@@ -1,0 +1,23 @@
+/*!
+
+\page page_story_weather_overview Tarina "weather_overview"
+
+\section section_weather_overview_story Tarinan muoto
+
+Tarina kuvailee 1-N mittaisen jakson s‰‰t‰ sateen ja
+pilvisyyden osalta.
+
+\section section_weather_overview_1dayrain Yhden p‰iv‰n sade
+
+Sivulla \ref page_rain_oneday on kuvattu kaikki mahdolliset tapaukset,
+yksi sade alkaa ja loppuu saman p‰iv‰n aikana, sek‰ niille generoitavat
+ennusteet.
+
+\section section_weather_overview_2dayrain Kahden p‰iv‰n sade
+
+Sivulla \ref page_rain_twoday on kuvattu kaikki mahdolliset tapaukset,
+yksi sade alkaa yhten‰ p‰iv‰n‰ ja lakkaa seuraavana p‰iv‰n‰, sek‰
+niille generoitavat ennusteet.
+
+
+*/

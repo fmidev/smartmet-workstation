@@ -1,0 +1,114 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(GeneralDoc)
+
+set(CMAKE_MFC_FLAG 2)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+
+add_definitions(
+    -DFMI_SUPPORT_STATION_DATA_SMARTTOOL 
+    -D_SCL_SECURE_NO_WARNINGS
+    )
+
+file( GLOB CPP_FILES source/*.cpp )
+file( GLOB H_FILES include/*.h )
+
+add_library( 
+    ${PROJECT_NAME} STATIC
+    ${CPP_FILES} 
+    ${H_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    Newbase
+    EditingDataUtils
+    SmartTools
+    CtrlViewUtils
+    SmetData
+    SmetUtils
+    CtrlViews
+    WinRegistryUtils
+    Imagine
+    ModifyEditedData
+    MfcUtils
+    Q2ClientLib
+    Threads
+    CaseStudyLib
+    ToolboxViews
+    HakeMessage
+    Processes
+    ToolboxDep
+    Dialogs
+    StationViews
+    AddParamsToViews
+    CatLog
+    ApplicationDataBase
+    WmsSupport
+	CapData
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
+    PUBLIC ${SmetData_INCLUDE_DIRS}
+    PUBLIC ${SmetUtils_INCLUDE_DIRS}
+    PUBLIC ${CtrlViews_INCLUDE_DIRS}
+    PUBLIC ${WinRegistryUtils_INCLUDE_DIRS}
+    PUBLIC ${Imagine_INCLUDE_DIRS}
+    PUBLIC ${ModifyEditedData_INCLUDE_DIRS}
+    PUBLIC ${MfcUtils_INCLUDE_DIRS}
+    PUBLIC ${Q2ClientLib_INCLUDE_DIRS}
+    PUBLIC ${Threads_INCLUDE_DIRS}
+    PUBLIC ${CaseStudyLib_INCLUDE_DIRS}
+    PUBLIC ${ToolboxViews_INCLUDE_DIRS}
+    PUBLIC ${HakeMessage_INCLUDE_DIRS}
+    PUBLIC ${Processes_INCLUDE_DIRS}
+    PUBLIC ${ToolboxDep_INCLUDE_DIRS}
+    PUBLIC ${Dialogs_INCLUDE_DIRS}
+    PUBLIC ${StationViews_INCLUDE_DIRS}
+    PUBLIC ${AddParamsToViews_INCLUDE_DIRS}
+    PUBLIC ${CatLog_INCLUDE_DIRS}
+    PUBLIC ${ApplicationDataBase_INCLUDE_DIRS}
+    PUBLIC ${WmsSupport_INCLUDE_DIRS}
+	PUBLIC ${CapData_INCLUDE_DIRS}
+    PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${TOOLKITPRO_INCLUDE_DIR}
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}/include
+    ${Newbase_INCLUDE_DIRS}
+    ${EditingDataUtils_INCLUDE_DIRS}
+    ${SmartTools_INCLUDE_DIRS}
+    ${CtrlViewUtils_INCLUDE_DIRS}
+    ${SmetData_INCLUDE_DIRS}
+    ${SmetUtils_INCLUDE_DIRS}
+    ${CtrlViews_INCLUDE_DIRS}
+    ${WinRegistryUtils_INCLUDE_DIRS}
+    ${Imagine_INCLUDE_DIRS}
+    ${ModifyEditedData_INCLUDE_DIRS}
+    ${MfcUtils_INCLUDE_DIRS}
+    ${Q2ClientLib_INCLUDE_DIRS}
+    ${Threads_INCLUDE_DIRS}
+    ${CaseStudyLib_INCLUDE_DIRS}
+    ${ToolboxViews_INCLUDE_DIRS}
+    ${HakeMessage_INCLUDE_DIRS}
+    ${Processes_INCLUDE_DIRS}
+    ${ToolboxDep_INCLUDE_DIRS}
+    ${Dialogs_INCLUDE_DIRS}
+    ${StationViews_INCLUDE_DIRS}
+    ${AddParamsToViews_INCLUDE_DIRS}
+    ${CatLog_INCLUDE_DIRS}
+    ${ApplicationDataBase_INCLUDE_DIRS}
+    ${WmsSupport_INCLUDE_DIRS}
+	${CapData_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIR}
+    ${TOOLKITPRO_INCLUDE_DIR}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
+    )
+

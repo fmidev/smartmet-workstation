@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/horttanainen/cppback
+	branch = master
+	commit = f8d4d0094d5566814be8f15723d2f19394550088
+	parent = e7c0caae827635a2dfb7aeb76b42f806a657671f
+	cmdver = 0.3.1

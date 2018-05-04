@@ -1,0 +1,277 @@
+/*!
+\page page_periodifraasit Periodifraasit
+
+\section sec_periodifraasit_intro Johdanto
+
+Periodifraasit ovat fraaseja, jotka kuvaavat jotain
+periodia. Tyypillisesti kyse on jostain lähiajankohdasta, eli
+esimerkiksi meneillään olevasta päivästä, ensi yöstä tai huomisesta.
+
+\section sec_periodifraasit_periodphrasefactory PeriodPhraseFactory
+
+TextGen::PeriodPhraseFactory namespacen create-metodi luo
+TextGen::Sentence objekteja, jossa on olennaiset periodia kuvaavat
+fraasit. Pääsääntöisesti virkkeessä on vain yksi fraasi, eli virke on
+tarkoitettu liitettäväksi johonkin toiseen virkkeeseen operator<<
+metodin avulla.
+
+Create-metodin API on
+\code
+TextGen::Sentence create(const std::string & theType,
+                         const std::string & theVariable,
+                         const NFmiTime & theForecastTime,
+                         const WeatherAnalysis::WeatherPeriod & thePeriod);
+\endcode
+Muuttuja \c theVariable on prefiksi \c theType tyyppisen fraasin
+generoimiseen tarvittaville muuttujille. Yleensä \c theVariable on
+muotoa \c textgen::[kappale]::[tarina]::[periodi].
+
+\subsection sec_periodifraasit_muuttujat Muuttujat
+
+Periodifraaseja kontrolloidaan muuttujilla muotoa
+\code
+textgen::[kappale]::[tarina]::[periodi] = [preferenssijärjestys].
+\endcode
+Muuttujan arvo on lista nimiä, joka määrittelee eri fraasien
+suosituimmuusjärjestyksen. Mahdolliset nimet on lueteltu alla
+<table>
+<tr><td>weekday</td><td>viikonpäivänä, viikonpäivän vastaisena yönä, viikonpäivästä alkaen</td></tr>
+<tr><td>today</td><td>tänään</td></tr>
+<tr><td>tonight</td><td>ensi yönä</td></tr>
+<tr><td>tomorrow</td><td>huomenna, huomisesta alkaen</td></tr>
+<tr><td>atday</td><td>päivällä</td></tr>
+<tr><td>atnight</td><td>yöllä</td></tr>
+<tr><td>followingday</td><td>seuraavana päivänä</td></tr>
+<tr><td>followingnight</td><td>seuraavana yönä</td></tr>
+<tr><td>none<td></td>-</td></tr>
+<tr><td>none!<td></td>-</td></tr>
+</table>
+
+Kukin tarina määrittelee kullekin sisältämälleen ajanjaksolle tyylin,
+esim. today ja next_day. Näillä on kullakin oletusarvoinen järjestys
+kullekin fraasille. Käyttäjän määrittelemällä järjestyksellä on
+preferenssi oletusarvoon nähden.
+
+\subsection sec_periodifraasit_until_tonight "until_tonight"
+
+Periodi käsittää meneillään olevan päivän iltaan asti. Mahdolliset
+fraasit oletusjärjestyksessä ovat
+
+ -# none (*)
+ -# today (*)
+ -# atday (*)
+ -# weekday
+ -# none!
+
+Asteriskilla merkittyihin fraaseihin liittyy lisäehtoja ennustushetken
+suhteen.
+
+\subsection sec_periodifraasit_until_morning "until_morning"
+
+Periodi käsittää jakson seuraavaan aamuun asti, sisältäen
+mahdollisesti muutaman tunnin meneillään olevaa päivää. Jaksoa
+käytetään tyypillisesti, kun päivä on jo niin pitkällä, että
+yö-periodi alkaa piakkoin.
+
+Mahdolliset fraasit oletusjärjestyksessä ovat
+
+ -# none (*)
+ -# tonight (*)
+ -# atnight (*)
+ -# weekday
+ -# none!
+
+Asteriskilla merkittyihin fraaseihin liittyy lisäehtoja ennustushetken
+suhteen.
+
+\subsection sec_periodifraasit_today "today"
+
+Periodi käsittää jonkin päiväjakson, mahdollisesti kokonaisen vuorokauden.
+Usein jakso on meneillään oleva päivä, mutta ei aina.
+
+Mahdolliset fraasit oletusjärjestyksessä ovat
+
+ -# none (*)
+ -# today (*)
+ -# tomorrow (*)
+ -# atday (*)
+ -# weekday
+ -# none!
+
+Asteriskilla merkittyihin fraaseihin liittyy lisäehtoja ennustushetken
+suhteen.
+
+\subsection sec_periodifraasit_tonight "tonight"
+
+Periodi käsittää jonkin yöjakson. Usein jakso on ensi yö, mutta ei aina.
+
+Mahdolliset fraasit oletusjärjestyksessä ovat
+
+ -# none (*)
+ -# tonight (*)
+ -# atnight (*)
+ -# weekday
+ -# none!
+
+Asteriskilla merkittyihin fraaseihin liittyy lisäehtoja ennustushetken
+suhteen.
+
+\subsection sec_periodifraasit_days "days"
+
+Periodi käsittää vähintään yhden päivän, mahdollisesti kaksi tai useampia.
+Usein jakso alkaa meneillään olevasta päivästä, usein huomisesta.
+
+Mahdolliset fraasit oletusjärjestyksessä ovat
+
+ -# none (*)
+ -# today (*)
+ -# tomorrow (*)
+ -# followingday
+ -# weekday
+ -# none!
+
+Fraasien järjestyksen pystyy valitsemaan normaalilla \c ::days::phrases muuttujalla,
+mutta senkin pystyy ylikuormittamaan eri pituisille jaksoille muuttujilla
+\code
+::days::phrases::days1
+::days::phrases::days
+::days::phrases::days
+...
+\endcode
+Päivien laskemiseen käytetään normaaleja muuttujia
+\code
+::day::starthour
+::day::endhour
+::day::maxstarthour
+::day::minendhour
+\endcode
+
+Vastaavat realisoidut fraasit ovat
+
+ -# Jos päiviä on yksi
+    -# ""
+    -# "Tänään"
+    -# "Huomenna"
+    -# (ei käytetä)
+    -# "Viikonpäivänä"
+ -# Jos päiviä on kaksi
+    -# ""
+    -# Riippuu tomorrow,followingday,weekday järjestyksestä
+       -# "Tänään ja huomenna" jos tomorrow
+       -# "Tänään ja seuraavana päivänä" jos followingday
+       -# "Tänään ja viikonpäivänä" jos weekday
+    -# Riippuu followingday,weekday järjestyksestä
+       -# "Huomenna ja seuraavana päivänä" jos followingday
+       -# "Huomenna ja viikonpäivänä" jos weekday
+    -# (ei käytetä)
+    -# "Viikonpäivänä ja viikonpäivänä"
+ -# Jos päiviä on kolme tai useampia
+    -# ""
+    -# (ei käytetä)
+    -# "Huomisesta alkaen"
+    -# (ei käytetä)
+    -# "Viikonpäivästä alkaen"
+
+
+\subsection sec_periodifraasit_next_night "next_night"
+
+Periodi käsittää yön, ilman päiväsaikaan kuuluvia hetkiä, joista
+kerrotaan erikseen ennen tätä osuutta.
+
+Mahdolliset fraasit oletusjärjestyksessä ovat
+
+ -# tonight (*)
+ -# atnight (*)
+ -# followingnight
+ -# weekday
+ -# none!
+
+Asteriskilla merkittyihin fraaseihin liittyy lisäehtoja ennustushetken
+suhteen.
+
+\subsection sec_periodifraasit_next_day "next_day"
+
+Periodi kattaa jakson seuraavasta aamusta iltaan, tai koko seuraavan
+vuorokauden.
+
+Mahdolliset fraasit oletusjärjestyksessä ovat
+
+ -# tomorrow (*)
+ -# followingday
+ -# weekday
+ -# none!
+
+Asteriskilla merkittyihin fraaseihin liittyy lisäehtoja ennustushetken
+suhteen.
+
+\subsection sec_periodifraasit_next_days "next_days"
+
+Periodi kattaa jakson seuraavasta aamusta eteenpäin vähintään kahden
+vuorokauden ajan (mahdollisesti hieman alle 48h).
+
+Mahdolliset fraasit oletusjärjestyksessä ovat
+
+ -# tomorrow (*)
+ -# weekday
+ -# none!
+
+Asteriskilla merkittyihin fraaseihin liittyy lisäehtoja ennustushetken
+suhteen.
+
+\subsection sec_periodifraasit_remaining_days "remaining_days"
+
+Periodi kattaa jakson seuraavasta aamusta eteenpäin, yhden tai
+useamman vuorokauden ajan.
+
+ -# Jos pituus = 1 vuorokausi
+    -# Palauta \c next_day paluuarvo
+ -# Muutoin
+    -# Palauta \c next_days paluuarvo
+
+\subsection sec_periodifraasit_remaining_day "remaining_day"
+
+Periodi kattaa loppupäivän ilman varsinaista päivätarkennetta.
+Usein käytetään yhdistelmää "today" + "remaining_day", jolloin
+saadaan aikaiseksi fraaseja tyyliin "tänään iltapäivästä alkaen"
+
+Fraasit valitaan seuraavan taulukon mukaisesti periodin alkamisajan
+perusteella
+
+\htmlonly
+<table align="center" border="1">
+<tr><th>Tunti</th><th>Fraasi</th></tr>
+<tr><td>00</td><td>-</td></tr>
+<tr><td>01</td><td>-</td></tr>
+<tr><td>02</td><td>-</td></tr>
+<tr><td>03</td><td>aamuyöstä alkaen</td></tr>
+<tr><td>04</td><td>aamuyöstä alkaen</td></tr>
+<tr><td>05</td><td>aamuyöstä alkaen</td></tr>
+<tr><td>06</td><td>aamusta alkaen</td></tr>
+<tr><td>07</td><td>aamusta alkaen</td></tr>
+<tr><td>08</td><td>aamusta alkaen</td></tr>
+<tr><td>09</td><td>aamupäivästä alkaen</td></tr>
+<tr><td>10</td><td>aamupäivästä alkaen</td></tr>
+<tr><td>11</td><td>keskipäivästä alkaen</td></tr>
+<tr><td>12</td><td>keskipäivästä alkaen</td></tr>
+<tr><td>13</td><td>iltapäivästä alkaen</td></tr>
+<tr><td>14</td><td>iltapäivästä alkaen</td></tr>
+<tr><td>15</td><td>iltapäivästä alkaen</td></tr>
+<tr><td>16</td><td>iltapäivästä alkaen</td></tr>
+<tr><td>17</td><td>iltapäivästä alkaen</td></tr>
+<tr><td>18</td><td>illasta alkaen</td></tr>
+<tr><td>19</td><td>illasta alkaen</td></tr>
+<tr><td>20</td><td>illasta alkaen</td></tr>
+<tr><td>21</td><td>illasta alkaen</td></tr>
+<tr><td>22</td><td>yöstä alkaen</td></tr>
+<tr><td>23</td><td>yöstä alkaen</td></tr>
+</table>
+\endhtmlonly
+On kuitenkin huomattava, että taulukon loppuosaa tulisi käyttää vain
+erittäin harvoin, kyseisen päivän ennusteita ei tulisi enää kertoa
+kovin myöhään samana päivänä. Käytännössä viimeisin sopiva kellonaika
+lienee jossain illansuussa.
+
+*/
+
+
+

@@ -1,0 +1,149 @@
+/*!
+
+\page page_story_temperature_dailymax Tarina "temperature_dailymax"
+
+\c temperature_dailymax tarina on muotoa
+
+  -# "P‰iv‰n ylin l‰mpˆtila on [viikonp‰iv‰n‰] noin x astetta"
+  -# "P‰iv‰n ylin l‰mpˆtila on [viikonp‰iv‰n‰] x...y astetta"
+
+Ruotsiksi
+
+  -# "Dagens hˆgsta temperatur ‰r [pÂ veckodag] cirka x grader"
+  -# "Dagens hˆgsta temperatur ‰r [pÂ veckodag] x...y grader"
+
+Englanniksi
+
+  -# "The maximum day temperature [on Weekday] is about x degrees"
+  -# "The maximum day temperature [on Weekday] is x...y degrees"
+
+Sivulauseessa jatketaan tarvittaessa
+
+  -# ", [seuraavana p‰iv‰n‰] huomattavasti korkeampi"
+  -# ", [seuraavana p‰iv‰n‰] korkeampi"
+  -# ", [seuraavana p‰iv‰n‰] hieman korkeampi"
+  -# ", [seuraavana p‰iv‰n‰] suunnilleen sama"
+  -# ", [seuraavana p‰iv‰n‰] hieman alempi"
+  -# ", [seuraavana p‰iv‰n‰] alempi"
+  -# ", [seuraavana p‰iv‰n‰] huomattavasti alempi"
+
+Ruotsiksi lauseet ovat
+
+  -# ", [pÂ fˆljande dag] betydligt hˆgre."
+  -# ", [pÂ fˆljande dag] hˆgre."
+  -# ", [pÂ fˆljande dag] nÂgot hˆgre."
+  -# ", [pÂ fˆljande dag] ungef‰r densamma."
+  -# ", [pÂ fˆljande dag] nÂgot l‰gre."
+  -# ", [pÂ fˆljande dag] l‰gre."
+  -# ", [pÂ fˆljande dag] betydligt l‰gre."
+
+Englanniksi lauseet ovat
+
+  -# ", [the following day] significantly higher."
+  -# ", [the following day] higher."
+  -# ", [the following day] somewhat higher."
+  -# ", [the following day] about the same."
+  -# ", [the following day] somewhat lower."
+  -# ", [the following day] lower."
+  -# ", [the following day] significantly lower."
+
+Aikafraasit ovat tyyppej‰ \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day. Niihin liittyvi‰ asetuksia
+kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::temperature_dailymax::today::phrases
+textgen::[kappale]::story::temperature_dailymax::next_day::phrases
+\endcode
+Tyypillisi‰ asetuksia ovat esimerkiksi
+\code
+textgen::[kappale]::story::temperature_dailymax::next_day::phrases = followingday
+\endcode
+
+Komparatiivin valinta perustuu muuttujiin
+\code
+textgen::[kappale]::story::temperature_dailymax::comparison::significantly_higher = [N]
+textgen::[kappale]::story::temperature_dailymax::comparison::higher = [N]
+textgen::[kappale]::story::temperature_dailymax::comparison::somewhat_higher = [N]
+textgen::[kappale]::story::temperature_dailymax::comparison::somewhat_lower = [N]
+textgen::[kappale]::story::temperature_dailymax::comparison::lower = [N]
+textgen::[kappale]::story::temperature_dailymax::comparison::significantly_lower = [N]
+\endcode
+ja laskettuihin l‰mpˆtilav‰leihin. Jos ensimm‰isen p‰iv‰n keskiarvo
+on A jae seuraavan B, valitaan
+
+  -# Fraasi 1, jos B-A >= \c significantly_higher
+  -# Fraasi 2, jos B-A >= \c higher
+  -# Fraasi 3, jos B-A >= \c somewhat_higher
+  -# Fraasi 7, jos A-B >= \c significantly_lower
+  -# Fraasi 6, jos A-B >= \c lower
+  -# Fraasi 5, jos A-B >= \c somewhat_lower
+  -# Fraasi 4 muutoin
+
+Jos p‰ivi‰ on useampia, luetellaan jatkossa jokaiselle p‰iv‰lle p‰iv‰n
+ylin sivulauseena seuraavasti
+
+  - ", viikonp‰iv‰n‰ noin x astetta"
+  - ", viikonp‰iv‰n‰ x...y astetta"
+
+Valinta yksitt‰isen arvon ja intervallin v‰lill‰ tehd‰‰n perustuen muuttujiin
+\code
+textgen::[kappale]::story::temperature_dailymax::mininterval = [1-]
+textgen::[kappale]::story::temperature_dailymax::always_interval_zero = [bool]
+\endcode
+Jos intervallin pituus on v‰hint‰‰n \c mininterval, sanotaan intervalli,
+muuten keskiarvo. Poikkeuksena jos nolla kuuluu intervalliin ja
+\c always_interval_zero on true, sanotaan aina intervalli.
+
+\c mininterval muuttujan oletusarvo on 2, \c always_interval_zero
+muuttujan false.
+
+P‰iv‰n m‰‰ritelm‰ saadaan muuttujista
+\code
+textgen::[kappale]::story::temperature_dailymax::day::starthour = [0-23]
+textgen::[kappale]::story::temperature_dailymax::day::endhour = [0-23]
+textgen::[kappale]::story::temperature_dailymax::day::maxstarthour = [0-23]
+textgen::[kappale]::story::temperature_dailymax::day::minendhour = [0-23]
+\endcode
+P‰iv‰n normaali aikav‰li on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mit‰ n‰m‰ asetukset vaativat, voidaan niiss‰ joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+M‰‰ritelm‰t voivat olla esimerkiksi muotoa
+\code
+textgen::[kappale]::story::temperature_dailymax::day::starthour    = 6
+textgen::[kappale]::story::temperature_dailymax::day::endhour      = 18
+textgen::[kappale]::story::temperature_dailymax::day::maxstarthour = 12
+\endcode
+T‰llˆin p‰iv‰n maksimi kerrottaisiin aina kello kahteentoista
+saakka, vaikka jakso alkaakin jo kello kuusi. Loppup‰‰st‰ sen
+sijaan tarvitsee harvemmin joustaa.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::temperature_dailymax::fake::day1::mean = [result]
+textgen::[kappale]::story::temperature_dailymax::fake::day1::minimum = [result]
+textgen::[kappale]::story::temperature_dailymax::fake::day1::maximum = [result]
+textgen::[kappale]::story::temperature_dailymax::fake::day2::mean = [result]
+...
+\endcode
+
+
+Tarvittavat fraasit ovat
+
+ - "p‰iv‰n ylin l‰mpˆtila"
+ - "on"
+ - "noin"
+ - "astetta"
+ - "huomattavasti korkeampi"
+ - "korkeampi"
+ - "hieman korkeampi"
+ - "suunnilleen sama"
+ - "hieman alempi"
+ - "alempi"
+ - "huomattavasti alempi"
+
+plus tarvittavat periodifraasit \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day sivuilta.
+
+*/

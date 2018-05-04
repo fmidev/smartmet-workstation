@@ -1,0 +1,87 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(StationViews)
+
+set(CMAKE_MFC_FLAG 2)
+
+add_definitions( 
+    -DURDL_HEADER_ONLY 
+    -DURDL_DISABLE_SSL
+    -DFMI_SUPPORT_STATION_DATA_SMARTTOOL
+    )
+
+file( GLOB CPP_FILES source/*.cpp )
+file( GLOB H_FILES include/*.h )
+
+add_library( 
+    ${PROJECT_NAME} STATIC
+    ${CPP_FILES} 
+    ${H_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME} 
+    Newbase
+    AutoComplete
+    Toolbox
+    SmartTools
+    Q2ClientLib
+    CtrlViews
+    TimeViews
+    TmUtils
+    Imagine
+    ModifyEditedData
+    Textgen
+    DataUtilities
+    HakeMessage
+	CapData
+	WmsSupport
+	XmlLiteUtils
+    )
+
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${AutoComplete_INCLUDE_DIRS}
+    PUBLIC ${Toolbox_INCLUDE_DIRS}
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${Q2ClientLib_INCLUDE_DIRS}
+    PUBLIC ${CtrlViews_INCLUDE_DIRS}
+    PUBLIC ${TimeViews_INCLUDE_DIRS}
+    PUBLIC ${TmUtils_INCLUDE_DIRS}
+    PUBLIC ${Imagine_INCLUDE_DIRS}
+    PUBLIC ${ModifyEditedData_INCLUDE_DIRS}
+    PUBLIC ${Textgen_INCLUDE_DIRS}
+    PUBLIC ${DataUtilities_INCLUDE_DIRS}
+    PUBLIC ${HakeMessage_INCLUDE_DIRS}
+	PUBLIC ${CapData_INCLUDE_DIRS}
+    PUBLIC ${WmsSupport_INCLUDE_DIRS}
+    PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${UNIRAS_INCLUDE_DIR}
+	PUBLIC ${XmlLiteUtils_INCLUDE_DIRS}
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}
+    ${Newbase_INCLUDE_DIRS}
+    ${AutoComplete_INCLUDE_DIRS}
+    ${Toolbox_INCLUDE_DIRS}
+    ${SmartTools_INCLUDE_DIRS}
+    ${Q2ClientLib_INCLUDE_DIRS}
+    ${CtrlViews_INCLUDE_DIRS}
+    ${TimeViews_INCLUDE_DIRS}
+    ${TmUtils_INCLUDE_DIRS}
+    ${Imagine_INCLUDE_DIRS}
+    ${ModifyEditedData_INCLUDE_DIRS}
+    ${Textgen_INCLUDE_DIRS}
+    ${DataUtilities_INCLUDE_DIRS}
+    ${HakeMessage_INCLUDE_DIRS}
+	${CapData_INCLUDE_DIRS}
+    ${WmsSupport_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIR}
+    ${UNIRAS_INCLUDE_DIR}
+	${XmlLiteUtils_INCLUDE_DIRS}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
+    )
+

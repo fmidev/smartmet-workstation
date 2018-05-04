@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:fmidev/smartmet-library-textgen.git
+	branch = master
+	commit = dcbeb8df17112bec457d9a1bd4dab3030d13325c
+	parent = 6fbd71df23f35a469121dbcb1ebaafdcb16a0e79
+	cmdver = 0.3.1

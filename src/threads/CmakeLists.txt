@@ -1,0 +1,62 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(Threads)
+
+set(CMAKE_MFC_FLAG 2)
+
+file( GLOB CPP_FILES *.cpp )
+file( GLOB H_FILES *.h )
+file( GLOB RES_FILES *.rc )
+
+add_library( 
+    ${PROJECT_NAME} STATIC
+    ${CPP_FILES}
+    ${H_FILES}
+    ${RES_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    Newbase
+    SmartTools
+    Bzip2Util
+    Processes
+    AutoComplete
+    EditingDataUtils
+	ApplicationDataBase
+	SmetData
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${Bzip2Util_INCLUDE_DIRS}
+    PUBLIC ${Processes_INCLUDE_DIRS}
+    PUBLIC ${AutoComplete_INCLUDE_DIRS}
+    PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
+    PUBLIC ${ApplicationDataBase_INCLUDE_DIRS}
+    PUBLIC ${SmetData_INCLUDE_DIRS}
+    )
+
+set(${PROJECT_NAME}_RES_FILE
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.dir/$(Configuration)/SmartMetThreads.res
+    CACHE INTERNAL "${PROJECT_NAME}: Generated .res file" FORCE
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}
+    ${Newbase_INCLUDE_DIRS}
+    ${SmartTools_INCLUDE_DIRS}
+    ${Bzip2Util_INCLUDE_DIRS}
+    ${Processes_INCLUDE_DIRS}
+    ${AutoComplete_INCLUDE_DIRS}
+    ${EditingDataUtils_INCLUDE_DIRS}
+    ${ApplicationDataBase_INCLUDE_DIRS}
+    ${SmetData_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIR}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
+    )
+

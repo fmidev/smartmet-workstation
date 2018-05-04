@@ -1,0 +1,48 @@
+/*!
+
+\page page_story_temperature_range Tarina "temperature_range"
+
+\c temperature_range tarina on muotoa
+
+  -# "Lämpötila on noin X astetta."
+  -# "Lämpötila on X...Y astetta."
+
+Ruotsiksi
+
+  -# "Temperatur är cirka X grader."
+  -# "Temperatur är X...Y grader."
+
+Englanniksi
+
+  -# "Temperature is about X degrees."
+  -# "Temperature is X...Y degrees."
+
+Käytetyt fraasit ovat
+
+  - "lämpötila"
+  - "noin"
+  - "astetta"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Min(Temperature))...Mean(Max(Temperature))
+textgen::[kappale]::story::temperature_range::fake::minimum = [result]
+textgen::[kappale]::story::temperature_range::fake::maximum = [result]
+textgen::[kappale]::story::temperature_range::fake::mean = [result]
+\endcode
+
+Tarinaan liittyviä muuttujia ovat
+\code
+textgen::[kappale]::story::temperature_range::mininterval = [1-]
+textgen::[kappale]::story::temperature_range::always_interval_zero = [bool]
+\endcode
+
+Jos intervallin pituus on vähintään \c mininterval, sanotaan intervalli,
+muuten keskiarvo. Poikkeuksena jos nolla kuuluu intervalliin ja
+\c always_interval_zero on true, sanotaan aina intervalli.
+
+\c mininterval muuttujan oletusarvo on 2, \c always_interval_zero
+muuttujan false.
+
+*/
+

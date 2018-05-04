@@ -1,0 +1,28 @@
+/*!
+
+\page page_story_temperature_mean Tarina "temperature_mean"
+
+\c temperature_mean tarina on muotoa
+
+  -# "Keskilämpötila N astetta."
+
+Ruotsiksi
+
+  -# "Medeltemperaturen N grader."
+
+Englanniksi
+
+  -# "Mean temperature N degrees."
+
+Käytetyt fraasit ovat
+
+  - "keskilämpötila"
+  - "astetta"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Mean(Temperature)):
+textgen::[kappale]::story::temperature_mean::fake::mean = [result]
+\endcode
+
+*/

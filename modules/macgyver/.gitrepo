@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:fmidev/smartmet-library-macgyver.git
+	branch = master
+	commit = f401f1ea247d6a84708d14de6700c6d6e6e15a87
+	parent = 55f1def1d676c1f2a92cfac2b6f36567c16a414e
+	cmdver = 0.3.1

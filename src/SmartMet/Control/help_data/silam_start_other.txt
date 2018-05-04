@@ -1,0 +1,73 @@
+!     SILAM lähtöpistelista 
+!!   Euroopan ydinlaitospaikat , muut kuin voimalaitokset
+!!   (OT = siviililaitos; OT_SCI = tutkimusreaktori OT_REPR = jällenkäsittelylaitos 
+!!    OT_MILI = sotilaslaitos; OT_MIPLA = sotilasreaktori)
+!!   koordinaatit ovat desimaalilukuna positiivinen = E , negatiivinen = W
+!!   Ilkka Valkama, Mika Salonoja ja Sulo Kolie.
+!!   Tiedot tarkistettu 8.6.93 Tuomo Pesonen/20.1.2006 Ilkka Valkama
+!
+!    latitude        longitude         valtio                    tyyppi               info
+!--------------------------------------------------------------------------------------------------------------------
+
+ 53.833   N   25.317   E   BYELORUSSIA   OT_MILI   Lida, SS-25 silos 27  
+ 52.033   N   29.167   E   BYELORUSSIA   OT_MILI   Mozyr, SS-25 silos 27  
+ 59.350   N   24.050   E   ESTONIA   OT_MIPLA   Paldiski (closed)  
+ 60.150   N   24.800   E   FINLAND   OT_SCI   Otaniemi, Helsinki 
+ 52.217   N   07.018   E   GERMANY   OT   Gronau, uranium concentration plant  
+ 53.058   N   11.367   E   GERMANY   OT   Gorbben, interval depot of nuclear fuel  
+ 52.067   N   07.017   E   GERMANY   OT   Ahaus, interval depot of nuclear fuel  
+ 52.250   N   10.500   E   GERMANY   OT   Asse, Braunschweig, final depot (experiment)  
+ 50.433   N   80.267   E   KAZAKHSTAN   OT_FIELD   Semipalatinsk (closed)  
+ 56.900   N   24.150   E   LATVIA   OT_MIPLA   Riga  
+ 53.533   N   82.750   E   RUSSIA   OT_MILI   Aleysk, SS-18 silos 30  
+ 55.400   N   43.800   E   RUSSIA   OT_MILI   Arzamas, (Kremlev), Nuclear weapon  
+ 56.783   N   61.467   E   RUSSIA   OT   Beloyarsk, (Belojarsk), plutonium  
+ 57.667   N   56.250   E   RUSSIA   OT_MILI   Bershet, SS-11 silos 60, SS-24 silos 9   
+ 55.200   N   61.417   E   RUSSIA   OT-SCI   Chelyabinsk (Tsheljabinsk), plutonium   
+ 50.767   N   59.500   E   RUSSIA   OT_MILI   Dombarovskiy, SS-18 silos 64  
+ 72.417   N   72.633   E   RUSSIA   OT_MILI   Drovyanaya, SS-11 silos 50  
+ 52.300   N   104.250   E   RUSSIA   OT_MILI   Irkutsk, SS-25 silos 36  
+ 56.183   N   95.800   E   RUSSIA   OT_MILI   Kansk, SS-25 silos 27  
+ 53.100   N   60.617   E   RUSSIA   OT_MILI   Kartaly, SS-18 silos 46  
+ 57.767   N   40.983   E   RUSSIA   OT_MILI   Kostromo, SS-24 silos 12  
+ 54.033   N   35.800   E   RUSSIA   OT_MILI   Kozelsk, SS-19 silos 60  
+ 56.083   N   92.767   E   RUSSIA   OT_MILI   Krasnoyarsk,(Dodonovo), SS-11 silos 40, SS-24 silos 12  
+ 56.083   N   92.767   E   RUSSIA   OT   Krasnoyarsk,(Dodonovo), enriched uranium, plutonium  
+ 55.717   N   60.533   E   RUSSIA   OT   Kyshtym, enriched uranium, plutonium  
+ 59.900   N   29.083   E   RUSSIA   OT_MIPLA   Leningrad, Sosnovyi Bor  
+ 69.000   N   33.000   E   RUSSIA   OT_SUB   Murmansk  
+ 58.667   N   59.800   E   RUSSIA   OT_MILI   Niznaya Tura, nuclear weapons  
+ 73.000   N   55.000   E   RUSSIA   OT_FIELD   Novaja Zemlja, etelainen koealue  
+ 73.341   N   54.501   E   RUSSIA   OT_FIELD   Novaja Zemlja, pohjoinen koealue   
+ 53.183   N   45.000   E   RUSSIA   OT   Penza-19, (Zarchinuj)  
+ 50.433   N   80.267   E   RUSSIA   OT_MILI   Sverdlovsk-44-45, (Novouralsk/Rusnoj)  
+ 51.700   N   45.600   E   RUSSIA   OT_MILI   Tatisehevo, SS-19 silos 110, SS-24 silos 10  
+ 56.883   N   40.567   E   RUSSIA   OT_MILI   Teykovo, SS-25 silos 36, SS-11 silos 26  
+ 56.050   N   85.050   E   RUSSIA   OT   Tomsk, Seversk/Tomsk, enriched uranium, plutonium  
+ 57.500   N   60.017   E   RUSSIA   OT_MILI   Verhniy-Neyvinskiy  
+ 56.633   N   47.867   E   RUSSIA   OT_MILI   Yoshkar-Ola, SS-13 silos 40, SS-25 silos 18  
+ 59.167   N   49.333   E   RUSSIA   OT_MILI   Yurya, SS-25 silos 45  
+ 55.167   N   59.633   E   RUSSIA   OT_MIPLA   Zlatoust-36, (Torifugornyj)    
+ 68.98   N   33.08   E   RUSSIA   OT_MILI   Murmansk (Kola, naval base &amp; subs)  
+ 68.05   N   39.63   E   RUSSIA   OT_MILI   Gremikha (Kola, naval base &amp; subs))  
+ 64.58   N   39.83   E   RUSSIA   OT_MILI   Severodvinsk (naval &amp; air base, fuel storage)  
+ 69.08   N   33.50   E   RUSSIA   OT_MILI   Severomorsk (Kola, naval &amp; air base)  
+ 68.07   N   33.25   E   RUSSIA   OT_MILI   Olenegorsk (Kola, airbase)  
+ 69.16   N   33.36   E   RUSSIA   OT_SUB   Palaya Guba (Kola, subs &amp; spent fuel)  
+ 69.18   N   33.32   E   RUSSIA   OT_SUB   Olenya Guba (Kola, subs &amp; spent fuel)  
+ 69.27   N   32.80   E   RUSSIA   OT_SUB   Ura Guba (Kola, subs &amp; spent fuel)  
+ 69.36   N   32.80   E   RUSSIA   OT_SUB   Ara Guba (Kola, subs &amp; spent fuel)  
+ 69.20   N   33.30   E   RUSSIA   OT_SUB   Sayda Guba (Kola, subs &amp; spent fuel)  
+ 69.40   N   32.16   E   RUSSIA   OT_SUB   Zapadnaya Liza (Kola, subs &amp; spent fuel)  
+ 48.483   N   35.000   E   UKRAINE   OT_MILI   Dnepropetrovsk, Ballistic Missile or Bomb Production plant   
+ 48.050   N   30.833   E   UKRAINE   OT_MILI   Pervomaysk, SS-19 silos 40, SS-24 silos 46   
+ 50.583   N   32.400   E   UKRAINE   OT_MILI   Priluki, TU-160 planes 13   
+ 49.833   N   30.400   E   UKRAINE   OT_MILI   Uzin, TU-95MS16 planes 21, TU-95M planes 1, TU-95K planes 1   
+ 51.383   N  -01.150   W   UNITED KINGDOM   OT_MIPLA   Aldermaston, Berkshire, MOD establishments   
+ 51.667   N  -00.633   W   UNITED KINGDOM   OT   Amersham, Buckingham, international plc establishments     
+ 51.500   N  -03.217   W   UNITED KINGDOM   OT   Cardiff, Glamorgan, Wales, international plc establishments  
+ 50.367   N  -04.167   W   UNITED KINGDOM   OT_MIPLA   Devonport, Devon, MOD establishments  
+ 56.200   N  -04.750   W   UNITED KINGDOM   OT_MIPLA   Faslane (Arrochar), Strathclyde, MOD establ. 
+ 56.050   N  -03.433   W   UNITED KINGDOM   OT_MIPLA   Rosyth, Fife, Skotland, MOD establishements  
+ 54.400   N  -03.483   W   UNITED KINGDOM   OT_REPR   Sellafield, Windscale  
+

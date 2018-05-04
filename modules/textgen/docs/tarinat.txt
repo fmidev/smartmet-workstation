@@ -1,0 +1,149 @@
+/*!
+\page page_tarinat Tarinat
+
+<ol>
+<li>\ref sec_tarina</li>
+<li>\ref sec_storyfactory</li>
+<li>\ref sec_specialstory</li>
+<li>\ref sec_temperaturestory</li>
+ <ol>
+ <li>\ref page_story_temperature_day</li>
+ <li>\ref page_story_temperature_mean</li>
+ <li>\ref page_story_temperature_meanmax</li>
+ <li>\ref page_story_temperature_meanmin</li>
+ <li>\ref page_story_temperature_dailymax</li>
+ <li>\ref page_story_temperature_nightlymin</li>
+ <li>\ref page_story_temperature_weekly_minmax</li>
+ <li>\ref page_story_temperature_weekly_averages</li>
+ <li>\ref page_story_temperature_weekly_averages_trend (puuttuu)</li>
+ </ol>
+<li>\ref sec_dewpointstory</li>
+<ol>
+<li>\ref page_story_dewpoint_range</li>
+</ol>
+<li>\ref sec_precipitationstory</li>
+ <ol>
+ <li>\ref page_story_precipitation_total</li>
+ <li>\ref page_story_precipitation_range</li>
+ <li>\ref page_story_precipitation_classification</li>
+ <li>\ref page_story_precipitation_daily_sums</li>
+ <li>\ref page_story_pop_max</li>
+ <li>\ref page_story_pop_days</li>
+ <li>\ref page_story_pop_twodays</li>
+ </ol>
+<li>\ref sec_cloudinesstory</li>
+ <ol>
+ <li>\ref page_story_cloudiness_overview</li>
+ </ol>
+<li>\ref sec_weatherstory</li>
+ <ol>
+ <li>\ref page_story_weather_overview</li>
+ <li>\ref page_story_weather_shortoverview (olomuoto toteuttamatta)</li>
+ <li>\ref page_story_weather_thunderprobability</li>
+ </ol>
+<li>\ref sec_windstory</li>
+ <ol>
+ <li>\ref page_story_wind_range</li>
+ <li>\ref page_story_wind_daily_ranges</li>
+ <li>\ref page_story_wind_summary</li>
+ <li>\ref page_story_wind_simple_overview (puuttuu)</li>
+ <li>\ref page_story_wind_overview (puuttuu)</li>
+ </ol>
+<li>\ref sec_froststory</li>
+ <ol>
+ <li>\ref page_story_frost_day</li>
+ <li>\ref page_story_frost_mean</li>
+ <li>\ref page_story_frost_maximum</li>
+ <li>\ref page_story_frost_range</li>
+ <li>\ref page_story_frost_twonights</li>
+ </ol>
+<li>\ref sec_relativehumidity_story</li>
+ <ol>
+ <li>\ref page_story_relativehumidity_day</li>
+ <li>\ref page_story_relativehumidity_lowest</li>
+ <li>\ref page_story_relativehumidity_range</li>
+ </ol>
+<li>\ref sec_roadstory</li>
+ <ol>
+ <li>\ref page_story_roadtemperature_daynightranges</li>
+ <li>\ref page_story_roadcondition_overview</li>
+ </ol>
+<li>\ref sec_foreststory</li>
+ <ol>
+ <li>\ref page_story_forestfirewarning_county</li>
+ <li>\ref page_story_forestfireindex_twodays</li>
+ <li>\ref page_story_evaporation_day</li>
+ </ol>
+</ol>
+<li>\ref sec_pressurestory</li>
+ <ol>
+ <li>\ref page_story_pressure_mean</li>
+ </ol>
+</ol>
+
+\section sec_tarina Mik‰ on tarina
+
+Tarina on yksitt‰inen kappale, joka sis‰lt‰‰ yksitt‰iseen s‰‰parametriin
+liittyv‰n kuvauksen. Kappale voi olla tyhj‰ jos parametrista ei ole
+mit‰‰n kerrottavaa, tai se voi koostua yhdest‰ tai useammasta virkkeest‰.
+
+
+\section sec_storyfactory StoryFactory namespace
+
+TextGen::StoryFactory namespace sis‰lt‰‰ create funktion,
+jolla voidaan luoda erikseen nimettyj‰ tarinoita.
+
+
+\section sec_specialstory Erikoistarinat
+
+Normaalista poikkeava tarina on "none", joka palauttaa tyhj‰n Paragraph
+objektin.
+
+\section sec_temperaturestory TemperatureStory luokka
+
+TextGen::TemperatureStory luokka hallitsee l‰mpˆtilaan liittyv‰t tarinat.
+
+\section sec_precipitationstory PrecipitationStory luokka
+
+TextGen::PrecipitationStory luokka hallitsee sateeseen liittyv‰t tarinat.
+
+Yksi keskeinen ongelma on se, miten sadesumma m‰‰ritell‰‰n. Esimerkiksi
+kun puhutaan alueen keskim‰‰r‰isest‰ sadesummasta, pit‰isikˆ laskuihin ottaa
+vain ne pisteet joissa oikeasti sataa edes jonkin verran, vai kaikki pisteet?
+
+\section sec_cloudinesstory CloudinessStory luokka
+
+TextGen::CloudinessStory luokka hallitsee pelk‰st‰‰n pilvisyyteen
+liittyv‰t tarinat.
+
+\section sec_weatherstory WeatherStory luokka
+
+TextGen::WeatherStory luokka hallitsee yleiss‰‰h‰n liittyv‰t tarinat.
+
+\section sec_windstory WindStory luokka
+
+TextGen::WindStory luokka hallitsee tuuleen liittyv‰t tarinat.
+
+\section sec_froststory FrostStory luokka
+
+TextGen::FrostStory luokka hallitsee hallaan liittyv‰t tarinat.
+
+\section sec_relativehumidity_story RelativeHumidityStory luokka
+
+TextGen::RelativeHumidityStory luokka hallitsee suhteelliseen
+kosteuteen liittyv‰t tarinat.
+
+\section sec_dewpoint_story DewPointStory luokka
+
+TextGen::DewPointStory luokka hallitsee kastepisteeseen liittyv‰t tarinat.
+
+\section sec_roadstory RoadStory luokka
+
+TextGen::RoadStory luokka hallitsee ties‰‰h‰n liittyv‰t tarinat.
+
+\section sec_foreststory ForestStory luokka
+
+TextGen::ForestStory luokka hallitsee kosteusmalliin ja
+mets‰palovaroituksiin liittyv‰t tarinat.
+
+*/

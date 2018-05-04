@@ -1,0 +1,7 @@
+*~
+*Test
+obj
+*.plist
+*.so
+*.a
+

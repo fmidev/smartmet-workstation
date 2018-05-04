@@ -1,0 +1,12 @@
+/*!
+\page page_aikavalit Aikam‰‰rittelyj‰
+
+\section sec_aikanimet Nimet eri ajanjaksoille
+
+Eri ajanjaksoille k‰ytet‰‰n alla olevan taulukon mukaisia
+nimi‰. Kaikki kellonajat ovat paikallista aikaa.
+
+<img src="docs/aikavalit.php">
+
+
+*/

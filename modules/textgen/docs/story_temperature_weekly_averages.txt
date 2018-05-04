@@ -1,0 +1,80 @@
+/*!
+
+\page page_story_temperature_weekly_averages Tarina "temperature_weekly_averages"
+
+Tarina on muuten samankaltainen tarinan
+\ref page_story_temperature_weekly_minmax
+kanssa, mutta lauseissa ei kerrota päivien ylimmistä ja öiden alimmista
+lämpötiloista vaan niiden keskilämpötiloista.
+
+Ajanjakson täytyy olla vähintään 2 vuorokautta.
+
+Tarinat ovat muotoa
+
+  -# "Päivälämpötila on A...B astetta, yölämpötila C...D astetta."
+  -# "Päivälämpötila on noin X astetta, yölämpötila noin Y astetta."
+
+Ruotsiksi
+
+  -# "Dagstemperaturen är A...B grader, natttemperaturen C...D grader."
+  -# "Dagstemperaturen är cirka X grader, natttemperaturen circa Y grader."
+
+Englanniksi
+
+  -# "Daily temperature is A...B degrees, nightly temperature C...D degrees."
+  -# "Daily temperature is about X degrees, nightly temperature about Y degrees."
+
+Jos intervalli on pienempi kuin
+\code
+textgen::[kappale]::story::temperature_weekly_averages::day::mininterval = [1-] (default=2)
+textgen::[kappale]::story::temperature_weekly_averages::night::mininterval = [1-] (default=2)
+\endcode
+typistetään intervalli yhdeksi noin-lukemaksi.
+Jos muuttuja
+\code
+textgen::[kappale]::story::temperature_weekly_averages::day::always_interval_zero = [bool] (default = false)
+textgen::[kappale]::story::temperature_weekly_averages::night::always_interval_zero = [bool] (default = false)
+\endcode
+on true, intervallit joihin lukema 0 kuuluu esitetään aina
+intervallina, jos ala- ja ylärajat eroavat asteenkaan.
+
+Päivät ja yöt määritellään seuraavien muuttujien mukaan:
+\code
+textgen::[kappale]::story::temperature_weekly_averages::day::starthour = [0-23]
+textgen::[kappale]::story::temperature_weekly_averages::day::endhour = [0-23]
+textgen::[kappale]::story::temperature_weekly_averages::day::maxstarthour = [0-23]
+textgen::[kappale]::story::temperature_weekly_averages::day::minendhour = [0-23]
+
+textgen::[kappale]::story::temperature_weekly_averages::night::starthour = [0-23]
+textgen::[kappale]::story::temperature_weekly_averages::night::endhour = [0-23]
+textgen::[kappale]::story::temperature_weekly_averages::night::maxstarthour = [0-23]
+textgen::[kappale]::story::temperature_weekly_averages::night::minendhour = [0-23]
+\endcode
+Tyypillisiä asetuksia ovat esimerkiksi seuraavat
+\code
+textgen::[kappale]::story::temperature_weekly_averages::day::starthour = 6
+textgen::[kappale]::story::temperature_weekly_averages::day::endhour = 18
+textgen::[kappale]::story::temperature_weekly_averages::night::starthour = 18
+textgen::[kappale]::story::temperature_weekly_averages::night::endhour = 6
+\endcode
+
+Laskujen tulokset voi korvata muuttujilla
+\code
+textgen::[kappale]::story::temperature_weekly_averages::fake::day::minimum = [result]
+textgen::[kappale]::story::temperature_weekly_averages::fake::day::maximum = [result]
+textgen::[kappale]::story::temperature_weekly_averages::fake::day::mean = [result]
+
+textgen::[kappale]::story::temperature_weekly_averages::fake::night::minimum = [result]
+textgen::[kappale]::story::temperature_weekly_averages::fake::night:maximum = [result]
+textgen::[kappale]::story::temperature_weekly_averages::fake::night:mean = [result]
+\endcode
+
+Tarvittavat fraasit ovat
+
+  - "päivälämpötila"
+  - "yölämpötila"
+  - "on"
+  - "noin"
+  - "astetta"
+
+*/

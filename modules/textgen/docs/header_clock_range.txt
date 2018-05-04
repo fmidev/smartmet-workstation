@@ -1,0 +1,33 @@
+/*!
+\page page_header_clock_range Header tyyppi "clock_range"
+
+\section sec_header_clock_range Header tyyppi "clock_range"
+
+Mahdolliset headerit ovat
+
+  -# "Odotettavissa kello X-Y"
+  -# "Odotettavissa maanantaina kello X-Y" + variaatiot
+
+Ruotsiksi
+
+  -# "Utsikter clockan X-Y"
+  -# "Utsikter på måndag clockan X-Y"
+
+Englanniksi
+
+  -# "Expected weather X-Y o'clock"
+  -# "Expected weather on Monday X-Y o'clock" + variaatiot
+
+Oletusarvoisesti viikonpäivää ei mainita. Viikonpäivän
+saa päälle asetuksella
+\code
+header::weekdays = true
+\endcode
+
+Käytetyt fraasit ovat
+
+  - "odotettavissa"
+  - "N-na", missä N=1-7
+  - "o'clock"
+
+*/

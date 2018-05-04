@@ -1,0 +1,98 @@
+/*!
+
+\page page_story_precipitation_classification Tarina "precipitation_classification"
+
+\c precipitation_classification tarina on muotoa
+
+  -# "Sadesumma yli N millimetriä."
+  -# "Sadesumma monin paikoin yli N millimetriä."
+  -# "Sadesumma paikoin yli N millimetriä."
+  -# "Sadesumma 0 millimetriä."
+  -# "Sadesumma N-M millimetriä."
+  -# "Sadesumma N-M millimetriä, paikoin enemmän."
+  -# "Sadesumma N-M millimetriä, monin paikoin enemmän."
+
+Ruotsiksi
+
+  -# "Nederbördsumman över N millimeter."
+  -# "Nederbördsumman på många håll över N millimeter."
+  -# "Nederbördsumman lokat över N millimeter."
+  -# "Nederbördsumman 0 millimeter."
+  -# "Nederbördsumman N-M millimeter."
+  -# "Nederbördsumman N-M millimeter, lokalt mera."
+  -# "Nederbördsumman N-M millimeter, mera på många håll."
+
+Englanniksi
+
+  -# "Total precipitation over N millimeters."
+  -# "Total precipitation in many places over N millimeters."
+  -# "Total precipitation in some places over N millimeters."
+  -# "Total precipitation 0 millimeters."
+  -# "Total precipitation N-M millimeters."
+  -# "Total precipitation N-M millimeters, more in many places."
+  -# "Total precipitation N-M millimeters, more in some places."
+
+Päättelyssä käytetään muuttujina alueen minimi- ja maksimisadesummaa,
+sekä optionaalisia muuttujia
+\code
+textgen::[kappale]::story::precipitation_classification::max_some_places = [0-100]
+textgen::[kappale]::story::precipitation_classification::max_many_places = [0-100]
+textgen::[kappale]::story::precipitation_classification::some_places = [0-100]
+textgen::[kappale]::story::precipitation_classification::many_places = [0-100]
+textgen::[kappale]::story::precipitation_classification::classes = [range1,range2,...]
+\endcode
+Teksti valitaan seuraavalla logiikalla
+
+  -# Kaikista luokista haetaan maksimi sademäärä MAXCLASS
+  -# Jos sadesumman maksimi on yli MAXCLASS
+     -# Jos sadesumman minimi on yli MAXCLASS palautetaan fraasi 1
+     -# Jos sadesumma ylittää asetetun raja-arvon \c max_many_places riittävän
+        monessa pisteessä, palautetaan fraasi 2.
+     -# Jos sadesumma ylittää asetetun raja-arvon \c max_some_places riittävän
+        monessa pisteessä, palautetaan fraasi 3.
+     -# Muutoin palautetaan fraasi 5!!!
+  -# Jos sadesumman maksimi on 0, palautetaan fraasi 4.
+  -# Lasketaan sadesumman keskiarvo ja maksimi.
+  -# Muodostetaan sadeluokka keskiarvon perusteella. Jos useampi luokka
+     on mahdollinen, valitaan se niistä ensimmäinen.
+  -# Jos maksimi kuuluu samaan luokkaa, palautetaan fraasi 5.
+  -# Jos alueellinen ylitysprosentti ylittää rajan \c many_places, palautetaan
+     fraasi 6. Jos rajaa ei ole asetettu, ei fraasia 6 koskaan palauteta.
+  -# Jos alueellinen ylitysprosentti ylittää rajan \c some_places, palautetaan
+     fraasi 7. Jos rajaa ei ole asetettu, ei fraasia 7 koskaan palauteta.
+  -# Palautetaan fraasi 5.
+
+Käytetyt fraasit ovat
+
+  - "sadesumma"
+  - "paikoin"
+  - "monin paikoin"
+  - "yli"
+  - "millimetriä"
+  - "paikoin enemmän"
+  - "monin paikoin enemmän"
+
+PS. Tarinan nimi ei ole \c precipitation_class, koska
+koodauskonventioiden mukaan PrecipitationStory luokkaan tulisi metodi
+nimeltä class, joka ei ole sallittua.
+
+Sadesummaan eivät periaatteessa kuulu liian pienet tunnin sademäärät.
+Summasta voi filtteröidä pois nämä liian pienet sateet muuttujan
+\code
+textgen::[kappale]::story::precipitation_range::minrain = [0-X]
+\endcode
+avulla.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Sum(Precipitation))
+textgen::[kappale]::story::precipitation_classification::fake::mean = [result]
+# Minimum(Sum(Precipitation))
+textgen::[kappale]::story::precipitation_classification::fake::minimum = [result]
+# Maximum(Sum(Precipitation))
+textgen::[kappale]::story::precipitation_classification::fake::maximum = [result]
+# Percentage(Sum(Precipitation))
+textgen::[kappale]::story::precipitation_classification::fake::percentage = [result]
+\endcode
+
+*/

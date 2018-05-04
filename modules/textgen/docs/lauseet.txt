@@ -1,0 +1,152 @@
+/*!
+\page page_lauseet Lauseiden rakentaminen
+
+\section sec_lause_interface Peruskäyttö
+
+TextGen::Document on objekti, josta lopullinen teksti koostuu.
+TextGen::Document puolestaan koostuu TextGen::Header ja TextGen::Paragraph
+objekteista. Jälkimmäinen edelleen koostuu TextGen::Sentence objekteista.
+Sekä TextGen::Header että TextGen::Sentence koostuvat viimein matalimman
+tason objekteista TextGen::Phrase ja TextGen::Number.
+
+Virkkeitä voi rakentaa seuraavaan tyyliin
+\code
+shared_ptr<Dictionary> dict = TextGen::DictionaryFactory::create("mysql");
+dict->init("en");
+
+TextGen::Sentence s;
+s << TextGen::Phrase("kaakko");
+s << TextGen::Number<int>(12);
+cout << s.realize(dict);
+\endcode
+joka tulostaa tekstin "South east 12.". Esimerkissä on käytetty TextGen
+namespacea eksplisiittisesti vain Doxygenin tähden, normaalisti
+koodissa olisi jossain kohtaa
+\code
+using namespace TextGen;
+\endcode
+Koodi
+\code
+TextGen::Sentence s;
+s << TextGen::Phrase("luode") << TextGen::Number<float>(12.33333333333);
+cout << s.realize(dict);
+\endcode
+tulostaa "South east 12.3.", eli numeroilla on siis jonkinlainen
+oletusarvoinen esitystarkkuus. Tarkkuutta voi muuttaa käyttämällä
+TextGen::Number luokan toista templaattiparametria traits-tyylisesti.
+
+Stringeille ja integereille on olemassa oletusmuunnos TextGen::Phrase
+ja TextGen::Number<int> tyylisiksi, eli myös seuraava toimii.
+\code
+TextGen::Sentence s;
+s << "kaakko" << 12;
+cout << s.realize(dict);
+\endcode
+
+Kaupunkien nimille on olemassa oma tyyppinsä TextGen::LocationPhrase.
+Fraasi palauttaa itsensä kapitalisoituna takaisin, paitsi jos
+sanakirjasta löytyy fraasille oikea käännös. Fraasista kapitalisoidaan
+kukin erillinen sana, sekä kaikki väliviivalla erotellut osat.
+
+Kokonaisia kappaleita luodaan seuraavasti
+\code
+TextGen::Paragraph p;
+TextGen::Sentence s1;
+s1 << "ke" << "kaakko" << 12;
+TextGen::Sentence s2;
+s2 << "to" << "luode" << 13;
+p << s1 << s2;
+cout << p.realize(dict);
+\endcode
+joka tulostaisi "Wed south east 12. Thu north west 13.".
+
+\section sec_valimerkit Välimerkit
+
+TextGen::Delimiter luokka esittää välimerkkiä.
+Välimerkki annetaan konstruktorissa. Luokan realize
+metodi palauttaa konstruktorissa annetun merkkijonon
+takaisin. Keskeinen piirre on, että prefix-metodi
+palauttaa tyhjän merkkijonon, jolloin TextGen::Sentence
+luokka osaa yhdistää välimerkin suoraan edelliseen sanaan kiinni.
+
+Esimerkiksi
+\code
+Sentence s;
+s << "kaakko" << 12 << Delimiter(",") << "etelä" << 13;
+cout << s.realize(dict);
+\endcode
+palauttaisi merkkijonon "Kaakko 12, etelä 13."
+
+\section sec_edistyneet_numerot Numeroiden modifiointi
+
+TextGen::Number on templaatti, joka ottaa argumenttina
+sekä esitetyn luvun tyypin, että policy-luokan, jossa on
+staattinen tostring metodi konversiota varten.
+
+Esimerkiksi integerit ovat käytännössä luokka
+\code
+Number<int, DefaultNumberTraits<int> >
+\endcode
+missä oletusarovinen DefaultNumberTraits on
+\code
+template <typename Value>
+struct DefaultNumberTraits
+{
+      static std::string tostring(const Value & theValue)
+      {
+        std::ostringstream os;
+        os << theValue;
+        return os.str();
+      }
+};
+\endcode
+Integerit tulostuvat siis normaalisti, kuten suurin osa muistakin
+tyypeistä.
+
+Float ja double tyypit ovat spesialisoituja templaatteja, esim.
+\code
+template <>
+struct DefaultNumberTraits<float>
+{
+      static std::string tostring(float theValue)
+      {
+        std::ostringstream os;
+        os << std::fixed << std::setprecision(1) << theValue;
+        std::string ret = os.str();
+        if(ret.size() > 2)
+              if(ret.substr(ret.size()-2,2) == ".0")
+                return ret.substr(0,ret.size()-2);
+        return ret;
+      }
+};
+\endcode
+Floatit tulostuvat siis yhden desimaalin tarkkuudella, mutta mahdollinen
+".0" loppu karsitaan pois.
+
+Omien numerotyyppien määrittely onnistuu määrittelemällä sopiva
+traits-luokka, sekä tekemällä sopiva typedef käytön helpottamiseksi.
+Esimerkiksi alla on traits-luokka, joka soveltuu tuulen suunnan
+pyöristämiseen lähimpään 45 asteeseen.
+\code
+template <typename Value, int Mult>
+struct WindDirectionTraits
+{
+      static std::string tostring(const Value & theValue)
+      {
+        std::ostringstream os;
+        int value = static_cast<int>(std::floor(theValue/Mult+0.5)*Mult);
+        value %= 360;
+        os << value;
+        return os.str();
+      }
+};
+\endcode
+Esimerkiksi seuraava koodi tulostaa lukemat 45 ja 0.
+\code
+typedef TextGen::Number<float, WindDirectionTraits<float,45> > PhraseWDir45
+
+cout << PhraseWDir45(30).realize(dict) << endl
+     << PhraseWDir45(359).realize(dict) << endl;
+\endcode
+
+*/

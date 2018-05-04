@@ -1,0 +1,83 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(ToolboxDep)
+
+set(CMAKE_MFC_FLAG 2)
+
+file( GLOB CPP_FILES *.cpp )
+file( GLOB H_FILES *.h  *.H )
+file( GLOB RES_FILES *.rc res/* *.CPP )
+
+add_library( 
+    ${PROJECT_NAME} STATIC
+    ${CPP_FILES} 
+    ${H_FILES} 
+    ${RES_FILES}
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    FilterDataViews
+    Toolbox
+    Newbase
+    ModifyEditedData
+    MfcUtils
+    SmartTools
+    SmetUtils
+    SmetData
+    TimeViews
+    XmlLiteUtils
+    Threads
+    GridCtrl
+    CtrlViews
+	StationViews
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${FilterDataViews_INCLUDE_DIRS}
+    PUBLIC ${Toolbox_INCLUDE_DIRS}
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${ModifyEditedData_INCLUDE_DIRS}
+    PUBLIC ${MfcUtils_INCLUDE_DIRS}
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${SmetUtils_INCLUDE_DIRS}
+    PUBLIC ${SmetData_INCLUDE_DIRS}
+    PUBLIC ${TimeViews_INCLUDE_DIRS}
+    PUBLIC ${XmlLiteUtils_INCLUDE_DIRS}
+    PUBLIC ${Threads_INCLUDE_DIRS}
+    PUBLIC ${GridCtrl_INCLUDE_DIRS}
+    PUBLIC ${CtrlViews_INCLUDE_DIRS}
+    PUBLIC ${StationViews_INCLUDE_DIRS}
+    PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${UNIRAS_INCLUDE_DIR}
+    PUBLIC ${TOOLKITPRO_INCLUDE_DIR}
+    )
+
+set(${PROJECT_NAME}_RES_FILE
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.dir/$(Configuration)/SmartMetToolboxDep.res
+    CACHE INTERNAL "${PROJECT_NAME}: Generated .res file" FORCE
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}
+    ${FilterDataViews_INCLUDE_DIRS}
+    ${Toolbox_INCLUDE_DIRS}
+    ${Newbase_INCLUDE_DIRS}
+    ${ModifyEditedData_INCLUDE_DIRS}
+    ${MfcUtils_INCLUDE_DIRS}
+    ${SmartTools_INCLUDE_DIRS}
+    ${SmetUtils_INCLUDE_DIRS}
+    ${SmetData_INCLUDE_DIRS}
+    ${TimeViews_INCLUDE_DIRS}
+    ${XmlLiteUtils_INCLUDE_DIRS}
+    ${Threads_INCLUDE_DIRS}
+    ${CtrlViews_INCLUDE_DIRS}
+    ${StationViews_INCLUDE_DIRS}
+    ${GridCtrl_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIR}
+    ${UNIRAS_INCLUDE_DIR}
+    ${TOOLKITPRO_INCLUDE_DIR}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
+    )

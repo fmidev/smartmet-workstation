@@ -1,0 +1,506 @@
+/*!
+
+\page page_story_wind_overview Tarina "wind_overview"
+
+Tämä tarina on speksattu kohtuullisesti, mutta toteutus puuttuu.
+
+\section section_wind_overview_story Tarinan muoto
+
+Tarina kuvailee tuuliennustetta yhden tai useamman päivän mittaiselle
+jaksolle. Parhaiten tarina soveltuu ensimmäisille 1-3 päivälle.
+
+Tarinan yleismuoto on
+
+ -# [seuraavaan aamuun asti], [loppuaika]
+
+Ensimmäisen osan aikamäärittelyt saadaan muuttujista
+\code
+textgen::[kappale]::story::wind_overview::day::starthour = [0-23] (6)
+textgen::[kappale]::story::wind_overview::day::maxstarthour = [0-23] (starthour)
+textgen::[kappale]::story::wind_overview::night::starthour = [0-23] (18)
+textgen::[kappale]::story::wind_overview::night::maxstarthour = [0-23] (starthour)
+textgen::[kappale]::story::wind_overview::night::endhour = [0-23] (06)
+textgen::[kappale]::story::wind_overview::night::minendhour = [0-23] (endhour)
+\endcode
+Tyypilliset asetukset ovat
+\code
+textgen::[kappale]::story::wind_overview::day::starthour = 6
+textgen::[kappale]::story::wind_overview::day::maxstarthour = 12
+textgen::[kappale]::story::wind_overview::night::starthour = 18
+textgen::[kappale]::story::wind_overview::night::maxstarthour = 0
+textgen::[kappale]::story::wind_overview::night::endhour = 6
+\endcode
+Tällöin kerrottaisiin huomisaamuun asti aina keskiyöhön saakka,
+tämän jälkeen aletaan kertoa tulevasta päivästä.
+
+\subsection subsection_wind_overview_part1 Ensimmäinen päivä
+
+Jos päivä on mennyt liian pitkälle, eli kello on yli
+\c day::maxstarthour, kerrotaan tuuli ensi aamuun saakka. Mukana on siis
+sekä jäljellä oleva päivä että yö.
+
+Mahdolliset tarinat tällä "jatketulle" yöjaksolle ovat
+
+  -# "[Ajanjaksona] tyyntä."
+  -# "[Ajanjaksona] heikkoa tuulta."
+  -# "[Ajanjaksona] [voimakasta] [suuntatuulta]."
+  -# "[Ajanjaksona] myrskyä."
+  -# "[Ajanjaksona] hirmumyrskyä."
+  -# "[Ajanjaksona] [suuntatuulta] X-Y m/s."
+
+Aikafraasin tyyppi on \ref sec_periodifraasit_until_morning, jota
+kontrolloidaan muuttujalla
+\code
+textgen::[kappale]::story::wind_overview::until_morning::phrases
+\endcode
+Sopiva arvo muuttujalle on esimerkiksi
+\code
+textgen::[kappale]::story::wind_overview::until_morning::phrases = atnight,weekday
+\endcode
+koska fraasia "ensi yönä" (tonight) ei välttämättä haluta käyttää,
+"yöllä" (atnight) sopinee tilanteeseen paremmin.
+
+Mahdolliset voimakkuudet ovat
+ 
+  -# "kohtalaista"
+  -# "navakkaa"
+  -# "kovaa"
+
+ja suunnat
+
+  -# "pohjoistuulta"
+  -# "koillistuulta"
+  -# "itätuulta"
+  -# "kaakkoistuulta"
+  -# "etelätuulta"
+  -# "lounaistuulta"
+  -# "länsituulta"
+  -# "luoteistuulta"
+  -# "pohjoisen puoleista tuulta"
+  -# "koillisen puoleista tuulta"
+  -# "idän puoleista tuulta"
+  -# "kaakon puoleista tuulta"
+  -# "etelän puoleista tuulta"
+  -# "lounaan puoleista tuulta"
+  -# "lännen puoleista tuulta"
+  -# "luoteen puoleista tuulta"
+  -# "suunnaltaan vaihtelevaa tuulta"
+
+Suunnan ja nopeuden laskeminen eri jaksoille käsitellään jatkossa
+erikseen.
+
+Jos päivä on tarpeeksi pitkä käsiteltäväksi, käsitellään se kuten yö
+edellä. Tällöin aikafraasi on kuitenkin tyyppiä
+\ref sec_periodifraasit_until_tonight, jota kontrolloidaan
+muuttujalla
+Aikafraasin tyyppi on \ref sec_periodifraasit_until_tonight, jota
+kontrolloidaan muuttujalla
+\code
+textgen::[kappale]::story::wind_overview::until_tonight::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_overview::until_tonight::phrases = atday,weekday
+\endcode
+
+Lisäksi tuotetaan sivulause yön tuulesta, joka on muotoa
+
+  -# ", [ajanjaksona] [voimakasta] [suuntatuulta]."
+  -# ", [ajanjaksona] tuuli heikkenee."
+  -# ", [ajanjaksona] tuuli [heikkenee/voimistuu] [voimakkaaksi]."
+  -# ", [ajanjaksona] tuuli [heikkenee/voimistuu] [voimakkaaksi] [suuntatuuleksi]."
+  -# ", [ajanjaksona] [suuntatuulta]."
+  -# ", [ajanjaksona] [suuntatuulta] X-Y m/s."
+
+Sivulaiseen aikafraasi on tyyppiä \ref sec_periodifraasit_tonight,
+jota kontrolloidaan muuttujalla
+\code
+textgen::[kappale]::story::wind_overview::tonight::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_overview::tonight::phrases = atnight,weekday
+\endcode
+Tässä yhteydessä olisi myös mahdollista käyttää fraasia "ensi yönä"
+(tonight), joka ei ollut suositeltavaa päiväosan puuttuessa.
+
+Lisäksi on mahdollista, että päivän ja yön tuulet ovat niin
+samanlaisia, ettei sivulausetta ole lainkaan. Tällöin ei käytetä
+aikafraasia ollenkaan.
+
+\subsection subsection_wind_overview_part2 Toinen päivä
+
+Tässä tapauksessa tutkittavan aikavälin loppuaika on enintään 24
+tuntia, eli voidaan puhua pelkästään seuraavasta päivästä.
+
+Toisesta päivästä voidaan kertoa omana virkkeenään, tai sivulauseena.
+Toisen päivän tarinan muoto on
+
+  -# "[Ajanjaksona] edelleen tyyntä."
+  -# "[Ajanjaksona] edelleen [voimakasta] tuulta."
+  -# "[Ajanjaksona] edelleen [voimakasta] tuulta."
+  -# "[Ajanjaksona] [suuntatuulta]."
+  -# "[Ajanjaksona] tuuli tyyntyy."
+  -# "[Ajanjaksona] tuuli heikkenee."
+  -# "[Ajanjaksona] tuuli heikkenee [voimakkaaksi]."
+  -# "[Ajanjaksona] tuuli voimistuu [voimakkaaksi]."
+  -# "[Ajanjaksona] [voimakasta] [suuntatuulta]."
+  -# "[Ajanjaksona] [voimakkaaksi] [heikkenevää/voimistuvaa] [suuntatuulta]."
+
+Aikafraasi on tyyppiä \ref sec_periodifraasit_next_day, jota kontrolloidaan
+muuttujalla
+\code
+textgen::[kappale]::story::wind_overview::next_day::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_overview::next_day::phrases = tomorrow,followingday
+\endcode
+
+\subsection subsection_wind_overview_partx Loput päivät
+
+Tässä tapauksessa tutkittavan aikavälin loppuaika on yli 24 tuntia.
+Tästä loppuajasta kerrotaan yhdelle virkkeellä tai sivulauseella.
+
+  -# "[ajanjaksosta alkaen] tyyntä."
+  -# "[ajanjaksosta alkaen] [suuntatuulta]."
+  -# "[ajanjaksosta alkaen] [voimakasta] [suuntatuulta]."
+  -# "[ajanjaksosta alkaen] [heikkenevää/voimistuvaa] [suuntatuulta]."
+  -# "[ajanjaksosta alkaen] [voimakkaaksi] [heikkenevää/voimistuvaa] [suuntatuulta]."
+  -# "[ajanjaksosta alkaen] [voimakkaaksi] [heikkenevää/voimistuvaa] tuulta."
+  -# "[ajanjaksosta alkaen] [voimakasta] tai [voimakasta] [suuntatuulta]."
+  -# "[ajanjaksosta alkaen] [voimakasta] tai [voimakasta] tuulta."
+  -# "[ajanjaksosta alkaen] ajoittain [voimakasta] tuulta."
+  -# "[ajanjaksosta alkaen] ajoittain [voimakasta] [suuntatuulta]."
+
+Aikafraasi on tyyppiä \ref sec_periodifraasit_next_days, jota kontrolloidaan
+muuttujalla
+\code
+textgen::[kappale]::story::wind_overview::next_days::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_overview::next_days::phrases = tomorrow,weekday
+\endcode
+
+\section section_wind_overview_algorithm Algoritmit
+
+\subsection subsection_wind_overview_windspeed Tuulen nopeus
+
+Kunkin aikavälin tuulennopeusluokka saadaan laskemalla tuulen nopeuden
+keskiarvo ajan ja paikan yli.
+
+Nopeuden vaihteluväli saadaan laskemalla aikakeskiarvojen minimi ja maksimi.
+
+Muuttujan
+\code
+textgen::[kappale]::story::wind_overview::range_limit = [0-] (0)
+\endcode
+arvo on keskituulen raja, jonka alapuolella tuulesta kerrotaan
+vaihteluväli. Arvo nolla käytännössä siis tarkoittaisi, ettei
+vaihteluväliä koskaan anneta.
+
+
+\subsection subsection_wind_overview_winddirection Tuulen suunta
+
+Kunkin aikavälin tuulen suunta saadaan laskemalla suunnan keskiarvo
+ajan ja paikan yli. Suunnan laatuindeksin mukaisesti suunnan
+tarkkuutta heikennetään ensin "suunnan puoleiseksi tuuleksi", ja sen
+jälkeen "suunnaltaan vaihtelevaksi tuuleksi".
+
+Vaadittua laatua kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::wind_overview::direction::accurate (= 0.8)
+textgen::[kappale]::story::wind_overview::direction::variable (= 0.4)
+\endcode
+Oletusarvot on annettu suluissa.
+
+Suunnan fraasi valitaan seuraavasti
+
+  -# Jos laatu >= \c accurate, "N-tuulta"
+  -# Jos laatu >= \c variable, "N-puoleista tuulta"
+  -# Muutoin "suunnaltaan vaihtelevaa tuulta"
+
+\subsection subsection_wind_overview_algorithm_part1 Ensimmäinen päivä
+
+Jos jäljellä on vain jatkettu yöjakso
+
+  -# Lasketaan nopeuden keskiarvo ja suunta
+  -# Jos keskiarvo alittaa rajan \c range_limit, "[suuntatuulta] X-Y m/s."
+  -# Lasketaan nopeusluokka
+  -# Jos luokka on tyyntä, "Tyyntä."
+  -# Jos luokka on heikkoa tuulta, "Heikkoa tuulta."
+  -# Jos luokka on myrskyä, "Myrskyä."
+  -# Jos luokka on hirmumyrskyä, "Hirmumyrskyä."
+  -# Muutoin "[Voimakasta] [suuntatuulta]."
+
+Jos jäljellä on sekä päivä- että yöjakso, käsitellään päiväjakso kuten
+edellä. Lisäksi talletetaan jatkoa varten laskettu nopeusluokka ja
+suuntaluokka.
+
+Yötarina generoidaan aikamääreen perään seuraavasti:
+
+  -# Jos keskituuli alittaa rajan \c range_limit, "[suuntatuulta] X-Y m/s."
+  -# Jos nopeusluokka ja suuntaluokka on sama, ei yöstä kerrota erikseen.
+  -# Jos nopeus on sama, "[suuntatuulta]."
+  -# Jos nopeusluokka kasvaa
+     -# Jos nopeusluokka on heikkoa tuulta, "heikkoa tuulta"
+     -# Muutoin "[voimakasta] [suuntatuulta]."
+  -# Jos nopeusluokka laskee
+     -# Jos nopeusluokka on tyyntä, "tuuli tyyntyy."
+     -# Jos nopeusluokka on heikkoa tuulta, "tuuli heikkenee."
+     -# Muutoin "[voimakasta] [suuntatuulta]."
+
+Viimeisin mainittu nopeusluokka ja suuntaluokka otetaan talteen
+seuraavan jakson käsittelyä varten.
+
+\subsection subsection_wind_overview_algorithm_part2 Toinen päivä
+
+Itse tarinaosuus generoidaan seuraavasti
+
+  -# Jos keskituuli alittaa rajan \c range_limit
+     -# Jos suunta on sama kuin aiemmin, "X-Y m/s"
+     -# Muutoin "[suuntatuulta] X-Y m/s"
+  -# Jos yksi luokka riittää kuvaamaan nopeutta
+     -# Jos tuuli voimistuu
+        -# Jos luokka on heikkoa tuulta, "heikkoa tuulta"
+        -# Jos luokka on myrskyä, "tuuli voimistuu myrskyksi"
+        -# Jos luokka on hirmumyrskyä, "hirmumyrskyä"
+        -# Muutoin "tuuli voimistuu [voimakkaaksi] [suuntatuuleksi]"
+     -# Jos tuuli heikkenee
+        -# Jos luokka on tyyntä, "tuuli tyyntyy".
+        -# Jos luokka on heikkoa tuulta, "tuuli heikkenee"
+        -# Jos luokka on myrskyä, "myrskyä"
+        -# Muutoin "tuuli heikkenee [voimakkaaksi] [suuntatuuleksi]"
+  -# Jos on selvä trendi
+     -# Jos lopussa tyyntä, "tuuli tyyntyy"
+     -# Jos lopussa heikkoa tuulta, "tuuli heikkenee"
+     -# Jos lopussa myrskyä, "tuuli voimistuu myrskyksi"
+     -# Jos lopussa hirmumyrskyä, "tuuli voimistuu hirmumyrskyksi"
+     -# Jos suuntakuvaus on hyvä, "[voimakkaaksi] heikkenevää/voimistuvaa [suuntatuulta]"
+     -# Muutoin "tuuli heikkenee/voimistuu [voimakkaaksi]"
+  -# Lasketaan keskituulen maksimi
+     -# Jos suunta on selkeä, "ajoittain [voimakasta] [suuntatuulta]"
+     -# Muutoin "ajoittain [voimakasta] tuulta"
+
+\subsection subsection_wind_overview_algorithm_partx Toisesta päivästä lähtien
+
+Tässä tapauksessa jakson pituus ylittänee 24 tuntia, ja tuulesta pitää
+kertoa yhteenvetomaisesti verrattuna ensimmäiseen päivään ja yöhön.
+
+ -# Lasketaan nopeusluokka ja suuntaluokka
+ -# Jos nopeusluokka on hyvä
+    -# Jos suuntaluokka on hyvä, "[voimakasta] [suuntatuulta]"
+    -# Muutoin "[voimakasta] [tuulta]"
+ -# Jos on hyvä trendi
+    -# Lasketaan uusi nopeusluokka viimeisille 12 tunnille
+    -# Jos suuntaluokka on hyvä, "[voimakkaaksi] heikkenevää/voimistuvaa [suuntatuulta]"
+    -# Muutoin "[voimakkaaksi] heikkenevää/voimistuvaa tuulta"
+ -# Jos nopeutta voi kuvata kahdella vierekkäisellä luokalla,
+    -# Jos suuntaluokka on hyvä, "[voimakasta] tai [voimakasta] [suuntatuulta]"
+    -# Muutoin "[voimakasta] tai [voimakasta] tuulta"
+ -# Haetaan keskiarvon maksimi ja "ajoittain [voimakasta] tuulta"
+
+
+\section section_wind_overview_speeds Tuuliluokat
+
+Vakiintuneen käytännön mukaan eri tuuliluokat ovat
+
+<table border="1">
+<tr><td>0 m/s</td><td>tyyntä</td><td>lugnt</td></tr>
+<tr><td>1-3 m/s</td><td>heikkoa tuulta</td><td>svag vind</td></tr>
+<tr><td>4-7 m/s</td><td>kohtalaista tuulta</td><td>måttlig vind</td></tr>
+<tr><td>8-13 m/s</td><td>navakkaa tuulta</td><td>frisk vind</td></tr>
+<tr><td>14-20 m/s</td><td>kovaa tuulta</td><td>hård vind</td></tr>
+<tr><td>21-32 m/s</td><td>myrskyä</td><td>storm</td></tr>
+<tr><td>32- m/s</td><td>hirmumyrskyä</td><td>orkan</td></tr>
+</table>
+
+\section section_wind_overview_fraasit Tarvittavat fraasit
+
+Tarvittavat fraasit ovat
+
+ - "m/s"
+ - "metriä sekunnissa"
+ - "tyyntä"
+ - "heikkoa"
+ - "kohtalaista"
+ - "navakkaa"
+ - "kovaa"
+ - "myrskyä"
+ - "hirmumyrskyä"
+ - "tyyneksi"
+ - "heikoksi"
+ - "kohtalaiseksi"
+ - "navakaksi"
+ - "kovaksi"
+ - "myrskyksi"
+ - "hirmumyrskyksi"
+ - "tuuli"
+ - "tuulta"
+ - "yöllä"
+ - "tuuli tyyntyy"
+ - "tuuli heikkenee"
+ - "tuuli voimistuu"
+ - "edelleen"
+ - "heikkenevää"
+ - "voimistuvaa"
+ - "suunnaltaan vaihtelevaa"
+ - "N-tuulta", N=1-8
+ - "N-tuuleksi", N=1-8
+ - "N-puoleista tuulta", N=1-8
+ - "N-puoleiseksi tuuleksi", N=1-8
+
+Lisäksi tarvitaan periodifraasit
+\ref sec_periodifraasit_until_tonight,
+\ref sec_periodifraasit_until_morning,
+\ref sec_periodifraasit_tonight,
+\ref sec_periodifraasit_next_day ja
+\ref sec_periodifraasit_next_days.
+
+Oleelliset fraasit ovat eri kielillä
+
+<table>
+<tr>
+<td>metriä sekunnissa</td>
+<td>meter i sekunden</td>
+<td>meters per second</td>
+</tr>
+<tr>
+<td>tyyntä</td>
+<td>lugnt</td>
+<td>calm winds</td>
+</tr>
+<tr>
+<td>heikkoa</td>
+<td>svag</td>
+<td>light</td>
+<tr>
+<td>kohtalaista</td>
+<td>måttlig</td>
+<td>moderate</td>
+</tr>
+<tr>
+<td>navakkaa</td>
+<td>frisk</td>
+<td>fresh</td>
+</tr>
+<tr>
+<td>kovaa</td>
+<td>hård</td>
+<td>strong</td>
+</tr>
+<tr>
+<td>myrskyä</td>
+<td>storm</td>
+<td>stormy</td>
+</tr>
+<tr>
+<td>hirmumyrskyä</td>
+<td>orkan</td>
+<td>severe strom</td>
+</tr>
+<tr>
+<td>tyyneksi</td>
+<td>till lugnt</td>
+<td>calm</td>
+</tr>
+<tr>
+<td>heikoksi</td>
+<td>till svag</td>
+<td>light</td>
+</tr>
+<tr>
+<td>kohtalaiseksi</td>
+<td>till måttlig</td>
+<td>moderate</td>
+</tr>
+<tr>
+<td>navakaksi</td>
+<td>till frisk</td>
+<td>fresh</td>
+</tr>
+<tr>
+<td>kovaksi</td>
+<td>till hård</td>
+<td>strong</td>
+</tr>
+<tr>
+<td>myrskyksi</td>
+<td>till storm</td>
+<td>storm</td>
+</tr>
+<tr>
+<td>hirmumyrskyksi</td>
+<td>till orkan</td>
+<td>severe strom</td>
+</tr>
+<tr>
+<td>tuuli</td>
+<td>vinden</td>
+<td>wind</td>
+</tr>
+<tr>
+<td>tuulta</td>
+<td>vind</td>
+<td>wind</td>
+</tr>
+<tr>
+<td>tuuli tyyntyy</td>
+<td>avtar vinden helt</td>
+<td>the wind becomes calm</td>
+</tr>
+<tr>
+<td>tuuli heikkenee</td>
+<td>avtar vinden</td>
+<td>the wind weakens to</td>
+</tr>
+<tr>
+<td>tuuli voimistuu</td>
+<td>tilltar vinden</td>
+<td>the wind strenghtens to</td>
+</tr>
+<tr>
+<td>edelleen</td>
+<td>fortfarande</td>
+<td>continued</td>
+</tr>
+<tr>
+<td>heikkenevää</td>
+<td>avtagande</td>
+<td>weakening</td>
+</tr>
+<tr>
+<td>voimistuvaa</td>
+<td>tilltagande</td>
+<td>strenghtening</td>
+</tr>
+<tr>
+<td>suunnaltaan vaihtelevaa</td>
+<td>varierande</td>
+<td>variable</td>
+</tr>
+<tr>
+<td>pohjoistuulta ...</td>
+<td>nordlig vind ...</td>
+<td>northern wind ...</td>
+</tr>
+<tr>
+<td>pohjoistuuleksi ...</td>
+<td>nordlig vind ...</td>
+<td>northerly wind ...</td>
+</tr>
+<tr>
+<td>pohjoisen puoleista tuulta ...</td>
+<td>vind omkring nord ...</td>
+<td>approximately northerly wind ...</td>
+</tr>
+<tr>
+<td>pohjoisen puoleiseksi tuuleksi ...</td>
+<td>vind omkring nord ...</td>
+<td>approximately northerly wind ...</td>
+</tr>
+</table>
+ 
+
+*/

@@ -1,0 +1,29 @@
+// SmartMet.idl : type library source for SmartMet.exe
+
+// This file will be processed by the MIDL compiler to produce the
+// type library (SmartMet.tlb).
+
+[ uuid(E28FB933-0B37-4FA5-9BC4-CCE980481F10), version(1.0) ]
+library SmartMet
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	//  Primary dispatch interface for CSmartMetDoc
+	
+	[ uuid(CDDC9574-B255-4A7C-A69C-FCD8AE5E8166) ]
+	dispinterface ISmartMet
+	{
+		properties:
+			
+		methods:
+	};
+
+	//  Class information for CSmartMetDoc
+	
+	[ uuid(680EBBCB-C820-462D-BA42-5FD06F65CF4D) ]
+	coclass CSmartMetDoc
+	{
+		[default] dispinterface ISmartMet;
+	};
+};

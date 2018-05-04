@@ -1,0 +1,243 @@
+//© Ilmatieteenlaitos/Marko
+//  Original 23.09.1998
+// 
+//                                  
+//Ver. xx.xx.xxxx/Marko
+//
+//-------------------------------------------------------------------- nctrview.cpp
+
+#include "NFmiCtrlView.h"
+#include "NFmiDrawParam.h"
+#include "CtrlViewDocumentInterface.h"
+#include "NFmiRectangle.h"
+#include "NFmiToolBox.h"
+#include "NFmiFastQueryInfo.h"
+#include "SpecialDesctopIndex.h"
+#include "MapHandlerInterface.h"
+#include "CtrlViewGdiPlusFunctions.h"
+
+#include <gdiplus.h>
+
+const float NFmiCtrlView::gGreyColorBaseComponent = 192.f;
+const NFmiColor NFmiCtrlView::gGreyColorDefault = NFmiColor(NFmiCtrlView::gGreyColorBaseComponent / 255.f, NFmiCtrlView::gGreyColorBaseComponent / 255.f, NFmiCtrlView::gGreyColorBaseComponent / 255.f);
+
+//--------------------------------------------------------
+// NFmiCtrlView constructor
+//--------------------------------------------------------
+
+NFmiCtrlView::NFmiCtrlView(void)
+:itsRect()
+,itsToolBox(0)
+,itsDrawingEnvironment(0)
+,itsDrawParam()
+,itsInfo()
+,itsCtrlViewDocumentInterface(nullptr)
+,itsMapViewDescTopIndex(-1)
+,itsViewGridRowNumber(-1)
+,itsViewGridColumnNumber(-1)
+,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsGdiPlusGraphics(0)
+{ // itsDataParam ei voi toimia tämän jälkeen!!!!!
+    SetupCtrlViewDocumentInterface(__FUNCTION__);
+}
+
+NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
+						   ,NFmiToolBox * theToolBox
+						   ,NFmiDrawingEnvironment * theDrawingEnvi
+                           , int viewGridRowNumber
+                           , int viewGridColumnNumber)
+:itsRect(theRect)
+,itsToolBox(theToolBox)
+,itsDrawingEnvironment(theDrawingEnvi)
+,itsDrawParam()
+,itsInfo()
+,itsCtrlViewDocumentInterface(nullptr)
+,itsMapViewDescTopIndex(theMapViewDescTopIndex)
+,itsViewGridRowNumber(viewGridRowNumber)
+,itsViewGridColumnNumber(viewGridColumnNumber)
+,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsGdiPlusGraphics(0)
+{
+    SetupCtrlViewDocumentInterface(__FUNCTION__);
+}
+
+NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
+						   ,NFmiToolBox * theToolBox
+						   ,NFmiDrawingEnvironment * theDrawingEnvi
+						   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+                           ,int viewGridRowNumber
+                           ,int viewGridColumnNumber)
+:itsRect(theRect)
+,itsToolBox(theToolBox)
+,itsDrawingEnvironment(theDrawingEnvi)
+,itsDrawParam(theDrawParam)
+,itsInfo()
+,itsCtrlViewDocumentInterface(nullptr)
+,itsMapViewDescTopIndex(theMapViewDescTopIndex)
+,itsViewGridRowNumber(viewGridRowNumber)
+,itsViewGridColumnNumber(viewGridColumnNumber)
+,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsGdiPlusGraphics(0)
+{
+    SetupCtrlViewDocumentInterface(__FUNCTION__);
+}
+
+NFmiCtrlView::NFmiCtrlView(const NFmiCtrlView& theView)
+:itsRect(theView.itsRect)
+,itsToolBox(theView.itsToolBox)
+,itsDrawingEnvironment(theView.itsDrawingEnvironment)
+,itsDrawParam(theView.itsDrawParam)
+,itsInfo(theView.itsInfo)
+,itsCtrlViewDocumentInterface(theView.itsCtrlViewDocumentInterface)
+,itsMapViewDescTopIndex(theView.itsMapViewDescTopIndex)
+,itsViewGridRowNumber(theView.itsViewGridRowNumber)
+,itsViewGridColumnNumber(theView.itsViewGridColumnNumber)
+,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsGdiPlusGraphics(0)
+{
+}
+
+CtrlViewDocumentInterface* NFmiCtrlView::GetCtrlViewDocumentInterface()
+{
+    return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
+}
+
+void NFmiCtrlView::SetupCtrlViewDocumentInterface(const std::string &callerFunctionName)
+{
+    if(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation)
+        itsCtrlViewDocumentInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
+    else
+        throw std::runtime_error(callerFunctionName + " - CtrlViewDocumentInterface was not set");
+}
+
+//--------------------------------------------------------
+// Update
+//--------------------------------------------------------
+void NFmiCtrlView::Update(const NFmiRect &theRect, NFmiToolBox *theToolBox)
+{
+	itsRect=theRect;
+	itsToolBox = theToolBox;
+}
+//--------------------------------------------------------
+// operator==
+//--------------------------------------------------------
+bool NFmiCtrlView::operator==(const NFmiCtrlView& theCtrlView) const
+{
+	return (*itsDrawParam == *theCtrlView.itsDrawParam) == true;
+}
+
+//--------------------------------------------------------
+// operator <
+//--------------------------------------------------------
+bool NFmiCtrlView::operator< (const NFmiCtrlView& theCtrlView) const
+{
+	return (*itsDrawParam < *theCtrlView.itsDrawParam) == true;
+}
+
+void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment * theEnvi)
+{
+	NFmiRectangle rect(itsRect.TopLeft()
+					  ,itsRect.BottomRight()
+					  ,0
+					  ,theEnvi);
+	itsToolBox->Convert(&rect);
+}
+
+void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment * theEnvi, const NFmiRect& theFrame)
+{
+	NFmiRectangle rect(theFrame.TopLeft()
+					  ,theFrame.BottomRight()
+					  ,0
+					  ,theEnvi);
+	itsToolBox->Convert(&rect);
+}
+
+int NFmiCtrlView::GetUsedParamRowIndex(int theRowIndex, int theColumnIndex)
+{
+	if(itsMapViewDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
+		return theRowIndex; // tämä on muut kuin karttanäytöt
+
+    CtrlViewUtils::MapViewMode mapViewMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
+
+	if(mapViewMode == CtrlViewUtils::MapViewMode::kOneTime)
+	{ // jokainen näyttöruutu on samaa aikaa, jokaisella ruudulla on omat parametrit. Ruudukon juoksutus menee 
+		// vasemmalta oikealle ja ylhäältä alas. Esim. Näyttö on 4x3 ruudukossa. 
+		// theRowIndex = 2 eli 2. rivi (indeksit alkavat 1:stä).
+		// theColumnIndex on 3 eli 3. sarake (indeksit 1:stä)
+		// ((2-1) * 4) + 3 = 7    (4 on siis ruudukon x-koko)
+		int totalViewTileIndex = ((theRowIndex-1) * static_cast<int>(itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X())) + theColumnIndex;
+		return totalViewTileIndex;
+	}
+	else if(mapViewMode == CtrlViewUtils::MapViewMode::kRunningTime)
+		return 1; // juokseva aika moodissa palautetaan aina 1. param rivi, koska joka ruudussa on eri aika ja samat 1. rivin
+					// parametrit (muista että kyseessä on virtuaali 1. rivi eli näyttö luokat elävät 1:stä alkavassa maailmassa)
+	else
+		return theRowIndex; // normaali moodissa (tai muissa tapauksissa) palautetaan normaali rivi indeksi
+}
+
+// Näytetty rivi numero täällä (theRowIndex) ei ole aina sama kuin dokumentin
+// rivi, koska nykyään näyttörivejä voi selata myös pystysuunnassa.
+int NFmiCtrlView::CalcRealRowIndex(int theRowIndex, int theColumnIndex)
+{
+	int realRowIndex = GetUsedParamRowIndex(theRowIndex, theColumnIndex); 
+	if(itsMapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+		realRowIndex += itsCtrlViewDocumentInterface->MapRowStartingIndex(itsMapViewDescTopIndex) - 1;
+	return realRowIndex;
+}
+
+std::unique_ptr<MapHandlerInterface> NFmiCtrlView::GetMapHandlerInterface()
+{
+    return itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex);
+}
+
+// Luodaan GDI++ piirto olio annetun toolboxin avulla.
+// Jos piirtoaluetta halutaan rajata, annetaan alue theRelativeClipRect -parametrissa.
+Gdiplus::Graphics* NFmiCtrlView::CreateGdiplusGraphics(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect)
+{
+    if(theToolBox == 0)
+        throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + " -method, given toolbox was 0-pointer, unable to initialize Gdiplus::Graphics, application error.");
+
+    Gdiplus::Graphics *gdiPlusGraphics = Gdiplus::Graphics::FromHDC(theToolBox->GetDC()->GetSafeHdc());
+    if(gdiPlusGraphics == 0)
+        throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + " -method, unable to initialize Gdiplus::Graphics, application error.");
+
+    if(theToolBox->GetDC()->IsPrinting())
+        gdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // tähän asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pitää laittaa siihen
+    if(theRelativeClipRect)
+        gdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(theToolBox, *theRelativeClipRect));
+    return gdiPlusGraphics;
+}
+
+void NFmiCtrlView::InitializeGdiplus(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect)
+{
+    itsGdiPlusGraphics = NFmiCtrlView::CreateGdiplusGraphics(theToolBox, theRelativeClipRect);
+}
+
+// Tätä pitää kutsua, kun lopetetaan näyttöluokan piirto, joka on alustettu InitializeGdiplus -metodi kutsulla.
+void NFmiCtrlView::CleanGdiplus(void)
+{
+	if(itsGdiPlusGraphics)
+	{
+		delete itsGdiPlusGraphics;
+		itsGdiPlusGraphics = 0;
+	}
+}
+
+NFmiRect NFmiCtrlView::CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+{
+	theInfo->FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
+	NFmiPoint latlon1(theInfo->LatLon());
+	NFmiPoint latlon2(theInfo->PeekLocationLatLon(1, 0));
+	NFmiPoint latlon3(theInfo->PeekLocationLatLon(0, 1));
+	NFmiPoint p1(LatLonToViewPoint(latlon1));
+	NFmiPoint p2(LatLonToViewPoint(latlon2));
+	NFmiPoint p3(LatLonToViewPoint(latlon3));
+	double factor = 1.2; // pitää vähän suurentaa laatikoiden kokoa, jos hila ja karttapohja eivät ole samaa projektiota, tällöin voi jäädä pieniä aukkoja maskiin
+	double distX = ::fabs(p1.X() - p2.X()) * factor;
+	// 4. Calc relative dist of two vertical neighbor grid point in y dir
+	double distY = ::fabs(p1.Y() - p3.Y()) * factor;
+
+	NFmiRect rect(0, 0, distX, distY);
+	return rect;
+}
+

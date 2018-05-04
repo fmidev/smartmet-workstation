@@ -1,0 +1,65 @@
+#pragma once
+
+#include "NFmiDataMatrix.h"
+#include "boost/shared_ptr.hpp"
+#include <vector>
+#include "NFmiMacroParamItem.h"
+
+class NFmiStopFunctor;
+class NFmiMacroParamFolder;
+class NFmiMacroParam;
+class NFmiMacroParamItem;
+
+// Luokka huolehtii NFmiMacroParam olioista, joita on talletettu Meteorologin
+// Editorilla.Tätä luokka käytetään dokumentti - luokan kautta.
+// MacroParam on smarttool - skripti, joka piirretään karttanäytölle.
+// Taikasana on RESULT eli esim.RESULT = T - DP
+// on macroParam joka piirtää näytölle lämpötilan ja kastepisteen eron.
+// Miten se piirretään, riippuu macroParamiin liittyvästä DrawParamista.
+// MacroParamit talletetaan haluttuun hakemistoon, joka annetaan
+// MacroParamSysteemille ja se talletetaan kahdessa osassa.Skripti omaan
+// tiedostoon ja drawParam omaan.Niitä linkittää macroParamin nimi joka
+// tulee tiedoston nimiin.Eli esim.theta1 nimisestä macroparamista tulisi
+// tiedosto theta1.st(skripti) ja theta1.dpa(drawparam) tiedostot.
+
+class NFmiMacroParamSystem
+{
+public:
+	NFmiMacroParamSystem(void);
+	void Init(NFmiMacroParamSystem &theOther);
+	bool IsUpdateNeeded(NFmiMacroParamSystem &theOther);
+
+	void RootPath(const std::string &newValue); // tämä on initialisointi metodi ja myös root hakis asetetaan
+	const std::string& RootPath(void) const {return itsRootPath;}
+
+	boost::shared_ptr<NFmiMacroParamFolder> GetCurrent(void); // tällä voi säädellä Find:illa etsityn folder-otuksen arvoja ja asetuksia
+	bool FindTotal(const std::string &theTotalFileName); // tietyn nimistä tiedosto nimeä
+	bool FindMacro(const std::string &theMacroName); // etsii currentista folderista haluttua makroa
+	boost::shared_ptr<NFmiMacroParam> CurrentMacroParam(void){return itsFoundMacroParam;}; // tällä saa edellä etsityn macroparamin
+	int CurrentIndex(void) const {return itsCurrentIndexPois;}
+
+	const std::string& CurrentPath(void) const {return itsCurrentPath;}
+	std::string RelativePath(void) const;
+	void CurrentPath(const std::string &newValue); // tämä on alihakemistoon siirtymis metodi
+	std::vector<NFmiMacroParamItem>& MacroParamItemTree(void) {return itsMacroItemTree;}
+	void Rebuild(NFmiStopFunctor *theStopFunctor);
+	void SwapMacroData(NFmiMacroParamSystem &theOther);
+	bool UpdateMacroParamListView(void) {return fUpdateMacroParamListView;}
+	void UpdateMacroParamListView(bool newValue) {fUpdateMacroParamListView = newValue;}
+private:
+	void AddToMacroParamItemTree(std::vector<NFmiMacroParamItem> &theMacroItemList, const checkedVector<boost::shared_ptr<NFmiMacroParam> >& theMacroParams, NFmiStopFunctor *theStopFunctor);
+	int FindPath(const std::string &thePathName); // etsii folder-otusta polku nimellä
+	int SeekMacroFolder(const std::string &theTotalFileName);
+	void ClearMacros(void);
+	void InitMacroParamTree(NFmiStopFunctor *theStopFunctor);
+	void MakeMacroParamItemTree(NFmiStopFunctor *theStopFunctor);
+
+	std::string itsCurrentPath; // mihin paikkaan on macroparamit talletettu
+	std::string itsRootPath; // tämän avulla saadaan kansio systeemille root kansio, josta ylöspäin ei voi mennä ..-hakiksen kautta
+	checkedVector<boost::shared_ptr<NFmiMacroParamFolder> > itsMacroParamFolders; // tässä on kaikki macroParamit omissa foldereissaa vectorissa, siis kaikki ali hakemistot omina foldereinaan, eikä ne ole hierarkkisessa systeemissä vaan ihan vektorissa vierekkäin
+	std::vector<NFmiMacroParamItem> itsMacroItemTree; // tämän rakenteen avulla lisätään macroParamit mm. popup-valikkoon
+	int itsCurrentIndexPois; // currenttia macroparamia osoitetaan tällä indeksillä (=paikka itsMacroParamFolders vektorissa), alkaa 0:sta ja -1 kun ei osoita mihinkään
+	boost::shared_ptr<NFmiMacroParam> itsFoundMacroParam; // Find(path, name)::lla löydetty macroParam
+	bool fUpdateMacroParamListView; // tämän lipun avulla voidaan päivittää smartTool-dialogia ja sen päivityksiä
+};
+

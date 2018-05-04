@@ -1,0 +1,364 @@
+/*!
+
+\page page_story_cloudiness_overview Tarina "cloudiness_overview"
+
+\section section_cloudiness_overview_story Tarinan muoto
+
+Tarina kertoo yhden tai useamman p‰iv‰n mittaisen jakson pilvisyydest‰.
+Parhaiten tarina soveltuu ensimm‰isille ennustettaville p‰iville.
+
+Yhden p‰iv‰n osalta tarina koostuu seuraavista tarinoista:
+
+ -# [enimm‰kseen] pilvist‰
+ -# [enimm‰kseen] puolipilvist‰
+ -# [enimm‰kseen] selke‰‰
+ -# pilvist‰ tai puolipilvist‰
+ -# selke‰‰ tai puolipilvist‰
+ -# pilvistyv‰‰
+ -# selkenev‰‰
+ -# vaihtelevaa pilvisyytt‰
+
+Kahden tai useamman p‰iv‰n ennusteet koostuvat samoista
+tarinoista. Jos per‰kk‰isille p‰iville osuu sama tarina,
+mainitaan se vain kerran.
+
+Esimerkkej‰:
+
+ -# T‰n‰‰n ja huomenna enimm‰kseen pilvist‰, keskiviikkona selkenev‰‰.
+ -# T‰n‰‰n pilvistyv‰‰, huomisesta alkaen vaihtelevaa pilvisyytt‰.
+
+\section section_cloudiness_overview_algorithm Algoritmit
+
+Algoritmin k‰ytt‰m‰t muuttujat ovat
+\code
+::story::cloudiness_overview::clear = [0-100] (=40)
+::story::cloudiness_overview::cloudy = [0-100] (=70)
+
+::story::cloudiness_overview::single_class_limit = [0-100]  (=90)
+::story::cloudiness_overview::mostly_class_limit = [0-100]  (=80)
+::story::cloudiness_overview::no_class_limit = [0-100]      (=20)
+::story::cloudiness_overview::trend_limit = [0-100]         (=80)
+::story::cloudiness_overview::merge_same = [true|false]     (=true)
+::story::cloudiness_overview::merge_similar = [true|false]  (=true)
+
+::story::cloudiness_overview::day::starthour = [0-23]
+::story::cloudiness_overview::day::endhour = [0-23]
+::story::cloudiness_overview::day::maxstarthour = [0-23]    (=starthour)
+::story::cloudiness_overview::day::minendhour = [0-23]      (=minendhour)
+\endcode
+Prosenttiluku 40 vastaa pilvisyysluokkaa 3.2, luku 70 pilvisyysluokkaa
+5.6. Paremmat oletusarvot voisivat perustua tarkkoihin lukuihin
+3.5 ja 5.5, mutta helpommin muistettavat rajat lienev‰t t‰ss‰
+tapauksessa parempia.
+
+Jos asetus \c merge_same on \c true, yhdistet‰‰n per‰kk‰iset p‰iv‰t
+joiden pilvisyyskuvaus on sama yhdeksi ainoaksi kuvaukseksi. Jos asetus
+\c merge_similar on \c true, yhdistet‰‰n lis‰ksi myˆs samankaltaiset
+kuvaukset, esimerkiksi "pilvist‰" ja "enimm‰kseen pilvist‰". Asetusta
+\c merge_same ei tarvita, jos \c merge_similar on \c true.
+
+On huomattava, ettei ole j‰rkev‰‰ m‰‰ritell‰ p‰iv‰‰ liian
+lyhyeksi. Muuten voi tulla, tosin harvoin, sellainen
+tilanne vastaan, ett‰ kahdelle per‰kk‰iselle p‰iv‰lle
+ennustetaan pilvistyv‰‰.
+
+Yksitt‰isen p‰iv‰n pilvisyystyyppi m‰‰ritell‰‰n seuraavasti:
+
+-# Lasketaan kunkin luokan prosenttiosuus
+  -# Puolipilvisen osuus voidaan laskea kahden muun tyypin osuudesta
+-# Jos pilvist‰ on v‰hint‰‰n \c single_class_limit, "pilvist‰"
+-# Jos selke‰‰ on v‰hint‰‰n \c single_class_limit, "selke‰‰"
+-# Jos puolipilvist‰ on v‰hint‰‰n \c single_class_limit, "puolipilvist‰"
+-# Jos pilvist‰ on v‰hint‰‰n \c mostly_class_limit, "enimm‰kseen pilvist‰"
+-# Jos selke‰‰ on v‰hint‰‰n \c mostly_class_limit, "enimm‰kseen selke‰‰"
+-# Jos puolipilvist‰ on v‰hint‰‰n \c mostly_class_limit, "enimm‰kseen puolipilvist‰"
+-# Jos selke‰‰ on alle \c no_class_limit, "pilvist‰ tai puolipilvist‰"
+-# Jos pilvist‰ on alle \c no_class_limit, "selke‰‰ tai puolipilvist‰"
+-# Jos lis‰‰ntyv‰ trendi on v‰hint‰‰n \c trend_limit, "pilvistyv‰‰"
+-# Jos v‰henev‰ trendi on v‰hint‰‰n \c trend_limit, "selkenev‰‰"
+-# "vaihtelevaa pilvisyytt‰"
+
+Tuloksia voi testata k‰ytt‰m‰ll‰ apumuuttujia
+\code
+::fake::day1::cloudy = [result]
+::fake::day1::clear  = [result]
+::fake::day1::trend  = [result]
+\endcode
+Seuraavien p‰ivien tulokset voi asettaa vastaavasti.
+
+\subsection subsection_cloudiness_overview_oneday Yksi p‰iv‰
+
+Yhdelle p‰iv‰lle yll‰ oleva algoritmi k‰y sellaisenaan.
+
+\subsection subsection_cloudiness_overview_twodays Kaksi p‰iv‰‰
+
+-# Jos \c merge_same tai \c merge_similar on \c true, k‰sitell‰‰n
+   kumpikin p‰iv‰ erikseen.
+-# Generoidaan kummankin p‰iv‰n tarina erikseen ilman aikafraaseja
+-# Jos tarina on eri, lis‰t‰‰n aikafraasit ja yhdistet‰‰n tarinat.
+-# Muuten yhdistet‰‰n aikafraasit "ja"-sanalla yhteisen tarinan eteen.
+
+Esimerkiksi:
+
+ - "T‰n‰‰n selke‰‰, huomenna pilvistyv‰‰."
+ - "T‰n‰‰n ja huomenna pilvist‰."
+
+\subsection subsection_cloudiness_overview_threedays Kolme p‰iv‰‰
+
+-# Jos \c merge_same tai \c merge_similar on \c true, k‰sitell‰‰n
+   kaikki p‰iv‰t erikseen.
+-# Generoidaan kaikkien p‰ivien tarina erikseen ilman aikafraaseja
+-# Jos kahden ensimm‰isen p‰iv‰n tarina on sama, yhdistet‰‰n
+   niiden aikafraasit "ja"-fraasilla yhteisen tarinan eteen,
+   kolmas p‰iv‰ liitet‰‰n per‰‰n omalla aikafraasillaan.
+-# Jos kahden viimeisen p‰iv‰n tarina on sama, yhdistet‰‰n
+   niiden aikafraasit "alkaen" tyyppiseksi, ensimm‰inen
+   p‰iv‰ saa oman aikafraasinsa.
+-# Muuten kustakin p‰iv‰st‰ kerrotaan erikseen.
+
+Esimerkiksi:
+
+  - "T‰n‰‰n ja huomenna pilvist‰, torstaina enimm‰kseen selke‰‰."
+  - "T‰n‰‰n pilvistyv‰‰, huomisesta alkaen enimm‰kseen pilvist‰."
+  - "T‰n‰‰n pilvist‰, huomenna selke‰‰, torstaina pilvistyv‰‰."
+
+T‰m‰ on itse asiassa erikoistapaus seuraavasta useamman
+p‰iv‰n algoritmista.
+
+\subsection subsection_cloudiness_overview_severaldays Useampi p‰iv‰
+
+-# Jos \c merge_same tai \c merge_similar on \c true, k‰sitell‰‰n
+   kaikki p‰iv‰t erikseen.
+-# Generoidaan kaikkien p‰ivien tarina erikseen ilman aikafraaseja
+-# Luupataan tarinoiden yli
+  -# Jos seuraava tarina on erilainen kuin luupattavan p‰iv‰n
+    -# Generoidaan sille oma aikafraasi tarinan eteen
+  -# Muuten jos samanlaiset p‰iv‰t jatkuvat loppuun asti
+    -# Generoidaan "alkaen"-tyyppinen aikafraasi tarinalle
+  -# Muuten jos samanlaisia p‰ivi‰ on vain kaksi
+    -# Yhdistet‰‰n aikafraasit "ja"-sanalla
+  -# Muuten samanlaisia p‰ivi‰ on v‰hint‰‰n kolme, muttei loppuun asti
+    -# Yhdistet‰‰n aikafraasit "alkaen"-tyyppiseksi
+
+\subsection subsection_cloudiness_overview_similarity Tarinoiden samanlaisuus
+
+Kahden p‰iv‰n pilvisyyskuvaus voi olla niin samankaltainen, ett‰
+ne kannattaa yhdist‰‰ yhdeksi ennusteen selkeytt‰miseksi.
+
+Alla on lueteltu kaikki mahdolliset tarinat. Tarinat on lueteltu
+suunnilleen j‰rjestyksess‰ pilvisest‰ selke‰‰n yhdistelyn
+hahmottamiseksi.
+
+ -# pilvist‰
+ -# pilvistyv‰‰
+ -# enimm‰kseen pilvist‰
+ -# pilvist‰ tai puolipilvist‰
+ -# enimm‰kseen puolipilvist‰
+ -# vaihtelevaa pilvisyytt‰
+ -# puolipilvist‰
+ -# selke‰‰ tai puolipilvist‰
+ -# enimm‰kseen selke‰‰
+ -# selkenev‰‰
+ -# selke‰‰
+
+Alla olevassa taulukossa pystysarake esitt‰‰ ensimm‰isen p‰iv‰n
+pilvisyytt‰, vaakasarake toisen p‰iv‰n pilvisyytt‰. N‰ille
+on mahdollista k‰ytt‰‰ taulukon mukaisia yhdistelmi‰.
+
+<table border="1" cellspacing="0" cellpadding="1">
+<tr>
+<td></td>
+<td>pilvist‰</td>
+<td>pilvistyv‰‰</td>
+<td>enimm‰kseen pilvist‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>enimm‰kseen puolipilvist‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>puolipilvist‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>enimm‰kseen selke‰‰</td>
+<td>selkenev‰‰</td>
+<td>selke‰‰</td>
+</tr>
+<tr>
+<td>pilvist‰</td>
+<td>=</td>
+<td>-</td>
+<td>enimm‰kseen pilvist‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>pilvistyv‰‰</td>
+<td>pilvistyv‰‰</td>
+<td>=</td>
+<td>pilvistyv‰‰</td>
+<td>-</td>
+<td>-</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>enimm‰kseen pilvist‰</td>
+<td>enimm‰kseen pilvist‰</td>
+<td>-</td>
+<td>=</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>=</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>enimm‰kseen puolipilvist‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>=</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>enimm‰kseen puolipilvist‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+</tr>
+<tr>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>-</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>=</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>puolipilvist‰</td>
+<td>puolipilvist‰ tai pilvist‰</td>
+<td>-</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>pilvist‰ tai puolipilvist‰</td>
+<td>enimm‰kseen puolipilvist‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>=</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+</tr>
+<tr>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>-</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>vaihtelevaa pilvisyytt‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>=</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+</tr>
+<tr>
+<td>enimm‰kseen selke‰‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>=</td>
+<td>-</td>
+<td>enimm‰kseen selke‰‰</td>
+</tr>
+<tr>
+<td>selkenev‰‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>selkenev‰‰</td>
+<td>=</td>
+<td>selkenev‰‰</td>
+</tr>
+<tr>
+<td>selke‰‰</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>-</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>selke‰‰ tai puolipilvist‰</td>
+<td>enimm‰kseen selke‰‰</td>
+<td>-</td>
+<td>=</td>
+</tr>
+</table>
+Esimerkiksi "vaihtelevaa pilvisyytt‰" ja "pilvistyv‰‰" yhdistet‰‰n fraasiksi
+"vaihtelevaa pilvisyytt‰". Kuitenkin fraasit "vaihtelevaa pilvisyytt‰" ja
+"selkenev‰‰" pidet‰‰n tarkoituksellisesti erill‰‰n, koska selkeneminen
+on yleens‰ oleellinen muutos parempaan s‰‰h‰n, eik‰ siihen v‰lt‰m‰tt‰
+liity sateen osalta mit‰‰n muutakaan raportoitavaa.
+
+Kolmen tai useamman p‰iv‰n pilvisyys katsotaan samaksi, jos jokaiset
+kaksi per‰kk‰ist‰ p‰iv‰‰ voidaan yhdist‰‰, ja n‰iden tulokset voidaan
+edelleen rekursiivisesti yhdist‰‰ yhdeksi ainoaksi tulokseksi.
+
+\section section_cloudiness_overview_phrases Tarvittavat fraasit
+
+Tarvittavat fraasit ovat
+
+ - "enimm‰kseen"
+ - "pilvist‰"
+ - "puolipilvist‰"
+ - "selke‰‰"
+ - "tai"
+ - "ja"
+ - "pilvistyv‰‰"
+ - "selkenev‰‰"
+ - "vaihtelevaa pilvisyytt‰"
+
+Lis‰ksi tarvitaan aikafraasit \c days.
+
+*/

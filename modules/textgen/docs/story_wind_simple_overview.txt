@@ -1,0 +1,179 @@
+/*!
+
+\page page_story_wind_simple_overview Tarina "wind_simple_overview"
+
+Tämä tarina ei ole hyvin speksattu, eikä sitä tule käyttää ainakaan
+vielä.
+
+\section section_wind_simple_overview_story Tarinan muoto
+
+Tarina kuvailee tuuliennustetta yhden tai useamman päivän mittaiselle
+jaksolle. Parhaiten tarina soveltuu ensimmäisille 1-3 päivälle.
+
+Tarinassa ei käytetä nopeusluokkia algoritmin yksinkertaistamiseksi.
+Suuntaluokat ovat käytössä.
+
+Tarinan yleismuoto on
+
+ -# [seuraavaan aamuun asti], [loppuaika]
+
+Ensimmäisen osan aikamäärittelyt saadaan muuttujista
+\code
+textgen::[kappale]::story::wind_simple_overview::day::starthour = [0-23] (6)
+textgen::[kappale]::story::wind_simple_overview::day::maxstarthour = [0-23] (starthour)
+textgen::[kappale]::story::wind_simple_overview::night::starthour = [0-23] (18)
+textgen::[kappale]::story::wind_simple_overview::night::maxstarthour = [0-23] (starthour)
+textgen::[kappale]::story::wind_simple_overview::night::endhour = [0-23] (06)
+textgen::[kappale]::story::wind_simple_overview::night::minendhour = [0-23] (endhour)
+\endcode
+Tyypilliset asetukset ovat
+\code
+textgen::[kappale]::story::wind_simple_overview::day::starthour = 6
+textgen::[kappale]::story::wind_simple_overview::day::maxstarthour = 12
+textgen::[kappale]::story::wind_simple_overview::night::starthour = 18
+textgen::[kappale]::story::wind_simple_overview::night::maxstarthour = 0
+textgen::[kappale]::story::wind_simple_overview::night::endhour = 6
+\endcode
+Tällöin kerrottaisiin huomisaamuun asti aina keskiyöhön saakka,
+tämän jälkeen aletaan kertoa tulevasta päivästä.
+
+\subsection subsection_wind_simple_overview_part1 Ensimmäinen päivä
+
+Jos päivä on mennyt liian pitkälle, eli kello on yli
+\c day::maxstarthour, kerrotaan tuuli ensi aamuun saakka. Mukana on siis
+sekä jäljellä oleva päivä että yö.
+
+Mahdolliset tarinat tällä "jatketulle" yöjaksolle ovat
+
+  -# "[Ajanjaksona] X-Y m/s."
+  -# "[Ajanjaksona] [suuntatuulta] X-Y m/s."
+
+Aikafraasin tyyppi on \ref sec_periodifraasit_until_morning, jota
+kontrolloidaan muuttujalla
+\code
+textgen::[kappale]::story::wind_simple_overview::until_morning::phrases
+\endcode
+Sopiva arvo muuttujalle on esimerkiksi
+\code
+textgen::[kappale]::story::wind_simple_overview::until_morning::phrases = atnight,weekday
+\endcode
+koska fraasia "ensi yönä" (tonight) ei välttämättä haluta käyttää,
+"yöllä" (atnight) sopinee tilanteeseen paremmin.
+
+Suunnan ja nopeuden laskeminen eri jaksoille käsitellään jatkossa
+erikseen.
+
+Jos päivä on tarpeeksi pitkä käsiteltäväksi, käsitellään se kuten yö
+edellä. Tällöin aikafraasi on kuitenkin tyyppiä
+\ref sec_periodifraasit_until_tonight, jota kontrolloidaan
+muuttujalla
+Aikafraasin tyyppi on \ref sec_periodifraasit_until_tonight, jota
+kontrolloidaan muuttujalla
+\code
+textgen::[kappale]::story::wind_simple_overview::until_tonight::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_simple_overview::until_tonight::phrases = atday,weekday
+\endcode
+
+Lisäksi tuotetaan sivulause yön tuulesta, joka on muotoa
+
+  -# ", [ajanjaksona] [suuntatuulta] X-Y m/s."
+
+Sivulaiseen aikafraasi on tyyppiä \ref sec_periodifraasit_tonight,
+jota kontrolloidaan muuttujalla
+\code
+textgen::[kappale]::story::wind_simple_overview::tonight::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_simple_overview::tonight::phrases = atnight,weekday
+\endcode
+Tässä yhteydessä olisi myös mahdollista käyttää fraasia "ensi yönä"
+(tonight), joka ei ollut suositeltavaa päiväosan puuttuessa.
+
+\subsection subsection_wind_simple_overview_part2 Toinen päivä
+
+Tässä tapauksessa tutkittavan aikavälin loppuaika on enintään 24
+tuntia, eli voidaan puhua pelkästään seuraavasta päivästä.
+
+Toisesta päivästä voidaan kertoa omana virkkeenään, tai sivulauseena.
+Toisen päivän tarinan muoto on
+
+  -# "[Ajanjaksona] [suuntatuulta] X-Y m/s."
+
+Aikafraasi on tyyppiä \ref sec_periodifraasit_next_day, jota kontrolloidaan
+muuttujalla
+\code
+textgen::[kappale]::story::wind_simple_overview::next_day::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_simple_overview::next_day::phrases = tomorrow,followingday
+\endcode
+
+\subsection subsection_wind_simple_overview_partx Loput päivät
+
+Tässä tapauksessa tutkittavan aikavälin loppuaika on yli 24 tuntia.
+Tästä loppuajasta kerrotaan yhdelle virkkeellä tai sivulauseella.
+
+  -# "[Ajanjaksosta alkaen] [suuntatuulta] X-Y m/s."
+
+Aikafraasi on tyyppiä \ref sec_periodifraasit_next_days, jota kontrolloidaan
+muuttujalla
+\code
+textgen::[kappale]::story::wind_simple_overview::next_days::phrases
+\endcode
+Suositeltava arvo on esimerkiksi
+\code
+textgen::[kappale]::story::wind_simple_overview::next_days::phrases = tomorrow,weekday
+\endcode
+
+\section section_wind_simple_overview_algorithm Algoritmit
+
+\subsection subsection_wind_simple_overview_windspeed Tuulen nopeus
+
+Nopeuden vaihteluväli saadaan laskemalla aikakeskiarvojen minimi ja maksimi.
+
+\subsection subsection_wind_simple_overview_winddirection Tuulen suunta
+
+Kunkin aikavälin tuulen suunta saadaan laskemalla suunnan keskiarvo
+ajan ja paikan yli. Suunnan laatuindeksin mukaisesti suunnan
+tarkkuutta heikennetään ensin "suunnan puoleiseksi tuuleksi", ja sen
+jälkeen "suunnaltaan vaihtelevaksi tuuleksi".
+
+Vaadittua laatua (suunnan keskihajonta) kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::wind_simple_overview::direction::accurate (= 22.5)
+textgen::[kappale]::story::wind_simple_overview::direction::variable (= 45)
+\endcode
+Oletusarvot on annettu suluissa.
+
+Suunnan fraasi valitaan seuraavasti
+
+  -# Jos laatu >= \c accurate, "N-tuulta"
+  -# Jos laatu >= \c variable, "N-puoleista tuulta"
+  -# Muutoin "suunnaltaan vaihtelevaa tuulta"
+
+\section section_wind_simple_overview_fraasit Tarvittavat fraasit
+
+Tarvittavat fraasit ovat
+
+ - "m/s"
+ - "metriä sekunnissa"
+ - "tuulta"
+ - "suunnaltaan vaihtelevaa"
+ - "N-tuulta", N=1-8
+ - "N-tuuleksi", N=1-8
+ - "N-puoleista tuulta", N=1-8
+ - "N-puoleiseksi tuuleksi", N=1-8
+
+Lisäksi tarvitaan periodifraasit
+\ref sec_periodifraasit_until_tonight,
+\ref sec_periodifraasit_until_morning,
+\ref sec_periodifraasit_tonight,
+\ref sec_periodifraasit_next_day ja
+\ref sec_periodifraasit_next_days.
+
+*/

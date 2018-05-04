@@ -1,0 +1,27 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(StlHelp CXX)
+
+set(CMAKE_MFC_FLAG 0)
+
+file( GLOB H_FILES include/*.h )
+
+add_library( 
+    ${PROJECT_NAME}
+    ${H_FILES}
+    )
+
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
+    )
+
+set_target_properties(
+    ${PROJECT_NAME}
+    PROPERTIES LINKER_LANGUAGE CXX
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}/include
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
+    )

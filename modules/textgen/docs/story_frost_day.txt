@@ -1,0 +1,90 @@
+/*!
+
+\page page_story_frost_day Tarina "frost_day"
+
+Tarina on tyhjä lokakuun puolivälistä maaliskuun loppuun! Lisäksi, jos
+ankaran hallan todennäköisyys on hyvin korkea, lienee halla niin
+päivän selvää, ettei siitä kannata mainita erikseen.
+
+Jos jakson pituus on nolla yötä, palautetaan tyhjä tarina.
+
+Jos jakson pituus on yksi yö, palautetaan jokin tarinoista
+
+ -# ""
+ -# "[Hallan todennäköisyys] on [ensi yönä] N%."
+ -# "[Hallan todennäköisyys] on [ensi yönä] N%, rannikolla M%."
+
+Ruotsiksi
+
+ -# ""
+ -# "[Sannolikheten för nattfrost] är [i natt] N%."
+ -# "[Sannolikheten för nattfrost] är [i natt] N%, vid kusten M%."
+
+Englanniksi
+
+ -# ""
+ -# "[Probability of frost] is [at night] N%."
+ -# "[Probability of frost] is [at night] N%, at the coast M%."
+
+Fraasin "hallan todennäköisyys" tilalle voi tulla myös "ankaran hallan
+todennäköisyys", riippuen tilanteesta.
+
+Tarina valitaan perustuen muuttujiin
+\code
+textgen::[kappale]::story::frost_day::severe_frost_limit = [0-100] (=10)
+textgen::[kappale]::story::frost_day::frost_limit = [0-100] (=10)
+textgen::[kappale]::story::frost_day::obvious_frost = [0-100] (=90)
+textgen::[kappale]::story::frost_day::precision = [0-100] (=10)
+textgen::[kappale]::story::frost_day::coast_limit = [0-100] (=20)
+\endcode
+Jos ankaran hallan todennäköisyys on vähintään \c severe_frost_limit,
+käytetään fraasia "ankaran hallan todennäköisyys", muutoin fraasia "hallan todennäköisyys".
+Jos hallan todennäköisyys on alle \c frost_limit, palautetaan tyhjä tarina. Kuitenkin
+jos ankaran hallan todennäköisyys on yli \c obvious_frost, tarina
+voi jäädä kokonaan tyhjäksi. (Katso sivun alun selitystä.)
+
+Sisämaan ja rannikon todennäköisyyksistä kerrotaan erikseen, jos todennäköisyyksien
+erotus on vähintään \c coast_limit.
+
+Todennäköisyydet pyöristetään muuttujan \c precision tarkkuuteen.
+Yleensä käytetään tarkkuutta 10.
+
+Yön määritelmä saadaan muuttujista
+\code
+textgen::[kappale]::story::frost_day::night::starthour = [0-23]
+textgen::[kappale]::story::frost_day::night::endhour = [0-23]
+textgen::[kappale]::story::frost_day::night::maxstarthour = [0-23]
+textgen::[kappale]::story::frost_day::night::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Yölle ei ole annettu hallan yhteydessä minkäänlaista oletusmääritelmää,
+kuten 18-06, koska hallan kohdalla mielenkiintoinen aikaväli voi hyvinkin
+olla suurempi. Näin vastuu oikean aikavälin määrittelystä jää käyttäjälle.
+
+Aikafraasit ovat tyyppiä \ref sec_periodifraasit_tonight.
+Niihin liittyviä asetuksia kontrolloidaan muuttujalla
+
+\code
+textgen::[kappale]::story::frost_day::tonight::phrases
+\endcode
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::frost_day::fake::area::frost = [result]
+textgen::[kappale]::story::frost_day::fake::area::severe_frost = [result]
+textgen::[kappale]::story::frost_day::fake::coast::value = [result]
+textgen::[kappale]::story::frost_day::fake::inland::value = [result]
+\endcode
+
+Käytetyt fraasit ovat
+
+ - "hallan todennäköisyys"
+ - "ankaran hallan todennäköisyys"
+ - "on"
+ - "rannikolla"
+
+*/

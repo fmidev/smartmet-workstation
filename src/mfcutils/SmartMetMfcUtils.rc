@@ -1,0 +1,301 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "SmartMetMfcUtils_resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Finnish (Finland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FIN)
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_WITH_RICH_EDIT DIALOGEX 0, 0, 215, 407
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_RICHEDIT_TEXT_SECTION,"RichEdit20W",WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | 0x10c4,0,0,212,400
+END
+
+IDD_DIALOG_LOAD_DATA_INCOMPLETE_WARNING DIALOGEX 0, 0, 206, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Data loading warning"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Continue",IDOK,7,41,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,69,41,50,14
+    LTEXT           "Chosen data is incomplete and extrapolation must be done.",IDC_STATIC,7,6,192,8
+    LTEXT           "Press Cancel button if you dont want to proceed.",IDC_STATIC,7,29,172,9
+    LTEXT           "If you want to still continue, press Continue button.",IDC_STATIC,7,17,179,8
+END
+
+IDD_DIALOG_GET_DIRECTORY_NAME DIALOGEX 0, 0, 173, 66
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create new folder"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Ok",IDOK,7,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,63,7,50,14
+    EDITTEXT        IDC_EDIT_DIRECTORY_NAME,7,38,57,14,ES_AUTOHSCROLL
+    LTEXT           "New folder name",IDC_STATIC,7,25,55,8
+END
+
+IDD_DIALOG_DATA_LOADINGPROBLEMS DIALOGEX 0, 0, 139, 110
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Data loading problem"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Ok",IDOK,14,89,50,14
+    LTEXT           "There was problem when loading selected data.",IDC_STATIC_Text,15,14,101,17
+    LTEXT           "Static",IDC_STATIC_DATA_LOADING_ERROR_STRING,7,42,124,41,SS_SUNKEN
+END
+
+IDD_DIALOG_DROP_FILE_WARNING DIALOGEX 0, 0, 174, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tiedoston pudotus ikkunaan varoitus"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Kyllä",IDOK,7,69,50,14
+    PUSHBUTTON      "Peruuta",IDCANCEL,69,69,50,14
+    LTEXT           "Olet tiputtanut editoriin tiedoston.\nOletko varma, että haluat avata tiputetun tiedoston.",IDC_STATIC,7,2,160,24
+    LTEXT           "Nyt käytössäsi oleva data ei ole enää käytössäsi\ntämän jälkeen jos painat Kyllä!\nHUOM! saat tilaisuuden säästää datan jos jatkat.",IDC_STATIC,7,28,160,25
+    LTEXT           "Paina Peruuta jos et halua edetä tästä.",IDC_STATIC,7,57,145,10
+END
+
+IDD_DIALOG_DATA_CHECK_PROP DIALOGEX 0, 0, 316, 195
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Data Checks"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Kuittaa",IDC_BUTTON_ACKNOWLEDGE,41,19,44,14
+    CONTROL         "Käytä",IDC_CHECK_USE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,23,35,10
+    CONTROL         "Näytä kartalla",IDC_CHECK_SHOW_ON_MAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,23,61,10
+    LTEXT           "Datan ja checkin kuvaus (esim. Ecmwf Suomi maa-alueet)",IDC_STATIC_Check_DESCRIPTION,7,6,302,13
+    CONTROL         "",IDC_STATIC_STATUS_IMAGE,"Static",SS_BLACKFRAME | SS_SUNKEN,12,19,20,16
+    CONTROL         IDC_CHECK_SHOW_ON_MAP,IDC_STATIC_DATA_CHECK_IMAGE,"Static",SS_BITMAP | SS_SUNKEN,7,39,269,145
+END
+
+IDD_DIALOG_DATA_CHECK_OPTIONS_PROB DIALOGEX 0, 0, 316, 195
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Data check options"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Talleta",IDC_BUTTON_DATA_CHECK_SAVE,7,7,50,14
+    PUSHBUTTON      "Poista",IDC_BUTTONDATA_CHECK_REMOVE,67,7,50,14
+    LISTBOX         IDC_LIST_DATA_CHECKS,7,26,302,81,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_NAME,7,121,74,14,ES_AUTOHSCROLL
+    LTEXT           "Nimi",IDC_STATIC_NAME_STR,9,110,69,8
+    LTEXT           "Alue maski",IDC_STATIC_AREA_STR,91,112,69,8
+    COMBOBOX        IDC_COMBO_AREA,89,122,62,35,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Data",IDC_STATIC_SELECT_DATA_STR,167,113,69,8
+    COMBOBOX        IDC_COMBO_DATA,167,122,62,35,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_DIALOG_WITH_RICH_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 208
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 400
+    END
+
+    IDD_DIALOG_LOAD_DATA_INCOMPLETE_WARNING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 199
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_DIALOG_GET_DIRECTORY_NAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 166
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 59
+    END
+
+    IDD_DIALOG_DATA_LOADINGPROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 131
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_DIALOG_DROP_FILE_WARNING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 167
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_DIALOG_DATA_CHECK_PROP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 188
+    END
+
+    IDD_DIALOG_DATA_CHECK_OPTIONS_PROB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 188
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "SmartMetMfcUtils_resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""XFolderDialog.rc""\r\n"
+    "#endif\r\n"
+    "#ifdef _VC60\r\n"
+    "/////////////////////////////////////////////////////////////////////////////\r\n"
+    "//\r\n"
+    "// 24\r\n"
+    "//\r\n"
+    "1                      24      MOVEABLE PURE   ""app.manifest""\r\n"
+    "#endif\r\n"
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_DATA_CHECK_SYMBOL BITMAP                  "res\\bitmap1.bmp"
+
+IDB_BITMAP_DATA_CHECK_SAMPLE BITMAP                  "res\\data_test_status_sample.bmp"
+
+IDB_BITMAP_DOUBLE_GREEN_LED BITMAP                  "res\\ledgreen.bmp"
+
+#endif    // Finnish (Finland) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United Kingdom) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_GUS_ICON_EDIT_SKIN BITMAP                  "res\\GUSIconEditSkin.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_GUS_ICON_EDIT MENU
+BEGIN
+    POPUP "SearchOption"
+    BEGIN
+        MENUITEM "Case Sensitive",              ID_SEARCHOPTION_CASESENSITIVE
+        MENUITEM "Match Anywhere",              ID_SEARCHOPTION_MATCHANYWHERE
+    END
+END
+
+#endif    // English (United Kingdom) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "afxres.rc"         // Standard components
+#include "XFolderDialog.rc"
+#endif
+#ifdef _VC60
+/////////////////////////////////////////////////////////////////////////////
+//
+// 24
+//
+1                      24      MOVEABLE PURE   "app.manifest"
+#endif
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

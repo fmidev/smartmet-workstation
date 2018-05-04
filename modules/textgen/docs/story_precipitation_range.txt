@@ -1,0 +1,55 @@
+/*!
+
+\page page_story_precipitation_range Tarina "precipitation_range"
+
+\c precipitation_range tarina on muotoa
+
+  -# "Sadesumma on yli N millimetriä."
+  -# "Sadesumma on N millimetriä."
+  -# "Sadesumma on N-M millimetriä."
+
+Ruotsiksi
+
+  -# "Nederbördsumman är över N millimeter."
+  -# "Nederbördsumman är N millimeter."
+  -# "Nederbördsumman är N-M millimeter."
+
+Englanniksi
+
+  -# "Total precipitation is over N millimeters."
+  -# "Total precipitation is N millimeters."
+  -# "Total precipitation is N-M millimeters."
+
+Sadesummaan eivät periaatteessa kuulu liian pienet tunnin sademäärät.
+Summasta voi filtteröidä pois nämä liian pienet sateet muuttujan
+\code
+textgen::[kappale]::story::precipitation_range::minrain = [0-X]
+\endcode
+avulla.
+
+Päättelyssä käytetään muuttujina alueen minimi- ja maksimisadesummaa,
+sekä optionaalista muuttujaa
+\code
+textgen::[kappale]::story::precipitation_range::maxrain
+\endcode
+
+Jos muuttujan arvo on asetettu lukemaksi X ja minimisadesumma on
+vähintään X, palautetaan tarina 1. Jos minimi ja maksimi ovat samoja,
+palautetaan tarina 2. Muuten palautetaan tarina 3.
+
+Käytetyt fraasit ovat
+
+  - "sadesumma"
+  - "on"
+  - "yli"
+  - "millimetriä"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Minimum(Sum(Precipitation)):
+textgen::[kappale]::story::precipitation_total::fake::minimum = [result]
+# Maximum(Sum(Precipitation)):
+textgen::[kappale]::story::precipitation_total::fake::maximum = [result]
+\endcode
+
+*/

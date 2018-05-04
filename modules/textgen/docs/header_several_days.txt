@@ -1,0 +1,28 @@
+/*!
+\page page_header_several_days Header tyyppi "several_days"
+
+\section sec_header_several_days Header tyyppi "several_days"
+
+Tuottaa headerin tyyppiä "Tiistaiaamusta alkavan viiden vuorokauden sää".
+Kellonaikojen tulee olla 06 tai 18. Jakson kokonaispituuden tulee olla
+N*24 tuntia, missä N=2..10.
+
+Mahdolliset headerit ovat
+
+  -# "Maanantaiaamusta alkavan viiden vuorokauden sää" + variaatiot
+
+Ruotsiksi
+
+  -# "Från måndag morgon för de följande fem dygnen" + variaatiot
+
+Englanniksi
+
+  -# "From Monday morning for the next five days" + variaatiot
+
+Käytetyt fraasit ovat
+
+  - "N-aamusta alkavan", missä N=1-7
+  - "N-illasta alkavan", missä N=1-7
+  - "N-vuorokauden sää", missä N=2-10
+
+*/

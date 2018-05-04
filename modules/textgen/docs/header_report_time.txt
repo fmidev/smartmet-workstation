@@ -1,0 +1,30 @@
+/*!
+\page page_header_report_time Header tyyppi "report_time"
+
+\section sec_header_report_time Header tyyppi "report_time"
+
+Tuottaa headerin tyyppi‰ "S‰‰ennuste tiistaina kello 18".
+Kellonaika otetaan jakson alkuajasta. Erityisen hyvin tyyppi sopinee
+yhteen periodityypin "now" kanssa.
+
+Mahdolliset headerit ovat
+
+  -# "S‰‰ennuste N-na kello K".
+
+Ruotsiksi
+
+  -# "V‰derraport N-na klockan K."
+
+Englanniksi
+
+  -# "Weather report N-na K o'clock."
+
+K‰ytetyt fraasit ovat
+
+  -# "s‰‰ennuste"
+  -# "N-na", N=1..7
+  -# "kello"
+  -# "o'clock"
+
+
+*/

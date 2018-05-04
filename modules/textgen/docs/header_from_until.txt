@@ -1,0 +1,30 @@
+/*!
+\page page_header_from_until Header tyyppi "from_until"
+
+\section sec_header_from_until Header tyyppi "from_until"
+
+Tuottaa headerin tyyppiä "Odotettavissa tiistai-illasta torstaiaamuun".
+Kellonaikojen tulee olla 06 tai 18, jolloin tarkenteet ovat aamu tai ilta.
+Käytetään yleensä vastaavan periodityypin "from_until" kanssa.
+
+Mahdolliset headerit ovat
+
+  -# "Odotettavissa maanantaiaamusta maanantaiaamuun" + variaatiot
+
+Ruotsiksi
+
+  -# "Utsikter från måndag morgon till måndag morgon" + variaatiot
+
+Englanniksi
+
+  -# "Expected weather from Monday morning until Monday morning" + variaatiot
+
+Käytetyt fraasit ovat
+
+  - "odotettavissa"
+  - "N-aamusta", missä N=1-7
+  - "N-illasta", missä N=1-7
+  - "N-aamuun", missä N=1-7
+  - "N-iltaan", missä N=1-7
+
+*/

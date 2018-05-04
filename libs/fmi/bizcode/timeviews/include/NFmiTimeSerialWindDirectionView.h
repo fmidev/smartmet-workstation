@@ -1,0 +1,63 @@
+//**********************************************************
+// C++ Class Name : NFmiTimeSerialWindDirectionView 
+// ---------------------------------------------------------
+// Filetype: (HEADER)
+// Filepath: D:/projekti/GDPro/GDTemp/NFmiTimeSerialWindDirectionView.h 
+// 
+// 
+// GDPro Properties 
+// ---------------------------------------------------
+//  - GD Symbol Type    : CLD_Class 
+//  - GD Method         : UML ( 2.1.4 ) 
+//  - GD System Name    : Met-editor Plan 3 
+//  - GD View Type      : Class Diagram 
+//  - GD View Name      : 2. uusi aikasarja viritys 
+// ---------------------------------------------------  
+//  Author         : pietarin 
+//  Creation Date  : Tues - Apr 6, 1999 
+// 
+// 
+//  Description: 
+// 
+//  Change Log: 
+// 
+//**********************************************************
+
+#pragma once
+
+#include "NFmiTimeSerialView.h"
+
+
+class NFmiTimeSerialWindDirectionView : public NFmiTimeSerialView
+{
+
+ public:
+    NFmiTimeSerialWindDirectionView		(const NFmiRect & theRect
+										,NFmiToolBox * theToolBox
+										,NFmiDrawingEnvironment * theDrawingEnvi
+										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+										,int theIndex
+										,double theManualModifierLength /* = 1. */);
+   virtual  ~NFmiTimeSerialWindDirectionView (void);
+ 
+   virtual bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+   virtual bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+   virtual void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle);
+   virtual void CreateValueScale (void);
+   virtual void DrawValueAxis (void);
+   using NFmiTimeSerialView::DrawDataLine; 
+   virtual void DrawDataLine (const NFmiMetTime& theTime1,  const NFmiMetTime& theTime2, double value1, double value2, NFmiDrawingEnvironment & envi);
+   virtual void EvaluateValue (double& theValue);
+
+ protected:
+   virtual void DrawData (void);
+   virtual void DrawGrids (NFmiDrawingEnvironment & envi);
+   void DrawValueGrids (NFmiDrawingEnvironment & envi, double minPos, double maxPos);
+   void DrawModifyFactorPointGrids (void);
+   void DrawSelectedStationData (void);
+   void DrawBackground (void);
+   virtual void CreateValueScaleView (void);
+   bool AutoAdjustValueScale(void){return false;};
+
+};
+

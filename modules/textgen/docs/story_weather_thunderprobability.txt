@@ -1,0 +1,46 @@
+/*!
+
+\page page_story_weather_thunderprobability Tarina "weather_thunderprobability"
+
+\section section_weather_thunderprobability_story Tarinan muoto
+
+Tarina kuvailee yhden tai useamman päivän mittaisen jakson ukkosen
+todennäköisyyttä. Ilmoitettu todennäköisyys ilmaisee ukkosen
+todennäköisyyden koko jakson aikana.
+
+Mahdolliset tarinat ovat
+
+ -# ""
+ -# "Ukkosen todennäköisyys on X%."
+
+Ruotsiksi ei-tyhjät mahdollisuudet ovat
+
+ -# "Sannolikheten för åska är X%."
+
+ja englanniksi
+
+ -# "Probability of thunder is X%."
+
+Todennäköisyys ilmoitetaan tarkkuudella
+\code
+textgen::[kappale]::story::weather_thunderprobability::precision = [0-100] (= 10)
+\endcode
+Todennäköisyyttä ei ilmoiteta, jos se on alle
+\code
+textgen::[kappale]::story::weather_thunderprobability::limit = [0-100] (= 10)
+\endcode
+
+Analyysitulokset voi korvata regressiotesteissä muuttujilla
+\code
+textgen::[kappale]::story::weather_thunderprobability::fake::probability = [result]
+\endcode
+
+\section section_weather_thunderprobability_fraasit Tarvittavat fraasit
+
+Tarvittavat fraasit ovat
+
+ - "ukkosen todennäköisyys"
+ - "on"
+ - "prosenttia"
+
+*/

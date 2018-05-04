@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:fmidev/smartmet-library-newbase.git
+	branch = master
+	commit = de1ffed9f56fd273cf7c163565e4f34fe26b948f
+	parent = d7021d59e1f7a8efb0985849aded3c13a0f380f0
+	cmdver = 0.3.1

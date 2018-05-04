@@ -1,0 +1,114 @@
+# Better Weather Symbol image mappings.
+# Each line has three values separated by ; -characters:
+# Paramcode;smallImagePath;largeImagePath
+# FilePaths are in default at SmartMet's woml/BetterWeatherSymbols directory, give relative path from there here.
+
+# Cloudiness, no precipitation
+# ----------------------------
+0;png16\Selkea.png;png48\Selkea.png
+1;png16\Keski1_2.png;png48\Keski1_2.png
+2;png16\Keski3_5.png;png48\Keski3_5.png
+3;png16\Keski6_7.png;png48\Keski6_7.png
+4;png16\Keski8.png;png48\Keski8.png
+
+# Haze and fog
+# ----------------------------
+10;png16\Utu.png;png48\Utu.png
+40;png16\Sumu.png;png48\Sumu.png
+
+# Thunders with showers
+# ----------------------------
+95;png16\61_ukkoskuuro.png;png48\61_ukkoskuuro.png
+140;png16\Ukkoskuuro3_5.png;png48\Ukkoskuuro3_5.png
+141;png16\Ukkoskuuro8.png;png48\Ukkoskuuro8.png
+142;png16\63_ukkoskuuro_kova.png;png48\63_ukkoskuuro_kova.png
+143;png16\62.png;png48\62.png
+97;png16\Ukkoskuuro8_2.png;png48\Ukkoskuuro8_2.png
+
+# Showers
+# -----------------------------
+80;png16\Vesikuuro3_5.png;png48\Vesikuuro3_5.png
+81;png16\Vesikuuro6_7.png;png48\Vesikuuro6_7.png
+82;png16\Vesikuuro8.png;png48\Vesikuuro8.png
+
+# Freezing drizzle and rain
+# ----------------------------
+57;png16\Jaatavatihku8.png;png48\Jaatavatihku8.png
+67;png16\Jaatavasade8.png;png48\Jaatavasade8.png
+
+# Drizzle
+# ----------------------------
+51;png16\Tihkusade8.png;png48\Tihkusade8.png
+
+# Rain (shower and continuous)
+# ----------------------------
+101;png16\21_heikkovesikuuro.png;png48\21_heikkovesikuuro.png
+102;png16\Vesisade_sc6_7.png;png48\Vesisade_sc6_7.png
+61;png16\Vesisade1.png;png48\Vesisade1.png
+103;png16\22_vesikuuro.png;png48\22_vesikuuro.png
+104;png16\22.png;png48\22.png
+63;png16\Vesisade2.png;png48\Vesisade2.png
+105;png16\23_kovavesikuuro.png;png48\23_kovavesikuuro.png
+106;png16\23.png;png48\23.png
+65;png16\33.png;png48\33.png
+
+# Sleet (shower and continuous)
+# -----------------------------
+120;png16\Rantakuuro3_5.png;png48\Rantakuuro3_5.png
+121;png16\Rantakuuro6_7.png;png48\Rantakuuro6_7.png
+68;png16\Rantakuuro8.png;png48\Rantakuuro8.png
+122;png16\72_rantakuuro.png;png48\72_rantakuuro.png
+123;png16\72.png;png48\72.png
+69;png16\Rantasade2.png;png48\Rantasade2.png
+124;png16\73_kovarantakuuro.png;png48\73_kovarantakuuro.png
+125;png16\73.png;png48\73.png
+70;png16\83.png;png48\83.png
+
+# Snow (shower and continuous)
+# -----------------------------
+130;png16\Lumikuuro3_5.png;png48\Lumikuuro3_5.png
+131;png16\Lumikuuro6_7.png;png48\Lumikuuro6_7.png
+71;png16\Lumikuuro8.png;png48\Lumikuuro8.png
+132;png16\42_lumikuuro.png;png48\42_lumikuuro.png
+133;png16\42.png;png48\42.png
+73;png16\Lumisade2.png;png48\Lumisade2.png
+134;png16\43_kovalumikuuro.png;png48\43_kovalumikuuro.png
+135;png16\43.png;png48\43.png
+75;png16\53.png;png48\53.png
+
+# Precipitation symbols, no clouds
+# -----------------------------
+150;png16\Vesi1.png;png48\Vesi1.png
+151;png16\Vesi2.png;png48\Vesi2.png
+152;png16\Vesi3.png;png48\Vesi3.png
+153;png16\Vesikuuro.png;png48\Vesikuuro.png
+154;png16\Ukkonen1.png;png48\Ukkonen1.png
+155;png16\Tihku1.png;png48\Tihku1.png
+156;png16\Tihku2.png;png48\Tihku2.png
+157;png16\Tihku3.png;png48\Tihku3.png
+158;png16\Lumi1.png;png48\Lumi1.png
+159;png16\Lumi2.png;png48\Lumi2.png
+160;png16\Lumi3.png;png48\Lumi3.png
+161;png16\Lumikuuro.png;png48\Lumikuuro.png
+162;png16\Ranta1.png;png48\Ranta1.png
+163;png16\Ranta2.png;png48\Ranta2.png
+164;png16\Ranta3.png;png48\Ranta3.png
+165;png16\Rantakuuro.png;png48\Rantakuuro.png
+166;png16\Jaatavasade.png;png48\Jaatavasade.png
+167;png16\Jaatavatihku.png;png48\Jaatavatihku.png
+
+# Hessaa relic codes
+# -----------------------------
+21;png16\21_heikkovesikuuro.png;png48\21_heikkovesikuuro.png
+22;png16\22_vesikuuro.png;png48\22_vesikuuro.png
+31;png16\Vesisade1.png;png48\Vesisade1.png
+32;png16\Vesisade2.png;png48\Vesisade2.png
+33;png16\33.png;png48\33.png
+41;png16\Lumikuuro6_7.png;png48\Lumikuuro6_7.png
+42;png16\42.png;png48\42.png
+52;png16\Lumisade2.png;png48\Lumisade2.png
+53;png16\53.png;png48\53.png
+62;png16\62.png;png48\62.png
+64;png16\61_ukkoskuuro.png;png48\61_ukkoskuuro.png
+72;png16\72.png;png48\72.png
+83;png16\83.png;png48\83.png

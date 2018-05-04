@@ -1,0 +1,149 @@
+/*!
+
+\page page_story_temperature_day Tarina "temperature_day"
+
+\c temperature_day tarina on muotoa
+
+  -# ""
+  -# "Lämpötila on [viikonpäivänä] [x...y] astetta, [sivulause]
+  -# "Päivän ylin lämpötila on [viikonpäivänä] [x...y] astetta, [sivulause].
+     Yön alin lämpötila on [viikonpäivän vastaisena yönä] [x...y]
+     astetta , [sivulause]."
+
+missä
+
+  - fraasi [x..y] voi olla muotoa "X...Y" tai "noin X"
+  - päivä ja/tai yöjakso voi puuttua kellonajasta ja jakson pituudesta riippuen
+  - sivulause annetaan, jos lämpötila on rannikolla oleellisesti erilainen
+
+Mahdollinen sivulause on muotoa
+
+  -# "rannikolla [x...y] astetta"
+  -# "rannikolla huomattavasti korkeampi"
+  -# "rannikolla korkeampi"
+  -# "rannikolla hieman korkeampi"
+  -# "rannikolla suunnilleen sama"
+  -# "rannikolla hieman alempi"
+  -# "rannikolla alempi"
+  -# "rannikolla huomattavasti alempi"
+
+Virkettä toistetaan yhtä monta kertaa kuin datasta löytyy päivä/yö jaksoja.
+ 
+Fraasien valintaan liittyvät muuttujat ovat
+\code
+textgen::[kappale]::story::temperature_day::day_night_limit = [N] (=3)
+
+textgen::[kappale]::story::temperature_day::coast_numeric_limit = [N] (=8)
+textgen::[kappale]::story::temperature_day::coast_not_below = [N] (=-15)
+
+textgen::[kappale]::story::temperature_day::coast_limit = [N] (=2)
+
+textgen::[kappale]::story::temperature_day::comparison::significantly_higher = [N]
+textgen::[kappale]::story::temperature_day::comparison::higher = [N]
+textgen::[kappale]::story::temperature_day::comparison::somewhat_higher = [N]
+textgen::[kappale]::story::temperature_day::comparison::somewhat_lower = [N]
+textgen::[kappale]::story::temperature_day::comparison::lower = [N]
+textgen::[kappale]::story::temperature_day::comparison::significantly_lower = [N]
+\endcode
+
+Algoritmi on
+
+ -# Jos päivän ylimmän ja yön alimman lämpötilan ero on alle
+    \c day_night_limit, ei päivästä ja yöstä kerrota erikseen.
+    Rannikosta saatetaan kuitenkin kertoa vielä erikseen.
+ -# Jos sisämaan ja rannikon ero on vähintään \c coast_numeric_limit,
+    annetaan kummankin alueen lämpötila numeroina. Merkittävistä
+    lämpötilaeroista saadaan näin tarkempi tieto.
+ -# Jos alueen lämpötila on alle \c coast_not_below, ei rannikosta ja
+    sisämaasta kerrota erikseen.
+ -# Jos ero on vähintään \c coast_limit, vertaillaan lämpötiloja sanallisesti
+    \c comparison muuttujan rajojen mukaisesti.
+    
+Aikafraasit ovat tyyppiä \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_tonight Niihin liittyviä asetuksia
+kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::temperature_day::today::phrases
+textgen::[kappale]::story::temperature_day::tonight::phrases
+\endcode
+
+Valinta yksittäisen arvon ja intervallin välillä tehdään perustuen muuttujiin
+\code
+textgen::[kappale]::story::temperature_day::mininterval = [1-] (=2)
+textgen::[kappale]::story::temperature_day::always_interval_zero = [bool] (=false)
+\endcode
+Jos intervallin pituus on vähintään \c mininterval, sanotaan intervalli,
+muuten keskiarvo. Poikkeuksena jos nolla kuuluu intervalliin ja
+\c always_interval_zero on true, sanotaan aina intervalli.
+
+Päivän ja yön määritelmä saadaan muuttujista
+\code
+textgen::[kappale]::story::temperature_day::day::starthour = [0-23]
+textgen::[kappale]::story::temperature_day::day::endhour = [0-23]
+textgen::[kappale]::story::temperature_day::day::maxstarthour = [0-23]
+textgen::[kappale]::story::temperature_day::day::minendhour = [0-23]
+
+textgen::[kappale]::story::temperature_day::night::starthour = [0-23]
+textgen::[kappale]::story::temperature_day::night::endhour = [0-23]
+textgen::[kappale]::story::temperature_day::night::maxstarthour = [0-23]
+textgen::[kappale]::story::temperature_day::night::minendhour = [0-23]
+\endcode
+
+Määritelmät voisivat olla esimerkiksi muotoa
+\code
+textgen::[kappale]::story::temperature_day::day::starthour    = 6
+textgen::[kappale]::story::temperature_day::day::endhour      = 21
+textgen::[kappale]::story::temperature_day::day::maxstarthour = 13
+textgen::[kappale]::story::temperature_day::day::minendhour   = 21
+
+textgen::[kappale]::story::temperature_day::night::starthour    = 18
+textgen::[kappale]::story::temperature_day::night::endhour      = 8
+textgen::[kappale]::story::temperature_day::night::maxstarthour = 23
+textgen::[kappale]::story::temperature_day::night::minendhour   = 6
+\endcode
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::temperature_day::fake::day<N>::area::mean = [result]
+textgen::[kappale]::story::temperature_day::fake::day<N>::area::minimum = [result]
+textgen::[kappale]::story::temperature_day::fake::day<N>::area::maximum = [result]
+
+textgen::[kappale]::story::temperature_day::fake::day<N>::coast::mean = [result]
+textgen::[kappale]::story::temperature_day::fake::day<N>::coast::minimum = [result]
+textgen::[kappale]::story::temperature_day::fake::day<N>::coast::maximum = [result]
+
+textgen::[kappale]::story::temperature_day::fake::day<N>::inland::mean = [result]
+textgen::[kappale]::story::temperature_day::fake::day<N>::inland::minimum = [result]
+textgen::[kappale]::story::temperature_day::fake::day<N>::inland::maximum = [result]
+
+textgen::[kappale]::story::temperature_day::fake::night<N>::area::mean = [result]
+textgen::[kappale]::story::temperature_day::fake::night<N>::area::minimum = [result]
+textgen::[kappale]::story::temperature_day::fake::night<N>::area::maximum = [result]
+
+textgen::[kappale]::story::temperature_day::fake::night<N>::coast::mean = [result]
+textgen::[kappale]::story::temperature_day::fake::night<N>::coast::minimum = [result]
+textgen::[kappale]::story::temperature_day::fake::night<N>::coast::maximum = [result]
+
+textgen::[kappale]::story::temperature_day::fake::night<N>::inland::mean = [result]
+textgen::[kappale]::story::temperature_day::fake::night<N>::inland::minimum = [result]
+textgen::[kappale]::story::temperature_day::fake::night<N>::inland::maximum = [result]
+\endcode
+
+Tarvittavat fraasit ovat
+
+ - "päivän ylin lämpötila"
+ - "on"
+ - "noin"
+ - "astetta"
+ - "huomattavasti korkeampi"
+ - "korkeampi"
+ - "hieman korkeampi"
+ - "suunnilleen sama"
+ - "hieman alempi"
+ - "alempi"
+ - "huomattavasti alempi"
+ - "rannikolla"
+
+plus tarvittavat periodifraasit \ref sec_periodifraasit_today ja \ref sec_periodifraasit_tonight sivuilta.
+
+*/

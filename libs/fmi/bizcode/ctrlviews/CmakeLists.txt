@@ -1,0 +1,50 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(CtrlViews)
+
+set(CMAKE_MFC_FLAG 2)
+
+file( GLOB CPP_FILES source/*.cpp )
+file( GLOB H_FILES include/*.h )
+
+add_library( 
+    ${PROJECT_NAME} STATIC
+    ${CPP_FILES} 
+    ${H_FILES} 
+    )
+
+target_link_libraries( 
+    ${PROJECT_NAME}
+    SmartTools
+    Toolbox
+    Newbase
+    SmetData
+    CtrlViewUtils
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${Toolbox_INCLUDE_DIRS}
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${SmetData_INCLUDE_DIRS}
+    PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
+    PUBLIC ${StlHelp_INCLUDE_DIRS}
+    PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${UNIRAS_INCLUDE_DIR}
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}/include
+    ${SmartTools_INCLUDE_DIRS}
+    ${Toolbox_INCLUDE_DIRS}
+    ${Newbase_INCLUDE_DIRS}
+    ${SmetData_INCLUDE_DIRS}
+    ${CtrlViewUtils_INCLUDE_DIRS}
+    ${StlHelp_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIR}
+    ${UNIRAS_INCLUDE_DIR}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
+    )
+

@@ -1,0 +1,52 @@
+/*!
+
+\page page_story_frost_mean Tarina "frost_mean"
+
+Aikavälin hallan todennäköisyyksistä valitaan keskiarvo tekstiä varten.
+
+\c frost_mean tarina on muotoa
+
+ -# ""
+ -# "Hallan todennäköisyys on N%."
+ -# "Ankaran hallan todennäköisyys on N%".
+
+Ruotsiksi
+
+ -# ""
+ -# "Sannolikheten för nattfrost är N%."
+ -# "Sannolikheten för stark nattforst är N%".
+
+Englanniksi
+
+ -# ""
+ -# "Probability of frost is N%."
+ -# "Probability of severe frost is N%".
+
+Tarina valitaan perustuen muuttujiin
+\code
+textgen::[kappale]::story::frost_mean::severe_frost_limit = [0-100]
+textgen::[kappale]::story::frost_mean::frost_limit = [0-100]
+textgen::[kappale]::story::frost_mean::precision = [0-100]
+\endcode
+Jos ankaran hallan todennäköisyys on vähintään \c severe_frost_limit,
+palautetaan fraasi 3. Muuten jos hallan todennäköisyys on vähintään
+\c frost_limit, palautetaan fraasi 2. Muuten palautetaan tyhjä tarina.
+
+Todennäköisyydet pyöristetään muuttujan \c precision tarkkuuteen.
+Yleisimmin käytettäneen tarkkuutta 10.
+
+Käytetyt fraasit ovat
+
+ - "hallan todennäköisyys"
+ - "ankaran hallan todennäköisyys"
+ - "on"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Maximum(Frost)):
+textgen::[kappale]::story::frost_mean::fake::mean = [result]
+# Mean(Maximum(SevereFrost)):
+textgen::[kappale]::story::frost_mean::fake::severe_mean = [result]
+\endcode
+
+*/

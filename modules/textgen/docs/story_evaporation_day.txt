@@ -1,0 +1,67 @@
+/*!
+
+\page page_story_evaporation_day Tarina "evaporation_day"
+
+Tarinan muoto on jokin seuraavista
+
+ -# "Haihdunta on erittäin huono, X millimetriä."
+ -# "Haihdunta on huono, X millimetriä."
+ -# "Haihdunta on tyydyttävä, X millimetriä."
+ -# "Haihdunta on hyvä, X millimetriä."
+ -# "Haihdunta on erittäin hyvä, X millimetriä."
+
+Ruotsiksi:
+
+ -# "Avdunstning är mycket svag, X millimeter."
+ -# "Avdunstning är svag, X millimeter."
+ -# "Avdunstning är måttlig, X millimeter."
+ -# "Avdunstning är bra, X millimeter."
+ -# "Avdunstning är mycket bra, X millimeter."
+
+Englanniksi:
+
+ -# "Evaporation is very poor, X millimeters."
+ -# "Evaporation is poor, X millimeters."
+ -# "Evaporation is satisfactory, X millimeters."
+ -# "Evaporation is good, X millimeters."
+ -# "Evaporation is very good, X millimeters."
+
+Tarina soveltuu vain yhdelle ainoalle päivälle. Jos
+data puuttuu kyseiselle päivälle, on tarina tyhjä.
+
+Haihduntaan liittyvät raja-arvot ovat:
+
+ - alle 1,5 mm/d  erittäin huono
+ - 1,5-3 mm/d  huono
+ - 3,1-5 mm/d  tyydyttävä
+ - 5,1-7,5 mm/d  hyvä
+ - yli 7,5 mm/d  erinomainen
+
+Päivän määritelmä saadaan muuttujista
+
+\code
+textgen::[kappale]::story::evaporation_day::day::starthour = [0-23]
+textgen::[kappale]::story::evaporation_day::day::endhour = [0-23]
+textgen::[kappale]::story::evaporation_day::day::maxstarthour = [0-23]
+textgen::[kappale]::story::evaporation_day::day::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::evaporation_day::fake::mean = [result]
+\endcode
+
+Käytetyt fraasit ovat
+
+ - "haihdunta on erittäin huono"
+ - "haihdunta on huono"
+ - "haihdunta on tyydyttävä"
+ - "haihdunta on hyvä"
+ - "haihdunta on erittäin hyvä"
+ - "millimetriä"
+ 
+*/

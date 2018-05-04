@@ -1,0 +1,1034 @@
+//=======================================================================
+//================ Lex class support ====================================
+//=======================================================================
+// 	lexClass:
+//		name		= c_CPPString
+//		parent		= c_CPP
+//		parent:dyn	= c_CPP
+//		parent:file = <*.c|*.cpp|*.h|*.inl|*.tli|*.tlh|*.rc|*.rc2>	
+//
+//		children		= 0
+//		children		= class1, class2, ...
+//
+//		previous:class			=	
+//		previous:tag			=	
+//		previous:tag:separators	=	
+//
+//		start:class		= 
+//		start:Tag		= '"'
+//
+//		skip:Tag		= '\"'
+//
+//		end:class		= //
+//		end:Tag			= '"'
+//		end:separators	= ' '
+//
+//		Token:tag		= 'if', 'for', 'while', 'do'
+//		Token:start:separators	= 
+//		Token:end:separators	= 
+//-----------------------------------------------------------------------
+//---------------- Attributes -------------------------------------------
+//-----------------------------------------------------------------------
+//	txt:colorFG	= 0xffc0c0 // color value in hex format. default: black	
+//	txt:colorBK	= 0xffc0c0 // color value in hex format. default: white		
+//
+//	txt:colorSelFG	= 0xffc0c0 // color value in hex format. default: white
+//	txt:colorSelBK	= 0xffc0c0 // color value in hex format. default: black
+//
+//	txt:Bold	= 1 // {1,0} default: 0
+//	txt:Italic	= 1 // {1,0} default: 0
+//	txt:Underline	= 1 // {1,0} default: 0
+//
+//	caseSensitive	= 1 // {1,0} default: 0
+//
+//	Collapsable	= 1 // {1,0} default: 0
+//	CollapsedText	= '/*...*/' // quoted string value. default: '[..]'	
+//
+//	ParseOnScreen	= 1 // {1,0} default: 0
+// 	
+//-----------------------------------------------------------------------
+//* Global attributes ***************************************************
+//-----------------------------------------------------------------------
+// 	global:FirstParseInSeparateThread	= 1		// {0,1} default=1
+// 	global:EditReparceInSeparateThread	= 1		// {0,1} default=1
+// 	global:ConfigChangedReparceInSeparateThread= 1 // {0,1} default=1
+// 	global:EditReparceTimeout_ms	= 500		// default= 500 ms; time out for start reparse after last key was pressed.
+// 	global:MaxBackParseOffset		= 100		// default= 100 chars; maximum back buffer size. Some times parser look back for the text from current position.
+// 	global:OnScreenSchCacheLifeTime_sec = 180	// default= 180 sec; -1 and 0 means infinite; time out for on screen parsed pices of text. for memory using optimization.
+// 	global:ParserThreadIdleLifeTime_sec = 60	// default=60 sec; -1 and 0 means infinite; time out for existing of parser thread when parser idle (no parse requests).
+	
+/////////////////////////////////////////////////////////////////////////
+
+//=======================================================================
+//================ Variables support ====================================
+//=======================================================================
+// NON operation - example:   @alpha:not
+//
+// @alpha	= a-z, A-Z
+// @digit	= 0-9
+// @HexDdigit	= 0-9, a-f, A-F
+// @specs	= "~`!@#$%^&*()_-+=\\|{}[];:'\",.<>/?"
+// @EOL		= End Of Line
+//---------------------------------------------
+// special tags:  '\\', '\'', '\t', '\r', '\n'
+/////////////////////////////////////////////////////////////////////////
+
+lexClass: 
+	name			= c_SmartTool	
+	parent:file		= <*.st>	
+	caseSensitive		= 0
+	DisplayName       = 'Normal Text'
+
+	//global:FirstParseInSeparateThread	= 0
+	global:EditReparceInSeparateThread	= 1
+
+	//global:EditReparceTimeout_ms	= 250
+	//global:MaxBackParseOffset		= 100
+	//global:OnScreenSchCacheLifeTime_sec = 60
+	//global:ParserThreadIdleLifeTime_sec = -1
+
+
+lexClass: 	
+	name		= c_CPPCodeBlock
+	parent:dyn	= c_SmartTool, c_CPPCodeBlock
+	start:Tag	= '{'
+	end:tag		= '}'
+	Collapsable	= 1 
+	CollapsedText	= '...'
+	DisplayName		= 'Curly Braces'
+
+lexClass: 	
+	name		= c_URL	
+	ParseOnScreen	= 0
+	parent:dyn	= c_SmartTool, c_CPPCodeBlock
+	caseSensitive	= 0
+	children		= 0
+	previous:tag	= @specs, ' ', '\t', @eol
+	start:Tag		= 'http:'
+	end:separators	= ' ', '\t', '*', '"', @eol
+	txt:colorBK	= 0xC0FFC0
+	txt:Underline	= 1
+	DisplayName		= 'URL'
+
+lexClass: 	
+	name			= c_String	
+	parent:dyn		= c_SmartTool, c_CPPCodeBlock
+	children		= c_URL
+	start:Tag		= '"'
+	skip:Tag		= '\\"', '\\\r\n', '\\\n\r', '\\\n', '\\\r'	
+	end:Tag			= '"', @eol
+	txt:colorFG		= 0xE00000
+	DisplayName		= 'String (Double Quotes)'
+
+lexClass: 	
+	name			= c_String_char	
+	parent:dyn		= c_SmartTool, c_CPPCodeBlock
+	children		= 0
+	start:Tag		= '\''
+	//skip:Tag		= '\\"', '\\\r\n', '\\\n\r', '\\\n', '\\\r'	
+	end:Tag			= '\'', @eol
+	txt:colorFG		= 0xE00000
+	DisplayName		= 'String (Single Quotes)'
+
+lexClass: 	
+	name			= c_Str_include
+	parent:dyn		= c_SmartTool, c_CPPCodeBlock
+	children		= 0
+	previous:tag	= '#include'
+	previous:tag:separators = ' ', '\t' 
+	start:Tag		= '<'	
+	end:Tag			= '>', @eol
+	txt:colorFG		= 0xE00000
+	DisplayName		= 'String (Include File)'
+
+lexClass:
+	name		= c_CPPCommentML	
+	parent:dyn	= c_SmartTool, c_CPPCodeBlock
+	children	= c_URL		
+	start:Tag	='/*'
+	end:Tag		='*/'
+	Collapsable	= 1 
+	CollapsedText	= '/**/' 
+	
+	txt:colorFG	= 0x00CF00
+	DisplayName		= 'Comment (Multi-Line)'
+
+		
+lexClass:	
+	name		= c_CPPCommentSL
+//	ParseOnScreen	= 0
+	parent		= c_SmartTool, c_CPPCodeBlock
+	children	= c_URL		
+	start:tag	='//'
+	skip:Tag	= '\\\r\n', '\\\n\r', '\\\n', '\\\r'	
+	end:tag		= @eol
+	txt:colorFG	= 0x00A000
+	DisplayName		= 'Comment (Single-Line)'
+	
+lexClass:	
+	name		= c_SmartTool_BareFunctions
+	ParseOnScreen	= 0
+	parent:Dyn	= c_SmartTool, c_CPPCodeBlock
+	children	= 0
+	DisplayName		= 'Functions'
+
+	token:tag	= 'exp'
+	token:tag	= 'sqrt'
+	token:tag	= 'ln'
+	token:tag	= 'lg'
+	token:tag	= 'sin'
+	token:tag	= 'cos'
+	token:tag	= 'tan'
+	token:tag	= 'sinh'
+	token:tag	= 'cosh'
+	token:tag	= 'tanh'
+	token:tag	= 'asin'
+	token:tag	= 'acos'
+	token:tag	= 'atan'
+	token:tag	= 'ceil'
+	token:tag	= 'floor'
+	token:tag	= 'round'
+	token:tag	= 'abs'
+	token:tag	= 'rand'
+	token:tag	= 'atan2'
+
+	token:tag	= 'avg'
+	token:tag	= 'min'
+	token:tag	= 'max'
+	token:tag	= 'sum'
+	token:tag	= 'med'
+
+	token:tag	= 'sumt'
+	token:tag	= 'maxt'
+	token:tag	= 'mint'
+	token:tag	= 'avgt'
+	token:tag	= 'medt'
+
+	token:tag	= 'sumz'
+	token:tag	= 'maxz'
+	token:tag	= 'minz'
+	token:tag	= 'avgz'
+	token:tag	= 'medz'
+	token:tag	= 'maxh'
+	token:tag	= 'minh'
+
+	token:tag	= 'grad'
+	token:tag	= 'div'
+	token:tag	= 'adv'
+	token:tag	= 'lap'
+	token:tag	= 'rot'
+
+	token:tag	= 'vertp_max'
+	token:tag	= 'vertp_min'
+	token:tag	= 'vertp_avg'
+	token:tag	= 'vertp_sum'
+	token:tag	= 'vertp_med'
+	token:tag	= 'vertp_get'
+	token:tag	= 'vertp_findc'
+	token:tag	= 'vertp_maxh'
+	token:tag	= 'vertp_minh'
+	token:tag	= 'vertp_grad'
+	token:tag	= 'vertp_findh_cond'
+	token:tag	= 'vertp_findc_cond'
+	token:tag	= 'vertfl_max'
+	token:tag	= 'vertfl_min'
+	token:tag	= 'vertfl_avg'
+	token:tag	= 'vertfl_sum'
+	token:tag	= 'vertfl_med'
+	token:tag	= 'vertfl_get'
+	token:tag	= 'vertfl_findh'
+	token:tag	= 'vertfl_findc'
+	token:tag	= 'vertfl_maxh'
+	token:tag	= 'vertfl_minh'
+	token:tag	= 'vertfl_grad'
+	token:tag	= 'vertfl_findh_cond'
+	token:tag	= 'vertfl_findc_cond'
+	token:tag	= 'vertz_max'
+	token:tag	= 'vertz_min'
+	token:tag	= 'vertz_avg'
+	token:tag	= 'vertz_sum'
+	token:tag	= 'vertz_med'
+	token:tag	= 'vertz_get'
+	token:tag	= 'vertz_findh'
+	token:tag	= 'vertz_findc'
+	token:tag	= 'vertz_maxh'
+	token:tag	= 'vertz_minh'
+	token:tag	= 'vertz_grad'
+	token:tag	= 'vertz_findh_cond'
+	token:tag	= 'vertz_findc_cond'
+	token:tag	= 'vertlev_max'
+	token:tag	= 'vertlev_min'
+	token:tag	= 'vertlev_avg'
+	token:tag	= 'vertlev_sum'
+	token:tag	= 'vertlev_med'
+	token:tag	= 'vertlev_get'
+	token:tag	= 'vertlev_findh'
+	token:tag	= 'vertlev_findc'
+	token:tag	= 'vertlev_maxh'
+	token:tag	= 'vertlev_minh'
+	token:tag	= 'vertlev_grad'
+	token:tag	= 'vertlev_findh_cond'
+	token:tag	= 'vertlev_findc_cond'
+
+	token:tag	= 'peekxy'
+	token:tag	= 'peekxy2'
+	token:tag	= 'peekxy3'
+
+	token:tag	= 'probrect_over'
+	token:tag	= 'probrect_overeq'
+	token:tag	= 'probrect_under'
+	token:tag	= 'probrect_undereq'
+	token:tag	= 'probrect_equal'
+	token:tag	= 'probrect_notequal'
+	token:tag	= 'probrect_between'
+	token:tag	= 'probrect_betweeneq'
+
+	token:tag	= 'probcircle_over'
+	token:tag	= 'probcircle_overeq'
+	token:tag	= 'probcircle_under'
+	token:tag	= 'probcircle_undereq'
+	token:tag	= 'probcircle_equal'
+	token:tag	= 'probcircle_notequal'
+	token:tag	= 'probcircle_between'
+	token:tag	= 'probcircle_betweeneq'
+
+	token:tag	= 'occurrence_over'
+	token:tag	= 'occurrence_overeq'
+	token:tag	= 'occurrence_under'
+	token:tag	= 'occurrence_undereq'
+	token:tag	= 'occurrence_equal'
+	token:tag	= 'occurrence_notequal'
+	token:tag	= 'occurrence_between'
+	token:tag	= 'occurrence_betweeneq'
+	token:tag	= 'occurrence'
+
+	token:tag	= 'closestvalue'
+	token:tag	= 'latestvalue'
+
+	token:tag	= 'time_max'
+	token:tag	= 'time_min'
+	token:tag	= 'time_avg'
+	token:tag	= 'time_sum'
+	token:tag	= 'time_med'
+
+	token:tag	= 'timevertp_max'
+	token:tag	= 'timevertp_min'
+	token:tag	= 'timevertp_avg'
+	token:tag	= 'timevertp_sum'
+	token:tag	= 'timevertp_med'
+
+	token:tag	= 'timevertfl_max'
+	token:tag	= 'timevertfl_min'
+	token:tag	= 'timevertfl_avg'
+	token:tag	= 'timevertfl_sum'
+	token:tag	= 'timevertfl_med'
+
+	token:tag	= 'timevertz_max'
+	token:tag	= 'timevertz_min'
+	token:tag	= 'timevertz_avg'
+	token:tag	= 'timevertz_sum'
+	token:tag	= 'timevertz_med'
+
+	token:tag	= 'timevertlev_max'
+	token:tag	= 'timevertlev_min'
+	token:tag	= 'timevertlev_avg'
+	token:tag	= 'timevertlev_sum'
+	token:tag	= 'timevertlev_med'
+
+	token:tag	= 'area_min'
+	token:tag	= 'area_max'
+	token:tag	= 'area_avg'
+	token:tag	= 'area_sum'
+	token:tag	= 'area_med'
+
+	token:tag	= 'area_prob'
+	token:tag	= 'previousfulldays_min'
+	token:tag	= 'previousfulldays_max'
+	token:tag	= 'previousfulldays_avg'
+	token:tag	= 'previousfulldays_sum'
+	token:tag	= 'previousfulldays_med'
+	token:tag	= 'duration'
+	token:tag	= 'local_extremes'
+	
+	token:tag	= 'vertp_findh_over'
+	token:tag	= 'vertp_findh_overeq'
+	token:tag	= 'vertp_findh_under'
+	token:tag	= 'vertp_findh_undereq'
+	token:tag	= 'vertp_findh_between'
+	token:tag	= 'vertp_findh_betweeneq'
+	token:tag	= 'vertfl_findh_over'
+	token:tag	= 'vertfl_findh_overeq'
+	token:tag	= 'vertfl_findh_under'
+	token:tag	= 'vertfl_findh_undereq'
+	token:tag	= 'vertfl_findh_between'
+	token:tag	= 'vertfl_findh_betweeneq'
+	token:tag	= 'vertz_findh_over'
+	token:tag	= 'vertz_findh_overeq'
+	token:tag	= 'vertz_findh_under'
+	token:tag	= 'vertz_findh_undereq'
+	token:tag	= 'vertz_findh_between'
+	token:tag	= 'vertz_findh_betweeneq'
+	token:tag	= 'vertlev_findh_over'
+	token:tag	= 'vertlev_findh_overeq'
+	token:tag	= 'vertlev_findh_under'
+	token:tag	= 'vertlev_findh_undereq'
+	token:tag	= 'vertlev_findh_between'
+	token:tag	= 'vertlev_findh_betweeneq'
+	token:tag	= 'peekt'
+	token:tag	= 'resolution'
+	token:tag	= 'calculationpoint'
+	token:tag	= 'observationradius'
+	token:tag	= 'surface'
+	token:tag	= 'pressure'
+	token:tag	= 'hybrid'
+	token:tag	= 'height'
+	token:tag	= 'include'
+	token:tag	= '#include'
+	token:tag	= 'minute'
+	token:tag	= 'edited'
+
+	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
+	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
+	
+	txt:colorFG	= 0x0000FF
+		
+lexClass:	
+	name		= c_SmartTool_FunctionsWithPArameters
+	ParseOnScreen	= 0
+	parent:Dyn	= c_SmartTool, c_CPPCodeBlock
+	children	= 0
+	DisplayName		= 'Functions'
+
+	token:tag	= 'exp(x)'
+	token:tag	= 'sqrt(x)'
+	token:tag	= 'ln(x)'
+	token:tag	= 'lg(x)'
+	token:tag	= 'sin(x)'
+	token:tag	= 'cos(x)'
+	token:tag	= 'tan(x)'
+	token:tag	= 'sinh(x)'
+	token:tag	= 'cosh(x)'
+	token:tag	= 'tanh(x)'
+	token:tag	= 'asin(x)'
+	token:tag	= 'acos(x)'
+	token:tag	= 'atan(x)'
+	token:tag	= 'ceil(x)'
+	token:tag	= 'floor(x)'
+	token:tag	= 'round(x)'
+	token:tag	= 'abs(x)'
+	token:tag	= 'rand(x)'
+	token:tag	= 'atan2(x)'
+
+	token:tag	= 'avg(par timestep1 timestep2)'
+	token:tag	= 'min(par timestep1 timestep2)'
+	token:tag	= 'max(par timestep1 timestep2)'
+	token:tag	= 'sum(par timestep1 timestep2)'
+	token:tag	= 'med(par timestep1 timestep2)'
+	token:tag	= 'avg(par leftStep bottomStep rightStep topStep)'
+	token:tag	= 'min(par leftStep bottomStep rightStep topStep)'
+	token:tag	= 'max(par leftStep bottomStep rightStep topStep)'
+	token:tag	= 'sum(par leftStep bottomStep rightStep topStep)'
+	token:tag	= 'med(par leftStep bottomStep rightStep topStep)'
+
+	token:tag	= 'sumt(hourOffset1, hourOffset2, formula)'
+	token:tag	= 'maxt(hourOffset1, hourOffset2, formula)'
+	token:tag	= 'mint(hourOffset1, hourOffset2, formula)'
+	token:tag	= 'avgt(hourOffset1, hourOffset2, formula)'
+	token:tag	= 'medt(hourOffset1, hourOffset2, formula)'
+
+	token:tag	= 'sumz(z1, z2, formula)'
+	token:tag	= 'maxz(z1, z2, formula)'
+	token:tag	= 'minz(z1, z2, formula)'
+	token:tag	= 'avgz(z1, z2, formula)'
+	token:tag	= 'medz(z1, z2, formula)'
+	token:tag	= 'maxh(z1, z2, formula)'
+	token:tag	= 'minh(z1, z2, formula)'
+
+	token:tag	= 'grad(param)'
+	token:tag	= 'div(param)'
+	token:tag	= 'adv(param)'
+	token:tag	= 'lap(param)'
+	token:tag	= 'rot(wind)'
+
+	token:tag	= 'vertp_max(par, p1, p2)'
+	token:tag	= 'vertp_max(par, p1, p2, "x > y")'
+	token:tag	= 'vertp_min(par, p1, p2)'
+	token:tag	= 'vertp_min(par, p1, p2, "x > y")'
+	token:tag	= 'vertp_avg(par, p1, p2)'
+	token:tag	= 'vertp_avg(par, p1, p2, "x > y")'
+	token:tag	= 'vertp_sum(par, p1, p2)'
+	token:tag	= 'vertp_sum(par, p1, p2, "x > y")'
+	token:tag	= 'vertp_med(par, p1, p2)'
+	token:tag	= 'vertp_med(par, p1, p2, "x > y")'
+	token:tag	= 'vertp_get(par, p)'
+	token:tag	= 'vertp_findc(par, p1, p2, value)'
+	token:tag	= 'vertp_findc(par, p1, p2, value, "x > y")'
+	token:tag	= 'vertp_findh(par, p1, p2, value, nth)'
+	token:tag	= 'vertp_findh(par, p1, p2, value, nth, "x > y")'
+	token:tag	= 'vertp_maxh(par, p1, p2)'
+	token:tag	= 'vertp_maxh(par, p1, p2, "x > y")'
+	token:tag	= 'vertp_minh(par, p1, p2)'
+	token:tag	= 'vertp_minh(par, p1, p2, "x > y")'
+	token:tag	= 'vertp_grad(par, p1, p2)'
+	token:tag	= 'vertp_findh_cond(par, p1, p2, nth, "x > y")'
+	token:tag	= 'vertp_findc_cond(par, p1, p2, "x > y")'
+	token:tag	= 'vertfl_max(par, fl1, fl2)'
+	token:tag	= 'vertfl_max(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertfl_min(par, fl1, fl2)'
+	token:tag	= 'vertfl_min(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertfl_avg(par, fl1, fl2)'
+	token:tag	= 'vertfl_avg(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertfl_sum(par, fl1, fl2)'
+	token:tag	= 'vertfl_sum(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertfl_med(par, fl1, fl2)'
+	token:tag	= 'vertfl_med(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertfl_get(par, fl)'
+	token:tag	= 'vertfl_findh(par, fl1, fl2, value, nth)'
+	token:tag	= 'vertfl_findh(par, fl1, fl2, value, nth, "x > y")'
+	token:tag	= 'vertfl_findc(par, fl1, fl2, value)'
+	token:tag	= 'vertfl_findc(par, fl1, fl2, value, "x > y")'
+	token:tag	= 'vertfl_maxh(par, fl1, fl2)'
+	token:tag	= 'vertfl_maxh(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertfl_minh(par, fl1, fl2)'
+	token:tag	= 'vertfl_minh(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertfl_grad(par, fl1, fl2)'
+	token:tag	= 'vertfl_findh_cond(par, fl1, fl2, nth, "x > y")'
+	token:tag	= 'vertfl_findc_cond(par, fl1, fl2, "x > y")'
+	token:tag	= 'vertz_max(par, z1, z2)'
+	token:tag	= 'vertz_max(par, z1, z2, "x > y")'
+	token:tag	= 'vertz_min(par, z1, z2)'
+	token:tag	= 'vertz_min(par, z1, z2, "x > y")'
+	token:tag	= 'vertz_avg(par, z1, z2)'
+	token:tag	= 'vertz_avg(par, z1, z2, "x > y")'
+	token:tag	= 'vertz_sum(par, z1, z2)'
+	token:tag	= 'vertz_sum(par, z1, z2, "x > y")'
+	token:tag	= 'vertz_med(par, z1, z2)'
+	token:tag	= 'vertz_med(par, z1, z2, "x > y")'
+	token:tag	= 'vertz_get(par, z)'
+	token:tag	= 'vertz_findh(par, z1, z2, value, nth)'
+	token:tag	= 'vertz_findh(par, z1, z2, value, nth, "x > y")'
+	token:tag	= 'vertz_findc(par, z1, z2, value)'
+	token:tag	= 'vertz_findc(par, z1, z2, value, "x > y")'
+	token:tag	= 'vertz_maxh(par, z1, z2)'
+	token:tag	= 'vertz_maxh(par, z1, z2, "x > y")'
+	token:tag	= 'vertz_minh(par, z1, z2)'
+	token:tag	= 'vertz_minh(par, z1, z2, "x > y")'
+	token:tag	= 'vertz_grad(par, z1, z2)'
+	token:tag	= 'vertz_findh_cond(par, z1, z2, nth, "x > y")'
+	token:tag	= 'vertz_findc_cond(par, z1, z2, "x > y")'
+	token:tag	= 'vertlev_max(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_max(par, hyb1, hyb2, "x > y")'
+	token:tag	= 'vertlev_min(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_min(par, hyb1, hyb2, "x > y")'
+	token:tag	= 'vertlev_avg(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_avg(par, hyb1, hyb2, "x > y")'
+	token:tag	= 'vertlev_sum(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_sum(par, hyb1, hyb2, "x > y")'
+	token:tag	= 'vertlev_med(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_med(par, hyb1, hyb2, "x > y")'
+	token:tag	= 'vertlev_get(par, hyb)'
+	token:tag	= 'vertlev_findh(par, hyb1, hyb2, value, nth)'
+	token:tag	= 'vertlev_findh(par, hyb1, hyb2, value, nth, "x > y")'
+	token:tag	= 'vertlev_findc(par, hyb1, hyb2, value)'
+	token:tag	= 'vertlev_findc(par, hyb1, hyb2, value, "x > y")'
+	token:tag	= 'vertlev_maxh(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_maxh(par, hyb1, hyb2, "x > y")'
+	token:tag	= 'vertlev_minh(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_minh(par, hyb1, hyb2, "x > y")'
+	token:tag	= 'vertlev_grad(par, hyb1, hyb2)'
+	token:tag	= 'vertlev_findh_cond(par, hyb1, hyb2, nth, "x > y")'
+	token:tag	= 'vertlev_findc_cond(par, hyb1, hyb2, "x > y")'
+	
+	token:tag	= 'peekxy(par dataGridX dataGridY)'
+	token:tag	= 'peekxy2(par kmX kmY)'
+	token:tag	= 'peekxy3(par kmWestEast kmSouthNorth)'
+	
+	token:tag	= 'probrect_over(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probrect_overeq(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probrect_under(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probrect_undereq(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probrect_equal(par, radius_km, time_offset1, time_offset2, value)'
+	token:tag	= 'probrect_notequal(par, radius_km, time_offset1, time_offset2, value)'
+	token:tag	= 'probrect_between(par, radius_km, time_offset1, time_offset2, limit1, limit2)'
+	token:tag	= 'probrect_betweeneq(par, radius_km, time_offset1, time_offset2, limit1, limit2)'
+
+	token:tag	= 'probcircle_over(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probcircle_overeq(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probcircle_under(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probcircle_undereq(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'probcircle_equal(par, radius_km, time_offset1, time_offset2, value)'
+	token:tag	= 'probcircle_notequal(par, radius_km, time_offset1, time_offset2, value)'
+	token:tag	= 'probcircle_between(par, radius_km, time_offset1, time_offset2, limit1, limit2)'
+	token:tag	= 'probcircle_betweeneq(par, radius_km, time_offset1, time_offset2, limit1, limit2)'
+	
+	token:tag	= 'occurrence_over(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'occurrence_overeq(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'occurrence_under(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'occurrence_undereq(par, radius_km, time_offset1, time_offset2, limit)'
+	token:tag	= 'occurrence_equal(par, radius_km, time_offset1, time_offset2, value)'
+	token:tag	= 'occurrence_notequal(par, radius_km, time_offset1, time_offset2, value)'
+	token:tag	= 'occurrence_between(par, radius_km, time_offset1, time_offset2, limit1, limit2)'
+	token:tag	= 'occurrence_betweeneq(par, radius_km, time_offset1, time_offset2, limit1, limit2)'
+	token:tag	= 'occurrence(par, radius_km, time_offset1, time_offset2, "x > y")'
+	
+	token:tag	= 'closestvalue(par, timeoffset)'
+	token:tag	= 'latestvalue(par)'
+
+	token:tag	= 'time_max(par, time_offset1, time_offset2)'
+	token:tag	= 'time_min(par, time_offset1, time_offset2)'
+	token:tag	= 'time_avg(par, time_offset1, time_offset2)'
+	token:tag	= 'time_sum(par, time_offset1, time_offset2)'
+	token:tag	= 'time_med(par, time_offset1, time_offset2)'
+
+	token:tag	= 'timevertp_max(par, timeoffset1, timeoffset2, p1, p2)'
+	token:tag	= 'timevertp_min(par, timeoffset1, timeoffset2, p1, p2)'
+	token:tag	= 'timevertp_avg(par, timeoffset1, timeoffset2, p1, p2)'
+	token:tag	= 'timevertp_sum(par, timeoffset1, timeoffset2, p1, p2)'
+	token:tag	= 'timevertp_med(par, timeoffset1, timeoffset2, p1, p2)'
+
+	token:tag	= 'timevertfl_max(par, timeoffset1, timeoffset2, fl1, fl2)'
+	token:tag	= 'timevertfl_min(par, timeoffset1, timeoffset2, fl1, fl2)'
+	token:tag	= 'timevertfl_avg(par, timeoffset1, timeoffset2, fl1, fl2)'
+	token:tag	= 'timevertfl_sum(par, timeoffset1, timeoffset2, fl1, fl2)'
+	token:tag	= 'timevertfl_med(par, timeoffset1, timeoffset2, fl1, fl2)'
+
+	token:tag	= 'timevertz_max(par, timeoffset1, timeoffset2, z1, z2)'
+	token:tag	= 'timevertz_min(par, timeoffset1, timeoffset2, z1, z2)'
+	token:tag	= 'timevertz_avg(par, timeoffset1, timeoffset2, z1, z2)'
+	token:tag	= 'timevertz_sum(par, timeoffset1, timeoffset2, z1, z2)'
+	token:tag	= 'timevertz_med(par, timeoffset1, timeoffset2, z1, z2)'
+
+	token:tag	= 'timevertlev_max(par, timeoffset1, timeoffset2, lev1, lev2)'
+	token:tag	= 'timevertlev_min(par, timeoffset1, timeoffset2, lev1, lev2)'
+	token:tag	= 'timevertlev_avg(par, timeoffset1, timeoffset2, lev1, lev2)'
+	token:tag	= 'timevertlev_sum(par, timeoffset1, timeoffset2, lev1, lev2)'
+	token:tag	= 'timevertlev_med(par, timeoffset1, timeoffset2, lev1, lev2)'
+
+	token:tag	= 'area_min(par, radius_km, time_offset1, time_offset2)'
+	token:tag	= 'area_min(par, radius_km, time_offset1, time_offset2, "x > y")'
+	token:tag	= 'area_max(par, radius_km, time_offset1, time_offset2)'
+	token:tag	= 'area_max(par, radius_km, time_offset1, time_offset2, "x > y")'
+	token:tag	= 'area_avg(par, radius_km, time_offset1, time_offset2)'
+	token:tag	= 'area_avg(par, radius_km, time_offset1, time_offset2, "x > y")'
+	token:tag	= 'area_sum(par, radius_km, time_offset1, time_offset2)'
+	token:tag	= 'area_sum(par, radius_km, time_offset1, time_offset2, "x > y")'
+	token:tag	= 'area_med(par, radius_km, time_offset1, time_offset2)'
+	token:tag	= 'area_med(par, radius_km, time_offset1, time_offset2, "x > y")'
+
+	token:tag	= 'area_prob(par, radius_km, time_offset1, time_offset2, "x > y")'
+	token:tag	= 'previousfulldays_min(par, day_count)'
+	token:tag	= 'previousfulldays_min(par, day_count, "x > y")'
+	token:tag	= 'previousfulldays_max(par, day_count)'
+	token:tag	= 'previousfulldays_max(par, day_count, "x > y")'
+	token:tag	= 'previousfulldays_avg(par, day_count)'
+	token:tag	= 'previousfulldays_avg(par, day_count, "x > y")'
+	token:tag	= 'previousfulldays_sum(par, day_count)'
+	token:tag	= 'previousfulldays_sum(par, day_count, "x > y")'
+	token:tag	= 'previousfulldays_med(par, day_count)'
+	token:tag	= 'previousfulldays_med(par, day_count, "x > y")'
+	token:tag	= 'duration(par, seek_time_in_hours, use_cumulative_calculation, "x > y")'
+	token:tag	= 'local_extremes(par, search_radius_in_km, min_value, max_value)'
+
+	token:tag	= 'vertp_findh_over(par, p1, p2, limit)'
+	token:tag	= 'vertp_findh_overeq(par, p1, p2, limit)'
+	token:tag	= 'vertp_findh_under(par, p1, p2, limit)'
+	token:tag	= 'vertp_findh_undereq(par, p1, p2, limit)'
+	token:tag	= 'vertp_findh_between(par, p1, p2, limit1, limit2)'
+	token:tag	= 'vertp_findh_betweeneq(par, p1, p2, limit1, limit2)'
+	token:tag	= 'vertfl_findh_over(par, fl1, fl2, limit)'
+	token:tag	= 'vertfl_findh_overeq(par, fl1, fl2, limit)'
+	token:tag	= 'vertfl_findh_under(par, fl1, fl2, limit)'
+	token:tag	= 'vertfl_findh_undereq(par, fl1, fl2, limit)'
+	token:tag	= 'vertfl_findh_between(par, fl1, fl2, limit1, limit2)'
+	token:tag	= 'vertfl_findh_betweeneq(par, fl1, fl2, limit1, limit2)'
+	token:tag	= 'vertz_findh_over(par, z1, z2, limit)'
+	token:tag	= 'vertz_findh_overeq(par, z1, z2, limit)'
+	token:tag	= 'vertz_findh_under(par, z1, z2, limit)'
+	token:tag	= 'vertz_findh_undereq(par, z1, z2, limit)'
+	token:tag	= 'vertz_findh_between(par, z1, z2, limit1, limit2)'
+	token:tag	= 'vertz_findh_betweeneq(par, z1, z2, limit1, limit2)'
+	token:tag	= 'vertlev_findh_over(par, lev1, lev2, limit)'
+	token:tag	= 'vertlev_findh_overeq(par, lev1, lev2, limit)'
+	token:tag	= 'vertlev_findh_under(par, lev1, lev2, limit)'
+	token:tag	= 'vertlev_findh_undereq(par, lev1, lev2, limit)'
+	token:tag	= 'vertlev_findh_between(par, lev1, lev2, limit1, limit2)'
+	token:tag	= 'vertlev_findh_betweeneq(par, lev1, lev2, limit1, limit2)'
+	
+	token:tag	= 'peekt(par, timeoffset)'
+	
+	token:tag	= 'resolution = x // [km]'
+	token:tag	= 'resolution = producer_surface'
+	token:tag	= 'resolution = producer_pressure'
+	token:tag	= 'resolution = producer_hybrid'
+	token:tag	= 'resolution = producer_height'
+	token:tag	= 'resolution = edited'
+	
+	token:tag	= 'calculationpoint = producer'
+	token:tag	= 'calculationpoint = lat,lon'
+	
+	token:tag	= 'observationradius = x // [km]'
+	
+	token:tag	= '#include "locations\synop_locations.st"'
+
+	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
+	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
+	
+	txt:colorFG	= 0x0000FF
+	
+lexClass:
+	name		= c_CPPCodeControl
+	ParseOnScreen	= 0
+	parent:Dyn	= c_SmartTool, c_CPPCodeBlock
+	children	= 0
+	DisplayName		= 'Code Control'
+
+	token:tag	= 'VAR'
+	token:tag	= 'IF'
+	token:tag	= 'ELSEIF'
+	token:tag	= 'ELSE'
+	token:tag	= 'RESULT'
+	token:tag	= 'AND'
+	token:tag	= 'OR'
+	token:tag	= '&&'
+	token:tag	= '||'
+
+	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', @eol
+	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
+
+	txt:colorFG	= 0x990099
+	txt:bold = 0
+
+lexClass:
+	name		= c_CPPCodeControlWithStructures
+	ParseOnScreen	= 0
+	parent:Dyn	= c_SmartTool, c_CPPCodeBlock
+	children	= 0
+	DisplayName		= 'Code Control'
+
+	token:tag	= 'IF(x > y)\n{\n}'
+	token:tag	= 'IF(x > y AND z < x)\n{\n}'
+	token:tag	= 'IF(x > y OR z < x)\n{\n}'
+	token:tag	= 'IF(x > y)\n{\n}\nELSE\n{\n}'
+	token:tag	= 'IF(x > y)\n{\n}\nELSEIF(z < x)\n{\n}\nELSE\n{\n}'
+	token:tag	= 'ELSEIF(x > y)\n{\n}'
+	token:tag	= 'ELSEIF(x > y AND z < x)\n{\n}'
+	token:tag	= 'ELSEIF(x > y OR z < x)\n{\n}'
+	token:tag	= 'ELSE\n{\n}'
+
+	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', @eol
+	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
+
+	txt:colorFG	= 0x990099
+	txt:bold = 0
+
+
+lexClass:
+	name		= c_CPPKnownVars
+	ParseOnScreen	= 0
+	parent:Dyn	= c_SmartTool, c_CPPCodeBlock
+	children	= 0
+	DisplayName		= 'Known Variables'
+
+	token:tag	= 'T'
+	token:tag	= 'P'
+	token:tag	= 'RH'
+	token:tag	= 'TPOT'
+	token:tag	= 'THETAW'
+	token:tag	= 'KIND'
+	token:tag	= 'TD'
+	token:tag	= 'DP'
+	token:tag	= 'LRAD'
+	token:tag	= 'SRAD'
+	token:tag	= 'WS'
+	token:tag	= 'WD'
+	token:tag	= 'U'
+	token:tag	= 'V'
+	token:tag	= 'WVEC'
+	token:tag	= 'N'
+	token:tag	= 'CL'
+	token:tag	= 'CM'
+	token:tag	= 'CH'
+	token:tag	= 'RR'
+	token:tag	= 'PREF'
+	token:tag	= 'PRET'
+	token:tag	= 'THUND'
+	token:tag	= 'FOG'
+	token:tag	= 'HSADE'
+	token:tag	= 'HESSAA'
+	token:tag	= 'W'
+	token:tag	= 'Z'
+	token:tag	= 'GEOM'
+	token:tag	= 'GEOP'
+	token:tag	= 'WIND'
+	token:tag	= 'WEATHER'
+	token:tag	= 'RRCON'
+	token:tag	= 'RRLAR'
+	token:tag	= 'CAPE'
+	token:tag	= 'CIN'
+	token:tag	= 'TKE'
+	token:tag	= 'ICING'
+	token:tag	= 'POP'
+	token:tag	= 'MIST'
+	token:tag	= 'PSEUDOSATEL'
+	token:tag	= 'VIS'
+	token:tag	= 'GUST'
+	token:tag	= 'WSMAX'
+	token:tag	= 'BOUNDARYLH'
+	token:tag	= 'SNOWFALL'
+	token:tag	= 'CLOUDWATER'
+	token:tag	= 'FMIPARAMETERNAME'
+	token:tag	= 'STATIONP'
+	token:tag	= 'ZEROH'
+	token:tag	= 'SNOWDEPTH'
+	token:tag	= 'ICECOVER'
+	token:tag	= 'WSO1'
+	token:tag	= 'WSO2'
+	token:tag	= 'WSO3'
+	token:tag	= 'WSO4'
+	token:tag	= 'WSO5'
+	token:tag	= 'WSO6'
+	token:tag	= 'ICING'
+	token:tag	= 'QNH'
+	token:tag	= 'LCLSUR'
+	token:tag	= 'LFCSUR'
+	token:tag	= 'ELSUR'
+	token:tag	= 'LCLHEIGHTSUR'
+	token:tag	= 'LFCHEIGHTSUR'
+	token:tag	= 'ELHEIGHTSUR'
+	token:tag	= 'CAPESUR'
+	token:tag	= 'CAPE03KMSUR'
+	token:tag	= 'CAPE1040SUR'
+	token:tag	= 'CINSUR'
+	token:tag	= 'LCL500M'
+	token:tag	= 'LFC500M'
+	token:tag	= 'EL500M'
+	token:tag	= 'LCLHEIGHT500M'
+	token:tag	= 'LFCHEIGHT500M'
+	token:tag	= 'ELHEIGHT500M'
+	token:tag	= 'CAPE500M'
+	token:tag	= 'CAPE03KM500M'
+	token:tag	= 'CAPE1040500M'
+	token:tag	= 'CIN500M'
+	token:tag	= 'LCLMOSTUN'
+	token:tag	= 'LFCMOSTUN'
+	token:tag	= 'ELMOSTUN'
+	token:tag	= 'LCLHEIGHTMOSTUN'
+	token:tag	= 'LFCHEIGHTMOSTUN'
+	token:tag	= 'ELHEIGHTMOSTUN'
+	token:tag	= 'CAPEMOSTUN'
+	token:tag	= 'CAPE03KMMOSTUN'
+	token:tag	= 'CAPE1040MOSTUN'
+	token:tag	= 'CINMOSTUN'
+	token:tag	= 'LCLOBSBAS'
+	token:tag	= 'LFCOBSBAS'
+	token:tag	= 'ELOBSBAS'
+	token:tag	= 'LCLHEIGHTOBSBAS'
+	token:tag	= 'LFCHEIGHTOBSBAS'
+	token:tag	= 'ELHEIGHTOBSBAS'
+	token:tag	= 'CAPEOBSBAS'
+	token:tag	= 'CAPE03KMOBSBAS'
+	token:tag	= 'CAPE1040OBSBAS'
+	token:tag	= 'CINOBSBAS'
+	token:tag	= 'SHOW'
+	token:tag	= 'LIFT'
+	token:tag	= 'KINX'
+	token:tag	= 'CTOT'
+	token:tag	= 'VTOT'
+	token:tag	= 'TOTL'
+	token:tag	= 'BULKSHEAR06KM'
+	token:tag	= 'BULKSHEAR01KM'
+	token:tag	= 'SRH03KM'
+	token:tag	= 'SRH01KM'
+	token:tag	= 'THETAE03KM'
+	token:tag	= 'TOPO'
+	token:tag	= 'SLOPE'
+	token:tag	= 'SLOPEDIR'
+	token:tag	= 'DISTSEA'
+	token:tag	= 'DIRSEA'
+	token:tag	= 'DISTLAND'
+	token:tag	= 'DIRLAND'
+	token:tag	= 'LANDSEEMASK'
+	token:tag	= 'RELTOPO'
+	token:tag	= 'LAT'
+	token:tag	= 'LON'
+	token:tag	= 'EANGLE'
+	token:tag	= 'JDAY'
+	token:tag	= 'LHOUR'
+	token:tag	= 'UTCHOUR'
+	token:tag	= 'FHOUR'
+	token:tag	= 'TIMESTEP'
+	token:tag	= 'GRIDSIZEX'
+	token:tag	= 'GRIDSIZEY'
+	token:tag	= 'MET'
+	token:tag	= 'ORIG'
+	token:tag	= 'ANA'
+	token:tag	= 'HELP'
+	token:tag	= 'EC3VRK'
+	token:tag	= 'SYNOP'
+	token:tag	= 'METAR'
+	token:tag	= 'WXT'
+	token:tag	= 'ROAD'
+	token:tag	= 'TEMP'
+	token:tag	= 'NRD'
+	token:tag	= 'MISS'
+	token:tag	= 'PI'
+	token:tag	= 'CAPEF100'
+	token:tag	= 'CAPEF99'
+	token:tag	= 'CAPEF975'
+	token:tag	= 'CAPEF95'
+	token:tag	= 'CAPEF875'
+	token:tag	= 'CAPEF50'
+	token:tag	= 'CAPEF125'
+	token:tag	= 'CAPEF5'
+	token:tag	= 'CAPEF025'
+	token:tag	= 'CAPEF1'
+	token:tag	= 'CAPEF0'
+	token:tag	= 'TDF100'
+	token:tag	= 'TDF99'
+	token:tag	= 'TDF975'
+	token:tag	= 'TDF95'
+	token:tag	= 'TDF875'
+	token:tag	= 'TDF50'
+	token:tag	= 'TDF125'
+	token:tag	= 'TDF5'
+	token:tag	= 'TDF025'
+	token:tag	= 'TDF1'
+	token:tag	= 'TDF0'
+	token:tag	= 'ICECOVERF100'
+	token:tag	= 'ICECOVERF99'
+	token:tag	= 'ICECOVERF975'
+	token:tag	= 'ICECOVERF95'
+	token:tag	= 'ICECOVERF875'
+	token:tag	= 'ICECOVERF50'
+	token:tag	= 'ICECOVERF125'
+	token:tag	= 'ICECOVERF5'
+	token:tag	= 'ICECOVERF025'
+	token:tag	= 'ICECOVERF1'
+	token:tag	= 'ICECOVERF0'
+	token:tag	= 'TMAXF100'
+	token:tag	= 'TMAXF99'
+	token:tag	= 'TMAXF975'
+	token:tag	= 'TMAXF95'
+	token:tag	= 'TMAXF875'
+	token:tag	= 'TMAXF50'
+	token:tag	= 'TMAXF125'
+	token:tag	= 'TMAXF5'
+	token:tag	= 'TMAXF025'
+	token:tag	= 'TMAXF1'
+	token:tag	= 'TMAXF0'
+	token:tag	= 'TMINF100'
+	token:tag	= 'TMINF99'
+	token:tag	= 'TMINF975'
+	token:tag	= 'TMINF95'
+	token:tag	= 'TMINF875'
+	token:tag	= 'TMINF50'
+	token:tag	= 'TMINF125'
+	token:tag	= 'TMINF5'
+	token:tag	= 'TMINF025'
+	token:tag	= 'TMINF1'
+	token:tag	= 'TMINF0'
+	token:tag	= 'RR3HF100'
+	token:tag	= 'RR3HF99'
+	token:tag	= 'RR3HF975'
+	token:tag	= 'RR3HF95'
+	token:tag	= 'RR3HF875'
+	token:tag	= 'RR3HF50'
+	token:tag	= 'RR3HF125'
+	token:tag	= 'RR3HF5'
+	token:tag	= 'RR3HF025'
+	token:tag	= 'RR3HF1'
+	token:tag	= 'RR3HF0'
+	token:tag	= 'PF100'
+	token:tag	= 'PF99'
+	token:tag	= 'PF975'
+	token:tag	= 'PF95'
+	token:tag	= 'PF875'
+	token:tag	= 'PF50'
+	token:tag	= 'PF125'
+	token:tag	= 'PF5'
+	token:tag	= 'PF025'
+	token:tag	= 'PF1'
+	token:tag	= 'PF0'
+	token:tag	= 'SNOWDEPTHF100'
+	token:tag	= 'SNOWDEPTHF99'
+	token:tag	= 'SNOWDEPTHF975'
+	token:tag	= 'SNOWDEPTHF95'
+	token:tag	= 'SNOWDEPTHF875'
+	token:tag	= 'SNOWDEPTHF50'
+	token:tag	= 'SNOWDEPTHF125'
+	token:tag	= 'SNOWDEPTHF5'
+	token:tag	= 'SNOWDEPTHF025'
+	token:tag	= 'SNOWDEPTHF1'
+	token:tag	= 'SNOWDEPTHF0'
+	token:tag	= 'TF100'
+	token:tag	= 'TF99'
+	token:tag	= 'TF975'
+	token:tag	= 'TF95'
+	token:tag	= 'TF875'
+	token:tag	= 'TF50'
+	token:tag	= 'TF125'
+	token:tag	= 'TF5'
+	token:tag	= 'TF025'
+	token:tag	= 'TF1'
+	token:tag	= 'TF0'
+	token:tag	= 'TSEAF100'
+	token:tag	= 'TSEAF99'
+	token:tag	= 'TSEAF975'
+	token:tag	= 'TSEAF95'
+	token:tag	= 'TSEAF875'
+	token:tag	= 'TSEAF50'
+	token:tag	= 'TSEAF125'
+	token:tag	= 'TSEAF5'
+	token:tag	= 'TSEAF025'
+	token:tag	= 'TSEAF1'
+	token:tag	= 'TSEAF0'
+	token:tag	= 'NF100'
+	token:tag	= 'NF99'
+	token:tag	= 'NF975'
+	token:tag	= 'NF95'
+	token:tag	= 'NF875'
+	token:tag	= 'NF50'
+	token:tag	= 'NF125'
+	token:tag	= 'NF5'
+	token:tag	= 'NF025'
+	token:tag	= 'NF1'
+	token:tag	= 'NF0'
+	token:tag	= 'TCWF100'
+	token:tag	= 'TCWF99'
+	token:tag	= 'TCWF975'
+	token:tag	= 'TCWF95'
+	token:tag	= 'TCWF875'
+	token:tag	= 'TCWF50'
+	token:tag	= 'TCWF125'
+	token:tag	= 'TCWF5'
+	token:tag	= 'TCWF025'
+	token:tag	= 'TCWF1'
+	token:tag	= 'TCWF0'
+	token:tag	= 'GUSTF100'
+	token:tag	= 'GUSTF99'
+	token:tag	= 'GUSTF975'
+	token:tag	= 'GUSTF95'
+	token:tag	= 'GUSTF875'
+	token:tag	= 'GUSTF50'
+	token:tag	= 'GUSTF125'
+	token:tag	= 'GUSTF5'
+	token:tag	= 'GUSTF025'
+	token:tag	= 'GUSTF1'
+	token:tag	= 'GUSTF0'
+	token:tag	= 'WSF100'
+	token:tag	= 'WSF99'
+	token:tag	= 'WSF975'
+	token:tag	= 'WSF95'
+	token:tag	= 'WSF875'
+	token:tag	= 'WSF50'
+	token:tag	= 'WSF125'
+	token:tag	= 'WSF5'
+	token:tag	= 'WSF025'
+	token:tag	= 'WSF1'
+	token:tag	= 'WSF0'
+
+	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', @eol
+	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
+
+	txt:colorFG	= 0xDD6600
+	txt:bold = 0

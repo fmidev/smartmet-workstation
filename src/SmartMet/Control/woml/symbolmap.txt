@@ -1,0 +1,126 @@
+# Sade symboleja ilman pilvisyytt‰
+# --------------------------------
+PresentWeather@66;set32\Jaatavasade_42x42.png;set32\Jaatavasade_128x128.png
+PresentWeather@56;set32\Jaatavatihku_42x42.png;set32\Jaatavatihku_128x128.png
+PresentWeather@70;set32\Lumi1_42x42.png;set32\Lumi1_128x128.png
+PresentWeather@71;set32\Lumi2_42x42.png;set32\Lumi2_128x128.png
+PresentWeather@73;set32\Lumi3_42x42.png;set32\Lumi3_128x128.png
+PresentWeather@85;set32\Lumikuuro_42x42.png;set32\Lumikuuro_128x128.png
+PresentWeather@68;set32\Ranta1_42x42.png;set32\Ranta1_128x128.png
+PresentWeather@69;set32\Ranta2_42x42.png;set32\Ranta2_128x128.png
+# ??? PresentWeather@69;set32\Ranta3_42x42.png;set32\Ranta3_128x128.png
+PresentWeather@83;set32\Rantakuuro_42x42.png;set32\Rantakuuro_128x128.png
+PresentWeather@45;set32\Sumu_42x42.png;set32\Sumu_128x128.png
+PresentWeather@50;set32\Tihku1_42x42.png;set32\Tihku1_128x128.png
+PresentWeather@51;set32\Tihku2_42x42.png;set32\Tihku2_128x128.png
+PresentWeather@53;set32\Tihku3_42x42.png;set32\Tihku3_128x128.png
+PresentWeather@95;set32\Ukkonen_42x42.png;set32\Ukkonen_128x128.png
+PresentWeather@60;set32\Vesi1_42x42.png;set32\Vesi1_128x128.png
+PresentWeather@61;set32\Vesi2_42x42.png;set32\Vesi2_128x128.png
+PresentWeather@63;set32\Vesi3_42x42.png;set32\Vesi3_128x128.png
+PresentWeather@80;set32\Vesikuuro_42x42.png;set32\Vesikuuro_128x128.png
+
+# Pilvi+sade symboleja
+# --------------------
+
+# Miksi kahdessa kohtaa hieman erilaiset koodit?
+# <gml:name codeSpace="urn:metobject:gml:fi:fmi:symbol">Cloud@03_8_PresentWeather@60</gml:name>
+# <womlswo:definitionReference scheme="fmi">Cloud_03_8@PresentWeather_60</womlswo:definitionReference>
+# #- avaimessa?????? esim. Cloud@06_3-5#PresentWeather@60
+
+Cloud_03_8@PresentWeather_60;set36\Vesisade1_42x42.png;set36\Vesisade1_128x128.png
+Cloud_03_8@PresentWeather_68;set36\Rantasade1_42x42.png;set36\Rantasade1_128x128.png
+Cloud_03_8@PresentWeather_70;set36\Lumisade1_42x42.png;set36\Lumisade1_128x128.png
+Cloud_03_8@PresentWeather_66;set36\Jaatavasade_42x42.png;set36\Jaatavasade_128x128.png
+Cloud_03_8@PresentWeather_61;set36\Vesisade2_42x42.png;set36\Vesisade2_128x128.png
+Cloud_03_8@PresentWeather_69;set36\Rantasade2_42x42.png;set36\Rantasade2_128x128.png
+Cloud_03_8@PresentWeather_71;set36\Lumisade2_42x42.png;set36\Lumisade2_128x128.png
+Cloud_04_6-7@PresentWeather_60;set36\Vesisade_sc6_7_42x42.png;set36\Vesisade_sc6_7_128x128.png
+Cloud_04_6-7@PresentWeather_68;set36\Rantasade_sc6_7_42x42.png;set36\Rantasade_sc6_7_128x128.png
+Cloud_04_6-7@PresentWeather_70;set36\Lumisade_sc6_7_42x42.png;set36\Lumisade_sc6_7_128x128.png
+Cloud_04_8@PresentWeather_60;set36\Vesisade_sc8_42x42.png;set36\Vesisade_sc8_128x128.png
+Cloud_04_8@PresentWeather_68;set36\Rantasade_sc8_42x42.png;set36\Rantasade_sc8_128x128.png
+Cloud_04_8@PresentWeather_70;set36\Lumisade_sc8_42x42.png;set36\Lumisade_sc8_128x128.png
+Cloud_05_6-7@PresentWeather_50;set36\Tihkusade6_7_42x42.png;set36\Tihkusade6_7_128x128.png
+Cloud_05_8@PresentWeather_50;set36\Tihkusade8_42x42.png;set36\Tihkusade8_128x128.png
+Cloud_05_8@PresentWeather_51;set36\Tihkusade8_2_42x42.png;set36\Tihkusade8_2_128x128.png
+Cloud_05_6-7@PresentWeather_56;set36\Jaatavatihku6_7_42x42.png;set36\Jaatavatihku6_7_128x128.png
+Cloud_05_8@PresentWeather_56;set36\Jaatavatihku8_42x42.png;set36\Jaatavatihku8_128x128.png
+Cloud_06_3-5@PresentWeather_60;set36\Vesikuuro3_5_42x42.png;set36\Vesikuuro3_5_128x128.png
+Cloud_06_3-5@PresentWeather_68;set36\Rantakuuro3_5_42x42.png;set36\Rantakuuro3_5_128x128.png
+Cloud_06_3-5@PresentWeather_70;set36\Lumikuuro3_5_42x42.png;set36\Lumikuuro3_5_128x128.png
+Cloud_06_3-5@PresentWeather_96;set36\Ukkoskuuro3_5_42x42.png;set36\Ukkoskuuro3_5_128x128.png
+Cloud_06_6-7@PresentWeather_60;set36\Vesikuuro6_7_42x42.png;set36\Vesikuuro6_7_128x128.png
+Cloud_06_6-7@PresentWeather_68;set36\Rantakuuro6_7_42x42.png;set36\Rantakuuro6_7_128x128.png
+Cloud_06_6-7@PresentWeather_70;set36\Lumikuuro6_7_42x42.png;set36\Lumikuuro6_7_128x128.png
+Cloud_06_6-7@PresentWeather_96;set36\Ukkoskuuro6_7_42x42.png;set36\Ukkoskuuro6_7_128x128.png
+Cloud_06_8@PresentWeather_60;set36\Vesikuuro8_42x42.png;set36\Vesikuuro8_128x128.png
+Cloud_06_8@PresentWeather_68;set36\Rantakuuro8_42x42.png;set36\Rantakuuro8_128x128.png
+Cloud_06_8@PresentWeather_70;set36\Lumikuuro8_42x42.png;set36\Lumikuuro8_128x128.png
+Cloud_06_8@PresentWeather_96;set36\Ukkoskuuro8_42x42.png;set36\Ukkoskuuro8_128x128.png
+# PresentWeather_96_PresentWeather_96 ?????
+Cloud_06_8@PresentWeather_96_PresentWeather_96;set36\Ukkoskuuro8_2_42x42.png;set36\Ukkoskuuro8_2_128x128.png
+
+# Pilvisymboleja ilman sadetta
+# ----------------------------
+Cloud@00;set36\Selkea_42x42.png;set36\Selkea_128x128.png
+Cloud@01_1-2;set36\Yla1_2_42x42.png;set36\Yla1_2_128x128.png
+Cloud@01_3-5;set36\Yla3_5_42x42.png;set36\Yla3_5_128x128.png
+Cloud@01_6-7;set36\Yla6_7_42x42.png;set36\Yla6_7_128x128.png
+Cloud@01_8;set36\Yla8_42x42.png;set36\Yla8_128x128.png
+Cloud@02_1-2;set36\Pouta1_2_42x42.png;set36\Pouta1_2_128x128.png
+Cloud@02_3-5;set36\Pouta3_5_42x42.png;set36\Pouta3_5_128x128.png
+Cloud@02_6-7;set36\Pouta6_7_42x42.png;set36\Pouta6_7_128x128.png
+Cloud@02_8;set36\Pouta8_42x42.png;set36\Pouta8_128x128.png
+Cloud@03_1-2;set36\Keski1_2_42x42.png;set36\Keski1_2_128x128.png
+Cloud@03_3-5;set36\Keski3_5_42x42.png;set36\Keski3_5_128x128.png
+Cloud@03_6-7;set36\Keski6_7_42x42.png;set36\Keski6_7_128x128.png
+Cloud@03_8;set36\Keski8_42x42.png;set36\Keski8_128x128.png
+Cloud@04_1-2;set36\Sc1_2_42x42.png;set36\Sc1_2_128x128.png
+Cloud@04_3-5;set36\Sc3_5_42x42.png;set36\Sc3_5_128x128.png
+Cloud@04_6-7;set36\Sc6_7_42x42.png;set36\Sc6_7_128x128.png
+Cloud@04_8;set36\Sc8_42x42.png;set36\Sc8_128x128.png
+Cloud@05_1-2;set36\St1_2_42x42.png;set36\St1_2_128x128.png
+Cloud@05_3-5;set36\St3_5_42x42.png;set36\St3_5_128x128.png
+Cloud@05_6-7;set36\St6_7_42x42.png;set36\St6_7_128x128.png
+Cloud@05_8;set36\St8_42x42.png;set36\St8_128x128.png
+Cloud@06_6-7;set36\Kuuro6_7_42x42.png;set36\Kuuro6_7_128x128.png
+Cloud@06_8;set36\Kuuro8_42x42.png;set36\Kuuro8_128x128.png
+
+
+# Varoitussymboleja
+# -----------------
+
+# Miksi gml:name:n arvo on kaikissa bar???
+# <gml:name codeSpace="urn:metobject:gml:fi:fmi:symbol">bar</gml:name>
+# joudun k‰ytt‰m‰‰n womlswo:definitionReference -noden arvoa kaikille t‰m‰n takia
+
+Warning@BadDriveCoil;set3\Huono_ajokeli_42x42.png;set3\Huono_ajokeli_128x128.png
+Warning@WorstDriveCoil;set3\Huonoin_ajokeli_42x42.png;set3\Huonoin_ajokeli_128x128.png
+Warning@ForestFire;set3\Palo_metsa_42x42.png;set3\Palo_metsa_128x128.png
+Warning@GrassFire;set3\Palo_ruoho_42x42.png;set3\Palo_ruoho_128x128.png
+Warning@Rain;set3\Sadevaro_42x42.png;set3\Sadevaro_128x128.png
+Warning@Ozone;set3\O3_42x42.png;set3\O3_128x128.png
+
+# Miksi kahdella samalla varoituksella eri koodisana?
+Warning@Hallaa;set3\hallaa_42x42.png;set3\hallaa_128x128.png
+Warning@Frost;set3\hallaa_42x42.png;set3\hallaa_128x128.png
+Warning@NightFrost;set3\yopakkasta_64x64.png;set3\yopakkasta_192x192.png
+
+Warning@Rain1;set34\Sadevar1_42x42.png;set34\Sadevar1_128x128.png
+Warning@Rain2;set34\Sadevar2_42x42.png;set34\Sadevar2_128x128.png
+Warning@Rain3;set34\Sadevar3_42x42.png;set34\Sadevar3_128x128.png
+Warning@Thunder1;set34\Ukkosvar1_42x42.png;set34\Ukkosvar1_128x128.png
+Warning@Thunder2;set34\Ukkosvar2_42x42.png;set34\Ukkosvar2_128x128.png
+Warning@Thunder3;set34\Ukkosvar3_42x42.png;set34\Ukkosvar3_128x128.png
+# Warning@BadDriveCoil;set34\Ajokeli1_42x42.png;set34\Ajokeli1_128x128.png
+
+
+
+
+# Muut symbolit
+# -------------
+
+# LowPressureCenter
+# PolarLow
+# HighPressureCenter

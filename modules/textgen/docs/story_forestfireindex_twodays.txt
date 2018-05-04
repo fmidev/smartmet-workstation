@@ -1,0 +1,63 @@
+/*!
+
+\page page_story_forestfireindex_twodays Tarina "forestfireindex_twodays"
+
+Tarina \c forestfireindex_twodays on muotoa
+
+ -# "Metsäpaloindeksi on [viikonpäivänä] x,, [viikonpäivänä] y."
+
+Ruotsiksi
+
+ -# "Bränningsindexen är [på veckodag] x, [på veckodag] y."
+
+Englanniksi
+
+ -# "The forest fire index is [on weekday] x, [on weekday] y."
+
+Tarina soveltuu yhden/kahden vuorokauden ennusteisiin. Sivulausetta ei
+ole yhden vuorokauden ennusteissa. Kolmannesta tai sitä seuraavista päivistä
+ei kerrota mitään, kosteusmalli ei koskaan yletä niin pitkälle.
+
+Aikafraasit ovat tyyppiä \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day. Niihin liittyviä asetuksia
+kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::forestfireindex_twodays::today::phrases
+textgen::[kappale]::story::forestfireindex_twodays::next_day::phrases
+\endcode
+Tyypillisiä asetuksia ovat esimerkiksi
+\code
+textgen::[kappale]::story::forestfireindex_twodays::next_day::phrases = followingday
+\endcode
+
+Päivän määritelmä saadaan muuttujista
+\code
+textgen::[kappale]::story::forestfireindex_twodays::day::starthour = [0-23]
+textgen::[kappale]::story::forestfireindex_twodays::day::endhour = [0-23]
+textgen::[kappale]::story::forestfireindex_twodays::day::maxstarthour = [0-23]
+textgen::[kappale]::story::forestfireindex_twodays::day::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Oletusarvoisesti \c starthour = 0 ja \c endhour = 0. Joustorajat ovat
+optionaalisia.
+
+Tarvittavat fraasit ovat
+
+ - "metsäpaloindeksi"
+ - "on"
+
+Lisäksi tarvitaan periodifraasit \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Minimum(Minimum(Temperature)):
+textgen::[kappale]::story::forestfireindex_twodays::fake::day1::maximum = [result]
+textgen::[kappale]::story::forestfireindex_twodays::fake::day2::maximum = [result]
+\endcode
+
+*/

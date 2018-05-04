@@ -1,0 +1,3 @@
+#include "SmartMetDocumentInterface.h"
+
+SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementationCallBackType SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation;

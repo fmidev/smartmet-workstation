@@ -1,0 +1,39 @@
+/*!
+
+\page page_story_relativehumidity_range Tarina "relativehumidity_range"
+
+\c relativehumidity_range tarina on muotoa
+
+  -# "Suhteellinen Kosteus on noin X%."
+  -# "Suhteellinen Kosteus on X...Y%."
+
+Ruotsiksi
+
+  -# "Relativ fuktighet är cirka X%."
+  -# "Relativ fuktighet är X...Y%."
+
+Englanniksi
+
+  -# "Relative humidity is about X%."
+  -# "Relative humidity is X...Y%."
+
+Käytetyt fraasit ovat
+
+  - "suhteellinen kosteus"
+  - "noin"
+  - "prosenttia"
+
+Suhteellinen kosteus pyöristetään tarkkuuteen
+\code
+textgen::[kappale]::story::relativehumidity_range::precision = [0-100]
+\endcode
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Min(Relativehumidity))...Mean(Max(Relativehumidity))
+textgen::[kappale]::story::relativehumidity_range::fake::minimum = [result]
+textgen::[kappale]::story::relativehumidity_range::fake::maximum = [result]
+\endcode
+
+*/
+
