@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:fmidev/smartmet-library-smarttools.git
+	branch = master
+	commit = c4b5ca7ff74d69cb9696d39d45071f4bb0a3e6f1
+	parent = ef287f9b59c809a6ad3e7764576644d6630ed6e9
+	cmdver = 0.3.1

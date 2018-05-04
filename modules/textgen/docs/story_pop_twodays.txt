@@ -1,0 +1,125 @@
+/*!
+
+\page page_story_pop_twodays Tarina "pop_twodays"
+
+Tarina \c pop_twodays on muotoa
+
+ -# "Sateen todennäköisyys on [viikonpäivänä] x%"
+    -# ", [viikonpäivänä] huomattavasti suurempi."
+    -# ", [viikonpäivänä] suurempi."
+    -# ", [viikonpäivänä] hieman suurempi."
+    -# ", [viikonpäivänä] sama."
+    -# ", [viikonpäivänä] hieman pienempi."
+    -# ", [viikonpäivänä] pienempi."
+    -# ", [viikonpäivänä] huomattavasti pienempi."
+
+Ruotsiksi
+
+ -# "Sannolikheten för nederbörd är [på veckodag] x%"
+    -# ", [på veckodag] betydligt större."
+    -# ", [på veckodag] större."
+    -# ", [på veckodag] något större."
+    -# ", [på veckodag] densamma."
+    -# ", [på veckodag] något mindre."
+    -# ", [på veckodag] mindre."
+    -# ", [på veckodag] betydligt mindre."
+
+Englanniksi
+
+ -# "Probability of precipitation is [on weekday] x%"
+    -# ", [on weekday] significantly greater."
+    -# ", [on weekday] greater."
+    -# ", [on weekday] somewhat greater."
+    -# ", [on weekday] the same."
+    -# ", [on weekday] somewhat smaller."
+    -# ", [on weekday] smaller."
+    -# ", [on weekday] significantly smaller."
+
+Tarina soveltuu yhden/kahden vuorokauden ennusteisiin. Sivulausetta ei
+ole yhden vuorokauden ennusteissa. Kolmannesta tai sitä seuraavista päivistä
+ei kerrota mitään.
+
+Jos jonkin päivän sateen todennäköisyys alittaa asetetun rajan,
+ei kyseisestä päivästä kerrota mitään. Jäljelle jää siis vain
+joko tyhjä tarina, tai tarina muotoa "Sateen todennäköisyys on
+[viikonpäivänä] X%."
+
+Aikafraasit ovat tyyppiä \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day. Niihin liittyviä asetuksia
+kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::pop_twodays::today::phrases
+textgen::[kappale]::story::pop_twodays::next_day::phrases
+\endcode
+Tyypillisiä asetuksia ovat esimerkiksi
+\code
+textgen::[kappale]::story::pop_twodays::next_day::phrases = followingday
+\endcode
+
+Päivän määritelmä saadaan muuttujista
+\code
+textgen::[kappale]::story::pop_twodays::day::starthour = [0-23]
+textgen::[kappale]::story::pop_twodays::day::endhour = [0-23]
+textgen::[kappale]::story::pop_twodays::day::maxstarthour = [0-23]
+textgen::[kappale]::story::pop_twodays::day::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Oletusarvoisesti \c starthour = 0 ja \c endhour = 0. Joustorajat ovat
+optionaalisia.
+
+Sateen todennäköisyys pyöristetään tarkkuuteen
+\code
+textgen::[kappale]::story::pop_twodays::precision = [0-100]
+\endcode
+Sateen todennäköisyyden täytyy olla vähintään
+\code
+textgen::[kappale]::story::pop_twodays::limit = [0-100]
+\endcode
+ennen kuin todennäköisyydestä kerrotaan.
+
+Erotuksen suuruus päätellään seuraavista rajoista
+\code
+textgen::[kappale]::story::pop_twodays::comparison::significantly_greater = [0-100]
+textgen::[kappale]::story::pop_twodays::comparison::greater = [0-100]
+textgen::[kappale]::story::pop_twodays::comparison::somewhat_greater = [0-100]
+textgen::[kappale]::story::pop_twodays::comparison::somewhat_smaller = [0-100]
+textgen::[kappale]::story::pop_twodays::comparison::smaller = [0-100]
+textgen::[kappale]::story::pop_twodays::comparison::significantly_smaller = [0-100]
+\endcode
+seuraavasti tuloksista \c pop2 ja \c pop1
+
+ -# Jos \c pop2 - \c pop1 >= \c significantly_greater, valitaan "huomattavasti suurempi"
+ -# Jos \c pop2 - \c pop1 >= \c greater, valitaan "suurempi"
+ -# Jos \c pop2 - \c pop1 >= \c somewhat_greater, valitaan "hieman suurempi"
+ -# Jos \c pop1 - \c pop2 >= \c significantly_smaller, valitaan "huomattavasti pienempi"
+ -# Jos \c pop1 - \c pop2 >= \c smaller, valitaan "pienempi"
+ -# Jos \c pop1 - \c pop2 >= \c somewhat_smaller, valitaan "hieman pienempi"
+ -# Muuten valitaan "sama"
+
+Tarvittavat fraasit ovat
+
+ - "sateen todennäköisyys"
+ - "on"
+ - "huomattavasti suurempi"
+ - "suurempi"
+ - "hieman suurempi"
+ - "sama"
+ - "hieman pienempi"
+ - "pienempi" 
+ - "huomattavasti pienempi"
+
+Lisäksi tarvitaan periodifraasit \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Minimum(Minimum(Temperature)):
+textgen::[kappale]::story::pop_twodays::fake::day1::maximum = [result]
+textgen::[kappale]::story::pop_twodays::fake::day2::maximum = [result]
+\endcode
+
+*/

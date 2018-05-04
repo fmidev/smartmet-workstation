@@ -1,0 +1,56 @@
+/*!
+
+\mainpage textgen Tekstigeneraattori
+
+\section sec_johdanto Johdanto
+
+T‰nne tulee tekstigeneraattorin dokumentaation etusivu.
+
+\section sec_sanakirjat Sanakirjat
+
+\ref page_sanakirjat sivulla kuvataan sanakirjojen toimintaa ja niiden
+suunniteltua k‰yttˆtapaa.
+
+\section sec_lauseet Lauseiden rakentaminen
+
+\ref page_lauseet sivulla kuvataan lauseiden ja kappaleiden rakentamista,
+sek‰ niiden muuntamista tekstiksi.
+
+\section sec_aikavalit Aikajaksojen m‰‰rittelyist‰
+
+\ref page_aikavalit sivulla kuvataan, miten eri vuorokauden ajat
+nimet‰‰n tekstigeneraattorissa.
+
+\section sec_periodit S‰‰periodit
+
+\ref page_periodit sivulla kuvataan, miten s‰‰periodeja luodaan.
+
+\section sec_aliperiodit S‰‰periodin jakaminen p‰iviksi
+
+\ref page_aliperiodit sivulla kuvataan, miten s‰‰periodin voi
+jakaa p‰iv‰kohtaisiksi osiksi.
+
+\section sec_otsikot Otsikot
+
+\ref page_otsikot sivulla kuvataan, miten otsikoita luodaan
+
+\section sec_tarinat Tarinat
+
+\ref page_tarinat sivulla kuvataan, miten yksitt‰isist‰ s‰‰parametreista
+generoidaan teksti‰.
+
+\section sec_periodifraasit Periodifraasit
+
+\ref page_periodifraasit sivulla kuvataan, miten yksitt‰isi‰
+aikajaksoja kuvaavia fraaseja luodaan.
+
+\section sec_laatu Laatu
+
+\ref page_laatu sivulla kuvataan laadun merkityst‰ ja sen laskemista.
+
+\section sec_funktiot Funktiot
+
+\ref page_funktiot sivulla kuvataan, mit‰ funktioita analyysiosio
+voi laskea, sek‰ miten tulosten laatu m‰‰ritell‰‰n.
+
+*/

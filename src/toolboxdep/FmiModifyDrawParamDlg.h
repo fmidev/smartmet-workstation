@@ -1,0 +1,280 @@
+#pragma once
+
+// FmiModifyDrawParamDlg.h : header file
+//
+#include "SmartMetToolboxDep_resource.h"
+#include "afxwin.h"
+#include "NFmiDrawParam.h"
+#include "WzComboBox.h"
+
+class SmartMetDocumentInterface;
+class NFmiFixedDrawParamFolder;
+
+/////////////////////////////////////////////////////////////////////////////
+// CFmiModifyDrawParamDlg dialog
+
+class CFmiModifyDrawParamDlg : public CDialog
+{
+// Construction
+public:
+	CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string &theDrawParamPath, bool modifyMapViewParam, bool modifyCrossSectionViewParam, unsigned int theDescTopIndex, CWnd* pParent = NULL);
+	~CFmiModifyDrawParamDlg(void);
+
+	bool RefreshPressed(void) const {return fRefreshPressed;}
+	bool SkipreadingSpecialClassColorIndices(void) const {return fSkipreadingSpecialClassColorIndices;}
+	void SkipreadingSpecialClassColorIndices(bool newValue) {fSkipreadingSpecialClassColorIndices = newValue;}
+
+	// Dialog Data
+	//{{AFX_DATA(CFmiModifyDrawParamDlg)
+	enum { IDD = IDD_DIALOG_DRAWPARAM_EDITOR_DLG2 };
+	CButton	itsSimpleColorContourMidColor;
+	CButton	itsSimpleColorContourLowColor;
+	CButton	itsSimpleColorContourHighColor;
+	CButton itsSimpleColorContourHigh2Color;
+	CButton	itsHatch2Color;
+	CButton	itsSymbolFillColor;
+	CButton	itsSymbolColor;
+	CButton	itsIsoLineLabelColor;
+	CButton	itsIsoLineColor;
+	CButton itsIsolineLabelBoxFillColor;
+	CButton	itsSymbolMidColor;
+	CButton	itsSymbolLowColor;
+	CButton	itsSymbolHighColor;
+	CButton	itsSimpleIsoLineMidColor;
+	CButton	itsSimpleIsoLineLowColor;
+	CButton	itsSimpleIsoLineHighColor;
+	CButton	itsHatch1Color;
+	BOOL	fUSeChangingColorsWithSymbols;
+	BOOL	fUSeColorScaleWithSimpleIsoLines;
+	BOOL	fUseIsoLineFeathering;
+	BOOL	fUseHatch1;
+	BOOL	fDrawLabelBox;
+	BOOL	fDrawOnlyOverMask; // oikeasti tämä on piirrä vain maskin päälle optio
+	BOOL	fUseSpecialClasses;
+	int		itsHatch1Style;
+	double	itsHatch1EndValue;
+	double	itsHatch1StartValue;
+	double	itsIsoLineGap;
+	int		itsIsoLineDecimals;
+	double	itsIsoLineLabelHeight;
+	float	itsIsoLineSmoothFactor;
+	int		itsIsoLineStyle;
+	float	itsIsoLineWidth;
+	double	itsModifyingStep;
+	double	itsOneSymbolHeight;
+	double	itsOneSymbolWidth;
+    double itsOneSymbolHorizontalOffset_NEW;
+    double itsOneSymbolVerticalOffset_NEW;
+    double	itsParamAbsolutValueMax;
+	double	itsParamAbsolutValueMin;
+    CString	itsParamAbbreviationStrU_;
+    CString	itsParamNameStrU_;
+    CString	itsProducerStrU_;
+	int		itsGridDataDrawStyle;
+    int		itsSimpleClassCount;
+	float	itsSimpleClassEndValue;
+	float	itsSimpleClassStartValue;
+	int		itsSymbolsWithColorsClassCount;
+	float	itsSymbolsWithColorsEndValue;
+	float	itsSymbolsWithColorsMiddleValue;
+	float	itsSymbolsWithColorsStartValue;
+	int		itsSpecialClassCount;
+    CString	itsSpecialClassColorIndicesStrU_;
+    CString	itsSpecialClassLabelColorIndicesStrU_; // ei löydy drawparamista!!!!! // käytetään väliaikaisesti label korkeuden kanssa
+    CString	itsSpecialClassLineStylesStrU_;
+    CString	itsSpecialClassLineWidthStrU_;
+    CString	itsSpecialClassValuesStrU_;
+	double	itsTimeSeriesModifyLimit;
+	double	itsTimeSeriesScaleMax;
+	double	itsTimeSeriesScaleMin;
+    CString	itsParamUnitStrU_;
+	BOOL	fIsHidden;
+	BOOL	fUseHatch2;
+	double	itsHatch2Style;
+	double	itsHatch2EndValue;
+	double	itsHatch2StartValue;
+	float	itsSimpleColorContourClassEnd2Value;
+	float	itsSimpleColorContourClassEndValue;
+	float	itsSimpleColorContourClassMiddleValue;
+	float	itsSimpleColorContourClassStartValue;
+	BOOL	fUSeSeparatingLinesBetweenColorContourClasses;
+    double itsIsoLineZeroValue_NEW;
+    double itsSimpleClassMiddleValue_NEW;
+    //}}AFX_DATA
+
+	bool fSpecialClassesHaveInvalidValues; // tämän muuttujan avulla väritetään labeli tarvittaessa punaiseksi että
+											// käyttäjä näkee että annetut luokka rajat ovat virheellisiä.
+											// Suurin ongelma tulee kun kaikki arvoteivät ole nousevassa järjestyksessä. Tällöin ohjelma toimii oudosti.
+
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CFmiModifyDrawParamDlg)
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//}}AFX_VIRTUAL
+
+// Implementation
+protected:
+
+	// Generated message map functions
+	//{{AFX_MSG(CFmiModifyDrawParamDlg)
+	afx_msg void OnButtonHatch1Color();
+	afx_msg void OnButtonColorShowSimpleIsolineHigh();
+	afx_msg void OnButtonColorShowSimpleIsolineLow();
+	afx_msg void OnButtonColorShowSimpleIsolineMid();
+	afx_msg void OnButtonColorShowSymbHigh();
+	afx_msg void OnButtonColorShowSymbLow();
+	afx_msg void OnButtonColorShowSymbMid();
+	afx_msg void OnButtonIsolineColor();
+	afx_msg void OnBnClickedButtonIsolineLabelBoxFillColor();
+	afx_msg void OnButtonIsolineLabelColor();
+	afx_msg void OnButtonSymbolColor();
+	afx_msg void OnButtonSymbolFillColor();
+	virtual void OnOK();
+	virtual void OnCancel();
+	afx_msg void OnSaveAsButton();
+	afx_msg void OnSaveButton();
+	virtual BOOL OnInitDialog();
+	afx_msg void OnShowColorIndexDlg();
+	afx_msg void OnButtonHatch2Color();
+	afx_msg void OnButtonColorShowSimpleColorcontourHigh();
+	afx_msg void OnButtonColorShowSimpleColorcontourLow();
+	afx_msg void OnButtonColorShowSimpleColorcontourMid();
+	afx_msg void OnButtonResetDrawParam();
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+
+private:
+
+	void InitDialogFromDrawParam(void);
+	void IsHidden(void);
+	void ParamAbbreviation(void);
+	void OneSymbolRelativeSize(void);
+	void OneSymbolRelativePositionOffset(void);
+	void IsoLineGab(void);
+	void ModifyingStep(void);
+	void AbsoluteMinAndMaxValue(void);
+	void TimeSeriesScaleMinAndMax(void);
+	void TimeSerialModifyingLimit(void);
+	void ReadParameterAbbreviation(void);
+	void ReadHidden(void);
+	void ReadOneSymbolRelativeSize();
+	void ReadOneSymbolRelativePositionOffset(void);
+	void ReadIsoLineGab(void);
+	void ReadModifyingStep(void);
+	void ReadAbsoluteMinAndMaxValue(void);
+	void ReadTimeSeriesScaleMinAndMax(void);
+	void ReadTimeSerialModifyingLimit(void);
+	void GetSelectedDrawParamSetUp(void);
+	void ReadAllButtonColors(void);
+	void InitRestOfVersion2Data(void);
+	void InitSpecialClassesData(void);
+	void ReadRestOfVersion2Data(void);
+	void ReadSpecialClassesData(void);
+	void InitColors(void);
+	void MakeViewMacroAdjustments(void);
+    void FillStationDataViewSelector(void);
+
+	void InitDialogTexts(void);
+	void TakeDrawParamModificationInUse(void);
+    void DoOnCancel();
+    void InitFixedDrawParamSelector();
+    void AddFixedDrawParamFolderToSelector(int theTreeIndex, const NFmiFixedDrawParamFolder &theFolder, CWzComboBox &theFixedDrawParamSelector);
+    std::shared_ptr<NFmiDrawParam> GetSelectedFixedDrawParam();
+    std::string GetSelectedFixedDrawParamPath();
+    void ForceStationViewUpdate();
+    void AdjustStartingPosition();
+
+	std::string itsDrawParamPath;
+	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+	boost::shared_ptr<NFmiDrawParam> itsBackupDrawParam; // vielä yksi vara drawParam, jos joku haluaa katsoa muutoksia päivitys-napista, muttasitten painaa
+									  // lopuksi cancelia, tällöin täällä on originaali tallessa.
+	boost::shared_ptr<NFmiDrawParam> itsOrigDrawParam; // tämä on originaali data ja se on tallessa tallessa sitä varten että muutokset eivät
+									 // voimaan muutoin kun OK-nappia painamalla, tai kun parametri talletetaan ja/tai otetaan käyttöön kaikkialla.
+	bool fRefreshPressed; // optimointia, tähän merkitään vain onko refreshiä painettu, jonka jälkeen jos cancelia painettu, pitää ruutu päivittää
+	bool fModifyMapViewParam;
+	bool fModifyCrossSectionViewParam;
+
+	COLORREF itsSymbolFillColorRef;
+	COLORREF itsSymbolColorRef;
+	COLORREF itsIsoLineLabelColorRef;
+	COLORREF itsIsoLineColorRef;
+	COLORREF itsIsoLineLabelBoxFillColorRef;
+	COLORREF itsSymbolMidColorRef;
+	COLORREF itsSymbolLowColorRef;
+	COLORREF itsSymbolHighColorRef;
+	COLORREF itsSimpleIsoLineMidColorRef;
+	COLORREF itsSimpleIsoLineLowColorRef;
+	COLORREF itsSimpleIsoLineHighColorRef;
+	COLORREF itsSimpleColorContourMidColorRef;
+	COLORREF itsSimpleColorContourLowColorRef;
+	COLORREF itsSimpleColorContourHighColorRef;
+	COLORREF itsSimpleColorContourHigh2ColorRef;
+	COLORREF itsHatch1ColorRef;
+	COLORREF itsHatch2ColorRef;
+	CBitmap* itsSymbolFillBitmap;
+	CBitmap* itsSymbolBitmap;
+	CBitmap* itsIsoLineLabelBitmap;
+	CBitmap* itsIsoLineBitmap;
+	CBitmap* itsIsoLineLabelBoxFillBitmap;
+	CBitmap* itsSymbolMidBitmap;
+	CBitmap* itsSymbolLowBitmap;
+	CBitmap* itsSymbolHighBitmap;
+	CBitmap* itsSimpleIsoLineMidBitmap;
+	CBitmap* itsSimpleIsoLineLowBitmap;
+	CBitmap* itsSimpleIsoLineHighBitmap;
+	CBitmap* itsSimpleColorContourMidBitmap;
+	CBitmap* itsSimpleColorContourLowBitmap;
+	CBitmap* itsSimpleColorContourHighBitmap;
+	CBitmap* itsSimpleColorContourHigh2Bitmap;
+	CBitmap* itsHatch1Bitmap;
+	CBitmap* itsHatch2Bitmap;
+	CRect itsSymbolFillColorRect;
+	CRect itsSymbolColorRect;
+	CRect itsIsoLineLabelColorRect;
+	CRect itsIsoLineColorRect;
+	CRect itsIsoLineLabelBoxFillColorRect;
+	CRect itsSymbolMidColorRect;
+	CRect itsSymbolLowColorRect;
+	CRect itsSymbolHighColorRect;
+	CRect itsSimpleIsoLineMidColorRect;
+	CRect itsSimpleIsoLineLowColorRect;
+	CRect itsSimpleIsoLineHighColorRect;
+	CRect itsSimpleColorContourMidColorRect;
+	CRect itsSimpleColorContourLowColorRect;
+	CRect itsSimpleColorContourHighColorRect;
+	CRect itsSimpleColorContourHigh2ColorRect;
+	CRect itsHatch1ColorRect;
+	CRect itsHatch2ColorRect;
+
+	bool fSkipreadingSpecialClassColorIndices; // tämä on viritys, mitä tarvitaan että väriindeksi pikapäivitys toimisi
+
+    SmartMetDocumentInterface *itsSmartMetDocumentInterface; // päivitä napista päivitetään ruudut tämän avulla (ja muita tarpeita)
+	unsigned int itsDescTopIndex; // jos piirto-ominaisuudet liittyvät jonkun karttanäytön (desctop) parametriin, pitää siitä olla tieto, että oikeaa karttanäyttöä osataan päivittää
+    CString itsDrawParamFileNameStrU_;
+    CComboBox itsStationDataViewSelector;
+    BOOL fUseIsoLineGabWithCustomContours;
+    double itsContourGap;
+    float itsAlpha;
+    CWzComboBox itsFixedDrawParamSelector; // puurakenteinen dropdown lista, missä kansioita ja drawParameita
+    bool fFixedDrawParamSelectorInitialized;
+    int itsIconTypeFolderId; // kun itsFixedDrawParamSelector:ille annetaan kansio ja drawParam ikonit, näihin talletetaan niiden vastaavat id:t
+    int itsIconTypeFileId;
+    BOOL fUseTransparentLabelBoxFillColor;
+    BOOL fDoSparseDataSymbolVisualization;
+
+public:
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnBnClickedModifyDrwParamRefresh();
+	afx_msg void OnBnClickedDrawParamLoadFrom();
+	afx_msg void OnBnClickedModifyDrwParamUseWithAll();
+	afx_msg void OnBnClickedButtonColorShowSimpleColorcontourHigh2();
+	afx_msg void OnClose();
+	afx_msg void OnEnChangeSpecialClassesValues();
+    afx_msg void OnCbnSelchangeComboFixedDrawParamSelector();
+    afx_msg void OnBnClickedButtonReloadOriginal();
+};
+
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+

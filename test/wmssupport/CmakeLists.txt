@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(SmartMetHakeMessagesTest)
+
+set(CMAKE_MFC_FLAG 0)
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
+
+add_definitions( -D_UNICODE -DUNICODE )
+
+include_directories( 
+    ${LIBS_FMI}/datautilities
+    ${BOOST_INCLUDE_DIR}
+    ${LIBS_FMI}/newbase/include
+    ${LIBS_3RD}/googletest/googletest/include
+    ${LIBS_3RD}/googletest/googlemock/include
+    )
+
+link_directories(
+    ${BOOST_LIB_DIR}
+    ${LIBS_3RD}/gtest/lib
+    ${LIBS_3RD}/gmock/lib
+    )
+
+file( GLOB CPP_FILES *.cpp )
+file( GLOB H_FILES *.h )
+
+add_executable( 
+    ${PROJECT_NAME}
+    ${CPP_FILES} 
+    ${H_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    SmartMetDataUtilities
+    newbaseEditor
+    )
+

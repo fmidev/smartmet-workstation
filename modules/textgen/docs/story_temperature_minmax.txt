@@ -1,0 +1,29 @@
+/*!
+
+\page page_story_temperature_meanmax Tarina "temperature_meanmax"
+
+\c temperature_meanmax tarina on muotoa
+
+  -# "Keskimääräinen ylin lämpötila N astetta."
+
+Ruotsiksi
+
+  -# "Den högsta temperaturen i medeltal N grader."
+
+Englanniksi
+
+  -# "Mean maximum temperature N degrees."
+
+Käytetyt fraasit ovat
+
+  - "keskimääräinen ylin lämpötila"
+  - "astetta"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Mean(MaxTemperature)):
+textgen::[kappale]::story::temperature_meanmax::fake::mean = [result]
+\endcode
+
+*/
+

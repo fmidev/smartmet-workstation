@@ -1,0 +1,29 @@
+/*!
+\page page_otsikot Otsikot
+
+<ol>
+ <li>\ref sec_headerfactory</li>
+ <ol>
+  <li>\ref page_header_none</li>
+  <li>\ref page_header_until</li>
+  <li>\ref page_header_clock_range</li>
+  <li>\ref page_header_from_until</li>
+  <li>\ref page_header_several_days</li>
+  <li>\ref page_header_morning</li>
+  <li>\ref page_header_forenoon</li>
+  <li>\ref page_header_afternoon</li>
+  <li>\ref page_header_evening</li>
+  <li>\ref page_header_report_time</li>
+  <li>\ref page_header_report_area</li>
+  <li>\ref page_header_report_location</li>
+ </ol>
+</ol>
+
+\section sec_headerfactory HeaderFactory namespace
+
+TextGen::HeaderFactory namespace sis‰lt‰‰ create funktion,
+jolla voidaan luoda erikseen nimettyj‰ otsikoita. Funktiolle
+annetaan alueen mimi, s‰‰periodi sek‰ otsikon tyyppi.
+Paluuarvona on TextGen::Header objekti.
+
+*/

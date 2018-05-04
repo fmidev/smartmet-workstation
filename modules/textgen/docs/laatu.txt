@@ -1,0 +1,59 @@
+/*!
+\page page_laatu Laatu
+
+\section sec_laatu_intro Johdanto
+
+Kuhunkin analysoituun tulokseen voidaan liittää jonkinlainen laatua
+mittaava luku. Tällä sivulla selvitetään laadun suunniteltu
+käyttötarkoitus, sen laskeminen eri parametereille ja funktioille,
+sekä laadun räätälöinti eri tarkoituksiin.
+
+\section sec_laatu_tarkoitus Käyttötarkoitus
+
+Laadulla on seuraavat käyttötarkoitukset
+
+  -# Alueelliset ennusteet voidaan jakaa automaattisesti pienempiin
+     osiin, jos lasketuilla tuloksilla on heikko laatu.
+  -# Ajalliset ennusteet voidaan jakaa automaattisesti lyhempiin
+     jaksoihin, jos lasketuilla tuloksilla on heikko laatu.
+
+Esimerkiksi Suomi voidaan jakaa edelleen Etelä-, Keski- ja
+Pohjois-Suomeen.  Useamman päivän jakso taas voidaan jakaa
+yksittäisiin päiviin, ja yksittäinen päivä edelleen päivään ja yöhön jne.
+
+\section sec_laatu_laskeminen Laadun laskeminen
+
+Laatu määritellään pääasiassa alueelliseksi suureeksi, ajassa integroinnilla
+ei katsota olevan mitään vaikutusta. Laatua mitataan suoraan virhearviolla,
+eli laadun yksikkö riippuu suureesta. Kaikille laatusuureille on kuitenkin
+yhteistä, että 0 tarkoittaa tarkkaa tulosta.
+
+\section sec_laatu_funktiot Laadun tulkinta eri funktioille
+
+Suurin osa tekstigeneraattorin suorittamista analyyseista on
+yhdistelmä alue- ja aikaintegraatioita, jälkimmäinen ensin
+suoritettuna. Kaikki laatu katsotaan kohdistuvan alueelliseen
+integrointiin, eli pisteintegroinnin virhearvio on aina 0.
+
+Seuraaville funktioille virhearvio on aina 0:
+
+ -# \c Maximum
+ -# \c Minimum
+ -# \c Sum
+ -# \c StandardDeviation
+ -# \c Percentage
+ -# \c Count
+ -# \c Trend
+ -# \c Change
+
+Jäljelle jäävät siis ainoastaan \c Mean.
+
+\c Mean funktiolle virhearvio on alueellinen keskihajonta.
+
+On kuitenkin huomattava, että tekstiä generoidessa \c Trend on
+hyvä laadun mittari ajalliselle \c Change funktiolle.
+
+*/
+
+
+

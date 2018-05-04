@@ -1,0 +1,24 @@
+# Warning symbols
+# Each line has three values separated by ; -characters:
+# Paramcode;smallImagePath;largeImagePath
+
+cold-weather;small\cold-weather_42.png;large\cold-weather_96.png
+flood-level;small\flood-level_42.png;large\flood-level_96.png
+flood-level-2;small\flood-level-2_42.png;large\flood-level-2_96.png
+flood-level-3;small\flood-level-3_42.png;large\flood-level-3_96.png
+flood-level-4;small\flood-level-4_42.png;large\flood-level-4_96.png
+forest-fire-weather;small\forest-fire-weather_42.png;large\forest-fire-weather_96.png
+grass-fire-weather;small\grass-fire-weather_42.png;large\grass-fire-weather_96.png
+hot-weather;small\hot-weather_42.png;large\hot-weather_96.png
+pedestrian-safety;small\pedestrian-safety_42.png;large\pedestrian-safety_96.png
+rain;small\rain_42.png;large\rain_96.png
+sea-icing;small\sea-icing_42.png;large\sea-icing_96.png
+sea-thunder-storm;small\sea-thunder-storm_42.png;large\sea-thunder-storm_96.png
+sea-water-height-high-water;small\sea-water-height-high-water_42.png;large\sea-water-height-high-water_96.png
+sea-water-height-shallow-water;small\sea-water-height-shallow-water_42.png;large\sea-water-height-shallow-water_96.png
+sea-wave-height;small\sea-wave-height_42.png;large\sea-wave-height_96.png
+sea-wind;small\sea-wind_42.png;large\sea-wind_96.png
+thunder-storm;small\thunder-storm_42.png;large\thunder-storm_96.png
+traffic-weather;small\traffic-weather_42.png;large\traffic-weather_96.png
+uv-note;small\uv-note_42.png;large\uv-note_96.png
+wind;small\wind_42.png;large\wind_96.png

@@ -1,0 +1,42 @@
+/*!
+
+\page page_story_dewpoint_range Tarina "dewpoint_range"
+
+\c dewpoint_range tarina on muotoa
+
+  -# "Kastepiste on noin X astetta."
+  -# "Kastepiste on X...Y astetta."
+
+Ruotsiksi
+
+  -# "Daggpunkt ‰r cirka X grader."
+  -# "Daggpunkt ‰r X...Y grader."
+
+Englanniksi
+
+  -# "Dewpoint is about X degrees."
+  -# "Dewpoint is X...Y degrees."
+
+K‰ytetyt fraasit ovat
+
+  - "kastepiste"
+  - "noin"
+  - "astetta"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Min(Dewpoint))...Mean(Max(Dewpoint))
+textgen::[kappale]::story::dewpoint_range::fake::minimum = [result]
+textgen::[kappale]::story::dewpoint_range::fake::maximum = [result]
+\endcode
+
+Tarinaan liittyvi‰ muuttujia ovat
+\code
+textgen::[kappale]::story::dewpoint_range::mininterval = [1-]
+\endcode
+
+Jos intervallin pituus on v‰hint‰‰n \c mininterval, sanotaan intervalli,
+muuten keskiarvo.
+
+*/
+

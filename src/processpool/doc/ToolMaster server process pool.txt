@@ -1,0 +1,42 @@
+ToolMaster server process pool
+==============================
+
+Pending issues and problems
+
+Master process
+- Tee singleton, tarkista käynnistyksen yhteydessä, onko Masteria jo olemassa
+    - jos on, keskeytä
+    - mitä jos toinen master on jumissa/ikiloopissa ja ei voi lopettaa?
+- Mitä jos work_queue täyttää?
+    - testaa pienellä segmentti koolla ja paljolla töitä
+- Voiko Master tappaa child-prosessin?
+    - terminate -komennolla kyllä
+- Miksi en voi ottaa child:ia talteen, että voisin käyttää siihen komentoja?
+    - nyt jos otan child:in talteen, lopuksi sen destruktori kaataa ohjelman (bad handle)
+
+Worker process
+- Voiko worker estää oman iki-loopin jotenkin?
+    - erillinen säie tutkisi jotenkin onko workerin työ-rutiinit elossa
+    - säie heittäisi poikkeuksen, joka lopettaa workerin?
+    - testaa...
+- Workerin pitää tutkia onko toinen worker samalla id:llä olemassa
+    - Master saattaa käynnistää useita workereitä samalla id:llä
+        - esim. työ kesti kauemmin kuin raportointi ajan expiroituminen, 
+        tällöin master totesi että worker on kuollut ja käynnisti uuden
+    - worker tarkastelee kasvattaako joku muukin sen running-process counteria
+        - kun asia huomataan, tappavatko kaikki itsensä, vai voiko joku jättää itsensä henkiin?
+
+Processies general
+- Tee release prosesseihin virhedialogin aukeamis esto
+    SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
+- SEH exceptions handling?
+    - en ole varma tästä, kokeilin c++-exception asetukset päällä ja kääntäjä valitti että koodi ei toimi 
+    kun vaaditaan stack unwinding ominaisuutta (mm. c++ objektien tuhoamista)
+        __try
+        {
+               // code that might crash
+        }
+        __except(EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+

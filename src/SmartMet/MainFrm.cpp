@@ -1,0 +1,1656 @@
+
+// MainFrm.cpp : implementation of the CMainFrame class
+//
+
+#include "stdafx.h"
+#include "SmartMet.h"
+#include "MainFrm.h"
+#include "SmartMetDoc.h"
+#include "SmartMetView.h"
+#include "ZoomDlg.h"
+#include "NFmiEditMapGeneralDataDoc.h"
+#include "CloseDlg.h"
+#include "NFmiSmartInfo.h"
+#include "NFmiMetEditorModeDataWCTR.h"
+#include "NFmiMetEditorOptionsData.h"
+#include "NFmiDictionaryFunction.h"
+#include "NFmiFileCleanerSystem.h"
+#include "FmiWin32TemplateHelpers.h"
+#include "FmiWin32Helpers.h"
+#include "NFmiQueryData.h"
+#include "NFmiDataNotificationSettingsWinRegistry.h"
+#include "FmiCombineDataThread.h"
+#include "FmiSeaIcingMessageThread.h"
+#include "FmiMacroParamUpdateThread.h"
+#include "SmartMetThreads_resource.h"
+#include "FmiQueryDataCacheLoaderThread.h"
+#include "FmiDataLoadingThread2.h"
+#include "FmiCacheLoaderData.h"
+#include "NFmiHelpDataInfo.h"
+#include "NFmiApplicationDataBase.h"
+#include "FmiAppDataToDbThread.h"
+#include "NFmiMacroPathSettings.h"
+#include "NFmiApplicationWinRegistry.h"
+#include "NFmiSatelliteImageCacheSystem.h"
+#include "HakeMessage/Main.h"
+#include "HakeMessage/HakeSystemConfigurations.h"
+#include "NFmiSeaIcingWarningSystem.h"
+#include "CtrlViewWin32Functions.h"
+#include "CtrlViewFunctions.h"
+#include "WmsSupport.h"
+#include "ApplicationInterface.h"
+
+#include "commctrl.h"
+#include "ntray.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+namespace
+{
+    // Optimizing view updates so that system won't update all views and dialogs every time when new data is loaded in to system.
+    // This is done by starting timer when new data is read (to hold some time before doing actual updates on views). So when in the waiting period a new data
+    // is read, that won't fire new update views action.
+
+    // If this flag is true, don't start new new-query-data-read-update-views-timer
+    std::atomic_flag g_NewQueryDataReadUpdateViewsTimerFlag = ATOMIC_FLAG_INIT;
+    // When timer is started with kFmiNewQueryDataReadUpdateViewsTimer, to here is stored the dynamic timer id that is used to kill the timer after updates.
+    UINT g_NewQueryDataReadUpdateViewsTimerId;
+    // Here is stored each new query data file name for final updateAllViewsAndDialogs reasonForUpdate message.
+    std::string g_NewQueryDataReadList;
+}
+
+
+// CMainFrame
+const NFmiViewPosRegistryInfo CMainFrame::s_ViewPosRegistryInfo(CRect(10, 10, 600, 800), "\\MainMapView");
+
+#define WM_TRAYNOTIFY WM_USER + 147
+CTrayNotifyIcon g_TrayIcon;
+
+IMPLEMENT_DYNCREATE(CMainFrame, CFmiUsedFrameWndParent)
+
+const int  iMaxUserToolbars = 10;
+const UINT uiFirstUserToolBarId = AFX_IDW_CONTROLBAR_FIRST + 40;
+const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
+
+BEGIN_MESSAGE_MAP(CMainFrame, CFmiUsedFrameWndParent)
+	ON_WM_CREATE()
+
+#ifndef FMI_DISABLE_MFC_FEATURE_PACK
+	// Global help commands
+	ON_COMMAND(ID_HELP_FINDER, &CFmiUsedFrameWndParent::OnHelpFinder)
+	ON_COMMAND(ID_HELP, &CFmiUsedFrameWndParent::OnHelp)
+	ON_COMMAND(ID_CONTEXT_HELP, &CFmiUsedFrameWndParent::OnContextHelp)
+	ON_COMMAND(ID_DEFAULT_HELP, &CFmiUsedFrameWndParent::OnHelpFinder)
+	ON_COMMAND(ID_VIEW_CUSTOMIZE, &CMainFrame::OnViewCustomize)
+	ON_REGISTERED_MESSAGE(AFX_WM_CREATETOOLBAR, &CMainFrame::OnToolbarCreateNew)
+	ON_COMMAND_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_OFF_2007_AQUA, &CMainFrame::OnApplicationLook)
+	ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_OFF_2007_AQUA, &CMainFrame::OnUpdateApplicationLook)
+	ON_COMMAND(ID_VIEW_CAPTION_BAR, &CMainFrame::OnViewCaptionBar)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_CAPTION_BAR, &CMainFrame::OnUpdateViewCaptionBar)
+	ON_COMMAND(ID_VIEW_DEMODOCKVIEWS, &CMainFrame::OnViewDemodockviews)
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+	ON_WM_CLOSE()
+	ON_WM_DESTROY()
+	ON_WM_PALETTECHANGED()
+	ON_WM_QUERYNEWPALETTE()
+	ON_WM_TIMER()
+	ON_COMMAND(ID_VIEW_SET_MAIN_FRAME_PLACE_TO_DEFAULT, OnViewSetMainFramePlaceToDefault)
+	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTW, 0, 0xFFFF, OnToolTipText)
+	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTA, 0, 0xFFFF, OnToolTipText)
+	ON_MESSAGE(WM_TRAYNOTIFY, OnTrayNotification)
+	ON_COMMAND(ID_ENABLENOTIFICATIONS, &CMainFrame::OnEnablenotifications)
+	ON_UPDATE_COMMAND_UI(ID_ENABLENOTIFICATIONS, &CMainFrame::OnUpdateEnablenotifications)
+	ON_COMMAND(ID_DISABLENOTIFICATIONS, &CMainFrame::OnDisablenotifications)
+	ON_UPDATE_COMMAND_UI(ID_DISABLENOTIFICATIONS, &CMainFrame::OnUpdateDisablenotifications)
+	ON_COMMAND(ID_NOTIFICATIONSOUNDSON, &CMainFrame::OnNotificationsoundson)
+	ON_UPDATE_COMMAND_UI(ID_NOTIFICATIONSOUNDSON, &CMainFrame::OnUpdateNotificationsoundson)
+	ON_COMMAND(ID_NOTIFICATIONSOUNDSOFF, &CMainFrame::OnNotificationsoundsoff)
+	ON_UPDATE_COMMAND_UI(ID_NOTIFICATIONSOUNDSOFF, &CMainFrame::OnUpdateNotificationsoundsoff)
+	ON_COMMAND(ID_SHOW_SYSTRAY_SYMBOL, &CMainFrame::OnShowSystraySymbol)
+	ON_UPDATE_COMMAND_UI(ID_SHOW_SYSTRAY_SYMBOL, &CMainFrame::OnUpdateShowSystraySymbol)
+	ON_COMMAND(ID_HIDE_SYSTRAY_SYMBOL, &CMainFrame::OnHideSystraySymbol)
+	ON_UPDATE_COMMAND_UI(ID_HIDE_SYSTRAY_SYMBOL, &CMainFrame::OnUpdateHideSystraySymbol)
+    ON_WM_GETMINMAXINFO()
+END_MESSAGE_MAP()
+
+static UINT indicators[] =
+{
+	ID_SEPARATOR,           // status line indicator
+	ID_INDICATOR_CAPS,
+	ID_INDICATOR_NUM,
+	ID_INDICATOR_SCRL,
+};
+
+const int gDisableMacroParamThread = 1;
+const int gDisableDataCache1Thread = 2;
+const int gDisableDataCache2Thread = 4;
+const int gDisableDataCache3Thread = 8;
+const int gDisableDataCacheHistoryThread = 16;
+const int gDisableCombineDataThread = 32;
+const int gDisableSoundingIndexDataThread = 64;
+const int gDisableWarningMessageThread = 128;
+const int gDisableDataLoaderThread = 256;
+const int gDisableMacroDirectorySyncThread = 512;
+
+static int GetDisabledThreads(void)
+{
+	int disableThreads = 0;
+// Ota n‰it‰ riveja pois kommentista, jos haluat disabloida tiettyj‰ threadeja testi mieless‰
+//	disableThreads |= gDisableMacroParamThread;
+//	disableThreads |= gDisableDataCache1Thread;
+//	disableThreads |= gDisableDataCache2Thread;
+//	disableThreads |= gDisableDataCache3Thread;
+//	disableThreads |= gDisableDataCacheHistoryThread;
+//	disableThreads |= gDisableCombineDataThread;
+//	disableThreads |= gDisableSoundingIndexDataThread;
+//	disableThreads |= gDisableWarningMessageThread;
+//	disableThreads |= gDisableDataLoaderThread;
+//	disableThreads |= gDisableMacroDirectorySyncThread;
+
+	return disableThreads;
+}
+
+// CMainFrame construction/destruction
+
+CMainFrame::CMainFrame()
+:itsDisableThreadsVariable(0)
+{
+#ifndef FMI_DISABLE_MFC_FEATURE_PACK
+	EnableActiveAccessibility();
+	// TODO: add member initialization code here
+	theApp.m_nAppLook = theApp.GetInt(_T("ApplicationLook"), ID_VIEW_APPLOOK_VS_2005);
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+	itsDoc = 0;
+
+	itsRedFlagBitmap = new CBitmap;
+	itsRedFlagBitmap->LoadBitmap(IDB_BITMAP_RED_FLAG);
+	itsOrangeFlagBitmap = new CBitmap;
+	itsOrangeFlagBitmap->LoadBitmap(IDB_BITMAP_ORANGE_FLAG);
+	itsFlagButtonIndex = -1;
+	itsDisableThreadsVariable = ::GetDisabledThreads();
+}
+
+CMainFrame::~CMainFrame()
+{
+	for(size_t i=0; i < itsQDataCacheLoaderDatas.size(); i++)
+		delete itsQDataCacheLoaderDatas[i];
+	itsQDataCacheLoaderDatas.clear();
+
+	CtrlView::DestroyBitmap(&itsRedFlagBitmap);
+    CtrlView::DestroyBitmap(&itsOrangeFlagBitmap);
+}
+
+// FindMenuItem() will find a menu item string from the specified
+// popup menu and returns its position (0-based) in the specified 
+// popup menu. It returns -1 if no such menu item string is found.
+static int FindMenuItem(CMenu* Menu, LPCTSTR MenuString)
+{
+   ASSERT(Menu);
+   ASSERT(::IsMenu(Menu->GetSafeHmenu()));
+
+   int count = Menu->GetMenuItemCount();
+   for (int i = 0; i < count; i++)
+   {
+       CString strU_;
+       if(Menu->GetMenuString(i, strU_, MF_BYPOSITION) &&
+           strU_.Compare(MenuString) == 0)
+         return i;
+   }
+
+   return -1;
+}
+
+static void RemoveMenuItem(CMenu* Menu, LPCTSTR subMenuString, LPCTSTR menuItemString)
+{
+	if(Menu)
+	{
+		int pos = ::FindMenuItem(Menu, subMenuString); // etsit‰‰n haluttu sub-menu
+		if (pos != -1)
+		{
+			CMenu* submenu = Menu->GetSubMenu(pos);
+			pos = ::FindMenuItem(submenu, menuItemString); // etsit‰‰n haluttu menuitem lˆydetyst‰ sub-menusta
+			if (pos > -1)
+				submenu->RemoveMenu(pos, MF_BYPOSITION);
+		}
+	}
+}
+
+// k‰y l‰pi menun ja etsii haluttua komentoa ja poistaa sen
+static void RemoveMenuItem(CMenu* Menu, UINT theCommand)
+{
+	if(Menu)
+	{
+		for(UINT i = 0; i < static_cast<UINT>(Menu->GetMenuItemCount()); i++)
+		{
+			CMenu* subMenu = Menu->GetSubMenu(i);
+			for(UINT j = 0; j < static_cast<UINT>(subMenu->GetMenuItemCount()); j++)
+			{
+				if(subMenu->GetMenuItemID(j) == theCommand)
+					subMenu->RemoveMenu(j, MF_BYPOSITION);
+			}
+		}
+	}
+}
+
+int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CFmiUsedFrameWndParent::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	CSmartMetApp* app = (CSmartMetApp*)AfxGetApp();
+	if(app)
+	{
+		itsDoc = app->GeneralDocData();
+	}
+
+#ifdef FMI_DISABLE_MFC_FEATURE_PACK
+	if (!m_wndToolBar.Create(this) || !m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
+#else
+	BOOL bNameValid;
+	// set the visual manager and style based on persisted value
+	OnApplicationLook(theApp.m_nAppLook);
+
+	if (!m_wndMenuBar.Create(this))
+	{
+		TRACE0("Failed to create menubar\n");
+		return -1;      // fail to create
+	}
+
+	m_wndMenuBar.SetPaneStyle(m_wndMenuBar.GetPaneStyle() | CBRS_SIZE_DYNAMIC | CBRS_TOOLTIPS | CBRS_FLYBY);
+
+	// prevent the menu bar from taking the focus on activation
+	CMFCPopupMenu::SetForceMenuFocus(FALSE);
+
+	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
+		!m_wndToolBar.LoadToolBar(theApp.m_bHiColorIcons ? IDR_MAINFRAME_256 : IDR_MAINFRAME))
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+	{
+		TRACE0("Failed to create toolbar\n");
+		return -1;      // fail to create
+	}
+
+#ifdef FMI_DISABLE_MFC_FEATURE_PACK
+	// 256 v‰risen ja vaihtuva kokoisen tolbarin teko vaatii n‰iden k‰yttˆˆn oton
+	itsToolBarBitmapHandle = (HBITMAP) ::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME_256), 
+							IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADMAP3DCOLORS);
+	itsToolBarBitmap.Attach(itsToolBarBitmapHandle);
+	itsToolBarImagelist.Create(16, 16, ILC_COLOR24, 4, 4);
+	itsToolBarImagelist.Add(&itsToolBarBitmap, (CBitmap*) NULL);
+	m_wndToolBar.GetToolBarCtrl().SetImageList(&itsToolBarImagelist);
+
+#else
+    CString strToolBarNameU_;
+	bNameValid = strToolBarName.LoadString(IDS_TOOLBAR_STANDARD);
+	ASSERT(bNameValid);
+	m_wndToolBar.SetWindowText(strToolBarName);
+
+    CString strCustomizeU_;
+	bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	ASSERT(bNameValid);
+	m_wndToolBar.EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+
+	// Allow user-defined toolbars operations:
+	InitUserToolbars(NULL, uiFirstUserToolBarId, uiLastUserToolBarId);
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+	// Apply user settings to optionally hide some of the toolbar controls
+	ConfigureToolbarControls();
+
+	if (!m_wndStatusBar.Create(this) || !m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT)))
+	{
+		TRACE0("Failed to create status bar\n");
+		return -1;      // fail to create
+	}
+
+#ifdef FMI_DISABLE_MFC_FEATURE_PACK
+	// TODO: Remove this if you don't want tool tips or a resizeable toolbar
+	m_wndToolBar.SetBarStyle(m_wndToolBar.GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
+
+	// TODO: Delete these three lines if you don't want the toolbar to be dockable
+	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
+	EnableDocking(CBRS_ALIGN_ANY);
+	DockControlBar(&m_wndToolBar);
+#else
+	// TODO: Delete these five lines if you don't want the toolbar and menubar to be dockable
+	m_wndMenuBar.EnableDocking(CBRS_ALIGN_ANY);
+	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
+	EnableDocking(CBRS_ALIGN_ANY);
+	DockPane(&m_wndMenuBar);
+	DockPane(&m_wndToolBar);
+
+
+	// enable Visual Studio 2005 style docking window behavior
+	CDockingManager::SetDockingMode(DT_SMART);
+	// enable Visual Studio 2005 style docking window auto-hide behavior
+	EnableAutoHidePanes(CBRS_ALIGN_ANY);
+
+	// Create a caption bar:
+	if (!CreateCaptionBar())
+	{
+		TRACE0("Failed to create caption bar\n");
+		return -1;      // fail to create
+	}
+
+	// Load menu item image (not placed on any standard toolbars):
+	CMFCToolBar::AddToolBarForImageCollection(IDR_MENU_IMAGES, theApp.m_bHiColorIcons ? IDB_MENU_IMAGES_24 : 0);
+
+	// HUOM! Jos dokkautuvat pane-ikkunat laitetaan t‰‰ll‰ jo p‰‰lle, sen voisi tehd‰ t‰ss‰ kohtaa.
+	//OnViewDemodockviews();
+
+	// Enable toolbar and docking window menu replacement
+	EnablePaneMenu(TRUE, ID_VIEW_CUSTOMIZE, strCustomize, ID_VIEW_TOOLBAR);
+
+	// enable quick (Alt+drag) toolbar customization
+	CMFCToolBar::EnableQuickCustomization();
+
+	if (CMFCToolBar::GetUserImages() == NULL)
+	{
+		// load user-defined toolbar images
+		if (m_UserImages.Load(_T(".\\UserImages.bmp")))
+		{
+			m_UserImages.SetImageSize(CSize(16, 16), FALSE);
+			CMFCToolBar::SetUserImages(&m_UserImages);
+		}
+	}
+/* // HUOM! t‰m‰ toimii vain menulle, ei toolbar buttoneille?!?!
+	// enable menu personalization (most-recently used commands)
+	// TODO: define your own basic commands, ensuring that each pulldown menu has at least one basic command.
+	CList<UINT, UINT> lstBasicCommands;
+
+	lstBasicCommands.AddTail(ID_FILE_NEW);
+	lstBasicCommands.AddTail(ID_FILE_OPEN);
+	lstBasicCommands.AddTail(ID_FILE_SAVE);
+	lstBasicCommands.AddTail(ID_FILE_PRINT);
+	lstBasicCommands.AddTail(ID_APP_EXIT);
+	lstBasicCommands.AddTail(ID_EDIT_CUT);
+	lstBasicCommands.AddTail(ID_EDIT_PASTE);
+	lstBasicCommands.AddTail(ID_EDIT_UNDO);
+	lstBasicCommands.AddTail(ID_APP_ABOUT);
+	lstBasicCommands.AddTail(ID_VIEW_STATUS_BAR);
+	lstBasicCommands.AddTail(ID_VIEW_TOOLBAR);
+	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2003);
+	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_VS_2005);
+	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_BLUE);
+	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_SILVER);
+	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_BLACK);
+	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_AQUA);
+	lstBasicCommands.AddTail(ID_SORTING_SORTALPHABETIC);
+	lstBasicCommands.AddTail(ID_SORTING_SORTBYTYPE);
+	lstBasicCommands.AddTail(ID_SORTING_SORTBYACCESS);
+	lstBasicCommands.AddTail(ID_SORTING_GROUPBYTYPE);
+
+	CMFCToolBar::SetBasicCommands(lstBasicCommands);
+*/
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+	std::string errorBaseStr("Error in CMainFrame::OnInitDialog while reading dialog size and position values");
+//	CFmiWin32TemplateHelpers::DoWindowSizeSettings(this, false, errorBaseStr, itsDoc->Logger());
+    CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsDoc->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
+
+	itsCleanDataTimer = static_cast<UINT>(SetTimer(kFmiCleanDataTimer, 1 * 5 * 60 * 1000, NULL)); // siivotaan datahakemistot kerran 5 minuutin kuluttua, siell‰ timer asetetaan sitten miten pit‰‰
+	itsDebugDataSizeLoggerTimer = static_cast<UINT>(SetTimer(kFmiDebugDataSizeLoggerTimer, 1 * 1 * 30 * 1000, NULL)); // aloitetaan raportointi 30 sekunnin kuluttua, muutetaan sitten harvemmaksi
+	itsCheckAnimationLockedModeTimeBagsTimer = static_cast<UINT>(SetTimer(kFmiCheckAnimationLockedModeTimeBagsTimer, 1 * 1 * 63 * 1000, NULL)); // laitan animaatio havainto lukitus timerin 63 sekuntiin, ett‰ se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyˆr‰ht‰v‰t timerit
+	itsCheckForNewSatelDataTimer = static_cast<UINT>(SetTimer(kFmiCheckForNewSatelDataTimer, 1 * 57 * 1000, NULL)); // laitan satel/k‰siteanalyysi datan tarkistuksen timerin 57 sekuntiin, ett‰ se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyˆr‰ht‰v‰t timerit
+	itsAutoSaveTimer = static_cast<UINT>(SetTimer(kFmiAutoSaveTimer, 1 * 60 * 1000, NULL));
+	int updateInterValInHours = itsDoc->ApplicationDataBase().UpdateIntervalInHours();
+	if(updateInterValInHours > 0)
+		itsDataToDBUpdateTimer = static_cast<UINT>(SetTimer(kFmiDataToDBUpdateTimer, updateInterValInHours * 60 * 60 * 1000, NULL)); // kerran vuorokaudessa l‰hetys
+	itsCleanOldDataFromMemoryTimer = static_cast<UINT>(SetTimer(kFmiCleanOldDataFromMemoryTimer, 5 * 60 * 1000, NULL)); // siivotaan queryDatoja muistissa aina 5 minuutin v‰lein
+	if(itsDoc->MacroPathSettings().UseLocalCache())
+		itsMacroDirectoriesSyncronization = static_cast<UINT>(SetTimer(kFmiMacroDirectoriesSyncronization, 3 * 60 * 1000, NULL)); // tehd‰‰n 1. synkronointi vaikka 3 minuutin kuluttua
+    itsStoreViewPosToWinRegistryTimer = static_cast<UINT>(SetTimer(kFmiStoreViewPosToWinRegistryTimer, 117 * 1000, NULL)); // tehd‰‰n ikkunoiden koko+sijainti talletuksia rekisteriin n. parin minuutin v‰lein (117 sekuntia)
+    itsStoreCrashBackupViewMacroTimer = static_cast<UINT>(SetTimer(kFmiStoreCrashBackupViewMacroTimer, 87 * 1000, NULL)); // tehd‰‰n crash backup viewmacro talletuksia n. 1.5 minuutin v‰lein (87 sekuntia)
+    itsGenerateBetaProductsTimer = static_cast<UINT>(SetTimer(kFmiGenerateBetaProductsTimer, 60 * 1000, NULL)); // Tarkastellaan minuutin v‰lein, ett‰ pit‰‰kˆ beta-producteja tehd‰ 
+    itsLoggingSystemManagementTimer = static_cast<UINT>(SetTimer(kFmiLoggingSystemManagementTimer, 12 * 60 * 1000, NULL)); // Lokitus systeemi‰ pit‰‰ hallinnoida aika ajoin, viestien trimmau muistista ja crash-reporteriin mahdollisesti p‰ivitetty lokitiedoston nimi
+
+#ifdef FMI_DISABLE_MFC_FEATURE_PACK
+	// Otetaan MFC-feature-pack liit‰nn‰iset osat pois menusta
+	CMenu* pMenu = GetMenu();
+	if(pMenu)
+	{
+		::RemoveMenuItem(pMenu, _T("&View"), _T("&Toolbars and Docking Windows")); 
+		::RemoveMenuItem(pMenu, _T("&View"), _T("&Caption Bar")); 
+		::RemoveMenuItem(pMenu, _T("&View"), _T("Demo dock views")); 
+		::RemoveMenuItem(pMenu, _T("&View"), _T("&Application Look")); 
+		::RemoveMenuItem(pMenu, _T("&Help"), _T("&Help Topics")); 
+	}
+
+    LocalizeMenuStrings();
+
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+	std::string usedTooltipStr = itsDoc->DataNotificationSettings().ToolTipUseTitle() ? itsDoc->GetApplicationTitle() : itsDoc->DataNotificationSettings().ToolTip();
+    if(!g_TrayIcon.Create(this, IDR_MENU_SYS_TRAY_POPUP, CA2T(usedTooltipStr.c_str()), LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME)), WM_TRAYNOTIFY, 0, itsDoc->DataNotificationSettings().ShowIcon()))
+	{
+		AfxMessageBox(_T("Failed to create SmartMet tray icon"), MB_OK | MB_ICONSTOP);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void LocalizeMenuStrings(CMenu *pMenu)
+{
+	if(pMenu)
+	{
+        for(int i = 0; i < pMenu->GetMenuItemCount(); i++)
+        {
+            CMenu *pSubMenu = pMenu->GetSubMenu(i);
+            LocalizeMenuStrings(pSubMenu);
+            CString menuItemStrU_;
+            pMenu->GetMenuString(i, menuItemStrU_, MF_BYPOSITION);
+            if(menuItemStrU_.GetLength())
+            {
+                UINT itemId = pMenu->GetMenuItemID(i);
+                std::string newMenuItemStr = ::GetDictionaryString(CT2A(menuItemStrU_));
+                menuItemStrU_ = CA2T(newMenuItemStr.c_str());
+                pMenu->ModifyMenu(i, MF_BYPOSITION | MF_STRING, itemId, menuItemStrU_);
+            }
+        }
+    }
+}
+
+void CMainFrame::LocalizeMenuStrings()
+{
+	CMenu *pMenu = GetMenu();
+    ::LocalizeMenuStrings(pMenu);
+}
+
+// T‰ss‰ metodissa on tarkoitus k‰ynnist‰‰ ne working-threadit, jotka k‰ynnistet‰‰n aina.
+// StartDataLoadingWorkingThread -metodissa k‰ynnistet‰‰n ne working-threadit, jotka
+// k‰ynnistet‰‰n vain ns. operatiivisessa tilassa.
+void CMainFrame::StartAdditionalWorkerThreads(void)
+{
+	DoAppDataBaseCollection(NFmiApplicationDataBase::kStart);
+
+	// k‰ynnistet‰‰n macroParam update threadi kerran, ja se pit‰‰ ensin initialisoida. T‰m‰ threadi k‰ynnistet‰‰n aina.
+	CFmiMacroParamUpdateThread::InitMacroParamSystem(itsDoc->MacroParamSystem());
+	int macroParamThreadDelayInMS = 6 * 1000;
+	if(itsDoc->MachineThreadCount() >= 6)
+		macroParamThreadDelayInMS /= 3; // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ alkua niin paljoa
+	CFmiMacroParamUpdateThread::SetFirstTimeDelay(macroParamThreadDelayInMS);
+	if((itsDisableThreadsVariable & gDisableMacroParamThread) == 0)
+		CWinThread *macroParamUpdateThread = AfxBeginThread(CFmiMacroParamUpdateThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
+
+	StartQDataCacheThreads();
+}
+
+static void MakeDataLoaderThread(int priority, double minSizeMB, double maxSizeMB, int win32ThreadPriority, std::vector<CFmiCacheLoaderData*> &theQDataCacheLoaderDatas, int theStartUpDelayInMS, bool fMakeHistoryThread = false)
+{
+	CFmiCacheLoaderData *cacheLoaderData = new CFmiCacheLoaderData(); 
+	cacheLoaderData->itsThreadPriority = priority;
+	std::string threadName = "thread #";
+	threadName += NFmiStringTools::Convert(cacheLoaderData->itsThreadPriority);
+	cacheLoaderData->itsThreadName = threadName;
+	cacheLoaderData->itsMinDataSizeInMB = minSizeMB;
+	cacheLoaderData->itsMaxDataSizeInMB = maxSizeMB;
+	cacheLoaderData->itsStartUpWaitTimeInMS = theStartUpDelayInMS;
+	if(fMakeHistoryThread)
+		AfxBeginThread(CFmiQueryDataCacheLoaderThread::DoHistoryThread, cacheLoaderData, win32ThreadPriority);
+	else
+		AfxBeginThread(CFmiQueryDataCacheLoaderThread::DoThread, cacheLoaderData, win32ThreadPriority);
+	theQDataCacheLoaderDatas.push_back(cacheLoaderData);
+}
+
+// t‰lle piti tehd‰ oma metodi, koska SmartMetin asetuksia muuttamalla t‰m‰ pit‰‰ k‰ynnist‰‰ joskus erikseen tai uudelleen.
+// T‰ss‰ k‰ynnistet‰‰n kolme eri tasoista threadia, joilla ladataan cacheen eri kokoisia (eri prioriteetteja) qdata-tiedostoja.
+void CMainFrame::StartQDataCacheThreads(void)
+{
+	if(itsDoc->HelpDataInfoSystem()->UseQueryDataCache() == false)
+		return ; // ei k‰ynnistet‰ cache-worker-threadeja, koska asetukset sanovat ett‰ niit‰ ei k‰ytet‰
+
+    // valitettavasti apppath-stringi on url-encodattu ja se pit‰‰ purkaa...
+    std::string smartMetBinariesDirectory = NFmiStringTools::UrlDecode(itsDoc->ApplicationDataBase().apppath); 
+	// k‰ynnistet‰‰n qdata cache-loader threadi kerran, ja se pit‰‰ ensin initialisoida. T‰m‰ threadi k‰ynnistet‰‰n aina.
+	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours());
+	// K‰ynnistet‰‰n 3 eri tasoista cache-loader threadia 
+	// HUOM!!! Muista laittaa min ja max tiedostokoko rajat niin ettei mik‰‰n koko j‰‰ niiden ulkopuolelle.
+	// Eli laita 1. max 2. seuraavan min:iksi jne.
+	double mediumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMediumFileSizeMB();
+	double largeFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheLargeFileSizeMB();
+	double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
+	// Testi threadi, joka tekee kaikki tiedosto koot
+//	::MakeDataLoaderThread(1, 0, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas);
+	// Oikea threadi setti
+	int thread1DelayInMS = 0*1000;
+	int thread2DelayInMS = 2*1000;
+	int thread3DelayInMS = 3*1000;
+	int thread4DelayInMS = 120*1000;
+	if(itsDoc->MachineThreadCount() >= 6)
+	{ // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ eri threadien alkua niin paljoa
+		thread1DelayInMS = 0*1000;
+		thread2DelayInMS = 2*1000;
+		thread3DelayInMS = 20*1000;
+		thread4DelayInMS = 40*1000;
+	}
+
+    CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
+    CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
+
+	// HUOM1 k‰ynnist‰n data-kopiointithreadit v‰hiten merkitt‰v‰st‰ merkitt‰vimp‰‰n, koska
+	// ainakin 1-2 core systeemeiss‰ viimeiseksi k‰ynnistetyt threadit n‰ytt‰v‰t saavan 
+	// etulyˆnti aseman k‰ytetyist‰ prioriteeteista huolimatta.
+    // HUOM2 VC++2012 -k‰‰nt‰j‰ll‰ pit‰‰kin k‰ynnist‰‰ t‰rkeysj‰rjestyksess‰ (edellinen kommentti oli VC++2008 ajoilta).
+    // HUOM3 Nyt "viuhti on Linux serveri" -kaudella ja VC++2012, pit‰‰ taas n‰emm‰ k‰ytt‰‰ k‰‰nteist‰ j‰rjestyst‰ (ja nyt 
+    // j‰rjestys on tosi t‰rke‰‰, koska yleens‰ vain yksi threadeista toimii kerrallaan).
+    if((itsDisableThreadsVariable & gDisableDataCache1Thread) == 0)
+		::MakeDataLoaderThread(1, 0, mediumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread1DelayInMS);
+    if((itsDisableThreadsVariable & gDisableDataCache2Thread) == 0)
+        ::MakeDataLoaderThread(2, mediumFileSizeMB, largeFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread2DelayInMS);
+    if((itsDisableThreadsVariable & gDisableDataCache3Thread) == 0)
+        ::MakeDataLoaderThread(3, largeFileSizeMB, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas, thread3DelayInMS); // laitetaan tosi isot tiedostot tulemaan pienemm‰ll‰ prioriteetill‰
+    //if((itsDisableThreadsVariable & gDisableDataCacheHistoryThread) == 0)
+    //    ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas, thread4DelayInMS, true); // laitetaan historia tiedostot tulemaan pienemm‰ll‰ prioriteetill‰
+}
+
+void CMainFrame::StartHistoryDataCacheThread(void)
+{
+    double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
+    // T‰m‰ yritt‰‰ k‰ynnist‰‰ uuden worker threadin. Jos se on jo k‰ynniss‰, uusi threadi lopettaa saman 2 sekunnin odottelun j‰lkeen.
+    ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, 0, true); // laitetaan tosi isot tiedostot tulemaan pinemm‰ll‰ prioriteetill‰
+}
+
+
+// t‰m‰ yritt‰‰ aloittaa uudestaan historia datan keruu threadin (jos esim. cachen polku muuttunut tms)
+void CMainFrame::RestartHistoryDataCacheThread(void)
+{
+	CFmiQueryDataCacheLoaderThread::RestartHistoryCollection();
+    double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
+    // T‰m‰ yritt‰‰ k‰ynnist‰‰ uuden worker threadin. Jos se on jo k‰ynniss‰, uusi threadi lopettaa saman 2 sekunnin odottelun j‰lkeen.
+    ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, 0, true); // laitetaan tosi isot tiedostot tulemaan pinemm‰ll‰ prioriteetill‰
+}
+
+void CMainFrame::StopQDataCacheThreads(void)
+{
+	CFmiQueryDataCacheLoaderThread::CloseNow(); // t‰m‰ on halppoa, kaikki cache-worker-threadit seuraavat t‰m‰ flagin asetusta
+}
+
+typedef std::deque<std::pair<time_t, std::string> > MessageContainer;
+
+static MessageContainer g_lastNotificationMessages; // t‰ss‰ on viimeiset viestit
+
+// TheMessages-containerissa on vanhat viestit aina per‰ll‰ ja uudemmat edess‰!
+static void ClearOldMessages(MessageContainer &theMessages, time_t currentTime, int theExpirationTimeInSeconds)
+{
+	do
+	{
+		if(theMessages.size() > 0)
+		{
+			if(currentTime - theMessages[theMessages.size()-1].first > theExpirationTimeInSeconds)
+				theMessages.pop_back();
+			else
+				break;
+		}
+		else
+			break;
+	} while(true);
+}
+
+// t‰m‰ kokoaa uusimmista notifikaatioista yhdisrtelm‰, kuitenkin niin ett‰ stringin pituus on maksimissa 255 merkki‰, mik‰ on notifikaatio rajoitus
+static std::string MakeTotalNotification(MessageContainer &theMessages)
+{
+	std::string totalStr;
+	for(size_t i=0; i<theMessages.size(); i++)
+	{
+		if(i > 0)
+			totalStr += "\n\n"; // laitetaan eri viestien erottimeksi rivinvaihdot, ett‰ tulee yksi tyhj‰ rivi v‰liin
+
+		totalStr += theMessages[i].second;
+	}
+	totalStr.resize(255);
+	return totalStr;
+}
+
+// theStyle is 0=Warning,1=Error,2=Info,3=None,4=User. This sets the used icon in balloon, must add user icon to paramList if that is wanted to use.
+void CMainFrame::SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound)
+{
+	// Pidet‰‰n listaa, miss‰ on viimeisimm‰t viestit ja tulostetaan niit‰ viimeisen 30 sekunnin ajalta
+	// Kuitenkin niin ett‰ lopulliseen Notifikaatio tekstiin mahtuu maksimissaan 255 merkki‰, mik‰ on k‰ytetyn data struktuurin raja
+
+	time_t t;
+	time(&t);
+	g_lastNotificationMessages.push_front(std::make_pair(t, theNotificationMsgStr));
+	::ClearOldMessages(g_lastNotificationMessages, t, 60 * 3); // pidet‰‰n vaikka kolme viimeisinta minuuttia tallessa
+	std::string finalNotifStr = ::MakeTotalNotification(g_lastNotificationMessages);
+    g_TrayIcon.SetBalloonDetails(CA2T(finalNotifStr.c_str()), CA2T(theNotificationTitle.c_str()), static_cast<CTrayNotifyIcon::BalloonStyle>(theStyle), theTimeout, 0, fNoSound);
+}
+
+LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam)
+{
+  //Delegate all the work back to the default implementation in
+  //CTrayNotifyIcon.
+  g_TrayIcon.OnTrayNotification(wParam, lParam);
+  return 0L;
+}
+
+void CMainFrame::ConfigureToolbarControls()  
+{
+	// Hide / Show various toolbar controls based on the configuration options
+	// Configuration option -> COMMAND ID mapping
+	SetControlHiding("MetEditor::Toolbar::LoadData", ID_BUTTON_LOAD_DATA);
+	SetControlHiding("MetEditor::Toolbar::StoreData", ID_BUTTON_STORE_DATA);
+	SetControlHiding("MetEditor::Toolbar::DataToDatabase", ID_BUTTON_DATA_TO_DATABASE);
+	SetControlHiding("MetEditor::Toolbar::HelpEditorMode", ID_BUTTON_HELP_EDITOR_MODE); //x = unable to find corresponding menu item
+	SetControlHiding("MetEditor::Toolbar::DataQualityChecker", ID_BUTTON_DATA_QUALITY_CHECKER);
+	SetControlHiding("MetEditor::Toolbar::Print", ID_FILE_PRINT);
+	SetControlHiding("MetEditor::Toolbar::ZoomDialog", ID_BUTTON_ZOOM_DIALOG);
+	SetControlHiding("MetEditor::Toolbar::DataArea", ID_BUTTON_DATA_AREA);
+	SetControlHiding("MetEditor::Toolbar::SelectFinlandMap", ID_BUTTON_SELECT_FINLAND_MAP);
+	SetControlHiding("MetEditor::Toolbar::SelectScandinavianMap", ID_BUTTON_SELECT_SCANDINAVIA_MAP);
+	SetControlHiding("MetEditor::Toolbar::SelectEuropeMap", ID_BUTTON_SELECT_EUROPE_MAP);
+	SetControlHiding("MetEditor::Toolbar::SelectGlobe", ID_BUTTON_GLOBE);
+	SetControlHiding("MetEditor::Toolbar::ViewGridSelectionDlg", ID_MENUITEM_VIEW_GRID_SELECTION_DLG);
+	SetControlHiding("MetEditor::Toolbar::ExtraMapViewDlg1", ID_EXTRA_MAP_VIEW_1);
+	SetControlHiding("MetEditor::Toolbar::ExtraMapViewDlg2", ID_EXTRA_MAP_VIEW_2);
+	SetControlHiding("MetEditor::Toolbar::TimeEditValuesDlg", ID_BUTTON_TIME_EDIT_VALUES_DLG);
+	SetControlHiding("MetEditor::Toolbar::SelectionToolDlg", ID_BUTTON_SELECTION_TOOL_DLG);
+	SetControlHiding("MetEditor::Toolbar::FilterDialog", ID_BUTTON_FILTER_DIALOG);
+	SetControlHiding("MetEditor::Toolbar::BrushToolDlg", ID_BUTTON_BRUSH_TOOL_DLG); //x
+	SetControlHiding("MetEditor::Toolbar::SmartToolDlg", ID_BUTTON_OPEN_SMART_TOOL_DLG);
+	SetControlHiding("MetEditor::Toolbar::EditorControlPointMode", ID_BUTTON_EDITOR_CONTROL_POINT_MODE);//x
+	SetControlHiding("MetEditor::Toolbar::ValidateData", ID_BUTTON_VALIDATE_DATA); //x
+	SetControlHiding("MetEditor::Toolbar::ShowCrossSection", ID_BUTTON_TEMP_DLG);
+	SetControlHiding("MetEditor::Toolbar::StoreViewMacro", ID_BUTTON_SHOW_CROSS_SECTION);
+	SetControlHiding("MetEditor::Toolbar::ObservationComparisonMode", ID_BUTTON_OBSERVATION_COMPARISON_MODE);//x
+	SetControlHiding("MetEditor::Toolbar::SynopDataGridView", ID_BUTTON_SYNOP_DATA_GRID_VIEW);
+	SetControlHiding("MetEditor::Toolbar::Trajectory", ID_BUTTON_TRAJECTORY);
+	SetControlHiding("MetEditor::Toolbar::Animation", ID_BUTTON_ANIMATION);
+	SetControlHiding("MetEditor::Toolbar::Refresh", ID_BUTTON_REFRESH);
+	SetControlHiding("MetEditor::Toolbar::MakeEditedDataCopy", ID_BUTTON_MAKE_EDITED_DATA_COPY);
+	SetControlHiding("MetEditor::Toolbar::Undo", ID_EDIT_UNDO);
+	SetControlHiding("MetEditor::Toolbar::Redo", ID_EDIT_REDO);
+}
+
+#ifndef FMI_DISABLE_MFC_FEATURE_PACK
+static void RemoveMenuItem(CMFCMenuBar &theMenuBar, int commandId)
+{
+	CMenu* pMenu = CMenu::FromHandle(theMenuBar.GetHMenu());
+	if(pMenu)
+	{
+		for(int i = 0; i < static_cast<int>(pMenu->GetMenuItemCount()); i++)
+		{
+			CMenu* pSubMenu = pMenu->GetSubMenu(i);
+			if(pSubMenu) 
+				pSubMenu->RemoveMenu(commandId, MF_BYCOMMAND);
+		}
+	}
+}
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+/**
+* Load given configuration option and hide the corresponding toolbar control
+* when the value of the option is "Hide" (case-sensitive at the moment).
+*/
+void CMainFrame::SetControlHiding(const std::string &confOption, int commandId)
+{
+	static int currentIndex = -1; // HUOM! t‰t‰ funktiota voidaan kutsua vain kerran!!!! T‰h‰n lasketaan qualityDataChecker-anapin indeksi
+
+	// Default behaviour is to show the control when the corresponding configuration option is missing.
+	std::string value = NFmiSettingsImpl::Instance().Value(confOption, "Show");
+	bool hide = value.compare("Hide") == 0;
+	if(hide)
+#ifdef FMI_DISABLE_MFC_FEATURE_PACK
+	{
+		m_wndToolBar.GetToolBarCtrl().HideButton(commandId, true);
+		::RemoveMenuItem(GetMenu(), commandId); // poistetaan hide-tapauksessa myˆs mahdollinen vastaava menu-kohta
+	}
+#else
+	{
+		// piilotetaan nappula toolbarista
+		int index = m_wndToolBar.CommandToIndex(commandId);
+		if(index >= 0)
+		{
+			CMFCToolBarButton *button = m_wndToolBar.GetButton(index);
+			if(button)
+				button->SetVisible(FALSE);
+		}
+		// Sitten toiminto piilotetaan menu-valikosta
+		::RemoveMenuItem(m_wndMenuBar, commandId);
+	}
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+	else
+	{
+		currentIndex++;
+		if(commandId == ID_BUTTON_DATA_QUALITY_CHECKER)
+			itsFlagButtonIndex = currentIndex;
+	}
+}
+
+BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
+{
+	if( !CFmiUsedFrameWndParent::PreCreateWindow(cs) )
+		return FALSE;
+	// TODO: Modify the Window class or styles here by modifying
+	//  the CREATESTRUCT cs
+
+	return TRUE;
+}
+
+#ifndef FMI_DISABLE_MFC_FEATURE_PACK
+BOOL CMainFrame::CreateDockingWindows()
+{
+	BOOL bNameValid;
+
+	// Create class view
+    CString strClassViewU_;
+	bNameValid = strClassView.LoadString(IDS_CLASS_VIEW);
+	ASSERT(bNameValid);
+	if (!m_wndClassView.Create(strClassView, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_CLASSVIEW, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create Class View window\n");
+		return FALSE; // failed to create
+	}
+
+	// Create file view
+    CString strFileViewU_;
+	bNameValid = strFileView.LoadString(IDS_FILE_VIEW);
+	ASSERT(bNameValid);
+	if (!m_wndFileView.Create(strFileView, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_FILEVIEW, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT| CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create File View window\n");
+		return FALSE; // failed to create
+	}
+
+	// Create output window
+    CString strOutputWndU_;
+	bNameValid = strOutputWnd.LoadString(IDS_OUTPUT_WND);
+	ASSERT(bNameValid);
+	if (!m_wndOutput.Create(strOutputWnd, this, CRect(0, 0, 100, 100), TRUE, ID_VIEW_OUTPUTWND, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_BOTTOM | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create Output window\n");
+		return FALSE; // failed to create
+	}
+
+	// Create properties window
+    CString strPropertiesWndU_;
+	bNameValid = strPropertiesWnd.LoadString(IDS_PROPERTIES_WND);
+	ASSERT(bNameValid);
+	if (!m_wndProperties.Create(strPropertiesWnd, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_PROPERTIESWND, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_RIGHT | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create Properties window\n");
+		return FALSE; // failed to create
+	}
+
+	SetDockingWindowIcons(theApp.m_bHiColorIcons);
+	return TRUE;
+}
+
+void CMainFrame::SetDockingWindowIcons(BOOL bHiColorIcons)
+{
+	HICON hFileViewIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_FILE_VIEW_HC : IDI_FILE_VIEW), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	m_wndFileView.SetIcon(hFileViewIcon, FALSE);
+
+	HICON hClassViewIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_CLASS_VIEW_HC : IDI_CLASS_VIEW), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	m_wndClassView.SetIcon(hClassViewIcon, FALSE);
+
+	HICON hOutputBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_OUTPUT_WND_HC : IDI_OUTPUT_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	m_wndOutput.SetIcon(hOutputBarIcon, FALSE);
+
+	HICON hPropertiesBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_PROPERTIES_WND_HC : IDI_PROPERTIES_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	m_wndProperties.SetIcon(hPropertiesBarIcon, FALSE);
+
+}
+
+BOOL CMainFrame::CreateCaptionBar()
+{
+	if (!m_wndCaptionBar.Create(WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, this, ID_VIEW_CAPTION_BAR, -1, TRUE))
+	{
+		TRACE0("Failed to create caption bar\n");
+		return FALSE;
+	}
+
+	BOOL bNameValid;
+
+    CString strTemp, strTemp2U_;
+	bNameValid = strTemp.LoadString(IDS_CAPTION_BUTTON);
+	ASSERT(bNameValid);
+	m_wndCaptionBar.SetButton(strTemp, ID_TOOLS_OPTIONS, CMFCCaptionBar::ALIGN_LEFT, FALSE);
+	bNameValid = strTemp.LoadString(IDS_CAPTION_BUTTON_TIP);
+	ASSERT(bNameValid);
+	m_wndCaptionBar.SetButtonToolTip(strTemp);
+
+	bNameValid = strTemp.LoadString(IDS_CAPTION_TEXT);
+	ASSERT(bNameValid);
+	m_wndCaptionBar.SetText(strTemp, CMFCCaptionBar::ALIGN_LEFT);
+
+	m_wndCaptionBar.SetBitmap(IDB_INFO, RGB(255, 255, 255), FALSE, CMFCCaptionBar::ALIGN_LEFT);
+	bNameValid = strTemp.LoadString(IDS_CAPTION_IMAGE_TIP);
+	ASSERT(bNameValid);
+	bNameValid = strTemp2.LoadString(IDS_CAPTION_IMAGE_TEXT);
+	ASSERT(bNameValid);
+	m_wndCaptionBar.SetImageToolTip(strTemp, strTemp2);
+
+	// Laitetaan aluksi captionbar piiloon
+	m_wndCaptionBar.ShowWindow(FALSE);
+
+	return TRUE;
+}
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+// CMainFrame diagnostics
+
+#ifdef _DEBUG
+void CMainFrame::AssertValid() const
+{
+	CFmiUsedFrameWndParent::AssertValid();
+}
+
+void CMainFrame::Dump(CDumpContext& dc) const
+{
+	CFmiUsedFrameWndParent::Dump(dc);
+}
+#endif //_DEBUG
+
+
+// CMainFrame message handlers
+
+#ifndef FMI_DISABLE_MFC_FEATURE_PACK
+void CMainFrame::OnViewCustomize()
+{
+	CMFCToolBarsCustomizeDialog* pDlgCust = new CMFCToolBarsCustomizeDialog(this, TRUE /* scan menus */);
+	pDlgCust->EnableUserDefinedToolbars();
+	pDlgCust->Create();
+}
+
+LRESULT CMainFrame::OnToolbarCreateNew(WPARAM wp,LPARAM lp)
+{
+	LRESULT lres = CFrameWndEx::OnToolbarCreateNew(wp,lp);
+	if (lres == 0)
+	{
+		return 0;
+	}
+
+	CMFCToolBar* pUserToolbar = (CMFCToolBar*)lres;
+	ASSERT_VALID(pUserToolbar);
+
+	BOOL bNameValid;
+    CString strCustomizeU_;
+	bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	ASSERT(bNameValid);
+
+	pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+	return lres;
+}
+
+void CMainFrame::OnApplicationLook(UINT id)
+{
+	CWaitCursor wait;
+
+	theApp.m_nAppLook = id;
+
+	switch (theApp.m_nAppLook)
+	{
+	case ID_VIEW_APPLOOK_WIN_2000:
+		CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManager));
+		break;
+
+	case ID_VIEW_APPLOOK_OFF_XP:
+		CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerOfficeXP));
+		break;
+
+	case ID_VIEW_APPLOOK_WIN_XP:
+		CMFCVisualManagerWindows::m_b3DTabsXPTheme = TRUE;
+		CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
+		break;
+
+	case ID_VIEW_APPLOOK_OFF_2003:
+		CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerOffice2003));
+		CDockingManager::SetDockingMode(DT_SMART);
+		break;
+
+	case ID_VIEW_APPLOOK_VS_2005:
+		CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerVS2005));
+		CDockingManager::SetDockingMode(DT_SMART);
+		break;
+
+	default:
+		switch (theApp.m_nAppLook)
+		{
+		case ID_VIEW_APPLOOK_OFF_2007_BLUE:
+			CMFCVisualManagerOffice2007::SetStyle(CMFCVisualManagerOffice2007::Office2007_LunaBlue);
+			break;
+
+		case ID_VIEW_APPLOOK_OFF_2007_BLACK:
+			CMFCVisualManagerOffice2007::SetStyle(CMFCVisualManagerOffice2007::Office2007_ObsidianBlack);
+			break;
+
+		case ID_VIEW_APPLOOK_OFF_2007_SILVER:
+			CMFCVisualManagerOffice2007::SetStyle(CMFCVisualManagerOffice2007::Office2007_Silver);
+			break;
+
+		case ID_VIEW_APPLOOK_OFF_2007_AQUA:
+			CMFCVisualManagerOffice2007::SetStyle(CMFCVisualManagerOffice2007::Office2007_Aqua);
+			break;
+		}
+
+		CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerOffice2007));
+		CDockingManager::SetDockingMode(DT_SMART);
+	}
+
+	RedrawWindow(NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME | RDW_ERASE);
+
+	theApp.WriteInt(_T("ApplicationLook"), theApp.m_nAppLook);
+}
+
+void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetRadio(theApp.m_nAppLook == pCmdUI->m_nID);
+}
+
+void CMainFrame::OnViewCaptionBar()
+{
+	m_wndCaptionBar.ShowWindow(m_wndCaptionBar.IsVisible() ? SW_HIDE : SW_SHOW);
+	RecalcLayout(FALSE);
+}
+
+void CMainFrame::OnUpdateViewCaptionBar(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_wndCaptionBar.IsVisible());
+}
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParentWnd, CCreateContext* pContext)
+{
+#ifdef FMI_DISABLE_MFC_FEATURE_PACK
+	// TODO: Add your specialized code here and/or call the base class
+	return CFmiUsedFrameWndParent::LoadFrame(nIDResource, dwDefaultStyle, pParentWnd, pContext);
+#else
+	// base class does the real work
+	if (!CFmiUsedFrameWndParent::LoadFrame(nIDResource, dwDefaultStyle, pParentWnd, pContext))
+	{
+		return FALSE;
+	}
+
+	// enable customization button for all user toolbars
+	BOOL bNameValid;
+    CString strCustomizeU_;
+	bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	ASSERT(bNameValid);
+
+	for (int i = 0; i < iMaxUserToolbars; i ++)
+	{
+		CMFCToolBar* pUserToolbar = GetUserToolBarByIndex(i);
+		if (pUserToolbar != NULL)
+		{
+			pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+		}
+	}
+
+	return TRUE;
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+}
+
+void CMainFrame::OnClose()
+{
+	bool displayNotCloseDlg = itsDoc->IsOperationalModeOn() ? false : true;
+
+	CCloseDlg closeDlg;
+	if(displayNotCloseDlg || closeDlg.DoModal() == IDOK)
+	{
+		{
+			itsDoc->LogMessage("Give Working-threads 15 s time to stop.", CatLog::Severity::Info, CatLog::Category::Operational);
+			DoAppDataBaseCollection(NFmiApplicationDataBase::kClose);
+
+            // HUOM! Jos WmsSupport:in alustus on ep‰onnistunut, ei saa tehd‰ tappok‰sky‰ ja odottelua
+            // koska mystisest‰ syyst‰ t‰llˆin CFmiDataLoadingThread2:en lopetus ep‰onnistuu DEBUG moodissa (ei release).
+            if(itsDoc->WmsSupport().isConfigured())
+                itsDoc->WmsSupport().kill();
+			CFmiCombineDataThread::CloseNow(); // sama t‰ss‰ combineData-threadille
+			CFmiSoundingIndexDataThread::CloseNow(); // sama t‰ss‰ soundingIndexData-threadille
+			CFmiSeaIcingMessageThread::CloseNow(); // sama t‰ss‰ HAKE warning luku -threadille
+			CFmiMacroParamUpdateThread::CloseNow(); // t‰ss‰ sama macroParam p‰ivitys -threadille
+			CFmiQueryDataCacheLoaderThread::CloseNow(); // t‰ss‰ sama queryData cachetus -threadeille (3 kpl kerralla)
+            NFmiSatelliteImageCacheSystem::StopUpdateThreads();
+            itsDoc->WarningCenterSystem().kill();
+            CFmiDataLoadingThread2::CloseNow(); // sama t‰ss‰ combineData-threadille
+
+        	CSmartMetDoc* doc = (CSmartMetDoc*)GetActiveDocument();
+			doc->DoOnClose(); // T‰ss‰ tehd‰‰n tietyt asiat, ennen kuin menn‰‰n NFmiEditMapGeneralDataDoc::StoreSupplementaryData -metodiin.
+
+			if(CFmiCombineDataThread::WaitToClose(6 * 1000))
+				itsDoc->LogMessage("CombineData working-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+			else
+				itsDoc->LogMessage("CombineData working-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+			if(CFmiSoundingIndexDataThread::WaitToClose(6 * 1000))
+				itsDoc->LogMessage("soundingIndexData working-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+			else
+				itsDoc->LogMessage("soundingIndexData working-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+			if(CFmiSeaIcingMessageThread::WaitToClose(5 * 1000))
+				itsDoc->LogMessage("SeaIcing Message working-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+			else
+				itsDoc->LogMessage("SeaIcing Message working-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+			if(CFmiMacroParamUpdateThread::WaitToClose(5 * 1000))
+				itsDoc->LogMessage("MacroParam update-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+			else
+				itsDoc->LogMessage("MacroParam update-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+			if(CFmiDataLoadingThread2::WaitToClose(12 * 1000))
+				itsDoc->LogMessage("DataLoadingThread-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+			else
+				itsDoc->LogMessage("DataLoadingThread-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+			WaitQDataCacheThreadsToStop();
+			if(CFmiAppDataToDbThread::WaitToClose(10 * 1000))
+				itsDoc->LogMessage("AppDataToDbThread-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+			else
+				itsDoc->LogMessage("AppDataToDbThread-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+            if(NFmiSatelliteImageCacheSystem::WaitUpdateThreadsToStop(1*1000))
+                itsDoc->LogMessage("SatelliteImageCache-threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+            else
+                itsDoc->LogMessage("SatelliteImageCache-threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+            if(itsDoc->WarningCenterSystem().isDead(std::chrono::milliseconds(1 * 1000)))
+                itsDoc->LogMessage("Hake message -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+            else
+                itsDoc->LogMessage("Hake message -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+
+            if(itsDoc->WmsSupport().isConfigured())
+            {
+                if(itsDoc->WmsSupport().isDead(std::chrono::milliseconds(1 * 1000)))
+                    itsDoc->LogMessage("WmsSupport -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+                else
+                    itsDoc->LogMessage("WmsSupport -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+            }
+
+            // N‰m‰ pit‰‰ tehd‰ vasta kun working-thread on lopettanut, koska muuten voi tulla ongelmia
+			// koska dokumentin StoreSupplementaryData tuhoaa ne dll:t, jotka muuten ehk‰ viel‰ lukisivat
+			// datoja.
+			doc->StoreData(true);
+			doc->UpdateTrajectorySystem(); // pakko p‰ivitt‰‰ arvoja ennen talletusta
+			itsDoc->StoreSupplementaryData();
+
+			itsDoc->MakeClosingLogMessage();
+		}
+		CFrameWnd::OnClose();
+	}
+}
+
+void CMainFrame::WaitQDataCacheThreadsToStop(void)
+{
+	bool status = true;
+	int waitTimeInSeconds = 6;
+	if(itsDoc->MachineThreadCount() < 3)
+		waitTimeInSeconds = 10;
+	for(size_t i=0; i < itsQDataCacheLoaderDatas.size(); i++)
+	{
+		if(CFmiQueryDataCacheLoaderThread::WaitToClose(waitTimeInSeconds * 1000, itsQDataCacheLoaderDatas[i]) == false)
+			status = false;
+	}
+	if(status)
+		itsDoc->LogMessage("QueryData cache-threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+	else
+		itsDoc->LogMessage("Some problem with QueryData cache-threads stoppage, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+}
+
+void CMainFrame::ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds)
+{
+    itsParamAddingSystemUpdateTimer = static_cast<UINT>(SetTimer(kFmiParamAddingSystemUpdateTimer, waitTimeInSeconds * 1000, NULL));
+}
+
+void CMainFrame::UpdateCrashRptLogFile()
+{
+    CSmartMetApp* app = (CSmartMetApp*)AfxGetApp();
+    app->UpdateCrashRptLogFile();
+}
+
+void CMainFrame::TrimmInMemoryLogMessages()
+{
+    CatLog::trimmOldestMessages(CatLog::Severity::Trace);
+}
+
+void CMainFrame::OnTimer(UINT_PTR nIDEvent)
+{
+	static int counter = 0;
+	counter++;
+//	TRACE("%7d nIDEvent = %d\n", counter, nIDEvent);
+
+	CSmartMetDoc* cdoc = (CSmartMetDoc*)GetActiveDocument();
+	if(!cdoc)
+		return;
+	switch(nIDEvent)
+	{
+		case kFmiCheckAnimationLockedModeTimeBagsTimer:
+		{
+			cdoc->GetData()->CheckAnimationLockedModeTimeBags(CtrlViewUtils::kDoAllMapViewDescTopIndex, false);
+			return;
+		}
+		case kFmiCheckForNewSatelDataTimer:
+		{
+			KillTimer(itsCheckForNewSatelDataTimer);
+			int checkFrequenceInMinutes = cdoc->GetData()->SatelDataRefreshTimerInMinutes();
+			if(checkFrequenceInMinutes > 0)
+			{
+                cdoc->GetData()->CheckForNewConceptualModelData();
+			}
+			else
+				checkFrequenceInMinutes = 1; // k‰ynnistet‰‰n t‰m‰ timeri kuitenkin ainakin kerran minuutissa, jos joku muuttaa asetuksia, t‰llˆin ei tarvitse erikseen k‰ynnist‰‰ timeria uudestaan
+			itsCheckForNewSatelDataTimer = static_cast<UINT>(SetTimer(kFmiCheckForNewSatelDataTimer, checkFrequenceInMinutes * 60 * 1000, NULL));
+
+			return;
+		}
+
+		case kFmiCleanDataTimer:
+		{
+			KillTimer(itsCleanDataTimer);
+			double cleaningFreqInMinutes = cdoc->GetData()->FileCleanerSystem().CleaningTimeStepInHours() * 60;
+			if(cleaningFreqInMinutes > 0)
+			{
+				cdoc->GetData()->CleanDataDirectories();
+				itsCleanDataTimer = static_cast<UINT>(SetTimer(kFmiCleanDataTimer, static_cast<UINT>(cleaningFreqInMinutes * 60 * 1000), NULL));
+			}
+			return ;
+		}
+
+		case kFmiDebugDataSizeLoggerTimer:
+		{
+			static bool firstTime = true;
+			KillTimer(itsDebugDataSizeLoggerTimer);
+			if(firstTime)
+			{
+				firstTime = false;
+				itsDebugDataSizeLoggerTimer = static_cast<UINT>(SetTimer(kFmiDebugDataSizeLoggerTimer, static_cast<UINT>(2 * 60 * 1000), NULL)); // 1. raportin j‰lkeen tehd‰‰n yksi raportti nopeammin
+			}
+			else
+				itsDebugDataSizeLoggerTimer = static_cast<UINT>(SetTimer(kFmiDebugDataSizeLoggerTimer, static_cast<UINT>(20 * 60 * 1000), NULL)); // 2. raportin j‰lkeen tehd‰‰n loput raportit hieman harvemmin
+			cdoc->GetData()->ReportInfoOrganizerDataConsumption();
+			cdoc->GetData()->ReportProcessMemoryUsage();
+			return ;
+		}
+
+		case kFmiAutoSaveTimer:
+		{ // tapetaan ja k‰ynnistet‰‰n autosave timer (vaikka se ei olisi k‰ytˆss‰)
+			KillTimer(itsAutoSaveTimer);
+			cdoc->DoAutoSave();
+
+			int autoSaveFreqInMinutes = cdoc->GetData()->MetEditorOptionsData().AutoSaveFrequensInMinutes();
+			itsAutoSaveTimer = static_cast<UINT>(SetTimer(kFmiAutoSaveTimer, autoSaveFreqInMinutes * 60 * 1000, NULL));
+			return;
+		}
+
+		case kFmiAutoStartUpLoadTimer:
+		{
+			KillTimer(itsAutoStartUpLoadTimer);
+			itsDoc->TryAutoStartUpLoad();
+			if(itsDoc->EditedDataNeedsToBeLoaded())
+			{
+				itsAutoStartUpLoadTimer = static_cast<UINT>(SetTimer(kFmiAutoStartUpLoadTimer, 10 * 1000, NULL));
+                ApplicationInterface::GetSmartMetView()->Update(); // t‰m‰n avulla elapsed time laskuri p‰ivittyy p‰‰karttan‰ytˆss‰
+			}
+			return;
+		}
+
+		case kFmiToggleFlagButtonTimer:
+		{
+			static bool lastWasRed = false;
+			KillTimer(itsToggleFlagButtonTimer);
+			if(itsDoc->EditedDataNotInPreferredState() && itsFlagButtonIndex != -1)
+			{
+				if(lastWasRed)
+					itsToolBarImagelist.Replace(itsFlagButtonIndex, itsOrangeFlagBitmap, NULL);
+				else
+					itsToolBarImagelist.Replace(itsFlagButtonIndex, itsRedFlagBitmap, NULL);
+				lastWasRed = !lastWasRed;
+				itsToggleFlagButtonTimer = static_cast<UINT>(SetTimer(kFmiToggleFlagButtonTimer, 1 * 1000, NULL));
+			}
+			else
+				itsToolBarImagelist.Replace(itsFlagButtonIndex, itsOrangeFlagBitmap, NULL); // viimeiseksi laitetaan oranssi lippu p‰‰lle
+			m_wndToolBar.Invalidate(FALSE);
+			if(!lastWasRed && itsDoc->RunningTimeInSeconds() > 5 * 60)
+				KillTimer(itsToggleFlagButtonTimer); // jos SmartMet on ollut k‰ynniss‰ yli 5 minuuttia ja viimeksi on ollut oranssi lippu p‰‰ll‰, lopetetaan lipun vilkutus kokonaan
+			return;
+		}
+
+		case kFmiDataToDBUpdateTimer:
+		{
+			DoAppDataBaseCollection(NFmiApplicationDataBase::kUpdate);
+			return;
+		}
+
+
+		case kFmiCleanOldDataFromMemoryTimer:
+		{
+			cdoc->GetData()->CleanUnusedDataFromMemory();
+			return;
+		}
+
+		case kFmiMacroDirectoriesSyncronization:
+		{
+			KillTimer(itsMacroDirectoriesSyncronization);
+			if(itsDoc->MacroPathSettings().UseLocalCache())
+			{
+				cdoc->GetData()->DoMacroDirectoriesSyncronization();
+				itsMacroDirectoriesSyncronization = static_cast<UINT>(SetTimer(kFmiMacroDirectoriesSyncronization, itsDoc->MacroPathSettings().SyncIntervalInMinutes() * 60 * 1000, NULL));
+				return;
+			}
+		}
+
+        case kFmiStoreViewPosToWinRegistryTimer:
+		{
+            cdoc->SaveViewPositionsToRegistry();
+			return;
+		}
+
+        case kFmiStoreCrashBackupViewMacroTimer:
+        {
+            cdoc->GetData()->StoreBackUpViewMacro(false);
+            return;
+        }
+
+        case kFmiGenerateBetaProductsTimer:
+        {
+            itsDoc->DoGenerateBetaProductsChecks();
+            return;
+        }
+
+        case kFmiParamAddingSystemUpdateTimer:
+        {
+            KillTimer(itsParamAddingSystemUpdateTimer);
+            itsDoc->UpdateParamAddingSystem();
+            return;
+        }
+
+        case kFmiLoggingSystemManagementTimer:
+        {
+            UpdateCrashRptLogFile();
+            TrimmInMemoryLogMessages();
+            return;
+        }
+
+        case kFmiNewQueryDataReadUpdateViewsTimer:
+        {
+            KillTimer(g_NewQueryDataReadUpdateViewsTimerId);
+            ((CSmartMetDoc*)GetActiveDocument())->UpdateAllViewsAndDialogs("CMainFrame: Loaded new data in SmartMet's database: " + g_NewQueryDataReadList);
+            g_NewQueryDataReadList.clear();
+            g_NewQueryDataReadUpdateViewsTimerFlag.clear();
+            return;
+        }
+    }
+
+	CFrameWnd::OnTimer(nIDEvent);
+}
+
+void CMainFrame::CheckForAutoLoadTimerStart(void)
+{
+	if(itsDoc->EditedDataNeedsToBeLoaded())
+	{
+		itsAutoStartUpLoadTimer = static_cast<UINT>(SetTimer(kFmiAutoStartUpLoadTimer, 10 * 1000, NULL)); // pistet‰‰n 10 sekunnin intervallilla tarkastamaan lˆytyykˆ editoitavaa pohja dataa
+	}
+}
+
+void CMainFrame::PutWarningFlagTimerOn(void)
+{
+	if(itsDoc->EditedSmartInfo() && itsDoc->EditedDataNotInPreferredState() && itsFlagButtonIndex != -1)
+	{
+		itsToggleFlagButtonTimer = static_cast<UINT>(SetTimer(kFmiToggleFlagButtonTimer, 1 * 1000, NULL)); // pistet‰‰n 1 sekunnin intervallilla vaihtamaan lippu-napi kuvaa
+	}
+}
+
+void CMainFrame::StartDataLoadingWorkingThread(void)
+{
+	CSmartMetDoc* cdoc = (CSmartMetDoc*)GetActiveDocument();
+	if(!cdoc)
+		return;
+
+	// datan lataus thread k‰ynnistys, jos ei olla ns. normaali moodissa
+	if(cdoc->GetData()->EditorModeDataWCTR()->EditorMode() != NFmiMetEditorModeDataWCTR::kNormal)
+	{
+		if(cdoc->GetData()->EditorModeDataWCTR()->InNormalModeStillInDataLoadDialog())
+			return ; // ollaan oikeasti normaali moodissa ja datanlataus dialogi on auki, t‰llˆin ei laitetan data threadeja p‰‰lle
+
+		static bool firstTime = true;
+		if(firstTime)
+		{
+			firstTime = false;
+			// K‰ynnistet‰‰n CombineData-threadi vain yhden kerran, jolloin se j‰‰ sitten pyˆrim‰‰n sinne itsekseen,
+			// kunnes sille sanotaan ett‰ lopeta (ohjelmaa suljettaessa).
+			// T‰m‰ on hyv‰ sijoittaa t‰nne normaalin working-threadin k‰ynnistykseen, koska aina ei haluta ett‰
+			// kyseinen threadi l‰htee edes pyˆrim‰‰n.
+			CFmiCombineDataThread::InitCombineDataInfos(*(cdoc->GetData()->HelpDataInfoSystem()));
+			int combineThreadDelayInMS = 60*1000;
+			if(itsDoc->MachineThreadCount() >= 6)
+				combineThreadDelayInMS = 30*1000; // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ alkua niin paljoa
+			CFmiCombineDataThread::SetFirstTimeDelay(combineThreadDelayInMS);
+			if((itsDisableThreadsVariable & gDisableCombineDataThread) == 0)
+				CWinThread *combineDataThread = AfxBeginThread(CFmiCombineDataThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
+
+			// k‰ynnistet‰‰n myˆs SoundingIndexDataThread kerran, se pit‰‰ myˆs ensin initialisoida.
+			CFmiSoundingIndexDataThread::InitSoundingIndexDataInfos(*(cdoc->GetData()->HelpDataInfoSystem()), cdoc->GetData()->AutoGeneratedSoundingIndexBasePath()); // t‰m‰ pit‰‰ siirt‰‰ threadin k‰ynnistyst‰ edelt‰v‰ksi kohdaksi
+			int soundingIndexThreadDelayInMS = 70*1000;
+			if(itsDoc->MachineThreadCount() >= 6)
+				soundingIndexThreadDelayInMS = 35*1000; // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ alkua niin paljoa
+			CFmiSoundingIndexDataThread::SetFirstTimeDelay(soundingIndexThreadDelayInMS);
+			if((itsDisableThreadsVariable & gDisableSoundingIndexDataThread) == 0)
+				CWinThread *soundingIndexDataThread = AfxBeginThread(CFmiSoundingIndexDataThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
+
+			// k‰ynnistet‰‰n myˆs SeaIcing sanomien luku threadi kerran, ja se pit‰‰ ensin initialisoida.
+			CFmiSeaIcingMessageThread::InitSeaIcingMessageInfo(cdoc->GetData()->SeaIcingWarningSystem()); // t‰m‰ pit‰‰ siirt‰‰ threadin k‰ynnistyst‰ edelt‰v‰ksi kohdaksi
+			int seaIcingThreadDelayInMS = 75*1000;
+			if(itsDoc->MachineThreadCount() >= 6)
+                seaIcingThreadDelayInMS = 40*1000; // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ alkua niin paljoa
+            CFmiSeaIcingMessageThread::SetFirstTimeDelay(seaIcingThreadDelayInMS);
+			if((itsDisableThreadsVariable & gDisableWarningMessageThread) == 0)
+				CWinThread *hakeWarningThread = AfxBeginThread(CFmiSeaIcingMessageThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
+
+            // K‰ynnistet‰‰n Hake sanomien luku, jos on jotain dataa luettavaksi
+            if(itsDoc->WarningCenterSystem().isThereAnyWorkToDo())
+            {
+                itsDoc->WarningCenterSystem().setUpdateApplicationCallback(&CFmiHakeWarningMessages::UpdateApplicationAfterChanges);
+                itsDoc->WarningCenterSystem().goToWorkAfter(std::chrono::milliseconds(seaIcingThreadDelayInMS)); // K‰ytet‰‰n SeaIcing viivett‰
+            }
+
+			// data loading threadin k‰ynnistys
+			// HUOM! t‰m‰ pit‰‰ aloittaa viimeisen‰, koska muut threadit (ainakin CFmiSoundingIndexDataThread) voivat lis‰t‰ luettavia datoja.
+            auto genDoc = cdoc->GetData();
+			CFmiDataLoadingThread2::InitDynamicHelpDataInfo(*genDoc->HelpDataInfoSystem(), genDoc->DataNotificationSettings() , genDoc->Language());
+			if((itsDisableThreadsVariable & gDisableDataLoaderThread) == 0)
+				CWinThread *dataLoadingThread = AfxBeginThread(CFmiDataLoadingThread2::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
+		}
+	}
+}
+
+void CMainFrame::OnViewSetMainFramePlaceToDefault()
+{
+    MoveWindow(CMainFrame::ViewPosRegistryInfo().DefaultWindowRect());
+    Persist2::WriteWindowRectToWinRegistry(itsDoc->ApplicationWinRegistry(), CMainFrame::ViewPosRegistryInfo().WinRegistryKeyStr(), this);
+}
+
+void CMainFrame::OnUpdateFrameTitle(BOOL bAddToTitle)
+{
+	if(itsDoc)
+	{
+        this->SetTitle(CA2T(itsDoc->GetApplicationTitle().c_str())); // t‰m‰ on v‰h‰n outo paikka s‰‰t‰‰ framen title‰, mutta OnCreate:ssa ei ole viel‰ dokumenttia saatavilla
+
+		boost::shared_ptr<NFmiFastQueryInfo> info = itsDoc->EditedSmartInfo();
+		if(info && dynamic_cast<NFmiSmartInfo*>(info.get())->LoadedFromFile())
+		{
+			CFrameWnd::OnUpdateFrameTitle(bAddToTitle);
+			return ;
+		}
+	}
+	// Jos ei ole dataa ladatta tiedostosta, j‰‰ ohjelman nimeksi pelkk‰ ohjelman nimi,
+	// ei "dokumentti - ohjelmannimi"
+	SetWindowText(m_strTitle); // m_strTitle sis‰lt‰‰ alkuper‰isen ohjelman nimen, mik‰ on annettu IDR_MAINFRAME:ssa
+}
+
+void CMainFrame::OnWorkinThreadDataRead2()
+{
+	std::vector<LoadedQueryDataHolder> qDatas;
+	if(CFmiDataLoadingThread2::GetLoadedDatas(qDatas))
+	{
+        std::string loadedFileNames;
+		for(size_t i =0; i < qDatas.size(); i++)
+		{
+			LoadedQueryDataHolder &tmp = qDatas[i];
+			// HUOM! en voinut tehd‰ shared_ptr virityst‰ t‰h‰n datan siirtoon, koska siin‰ olevaa pointteria ei voi vaputtaa ja
+			// olen tekem‰ss‰ asiaan liittyv‰‰ suurempaa remonttia SmartMet 6.0:aan. Lis‰ksi auto_ptr-otuksia ei voi laittaa std-containereihin.
+			// Siksi t‰m‰ tiedon siirto vuotaa muistia, jos esim. ohjelma lopetetaan kesken kaiken.
+            if(tmp.itsQueryData && tmp.itsQueryData->Info())
+            {
+                itsDoc->AddQueryData(tmp.itsQueryData.release(), tmp.itsDataFileName, tmp.itsDataFilePattern, tmp.itsDataType, tmp.itsNotificationStr, false);
+                if(!loadedFileNames.empty())
+                    loadedFileNames += ", ";
+                loadedFileNames += tmp.itsDataFileName;
+            }
+			else 
+			{    // HUOM! joskus tulee ehk‰ jonkin luku virheen takia queryData, jonka rawData on roskaa ja info on 0-pointteri. Sellainen data ignoorataan 
+				 // t‰ss‰, huom vuotaa muistia, koska en voi deletoida kun rawData-pointteri osoittaa ties minne.
+				std::string errMessage = "Data loading failed, following data was read, but it was invalid and not used: ";
+				errMessage += tmp.itsDataFileName;
+				itsDoc->LogMessage(errMessage, CatLog::Severity::Error, CatLog::Category::Operational);
+			}
+		}
+        StartNewQueryDataLoadedUpdateTimer(loadedFileNames);
+	}
+}
+
+void CMainFrame::StartNewQueryDataLoadedUpdateTimer(const std::string &loadedFileNames)
+{
+    // If atomic flag was not in set state, start update timer
+    if(!g_NewQueryDataReadUpdateViewsTimerFlag.test_and_set(std::memory_order_acquire))
+    {
+        // When there is new query data loaded, we want to wait few seconds before we update all views, so that we are not in update cyle all the time
+        // because new query data files  may come in bunches.
+        g_NewQueryDataReadUpdateViewsTimerId = static_cast<UINT>(SetTimer(kFmiNewQueryDataReadUpdateViewsTimer, static_cast<UINT>(5 * 1000), NULL));
+    }
+    // Adding these loaded file names to final views update message file list.
+    if(!g_NewQueryDataReadList.empty())
+        g_NewQueryDataReadList += ",";
+    g_NewQueryDataReadList += loadedFileNames;
+}
+
+void CMainFrame::GetNewWarningMessages(void)
+{
+	if(itsDoc)
+	{
+        itsDoc->CheckForNewWarningMessageData();
+		if(itsDoc->WarningCenterSystem().getLegacyData().WarningCenterViewOn())
+			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Warning messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
+	}
+}
+
+void CMainFrame::GetNewSeaIcingMessages(void)
+{
+	if(itsDoc)
+	{
+		CFmiSeaIcingMessageThread::GetNewSeaIcingMessages(itsDoc->SeaIcingWarningSystem());
+		if(itsDoc->SeaIcingWarningSystem().ViewVisible())
+			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Sea-icing messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
+	}
+}
+
+void CMainFrame::DoMacroParamUpdate(void)
+{
+	if(itsDoc)
+	{
+		if(CFmiMacroParamUpdateThread::GetMacroParams(itsDoc->MacroParamSystem()))
+		{
+			static bool firstTime = true;
+			if(firstTime)
+			{ // Kun 1. kerran on luettu macroParamit sis‰‰n, pit‰‰ varmistaa kaikkien ruutujen p‰ivitys. Koska jos joku on jo ladannut vieMakron, jossa
+				// on makroParameita, ne pit‰‰ piirt‰‰ nyt uudestaan.
+				firstTime = false;
+				itsDoc->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+			}
+			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)
+		}
+	}
+}
+
+void CMainFrame::DoDataCheckResultUpdate(void)
+{
+	if(itsDoc)
+	{
+		// En viel‰ tied‰ mit‰ pit‰‰ tehd‰ t‰ss‰, mutta liataan varmuuden vuoksi kaikki ikkunat ja ruutujen Â‰ivitys p‰‰lle
+		itsDoc->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+		itsDoc->RefreshApplicationViewsAndDialogs(__FUNCTION__);
+	}
+}
+
+BOOL CMainFrame::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
+{
+//	if(message == ID_MESSAGE_WORKING_THREAD_DATA_READ)
+	//	OnWorkinThreadDataRead();
+	if(message == ID_MESSAGE_WORKING_THREAD_DATA_READ2)
+		OnWorkinThreadDataRead2();
+	else if(message == ID_MESSAGE_NEW_HAKE_WARNING_AVAILABLE)
+		GetNewWarningMessages();
+	else if(message == ID_MESSAGE_NEW_SEA_ICING_WARNING_AVAILABLE)
+		GetNewSeaIcingMessages();
+	else if(message == ID_MESSAGE_MACRO_PARAMS_UPDATE)
+		DoMacroParamUpdate();
+	else if(message == ID_MESSAGE_WORKING_THREAD_DATA_CHECK_RESULTS)
+		DoDataCheckResultUpdate();
+    else if(message == ID_MESSAGE_START_HISTORY_THREAD)
+        StartHistoryDataCacheThread();
+
+	return CFrameWnd::OnWndMsg(message, wParam, lParam, pResult);
+}
+
+// t‰m‰n overriden avulla saadaan tooltippiin kieli versio aikaiseksi
+// eli t‰m‰ tooltip on toolbar-nappuloiden tooltippi
+BOOL CMainFrame::OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
+{
+	BOOL status = CFrameWnd::OnToolTipText(id, pNMHDR, pResult);
+
+	if(status)
+	{
+		CSmartMetApp* app = (CSmartMetApp*)AfxGetApp();
+        TOOLTIPTEXT* pTTT = (TOOLTIPTEXT*)pNMHDR;
+        UINT nID = static_cast<UINT>(pNMHDR->idFrom);
+        CString strU_;
+        strU_ = pTTT->szText;
+        CString realStrU_(app->GetToolTipString(nID, strU_));
+        _tcsncpy(pTTT->szText, realStrU_, static_cast<int>(_tcslen(pTTT->szText)));
+	}
+    return status;
+}
+
+// t‰m‰ hoitaa statusbarin tekstit moni kieli versiossa, kun toolbarin nappien avustus teksti‰ haetaan
+void CMainFrame::GetMessageString(UINT nID, CString& rMessageU_) const
+{
+	// TODO: Add your specialized code here and/or call the base class
+
+	CFrameWnd::GetMessageString(nID, rMessageU_);
+
+	CSmartMetApp* app = (CSmartMetApp*)AfxGetApp();
+	// kielen vaihdon pit‰‰ tapahtua t‰ss‰ v‰liss‰ (statusbar teksti, joka saadaan toolbar + hiiri sen p‰‰ll‰)
+    CString realStrU_ = app->GetToolTipString(nID, rMessageU_);
+    rMessageU_ = realStrU_;
+
+}
+
+void CMainFrame::OnEnablenotifications()
+{
+	itsDoc->DataNotificationSettings().Use(true);
+}
+
+void CMainFrame::OnUpdateEnablenotifications(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(itsDoc->DataNotificationSettings().Use() == false);
+}
+
+void CMainFrame::OnDisablenotifications()
+{
+	itsDoc->DataNotificationSettings().Use(false);
+}
+
+void CMainFrame::OnUpdateDisablenotifications(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(itsDoc->DataNotificationSettings().Use() == true);
+}
+
+void CMainFrame::OnNotificationsoundson()
+{
+	itsDoc->DataNotificationSettings().UseSound(true);
+}
+
+void CMainFrame::OnUpdateNotificationsoundson(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(itsDoc->DataNotificationSettings().UseSound() == false);
+}
+
+void CMainFrame::OnNotificationsoundsoff()
+{
+	itsDoc->DataNotificationSettings().UseSound(false);
+}
+
+void CMainFrame::OnUpdateNotificationsoundsoff(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(itsDoc->DataNotificationSettings().UseSound() == true);
+}
+
+void CMainFrame::OnShowSystraySymbol()
+{
+	g_TrayIcon.Show();
+    itsDoc->DataNotificationSettings().ShowIcon(true);
+}
+
+void CMainFrame::OnUpdateShowSystraySymbol(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(g_TrayIcon.IsHidden());
+}
+
+void CMainFrame::OnHideSystraySymbol()
+{
+	g_TrayIcon.Hide();
+    itsDoc->DataNotificationSettings().ShowIcon(false);
+}
+
+void CMainFrame::OnUpdateHideSystraySymbol(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(g_TrayIcon.IsShowing());
+}
+
+#ifndef FMI_DISABLE_MFC_FEATURE_PACK
+void CMainFrame::OnViewDemodockviews()
+{
+	static bool firstTime = true;
+
+	if(firstTime)
+	{
+		firstTime = false;
+		// create docking windows
+		if (!CreateDockingWindows())
+		{
+			TRACE0("Failed to create docking windows\n");
+			return ;
+		}
+
+		m_wndFileView.EnableDocking(CBRS_ALIGN_ANY);
+		m_wndClassView.EnableDocking(CBRS_ALIGN_ANY);
+		DockPane(&m_wndFileView);
+		CDockablePane* pTabbedBar = NULL;
+		m_wndClassView.AttachToTabWnd(&m_wndFileView, DM_SHOW, TRUE, &pTabbedBar);
+		m_wndOutput.EnableDocking(CBRS_ALIGN_ANY);
+		DockPane(&m_wndOutput);
+		m_wndProperties.EnableDocking(CBRS_ALIGN_ANY);
+		DockPane(&m_wndProperties);
+
+		// laitetaan properties-osio (oikealla puolella) aluksi autohide-modeen ja piiloon
+		m_wndProperties.ToggleAutoHide();
+		m_wndProperties.Slide(FALSE, TRUE);
+		// laitetaan output-osio (ala osassa) aluksi autohide-modeen ja piiloon
+		m_wndOutput.ToggleAutoHide();
+		m_wndOutput.Slide(FALSE, TRUE);
+		// laitetaan fileView ja classView -osio (vasemmalla puolella) aluksi autohide-modeen ja piiloon
+		// HUOM! t‰m‰ pit‰‰ tehd‰ niiden container-oliolla, koska suora m_wndFileView- tai 
+		// m_wndClassView-olioiden k‰pistwely ei toimi. Syy on varmaan siin‰ ett‰ on useita (2 kpl) tabeja samassa.
+		pTabbedBar->ToggleAutoHide();
+		pTabbedBar->Slide(FALSE, TRUE);
+
+		// Create a caption bar:
+		if (!CreateCaptionBar())
+		{
+			TRACE0("Failed to create caption bar\n");
+			return ;      // fail to create
+		}
+
+	}
+}
+#endif // FMI_DISABLE_MFC_FEATURE_PACK
+
+
+void CMainFrame::DoAppDataBaseCollection(int theAction) // theAction = NFmiApplicationDataBase::Action
+{
+	itsDoc->ApplicationDataBase().CollectSmartMetData(static_cast<NFmiApplicationDataBase::Action>(theAction), itsDoc->Language(), itsDoc->RunningTimeInSeconds(), itsDoc->IsToolMasterAvailable(), itsDoc->InfoOrganizer());
+	itsDoc->LogMessage(itsDoc->ApplicationDataBase().MakeUrlParamString(), CatLog::Severity::Info, CatLog::Category::NetRequest); // lokitetaan info aina ensin
+	if(itsDoc->ApplicationDataBase().UseDataSending())
+	{
+        CWinThread *AppDataToDbThread = AfxBeginThread(CFmiAppDataToDbThread::DoThread, &itsDoc->ApplicationDataBase(), THREAD_PRIORITY_BELOW_NORMAL);
+    }
+}
+
+
+
+void CMainFrame::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+    // the minimum client rectangle (in that is lying the view window)
+    CRect rc(0, 0, 250, 250);
+    // compute the required size of the frame window rectangle
+    // based on the desired client-rectangle size
+    CalcWindowRect(rc);
+
+    lpMMI->ptMinTrackSize.x = rc.Width();
+    lpMMI->ptMinTrackSize.y = rc.Height();
+}

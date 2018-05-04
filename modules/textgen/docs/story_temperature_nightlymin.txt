@@ -1,0 +1,150 @@
+/*!
+
+\page page_story_temperature_nightlymin Tarina "temperature_nightlymin"
+
+\c temperature_nightlymin tarina on muotoa
+
+  -# "yön alin lämpötila on [viikonpäivän vastaisena yönä] noin x astetta"
+  -# "yön alin lämpötila on [viikonpäivän vastaisena yönä] x...y astetta"
+
+Ruotsiksi
+
+  -# "Dagens högsta temperatur är [på natten mot veckodag] cirka x grader"
+  -# "Dagens högsta temperatur är [på natten mot veckodag] x...y grader"
+
+Englanniksi
+
+  -# "The maximum day temperature [on Weekday night] is about x degrees"
+  -# "The maximum day temperature [on Weekday night] is x...y degrees"
+
+Sivulauseessa jatketaan tarvittaessa
+
+  -# ", [seuraavana yönä] huomattavasti korkeampi"
+  -# ", [seuraavana yönä] korkeampi"
+  -# ", [seuraavana yönä] hieman korkeampi"
+  -# ", [seuraavana yönä] suunnilleen sama"
+  -# ", [seuraavana yönä] hieman alempi"
+  -# ", [seuraavana yönä] alempi"
+  -# ", [seuraavana yönä] huomattavasti alempi"
+
+Ruotsiksi lauseet ovat
+
+  -# ", [på följande natt] betydligt högre."
+  -# ", [på följande natt] högre."
+  -# ", [på följande natt] något högre."
+  -# ", [på följande natt] ungefär densamma."
+  -# ", [på följande natt] något lägre."
+  -# ", [på följande natt] lägre."
+  -# ", [på följande natt] betydligt lägre."
+
+Englanniksi lauseet ovat
+
+  -# ", [the following night] significantly higher."
+  -# ", [the following night] higher."
+  -# ", [the following night] somewhat higher."
+  -# ", [the following night] about the same."
+  -# ", [the following night] somewhat lower."
+  -# ", [the following night] lower."
+  -# ", [the following night] significantly lower."
+
+Aikafraasit ovat tyyppejä \ref sec_periodifraasit_tonight ja
+\ref sec_periodifraasit_next_night. Niihin liittyviä asetuksia
+kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::temperature_nightlymin::tonight::phrases
+textgen::[kappale]::story::temperature_nightlymin::next_night::phrases
+\endcode
+Tyypillisiä asetuksia ovat esimerkiksi
+\code
+textgen::[kappale]::story::temperature_nightlymin::tonight::phrases = tonight
+textgen::[kappale]::story::temperature_nightlymin::next_night::phrases = followingnight
+\endcode
+
+Komparatiivin valinta perustuu muuttujiin
+\code
+textgen::[kappale]::story::temperature_nightlymin::comparison::significantly_higher = [N]
+textgen::[kappale]::story::temperature_nightlymin::comparison::higher = [N]
+textgen::[kappale]::story::temperature_nightlymin::comparison::somewhat_higher = [N]
+textgen::[kappale]::story::temperature_nightlymin::comparison::somewhat_lower = [N]
+textgen::[kappale]::story::temperature_nightlymin::comparison::lower = [N]
+textgen::[kappale]::story::temperature_nightlymin::comparison::significantly_lower = [N]
+\endcode
+ja laskettuihin lämpötilaväleihin. Jos ensimmäisen yön keskiarvo
+on A jae seuraavan B, valitaan
+
+  -# Fraasi 1, jos B-A >= \c significantly_higher
+  -# Fraasi 2, jos B-A >= \c higher
+  -# Fraasi 3, jos B-A >= \c somewhat_higher
+  -# Fraasi 7, jos A-B >= \c significantly_lower
+  -# Fraasi 6, jos A-B >= \c lower
+  -# Fraasi 5, jos A-B >= \c somewhat_lower
+  -# Fraasi 4 muutoin
+
+Jos öitä on useampia, luetellaan jatkossa jokaiselle yölle yön
+alin sivulauseena seuraavasti
+
+  - ", viikonpäivän vastaisena yönä noin x astetta"
+  - ", viikonpäivän vastaisena yönä x...y astetta"
+
+Valinta yksittäisen arvon ja intervallin välillä tehdään perustuen muuttujiin
+\code
+textgen::[kappale]::story::temperature_nightlymin::mininterval = [1-]
+textgen::[kappale]::story::temperature_nightlymin::always_interval_zero = [bool]
+\endcode
+Jos intervallin pituus on vähintään \c mininterval, sanotaan intervalli,
+muuten keskiarvo. Poikkeuksena jos nolla kuuluu intervalliin ja
+\c always_interval_zero on true, sanotaan aina intervalli.
+
+\c mininterval muuttujan oletusarvo on 2, \c always_interval_zero
+muuttujan false.
+
+Yön määritelmä saadaan muuttujista
+\code
+textgen::[kappale]::story::temperature_nightlymin::night::starthour = [0-23]
+textgen::[kappale]::story::temperature_nightlymin::night::endhour = [0-23]
+textgen::[kappale]::story::temperature_nightlymin::night::maxstarthour = [0-23]
+textgen::[kappale]::story::temperature_nightlymin::night::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Määritelmät voivat olla esimerkiksi muotoa
+\code
+textgen::[kappale]::story::temperature_nightlymin::night::starthour    = 18
+textgen::[kappale]::story::temperature_nightlymin::night::endhour      = 6
+textgen::[kappale]::story::temperature_nightlymin::night::maxstarthour = 01
+\endcode
+Tällöin yön minimi kerrottaisiin aina kello yhteen saakka aamulla,
+vaikka jakso alkaakin jo kello kuusi illalla. Loppupäästä sen
+sijaan tarvitsee harvemmin joustaa.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::temperature_nightlymin::fake::night1::mean = [result]
+textgen::[kappale]::story::temperature_nightlymin::fake::night1::minimum = [result]
+textgen::[kappale]::story::temperature_nightlymin::fake::night1::maximum = [result]
+textgen::[kappale]::story::temperature_nightlymin::fake::night2::mean = [result]
+...
+\endcode
+
+
+Tarvittavat fraasit ovat
+
+ - "yön alin lämpötila"
+ - "on"
+ - "noin"
+ - "astetta"
+ - "huomattavasti korkeampi"
+ - "korkeampi"
+ - "hieman korkeampi"
+ - "suunnilleen sama"
+ - "hieman alempi"
+ - "alempi"
+ - "huomattavasti alempi"
+
+plus tarvittavat periodifraasit \ref sec_periodifraasit_tonight
+\ref sec_periodifraasit_next_night.
+
+*/

@@ -1,0 +1,4 @@
+#include "CtrlViewDocumentInterface.h"
+
+CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementationCallBackType CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation;
+

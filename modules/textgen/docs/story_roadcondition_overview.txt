@@ -1,0 +1,797 @@
+/*!
+
+\page page_story_roadcondition_overview Tarina "roadcondition_overview"
+
+Mahdolliset keliolosuhteet ovat tärkeysjärjestyksessä
+
+ -# jäinen
+ -# osittain jäinen
+ -# kuura
+ -# märkä lumi (sohjoa)
+ -# kuiva lumi (lunta)
+ -# märkä
+ -# kostea
+ -# kuiva
+
+Tyypilliset olosuhteita kuvaavat lauseet ovat
+
+ -# Tiet ovat [yleisesti, monin paikoin, paikoin] jäisiä
+ -# Tiet ovat [yleisesti, monin paikoin, paikoin] osittain jäisiä.
+ -# Teillä on [yleisesti, monin paikoin, paikoin] kuuraa
+ -# Teillä on [-, monin paikoin, paikoin] sohjoa
+ -# Teillä on [-, monin paikoin, paikoin] lunta
+ -# Tiet ovat [-, monin paikoin, paikoin] märkiä
+ -# Tiet ovat [-, monin paikoin, paikoin] kosteita
+ -# Tiet ovat kuivia
+
+Ruotsiksi
+
+ -# Vägarna är [allmänt, flerstädes, lokalt] isiga
+ -# Vägarna är [allmänt, flerstädes, lokalt] delvis isiga
+ -# Vägarna är [allmänt, flerstädes, lokalt] täckta av rimfrost
+ -# Vägarna är [-, flerstädes, lokalt] täckta av snösörja
+ -# Vägarna är [-, flerstädes, lokalt] täckta av snö
+ -# Vägarna är [-, flerstädes, lokalt] våta
+ -# Vägarna är [-, flerstädes, lokalt] fuktiga
+ -# Vägarna är torra
+
+Englanniksi
+
+ -# The roads are [generally, in many places, in some places] icy
+ -# The roads are [generally, in many places, in some places] partly icy
+ -# The roads are [generally, in many places, in some places] covered by frost
+ -# The roads are [-, in many places, in some places] covered by slush
+ -# The roads are [-, in many places, in some places] covered by snow
+ -# The roads are [-, in many places, in some places] wet
+ -# The roads are [-, in many places, in some places] moist
+ -# The roads are dry
+
+Erityisesti siis "Tiet ovat kuivia" viittaa aina siihen, ettei
+muuta keliä ole. Lisäksi "yleisesti" fraasia ei juuri käytetä
+tavallisemmille keleille, koko fraasin pois jättäminen ajaa
+saman asian ("Teillä on lunta").
+
+Keleistä kolme ensimmäistä (jäinen, osittain jäinen, kuura) ovat
+tärkeämpiä kuin muut kelit.
+
+Ennuste kattaa vain ensimmäiset 30 tuntia. Pituutta voi muuttaa muuttujalla
+\code
+::maxhours = [0-N] (=30)
+\endcode
+mutta käytännössä pituus on ylhäältä rajattu tiesäämallin rajatun
+pituuden takia. Järkevä maksimi on noin 30 tuntia.
+
+\section section_roadcondition_oneperiod Yhden jakson keli
+
+Oletetaan seuraavat määritelmät
+
+  -# Keli on yleisesti jotain, jos keliä esiintyy yli Y prosenttia.
+     Y on niin suuri, että mitään muuta keliä ei voi esiintyä
+     monin paikoin.
+  -# Keli on monin paikoin jotain, jos keliä esiintyy yli M prosenttia.
+     Vain yhtä keliä voi esiintyä monin paikoin, eli M on yli 50 prosenttia.
+  -# Keli on paikoin jotain, jos keliä esiintyy yli P prosenttia, missä
+     P on alle 50 prosenttia.
+
+Käytännössä tällöin P = 100-Y, jolloin "yleisesti" ja "paikoin" ovat
+toisensa pois sulkevia. Järkeviä arvoja ovat esim. Y=90, M=50, P=10.
+
+Asetuksia voi kontrolloida muuttujilla
+\code
+textgen::[kappale]::story::roadcondition_overview::generally_limit = [0-100] (=90)
+textgen::[kappale]::story::roadcondition_overview::manyplaces_limit = [0-100] (=50)
+textgen::[kappale]::story::roadcondition_overview::someplaces_limit = [0-100] (=10)
+\endcode
+
+Näin ollen, jos jotain keliä on yleisesti, ovat mahdolliset tapaukset
+jo lueteltu aiemmissa esimerkkilauseissa. Jos yhtä keliä on monin
+paikoin, ja mitään muuta kuin kuivaa ei ole edes paikoin, päädytään
+edelleen aiempiin esimerkkitapauksiin.
+
+Jäljelle jäävät siis tapaukset
+
+  -# yhtä keliä on monin paikoin, yhtä tai useampaa paikoin
+  -# monia kelejä on paikoin
+
+Alla on lueteltu kaikki mahdolliset yhdistelmät, jossa
+yhtä keliä on monin paikoin, ja jotain toista keliä paikoin.
+Jos paikoin on kahta tai useampaa muuta keliä, sanotaan
+niistä vain \e tärkein, ei se jota on eniten.
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<td></td>
+<td>jäinen</td>
+<td>osittain jäinen</td>
+<td>kuura</td>
+<td>sohjo</td>
+<td>lunta</td>
+<td>märkä</td>
+<td>kostea</td>
+<td>kuiva</td>
+</tr>
+<tr>
+<td>Tiet ovat monin paikoin jäisiä</td>
+<td>-</td>
+<td>, paikoin osittain jäisiä</td>
+<td>, paikoin kuuraisia</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Tiet ovat monin paikoin osittain jäisiä</td>
+<td>, paikoin jäisiä</td>
+<td>-</td>
+<td>, paikoin kuuraisia</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Teillä on monin paikoin kuuraa</td>
+<td>, paikoin tiet ovat jäisiä</td>
+<td>, paikoin tiet ovat osittain jäisiä</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Teillä on monin paikoin sohjoa</td>
+<td>, paikoin tiet ovat jäisiä</td>
+<td>, paikoin tiet ovat osittain jäisiä</td>
+<td>, paikoin kuuraa</td>
+<td>-</td>
+<td>, paikoin lunta</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Teillä on monin paikoin lunta</td>
+<td>, paikoin tiet ovat jäisiä</td>
+<td>, paikoin tiet ovat osittain jäisiä</td>
+<td>, paikoin kuuraa</td>
+<td>, paikoin sohjoa</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Tiet ovat monin paikoin märkiä</td>
+<td>, paikoin jäisiä</td>
+<td>, paikoin osittain jäisiä</td>
+<td>, paikoin kuuraisia</td>
+<td>, paikoin sohjoisia</td>
+<td>, paikoin lumisia</td>
+<td>-</td>
+<td>, paikoin kosteita</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Tiet ovat monin paikoin kosteita</td>
+<td>, paikoin jäisiä</td>
+<td>, paikoin osittain jäisiä</td>
+<td>, paikoin kuuraisia</td>
+<td>, paikoin sohjoisia</td>
+<td>, paikoin lumisia</td>
+<td>, paikoin märkiä</td>
+<td>-</td>
+<td>&nbsp;</td>
+</tr>
+</table>
+\endhtmlonly
+
+Sama taulukko on ruotsiksi
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<td></td>
+<td>isig</td>
+<td>delvis isig</td>
+<td>rimfrost</td>
+<td>snösörja</td>
+<td>snö</td>
+<td>våt</td>
+<td>fuktig</td>
+<td>torr</td>
+</tr>
+<tr>
+<td>Vägarna är flerstädes isiga</td>
+<td>-</td>
+<td>, lokalt delvis isiga</td>
+<td>, lokalt täckta av rimfrost</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är felrstädes delvis isiga</td>
+<td>, lokalt isiga</td>
+<td>-</td>
+<td>, lokalt täckta av rimfrost</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är flerstädes täckta av rimfrost</td>
+<td>, lokalt isiga</td>
+<td>, lokalt delvis isiga</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är flerstädes täckta av snösörja</td>
+<td>, lokalt isiga</td>
+<td>, lokalt delvis isiga</td>
+<td>, lokalt täckta av rimfrost</td>
+<td>-</td>
+<td>, lokalt täckta av snö</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är flerstädes täckta av snö</td>
+<td>, lokalt isiga</td>
+<td>, lokalt devis isiga</td>
+<td>, lokalt täckta av rimfrost</td>
+<td>, lokalt täckta av snösörja</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är flerstädes våta</td>
+<td>, lokalt isiga</td>
+<td>, lokalt delvis isiga</td>
+<td>, lokalt täckta av rimfrost</td>
+<td>, lokalt täckta av snösörja</td>
+<td>, lokalt täckta av snö</td>
+<td>-</td>
+<td>, lokalt fuktiga</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är flerstädes fuktiga</td>
+<td>, lokalt isiga</td>
+<td>, lokalt delvis isiga</td>
+<td>, lokalt täckta av rimfrost</td>
+<td>, lokalt täckta av snösörja</td>
+<td>, lokalt täckta av snö</td>
+<td>, lokalt våta</td>
+<td>-</td>
+<td>&nbsp;</td>
+</tr>
+</table>
+\endhtmlonly
+
+Erikoistapauksena jos tiet ovat monin paikoin kuivia, kerrotaan
+vain jäljelle jäävistä "paikoin" tyyppisistä keleistä. Jos niitä on
+vain yksi, saadaan aiempi triviaali lista yksittäisistä keleistä.
+Jos kelejä on useampia, kerrotaan vain kahdesta tärkeimmästä
+alla olevan luettelon mukaisesti
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<td></td>
+<td>osittain jäinen</td>
+<td>kuura</td>
+<td>sohjo</td>
+<td>lunta</td>
+<td>märkä</td>
+<td>kostea</td>
+<td>kuiva</td>
+</tr>
+<tr>
+<td>Tiet ovat paikoin jäisiä</td>
+<td>tai osittain jäisiä</td>
+<td>tai kuuraisia</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Tiet ovat paikoin osittain jäisiä</td>
+<td>-</td>
+<td>tai kuuraisia</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Teillä on paikoin kuuraa</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Teillä on paikoin sohjoa</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>tai lunta</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Teillä on paikoin lunta</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Tiet ovat paikoin märkiä</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>tai kosteita</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Tiet ovat paikoin kosteita</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+</tr>
+</table>
+\endhtmlonly
+
+Sama taulukko on ruotsiksi
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<td></td>
+<td>delvis isig</td>
+<td>rimfrost</td>
+<td>snösörja</td>
+<td>snö</td>
+<td>våt</td>
+<td>fuktig</td>
+<td>torr</td>
+</tr>
+<tr>
+<td>Vägarna är lokalt isiga</td>
+<td>eller delvis isiga</td>
+<td>eller täckta av rimfrost</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är lokalt delvis isiga</td>
+<td>-</td>
+<td>eller täckta av rimfrost</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är lokalt täckta av rimfrost</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är lokalt täckta av snösörja</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>eller snö</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är lokalt täckta av snö</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är lokalt våta</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>eller fuktiga</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>Vägarna är lokalt fuktiga</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+</tr>
+</table>
+\endhtmlonly
+
+\section section_roadcondition_manyperiods Useamman jakson keli
+
+Tieliikelaitosta kiinnostavat erityisesti aamu, päivä, ilta ja yöjaksot.
+Periaatteessa näista voidaan jokaisesta kertoa erikseen, mutta käytännössä
+luettavuuden takia tarvitaan algoritmi, joka yhdistää kaksi vierekkäistä
+aikaintervallia, jos niiden kelit ovat riittävän samankaltaisia.
+
+Määritelmä:
+\htmlonly
+<blockquote>
+\endhtmlonly
+Kaksi keliä ovat samoja, jos niistä kerrottaisiin samalla tekstillä.
+\htmlonly
+</blockquote>
+\endhtmlonly
+Näin olisi mahdollista saada algoritmi, jolla kelejä vertailtaisiin
+suoraan kunkin kelin prosenttiosuuden mukaan. Kuitenkin mahdolliset
+algoritmimuutokset voi tehdä huomattavasti turvallisemmin, jos
+verrataan sen sijaan itse generoitua Sentence objektia.
+
+Vertailu voitaisiin suorittaa lisäämällä Sentence objektiin operator==
+metodi. Kuitenkin tämä viittaisi operaattorin lisäämiseen koko
+Glyph-hierarkiaan, jossa sen toteuttamisessa olisi oltava erityisen
+huolellinen (oikea ratkaisu löytyy esim. C++ Journal lehdestä).
+Huomattavasti yksinkertaisempaa on realisoida teksti DebugDictionary
+sanakirjalla ja DebugTextFormatterilla - näin saman tuloksen vertailuun
+riittää pelkkä merkkijonovertailu.
+
+Näin ollen jäljelle jää algoritmi, jolla valitaan yhdistettyjen
+kelien aikaväliä kuvaava fraasi.
+
+Jaksot ovat siis:
+
+ -# aamu
+ -# päivä
+ -# ilta
+ -# yö
+
+Helpoin tapa yhdistää aikafraasit on käyttää "alkaen"-fraasia,
+eli
+
+ -# "aamusta alkaen"
+ -# "aamupäivästä alkaen"
+ -# "illasta alkaen"
+ -# "yöstä alkaen"
+
+Erityisesti on siis huomattava, päivän alkamisaika tarkentuu aamupäiväksi.
+Lisäksi tarvitaan päivää tarkentava aikafraasi, joksi sopii tyyppi "today".
+
+Mahdollisia tuloksia ovat siis esimerkiksi
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<th>tänään</th>
+<th>huomenna</th>
+<th>maanantaina</th>
+</tr>
+<tr>
+<td>aamulla</td>
+<td>huomisaamuna</td>
+<td>maanantaiaamuna</td>
+</tr>
+<tr>
+<td>päivällä</td>
+<td>huomenna päivällä</td>
+<td>maanantaina päivällä</td>
+</tr>
+<tr>
+<td>illalla</td>
+<td>huomenna illalla</td>
+<td>maanantaina illalla</td>
+</tr>
+<tr>
+<td>yöllä</td>
+<td>tiistain vastaisena yönä</td>
+<td>tiistain vastaisena yönä</td>
+</tr>
+<tr>
+<td>aamusta alkaen</td>
+<td>huomisaamusta alkaen</td>
+<td>maanantaiaamusta alkaen</td>
+</tr>
+<tr>
+<td>aamupäivästä alkaen</td>
+<td>huomenna aamupäivästä alkaen</td>
+<td>maanantaiaamupäivästä alkaen</td>
+</tr>
+<tr>
+<td>illasta alkaen</td>
+<td>huomenna illasta alkaen</td>
+<td>maanantai-illasta alkaen</td>
+</tr>
+<tr>
+<td>yöstä alkaen</td>
+<td>tiistain vastaisesta yöstä alkaen</td>
+<td>tiistain vastaisesta yöstä alkaen</td>
+</tr>
+</table>
+\endhtmlonly
+
+Fraaseja käytettäessä tulee muistaa viimeeksi mainittu päivämäärän
+tarkenne, koska fraaseja "huomenna" ja "viikonpäivänä" ei tule
+toistaa. Kun tarkenne on sama, valitaan aikafraasin tyypiksi aina
+"today" tyyppi. Näin ollen aikafraasit tulee valita tällaista
+reduktiota silmällä pitäen.
+
+Esimerkiksi
+<ul>
+<li>Huomisaamuna X, päivällä Y, illasta alkaen Z
+<li>Illasta alkaen X, huomisaamusta alkaen Y, illalla Z.
+<li>Huomenna illasta alkaen X, tiistaiaamuna Y, päivällä Z
+</ul>
+
+Ruotsiksi fraasit ovat
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<th>tänään</th>
+<th>huomenna</th>
+<th>maanantaina</th>
+</tr>
+<tr>
+<td>på morgonen</td>
+<td>i morgon bitti</td>
+<td>på måndag morgon</td>
+</tr>
+<tr>
+<td>på dagen</td>
+<td>i morgon på dagen</td>
+<td>på måndag på dagen</td>
+</tr>
+<tr>
+<td>på kvällen</td>
+<td>i morgon kväll</td>
+<td>på måndag kväll</td>
+</tr>
+<tr>
+<td>på natten</td>
+<td>natten mot tisdagen</td>
+<td>natten mot tisdagen</td>
+</tr>
+<tr>
+<td>från morgonen</td>
+<td>från morgon bitti</td>
+<td>från måndag morgon</td>
+</tr>
+<tr>
+<td>från förmiddagen</td>
+<td>från i morgon förmiddag</td>
+<td>från måndag förmiddag</td>
+</tr>
+<tr>
+<td>från kvällen</td>
+<td>från i morgon kväll</td>
+<td>från måndag kväll</td>
+</tr>
+<tr>
+<td>från natten</td>
+<td>från natten mot tisdag</td>
+<td>från natten mot tisdag</td>
+</tr>
+</table>
+\endhtmlonly
+
+ja englanniksi
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<th>tänään</th>
+<th>huomenna</th>
+<th>maanantaina</th>
+</tr>
+<tr>
+<td>in the morning</td>
+<td>tomorrow morning</td>
+<td>on Monday morning</td>
+</tr>
+<tr>
+<td>during the day</td>
+<td>tomorrow during the day</td>
+<td>on Monday during the day</td>
+</tr>
+<tr>
+<td>in the evening</td>
+<td>tomorrow evening</td>
+<td>on Monday evening</td>
+</tr>
+<tr>
+<td>at night</td>
+<td>on Tuesday night</td>
+<td>on Tuesday night</td>
+</tr>
+<tr>
+<td>from the morning</td>
+<td>from tomorrow morning</td>
+<td>from Monday morning</td>
+</tr>
+<tr>
+<td>from before noon</td>
+<td>from tomorrow before noon</td>
+<td>from Monday before noon</td>
+</tr>
+<tr>
+<td>from the evening</td>
+<td>from tomorrow evening</td>
+<td>from Monday evening</td>
+</tr>
+<tr>
+<td>from the night</td>
+<td>from tomorrow night</td>
+<td>from Tuesday night</td>
+</tr>
+</table>
+\endhtmlonly
+
+
+\section story_roadcondition_fraasit Tarvittavat fraasit
+
+Tarvittavat fraasit ovat eri kielillä
+
+\htmlonly
+<table border="1" align="center">
+<tr>
+<td>tiet ovat</td>
+<td>vägarna är</td>
+<td>the roads are</td>
+</tr>
+<td>teillä on</td>
+<td>vägarna är</td>
+<td>the roads are</td>
+</tr>
+<td>jäisiä</td>
+<td>isiga</td>
+<td>icy</td>
+</tr>
+<td>osittain jäisiä</td>
+<td>delvis isiga</td>
+<td>partly icy</td>
+</tr>
+<td>kuuraa</td>
+<td>täckta av rimfrost</td>
+<td>covered by frost</td>
+</tr>
+<td>sohjoa</td>
+<td>täckta av snösörja</td>
+<td>covered by slush</td>
+</tr>
+<td>lunta</td>
+<td>täckta av snö</td>
+<td>covered by snow</td>
+</tr>
+<td>märkiä</td>
+<td>våta</td>
+<td>wet</td>
+</tr>
+<td>kosteita</td>
+<td>fuktiga</td>
+<td>moist</td>
+</tr>
+<td>kuivia</td>
+<td>torra</td>
+<td>dry</td>
+</tr>
+<td>kuuraisia</td>
+<td>täckta av rimfrost</td>
+<td>covered by frost</td>
+</tr>
+<td>sohjoisia</td>
+<td>täckta av snösörja</td>
+<td>covered by slush</td>
+</tr>
+<td>lumisia</td>
+<td>täckta av snö</td>
+<td>covered by snow</td>
+</tr>
+<td>tiet ovat (sivulause)</td>
+<td>(tyhjä)</td>
+<td>(tyhjä)</td>
+</tr>
+<tr>
+<td>yleisesti</td>
+<td>allmänt</td>
+<td>generally</td>
+</tr>
+<tr>
+<td>monin paikoin</td>
+<td>flerstädes</td>
+<td>in many places</td>
+</tr>
+<tr>
+<td>paikoin</td>
+<td>lokalt</td>
+<td>in some places</td>
+</tr>
+</table>
+\endhtmlonly
+
+Lisäksi tarvitaan aikafraasit
+
+\htmlonly
+<table border="1" align="center">
+<tr><th>avainsana</th><th>fi</th><th>sv</th><th>en</th></tr>
+<tr><td>N-aamuna</td><td>maanantaiaamuna</td><td>på måndag morgon</td><td>on Monday morning</td></tr>
+<tr><td>N-aamupäivästä alkaen</td><td>maanantaiaamupäivästä alkaen</td><td>från måndag förmiddag</td><td>from Monday before noon</td></tr>
+<tr><td>N-aamusta alkaen</td><td>maanantaiaamusta alkaen</td><td>från måndag morgon</td><td>from Monday morning</td></tr>
+<tr><td>N-iltana</td><td>maanantai-iltana</td><td>på måndag kväll</td><td>on Monday evening</td></tr>
+<tr><td>N-illasta alkaen</td><td>maanantai-illasta alkaen</td><td>från måndag kväll</td><td>from Monday evening</td></tr>
+<tr><td>N-päivällä</td><td>maanantaina päivällä</td><td>på måndag på dagen</td><td>on Monday during the day</td></tr>
+<tr><td>N-vastaisena yönä</td><td>tiistain vastaisena yönä</td><td>natten mot tisdagen</td><td>on Tuesday night</td></tr>
+<tr><td>N-vastaisesta yöstä alkaen</td><td>tiistain vastaisesta yöstä alkaen</td><td>från natten mot tisdag</td><td>from Tuesday night</td></tr>
+<tr><td>aamulla</td><td>aamulla</td><td>på morgonen</td><td>in the morning</td></tr>
+<tr><td>aamusta alkaen</td><td>aamusta alkaen</td><td>från morgonen</td><td>from the morning</td></tr>
+<tr><td>päivällä</td><td>päivällä</td><td>på dagen</td><td>during the day</td></tr>
+<tr><td>aamupäivästä alkaen</td><td>aamupäivästä alkaen</td><td>från förmiddagen</td><td>from before noon</td></tr>
+<tr><td>illalla</td><td>illalla</td><td>på kvällen</td><td>in the evening</td></tr>
+<tr><td>illasta alkaen</td><td>illasta alkaen</td><td>från kvällen</td><td>from the evening</td></tr>
+<tr><td>yöllä</td><td>yöllä</td><td>på natten</td><td>at night</td></tr>
+<tr><td>yöstä alkaen</td><td>yöstä alkaen</td><td>från natten</td><td>from the night</td></tr>
+<tr><td>huomisaamuna</td><td>huomisaamuna</td><td>i morgon bitti</td><td>tomorrow morning</td></tr>
+<tr><td>huomisaamusta alkaen</td><td>huomisaamusta alkaen</td><td>från morgon bitti</td><td>from tomorrow morning</td></tr>
+<tr><td>huomisaamupäivästä alkaen</td><td>huomisaamupäivästä alkaen</td><td>från i morgon förmiddag</td><td>from tomorrow before noon</td></tr>
+<tr><td>huomisillasta alkaen</td><td>huomisillasta alkaen</td><td>från i morgon kväll</td><td>from tomorrow evening</td></tr>
+<tr><td>huomenna päivällä</td><td>huomenna päivällä</td><td>i morgon på dagen</td><td>tomorrow during the day</td></tr>
+<tr><td>huomisiltana</td><td>huomisiltana</td><td>i morgon kväll</td><td>tomorrow evening</td></tr>
+</table>
+\endhtmlonly
+
+*/

@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.7.1)
+project(UnpackSmartMetDataFilesExe)
+
+set(CMAKE_MFC_FLAG 0)
+
+link_directories(
+    ${BOOST_LIB_DIR}
+    ${TOOLKITPRO_LIB_DIR}
+    )
+
+file( GLOB CPP_FILES *.cpp )
+
+add_executable( 
+    ${PROJECT_NAME}
+    ${CPP_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    Newbase
+    Bzip2Util
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${Bzip2Util_INCLUDE_DIRS}
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    )
+

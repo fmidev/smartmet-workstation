@@ -1,0 +1,82 @@
+/*!
+
+\page page_story_relativehumidity_day Tarina "relativehumidity_day"
+
+Tarina \c relativehumidity_day kertoo vuorokauden suhteellisesta kosteudesta.
+Tarina on suunnattu maanviljelijöille, joita kiinnostaa lähinnä alin
+ennustettu suhteellinen kosteus. Palautettava arvo on ajallisen minimin
+alueellinen keskiarvo.
+
+Tarina on jotakin muodoista
+
+ -# "Alin suhteellinen kosteus on [viikonpäivänä] x%"
+ -# "Alin suhteellinen kosteus on [viikonpäivänä] x%, rannikolla y%"
+ 
+Ruotsiksi
+
+ -# "Den lägsta relativa fuktigheten är [på veckodag] x%"
+ -# "Den lägsta relative fuktigheten är [på veckodag] x%, vid kusten y%"
+
+Englanniksi
+
+ -# "The smallest relative humidity [on weekday] is x%"
+ -# "The smallest relative humidity [on weekday] is x%, on the coastal area y%"
+
+Aikafraasit ovat tyyppiä \ref sec_periodifraasit_today.
+Niihin liittyviä asetuksia kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::relativehumidity_day::today::phrases
+\endcode
+
+Alin suhteellinen kosteus etsitään ajalta, jonka määritelmä
+saadaan muuttujista
+\code
+textgen::[kappale]::story::relativehumidity_day::day::starthour = [0-23]
+textgen::[kappale]::story::relativehumidity_day::day::endhour = [0-23]
+textgen::[kappale]::story::relativehumidity_day::day::maxstarthour = [0-23]
+textgen::[kappale]::story::relativehumidity_day::day::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Oletusarvoisesti asetukset määräytyvät suoraan itse periodin pituudesta.
+
+Suhteellinen kosteus pyöristetään tarkkuuteen
+\code
+textgen::[kappale]::story::relativehumidity_day::precision = [0-100] (= 10%)
+\endcode
+
+Tarvittavat fraasit ovat
+
+ - "alin suhteellinen kosteus"
+ - "on"
+ - "rannikolla"
+
+Lisäksi tarvitaan periodifraasit \ref sec_periodifraasit_today.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::relativehumidity_day::fake::area::minimum = [result]
+textgen::[kappale]::story::relativehumidity_day::fake::coast::minimum = [result]
+textgen::[kappale]::story::relativehumidity_day::fake::inland::minimum = [result]
+\endcode
+
+Tarina muodostetaan seuraavasti:
+
+ -# Lasketaan mean(min(rh)) alueelle, rannikolle ja sisämaahan
+ -# Jos joko rannikko tai sisämaa puuttuu, palautetaan tarina muotoa
+    "Alin suhteellinen kosteus on [viikonpäivänä] x%"
+ -# Jos rannikon ja sisämaan välinen ero alittaa asetetun
+    rajan \c coast_limit rajan, palautetaan tarina muotoa
+    "Alin suhteellinen kosteus on [viikonpäivänä] x%"
+ -# Palautetaan "Alin suhteellinen kosteus on [viikonpäivänä] x%, rannikolla y%"
+
+Käytetyt muuttujat ovat
+\code
+textgen::[kappale]::story::relativehumidity_day::coast_limit = [0-100] (= 30%)
+\endcode
+
+
+*/

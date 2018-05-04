@@ -1,0 +1,160 @@
+Version 3
+'ParameterAbbreviation'
+Lämpötila
+'Priority'
+1
+'ViewType'
+3
+'UseIsoLineGabWithCustomContours'
+1
+'IsoLineGab'
+10
+'IsolineColor'
+0.74902 0.74902 0.74902 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+1 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+009
+'itsAbsoluteMaxValue'
+1e+009
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+30
+'RelativeSize'
+0.4 0.4
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.4 0.4
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+0
+1
+0
+4
+0
+0.2
+0
+6
+1
+-0.1
+0
+0.1
+0 0 1 0
+1 0 1 0
+1 0 0 0
+3
+10
+-50 -40 -30 -20 -10 0 10 20 30 40 
+1
+5 
+0
+
+0
+
+10
+442 370 266 10 106 258 507 484 451 195 
+0
+
+0
+0
+0
+
+0
+
+-15
+0
+5
+0.00784314 0.34902 0.686275 0
+1 1 1 0
+1 1 0 0
+35
+0
+0
+-0.5
+0.8
+1
+1 0 0 0
+0 0 0 0
+0
+0
+2
+10
+2
+0 1 0 0
+1 0 0 0
+0
+Version_3_stuff
+1 1 0 0
+1 1
+0.74902 0.74902 0.74902 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 0.1
+1 0 0 0
+10
+-50 -40 -30 -20 -10 0 10 20 30 40
+1
+5
+0
+
+0
+
+10
+442 370 266 10 106 258 507 484 451 195
+0 0
+possible_extra_data
+6
+85 0 0 0 0 0
+1
+14 19000000000000
+

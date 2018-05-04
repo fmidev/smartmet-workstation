@@ -1,0 +1,158 @@
+/*!
+
+\page page_story_wind_summary Tarina "wind_summary"
+
+\section section_wind_summary_story Tarinan muoto
+
+Tarina kuvailee tuuliennustetta kolmen tai useamman p‰iv‰n mittaiselle jaksolle,
+joka ei ole heti kokonaisennusteen alussa. Tyypillisesti jakso alkaa kolmannesta
+tai nelj‰nnest‰ ennustusp‰iv‰st‰. Tarina sopii parhaiten merialueille.
+
+Mahdolliset peruslauseet ovat
+
+ -# Enimm‰kseen [kohtalaista lounaistuulta].
+ -# Enimm‰kseen [kohtalaista], ajoittain [navakkaa lounaistuulta]
+
+Mahdollisesta kovasta tuulesta annetaan lis‰virke seuraavasti
+
+ -# Mahdollisesti [kovaa tuulta] [maanantaina]
+ -# Mahdollisesti [kovaa tuulta] [maanantaina] ja [tiistaina]  (2 per‰kk‰ist‰ p‰iv‰‰)
+ -# Mahdollisesti [kovaa tuulta] jakson alkupuolella.
+ -# Mahdollisesti [kovaa tuulta] jakson keskivaiheilla.
+ -# Mahdollisesti [kovaa tuulta] jakson loppupuolella.
+ -# Mahdollisesti [kovaa tuulta]
+
+T‰ss‰ [kovaa tuulta] on laajennettavissa vaihtoehtoisiin muotoihin
+
+  -# "kovaa tuulta"
+  -# "kovaa tuulta tai myrsky‰"
+  -# "myrsky‰"
+
+\section section_wind_summary_story_algorithm Algoritmit
+
+ -# Lasketaan kunkin tuuliluokan prosenttiosuus. Alkuvaiheessa
+    kova tuuli ja myrsky k‰sitell‰‰n yhten‰ luokkana.
+ -# Etsit‰‰n useiten esiintyv‰ luokka X.
+ -# Etsit‰‰n suurin luokka Y, jota esiintyy haluttu minimim‰‰r‰ (\c minimum_percentage)
+ -# Jos Y<=X, k‰ytet‰‰n taulukkoa 1, muutoin taulukkoa 2
+
+\htmlonly
+<table align="center" border="1">
+<caption>Taulukko 1</caption>
+<tr><th>X</th><th>Ennuste</th></tr>
+<tr><td>tyyni</td><td>Enimm‰kseen tyynt‰</td></tr>
+<tr><td>kohtalainen</td><td>Enimm‰kseen [kohtalaista lounaistuulta]</td></tr>
+<tr><td>navakka</td><td>Enimm‰kseen [navakkaa lounaistuulta]</td></tr>
+<tr><td>kova/myrsky</td><td>[Mahdollisesti kovaa tuulta]</td></tr>
+</table>
+\endhtmlonly
+
+\htmlonly
+<table border="1">
+<caption>Taulukko 2</caption>
+<tr><th>X</th><th>Y</th><th>Ennuste</th></tr>
+<tr>
+<td>tyyni</td>
+<td>kohtalainen</td>
+<td>Enimm‰kseen tyynt‰, ajoittain [kohtalaista tuulta]</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>navakka</td>
+<td>Enimm‰kseen tyynt‰, ajoittain [navakkaa tuulta]</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>kova/myrsky</td>
+<td>Enimm‰kseen tyynt‰. [Mahdollisesti kovaa tuulta]</td>
+</tr>
+<tr>
+<td>kohtalainen</td>
+<td>navakka</td>
+<td>Enimm‰kseen kohtalaista, ajoittain navakkaa [lounaistuulta]</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>kova/myrsky</td>
+<td>Enimm‰kseen [kohtalaista lounaistuulta]. [Mahdollisesti kovaa tuulta]</td>
+</tr>
+<tr>
+<td>navakka</td>
+<td>kova/myrsky</td>
+<td>Enimm‰kseen [navakkaa lounaistuulta]. [Mahdollisesti kovaa tuulta]</td>
+</tr>
+</table>
+\endhtmlonly
+
+Mahdollisesta kovasta tuulesta annetaan lis‰virke seuraavasti
+
+ -# Jos kovaa tuulta on ennustettu vain yhdelle p‰iv‰lle,
+    - "Mahdollisesti [kovaa tuulta] [maanantaina]"
+ -# Jos kovaa tuulta on ennustettu vain kahdelle per‰kk‰iselle p‰iv‰lle
+    - "Mahdollisesti [kovaa tuulta] [maanantaina] ja [tiistaina]"
+ -# Jos kovaa tuulta on ennustettu vain jakson alkupuolelle
+    - "Mahdollisesti [kovaa tuulta] jakson alkupuolella"
+ -# Jos kovaa tuulta on ennustettu vain jakson loppupuolelle
+    - "Mahdollisesti [kovaa tuulta] jakson loppupuolella."
+ -# Jos kovaa tuulta on ennustettu vain jakson keskivaiheille
+    - "Mahdollisesti [kovaa tuulta] jakson keskivaiheilla."
+ -# Muutoin palautetaan
+    - Mahdollisesti [kovaa tuulta]
+
+T‰ss‰ fraasi "kovaa tuulta" laajennetaan seuraavasti:
+
+  -# Jos maksimituuli on yli storm_limit, "myrsky‰"
+  -# Jos maksimituuli on yli storm_maybe_limit, "kovaa tuulta tai myrsky‰"
+  -# Muutoin "kovaa tuulta"
+
+K‰ytetyt muuttujat ovat
+\code
+textgen::[kappale]::story::wind_summary::minimum_percentage = [0-X] (=5)
+textgen::[kappale]::story::wind_summary::storm_limit       = [0-X] (=21)
+textgen::[kappale]::story::wind_summary::storm_maybe_limit = [0-X] (=19)
+\endcode
+
+\section section_wind_summary_winddirection Tuulen suunta
+
+Kunkin aikav‰lin tuulen suunta saadaan laskemalla suunnan keskiarvo
+ajan ja paikan yli. Suunnan laatuindeksin mukaisesti suunnan
+tarkkuutta heikennet‰‰n ensin "suunnan puoleiseksi tuuleksi", ja sen
+j‰lkeen "suunnaltaan vaihtelevaksi tuuleksi".
+
+Vaadittua laatua (suunnan keskihajonta) kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::wind_summary::direction::accurate (= 22.5)
+textgen::[kappale]::story::wind_summary::direction::variable (= 45)
+\endcode
+Oletusarvot on annettu suluissa.
+
+Suunnan fraasi valitaan seuraavasti
+
+  -# Jos laatu >= \c accurate, "N-tuulta"
+  -# Jos laatu >= \c variable, "N-puoleista tuulta"
+  -# Muutoin suuntaa ei mainita
+
+Erityisesti on siis huomattava, ettei katsaustyyppisiss‰ ennusteissa
+mainita suunnaltaan vaihtelevaa tuulta.
+
+\section section_wind_summary_fraasit Tarvittavat fraasit
+
+Tarvittavat fraasit ovat
+
+ - "mahdollisesti"
+ - "enimm‰kseen"
+ - "ajoittain"
+ - "ja"
+ - "tyynt‰"
+ - "heikkoa"
+ - "kohtalaista"
+ - "kovaa"
+ - "myrsky‰"
+ - "tuulta"
+ - "jakson alkupuolella"
+ - "jakson loppupuolella"
+ - "jakson keskivaiheilla"
+ - "N-tuulta"
+ - "N-na"
+
+*/

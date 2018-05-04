@@ -1,0 +1,24 @@
+# Files that change all the time
+HTMLDefines.h
+*.chm
+lastloadedfile.txt
+*backupViewMacro.wmr
+UnpackSmartMetDataFilesExe.exe
+cp_data.bak
+running_status.dat
+viewmacro.dat
+mapviewsettings.conf
+log.txt
+*.aps
+/src/SmartMet/local/control/
+
+# 3rd party lib binaries should not be added to version control
+/libs/3rd*
+
+# Project specific ignores
+/scripts/cmake
+/scripts/git
+
+# Variant specific configuration files
+cap.conf
+wms.conf

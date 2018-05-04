@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = ssh://io.weatherproof.fi/smartmet/git/smartmetbizcode.git
+	branch = new_struct
+	commit = 418974769734c23fb88c0b22b315e2da52161661
+	parent = 5b3b7d8660fabc80a4677373638d47adcd0347e7
+	cmdver = 0.3.0

@@ -1,0 +1,28 @@
+/*!
+
+\page page_story_temperature_meanmin Tarina "temperature_meanmin"
+
+\c temperature_meanmin tarina on muotoa
+
+  -# "Keskimääräinen alin lämpötila N astetta."
+
+Ruotsiksi
+
+  -# "Den lägsta temperaturen i medeltal N grader."
+
+Englanniksi
+
+  -# "Mean minimum temperature N degrees."
+
+Käytetyt fraasit ovat
+
+  - "keskimääräinen alin lämpötila"
+  - "astetta"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Mean(MinTemperature)):
+textgen::[kappale]::story::temperature_meanmin::fake::mean = [result]
+\endcode
+
+*/

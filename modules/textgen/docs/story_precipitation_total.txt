@@ -1,0 +1,35 @@
+/*!
+
+\page page_story_precipitation_total Tarina "precipitation_total"
+
+\c precipitation_total tarina on muotoa
+
+  -# "Sadesumma N millimetriä."
+
+Ruotsiksi
+
+  -# "Nederbördsumman N millimeter."
+
+Englanniksi
+
+  -# "Total precipitation N millimeters."
+
+Käytetyt fraasit ovat
+
+  - "sadesumma"
+  - "millimetriä"
+
+Sadesummaan eivät periaatteessa kuulu liian pienet tunnin sademäärät.
+Summasta voi filtteröidä pois nämä liian pienet sateet muuttujan
+\code
+textgen::[kappale]::story::precipitation_total::minrain = [0-X]
+\endcode
+avulla
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Sum(Precipitation)):
+textgen::[kappale]::story::precipitation_total::fake::mean = [result]
+\endcode
+
+*/

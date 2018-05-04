@@ -1,0 +1,9 @@
+/*!
+\page page_header_none Header tyyppi "none"
+
+\section sec_header_none Header tyyppi "none"
+
+Tuottaa tyhj‰n headerin. K‰ytet‰‰n, jos jonkin kappaleen eteen
+ei haluta otsikkoa.
+
+*/

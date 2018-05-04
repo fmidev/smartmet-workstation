@@ -1,0 +1,6 @@
+; SmartMetDllLib.def : Declares the module parameters for the DLL.
+
+LIBRARY      "SmartMetDllLib"
+
+EXPORTS
+    ; Explicit exports can go here

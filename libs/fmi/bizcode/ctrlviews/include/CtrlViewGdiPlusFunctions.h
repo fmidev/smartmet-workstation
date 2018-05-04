@@ -1,0 +1,71 @@
+#pragma once
+
+#include "stdafx.h"
+#include "NFmiColor.h"
+#include "NFmiRect.h"
+#include <gdiplus.h>
+#include <vector>
+#include <list>
+#include "matrix3d.h"
+#include <boost/shared_ptr.hpp>
+
+class NFmiToolBox;
+class NFmiPoint;
+class NFmiCtrlView;
+class GdiPlusLineInfo;
+class NFmiDrawParam;
+
+namespace CtrlView
+{
+    // Color related functions
+    Gdiplus::Color NFmiColor2GdiplusColor(const NFmiColor &theColor, bool fUseAlpha = false);
+    // theBrightningFactor on prosentti luku, jolla annettua väriä saadaan vaalennettua tai tummennettua.
+    // jos prosentti luku on > 0, vaalenee väri, jos se on < 0, tummenee väri.
+    void ModifyColors(boost::shared_ptr<NFmiDrawParam> &theDrawParam, double theBrightningFactor, bool fDoIsolineColors, bool fDoContourColors, bool fDosymbolColors, Matrix3D<std::pair<int, COLORREF> > &theUsedColorsCube, int theSpecialColorEndIndex);
+    double CalcBrightningFactor(int theStartIndex, int theModelRunCount, int theCurrentIndex);
+    NFmiColor ColorRef2Color(COLORREF color);
+    COLORREF Color2ColorRef(const NFmiColor &theColor);
+
+    // String manipulations
+    std::wstring StringToWString(const std::string& s);
+    std::string WStringToString(const std::wstring& s);
+
+    // Relative (toolbox) to Gdi+ coordinate transformation
+    const Gdiplus::Rect CRect2GdiplusRect(const CRect &theCRect);
+    const Gdiplus::RectF CRect2GdiplusRectF(const CRect &theCRect);
+    const Gdiplus::Rect Relative2GdiplusRect(NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect);
+    const Gdiplus::RectF Relative2GdiplusRectF(NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect);
+    const NFmiRect GdiplusRect2Relative(NFmiToolBox *theToolBox, const Gdiplus::RectF &theGdiplusRect);
+    const NFmiRect GdiplusRect2Relative(NFmiToolBox *theToolBox, const Gdiplus::Rect &theGdiplusRect);
+    const Gdiplus::PointF Relative2GdiplusPoint(NFmiToolBox *theToolBox, const NFmiPoint &theRelativePoint);
+    std::vector<Gdiplus::PointF> Relative2GdiplusPolyLine(NFmiToolBox *theToolBox, const std::vector<NFmiPoint> &theRelativePolyLine, const NFmiPoint &theRelativeOffset);
+    void MakePathFromRect(Gdiplus::GraphicsPath &thePath, NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect);
+    Gdiplus::RectF GetStringBoundingBox(Gdiplus::Graphics &theGdiPlusGraphics, const std::string &theString, float theFontSizeInPixels, const Gdiplus::PointF &theOringinInPixels, const std::wstring &theFontNameStr);
+
+    // Drawing functions
+    // theAlpha: 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation, Gdiplus::Graphics *theGdiPlusGraphics = 0);
+    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, const Gdiplus::Color &theTransparentColor, bool fDoNearestInterpolation);
+    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, const Gdiplus::Color &theTransparentColor, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation);
+    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, bool fDoNearestInterpolation, Gdiplus::ImageAttributes *theImageAttr = 0, Gdiplus::Graphics *theGdiPlusGraphics = 0);
+    Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &thePath, const std::string &theFileName);
+    Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &thePathAndFileName);
+    void SetGdiplusAlignment(FmiDirection theAlignment, Gdiplus::StringFormat &theStringFormat);
+    const Gdiplus::PointF ConvertLatlonToGdiPlusPoint(NFmiCtrlView *theView, const NFmiPoint &theLatLon);
+    std::vector<Gdiplus::PointF> ConvertLatLon2GdiPoints(NFmiCtrlView *theView, const std::vector<NFmiPoint> &theLatlonPath);
+    const NFmiPoint ConvertGdiPlusPointToLatlon(NFmiCtrlView *theView, const Gdiplus::PointF &theGdiPlusPoint);
+    void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<Gdiplus::PointF> &thePoints, const GdiPlusLineInfo &theLineInfo, bool fFill, int fillHatchStyle, bool fPrinting, std::vector<Gdiplus::REAL> *theDashPatternVector = 0);
+    void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<Gdiplus::PointF> &thePoints, const GdiPlusLineInfo &theLineInfo, bool fFill, const NFmiColor &fillColor, int fillHatchStyle, bool fPrinting, std::vector<Gdiplus::REAL> *theDashPatternVector = 0);
+    size_t DrawGdiplusSimpleMultiPolyLine(Gdiplus::Graphics &theGraphics, NFmiToolBox *theToolBox, const std::list<std::vector<NFmiPoint>> &theMultiPolyLine, const NFmiColor &theLineColor, int theLineThickness, const NFmiPoint &theRelativeOffSet);
+    void DrawTextToRelativeLocation(Gdiplus::Graphics &theGdiPlusGraphics, const NFmiColor &theColor, double theFontSizeInMM, const std::string &theStr, const NFmiPoint &thePlace, double pixelsPerMM, NFmiToolBox *theToolbox, const std::wstring &theFontNameStr, FmiDirection theAlingment, Gdiplus::FontStyle theFontStyle = Gdiplus::FontStyleRegular);
+    void DrawSimpleText(Gdiplus::Graphics &theGdiPlusGraphics, const NFmiColor &theColor, float theFontSizeInPixels, const std::string &theStr, const NFmiPoint &theAbsPlace, const std::wstring &theFontNameStr, FmiDirection theAlingment, const NFmiColor *theBkColor = 0);
+    void DrawLine(Gdiplus::Graphics &theGdiPlusGraphics, int x1, int y1, int x2, int y2, const NFmiColor &theColor, float thePenWidthInPixels, Gdiplus::DashStyle theDashStyle = Gdiplus::DashStyleSolid);
+    void DrawRect(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::Rect &theRectInPixels, const NFmiColor &theRectFrameColor, const NFmiColor &theRectFillColor, bool doFill, bool doFrame, bool useAlphaFill, float theRectFrameWidthInPixels, Gdiplus::DashStyle theDashStyle = Gdiplus::DashStyleSolid);
+    void DrawPath(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::GraphicsPath &thePathInPixels, const NFmiColor &theFrameColor, const NFmiColor &theFillColor, bool doFill, bool doFrame, bool useAlphaFill, float theFrameWidthInPixels);
+
+    void DrawAnimationButton(const NFmiRect &theRect, Gdiplus::Bitmap *theButtonImage, Gdiplus::Graphics *theGdiPlusGraphics, NFmiToolBox &theToolBox, bool isPrinting, const NFmiPoint &theViewSizeInPixels, Gdiplus::REAL theAlpha, bool fForceSize = false, bool fDoNearestInterpolation = true);
+    void DrawImageButton(const CRect &theAbsRect, Gdiplus::Bitmap *theButtonImage, Gdiplus::Graphics *theGdiPlusGraphics, Gdiplus::REAL theAlpha, bool isPrinting);
+    void DrawBitmap(Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::REAL theAlpha, Gdiplus::Graphics *theGdiPlusGraphics, bool isPrinting, bool fDoNearestInterpolation);
+
+    void Draw3DRect(Gdiplus::Graphics *theGdiPlusGraphics, const Gdiplus::RectF &theRect, const NFmiColor &theColor, float theEdgeColorFactor, float theEdgeWidth);
+}

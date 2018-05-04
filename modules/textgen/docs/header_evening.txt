@@ -1,0 +1,33 @@
+/*!
+\page page_header_evening Header tyyppi "evening"
+
+\section sec_header_evening Header tyyppi "evening"
+
+Mahdolliset headerit ovat
+
+  -# "Odotettavissa illalla"
+  -# "Odotettavissa maanantaina illalla" + variaatiot
+
+Ruotsiksi
+
+  -# "Utsikter på kvällen"
+  -# "Utsikter på måndag kvällen" + variaatiot
+
+Englanniksi
+
+  -# "Expected weather in the evening"
+  -# "Expected weather on Monday evening" + variaatiot
+
+Oletusarvoisesti viikonpäivää ei mainita. Viikonpäivän
+saa päälle asetuksella
+\code
+header::weekdays = true
+\endcode
+
+Käytetyt fraasit ovat
+
+  - "odotettavissa"
+  - "illalla"
+  - "N-illalla", missä N=1-7
+
+*/

@@ -1,0 +1,9 @@
+/*!
+\page page_header_report_location Header tyyppi "report_location"
+
+\section sec_header_report_location Header tyyppi "report_location"
+
+Tuottaa headerin tyyppiä "Uusimaa". Headeri koostuu siis vain ja
+ainoastaan alueen tai pisteen nimestä.
+
+*/

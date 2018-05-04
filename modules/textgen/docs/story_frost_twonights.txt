@@ -1,0 +1,123 @@
+/*!
+
+\page page_story_frost_twonights Tarina "frost_twonights"
+
+Tarina on tyhjä lokakuun puolivälistä maaliskuun loppuun! Lisäksi, jos
+ankaran hallan todennäköisyys on kumpanakin päivänä hyvin korkea, lienee
+halla niin päivän selvää, ettei siitä kannata mainita erikseen.
+
+Jos jakson pituus on nolla yötä, palautetaan tyhjä tarina.
+
+Jos jakson pituus on yksi yö, palautetaan jokin tarinoista
+
+ -# ""
+ -# "Hallan todennäköisyys on N%."
+ -# "Ankaran hallan todennäköisyys on N%".
+
+Ruotsiksi
+
+ -# ""
+ -# "Sannolikheten för nattfrost är N%."
+ -# "Sannolikheten för stark nattforst är N%".
+
+Englanniksi
+
+ -# ""
+ -# "Probability of frost is N%."
+ -# "Probability of severe frost is N%".
+
+Tarina valitaan perustuen muuttujiin
+\code
+textgen::[kappale]::story::frost_twonights::severe_frost_limit = [0-100]
+textgen::[kappale]::story::frost_twonights::frost_limit = [0-100]
+textgen::[kappale]::story::frost_twonights::obvious_frost = [0-100] (=90)
+textgen::[kappale]::story::frost_twonights::precision = [0-100]
+\endcode
+Jos ankaran hallan todennäköisyys on vähintään \c severe_frost_limit,
+palautetaan fraasi 3. Muuten jos hallan todennäköisyys on vähintään
+\c frost_limit, palautetaan fraasi 2. Muuten palautetaan tyhjä tarina.
+Jos ankaran hallan todennäköisyys on yli \c obvious_frost, tarina
+voi jäädä kokonaan tyhjäksi. (Katso sivun alun selitystä.)
+
+Todennäköisyydet pyöristetään muuttujan \c precision tarkkuuteen.
+Yleensä käytetään tarkkuutta 10.
+
+Yön määritelmä saadaan muuttujista
+\code
+textgen::[kappale]::story::frost_twonights::night::starthour = [0-23]
+textgen::[kappale]::story::frost_twonights::night::endhour = [0-23]
+textgen::[kappale]::story::frost_twonights::night::maxstarthour = [0-23]
+textgen::[kappale]::story::frost_twonights::night::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Yölle ei ole annettu hallan yhteydessä minkäänlaista oletusmääritelmää,
+kuten 18-06, koska hallan kohdalla mielenkiintoinen aikaväli voi hyvinkin
+olla suurempi. Näin vastuu oikean aikavälin määrittelystä jää käyttäjälle.
+
+Jos jakson pituus on kaksi yötä tai useampia öitä, palautetaan jokin
+alla olevista tarinoista. Ainoastaan kahdesta ensimmäisestä yöstä
+kerrotaan, ei seuraavista päivistä!
+
+ -# "Hallan todennäköisyys on viikonpäivän vastaisena yönä x%"
+    -# + ", seuraavana yönä ankaran hallan todennäköisyys on x%."
+    -# + ", seuraavana yönä sama."
+    -# + ", seuraavana yönä x%."
+    -# + ", seuraava yö on lämpimämpi."
+ -# "Ankaran hallan todennäköisyys on viikonpäivän vastaisena yönä x%"
+    -# + ", seuraavana yönä sama."
+    -# + ", seuraavana yönä x%."
+    -# + ", seuraavana yönä hallan todennäköisyys on x%."
+    -# + ", "seuraava yö on huomattavasti lämpimämpi."
+
+Ruotsiksi
+
+ -# "Sannolikheten för nattfrost är natten mot veckodag x%",
+    -# + ", följande natt sannolikheten för stark nattfrost är x%."
+    -# + ", följande natt densamma."
+    -# + ", följande natt x%."
+    -# + ", följande natt är varmare."
+ -# "Sannolikheten för stark nattfrost är natten mot veckodag x%",
+    -# + ", följande natt densamma."
+    -# + ", följande natt x%".
+    -# + ", följande natt sannolikheten för nattfrost är x%".
+    -# + ", följande natt är betydligt varmare."
+
+Englanniksi
+
+ -# "Probability of frost is on Monday night x%",
+    -# + ", the following night probability of severe frost is x%",
+    -# + ", the following night the same."
+    -# + ", the following night x%."
+    -# + ", the following night is warmer."
+ -# "Probability of severe frost is on Monday night x%",
+    -# + ", the following night the same."
+    -# + ", the following night x%".
+    -# + ", the following night probability of frost is x%."
+    -# + ", the following night is significantly warmer."
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::frost_mean::fake::day1::mean = [result]
+textgen::[kappale]::story::frost_mean::fake::day1::severe_mean = [result]
+textgen::[kappale]::story::frost_mean::fake::day2::mean = [result]
+textgen::[kappale]::story::frost_mean::fake::day2::severe_mean = [result]
+\endcode
+
+
+Käytetyt fraasit ovat
+
+ - "hallan todennäköisyys"
+ - "ankaran hallan todennäköisyys"
+ - "on"
+ - "N-vastaisena yönä", N=1-7
+ - "seuraavana yönä"
+ - "sama"
+ - "seuraava yö"
+ - "lämpimämpi"
+ - "huomattavasti lämpimämpi"
+
+*/

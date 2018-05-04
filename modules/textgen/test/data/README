@@ -1,0 +1,14 @@
+skandinavia_pinta.sqd
+
+	Tiedosto valittiin regressiotesteihin suurten sade-ennusteiden
+	takia. Tiedoston alkuperäinen nimi oli
+	200308140850_pal_skandinavia_pinta.sqd.
+
+uusimaa.svg
+ahvenanmaa.svg
+pohjois-lappi.svg
+
+	Tiedostot on kopioitu regressiotesteihin hakemistosta
+	/data/share/textgendata/maps/maatalous/. Alueet on
+	valittu maantieteellisen hajonnan perusteella.
+

@@ -1,0 +1,78 @@
+/*!
+
+\page page_story_temperature_weekly_averages_trend Tarina "temperature_weekly_averages_trend"
+
+Ajanjakson täytyy olla vähintään 2 vuorokautta. Alkamis- ja loppumisaikojen
+täytyy olla 06 tai 18.
+
+Tarinat ovat muotoa
+
+  -# "Päivälämpötila on A...B astetta."
+  -# "Päivälämpötila on noin A...B astetta."
+  -# "Päivälämpötila on aluksi A...B astetta, lopuksi C...D astetta."
+  -# "Yölämpötila on aluksi A...B astetta, lopuksi C...D astetta."
+  -# "Yölämpötila on A...B astetta."
+  -# "Yölämpötila on noin A...B astetta."
+  -# "Päivälämpötila on A...B astetta, yölämpötila C...D astetta."
+  -# "Päivälämpötila on noin X astetta, yölämpötila noin Y astetta."
+
+Tarinassa on tarvittaessa kaksi erillistä virkettä.
+
+Ruotsiksi
+
+  -# "Dagstemperaturen är A...B grader."
+  -# "Dagstemperaturen är circa A...B grader."
+  -# "Dagstemperaturen är i början A...B grader, i slutet C...D grader."
+  -# "Natttemperaturen är i början A...B grader, i slutet C...D grader."
+  -# "Natttemperaturen är A...B grader."
+  -# "Natttemperaturen är circa A...B grader."
+  -# "Dagstemperaturen är A...B grader, natttemperaturen C...D grader."
+  -# "Dagstemperaturen är circa X grader, natttemperaturen circa Y grader."
+
+Englanniksi
+
+  -# "Daily maximum temperature is A...B degrees."
+  -# "Daily maximum temperature is about A...B degrees."
+  -# "Daily maximum temperature is in the beginning A...B degrees, in the end C...D degrees."
+  -# "Daily minimum temperaturen is in the beginning A...B degrees, in the end C...D degrees."
+  -# "Daily minimum temperaturen is A...B degrees."
+  -# "Daily minimum temperaturen is about A...B degrees."
+  -# "Daily maximum temperature is A...B degrees, natttemperaturen C...D degrees."
+  -# "Daily maximum temperature is about X degrees, natttemperaturen about Y degrees."
+
+
+  -# "Daily maximum temperature is A...B degrees, nightly minimum temperature C...D degrees."
+  -# "Daily maximum temperature is about X degrees, nightly minimum temperatures about Y degrees."
+
+Jos intervalli on pienempi kuin
+\code
+textgen::[kappale]::story::temperature_weekly_averages::mininterval = [1-]
+\endcode
+typistetään intervalli yhdeksi noin-lukemaksi.
+Jos muuttuja
+\code
+textgen::[kappale]::story::temperature_weekly_averages::always_interval_zero = [bool]
+\endcode
+on true, intervallit joihin lukema 0 kuuluu esitetään aina
+intervallina, jos ala- ja ylärajat eroavat asteenkaan.
+Jos muuttuja
+\code
+textgen::[kappale]::story::temperature_weekly_averages::emphasize_night_minimum = [bool]
+\endcode
+arvo on true, ei yön alimmalle lämpötilalle esitetä ylärajaa.
+
+Tarinassa esitetään aina ensin päivälämpötila, sitten yölämpötila.
+Jos jommassa kummassa pystytään suorittamaan aikajako "aluksi"- ja
+"lopuksi"-jaksoihin, tarina koostuu kahdesta virkkeestä.
+
+Tarvittavat fraasit ovat
+
+  - "päivälämpötila"
+  - "yölämpötila"
+  - "on"
+  - "noin"
+  - "astetta"
+  - "aluksi"
+  - "lopuksi"
+
+*/

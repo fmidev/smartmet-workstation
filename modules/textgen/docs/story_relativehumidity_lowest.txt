@@ -1,0 +1,115 @@
+/*!
+
+\page page_story_relativehumidity_lowest Tarina "relativehumidity_lowest"
+
+Tarina \c relativehumidity_lowest on muotoa
+
+ -# "Alin suhteellinen kosteus on [viikonpäivänä] x%"
+    -# ", [viikonpäivänä] huomattavasti suurempi."
+    -# ", [viikonpäivänä] suurempi."
+    -# ", [viikonpäivänä] hieman suurempi."
+    -# ", [viikonpäivänä] sama."
+    -# ", [viikonpäivänä] hieman pienempi."
+    -# ", [viikonpäivänä] pienempi."
+    -# ", [viikonpäivänä] huomattavasti pienempi."
+
+Ruotsiksi
+
+ -# "Den lägsta relativa fuktigheten är [på veckodag] x%"
+    -# ", [på veckodag] betydligt större."
+    -# ", [på veckodag] större."
+    -# ", [på veckodag] något större."
+    -# ", [på veckodag] densamma."
+    -# ", [på veckodag] något mindre."
+    -# ", [på veckodag] mindre."
+    -# ", [på veckodag] betydligt mindre."
+
+Englanniksi
+
+ -# "The smallest relative humidity [on weekday] is x%"
+    -# ", [on weekday] significantly greater."
+    -# ", [on weekday] greater."
+    -# ", [on weekday] somewhat greater."
+    -# ", [on weekday] the same."
+    -# ", [on weekday] somewhat smaller."
+    -# ", [on weekday] smaller."
+    -# ", [on weekday] significantly smaller."
+
+Tarina soveltuu yhden/kahden vuorokauden ennusteisiin. Sivulausetta ei
+ole yhden vuorokauden ennusteissa. Kolmannesta tai sitä seuraavista päivistä
+ei kerrota mitään.
+
+Aikafraasit ovat tyyppiä \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day. Niihin liittyviä asetuksia
+kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::relativehumidity_lowest::today::phrases
+textgen::[kappale]::story::relativehumidity_lowest::next_day::phrases
+\endcode
+Tyypillisiä asetuksia ovat esimerkiksi
+\code
+textgen::[kappale]::story::relativehumidity_lowest::next_day::phrases = followingday
+\endcode
+
+Päivän määritelmä saadaan muuttujista
+\code
+textgen::[kappale]::story::relativehumidity_lowest::day::starthour = [0-23]
+textgen::[kappale]::story::relativehumidity_lowest::day::endhour = [0-23]
+textgen::[kappale]::story::relativehumidity_lowest::day::maxstarthour = [0-23]
+textgen::[kappale]::story::relativehumidity_lowest::day::minendhour = [0-23]
+\endcode
+Päivän normaali aikaväli on \c starthour - \c endhour. Jos periodi on
+lyhyempi kuin mitä nämä asetukset vaativat, voidaan niissä joustaa
+muuttujien \c maxstarthour - \c minendhour rajoissa. Joustorajan
+puuttuessa ei joustoa sallita ollenkaan.
+
+Oletusarvoisesti \c starthour = 0 ja \c endhour = 0. Joustorajat ovat
+optionaalisia.
+
+Suhteellinen kosteus pyöristetään tarkkuuteen
+\code
+textgen::[kappale]::story::relativehumidity_lowest::precision = [0-100]
+\endcode
+
+Erotuksen suuruus päätellään seuraavista rajoista
+\code
+textgen::[kappale]::story::relativehumidity_lowest::comparison::significantly_greater = [0-100]
+textgen::[kappale]::story::relativehumidity_lowest::comparison::greater = [0-100]
+textgen::[kappale]::story::relativehumidity_lowest::comparison::somewhat_greater = [0-100]
+textgen::[kappale]::story::relativehumidity_lowest::comparison::somewhat_smaller = [0-100]
+textgen::[kappale]::story::relativehumidity_lowest::comparison::smaller = [0-100]
+textgen::[kappale]::story::relativehumidity_lowest::comparison::significantly_smaller = [0-100]
+\endcode
+seuraavasti tuloksista \c humidity2 ja \c humidity1
+
+ -# Jos \c humidity2 - \c humidity1 >= \c significantly_greater, valitaan "huomattavasti suurempi"
+ -# Jos \c humidity2 - \c humidity1 >= \c greater, valitaan "suurempi"
+ -# Jos \c humidity2 - \c humidity1 >= \c somewhat_greater, valitaan "hieman suurempi"
+ -# Jos \c humidity1 - \c humidity2 >= \c significantly_smaller, valitaan "huomattavasti pienempi"
+ -# Jos \c humidity1 - \c humidity2 >= \c smaller, valitaan "pienempi"
+ -# Jos \c humidity1 - \c humidity2 >= \c somewhat_smaller, valitaan "hieman pienempi"
+ -# Muuten valitaan "sama"
+
+Tarvittavat fraasit ovat
+
+ - "alin suhteellinen kosteus"
+ - "on"
+ - "huomattavasti suurempi"
+ - "suurempi"
+ - "hieman suurempi"
+ - "sama"
+ - "hieman pienempi"
+ - "pienempi" 
+ - "huomattavasti pienempi"
+
+Lisäksi tarvitaan periodifraasit \ref sec_periodifraasit_today ja
+\ref sec_periodifraasit_next_day.
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Minimum(Minimum(Temperature)):
+textgen::[kappale]::story::relativehumidity_lowest::fake::day1::minimum = [result]
+textgen::[kappale]::story::relativehumidity_lowest::fake::day2::minimum = [result]
+\endcode
+
+*/

@@ -1,0 +1,173 @@
+/*!
+
+\page page_story_weather_shortoverview Tarina "weather_shortoverview"
+
+\section section_weather_shortoverview_story Tarinan muoto
+
+Tarina kuvailee useamman p‰iv‰n mittaisen jakson s‰‰t‰ sateen ja
+pilvisyyden osalta.
+
+Mahdolliset tarinat ovat
+
+ -# "[Enimm‰kseen selke‰‰], poutaa."
+ -# "[Enimm‰kseen selke‰‰], [viikonp‰iv‰n‰] [sadetta]"
+ -# "[Enimm‰kseen selke‰‰], [viikonp‰iv‰n‰] paikoin [sadetta]"
+ -# "[Enimm‰kseen selke‰‰], ajoittain sateista."
+ -# "S‰‰ on ep‰vakaista."
+
+Pilvisyydelle vaihtoehdot ovat
+
+  -# "enimm‰kseen selke‰‰"
+  -# "enimm‰kseen pilvist‰"
+  -# "enimm‰kseen puolipilvist‰"
+  -# "enimm‰kseen selke‰‰ tai puolipilvist‰"
+  -# "enimm‰kseen pilvist‰ tai puolipilvist‰"
+  -# "vaihtelevaa pilvisyytt‰"
+
+Sademuodoille vaihtoehdot ovat
+
+  -# "sadetta"
+  -# "r‰nt‰sadetta"
+  -# "lumisadetta"
+  -# "vesi- tai r‰nt‰sadetta"
+  -# "lumi- tai r‰nt‰sadetta"
+
+\section section_weather_shortoverview_algorithm Algoritmit
+
+Tarina muodostetaan k‰ytt‰en alla olevia algoritmeja.
+
+\subsection section_weather_shortoverview_cloudiness Pilvisyys
+
+Muuttujan
+\code
+textgen::[kappale]::story::weather_shortoverview::cloudiness::fullrange = [boolean] (=true)
+\endcode
+mukaisesti pilvisyys lasketaan joko koko aikav‰lille, tai pilvisyys lasketaan
+ali-intervalleille
+\code
+textgen::[kappale]::story::weather_shortoverview::cloudiness::day::starthour = [0-23] (= 0)
+textgen::[kappale]::story::weather_shortoverview::cloudiness::day::endhour = [0-23] (= 0)
+textgen::[kappale]::story::weather_shortoverview::cloudiness::day::maxstarthour = [0-23] (= starthour)
+textgen::[kappale]::story::weather_shortoverview::cloudiness::day::minendhour = [0-23] (= minendhour)
+\endcode
+Oletusarvojen mukaisesti siis vain kokonaiset vuorokaudet laskettaisiin mukaan.
+Toisille asiakkaille saatettaisiin ottaa mukaan vain p‰iv‰t, eli klo 06-18.
+
+N‰in saadulle jaksotukselle lasketaan selke‰n, puolipilvisen ja pilvisen
+prosenttiosuus. Luokituksien rajana k‰ytet‰‰n prosenttilukuja
+\code
+textgen::[kappale]::story::weather_shortoverview::cloudiness::clear = [0-100] (=40)
+textgen::[kappale]::story::weather_shortoverview::cloudiness::cloudy = [0-100] (=70)
+\endcode
+Prosenttiluku 40 vastaa pilvisyysluokkaa 3.2, luku 70 pilvisyysluokkaa
+5.6.  Paremmat oletusarvot saattaisivat perustua tarkkoihin lukuihin
+3.5 ja 5.5, mutta helpommin muistettavat rajat lienev‰t t‰ss‰
+tapauksessa parempia.
+
+Rajojen perusteella pilvisyysprosentti lasketaan
+
+  -# selke‰ksi, jos prosentti >= \c cloudiness::clear
+  -# pilviseksi, jos prosentti >= \c cloudiness::cloudy
+  -# muutoin puolipilviseksi
+
+Merkit‰‰n n‰in saatuja prosenttiosuuksia luvuilla N1, N2 ja N3, ja oletetaan
+muuttujat
+\code
+textgen::[kappale]::story::weather_shortoverview::cloudiness::single_limit = [50-100] (=60)
+textgen::[kappale]::story::weather_shortoverview::cloudiness::double_limit = [50-100] (=20)
+\endcode
+Pilvisyyskuvaus valitaan seuraavasti
+
+ -# Jos N1 >= \c single_limit, "enimm‰kseen selke‰‰"
+ -# Jos N2 >= \c single_limit, "enimm‰kseen puolipilvist‰"
+ -# Jos N3 >= \c single_limit, "enimm‰kseen pilvist‰"
+ -# Jos N1 < \c double_limit, "enimm‰kseen pilvist‰ tai puolipilvist‰"
+ -# Jos N3 < \c double_limit, "enimm‰kseen selke‰‰ tai puolipilviust‰"
+ -# Muutoin "vaihtelevaa pilvisyytt‰"
+
+Ongelmakohta: Pilvisyytt‰ tuskin kerrottaisiin sille p‰iv‰lle, jolle
+sataa. Samalla logiikalla sen ei ehk‰ tulisi olla
+prosenttilaskuissakaan mukana. Eli, periaatteessa voisi olla
+"enimm‰kseen selke‰‰, viikonp‰iv‰n‰ sadetta". Pilvisyystarinan tulisi
+siis tavallaan tiet‰‰, miten sateesta kerrotaan.
+
+\subsection section_weather_shortoverview_precipitation Sade
+
+Sateen osalta tarkastellaan enimm‰kseen yksitt‰isi‰ vuorokausia.
+N‰in ollen k‰ytt‰j‰n tulee m‰‰ritell‰ hyv‰ksytyt vuorokaudet seuraavien
+muuttujien avulla
+\code
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::starthour = [0-23] (= 0)
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::endhour = [0-23] (= 0)
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::maxstarthour = [0-23] (= starthour)
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::minendhour = [0-23] (= minendhour)
+\endcode
+Oletusarvojen mukaisesti siis vain kokonaiset vuorokaudet laskettaisiin mukaan.
+J‰rkev‰mm‰t joustavat arvot voivat olla esimerkiksi
+\code
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::starthour = 0
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::endhour = 0
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::maxstarthour = 6
+textgen::[kappale]::story::weather_shortoverview::precipitation::day::minendhour = 18
+\endcode
+T‰llˆin myˆs osittain vajaat p‰iv‰t otettaisiin huomioon, olennaista olisi
+nimenomaan p‰iv‰saika.
+
+Kullekin yksitt‰iselle vuorokaudelle lasketaan sadesummat R1,R2,...RN.
+N‰ihin liittyen k‰ytet‰‰n asetuksia
+\code
+textgen::[kappale]::story::weather_shortoverview::precipitation::rainy = [0-] (=1)
+textgen::[kappale]::story::weather_shortoverview::precipitation::partly_rainy = [0-] (=0.1)
+\endcode
+N‰iden perusteella p‰‰tell‰‰n onko p‰iv‰ sateinen, vai tuleeko sadetta
+vain paikoin. Alueellisella jakaumalla ei siis ole mit‰‰n osuutta asiaan!
+
+Lis‰ksi tarvitaan muuttujaa
+\code
+textgen::[kappale]::story::weather_shortoverview::precipitation::unstable = [0-] (=50)
+\endcode
+
+Olkoon N1 p‰ivien lukum‰‰r‰ jolloin Ri >= \c rainy_limit ja
+N2 lukum‰‰r‰ jolloin Ri >= \c mostly_rainy_limit. Sadetarina
+generoidaan t‰llˆin seuraavasti:
+
+  -# Jos N1 == N2 == 0, "poutaa"
+  -# Jos N1 == 1 && N2 == 1, "[viikonp‰iv‰n‰] [sadetta]"
+  -# Jos N1 == 0 && N2 == 1, "[viikonp‰iv‰n‰] paikoin [sadetta]"
+  -# Jos Ri >= \c rainy_limit v‰hint‰‰n \c unstable_limit p‰ivist‰, "s‰‰ on ep‰vakaista"
+  -# Muuten "ajoittain sateista"
+
+\section section_weather_shortoverview_fakes Tulosten testaus
+
+Analyysitulokset voi korvata regressiotesteiss‰ muuttujilla
+\code
+textgen::[kappale]::story::weather_shortoverview::fake::clear_percentage = [result]
+textgen::[kappale]::story::weather_shortoverview::fake::cloudy_percentage = [result]
+
+textgen::[kappale]::story::weather_shortoverview::fake::day1::precipitation = [result]
+textgen::[kappale]::story::weather_shortoverview::fake::day2::precipitation = [result]
+...
+\endcode
+
+\section section_weather_shortoverview_fraasit Tarvittavat fraasit
+
+Tarvittavat fraasit ovat
+
+ - "enimm‰kseen"
+ - "selke‰‰"
+ - "pilvist‰"
+ - "puolipilvist‰"
+ - "vaihtelevaa pilvisyytt‰"
+ - "poutaa"
+ - "N-na", N=1-7
+ - "paikoin"
+ - "sadetta"
+ - "ajoittain sateista"
+ - "s‰‰ on ep‰vakaista"
+ - "tai"
+ - "r‰nt‰sadetta"
+ - "lumisadetta"
+ - "vesi-"
+ - "lumi-"
+
+*/

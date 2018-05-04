@@ -1,0 +1,30 @@
+/*!
+\page page_header_until Header tyyppi "until"
+
+\section sec_header_until Header tyyppi "until"
+
+Tuottaa headerin tyyppiä "Odotettavissa tiistai-iltaan asti".
+Loppukellonajan tulee olla 06 tai 18, jolloin tarkenne on vastaavasti
+aamu tai ilta. Tätä käytetään yleensä vastaavan periodityypin "until"
+kanssa.
+
+Mahdolliset headerit ovat
+
+  -# "Odotettavissa maanantaiaamuun asti" + variaatiot
+
+Ruotsiksi
+
+  -# "Utsikter till måndag morgon" + variaatiot
+
+Englanniksi
+
+  -# "Expected weather until Monday morning" + variaatiot
+
+Käytetyt fraasit ovat
+
+  - "odotettavissa"
+  - "asti"
+  - "N-aamuun", missä N=1-7
+  - "N-iltaan", missä N=1-7
+
+*/

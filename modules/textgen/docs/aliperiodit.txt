@@ -1,0 +1,42 @@
+/*!
+\page page_aliperiodit Aliperiodien luonti
+
+\section sec_subperiods Aliperiodit
+
+Kullekin kappaleelle voi erikseen m‰‰ritell‰, halutaanko siihen
+liittyv‰ periodi jakaa pienempiin osiin. Esimerkiksi jos
+konfiguraatiotiedostossa on osio
+\code
+textgen::sections::part1
+\endcode
+voidaan osa jakaa p‰iviksi n‰in
+\code
+textgen::part1
+{
+	subperiods = true
+	subperiod::day
+	{
+		starthour = 6
+		endhour = 6
+		maxstarthour = 24
+		minendhour = 18
+	}
+}
+\endcode
+T‰llˆin kuhunkin p‰iv‰‰n liittyv‰t tarinat luetellaan muuttujissa
+\code
+textgen::part1::day1::content
+textgen::part1::day2::content
+textgen::part1::day3::content
+...
+\endcode
+tai jos relevantin p‰iv‰n muuttujaa ei ole asetettu, k‰ytet‰‰n muuttujaa
+\code
+textgen::part1::content
+\endcode
+
+Aliperiodeille soveltuvat l‰hinn‰ tarinat muotoa parameter_day. Muutkin
+tarinat saattavat toimia, mutta niit‰ ei yleens‰ ole vartavasten suunniteltu
+alle 24 tunnin jaksoille.
+
+*/

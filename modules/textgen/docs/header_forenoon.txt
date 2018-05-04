@@ -1,0 +1,33 @@
+/*!
+\page page_header_forenoon Header tyyppi "forenoon"
+
+\section sec_header_forenoon Header tyyppi "forenoon"
+
+Mahdolliset headerit ovat
+
+  -# "Odotettavissa aamupäivällä"
+  -# "Odotettavissa maanantaina aamupäivällä" + variaatiot
+
+Ruotsiksi
+
+  -# "Utsikter på förmiddagen"
+  -# "Utsikter på måndag förmiddagen" + variaatiot
+
+Englanniksi
+
+  -# "Expected weather in the forenoon"
+  -# "Expected weather on Monday forenoon" + variaatiot
+
+Oletusarvoisesti viikonpäivää ei mainita. Viikonpäivän
+saa päälle asetuksella
+\code
+header::weekdays = true
+\endcode
+
+Käytetyt fraasit ovat
+
+  - "odotettavissa"
+  - "aamupäivällä"
+  - "N-aamupäivällä", missä N=1-7
+
+*/

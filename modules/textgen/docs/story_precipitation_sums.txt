@@ -1,0 +1,52 @@
+/*!
+
+\page page_story_precipitation_sums Tarina "precipitation_sums"
+
+\c precipitation_sums tarina on muotoa
+
+  -# "Ensimmäisen 12 tunnin sademäärä on X-Y millimetriä, seuraavan 12 tunnin X-Y millimetriä."
+  -# "Seuraavan 24 tunnin sademäärä on 0 millimetriä."
+
+Ruotsiksi
+
+  -# "Nederbördssumman för de första 12 timmar är X-Y millimeter, för de följande 12 timmar X-Y millimeter."
+  -# "Nederbördssumman för de följande 24 timmar är 0 millimeter."
+
+Englanniksi
+
+  -# "Total precipitation for the first 12 hours is X-Y millimeters, for the following 12 hours X-Y millimeters."
+  -# "Total precipitation for the next 24 hours is 0 millimeters."
+
+Käytetyt fraasit ovat
+
+  - "ensimmäisen 12 tunnin sademäärä"
+  - "seuraavan 12 tunnin"
+  - "on"
+  - "seuraavan 24 tunnin sademäärä"
+  - "millimetriä"
+
+Sadesummaan eivät periaatteessa kuulu liian pienet tunnin sademäärät.
+Summasta voi filtteröidä pois nämä liian pienet sateet muuttujan
+\code
+textgen::[kappale]::story::precipitation_sums::minrain = [0-X]
+\endcode
+avulla
+
+Sadesummasta kerrotaan keskiarvona, jos minimin ja maksimin
+erotus on alle
+\code
+textgen::[kappale]::story::precipitation_sums::mininterval = [0-X] (=1)
+\endcode
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Sum(Precipitation)):
+textgen::[kappale]::story::precipitation_sums::fake::period1::mean = [result]
+textgen::[kappale]::story::precipitation_sums::fake::period1::minimum = [result]
+textgen::[kappale]::story::precipitation_sums::fake::period1::maximum = [result]
+textgen::[kappale]::story::precipitation_sums::fake::period2::mean = [result]
+textgen::[kappale]::story::precipitation_sums::fake::period2::minimum = [result]
+textgen::[kappale]::story::precipitation_sums::fake::period2::maximum = [result]
+\endcode
+
+*/

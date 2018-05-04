@@ -1,0 +1,43 @@
+/*!
+
+\page page_story_pop_max Tarina "pop_max"
+
+Tarina \c pop_max on muotoa
+
+ -# "Sateen todennäköisyys on x%"
+
+Ruotsiksi
+
+ -# "Sannolikheten för nederbörd är x%"
+
+Englanniksi
+
+ -# "Probability of precipitation is x%"
+
+Sateen todennäköisyys lasketaan ottamalla ajallisten maksimien
+alueellinen keskiarvo.
+
+Sateen todennäköisyys pyöristetään tarkkuuteen
+\code
+textgen::[kappale]::story::pop_max::precision = [0-100]
+\endcode
+Sateen todennäköisyyden täytyy vähintään
+\code
+textgen::[kappale]::story::pop_max::minimum = [0-100] (default = 10)
+\endcode
+ennen kuin todennäköisyydestä kerrotaan, ja enintään
+\code
+textgen::[kappale]::story::pop_max::maximum = [0-100] (default = 100)
+\endcode
+
+Tarvittavat fraasit ovat
+
+ - "sateen todennäköisyys"
+ - "on"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+textgen::[kappale]::story::pop_max::fake::max = [result]
+\endcode
+
+*/

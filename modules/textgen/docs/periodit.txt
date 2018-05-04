@@ -1,0 +1,84 @@
+/*!
+\page page_periodit Periodien luonti
+
+\section sec_periodfactory WeatherPeriodFactory namespace
+
+TextGen::WeatherPeriodFactory namespace sisältää create funktion,
+jolla voidaan luoda erikseen nimettyjä sääjaksoja. Funktiolle
+annetaan ennusteen tekoaika paikallista aikaa ja sääjaksoa
+kuvaavan muuttujan nimi, paluuarvona on TextGen::WeatherPeriod objekti.
+
+Esimerkki:
+\code
+NFmiTime t(2003,5,10);
+WeatherPeriod period = WeatherPeriodFactory::create(t,"textgen::period");
+\endcode
+Tällöin factory olettaa, että esimerkiksi muuttuja \c textgen::period::type
+on asetettu. Muut vaaditut muuttujat riippuvat periodin tyypistä, ja
+on dokumentoitu kunkin periodityypin dokumentaatiossa.
+
+\subsection sec_period_now Periodityyppi "now"
+
+Periodin alku- ja loppuaika asetetaan annettuun aikaan.  Periodi on
+hyödyllinen lähinnä otsikkojen generoinnissa, esim. otsikon
+"report_area" kanssa.
+
+\subsection sec_period_until Periodityyppi "until"
+
+Periodin muodostamiseen vaaditaan muuttujat
+\code
+variable::type = until
+variable::days = <integer>
+variable::endhour = <integer>
+variable::switchhour = <integer>
+\endcode
+Näistä asetuksista saadaan periodin alkuaika yksinkertaisesti
+pyöristämällä annettu aika ylöspäin tasatuntiin. Loppuaika saadaan
+lisäämällä ensin alkuaikaan \c variable::days. Jos tuntiosa on
+vähintään \c variable::switchhour, lisätään vielä yksi päivä.
+Tämän jälkeen tunti asetetaan arvoon \c variable::endhour.
+
+Esimerkiksi jos
+\code
+variable::days = 1
+variable::endhour = 18
+variable::switchhour = 12
+\endcode
+saadaan
+- Maanantaina klo 11:00 periodi Maanantai 11:00 - Tiistai 18:00
+- Maanantaina klo 11:01 periodi Maanantai 12:00 - Keskiviikko 18:00
+
+
+\subsection sec_period_from_until Periodityyppi "from_until"
+
+Periodin muodostamiseen vaaditaan muuttujat
+\code
+variable::type = from_until
+variable::startday = <integer>
+variable::starthour = <integer>
+variable::switchhour = <integer>
+variable::days = <integer>
+variable::endhour = <integer>
+\endcode
+Näistä asetuksista saadaan periodin alkuaika pyöristämällä kello
+ensin ylöspäin tasatuntiin. Sitten lisätään \c variable::startday päiviin.
+Tämän jälkeen lisätään vielä yksi päivä, jos tunti on vähintään
+\c variable::switchhour. Lopuksi tunnit asetetaan arvoon
+\c variable::starthour.
+
+Loppuaika saadaan lisäämällä alkuaikaan \c variable::days päivää,
+ja asettamalla tunteihin arvo \c variable::endhour.
+
+Esimerkiksi jos
+\code
+variable::startday = 1
+variable::starthour = 18
+variable::switchhour = 12
+variable::days = 2
+variable::endhour = 6
+\endcode
+saadaan
+- Maanantaina klo 11:00 periodi Tiistai 18:00 - Torstai 06:00
+- Maanantaina klo 11:01 periodi Keskiviikko 18:00 - Perjantai 06:00
+
+*/

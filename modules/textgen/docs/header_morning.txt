@@ -1,0 +1,33 @@
+/*!
+\page page_header_morning Header tyyppi "morning"
+
+\section sec_header_morning Header tyyppi "morning"
+
+Mahdolliset headerit ovat
+
+  -# "Odotettavissa aamulla"
+  -# "Odotettavissa maanantaina aamulla" + variaatiot
+
+Ruotsiksi
+
+  -# "Utsikter på morgonen"
+  -# "Utsikter på måndag morgonen" + variaatiot
+
+Englanniksi
+
+  -# "Expected weather in the morning"
+  -# "Expected weather on Monday morning" + variaatiot
+
+Oletusarvoisesti viikonpäivää ei mainita. Viikonpäivän
+saa päälle asetuksella
+\code
+header::weekdays = true
+\endcode
+
+Käytetyt fraasit ovat
+
+  - "odotettavissa"
+  - "aamulla"
+  - "N-aamulla", missä N=1-7
+
+*/

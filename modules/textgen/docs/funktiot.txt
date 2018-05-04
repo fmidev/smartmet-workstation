@@ -1,0 +1,48 @@
+/*!
+\page page_funktiot Analyysifunktiot
+
+<ol>
+<li>\ref sec_funktio_intro</li>
+<li>\ref sec_mean</li>
+<li>\ref sec_maximum</li>
+<li>\ref sec_minimum</li>
+<li>\ref sec_sum</li>
+<li>\ref sec_count</li>
+<li>\ref sec_percentage</li>
+<li>\ref sec_trend</li>
+</ol>
+
+\section sec_funktio_intro Johdanto
+
+Tiedostossa WeatherFunction.h on määritelty enumeraatio
+TextGen::WeatherFunction, jossa on lueteltu sääanalysaattorin
+tunnistamat funktiot.
+
+\section sec_mean "Mean"
+
+\section sec_maximum "Maximum"
+
+\section sec_minimum "Minimum"
+
+\section sec_sum "Sum"
+
+\section sec_count "Count"
+
+\section sec_percentage "Percentage"
+
+\section sec_trend "Trend"
+
+Trend-funktiota on tarkoitus käyttää vain ajan suhteen, analysaattori ei
+tarkista tätä suoritusaikana.
+
+Funktion arvo on aikasarjan viimeisen ja ensimmäisen arvon erotus.
+Funktion laatu, joka on tässä erityisen olennainen osa tulosta,
+on se prosenttiosuus aikasarjasta, jossa arvo muuttuu samaan
+suuntaan kuin lopullinen erotus on. Tällöin esimerkiksi monotonisesti
+nousevan tai laskevan aikasarjan laatu on aina 1.
+
+Jos aikasarja nousee tai laskee suurimman osan ajasta, voidaan
+laadun olettaa tällöin olevan selvästi yli 0.5, jolloin voidaan
+puhua aikasarjan trendistä.
+
+*/

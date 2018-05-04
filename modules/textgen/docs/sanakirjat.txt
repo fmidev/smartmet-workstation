@@ -1,0 +1,48 @@
+/*!
+\page page_sanakirjat Sanakirjat
+
+\section sec_interface API
+
+Sanakirja objektit periytyv‰t luokasta Dictionary, joka m‰‰rittelee
+sanakirjaobjektien API:n.
+\code
+void init(const std::string & theLanguage);
+bool contains(const std::string & theKey) const;
+const std::string & find(const std::string & theKey) const;
+void insert(const std::string & theKey, const std::string & thePhrase);
+
+size_type size(void) const;
+bool empty(void) const;
+\endcode
+P‰‰asiallisesti sanakirjaobjekteja k‰ytet‰‰n seuraavalla tavalla:
+\code
+MySQLDictionary dict;
+dict.init("fi");
+cout << dict.find("s‰‰");
+\endcode
+Factory-tyyppisess‰ k‰ytˆss‰ koodi on vastaavasti
+\code
+std::auto_ptr<Dictionary> dict = DictionaryFactory::create("mysql");
+dict->init("fi");
+cout << dict->find("s‰‰");
+\endcode
+
+\section sec_globaali Globaali sanakirja
+
+Sanakirjaa k‰ytet‰‰n l‰hes kaikkialla tekstigeneraattorissa.
+Sanakirjaobjektien v‰litt‰minen parametreina ymp‰ri ohjelmaa
+ei ole j‰rkev‰‰. Parempi ratkaisu on k‰ytt‰‰ singleton-luokkaa
+sanakirjan esitt‰miseen. Tekstigeneraattorissa singletonina
+toimii TheDictionary luokka.
+
+TheDictionary luokalla on muuten sama k‰yttˆliittym‰ kuin
+Dictionary luokilla, mutta lis‰ksi singleton alustetaan
+dictionary metodilla k‰ytt‰m‰‰n halutun tyyppist‰ sanakirjaa.
+Esimerkiksi
+\code
+TheDictionary::instance().dictionary(DictionaryFactory::create("mysql"));
+TheDictionary::instance().init("fi");
+cout << TheDictionary::instance().find("s‰‰");
+\endcode
+
+*/

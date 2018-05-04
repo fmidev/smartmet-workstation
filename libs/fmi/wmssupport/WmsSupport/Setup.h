@@ -1,0 +1,63 @@
+#pragma once
+
+#include "NFmiProducer.h"
+
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <chrono>
+
+namespace Wms
+{
+    class ServerSetup
+    {
+    public:
+        std::string scheme;
+        std::string host;
+        std::string path;
+        std::string map;
+        std::string stereo00;
+        std::string stereo10;
+        std::string stereo20;
+        std::string token;
+        std::vector<std::string> layerGroup;
+    };
+
+    class UserUrlServerSetup
+    {
+    public:
+        std::string version;
+        bool transparency;
+        std::vector<ServerSetup> parsedServers;
+    };
+
+    class DynamicServerSetup
+    {
+    public:
+        NFmiProducer producer;
+        std::string version;
+        bool transparency;
+        std::string delimiter;
+        ServerSetup generic;
+    };
+
+    class Setup
+    {
+    public:
+        bool isConfigured = false;
+
+        size_t numberOfCaches;
+        size_t numberOfLayersPerCache;
+        std::string proxyUrl;
+
+        int backgroundBackwardAmount;
+        int backgroundForwardAmount;
+
+        std::chrono::seconds intervalToPollGetCapabilities;
+
+        UserUrlServerSetup background;
+        UserUrlServerSetup overlay;
+        std::unordered_map<int, DynamicServerSetup> dynamics;
+    };
+}
+

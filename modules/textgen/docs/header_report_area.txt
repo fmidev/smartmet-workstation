@@ -1,0 +1,31 @@
+/*!
+\page page_header_report_area Header tyyppi "report_area"
+
+\section sec_header_report_area Header tyyppi "report_area"
+
+Tuottaa headerin tyyppi‰ "S‰‰ennuste Uudellemaalle tiistaina kello 18".
+Kellonaika otetaan jakson alkuajasta. Erityisen hyvin tyyppi sopinee
+yhteen periodityypin "now" kanssa.
+
+Mahdolliset headerit ovat
+
+  -# "S‰‰ennuste alueelle N-na kello K".
+
+Ruotsiksi
+
+  -# "V‰derraport fˆr omrodet N-na klockan K."
+
+Englanniksi
+
+  -# "Weather report for area N-na K o'clock."
+
+K‰ytetyt fraasit ovat
+
+  -# "s‰‰ennuste"
+  -# "alue:lle", alue = alueen nimi
+  -# "N-na", N=1..7
+  -# "kello"
+  -# "o'clock"
+
+
+*/

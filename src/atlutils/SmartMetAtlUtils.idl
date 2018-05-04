@@ -1,0 +1,18 @@
+// SmartMetAtlUtils.idl : IDL source for SmartMetAtlUtils
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (SmartMetAtlUtils.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(A90D7EC8-1556-4CD6-8D5D-A4DD130883CB),
+	version(1.0),
+	helpstring("SmartMetAtlUtils 1.0 Type Library")
+]
+library SmartMetAtlUtilsLib
+{
+	importlib("stdole2.tlb");
+};

@@ -1,0 +1,1140 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\SmartMet.ico"
+
+IDR_SmartMetTYPE        ICON                    "res\\SmartMetDoc.ico"
+
+IDI_FILE_VIEW           ICON                    "res\\file_view.ico"
+
+IDI_FILE_VIEW_HC        ICON                    "res\\file_view_hc.ico"
+
+IDI_CLASS_VIEW          ICON                    "res\\class_view.ico"
+
+IDI_CLASS_VIEW_HC       ICON                    "res\\class_view_hc.ico"
+
+IDI_OUTPUT_WND          ICON                    "res\\output_wnd.ico"
+
+IDI_OUTPUT_WND_HC       ICON                    "res\\output_wnd_hc.ico"
+
+IDI_PROPERTIES_WND      ICON                    "res\\properties_wnd.ico"
+
+IDI_PROPERTIES_WND_HC   ICON                    "res\\properties_wnd_hc.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
+IDR_MAINFRAME_256       BITMAP                  "res\\Toolbar256.bmp"
+
+IDR_SORT                BITMAP                  "res\\sort.bmp"
+
+IDB_SORT_24             BITMAP                  "res\\sort_hc.bmp"
+
+IDB_FILE_VIEW           BITMAP                  "res\\fileview.bmp"
+
+IDB_FILE_VIEW_24        BITMAP                  "res\\fileview_hc.bmp"
+
+IDB_CLASS_VIEW          BITMAP                  "res\\classview.bmp"
+
+IDB_CLASS_VIEW_24       BITMAP                  "res\\classview_hc.bmp"
+
+IDR_EXPLORER            BITMAP                  "res\\explorer.bmp"
+
+IDB_EXPLORER_24         BITMAP                  "res\\explorer_hc.bmp"
+
+IDR_MENU_IMAGES         BITMAP                  "res\\menuimages.bmp"
+
+IDB_MENU_IMAGES_24      BITMAP                  "res\\menuimages_hc.bmp"
+
+IDR_PROPERTIES          BITMAP                  "res\\properties.bmp"
+
+IDB_PROPERTIES_HC       BITMAP                  "res\\properties_hc.bmp"
+
+IDB_INFO                BITMAP                  "res\\info.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR 16, 16
+BEGIN
+    BUTTON      ID_BUTTON_LOAD_DATA
+    BUTTON      ID_BUTTON_STORE_DATA
+    BUTTON      ID_BUTTON_DATA_TO_DATABASE
+    BUTTON      ID_BUTTON_HELP_EDITOR_MODE
+    BUTTON      ID_BUTTON_DATA_QUALITY_CHECKER
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    BUTTON      ID_BUTTON_ZOOM_DIALOG
+    BUTTON      ID_BUTTON_DATA_AREA
+    BUTTON      ID_BUTTON_SELECT_FINLAND_MAP
+    BUTTON      ID_BUTTON_SELECT_SCANDINAVIA_MAP
+    BUTTON      ID_BUTTON_SELECT_EUROPE_MAP
+    BUTTON      ID_BUTTON_GLOBE
+    BUTTON      ID_MENUITEM_VIEW_GRID_SELECTION_DLG
+    SEPARATOR
+    BUTTON      ID_EXTRA_MAP_VIEW_1
+    BUTTON      ID_EXTRA_MAP_VIEW_2
+    BUTTON      ID_BUTTON_TIME_EDIT_VALUES_DLG
+    BUTTON      ID_BUTTON_SELECTION_TOOL_DLG
+    BUTTON      ID_BUTTON_FILTER_DIALOG
+    BUTTON      ID_BUTTON_BRUSH_TOOL_DLG
+    BUTTON      ID_BUTTON_OPEN_SMART_TOOL_DLG
+    BUTTON      ID_BUTTON_EDITOR_CONTROL_POINT_MODE
+    BUTTON      ID_BUTTON_VALIDATE_DATA
+    BUTTON      ID_BUTTON_TEMP_DLG
+    BUTTON      ID_BUTTON_SHOW_CROSS_SECTION
+    BUTTON      ID_ACCELERATOR_STORE_VIEW_MACRO
+    BUTTON      ID_BUTTON_OBSERVATION_COMPARISON_MODE
+    BUTTON      ID_BUTTON_SYNOP_DATA_GRID_VIEW
+    BUTTON      ID_BUTTON_TRAJECTORY
+    SEPARATOR
+    BUTTON      ID_BUTTON_ANIMATION
+    SEPARATOR
+    BUTTON      ID_BUTTON_REFRESH
+    BUTTON      ID_BUTTON_MAKE_EDITED_DATA_COPY
+    SEPARATOR
+    BUTTON      ID_EDIT_UNDO
+    BUTTON      ID_EDIT_REDO
+END
+
+IDR_MAINFRAME_256 TOOLBAR 16, 16
+BEGIN
+    BUTTON      ID_BUTTON_LOAD_DATA
+    BUTTON      ID_BUTTON_STORE_DATA
+    BUTTON      ID_BUTTON_DATA_TO_DATABASE
+    BUTTON      ID_BUTTON_HELP_EDITOR_MODE
+    BUTTON      ID_BUTTON_DATA_QUALITY_CHECKER
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    BUTTON      ID_BUTTON_ZOOM_DIALOG
+    BUTTON      ID_BUTTON_DATA_AREA
+    BUTTON      ID_BUTTON_SELECT_FINLAND_MAP
+    BUTTON      ID_BUTTON_SELECT_SCANDINAVIA_MAP
+    BUTTON      ID_BUTTON_SELECT_EUROPE_MAP
+    BUTTON      ID_BUTTON_GLOBE
+    BUTTON      ID_MENUITEM_VIEW_GRID_SELECTION_DLG
+    SEPARATOR
+    BUTTON      ID_EXTRA_MAP_VIEW_1
+    BUTTON      ID_EXTRA_MAP_VIEW_2
+    BUTTON      ID_BUTTON_TIME_EDIT_VALUES_DLG
+    BUTTON      ID_BUTTON_SELECTION_TOOL_DLG
+    BUTTON      ID_BUTTON_FILTER_DIALOG
+    BUTTON      ID_BUTTON_BRUSH_TOOL_DLG
+    BUTTON      ID_BUTTON_OPEN_SMART_TOOL_DLG
+    BUTTON      ID_BUTTON_EDITOR_CONTROL_POINT_MODE
+    BUTTON      ID_BUTTON_VALIDATE_DATA
+    BUTTON      ID_BUTTON_TEMP_DLG
+    BUTTON      ID_BUTTON_SHOW_CROSS_SECTION
+    BUTTON      ID_ACCELERATOR_STORE_VIEW_MACRO
+    BUTTON      ID_BUTTON_OBSERVATION_COMPARISON_MODE
+    BUTTON      ID_BUTTON_SYNOP_DATA_GRID_VIEW
+    BUTTON      ID_BUTTON_TRAJECTORY
+    SEPARATOR
+    BUTTON      ID_BUTTON_ANIMATION
+    SEPARATOR
+    BUTTON      ID_BUTTON_REFRESH
+    BUTTON      ID_BUTTON_MAKE_EDITED_DATA_COPY
+    SEPARATOR
+    BUTTON      ID_EDIT_UNDO
+    BUTTON      ID_EDIT_REDO
+END
+
+IDR_SORT TOOLBAR 16, 16
+BEGIN
+    BUTTON      ID_SORT_MENU
+    BUTTON      ID_NEW_FOLDER
+END
+
+IDR_EXPLORER TOOLBAR 16, 16
+BEGIN
+    BUTTON      ID_PROPERTIES
+END
+
+IDR_MENU_IMAGES TOOLBAR 16, 16
+BEGIN
+    BUTTON      ID_WINDOW_MANAGER
+    SEPARATOR
+    BUTTON      ID_WINDOW_CASCADE
+    BUTTON      ID_WINDOW_TILE_HORZ
+    BUTTON      ID_TOOLS_MACRO
+    BUTTON      ID_SORTING_SORTALPHABETIC
+    BUTTON      ID_SORTING_SORTBYTYPE
+    BUTTON      ID_SORTING_SORTBYACCESS
+    BUTTON      ID_SORTING_GROUPBYTYPE
+END
+
+IDR_PROPERTIES TOOLBAR 16, 16
+BEGIN
+    BUTTON      ID_EXPAND_ALL
+    BUTTON      ID_SORTPROPERTIES
+    BUTTON      ID_PROPERTIES1
+    BUTTON      ID_PROPERTIES2
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Load",                        ID_BUTTON_LOAD_DATA
+        MENUITEM "Save Data",                   ID_BUTTON_STORE_DATA
+        MENUITEM "To Database",                 ID_BUTTON_DATA_TO_DATABASE
+        MENUITEM SEPARATOR
+        MENUITEM "Load from file",              ID_DATA_LOAD_FROM_FILE
+        MENUITEM "Store Data to file",          ID_DATA_STORE_TO_FILE
+        MENUITEM "Save data file as",           ID_MENUITEM_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Store map view image",        ID_DATA_STORE_VIEW_TO_PICTURE_FILE
+        MENUITEM "Store map view 2 image",      ID_DATA_STORE_MAP_VIEW2_TO_PICTURE_FILE
+        MENUITEM "Store map view 3 image",      ID_DATA_STORE_MAP_VIEW3_TO_PICTURE_FILE
+        MENUITEM "Store time serial view image", ID_DATA_STORE_TIMESERIALVIEW_TO_PICTURE_FILE
+        MENUITEM "Store temp view image",       ID_DATA_STORE_TEMPVIEW_TO_PICTURE_FILE
+        MENUITEM "Store cross section view image", ID_DATA_STORE_CROSSSECTIONVIEW_TO_PICTURE_FILE
+        MENUITEM "Store trajectory view image", ID_DATA_STORE_TRAJEKTORYVIEW_TO_PICTURE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Redo\tCtrl+Shift+Z",         ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Select all\tCtrl+A",          ID_SELECT_ALL
+        MENUITEM "Deselect all\tCtrl+Shift+A",  ID_DESELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "Make comparison data",        ID_BUTTON_MAKE_EDITED_DATA_COPY
+        MENUITEM SEPARATOR
+        MENUITEM "Settings...",                 ID_MENUITEM_OPTIOT
+        MENUITEM "Projection line settings",    ID_MENUITEM_PROJECTION_LINE_SETUP
+        MENUITEM "View grid setting...",        ID_MENUITEM_VIEW_GRID_SELECTION_DLG2
+        MENUITEM "CP gridding options",         ID_MENUITEM_GRIDDING_OPTIONS
+        MENUITEM "Macro path settings...",      ID_MUOKKAA_MAKROPOLKUASETUKSET
+        MENUITEM "Help edit mode settings...",  ID_MENUITEM_HELP_EDITOR_SETTINGS
+        MENUITEM "Language...",                 ID_MENUITEM_MUOKKAA_KIELI
+        MENUITEM "Do macro directory syncronization\tF6", ID_ACCELERATOR_DO_MACRO_DIRECTORIES_SYNCRONIZATION
+        POPUP "Reload Data"
+        BEGIN
+            MENUITEM "Reload All Dynamic Data\tCTRL + SHIFT + F5", ID_ACCELERATOR_RELOAD_ALL_DYNAMIC_DATA
+            MENUITEM "Reload Failed Satellite Images", ID_RELOADDATA_RELOADFAILEDSATELLITEIMAGES
+        END
+    END
+    POPUP "&View"
+    BEGIN
+        POPUP "&Toolbars and Docking Windows"
+        BEGIN
+            MENUITEM "<placeholder>",               ID_VIEW_TOOLBAR
+        END
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM "&Caption Bar",                ID_VIEW_CAPTION_BAR
+        MENUITEM "Demo dock views",             ID_VIEW_DEMODOCKVIEWS
+        POPUP "&Application Look"
+        BEGIN
+            MENUITEM "Windows &2000",               ID_VIEW_APPLOOK_WIN_2000
+            MENUITEM "Office &XP",                  ID_VIEW_APPLOOK_OFF_XP
+            MENUITEM "&Windows XP",                 ID_VIEW_APPLOOK_WIN_XP
+            MENUITEM "Office 200&3",                ID_VIEW_APPLOOK_OFF_2003
+            MENUITEM "Visual Studio.NET 200&5",     ID_VIEW_APPLOOK_VS_2005
+            POPUP "Office 200&7"
+            BEGIN
+                MENUITEM "&Blue Style",                 ID_VIEW_APPLOOK_OFF_2007_BLUE
+                MENUITEM "B&lack Style",                ID_VIEW_APPLOOK_OFF_2007_BLACK
+                MENUITEM "&Silver Style",               ID_VIEW_APPLOOK_OFF_2007_SILVER
+                MENUITEM "&Aqua Style",                 ID_VIEW_APPLOOK_OFF_2007_AQUA
+            END
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "View log",                    ID_VIEW_EDITOR_LOG
+        MENUITEM SEPARATOR
+        MENUITEM "Map view 2",                  ID_EXTRA_MAP_VIEW_1
+        MENUITEM "Map view 3",                  ID_EXTRA_MAP_VIEW_2
+        MENUITEM "Time serial view",            ID_BUTTON_TIME_EDIT_VALUES_DLG
+        MENUITEM "Grid point selection tool",   ID_BUTTON_SELECTION_TOOL_DLG
+        MENUITEM "Data filter tool",            ID_BUTTON_FILTER_DIALOG
+        MENUITEM "Zooming tool",                ID_BUTTON_ZOOM_DIALOG
+        MENUITEM "Param selection tool\tF8",    ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
+        MENUITEM "SmartTool dialog",            ID_BUTTON_OPEN_SMART_TOOL_DLG
+        MENUITEM "View macro tool",             ID_ACCELERATOR_STORE_VIEW_MACRO
+        MENUITEM "Sounding view",               ID_BUTTON_TEMP_DLG
+        MENUITEM "Animation tool",              ID_BUTTON_ANIMATION
+        MENUITEM "Cross section view",          ID_BUTTON_SHOW_CROSS_SECTION
+        MENUITEM "Synop plot settings...\tF3",  ID_BUTTON_SHOW_SYNOP_PLOT_SETTINGS
+        MENUITEM "Station data grid view",      ID_BUTTON_SYNOP_DATA_GRID_VIEW
+        MENUITEM "Trajectory tool",             ID_BUTTON_TRAJECTORY
+        MENUITEM "Warning center messages\tF9", ID_BUTTON_WARNING_CENTER_DLG
+        MENUITEM "Sea icing messages",          ID_BUTTON_SEA_ICING_WARNINGS_DLG
+        MENUITEM "Wind table tool",             ID_BUTTON_WIND_TABLE_DLG
+        MENUITEM "Data quality checker",        ID_BUTTON_DATA_QUALITY_CHECKER
+        MENUITEM "Ignore stations\tCtrl+F3",    ID_ACCELERATOR_IGNORE_STATIONS_DLG
+        MENUITEM "Case study dialog\tCTRL+F8",  ID_VIEW_CASE_STUDY_DIALOG
+        MENUITEM "Beta Production\tSHIFT+F8",   ID_VIEW_BETAPRODUCTION
+        MENUITEM "Log Viewer\tCtrl+L",          ID_ACCELERATOR_LOG_VIEWER
+        MENUITEM SEPARATOR
+        POPUP "Move views visible"
+        BEGIN
+            MENUITEM "Set map view position",       ID_VIEW_SET_MAIN_FRAME_PLACE_TO_DEFAULT
+            MENUITEM "Set map view 2 position",     ID_VIEW_SET_MAP_VIEW2_PLACE_TO_DEFAULT
+            MENUITEM "Set map view 3 position",     ID_VIEW_SET_MAP_VIEW3_PLACE_TO_DEFAULT
+            MENUITEM "Set time serial view position", ID_VIEW_SET_TIME_EDITOR_PLACE_TO_DEFAULT
+            MENUITEM "Sounding view position",      ID_VIEW_SET_TEMP_VIEW_PLACE_TO_DEFAULT
+            MENUITEM "Cross section view position", ID_VIEW_SET_CROSSSECTION_VIEW_PLACE_TO_DEFAULT
+            MENUITEM "Param selection view position", ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT
+            MENUITEM "Zoom view position",          ID_VIEW_SET_ZOOM_VIEW_PLACE_TO_DEFAULT
+            MENUITEM "SmartTool view position",     ID_VIEW_SET_SMARTTOOL_VIEW_PLACE_TO_DEFAULT
+            MENUITEM "Station data grid view position", ID_VIEW_SET_SYNOP_TEXT_VIEW_PLACE_TO_DEFAULT
+            MENUITEM "Trajectory view position",    ID_VIEW_SET_TRAJECTORY_VIEW_PLACE_TO_DEFAULT
+            MENUITEM "View macro position",         ID_VIEW_SET_VIEW_MACRO_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Warning center view position", ID_VIEW_SET_WARNING_CENTER_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Sea icing view position",     ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Wind table view position",    ID_VIEW_SET_WIND_TABLE_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Data quality checker position", ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT
+        END
+        MENUITEM SEPARATOR
+        POPUP "Notification settings"
+        BEGIN
+            MENUITEM "Enable data notifications",   ID_ENABLENOTIFICATIONS
+            MENUITEM "Disable data notifications",  ID_DISABLENOTIFICATIONS
+            MENUITEM "Enable notification sound",   ID_NOTIFICATIONSOUNDSON
+            MENUITEM "Disable notification sound",  ID_NOTIFICATIONSOUNDSOFF
+            MENUITEM "Show system tray icon",       ID_SHOW_SYSTRAY_SYMBOL
+            MENUITEM "Hide system tray icon",       ID_HIDE_SYSTRAY_SYMBOL
+        END
+        MENUITEM SEPARATOR
+        POPUP "Tooltip status"
+        BEGIN
+            MENUITEM "Map views (all)",             ID_TOOLTIPSTATUS_MAPVIEWS
+            MENUITEM "Time serial view",            ID_TOOLTIPSTATUS_TIMESERIALVIEW
+            MENUITEM "Sounding view",               ID_TOOLTIPSTATUS_SOUNDINGVIEW
+            MENUITEM "Cross section view",          ID_TOOLTIPSTATUS_CROSSSECTIONVIEW
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Select area 1",               ID_BUTTON_SELECT_FINLAND_MAP
+        MENUITEM "Select area 2",               ID_BUTTON_SELECT_SCANDINAVIA_MAP
+        MENUITEM "Select area 3",               ID_BUTTON_SELECT_EUROPE_MAP
+        MENUITEM "Select area 4",               ID_BUTTON_GLOBE
+        MENUITEM "Select data's area",          ID_BUTTON_DATA_AREA
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh all views F5",        ID_BUTTON_REFRESH
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_FINDER
+        MENUITEM "&About SmartMet",             ID_APP_ABOUT
+        MENUITEM "Shortcuts",                   ID_HELP_SHORT_CUTS
+        MENUITEM "Error test (crashes SmartMet!)", ID_OHJE_VIRHETESTI
+    END
+END
+
+IDR_POPUP_EDIT MENU
+BEGIN
+    POPUP "Edit"
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+    END
+END
+
+IDR_POPUP_SORT MENU
+BEGIN
+    POPUP "Sorting"
+    BEGIN
+        MENUITEM "&Sort Alphabeticaly",         ID_SORTING_SORTALPHABETIC
+        MENUITEM "Sort by &Type",               ID_SORTING_SORTBYTYPE
+        MENUITEM "Sort by Acc&ess",             ID_SORTING_SORTBYACCESS
+        MENUITEM "Group by t&ype",              ID_SORTING_GROUPBYTYPE
+    END
+END
+
+IDR_POPUP_EXPLORER MENU
+BEGIN
+    POPUP "Explorer"
+    BEGIN
+        MENUITEM "&Open",                       ID_OPEN
+        MENUITEM "Open &With....",              ID_OPEN_WITH
+        MENUITEM SEPARATOR
+        MENUITEM "&Compile",                    ID_DUMMY_COMPILE
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Remove",                     ID_EDIT_CLEAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              ID_PROPERTIES
+    END
+END
+
+IDR_OUTPUT_POPUP MENU
+BEGIN
+    POPUP "Popup"
+    BEGIN
+        MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Clear",                      ID_EDIT_CLEAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Hide",                       ID_VIEW_OUTPUTWND
+    END
+END
+
+IDR_HELP_MENU MENU
+BEGIN
+    MENUITEM "&Help Topics",                ID_HELP_FINDER
+    MENUITEM SEPARATOR
+    MENUITEM "&About SmartMet...",          ID_APP_ABOUT
+END
+
+IDR_THEME_MENU MENU
+BEGIN
+    MENUITEM "Office 2007 (&Blue Style)",   ID_VIEW_APPLOOK_OFF_2007_BLUE
+    MENUITEM "Office 2007 (B&lack Style)",  ID_VIEW_APPLOOK_OFF_2007_BLACK
+    MENUITEM "Office 2007 (&Silver Style)", ID_VIEW_APPLOOK_OFF_2007_SILVER
+    MENUITEM "Office 2007 (&Aqua Style)",   ID_VIEW_APPLOOK_OFF_2007_AQUA
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    "0",            ID_ACCELERATOR_MAP_ROW_10, VIRTKEY, NOINVERT
+    "0",            ID_ACCELERATOR_BORROW_PARAMS_10, VIRTKEY, CONTROL, NOINVERT
+    "1",            ID_ACCELERATOR_MAP_ROW_1, VIRTKEY, NOINVERT
+    "1",            ID_ACCELERATOR_BORROW_PARAMS_1, VIRTKEY, CONTROL, NOINVERT
+    "2",            ID_ACCELERATOR_MAP_ROW_2, VIRTKEY, NOINVERT
+    "2",            ID_ACCELERATOR_BORROW_PARAMS_2, VIRTKEY, CONTROL, NOINVERT
+    "3",            ID_ACCELERATOR_MAP_ROW_3, VIRTKEY, NOINVERT
+    "3",            ID_ACCELERATOR_BORROW_PARAMS_3, VIRTKEY, CONTROL, NOINVERT
+    "4",            ID_ACCELERATOR_MAP_ROW_4, VIRTKEY, NOINVERT
+    "4",            ID_ACCELERATOR_BORROW_PARAMS_4, VIRTKEY, CONTROL, NOINVERT
+    "5",            ID_ACCELERATOR_MAP_ROW_5, VIRTKEY, NOINVERT
+    "5",            ID_ACCELERATOR_BORROW_PARAMS_5, VIRTKEY, CONTROL, NOINVERT
+    "6",            ID_ACCELERATOR_MAP_ROW_6, VIRTKEY, NOINVERT
+    "6",            ID_ACCELERATOR_BORROW_PARAMS_6, VIRTKEY, CONTROL, NOINVERT
+    "7",            ID_ACCELERATOR_MAP_ROW_7, VIRTKEY, NOINVERT
+    "7",            ID_ACCELERATOR_BORROW_PARAMS_7, VIRTKEY, CONTROL, NOINVERT
+    "8",            ID_ACCELERATOR_MAP_ROW_8, VIRTKEY, NOINVERT
+    "8",            ID_ACCELERATOR_BORROW_PARAMS_8, VIRTKEY, CONTROL, NOINVERT
+    "9",            ID_ACCELERATOR_MAP_ROW_9, VIRTKEY, NOINVERT
+    "9",            ID_ACCELERATOR_BORROW_PARAMS_9, VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_ACCELERATOR_TOGGLE_ANIMATION_VIEW, VIRTKEY, NOINVERT
+    "A",            ID_SELECT_ALL,          VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_DESELECT_ALL,        VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "B",            ID_TOGGLE_SHOW_NAMES_ON_MAP, VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_ACCELERATOR_TOGGLE_OVERMAP_FORE_BACK_GROUND, VIRTKEY, SHIFT, NOINVERT
+    "B",            ID_TOGGLE_SHOW_PREVIOUS_NAMES_ON_MAP, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_ACCELERATOR_COPY_ALL_MAP_VIEW_PARAMS, VIRTKEY, SHIFT, NOINVERT
+    "D",            ID_EDIT_SPACE_OUT,      VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_SHOW_GRID_POINTS,    VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_TOGGLE_GRID_POINT_COLOR, VIRTKEY, SHIFT, NOINVERT
+    "E",            ID_TOGGLE_GRID_POINT_SIZE, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "F",            ID_CHANGE_MAP_TYPE,     VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_CHANGE_PREVIOUS_MAP_TYPE, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "G",            ID_ACCELERATOR_RESET_TIME_FILTER_TIMES, VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MAKE_GRID_FILE,      VIRTKEY, SHIFT, NOINVERT
+    "H",            ID_HIDE_PARAM_WINDOW,   VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_ACCELERATOR_STORE_VIEW_MACRO, VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_ACCELERATOR_LOG_VIEWER, VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_ACCELERATOR_AREA_INFO_TO_CLIPBOARD, VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_ACCELERATOR_CALCULATIONPOINT_INFO_TO_CLIPBOARD, VIRTKEY, SHIFT, NOINVERT
+    "M",            ID_ACCELERATOR_DATA_FILEPATHS_TO_CLIPBOARD, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "Q",            ID_TOGGLE_LAND_BORDER_DRAW_COLOR, VIRTKEY, CONTROL, NOINVERT
+    "Q",            ID_TOGGLE_LAND_BORDER_PEN_SIZE, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "R",            ID_SHOW_PROJECTION_LINES, VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_SHOW_TIME_STRING,    VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_ACCELERATOR_PASTE_ALL_MAP_VIEW_PARAMS, VIRTKEY, SHIFT, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_BUTTON_DELETE,       VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, NOINVERT
+    VK_DOWN,        ID_ACCELERATOR_MAP_PAN_DOWN, VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_ACCELERATOR_MAP_ZOOM_OUT, VIRTKEY, SHIFT, NOINVERT
+    VK_DOWN,        ID_ACCELERATOR_MOVE_MANY_MAP_ROWS_DOWN, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
+    VK_F10,         ID_ACCELERATOR_TOGGLE_KEEP_MAP_RATIO, VIRTKEY, NOINVERT
+    VK_F11,         ID_ACCELERATOR_TOGGLE_TOOLTIP, VIRTKEY, NOINVERT
+    VK_F12,         ID_ACCELERATOR_APPLY_BACKUP_VIEW_MACRO, VIRTKEY, NOINVERT
+    VK_F12,         ID_ACCELERATOR_APPLY_CRASH_BACKUP_VIEW_MACRO, VIRTKEY, CONTROL, NOINVERT
+    VK_F12,         ID_ACCELERATOR_APPLY_STARTUP_VIEW_MACRO, VIRTKEY, SHIFT, NOINVERT
+    VK_F2,          ID_BUTTON_OBSERVATION_COMPARISON_MODE, VIRTKEY, NOINVERT
+    VK_F2,          ID_ACCELERATOR_OBS_COMPARISON_CHANGE_SYMBOL_SIZE, VIRTKEY, CONTROL, NOINVERT
+    VK_F2,          ID_ACCELERATOR_OBS_COMPARISON_CHANGE_SYMBOL, VIRTKEY, SHIFT, NOINVERT
+    VK_F2,          ID_ACCELERATOR_OBS_COMPARISON_TOGGLE_BORDER_DRAW, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F3,          ID_BUTTON_SHOW_SYNOP_PLOT_SETTINGS, VIRTKEY, NOINVERT
+    VK_F3,          ID_ACCELERATOR_IGNORE_STATIONS_DLG, VIRTKEY, CONTROL, NOINVERT
+    VK_F4,          ID_ACCELERATOR_CROSS_SECTION_MODE, VIRTKEY, NOINVERT
+    VK_F5,          ID_BUTTON_REFRESH,      VIRTKEY, NOINVERT
+    VK_F5,          ID_ACCELERATOR_RELOAD_ALL_DYNAMIC_DATA, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F6,          ID_ACCELERATOR_DO_MACRO_DIRECTORIES_SYNCRONIZATION, VIRTKEY, NOINVERT
+    VK_F7,          ID_ACCELERATOR_TOGGLE_HELP_CURSOR_ON_MAP, VIRTKEY, NOINVERT
+    VK_F8,          ID_BUTTON_VIEW_SELECT_PARAM_DIALOG, VIRTKEY, NOINVERT
+    VK_F8,          ID_VIEW_CASE_STUDY_DIALOG, VIRTKEY, CONTROL, NOINVERT
+    VK_F8,          ID_VIEW_BETAPRODUCTION, VIRTKEY, SHIFT, NOINVERT
+    VK_F9,          ID_BUTTON_WARNING_CENTER_DLG, VIRTKEY, NOINVERT
+    VK_HOME,        ID_ACCELERATOR_SET_HOME_TIME, VIRTKEY, NOINVERT
+    VK_INSERT,      ID_ACCELERATOR_DEVELOPED_FUNCTION_TESTING, VIRTKEY, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_LEFT,        ID_ACCELERATOR_MAP_PAN_LEFT, VIRTKEY, CONTROL, NOINVERT
+    VK_NEXT,        ID_ACCELERATOR_CHANGE_TIME_BY_DAY_FORWARD, VIRTKEY, NOINVERT
+    VK_NEXT,        ID_ACCELERATOR_CHANGE_TIME_BY_WEEK_FORWARD, VIRTKEY, CONTROL, NOINVERT
+    VK_NEXT,        ID_ACCELERATOR_CHANGE_TIME_BY_MONTH_FORWARD, VIRTKEY, SHIFT, NOINVERT
+    VK_NEXT,        ID_ACCELERATOR_CHANGE_TIME_BY_YEAR_FORWARD, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_NUMPAD0,     ID_ACCELERATOR_MAP_ROW_10, VIRTKEY, NOINVERT
+    VK_NUMPAD1,     ID_ACCELERATOR_MAP_ROW_1, VIRTKEY, NOINVERT
+    VK_NUMPAD2,     ID_ACCELERATOR_MAP_ROW_2, VIRTKEY, NOINVERT
+    VK_NUMPAD3,     ID_ACCELERATOR_MAP_ROW_3, VIRTKEY, NOINVERT
+    VK_NUMPAD4,     ID_ACCELERATOR_MAP_ROW_4, VIRTKEY, NOINVERT
+    VK_NUMPAD5,     ID_ACCELERATOR_MAP_ROW_5, VIRTKEY, NOINVERT
+    VK_NUMPAD6,     ID_ACCELERATOR_MAP_ROW_6, VIRTKEY, NOINVERT
+    VK_NUMPAD7,     ID_ACCELERATOR_MAP_ROW_7, VIRTKEY, NOINVERT
+    VK_NUMPAD8,     ID_ACCELERATOR_MAP_ROW_8, VIRTKEY, NOINVERT
+    VK_NUMPAD9,     ID_ACCELERATOR_MAP_ROW_9, VIRTKEY, NOINVERT
+    VK_PRIOR,       ID_ACCELERATOR_CHANGE_TIME_BY_DAY_BACKWARD, VIRTKEY, NOINVERT
+    VK_PRIOR,       ID_ACCELERATOR_CHANGE_TIME_BY_WEEK_BACKWARD, VIRTKEY, CONTROL, NOINVERT
+    VK_PRIOR,       ID_ACCELERATOR_CHANGE_TIME_BY_MONTH_BACKWARD, VIRTKEY, SHIFT, NOINVERT
+    VK_PRIOR,       ID_ACCELERATOR_CHANGE_TIME_BY_YEAR_BACKWARD, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_RIGHT,       ID_ACCELERATOR_MAP_PAN_RIGHT, VIRTKEY, CONTROL, NOINVERT
+    VK_SPACE,       ID_ACCELERATOR_SWAP_AREA, VIRTKEY, NOINVERT
+    VK_SPACE,       ID_ACCELERATOR_MAKE_SWAP_BASE_AREA, VIRTKEY, CONTROL, NOINVERT
+    VK_UP,          ID_ACCELERATOR_MAP_PAN_UP, VIRTKEY, CONTROL, NOINVERT
+    VK_UP,          ID_ACCELERATOR_MAP_ZOOM_IN, VIRTKEY, SHIFT, NOINVERT
+    VK_UP,          ID_ACCELERATOR_MOVE_MANY_MAP_ROWS_UP, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "W",            ID_SHOW_MASKS_ON_MAP,   VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_ACCELERATOR_TOGGLE_WMS_MAP_MODE, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "X",            ID_ACCELERATOR_LOCATION_FINDER_TOOL, VIRTKEY, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_REDO,           VIRTKEY, SHIFT, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 467, 324
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About SmartMet"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 460
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 317
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
+    IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+END
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "SmartMet\n\nSmartMet\nSmartMet Files (*.sqd)\n.sqd\nSmartMet.Document\nSmartMet.Document"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "SmartMet"
+    AFX_IDS_IDLEMESSAGE     "For Help, press F1"
+    AFX_IDS_HELPMODEMESSAGE "Select an object on which to get Help"
+END
+
+STRINGTABLE
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_NEW             "Create a new document\nNew"
+    ID_FILE_OPEN            "Open an existing document\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the active document\nSave"
+    ID_FILE_SAVE_AS         "Save the active document with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Print the active document\nPrint"
+    ID_FILE_PRINT_DIRECT    "Print the active document using current options\nQuick Print"
+    ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
+    ID_FILE_SEND_MAIL       "Send the active document through electronic mail\nSend Mail"
+END
+
+STRINGTABLE
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_HELP_INDEX           "Opens Help\nHelp Topics"
+    ID_HELP_FINDER          "List Help topics\nHelp Topics"
+    ID_HELP_USING           "Display instructions about how to use help\nHelp"
+    ID_CONTEXT_HELP         "Display help for clicked on buttons, menus and windows\nHelp"
+    ID_HELP                 "Display help for current task or command\nHelp"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+    ID_FILE_MRU_FILE5       "Open this document"
+    ID_FILE_MRU_FILE6       "Open this document"
+    ID_FILE_MRU_FILE7       "Open this document"
+    ID_FILE_MRU_FILE8       "Open this document"
+    ID_FILE_MRU_FILE9       "Open this document"
+    ID_FILE_MRU_FILE10      "Open this document"
+    ID_FILE_MRU_FILE11      "Open this document"
+    ID_FILE_MRU_FILE12      "Open this document"
+    ID_FILE_MRU_FILE13      "Open this document"
+    ID_FILE_MRU_FILE14      "Open this document"
+    ID_FILE_MRU_FILE15      "Open this document"
+    ID_FILE_MRU_FILE16      "Open this document"
+END
+
+STRINGTABLE
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle Status Bar"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_CAPTION_BAR     "Show or hide the caption bar\nToggle Caption Bar"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview mode\nCancel Preview"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_PANE1        "Pane 1"
+    IDS_STATUS_PANE2        "Pane 2"
+    IDS_TOOLBAR_STANDARD    "Standard"
+    IDS_TOOLBAR_CUSTOMIZE   "Customize..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FILE_VIEW           "File View"
+    IDS_CLASS_VIEW          "Class View"
+    IDS_OUTPUT_WND          "Output"
+    IDS_PROPERTIES_WND      "Properties"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EXPLORER            "Explorer"
+    IDS_EDIT_MENU           "Edit"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RIBBON_CAPTIONBAR   "Caption Bar"
+    IDS_BUILD_TAB           "Build"
+    IDS_DEBUG_TAB           "Debug"
+    IDS_FIND_TAB            "Find"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAPTION_BUTTON      "Options..."
+    IDS_CAPTION_BUTTON_TIP  "Click here to see more options"
+    IDS_CAPTION_TEXT        "This is a caption bar where a message can be presented to the user."
+    IDS_CAPTION_IMAGE_TIP   "Important"
+    IDS_CAPTION_IMAGE_TEXT  "Here is an informational message for the user."
+END
+
+STRINGTABLE
+BEGIN
+    ID_BUTTON_LOAD_DATA     "Load\nLoad"
+    ID_BUTTON_STORE_DATA    "Save Data\nSave Data"
+    ID_BUTTON_DATA_TO_DATABASE "To Database\nTo Database"
+    ID_DATA_LOAD_FROM_FILEID_DATA_LOAD_FROM_FILE 
+                            "Load from file\nLoad from file"
+    ID_DATA_STORE_TO_FILE   "Store Data to file\nStore Data to file"
+    ID_MENUITEM_SAVE_AS     "Save data file as\nSave data file as"
+    ID_DATA_STORE_VIEW_TO_PICTURE_FILE 
+                            "Store map view image\nStore map view image"
+    ID_DATA_STORE_MAP_VIEW2_TO_PICTURE_FILE 
+                            "Store map view 2 image\nStore map view 2 image"
+END
+
+STRINGTABLE
+BEGIN
+    ID_DATA_STORE_MAP_VIEW3_TO_PICTURE_FILE 
+                            "Store map view 3 image\nStore map view 3 image"
+    ID_DATA_STORE_TIMESERIALVIEW_TO_PICTURE_FILE 
+                            "Store time serial view image\nStore time serial view image"
+    ID_DATA_STORE_TEMPVIEW_TO_PICTURE_FILE 
+                            "Store temp view image\nStore temp view image"
+    ID_DATA_STORE_CROSSSECTIONVIEW_TO_PICTURE_FILE 
+                            "Store cross section view image\nStore cross section view image"
+    ID_DATA_STORE_TRAJEKTORYVIEW_TO_PICTURE_FILE 
+                            "Store trajectory view image\nStore trajectory view image"
+    ID_SELECT_ALL           "Select all\nSelect all"
+    ID_DESELECT_ALL         "Deselect all\\Deselect all"
+    ID_BUTTON_MAKE_EDITED_DATA_COPY 
+                            "Make comparison data\nMake comparison data"
+    ID_MENUITEM_OPTIOT      "Settings...\nSettings..."
+    ID_MENUITEM_PROJECTION_LINE_SETUP 
+                            "Projection line settings\nProjection line settings"
+    ID_MENUITEM_VIEW_GRID_SELECTION_DLG2 
+                            "View grid setting...\nView grid setting..."
+END
+
+STRINGTABLE
+BEGIN
+    ID_NOTIFICATIONSOUNDSOFF 
+                            "Disable notification sound\nDisable notification sound"
+    ID_SHOW_SYSTRAY_SYMBOL  "Show system tray icon\nShow system tray icon"
+    ID_HIDE_SYSTRAY_SYMBOL  "Hide system tray icon\nHide system tray icon"
+    ID_BUTTON_SELECT_FINLAND_MAP "Select area 1\nSelect area 1"
+    ID_BUTTON_SELECT_SCANDINAVIA_MAP "Select area 2\nSelect area 2"
+    ID_BUTTON_SELECT_EUROPE_MAP "Select area 3\nSelect area 3"
+    ID_BUTTON_GLOBE         "Select area 4\nSelect area 4"
+    ID_BUTTON_REFRESH       "Refresh all views F5\nRefresh all views F5"
+    ID_HELP_SHORT_CUTS      "Shortcuts\nShortcuts"
+    ID_OHJE_VIRHETESTI      "Error test (crashes SmartMet!)\nError test (crashes SmartMet!)"
+    ID_MENUITEM_VIEW_GRID_SELECTION_DLG 
+                            "View grid setting...\nView grid setting..."
+    ID_BUTTON_DATA_AREA     "Select data's area\nSelect data's area"
+    ID_DATA_LOAD_FROM_FILE  "Load from file\nLoad from file"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MENUITEM_GRIDDING_OPTIONS "CP gridding options\nCP gridding options"
+    ID_MUOKKAA_MAKROPOLKUASETUKSET 
+                            "Macro path settings...\nMacro path settings..."
+    ID_MENUITEM_HELP_EDITOR_SETTINGS 
+                            "Help edit mode settings...\nHelp edit mode settings..."
+    ID_MENUITEM_MUOKKAA_KIELI "Language...\nLanguage..."
+    ID_VIEW_EDITOR_LOG      "View log\nView log"
+    ID_EXTRA_MAP_VIEW_1     "Map view 2\nMap view 2"
+    ID_EXTRA_MAP_VIEW_2     "Map view 3\nMap view 3"
+    ID_BUTTON_TIME_EDIT_VALUES_DLG "Time serial view\nTime serial view"
+    ID_BUTTON_SELECTION_TOOL_DLG 
+                            "Grid point selection tool\nGrid point selection tool"
+    ID_BUTTON_FILTER_DIALOG "Data filter tool\nData filter tool"
+    ID_BUTTON_ZOOM_DIALOG   "Zooming tool\nZooming tool"
+    ID_BUTTON_VIEW_SELECT_PARAM_DIALOG 
+                            "Param selection tool\nParam selection tool"
+    ID_BUTTON_OPEN_SMART_TOOL_DLG "SmartTool dialog\nSmartTool dialog"
+    ID_ACCELERATOR_STORE_VIEW_MACRO "View macro tool\nView macro tool"
+    ID_BUTTON_TEMP_DLG      "Sounding view\nSounding view"
+END
+
+STRINGTABLE
+BEGIN
+    ID_BUTTON_ANIMATION     "Animation tool\nAnimation tool"
+    ID_BUTTON_SHOW_CROSS_SECTION "Cross section view\nCross section view"
+    ID_BUTTON_SHOW_SYNOP_PLOT_SETTINGS 
+                            "Synop plot settings...\nSynop plot settings..."
+    ID_BUTTON_SYNOP_DATA_GRID_VIEW 
+                            "Station data grid view\nStation data grid view"
+    ID_BUTTON_TRAJECTORY    "Trajectory tool\nTrajectory tool"
+    ID_BUTTON_WARNING_CENTER_DLG 
+                            "Warning center messages\nWarning center messages"
+    ID_BUTTON_SEA_ICING_WARNINGS_DLG "Sea icing messages\nSea icing messages"
+    ID_BUTTON_WIND_TABLE_DLG "Wind table tool\nWind table tool"
+    ID_BUTTON_DATA_QUALITY_CHECKER 
+                            "Data quality checker\nData quality checker"
+    ID_VIEW_SET_MAIN_FRAME_PLACE_TO_DEFAULT 
+                            "Set map view position\nSet map view position"
+    ID_VIEW_SET_MAP_VIEW2_PLACE_TO_DEFAULT 
+                            "Set map view 2 position\nSet map view 2 position"
+    ID_VIEW_SET_MAP_VIEW3_PLACE_TO_DEFAULT 
+                            "Set map view 3 position\nSet map view 3 position"
+    ID_VIEW_SET_TIME_EDITOR_PLACE_TO_DEFAULT 
+                            "Set time serial view position\nSet time serial view position"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_SET_TEMP_VIEW_PLACE_TO_DEFAULT 
+                            "Sounding view position\nSounding view position"
+    ID_VIEW_SET_CROSSSECTION_VIEW_PLACE_TO_DEFAULT 
+                            "Cross section view position\nCross section view position"
+    ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT 
+                            "Param selection view position\nParam selection view position"
+    ID_VIEW_SET_ZOOM_VIEW_PLACE_TO_DEFAULT 
+                            "Zoom view position\nZoom view position"
+    ID_VIEW_SET_SYNOP_TEXT_VIEW_PLACE_TO_DEFAULT 
+                            "Station data grid view position\nStation data grid view position"
+    ID_VIEW_SET_TRAJECTORY_VIEW_PLACE_TO_DEFAULT 
+                            "Trajectory view position\nTrajectory view position"
+    ID_VIEW_SET_VIEW_MACRO_DLG_PLACE_TO_DEFAULT 
+                            "View macro position\nView macro position"
+    ID_VIEW_SET_WARNING_CENTER_DLG_PLACE_TO_DEFAULT 
+                            "Warning center view position\nWarning center view position"
+    ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT 
+                            "Sea icing view position\nSea icing view position"
+    ID_VIEW_SET_WIND_TABLE_DLG_PLACE_TO_DEFAULT 
+                            "Wind table view position\nWind table view position"
+    ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT 
+                            "Data quality checker position\nData quality checker position"
+    ID_ENABLENOTIFICATIONS  "Enable data notifications\nEnable data notifications"
+    ID_DISABLENOTIFICATIONS "Disable data notifications\nDisable data notifications"
+    ID_NOTIFICATIONSOUNDSON "Enable notification sound\nEnable notification sound"
+END
+
+STRINGTABLE
+BEGIN
+    ID_BUTTON_BRUSH_TOOL_DLG "Brush tool\nBrush tool"
+    ID_BUTTON_VALIDATE_DATA "Data validation\nData validation"
+    ID_BUTTON_EDITOR_CONTROL_POINT_MODE 
+                            "Control point mode\nControl point mode"
+    ID_BUTTON_HELP_EDITOR_MODE "Help edit mode\nHelp edit mode"
+END
+
+STRINGTABLE
+BEGIN
+    ID_BUTTON_OBSERVATION_COMPARISON_MODE 
+                            "Obs comparison mode\nObs comparison mode"
+END
+
+STRINGTABLE
+BEGIN
+    ID_ACCELERATOR_IGNORE_STATIONS_DLG 
+                            "Ignore station  selection\nIgnore station  selection"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_SET_SMARTTOOL_VIEW_PLACE_TO_DEFAULT 
+                            "SmartTool view position\nSmartTool view position"
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Finnish (Finland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FIN)
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON_LED_RED        ICON                    "res\\ledred.ico"
+
+IDI_ICON_LED_BLUE       ICON                    "res\\ledblue.ico"
+
+IDI_ICON_LED_GRAY       ICON                    "res\\ledgray.ico"
+
+IDI_ICON_LED_GREEN      ICON                    "res\\ledgreen.ico"
+
+IDI_ICON_LED_LIGHT_BLUE ICON                    "res\\ledlightblue.ico"
+
+IDI_ICON_LED_LIGHT_GREEN ICON                    "res\\ledlightgreen.ico"
+
+IDI_ICON_LED_ORANGE     ICON                    "res\\ledorange.ico"
+
+IDI_ICON_LED_PURPLE     ICON                    "res\\ledpurple.ico"
+
+IDI_ICON_LED_YELLOW     ICON                    "res\\ledyellow.ico"
+
+IDI_ICON_FOLDER_OPEN    ICON                    "res\\Avosoft-Warm-Toolbar-Folder-open.ico"
+
+IDI_ICON_FILE_CHART     ICON                    "res\\Hopstarter-Soft-Scraps-Document-Chart.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_ABOUT_DLG_VER_5_1 BITMAP                  "res\\Smartmet-about_v_5_1.bmp"
+
+IDB_BITMAP_SYNOP_PLOT_TOOLTIP_BASE BITMAP                  "res\\synop_plot_tooltip_base.bmp"
+
+IDB_BITMAP_ABOUT_DLG_VER_5_7 BITMAP                  "res\\SmartMet_5_7_about_image.bmp"
+
+IDB_BITMAP_ORANGE_FLAG  BITMAP                  "res\\flag_orange.bmp"
+
+IDB_BITMAP_RED_FLAG     BITMAP                  "res\\flag_red.bmp"
+
+IDB_BITMAP_FMI_LOGO_CASE_STUDY BITMAP                  "res\\fmilogo_case_study.bmp"
+
+IDB_BITMAP_ABOUT_DLG_VER_5_10_NO_TEXTS BITMAP                  "res\\SmartMet_5_10_about_image_no_texts.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_SYS_TRAY_POPUP MENU
+BEGIN
+    POPUP "popup1"
+    BEGIN
+        MENUITEM "About SmartMet",              ID_APP_ABOUT
+        MENUITEM "Show notifications",          ID_ENABLENOTIFICATIONS
+        MENUITEM "Dont show notifications",     ID_DISABLENOTIFICATIONS
+        MENUITEM "Notification sound on",       ID_NOTIFICATIONSOUNDSON
+        MENUITEM "Notification sound off",      ID_NOTIFICATIONSOUNDSOFF
+        MENUITEM "Show System Tray Icon",       ID_SHOW_SYSTRAY_SYMBOL
+        MENUITEM "Hide System Tray Icon",       ID_HIDE_SYSTRAY_SYMBOL
+        MENUITEM "Exit SmartMet",               ID_APP_EXIT
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\SmartMet.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""afxprint.rc""       // printing/print preview resources\r\n"
+    "#if !defined(_AFXDLL)\r\n"
+    "#include ""afxribbon.rc""              // MFC ribbon and control bar resources\r\n"
+    "#endif\r\n"
+    "#endif\r\n"
+    "1 TYPELIB ""SmartMet.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 5,12,12,1
+ PRODUCTVERSION 5,12,12,1
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040b04b0"
+        BEGIN
+            VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
+            VALUE "FileDescription", "SmartMet meteorological workstation"
+            VALUE "FileVersion", "5.12.12.1"
+            VALUE "InternalName", "SmartMet"
+            VALUE "LegalCopyright", "(C) 1999-2018 FMI (Finnish Meteorological Instituet).  All rights reserved"
+            VALUE "OriginalFilename", "SmartMet.exe"
+            VALUE "ProductName", "SmartMet"
+            VALUE "ProductVersion", "5.12.12.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x40b, 1200
+    END
+END
+
+#endif    // Finnish (Finland) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United Kingdom) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE BITMAP                  "res\\fmilogo_beta_product_mode.bmp"
+
+#endif    // English (United Kingdom) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\SmartMet.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#include "afxprint.rc"       // printing/print preview resources
+#if !defined(_AFXDLL)
+#include "afxribbon.rc"              // MFC ribbon and control bar resources
+#endif
+#endif
+1 TYPELIB "SmartMet.tlb"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

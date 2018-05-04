@@ -1,0 +1,30 @@
+/*!
+
+\page page_story_pressure_mean Tarina "pressure_mean"
+
+\c pressure_mean tarina on muotoa
+
+  -# "Paine on X hPa."
+
+Ruotsiksi
+
+  -# "Tryck är X hPa."
+
+Englanniksi
+
+  -# "Pressure is X hPa."
+
+Käytetyt fraasit ovat
+
+  - "paine"
+  - "on"
+  - "hehtopascalia"
+
+Tarinan laskennassa generoidut funktiot voi ylikuormittaa seuraavasti:
+\code
+# Mean(Mean(Pressure))
+textgen::[kappale]::story::pressure_mean::fake::mean = [result]
+\endcode
+
+*/
+

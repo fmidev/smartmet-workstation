@@ -1,0 +1,156 @@
+/*!
+
+\page page_story_forestfirewarning_county Tarina "forestfirewarning_county"
+
+Tarina \c forestfirewarning_county on eri muotoa
+
+ -# "Metsäpalovaroitus [on/ei ole] voimassa."
+
+Ruotsiksi
+
+ -# "Varning för skogsbrand [är/är inte] i kraft."
+
+Englanniksi
+
+ -# "Forest fire warning [is/is not] in effect."
+
+Varoitus on aluekohtainen. Jos esimerkiksi kyseessä on alue
+koodinimeltä "imatra", joka voi olla määritelty polygoniksi tai
+pisteeksi, saadaan relevantin varoitusalueen koodinumero muuttujasta
+\code
+qdtext::forestfirewarning::areacodes::imatra = 9
+\endcode
+Käytössä olevat koodinumerot ovat
+\code
+# Maakunnat:
+1 Uusimaa
+2 Varsinais-Suomi
+3 Itä-Uusimaa
+4 Satakunta
+5 Kanta-Häme
+6 Pirkanmaa
+7 Päijät-Häme
+8 Kymenlaakso
+9 Etelä-Karjala
+10 Etelä-Savo
+11 Pohjois-Savo
+12 Pohjois-Karjala
+13 Keski-Suomi
+14 Etelä-Pohjanmaa
+15 Pohjanmaa
+16 Keski-Pohjanmaa
+17 Pohjois-Pohjanmaa
+18 Kainuu
+19 Lappi
+20 Ahvenanmaa
+# Pohjois-Pohjanmaan kunnat:
+21 Eteläinen Pohjois-Pohjanmaa
+22 Pudasjärvi
+23 Taivalkoski
+24 Kuusamo
+# Lapin kunnat:
+25 Kemi
+26 Tornio
+27 Keminmaa
+28 Tervola
+29 Simo
+30 Ranua
+31 Posio
+32 Salla
+33 Kemijärvi
+34 Rovaniemen mlk
+35 Rovaniemi
+36 Ylitornio
+37 Pello
+38 Kolari
+39 Muonio
+40 Kittilä
+41 Sodankylä
+42 Pelkosenniemi
+43 Savukoski
+44 Inari
+45 Utsjoki
+46 Enontekiö
+\endcode
+Metsäpalovaroitukset luetaan hakemistosta
+\code
+qdtext::forestfirewarning::directory
+\endcode
+jolle sopiva arvo tällä hetkellä on
+\code
+/data/pal/txt/varo/palo/
+\endcode
+Hakemistosta luetaan tiedosto nimeltään
+\code
+YYYYMMDD.palot_koodina
+\endcode
+missä YYYYMMDD on joko saman päivän aikaleima, tai jos tiedostoa ei
+löydy, edellisen päivän aikaleima. Näin teksti saadaan toimimaan
+myös vuorokauden vaihteen kohdalla.
+
+Tiedoston oletettu rakenne on seuraavanlainen:
+\code
+200505240921
+20 2
+2 0
+4 2
+1 0
+3 0
+5 0
+7 0
+8 0
+9 0
+6 0
+13 0
+10 0
+11 0
+12 0
+14 2
+15 2
+16 0
+17 0
+18 0
+19 0
+21 0
+22 0
+23 0
+24 0
+25 0
+26 0
+27 0
+28 0
+29 0
+30 0
+31 0
+32 0
+33 0
+34 0
+35 0
+36 0
+37 0
+38 0
+39 0
+40 0
+41 0
+42 0
+43 0
+44 0
+45 0
+46 0
+\endcode
+Ensimmäisen rivin jälkeen on lueteltu kaikki varoitusalueet ja
+alueella voimassa oleva metsäpalovaroituksen taso. Eri tasot ovat:
+
+  - 0 = ei voimassa olevia varoituksia
+  - 1 = ruohikkopalojen vaara on suuri
+  - 2 = metsäpalovaroitus on voimassa / annetaan tänään kello 12
+
+Fraasi "metsäpalovaroitus on voimassa" valitaan vain ja ainoastaan
+koodille 2.
+
+Tarinan tarvitsemat fraasit ovat
+
+ - "metsäpaloindeksi on voimassa"
+ - "metsäpaloindeksi ei ole voimassa"
+
+*/

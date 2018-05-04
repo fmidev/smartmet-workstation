@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/horttanainen/cppext
+	branch = master
+	commit = 3ff70fcbcd3ed3b4ede1d227379b5da417bdabc4
+	parent = 8f236a0a43bc0ef12228c4c1b1ffec376ad6295a
+	cmdver = 0.3.1

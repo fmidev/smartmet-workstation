@@ -1,0 +1,203 @@
+/*!
+
+\page page_story_wind_daily_ranges Tarina "wind_daily_ranges"
+
+\section section_wind_daily_ranges_story Tarinan muoto
+
+Tarina kuvailee tuuliennustetta yhden tai useamman p‰iv‰n mittaiselle
+jaksolle. Parhaiten tarina soveltuu ensimm‰isille 1-3 p‰iv‰lle.
+Kolmas p‰iv‰ on viimeinen, jolle kerrotaan ennuste.
+
+Tarinassa ei k‰ytet‰ nopeusluokkia algoritmin yksinkertaistamiseksi.
+Suuntaluokat ovat k‰ytˆss‰.
+
+Tarinan yleismuoto on
+
+ -# [Viikonp‰iv‰n‰] [suuntatuulta] X-Y m/s
+ -# [Viikonp‰iv‰n‰] [suuntatuulta] noin X m/s
+
+jota toistetaan kullekin p‰iv‰lle eteenp‰in. Toiston v‰ltt‰miseksi
+joko suunta tai nopeus saatetaan j‰tt‰‰ pois. Jos sek‰ suunta ja
+nopeus ovat samoja kuin edellisen‰ p‰iv‰n‰, j‰tet‰‰n joko
+koko p‰iv‰ pois, tai edellisen lauseen aikafraasiksi tulee
+"viikonp‰iv‰st‰ alkaen".
+
+Tuulet kerrotaan vain p‰iv‰jaksoille, jota konfiguroidaan muuttujilla.
+\code
+textgen::[kappale]::story::wind_daily_ranges::day::starthour = [0-23] (6)
+textgen::[kappale]::story::wind_daily_ranges::day::maxstarthour = [0-23] (starthour)
+textgen::[kappale]::story::wind_daily_ranges::day::endhour = [0-23] (18)
+textgen::[kappale]::story::wind_daily_ranges::day::minendhour = [0-23] (endhour)
+\endcode
+Tyypilliset asetukset esimerkiksi maanviljelijˆille ovat
+\code
+textgen::[kappale]::story::wind_daily_ranges::day::starthour = 4
+textgen::[kappale]::story::wind_daily_ranges::day::maxstarthour = 12
+textgen::[kappale]::story::wind_daily_ranges::day::endhour = 21
+textgen::[kappale]::story::wind_daily_ranges::day::minendhour = 18
+\endcode
+P‰iv‰ on siis venytetty maanviljelijˆiden tarpeisiin.
+
+Tuuli-intervalli typistet‰‰n yhteen lukuun (keskiarvo), jos
+intervalli on pienempi kuin
+\code
+textgen::[kappale]::story::wind_daily_ranges::mininterval = [0-] (0)
+\endcode
+
+\section section_wind_daily_ranges_aikafraasit Aikafraasit
+
+Ensimm‰isen p‰iv‰n aikafraasi on muotoa
+\ref sec_periodifraasit_today, seuraavien p‰ivien muotoa
+\ref sec_periodifraasit_next_day.
+Vastaavat muuttujat ovat
+\code
+textgen::[kappale]::story::wind_daily_ranges::today::phrases
+textgen::[kappale]::story::wind_daily_ranges::next_day::phrases
+\endcode
+Erikoistapauksena jos lopusta yhdistet‰‰n 2 vuorokautta, k‰ytet‰‰n
+muuttujaa
+\code
+textgen::[kappale]::story::wind_daily_ranges::next_days::phrases
+\endcode
+
+\section section_wind_daily_ranges_windspeed Tuulen nopeus
+
+Nopeuden vaihteluv‰li saadaan laskemalla aikakeskiarvojen minimi ja maksimi.
+
+Kaksi tuulennopeutta katsotaan samoiksi, jos minimit ja maksimit poikkeavat
+enint‰‰n alla olevien lukujen verran.
+\code
+textgen::[kappale]::story::wind_daily_ranges::same::minimum = [0-] (0)
+textgen::[kappale]::story::wind_daily_ranges::same::maximum = [0-] (0)
+\endcode
+Useampi nopeus katsotaan samoiksi, jos kaikki parit katsotaan samoiksi.
+Yhteinen nopeusintervalli saadaan poimimalla intervalleista minimi
+ja maksimi uusiksi intervallirajoiksi.
+
+\section section_wind_daily_ranges_winddirection Tuulen suunta
+
+Kunkin aikav‰lin tuulen suunta saadaan laskemalla suunnan keskiarvo
+ajan ja paikan yli. Suunnan laatuindeksin mukaisesti suunnan
+tarkkuutta heikennet‰‰n ensin "suunnan puoleiseksi tuuleksi", ja sen
+j‰lkeen "suunnaltaan vaihtelevaksi tuuleksi".
+
+Vaadittua laatua (suunnan keskihajonta) kontrolloidaan muuttujilla
+\code
+textgen::[kappale]::story::wind_daily_ranges::direction::accurate (= 22.5)
+textgen::[kappale]::story::wind_daily_ranges::direction::variable (= 45)
+\endcode
+Oletusarvot on annettu suluissa.
+
+Suunnan fraasi valitaan seuraavasti
+
+  -# Jos laatu < \c accurate, "N-tuulta"
+  -# Jos laatu >= \c variable, "N-puoleista tuulta"
+  -# Muutoin "suunnaltaan vaihtelevaa tuulta"
+
+Kahta ilmansuuntaa ei koskaan verrata suoraan kesken‰‰n, koska
+v‰li-ilmansuuntaan pyˆrist‰minen on aiheuttanut merkitt‰v‰‰
+tarkkuush‰viˆt‰. Sen sijaan suunta lasketaan kahdelle tai useammalle
+p‰iv‰lle kokonaisuutena, ja katsotaan onko tuloksen laatu riitt‰v‰.
+
+\section section_wind_daily_ranges_fakes Tulosten testaaminen
+
+Kullekin p‰iv‰jaksolle lasketaan kunkin pisteen ajallisista keskiarvoista
+alueellinen minimi, keskiarvo ja maksimi. N‰it‰ tuloksia voi
+v‰‰rent‰‰ testaamista varten muuttujilla
+\code
+textgen::[kappale]::story::wind_daily_ranges::fake::day1::speed::mean = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::day1::speed::minimum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::day1::speed::maximum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::day1::direction::mean = [result]
+...
+\endcode
+Lis‰ksi tulevat erikoistapaukset p‰iville 1-2, p‰iville 2-3 ja p‰iville 1-3
+\code
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-2::speed::mean = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-2::speed::minimum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-2::speed::maximum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-2::direction::mean = [result]
+
+textgen::[kappale]::story::wind_daily_ranges::fake::days2-3::speed::mean = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days2-3::speed::minimum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days2-3::speed::maximum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days2-3::direction::mean = [result]
+
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-3::speed::mean = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-3::speed::minimum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-3::speed::maximum = [result]
+textgen::[kappale]::story::wind_daily_ranges::fake::days1-3::direction::mean = [result]
+\endcode
+
+\section section_wind_daily_ranges_algoritmi Algoritmit
+
+-# Jos p‰ivi‰ on 1, [T‰n‰‰n] [it‰tuulta] [X-Y m/s]
+-# Jos p‰ivi‰ on 2
+   -# Jos D(D1,D2) on laadukas tai D1,D2 ovat suunnaltaan vaihtelevia
+      -# Jos W1==W2, [T‰n‰‰n ja huomenna] [it‰tuulta] [X-Y m/s]
+      -# Jos W1<>W2, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [X-Y m/s]
+   -# Jos D(D1,D2) ei ole laadukas
+      -# Jos W1==W2, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta]
+      -# Jos W1<>W2, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta] [X-Y m/s]
+-# Muuten p‰ivi‰ on 3, loppuja p‰ivi‰ ei huomioida
+   -# Jos D(D1,D2,D3) on laadukas tai D1,D2,D3 ovat suunnaltaan vaihtelevia
+      -# Jos W1==W2==W3, [Viikonp‰iv‰st‰ alkaen] [it‰tuulta] [X-Y m/s]
+      -# Jos W1==W2<>W3, [It‰tuulta] [X-Y m/s], viikonp‰iv‰n‰ [X-Y m/s]
+      -# Jos W1<>W2==W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰st‰ alkaen] [X-Y m/s]
+      -# Jos W1<>W2<>W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [X-Y m/s], [viikonp‰iv‰n‰] [X-Y m/s]
+   -# Jos D(D1,D2) on laadukas tai D1,D2 ovat suunnaltaan vaihtelevia
+      -# Jos W1==W2==W3, [It‰tuulta] [X-Y m/s], viikonp‰iv‰n‰ [l‰nsituulta]
+      -# Jos W1==W2<>W3, [It‰tuulta] [X-Y m/s], viikonp‰iv‰n‰ [l‰nsituulta] [X-Y m/s]
+      -# Jos W1<>W2==W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta]
+      -# Jos W1<>W2<>W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta] [X-Y m/s]
+   -# Jos D(D2,D3) on laadukas tai D2,D3 ovat suunnaltaan vaihtelevia
+      -# Jos W1==W2==W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰st‰ alkaen] [l‰nsituulta]
+      -# Jos W1==W2<>W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta], [viikonp‰iv‰n‰] [X-Y m/s]
+      -# Jos W1<>W2==W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰st‰ alkaen] [l‰nsituulta] [X-Y m/s]
+      -# Jos W1<>W2<>W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta] [X-Y m/s], [viikonp‰iv‰n‰] [X-Y m/s]
+   -# Muuten D1<>D2 ja D2<>D3 (muttei v‰ltt‰m‰tt‰ D1<>D3)
+      -# Jos W1==W2==W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta], [viikonp‰iv‰n‰] [etel‰tuulta]
+      -# Jos W1==W2<>W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta], [viikonp‰iv‰n‰] [etel‰tuulta] [X-Y m/s]
+      -# Jos W1<>W2==W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta] [X-Y m/s], [viikonp‰iv‰n‰] [etel‰tuulta]
+      -# Jos W1<>W2<>W3, [T‰n‰‰n] [it‰tuulta] [X-Y m/s], [viikonp‰iv‰n‰] [l‰nsituulta] [X-Y m/s], [viikonp‰iv‰n‰] [etel‰tuulta] [X-Y m/s]
+
+Ensimm‰isen p‰iv‰n tyyppi on \ref sec_periodifraasit_today, seuraavien
+p‰ivien tyyppi on \ref sec_periodifraasit_next_day tai
+\ref sec_periodifraasit_next_days. Jos kaikki p‰iv‰t yhdistet‰‰n,
+k‰ytet‰‰n tyyppi‰ \ref sec_periodifraasit_days.
+
+Erityisesti on huomattava, ett‰ tietyiss‰ kohdissa on j‰tetty
+kokonainen p‰iv‰ v‰list‰, koska suunta ja nopeus ovat olleet
+samanlaisia edellisen p‰iv‰n kanssa. N‰iss‰ tilanteissa seuraavalle
+p‰iv‰lle on v‰ltt‰m‰tt‰ sanottava viikonp‰iv‰n nimi. N‰iss‰ kohdissa
+\c viikonp‰iv‰n‰ on merkitty ilman optionaalisuuteen viittaavia
+hakasulkuja.
+
+Lis‰ksi joillakin meteorologeilla on k‰yt‰ntˆn‰ laittaa tuulen nopeus
+j‰lkimm‰iselle p‰iv‰lle, jos kahden p‰iv‰n nopeudet ovat yht‰ suuria.
+T‰m‰ on mahdollista toteuttaa tulevaisuudessa optiona, jos niin halutaan.
+T‰llˆin tulee kuitenkin huomata kolmen p‰iv‰n erikoistapaukset, esimerkiksi
+kun kaikkien kolmen p‰iv‰n nopeus on sama.
+
+
+
+\section section_wind_daily_ranges_fraasit Tarvittavat fraasit
+
+Tarvittavat fraasit ovat
+
+ - "m/s"
+ - "noin"
+ - "metri‰ sekunnissa"
+ - "tuulta"
+ - "suunnaltaan vaihtelevaa"
+ - "N-tuulta", N=1-8
+ - "N-tuuleksi", N=1-8
+ - "N-puoleista tuulta", N=1-8
+ - "N-puoleiseksi tuuleksi", N=1-8
+
+Lis‰ksi tarvitaan periodifraasit
+\ref sec_periodifraasit_today,
+\ref sec_periodifraasit_next_day ja
+\ref sec_periodifraasit_next_days.
+
+*/
