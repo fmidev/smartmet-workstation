@@ -14,6 +14,7 @@ log.txt
 
 # 3rd party lib binaries should not be added to version control
 /libs/3rd*
+/*.zip
 
 # Project specific ignores
 /scripts/cmake
