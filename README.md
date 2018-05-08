@@ -12,3 +12,6 @@ First time build instructions:
 5. MS Visual C++ solution is in smartmet-workstation_msvc directory, open SmartMet.sln from there
 6. SmartMet project uses by default smartmet_sap_scand.conf main configuration file. 
  <br>It has cap.conf and wms.conf files disabled.
+7. Set SmartMet project as start up project in Visual C++
+8. Press F7 to Build solution (key mappings may be different depending on used key mapping schemes)
+9. Press F5 to Run SmartMet in debugger
