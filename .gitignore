@@ -7,7 +7,6 @@ UnpackSmartMetDataFilesExe.exe
 cp_data.bak
 running_status.dat
 viewmacro.dat
-mapviewsettings.conf
 log.txt
 *.aps
 /src/SmartMet/local/control/

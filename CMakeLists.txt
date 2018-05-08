@@ -47,7 +47,7 @@ include(cmake/DownloadProject.cmake)
 
 download_project(PROJ                fmt
     GIT_REPOSITORY      https://github.com/fmtlib/fmt.git
-    GIT_TAG             master
+    GIT_TAG             4.1.0
     ${UPDATE_DISCONNECTED_IF_AVAILABLE}
     )
 
