@@ -196,6 +196,7 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
+if(NOT DISABLE_CPPRESTSDK)	
 set(
     CPPRESTSDK_BASE_DIR
     ${LIBS_3RD}/cpprestsdk
@@ -237,3 +238,4 @@ set(
     ${CPPRESTSDK_LIB_DIR}/cpprest140d_2_9.lib
     CACHE INTERNAL "" FORCE
     )
+endif()

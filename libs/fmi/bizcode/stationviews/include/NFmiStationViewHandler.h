@@ -101,9 +101,11 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	NFmiPoint CalcRelativeWarningIconSize(Gdiplus::Bitmap *theImage);
 	NFmiRect CalcSymbolRelativeRect(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, double theSizeFactor = 1.0);
 	void DrawWarningIcon(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, float theAlpha, double theSizeFactor = 1.0);
-	void DrawWantedWarningIcon(const HakeMessage::HakeMsg &theWarningMessage, bool isHakeMessage);
+#ifndef DISABLE_CPPRESTSDK
+    void DrawWantedWarningIcon(const HakeMessage::HakeMsg &theWarningMessage, bool isHakeMessage);
     void DrawHakeMessageIcon(const HakeMessage::HakeMsg &theWarningMessage, const NFmiPoint &latlon);
     void DrawKaHaMessageIcon(const HakeMessage::HakeMsg &theWarningMessage, const NFmiPoint &latlon);
+#endif // DISABLE_CPPRESTSDK
 
 	void InitializeWarningSymbols(void);
 	bool CheckBoundingBox(NFmiRect &theBoundBox, checkedVector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace);
@@ -129,8 +131,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	std::string ComposeWarningMessageToolTipText(void);
 	std::string ComposeSeaIcingWarningMessageToolTipText(void);
 	std::string ComposeSilamLocationsToolTipText(void);
+#ifndef DISABLE_CPPRESTSDK
     std::string HakeToolTipText(HakeMessage::HakeMsg &msg);
     std::string KahaToolTipText(HakeMessage::HakeMsg &msg);
+#endif // DISABLE_CPPRESTSDK
 	void DrawMouseCursorHelperCrossHair(void);
 	void DrawSelectedSynopFromGridView(void);
 	bool ChangeHybridDataLevel(NFmiStationView* theView, short theDelta);
@@ -178,8 +182,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void DoCacheDrawing(NFmiToolBox * theGTB, const NFmiRect &theMapFrame, CDC *destinationDc, int cacheRowIndex);
     int CalcUsedCacheRowIndex() const;
     void GetShownMessages();
+#ifndef DISABLE_CPPRESTSDK
     void ShowWarningMessages(const std::vector<HakeMessage::HakeMsg> &messages, bool isHakeMessage);
     void GetMinimumDistanceMessage(const std::vector<HakeMessage::HakeMsg> &messages, const NFmiLocation &wantedLocation, HakeMessage::HakeMsg &minimumDistanceMessage, double &minimumDistance);
+#endif // DISABLE_CPPRESTSDK
     void TraceLogValidTimeAndAbsoluteRow();
 
     boost::shared_ptr<NFmiArea> itsMapArea;
@@ -195,7 +201,9 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	NFmiParamHandlerView* itsParamHandlerView;
 	NFmiRect itsParamHandlerViewRect;
 	bool fWholeCrossSectionReallyMoved; 
+#ifndef DISABLE_CPPRESTSDK
     std::vector<HakeMessage::HakeMsg> itsShownHakeMessages;
     std::vector<HakeMessage::KahaMsg> itsShownKaHaMessages;
+#endif // DISABLE_CPPRESTSDK
 };
 

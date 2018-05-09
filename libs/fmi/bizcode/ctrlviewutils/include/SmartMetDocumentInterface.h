@@ -311,7 +311,9 @@ public:
     virtual NFmiAutoComplete& AutoComplete() = 0;
     virtual void InvalidateMapView(bool bErase = true) = 0;
     virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() = 0;
+#ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;
+#endif // DISABLE_CPPRESTSDK
     virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) = 0;
     virtual AddParams::ParamAddingSystem& ParamAddingSystem() = 0;
     virtual bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) = 0;

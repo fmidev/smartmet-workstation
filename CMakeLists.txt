@@ -12,6 +12,17 @@ add_definitions(
     -DUSE_POTENTIAL_VALUES_IN_EDITING
     )
 
+# To disable/enable Cpprestsdk usage in SmartMet build do following: 
+# 1. Set DISABLE_CPPRESTSDK to ON/OFF in smartmet-workstation/CMakeLists.txt
+# 2. Delete the MSVC build directory smartmet-workstation_msvc
+# 3. Run cmake script smartmet-workstation/scripts/cmake/cmake_msvc_build.sh
+# 4. Open smartmet-workstation_msvc/SmartMet.sln in Visual C++ and do full build
+option(DISABLE_CPPRESTSDK "Is CppRestSdk used in build" ON)
+
+if(DISABLE_CPPRESTSDK)
+add_definitions(-DDISABLE_CPPRESTSDK)
+endif()	
+	
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
     )
@@ -179,10 +190,12 @@ add_subdirectory(
     libs/fmi/bizcode/tm_utils
     )
 
+if(NOT DISABLE_CPPRESTSDK)
 add_subdirectory(
     libs/fmi/webclient
     )
-
+endif()
+	
 add_subdirectory(
     libs/fmi/hakemessages
     )
@@ -219,9 +232,11 @@ add_subdirectory(
     libs/fmi/bitmaphandler
     )
 
+if(NOT DISABLE_CPPRESTSDK)
 add_subdirectory(
     libs/fmi/wmssupport
     )
+endif()
 
 add_subdirectory(
     libs/fmi/bizcode/timeviews

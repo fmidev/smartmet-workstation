@@ -37,7 +37,9 @@
 #include "NFmiSeaIcingWarningSystem.h"
 #include "CtrlViewWin32Functions.h"
 #include "CtrlViewFunctions.h"
+#ifndef DISABLE_CPPRESTSDK
 #include "WmsSupport.h"
+#endif // DISABLE_CPPRESTSDK
 #include "ApplicationInterface.h"
 
 #include "commctrl.h"
@@ -997,15 +999,19 @@ void CMainFrame::OnClose()
 
             // HUOM! Jos WmsSupport:in alustus on ep‰onnistunut, ei saa tehd‰ tappok‰sky‰ ja odottelua
             // koska mystisest‰ syyst‰ t‰llˆin CFmiDataLoadingThread2:en lopetus ep‰onnistuu DEBUG moodissa (ei release).
+#ifndef DISABLE_CPPRESTSDK
             if(itsDoc->WmsSupport().isConfigured())
                 itsDoc->WmsSupport().kill();
+#endif // DISABLE_CPPRESTSDK
 			CFmiCombineDataThread::CloseNow(); // sama t‰ss‰ combineData-threadille
 			CFmiSoundingIndexDataThread::CloseNow(); // sama t‰ss‰ soundingIndexData-threadille
 			CFmiSeaIcingMessageThread::CloseNow(); // sama t‰ss‰ HAKE warning luku -threadille
 			CFmiMacroParamUpdateThread::CloseNow(); // t‰ss‰ sama macroParam p‰ivitys -threadille
 			CFmiQueryDataCacheLoaderThread::CloseNow(); // t‰ss‰ sama queryData cachetus -threadeille (3 kpl kerralla)
             NFmiSatelliteImageCacheSystem::StopUpdateThreads();
+#ifndef DISABLE_CPPRESTSDK
             itsDoc->WarningCenterSystem().kill();
+#endif // DISABLE_CPPRESTSDK
             CFmiDataLoadingThread2::CloseNow(); // sama t‰ss‰ combineData-threadille
 
         	CSmartMetDoc* doc = (CSmartMetDoc*)GetActiveDocument();
@@ -1040,6 +1046,7 @@ void CMainFrame::OnClose()
                 itsDoc->LogMessage("SatelliteImageCache-threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
             else
                 itsDoc->LogMessage("SatelliteImageCache-threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+#ifndef DISABLE_CPPRESTSDK
             if(itsDoc->WarningCenterSystem().isDead(std::chrono::milliseconds(1 * 1000)))
                 itsDoc->LogMessage("Hake message -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
             else
@@ -1052,6 +1059,7 @@ void CMainFrame::OnClose()
                 else
                     itsDoc->LogMessage("WmsSupport -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
             }
+#endif // DISABLE_CPPRESTSDK
 
             // N‰m‰ pit‰‰ tehd‰ vasta kun working-thread on lopettanut, koska muuten voi tulla ongelmia
 			// koska dokumentin StoreSupplementaryData tuhoaa ne dll:t, jotka muuten ehk‰ viel‰ lukisivat
@@ -1333,11 +1341,13 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
 				CWinThread *hakeWarningThread = AfxBeginThread(CFmiSeaIcingMessageThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
 
             // K‰ynnistet‰‰n Hake sanomien luku, jos on jotain dataa luettavaksi
+#ifndef DISABLE_CPPRESTSDK
             if(itsDoc->WarningCenterSystem().isThereAnyWorkToDo())
             {
                 itsDoc->WarningCenterSystem().setUpdateApplicationCallback(&CFmiHakeWarningMessages::UpdateApplicationAfterChanges);
                 itsDoc->WarningCenterSystem().goToWorkAfter(std::chrono::milliseconds(seaIcingThreadDelayInMS)); // K‰ytet‰‰n SeaIcing viivett‰
             }
+#endif // DISABLE_CPPRESTSDK
 
 			// data loading threadin k‰ynnistys
 			// HUOM! t‰m‰ pit‰‰ aloittaa viimeisen‰, koska muut threadit (ainakin CFmiSoundingIndexDataThread) voivat lis‰t‰ luettavia datoja.
@@ -1421,12 +1431,14 @@ void CMainFrame::StartNewQueryDataLoadedUpdateTimer(const std::string &loadedFil
 
 void CMainFrame::GetNewWarningMessages(void)
 {
-	if(itsDoc)
+#ifndef DISABLE_CPPRESTSDK
+    if(itsDoc)
 	{
         itsDoc->CheckForNewWarningMessageData();
 		if(itsDoc->WarningCenterSystem().getLegacyData().WarningCenterViewOn())
 			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Warning messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
 	}
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CMainFrame::GetNewSeaIcingMessages(void)
