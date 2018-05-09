@@ -1,4 +1,6 @@
 #include "HakeMessage/KahaMessages.h"
+#ifndef DISABLE_CPPRESTSDK
+
 #include "HakeMessage/HakeMsg.h"
 #include "HakeMessage/json.hpp"
 
@@ -94,3 +96,5 @@ namespace HakeMessage
         return false;
     }
 }
+
+#endif // DISABLE_CPPRESTSDK

@@ -1,4 +1,5 @@
 #pragma once
+#ifndef DISABLE_CPPRESTSDK
 
 #include "NFmiStationView.h"
 #include "NFmiParameterName.h"
@@ -40,4 +41,6 @@ protected:
     long itsLatestProducer = -1;
 
 };
+
+#endif // DISABLE_CPPRESTSDK
 

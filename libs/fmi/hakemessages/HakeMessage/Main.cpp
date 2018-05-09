@@ -1,4 +1,6 @@
 #include "HakeMessage/Main.h"
+#ifndef DISABLE_CPPRESTSDK
+
 #include "HakeMessage/HakeMsg.h"
 #include "HakeMessage/MsgParser.h"
 #include "HakeMessage/Io.h"
@@ -302,3 +304,5 @@ namespace HakeMessage
         return *legacyData_;
     }
 }
+
+#endif // DISABLE_CPPRESTSDK

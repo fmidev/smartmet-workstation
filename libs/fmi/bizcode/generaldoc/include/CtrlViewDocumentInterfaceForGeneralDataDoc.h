@@ -201,7 +201,9 @@ public:
     bool ShowTrajectorsOnMap(int theDescTopIndex) override;
     std::vector<NFmiProducer>& ExtraSoundingProducerList(void) override;
     bool ShowWarningMarkersOnMap(int theDescTopIndex) override;
+#ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;
+#endif // DISABLE_CPPRESTSDK
     CDC* MapBlitDC(int theDescTopIndex) override;
     void ToolTipColumnIndex(int newIndex) override;
     bool HasActiveViewChanged(void) override;
@@ -268,7 +270,9 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() override;
     bool UseWmsMaps() override;
     void UseWmsMaps(bool newValue) override;
+#ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport& WmsSupport() override;
+#endif // DISABLE_CPPRESTSDK
     NFmiBetaProductionSystem& BetaProductionSystem() override;
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;

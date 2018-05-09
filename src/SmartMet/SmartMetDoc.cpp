@@ -3215,7 +3215,8 @@ void CSmartMetDoc::OnAcceleratorToggleHelpCursorOnMap()
 // F9 -pressed
 void CSmartMetDoc::OnButtonWarningCenterDlg()
 {
-	if(GetData())
+#ifndef DISABLE_CPPRESTSDK
+    if(GetData())
 	{
 		if(!itsWarningCenterDlg)
 			CreateWarningCenterDlg(GetData());
@@ -3235,6 +3236,7 @@ void CSmartMetDoc::OnButtonWarningCenterDlg()
 		GetData()->AreaViewDirty(itsMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
 	}
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CSmartMetDoc::OnAcceleratorDoMacroDirectoriesSyncronization()
