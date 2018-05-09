@@ -12,28 +12,21 @@ add_library(
 
 source_group("Src" FILES ${SOURCE_FILES})
 
+set(LINK_LIBRARY_LIST 
+	${PROJECT_NAME}
+    XmlLiteUtils
+    Newbase
+    SmartTools
+    EditingDataUtils
+    cppext
+    cppback
+	)
+
 if(NOT DISABLE_CPPRESTSDK)
-target_link_libraries(
-    ${PROJECT_NAME}
-    XmlLiteUtils
-    Newbase
-    SmartTools
-    EditingDataUtils
-    WebClient
-    cppext
-    cppback
-    )
-else()
-target_link_libraries(
-    ${PROJECT_NAME}
-    XmlLiteUtils
-    Newbase
-    SmartTools
-    EditingDataUtils
-    cppext
-    cppback
-    )
+	set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} WebClient)
 endif()
+
+target_link_libraries(${LINK_LIBRARY_LIST})
 
 target_include_directories( 
     ${PROJECT_NAME}

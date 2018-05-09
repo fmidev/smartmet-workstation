@@ -18,64 +18,38 @@ add_library(
     ${H_FILES} 
     )
 
+set(LINK_LIBRARY_LIST 
+	${PROJECT_NAME}
+    Newbase
+    EditingDataUtils
+    SmartTools
+    CtrlViewUtils
+    SmetData
+    SmetUtils
+    CtrlViews
+    WinRegistryUtils
+    Imagine
+    ModifyEditedData
+    MfcUtils
+    Q2ClientLib
+    Threads
+    CaseStudyLib
+    ToolboxViews
+    HakeMessage
+    Processes
+    ToolboxDep
+    Dialogs
+    StationViews
+    AddParamsToViews
+    CatLog
+    ApplicationDataBase
+	CapData
+    )
 if(NOT DISABLE_CPPRESTSDK)
-target_link_libraries(
-    ${PROJECT_NAME}
-    Newbase
-    EditingDataUtils
-    SmartTools
-    CtrlViewUtils
-    SmetData
-    SmetUtils
-    CtrlViews
-    WinRegistryUtils
-    Imagine
-    ModifyEditedData
-    MfcUtils
-    Q2ClientLib
-    Threads
-    CaseStudyLib
-    ToolboxViews
-    HakeMessage
-    Processes
-    ToolboxDep
-    Dialogs
-    StationViews
-    AddParamsToViews
-    CatLog
-    ApplicationDataBase
-    WmsSupport
-	CapData
-    )
-else()
-target_link_libraries(
-    ${PROJECT_NAME}
-    Newbase
-    EditingDataUtils
-    SmartTools
-    CtrlViewUtils
-    SmetData
-    SmetUtils
-    CtrlViews
-    WinRegistryUtils
-    Imagine
-    ModifyEditedData
-    MfcUtils
-    Q2ClientLib
-    Threads
-    CaseStudyLib
-    ToolboxViews
-    HakeMessage
-    Processes
-    ToolboxDep
-    Dialogs
-    StationViews
-    AddParamsToViews
-    CatLog
-    ApplicationDataBase
-	CapData
-    )
+	set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} WmsSupport)
 endif()
+
+target_link_libraries(${LINK_LIBRARY_LIST})
 	
 target_include_directories( 
     ${PROJECT_NAME}
