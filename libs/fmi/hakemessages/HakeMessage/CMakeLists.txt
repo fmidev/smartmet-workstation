@@ -12,6 +12,7 @@ add_library(
 
 source_group("Src" FILES ${SOURCE_FILES})
 
+if(NOT DISABLE_CPPRESTSDK)
 target_link_libraries(
     ${PROJECT_NAME}
     XmlLiteUtils
@@ -22,6 +23,17 @@ target_link_libraries(
     cppext
     cppback
     )
+else()
+target_link_libraries(
+    ${PROJECT_NAME}
+    XmlLiteUtils
+    Newbase
+    SmartTools
+    EditingDataUtils
+    cppext
+    cppback
+    )
+endif()
 
 target_include_directories( 
     ${PROJECT_NAME}

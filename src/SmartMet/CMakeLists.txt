@@ -129,6 +129,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     VERBATIM
     )
 
+if(NOT DISABLE_CPPRESTSDK)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
     COMMAND ${CMAKE_COMMAND} -E copy_directory 
     ${CPPRESTSDK_OPTIMIZED_DLL_DIR}
@@ -149,6 +150,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug
     VERBATIM
     )
+endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy

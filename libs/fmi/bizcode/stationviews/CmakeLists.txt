@@ -18,6 +18,7 @@ add_library(
     ${H_FILES} 
     )
 
+if(NOT DISABLE_CPPRESTSDK)
 target_link_libraries(
     ${PROJECT_NAME} 
     Newbase
@@ -37,6 +38,26 @@ target_link_libraries(
 	WmsSupport
 	XmlLiteUtils
     )
+else()
+target_link_libraries(
+    ${PROJECT_NAME} 
+    Newbase
+    AutoComplete
+    Toolbox
+    SmartTools
+    Q2ClientLib
+    CtrlViews
+    TimeViews
+    TmUtils
+    Imagine
+    ModifyEditedData
+    Textgen
+    DataUtilities
+    HakeMessage
+	CapData
+	XmlLiteUtils
+    )
+endif()
 
 target_include_directories(
     ${PROJECT_NAME}

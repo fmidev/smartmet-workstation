@@ -187,7 +187,9 @@ BOOL CFmiWarningCenterDlg::OnInitDialog()
     auto &applicationWinRegistry = itsSmartMetDocumentInterface->ApplicationWinRegistry();
     std::string errorBaseStr("Error in CFmiWarningCenterDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(applicationWinRegistry, this, false, errorBaseStr, 0);
-	fShowAllMessages = itsSmartMetDocumentInterface->WarningCenterSystem().getLegacyData().ShowAllMessages();
+#ifndef DISABLE_CPPRESTSDK
+    fShowAllMessages = itsSmartMetDocumentInterface->WarningCenterSystem().getLegacyData().ShowAllMessages();
+#endif // DISABLE_CPPRESTSDK
     fShowHakeMessages = applicationWinRegistry.ShowHakeMessages();
     fShowKaHaMessages = applicationWinRegistry.ShowKaHaMessages();
     itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
@@ -223,7 +225,9 @@ void CFmiWarningCenterDlg::OnClose()
 
 void CFmiWarningCenterDlg::DoWhenClosing(void)
 {
+#ifndef DISABLE_CPPRESTSDK
     itsSmartMetDocumentInterface->WarningCenterSystem().getLegacyData().WarningCenterViewOn(false);
+#endif // DISABLE_CPPRESTSDK
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 }
@@ -291,6 +295,7 @@ void CFmiWarningCenterDlg::OnBnClickedButtonNextTime()
 
 void CFmiWarningCenterDlg::OnBnClickedButtonWarningCenterOptions()
 {
+#ifndef DISABLE_CPPRESTSDK
     auto &warningCenterSystem = itsSmartMetDocumentInterface->WarningCenterSystem();
     CFmiWarningMessageOptionsDlg dlg(&warningCenterSystem, itsSmartMetDocumentInterface->ApplicationWinRegistry(), this);
 	if(dlg.DoModal() == IDOK)
@@ -298,6 +303,7 @@ void CFmiWarningCenterDlg::OnBnClickedButtonWarningCenterOptions()
         warningCenterSystem.getLegacyData().StoreSettings();
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 	}
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CFmiWarningCenterDlg::InitHeaders(void)
@@ -364,6 +370,7 @@ int CFmiWarningCenterDlg::CountShownMessages(void)
 
 void CFmiWarningCenterDlg::GetShownMessages()
 {
+#ifndef DISABLE_CPPRESTSDK
     itsShownHakeMessages.clear();
     itsShownKaHaMessages.clear();
 
@@ -376,6 +383,7 @@ void CFmiWarningCenterDlg::GetShownMessages()
         itsShownHakeMessages = warningCenterSystem.getHakeMessages(startTime, mapTime, *zoomedArea);
     if(fShowKaHaMessages)
         itsShownKaHaMessages = warningCenterSystem.getKahaMessages(startTime, mapTime, *zoomedArea);
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CFmiWarningCenterDlg::Update(void)
@@ -517,9 +525,11 @@ void CFmiWarningCenterDlg::FillGridWithWarningMessages(bool &fFirstTime, int the
 
 void CFmiWarningCenterDlg::OnBnClickedCheckShowAllMessages()
 {
-	UpdateData(TRUE);
+#ifndef DISABLE_CPPRESTSDK
+    UpdateData(TRUE);
     itsSmartMetDocumentInterface->WarningCenterSystem().getLegacyData().ShowAllMessages(fShowAllMessages == TRUE);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CFmiWarningCenterDlg::SetDefaultValues(void)
