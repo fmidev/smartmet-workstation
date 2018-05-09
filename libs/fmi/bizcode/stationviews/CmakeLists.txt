@@ -18,46 +18,29 @@ add_library(
     ${H_FILES} 
     )
 
+set(LINK_LIBRARY_LIST 
+	${PROJECT_NAME}
+    Newbase
+    AutoComplete
+    Toolbox
+    SmartTools
+    Q2ClientLib
+    CtrlViews
+    TimeViews
+    TmUtils
+    Imagine
+    ModifyEditedData
+    Textgen
+    DataUtilities
+    HakeMessage
+	CapData
+	XmlLiteUtils
+    )
 if(NOT DISABLE_CPPRESTSDK)
-target_link_libraries(
-    ${PROJECT_NAME} 
-    Newbase
-    AutoComplete
-    Toolbox
-    SmartTools
-    Q2ClientLib
-    CtrlViews
-    TimeViews
-    TmUtils
-    Imagine
-    ModifyEditedData
-    Textgen
-    DataUtilities
-    HakeMessage
-	CapData
-	WmsSupport
-	XmlLiteUtils
-    )
-else()
-target_link_libraries(
-    ${PROJECT_NAME} 
-    Newbase
-    AutoComplete
-    Toolbox
-    SmartTools
-    Q2ClientLib
-    CtrlViews
-    TimeViews
-    TmUtils
-    Imagine
-    ModifyEditedData
-    Textgen
-    DataUtilities
-    HakeMessage
-	CapData
-	XmlLiteUtils
-    )
+	set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} WmsSupport)
 endif()
+
+target_link_libraries(${LINK_LIBRARY_LIST})
 
 target_include_directories(
     ${PROJECT_NAME}
