@@ -12,6 +12,17 @@ add_definitions(
     -DUSE_POTENTIAL_VALUES_IN_EDITING
     )
 
+# If disabling Cpprestsdk (means setting DISABLE_CPPRESTSDK to ON), do following: 
+# 1. Rename smartmet-workstation\libs\3rd\cpprestsdk directory to e.g. cpprestsdk_XXXX
+# 2. Delete build directory smartmet-workstation_msvc
+# 3. Run cmake script smartmet-workstation\scripts\cmake\cmake_msvc_build.sh
+# And if enabling again (DISABLE_CPPRESTSDK to OFF), do step 1.'s reverse and then rest of the steps as before.
+option(DISABLE_CPPRESTSDK "Is CppRestSdk used in build" ON)
+
+if(DISABLE_CPPRESTSDK)
+add_definitions(-DDISABLE_CPPRESTSDK)
+endif()	
+	
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
     )
@@ -179,10 +190,12 @@ add_subdirectory(
     libs/fmi/bizcode/tm_utils
     )
 
+if(NOT DISABLE_CPPRESTSDK)
 add_subdirectory(
     libs/fmi/webclient
     )
-
+endif()
+	
 add_subdirectory(
     libs/fmi/hakemessages
     )
@@ -219,9 +232,11 @@ add_subdirectory(
     libs/fmi/bitmaphandler
     )
 
+if(NOT DISABLE_CPPRESTSDK)
 add_subdirectory(
     libs/fmi/wmssupport
     )
+endif()
 
 add_subdirectory(
     libs/fmi/bizcode/timeviews

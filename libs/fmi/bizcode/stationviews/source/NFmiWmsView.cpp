@@ -3,6 +3,8 @@
 #endif
 
 #include "NFmiWmsView.h"
+#ifndef DISABLE_CPPRESTSDK
+
 #include "boost/shared_ptr.hpp"
 #include "NFmiArea.h"
 #include "NFmiDrawParam.h"
@@ -93,3 +95,5 @@ std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
     }
     return "";
 }
+
+#endif // DISABLE_CPPRESTSDK

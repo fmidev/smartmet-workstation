@@ -153,10 +153,14 @@
 #endif
 #include <boost/thread.hpp>
 #include "execute-command-in-separate-process.h"
+
+#ifndef DISABLE_CPPRESTSDK
 #include "WmsSupport.h"
-#include <functional>
 #include "CapabilitiesHandler.h"
 #include "CapabilityTree.h"
+#endif // DISABLE_CPPRESTSDK
+
+#include <functional>
 #ifdef _MSC_VER
 #pragma warning (default : 4244 4267) // laitetaan 4244 takaisin p‰‰lle, koska se on t‰rke‰ (esim. double -> int auto castaus varoitus)
 #endif
@@ -536,7 +540,9 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsFileCleanerSystem()
 ,itsWmoStationInfoSystem(true, false)
 ,fWmoStationInfoSystemInitialized(false)
+#ifndef DISABLE_CPPRESTSDK
 ,itsWarningCenterSystem()
+#endif DISABLE_CPPRESTSDK
 ,itsProducerSystem()
 ,itsObsProducerSystem()
 ,itsSatelImageProducerSystem()
@@ -620,7 +626,9 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsLastEditedDataSendTime(NFmiMetTime::gMissingTime)
 ,fLastEditedDataSendHasComeBack(false)
 ,itsEditDataUserList()
+#ifndef DISABLE_CPPRESTSDK
 ,wmsSupport()
+#endif // DISABLE_CPPRESTSDK
 ,paramAddingSystem()
 {
 	NFmiRect bsRect1(0.,0.,1.,0.905);
@@ -809,11 +817,13 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
 void InitWmsSupport()
 {
+#ifndef DISABLE_CPPRESTSDK
     wmsSupport.initialSetUp();
     if(!wmsSupport.isConfigured())
     {
         UseWmsMaps(false);
     }
+#endif // DISABLE_CPPRESTSDK
 }
 
 void InitCapData()
@@ -1476,6 +1486,7 @@ void InitSatelImageProducerSystem(void)
 
 void InitWarningCenterSystem(void)
 {
+#ifndef DISABLE_CPPRESTSDK
     DoVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
@@ -1487,6 +1498,7 @@ void InitWarningCenterSystem(void)
 		errStr += e.what();
         LogAndWarnUser(errStr, "Problems in InitWarningCenterSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
 	}
+#endif // DISABLE_CPPRESTSDK
 }
 
 void InitSeaIcingWarningSystem(void)
@@ -4126,6 +4138,7 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 	thePopupMenu->Add(menuItem);
 }
 
+#ifndef DISABLE_CPPRESTSDK
 void AddAllWmsProducersToParamSelectionPopup(
     const MenuCreationSettings &theMenuSettings,
     NFmiInfoData::Type theDataType,
@@ -4164,10 +4177,12 @@ void AddAllWmsProducersToParamSelectionPopup(
     }
     producerMenuList->Add(subMenuItem);
 }
+#endif // DISABLE_CPPRESTSDK
 
 //Wms datan lis‰ys popupiin
 void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuItemList, NFmiInfoData::Type theDataType)
 {
+#ifndef DISABLE_CPPRESTSDK
     if(theMenuSettings.fDoMapMenu)
     {
         try
@@ -4208,6 +4223,7 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
         {
         }
     }
+#endif // DISABLE_CPPRESTSDK
 }
 
 void AddCustomFolderToMenuItemList(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theCustomMenuList, const std::string &theCustomMenuName)
@@ -7156,12 +7172,14 @@ void SetActiveParamMissingValues(double theValue)
 
 void ChangeWmsMapType(unsigned int theDescTopIndex, bool fForward)
 {
+#ifndef DISABLE_CPPRESTSDK
     if(fForward)
         WmsSupport().nextBackground();
     else
         WmsSupport().previousBackground();
 
     MapDirty(theDescTopIndex, true, true);
+#endif // DISABLE_CPPRESTSDK
 }
 
 void ChangeFileBitmapMapType(unsigned int theDescTopIndex, bool fForward)
@@ -7871,8 +7889,10 @@ void StoreSupplementaryData(void)
 		StoreAllCPDataToFiles();
 		ReportInfoOrganizerDataConsumption();
         StoreBackUpViewMacro(true);
+#ifndef DISABLE_CPPRESTSDK
         itsWarningCenterSystem.getLegacyData().StoreSettings();
-	}
+#endif // DISABLE_CPPRESTSDK
+    }
 	catch(std::exception &e)
 	{
 		std::string problemStr("Problems when trying to save the settings to the settings files:\n");
@@ -8233,7 +8253,9 @@ bool InitCPGriddingProperties(void)
 	{
 		NFmiViewSettingMacro::WarningCenterView &view = theMacro.GetWarningCenterView();
 
-		view.WarningCenterSystem(itsWarningCenterSystem.getLegacyData());
+#ifndef DISABLE_CPPRESTSDK
+        view.WarningCenterSystem(itsWarningCenterSystem.getLegacyData());
+#endif // DISABLE_CPPRESTSDK
         view.ShowHakeMessages(ApplicationWinRegistry().ShowHakeMessages());
         view.ShowKaHaMessages(ApplicationWinRegistry().ShowKaHaMessages());
 	}
@@ -8433,7 +8455,9 @@ bool InitCPGriddingProperties(void)
 	{
 		NFmiViewSettingMacro::WarningCenterView &view = theMacro.GetWarningCenterView();
 
-		itsWarningCenterSystem.getLegacyData().Init(view.WarningCenterSystem());
+#ifndef DISABLE_CPPRESTSDK
+        itsWarningCenterSystem.getLegacyData().Init(view.WarningCenterSystem());
+#endif // DISABLE_CPPRESTSDK
         ApplicationWinRegistry().ShowHakeMessages(view.ShowHakeMessages());
         ApplicationWinRegistry().ShowKaHaMessages(view.ShowKaHaMessages());
     }
@@ -10267,10 +10291,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MacroParamGridSizeY(static_cast<int>(gridSize.Y()));
 	}
 
+#ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void)
 	{
 		return itsWarningCenterSystem;
 	}
+#endif // DISABLE_CPPRESTSDK
 
 	void UpdateCrossSectionMacroParamDataSize(void)
 	{
@@ -10757,6 +10783,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void ChangeWmsOverlayMapType(unsigned int theDescTopIndex, bool fForward)
     {
+#ifndef DISABLE_CPPRESTSDK
         if(fForward)
             WmsSupport().nextOverlay();
         else
@@ -10764,6 +10791,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
         MapDirty(theDescTopIndex, true, true);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's Wms overlay map type changed");
+#endif // DISABLE_CPPRESTSDK
     }
 
     void ChangeFileBitmapOverlayMapType(unsigned int theDescTopIndex, bool fForward)
@@ -13555,8 +13583,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     // Tarkistetaan onko tehty uutta Hake/Kaha sanoma pohjaista queryDataa ja laitetaan se infoOrganizeriin
     void CheckForNewWarningMessageData()
     {
+#ifndef DISABLE_CPPRESTSDK
         AddMessageBasedData(itsWarningCenterSystem.getHakeQueryData(), "fakeHakeFileName", "fakeHakeFilePattern"); // "New warning center message data");
         AddMessageBasedData(itsWarningCenterSystem.getKahaQueryData(), "fakeKaHaFileName", "fakeKaHaFilePattern"); // "New Kansalais Havainto message data");
+#endif // DISABLE_CPPRESTSDK
     }
 
     void ApplyStartupViewMacro()
@@ -13675,10 +13705,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
     }
 
+#ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport& WmsSupport()
     {
         return wmsSupport;
     }
+#endif // DISABLE_CPPRESTSDK
 
     void InitParamAddingSystem()
     {
@@ -13744,7 +13776,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
     AddParams::ParamAddingSystem paramAddingSystem;
+#ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport wmsSupport;
+#endif // DISABLE_CPPRESTSDK
     NFmiViewSettingMacro itsStartupViewMacro; // T‰h‰n ladataan SmartMetin tyhj‰ alkutilanne, jotta SHIFT + F12 pikan‰pp‰imell‰ p‰‰see takaisin alkutilaan milloin tahansa ajon aikana.
     NFmiEditDataUserList itsEditDataUserList; // Jos konffeissa on niin m‰‰r‰tty, t‰h‰n luetaan editoijien tunnukset, ja t‰t‰ listaa k‰ytet‰‰n L‰het‰-data-tietokantaan dialogissa
     std::vector<std::string> itsSmartToolFileNames; // T‰h‰n on listattu rekursiivisesti kaikki perus smarttool hakemistosta haetut tiedostot, joissa on oikea vmr -p‰‰te. Tiedoston nimill‰ on relatiivienn polku (suhteessa perus hakemistoon)
@@ -13887,8 +13921,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiProducerSystem itsProducerSystem;
 	NFmiProducerSystem itsObsProducerSystem; // havainto data tuottajat laitetaan eri pakettiin
 	NFmiProducerSystem itsSatelImageProducerSystem; // satelliitti/tutka kuvien tuottajat laitetaan t‰h‰n (k‰ytet‰‰n mm. parametri pop-up valikoiden tekoon)
+#ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main itsWarningCenterSystem;
-	NFmiFileCleanerSystem itsFileCleanerSystem;
+#endif // DISABLE_CPPRESTSDK
+    NFmiFileCleanerSystem itsFileCleanerSystem;
 
 	bool fIsTEMPCodeSoundingDataAlsoCopiedToEditedData;
 	std::string itsLastTEMPDataStr; // t‰h‰n on talletettu aina viimeksi k‰ytetty TEMP koodin purussa ollut stringi
@@ -15071,10 +15107,12 @@ void NFmiEditMapGeneralDataDoc::SetMacroParamDataGridSize(int xSize, int ySize)
 	pimpl->SetMacroParamDataGridSize(xSize, ySize);
 }
 
+#ifndef DISABLE_CPPRESTSDK
 HakeMessage::Main& NFmiEditMapGeneralDataDoc::WarningCenterSystem(void)
 {
 	return pimpl->WarningCenterSystem();
 }
+#endif // DISABLE_CPPRESTSDK
 /*
 void NFmiEditMapGeneralDataDoc::UpdateWarningMessages(void)
 {
@@ -16371,10 +16409,12 @@ void NFmiEditMapGeneralDataDoc::UseWmsMaps(bool newValue)
     pimpl->UseWmsMaps(newValue);
 }
 
+#ifndef DISABLE_CPPRESTSDK
 Wms::WmsSupport& NFmiEditMapGeneralDataDoc::WmsSupport()
 {
     return pimpl->WmsSupport();
 }
+#endif // DISABLE_CPPRESTSDK
 
 AddParams::ParamAddingSystem& NFmiEditMapGeneralDataDoc::ParamAddingSystem()
 {

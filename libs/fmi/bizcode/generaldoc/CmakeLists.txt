@@ -18,6 +18,7 @@ add_library(
     ${H_FILES} 
     )
 
+if(NOT DISABLE_CPPRESTSDK)
 target_link_libraries(
     ${PROJECT_NAME}
     Newbase
@@ -46,7 +47,36 @@ target_link_libraries(
     WmsSupport
 	CapData
     )
-
+else()
+target_link_libraries(
+    ${PROJECT_NAME}
+    Newbase
+    EditingDataUtils
+    SmartTools
+    CtrlViewUtils
+    SmetData
+    SmetUtils
+    CtrlViews
+    WinRegistryUtils
+    Imagine
+    ModifyEditedData
+    MfcUtils
+    Q2ClientLib
+    Threads
+    CaseStudyLib
+    ToolboxViews
+    HakeMessage
+    Processes
+    ToolboxDep
+    Dialogs
+    StationViews
+    AddParamsToViews
+    CatLog
+    ApplicationDataBase
+	CapData
+    )
+endif()
+	
 target_include_directories( 
     ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/include

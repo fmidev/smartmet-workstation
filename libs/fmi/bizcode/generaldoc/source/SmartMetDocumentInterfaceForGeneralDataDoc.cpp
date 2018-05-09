@@ -1161,10 +1161,12 @@ NFmiSeaIcingWarningSystem& SmartMetDocumentInterfaceForGeneralDataDoc::SeaIcingW
     return itsDoc->SeaIcingWarningSystem();
 }
 
+#ifndef DISABLE_CPPRESTSDK
 HakeMessage::Main& SmartMetDocumentInterfaceForGeneralDataDoc::WarningCenterSystem()
 {
     return itsDoc->WarningCenterSystem();
 }
+#endif // DISABLE_CPPRESTSDK
 
 CtrlViewUtils::GraphicalInfo& SmartMetDocumentInterfaceForGeneralDataDoc::GetGraphicalInfo(int theMapViewDescTopIndex)
 {

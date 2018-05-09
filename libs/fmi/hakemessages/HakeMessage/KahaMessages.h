@@ -1,4 +1,5 @@
 #pragma once
+#ifndef DISABLE_CPPRESTSDK
 
 #include "HakeMessage/KahaMsg.h"
 
@@ -28,3 +29,5 @@ namespace HakeMessage
         bool shouldReplaceOlderMessage(const KahaMsg& message, const NFmiMetTime& foundMsgsSendingTime);
     };
 }
+
+#endif // DISABLE_CPPRESTSDK
