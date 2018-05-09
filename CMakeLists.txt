@@ -17,7 +17,7 @@ add_definitions(
 # 2. Delete the MSVC build directory smartmet-workstation_msvc
 # 3. Run cmake script smartmet-workstation/scripts/cmake/cmake_msvc_build.sh
 # 4. Open smartmet-workstation_msvc/SmartMet.sln in Visual C++ and do full build
-option(DISABLE_CPPRESTSDK "Is CppRestSdk used in build" ON)
+option(DISABLE_CPPRESTSDK "Is CppRestSdk used in build" OFF)
 
 if(DISABLE_CPPRESTSDK)
 add_definitions(-DDISABLE_CPPRESTSDK)
