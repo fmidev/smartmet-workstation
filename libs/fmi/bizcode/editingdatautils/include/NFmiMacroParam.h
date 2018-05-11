@@ -21,8 +21,8 @@ public:
 	void DrawParam(boost::shared_ptr<NFmiDrawParam> &newValue) {itsDrawParam = newValue;}
 	bool IsMacroParamDirectory(void) const {return fMacroParamDirectory;}
 	void SetMacroParamDirectory(bool newState) {fMacroParamDirectory = newState;}
-	const std::string& MacroParaDirectoryPath(void) const {return itsMacroParaDirectoryPath;}
-	void MacroParaDirectoryPath(const std::string &thePath) {itsMacroParaDirectoryPath = thePath;}
+	const std::string& MacroParamDirectoryPath(void) const {return itsMacroParaDirectoryPath;}
+	void MacroParamDirectoryPath(const std::string &thePath) {itsMacroParaDirectoryPath = thePath;}
 	bool ErrorInMacro(void) const {return fErrorInMacro;}
 	void ErrorInMacro(bool newValue) {fErrorInMacro = newValue;}
 
