@@ -74,6 +74,7 @@ BEGIN_MESSAGE_MAP(CFmiParamAddingDlg, CDialogEx)
     ON_WM_GETMINMAXINFO()
     ON_WM_SIZE()
     ON_WM_TIMER()
+    ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 void CFmiParamAddingDlg::SetDefaultValues(void)
@@ -140,8 +141,8 @@ void CFmiParamAddingDlg::DoWhenClosing(void)
 
 void CFmiParamAddingDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
-    lpMMI->ptMinTrackSize.x = 500;
-    lpMMI->ptMinTrackSize.y = 400;
+    lpMMI->ptMinTrackSize.x = 250;
+    lpMMI->ptMinTrackSize.y = 250;
 
     CDialogEx::OnGetMinMaxInfo(lpMMI);
 }
@@ -304,33 +305,79 @@ void CFmiParamAddingDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, boo
     }
 }
 
-static const COLORREF gCategoryBkColor = RGB(250, 220, 220);
-static const COLORREF gProducerBkColor = RGB(220, 250, 220);
-static const COLORREF gDataBkColor = RGB(220, 220, 250);
-static const COLORREF gParamBkColor = RGB(255, 255, 255);
-static const COLORREF gSubParamBkColor = RGB(255, 255, 245);
-static const COLORREF gLevelBkColor = RGB(250, 250, 220);
-static const COLORREF gErrorBkColor = RGB(190, 190, 190);
+static const COLORREF gCategoryColor = RGB(250, 220, 220);
+static const COLORREF gProducerColor = RGB(220, 250, 220);
+//static const COLORREF gDataColor = RGB(220, 220, 250);
+static const COLORREF gDataColor = RGB(200, 200, 255);
+static const COLORREF gParamColor = RGB(255, 255, 255);
+static const COLORREF gSubParamColor = RGB(255, 255, 245);
+static const COLORREF gLevelColor1 = RGB(200, 200, 255);
+static const COLORREF gLevelColor2 = RGB(170, 170, 255);
+static const COLORREF gLevelColor3 = RGB(140, 140, 255);
+static const COLORREF gLevelColor4 = RGB(110, 110, 255);
+static const COLORREF gLevelColor5 = RGB(90, 90, 255);
+static const COLORREF gLevelColor6 = RGB(60, 60, 255);
+static const COLORREF gLevelColor7 = RGB(40, 40, 255);
+static const COLORREF gLevelColor8 = RGB(20, 20, 255);
+static const COLORREF gLevelColor9 = RGB(10, 10, 255);
+static const COLORREF gLevelColor10 = RGB(0, 0, 255);
+static const COLORREF gErrorColor = RGB(190, 190, 190);
 
 static COLORREF getUsedBackgroundColor(const AddParams::SingleRowItem &theRowItem)
 {
-    switch(theRowItem.rowType())
+    // Params always have white background color
+    if(theRowItem.leafNode()) { return gParamColor; }
+
+    if(!NFmiDrawParam::IsMacroParamCase(theRowItem.dataType()))
     {
-    case AddParams::kCategoryType:
-        return gCategoryBkColor;
-    case AddParams::kProducerType:
-        return gProducerBkColor;
-    case AddParams::kDataType:
-        return gDataBkColor;
-    case AddParams::kParamType:
-        return gParamBkColor;
-    case AddParams::kSubParamType:
-    case AddParams::kSubParamLevelType:
-        return gSubParamBkColor;
-    case AddParams::kLevelType:
-        return gLevelBkColor;
+        switch(theRowItem.rowType())
+        {
+        case AddParams::kCategoryType:
+            return gCategoryColor;
+        case AddParams::kProducerType:
+            return gProducerColor;
+        case AddParams::kDataType:
+            return gDataColor;
+        case AddParams::kParamType:
+            return gParamColor;
+        case AddParams::kSubParamType:
+        case AddParams::kSubParamLevelType:
+            return gSubParamColor;
+        case AddParams::kLevelType:
+            return gLevelColor1;
+        default:
+            return gErrorColor;
+        }
+    }
+
+    switch(theRowItem.treeDepth())
+    {
+    case 1:
+        return gCategoryColor;
+    case 2:
+        return gProducerColor;
+    case 3:
+        return gLevelColor1;
+    case 4:
+        return gLevelColor2;
+    case 5:
+        return gLevelColor3;
+    case 6:
+        return gLevelColor4;
+    case 7:
+        return gLevelColor5;
+    case 8:
+        return gLevelColor6;
+    case 9:
+        return gLevelColor7;
+    case 10:
+        return gLevelColor8;
+    case 11:
+        return gLevelColor9;
+    case 12:
+        return gLevelColor10;
     default:
-        return gErrorBkColor;
+        return gErrorColor;
     }
 }
 
@@ -395,17 +442,34 @@ void CFmiParamAddingDlg::HandleGridCtrlsLButtonDblClk()
 
 void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
 {
-    if(rowItem.dataType() != NFmiInfoData::kNoDataType)
+    if(rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode())
     {
-        NFmiMenuItem addParamCommand(
-            static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
-            NFmiString("Add some param"),
-            NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.itemName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
-            kAddViewWithRealRowNumber,
-            NFmiMetEditorTypes::kFmiParamsDefaultView,
-            nullptr,
-            rowItem.dataType());
-        itsSmartMetDocumentInterface->ExecuteCommand(addParamCommand, itsParamAddingSystem->LastActivatedRowIndex(), 0);
+        NFmiMenuItem *addParamCommand;
+        if(NFmiDrawParam::IsMacroParamCase(rowItem.dataType())) {
+            addParamCommand = new NFmiMenuItem(
+                static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
+                rowItem.itemName(),
+                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.itemName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+                kAddViewWithRealRowNumber,
+                NFmiMetEditorTypes::kFmiParamsDefaultView,
+                rowItem.level().get(),
+                rowItem.dataType());
+                                                                                                                                                                                                                                                          
+            addParamCommand->MacroParamInitName(rowItem.uniqueDataId());
+        } 
+        else
+        {
+            addParamCommand = new NFmiMenuItem(
+                static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
+                NFmiString("Add some param"),
+                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.itemName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+                kAddViewWithRealRowNumber,
+                NFmiMetEditorTypes::kFmiParamsDefaultView,
+                rowItem.level().get(), 
+                rowItem.dataType());
+        }
+
+        itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParamAddingSystem->LastActivatedRowIndex(), 0);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParamAddingDlg: Adding param to map view");
     }
 }
@@ -467,4 +531,12 @@ std::string CFmiParamAddingDlg::MakeTitleText()
     str += MakeActiveViewRowText();
     str += ")";
     return str;
+}
+
+
+BOOL CFmiParamAddingDlg::OnEraseBkgnd(CDC* pDC)
+{
+    return FALSE;
+
+    //return CDialogEx::OnEraseBkgnd(pDC);
 }

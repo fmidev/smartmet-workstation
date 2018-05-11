@@ -6,8 +6,10 @@
 #include <vector>
 
 class NFmiHelpDataInfoSystem;
+class NFmiHelpDataInfo;
 class NFmiInfoOrganizer;
 class NFmiFastQueryInfo;
+class NFmiMacroParamItem;
 
 namespace AddParams
 {
@@ -16,12 +18,17 @@ namespace AddParams
     class ProducerData
     {
 		NFmiProducer producer_;
+        NFmiInfoData::Type dataCategory_;  //This distinguish model, observation, satellite, etc. datatypes
         std::vector<std::unique_ptr<SingleData>> dataVector_;
+        std::vector<std::unique_ptr<SingleRowItem>> satelliteDataVector_; // Satellite data doesn't have queryData, so it's handled differently. Biggest difference is that it skips singleData creation.
+        std::vector<std::unique_ptr<SingleRowItem>> macroParamDataVector_;
+
     public:
-        ProducerData(const NFmiProducer &producer);
+        ProducerData(const NFmiProducer &producer, NFmiInfoData::Type dataCategory);
         ~ProducerData();
 
         bool updateData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        bool updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree);
         const NFmiProducer& producer() const { return producer_; }
         const std::vector<std::unique_ptr<SingleData>>& dataVector() const { return dataVector_; }
         bool empty() const { return dataVector_.empty(); }
@@ -29,6 +36,10 @@ namespace AddParams
         std::string makeUniqueProducerIdString() const;
     private:
         bool updateData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        bool updateSatelliteData(NFmiHelpDataInfoSystem &helpDataInfoSystem);
         void addNewSingleData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, const std::vector<std::unique_ptr<SingleRowItem>> &thisDataVector) const;
+        int macroParamsToVector(std::vector<std::unique_ptr<SingleRowItem>> &macroParamVector, const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth);
+        std::vector<std::unique_ptr<SingleRowItem>> createMacroParamVector(const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth);
     };
 }

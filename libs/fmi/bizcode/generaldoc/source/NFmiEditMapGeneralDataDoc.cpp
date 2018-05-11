@@ -4475,12 +4475,11 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 		menuList->Add(menuItem1);
 	}
 
-    //Cap datan testausta varten
     if(capDataSystem.useCapData())
     {
         NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345)); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
         std::string menuString = "Warnings (CAP)";
-        NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, ConceptualModelData().DefaultUserName()), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCapData); // 0 = NFmiLevel-pointteri
+        NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, "cap-data"), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCapData); // 0 = NFmiLevel-pointteri
         menuList->Add(menuItem1);
     }
 
@@ -4556,7 +4555,10 @@ void AddToListAllThisDataTypes(const MenuCreationSettings &theMenuSettings, NFmi
 		for(int i=0; i<size; i++)
 			AddSmartInfoToMenuList(theMenuSettings, infos[i], subMenuList, theDataType);
 
-		NFmiMenuItem *subMenuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, "Radar data", NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSingleStationRadarData); // 0 = NFmiLevel-pointteri
+		NFmiMenuItem *subMenuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, "Radar data", 
+            NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 
+            0, NFmiInfoData::kSingleStationRadarData); // 0 = NFmiLevel-pointteri
+
 		subMenuItem->AddSubMenu(subMenuList);
 		theMenuList->Add(subMenuItem);
 	}
@@ -4566,14 +4568,16 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 {
 	bool anySatelProducersFound = false;
 	std::string menuString = ::GetDictionaryString("MapViewParamPopUpSatelliteData");
-	NFmiMenuItem *menuItem2 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
+	NFmiMenuItem *menuItem2 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), 
+        theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
 
 	NFmiMenuItemList *satelProducerMenuList = new NFmiMenuItemList;
 	std::vector<NFmiProducerInfo> &satelProducers = itsSatelImageProducerSystem.Producers();
 	for(size_t j=0; j<satelProducers.size(); j++)
 	{
 		bool anyChannelsFound = false;
-		NFmiMenuItem *menuItemProducer = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, satelProducers[j].Name(), NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
+		NFmiMenuItem *menuItemProducer = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, satelProducers[j].Name(), NFmiDataIdent(), 
+            theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
 		NFmiMenuItemList *satelChannelMenuList = new NFmiMenuItemList;
 		int helpDataSize = HelpDataInfoSystem()->DynamicCount();
 		for(int i=0; i<helpDataSize; i++)
@@ -4585,7 +4589,8 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 				int helpDataProdId = helpDataInfo.FakeProducerId();
 				if(prodId > 0 && prodId == helpDataProdId)
 				{
-					NFmiMenuItem *satelItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, helpDataInfo.ImageDataIdent().GetParamName(), helpDataInfo.ImageDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
+					NFmiMenuItem *satelItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, helpDataInfo.ImageDataIdent().GetParamName(), 
+                        helpDataInfo.ImageDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
 					satelChannelMenuList->Add(satelItem);
 					anyChannelsFound = true;
 				}
@@ -7892,7 +7897,7 @@ void StoreSupplementaryData(void)
 #ifndef DISABLE_CPPRESTSDK
         itsWarningCenterSystem.getLegacyData().StoreSettings();
 #endif // DISABLE_CPPRESTSDK
-    }
+	}
 	catch(std::exception &e)
 	{
 		std::string problemStr("Problems when trying to save the settings to the settings files:\n");
@@ -8254,7 +8259,7 @@ bool InitCPGriddingProperties(void)
 		NFmiViewSettingMacro::WarningCenterView &view = theMacro.GetWarningCenterView();
 
 #ifndef DISABLE_CPPRESTSDK
-        view.WarningCenterSystem(itsWarningCenterSystem.getLegacyData());
+		view.WarningCenterSystem(itsWarningCenterSystem.getLegacyData());
 #endif // DISABLE_CPPRESTSDK
         view.ShowHakeMessages(ApplicationWinRegistry().ShowHakeMessages());
         view.ShowKaHaMessages(ApplicationWinRegistry().ShowKaHaMessages());
@@ -8456,7 +8461,7 @@ bool InitCPGriddingProperties(void)
 		NFmiViewSettingMacro::WarningCenterView &view = theMacro.GetWarningCenterView();
 
 #ifndef DISABLE_CPPRESTSDK
-        itsWarningCenterSystem.getLegacyData().Init(view.WarningCenterSystem());
+		itsWarningCenterSystem.getLegacyData().Init(view.WarningCenterSystem());
 #endif // DISABLE_CPPRESTSDK
         ApplicationWinRegistry().ShowHakeMessages(view.ShowHakeMessages());
         ApplicationWinRegistry().ShowKaHaMessages(view.ShowKaHaMessages());
@@ -13717,13 +13722,33 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         DoVerboseFunctionStartingLogReporting(__FUNCTION__);
         try
         {
-            paramAddingSystem.initialize(ProducerSystem(), *InfoOrganizer(), *HelpDataInfoSystem());
+            paramAddingSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
+                *InfoOrganizer(), *HelpDataInfoSystem());
+
+            auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
+            paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
+
+            // Add other data. Joonas: jatka t‰st‰!
+            //if(ConceptualModelData().Use())
+            //{
+            //    NFmiProducer prod(1028); // No official producerId
+            //    std::string menuString = "Conceptual analysis";
+            //    NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, ConceptualModelData().DefaultUserName()), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kConceptualModelData); // 0 = NFmiLevel-pointteri
+            //    menuList->Add(menuItem1);
+            //}
+
+            if(capDataSystem.useCapData())
+            {
+                NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345)); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
+                std::string menuString = "Warnings (CAP)";
+                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
+                //NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, "cap-data"), prod), 
+                //    theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCapData);
+                //menuList->Add(menuItem1);
+            }
+
             // TODO alusta eri categoria datoilla ilman varsinaisia datoja (lis‰‰ kyseinen ominaisuus ParamAddingSystem:iin)
-            // ProducerSystem()
-            // ObsProducerSystem()
-            // SatelImageProducerSystem()
             // WmsSupport()
-            // MacroParams()
         }
         catch(std::exception &e)
         {
@@ -13733,7 +13758,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void UpdateParamAddingSystem()
     {
-        ParamAddingSystem().updateModelData();
+        ParamAddingSystem().updateData();
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Update Param adding dialog system", SmartMetViewId::ParamAddingDlg);
     }
 
@@ -13919,12 +13944,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiHelpEditorSystem itsHelpEditorSystem;
 
 	NFmiProducerSystem itsProducerSystem;
-	NFmiProducerSystem itsObsProducerSystem; // havainto data tuottajat laitetaan eri pakettiin
+	NFmiProducerSystem itsObsProducerSystem;
 	NFmiProducerSystem itsSatelImageProducerSystem; // satelliitti/tutka kuvien tuottajat laitetaan t‰h‰n (k‰ytet‰‰n mm. parametri pop-up valikoiden tekoon)
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main itsWarningCenterSystem;
 #endif // DISABLE_CPPRESTSDK
-    NFmiFileCleanerSystem itsFileCleanerSystem;
+	NFmiFileCleanerSystem itsFileCleanerSystem;
 
 	bool fIsTEMPCodeSoundingDataAlsoCopiedToEditedData;
 	std::string itsLastTEMPDataStr; // t‰h‰n on talletettu aina viimeksi k‰ytetty TEMP koodin purussa ollut stringi
