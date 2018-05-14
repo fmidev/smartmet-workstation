@@ -506,6 +506,10 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     bool betaVersion = false;
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
+
+    CString possibleWarningTextU_; // = _TEXT("Wms ja Hake + KaHa sanomien tuki otettu pois p‰‰lt‰!");
+    if(possibleWarningTextU_.GetLength())
+        itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 370), true));
 }
 
 // Oletus, theControlPath on absoluuttinen polku joko tiedostoon tai hakemistoon.
