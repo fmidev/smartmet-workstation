@@ -27,7 +27,7 @@ namespace AddParams
     ,infoOrganizer_(nullptr)
     ,helpDataInfoSystem_(nullptr)
     ,itsLastAcivatedDescTopIndex(0)
-    ,itsLastActivatedRowIndex(0)
+    ,itsLastActivatedRowIndex(1)
     ,helpDataIDs()
     {
     }

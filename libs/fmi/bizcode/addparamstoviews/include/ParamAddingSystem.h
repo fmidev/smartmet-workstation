@@ -43,7 +43,11 @@ namespace AddParams
 
         // Here is information about last activated view and its row. these are
         // used to insert selected parameters to right places.
+        // 0 = main map, 1 = map-view-2, 2 = map-view-3
+        // In future these will be added: 98 = cross-section-view, 99 = time-serial-view
         unsigned int itsLastAcivatedDescTopIndex;
+        // The view row that has been last clicked with mouse.
+        // This index starts from 1 !!
         int itsLastActivatedRowIndex;
 
         // Help data's producer id's
