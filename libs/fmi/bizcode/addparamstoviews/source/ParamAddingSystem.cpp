@@ -45,15 +45,11 @@ namespace AddParams
         helpDataIDs = {101, 107, 108, 109, 160, 242}; // Help Data id's. These are added to Help Data Category
     }
 
-    void ParamAddingSystem::addHelpData(const NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
+    void ParamAddingSystem::addHelpData(NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
     {
-        //std::string uniqueDataId = menuString + std::string(producer.GetName());
-        //SingleRowItem item = SingleRowItem(kParamType, menuString, producer, true);
-        //otherHelpData.push_back(item);
-        //SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId,
-        //    bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType,
-        //    unsigned long parentItemId, const std::string &parentItemName, const bool leafNode,
-        //    const std::shared_ptr<NFmiLevel> &level, const int treeDepth)
+        std::string uniqueDataId = std::string(producer.GetName()) + "-" + menuString;
+        SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, dataType, 0, "", true, nullptr, 2);
+        otherHelpData.push_back(item);
     }
 
     void ParamAddingSystem::updateData()
@@ -61,9 +57,9 @@ namespace AddParams
         updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
         updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
+        updateMacroParamData("Macro Params", NFmiInfoData::kMacroParam);
         updateData("Help data", *modelProducerSystem_, NFmiInfoData::kModelHelpData);
         updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
-        updateMacroParamData("Macro Params", NFmiInfoData::kMacroParam);
     }
 
     void ParamAddingSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory)
@@ -152,6 +148,10 @@ namespace AddParams
             dialogRowData_.push_back(::makeRowItem(*category, uniqueId, categoryMemory));
             auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory);
             dialogRowData_.insert(dialogRowData_.end(), gategoryRowData.begin(), gategoryRowData.end());
+        }
+        for(const auto &rowItem : otherHelpData)
+        {
+            dialogRowData_.push_back(rowItem);
         }
     }
 
