@@ -2,6 +2,6 @@
 
 dev=$(cat ./branches/dev_branch)
 
-git checkout $dev && git push origin $dev
+git checkout $dev && git push --tags origin $dev
 
 read -p "Press [Enter] key to continue..."
