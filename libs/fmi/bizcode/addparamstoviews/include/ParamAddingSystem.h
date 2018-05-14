@@ -2,13 +2,13 @@
 
 #include "SingleRowItem.h"
 #include "boost/shared_ptr.hpp"
+#include "NFmiProducer.h"
 #include <vector>
 #include <functional>
 
 class NFmiHelpDataInfoSystem;
 class NFmiInfoOrganizer;
 class NFmiProducerSystem;
-class NFmiProducer;
 class NFmiMacroParamSystem;
 
 namespace AddParams
@@ -57,7 +57,7 @@ namespace AddParams
         ~ParamAddingSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
-        void addHelpData(const NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType);
+        void addHelpData(NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType);
         void updateData();
         void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory);
         int updateWaitTimeoutInSeconds() const { return updateWaitTimeoutInSeconds_; }

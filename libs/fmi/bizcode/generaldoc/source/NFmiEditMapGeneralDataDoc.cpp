@@ -13728,25 +13728,20 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
-            // Add other data. Joonas: jatka t‰st‰!
+            // Add other data to help data. 
             //if(ConceptualModelData().Use())
             //{
-            //    NFmiProducer prod(1028); // No official producerId
-            //    std::string menuString = "Conceptual analysis";
-            //    NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, ConceptualModelData().DefaultUserName()), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kConceptualModelData); // 0 = NFmiLevel-pointteri
-            //    menuList->Add(menuItem1);
+            //    NFmiProducer prod(1028, "Analysis"); // No official producerId
+            //    std::string menuString = "Conceptual analysis"; // Joonas: Conceptual analysis uses name to fetch correct data, so needs to be fixed before use!
+            //    paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData);
             //}
 
             if(capDataSystem.useCapData())
             {
-                NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345)); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
+                NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345), "CAP"); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
                 std::string menuString = "Warnings (CAP)";
                 paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
-                //NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, "cap-data"), prod), 
-                //    theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCapData);
-                //menuList->Add(menuItem1);
             }
-
             // TODO alusta eri categoria datoilla ilman varsinaisia datoja (lis‰‰ kyseinen ominaisuus ParamAddingSystem:iin)
             // WmsSupport()
         }
