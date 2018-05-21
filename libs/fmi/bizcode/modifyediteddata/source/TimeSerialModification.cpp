@@ -1005,7 +1005,11 @@ static bool MustMakeValidationCheckAfterModifyingThisParam(TimeSerialModificatio
 		{
 		case kFmiTemperature: // T-DP tarkasteluissa
 		case kFmiPrecipitation1h:
-		case kFmiPrecipitationForm:
+#ifdef USE_POTENTIAL_VALUES_IN_EDITING
+        case kFmiPotentialPrecipitationForm:
+#else
+        case kFmiPrecipitationForm:
+#endif
 			return true;
 		}
 	}
@@ -1063,7 +1067,11 @@ static bool MakeDataValiditation_PrForm_T(TimeSerialModificationDataInterface &t
 		if(editedData)
 		{
 			boost::shared_ptr<NFmiFastQueryInfo> prFormInfo(new NFmiFastQueryInfo(*editedData));
-			if(!prFormInfo->Param(kFmiPrecipitationForm))
+#ifdef USE_POTENTIAL_VALUES_IN_EDITING
+            if(!prFormInfo->Param(kFmiPotentialPrecipitationForm))
+#else
+            if(!prFormInfo->Param(kFmiPrecipitationForm))
+#endif
 				return false;
 			boost::shared_ptr<NFmiFastQueryInfo> temperatureInfo(new NFmiFastQueryInfo(*editedData));
 			if(!temperatureInfo->Param(kFmiTemperature))
