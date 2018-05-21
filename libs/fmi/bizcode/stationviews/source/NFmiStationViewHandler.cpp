@@ -3797,7 +3797,8 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridColumnNumber);
             break;
 
-			case kFmiPrecipitationForm:
+            case kFmiPrecipitationForm:
+            case kFmiPotentialPrecipitationForm:
 				stationView = new NFmiPrecipitationFormSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 																	  ,itsToolBox
 																	  ,itsDrawingEnvironment

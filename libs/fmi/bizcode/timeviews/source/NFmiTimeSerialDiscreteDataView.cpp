@@ -171,7 +171,9 @@ void NFmiTimeSerialDiscreteDataView::GetLowAndHighLimits(boost::shared_ptr<NFmiD
 	FmiParameterName parName = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
 	if(parName == kFmiPrecipitationForm)
 		theHigherLimit = 8;
-	else if(parName == kFmiFogIntensity)
+    else if(parName == kFmiPotentialPrecipitationForm)
+        theHigherLimit = 8;
+    else if(parName == kFmiFogIntensity)
 		theHigherLimit = 3;
 	else if(parName == kFmiPrecipitationType)
 		theHigherLimit = 3;
