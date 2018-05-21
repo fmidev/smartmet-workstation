@@ -129,6 +129,13 @@ bool CFmiOperationProgressDlg::WaitUntilInitialized(void)
 			return false;
 		Sleep(10);
 	}
-	return true;
+    // Lisäksi pitää varmistaa että itsProgressCtrl on myös alustettu!
+    for(int i = 0; itsProgressCtrl.GetSafeHwnd() == NULL; i++)
+    {
+        if(i > 200)
+            return false;
+        Sleep(10);
+    }
+    return true;
 }
 
