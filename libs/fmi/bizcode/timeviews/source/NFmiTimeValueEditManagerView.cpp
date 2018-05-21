@@ -369,7 +369,8 @@ NFmiTimeSerialView* NFmiTimeValueEditManagerView::CreateTimeSerialView(boost::sh
 		{
 			switch (parName)
 			{
-			case kFmiPrecipitationForm:
+            case kFmiPrecipitationForm:
+            case kFmiPotentialPrecipitationForm:
 				view = new NFmiTimeSerialPrecipitationFormView(rect
 															   ,itsToolBox
 															   ,itsDrawingEnvironment
