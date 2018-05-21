@@ -1125,10 +1125,10 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 		}
 		bool status = true;
 		if(theAdapter.MetEditorOptionsData().UseDataValiditation_PrForm_T())
-			status = status && ::MakeDataValiditation_PrForm_T(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
+			status &= ::MakeDataValiditation_PrForm_T(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
 
 		if(theAdapter.MetEditorOptionsData().UseDataValiditation_T_DP())
-			status = status && ::MakeDataValiditation_T_DP(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
+			status &= ::MakeDataValiditation_T_DP(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
 		return status;
 	}
 	return false;
