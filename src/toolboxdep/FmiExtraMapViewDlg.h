@@ -135,4 +135,5 @@ public:
     afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
     afx_msg void OnAcceleratorMoveManyMapRowsUp();
     afx_msg void OnAcceleratorMoveManyMapRowsDown();
+    afx_msg void OnAcceleratorLockRowToMainMap();
 };
