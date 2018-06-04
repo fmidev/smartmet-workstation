@@ -582,6 +582,7 @@ bool NFmiBetaProduct::CheckSynopStationIdListRelatedInputs(const std::string &th
     fSynopStationIdListInputOk = false;
     try
     {
+        itsSynopStationIdListString = theSynopStationIdListString;
         itsSynopStationIdList = ::MakeIndexList(theSynopStationIdListString);
         fSynopStationIdListInputOk = true;
     }
