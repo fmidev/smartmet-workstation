@@ -1411,3 +1411,8 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int th
         theLatLon, theTime, theSelectionCombineFunction, theMask
         , theRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
+{
+    itsDoc->UpdateRowInLockedDescTops(theOrigDescTopIndex);
+}
