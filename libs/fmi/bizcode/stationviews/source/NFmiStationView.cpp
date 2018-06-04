@@ -428,8 +428,8 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
 
     if(minmaxCalc.MaxValue() != kFloatMissing)
     {
-        if(minmaxCalc.MaxValue() - avgCalc.CalculationResult() >= 2)
-            return static_cast<int>(avgCalc.CalculationResult()); // jos maksimi pituuden ja keski teksti pituuden ero oli kaksi tai yli, palauta keskiarvo
+        if(minmaxCalc.MaxValue() - avgCalc.CalculationResult() >= 4)
+            return boost::math::iround(avgCalc.CalculationResult()); // jos maksimi pituuden ja keski teksti pituuden ero oli 4 tai yli, palauta keskiarvon pyöristys
         else // muuten palauta maksimi arvo
             return static_cast<int>(minmaxCalc.MaxValue());
     }
