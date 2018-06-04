@@ -605,6 +605,7 @@ void CFmiExtraMapViewDlg::OnButtonMapViewSettings()
         mapViewDescTop->ViewGridSize(mapViewDescTop->ViewGridSize(), mapViewWinRegistry);
         mapViewDescTop->MapDirty(true, true);
         mapViewDescTop->BorderDrawDirty(true);
+        itsSmartMetDocumentInterface->UpdateRowInLockedDescTops(itsMapViewDescTopIndex);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Extra map view settings changed");
 	}
 }
@@ -649,6 +650,7 @@ void CFmiExtraMapViewDlg::OnAcceleratorLockTimeToMainMap()
 void CFmiExtraMapViewDlg::OnAcceleratorLockRowToMainMap()
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewRow(!itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewRow());
+    itsSmartMetDocumentInterface->UpdateRowInLockedDescTops(itsMapViewDescTopIndex);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle lock row to main map view");
 }
 
