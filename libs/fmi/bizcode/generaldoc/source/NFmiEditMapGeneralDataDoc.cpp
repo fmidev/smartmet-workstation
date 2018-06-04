@@ -16509,3 +16509,8 @@ Warnings::CapDataSystem& NFmiEditMapGeneralDataDoc::GetCapDataSystem()
 {
     return pimpl->GetCapDataSystem();
 }
+
+void NFmiEditMapGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
+{
+    pimpl->UpdateRowInLockedDescTops(theOrigDescTopIndex);
+}

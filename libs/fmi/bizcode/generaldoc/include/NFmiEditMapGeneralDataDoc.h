@@ -145,6 +145,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex);
     Warnings::CapDataSystem& GetCapDataSystem();
     Q2ServerInfo& GetQ2ServerInfo();
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex);
