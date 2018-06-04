@@ -118,6 +118,7 @@ ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_ZOOM_OUT, &CFmiExtraMapViewDlg::OnAccelerato
 ON_WM_GETMINMAXINFO()
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_MANY_MAP_ROWS_UP, &CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsUp)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_MANY_MAP_ROWS_DOWN, &CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsDown)
+ON_COMMAND(ID_ACCELERATOR_LOCK_ROW_TO_MAIN_MAP, &CFmiExtraMapViewDlg::OnAcceleratorLockRowToMainMap)
 END_MESSAGE_MAP()
 
 
@@ -604,6 +605,7 @@ void CFmiExtraMapViewDlg::OnButtonMapViewSettings()
         mapViewDescTop->ViewGridSize(mapViewDescTop->ViewGridSize(), mapViewWinRegistry);
         mapViewDescTop->MapDirty(true, true);
         mapViewDescTop->BorderDrawDirty(true);
+        itsSmartMetDocumentInterface->UpdateRowInLockedDescTops(itsMapViewDescTopIndex);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Extra map view settings changed");
 	}
 }
@@ -643,6 +645,13 @@ void CFmiExtraMapViewDlg::OnAcceleratorLockTimeToMainMap()
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewTime(!itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewTime());
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle lock time to main map view");
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorLockRowToMainMap()
+{
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewRow(!itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewRow());
+    itsSmartMetDocumentInterface->UpdateRowInLockedDescTops(itsMapViewDescTopIndex);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle lock row to main map view");
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorMakeSwapBaseArea()
