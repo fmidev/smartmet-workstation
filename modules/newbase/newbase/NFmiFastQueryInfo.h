@@ -168,6 +168,9 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
 
   // 12.09.2013 Anssi.R changed method to virtual to be able to override in NFmiMultiQueryInfo
   virtual void Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime);
+  // Hakee annetun time-rangen sisällä olevan kentän interpoloituna. Jos time-range menee toiselta aikasuunnalta
+  // yli, mutta toiselta ei, palautetaan nearesr, jos niin on määrätty (doNearestTimeIfPossible = true).
+  virtual void Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime, long theTimeRangeInMinutes, bool doNearestTimeIfPossible = false);
 
   // 31.5.2017 Tavi high performance bulk query
   bool GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const;

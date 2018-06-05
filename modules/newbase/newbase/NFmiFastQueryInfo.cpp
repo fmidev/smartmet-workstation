@@ -1983,6 +1983,7 @@ static float InterpolationHelper(float theValue1, float theValue2, float theFact
 class TimeInterpolationData
 {
 public:
+    bool doNearestTimeIfPossible = false;
     bool isGrid = false;
     bool hasWantedTime = false;
     unsigned long oldTimeIndex = gMissingIndex;
@@ -1994,8 +1995,9 @@ public:
     unsigned long nextTimeIndex = gMissingIndex;
     float previousToNextTimeDifferenceInMinutes = 0;
 
-    TimeInterpolationData(NFmiFastQueryInfo &info, const NFmiMetTime &theInterpolatedTime, long theTimeRangeInMinutes = kLongMissing)
+    TimeInterpolationData(NFmiFastQueryInfo &info, const NFmiMetTime &theInterpolatedTime, long theTimeRangeInMinutes = kLongMissing, bool doNearestTimeIfPossible = false)
     {
+        this->doNearestTimeIfPossible = doNearestTimeIfPossible;
         oldTimeIndex = info.TimeIndex();
         isGrid = info.IsGrid();
         if(isGrid)
@@ -2010,7 +2012,7 @@ public:
                 isInsideAtAll = info.IsInside(theInterpolatedTime);
                 if(isInsideAtAll)
                 {
-                    if(info.TimeToNearestStep(theInterpolatedTime, kBackward, theTimeRangeInMinutes))
+                    if(info.TimeToNearestStep(theInterpolatedTime, kBackward, theTimeRangeInMinutes) || this->doNearestTimeIfPossible)
                     {
                         previousTime = info.Time();
                         previousTimeIndex = info.TimeIndex();
@@ -2035,8 +2037,16 @@ public:
             return true;
         if(!isInsideAtAll)
             return false;
-        if(previousTimeIndex == gMissingIndex || nextTimeIndex == gMissingIndex)
-            return false;
+        if(doNearestTimeIfPossible)
+        {
+            if(previousTimeIndex == gMissingIndex && nextTimeIndex == gMissingIndex)
+                return false;
+        }
+        else
+        {
+            if(previousTimeIndex == gMissingIndex || nextTimeIndex == gMissingIndex)
+                return false;
+        }
 
         return true;
     }
@@ -2044,6 +2054,19 @@ public:
     bool HasWantedTime()
     {
         return hasWantedTime;
+    }
+
+    bool DoNearestTime()
+    {
+        if(doNearestTimeIfPossible)
+        {
+            if(previousTimeIndex != gMissingIndex && nextTimeIndex == gMissingIndex)
+                return true;
+            if(previousTimeIndex == gMissingIndex && nextTimeIndex != gMissingIndex)
+                return true;
+        }
+
+        return false;
     }
 };
 
@@ -2056,10 +2079,14 @@ public:
  * \param theInterpolatedTime The desired time
  */
 // ----------------------------------------------------------------------
-void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix,
-                               const NFmiMetTime &theInterpolatedTime)
+void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime)
 {
-    TimeInterpolationData timeInterpolationData(*this, theInterpolatedTime); 
+    NFmiFastQueryInfo::Values(theMatrix, theInterpolatedTime, kLongMissing);
+}
+
+void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime, long theTimeRangeInMinutes, bool doNearestTimeIfPossible)
+{
+    TimeInterpolationData timeInterpolationData(*this, theInterpolatedTime, theTimeRangeInMinutes, doNearestTimeIfPossible); 
     if(!timeInterpolationData.CanGetValues())
     {
         TimeIndex(timeInterpolationData.oldTimeIndex);
@@ -2072,6 +2099,17 @@ void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix,
     Values(theMatrix);
     TimeIndex(timeInterpolationData.oldTimeIndex);
     return;
+  }
+
+  if(timeInterpolationData.DoNearestTime())
+  {
+      if(timeInterpolationData.previousTimeIndex != gMissingIndex)
+          TimeIndex(timeInterpolationData.previousTimeIndex);
+      else
+          TimeIndex(timeInterpolationData.nextTimeIndex);
+      Values(theMatrix);
+      TimeIndex(timeInterpolationData.oldTimeIndex);
+      return;
   }
 
   // Extract leftside and rightside data values
