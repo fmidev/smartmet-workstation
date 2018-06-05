@@ -86,6 +86,7 @@ END_MESSAGE_MAP()
 BOOL CCaseStudyExeDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+    DoResizerHooking();
 
 	// Add "About..." menu item to system menu.
 
@@ -124,6 +125,18 @@ BOOL CCaseStudyExeDlg::OnInitDialog()
 	itsStartOperationTimer = static_cast<UINT>(SetTimer(kFmiStartOperationTimer, 50, NULL)); // k‰ynnistet‰‰n timer, ett‰ saadaan pikkuisen viiveen j‰lkeen k‰ynnistetty‰ Case Studa datan keruu operaatio
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+void CCaseStudyExeDlg::DoResizerHooking(void)
+{
+    BOOL bOk = m_resizer.Hook(this);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDOK, ANCHOR_BOTTOM | ANCHOR_LEFT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_STATIC_THIS_IS_WHERE_FILE_COPY_DIALOG_APPEARS, ANCHOR_BOTTOM | ANCHOR_LEFT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_STATIC_MAIN_MESSAGE_STR, ANCHOR_HORIZONTALLY | ANCHOR_VERTICALLY);
+    ASSERT(bOk == TRUE);
 }
 
 CWnd* CCaseStudyExeDlg::GetCopyDialogPositionWindow(void)
