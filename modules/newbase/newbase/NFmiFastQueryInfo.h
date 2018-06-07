@@ -215,12 +215,24 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
               int theBackwardOffsetInMinutes,
               int theForwardOffsetInMinutes);
 
+
+  virtual void Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
+      NFmiDataMatrix<float> &theValues,
+      float P = kFloatMissing,
+      float H = kFloatMissing);
   // 12.09.2013 Anssi.R changed method to virtual to be able to override in NFmiMultiQueryInfo
   virtual void Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
                       NFmiDataMatrix<float> &theValues,
                       const NFmiMetTime &theTime,
                       float P = kFloatMissing,
                       float H = kFloatMissing);
+  virtual void Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
+      NFmiDataMatrix<float> &theValues,
+      const NFmiMetTime &theTime,
+      float P,
+      float H,
+      long theTimeRangeInMinutes,
+      bool doNearestTimeIfPossible = false);
 
   void CroppedValues(NFmiDataMatrix<float> &theMatrix, int x1, int y1, int x2, int y2) const;
   void CroppedValues(NFmiDataMatrix<float> &theMatrix,
