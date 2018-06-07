@@ -24,7 +24,7 @@ log.txt
 # specify
 src/SmartMet/Control/*
 !src/SmartMet/Control/EditConfig/
-!src/SmartMet/Controlhelp_data/
+!src/SmartMet/Control/help_data/
 !src/SmartMet/Control/woml/
 !src/SmartMet/Control/toolbar_editing_version.conf
 !src/SmartMet/Control/toolbar_no_editing_version.conf
