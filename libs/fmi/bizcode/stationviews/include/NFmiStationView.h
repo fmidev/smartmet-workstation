@@ -190,6 +190,8 @@ protected:
    void DoNormalSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
    void DoSparseDataSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
    NFmiHelpDataInfo* GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2);
+   float CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
@@ -248,5 +250,9 @@ protected:
    // MacroParam laskuja halutaan optimoida, jos ne piirret‰‰n harvennetussa symboli muodossa.
    // Jos t‰m‰ tapaus on piirrossa, ei saa en‰‰ alkaa laskemaan, tarvitseeko piirtoa harventaa edelleen.
    bool fUseAlReadySpacedOutData;
+
+   // Rajoitettuihin aikainterpolaatioihin liittyvi‰ muuttujia
+   long itsTimeInterpolationRangeInMinutes;
+   bool fAllowNearestTimeInterpolation;
 };
 
