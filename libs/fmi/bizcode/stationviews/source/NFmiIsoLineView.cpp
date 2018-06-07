@@ -2464,11 +2464,13 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
             isoLineData.itsInfo = itsInfo;
             isoLineData.itsParam = itsInfo->Param();
             isoLineData.itsTime = this->itsTime;
+            auto helpDataInfo = GetHelpDataInfo(itsInfo);
+            auto usedTimeInterpolationRangeInMinutes = NFmiStationView::GetTimeInterpolationRangeInMinutes(helpDataInfo);
+            bool allowNearestTimeInterpolation = NFmiStationView::AllowNearestTimeInterpolation(usedTimeInterpolationRangeInMinutes);
 
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, itsTime);
+            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, itsTime, kFloatMissing, kFloatMissing, usedTimeInterpolationRangeInMinutes, allowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
-            initializeIsoLineData(isoLineData);
-            fillGridDataStatus = true;
+            fillGridDataStatus = initializeIsoLineData(isoLineData);
             zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(Area().get());
         }
     }
