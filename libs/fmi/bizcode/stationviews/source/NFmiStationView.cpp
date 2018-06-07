@@ -55,6 +55,7 @@
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "Q2ServerInfo.h"
+#include "NFmiHelpDataInfo.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1943,17 +1944,27 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 	return true;
 }
 
-static void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2)
+static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo)
+{
+    if(theHelpDataInfo)
+        return theHelpDataInfo->TimeInterpolationRangeInMinutes();
+    else
+        return 6 * 60; // Default will be 6 hours
+}
+
+static void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, const NFmiHelpDataInfo *theHelpDataInfo)
 {
 	if(theInfo == 0)
 		theValues = kFloatMissing;
 	else
 	{
+        auto usedtimeInterpolationRangeInMinutes = ::GetTimeInterpolationRangeInMinutes(theHelpDataInfo);
+        bool allowNearestTimeInterpolation = usedtimeInterpolationRangeInMinutes <= 30;
         auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theTime);
 		if(fUseCropping)
-			theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2);
+			theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, usedtimeInterpolationRangeInMinutes, allowNearestTimeInterpolation);
 		else
-			theInfo->Values(theValues, usedTime);
+			theInfo->Values(theValues, usedTime, usedtimeInterpolationRangeInMinutes, allowNearestTimeInterpolation);
 	}
 }
 
@@ -2057,11 +2068,12 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 		}
 		else
 		{
+            auto helpDataInfo = GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(itsInfo->DataFilePattern());
 			bool useCropping = (x2 - x1 >= 1) && (y2 - y1 >= 1);
 			if(itsDrawParam->DoDataComparison())
 			{
 				if(fGetCurrentDataFromQ2Server == false)
-					::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+					::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, helpDataInfo);
 				NFmiGrid dataAreaGrid = ::GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
 				NFmiDataMatrix<float> values2;
 				FillDataComparisonMatrix(itsInfo, itsDrawParam, values2, dataAreaGrid, itsTime);
@@ -2069,21 +2081,21 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 			}
 			else if(itsDrawParam->ShowDifference())
 			{
-				::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+				::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, helpDataInfo);
 				int changeByMinutes = itsShowDifferenceTimeShift * 60; // showdiff on tunteina
 				NFmiMetTime tmpTime(itsTime);
 				tmpTime.ChangeByMinutes(-changeByMinutes);
 				NFmiDataMatrix<float> values2;
-				::FillDataMatrix(itsInfo, values2, tmpTime, useCropping, x1, y1, x2, y2);
+				::FillDataMatrix(itsInfo, values2, tmpTime, useCropping, x1, y1, x2, y2, helpDataInfo);
 				::CalcDiffMatrix(theValues, values2);
 			}
 			else if(itsDrawParam->ShowDifferenceToOriginalData())
 			{
-				::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+				::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, helpDataInfo);
     			if(itsOriginalDataInfo)
                 {
 				    NFmiDataMatrix<float> values2;
-				    ::FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
+				    ::FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2, helpDataInfo);
 				    ::CalcDiffMatrix(theValues, values2);
                 }
                 else
@@ -2093,12 +2105,12 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 			{
 				if(itsInfo->DataType() != NFmiInfoData::kStationary)
 				{
-					::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+					::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, helpDataInfo);
 					if(itsDrawParam->ModelRunDifferenceIndex() < 0)
 					{ // Lasketaan erotuskenttä johonkin aiempaan malliajoon
 						boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, false);
 						NFmiDataMatrix<float> values2;
-						::FillDataMatrix(wantedModelRunInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
+						::FillDataMatrix(wantedModelRunInfo, values2, itsTime, useCropping, x1, y1, x2, y2, helpDataInfo);
 						::CalcDiffMatrix(theValues, values2);
 					}
 				}
