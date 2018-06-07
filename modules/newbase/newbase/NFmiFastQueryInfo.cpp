@@ -2371,31 +2371,49 @@ bool NFmiFastQueryInfo::GetInterpolatedCube(std::vector<float> &values, const NF
  */
 // ----------------------------------------------------------------------
 void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
-                                      const NFmiMetTime &theInterpolatedTime,
-                                      int x1,
-                                      int y1,
-                                      int x2,
-                                      int y2)
+    const NFmiMetTime &theInterpolatedTime,
+    int x1,
+    int y1,
+    int x2,
+    int y2)
 {
-  // Only grids can be returned as matrices
-  if (!IsGrid()) return;
+    CroppedValues(theMatrix, theInterpolatedTime, x1, y1, x2, y2, kLongMissing, false);
+}
 
-  int oldTimeIndex = TimeIndex();
+void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
+        const NFmiMetTime &theInterpolatedTime,
+        int x1,
+        int y1,
+        int x2,
+        int y2,
+        long theTimeRangeInMinutes,
+        bool doNearestTimeIfPossible)
+{
+    TimeInterpolationData timeInterpolationData(*this, theInterpolatedTime, theTimeRangeInMinutes, doNearestTimeIfPossible);
+    if(!timeInterpolationData.CanGetValues())
+    {
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
 
-  // Handle exact existing time
-  if (Time(theInterpolatedTime))
-  {
-    CroppedValues(theMatrix, x1, y1, x2, y2);
-    TimeIndex(oldTimeIndex);
-    return;
-  }
+    // Handle exact existing time
+    if(timeInterpolationData.HasWantedTime())
+    {
+        CroppedValues(theMatrix, x1, y1, x2, y2);
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
 
-  // Cannot interpolate outside data range
-  if (!IsInside(theInterpolatedTime))
-  {
-    TimeIndex(oldTimeIndex);
-    return;
-  }
+    if(timeInterpolationData.DoNearestTime())
+    {
+        if(timeInterpolationData.previousTimeIndex != gMissingIndex)
+            TimeIndex(timeInterpolationData.previousTimeIndex);
+        else
+            TimeIndex(timeInterpolationData.nextTimeIndex);
+        CroppedValues(theMatrix, x1, y1, x2, y2);
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
 
   // Extract leftside and rightside data values
 
@@ -2406,16 +2424,14 @@ void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
   NFmiDataMatrix<float> values1;
   NFmiDataMatrix<float> values2;
 
-  // pitää löytyä, koska isinside on tarkastettu edellä!!
-  if (TimeToNearestStep(theInterpolatedTime, kBackward)) CroppedValues(values1, x1, y1, x2, y2);
-  NFmiMetTime time1(Time());
+  TimeIndex(timeInterpolationData.previousTimeIndex);
+  CroppedValues(values1, x1, y1, x2, y2);
 
-  // pitää löytyä, koska isinside on tarkastettu edellä!!
-  if (TimeToNearestStep(theInterpolatedTime, kForward)) CroppedValues(values2, x1, y1, x2, y2);
-  NFmiMetTime time2(Time());
+  TimeIndex(timeInterpolationData.nextTimeIndex);
+  CroppedValues(values2, x1, y1, x2, y2);
 
-  auto diff1 = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(time1));
-  auto diff2 = static_cast<float>(time2.DifferenceInMinutes(time1));
+  auto diff1 = timeInterpolationData.previousToInterpolatedTimeDifferenceInMinutes;
+  auto diff2 = timeInterpolationData.previousToNextTimeDifferenceInMinutes;
 
   float factor = 1 - diff1 / diff2;
 
@@ -2467,7 +2483,7 @@ void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
         theMatrix[i][j] = InterpolationHelper(values1[i][j], values2[i][j], factor);
   }
 
-  TimeIndex(oldTimeIndex);
+  TimeIndex(timeInterpolationData.oldTimeIndex);
 }
 
 // ----------------------------------------------------------------------
