@@ -229,7 +229,14 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
                      int y1,
                      int x2,
                      int y2);
-
+  void CroppedValues(NFmiDataMatrix<float> &theMatrix,
+      const NFmiMetTime &theInterpolatedTime,
+      int x1,
+      int y1,
+      int x2,
+      int y2,
+      long theTimeRangeInMinutes,
+      bool doNearestTimeIfPossible = false);
   bool SetValues(const NFmiDataMatrix<float> &theMatrix);
 
   template <typename T>
