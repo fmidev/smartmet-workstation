@@ -21,6 +21,7 @@ class NFmiArea;
 class NFmiFastQueryInfo;
 class NFmiGrid;
 class NFmiGriddingHelperInterface;
+class NFmiHelpDataInfo;
 
 class CRect;
 class CDC;
@@ -75,6 +76,8 @@ public:
    void SpecialMatrixData(const NFmiDataMatrix<float> &theMatrix) {itsSpecialMatrixData = theMatrix;}
    // t‰m‰ on asemadatan griddaus funktio, jota voidaan k‰ytt‰‰ nyt staattisena funktiona
    static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, float theObservationRadiusRelative);
+   static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
+   static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
 
 	template<typename T>
 	static void GetMinAndMaxValues(const NFmiDataMatrix<T> &theMatrix, T &theMin, T &theMax)
@@ -186,6 +189,7 @@ protected:
    void DoSpaceOutSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
    void DoNormalSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
    void DoSparseDataSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
+   NFmiHelpDataInfo* GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;

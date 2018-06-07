@@ -1944,12 +1944,22 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 	return true;
 }
 
-static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo)
+long NFmiStationView::GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo)
 {
     if(theHelpDataInfo)
         return theHelpDataInfo->TimeInterpolationRangeInMinutes();
     else
         return 6 * 60; // Default will be 6 hours
+}
+
+bool NFmiStationView::AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes)
+{
+    return theTimeInterpolationRangeInMinutes <= 30;
+}
+
+NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+{
+    return GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());
 }
 
 static void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, const NFmiHelpDataInfo *theHelpDataInfo)
@@ -1958,13 +1968,13 @@ static void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDa
 		theValues = kFloatMissing;
 	else
 	{
-        auto usedtimeInterpolationRangeInMinutes = ::GetTimeInterpolationRangeInMinutes(theHelpDataInfo);
-        bool allowNearestTimeInterpolation = usedtimeInterpolationRangeInMinutes <= 30;
+        auto usedTimeInterpolationRangeInMinutes = NFmiStationView::GetTimeInterpolationRangeInMinutes(theHelpDataInfo);
+        bool allowNearestTimeInterpolation = NFmiStationView::AllowNearestTimeInterpolation(usedTimeInterpolationRangeInMinutes);
         auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theTime);
 		if(fUseCropping)
-			theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, usedtimeInterpolationRangeInMinutes, allowNearestTimeInterpolation);
+			theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, usedTimeInterpolationRangeInMinutes, allowNearestTimeInterpolation);
 		else
-			theInfo->Values(theValues, usedTime, usedtimeInterpolationRangeInMinutes, allowNearestTimeInterpolation);
+			theInfo->Values(theValues, usedTime, usedTimeInterpolationRangeInMinutes, allowNearestTimeInterpolation);
 	}
 }
 
@@ -2068,7 +2078,7 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 		}
 		else
 		{
-            auto helpDataInfo = GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(itsInfo->DataFilePattern());
+            auto helpDataInfo = GetHelpDataInfo(itsInfo);
 			bool useCropping = (x2 - x1 >= 1) && (y2 - y1 >= 1);
 			if(itsDrawParam->DoDataComparison())
 			{
