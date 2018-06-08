@@ -21,6 +21,7 @@ class NFmiArea;
 class NFmiFastQueryInfo;
 class NFmiGrid;
 class NFmiGriddingHelperInterface;
+class NFmiHelpDataInfo;
 
 class CRect;
 class CDC;
@@ -75,6 +76,8 @@ public:
    void SpecialMatrixData(const NFmiDataMatrix<float> &theMatrix) {itsSpecialMatrixData = theMatrix;}
    // t‰m‰ on asemadatan griddaus funktio, jota voidaan k‰ytt‰‰ nyt staattisena funktiona
    static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, float theObservationRadiusRelative);
+   static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
+   static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
 
 	template<typename T>
 	static void GetMinAndMaxValues(const NFmiDataMatrix<T> &theMatrix, T &theMin, T &theMax)
@@ -186,6 +189,9 @@ protected:
    void DoSpaceOutSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
    void DoNormalSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
    void DoSparseDataSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
+   NFmiHelpDataInfo* GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2);
+   float CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
@@ -244,5 +250,9 @@ protected:
    // MacroParam laskuja halutaan optimoida, jos ne piirret‰‰n harvennetussa symboli muodossa.
    // Jos t‰m‰ tapaus on piirrossa, ei saa en‰‰ alkaa laskemaan, tarvitseeko piirtoa harventaa edelleen.
    bool fUseAlReadySpacedOutData;
+
+   // Rajoitettuihin aikainterpolaatioihin liittyvi‰ muuttujia
+   long itsTimeInterpolationRangeInMinutes;
+   bool fAllowNearestTimeInterpolation;
 };
 
