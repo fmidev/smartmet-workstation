@@ -296,4 +296,5 @@ public:
     void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
+    void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
 };
