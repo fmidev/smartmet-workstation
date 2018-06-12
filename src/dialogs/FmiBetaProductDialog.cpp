@@ -694,11 +694,27 @@ bool CFmiBetaProductDialog::RunViewMacro(const NFmiBetaProduct &theBetaProduct, 
     return true;
 }
 
+#ifdef min
+#undef min
+#endif
+
 static NFmiMetTime CalcWallClockOffsetTime(const NFmiBetaProduct &theBetaProduct, const NFmiBetaProductAutomation::NFmiTimeModeInfo &theTimeMode, const NFmiMetTime &theMakeTime)
 {
     NFmiMetTime aTime = theMakeTime;
-    aTime.SetTimeStep(60); // Tehd‰‰n aloitus/lopeus ajoista tasa tunteja
-    aTime.ChangeByMinutes(boost::math::iround(theTimeMode.itsWallClockOffsetInHours * 60.));
+    long usedOffsetInMinutes = boost::math::iround(theTimeMode.itsWallClockOffsetInHours * 60.);
+    int offsetMinutes = usedOffsetInMinutes % 60;
+    long usedTimeStepInMinutes = 60;
+    // Yleens‰ halutaan pyˆrist‰‰ aloitus/lopetus ajat l‰himp‰‰n tuntiin, mutta jos annetut wall-time offsetit eiv‰t ole tasatuntisia, 
+    // laitetaan time-stepiksi pienempi 'stepeist‰', jotta p‰‰st‰‰n k‰siksi haluttuihin minuutti lukemiin...
+    if(offsetMinutes != 0)
+    {
+        usedTimeStepInMinutes = std::min(offsetMinutes, theBetaProduct.TimeStepInMinutes());
+    }
+    // Varmistetaan ett‰ timestep ei ole mahdoton
+    if(usedTimeStepInMinutes < 1)
+        usedTimeStepInMinutes = 1;
+    aTime.SetTimeStep(usedTimeStepInMinutes);
+    aTime.ChangeByMinutes(usedOffsetInMinutes);
     aTime.SetTimeStep(theBetaProduct.TimeStepInMinutes()); // Laitetaan lopuksi aloitusaika haluttuun aikasteppiin, jotta sille voidaan tehd‰ aika-loopissa NextMetTime
     return aTime;
 }

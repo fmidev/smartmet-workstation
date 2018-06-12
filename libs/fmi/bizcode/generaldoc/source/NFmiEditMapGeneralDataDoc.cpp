@@ -3766,6 +3766,23 @@ void UpdateTimeInLockedDescTops(const NFmiMetTime &theTime, unsigned int theOrig
 	}
 }
 
+void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
+{
+    // eli jos origIndex oli pääikkuna (index = 0) tai apuikkuna oli lukittu pääikkunaan, silloin tehdään rivi päivityksiä
+    if(theOrigDescTopIndex == 0 || MapViewDescTop(theOrigDescTopIndex)->LockToMainMapViewRow())
+    {
+        auto mapRowStartingIndex = MapViewDescTop(theOrigDescTopIndex)->MapRowStartingIndex();
+        unsigned int desctopCount = static_cast<unsigned int>(itsMapViewDescTopList.size());
+        for(unsigned int descTopIndex = 0; descTopIndex < desctopCount; descTopIndex++)
+        {
+            if(descTopIndex == 0 || MapViewDescTop(descTopIndex)->LockToMainMapViewRow())
+            {
+                MapViewDescTop(descTopIndex)->MapRowStartingIndex(mapRowStartingIndex);
+            }
+        }
+    }
+}
+
 bool IsAnimationTimeBoxVisibleOverTimeControlView(unsigned int theDescTopIndex)
 {
     const auto &animationTimes = MapViewDescTop(theDescTopIndex)->AnimationDataRef().Times();
@@ -7285,6 +7302,7 @@ bool ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 	if(MapViewDescTop(theDescTopIndex)->ScrollViewRow(theCount, activeViewRow))
 	{
 		ActiveViewRow(theDescTopIndex, activeViewRow); // asetetaan uusi suhteellinen aktiivinen rivi takaisin desctopiin
+        UpdateRowInLockedDescTops(theDescTopIndex);
 		MapDirty(theDescTopIndex, true, false);
 		return true;
 	}
@@ -10880,6 +10898,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnAcceleratorMapRow(unsigned int theDescTopIndex, int theStartingRow)
 	{
 		MapViewDescTop(theDescTopIndex)->MapRowStartingIndex(theStartingRow);
+        UpdateRowInLockedDescTops(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: changed starting absolute map row");
 	}
 
@@ -16484,4 +16503,9 @@ Q2ServerInfo& NFmiEditMapGeneralDataDoc::GetQ2ServerInfo()
 Warnings::CapDataSystem& NFmiEditMapGeneralDataDoc::GetCapDataSystem()
 {
     return pimpl->GetCapDataSystem();
+}
+
+void NFmiEditMapGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
+{
+    pimpl->UpdateRowInLockedDescTops(theOrigDescTopIndex);
 }

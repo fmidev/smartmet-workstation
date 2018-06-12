@@ -2465,10 +2465,9 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
             isoLineData.itsParam = itsInfo->Param();
             isoLineData.itsTime = this->itsTime;
 
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, itsTime);
+            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, itsTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
-            initializeIsoLineData(isoLineData);
-            fillGridDataStatus = true;
+            fillGridDataStatus = initializeIsoLineData(isoLineData);
             zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(Area().get());
         }
     }
