@@ -28,4 +28,3 @@ src/SmartMet/Control/*
 !src/SmartMet/Control/woml/
 !src/SmartMet/Control/toolbar_editing_version.conf
 !src/SmartMet/Control/toolbar_no_editing_version.conf
-!src/SmartMet/Control/obs_comparison.conf
