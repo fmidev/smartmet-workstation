@@ -202,7 +202,7 @@ static bool IsConfigurationFileIgnored(const std::string &theFileName, const std
 
 void NFmiBasicSmartMetConfigurations::InitFactorySettingFiles()
 {
-    std::string factorySettingsDefaultPath = itsWorkingDirectory + "\\FactorySettings";
+    std::string factorySettingsDefaultPath = itsWorkingDirectory + "\\factory_settings";
     itsFactorySettingsConfigurationFilePath = NFmiSettings::Optional<std::string>("SmartMet::FactorySettingsPath", factorySettingsDefaultPath);
     itsFactorySettingsConfigurationFiles = NFmiFileSystem::DirectoryFiles(itsFactorySettingsConfigurationFilePath);
 }
