@@ -138,6 +138,7 @@ CFmiWarningCenterDlg::CFmiWarningCenterDlg(SmartMetDocumentInterface *smartMetDo
 ,fShowAllMessages(FALSE)
 , fShowHakeMessages(FALSE)
 , fShowKaHaMessages(FALSE)
+, itsMinimumTimeRangeForWarningsOnMapViewsInMinutes(0)
 {
 }
 
@@ -153,6 +154,7 @@ void CFmiWarningCenterDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_SHOW_ALL_MESSAGES, fShowAllMessages);
     DDX_Check(pDX, IDC_CHECK_SHOW_HAKE_MESSAGES, fShowHakeMessages);
     DDX_Check(pDX, IDC_CHECK_SHOW_KAHA_MESSAGES, fShowKaHaMessages);
+    DDX_Text(pDX, IDC_EDIT_MINIMUM_TIME_STEP_IN_MINUTES, itsMinimumTimeRangeForWarningsOnMapViewsInMinutes);
 }
 
 
@@ -169,6 +171,7 @@ BEGIN_MESSAGE_MAP(CFmiWarningCenterDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_WARNING_CENTER_REFRESH_MESSAGES, OnBnClickedButtonWarningCenterRefreshMessages)
     ON_BN_CLICKED(IDC_CHECK_SHOW_HAKE_MESSAGES, &CFmiWarningCenterDlg::OnBnClickedCheckShowHakeMessages)
     ON_BN_CLICKED(IDC_CHECK_SHOW_KAHA_MESSAGES, &CFmiWarningCenterDlg::OnBnClickedCheckShowKahaMessages)
+    ON_EN_CHANGE(IDC_EDIT_MINIMUM_TIME_STEP_IN_MINUTES, &CFmiWarningCenterDlg::OnEnChangeEditMinimumTimeStepInMinutes)
 END_MESSAGE_MAP()
 
 
@@ -192,6 +195,7 @@ BOOL CFmiWarningCenterDlg::OnInitDialog()
 #endif // DISABLE_CPPRESTSDK
     fShowHakeMessages = applicationWinRegistry.ShowHakeMessages();
     fShowKaHaMessages = applicationWinRegistry.ShowKaHaMessages();
+    itsMinimumTimeRangeForWarningsOnMapViewsInMinutes = applicationWinRegistry.MinimumTimeRangeForWarningsOnMapViewsInMinutes();
     itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
 	itsGridCtrl.MoveWindow(CalcClientArea(), FALSE);
 	fGridCtrlInitialized = true;
@@ -329,7 +333,8 @@ static std::string GetTimeAndStationString(SmartMetDocumentInterface *smartMetDo
 	std::string str;
 	str += "Warning messages was between ";
 	str += " (-";
-	str += NFmiStringTools::Convert(smartMetDocumentInterface->MapViewDescTop(theMapViewDescTopIndex)->TimeControlTimeStep());
+    double timeStepForMessagesInHours = smartMetDocumentInterface->GetTimeRangeForWarningMessagesOnMapViewInMinutes() / 60.;
+    str += NFmiStringTools::Convert(timeStepForMessagesInHours);
 	str += " hrs) - ";
 	str += static_cast<char*>(theTime.ToStr(::GetDictionaryString("StationDataTableViewTimeFormat"), smartMetDocumentInterface->Language()));
 	str += " ";
@@ -375,9 +380,9 @@ void CFmiWarningCenterDlg::GetShownMessages()
     itsShownKaHaMessages.clear();
 
     boost::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
-    int editorTimeStep = static_cast<int>(::round(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->TimeControlTimeStep() * 60));
+    int timeStepForMessagesInMinutes = itsSmartMetDocumentInterface->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
     NFmiMetTime mapTime = itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
-    NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(mapTime, editorTimeStep);
+    NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(mapTime, timeStepForMessagesInMinutes);
     auto &warningCenterSystem = itsSmartMetDocumentInterface->WarningCenterSystem();
     if(fShowHakeMessages)
         itsShownHakeMessages = warningCenterSystem.getHakeMessages(startTime, mapTime, *zoomedArea);
@@ -589,6 +594,17 @@ void CFmiWarningCenterDlg::LoadViewMacroSettingsFromDocument()
     auto &applicationWinRegistry = itsSmartMetDocumentInterface->ApplicationWinRegistry();
     fShowHakeMessages = applicationWinRegistry.ShowHakeMessages();
     fShowKaHaMessages = applicationWinRegistry.ShowKaHaMessages();
+    itsMinimumTimeRangeForWarningsOnMapViewsInMinutes = applicationWinRegistry.MinimumTimeRangeForWarningsOnMapViewsInMinutes();
 
     UpdateData(FALSE);
+}
+
+
+void CFmiWarningCenterDlg::OnEnChangeEditMinimumTimeStepInMinutes()
+{
+    UpdateData(TRUE);
+    auto &applicationWinRegistry = itsSmartMetDocumentInterface->ApplicationWinRegistry();
+    applicationWinRegistry.MinimumTimeRangeForWarningsOnMapViewsInMinutes(itsMinimumTimeRangeForWarningsOnMapViewsInMinutes);
+    Update();
+    ForceMainMapViewUpdate(__FUNCTION__);
 }

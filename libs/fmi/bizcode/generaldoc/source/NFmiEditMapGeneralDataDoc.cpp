@@ -8281,7 +8281,22 @@ bool InitCPGriddingProperties(void)
 #endif // DISABLE_CPPRESTSDK
         view.ShowHakeMessages(ApplicationWinRegistry().ShowHakeMessages());
         view.ShowKaHaMessages(ApplicationWinRegistry().ShowKaHaMessages());
+        view.MinimumTimeRangeForWarningsOnMapViewsInMinutes(ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes());
 	}
+
+#ifdef max
+#undef max
+#endif
+
+    int GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+    {
+        int timeStepInMapView = static_cast<int>(::round(MapViewDescTop(0)->TimeControlTimeStep() * 60));
+        int minimumTimeRange = ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes();
+        if(minimumTimeRange <= 0)
+            return timeStepInMapView;
+        else
+            return std::max(timeStepInMapView, minimumTimeRange);
+    }
 
 	void FillSynopPlotSettingsMacro(NFmiViewSettingMacro &theMacro)
 	{
@@ -8483,6 +8498,7 @@ bool InitCPGriddingProperties(void)
 #endif // DISABLE_CPPRESTSDK
         ApplicationWinRegistry().ShowHakeMessages(view.ShowHakeMessages());
         ApplicationWinRegistry().ShowKaHaMessages(view.ShowKaHaMessages());
+        ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes(view.MinimumTimeRangeForWarningsOnMapViewsInMinutes());
     }
 
 	void SetSynopPlotSettings(NFmiViewSettingMacro &theMacro)
@@ -16513,4 +16529,9 @@ Warnings::CapDataSystem& NFmiEditMapGeneralDataDoc::GetCapDataSystem()
 void NFmiEditMapGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
 {
     pimpl->UpdateRowInLockedDescTops(theOrigDescTopIndex);
+}
+
+int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+{
+    return pimpl->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
 }

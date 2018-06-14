@@ -573,6 +573,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mLocationFinderThreadTimeOutInMS()
 ,mShowHakeMessages()
 ,mShowKaHaMessages()
+,mMinimumTimeRangeForWarningsOnMapViewsInMinutes()
 ,mDrawObjectScaleFactor()
 ,itsMaximumFontSizeFactor(3.)
 {
@@ -627,6 +628,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mLocationFinderThreadTimeOutInMS = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\LocationFinderThreadTimeOutInMS", usedKey, 1500, "SmartMet::LocationFinderThreadTimeOutInMS");
     mShowHakeMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowHakeMessages", usedKey, true);
     mShowKaHaMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowKaHaMessages", usedKey, false);
+    mMinimumTimeRangeForWarningsOnMapViewsInMinutes = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\MinimumTimeRangeForWarningsOnMapViewsInMinutes", usedKey, 0);
     mDrawObjectScaleFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\DrawObjectScaleFactor", usedKey, 0.9, "MetEditor::DrawObjectScaleFactor");
     //mMaximumFontSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MaximumFontSizeFactor", usedKey, 2);
 
@@ -835,6 +837,16 @@ bool NFmiApplicationWinRegistry::ShowKaHaMessages()
 void NFmiApplicationWinRegistry::ShowKaHaMessages(bool newValue)
 {
     *mShowKaHaMessages = newValue;
+}
+
+int NFmiApplicationWinRegistry::MinimumTimeRangeForWarningsOnMapViewsInMinutes()
+{
+    return *mMinimumTimeRangeForWarningsOnMapViewsInMinutes;
+}
+
+void NFmiApplicationWinRegistry::MinimumTimeRangeForWarningsOnMapViewsInMinutes(int newValue)
+{
+    *mMinimumTimeRangeForWarningsOnMapViewsInMinutes = newValue;
 }
 
 double NFmiApplicationWinRegistry::DrawObjectScaleFactor()
