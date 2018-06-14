@@ -1416,3 +1416,8 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateRowInLockedDescTops(unsig
 {
     itsDoc->UpdateRowInLockedDescTops(theOrigDescTopIndex);
 }
+
+int SmartMetDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+{
+    return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}

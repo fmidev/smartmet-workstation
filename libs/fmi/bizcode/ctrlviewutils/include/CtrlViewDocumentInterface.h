@@ -381,4 +381,5 @@ public:
     virtual Warnings::CapDataSystem& GetCapDataSystem() = 0;
     virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) = 0;
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) = 0;
+    virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
 };
