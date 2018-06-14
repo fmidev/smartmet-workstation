@@ -1325,3 +1325,8 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLandBorderMapBitmap(unsigned
 {
     itsDoc->MapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap);
 }
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+{
+    return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}
