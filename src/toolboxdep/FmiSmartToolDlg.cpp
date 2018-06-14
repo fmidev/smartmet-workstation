@@ -276,7 +276,7 @@ void CFmiSmartToolDlg::InitializeSyntaxEditControl()
 
 std::string CFmiSmartToolDlg::MakeSyntaxEditConfigFilePath()
 {
-    std::string configDirectoryPath = itsSmartMetDocumentInterface->ControlDirectory() + "\\EditConfig\\";
+    std::string configDirectoryPath = itsSmartMetDocumentInterface->ControlDirectory() + "\\edit_conf\\";
     configDirectoryPath = NFmiSettings::Optional<std::string>("SmartMet::SmarttoolDlg::SyntaxEditDirectoryPath", configDirectoryPath);
     configDirectoryPath = PathUtils::getAbsoluteFilePath(configDirectoryPath, itsSmartMetDocumentInterface->ControlDirectory());
     return configDirectoryPath + "\\SyntaxEdit.ini";
