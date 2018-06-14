@@ -157,6 +157,7 @@ protected:
 	virtual void OnOK();
 	virtual void OnCancel();
 	void DoWhenClosing(void);
+    virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 public:
 	afx_msg void OnClose();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
@@ -171,12 +172,12 @@ public:
     afx_msg void OnBnClickedButtonWarningCenterRefreshMessages();
     afx_msg void OnBnClickedCheckShowHakeMessages();
     afx_msg void OnBnClickedCheckShowKahaMessages();
+    afx_msg void OnEnChangeEditMinimumTimeStepInMinutes();
 private:
 	BOOL fShowAllMessages;
     BOOL fShowHakeMessages;
     BOOL fShowKaHaMessages;
     std::vector<HakeMessage::HakeMsg> itsShownHakeMessages;
     std::vector<HakeMessage::KahaMsg> itsShownKaHaMessages;
-protected:
-	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
+    int itsMinimumTimeRangeForWarningsOnMapViewsInMinutes;
 };

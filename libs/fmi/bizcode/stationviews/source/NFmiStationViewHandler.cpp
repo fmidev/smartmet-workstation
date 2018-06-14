@@ -1312,8 +1312,8 @@ void NFmiStationViewHandler::GetShownMessages()
     itsShownKaHaMessages.clear();
 
     boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
-    int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) * 60));
-    NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(itsTime, editorTimeStep);
+    int timeStepForMessagesInMinutes = itsCtrlViewDocumentInterface->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+    NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(itsTime, timeStepForMessagesInMinutes);
 
     if(itsCtrlViewDocumentInterface->ApplicationWinRegistry().ShowHakeMessages())
         itsShownHakeMessages = itsCtrlViewDocumentInterface->WarningCenterSystem().getHakeMessages(startTime, itsTime, *zoomedArea);
