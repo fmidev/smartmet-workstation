@@ -719,7 +719,10 @@ static NFmiMetTime CalcWallClockOffsetTime(const NFmiBetaProduct &theBetaProduct
     // laitetaan time-stepiksi pienempi 'stepeist‰', jotta p‰‰st‰‰n k‰siksi haluttuihin minuutti lukemiin...
     if(absoluteOffsetMinutes != 0 || theBetaProduct.TimeStepInMinutes() <= 30)
     {
-        usedTimeStepInMinutes = std::min(absoluteOffsetMinutes, theBetaProduct.TimeStepInMinutes());
+        if(absoluteOffsetMinutes == 0)
+            usedTimeStepInMinutes = theBetaProduct.TimeStepInMinutes();
+        else
+            usedTimeStepInMinutes = std::min(absoluteOffsetMinutes, theBetaProduct.TimeStepInMinutes());
     }
     // Varmistetaan ett‰ timestep ei ole mahdoton
     if(usedTimeStepInMinutes < 1)
