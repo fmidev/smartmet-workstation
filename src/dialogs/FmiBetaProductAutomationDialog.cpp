@@ -593,6 +593,8 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonBetaAutomationSave()
 
     BetaProduct::SaveObjectToKnownFileInJsonFormat(*itsBetaProductAutomation, itsSelectedAutomationFullFilePath, "Beta-automation", false);
     MakeAutomationComparisonObject();
+    // P‰ivitet‰‰n automaatiolistan beta-automaatiot, jos niihin olisi tullut muutoksia
+    itsBetaProductionSystem->UsedAutomationList().RefreshAutomationList();
     itsBetaProductionSystem->UsedAutomationList().DoFullChecks(itsBetaProductionSystem->AutomationModeOn());
     UpdateAutomationList(); // Jos tehdyt muutokset vaikuttavat listassa oleviin automaatioihin, pit‰‰ listaa p‰ivitt‰‰
 }
