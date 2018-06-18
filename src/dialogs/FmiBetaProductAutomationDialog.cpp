@@ -329,10 +329,10 @@ void CFmiBetaProductAutomationDialog::InitHeaders(void)
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Row"), BetaAutomationHeaderParInfo::kRowNumber, basicColumnWidthUnit * 2));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Name"), BetaAutomationHeaderParInfo::kAutomationName, basicColumnWidthUnit * 9));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Enable"), BetaAutomationHeaderParInfo::kEnable, basicColumnWidthUnit * 3));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Next"), BetaAutomationHeaderParInfo::kNextRuntime, boost::math::iround(basicColumnWidthUnit * 2.5)));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Last"), BetaAutomationHeaderParInfo::kLastRuntime, basicColumnWidthUnit * 3));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Next"), BetaAutomationHeaderParInfo::kNextRuntime, boost::math::iround(basicColumnWidthUnit * 3.)));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Last"), BetaAutomationHeaderParInfo::kLastRuntime, boost::math::iround(basicColumnWidthUnit * 3.5)));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Status"), BetaAutomationHeaderParInfo::kAutomationStatus, boost::math::iround(basicColumnWidthUnit * 8.5)));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Path"), BetaAutomationHeaderParInfo::kAutomationPath, boost::math::iround(basicColumnWidthUnit * 12.)));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Path"), BetaAutomationHeaderParInfo::kAutomationPath, boost::math::iround(basicColumnWidthUnit * 30.)));
 }
 
 void CFmiBetaProductAutomationDialog::UpdateBetaProductPathInfo()
