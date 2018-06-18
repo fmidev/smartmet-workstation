@@ -1638,6 +1638,27 @@ void NFmiBetaProductAutomationList::DoFullChecks(bool fAutomationModeOn)
     }
 }
 
+void NFmiBetaProductAutomationList::RefreshAutomationList()
+{
+    for(auto &betaAutomation : itsAutomationVector)
+    {
+        RefreshAutomationIfNeeded(betaAutomation);
+    }
+}
+
+void NFmiBetaProductAutomationList::RefreshAutomationIfNeeded(std::shared_ptr<NFmiBetaProductAutomationListItem> &automationListItem)
+{
+    // Lue annettu beta-automaatio uudestaan tiedostosta uuteen olioon
+    std::shared_ptr<NFmiBetaProductAutomationListItem> listItemFromFile = std::make_shared<NFmiBetaProductAutomationListItem>(automationListItem->itsBetaProductAutomationAbsolutePath);
+    if(PrepareListItemAfterJsonRead(*listItemFromFile)) // Voidaan käyttää tätä metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
+    {
+        // Jos luku meni hyvin, sijoitetaan annettu beta-automaatio päivitettävään otukseen
+        automationListItem->itsBetaProductAutomation.swap(listItemFromFile->itsBetaProductAutomation);
+        // päivitetään vielä seuraava ajoaika
+        automationListItem->itsNextRunTime = automationListItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1));
+    }
+}
+
 bool NFmiBetaProductAutomationList::IsOk() const
 {
     for(auto &listItem : itsAutomationVector)
