@@ -267,9 +267,9 @@ void CFmiSeaIcingWarningsDlg::SetDefaultValues(void)
 
 void CFmiSeaIcingWarningsDlg::InitHeaders(void)
 {
-	int basicColumnWidthUnit = 16;
+	int basicColumnWidthUnit = 18;
 	itsHeaders.clear();
-	itsHeaders.push_back(SeaIcingWarningsHeaderParInfo("Nr", SeaIcingWarningsHeaderParInfo::kRowNumber, basicColumnWidthUnit*2));
+	itsHeaders.push_back(SeaIcingWarningsHeaderParInfo("Nr", SeaIcingWarningsHeaderParInfo::kRowNumber, basicColumnWidthUnit*3));
 	itsHeaders.push_back(SeaIcingWarningsHeaderParInfo("Time (UTC)", SeaIcingWarningsHeaderParInfo::kReportTime, basicColumnWidthUnit*7));
 	itsHeaders.push_back(SeaIcingWarningsHeaderParInfo("ShipID", SeaIcingWarningsHeaderParInfo::kShipId, basicColumnWidthUnit*3));
 	itsHeaders.push_back(SeaIcingWarningsHeaderParInfo("Spray", SeaIcingWarningsHeaderParInfo::kSpray, static_cast<int>(round(basicColumnWidthUnit*2.5))));
