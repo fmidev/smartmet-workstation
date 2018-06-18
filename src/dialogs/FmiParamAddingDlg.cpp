@@ -13,6 +13,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMenuItem.h"
 #include "SpecialDesctopIndex.h"
+#include "boost\math\special_functions\round.hpp"
 
 // *************************************************
 // NFmiParamAddingGridCtrl
@@ -195,11 +196,11 @@ void CFmiParamAddingDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
 
 void CFmiParamAddingDlg::InitHeaders(void)
 {
-    int basicColumnWidthUnit = 16;
+    int basicColumnWidthUnit = 18;
     itsHeaders.clear();
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Row", ParamAddingHeaderParInfo::kRowNumber, basicColumnWidthUnit * 2));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, basicColumnWidthUnit * 24));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Id", ParamAddingHeaderParInfo::kItemId, basicColumnWidthUnit * 4));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Row", ParamAddingHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 24.)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Id", ParamAddingHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 3.5)));
 }
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
