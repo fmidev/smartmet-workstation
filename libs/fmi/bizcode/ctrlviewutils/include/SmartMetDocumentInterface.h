@@ -365,4 +365,5 @@ public:
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
+    virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
 };

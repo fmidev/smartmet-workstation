@@ -297,4 +297,5 @@ public:
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
+    int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
 };
