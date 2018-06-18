@@ -843,7 +843,9 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonSaveAsAutomationList()
     if(BetaProduct::SaveObjectInJsonFormat(itsBetaProductionSystem->UsedAutomationList(), BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaAutomationListFileFilter(), NFmiBetaProductionSystem::BetaAutomationListFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Automation-list", false, &usedAbsoluteFilePath))
     {
         itsBetaProductionSystem->UsedAutomationListPathString(usedAbsoluteFilePath);
+        UpdateSelectedAutomationListName();
         CheckForSaveButtonEnablations();
+        UpdateData(FALSE);
     }
 }
 
