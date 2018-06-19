@@ -685,6 +685,8 @@ void CFmiBetaProductAutomationDialog::UpdateAutomationList()
         SetGridRow(currentRowCount++, *dataVector[i]);
     }
     itsGridCtrl.SetSelectedRange(selectedCellRange);
+
+    itsGridCtrl.UpdateData(FALSE);
 }
 
 // Halutaan palauttaa HH:mm eli hours:minutes teksti annetulle ajalle.
