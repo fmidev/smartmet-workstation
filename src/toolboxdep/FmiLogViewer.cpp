@@ -241,12 +241,12 @@ void CFmiLogViewer::InitDialogTexts()
 
 void CFmiLogViewer::InitHeaders()
 {
-    int basicColumnWidthUnit = 16;
+    int basicColumnWidthUnit = 18;
     itsHeaders.clear();
-    itsHeaders.push_back(LogMessageHeaderParInfo("Row", LogMessageHeaderParInfo::kRowNumber, basicColumnWidthUnit * 3));
-    itsHeaders.push_back(LogMessageHeaderParInfo("Time", LogMessageHeaderParInfo::kTime, basicColumnWidthUnit * 9));
-    itsHeaders.push_back(LogMessageHeaderParInfo("Category", LogMessageHeaderParInfo::kCategory, basicColumnWidthUnit * 5));
-    itsHeaders.push_back(LogMessageHeaderParInfo("Severity", LogMessageHeaderParInfo::kSeverity, basicColumnWidthUnit * 3));
+    itsHeaders.push_back(LogMessageHeaderParInfo("Row", LogMessageHeaderParInfo::kRowNumber, static_cast<int>(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(LogMessageHeaderParInfo("Time", LogMessageHeaderParInfo::kTime, basicColumnWidthUnit * 10));
+    itsHeaders.push_back(LogMessageHeaderParInfo("Category", LogMessageHeaderParInfo::kCategory, static_cast<int>(basicColumnWidthUnit * 5.5)));
+    itsHeaders.push_back(LogMessageHeaderParInfo("Severity", LogMessageHeaderParInfo::kSeverity, static_cast<int>(basicColumnWidthUnit * 3.6)));
     itsHeaders.push_back(LogMessageHeaderParInfo("Message", LogMessageHeaderParInfo::kMessage, basicColumnWidthUnit * 35));
 }
 
