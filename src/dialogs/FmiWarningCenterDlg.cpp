@@ -265,7 +265,17 @@ CRect CFmiWarningCenterDlg::CalcClientArea(void)
 {
 	CRect rect;
 	GetClientRect(rect);
-	rect.top = rect.top + 40;
+    // Kuinka paljon grid kontrollin yläosan pitää siirtää alaspäin
+    int gridControlTopPositionOffset = 40;
+    CWnd *staticControl = GetDlgItem(IDC_STATIC_TIME_STR);
+    if(staticControl)
+    {
+        CRect staticRect;
+        staticControl->GetWindowRect(staticRect);
+        ScreenToClient(staticRect);
+        gridControlTopPositionOffset = staticRect.bottom;
+    }
+	rect.top = rect.top + gridControlTopPositionOffset + 1;
 	return rect;
 }
 
@@ -312,9 +322,9 @@ void CFmiWarningCenterDlg::OnBnClickedButtonWarningCenterOptions()
 
 void CFmiWarningCenterDlg::InitHeaders(void)
 {
-	int basicColumnWidthUnit = 16;
+	int basicColumnWidthUnit = 18;
 	itsHeaders.clear();
-	itsHeaders.push_back(WarningCenterHeaderParInfo("Nr", WarningCenterHeaderParInfo::kRowNumber, basicColumnWidthUnit*2));
+	itsHeaders.push_back(WarningCenterHeaderParInfo("Nr", WarningCenterHeaderParInfo::kRowNumber, static_cast<int>(basicColumnWidthUnit*2.5)));
 	itsHeaders.push_back(WarningCenterHeaderParInfo("Time (UTC)", WarningCenterHeaderParInfo::kStartTime, basicColumnWidthUnit*8));
 	itsHeaders.push_back(WarningCenterHeaderParInfo("Center", WarningCenterHeaderParInfo::kCenterId, basicColumnWidthUnit*3));
 	itsHeaders.push_back(WarningCenterHeaderParInfo("MsgNum", WarningCenterHeaderParInfo::kMessageNumber, basicColumnWidthUnit*3));

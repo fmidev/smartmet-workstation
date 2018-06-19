@@ -70,6 +70,7 @@ private:
     void UpdateSynopStationIdInfo();
     void DoAllBetaProductUpdates();
     void UpdateSynopStationEditColors();
+    void UpdateBetaProductName();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     NFmiBetaProductionSystem *itsBetaProductionSystem; // ei omista, ei tuhoa
@@ -92,6 +93,7 @@ private:
     // Tehdään Generate- ja Save -buttoneille muuttujat, jotta ne voidaan tarvittaessa enbloida/disabloida
     CButton itsGenerateImagesButton;
     CButton itsSaveButton;
+    CButton itsSaveAsButton;
     // Tähän laitetaan tuotannon ajaksi esim. "2/56 images generated" ja lopuksi "56 images generated (YYYY.MM.DD HH:mm:ss)"
     CString itsImageProductionTextU_;
     int itsSelectedViewIndex;
@@ -106,6 +108,8 @@ private:
     CComboBox itsParamBoxLocationSelector;
     BOOL fDisplayRuntimeInfo;
     int itsTotalImagesGenerated;
+    std::string itsBetaProductFullFilePath;
+    CString itsBetaProductNameU_;
 
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> *itsDueAutomations; // Tähän laitetaan väliaikaisesti tehtävien automaatioiden lista silloin kun SmartMet on automaatio moodissa ja se on huomannut että on tehtäviä töitä
 
@@ -151,4 +155,5 @@ public:
     afx_msg void OnCbnSelchangeComboParamBoxLocationSelector();
     afx_msg void OnBnClickedCheckDisplayRuntimeInfo();
     afx_msg void OnEnChangeEditSynopStationIdString();
+    afx_msg void OnBnClickedButtonSaveAsBetaProduct();
 };
