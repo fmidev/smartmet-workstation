@@ -60,7 +60,7 @@ namespace BetaProduct
         {
             std::string logMessage = std::string("Loading ") + theObjectName + " from file: " + theAbsoluteFilePath;
             if(GetLoggerFunction())
-                GetLoggerFunction()(logMessage, "", CatLog::Severity::Error, CatLog::Category::Data, true); // Onnistumiset vain logitetaan aina
+                GetLoggerFunction()(logMessage, "", CatLog::Severity::Debug, CatLog::Category::Data, true); // Onnistumiset vain logitetaan aina
             return true;
         }
         else
