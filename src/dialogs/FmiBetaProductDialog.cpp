@@ -717,7 +717,7 @@ static NFmiMetTime CalcWallClockOffsetTime(const NFmiBetaProduct &theBetaProduct
     long usedTimeStepInMinutes = 60;
     // Yleens‰ halutaan pyˆrist‰‰ aloitus/lopetus ajat l‰himp‰‰n tuntiin, mutta jos annetut wall-time offsetit eiv‰t ole tasatuntisia, 
     // laitetaan time-stepiksi pienempi 'stepeist‰', jotta p‰‰st‰‰n k‰siksi haluttuihin minuutti lukemiin...
-    if(absoluteOffsetMinutes != 0 || theBetaProduct.TimeStepInMinutes() <= 30)
+    if((absoluteOffsetMinutes != 0 && absoluteOffsetMinutes <= 30) || theBetaProduct.TimeStepInMinutes() <= 30)
     {
         if(absoluteOffsetMinutes == 0)
             usedTimeStepInMinutes = theBetaProduct.TimeStepInMinutes();
