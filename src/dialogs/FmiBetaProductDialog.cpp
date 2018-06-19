@@ -559,7 +559,29 @@ bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDest
             }
         }
         if(fAllowDestinationDelete)
-            ::DeleteAllFiles(CA2T(theDestinationDirectory.c_str()));
+        {
+//            ::DeleteAllFiles(CA2T(theDestinationDirectory.c_str()));
+
+            // Kokeillaan toista hakemiston tyhjennys funktiota, koska kuulemma DeleteAllFiles jättää joskus vanhoja tiedostoja jälkeen?!?
+            try
+            {
+                NFmiFileSystem::CleanDirectory(theDestinationDirectory, 0);
+            }
+            catch(std::exception &e)
+            {
+                std::string errorStr = "\"";
+                errorStr += e.what();
+                errorStr += "\" error encountered while trying to delete files from directory: ";
+                errorStr += theDestinationDirectory;
+                itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, "Beta-product error title not used", CatLog::Severity::Error, CatLog::Category::Operational, true);
+            }
+            catch(...)
+            { 
+                std::string errorStr = "Unknown error while trying to delete files from directory: ";
+                errorStr += theDestinationDirectory;
+                itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, "Beta-product error title not used", CatLog::Severity::Error, CatLog::Category::Operational, true);
+            }
+        }
 
         GenerateWebInfoFiles(theDestinationDirectory, theBetaProduct);
         return true;
