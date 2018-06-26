@@ -6,7 +6,7 @@ set(CMAKE_MFC_FLAG 2)
 # Configure the template file
 SET(USER_FILE ${PROJECT_NAME}.vcxproj.user)
 SET(OUTPUT_PATH ${PROJECT_BINARY_DIR}/${USER_FILE})
-SET(COMMANDLINE_ARGUMENTS "-d -p Control/smartmet_sap_scand.conf")
+SET(COMMANDLINE_ARGUMENTS "-d -p ../../../smartmet-workstation-conf-fmi/control/smartmet_sap_scand.conf")
 SET(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 CONFIGURE_FILE(UserTemplate.user ${USER_FILE} @ONLY)
 
