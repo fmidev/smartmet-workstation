@@ -280,4 +280,5 @@ public:
     Warnings::CapDataSystem& GetCapDataSystem() override;
     Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) override;
     void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) override;
+    int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
 };
