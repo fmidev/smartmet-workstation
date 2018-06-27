@@ -10,11 +10,11 @@ First time build instructions:
 3. Run smartmet-workstation/scripts/move_scripts_here.sh script
 4. Run cmake build script smartmet-workstation/scripts/cmake/cmake_msvc_build.sh
 5. Get Fmi related configurations from github in bash:
-  <br>git clone git@github.com:fmidev/smartmet-workstation-conf.git
-6. Copy src folder from this repo into smartmet-workstation repo root
-7. MS Visual C++ solution is in smartmet-workstation_msvc directory, open SmartMet.sln from there
-8. SmartMet project uses by default smartmet_sap_scand.conf main configuration file. 
+  <br>git clone git@github.com:fmidev/smartmet-workstation-conf-fmi.git
+6. MS Visual C++ solution is in smartmet-workstation_msvc directory, open SmartMet.sln from there
+7. SmartMet project should use smartmet_sap_scand.conf main configuration file. 
+ <br>Command arguments: -d -p ../../../smartmet-workstation-conf-fmi/control/smartmet_sap_scand.conf
  <br>It has cap.conf and wms.conf files disabled.
-9. Set SmartMet project as start up project in Visual C++
-10. Press F7 to Build solution (key mappings may be different depending on used key mapping schemes)
-11. Press F5 to Run SmartMet in debugger..
+8. Set SmartMet project as start up project in Visual C++
+9. Press F7 to Build solution (key mappings may be different depending on used key mapping schemes)
+10. Press F5 to Run SmartMet in debugger..

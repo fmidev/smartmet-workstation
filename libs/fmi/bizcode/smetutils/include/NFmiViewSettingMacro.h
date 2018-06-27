@@ -431,6 +431,8 @@ public:
         void ShowHakeMessages(bool newValue) { fShowHakeMessages = newValue; }
         bool ShowKaHaMessages() const { return fShowKaHaMessages; }
         void ShowKaHaMessages(bool newValue) { fShowKaHaMessages = newValue; }
+        int MinimumTimeRangeForWarningsOnMapViewsInMinutes() const { return itsMinimumTimeRangeForWarningsOnMapViewsInMinutes; }
+        void MinimumTimeRangeForWarningsOnMapViewsInMinutes(int newValue) { itsMinimumTimeRangeForWarningsOnMapViewsInMinutes = newValue; }
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
@@ -443,7 +445,7 @@ public:
 		std::vector<int> itsHeaderColumnWidthsInPixels;
         bool fShowHakeMessages; // HAKE sanomien checkbox asetus dialogissa
         bool fShowKaHaMessages; // KaHa sanomien checkbox asetus dialogissa
-
+        int itsMinimumTimeRangeForWarningsOnMapViewsInMinutes; // Ks. NFmiApplicationWinRegistry.h:sta vastaavan member-datan selitys.
 	};
 
 	class SynopDataGridView

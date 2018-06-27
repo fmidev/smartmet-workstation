@@ -944,6 +944,7 @@ NFmiViewSettingMacro::WarningCenterView::WarningCenterView()
 ,itsWarningCenterSystem()
 ,fShowHakeMessages(true)
 ,fShowKaHaMessages(false)
+,itsMinimumTimeRangeForWarningsOnMapViewsInMinutes(0)
 {
 }
 
@@ -971,6 +972,7 @@ void NFmiViewSettingMacro::WarningCenterView::Write(std::ostream& os) const
 
     extraData.Add(static_cast<double>(fShowHakeMessages)); // fShowHakeMessages on 1. uusi 'double' arvo
     extraData.Add(static_cast<double>(fShowKaHaMessages)); // fShowKaHaMessages on 2. uusi 'double' arvo
+    extraData.Add(static_cast<double>(itsMinimumTimeRangeForWarningsOnMapViewsInMinutes)); // itsMinimumTimeRangeForWarningsOnMapViewsInMinutes on 3. uusi 'double' arvo
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -1008,6 +1010,9 @@ void NFmiViewSettingMacro::WarningCenterView::Read(std::istream& is)
     fShowKaHaMessages = false;
     if(extraData.itsDoubleValues.size() >= 2)
         fShowKaHaMessages = (extraData.itsDoubleValues[1] == 0) ? false : true;
+    itsMinimumTimeRangeForWarningsOnMapViewsInMinutes = 0;
+    if(extraData.itsDoubleValues.size() >= 3)
+        itsMinimumTimeRangeForWarningsOnMapViewsInMinutes = static_cast<int>(extraData.itsDoubleValues[2]);
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);

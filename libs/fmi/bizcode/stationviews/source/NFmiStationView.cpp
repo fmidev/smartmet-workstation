@@ -1162,17 +1162,22 @@ float NFmiStationView::GetSynopValueFromQ2Archive(boost::shared_ptr<NFmiFastQuer
 // Oletus 2: annetun theInfo:n aikainterpolaatio arvot ovat samoja kuin NFmiStationView-luokan itsInfo:n vastaavat.
 float NFmiStationView::CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime)
 {
-    float currentValue = itsInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
-    if(currentValue == kFloatMissing && fAllowNearestTimeInterpolation)
+    if(fDoTimeInterpolation && itsTimeInterpolationRangeInMinutes == 0)
+        return kFloatMissing;
+    else
     {
-        auto oldTimeIndex = theInfo->TimeIndex();
-        if(theInfo->FindNearestTime(theTime, kCenter, itsTimeInterpolationRangeInMinutes))
+        float currentValue = itsInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
+        if(currentValue == kFloatMissing && fAllowNearestTimeInterpolation)
         {
-            currentValue = theInfo->FloatValue();
+            auto oldTimeIndex = theInfo->TimeIndex();
+            if(theInfo->FindNearestTime(theTime, kCenter, itsTimeInterpolationRangeInMinutes))
+            {
+                currentValue = theInfo->FloatValue();
+            }
+            theInfo->TimeIndex(oldTimeIndex);
         }
-        theInfo->TimeIndex(oldTimeIndex);
+        return currentValue;
     }
-    return currentValue;
 }
 
 // tämä hakee näytettävän datan riippuen asetuksista
@@ -1973,7 +1978,10 @@ long NFmiStationView::GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo 
 
 bool NFmiStationView::AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes)
 {
-    return theTimeInterpolationRangeInMinutes <= 30;
+    if(theTimeInterpolationRangeInMinutes > 0)
+        return theTimeInterpolationRangeInMinutes <= 30;
+    else
+        return false;
 }
 
 NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
@@ -2709,7 +2717,9 @@ void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)
 
 float NFmiStationView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-    float interpolatedValue = fDoTimeInterpolation ? theInfo->InterpolatedValue(theLatlon, theUsedTime) : theInfo->InterpolatedValue(theLatlon);
+    float interpolatedValue = kFloatMissing;
+    if(!(fDoTimeInterpolation && itsTimeInterpolationRangeInMinutes == 0))
+        interpolatedValue = fDoTimeInterpolation ? theInfo->InterpolatedValue(theLatlon, theUsedTime, itsTimeInterpolationRangeInMinutes) : theInfo->InterpolatedValue(theLatlon);
     return interpolatedValue;
 }
 

@@ -323,16 +323,16 @@ void CFmiBetaProductAutomationDialog::DoWhenClosing(void)
 
 void CFmiBetaProductAutomationDialog::InitHeaders(void)
 {
-    int basicColumnWidthUnit = 16;
+    int basicColumnWidthUnit = 18;
     itsHeaders.clear();
     
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Row"), BetaAutomationHeaderParInfo::kRowNumber, basicColumnWidthUnit * 2));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Name"), BetaAutomationHeaderParInfo::kAutomationName, basicColumnWidthUnit * 9));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Enable"), BetaAutomationHeaderParInfo::kEnable, basicColumnWidthUnit * 3));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Next"), BetaAutomationHeaderParInfo::kNextRuntime, boost::math::iround(basicColumnWidthUnit * 2.5)));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Last"), BetaAutomationHeaderParInfo::kLastRuntime, basicColumnWidthUnit * 3));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Next"), BetaAutomationHeaderParInfo::kNextRuntime, boost::math::iround(basicColumnWidthUnit * 2.7)));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Last"), BetaAutomationHeaderParInfo::kLastRuntime, boost::math::iround(basicColumnWidthUnit * 3.2)));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Status"), BetaAutomationHeaderParInfo::kAutomationStatus, boost::math::iround(basicColumnWidthUnit * 8.5)));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Path"), BetaAutomationHeaderParInfo::kAutomationPath, boost::math::iround(basicColumnWidthUnit * 12.)));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Path"), BetaAutomationHeaderParInfo::kAutomationPath, boost::math::iround(basicColumnWidthUnit * 30.)));
 }
 
 void CFmiBetaProductAutomationDialog::UpdateBetaProductPathInfo()
@@ -593,6 +593,8 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonBetaAutomationSave()
 
     BetaProduct::SaveObjectToKnownFileInJsonFormat(*itsBetaProductAutomation, itsSelectedAutomationFullFilePath, "Beta-automation", false);
     MakeAutomationComparisonObject();
+    // Päivitetään automaatiolistan beta-automaatiot, jos niihin olisi tullut muutoksia
+    itsBetaProductionSystem->UsedAutomationList().RefreshAutomationList();
     itsBetaProductionSystem->UsedAutomationList().DoFullChecks(itsBetaProductionSystem->AutomationModeOn());
     UpdateAutomationList(); // Jos tehdyt muutokset vaikuttavat listassa oleviin automaatioihin, pitää listaa päivittää
 }
@@ -683,6 +685,8 @@ void CFmiBetaProductAutomationDialog::UpdateAutomationList()
         SetGridRow(currentRowCount++, *dataVector[i]);
     }
     itsGridCtrl.SetSelectedRange(selectedCellRange);
+
+    itsGridCtrl.UpdateData(FALSE);
 }
 
 // Halutaan palauttaa HH:mm eli hours:minutes teksti annetulle ajalle.
@@ -841,7 +845,9 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonSaveAsAutomationList()
     if(BetaProduct::SaveObjectInJsonFormat(itsBetaProductionSystem->UsedAutomationList(), BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaAutomationListFileFilter(), NFmiBetaProductionSystem::BetaAutomationListFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Automation-list", false, &usedAbsoluteFilePath))
     {
         itsBetaProductionSystem->UsedAutomationListPathString(usedAbsoluteFilePath);
+        UpdateSelectedAutomationListName();
         CheckForSaveButtonEnablations();
+        UpdateData(FALSE);
     }
 }
 
