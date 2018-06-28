@@ -248,6 +248,7 @@ public:
 #endif // DISABLE_CPPRESTSDK
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) override;
     AddParams::ParamAddingSystem& ParamAddingSystem() override;
+    void UpdateParamAddingSystem() override;
     bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) override;
     int DataToDBCheckMethod() override;
     void DataToDBCheckMethod(int newValue) override;

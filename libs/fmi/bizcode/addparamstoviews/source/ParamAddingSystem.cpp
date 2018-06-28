@@ -47,7 +47,7 @@ namespace AddParams
 
     void ParamAddingSystem::addHelpData(NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
     {
-        std::string uniqueDataId = std::string(producer.GetName()) + "-" + menuString;
+        std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
         SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, dataType, 0, "", true, nullptr, 2);
         otherHelpData.push_back(item);
     }

@@ -316,6 +316,7 @@ public:
 #endif // DISABLE_CPPRESTSDK
     virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) = 0;
     virtual AddParams::ParamAddingSystem& ParamAddingSystem() = 0;
+    virtual void UpdateParamAddingSystem() = 0;
     virtual bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) = 0;
     virtual int DataToDBCheckMethod() = 0;
     virtual void DataToDBCheckMethod(int newValue) = 0;

@@ -1178,6 +1178,11 @@ AddParams::ParamAddingSystem& SmartMetDocumentInterfaceForGeneralDataDoc::ParamA
     return itsDoc->ParamAddingSystem();
 }
 
+void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateParamAddingSystem()
+{
+    itsDoc->UpdateParamAddingSystem();
+}
+
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId)
 {
     return itsDoc->ExecuteCommand(theMenuItem, theViewIndex, theViewTypeId);
