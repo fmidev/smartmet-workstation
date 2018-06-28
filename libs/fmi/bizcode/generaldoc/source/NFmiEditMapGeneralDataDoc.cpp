@@ -13764,21 +13764,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
             // Add other data to help data. 
+            if(capDataSystem.useCapData())
+            {
+                NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345), "CAP"); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
+                std::string menuString = "Warnings";
+                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
+            }
+
             //if(ConceptualModelData().Use())
             //{
             //    NFmiProducer prod(1028, "Analysis"); // No official producerId
             //    std::string menuString = "Conceptual analysis"; // Joonas: Conceptual analysis uses name to fetch correct data, so needs to be fixed before use!
             //    paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData);
             //}
-
-            if(capDataSystem.useCapData())
-            {
-                NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345), "CAP"); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
-                std::string menuString = "Warnings (CAP)";
-                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
-            }
-            // TODO alusta eri categoria datoilla ilman varsinaisia datoja (lis‰‰ kyseinen ominaisuus ParamAddingSystem:iin)
-            // WmsSupport()
+            
+            // TODO
+            // WmsSupport(), Streamlines, Edited data
         }
         catch(std::exception &e)
         {
