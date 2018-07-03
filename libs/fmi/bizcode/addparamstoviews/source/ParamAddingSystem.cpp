@@ -18,7 +18,7 @@ namespace
 namespace AddParams
 {
     ParamAddingSystem::ParamAddingSystem()
-    :updateWaitTimeoutInSeconds_(15)
+    :updateWaitTimeoutInSeconds_(10)
     ,updatePending_(false)
     ,dialogRowData_()
     ,dialogTreePatternArray_()

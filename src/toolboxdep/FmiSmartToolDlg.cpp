@@ -793,8 +793,8 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 	itsMacroParamList.SetCurSel(currentSelection);
     if(fForceThreadUpdate)
     {
-		CFmiMacroParamUpdateThread::ForceUpdate(); // tämä pakottaa että myös pop-up valikoiden käyttämää puu rakennetta päivitetään        
-        itsSmartMetDocumentInterface->UpdateParamAddingSystem(); // Joonas: ennen tätä pitäisi macroparamsystemin puurakenne päivittää!
+		CFmiMacroParamUpdateThread::ForceUpdate(); // tämä pakottaa että myös pop-up valikoiden käyttämää puu rakennetta päivitetään
+        itsSmartMetDocumentInterface->UpdateParamAddingSystem(); // Joonas: ennen tätä pitäisi macroparamsystemin puurakenne saada päivitettyä!
     }
 }
 
