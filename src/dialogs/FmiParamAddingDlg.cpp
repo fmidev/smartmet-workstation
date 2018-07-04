@@ -442,7 +442,7 @@ void CFmiParamAddingDlg::HandleGridCtrlsLButtonDblClk()
 }
 
 void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
-{
+{    
     if(rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode())
     {
         NFmiMenuItem *addParamCommand;
@@ -450,7 +450,7 @@ void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &
             addParamCommand = new NFmiMenuItem(
                 static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
                 rowItem.itemName(),
-                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.itemName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
                 NFmiMetEditorTypes::kFmiParamsDefaultView,
                 rowItem.level().get(),
@@ -463,7 +463,7 @@ void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &
             addParamCommand = new NFmiMenuItem(
                 static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
                 NFmiString("Add some param"),
-                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.itemName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
                 NFmiMetEditorTypes::kFmiParamsDefaultView,
                 rowItem.level().get(), 
