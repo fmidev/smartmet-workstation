@@ -23,9 +23,10 @@ namespace AddParams
 	// This is used to populate ParamAdding dialog's rows
     class SingleRowItem
     {
-        // Data's filefilter is unique id in SmartMet
+        // Data's file filter is unique id in SmartMet
         RowType rowType_;
         std::string itemName_;
+        std::string displayName_;
         unsigned long itemId_;
         bool dialogTreeNodeCollapsed_;
         // If rowItem is kDataType, store here data's uniqueDataId (its file path filter).
@@ -41,16 +42,18 @@ namespace AddParams
 
     public:
         SingleRowItem();
-        SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
-            bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType, 
-            unsigned long parentItemId = 0, const std::string &parentItemName = "", const bool leafNode = false, 
-            const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth_ = 0);
+        SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId,
+            bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType,
+            unsigned long parentItemId = 0, const std::string &parentItemName = "", const bool leafNode = false,
+            const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth_ = 0, std::string &displayName = std::string());
         ~SingleRowItem();
 
         RowType rowType() const { return rowType_; }
         void rowType(RowType rowType) { rowType_ = rowType; }
         const std::string& itemName() const { return itemName_; }
         void itemName(const std::string &itemName) { itemName_ = itemName; }
+        const std::string& displayName() const { return displayName_; }
+        void displayName(const std::string &displayName) { displayName_ = displayName; }
         unsigned long itemId() const { return itemId_; }
         void itemId(unsigned long itemId) { itemId_ = itemId; }
         bool dialogTreeNodeCollapsed() const { return dialogTreeNodeCollapsed_; }
