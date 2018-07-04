@@ -14,12 +14,13 @@ namespace AddParams
         , leafNode_(false)
         , level_(nullptr)
         , treeDepth_(0)
+        , displayName_()
     {}
 
     SingleRowItem::SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
         bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType, 
         unsigned long parentItemId, const std::string &parentItemName, const bool leafNode, 
-        const std::shared_ptr<NFmiLevel> &level, const int treeDepth)
+        const std::shared_ptr<NFmiLevel> &level, const int treeDepth, std::string &displayName)
         : rowType_(rowType)
         , itemName_(itemName)
         , itemId_(itemId)
@@ -31,8 +32,10 @@ namespace AddParams
         , leafNode_(leafNode)
         , level_(level)
         , treeDepth_(treeDepth)
+        , displayName_(displayName)
     {
         if(treeDepth_ == 0) { treeDepth_ = getTreeDepth(rowType); }
+        if(displayName_.empty()) { displayName_ = itemName; }
     }
 
     SingleRowItem::~SingleRowItem() = default;
