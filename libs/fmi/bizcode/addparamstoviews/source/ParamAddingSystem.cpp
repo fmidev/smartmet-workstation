@@ -45,10 +45,15 @@ namespace AddParams
         helpDataIDs = {101, 107, 108, 109, 160, 242}; // Help Data id's. These are added to Help Data Category
     }
 
-    void ParamAddingSystem::addHelpData(NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
+    void ParamAddingSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
+    {
+        addHelpData(producer, menuString, dataType, std::string());
+    }
+
+    void ParamAddingSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName) //Add at the end of help data list
     {
         std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
-        SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, dataType, 0, "", true, nullptr, 2);
+        SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, dataType, 0, "", true, nullptr, 2, displayName);
         otherHelpData.push_back(item);
     }
 

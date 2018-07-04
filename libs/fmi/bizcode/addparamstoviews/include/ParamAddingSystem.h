@@ -61,7 +61,8 @@ namespace AddParams
         ~ParamAddingSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
-        void addHelpData(NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType);
+        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
+        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName);
         void updateData();
         void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory);
         int updateWaitTimeoutInSeconds() const { return updateWaitTimeoutInSeconds_; }
