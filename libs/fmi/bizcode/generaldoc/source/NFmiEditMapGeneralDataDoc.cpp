@@ -13771,12 +13771,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
             }
 
-            //if(ConceptualModelData().Use())
-            //{
-            //    NFmiProducer prod(1028, "Analysis"); // No official producerId
-            //    std::string menuString = "Conceptual analysis"; // Joonas: Conceptual analysis uses name to fetch correct data, so needs to be fixed before use!
-            //    paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData);
-            //}
+            if(ConceptualModelData().Use())
+            {
+                NFmiProducer prod(1028, "Analysis"); // No official producerId
+                std::string menuString = "Conceptual analysis";
+                std::string displayName = ConceptualModelData().DefaultUserName(); // Conceptual analysis uses displayName to fetch correct data!
+                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
+            }
             
             // TODO
             // WmsSupport(), Streamlines, Edited data
