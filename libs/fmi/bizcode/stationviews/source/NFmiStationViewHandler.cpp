@@ -1179,6 +1179,8 @@ namespace
         ,itsKahaRain2(nullptr)
         ,itsKahaRain3(nullptr)
         ,itsKahaRoadSlippery(nullptr)
+        ,itsKahaFog(nullptr)
+        ,itsKahaWaterTemperature(nullptr)
         ,itsUnknownKaHaMessageType(nullptr)
         ,itsIconSizeInMM_x(9.8)
 		,itsIconSizeInMM_y(9.8)
@@ -1229,6 +1231,8 @@ namespace
             itsKahaRain2 = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-vesisade-2.png");
             itsKahaRain3 = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-vesisade-3.png");
             itsKahaRoadSlippery = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-tieliikennehairio.png");
+            itsKahaFog = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-sumu.png");
+            itsKahaWaterTemperature = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-vedenlampotila.png");
             itsUnknownKaHaMessageType = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/question_mark_kaha_32x32.png");
         }
 
@@ -1275,8 +1279,10 @@ namespace
         Gdiplus::Bitmap *itsKahaRain2;
         Gdiplus::Bitmap *itsKahaRain3;
         Gdiplus::Bitmap *itsKahaRoadSlippery;
+        Gdiplus::Bitmap *itsKahaFog;
+        Gdiplus::Bitmap *itsKahaWaterTemperature;
 
-        Gdiplus::Bitmap *itsUnknownKaHaMessageType; // tuntematon sanoma id, jolloin merkiksi sininen kysymerkki pallo
+        Gdiplus::Bitmap *itsUnknownKaHaMessageType; // tuntematon sanoma id, jolloin merkiksi sininen kysymysmerkki
 
         double itsIconSizeInMM_x; // tämä on haluttujen 16 x 16 pix ikonien koko printatessa
 		double itsIconSizeInMM_y;
@@ -1573,6 +1579,16 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
     case 10:
     { // Lumensyvyys
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaSnowDepth, 0.85f, 0.85);
+        break;
+    }
+    case 12:
+    { // Sumu
+        DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaFog, 0.85f, 0.85);
+        break;
+    }
+    case 13:
+    { // Veden pintalämpötila
+        DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaWaterTemperature, 0.85f, 0.85);
         break;
     }
     case 1100:
