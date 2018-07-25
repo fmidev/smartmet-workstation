@@ -7,16 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <list>
 #include <set>
-
-#ifdef _MSC_VER
-#pragma warning( \
-    disable : 4244 4267 4512)  // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
-#endif
-#include <boost/thread.hpp>
-#ifdef _MSC_VER
-#pragma warning(default : 4244 4267 4512)  // laitetaan 4244 takaisin päälle, koska se on tärkeä
-                                           // (esim. double -> int auto castaus varoitus)
-#endif
+#include <mutex>
 
 class NFmiOwnerInfo;
 class NFmiFastQueryInfo;
@@ -27,10 +18,8 @@ class NFmiFastQueryInfo;
 class NFmiQueryDataKeeper
 {
  public:
-  typedef boost::shared_mutex MutexType;
-  typedef boost::shared_lock<MutexType>
-      ReadLock;  // Read-lockia ei oikeasti tarvita, mutta laitan sen tähän, jos joskus tarvitaankin
-  typedef boost::unique_lock<MutexType> WriteLock;
+  typedef std::mutex MutexType;
+  typedef std::lock_guard<MutexType> WriteLock;
 
   NFmiQueryDataKeeper(void);
   NFmiQueryDataKeeper(boost::shared_ptr<NFmiOwnerInfo> &theOriginalData);
