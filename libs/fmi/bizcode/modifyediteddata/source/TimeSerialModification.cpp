@@ -3524,8 +3524,13 @@ std::string FmiModifyEditdData::DataFilterToolsParamsForLog(TimeSerialModificati
         case 0: // Only active parameter
         {
             boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0));
-            desc = drawParam->ParameterAbbreviation();
-            return "[" + desc + "]";
+            if(drawParam)
+            {
+                desc = drawParam->ParameterAbbreviation();
+                return "[" + desc + "]";
+            }
+            else
+                return "[No active param to modify]";
         }
         case 1: // All parameters
         {
