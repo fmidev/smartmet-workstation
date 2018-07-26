@@ -231,7 +231,6 @@ public:
     virtual const NFmiColor& StationPointColor(int theMapViewDescTopIndex) const = 0;
     virtual const NFmiPoint& StationPointSize(int theMapViewDescTopIndex) const = 0;
     virtual NFmiMacroParamSystem& MacroParamSystem(void) = 0;
-    virtual std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam) = 0;
     virtual CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void) = 0;
     virtual size_t SelectedGridPointLimit(void) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) = 0;

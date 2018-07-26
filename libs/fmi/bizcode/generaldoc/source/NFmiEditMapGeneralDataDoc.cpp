@@ -9349,11 +9349,6 @@ void SwapArea(unsigned int theDescTopIndex)
 		return itsMacroParamSystem;
 	}
 
-    std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-    {
-        return FmiModifyEditdData::GetWantedSmartToolStr(MacroParamSystem(), theDrawParam);
-    }
-
 	// lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName)
 	{
@@ -14899,11 +14894,6 @@ const std::string& NFmiEditMapGeneralDataDoc::GetCurrentSmartToolMacro(void)
 NFmiMacroParamSystem& NFmiEditMapGeneralDataDoc::MacroParamSystem(void)
 {
 	return pimpl->MacroParamSystem();
-}
-
-std::string NFmiEditMapGeneralDataDoc::GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-{
-    return pimpl->GetWantedSmartToolStr(theDrawParam);
 }
 
 void NFmiEditMapGeneralDataDoc::AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName) // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
