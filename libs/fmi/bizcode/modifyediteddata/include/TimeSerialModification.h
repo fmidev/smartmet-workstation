@@ -178,33 +178,19 @@ namespace FmiModifyEditdData
     const std::string ForecasterIDKey = "ForecasterID";
     const std::string HelperForecasterIDKey = "HelperForecasterID";
 
-	// Tätä funktiota VOI testata ModifyEditedDataExe-ohjelmalla
 	bool DoTimeSerialModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks);
 	void DoTimeSerialModifications2(ModifyFunctionParamHolder &theModifyFunctionParamHolder, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, bool fUseSetForDiscreteData, int theUnchangedValue);
-	// Tätä funktiota VOI testata ModifyEditedDataExe-ohjelmalla
-	bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks);
 	void DoSmartToolEditing2(ModifyFunctionParamHolder &theModifyFunctionParamHolder, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly);
-	// Tätä funktiota VOI testata ModifyEditedDataExe-ohjelmalla
 	bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, bool fPasteClipBoardData, bool fDoMultiThread);
-	// Tätä funktiota VOI testata ModifyEditedDataExe-ohjelmalla
 	bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread);
-	// Tätä funktiota EI VOI testata NFmiEditMapGeneralDataDoc-luokan ulkopuolella (ainakaan vielä)
 	bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread);
-	// Tätä funktiota EI VOI testata NFmiEditMapGeneralDataDoc-luokan ulkopuolella (ainakaan vielä)
 	bool StoreDataToDataBase(TimeSerialModificationDataInterface &theAdapter, const std::string &theForecasterId, const std::string &theHelperForecasterId, bool fDoMultiThread);
-	// Tätä funktiota EI VOI testata NFmiEditMapGeneralDataDoc-luokan ulkopuolella (ainakaan vielä)
 	bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemoveThundersOnLoad, bool fDoMultiThread);
-	// Tätä funktiota EI VOI testata NFmiEditMapGeneralDataDoc-luokan ulkopuolella (ainakaan vielä)
 	float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo = nullptr);
-	// Tätä funktiota EI VOI testata NFmiEditMapGeneralDataDoc-luokan ulkopuolella (ainakaan vielä)
 	bool TryAutoStartUpLoad(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread);
-	// Tätä funktiota VOI testata ModifyEditedDataExe-ohjelmalla
 	bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterface &theAdapter, NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fDoMultiThread, bool fPasteAction);
-	// Tätä funktiota EI VOI testata NFmiEditMapGeneralDataDoc-luokan ulkopuolella (ainakaan vielä)
 	void SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread);
-	// Tätä funktiota VOI testata ModifyEditedDataExe-ohjelmalla
 	bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread);
-	// Tätä funktiota VOI testata ModifyEditedDataExe-ohjelmalla
 	void SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
 					, const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime);
 	bool UndoData(TimeSerialModificationDataInterface &theAdapter);

@@ -3100,7 +3100,7 @@ std::string FmiModifyEditdData::GetWantedSmartToolStr(NFmiMacroParamSystem &macr
 		if(macroParamSystem.FindTotal(theDrawParam->InitFileName()))
 			return macroParamSystem.CurrentMacroParam()->MacroText();
 	}
-	return std::string("Error, couldn't found macro parameter: ") + theDrawParam->ParameterAbbreviation();
+	throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
 }
 
 // Pit‰‰ tehd‰ alustuksia laskuissa k‰ytetyn fastInfon ja datamatriisin v‰lill‰.
@@ -3345,16 +3345,6 @@ void FmiModifyEditdData::DoTimeSerialModifications2(ModifyFunctionParamHolder &t
 	::UndoData(theModifyFunctionParamHolder.itsAdapter); // toiminto on luultavasti keskeytetty k‰ytt‰j‰n toimesta, joten pit‰‰ tehd‰ undo-toiminto t‰ss‰ ja sitten palauttaa false
 	::PostProcessForProgressDialogAction(theModifyFunctionParamHolder, false, ID_MESSAGE_WORKING_THREAD_CANCELED);
 	::ReportError_InfiniteValueCheck(theModifyFunctionParamHolder.itsAdapter, std::string(__FUNCTION__) + " - canceled");
-}
-
-bool FmiModifyEditdData::DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
-{
-	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
-		return false;
-	::SetForInfiniteValueCheck(theAdapter);
-	bool status = ::DoSmartToolEditing(theAdapter, theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly, fDoMultiThread, theThreadCallBacks);
-	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
-	return status;
 }
 
 void FmiModifyEditdData::DoSmartToolEditing2(ModifyFunctionParamHolder &theModifyFunctionParamHolder, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
