@@ -9351,15 +9351,7 @@ void SwapArea(unsigned int theDescTopIndex)
 
     std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
     {
-        if(theDrawParam->ParameterAbbreviation() == std::string("macroParam"))
-            return GetCurrentSmartToolMacro();
-        else
-        {
-            NFmiMacroParamSystem &mpSystem = MacroParamSystem();
-            if(mpSystem.FindTotal(theDrawParam->InitFileName()))
-                return mpSystem.CurrentMacroParam()->MacroText();
-        }
-        throw std::runtime_error(std::string("GetWantedSmartToolStr: Error, couldn't found macro parameter:") + theDrawParam->ParameterAbbreviation());
+        return FmiModifyEditdData::GetWantedSmartToolStr(MacroParamSystem(), theDrawParam);
     }
 
 	// lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
