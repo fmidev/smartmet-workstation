@@ -3268,7 +3268,7 @@ bool MakeMacroParamDrawingLayerCacheChecks(boost::shared_ptr<NFmiDrawParam> &dra
 {
     if(drawParam->DataType() == NFmiInfoData::kMacroParam)
     {
-        std::string macroParamStr = FmiModifyEditdData::GetWantedSmartToolStr(MacroParamSystem(), drawParam);
+        std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(MacroParamSystem(), drawParam);
         MacroParamDataChecker macroParamDataChecker;
         auto macroParamDataInfoVector = macroParamDataChecker.getCalculationParametersFromMacroPram(macroParamStr);
         for(const auto &macroParamDataInfo : macroParamDataInfoVector)

@@ -61,6 +61,6 @@ namespace FmiModifyEditdData
 	bool UndoData(TimeSerialModificationDataInterface &theAdapter);
 	bool RedoData(TimeSerialModificationDataInterface &theAdapter);
     std::string GetModifiedParamsForLog(NFmiParamBag & modifiedParams);
-    std::string GetWantedSmartToolStr(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+    std::string GetMacroParamFormula(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
     std::string DataFilterToolsParamsForLog(TimeSerialModificationDataInterface &theAdapter);
 }

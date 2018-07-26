@@ -565,7 +565,7 @@ bool NFmiStationView::IsStationDataMacroParam(void)
 {
     try
     {
-    	std::string macroParamStr = FmiModifyEditdData::GetWantedSmartToolStr(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
+    	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
         if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != -1)
             return true;
     }
@@ -1923,7 +1923,7 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
         string baseParStr;
         baseParStr += "code=";
 
-        std::string macroParamStr = FmiModifyEditdData::GetWantedSmartToolStr(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
+        std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
         baseParStr += NFmiStringTools::UrlEncode(macroParamStr);
 
         string projectionStr("&projection=");

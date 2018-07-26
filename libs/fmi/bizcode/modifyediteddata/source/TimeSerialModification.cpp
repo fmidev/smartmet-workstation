@@ -2560,7 +2560,7 @@ static bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemo
 	return status;
 }
 
-std::string FmiModifyEditdData::GetWantedSmartToolStr(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+std::string FmiModifyEditdData::GetMacroParamFormula(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	if(theDrawParam->ParameterAbbreviation() == std::string("macroParam"))
 		return macroParamSystem.CurrentMacroParam()->MacroText();
@@ -2611,7 +2611,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 
 		// macroParam niminen macroparametri on erikoistapaus ja sen macroskripti otetaan currentti teksti
 		// muuten macro pit‰‰ pyyt‰‰ macroParaSysteemilt‰
-		std::string macroParamStr = FmiModifyEditdData::GetWantedSmartToolStr(theAdapter.MacroParamSystem(), theDrawParam);
+		std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
 		smartToolModifier.InitSmartTool(macroParamStr, true);
 	}
 	catch(std::exception &e)
