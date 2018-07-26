@@ -866,18 +866,23 @@ NFmiMacroParam* CFmiSmartToolDlg::FindSelectedMacroParam(void)
 
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamProperties()
 {
-	NFmiMacroParam *selectedMacroParam = FindSelectedMacroParam();
-    if(selectedMacroParam && !selectedMacroParam->IsMacroParamDirectory())
+    NFmiMacroParam *selectedMacroParam = FindSelectedMacroParam();
+    if(selectedMacroParam)
     {
-        CFmiModifyDrawParamDlg dlg(itsSmartMetDocumentInterface, selectedMacroParam->DrawParam(), itsSmartMetDocumentInterface->InfoOrganizer()->GetDrawParamPath(), true, false, itsSelectedMapViewDescTopIndex, this); // smarttool-dialogista ei voi toistaiseksi lis‰t‰ kuin p‰‰karttan‰ytˆlle macroParameja
-        if(dlg.DoModal() == IDOK)
-        {
-            RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed");
-        }
+        if(selectedMacroParam->IsMacroParamDirectory())
+            ::MessageBox(this->GetSafeHwnd(), CA2T(::GetDictionaryString("A directory was selected and you can't modify it's draw properties").c_str()), CA2T(::GetDictionaryString("No selection").c_str()), MB_ICONINFORMATION | MB_OK);
         else
         {
-            if(dlg.RefreshPressed())
-                RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed back"); // jos painettu refres-nappia ja sitten cancelia, pit‰‰ p‰ivitt‰‰ ruutu
+            CFmiModifyDrawParamDlg dlg(itsSmartMetDocumentInterface, selectedMacroParam->DrawParam(), itsSmartMetDocumentInterface->InfoOrganizer()->GetDrawParamPath(), true, false, itsSelectedMapViewDescTopIndex, this); // smarttool-dialogista ei voi toistaiseksi lis‰t‰ kuin p‰‰karttan‰ytˆlle macroParameja
+            if(dlg.DoModal() == IDOK)
+            {
+                RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed");
+            }
+            else
+            {
+                if(dlg.RefreshPressed())
+                    RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed back"); // jos painettu refres-nappia ja sitten cancelia, pit‰‰ p‰ivitt‰‰ ruutu
+            }
         }
     }
     else
