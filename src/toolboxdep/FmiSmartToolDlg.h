@@ -100,7 +100,6 @@ protected:
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
-	boost::shared_ptr<NFmiDrawParam> itsMacroParamDrawParam;
 	int itsSelectedMapViewDescTopIndex;
     CString itsMacroParamNameU_;
     CListBox itsMacroParamList;

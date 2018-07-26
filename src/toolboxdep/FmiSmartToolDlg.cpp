@@ -45,7 +45,6 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 :CDialog(CFmiSmartToolDlg::IDD, pParent)
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
 ,itsSmartToolInfo(smartMetDocumentInterface ? smartMetDocumentInterface->SmartToolInfo() : 0)
-,itsMacroParamDrawParam(new NFmiDrawParam() )
 ,itsSelectedMapViewDescTopIndex(0)
 ,itsMacroParamNameU_(_T(""))
 , itsMacroNameU_(_T(""))
@@ -65,10 +64,6 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 	fModifyOnlySelectedLocations = FALSE;
 	fMakeDBCheckAtSend = FALSE;
 	//}}AFX_DATA_INIT
-	itsMacroParamDrawParam->DataType(NFmiInfoData::kMacroParam);
-	NFmiDataIdent dataIdent(itsMacroParamDrawParam->Param());
-	dataIdent.GetParam()->SetName("MacroParam");
-	itsMacroParamDrawParam->Param(dataIdent);
 }
 
 CFmiSmartToolDlg::~CFmiSmartToolDlg(void)
@@ -679,6 +674,11 @@ bool CFmiSmartToolDlg::CreateNewMacroParamDirectory(const std::string &thePath)
 	return false;
 }
 
+static boost::shared_ptr<NFmiDrawParam> CreateDefaultDrawParamPointer()
+{
+    return boost::shared_ptr<NFmiDrawParam>(new NFmiDrawParam());
+}
+
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
 {
 	UpdateData(TRUE);
@@ -706,7 +706,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
 	boost::shared_ptr<NFmiMacroParam> tmp(new NFmiMacroParam);
 	tmp->Name(tmpName);
 	tmp->MacroText(GetMacroTextFromSyntaxEditor());
-	tmp->DrawParam(itsMacroParamDrawParam);
+	tmp->DrawParam(::CreateDefaultDrawParamPointer());
 	tmp->DrawParam()->ParameterAbbreviation(tmp->Name());
     tmp->DrawParam()->DataType(GetUsedMacroParamType());
 	NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
@@ -866,22 +866,22 @@ NFmiMacroParam* CFmiSmartToolDlg::FindSelectedMacroParam(void)
 
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamProperties()
 {
-	// katsotaan editoidaanko jotain valittua macroParamia vai defaulttia (=itsMacroParamDrawParam)
-	bool useSelected = false;
-	NFmiMacroParam *selected = FindSelectedMacroParam();
-	if(selected)
-		useSelected = true;
-
-	CFmiModifyDrawParamDlg dlg(itsSmartMetDocumentInterface, useSelected ? selected->DrawParam() : itsMacroParamDrawParam, itsSmartMetDocumentInterface->InfoOrganizer()->GetDrawParamPath(), true, false, itsSelectedMapViewDescTopIndex, this); // smarttool-dialogista ei voi toistaiseksi lisätä kuin pääkarttanäytölle macroParameja
-	if(dlg.DoModal() == IDOK)
-	{
-		RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed");
-	}
-	else
-	{
-		if(dlg.RefreshPressed())
-			RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed back"); // jos painettu refres-nappia ja sitten cancelia, pitää päivittää ruutu
-	}
+	NFmiMacroParam *selectedMacroParam = FindSelectedMacroParam();
+    if(selectedMacroParam && !selectedMacroParam->IsMacroParamDirectory())
+    {
+        CFmiModifyDrawParamDlg dlg(itsSmartMetDocumentInterface, selectedMacroParam->DrawParam(), itsSmartMetDocumentInterface->InfoOrganizer()->GetDrawParamPath(), true, false, itsSelectedMapViewDescTopIndex, this); // smarttool-dialogista ei voi toistaiseksi lisätä kuin pääkarttanäytölle macroParameja
+        if(dlg.DoModal() == IDOK)
+        {
+            RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed");
+        }
+        else
+        {
+            if(dlg.RefreshPressed())
+                RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed back"); // jos painettu refres-nappia ja sitten cancelia, pitää päivittää ruutu
+        }
+    }
+    else
+        ::MessageBox(this->GetSafeHwnd(), CA2T(::GetDictionaryString("No macroParam was selected").c_str()), CA2T(::GetDictionaryString("No selection").c_str()), MB_ICONINFORMATION | MB_OK);
 }
 
 void CFmiSmartToolDlg::AddSelectedMacroParamToRow(int theRow)
