@@ -513,7 +513,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsSmartMetEditingMode(CtrlViewUtils::kFmiEditingModeNormal)
 ,itsSavedDirectory()
 ,itsCurrentMacroText()
-,itsMacroParamDrawParam()
 ,itsMacroParamSystem()
 ,itsCrossSectionSystem(CtrlViewUtils::MaxViewGridYSize)
 ,itsPossibleUsedDataLoadingGrid(0)
@@ -2006,17 +2005,6 @@ void InitDrawDifferenceDrawParam(void)
 		itsDrawDifferenceDrawParam->SimpleIsoLineColorShadeMidValueColor(NFmiColor(1.f,0.f,1.f));
 		itsDrawDifferenceDrawParam->SimpleIsoLineColorShadeHighValueColor(NFmiColor(1.f,0.f,0.f));
 		itsDrawDifferenceDrawParam->StationDataViewType(NFmiMetEditorTypes::kFmiIsoLineView);
-
-		// Laitoin initialisoimaan myös testi makroParam-drawparamin
-		itsMacroParamDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(998)), 0, NFmiInfoData::kAnyData);
-		if(itsMacroParamDrawParam)
-		{
-			itsMacroParamDrawParam->ParameterAbbreviation("macroParam");
-			itsMacroParamDrawParam->DataType(NFmiInfoData::kMacroParam);
-			NFmiDataIdent dataIdent(itsMacroParamDrawParam->Param());
-			dataIdent.GetParam()->SetName("macroParam");
-			itsMacroParamDrawParam->Param(dataIdent);
-		}
 
 		// Laitoin alustamaan myös valittujen hilapisteiden uuden visualisointi piirron
 		itsSelectedGridPointDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSelectedGridPoints)), 0, NFmiInfoData::kAnyData);
@@ -6850,8 +6838,7 @@ void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 
 boost::shared_ptr<NFmiDrawParam> GetUsedMacroDrawParam(const NFmiMenuItem& theMenuItem)
 {
-	boost::shared_ptr<NFmiDrawParam> usedDrawParam = itsMacroParamDrawParam; // annetaan defaulMacroParam oletus arvoisesti muokattavaksi
-															// mutta vaihdetaan pointteri osoittamaan oikeaa drawparamia, jos kyse oli jostain muusta talletetusta macroParamista
+    boost::shared_ptr<NFmiDrawParam> usedDrawParam;
 	string macroParamName(static_cast<char*>(theMenuItem.DataIdent().GetParamName()));
 	if(macroParamName != string("macroParam") && itsMacroParamSystem.FindTotal(macroParamName)) // tässä tod. init fileName
 		usedDrawParam = itsMacroParamSystem.CurrentMacroParam()->DrawParam();
@@ -14010,7 +13997,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiCrossSectionSystem itsCrossSectionSystem; // poikkileikkaus piirron pisteiden hanskaus systeemi
 	string itsLatestMacroParamErrorText; // kun macroParam piirretään karttanäytölle, ja tulee virhe, talletetaan tähän aina viimeisin virhe ilmoitus
 	NFmiMacroParamSystem itsMacroParamSystem; // tämä hanskaa macroParamit, joilla voi piirtää smarttoolmacroja karttanäytölle
-	boost::shared_ptr<NFmiDrawParam> itsMacroParamDrawParam; // tämä on pysyvä macroParamien testi DrawParam
 	string itsCurrentMacroText; // tässä on tallessa viimeisin smarttool-dialogin teksti
 								// käytetään macroparam-näytön testivaiheessa
 
