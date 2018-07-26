@@ -97,6 +97,7 @@ protected:
     std::string GetMacroTextFromSyntaxEditor();
     std::string GetMacroParamFilePath(NFmiMacroParamSystem &theMacroParamSystem);
     NFmiInfoData::Type GetUsedMacroParamType();
+    void DoFinalMacroParamWrite(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiMacroParam> &macroParamPointer);
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
