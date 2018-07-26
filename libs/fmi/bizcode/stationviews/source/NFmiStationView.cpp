@@ -1913,44 +1913,44 @@ bool NFmiStationView::GetArchiveDataFromQ3Server(NFmiDataMatrix<float> &theValue
 // &maxdecimals=1
 bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid &theUsedGrid, const std::string &theUsedBaseUrlStr)
 {
-	NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize();
-    theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
+    try
+    {
+        NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize();
+        theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
 
-	string urlStr = theUsedBaseUrlStr;
+        string urlStr = theUsedBaseUrlStr;
 
-	string baseParStr;
-	baseParStr += "code=";
-    
-	std::string macroParamStr = itsCtrlViewDocumentInterface->GetWantedSmartToolStr(itsDrawParam);
-	baseParStr += NFmiStringTools::UrlEncode(macroParamStr);
+        string baseParStr;
+        baseParStr += "code=";
 
-	string projectionStr("&projection=");
-	projectionStr += itsArea->AreaStr();
-	baseParStr += projectionStr;
+        std::string macroParamStr = itsCtrlViewDocumentInterface->GetWantedSmartToolStr(itsDrawParam);
+        baseParStr += NFmiStringTools::UrlEncode(macroParamStr);
 
-	string gridsizeStr("&gridsize=");
-	gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.X()));
-	gridsizeStr += ",";
-	gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.Y()));
-	baseParStr += gridsizeStr;
+        string projectionStr("&projection=");
+        projectionStr += itsArea->AreaStr();
+        baseParStr += projectionStr;
 
-	string timeStr("&validtime=");
-	timeStr += itsTime.ToStr(kYYYYMMDDHHMMSS);
-	baseParStr += timeStr;
+        string gridsizeStr("&gridsize=");
+        gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.X()));
+        gridsizeStr += ",";
+        gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.Y()));
+        baseParStr += gridsizeStr;
 
-	int decimalcount = itsCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerDecimalCount();
-	baseParStr += "&maxdecimals=";
-	baseParStr += NFmiStringTools::Convert<int>(decimalcount);
+        string timeStr("&validtime=");
+        timeStr += itsTime.ToStr(kYYYYMMDDHHMMSS);
+        baseParStr += timeStr;
 
-	bool getOriginalGrid = false;
-	bool useBinaryData = true; // binääri data on nopeampaa
-	int usedCompression = 0; // 0=none, 1=zip, 2=bzip2
-	std::string extraInfoStr;
+        int decimalcount = itsCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerDecimalCount();
+        baseParStr += "&maxdecimals=";
+        baseParStr += NFmiStringTools::Convert<int>(decimalcount);
 
-	try
-	{
+        bool getOriginalGrid = false;
+        bool useBinaryData = true; // binääri data on nopeampaa
+        int usedCompression = 0; // 0=none, 1=zip, 2=bzip2
+        std::string extraInfoStr;
+
         itsCtrlViewDocumentInterface->GetDataFromQ2Server(urlStr, baseParStr, useBinaryData, usedCompression, theValues, extraInfoStr);
-	}
+    }
 	catch(std::exception & e)
 	{
 		// liatetaan varmuuden vuoksi matriisi 0 kokoiseksi
