@@ -1363,25 +1363,18 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     }
 
 	NFmiSmartToolModifier smartToolModifier(itsCtrlViewDocumentInterface->InfoOrganizer());
-	try // ensin tulkitaan macro
-	{
-		smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
+    try // ensin tulkitaan macro
+    {
+        smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
 
-		// macroParam niminen macroparametri on erikoistapaus ja sen macroskripti otetaan currentti teksti
-		// muuten macro pitää pyytää macroParaSysteemiltä
-		if(itsDrawParam->ParameterAbbreviation() == std::string("macroParam"))
-			smartToolModifier.InitSmartTool(itsCtrlViewDocumentInterface->SmartToolInfo()->CurrentScript(), true);
-		else
-		{
-			NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
-			if(mpSystem.FindTotal(itsDrawParam->InitFileName()))
-			{
-				smartToolModifier.InitSmartTool(mpSystem.CurrentMacroParam()->MacroText(), true);
-			}
-			else
-				throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + itsDrawParam->ParameterAbbreviation());
-		}
-	}
+        NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
+        if(mpSystem.FindTotal(itsDrawParam->InitFileName()))
+        {
+            smartToolModifier.InitSmartTool(mpSystem.CurrentMacroParam()->MacroText(), true);
+        }
+        else
+            throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + itsDrawParam->ParameterAbbreviation());
+    }
 	catch(exception &e)
 	{
 		string errorText;
