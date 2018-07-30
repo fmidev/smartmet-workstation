@@ -565,6 +565,8 @@ bool NFmiStationView::IsStationDataMacroParam(void)
 {
     try
     {
+        if(fUseCalculationPoints)
+            return true;
     	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
         if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != -1)
             return true;
@@ -580,8 +582,8 @@ bool NFmiStationView::IsStationDataMacroParam(void)
 bool NFmiStationView::IsSpaceOutDrawingUsed()
 {
     int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
-    bool locationMacroParamData = IsStationDataMacroParam() || fUseCalculationPoints;
-    if(spacingOutFactor > 0 && itsInfo->Grid() && !locationMacroParamData) // asema dataa ei yritetä harventaa
+    bool stationMacroParamData = IsStationDataMacroParam();
+    if(spacingOutFactor > 0 && itsInfo->Grid() && !stationMacroParamData) // asema dataa ei yritetä harventaa
     {
         if(itsDrawParam->DoSparseSymbolVisualization())
             return false;
