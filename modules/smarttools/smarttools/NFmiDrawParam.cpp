@@ -1553,8 +1553,7 @@ bool NFmiDrawParam::IsMacroParamCase(bool justCheckDataType)
   {
       if(!fUseViewMacrosSettingsForMacroParam)
       {
-          if(ViewMacroDrawParam() == false && (IsMacroParamCase(itsDataType)) &&
-              ParameterAbbreviation() != std::string("macroParam"))
+          if(ViewMacroDrawParam() == false && (IsMacroParamCase(itsDataType)))
               return true;
       }
   }
