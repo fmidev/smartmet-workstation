@@ -194,46 +194,24 @@ static CFmiCopyingStatus DoBzip2Unpacking(CachedDataFileInfo &theCachedDataFileI
         // 1.1. Puretaan bzip2 pakattu tiedosto
         try
         {
-            const double bigFileSizeInMB = 10; // laitetaan ison tiedoston rajaksi vaikka 10 MB
-            if(theCachedDataFileInfo.itsFileSizeInMB > bigFileSizeInMB)
-            { // tiedosto oli sen verran iso, ett‰ purku kest‰‰ niin kauan, ett‰ se pit‰‰ tehd‰ omassa erillisess‰ prosessissa (bzip2 purkua ei voi keskeytt‰‰)
-                std::string unpackCommandStr = ::MakeUnpackCommand(theCachedDataFileInfo);
-                bool status = CFmiProcessHelpers::ExecuteCommandInSeparateProcess(unpackCommandStr, true, false, SW_HIDE, false, NORMAL_PRIORITY_CLASS); 
-                if(status)
-                    return kFmiUnpackIsDoneInSeparateProcess;
-                else
-                    return kFmiCopyNotSuccessfull;
-            }
+            // Tehd‰‰n purku aina omassa erillisess‰ prosessissa (bzip2 purkua ei voi keskeytt‰‰), koska joskus bzip2 purku voi kaataa ohjelman
+            std::string unpackCommandStr = ::MakeUnpackCommand(theCachedDataFileInfo);
+            bool status = CFmiProcessHelpers::ExecuteCommandInSeparateProcess(unpackCommandStr, true, false, SW_HIDE, false, NORMAL_PRIORITY_CLASS);
+            if(status)
+                return kFmiUnpackIsDoneInSeparateProcess;
             else
-            { // tiedosto oli niin pieni, ett‰ tehd‰‰n purku heti t‰ss‰
-        	    NFmiMilliSecondTimer timer;
-                if(CFmiBzip2Helpers::UnpackBzip2DataFile(theCachedDataFileInfo.itseTotalCacheTmpPackedFileName, theCachedDataFileInfo.itsTotalCacheTmpFileName, true))
-                {
-                    timer.StopTimer();
-                    std::string logStr("Unpack file [");
-                    logStr += timer.EasyTimeDiffStr();
-                    logStr += "]: ";
-                    logStr += theCachedDataFileInfo.itseTotalCacheTmpPackedFileName;
-                    logStr += " to file: ";
-                    logStr += theCachedDataFileInfo.itsTotalCacheTmpFileName;
-                    CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
-                    return kFmiGoOnWithCopying;
-                }
-                else
-                {
-                    std::string errStr("Unknown error in CopyFileEx_CopyRename when trying to unpack file: ");
-                    errStr += theCachedDataFileInfo.itseTotalCacheTmpPackedFileName;
-                    errStr += " to file: ";
-                    errStr += theCachedDataFileInfo.itsTotalCacheTmpFileName;
-                    CatLog::logMessage(errStr, CatLog::Severity::Error, CatLog::Category::Data);
-                    return kFmiCopyNotSuccessfull;
-                }
-            }
+                return kFmiCopyNotSuccessfull;
         }
         catch(std::exception &e)
         {
-            std::string errStr("Error in CopyFileEx_CopyRename when trying to unpack file: ");
+            std::string errStr(std::string("Error in ") + __FUNCTION__ + " when trying to unpack file '" + theCachedDataFileInfo.itsTotalCacheFileName + "': ");
             errStr += e.what();
+            CatLog::logMessage(errStr, CatLog::Severity::Error, CatLog::Category::Data);
+            return kFmiCopyNotSuccessfull;
+        }
+        catch(...)
+        {
+            std::string errStr(std::string("Unknown error in ") + __FUNCTION__ + " when trying to unpack file '" + theCachedDataFileInfo.itsTotalCacheFileName + "'");
             CatLog::logMessage(errStr, CatLog::Severity::Error, CatLog::Category::Data);
             return kFmiCopyNotSuccessfull;
         }
