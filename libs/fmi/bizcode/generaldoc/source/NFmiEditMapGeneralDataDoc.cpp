@@ -6342,8 +6342,8 @@ void PasteDrawParamOptions(const NFmiMenuItem& theMenuItem, int theRowIndex, boo
 			UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
 		if(NFmiDrawParam::IsMacroParamCase(theMenuItem.DataType()))
 		{ // macroParam pit‰‰ viel‰ p‰ivitt‰‰ macroParamSystemiin!!
-			string macroParamName(static_cast<char*>(theMenuItem.DataIdent().GetParamName()));
-			if(macroParamName != string("macroParam") && itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
+			string macroParamName = theMenuItem.DataIdent().GetParamName();
+			if(itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
 				itsMacroParamSystem.CurrentMacroParam()->DrawParam()->Init(&itsCopyPasteDrawParam, true);
 		}
 	}
@@ -6838,12 +6838,17 @@ void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 
 boost::shared_ptr<NFmiDrawParam> GetUsedMacroDrawParam(const NFmiMenuItem& theMenuItem)
 {
-    boost::shared_ptr<NFmiDrawParam> usedDrawParam;
-	string macroParamName(static_cast<char*>(theMenuItem.DataIdent().GetParamName()));
-	if(macroParamName != string("macroParam") && itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
-		usedDrawParam = itsMacroParamSystem.CurrentMacroParam()->DrawParam();
-	usedDrawParam->ViewMacroDrawParam(theMenuItem.ViewMacroDrawParam()); // t‰m‰ pit‰‰ viel‰ asettaa
-	return usedDrawParam;
+	std::string macroParamName = theMenuItem.DataIdent().GetParamName();
+    if(itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
+    {
+        auto usedDrawParam = itsMacroParamSystem.CurrentMacroParam()->DrawParam();
+        if(usedDrawParam)
+        {
+            usedDrawParam->ViewMacroDrawParam(theMenuItem.ViewMacroDrawParam()); // t‰m‰ pit‰‰ viel‰ asettaa
+            return usedDrawParam;
+        }
+    }
+    throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": couldn't find searched macroParam '" + macroParamName + "'");
 }
 
 // muokataan macroParametrin asetuksia
