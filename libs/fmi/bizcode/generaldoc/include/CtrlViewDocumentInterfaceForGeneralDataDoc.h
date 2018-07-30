@@ -129,8 +129,7 @@ public:
     NFmiIgnoreStationsData& IgnoreStationsData(void) override;
     const NFmiColor& StationPointColor(int theMapViewDescTopIndex) const override;
     const NFmiPoint& StationPointSize(int theMapViewDescTopIndex) const override;
-    NFmiMacroParamSystem& MacroParamSystem(void);
-    std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+    NFmiMacroParamSystem& MacroParamSystem(void) override;
     CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void) override;
     size_t SelectedGridPointLimit(void) override;
     boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) override;

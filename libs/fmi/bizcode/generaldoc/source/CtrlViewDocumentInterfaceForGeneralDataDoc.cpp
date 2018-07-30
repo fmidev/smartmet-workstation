@@ -606,11 +606,6 @@ NFmiMacroParamSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamSyst
     return itsDoc->MacroParamSystem();
 }
 
-std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-{
-    return itsDoc->GetWantedSmartToolStr(theDrawParam);
-}
-
 CtrlViewUtils::FmiEditorModifyToolMode CtrlViewDocumentInterfaceForGeneralDataDoc::ModifyToolMode(void)
 {
     return itsDoc->ModifyToolMode();

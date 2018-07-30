@@ -491,7 +491,6 @@ public:
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
 	void AddMacroParamToCrossSectionView(int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
 	NFmiMacroParamSystem& MacroParamSystem(void);
-    std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
 	// Nämä makro tekstin get ja set metodit on makroparam-näyttöä varten tehtyjä virityksiä
 	void SetCurrentSmartToolMacro(const std::string& theMacroText);
 	const std::string& GetCurrentSmartToolMacro(void);
