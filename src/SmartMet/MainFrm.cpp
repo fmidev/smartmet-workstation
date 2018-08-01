@@ -398,9 +398,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	itsCheckAnimationLockedModeTimeBagsTimer = static_cast<UINT>(SetTimer(kFmiCheckAnimationLockedModeTimeBagsTimer, 1 * 1 * 63 * 1000, NULL)); // laitan animaatio havainto lukitus timerin 63 sekuntiin, että se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyörähtävät timerit
 	itsCheckForNewSatelDataTimer = static_cast<UINT>(SetTimer(kFmiCheckForNewSatelDataTimer, 1 * 57 * 1000, NULL)); // laitan satel/käsiteanalyysi datan tarkistuksen timerin 57 sekuntiin, että se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyörähtävät timerit
 	itsAutoSaveTimer = static_cast<UINT>(SetTimer(kFmiAutoSaveTimer, 1 * 60 * 1000, NULL));
-	int updateInterValInHours = itsDoc->ApplicationDataBase().UpdateIntervalInHours();
+	double updateInterValInHours = itsDoc->ApplicationDataBase().UpdateIntervalInHours();
 	if(updateInterValInHours > 0)
-		itsDataToDBUpdateTimer = static_cast<UINT>(SetTimer(kFmiDataToDBUpdateTimer, updateInterValInHours * 60 * 60 * 1000, NULL)); // kerran vuorokaudessa lähetys
+		itsDataToDBUpdateTimer = static_cast<UINT>(SetTimer(kFmiDataToDBUpdateTimer, static_cast<UINT>(updateInterValInHours * 60 * 60 * 1000), NULL)); // kerran vuorokaudessa lähetys
 	itsCleanOldDataFromMemoryTimer = static_cast<UINT>(SetTimer(kFmiCleanOldDataFromMemoryTimer, 5 * 60 * 1000, NULL)); // siivotaan queryDatoja muistissa aina 5 minuutin välein
 	if(itsDoc->MacroPathSettings().UseLocalCache())
 		itsMacroDirectoriesSyncronization = static_cast<UINT>(SetTimer(kFmiMacroDirectoriesSyncronization, 3 * 60 * 1000, NULL)); // tehdään 1. synkronointi vaikka 3 minuutin kuluttua
