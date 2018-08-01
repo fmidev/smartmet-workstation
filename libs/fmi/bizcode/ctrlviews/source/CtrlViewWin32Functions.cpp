@@ -9,10 +9,13 @@ namespace CtrlView
 {
     void DestroyBitmap(CBitmap **bitmap)
     {
-        if((*bitmap))
-            (*bitmap)->DeleteObject();
-        delete (*bitmap);
-        *bitmap = 0;
+        CBitmap *singlePointerBitmap = *bitmap;
+        if(singlePointerBitmap)
+        {
+            singlePointerBitmap->DeleteObject();
+            delete singlePointerBitmap;
+            singlePointerBitmap = nullptr;
+        }
     }
 
     void MakeCombatibleBitmap(CWnd *theView, CBitmap **theMemoryBitmap, int cx, int cy)
