@@ -51,22 +51,22 @@ public:
     void Read(std::istream& is);
 };
 
+class MfcViewStatus
+{
+    unsigned int itsShowCommand = 0; // minimized/maximized, ei muita tietoja
+    bool fShowWindow = false; // onko ikkuna auki vai ei
+public:
+    unsigned int ShowCommand() const { return itsShowCommand; }
+    void ShowCommand(unsigned int newValue) { itsShowCommand = newValue; }
+    bool ShowWindow() const { return fShowWindow; }
+    void ShowWindow(bool newValue) { fShowWindow = newValue; }
+};
+
 class NFmiViewSettingMacro
 {
 public:
 	static double itsLatestVersionNumber;
 	mutable double itsCurrentVersionNumber;
-
-    class MfcViewStatus
-    {
-        unsigned int itsShowCommand = 0; // minimized/maximized, ei muita tietoja
-        bool fShowWindow = false; // onko ikkuna auki vai ei
-    public:
-        unsigned int ShowCommand() const { return itsShowCommand; }
-        void ShowCommand(unsigned int newValue) {itsShowCommand = newValue;}
-        bool ShowWindow() const { return fShowWindow; }
-        void ShowWindow(bool newValue) { fShowWindow = newValue; }
-    };
 
 	class Param
 	{

@@ -602,13 +602,13 @@ void NFmiViewSettingMacro::CrossSectionView::Add(const MapRow &theMapRow)
 	itsMapRowSettings.push_back(theMapRow);
 }
 
-static std::ostream& WriteMfcViewStatus(std::ostream& os, const NFmiViewSettingMacro::MfcViewStatus &viewStatus)
+static std::ostream& WriteMfcViewStatus(std::ostream& os, const MfcViewStatus &viewStatus)
 {
     os << viewStatus.ShowCommand() << " " << viewStatus.ShowWindow();
     return os;
 }
 
-static void ReadMfcViewStatus(std::istream& in, NFmiViewSettingMacro::MfcViewStatus &viewStatus)
+static void ReadMfcViewStatus(std::istream& in, MfcViewStatus &viewStatus)
 {
     unsigned int showCommand = 0;
     in >> showCommand;
