@@ -572,8 +572,7 @@ NFmiViewSettingMacro::CrossSectionView::CrossSectionView(void)
 :itsMapRowSettings()
 ,itsCrossSectionSystem(CtrlViewUtils::MaxViewGridYSize)
 ,itsAbsolutRect()
-,itsStatus(0) //???
-,fShowWindow(true)
+,itsViewStatus()
 {
 }
 
@@ -584,8 +583,7 @@ NFmiViewSettingMacro::CrossSectionView::CrossSectionView(const NFmiViewSettingMa
 :itsMapRowSettings(theOther.itsMapRowSettings)
 ,itsCrossSectionSystem(theOther.itsCrossSectionSystem)
 ,itsAbsolutRect(theOther.itsAbsolutRect)
-,itsStatus(theOther.itsStatus)
-,fShowWindow(theOther.fShowWindow)
+,itsViewStatus(theOther.itsViewStatus)
 {
 }
 
@@ -596,8 +594,7 @@ NFmiViewSettingMacro::CrossSectionView& NFmiViewSettingMacro::CrossSectionView::
 		itsMapRowSettings = theOther.itsMapRowSettings;
 		itsCrossSectionSystem = theOther.itsCrossSectionSystem;
 		itsAbsolutRect = theOther.itsAbsolutRect;
-		itsStatus = theOther.itsStatus;
-		fShowWindow = theOther.fShowWindow;
+		itsViewStatus = theOther.itsViewStatus;
 	}
 	return *this;
 }
@@ -625,6 +622,21 @@ void NFmiViewSettingMacro::CrossSectionView::Add(const MapRow &theMapRow)
 	itsMapRowSettings.push_back(theMapRow);
 }
 
+static std::ostream& WriteMfcViewStatus(std::ostream& os, const NFmiViewSettingMacro::MfcViewStatus &viewStatus)
+{
+    os << viewStatus.ShowCommand() << " " << viewStatus.ShowWindow();
+    return os;
+}
+
+static void ReadMfcViewStatus(std::istream& in, NFmiViewSettingMacro::MfcViewStatus &viewStatus)
+{
+    unsigned int showCommand = 0;
+    in >> showCommand;
+    viewStatus.ShowCommand(showCommand);
+    bool showWindow = false;
+    in >> showWindow;
+    viewStatus.ShowWindow(showWindow);
+}
 
 void NFmiViewSettingMacro::CrossSectionView::Write(std::ostream& os) const
 {
@@ -635,7 +647,7 @@ void NFmiViewSettingMacro::CrossSectionView::Write(std::ostream& os) const
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
 	os << "// Status fShowWindow" << endl;
-	os << itsStatus << " " << fShowWindow << endl;
+    ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
 	os << "// CrossSectionSystem" << endl;
 	os << itsCrossSectionSystem;
@@ -660,7 +672,7 @@ void NFmiViewSettingMacro::CrossSectionView::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 	is >> itsAbsolutRect;
-	is >> itsStatus >> fShowWindow;
+    ::ReadMfcViewStatus(is, itsViewStatus);
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 	is >> itsCrossSectionSystem;
@@ -682,8 +694,7 @@ void NFmiViewSettingMacro::CrossSectionView::Read(std::istream& is)
 NFmiViewSettingMacro::TimeView::TimeView(void)
 :itsRows()
 ,itsAbsolutRect()
-,itsStatus(0) //???
-,fShowWindow(false)
+,itsViewStatus()
 ,fShowHelpData(false)
 ,fShowHelpData2(false)
 ,fShowHelpData3(false)
@@ -728,7 +739,8 @@ void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
 	os << "// Status ShowWindow ShowHelpData" << endl;
-	os << itsStatus << " " << fShowWindow << " " << fShowHelpData << endl;
+    ::WriteMfcViewStatus(os, itsViewStatus);
+	os << " " << fShowHelpData << endl;
 	os << "// itsStartTimeOffset itsEndTimeOffset" << endl;
 	os << itsStartTimeOffset << " " << itsEndTimeOffset << endl;
 
@@ -759,7 +771,8 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	NFmiDataStoringHelpers::ReadContainer(itsRows, is);
 	is >> itsAbsolutRect;
-	is >> itsStatus >> fShowWindow >> fShowHelpData;
+    ::ReadMfcViewStatus(is, itsViewStatus);
+	is >> fShowHelpData;
 	is >> itsStartTimeOffset >> itsEndTimeOffset;
 
 	if(is.fail())
@@ -797,8 +810,7 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 
 NFmiViewSettingMacro::TempView::TempView(void)
 :itsAbsolutRect()
-,itsStatus(0) //???
-,fShowWindow(false)
+,itsViewStatus()
 ,fShowHirlam(false)
 ,fShowEcmwf(false)
 ,fShowRealSounding(false)
@@ -821,7 +833,7 @@ void NFmiViewSettingMacro::TempView::Write(std::ostream& os) const
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
 	os << "// Status ShowWindow" << endl;
-	os << itsStatus << " " << fShowWindow << endl;
+    ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 	os << "// ShowHirlam ShowEcmwf ShowRealSounding" << endl;
 	os << fShowHirlam << " " << fShowEcmwf << " " << fShowRealSounding << endl;
 
@@ -846,8 +858,8 @@ void NFmiViewSettingMacro::TempView::Read(std::istream& is)
 
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	is >> itsAbsolutRect;
-	is >> itsStatus >> fShowWindow;
-	is >> fShowHirlam >> fShowEcmwf >> fShowRealSounding;
+    ::ReadMfcViewStatus(is, itsViewStatus);
+    is >> fShowHirlam >> fShowEcmwf >> fShowRealSounding;
 
 	if(itsCurrentVersionNumber > 1.0)
 	{
@@ -877,8 +889,7 @@ void NFmiViewSettingMacro::TempView::Read(std::istream& is)
 
 NFmiViewSettingMacro::TrajectoryView::TrajectoryView()
 :itsAbsolutRect()
-,itsStatus(0) //???
-,fShowWindow(false)
+,itsViewStatus()
 ,itsTrajectorySystem(0, 0)
 {
 }
@@ -898,7 +909,7 @@ void NFmiViewSettingMacro::TrajectoryView::Write(std::ostream& os) const
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
 	os << "// Status ShowWindow" << endl;
-	os << itsStatus << " " << fShowWindow << endl;
+    ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
 	os << "// TrajectorySystem" << endl;
 	os << itsTrajectorySystem << endl;
@@ -919,7 +930,7 @@ void NFmiViewSettingMacro::TrajectoryView::Read(std::istream& is)
 
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	is >> itsAbsolutRect;
-	is >> itsStatus >> fShowWindow;
+    ::ReadMfcViewStatus(is, itsViewStatus);
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -939,8 +950,7 @@ void NFmiViewSettingMacro::TrajectoryView::Read(std::istream& is)
 // **********************************************************************
 NFmiViewSettingMacro::WarningCenterView::WarningCenterView()
 :itsAbsolutRect()
-,itsStatus(0) //???
-,fShowWindow(false)
+,itsViewStatus()
 ,itsWarningCenterSystem()
 ,fShowHakeMessages(true)
 ,fShowKaHaMessages(false)
@@ -958,7 +968,7 @@ void NFmiViewSettingMacro::WarningCenterView::Write(std::ostream& os) const
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
 	os << "// Status + ShowWindow" << endl;
-	os << itsStatus << " " << fShowWindow << endl;
+    ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
 	os << "// WarningCenterSystem" << endl;
 	os << itsWarningCenterSystem << endl;
@@ -987,7 +997,7 @@ void NFmiViewSettingMacro::WarningCenterView::Read(std::istream& is)
 
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	is >> itsAbsolutRect;
-	is >> itsStatus >> fShowWindow;
+    ::ReadMfcViewStatus(is, itsViewStatus);
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1021,8 +1031,7 @@ void NFmiViewSettingMacro::WarningCenterView::Read(std::istream& is)
 
 NFmiViewSettingMacro::SynopDataGridView::SynopDataGridView(void) 
 :itsAbsolutRect()
-,itsStatus(0)
-,fShowWindow(false)
+,itsViewStatus()
 ,itsSelectedProducer()
 ,itsMinMaxRangeStartTime()
 ,fMinMaxModeOn(false)
@@ -1043,7 +1052,7 @@ void NFmiViewSettingMacro::SynopDataGridView::Write(std::ostream& os) const
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
 	os << "// Status + ShowWindow" << endl;
-	os << itsStatus << " " << fShowWindow << endl;
+    ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
 	os << "// SelectedProducer" << endl;
 	os << itsSelectedProducer << endl;
@@ -1078,7 +1087,7 @@ void NFmiViewSettingMacro::SynopDataGridView::Read(std::istream& is)
 
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	is >> itsAbsolutRect;
-	is >> itsStatus >> fShowWindow;
+    ::ReadMfcViewStatus(is, itsViewStatus);
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1390,8 +1399,7 @@ NFmiViewSettingMacro::MapViewDescTop::MapViewDescTop(void)
 :itsMapRowSettings()
 ,itsMapViewDescTop()
 ,itsAbsolutRect()
-,itsStatus(0) //???
-,fShowWindow(true)
+,itsViewStatus()
 ,itsDipMapHelperList()
 {
 }
@@ -1449,7 +1457,7 @@ void NFmiViewSettingMacro::MapViewDescTop::Write(std::ostream& os) const
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
 	os << "// Status fShowWindow" << endl;
-	os << itsStatus << " " << fShowWindow << endl;
+    ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
 	os << "// vector<MapRow> MapRowSettings" << endl;
     // Talletetaan rivejä vain niin pitkälle kuin sieltä löytyy jotain talletettavaa (nyt siis rivejä voi potentiaalisesti olla aina 50 kpl)
@@ -1497,8 +1505,8 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::MapViewDescTop::Read failed";
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	is >> itsAbsolutRect;
-	is >> itsStatus >> fShowWindow;
-	if(is.fail())
+    ::ReadMfcViewStatus(is, itsViewStatus);
+    if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 	NFmiDataStoringHelpers::ReadContainer(itsMapRowSettings, is);
 	if(is.fail())
