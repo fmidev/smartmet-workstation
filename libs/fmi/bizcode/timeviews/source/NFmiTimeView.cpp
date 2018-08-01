@@ -120,10 +120,19 @@ void NFmiTimeView::DrawTimeLine(const NFmiMetTime& theTime)
 //-----------------------------------------------------------------
 double NFmiTimeView::Time2Value(const NFmiMetTime& theTime)
 {
-	double value = static_cast<NFmiTimeScale*>(itsTimeAxis->Scale())->RelTimeLocation(theTime);
-	NFmiRect rect(CalcTimeAxisRect());
-	double finalValue = rect.Left() + value * rect.Width();
-	return finalValue;
+    if(itsTimeAxis)
+    {
+        auto timeScale = static_cast<NFmiTimeScale*>(itsTimeAxis->Scale());
+        if(timeScale)
+        {
+            double value = timeScale->RelTimeLocation(theTime);
+            NFmiRect rect(CalcTimeAxisRect());
+            double finalValue = rect.Left() + value * rect.Width();
+            return finalValue;
+        }
+    }
+
+    return 0;
 }
 
 void NFmiTimeView::DrawTimeGrids(NFmiDrawingEnvironment& envi,double minPos,double maxPos)
