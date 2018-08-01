@@ -579,26 +579,6 @@ NFmiViewSettingMacro::CrossSectionView::CrossSectionView(void)
 NFmiViewSettingMacro::CrossSectionView::~CrossSectionView(void)
 {}
 
-NFmiViewSettingMacro::CrossSectionView::CrossSectionView(const NFmiViewSettingMacro::CrossSectionView &theOther)
-:itsMapRowSettings(theOther.itsMapRowSettings)
-,itsCrossSectionSystem(theOther.itsCrossSectionSystem)
-,itsAbsolutRect(theOther.itsAbsolutRect)
-,itsViewStatus(theOther.itsViewStatus)
-{
-}
-
-NFmiViewSettingMacro::CrossSectionView& NFmiViewSettingMacro::CrossSectionView::operator=(const NFmiViewSettingMacro::CrossSectionView &theOther)
-{
-	if(this != &theOther)
-	{
-		itsMapRowSettings = theOther.itsMapRowSettings;
-		itsCrossSectionSystem = theOther.itsCrossSectionSystem;
-		itsAbsolutRect = theOther.itsAbsolutRect;
-		itsViewStatus = theOther.itsViewStatus;
-	}
-	return *this;
-}
-
 void NFmiViewSettingMacro::CrossSectionView::SetAllRowParams(NFmiPtrList<NFmiDrawParamList> *theDrawParamListVector, NFmiMacroParamSystem& theMacroParamSystem)
 {
 	Clear();
