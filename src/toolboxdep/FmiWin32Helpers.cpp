@@ -9,6 +9,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiMapViewDescTop.h"
+#include "NFmiViewSettingMacro.h"
 
 #include <fstream>
 
@@ -445,6 +446,28 @@ CRect CFmiWin32Helpers::FixWindowPosition(const CRect &theRect, int &theStartCor
 		return theRect;
 }
 
+static UINT GetUsedShowCommand(CWnd *win, const MfcViewStatus &viewStatus)
+{
+    // 1. Jos haluttu status on ShowWindow == false, palauta SW_HIDE
+    if(!viewStatus.ShowWindow())
+        return SW_HIDE;
+
+    // 2. Jos haluttu ikkuna status on minimized/maximized eli != 0, palauta SHOW_MIN/MAX
+    if(viewStatus.ShowCommand())
+    {
+        if(viewStatus.ShowCommand() == SW_MINIMIZE || viewStatus.ShowCommand() == SW_SHOWMINIMIZED)
+            return SW_SHOWMINIMIZED;
+        if(viewStatus.ShowCommand() == SW_MAXIMIZE || viewStatus.ShowCommand() == SW_SHOWMAXIMIZED)
+            return SW_SHOWMAXIMIZED;
+    }
+
+    // 3. Jos ikkuna oli min/max moodissa, mutta nyt se halutaan normaali näyttömoodiin, pitää palauttaa 
+    //if(CFmiWin32Helpers::IsWindowMinimizedOrMaximized(win))
+    //    return SW_RESTORE;
+    //else
+        return SW_SHOWNORMAL;
+}
+
 //static const CRect DebugHelper_WeirdViewRectSize(0, 0, 136, 39);
 //static void DebugHelper_CheckFor_WeirdViewRectSize(const CRect &theRect)
 //{
@@ -454,33 +477,56 @@ CRect CFmiWin32Helpers::FixWindowPosition(const CRect &theRect, int &theStartCor
 //    }
 //}
 
-void CFmiWin32Helpers::SetWindowSettings(CWnd *win, const CRect &theRect, bool fShowWindow, CWnd *mainFrame, int &theStartCornerCounter)
+// Jos showCommand parametri on 0:sta poikkeava, annetaan se win oliolle ShowWindow 
+// komennossa (tässä halutaan vain minimized/maximized tilojen palautus näyttömakrosta)
+void CFmiWin32Helpers::SetWindowSettings(CWnd *win, const CRect &theRect, const MfcViewStatus &viewStatus, CWnd *mainFrame, int &theStartCornerCounter)
 {
-	WINDOWPLACEMENT wndpl;
-	wndpl.length = sizeof(WINDOWPLACEMENT);
-	BOOL bRet = win->GetWindowPlacement(&wndpl); // gets current window position and iconized/maximized status
+    WINDOWPLACEMENT wndpl;
+    wndpl.length = sizeof(WINDOWPLACEMENT);
+    BOOL bRet = win->GetWindowPlacement(&wndpl); // gets current window position and iconized/maximized status
 
 //    DebugHelper_CheckFor_WeirdViewRectSize(theRect);
-	// tähän väliin tehdään tarkastelut, että jos ikkuna menee näyttöjen ulkopuolelle, laitetaan se lähimpään ikkunaan
-	CRect fixedRect(CFmiWin32Helpers::FixWindowPosition(theRect, theStartCornerCounter));
-//    DebugHelper_CheckFor_WeirdViewRectSize(fixedRect);
+    // tähän väliin tehdään tarkastelut, että jos ikkuna menee näyttöjen ulkopuolelle, laitetaan se lähimpään ikkunaan
+    CRect fixedRect(CFmiWin32Helpers::FixWindowPosition(theRect, theStartCornerCounter));
+    //    DebugHelper_CheckFor_WeirdViewRectSize(fixedRect);
 
-	wndpl.rcNormalPosition = fixedRect;
-/*
-	wndpl.rcNormalPosition.left = static_cast<LONG>(fixedRect.Left());
-	wndpl.rcNormalPosition.top = static_cast<LONG>(fixedRect.Top());
-	wndpl.rcNormalPosition.right = static_cast<LONG>(fixedRect.Right());
-	wndpl.rcNormalPosition.bottom = static_cast<LONG>(fixedRect.Bottom());
-*/
-	bRet = win->SetWindowPlacement(&wndpl);
-	if(fShowWindow)
-	{
-		win->ShowWindow(SW_SHOW);
-		if(mainFrame)
-			mainFrame->ShowWindow(SW_SHOW); // aktivoin pääikkunan, koska edellinen käsky jätti aikasarjaikkunan aktiiviseksi
-	}
-	else
-		win->ShowWindow(SW_HIDE);
+    wndpl.rcNormalPosition = fixedRect;
+    /*
+        wndpl.rcNormalPosition.left = static_cast<LONG>(fixedRect.Left());
+        wndpl.rcNormalPosition.top = static_cast<LONG>(fixedRect.Top());
+        wndpl.rcNormalPosition.right = static_cast<LONG>(fixedRect.Right());
+        wndpl.rcNormalPosition.bottom = static_cast<LONG>(fixedRect.Bottom());
+    */
+    bRet = win->SetWindowPlacement(&wndpl);
+    win->ShowWindow(::GetUsedShowCommand(win, viewStatus));
+    if(mainFrame)
+        mainFrame->ShowWindow(SW_SHOW); // aktivoin pääikkunan, koska edellinen käsky jätti aikasarjaikkunan aktiiviseksi
+}
+
+bool CFmiWin32Helpers::IsWindowMinimized(CWnd *win)
+{
+    WINDOWPLACEMENT wndpl;
+    wndpl.length = sizeof(WINDOWPLACEMENT);
+    BOOL bRet = win->GetWindowPlacement(&wndpl); // gets current window position and iconized/maximized status
+    if(bRet)
+    {
+        return wndpl.showCmd == SW_MINIMIZE || wndpl.showCmd == SW_SHOWMINIMIZED;
+    }
+    
+    return false;
+}
+
+bool CFmiWin32Helpers::IsWindowMinimizedOrMaximized(CWnd *win)
+{
+    WINDOWPLACEMENT wndpl;
+    wndpl.length = sizeof(WINDOWPLACEMENT);
+    BOOL bRet = win->GetWindowPlacement(&wndpl); // gets current window position and iconized/maximized status
+    if(bRet)
+    {
+        return wndpl.showCmd == SW_MINIMIZE || wndpl.showCmd == SW_SHOWMINIMIZED || wndpl.showCmd == SW_MAXIMIZE || wndpl.showCmd == SW_SHOWMAXIMIZED;
+    }
+
+    return false;
 }
 
 std::auto_ptr<CWaitCursor> CFmiWin32Helpers::GetWaitCursorIfNeeded(bool showWaitCursorWhileDrawingView)
