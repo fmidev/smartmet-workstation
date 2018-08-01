@@ -342,8 +342,6 @@ public:
 
 		CrossSectionView(void);
 		~CrossSectionView(void);
-		CrossSectionView(const CrossSectionView &theOther);
-		CrossSectionView& operator=(const CrossSectionView &theOther);
 
 		void SetAllRowParams(NFmiPtrList<NFmiDrawParamList> *theDrawParamListVector, NFmiMacroParamSystem& theMacroParamSystem);
 		const checkedVector<MapRow>& MapRowSettings(void) const {return itsMapRowSettings;}
