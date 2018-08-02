@@ -358,56 +358,13 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			CMFCToolBar::SetUserImages(&m_UserImages);
 		}
 	}
-/* // HUOM! tämä toimii vain menulle, ei toolbar buttoneille?!?!
-	// enable menu personalization (most-recently used commands)
-	// TODO: define your own basic commands, ensuring that each pulldown menu has at least one basic command.
-	CList<UINT, UINT> lstBasicCommands;
-
-	lstBasicCommands.AddTail(ID_FILE_NEW);
-	lstBasicCommands.AddTail(ID_FILE_OPEN);
-	lstBasicCommands.AddTail(ID_FILE_SAVE);
-	lstBasicCommands.AddTail(ID_FILE_PRINT);
-	lstBasicCommands.AddTail(ID_APP_EXIT);
-	lstBasicCommands.AddTail(ID_EDIT_CUT);
-	lstBasicCommands.AddTail(ID_EDIT_PASTE);
-	lstBasicCommands.AddTail(ID_EDIT_UNDO);
-	lstBasicCommands.AddTail(ID_APP_ABOUT);
-	lstBasicCommands.AddTail(ID_VIEW_STATUS_BAR);
-	lstBasicCommands.AddTail(ID_VIEW_TOOLBAR);
-	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2003);
-	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_VS_2005);
-	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_BLUE);
-	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_SILVER);
-	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_BLACK);
-	lstBasicCommands.AddTail(ID_VIEW_APPLOOK_OFF_2007_AQUA);
-	lstBasicCommands.AddTail(ID_SORTING_SORTALPHABETIC);
-	lstBasicCommands.AddTail(ID_SORTING_SORTBYTYPE);
-	lstBasicCommands.AddTail(ID_SORTING_SORTBYACCESS);
-	lstBasicCommands.AddTail(ID_SORTING_GROUPBYTYPE);
-
-	CMFCToolBar::SetBasicCommands(lstBasicCommands);
-*/
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
 
 	std::string errorBaseStr("Error in CMainFrame::OnInitDialog while reading dialog size and position values");
 //	CFmiWin32TemplateHelpers::DoWindowSizeSettings(this, false, errorBaseStr, itsDoc->Logger());
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsDoc->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
 
-	itsCleanDataTimer = static_cast<UINT>(SetTimer(kFmiCleanDataTimer, 1 * 5 * 60 * 1000, NULL)); // siivotaan datahakemistot kerran 5 minuutin kuluttua, siellä timer asetetaan sitten miten pitää
-	itsDebugDataSizeLoggerTimer = static_cast<UINT>(SetTimer(kFmiDebugDataSizeLoggerTimer, 1 * 1 * 30 * 1000, NULL)); // aloitetaan raportointi 30 sekunnin kuluttua, muutetaan sitten harvemmaksi
-	itsCheckAnimationLockedModeTimeBagsTimer = static_cast<UINT>(SetTimer(kFmiCheckAnimationLockedModeTimeBagsTimer, 1 * 1 * 63 * 1000, NULL)); // laitan animaatio havainto lukitus timerin 63 sekuntiin, että se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyörähtävät timerit
-	itsCheckForNewSatelDataTimer = static_cast<UINT>(SetTimer(kFmiCheckForNewSatelDataTimer, 1 * 57 * 1000, NULL)); // laitan satel/käsiteanalyysi datan tarkistuksen timerin 57 sekuntiin, että se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyörähtävät timerit
-	itsAutoSaveTimer = static_cast<UINT>(SetTimer(kFmiAutoSaveTimer, 1 * 60 * 1000, NULL));
-	double updateInterValInHours = itsDoc->ApplicationDataBase().UpdateIntervalInHours();
-	if(updateInterValInHours > 0)
-		itsDataToDBUpdateTimer = static_cast<UINT>(SetTimer(kFmiDataToDBUpdateTimer, static_cast<UINT>(updateInterValInHours * 60 * 60 * 1000), NULL)); // kerran vuorokaudessa lähetys
-	itsCleanOldDataFromMemoryTimer = static_cast<UINT>(SetTimer(kFmiCleanOldDataFromMemoryTimer, 5 * 60 * 1000, NULL)); // siivotaan queryDatoja muistissa aina 5 minuutin välein
-	if(itsDoc->MacroPathSettings().UseLocalCache())
-		itsMacroDirectoriesSyncronization = static_cast<UINT>(SetTimer(kFmiMacroDirectoriesSyncronization, 3 * 60 * 1000, NULL)); // tehdään 1. synkronointi vaikka 3 minuutin kuluttua
-    itsStoreViewPosToWinRegistryTimer = static_cast<UINT>(SetTimer(kFmiStoreViewPosToWinRegistryTimer, 117 * 1000, NULL)); // tehdään ikkunoiden koko+sijainti talletuksia rekisteriin n. parin minuutin välein (117 sekuntia)
-    itsStoreCrashBackupViewMacroTimer = static_cast<UINT>(SetTimer(kFmiStoreCrashBackupViewMacroTimer, 87 * 1000, NULL)); // tehdään crash backup viewmacro talletuksia n. 1.5 minuutin välein (87 sekuntia)
-    itsGenerateBetaProductsTimer = static_cast<UINT>(SetTimer(kFmiGenerateBetaProductsTimer, 60 * 1000, NULL)); // Tarkastellaan minuutin välein, että pitääkö beta-producteja tehdä 
-    itsLoggingSystemManagementTimer = static_cast<UINT>(SetTimer(kFmiLoggingSystemManagementTimer, 12 * 60 * 1000, NULL)); // Lokitus systeemiä pitää hallinnoida aika ajoin, viestien trimmau muistista ja crash-reporteriin mahdollisesti päivitetty lokitiedoston nimi
+    StartSmartMetTimers();
 
 #ifdef FMI_DISABLE_MFC_FEATURE_PACK
 	// Otetaan MFC-feature-pack liitännäiset osat pois menusta
@@ -433,6 +390,25 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	return 0;
+}
+
+void CMainFrame::StartSmartMetTimers()
+{
+    itsCleanDataTimer = static_cast<UINT>(SetTimer(kFmiCleanDataTimer, 1 * 5 * 60 * 1000, NULL)); // siivotaan datahakemistot kerran 5 minuutin kuluttua, siellä timer asetetaan sitten miten pitää
+    itsDebugDataSizeLoggerTimer = static_cast<UINT>(SetTimer(kFmiDebugDataSizeLoggerTimer, 1 * 1 * 30 * 1000, NULL)); // aloitetaan raportointi 30 sekunnin kuluttua, muutetaan sitten harvemmaksi
+    itsCheckAnimationLockedModeTimeBagsTimer = static_cast<UINT>(SetTimer(kFmiCheckAnimationLockedModeTimeBagsTimer, 1 * 1 * 63 * 1000, NULL)); // laitan animaatio havainto lukitus timerin 63 sekuntiin, että se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyörähtävät timerit
+    itsCheckForNewSatelDataTimer = static_cast<UINT>(SetTimer(kFmiCheckForNewSatelDataTimer, 1 * 57 * 1000, NULL)); // laitan satel/käsiteanalyysi datan tarkistuksen timerin 57 sekuntiin, että se ei mene aina samoihin aikoihin kuin muutkin kerran minuutissa pyörähtävät timerit
+    itsAutoSaveTimer = static_cast<UINT>(SetTimer(kFmiAutoSaveTimer, 1 * 60 * 1000, NULL));
+    double updateInterValInHours = itsDoc->ApplicationDataBase().UpdateIntervalInHours();
+    if(updateInterValInHours > 0)
+        itsDataToDBUpdateTimer = static_cast<UINT>(SetTimer(kFmiDataToDBUpdateTimer, static_cast<UINT>(updateInterValInHours * 60 * 60 * 1000), NULL)); // kerran vuorokaudessa lähetys
+    itsCleanOldDataFromMemoryTimer = static_cast<UINT>(SetTimer(kFmiCleanOldDataFromMemoryTimer, 5 * 60 * 1000, NULL)); // siivotaan queryDatoja muistissa aina 5 minuutin välein
+    if(itsDoc->MacroPathSettings().UseLocalCache())
+        itsMacroDirectoriesSyncronization = static_cast<UINT>(SetTimer(kFmiMacroDirectoriesSyncronization, 3 * 60 * 1000, NULL)); // tehdään 1. synkronointi vaikka 3 minuutin kuluttua
+    itsStoreViewPosToWinRegistryTimer = static_cast<UINT>(SetTimer(kFmiStoreViewPosToWinRegistryTimer, 117 * 1000, NULL)); // tehdään ikkunoiden koko+sijainti talletuksia rekisteriin n. parin minuutin välein (117 sekuntia)
+    itsStoreCrashBackupViewMacroTimer = static_cast<UINT>(SetTimer(kFmiStoreCrashBackupViewMacroTimer, 87 * 1000, NULL)); // tehdään crash backup viewmacro talletuksia n. 1.5 minuutin välein (87 sekuntia)
+    itsGenerateBetaProductsTimer = static_cast<UINT>(SetTimer(kFmiGenerateBetaProductsTimer, 60 * 1000, NULL)); // Tarkastellaan minuutin välein, että pitääkö beta-producteja tehdä 
+    itsLoggingSystemManagementTimer = static_cast<UINT>(SetTimer(kFmiLoggingSystemManagementTimer, 12 * 60 * 1000, NULL)); // Lokitus systeemiä pitää hallinnoida aika ajoin, viestien trimmau muistista ja crash-reporteriin mahdollisesti päivitetty lokitiedoston nimi
 }
 
 static void LocalizeMenuStrings(CMenu *pMenu)
