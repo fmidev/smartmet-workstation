@@ -2596,7 +2596,7 @@ static void GetWindowSettings(NFmiApplicationWinRegistry &theApplicationWinRegis
 // toimitaan kuten ennenkin (se arvo on nykyään jokaisessa näyttömakrossa), muuten palautetaan showCommand arvo.
 static bool IsViewShowCommandStoredInViewMacro(UINT showCommand)
 {
-    if(showCommand == SW_MINIMIZE || showCommand == SW_SHOWMINIMIZED || showCommand == SW_MAXIMIZE || showCommand == SW_SHOWMAXIMIZED)
+    if(CFmiWin32Helpers::IsShowCommandMinimized(showCommand) || CFmiWin32Helpers::IsShowCommandMaximized(showCommand))
         return true;
     else
         return false;

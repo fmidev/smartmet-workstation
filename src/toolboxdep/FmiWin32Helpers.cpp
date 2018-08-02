@@ -446,6 +446,16 @@ CRect CFmiWin32Helpers::FixWindowPosition(const CRect &theRect, int &theStartCor
 		return theRect;
 }
 
+bool CFmiWin32Helpers::IsShowCommandMinimized(UINT showCommand)
+{
+    return showCommand == SW_MINIMIZE || showCommand == SW_SHOWMINIMIZED;
+}
+
+bool CFmiWin32Helpers::IsShowCommandMaximized(UINT showCommand)
+{
+    return showCommand == SW_MAXIMIZE || showCommand == SW_SHOWMAXIMIZED;
+}
+
 static UINT GetUsedShowCommand(const MfcViewStatus &viewStatus)
 {
     // 1. Jos haluttu status on ShowWindow == false, palauta SW_HIDE
@@ -455,9 +465,9 @@ static UINT GetUsedShowCommand(const MfcViewStatus &viewStatus)
     // 2. Jos haluttu ikkuna status on minimized/maximized eli != 0, palauta SHOW_MIN/MAX
     if(viewStatus.ShowCommand())
     {
-        if(viewStatus.ShowCommand() == SW_MINIMIZE || viewStatus.ShowCommand() == SW_SHOWMINIMIZED)
+        if(CFmiWin32Helpers::IsShowCommandMinimized(viewStatus.ShowCommand()))
             return SW_SHOWMINIMIZED;
-        if(viewStatus.ShowCommand() == SW_MAXIMIZE || viewStatus.ShowCommand() == SW_SHOWMAXIMIZED)
+        if(CFmiWin32Helpers::IsShowCommandMaximized(viewStatus.ShowCommand()))
             return SW_SHOWMAXIMIZED;
     }
 
@@ -467,9 +477,11 @@ static UINT GetUsedShowCommand(const MfcViewStatus &viewStatus)
 
 // Jos maximized tilasta hypätään suoraan minimized tilaan, jää ikkuna piilossa maximized kokoonsa.
 // Tässä on tarkoitus laittaa se ensin normaali tilaan, jotta se voidaan minimoida myöhemmin kunnolla.
+// HUOM! Tämä ei korjaa kokonaan tilannetta, eli minimoitu ikkuna on oikean kokoinen oikeassa paikassa
+// mutta siinä on virheellinen visualisointi niin kauan kuin se on minimoituna.
 static void FixMaximizedToMinimizedProblem(CWnd *win, const MfcViewStatus &viewStatus)
 {
-    if(viewStatus.ShowCommand() == SW_MINIMIZE || viewStatus.ShowCommand() == SW_SHOWMINIMIZED)
+    if(CFmiWin32Helpers::IsShowCommandMinimized(viewStatus.ShowCommand()))
     {
         if(CFmiWin32Helpers::IsWindowMaximized(win))
         {
@@ -502,7 +514,7 @@ bool CFmiWin32Helpers::IsWindowMinimized(CWnd *win)
     BOOL bRet = win->GetWindowPlacement(&wndpl); // gets current window position and iconized/maximized status
     if(bRet)
     {
-        return wndpl.showCmd == SW_MINIMIZE || wndpl.showCmd == SW_SHOWMINIMIZED;
+        return CFmiWin32Helpers::IsShowCommandMinimized(wndpl.showCmd);
     }
     
     return false;
@@ -515,7 +527,7 @@ bool CFmiWin32Helpers::IsWindowMaximized(CWnd *win)
     BOOL bRet = win->GetWindowPlacement(&wndpl); // gets current window position and iconized/maximized status
     if(bRet)
     {
-        return wndpl.showCmd == SW_MAXIMIZE || wndpl.showCmd == SW_SHOWMAXIMIZED;
+        return CFmiWin32Helpers::IsShowCommandMaximized(wndpl.showCmd);
     }
 
     return false;
