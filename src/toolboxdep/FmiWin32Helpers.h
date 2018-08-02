@@ -71,7 +71,7 @@ namespace CFmiWin32Helpers
 	CRect FixWindowPosition(const CRect &theRect, int &theStartCornerCounter);
 	void SetWindowSettings(CWnd *win, const CRect &theRect, const MfcViewStatus &viewStatus, int &theStartCornerCounter);
     bool IsWindowMinimized(CWnd *win);
-    bool IsWindowMinimizedOrMaximized(CWnd *win);
+    bool IsWindowMaximized(CWnd *win);
 
 	std::auto_ptr<CWaitCursor> GetWaitCursorIfNeeded(bool showWaitCursorWhileDrawingView);
 
