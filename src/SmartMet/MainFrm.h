@@ -172,6 +172,7 @@ private:
     void UpdateCrashRptLogFile();
     void TrimmInMemoryLogMessages();
     void StartNewQueryDataLoadedUpdateTimer(const std::string &loadedFileNames);
+    void StartSmartMetTimers();
 
 	// 256 värisen ja vaihtuva kokoisen tolbarin teko vaatii näiden käyttöön oton
 	HBITMAP itsToolBarBitmapHandle;
