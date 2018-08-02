@@ -51,6 +51,17 @@ public:
     void Read(std::istream& is);
 };
 
+class MfcViewStatus
+{
+    unsigned int itsShowCommand = 0; // minimized/maximized, ei muita tietoja
+    bool fShowWindow = false; // onko ikkuna auki vai ei
+public:
+    unsigned int ShowCommand() const { return itsShowCommand; }
+    void ShowCommand(unsigned int newValue) { itsShowCommand = newValue; }
+    bool ShowWindow() const { return fShowWindow; }
+    void ShowWindow(bool newValue) { fShowWindow = newValue; }
+};
+
 class NFmiViewSettingMacro
 {
 public:
@@ -227,10 +238,8 @@ public:
 		void Rows(const checkedVector<TimeViewRow>& newValue) {itsRows = newValue;}
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
-		int Status(void) const {return itsStatus;}
-		void Status(int newValue) {itsStatus = newValue;}
-		bool ShowWindow(void) const {return fShowWindow;}
-		void ShowWindow(bool newValue) {fShowWindow = newValue;}
+        const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
+        MfcViewStatus& ViewStatus() { return itsViewStatus; }
 		bool ShowHelpData(void) const {return fShowHelpData;}
 		void ShowHelpData(bool newValue) {fShowHelpData = newValue;}
         bool ShowHelpData2(void) const { return fShowHelpData2; }
@@ -256,8 +265,7 @@ public:
 
 		checkedVector<TimeViewRow> itsRows; //  kaikkien karttanäyttörivien asetukset
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
-		int itsStatus; // minimized,maximized,jne.
-		bool fShowWindow;
+        MfcViewStatus itsViewStatus;
         bool fShowHelpData; // näytetäänkö malli+havainto+klimatologiset data operatiivisessä käytössä aikasarjassa editoidun datan ohella
         bool fShowHelpData2; // näytetäänkö lyhyt fraktiili mallidata aikasarjanäytössä
         bool fShowHelpData3; // näytetäänkö mallidatasta lasketun klimatologia data aikasarjanäytössä
@@ -276,11 +284,9 @@ public:
 
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
-		int Status(void) const {return itsStatus;}
-		void Status(int newValue) {itsStatus = newValue;}
-		bool ShowWindow(void) const {return fShowWindow;}
-		void ShowWindow(bool newValue) {fShowWindow = newValue;}
-		bool ShowHirlam(void) const {return fShowHirlam;}
+        const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
+        MfcViewStatus& ViewStatus() { return itsViewStatus; }
+        bool ShowHirlam(void) const {return fShowHirlam;}
 		void ShowHirlam(bool newValue) {fShowHirlam = newValue;}
 		bool ShowEcmwf(void) const {return fShowEcmwf;}
 		void ShowEcmwf(bool newValue) {fShowEcmwf = newValue;}
@@ -295,8 +301,7 @@ public:
 		void Read(std::istream& is);
 	private:
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
-		int itsStatus; // minimized,maximized,jne.
-		bool fShowWindow;
+        MfcViewStatus itsViewStatus;
 
 		bool fShowHirlam; // onko hirlam näyttö ruksi päällä vai ei
 		bool fShowEcmwf; // onko ecmwf näyttö ruksi päällä vai ei
@@ -314,11 +319,9 @@ public:
 
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
-		int Status(void) const {return itsStatus;}
-		void Status(int newValue) {itsStatus = newValue;}
-		bool ShowWindow(void) const {return fShowWindow;}
-		void ShowWindow(bool newValue) {fShowWindow = newValue;}
-		const NFmiTrajectorySystem& TrajectorySystem(void) const {return itsTrajectorySystem;}
+        const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
+        MfcViewStatus& ViewStatus() { return itsViewStatus; }
+        const NFmiTrajectorySystem& TrajectorySystem(void) const {return itsTrajectorySystem;}
 		void TrajectorySystem(const NFmiTrajectorySystem &theData);
 		double CurrentVersionNumber(void) {return itsCurrentVersionNumber;}
 		void CurrentVersionNumber(double newValue) {itsCurrentVersionNumber = newValue;}
@@ -327,8 +330,7 @@ public:
 		void Read(std::istream& is);
 	private:
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
-		int itsStatus; // minimized,maximized,jne.
-		bool fShowWindow;
+        MfcViewStatus itsViewStatus;
 
 		NFmiTrajectorySystem itsTrajectorySystem;
 		double itsCurrentVersionNumber; // tämä ei ole talletettuna TempView dataosiossa tiedostossa vaan tämä annetaan NFmiViewSettingMacro:lta tänne käyttöön
@@ -340,19 +342,15 @@ public:
 
 		CrossSectionView(void);
 		~CrossSectionView(void);
-		CrossSectionView(const CrossSectionView &theOther);
-		CrossSectionView& operator=(const CrossSectionView &theOther);
 
 		void SetAllRowParams(NFmiPtrList<NFmiDrawParamList> *theDrawParamListVector, NFmiMacroParamSystem& theMacroParamSystem);
 		const checkedVector<MapRow>& MapRowSettings(void) const {return itsMapRowSettings;}
 		void MapRowSettings(const checkedVector<MapRow>& newValue) {itsMapRowSettings = newValue;}
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
-		int Status(void) const {return itsStatus;}
-		void Status(int newValue) {itsStatus = newValue;}
-		bool ShowWindow(void) const {return fShowWindow;}
-		void ShowWindow(bool newValue) {fShowWindow = newValue;}
-		void SetMacroParamInitFileNames(const std::string &theRootPath);
+        const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
+        MfcViewStatus& ViewStatus() { return itsViewStatus; }
+        void SetMacroParamInitFileNames(const std::string &theRootPath);
 		const NFmiCrossSectionSystem& CrossSectionSystem(void) const {return itsCrossSectionSystem;}
 		void CrossSectionSystem(const NFmiCrossSectionSystem &theData) {itsCrossSectionSystem = theData;}
 
@@ -366,9 +364,8 @@ public:
 		checkedVector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
 		NFmiCrossSectionSystem itsCrossSectionSystem;
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
-		int itsStatus; // minimized,maximized,jne.
-		bool fShowWindow; // tämä on aina true kartta näytölle!!!
-	};
+        MfcViewStatus itsViewStatus;
+    };
 
 	class MapViewDescTop
 	{
@@ -382,11 +379,9 @@ public:
 		void MapRowSettings(const checkedVector<MapRow>& newValue) {itsMapRowSettings = newValue;}
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
-		int Status(void) const {return itsStatus;}
-		void Status(int newValue) {itsStatus = newValue;}
-		bool ShowWindow(void) const {return fShowWindow;}
-		void ShowWindow(bool newValue) {fShowWindow = newValue;}
-		void SetMacroParamInitFileNames(const std::string &theRootPath);
+        const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
+        MfcViewStatus& ViewStatus() { return itsViewStatus; }
+        void SetMacroParamInitFileNames(const std::string &theRootPath);
 		const NFmiMapViewDescTop& GetMapViewDescTop(void) const {return itsMapViewDescTop;}
 		void SetMapViewDescTop(const NFmiMapViewDescTop &theData, NFmiMapViewWinRegistry &theMapViewWinRegistry);
 
@@ -403,8 +398,7 @@ public:
 		checkedVector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
 		NFmiMapViewDescTop itsMapViewDescTop;
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
-		int itsStatus; // minimized,maximized,jne.
-		bool fShowWindow; // tämä on aina true kartta näytölle!!!
+        MfcViewStatus itsViewStatus;
 
 		// dipmaphandler osio pitää ottaa tähän erikois käsittelyyn
 		std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> itsDipMapHelperList;
@@ -419,11 +413,9 @@ public:
 
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
-		int Status(void) const {return itsStatus;}
-		void Status(int newValue) {itsStatus = newValue;}
-		bool ShowWindow(void) const {return fShowWindow;}
-		void ShowWindow(bool newValue) {fShowWindow = newValue;}
-		const HakeLegacySupport::HakeSystemConfigurations& WarningCenterSystem(void) const {return itsWarningCenterSystem;}
+        const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
+        MfcViewStatus& ViewStatus() { return itsViewStatus; }
+        const HakeLegacySupport::HakeSystemConfigurations& WarningCenterSystem(void) const {return itsWarningCenterSystem;}
 		void WarningCenterSystem(const HakeLegacySupport::HakeSystemConfigurations &theData) {itsWarningCenterSystem.Init(theData);}
 		const std::vector<int>& HeaderColumnWidthsInPixels(void) const {return itsHeaderColumnWidthsInPixels;}
 		void HeaderColumnWidthsInPixels(const std::vector<int> &theValues) {itsHeaderColumnWidthsInPixels = theValues;}
@@ -440,9 +432,8 @@ public:
 	private:
         HakeLegacySupport::HakeSystemConfigurations itsWarningCenterSystem;
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
-		int itsStatus; // minimized,maximized,jne.
-		bool fShowWindow; // tämä on aina true kartta näytölle!!!
-		std::vector<int> itsHeaderColumnWidthsInPixels;
+        MfcViewStatus itsViewStatus;
+        std::vector<int> itsHeaderColumnWidthsInPixels;
         bool fShowHakeMessages; // HAKE sanomien checkbox asetus dialogissa
         bool fShowKaHaMessages; // KaHa sanomien checkbox asetus dialogissa
         int itsMinimumTimeRangeForWarningsOnMapViewsInMinutes; // Ks. NFmiApplicationWinRegistry.h:sta vastaavan member-datan selitys.
@@ -457,10 +448,8 @@ public:
 
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
-		int Status(void) const {return itsStatus;}
-		void Status(int newValue) {itsStatus = newValue;}
-		bool ShowWindow(void) const {return fShowWindow;}
-		void ShowWindow(bool newValue) {fShowWindow = newValue;}
+        const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
+        MfcViewStatus& ViewStatus() { return itsViewStatus; }
 
 		const NFmiProducer& SelectedProducer(void) const {return itsSelectedProducer;}
 		void SelectedProducer(const NFmiProducer &theValue) {itsSelectedProducer = theValue;}
@@ -482,8 +471,7 @@ public:
 
 	private:
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
-		int itsStatus; // minimized,maximized,jne.
-		bool fShowWindow; // onko ikkuna päällä vai ei
+        MfcViewStatus itsViewStatus;
 
 		NFmiProducer itsSelectedProducer;
 		NFmiMetTime itsMinMaxRangeStartTime; // tätä  säädetään aika ja kalenteri kontrollien avulla
