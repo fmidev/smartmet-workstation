@@ -468,39 +468,20 @@ static UINT GetUsedShowCommand(CWnd *win, const MfcViewStatus &viewStatus)
         return SW_SHOWNORMAL;
 }
 
-//static const CRect DebugHelper_WeirdViewRectSize(0, 0, 136, 39);
-//static void DebugHelper_CheckFor_WeirdViewRectSize(const CRect &theRect)
-//{
-//    if(theRect.Size() == DebugHelper_WeirdViewRectSize.Size())
-//    {
-//        int x = 0;
-//    }
-//}
-
 // Jos showCommand parametri on 0:sta poikkeava, annetaan se win oliolle ShowWindow 
 // komennossa (t‰ss‰ halutaan vain minimized/maximized tilojen palautus n‰yttˆmakrosta)
-void CFmiWin32Helpers::SetWindowSettings(CWnd *win, const CRect &theRect, const MfcViewStatus &viewStatus, CWnd *mainFrame, int &theStartCornerCounter)
+void CFmiWin32Helpers::SetWindowSettings(CWnd *win, const CRect &theRect, const MfcViewStatus &viewStatus, int &theStartCornerCounter)
 {
     WINDOWPLACEMENT wndpl;
     wndpl.length = sizeof(WINDOWPLACEMENT);
     BOOL bRet = win->GetWindowPlacement(&wndpl); // gets current window position and iconized/maximized status
 
-//    DebugHelper_CheckFor_WeirdViewRectSize(theRect);
     // t‰h‰n v‰liin tehd‰‰n tarkastelut, ett‰ jos ikkuna menee n‰yttˆjen ulkopuolelle, laitetaan se l‰himp‰‰n ikkunaan
     CRect fixedRect(CFmiWin32Helpers::FixWindowPosition(theRect, theStartCornerCounter));
-    //    DebugHelper_CheckFor_WeirdViewRectSize(fixedRect);
 
     wndpl.rcNormalPosition = fixedRect;
-    /*
-        wndpl.rcNormalPosition.left = static_cast<LONG>(fixedRect.Left());
-        wndpl.rcNormalPosition.top = static_cast<LONG>(fixedRect.Top());
-        wndpl.rcNormalPosition.right = static_cast<LONG>(fixedRect.Right());
-        wndpl.rcNormalPosition.bottom = static_cast<LONG>(fixedRect.Bottom());
-    */
     bRet = win->SetWindowPlacement(&wndpl);
     win->ShowWindow(::GetUsedShowCommand(win, viewStatus));
-    if(mainFrame)
-        mainFrame->ShowWindow(SW_SHOW); // aktivoin p‰‰ikkunan, koska edellinen k‰sky j‰tti aikasarjaikkunan aktiiviseksi
 }
 
 bool CFmiWin32Helpers::IsWindowMinimized(CWnd *win)
