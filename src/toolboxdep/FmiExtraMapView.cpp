@@ -122,8 +122,6 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 {
 	if(itsSmartMetDocumentInterface->Printing())
 		return ; // tulee ongelmia, jos ruutua päivitetään kun samalla printataan
-    if(CFmiWin32Helpers::IsWindowMinimized(this))
-        return; // tulee ongelmia, jos ruutua päivitetään kun se on minimoitu
 
 	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor());
 
