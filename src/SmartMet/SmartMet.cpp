@@ -277,6 +277,7 @@ class CAboutDlg : public CDialog
 {
 public:
     CAboutDlg(const std::string &theTitleStr, const std::string &theVersionStr, const std::vector<DrawStringData> &theDynamicTextsDataVector);
+    ~CAboutDlg();
 
 // Dialog Data
 	enum { IDD = IDD_ABOUTBOX };
@@ -289,8 +290,11 @@ protected:
 	virtual BOOL OnInitDialog();
 	DECLARE_MESSAGE_MAP()
 
+    CRect GetActualWindowRect();
+
     CString	itsTitleStrU_;
     std::vector<DrawStringData> itsDynamicTextsDataVector;
+    CBitmap versionBaseImage;
 public:
     afx_msg void OnPaint();
 };
@@ -303,6 +307,11 @@ CAboutDlg::CAboutDlg(const std::string &theTitleStr, const std::string & theVers
 	EnableActiveAccessibility();
 }
 
+CAboutDlg::~CAboutDlg()
+{
+    versionBaseImage.DeleteObject();
+}
+
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
@@ -312,13 +321,30 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
     ON_WM_PAINT()
 END_MESSAGE_MAP()
 
+CRect CAboutDlg::GetActualWindowRect()
+{
+    WINDOWPLACEMENT wndpl;
+    wndpl.length = sizeof(WINDOWPLACEMENT);
+    // gets current window position and iconized/maximized status
+    BOOL bRet = GetWindowPlacement(&wndpl);
+
+    BOOL status = versionBaseImage.LoadBitmap(IDB_BITMAP_ABOUT_DLG_VER_5_10_NO_TEXTS);
+    //Get the width and height of the DIBSection
+    BITMAP bm;
+    int luku = versionBaseImage.GetObject(sizeof(bm), &bm);
+
+    return CRect(wndpl.rcNormalPosition.left, wndpl.rcNormalPosition.top, wndpl.rcNormalPosition.left + bm.bmWidth, wndpl.rcNormalPosition.top + bm.bmHeight);
+}
+
 BOOL CAboutDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
     SetWindowText(itsTitleStrU_);
 	this->SetIcon(AfxGetApp()->LoadIcon(IDR_MAINFRAME), false);
+    auto actualRect = GetActualWindowRect();
+    MoveWindow(actualRect, FALSE);
 
-	return TRUE;  // return TRUE unless you set the focus to a control
+    return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
@@ -333,8 +359,6 @@ void CAboutDlg::OnPaint()
 {
     CPaintDC dc(this); // device context for painting
 
-    CBitmap versionBaseImage; 
-    BOOL status = versionBaseImage.LoadBitmap(IDB_BITMAP_ABOUT_DLG_VER_5_10_NO_TEXTS);
     //Get the width and height of the DIBSection
     BITMAP bm;
     int luku = versionBaseImage.GetObject(sizeof(bm), &bm);
@@ -350,7 +374,6 @@ void CAboutDlg::OnPaint()
 
     memDC.SelectObject(pOldBitmap);
     memDC.DeleteDC();
-    versionBaseImage.DeleteObject();
 
     // Do not call CDialog::OnPaint() for painting messages
 }
