@@ -1682,7 +1682,7 @@ void CFmiSynopDataGridViewDlg::FillSynopDataGridViewMacro(NFmiViewSettingMacro::
 
 void CFmiSynopDataGridViewDlg::ApplySynopDataGridViewMacro(NFmiViewSettingMacro::SynopDataGridView &theViewMacro)
 {
-    itsSmartMetDocumentInterface->SynopDataGridViewOn(theViewMacro.ShowWindow()); // tämäkin on asetettava, arvo saatiin CZeditmap2Doc-luokassa tutkimalla ikkunan tilaa
+    itsSmartMetDocumentInterface->SynopDataGridViewOn(theViewMacro.ViewStatus().ShowWindow()); // tämäkin on asetettava, arvo saatiin CZeditmap2Doc-luokassa tutkimalla ikkunan tilaa
 
 	this->itsWmoIdFilterManager.AllSelected(theViewMacro.AllCountriesSelected());
 	this->itsDayRangeValue = theViewMacro.DayRangeValue();
