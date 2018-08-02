@@ -69,7 +69,7 @@ namespace CFmiWin32Helpers
 	// jos näyttö ei osu mihinkään monitoriin (jos SmartMetia on käytetty multi monitori koneessa
 	// ja samoja makroja/asetuksia käytetään yksi monitorisessa ympäristössä voi aiheutta tälläisen tilanteen.)
 	CRect FixWindowPosition(const CRect &theRect, int &theStartCornerCounter);
-	void SetWindowSettings(CWnd *win, const CRect &theRect, const MfcViewStatus &viewStatus, CWnd *mainFrame, int &theStartCornerCounter);
+	void SetWindowSettings(CWnd *win, const CRect &theRect, const MfcViewStatus &viewStatus, int &theStartCornerCounter);
     bool IsWindowMinimized(CWnd *win);
     bool IsWindowMinimizedOrMaximized(CWnd *win);
 
