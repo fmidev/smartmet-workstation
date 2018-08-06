@@ -3264,11 +3264,39 @@ bool DoMacroParamVerticalDataChecks(NFmiFastQueryInfo &theInfo, NFmiInfoData::Ty
     return true;
 }
 
+std::string DoGetMacroParamFormula(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CatLog::Category category)
+{
+    static std::set<std::string> reportedMissingMacroParams;
+
+    const auto &initFileName = theDrawParam->InitFileName();
+    std::string logErrorMessage;
+    try
+    {
+        return FmiModifyEditdData::GetMacroParamFormula(MacroParamSystem(), theDrawParam);
+    }
+    catch(std::exception &e)
+    {
+        logErrorMessage = e.what();
+    }
+    catch(...)
+    {
+        logErrorMessage = std::string("Couldn't find macroParam '") + initFileName + "'";
+    }
+    // Raportoidaan puuttuvasta macroParamista vain kerran per ajo
+    if(reportedMissingMacroParams.find(initFileName) == reportedMissingMacroParams.end())
+    {
+        reportedMissingMacroParams.insert(initFileName);
+        LogMessage(logErrorMessage, CatLog::Severity::Error, category);
+    }
+
+    return "";
+}
+
 bool MakeMacroParamDrawingLayerCacheChecks(boost::shared_ptr<NFmiDrawParam> &drawParam, NFmiFastQueryInfo &theInfo, NFmiInfoData::Type theType, NFmiMapViewDescTop &descTop, unsigned int theDescTopIndex, int cacheRowNumber, const std::string &theFileName)
 {
     if(drawParam->DataType() == NFmiInfoData::kMacroParam)
     {
-        std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(MacroParamSystem(), drawParam);
+        std::string macroParamStr = DoGetMacroParamFormula(drawParam, CatLog::Category::Visualization);
         MacroParamDataChecker macroParamDataChecker;
         auto macroParamDataInfoVector = macroParamDataChecker.getCalculationParametersFromMacroPram(macroParamStr);
         for(const auto &macroParamDataInfo : macroParamDataInfoVector)
