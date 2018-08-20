@@ -801,13 +801,13 @@ void CSmartMetApp::UpdateCrashRptLogFile()
 
 int exception_handler(LPEXCEPTION_POINTERS p)
 {
-    CatLog::logMessage("SmartMet has detected unknown exception while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational);
+    CatLog::logMessage("SmartMet has detected unknown exception while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational, true);
     exit(1);
 }
 int runtime_check_handler(int errorType, const char *filename, int linenumber, const char *moduleName, const char *format, ...)
 {
     auto errorString = boost::format("type %1% at %2% line %3% in %4%") % errorType % filename % linenumber % moduleName;
-    CatLog::logMessage("SmartMet has detected error: " + errorString.str() + ", while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational);
+    CatLog::logMessage("SmartMet has detected error: " + errorString.str() + ", while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational, true);
     exit(1);
 }
 
