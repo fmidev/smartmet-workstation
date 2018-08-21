@@ -13094,6 +13094,37 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return NFmiApplicationDataBase::CountProcessCount(appData, appVersionsStrOutDummy);
     }
 
+    // MP-CP systeemiss‰ on marter ja worker prosessi executablet.
+    // T‰m‰ funktio rakentaa tilanteeseen sopivan (master/worker) prosessin bin‰‰rin absoluuttisen polun.
+    // Polku rakennetaan 3 eri tavalla:
+    // 1. bin‰‰rien polkuja ei ole annettu konffeissa, rakenna polku niin ett‰ bin‰‰reill‰ on oletus nimet ja ne sijaitsevat SmartMet bin‰‰ri hakemistossa.
+    // 2. Polut on annettu konffeissa absoluuttisina, palauta se suoraan
+    // 3. Polut on annettu suhteellisina, jolloin lopullinen polku rakennetaan SmartMet bin‰‰rihakemiston suhteen
+    std::string MakeMpcpProcessPath(const std::string &absoluteSmartMetAppPath, const std::string &processSettingsKey, const std::string &defaultProcessName)
+    {
+        std::string configuredMasterProcessPath = NFmiSettings::Optional<std::string>(processSettingsKey, "");
+        if(configuredMasterProcessPath.empty())
+        {
+
+            std::string usedAppPath = absoluteSmartMetAppPath;
+            usedAppPath += "\\";
+            usedAppPath += defaultProcessName;
+            return usedAppPath;
+        }
+        else
+        {
+            
+            if(NFmiFileSystem::IsAbsolutePath(configuredMasterProcessPath))
+            {
+                return configuredMasterProcessPath;
+            }
+            else
+            {
+                return PathUtils::getAbsoluteFilePath(configuredMasterProcessPath, absoluteSmartMetAppPath);
+            }
+        }
+    }
+
     void MakeSureToolMasterPoolIsRunning2()
     {
         // Tarkista onko Master-prosessi jo k‰ynniss‰, jos oli, lopetetaan
@@ -13103,40 +13134,38 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             usedAppPath = NFmiStringTools::UrlDecode(usedAppPath); // valitettavasti t‰m‰ stringi on url-encodattu ja se pit‰‰ purkaa...
 
             // Jos ei ollut, k‰ynnist‰ Master-prosessi
-		    std::string commandStr;
-		    commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-		    commandStr += usedAppPath;
-		    commandStr += "\\";
-            commandStr += GetMasterProcessExeName();
-		    commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            std::string commandStr;
+            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::MasterProcessPath", GetMasterProcessExeName());
+            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
 
-		    commandStr += " -H"; // laitetaan TM-master prosessi piiloon -h optiolla
-		    commandStr += " -l \""; // laitetaan lokitiedosto -l optiolla
+            commandStr += " -H"; // laitetaan TM-master prosessi piiloon -h optiolla
+            commandStr += " -l \""; // laitetaan lokitiedosto -l optiolla
             commandStr += itsMultiProcessLogFilePath;
-		    commandStr += "\""; // laitetaan lainausmerkit lokitiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-		    commandStr += " -L "; // laitetaan lokitus taso -L optiolla
+            commandStr += "\""; // laitetaan lainausmerkit lokitiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += " -L "; // laitetaan lokitus taso -L optiolla
             commandStr += boost::lexical_cast<std::string>((int)itsMultiProcessPoolOptions.LogLevel());
             if(itsMultiProcessPoolOptions.MultiProcessPoolOptions().verbose_logging)
-    		    commandStr += " -v"; // laitetaan verbose lokitus p‰‰lle
+                commandStr += " -v"; // laitetaan verbose lokitus p‰‰lle
 
             if(!GetMultiProcessClientData().UseTcpMasterProcess())
             { // Vain IPC -pohjaiselle (EI Tcp) serverille annetaan n‰m‰ argumentit
-		        commandStr += " -w "; // laitetaan work-queue size -w optiolla
+                commandStr += " -w "; // laitetaan work-queue size -w optiolla
                 commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().task_queue_size_in_bytes);
-		        commandStr += " -r "; // laitetaan result-queue size -r optiolla
+                commandStr += " -r "; // laitetaan result-queue size -r optiolla
                 commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().result_queue_size_in_bytes);
             }
 
-		    commandStr += " -W "; // laitetaan Worker-prosessin polku -W optiolla
-		    commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-		    commandStr += usedAppPath;
-		    commandStr += "\\";
-            commandStr += GetWorkerProcessExeName();
-		    commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += " -W "; // laitetaan Worker-prosessin polku -W optiolla
+            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::WorkerProcessPath", GetWorkerProcessExeName());
+            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
 
 //            WORD showWindow = SW_HIDE;
-            CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr);
+            CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true);
         }
+        else
+            LogMessage("MP-CP calculations's Master process was already up and running, continuing to calculations...", CatLog::Severity::Debug, CatLog::Category::Editing);
     }
 
     // Aina kun tehd‰‰n MP-CP editointia (Multi-Process Control-Point), pit‰‰ varmistaa ett‰ 
