@@ -17,6 +17,7 @@ add_library(
 target_link_libraries(
     ${PROJECT_NAME}
     Newbase
+    CatLog
     )
 
 target_include_directories( 
@@ -24,6 +25,7 @@ target_include_directories(
     PUBLIC ${PROJECT_SOURCE_DIR}/smarttools
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${CatLog_INCLUDE_DIRS}
     )
 
 set(
@@ -32,5 +34,6 @@ set(
     ${PROJECT_SOURCE_DIR}
     ${Newbase_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
+    ${CatLog_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
