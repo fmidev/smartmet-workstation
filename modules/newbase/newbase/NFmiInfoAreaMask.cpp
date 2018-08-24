@@ -2734,9 +2734,9 @@ double NFmiInfoTimeIntegrator::Value(const NFmiCalculationParams &theCalculation
       itsTimeCache.itsOffset <= 0.5
           ? itsTimeCache.itsTimeIndex1
           : itsTimeCache.itsTimeIndex2;  // haetaan lähempi timeindeksi 'nolla'-kohdaksi
-  int usedStartIndex = startTimeIndex - itsStartTimeOffset;
+  int usedStartIndex = startTimeIndex + itsStartTimeOffset;
   int usedEndIndex = startTimeIndex + itsEndTimeOffset;
-  for (int i = usedStartIndex; i < usedEndIndex; i++)
+  for (int i = usedStartIndex; i <= usedEndIndex; i++)
   {
     itsInfo->TimeIndex(i);
     float tmpValue = itsInfo->CachedInterpolation(locationCache);
@@ -2807,9 +2807,9 @@ double NFmiInfoRectAreaIntegrator::Value(const NFmiCalculationParams &theCalcula
 
   itsFunctionModifier->Clear();
 
-  for (int j = itsStartYOffset; j < itsEndYOffset; j++)
+  for (int j = itsStartYOffset; j <= itsEndYOffset; j++)
   {
-    for (int i = itsStartXOffset; i < itsEndXOffset; i++)
+    for (int i = itsStartXOffset; i <= itsEndXOffset; i++)
     {
       itsFunctionModifier->Calculate(Peek(locationCache, i, j));
     }
