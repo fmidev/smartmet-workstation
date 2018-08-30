@@ -129,10 +129,32 @@ namespace CFmiWin32TemplateHelpers
 			theView->CurrentPrintTime(theView->PrintingStartTime());
 	}
 
+    // Halutaan että kun mistä tahansa näytöstä käynnistetään tämä prnttaus prosessi, 
+    // niin printtaavan ikkunan pitää olla Printtaus-dialogin emoikkuna, jotta dialogi 
+    // keskittyy printtaavan ikkunan keskelle, eikä aina pääikkunan keskelle.
+    inline void SetNewParentToPrintDialog(CWnd *newParent, CPrintInfo* pInfo)
+    {
+        if(newParent && pInfo)
+        {
+            // 1. Luodaan new:lla uusi CPrintDialog, jonka parent on haluttu ikkuna, default arvot CPrintInfo::CPrintInfo() -metodista
+            DWORD flags = PD_ALLPAGES | PD_USEDEVMODECOPIES | PD_NOSELECTION;
+            auto newPrintDlg = new CPrintDialog(FALSE, flags, newParent);
+            // 2. Otetaan tietyt asetukset (jotka asetettu CPrintInfo::CPrintInfo() -metodissa) vielä vanhasta dialogista
+            newPrintDlg->m_pd.nMinPage = pInfo->m_pPD->m_pd.nMinPage;
+            newPrintDlg->m_pd.nMaxPage = pInfo->m_pPD->m_pd.nMaxPage;
+            // 3. deletoidaan vanha dialogi pois alta
+            delete pInfo->m_pPD;
+            // 4. Asetetaan uusi tilalle
+            pInfo->m_pPD = newPrintDlg;
+            // 5. Samat loppu tarkistukset kuin CPrintInfo::CPrintInfo() -metodissa
+            ASSERT(pInfo->m_pPD->m_pd.hDC == NULL);
+        }
+    }
 
 	template<class Tview>
 	BOOL OnPreparePrintingMapView(Tview *theView, CPrintInfo* pInfo, bool disableRangePrint)
 	{
+        SetNewParentToPrintDialog(theView, pInfo);
 		theView->PrintingStartTime(theView->CalcPrintingStartTime()); // otetaan tämä nyt talteen, että saadaan se asetettua taas takaisin, kun lopetetaan moni sivu printtausta
 		theView->PrintingPageShiftInMinutes(theView->CalcPrintingPageShiftInMinutes());
         auto &applicationWinRegistry = theView->GetSmartMetDocumentInterface()->ApplicationWinRegistry();
