@@ -26,14 +26,21 @@ endif()
 
 # To disable/enable Extreme ToolkitPro in smartMet build, do following: 
 # 1. - 4. Same steps as with Cpprestsdk but with option DISABLE_EXTREME_TOOLKITPRO (next line)
-option(DISABLE_EXTREME_TOOLKITPRO "Is Extreme ToolkitPro used in build" OFF)
+option(DISABLE_EXTREME_TOOLKITPRO "Is Extreme ToolkitPro used in build" ON)
 # This will affect Smarttool dialog's behaviour.
 
+if(DISABLE_EXTREME_TOOLKITPRO)
+add_definitions(-DDISABLE_EXTREME_TOOLKITPRO)
+endif()	
 
 # To disable/enable Uniras Toolmaster in smartMet build, do following: 
 # 1. - 4. Same steps as with Cpprestsdk but with option DISABLE_UNIRAS_TOOLMASTER (next line)
 option(DISABLE_UNIRAS_TOOLMASTER "Is Uniras Toolmaster used in build" OFF)
 # This will affect isoline/contour visualizations and ControlPoint editing.
+
+if(DISABLE_UNIRAS_TOOLMASTER)
+add_definitions(-DDISABLE_UNIRAS_TOOLMASTER)
+endif()	
 	
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
