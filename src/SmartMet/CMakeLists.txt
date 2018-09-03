@@ -22,7 +22,7 @@ link_directories(
 
 file( GLOB CPP_FILES *.cpp )
 file( GLOB H_FILES *.h )
-file( GLOB RES_FILES *.rc res/* ${TOOLKITPRO_INCLUDE_DIR}/*.rc UserImages.bmp )
+file( GLOB RES_FILES *.rc res/* ${TOOLKITPRO_INCLUDE_DIR}/*.rc)
 file( GLOB REG_FILES *.reg )
 file( GLOB IDL_FILES *.idl )
 
@@ -152,13 +152,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     )
 endif()
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CRASHRPT_BASE_DIR}/bin/CrashRpt1402.dll
-    ${CRASHRPT_BASE_DIR}/bin/CrashSender1402.exe
-    ${CRASHRPT_BASE_DIR}/bin/crashrpt_lang.ini
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)
-    )
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CRASHRPT_BASE_DIR}/bin/CrashRpt1402.dll
