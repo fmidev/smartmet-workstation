@@ -18,7 +18,7 @@ add_library(
     ${H_FILES} 
     )
 
-set(LINK_LIBRARY_LIST 
+set(TARGET_LINK_LIBRARIES_LIST 
 	${PROJECT_NAME}
     Newbase
     AutoComplete
@@ -37,10 +37,10 @@ set(LINK_LIBRARY_LIST
 	XmlLiteUtils
     )
 if(NOT DISABLE_CPPRESTSDK)
-	set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} WmsSupport)
+	set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} WmsSupport)
 endif()
 
-target_link_libraries(${LINK_LIBRARY_LIST})
+target_link_libraries(${TARGET_LINK_LIBRARIES_LIST})
 
 target_include_directories(
     ${PROJECT_NAME}
