@@ -23,7 +23,9 @@
 #include "FmiWin32TemplateHelpers.h"
 #include "CtrlViewFunctions.h"
 #include "SmartMetMfcUtils_resource.h"
+#ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
+#endif // DISABLE_EXTREME_TOOLKITPRO
 
 /*
 #ifdef _DEBUG
@@ -54,9 +56,11 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 ,fQ3Macro(FALSE)
 ,fSearchOptionCaseSensitive(FALSE)
 ,fSearchOptionMatchAnywhere(TRUE)
-, itsUsedMacroPathU_(_T(""))
+,itsUsedMacroPathU_(_T(""))
+#ifndef DISABLE_EXTREME_TOOLKITPRO
 ,itsSyntaxEditControl()
 ,itsSyntaxEditControlAcceleratorTable(NULL)
+#endif // DISABLE_EXTREME_TOOLKITPRO
 {
 	assert(itsSmartToolInfo); // t‰ss‰ pit‰‰ olla jotain, koska myˆhemmin ei tarkistuksia!
 	//{{AFX_DATA_INIT(CFmiSmartToolDlg)
@@ -149,7 +153,11 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
     HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
 	this->SetIcon(hIcon, FALSE);
 
+#ifndef DISABLE_EXTREME_TOOLKITPRO
     InitializeSyntaxEditControl();
+#else
+    WarnUserAboutNoEditingSmarttools();
+#endif // DISABLE_EXTREME_TOOLKITPRO
 
 	fMakeDBCheckAtSend = itsSmartToolInfo->MakeDBCheckAtSend();
 	UpdateMacroName();
@@ -164,13 +172,25 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
     ResetSearchResource();
     DisableActionButtomIfInViewMode();
 
-    itsSyntaxEditControlAcceleratorTable = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR_SYNTAX_EDIT_CONTROL));
-
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
+
+void CFmiSmartToolDlg::WarnUserAboutNoEditingSmarttools()
+{
+    CWnd *controlPlaceHolderWin = GetDlgItem(IDC_STATIC_SYNTAX_EDIT_CONTROL_PLACER);
+    if(controlPlaceHolderWin)
+    {
+        // Let's put this place-holder control visible so that warning message is seen by user.
+        controlPlaceHolderWin->ModifyStyle(0, WS_VISIBLE);
+        controlPlaceHolderWin->SetWindowText(_TEXT("No smarttool formula editing without Extreme ToolkitPro support"));
+    }
+}
+
+#ifndef DISABLE_EXTREME_TOOLKITPRO
+// ========================================================================================================
 
 // Huom! T‰h‰n metodiin tulee theFilePath arvoja, joita ei lˆydy ja ne heitt‰v‰t poikkeuksen:
 // 1. Kun vaihdetaan kansiota
@@ -267,6 +287,8 @@ void CFmiSmartToolDlg::InitializeSyntaxEditControl()
     itsSyntaxEditControl->SetAutoIndent(TRUE);
 
     LoadSmarttoolToSyntaxEditControl(GetSmarttoolFilePath());
+
+    itsSyntaxEditControlAcceleratorTable = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR_SYNTAX_EDIT_CONTROL));
 }
 
 std::string CFmiSmartToolDlg::MakeSyntaxEditConfigFilePath()
@@ -275,11 +297,6 @@ std::string CFmiSmartToolDlg::MakeSyntaxEditConfigFilePath()
     configDirectoryPath = NFmiSettings::Optional<std::string>("SmartMet::SmarttoolDlg::SyntaxEditDirectoryPath", configDirectoryPath);
     configDirectoryPath = PathUtils::getAbsoluteFilePath(configDirectoryPath, itsSmartMetDocumentInterface->ControlDirectory());
     return configDirectoryPath + "\\SyntaxEdit.ini";
-}
-
-std::string CFmiSmartToolDlg::GetSmarttoolFilePath()
-{
-    return itsSmartToolInfo->GetFullScriptFileName(itsSmartToolInfo->CurrentScriptName());
 }
 
 void CFmiSmartToolDlg::AdjustSyntaxEditControlWindows()
@@ -297,6 +314,51 @@ void CFmiSmartToolDlg::AdjustSyntaxEditControlWindows()
             UpdateSyntaxEditControl();
         }
     }
+}
+
+static int GetLastColumn(CXTPSyntaxEditCtrl &syntaxEditControl)
+{
+    int nLastRow = syntaxEditControl.GetRowCount();
+    LPCTSTR szLineText = syntaxEditControl.GetLineText(nLastRow);
+    return (int)_tcsclen(szLineText) + 1;
+}
+
+// Tekstin saaminen on hankalaa SyntaxEdit-kontrollista (siell‰ on taas CXTPSyntaxEditBufferManager).
+// Kontrolli itse k‰sittelee teksti‰ Unicodena. Lis‰ksi teksti pit‰‰ hakea CMemeFile -otuksesta.
+// En voi tehd‰ luokan normaalia Serialize -talletusta, koska silloin tekstit menisiv‰t Unicode tiedostoihin ja 
+// niit‰ ei voisi luka vanhemmilla SmartMet versioilla (teksteihin tulisi bin‰‰ri mˆssˆ‰ sekaan).
+std::string CFmiSmartToolDlg::GetMacroTextFromSyntaxEditor()
+{
+    CXTPSyntaxEditBufferManager* pDataMan = itsSyntaxEditControl->GetEditBuffer();
+    if(pDataMan)
+    {
+        // 1. Luetaan koko kontrollin tekstisis‰ltˆ CMemFile olioon.
+        CMemFile memFile;
+        pDataMan->GetBuffer(1, 1, pDataMan->GetRowCount(), ::GetLastColumn(*itsSyntaxEditControl), memFile, FALSE, TRUE);
+        memFile.SeekToBegin(); // Aseta file-olio alkuun!
+
+                               // 2. Luetaan file olion sis‰lt‰ CString:iin
+        CString macroTextU_;
+        UINT nBytes = (UINT)memFile.GetLength();
+        int nChars = nBytes / sizeof(TCHAR);
+        UINT nBytesRead = memFile.Read(macroTextU_.GetBuffer(nChars + 1), nBytes);
+        macroTextU_.ReleaseBuffer(nChars); // T‰m‰ lis‰‰ stringin loppuun \0 -merkin ja ilmeisesti vapauttaa jotain dynaamisesti varattua juttua.
+
+                                           // 3. Konvertoidaan Unicode teksti ascii tekstiksi
+        std::string macroText = CT2A(macroTextU_);
+
+        return macroText;
+    }
+
+    return "";
+}
+
+// ========================================================================================================
+#endif // DISABLE_EXTREME_TOOLKITPRO
+
+std::string CFmiSmartToolDlg::GetSmarttoolFilePath()
+{
+    return itsSmartToolInfo->GetFullScriptFileName(itsSmartToolInfo->CurrentScriptName());
 }
 
 void CFmiSmartToolDlg::DoResizerHooking(void)
@@ -424,8 +486,28 @@ void CFmiSmartToolDlg::Update(void)
             UpdateMacroParamDisplayList(false);
         }
         DisableActionButtomIfInViewMode();
+#ifndef DISABLE_EXTREME_TOOLKITPRO
         UpdateSyntaxEditControl();
+#endif // DISABLE_EXTREME_TOOLKITPRO
     }
+}
+
+std::string CFmiSmartToolDlg::GetSmarttoolFormulaText()
+{
+#ifndef DISABLE_EXTREME_TOOLKITPRO
+    return GetMacroTextFromSyntaxEditor();
+#else
+    return "";
+#endif // DISABLE_EXTREME_TOOLKITPRO
+}
+
+bool CFmiSmartToolDlg::LoadSmarttoolFormula(const std::string &theFilePath)
+{
+#ifndef DISABLE_EXTREME_TOOLKITPRO
+    return LoadSmarttoolToSyntaxEditControl(theFilePath);
+#else
+    return false;
+#endif // DISABLE_EXTREME_TOOLKITPRO
 }
 
 void CFmiSmartToolDlg::RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate)
@@ -448,43 +530,6 @@ bool CFmiSmartToolDlg::EnableDlgItem(int theDlgId, bool fEnable)
 	return false;
 }
 
-static int GetLastColumn(CXTPSyntaxEditCtrl &syntaxEditControl)
-{
-    int nLastRow = syntaxEditControl.GetRowCount();
-    LPCTSTR szLineText = syntaxEditControl.GetLineText(nLastRow);
-    return (int)_tcsclen(szLineText) + 1;
-}
-
-// Tekstin saaminen on hankalaa SyntaxEdit-kontrollista (siell‰ on taas CXTPSyntaxEditBufferManager).
-// Kontrolli itse k‰sittelee teksti‰ Unicodena. Lis‰ksi teksti pit‰‰ hakea CMemeFile -otuksesta.
-// En voi tehd‰ luokan normaalia Serialize -talletusta, koska silloin tekstit menisiv‰t Unicode tiedostoihin ja 
-// niit‰ ei voisi luka vanhemmilla SmartMet versioilla (teksteihin tulisi bin‰‰ri mˆssˆ‰ sekaan).
-std::string CFmiSmartToolDlg::GetMacroTextFromSyntaxEditor()
-{
-    CXTPSyntaxEditBufferManager* pDataMan = itsSyntaxEditControl->GetEditBuffer();
-    if(pDataMan)
-    {
-        // 1. Luetaan koko kontrollin tekstisis‰ltˆ CMemFile olioon.
-        CMemFile memFile;
-        pDataMan->GetBuffer(1, 1, pDataMan->GetRowCount(), ::GetLastColumn(*itsSyntaxEditControl), memFile, FALSE, TRUE);
-        memFile.SeekToBegin(); // Aseta file-olio alkuun!
-
-        // 2. Luetaan file olion sis‰lt‰ CString:iin
-        CString macroTextU_;
-        UINT nBytes = (UINT)memFile.GetLength();
-        int nChars = nBytes / sizeof(TCHAR);
-        UINT nBytesRead = memFile.Read(macroTextU_.GetBuffer(nChars+1), nBytes);
-        macroTextU_.ReleaseBuffer(nChars); // T‰m‰ lis‰‰ stringin loppuun \0 -merkin ja ilmeisesti vapauttaa jotain dynaamisesti varattua juttua.
-
-        // 3. Konvertoidaan Unicode teksti ascii tekstiksi
-        std::string macroText = CT2A(macroTextU_);
-
-        return macroText;
-    }
-
-    return "";
-}
-
 static std::string GetLastLoadedSmartToolRelativePathName(SmartMetDocumentInterface *smartMetDocumentInterface)
 {
     auto smartToolInfo = smartMetDocumentInterface->SmartToolInfo();
@@ -500,7 +545,7 @@ void CFmiSmartToolDlg::OnButtonAction()
 		string counterStr = NFmiStringTools::Convert<int>(counter);
 
 		UpdateData(TRUE);
-		std::string macroText = GetMacroTextFromSyntaxEditor();
+		std::string macroText = GetSmarttoolFormulaText();
         itsMacroErrorTextU_ = CA2T(::GetDictionaryString("SmartToolDlgExecutionStarts").c_str());
 		UpdateData(FALSE);
 
@@ -556,7 +601,7 @@ void CFmiSmartToolDlg::DoSmartToolLoad(const std::string &theSmartToolName, bool
     if(status)
     {
         CatLog::logMessage(string("Loaded smartTool: ") + theSmartToolName, CatLog::Severity::Info, CatLog::Category::Macro);
-        LoadSmarttoolToSyntaxEditControl(GetSmarttoolFilePath());
+        LoadSmarttoolFormula(GetSmarttoolFilePath());
         UpdateMacroName();
         itsMacroParamNameU_ = _TEXT(""); // tyhjennet‰‰n varmuuden vuoksi makroParam name, koska kaksi save-nappia voi aiheuttaa sekaannuksia
         itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mit‰‰n'
@@ -566,7 +611,7 @@ void CFmiSmartToolDlg::DoSmartToolLoad(const std::string &theSmartToolName, bool
 
 void CFmiSmartToolDlg::OnButtonSmartToolLoadDbChecker()
 { // ladataan virallinen DBCheck-macro ruudulle esim. testi k‰yttˆˆn
-    LoadSmarttoolToSyntaxEditControl(itsSmartToolInfo->DBCheckerFileName());
+    LoadSmarttoolFormula(itsSmartToolInfo->DBCheckerFileName());
 	itsSmartToolInfo->CurrentScript(itsSmartToolInfo->DBCheckerText()); // pit‰‰ p‰ivitt‰‰ myˆs currenttia skripti‰
 
 	itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mit‰‰n'
@@ -610,7 +655,7 @@ void CFmiSmartToolDlg::OnButtonSmartToolSave()
 			return ;
 	}
 	// pit‰‰ ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
-	itsSmartToolInfo->CurrentScript(GetMacroTextFromSyntaxEditor());
+	itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText());
     if(itsSmartToolInfo->SaveScript(tmpName))
     {
         CatLog::logMessage(string("Saved smartTool: ") + string(tmpName), CatLog::Severity::Info, CatLog::Category::Macro);
@@ -640,7 +685,7 @@ void CFmiSmartToolDlg::OnButtonSmartToolSaveDbChecker()
 	if(action == IDOK)
 	{
 		UpdateData(TRUE);
-		itsSmartToolInfo->DBCheckerText(GetMacroTextFromSyntaxEditor());
+		itsSmartToolInfo->DBCheckerText(GetSmarttoolFormulaText());
 		itsSmartToolInfo->SaveDBChecker();
 	}
 }
@@ -743,7 +788,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
 		CreateNewMacroParamDirectory(macroParamName);
 		return ;
 	}
-	boost::shared_ptr<NFmiMacroParam> macroParamPointer = ::CreateMacroParamPointer(macroParamName, GetMacroTextFromSyntaxEditor(), GetUsedMacroParamType());
+	boost::shared_ptr<NFmiMacroParam> macroParamPointer = ::CreateMacroParamPointer(macroParamName, GetSmarttoolFormulaText(), GetUsedMacroParamType());
 	NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
 	std::string initFileName = ::MakeMacroParamInitFileName(mpSystem, macroParamPointer->Name());
 
@@ -957,7 +1002,7 @@ void CFmiSmartToolDlg::OnLbnSelchangeListParamMacros()
 		if(mpSystem.FindMacro(tmp))
 		{
 			itsMacroParamNameU_ = nameU_;
-            LoadSmarttoolToSyntaxEditControl(GetMacroParamFilePath(mpSystem));
+            LoadSmarttoolFormula(GetMacroParamFilePath(mpSystem));
 			itsMacroNameU_ = _TEXT(""); // Tyhjennet‰‰n varmuuden vuoksi smartToolin nimi, ett‰ kahden save-napin takia ei tule talletettua vahingossa v‰‰r‰ll‰ napilla
 		}
 		else
@@ -969,7 +1014,7 @@ void CFmiSmartToolDlg::OnLbnSelchangeListParamMacros()
 	{
 		itsMacroParamNameU_ = _TEXT("");
 	}
-	itsSmartToolInfo->CurrentScript(GetMacroTextFromSyntaxEditor()); // p‰ivitet‰‰n myˆs currentiksi macro-tekstiksi
+	itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText()); // p‰ivitet‰‰n myˆs currentiksi macro-tekstiksi
 
 	UpdateData(FALSE);
 }
@@ -1012,7 +1057,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonSmartToolRemove()
         bool status = itsSmartToolInfo->LoadScript(dlg.SelectedScriptName());
 		if(status)
 		{
-            LoadSmarttoolToSyntaxEditControl(GetSmarttoolFilePath());
+            LoadSmarttoolFormula(GetSmarttoolFilePath());
 			UpdateMacroName();
 			itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mit‰‰n'
             UpdateData(FALSE);
@@ -1289,5 +1334,7 @@ void CFmiSmartToolDlg::OnSize(UINT nType, int cx, int cy)
 {
     CDialog::OnSize(nType, cx, cy);
 
+#ifndef DISABLE_EXTREME_TOOLKITPRO
     AdjustSyntaxEditControlWindows();
+#endif // DISABLE_EXTREME_TOOLKITPRO
 }
