@@ -34,6 +34,8 @@
 
 // TODO: reference additional headers your program requires here
 
+#ifndef DISABLE_EXTREME_TOOLKITPRO
 #define _MARKO_SKIP_THE_BLOODY_INCLUDING_TOOLKITPRO_MESSAGES // Muuten n‰it‰ 'include' messuja tulee joka ikiselle k‰‰nnetylle cpp-tiedostolle pitk‰ liuta...
 #define _XTP_STATICLINK
 #include <XTToolkitPro.h>   // Codejock Software Components
+#endif // DISABLE_EXTREME_TOOLKITPRO

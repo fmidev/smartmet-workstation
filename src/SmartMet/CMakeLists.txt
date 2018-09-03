@@ -14,15 +14,26 @@ add_definitions(
     -DFMI_DISABLE_MFC_FEATURE_PACK
     )
 
-link_directories(
+set(LINK_DIRECTORIES_LIST 
     ${BOOST_LIB_DIR}
-    ${TOOLKITPRO_LIB_DIR}
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
 
+if(NOT DISABLE_EXTREME_TOOLKITPRO)
+	set(LINK_DIRECTORIES_LIST ${LINK_DIRECTORIES_LIST} ${TOOLKITPRO_LIB_DIR})
+endif()
+	
+link_directories(${LINK_DIRECTORIES_LIST})
+
 file( GLOB CPP_FILES *.cpp )
 file( GLOB H_FILES *.h )
+
+if(NOT DISABLE_CPPRESTSDK)
 file( GLOB RES_FILES *.rc res/* ${TOOLKITPRO_INCLUDE_DIR}/*.rc)
+else()
+file( GLOB RES_FILES *.rc res/*)
+endif()
+
 file( GLOB REG_FILES *.reg )
 file( GLOB IDL_FILES *.idl )
 
