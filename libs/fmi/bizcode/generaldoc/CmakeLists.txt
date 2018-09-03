@@ -80,7 +80,6 @@ target_include_directories(
     PUBLIC ${WmsSupport_INCLUDE_DIRS}
 	PUBLIC ${CapData_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${TOOLKITPRO_INCLUDE_DIR}
     )
 
 set(
