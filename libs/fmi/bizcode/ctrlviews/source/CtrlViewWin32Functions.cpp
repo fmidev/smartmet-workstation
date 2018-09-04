@@ -1,7 +1,7 @@
 #include "CtrlViewWin32Functions.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiToolBox.h"
-#include <agx\agx.h>
+#include "ToolMasterHelperFunctions.h"
 
 #include <stdexcept>
 
@@ -129,7 +129,6 @@ namespace CtrlView
 
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect)
     {
-        XuWindowSize(theClientRect.Width(), theClientRect.Height());
-        XuWindowSelect(theDC->GetSafeHdc());
+        Toolmaster::SetToolMastersDC(theDC, theClientRect);
     }
 }
