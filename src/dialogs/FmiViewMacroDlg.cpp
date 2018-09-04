@@ -17,6 +17,7 @@
 #include "CloneBitmap.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "SmartMetMfcUtils_resource.h"
+#include "persist2.h"
 
 #include "boost/filesystem.hpp"
 

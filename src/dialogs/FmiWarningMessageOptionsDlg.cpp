@@ -14,6 +14,7 @@
 #include "FmiWin32TemplateHelpers.h"
 #include "NFmiDictionaryFunction.h"
 #include "FmiWin32Helpers.h"
+#include "persist2.h"
 
 
 // CFmiWarningMessageOptionsDlg dialog

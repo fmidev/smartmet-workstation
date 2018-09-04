@@ -29,6 +29,7 @@
 #include "SynopCodeUtils.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "persist2.h"
 
 using namespace std;
 

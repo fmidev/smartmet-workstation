@@ -23,6 +23,7 @@
 #include "FmiWin32TemplateHelpers.h"
 #include "CtrlViewFunctions.h"
 #include "SmartMetMfcUtils_resource.h"
+#include "persist2.h"
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
 #endif // DISABLE_EXTREME_TOOLKITPRO
