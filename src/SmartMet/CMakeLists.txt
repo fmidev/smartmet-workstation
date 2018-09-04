@@ -104,7 +104,6 @@ target_include_directories(
     PUBLIC ${Processes_INCLUDE_DIRS}
     PUBLIC ${AutoComplete_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${UNIRAS_INCLUDE_DIR}
     PUBLIC ${CRASHRPT_INCLUDE_DIR}
     )
 
