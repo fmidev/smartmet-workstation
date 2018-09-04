@@ -37,7 +37,7 @@
 #include "NFmiDataModifierClasses.h"
 
 #include "NFmiIsoLineData.h"
-#include "mar002.h"
+#include "ToolMasterDrawingFunctions.h"
 #include "NFmiArea.h"
 #include "NFmiValueString.h"
 #include "NFmiValueLine.h"
@@ -2550,7 +2550,7 @@ void NFmiIsoLineView::DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, N
             NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
             NFmiRect relRect(GetFrame());
             AdjustZoomedAreaRect(zoomedAreaRect);
-            ::mar002(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, grid2PixelRatio, -1);
+            ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, grid2PixelRatio, -1);
         }
     }
     RestoreUpDifferenceDrawing(itsDrawParam);
