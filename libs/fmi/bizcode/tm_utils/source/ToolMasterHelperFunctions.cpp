@@ -1,4 +1,7 @@
 #include "stdafx.h"
+
+#ifndef DISABLE_UNIRAS_TOOLMASTER
+
 #include "ToolMasterHelperFunctions.h"
 #include "NFmiGriddingHelperInterface.h"
 #include "NFmiDrawParam.h"
@@ -254,3 +257,5 @@ namespace Toolmaster
         return useToolMaster;
     }
 }
+
+#endif // DISABLE_UNIRAS_TOOLMASTER

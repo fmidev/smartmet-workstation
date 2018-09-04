@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#ifndef DISABLE_UNIRAS_TOOLMASTER
+
 #include <agX/agxfont.h>
 #include <agX/agx.h>
 
@@ -1768,3 +1770,5 @@ static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers
         }
     }
 }
+
+#endif // DISABLE_UNIRAS_TOOLMASTER

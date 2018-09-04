@@ -1,4 +1,7 @@
 #include "stdafx.h"
+
+#ifndef DISABLE_UNIRAS_TOOLMASTER
+
 #include "ToolMasterColorCube.h"
 
 #include <agx\agx.h>
@@ -171,3 +174,5 @@ namespace ToolMasterColorCube
     }
 
 }
+
+#endif // DISABLE_UNIRAS_TOOLMASTER

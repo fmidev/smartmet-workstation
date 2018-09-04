@@ -53,7 +53,7 @@ IF(MSVC)
         )
 ENDIF()
 
-target_link_libraries(
+set(TARGET_LINK_LIBRARIES_LIST 
     ${PROJECT_NAME}
     ToolboxDep
     GeneralDoc
@@ -79,8 +79,13 @@ target_link_libraries(
     optimized ${ICU_OPTIMIZED_LIB_DT}
     optimized ${ICU_OPTIMIZED_LIB_IN}
     optimized ${ICU_OPTIMIZED_LIB_UC}
-    ${UNIRAS_LIB}
     )
+
+if(NOT DISABLE_UNIRAS_TOOLMASTER)
+	set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} ${UNIRAS_LIB})
+endif()
+
+target_link_libraries(${TARGET_LINK_LIBRARIES_LIST})
 
 target_include_directories( 
     ${PROJECT_NAME}
