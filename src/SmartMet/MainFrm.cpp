@@ -1622,7 +1622,7 @@ void CMainFrame::OnViewDemodockviews()
 void CMainFrame::DoAppDataBaseCollection(int theAction) // theAction = NFmiApplicationDataBase::Action
 {
 	itsDoc->ApplicationDataBase().CollectSmartMetData(static_cast<NFmiApplicationDataBase::Action>(theAction), itsDoc->Language(), itsDoc->RunningTimeInSeconds(), itsDoc->IsToolMasterAvailable(), itsDoc->InfoOrganizer());
-	itsDoc->LogMessage(itsDoc->ApplicationDataBase().MakeUrlParamString(), CatLog::Severity::Info, CatLog::Category::NetRequest); // lokitetaan info aina ensin
+	itsDoc->LogMessage(NFmiStringTools::UrlDecode(itsDoc->ApplicationDataBase().MakeUrlParamString()), CatLog::Severity::Info, CatLog::Category::NetRequest); // lokitetaan info aina ensin
 	if(itsDoc->ApplicationDataBase().UseDataSending())
 	{
         CWinThread *AppDataToDbThread = AfxBeginThread(CFmiAppDataToDbThread::DoThread, &itsDoc->ApplicationDataBase(), THREAD_PRIORITY_BELOW_NORMAL);
