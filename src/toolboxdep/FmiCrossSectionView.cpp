@@ -8,7 +8,6 @@
 #include "CFmiPopupMenu.h"
 #include "CFmiMenu.h"
 #include "NFmiMenuItemList.h"
-#include <agx\agx.h>
 #include "FmiWin32Helpers.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "CtrlViewKeyboardFunctions.h"

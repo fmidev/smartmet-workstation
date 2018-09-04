@@ -8,7 +8,6 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiGdiPlusImageMapHandler.h"
 
-#include <agx\agx.h>
 #include "NFmiMetEditorOptionsData.h"
 #include "DialogEx.h"
 #include "CFmiMenu.h"
