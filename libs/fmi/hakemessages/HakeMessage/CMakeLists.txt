@@ -12,7 +12,7 @@ add_library(
 
 source_group("Src" FILES ${SOURCE_FILES})
 
-set(LINK_LIBRARY_LIST 
+set(TARGET_LINK_LIBRARIES_LIST 
 	${PROJECT_NAME}
     XmlLiteUtils
     Newbase
@@ -23,10 +23,10 @@ set(LINK_LIBRARY_LIST
 	)
 
 if(NOT DISABLE_CPPRESTSDK)
-	set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} WebClient)
+	set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} WebClient)
 endif()
 
-target_link_libraries(${LINK_LIBRARY_LIST})
+target_link_libraries(${TARGET_LINK_LIBRARIES_LIST})
 
 target_include_directories( 
     ${PROJECT_NAME}

@@ -11,6 +11,7 @@
 #include "CloneBitmap.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewFunctions.h"
+#include "persist2.h"
 
 
 // CFmiCrossSectionDlg dialog

@@ -311,9 +311,6 @@ public:
     virtual NFmiAutoComplete& AutoComplete() = 0;
     virtual void InvalidateMapView(bool bErase = true) = 0;
     virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() = 0;
-#ifndef DISABLE_CPPRESTSDK
-    virtual HakeMessage::Main& WarningCenterSystem() = 0;
-#endif // DISABLE_CPPRESTSDK
     virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) = 0;
     virtual AddParams::ParamAddingSystem& ParamAddingSystem() = 0;
     virtual void UpdateParamAddingSystem() = 0;
@@ -367,4 +364,8 @@ public:
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+
+#ifndef DISABLE_CPPRESTSDK
+    virtual HakeMessage::Main& WarningCenterSystem() = 0;
+#endif // DISABLE_CPPRESTSDK
 };

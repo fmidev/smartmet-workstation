@@ -19,6 +19,7 @@
 #include "NFmiStationViewHandler.h"
 #include "CtrlViewFunctions.h"
 #include "CtrlViewKeyboardFunctions.h"
+#include "persist2.h"
 
 // CFmiExtraMapViewDlg dialog
 

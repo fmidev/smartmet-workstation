@@ -301,9 +301,6 @@ public:
     virtual bool ShowTrajectorsOnMap(int theDescTopIndex) = 0;
     virtual std::vector<NFmiProducer>& ExtraSoundingProducerList(void) = 0;
     virtual bool ShowWarningMarkersOnMap(int theDescTopIndex) = 0;
-#ifndef DISABLE_CPPRESTSDK
-    virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
-#endif // DISABLE_CPPRESTSDK
     virtual CDC* MapBlitDC(int theDescTopIndex) = 0;
     virtual void ToolTipColumnIndex(int newIndex) = 0;
     virtual bool HasActiveViewChanged(void) = 0;
@@ -370,9 +367,6 @@ public:
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
     virtual bool UseWmsMaps() = 0;
     virtual void UseWmsMaps(bool newValue) = 0;
-#ifndef DISABLE_CPPRESTSDK
-    virtual Wms::WmsSupport& WmsSupport() = 0;
-#endif // DISABLE_CPPRESTSDK
     virtual NFmiBetaProductionSystem& BetaProductionSystem() = 0;
     virtual void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
@@ -381,4 +375,9 @@ public:
     virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) = 0;
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+
+#ifndef DISABLE_CPPRESTSDK
+    virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
+    virtual Wms::WmsSupport& WmsSupport() = 0;
+#endif // DISABLE_CPPRESTSDK
 };

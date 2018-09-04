@@ -16,7 +16,6 @@
 #include "Utf8ConversionFunctions.h"
 #include "SettingsFunctions.h"
 #include "NFmiMetTime.h"
-#include <agx\agx.h>
 #include <thread>
 
 #pragma comment(lib, "psapi.lib")
@@ -875,22 +874,15 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	apppath = appPath;
 	// appuptime [s]
 	appuptime = applicationRunningTimeInSeconds;
-	// avstmstatus
+
+	// avstmversion is set outside of this class
+
+    // avstmstatus
     if(toolMasterAvailable)
         avstmstatus = "ok";
     else
         avstmstatus = "error";
 
-    // avstmversion
-	avstmversion = "";
-	avstmversion += NFmiStringTools::Convert(XuVERSION);
-	avstmversion += ".";
-	avstmversion += NFmiStringTools::Convert(XuREVISION);
-	avstmversion += ".";
-	if(XuUPDATE_LEVEL == ' ')
-		avstmversion += NFmiStringTools::Convert(2); // tietääkseni tällä hetkellä
-	else
-		avstmversion += NFmiStringTools::Convert(XuUPDATE_LEVEL);
 
 	// avsexpstatus  // AVS Express ei vielä käytössä
 	// avsexpversion // AVS Express ei vielä käytössä

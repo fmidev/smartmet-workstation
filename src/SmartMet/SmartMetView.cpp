@@ -33,14 +33,12 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiRectangle.h"
 
-#include <agx\agx.h>
 #include "FmiExtraMapView.h"
 #include "FmiWin32Helpers.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "NFmiStationViewHandler.h"
 #include "CtrlViewFunctions.h"
 #include "CtrlViewKeyboardFunctions.h"
-#include "ToolMasterColorCube.h"
 #include "MapDrawFunctions.h"
 #include "SmartMetDocumentInterface.h"
 #include "ApplicationInterface.h"
@@ -138,48 +136,6 @@ CSmartMetView::CSmartMetView()
 
 }
 
-void CSmartMetView::InitToolMaster(void)
-{
-	CSmartMetDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
-	if(data)
-	{
-        if(data->IsToolMasterAvailable())
-        {
-
-            //<STRONG><A NAME="context">Create a Toolmaster Graphics Context</A>
-            COLORREF f; float rgb[3], dummy[5];
-
-            // Create a new Toolmaster graphics context and select it
-            XuContextCreate(&(m_toolmasterContext));
-            XuContextSelect(m_toolmasterContext);
-
-            // Change color table 1 to RGB 0-255
-            XuColorTableChange(1, 255, XuLOOKUP, XuRGB, 255.);
-
-            // Copy Windows' text color to Toolmaster's foreground
-            f = GetSysColor(COLOR_WINDOWTEXT);
-            rgb[0] = GetRValue(f);
-            rgb[1] = GetGValue(f);
-            rgb[2] = GetBValue(f);
-            XuColor(XuCOLOR, 1, rgb, dummy);
-            XuColorDeviceLoad(1);
-
-            // Copy Windows' window color to Toolmasters background
-            f = GetSysColor(COLOR_WINDOW);
-            rgb[0] = GetRValue(f);
-            rgb[1] = GetGValue(f);
-            rgb[2] = GetBValue(f);
-            XuColor(XuCOLOR, 0, rgb, dummy);
-            XuColorDeviceLoad(0);
-            //</STRONG>
-        }
-
-        ToolMasterColorCube::InitDefaultColorTable(data->IsToolMasterAvailable()); // Varmistetaan color-cuben alustus
-	}
-}
-
 CSmartMetView::~CSmartMetView()
 {
 	delete itsEditMapView;
@@ -188,18 +144,6 @@ CSmartMetView::~CSmartMetView()
     CtrlView::DestroyBitmap(&itsMapBitmap);
     CtrlView::DestroyBitmap(&itsOverMapBitmap);
 	delete itsSynopPlotBitmap; // tähän ei saa käyttää DestroyBitmap-funktiota
-
-	CSmartMetDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
-	if(data && data->IsToolMasterAvailable())
-	{
-		//<STRONG><A NAME="delete">You must return to the initial context before deleting this one</A>
-		XuContextSelect(theApp.m_defaultContext) ;
-		XuContextDelete(m_toolmasterContext) ;
-		//</STRONG>
-	}
-
 	delete m_SizeWnd;
 	delete m_tooltip;
 }
@@ -1143,16 +1087,7 @@ void CSmartMetView::SetToolBoxsDC(CDC* theDC)
 // toolmasterin DC:n
 void CSmartMetView::SetToolMastersDC(CDC* theDC)
 {
-	CSmartMetDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
-	if(data && data->IsToolMasterAvailable())
-	{
-		RECT rc;
- 		GetClientRect(&rc);
-		XuWindowSize(rc.right - rc.left, rc.bottom - rc.top);
-		XuWindowSelect(theDC->GetSafeHdc());
-	}
+    CtrlView::SetToolMastersDC(theDC, this, GetGeneralDoc()->IsToolMasterAvailable());
 }
 
 void CSmartMetView::OnDropFiles(HDROP hDropInfo)

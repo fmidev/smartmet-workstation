@@ -22,6 +22,8 @@
 #include "QueryDataReading.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "ApplicationInterfaceForSmartMet.h"
+#include "ToolMasterColorCube.h"
+#include "ToolMasterHelperFunctions.h"
 
 #include "boost/format.hpp"
 
@@ -40,8 +42,6 @@ namespace
         #include "CrashRpt.h"
 	#endif
 #endif
-
-#include <agx/agx.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -97,7 +97,6 @@ const GUID CDECL BASED_CODE _tlid =
 const WORD _wVerMajor = 1;
 const WORD _wVerMinor = 0;
 
-
 // CSmartMetApp initialization
 
 BOOL CSmartMetApp::InitInstance()
@@ -123,7 +122,7 @@ BOOL CSmartMetApp::InitInstance()
     if(!TakeControlPathInfo())
         return FALSE;
     // Tämä on kutsuttava aina ja ennen CrashRptInstall-kutsua ja ennen CSplashThreadHolder luontia, koska sinne tulee dynaamista tekstiä editorin versiota ja build päivämääristä
-    if(!gBasicSmartMetConfigurations.Init())
+    if(!gBasicSmartMetConfigurations.Init(Toolmaster::MakeAvsToolmasterVersionString()))
         return FALSE;
 
 	CSplashThreadHolder pSplashThreadHolder(SplashStart());
@@ -470,8 +469,19 @@ void CSmartMetApp::CreateMenuDynamically(void)
 }
 */
 
+void CSmartMetApp::CloseToolMaster()
+{
+    if(itsGeneralData->IsToolMasterAvailable())
+    {
+        Toolmaster::CloseToolMaster();
+    }
+}
+
 int CSmartMetApp::ExitInstance()
 {
+    // Tätä pitää kutsua ennen kuin itsGeneralData tuhotaan!
+    CloseToolMaster();
+
 	// HUOM! itsGeneralData pitää tuhota ennen kuin GDI+ systeemi lopetetaan, koska
 	// generaldatalla on Gdiplus-bitmappeja tallessa, jotka gdishutdown näyttää tuhoavan.
 	// Eli ne tuhotaan tässä ensin generaldatan destruktorissa, muuten ne yritettäisiin
@@ -566,34 +576,18 @@ void CSmartMetApp::LoadFileAtStartUp(CCommandLineInfo *theCmdInfo)
 	}
 }
 
+// tämä pitää tehdä vasta ProcessShellCommand:in jälkeen, koska siellä syntyy View
+// AVS esimerkeissä luotiin MainFrame ennen ProcessShellCommand:ia, ei syntynyt
+// uutta MainFramea ilmeisesti koska oli MDI systeemi
 bool CSmartMetApp::DoToolMasterInitialization(void)
 {
-	bool useTM = false;
-	int tmStatus = InitToolMaster(fUseToolMasterIfAvailable);
-	if(tmStatus == XuLICOK || tmStatus == XuTRIAL)
-		useTM = true;
-
-	std::string toolmasterLicenseStr("agx ToolMaster license query returned: ");
-	if(tmStatus == XuLICOK)
-		toolmasterLicenseStr += "XuLICOK, graphics-license is in use.";
-	else if(tmStatus == XuTRIAL)
-		toolmasterLicenseStr += "XuTRIAL, graphics-license is in use.";
-	else if(tmStatus == XuMAXUSER)
-		toolmasterLicenseStr += "XuMAXUSER, graphics-license is not in use.";
-	else if(tmStatus == XuEXPIRED)
-		toolmasterLicenseStr += "XuEXPIRED, graphics-license is not in use.";
-	else if(tmStatus == XuLICERROR)
-		toolmasterLicenseStr += "XuLICERROR, graphics-license is not in use.";
-	else if(tmStatus == -1)
-		toolmasterLicenseStr = "agx ToolMaster graphics-license will not be used.";
-	else
-		toolmasterLicenseStr += "Unknown error, graphics-license is not in use.";
-	itsGeneralData->LogMessage(toolmasterLicenseStr, CatLog::Severity::Info, CatLog::Category::Configuration);
-
-	// tämä pitää tehdä vasta ProcessShellCommand:in jälkeen, koska siellä syntyy View
-	// AVS esimerkeissä luotiin MainFrame ennen ProcessShellCommand:ia, ei syntynyt
-	// uutta MainFramea ilmeisesti koska oli MDI systeemi
-	return useTM;
+    if(Toolmaster::DoToolMasterInitialization(m_pMainWnd, fUseToolMasterIfAvailable))
+    {
+        itsGeneralData->ToolMasterAvailable(true);
+        return true;
+    }
+    else
+        return false;
 }
 
 #pragma warning( push )
@@ -722,37 +716,6 @@ bool CSmartMetApp::TakeControlPathInfo(void)
         gBasicSmartMetConfigurations.EnableCrashReporter(false);
     }
     return true;
-}
-
-int CSmartMetApp::InitToolMaster(bool fTryToUseToolMaster)
-{
-	int tmStatus = -1;
-	if(fTryToUseToolMaster)
-	{
-		XuLicenseQuery(&tmStatus);
-		if(tmStatus == XuLICOK || tmStatus == XuTRIAL)
-		{
-			itsGeneralData->ToolMasterAvailable(true);
-
-
-			//<STRONG><A NAME="initial">Initialize Toolmaster</A>
-			XuInitialize   (NULL, NULL);
-			XuMessageTypes (XuON,                    // short messages in messagebox
-							XuOFF);                  // long messages in text window
-			XuMessageLevels(XuMESSAGE_CONTINUE, 	 // informational
-							XuMESSAGE_CONTINUE,      // warnings
-							XuMESSAGE_CONTINUE,      // errors
-							XuMESSAGE_KEEP_STATE);   // fatals
-			XuOpen        ((HWND)m_pMainWnd);        // pass any window handle for start up
-			XuContextQuery (&m_defaultContext) ;     // needed as "emergency" context
-			//</STRONG>
-
-			CSmartMetView *mapView = ApplicationInterface::GetSmartMetView();
-			if(mapView)
-				mapView->InitToolMaster(); // tämä täytyy tehdä esimerkeistä poiketen erikseen!!!!
-		}
-	}
-	return tmStatus;
 }
 
 bool CSmartMetApp::InitGdiplus()
