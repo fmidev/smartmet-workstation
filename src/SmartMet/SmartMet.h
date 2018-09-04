@@ -43,6 +43,7 @@ public:
 	virtual BOOL OnIdle(LONG lCount);
 	virtual int ExitInstance();
     void InitApplicationInterface();
+    virtual int Run();
 
 // Implementation
 	BOOL  m_bHiColorIcons;
@@ -67,7 +68,9 @@ private:
 //	void CreateMenuDynamically(void);
 	bool TakeControlPathInfo(void);
 	int InitToolMaster(bool fTryToUseToolMaster);
-//	std::map<UINT, std::string>& NonDictionaryToolbarItems(void) {return itsMenuCreator.NonDictionaryToolbarItems();}
+    void InitToolMasterColors();
+    void CloseToolMaster();
+    // std::map<UINT, std::string>& NonDictionaryToolbarItems(void) {return itsMenuCreator.NonDictionaryToolbarItems();}
 	CSplashThread* SplashStart(void);
 	void LoadFileAtStartUp(CCommandLineInfo *theCmdInfo);
 	bool InitGeneralDataDoc(void);
@@ -83,9 +86,8 @@ private:
 	ULONG_PTR m_gdiplusToken;
 	CSplashThread* itsSplashThread;
     ControlIdTextMap itsNonDictionaryToolbarItems;
-public:
-	int  m_defaultContext; // ToolMasterin initialisointiin liittyvä muuttuja (tämä on tehty jotenkin oudosti ja tätä tarvitaan myös CEditMap2View-luokassa, siksi public)
-	virtual int Run();
+	int m_defaultContext; // ToolMasterin initialisointiin liittyvä muuttuja
+    int m_toolmasterContext; // Tämä on tosiasiallinen toolmaster context (en oikein tajua tätä context juttua)
 };
 
 extern CSmartMetApp theApp;

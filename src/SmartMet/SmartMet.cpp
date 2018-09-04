@@ -22,6 +22,7 @@
 #include "QueryDataReading.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "ApplicationInterfaceForSmartMet.h"
+#include "ToolMasterColorCube.h"
 
 #include "boost/format.hpp"
 
@@ -484,8 +485,22 @@ void CSmartMetApp::CreateMenuDynamically(void)
 }
 */
 
+void CSmartMetApp::CloseToolMaster()
+{
+    if(itsGeneralData->IsToolMasterAvailable())
+    {
+        //<STRONG><A NAME="delete">You must return to the initial context before deleting this one</A>
+        XuContextSelect(theApp.m_defaultContext);
+        XuContextDelete(m_toolmasterContext);
+        //</STRONG>
+    }
+}
+
 int CSmartMetApp::ExitInstance()
 {
+    // T‰t‰ pit‰‰ kutsua ennen kuin itsGeneralData tuhotaan!
+    CloseToolMaster();
+
 	// HUOM! itsGeneralData pit‰‰ tuhota ennen kuin GDI+ systeemi lopetetaan, koska
 	// generaldatalla on Gdiplus-bitmappeja tallessa, jotka gdishutdown n‰ytt‰‰ tuhoavan.
 	// Eli ne tuhotaan t‰ss‰ ensin generaldatan destruktorissa, muuten ne yritett‰isiin
@@ -761,12 +776,45 @@ int CSmartMetApp::InitToolMaster(bool fTryToUseToolMaster)
 			XuContextQuery (&m_defaultContext) ;     // needed as "emergency" context
 			//</STRONG>
 
-			CSmartMetView *mapView = ApplicationInterface::GetSmartMetView();
-			if(mapView)
-				mapView->InitToolMaster(); // t‰m‰ t‰ytyy tehd‰ esimerkeist‰ poiketen erikseen!!!!
+            InitToolMasterColors();
 		}
 	}
 	return tmStatus;
+}
+
+void CSmartMetApp::InitToolMasterColors()
+{
+    if(itsGeneralData->IsToolMasterAvailable())
+    {
+        //<STRONG><A NAME="context">Create a Toolmaster Graphics Context</A>
+        COLORREF f; float rgb[3], dummy[5];
+
+        // Create a new Toolmaster graphics context and select it
+        XuContextCreate(&(m_toolmasterContext));
+        XuContextSelect(m_toolmasterContext);
+
+        // Change color table 1 to RGB 0-255
+        XuColorTableChange(1, 255, XuLOOKUP, XuRGB, 255.);
+
+        // Copy Windows' text color to Toolmaster's foreground
+        f = GetSysColor(COLOR_WINDOWTEXT);
+        rgb[0] = GetRValue(f);
+        rgb[1] = GetGValue(f);
+        rgb[2] = GetBValue(f);
+        XuColor(XuCOLOR, 1, rgb, dummy);
+        XuColorDeviceLoad(1);
+
+        // Copy Windows' window color to Toolmasters background
+        f = GetSysColor(COLOR_WINDOW);
+        rgb[0] = GetRValue(f);
+        rgb[1] = GetGValue(f);
+        rgb[2] = GetBValue(f);
+        XuColor(XuCOLOR, 0, rgb, dummy);
+        XuColorDeviceLoad(0);
+        //</STRONG>
+    }
+
+    ToolMasterColorCube::InitDefaultColorTable(itsGeneralData->IsToolMasterAvailable()); // Varmistetaan color-cuben alustus
 }
 
 bool CSmartMetApp::InitGdiplus()
