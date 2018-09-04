@@ -33,7 +33,6 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiRectangle.h"
 
-#include <agx\agx.h>
 #include "FmiExtraMapView.h"
 #include "FmiWin32Helpers.h"
 #include "FmiWin32TemplateHelpers.h"
