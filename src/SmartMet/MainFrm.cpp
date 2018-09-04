@@ -41,6 +41,7 @@
 #include "WmsSupport.h"
 #endif // DISABLE_CPPRESTSDK
 #include "ApplicationInterface.h"
+#include "persist2.h"
 
 #include "commctrl.h"
 #include "ntray.h"

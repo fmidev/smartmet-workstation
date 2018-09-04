@@ -15,6 +15,7 @@
 #include "CloneBitmap.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiGdiPlusImageMapHandler.h"
+#include "persist2.h"
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 

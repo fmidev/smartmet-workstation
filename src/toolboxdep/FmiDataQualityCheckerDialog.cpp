@@ -18,6 +18,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewFunctions.h"
+#include "persist2.h"
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia

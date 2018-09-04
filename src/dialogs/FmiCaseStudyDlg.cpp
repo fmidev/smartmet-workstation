@@ -13,6 +13,7 @@
 #include "NFmiApplicationDataBase.h"
 #include "NFmiFileSystem.h"
 #include "FmiWin32Helpers.h"
+#include "persist2.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include "execute-command-in-separate-process.h"

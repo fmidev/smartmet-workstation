@@ -2,6 +2,7 @@
 #include "FmiLogViewer.h"
 #include "CloneBitmap.h"
 #include "NFmiDictionaryFunction.h"
+#include "persist2.h"
 
 #include <mutex> 
 #include <atomic>

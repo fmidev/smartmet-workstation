@@ -1,8 +1,6 @@
 #pragma once
 
-#include "xmlliteutils/XMLite.h"
 #include "NFmiMapViewDescTop.h"
-#include "persist2.h"
 #include <agx\agx.h>
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiToolBox.h"
