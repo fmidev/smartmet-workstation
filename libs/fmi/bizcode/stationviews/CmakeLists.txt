@@ -61,7 +61,6 @@ target_include_directories(
 	PUBLIC ${CapData_INCLUDE_DIRS}
     PUBLIC ${WmsSupport_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${UNIRAS_INCLUDE_DIR}
 	PUBLIC ${XmlLiteUtils_INCLUDE_DIRS}
     )
 
@@ -84,7 +83,6 @@ set(
 	${CapData_INCLUDE_DIRS}
     ${WmsSupport_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
-    ${UNIRAS_INCLUDE_DIR}
 	${XmlLiteUtils_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

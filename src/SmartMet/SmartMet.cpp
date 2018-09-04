@@ -23,6 +23,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "ApplicationInterfaceForSmartMet.h"
 #include "ToolMasterColorCube.h"
+#include "ToolMasterHelperFunctions.h"
 
 #include "boost/format.hpp"
 
@@ -41,8 +42,6 @@ namespace
         #include "CrashRpt.h"
 	#endif
 #endif
-
-#include <agx/agx.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -98,21 +97,6 @@ const GUID CDECL BASED_CODE _tlid =
 const WORD _wVerMajor = 1;
 const WORD _wVerMinor = 0;
 
-static std::string MakeAvsToolmasterVersionString()
-{
-    std::string avsToolmasterVersion = "";
-    avsToolmasterVersion += NFmiStringTools::Convert(XuVERSION);
-    avsToolmasterVersion += ".";
-    avsToolmasterVersion += NFmiStringTools::Convert(XuREVISION);
-    avsToolmasterVersion += ".";
-    if(XuUPDATE_LEVEL == ' ')
-        avsToolmasterVersion += NFmiStringTools::Convert(2); // tietääkseni tällä hetkellä
-    else
-        avsToolmasterVersion += NFmiStringTools::Convert(XuUPDATE_LEVEL);
-
-    return avsToolmasterVersion;
-}
-
 // CSmartMetApp initialization
 
 BOOL CSmartMetApp::InitInstance()
@@ -138,7 +122,7 @@ BOOL CSmartMetApp::InitInstance()
     if(!TakeControlPathInfo())
         return FALSE;
     // Tämä on kutsuttava aina ja ennen CrashRptInstall-kutsua ja ennen CSplashThreadHolder luontia, koska sinne tulee dynaamista tekstiä editorin versiota ja build päivämääristä
-    if(!gBasicSmartMetConfigurations.Init(::MakeAvsToolmasterVersionString()))
+    if(!gBasicSmartMetConfigurations.Init(Toolmaster::MakeAvsToolmasterVersionString()))
         return FALSE;
 
 	CSplashThreadHolder pSplashThreadHolder(SplashStart());
@@ -489,10 +473,7 @@ void CSmartMetApp::CloseToolMaster()
 {
     if(itsGeneralData->IsToolMasterAvailable())
     {
-        //<STRONG><A NAME="delete">You must return to the initial context before deleting this one</A>
-        XuContextSelect(theApp.m_defaultContext);
-        XuContextDelete(m_toolmasterContext);
-        //</STRONG>
+        Toolmaster::CloseToolMaster();
     }
 }
 
@@ -595,34 +576,18 @@ void CSmartMetApp::LoadFileAtStartUp(CCommandLineInfo *theCmdInfo)
 	}
 }
 
+// tämä pitää tehdä vasta ProcessShellCommand:in jälkeen, koska siellä syntyy View
+// AVS esimerkeissä luotiin MainFrame ennen ProcessShellCommand:ia, ei syntynyt
+// uutta MainFramea ilmeisesti koska oli MDI systeemi
 bool CSmartMetApp::DoToolMasterInitialization(void)
 {
-	bool useTM = false;
-	int tmStatus = InitToolMaster(fUseToolMasterIfAvailable);
-	if(tmStatus == XuLICOK || tmStatus == XuTRIAL)
-		useTM = true;
-
-	std::string toolmasterLicenseStr("agx ToolMaster license query returned: ");
-	if(tmStatus == XuLICOK)
-		toolmasterLicenseStr += "XuLICOK, graphics-license is in use.";
-	else if(tmStatus == XuTRIAL)
-		toolmasterLicenseStr += "XuTRIAL, graphics-license is in use.";
-	else if(tmStatus == XuMAXUSER)
-		toolmasterLicenseStr += "XuMAXUSER, graphics-license is not in use.";
-	else if(tmStatus == XuEXPIRED)
-		toolmasterLicenseStr += "XuEXPIRED, graphics-license is not in use.";
-	else if(tmStatus == XuLICERROR)
-		toolmasterLicenseStr += "XuLICERROR, graphics-license is not in use.";
-	else if(tmStatus == -1)
-		toolmasterLicenseStr = "agx ToolMaster graphics-license will not be used.";
-	else
-		toolmasterLicenseStr += "Unknown error, graphics-license is not in use.";
-	itsGeneralData->LogMessage(toolmasterLicenseStr, CatLog::Severity::Info, CatLog::Category::Configuration);
-
-	// tämä pitää tehdä vasta ProcessShellCommand:in jälkeen, koska siellä syntyy View
-	// AVS esimerkeissä luotiin MainFrame ennen ProcessShellCommand:ia, ei syntynyt
-	// uutta MainFramea ilmeisesti koska oli MDI systeemi
-	return useTM;
+    if(Toolmaster::DoToolMasterInitialization(m_pMainWnd, fUseToolMasterIfAvailable))
+    {
+        itsGeneralData->ToolMasterAvailable(true);
+        return true;
+    }
+    else
+        return false;
 }
 
 #pragma warning( push )
@@ -751,70 +716,6 @@ bool CSmartMetApp::TakeControlPathInfo(void)
         gBasicSmartMetConfigurations.EnableCrashReporter(false);
     }
     return true;
-}
-
-int CSmartMetApp::InitToolMaster(bool fTryToUseToolMaster)
-{
-	int tmStatus = -1;
-	if(fTryToUseToolMaster)
-	{
-		XuLicenseQuery(&tmStatus);
-		if(tmStatus == XuLICOK || tmStatus == XuTRIAL)
-		{
-			itsGeneralData->ToolMasterAvailable(true);
-
-
-			//<STRONG><A NAME="initial">Initialize Toolmaster</A>
-			XuInitialize   (NULL, NULL);
-			XuMessageTypes (XuON,                    // short messages in messagebox
-							XuOFF);                  // long messages in text window
-			XuMessageLevels(XuMESSAGE_CONTINUE, 	 // informational
-							XuMESSAGE_CONTINUE,      // warnings
-							XuMESSAGE_CONTINUE,      // errors
-							XuMESSAGE_KEEP_STATE);   // fatals
-			XuOpen        ((HWND)m_pMainWnd);        // pass any window handle for start up
-			XuContextQuery (&m_defaultContext) ;     // needed as "emergency" context
-			//</STRONG>
-
-            InitToolMasterColors();
-		}
-	}
-	return tmStatus;
-}
-
-void CSmartMetApp::InitToolMasterColors()
-{
-    if(itsGeneralData->IsToolMasterAvailable())
-    {
-        //<STRONG><A NAME="context">Create a Toolmaster Graphics Context</A>
-        COLORREF f; float rgb[3], dummy[5];
-
-        // Create a new Toolmaster graphics context and select it
-        XuContextCreate(&(m_toolmasterContext));
-        XuContextSelect(m_toolmasterContext);
-
-        // Change color table 1 to RGB 0-255
-        XuColorTableChange(1, 255, XuLOOKUP, XuRGB, 255.);
-
-        // Copy Windows' text color to Toolmaster's foreground
-        f = GetSysColor(COLOR_WINDOWTEXT);
-        rgb[0] = GetRValue(f);
-        rgb[1] = GetGValue(f);
-        rgb[2] = GetBValue(f);
-        XuColor(XuCOLOR, 1, rgb, dummy);
-        XuColorDeviceLoad(1);
-
-        // Copy Windows' window color to Toolmasters background
-        f = GetSysColor(COLOR_WINDOW);
-        rgb[0] = GetRValue(f);
-        rgb[1] = GetGValue(f);
-        rgb[2] = GetBValue(f);
-        XuColor(XuCOLOR, 0, rgb, dummy);
-        XuColorDeviceLoad(0);
-        //</STRONG>
-    }
-
-    ToolMasterColorCube::InitDefaultColorTable(itsGeneralData->IsToolMasterAvailable()); // Varmistetaan color-cuben alustus
 }
 
 bool CSmartMetApp::InitGdiplus()

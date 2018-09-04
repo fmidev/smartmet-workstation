@@ -38,6 +38,7 @@
 
 #include "NFmiIsoLineData.h"
 #include "ToolMasterDrawingFunctions.h"
+#include "ToolMasterHelperFunctions.h"
 #include "NFmiArea.h"
 #include "NFmiValueString.h"
 #include "NFmiValueLine.h"
@@ -65,7 +66,6 @@
 
 #include <limits>
 
-#include <agx\agx.h>
 #include "boost\math\special_functions\round.hpp"
 
 // Kun toolmaster piirtää isoviivan discreetistä datasta tulokset voivat olla hieman yllättäviä.
@@ -1035,50 +1035,10 @@ void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &th
     if(!theDrawParam->UseSingleColorsWithSimpleIsoLines()) // tehdään isoviivojen värit skaalasta
     {
         theIsoLineData->fUseSingleColorsWithSimpleIsoLines = false;
-        int oldColorTable;
 
         if(fToolMasterUsed) // tämä tieto pitää antaa funktioon parametrina, koska aina dataa ei piirretä toolmasterilla vaikka se olisikin käytettävissä (esim. kun kartta ja data eri projektiossa)
         {
-            XuColorTableActiveQuery(&oldColorTable);
-
-            float low = theDrawParam->SimpleIsoLineColorShadeLowValue();
-            float mid = theDrawParam->SimpleIsoLineColorShadeMidValue();
-            float high = theDrawParam->SimpleIsoLineColorShadeHighValue();
-            int colorIndex1 = ToolMasterColorCube::RgbToColorIndex(theDrawParam->SimpleIsoLineColorShadeLowValueColor());
-            int colorIndex2 = ToolMasterColorCube::RgbToColorIndex(theDrawParam->SimpleIsoLineColorShadeMidValueColor());
-            int colorIndex3 = ToolMasterColorCube::RgbToColorIndex(theDrawParam->SimpleIsoLineColorShadeHighValueColor());
-
-            int classCount = theDrawParam->SimpleIsoLineColorShadeClassCount();
-            int colorIndices[3] = { colorIndex1, colorIndex2, colorIndex3 };
-            // luodaan väliaikaisesti uusi colortable ja color shade, jolta voidaan kysyä luokkien väri tietoja
-            // ja näiden väritietojen avulla voidaan kysyä default colortablein indeksejä
-            float width1 = 1;//theIsoLineData->itsCustomColorContours[1]-theIsoLineData->itsCustomColorContours[0];
-            float width2 = 1;//theIsoLineData->itsCustomColorContours[2]-theIsoLineData->itsCustomColorContours[1];
-            float width3 = 1;//theIsoLineData->itsCustomColorContours[3]-theIsoLineData->itsCustomColorContours[2];
-            float colorWidths[s_rgbDefCount] = { width1*2.f, width1 + width2, width2 + width3, width3*2.f };
-            CreateClassesAndColorTableAndColorShade(low, high, classCount, colorIndices, 7, 3, colorWidths, true);
-            float colorRGB[3], hatch[5];
-            int i = 0;
-            int colorIndexToTemporaryColorTable;
-            for(float value = startValue; value <= endValue; value += step, i++)
-            {
-                if(i >= theIsoLineData->itsMaxAllowedIsoLineCount)
-                    break;
-                if(value <= low)
-                    theIsoLineData->itsIsoLineColor[i] = colorIndex1;
-                else if(value == mid)
-                    theIsoLineData->itsIsoLineColor[i] = colorIndex2;
-                else if(value >= high)
-                    theIsoLineData->itsIsoLineColor[i] = colorIndex3;
-                else
-                {
-                    colorIndexToTemporaryColorTable = XuValueToColor(value);
-                    XuColorQuery(colorIndexToTemporaryColorTable, colorRGB, hatch);
-                    int wantedColorIndex = ToolMasterColorCube::RgbToColorIndex(colorRGB);
-                    theIsoLineData->itsIsoLineColor[i] = wantedColorIndex;
-                }
-            }
-            XuColorTableActivate(oldColorTable);
+            Toolmaster::FillChangingColorIndicesForSimpleIsoline(theDrawParam, theIsoLineData, step, startValue, endValue);
         }
         else // jos toolmaster ei käytössä, toimitaan toisella lailla
         {

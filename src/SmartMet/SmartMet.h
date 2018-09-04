@@ -67,8 +67,6 @@ private:
 	void TermGdiplus(void);
 //	void CreateMenuDynamically(void);
 	bool TakeControlPathInfo(void);
-	int InitToolMaster(bool fTryToUseToolMaster);
-    void InitToolMasterColors();
     void CloseToolMaster();
     // std::map<UINT, std::string>& NonDictionaryToolbarItems(void) {return itsMenuCreator.NonDictionaryToolbarItems();}
 	CSplashThread* SplashStart(void);
@@ -86,8 +84,6 @@ private:
 	ULONG_PTR m_gdiplusToken;
 	CSplashThread* itsSplashThread;
     ControlIdTextMap itsNonDictionaryToolbarItems;
-	int m_defaultContext; // ToolMasterin initialisointiin liittyvä muuttuja
-    int m_toolmasterContext; // Tämä on tosiasiallinen toolmaster context (en oikein tajua tätä context juttua)
 };
 
 extern CSmartMetApp theApp;
