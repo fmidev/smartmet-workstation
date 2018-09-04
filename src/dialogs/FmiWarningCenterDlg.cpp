@@ -18,6 +18,7 @@
 #include "HakeMessage/Main.h"
 #include "HakeMessage/HakeSystemConfigurations.h"
 #include "HakeMessage/HakeMsg.h"
+#include "persist2.h"
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 

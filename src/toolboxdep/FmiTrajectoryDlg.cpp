@@ -19,6 +19,7 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "CloneBitmap.h"
+#include "persist2.h"
 
 // CFmiTrajectoryDlg dialog
 

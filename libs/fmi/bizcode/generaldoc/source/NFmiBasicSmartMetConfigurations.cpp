@@ -100,7 +100,7 @@ std::string NFmiBasicSmartMetConfigurations::MakeDictionaryFilePath() const
     return dictionaryFilePath;
 }
 
-bool NFmiBasicSmartMetConfigurations::Init(void)
+bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersion)
 {
 	GetWorkingDirectory();
 	::_chdir(itsWorkingDirectory.c_str()); // kun versiosta 5.4 alkaen exe:t ajetaan 32/64-bit hakemistoistaan, pit‰‰ workin directory asettaa t‰ss‰ oikeaan
@@ -143,7 +143,7 @@ bool NFmiBasicSmartMetConfigurations::Init(void)
     // logger pit‰‰ alustaan ennen InitApplicationDataBase -kutsua
     if(!InitLogger())
         return false;
-	InitApplicationDataBase();
+	InitApplicationDataBase(avsToolMasterVersion);
 
 	return true;
 }
@@ -575,14 +575,17 @@ void NFmiBasicSmartMetConfigurations::LogAndWarnUser(const std::string &theMessa
     }
 }
 
-void NFmiBasicSmartMetConfigurations::InitApplicationDataBase(void)
+void NFmiBasicSmartMetConfigurations::InitApplicationDataBase(const std::string &avsToolMasterVersion)
 {
 	try
 	{
 		itsApplicationDataBase.InitFromSettings("SmartMet::ApplicationDataBase");
 		itsApplicationDataBase.ControlBasePath(itsControlBasePath);
 		itsApplicationDataBase.CollectSmartMetData(NFmiApplicationDataBase::kStart, itsLanguage, RunningTimeInSeconds(), fToolMasterAvailable, nullptr);
-	}
+
+        // AVS Toolmaster version is set once outside of NFmiApplicationDataBase class to remove dependency
+        itsApplicationDataBase.avstmversion = avsToolMasterVersion;
+    }
 	catch(std::exception &e)
 	{
 		std::string errStr("InitApplicationDataBase - Initialization error in configurations: \n");

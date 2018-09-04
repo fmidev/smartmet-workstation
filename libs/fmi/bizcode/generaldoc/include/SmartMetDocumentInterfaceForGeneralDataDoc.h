@@ -243,9 +243,6 @@ public:
     NFmiAutoComplete& AutoComplete() override;
     void InvalidateMapView(bool bErase = true) override;
     NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() override;
-#ifndef DISABLE_CPPRESTSDK
-    HakeMessage::Main& WarningCenterSystem() override;
-#endif // DISABLE_CPPRESTSDK
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) override;
     AddParams::ParamAddingSystem& ParamAddingSystem() override;
     void UpdateParamAddingSystem() override;
@@ -299,4 +296,8 @@ public:
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
+
+#ifndef DISABLE_CPPRESTSDK
+    HakeMessage::Main& WarningCenterSystem() override;
+#endif // DISABLE_CPPRESTSDK
 };

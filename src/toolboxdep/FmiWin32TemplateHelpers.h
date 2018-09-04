@@ -1,13 +1,11 @@
 #pragma once
 
-#include "xmlliteutils/XMLite.h"
 #include "NFmiMapViewDescTop.h"
-#include "persist2.h"
-#include <agx\agx.h>
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiToolBox.h"
 #include "SmartMetDocumentInterface.h"
 #include "catlog/catlog.h"
+#include "CtrlViewWin32Functions.h"
 
 namespace CFmiWin32TemplateHelpers
 {
@@ -66,13 +64,10 @@ namespace CFmiWin32TemplateHelpers
 		CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
 		theView->SetPrintCopyCDC(pDC);
 
-		if(smartMetDocumentInterface->IsToolMasterAvailable())
-		{
-			//<STRONG><A NAME="onprint">Print function</A>
-			XuWindowSize(pInfo->m_rectDraw.right  - pInfo->m_rectDraw.left,
-						 pInfo->m_rectDraw.bottom - pInfo->m_rectDraw.top);
-			XuWindowSelect(pDC->GetSafeHdc());
-		}
+        if(smartMetDocumentInterface->IsToolMasterAvailable())
+        {
+            CtrlView::SetToolMastersDC(pDC, pInfo->m_rectDraw);
+        }
 
 		theView->MakePrintViewDirty(true, true);
 		theView->OldWayPrintUpdate(); // t‰m‰ pit‰‰ tehd‰ ett‰ prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan

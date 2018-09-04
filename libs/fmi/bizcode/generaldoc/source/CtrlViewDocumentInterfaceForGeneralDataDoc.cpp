@@ -945,13 +945,6 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowWarningMarkersOnMap(int the
     return itsDoc->MapViewDescTop(theDescTopIndex)->ShowWarningMarkersOnMap();
 }
 
-#ifndef DISABLE_CPPRESTSDK
-HakeMessage::Main& CtrlViewDocumentInterfaceForGeneralDataDoc::WarningCenterSystem(void)
-{
-    return itsDoc->WarningCenterSystem();
-}
-#endif // DISABLE_CPPRESTSDK
-
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::MapBlitDC(int theDescTopIndex)
 {
     return itsDoc->MapViewDescTop(theDescTopIndex)->MapBlitDC();
@@ -1279,13 +1272,6 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMaps(bool newValue)
     itsDoc->UseWmsMaps(newValue);
 }
 
-#ifndef DISABLE_CPPRESTSDK
-Wms::WmsSupport& CtrlViewDocumentInterfaceForGeneralDataDoc::WmsSupport()
-{
-    return itsDoc->WmsSupport();
-}
-#endif // DISABLE_CPPRESTSDK
-
 NFmiBetaProductionSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::BetaProductionSystem()
 {
     return itsDoc->BetaProductionSystem();
@@ -1325,3 +1311,18 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOn
 {
     return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
 }
+
+#ifndef DISABLE_CPPRESTSDK
+// ===============================================
+
+HakeMessage::Main& CtrlViewDocumentInterfaceForGeneralDataDoc::WarningCenterSystem(void)
+{
+    return itsDoc->WarningCenterSystem();
+}
+
+Wms::WmsSupport& CtrlViewDocumentInterfaceForGeneralDataDoc::WmsSupport()
+{
+    return itsDoc->WmsSupport();
+}
+
+#endif // DISABLE_CPPRESTSDK

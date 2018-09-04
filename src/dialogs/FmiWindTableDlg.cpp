@@ -24,6 +24,7 @@
 #include "TextGenPosixTime.h"
 #include "CtrlViewFastInfoFunctions.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "persist2.h"
 
 #include <fstream>
 

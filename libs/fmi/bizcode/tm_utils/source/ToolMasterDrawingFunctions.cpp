@@ -1,10 +1,12 @@
 #include "stdafx.h"
 
+#ifndef DISABLE_UNIRAS_TOOLMASTER
+
 #include <agX/agxfont.h>
 #include <agX/agx.h>
 
 #include <algorithm>
-#include "mar002.h"
+#include "ToolMasterDrawingFunctions.h"
 #include "NFmiFastQueryInfo.h" // t‰m‰n pit‰‰ olla ennen NFmiIsoLineData.h includea!
 #include "NFmiIsoLineData.h"
 #include "NFmiRect.h"
@@ -1558,7 +1560,7 @@ static std::string MakeIsoLineDataGridSizeString(NFmiIsoLineData* theIsoLineData
     return str;
 }
 
-int mar002(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiPoint &theGrid2PixelRatio, int theCrossSectionIsoLineDrawIndex)
+int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiPoint &theGrid2PixelRatio, int theCrossSectionIsoLineDrawIndex)
 {
     NFmiRect gridArea(0, 0, 1, 1); // t‰m‰ on normaali yksi osaisen hilan alue (0,0 - 1,1)
     NFmiPoint downSizeFactor;
@@ -1768,3 +1770,5 @@ static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers
         }
     }
 }
+
+#endif // DISABLE_UNIRAS_TOOLMASTER
