@@ -103,10 +103,9 @@ namespace CtrlView
     {
         if(fToolMasterAvailable)
         {
-            RECT rc;
-            theView->GetClientRect(&rc);
-            XuWindowSize(rc.right - rc.left, rc.bottom - rc.top);
-            XuWindowSelect(theDC->GetSafeHdc());
+            CRect clientRect;
+            theView->GetClientRect(&clientRect);
+            SetToolMastersDC(theDC, clientRect);
         }
     }
 

@@ -13,6 +13,7 @@
 #include "CtrlViewKeyboardFunctions.h"
 #include "CtrlViewFunctions.h"
 #include "ApplicationInterface.h"
+#include "CtrlViewWin32Functions.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -140,13 +141,7 @@ void CFmiCrossSectionView::DoDraw(void)
 // toolmasterin DC:n
 void CFmiCrossSectionView::SetToolMastersDC(CDC* theDC)
 {
-	if(itsSmartMetDocumentInterface->IsToolMasterAvailable())
-	{
-		RECT rc;
- 		GetClientRect(&rc);
-		XuWindowSize(rc.right - rc.left, rc.bottom - rc.top);
-		XuWindowSelect(theDC->GetSafeHdc());
-	}
+    CtrlView::SetToolMastersDC(theDC, this, itsSmartMetDocumentInterface->IsToolMasterAvailable());
 }
 
 void CFmiCrossSectionView::DrawOverBitmapThings(NFmiToolBox *theToolBox)

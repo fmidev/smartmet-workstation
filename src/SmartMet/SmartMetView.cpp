@@ -46,6 +46,7 @@
 #include "CtrlViewWin32Functions.h"
 
 #include <Winspool.h>
+#include <agx\agx.h>
 
 extern CSmartMetApp theApp;
 
@@ -1142,16 +1143,7 @@ void CSmartMetView::SetToolBoxsDC(CDC* theDC)
 // toolmasterin DC:n
 void CSmartMetView::SetToolMastersDC(CDC* theDC)
 {
-	CSmartMetDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
-	if(data && data->IsToolMasterAvailable())
-	{
-		RECT rc;
- 		GetClientRect(&rc);
-		XuWindowSize(rc.right - rc.left, rc.bottom - rc.top);
-		XuWindowSelect(theDC->GetSafeHdc());
-	}
+    CtrlView::SetToolMastersDC(theDC, this, GetGeneralDoc()->IsToolMasterAvailable());
 }
 
 void CSmartMetView::OnDropFiles(HDROP hDropInfo)
