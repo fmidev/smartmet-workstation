@@ -5,6 +5,7 @@
 #include "NFmiToolBox.h"
 #include "SmartMetDocumentInterface.h"
 #include "catlog/catlog.h"
+#include "CtrlViewWin32Functions.h"
 
 namespace CFmiWin32TemplateHelpers
 {

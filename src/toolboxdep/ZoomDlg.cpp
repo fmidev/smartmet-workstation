@@ -15,6 +15,7 @@
 #include "NFmiMapViewDescTop.h"
 #include "FmiWin32Helpers.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "persist2.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
