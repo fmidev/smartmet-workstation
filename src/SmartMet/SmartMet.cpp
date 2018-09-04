@@ -97,6 +97,20 @@ const GUID CDECL BASED_CODE _tlid =
 const WORD _wVerMajor = 1;
 const WORD _wVerMinor = 0;
 
+static std::string MakeAvsToolmasterVersionString()
+{
+    std::string avsToolmasterVersion = "";
+    avsToolmasterVersion += NFmiStringTools::Convert(XuVERSION);
+    avsToolmasterVersion += ".";
+    avsToolmasterVersion += NFmiStringTools::Convert(XuREVISION);
+    avsToolmasterVersion += ".";
+    if(XuUPDATE_LEVEL == ' ')
+        avsToolmasterVersion += NFmiStringTools::Convert(2); // tiet‰‰kseni t‰ll‰ hetkell‰
+    else
+        avsToolmasterVersion += NFmiStringTools::Convert(XuUPDATE_LEVEL);
+
+    return avsToolmasterVersion;
+}
 
 // CSmartMetApp initialization
 
@@ -123,7 +137,7 @@ BOOL CSmartMetApp::InitInstance()
     if(!TakeControlPathInfo())
         return FALSE;
     // T‰m‰ on kutsuttava aina ja ennen CrashRptInstall-kutsua ja ennen CSplashThreadHolder luontia, koska sinne tulee dynaamista teksti‰ editorin versiota ja build p‰iv‰m‰‰rist‰
-    if(!gBasicSmartMetConfigurations.Init())
+    if(!gBasicSmartMetConfigurations.Init(::MakeAvsToolmasterVersionString()))
         return FALSE;
 
 	CSplashThreadHolder pSplashThreadHolder(SplashStart());
