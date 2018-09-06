@@ -20,16 +20,14 @@ First time build instructions:
 10. Press F5 to Run SmartMet in debugger..
 
 
-SmartMet-workstation 3rd party libraries guide
-==============================================
+# SmartMet-workstation 3rd party libraries guide
 
 Here are library dependencies that are needed but are not included with SmartMet-workstation project.
 Build all the library binaries with the same Visual C++ compiler (VC++ 2015 or never). If you download them directly make sure that they are build with the same compiler.
 
-Mandatory libraries for build:
+## Mandatory libraries for build:
 1. Boost
  - Used version 1.61.0 (or newer if no build breaking interface changes)
- 
  - See https://www.boost.org/users/download/ and look there for the link to download "prebuild windows binaries", then you don't have to work with zlib, bzip2 and icu libraries either.
    - Find following download (or newer version): boost_1_61_0-msvc-14.0-64.exe (msvc-14.0 means VC++ 2015)
  - If you *really* need to build, find source download from https://www.boost.org/users/download/
@@ -52,7 +50,7 @@ Mandatory libraries for build:
 5. CrashRpt
  - Used version 1.4.2 (or newer?)
 
-Optional libraries for build (omitting them will disable many important features):
+## Optional libraries for build (omitting them will disable many important features):
 6. AVS Uniras ToolMaster
  - Used version 7.5.2 (newer versions might have different systems)
  - Not using this will seriously handicap SmartMet's isoline and color contour visualizations.
@@ -66,24 +64,22 @@ Optional libraries for build (omitting them will disable many important features
  - Not using this will disable WMS support and certain Finnish data message support (HAKE and KaHa).
  - Go to https://github.com/Microsoft/cpprestsdk and look for help to install package to windows or build it your self.
 
-Using above libraries in smartMet-workstation project:
+## Using above libraries in smartMet-workstation project:
 1. Libraries are copyed to following location:
  - smartmet-workstation\libs\3rd\
  - The directory structure at the moment is following:
-		boost_1_61_0
-		cpprestsdk
-		crashrpt_1_4_2_r1609
-		icu_55_1
-		uniras_7v5
-		xtremetoolkitpro_17_1_0
+		<br>boost_1_61_0
+		<br>cpprestsdk
+		<br>crashrpt_1_4_2_r1609
+		<br>icu_55_1
+		<br>uniras_7v5
+		<br>xtremetoolkitpro_17_1_0
  - Naming policy is defined in smartmet-workstation\cmake\UsefulVariables.cmake file.
    - There is base names for directory names for each library. 
    - There is also used version for each library, that is in the resulting final directory name. If you use different versions, update the version number in there.
  
  
-===========================================================================================================
-========  Boost building sample script ====================================================================
-===========================================================================================================
+# Boost building sample script
 
 rem build boost library bat with bjam-system (using MS VC++ 8-14 compiler)
 
@@ -128,5 +124,3 @@ bjam address-model=64 --prefix=lib --build-dir=bin.v2_64 %GENERAL_BUILD_OPTIONS%
 rem ************** MSVC XX.X version build ends *******************************
 
 pause
-
-===========================================================================================================
