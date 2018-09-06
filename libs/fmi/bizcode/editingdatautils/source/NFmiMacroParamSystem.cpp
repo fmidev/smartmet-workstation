@@ -284,11 +284,11 @@ void NFmiMacroParamSystem::AddToMacroParamItemTree(std::vector<NFmiMacroParamIte
 			item.itsMacroParam = theMacroParams[j];
 			if(theMacroParams[j]->IsMacroParamDirectory())
 			{
-				int index = SeekMacroFolder(theMacroParams[j]->MacroParaDirectoryPath());
+				int index = SeekMacroFolder(theMacroParams[j]->MacroParamDirectoryPath());
 				if(index != -1)
 				{
 					// HUOM! aluksi pitää varmistaa, että kaikki hakemistot on alustettu kerran, muuten homma ei toimi!!
-					InsertAllSubdirectories(itsMacroParamFolders, theMacroParams[j]->MacroParaDirectoryPath(), itsRootPath, theStopFunctor);
+					InsertAllSubdirectories(itsMacroParamFolders, theMacroParams[j]->MacroParamDirectoryPath(), itsRootPath, theStopFunctor);
 					if(!itsMacroParamFolders[index]->Initialized())
 						itsMacroParamFolders[index]->RefreshMacroParams();
 					AddToMacroParamItemTree(item.itsDirectoryItems, itsMacroParamFolders[index]->MacroParams(), theStopFunctor);

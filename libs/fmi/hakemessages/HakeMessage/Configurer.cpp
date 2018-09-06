@@ -6,6 +6,7 @@
 #include "NFmiSettings.h"
 
 #include <boost/math/special_functions/round.hpp>
+#include <boost/lexical_cast.hpp>
 
 using milliseconds = std::chrono::milliseconds;
 

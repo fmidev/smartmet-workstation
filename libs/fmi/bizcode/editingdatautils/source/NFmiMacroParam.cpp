@@ -107,7 +107,7 @@ bool operator==(const NFmiMacroParam &obj1, const NFmiMacroParam &obj2)
 		if(obj1.MacroText() == obj2.MacroText())
 		{
 			//itsDrawParam  // TODO drawParamia ei vielä vertailla!!!!
-			if(obj1.MacroParaDirectoryPath() == obj2.MacroParaDirectoryPath())
+			if(obj1.MacroParamDirectoryPath() == obj2.MacroParamDirectoryPath())
 			{
 				if(obj1.IsMacroParamDirectory() == obj2.IsMacroParamDirectory())
 					return true;

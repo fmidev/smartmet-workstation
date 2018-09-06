@@ -155,7 +155,9 @@ public:
     bool LoadStaticHelpData(void);
     void UpdateParamAddingSystem();
     AddParams::ParamAddingSystem& ParamAddingSystem();
+#ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport& WmsSupport();
+#endif // DISABLE_CPPRESTSDK
     bool UseWmsMaps();
     void UseWmsMaps(bool newValue);
     boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData();
@@ -429,7 +431,9 @@ public:
 	NFmiProducerSystem& ProducerSystem(void);
 	NFmiProducerSystem& ObsProducerSystem(void);
 	NFmiProducerSystem& SatelImageProducerSystem(void);
+#ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void);
+#endif // DISABLE_CPPRESTSDK
 	void SetMacroParamDataGridSize(int xSize, int ySize);
     void LogMessage(const std::string& theMessage, CatLog::Severity severity, CatLog::Category category, bool flushLogger = false);
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false);

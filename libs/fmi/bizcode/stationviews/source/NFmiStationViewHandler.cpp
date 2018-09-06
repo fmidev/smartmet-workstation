@@ -99,9 +99,14 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "catlog/catlog.h"
+#include "NFmiVoidPtrList.h"
+
+#ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
 #include "wmssupport/LegendBuffer.h"
 #include "wmssupport/LegendSelf.h"
+#endif // DISABLE_CPPRESTSDK
+
 #include "ApplicationInterface.h"
 #include "CtrlViewWin32Functions.h"
 #include "BetaProductParamBoxFunctions.h"
@@ -1045,7 +1050,8 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 
 bool NFmiStationViewHandler::ShowWarningMessages(void)
 {
-	if(itsCtrlViewDocumentInterface->ShowWarningMarkersOnMap(itsMapViewDescTopIndex))
+#ifndef DISABLE_CPPRESTSDK
+    if(itsCtrlViewDocumentInterface->ShowWarningMarkersOnMap(itsMapViewDescTopIndex))
 	{
 		if(itsCtrlViewDocumentInterface->WarningCenterSystem().getLegacyData().WarningCenterViewOn()) // jos HALY dialogi on päällä
 		{
@@ -1053,6 +1059,7 @@ bool NFmiStationViewHandler::ShowWarningMessages(void)
 				return true;
 		}
 	}
+#endif // DISABLE_CPPRESTSDK
 	return false;
 }
 
@@ -1300,6 +1307,7 @@ void NFmiStationViewHandler::InitializeWarningSymbols(void)
 
 void NFmiStationViewHandler::GetShownMessages()
 {
+#ifndef DISABLE_CPPRESTSDK
     itsShownHakeMessages.clear();
     itsShownKaHaMessages.clear();
 
@@ -1311,31 +1319,35 @@ void NFmiStationViewHandler::GetShownMessages()
         itsShownHakeMessages = itsCtrlViewDocumentInterface->WarningCenterSystem().getHakeMessages(startTime, itsTime, *zoomedArea);
     if(itsCtrlViewDocumentInterface->ApplicationWinRegistry().ShowKaHaMessages())
         itsShownKaHaMessages = itsCtrlViewDocumentInterface->WarningCenterSystem().getKahaMessages(startTime, itsTime, *zoomedArea);
+#endif // DISABLE_CPPRESTSDK
 }
 
 const NFmiColor gDefaultHakeFillColor(1, 0, 0);
 const NFmiColor gDefaultKaHaFillColor(0, 0, 1);
 
+void NFmiStationViewHandler::DrawHALYMessageMarkers(void)
+{
+#ifndef DISABLE_CPPRESTSDK
+    if(ShowWarningMessages())
+    {
+        InitializeWarningSymbols();
+        GetShownMessages();
+
+        itsToolBox->RelativeClipRect(itsRect, true);
+        ShowWarningMessages(itsShownHakeMessages, true);
+        ShowWarningMessages(itsShownKaHaMessages, false);
+        itsToolBox->UseClipping(false);
+    }
+#endif // DISABLE_CPPRESTSDK
+}
+
+#ifndef DISABLE_CPPRESTSDK
 void NFmiStationViewHandler::ShowWarningMessages(const std::vector<HakeMessage::HakeMsg> &messages, bool isHakeMessage)
 {
     for(const auto &message : messages)
     {
         DrawWantedWarningIcon(message, isHakeMessage);
     }
-}
-
-void NFmiStationViewHandler::DrawHALYMessageMarkers(void)
-{
-	if(ShowWarningMessages())
-	{
-		InitializeWarningSymbols();
-        GetShownMessages();
-
-		itsToolBox->RelativeClipRect(itsRect, true);
-        ShowWarningMessages(itsShownHakeMessages, true);
-        ShowWarningMessages(itsShownKaHaMessages, false);
-		itsToolBox->UseClipping(false);
-	}
 }
 
 void NFmiStationViewHandler::DrawHakeMessageIcon(const HakeMessage::HakeMsg &theWarningMessage, const NFmiPoint &latlon)
@@ -1646,6 +1658,7 @@ void NFmiStationViewHandler::DrawWantedWarningIcon(const HakeMessage::HakeMsg &t
         DrawKaHaMessageIcon(theWarningMessage, latlon);
     }
 }
+#endif // DISABLE_CPPRESTSDK
 
 void NFmiStationViewHandler::DrawWarningIcon(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, float theAlpha, double theSizeFactor)
 {
@@ -1829,6 +1842,7 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 
 void NFmiStationViewHandler::DrawLegend(NFmiToolBox* theGTB)
 {
+#ifndef DISABLE_CPPRESTSDK
     if(!theGTB || (itsDrawParam && itsDrawParam->IsParamHidden()))
     {
         return;
@@ -1972,6 +1986,7 @@ void NFmiStationViewHandler::DrawLegend(NFmiToolBox* theGTB)
     catch(...)
     {
     }
+#endif // DISABLE_CPPRESTSDK
 }
 
 static void TraceLogLandBorderLineCounts(size_t polyLineCount, size_t totalLinePointCount, NFmiCtrlView *ctrlView)
@@ -2534,7 +2549,9 @@ void NFmiStationViewHandler::Update(void)
 			itsViewList->Clear(true);
 			for(drawParamList->Reset(); drawParamList->Next();)
 			{
-				itsViewList->Add(CreateStationView(drawParamList->Current()));
+                auto stationView = CreateStationView(drawParamList->Current());
+                if(stationView)
+				    itsViewList->Add(stationView);
 			}
 			itsViewList->Time(itsTime); // pitää asettaa myös aika oikein, koska joskus näyttöjen synkkaus menee pieleen ja luultavasti currentti aika joka on jäänyt tässä updatessa, joutuu mouseMove:ssa taas luotauksen ajaksi jos käyttäjä vääntää hiiri pohjassa karttanäytössä
 			SetViewListArea();
@@ -3575,6 +3592,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         }
         else if(theDrawParam->DataType() == NFmiInfoData::kWmsData) // WMS:n piirto
         {
+#ifndef DISABLE_CPPRESTSDK
             stationView = new NFmiWmsView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
                 , itsDrawingEnvironment
@@ -3582,6 +3600,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , param
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
+#endif // DISABLE_CPPRESTSDK
         }
 		else if(theDrawParam->DataType() == NFmiInfoData::kFlashData || (theDrawParam->Param().GetProducer()->GetIdent() == kFmiFlashObs && theDrawParam->Param().GetParamIdent() == kFmiFlashStrength ))
 		{
@@ -4536,6 +4555,7 @@ static void ConvertXML2PlainCode(std::string &theConvertedStr)
 	NFmiStringTools::ReplaceAll(theConvertedStr, ">", "&gt;");
 }
 
+#ifndef DISABLE_CPPRESTSDK
 void NFmiStationViewHandler::GetMinimumDistanceMessage(const std::vector<HakeMessage::HakeMsg> &messages, const NFmiLocation &wantedLocation, HakeMessage::HakeMsg &minimumDistanceMessage, double &minimumDistance)
 {
     for(const auto &message : messages)
@@ -4548,11 +4568,13 @@ void NFmiStationViewHandler::GetMinimumDistanceMessage(const std::vector<HakeMes
         }
     }
 }
+#endif // DISABLE_CPPRESTSDK
 
 std::string NFmiStationViewHandler::ComposeWarningMessageToolTipText(void)
 {
 	std::string str;
-	if(ShowWarningMessages())
+#ifndef DISABLE_CPPRESTSDK
+    if(ShowWarningMessages())
 	{
         GetShownMessages();
         NFmiLocation wantedLocation(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
@@ -4569,6 +4591,7 @@ std::string NFmiStationViewHandler::ComposeWarningMessageToolTipText(void)
             str = (minDistHake < minDistKaha) ? HakeToolTipText(hakeMessage) : KahaToolTipText(kahaMessage); //Hake or Kaha tooltip
         }
 	}
+#endif // DISABLE_CPPRESTSDK
 	return str;
 }
 
@@ -4605,6 +4628,8 @@ std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(voi
 	}
 	return str;
 }
+
+#ifndef DISABLE_CPPRESTSDK
 std::string NFmiStationViewHandler::HakeToolTipText(HakeMessage::HakeMsg &msg)
 {
     std::string str;
@@ -4619,6 +4644,7 @@ std::string NFmiStationViewHandler::HakeToolTipText(HakeMessage::HakeMsg &msg)
 
     return str;
 }
+#endif // DISABLE_CPPRESTSDK
 
 void AddLeadingZero(std::string& s)
 {
@@ -4686,6 +4712,7 @@ std::string KahaTooltipAccuracy(HakeMessage::HakeMsg &msg)
     return str;
 }
 
+#ifndef DISABLE_CPPRESTSDK
 std::string NFmiStationViewHandler::KahaToolTipText(HakeMessage::HakeMsg &msg)
 {
     std::string str;
@@ -4729,6 +4756,7 @@ std::string NFmiStationViewHandler::KahaToolTipText(HakeMessage::HakeMsg &msg)
 
     return str;
 }
+#endif // DISABLE_CPPRESTSDK
 
 
 static const NFmiPoint kMissingLatlon(kFloatMissing, kFloatMissing);

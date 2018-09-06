@@ -25,6 +25,7 @@ namespace AddParams
         bool updateData(const boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiHelpDataInfo *helpDataInfo = nullptr);
         const std::string& uniqueDataId() const { return uniqueDataId_; }
         const std::string& dataName() const { return dataName_; }
+        const NFmiInfoData::Type& dataType() const { return dataType_; }
         unsigned long producerId() const;
         std::vector<SingleRowItem> makeDialogRowData() const;
     };
