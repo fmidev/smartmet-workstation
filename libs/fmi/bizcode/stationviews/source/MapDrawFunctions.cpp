@@ -1,7 +1,9 @@
 #include "MapDrawFunctions.h"
 #include "CtrlViewDocumentInterface.h"
 #include "MapHandlerInterface.h"
+#ifndef DISABLE_CPPRESTSDK
 #include "WmsSupport.h"
+#endif // DISABLE_CPPRESTSDK
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiToolBox.h"
 #include "catlog/catlog.h"
@@ -29,6 +31,7 @@ namespace
     void wmsDraw(CtrlViewDocumentInterface *docInterface, int theDescTopIndex,
         CDC *theUsedCDC, Gdiplus::RectF& destRect, const NFmiPoint& bitmapSize)
     {
+#ifndef DISABLE_CPPRESTSDK
         auto mapPtr = docInterface->GetMapHandlerInterface(theDescTopIndex)->Area();
         auto holder = docInterface->WmsSupport().getBackground(*mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
         if(holder)
@@ -36,11 +39,13 @@ namespace
             NFmiRect srcRect(0, 0, int(bitmapSize.X()), int(bitmapSize.Y()));
             CtrlView::DrawBitmapToDC(theUsedCDC, *holder->mImage, srcRect, destRect, true);
         }
+#endif // DISABLE_CPPRESTSDK
     }
 
     void wmsOverlayDraw(CtrlViewDocumentInterface *docInterface, int theDescTopIndex,
         CDC *theUsedCDC, Gdiplus::RectF& destRect, const NFmiPoint& bitmapSize)
     {
+#ifndef DISABLE_CPPRESTSDK
         auto mapPtr = docInterface->GetMapHandlerInterface(theDescTopIndex)->Area();
         try
         {
@@ -54,6 +59,7 @@ namespace
         catch(...)
         {
         }
+#endif // DISABLE_CPPRESTSDK
     }
 
     bool mapIsNotDirty(CtrlViewDocumentInterface *docInterface, int theDescTopIndex)

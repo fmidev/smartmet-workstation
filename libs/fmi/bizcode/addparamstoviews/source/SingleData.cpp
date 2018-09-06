@@ -15,15 +15,39 @@ namespace
         return false;
     }
 
+    bool isThereNewFileAvailable(const NFmiHelpDataInfo *helpDataInfo, std::string latestDataFilePath)
+    {
+        if(helpDataInfo->LatestFileName().empty())
+            return true;
+        if(helpDataInfo->LatestFileName() != latestDataFilePath)
+            return true;
+        return false;
+    }
+
     // When making rowItem from non-vertical data with only param info, rowItem (tree-node) is in
     // collapsed mode because otherwise dialog's update codes will open it allways.
     // Here is used the SingleRowItem's parentItemId to store producerId
-    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType)
+    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false)
     {
-        return AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()));
+        return AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
     }
 
-    void addPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType)
+    AddParams::SingleRowItem makeLevelRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, const std::shared_ptr<NFmiLevel>& level)
+    {
+        std::string name = dataIdent.GetParamName() + " " + std::to_string(int(level->LevelValue()));
+        return AddParams::SingleRowItem(rowType, name, dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), true, level);
+    }
+
+    void addLevelRowItems(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo)
+    {
+        for(queryInfo.ResetLevel(); queryInfo.NextLevel(); )
+        {
+            const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(*queryInfo.Level());
+            dialogRowData.push_back(::makeLevelRowItem(dataIdent, dataType, rowType, level));
+        }
+    }
+
+    void addPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo)
     {
         if(dataIdent.HasDataParams())
         {
@@ -32,11 +56,59 @@ namespace
             {
                 for(const auto &subParam : subParams->ParamsVector())
                 {
-                    dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType));
+                    bool hasLevelData = queryInfo.SizeLevels() > 1;
+
+                    if(hasLevelData) //Level wind data
+                    {
+                        dialogRowData.push_back(::makeRowItem(subParam, dataType, AddParams::RowType::kLevelType)); //Parameter name as "header"
+                        ::addLevelRowItems(dialogRowData, subParam, dataType, AddParams::RowType::kSubParamLevelType, queryInfo); //Actual level data
+                    }
+                    else //Surface wind data
+                    {
+                        dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType, true));
+                    }
                 }
             }
         }
     }
+
+    //Create dailogRowData with proper RowType
+    void addParameterAndPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, NFmiQueryInfo &queryInfo)
+    {
+        AddParams::RowType rowType;
+        //kNoType = 0,
+        //kSubParamLevelType = 1,
+        //kLevelType = 2,
+        //kSubParamType = 3,
+        //kParamType = 4,
+        //kDataType = 5,
+        //kProducerType = 6,
+        //kCategoryType = 7,
+
+        if(!dataIdent.HasDataParams()) 
+        {
+            bool hasLevelData = queryInfo.SizeLevels() > 1;
+            rowType = AddParams::RowType::kParamType;
+
+            if(hasLevelData) //Level data
+            {
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType)); //Parameter name as "header", not actual data
+                ::addLevelRowItems(dialogRowData, dataIdent, dataType, AddParams::RowType::kLevelType, queryInfo); //Actual level data
+            } 
+            else //Surface data
+            {
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true)); 
+            }
+        }
+        else //Wind submenu
+        {
+            rowType = AddParams::RowType::kParamType;
+            dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType));
+            rowType = AddParams::RowType::kSubParamType; 
+            ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);
+        }
+    }
+
 }
 
 namespace AddParams
@@ -46,7 +118,7 @@ namespace AddParams
     SingleData::~SingleData() = default;
 
     // Returns true, if data's param or level structure is changed
-    bool SingleData::updateData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo * helpDataInfo)
+    bool SingleData::updateData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
     {
         bool dataStruckturesChanged = false;
         // No need to do update, if the latest data from infoOrganizer is still the same (with same filename timestamps)
@@ -71,8 +143,7 @@ namespace AddParams
         const auto &paramVector = latestMetaData_->ParamBag().ParamsVector();
         for(const auto &dataIdent : paramVector)
         {
-            dialogRowData.push_back(::makeRowItem(dataIdent, dataType_, kParamType));
-            ::addPossibleSubParameters(dialogRowData, dataIdent, dataType_, kSubParamType);
+            ::addParameterAndPossibleSubParameters(dialogRowData, dataIdent, dataType_, *latestMetaData_);
         }
         return dialogRowData;
     }

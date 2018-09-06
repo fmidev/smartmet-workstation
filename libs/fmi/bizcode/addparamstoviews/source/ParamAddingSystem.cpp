@@ -2,31 +2,11 @@
 #include "CategoryData.h"
 #include "ParamAddingUtils.h"
 #include "NFmiDictionaryFunction.h"
+#include "NFmiMacroParamSystem.h"
+    
 
 namespace
 {
-    unsigned char getDialogTreeDepth(const AddParams::SingleRowItem &rowItem)
-    {
-        switch(rowItem.rowType())
-        {
-        case AddParams::kCategoryType:
-            return 1;
-        case AddParams::kProducerType:
-            return 2;
-        case AddParams::kDataType:
-            return 3;
-        case AddParams::kParamType:
-            return 4;
-        case AddParams::kSubParamType:
-        case AddParams::kLevelType:
-            return 5;
-        case AddParams::kSubParamLevelType:
-            return 6;
-        default:
-            throw std::runtime_error("Error in getDialogTreeDepth function: Illegal row-item type");
-        }
-    }
-
     AddParams::SingleRowItem makeRowItem(const AddParams::CategoryData &categoryData, const std::string &uniqueId, const AddParams::SingleRowItem *rowItemMemory)
     {
         // If there is memory for this category's rowItem, use it, otherwise put categoryData in non-collapsed mode
@@ -47,39 +27,91 @@ namespace AddParams
     ,infoOrganizer_(nullptr)
     ,helpDataInfoSystem_(nullptr)
     ,itsLastAcivatedDescTopIndex(0)
-    ,itsLastActivatedRowIndex(0)
+    ,itsLastActivatedRowIndex(1)
+    ,helpDataIDs()
     {
     }
 
     ParamAddingSystem::~ParamAddingSystem() = default;
 
-    void ParamAddingSystem::initialize(NFmiProducerSystem &modelProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    void ParamAddingSystem::initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem, 
+        NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
         modelProducerSystem_ = &modelProducerSystem;
+        obsProducerSystem_ = &obsProducerSystem;
+        satelImageProducerSystem_ = &satelImageProducerSystem;
         infoOrganizer_ = &infoOrganizer;
         helpDataInfoSystem_ = &helpDataInfoSystem;
+        helpDataIDs = {101, 107, 108, 109, 160, 242}; // Help Data id's. These are added to Help Data Category
     }
 
-    void ParamAddingSystem::updateModelData()
+    void ParamAddingSystem::addHelpData(const NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
     {
-        std::string categoryName = ::GetDictionaryString("Model data");
+        //std::string uniqueDataId = menuString + std::string(producer.GetName());
+        //SingleRowItem item = SingleRowItem(kParamType, menuString, producer, true);
+        //otherHelpData.push_back(item);
+        //SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId,
+        //    bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType,
+        //    unsigned long parentItemId, const std::string &parentItemName, const bool leafNode,
+        //    const std::shared_ptr<NFmiLevel> &level, const int treeDepth)
+    }
+
+    void ParamAddingSystem::updateData()
+    {
+        updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
+        updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
+        updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
+        updateData("Help data", *modelProducerSystem_, NFmiInfoData::kModelHelpData);
+        updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
+        updateMacroParamData("Macro Params", NFmiInfoData::kMacroParam);
+    }
+
+    void ParamAddingSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory)
+    {
+        std::string categoryName = ::GetDictionaryString(catName.c_str());
         auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
         if(iter != categoryDataVector_.end())
         {
-            dialogDataNeedsUpdate_ |= (*iter)->updateData(*modelProducerSystem_, *infoOrganizer_, *helpDataInfoSystem_);
+            dialogDataNeedsUpdate_ |= (*iter)->updateData(producerSystem, *infoOrganizer_, *helpDataInfoSystem_, dataCategory, helpDataIDs);
         }
         else
         {
-            addNewCategoryData(categoryName, *modelProducerSystem_, *infoOrganizer_, *helpDataInfoSystem_);
+            addNewCategoryData(categoryName, producerSystem, *infoOrganizer_, *helpDataInfoSystem_, dataCategory);
         }
 
         updatePending(false);
     }
 
-    void ParamAddingSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &modelProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    void ParamAddingSystem::updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory)
     {
-        auto categoryDataPtr = std::make_unique<CategoryData>(categoryName);
-        categoryDataPtr->updateData(modelProducerSystem, infoOrganizer, helpDataInfoSystem);
+        if(getMacroParamSystemCallback_)
+        {
+            auto &macroParamSystem = getMacroParamSystemCallback_();
+            auto &macroParamTree = macroParamSystem.MacroParamItemTree();
+
+            std::string categoryName = ::GetDictionaryString(catName.c_str());
+            auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
+            if(iter != categoryDataVector_.end())
+            {
+                    dialogDataNeedsUpdate_ |= (*iter)->updateMacroParamData(macroParamTree, dataCategory);
+            }
+            else
+            {
+                // Add macro params as a new category
+                auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+                categoryDataPtr->updateMacroParamData(macroParamTree, dataCategory);
+                categoryDataVector_.push_back(std::move(categoryDataPtr));
+                dialogDataNeedsUpdate_ = true;
+            }
+
+            updatePending(false);
+        }
+    }
+
+    void ParamAddingSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+    {
+        auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+        categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs);
         categoryDataVector_.push_back(std::move(categoryDataPtr));
         dialogDataNeedsUpdate_ = true;
     }
@@ -103,7 +135,7 @@ namespace AddParams
         if(dialogDataNeedsUpdate_)
         {
             dialogDataNeedsUpdate_ = false;
-            updateModelData();
+            updateData();
             updateDialogRowData();
             updateDialogTreePatternData();
         }
@@ -128,7 +160,6 @@ namespace AddParams
     {
         dialogTreePatternArray_.clear();
         for(const auto &rowItem : dialogRowData_)
-            dialogTreePatternArray_.push_back(getDialogTreeDepth(rowItem));
+            dialogTreePatternArray_.push_back(rowItem.treeDepth());
     }
-
 }

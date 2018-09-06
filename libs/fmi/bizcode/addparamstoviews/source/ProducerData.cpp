@@ -4,16 +4,20 @@
 #include "NFmiInfoOrganizer.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiHelpDataInfo.h"
+#include "NFmiMacroParamSystem.h"
+#include "NFmiMacroParam.h"
+#include "NFmiDrawParam.h"
+
 
 namespace
 {
-    bool isDataAccepted(const boost::shared_ptr<NFmiFastQueryInfo> &info)
+    bool isDataOnlyOnOneLevel(const boost::shared_ptr<NFmiFastQueryInfo> &info)
     {
         if(info)
         {
             if(info->IsGrid())
             {
-                if(info->SizeLevels() == 1)
+                if(info->SizeLevels() == 1) //SizeLevels == 1 for surface data.
                 {
                     return true;
                 }
@@ -28,13 +32,39 @@ namespace
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : true;
         return AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
+
+    std::unique_ptr<AddParams::SingleRowItem> makeSatelliteRowItem(const NFmiProducer &producer, unsigned long paramId, const std::string &paramName, const std::string &uniqueId, NFmiInfoData::Type dataCategory)
+    {
+        return std::make_unique<AddParams::SingleRowItem>(AddParams::kParamType, paramName, paramId, true, uniqueId, dataCategory, producer.GetIdent(), std::string(producer.GetName()), true, nullptr, 3);
+    }
+
+    std::unique_ptr<AddParams::SingleRowItem> makeMacroParamRowItem(const NFmiProducer &producer, unsigned long paramId, const std::string &paramName, const std::string &uniqueId, NFmiInfoData::Type dataCategory, bool leafNode, int treeDepth)
+    {
+        AddParams::RowType paramType = (leafNode) ? AddParams::kParamType : AddParams::kDataType;
+        return std::make_unique<AddParams::SingleRowItem>(paramType, paramName, paramId, true, uniqueId, dataCategory, producer.GetIdent(), std::string(producer.GetName()), leafNode, nullptr, treeDepth);
+    }
+
+    bool areMacroParamVectorsDifferent(std::vector<std::unique_ptr<AddParams::SingleRowItem>> &newMacroParamDataVector, std::vector<std::unique_ptr<AddParams::SingleRowItem>> &macroParamDataVector_)
+    {
+        if(newMacroParamDataVector.size() != macroParamDataVector_.size())
+            return true;
+        for(int i = 0; i < newMacroParamDataVector.size(); i++)
+        {
+            if((newMacroParamDataVector[i]->uniqueDataId() != macroParamDataVector_[i]->uniqueDataId()))
+                return true;
+        }
+        return false;
+    }
 }
 
 namespace AddParams
 {
-    ProducerData::ProducerData(const NFmiProducer &producer)
+    ProducerData::ProducerData(const NFmiProducer &producer, NFmiInfoData::Type dataCategory)
     :producer_(producer)
+    ,dataCategory_(dataCategory)
     ,dataVector_()
+    ,satelliteDataVector_()
+    ,macroParamDataVector_()
     {
     }
 
@@ -43,28 +73,36 @@ namespace AddParams
     // Returns true, if some new producer data is added or data's param or level structure is changed
     bool ProducerData::updateData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
-        bool dataStruckturesChanged = false;
-        auto producerData = infoOrganizer.GetInfos(producer_.GetIdent());
-        for(auto &info : producerData)
+        bool dataStructuresChanged = false;
+        
+        if(dataCategory_ == NFmiInfoData::kSatelData)
         {
-            if(::isDataAccepted(info))
+            dataStructuresChanged |= updateSatelliteData(helpDataInfoSystem);
+        } 
+        else 
+        {
+            auto producerData = infoOrganizer.GetInfos(producer_.GetIdent());
+            for(auto &info : producerData)
             {
-                dataStruckturesChanged |= updateData(info, infoOrganizer, helpDataInfoSystem);
+                if(::isDataOnlyOnOneLevel(info))
+                {
+                    dataStructuresChanged |= updateData(info, infoOrganizer, helpDataInfoSystem);
+                }
+                else
+                {
+                    dataStructuresChanged |= updateData(info, infoOrganizer, helpDataInfoSystem);
+                }
             }
         }
-        return dataStruckturesChanged;
+
+        return dataStructuresChanged;
     }
 
     bool ProducerData::updateData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
         auto fileFilter = info->DataFilePattern();
         auto iter = std::find_if(dataVector_.begin(), dataVector_.end(),
-            [fileFilter]
-        (const auto &singleData)
-        {
-            return fileFilter == singleData->uniqueDataId();
-        });
-
+            [fileFilter] (const auto &singleData) { return fileFilter == singleData->uniqueDataId(); });
         if(iter != dataVector_.end())
         {
             return (*iter)->updateData(info);
@@ -74,6 +112,77 @@ namespace AddParams
             addNewSingleData(info, helpDataInfoSystem);
             return true;
         }
+    }
+
+    bool ProducerData::updateSatelliteData(NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    {
+        if(!satelliteDataVector_.empty()) // No need to update after initialization
+            return false;
+
+        for(int i = 0; i < helpDataInfoSystem.DynamicCount(); i++)
+        {
+            NFmiHelpDataInfo &helpDataInfo = helpDataInfoSystem.DynamicHelpDataInfo(i);
+            if(helpDataInfo.IsEnabled() && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
+            {
+                int prodId = static_cast<int>(producer_.GetIdent());
+                if(prodId > 0 && prodId == helpDataInfo.FakeProducerId()) //Checks that this actually is correct helpdata
+                {
+                    auto fileFilter = helpDataInfo.FileNameFilter();
+                    satelliteDataVector_.push_back(::makeSatelliteRowItem(producer_, helpDataInfo.ImageDataIdent().GetParamIdent(), std::string(helpDataInfo.ImageDataIdent().GetParamName()), fileFilter, dataCategory_));
+                }
+            }
+        }
+        return !satelliteDataVector_.empty();
+    }
+
+    bool ProducerData::updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree)
+    {
+        int treeDepth = 3;
+        std::vector<std::unique_ptr<SingleRowItem>> newMacroParamDataVector = createMacroParamVector(macroParamTree, treeDepth);
+        //Compare vectors and update if different
+        if(::areMacroParamVectorsDifferent(newMacroParamDataVector, macroParamDataVector_))
+        {
+            macroParamDataVector_.clear();
+            macroParamDataVector_ = std::move(newMacroParamDataVector);
+            return true;
+        }
+        return false;;
+    }
+
+    std::vector<std::unique_ptr<SingleRowItem>> ProducerData::createMacroParamVector(const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth)
+    {
+        std::vector<std::unique_ptr<SingleRowItem>> macroParamVector;
+        macroParamsToVector(macroParamVector, macroParamTree, treeDepth);
+        return macroParamVector;
+    }
+
+    int ProducerData::macroParamsToVector(std::vector<std::unique_ptr<SingleRowItem>> &macroParamVector, const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth)
+    {
+        //Recursively loop through macroParamTree and create SingleRowItems
+        for(auto const &macroParamRow : macroParamTree)
+        {
+            const NFmiMacroParamItem &macroParamItem = macroParamRow;
+
+            auto param = macroParamItem.itsMacroParam;
+            bool isDirectory = param->IsMacroParamDirectory();
+            bool leafNode = !isDirectory;
+
+            if(!isDirectory) //Leaf node
+            {
+                macroParamVector.push_back(::makeMacroParamRowItem(producer_, producer_.GetIdent(), param->Name(), param->DrawParam()->InitFileName(), dataCategory_, leafNode, treeDepth));
+            }
+            else // Directory, increase treeDepth
+            {
+                std::string paramName = macroParamItem.itsMacroParam->Name();
+                if(macroParamItem.itsMacroParam->ErrorInMacro())
+                    paramName += " (ERROR)";
+                auto &subtree = macroParamRow.itsDirectoryItems;
+                macroParamVector.push_back(::makeMacroParamRowItem(producer_, producer_.GetIdent(), paramName, param->MacroParamDirectoryPath(), dataCategory_, leafNode, treeDepth));
+                macroParamsToVector(macroParamVector, subtree, ++treeDepth);
+                treeDepth--;
+            }
+        }
+        return treeDepth;
     }
 
     void ProducerData::addNewSingleData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
@@ -89,6 +198,12 @@ namespace AddParams
 
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const
     {
+        if(dataCategory_ == NFmiInfoData::kSatelData)
+            return makeDialogRowData(dialogRowDataMemory, satelliteDataVector_);
+
+        if(dataCategory_ == NFmiInfoData::kMacroParam)
+            return makeDialogRowData(dialogRowDataMemory, macroParamDataVector_);
+
         std::vector<SingleRowItem> dialogRowData;
         for(const auto &singleData : dataVector_)
         {
@@ -109,5 +224,15 @@ namespace AddParams
         uniqueId += "_";
         uniqueId += std::to_string(producer_.GetIdent());
         return uniqueId;
+    }
+
+    std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, const std::vector<std::unique_ptr<SingleRowItem>> &thisDataVector) const
+    {
+        std::vector<SingleRowItem> dialogRowData;
+        for(const auto &singleRowData : thisDataVector)
+        {
+            dialogRowData.push_back(*singleRowData);
+        }
+        return dialogRowData;
     }
 }

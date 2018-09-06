@@ -1,7 +1,10 @@
 #pragma once
+#include <string>
+#include <memory>
 
 #include "NFmiInfoData.h"
-#include <string>
+#include "NFmiLevel.h"
+
 
 namespace AddParams
 {
@@ -32,9 +35,16 @@ namespace AddParams
         NFmiInfoData::Type dataType_;
         unsigned long parentItemId_;
         std::string parentItemName_;
+        bool leafNode_;
+        std::shared_ptr<NFmiLevel> level_;
+        int treeDepth_;
+
     public:
         SingleRowItem();
-        SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType, unsigned long parentItemId = 0, const std::string &parentItemName = "");
+        SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
+            bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType, 
+            unsigned long parentItemId = 0, const std::string &parentItemName = "", const bool leafNode = false, 
+            const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth_ = 0);
         ~SingleRowItem();
 
         RowType rowType() const { return rowType_; }
@@ -50,5 +60,10 @@ namespace AddParams
         void dataType(NFmiInfoData::Type dataType) { dataType_ = dataType; }
         unsigned long parentItemId() const { return parentItemId_; }
         const std::string& parentItemName() const { return parentItemName_; }
+        bool leafNode() const { return leafNode_; }
+        std::shared_ptr<NFmiLevel> level() const { return level_; }
+        void level(const std::shared_ptr<NFmiLevel>& level) {level_ = level; }
+        int treeDepth() const { return treeDepth_; }
+        int getTreeDepth(AddParams::RowType rowType);
     };
 }

@@ -243,7 +243,9 @@ public:
     NFmiAutoComplete& AutoComplete() override;
     void InvalidateMapView(bool bErase = true) override;
     NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() override;
+#ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;
+#endif // DISABLE_CPPRESTSDK
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) override;
     AddParams::ParamAddingSystem& ParamAddingSystem() override;
     bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) override;

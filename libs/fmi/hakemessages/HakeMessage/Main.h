@@ -1,4 +1,5 @@
 #pragma once
+#ifndef DISABLE_CPPRESTSDK
 
 #include "HakeSystemConfigurations.h"
 #include "HakeMessage/HakeMessages.h"
@@ -68,3 +69,5 @@ namespace HakeMessage
         size_t handleKahaJson();
     };
 }
+
+#endif // DISABLE_CPPRESTSDK

@@ -1,17 +1,25 @@
+// DBChecker 04/2018
 // Pilvisyyskorjaus sateen perusteella
 // Jos sataa, pilve‰ on v‰hint‰‰n 50 %
 IF(RR > 0.01 AND N < 50) {
   N = 50
 }
 
-// Lis‰t‰‰n ala- tai keskipilvi‰ niin ett‰ jompi kumpi on sama kuin kokonaispilvisyys.
-// Valinta tehd‰‰n sen mukaan kumpaa on jo alunperin enemm‰n.
-IF (CL < N AND CL >= CM) {
+// Lis‰t‰‰n ala-, keski- tai yl‰pilvi‰ niin ett‰ jokin kerroksista on sama kuin kokonaispilvisyys.
+// Valinta tehd‰‰n sen mukaan mit‰ on jo alunperin enemm‰n.
+// Tehd‰‰n ensin alapilville
+IF (CL < N AND CL >= CM AND CL >= CH) {
   CL = N
 }
-//ja toisinp‰in
-IF (CM < N AND CL < CM) {
+
+// ja keskipilville
+IF (CM < N AND CL < CM AND CH < CM) {
   CM = N
+}
+
+// lopuksi lis‰t‰‰n yl‰pilvi‰
+IF (CH < N AND CL < CH AND CM < CH) {
+  CH = N
 }
 
 // V‰hennet‰‰n ala- ja keskipilvi‰, jos ne ovat suurempia kuin kokonaispilvisyys.
@@ -51,8 +59,8 @@ IF( SRAD < 0 ){
   SRAD = 0 
 }
 
-// Luo wsmax:n loppuun jos se on puuttuvaa
-IF(FHOUR > 203 AND WSMAX == MISS) {
+// Luo wsmax:n jos se on puuttuvaa
+IF(WSMAX == MISS) {
  WSMAX = WS * 1.1
 }
 

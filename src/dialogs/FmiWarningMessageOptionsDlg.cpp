@@ -140,6 +140,7 @@ void CFmiWarningMessageOptionsDlg::DoWhenClosing()
 
 void CFmiWarningMessageOptionsDlg::StoreMessageTypeInfoToWarningCenterSystem()
 {
+#ifndef DISABLE_CPPRESTSDK
     auto &messageTypeInfovector = itsWarningCenterSystem->getLegacyData().MessageTypeInfos();
     int totalCount = std::min(static_cast<int>(messageTypeInfovector.size()), itsMessageTypeList.GetCount());
     for(int index = 0; index < totalCount; index++)
@@ -148,6 +149,7 @@ void CFmiWarningMessageOptionsDlg::StoreMessageTypeInfoToWarningCenterSystem()
     }
 
     itsWarningCenterSystem->getLegacyData().StoreSettings();
+#endif // DISABLE_CPPRESTSDK
 }
 
 static CString MakeMessageTypeInfoString(const HakeLegacySupport::MessageTypeInfo &messageTypeInfo)
@@ -168,6 +170,7 @@ static CString MakeMessageTypeInfoString(const HakeLegacySupport::MessageTypeInf
 
 void CFmiWarningMessageOptionsDlg::LoadMessageTypeInfoFromWarningCenterSystem()
 {
+#ifndef DISABLE_CPPRESTSDK
     itsMessageTypeList.ResetContent();
     int counter = 0;
     const auto &messageTypeInfos = itsWarningCenterSystem->getLegacyData().MessageTypeInfos();
@@ -178,10 +181,12 @@ void CFmiWarningMessageOptionsDlg::LoadMessageTypeInfoFromWarningCenterSystem()
     }
 
     UpdateData(FALSE);
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CFmiWarningMessageOptionsDlg::OnBnClickedButtonAdd()
 {
+#ifndef DISABLE_CPPRESTSDK
     HakeLegacySupport::MessageTypeInfo messageTypeInfo;
     CFmiWarningMessageSymbolOptionsDlg dlg(messageTypeInfo, this);
     if(dlg.DoModal() == IDOK)
@@ -189,20 +194,24 @@ void CFmiWarningMessageOptionsDlg::OnBnClickedButtonAdd()
         itsWarningCenterSystem->getLegacyData().AddMessageTypeInfo(messageTypeInfo);
         LoadMessageTypeInfoFromWarningCenterSystem();
     }
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CFmiWarningMessageOptionsDlg::OnBnClickedButtonRemove()
 {
+#ifndef DISABLE_CPPRESTSDK
     // Jos indeksi on -1, listalta ei ole valittuna mitään, eikä tarvitse tehdä mitään.
     if(itsMessageTypeList.GetCurSel() >= 0)
     {
         itsWarningCenterSystem->getLegacyData().RemoveMessageTypeInfo(itsMessageTypeList.GetCurSel());
         LoadMessageTypeInfoFromWarningCenterSystem();
     }
+#endif // DISABLE_CPPRESTSDK
 }
 
 void CFmiWarningMessageOptionsDlg::OnBnClickedButtonEdit()
 {
+#ifndef DISABLE_CPPRESTSDK
     // Jos indeksi on -1, listalta ei ole valittuna mitään, eikä tarvitse tehdä mitään.
     if(itsMessageTypeList.GetCurSel() >= 0)
     {
@@ -218,6 +227,7 @@ void CFmiWarningMessageOptionsDlg::OnBnClickedButtonEdit()
             }
         }
     }
+#endif // DISABLE_CPPRESTSDK
 }
 
 

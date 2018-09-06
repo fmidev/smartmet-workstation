@@ -18,8 +18,8 @@ add_library(
     ${H_FILES} 
     )
 
-target_link_libraries(
-    ${PROJECT_NAME} 
+set(LINK_LIBRARY_LIST 
+	${PROJECT_NAME}
     Newbase
     AutoComplete
     Toolbox
@@ -34,9 +34,13 @@ target_link_libraries(
     DataUtilities
     HakeMessage
 	CapData
-	WmsSupport
 	XmlLiteUtils
     )
+if(NOT DISABLE_CPPRESTSDK)
+	set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} WmsSupport)
+endif()
+
+target_link_libraries(${LINK_LIBRARY_LIST})
 
 target_include_directories(
     ${PROJECT_NAME}
