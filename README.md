@@ -55,14 +55,17 @@ Build all the library binaries with the same Visual C++ compiler (VC++ 2015 or n
  - Used version 7.5.2 (newer versions might have different systems)
  - Not using this will seriously handicap SmartMet's isoline and color contour visualizations.
  - You have to make contact with Advandec Viaualization Systems http://www.avs.com/contact/ and ask about using ToolMaster.
+ - To disable Toolmaster set option DISABLE_UNIRAS_TOOLMASTER from smartmet-workstation\CMakeLists.txt to OFF (default is ON).
 7. Extreme Toolkit Pro
  - Used version 17.1.0 (or newer?)
  - Not using this will disable ability to edit smarttool/macroParam formulas in smartTool dialog.
  - You have to make contact with codeJock company http://www.codejock.com/products/toolkitpro/ and ask about using Toolkit Pro.
+ - To disable Toolmaster set option DISABLE_EXTREME_TOOLKITPRO from smartmet-workstation\CMakeLists.txt to OFF (default is ON).
 8. CppRestSdk
  - Used version 1.61.0 or newer
  - Not using this will disable WMS support and certain Finnish data message support (HAKE and KaHa).
  - Go to https://github.com/Microsoft/cpprestsdk and look for help to install package to windows or build it your self.
+ - To disable Toolmaster set option DISABLE_CPPRESTSDK from smartmet-workstation\CMakeLists.txt to OFF (default is ON).
 
 ## Using above libraries in smartMet-workstation project:
 1. Libraries are copyed to following location:
