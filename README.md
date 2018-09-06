@@ -68,12 +68,12 @@ Build all the library binaries with the same Visual C++ compiler (VC++ 2015 or n
 1. Libraries are copyed to following location:
  - smartmet-workstation\libs\3rd\
  - The directory structure at the moment is following:
-		boost_1_61_0
-		cpprestsdk
-		crashrpt_1_4_2_r1609
-		icu_55_1
-		uniras_7v5
-		xtremetoolkitpro_17_1_0
+		<br>boost_1_61_0
+		<br>cpprestsdk
+		<br>crashrpt_1_4_2_r1609
+		<br>icu_55_1
+		<br>uniras_7v5
+		<br>xtremetoolkitpro_17_1_0
  - Naming policy is defined in smartmet-workstation\cmake\UsefulVariables.cmake file.
    - There is base names for directory names for each library. 
    - There is also used version for each library, that is in the resulting final directory name. If you use different versions, update the version number in there.
