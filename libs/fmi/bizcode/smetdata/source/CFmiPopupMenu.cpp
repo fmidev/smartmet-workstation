@@ -13,9 +13,8 @@ CFmiPopupMenu::~CFmiPopupMenu() = default;
 
 static void initPopupMenu(std::unique_ptr<CMenu> &popupMenu, NFmiMenuItemList *menuItemList, std::vector<std::unique_ptr<CMenu>> &subMenuContainer)
 {
-    for(menuItemList->Reset(); menuItemList->Next(); )
+    for(auto &menuItem : *menuItemList)
     {
-        auto menuItem = menuItemList->CurrentMenuItem();
         auto *subMenuItemList = menuItem->SubMenu();
         if(subMenuItemList)
         {

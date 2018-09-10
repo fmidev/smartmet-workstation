@@ -71,7 +71,7 @@ class NFmiMenuItem
 	NFmiMenuItemList* SubMenu(void) const;
 	NFmiInfoData::Type DataType(void)const{return itsDataType;}; // 1999.09.22/Marko
 	void DataType(NFmiInfoData::Type theType){itsDataType = theType;}; // 1999.09.22/Marko
-	unsigned long NumberOfSubMenuItems(void);
+	size_t NumberOfSubMenuItems(void);
 
 	void CommandId(long theCommandId);
 
