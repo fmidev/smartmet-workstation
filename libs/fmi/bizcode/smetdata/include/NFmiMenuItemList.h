@@ -58,11 +58,11 @@ class NFmiMenuItemList
 	bool Add(NFmiMenuItem* theMenuItem);
 	void Clear(bool fDeleteItem = false);
 	bool Find(const long &theId);
-	NFmiMenuItem *FoundMenuItem(void);
+	NFmiMenuItem* RecursivelyFoundMenuItem(void);
 	void Print(int roundCheck);			// Tämä on vain testausta varten.
 	void Reset(void);
 	bool Next(void);
-	NFmiMenuItem *Current(void);
+	NFmiMenuItem *CurrentMenuItem(void);
 	int NumberOfSubMenus(int theNumberOfSubmenus = 0);
 	unsigned long NumberOfMenuItems(void);
 	void CalcMinAndMaxId(void);
@@ -74,9 +74,9 @@ class NFmiMenuItemList
  private:
 	 NFmiPtrList<NFmiMenuItem> itsList;
 	 NFmiPtrList<NFmiMenuItem>::Iterator itsIter;
-	 NFmiMenuItem *itsFoundMenuItem;
-	 unsigned int itsMinId;
-	 unsigned int itsMaxId;
+	 NFmiMenuItem* itsRecursivelyFoundMenuItem = nullptr;
+	 unsigned int itsMinId = 421234567; // Joku iso luku vain
+	 unsigned int itsMaxId = 0;
 
 };
 

@@ -15,7 +15,7 @@ static void initPopupMenu(std::unique_ptr<CMenu> &popupMenu, NFmiMenuItemList *m
 {
     for(menuItemList->Reset(); menuItemList->Next(); )
     {
-        auto menuItem = menuItemList->Current();
+        auto menuItem = menuItemList->CurrentMenuItem();
         auto *subMenuItemList = menuItem->SubMenu();
         if(subMenuItemList)
         {
