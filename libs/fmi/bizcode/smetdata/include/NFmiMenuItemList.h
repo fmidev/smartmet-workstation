@@ -31,6 +31,9 @@
 #include "FmiNMeteditLibraryDefinitions.h"
 #include "NFmiMenuItem.h"
 
+#include <list>
+#include <memory>
+
 class NFmiParamBag;
 class NFmiDrawParamList;
 class NFmiLevelBag;
@@ -38,8 +41,10 @@ class NFmiDataIdent;
 
 class NFmiMenuItemList 
 {
-
  public:
+    using MenuItem = std::unique_ptr<NFmiMenuItem>;
+    using MenuItemList = std::list<MenuItem>;
+
 	NFmiMenuItemList(void);
 	NFmiMenuItemList(NFmiParamBag* theParamBag);
 	NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* theParamBag, const FmiMenuCommandType &theMenuCommandType,
@@ -49,22 +54,20 @@ class NFmiMenuItemList
 
 	NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* theParamBag, const FmiMenuCommandType &theMenuCommandType,
 						const NFmiMetEditorTypes::View &theViewType, NFmiLevelBag* theLevels, NFmiInfoData::Type theDataType, FmiParameterName notLevelParam = kFmiLastParameter, const NFmiDataIdent *thePossibleStreamLineParam = nullptr, const NFmiDataIdent *thePossibleWindVectorParam = nullptr);
-	NFmiMenuItemList(NFmiDrawParamList* theDrawParamList);
 	virtual ~NFmiMenuItemList(void);
 	
 	// Asettaa listan menuItemeille ID:t:
 	bool InitializeCommandIDs(unsigned long theFirstCommandID);
 
-	bool Add(NFmiMenuItem* theMenuItem);
-	void Clear(bool fDeleteItem = false);
+	bool Add(MenuItem &&theMenuItem);
+	void Clear();
 	bool Find(const long &theId);
 	NFmiMenuItem* RecursivelyFoundMenuItem(void);
 	void Print(int roundCheck);			// Tämä on vain testausta varten.
-	void Reset(void);
-	bool Next(void);
-	NFmiMenuItem *CurrentMenuItem(void);
+    MenuItemList::iterator begin();
+    MenuItemList::iterator end();
 	int NumberOfSubMenus(int theNumberOfSubmenus = 0);
-	unsigned long NumberOfMenuItems(void);
+	size_t NumberOfMenuItems(void);
 	void CalcMinAndMaxId(void);
 	unsigned int MinId(void);
 	unsigned int MaxId(void);
@@ -72,8 +75,7 @@ class NFmiMenuItemList
 
 
  private:
-	 NFmiPtrList<NFmiMenuItem> itsList;
-	 NFmiPtrList<NFmiMenuItem>::Iterator itsIter;
+     MenuItemList itsMenuItemList;
 	 NFmiMenuItem* itsRecursivelyFoundMenuItem = nullptr;
 	 unsigned int itsMinId = 421234567; // Joku iso luku vain
 	 unsigned int itsMaxId = 0;

@@ -70,23 +70,19 @@ void CFmiMenu::Init(NFmiMenuItemList* theMenuItemList)
 
 	for (menuNr = 0; menuNr <= itsNumberOfSubMenus; menuNr++)
 	{
-		itsMenuItemLists[menuNr]->Reset();
-		while (itsMenuItemLists[menuNr]->Next())
+		for(auto &menuItem : *itsMenuItemLists[menuNr])
 		{
-			if (itsMenuItemLists[menuNr]->CurrentMenuItem()->SubMenu())
+			if(menuItem->SubMenu())
 			{
 				listOrderNumber++;
-				itsMenuItemLists[listOrderNumber] 
-					= itsMenuItemLists[menuNr]->CurrentMenuItem()->SubMenu();
+				itsMenuItemLists[listOrderNumber] = menuItem->SubMenu();
 				itsMenus[menuNr].InsertMenu(-1, MF_BYPOSITION | MF_STRING | MF_POPUP, 
-					(UINT_PTR)itsMenus[listOrderNumber].GetSafeHmenu(), 
-						CA2T(itsMenuItemLists[menuNr]->CurrentMenuItem()->Text()));
+					(UINT_PTR)itsMenus[listOrderNumber].GetSafeHmenu(), CA2T(menuItem->Text()));
 			}
 			else
 			{
 				itsMenus[menuNr].InsertMenu(-1, MF_BYPOSITION | MF_STRING, 
-					itsMenuItemLists[menuNr]->CurrentMenuItem()->CommandId(),
-                    CA2T(itsMenuItemLists[menuNr]->CurrentMenuItem()->Text()));
+                    menuItem->CommandId(), CA2T(menuItem->Text()));
 			}
 		}
 			

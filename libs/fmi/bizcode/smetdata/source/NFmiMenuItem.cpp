@@ -198,7 +198,7 @@ void NFmiMenuItem::IndexInViewRow(int newValue)
 	itsIndexInViewRow = newValue;
 }
 
-unsigned long NFmiMenuItem::NumberOfSubMenuItems(void)
+size_t NFmiMenuItem::NumberOfSubMenuItems(void)
 {
 	if(itsSubMenu)
 		return itsSubMenu->NumberOfMenuItems();
