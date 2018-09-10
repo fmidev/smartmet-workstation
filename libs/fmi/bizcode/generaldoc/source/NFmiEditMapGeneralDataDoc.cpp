@@ -5514,7 +5514,7 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 	NFmiMetTime time;
 	if(itsPopupMenu->Find(theCommandID))
 	{
-		NFmiMenuItem * menuItem = itsPopupMenu->FoundMenuItem();
+		NFmiMenuItem * menuItem = itsPopupMenu->RecursivelyFoundMenuItem();
 		if(!menuItem)
 			return false;
 		FmiMenuCommandType command = menuItem->CommandType();

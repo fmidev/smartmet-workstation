@@ -34,19 +34,13 @@
 NFmiMenuItemList::NFmiMenuItemList(void)
 :itsList()
 ,itsIter(itsList.Start())
-,itsFoundMenuItem(0)
-,itsMinId(421234567)			// keksitty
-,itsMaxId(0)
 {
 }
 
 NFmiMenuItemList::NFmiMenuItemList(NFmiParamBag* theParamBag)
+:itsList()
+,itsIter(itsList.Start())
 {
-	itsIter = itsList.Start();
-	itsFoundMenuItem = 0;
-	itsMinId = 421234567;			// keksitty
-	itsMaxId = 0;
-
 	if(theParamBag)
 	{
 		theParamBag -> Reset();
@@ -91,12 +85,9 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 									NFmiInfoData::Type theDataType, 
                                     const NFmiDataIdent *thePossibleStreamLineParam,
                                     const NFmiDataIdent *thePossibleWindVectorParam)
+:itsList()
+,itsIter(itsList.Start())
 {
-	itsIter = itsList.Start();
-	itsFoundMenuItem = 0;
-	itsMinId = 421234567;			// keksitty
-	itsMaxId = 0;
-
 	if(theParamBag)
 	{
         bool streamLineParamAdded = false;
@@ -130,9 +121,6 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIde
 					,NFmiInfoData::Type theDataType)
 :itsList()
 ,itsIter(itsList.Start())
-,itsFoundMenuItem(0)
-,itsMinId(421234567)			// keksitty
-,itsMaxId(0)
 {
 	if(theLevels)
 	{
@@ -191,9 +179,6 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
                                   ,const NFmiDataIdent *thePossibleWindVectorParam)
 :itsList()
 ,itsIter(itsList.Start())
-,itsFoundMenuItem(0)
-,itsMinId(421234567)			// keksitty
-,itsMaxId(0)
 {
 	if(theParamBag && theLevels)
 	{
@@ -249,12 +234,9 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 }
 
 NFmiMenuItemList::NFmiMenuItemList(NFmiDrawParamList* theDrawParamList)
+:itsList()
+,itsIter(itsList.Start())
 {
-	itsIter = itsList.Start();
-	itsFoundMenuItem = 0;
-	itsMinId = 421234567;			// keksitty
-	itsMaxId = 0;
-
 	if(theDrawParamList)
 	{
 		theDrawParamList->Reset();
@@ -316,7 +298,8 @@ void NFmiMenuItemList::Clear(bool fDeleteItem)
 
 bool NFmiMenuItemList::Find(const long &theId)
 {
-	NFmiMenuItem* menuItem;
+    itsRecursivelyFoundMenuItem = nullptr;
+	NFmiMenuItem* menuItem = nullptr;
 	for(itsIter = itsList.Start(); itsIter.Next();)
 	{
 		menuItem = itsIter.CurrentPtr();
@@ -324,7 +307,7 @@ bool NFmiMenuItemList::Find(const long &theId)
 		{
 			if (menuItem->SubMenu()->Find(theId))
 			{
-				itsFoundMenuItem = menuItem->SubMenu()->FoundMenuItem();
+				itsRecursivelyFoundMenuItem = menuItem->SubMenu()->RecursivelyFoundMenuItem();
 				return true;
 			}
 		}
@@ -332,7 +315,7 @@ bool NFmiMenuItemList::Find(const long &theId)
 		{
 			if (menuItem->CommandId() == theId)
 			{
-				itsFoundMenuItem = menuItem;
+				itsRecursivelyFoundMenuItem = menuItem;
 				return true;
 			}
 		}
@@ -340,9 +323,9 @@ bool NFmiMenuItemList::Find(const long &theId)
 	return false;
 }
 
-NFmiMenuItem *NFmiMenuItemList::FoundMenuItem(void)
+NFmiMenuItem* NFmiMenuItemList::RecursivelyFoundMenuItem(void)
 {
-	return itsFoundMenuItem;
+	return itsRecursivelyFoundMenuItem;
 }
 
 
@@ -414,7 +397,7 @@ bool NFmiMenuItemList::Next(void)
 	return itsIter.Next();
 }
 
-NFmiMenuItem *NFmiMenuItemList::Current(void)
+NFmiMenuItem *NFmiMenuItemList::CurrentMenuItem(void)
 {
 	return itsIter.CurrentPtr();
 }
