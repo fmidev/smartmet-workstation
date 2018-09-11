@@ -26,7 +26,6 @@ public:
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) override;
     NFmiInfoOrganizer* InfoOrganizer(void) override;
     bool IsToolMasterAvailable(void) override;
-    bool DrawDataOnlyOnRightProjection(void) override;
     NFmiDrawParamList* DrawParamList(int theDescTopIndex, int theIndex) override;
     NFmiDrawParamList* TimeSerialViewDrawParamList(void) override;
     const NFmiColor& HelpColor(void) const override;

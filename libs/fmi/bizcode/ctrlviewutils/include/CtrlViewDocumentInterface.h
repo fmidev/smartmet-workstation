@@ -127,7 +127,6 @@ public:
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer(void) = 0;
     virtual bool IsToolMasterAvailable(void) = 0;
-    virtual bool DrawDataOnlyOnRightProjection(void) = 0;
     virtual NFmiDrawParamList* DrawParamList(int theDescTopIndex, int theIndex) = 0;
     virtual NFmiDrawParamList* TimeSerialViewDrawParamList(void) = 0;
     virtual const NFmiColor& HelpColor(void) const = 0;

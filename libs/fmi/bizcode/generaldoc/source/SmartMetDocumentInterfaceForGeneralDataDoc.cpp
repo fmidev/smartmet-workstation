@@ -1211,16 +1211,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SatelDataRefreshTimerInMinutes(
     itsDoc->SatelDataRefreshTimerInMinutes(newValue);
 }
 
-bool SmartMetDocumentInterfaceForGeneralDataDoc::DrawDataOnlyOnRightProjection()
-{
-    return itsDoc->DrawDataOnlyOnRightProjection();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::DrawDataOnlyOnRightProjection(bool newState)
-{
-    itsDoc->DrawDataOnlyOnRightProjection(newState);
-}
-
 const NFmiPoint& SmartMetDocumentInterfaceForGeneralDataDoc::StationDataGridSize()
 {
     return itsDoc->StationDataGridSize();
