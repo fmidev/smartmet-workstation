@@ -30,7 +30,10 @@ namespace
     {
         // If there is memory for this data's rowItem, use it, otherwise put singleData in collapsed mode
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : true;
-        return AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
+
+        auto singleRowItem = AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
+        singleRowItem.origTime(data.OrigOrLastTime());
+        return singleRowItem;
     }
 
     std::unique_ptr<AddParams::SingleRowItem> makeSatelliteRowItem(const NFmiProducer &producer, unsigned long paramId, const std::string &paramName, const std::string &uniqueId, NFmiInfoData::Type dataCategory)
