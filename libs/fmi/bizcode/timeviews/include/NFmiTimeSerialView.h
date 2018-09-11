@@ -231,6 +231,7 @@ class NFmiTimeSerialView : public NFmiTimeView
     bool IsEditedData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
     void SetEditedDatasCorrectMaskOn(boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo) const;
     bool IsMosTemperatureMinAndMaxDisplayed(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo);
+    void DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut);
 
 	NFmiDrawingEnvironment itsNormalCurveEnvi; // miten normaali k‰yr‰ piirret‰‰n
 	NFmiDrawingEnvironment itsChangeCurveEnvi; // miten muutos k‰yr‰ piirret‰‰n (punainen katkoviiva)
