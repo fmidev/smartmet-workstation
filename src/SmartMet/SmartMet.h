@@ -43,6 +43,8 @@ public:
 	virtual BOOL OnIdle(LONG lCount);
 	virtual int ExitInstance();
     void InitApplicationInterface();
+    bool AllowApplicationToClose() const { return fAllowApplicationToClose; }
+    void AllowApplicationToClose(bool newValue) { fAllowApplicationToClose = newValue; }
     virtual int Run();
 
 // Implementation
@@ -80,7 +82,8 @@ private:
 
 	NFmiEditMapGeneralDataDoc* itsGeneralData; // UGLY but I couldn't put this in mainframe
 	bool fUseToolMasterIfAvailable; // komentorivi argumentilla -n voidaan estää toolmasterin käyttö kokonaan, tämä on true, jos -n optiota ei ole käytetty
-	Gdiplus::GdiplusStartupInput itsGdiplusStartupInput;
+    bool fAllowApplicationToClose = false;
+    Gdiplus::GdiplusStartupInput itsGdiplusStartupInput;
 	ULONG_PTR m_gdiplusToken;
 	CSplashThread* itsSplashThread;
     ControlIdTextMap itsNonDictionaryToolbarItems;
