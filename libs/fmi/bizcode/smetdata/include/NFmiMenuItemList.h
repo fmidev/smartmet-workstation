@@ -63,7 +63,6 @@ class NFmiMenuItemList
 	void Clear();
 	bool Find(const long &theId);
 	NFmiMenuItem* RecursivelyFoundMenuItem(void);
-	void Print(int roundCheck);			// Tämä on vain testausta varten.
     MenuItemList::iterator begin();
     MenuItemList::iterator end();
 	int NumberOfSubMenus(int theNumberOfSubmenus = 0);
@@ -75,6 +74,8 @@ class NFmiMenuItemList
 
 
  private:
+     void SortParamsInAlphabeticalOrder();
+
      MenuItemList itsMenuItemList;
 	 NFmiMenuItem* itsRecursivelyFoundMenuItem = nullptr;
 	 unsigned int itsMinId = 421234567; // Joku iso luku vain

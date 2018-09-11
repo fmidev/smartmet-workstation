@@ -29,6 +29,8 @@
 #include "NFmiDrawParam.h"
 #include "NFmiParamBag.h"
 #include "NFmiLevelBag.h"
+
+#include <boost/algorithm/string.hpp>
 #include <cassert>
 
 NFmiMenuItemList::NFmiMenuItemList(void)
@@ -45,7 +47,7 @@ NFmiMenuItemList::NFmiMenuItemList(NFmiParamBag* theParamBag)
 		
 		while(theParamBag -> NextActive())
 		{
-			auto menuItem = std::make_unique<NFmiMenuItem>(theParamBag->Current()->GetParamName(), FmiParameterName(theParamBag -> Current() -> GetParam()->GetIdent()));
+			auto menuItem = std::make_unique<NFmiMenuItem>(std::string(theParamBag->Current()->GetParamName()), FmiParameterName(theParamBag -> Current() -> GetParam()->GetIdent()));
 			if (theParamBag->Current()->HasDataParams())
 			{
 				NFmiMenuItemList* menuItemList = new NFmiMenuItemList(theParamBag -> Current() -> GetDataParams());
@@ -53,6 +55,7 @@ NFmiMenuItemList::NFmiMenuItemList(NFmiParamBag* theParamBag)
 			}
             Add(std::move(menuItem));
         }
+        SortParamsInAlphabeticalOrder();
 	}
 }
 
@@ -66,7 +69,7 @@ static void AddPossibleMetaParam(NFmiMenuItemList &menuItemList,
 {
     if(thePossibleMetaParam && !paramAddedAlready)
     {
-        auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, thePossibleMetaParam->GetParamName(),
+        auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(thePossibleMetaParam->GetParamName()),
             *thePossibleMetaParam, theMenuCommandType, theViewType, nullptr, theDataType);
         menuItemList.Add(std::move(menuItem));
     }
@@ -86,7 +89,7 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 		theParamBag -> Reset();
 		while(theParamBag -> Next())
 		{
-            auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, theParamBag -> Current() -> GetParamName(),
+            auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(theParamBag -> Current() -> GetParamName()),
 							*(theParamBag->Current()), theMenuCommandType, theViewType, nullptr, theDataType);
 
 			if (theParamBag -> Current() -> HasDataParams())
@@ -104,7 +107,8 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
         }
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theDataType, thePossibleWindVectorParam, false);
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theDataType, thePossibleStreamLineParam, streamLineParamAdded);
-	}
+        SortParamsInAlphabeticalOrder();
+    }
 }
 
 NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIdent& theDataIdent, 
@@ -125,7 +129,7 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIde
 		for(theLevels->Reset(); theLevels->Next();)
 		{
 			const NFmiLevel* level = theLevels->Level();
-			NFmiString menuItemText("L ");
+			std::string menuItemText("L ");
 			menuItemText += NFmiStringTools::Convert(level->LevelValue());
 
             auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, menuItemText, theDataIdent
@@ -149,7 +153,7 @@ static void AddPossibleMetaParam(NFmiMenuItemList &menuItemList
 {
     if(thePossibleMetaParam && !paramAddedAlready)
     {
-        auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, thePossibleMetaParam->GetParamName(),
+        auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(thePossibleMetaParam->GetParamName()),
             *thePossibleMetaParam, theMenuCommandType, theViewType, nullptr, theDataType);
         NFmiMenuItemList* subMenuItemList = new NFmiMenuItemList(theMapViewDescTopIndex, *thePossibleMetaParam
             , theMenuCommandType, theLevels, theDataType);
@@ -177,13 +181,13 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 			FmiParameterName param = FmiParameterName(dataIdent->GetParam()->GetIdent());
 			if(param == notLevelParam)
 			{
-                auto menuItem2 = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, dataIdent->GetParamName(),
+                auto menuItem2 = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(dataIdent->GetParamName()),
 									*dataIdent, theMenuCommandType, theViewType, nullptr, theDataType);
 				Add(std::move(menuItem2));
 			}
 			else
 			{
-                MenuItem menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, dataIdent->GetParamName(),
+                MenuItem menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(dataIdent->GetParamName()),
 								*(dataIdent), theMenuCommandType, theViewType, nullptr, theDataType);
 
 				if (dataIdent->HasDataParams())
@@ -217,7 +221,8 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 		}
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, thePossibleWindVectorParam, false);
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, thePossibleStreamLineParam, streamLineParamAdded);
-	}
+        SortParamsInAlphabeticalOrder();
+    }
 }
 
 NFmiMenuItemList::~NFmiMenuItemList(void)
@@ -290,17 +295,6 @@ NFmiMenuItem* NFmiMenuItemList::RecursivelyFoundMenuItem(void)
 	return itsRecursivelyFoundMenuItem;
 }
 
-
-void NFmiMenuItemList::Print(int roundCheck)			// Tämä on vain testausta varten.
-{
-    for(auto &menuItem : itsMenuItemList)
-    {
-		menuItem->Print(roundCheck);
-	}
-
-	return;
-}
-
 int NFmiMenuItemList::NumberOfSubMenus(int theNumberOfSubmenus)
 {
     for(auto &menuItem : itsMenuItemList)
@@ -360,4 +354,14 @@ unsigned int NFmiMenuItemList::MinId(void)
 unsigned int NFmiMenuItemList::MaxId(void)
 {
 	return itsMaxId;
+}
+
+void NFmiMenuItemList::SortParamsInAlphabeticalOrder()
+{
+    itsMenuItemList.sort(
+        [](const auto &menuItemPtr1, const auto &menuItemPtr2) 
+    {
+        return boost::algorithm::ilexicographical_compare(menuItemPtr1->MenuText(), menuItemPtr2->MenuText());
+    }
+    );
 }
