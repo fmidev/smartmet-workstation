@@ -971,6 +971,7 @@ void CMainFrame::OnClose()
 	if(displayNotCloseDlg || closeDlg.DoModal() == IDOK)
 	{
 		{
+            theApp.AllowApplicationToClose(true);
 			itsDoc->LogMessage("Give Working-threads 15 s time to stop.", CatLog::Severity::Info, CatLog::Category::Operational);
 			DoAppDataBaseCollection(NFmiApplicationDataBase::kClose);
 
