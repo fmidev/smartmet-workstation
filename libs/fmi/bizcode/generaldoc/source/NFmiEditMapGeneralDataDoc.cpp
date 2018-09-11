@@ -523,7 +523,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsCrossSectionDrawParamListVector(0)
 ,itsMTATempSystem()
 ,fTimeSerialDataViewOn(false)
-,fDrawDataOnlyOnRightProjection(false)
 ,fSynopDataGridViewOn(false)
 ,itsSynopHighlightStationWmoId(-1)
 ,fShowSynopHighlightStationMarker(false)
@@ -1806,7 +1805,6 @@ void InitSettingsFromConfFile(void)
 		itsDoAtSendCommandString = NFmiSettings::Require<string>("MetEditor::AtSending::ShellCommand");
 		fUseDoAtSendCommand = NFmiSettings::Require<bool>("MetEditor::AtSending::DoCommand");
 		itsSmartMetEditingMode = static_cast<CtrlViewUtils::FmiSmartMetEditingMode>(NFmiSettings::Require<int>("MetEditor::EditXMode"));
-		fDrawDataOnlyOnRightProjection = NFmiSettings::Require<bool>("MetEditor::DrawDataOnlyOnRightProjection");
 		fWarnIfCantSaveWorkingFile = NFmiSettings::Optional("MetEditor::WarnIfCantSaveWorkingFile", true);
 
 		fUseOnePressureLevelDrawParam = NFmiSettings::Optional("MetEditor::UseOnePressureLevelDrawParam", false);
@@ -9956,16 +9954,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		fTimeSerialDataViewOn = newValue;
 	}
 
-	bool DrawDataOnlyOnRightProjection(void)
-	{
-		return fDrawDataOnlyOnRightProjection;
-	}
-	void DrawDataOnlyOnRightProjection(bool newState)
-	{
-		fDrawDataOnlyOnRightProjection = newState;
-		NFmiSettings::Set(string("MetEditor::DrawDataOnlyOnRightProjection"), NFmiStringTools::Convert<bool>(fDrawDataOnlyOnRightProjection), true);
-	}
-
 	bool SynopDataGridViewOn(void)
 	{
 		return fSynopDataGridViewOn;
@@ -14011,8 +13999,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool fShowSynopHighlightStationMarker; // näytetäänkö merkki kartta näytössä, kun jokin asema on mahdollisesti valittu
 	NFmiPoint itsSynopHighlightLatlon; // tässä latlon pisteessä oli viimeksi merkattu synop asema synop-teksti-taulukko näytössä
 	bool fSynopDataGridViewOn; // onko synop teksti muodossa katselu ikkuna näkyvissä vai ei
-	bool fDrawDataOnlyOnRightProjection; // piirretäänkö hiladata 'väärän' projektion kartan päälle, tämä on editorin asetuksista säädettävä optio
-									// joka tarkoitus on estää käyttämästä omaa grafiikka pakettia 'vahingossa' kun on toolmaster käytössä
 	bool fTimeSerialDataViewOn; // onko aikasarja näyttö päällä vai ei
 	NFmiMTATempSystem itsMTATempSystem; // tieto luotaus moodista ja jos MTA-moodi päällä, tietoa luotausnäytössä näytettävistä luotauksista
 	NFmiPtrList<NFmiDrawParamList> *itsCrossSectionDrawParamListVector; // poikkileikkaus ikkuna-ruudukon drawparamit
@@ -15039,14 +15025,6 @@ void NFmiEditMapGeneralDataDoc::TimeSerialDataViewOn(bool newValue)
 	pimpl->TimeSerialDataViewOn(newValue);
 }
 
-bool NFmiEditMapGeneralDataDoc::DrawDataOnlyOnRightProjection(void)
-{
-	return pimpl->DrawDataOnlyOnRightProjection();
-}
-void NFmiEditMapGeneralDataDoc::DrawDataOnlyOnRightProjection(bool newState)
-{
-	pimpl->DrawDataOnlyOnRightProjection(newState);
-}
 bool NFmiEditMapGeneralDataDoc::SynopDataGridViewOn(void)
 {
 	return pimpl->SynopDataGridViewOn();

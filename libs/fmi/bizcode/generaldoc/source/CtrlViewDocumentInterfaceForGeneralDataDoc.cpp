@@ -86,11 +86,6 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsToolMasterAvailable(void)
     return itsDoc->IsToolMasterAvailable();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::DrawDataOnlyOnRightProjection(void)
-{
-    return itsDoc->DrawDataOnlyOnRightProjection();
-}
-
 NFmiDrawParamList* CtrlViewDocumentInterfaceForGeneralDataDoc::DrawParamList(int theDescTopIndex, int theIndex)
 {
     return itsDoc->DrawParamList(theDescTopIndex, theIndex);
