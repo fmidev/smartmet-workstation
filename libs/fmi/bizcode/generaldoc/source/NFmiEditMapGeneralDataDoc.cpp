@@ -4431,7 +4431,7 @@ void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NF
 
 void AddChangeAllDataTypesToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType)
 {
-	std::vector<std::pair<NFmiString, NFmiInfoData::Type> > dataTypeVec;
+	std::vector<std::pair<std::string, NFmiInfoData::Type> > dataTypeVec;
 	dataTypeVec.push_back(std::make_pair("Edited-Data", NFmiInfoData::kEditable));
 	dataTypeVec.push_back(std::make_pair("Model-Data", NFmiInfoData::kViewable));
 	dataTypeVec.push_back(std::make_pair("Observations", NFmiInfoData::kObservations));
@@ -4523,21 +4523,6 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 	theMenuItem->AddSubMenu(menuList);
 }
 
-void AddHelpModelProducerDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuList, const NFmiString &theName, FmiProducerName theProducerId)
-{
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(theProducerId));
-	int size = static_cast<int>(infos.size());
-	if(size > 0)
-	{
-        auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, theName, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kViewable);
-		NFmiMenuItemList *menuList = new NFmiMenuItemList;
-		AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, theProducerId);
-
-		menuItem->AddSubMenu(menuList);
-		theMenuList->Add(std::move(menuItem));
-	}
-}
-
 bool IsProducerWanted(int theCurrentProdId, int theProducerId1, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1)
 {
 	if(theCurrentProdId == theProducerId1)
@@ -4614,7 +4599,7 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 				int helpDataProdId = helpDataInfo.FakeProducerId();
 				if(prodId > 0 && prodId == helpDataProdId)
 				{
-                    auto satelItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, helpDataInfo.ImageDataIdent().GetParamName(),
+                    auto satelItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, std::string(helpDataInfo.ImageDataIdent().GetParamName()),
                         helpDataInfo.ImageDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kSatelData);
 					satelChannelMenuList->Add(std::move(satelItem));
 					anyChannelsFound = true;
@@ -5286,7 +5271,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 							{
 								if(analyzeInfos[i]->SizeLevels() <= 1)
 								{ // vain pintadatat otetaan käsittelyyn
-                                    auto item2 = std::make_unique<NFmiMenuItem>(theDescTopIndex, analyzeInfos[i]->Param().GetProducer()->GetName(), param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, analyzeInfos[i]->DataType(), index);
+                                    auto item2 = std::make_unique<NFmiMenuItem>(theDescTopIndex, std::string(analyzeInfos[i]->Param().GetProducer()->GetName()), param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, analyzeInfos[i]->DataType(), index);
 									item2->ExtraParam(analyzeInfos[i]->Param().GetProducer()->GetIdent());
 									diffToAnalyzeMenuList->Add(std::move(item2));
 								}
@@ -5927,7 +5912,7 @@ void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFm
 	NFmiInfoData::Type dataType = theMenuItem.DataType();
 	if(NFmiDrawParam::IsMacroParamCase(dataType))
 	{
-		theDrawParam->ParameterAbbreviation(static_cast<char*>(theMenuItem.Text())); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
+		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
 		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
 	if(theMacroParamInitFileName == 0)
 	{
@@ -6013,7 +5998,7 @@ void SetCrossSectionDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::sh
 	if(theMenuItem.DataType() == NFmiInfoData::kCrossSectionMacroParam)
 	{
 		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
-		theDrawParam->ParameterAbbreviation(static_cast<char*>(theMenuItem.Text())); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
+		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
 		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
 		if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
 			usedMacroParam = currentFolder->Current();
@@ -9884,7 +9869,7 @@ void AddTrajectoryOptionsToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu)
 	}
 }
 
-void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamList *theDrawParamList, const NFmiString &theMenuTitle, FmiMenuCommandType theMenuCommand)
+void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamList *theDrawParamList, const std::string &theMenuTitle, FmiMenuCommandType theMenuCommand)
 {
 	if(theDrawParamList && theDrawParamList->NumberOfItems() > 0)
 	{
@@ -9895,7 +9880,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			boost::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
 			NFmiDataIdent param(drawParam->Param());
-			NFmiString usedParamName = drawParam->ParameterAbbreviation();
+			std::string usedParamName = drawParam->ParameterAbbreviation();
 			bool macroParam = (drawParam->DataType() == NFmiInfoData::kCrossSectionMacroParam);
 			if(macroParam)
 				param.GetParam()->SetName(drawParam->InitFileName());
