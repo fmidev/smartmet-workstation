@@ -552,6 +552,9 @@ public:
 	void UseControlPoinTool(bool newValue) {fUseControlPoinTool = newValue;}
 	bool UseAnimationTool(void) const {return fUseAnimationTool;}
 	void UseAnimationTool(bool newValue) {fUseAnimationTool = newValue;}
+    bool KeepMapAspectRatio() const { return fKeepMapAspectRatio; }
+    void KeepMapAspectRatio(bool newValue) { fKeepMapAspectRatio = newValue; }
+
 	int AnimationStartPosition(void) const {return itsAnimationStartPosition;}
 	void AnimationStartPosition(int newValue) {itsAnimationStartPosition = newValue;}
 	int AnimationEndPosition(void) const {return itsAnimationEndPosition;}
@@ -592,6 +595,7 @@ private:
 	bool fUseAnalyzeTool;
 	bool fUseControlPoinTool;
 	bool fUseAnimationTool;
+    bool fKeepMapAspectRatio;
 	// animaatio asetukset
 	int itsAnimationStartPosition; // kuinka monennestako framesta editoitavaa dataa aloitetaan
 	int itsAnimationEndPosition; // kuinka monennestako framesta editoitavaa dataa lopetetaan

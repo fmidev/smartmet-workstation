@@ -8340,7 +8340,8 @@ bool InitCPGriddingProperties(void)
 		theMacro.AnimationStartPosition(animationStartOffset);
 		int animationEndOffset = 0; //itsAnimationEndTime.DifferenceInMinutes(TimeControlViewTimes(0).LastTime());
 		theMacro.AnimationEndPosition(animationEndOffset);
-	}
+        theMacro.KeepMapAspectRatio(ApplicationWinRegistry().KeepMapAspectRatio());
+    }
 
 	void SetGeneralDoc(NFmiViewSettingMacro &theMacro)
 	{
@@ -8673,6 +8674,8 @@ bool InitCPGriddingProperties(void)
 		// SynopDataGridView hoidetaan CSmartMetDoc-luokassa
 		SetObsComparisonSettings(theMacro);
 		SetMaskSettings(theMacro);
+
+        ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
 
 		// l‰j‰ dirty funktio kutsuja, ota nyt t‰st‰ selv‰‰. Pit‰isi laittaa uuteen uskoon koko p‰ivitys asetus juttu.
 		MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
