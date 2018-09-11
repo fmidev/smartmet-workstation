@@ -183,6 +183,8 @@ void CFmiParamAddingDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
         int otherColumnsCombinedWidth = cellRect.Width();
         itsGridCtrl.GetCellRect(0, 2, cellRect);
         otherColumnsCombinedWidth += cellRect.Width();
+        itsGridCtrl.GetCellRect(0, 3, cellRect);
+        otherColumnsCombinedWidth += cellRect.Width();
 
         // Calculate new width for name column so that it will fill the client area
         // Total width (gridCtrlWidth) - otherColumnsCombinedWidth - some value (32) that represents the width of the vertical scroll control
@@ -199,7 +201,8 @@ void CFmiParamAddingDlg::InitHeaders(void)
     int basicColumnWidthUnit = 18;
     itsHeaders.clear();
     itsHeaders.push_back(ParamAddingHeaderParInfo("Row", ParamAddingHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 24.)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Time", ParamAddingHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 5.5)));
     itsHeaders.push_back(ParamAddingHeaderParInfo("Id", ParamAddingHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 3.5)));
 }
 
@@ -390,6 +393,8 @@ static std::string GetColumnText(int theRow, int theColumn, const AddParams::Sin
         return std::to_string(theRow);
     case ParamAddingHeaderParInfo::kItemName:
         return theRowItem.itemName();
+    case ParamAddingHeaderParInfo::kOrigOrLastTime:
+        return theRowItem.origTime();
     case ParamAddingHeaderParInfo::kItemId:
     {
         if(theRowItem.itemId())

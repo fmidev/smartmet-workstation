@@ -39,13 +39,15 @@ namespace AddParams
         bool leafNode_;
         std::shared_ptr<NFmiLevel> level_;
         int treeDepth_;
+        std::string origTime_;
 
     public:
         SingleRowItem();
         SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId,
             bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType,
             unsigned long parentItemId = 0, const std::string &parentItemName = "", const bool leafNode = false,
-            const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth_ = 0, std::string &displayName = std::string());
+            const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth = 0, std::string &displayName = std::string(), 
+            std::string &origTime = std::string());
         ~SingleRowItem();
 
         RowType rowType() const { return rowType_; }
@@ -68,5 +70,7 @@ namespace AddParams
         void level(const std::shared_ptr<NFmiLevel>& level) {level_ = level; }
         int treeDepth() const { return treeDepth_; }
         int getTreeDepth(AddParams::RowType rowType);
+        const std::string& origTime() const { return origTime_; }
+        void origTime(const std::string &origTime) { origTime_ = origTime; }
     };
 }
