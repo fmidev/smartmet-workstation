@@ -296,7 +296,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_APPLY_STARTUP_VIEW_MACRO, &CSmartMetDoc::OnAcceleratorApplyStartupViewMacro)
     ON_COMMAND(ID_ACCELERATOR_TOGGLE_WMS_MAP_MODE, &CSmartMetDoc::OnAcceleratorToggleWmsMapMode)
     ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParamAddingDlgPlaceToDefault)
-    END_MESSAGE_MAP()
+        ON_COMMAND(ID_HELP_EXCEPTIONTEST, &CSmartMetDoc::OnHelpExceptiontest)
+        END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
 END_DISPATCH_MAP()
@@ -3109,6 +3110,14 @@ void CSmartMetDoc::DoCrashTest(void)
 	NFmiDataMatrix<float> bs;
 	bs[10][20] = 4.6f;
 	bs.At(10, 20) = 4.6f;
+}
+
+void CSmartMetDoc::OnHelpExceptiontest()
+{
+    // Yleinen poikkeuksien käsittely hoidetaan nyt applikaation Run metodissa, jossa niistä lokitetaan viestiä, mutta jatketaan.
+    std::string exceptionMessage = "Test exception is thrown from ";
+    exceptionMessage += __FUNCTION__;
+    throw std::runtime_error(exceptionMessage); 
 }
 
 void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
