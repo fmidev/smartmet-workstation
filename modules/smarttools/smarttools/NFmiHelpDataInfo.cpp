@@ -18,6 +18,7 @@
 
 using namespace std;
 
+const long kTimeInterpolationRangeDefaultValueInMinutes = 6 * 60;
 // ----------------------------------------------------------------------
 /*!
  *  syö spacet pois streamista ja palauttaa true:n jos ei olla lopussa
@@ -53,7 +54,8 @@ NFmiHelpDataInfo::NFmiHelpDataInfo(void)
       itsAdditionalArchiveFileCount(0),
       fEnable(true),
       fNonFixedTimeGab(false),
-      itsModelRunTimeGapInHours(0)
+      itsModelRunTimeGapInHours(0),
+      itsTimeInterpolationRangeInMinutes(kTimeInterpolationRangeDefaultValueInMinutes)
 {
 }
 
@@ -83,7 +85,8 @@ NFmiHelpDataInfo::NFmiHelpDataInfo(const NFmiHelpDataInfo &theOther)
       itsAdditionalArchiveFileCount(theOther.itsAdditionalArchiveFileCount),
       fEnable(theOther.fEnable),
       fNonFixedTimeGab(theOther.fNonFixedTimeGab),
-      itsModelRunTimeGapInHours(theOther.itsModelRunTimeGapInHours)
+      itsModelRunTimeGapInHours(theOther.itsModelRunTimeGapInHours),
+      itsTimeInterpolationRangeInMinutes(theOther.itsTimeInterpolationRangeInMinutes)
 {
 }
 
@@ -118,6 +121,7 @@ NFmiHelpDataInfo &NFmiHelpDataInfo::operator=(const NFmiHelpDataInfo &theOther)
     fEnable = theOther.fEnable;
     fNonFixedTimeGab = theOther.fNonFixedTimeGab;
     itsModelRunTimeGapInHours = theOther.itsModelRunTimeGapInHours;
+    itsTimeInterpolationRangeInMinutes = theOther.itsTimeInterpolationRangeInMinutes;
 
     itsBaseNameSpace = theOther.itsBaseNameSpace;
   }
@@ -152,6 +156,7 @@ void NFmiHelpDataInfo::Clear(void)
   fEnable = true;
   fNonFixedTimeGab = false;
   itsModelRunTimeGapInHours = 0;
+  itsTimeInterpolationRangeInMinutes = kTimeInterpolationRangeDefaultValueInMinutes;
 }
 
 static void FixPathEndWithSeparator(std::string &theFixedPathStr)
@@ -206,6 +211,16 @@ static void MakeCombinedDataFilePattern(NFmiHelpDataInfo &theDataInfo,
   }
 }
 
+static long GetDefaultTimeInterpolationRangeInMinutes(NFmiInfoData::Type dataType)
+{
+    // Nämä aikainterpolaatio jutut koskevat siis vain hilamuotoisia datoja, ei asemadataa.
+    // Esim. erilaiset tutkadatat saavat lyhyemmän interpolaatio rajan.
+    if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kSingleStationRadarData)
+        return 0;
+    else
+        return kTimeInterpolationRangeDefaultValueInMinutes;
+}
+
 void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
                                         const std::string &theName,
                                         const NFmiHelpDataInfoSystem &theHelpDataSystem)
@@ -245,6 +260,8 @@ void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
     fNonFixedTimeGab = NFmiSettings::Optional<bool>(itsBaseNameSpace + "::NonFixedTimeGab", false);
     itsModelRunTimeGapInHours =
         NFmiSettings::Optional<float>(itsBaseNameSpace + "::ModelRunTimeGapInHours", 0);
+    itsTimeInterpolationRangeInMinutes =
+        NFmiSettings::Optional<long>(itsBaseNameSpace + "::TimeInterpolationRangeInMinutes", ::GetDefaultTimeInterpolationRangeInMinutes(itsDataType));
 
     if (IsCombineData())
       ::MakeCombinedDataFilePattern(*this, theHelpDataSystem);

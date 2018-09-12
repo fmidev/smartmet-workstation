@@ -242,6 +242,8 @@ public:
     void ShowHakeMessages(bool newValue);
     bool ShowKaHaMessages();
     void ShowKaHaMessages(bool newValue);
+    int MinimumTimeRangeForWarningsOnMapViewsInMinutes();
+    void MinimumTimeRangeForWarningsOnMapViewsInMinutes(int newValue);
 
     double DrawObjectScaleFactor();
     void DrawObjectScaleFactor(double newValue);
@@ -286,6 +288,10 @@ private:
 
     boost::shared_ptr<CachedRegBool> mShowHakeMessages; // Näytetäänkö Warnings dialogin kautta Hake sanomia? (Hälytys keskus)
     boost::shared_ptr<CachedRegBool> mShowKaHaMessages; // Näytetäänkö Warnings dialogin kautta KaHa sanomia? (Kansalais havaintoja)
+    // Tällä voidaan säätää mikä on minimi aikaväli, mitä käytetään karttanäytöillä kun
+    // siellä näytetään joko Hake tai KaHa sanomia. Jos tämä on <= 0, käytetään karttanäytön time-steppiä.
+    // Jos tämä on > 0, käytetään tämän ja karttanäytön time-stepin maksimia.
+    boost::shared_ptr<CachedRegInt> mMinimumTimeRangeForWarningsOnMapViewsInMinutes;
 
     // Tällä mDrawObjectScaleFactor:illa skaalataan erilaisten (vektori, ei bitmap) piirto-objektien piirto kokoa. Koska ei voi kysyä järjestelmältä 
     // kuinka iso monitori fyysisesti (useat näytön ohjaimet 'valehtelevat' koon karkeasti) on ja niimuodoin ei voi laskea oikeaa pixel/mm suhdetta.

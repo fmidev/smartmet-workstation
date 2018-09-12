@@ -56,7 +56,7 @@
 
 #include "stdafx.h"
 #include "TextProgressCtrl.h"
-#include "CMemDC.h"
+#include "MemDC.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -147,7 +147,7 @@ void CTextProgressCtrl::OnPaint()
 		return;
 
 	CPaintDC PaintDC(this);						// device context for painting
-	CMemDC2 dc(&PaintDC);						// memory device context
+	CMemDC dc(&PaintDC);						// memory device context
 
 	// get colors to use
 	COLORREF crBarColor		= (COLORREF)OnGetBarColor(0, 0);

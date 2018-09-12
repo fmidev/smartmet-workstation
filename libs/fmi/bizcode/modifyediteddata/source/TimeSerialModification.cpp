@@ -61,537 +61,6 @@ static void LogMessage(TimeSerialModificationDataInterface &theAdapter, const st
     theAdapter.LogAndWarnUser(theMessage, "", severity, category, true);
 }
 
-MultiProcessClientData& FmiModifyEditdData::TimeSerialModificationDataAdapter::GetMultiProcessClientData(void) 
-{
-    static MultiProcessClientData dummy;
-    return dummy;
-}
-
-
-// *********************************************************************
-// ************ TimeSerialModificationDataAdapter **********************
-// *********************************************************************
-
-FmiModifyEditdData::TimeSerialModificationDataAdapter::TimeSerialModificationDataAdapter(void)
-:TimeSerialModificationDataInterface()
-,fCheckValidationFromSettings(false)
-,itsParamMaskList(new NFmiAreaMaskList())
-,fUseMasksInTimeSerialViews(false)
-,itsAnalyzeToolData(new NFmiAnalyzeToolData())
-,itsInfoOrganizer(new NFmiInfoOrganizer())
-,itsDrawParam(new NFmiDrawParam())
-,itsMetEditorOptionsData(new NFmiMetEditorOptionsData())
-,itsEditorControlPointManager(new NFmiEditorControlPointManager())
-,itsTimeEditSmootherValue(0)
-,itsSmartMetEditingMode(CtrlViewUtils::kFmiEditingModeNormal)
-,itsFilteringParameterUsageState(0)
-,itsFilteringParamBag(new NFmiParamBag())
-,itsEditedDataTimeDescriptor(new NFmiTimeDescriptor())
-,itsActiveViewTime(new NFmiMetTime())
-,itsSmartToolInfo(new NFmiSmartToolInfo())
-,itsSmartToolEditingErrorText()
-,fUseMasksWithFilterTool(false)
-,itsTestFilterUsedMask(NFmiMetEditorTypes::kFmiNoMask)
-,itsClipBoardData(new NFmiGrid())
-,itsFilterFunction(0) // 0 = avg
-,itsAreaFilterStartRange(-1, -1, 1, 1)
-,itsAreaFilterEndRange(-2, -2, 2, 2)
-,fUseTimeInterpolation(false)
-,itsTimeFilterRangeStart(-1, 1)
-,itsTimeFilterRangeEnd(-2, 2)
-,itsDataToDBCheckMethod(1)
-,itsDataLoadingInfo(new NFmiDataLoadingInfo())
-,itsHelpEditorSystem(new NFmiHelpEditorSystem())
-,itsHelpDataInfoSystem(new NFmiHelpDataInfoSystem())
-,fWarnIfCantSaveWorkingFile(true)
-,fUseEditedDataParamDescriptor(false)
-,itsEditedDataParamDescriptor(new NFmiParamDescriptor())
-,itsDataLoadingProducerIndexVector()
-,itsModelDataBlender(new NFmiModelDataBlender())
-,itsProducerIdLister(new NFmiProducerIdLister())
-,itsMacroParamSystem(new NFmiMacroParamSystem())
-,itsArea(new NFmiLatLonArea(NFmiPoint(9.0,54.0), NFmiPoint(36.0, 73.0)))
-,itsLanguage(kFinnish)
-{
-}
-
-FmiModifyEditdData::TimeSerialModificationDataAdapter::~TimeSerialModificationDataAdapter(void)
-{
-}
-
-static void AddDataToInfoOrganizer(boost::shared_ptr<NFmiInfoOrganizer> &theInfoOrganizer, const std::string &theFileFilter, NFmiInfoData::Type theDataType)
-{
-	std::string fileNameFound;
-	time_t timeStamp = NFmiFileSystem::FindFile(theFileFilter, true, &fileNameFound);
-
-	if(timeStamp && fileNameFound.empty() == false)
-	{
-		std::string totalFileNameFound = NFmiFileSystem::PathFromPattern(theFileFilter);
-		totalFileNameFound += fileNameFound;
-		std::auto_ptr<NFmiQueryData> qDataPtr;
-		if(totalFileNameFound.empty() == false && NFmiFileSystem::FileExists(totalFileNameFound) && NFmiFileSystem::FileEmpty(totalFileNameFound) == false)
-		{
-			qDataPtr.reset(new NFmiQueryData(totalFileNameFound, true)); // t‰m‰ laittaa memorymappauksen p‰‰lle
-		}
-
-		if(qDataPtr.get())
-		{
-			bool wasDeleted = false;
-			int undoRedoLevel = (theDataType == NFmiInfoData::kEditable) ? 3 : 0;
-			theInfoOrganizer->AddData(qDataPtr.release(), totalFileNameFound, theFileFilter, theDataType, undoRedoLevel, 0, 0, wasDeleted);
-			if(wasDeleted)
-				throw std::runtime_error(std::string("Unable to accept qdata from file: ") + fileNameFound);
-		}
-		else
-			throw std::runtime_error(std::string("Unable to read qdata file: ") + fileNameFound);
-	}
-	else
-		throw std::runtime_error(std::string("Unable to find any qdata with file-filter: ") + theFileFilter);
-
-}
-
-static void SetCurrentDrawParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiDataIdent& theParam, const NFmiLevel &theLevel, NFmiInfoData::Type theDataType)
-{
-	theDrawParam->Param(theParam);
-	theDrawParam->Level(theLevel);
-	theDrawParam->DataType(theDataType);
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::AddMask(FmiParameterName theParId, NFmiInfoData::Type theType, FmiMaskOperation maskOper, double limit1, double limit2)
-{
-	boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = itsInfoOrganizer->Info(NFmiDataIdent(NFmiParam(theParId)), 0, theType);
-	if(tmpInfo)
-	{
-		boost::shared_ptr<NFmiFastQueryInfo> infoCopy(new NFmiFastQueryInfo(*tmpInfo));
-
-		NFmiCalculationCondition calCond(maskOper, limit1, limit2);
-		boost::shared_ptr<NFmiAreaMask> mask(new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy));
-		if(mask)
-			itsParamMaskList->Add(mask);
-	}
-}
-
-
-// T‰m‰ funktio initialisoi kaikki dataosat niin ett‰ niist‰ on sitten k‰yttˆ‰ halutussa testaus tilanteessa.
-// T‰m‰ tulee varmaan joskus haarautumaan erilaisia testi skenaarioita vasten.
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::Initialize(DataVector &theUsedDatas, bool useMasks, bool fDoValidations)
-{
-/*
-	// lue halutut konfiguraatio tiedostot
-	std::vector<std::string> confFileNameVector;
-	confFileNameVector.push_back("xxx.conf");
-	for (size_t i=0; i < confFileNameVector.size(); i++)
-	{
-		std::string fileName = confFileNameVector[i]; 
-		if(NFmiSettings::Read(fileName) == false)
-			throw std::runtime_error(std::string("Error when reading configuration files: can't open file:\n") + fileName);
-	}
-*/
-	fCheckValidationFromSettings = fDoValidations;
-//    itsLogger->UsedLoggingDevices(kStdErr); // laitetaan lokitus vain std::cerr :iin
-	itsInfoOrganizer->Init("", false, false, true);
-	fUseMasksInTimeSerialViews = useMasks;
-	fUseMasksWithFilterTool = useMasks;
-//	itsAnalyzeToolData
-	for(size_t i = 0; i < theUsedDatas.size(); i++)
-		::AddDataToInfoOrganizer(itsInfoOrganizer, theUsedDatas[i].first, theUsedDatas[i].second); // lis‰‰ halutut qdatat infoorganizeriin
-	::SetCurrentDrawParam(itsDrawParam, NFmiDataIdent(NFmiParam(4, "T"), NFmiProducer(kFmiMETEOR)), NFmiLevel(), NFmiInfoData::kEditable);
-	itsMetEditorOptionsData->UseDataValiditation_T_DP(true); // enabloidaan t‰m‰ koska se on false:na oletus konstruktorin j‰lkeen
-
-	if(useMasks)
-	{
-		AddMask(kFmiTemperature, NFmiInfoData::kEditable, kFmiMaskGreaterThan, -3.);
-		AddMask(kFmiTopoGraf, NFmiInfoData::kStationary, kFmiMaskGreaterThan, 0.);
-	}
-
-//	itsEditorControlPointManager
-	itsTimeEditSmootherValue = 0;
-	itsSmartMetEditingMode = CtrlViewUtils::kFmiEditingModeNormal;
-	itsFilteringParameterUsageState = 0; // aktiivisen parametrin modifiointi moodi p‰‰ll‰
-	itsFilteringParamBag = boost::shared_ptr<NFmiParamBag>(new NFmiParamBag(EditedInfo()->ParamBag()));
-	itsEditedDataTimeDescriptor = boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(EditedInfo()->TimeDescriptor()));
-	itsActiveViewTime = boost::shared_ptr<NFmiMetTime>(new NFmiMetTime(EditedInfo()->TimeDescriptor().FirstTime()));
-
-	return true;
-}
-
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::CheckValidationFromSettings(void)
-{
-	return fCheckValidationFromSettings;
-}
-
-boost::shared_ptr<NFmiFastQueryInfo> FmiModifyEditdData::TimeSerialModificationDataAdapter::EditedInfo(void) 
-{
-	return itsInfoOrganizer->FindInfo(NFmiInfoData::kEditable);
-}
-
-boost::shared_ptr<NFmiAreaMaskList> FmiModifyEditdData::TimeSerialModificationDataAdapter::ParamMaskList(void)
-{
-	return itsParamMaskList;
-}
-
-NFmiAnalyzeToolData& FmiModifyEditdData::TimeSerialModificationDataAdapter::AnalyzeToolData(void)
-{
-	return *itsAnalyzeToolData;
-}
-
-NFmiInfoOrganizer* FmiModifyEditdData::TimeSerialModificationDataAdapter::InfoOrganizer(void)
-{
-	return itsInfoOrganizer.get();
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::AllMapViewDescTopsTimeDirty(const NFmiMetTime & /* theTime */ )
-{
-	// TODO t‰ll‰inen koodi sitten oikeaan luokkaan
-
-//	unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
-//	for(unsigned int i = 0; i<ssize; i++)
-//		MapViewDescTop(i)->MapViewCache().MakeTimeDirty(theTime);
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::AreaViewDirty(unsigned int /* theDescTopIndex */ , bool /* areaViewDirty */ , bool /* clearCache */ )
-{
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::MapDirty(unsigned int /* theDescTopIndex */ , bool /* mapDirty */ , bool /* clearCache */ )
-{
-}
-
-boost::shared_ptr<NFmiDrawParam> FmiModifyEditdData::TimeSerialModificationDataAdapter::GetUsedDrawParam(const NFmiDataIdent & theDataIdent, NFmiInfoData::Type theDataType)
-{
-	if(EditedInfo()->Param(static_cast<FmiParameterName>(theDataIdent.GetParamIdent())))
-		itsDrawParam->Param(EditedInfo()->Param());
-	else
-		itsDrawParam->Param(theDataIdent);
-	itsDrawParam->DataType(theDataType);
-	return itsDrawParam;
-
-	// TODO t‰ll‰inen rakenne pit‰‰ tehd‰ oikeaan luokkaan GenDoc-adapteriin
-//	if(itsModifiedPropertiesDrawParamList.Find(dataIdent, 0, NFmiInfoData::kEditable, "", true))
-//		drawParamForLimits = itsModifiedPropertiesDrawParamList.Current(); // katsotaan lˆytyykˆ ensin jo k‰ytˆss‰ olevista DrawParameista haluttu (jos siin‰ on muutoksia arvoissa)
-//	else
-//	{
-//		drawParamForLimits = InfoOrganizer()->CreateDrawParam(dataIdent, 0, NFmiInfoData::kEditable);
-//	}
-}
-
-NFmiMetEditorOptionsData& FmiModifyEditdData::TimeSerialModificationDataAdapter::MetEditorOptionsData(void)
-{
-	return *itsMetEditorOptionsData;
-}
-
-boost::shared_ptr<NFmiEditorControlPointManager> FmiModifyEditdData::TimeSerialModificationDataAdapter::CPManager(bool /* getOldSchoolCPManager */ )
-{
-	return itsEditorControlPointManager;
-}
-
-boost::shared_ptr<NFmiDrawParam> FmiModifyEditdData::TimeSerialModificationDataAdapter::ActiveDrawParam(unsigned int /* theDescTopIndex */ , int /* theRowIndex */ )
-{
-	return itsDrawParam;
-}
-
-NFmiParamBag& FmiModifyEditdData::TimeSerialModificationDataAdapter::FilteringParamBag(void)
-{
-	return *itsFilteringParamBag;
-}
-
-const NFmiTimeDescriptor& FmiModifyEditdData::TimeSerialModificationDataAdapter::EditedDataTimeDescriptor(void)
-{
-	return *itsEditedDataTimeDescriptor;
-}
-
-const NFmiMetTime& FmiModifyEditdData::TimeSerialModificationDataAdapter::ActiveViewTime(void)
-{
-	return *itsActiveViewTime;
-}
-/*
-boost::shared_ptr<NFmiTimeBag> FmiModifyEditdData::TimeSerialModificationDataAdapter::CreateDataFilteringTimeBag(boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, bool fPasteClipBoardData)
-{
-	boost::shared_ptr<NFmiTimeBag> timeBag;
-	if(theEditedData)
-	{
-		const NFmiTimeDescriptor &timeDesc = theEditedData->TimeDescriptor();
-		timeBag = boost::shared_ptr<NFmiTimeBag>(new NFmiTimeBag(timeDesc.FirstTime(), timeDesc.LastTime(), timeDesc.Resolution()));
-	}
-	return timeBag;
-}
-*/
-
-boost::shared_ptr<NFmiTimeDescriptor> FmiModifyEditdData::TimeSerialModificationDataAdapter::CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, bool fPasteClipBoardData)
-{
-	boost::shared_ptr<NFmiTimeDescriptor> timeDesc;
-	if(fPasteClipBoardData)
-	{
-		NFmiTimeBag timeBag(ActiveViewTime(), ActiveViewTime(), theEditedData->TimeResolution());
-		timeDesc = boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(theEditedData->OriginTime(), timeBag));
-	}
-	else
-	{
-		NFmiTimeDescriptor tmpTimeDesc(theEditedData->TimeDescriptor());
-		timeDesc = boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(tmpTimeDesc.GetIntersection(TimeFilterStartTime(), TimeFilterEndTime())));
-	}
-	return timeDesc;
-}
-
-NFmiSmartToolInfo* FmiModifyEditdData::TimeSerialModificationDataAdapter::SmartToolInfo(void)
-{
-	return itsSmartToolInfo.get();
-}
-
-std::string& FmiModifyEditdData::TimeSerialModificationDataAdapter::SmartToolEditingErrorText(void)
-{
-	return itsSmartToolEditingErrorText;
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::LastBrushedViewRow(int /* newRow */ )
-{
-	// oikeaan adapteriin pit‰‰ laittaa
-	//doc->LastBrushedViewRow(newRow );
-}
-
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::UseMasksWithFilterTool(void)
-{
-	return fUseMasksWithFilterTool;
-}
-
-int FmiModifyEditdData::TimeSerialModificationDataAdapter::TestFilterUsedMask(void)
-{
-	return itsTestFilterUsedMask;
-}
-
-NFmiGrid* FmiModifyEditdData::TimeSerialModificationDataAdapter::ClipBoardData(void)
-{
-	return itsClipBoardData.get();
-}
-
-// 0 = avg, 1 = max ja 2 = min filtterit
-int FmiModifyEditdData::TimeSerialModificationDataAdapter::FilterFunction(void)
-{
-	return itsFilterFunction;
-}
-
-const NFmiMetTime& FmiModifyEditdData::TimeSerialModificationDataAdapter::TimeFilterStartTime(void)
-{
-	return EditedInfo()->TimeDescriptor().FirstTime();
-}
-
-const NFmiMetTime& FmiModifyEditdData::TimeSerialModificationDataAdapter::TimeFilterEndTime(void)
-{
-	return EditedInfo()->TimeDescriptor().LastTime();
-}
-
-// 1 = alku laatikko ja 2 on loppu laatikko
-const NFmiRect& FmiModifyEditdData::TimeSerialModificationDataAdapter::AreaFilterRange(int index)
-{
-	if(index == 1)
-		return itsAreaFilterStartRange;
-	else
-		return itsAreaFilterEndRange;
-}
-
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::UseTimeInterpolation(void)
-{
-	return fUseTimeInterpolation;
-}
-
-const NFmiPoint& FmiModifyEditdData::TimeSerialModificationDataAdapter::TimeFilterRangeStart(void)
-{
-	return itsTimeFilterRangeStart;
-}
-
-const NFmiPoint& FmiModifyEditdData::TimeSerialModificationDataAdapter::TimeFilterRangeEnd(void)
-{
-	return itsTimeFilterRangeEnd;
-}
-
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::IsSmoothTimeShiftPossible(void)
-{
-	if(TimeFilterRangeStart().X() == TimeFilterRangeStart().Y() &&
-		TimeFilterRangeEnd().X() == TimeFilterRangeEnd().Y())
-		return true;
-	return false;
-}
-
-int FmiModifyEditdData::TimeSerialModificationDataAdapter::DataToDBCheckMethod(void)
-{
-	return itsDataToDBCheckMethod;
-}
-
-NFmiDataLoadingInfo& FmiModifyEditdData::TimeSerialModificationDataAdapter::GetUsedDataLoadingInfo(void)
-{
-	return *itsDataLoadingInfo;
-}
-
-NFmiHelpEditorSystem& FmiModifyEditdData::TimeSerialModificationDataAdapter::HelpEditorSystem(void)
-{
-	return *itsHelpEditorSystem;
-}
-
-// oikeassa GenDoc-adapterissa kutsu suoraan vastaavaa GenDoc:in StoreData-metodia.
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::StoreData(const std::string& theFileName, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave)
-{
-//	CSaveDataDlg dlg;
-	if(askForSave) // lis‰sin askForSaven, ett‰ ei aina kysytt‰isi talletetaanko
-	{
-//		if(dlg.DoModal() != IDOK)
-//			return false;
-	}
-	if(theSmartInfo && (theFileName != "")) // MITƒ JOS EI OLE NIMEƒ!!!!!!!
-	{
-		NFmiQueryData *data = theSmartInfo->DataReference().get();
-		bool status = false;
-		if(HelpEditorSystem().UsedHelpEditorStatus())
-		{ // pit‰‰ muuttaa help-datan tuottaja id, mutta kopioon!
-			NFmiQueryData helpData(*data);
-			helpData.Info()->SetProducer(NFmiProducer(NFmiProducerSystem::gHelpEditorDataProdId, "HelpData"));
-			status = StoreData(true, theFileName, &helpData); // t‰m‰n talletukseen on laitettava tmp-file v‰livaihe, koska t‰h‰n help-dataan muut SmartMetit voi tarrata heti kiinni
-		}
-		else
-			status = StoreData(false, theFileName, data); // normaali editoitu data talletetaan suoraan oikealla nimell‰, koska siihen ei kukaan tarraa kiinni (paitsi serveri joka k‰sittelee kyseisen datan)
-		if(status)
-			dynamic_cast<NFmiSmartInfo*>(theSmartInfo.get())->Dirty(false);
-		return status;
-	}
-	return false;
-}
-
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::StoreData(bool fDoSaveTmpRename, const std::string& theFileName, NFmiQueryData *theData)
-{
-	if(theData)
-	{
-		NFmiStreamQueryData sQData;
-		if(fDoSaveTmpRename)
-		{ // tehd‰‰n kirjoitus tmp-tiedostoon ja lopuksi tehd‰‰n rename tiedostolle lopullisen nimiseksi
-			NFmiFileString tmpFileNameStr(theFileName);
-			NFmiString tmpFileName = "TMP_";
-			tmpFileName += tmpFileNameStr.FileName();
-			tmpFileName += "_TMP";
-			tmpFileNameStr.FileName(tmpFileName);
-			bool status = sQData.WriteData(tmpFileNameStr, theData, static_cast<long>(theData->InfoVersion()));
-			if(status)
-			{
-				if(NFmiFileSystem::RenameFile(tmpFileNameStr.CharPtr(), theFileName))
-					return true;
-				else
-				{
-					std::string errLogStr("Error: StoreData failed, cannot rename tmp-file to final file: \n");
-					errLogStr += tmpFileNameStr.CharPtr();
-					errLogStr += " -> ";
-					errLogStr += theFileName;
-					::LogMessage(*this, errLogStr, CatLog::Severity::Error, CatLog::Category::Data);
-					return false;
-				}
-			}
-			else
-			{
-				std::string errLogStr("Error: StoreData failed, cannot store file in tmp-file: ");
-				errLogStr += tmpFileNameStr.CharPtr();
-                ::LogMessage(*this, errLogStr, CatLog::Severity::Error, CatLog::Category::Data);
-				return false;
-			}
-		}
-		else
-		{
-			if(sQData.WriteData(theFileName, theData, static_cast<long>(theData->InfoVersion())))
-				return true;
-			else
-			{
-				std::string errLogStr("Error: StoreData failed, cannot store file in file: ");
-				errLogStr += theFileName;
-                ::LogMessage(*this, errLogStr, CatLog::Severity::Error, CatLog::Category::Data);
-			}
-		}
-	}
-	std::string errLogStr("Error: StoreData failed, there were no data (null pointer) to store to file: ");
-	errLogStr += theFileName;
-    ::LogMessage(*this, errLogStr, CatLog::Severity::Error, CatLog::Category::Data);
-	return false;
-}
-
-NFmiHelpDataInfoSystem* FmiModifyEditdData::TimeSerialModificationDataAdapter::HelpDataInfoSystem(void)
-{
-	return itsHelpDataInfoSystem.get();
-}
-
-// oikeassa GenDoc-adapterissa kutsu suoraan vastaavaa GenDoc:in DataLoadingOK-metodia.
-bool FmiModifyEditdData::TimeSerialModificationDataAdapter::DataLoadingOK(bool noError)
-{
-	return !noError;
-}
-
-// oikeassa GenDoc-adapterissa kutsu suoraan vastaavaa GenDoc:in AddData-metodia.
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& /* theNotificationStr */ , bool /* loadFromFileState */)
-{
-	bool dataWasDeleted = false;
-	InfoOrganizer()->AddData(theData, theDataFileName, theDataFilePattern, theType, 0, 0, 6*60, dataWasDeleted);
-}
-
-NFmiParamDescriptor& FmiModifyEditdData::TimeSerialModificationDataAdapter::EditedDataParamDescriptor(void)
-{
-	return *itsEditedDataParamDescriptor;
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::PutWarningFlagTimerOn(void)
-{
-	// oikeassa GenDoc-adapterissa kutsu tulee olemaan alla oleva rivi!!!!
-	// itsMapView->PutWarningFlagTimerOn();
-}
-
-NFmiModelDataBlender& FmiModifyEditdData::TimeSerialModificationDataAdapter::ModelDataBlender(void)
-{
-	return *itsModelDataBlender;
-}
-
-NFmiProducerIdLister& FmiModifyEditdData::TimeSerialModificationDataAdapter::ProducerIdLister(void)
-{
-	return *itsProducerIdLister;
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::DoDataLoadingProblemsDlg(const std::string & /* theMessage */ )
-{
-	// oikeassa GenDoc-adapterissa tulee olemaan alla oleva koodi!!!!
-	// CDataLoadingProblemsDlg dlg(theMessage.c_str());
-	// dlg.DoModal();
-}
-
-const std::string& FmiModifyEditdData::TimeSerialModificationDataAdapter::GetCurrentSmartToolMacro(void) 
-{
-	static std::string dummyMacroStr = "result = T + 1";
-	return dummyMacroStr;
-}
-
-NFmiMacroParamSystem& FmiModifyEditdData::TimeSerialModificationDataAdapter::MacroParamSystem(void)
-{
-	return *itsMacroParamSystem;
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::SetLatestMacroParamErrorText(const std::string & /* theErrorText */ )
-{
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::SetMacroErrorText(const std::string & /* theErrorStr */ )
-{
-}
-
-boost::shared_ptr<NFmiArea> FmiModifyEditdData::TimeSerialModificationDataAdapter::MapHandlerArea(bool /* fGetZoomedArea */ )
-{
-	return itsArea;
-}
-
-FmiLanguage FmiModifyEditdData::TimeSerialModificationDataAdapter::Language(void)
-{
-	return itsLanguage;
-}
-
-void FmiModifyEditdData::TimeSerialModificationDataAdapter::LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption)
-{
-}
-
-// *********************************************************************
-// ************ TimeSerialModificationDataAdapter **********************
-// *********************************************************************
-
-
 struct LimitChecker
 {
 	LimitChecker(double theMin, double theMax):itsMin(theMin),itsMax(theMax){}
@@ -1005,7 +474,11 @@ static bool MustMakeValidationCheckAfterModifyingThisParam(TimeSerialModificatio
 		{
 		case kFmiTemperature: // T-DP tarkasteluissa
 		case kFmiPrecipitation1h:
-		case kFmiPrecipitationForm:
+#ifdef USE_POTENTIAL_VALUES_IN_EDITING
+        case kFmiPotentialPrecipitationForm:
+#else
+        case kFmiPrecipitationForm:
+#endif
 			return true;
 		}
 	}
@@ -1063,7 +536,11 @@ static bool MakeDataValiditation_PrForm_T(TimeSerialModificationDataInterface &t
 		if(editedData)
 		{
 			boost::shared_ptr<NFmiFastQueryInfo> prFormInfo(new NFmiFastQueryInfo(*editedData));
-			if(!prFormInfo->Param(kFmiPrecipitationForm))
+#ifdef USE_POTENTIAL_VALUES_IN_EDITING
+            if(!prFormInfo->Param(kFmiPotentialPrecipitationForm))
+#else
+            if(!prFormInfo->Param(kFmiPrecipitationForm))
+#endif
 				return false;
 			boost::shared_ptr<NFmiFastQueryInfo> temperatureInfo(new NFmiFastQueryInfo(*editedData));
 			if(!temperatureInfo->Param(kFmiTemperature))
@@ -1125,10 +602,10 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 		}
 		bool status = true;
 		if(theAdapter.MetEditorOptionsData().UseDataValiditation_PrForm_T())
-			status = status && ::MakeDataValiditation_PrForm_T(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
+			status &= ::MakeDataValiditation_PrForm_T(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
 
 		if(theAdapter.MetEditorOptionsData().UseDataValiditation_T_DP())
-			status = status && ::MakeDataValiditation_T_DP(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
+			status &= ::MakeDataValiditation_T_DP(theAdapter, theTimeDescriptor, theLocationMask, fDoMultiThread);
 		return status;
 	}
 	return false;
@@ -3083,16 +2560,11 @@ static bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemo
 	return status;
 }
 
-std::string FmiModifyEditdData::GetWantedSmartToolStr(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+std::string FmiModifyEditdData::GetMacroParamFormula(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
-	if(theDrawParam->ParameterAbbreviation() == std::string("macroParam"))
-		return macroParamSystem.CurrentMacroParam()->MacroText();
-	else
-	{
-		if(macroParamSystem.FindTotal(theDrawParam->InitFileName()))
-			return macroParamSystem.CurrentMacroParam()->MacroText();
-	}
-	return std::string("Error, couldn't found macro parameter: ") + theDrawParam->ParameterAbbreviation();
+    if(macroParamSystem.FindTotal(theDrawParam->InitFileName()))
+        return macroParamSystem.CurrentMacroParam()->MacroText();
+    throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
 }
 
 // Pit‰‰ tehd‰ alustuksia laskuissa k‰ytetyn fastInfon ja datamatriisin v‰lill‰.
@@ -3132,9 +2604,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 		smartToolModifier.SetGriddingHelper(theAdapter.GetGriddingHelper());
         smartToolModifier.IncludeDirectory(theAdapter.MacroParamSystem().RootPath());
 
-		// macroParam niminen macroparametri on erikoistapaus ja sen macroskripti otetaan currentti teksti
-		// muuten macro pit‰‰ pyyt‰‰ macroParaSysteemilt‰
-		std::string macroParamStr = FmiModifyEditdData::GetWantedSmartToolStr(theAdapter.MacroParamSystem(), theDrawParam);
+		std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
 		smartToolModifier.InitSmartTool(macroParamStr, true);
 	}
 	catch(std::exception &e)
@@ -3339,16 +2809,6 @@ void FmiModifyEditdData::DoTimeSerialModifications2(ModifyFunctionParamHolder &t
 	::ReportError_InfiniteValueCheck(theModifyFunctionParamHolder.itsAdapter, std::string(__FUNCTION__) + " - canceled");
 }
 
-bool FmiModifyEditdData::DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
-{
-	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
-		return false;
-	::SetForInfiniteValueCheck(theAdapter);
-	bool status = ::DoSmartToolEditing(theAdapter, theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly, fDoMultiThread, theThreadCallBacks);
-	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
-	return status;
-}
-
 void FmiModifyEditdData::DoSmartToolEditing2(ModifyFunctionParamHolder &theModifyFunctionParamHolder, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
 {
 	if(::IsDataModificationInProgress(theModifyFunctionParamHolder.itsAdapter, __FUNCTION__))
@@ -3516,8 +2976,13 @@ std::string FmiModifyEditdData::DataFilterToolsParamsForLog(TimeSerialModificati
         case 0: // Only active parameter
         {
             boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0));
-            desc = drawParam->ParameterAbbreviation();
-            return "[" + desc + "]";
+            if(drawParam)
+            {
+                desc = drawParam->ParameterAbbreviation();
+                return "[" + desc + "]";
+            }
+            else
+                return "[No active param to modify]";
         }
         case 1: // All parameters
         {

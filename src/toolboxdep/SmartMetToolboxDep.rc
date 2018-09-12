@@ -785,19 +785,19 @@ BEGIN
     CONTROL         "Lock time with main map view",IDC_CHECK_MAP_VIEW_LOCK_TIME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,47,109,10
     CONTROL         "Show trajectors on map",IDC_CHECK_MAP_VIEW_SHOW_TRAJECTORS_ON_MAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,58,92,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,68,92,10
     CONTROL         "Show sounding markers on map",IDC_CHECK_MAP_VIEW_SHOW_SOUNDING_MARKERS_ON_MAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,69,117,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,79,117,10
     CONTROL         "Show cross section markers on map",IDC_CHECK_MAP_VIEW_SHOW_CROSSSECTION_MARKERS_ON_MAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,80,129,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,90,129,10
     CONTROL         "Show selected points on map",IDC_CHECK_MAP_VIEW_SHOW_SELECTED_POINTS_ON_MAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,91,109,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,101,109,10
     CONTROL         "Show control points on map",IDC_CHECK_MAP_VIEW_SHOW_CONTROL_POINTS_ON_MAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,102,104,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,112,104,10
     CONTROL         "Show obs comparison on map",IDC_CHECK_MAP_VIEW_SHOW_OBS_COMPARISON_ON_MAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,113,110,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,123,110,10
     CONTROL         "Show warning message markers on map",IDC_CHECK_MAP_VIEW_SHOW_WARNING_MESSAGE_MARKERS_ON_MAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,124,143,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,134,143,10
     EDITTEXT        IDC_EDIT_MAP_VIEW_TIME_STEP,7,179,37,14,ES_AUTOHSCROLL
     LTEXT           "Time step in hours (e.g. 0.25 = 15 minutes)",IDC_STATIC_MAP_VIEW_TIME_STEP_STR,48,182,140,8
     GROUPBOX        "Map view display mode",IDC_STATIC_MAP_VIEW_SETTINGS_GROUP_DISPLAY_MODE_STR,7,194,189,29
@@ -807,6 +807,8 @@ BEGIN
     EDITTEXT        IDC_EDIT_MAP_VIEW_GRID_ROW_COUNT,60,157,33,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_MAP_VIEW_GRID_COLUMN_COUNT,102,157,33,14,ES_AUTOHSCROLL
     GROUPBOX        "Map view grid      Columns    Rows",IDC_STATIC_MAP_VIEW_SETTINGS_GROUP_GRID_STR,7,146,189,29
+    CONTROL         "Lock rows with main map view",IDC_CHECK_MAP_VIEW_LOCK_ROW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,111,10
 END
 
 IDD_DIALOG_SMART_TOOL DIALOGEX 0, 0, 321, 312
@@ -1288,6 +1290,7 @@ BEGIN
     VK_UP,          ID_ACCELERATOR_EXTRA_MAP_ZOOM_IN, VIRTKEY, SHIFT, NOINVERT
     VK_UP,          ID_ACCELERATOR_EXTRA_MAP_MOVE_MANY_MAP_ROWS_UP, VIRTKEY, SHIFT, CONTROL, NOINVERT
     "W",            ID_ACCELERATOR_SHOW_MASKS_ON_MAP_EXTRA_MAP, VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_ACCELERATOR_LOCK_ROW_TO_MAIN_MAP, VIRTKEY, SHIFT, NOINVERT
 END
 
 

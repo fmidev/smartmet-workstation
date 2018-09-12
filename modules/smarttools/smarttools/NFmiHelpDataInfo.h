@@ -93,6 +93,8 @@ class NFmiHelpDataInfo
   void NonFixedTimeGab(bool newValue) { fNonFixedTimeGab = newValue; }
   float ModelRunTimeGapInHours(void) const { return itsModelRunTimeGapInHours; }
   void ModelRunTimeGapInHours(float newValue) { itsModelRunTimeGapInHours = newValue; }
+  long TimeInterpolationRangeInMinutes() const { return itsTimeInterpolationRangeInMinutes; }
+  void TimeInterpolationRangeInMinutes(long newValue) { itsTimeInterpolationRangeInMinutes = newValue; }
   const std::string &PartialDataCacheFileNameFilter(void) const
   {
     return itsPartialDataCacheFileNameFilter;
@@ -177,6 +179,11 @@ class NFmiHelpDataInfo
   // Esim. EC:llä on normaalisti 12 h, mutta nyt 3vrk EC datat tulevat 6 tunnin välein, joten 3 vrk
   // datoille pitää asettaa tämä 6:ksi.
   // Default arvo on 0, jolloin tästä ei välitetä.
+
+  // Kuinka pitkältä aikajänteeltä SmartMet sallii aikainterpolaation tapahtuvan (käytetään ainakin hilapiirroissa).
+  // Tämän arvo on optionaalinen ja sen oletuspituus on 6 tuntia.
+  // SmartMet käyttää hila muotoisille havaintodatoille arvoa 1 tunti, jos tätä ei ole määritelty.
+  long itsTimeInterpolationRangeInMinutes;
 };
 
 class NFmiHelpDataInfoSystem

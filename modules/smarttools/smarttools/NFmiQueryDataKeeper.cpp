@@ -6,20 +6,6 @@
 #include <newbase/NFmiQueryData.h>
 #include <fstream>
 
-#ifdef _MSC_VER
-#pragma warning( \
-    disable : 4244 4267 4512)  // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
-#endif
-
-#ifndef BOOST_DISABLE_THREADS
-#include <boost/thread.hpp>
-#endif
-
-#ifdef _MSC_VER
-#pragma warning(default : 4244 4267 4512)  // laitetaan 4244 takaisin päälle, koska se on tärkeä
-                                           // (esim. double -> int auto castaus varoitus)
-#endif
-
 // ************* NFmiQueryDataKeeper-class **********************
 
 NFmiQueryDataKeeper::NFmiQueryDataKeeper(void)

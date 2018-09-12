@@ -1969,15 +1969,111 @@ void NFmiFastQueryInfo::CroppedValues(
 
 static float InterpolationHelper(float theValue1, float theValue2, float theFactor1)
 {
-  if (theValue1 == kFloatMissing && theValue2 == kFloatMissing)
-    return kFloatMissing;
-  else if (theValue1 == kFloatMissing)
-    return theValue2;
-  else if (theValue2 == kFloatMissing)
-    return theValue1;
-  else
-    return theFactor1 * theValue1 + (1 - theFactor1) * theValue2;
+    if(theValue1 == kFloatMissing && theValue2 == kFloatMissing)
+        return kFloatMissing;
+    else if(theValue1 == kFloatMissing || theValue2 == kFloatMissing)
+    {
+        // Jos toinen arvoista puuttuva, palautetaan suoraan se arvo, jota lähempänä theFactor1 on, oli se puuttuva tai ei
+        // Jos theFactor1 on 1, ollaan theValue1:n ajassa kiinni ja jos se on 0, ollaan theValue2:n ajassa kiinni
+        if(theFactor1 <= 0.5)
+            return theValue2;
+        else
+            return theValue1;
+    }
+    else
+        return theFactor1 * theValue1 + (1 - theFactor1) * theValue2;
 }
+
+// Luokka jonka avulla tehdään matriisi aikainterpolaatioita hallitummin
+class TimeInterpolationData
+{
+public:
+    bool doNearestTimeIfPossible = false;
+    bool isGrid = false;
+    bool hasWantedTime = false;
+    unsigned long oldTimeIndex = gMissingIndex;
+    bool isInsideAtAll = false;
+    NFmiMetTime previousTime = NFmiMetTime::gMissingTime;
+    unsigned long previousTimeIndex = gMissingIndex;
+    float previousToInterpolatedTimeDifferenceInMinutes = 0;
+    NFmiMetTime nextTime = NFmiMetTime::gMissingTime;
+    unsigned long nextTimeIndex = gMissingIndex;
+    float previousToNextTimeDifferenceInMinutes = 0;
+
+    TimeInterpolationData(NFmiFastQueryInfo &info, const NFmiMetTime &theInterpolatedTime, long theTimeRangeInMinutes = kLongMissing, bool doNearestTimeIfPossible = false)
+    {
+        this->doNearestTimeIfPossible = doNearestTimeIfPossible;
+        oldTimeIndex = info.TimeIndex();
+        isGrid = info.IsGrid();
+        if(isGrid)
+        {
+            if(info.Time(theInterpolatedTime))
+            {
+                hasWantedTime = true;
+                return;
+            }
+            else
+            {
+                isInsideAtAll = info.IsInside(theInterpolatedTime);
+                if(isInsideAtAll)
+                {
+                    if(info.TimeToNearestStep(theInterpolatedTime, kBackward, theTimeRangeInMinutes) || this->doNearestTimeIfPossible)
+                    {
+                        previousTime = info.Time();
+                        previousTimeIndex = info.TimeIndex();
+                        previousToInterpolatedTimeDifferenceInMinutes = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(previousTime));
+                        if(info.TimeToNearestStep(theInterpolatedTime, kForward, theTimeRangeInMinutes))
+                        {
+                            nextTime = info.Time();
+                            nextTimeIndex = info.TimeIndex();
+                            previousToNextTimeDifferenceInMinutes = static_cast<float>(nextTime.DifferenceInMinutes(previousTime));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    bool CanGetValues()
+    {
+        if(!isGrid)
+            return false;
+        if(hasWantedTime)
+            return true;
+        if(!isInsideAtAll)
+            return false;
+        if(doNearestTimeIfPossible)
+        {
+            if(previousTimeIndex == gMissingIndex && nextTimeIndex == gMissingIndex)
+                return false;
+        }
+        else
+        {
+            if(previousTimeIndex == gMissingIndex || nextTimeIndex == gMissingIndex)
+                return false;
+        }
+
+        return true;
+    }
+
+    bool HasWantedTime()
+    {
+        return hasWantedTime;
+    }
+
+    bool DoNearestTime()
+    {
+        if(doNearestTimeIfPossible)
+        {
+            if(previousTimeIndex != gMissingIndex && nextTimeIndex == gMissingIndex)
+                return true;
+            if(previousTimeIndex == gMissingIndex && nextTimeIndex != gMissingIndex)
+                return true;
+        }
+
+        return false;
+    }
+};
 
 // ----------------------------------------------------------------------
 /*!
@@ -1988,27 +2084,37 @@ static float InterpolationHelper(float theValue1, float theValue2, float theFact
  * \param theInterpolatedTime The desired time
  */
 // ----------------------------------------------------------------------
-void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix,
-                               const NFmiMetTime &theInterpolatedTime)
+void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime)
 {
-  // Only grids can be returned as matrices
-  if (!IsGrid()) return;
+    NFmiFastQueryInfo::Values(theMatrix, theInterpolatedTime, kLongMissing);
+}
 
-  int oldTimeIndex = TimeIndex();
+void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime, long theTimeRangeInMinutes, bool doNearestTimeIfPossible)
+{
+    TimeInterpolationData timeInterpolationData(*this, theInterpolatedTime, theTimeRangeInMinutes, doNearestTimeIfPossible); 
+    if(!timeInterpolationData.CanGetValues())
+    {
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
 
   // Handle exact existing time
-  if (Time(theInterpolatedTime))
+  if(timeInterpolationData.HasWantedTime())
   {
     Values(theMatrix);
-    TimeIndex(oldTimeIndex);
+    TimeIndex(timeInterpolationData.oldTimeIndex);
     return;
   }
 
-  // Cannot interpolate outside data range
-  if (!IsInside(theInterpolatedTime))
+  if(timeInterpolationData.DoNearestTime())
   {
-    TimeIndex(oldTimeIndex);
-    return;
+      if(timeInterpolationData.previousTimeIndex != gMissingIndex)
+          TimeIndex(timeInterpolationData.previousTimeIndex);
+      else
+          TimeIndex(timeInterpolationData.nextTimeIndex);
+      Values(theMatrix);
+      TimeIndex(timeInterpolationData.oldTimeIndex);
+      return;
   }
 
   // Extract leftside and rightside data values
@@ -2020,16 +2126,14 @@ void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix,
   NFmiDataMatrix<float> values1;
   NFmiDataMatrix<float> values2;
 
-  // pitää löytyä, koska isinside on tarkastettu edellä!!
-  if (TimeToNearestStep(theInterpolatedTime, kBackward)) Values(values1);
-  NFmiMetTime time1(Time());
+  TimeIndex(timeInterpolationData.previousTimeIndex);
+  Values(values1);
 
-  // pitää löytyä, koska isinside on tarkastettu edellä!!
-  if (TimeToNearestStep(theInterpolatedTime, kForward)) Values(values2);
-  NFmiMetTime time2(Time());
+  TimeIndex(timeInterpolationData.nextTimeIndex);
+  Values(values2);
 
-  auto diff1 = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(time1));
-  auto diff2 = static_cast<float>(time2.DifferenceInMinutes(time1));
+  auto diff1 = timeInterpolationData.previousToInterpolatedTimeDifferenceInMinutes;
+  auto diff2 = timeInterpolationData.previousToNextTimeDifferenceInMinutes;
 
   float factor = 1 - diff1 / diff2;
 
@@ -2081,7 +2185,7 @@ void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix,
         theMatrix[i][j] = InterpolationHelper(values1[i][j], values2[i][j], factor);
   }
 
-  TimeIndex(oldTimeIndex);
+  TimeIndex(timeInterpolationData.oldTimeIndex);
 }
 
 bool NFmiFastQueryInfo::GetLevelToVec(std::vector<float> &values)
@@ -2272,31 +2376,49 @@ bool NFmiFastQueryInfo::GetInterpolatedCube(std::vector<float> &values, const NF
  */
 // ----------------------------------------------------------------------
 void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
-                                      const NFmiMetTime &theInterpolatedTime,
-                                      int x1,
-                                      int y1,
-                                      int x2,
-                                      int y2)
+    const NFmiMetTime &theInterpolatedTime,
+    int x1,
+    int y1,
+    int x2,
+    int y2)
 {
-  // Only grids can be returned as matrices
-  if (!IsGrid()) return;
+    CroppedValues(theMatrix, theInterpolatedTime, x1, y1, x2, y2, kLongMissing, false);
+}
 
-  int oldTimeIndex = TimeIndex();
+void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
+        const NFmiMetTime &theInterpolatedTime,
+        int x1,
+        int y1,
+        int x2,
+        int y2,
+        long theTimeRangeInMinutes,
+        bool doNearestTimeIfPossible)
+{
+    TimeInterpolationData timeInterpolationData(*this, theInterpolatedTime, theTimeRangeInMinutes, doNearestTimeIfPossible);
+    if(!timeInterpolationData.CanGetValues())
+    {
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
 
-  // Handle exact existing time
-  if (Time(theInterpolatedTime))
-  {
-    CroppedValues(theMatrix, x1, y1, x2, y2);
-    TimeIndex(oldTimeIndex);
-    return;
-  }
+    // Handle exact existing time
+    if(timeInterpolationData.HasWantedTime())
+    {
+        CroppedValues(theMatrix, x1, y1, x2, y2);
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
 
-  // Cannot interpolate outside data range
-  if (!IsInside(theInterpolatedTime))
-  {
-    TimeIndex(oldTimeIndex);
-    return;
-  }
+    if(timeInterpolationData.DoNearestTime())
+    {
+        if(timeInterpolationData.previousTimeIndex != gMissingIndex)
+            TimeIndex(timeInterpolationData.previousTimeIndex);
+        else
+            TimeIndex(timeInterpolationData.nextTimeIndex);
+        CroppedValues(theMatrix, x1, y1, x2, y2);
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
 
   // Extract leftside and rightside data values
 
@@ -2307,16 +2429,14 @@ void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
   NFmiDataMatrix<float> values1;
   NFmiDataMatrix<float> values2;
 
-  // pitää löytyä, koska isinside on tarkastettu edellä!!
-  if (TimeToNearestStep(theInterpolatedTime, kBackward)) CroppedValues(values1, x1, y1, x2, y2);
-  NFmiMetTime time1(Time());
+  TimeIndex(timeInterpolationData.previousTimeIndex);
+  CroppedValues(values1, x1, y1, x2, y2);
 
-  // pitää löytyä, koska isinside on tarkastettu edellä!!
-  if (TimeToNearestStep(theInterpolatedTime, kForward)) CroppedValues(values2, x1, y1, x2, y2);
-  NFmiMetTime time2(Time());
+  TimeIndex(timeInterpolationData.nextTimeIndex);
+  CroppedValues(values2, x1, y1, x2, y2);
 
-  auto diff1 = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(time1));
-  auto diff2 = static_cast<float>(time2.DifferenceInMinutes(time1));
+  auto diff1 = timeInterpolationData.previousToInterpolatedTimeDifferenceInMinutes;
+  auto diff2 = timeInterpolationData.previousToNextTimeDifferenceInMinutes;
 
   float factor = 1 - diff1 / diff2;
 
@@ -2368,7 +2488,7 @@ void NFmiFastQueryInfo::CroppedValues(NFmiDataMatrix<float> &theMatrix,
         theMatrix[i][j] = InterpolationHelper(values1[i][j], values2[i][j], factor);
   }
 
-  TimeIndex(oldTimeIndex);
+  TimeIndex(timeInterpolationData.oldTimeIndex);
 }
 
 // ----------------------------------------------------------------------
@@ -2450,30 +2570,95 @@ void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix,
 }
 
 void NFmiFastQueryInfo::Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
+    NFmiDataMatrix<float> &theValues,
+    float P,
+    float H)
+{
+    theValues.Resize(theLatlonMatrix.NX(), theLatlonMatrix.NY(), kFloatMissing);
+    if(HPlaceDescriptor().IsGrid() == false) return;  // ei gridi dataa, interpolaatio ei onnistu
+
+    bool doNormalInterpolation = (P == kFloatMissing && H == kFloatMissing);
+    for(NFmiDataMatrix<NFmiPoint>::size_type j = 0; j < theLatlonMatrix.NY(); j++)
+    {
+        for(NFmiDataMatrix<NFmiPoint>::size_type i = 0; i < theLatlonMatrix.NX(); i++)
+        {
+            float &setValue = theValues[i][j];
+            const NFmiPoint &latlon = theLatlonMatrix[i][j];
+            if(doNormalInterpolation)
+                setValue = InterpolatedValue(latlon);
+            else if(H != kFloatMissing)
+                setValue = HeightValue(H, latlon);
+            else
+                setValue = PressureLevelValue(P, latlon);
+        }
+    }
+}
+
+void NFmiFastQueryInfo::Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
                                NFmiDataMatrix<float> &theValues,
                                const NFmiMetTime &theTime,
                                float P,
                                float H)
 {
-  theValues.Resize(theLatlonMatrix.NX(), theLatlonMatrix.NY(), kFloatMissing);
-  if (HPlaceDescriptor().IsGrid() == false) return;  // ei gridi dataa, interpolaatio ei onnistu
-  if (IsInside(theTime) == false) return;            // aikainterpolointi ei onnistu
+    Values(theLatlonMatrix,
+        theValues,
+        theTime,
+        P,
+        H,
+        kLongMissing,
+        false);
+}
 
-  bool doNormalInterpolation = (P == kFloatMissing && H == kFloatMissing);
-  for (NFmiDataMatrix<NFmiPoint>::size_type j = 0; j < theLatlonMatrix.NY(); j++)
-  {
-    for (NFmiDataMatrix<NFmiPoint>::size_type i = 0; i < theLatlonMatrix.NX(); i++)
+void NFmiFastQueryInfo::Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
+    NFmiDataMatrix<float> &theValues,
+    const NFmiMetTime &theTime,
+    float P,
+    float H,
+    long theTimeRangeInMinutes,
+    bool doNearestTimeIfPossible)
+{
+    TimeInterpolationData timeInterpolationData(*this, theTime, theTimeRangeInMinutes, doNearestTimeIfPossible);
+    if(!timeInterpolationData.CanGetValues())
     {
-      float &setValue = theValues[i][j];
-      const NFmiPoint &latlon = theLatlonMatrix[i][j];
-      if (doNormalInterpolation)
-        setValue = InterpolatedValue(latlon, theTime);
-      else if (H != kFloatMissing)
-        setValue = HeightValue(H, latlon, theTime);
-      else
-        setValue = PressureLevelValue(P, latlon, theTime);
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
     }
-  }
+
+    // Handle exact existing time
+    if(timeInterpolationData.HasWantedTime())
+    {
+        Values(theLatlonMatrix, theValues, P, H);
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
+
+    if(timeInterpolationData.DoNearestTime())
+    {
+        if(timeInterpolationData.previousTimeIndex != gMissingIndex)
+            TimeIndex(timeInterpolationData.previousTimeIndex);
+        else
+            TimeIndex(timeInterpolationData.nextTimeIndex);
+        Values(theLatlonMatrix, theValues, P, H);
+        TimeIndex(timeInterpolationData.oldTimeIndex);
+        return;
+    }
+
+    theValues.Resize(theLatlonMatrix.NX(), theLatlonMatrix.NY(), kFloatMissing);
+    bool doNormalInterpolation = (P == kFloatMissing && H == kFloatMissing);
+    for(NFmiDataMatrix<NFmiPoint>::size_type j = 0; j < theLatlonMatrix.NY(); j++)
+    {
+        for(NFmiDataMatrix<NFmiPoint>::size_type i = 0; i < theLatlonMatrix.NX(); i++)
+        {
+            float &setValue = theValues[i][j];
+            const NFmiPoint &latlon = theLatlonMatrix[i][j];
+            if(doNormalInterpolation)
+                setValue = InterpolatedValue(latlon, theTime, static_cast<int>(theTimeRangeInMinutes));
+            else if(H != kFloatMissing)
+                setValue = HeightValue(H, latlon, theTime, static_cast<unsigned long>(theTimeRangeInMinutes));
+            else
+                setValue = PressureLevelValue(P, latlon, theTime, static_cast<unsigned long>(theTimeRangeInMinutes));
+        }
+    }
 }
 
 // ----------------------------------------------------------------------

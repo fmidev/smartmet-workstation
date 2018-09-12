@@ -25,11 +25,14 @@ namespace
     }
 
     // When making rowItem from non-vertical data with only param info, rowItem (tree-node) is in
-    // collapsed mode because otherwise dialog's update codes will open it allways.
+    // collapsed mode because otherwise dialog's update codes will open it always.
     // Here is used the SingleRowItem's parentItemId to store producerId
-    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false)
+    
+    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, const std::string& origTime = std::string())
     {
-        return AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
+        auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
+        rowItem.origTime(origTime);
+        return rowItem;
     }
 
     AddParams::SingleRowItem makeLevelRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, const std::shared_ptr<NFmiLevel>& level)
@@ -84,26 +87,27 @@ namespace
         //kDataType = 5,
         //kProducerType = 6,
         //kCategoryType = 7,
-
+        
         if(!dataIdent.HasDataParams()) 
         {
+
             bool hasLevelData = queryInfo.SizeLevels() > 1;
             rowType = AddParams::RowType::kParamType;
 
             if(hasLevelData) //Level data
             {
-                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType)); //Parameter name as "header", not actual data
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false)); //Parameter name as "header", not actual data
                 ::addLevelRowItems(dialogRowData, dataIdent, dataType, AddParams::RowType::kLevelType, queryInfo); //Actual level data
             } 
             else //Surface data
             {
-                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true)); 
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true));
             }
         }
-        else //Wind submenu
+        else //Wind sub menu
         {
             rowType = AddParams::RowType::kParamType;
-            dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType));
+            dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false));
             rowType = AddParams::RowType::kSubParamType; 
             ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);
         }
@@ -154,5 +158,18 @@ namespace AddParams
             return latestMetaData_->Producer()->GetIdent();
         else
             return 0;
+    }
+
+     std::string SingleData::OrigOrLastTime() const
+    {
+        NFmiFastQueryInfo fastInfo(*latestMetaData_);
+        NFmiMetTime dataTime = fastInfo.OriginTime();
+        if(dataType_ == NFmiInfoData::kObservations || dataType_ == NFmiInfoData::kAnalyzeData)
+        {
+            dataTime = fastInfo.TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
+        }
+
+        std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
+        return !origTime.empty() ? origTime : "";
     }
 }

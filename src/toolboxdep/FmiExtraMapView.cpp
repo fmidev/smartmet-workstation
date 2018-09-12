@@ -8,7 +8,6 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiGdiPlusImageMapHandler.h"
 
-#include <agx\agx.h>
 #include "NFmiMetEditorOptionsData.h"
 #include "DialogEx.h"
 #include "CFmiMenu.h"
@@ -372,13 +371,7 @@ void CFmiExtraMapView::SetToolBoxsDC(CDC* theDC)
 // toolmasterin DC:n
 void CFmiExtraMapView::SetToolMastersDC(CDC* theDC)
 {
-	if(itsSmartMetDocumentInterface->IsToolMasterAvailable())
-	{
-		RECT rc;
- 		GetClientRect(&rc);
-		XuWindowSize(rc.right - rc.left, rc.bottom - rc.top);
-		XuWindowSelect(theDC->GetSafeHdc());
-	}
+    CtrlView::SetToolMastersDC(theDC, this, itsSmartMetDocumentInterface->IsToolMasterAvailable());
 }
 
 // tällä piirretään tavara, joka tulee myös bitmapin päälle

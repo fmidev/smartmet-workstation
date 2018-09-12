@@ -2,13 +2,13 @@
 
 #include "SingleRowItem.h"
 #include "boost/shared_ptr.hpp"
+#include "NFmiProducer.h"
 #include <vector>
 #include <functional>
 
 class NFmiHelpDataInfoSystem;
 class NFmiInfoOrganizer;
 class NFmiProducerSystem;
-class NFmiProducer;
 class NFmiMacroParamSystem;
 
 namespace AddParams
@@ -19,9 +19,9 @@ namespace AddParams
     {
         std::vector<std::unique_ptr<CategoryData>> categoryDataVector_;
 
-        // We don't want to do updateModelData everytime when SmartMet reads new queryData from file. 
+        // We don't want to do updateModelData every time when SmartMet reads new queryData from file. 
         // So when any data is read in GeneralDoc following happens:
-        // 1. Checks if update is pending andif it is, do nothing.
+        // 1. Checks if update is pending and if it is, do nothing.
         // 2. If it's not, startup updateTimer (in CMainFrm) with updateWaitTimeoutInSeconds_ and set on updatePending_ flag.
         // 3. When update timer starts, call updateModelData, which also sets updatePending_ flag off.
         int updateWaitTimeoutInSeconds_;
@@ -61,7 +61,8 @@ namespace AddParams
         ~ParamAddingSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
-        void addHelpData(const NFmiProducer &producer, std::string &menuString, NFmiInfoData::Type dataType);
+        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
+        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName);
         void updateData();
         void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory);
         int updateWaitTimeoutInSeconds() const { return updateWaitTimeoutInSeconds_; }

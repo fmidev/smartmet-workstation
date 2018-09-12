@@ -35,6 +35,8 @@
 #include "NFmiInfoData.h"
 #include "NFmiMetEditorTypes.h"
 
+#include <memory>
+
 class NFmiMenuItemList;
 class NFmiLevel;
 
@@ -44,14 +46,14 @@ class NFmiMenuItem
  public:
 
 	NFmiMenuItem(void);
-	NFmiMenuItem(const NFmiString &theText, const FmiParameterName& theParam);
-	NFmiMenuItem(int theMapViewDescTopIndex, const NFmiString &theText, const NFmiDataIdent& theDataIdent, 
+	NFmiMenuItem(const std::string &theText, const FmiParameterName& theParam);
+	NFmiMenuItem(int theMapViewDescTopIndex, const std::string &theText, const NFmiDataIdent& theDataIdent,
 				const FmiMenuCommandType &theMenuCommandType, 
 				const NFmiMetEditorTypes::View &theViewType, const NFmiLevel* theLevel,
 				NFmiInfoData::Type theDataType,
 				int theIndexInViewRow = -1,
 				bool viewMacroDrawParam = false);
-	NFmiMenuItem(int theMapViewDescTopIndex, const NFmiString &theText, const FmiParameterName& theParam, 
+	NFmiMenuItem(int theMapViewDescTopIndex, const std::string &theText, const FmiParameterName& theParam,
 				const FmiMenuCommandType &theMenuCommandType,
 				const NFmiMetEditorTypes::View &theViewType, const NFmiLevel* theLevel,
 				NFmiInfoData::Type theDataType,
@@ -62,22 +64,21 @@ class NFmiMenuItem
     NFmiMenuItem &operator=(const NFmiMenuItem &theMenuItem) = delete;
 
 	const FmiMenuCommandType &CommandType(void) const;
-	const NFmiString &Text(void) const;
+	const std::string &MenuText(void) const;
 	const FmiParameterName &Parameter(void) const;
 	const NFmiDataIdent& DataIdent(void)const {return itsDataIdent;};
-    const NFmiLevel* Level(void)const{return itsLevel;};
+    const NFmiLevel* Level(void) const;
 	const NFmiMetEditorTypes::View &ViewType(void) const;
 	const long& CommandId(void) const;
 	NFmiMenuItemList* SubMenu(void) const;
 	NFmiInfoData::Type DataType(void)const{return itsDataType;}; // 1999.09.22/Marko
 	void DataType(NFmiInfoData::Type theType){itsDataType = theType;}; // 1999.09.22/Marko
-	unsigned long NumberOfSubMenuItems(void);
+	size_t NumberOfSubMenuItems(void);
 
 	void CommandId(long theCommandId);
 
 	bool AddSubMenu (NFmiMenuItemList* theSubMenu);
 
-	void Print(int roundCheck) const;		// T‰m‰ on testausta varten.
 	int IndexInViewRow(void) const;
 	void IndexInViewRow(int newValue);
 	bool ViewMacroDrawParam(void) const {return fViewMacroDrawParam;}
@@ -92,16 +93,16 @@ class NFmiMenuItem
    NFmiDataIdent itsDataIdent;
    FmiMenuCommandType itsCommandType;
 
-   NFmiString itsText;					// menun k‰sky tekstimuodossa
+   std::string itsMenuText;
    FmiParameterName itsParameter;
    NFmiMetEditorTypes::View itsViewType;
-   NFmiLevel* itsLevel; // t‰t‰ tarvitaan joissain tapauksissa kun pit‰‰ asettaa/valita leveli
+   std::unique_ptr<NFmiLevel> itsLevel; // t‰t‰ tarvitaan joissain tapauksissa kun pit‰‰ asettaa/valita leveli
 
 //   Joskus varmaan tarvitsee 'merkata' k‰sky
 //   ihan erillisell‰ tunnuksella.
    long itsCommandId; // WM_USER+? // windowsin komento id arvo
 
-   NFmiMenuItemList* itsSubMenu;		// Menu item saataa sis‰lt‰‰ ali-menun.
+   std::unique_ptr<NFmiMenuItemList> itsSubMenu;		// Menu item saataa sis‰lt‰‰ ali-menun.
    NFmiInfoData::Type itsDataType; // 1999.09.22/Marko
 
    int itsMapViewDescTopIndex; // tein t‰st‰ tahallaan int enk‰ unsigned:in, ett‰ negatiivinen numero olisi puuttuva. Lis‰ksi laitoin

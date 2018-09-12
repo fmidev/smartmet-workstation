@@ -61,7 +61,6 @@ private:
 public:
 	afx_msg void OnBnClickedCheckUseViewMode();
 private:
-	BOOL fDrawDataOnlyOnRightProjection;
     CString itsQ2ServerUrlStrU_;
     CString itsQ3ServerUrlStrU_;
 	BOOL fQ2ServerUsed;

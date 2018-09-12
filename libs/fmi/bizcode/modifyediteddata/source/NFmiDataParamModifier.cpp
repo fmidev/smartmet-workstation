@@ -38,6 +38,7 @@
 #include "NFmiSettings.h"
 #include "client_to_master_connection.h" // HUOM! t‰m‰n pit‰‰ olla ennen #include "MultiProcessClientData.h", koska muuten tulee joku outo Winsock.h allready included error (boost asio -juttu)
 #include "MultiProcessClientData.h"
+#include "ToolMasterHelperFunctions.h"
 
 #include <fstream>
 
@@ -48,8 +49,6 @@
 #ifdef _MSC_VER
 #pragma warning (default : 4244 4267 4512) // laitetaan 4244 takaisin p‰‰lle, koska se on t‰rke‰ (esim. double -> int auto castaus varoitus)
 #endif
-
-#include <agX/agx.h>
 
 //--------------------------------------------------------
 // Constructor/Destructor
@@ -692,17 +691,6 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCPModifying(MultiProcessCli
     return status;
 }
 
-// k‰ytet‰‰n avuksi least-squeare-metodin yhteydess‰
-struct MultiplyFunctor
-{
-	MultiplyFunctor(double theFactor):itsFactor(theFactor){}
-	double operator()(double theValue)
-	{
-		return theValue*itsFactor;
-	}
-	double itsFactor;
-};
-
 namespace
 {
 	// ToolMaster griddausta saa tehd‰ vain yksi threadi kerrallaan, siksi pit‰‰ tehd‰ siihen 
@@ -730,56 +718,12 @@ void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValu
 	{
 		std::vector<float> tmGridData(gridData.NX() * gridData.NY(), kFloatMissing);
 
-		{ // HUOM!!! aloitetaan blokki, miss‰ write-lukko tehd‰‰n
+		{ 
+            // HUOM!!! aloitetaan blokki, miss‰ write-lukko tehd‰‰n
 			WriteLock lock(itsToolMasterGriddingMutex);
 			// Toolmaster griddaus funktioiden k‰yttˆ
-			XuViewWorldLimits(theRelativeRect.Left(), theRelativeRect.Right(), theRelativeRect.Top(), theRelativeRect.Bottom(), 0, 0);
-            XuUndefined(kFloatMissing, 2);
-
-            if(theObservationRadiusRelative != kFloatMissing)
-                XuGriddingLocalFitRadius(theObservationRadiusRelative);
-            else
-                XuGriddingLocalFitRadius(1.41); // T‰m‰ on laskentaruudun (~ 0,0 - 1,1) kulmapisteiden diagonaalinen et‰isyys, mik‰ on t‰m‰n radiuksen oletusarvo (= kaikkia pisteit‰ k‰ytet‰‰n aina laskuissa)
-
-			switch(theGriddingFunction)
-			{
-			case kFmiXuGriddingThinPlateSplineCalc:
-				XuGriddingThinPlateSplineCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()));
-				break;
-
-			case kFmiXuGriddingFastLocalFitCalc:
-				XuGriddingFastLocalFitCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()));
-				break;
-			case kFmiXuGriddingLocalFitCalc:
-				XuGriddingLocalFitCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()));
-				break;
-			case kFmiXuGriddingTriangulationCalc: // t‰m‰ ei oikein toimi (joskus teki rumaa mutta j‰rkev‰‰ tulosta, nyt rikki)
-				{
-					// triangulaatio algoritmi vaatii paria tyˆ taulukkoa
-					std::vector<int> int_array(31 * arraySize + (gridData.NY() * gridData.NX()) );
-					std::vector<float> float_array(5 * arraySize);
-					XuGriddingTriangulationCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()), &int_array[0], &float_array[0]);
-					break;
-				}
-			case kFmiXuGriddingLeastSquaresCalc: // en saa tekem‰‰n j‰rkev‰‰ tulosta
-				{
-					const double factor = 100.;
-					MultiplyFunctor mul(factor);
-					XuViewWorldLimits(0, factor, 0, factor, 0, 0);
-					int side_length = static_cast<int>(factor/2); // t‰m‰ menee luultavasti pieleen, pit‰‰ olla int, mutta asetin maailman 0,0 - 1,1:n kokoiseksi
-					int num_y_subgrid = 2;//itsGridYSize/10; // subgridin pit‰isi kai olla jaollinen originaali gridin koosta
-					int num_x_subgrid = 2;//itsGridXSize/10;
-					std::vector<float> tmpXValues(xValues.begin(), xValues.end());
-					std::transform(tmpXValues.begin(), tmpXValues.end(), tmpXValues.begin(), mul);
-					std::vector<float> tmpYValues(yValues.begin(), yValues.end());
-					std::transform(tmpYValues.begin(), tmpYValues.end(), tmpYValues.begin(), mul);
-					XuGriddingLeastSquaresCalc(&tmpXValues[0], &tmpYValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()), side_length, num_y_subgrid , num_x_subgrid);
-					break;
-				}
-			default:
-				break;
-			}
-		} // HUOM!!! write-lukko vapautuu t‰ss‰
+            Toolmaster::DoToolMasterGridding(xValues, yValues, zValues, arraySize, theRelativeRect, theGriddingFunction, theObservationRadiusRelative, gridData, tmGridData);
+		}
 
 		for(unsigned int j=0; j<gridData.NY(); j++)
 			for(unsigned int i=0; i<gridData.NX(); i++)

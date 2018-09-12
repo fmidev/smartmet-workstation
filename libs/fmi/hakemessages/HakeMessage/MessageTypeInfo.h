@@ -8,8 +8,8 @@ namespace HakeLegacySupport
     enum MessageType
     {
         kNoMessage = 0,
-        kHakeMessage = 1, // "Halytys keskus" warnings
-        kKahaMessage = 2 // "Kansalais havainnot" messages
+        kHakeMessage = 1, // "Halytyskeskus" warnings
+        kKahaMessage = 2 // "Kansalaishavainnot" messages
     };
 
     // Tämä erottaa yhden MessageTypeInfo:n stringiksi muutettuja sisäisiä kenttiä
