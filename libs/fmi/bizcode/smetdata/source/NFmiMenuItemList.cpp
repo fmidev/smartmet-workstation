@@ -29,43 +29,33 @@
 #include "NFmiDrawParam.h"
 #include "NFmiParamBag.h"
 #include "NFmiLevelBag.h"
+
+#include <boost/algorithm/string.hpp>
 #include <cassert>
 
 NFmiMenuItemList::NFmiMenuItemList(void)
-:itsList()
-,itsIter(itsList.Start())
-,itsFoundMenuItem(0)
-,itsMinId(421234567)			// keksitty
-,itsMaxId(0)
+:itsMenuItemList()
 {
 }
 
 NFmiMenuItemList::NFmiMenuItemList(NFmiParamBag* theParamBag)
+:itsMenuItemList()
 {
-	itsIter = itsList.Start();
-	itsFoundMenuItem = 0;
-	itsMinId = 421234567;			// keksitty
-	itsMaxId = 0;
-
 	if(theParamBag)
 	{
 		theParamBag -> Reset();
 		
 		while(theParamBag -> NextActive())
 		{
-			NFmiMenuItem* menuItem;
-			menuItem = new NFmiMenuItem(theParamBag->Current()->GetParamName(), 
-								FmiParameterName(theParamBag -> Current() -> GetParam()->GetIdent()));
-			Add(menuItem);
-
+			auto menuItem = std::make_unique<NFmiMenuItem>(std::string(theParamBag->Current()->GetParamName()), FmiParameterName(theParamBag -> Current() -> GetParam()->GetIdent()));
 			if (theParamBag->Current()->HasDataParams())
 			{
-				NFmiMenuItemList* menuItemList;
-				menuItemList = 
-					new NFmiMenuItemList(theParamBag -> Current() -> GetDataParams());
-				menuItem -> AddSubMenu(menuItemList);
+				NFmiMenuItemList* menuItemList = new NFmiMenuItemList(theParamBag -> Current() -> GetDataParams());
+				menuItem->AddSubMenu(menuItemList);
 			}
-		}
+            Add(std::move(menuItem));
+        }
+        SortParamsInAlphabeticalOrder();
 	}
 }
 
@@ -79,9 +69,9 @@ static void AddPossibleMetaParam(NFmiMenuItemList &menuItemList,
 {
     if(thePossibleMetaParam && !paramAddedAlready)
     {
-        NFmiMenuItem* menuItem = new NFmiMenuItem(theMapViewDescTopIndex, thePossibleMetaParam->GetParamName(),
-            *thePossibleMetaParam, theMenuCommandType, theViewType, 0, theDataType);
-        menuItemList.Add(menuItem);
+        auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(thePossibleMetaParam->GetParamName()),
+            *thePossibleMetaParam, theMenuCommandType, theViewType, nullptr, theDataType);
+        menuItemList.Add(std::move(menuItem));
     }
 }
 
@@ -91,26 +81,20 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 									NFmiInfoData::Type theDataType, 
                                     const NFmiDataIdent *thePossibleStreamLineParam,
                                     const NFmiDataIdent *thePossibleWindVectorParam)
+:itsMenuItemList()
 {
-	itsIter = itsList.Start();
-	itsFoundMenuItem = 0;
-	itsMinId = 421234567;			// keksitty
-	itsMaxId = 0;
-
 	if(theParamBag)
 	{
         bool streamLineParamAdded = false;
 		theParamBag -> Reset();
 		while(theParamBag -> Next())
 		{
-			NFmiMenuItem* menuItem = new NFmiMenuItem(theMapViewDescTopIndex, theParamBag -> Current() -> GetParamName(), 
-							*(theParamBag->Current()), theMenuCommandType, theViewType, 0, theDataType);
-			Add(menuItem);			
+            auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(theParamBag -> Current() -> GetParamName()),
+							*(theParamBag->Current()), theMenuCommandType, theViewType, nullptr, theDataType);
 
 			if (theParamBag -> Current() -> HasDataParams())
 			{
-				NFmiMenuItemList* menuItemList;
-				menuItemList = 
+				NFmiMenuItemList* menuItemList = 
 					new NFmiMenuItemList(theMapViewDescTopIndex, theParamBag -> Current() -> GetDataParams(),
                     theMenuCommandType,theViewType, theDataType, thePossibleStreamLineParam);
                 if(thePossibleStreamLineParam && theParamBag->Current()->GetParamIdent() == kFmiTotalWindMS)
@@ -118,21 +102,19 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
                     streamLineParamAdded = true;
                 }
 				menuItem -> AddSubMenu(menuItemList);
-			}
-		}
+            }
+            Add(std::move(menuItem));
+        }
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theDataType, thePossibleWindVectorParam, false);
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theDataType, thePossibleStreamLineParam, streamLineParamAdded);
-	}
+        SortParamsInAlphabeticalOrder();
+    }
 }
 
 NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIdent& theDataIdent, 
 					const FmiMenuCommandType& theMenuCommandType, NFmiLevelBag* theLevels
 					,NFmiInfoData::Type theDataType)
-:itsList()
-,itsIter(itsList.Start())
-,itsFoundMenuItem(0)
-,itsMinId(421234567)			// keksitty
-,itsMaxId(0)
+:itsMenuItemList()
 {
 	if(theLevels)
 	{
@@ -144,16 +126,15 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIde
         // on Windows 10 (64-bit) is between 85000 and 170000 menu items.
         const int maxLevelsIncludedInPopup = 250;
         int levelCounter = 0;
-		NFmiMenuItem* menuItem;
 		for(theLevels->Reset(); theLevels->Next();)
 		{
 			const NFmiLevel* level = theLevels->Level();
-			NFmiString menuItemText("L ");
+			std::string menuItemText("L ");
 			menuItemText += NFmiStringTools::Convert(level->LevelValue());
 
-			menuItem = new NFmiMenuItem(theMapViewDescTopIndex, menuItemText, theDataIdent
+            auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, menuItemText, theDataIdent
 				, theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, level, theDataType);
-			Add(menuItem);
+			Add(std::move(menuItem));
             levelCounter++;
             if(levelCounter >= maxLevelsIncludedInPopup)
                 break;
@@ -172,12 +153,12 @@ static void AddPossibleMetaParam(NFmiMenuItemList &menuItemList
 {
     if(thePossibleMetaParam && !paramAddedAlready)
     {
-        NFmiMenuItem *menuItem = new NFmiMenuItem(theMapViewDescTopIndex, thePossibleMetaParam->GetParamName(),
-            *thePossibleMetaParam, theMenuCommandType, theViewType, 0, theDataType);
-        menuItemList.Add(menuItem);
-        NFmiMenuItemList* menuItemList = new NFmiMenuItemList(theMapViewDescTopIndex, *thePossibleMetaParam
+        auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(thePossibleMetaParam->GetParamName()),
+            *thePossibleMetaParam, theMenuCommandType, theViewType, nullptr, theDataType);
+        NFmiMenuItemList* subMenuItemList = new NFmiMenuItemList(theMapViewDescTopIndex, *thePossibleMetaParam
             , theMenuCommandType, theLevels, theDataType);
-        menuItem->AddSubMenu(menuItemList);
+        menuItem->AddSubMenu(subMenuItemList);
+        menuItemList.Add(std::move(menuItem));
     }
 }
 
@@ -189,11 +170,7 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 								  ,FmiParameterName notLevelParam
                                   ,const NFmiDataIdent *thePossibleStreamLineParam
                                   ,const NFmiDataIdent *thePossibleWindVectorParam)
-:itsList()
-,itsIter(itsList.Start())
-,itsFoundMenuItem(0)
-,itsMinId(421234567)			// keksitty
-,itsMaxId(0)
+:itsMenuItemList()
 {
 	if(theParamBag && theLevels)
 	{
@@ -201,19 +178,17 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
         for(theParamBag->Reset(); theParamBag->Next();)
 		{
             auto dataIdent = theParamBag->Current();
-			NFmiMenuItem* menuItem = nullptr;
 			FmiParameterName param = FmiParameterName(dataIdent->GetParam()->GetIdent());
 			if(param == notLevelParam)
 			{
-				NFmiMenuItem *menuItem2 = new NFmiMenuItem(theMapViewDescTopIndex, dataIdent->GetParamName(),
-									*dataIdent, theMenuCommandType, theViewType, 0, theDataType);
-				Add(menuItem2);
+                auto menuItem2 = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(dataIdent->GetParamName()),
+									*dataIdent, theMenuCommandType, theViewType, nullptr, theDataType);
+				Add(std::move(menuItem2));
 			}
 			else
 			{
-				menuItem = new NFmiMenuItem(theMapViewDescTopIndex, dataIdent->GetParamName(),
-								*(dataIdent), theMenuCommandType, theViewType, 0, theDataType);
-				Add(menuItem);			
+                MenuItem menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(dataIdent->GetParamName()),
+								*(dataIdent), theMenuCommandType, theViewType, nullptr, theDataType);
 
 				if (dataIdent->HasDataParams())
 				{
@@ -241,57 +216,35 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 														, theMenuCommandType, theLevels, theDataType);
 					menuItem -> AddSubMenu(menuItemList);
 				}
-			}
+                Add(std::move(menuItem));
+            }
 		}
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, thePossibleWindVectorParam, false);
         ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, thePossibleStreamLineParam, streamLineParamAdded);
-	}
+        SortParamsInAlphabeticalOrder();
+    }
 }
-
-NFmiMenuItemList::NFmiMenuItemList(NFmiDrawParamList* theDrawParamList)
-{
-	itsIter = itsList.Start();
-	itsFoundMenuItem = 0;
-	itsMinId = 421234567;			// keksitty
-	itsMaxId = 0;
-
-	if(theDrawParamList)
-	{
-		theDrawParamList->Reset();
-		
-		while(theDrawParamList->Next())
-		{
-			NFmiMenuItem* menuItem = 0;
-			throw std::runtime_error("NFmiMenuItemList::NFmiMenuItemList ei toimi");
-			Add(menuItem);
-		}	
-	}
-}
-
 
 NFmiMenuItemList::~NFmiMenuItemList(void)
 {
-	itsList.Clear(true);	// tuhoaa listan itemit
 }
 
 bool NFmiMenuItemList::InitializeCommandIDs(unsigned long theFirstCommandID)
 {
 	unsigned long iD = theFirstCommandID;
 
-	NFmiMenuItem* menuItem;
-	for(itsIter = itsList.Start(); itsIter.Next();)
+	for(auto &menuItemPtr : itsMenuItemList)
 	{
-		menuItem = itsIter.CurrentPtr();
-		if (menuItem->SubMenu())
+		if (menuItemPtr->SubMenu())
 		{
-			menuItem->SubMenu()->InitializeCommandIDs(iD);
-			menuItem->SubMenu()->CalcMinAndMaxId();
-			if(menuItem->SubMenu()->MaxId())
-				iD = (menuItem->SubMenu()->MaxId()) + 1;
+            menuItemPtr->SubMenu()->InitializeCommandIDs(iD);
+            menuItemPtr->SubMenu()->CalcMinAndMaxId();
+			if(menuItemPtr->SubMenu()->MaxId())
+				iD = (menuItemPtr->SubMenu()->MaxId()) + 1;
 		}
 		else
 		{
-			menuItem->CommandId(iD);
+            menuItemPtr->CommandId(iD);
 			iD++;
 		}
 	}
@@ -301,30 +254,27 @@ bool NFmiMenuItemList::InitializeCommandIDs(unsigned long theFirstCommandID)
 	return true;
 }
 
-//--------------------------------------------------------
-// Add 
-//--------------------------------------------------------
-bool NFmiMenuItemList::Add (NFmiMenuItem* theMenuItem)
+bool NFmiMenuItemList::Add(MenuItem &&theMenuItem)
 {
-	return itsList.AddEnd(theMenuItem);
+	itsMenuItemList.push_back(std::move(theMenuItem));
+    return true;
 }
 
-void NFmiMenuItemList::Clear(bool fDeleteItem)
+void NFmiMenuItemList::Clear()
 {
-	itsList.Clear(fDeleteItem);
+	itsMenuItemList.clear();
 }
 
 bool NFmiMenuItemList::Find(const long &theId)
 {
-	NFmiMenuItem* menuItem;
-	for(itsIter = itsList.Start(); itsIter.Next();)
+    itsRecursivelyFoundMenuItem = nullptr;
+	for(auto &menuItem : itsMenuItemList)
 	{
-		menuItem = itsIter.CurrentPtr();
 		if (menuItem->SubMenu())
 		{
 			if (menuItem->SubMenu()->Find(theId))
 			{
-				itsFoundMenuItem = menuItem->SubMenu()->FoundMenuItem();
+				itsRecursivelyFoundMenuItem = menuItem->SubMenu()->RecursivelyFoundMenuItem();
 				return true;
 			}
 		}
@@ -332,7 +282,7 @@ bool NFmiMenuItemList::Find(const long &theId)
 		{
 			if (menuItem->CommandId() == theId)
 			{
-				itsFoundMenuItem = menuItem;
+				itsRecursivelyFoundMenuItem = menuItem.get();
 				return true;
 			}
 		}
@@ -340,31 +290,16 @@ bool NFmiMenuItemList::Find(const long &theId)
 	return false;
 }
 
-NFmiMenuItem *NFmiMenuItemList::FoundMenuItem(void)
+NFmiMenuItem* NFmiMenuItemList::RecursivelyFoundMenuItem(void)
 {
-	return itsFoundMenuItem;
-}
-
-
-void NFmiMenuItemList::Print(int roundCheck)			// Tämä on vain testausta varten.
-{
-	NFmiMenuItem* menuItem;
-	for(itsIter = itsList.Start(); itsIter.Next();)
-	{
-		menuItem = itsIter.CurrentPtr();
-		menuItem->Print(roundCheck);
-	}
-
-	return;
+	return itsRecursivelyFoundMenuItem;
 }
 
 int NFmiMenuItemList::NumberOfSubMenus(int theNumberOfSubmenus)
 {
-	NFmiMenuItem* menuItem;
-	for(itsIter = itsList.Start(); itsIter.Next();)
-	{
-		menuItem = itsIter.CurrentPtr();
-		if (menuItem && menuItem->SubMenu())
+    for(auto &menuItem : itsMenuItemList)
+    {
+		if(menuItem && menuItem->SubMenu())
 		{
 			theNumberOfSubmenus = menuItem->SubMenu()->NumberOfSubMenus(theNumberOfSubmenus);
 			theNumberOfSubmenus++;
@@ -373,17 +308,15 @@ int NFmiMenuItemList::NumberOfSubMenus(int theNumberOfSubmenus)
 	return theNumberOfSubmenus;
 }
 
-unsigned long NFmiMenuItemList::NumberOfMenuItems(void)
+size_t NFmiMenuItemList::NumberOfMenuItems(void)
 {
-	return itsList.NumberOfItems();
+	return itsMenuItemList.size();
 }
 
 void NFmiMenuItemList::CalcMinAndMaxId(void)
 {
-	NFmiMenuItem* menuItem;
-	for(itsIter = itsList.Start(); itsIter.Next();)
-	{
-		menuItem = itsIter.CurrentPtr();
+    for(auto &menuItem : itsMenuItemList)
+    {
 		if (menuItem->CommandId() != 0)		// Jos menuItemilla on SubMenuja, on sen ID 0.
 		{
 			if (menuItem->CommandId() < static_cast<long>(itsMinId))
@@ -403,20 +336,14 @@ void NFmiMenuItemList::CalcMinAndMaxId(void)
 	return;	
 }
 
-void NFmiMenuItemList::Reset(void)
+NFmiMenuItemList::MenuItemList::iterator NFmiMenuItemList::begin()
 {
-	itsIter = itsList.Start();
-	return;
+	return itsMenuItemList.begin();
 }
 
-bool NFmiMenuItemList::Next(void)
+NFmiMenuItemList::MenuItemList::iterator NFmiMenuItemList::end()
 {
-	return itsIter.Next();
-}
-
-NFmiMenuItem *NFmiMenuItemList::Current(void)
-{
-	return itsIter.CurrentPtr();
+    return itsMenuItemList.end();
 }
 
 unsigned int NFmiMenuItemList::MinId(void)
@@ -427,4 +354,14 @@ unsigned int NFmiMenuItemList::MinId(void)
 unsigned int NFmiMenuItemList::MaxId(void)
 {
 	return itsMaxId;
+}
+
+void NFmiMenuItemList::SortParamsInAlphabeticalOrder()
+{
+    itsMenuItemList.sort(
+        [](const auto &menuItemPtr1, const auto &menuItemPtr2) 
+    {
+        return boost::algorithm::ilexicographical_compare(menuItemPtr1->MenuText(), menuItemPtr2->MenuText());
+    }
+    );
 }

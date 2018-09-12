@@ -13,21 +13,20 @@ CFmiPopupMenu::~CFmiPopupMenu() = default;
 
 static void initPopupMenu(std::unique_ptr<CMenu> &popupMenu, NFmiMenuItemList *menuItemList, std::vector<std::unique_ptr<CMenu>> &subMenuContainer)
 {
-    for(menuItemList->Reset(); menuItemList->Next(); )
+    for(auto &menuItem : *menuItemList)
     {
-        auto menuItem = menuItemList->Current();
         auto *subMenuItemList = menuItem->SubMenu();
         if(subMenuItemList)
         {
             auto subMenu = std::make_unique<CMenu>();
             subMenu->CreatePopupMenu();
-            popupMenu->AppendMenu(MF_BYPOSITION | MF_STRING | MF_POPUP, UINT_PTR(subMenu->GetSafeHmenu()), CA2T(menuItem->Text()));
+            popupMenu->AppendMenu(MF_BYPOSITION | MF_STRING | MF_POPUP, UINT_PTR(subMenu->GetSafeHmenu()), CA2T(menuItem->MenuText().c_str()));
             ::initPopupMenu(subMenu, subMenuItemList, subMenuContainer);
             subMenuContainer.emplace_back(std::move(subMenu));
         }
         else
         {
-            popupMenu->AppendMenu(MF_BYPOSITION | MF_STRING, menuItem->CommandId(), CA2T(menuItem->Text()));
+            popupMenu->AppendMenu(MF_BYPOSITION | MF_STRING, menuItem->CommandId(), CA2T(menuItem->MenuText().c_str()));
         }
     }
 }

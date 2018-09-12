@@ -467,8 +467,6 @@ public:
 	void SetHighlightedSynopStation(const NFmiPoint &theLatlon, int theWmoId, bool fShowHighlight);
 	bool SynopDataGridViewOn(void);
 	void SynopDataGridViewOn(bool newState);
-	bool DrawDataOnlyOnRightProjection(void);
-	void DrawDataOnlyOnRightProjection(bool newState);
 	bool TimeSerialDataViewOn(void);
 	void TimeSerialDataViewOn(bool newValue);
 	NFmiMTATempSystem& GetMTATempSystem(void);

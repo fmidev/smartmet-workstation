@@ -467,7 +467,7 @@ void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &
         {
             addParamCommand = new NFmiMenuItem(
                 static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
-                NFmiString("Add some param"),
+                "Add some param",
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
                 NFmiMetEditorTypes::kFmiParamsDefaultView,

@@ -72,33 +72,6 @@ NFmiRect NFmiViewParamsView::CalcParamRect(int theParamLineIndex, bool fExcludeC
     return NFmiRect(left, top, right, bottom);
 }
 
-// jos s‰‰detty niin ett‰ ei piirret‰ dataa 'v‰‰r‰‰n' projektioon ja data ja kartto eri projektioissa,
-// ja ollaan piirt‰m‰ss‰ isoviiva/contour muodossa (style != 1),
-// piirret‰‰n parametrin p‰‰lle punainen ruksi
-void NFmiViewParamsView::DrawCrossOverParamNameIfNotDrawed(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &thePlace)
-{
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, true);
-	if(info && info->IsGrid() && (theDrawParam->GridDataPresentationStyle() != 1 || theDrawParam->GridDataPresentationStyle() != 6))
-	{
-        boost::shared_ptr<NFmiArea> infoArea(info->Area()->Clone());
-        if(itsCtrlViewDocumentInterface->IsToolMasterAvailable() && itsCtrlViewDocumentInterface->DrawDataOnlyOnRightProjection() && NFmiQueryDataUtil::AreAreasSameKind(itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area().get(), infoArea.get()) == false)
-		{
-			double left = thePlace.X();
-			double top = thePlace.Y() + 2*itsPixelSize.Y(); // kauneus syist‰ pikselin siirto
-			double bottom = thePlace.Y()+ itsLineHeight + itsPixelSize.Y();
-			double right = GetFrame().Right() - 2 * itsPixelSize.X();
-
-			theEnvi.SetFrameColor(NFmiColor(1.f,0.f,0.f)); // laitetaan punainen ruksi
-			NFmiLine line1(NFmiPoint(left, top), NFmiPoint(right, bottom - itsPixelSize.Y()), 0, &theEnvi);
-			itsToolBox->Convert(&line1);
-			NFmiLine line2(NFmiPoint(left, bottom - itsPixelSize.Y()), NFmiPoint(right, top), 0, &theEnvi);
-			itsToolBox->Convert(&line2);
-			NFmiRectangle rec1(NFmiPoint(left, top), NFmiPoint(right, bottom), 0, &theEnvi);
-			itsToolBox->Convert(&rec1);
-		}
-	}
-}
-
 void NFmiViewParamsView::DrawParamCheckBox(int lineIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	static NFmiDrawingEnvironment envi;
@@ -157,7 +130,6 @@ void NFmiViewParamsView::DrawData(void)
 					NFmiText text(LineTextPlace(counter, true), paramNameStr, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text);
 					DrawParamCheckBox(counter, drawParam);
-					DrawCrossOverParamNameIfNotDrawed(drawParam, *itsDrawingEnvironment, LineTextPlace(counter, true));
 					DrawModelSelectorButtons(drawParam, counter);
 				}
 			}

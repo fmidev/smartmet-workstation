@@ -37,12 +37,12 @@
 NFmiMenuItem::NFmiMenuItem(void)
 :itsDataIdent()
 ,itsCommandType(kFmiShowView)
-,itsText()
+,itsMenuText()
 ,itsParameter(kFmiLastParameter)
 ,itsViewType(NFmiMetEditorTypes::kFmiSymbolView)
-,itsLevel(0)
+,itsLevel()
 ,itsCommandId(0)
-,itsSubMenu(0)
+,itsSubMenu()
 ,itsDataType(NFmiInfoData::kEditable)
 ,itsMapViewDescTopIndex(-1)
 ,itsIndexInViewRow(-1)
@@ -51,14 +51,14 @@ NFmiMenuItem::NFmiMenuItem(void)
 {
 }
 
-NFmiMenuItem::NFmiMenuItem(const NFmiString &theText, const FmiParameterName& theParam)
+NFmiMenuItem::NFmiMenuItem(const std::string &theText, const FmiParameterName& theParam)
 :itsDataIdent()
 ,itsCommandType(kFmiShowView)
-,itsText(theText)
+,itsMenuText(theText)
 ,itsParameter(theParam)
 ,itsViewType(NFmiMetEditorTypes::kFmiSymbolView)
-,itsLevel(0)
-,itsSubMenu(0)
+,itsLevel()
+,itsSubMenu()
 ,itsDataType(NFmiInfoData::kEditable)
 ,itsMapViewDescTopIndex(-1)
 ,itsIndexInViewRow(-1)
@@ -68,7 +68,7 @@ NFmiMenuItem::NFmiMenuItem(const NFmiString &theText, const FmiParameterName& th
 
 }
 NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex
-						  ,const NFmiString &theText
+						  ,const std::string &theText
 						  ,const NFmiDataIdent& theDataIdent
 						  ,const FmiMenuCommandType &theMenuCommandType
 						  ,const NFmiMetEditorTypes::View &theViewType
@@ -78,11 +78,11 @@ NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex
 						  ,bool viewMacroDrawParam)
 :itsDataIdent(theDataIdent)
 ,itsCommandType(theMenuCommandType)
-,itsText(theText)
+,itsMenuText(theText)
 ,itsParameter(FmiParameterName(theDataIdent.GetParam()->GetIdent()))	// Lieneekö oikein???
 ,itsViewType(theViewType)
-,itsLevel(theLevel ? new NFmiLevel(*theLevel) : 0 )
-,itsSubMenu(0)
+,itsLevel(theLevel ? new NFmiLevel(*theLevel) : nullptr )
+,itsSubMenu()
 ,itsDataType(theDataType)
 ,itsMapViewDescTopIndex(theMapViewDescTopIndex)
 ,itsIndexInViewRow(theIndexInViewRow)
@@ -91,7 +91,7 @@ NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex
 {
 }
 
-NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex, const NFmiString &theText
+NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex, const std::string &theText
 						  ,const FmiParameterName& theParam
 						  ,const FmiMenuCommandType &theMenuCommandType
 						  ,const NFmiMetEditorTypes::View &theViewType
@@ -101,11 +101,11 @@ NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex, const NFmiString &theText
 						  ,bool viewMacroDrawParam)
 :itsDataIdent()
 ,itsCommandType(theMenuCommandType)
-,itsText(theText)
+,itsMenuText(theText)
 ,itsParameter(theParam)
 ,itsViewType(theViewType)
-,itsLevel(theLevel ? new NFmiLevel(*theLevel) : 0)
-,itsSubMenu(0)
+,itsLevel(theLevel ? new NFmiLevel(*theLevel) : nullptr)
+,itsSubMenu(nullptr)
 ,itsDataType(theDataType)
 ,itsMapViewDescTopIndex(theMapViewDescTopIndex)
 ,itsIndexInViewRow(theIndexInViewRow)
@@ -116,8 +116,6 @@ NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex, const NFmiString &theText
 
 NFmiMenuItem::~NFmiMenuItem()
 {
-	delete itsLevel;
-	delete itsSubMenu;
 }
 
 const FmiMenuCommandType &NFmiMenuItem::CommandType(void) const
@@ -125,9 +123,9 @@ const FmiMenuCommandType &NFmiMenuItem::CommandType(void) const
 	return itsCommandType;
 }
 
-const NFmiString &NFmiMenuItem::Text(void) const
+const std::string &NFmiMenuItem::MenuText(void) const
 {
-	return itsText;
+	return itsMenuText;
 }
 
 const FmiParameterName &NFmiMenuItem::Parameter(void) const
@@ -147,7 +145,7 @@ const long& NFmiMenuItem::CommandId(void) const
 
 NFmiMenuItemList* NFmiMenuItem::SubMenu(void) const
 {
-	return itsSubMenu;
+	return itsSubMenu.get();
 }
 
 void NFmiMenuItem::CommandId(long theCommandId)
@@ -158,34 +156,9 @@ void NFmiMenuItem::CommandId(long theCommandId)
 
 bool NFmiMenuItem::AddSubMenu (NFmiMenuItemList* theSubMenu)
 {
-	itsSubMenu = theSubMenu;
+	itsSubMenu.reset(theSubMenu);
 	itsCommandId = 0;
 	return true;
-}
-
-
-void NFmiMenuItem::Print(int roundCheck) const			// Tämä on vain testausta varten.
-{
-	using namespace std;
-
-	if(itsSubMenu)
-	{
-		for (int i = 1; i < roundCheck; i++)
-			cout << "          ";
-		cout << itsText.CharPtr();
-		cout << endl;
-		roundCheck++;
-		itsSubMenu->Print(roundCheck);
-	}
-	else
-	{
-		for (int i = 1; i < roundCheck; i++)
-			cout << "          ";
-		cout << itsText.CharPtr();
-		cout << "   ";
-		cout << itsCommandId << endl;
-	}
-	return;
 }
 
 int NFmiMenuItem::IndexInViewRow(void) const
@@ -198,10 +171,15 @@ void NFmiMenuItem::IndexInViewRow(int newValue)
 	itsIndexInViewRow = newValue;
 }
 
-unsigned long NFmiMenuItem::NumberOfSubMenuItems(void)
+size_t NFmiMenuItem::NumberOfSubMenuItems(void)
 {
 	if(itsSubMenu)
 		return itsSubMenu->NumberOfMenuItems();
 
 	return 0;
+}
+
+const NFmiLevel* NFmiMenuItem::Level(void) const
+{ 
+    return itsLevel.get(); 
 }
