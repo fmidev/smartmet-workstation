@@ -12,15 +12,34 @@ add_definitions(
     -DUSE_POTENTIAL_VALUES_IN_EDITING
     )
 
-# To disable/enable Cpprestsdk usage in SmartMet build do following: 
+# To disable/enable Cpprestsdk usage in SmartMet build, do following: 
 # 1. Set DISABLE_CPPRESTSDK to ON/OFF in smartmet-workstation/CMakeLists.txt
 # 2. Delete the MSVC build directory smartmet-workstation_msvc
 # 3. Run cmake script smartmet-workstation/scripts/cmake/cmake_msvc_build.sh
 # 4. Open smartmet-workstation_msvc/SmartMet.sln in Visual C++ and do full build
 option(DISABLE_CPPRESTSDK "Is CppRestSdk used in build" OFF)
+# This will affect WMS maps and data image functions and also HAKE/KaHA messages.
 
 if(DISABLE_CPPRESTSDK)
 add_definitions(-DDISABLE_CPPRESTSDK)
+endif()	
+
+# To disable/enable Extreme ToolkitPro in smartMet build, do following: 
+# 1. - 4. Same steps as with Cpprestsdk but with option DISABLE_EXTREME_TOOLKITPRO (next line)
+option(DISABLE_EXTREME_TOOLKITPRO "Is Extreme ToolkitPro used in build" OFF)
+# This will affect Smarttool dialog's behaviour.
+
+if(DISABLE_EXTREME_TOOLKITPRO)
+add_definitions(-DDISABLE_EXTREME_TOOLKITPRO)
+endif()	
+
+# To disable/enable Uniras Toolmaster in smartMet build, do following: 
+# 1. - 4. Same steps as with Cpprestsdk but with option DISABLE_UNIRAS_TOOLMASTER (next line)
+option(DISABLE_UNIRAS_TOOLMASTER "Is Uniras Toolmaster used in build" OFF)
+# This will affect isoline/contour visualizations and ControlPoint editing.
+
+if(DISABLE_UNIRAS_TOOLMASTER)
+add_definitions(-DDISABLE_UNIRAS_TOOLMASTER)
 endif()	
 	
 add_compile_options(

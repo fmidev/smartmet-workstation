@@ -1161,13 +1161,6 @@ NFmiSeaIcingWarningSystem& SmartMetDocumentInterfaceForGeneralDataDoc::SeaIcingW
     return itsDoc->SeaIcingWarningSystem();
 }
 
-#ifndef DISABLE_CPPRESTSDK
-HakeMessage::Main& SmartMetDocumentInterfaceForGeneralDataDoc::WarningCenterSystem()
-{
-    return itsDoc->WarningCenterSystem();
-}
-#endif // DISABLE_CPPRESTSDK
-
 CtrlViewUtils::GraphicalInfo& SmartMetDocumentInterfaceForGeneralDataDoc::GetGraphicalInfo(int theMapViewDescTopIndex)
 {
     return itsDoc->GetGraphicalInfo(theMapViewDescTopIndex);
@@ -1176,6 +1169,11 @@ CtrlViewUtils::GraphicalInfo& SmartMetDocumentInterfaceForGeneralDataDoc::GetGra
 AddParams::ParamAddingSystem& SmartMetDocumentInterfaceForGeneralDataDoc::ParamAddingSystem()
 {
     return itsDoc->ParamAddingSystem();
+}
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateParamAddingSystem()
+{
+    itsDoc->UpdateParamAddingSystem();
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId)
@@ -1211,16 +1209,6 @@ int SmartMetDocumentInterfaceForGeneralDataDoc::SatelDataRefreshTimerInMinutes()
 void SmartMetDocumentInterfaceForGeneralDataDoc::SatelDataRefreshTimerInMinutes(int newValue)
 {
     itsDoc->SatelDataRefreshTimerInMinutes(newValue);
-}
-
-bool SmartMetDocumentInterfaceForGeneralDataDoc::DrawDataOnlyOnRightProjection()
-{
-    return itsDoc->DrawDataOnlyOnRightProjection();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::DrawDataOnlyOnRightProjection(bool newState)
-{
-    itsDoc->DrawDataOnlyOnRightProjection(newState);
 }
 
 const NFmiPoint& SmartMetDocumentInterfaceForGeneralDataDoc::StationDataGridSize()
@@ -1411,3 +1399,23 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int th
         theLatLon, theTime, theSelectionCombineFunction, theMask
         , theRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
+{
+    itsDoc->UpdateRowInLockedDescTops(theOrigDescTopIndex);
+}
+
+int SmartMetDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+{
+    return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}
+
+#ifndef DISABLE_CPPRESTSDK
+// =================================================
+
+HakeMessage::Main& SmartMetDocumentInterfaceForGeneralDataDoc::WarningCenterSystem()
+{
+    return itsDoc->WarningCenterSystem();
+}
+
+#endif // DISABLE_CPPRESTSDK

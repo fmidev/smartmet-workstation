@@ -26,7 +26,6 @@ public:
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) override;
     NFmiInfoOrganizer* InfoOrganizer(void) override;
     bool IsToolMasterAvailable(void) override;
-    bool DrawDataOnlyOnRightProjection(void) override;
     NFmiDrawParamList* DrawParamList(int theDescTopIndex, int theIndex) override;
     NFmiDrawParamList* TimeSerialViewDrawParamList(void) override;
     const NFmiColor& HelpColor(void) const override;
@@ -129,8 +128,7 @@ public:
     NFmiIgnoreStationsData& IgnoreStationsData(void) override;
     const NFmiColor& StationPointColor(int theMapViewDescTopIndex) const override;
     const NFmiPoint& StationPointSize(int theMapViewDescTopIndex) const override;
-    NFmiMacroParamSystem& MacroParamSystem(void);
-    std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+    NFmiMacroParamSystem& MacroParamSystem(void) override;
     CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void) override;
     size_t SelectedGridPointLimit(void) override;
     boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) override;
@@ -201,9 +199,6 @@ public:
     bool ShowTrajectorsOnMap(int theDescTopIndex) override;
     std::vector<NFmiProducer>& ExtraSoundingProducerList(void) override;
     bool ShowWarningMarkersOnMap(int theDescTopIndex) override;
-#ifndef DISABLE_CPPRESTSDK
-    HakeMessage::Main& WarningCenterSystem(void) override;
-#endif // DISABLE_CPPRESTSDK
     CDC* MapBlitDC(int theDescTopIndex) override;
     void ToolTipColumnIndex(int newIndex) override;
     bool HasActiveViewChanged(void) override;
@@ -270,9 +265,6 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() override;
     bool UseWmsMaps() override;
     void UseWmsMaps(bool newValue) override;
-#ifndef DISABLE_CPPRESTSDK
-    Wms::WmsSupport& WmsSupport() override;
-#endif // DISABLE_CPPRESTSDK
     NFmiBetaProductionSystem& BetaProductionSystem() override;
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
@@ -280,4 +272,10 @@ public:
     Warnings::CapDataSystem& GetCapDataSystem() override;
     Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) override;
     void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) override;
+    int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
+
+#ifndef DISABLE_CPPRESTSDK
+    HakeMessage::Main& WarningCenterSystem(void) override;
+    Wms::WmsSupport& WmsSupport() override;
+#endif // DISABLE_CPPRESTSDK
 };

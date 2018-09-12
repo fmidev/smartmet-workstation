@@ -154,7 +154,9 @@ public:
 	NFmiGridPointCache& GridPointCache(void){return itsGridPointCache;}
 	bool LockToMainMapViewTime(void) const {return fLockToMainMapViewTime;}
 	void LockToMainMapViewTime(bool newValue) {fLockToMainMapViewTime = newValue;}
-	bool ShowTrajectorsOnMap(void) const {return fShowTrajectorsOnMap;}
+    bool LockToMainMapViewRow(void) const { return fLockToMainMapViewRow; }
+    void LockToMainMapViewRow(bool newValue) { fLockToMainMapViewRow = newValue; }
+    bool ShowTrajectorsOnMap(void) const {return fShowTrajectorsOnMap;}
 	void ShowTrajectorsOnMap(bool newValue) {fShowTrajectorsOnMap = newValue;}
 	bool ShowSoundingMarkersOnMap(void) const {return fShowSoundingMarkersOnMap;}
 	void ShowSoundingMarkersOnMap(bool newValue) {fShowSoundingMarkersOnMap = newValue;}
@@ -259,7 +261,8 @@ private:
 	NFmiGridPointCache itsGridPointCache;
     NFmiAnimationData itsAnimationData;
 
-	bool fLockToMainMapViewTime;
+    bool fLockToMainMapViewTime;
+    bool fLockToMainMapViewRow;
 	bool fShowTrajectorsOnMap;
 	bool fShowSoundingMarkersOnMap;
 	bool fShowCrossSectionMarkersOnMap;

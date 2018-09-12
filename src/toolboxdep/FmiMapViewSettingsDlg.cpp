@@ -20,6 +20,7 @@ CFmiMapViewSettingsDlg::CFmiMapViewSettingsDlg(NFmiMapViewDescTop &theMapViewdes
 	, fDrawCountryBorders(FALSE)
 	, fSpaceOutSymbolicGridData(FALSE)
 	, fLockToMainMapViewTime(FALSE)
+    , fLockToMainMapViewRow(FALSE)
 	, fShowTrajectorsOnMap(FALSE)
 	, fShowSoundingMarkersOnMap(FALSE)
 	, fShowCrossSectionMarkersOnMap(FALSE)
@@ -43,7 +44,8 @@ void CFmiMapViewSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	DDX_Check(pDX, IDC_CHECK_MAP_VIEW_DRAW_LAND_BORDERS, fDrawCountryBorders);
 	DDX_Check(pDX, IDC_CHECK_MAP_VIEW_SPACE_OUT_SYMBOLIC_DATA, fSpaceOutSymbolicGridData);
-	DDX_Check(pDX, IDC_CHECK_MAP_VIEW_LOCK_TIME, fLockToMainMapViewTime);
+    DDX_Check(pDX, IDC_CHECK_MAP_VIEW_LOCK_TIME, fLockToMainMapViewTime);
+    DDX_Check(pDX, IDC_CHECK_MAP_VIEW_LOCK_ROW, fLockToMainMapViewRow);
 	DDX_Check(pDX, IDC_CHECK_MAP_VIEW_SHOW_TRAJECTORS_ON_MAP, fShowTrajectorsOnMap);
 	DDX_Check(pDX, IDC_CHECK_MAP_VIEW_SHOW_SOUNDING_MARKERS_ON_MAP, fShowSoundingMarkersOnMap);
 	DDX_Check(pDX, IDC_CHECK_MAP_VIEW_SHOW_CROSSSECTION_MARKERS_ON_MAP, fShowCrossSectionMarkersOnMap);
@@ -75,7 +77,8 @@ BOOL CFmiMapViewSettingsDlg::OnInitDialog()
 
 	fDrawCountryBorders = itsMapViewdescTop.LandBorderColorIndex() >= 0;
     fSpaceOutSymbolicGridData = itsMapViewWinRegistry.SpacingOutFactor() > 0;
-	fLockToMainMapViewTime = itsMapViewdescTop.LockToMainMapViewTime();
+    fLockToMainMapViewTime = itsMapViewdescTop.LockToMainMapViewTime();
+    fLockToMainMapViewRow = itsMapViewdescTop.LockToMainMapViewRow();
 	fShowTrajectorsOnMap = itsMapViewdescTop.ShowTrajectorsOnMap();
 	fShowSoundingMarkersOnMap = itsMapViewdescTop.ShowSoundingMarkersOnMap();
 	fShowCrossSectionMarkersOnMap = itsMapViewdescTop.ShowCrossSectionMarkersOnMap();
@@ -125,7 +128,8 @@ void CFmiMapViewSettingsDlg::OnOK()
 			itsMapViewWinRegistry.SpacingOutFactor(0);
 	}
 
-	itsMapViewdescTop.LockToMainMapViewTime(fLockToMainMapViewTime == TRUE);
+    itsMapViewdescTop.LockToMainMapViewTime(fLockToMainMapViewTime == TRUE);
+    itsMapViewdescTop.LockToMainMapViewRow(fLockToMainMapViewRow == TRUE);
 	itsMapViewdescTop.ShowTrajectorsOnMap(fShowTrajectorsOnMap == TRUE);
 	itsMapViewdescTop.ShowSoundingMarkersOnMap(fShowSoundingMarkersOnMap == TRUE);
 	itsMapViewdescTop.ShowCrossSectionMarkersOnMap(fShowCrossSectionMarkersOnMap == TRUE);

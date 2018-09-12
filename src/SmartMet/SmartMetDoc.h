@@ -232,6 +232,7 @@ private:
     void LoadViewMacroSettingsForCrossSectionDlg(NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);
     void LoadViewMacroSettingsForExtraMapViewDlg(CFmiExtraMapViewDlg **extraMapViewDlg, unsigned int theMapViewDescTopIndex, NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);
     void LoadViewMacroSettingsForTimeSerialDataView(NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);
+    void MakeViewActivationAfterLoadingViewMacro();
 
 	CTimeEditValuesDlg *itsTimeSerialDataEditorDlg;
 	NFmiEditMapGeneralDataDoc* itsData;
@@ -366,6 +367,7 @@ public:
     afx_msg void OnAcceleratorApplyStartupViewMacro();
     afx_msg void OnAcceleratorToggleWmsMapMode();
     afx_msg void OnSetParamAddingDlgPlaceToDefault();
+    afx_msg void OnHelpExceptiontest();
 };
 
 

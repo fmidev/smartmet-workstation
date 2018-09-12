@@ -17,7 +17,9 @@ class SmartMetDocumentInterface;
 class NFmiSmartToolInfo;
 class NFmiDrawParam;
 class NFmiMacroParam;
+#ifndef DISABLE_EXTREME_TOOLKITPRO
 class CXTPSyntaxEditCtrl;
+#endif // DISABLE_EXTREME_TOOLKITPRO
 class NFmiMacroParamSystem;
 
 class CFmiSmartToolDlg : public CDialog
@@ -87,20 +89,25 @@ protected:
     void InitSpeedSearchControl();
     void DoTimedResetSearchResource();
     void DoSmartToolLoad(const std::string &theSmartToolName, bool fDoSpeedLoad);
+    std::string GetSmarttoolFilePath();
+    void WarnUserAboutNoEditingSmarttools();
+    std::string GetSmarttoolFormulaText();
+    bool LoadSmarttoolFormula(const std::string &theFilePath);
+#ifndef DISABLE_EXTREME_TOOLKITPRO
     void InitializeSyntaxEditControl();
     std::string MakeSyntaxEditConfigFilePath();
-    std::string GetSmarttoolFilePath();
     void AdjustSyntaxEditControlWindows();
     bool LoadSmarttoolToSyntaxEditControl(const std::string &theFilePath);
     void UpdateSyntaxEditControl();
     bool StoreSmarttoolFromSyntaxEditControl(const std::string &theFilePath);
     std::string GetMacroTextFromSyntaxEditor();
+#endif // DISABLE_EXTREME_TOOLKITPRO
     std::string GetMacroParamFilePath(NFmiMacroParamSystem &theMacroParamSystem);
     NFmiInfoData::Type GetUsedMacroParamType();
+    void DoFinalMacroParamWrite(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiMacroParam> &macroParamPointer);
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
-	boost::shared_ptr<NFmiDrawParam> itsMacroParamDrawParam;
 	int itsSelectedMapViewDescTopIndex;
     CString itsMacroParamNameU_;
     CListBox itsMacroParamList;
@@ -116,8 +123,10 @@ protected:
     BOOL fSearchOptionMatchAnywhere;
     CString itsUsedMacroPathU_;
 
+#ifndef DISABLE_EXTREME_TOOLKITPRO
     std::unique_ptr<CXTPSyntaxEditCtrl>	itsSyntaxEditControl;
     HACCEL itsSyntaxEditControlAcceleratorTable;
+#endif // DISABLE_EXTREME_TOOLKITPRO
 
 public:
 	afx_msg void OnBnClickedCheckModifyOnlySelectedLocations();

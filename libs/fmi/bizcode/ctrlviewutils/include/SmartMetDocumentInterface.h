@@ -311,11 +311,9 @@ public:
     virtual NFmiAutoComplete& AutoComplete() = 0;
     virtual void InvalidateMapView(bool bErase = true) = 0;
     virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() = 0;
-#ifndef DISABLE_CPPRESTSDK
-    virtual HakeMessage::Main& WarningCenterSystem() = 0;
-#endif // DISABLE_CPPRESTSDK
     virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) = 0;
     virtual AddParams::ParamAddingSystem& ParamAddingSystem() = 0;
+    virtual void UpdateParamAddingSystem() = 0;
     virtual bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) = 0;
     virtual int DataToDBCheckMethod() = 0;
     virtual void DataToDBCheckMethod(int newValue) = 0;
@@ -323,8 +321,6 @@ public:
     virtual NFmiHelpEditorSystem& HelpEditorSystem() = 0;
     virtual int SatelDataRefreshTimerInMinutes() = 0;
     virtual void SatelDataRefreshTimerInMinutes(int newValue) = 0;
-    virtual bool DrawDataOnlyOnRightProjection() = 0;
-    virtual void DrawDataOnlyOnRightProjection(bool newState) = 0;
     virtual const NFmiPoint& StationDataGridSize() = 0;
     virtual void StationDataGridSize(const NFmiPoint &newValue) = 0;
     virtual bool DoAutoLoadDataAtStartUp() const = 0;
@@ -364,4 +360,10 @@ public:
     virtual void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
+    virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
+    virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+
+#ifndef DISABLE_CPPRESTSDK
+    virtual HakeMessage::Main& WarningCenterSystem() = 0;
+#endif // DISABLE_CPPRESTSDK
 };

@@ -341,6 +341,7 @@ public:
     bool ContainsAutomationMoreThanOnce() const;
     bool HasAutomationAlready(const std::string &theFullFilePath) const;
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetDueAutomations(const NFmiMetTime &theCurrentTime);
+    void RefreshAutomationList();
 
     static json_spirit::Object MakeJsonObject(const NFmiBetaProductAutomationList &theBetaProductAutomationList);
     void ParseJsonPair(json_spirit::Pair &thePair);
@@ -354,6 +355,7 @@ private:
     bool MakeListItemPathSettingsCheck(NFmiBetaProductAutomationListItem &theListItem, const std::string &theCheckedPath);
     bool PrepareListItemAfterJsonRead(NFmiBetaProductAutomationListItem &theListItem);
     std::set<std::string> GetUniqueFilePathSet() const;
+    void RefreshAutomationIfNeeded(std::shared_ptr<NFmiBetaProductAutomationListItem> &automationListItem);
 
     AutomationContainer itsAutomationVector;
 

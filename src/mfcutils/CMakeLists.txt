@@ -18,6 +18,7 @@ add_library(
 target_include_directories(
     ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${GridCtrl_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     )
 
@@ -29,6 +30,7 @@ set(${PROJECT_NAME}_RES_FILE
 set(
     ${PROJECT_NAME}_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}
+    ${GridCtrl_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR} 
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

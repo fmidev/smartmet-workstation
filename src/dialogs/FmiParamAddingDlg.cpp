@@ -13,6 +13,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMenuItem.h"
 #include "SpecialDesctopIndex.h"
+#include "boost\math\special_functions\round.hpp"
 
 // *************************************************
 // NFmiParamAddingGridCtrl
@@ -182,6 +183,8 @@ void CFmiParamAddingDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
         int otherColumnsCombinedWidth = cellRect.Width();
         itsGridCtrl.GetCellRect(0, 2, cellRect);
         otherColumnsCombinedWidth += cellRect.Width();
+        itsGridCtrl.GetCellRect(0, 3, cellRect);
+        otherColumnsCombinedWidth += cellRect.Width();
 
         // Calculate new width for name column so that it will fill the client area
         // Total width (gridCtrlWidth) - otherColumnsCombinedWidth - some value (32) that represents the width of the vertical scroll control
@@ -195,11 +198,12 @@ void CFmiParamAddingDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
 
 void CFmiParamAddingDlg::InitHeaders(void)
 {
-    int basicColumnWidthUnit = 16;
+    int basicColumnWidthUnit = 18;
     itsHeaders.clear();
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Row", ParamAddingHeaderParInfo::kRowNumber, basicColumnWidthUnit * 2));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, basicColumnWidthUnit * 24));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Id", ParamAddingHeaderParInfo::kItemId, basicColumnWidthUnit * 4));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Row", ParamAddingHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Time", ParamAddingHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 5.5)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Id", ParamAddingHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 3.5)));
 }
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
@@ -389,6 +393,8 @@ static std::string GetColumnText(int theRow, int theColumn, const AddParams::Sin
         return std::to_string(theRow);
     case ParamAddingHeaderParInfo::kItemName:
         return theRowItem.itemName();
+    case ParamAddingHeaderParInfo::kOrigOrLastTime:
+        return theRowItem.origTime();
     case ParamAddingHeaderParInfo::kItemId:
     {
         if(theRowItem.itemId())
@@ -441,7 +447,7 @@ void CFmiParamAddingDlg::HandleGridCtrlsLButtonDblClk()
 }
 
 void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
-{
+{    
     if(rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode())
     {
         NFmiMenuItem *addParamCommand;
@@ -449,7 +455,7 @@ void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &
             addParamCommand = new NFmiMenuItem(
                 static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
                 rowItem.itemName(),
-                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.itemName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
                 NFmiMetEditorTypes::kFmiParamsDefaultView,
                 rowItem.level().get(),
@@ -461,8 +467,8 @@ void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &
         {
             addParamCommand = new NFmiMenuItem(
                 static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
-                NFmiString("Add some param"),
-                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.itemName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+                "Add some param",
+                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
                 NFmiMetEditorTypes::kFmiParamsDefaultView,
                 rowItem.level().get(), 

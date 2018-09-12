@@ -10,6 +10,7 @@
 #include "NFmiBetaProductSystem.h"
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiDictionaryFunction.h"
+#include "persist2.h"
 
 
 // CFmiBetaProductTabControlDialog dialog

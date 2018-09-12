@@ -55,6 +55,7 @@
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "Q2ServerInfo.h"
+#include "NFmiHelpDataInfo.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -179,6 +180,8 @@ NFmiStationView::NFmiStationView(int theMapViewDescTopIndex, boost::shared_ptr<N
 ,itsSpecialMatrixData()
 ,fUseCalculationPoints(false)
 ,fUseAlReadySpacedOutData(false)
+,itsTimeInterpolationRangeInMinutes(kLongMissing)
+,fAllowNearestTimeInterpolation(false)
 {
 }
 
@@ -428,8 +431,8 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
 
     if(minmaxCalc.MaxValue() != kFloatMissing)
     {
-        if(minmaxCalc.MaxValue() - avgCalc.CalculationResult() >= 2)
-            return static_cast<int>(avgCalc.CalculationResult()); // jos maksimi pituuden ja keski teksti pituuden ero oli kaksi tai yli, palauta keskiarvo
+        if(minmaxCalc.MaxValue() - avgCalc.CalculationResult() >= 4)
+            return boost::math::iround(avgCalc.CalculationResult()); // jos maksimi pituuden ja keski teksti pituuden ero oli 4 tai yli, palauta keskiarvon pyöristys
         else // muuten palauta maksimi arvo
             return static_cast<int>(minmaxCalc.MaxValue());
     }
@@ -562,7 +565,9 @@ bool NFmiStationView::IsStationDataMacroParam(void)
 {
     try
     {
-    	std::string macroParamStr = itsCtrlViewDocumentInterface->GetWantedSmartToolStr(itsDrawParam);
+        if(fUseCalculationPoints)
+            return true;
+    	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
         if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != -1)
             return true;
     }
@@ -577,8 +582,8 @@ bool NFmiStationView::IsStationDataMacroParam(void)
 bool NFmiStationView::IsSpaceOutDrawingUsed()
 {
     int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
-    bool locationMacroParamData = IsStationDataMacroParam() || fUseCalculationPoints;
-    if(spacingOutFactor > 0 && itsInfo->Grid() && !locationMacroParamData) // asema dataa ei yritetä harventaa
+    bool stationMacroParamData = IsStationDataMacroParam();
+    if(spacingOutFactor > 0 && itsInfo->Grid() && !stationMacroParamData) // asema dataa ei yritetä harventaa
     {
         if(itsDrawParam->DoSparseSymbolVisualization())
             return false;
@@ -1155,6 +1160,28 @@ float NFmiStationView::GetSynopValueFromQ2Archive(boost::shared_ptr<NFmiFastQuer
 	return kFloatMissing;
 }
 
+// Oletus: theInfo ei ole nullptr
+// Oletus 2: annetun theInfo:n aikainterpolaatio arvot ovat samoja kuin NFmiStationView-luokan itsInfo:n vastaavat.
+float NFmiStationView::CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime)
+{
+    if(fDoTimeInterpolation && itsTimeInterpolationRangeInMinutes == 0)
+        return kFloatMissing;
+    else
+    {
+        float currentValue = itsInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
+        if(currentValue == kFloatMissing && fAllowNearestTimeInterpolation)
+        {
+            auto oldTimeIndex = theInfo->TimeIndex();
+            if(theInfo->FindNearestTime(theTime, kCenter, itsTimeInterpolationRangeInMinutes))
+            {
+                currentValue = theInfo->FloatValue();
+            }
+            theInfo->TimeIndex(oldTimeIndex);
+        }
+        return currentValue;
+    }
+}
+
 // tämä hakee näytettävän datan riippuen asetuksista
 float NFmiStationView::ViewFloatValue(void)
 {
@@ -1185,13 +1212,13 @@ float NFmiStationView::ViewFloatValue(void)
 	}
 	else if(itsDrawParam->DoDataComparison())
 	{
-		float currentValue = itsInfo->InterpolatedValue(itsTime);
+		float currentValue = CalcTimeInterpolatedValue(itsInfo, itsTime);
 		itsToolTipDiffValue1 = currentValue;
 		NFmiProducer prod(itsDrawParam->DataComparisonProdId());
 		boost::shared_ptr<NFmiFastQueryInfo> comparisonData = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(itsDrawParam->DataComparisonType(), prod, true);  // true = tehdään vain pintadatalle
 		float value2 = kFloatMissing;
 		if(comparisonData && comparisonData->Param(static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent())))
-			value2 = comparisonData->InterpolatedValue(itsInfo->LatLon(), itsTime);
+			value2 = comparisonData->InterpolatedValue(itsInfo->LatLon(), itsTime, itsTimeInterpolationRangeInMinutes);
 		itsToolTipDiffValue2 = value2;
 		if(currentValue == kFloatMissing || value2 == kFloatMissing)
 			return kFloatMissing;
@@ -1209,12 +1236,12 @@ float NFmiStationView::ViewFloatValue(void)
 	}
 	else if(itsDrawParam->ShowDifferenceToOriginalData())
 	{
-		float currentValue = itsInfo->FloatValue();
+		float currentValue = CalcTimeInterpolatedValue(itsInfo, itsTime);
         float origValue = currentValue;
     	if(itsOriginalDataInfo)
         {
 		    itsOriginalDataInfo->LocationIndex(itsInfo->LocationIndex());
-		    origValue = itsOriginalDataInfo->FloatValue();
+            origValue = CalcTimeInterpolatedValue(itsOriginalDataInfo, itsTime);
         }
 
 		if(currentValue == kFloatMissing || origValue == kFloatMissing)
@@ -1227,7 +1254,7 @@ float NFmiStationView::ViewFloatValue(void)
         if(fDoTimeInterpolation)
         {
             auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
-            value = itsInfo->InterpolatedValue(usedTime);
+            value = CalcTimeInterpolatedValue(itsInfo, usedTime);
         }
 		else
 			value = itsInfo->FloatValue();
@@ -1239,7 +1266,7 @@ float NFmiStationView::ViewFloatValue(void)
 			else
 			{
 				wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-				float value2 = wantedModelRunInfo->InterpolatedValue(itsTime);
+				float value2 = CalcTimeInterpolatedValue(wantedModelRunInfo, itsTime);
 				if(value == kFloatMissing || value2 == kFloatMissing)
 					value = kFloatMissing;
 				else
@@ -1888,44 +1915,44 @@ bool NFmiStationView::GetArchiveDataFromQ3Server(NFmiDataMatrix<float> &theValue
 // &maxdecimals=1
 bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid &theUsedGrid, const std::string &theUsedBaseUrlStr)
 {
-	NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize();
-    theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
+    try
+    {
+        NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize();
+        theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
 
-	string urlStr = theUsedBaseUrlStr;
+        string urlStr = theUsedBaseUrlStr;
 
-	string baseParStr;
-	baseParStr += "code=";
-    
-	std::string macroParamStr = itsCtrlViewDocumentInterface->GetWantedSmartToolStr(itsDrawParam);
-	baseParStr += NFmiStringTools::UrlEncode(macroParamStr);
+        string baseParStr;
+        baseParStr += "code=";
 
-	string projectionStr("&projection=");
-	projectionStr += itsArea->AreaStr();
-	baseParStr += projectionStr;
+        std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
+        baseParStr += NFmiStringTools::UrlEncode(macroParamStr);
 
-	string gridsizeStr("&gridsize=");
-	gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.X()));
-	gridsizeStr += ",";
-	gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.Y()));
-	baseParStr += gridsizeStr;
+        string projectionStr("&projection=");
+        projectionStr += itsArea->AreaStr();
+        baseParStr += projectionStr;
 
-	string timeStr("&validtime=");
-	timeStr += itsTime.ToStr(kYYYYMMDDHHMMSS);
-	baseParStr += timeStr;
+        string gridsizeStr("&gridsize=");
+        gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.X()));
+        gridsizeStr += ",";
+        gridsizeStr += NFmiStringTools::Convert<int>(static_cast<int>(usedGridSize.Y()));
+        baseParStr += gridsizeStr;
 
-	int decimalcount = itsCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerDecimalCount();
-	baseParStr += "&maxdecimals=";
-	baseParStr += NFmiStringTools::Convert<int>(decimalcount);
+        string timeStr("&validtime=");
+        timeStr += itsTime.ToStr(kYYYYMMDDHHMMSS);
+        baseParStr += timeStr;
 
-	bool getOriginalGrid = false;
-	bool useBinaryData = true; // binääri data on nopeampaa
-	int usedCompression = 0; // 0=none, 1=zip, 2=bzip2
-	std::string extraInfoStr;
+        int decimalcount = itsCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerDecimalCount();
+        baseParStr += "&maxdecimals=";
+        baseParStr += NFmiStringTools::Convert<int>(decimalcount);
 
-	try
-	{
+        bool getOriginalGrid = false;
+        bool useBinaryData = true; // binääri data on nopeampaa
+        int usedCompression = 0; // 0=none, 1=zip, 2=bzip2
+        std::string extraInfoStr;
+
         itsCtrlViewDocumentInterface->GetDataFromQ2Server(urlStr, baseParStr, useBinaryData, usedCompression, theValues, extraInfoStr);
-	}
+    }
 	catch(std::exception & e)
 	{
 		// liatetaan varmuuden vuoksi matriisi 0 kokoiseksi
@@ -1943,7 +1970,28 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 	return true;
 }
 
-static void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2)
+long NFmiStationView::GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo)
+{
+    if(theHelpDataInfo)
+        return theHelpDataInfo->TimeInterpolationRangeInMinutes();
+    else
+        return 6 * 60; // Default will be 6 hours
+}
+
+bool NFmiStationView::AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes)
+{
+    if(theTimeInterpolationRangeInMinutes > 0)
+        return theTimeInterpolationRangeInMinutes <= 30;
+    else
+        return false;
+}
+
+NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+{
+    return GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());
+}
+
+void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2)
 {
 	if(theInfo == 0)
 		theValues = kFloatMissing;
@@ -1951,9 +1999,9 @@ static void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDa
 	{
         auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theTime);
 		if(fUseCropping)
-			theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2);
+			theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
 		else
-			theInfo->Values(theValues, usedTime);
+			theInfo->Values(theValues, usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
 	}
 }
 
@@ -2061,7 +2109,7 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 			if(itsDrawParam->DoDataComparison())
 			{
 				if(fGetCurrentDataFromQ2Server == false)
-					::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+					FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
 				NFmiGrid dataAreaGrid = ::GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
 				NFmiDataMatrix<float> values2;
 				FillDataComparisonMatrix(itsInfo, itsDrawParam, values2, dataAreaGrid, itsTime);
@@ -2069,21 +2117,21 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 			}
 			else if(itsDrawParam->ShowDifference())
 			{
-				::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+                FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
 				int changeByMinutes = itsShowDifferenceTimeShift * 60; // showdiff on tunteina
 				NFmiMetTime tmpTime(itsTime);
 				tmpTime.ChangeByMinutes(-changeByMinutes);
 				NFmiDataMatrix<float> values2;
-				::FillDataMatrix(itsInfo, values2, tmpTime, useCropping, x1, y1, x2, y2);
+                FillDataMatrix(itsInfo, values2, tmpTime, useCropping, x1, y1, x2, y2);
 				::CalcDiffMatrix(theValues, values2);
 			}
 			else if(itsDrawParam->ShowDifferenceToOriginalData())
 			{
-				::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+                FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
     			if(itsOriginalDataInfo)
                 {
 				    NFmiDataMatrix<float> values2;
-				    ::FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
+                    FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
 				    ::CalcDiffMatrix(theValues, values2);
                 }
                 else
@@ -2093,12 +2141,12 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 			{
 				if(itsInfo->DataType() != NFmiInfoData::kStationary)
 				{
-					::FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+                    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
 					if(itsDrawParam->ModelRunDifferenceIndex() < 0)
 					{ // Lasketaan erotuskenttä johonkin aiempaan malliajoon
 						boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, false);
 						NFmiDataMatrix<float> values2;
-						::FillDataMatrix(wantedModelRunInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
+                        FillDataMatrix(wantedModelRunInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
 						::CalcDiffMatrix(theValues, values2);
 					}
 				}
@@ -2149,6 +2197,9 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 	if(!NFmiDrawParam::IsMacroParamCase(itsDrawParam->DataType()))
 		if(!itsInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())))
 			return ;
+
+    itsTimeInterpolationRangeInMinutes = NFmiStationView::GetTimeInterpolationRangeInMinutes(GetHelpDataInfo(itsInfo));
+    fAllowNearestTimeInterpolation = NFmiStationView::AllowNearestTimeInterpolation(itsTimeInterpolationRangeInMinutes);
 
 	{
 		//verrataan editdataa sittenkin vertailu dataan, jolloin voi ottaa 'valokuvia', ja vertailua voi suorittaa askel askeleelta
@@ -2668,7 +2719,9 @@ void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)
 
 float NFmiStationView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-    float interpolatedValue = fDoTimeInterpolation ? theInfo->InterpolatedValue(theLatlon, theUsedTime) : theInfo->InterpolatedValue(theLatlon);
+    float interpolatedValue = kFloatMissing;
+    if(!(fDoTimeInterpolation && itsTimeInterpolationRangeInMinutes == 0))
+        interpolatedValue = fDoTimeInterpolation ? theInfo->InterpolatedValue(theLatlon, theUsedTime, itsTimeInterpolationRangeInMinutes) : theInfo->InterpolatedValue(theLatlon);
     return interpolatedValue;
 }
 

@@ -49,6 +49,8 @@ const int gMaxHelpCPDrawed = 20;
 
 const double gDontDrawLineValue = -99999.9; // funktio DrawSimpleDataVectorInTimeSerial ei piirr‰ kyseisell‰ arvolla viivaa
 
+const NFmiColor g_OfficialDataColor(0.78f, 0.082f, 0.52f); // viinin punainen kepa-datasta
+
 using namespace std;
 
 static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theViewedDrawParam, const NFmiProducer &theWantedProducer, NFmiInfoData::Type theWantedType, bool fIgnoreParam = false)
@@ -547,25 +549,32 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 			// laitetaan tarvittaessa myˆs help editor data legend‰ n‰kyviin
 			if(itsCtrlViewDocumentInterface->HelpEditorSystem().Use())
 			{
-				NFmiProducer prod(NFmiProducerSystem::gHelpEditorDataProdId, "help-data");
-				boost::shared_ptr<NFmiFastQueryInfo> helpInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, prod, NFmiInfoData::kEditingHelpData);
-				if(helpInfo)
-				{
-					envi.SetFrameColor(itsCtrlViewDocumentInterface->HelpEditorSystem().HelpColor());
-					NFmiText text(textPoint, "helpdata", 0, &envi);
-					itsToolBox->Convert(&text);
-
-					NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc/2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), 0, &envi);
-					itsToolBox->Convert(&line1);
-
-					textPoint.Y(textPoint.Y() + heightInc);
-				}
+				NFmiProducer prod(NFmiProducerSystem::gHelpEditorDataProdId, "helpdata");
+                DrawExistingDataLegend(prod, NFmiInfoData::kEditingHelpData, itsDrawParam, itsCtrlViewDocumentInterface->HelpEditorSystem().HelpColor(), heightInc, endPointX1, textPoint, envi);
 			}
-		}
+            // Virallisen operatiivisen datan legenda
+            NFmiProducer prod(0, "operational");
+            DrawExistingDataLegend(prod, NFmiInfoData::kKepaData, itsDrawParam, g_OfficialDataColor, heightInc, endPointX1, textPoint, envi);
+        }
 		itsToolBox->SetTextAlignment(oldAligment);
 	}
 }
 
+void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut)
+{
+    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, drawParam, producer, dataType);
+    if(info)
+    {
+        drawingEnvironmentInOut.SetFrameColor(color);
+        NFmiText text(legendPlaceInOut, producer.GetName(), 0, &drawingEnvironmentInOut);
+        itsToolBox->Convert(&text);
+
+        NFmiLine line1(NFmiPoint(legendPlaceInOut.X(), legendPlaceInOut.Y() - heightIncrement / 2.), NFmiPoint(endPointX, legendPlaceInOut.Y() - heightIncrement / 2.), 0, &drawingEnvironmentInOut);
+        itsToolBox->Convert(&line1);
+
+        legendPlaceInOut.Y(legendPlaceInOut.Y() + heightIncrement);
+    }
+}
 
 void NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon)
 {
@@ -632,7 +641,7 @@ void NFmiTimeSerialView::DrawKepaDataLocationInTime(NFmiDrawingEnvironment &envi
 	if(kepaInfo)
 	{
 		kepaInfo->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
-		envi.SetFrameColor(NFmiColor(0.78f, 0.082f, 0.52f)); // viinin punainen kepa-datasta
+		envi.SetFrameColor(g_OfficialDataColor);
 		envi.SetPenSize(NFmiPoint(2, 2));
 		DrawSimpleDataInTimeSerial(kepaInfo, envi, theLatlon, 0, NFmiPoint(6, 6)); // 0=ei siirret‰ aikasarjaa mihink‰‰n suuntaa piirrossa
 		envi.SetPenSize(NFmiPoint(1, 1)); // ohut viiva takaisin
