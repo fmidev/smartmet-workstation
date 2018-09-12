@@ -1182,6 +1182,7 @@ NFmiViewSettingMacro::NFmiViewSettingMacro(void)
 ,fUseAnalyzeTool(false)
 ,fUseControlPoinTool(false)
 ,fUseAnimationTool(false)
+,fKeepMapAspectRatio(false)
 ,itsAnimationStartPosition(0)
 ,itsAnimationEndPosition(0)
 ,itsAnimationDelayInMS(150)
@@ -1265,9 +1266,13 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
 		os << itsExtraMapViewDescTops[i] << endl;
 	}
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+    // Lopuksi viel‰ mahdollinen extra data:
+    // Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
+    // edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; 
+    // KeepMapAspectRatio (F10 toiminto Smartmetissa) on siis 1. uusista double-extra-parametreista
+    extraData.Add(fKeepMapAspectRatio);
+
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -1346,7 +1351,12 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 		is >> extraData;
 		// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
 		// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
-	}
+
+        // t‰m‰ on siis default arvo KeepMapAspectRatio (eli ‰l‰ pakota pit‰m‰‰n oikeita karttasuhteita)
+        fKeepMapAspectRatio = false;
+        if(extraData.itsDoubleValues.size() >= 1)
+            fKeepMapAspectRatio = extraData.itsDoubleValues[0] != 0;
+    }
 	else
 	{
 		// muuten tehd‰‰n sopivia alustuksia uusiin muuttujiin

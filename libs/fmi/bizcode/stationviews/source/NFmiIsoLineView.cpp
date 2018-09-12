@@ -421,11 +421,6 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
         return;
     SetMapViewSettings(*itsInfoVectorIter);
 
-    // jos s‰‰detty niin ett‰ ei piirret‰ dataa 'v‰‰r‰‰n' projektioon ja data ja kartto eri projektioissa, lopetetaan
-    boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area() ? itsInfo->Area()->Clone() : nullptr);
-    if(itsCtrlViewDocumentInterface->IsToolMasterAvailable() && itsCtrlViewDocumentInterface->DrawDataOnlyOnRightProjection() && NFmiQueryDataUtil::AreAreasSameKind(itsArea.get(), infoArea.get()) == false)
-        return;
-
     if(itsDrawParam->Alpha() <= 0)
         return;
 

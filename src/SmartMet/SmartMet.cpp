@@ -852,7 +852,37 @@ void CSmartMetApp::CrashRptUninstall(void)
 #endif // DO_CRASH_REPORTING
 }
 
+static void DoErrorReporting(const std::string &messageStart, const std::string &functionName, const std::string &messageEnd)
+{
+    std::string errorString = messageStart;
+    errorString += " ";
+    errorString += functionName;
+    if(!messageEnd.empty())
+    {
+        errorString += ": ";
+        errorString += messageEnd;
+    }
+    CatLog::logMessage(errorString, CatLog::Severity::Error, CatLog::Category::Operational, true);
+}
+
 int CSmartMetApp::Run()
 {
-    return CFmiUsedAppParent::Run();
+    int status = 0;
+    do
+    {
+        try
+        {
+            status = CFmiUsedAppParent::Run();
+        }
+        catch(std::exception &e)
+        {
+            ::DoErrorReporting("Exception was catched in", __FUNCTION__, e.what());
+        }
+        catch(...)
+        {
+            ::DoErrorReporting("Unknown Exception was catched in", __FUNCTION__, "");
+        }
+
+    } while(!AllowApplicationToClose());
+    return status;
 }

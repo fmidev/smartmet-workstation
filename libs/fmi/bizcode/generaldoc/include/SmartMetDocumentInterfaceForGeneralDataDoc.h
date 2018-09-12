@@ -253,8 +253,6 @@ public:
     NFmiHelpEditorSystem& HelpEditorSystem() override;
     int SatelDataRefreshTimerInMinutes() override;
     void SatelDataRefreshTimerInMinutes(int newValue) override;
-    bool DrawDataOnlyOnRightProjection() override;
-    void DrawDataOnlyOnRightProjection(bool newState) override;
     const NFmiPoint& StationDataGridSize() override;
     void StationDataGridSize(const NFmiPoint &newValue) override;
     bool DoAutoLoadDataAtStartUp() const override;

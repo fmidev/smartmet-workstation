@@ -321,8 +321,6 @@ public:
     virtual NFmiHelpEditorSystem& HelpEditorSystem() = 0;
     virtual int SatelDataRefreshTimerInMinutes() = 0;
     virtual void SatelDataRefreshTimerInMinutes(int newValue) = 0;
-    virtual bool DrawDataOnlyOnRightProjection() = 0;
-    virtual void DrawDataOnlyOnRightProjection(bool newState) = 0;
     virtual const NFmiPoint& StationDataGridSize() = 0;
     virtual void StationDataGridSize(const NFmiPoint &newValue) = 0;
     virtual bool DoAutoLoadDataAtStartUp() const = 0;

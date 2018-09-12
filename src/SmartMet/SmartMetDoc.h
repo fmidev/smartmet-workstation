@@ -367,6 +367,7 @@ public:
     afx_msg void OnAcceleratorApplyStartupViewMacro();
     afx_msg void OnAcceleratorToggleWmsMapMode();
     afx_msg void OnSetParamAddingDlgPlaceToDefault();
+    afx_msg void OnHelpExceptiontest();
 };
 
 

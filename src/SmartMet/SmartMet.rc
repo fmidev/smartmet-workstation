@@ -366,6 +366,7 @@ BEGIN
         MENUITEM "&About SmartMet",             ID_APP_ABOUT
         MENUITEM "Shortcuts",                   ID_HELP_SHORT_CUTS
         MENUITEM "Error test (crashes SmartMet!)", ID_OHJE_VIRHETESTI
+        MENUITEM "Exception test (only logs error)", ID_HELP_EXCEPTIONTEST
     END
 END
 
