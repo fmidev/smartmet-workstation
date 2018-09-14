@@ -215,7 +215,7 @@ namespace AddParams
             dialogRowData.push_back(::makeRowItem(*singleData, uniqueId, singleDataMemory));
             auto rowData = singleData->makeDialogRowData();
             dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
-        }
+        }   
         return dialogRowData;
     }
 
