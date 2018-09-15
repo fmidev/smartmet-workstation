@@ -86,7 +86,8 @@ class NFmiCrossSectionView : public NFmiIsoLineView
 	NFmiRect CalcPressureScaleRect(void);
 
  protected:
-   bool IsToolMasterAvailable(void);
+   bool IsToolMasterAvailable(void) override;
+   bool DeleteTransparencyBitmap() override;
    NFmiTimeBag GetUsedTimeBagForDataCalculations(void);
    void SetupUsedDrawParam(void);
    float GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);

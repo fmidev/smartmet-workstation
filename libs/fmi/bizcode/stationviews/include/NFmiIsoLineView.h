@@ -175,7 +175,8 @@ class NFmiIsoLineView : public NFmiStationView
 
  protected:
 	NFmiPoint CalcGrid2PixelRatio(NFmiIsoLineData  &theIsoLineData);
-	virtual bool IsToolMasterAvailable(void);
+    virtual bool IsToolMasterAvailable(void);
+    virtual bool DeleteTransparencyBitmap();
 	bool FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
     void FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed);
 	void FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData);

@@ -17,10 +17,8 @@
 
 using namespace std;
 
-static std::string& default_regions =
-    *new std::string("/usr/share/smartmet/timezones/date_time_zonespec.csv");
-static std::string& default_coordinates =
-    *new std::string("/usr/share/smartmet/timezones/timezone.shz");
+static std::string default_regions = "/usr/share/smartmet/timezones/date_time_zonespec.csv";
+static std::string default_coordinates = "/usr/share/smartmet/timezones/timezone.shz";
 
 namespace Fmi
 {
