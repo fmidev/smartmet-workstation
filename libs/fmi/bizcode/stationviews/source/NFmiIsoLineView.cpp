@@ -302,12 +302,17 @@ NFmiIsoLineView::NFmiIsoLineView(int theMapViewDescTopIndex, boost::shared_ptr<N
 
 NFmiIsoLineView::~NFmiIsoLineView(void)
 {
-    CtrlView::DestroyBitmap(&itsTransparencyDrawBitmap);
+    CtrlView::DestroyBitmap(&itsTransparencyDrawBitmap, DeleteTransparencyBitmap());
 }
 
 bool NFmiIsoLineView::IsToolMasterAvailable(void)
 {
     return itsCtrlViewDocumentInterface->IsToolMasterAvailable();
+}
+
+bool NFmiIsoLineView::DeleteTransparencyBitmap()
+{
+    return true;
 }
 
 // valitsin läpinäkyväksi väriksi mahd. läheltä valkoista, mutta siiitä vähän poikkeavan, koska
@@ -337,7 +342,7 @@ void NFmiIsoLineView::PrepareForTransparentDraw(void)
         if(itsTransparencyDrawBitmap == 0 || itsLastBitmapSize != clientAreaSize || itsCtrlViewDocumentInterface->Printing())
         {
             itsLastBitmapSize = clientAreaSize;
-            CtrlView::DestroyBitmap(&itsTransparencyDrawBitmap);
+            CtrlView::DestroyBitmap(&itsTransparencyDrawBitmap, DeleteTransparencyBitmap());
             CtrlView::MakeCombatibleBitmap(itsCtrlViewDocumentInterface->TransparencyContourDrawView(), &itsTransparencyDrawBitmap, static_cast<int>(itsLastBitmapSize.X()), static_cast<int>(itsLastBitmapSize.Y()));
         }
         itsTransparencyDrawBackupDC = itsToolBox->GetDC();
