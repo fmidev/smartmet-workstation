@@ -7,13 +7,16 @@
 
 namespace CtrlView
 {
-    void DestroyBitmap(CBitmap **bitmap)
+    void DestroyBitmap(CBitmap **bitmap, bool deleteOldBitmap)
     {
         CBitmap *singlePointerBitmap = *bitmap;
         if(singlePointerBitmap)
         {
             singlePointerBitmap->DeleteObject();
-            delete singlePointerBitmap;
+            if(deleteOldBitmap)
+            {
+                delete singlePointerBitmap;
+            }
             singlePointerBitmap = nullptr;
         }
     }

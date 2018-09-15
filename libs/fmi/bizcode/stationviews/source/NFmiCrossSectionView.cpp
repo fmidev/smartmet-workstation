@@ -1011,6 +1011,13 @@ bool NFmiCrossSectionView::IsToolMasterAvailable(void)
 	return itsCtrlViewDocumentInterface->IsToolMasterAvailable();
 }
 
+// Jostain syystä karttanäytöille transparency piirtoon liittyvä bitmap pitää deletoida (muuten vuotaa),
+// mutta poikkileikkausnäytössä sitä ei saa tehdä, muuten kaatuu (ei vuoda, vaikka ei deletoida).
+bool NFmiCrossSectionView::DeleteTransparencyBitmap()
+{
+    return false;
+}
+
 void NFmiCrossSectionView::DrawCrossSection(void)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw layer");
