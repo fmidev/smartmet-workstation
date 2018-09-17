@@ -320,7 +320,7 @@ bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(boost::
 
 void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut)
 {
-    if(theInfo->IsGrid())
+    if(!theInfo->IsGrid())
     {
         for(theInfo->ResetLocation(); theInfo->NextLocation(); )
         {
