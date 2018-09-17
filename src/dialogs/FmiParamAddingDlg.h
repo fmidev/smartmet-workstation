@@ -6,6 +6,7 @@
 #include <vector>
 #include <functional>
 #include "NFmiViewPosRegistryInfo.h"
+#include "PPTooltip.h"
 
 class SmartMetDocumentInterface;
 
@@ -107,6 +108,7 @@ private:
     AddParams::ParamAddingSystem *itsParamAddingSystem;
     unsigned int itsLastAcivatedDescTopIndex; // Mikä oli viimeksi DescTopIndex, kun otsikon tekstiä tehtiin
     int itsLastActivatedRowIndex; // Mikä oli viimeksi RowIndex, kun otsikon tekstiä tehtiin
+    CPPToolTip m_tooltip;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -121,4 +123,7 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+    afx_msg void NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result);
+    std::string ComposeToolTipText(CPoint point);
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
