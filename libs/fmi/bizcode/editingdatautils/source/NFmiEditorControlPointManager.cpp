@@ -28,6 +28,7 @@
 #include "NFmiArea.h"
 #include "NFmiSettings.h"
 #include "NFmiFileString.h"
+#include "NFmiFastQueryInfo.h"
 
 #include <iterator>
 #include <fstream>
@@ -298,6 +299,38 @@ bool NFmiEditorControlPointManager::Init(const NFmiEditorControlPointManager &th
 	CPGriddingProperties(theOther.CPGriddingProperties());
 	Area(theOther.Area());
 	return Init(theOther.TimeDescriptor(), theOther.ParamBag(), "", true, true);
+}
+
+bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea)
+{
+    checkedVector<NFmiPoint> addedControlPoints;
+    for(auto &fastInfo : theInfos)
+    {
+        AddZoomedAreaStationsToCPVector(fastInfo, theArea, addedControlPoints);
+    }
+    return Init(addedControlPoints);
+}
+
+bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea)
+{
+    checkedVector<NFmiPoint> addedControlPoints;
+    AddZoomedAreaStationsToCPVector(theInfo, theArea, addedControlPoints);
+    return Init(addedControlPoints);
+}
+
+void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut)
+{
+    if(theInfo->IsGrid())
+    {
+        for(theInfo->ResetLocation(); theInfo->NextLocation(); )
+        {
+            const auto &latlon = theInfo->LatLonFast();
+            if(theArea->IsInside(latlon))
+            {
+                theAddedControlPointsInOut.push_back(latlon);
+            }
+        }
+    }
 }
 
 void NFmiEditorControlPointManager::FilePath(const std::string &newValue) 
@@ -1043,6 +1076,7 @@ std::istream& operator>>(std::istream& is, NFmiEditorControlPointManager& item)
 	return is;
 }
 
+// ==========================================================================================
 
 NFmiCPGriddingProperties::NFmiCPGriddingProperties(bool isToolMasterAvailable)
 :fToolMasterAvailable(isToolMasterAvailable)
@@ -1066,4 +1100,3 @@ void NFmiCPGriddingProperties::StoreToSettings(void)
 	else
 		throw std::runtime_error("Error in NFmiCPGriddingProperties::StoreToSettings, unable to store setting.");
 }
-

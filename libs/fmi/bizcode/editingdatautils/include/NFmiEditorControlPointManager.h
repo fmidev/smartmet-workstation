@@ -71,6 +71,8 @@ public:
    bool Init(const NFmiTimeDescriptor& theTimes, const NFmiParamBag& theParams, const std::string& theCPFileName, bool fKeepOldValues, bool fKeepOldCPs, int theMaxAllowedTimeCount = 200);
    bool Init(const checkedVector<NFmiPoint> &newCPs);
    bool Init(const NFmiEditorControlPointManager &theOther);
+   bool SetZoomedAreaStationsAsControlPoints(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea);
+   bool SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea);
    int Size (void) ;
    double ChangeValue (void);
    void ChangeValue (double newValue);
@@ -152,6 +154,7 @@ private:
 	void ClearAllChangeValues(double newValue);
 	void ClearIndexedParamChangeValues(double newValue, int paramIndex);
 	void ClearIndexedParamIndexedCPChangeValues(double newValue, int paramIndex, int CPIndex);
+    void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut);
 
    // Kuinka monta controlpoint parametria on parambagissä.
    int itsParamCount;
