@@ -5735,6 +5735,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			itsCPManagerSet.SetCPManager(menuItem->IndexInViewRow());
 			TimeSerialViewDirty(true);
 			break;
+        case kFmiObservationStationsToCpPoints:
+            MakeObservationStationsToCpPoints(*menuItem);
+            break;
 
 		case kFmiHideAllMapViewObservations:
 			HideShowAllMapViewParams(menuItem->MapViewDescTopIndex(), true, false, false, false);
@@ -7815,6 +7818,7 @@ bool CreateCPPopup()
 		itsPopupMenu->Add(std::move(menuItem));
 
         AddCpManagerSetsToCpPopupMenu(itsPopupMenu, infoDataType);
+        AddObservationStationsToCpPointsCommands(itsPopupMenu);
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 			return false;
@@ -7893,6 +7897,22 @@ void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, c
             delete producerMenuList;
     }
 }
+
+void MakeObservationStationsToCpPoints(NFmiMenuItem &menuItem)
+{
+    // Haetaan käytössä oleva CP-manager
+    auto controlPointManager = itsCPManagerSet.CPManager(itsCPManagerSet.UseOldSchoolStyle());
+    if(controlPointManager)
+    {
+        // Haetaan käytetyn datatyypin, halutun tuottajan kaikki tiedostot, jotka ovat pinta datoja (= leveleitä on vain 1)
+        auto observationInfos = InfoOrganizer()->GetInfos(menuItem.DataType(), true, menuItem.DataIdent().GetProducer()->GetIdent());
+        controlPointManager->SetZoomedAreaStationsAsControlPoints(observationInfos, MapViewDescTop(0)->MapHandler()->Area());
+
+        // Vain aikasarja pitää laittaa tässä likaiseksi, sieltä mistä tätä kutsutaan (MakePopUpCommandUsingRowIndex) laitetaan karttanäytöt likaisiksi.
+        TimeSerialViewDirty(true);
+    }
+}
+
 void AddCpManagerSetsToCpPopupMenu(NFmiMenuItemList *mainPopupMenu, NFmiInfoData::Type infoDataType)
 {
     // Lisätään mahdollisen CPManagerSetin valinnat
