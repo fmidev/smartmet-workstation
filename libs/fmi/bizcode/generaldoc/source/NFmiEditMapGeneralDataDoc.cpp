@@ -7814,31 +7814,7 @@ bool CreateCPPopup()
 		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiModifyCPAttributes, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
 		itsPopupMenu->Add(std::move(menuItem));
 
-		// Lis‰t‰‰n mahdollisen CPManagerSetin valinnat
-		size_t cpSetSize = itsCPManagerSet.CPSetSize();
-		if(cpSetSize > 1)
-		{
-			NFmiMenuItemList *cpManagerMenuList = new NFmiMenuItemList;
-			for(size_t i = 0; i < cpSetSize; i++)
-			{
-				boost::shared_ptr<NFmiEditorControlPointManager> cpManager = itsCPManagerSet.CPManagerFromSet(i);
-				if(cpManager)
-				{
-                    auto cpMenuItem = std::make_unique<NFmiMenuItem>(-1, cpManager->Name(), NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType, static_cast<int>(i));
-					cpManagerMenuList->Add(std::move(cpMenuItem));
-				}
-			}
-			
-			if(cpManagerMenuList->NumberOfMenuItems())
-			{
-				menuString = ::GetDictionaryString("CPManagers");
-				menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
-				menuItem->AddSubMenu(cpManagerMenuList);
-				itsPopupMenu->Add(std::move(menuItem));
-			}
-			else
-				delete cpManagerMenuList;
-		}
+        AddCpManagerSetsToCpPopupMenu(itsPopupMenu, infoDataType);
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 			return false;
@@ -7846,6 +7822,104 @@ bool CreateCPPopup()
 		return true;
 	}
 	return false;
+}
+
+bool IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+    if(info)
+    {
+        // Pit‰‰ olla asemadata
+        if(!info->IsGrid())
+        {
+            // Ei saa olla level dataa
+            if(info->SizeLevels() == 1)
+            {
+                // Ei saa olla liikkuva asemadata
+                if(!info->HasLatlonInfoInData())
+                {
+                    // Asemia pit‰‰ olla kokonaisuudessaan v‰hint‰in 10 kpl (ettei tule mukaan kaikenlaisia 'hˆpˆ' datoja)
+                    if(info->SizeLocations() >= 10)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+// Havaintodatan asemista voidaan tehd‰ ControlPoint pisteet
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu)
+{
+    NFmiInfoData::Type usedInfoData = NFmiInfoData::kObservations;
+    // Ker‰t‰‰n lista producer-id arvoja nimineen, joista tehd‰‰n popup valikko
+    // Yhdelt‰ tuottajalta tulee vain yksi kohta (esim. synopilla voi olla jopa 3 eri tiedostoa)
+    std::map<long, std::string> observationProducerList;
+    auto observationInfos = InfoOrganizer()->GetInfos(usedInfoData);
+    for(auto &info : observationInfos)
+    {
+        if(IsGoodObservationDataForCpPointConversion(info))
+        {
+            const auto *producer = info->Producer();
+            observationProducerList.insert(std::make_pair(producer->GetIdent(), std::string(producer->GetName())));
+        }
+    }
+
+    AddObservationStationsToCpPointsCommands(mainPopupMenu, observationProducerList, usedInfoData);
+}
+
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, const std::map<long, std::string> &observationProducerList, NFmiInfoData::Type usedInfoData)
+{
+    if(!observationProducerList.empty())
+    {
+        NFmiParam dummyParam;
+        NFmiMenuItemList *producerMenuList = new NFmiMenuItemList;
+        for(const auto &producerItem : observationProducerList)
+        {
+            NFmiProducer producer(producerItem.first, producerItem.second);
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, producerItem.second, NFmiDataIdent(dummyParam, producer), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
+            producerMenuList->Add(std::move(menuItem));
+        }
+
+        if(producerMenuList->NumberOfMenuItems())
+        {
+            std::string menuString = ::GetDictionaryString("Observations To CP points");
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
+            menuItem->AddSubMenu(producerMenuList);
+            mainPopupMenu->Add(std::move(menuItem));
+        }
+        else
+            delete producerMenuList;
+    }
+}
+void AddCpManagerSetsToCpPopupMenu(NFmiMenuItemList *mainPopupMenu, NFmiInfoData::Type infoDataType)
+{
+    // Lis‰t‰‰n mahdollisen CPManagerSetin valinnat
+    size_t cpSetSize = itsCPManagerSet.CPSetSize();
+    if(cpSetSize > 1)
+    {
+        NFmiMenuItemList *cpManagerMenuList = new NFmiMenuItemList;
+        for(size_t i = 0; i < cpSetSize; i++)
+        {
+            boost::shared_ptr<NFmiEditorControlPointManager> cpManager = itsCPManagerSet.CPManagerFromSet(i);
+            if(cpManager)
+            {
+                auto cpMenuItem = std::make_unique<NFmiMenuItem>(-1, cpManager->Name(), NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType, static_cast<int>(i));
+                cpManagerMenuList->Add(std::move(cpMenuItem));
+            }
+        }
+
+        if(cpManagerMenuList->NumberOfMenuItems())
+        {
+            std::string menuString = ::GetDictionaryString("CPManagers");
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType);
+            menuItem->AddSubMenu(cpManagerMenuList);
+            mainPopupMenu->Add(std::move(menuItem));
+        }
+        else
+            delete cpManagerMenuList;
+    }
 }
 
 // nelj‰ tilaa:
