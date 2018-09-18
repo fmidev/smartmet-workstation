@@ -430,14 +430,20 @@ static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterfa
 
                 if(theAdapter.UseMultiProcessCpCalc())
                 {
-                    theAdapter.MakeSureToolMasterPoolIsRunning();
-                    try
+                    if(theAdapter.MakeSureToolMasterPoolIsRunning())
                     {
-                        dataModifier.DoProcessPoolCpModifyingTcp(theAdapter.GetMultiProcessClientData(), theTimeDescriptor, theAdapter.GetSmartMetGuid(), theThreadCallBacks);
+                        try
+                        {
+                            dataModifier.DoProcessPoolCpModifyingTcp(theAdapter.GetMultiProcessClientData(), theTimeDescriptor, theAdapter.GetSmartMetGuid(), theThreadCallBacks);
+                        }
+                        catch(std::exception &e)
+                        {
+                            CatLog::logMessage(std::string("Error with MP-CP editing: ") + e.what(), CatLog::Severity::Error, CatLog::Category::Editing);
+                        }
                     }
-                    catch(std::exception &e)
+                    else
                     {
-                        log_message(std::string("Error with MP-CP editing:\n") + e.what(), logging::trivial::error);
+                        CatLog::logMessage(std::string("Error with MP-CP editing: Unable to start distributed calculation system"), CatLog::Severity::Error, CatLog::Category::Editing);
                     }
                 }
                 else
