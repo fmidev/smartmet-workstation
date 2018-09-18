@@ -433,10 +433,7 @@ static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterfa
                     theAdapter.MakeSureToolMasterPoolIsRunning();
                     try
                     {
-                        if(theAdapter.GetMultiProcessClientData().UseTcpMasterProcess())
-                            dataModifier.DoProcessPoolCpModifyingTcp(theAdapter.GetMultiProcessClientData(), theTimeDescriptor, theAdapter.GetSmartMetGuid(), theThreadCallBacks);
-                        else
-                            dataModifier.DoProcessPoolCPModifying(theAdapter.GetMultiProcessClientData(), theTimeDescriptor, theAdapter.GetSmartMetGuid(), theThreadCallBacks);
+                        dataModifier.DoProcessPoolCpModifyingTcp(theAdapter.GetMultiProcessClientData(), theTimeDescriptor, theAdapter.GetSmartMetGuid(), theThreadCallBacks);
                     }
                     catch(std::exception &e)
                     {
