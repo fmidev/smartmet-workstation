@@ -9,6 +9,7 @@
 #include "boost/shared_ptr.hpp"
 #include "NFmiPoint.h"
 #include "NFmiViewPosRegistryInfo.h"
+#include "NFmiDataMatrix.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CTimeEditValuesDlg dialog
@@ -52,7 +53,7 @@ public:
     CString	itsGriddingFactorStrU_;
     CString	itsCPManagerStrU_;
 	BOOL	fUseAnalyzeTool;
-	BOOL	fUseAnalyzeToolWithAllParams;
+	BOOL	fUseControlPointObservationsBlending;
 	//}}AFX_DATA
 
 // Overrides
@@ -82,7 +83,7 @@ protected:
 	afx_msg void OnButtonClearAllCpValues();
 	afx_msg void OnButtonPrint();
 	afx_msg void OnCheckUseAnalyzeTool();
-	afx_msg void OnCheckUseAnalyzeToolWithAllParams();
+	afx_msg void OnCheckUseCpObsBlending();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -102,8 +103,9 @@ private:
 	void EditModeUpdate(void);
 	void InitDialogTexts(void);
 	void UpdateAnalyseActionControl(void);
-	void UpdateProducerLists(void);
-	void UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer);
+    void UpdateProducerLists(void);
+    void UpdateCpObsBlendProducerList(void);
+	void UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer, const checkedVector<NFmiProducer> &producerList, bool isSelectionMadeYet);
 	void OnComboSelectionChanged(CComboBox &theProducerSelector, SetByName setByName);
 	NFmiPoint CalcEditedDataGriddingResolutionInKM(void);
 
