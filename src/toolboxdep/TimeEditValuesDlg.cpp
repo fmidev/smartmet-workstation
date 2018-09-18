@@ -61,7 +61,6 @@ CTimeEditValuesDlg::CTimeEditValuesDlg(SmartMetDocumentInterface *smartMetDocume
 	fUseMaskInTimeSerialViews = itsSmartMetDocumentInterface->IsMasksUsedInTimeSerialViews();
 	fUseZoomedAreaCP = itsSmartMetDocumentInterface->UseCPGridCrop();
 	itsSmootherValueStrU_ = _T("");
-    itsGriddingFactorStrU_ = _T("");
     itsCPManagerStrU_ = _T("");
 	fUseAnalyzeTool = FALSE;
 	fUseControlPointObservationsBlending = FALSE;
@@ -78,12 +77,10 @@ void CTimeEditValuesDlg::DoDataExchange(CDataExchange* pDX)
     //{{AFX_DATA_MAP(CTimeEditValuesDlg)
     DDX_Control(pDX, IDC_SLIDER_SMOOTHER_VALUE, itsSmootherSlider);
     DDX_Control(pDX, IDC_SLIDER_MODIFIERLENGTH, itsManualModifierLength);
-    DDX_Control(pDX, IDC_SLIDER_GRIDDING_FACTOR, itsGriddingFactorSlider);
     DDX_Check(pDX, IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, fUseMaskInTimeSerialViews);
     DDX_Check(pDX, IDC_CHECK_USE_ZOOMED_AREA_CP, fUseZoomedAreaCP);
 
     DDX_Text(pDX, IDC_STATIC_SMOOTHER_VALUE_STR, itsSmootherValueStrU_);
-    DDX_Text(pDX, IDC_STATIC_GRIDDING_FACTOR_STR, itsGriddingFactorStrU_);
     DDX_Text(pDX, IDC_STATIC_CP_MANAGER_NAME_STR, itsCPManagerStrU_);
 
     DDX_Check(pDX, IDC_CHECK_USE_ANALYZE_TOOL, fUseAnalyzeTool);
@@ -162,9 +159,6 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
 	itsSmootherSlider.SetPos(itsSmartMetDocumentInterface->TimeEditSmootherValue());
 	UpdateSmootherString();
 
-	itsGriddingFactorSlider.SetRange(1, 10);
-	itsGriddingFactorSlider.SetPos(FmiRound(itsSmartMetDocumentInterface->CPGriddingFactor()*10));
-	UpdateGriddingFactorString();
 	UpdateCPManagerString();
 
 	InitDialogTexts();
@@ -205,31 +199,6 @@ void CTimeEditValuesDlg::UpdateCPManagerString(void)
     itsCPManagerStrU_ = _TEXT("");
 	if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode() && itsSmartMetDocumentInterface->CPManagerSet().UseOldSchoolStyle() == false)
         itsCPManagerStrU_ = CA2T(itsSmartMetDocumentInterface->CPManager()->Name().c_str());
-	UpdateData(FALSE);
-}
-
-void CTimeEditValuesDlg::UpdateGriddingFactorString(void)
-{
-	UpdateData(TRUE);
-	float griddingFactor = itsGriddingFactorSlider.GetPos() / 10.f;
-	NFmiValueString valuStr(griddingFactor, "%0.1f");
-    itsGriddingFactorStrU_ = CA2T(valuStr);
-    itsSmartMetDocumentInterface->CPGriddingFactor(griddingFactor);
-	NFmiPoint griddingReslutionInKM = CalcEditedDataGriddingResolutionInKM();
-	if(griddingReslutionInKM.X() == 0 || griddingReslutionInKM.Y() == 0)
-        itsGriddingFactorStrU_ += _TEXT(" => ? x ? km");
-	else
-	{
-        itsGriddingFactorStrU_ += _TEXT(" => ");
-        CString resStrU_;
-        resStrU_.Format(_TEXT("%0.1f"), griddingReslutionInKM.X() / griddingFactor);
-        itsGriddingFactorStrU_ += resStrU_;
-        itsGriddingFactorStrU_ += _TEXT(" x ");
-        resStrU_.Format(_TEXT("%0.1f"), griddingReslutionInKM.Y() / griddingFactor);
-        itsGriddingFactorStrU_ += resStrU_;
-        itsGriddingFactorStrU_ += _TEXT(" km");
-	}
-
 	UpdateData(FALSE);
 }
 
@@ -401,10 +370,8 @@ void CTimeEditValuesDlg::SeViewModeButtonsSetup(void)
     // Riippuen ollaanko ns. view-moodissa vai ei, disabloidaan/enabloidaan editoinnissa käytettyjä nappuloita
     EnableDlgItem(IDC_CHECK_USE_CP_OBS_BLENDING, enableEditingControls);
     EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, enableEditingControls);
-    EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, enableEditingControls);
     EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, enableEditingControls);
     EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, enableEditingControls);
-    EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, enableEditingControls);
     EnableDlgItem(IDC_STATIC_SMOOTH_STR, enableEditingControls);
     EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, enableEditingControls);
     EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, enableEditingControls);
@@ -470,7 +437,6 @@ void CTimeEditValuesDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 	UpdateData(TRUE);
     itsTimeEditValuesView->ManualModifierLength(CalcRelativeSliderValue());
 	UpdateSmootherString();
-	UpdateGriddingFactorString();
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
@@ -573,10 +539,8 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
         status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, false, false);
 
         status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, false);
-        status = EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, false);
         status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
         status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
-        status = EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, false);
         status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
         status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, false);
         status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, false);
@@ -590,10 +554,8 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, true, true);
 
 		status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, false);
-		status = EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, false);
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
 		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
-		status = EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, false);
 		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
 		status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, false);
 		status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, false);
@@ -606,10 +568,8 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, false, false);
 
 		status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, true);
-		status = EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, true);
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, true);
 		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, true);
-		status = EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, true);
 		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, true);
 		status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, true);
 		status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, true);
@@ -621,14 +581,10 @@ void CTimeEditValuesDlg::UpdateControlsAfterMPCPMode(void)
 {
     if(fUseMultiProcessCPCalc)
     {
-		EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, false, true);
-		EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, false, true);
 		EnableDlgItem(IDC_CHECK_USE_ZOOMED_AREA_CP, false, true);
     }
     else
     {
-		EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, true, true);
-		EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, true, true);
 		EnableDlgItem(IDC_CHECK_USE_ZOOMED_AREA_CP, true, true);
     }
 }
@@ -964,18 +920,8 @@ BOOL CTimeEditValuesDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LR
 
 HBRUSH CTimeEditValuesDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	if(pWnd->GetDlgCtrlID() == IDC_STATIC_GRIDDING_FACTOR_STR)
-	{
-		if(itsSmartMetDocumentInterface->CPGriddingFactor() > 0 && itsSmartMetDocumentInterface->CPGriddingFactor() < 1)
-			pDC->SetTextColor(RGB(255, 0, 0)); // varoitetaan punaisella värillä, jos käytössä on hilauksen tarkkuutta harventava kerroin
-		else
-			pDC->SetTextColor(RGB(0, 0, 0));
-	}
-
+    return CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 	// TODO:  Return a different brush if the default is not desired
-	return hbr;
 }
 
 

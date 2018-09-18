@@ -103,7 +103,6 @@ public:
 	void SetMacroErrorText(const std::string &theErrorStr) override;
 	boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) override;
 	FmiLanguage Language(void) override;
-	float CPGriddingFactor(void) override;
 	const NFmiRect& CPGridCropRect(void) override;
 	bool UseCPGridCrop(void) override;
 	const NFmiPoint& CPGridCropMargin(void) override;

@@ -308,20 +308,16 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 																	,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
 																	,unsigned long theAreaMask
 																	,boost::shared_ptr<NFmiEditorControlPointManager> theCPManager
-																	,float theCPGriddingFactor
 																	,const NFmiRect &theCPGridCropRect
 																	,bool theUseGridCrop
 																	,const NFmiPoint &theCropMarginSize)
 :NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask, NFmiRect())
 ,itsGridData()
-,itsCoarseGridData()
-,itsCPGriddingFactor(theCPGriddingFactor)
 ,itsCPGridCropRect(theCPGridCropRect)
 ,fUseGridCrop(theUseGridCrop)
 ,fCanGridCropUsed(false)
 ,itsCropMarginSize(theCropMarginSize)
 ,itsCroppedGridData()
-,itsCroppedCoarseGridData()
 ,itsGridCropRelativeRect(0, 0, 1, 1)
 ,itsObsDataGridding(new NFmiObsDataGridding())
 ,itsCPManager(theCPManager)
@@ -330,18 +326,8 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 	static NFmiRect emptyRect(0, 0, 1, 1);
 	if(itsInfo && itsInfo->IsGrid())
 	{
-		if(itsCPGriddingFactor <= 0 || itsCPGriddingFactor > 1)
-			itsCPGriddingFactor = 1;
-
 		const NFmiGrid* grid = itsInfo->Grid();
 		itsGridData.Resize(grid->XNumber(), grid->YNumber(), 0.f);
-		if(IsCPGriddingFactorUsed())
-		{ 
-            // jos griddauskerroin on nollasta poikkeava, tehd‰‰n harvempi hila
-			size_t nx = FmiRound(itsGridData.NX() * itsCPGriddingFactor);
-			size_t ny = FmiRound(itsGridData.NY() * itsCPGriddingFactor);
-			itsCoarseGridData.Resize(nx, ny, 0.f);
-		}
 
 		fCanGridCropUsed = itsCPGridCropRect != emptyRect;
 		if(fUseGridCrop && fCanGridCropUsed)
@@ -354,9 +340,6 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 			if(nx < 4 || ny < 4) // en tied‰ mik‰ olisi pienin loogisin cropattu hila, mutta ei t‰m‰ voi olla liian pieni
 				fUseGridCrop = false; // laitetaan pois p‰‰lt‰ jos cropatusta hilasta tulisi liian pieni
 
-			nx = FmiRound(nx * itsCPGriddingFactor);
-			ny = FmiRound(ny * itsCPGriddingFactor);
-			itsCroppedCoarseGridData.Resize(nx, ny, 0.f);
 			double left = itsCPGridCropRect.Left() / itsGridData.NX();
 			double right = itsCPGridCropRect.Right() / itsGridData.NX();
 			double bottom = itsCPGridCropRect.Bottom() / itsGridData.NY();
@@ -369,14 +352,6 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 NFmiDataParamControlPointModifier::~NFmiDataParamControlPointModifier(void)
 {
 	delete itsObsDataGridding;
-}
-
-bool NFmiDataParamControlPointModifier::IsCPGriddingFactorUsed(void) const
-{
-	if(itsCPGriddingFactor > 0 && itsCPGriddingFactor < 1)
-		return true; // ainoastaan kertoimet 0 ja 1 v‰lill‰ (ei rajoilla) ovat j‰rkevi‰
-	else
-		return false;
 }
 
 // HUOM!! eri signerature kuin edell‰!!!
@@ -856,24 +831,12 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 				if(IsZeroModification(zValues) == false)
 				{
 					NFmiDataMatrix<float> *usedGridData = &itsGridData;
-					if(fUseGridCrop)
-					{
-						if(IsCPGriddingFactorUsed())
-							usedGridData = &itsCroppedCoarseGridData;
-						else
-							usedGridData = &itsCroppedGridData;
-					}
-					else if(IsCPGriddingFactorUsed())
-						usedGridData = &itsCoarseGridData;
-					NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), *usedGridData, itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
+                    if(fUseGridCrop)
+                    {
+                        usedGridData = &itsCroppedGridData;
+                    }
 
-                    if(IsCPGriddingFactorUsed())
-					{
-						if(fUseGridCrop)
-							::InterpolateMatrix(itsCroppedCoarseGridData, itsCroppedGridData);
-						else
-							::InterpolateMatrix(itsCoarseGridData, itsGridData);
-					}
+                    NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), *usedGridData, itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
 
 					if(fUseGridCrop)
 						::FixCroppedMatrixMargins(itsCroppedGridData, itsCropMarginSize);

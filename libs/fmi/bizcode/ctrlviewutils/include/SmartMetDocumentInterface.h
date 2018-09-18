@@ -269,8 +269,6 @@ public:
     virtual void TimeEditSmootherMaxValue(int newValue) = 0;
     virtual int TimeEditSmootherValue() = 0;
     virtual void TimeEditSmootherValue(int newValue) = 0;
-    virtual float CPGriddingFactor() = 0;
-    virtual void CPGriddingFactor(float newValue) = 0;
     virtual const NFmiPoint& TimeSerialViewSizeInPixels() const = 0;
     virtual void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust() = 0;
