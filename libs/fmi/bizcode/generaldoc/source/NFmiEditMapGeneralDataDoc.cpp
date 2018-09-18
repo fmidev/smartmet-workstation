@@ -7828,61 +7828,23 @@ bool CreateCPPopup()
 	return false;
 }
 
-bool IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info)
-{
-    if(info)
-    {
-        // Pit‰‰ olla asemadata
-        if(!info->IsGrid())
-        {
-            // Ei saa olla level dataa
-            if(info->SizeLevels() == 1)
-            {
-                // Ei saa olla liikkuva asemadata
-                if(!info->HasLatlonInfoInData())
-                {
-                    // Asemia pit‰‰ olla kokonaisuudessaan v‰hint‰in 10 kpl (ettei tule mukaan kaikenlaisia 'hˆpˆ' datoja)
-                    if(info->SizeLocations() >= 10)
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    return false;
-}
-
 // Havaintodatan asemista voidaan tehd‰ ControlPoint pisteet
 void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu)
 {
-    NFmiInfoData::Type usedInfoData = NFmiInfoData::kObservations;
-    // Ker‰t‰‰n lista producer-id arvoja nimineen, joista tehd‰‰n popup valikko
-    // Yhdelt‰ tuottajalta tulee vain yksi kohta (esim. synopilla voi olla jopa 3 eri tiedostoa)
-    std::map<long, std::string> observationProducerList;
-    auto observationInfos = InfoOrganizer()->GetInfos(usedInfoData);
-    for(auto &info : observationInfos)
-    {
-        if(IsGoodObservationDataForCpPointConversion(info))
-        {
-            const auto *producer = info->Producer();
-            observationProducerList.insert(std::make_pair(producer->GetIdent(), std::string(producer->GetName())));
-        }
-    }
-
-    AddObservationStationsToCpPointsCommands(mainPopupMenu, observationProducerList, usedInfoData);
+    auto &cpObsBlendingData = AnalyzeToolData().ControlPointObservationBlendingData();
+    cpObsBlendingData.SeekProducers(*InfoOrganizer());
+    AddObservationStationsToCpPointsCommands(mainPopupMenu, cpObsBlendingData.Producers(), NFmiInfoData::kObservations);
 }
 
-void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, const std::map<long, std::string> &observationProducerList, NFmiInfoData::Type usedInfoData)
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, const checkedVector<NFmiProducer> &producerList, NFmiInfoData::Type usedInfoData)
 {
-    if(!observationProducerList.empty())
+    if(!producerList.empty())
     {
         NFmiParam dummyParam;
         NFmiMenuItemList *producerMenuList = new NFmiMenuItemList;
-        for(const auto &producerItem : observationProducerList)
+        for(const auto &producer : producerList)
         {
-            NFmiProducer producer(producerItem.first, producerItem.second);
-            auto menuItem = std::make_unique<NFmiMenuItem>(-1, producerItem.second, NFmiDataIdent(dummyParam, producer), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, std::string(producer.GetName()), NFmiDataIdent(dummyParam, producer), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
             producerMenuList->Add(std::move(menuItem));
         }
 
