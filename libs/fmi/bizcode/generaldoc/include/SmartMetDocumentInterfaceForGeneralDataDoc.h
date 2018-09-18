@@ -201,8 +201,6 @@ public:
     void TimeEditSmootherMaxValue(int newValue) override;
     int TimeEditSmootherValue() override;
     void TimeEditSmootherValue(int newValue) override;
-    float CPGriddingFactor() override;
-    void CPGriddingFactor(float newValue) override;
     const NFmiPoint& TimeSerialViewSizeInPixels() const override;
     void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) override;
     bool UseTimeSerialAxisAutoAdjust() override;

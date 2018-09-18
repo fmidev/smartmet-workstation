@@ -231,8 +231,6 @@ public:
 	bool UseCPGridCrop(void);
 	void UseCPGridCrop(bool newValue);
 	bool IsCPGridCropInAction(void);
-	float CPGriddingFactor(void);
-	void CPGriddingFactor(float newValue);
 	bool DrawSelectionOnThisView(void);
 	void DrawSelectionOnThisView(bool newValue);
 	size_t SelectedGridPointLimit(void);

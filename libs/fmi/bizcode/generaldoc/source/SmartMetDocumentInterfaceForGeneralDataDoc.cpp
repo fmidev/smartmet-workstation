@@ -951,16 +951,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherValue(int newVa
     return itsDoc->TimeEditSmootherValue(newValue);
 }
 
-float SmartMetDocumentInterfaceForGeneralDataDoc::CPGriddingFactor()
-{
-    return itsDoc->CPGriddingFactor();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::CPGriddingFactor(float newValue)
-{
-    return itsDoc->CPGriddingFactor(newValue);
-}
-
 const NFmiPoint& SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewSizeInPixels() const
 {
     return itsDoc->TimeSerialViewSizeInPixels();

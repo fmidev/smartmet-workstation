@@ -122,7 +122,6 @@ public:
     virtual void SetMacroErrorText(const std::string &theErrorStr) = 0;
     virtual boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) = 0;
     virtual FmiLanguage Language(void) = 0;
-    virtual float CPGriddingFactor(void) = 0;
     virtual const NFmiRect& CPGridCropRect(void) = 0;
     virtual bool UseCPGridCrop(void) = 0;
     virtual const NFmiPoint& CPGridCropMargin(void) = 0;

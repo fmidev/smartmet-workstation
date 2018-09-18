@@ -90,7 +90,7 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 {
  public:
 	NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
-													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> theCPManager, float theCPGriddingFactor, const NFmiRect &theCPGridCropRect,
+													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> theCPManager, const NFmiRect &theCPGridCropRect,
 													bool theUseGridCrop, const NFmiPoint &theCropMarginSize);
 	virtual ~NFmiDataParamControlPointModifier(void);
 	// HUOM!! eri signerature kuin edell‰!!!
@@ -106,17 +106,13 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	bool GetChangeValues(std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool GetChangeValuesWithWork(const NFmiMetTime &theTime, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool IsZeroModification(const std::vector<float> &theZValues);
-	bool IsCPGriddingFactorUsed(void) const;
 
 	NFmiDataMatrix<float> itsGridData;
-	NFmiDataMatrix<float> itsCoarseGridData;
-	float itsCPGriddingFactor;
 	NFmiRect itsCPGridCropRect; // jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, k‰ytet‰‰n t‰t‰ hilapiste-rect:i‰. T‰‰ll‰ on siis bottom-left ja top-right editoidun datan hila-indeksit
 	bool fUseGridCrop; // flagi ett‰ k‰ytet‰‰nkˆ croppia vai ei, t‰m‰ tulee siis aikasarjaikkunan s‰‰dˆist‰
 	bool fCanGridCropUsed; // flagi ett‰ voidaanko croppia k‰ytt‰‰ vai ei, jos fUseGridCrop on true ja t‰m‰ on false, ei tehd‰ mit‰‰n...
 	NFmiPoint itsCropMarginSize;
 	NFmiDataMatrix<float> itsCroppedGridData;
-	NFmiDataMatrix<float> itsCroppedCoarseGridData;
 	NFmiRect itsGridCropRelativeRect;
 	NFmiObsDataGridding* itsObsDataGridding; // omistaa
 	boost::shared_ptr<NFmiEditorControlPointManager> itsCPManager;

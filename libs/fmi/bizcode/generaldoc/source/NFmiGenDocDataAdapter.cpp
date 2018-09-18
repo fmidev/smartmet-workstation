@@ -408,11 +408,6 @@ FmiLanguage NFmiGenDocDataAdapter::Language(void)
 	return itsDoc->Language();
 }
 
-float NFmiGenDocDataAdapter::CPGriddingFactor(void)
-{
-	return itsDoc->CPGriddingFactor();
-}
-
 const NFmiRect& NFmiGenDocDataAdapter::CPGridCropRect(void)
 {
 	return itsDoc->CPGridCropRect();

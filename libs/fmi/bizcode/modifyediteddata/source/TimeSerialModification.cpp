@@ -425,8 +425,8 @@ static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterfa
 				theAdapter.CPManager()->Param(theModifiedDrawParam->Param());
 
 				NFmiDataParamControlPointModifier dataModifier(fastInfo, theModifiedDrawParam, theMaskList, fUsedMask, 
-															theAdapter.CPManager(), theAdapter.CPGriddingFactor(), 
-															theAdapter.CPGridCropRect(), theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin());
+															theAdapter.CPManager(), theAdapter.CPGridCropRect(), 
+                                                            theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin());
 
                 if(theAdapter.UseMultiProcessCpCalc())
                 {

@@ -602,7 +602,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsBasicConfigurations()
 ,fEditedPointsSelectionChanged(false)
 ,fDrawSelectionOnThisView(false)
-,itsCPGriddingFactor(1)
 ,itsCPGridCropRect()
 ,fUseCPGridCrop(false)
 ,itsCPGridCropLatlonArea()
@@ -1818,7 +1817,6 @@ void InitSettingsFromConfFile(void)
 
 		itsMapViewTimeLabelInfo.InitFromSettings("SmartMet::TimeLabel");
 		itsSatelDataRefreshTimerInMinutes = NFmiSettings::Require<int>("SmartMet::SatelDataRefreshTimerInMinutes");
-		itsCPGriddingFactor = NFmiSettings::Optional<float>("SmartMet::CPGriddingFactor", 1);
         fStoreLastLoadedFileNameToFile = NFmiSettings::Optional<bool>("SmartMet::StoreLastLoadedFileNameToFile", false);
         itsHardDriveFreeLimitForConfSavesInMB = NFmiSettings::Optional<float>("SmartMet::HardDriveFreeLimitForConfSavesInMB", 10);
         itsHardDriveFreeLimitForEditedDataSavesInMB = NFmiSettings::Optional<float>("SmartMet::HardDriveFreeLimitForEditedDataSavesInMB", 500);
@@ -1836,7 +1834,6 @@ void SaveSettingsToConfFile(void)
 	{
 		SettingsFunctions::SetCommaSeaparatedPointToSettings("MetEditor::StationDataGridSize", itsStationDataGridSize);
 		NFmiSettings::Set("SmartMet::SatelDataRefreshTimerInMinutes", NFmiStringTools::Convert<int>(itsSatelDataRefreshTimerInMinutes), true);
-		NFmiSettings::Set("SmartMet::CPGriddingFactor", NFmiStringTools::Convert<float>(itsCPGriddingFactor), true);
         itsQ2ServerInfo.StoreToSettings();
 	}
 	catch(exception &e)
@@ -12828,16 +12825,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		fDrawSelectionOnThisView = newValue;
 	}
 
-	float CPGriddingFactor(void)
-	{
-		return itsCPGriddingFactor;
-	}
-
-	void CPGriddingFactor(float newValue)
-	{
-		itsCPGriddingFactor = newValue;
-	}
-
 	const NFmiRect& CPGridCropRect(void)
 	{
 		if(IsCPGridCropInAction())
@@ -13934,8 +13921,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiPoint itsCPGridCropMargin; // tässä kerrotaan kuinka monta hilapistettä x- ja y-suunnassa on ulko- ja sisä-laatikon välissä. 
 									// Tällä alueella muutokset menevät täydestä lähes nollaan, jotta reunoista tulisi mahdollisimman pehmeät.
 
-	float itsCPGriddingFactor; // Tällä säädetään miten tarkkaa modifikaatio hilaa lasketaan Kontrollipistetyökalussa. Kyse on huijauksesta CP-muokkauksen nopeuden tähden.
-								// Jos arvo on > 0 ja < 1, lasketaan muutoshila harvennettuun hilaan joka sitten interpoloidaan editoidun datan omaan hilaan ja tehdään muutokset.
 	bool fDrawSelectionOnThisView; // haluan piirtää maalattaessa valitut pisteet piirto ikkunaan, tämä on sitä varten tehty kikka vitonen
 	bool fEditedPointsSelectionChanged; // onko muutettu editoinnissa valittuja pisteitä, jos on, niin ruutua pitää päivittää tietyllä tavalla.
 	NFmiBasicSmartMetConfigurations itsBasicConfigurations; // Täällä on tietyt perus asetukset, mitkä alustetaan jo ennen GenDocin alustusta
@@ -16155,16 +16140,6 @@ bool NFmiEditMapGeneralDataDoc::DrawSelectionOnThisView(void)
 void NFmiEditMapGeneralDataDoc::DrawSelectionOnThisView(bool newValue)
 {
 	pimpl->DrawSelectionOnThisView(newValue);
-}
-
-float NFmiEditMapGeneralDataDoc::CPGriddingFactor(void)
-{
-	return pimpl->CPGriddingFactor();
-}
-
-void NFmiEditMapGeneralDataDoc::CPGriddingFactor(float newValue)
-{
-	pimpl->CPGriddingFactor(newValue);
 }
 
 const NFmiRect& NFmiEditMapGeneralDataDoc::CPGridCropRect(void)

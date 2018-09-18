@@ -45,12 +45,10 @@ public:
 	enum { IDD = IDD_DIALOG_TIME_EDIT_VALUES };
 	CSliderCtrl	itsSmootherSlider;
 	CSliderCtrl	itsManualModifierLength;
-	CSliderCtrl	itsGriddingFactorSlider;
 	int		itsModifyMode;
 	BOOL	fUseMaskInTimeSerialViews;
 	BOOL	fUseZoomedAreaCP;
     CString	itsSmootherValueStrU_;
-    CString	itsGriddingFactorStrU_;
     CString	itsCPManagerStrU_;
 	BOOL	fUseAnalyzeTool;
 	BOOL	fUseControlPointObservationsBlending;
@@ -97,7 +95,6 @@ private:
 	void UpdateSlider(void);
 	void UpdateSmootherString(void);
 	void UpdateCPManagerString(void);
-	void UpdateGriddingFactorString(void);
 	double CalcRelativeSliderValue();
 	CRect CalcClientArea(void);
 	void EditModeUpdate(void);
