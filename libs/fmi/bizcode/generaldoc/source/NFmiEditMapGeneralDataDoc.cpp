@@ -13126,7 +13126,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         }
     }
 
-    void MakeSureToolMasterPoolIsRunning2()
+    bool MakeSureToolMasterPoolIsRunning2()
     {
         // Tarkista onko Master-prosessi jo käynnissä, jos oli, lopetetaan
         if(MasterProcessRunningCount() <= 0)
@@ -13155,19 +13155,19 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ympärille, jos siinä sattuisi olemaan spaceja
 
 //            WORD showWindow = SW_HIDE;
-            CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true);
+            return CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true);
         }
         else
+        {
             LogMessage("MP-CP calculations's Master process was already up and running, continuing to calculations...", CatLog::Severity::Debug, CatLog::Category::Editing);
+            return true;
+        }
     }
 
-    // Aina kun tehdään MP-CP editointia (Multi-Process Control-Point), pitää varmistaa että 
-    // ToolMaster -prosessi pooli on käynnissä. ja jos ei ole, se pitää käynnistää.
-    // Jotta homma sujuisi nopeasti (tämän funktion kutsujan silmin), tehdään prosessi tarkastelut ja 
-    // niiden mahdolliset käynnistykset erillisessä threadissa.
-    void MakeSureToolMasterPoolIsRunning(void)
+    bool MakeSureToolMasterPoolIsRunning(void)
     {
-        boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
+        return MakeSureToolMasterPoolIsRunning2();
+//        boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
         // Eli ei jäädä odottamaan lopetusta tt.join():illa
     }
 
@@ -16212,9 +16212,9 @@ void NFmiEditMapGeneralDataDoc::UseMultiProcessCpCalc(bool newValue)
     pimpl->UseMultiProcessCpCalc(newValue);
 }
 
-void NFmiEditMapGeneralDataDoc::MakeSureToolMasterPoolIsRunning(void)
+bool NFmiEditMapGeneralDataDoc::MakeSureToolMasterPoolIsRunning(void)
 {
-    pimpl->MakeSureToolMasterPoolIsRunning();
+    return pimpl->MakeSureToolMasterPoolIsRunning();
 }
 
 NFmiMultiProcessPoolOptions& NFmiEditMapGeneralDataDoc::MultiProcessPoolOptions(void)

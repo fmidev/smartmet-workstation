@@ -109,7 +109,7 @@ public:
     MultiProcessClientData& GetMultiProcessClientData(void) override;
     const std::string& GetSmartMetGuid(void) override;
     bool UseMultiProcessCpCalc(void) override;
-    void MakeSureToolMasterPoolIsRunning(void) override;
+    bool MakeSureToolMasterPoolIsRunning(void) override;
     bool IsWorkingDataSaved() override;
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) override;
 
