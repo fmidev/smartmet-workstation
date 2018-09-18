@@ -262,23 +262,8 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 double NFmiDataParamModifier::Calculate (double theDataValue, double theFactor)
 {
 	double returnValue = kFloatMissing;
-	if(theDataValue == kFloatMissing) //laura 05071999
+	if(theDataValue == kFloatMissing)
 		returnValue = theFactor;
-/*
-	else if(itsDrawParam->ModifyingUnit() == 0)		// %
-	{
-		double value = theDataValue + ((theFactor / 100.0) * theDataValue);
-
-		if(itsInfo->Param().GetParam()->GetIdent() == kFmiWindDirection)
-		{
-			if(theDataValue != 0 && value == 0)
-				value = 360;
-			while (value > 360)
-				value -= 360;
-		}
-		returnValue = value;
-	}
-*/
 	else
 	{
 		returnValue = theDataValue + theFactor;
@@ -351,7 +336,8 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 		const NFmiGrid* grid = itsInfo->Grid();
 		itsGridData.Resize(grid->XNumber(), grid->YNumber(), 0.f);
 		if(IsCPGriddingFactorUsed())
-		{ // jos ggriddauskerroin on nollasta poikkeava, tehdään harvempi hila
+		{ 
+            // jos griddauskerroin on nollasta poikkeava, tehdään harvempi hila
 			size_t nx = FmiRound(itsGridData.NX() * itsCPGriddingFactor);
 			size_t ny = FmiRound(itsGridData.NY() * itsCPGriddingFactor);
 			itsCoarseGridData.Resize(nx, ny, 0.f);
@@ -530,7 +516,6 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
         if(!GetChangeValuesWithWork(theActiveTimes.Time(), xValues, yValues, zValues))
 			continue; // tälle ajalle ei muutoksia!
         tasks.push(tcp_tools::task_structure(jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, itsGridData.NX(), itsGridData.NY(), xValues, yValues, zValues, theGuidStr, griddingFunction));
-//        process_helpers::add_new_task(workqueue, *mpClientDataType.get(), xValues, yValues, zValues, itsGridData.NX(), itsGridData.NY(), theGuidStr, jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, griddingFunction);
 	}
 
     // Käynnistetään clint->server yhteys
@@ -728,7 +713,6 @@ void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValu
 		for(unsigned int j=0; j<gridData.NY(); j++)
 			for(unsigned int i=0; i<gridData.NX(); i++)
 				gridData[i][j] = tmGridData[j*gridData.NX() + i];
-		// Toolmaster griddaus funktioiden käyttö
 	}
 }
 
@@ -871,27 +855,6 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 			{
 				if(IsZeroModification(zValues) == false)
 				{
-/*
-					static int totalCounter = 1;
-					bool debugCPs = true;
-					std::string baseCpCheckFileName("d:\\cppointcheck.txt");
-					std::string currentCpCheckFileName = baseCpCheckFileName;
-					currentCpCheckFileName += ".";
-					currentCpCheckFileName += NFmiStringTools::Convert(totalCounter);
-					totalCounter++;
-					if(debugCPs)
-					{
-						std::ofstream out(currentCpCheckFileName.c_str());
-						if(out)
-						{
-							out.precision(5);
-							for(size_t i = 0; i < xValues.size(); i++)
-							{
-								out << "P" << i+1 << ": x=" << xValues[i] << ", y=" << yValues[i] << ", z=" << zValues[i] << std::endl;
-							}
-						}
-					}
-*/
 					NFmiDataMatrix<float> *usedGridData = &itsGridData;
 					if(fUseGridCrop)
 					{
@@ -903,18 +866,8 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 					else if(IsCPGriddingFactorUsed())
 						usedGridData = &itsCoarseGridData;
 					NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), *usedGridData, itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
-/*
-					if(debugCPs)
-					{
-						std::ofstream out(currentCpCheckFileName.c_str(), std::ios::app);
-						if(out)
-						{
-							out.precision(5);
-							out << *usedGridData << std::endl;
-						}
-					}
-*/
-					if(IsCPGriddingFactorUsed())
+
+                    if(IsCPGriddingFactorUsed())
 					{
 						if(fUseGridCrop)
 							::InterpolateMatrix(itsCroppedCoarseGridData, itsCroppedGridData);
