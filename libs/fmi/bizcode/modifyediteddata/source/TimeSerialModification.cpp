@@ -351,23 +351,7 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 
 static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theAnalyzeDataInfo, boost::shared_ptr<NFmiAreaMaskList> &theUsedMaskList, NFmiTimeDescriptor &theTimes, NFmiParam &theParam)
 {
-	bool status = false;
-	if(theAdapter.AnalyzeToolData().AnalyzeToolWithAllParams())
-	{
-		unsigned long paramIndex = theEditedInfo->ParamIndex();
-		unsigned long paramIndex2 = theAnalyzeDataInfo->ParamIndex();
-		for(theAnalyzeDataInfo->ResetParam(); theAnalyzeDataInfo->NextParam(false); )
-		{
-			status = ::DoAnalyzeModificationsForParam(theAdapter, *theAnalyzeDataInfo->Param().GetParam(), theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
-		}
-		theEditedInfo->ParamIndex(paramIndex); // palautetaan parametri osoittamaan oikeaan takaisin
-		theAnalyzeDataInfo->ParamIndex(paramIndex2);
-	}
-	else // muuten vain annettu parametri työstetään
-	{
-		status = ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
-	}
-	return status;
+	return ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
 }
 
 static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const NFmiMetTime& /* theEndTime */ )
