@@ -12,13 +12,99 @@
 #include "NFmiFastQueryInfo.h"
 #include <boost/bind.hpp>
 
+void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
+{
+    NFmiInfoData::Type usedInfoData = NFmiInfoData::kObservations;
+    // Ker‰t‰‰n lista producer-id arvoja nimineen, joista tehd‰‰n popup valikko
+    // Yhdelt‰ tuottajalta tulee vain yksi kohta (esim. synopilla voi olla jopa 3 eri tiedostoa)
+    std::map<long, NFmiProducer> observationProducerList;
+    auto observationInfos = theInfoOrganizer.GetInfos(usedInfoData);
+    for(auto &info : observationInfos)
+    {
+        if(IsGoodObservationDataForCpPointConversion(info))
+        {
+            const auto &producer = *info->Producer();
+            observationProducerList.insert(std::make_pair(producer.GetIdent(), producer));
+        }
+    }
+
+    itsProducers.clear();
+    for(const auto &producerMapItem : observationProducerList)
+        itsProducers.push_back(producerMapItem.second);
+}
+
+bool NFmiControlPointObservationBlendingData::SelectProducerByName(const std::string &theProducerName)
+{
+    for(const auto &producer : itsProducers)
+    {
+        if(producer.GetName() == theProducerName)
+        {
+            itsSelectedProducer = producer;
+            fIsSelectionMadeYet = true;
+            itsLastSessionProducer = itsSelectedProducer; // t‰t‰ pit‰‰ myˆs p‰ivitt‰‰, koska se talletetaan sitten lopuksi konffeihin
+            return true;
+        }
+    }
+    return false;
+}
+
+bool NFmiControlPointObservationBlendingData::IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+    if(info)
+    {
+        // Pit‰‰ olla asemadata
+        if(!info->IsGrid())
+        {
+            // Ei saa olla level dataa
+            if(info->SizeLevels() == 1)
+            {
+                // Ei saa olla liikkuva asemadata
+                if(!info->HasLatlonInfoInData())
+                {
+                    // Asemia pit‰‰ olla kokonaisuudessaan v‰hint‰in 10 kpl (ettei tule mukaan kaikenlaisia 'hˆpˆ' datoja)
+                    if(info->SizeLocations() >= 10)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void NFmiControlPointObservationBlendingData::InitFromSettings(const std::string &theBaseNameSpace)
+{
+    itsBaseNameSpace = theBaseNameSpace;
+
+    // HUOM!! ei lueta eik‰ talleteta fAnalyzeToolMode-muuttujaa, koska oletusarvoisesti t‰m‰ arvo on SmartMetin k‰ynnistyess‰ aina false
+    unsigned long prodId = NFmiSettings::Require<unsigned long>(std::string(itsBaseNameSpace + "::ProdId"));
+    std::string prodName = NFmiSettings::Require<std::string>(std::string(itsBaseNameSpace + "::ProdName"));
+    itsSelectedProducer = itsLastSessionProducer = NFmiProducer(prodId, prodName);
+}
+
+void NFmiControlPointObservationBlendingData::StoreToSettings(void)
+{
+    if(itsBaseNameSpace.empty() == false)
+    {
+        // t‰ss‰ k‰ytet‰‰n lastsession-versiota, koska jos tuottajaan ei ole koskettu k‰sin, niiss‰ on oikeat tuottajat ja jos s‰‰detty k‰sin niin myˆs
+        NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdId"), NFmiStringTools::Convert(itsLastSessionProducer.GetIdent()), true);
+        NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdName"), itsLastSessionProducer.GetName().CharPtr(), true);
+
+    }
+    else
+        throw std::runtime_error("Error in NFmiAnalyzeToolData::StoreToSettings, unable to store setting.");
+}
+
+
+// ===============================================================================================
+
 NFmiAnalyzeToolData::NFmiAnalyzeToolData(void)
 :itsSelectedProducer1()
 ,itsLastSessionProducer1()
 ,itsSelectedProducer2()
 ,itsLastSessionProducer2()
 ,itsAnalyzeToolEndTime()
-,fAnalyzeToolWithAllParams(false)
 ,fAnalyzeToolMode(false)
 ,fUseBothProducers(false)
 ,fIsSelectionsMadeYet(false)
@@ -44,8 +130,9 @@ void NFmiAnalyzeToolData::InitFromSettings(const std::string &theBaseNameSpace)
 	unsigned long prodId2 = NFmiSettings::Require<unsigned long>(std::string(itsBaseNameSpace + "::ProdId2"));
 	std::string prodName2 = NFmiSettings::Require<std::string>(std::string(itsBaseNameSpace + "::ProdName2"));
 	itsSelectedProducer2 = itsLastSessionProducer2 = NFmiProducer(prodId2, prodName2);
-	fAnalyzeToolWithAllParams = NFmiSettings::Require<bool>(std::string(itsBaseNameSpace + "::AnalyzeToolWithAllParams"));
 	fUseBothProducers = NFmiSettings::Require<bool>(std::string(itsBaseNameSpace + "::UseBothProducers"));
+
+    itsControlPointObservationBlendingData.InitFromSettings(theBaseNameSpace + "::CpObsBlendData");
 }
 
 void NFmiAnalyzeToolData::StoreToSettings(void)
@@ -57,10 +144,9 @@ void NFmiAnalyzeToolData::StoreToSettings(void)
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdName1"), itsLastSessionProducer1.GetName().CharPtr(), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdId2"), NFmiStringTools::Convert(itsLastSessionProducer2.GetIdent()), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdName2"), itsLastSessionProducer2.GetName().CharPtr(), true);
-
-		NFmiSettings::Set(std::string(itsBaseNameSpace + "::AnalyzeToolWithAllParams"), NFmiStringTools::Convert(fAnalyzeToolWithAllParams), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::UseBothProducers"), NFmiStringTools::Convert(fUseBothProducers), true);
 
+        itsControlPointObservationBlendingData.StoreToSettings();
 	}
 	else
 		throw std::runtime_error("Error in NFmiAnalyzeToolData::StoreToSettings, unable to store setting.");
