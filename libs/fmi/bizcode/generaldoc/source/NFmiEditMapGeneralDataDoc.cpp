@@ -186,8 +186,6 @@ namespace
 	typedef boost::unique_lock<MutexType> WriteLock;
 	MutexType gParamMaskListMutex;
 
-    const std::string tmMasterProcessName = "MasterProcessMFC.exe";
-    const std::string tmWorkerProcessName = "WorkerProcessMFC.exe";
     const std::string tmMasterTcpProcessName = "MasterProcessTcpMFC.exe";
     const std::string tmWorkerTcpProcessName = "WorkerProcessTcpMFC.exe";
 }
@@ -13081,18 +13079,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     const std::string& GetMasterProcessExeName()
     {
-        if(GetMultiProcessClientData().UseTcpMasterProcess())
-            return tmMasterTcpProcessName;
-        else
-            return tmMasterProcessName;
+        return tmMasterTcpProcessName;
     }
 
     const std::string& GetWorkerProcessExeName()
     {
-        if(GetMultiProcessClientData().UseTcpMasterProcess())
-            return tmWorkerTcpProcessName;
-        else
-            return tmWorkerProcessName;
+        return tmWorkerTcpProcessName;
     }
 
     int MasterProcessRunningCount()
@@ -13157,14 +13149,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(itsMultiProcessPoolOptions.MultiProcessPoolOptions().verbose_logging)
                 commandStr += " -v"; // laitetaan verbose lokitus p‰‰lle
 
-            if(!GetMultiProcessClientData().UseTcpMasterProcess())
-            { // Vain IPC -pohjaiselle (EI Tcp) serverille annetaan n‰m‰ argumentit
-                commandStr += " -w "; // laitetaan work-queue size -w optiolla
-                commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().task_queue_size_in_bytes);
-                commandStr += " -r "; // laitetaan result-queue size -r optiolla
-                commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().result_queue_size_in_bytes);
-            }
-
             commandStr += " -W "; // laitetaan Worker-prosessin polku -W optiolla
             commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
             commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::WorkerProcessPath", GetWorkerProcessExeName());
@@ -13183,32 +13167,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     // niiden mahdolliset k‰ynnistykset erillisess‰ threadissa.
     void MakeSureToolMasterPoolIsRunning(void)
     {
-        MultiProcessQueueClearing(); // T‰t‰ pit‰‰ kutsua ennen kuin multi-process systeemi k‰ynnistet‰‰n
-
         boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
         // Eli ei j‰‰d‰ odottamaan lopetusta tt.join():illa
-    }
-
-    // Yritet‰‰n tyhjent‰‰ 1. kerralla mahdollisia olemassa olevia work- ja result-queue:ja
-    void MultiProcessQueueClearing(void)
-    {
-        static bool firstTime = true;
-
-        if(firstTime) // Vain 1. kerralla
-        {
-            firstTime = false;
-
-            // 1. jos ei ole jo alustettu MultiProcessClientData:a
-            if(!GetMultiProcessClientData().IsMultiProcessClientDataInitialized())
-            {
-                // 2. Jos ei ole k‰ynniss‰ Master-processia
-                if(MasterProcessRunningCount() == 0)
-                {
-                    process_helpers::remove_shared_memory_object(work_queue_shared_name);
-                    process_helpers::remove_shared_memory_object(work_result_queue_shared_name);
-                }
-            }
-        }
     }
 
     NFmiMultiProcessPoolOptions& MultiProcessPoolOptions(void)

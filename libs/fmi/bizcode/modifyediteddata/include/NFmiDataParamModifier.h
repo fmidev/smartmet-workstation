@@ -95,7 +95,6 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	virtual ~NFmiDataParamControlPointModifier(void);
 	// HUOM!! eri signerature kuin edellä!!!
 	bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
-    bool DoProcessPoolCPModifying(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks);
     bool DoProcessPoolCpModifyingTcp(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks);
 	static void DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, int theGriddingFunction, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative);
 	int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
