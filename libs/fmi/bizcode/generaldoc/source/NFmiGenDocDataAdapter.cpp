@@ -438,9 +438,9 @@ bool NFmiGenDocDataAdapter::UseMultiProcessCpCalc(void)
     return itsDoc->UseMultiProcessCpCalc();
 }
 
-void NFmiGenDocDataAdapter::MakeSureToolMasterPoolIsRunning(void)
+bool NFmiGenDocDataAdapter::MakeSureToolMasterPoolIsRunning(void)
 {
-    itsDoc->MakeSureToolMasterPoolIsRunning();
+    return itsDoc->MakeSureToolMasterPoolIsRunning();
 }
 
 bool NFmiGenDocDataAdapter::IsWorkingDataSaved()

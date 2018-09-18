@@ -208,7 +208,7 @@ public:
     bool AllowRightClickDisplaySelection(void);
     void AllowRightClickDisplaySelection(bool newValue);
     NFmiMultiProcessPoolOptions& MultiProcessPoolOptions(void);
-    void MakeSureToolMasterPoolIsRunning(void);
+    bool MakeSureToolMasterPoolIsRunning(void);
     bool UseMultiProcessCpCalc(void);
     void UseMultiProcessCpCalc(bool newValue);
     const std::string& GetSmartMetGuid(void);

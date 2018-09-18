@@ -128,7 +128,7 @@ public:
     virtual MultiProcessClientData& GetMultiProcessClientData(void) = 0;
     virtual const std::string& GetSmartMetGuid(void) = 0;
     virtual bool UseMultiProcessCpCalc(void) = 0;
-    virtual void MakeSureToolMasterPoolIsRunning(void) = 0;
+    virtual bool MakeSureToolMasterPoolIsRunning(void) = 0;
     virtual bool IsWorkingDataSaved() = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) = 0;
 };
