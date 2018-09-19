@@ -37,6 +37,7 @@
 #include "NFmiRectangle.h"
 #include "NFmiText.h"
 #include "CtrlViewFastInfoFunctions.h"
+#include "EditedInfoMaskHandler.h"
 
 #include <boost\math\special_functions\round.hpp>
 
@@ -313,22 +314,19 @@ void NFmiTimeSerialDiscreteDataView::DrawModifyFactorPointGrids (void)
 //--------------------------------------------------------
 void NFmiTimeSerialDiscreteDataView::DrawSelectedStationData (void)
 {
-    unsigned long oldMask = itsInfo->MaskType();
-    if(CtrlViewFastInfoFunctions::GetMaskedCount(itsInfo, NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()))
+    auto maskType = CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(itsInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, maskType);
+    if(maskType == NFmiMetEditorTypes::kFmiDisplayedMask)
     {
-        itsInfo->MaskType(NFmiMetEditorTypes::kFmiDisplayedMask);
         for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
             DrawLocationInTime(itsInfo->LatLon(), itsNormalCurveEnvi, itsChangeCurveEnvi);
     }
     else
     {
-        itsInfo->MaskType(NFmiMetEditorTypes::kFmiSelectionMask);
         itsInfo->ResetLocation();
         if(itsInfo->NextLocation())
             DrawLocationInTime(itsInfo->LatLon(), itsNormalCurveEnvi, itsChangeCurveEnvi);
     }
-
-	itsInfo->MaskType(oldMask);
 }
 
 //--------------------------------------------------------
