@@ -100,6 +100,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "catlog/catlog.h"
 #include "NFmiVoidPtrList.h"
+#include "EditedInfoMaskHandler.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -4147,8 +4148,7 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 		NFmiDrawingEnvironment envi;
 		envi.EnableFill();
 		envi.DisableFrame();
-		unsigned long oldMask = info->MaskType();
-		info->MaskType(NFmiMetEditorTypes::kFmiNoMask); // muutin activaatiomaskin käytöstä kaikkien piirtoon, koska muuten harvennetun datan piirto ei toimi oikein
+        EditedInfoMaskHandler editedInfoMaskHandler(info, NFmiMetEditorTypes::kFmiNoMask); // muutin activaatiomaskin käytöstä kaikkien piirtoon, koska muuten harvennetun datan piirto ei toimi oikein
 		NFmiRect maskRect(CalcMaskRectSize(info));
 		NFmiPoint xy;
 		NFmiPoint latLon;
@@ -4174,7 +4174,6 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 				}
 			}
 		}
-		info->MaskType(oldMask);
 	}
 }
 

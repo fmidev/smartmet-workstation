@@ -38,6 +38,7 @@
 #include "NFmiExtraMacroParamData.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiPathUtils.h"
+#include "EditedInfoMaskHandler.h"
 #include "catlog/catlog.h"
 #include <fstream>
 #include <newbase/NFmiEnumConverter.h>
@@ -386,8 +387,7 @@ static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapt
 					return false;
 				}
 
-				unsigned long oldMask = editedInfo->MaskType(); // tehdään ainakin aluksi muokkaus kaikille pisteille!!
-				editedInfo->MaskType(fUsedMask); // 13.11.2002/Marko tehdään muokkaus valituille pisteille
+                EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
 				NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
 				times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
 				bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeDataInfo, maskList, times, theParam);
@@ -402,7 +402,6 @@ static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapt
 					}
 				}
                 ::LogMessage(theAdapter, "Using Analyze tool to modify edited data.", CatLog::Severity::Info, CatLog::Category::Editing);
-				editedInfo->MaskType(oldMask); // Maski asetus takaisin.
 				return status;
 			}
 		}
@@ -1277,13 +1276,13 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 			}
 
 			boost::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = boost::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
-			unsigned int oldMask = editedData->MaskType();
+            auto usedMaskType = theAdapter.TestFilterUsedMask();
+            EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
 			bool status = false;
 			if(copyOfEditedData)
 			{
 				boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
-				editedData->MaskType(theAdapter.TestFilterUsedMask());
-				copyOfEditedData->MaskType(theAdapter.TestFilterUsedMask());
+				copyOfEditedData->MaskType(usedMaskType);
 				status = ::DoAreaFiltering(theAdapter, maskList, editedData, copyOfEditedData, fPasteClipBoardData, times, fDoMultiThread);
 				if(!status)
 					::UndoData(theAdapter);
@@ -1293,7 +1292,6 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
                     theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
                 }
 			}
-			editedData->MaskType(oldMask);
 			editedData->Time(time);
             LogDataFilterToolsModifications(theAdapter, true);
 			return status;
@@ -1560,20 +1558,19 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 			return false;
 
 		boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
-		unsigned int oldMask = editedData->MaskType();
-		editedData->MaskType(theAdapter.TestFilterUsedMask());
-		copyOfEditedData->MaskType(theAdapter.TestFilterUsedMask());
+        auto usedMaskType = theAdapter.TestFilterUsedMask();
+        EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
+		copyOfEditedData->MaskType(usedMaskType);
 		bool status = ::DoTimeFiltering(theAdapter, maskList, editedData, copyOfEditedData, times, fDoMultiThread);
 
 		if(!status)
 			::UndoData(theAdapter);
 		else
 		{
-            ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, false);
+            ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, usedMaskType, kFmiLastParameter, fDoMultiThread, false);
             theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
 		}
 
-		editedData->MaskType(oldMask);
 		editedData->Time(time);
         LogDataFilterToolsModifications(theAdapter, false);
 		return status;
@@ -1705,9 +1702,9 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 			return false;
 
 		boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
-		unsigned int oldMask = editedData->MaskType();
-		editedData->MaskType(theAdapter.TestFilterUsedMask()); // otetaan maskin käyttö muokkausdialogista
-		copyOfEditedData->MaskType(theAdapter.TestFilterUsedMask());
+        auto usedMaskType = theAdapter.TestFilterUsedMask();
+        EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
+		copyOfEditedData->MaskType(usedMaskType);
 		bool status = ::DoCombineModelAndKlapse(theAdapter, maskList, editedData, copyOfEditedData, times, fDoMultiThread);
 		if(!status)
 			::UndoData(theAdapter);
@@ -1718,7 +1715,6 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 //			theAdapter.RefreshMasks();
 		}
 
-		editedData->MaskType(oldMask);
 		editedData->Time(time);
 
 		return status;

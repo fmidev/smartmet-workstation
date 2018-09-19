@@ -56,6 +56,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "Q2ServerInfo.h"
 #include "NFmiHelpDataInfo.h"
+#include "EditedInfoMaskHandler.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -885,8 +886,7 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 		CalculateGeneralStationRect();
         NFmiRect displayRect = ::CalcWantedDisplayRect(itsCtrlViewDocumentInterface, itsToolBox, itsMapViewDescTopIndex, 2.0);
         CPoint firstSelectedPointPixelSize = ::CalcWantedPixelSize(itsCtrlViewDocumentInterface, itsToolBox, itsMapViewDescTopIndex, 1.6);
-		unsigned long oldMask = itsInfo->MaskType();
-		itsInfo->MaskType(theMaskType);
+        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, theMaskType);
 		itsDrawingEnvironment->EnableInvert();
 		CDC *usedDC = itsToolBox->GetDC();
 		if(theMaskType == NFmiMetEditorTypes::kFmiSelectionMask)
@@ -954,7 +954,6 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 			}
 		}
 		itsDrawingEnvironment->DisableInvert();
-		itsInfo->MaskType(oldMask);
 		itsToolBox->UseClipping(false);
 		return true;
 	}

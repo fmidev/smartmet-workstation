@@ -61,6 +61,7 @@
 #include "ToolMasterColorCube.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "catlog/catlog.h"
+#include "EditedInfoMaskHandler.h"
 
 #include "datautilities\DataUtilitiesAdapter.h"
 
@@ -1527,13 +1528,14 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     isoLineData.itsInfo = itsInfo;
     isoLineData.itsParam = itsInfo->Param();
     isoLineData.itsTime = itsInfo->Time();
-
-    unsigned long oldMask = itsInfo->MaskType();
-    itsInfo->MaskType(NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
     NFmiDataMatrix<float> values;
-    if(FillIsoLineGridData(values, isoLineData) == false)
-        return;
-    itsInfo->MaskType(oldMask); // asetetaan vanha maski p‰‰lle takaisin
+
+    {
+        // Laitetaan t‰m‰ erilliseen blokkiin, jotta vanha maski arvo saadaan takaisin p‰‰lle niin kuin vanhallakin koodilla
+        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
+        if(FillIsoLineGridData(values, isoLineData) == false)
+            return;
+    }
 
     SetUpDifferenceDrawing(itsDrawParam);
 
@@ -2438,10 +2440,8 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         isoLineData.itsParam = itsInfo->Param();
         isoLineData.itsTime = this->itsTime;
 
-        unsigned long oldMask = itsInfo->MaskType();
-        itsInfo->MaskType(NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
+        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
         fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, x1, y1, x2, y2);
-        itsInfo->MaskType(oldMask); // asetetaan vanha maski p‰‰lle takaisin
     }
     else // normaali datan rakentelu ja t‰yttˆ
     {
@@ -2449,10 +2449,8 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         isoLineData.itsParam = itsInfo->Param();
         isoLineData.itsTime = this->itsTime;
 
-        unsigned long oldMask = itsInfo->MaskType();
-        itsInfo->MaskType(NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
+        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
         fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0);
-        itsInfo->MaskType(oldMask); // asetetaan vanha maski p‰‰lle takaisin
         if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2server tapauksessa haetaan vain ruudun alueelle dataa, joten poikkeaa normaali piirrosta
             zoomedAreaRect = itsInfo->Area()->XYArea();
         else if(itsInfo->IsGrid())
