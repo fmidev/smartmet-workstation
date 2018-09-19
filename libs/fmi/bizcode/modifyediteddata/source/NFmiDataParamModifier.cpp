@@ -330,22 +330,31 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 		itsGridData.Resize(grid->XNumber(), grid->YNumber(), 0.f);
 
 		fCanGridCropUsed = itsCPGridCropRect != emptyRect;
-		if(fUseGridCrop && fCanGridCropUsed)
-		{
-			size_t nx = FmiRound(itsCPGridCropRect.Width()) + 1;
-			nx = FmiMin(nx, itsGridData.NX());
-			size_t ny = FmiRound(itsCPGridCropRect.Height()) + 1;
-			ny = FmiMin(ny, itsGridData.NY());
-			itsCroppedGridData.Resize(nx, ny, 0.f);
-			if(nx < 4 || ny < 4) // en tied‰ mik‰ olisi pienin loogisin cropattu hila, mutta ei t‰m‰ voi olla liian pieni
-				fUseGridCrop = false; // laitetaan pois p‰‰lt‰ jos cropatusta hilasta tulisi liian pieni
+        if(fUseGridCrop)
+        {
+            if(fCanGridCropUsed)
+            {
+                size_t nx = FmiRound(itsCPGridCropRect.Width()) + 1;
+                nx = FmiMin(nx, itsGridData.NX());
+                size_t ny = FmiRound(itsCPGridCropRect.Height()) + 1;
+                ny = FmiMin(ny, itsGridData.NY());
+                itsCroppedGridData.Resize(nx, ny, 0.f);
+                if(nx < 4 || ny < 4) // en tied‰ mik‰ olisi pienin loogisin cropattu hila, mutta ei t‰m‰ voi olla liian pieni
+                    fUseGridCrop = false; // laitetaan pois p‰‰lt‰ jos cropatusta hilasta tulisi liian pieni
 
-			double left = itsCPGridCropRect.Left() / itsGridData.NX();
-			double right = itsCPGridCropRect.Right() / itsGridData.NX();
-			double bottom = itsCPGridCropRect.Bottom() / itsGridData.NY();
-			double top = itsCPGridCropRect.Top() / itsGridData.NY();
-			itsGridCropRelativeRect = NFmiRect(left, top, right, bottom);
-		}
+                double left = itsCPGridCropRect.Left() / itsGridData.NX();
+                double right = itsCPGridCropRect.Right() / itsGridData.NX();
+                double bottom = itsCPGridCropRect.Bottom() / itsGridData.NY();
+                double top = itsCPGridCropRect.Top() / itsGridData.NY();
+                itsGridCropRelativeRect = NFmiRect(left, top, right, bottom);
+            }
+            else
+            {
+                //  asetuksissa on ett‰ k‰yt‰ croppia, mutta croppausta ei voida toteuttaa (kartta zoomi on koko alueella), 
+                // t‰llˆin laitetaan fUseGridCrop false:ksi
+                fUseGridCrop = false; 
+            }
+        }
 	}
 }
 
@@ -357,9 +366,6 @@ NFmiDataParamControlPointModifier::~NFmiDataParamControlPointModifier(void)
 // HUOM!! eri signerature kuin edell‰!!!
 bool NFmiDataParamControlPointModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks)
 {
-	if(fUseGridCrop && fCanGridCropUsed == false)
-		return false; //  asetuksissa on ett‰ k‰yt‰ croppia, mutta croppausta ei voida toteuttaa, t‰llˆin ei tehd‰ mit‰‰n
-
 	unsigned long oldMaskType = itsInfo->MaskType();
 	itsInfo->MaskType(itsMaskType);
 
@@ -380,40 +386,51 @@ bool NFmiDataParamControlPointModifier::ModifyTimeSeriesDataUsingMaskFactors(NFm
 		NFmiQueryDataUtil::DoStepIt(theThreadCallBacks); // stepataan vasta 0-tarkastuksen j‰lkeen!
 		double maskFactor = 1;
 		if(fUseGridCrop)
-		{
-			unsigned long sizeX = itsInfo->GridXNumber();
-			for(size_t j = 0; j < itsCroppedGridData.NY(); j++)
-			{
-				for(size_t i = 0; i < itsCroppedGridData.NX(); i++)
-				{
-					unsigned long locationIndex = FmiRound(((itsCPGridCropRect.Top() + j) * sizeX) + itsCPGridCropRect.Left() + i);
-					itsInfo->LocationIndex(locationIndex);
-					if(itsParamMaskList->UseMask())
-						maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
-					if(maskFactor)
-						itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsCroppedGridData[i][j], maskFactor)));
-				}
-			}
-		}
+            DoCroppedGridCalculations();
 		else
-		{
-			for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-			{
-				if(itsParamMaskList->UseMask())
-					maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
-				if(maskFactor)
-				{
-					int locationIndex = itsInfo->LocationIndex();
-					itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsGridData[locationIndex%itsGridData.NX()][locationIndex/itsGridData.NX()], maskFactor)));
-				}
-			}
-		}
+            DoFullGridCalculations();
 	}
 
 	itsInfo->MaskType(oldMaskType);
 
 	return true;
 }
+
+void NFmiDataParamControlPointModifier::DoCroppedGridCalculations()
+{
+    auto useMask = itsParamMaskList->UseMask();
+    double maskFactor = 1;
+    unsigned long sizeX = itsInfo->GridXNumber();
+    for(size_t j = 0; j < itsCroppedGridData.NY(); j++)
+    {
+        for(size_t i = 0; i < itsCroppedGridData.NX(); i++)
+        {
+            unsigned long locationIndex = FmiRound(((itsCPGridCropRect.Top() + j) * sizeX) + itsCPGridCropRect.Left() + i);
+            itsInfo->LocationIndex(locationIndex);
+            if(useMask)
+                maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
+            if(maskFactor)
+                itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsCroppedGridData[i][j], maskFactor)));
+        }
+    }
+}
+
+void NFmiDataParamControlPointModifier::DoFullGridCalculations()
+{
+    auto useMask = itsParamMaskList->UseMask();
+    double maskFactor = 1;
+    for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+    {
+        if(itsParamMaskList->UseMask())
+            maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
+        if(maskFactor)
+        {
+            int locationIndex = itsInfo->LocationIndex();
+            itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsGridData[locationIndex%itsGridData.NX()][locationIndex / itsGridData.NX()], maskFactor)));
+        }
+    }
+}
+
 
 // Huom! t‰m‰ pit‰‰ kutsua erilliseen threadiin, muuten blokkaa pitemm‰ksi aikaa
 static void StartNewConnection(const std::string &username, bool use_verbose_logging)
