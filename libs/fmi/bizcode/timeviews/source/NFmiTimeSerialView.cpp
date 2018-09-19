@@ -36,6 +36,7 @@
 #include "NFmiStepTimeScale.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "NFmiStation.h"
+#include "EditedInfoMaskHandler.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -1570,14 +1571,6 @@ void NFmiTimeSerialView::DrawData(void)
 	DrawTimeLine();
 }
 
-void NFmiTimeSerialView::SetEditedDatasCorrectMaskOn(boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo) const
-{
-    if(CtrlViewFastInfoFunctions::GetMaskedCount(theEditedInfo, NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()))
-        theEditedInfo->MaskType(NFmiMetEditorTypes::kFmiDisplayedMask);
-    else
-        theEditedInfo->MaskType(NFmiMetEditorTypes::kFmiSelectionMask);
-}
-
 // piirtää selityksen ruudun yläreunaan ja piirtää datan kertyvänä
 // eli laskee kertymän datan arvoista
 void NFmiTimeSerialView::DrawSelectedStationDataIncrementally(void)
@@ -1590,9 +1583,7 @@ void NFmiTimeSerialView::DrawSelectedStationDataIncrementally(void)
     // functions are using mask-system that are only usable with edited data.
 	if(!info || !IsEditedData(info))
 		return;
-	unsigned long oldMask = info->MaskType();
-    SetEditedDatasCorrectMaskOn(info);
-
+    EditedInfoMaskHandler editedInfoMaskHandler(info, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(info, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()));
 	info->ResetLocation();
 	if(info->NextLocation())
 		DrawLocationDataIncrementally();
@@ -1603,7 +1594,6 @@ void NFmiTimeSerialView::DrawSelectedStationDataIncrementally(void)
 			DrawLocationDataIncrementally();
 	}
 
-	info->MaskType(oldMask);
 	return;
 }
 
@@ -1795,8 +1785,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 		}
 		else
 		{
-            unsigned long oldMask = info->MaskType();
-            SetEditedDatasCorrectMaskOn(info);
+            EditedInfoMaskHandler editedInfoMaskHandler(info, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(info, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()));
 
 			int counter = 1;
 			NFmiColor stationDataColor;
@@ -1827,8 +1816,6 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
                     DrawHelperObservationData(latlon, counter);
                 }
 			}
-
-			info->MaskType(oldMask);
 		}
 	}
 }
@@ -1860,8 +1847,7 @@ void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
 		return;
     NFmiPoint primaryLatlon = GetTooltipLatlon();
 
-    unsigned long oldMask = editedInfo->MaskType();
-    SetEditedDatasCorrectMaskOn(editedInfo);
+    EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()));
 
 	int counter = 1;
 	FmiParameterName param = FmiParameterName(itsDrawParam->Param().GetParamIdent());
@@ -1884,8 +1870,6 @@ void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
             }
         }
     }
-
-	editedInfo->MaskType(oldMask);
 }
 
 void NFmiTimeSerialView::DrawCPReferenceLines(void)
@@ -2511,8 +2495,7 @@ checkedVector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(editedInfo)
 	{
-		unsigned long oldMask = editedInfo->MaskType();
-        SetEditedDatasCorrectMaskOn(editedInfo);
+        EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()));
 
 		editedInfo->ResetLocation();
 		if(editedInfo->NextLocation())
@@ -2523,7 +2506,6 @@ checkedVector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
 			while(editedInfo->NextLocation())
 				latlons.push_back(editedInfo->LatLon());
 		}
-		editedInfo->MaskType(oldMask);
 	}
 	// piirrretään vielä editoidun alueen ulkopuolelta mahd. valittu piste mutta vain jos muuta ei ole piirretty
 	if(counter == 1)
@@ -4509,14 +4491,12 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
         viewedInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())); // parametri pitää asettaa
 		// näin saadaan selville 1. piirretty piste, ikävää koodia, mutta ei voi mitään...
 		bool composeAllSelectedLocations = false;
-        unsigned long oldMask = editedInfo->MaskType();
-        if(CtrlViewFastInfoFunctions::GetMaskedCount(editedInfo, NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()))
+        auto maskType = CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
+        EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, maskType);
+        if(maskType == NFmiMetEditorTypes::kFmiDisplayedMask)
 		{
-			editedInfo->MaskType(NFmiMetEditorTypes::kFmiDisplayedMask);
 			composeAllSelectedLocations = true;
 		}
-		else
-			editedInfo->MaskType(NFmiMetEditorTypes::kFmiSelectionMask);
 
 		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
 		string parNameStr = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), false, showExtraInfo, true);
@@ -4551,7 +4531,6 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 				selectedLocationCounter++;
 			}
 		}
-        editedInfo->MaskType(oldMask);
 
 		if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
 		{
@@ -4625,11 +4604,9 @@ NFmiPoint NFmiTimeSerialView::GetFirstSelectedLatlonFromEditedData() const
     if(editedInfo)
     {
         // Check if there is selected mask point to return
-        unsigned long oldMask = editedInfo->MaskType();
-        SetEditedDatasCorrectMaskOn(editedInfo);
+        EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()));
         if(editedInfo->FirstLocation())
         {
-            editedInfo->MaskType(oldMask);
             return editedInfo->LatLon();
         }
     }
