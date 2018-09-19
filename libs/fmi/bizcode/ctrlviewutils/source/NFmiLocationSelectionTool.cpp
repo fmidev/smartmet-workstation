@@ -36,6 +36,7 @@
 #include "NFmiSmartInfo.h"
 #include "NFmiArea.h"
 #include "NFmiMetEditorTypes.h"
+#include "EditedInfoMaskHandler.h"
 
 //--------------------------------------------------------
 // Constructor/Destructor 
@@ -153,9 +154,7 @@ void NFmiLocationSelectionTool::CircleSelection(boost::shared_ptr<NFmiFastQueryI
 {
 	if(theInfo && theArea)
 	{
-		unsigned long oldMask = theInfo->MaskType();
-	// *********** laita tähän sitten activation maski päälle!!! *******************
-		theInfo->MaskType(NFmiMetEditorTypes::kFmiNoMask); 
+        EditedInfoMaskHandler editedInfoMaskHandler(theInfo, NFmiMetEditorTypes::kFmiNoMask);
 		NFmiPoint cursorViewPosition(theArea->ToXY(theLatLon));
 		for(theInfo->ResetLocation(); theInfo->NextLocation(); )
 		{
@@ -166,7 +165,6 @@ void NFmiLocationSelectionTool::CircleSelection(boost::shared_ptr<NFmiFastQueryI
 				else
 					::DoMaskLocation(theInfo, true, theMask);
 		}
-		theInfo->MaskType(oldMask);
 	}
 }
 //--------------------------------------------------------
@@ -180,9 +178,8 @@ void NFmiLocationSelectionTool::ParamSelection(boost::shared_ptr<NFmiFastQueryIn
 {
 	if(theInfo && theArea)
 	{
-		unsigned long oldMask = theInfo->MaskType();
-		theInfo->MaskType(NFmiMetEditorTypes::kFmiNoMask); 
-		if(UseValueFromLocation())
+        EditedInfoMaskHandler editedInfoMaskHandler(theInfo, NFmiMetEditorTypes::kFmiNoMask);
+        if(UseValueFromLocation())
 		{
 			double value = Info()->InterpolatedValue(theLatLon);
 			LowerLimit(value); // laitetaan klikatun kohdan arvo lowerlimitiksi
@@ -209,6 +206,5 @@ void NFmiLocationSelectionTool::ParamSelection(boost::shared_ptr<NFmiFastQueryIn
 				}
 			}
 		}
-		theInfo->MaskType(oldMask);
 	}
 }
