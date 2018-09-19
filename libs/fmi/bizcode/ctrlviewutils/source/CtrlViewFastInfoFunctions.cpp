@@ -25,4 +25,15 @@ namespace CtrlViewFastInfoFunctions
         else
             return false;
     }
+
+    // 'Proper' maski tyyppi riippuu miten editoidussa datassa on valittuna eri maskien pisteitä:
+    // Jos yksikin editoidun datan piste on kFmiDisplayedMask -moodissa valittuna, palautetaan kFmiDisplayedMask.
+    // Muuten palautetaan kFmiSelectionMask.
+    NFmiMetEditorTypes::Mask GetProperMaskTypeFromEditeInfo(boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool allowRightClickDisplaySelection)
+    {
+        if(CtrlViewFastInfoFunctions::GetMaskedCount(editedInfo, NFmiMetEditorTypes::kFmiDisplayedMask, allowRightClickDisplaySelection))
+            return NFmiMetEditorTypes::kFmiDisplayedMask;
+        else
+            return NFmiMetEditorTypes::kFmiSelectionMask;
+    }
 }
