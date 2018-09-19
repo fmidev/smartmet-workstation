@@ -107,6 +107,7 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	bool IsZeroModification(const std::vector<float> &theZValues);
     void DoCroppedGridCalculations();
     void DoFullGridCalculations();
+    bool PreventGridCropCalculations();
 
 	NFmiDataMatrix<float> itsGridData;
 	NFmiRect itsCPGridCropRect; // jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, k‰ytet‰‰n t‰t‰ hilapiste-rect:i‰. T‰‰ll‰ on siis bottom-left ja top-right editoidun datan hila-indeksit
