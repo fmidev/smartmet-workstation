@@ -105,6 +105,8 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	bool GetChangeValues(std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool GetChangeValuesWithWork(const NFmiMetTime &theTime, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool IsZeroModification(const std::vector<float> &theZValues);
+    void DoCroppedGridCalculations();
+    void DoFullGridCalculations();
 
 	NFmiDataMatrix<float> itsGridData;
 	NFmiRect itsCPGridCropRect; // jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, k‰ytet‰‰n t‰t‰ hilapiste-rect:i‰. T‰‰ll‰ on siis bottom-left ja top-right editoidun datan hila-indeksit
