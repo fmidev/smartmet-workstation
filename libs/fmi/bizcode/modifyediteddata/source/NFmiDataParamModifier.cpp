@@ -39,6 +39,7 @@
 #include "client_to_master_connection.h" // HUOM! t‰m‰n pit‰‰ olla ennen #include "MultiProcessClientData.h", koska muuten tulee joku outo Winsock.h allready included error (boost asio -juttu)
 #include "MultiProcessClientData.h"
 #include "ToolMasterHelperFunctions.h"
+#include "EditedInfoMaskHandler.h"
 
 #include <fstream>
 
@@ -72,8 +73,7 @@ NFmiDataParamModifier::NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo
 //   avulla.
 bool NFmiDataParamModifier::ModifyData (void)
 {
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
 	itsParamMaskList->CheckIfMaskUsed();
 	if(itsParamMaskList->UseMask())
 		SyncronizeTimeWithMasks();
@@ -89,17 +89,14 @@ bool NFmiDataParamModifier::ModifyData (void)
 			itsInfo->FloatValue(static_cast<float>(Calculate(itsInfo->FloatValue())));
 	}
 
-	itsInfo->MaskType(oldMaskType);
-
 	return true;
 }
 
 // 1999.11.17/Marko Viritetty ympyr‰ muokkauksille
 bool NFmiDataParamModifier::ModifyData2(void)
 {
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 	if(itsParamMaskList->UseMask())
 		SyncronizeTimeWithMasks();
 	PrepareFastIsInsideData();
@@ -107,8 +104,6 @@ bool NFmiDataParamModifier::ModifyData2(void)
 	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		if(IsPossibleInside(itsInfo->RelativePoint()))
 			itsInfo->FloatValue(static_cast<float>(Calculate2(itsInfo->FloatValue())));
-
-	itsInfo->MaskType(oldMaskType);
 
 	return true;
 }
@@ -154,10 +149,8 @@ bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveT
 {
 	int modifyFactorIndex = 0;
 
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
 	{
@@ -176,8 +169,6 @@ bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveT
 		modifyFactorIndex++;
 	}
 
-	itsInfo->MaskType(oldMaskType);
-
 	return true;
 }
 
@@ -185,9 +176,7 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 {
 	int modifyFactorIndex = 0;
 
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
 	itsParamMaskList->CheckIfMaskUsed();
 
 	double searchRectSize = (itsSelectedSearchAreaRect.Width()+1) * (itsSelectedSearchAreaRect.Height()+1);
@@ -218,8 +207,6 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 		modifyFactorIndex++;
 	}
 
-	itsInfo->MaskType(oldMaskType);
-
 	return true;
 }
 
@@ -230,10 +217,8 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 {
 	int modifyFactorIndex = 0;
 
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
 	{
@@ -248,8 +233,6 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 		}
 		modifyFactorIndex++;
 	}
-
-	itsInfo->MaskType(oldMaskType);
 
 	return true;
 }
@@ -323,7 +306,7 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 ,itsCPManager(theCPManager)
 ,itsLastTimeIndex(-1)
 {
-	static NFmiRect emptyRect(0, 0, 1, 1);
+    static NFmiRect emptyRect(0, 0, 1, 1);
 	if(itsInfo && itsInfo->IsGrid())
 	{
 		const NFmiGrid* grid = itsInfo->Grid();
@@ -348,12 +331,6 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
                 double top = itsCPGridCropRect.Top() / itsGridData.NY();
                 itsGridCropRelativeRect = NFmiRect(left, top, right, bottom);
             }
-            else
-            {
-                //  asetuksissa on ett‰ k‰yt‰ croppia, mutta croppausta ei voida toteuttaa (kartta zoomi on koko alueella), 
-                // t‰llˆin laitetaan fUseGridCrop false:ksi
-                fUseGridCrop = false; 
-            }
         }
 	}
 }
@@ -363,13 +340,22 @@ NFmiDataParamControlPointModifier::~NFmiDataParamControlPointModifier(void)
 	delete itsObsDataGridding;
 }
 
+bool NFmiDataParamControlPointModifier::PreventGridCropCalculations()
+{
+    if(fUseGridCrop && fCanGridCropUsed == false)
+        return true;
+    else
+        return false;
+}
+
 // HUOM!! eri signerature kuin edell‰!!!
 bool NFmiDataParamControlPointModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks)
 {
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
+    if(PreventGridCropCalculations())
+        return false;
 
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 	NFmiDataMatrix<float> infoValues;
 	NFmiQueryDataUtil::SetRange(theThreadCallBacks, 0, CalcActualModifiedTimes(theActiveTimes), 1);
 
@@ -390,8 +376,6 @@ bool NFmiDataParamControlPointModifier::ModifyTimeSeriesDataUsingMaskFactors(NFm
 		else
             DoFullGridCalculations();
 	}
-
-	itsInfo->MaskType(oldMaskType);
 
 	return true;
 }
@@ -476,13 +460,14 @@ static void CheckClientToServerConnection(const std::string &log_file_path, cons
 // Tehd‰‰n laskut prosessi poolilla, k‰ytt‰en Tcp tiedonsiirtoa
 bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks)
 {
+    if(PreventGridCropCalculations())
+        return false;
+
     static size_t jobIndex = 0;
 
     bool status = true;
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 	NFmiDataMatrix<float> infoValues;
     int jobCount = CalcActualModifiedTimes(theActiveTimes);
     NFmiQueryDataUtil::SetRange(theThreadCallBacks, 0, jobCount, 1);
@@ -570,7 +555,6 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
             break;
     }
 
-	itsInfo->MaskType(oldMaskType);
     return status;
 }
 
