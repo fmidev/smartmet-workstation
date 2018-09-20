@@ -1160,8 +1160,8 @@ CRect CFmiTMColorIndexDlg::CalcRealFinalDialogSize()
     CRect rect;
     GetWindowRect(&rect);
     CRect lastRect(itsColorRectVector[itsColorRectVector.size() - 1].itsColorRect); // oletetaan että viimeinen listalla oleva laatikko on myös oikeassa reunassa
-    rect.right = rect.left + lastRect.right + 20;
-    rect.bottom = rect.top + lastRect.bottom + 52;
+    rect.right = rect.left + lastRect.right + 25;
+    rect.bottom = rect.top + lastRect.bottom + 62;
     return rect;
 }
 
