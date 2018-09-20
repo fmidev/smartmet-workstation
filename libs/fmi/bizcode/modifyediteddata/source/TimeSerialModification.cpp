@@ -355,7 +355,16 @@ static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapt
 	return ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
 }
 
-static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const NFmiMetTime& /* theEndTime */ )
+static boost::shared_ptr<NFmiAreaMaskList> GetUsedTimeSerialMaskList(TimeSerialModificationDataInterface &theAdapter)
+{
+    boost::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
+    boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
+    if(!theAdapter.UseMasksInTimeSerialViews())
+        maskList = emptyMaskList;
+    return maskList;
+}
+
+static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 	if(editedInfo == 0)
@@ -363,11 +372,8 @@ static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapt
 		::LogMessage(theAdapter, "Trying use Analyze modifying tool, but there is no edited data (error in SmartMet's code?).", CatLog::Severity::Warning, CatLog::Category::Editing);
 		return false;
 	}
-	boost::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
-	boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
-	if(!theAdapter.UseMasksInTimeSerialViews())
-		maskList = emptyMaskList;
 
+    auto maskList = ::GetUsedTimeSerialMaskList(theAdapter);
 	NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
 	if(infoOrganizer)
 	{
@@ -710,7 +716,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
 		if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
-			::DoAnalyzeModifications(theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
+			::DoAnalyzeModifications(theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask);
 		else
 		{
 			NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
@@ -735,10 +741,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 					return false;
 				}
 
-				boost::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
-				boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
-				if(!theAdapter.UseMasksInTimeSerialViews())
-					maskList = emptyMaskList;
+                auto maskList = ::GetUsedTimeSerialMaskList(theAdapter);
 				if(theAdapter.MetEditorOptionsData().ControlPointMode())
 				{
                     ::LogMessage(theAdapter, TimeSeriesModifiedParamForLog(theModifiedDrawParam) + " - modified with Control Point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
