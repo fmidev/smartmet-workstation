@@ -324,12 +324,10 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 				}
 			}
 			// kopioidaan vielä analyysi datan alku editoitavan datan alkuun, että tulee jatkuvaa dataa (ei hyppyä mallista analyysiin ja sitten liuku analyysista malliin)
-			NFmiMetTime startTime(theAnalyzeData->Time());
             for( ; theAnalyzeData->PreviousTime(); )
 			{
 				if(theModifiedData->Time(theAnalyzeData->Time()))
 				{
-					startTime = theAnalyzeData->Time();
 					for(theAnalyzeData->ResetLevel(), theModifiedData->ResetLevel(); theAnalyzeData->NextLevel() && theModifiedData->NextLevel(); )
 					{
 						for(theModifiedData->ResetLocation(); theModifiedData->NextLocation(); )
@@ -364,54 +362,51 @@ static boost::shared_ptr<NFmiAreaMaskList> GetUsedTimeSerialMaskList(TimeSerialM
     return maskList;
 }
 
-static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask)
+static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
-	if(editedInfo == 0)
-	{
-		::LogMessage(theAdapter, "Trying use Analyze modifying tool, but there is no edited data (error in SmartMet's code?).", CatLog::Severity::Warning, CatLog::Category::Editing);
-		return false;
-	}
+    if(editedInfo)
+    {
+        auto maskList = ::GetUsedTimeSerialMaskList(theAdapter);
+        NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
+        if(infoOrganizer)
+        {
+            boost::shared_ptr<NFmiFastQueryInfo> analyzeToolDataInfo = infoOrganizer->Info(NFmiDataIdent(theParam, producer), 0, dataType);
+            if(analyzeToolDataInfo)
+            {
+                NFmiMetTime firstTime(analyzeToolDataInfo->TimeDescriptor().LastTime());
+                if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
+                {
+                    try
+                    {
+                        ::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), normalLogMessage, firstTime, firstTime);
+                    }
+                    catch(...)
+                    {
+                        // heitetty poikkeus eli halutaan lopettaa toiminto
+                        return false;
+                    }
 
-    auto maskList = ::GetUsedTimeSerialMaskList(theAdapter);
-	NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
-	if(infoOrganizer)
-	{
-		boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo = infoOrganizer->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
-		if(analyzeDataInfo)
-		{
-			NFmiMetTime firstTime(analyzeDataInfo->TimeDescriptor().LastTime());
-			if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
-			{
-				try
-				{
-					::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), "Analyysityökalu-muutos", firstTime, firstTime);
-				}
-				catch(...)
-				{
-					// heitetty poikkeus eli halutaan lopettaa toiminto
-					return false;
-				}
-
-                EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
-				NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
-				times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
-				bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeDataInfo, maskList, times, theParam);
-				if(theAdapter.AnalyzeToolData().UseBothProducers())
-				{
-					boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo2 = infoOrganizer->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
-					if(analyzeDataInfo2)
-					{
-						dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
-						status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeDataInfo2, maskList, times, theParam);
-						dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pitää palauttaa alkuperäinen maski (hoituu uudella inverse:llä)
-					}
-				}
-                ::LogMessage(theAdapter, "Using Analyze tool to modify edited data.", CatLog::Severity::Info, CatLog::Category::Editing);
-				return status;
-			}
-		}
-	}
+                    EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
+                    NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
+                    times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
+                    bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeToolDataInfo, maskList, times, theParam);
+                    if(theAdapter.AnalyzeToolData().UseBothProducers())
+                    {
+                        boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo2 = infoOrganizer->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
+                        if(analyzeDataInfo2)
+                        {
+                            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
+                            status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeDataInfo2, maskList, times, theParam);
+                            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pitää palauttaa alkuperäinen maski (hoituu uudella inverse:llä)
+                        }
+                    }
+                    ::LogMessage(theAdapter, normalLogMessage, CatLog::Severity::Info, CatLog::Category::Editing);
+                    return status;
+                }
+            }
+        }
+    }
 	return false;
 }
 
@@ -716,7 +711,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
 		if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
-			::DoAnalyzeModifications(theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask);
+			::DoAnalyzeToolRelatedModifications(theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Analyze tool to modify edited data.", theAdapter.AnalyzeToolData().SelectedProducer1(), NFmiInfoData::kAnalyzeData);
 		else
 		{
 			NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
