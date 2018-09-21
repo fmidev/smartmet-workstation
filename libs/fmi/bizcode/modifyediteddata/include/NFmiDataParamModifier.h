@@ -116,7 +116,8 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	NFmiPoint itsCropMarginSize;
 	NFmiDataMatrix<float> itsCroppedGridData;
 	NFmiRect itsGridCropRelativeRect;
-	NFmiObsDataGridding* itsObsDataGridding; // omistaa
+    // Tämä on Markon tekemä surkea griddaus korvike, jos parempaa systeemiä (esim. ToolMasteria) ei löydy
+	NFmiObsDataGridding* itsObsDataGridding;
 	boost::shared_ptr<NFmiEditorControlPointManager> itsCPManager;
 	int itsLastTimeIndex; // optimointia varten
 };
