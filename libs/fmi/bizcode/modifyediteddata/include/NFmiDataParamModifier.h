@@ -43,7 +43,7 @@ class NFmiDataParamModifier
 {
 
  public:
-	NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+	NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
 							unsigned long theAreaMask, const NFmiRect& theSelectedSearchAreaRect);
 	virtual ~NFmiDataParamModifier(void){};
 	bool ModifyData (void);
@@ -89,8 +89,8 @@ class NFmiObsDataGridding;
 class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 {
  public:
-	NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
-													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> theCPManager, const NFmiRect &theCPGridCropRect,
+	NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
 													bool theUseGridCrop, const NFmiPoint &theCropMarginSize);
 	virtual ~NFmiDataParamControlPointModifier(void);
 	// HUOM!! eri signerature kuin edellä!!!
