@@ -42,6 +42,7 @@
 #include "catlog/catlog.h"
 #include <fstream>
 #include <newbase/NFmiEnumConverter.h>
+#include "NFmiControlPointObservationBlender.h"
 
 
 #ifdef _MSC_VER
@@ -411,14 +412,16 @@ static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoT
     }
 }
 
-static NFmiMetTime GetLatestSuitableAnalyzeToolInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
+// Palauttaa sekä todellisen viimeisen ajan (esim. 10.20), että pyöristetyn editoituun datan sopivan ajan (esim. 10.00)
+static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
 {
     if(infos.empty())
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze time");
     else
     {
-        auto latestTime = ::GetLatestInfoTime(infos);
-        return ::GetSuitableAnalyzeToolInfoTime(latestTime, editedInfo);
+        auto latestActualTime = ::GetLatestInfoTime(infos);
+        auto latestTime = ::GetSuitableAnalyzeToolInfoTime(latestActualTime, editedInfo);
+        return std::make_pair(latestActualTime, latestTime);
     }
 }
 
@@ -429,12 +432,12 @@ static NFmiTimeDescriptor GetAnalyzeToolModificationTimes(TimeSerialModification
     return times;
 }
 
-static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> editedInfo, boost::shared_ptr<NFmiFastQueryInfo> analyzeInfo1, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes)
+static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, boost::shared_ptr<NFmiFastQueryInfo> &analyzeInfo1, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType)
 {
     bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeInfo1, maskList, analyzeToolTimes, theParam);
     if(theAdapter.AnalyzeToolData().UseBothProducers())
     {
-        boost::shared_ptr<NFmiFastQueryInfo> analyzeInfo2 = theAdapter.InfoOrganizer()->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
+        boost::shared_ptr<NFmiFastQueryInfo> analyzeInfo2 = theAdapter.InfoOrganizer()->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, dataType);
         if(analyzeInfo2)
         {
             dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
@@ -445,7 +448,17 @@ static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface 
     return status;
 }
 
-static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
+static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
+{
+    auto drawParam = theAdapter.GetUsedDrawParam(editedInfo->Param(), dataType);
+    NFmiControlPointObservationBlender dataModifier(editedInfo, drawParam, maskList, fUsedMask,
+        theAdapter.CPManager(), theAdapter.CPGridCropRect(),
+        theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin(), observationInfos, actualFirstTime);
+
+    return dataModifier.ModifyTimeSeriesDataUsingMaskFactors(analyzeToolTimes, nullptr);
+}
+
+static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
     if(editedInfo)
@@ -457,7 +470,8 @@ static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterfac
             auto analyzeToolInfos = ::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
             if(!analyzeToolInfos.empty())
             {
-                auto firstTime = ::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo);
+                NFmiMetTime actualFirstTime, firstTime;
+                std::tie(actualFirstTime, firstTime) = ::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo);
                 if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
                 {
                     try
@@ -473,7 +487,10 @@ static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterfac
                     EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
                     auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
                     ::LogMessage(theAdapter, normalLogMessage, CatLog::Severity::Info, CatLog::Category::Editing);
-                    return ::DoFinalAnalyzeToolModifications(theAdapter, editedInfo, analyzeToolInfos[0], theParam, fUsedMask, maskList, times);
+                    if(useObservationBlenderTool)
+                        return ::DoFinalObservationBlenderToolModifications(theAdapter, editedInfo, analyzeToolInfos, theParam, fUsedMask, maskList, times, dataType, actualFirstTime);
+                    else
+                        return ::DoFinalAnalyzeToolModifications(theAdapter, editedInfo, analyzeToolInfos[0], theParam, fUsedMask, maskList, times, dataType);
                 }
             }
         }
@@ -781,8 +798,10 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 {
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
-		if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
-			::DoAnalyzeToolRelatedModifications(theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Analyze tool to modify edited data.", theAdapter.AnalyzeToolData().SelectedProducer1(), NFmiInfoData::kAnalyzeData);
+        if(theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool()) // haaraudutaan, jos on observation-blender työkalu käytössä!
+            ::DoAnalyzeToolRelatedModifications(true, theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Observation-blender tool to modify edited data.", theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer(), NFmiInfoData::kObservations);
+        else if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
+			::DoAnalyzeToolRelatedModifications(false, theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Analyze tool to modify edited data.", theAdapter.AnalyzeToolData().SelectedProducer1(), NFmiInfoData::kAnalyzeData);
 		else
 		{
 			NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
