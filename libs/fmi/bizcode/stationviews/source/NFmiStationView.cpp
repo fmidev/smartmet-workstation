@@ -1167,7 +1167,7 @@ float NFmiStationView::CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQuery
         return kFloatMissing;
     else
     {
-        float currentValue = itsInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
+        float currentValue = theInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
         if(currentValue == kFloatMissing && fAllowNearestTimeInterpolation)
         {
             auto oldTimeIndex = theInfo->TimeIndex();
