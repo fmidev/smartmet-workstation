@@ -429,6 +429,22 @@ static NFmiTimeDescriptor GetAnalyzeToolModificationTimes(TimeSerialModification
     return times;
 }
 
+static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> editedInfo, boost::shared_ptr<NFmiFastQueryInfo> analyzeInfo1, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes)
+{
+    bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeInfo1, maskList, analyzeToolTimes, theParam);
+    if(theAdapter.AnalyzeToolData().UseBothProducers())
+    {
+        boost::shared_ptr<NFmiFastQueryInfo> analyzeInfo2 = theAdapter.InfoOrganizer()->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
+        if(analyzeInfo2)
+        {
+            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
+            status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeInfo2, maskList, analyzeToolTimes, theParam);
+            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pit‰‰ palauttaa alkuper‰inen maski (hoituu uudella inverse:ll‰)
+        }
+    }
+    return status;
+}
+
 static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
@@ -456,19 +472,8 @@ static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterfac
 
                     EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
                     auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
-                    bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeToolInfos[0], maskList, times, theParam);
-                    if(theAdapter.AnalyzeToolData().UseBothProducers())
-                    {
-                        boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo2 = infoOrganizer->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
-                        if(analyzeDataInfo2)
-                        {
-                            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
-                            status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeDataInfo2, maskList, times, theParam);
-                            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pit‰‰ palauttaa alkuper‰inen maski (hoituu uudella inverse:ll‰)
-                        }
-                    }
                     ::LogMessage(theAdapter, normalLogMessage, CatLog::Severity::Info, CatLog::Category::Editing);
-                    return status;
+                    return ::DoFinalAnalyzeToolModifications(theAdapter, editedInfo, analyzeToolInfos[0], theParam, fUsedMask, maskList, times);
                 }
             }
         }
