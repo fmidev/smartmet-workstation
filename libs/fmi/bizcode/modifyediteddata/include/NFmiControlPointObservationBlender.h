@@ -21,4 +21,8 @@ class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModif
          bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime);
 
      void DoTimeSerialModifications(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
+
+protected:
+    bool GetObservationsToChangeValueFields(std::vector<float> xValues, std::vector<float> yValues, std::vector<float> zValues, const NFmiTimeDescriptor &allowedTimeRange, double maxAllowedDistanceToStationInKm);
+    void FillZeroChangeValuesForMissingCpPoints(std::vector<float> &zValues);
 };
