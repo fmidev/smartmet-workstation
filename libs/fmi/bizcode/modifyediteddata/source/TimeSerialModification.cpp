@@ -362,6 +362,73 @@ static boost::shared_ptr<NFmiAreaMaskList> GetUsedTimeSerialMaskList(TimeSerialM
     return maskList;
 }
 
+static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
+    bool fGroundData, int theProducerId, int theProducerId2 = -1)
+{
+    auto infoVector = infoOrganizer.GetInfos(theType, fGroundData, theProducerId, theProducerId2);
+    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> finalInfos;
+    for(const auto &info : infoVector)
+    {
+        if(info->Param(theParam))
+            finalInfos.push_back(info);
+    }
+    return finalInfos;
+}
+
+static NFmiMetTime GetLatestInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos)
+{
+    NFmiMetTime latestTime = NFmiMetTime::gMissingTime;
+    for(const auto &info : infos)
+    {
+        const auto &latestInfoTime = info->TimeDescriptor().LastTime();
+        if(latestInfoTime != NFmiMetTime::gMissingTime && latestInfoTime > latestTime)
+            latestTime = latestInfoTime;
+    }
+    return latestTime;
+}
+
+static NFmiMetTime RoundToNearestHourWithHalfwayBackwards(NFmiMetTime time)
+{
+    // Normaalisti NFmiMetTime::NearestMetTime(60) pyöristää seuraavaan tuntiin, jos minuutti on 30, 
+    // mutta tässä halutaan mennä silloin taaksepäin edelliseen tuntiin
+    if(time.GetMin() == 30 && time.GetSec() == 0)
+        time.NearestMetTime(60, kBackward);
+    else
+        time.NearestMetTime(60);
+    return time;
+}
+
+static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
+{
+    // 1. Jos latestInfoTime löytyy editedInfo:sta, palautetaan se
+    if(editedInfo->Time(latestInfoTime))
+        return latestInfoTime;
+    else
+    {
+        // Jos aikaa ei ollut suoraan editoidussa datassa, palautetaan vain varmuuden vuoksi lähimpään tuntiin pyöristetty aika
+        // Huom. Tasan 30 minuutista halutaan mennä taaksepäin, siksi erikois funktio.
+        return ::RoundToNearestHourWithHalfwayBackwards(latestInfoTime);
+    }
+}
+
+static NFmiMetTime GetLatestSuitableAnalyzeToolInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
+{
+    if(infos.empty())
+        throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze time");
+    else
+    {
+        auto latestTime = ::GetLatestInfoTime(infos);
+        return ::GetSuitableAnalyzeToolInfoTime(latestTime, editedInfo);
+    }
+}
+
+static NFmiTimeDescriptor GetAnalyzeToolModificationTimes(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const NFmiMetTime &firstTime)
+{
+    NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
+    times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
+    return times;
+}
+
 static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
@@ -371,10 +438,10 @@ static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterfac
         NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
         if(infoOrganizer)
         {
-            boost::shared_ptr<NFmiFastQueryInfo> analyzeToolDataInfo = infoOrganizer->Info(NFmiDataIdent(theParam, producer), 0, dataType);
-            if(analyzeToolDataInfo)
+            auto analyzeToolInfos = ::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
+            if(!analyzeToolInfos.empty())
             {
-                NFmiMetTime firstTime(analyzeToolDataInfo->TimeDescriptor().LastTime());
+                auto firstTime = ::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo);
                 if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
                 {
                     try
@@ -388,9 +455,8 @@ static bool DoAnalyzeToolRelatedModifications(TimeSerialModificationDataInterfac
                     }
 
                     EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
-                    NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
-                    times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
-                    bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeToolDataInfo, maskList, times, theParam);
+                    auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
+                    bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeToolInfos[0], maskList, times, theParam);
                     if(theAdapter.AnalyzeToolData().UseBothProducers())
                     {
                         boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo2 = infoOrganizer->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
