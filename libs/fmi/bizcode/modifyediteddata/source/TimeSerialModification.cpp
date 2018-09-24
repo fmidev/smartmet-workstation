@@ -266,7 +266,6 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 		theAnalyzeData->LastTime(); // vain viimeinen aika kiinnostaa analyysistä
 		if(theAnalyzeData->Param(theParam) && theModifiedData->Param(theParam))
 		{
-			theMaskList->CheckIfMaskUsed();
 			for(theAnalyzeData->ResetLevel(), theModifiedData->ResetLevel(); theAnalyzeData->NextLevel() && theModifiedData->NextLevel(); )
 			{
 				for(theModifiedData->ResetLocation(); theModifiedData->NextLocation(); )
@@ -335,6 +334,7 @@ static boost::shared_ptr<NFmiAreaMaskList> GetUsedTimeSerialMaskList(TimeSerialM
     boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
     if(!theAdapter.UseMasksInTimeSerialViews())
         maskList = emptyMaskList;
+    maskList->CheckIfMaskUsed();
     return maskList;
 }
 
