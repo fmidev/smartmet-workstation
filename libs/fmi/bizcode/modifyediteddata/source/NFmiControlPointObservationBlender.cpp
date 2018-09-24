@@ -67,7 +67,7 @@ bool NFmiControlPointObservationBlender::MakeBlendingOperation(const NFmiDataMat
         {
             auto blendingTimeIndex = blendingTimes.Index();
             // Blendaus menee niin että alkuhetkellä muutos kenttä otetaan kertoimella 1. ja viimeisellä se otetaan kertoimella 0. (eli viimeinen aika-askel voidaan skipata)
-            if(blendingTimeIndex + 1 >= blendingTimes.Size())
+            if(blendingTimeIndex + 1 >= blendingTimeSize)
                 break;
             const auto &editedTime = blendingTimes.Time();
             if(editedInfo->Time(editedTime)) // Ajan pitäisi aina löytyä, koska blendingtimes on rakennettu editoidun datan aikojen perusteella
@@ -94,7 +94,7 @@ float NFmiControlPointObservationBlender::BlendData(float editedDataValue, float
 {
     if(editedDataValue == kFloatMissing || changeValue == kFloatMissing)
         return editedDataValue; // ongelma tilanteissa palautetaan arvo editoidusta datasta takaisin
-    float value = (timeSize - timeIndex - 1) / (timeSize - 1) * changeValue + editedDataValue;
+    float value = (timeSize - timeIndex - 1.f) / (timeSize - 1.f) * changeValue + editedDataValue;
     return limitChecker.CheckValue(value);
 }
 
@@ -120,6 +120,15 @@ void NFmiControlPointObservationBlender::FillZeroChangeValuesForMissingCpPoints(
     }
 }
 
+static bool NeedToLookForObservationValuesForCpPoint(const std::vector<float> &cpValues, const std::vector<double> &cpDistanceToStationInKm, size_t cpLocationIndex)
+{
+    // Jos tietyssä cp-pisteessä on jo etäisyys minimi eli 0 km ja cp-arvo ei ole puuttuvaa, 
+    // tällöin ei enää tarvitse etsiä parempia asemia tai arvoja.
+    if(cpDistanceToStationInKm[cpLocationIndex] == 0 && cpValues[cpLocationIndex] != kFloatMissing)
+        return false;
+    else
+        return true;
+}
 
 // Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisessä CP-pisteessä on 0 (merkitään missing arvolla).
 bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange, double maxAllowedDistanceToStationInKm)
@@ -144,26 +153,29 @@ bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std:
                     // 4. Käy läpi CP-pisteet ja etsi jokaiseen lähin asema. 
                     for(size_t cpLocationIndex = 0; cpLocationIndex < cpLatlonPoints.size(); cpLocationIndex++)
                     {
-                        NFmiLocation cpLocation(cpLatlonPoints[cpLocationIndex]);
-                        if(info->NearestLocation(cpLocation, maxAllowedDistanceToStationInKm * 1000))
+                        if(::NeedToLookForObservationValuesForCpPoint(zValues, cpDistanceToStationInKm, cpLocationIndex))
                         {
-                            auto distanceInKm = cpLocation.Distance(info->LatLonFast());
-                            // Jos on löytynyt uusi lähin asema, pitää ensin muutos arvo nollata mahdollisesta edellisen datan lähipisteen arvosta
-                            if(distanceInKm < cpDistanceToStationInKm[cpLocationIndex])
+                            NFmiLocation cpLocation(cpLatlonPoints[cpLocationIndex]);
+                            if(info->NearestLocation(cpLocation, maxAllowedDistanceToStationInKm * 1000))
                             {
-                                zValues[cpLocationIndex] = kFloatMissing;
-                                // 5. Laita aseman etäisyys pisteeseen joka CP-pisteeseen talteen, jotta voidaan etsiä toisista datoista lähempiä asemia
-                                cpDistanceToStationInKm[cpLocationIndex] = distanceInKm;
-                            }
-                            // Tässä etsitään myöhäisimmän sallitun ajan ei-puuttuvaa arvoa
-                            if(distanceInKm == cpDistanceToStationInKm[cpLocationIndex])
-                            {
-                                // 6. Miten CP-pisteiden arvoja rankataan tärkeysjärjestykseen?
-                                // 6.1. Ensin ratkaisee että on lähin asema (vaikka datalle ei löytyisi sopivia aikoja)
-                                // 6.2. Sitten ratkaiseen viimeisimmän sallitun ajan ei-puuttuva arvo
-                                if(zValues[cpLocationIndex] == kFloatMissing)
+                                auto distanceInKm = cpLocation.Distance(info->LatLonFast());
+                                // Jos on löytynyt uusi lähin asema, pitää ensin muutos arvo nollata mahdollisesta edellisen datan lähipisteen arvosta
+                                if(distanceInKm < cpDistanceToStationInKm[cpLocationIndex])
                                 {
-                                    zValues[cpLocationIndex] = info->FloatValue();
+                                    zValues[cpLocationIndex] = kFloatMissing;
+                                    // 5. Laita aseman etäisyys pisteeseen joka CP-pisteeseen talteen, jotta voidaan etsiä toisista datoista lähempiä asemia
+                                    cpDistanceToStationInKm[cpLocationIndex] = distanceInKm;
+                                }
+                                // Tässä etsitään myöhäisimmän sallitun ajan ei-puuttuvaa arvoa
+                                if(distanceInKm == cpDistanceToStationInKm[cpLocationIndex])
+                                {
+                                    // 6. Miten CP-pisteiden arvoja rankataan tärkeysjärjestykseen?
+                                    // 6.1. Ensin ratkaisee että on lähin asema (vaikka datalle ei löytyisi sopivia aikoja)
+                                    // 6.2. Sitten ratkaiseen viimeisimmän sallitun ajan ei-puuttuva arvo
+                                    if(zValues[cpLocationIndex] == kFloatMissing)
+                                    {
+                                        zValues[cpLocationIndex] = info->FloatValue();
+                                    }
                                 }
                             }
                         }
