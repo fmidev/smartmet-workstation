@@ -51,6 +51,45 @@
 #pragma warning (default : 4244 4267 4512) // laitetaan 4244 takaisin päälle, koska se on tärkeä (esim. double -> int auto castaus varoitus)
 #endif
 
+
+NFmiDataParamModifier::LimitChecker::LimitChecker(float theMin, float theMax, FmiParameterName theParam)
+    :itsMin(theMin)
+    , itsMax(theMax)
+    ,fModularFixNeeded(IsModularParam(theParam))
+{}
+
+bool NFmiDataParamModifier::LimitChecker::IsModularParam(FmiParameterName theParam)
+{
+    return (theParam == kFmiWindDirection) || (theParam == kFmiWaveDirection);
+}
+
+#include <math.h>
+
+float NFmiDataParamModifier::LimitChecker::CheckValue(float theCheckedValue) const
+{
+    const float directionModuloValue = 360.f;
+
+    if(theCheckedValue == kFloatMissing)
+        return kFloatMissing;
+
+    if(fModularFixNeeded)
+    {
+        theCheckedValue = std::fmodf(theCheckedValue, directionModuloValue);
+        if(theCheckedValue < 0)
+            theCheckedValue += directionModuloValue;
+    }
+    else
+    {
+        if(theCheckedValue > itsMax)
+            theCheckedValue = itsMax;
+        else if(theCheckedValue < itsMin)
+            theCheckedValue = itsMin;
+    }
+    return theCheckedValue;
+}
+
+
+
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------

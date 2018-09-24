@@ -41,8 +41,20 @@ class NFmiThreadCallBacks;
 
 class NFmiDataParamModifier
 {
-
  public:
+
+     class LimitChecker
+     {
+         float itsMin;
+         float itsMax;
+         bool fModularFixNeeded; // suuntaan littyvät parametrit vaativat modulo korjauksen ja niiden arvo alue on aina [0, 360]
+     public:
+         LimitChecker(float theMin, float theMax, FmiParameterName theParam);
+         static bool IsModularParam(FmiParameterName theParam);
+         float CheckValue(float theCheckedValue) const;
+     };
+
+
 	NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
 							unsigned long theAreaMask, const NFmiRect& theSelectedSearchAreaRect);
 	virtual ~NFmiDataParamModifier(void){};
