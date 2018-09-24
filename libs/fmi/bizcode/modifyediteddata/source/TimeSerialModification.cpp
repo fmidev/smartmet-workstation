@@ -63,23 +63,6 @@ static void LogMessage(TimeSerialModificationDataInterface &theAdapter, const st
     theAdapter.LogAndWarnUser(theMessage, "", severity, category, true);
 }
 
-struct LimitChecker
-{
-	LimitChecker(double theMin, double theMax):itsMin(theMin),itsMax(theMax){}
-	double CheckValue(double theCheckedValue)
-	{
-		if(theCheckedValue == kFloatMissing)
-			return kFloatMissing;
-		if(theCheckedValue > itsMax)
-			theCheckedValue = itsMax;
-		else if(theCheckedValue < itsMin)
-			theCheckedValue = itsMin;
-		return theCheckedValue;
-	}
-	double itsMin;
-	double itsMax;
-};
-
 // piti tehdä winkkarista irralliset messagebox button/toiminto definet (HUOM! FMI-etuliite)
 #define FMI_MB_OK			0x00000000L
 #define FMI_MB_ICONERROR	0x00000010L
@@ -273,14 +256,13 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
     if(theParam.InterpolationMethod() != kLinearly)
         return false; // Tehdään vain lineaarisille parametreille muokkaus, en osaa muille laskea muutoksia oikein
 
-    FmiParameterName parName = static_cast<FmiParameterName>(theParam.GetIdent());
 	NFmiDataIdent dataIdent(theParam);
 	boost::shared_ptr<NFmiDrawParam> drawParamForLimits = theAdapter.GetUsedDrawParam(dataIdent, NFmiInfoData::kEditable);
 
 	if(drawParamForLimits)
 	{
-		LimitChecker limitChecker(drawParamForLimits->AbsoluteMinValue(), drawParamForLimits->AbsoluteMaxValue());
-		double size = theTimes.Size();
+		NFmiDataParamModifier::LimitChecker limitChecker(static_cast<float>(drawParamForLimits->AbsoluteMinValue()), static_cast<float>(drawParamForLimits->AbsoluteMaxValue()), static_cast<FmiParameterName>(theParam.GetIdent()));
+		float size = static_cast<float>(theTimes.Size());
 		theAnalyzeData->LastTime(); // vain viimeinen aika kiinnostaa analyysistä
 		if(theAnalyzeData->Param(theParam) && theModifiedData->Param(theParam))
 		{
@@ -292,30 +274,23 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 					NFmiPoint latlon(theModifiedData->LatLon());
 					if(theMaskList->IsMasked(latlon))
 					{
-						double analyzeValue = theAnalyzeData->InterpolatedValue(latlon);
+                        float analyzeValue = theAnalyzeData->InterpolatedValue(latlon);
 						if(theModifiedData->Time(theTimes.FirstTime()))
 						{
-							double firstEditDataValue = theModifiedData->FloatValue();
+                            float firstEditDataValue = theModifiedData->FloatValue();
 							if(analyzeValue != kFloatMissing && firstEditDataValue != kFloatMissing)
 							{
-								double analyzeValueDiff = analyzeValue - firstEditDataValue;
-								double i = 0;
-								for(theTimes.Reset(); theTimes.Next(); i++)
+                                float analyzeValueDiff = analyzeValue - firstEditDataValue;
+                                float timeIndex = 0;
+								for(theTimes.Reset(); theTimes.Next(); timeIndex++)
 								{
 									if(theModifiedData->Time(theTimes.Time())) // vain editoitavaa dataa juoksutetaan ajassa (ajan pitäisi löytyä!)
 									{
-										double editDataValue = theModifiedData->FloatValue();
+                                        float editDataValue = theModifiedData->FloatValue();
 										if(editDataValue != kFloatMissing)
 										{
-											double changeValue = (size - i - 1)/(size-1) * analyzeValueDiff + editDataValue;
-                                            if(parName == kFmiWindDirection)
-                                            {
-                                                if(changeValue > 360)
-                                                    changeValue = FmiRound(changeValue) % 360;
-                                                else if(changeValue < 0)
-                                                    changeValue += 360;
-                                            }
-											theModifiedData->FloatValue(static_cast<float>(limitChecker.CheckValue(changeValue)));
+                                            float changeValue = (size - timeIndex - 1)/(size-1) * analyzeValueDiff + editDataValue;
+											theModifiedData->FloatValue(limitChecker.CheckValue(changeValue));
 										}
 									}
 								}
@@ -336,7 +311,7 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 							NFmiPoint latlon(theModifiedData->LatLon());
 							if(theMaskList->IsMasked(latlon))
 							{
-								float value2 = static_cast<float>(limitChecker.CheckValue(theAnalyzeData->InterpolatedValue(latlon)));
+								float value2 = limitChecker.CheckValue(theAnalyzeData->InterpolatedValue(latlon));
 								if(value2 != kFloatMissing)
 									theModifiedData->FloatValue(value2);
 							}
