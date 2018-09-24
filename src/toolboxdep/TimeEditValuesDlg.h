@@ -28,7 +28,7 @@ public:
 
     // Construction
 public:
-	typedef boost::function<bool (const std::string&) > SetByName;
+	typedef std::function<bool (const std::string&) > SetByName;
 
 	CTimeEditValuesDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent = NULL);
 	~CTimeEditValuesDlg(void);
