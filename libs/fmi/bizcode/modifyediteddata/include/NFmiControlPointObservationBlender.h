@@ -20,9 +20,12 @@ class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModif
          unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
          bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime);
 
-     void DoTimeSerialModifications(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
+     bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
+     static float BlendData(float editedDataValue, float changeValue, unsigned long timeSize, unsigned long timeIndex, const NFmiDataParamModifier::LimitChecker &limitChecker);
 
 protected:
-    bool GetObservationsToChangeValueFields(std::vector<float> xValues, std::vector<float> yValues, std::vector<float> zValues, const NFmiTimeDescriptor &allowedTimeRange, double maxAllowedDistanceToStationInKm);
+    bool GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange, double maxAllowedDistanceToStationInKm);
     void FillZeroChangeValuesForMissingCpPoints(std::vector<float> &zValues);
+    NFmiDataMatrix<float> CalcChangeField(const NFmiDataMatrix<float> &analysisField);
+    bool MakeBlendingOperation(const NFmiDataMatrix<float> &changeField, NFmiTimeDescriptor &blendingTimes);
 };
