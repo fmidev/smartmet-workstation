@@ -419,6 +419,8 @@ void CTimeEditValuesDlg::Update(void)
             EnableButtons();
             UpdateAnalyseActionControl();
             SeViewModeButtonsSetup();
+            if(itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().OverrideSelection())
+                UpdateControlsAfterAnalyzeMode();
         }
     }
 }
@@ -777,11 +779,11 @@ void CTimeEditValuesDlg::OnCbnSelchangeComboAnalyzeProducer1()
     if(analyzeToolData.ControlPointObservationBlendingData().UseBlendingTool())
     {
         auto &cpObsBlendingToolData = analyzeToolData.ControlPointObservationBlendingData();
-        OnComboSelectionChanged(itsProducer1Selector, boost::bind(&NFmiControlPointObservationBlendingData::SelectProducerByName, &cpObsBlendingToolData, _1));
+        OnComboSelectionChanged(itsProducer1Selector, [&cpObsBlendingToolData](const auto &producerName) { return cpObsBlendingToolData.SelectProducer(producerName); });
     }
     else
     {
-        OnComboSelectionChanged(itsProducer1Selector, boost::bind(&NFmiAnalyzeToolData::SelectProducer1ByName, &analyzeToolData, _1));
+        OnComboSelectionChanged(itsProducer1Selector, [&analyzeToolData](const auto &producerName) { return analyzeToolData.SelectProducer1ByName(producerName); });
     }
 }
 
@@ -789,7 +791,7 @@ void CTimeEditValuesDlg::OnCbnSelchangeComboAnalyzeProducer2()
 {
 	UpdateData(TRUE);
 	NFmiAnalyzeToolData &analyzeToolData = itsSmartMetDocumentInterface->AnalyzeToolData();
-	OnComboSelectionChanged(itsProducer2Selector, boost::bind(&NFmiAnalyzeToolData::SelectProducer2ByName, &analyzeToolData, _1));
+	OnComboSelectionChanged(itsProducer2Selector, [&analyzeToolData](const auto &producerName) { return analyzeToolData.SelectProducer2ByName(producerName); });
 }
 
 void CTimeEditValuesDlg::OnComboSelectionChanged(CComboBox &theProducerSelector, SetByName setByName)
@@ -859,7 +861,15 @@ void CTimeEditValuesDlg::UpdateCpObsBlendProducerList(void)
     auto &cpObsBlendingData = itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData();
     cpObsBlendingData.SeekProducers(*itsSmartMetDocumentInterface->InfoOrganizer());
     const auto &producers = cpObsBlendingData.Producers();
-    UpdateProducerList(itsProducer1Selector, cpObsBlendingData.SelectedProducer(), producers, cpObsBlendingData.IsSelectionMadeYet());
+    // Tietyissä tilanteissa pitää producer selectionia päivittää väkisin (kuten kun ollaan valittu toinen tuottaja CP-pisteiksi).
+    // Jos selectionMadeYet on false, tällöin tuottaja otetaan uudestaan cpObsBlendingData:sta.
+    bool selectionMadeYet = cpObsBlendingData.IsSelectionMadeYet();
+    if(cpObsBlendingData.OverrideSelection())
+    {
+        selectionMadeYet = false;
+        cpObsBlendingData.OverrideSelection(false);
+    }
+    UpdateProducerList(itsProducer1Selector, cpObsBlendingData.SelectedProducer(), producers, selectionMadeYet);
     UpdateData(FALSE);
 }
 

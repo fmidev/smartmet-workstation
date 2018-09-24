@@ -34,6 +34,7 @@ class NFmiControlPointObservationBlendingData
     // kun lisää dataa luetaan, tulee myös käyttöön viimeksi valittu, voidaan tämäbn muuttujan
     // avulla säätää se käyttöön. Mutta jos joku on tehnyt valintoja jo, ei kosketa listojen valintaan.
     bool fIsSelectionMadeYet = false; 
+    bool fOverrideSelection = false;
     // Tähän kerätään käytössä olevat oikean tyyppiset observation tuottajat
     checkedVector<NFmiProducer> itsProducers; 
     std::string itsBaseNameSpace;
@@ -44,11 +45,16 @@ public:
     bool UseBlendingTool() const { return fUseBlendingTool; }
     void UseBlendingTool(bool newValue) { fUseBlendingTool = newValue; }
     const NFmiProducer& SelectedProducer() const { return itsSelectedProducer; }
-    bool SelectProducerByName(const std::string &theProducerName);
+    bool SelectProducer(const std::string &theProducerName);
+    bool SelectProducer(unsigned long theProducerId);
     bool IsSelectionMadeYet(void) const { return fIsSelectionMadeYet; }
     void SeekProducers(NFmiInfoOrganizer &theInfoOrganizer);
     const checkedVector<NFmiProducer>& Producers() const { return itsProducers; }
     static bool IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info);
+    bool OverrideSelection() const { return fOverrideSelection; }
+    void OverrideSelection(bool newValue);
+private:
+    bool UpdateProducerInfo(const NFmiProducer &producer);
 };
 
 class NFmiAnalyzeToolData

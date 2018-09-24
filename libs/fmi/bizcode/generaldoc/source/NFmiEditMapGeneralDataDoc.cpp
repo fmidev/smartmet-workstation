@@ -7862,8 +7862,10 @@ void MakeObservationStationsToCpPoints(NFmiMenuItem &menuItem)
     if(controlPointManager)
     {
         // Haetaan käytetyn datatyypin, halutun tuottajan kaikki tiedostot, jotka ovat pinta datoja (= leveleitä on vain 1)
-        auto observationInfos = InfoOrganizer()->GetInfos(menuItem.DataType(), true, menuItem.DataIdent().GetProducer()->GetIdent());
+        auto producerId = menuItem.DataIdent().GetProducer()->GetIdent();
+        auto observationInfos = InfoOrganizer()->GetInfos(menuItem.DataType(), true, producerId);
         controlPointManager->SetZoomedAreaStationsAsControlPoints(observationInfos, MapViewDescTop(0)->MapHandler()->Area());
+        AnalyzeToolData().ControlPointObservationBlendingData().SelectProducer(producerId);
 
         // Vain aikasarja pitää laittaa tässä likaiseksi, sieltä mistä tätä kutsutaan (MakePopUpCommandUsingRowIndex) laitetaan karttanäytöt likaisiksi.
         TimeSerialViewDirty(true);

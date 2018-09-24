@@ -33,19 +33,45 @@ void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &t
         itsProducers.push_back(producerMapItem.second);
 }
 
-bool NFmiControlPointObservationBlendingData::SelectProducerByName(const std::string &theProducerName)
+bool NFmiControlPointObservationBlendingData::SelectProducer(const std::string &theProducerName)
 {
     for(const auto &producer : itsProducers)
     {
         if(producer.GetName() == theProducerName)
         {
-            itsSelectedProducer = producer;
-            fIsSelectionMadeYet = true;
-            itsLastSessionProducer = itsSelectedProducer; // tätä pitää myös päivittää, koska se talletetaan sitten lopuksi konffeihin
-            return true;
+            return UpdateProducerInfo(producer);
         }
     }
     return false;
+}
+
+bool NFmiControlPointObservationBlendingData::SelectProducer(unsigned long theProducerId)
+{
+    for(const auto &producer : itsProducers)
+    {
+        if(producer.GetIdent() == theProducerId)
+        {
+            OverrideSelection(true);
+            return UpdateProducerInfo(producer);
+        }
+    }
+    return false;
+}
+
+bool NFmiControlPointObservationBlendingData::UpdateProducerInfo(const NFmiProducer &producer)
+{
+    itsSelectedProducer = producer;
+    fIsSelectionMadeYet = true;
+    itsLastSessionProducer = itsSelectedProducer; // tätä pitää myös päivittää, koska se talletetaan sitten lopuksi konffeihin
+    return true;
+}
+
+void NFmiControlPointObservationBlendingData::OverrideSelection(bool newValue)
+{ 
+    fOverrideSelection = newValue; 
+    // Jos overide-moodi halutaan resetoida, pitää myös fIsSelectionMadeYet laittaa päälle
+    if(!newValue)
+        fIsSelectionMadeYet = true;
 }
 
 bool NFmiControlPointObservationBlendingData::IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info)
