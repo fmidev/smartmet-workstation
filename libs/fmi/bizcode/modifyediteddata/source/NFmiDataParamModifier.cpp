@@ -428,7 +428,7 @@ void NFmiDataParamControlPointModifier::DoCroppedGridCalculations()
     {
         for(size_t i = 0; i < itsCroppedGridData.NX(); i++)
         {
-            unsigned long locationIndex = FmiRound(((itsCPGridCropRect.Top() + j) * sizeX) + itsCPGridCropRect.Left() + i);
+            auto locationIndex = static_cast<unsigned long>(GridPointToLocationIndex(boost::math::iround(itsCPGridCropRect.Left() + i), boost::math::iround(itsCPGridCropRect.Top() + j), sizeX));
             itsInfo->LocationIndex(locationIndex);
             if(useMask)
                 maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
@@ -436,6 +436,14 @@ void NFmiDataParamControlPointModifier::DoCroppedGridCalculations()
                 itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsCroppedGridData[i][j], maskFactor)));
         }
     }
+}
+
+size_t NFmiDataParamControlPointModifier::GridPointToLocationIndex(size_t gridPointX, size_t gridPointY, size_t gridSizeX)
+{
+    if(gridPointX < gridSizeX)
+        return (gridPointY * gridSizeX) + gridPointX;
+    else
+        return gMissingIndex;
 }
 
 void NFmiDataParamControlPointModifier::DoFullGridCalculations()
