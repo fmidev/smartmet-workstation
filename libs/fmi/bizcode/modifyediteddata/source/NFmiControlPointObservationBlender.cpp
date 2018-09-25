@@ -58,6 +58,8 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
 bool NFmiControlPointObservationBlender::MakeBlendingOperation(const NFmiDataMatrix<float> &changeField, NFmiTimeDescriptor &blendingTimes)
 {
     auto status = false;
+    auto useMask = itsParamMaskList->UseMask();
+    float maskFactor = 1.f;
     auto &editedInfo = itsInfo;
     NFmiDataParamModifier::LimitChecker limitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(editedInfo->Param().GetParamIdent()));
     for(editedInfo->ResetLevel(); editedInfo->NextLevel(); ) // Tuskin ikinä päästään 3D editointiin, mutta varaudutaan silti siihen
@@ -75,11 +77,13 @@ bool NFmiControlPointObservationBlender::MakeBlendingOperation(const NFmiDataMat
                 itsParamMaskList->SyncronizeMaskTime(editedTime);
                 for(editedInfo->ResetLocation(); editedInfo->NextLocation(); )
                 {
-                    if(itsParamMaskList->IsMasked(editedInfo->LatLonFast()))
+                    if(useMask)
+                        maskFactor = static_cast<float>(itsParamMaskList->MaskValue(editedInfo->LatLonFast()));
+                    if(maskFactor)
                     {
                         auto editedValue = editedInfo->FloatValue();
                         auto changeValue = changeField.GetValue(editedInfo->LocationIndex(), kFloatMissing);
-                        float value = NFmiControlPointObservationBlender::BlendData(editedValue, changeValue, blendingTimeSize, blendingTimeIndex, limitChecker);
+                        float value = NFmiControlPointObservationBlender::BlendData(editedValue, changeValue, maskFactor, blendingTimeSize, blendingTimeIndex, limitChecker);
                         editedInfo->FloatValue(value);
                         status = true;
                     }
@@ -90,11 +94,11 @@ bool NFmiControlPointObservationBlender::MakeBlendingOperation(const NFmiDataMat
     return status;
 }
 
-float NFmiControlPointObservationBlender::BlendData(float editedDataValue, float changeValue, unsigned long timeSize, unsigned long timeIndex, const NFmiDataParamModifier::LimitChecker &limitChecker)
+float NFmiControlPointObservationBlender::BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiDataParamModifier::LimitChecker &limitChecker)
 {
     if(editedDataValue == kFloatMissing || changeValue == kFloatMissing)
         return editedDataValue; // ongelma tilanteissa palautetaan arvo editoidusta datasta takaisin
-    float value = (timeSize - timeIndex - 1.f) / (timeSize - 1.f) * changeValue + editedDataValue;
+    float value = (timeSize - timeIndex - 1.f) / (timeSize - 1.f) * (changeValue * maskFactor) + editedDataValue;
     return limitChecker.CheckValue(value);
 }
 
