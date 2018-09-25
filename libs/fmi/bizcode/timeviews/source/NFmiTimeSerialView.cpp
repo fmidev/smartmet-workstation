@@ -3311,7 +3311,8 @@ void NFmiTimeSerialView::DrawValueGrids(NFmiDrawingEnvironment& envi,double minP
  // laskee aikasarjan muutokset ja päivittää infon arvot ja nollaa korjaus käyrän
 void NFmiTimeSerialView::ChangeTimeSeriesValues(void)
 {
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() || itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode() || IsModifyFactorValuesNonZero())
+    auto &analyzeToolData = itsCtrlViewDocumentInterface->AnalyzeToolData();
+	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() || analyzeToolData.AnalyzeToolMode() || analyzeToolData.ControlPointObservationBlendingData().UseBlendingTool() || IsModifyFactorValuesNonZero())
 	{
 		NFmiMetEditorTypes::Mask maskType = NFmiMetEditorTypes::kFmiSelectionMask;
 		if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()) // kontrollipiste työkalulla muutokset tehdään aina kaikkiin pisteisiin, eli = nomask
