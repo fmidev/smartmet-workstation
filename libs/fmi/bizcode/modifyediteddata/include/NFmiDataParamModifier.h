@@ -109,7 +109,8 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
     bool DoProcessPoolCpModifyingTcp(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks);
 	static void DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, int theGriddingFunction, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative);
-	int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
+    static size_t GridPointToLocationIndex(size_t gridPointX, size_t gridPointY, size_t gridSizeX);
+    int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
 
  protected:
 	bool IsTimeModified(const NFmiMetTime &theTime);
