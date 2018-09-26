@@ -30,6 +30,8 @@ IMPLEMENT_DYNCREATE(NFmiParamAddingGridCtrl, CGridCtrl)
 // CFmiParamAddingDlg message handlers
 BEGIN_MESSAGE_MAP(NFmiParamAddingGridCtrl, CGridCtrl)
     ON_WM_LBUTTONDBLCLK()
+    ON_WM_SIZE()
+    ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
 
 void NFmiParamAddingGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
@@ -40,6 +42,78 @@ void NFmiParamAddingGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 
     if(itsLButtonDblClkCallback)
         itsLButtonDblClkCallback();
+}
+
+void NFmiParamAddingGridCtrl::OnSize(UINT nType, int cx, int cy)
+{
+    CGridCtrl::OnSize(nType, cx, cy);
+    CRect rect;
+    GetClientRect(rect);
+    m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, rect);    
+}
+
+
+void NFmiParamAddingGridCtrl::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
+{
+    *result = 0;
+    NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
+
+    if(pNotify->ti->nIDTool == PARAM_ADDING_DIALOG_TOOLTIP_ID)
+    {
+        CPoint pt = *pNotify->pt;
+        ScreenToClient(&pt);
+
+        CString strU_;
+
+        try
+        {
+            strU_ = CA2T(NFmiParamAddingGridCtrl::ComposeToolTipText(pt).c_str());
+        }
+        catch(std::exception &e)
+        {
+            strU_ = _TEXT("Error while making the tooltip string:\n");
+            strU_ += CA2T(e.what());
+        }
+        catch(...)
+        {
+            strU_ = _TEXT("Error (unknown) while making the tooltip string");
+        }
+
+        pNotify->ti->sTooltip = strU_;
+
+    }
+}
+
+BOOL NFmiParamAddingGridCtrl::PreTranslateMessage(MSG* pMsg)
+{
+    m_tooltip.RelayEvent(pMsg);
+
+    return CGridCtrl::PreTranslateMessage(pMsg);
+}
+
+BOOL NFmiParamAddingGridCtrl::OnInitDialog()
+{
+    CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID);
+
+    return TRUE;
+}
+
+std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
+{
+    //10. Lis‰‰ uusi std::string CFmiParamAddingDlg::ComposeToolTipText(CPoint point) - metodi
+    //    - Sen pit‰‰ tutkia, mit‰ rivi‰ annettu piste osoittaa ja tehd‰ sen mukaan joku teksti.
+    //11. Katso tooltip tekstin http muotoiluun ja v‰reihin liittyvi‰ esimerkkej‰ vaikka NFmiTimeSerialView luokasta :
+    //-metodit : GetObsFraktileDataToolTipText, GetColoredLocationTooltipStr, MultiModelRunToolTip ja ComposeToolTipText
+    //    - Mm. <b> on boldaus, <br> on rivinvaihto, <hr> on vaaka viiva, <font color = blue> on fontin v‰ri, jne.
+    //    12. Miten saa tietoja datoista ?
+    //    -OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisess‰ Time - sarake jutussa
+    //    - Katso eri tietoja FastInfosta seuraavilta olioita
+    //    - HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue + resoluutio kilometreiss‰ tekstej‰(kysy neuvoa)
+    //    - TimeDescriptor() metodilla aikatietoa, ja silt‰ voi kysy‰ onko kyseess‰ tasav‰linen step vai ep‰m‰‰r‰inen aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyyd‰ tasav‰linen ValidTimeBag())
+    //    - Levelit oletkin jo varmaan k‰ynyt l‰pi toisaalla eli siihen ei tarvii neuvoja
+    //    - Parametrit myˆs tuttuja
+
+    return std::string("Important info!");
 }
 
 
@@ -79,7 +153,7 @@ BEGIN_MESSAGE_MAP(CFmiParamAddingDlg, CDialogEx)
     ON_WM_SIZE()
     ON_WM_TIMER()
     ON_WM_ERASEBKGND()
-    ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
+    //ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
 
 void CFmiParamAddingDlg::SetDefaultValues(void)
@@ -92,7 +166,7 @@ BOOL CFmiParamAddingDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
     fDialogInitialized = true;
-    CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID);
+    //CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID);
 
     HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
     this->SetIcon(hIcon, FALSE);
@@ -171,7 +245,7 @@ void CFmiParamAddingDlg::AdjustDialogControls(void)
             GetClientRect(&gridControlRect);
             win->MoveWindow(gridControlRect);
             FitNameColumnOnVisibleArea(gridControlRect.Width());
-            m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, gridControlRect);
+            //m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, gridControlRect);
         }
     }
 }
@@ -553,58 +627,45 @@ BOOL CFmiParamAddingDlg::OnEraseBkgnd(CDC* pDC)
     //return CDialogEx::OnEraseBkgnd(pDC);
 }
 
-BOOL CFmiParamAddingDlg::PreTranslateMessage(MSG* pMsg)
-{
-    m_tooltip.RelayEvent(pMsg);
-
-    return CDialog::PreTranslateMessage(pMsg);
-}
-
-void CFmiParamAddingDlg::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
-{
-    *result = 0;
-    NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
-
-    if(pNotify->ti->nIDTool == PARAM_ADDING_DIALOG_TOOLTIP_ID)
-    {
-        CPoint pt = *pNotify->pt;
-        ScreenToClient(&pt);
-
-        CString strU_;
-
-        try
-        {
-            strU_ = CA2T(ComposeToolTipText(pt).c_str());
-        }
-        catch(std::exception &e)
-        {
-            strU_ = _TEXT("Error while making the tooltip string:\n");
-            strU_ += CA2T(e.what());
-        }
-        catch(...)
-        {
-            strU_ = _TEXT("Error (unknown) while making the tooltip string");
-        }
-
-        pNotify->ti->sTooltip = strU_;
-
-    } 
-}
-
-std::string CFmiParamAddingDlg::ComposeToolTipText(CPoint point)
-{
-    //10. Lis‰‰ uusi std::string CFmiParamAddingDlg::ComposeToolTipText(CPoint point) - metodi
-    //    - Sen pit‰‰ tutkia, mit‰ rivi‰ annettu piste osoittaa ja tehd‰ sen mukaan joku teksti.
-    //11. Katso tooltip tekstin http muotoiluun ja v‰reihin liittyvi‰ esimerkkej‰ vaikka NFmiTimeSerialView luokasta :
-    //-metodit : GetObsFraktileDataToolTipText, GetColoredLocationTooltipStr, MultiModelRunToolTip ja ComposeToolTipText
-    //    - Mm. <b> on boldaus, <br> on rivinvaihto, <hr> on vaaka viiva, <font color = blue> on fontin v‰ri, jne.
-    //    12. Miten saa tietoja datoista ?
-    //    -OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisess‰ Time - sarake jutussa
-    //    - Katso eri tietoja FastInfosta seuraavilta olioita
-    //    - HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue + resoluutio kilometreiss‰ tekstej‰(kysy neuvoa)
-    //    - TimeDescriptor() metodilla aikatietoa, ja silt‰ voi kysy‰ onko kyseess‰ tasav‰linen step vai ep‰m‰‰r‰inen aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyyd‰ tasav‰linen ValidTimeBag())
-    //    - Levelit oletkin jo varmaan k‰ynyt l‰pi toisaalla eli siihen ei tarvii neuvoja
-    //    - Parametrit myˆs tuttuja
-
-    return "Important info!";
-}
+//BOOL CFmiParamAddingDlg::PreTranslateMessage(MSG* pMsg)
+//{
+//    m_tooltip.RelayEvent(pMsg);
+//
+//    return CDialog::PreTranslateMessage(pMsg);
+//}
+//
+//void CFmiParamAddingDlg::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
+//{
+//    *result = 0;
+//    NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
+//
+//    if(pNotify->ti->nIDTool == PARAM_ADDING_DIALOG_TOOLTIP_ID)
+//    {
+//        CPoint pt = *pNotify->pt;
+//        ScreenToClient(&pt);
+//
+//        CString strU_;
+//
+//        try
+//        {
+//            strU_ = CA2T(ComposeToolTipText(pt).c_str());
+//        }
+//        catch(std::exception &e)
+//        {
+//            strU_ = _TEXT("Error while making the tooltip string:\n");
+//            strU_ += CA2T(e.what());
+//        }
+//        catch(...)
+//        {
+//            strU_ = _TEXT("Error (unknown) while making the tooltip string");
+//        }
+//
+//        pNotify->ti->sTooltip = strU_;
+//
+//    } 
+//}
+//
+//std::string CFmiParamAddingDlg::ComposeToolTipText(CPoint point)
+//{
+//    return "Important info!";
+//}
