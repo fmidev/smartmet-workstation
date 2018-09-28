@@ -111,6 +111,7 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	static void DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, int theGriddingFunction, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative);
     static size_t GridPointToLocationIndex(size_t gridPointX, size_t gridPointY, size_t gridSizeX);
     int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
+    static void FixCroppedMatrixMargins(NFmiDataMatrix<float> &theCroppedGridData, const NFmiPoint &theCropMarginSize);
 
  protected:
 	bool IsTimeModified(const NFmiMetTime &theTime);
@@ -118,9 +119,13 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	bool GetChangeValues(std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool GetChangeValuesWithWork(const NFmiMetTime &theTime, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool IsZeroModification(const std::vector<float> &theZValues);
-    void DoCroppedGridCalculations();
-    void DoFullGridCalculations();
+    void DoCroppedGridCalculations(const NFmiDataMatrix<float> &usedData);
+    void DoFullGridCalculations(const NFmiDataMatrix<float> &usedData);
     bool PreventGridCropCalculations();
+    virtual void DoCroppedPointCalculations(const NFmiDataMatrix<float> &usedData, size_t xIndex, size_t yIndex, float maskFactor);
+    virtual void DoNormalPointCalculations(const NFmiDataMatrix<float> &usedData, unsigned long locationIndex, float maskFactor);
+    void DoLocationGridCalculations(const NFmiDataMatrix<float> &usedData);
+    NFmiDataMatrix<float>& GetUsedGridData();
 
 	NFmiDataMatrix<float> itsGridData;
 	NFmiRect itsCPGridCropRect; // jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, k‰ytet‰‰n t‰t‰ hilapiste-rect:i‰. T‰‰ll‰ on siis bottom-left ja top-right editoidun datan hila-indeksit

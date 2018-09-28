@@ -4,6 +4,14 @@
 #include "NFmiAreaMaskList.h"
 #include "NFmiDrawParam.h"
 
+NFmiControlPointObservationBlender::BlendingDataHelper::BlendingDataHelper()
+:changeField()
+,limitChecker(kFloatMissing, kFloatMissing, kFmiBadParameter)
+{
+
+}
+
+
 NFmiControlPointObservationBlender::NFmiControlPointObservationBlender(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
     unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
     bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime)
@@ -28,70 +36,86 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
     // Kuinka vanhoja havaintoja sallitaan mukaan suhteessa aloitusaikaan itsActualFirstTime
     const long expirationTimeInMinutes = 20;
 
+    // 1. Mik‰ on sallittu aikahaarukka? esim. 10.00 - 10.20 Utc
+    auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, expirationTimeInMinutes);
+    // 2. Mik‰ on maksimi et‰isyys CP-pisteest‰ l‰himp‰‰n havaintoasemaan
+    const double maxAllowedDistanceToStationInKm = 10.;
+    // 3. Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
+    std::vector<float> xValues, yValues, zValues;
+    if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedTimes, maxAllowedDistanceToStationInKm))
+    {
+        // Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
+        if(!itsInfo->Time(itsActualFirstTime))
+            itsInfo->FirstTime();
+        // 4. T‰ydenn‰ CP-pisteiden arvoja seuraavasti, jos CP-pisteess‰ on puuttuva, otetaan editoidusta datasta 0-hetkelt‰ arvo siihen (0-muutos)
+        FillZeroChangeValuesForMissingCpPoints(zValues);
+        // 5. Laske CP-pisteiden avulla 0-hetken 'analyysikentt‰'
+        DoBlendingDataGridding(xValues, yValues, zValues);
+        // 6. Laske analyysikent‰n ja editoidun datan 0-hetken kent‰n avulla muutoskentt‰
+        itsBlendingDataHelper.changeField = CalcChangeField(GetUsedGridData());
+        // 7. Blendaa muutoskentt‰ editoituun dataan liu'uttamalla
+        return MakeBlendingOperation(theActiveTimes);
+        // 8. Lasketaanko 'analyysit' ja niiden sijoitus editoituun dataan myˆs 0-hetke‰ edelt‰ville editoidun datan ajoille?
+    }
+    return false;
+}
+
+bool NFmiControlPointObservationBlender::DoBlendingDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues)
+{
     // Mik‰ oli k‰ytetty griddaus functio?
     FmiGriddingFunction griddingFunction = itsCPManager->CPGriddingProperties().Function();
     if(griddingFunction != kFmiErrorGriddingFunction)
     {
-        // 1. Mik‰ on sallittu aikahaarukka? esim. 10.00 - 10.20 Utc
-        auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, expirationTimeInMinutes);
-        // 2. Mik‰ on maksimi et‰isyys CP-pisteest‰ l‰himp‰‰n havaintoasemaan
-        const double maxAllowedDistanceToStationInKm = 10.;
-        // 3. Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
-        std::vector<float> xValues, yValues, zValues;
-        if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedTimes, maxAllowedDistanceToStationInKm))
-        {
-            // 4. T‰ydenn‰ CP-pisteiden arvoja seuraavasti, jos CP-pisteess‰ on puuttuva, otetaan editoidusta datasta 0-hetkelt‰ arvo siihen (0-muutos)
-            FillZeroChangeValuesForMissingCpPoints(zValues);
-            // 5. Laske CP-pisteiden avulla 0-hetken 'analyysikentt‰'
-            NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), itsGridData, itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
-            // 6. Laske analyysikent‰n ja editoidun datan 0-hetken kent‰n avulla muutoskentt‰
-            auto changeField = CalcChangeField(itsGridData);
-            // 7. Blendaa muutoskentt‰ editoituun dataan liu'uttamalla
-            return MakeBlendingOperation(changeField, theActiveTimes);
-            // 8. Lasketaanko 'analyysit' ja niiden sijoitus editoituun dataan myˆs 0-hetke‰ edelt‰ville editoidun datan ajoille?
-        }
+        NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
+
+        if(fUseGridCrop)
+            NFmiDataParamControlPointModifier::FixCroppedMatrixMargins(GetUsedGridData(), itsCropMarginSize);
+
+        return true;
     }
     return false;
 }
 
 // Blendataan annettu muutoskentt‰ editoituun parametriin annetun blendingTimes:in aikarajoissa.
-bool NFmiControlPointObservationBlender::MakeBlendingOperation(const NFmiDataMatrix<float> &changeField, NFmiTimeDescriptor &blendingTimes)
+bool NFmiControlPointObservationBlender::MakeBlendingOperation(NFmiTimeDescriptor &blendingTimes)
 {
     auto status = false;
     auto useMask = itsParamMaskList->UseMask();
     float maskFactor = 1.f;
-    auto &editedInfo = itsInfo;
-    NFmiDataParamModifier::LimitChecker limitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(editedInfo->Param().GetParamIdent()));
-    for(editedInfo->ResetLevel(); editedInfo->NextLevel(); ) // Tuskin ikin‰ p‰‰st‰‰n 3D editointiin, mutta varaudutaan silti siihen
+    itsBlendingDataHelper.limitChecker = NFmiDataParamModifier::LimitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent()));
+    for(itsInfo->ResetLevel(); itsInfo->NextLevel(); ) // Tuskin ikin‰ p‰‰st‰‰n 3D editointiin, mutta varaudutaan silti siihen
     {
-        auto blendingTimeSize = blendingTimes.Size();
+        itsBlendingDataHelper.blendingTimeSize = blendingTimes.Size();
         for(blendingTimes.Reset(); blendingTimes.Next(); )
         {
-            auto blendingTimeIndex = blendingTimes.Index();
+            itsBlendingDataHelper.blendingTimeIndex = blendingTimes.Index();
             // Blendaus menee niin ett‰ alkuhetkell‰ muutos kentt‰ otetaan kertoimella 1. ja viimeisell‰ se otetaan kertoimella 0. (eli viimeinen aika-askel voidaan skipata)
-            if(blendingTimeIndex + 1 >= blendingTimeSize)
+            if(itsBlendingDataHelper.blendingTimeIndex + 1 >= itsBlendingDataHelper.blendingTimeSize)
                 break;
-            const auto &editedTime = blendingTimes.Time();
-            if(editedInfo->Time(editedTime)) // Ajan pit‰isi aina lˆyty‰, koska blendingtimes on rakennettu editoidun datan aikojen perusteella
+            if(itsInfo->Time(blendingTimes.Time())) // Ajan pit‰isi aina lˆyty‰, koska blendingtimes on rakennettu editoidun datan aikojen perusteella
             {
-                itsParamMaskList->SyncronizeMaskTime(editedTime);
-                for(editedInfo->ResetLocation(); editedInfo->NextLocation(); )
-                {
-                    if(useMask)
-                        maskFactor = static_cast<float>(itsParamMaskList->MaskValue(editedInfo->LatLonFast()));
-                    if(maskFactor)
-                    {
-                        auto editedValue = editedInfo->FloatValue();
-                        auto changeValue = changeField.GetValue(editedInfo->LocationIndex(), kFloatMissing);
-                        float value = NFmiControlPointObservationBlender::BlendData(editedValue, changeValue, maskFactor, blendingTimeSize, blendingTimeIndex, limitChecker);
-                        editedInfo->FloatValue(value);
-                        status = true;
-                    }
-                }
+                SyncronizeTimeWithMasks();
+                DoLocationGridCalculations(itsBlendingDataHelper.changeField);
             }
         }
     }
     return status;
+}
+
+void NFmiControlPointObservationBlender::DoCroppedPointCalculations(const NFmiDataMatrix<float> &usedData, size_t xIndex, size_t yIndex, float maskFactor)
+{
+    auto editedValue = itsInfo->FloatValue();
+    auto changeValue = usedData[xIndex][yIndex];
+    float value = NFmiControlPointObservationBlender::BlendData(editedValue, changeValue, maskFactor, itsBlendingDataHelper.blendingTimeSize, itsBlendingDataHelper.blendingTimeIndex, itsBlendingDataHelper.limitChecker);
+    itsInfo->FloatValue(value);
+}
+
+void NFmiControlPointObservationBlender::DoNormalPointCalculations(const NFmiDataMatrix<float> &usedData, unsigned long locationIndex, float maskFactor)
+{
+    auto editedValue = itsInfo->FloatValue();
+    auto changeValue = usedData.GetValue(itsInfo->LocationIndex(), kFloatMissing);
+    float value = NFmiControlPointObservationBlender::BlendData(editedValue, changeValue, maskFactor, itsBlendingDataHelper.blendingTimeSize, itsBlendingDataHelper.blendingTimeIndex, itsBlendingDataHelper.limitChecker);
+    itsInfo->FloatValue(value);
 }
 
 float NFmiControlPointObservationBlender::BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiDataParamModifier::LimitChecker &limitChecker)
@@ -105,7 +129,10 @@ float NFmiControlPointObservationBlender::BlendData(float editedDataValue, float
 NFmiDataMatrix<float> NFmiControlPointObservationBlender::CalcChangeField(const NFmiDataMatrix<float> &analysisField)
 {
     NFmiDataMatrix<float> changeField;
-    itsInfo->Values(changeField); // otetaan originaali kentt‰ changeField:iin
+    if(fUseGridCrop)
+        itsInfo->CroppedValues(changeField, boost::math::iround(itsCPGridCropRect.Left()), boost::math::iround(itsCPGridCropRect.Top()), boost::math::iround(itsCPGridCropRect.Right()), boost::math::iround(itsCPGridCropRect.Bottom()));
+    else
+        itsInfo->Values(changeField); // otetaan originaali kentt‰ changeField:iin
     changeField -= analysisField; // matriisi laskuoperaatiot ottavat huomioon puuttuvat arvot
     return changeField;
 }
