@@ -351,14 +351,69 @@ static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(N
     return finalInfos;
 }
 
-static NFmiMetTime GetLatestInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos /* , const NFmiArea *checkedObservationArea */ )
+// Tarkista että valitulle ajalle ja parametrille löytyy riittävä määrä ei-puuttuvia havaintoja.
+// Jos havaintoja ei ole riittävästi, palauta false, muuten true.
+// Oletuksia: 1. info ei ole nullptr, 2. checkedObservationArea ei ole nullptr, 3. info:ssa on asemadataa
+static bool CheckForExistingObservationsOnUsedArea(boost::shared_ptr<NFmiFastQueryInfo> &info, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
+{
+    auto stationsOnAreaCount = 0.f;
+    auto nonMissingObservationsOnAreaCount = 0.f;
+    for(info->ResetLocation(); info->NextLocation(); )
+    {
+        if(checkedObservationArea->IsInside(info->LatLonFast()))
+        {
+            stationsOnAreaCount++;
+            if(info->FloatValue() != kFloatMissing)
+                nonMissingObservationsOnAreaCount++;
+        }
+    }
+    if(stationsOnAreaCount == 0)
+        return false; // Jos alueella ei ollut yhtään asemaa => false
+    auto nonMissingValueRatioOnArea = 100.f * nonMissingObservationsOnAreaCount / stationsOnAreaCount;
+    auto nonMissingValueRatioLimit = 30.f; // Laitetaan joku raja puuttuvien maksimimääräksi
+    return nonMissingValueRatioOnArea >= nonMissingValueRatioLimit;
+}
+
+// Haetaan datasta viimeisin aika, jolla on riittävästi havaintoja.
+// Jos kyse on hiladatasta, palautetaan vain viimeinen aika.
+static NFmiMetTime FindLatestAcceptableTime(boost::shared_ptr<NFmiFastQueryInfo> &info, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
+{
+    if(info)
+    {
+        if(checkedObservationArea && !info->IsGrid())
+        {
+            // Aletaan käydä datan aikoja läpi lopusta taaksepäin
+            info->LastTime();
+            // Ei käydä läpi kuin maksimissan n kpl viimeistä aikaa
+            auto timeCounter = 0;
+            const auto timeCounterLimit = 5;
+            do
+            {
+                if(::CheckForExistingObservationsOnUsedArea(info, checkedObservationArea))
+                    return info->Time();
+                timeCounter++;
+            } while(info->PreviousTime() && timeCounter <= timeCounterLimit);
+
+            // Sopivaa aikaa ei löytynyt datan lopusta, palautetaan puuttuva aika
+            return NFmiMetTime::gMissingTime;
+        }
+        // Kyseessä oli hiladataa tai ei haluta tehdä area tarkasteluja, palauta viimeinen aika
+        return info->TimeDescriptor().LastTime();
+    }
+    // Ei infoa, tähän ei pitäisi tulla
+    return NFmiMetTime::gMissingTime;
+}
+
+static NFmiMetTime GetLatestInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
 {
     NFmiMetTime latestTime = NFmiMetTime::gMissingTime;
-    for(const auto &info : infos)
+    for(auto &info : infos)
     {
-        const auto &latestInfoTime = info->TimeDescriptor().LastTime();
+        const auto latestInfoTime = ::FindLatestAcceptableTime(info, checkedObservationArea);
         if(latestTime == NFmiMetTime::gMissingTime || latestInfoTime > latestTime)
+        {
             latestTime = latestInfoTime;
+        }
     }
     return latestTime;
 }
@@ -388,13 +443,13 @@ static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoT
 }
 
 // Palauttaa sekä todellisen viimeisen ajan (esim. 10.20), että pyöristetyn editoituun datan sopivan ajan (esim. 10.00)
-static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
+static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
 {
     if(infos.empty())
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze time");
     else
     {
-        auto latestActualTime = ::GetLatestInfoTime(infos);
+        auto latestActualTime = ::GetLatestInfoTime(infos, checkedObservationArea);
         auto latestTime = ::GetSuitableAnalyzeToolInfoTime(latestActualTime, editedInfo);
         return std::make_pair(latestActualTime, latestTime);
     }
@@ -423,6 +478,29 @@ static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface 
     return status;
 }
 
+static boost::shared_ptr<NFmiArea> GetUsedAreaForAnalyzeTool(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
+{
+    if(editedInfo && editedInfo->IsGrid())
+    {
+        const auto &editAreaGrid = *editedInfo->Grid();
+        // 1. Jos "Zoomed CP" optio ei ole päällä tai zoomaus on niin vähäinen että ei tuota erillistä zoomattua aluetta, 
+        // palautetaan editoidun datan area.
+        const auto &zoomedAreaGridPointRect = theAdapter.CPGridCropRect();
+        const auto emptyRect = NFmiRect();
+        auto useZoomedArea = theAdapter.UseCPGridCrop() && (zoomedAreaGridPointRect != emptyRect);
+        if(!useZoomedArea)
+            return boost::shared_ptr<NFmiArea>(editAreaGrid.Area()->Clone());
+        else
+        {
+            // Luodaan uusi area zoomialueen hilapisteiden avulla
+            auto bottomLeftLatlon = editAreaGrid.GridToLatLon(zoomedAreaGridPointRect.BottomLeft());
+            auto topRightLatlon = editAreaGrid.GridToLatLon(zoomedAreaGridPointRect.TopRight());
+            return boost::shared_ptr<NFmiArea>(editAreaGrid.Area()->CreateNewArea(bottomLeftLatlon, topRightLatlon));
+        }
+    }
+    return boost::shared_ptr<NFmiArea>();
+}
+
 static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
 {
     auto drawParam = theAdapter.GetUsedDrawParam(editedInfo->Param(), dataType);
@@ -445,29 +523,35 @@ static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, Ti
             auto analyzeToolInfos = ::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
             if(!analyzeToolInfos.empty())
             {
+                auto usedAreaPtr = ::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
                 NFmiMetTime actualFirstTime, firstTime;
-                std::tie(actualFirstTime, firstTime) = ::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo);
+                std::tie(actualFirstTime, firstTime) = ::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo, usedAreaPtr);
                 if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
                 {
+                    auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
                     try
                     {
-                        ::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), normalLogMessage, firstTime, firstTime);
+                        ::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), normalLogMessage, times.FirstTime(), times.LastTime());
                     }
                     catch(...)
                     {
                         // heitetty poikkeus eli halutaan lopettaa toiminto
+                        ::LogMessage(theAdapter, "Unknown error occured while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
                         return false;
                     }
 
                     EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
-                    auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
                     ::LogMessage(theAdapter, normalLogMessage, CatLog::Severity::Info, CatLog::Category::Editing);
                     if(useObservationBlenderTool)
                         return ::DoFinalObservationBlenderToolModifications(theAdapter, editedInfo, analyzeToolInfos, theParam, fUsedMask, maskList, times, dataType, actualFirstTime);
                     else
                         return ::DoFinalAnalyzeToolModifications(theAdapter, editedInfo, analyzeToolInfos[0], theParam, fUsedMask, maskList, times, dataType);
                 }
+                else
+                    ::LogMessage(theAdapter, "Analyze tool's end time was greater than calculated start time for analyze related editing", CatLog::Severity::Error, CatLog::Category::Editing);
             }
+            else
+                ::LogMessage(theAdapter, "Couldn't find any data while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
         }
     }
 	return false;
