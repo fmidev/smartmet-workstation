@@ -58,6 +58,8 @@
 #pragma warning(disable : 4505) // warning C4505: 'func-name' : unreferenced local function has been removed
 #endif
 
+using namespace std::literals::string_literals;
+
 static void LogMessage(TimeSerialModificationDataInterface &theAdapter, const std::string& theMessage, CatLog::Severity severity, CatLog::Category category)
 {
     theAdapter.LogAndWarnUser(theMessage, "", severity, category, true);
@@ -418,39 +420,57 @@ static NFmiMetTime GetLatestInfoTime(checkedVector<boost::shared_ptr<NFmiFastQue
     return latestTime;
 }
 
-static NFmiMetTime RoundToNearestHourWithHalfwayBackwards(NFmiMetTime time)
-{
-    // Normaalisti NFmiMetTime::NearestMetTime(60) pyöristää seuraavaan tuntiin, jos minuutti on 30, 
-    // mutta tässä halutaan mennä silloin taaksepäin edelliseen tuntiin
-    if(time.GetMin() == 30 && time.GetSec() == 0)
-        time.NearestMetTime(60, kBackward);
-    else
-        time.NearestMetTime(60);
-    return time;
-}
-
-static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
+static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool useObservationBlenderTool, const std::string usedProducerName)
 {
     // 1. Jos latestInfoTime löytyy editedInfo:sta, palautetaan se
     if(editedInfo->Time(latestInfoTime))
         return latestInfoTime;
     else
     {
-        // Jos aikaa ei ollut suoraan editoidussa datassa, palautetaan vain varmuuden vuoksi lähimpään tuntiin pyöristetty aika
-        // Huom. Tasan 30 minuutista halutaan mennä taaksepäin, siksi erikois funktio.
-        return ::RoundToNearestHourWithHalfwayBackwards(latestInfoTime);
+        // Jos aikaa ei ollut suoraan editoidussa datassa, katsotaan kelpaako lähin aika.
+        // Normaali analyysi laskennassa käytetään 1h haarukkaa, mutta obs-blenderin kanssa käytetään tarkempaa
+        // rqjaa, mikä löytyy 
+        long maxDifferenceInMinutes = useObservationBlenderTool ? NFmiControlPointObservationBlender::ExpirationTimeInMinutes() : 60;
+        if(editedInfo->FindNearestTime(latestInfoTime, kCenter, maxDifferenceInMinutes))
+            return editedInfo->Time();
+        else
+        {
+            // Ei löytynyt aikarajojen sisältä sopivaa aikaa editoidusta datasta, tee joku selittävä teksti lokiin molemmille työkaluille erikseen
+            if(useObservationBlenderTool)
+            {
+                auto errorString = "Observation-blender error, latest good '"s;
+                errorString += usedProducerName;
+                errorString += "' observation ("s;
+                errorString += latestInfoTime.ToStr("MM.DD HH:mm");
+                errorString += ") was not in limits ("s;
+                errorString += std::to_string(maxDifferenceInMinutes);
+                errorString += " minutes) to any edited time step"s;
+                throw std::runtime_error(errorString);
+            }
+            else
+            {
+                auto errorString = "Analyze tool error, latest good '"s;
+                errorString += usedProducerName;
+                errorString += "' analyze ("s;
+                errorString += latestInfoTime.ToStr("MM.DD HH:mm");
+                errorString += ") was not in limits ("s;
+                errorString += std::to_string(maxDifferenceInMinutes);
+                errorString += " minutes) to any edited time step"s;
+                throw std::runtime_error(errorString);
+            }
+        }
     }
 }
 
 // Palauttaa sekä todellisen viimeisen ajan (esim. 10.20), että pyöristetyn editoituun datan sopivan ajan (esim. 10.00)
-static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
+static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string usedProducerName)
 {
     if(infos.empty())
-        throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze time");
+        throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze tool time");
     else
     {
         auto latestActualTime = ::GetLatestInfoTime(infos, checkedObservationArea);
-        auto latestTime = ::GetSuitableAnalyzeToolInfoTime(latestActualTime, editedInfo);
+        auto latestTime = ::GetSuitableAnalyzeToolInfoTime(latestActualTime, editedInfo, useObservationBlenderTool, usedProducerName);
         return std::make_pair(latestActualTime, latestTime);
     }
 }
@@ -525,7 +545,7 @@ static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, Ti
             {
                 auto usedAreaPtr = ::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
                 NFmiMetTime actualFirstTime, firstTime;
-                std::tie(actualFirstTime, firstTime) = ::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo, usedAreaPtr);
+                std::tie(actualFirstTime, firstTime) = ::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo, usedAreaPtr, useObservationBlenderTool, std::string(producer.GetName()));
                 if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
                 {
                     auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
@@ -2896,11 +2916,21 @@ static bool IsDataModificationInProgress(TimeSerialModificationDataInterface &th
 
 bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
-	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
-		return false;
-	::SetForInfiniteValueCheck(theAdapter);
-	bool status = ::DoTimeSeriesValuesModifying(theAdapter, theModifiedDrawParam, fUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue, fDoMultiThread, theThreadCallBacks);
-	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
+    auto status = false;
+    try
+    {
+        if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
+            return false;
+        ::SetForInfiniteValueCheck(theAdapter);
+        status = ::DoTimeSeriesValuesModifying(theAdapter, theModifiedDrawParam, fUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue, fDoMultiThread, theThreadCallBacks);
+        ::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
+    }
+    catch(std::exception &e)
+    {
+        auto errorString = "Unable to do time-serial modifications: "s;
+        errorString += e.what();
+        ::LogMessage(theAdapter, errorString, CatLog::Severity::Error, CatLog::Category::Editing);
+    }
 	return status;
 }
 
