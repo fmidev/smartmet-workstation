@@ -351,13 +351,13 @@ static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(N
     return finalInfos;
 }
 
-static NFmiMetTime GetLatestInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos)
+static NFmiMetTime GetLatestInfoTime(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos /* , const NFmiArea *checkedObservationArea */ )
 {
     NFmiMetTime latestTime = NFmiMetTime::gMissingTime;
     for(const auto &info : infos)
     {
         const auto &latestInfoTime = info->TimeDescriptor().LastTime();
-        if(latestInfoTime != NFmiMetTime::gMissingTime && latestInfoTime > latestTime)
+        if(latestTime == NFmiMetTime::gMissingTime || latestInfoTime > latestTime)
             latestTime = latestInfoTime;
     }
     return latestTime;
