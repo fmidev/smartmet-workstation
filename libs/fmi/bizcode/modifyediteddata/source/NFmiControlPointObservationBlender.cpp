@@ -4,6 +4,18 @@
 #include "NFmiAreaMaskList.h"
 #include "NFmiDrawParam.h"
 
+long NFmiControlPointObservationBlender::itsExpirationTimeInMinutes = 10;
+
+long NFmiControlPointObservationBlender::ExpirationTimeInMinutes()
+{
+    return itsExpirationTimeInMinutes;
+}
+
+void NFmiControlPointObservationBlender::ExpirationTimeInMinutes(long newValue)
+{
+    itsExpirationTimeInMinutes = newValue;
+}
+
 NFmiControlPointObservationBlender::BlendingDataHelper::BlendingDataHelper()
 :changeField()
 ,limitChecker(kFloatMissing, kFloatMissing, kFmiBadParameter)
@@ -33,11 +45,8 @@ static NFmiTimeDescriptor CalcAllowedTimes(const NFmiMetTime &actualFirstTime, l
 
 bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks)
 {
-    // Kuinka vanhoja havaintoja sallitaan mukaan suhteessa aloitusaikaan itsActualFirstTime
-    const long expirationTimeInMinutes = 20;
-
     // 1. Mik‰ on sallittu aikahaarukka? esim. 10.00 - 10.20 Utc
-    auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, expirationTimeInMinutes);
+    auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, NFmiControlPointObservationBlender::ExpirationTimeInMinutes());
     // 2. Mik‰ on maksimi et‰isyys CP-pisteest‰ l‰himp‰‰n havaintoasemaan
     const double maxAllowedDistanceToStationInKm = 10.;
     // 3. Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
