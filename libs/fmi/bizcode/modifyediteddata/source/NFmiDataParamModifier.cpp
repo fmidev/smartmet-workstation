@@ -466,7 +466,7 @@ void NFmiDataParamControlPointModifier::DoFullGridCalculations(const NFmiDataMat
     float maskFactor = 1;
     for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
     {
-        if(itsParamMaskList->UseMask())
+        if(useMask)
             maskFactor = static_cast<float>(itsParamMaskList->MaskValue(itsInfo->LatLon()));
         if(maskFactor)
         {
