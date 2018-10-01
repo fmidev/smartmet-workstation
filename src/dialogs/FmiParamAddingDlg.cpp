@@ -47,11 +47,18 @@ void NFmiParamAddingGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 void NFmiParamAddingGridCtrl::OnSize(UINT nType, int cx, int cy)
 {
     CGridCtrl::OnSize(nType, cx, cy);
+
+    static bool firstTime = true;
+    if(firstTime)
+    {
+        OnInitDialog();
+        firstTime = false;
+    }
+
     CRect rect;
     GetClientRect(rect);
-    m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, rect);    
+    m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, rect);
 }
-
 
 void NFmiParamAddingGridCtrl::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
@@ -626,46 +633,3 @@ BOOL CFmiParamAddingDlg::OnEraseBkgnd(CDC* pDC)
 
     //return CDialogEx::OnEraseBkgnd(pDC);
 }
-
-//BOOL CFmiParamAddingDlg::PreTranslateMessage(MSG* pMsg)
-//{
-//    m_tooltip.RelayEvent(pMsg);
-//
-//    return CDialog::PreTranslateMessage(pMsg);
-//}
-//
-//void CFmiParamAddingDlg::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
-//{
-//    *result = 0;
-//    NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
-//
-//    if(pNotify->ti->nIDTool == PARAM_ADDING_DIALOG_TOOLTIP_ID)
-//    {
-//        CPoint pt = *pNotify->pt;
-//        ScreenToClient(&pt);
-//
-//        CString strU_;
-//
-//        try
-//        {
-//            strU_ = CA2T(ComposeToolTipText(pt).c_str());
-//        }
-//        catch(std::exception &e)
-//        {
-//            strU_ = _TEXT("Error while making the tooltip string:\n");
-//            strU_ += CA2T(e.what());
-//        }
-//        catch(...)
-//        {
-//            strU_ = _TEXT("Error (unknown) while making the tooltip string");
-//        }
-//
-//        pNotify->ti->sTooltip = strU_;
-//
-//    } 
-//}
-//
-//std::string CFmiParamAddingDlg::ComposeToolTipText(CPoint point)
-//{
-//    return "Important info!";
-//}
