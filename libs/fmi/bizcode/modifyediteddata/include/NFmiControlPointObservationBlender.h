@@ -33,6 +33,8 @@ class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModif
 
      bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
      static float BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiDataParamModifier::LimitChecker &limitChecker);
+     static long ExpirationTimeInMinutes();
+     static void ExpirationTimeInMinutes(long newValue);
 
 protected:
     bool GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange, double maxAllowedDistanceToStationInKm);
@@ -44,4 +46,6 @@ protected:
     void DoNormalPointCalculations(const NFmiDataMatrix<float> &usedData, unsigned long locationIndex, float maskFactor) override;
 
     BlendingDataHelper itsBlendingDataHelper;
+    // Kuinka vanhoja havaintoja sallitaan mukaan suhteessa aloitusaikaan itsActualFirstTime
+    static long itsExpirationTimeInMinutes;
 };
