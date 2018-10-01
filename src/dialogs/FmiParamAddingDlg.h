@@ -51,12 +51,16 @@ class NFmiParamAddingGridCtrl : public CGridCtrl
 public:
     NFmiParamAddingGridCtrl(int nRows = 0, int nCols = 0, int nFixedRows = 0, int nFixedCols = 0)
         :CGridCtrl(nRows, nCols, nFixedRows, nFixedCols)
+        , itsSmartMetDocumentInterface(nullptr)
     {}
+
     std::function<void(void)> itsLButtonDblClkCallback;
+    void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface) { itsSmartMetDocumentInterface = smartMetDocumentInterface; };
 
 private:
     std::string ComposeToolTipText(CPoint point);
     CPPToolTip m_tooltip;
+    SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 
 public:
     DECLARE_MESSAGE_MAP()

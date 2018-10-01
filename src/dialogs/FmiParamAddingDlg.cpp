@@ -107,20 +107,27 @@ BOOL NFmiParamAddingGridCtrl::OnInitDialog()
 
 std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
 {
-    //10. Lis‰‰ uusi std::string CFmiParamAddingDlg::ComposeToolTipText(CPoint point) - metodi
-    //    - Sen pit‰‰ tutkia, mit‰ rivi‰ annettu piste osoittaa ja tehd‰ sen mukaan joku teksti.
     //11. Katso tooltip tekstin http muotoiluun ja v‰reihin liittyvi‰ esimerkkej‰ vaikka NFmiTimeSerialView luokasta :
     //-metodit : GetObsFraktileDataToolTipText, GetColoredLocationTooltipStr, MultiModelRunToolTip ja ComposeToolTipText
     //    - Mm. <b> on boldaus, <br> on rivinvaihto, <hr> on vaaka viiva, <font color = blue> on fontin v‰ri, jne.
     //    12. Miten saa tietoja datoista ?
     //    -OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisess‰ Time - sarake jutussa
     //    - Katso eri tietoja FastInfosta seuraavilta olioita
-    //    - HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue + resoluutio kilometreiss‰ tekstej‰(kysy neuvoa)
-    //    - TimeDescriptor() metodilla aikatietoa, ja silt‰ voi kysy‰ onko kyseess‰ tasav‰linen step vai ep‰m‰‰r‰inen aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyyd‰ tasav‰linen ValidTimeBag())
+    //    - HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue 
+    //          + resoluutio kilometreiss‰ tekstej‰(kysy neuvoa)
+    //    - TimeDescriptor() metodilla aikatietoa, ja silt‰ voi kysy‰ onko kyseess‰ tasav‰linen step vai ep‰m‰‰r‰inen 
+    //          aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyyd‰ tasav‰linen ValidTimeBag())
     //    - Levelit oletkin jo varmaan k‰ynyt l‰pi toisaalla eli siihen ei tarvii neuvoja
     //    - Parametrit myˆs tuttuja
 
-    return std::string("Important info!");
+    CCellID idCurrentCell = GetCellFromPt(point);
+    if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount())
+    {
+        auto rowData = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1); 
+        return rowData.displayName();
+    }
+    
+    return std::string("Parameter Selection");
 }
 
 
@@ -185,6 +192,7 @@ BOOL CFmiParamAddingDlg::OnInitDialog()
     // Tee paikan asetus vasta tooltipin alustuksen j‰lkeen, niin se toimii ilman OnSize-kutsua.
     std::string errorBaseStr("Error in CFmiCaseStudyDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
+    itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
 
     // Do not allow selection, it would look bad for one row being all blue
     itsGridCtrl.EnableSelection(FALSE);
@@ -252,7 +260,6 @@ void CFmiParamAddingDlg::AdjustDialogControls(void)
             GetClientRect(&gridControlRect);
             win->MoveWindow(gridControlRect);
             FitNameColumnOnVisibleArea(gridControlRect.Width());
-            //m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, gridControlRect);
         }
     }
 }
