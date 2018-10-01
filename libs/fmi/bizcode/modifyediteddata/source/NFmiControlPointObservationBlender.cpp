@@ -121,7 +121,7 @@ float NFmiControlPointObservationBlender::BlendData(float editedDataValue, float
 {
     if(editedDataValue == kFloatMissing || changeValue == kFloatMissing)
         return editedDataValue; // ongelma tilanteissa palautetaan arvo editoidusta datasta takaisin
-    float value = (timeSize - timeIndex - 1.f) / (timeSize - 1.f) * (changeValue * maskFactor) + editedDataValue;
+    float value = editedDataValue - ((timeSize - timeIndex - 1.f) / (timeSize - 1.f) * (changeValue * maskFactor));
     return limitChecker.CheckValue(value);
 }
 
