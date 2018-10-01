@@ -45,7 +45,7 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
     if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedTimes, maxAllowedDistanceToStationInKm))
     {
         // Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
-        if(!itsInfo->Time(itsActualFirstTime))
+        if(!itsInfo->Time(theActiveTimes.FirstTime()))
             itsInfo->FirstTime();
         // 4. T‰ydenn‰ CP-pisteiden arvoja seuraavasti, jos CP-pisteess‰ on puuttuva, otetaan editoidusta datasta 0-hetkelt‰ arvo siihen (0-muutos)
         FillZeroChangeValuesForMissingCpPoints(zValues);
@@ -80,8 +80,6 @@ bool NFmiControlPointObservationBlender::DoBlendingDataGridding(std::vector<floa
 bool NFmiControlPointObservationBlender::MakeBlendingOperation(NFmiTimeDescriptor &blendingTimes)
 {
     auto status = false;
-    auto useMask = itsParamMaskList->UseMask();
-    float maskFactor = 1.f;
     itsBlendingDataHelper.limitChecker = NFmiDataParamModifier::LimitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent()));
     for(itsInfo->ResetLevel(); itsInfo->NextLevel(); ) // Tuskin ikin‰ p‰‰st‰‰n 3D editointiin, mutta varaudutaan silti siihen
     {
@@ -96,6 +94,7 @@ bool NFmiControlPointObservationBlender::MakeBlendingOperation(NFmiTimeDescripto
             {
                 SyncronizeTimeWithMasks();
                 DoLocationGridCalculations(itsBlendingDataHelper.changeField);
+                status = true;
             }
         }
     }
