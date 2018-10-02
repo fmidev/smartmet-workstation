@@ -1755,7 +1755,12 @@ bool NFmiTimeSerialView::IsParamWeatherSymbol3()
 
 bool NFmiTimeSerialView::DoControlPointModeDrawing() const
 {
-    return (!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode()) && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode();
+    return (!IsAnalyzeRelatedToolUsed()) && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode();
+}
+
+bool NFmiTimeSerialView::IsAnalyzeRelatedToolUsed() const
+{
+    return itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode() || itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool();
 }
 
 //--------------------------------------------------------
@@ -1793,7 +1798,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 			if(info->NextLocation())
 			{
 				DrawSelectedStationData(info, info->LatLon(), counter);
-				if(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode())
+				if(IsAnalyzeRelatedToolUsed())
 					DrawAnalyzeToolEndTimeLine(); // piirretään vain ensimmäisellä kerralla pystyviiva, joka kuvaa analyysityökalun lopetusajan kohdan
 			}
 
@@ -2035,7 +2040,7 @@ NFmiDrawingEnvironment NFmiTimeSerialView::ChangeIncrementalStationDataCurveEnvi
 // difference, then help line won't be drawn)
 bool NFmiTimeSerialView::IsModifiedValueLineDrawn(long theEndPointIndex)
 {
-	if(!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode()) // analyysi modessa ei piirretä näitä muutoskäyriä!!!
+	if(!IsAnalyzeRelatedToolUsed()) // analyysi modessa ei piirretä näitä muutoskäyriä!!!
 	{
 		if(itsDrawParam->TimeSerialModifyingLimit())
 		{
@@ -2087,7 +2092,7 @@ void NFmiTimeSerialView::DrawModifyFactorPoints(void)
 	itsToolBox->UseClipping(true);
 	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
 	{
-		if(!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode()) // muutos käyrät piirretään vain ei-analyysi tilassa
+		if(!IsAnalyzeRelatedToolUsed()) // muutos käyrät piirretään vain ei-analyysi tilassa
 		{
 			DrawModifyFactorPointGrids();
 			if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
@@ -2314,7 +2319,7 @@ void NFmiTimeSerialView::DrawModifyFactorAxis(void)
 	itsToolBox->UseClipping(false);
 	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
 	{
-		if(itsModifyFactorView && (!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode())) // muutos asteikko piirretään vain ei-analyysi tilassa
+		if(itsModifyFactorView && (!IsAnalyzeRelatedToolUsed())) // muutos asteikko piirretään vain ei-analyysi tilassa
 		{
 			NFmiDrawingEnvironment envi;
 			envi.SetFrameColor(NFmiColor(0.f,0.f,0.f));
@@ -2363,7 +2368,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 		itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
 		if(itsInfo == 0)
 			return false;
-		if(!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode() && itsModifyFactorView && itsModifyFactorView->GetFrame().IsInside(thePlace))
+		if(IsModifyFactorViewClicked(thePlace))
 		{
 			if(IsEditedData(itsInfo))
 				return ChangeModifyFactorView(-1.);
@@ -2402,7 +2407,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 				    return false;
 
 			    double proximityFactor = CalcMouseClickProximityFactor();//0.02;
-			    if(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode())
+			    if(IsAnalyzeRelatedToolUsed())
 			    {
 				    NFmiMetTime analyzeEndTime(Value2Time(thePlace));
                     itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolEndTime(analyzeEndTime);
@@ -2672,7 +2677,7 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
                 // kuinka läheltä pitää aikaakselia klikata ennenkuin ohjelma suostuu 'löytämään'
 	            // klikkauksen paikan (nyt lineaariselle laitetaan isommat 'reunat' hakua varten)
 			    double proximityFactor = CalcMouseClickProximityFactor();//0.02;
-			    if(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode())
+			    if(IsAnalyzeRelatedToolUsed())
 			    {
 				    NFmiMetTime analyzeEndTime(Value2Time(thePlace));
                     itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolEndTime(analyzeEndTime);
@@ -2767,7 +2772,7 @@ bool NFmiTimeSerialView::RightButtonUp(const NFmiPoint &thePlace
 
 		if(OpenOverViewPopUp(thePlace, theKey))
 			return true;
-		if(!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode() && itsModifyFactorView && itsModifyFactorView->GetFrame().IsInside(thePlace))
+		if(IsModifyFactorViewClicked(thePlace))
 		{
 			return ChangeModifyFactorView(1.);
 		}
@@ -3311,8 +3316,7 @@ void NFmiTimeSerialView::DrawValueGrids(NFmiDrawingEnvironment& envi,double minP
  // laskee aikasarjan muutokset ja päivittää infon arvot ja nollaa korjaus käyrän
 void NFmiTimeSerialView::ChangeTimeSeriesValues(void)
 {
-    auto &analyzeToolData = itsCtrlViewDocumentInterface->AnalyzeToolData();
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() || analyzeToolData.AnalyzeToolMode() || analyzeToolData.ControlPointObservationBlendingData().UseBlendingTool() || IsModifyFactorValuesNonZero())
+	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() || IsAnalyzeRelatedToolUsed() || IsModifyFactorValuesNonZero())
 	{
 		NFmiMetEditorTypes::Mask maskType = NFmiMetEditorTypes::kFmiSelectionMask;
 		if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()) // kontrollipiste työkalulla muutokset tehdään aina kaikkiin pisteisiin, eli = nomask
@@ -3943,7 +3947,7 @@ void NFmiTimeSerialView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFm
 	DrawEditedDataLocationInTime(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle);
 	if(IsEditedData(Info()))
 	{
-		if(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode())
+		if(IsAnalyzeRelatedToolUsed())
 			DrawAnalyzeToolChangeLine(theLatLonPoint);
 	}
 }
@@ -3994,12 +3998,17 @@ bool NFmiTimeSerialView::ChangeDataLevel(boost::shared_ptr<NFmiDrawParam> &theDr
 	return false;
 }
 
+bool NFmiTimeSerialView::IsModifyFactorViewClicked(const NFmiPoint &thePlace) const
+{
+    return (!IsAnalyzeRelatedToolUsed()) && itsModifyFactorView && itsModifyFactorView->GetFrame().IsInside(thePlace);
+}
+
 bool NFmiTimeSerialView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
 {
 	bool status = false;
 	if(IsIn(thePlace))
 	{
-		if(!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode() && itsModifyFactorView && itsModifyFactorView->GetFrame().IsInside(thePlace))
+		if(IsModifyFactorViewClicked(thePlace))
 		{
 			status = ChangeModifyFactorView((theDelta < 0) ? -1. : 1.);
 		}
