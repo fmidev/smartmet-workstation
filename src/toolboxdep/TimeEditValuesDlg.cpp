@@ -532,6 +532,7 @@ void CTimeEditValuesDlg::SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, 
     {
         if(analyzeToolHasJustBeenSet)
         {
+            itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolMode(fUseAnalyzeTool == TRUE);
             if(fUseAnalyzeTool)
             {
                 // Analyysityˆkalu on juuri laitettu p‰‰lle, pit‰‰ varmistaa ett‰ Obs-blender ei ole p‰‰ll‰
@@ -541,6 +542,7 @@ void CTimeEditValuesDlg::SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, 
         }
         else
         {
+            itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool(fUseControlPointObservationsBlending == TRUE);
             if(fUseControlPointObservationsBlending)
             {
                 // Obs-blender on juuri laitettu p‰‰lle, pit‰‰ varmistaa ett‰ analyysi-tyˆkalu ei ole p‰‰ll‰
