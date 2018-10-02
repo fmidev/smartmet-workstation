@@ -15,6 +15,8 @@
 #include "SpecialDesctopIndex.h"
 #include "boost\math\special_functions\round.hpp"
 #include "FmiWin32Helpers.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiInfoOrganizer.h"
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
@@ -105,26 +107,82 @@ BOOL NFmiParamAddingGridCtrl::OnInitDialog()
     return TRUE;
 }
 
+std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+{
+    //Joonas continue from here
+    auto a = info->OriginTime();
+    auto b = info->TimeDescriptor().LastTime();
+    auto c = info->HPlaceDescriptor().IsGrid();
+    auto d = info->HPlaceDescriptor().Grid();
+    auto e = info->HPlaceDescriptor().Area();
+    auto f = info->TimeDescriptor().ValidTimeList();// ->CurrentResolution();
+    auto g = info->TimeDescriptor().ValidTimeBag();
+
+
+    singleRowItem.uniqueDataId();
+    std::string tooltip = "Data info: \n";
+    tooltip += "Item name: " + singleRowItem.itemName() + "\n";
+    tooltip += "Item ID: " + std::to_string(singleRowItem.itemId()) + "\n";
+    tooltip += "Origin Time: " + singleRowItem.origTime() + "\n";
+    //tooltip += "Grid: " + fastQueryInfo->HPlaceDescriptor().Grid()->;
+    return tooltip;
+}
+
+std::string tooltipForProducerType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+{
+    return "producer";
+}
+
+std::string tooltipForCategoryType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+{
+    return "category";
+}
+
+std::string TooltipText(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+{
+    // Tooltip is different for kDataType, kProducerType, kCategoryType and parameters itself
+    switch (singleRowItem.rowType())
+    {
+    case AddParams::RowType::kDataType:
+        return tooltipForDataType(singleRowItem, info);
+    case AddParams::RowType::kProducerType:
+        return tooltipForProducerType(singleRowItem, info);
+    case AddParams::RowType::kCategoryType:
+        return tooltipForCategoryType(singleRowItem, info);
+    default:
+        return "D\'oh!";
+    }
+}
+
 std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
 {
     //11. Katso tooltip tekstin http muotoiluun ja väreihin liittyviä esimerkkejä vaikka NFmiTimeSerialView luokasta :
     //-metodit : GetObsFraktileDataToolTipText, GetColoredLocationTooltipStr, MultiModelRunToolTip ja ComposeToolTipText
     //    - Mm. <b> on boldaus, <br> on rivinvaihto, <hr> on vaaka viiva, <font color = blue> on fontin väri, jne.
-    //    12. Miten saa tietoja datoista ?
-    //    -OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisessä Time - sarake jutussa
-    //    - Katso eri tietoja FastInfosta seuraavilta olioita
-    //    - HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue 
-    //          + resoluutio kilometreissä tekstejä(kysy neuvoa)
-    //    - TimeDescriptor() metodilla aikatietoa, ja siltä voi kysyä onko kyseessä tasavälinen step vai epämääräinen 
-    //          aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyydä tasavälinen ValidTimeBag())
-    //    - Levelit oletkin jo varmaan käynyt läpi toisaalla eli siihen ei tarvii neuvoja
-    //    - Parametrit myös tuttuja
+    //12. Miten saa tietoja datoista ?
+    //-OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisessä Time - sarake jutussa
+    //- Katso eri tietoja FastInfosta seuraavilta olioita
+    //- HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue 
+    //        + resoluutio kilometreissä tekstejä(kysy neuvoa)
+    //- TimeDescriptor() metodilla aikatietoa, ja siltä voi kysyä onko kyseessä tasavälinen step vai epämääräinen 
+    //        aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyydä tasavälinen ValidTimeBag())
+    //- Levelit oletkin jo varmaan käynyt läpi toisaalla eli siihen ei tarvii neuvoja
+    //- Parametrit myös tuttuja
 
     CCellID idCurrentCell = GetCellFromPt(point);
-    if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount())
+    if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount() 
+        && idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
     {
-        auto rowData = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1); 
-        return rowData.displayName();
+        AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
+        auto id = singleRowItem.itemId();
+
+        //Joonas: get info from NFmiFastQueryInfo
+        auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, NFmiProducer(id), true);
+        
+
+        //FindInfo(NFmiInfoData::Type theDataType, const NFmiProducer &theProducer, bool fGroundData, int theIndex)
+
+        return TooltipText(singleRowItem, fastQueryInfo);
     }
     
     return std::string("Parameter Selection");
