@@ -77,9 +77,6 @@ bool NFmiControlPointObservationBlender::DoBlendingDataGridding(std::vector<floa
     {
         NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
 
-        if(fUseGridCrop)
-            NFmiDataParamControlPointModifier::FixCroppedMatrixMargins(GetUsedGridData(), itsCropMarginSize);
-
         return true;
     }
     return false;
@@ -142,6 +139,11 @@ NFmiDataMatrix<float> NFmiControlPointObservationBlender::CalcChangeField(const 
     else
         itsInfo->Values(changeField); // otetaan originaali kentt‰ changeField:iin
     changeField -= analysisField; // matriisi laskuoperaatiot ottavat huomioon puuttuvat arvot
+
+    // Zoomed crop tapauksessa pit‰‰ muutos liu'uttaa nolliin kohti zoomatubn alueen reunoja
+    if(fUseGridCrop)
+        NFmiDataParamControlPointModifier::FixCroppedMatrixMargins(changeField, itsCropMarginSize);
+
     return changeField;
 }
 
