@@ -420,6 +420,23 @@ static NFmiMetTime GetLatestInfoTime(checkedVector<boost::shared_ptr<NFmiFastQue
     return latestTime;
 }
 
+static std::string MakeErrorTextForNotFindingSuitableAnalyzeToolTime(const std::string &toolName, const std::string &dataTypeName, const NFmiMetTime &notFoundTime, const std::string usedProducerName, long maxDifferenceInMinutes)
+{
+    auto errorString = toolName;
+    errorString += " error, latest good '"s;
+    errorString += usedProducerName;
+    errorString += "'"s;
+    errorString += dataTypeName;
+    if(notFoundTime == NFmiMetTime::gMissingTime)
+        errorString += "' (missing time) "s;
+    else
+        errorString += notFoundTime.ToStr("' (MM.DD HH:mm) ");
+    errorString += "was not in limits ("s;
+    errorString += std::to_string(maxDifferenceInMinutes);
+    errorString += " minutes) to any edited time step"s;
+    return errorString;
+}
+
 static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool useObservationBlenderTool, const std::string usedProducerName)
 {
     // 1. Jos latestInfoTime löytyy editedInfo:sta, palautetaan se
@@ -438,24 +455,12 @@ static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoT
             // Ei löytynyt aikarajojen sisältä sopivaa aikaa editoidusta datasta, tee joku selittävä teksti lokiin molemmille työkaluille erikseen
             if(useObservationBlenderTool)
             {
-                auto errorString = "Observation-blender error, latest good '"s;
-                errorString += usedProducerName;
-                errorString += "' observation ("s;
-                errorString += latestInfoTime.ToStr("MM.DD HH:mm");
-                errorString += ") was not in limits ("s;
-                errorString += std::to_string(maxDifferenceInMinutes);
-                errorString += " minutes) to any edited time step"s;
+                auto errorString = ::MakeErrorTextForNotFindingSuitableAnalyzeToolTime("Observation-blender"s, "observation"s, latestInfoTime, usedProducerName, maxDifferenceInMinutes);
                 throw std::runtime_error(errorString);
             }
             else
             {
-                auto errorString = "Analyze tool error, latest good '"s;
-                errorString += usedProducerName;
-                errorString += "' analyze ("s;
-                errorString += latestInfoTime.ToStr("MM.DD HH:mm");
-                errorString += ") was not in limits ("s;
-                errorString += std::to_string(maxDifferenceInMinutes);
-                errorString += " minutes) to any edited time step"s;
+                auto errorString = ::MakeErrorTextForNotFindingSuitableAnalyzeToolTime("Analyze tool"s, "analyze"s, latestInfoTime, usedProducerName, maxDifferenceInMinutes);
                 throw std::runtime_error(errorString);
             }
         }
