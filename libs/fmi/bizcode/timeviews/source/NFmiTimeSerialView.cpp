@@ -1740,15 +1740,17 @@ void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQuery
     }
     itsNormalCurveEnvi.SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(theDrawedLocationCounter - 1));
     DrawLocationInTime(theLatlon, itsNormalCurveEnvi, itsChangeCurveEnvi);
-    // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
-    DrawHelperObservationData(theLatlon, theDrawedLocationCounter);
-
+    if(theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirret‰‰n havainto-data
+    {
+        // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
+        DrawHelperObservationData(theLatlon);
+    }
     DrawStationDataStationNameLegend(theViewedInfo, theLatlon, theDrawedLocationCounter++, itsNormalCurveEnvi);
 }
 
-void NFmiTimeSerialView::DrawHelperObservationData(const NFmiPoint &theLatlon, int &theDrawedLocationCounter)
+void NFmiTimeSerialView::DrawHelperObservationData(const NFmiPoint &theLatlon)
 {
-    if(theDrawedLocationCounter == 1 && itsCtrlViewDocumentInterface->IsOperationalModeOn() && itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
+    if(itsCtrlViewDocumentInterface->IsOperationalModeOn() && itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
     {
         // Ei piirret‰ jos valittu data on havainto tyyppista ja synop tuottajalta, koska k‰yr‰ on jo piirrettyn‰ valittuna datana edell‰.
         // Jos se piirret‰‰n uudestaan originaali (sininen) k‰yr‰ peittyisi nyt punaisella k‰yr‰ll‰
@@ -1776,7 +1778,7 @@ bool NFmiTimeSerialView::IsParamWeatherSymbol3()
 
 bool NFmiTimeSerialView::DoControlPointModeDrawing() const
 {
-    return (!IsAnalyzeRelatedToolUsed()) && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode();
+    return (!itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolMode()) && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode();
 }
 
 bool NFmiTimeSerialView::IsAnalyzeRelatedToolUsed() const
@@ -1839,7 +1841,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
                     auto &latlon = itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint();
         			DrawHelperDataLocationInTime(latlon);
                     // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
-                    DrawHelperObservationData(latlon, counter);
+                    DrawHelperObservationData(latlon);
                 }
 			}
 		}
@@ -1898,86 +1900,105 @@ void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
     }
 }
 
+// Jos ollaan CP-moodissa ja ollaan myˆs Obs-blender moodissa ja kyse on editoidusta datasta.
+// Haaraantuu t‰nne DrawCPReferenceLines metodista.
+void NFmiTimeSerialView::DrawObservationBlenderDataInCpMode()
+{
+    // 1. Piirr‰ CP k‰yr‰ legendat (aktiivinen + show-always-pisteet)
+    // 2. Piirr‰ Editoitava data CP tyyliin
+    // 3. Piirr‰ obs->edited blendausk‰yr‰
+    // 4. DrawAnalyzeToolEndTimeLine();
+    // 5. Laita extra infoa n‰kyviin aktiivisesta CP-pisteest‰
+    //    - mm. Havainto aika, tuottajan nimi, onko kyse 0-muutos CP-pisteest‰, jne.
+    //    - N‰kyviin tieto, ett‰ onnistuuko obs-blending muokkaus ensink‰‰n.
+}
+
 void NFmiTimeSerialView::DrawCPReferenceLines(void)
 {
-	NFmiDrawingEnvironment currentDataEnvi;
-	NFmiDrawingEnvironment changeDataEnvi(ChangeStationDataCurveEnvironment(0.3, 150));
-	currentDataEnvi.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f));
-	changeDataEnvi.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f));
-	FmiDirection oldAligment = itsToolBox->GetTextAlignment();
-	itsToolBox->SetTextAlignment(kBaseRight); // piirret‰‰n teksti vasemmalle textPoint:ista ja viiva oikealle
+    if(itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool())
+    {
+        DrawObservationBlenderDataInCpMode();
+    }
+    else
+    {
+        NFmiDrawingEnvironment currentDataEnvi;
+        NFmiDrawingEnvironment changeDataEnvi(ChangeStationDataCurveEnvironment(0.3, 150));
+        currentDataEnvi.SetFrameColor(NFmiColor(0.5f, 0.5f, 0.5f));
+        changeDataEnvi.SetFrameColor(NFmiColor(0.5f, 0.5f, 0.5f));
+        FmiDirection oldAligment = itsToolBox->GetTextAlignment();
+        itsToolBox->SetTextAlignment(kBaseRight); // piirret‰‰n teksti vasemmalle textPoint:ista ja viiva oikealle
 
-	NFmiPoint fontSize(20,20);
-	currentDataEnvi.SetFontSize(fontSize);
+        NFmiPoint fontSize(20, 20);
+        currentDataEnvi.SetFontSize(fontSize);
 
-	boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
-	boost::shared_ptr<NFmiFastQueryInfo> info = Info();
-	if(CPMan && info)
-	{
-		NFmiPoint normalLine(1, 1);
-		NFmiPoint thickLine(3, 3);
-		NFmiPoint normalChangeLine(1, 1);
-		NFmiPoint thickChangeLine(3, 3);
-		NFmiRect frame(GetFrame());
-		NFmiPoint textPoint(frame.TopLeft());
-		textPoint.X(textPoint.X() + frame.Width()/5*4);
-		double heightInc = itsToolBox->SY(15);
-		double endPointX1 = textPoint.X() + frame.Width()/25*1;
-		double endPointX2 = textPoint.X() + frame.Width()/20*2;
-		textPoint.Y(textPoint.Y() + heightInc);
-		int currentLineIndex = 0;
-		for(CPMan->ResetCP(); CPMan->NextCP();)
-		{
-			if(currentLineIndex >= gMaxHelpCPDrawed)
-				break; // ei piirret‰ enemp‰‰ referenssi viivoja
-
-			if(CPMan->IsActivateCP())
-			{
-				currentDataEnvi.SetPenSize(thickLine);
-				changeDataEnvi.SetPenSize(thickChangeLine);
-			}
-			else if(CPMan->ShowCPAllwaysOnTimeView())
-			{
-				currentDataEnvi.SetPenSize(normalLine);
-				changeDataEnvi.SetPenSize(normalChangeLine);
-			}
-			else
-				continue;
-			currentDataEnvi.SetFrameColor(gCPHelpColors[currentLineIndex]);
-			changeDataEnvi.SetFrameColor(gCPHelpColors[currentLineIndex]);
-			info->Location(CPMan->LatLon()); // asetetaan infon location kohdalleen
-			itsModificationFactorCurvePoints = CPMan->CPChangeValues();
-			if(CPMan->IsActivateCP())
-				DrawHelperDataLocationInTime(CPMan->LatLon()); // piirret‰‰n aktiivisen CP-pisteen apu datat myˆs ruudulle (=kepa, obs ja clim datat)
-			DrawLocationInTime(CPMan->LatLon(), currentDataEnvi, changeDataEnvi);
-            if(CPMan->IsActivateCP())
+        boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
+        boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+        if(CPMan && info)
+        {
+            NFmiPoint normalLine(1, 1);
+            NFmiPoint thickLine(3, 3);
+            NFmiPoint normalChangeLine(1, 1);
+            NFmiPoint thickChangeLine(3, 3);
+            NFmiRect frame(GetFrame());
+            NFmiPoint textPoint(frame.TopLeft());
+            textPoint.X(textPoint.X() + frame.Width() / 5 * 4);
+            double heightInc = itsToolBox->SY(15);
+            double endPointX1 = textPoint.X() + frame.Width() / 25 * 1;
+            double endPointX2 = textPoint.X() + frame.Width() / 20 * 2;
+            textPoint.Y(textPoint.Y() + heightInc);
+            int currentLineIndex = 0;
+            for(CPMan->ResetCP(); CPMan->NextCP();)
             {
-                int counter = 1; // t‰m‰ varmistaa ett‰ aktiivisen CP:n havainto piirret‰‰n
-                // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
-                DrawHelperObservationData(CPMan->LatLon(), counter);
+                if(currentLineIndex >= gMaxHelpCPDrawed)
+                    break; // ei piirret‰ enemp‰‰ referenssi viivoja
+
+                if(CPMan->IsActivateCP())
+                {
+                    currentDataEnvi.SetPenSize(thickLine);
+                    changeDataEnvi.SetPenSize(thickChangeLine);
+                }
+                else if(CPMan->ShowCPAllwaysOnTimeView())
+                {
+                    currentDataEnvi.SetPenSize(normalLine);
+                    changeDataEnvi.SetPenSize(normalChangeLine);
+                }
+                else
+                    continue;
+                currentDataEnvi.SetFrameColor(gCPHelpColors[currentLineIndex]);
+                changeDataEnvi.SetFrameColor(gCPHelpColors[currentLineIndex]);
+                info->Location(CPMan->LatLon()); // asetetaan infon location kohdalleen
+                itsModificationFactorCurvePoints = CPMan->CPChangeValues();
+                if(CPMan->IsActivateCP())
+                    DrawHelperDataLocationInTime(CPMan->LatLon()); // piirret‰‰n aktiivisen CP-pisteen apu datat myˆs ruudulle (=kepa, obs ja clim datat)
+                DrawLocationInTime(CPMan->LatLon(), currentDataEnvi, changeDataEnvi);
+                if(CPMan->IsActivateCP())
+                {
+                    // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
+                    DrawHelperObservationData(CPMan->LatLon());
+                }
+
+                if(itsViewGridRowNumber == 1) // laitetaan viivav‰ri legenda vain 1. aikasarja ikkunaan!
+                {
+                    itsToolBox->UseClipping(false);
+                    NFmiValueString indexStr(CPMan->CPIndex() + 1, "%d"); // +1 koska indeksit alkavat 0:sta
+                    NFmiText text(textPoint, indexStr, 0, &currentDataEnvi);
+                    itsToolBox->Convert(&text);
+
+                    NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc / 2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc / 2.), 0, &currentDataEnvi);
+                    itsToolBox->Convert(&line1);
+                    NFmiLine line2(NFmiPoint(endPointX1, textPoint.Y() - heightInc / 2.), NFmiPoint(endPointX2, textPoint.Y() - heightInc / 2.), 0, &changeDataEnvi);
+                    itsToolBox->Convert(&line2);
+                }
+
+                currentLineIndex++;
+                textPoint.Y(textPoint.Y() + heightInc);
             }
-
-			if(itsViewGridRowNumber == 1) // laitetaan viivav‰ri legenda vain 1. aikasarja ikkunaan!
-			{
-				itsToolBox->UseClipping(false);
-				NFmiValueString indexStr(CPMan->CPIndex() + 1, "%d"); // +1 koska indeksit alkavat 0:sta
-				NFmiText text(textPoint, indexStr, 0, &currentDataEnvi);
-				itsToolBox->Convert(&text);
-
-				NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc/2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), 0, &currentDataEnvi);
-				itsToolBox->Convert(&line1);
-				NFmiLine line2(NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), NFmiPoint(endPointX2, textPoint.Y() - heightInc/2.), 0, &changeDataEnvi);
-				itsToolBox->Convert(&line2);
-			}
-
-			currentLineIndex++;
-			textPoint.Y(textPoint.Y() + heightInc);
-		}
-		//lopuksi asetetaan info aktiiviseen cp:hen
-		info->Location(CPMan->ActiveCPLatLon()); // asetetaan infon location kohdalleen
-		itsModificationFactorCurvePoints = CPMan->ActiveCPChangeValues();
-	}
-	itsToolBox->SetTextAlignment(oldAligment);
+            //lopuksi asetetaan info aktiiviseen cp:hen
+            info->Location(CPMan->ActiveCPLatLon()); // asetetaan infon location kohdalleen
+            itsModificationFactorCurvePoints = CPMan->ActiveCPChangeValues();
+        }
+        itsToolBox->SetTextAlignment(oldAligment);
+    }
 }
 
 //--------------------------------------------------------
