@@ -105,7 +105,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	std::string GetObservationToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
 	void DrawModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &theFractileData, long theStartParamIndex, const NFmiPoint &theLatlon, long theParamIndexIncrement = 1);
 	void DrawSelectedStationData(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, int &theDrawedLocationCounter);
-    void DrawHelperObservationData(const NFmiPoint &theLatlon, int &theDrawedLocationCounter);
+    void DrawHelperObservationData(const NFmiPoint &theLatlon);
     bool IsParamWeatherSymbol3();
     bool IsSynopticObservationData();
     std::string GetModelDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
@@ -234,6 +234,7 @@ class NFmiTimeSerialView : public NFmiTimeView
     bool IsAnalyzeRelatedToolUsed() const;
     bool IsModifyFactorViewClicked(const NFmiPoint &thePlace) const;
     void DrawSinglePointData(double value, const NFmiMetTime &time, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theSinglePointSize);
+    void DrawObservationBlenderDataInCpMode();
 
 	NFmiDrawingEnvironment itsNormalCurveEnvi; // miten normaali k‰yr‰ piirret‰‰n
 	NFmiDrawingEnvironment itsChangeCurveEnvi; // miten muutos k‰yr‰ piirret‰‰n (punainen katkoviiva)
