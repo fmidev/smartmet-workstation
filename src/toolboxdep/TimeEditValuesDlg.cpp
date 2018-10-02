@@ -26,6 +26,8 @@
 #include "CtrlViewFunctions.h"
 #include "persist2.h"
 
+using namespace std::literals::string_literals;
+
 #ifdef _MSC_VER
 #pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
 #endif
@@ -511,22 +513,44 @@ void CTimeEditValuesDlg::OnButtonPrint()
 void CTimeEditValuesDlg::OnCheckUseAnalyzeTool() 
 {
 	UpdateData(TRUE);
-	if(itsSmartMetDocumentInterface)
-	{
-        itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolMode(fUseAnalyzeTool == TRUE);
-		UpdateControlsAfterAnalyzeMode();
-		RefreshApplicationViews("TimeSerialDlg: Toggle use analyze tool");
-	}
+    SetAnalyzeRelatedTools(true, "TimeSerialDlg: TimeSerialDlg: Toggle use analyze tool"s);
 }
 
 void CTimeEditValuesDlg::OnCheckUseCpObsBlending()
 {
 	UpdateData(TRUE);
-	if(itsSmartMetDocumentInterface)
-	{
-        itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool(fUseControlPointObservationsBlending == TRUE);
+    SetAnalyzeRelatedTools(false, "TimeSerialDlg: Toggle use observation blending tool"s);
+}
+
+// Tämän funktion tehtävänä on varmistaa että vain yksi (tai ei yhtään) analyysi-työkaluun liittyvistä 
+// työkaluista on kerrallaan päällä.
+// Jos analyzeToolHasJustBeenSet on true, tällöin varmistetaan että Obs-blenderin asetukset laitetaan sallittuun tilaan
+// ja jos se on false, varmistetaan että analyysi-työkalun asetukset menevät oikein.
+void CTimeEditValuesDlg::SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, const std::string &logMessage)
+{
+    if(itsSmartMetDocumentInterface)
+    {
+        if(analyzeToolHasJustBeenSet)
+        {
+            if(fUseAnalyzeTool)
+            {
+                // Analyysityökalu on juuri laitettu päälle, pitää varmistaa että Obs-blender ei ole päällä
+                fUseControlPointObservationsBlending = FALSE;
+                itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool(fUseControlPointObservationsBlending == TRUE);
+            }
+        }
+        else
+        {
+            if(fUseControlPointObservationsBlending)
+            {
+                // Obs-blender on juuri laitettu päälle, pitää varmistaa että analyysi-työkalu ei ole päällä
+                fUseAnalyzeTool = FALSE;
+                itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolMode(fUseAnalyzeTool == TRUE);
+            }
+        }
+        UpdateData(FALSE); // Päivitä checkbox kontrollien tilat
         UpdateControlsAfterAnalyzeMode();
-        RefreshApplicationViews("TimeSerialDlg: Toggle use CP obs blending tool");
+        RefreshApplicationViews(logMessage);
     }
 }
 
