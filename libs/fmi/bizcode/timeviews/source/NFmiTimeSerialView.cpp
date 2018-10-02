@@ -1207,7 +1207,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
 
 	itsToolBox->UseClipping(true);
 	int size = theDrawedTimes.GetSize();
-	if(size > 1)
+	if(size >= 1)
 	{
 		NFmiDrawingEnvironment blackLineEnvi;
 		theInfo->Time(theDrawedTimes.FirstTime()); // pitää asettaa 1. aika päälle, mutta ei tarvitse tarkistaa sitä
@@ -1241,7 +1241,23 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
             if(time2 > lastTimeOnView)
                 break;
 		}
+
+        if(size == 1)
+        {
+            DrawSinglePointData(realValue1, time1, theEnvi, theSinglePointSize);
+        }
 	}
+}
+
+void NFmiTimeSerialView::DrawSinglePointData(double value, const NFmiMetTime &time, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theSinglePointSize)
+{
+    // Piirretään se ainoa datasta löytynyt aika kuitenkin aikasarjaan
+    NFmiPoint relativePoint = CalcRelativeValuePosition(time, value);
+    double penSize = itsCtrlViewDocumentInterface->Printing() ? (theSinglePointSize.X() * 5.) : theSinglePointSize.X();
+    auto oldPenSize = theEnvi.GetPenSize();
+    theEnvi.SetPenSize(NFmiPoint(penSize, penSize));
+    DrawPointInDataRect(theEnvi, relativePoint, theSinglePointSize);
+    theEnvi.SetPenSize(oldPenSize);
 }
 
 void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatlon, int theTimeWhenDrawedInMinutes, const NFmiPoint& theSinglePointSize, bool fUseValueAxis)
@@ -1257,7 +1273,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQu
 	NFmiLocation wantedLocation(theLatlon);
 	if(interpolateValues == false && (theInfo->NearestLocation(wantedLocation, gMaxDistanceToFractileStation) == false))
 		return ; // jos asema dataa ei löydy 500 km sisältä haluttua pistettä, ei käytetä sitä
-	if(size > 1)
+	if(size >= 1)
 	{
 		NFmiPoint pointSize(1, 1);
 		theInfo->FirstTime();
@@ -1275,7 +1291,12 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQu
 			realValue1 = realValue2;
 			time1 = time2;
 		}
-	}
+
+        if(size == 1)
+        {
+            DrawSinglePointData(realValue1, time1, theEnvi, theSinglePointSize);
+        }
+    }
 }
 
 //--------------------------------------------------------
