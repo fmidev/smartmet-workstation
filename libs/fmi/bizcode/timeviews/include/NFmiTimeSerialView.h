@@ -233,6 +233,7 @@ class NFmiTimeSerialView : public NFmiTimeView
     void DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut);
     bool IsAnalyzeRelatedToolUsed() const;
     bool IsModifyFactorViewClicked(const NFmiPoint &thePlace) const;
+    void DrawSinglePointData(double value, const NFmiMetTime &time, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theSinglePointSize);
 
 	NFmiDrawingEnvironment itsNormalCurveEnvi; // miten normaali k‰yr‰ piirret‰‰n
 	NFmiDrawingEnvironment itsChangeCurveEnvi; // miten muutos k‰yr‰ piirret‰‰n (punainen katkoviiva)
