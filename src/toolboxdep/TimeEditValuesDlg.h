@@ -105,6 +105,7 @@ private:
 	void UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer, const checkedVector<NFmiProducer> &producerList, bool isSelectionMadeYet);
 	void OnComboSelectionChanged(CComboBox &theProducerSelector, SetByName setByName);
 	NFmiPoint CalcEditedDataGriddingResolutionInKM(void);
+    void SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, const std::string &logMessage);
 
     CTimeEditValuesView* itsTimeEditValuesView;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
