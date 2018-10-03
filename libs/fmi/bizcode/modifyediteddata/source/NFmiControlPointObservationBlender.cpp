@@ -3,18 +3,7 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiAreaMaskList.h"
 #include "NFmiDrawParam.h"
-
-long NFmiControlPointObservationBlender::itsExpirationTimeInMinutes = 10;
-
-long NFmiControlPointObservationBlender::ExpirationTimeInMinutes()
-{
-    return itsExpirationTimeInMinutes;
-}
-
-void NFmiControlPointObservationBlender::ExpirationTimeInMinutes(long newValue)
-{
-    itsExpirationTimeInMinutes = newValue;
-}
+#include "NFmiAnalyzeToolData.h"
 
 NFmiControlPointObservationBlender::BlendingDataHelper::BlendingDataHelper()
 :changeField()
@@ -46,12 +35,10 @@ static NFmiTimeDescriptor CalcAllowedTimes(const NFmiMetTime &actualFirstTime, l
 bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks)
 {
     // 1. Mik‰ on sallittu aikahaarukka? esim. 10.00 - 10.20 Utc
-    auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, NFmiControlPointObservationBlender::ExpirationTimeInMinutes());
-    // 2. Mik‰ on maksimi et‰isyys CP-pisteest‰ l‰himp‰‰n havaintoasemaan
-    const double maxAllowedDistanceToStationInKm = 10.;
+    auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes());
     // 3. Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
     std::vector<float> xValues, yValues, zValues;
-    if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedTimes, maxAllowedDistanceToStationInKm))
+    if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedTimes))
     {
         // Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
         if(!itsInfo->Time(theActiveTimes.FirstTime()))
@@ -86,7 +73,7 @@ bool NFmiControlPointObservationBlender::DoBlendingDataGridding(std::vector<floa
 bool NFmiControlPointObservationBlender::MakeBlendingOperation(NFmiTimeDescriptor &blendingTimes)
 {
     auto status = false;
-    itsBlendingDataHelper.limitChecker = NFmiDataParamModifier::LimitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent()));
+    itsBlendingDataHelper.limitChecker = NFmiLimitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent()));
     for(itsInfo->ResetLevel(); itsInfo->NextLevel(); ) // Tuskin ikin‰ p‰‰st‰‰n 3D editointiin, mutta varaudutaan silti siihen
     {
         itsBlendingDataHelper.blendingTimeSize = blendingTimes.Size();
@@ -111,7 +98,7 @@ void NFmiControlPointObservationBlender::DoCroppedPointCalculations(const NFmiDa
 {
     auto editedValue = itsInfo->FloatValue();
     auto changeValue = usedData[xIndex][yIndex];
-    float value = NFmiControlPointObservationBlender::BlendData(editedValue, changeValue, maskFactor, itsBlendingDataHelper.blendingTimeSize, itsBlendingDataHelper.blendingTimeIndex, itsBlendingDataHelper.limitChecker);
+    float value = NFmiControlPointObservationBlendingData::BlendData(editedValue, changeValue, maskFactor, itsBlendingDataHelper.blendingTimeSize, itsBlendingDataHelper.blendingTimeIndex, itsBlendingDataHelper.limitChecker);
     itsInfo->FloatValue(value);
 }
 
@@ -119,16 +106,8 @@ void NFmiControlPointObservationBlender::DoNormalPointCalculations(const NFmiDat
 {
     auto editedValue = itsInfo->FloatValue();
     auto changeValue = usedData.GetValue(itsInfo->LocationIndex(), kFloatMissing);
-    float value = NFmiControlPointObservationBlender::BlendData(editedValue, changeValue, maskFactor, itsBlendingDataHelper.blendingTimeSize, itsBlendingDataHelper.blendingTimeIndex, itsBlendingDataHelper.limitChecker);
+    float value = NFmiControlPointObservationBlendingData::BlendData(editedValue, changeValue, maskFactor, itsBlendingDataHelper.blendingTimeSize, itsBlendingDataHelper.blendingTimeIndex, itsBlendingDataHelper.limitChecker);
     itsInfo->FloatValue(value);
-}
-
-float NFmiControlPointObservationBlender::BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiDataParamModifier::LimitChecker &limitChecker)
-{
-    if(editedDataValue == kFloatMissing || changeValue == kFloatMissing)
-        return editedDataValue; // ongelma tilanteissa palautetaan arvo editoidusta datasta takaisin
-    float value = editedDataValue - ((timeSize - timeIndex - 1.f) / (timeSize - 1.f) * (changeValue * maskFactor));
-    return limitChecker.CheckValue(value);
 }
 
 NFmiDataMatrix<float> NFmiControlPointObservationBlender::CalcChangeField(const NFmiDataMatrix<float> &analysisField)
@@ -172,7 +151,7 @@ static bool NeedToLookForObservationValuesForCpPoint(const std::vector<float> &c
 }
 
 // Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
-bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange, double maxAllowedDistanceToStationInKm)
+bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange)
 {
     // 1. Haetaan k‰ytetyst‰ CP-managerista pohjat, eli x- ja y-koordinaatit ja jotkut pohja-arvot z eli muutoskent‰lle.
     if(GetChangeValues(xValues, yValues, zValues))
@@ -197,7 +176,7 @@ bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std:
                         if(::NeedToLookForObservationValuesForCpPoint(zValues, cpDistanceToStationInKm, cpLocationIndex))
                         {
                             NFmiLocation cpLocation(cpLatlonPoints[cpLocationIndex]);
-                            if(info->NearestLocation(cpLocation, maxAllowedDistanceToStationInKm * 1000))
+                            if(info->NearestLocation(cpLocation, NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000))
                             {
                                 auto distanceInKm = cpLocation.Distance(info->LatLonFast());
                                 // Jos on lˆytynyt uusi l‰hin asema, pit‰‰ ensin muutos arvo nollata mahdollisesta edellisen datan l‰hipisteen arvosta

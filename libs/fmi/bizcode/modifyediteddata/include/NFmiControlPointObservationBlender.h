@@ -2,6 +2,8 @@
 
 #include "NFmiDataParamModifier.h"
 #include "NFmiDataMatrix.h"
+#include "NFmiMetTime.h"
+#include "NFmiLimitChecker.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiThreadCallBacks;
@@ -24,7 +26,7 @@ class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModif
          NFmiDataMatrix<float> changeField;
          unsigned long blendingTimeSize = 0;
          unsigned long blendingTimeIndex = 0;
-         NFmiDataParamModifier::LimitChecker limitChecker;
+         NFmiLimitChecker limitChecker;
      };
 
      NFmiControlPointObservationBlender(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
@@ -32,12 +34,9 @@ class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModif
          bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime);
 
      bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
-     static float BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiDataParamModifier::LimitChecker &limitChecker);
-     static long ExpirationTimeInMinutes();
-     static void ExpirationTimeInMinutes(long newValue);
 
 protected:
-    bool GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange, double maxAllowedDistanceToStationInKm);
+    bool GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange);
     void FillZeroChangeValuesForMissingCpPoints(std::vector<float> &zValues);
     NFmiDataMatrix<float> CalcChangeField(const NFmiDataMatrix<float> &analysisField);
     bool MakeBlendingOperation(NFmiTimeDescriptor &blendingTimes);
@@ -46,6 +45,4 @@ protected:
     void DoNormalPointCalculations(const NFmiDataMatrix<float> &usedData, unsigned long locationIndex, float maskFactor) override;
 
     BlendingDataHelper itsBlendingDataHelper;
-    // Kuinka vanhoja havaintoja sallitaan mukaan suhteessa aloitusaikaan itsActualFirstTime
-    static long itsExpirationTimeInMinutes;
 };
