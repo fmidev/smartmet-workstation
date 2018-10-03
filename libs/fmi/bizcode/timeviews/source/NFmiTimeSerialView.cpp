@@ -3727,6 +3727,34 @@ void NFmiTimeSerialView::DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoi
 	}
 }
 
+boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetMostSuitableAnalyzeToolRelatedData(const NFmiPoint &theLatLonPoint)
+{
+    if(itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool())
+        return GetMostSuitableObsBlenderData(theLatLonPoint);
+    else
+        return itsCtrlViewDocumentInterface->InfoOrganizer()->Info(NFmiDataIdent(*(Info()->Param().GetParam()), itsCtrlViewDocumentInterface->AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
+}
+
+static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVectorIn, FmiParameterName wantedParamId)
+{
+    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVectorResult;
+    std::copy_if(infoVectorIn.begin(), infoVectorIn.end(), std::back_inserter(infoVectorResult),
+        [wantedParamId](const auto &info)
+    {
+        return info->Param(wantedParamId);
+    });
+    return infoVectorResult;
+}
+
+boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetMostSuitableObsBlenderData(const NFmiPoint &theLatLonPoint)
+{
+    auto selectedProducerId = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer().GetIdent();
+    auto infoVector = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(itsInfo->DataType(), true, selectedProducerId);
+    auto infosWithParamVector = ::GetInfosWithWantedParam(infoVector, static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()));
+    auto maxDistanceInMeters = NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000.;
+    return itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(NFmiLocation(theLatLonPoint), NFmiMetTime::gMissingTime, true, &infosWithParamVector, maxDistanceInMeters);
+}
+
 void NFmiTimeSerialView::DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(NFmiDataIdent(*(Info()->Param().GetParam()), itsCtrlViewDocumentInterface->AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
