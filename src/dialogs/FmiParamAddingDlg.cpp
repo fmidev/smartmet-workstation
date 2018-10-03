@@ -109,7 +109,7 @@ BOOL NFmiParamAddingGridCtrl::OnInitDialog()
 
 std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
 {
-    //Joonas continue from here
+    //Joonas continue from here. Macroparametrit kaataa!
     auto a = info->OriginTime();
     auto b = info->TimeDescriptor().LastTime();
     auto c = info->HPlaceDescriptor().IsGrid();
@@ -118,14 +118,27 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     auto f = info->TimeDescriptor().ValidTimeList();// ->CurrentResolution();
     auto g = info->TimeDescriptor().ValidTimeBag();
 
+    std::string str;
+    str += "<b><font color=blue>";
+    str += "Data information \n";
+    str += "</font></b>";
+    str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
+    str += "<b>File name: </b>\t" + info->DataFileName() + "\n";
+    str += "<b>Data loaded: </b>\t \n";
+    str += "<b>File modified: </b>\t" + std::to_string(info->LastTime()) + " UTC \n";
+    str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC \n";
+    str += "<b>Time range: </b>\t\n";
+    str += "<b>Time structure:  </b>\t\n";
+    str += "<b>Params:  </b>\t\n";
+    str += "<b>Grid info: </b>\t area: " + info->Area()->AreaStr() + "\n";
+    str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
+    str += "<b>File size: </b>\t\n";
+    str += "<b>Local path: </b>\t" + info->DataFilePattern() + "\n";
+    str += "<b>Server path: </b>\t\n";
 
-    singleRowItem.uniqueDataId();
-    std::string tooltip = "Data info: \n";
-    tooltip += "Item name: " + singleRowItem.itemName() + "\n";
-    tooltip += "Item ID: " + std::to_string(singleRowItem.itemId()) + "\n";
-    tooltip += "Origin Time: " + singleRowItem.origTime() + "\n";
     //tooltip += "Grid: " + fastQueryInfo->HPlaceDescriptor().Grid()->;
-    return tooltip;
+    
+    return str;
 }
 
 std::string tooltipForProducerType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
@@ -175,13 +188,8 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
     {
         AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
         auto id = singleRowItem.itemId();
-
-        //Joonas: get info from NFmiFastQueryInfo
         auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, NFmiProducer(id), true);
-        
-
         //FindInfo(NFmiInfoData::Type theDataType, const NFmiProducer &theProducer, bool fGroundData, int theIndex)
-
         return TooltipText(singleRowItem, fastQueryInfo);
     }
     
