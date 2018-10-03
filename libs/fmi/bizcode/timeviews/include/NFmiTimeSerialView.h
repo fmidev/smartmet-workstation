@@ -37,6 +37,7 @@ class NFmiFastQueryInfo;
 class NFmiDataModifier;
 class NFmiProducer;
 class NFmiParam;
+class NFmiEditorControlPointManager;
 
 namespace ModelClimatology
 {
@@ -44,6 +45,25 @@ namespace ModelClimatology
     using ParamMapItem = std::pair<std::string, ParamIds>;
     using ParamMap = std::map<FmiParameterName, ParamMapItem>;
 }
+
+class CpDrawingOptions
+{
+public:
+    CpDrawingOptions(const NFmiDrawingEnvironment &currentLine, const NFmiDrawingEnvironment &changeLine, const NFmiRect &viewFrame, const NFmiToolBox *toolbox);
+
+    NFmiDrawingEnvironment currentDataEnvi;
+    NFmiDrawingEnvironment changeDataEnvi;
+    NFmiPoint normalLine{ 2, 2 };
+    NFmiPoint thickLine{ 3, 3 };
+    NFmiPoint normalChangeLine{ 2, 2 };
+    NFmiPoint thickChangeLine{ 3, 3 };
+    NFmiPoint textPoint;
+    double heightInc = 0;
+    double endPointX1 = 0;
+    double endPointX2 = 0;
+    int currentLineIndex = 0;
+};
+
 
 class NFmiTimeSerialView : public NFmiTimeView
 {
@@ -162,6 +182,15 @@ class NFmiTimeSerialView : public NFmiTimeView
 	void DrawNightShades(void);
 	void DrawShade(NFmiDrawingEnvironment &theEnvi, const NFmiMetTime &theTime, short theChangeByMinutes, double theYShift);
 	void DrawCPReferenceLines(void);
+    void DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, boost::shared_ptr<NFmiFastQueryInfo> &info, CpDrawingOptions &cpDrawingOptions);
+    void DrawCPReferenceLines_SetLineOptions(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions);
+    bool DrawCPReferenceLines_IsCpDrawn(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager);
+    void DrawCPReferenceLines_AdvanceDrawingOptions(CpDrawingOptions &cpDrawingOptions);
+    void DrawCPReferenceLines_DrawLegend(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions);
+    void DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions);
+    bool IsThisFirstEditedParamRow();
+    NFmiDrawingEnvironment MakeNormalCpLineDrawOptions() const;
+    NFmiDrawingEnvironment MakeChangeCpLineDrawOptions() const;
 	void DrawLocationDataIncrementally(void);
 	void DrawIncrementalDataLegend(void);
 	void DrawSelectedStationDataIncrementally(void);
@@ -218,7 +247,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	double LowerScaleValueRound (double value, double step);
 	double HigherScaleValueRound (double value, double step);
 	NFmiDrawingEnvironment NormalStationDataCurveEnvironment (void);
-	NFmiDrawingEnvironment ChangeStationDataCurveEnvironment (double theRelativeFillFactor = 0.6, double theSublinesPerUnitFactor = 50);
+	NFmiDrawingEnvironment ChangeStationDataCurveEnvironment (double theRelativeFillFactor = 0.6, double theSublinesPerUnitFactor = 50) const;
 	NFmiDrawingEnvironment IncrementalStationDataCurveEnvironment(void);
 	NFmiDrawingEnvironment ChangeIncrementalStationDataCurveEnvironment(void);
 	bool ChangeModifyFactorView (double theChangeDirectionFactor);
