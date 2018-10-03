@@ -1740,7 +1740,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQuery
         DrawHelperDataLocationInTime(theLatlon);
     }
     itsNormalCurveEnvi.SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(theDrawedLocationCounter - 1));
-    DrawLocationInTime(theLatlon, itsNormalCurveEnvi, itsChangeCurveEnvi);
+    DrawLocationInTime(theLatlon, itsNormalCurveEnvi, itsChangeCurveEnvi, true);
     if(theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirret‰‰n havainto-data
     {
         // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
@@ -1905,11 +1905,11 @@ void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
 // Haaraantuu t‰nne DrawCPReferenceLines metodista.
 void NFmiTimeSerialView::DrawObservationBlenderDataInCpMode()
 {
-    // 1. Piirr‰ CP k‰yr‰ legendat (aktiivinen + show-always-pisteet)
-    // 2. Piirr‰ Editoitava data CP tyyliin
-    // 3. Piirr‰ obs->edited blendausk‰yr‰
-    // 4. DrawAnalyzeToolEndTimeLine();
-    // 5. Laita extra infoa n‰kyviin aktiivisesta CP-pisteest‰
+    // 1. Piirr‰ CP k‰yr‰t legendoineen 
+    DrawCPReferenceLines_DrawAllCps(false); // Ei piirret‰ CP muokkausk‰yr‰‰ (false parametri)
+    // 2. Piirr‰ obs->edited blendausk‰yr‰
+    // 3. DrawAnalyzeToolEndTimeLine();
+    // 4. Laita extra infoa n‰kyviin aktiivisesta CP-pisteest‰
     //    - mm. Havainto aika, tuottajan nimi, onko kyse 0-muutos CP-pisteest‰, jne.
     //    - N‰kyviin tieto, ett‰ onnistuuko obs-blending muokkaus ensink‰‰n.
 }
@@ -2012,12 +2012,12 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawLegend(boost::shared_ptr<NFmiE
     }
 }
 
-void NFmiTimeSerialView::DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions)
+void NFmiTimeSerialView::DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions, bool drawModificationLines)
 {
     auto isActiveCp = cpManager->IsActivateCP();
     if(isActiveCp)
         DrawHelperDataLocationInTime(cpManager->LatLon()); // piirret‰‰n aktiivisen CP-pisteen apu datat myˆs ruudulle (=kepa, obs ja clim datat)
-    DrawLocationInTime(cpManager->LatLon(), cpDrawingOptions.currentDataEnvi, cpDrawingOptions.changeDataEnvi);
+    DrawLocationInTime(cpManager->LatLon(), cpDrawingOptions.currentDataEnvi, cpDrawingOptions.changeDataEnvi, drawModificationLines);
     if(isActiveCp)
     {
         // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
@@ -2026,7 +2026,7 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<N
 }
 
 // Piirt‰‰ yhteen CP-pisteeseen liittyv‰t jutut.
-void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, boost::shared_ptr<NFmiFastQueryInfo> &info, CpDrawingOptions &cpDrawingOptions)
+void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, boost::shared_ptr<NFmiFastQueryInfo> &info, CpDrawingOptions &cpDrawingOptions, bool drawModificationLines)
 {
     if(DrawCPReferenceLines_IsCpDrawn(cpManager))
     {
@@ -2034,40 +2034,41 @@ void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFm
 
         info->Location(cpManager->LatLon()); // asetetaan infon location kohdalleen
         itsModificationFactorCurvePoints = cpManager->CPChangeValues();
-        DrawCPReferenceLines_DrawCpLocation(cpManager, cpDrawingOptions);
+        DrawCPReferenceLines_DrawCpLocation(cpManager, cpDrawingOptions, drawModificationLines);
         DrawCPReferenceLines_DrawLegend(cpManager, cpDrawingOptions);
         DrawCPReferenceLines_AdvanceDrawingOptions(cpDrawingOptions);
     }
 }
 
-void NFmiTimeSerialView::DrawCPReferenceLines(void)
+void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLines)
+{
+    CpDrawingOptions cpDrawingOptions(MakeNormalCpLineDrawOptions(), MakeChangeCpLineDrawOptions(), GetFrame(), itsToolBox);
+    // piirret‰‰n teksti vasemmalle textPoint:ista ja viiva oikealle
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kBaseRight);
+
+    boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
+    boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+    if(CPMan && info)
+    {
+        for(CPMan->ResetCP(); CPMan->NextCP();)
+        {
+            if(cpDrawingOptions.currentLineIndex >= gMaxHelpCPDrawed)
+                break; // ei piirret‰ enemp‰‰ referenssi viivoja
+
+            DrawCPReferenceLines_ForCurrentCp(CPMan, info, cpDrawingOptions, drawModificationLines);
+        }
+        //lopuksi asetetaan info aktiiviseen cp:hen
+        info->Location(CPMan->ActiveCPLatLon()); // asetetaan infon location kohdalleen
+        itsModificationFactorCurvePoints = CPMan->ActiveCPChangeValues();
+    }
+}
+
+void NFmiTimeSerialView::DrawCPReferenceLines()
 {
     if(itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool())
-    {
         DrawObservationBlenderDataInCpMode();
-    }
     else
-    {
-        CpDrawingOptions cpDrawingOptions(MakeNormalCpLineDrawOptions(), MakeChangeCpLineDrawOptions(), GetFrame(), itsToolBox);
-        // piirret‰‰n teksti vasemmalle textPoint:ista ja viiva oikealle
-        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kBaseRight);
-
-        boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
-        boost::shared_ptr<NFmiFastQueryInfo> info = Info();
-        if(CPMan && info)
-        {
-            for(CPMan->ResetCP(); CPMan->NextCP();)
-            {
-                if(cpDrawingOptions.currentLineIndex >= gMaxHelpCPDrawed)
-                    break; // ei piirret‰ enemp‰‰ referenssi viivoja
-
-                DrawCPReferenceLines_ForCurrentCp(CPMan, info, cpDrawingOptions);
-            }
-            //lopuksi asetetaan info aktiiviseen cp:hen
-            info->Location(CPMan->ActiveCPLatLon()); // asetetaan infon location kohdalleen
-            itsModificationFactorCurvePoints = CPMan->ActiveCPChangeValues();
-        }
-    }
+        DrawCPReferenceLines_DrawAllCps(true);
 }
 
 //--------------------------------------------------------
@@ -4065,7 +4066,7 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLine(const NFm
     }
 }
 
-void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes)
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines)
 {
     checkedVector<double> values;
     FillTimeSerialDataFromInfo(*Info(), theLatLonPoint, values);
@@ -4074,19 +4075,21 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFm
     double xStartPos = 0;
     double xStep = 0.1;
     CalcOptimizedDrawingValues(*(Info()->TimeDescriptor().ValidTimeBag()), xStartPos, xStep);
-    DrawEditedDataLocationInTime_ModificationLineOptimized(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
+    if(drawModificationLines)
+        DrawEditedDataLocationInTime_ModificationLineOptimized(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
     PlotTimeSerialDataOpt(values, xStartPos, xStep, theCurrentDataLineStyle, g_PointNormal, g_PointSingle, true, true);
 }
 
-void NFmiTimeSerialView::DrawEditedDataLocationInTime_Timelist(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes)
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_Timelist(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines)
 {
     checkedVector<double> values;
     FillTimeSerialDataFromInfo(*Info(), theLatLonPoint, values);
-    DrawEditedDataLocationInTime_ModificationLine(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
+    if(drawModificationLines)
+        DrawEditedDataLocationInTime_ModificationLine(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
     PlotTimeSerialData(values, theTimes, theCurrentDataLineStyle, g_PointNormal, g_PointSingle, true, true);
 }
 
-void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
+void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines)
 {
     if(DrawEditedDataLocationInTime_PreliminaryActions(theLatLonPoint, theCurrentDataLineStyle))
     {
@@ -4096,18 +4099,18 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLon
         // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
         if(Info()->TimeDescriptor().ValidTimeBag())
         {
-            DrawEditedDataLocationInTime_TimebagOptimized(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times);
+            DrawEditedDataLocationInTime_TimebagOptimized(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times, drawModificationLines);
         }
         else
         {
-            DrawEditedDataLocationInTime_Timelist(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times);
+            DrawEditedDataLocationInTime_Timelist(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times, drawModificationLines);
         }
     }
 }
 
-void NFmiTimeSerialView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
+void NFmiTimeSerialView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines)
 {
-	DrawEditedDataLocationInTime(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle);
+	DrawEditedDataLocationInTime(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, drawModificationLines);
 	if(IsEditedData(Info()))
 	{
 		if(IsAnalyzeRelatedToolUsed())
