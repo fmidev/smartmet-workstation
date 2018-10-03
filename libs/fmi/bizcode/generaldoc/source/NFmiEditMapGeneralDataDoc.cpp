@@ -10721,39 +10721,32 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return theInfo.LocationIndex(minLocInd);
 	}
 
-	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing)
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> info;
-
 		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = (thePossibleInfoVector == 0) ? GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY) : *thePossibleInfoVector;
 
-		std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator it = infoVector.begin();
 		if(infoVector.size() > 0)
 		{ // etsit‰‰n useasta infosta l‰hint‰ asemaa
 			const double defaultDist = 999999999.;
 			double minDist = defaultDist;
 			int wantedInfoIndex = -1;
 			int index = 0;
-			bool fDoShipDataLocations = false;
 			unsigned long minLocationIndex = static_cast<unsigned long>(-1);
-			for( ; it != infoVector.end(); ++it)
+			for(auto &info : infoVector)
 			{
-				if(ignoreTime || (*it)->Time(theTime))
+				if(ignoreTime || info->Time(theTime))
 				{
-					FmiProducerName prod = static_cast<FmiProducerName>((*it)->Producer()->GetIdent());
-					if((*it)->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY))
-						fDoShipDataLocations = true;
-					else
-						fDoShipDataLocations = false;
-
-					if(fDoShipDataLocations ? NearestShipLocation(*(*it), theLocation) : (*it)->NearestLocation(theLocation))
+					FmiProducerName prod = static_cast<FmiProducerName>(info->Producer()->GetIdent());
+                    auto doShipDataLocations = (info->IsGrid() == false && (info->HasLatlonInfoInData()));
+					if(doShipDataLocations ? NearestShipLocation(*info, theLocation) : info->NearestLocation(theLocation))
 					{
-						double currentDistance = theLocation.Distance(fDoShipDataLocations ? (*it)->GetLatlonFromData() : (*it)->LatLon());
-						if(currentDistance < minDist)
+						double currentDistance = theLocation.Distance(doShipDataLocations ? info->GetLatlonFromData() : info->LatLonFast());
+						if(currentDistance < minDist && currentDistance < maxDistanceInMeters)
 						{
 							minDist = currentDistance;
 							wantedInfoIndex = index;
-							minLocationIndex = (*it)->LocationIndex();
+							minLocationIndex = info->LocationIndex();
 						}
 					}
 				}
@@ -10761,9 +10754,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 			if(wantedInfoIndex >=0)
 			{
-				it = infoVector.begin();
-				it += wantedInfoIndex;
-				info = *it;
+				info = infoVector[wantedInfoIndex];
 			}
 		}
 
@@ -15324,9 +15315,9 @@ void NFmiEditMapGeneralDataDoc::ResetOutOfEditedAreaTimeSerialPoint(void)
 	pimpl->ResetOutOfEditedAreaTimeSerialPoint();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
-	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector);
+	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
 
 void NFmiEditMapGeneralDataDoc::TimeControlTimeStep(unsigned int theDescTopIndex, float newValue)

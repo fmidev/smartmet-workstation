@@ -390,7 +390,7 @@ public:
 	void OnToggleGridPointSize(unsigned int theDescTopIndex);
 	void OnEditSpaceOut(unsigned int theDescTopIndex);
     bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams);
-	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector);
+	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing);
 	const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const;
 	void OutOfEditedAreaTimeSerialPoint(const NFmiPoint &newValue);
 	void ResetOutOfEditedAreaTimeSerialPoint(void);
