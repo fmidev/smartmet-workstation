@@ -273,6 +273,8 @@ class NFmiTimeSerialView : public NFmiTimeView
     void DrawSinglePointData(double value, const NFmiMetTime &time, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theSinglePointSize);
     void DrawObservationBlenderDataInCpMode();
     bool IsModificationLineDrawn() const;
+    boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableAnalyzeToolRelatedData(const NFmiPoint &theLatLonPoint);
+    boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableObsBlenderData(const NFmiPoint &theLatLonPoint);
 
 	NFmiDrawingEnvironment itsNormalCurveEnvi; // miten normaali k‰yr‰ piirret‰‰n
 	NFmiDrawingEnvironment itsChangeCurveEnvi; // miten muutos k‰yr‰ piirret‰‰n (punainen katkoviiva)
