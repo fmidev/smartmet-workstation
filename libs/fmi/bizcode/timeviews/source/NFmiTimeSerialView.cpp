@@ -2379,7 +2379,7 @@ void NFmiTimeSerialView::DrawModifyFactorAxis(void)
 	}
 }
 
-bool NFmiTimeSerialView::IsEditedData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+bool NFmiTimeSerialView::IsEditedData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const
 {
     return theInfo->DataType() == NFmiInfoData::kEditable;
 }
@@ -3707,7 +3707,7 @@ bool NFmiTimeSerialView::IsActivated(void) const
 	return false;
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::Info(void)
+boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::Info(void) const
 {
 	return itsInfo;
 }
@@ -3935,55 +3935,107 @@ void NFmiTimeSerialView::CalcOptimizedDrawingValues(const NFmiTimeBag &theTimesI
 //--------------------------------------------------------
 // DrawLocationInTime
 //--------------------------------------------------------
-void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
+
+// Toiminnat mit‰ tehd‰‰n DrawEditedDataLocationInTime metodin alussa.
+// Palauttaa true, jos on tarkoitus jatkaa normaali piirtoja viel‰ eteenp‰in, 
+// ja palauttaa false, jos lopetetaan.
+bool NFmiTimeSerialView::DrawEditedDataLocationInTime_PreliminaryActions(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle)
 {
-	itsToolBox->UseClipping(true);
+    itsToolBox->UseClipping(true);
+    // piirret‰‰n edellisten malliajojen pluumi ensin eli alle (jos niit‰ edes piirret‰‰n)
+    DrawModelRunsPlume(theLatLonPoint, theCurrentDataLineStyle, itsDrawParam); 
 
-	DrawModelRunsPlume(theLatLonPoint, theCurrentDataLineStyle, itsDrawParam); // piirret‰‰n edellisten malliajojen pluumi ensin eli alle (jos niit‰ edes piirret‰‰n)
+    if(fJustScanningForMinMaxValues)
+    {
+        ScanDataForMinAndMaxValues(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues);
+        return false;
+    }
 
-	if(fJustScanningForMinMaxValues)
-	{
-		ScanDataForMinAndMaxValues(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues);
-		return ;
-	}
-
-	NFmiPoint pointNormal(1.,1.);
-	NFmiPoint pointSingle(4.,4.);
-	checkedVector<double> values;
-	FillTimeSerialDataFromInfo(*Info(), theLatLonPoint, values);
-
-	// timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
-	bool useOptimizedCode = (Info()->TimeDescriptor().ValidTimeBag() != 0);
-	checkedVector<NFmiMetTime> times;
-	double xStartPos = 0;
-	double xStep = 0.1;
-	if(useOptimizedCode)
-		CalcOptimizedDrawingValues(*(Info()->TimeDescriptor().ValidTimeBag()), xStartPos, xStep);
-	else
-		FillTimeSerialTimesFromInfo(*Info(), times);
-
-	if(IsEditedData(Info()))
-	{
-		if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. view-moodi p‰‰ll‰, ei lasketa ja piirret‰ muutosk‰yri‰ turhaan
-		{
-			checkedVector<double> maskValues;
-			FillTimeSerialMaskValues(times, theLatLonPoint, maskValues);
-			checkedVector<double> changeValues;
-			FillTimeSerialChangedValues(values, maskValues, changeValues);
-			if(useOptimizedCode)
-				PlotTimeSerialDataOpt(changeValues, xStartPos, xStep, theModifiedDataLineStyle, pointNormal, pointSingle, true);
-			else
-				PlotTimeSerialData(changeValues, times, theModifiedDataLineStyle, pointNormal, pointSingle, true);
-		}
-	}
-
-	if(useOptimizedCode)
-		PlotTimeSerialDataOpt(values, xStartPos, xStep, theCurrentDataLineStyle, pointNormal, pointSingle, true, true);
-	else
-		PlotTimeSerialData(values, times, theCurrentDataLineStyle, pointNormal, pointSingle, true, true);
+    return true;
 }
 
-// haluan poistaa t‰m‰n mammutin, pistin varmuuden vuoksi sis‰llˆn jo kommentteihin.
+bool NFmiTimeSerialView::IsModificationLineDrawn() const
+{
+    // Jos kyse on editoidun datan piirrosta
+    if(IsEditedData(Info()))
+    {
+        // ja jos ollaan normaali editointi moodissa
+        if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal)
+            return true; // voidaan muutos k‰yr‰ piirt‰‰
+    }
+    return false;
+}
+
+NFmiPoint g_PointNormal(1., 1.);
+NFmiPoint g_PointSingle(4., 4.);
+
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLineOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, const checkedVector<double> &values)
+{
+    if(IsModificationLineDrawn())
+    {
+        double xStartPos = 0;
+        double xStep = 0.1;
+        CalcOptimizedDrawingValues(*(Info()->TimeDescriptor().ValidTimeBag()), xStartPos, xStep);
+        checkedVector<double> maskValues;
+        FillTimeSerialMaskValues(theTimes, theLatLonPoint, maskValues);
+        checkedVector<double> changeValues;
+        FillTimeSerialChangedValues(values, maskValues, changeValues);
+        PlotTimeSerialDataOpt(changeValues, xStartPos, xStep, theModifiedDataLineStyle, g_PointNormal, g_PointSingle, true);
+    }
+}
+
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLine(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, const checkedVector<double> &values)
+{
+    if(IsModificationLineDrawn())
+    {
+        checkedVector<double> maskValues;
+        FillTimeSerialMaskValues(theTimes, theLatLonPoint, maskValues);
+        checkedVector<double> changeValues;
+        FillTimeSerialChangedValues(values, maskValues, changeValues);
+        PlotTimeSerialData(changeValues, theTimes, theModifiedDataLineStyle, g_PointNormal, g_PointSingle, true);
+    }
+}
+
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes)
+{
+    checkedVector<double> values;
+    FillTimeSerialDataFromInfo(*Info(), theLatLonPoint, values);
+
+    // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
+    double xStartPos = 0;
+    double xStep = 0.1;
+    CalcOptimizedDrawingValues(*(Info()->TimeDescriptor().ValidTimeBag()), xStartPos, xStep);
+    DrawEditedDataLocationInTime_ModificationLineOptimized(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
+    PlotTimeSerialDataOpt(values, xStartPos, xStep, theCurrentDataLineStyle, g_PointNormal, g_PointSingle, true, true);
+}
+
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_Timelist(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes)
+{
+    checkedVector<double> values;
+    FillTimeSerialDataFromInfo(*Info(), theLatLonPoint, values);
+    DrawEditedDataLocationInTime_ModificationLine(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
+    PlotTimeSerialData(values, theTimes, theCurrentDataLineStyle, g_PointNormal, g_PointSingle, true, true);
+}
+
+void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
+{
+    if(DrawEditedDataLocationInTime_PreliminaryActions(theLatLonPoint, theCurrentDataLineStyle))
+    {
+        checkedVector<NFmiMetTime> times;
+        FillTimeSerialTimesFromInfo(*Info(), times);
+
+        // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
+        if(Info()->TimeDescriptor().ValidTimeBag())
+        {
+            DrawEditedDataLocationInTime_TimebagOptimized(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times);
+        }
+        else
+        {
+            DrawEditedDataLocationInTime_Timelist(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times);
+        }
+    }
+}
+
 void NFmiTimeSerialView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
 {
 	DrawEditedDataLocationInTime(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle);
