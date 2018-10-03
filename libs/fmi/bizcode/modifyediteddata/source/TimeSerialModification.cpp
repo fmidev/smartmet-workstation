@@ -263,7 +263,7 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 
 	if(drawParamForLimits)
 	{
-		NFmiDataParamModifier::LimitChecker limitChecker(static_cast<float>(drawParamForLimits->AbsoluteMinValue()), static_cast<float>(drawParamForLimits->AbsoluteMaxValue()), static_cast<FmiParameterName>(theParam.GetIdent()));
+		NFmiLimitChecker limitChecker(static_cast<float>(drawParamForLimits->AbsoluteMinValue()), static_cast<float>(drawParamForLimits->AbsoluteMaxValue()), static_cast<FmiParameterName>(theParam.GetIdent()));
 		float size = static_cast<float>(theTimes.Size());
 		theAnalyzeData->LastTime(); // vain viimeinen aika kiinnostaa analyysistä
 		if(theAnalyzeData->Param(theParam) && theModifiedData->Param(theParam))
@@ -447,7 +447,7 @@ static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoT
         // Jos aikaa ei ollut suoraan editoidussa datassa, katsotaan kelpaako lähin aika.
         // Normaali analyysi laskennassa käytetään 1h haarukkaa, mutta obs-blenderin kanssa käytetään tarkempaa
         // rqjaa, mikä löytyy 
-        long maxDifferenceInMinutes = useObservationBlenderTool ? NFmiControlPointObservationBlender::ExpirationTimeInMinutes() : 60;
+        long maxDifferenceInMinutes = useObservationBlenderTool ? NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes() : 60;
         if(editedInfo->FindNearestTime(latestInfoTime, kCenter, maxDifferenceInMinutes))
             return editedInfo->Time();
         else
