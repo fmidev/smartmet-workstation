@@ -10,7 +10,11 @@
 #include "NFmiSettings.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFastQueryInfo.h"
+#include "NFmiLimitChecker.h"
 #include <boost/bind.hpp>
+
+long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 10;
+double NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = 10;
 
 void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
 {
@@ -283,4 +287,32 @@ bool NFmiAnalyzeToolData::EnableAnalyseTool(NFmiInfoOrganizer &theInfoOrganizer,
 		}
 	}
 	return false;
+}
+
+long NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes()
+{
+    return itsExpirationTimeInMinutes;
+}
+
+void NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes(long newValue)
+{
+    itsExpirationTimeInMinutes = newValue;
+}
+
+double NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm()
+{
+    return itsMaxAllowedDistanceToStationInKm;
+}
+
+void NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm(double newValue)
+{
+    itsMaxAllowedDistanceToStationInKm = newValue;
+}
+
+float NFmiControlPointObservationBlendingData::BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiLimitChecker &limitChecker)
+{
+    if(editedDataValue == kFloatMissing || changeValue == kFloatMissing)
+        return editedDataValue; // ongelma tilanteissa palautetaan arvo editoidusta datasta takaisin
+    float value = editedDataValue - ((timeSize - timeIndex - 1.f) / (timeSize - 1.f) * (changeValue * maskFactor));
+    return limitChecker.CheckValue(value);
 }

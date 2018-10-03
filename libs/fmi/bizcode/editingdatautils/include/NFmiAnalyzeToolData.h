@@ -19,6 +19,7 @@
 class NFmiInfoOrganizer;
 class NFmiHelpDataInfoSystemtem;
 class NFmiFastQueryInfo;
+class NFmiLimitChecker;
 
 class NFmiControlPointObservationBlendingData
 {
@@ -38,6 +39,10 @@ class NFmiControlPointObservationBlendingData
     // Tähän kerätään käytössä olevat oikean tyyppiset observation tuottajat
     checkedVector<NFmiProducer> itsProducers; 
     std::string itsBaseNameSpace;
+    // Kuinka vanhoja havaintoja sallitaan mukaan suhteessa aloitusaikaan itsActualFirstTime
+    static long itsExpirationTimeInMinutes;
+    // Mikä on maksimi sallittu etäisyys CP-pisteestä lähimpään havaintoasemaan
+    static double itsMaxAllowedDistanceToStationInKm;
 
 public:
     void InitFromSettings(const std::string &theBaseNameSpace);
@@ -53,6 +58,12 @@ public:
     static bool IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info);
     bool OverrideSelection() const { return fOverrideSelection; }
     void OverrideSelection(bool newValue);
+
+    static float BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiLimitChecker &limitChecker);
+    static long ExpirationTimeInMinutes();
+    static void ExpirationTimeInMinutes(long newValue);
+    static double MaxAllowedDistanceToStationInKm();
+    static void MaxAllowedDistanceToStationInKm(double newValue);
 private:
     bool UpdateProducerInfo(const NFmiProducer &producer);
 };
