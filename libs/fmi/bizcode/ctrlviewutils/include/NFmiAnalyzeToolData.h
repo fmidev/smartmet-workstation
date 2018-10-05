@@ -20,6 +20,7 @@ class NFmiInfoOrganizer;
 class NFmiHelpDataInfoSystemtem;
 class NFmiFastQueryInfo;
 class NFmiLimitChecker;
+class TimeSerialModificationDataInterface;
 
 class NFmiControlPointObservationBlendingData
 {
@@ -99,6 +100,9 @@ public:
 	bool SelectProducer2ByName(const std::string &theProducerName);
 	bool EnableAnalyseTool(NFmiInfoOrganizer &theInfoOrganizer, const NFmiParam &theParam);
     NFmiControlPointObservationBlendingData& ControlPointObservationBlendingData() { return itsControlPointObservationBlendingData; }
+
+    static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string usedProducerName);
+    static boost::shared_ptr<NFmiArea> GetUsedAreaForAnalyzeTool(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo);
 
 private:
 	bool SelectProducerByName(const std::string &theProducerName, ProdSetter theSetter);
