@@ -16,8 +16,8 @@
 
 using namespace std::literals::string_literals;
 
-long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 10;
-double NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = 10;
+long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 30;
+double NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = 20;
 
 void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
 {
@@ -377,16 +377,19 @@ static NFmiMetTime GetLatestInfoTime(checkedVector<boost::shared_ptr<NFmiFastQue
     NFmiMetTime latestTime = NFmiMetTime::gMissingTime;
     for(auto &info : infos)
     {
+        // Ajan etsinnöissä käydään läpi kaikki asemat, mutta haluamme palauttaa tämän asetuksen lopuksi
+        auto oldLocationIndex = info->LocationIndex();
         const auto latestInfoTime = ::FindLatestAcceptableTime(info, checkedObservationArea);
         if(latestTime == NFmiMetTime::gMissingTime || latestInfoTime > latestTime)
         {
             latestTime = latestInfoTime;
         }
+        info->LocationIndex(oldLocationIndex);
     }
     return latestTime;
 }
 
-static std::string MakeErrorTextForNotFindingSuitableAnalyzeToolTime(const std::string &toolName, const std::string &dataTypeName, const NFmiMetTime &notFoundTime, const std::string usedProducerName, long maxDifferenceInMinutes)
+static std::string MakeErrorTextForNotFindingSuitableAnalyzeToolTime(const std::string &toolName, const std::string &dataTypeName, const NFmiMetTime &notFoundTime, const std::string &usedProducerName, long maxDifferenceInMinutes)
 {
     auto errorString = toolName;
     errorString += " error, latest good '"s;
@@ -403,7 +406,7 @@ static std::string MakeErrorTextForNotFindingSuitableAnalyzeToolTime(const std::
     return errorString;
 }
 
-static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool useObservationBlenderTool, const std::string usedProducerName)
+static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool useObservationBlenderTool, const std::string &usedProducerName)
 {
     // 1. Jos latestInfoTime löytyy editedInfo:sta, palautetaan se
     if(editedInfo->Time(latestInfoTime))
@@ -434,7 +437,7 @@ static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoT
 }
 
 // Palauttaa sekä todellisen viimeisen ajan (esim. 10.20), että pyöristetyn editoituun datan sopivan ajan (esim. 10.00)
-std::pair<NFmiMetTime, NFmiMetTime> NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string usedProducerName)
+std::pair<NFmiMetTime, NFmiMetTime> NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName)
 {
     if(infos.empty())
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze tool time");
