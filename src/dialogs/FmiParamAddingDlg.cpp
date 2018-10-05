@@ -17,6 +17,7 @@
 #include "FmiWin32Helpers.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiInfoOrganizer.h"
+#include "NFmiTimeList.h"
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
@@ -109,34 +110,70 @@ BOOL NFmiParamAddingGridCtrl::OnInitDialog()
 
 std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
 {
-    //Joonas continue from here. Macroparametrit kaataa!
-    auto a = info->OriginTime();
-    auto b = info->TimeDescriptor().LastTime();
+    if(info == nullptr) //MacroParams don't have FastQueryInfo
+        return "No FastQueryInfo";
+
+    //11. Katso tooltip tekstin http muotoiluun ja väreihin liittyviä esimerkkejä vaikka NFmiTimeSerialView luokasta :
+    //-metodit : GetObsFraktileDataToolTipText, GetColoredLocationTooltipStr, MultiModelRunToolTip ja ComposeToolTipText
+    //    - Mm. <b> on boldaus, <br> on rivinvaihto, <hr> on vaaka viiva, <font color = blue> on fontin väri, jne.
+    
+    //12. Miten saa tietoja datoista ?
+    //-OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisessä Time - sarake jutussa
+    //- Katso eri tietoja FastInfosta seuraavilta olioita
+    //- HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue 
+    //        + resoluutio kilometreissä tekstejä(kysy neuvoa)
+    //- TimeDescriptor() metodilla aikatietoa, ja siltä voi kysyä onko kyseessä tasavälinen step vai epämääräinen 
+    //        aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyydä tasavälinen ValidTimeBag())
+    //- Levelit oletkin jo varmaan käynyt läpi toisaalla eli siihen ei tarvii neuvoja
+    //- Parametrit myös tuttuja
+
+
     auto c = info->HPlaceDescriptor().IsGrid();
     auto d = info->HPlaceDescriptor().Grid();
     auto e = info->HPlaceDescriptor().Area();
     auto f = info->TimeDescriptor().ValidTimeList();// ->CurrentResolution();
     auto g = info->TimeDescriptor().ValidTimeBag();
 
+    //if(info->HPlaceDescriptor().IsGrid())
+    //{
+    //    info->HPlaceDescriptor().
+    //}
+    NFmiTimeList* timeList;
+    NFmiTimeBag* timeBag;
+    int timeSteps;
+    std::string resolution;
+
+    if(info->TimeDescriptor().ValidTimeList() != nullptr)
+    {
+        timeList = info->TimeDescriptor().ValidTimeList();
+        timeSteps = timeList->NumberOfItems();
+        resolution = "varies";
+    }
+    else 
+    {
+        timeBag = info->TimeDescriptor().ValidTimeBag();
+        timeSteps = timeBag->GetSize();
+        resolution = std::to_string(timeBag->Resolution());
+    }
+
     std::string str;
     str += "<b><font color=blue>";
     str += "Data information \n";
     str += "</font></b>";
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
-    str += "<b>File name: </b>\t" + info->DataFileName() + "\n";
+    //str += "<b>File name: </b>\t" + info->DataFilePattern() + "\n";
     str += "<b>Data loaded: </b>\t \n";
-    str += "<b>File modified: </b>\t" + std::to_string(info->LastTime()) + " UTC \n";
+    str += "<b>File modified: </b>\t" + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC \n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC \n";
     str += "<b>Time range: </b>\t\n";
-    str += "<b>Time structure:  </b>\t\n";
-    str += "<b>Params:  </b>\t\n";
-    str += "<b>Grid info: </b>\t area: " + info->Area()->AreaStr() + "\n";
+    str += "<b>Time structure:  </b>\t + tähän time tietoa + \n";
+    str += "<b>Params:  </b>\t\ttotal: " + std::to_string(info->ParamBag().GetSize()) +  "\n";
+    str += "\t\t\t params here... \n";
+    str += "<b>Grid info: </b>\tarea: " + info->Area()->AreaStr() + "\n";
     str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
     str += "<b>File size: </b>\t\n";
-    str += "<b>Local path: </b>\t" + info->DataFilePattern() + "\n";
+    str += "<b>Local path: </b>\t" + singleRowItem.uniqueDataId() + "\n";
     str += "<b>Server path: </b>\t\n";
-
-    //tooltip += "Grid: " + fastQueryInfo->HPlaceDescriptor().Grid()->;
     
     return str;
 }
@@ -169,26 +206,16 @@ std::string TooltipText(AddParams::SingleRowItem singleRowItem, boost::shared_pt
 
 std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
 {
-    //11. Katso tooltip tekstin http muotoiluun ja väreihin liittyviä esimerkkejä vaikka NFmiTimeSerialView luokasta :
-    //-metodit : GetObsFraktileDataToolTipText, GetColoredLocationTooltipStr, MultiModelRunToolTip ja ComposeToolTipText
-    //    - Mm. <b> on boldaus, <br> on rivinvaihto, <hr> on vaaka viiva, <font color = blue> on fontin väri, jne.
-    //12. Miten saa tietoja datoista ?
-    //-OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisessä Time - sarake jutussa
-    //- Katso eri tietoja FastInfosta seuraavilta olioita
-    //- HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue 
-    //        + resoluutio kilometreissä tekstejä(kysy neuvoa)
-    //- TimeDescriptor() metodilla aikatietoa, ja siltä voi kysyä onko kyseessä tasavälinen step vai epämääräinen 
-    //        aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyydä tasavälinen ValidTimeBag())
-    //- Levelit oletkin jo varmaan käynyt läpi toisaalla eli siihen ei tarvii neuvoja
-    //- Parametrit myös tuttuja
-
     CCellID idCurrentCell = GetCellFromPt(point);
     if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount() 
         && idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
     {
         AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
         auto id = singleRowItem.itemId();
+        //bool surfaceData = !singleRowItem.level() ? true : false;
+
         auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, NFmiProducer(id), true);
+        //Joonas: fastQueryInfo saa nyt aina ensimmäisen datan id:stä. Pitäisi osata poimia oikea.
         //FindInfo(NFmiInfoData::Type theDataType, const NFmiProducer &theProducer, bool fGroundData, int theIndex)
         return TooltipText(singleRowItem, fastQueryInfo);
     }
