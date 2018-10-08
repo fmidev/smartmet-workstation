@@ -85,7 +85,7 @@ bool NFmiControlPointObservationBlender::MakeBlendingOperation(NFmiTimeDescripto
                 break;
             if(itsInfo->Time(blendingTimes.Time())) // Ajan pitäisi aina löytyä, koska blendingtimes on rakennettu editoidun datan aikojen perusteella
             {
-                SyncronizeTimeWithMasks();
+                itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
                 DoLocationGridCalculations(itsBlendingDataHelper.changeField);
                 status = true;
             }
