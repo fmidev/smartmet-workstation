@@ -72,7 +72,6 @@ class NFmiDataParamModifier
 										// muokkaus on. Vähän niin kuin maskien kanssa. Keskellä valinta aluetta muutos
 										// on voimakas ja reunoilla heikompi.
 
-	bool SyncronizeTimeWithMasks (void);
 };
 
 // ****************************************************************************************************

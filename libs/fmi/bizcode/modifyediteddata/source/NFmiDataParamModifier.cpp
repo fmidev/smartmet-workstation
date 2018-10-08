@@ -76,8 +76,7 @@ bool NFmiDataParamModifier::ModifyData (void)
 {
     EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
 	itsParamMaskList->CheckIfMaskUsed();
-	if(itsParamMaskList->UseMask())
-		SyncronizeTimeWithMasks();
+    itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
 
 	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 	{
@@ -98,9 +97,8 @@ bool NFmiDataParamModifier::ModifyData2(void)
 {
     EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
     itsParamMaskList->CheckIfMaskUsed();
-	if(itsParamMaskList->UseMask())
-		SyncronizeTimeWithMasks();
-	PrepareFastIsInsideData();
+    itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+    PrepareFastIsInsideData();
 
 	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		if(IsPossibleInside(itsInfo->RelativePoint()))
@@ -121,25 +119,6 @@ double NFmiDataParamModifier::Calculate (const double& theValue)
 }
 
 //--------------------------------------------------------
-// SyncronizeTimeWithMasks
-//--------------------------------------------------------
-//   Tarkistaa onko maskeja käytössä. Jos on,
-//   pyytää itsDataParamilta ajan ja antaa masklistalle
-//   ajan synkronointia varten. Palauttaa mita masklistan
-//   funktio palauttaa. Käytössä saattaa olla useita
-//   eri querydatoja, joilla on omat dataparam-otukset
-//   ja ne pitää saada samaan aikaan, että maskaus toimisi
-//	 oikein.
-bool NFmiDataParamModifier::SyncronizeTimeWithMasks (void)
-{
-	if(itsParamMaskList->CheckIfMaskUsed())
-	{
-		return itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
-	}
-	else
-		return false;
-}
-//--------------------------------------------------------
 // ModifyTimeSeriesData
 //--------------------------------------------------------
 
@@ -156,8 +135,8 @@ bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveT
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
 	{
 		itsInfo->Time(theActiveTimes.Time());
-		SyncronizeTimeWithMasks();
-		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		{
 			if(itsParamMaskList->UseMask())
 			{
@@ -189,8 +168,8 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 			modifyFactorIndex = itsInfo->TimeIndex();
 		else
 			continue;
-		SyncronizeTimeWithMasks();
-		double maskFactor = 0;
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        double maskFactor = 0;
 		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		{
 			maskFactor = 1; //itsParamMaskList->MaskValue(itsInfo->LatLon());
@@ -224,8 +203,8 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
 	{
 		itsInfo->Time(theActiveTimes.Time());
-		SyncronizeTimeWithMasks();
-		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		{
 			if((itsParamMaskList->UseMask() && itsParamMaskList->IsMasked(itsInfo->LatLon()))
 				|| !(itsParamMaskList->UseMask()))
@@ -365,8 +344,8 @@ bool NFmiDataParamControlPointModifier::ModifyTimeSeriesDataUsingMaskFactors(NFm
 		NFmiQueryDataUtil::CheckIfStopped(theThreadCallBacks);
 		if(itsInfo->Time(theActiveTimes.Time()) == false)
 			continue;
-		SyncronizeTimeWithMasks();
-		bool isZeroGrid = !DoDataGridding();
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        bool isZeroGrid = !DoDataGridding();
 		if(isZeroGrid)
 			continue; // tälle ajalle ei muutoksia!
 		NFmiQueryDataUtil::CheckIfStopped(theThreadCallBacks);
@@ -511,7 +490,7 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
 
 		if(itsInfo->Time(theActiveTimes.Time()) == false)
 			continue;
-		SyncronizeTimeWithMasks();
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
         if(!GetChangeValuesWithWork(theActiveTimes.Time(), xValues, yValues, zValues))
 			continue; // tälle ajalle ei muutoksia!
         tasks.push(tcp_tools::task_structure(jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, itsGridData.NX(), itsGridData.NY(), xValues, yValues, zValues, theGuidStr, griddingFunction));
