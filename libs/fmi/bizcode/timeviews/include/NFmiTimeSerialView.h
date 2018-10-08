@@ -64,7 +64,6 @@ public:
     int currentLineIndex = 0;
 };
 
-
 class NFmiTimeSerialView : public NFmiTimeView
 {
 
@@ -164,7 +163,8 @@ class NFmiTimeSerialView : public NFmiTimeView
 	void DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo);
 	void DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoint);
 	void DrawAnalyzeToolEndTimeLine(void);
-    void SetAnalyzeToolRelatedInfoToLastSuitableTime(boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo, bool isObservationData);
+    bool SetAnalyzeToolRelatedInfoToLastSuitableTime(boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo, bool isObservationData);
+    void DrawAnalyzeToolRelatedMessages(const std::vector<std::string> &messages, NFmiDrawingEnvironment &envi);
     void DrawStationNameLegend(const NFmiLocation* theLocation, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theFontSize, const NFmiPoint& theTextPos, const NFmiString& thePreLocationString, FmiDirection theTextAligment, double theDistanceInMeters = kFloatMissing);
 	void DrawModelDataLegend(const std::vector<NFmiColor> &theUsedColors, const std::vector<std::string> &theFoundProducerNames);
 	NFmiPoint CalcParamTextPosition(void);
