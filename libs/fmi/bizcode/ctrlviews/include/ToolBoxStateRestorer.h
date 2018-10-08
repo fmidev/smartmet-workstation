@@ -9,8 +9,9 @@ class NFmiToolBox;
 class ToolBoxStateRestorer
 {
     FmiDirection oldAligment_ = kNoDirection;
+    bool oldUseClipping_ = false;
     NFmiToolBox &toolBox_;
 public:
-    ToolBoxStateRestorer(NFmiToolBox &toolBox, FmiDirection newAligment);
+    ToolBoxStateRestorer(NFmiToolBox &toolBox, FmiDirection newAligment, bool useClipping);
     ~ToolBoxStateRestorer();
 };
