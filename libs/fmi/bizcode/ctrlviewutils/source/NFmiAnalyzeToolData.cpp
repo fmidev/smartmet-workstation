@@ -12,11 +12,12 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiLimitChecker.h"
 #include "TimeSerialModificationDataInterface.h"
+#include "NFmiAreaMaskList.h"
 #include <boost/bind.hpp>
 
 using namespace std::literals::string_literals;
 
-long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 30;
+long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 20;
 double NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = 20;
 
 void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
@@ -470,4 +471,14 @@ boost::shared_ptr<NFmiArea> NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(TimeS
         }
     }
     return boost::shared_ptr<NFmiArea>();
+}
+
+boost::shared_ptr<NFmiAreaMaskList> NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(TimeSerialModificationDataInterface &theAdapter)
+{
+    boost::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
+    boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
+    if(!theAdapter.UseMasksInTimeSerialViews())
+        maskList = emptyMaskList;
+    maskList->CheckIfMaskUsed();
+    return maskList;
 }
