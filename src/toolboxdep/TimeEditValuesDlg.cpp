@@ -127,6 +127,12 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
     ON_BN_CLICKED(IDC_CHECK_ALLOW_RIGHT_CLICK_SELECTION, &CTimeEditValuesDlg::OnBnClickedCheckAllowRightClickSelection)
     ON_COMMAND(ID_ACCELERATOR_TIME_VIEW_TOGGLE_HELP_DATA3, &CTimeEditValuesDlg::OnAcceleratorTimeViewToggleHelpData3)
     ON_COMMAND(ID_ACCELERATOR_TIME_VIEW_TOGGLE_HELP_DATA4, &CTimeEditValuesDlg::OnAcceleratorTimeViewToggleHelpData4)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_NEXT, &CTimeEditValuesDlg::OnAcceleratorCpSelectNext)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_PREVIOUS, &CTimeEditValuesDlg::OnAcceleratorCpSelectPrevious)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_LEFT, &CTimeEditValuesDlg::OnAcceleratorCpSelectLeft)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_RIGHT, &CTimeEditValuesDlg::OnAcceleratorCpSelectRight)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_UP, &CTimeEditValuesDlg::OnAcceleratorCpSelectUp)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_DOWN, &CTimeEditValuesDlg::OnAcceleratorCpSelectDown)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -979,3 +985,40 @@ void CTimeEditValuesDlg::OnBnClickedCheckAllowRightClickSelection()
     Invalidate(FALSE);
 }
 
+void CTimeEditValuesDlg::HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    if(itsSmartMetDocumentInterface->MakeControlPointAcceleratorAction(action, updateMessage))
+    {
+        Invalidate(FALSE);
+    }
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectNext()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Next, "TimeSerialDlg: Select next Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectPrevious()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Previous, "TimeSerialDlg: Select previous Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectLeft()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Left, "TimeSerialDlg: Select nearest left Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectRight()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Right, "TimeSerialDlg: Select nearest right Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectUp()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Up, "TimeSerialDlg: Select nearest upward Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectDown()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Down, "TimeSerialDlg: Select nearest downward Control-point"s);
+}
