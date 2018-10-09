@@ -929,19 +929,22 @@ static double GetAngleTowardsDirection(ControlPointAcceleratorActions direction)
 }
 
 // Lasketaan kerroin currentin CP pisteen suunnalle suhteessa haluttuun suuntaan.
-// Jos suunta on t‰ydellinen, saadaan kertoimeksi tasan 1, mutta jos suunnissa on eroa, voi se kasvaa kohti 2:sta (jos l‰hestyt‰‰n 180 asteen heittoa)
+// Jos suunta on t‰ydellinen, saadaan kertoimeksi tasan 1, mutta jos suunnissa on eroa, voi se kasvaa kohti ~3.2:sta (jos l‰hestyt‰‰n 180 asteen heittoa)
 static double CalcDirectionalFactor(const NFmiPoint &activeCpRelativePoint, const NFmiPoint &currentCpRelativePoint, ControlPointAcceleratorActions direction)
 {
     const double angleDivider = 90.;
     auto directionAngle = ::GetAngleTowardsDirection(direction);
     auto directionToCurrentPoint = ::CalcDirection(activeCpRelativePoint, currentCpRelativePoint);
+    auto factor = 1.;
     if(std::fabs(directionAngle - directionToCurrentPoint) > 180.)
     {
         directionToCurrentPoint -= 360.; // Pit‰‰ varmistaa ett‰ erotusta ei lasketa ympyr‰n pitk‰‰ kaarta pitkin
-        return 1. + (std::fabs(directionToCurrentPoint - directionAngle) / angleDivider);
+        factor = 1. + (std::fabs(directionToCurrentPoint - directionAngle) / angleDivider);
     }
     else
-        return 1. + (std::fabs(directionAngle - directionToCurrentPoint)/ angleDivider);
+        factor = 1. + (std::fabs(directionAngle - directionToCurrentPoint)/ angleDivider);
+    // Korostetaan factor:ia viel‰ niin ett‰ hyv‰t suunnat saava suhteessa pienemp‰‰ kerrointa
+    return std::pow(factor, 1.7);
 }
 
 template<typename Comparison>
