@@ -897,8 +897,55 @@ bool NFmiEditorControlPointManager::ActivateFirstCp()
         return false;
 }
 
+// Calculate direction from point1 to point2.
+// Result is in degrees (0 -> 360), 'north' is 0 and goes clockwise (east 90, south 180, west 270).
+// If points are the same, result is 0.
+static double CalcDirection(const NFmiPoint &point1, const NFmiPoint &point2)
+{
+    auto x = point2.X() - point1.X();
+    auto y = point2.Y() - point1.Y();
+    if(x == 0 && y == 0)
+        return 0;
+    auto origDirection = atan2(x, y) * 180 / kPii;
+    if(origDirection < 0)
+        return 360 + origDirection;
+    else
+        return origDirection;
+}
+
+static double GetAngleTowardsDirection(ControlPointAcceleratorActions direction)
+{
+    switch(direction)
+    {
+    case ControlPointAcceleratorActions::Up:
+        return 0;
+    case ControlPointAcceleratorActions::Down:
+        return 180;
+    case ControlPointAcceleratorActions::Left:
+        return 270;
+    default: // default on Right case
+        return 90;
+    }
+}
+
+// Lasketaan kerroin currentin CP pisteen suunnalle suhteessa haluttuun suuntaan.
+// Jos suunta on t‰ydellinen, saadaan kertoimeksi tasan 1, mutta jos suunnissa on eroa, voi se kasvaa kohti 2:sta (jos l‰hestyt‰‰n 180 asteen heittoa)
+static double CalcDirectionalFactor(const NFmiPoint &activeCpRelativePoint, const NFmiPoint &currentCpRelativePoint, ControlPointAcceleratorActions direction)
+{
+    const double angleDivider = 90.;
+    auto directionAngle = ::GetAngleTowardsDirection(direction);
+    auto directionToCurrentPoint = ::CalcDirection(activeCpRelativePoint, currentCpRelativePoint);
+    if(std::fabs(directionAngle - directionToCurrentPoint) > 180.)
+    {
+        directionToCurrentPoint -= 360.; // Pit‰‰ varmistaa ett‰ erotusta ei lasketa ympyr‰n pitk‰‰ kaarta pitkin
+        return 1. + (std::fabs(directionToCurrentPoint - directionAngle) / angleDivider);
+    }
+    else
+        return 1. + (std::fabs(directionAngle - directionToCurrentPoint)/ angleDivider);
+}
+
 template<typename Comparison>
-static int FindClosestCp(NFmiEditorControlPointManager &cpManager, int activeCpIndex, const Comparison &compare)
+static int FindBestSuitedCpTowardsDirection(NFmiEditorControlPointManager &cpManager, int activeCpIndex, const Comparison &compare, ControlPointAcceleratorActions direction)
 {
     const auto &activeCpRelativePoint = cpManager.RelativePoint(activeCpIndex);
     int closestCpIndex = g_missingCpIndex;
@@ -910,7 +957,9 @@ static int FindClosestCp(NFmiEditorControlPointManager &cpManager, int activeCpI
             const auto &currentCpRelativePoint = cpManager.RelativePoint(cpIndex);
             if(compare(activeCpRelativePoint, currentCpRelativePoint))
             {
-                auto currentDistance = activeCpRelativePoint.Distance(currentCpRelativePoint);
+                // Et‰isyys laskuissa otetaan huomioon pisteiden et‰isyys ja 'hyv‰' suunta
+                auto directionalFactor = ::CalcDirectionalFactor(activeCpRelativePoint, currentCpRelativePoint, direction);
+                auto currentDistance = activeCpRelativePoint.Distance(currentCpRelativePoint) * directionalFactor;
                 if(currentDistance < minRelativeDistance)
                 {
                     closestCpIndex = cpIndex;
@@ -944,7 +993,7 @@ bool NFmiEditorControlPointManager::ActivateCPToward(ControlPointAcceleratorActi
         return ActivateFirstCp(); // Yritet‰‰n aktivoida 1. CP-piste
     else
     {
-        auto closestCpIndex = ::FindClosestCp(*this, activeCpIndex, ::GetTowardsComparisonFunction(direction));
+        auto closestCpIndex = ::FindBestSuitedCpTowardsDirection(*this, activeCpIndex, ::GetTowardsComparisonFunction(direction), direction);
         if(closestCpIndex != g_missingCpIndex)
         {
             ActivateCP(closestCpIndex, true);
