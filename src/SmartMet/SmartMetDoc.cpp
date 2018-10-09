@@ -297,6 +297,12 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_TOGGLE_WMS_MAP_MODE, &CSmartMetDoc::OnAcceleratorToggleWmsMapMode)
     ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParamAddingDlgPlaceToDefault)
         ON_COMMAND(ID_HELP_EXCEPTIONTEST, &CSmartMetDoc::OnHelpExceptiontest)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_NEXT, &CSmartMetDoc::OnAcceleratorCpSelectNext)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_PREVIOUS, &CSmartMetDoc::OnAcceleratorCpSelectPrevious)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_LEFT, &CSmartMetDoc::OnAcceleratorCpSelectLeft)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_RIGHT, &CSmartMetDoc::OnAcceleratorCpSelectRight)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_UP, &CSmartMetDoc::OnAcceleratorCpSelectUp)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
         END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -3778,4 +3784,47 @@ void CSmartMetDoc::OnAcceleratorToggleWmsMapMode()
 {
     itsData->UseWmsMaps(!itsData->UseWmsMaps());
     UpdateAllViewsAndDialogs("Toggle WMS map mode");
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectNext()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Next, "Main map view: Select next Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectPrevious()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Previous, "Main map view: Select previous Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectLeft()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Left, "Main map view: Select nearest left Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectRight()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Right, "Main map view: Select nearest right Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectUp()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Up, "Main map view: Select nearest upward Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectDown()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Down, "Main map view: Select nearest downward Control-point"s);
+}
+
+void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    if(GetData()->MakeControlPointAcceleratorAction(action, updateMessage))
+    {
+    }
 }
