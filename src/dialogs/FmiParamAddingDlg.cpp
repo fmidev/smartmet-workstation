@@ -18,6 +18,7 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiTimeList.h"
+#include "NFmiFileSystem.h"
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
@@ -108,7 +109,21 @@ BOOL NFmiParamAddingGridCtrl::OnInitDialog()
     return TRUE;
 }
 
-std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+std::string combineFilePath(const std::string &fileName, const std::string &fileNameFilter)
+{
+    try
+    {
+        std::size_t found = fileNameFilter.find_last_of("/\\");
+        std::string filePath = found ? fileNameFilter.substr(0, found + 1) + fileName : "";
+        return filePath;
+    }
+    catch(...)
+    {
+        return "";
+    }
+}
+
+std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
 {
     if(info == nullptr) //MacroParams don't have FastQueryInfo
         return "No FastQueryInfo";
@@ -163,45 +178,54 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
     //str += "<b>File name: </b>\t" + info->DataFilePattern() + "\n";
     str += "<b>Data loaded: </b>\t \n";
-    str += "<b>File modified: </b>\t" + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC \n";
+    str += "<b>File modified: </b>\t  \n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC \n";
-    str += "<b>Time range: </b>\t\n";
+    str += "<b>Time range: </b>\t" + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC \n";
     str += "<b>Time structure:  </b>\t + tähän time tietoa + \n";
     str += "<b>Params:  </b>\t\ttotal: " + std::to_string(info->ParamBag().GetSize()) +  "\n";
     str += "\t\t\t params here... \n";
     str += "<b>Grid info: </b>\tarea: " + info->Area()->AreaStr() + "\n";
     str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
-    str += "<b>File size: </b>\t\n";
-    str += "<b>Local path: </b>\t" + singleRowItem.uniqueDataId() + "\n";
-    str += "<b>Server path: </b>\t\n";
+    str += "<b>File size: </b>\t\t" + fileSize + " MB \n";
+    str += "<b>Local path: </b>\t" + combineFilePath(info->DataFileName(), info->DataFilePattern())  + "\n";
+    str += "<b>Server path: </b>\t \n";
     
     return str;
 }
 
-std::string tooltipForProducerType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+std::string tooltipForProducerType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
 {
     return "producer";
 }
 
-std::string tooltipForCategoryType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+std::string tooltipForCategoryType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
 {
     return "category";
 }
 
-std::string TooltipText(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+std::string TooltipText(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
 {
     // Tooltip is different for kDataType, kProducerType, kCategoryType and parameters itself
     switch (singleRowItem.rowType())
     {
     case AddParams::RowType::kDataType:
-        return tooltipForDataType(singleRowItem, info);
+        return tooltipForDataType(singleRowItem, info, fileSize);
     case AddParams::RowType::kProducerType:
-        return tooltipForProducerType(singleRowItem, info);
+        return tooltipForProducerType(singleRowItem, info, fileSize);
     case AddParams::RowType::kCategoryType:
-        return tooltipForCategoryType(singleRowItem, info);
+        return tooltipForCategoryType(singleRowItem, info, fileSize);
     default:
         return "D\'oh!";
     }
+}
+
+std::string fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
+{
+    auto sizeMB = NFmiFileSystem::FileSize(singleRowItem.totalFilePath()) / (1024 * 1024);
+    std::stringstream fileSizeInMB;
+    fileSizeInMB << std::setprecision(2) << sizeMB;
+
+   return fileSizeInMB.str();
 }
 
 std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
@@ -211,13 +235,17 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
         && idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
     {
         AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
-        auto id = singleRowItem.itemId();
-        //bool surfaceData = !singleRowItem.level() ? true : false;
+        auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+        
+        
 
-        auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, NFmiProducer(id), true);
-        //Joonas: fastQueryInfo saa nyt aina ensimmäisen datan id:stä. Pitäisi osata poimia oikea.
-        //FindInfo(NFmiInfoData::Type theDataType, const NFmiProducer &theProducer, bool fGroundData, int theIndex)
-        return TooltipText(singleRowItem, fastQueryInfo);
+        if(!fastQueryInfoVector.empty())
+        {
+            return TooltipText(singleRowItem, fastQueryInfoVector.at(0), fileSizeInMB(singleRowItem));
+        }
+        else
+            return "No info";
+
     }
     
     return std::string("Parameter Selection");
@@ -260,7 +288,6 @@ BEGIN_MESSAGE_MAP(CFmiParamAddingDlg, CDialogEx)
     ON_WM_SIZE()
     ON_WM_TIMER()
     ON_WM_ERASEBKGND()
-    //ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
 
 void CFmiParamAddingDlg::SetDefaultValues(void)
@@ -273,7 +300,6 @@ BOOL CFmiParamAddingDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
     fDialogInitialized = true;
-    //CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID);
 
     HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
     this->SetIcon(hIcon, FALSE);
