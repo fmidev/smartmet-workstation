@@ -5663,13 +5663,13 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiActivateCP:
 			{
 				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), true, false);
+					CPManager()->ActivateCP(CPManager()->CPIndex(), true);
 			}
 			break;
 		case kFmiDeactivateCP:
 			{
 				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), false, true);
+					CPManager()->ActivateCP(CPManager()->CPIndex(), false);
 			}
 			break;
 		case kFmiEnableCP:

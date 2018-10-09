@@ -2716,7 +2716,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 			if(!cpManager->MouseCaptured())
 			{
 				NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-                cpManager->ActivateCP(latlon, true, false);
+                cpManager->ActivateCP(latlon, true);
 				if((theKey & kShiftKey) && (theKey & kCtrlKey))
                     cpManager->AddCP(latlon);
 				else if((theKey & kShiftKey))

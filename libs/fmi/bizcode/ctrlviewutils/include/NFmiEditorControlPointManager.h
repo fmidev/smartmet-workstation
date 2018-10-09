@@ -97,8 +97,8 @@ public:
    void ShowCPAllwaysOnTimeView(bool newValue);
    void ShowAllCPsAllwaysOnTimeView(bool newValue);
    void MoveCP (const NFmiPoint& newLatLon);
-   void ActivateCP (const NFmiPoint& theLatLon, bool newState, bool fKeepOld);
-   void ActivateCP (int theCPIndex, bool newState, bool fKeepOld) ;
+   void ActivateCP (const NFmiPoint& theLatLon, bool newState);
+   void ActivateCP (int theCPIndex, bool newState) ;
    bool IsActivateCP(void);
    bool IsNearestPointActivateCP(const NFmiPoint& theLatLon);
    bool IsCPMovingInTime(int theIndex = -1);
@@ -113,6 +113,7 @@ public:
    bool NextCP(void) ;
    bool ActivateNextCP();
    bool ActivatePreviousCP();
+   bool ActivateUpwardCP();
    void ClearAllChangeValues (int clearMethod, double theClearValue) ;
    void CPMovingInTimeHelpPoints(const ThreePoints& thePoints, int theIndex = -1);
    const ThreePoints& CPMovingInTimeHelpPoints(int theIndex = -1) const;
@@ -160,6 +161,8 @@ private:
 	void ClearIndexedParamIndexedCPChangeValues(double newValue, int paramIndex, int CPIndex);
     void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut);
     int GetActiveCpIndex() const;
+    bool ActivateFirstCp();
+    void ResetActivityVector();
 
    // Kuinka monta controlpoint parametria on parambagissä.
    int itsParamCount;

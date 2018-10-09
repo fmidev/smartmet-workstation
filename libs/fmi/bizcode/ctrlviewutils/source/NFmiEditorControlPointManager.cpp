@@ -581,7 +581,7 @@ bool NFmiEditorControlPointManager::AddCP (const NFmiPoint& theLatLon)
 	itsCPMatrix.Resize(itsParamCount, itsCPCount, NFmiEditorControlPoint(timeSize));
 	itsCPMovingInTimeHelpPoints.resize(itsCPCount, ThreePoints());
 	itsShowCPAllwaysOnTimeView.resize(itsCPCount, false);
-	ActivateCP(itsCPIndex, true, false) ;
+	ActivateCP(itsCPIndex, true) ;
 
 	return true;
 }
@@ -684,25 +684,26 @@ void NFmiEditorControlPointManager::MoveCP (const NFmiPoint& newLatLon)
 // keepOld:in avulla voidaan
 // kontrolloida, lisätäänkö aktiivinen jo aktiivisten listaan vai
 // tuleeko siitä ainoa aktiivinen CP.
-void NFmiEditorControlPointManager::ActivateCP (const NFmiPoint& theLatLon, bool newState, bool fKeepOld)
+void NFmiEditorControlPointManager::ActivateCP(const NFmiPoint& theLatLon, bool newState)
 {
-	if(FindNearestCP(theLatLon))
-	{
-		if(!fKeepOld)
-			for(int i = 0; i < itsCPCount; i++)
-				itsCPActivityVector[i] = false;
-		if(AreCPIndexiesGood(0, itsCPIndex))
-			itsCPActivityVector[itsCPIndex] = newState;
-	}
+    if(FindNearestCP(theLatLon))
+    {
+        ResetActivityVector();
+        if(AreCPIndexiesGood(0, itsCPIndex))
+            itsCPActivityVector[itsCPIndex] = newState;
+    }
 }
 
-void NFmiEditorControlPointManager::ActivateCP(int theCPIndex, bool newState, bool fKeepOld)
+void NFmiEditorControlPointManager::ActivateCP(int theCPIndex, bool newState)
 {
-	if(!fKeepOld)
-		for(int i = 0; i < itsCPCount; i++)
-			itsCPActivityVector[i] = false;
-	if(AreCPIndexiesGood(0, theCPIndex))
-		itsCPActivityVector[theCPIndex] = newState;
+    ResetActivityVector();
+    if(AreCPIndexiesGood(0, theCPIndex))
+        itsCPActivityVector[theCPIndex] = newState;
+}
+
+void NFmiEditorControlPointManager::ResetActivityVector()
+{
+    itsCPActivityVector.swap(std::vector<bool>(itsCPActivityVector.size(), false));
 }
 
 bool NFmiEditorControlPointManager::IsActivateCP(void)
@@ -859,14 +860,13 @@ bool NFmiEditorControlPointManager::ActivateNextCP()
 {
     auto activeCpIndex = GetActiveCpIndex();
     if(activeCpIndex == g_missingCpIndex)
-        return false;
+        return ActivateFirstCp(); // Yritetään aktivoida 1. CP-piste
     if(activeCpIndex == itsCPCount - 1)
         return false; // Viimeinen CP-piste oli jo aktiivinen, jätetään homma siihen
     else 
     {
         // Deaktivoidaan löydetty piste, ja aktivoidaan sitä seuraava
-        itsCPActivityVector[activeCpIndex] = false;
-        itsCPActivityVector[activeCpIndex + 1] = true;
+        ActivateCP(activeCpIndex + 1, true);
         return true;
     }
 }
@@ -875,16 +875,31 @@ bool NFmiEditorControlPointManager::ActivatePreviousCP()
 {
     auto activeCpIndex = GetActiveCpIndex();
     if(activeCpIndex == g_missingCpIndex)
-        return false;
+        return ActivateFirstCp(); // Yritetään aktivoida 1. CP-piste
     if(activeCpIndex <= 0)
         return false; // Viimeinen CP-piste oli jo aktiivinen, jätetään homma siihen
     else
     {
         // Deaktivoidaan löydetty piste, ja aktivoidaan sitä edellinen
-        itsCPActivityVector[activeCpIndex] = false;
-        itsCPActivityVector[activeCpIndex - 1] = true;
+        ActivateCP(activeCpIndex - 1, true);
         return true;
     }
+}
+
+bool NFmiEditorControlPointManager::ActivateFirstCp()
+{
+    if(itsCPCount)
+    {
+        ActivateCP(0, true);
+        return true;
+    }
+    else
+        return false;
+}
+
+bool NFmiEditorControlPointManager::ActivateUpwardCP()
+{
+    return false;
 }
 
 bool NFmiEditorControlPointManager::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action)
