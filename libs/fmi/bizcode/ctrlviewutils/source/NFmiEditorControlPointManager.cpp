@@ -861,7 +861,7 @@ bool NFmiEditorControlPointManager::ActivateNextCP()
     auto activeCpIndex = GetActiveCpIndex();
     if(activeCpIndex == g_missingCpIndex)
         return ActivateFirstCp(); // Yritet‰‰n aktivoida 1. CP-piste
-    if(activeCpIndex == itsCPCount - 1)
+    if(activeCpIndex >= itsCPCount - 1)
         return false; // Viimeinen CP-piste oli jo aktiivinen, j‰tet‰‰n homma siihen
     else 
     {
@@ -897,9 +897,62 @@ bool NFmiEditorControlPointManager::ActivateFirstCp()
         return false;
 }
 
-bool NFmiEditorControlPointManager::ActivateUpwardCP()
+template<typename Comparison>
+static int FindClosestCp(NFmiEditorControlPointManager &cpManager, int activeCpIndex, const Comparison &compare)
 {
-    return false;
+    const auto &activeCpRelativePoint = cpManager.RelativePoint(activeCpIndex);
+    int closestCpIndex = g_missingCpIndex;
+    double minRelativeDistance = 9999999999.;
+    for(int cpIndex = 0; cpIndex < cpManager.CPCount(); cpIndex++)
+    {
+        if(cpIndex != activeCpIndex)
+        {
+            const auto &currentCpRelativePoint = cpManager.RelativePoint(cpIndex);
+            if(compare(activeCpRelativePoint, currentCpRelativePoint))
+            {
+                auto currentDistance = activeCpRelativePoint.Distance(currentCpRelativePoint);
+                if(currentDistance < minRelativeDistance)
+                {
+                    closestCpIndex = cpIndex;
+                    minRelativeDistance = currentDistance;
+                }
+            }
+        }
+    }
+    return closestCpIndex;
+}
+
+static std::function<bool(const NFmiPoint &, const NFmiPoint &)> GetTowardsComparisonFunction(ControlPointAcceleratorActions direction)
+{
+    switch(direction)
+    {
+    case ControlPointAcceleratorActions::Up:
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.Y() < currentPoint.Y(); };
+    case ControlPointAcceleratorActions::Down:
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.Y() > currentPoint.Y(); };
+    case ControlPointAcceleratorActions::Left:
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.X() > currentPoint.X(); };
+    default: // default on Right case
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.X() < currentPoint.X(); };
+    }
+}
+
+bool NFmiEditorControlPointManager::ActivateCPToward(ControlPointAcceleratorActions direction)
+{
+    auto activeCpIndex = GetActiveCpIndex();
+    if(activeCpIndex == g_missingCpIndex)
+        return ActivateFirstCp(); // Yritet‰‰n aktivoida 1. CP-piste
+    else
+    {
+        auto closestCpIndex = ::FindClosestCp(*this, activeCpIndex, ::GetTowardsComparisonFunction(direction));
+        if(closestCpIndex != g_missingCpIndex)
+        {
+            ActivateCP(closestCpIndex, true);
+            return true;
+        }
+        else
+            return false;
+    }
 }
 
 bool NFmiEditorControlPointManager::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action)
@@ -911,9 +964,8 @@ bool NFmiEditorControlPointManager::MakeControlPointAcceleratorAction(ControlPoi
     case ControlPointAcceleratorActions::Previous:
         return ActivatePreviousCP();
     default:
-        break;
+        return ActivateCPToward(action);
     }
-    return false;
 }
 
 //--------------------------------------------------------
