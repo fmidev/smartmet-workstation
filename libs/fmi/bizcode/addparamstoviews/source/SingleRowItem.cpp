@@ -16,13 +16,14 @@ namespace AddParams
         , treeDepth_(0)
         , displayName_()
         , origTime_()
+        , totalFilePath_()
     {}
 
     SingleRowItem::SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
         bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType, 
         unsigned long parentItemId, const std::string &parentItemName, const bool leafNode, 
         const std::shared_ptr<NFmiLevel> &level, const int treeDepth, std::string &displayName
-        , std::string &origTime)
+        , std::string &origTime, std::string &totalFilePath)
         : rowType_(rowType)
         , itemName_(itemName)
         , itemId_(itemId)
@@ -36,6 +37,7 @@ namespace AddParams
         , treeDepth_(treeDepth)
         , displayName_(displayName)
         , origTime_(origTime)
+        , totalFilePath_(totalFilePath)
     {
         if(treeDepth_ == 0) { treeDepth_ = getTreeDepth(rowType); }
         if(displayName_.empty()) { displayName_ = itemName; }
