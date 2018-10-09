@@ -7,6 +7,7 @@
 #include "NFmiInfoData.h"
 #include "boost/shared_ptr.hpp"
 #include "SmartMetViewId.h"
+#include "ControlPointAcceleratorActions.h"
 
 class NFmiRect;
 class NFmiEditMapGeneralDataDoc;
@@ -233,6 +234,7 @@ private:
     void LoadViewMacroSettingsForExtraMapViewDlg(CFmiExtraMapViewDlg **extraMapViewDlg, unsigned int theMapViewDescTopIndex, NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);
     void LoadViewMacroSettingsForTimeSerialDataView(NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);
     void MakeViewActivationAfterLoadingViewMacro();
+    void HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage);
 
 	CTimeEditValuesDlg *itsTimeSerialDataEditorDlg;
 	NFmiEditMapGeneralDataDoc* itsData;
@@ -368,6 +370,12 @@ public:
     afx_msg void OnAcceleratorToggleWmsMapMode();
     afx_msg void OnSetParamAddingDlgPlaceToDefault();
     afx_msg void OnHelpExceptiontest();
+    afx_msg void OnAcceleratorCpSelectNext();
+    afx_msg void OnAcceleratorCpSelectPrevious();
+    afx_msg void OnAcceleratorCpSelectLeft();
+    afx_msg void OnAcceleratorCpSelectRight();
+    afx_msg void OnAcceleratorCpSelectUp();
+    afx_msg void OnAcceleratorCpSelectDown();
 };
 
 
