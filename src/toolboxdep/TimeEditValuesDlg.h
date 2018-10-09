@@ -10,6 +10,7 @@
 #include "NFmiPoint.h"
 #include "NFmiViewPosRegistryInfo.h"
 #include "NFmiDataMatrix.h"
+#include "ControlPointAcceleratorActions.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CTimeEditValuesDlg dialog
@@ -106,6 +107,7 @@ private:
 	void OnComboSelectionChanged(CComboBox &theProducerSelector, SetByName setByName);
 	NFmiPoint CalcEditedDataGriddingResolutionInKM(void);
     void SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, const std::string &logMessage);
+    void HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage);
 
     CTimeEditValuesView* itsTimeEditValuesView;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -140,6 +142,12 @@ public:
     afx_msg void OnBnClickedCheckAllowRightClickSelection();
     afx_msg void OnAcceleratorTimeViewToggleHelpData3();
     afx_msg void OnAcceleratorTimeViewToggleHelpData4();
+    afx_msg void OnAcceleratorCpSelectNext();
+    afx_msg void OnAcceleratorCpSelectPrevious();
+    afx_msg void OnAcceleratorCpSelectLeft();
+    afx_msg void OnAcceleratorCpSelectRight();
+    afx_msg void OnAcceleratorCpSelectUp();
+    afx_msg void OnAcceleratorCpSelectDown();
 };
 
 //{{AFX_INSERT_LOCATION}}
