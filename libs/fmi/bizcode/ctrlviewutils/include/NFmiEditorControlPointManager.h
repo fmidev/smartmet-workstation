@@ -113,7 +113,7 @@ public:
    bool NextCP(void) ;
    bool ActivateNextCP();
    bool ActivatePreviousCP();
-   bool ActivateUpwardCP();
+   bool ActivateCPToward(ControlPointAcceleratorActions direction);
    void ClearAllChangeValues (int clearMethod, double theClearValue) ;
    void CPMovingInTimeHelpPoints(const ThreePoints& thePoints, int theIndex = -1);
    const ThreePoints& CPMovingInTimeHelpPoints(int theIndex = -1) const;
@@ -144,6 +144,7 @@ public:
    const std::string& Name(void) const {return itsName;}
    void Name(const std::string &newValue) {itsName = newValue;}
    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action);
+   int CPCount() const { return itsCPCount; }
 
    std::istream& Read (std::istream& file) ;
    std::ostream& Write (std::ostream& file) const;
