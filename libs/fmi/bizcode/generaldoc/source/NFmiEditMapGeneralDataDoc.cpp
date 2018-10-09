@@ -13827,6 +13827,20 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return capDataSystem;
     }
 
+    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+    {
+        if(MetEditorOptionsData().ControlPointMode())
+        {
+            if(CPManager()->MakeControlPointAcceleratorAction(action))
+            {
+                TimeSerialViewDirty(true);
+                RefreshApplicationViewsAndDialogs(updateMessage, true, true, 0);
+                return true;
+            }
+        }
+        return false;
+    }
+
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
@@ -16501,4 +16515,9 @@ void NFmiEditMapGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDe
 int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
 {
     return pimpl->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}
+
+bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    return pimpl->MakeControlPointAcceleratorAction(action, updateMessage);
 }

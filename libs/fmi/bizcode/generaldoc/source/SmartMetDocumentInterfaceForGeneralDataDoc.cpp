@@ -1400,6 +1400,11 @@ int SmartMetDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOn
     return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
 }
 
+bool SmartMetDocumentInterfaceForGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    return itsDoc->MakeControlPointAcceleratorAction(action, updateMessage);
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 
