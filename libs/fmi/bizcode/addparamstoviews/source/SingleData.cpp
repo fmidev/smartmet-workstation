@@ -30,10 +30,11 @@ namespace
     // collapsed mode because otherwise dialog's update codes will open it always.
     // Here is used the SingleRowItem's parentItemId to store producerId
     
-    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, const std::string& origTime = std::string())
+    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, const std::string& origTime = std::string(), const std::string& totalFilePath = std::string())
     {
         auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
         rowItem.origTime(origTime);
+        rowItem.totalFilePath(totalFilePath);
         return rowItem;
     }
 
@@ -97,7 +98,6 @@ namespace
         
         if(!dataIdent.HasDataParams()) 
         {
-
             bool hasLevelData = queryInfo.SizeLevels() > 1;
             rowType = AddParams::RowType::kParamType;
 
@@ -129,6 +129,23 @@ namespace AddParams
 
     SingleData::~SingleData() = default;
 
+    std::string combineTotalFilePath(const std::string &dataFileName, const std::string &fileNameFilter = NULL)
+    {
+        if(fileNameFilter.empty())
+            return "";
+        try
+        {
+            std::size_t found = fileNameFilter.find_last_of("/\\");
+            std::string filePath = found ? fileNameFilter.substr(0, found + 1) + dataFileName : "";
+            return filePath;
+        }
+        catch(...)
+        {
+            return "";
+        }
+        return "";
+    }
+
     // Returns true, if data's param or level structure is changed
     bool SingleData::updateData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
     {
@@ -138,6 +155,8 @@ namespace AddParams
         {
             dataStruckturesChanged = ::isDataStructuresChanged(info, latestMetaData_);
             latestDataFilePath_ = info->DataFileName();
+            //totalServerPath_ = combineTotalFilePath(info->DataFileName(), helpDataInfo->FileNameFilter());
+            totalLocalPath_ = combineTotalFilePath(info->DataFileName(), info->DataFilePattern());
             latestMetaData_ = std::make_unique<NFmiQueryInfo>(*info);
             uniqueDataId_ = info->DataFilePattern();
             dataType_ = info->DataType();
@@ -180,4 +199,6 @@ namespace AddParams
         std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
         return !origTime.empty() ? origTime : "";
     }
+
+     
 }
