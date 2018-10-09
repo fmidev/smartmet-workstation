@@ -6,6 +6,7 @@
 #include "FmiEditorModifyToolMode.h"
 #include "FmiSmartMetEditingMode.h"
 #include "NFmiTimeEditMode.h"
+#include "ControlPointAcceleratorActions.h"
 
 #include "boost/shared_ptr.hpp"
 
@@ -360,6 +361,7 @@ public:
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+    virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

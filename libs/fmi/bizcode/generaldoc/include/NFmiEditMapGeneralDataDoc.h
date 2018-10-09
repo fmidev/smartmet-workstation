@@ -14,6 +14,7 @@
 #include "FmiSmartMetEditingMode.h"
 #include "FmiEditorModifyToolMode.h"
 #include "catlog/catlog.h"
+#include "ControlPointAcceleratorActions.h"
 
 #include <list>
 #include "boost/shared_ptr.hpp"
@@ -145,6 +146,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes();
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex);
     Warnings::CapDataSystem& GetCapDataSystem();
