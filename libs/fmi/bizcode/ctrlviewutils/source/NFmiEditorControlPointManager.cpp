@@ -841,6 +841,66 @@ bool NFmiEditorControlPointManager::NextCP(void)
 		return true;
 }
 
+const int g_missingCpIndex = -1;
+
+// Etsi ensimmäinen aktiivinen CP-piste ja palauta sen indeksi.
+// Jos aktiivista CP:tä ei ole, palauta g_missingCpIndex.
+int NFmiEditorControlPointManager::GetActiveCpIndex() const
+{
+    for(auto cpIndex = 0; cpIndex < itsCPActivityVector.size(); cpIndex++)
+    {
+        if(itsCPActivityVector[cpIndex])
+            return cpIndex;
+    }
+    return g_missingCpIndex;
+}
+
+bool NFmiEditorControlPointManager::ActivateNextCP()
+{
+    auto activeCpIndex = GetActiveCpIndex();
+    if(activeCpIndex == g_missingCpIndex)
+        return false;
+    if(activeCpIndex == itsCPCount - 1)
+        return false; // Viimeinen CP-piste oli jo aktiivinen, jätetään homma siihen
+    else 
+    {
+        // Deaktivoidaan löydetty piste, ja aktivoidaan sitä seuraava
+        itsCPActivityVector[activeCpIndex] = false;
+        itsCPActivityVector[activeCpIndex + 1] = true;
+        return true;
+    }
+}
+
+bool NFmiEditorControlPointManager::ActivatePreviousCP()
+{
+    auto activeCpIndex = GetActiveCpIndex();
+    if(activeCpIndex == g_missingCpIndex)
+        return false;
+    if(activeCpIndex <= 0)
+        return false; // Viimeinen CP-piste oli jo aktiivinen, jätetään homma siihen
+    else
+    {
+        // Deaktivoidaan löydetty piste, ja aktivoidaan sitä edellinen
+        itsCPActivityVector[activeCpIndex] = false;
+        itsCPActivityVector[activeCpIndex - 1] = true;
+        return true;
+    }
+}
+
+bool NFmiEditorControlPointManager::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action)
+{
+    switch(action)
+    {
+    case ControlPointAcceleratorActions::Next:
+        return ActivateNextCP();
+    case ControlPointAcceleratorActions::Previous:
+        return ActivatePreviousCP();
+    default:
+        break;
+    }
+    return false;
+}
+
 //--------------------------------------------------------
 // ClearAllChangeValues 
 //--------------------------------------------------------
@@ -1064,6 +1124,8 @@ const NFmiPoint& NFmiEditorControlPointManager::StartingRelativeLocation(int the
 
 	return itsDummyLatlon;
 }
+
+
 
 std::ostream& operator<<(std::ostream& os, const NFmiEditorControlPointManager& item)
 {

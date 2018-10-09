@@ -30,6 +30,7 @@
 #include "NFmiEditorControlPoint.h"
 #include "NFmiDataMatrix.h" // täältä tulee myös checkedVector
 #include "NFmiGriddingHelperInterface.h"
+#include "ControlPointAcceleratorActions.h"
 
 struct NFmiCPGriddingProperties
 {
@@ -110,6 +111,8 @@ public:
    bool NextTime (void) ;
    bool ResetCP(void) ;
    bool NextCP(void) ;
+   bool ActivateNextCP();
+   bool ActivatePreviousCP();
    void ClearAllChangeValues (int clearMethod, double theClearValue) ;
    void CPMovingInTimeHelpPoints(const ThreePoints& thePoints, int theIndex = -1);
    const ThreePoints& CPMovingInTimeHelpPoints(int theIndex = -1) const;
@@ -139,6 +142,7 @@ public:
    void FilePath(const std::string &newValue);
    const std::string& Name(void) const {return itsName;}
    void Name(const std::string &newValue) {itsName = newValue;}
+   bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action);
 
    std::istream& Read (std::istream& file) ;
    std::ostream& Write (std::ostream& file) const;
@@ -155,6 +159,7 @@ private:
 	void ClearIndexedParamChangeValues(double newValue, int paramIndex);
 	void ClearIndexedParamIndexedCPChangeValues(double newValue, int paramIndex, int CPIndex);
     void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut);
+    int GetActiveCpIndex() const;
 
    // Kuinka monta controlpoint parametria on parambagissä.
    int itsParamCount;
