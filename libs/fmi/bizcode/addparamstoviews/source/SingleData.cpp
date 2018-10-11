@@ -2,6 +2,8 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiHelpDataInfo.h"
 
+#include <boost/algorithm/string.hpp>
+
 namespace
 {
     bool isDataStructuresChanged(const boost::shared_ptr<NFmiFastQueryInfo>& newInfo, const std::unique_ptr<NFmiQueryInfo> &latestMetaData)
@@ -75,6 +77,11 @@ namespace
         }
     }
 
+    bool compareDisplayName(const AddParams::SingleRowItem &a, const  AddParams::SingleRowItem &b)
+    {
+        return boost::algorithm::ilexicographical_compare(a.displayName(), b.displayName());
+    }
+
     //Create dailogRowData with proper RowType
     void addParameterAndPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, NFmiQueryInfo &queryInfo)
     {
@@ -102,6 +109,7 @@ namespace
             else //Surface data
             {
                 dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true));
+                std::sort(dialogRowData.begin(), dialogRowData.end(), compareDisplayName);
             }
         }
         else //Wind sub menu
