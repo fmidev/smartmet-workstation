@@ -6,6 +6,7 @@
 #include "FmiEditorModifyToolMode.h"
 #include "FmiSmartMetEditingMode.h"
 #include "NFmiTimeEditMode.h"
+#include "ControlPointAcceleratorActions.h"
 
 #include "boost/shared_ptr.hpp"
 
@@ -269,8 +270,6 @@ public:
     virtual void TimeEditSmootherMaxValue(int newValue) = 0;
     virtual int TimeEditSmootherValue() = 0;
     virtual void TimeEditSmootherValue(int newValue) = 0;
-    virtual float CPGriddingFactor() = 0;
-    virtual void CPGriddingFactor(float newValue) = 0;
     virtual const NFmiPoint& TimeSerialViewSizeInPixels() const = 0;
     virtual void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust() = 0;
@@ -362,6 +361,7 @@ public:
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+    virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

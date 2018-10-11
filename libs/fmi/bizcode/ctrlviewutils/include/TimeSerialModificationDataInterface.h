@@ -122,14 +122,13 @@ public:
     virtual void SetMacroErrorText(const std::string &theErrorStr) = 0;
     virtual boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) = 0;
     virtual FmiLanguage Language(void) = 0;
-    virtual float CPGriddingFactor(void) = 0;
     virtual const NFmiRect& CPGridCropRect(void) = 0;
     virtual bool UseCPGridCrop(void) = 0;
     virtual const NFmiPoint& CPGridCropMargin(void) = 0;
     virtual MultiProcessClientData& GetMultiProcessClientData(void) = 0;
     virtual const std::string& GetSmartMetGuid(void) = 0;
     virtual bool UseMultiProcessCpCalc(void) = 0;
-    virtual void MakeSureToolMasterPoolIsRunning(void) = 0;
+    virtual bool MakeSureToolMasterPoolIsRunning(void) = 0;
     virtual bool IsWorkingDataSaved() = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) = 0;
 };

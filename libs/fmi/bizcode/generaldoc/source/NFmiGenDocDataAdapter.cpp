@@ -408,11 +408,6 @@ FmiLanguage NFmiGenDocDataAdapter::Language(void)
 	return itsDoc->Language();
 }
 
-float NFmiGenDocDataAdapter::CPGriddingFactor(void)
-{
-	return itsDoc->CPGriddingFactor();
-}
-
 const NFmiRect& NFmiGenDocDataAdapter::CPGridCropRect(void)
 {
 	return itsDoc->CPGridCropRect();
@@ -443,9 +438,9 @@ bool NFmiGenDocDataAdapter::UseMultiProcessCpCalc(void)
     return itsDoc->UseMultiProcessCpCalc();
 }
 
-void NFmiGenDocDataAdapter::MakeSureToolMasterPoolIsRunning(void)
+bool NFmiGenDocDataAdapter::MakeSureToolMasterPoolIsRunning(void)
 {
-    itsDoc->MakeSureToolMasterPoolIsRunning();
+    return itsDoc->MakeSureToolMasterPoolIsRunning();
 }
 
 bool NFmiGenDocDataAdapter::IsWorkingDataSaved()

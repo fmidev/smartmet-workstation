@@ -103,14 +103,13 @@ public:
 	void SetMacroErrorText(const std::string &theErrorStr) override;
 	boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) override;
 	FmiLanguage Language(void) override;
-	float CPGriddingFactor(void) override;
 	const NFmiRect& CPGridCropRect(void) override;
 	bool UseCPGridCrop(void) override;
 	const NFmiPoint& CPGridCropMargin(void) override;
     MultiProcessClientData& GetMultiProcessClientData(void) override;
     const std::string& GetSmartMetGuid(void) override;
     bool UseMultiProcessCpCalc(void) override;
-    void MakeSureToolMasterPoolIsRunning(void) override;
+    bool MakeSureToolMasterPoolIsRunning(void) override;
     bool IsWorkingDataSaved() override;
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) override;
 

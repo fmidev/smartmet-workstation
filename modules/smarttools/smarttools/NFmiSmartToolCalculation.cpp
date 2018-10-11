@@ -1134,7 +1134,8 @@ void NFmiSmartToolCalculation::CheckIfModularParameter(void)
   itsCircularValueModulor = kFloatMissing;
   if (itsResultInfo)
   {
-    if (itsResultInfo->Param().GetParamIdent() == kFmiWindDirection)
+    auto paramName = itsResultInfo->Param().GetParamIdent();
+    if(paramName == kFmiWindDirection || paramName == kFmiWaveDirection)
     {
       fCircularValue = true;
       itsCircularValueModulor = 360;
