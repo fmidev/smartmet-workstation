@@ -28,6 +28,7 @@
 #include "NFmiArea.h"
 #include "NFmiSettings.h"
 #include "NFmiFileString.h"
+#include "NFmiFastQueryInfo.h"
 
 #include <iterator>
 #include <fstream>
@@ -300,6 +301,38 @@ bool NFmiEditorControlPointManager::Init(const NFmiEditorControlPointManager &th
 	return Init(theOther.TimeDescriptor(), theOther.ParamBag(), "", true, true);
 }
 
+bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea)
+{
+    checkedVector<NFmiPoint> addedControlPoints;
+    for(auto &fastInfo : theInfos)
+    {
+        AddZoomedAreaStationsToCPVector(fastInfo, theArea, addedControlPoints);
+    }
+    return Init(addedControlPoints);
+}
+
+bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea)
+{
+    checkedVector<NFmiPoint> addedControlPoints;
+    AddZoomedAreaStationsToCPVector(theInfo, theArea, addedControlPoints);
+    return Init(addedControlPoints);
+}
+
+void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut)
+{
+    if(!theInfo->IsGrid())
+    {
+        for(theInfo->ResetLocation(); theInfo->NextLocation(); )
+        {
+            const auto &latlon = theInfo->LatLonFast();
+            if(theArea->IsInside(latlon))
+            {
+                theAddedControlPointsInOut.push_back(latlon);
+            }
+        }
+    }
+}
+
 void NFmiEditorControlPointManager::FilePath(const std::string &newValue) 
 {
 	itsFilePath = newValue;
@@ -548,7 +581,7 @@ bool NFmiEditorControlPointManager::AddCP (const NFmiPoint& theLatLon)
 	itsCPMatrix.Resize(itsParamCount, itsCPCount, NFmiEditorControlPoint(timeSize));
 	itsCPMovingInTimeHelpPoints.resize(itsCPCount, ThreePoints());
 	itsShowCPAllwaysOnTimeView.resize(itsCPCount, false);
-	ActivateCP(itsCPIndex, true, false) ;
+	ActivateCP(itsCPIndex, true) ;
 
 	return true;
 }
@@ -651,25 +684,26 @@ void NFmiEditorControlPointManager::MoveCP (const NFmiPoint& newLatLon)
 // keepOld:in avulla voidaan
 // kontrolloida, lis‰t‰‰nkˆ aktiivinen jo aktiivisten listaan vai
 // tuleeko siit‰ ainoa aktiivinen CP.
-void NFmiEditorControlPointManager::ActivateCP (const NFmiPoint& theLatLon, bool newState, bool fKeepOld)
+void NFmiEditorControlPointManager::ActivateCP(const NFmiPoint& theLatLon, bool newState)
 {
-	if(FindNearestCP(theLatLon))
-	{
-		if(!fKeepOld)
-			for(int i = 0; i < itsCPCount; i++)
-				itsCPActivityVector[i] = false;
-		if(AreCPIndexiesGood(0, itsCPIndex))
-			itsCPActivityVector[itsCPIndex] = newState;
-	}
+    if(FindNearestCP(theLatLon))
+    {
+        ResetActivityVector();
+        if(AreCPIndexiesGood(0, itsCPIndex))
+            itsCPActivityVector[itsCPIndex] = newState;
+    }
 }
 
-void NFmiEditorControlPointManager::ActivateCP(int theCPIndex, bool newState, bool fKeepOld)
+void NFmiEditorControlPointManager::ActivateCP(int theCPIndex, bool newState)
 {
-	if(!fKeepOld)
-		for(int i = 0; i < itsCPCount; i++)
-			itsCPActivityVector[i] = false;
-	if(AreCPIndexiesGood(0, theCPIndex))
-		itsCPActivityVector[theCPIndex] = newState;
+    ResetActivityVector();
+    if(AreCPIndexiesGood(0, theCPIndex))
+        itsCPActivityVector[theCPIndex] = newState;
+}
+
+void NFmiEditorControlPointManager::ResetActivityVector()
+{
+    itsCPActivityVector.swap(std::vector<bool>(itsCPActivityVector.size(), false));
 }
 
 bool NFmiEditorControlPointManager::IsActivateCP(void)
@@ -806,6 +840,184 @@ bool NFmiEditorControlPointManager::NextCP(void)
 		return false;
 	else
 		return true;
+}
+
+const int g_missingCpIndex = -1;
+
+// Etsi ensimm‰inen aktiivinen CP-piste ja palauta sen indeksi.
+// Jos aktiivista CP:t‰ ei ole, palauta g_missingCpIndex.
+int NFmiEditorControlPointManager::GetActiveCpIndex() const
+{
+    for(auto cpIndex = 0; cpIndex < itsCPActivityVector.size(); cpIndex++)
+    {
+        if(itsCPActivityVector[cpIndex])
+            return cpIndex;
+    }
+    return g_missingCpIndex;
+}
+
+bool NFmiEditorControlPointManager::ActivateNextCP()
+{
+    auto activeCpIndex = GetActiveCpIndex();
+    if(activeCpIndex == g_missingCpIndex)
+        return ActivateFirstCp(); // Yritet‰‰n aktivoida 1. CP-piste
+    if(activeCpIndex >= itsCPCount - 1)
+        return false; // Viimeinen CP-piste oli jo aktiivinen, j‰tet‰‰n homma siihen
+    else 
+    {
+        // Deaktivoidaan lˆydetty piste, ja aktivoidaan sit‰ seuraava
+        ActivateCP(activeCpIndex + 1, true);
+        return true;
+    }
+}
+
+bool NFmiEditorControlPointManager::ActivatePreviousCP()
+{
+    auto activeCpIndex = GetActiveCpIndex();
+    if(activeCpIndex == g_missingCpIndex)
+        return ActivateFirstCp(); // Yritet‰‰n aktivoida 1. CP-piste
+    if(activeCpIndex <= 0)
+        return false; // Viimeinen CP-piste oli jo aktiivinen, j‰tet‰‰n homma siihen
+    else
+    {
+        // Deaktivoidaan lˆydetty piste, ja aktivoidaan sit‰ edellinen
+        ActivateCP(activeCpIndex - 1, true);
+        return true;
+    }
+}
+
+bool NFmiEditorControlPointManager::ActivateFirstCp()
+{
+    if(itsCPCount)
+    {
+        ActivateCP(0, true);
+        return true;
+    }
+    else
+        return false;
+}
+
+// Calculate direction from point1 to point2.
+// Result is in degrees (0 -> 360), 'north' is 0 and goes clockwise (east 90, south 180, west 270).
+// If points are the same, result is 0.
+static double CalcDirection(const NFmiPoint &point1, const NFmiPoint &point2)
+{
+    auto x = point2.X() - point1.X();
+    auto y = point2.Y() - point1.Y();
+    if(x == 0 && y == 0)
+        return 0;
+    auto origDirection = atan2(x, y) * 180 / kPii;
+    if(origDirection < 0)
+        return 360 + origDirection;
+    else
+        return origDirection;
+}
+
+static double GetAngleTowardsDirection(ControlPointAcceleratorActions direction)
+{
+    switch(direction)
+    {
+    case ControlPointAcceleratorActions::Up:
+        return 0;
+    case ControlPointAcceleratorActions::Down:
+        return 180;
+    case ControlPointAcceleratorActions::Left:
+        return 270;
+    default: // default on Right case
+        return 90;
+    }
+}
+
+// Lasketaan kerroin currentin CP pisteen suunnalle suhteessa haluttuun suuntaan.
+// Jos suunta on t‰ydellinen, saadaan kertoimeksi tasan 1, mutta jos suunnissa on eroa, voi se kasvaa kohti ~3.2:sta (jos l‰hestyt‰‰n 180 asteen heittoa)
+static double CalcDirectionalFactor(const NFmiPoint &activeCpRelativePoint, const NFmiPoint &currentCpRelativePoint, ControlPointAcceleratorActions direction)
+{
+    const double angleDivider = 90.;
+    auto directionAngle = ::GetAngleTowardsDirection(direction);
+    auto directionToCurrentPoint = ::CalcDirection(activeCpRelativePoint, currentCpRelativePoint);
+    auto factor = 1.;
+    if(std::fabs(directionAngle - directionToCurrentPoint) > 180.)
+    {
+        directionToCurrentPoint -= 360.; // Pit‰‰ varmistaa ett‰ erotusta ei lasketa ympyr‰n pitk‰‰ kaarta pitkin
+        factor = 1. + (std::fabs(directionToCurrentPoint - directionAngle) / angleDivider);
+    }
+    else
+        factor = 1. + (std::fabs(directionAngle - directionToCurrentPoint)/ angleDivider);
+    // Korostetaan factor:ia viel‰ niin ett‰ hyv‰t suunnat saava suhteessa pienemp‰‰ kerrointa
+    return std::pow(factor, 1.7);
+}
+
+template<typename Comparison>
+static int FindBestSuitedCpTowardsDirection(NFmiEditorControlPointManager &cpManager, int activeCpIndex, const Comparison &compare, ControlPointAcceleratorActions direction)
+{
+    const auto &activeCpRelativePoint = cpManager.RelativePoint(activeCpIndex);
+    int closestCpIndex = g_missingCpIndex;
+    double minRelativeDistance = 9999999999.;
+    for(int cpIndex = 0; cpIndex < cpManager.CPCount(); cpIndex++)
+    {
+        if(cpIndex != activeCpIndex)
+        {
+            const auto &currentCpRelativePoint = cpManager.RelativePoint(cpIndex);
+            if(compare(activeCpRelativePoint, currentCpRelativePoint))
+            {
+                // Et‰isyys laskuissa otetaan huomioon pisteiden et‰isyys ja 'hyv‰' suunta
+                auto directionalFactor = ::CalcDirectionalFactor(activeCpRelativePoint, currentCpRelativePoint, direction);
+                auto currentDistance = activeCpRelativePoint.Distance(currentCpRelativePoint) * directionalFactor;
+                if(currentDistance < minRelativeDistance)
+                {
+                    closestCpIndex = cpIndex;
+                    minRelativeDistance = currentDistance;
+                }
+            }
+        }
+    }
+    return closestCpIndex;
+}
+
+static std::function<bool(const NFmiPoint &, const NFmiPoint &)> GetTowardsComparisonFunction(ControlPointAcceleratorActions direction)
+{
+    switch(direction)
+    {
+    case ControlPointAcceleratorActions::Up:
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.Y() < currentPoint.Y(); };
+    case ControlPointAcceleratorActions::Down:
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.Y() > currentPoint.Y(); };
+    case ControlPointAcceleratorActions::Left:
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.X() > currentPoint.X(); };
+    default: // default on Right case
+        return [](const NFmiPoint &activePoint, const NFmiPoint &currentPoint) {return activePoint.X() < currentPoint.X(); };
+    }
+}
+
+bool NFmiEditorControlPointManager::ActivateCPToward(ControlPointAcceleratorActions direction)
+{
+    auto activeCpIndex = GetActiveCpIndex();
+    if(activeCpIndex == g_missingCpIndex)
+        return ActivateFirstCp(); // Yritet‰‰n aktivoida 1. CP-piste
+    else
+    {
+        auto closestCpIndex = ::FindBestSuitedCpTowardsDirection(*this, activeCpIndex, ::GetTowardsComparisonFunction(direction), direction);
+        if(closestCpIndex != g_missingCpIndex)
+        {
+            ActivateCP(closestCpIndex, true);
+            return true;
+        }
+        else
+            return false;
+    }
+}
+
+bool NFmiEditorControlPointManager::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action)
+{
+    switch(action)
+    {
+    case ControlPointAcceleratorActions::Next:
+        return ActivateNextCP();
+    case ControlPointAcceleratorActions::Previous:
+        return ActivatePreviousCP();
+    default:
+        return ActivateCPToward(action);
+    }
 }
 
 //--------------------------------------------------------
@@ -1032,6 +1244,8 @@ const NFmiPoint& NFmiEditorControlPointManager::StartingRelativeLocation(int the
 	return itsDummyLatlon;
 }
 
+
+
 std::ostream& operator<<(std::ostream& os, const NFmiEditorControlPointManager& item)
 {
 	item.Write(os); 
@@ -1043,6 +1257,7 @@ std::istream& operator>>(std::istream& is, NFmiEditorControlPointManager& item)
 	return is;
 }
 
+// ==========================================================================================
 
 NFmiCPGriddingProperties::NFmiCPGriddingProperties(bool isToolMasterAvailable)
 :fToolMasterAvailable(isToolMasterAvailable)
@@ -1066,4 +1281,3 @@ void NFmiCPGriddingProperties::StoreToSettings(void)
 	else
 		throw std::runtime_error("Error in NFmiCPGriddingProperties::StoreToSettings, unable to store setting.");
 }
-

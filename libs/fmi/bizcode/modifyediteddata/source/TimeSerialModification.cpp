@@ -38,9 +38,11 @@
 #include "NFmiExtraMacroParamData.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiPathUtils.h"
+#include "EditedInfoMaskHandler.h"
 #include "catlog/catlog.h"
 #include <fstream>
 #include <newbase/NFmiEnumConverter.h>
+#include "NFmiControlPointObservationBlender.h"
 
 
 #ifdef _MSC_VER
@@ -56,27 +58,12 @@
 #pragma warning(disable : 4505) // warning C4505: 'func-name' : unreferenced local function has been removed
 #endif
 
+using namespace std::literals::string_literals;
+
 static void LogMessage(TimeSerialModificationDataInterface &theAdapter, const std::string& theMessage, CatLog::Severity severity, CatLog::Category category)
 {
     theAdapter.LogAndWarnUser(theMessage, "", severity, category, true);
 }
-
-struct LimitChecker
-{
-	LimitChecker(double theMin, double theMax):itsMin(theMin),itsMax(theMax){}
-	double CheckValue(double theCheckedValue)
-	{
-		if(theCheckedValue == kFloatMissing)
-			return kFloatMissing;
-		if(theCheckedValue > itsMax)
-			theCheckedValue = itsMax;
-		else if(theCheckedValue < itsMin)
-			theCheckedValue = itsMin;
-		return theCheckedValue;
-	}
-	double itsMin;
-	double itsMax;
-};
 
 // piti tehdä winkkarista irralliset messagebox button/toiminto definet (HUOM! FMI-etuliite)
 #define FMI_MB_OK			0x00000000L
@@ -271,74 +258,72 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
     if(theParam.InterpolationMethod() != kLinearly)
         return false; // Tehdään vain lineaarisille parametreille muokkaus, en osaa muille laskea muutoksia oikein
 
-    FmiParameterName parName = static_cast<FmiParameterName>(theParam.GetIdent());
 	NFmiDataIdent dataIdent(theParam);
 	boost::shared_ptr<NFmiDrawParam> drawParamForLimits = theAdapter.GetUsedDrawParam(dataIdent, NFmiInfoData::kEditable);
 
 	if(drawParamForLimits)
 	{
-		LimitChecker limitChecker(drawParamForLimits->AbsoluteMinValue(), drawParamForLimits->AbsoluteMaxValue());
-		double size = theTimes.Size();
+        auto useMask = theMaskList->UseMask();
+		NFmiLimitChecker limitChecker(static_cast<float>(drawParamForLimits->AbsoluteMinValue()), static_cast<float>(drawParamForLimits->AbsoluteMaxValue()), static_cast<FmiParameterName>(theParam.GetIdent()));
+		auto timeSize = theTimes.Size();
 		theAnalyzeData->LastTime(); // vain viimeinen aika kiinnostaa analyysistä
 		if(theAnalyzeData->Param(theParam) && theModifiedData->Param(theParam))
 		{
-			theMaskList->CheckIfMaskUsed();
-			for(theAnalyzeData->ResetLevel(), theModifiedData->ResetLevel(); theAnalyzeData->NextLevel() && theModifiedData->NextLevel(); )
-			{
-				for(theModifiedData->ResetLocation(); theModifiedData->NextLocation(); )
-				{
-					NFmiPoint latlon(theModifiedData->LatLon());
-					if(theMaskList->IsMasked(latlon))
-					{
-						double analyzeValue = theAnalyzeData->InterpolatedValue(latlon);
-						if(theModifiedData->Time(theTimes.FirstTime()))
-						{
-							double firstEditDataValue = theModifiedData->FloatValue();
-							if(analyzeValue != kFloatMissing && firstEditDataValue != kFloatMissing)
-							{
-								double analyzeValueDiff = analyzeValue - firstEditDataValue;
-								double i = 0;
-								for(theTimes.Reset(); theTimes.Next(); i++)
-								{
-									if(theModifiedData->Time(theTimes.Time())) // vain editoitavaa dataa juoksutetaan ajassa (ajan pitäisi löytyä!)
-									{
-										double editDataValue = theModifiedData->FloatValue();
-										if(editDataValue != kFloatMissing)
-										{
-											double changeValue = (size - i - 1)/(size-1) * analyzeValueDiff + editDataValue;
-                                            if(parName == kFmiWindDirection)
-                                            {
-                                                if(changeValue > 360)
-                                                    changeValue = FmiRound(changeValue) % 360;
-                                                else if(changeValue < 0)
-                                                    changeValue += 360;
-                                            }
-											theModifiedData->FloatValue(static_cast<float>(limitChecker.CheckValue(changeValue)));
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+            for(theAnalyzeData->ResetLevel(), theModifiedData->ResetLevel(); theAnalyzeData->NextLevel() && theModifiedData->NextLevel(); )
+            {
+                for(theModifiedData->ResetLocation(); theModifiedData->NextLocation(); )
+                {
+                    NFmiPoint latlon(theModifiedData->LatLon());
+                    float analyzeValue = theAnalyzeData->InterpolatedValue(latlon);
+                    if(theModifiedData->Time(theTimes.FirstTime()))
+                    {
+                        float firstEditDataValue = theModifiedData->FloatValue();
+                        if(analyzeValue != kFloatMissing && firstEditDataValue != kFloatMissing)
+                        {
+                            float changeValue = firstEditDataValue - analyzeValue;
+                            auto timeIndex = 0;
+                            for(theTimes.Reset(); theTimes.Next(); timeIndex++)
+                            {
+                                if(theModifiedData->Time(theTimes.Time())) // vain editoitavaa dataa juoksutetaan ajassa (ajan pitäisi löytyä!)
+                                {
+                                    theMaskList->SyncronizeMaskTime(theTimes.Time());
+                                    float maskFactor = 1.f;
+                                    if(useMask)
+                                        maskFactor = static_cast<float>(theMaskList->MaskValue(latlon));
+                                    if(maskFactor)
+                                    {
+                                        float editDataValue = theModifiedData->FloatValue();
+                                        if(editDataValue != kFloatMissing)
+                                        {
+                                            auto modifiedValue = NFmiControlPointObservationBlendingData::BlendData(editDataValue, changeValue, maskFactor, timeSize, timeIndex, limitChecker);
+                                            theModifiedData->FloatValue(modifiedValue);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 			// kopioidaan vielä analyysi datan alku editoitavan datan alkuun, että tulee jatkuvaa dataa (ei hyppyä mallista analyysiin ja sitten liuku analyysista malliin)
-			NFmiMetTime startTime(theAnalyzeData->Time());
             for( ; theAnalyzeData->PreviousTime(); )
 			{
 				if(theModifiedData->Time(theAnalyzeData->Time()))
 				{
-					startTime = theAnalyzeData->Time();
-					for(theAnalyzeData->ResetLevel(), theModifiedData->ResetLevel(); theAnalyzeData->NextLevel() && theModifiedData->NextLevel(); )
+                    theMaskList->SyncronizeMaskTime(theModifiedData->Time());
+                    for(theAnalyzeData->ResetLevel(), theModifiedData->ResetLevel(); theAnalyzeData->NextLevel() && theModifiedData->NextLevel(); )
 					{
 						for(theModifiedData->ResetLocation(); theModifiedData->NextLocation(); )
 						{
 							NFmiPoint latlon(theModifiedData->LatLon());
-							if(theMaskList->IsMasked(latlon))
-							{
-								float value2 = static_cast<float>(limitChecker.CheckValue(theAnalyzeData->InterpolatedValue(latlon)));
-								if(value2 != kFloatMissing)
-									theModifiedData->FloatValue(value2);
+                            float maskFactor = 1.f;
+                            if(useMask)
+                                maskFactor = static_cast<float>(theMaskList->MaskValue(latlon));
+                            if(maskFactor)
+                            {
+                                float value = limitChecker.CheckValue(theAnalyzeData->InterpolatedValue(latlon));
+								if(value != kFloatMissing)
+									theModifiedData->FloatValue(value);
 							}
 						}
 					}
@@ -351,78 +336,98 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 
 static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theAnalyzeDataInfo, boost::shared_ptr<NFmiAreaMaskList> &theUsedMaskList, NFmiTimeDescriptor &theTimes, NFmiParam &theParam)
 {
-	bool status = false;
-	if(theAdapter.AnalyzeToolData().AnalyzeToolWithAllParams())
-	{
-		unsigned long paramIndex = theEditedInfo->ParamIndex();
-		unsigned long paramIndex2 = theAnalyzeDataInfo->ParamIndex();
-		for(theAnalyzeDataInfo->ResetParam(); theAnalyzeDataInfo->NextParam(false); )
-		{
-			status = ::DoAnalyzeModificationsForParam(theAdapter, *theAnalyzeDataInfo->Param().GetParam(), theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
-		}
-		theEditedInfo->ParamIndex(paramIndex); // palautetaan parametri osoittamaan oikeaan takaisin
-		theAnalyzeDataInfo->ParamIndex(paramIndex2);
-	}
-	else // muuten vain annettu parametri työstetään
-	{
-		status = ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
-	}
-	return status;
+	return ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
 }
 
-static bool DoAnalyzeModifications(TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const NFmiMetTime& /* theEndTime */ )
+static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
+    bool fGroundData, int theProducerId, int theProducerId2 = -1)
+{
+    auto infoVector = infoOrganizer.GetInfos(theType, fGroundData, theProducerId, theProducerId2);
+    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> finalInfos;
+    for(const auto &info : infoVector)
+    {
+        if(info->Param(theParam))
+            finalInfos.push_back(info);
+    }
+    return finalInfos;
+}
+
+static NFmiTimeDescriptor GetAnalyzeToolModificationTimes(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const NFmiMetTime &firstTime)
+{
+    NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
+    times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
+    return times;
+}
+
+static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, boost::shared_ptr<NFmiFastQueryInfo> &analyzeInfo1, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType)
+{
+    bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeInfo1, maskList, analyzeToolTimes, theParam);
+    if(theAdapter.AnalyzeToolData().UseBothProducers())
+    {
+        boost::shared_ptr<NFmiFastQueryInfo> analyzeInfo2 = theAdapter.InfoOrganizer()->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, dataType);
+        if(analyzeInfo2)
+        {
+            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
+            status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeInfo2, maskList, analyzeToolTimes, theParam);
+            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pitää palauttaa alkuperäinen maski (hoituu uudella inverse:llä)
+        }
+    }
+    return status;
+}
+
+static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
+{
+    auto drawParam = theAdapter.GetUsedDrawParam(editedInfo->Param(), dataType);
+    NFmiControlPointObservationBlender dataModifier(editedInfo, drawParam, maskList, fUsedMask,
+        theAdapter.CPManager(), theAdapter.CPGridCropRect(),
+        theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin(), observationInfos, actualFirstTime);
+
+    return dataModifier.ModifyTimeSeriesDataUsingMaskFactors(analyzeToolTimes, nullptr);
+}
+
+static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
-	if(editedInfo == 0)
-	{
-		::LogMessage(theAdapter, "Trying use Analyze modifying tool, but there is no edited data (error in SmartMet's code?).", CatLog::Severity::Warning, CatLog::Category::Editing);
-		return false;
-	}
-	boost::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
-	boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
-	if(!theAdapter.UseMasksInTimeSerialViews())
-		maskList = emptyMaskList;
+    if(editedInfo)
+    {
+        auto maskList = NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(theAdapter);
+        NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
+        if(infoOrganizer)
+        {
+            auto analyzeToolInfos = ::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
+            if(!analyzeToolInfos.empty())
+            {
+                auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
+                NFmiMetTime actualFirstTime, firstTime;
+                std::tie(actualFirstTime, firstTime) = NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo, usedAreaPtr, useObservationBlenderTool, std::string(producer.GetName()));
+                if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
+                {
+                    auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
+                    try
+                    {
+                        ::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), normalLogMessage, times.FirstTime(), times.LastTime());
+                    }
+                    catch(...)
+                    {
+                        // heitetty poikkeus eli halutaan lopettaa toiminto
+                        ::LogMessage(theAdapter, "Unknown error occured while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+                        return false;
+                    }
 
-	NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
-	if(infoOrganizer)
-	{
-		boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo = infoOrganizer->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
-		if(analyzeDataInfo)
-		{
-			NFmiMetTime firstTime(analyzeDataInfo->TimeDescriptor().LastTime());
-			if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
-			{
-				try
-				{
-					::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), "Analyysityökalu-muutos", firstTime, firstTime);
-				}
-				catch(...)
-				{
-					// heitetty poikkeus eli halutaan lopettaa toiminto
-					return false;
-				}
-
-				unsigned long oldMask = editedInfo->MaskType(); // tehdään ainakin aluksi muokkaus kaikille pisteille!!
-				editedInfo->MaskType(fUsedMask); // 13.11.2002/Marko tehdään muokkaus valituille pisteille
-				NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
-				times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
-				bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeDataInfo, maskList, times, theParam);
-				if(theAdapter.AnalyzeToolData().UseBothProducers())
-				{
-					boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo2 = infoOrganizer->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
-					if(analyzeDataInfo2)
-					{
-						dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
-						status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeDataInfo2, maskList, times, theParam);
-						dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pitää palauttaa alkuperäinen maski (hoituu uudella inverse:llä)
-					}
-				}
-                ::LogMessage(theAdapter, "Using Analyze tool to modify edited data.", CatLog::Severity::Info, CatLog::Category::Editing);
-				editedInfo->MaskType(oldMask); // Maski asetus takaisin.
-				return status;
-			}
-		}
-	}
+                    EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
+                    ::LogMessage(theAdapter, normalLogMessage, CatLog::Severity::Info, CatLog::Category::Editing);
+                    if(useObservationBlenderTool)
+                        return ::DoFinalObservationBlenderToolModifications(theAdapter, editedInfo, analyzeToolInfos, theParam, fUsedMask, maskList, times, dataType, actualFirstTime);
+                    else
+                        return ::DoFinalAnalyzeToolModifications(theAdapter, editedInfo, analyzeToolInfos[0], theParam, fUsedMask, maskList, times, dataType);
+                }
+                else
+                    ::LogMessage(theAdapter, "Analyze tool's end time was greater than calculated start time for analyze related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+            }
+            else
+                ::LogMessage(theAdapter, "Couldn't find any data while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+        }
+    }
 	return false;
 }
 
@@ -441,22 +446,25 @@ static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterfa
 				theAdapter.CPManager()->Param(theModifiedDrawParam->Param());
 
 				NFmiDataParamControlPointModifier dataModifier(fastInfo, theModifiedDrawParam, theMaskList, fUsedMask, 
-															theAdapter.CPManager(), theAdapter.CPGriddingFactor(), 
-															theAdapter.CPGridCropRect(), theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin());
+															theAdapter.CPManager(), theAdapter.CPGridCropRect(), 
+                                                            theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin());
 
                 if(theAdapter.UseMultiProcessCpCalc())
                 {
-                    theAdapter.MakeSureToolMasterPoolIsRunning();
-                    try
+                    if(theAdapter.MakeSureToolMasterPoolIsRunning())
                     {
-                        if(theAdapter.GetMultiProcessClientData().UseTcpMasterProcess())
+                        try
+                        {
                             dataModifier.DoProcessPoolCpModifyingTcp(theAdapter.GetMultiProcessClientData(), theTimeDescriptor, theAdapter.GetSmartMetGuid(), theThreadCallBacks);
-                        else
-                            dataModifier.DoProcessPoolCPModifying(theAdapter.GetMultiProcessClientData(), theTimeDescriptor, theAdapter.GetSmartMetGuid(), theThreadCallBacks);
+                        }
+                        catch(std::exception &e)
+                        {
+                            CatLog::logMessage(std::string("Error with MP-CP editing: ") + e.what(), CatLog::Severity::Error, CatLog::Category::Editing);
+                        }
                     }
-                    catch(std::exception &e)
+                    else
                     {
-                        log_message(std::string("Error with MP-CP editing:\n") + e.what(), logging::trivial::error);
+                        CatLog::logMessage(std::string("Error with MP-CP editing: Unable to start distributed calculation system"), CatLog::Severity::Error, CatLog::Category::Editing);
                     }
                 }
                 else
@@ -723,8 +731,10 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 {
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
-		if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
-			::DoAnalyzeModifications(theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
+        if(theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool()) // haaraudutaan, jos on observation-blender työkalu käytössä!
+            ::DoAnalyzeToolRelatedModifications(true, theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Observation-blender tool to modify edited data.", theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer(), NFmiInfoData::kObservations);
+        else if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
+			::DoAnalyzeToolRelatedModifications(false, theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Analyze tool to modify edited data.", theAdapter.AnalyzeToolData().SelectedProducer1(), NFmiInfoData::kAnalyzeData);
 		else
 		{
 			NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
@@ -749,10 +759,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 					return false;
 				}
 
-				boost::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
-				boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
-				if(!theAdapter.UseMasksInTimeSerialViews())
-					maskList = emptyMaskList;
+                auto maskList = NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(theAdapter);
 				if(theAdapter.MetEditorOptionsData().ControlPointMode())
 				{
                     ::LogMessage(theAdapter, TimeSeriesModifiedParamForLog(theModifiedDrawParam) + " - modified with Control Point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
@@ -1290,13 +1297,13 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 			}
 
 			boost::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = boost::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
-			unsigned int oldMask = editedData->MaskType();
+            auto usedMaskType = theAdapter.TestFilterUsedMask();
+            EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
 			bool status = false;
 			if(copyOfEditedData)
 			{
 				boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
-				editedData->MaskType(theAdapter.TestFilterUsedMask());
-				copyOfEditedData->MaskType(theAdapter.TestFilterUsedMask());
+				copyOfEditedData->MaskType(usedMaskType);
 				status = ::DoAreaFiltering(theAdapter, maskList, editedData, copyOfEditedData, fPasteClipBoardData, times, fDoMultiThread);
 				if(!status)
 					::UndoData(theAdapter);
@@ -1306,7 +1313,6 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
                     theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
                 }
 			}
-			editedData->MaskType(oldMask);
 			editedData->Time(time);
             LogDataFilterToolsModifications(theAdapter, true);
 			return status;
@@ -1573,20 +1579,19 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 			return false;
 
 		boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
-		unsigned int oldMask = editedData->MaskType();
-		editedData->MaskType(theAdapter.TestFilterUsedMask());
-		copyOfEditedData->MaskType(theAdapter.TestFilterUsedMask());
+        auto usedMaskType = theAdapter.TestFilterUsedMask();
+        EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
+		copyOfEditedData->MaskType(usedMaskType);
 		bool status = ::DoTimeFiltering(theAdapter, maskList, editedData, copyOfEditedData, times, fDoMultiThread);
 
 		if(!status)
 			::UndoData(theAdapter);
 		else
 		{
-            ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, false);
+            ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, usedMaskType, kFmiLastParameter, fDoMultiThread, false);
             theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
 		}
 
-		editedData->MaskType(oldMask);
 		editedData->Time(time);
         LogDataFilterToolsModifications(theAdapter, false);
 		return status;
@@ -1718,9 +1723,9 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 			return false;
 
 		boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
-		unsigned int oldMask = editedData->MaskType();
-		editedData->MaskType(theAdapter.TestFilterUsedMask()); // otetaan maskin käyttö muokkausdialogista
-		copyOfEditedData->MaskType(theAdapter.TestFilterUsedMask());
+        auto usedMaskType = theAdapter.TestFilterUsedMask();
+        EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
+		copyOfEditedData->MaskType(usedMaskType);
 		bool status = ::DoCombineModelAndKlapse(theAdapter, maskList, editedData, copyOfEditedData, times, fDoMultiThread);
 		if(!status)
 			::UndoData(theAdapter);
@@ -1731,7 +1736,6 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 //			theAdapter.RefreshMasks();
 		}
 
-		editedData->MaskType(oldMask);
 		editedData->Time(time);
 
 		return status;
@@ -2766,11 +2770,21 @@ static bool IsDataModificationInProgress(TimeSerialModificationDataInterface &th
 
 bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
-	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
-		return false;
-	::SetForInfiniteValueCheck(theAdapter);
-	bool status = ::DoTimeSeriesValuesModifying(theAdapter, theModifiedDrawParam, fUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue, fDoMultiThread, theThreadCallBacks);
-	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
+    auto status = false;
+    try
+    {
+        if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
+            return false;
+        ::SetForInfiniteValueCheck(theAdapter);
+        status = ::DoTimeSeriesValuesModifying(theAdapter, theModifiedDrawParam, fUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue, fDoMultiThread, theThreadCallBacks);
+        ::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
+    }
+    catch(std::exception &e)
+    {
+        auto errorString = "Unable to do time-serial modifications: "s;
+        errorString += e.what();
+        ::LogMessage(theAdapter, errorString, CatLog::Severity::Error, CatLog::Category::Editing);
+    }
 	return status;
 }
 

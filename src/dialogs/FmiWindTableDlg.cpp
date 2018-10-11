@@ -24,6 +24,7 @@
 #include "TextGenPosixTime.h"
 #include "CtrlViewFastInfoFunctions.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "EditedInfoMaskHandler.h"
 #include "persist2.h"
 
 #include <fstream>
@@ -297,11 +298,7 @@ static NFmiPoint GetSelectedLatlon(SmartMetDocumentInterface *smartMetDocumentIn
 		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = smartMetDocumentInterface->EditedSmartInfo();
 		if(editedInfo)
 		{
-			unsigned int oldMask = editedInfo->MaskType();
-			if(CtrlViewFastInfoFunctions::GetMaskedCount(editedInfo, NFmiMetEditorTypes::kFmiDisplayedMask, smartMetDocumentInterface->AllowRightClickDisplaySelection()))
-				editedInfo->MaskType(NFmiMetEditorTypes::kFmiDisplayedMask);
-			else
-				editedInfo->MaskType(NFmiMetEditorTypes::kFmiSelectionMask);
+            EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, smartMetDocumentInterface->AllowRightClickDisplaySelection()));
 
 			editedInfo->ResetLocation();
 			if(editedInfo->NextLocation())

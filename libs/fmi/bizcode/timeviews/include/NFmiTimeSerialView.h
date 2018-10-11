@@ -37,6 +37,7 @@ class NFmiFastQueryInfo;
 class NFmiDataModifier;
 class NFmiProducer;
 class NFmiParam;
+class NFmiEditorControlPointManager;
 
 namespace ModelClimatology
 {
@@ -44,6 +45,24 @@ namespace ModelClimatology
     using ParamMapItem = std::pair<std::string, ParamIds>;
     using ParamMap = std::map<FmiParameterName, ParamMapItem>;
 }
+
+class CpDrawingOptions
+{
+public:
+    CpDrawingOptions(const NFmiDrawingEnvironment &currentLine, const NFmiDrawingEnvironment &changeLine, const NFmiRect &viewFrame, const NFmiToolBox *toolbox);
+
+    NFmiDrawingEnvironment currentDataEnvi;
+    NFmiDrawingEnvironment changeDataEnvi;
+    NFmiPoint normalLine{ 2, 2 };
+    NFmiPoint thickLine{ 3, 3 };
+    NFmiPoint normalChangeLine{ 2, 2 };
+    NFmiPoint thickChangeLine{ 3, 3 };
+    NFmiPoint textPoint;
+    double heightInc = 0;
+    double endPointX1 = 0;
+    double endPointX2 = 0;
+    int currentLineIndex = 0;
+};
 
 class NFmiTimeSerialView : public NFmiTimeView
 {
@@ -67,7 +86,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
 	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey);
 	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
-	virtual void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle);
+	virtual void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines);
 	virtual void CreateValueScale (void);
 	virtual void DrawValueAxis (void);
 	virtual void DrawDataLine (const NFmiMetTime& theTime1,  const NFmiMetTime& theTime2, double value1, double value2, NFmiDrawingEnvironment & envi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis);
@@ -83,7 +102,7 @@ class NFmiTimeSerialView : public NFmiTimeView
  protected:
 	// ***** uusia selkeit‰ piirtofunktioita *********
 	void DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &theCurrentDataLineStyle, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
-	void DrawEditedDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle);
+	void DrawEditedDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines);
 	void PlotTimeSerialData(const checkedVector<double> &theValues, const checkedVector<NFmiMetTime> &theTimes, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines = false);
 	void PlotTimeSerialDataOpt(const checkedVector<double> &theValues, double xPosStart, double xStep, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines = false);
 	void FillTimeSerialDataFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiPoint &theLatLonPoint, checkedVector<double> &theValues);
@@ -94,7 +113,14 @@ class NFmiTimeSerialView : public NFmiTimeView
 	void FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiTimeBag &theLimitTimes, checkedVector<NFmiMetTime> &theTimes);
 	void CalcOptimizedDrawingValues(const NFmiTimeBag &theTimesIn, double &theXStartPosOut, double &theXStepOut);
 	bool OpenOverViewPopUp(const NFmiPoint &thePlace, unsigned long theKey);
-	// ***** uusia selkeit‰ piirtofunktioita *********
+
+    // Splitting DrawEditedDataLocationInTime -method in smaller parts
+    bool DrawEditedDataLocationInTime_PreliminaryActions(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle);
+    void DrawEditedDataLocationInTime_TimebagOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines);
+    void DrawEditedDataLocationInTime_Timelist(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines);
+    void DrawEditedDataLocationInTime_ModificationLineOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, const checkedVector<double> &values);
+    void DrawEditedDataLocationInTime_ModificationLine(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, const checkedVector<double> &values);
+    // ***** uusia selkeit‰ piirtofunktioita *********
 
     boost::shared_ptr<NFmiFastQueryInfo> GetObservationInfo(const NFmiParam &theParam, const NFmiPoint &theLatlon);
     boost::shared_ptr<NFmiFastQueryInfo> GetNonSynopObservation(const NFmiParam &theParam);
@@ -105,7 +131,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	std::string GetObservationToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
 	void DrawModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &theFractileData, long theStartParamIndex, const NFmiPoint &theLatlon, long theParamIndexIncrement = 1);
 	void DrawSelectedStationData(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, int &theDrawedLocationCounter);
-    void DrawHelperObservationData(const NFmiPoint &theLatlon, int &theDrawedLocationCounter);
+    void DrawHelperObservationData(const NFmiPoint &theLatlon);
     bool IsParamWeatherSymbol3();
     bool IsSynopticObservationData();
     std::string GetModelDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
@@ -134,10 +160,12 @@ class NFmiTimeSerialView : public NFmiTimeView
     void DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon);
     bool DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon, const NFmiProducer &theProducer);
 	void DrawSimpleDataVectorInTimeSerial(checkedVector<std::pair<double, NFmiMetTime> > &theDataVector, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePenSize, const NFmiPoint& theSinglePointSize);
-	void DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi);
+	void DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo);
 	void DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoint);
 	void DrawAnalyzeToolEndTimeLine(void);
-	void DrawStationNameLegend(const NFmiLocation* theLocation, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theFontSize, const NFmiPoint& theTextPos, const NFmiString& thePreLocationString, FmiDirection theTextAligment, double theDistanceInMeters = kFloatMissing);
+    bool SetAnalyzeToolRelatedInfoToLastSuitableTime(boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo, bool isObservationData);
+    void DrawAnalyzeToolRelatedMessages(const std::vector<std::string> &messages, NFmiDrawingEnvironment &envi);
+    void DrawStationNameLegend(const NFmiLocation* theLocation, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theFontSize, const NFmiPoint& theTextPos, const NFmiString& thePreLocationString, FmiDirection theTextAligment, double theDistanceInMeters = kFloatMissing);
 	void DrawModelDataLegend(const std::vector<NFmiColor> &theUsedColors, const std::vector<std::string> &theFoundProducerNames);
 	NFmiPoint CalcParamTextPosition(void);
 	void DrawHelperDataLocationInTime(const NFmiPoint &theLatlon);
@@ -154,11 +182,21 @@ class NFmiTimeSerialView : public NFmiTimeView
 	void DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatlon, int theTimeWhenDrawedInMinutes, const NFmiPoint& theSinglePointSize, bool fUseValueAxis = true);
 	void DrawNightShades(void);
 	void DrawShade(NFmiDrawingEnvironment &theEnvi, const NFmiMetTime &theTime, short theChangeByMinutes, double theYShift);
-	void DrawCPReferenceLines(void);
+    void DrawCPReferenceLines();
+    void DrawCPReferenceLines_DrawAllCps(bool drawModificationLines);
+    void DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, boost::shared_ptr<NFmiFastQueryInfo> &info, CpDrawingOptions &cpDrawingOptions, bool drawModificationLines);
+    void DrawCPReferenceLines_SetLineOptions(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions);
+    bool DrawCPReferenceLines_IsCpDrawn(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager);
+    void DrawCPReferenceLines_AdvanceDrawingOptions(CpDrawingOptions &cpDrawingOptions);
+    void DrawCPReferenceLines_DrawLegend(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions);
+    void DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions, bool drawModificationLines);
+    bool IsThisFirstEditedParamRow();
+    NFmiDrawingEnvironment MakeNormalCpLineDrawOptions() const;
+    NFmiDrawingEnvironment MakeChangeCpLineDrawOptions() const;
 	void DrawLocationDataIncrementally(void);
 	void DrawIncrementalDataLegend(void);
 	void DrawSelectedStationDataIncrementally(void);
-	virtual boost::shared_ptr<NFmiFastQueryInfo> Info(void);
+	virtual boost::shared_ptr<NFmiFastQueryInfo> Info(void) const;
 	void DrawPointInDataRect(NFmiDrawingEnvironment& envi, const NFmiPoint& theRelativePoint, const NFmiPoint& thePointSize);
 	void DrawLineInDataRect(NFmiPoint& relativeStartPoint, NFmiPoint& relativeEndPoint, NFmiDrawingEnvironment & envi);
 	virtual double CalcLinePerUnitValue(double *theLowTimeGridPos);
@@ -211,7 +249,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	double LowerScaleValueRound (double value, double step);
 	double HigherScaleValueRound (double value, double step);
 	NFmiDrawingEnvironment NormalStationDataCurveEnvironment (void);
-	NFmiDrawingEnvironment ChangeStationDataCurveEnvironment (double theRelativeFillFactor = 0.6, double theSublinesPerUnitFactor = 50);
+	NFmiDrawingEnvironment ChangeStationDataCurveEnvironment (double theRelativeFillFactor = 0.6, double theSublinesPerUnitFactor = 50) const;
 	NFmiDrawingEnvironment IncrementalStationDataCurveEnvironment(void);
 	NFmiDrawingEnvironment ChangeIncrementalStationDataCurveEnvironment(void);
 	bool ChangeModifyFactorView (double theChangeDirectionFactor);
@@ -228,10 +266,16 @@ class NFmiTimeSerialView : public NFmiTimeView
     NFmiPoint GetTooltipLatlon() const;
     NFmiPoint GetFirstSelectedLatlonFromEditedData() const;
     bool DoControlPointModeDrawing() const;
-    bool IsEditedData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-    void SetEditedDatasCorrectMaskOn(boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo) const;
+    bool IsEditedData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const;
     bool IsMosTemperatureMinAndMaxDisplayed(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo);
     void DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut);
+    bool IsAnalyzeRelatedToolUsed() const;
+    bool IsModifyFactorViewClicked(const NFmiPoint &thePlace) const;
+    void DrawSinglePointData(double value, const NFmiMetTime &time, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theSinglePointSize);
+    void DrawObservationBlenderDataInCpMode();
+    bool IsModificationLineDrawn() const;
+    boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableAnalyzeToolRelatedData(const NFmiPoint &theLatLonPoint);
+    boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableObsBlenderData(const NFmiPoint &theLatLonPoint);
 
 	NFmiDrawingEnvironment itsNormalCurveEnvi; // miten normaali k‰yr‰ piirret‰‰n
 	NFmiDrawingEnvironment itsChangeCurveEnvi; // miten muutos k‰yr‰ piirret‰‰n (punainen katkoviiva)

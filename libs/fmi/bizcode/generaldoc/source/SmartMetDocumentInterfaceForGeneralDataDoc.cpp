@@ -951,16 +951,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherValue(int newVa
     return itsDoc->TimeEditSmootherValue(newValue);
 }
 
-float SmartMetDocumentInterfaceForGeneralDataDoc::CPGriddingFactor()
-{
-    return itsDoc->CPGriddingFactor();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::CPGriddingFactor(float newValue)
-{
-    return itsDoc->CPGriddingFactor(newValue);
-}
-
 const NFmiPoint& SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewSizeInPixels() const
 {
     return itsDoc->TimeSerialViewSizeInPixels();
@@ -1408,6 +1398,11 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateRowInLockedDescTops(unsig
 int SmartMetDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
 {
     return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}
+
+bool SmartMetDocumentInterfaceForGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    return itsDoc->MakeControlPointAcceleratorAction(action, updateMessage);
 }
 
 #ifndef DISABLE_CPPRESTSDK

@@ -59,7 +59,8 @@ protected:
 	void DrawSelectedColorMarker(CDC *theDC);
 	void MoveRemainingSelectedColorRectsBackward(int theSelectedColorIndex);
 	void DoDraw(CDC *theDC);
-	CRect CalcBelowButtonsClientArea(void);
+    CRect CalcBelowButtonsClientArea(void);
+    CRect CalcRealFinalDialogSize();
     int CalcCustomDrawAreaTop(void);
 	void MakeViewUpdates(void);
 	void MakeColorUpdatesTodrawParam(void);
