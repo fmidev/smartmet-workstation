@@ -4482,6 +4482,7 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 {
 	NFmiMenuItemList *menuList = new NFmiMenuItemList;
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 160); // 160 = mesan 2
+    AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 189); // 189 = MetNo Analysis
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiRADARNRD, NFmiInfoData::kObservations); // tuliset dataa, mutta ei 'tutka'-dataa eli ignooraa kObservations-data tyyppi joka normaali tutkalla on
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 108); // 108 = lumikuorma-datan tuottaja numero
     AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 101); // 101 = kriging-datan tuottaja numero

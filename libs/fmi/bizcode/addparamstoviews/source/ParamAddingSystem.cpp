@@ -42,7 +42,7 @@ namespace AddParams
         satelImageProducerSystem_ = &satelImageProducerSystem;
         infoOrganizer_ = &infoOrganizer;
         helpDataInfoSystem_ = &helpDataInfoSystem;
-        helpDataIDs = {101, 107, 108, 109, 160, 242}; // Help Data id's. These are added to Help Data Category
+        helpDataIDs = {101, 107, 108, 109, 160, 189, 242}; // Help Data id's. These are added to Help Data Category
     }
 
     void ParamAddingSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
