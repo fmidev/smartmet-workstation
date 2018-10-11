@@ -1906,13 +1906,8 @@ void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
 // Haaraantuu t‰nne DrawCPReferenceLines metodista.
 void NFmiTimeSerialView::DrawObservationBlenderDataInCpMode()
 {
-    // 1. Piirr‰ CP k‰yr‰t legendoineen 
     DrawCPReferenceLines_DrawAllCps(false); // Ei piirret‰ CP muokkausk‰yr‰‰ (false parametri)
-    // 2. Piirr‰ obs->edited blendausk‰yr‰
-    // 3. DrawAnalyzeToolEndTimeLine();
-    // 4. Laita extra infoa n‰kyviin aktiivisesta CP-pisteest‰
-    //    - mm. Havainto aika, tuottajan nimi, onko kyse 0-muutos CP-pisteest‰, jne.
-    //    - N‰kyviin tieto, ett‰ onnistuuko obs-blending muokkaus ensink‰‰n.
+    DrawAnalyzeToolEndTimeLine();
 }
 
 NFmiDrawingEnvironment NFmiTimeSerialView::MakeNormalCpLineDrawOptions() const
