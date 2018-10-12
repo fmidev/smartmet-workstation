@@ -5,6 +5,8 @@
 #include "NFmiDrawParam.h"
 #include "NFmiAnalyzeToolData.h"
 
+#include <boost/math/special_functions/round.hpp>
+
 NFmiControlPointObservationBlender::BlendingDataHelper::BlendingDataHelper()
 :changeField()
 ,limitChecker(kFloatMissing, kFloatMissing, kFmiBadParameter)

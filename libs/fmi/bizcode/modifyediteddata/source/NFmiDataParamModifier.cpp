@@ -41,6 +41,7 @@
 #include "ToolMasterHelperFunctions.h"
 #include "EditedInfoMaskHandler.h"
 
+#include <boost/math/special_functions/round.hpp>
 #include <fstream>
 
 #ifdef _MSC_VER
