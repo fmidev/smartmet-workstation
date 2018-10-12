@@ -112,8 +112,8 @@ void NFmiControlPointObservationBlendingData::InitFromSettings(const std::string
     itsBaseNameSpace = theBaseNameSpace;
 
     // HUOM!! ei lueta eikä talleteta fAnalyzeToolMode-muuttujaa, koska oletusarvoisesti tämä arvo on SmartMetin käynnistyessä aina false
-    unsigned long prodId = NFmiSettings::Require<unsigned long>(std::string(itsBaseNameSpace + "::ProdId"));
-    std::string prodName = NFmiSettings::Require<std::string>(std::string(itsBaseNameSpace + "::ProdName"));
+    unsigned long prodId = NFmiSettings::Optional<unsigned long>(std::string(itsBaseNameSpace + "::ProdId"), kFmiSYNOP);
+    std::string prodName = NFmiSettings::Optional<std::string>(std::string(itsBaseNameSpace + "::ProdName"), "Synop"s);
     itsSelectedProducer = itsLastSessionProducer = NFmiProducer(prodId, prodName);
 }
 
