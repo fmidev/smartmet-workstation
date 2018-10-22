@@ -4227,8 +4227,8 @@ void NFmiStationViewHandler::DrawAutocompleteLocations(void)
 
 	g_AutoCompletionRects.clear(); // aluksi aina nollataan laatikot
 
-	// piirret‰‰n autocomplete juttuja vain p‰‰karttan‰yttˆˆn ja 1. rivin 1. sarakkeeseen
-	if(itsMapViewDescTopIndex == 0 && itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
+	// piirret‰‰n autocomplete juttuja vain 1. rivin 1. sarakkeeseen
+	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
 	{
 		std::vector<NFmiACLocationInfo> locInfos = autoComplete.AutoCompleteResults();
 		if(locInfos.size() == 0)
