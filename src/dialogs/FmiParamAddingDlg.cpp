@@ -146,17 +146,12 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     auto c = info->HPlaceDescriptor().IsGrid();
     auto d = info->HPlaceDescriptor().Grid();
     auto e = info->HPlaceDescriptor().Area();
-    auto f = info->TimeDescriptor().ValidTimeList();// ->CurrentResolution();
-    auto g = info->TimeDescriptor().ValidTimeBag();
 
-    //if(info->HPlaceDescriptor().IsGrid())
-    //{
-    //    info->HPlaceDescriptor().
-    //}
     NFmiTimeList* timeList;
     NFmiTimeBag* timeBag;
     int timeSteps;
     std::string resolution;
+    std::string gridArea;
 
     if(info->TimeDescriptor().ValidTimeList() != nullptr)
     {
@@ -168,27 +163,36 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     {
         timeBag = info->TimeDescriptor().ValidTimeBag();
         timeSteps = timeBag->GetSize();
-        resolution = std::to_string(timeBag->Resolution());
+        resolution = std::to_string(timeBag->Resolution()) + " min";
     }
+
+    gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
 
     std::string str;
     str += "<b><font color=blue>";
-    str += "Data information \n";
+    str += "Data information";
     str += "</font></b>";
+    str += "<br><hr color=blue><br>";
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
     //str += "<b>File name: </b>\t" + info->DataFilePattern() + "\n";
     str += "<b>Data loaded: </b>\t \n";
     str += "<b>File modified: </b>\t  \n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC \n";
-    str += "<b>Time range: </b>\t" + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC \n";
-    str += "<b>Time structure:  </b>\t + tähän time tietoa + \n";
-    str += "<b>Params:  </b>\t\ttotal: " + std::to_string(info->ParamBag().GetSize()) +  "\n";
-    str += "\t\t\t params here... \n";
-    str += "<b>Grid info: </b>\tarea: " + info->Area()->AreaStr() + "\n";
-    str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
+    str += "<b>Time range: </b>\t" + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC ";
+    str += "<br><hr color=blue><br>";
+    str += "<b>Time structure: </b> \n";
+    str += "\t\t\ttime steps : " + std::to_string(timeSteps) + "\n";
+    str += "\t\t\tresolution: " + resolution;
+    str += "<br><hr color=blue><br>";
+    str += "<b>Parameters:  </b>\ttotal: " + std::to_string(info->ParamBag().GetSize());
+    str += "<br><hr color=blue><br>";
+    str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
+    str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
+    str += "<br><hr color=blue><br>";
     str += "<b>File size: </b>\t\t" + fileSize + " MB \n";
     str += "<b>Local path: </b>\t" + combineFilePath(info->DataFileName(), info->DataFilePattern())  + "\n";
     str += "<b>Server path: </b>\t \n";
+    str += "<br><hr color=blue><br>";
     
     return str;
 }
