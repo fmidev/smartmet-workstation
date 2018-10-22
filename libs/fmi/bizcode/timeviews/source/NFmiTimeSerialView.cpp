@@ -3684,13 +3684,16 @@ bool NFmiTimeSerialView::SetAnalyzeToolRelatedInfoToLastSuitableTime(boost::shar
     {
         try
         {
-            checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> analyzeToolInfos(1, analyzeDataInfo);
+            checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> analyzeToolInfos = GetObsBlenderDataVector();
             auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(itsCtrlViewDocumentInterface->GenDocDataAdapter(), Info());
             auto useObservationBlenderTool = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool();
             std::string producerName = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer().GetName();
             NFmiMetTime actualFirstTime, usedFirstTime;
             std::tie(actualFirstTime, usedFirstTime) = NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, Info(), usedAreaPtr, useObservationBlenderTool, producerName);
-            return analyzeDataInfo->Time(usedFirstTime);
+            if(usedFirstTime > analyzeDataInfo->TimeDescriptor().LastTime())
+                return analyzeDataInfo->Time(actualFirstTime);
+            else
+                return analyzeDataInfo->Time(usedFirstTime);
         }
         catch(std::exception &)
         {
@@ -3842,12 +3845,17 @@ static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedPar
 
 boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetMostSuitableObsBlenderData(const NFmiPoint &theLatLonPoint)
 {
-    auto selectedProducerId = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer().GetIdent();
-    auto infoVector = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations, true, selectedProducerId);
-    auto infosWithParamVector = ::GetInfosWithWantedParam(infoVector, static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()));
+    auto infosWithParamVector = GetObsBlenderDataVector();
     // Haetaan data, jossa on lähin asema, jonka pitää olla myös määrätyn hakusäteen sisällä
     auto maxDistanceInMeters = NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000.;
     return itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(NFmiLocation(theLatLonPoint), NFmiMetTime::gMissingTime, true, &infosWithParamVector, maxDistanceInMeters);
+}
+
+checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiTimeSerialView::GetObsBlenderDataVector()
+{
+    auto selectedProducerId = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer().GetIdent();
+    auto infoVector = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations, true, selectedProducerId);
+    return ::GetInfosWithWantedParam(infoVector, static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()));
 }
 
 void NFmiTimeSerialView::DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo)
