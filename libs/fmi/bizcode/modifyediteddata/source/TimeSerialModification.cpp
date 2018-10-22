@@ -2812,9 +2812,10 @@ void FmiModifyEditdData::DoTimeSerialModifications2(ModifyFunctionParamHolder &t
 		return ;
 		// HUOM! ei saa menn‰ onnistuneessa ajossa t‰st‰ ohi, pit‰‰ olla return edell‰!
 	}
-	catch(NFmiStopThreadException & )
+	catch(std::exception &e)
 	{
-	}
+        ::LogMessage(theModifyFunctionParamHolder.itsAdapter, e.what(), CatLog::Severity::Error, CatLog::Category::Editing);
+    }
 	catch(...)
 	{
 	}
