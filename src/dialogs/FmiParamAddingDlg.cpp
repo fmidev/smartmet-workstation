@@ -221,7 +221,7 @@ std::string TooltipText(AddParams::SingleRowItem singleRowItem, boost::shared_pt
 
 std::string fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
 {
-    auto sizeMB = NFmiFileSystem::FileSize(singleRowItem.totalFilePath()) / (1024 * 1024);
+    auto sizeMB = NFmiFileSystem::FileSize(singleRowItem.totalFilePath()) / (1024 * 1000);
     std::stringstream fileSizeInMB;
     fileSizeInMB << std::setprecision(2) << sizeMB;
 
