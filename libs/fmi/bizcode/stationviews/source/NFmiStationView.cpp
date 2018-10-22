@@ -2427,7 +2427,7 @@ float NFmiStationView::ToolTipValue(const NFmiPoint& theRelativePoint, boost::sh
 		boost::shared_ptr<NFmiFastQueryInfo> info = theInfo;
 		if(prodId == kFmiSYNOP || prodId == kFmiSHIP || prodId == kFmiBUOY || prodId == kFmiTestBed)
 		{
-			info = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(wantedLocation, itsTime, false, 0);
+			info = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(wantedLocation, itsTime, true, 0);
 			if(info == 0 && UseQ2ForSynopData(itsDrawParam))
 			{
 				info = GetNearestQ2SynopStation(wantedLocation);
