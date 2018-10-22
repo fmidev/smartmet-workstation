@@ -289,6 +289,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "View log",                    ID_VIEW_EDITOR_LOG
+        MENUITEM "Log Viewer\tCtrl+L",          ID_ACCELERATOR_LOG_VIEWER
         MENUITEM SEPARATOR
         MENUITEM "Map view 2",                  ID_EXTRA_MAP_VIEW_1
         MENUITEM "Map view 3",                  ID_EXTRA_MAP_VIEW_2
@@ -298,9 +299,9 @@ BEGIN
         MENUITEM "Zooming tool",                ID_BUTTON_ZOOM_DIALOG
         MENUITEM "Param selection tool\tF8",    ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
         MENUITEM "SmartTool dialog",            ID_BUTTON_OPEN_SMART_TOOL_DLG
-        MENUITEM "View macro tool",             ID_ACCELERATOR_STORE_VIEW_MACRO
+        MENUITEM "View macro tool\tCTRL+I",     ID_ACCELERATOR_STORE_VIEW_MACRO
         MENUITEM "Sounding view",               ID_BUTTON_TEMP_DLG
-        MENUITEM "Animation tool",              ID_BUTTON_ANIMATION
+        MENUITEM "Animation tool\tZ",           ID_BUTTON_ANIMATION
         MENUITEM "Cross section view",          ID_BUTTON_SHOW_CROSS_SECTION
         MENUITEM "Synop plot settings...\tF3",  ID_BUTTON_SHOW_SYNOP_PLOT_SETTINGS
         MENUITEM "Station data grid view",      ID_BUTTON_SYNOP_DATA_GRID_VIEW
@@ -312,7 +313,6 @@ BEGIN
         MENUITEM "Ignore stations\tCtrl+F3",    ID_ACCELERATOR_IGNORE_STATIONS_DLG
         MENUITEM "Case study dialog\tCTRL+F8",  ID_VIEW_CASE_STUDY_DIALOG
         MENUITEM "Beta Production\tSHIFT+F8",   ID_VIEW_BETAPRODUCTION
-        MENUITEM "Log Viewer\tCtrl+L",          ID_ACCELERATOR_LOG_VIEWER
         MENUITEM SEPARATOR
         POPUP "Move views visible"
         BEGIN
