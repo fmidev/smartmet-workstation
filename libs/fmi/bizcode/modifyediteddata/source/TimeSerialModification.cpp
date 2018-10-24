@@ -380,7 +380,7 @@ static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDat
     auto drawParam = theAdapter.GetUsedDrawParam(editedInfo->Param(), dataType);
     NFmiControlPointObservationBlender dataModifier(editedInfo, drawParam, maskList, fUsedMask,
         theAdapter.CPManager(), theAdapter.CPGridCropRect(),
-        theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin(), observationInfos, actualFirstTime);
+        theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin(), observationInfos, actualFirstTime, theAdapter.GetGriddingHelper()->GriddingProperties(true));
 
     return dataModifier.ModifyTimeSeriesDataUsingMaskFactors(analyzeToolTimes, nullptr);
 }
@@ -447,7 +447,7 @@ static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterfa
 
 				NFmiDataParamControlPointModifier dataModifier(fastInfo, theModifiedDrawParam, theMaskList, fUsedMask, 
 															theAdapter.CPManager(), theAdapter.CPGridCropRect(), 
-                                                            theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin());
+                                                            theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin(), theAdapter.GetGriddingHelper()->GriddingProperties(true));
 
                 if(theAdapter.UseMultiProcessCpCalc())
                 {
