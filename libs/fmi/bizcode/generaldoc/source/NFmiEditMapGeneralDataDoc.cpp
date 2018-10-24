@@ -756,7 +756,6 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitMTATempSystem(); // pit‰‰ kutsua vasta InitProducerSystem- ja InitExtraSoundingProducerListFromSettings -kutsujen j‰lkeen
 
 	InitCPManagerSet();
-	InitCPGriddingProperties();
 	InitDrawDifferenceDrawParam();
 	InitSmartToolInfo();
 	InitMacroParamSystem(true); // macroParamsystem pit‰‰ initialisoida ennen viewMacroSystemin initialisointia!!!!!!!
@@ -1362,7 +1361,8 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         std::string shortAppVerStr = GetShortAppVersionString();
         if(shortAppVerStr.size() < 3)
             throw std::runtime_error(std::string("Invalid application's short version number: '") + shortAppVerStr + "', should be in format X.Y");
-        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem()); // 3 = 3 eri karttan‰yttˆ‰, ei viel‰k‰‰n miss‰‰n asetusta t‰lle, koska p‰‰karttan‰yttˆ poikkeaa kahdesta apukarttan‰ytˆst‰
+        // 3 = 3 eri karttan‰yttˆ‰, ei viel‰k‰‰n miss‰‰n asetusta t‰lle, koska p‰‰karttan‰yttˆ poikkeaa kahdesta apukarttan‰ytˆst‰
+        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem(), IsToolMasterAvailable());
 
         // We have to set log level here, now that used log level is read from registry
         CatLog::logLevel(static_cast<CatLog::Severity>(itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LogLevel()));
@@ -7926,8 +7926,6 @@ bool IsToolMasterAvailable(void) const
 void ToolMasterAvailable(bool newValue)
 {
     itsBasicConfigurations.ToolMasterAvailable(newValue);
-    itsCPGriddingProperties.fToolMasterAvailable = newValue; // En ymm‰rr‰ mihin itsCPGriddingProperties -dataosiota todellakin tarvitaan, voisiko sen poistaa
-    itsCPManagerSet.SetToolMasterAvailable(newValue); // asetetaan kaikille CP-managereille arvo kerralla
 }
 
 // Tallettaa mm. CP pisteet, muutosk‰yr‰t jne.
@@ -8139,32 +8137,6 @@ const string& EditorVersionStr(void)
 	return itsBasicConfigurations.EditorVersionStr();
 }
 
-const NFmiCPGriddingProperties& CPGriddingProperties(void)
-{
-	return itsCPGriddingProperties;
-}
-void CPGriddingProperties(const NFmiCPGriddingProperties& newProperties)
-{
-	itsCPGriddingProperties = newProperties;
-	CPManagerSet().SetCPGriddingProperties(itsCPGriddingProperties);  // p‰ivitet‰‰n t‰m‰ myˆs CPManagerSet:iin, ett‰ ominaisuudet tulevat k‰yttˆˆn
-}
-
-bool StoreCPGriddingProperties(void)
-{
-	try
-	{
-		itsCPGriddingProperties.StoreToSettings();
-		return true;
-	}
-	catch(std::exception &e)
-	{
-		std::string errStr("Error while storing gridding options.\n");
-		errStr += e.what();
-		this->LogAndWarnUser(errStr, "Error while storing gridding options", CatLog::Severity::Error, CatLog::Category::Configuration, false);
-	}
-	return false;
-}
-
 bool InitCPManagerSet(void)
 {
     DoVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -8180,22 +8152,6 @@ bool InitCPManagerSet(void)
 	return false;
 }
 
-bool InitCPGriddingProperties(void)
-{
-    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
-	try
-	{
-		itsCPGriddingProperties.InitFromSettings("SmartMet::GriddingOptions");
-		itsCPGriddingProperties.fToolMasterAvailable = this->IsToolMasterAvailable();
-		CPManagerSet().SetCPGriddingProperties(itsCPGriddingProperties);
-		return true;
-	}
-	catch(std::exception &e)
-	{
-		LogAndWarnUser(e.what(), "Error while initializing Gridding Options", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
-	}
-	return false;
-}
 
 	std::string& SmartToolEditingErrorText(void)
 	{
@@ -14051,8 +14007,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	size_t itsSelectedGridPointLimit; // kuinka monta hilapistett‰ pit‰‰ v‰hint‰‰n olla valittuna ennen kuin menn‰‰n uuteen hatchill‰ visualisointi tapaan
 	string itsSmartToolEditingErrorText;
 
-	NFmiCPGriddingProperties itsCPGriddingProperties; // mill‰ funktiolla ja miten tehd‰‰n CP-tyˆkalun griddaus
-
 	bool fActivateParamSelectionDlgAfterLeftDoubleClick; // kikka 6, jotta zeditmap2view tiet‰‰, pit‰‰kˆ dialogi aktivoida
 
     // N‰ytet‰‰nkˆ erilaisia apudatoja aikasarjaikkunoissa?
@@ -14782,21 +14736,6 @@ const string& NFmiEditMapGeneralDataDoc::EditorVersionStr(void)
 bool NFmiEditMapGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId)
 {
 	return pimpl->ExecuteCommand(theMenuItem, theViewIndex, theViewTypeId);
-}
-
-const NFmiCPGriddingProperties& NFmiEditMapGeneralDataDoc::CPGriddingProperties(void)
-{
-	return pimpl->CPGriddingProperties();
-}
-
-void NFmiEditMapGeneralDataDoc::CPGriddingProperties(const NFmiCPGriddingProperties& newProperties)
-{
-	pimpl->CPGriddingProperties(newProperties);
-}
-
-bool NFmiEditMapGeneralDataDoc::StoreCPGriddingProperties(void)
-{
-	return pimpl->StoreCPGriddingProperties();
 }
 
 bool NFmiEditMapGeneralDataDoc::DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
