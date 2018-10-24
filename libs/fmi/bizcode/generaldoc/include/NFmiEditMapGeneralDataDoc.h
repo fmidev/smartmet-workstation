@@ -51,7 +51,6 @@ class NFmiMetEditorOptionsData;
 class NFmiMetEditorBaseMacro;
 class NFmiEditorControlPointManager;
 class NFmiProjectionCurvatureInfo;
-struct NFmiCPGriddingProperties;
 class NFmiSmartToolInfo;
 class NFmiPoint;
 class NFmiRect;
@@ -517,9 +516,6 @@ public:
 
 	bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly);
 	std::string& SmartToolEditingErrorText(void);
-	bool StoreCPGriddingProperties(void);
-	const NFmiCPGriddingProperties& CPGriddingProperties(void);
-	void CPGriddingProperties(const NFmiCPGriddingProperties& newProperties);
 	bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId);
 	const std::string& EditorVersionStr(void);
 	bool IsOperationalModeOn(void);
