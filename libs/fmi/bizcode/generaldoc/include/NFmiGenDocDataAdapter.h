@@ -2,27 +2,7 @@
 
 #include "TimeSerialModificationDataInterface.h"
 
-class NFmiDrawParam;
-class NFmiFastQueryInfo;
-class NFmiAreaMaskList;
-class NFmiAnalyzeToolData;
-class NFmiInfoOrganizer;
-class NFmiDataIdent;
-class NFmiMetEditorOptionsData;
-class NFmiEditorControlPointManager;
-class NFmiParamBag;
-class NFmiMetTime;
-class NFmiSmartToolInfo;
 class NFmiEditMapGeneralDataDoc;
-class NFmiGrid;
-class NFmiDataLoadingInfo;
-class NFmiHelpEditorSystem;
-class NFmiQueryData;
-class NFmiHelpDataInfoSystem;
-class NFmiHPlaceDescriptor;
-class NFmiParamDescriptor;
-class NFmiModelDataBlender;
-class NFmiProducerIdLister;
 
 // T‰m‰ luokka toteuttaa uuden editoidun datan muokkaus rajapinnan joka on tehty
 // ModifyEditedData-kirjastoon. Siell‰ on m‰‰ritelty abstrakti TimeSerialModificationDataAdapterBase
