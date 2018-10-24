@@ -8,6 +8,7 @@
 #include "NFmiGriddingHelperInterface.h"
 #include "NFmiEditorControlPointManager.h"
 #include "FmiSmartMetEditingMode.h"
+#include "NFmiApplicationWinRegistry.h"
 
 NFmiGenDocDataAdapter::NFmiGenDocDataAdapter(NFmiEditMapGeneralDataDoc *theDoc)
 :itsDoc(theDoc)
@@ -189,17 +190,18 @@ public:
         :itsDoc(theDoc)
     {}
 
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
+    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
     {
         itsDoc->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
-    NFmiIgnoreStationsData& IgnoreStationsData()
+    NFmiIgnoreStationsData& IgnoreStationsData() override
     {
         return itsDoc->IgnoreStationsData();
     }
-    FmiGriddingFunction GriddingFunction()
+
+    const NFmiGriddingProperties& GriddingProperties(bool getEditingRelatedProperties) override
     {
-        return itsDoc->CPManager()->CPGriddingProperties().Function();
+        return itsDoc->ApplicationWinRegistry().GriddingProperties(getEditingRelatedProperties);
     }
 
 };
