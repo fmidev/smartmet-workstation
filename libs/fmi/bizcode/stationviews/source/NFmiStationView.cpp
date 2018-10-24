@@ -57,6 +57,7 @@
 #include "Q2ServerInfo.h"
 #include "NFmiHelpDataInfo.h"
 #include "EditedInfoMaskHandler.h"
+#include "NFmiApplicationWinRegistry.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1408,13 +1409,14 @@ static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, co
 	}
 }
 
-static void DoFinalGridding(FmiGriddingFunction griddingFunction, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<float> &theXValues, checkedVector<float> &theYValues, checkedVector<float> &theZValues, NFmiDataMatrix<float> &theValues, float theObservationRadiusRelative)
+static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<float> &theXValues, checkedVector<float> &theYValues, checkedVector<float> &theZValues, NFmiDataMatrix<float> &theValues)
 {
-	auto_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
-	NFmiDataParamControlPointModifier::DoDataGridding(theXValues, theYValues, theZValues, static_cast<int>(theZValues.size()), theValues, theArea->XYArea(), griddingFunction, obsDataGridding.get(), theObservationRadiusRelative);
+    auto stationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(griddingProperties.rangeLimitInKm(), theArea.get()));
+    auto_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
+	NFmiDataParamControlPointModifier::DoDataGridding(theXValues, theYValues, theZValues, static_cast<int>(theZValues.size()), theValues, theArea->XYArea(), griddingProperties, obsDataGridding.get(), stationRadiusRelative);
 }
 
-void NFmiStationView::GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, float theObservationRadiusRelative)
+void NFmiStationView::GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties)
 {
 	checkedVector<float> xValues;
 	checkedVector<float> yValues;
@@ -1451,7 +1453,7 @@ void NFmiStationView::GridStationData(NFmiGriddingHelperInterface *theGriddingHe
 			}
 		}
 	}
-	::DoFinalGridding(theGriddingHelper->GriddingFunction(), theArea, xValues, yValues, zValues, theValues, theObservationRadiusRelative);
+	::DoFinalGridding(griddingProperties, theArea, xValues, yValues, zValues, theValues);
 }
 
 class CtrlViewDocumentInterfaceGridding : public NFmiGriddingHelperInterface
@@ -1462,17 +1464,17 @@ public:
         :itsCtrlViewDocumentInterface(theCtrlViewDocumentInterface)
     {}
 
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
+    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
     {
         itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
-    NFmiIgnoreStationsData& IgnoreStationsData()
+    NFmiIgnoreStationsData& IgnoreStationsData() override
     {
         return itsCtrlViewDocumentInterface->IgnoreStationsData();
     }
-    FmiGriddingFunction GriddingFunction()
+    const NFmiGriddingProperties& GriddingProperties(bool getEditingRelatedProperties) override
     {
-        return itsCtrlViewDocumentInterface->CPManager()->CPGriddingProperties().Function();
+        return itsCtrlViewDocumentInterface->ApplicationWinRegistry().GriddingProperties(getEditingRelatedProperties);
     }
 
 };
@@ -1481,15 +1483,15 @@ public:
 void NFmiStationView::GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime)
 {
 	if(UseQ2ForSynopData(itsDrawParam))
-		GridStationDataFromQ2(theValues, theTime, false);
+		GridStationDataFromQ2(theValues, theTime);
     else
     {
-        CtrlViewDocumentInterfaceGridding ctrlViewGridding(itsCtrlViewDocumentInterface);
-        NFmiStationView::GridStationData(&ctrlViewGridding, Area(), itsDrawParam, theValues, theTime, kFloatMissing);
+        CtrlViewDocumentInterfaceGridding ctrlViewGriddingInterface(itsCtrlViewDocumentInterface);
+        NFmiStationView::GridStationData(&ctrlViewGriddingInterface, Area(), itsDrawParam, theValues, theTime, ctrlViewGriddingInterface.GriddingProperties(false));
     }
 }
 
-void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, float theObservationRadiusRelative)
+void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime)
 {
 	checkedVector<float> xValues;
 	checkedVector<float> yValues;
@@ -1520,7 +1522,9 @@ void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, co
 			}
 		}
 	}
-	::DoFinalGridding(itsCtrlViewDocumentInterface->CPManager()->CPGriddingProperties().Function(), itsArea, xValues, yValues, zValues, theValues, theObservationRadiusRelative);
+
+    CtrlViewDocumentInterfaceGridding ctrlViewGriddingInterface(itsCtrlViewDocumentInterface);
+    ::DoFinalGridding(ctrlViewGriddingInterface.GriddingProperties(false), itsArea, xValues, yValues, zValues, theValues);
 }
 
 static void FixDataWithMaskValues(const NFmiMetTime &theTime, NFmiDataMatrix<float> &theValues, const NFmiGrid &theGrid, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theParamMaskList)
