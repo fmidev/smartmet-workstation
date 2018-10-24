@@ -32,27 +32,6 @@
 #include "NFmiGriddingHelperInterface.h"
 #include "ControlPointAcceleratorActions.h"
 
-struct NFmiCPGriddingProperties
-{
-	NFmiCPGriddingProperties(bool isToolMasterAvailable = false);
-
-	void InitFromSettings(const std::string &theBaseNameSpace);
-	void StoreToSettings(void);
-
-	FmiGriddingFunction Function(void) const
-	{
-		if(fToolMasterAvailable)
-			return itsFunction;
-		return kFmiMarkoGriddingFunction;
-	}
-
-	// ************* Toolmaster Griddaus ominaisuuksia *************
-	bool fToolMasterAvailable;
-	FmiGriddingFunction itsFunction;
-	// ************* Toolmaster Griddaus ominaisuuksia *************
-	std::string itsBaseNameSpace;
-};
-
 class NFmiArea;
 
 class NFmiEditorControlPointManager 
@@ -135,9 +114,6 @@ public:
    bool ReadBackup(std::istream& file);
    void SetInTimeMovingCPRelativeLocations(const checkedVector<NFmiPoint>& theRelativeVector, int theIndex = -1);
    const checkedVector<NFmiPoint>& GetInTimeMovingCPRelativeLocations(int theIndex = -1) const;
-   const NFmiCPGriddingProperties& CPGriddingProperties(void) const {return itsCPGriddingProperties;}
-   NFmiCPGriddingProperties& CPGriddingProperties(void) {return itsCPGriddingProperties;}
-   void CPGriddingProperties(const NFmiCPGriddingProperties& newProperties){itsCPGriddingProperties = newProperties;}
    const checkedVector<NFmiPoint>& CPLocationVector(void) const {return itsCPLocationVector;}
    const std::string& FilePath(void) const {return itsFilePath;}
    void FilePath(const std::string &newValue);
@@ -204,7 +180,6 @@ private:
 
    checkedVector<bool> itsShowCPAllwaysOnTimeView;
 
-   NFmiCPGriddingProperties itsCPGriddingProperties; // t‰‰ll‰ on kopio siit‰ mik‰ on gendatadocissa
    std::string itsFilePath; // jos t‰m‰ ei ole tyhj‰, on t‰m‰ CPManageri luettu t‰st‰ tiedostosta (polkuineen kaikkineen)
    std::string itsName; // t‰m‰ otetaan suoraan tiedoston nimest‰
 };

@@ -292,11 +292,10 @@ bool NFmiEditorControlPointManager::Init(const checkedVector<NFmiPoint> &newCPs)
 
 // Tämä liittyy CPManagerin vaihtoon (kun niitä on setti käytössä).
 //  Eli otetaan kaikki ulkoiset tekijät theOther:ista käyttöön: 
-// area, times, params, griddingProperties etc.
+// area, times, params, etc.
 // Mutta itse CP-pisteisiin ja niiden arvoihin ei kosketa!
 bool NFmiEditorControlPointManager::Init(const NFmiEditorControlPointManager &theOther)
 {
-	CPGriddingProperties(theOther.CPGriddingProperties());
 	Area(theOther.Area());
 	return Init(theOther.TimeDescriptor(), theOther.ParamBag(), "", true, true);
 }
@@ -1255,29 +1254,4 @@ std::istream& operator>>(std::istream& is, NFmiEditorControlPointManager& item)
 {
 	item.Read(is); 
 	return is;
-}
-
-// ==========================================================================================
-
-NFmiCPGriddingProperties::NFmiCPGriddingProperties(bool isToolMasterAvailable)
-:fToolMasterAvailable(isToolMasterAvailable)
-,itsFunction(kFmiXuGriddingFastLocalFitCalc) // asetetaan defaulttina joku hyvä algoritmi, jos toolmaster ei ole käytössä, NFmiCPGriddingProperties::Function palauttaa kFmiMarkoGriddingFunction:in joka tapauksessa
-,itsBaseNameSpace()
-{}
-
-void NFmiCPGriddingProperties::InitFromSettings(const std::string &theBaseNameSpace)
-{
-	itsBaseNameSpace = theBaseNameSpace;
-
-	itsFunction = static_cast<FmiGriddingFunction>(NFmiSettings::Require<int>(std::string(itsBaseNameSpace + "::Function")));
-}
-
-void NFmiCPGriddingProperties::StoreToSettings(void)
-{
-	if(itsBaseNameSpace.empty() == false)
-	{
-		NFmiSettings::Set(std::string(itsBaseNameSpace + "::Function"), NFmiStringTools::Convert(itsFunction), true);
-	}
-	else
-		throw std::runtime_error("Error in NFmiCPGriddingProperties::StoreToSettings, unable to store setting.");
 }
