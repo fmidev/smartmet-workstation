@@ -40,6 +40,7 @@
 #include "MultiProcessClientData.h"
 #include "ToolMasterHelperFunctions.h"
 #include "EditedInfoMaskHandler.h"
+#include "NFmiGriddingProperties.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include <fstream>
@@ -274,7 +275,8 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 																	,boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager
 																	,const NFmiRect &theCPGridCropRect
 																	,bool theUseGridCrop
-																	,const NFmiPoint &theCropMarginSize)
+																	,const NFmiPoint &theCropMarginSize
+                                                                    , const NFmiGriddingProperties &griddingProperties)
 :NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask, NFmiRect())
 ,itsGridData()
 ,itsCPGridCropRect(theCPGridCropRect)
@@ -286,6 +288,7 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 ,itsObsDataGridding(new NFmiObsDataGridding())
 ,itsCPManager(theCPManager)
 ,itsLastTimeIndex(-1)
+,itsGriddingProperties(griddingProperties)
 {
     static NFmiRect emptyRect(0, 0, 1, 1);
 	if(itsInfo && itsInfo->IsGrid())
@@ -478,7 +481,7 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
 	std::vector<float> zValues;
     std::string relativeAreaRectStr("0,0,1,1"); // ilmeisesti muokkaus tehdään aina 0,0 - 1,1 laatikossa (paitsi jos olisi cropattuja alueita)
     NFmiStaticTime timeAtWorkStarted;
-    FmiGriddingFunction griddingFunction = itsCPManager->CPGriddingProperties().Function();
+    FmiGriddingFunction griddingFunction = itsGriddingProperties.function();
     jobIndex++;
 
     // Täytetään ensin task-jono
@@ -570,11 +573,11 @@ namespace
 	MutexType itsToolMasterGriddingMutex;
 }
 
-void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, int theGriddingFunction, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative)
+void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, const NFmiGriddingProperties &griddingProperties, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative)
 {
 	if(arraySize == 0)
 		return ;
-	if(theGriddingFunction == kFmiMarkoGriddingFunction)
+	if(griddingProperties.function() == kFmiMarkoGriddingFunction)
 	{
 		if(theObsDataGridding)
 		{
@@ -591,7 +594,7 @@ void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValu
             // HUOM!!! aloitetaan blokki, missä write-lukko tehdään
 			WriteLock lock(itsToolMasterGriddingMutex);
 			// Toolmaster griddaus funktioiden käyttö
-            Toolmaster::DoToolMasterGridding(xValues, yValues, zValues, arraySize, theRelativeRect, theGriddingFunction, theObservationRadiusRelative, gridData, tmGridData);
+            Toolmaster::DoToolMasterGridding(xValues, yValues, zValues, arraySize, theRelativeRect, griddingProperties, theObservationRadiusRelative, gridData, tmGridData);
 		}
 
 		for(unsigned int j=0; j<gridData.NY(); j++)
@@ -729,8 +732,7 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 	{
 		if(itsCPManager->Time(itsInfo->Time()))
 		{
-			FmiGriddingFunction griddingFunction = itsCPManager->CPGriddingProperties().Function();
-			if(griddingFunction == kFmiErrorGriddingFunction)
+			if(itsGriddingProperties.function() == kFmiErrorGriddingFunction)
 				return false;
 			std::vector<float> xValues;
 			std::vector<float> yValues;
@@ -739,7 +741,8 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 			{
 				if(IsZeroModification(zValues) == false)
 				{
-                    NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
+                    auto cpPointRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(itsGriddingProperties.rangeLimitInKm(), itsInfo->Area()));
+                    NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, itsGriddingProperties, itsObsDataGridding, cpPointRadiusRelative);
 
 					if(fUseGridCrop)
 						FixCroppedMatrixMargins(GetUsedGridData(), itsCropMarginSize);

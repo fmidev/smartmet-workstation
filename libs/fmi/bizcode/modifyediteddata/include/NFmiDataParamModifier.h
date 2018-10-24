@@ -28,6 +28,7 @@
 #include "NFmiRect.h"
 #include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
+#include "NFmiGriddingProperties.h"
 
 class NFmiParam;
 class NFmiDrawParam;
@@ -89,12 +90,12 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
  public:
 	NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
 													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
-													bool theUseGridCrop, const NFmiPoint &theCropMarginSize);
+													bool theUseGridCrop, const NFmiPoint &theCropMarginSize, const NFmiGriddingProperties &griddingProperties);
 	virtual ~NFmiDataParamControlPointModifier(void);
 	// HUOM!! eri signerature kuin edellä!!!
 	bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
     bool DoProcessPoolCpModifyingTcp(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks);
-	static void DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, int theGriddingFunction, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative);
+	static void DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, const NFmiGriddingProperties &griddingProperties, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative);
     static size_t GridPointToLocationIndex(size_t gridPointX, size_t gridPointY, size_t gridSizeX);
     int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
     static void FixCroppedMatrixMargins(NFmiDataMatrix<float> &theCroppedGridData, const NFmiPoint &theCropMarginSize);
@@ -124,6 +125,7 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	NFmiObsDataGridding* itsObsDataGridding;
 	boost::shared_ptr<NFmiEditorControlPointManager> itsCPManager;
 	int itsLastTimeIndex; // optimointia varten
+    NFmiGriddingProperties itsGriddingProperties;
 };
 
 

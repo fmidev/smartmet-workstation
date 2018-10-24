@@ -17,10 +17,10 @@ NFmiControlPointObservationBlender::BlendingDataHelper::BlendingDataHelper()
 
 NFmiControlPointObservationBlender::NFmiControlPointObservationBlender(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
     unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
-    bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime)
+    bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime, const NFmiGriddingProperties &griddingProperties)
     :NFmiDataParamControlPointModifier(theInfo, theDrawParam, theMaskList,
         theAreaMask, theCPManager, theCPGridCropRect,
-        theUseGridCrop, theCropMarginSize)
+        theUseGridCrop, theCropMarginSize, griddingProperties)
     , itsObservationInfos(observationInfos)
     , itsActualFirstTime(actualFirstTime)
 {
@@ -60,11 +60,10 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
 
 bool NFmiControlPointObservationBlender::DoBlendingDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues)
 {
-    // Mikä oli käytetty griddaus functio?
-    FmiGriddingFunction griddingFunction = itsCPManager->CPGriddingProperties().Function();
-    if(griddingFunction != kFmiErrorGriddingFunction)
+    if(itsGriddingProperties.function() != kFmiErrorGriddingFunction)
     {
-        NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
+        auto obsBlenderCalculationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(itsGriddingProperties.rangeLimitInKm(), itsInfo->Area()));
+        NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, itsGriddingProperties, itsObsDataGridding, obsBlenderCalculationRadiusRelative);
 
         return true;
     }
