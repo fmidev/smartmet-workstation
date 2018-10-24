@@ -12,6 +12,80 @@
 #include <unordered_map>
 
 // ************************************************
+// ****   NFmiGriddingPropertiesWinRegistry *******
+// ************************************************
+
+NFmiGriddingPropertiesWinRegistry::NFmiGriddingPropertiesWinRegistry()
+:mInitialized(false)
+,mBaseRegistryPath()
+,mSectionName("\\GriddingProperties")
+,mFunction()
+,mRangeLimitInKm()
+,mLocalFitMethod()
+,mLocalFitDelta()
+,mSmoothLevel()
+,mLocalFitFilterRadius()
+,mLocalFitFilterFactor()
+,mGriddingProperties()
+{}
+
+bool NFmiGriddingPropertiesWinRegistry::Init(const std::string &baseRegistryPath, bool isToolMasterAvailable)
+{
+    if(mInitialized)
+        std::runtime_error("NFmiGriddingPropertiesWinRegistry::Init: all ready initialized.");
+
+    mInitialized = true;
+    mBaseRegistryPath = baseRegistryPath;
+
+    mGriddingProperties.toolMasterAvailable(isToolMasterAvailable);
+
+    // HKEY_CURRENT_USER -keys
+    HKEY usedKey = HKEY_CURRENT_USER;
+
+    // Otetaan kaikki oletusarvot pelkill‰ oletusarvoilla ensin rakennetusta mGriddingProperties dataosasta
+    mFunction = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\Function", usedKey, mGriddingProperties.function());
+    mRangeLimitInKm = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\RangeLimitInKm", usedKey, mGriddingProperties.rangeLimitInKm());
+    mLocalFitMethod = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\LocalFitMethod", usedKey, mGriddingProperties.localFitMethod());
+    mLocalFitDelta = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\LocalFitDelta", usedKey, mGriddingProperties.localFitDelta());
+    mSmoothLevel = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\SmoothLevel", usedKey, mGriddingProperties.smoothLevel());
+    mLocalFitFilterRadius = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\LocalFitFilterRadius", usedKey, mGriddingProperties.localFitFilterRadius());
+    mLocalFitFilterFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\LocalFitFilterFactor", usedKey, mGriddingProperties.localFitFilterFactor());
+
+    // Nyt kun rekisteri arvot on haettu, pit‰‰ p‰ivitt‰‰ t‰m‰ POD tyyppinen kokoomadata niiden mukaan
+    UpdateGriddingPropertiesFromRegistry();
+
+    return true;
+}
+
+void NFmiGriddingPropertiesWinRegistry::Update(const NFmiGriddingProperties &griddingProperties)
+{
+    *mFunction = griddingProperties.function();
+    *mRangeLimitInKm = griddingProperties.rangeLimitInKm();
+    *mLocalFitMethod = griddingProperties.localFitMethod();
+    *mLocalFitDelta = griddingProperties.localFitDelta();
+    *mSmoothLevel = griddingProperties.smoothLevel();
+    *mLocalFitFilterRadius = griddingProperties.localFitFilterRadius();
+    *mLocalFitFilterFactor = griddingProperties.localFitFilterFactor();
+}
+
+const NFmiGriddingProperties& NFmiGriddingPropertiesWinRegistry::GetGriddingProperties() const
+{
+    return mGriddingProperties;
+}
+
+void NFmiGriddingPropertiesWinRegistry::UpdateGriddingPropertiesFromRegistry()
+{
+    mGriddingProperties.function(static_cast<FmiGriddingFunction>(static_cast<int>(*mFunction)));
+    mGriddingProperties.rangeLimitInKm(*mRangeLimitInKm);
+    mGriddingProperties.localFitMethod(*mLocalFitMethod);
+    mGriddingProperties.localFitDelta(*mLocalFitDelta);
+    mGriddingProperties.smoothLevel(*mSmoothLevel);
+    mGriddingProperties.localFitFilterRadius(*mLocalFitFilterRadius);
+    mGriddingProperties.localFitFilterFactor(*mLocalFitFilterFactor);
+}
+
+
+// ************************************************
 // ******   NFmiHelpDataEnableWinRegistry *********
 // ************************************************
 
@@ -576,13 +650,18 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mMinimumTimeRangeForWarningsOnMapViewsInMinutes()
 ,mDrawObjectScaleFactor()
 ,itsMaximumFontSizeFactor(3.)
+,mEditingToolsGriddingProperties()
+,mVisualizationGriddingProperties()
 {
+    // Asetetaan visualisointiin liittyv‰ range-limit 0:ksi, t‰llˆin se on rajaton, 
+    // eli CP-pisteen vaikutus levi‰‰ rajattomasti, kuten se on t‰h‰n menness‰kin toiminut.
+    mVisualizationGriddingProperties.rangeLimitInKm(0.);
 }
 
 // fullAppVer esim. 5.9.3.0
 // shortAppVer esim. 5.9
 // configurationName se loppu osa konffista ilman mit‰‰n alku polkuja esim. control_scand_saa2_edit_conf
-bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
+bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem, bool isToolMasterAvailable)
 {
     if(mInitialized)
         throw std::runtime_error("NFmiApplicationWinRegistry::Init: all ready initialized.");
@@ -631,6 +710,12 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mMinimumTimeRangeForWarningsOnMapViewsInMinutes = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\MinimumTimeRangeForWarningsOnMapViewsInMinutes", usedKey, 0);
     mDrawObjectScaleFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\DrawObjectScaleFactor", usedKey, 0.9, "MetEditor::DrawObjectScaleFactor");
     //mMaximumFontSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MaximumFontSizeFactor", usedKey, 2);
+
+    // EditingTools section in general
+    mEditingToolsGriddingProperties.Init(mBaseRegistryPath + "\\" + sectionName + "\\EditingTools", isToolMasterAvailable);
+    // This Visualization section is not yet in Windows registry
+    mVisualizationGriddingProperties.toolMasterAvailable(isToolMasterAvailable);
+
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! n‰m‰ vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -869,3 +954,18 @@ void NFmiApplicationWinRegistry::MaximumFontSizeFactor(double newValue)
     itsMaximumFontSizeFactor = newValue;
 }
 
+const NFmiGriddingProperties& NFmiApplicationWinRegistry::GriddingProperties(bool getEditingRelatedProperties) const
+{
+    if(getEditingRelatedProperties)
+        return mEditingToolsGriddingProperties.GetGriddingProperties();
+    else
+        return mVisualizationGriddingProperties;
+}
+
+void NFmiApplicationWinRegistry::SetGriddingProperties(bool setEditingRelatedProperties, const NFmiGriddingProperties &griddingProperties)
+{
+    if(setEditingRelatedProperties)
+        mEditingToolsGriddingProperties.Update(griddingProperties);
+    else
+        mVisualizationGriddingProperties = griddingProperties;
+}
