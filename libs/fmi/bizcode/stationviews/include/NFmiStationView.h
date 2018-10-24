@@ -22,6 +22,7 @@ class NFmiFastQueryInfo;
 class NFmiGrid;
 class NFmiGriddingHelperInterface;
 class NFmiHelpDataInfo;
+class NFmiGriddingProperties;
 
 class CRect;
 class CDC;
@@ -75,7 +76,7 @@ public:
    NFmiDataMatrix<float>& SpecialMatrixData(void) {return itsSpecialMatrixData;}
    void SpecialMatrixData(const NFmiDataMatrix<float> &theMatrix) {itsSpecialMatrixData = theMatrix;}
    // t‰m‰ on asemadatan griddaus funktio, jota voidaan k‰ytt‰‰ nyt staattisena funktiona
-   static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, float theObservationRadiusRelative);
+   static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties);
    static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
    static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
 
@@ -161,7 +162,7 @@ protected:
    float CalcMacroParamTooltipValue();
    virtual bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2);
    void GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
-   void GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, float theObservationRadiusRelative);
+   void GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
    NFmiColor GetColoredNumberColor(float theValue);
    void DrawInvertStationRect(NFmiRect &theRect);
    void DrawStationRect(void);
