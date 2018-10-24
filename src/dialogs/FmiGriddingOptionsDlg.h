@@ -3,8 +3,8 @@
 // FmiGriddingOptionsDlg.h : header file
 //
 #include "SmartMetDialogs_resource.h"
+#include "NFmiGriddingProperties.h"
 
-struct NFmiCPGriddingProperties;
 /////////////////////////////////////////////////////////////////////////////
 // CFmiGriddingOptionsDlg dialog
 
@@ -12,7 +12,9 @@ class CFmiGriddingOptionsDlg : public CDialog
 {
 // Construction
 public:
-	CFmiGriddingOptionsDlg(NFmiCPGriddingProperties *theOptions, CWnd* pParent = NULL);   // standard constructor
+	CFmiGriddingOptionsDlg(const NFmiGriddingProperties &griddingProperties, CWnd* pParent = NULL);   // standard constructor
+
+    const NFmiGriddingProperties& GetModifiedGriddingProperties() const { return itsGriddingProperties; }
 
 // Dialog Data
 	//{{AFX_DATA(CFmiGriddingOptionsDlg)
@@ -40,7 +42,7 @@ protected:
 
 	void InitDialogTexts(void);
 
-	NFmiCPGriddingProperties *itsGriddingOptions;
+    NFmiGriddingProperties itsGriddingProperties;
 };
 
 //{{AFX_INSERT_LOCATION}}

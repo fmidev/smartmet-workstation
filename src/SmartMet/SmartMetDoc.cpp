@@ -2187,14 +2187,13 @@ void CSmartMetDoc::OnMenuitemGriddingOptions()
 	NFmiEditMapGeneralDataDoc* doc = GetData();
 	if(doc)
 	{
-		NFmiCPGriddingProperties options(doc->CPGriddingProperties());
-		CFmiGriddingOptionsDlg dlg(&options);
+        // Tässä muokataan vain editointiin liittyviä griddaus asetuksia
+		CFmiGriddingOptionsDlg dlg(doc->ApplicationWinRegistry().GriddingProperties(true));
 		if(dlg.DoModal() == IDOK)
 		{
-			doc->CPGriddingProperties(options);
-			doc->StoreCPGriddingProperties();
+            doc->ApplicationWinRegistry().SetGriddingProperties(true, dlg.GetModifiedGriddingProperties());
 			doc->MapDirty(itsMapViewDescTopIndex, true, true);
-			UpdateAllViewsAndDialogs("Used ToolMaster gridding function changed");
+			UpdateAllViewsAndDialogs("Used ToolMaster gridding options changed");
 		}
 	}
 

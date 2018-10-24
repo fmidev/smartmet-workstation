@@ -21,9 +21,9 @@ static char THIS_FILE[] = __FILE__;
 // CFmiGriddingOptionsDlg dialog
 
 
-CFmiGriddingOptionsDlg::CFmiGriddingOptionsDlg(NFmiCPGriddingProperties *theOptions, CWnd* pParent /*=NULL*/)
+CFmiGriddingOptionsDlg::CFmiGriddingOptionsDlg(const NFmiGriddingProperties &griddingProperties, CWnd* pParent)
 :CDialog(CFmiGriddingOptionsDlg::IDD, pParent)
-,itsGriddingOptions(theOptions)
+,itsGriddingProperties(griddingProperties)
 {
 	//{{AFX_DATA_INIT(CFmiGriddingOptionsDlg)
 	itsGriddingFunction = -1;
@@ -56,7 +56,7 @@ BOOL CFmiGriddingOptionsDlg::OnInitDialog()
 	this->SetIcon(hIcon, FALSE);
 
 	InitDialogTexts();
-	itsGriddingFunction = itsGriddingOptions->itsFunction;
+	itsGriddingFunction = itsGriddingProperties.function();
 	UpdateData(FALSE);
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -66,7 +66,7 @@ BOOL CFmiGriddingOptionsDlg::OnInitDialog()
 void CFmiGriddingOptionsDlg::OnOK() 
 {
 	UpdateData(TRUE);
-	itsGriddingOptions->itsFunction = (FmiGriddingFunction)itsGriddingFunction;
+	itsGriddingProperties.function(static_cast<FmiGriddingFunction>(itsGriddingFunction));
 	
 	CDialog::OnOK();
 }
