@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.6.2)
 
 project(SmartMet)
 
+#In future we should change to Visual C++ 2017 and Windows 10.0 SDK, 
+# this should fix problems with Add member variable -wizard when working with dialogs.
+#set(CMAKE_SYSTEM_VERSION 10.0 CACHE TYPE INTERNAL FORCE)
+
 set(CMAKE_PREFIX_PATH ${LIBS_3RD}/cmakefinds )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/runtime_output")
 
