@@ -300,6 +300,19 @@ add_subdirectory(
 add_subdirectory(
     src/casestudyexe
     )
+	
+# Put these Master and Worker process projects in comments after 
+# generating a new version binaries. We don't want to generate them all the time.
+add_subdirectory(
+    src/processpool/MultiProcessToolsMFC
+    )
+add_subdirectory(
+    src/processpool/MasterProcessTcpMFC
+    )
+add_subdirectory(
+    src/processpool/WorkerProcessTcpMFC
+    )
+# ---- Master and Worker process projects ends -------------- 
 
 add_subdirectory(
     src/SmartMet 
