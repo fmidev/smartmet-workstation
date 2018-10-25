@@ -140,7 +140,8 @@ void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalcula
     theMacroParamValue.itsValue = static_cast<float>(value);
 }
 
-// Poista kommentti tästä, jos haluat lokittaa jokaisen laskennan debuggausmielessä
+// Poista kommentti tästä, jos haluat lokittaa jokaisen laskennan debuggausmielessä 
+// Huom! myös kirjaston CMakeLists.txt:stä pitää poistaa kommentit Catlogin kohdilta
 //#define LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW 1
 
 #ifdef LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW
