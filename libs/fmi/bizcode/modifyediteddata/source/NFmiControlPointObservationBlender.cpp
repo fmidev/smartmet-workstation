@@ -45,15 +45,19 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
         // Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
         if(!itsInfo->Time(theActiveTimes.FirstTime()))
             itsInfo->FirstTime();
-        // 4. Täydennä CP-pisteiden arvoja seuraavasti, jos CP-pisteessä on puuttuva, otetaan editoidusta datasta 0-hetkeltä arvo siihen (0-muutos)
-        FillZeroChangeValuesForMissingCpPoints(zValues);
-        // 5. Laske CP-pisteiden avulla 0-hetken 'analyysikenttä'
-        DoBlendingDataGridding(xValues, yValues, zValues);
-        // 6. Laske analyysikentän ja editoidun datan 0-hetken kentän avulla muutoskenttä
-        itsBlendingDataHelper.changeField = CalcChangeField(GetUsedGridData());
-        // 7. Blendaa muutoskenttä editoituun dataan liu'uttamalla
-        return MakeBlendingOperation(theActiveTimes);
-        // 8. Lasketaanko 'analyysit' ja niiden sijoitus editoituun dataan myös 0-hetkeä edeltäville editoidun datan ajoille?
+        // Olen kuullut että Obs-blender voi muokata väärää parametria, varmistetaan että tässä on oikea parametri päällä
+        if(Param(*itsDrawParam->Param().GetParam()))
+        {
+            // 4. Täydennä CP-pisteiden arvoja seuraavasti, jos CP-pisteessä on puuttuva, otetaan editoidusta datasta 0-hetkeltä arvo siihen (0-muutos)
+            FillZeroChangeValuesForMissingCpPoints(zValues);
+            // 5. Laske CP-pisteiden avulla 0-hetken 'analyysikenttä'
+            DoBlendingDataGridding(xValues, yValues, zValues);
+            // 6. Laske analyysikentän ja editoidun datan 0-hetken kentän avulla muutoskenttä
+            itsBlendingDataHelper.changeField = CalcChangeField(GetUsedGridData());
+            // 7. Blendaa muutoskenttä editoituun dataan liu'uttamalla
+            return MakeBlendingOperation(theActiveTimes);
+            // 8. Lasketaanko 'analyysit' ja niiden sijoitus editoituun dataan myös 0-hetkeä edeltäville editoidun datan ajoille?
+        }
     }
     return false;
 }
