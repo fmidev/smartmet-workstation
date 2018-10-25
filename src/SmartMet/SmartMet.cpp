@@ -588,10 +588,9 @@ bool CSmartMetApp::DoToolMasterInitialization(void)
     if(Toolmaster::DoToolMasterInitialization(m_pMainWnd, fUseToolMasterIfAvailable))
     {
         itsGeneralData->ToolMasterAvailable(true);
-        return true;
     }
-    else
-        return false;
+    itsGeneralData->InitGriddingProperties();
+    return itsGeneralData->IsToolMasterAvailable();
 }
 
 #pragma warning( push )

@@ -59,6 +59,7 @@ bool NFmiGriddingPropertiesWinRegistry::Init(const std::string &baseRegistryPath
 
 void NFmiGriddingPropertiesWinRegistry::Update(const NFmiGriddingProperties &griddingProperties)
 {
+    // Ensin muutokset asetetaan rekiteri muutujiin
     *mFunction = griddingProperties.function();
     *mRangeLimitInKm = griddingProperties.rangeLimitInKm();
     *mLocalFitMethod = griddingProperties.localFitMethod();
@@ -66,6 +67,8 @@ void NFmiGriddingPropertiesWinRegistry::Update(const NFmiGriddingProperties &gri
     *mSmoothLevel = griddingProperties.smoothLevel();
     *mLocalFitFilterRadius = griddingProperties.localFitFilterRadius();
     *mLocalFitFilterFactor = griddingProperties.localFitFilterFactor();
+    // Lopuksi luokan oma data-member p‰ivitet‰‰n vastaavasti
+    mGriddingProperties = griddingProperties;
 }
 
 const NFmiGriddingProperties& NFmiGriddingPropertiesWinRegistry::GetGriddingProperties() const
@@ -653,15 +656,12 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mEditingToolsGriddingProperties()
 ,mVisualizationGriddingProperties()
 {
-    // Asetetaan visualisointiin liittyv‰ range-limit 0:ksi, t‰llˆin se on rajaton, 
-    // eli CP-pisteen vaikutus levi‰‰ rajattomasti, kuten se on t‰h‰n menness‰kin toiminut.
-    mVisualizationGriddingProperties.rangeLimitInKm(0.);
 }
 
 // fullAppVer esim. 5.9.3.0
 // shortAppVer esim. 5.9
 // configurationName se loppu osa konffista ilman mit‰‰n alku polkuja esim. control_scand_saa2_edit_conf
-bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem, bool isToolMasterAvailable)
+bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
 {
     if(mInitialized)
         throw std::runtime_error("NFmiApplicationWinRegistry::Init: all ready initialized.");
@@ -711,16 +711,19 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mDrawObjectScaleFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\DrawObjectScaleFactor", usedKey, 0.9, "MetEditor::DrawObjectScaleFactor");
     //mMaximumFontSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MaximumFontSizeFactor", usedKey, 2);
 
-    // EditingTools section in general
-    mEditingToolsGriddingProperties.Init(mBaseRegistryPath + "\\" + sectionName + "\\EditingTools", isToolMasterAvailable);
-    // This Visualization section is not yet in Windows registry
-    mVisualizationGriddingProperties.toolMasterAvailable(isToolMasterAvailable);
-
-
     // HKEY_LOCAL_MACHINE -keys (HUOM! n‰m‰ vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
 
     return true;
+}
+
+void NFmiApplicationWinRegistry::InitGriddingProperties(bool isToolMasterAvailable)
+{
+    std::string sectionName = NFmiApplicationWinRegistry::MakeGeneralSectionName();
+    // EditingTools section in general
+    mEditingToolsGriddingProperties.Init(mBaseRegistryPath + "\\" + sectionName + "\\EditingTools", isToolMasterAvailable);
+    // This Visualization section is not yet in Windows registry
+    mVisualizationGriddingProperties.toolMasterAvailable(isToolMasterAvailable);
 }
 
 std::string NFmiApplicationWinRegistry::WindowRectStr(const std::string &keyString)
