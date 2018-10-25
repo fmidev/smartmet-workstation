@@ -43,6 +43,7 @@ protected:
     bool DoBlendingDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues);
     void DoCroppedPointCalculations(const NFmiDataMatrix<float> &usedData, size_t xIndex, size_t yIndex, float maskFactor) override;
     void DoNormalPointCalculations(const NFmiDataMatrix<float> &usedData, unsigned long locationIndex, float maskFactor) override;
+    void MakeAnalysisModificationToStartOfEditedData(unsigned long firstModifiedTimeIndex);
 
     BlendingDataHelper itsBlendingDataHelper;
 };

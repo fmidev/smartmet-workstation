@@ -44,7 +44,10 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
     {
         // Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
         if(!itsInfo->Time(theActiveTimes.FirstTime()))
+        {
             itsInfo->FirstTime();
+        }
+        auto firstModifiedTimeIndex = itsInfo->TimeIndex();
         // Olen kuullut että Obs-blender voi muokata väärää parametria, varmistetaan että tässä on oikea parametri päällä
         if(Param(*itsDrawParam->Param().GetParam()))
         {
@@ -55,11 +58,47 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
             // 6. Laske analyysikentän ja editoidun datan 0-hetken kentän avulla muutoskenttä
             itsBlendingDataHelper.changeField = CalcChangeField(GetUsedGridData());
             // 7. Blendaa muutoskenttä editoituun dataan liu'uttamalla
-            return MakeBlendingOperation(theActiveTimes);
-            // 8. Lasketaanko 'analyysit' ja niiden sijoitus editoituun dataan myös 0-hetkeä edeltäville editoidun datan ajoille?
+            auto status = MakeBlendingOperation(theActiveTimes);
+            // 8. Lasketaan 'analyysit' ja niiden sijoitus editoituun dataan myös 0-hetkeä edeltäville editoidun datan ajoille
+            MakeAnalysisModificationToStartOfEditedData(firstModifiedTimeIndex);
+            return status;
         }
     }
     return false;
+}
+
+void NFmiControlPointObservationBlender::MakeAnalysisModificationToStartOfEditedData(unsigned long firstModifiedTimeIndex)
+{
+    // Aloitus aikaindeksi ei saa olla 0 tai muu out-of-data indeksi
+    if(firstModifiedTimeIndex > 0 && firstModifiedTimeIndex < itsInfo->SizeTimes())
+    {
+        // Siirretään timeIndex yksi askel taaksepäin Obs-blender työkalun aloitusajasta
+        firstModifiedTimeIndex--;
+        if(itsInfo->TimeIndex(firstModifiedTimeIndex))
+        {
+            // Näillä asetuksilla saadaan 'blendaus' toiminto käyttämään analyysikenttää täysillä arvoilla
+            itsBlendingDataHelper.blendingTimeSize = 2; // 2 on pienin time-size mitä voi olla
+            itsBlendingDataHelper.blendingTimeIndex = 0;
+            do
+            {
+                // Sallitut havaintoajat ovat vain kulloikin läpikäytävä ajan hetki editoidussa datassa
+                const auto &currentTime = itsInfo->Time();
+                NFmiTimeDescriptor allowedObservationTimes(currentTime, NFmiTimeBag(currentTime, currentTime, 60));
+                std::vector<float> xValues, yValues, zValues;
+                if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedObservationTimes))
+                {
+                    // 4. Täydennä CP-pisteiden arvoja seuraavasti, jos CP-pisteessä on puuttuva, otetaan editoidusta datasta 0-hetkeltä arvo siihen (0-muutos)
+                    FillZeroChangeValuesForMissingCpPoints(zValues);
+                    // 5. Laske CP-pisteiden avulla 0-hetken 'analyysikenttä'
+                    DoBlendingDataGridding(xValues, yValues, zValues);
+                    // 6. Laske analyysikentän ja editoidun datan 0-hetken kentän avulla muutoskenttä
+                    itsBlendingDataHelper.changeField = CalcChangeField(GetUsedGridData());
+                    itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+                    DoLocationGridCalculations(itsBlendingDataHelper.changeField);
+                }
+            } while(itsInfo->PreviousTime());
+        }
+    }
 }
 
 bool NFmiControlPointObservationBlender::DoBlendingDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues)
@@ -79,21 +118,18 @@ bool NFmiControlPointObservationBlender::MakeBlendingOperation(NFmiTimeDescripto
 {
     auto status = false;
     itsBlendingDataHelper.limitChecker = NFmiLimitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent()));
-    for(itsInfo->ResetLevel(); itsInfo->NextLevel(); ) // Tuskin ikinä päästään 3D editointiin, mutta varaudutaan silti siihen
+    itsBlendingDataHelper.blendingTimeSize = blendingTimes.Size();
+    for(blendingTimes.Reset(); blendingTimes.Next(); )
     {
-        itsBlendingDataHelper.blendingTimeSize = blendingTimes.Size();
-        for(blendingTimes.Reset(); blendingTimes.Next(); )
+        itsBlendingDataHelper.blendingTimeIndex = blendingTimes.Index();
+        // Blendaus menee niin että alkuhetkellä muutos kenttä otetaan kertoimella 1. ja viimeisellä se otetaan kertoimella 0. (eli viimeinen aika-askel voidaan skipata)
+        if(itsBlendingDataHelper.blendingTimeIndex + 1 >= itsBlendingDataHelper.blendingTimeSize)
+            break;
+        if(itsInfo->Time(blendingTimes.Time())) // Ajan pitäisi aina löytyä, koska blendingtimes on rakennettu editoidun datan aikojen perusteella
         {
-            itsBlendingDataHelper.blendingTimeIndex = blendingTimes.Index();
-            // Blendaus menee niin että alkuhetkellä muutos kenttä otetaan kertoimella 1. ja viimeisellä se otetaan kertoimella 0. (eli viimeinen aika-askel voidaan skipata)
-            if(itsBlendingDataHelper.blendingTimeIndex + 1 >= itsBlendingDataHelper.blendingTimeSize)
-                break;
-            if(itsInfo->Time(blendingTimes.Time())) // Ajan pitäisi aina löytyä, koska blendingtimes on rakennettu editoidun datan aikojen perusteella
-            {
-                itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
-                DoLocationGridCalculations(itsBlendingDataHelper.changeField);
-                status = true;
-            }
+            itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+            DoLocationGridCalculations(itsBlendingDataHelper.changeField);
+            status = true;
         }
     }
     return status;
