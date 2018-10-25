@@ -8,7 +8,7 @@ class NFmiGriddingProperties
     // Which ToolMaster function is in use, options are: FastLocalFitCalc, LocalFitCalc, TriangulationCalc, LeastSquaresCalc, ThinPlateSplineCalc
     FmiGriddingFunction function_ = kFmiXuGriddingFastLocalFitCalc;
     // To how far grid points is CP value allowed to affect [km]
-    double rangeLimitInKm_ = 150.;
+    double rangeLimitInKm_ = 0.;
     // Interpolation method: default is XuWEIGHTED_AVERAGE 1, other options: XuBILINEAR 2, XuBILINEAR_STRICT 3, XuWEIGHTED_AVERAGE_2Q 4, XuWEIGHTED_AVERAGE_3Q 5, XuWEIGHTED_AVERAGE_4Q 6
     int localFitMethod_ = 1;
     // If grid-point is sufficently close enough to CP point, that grid-point's value will be set to that CP's value.
