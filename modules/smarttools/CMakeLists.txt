@@ -14,10 +14,13 @@ add_library(
     ${SOURCE_FILES} 
     )
 
+# Remove comments for CatLog library, if you need do deep trace 
+# debugging with smarttool language.
+	
 target_link_libraries(
     ${PROJECT_NAME}
     Newbase
-    CatLog
+#    CatLog
     )
 
 target_include_directories( 
@@ -25,7 +28,7 @@ target_include_directories(
     PUBLIC ${PROJECT_SOURCE_DIR}/smarttools
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${CatLog_INCLUDE_DIRS}
+#    PUBLIC ${CatLog_INCLUDE_DIRS}
     )
 
 set(
@@ -34,6 +37,6 @@ set(
     ${PROJECT_SOURCE_DIR}
     ${Newbase_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
-    ${CatLog_INCLUDE_DIRS}
+#    ${CatLog_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
