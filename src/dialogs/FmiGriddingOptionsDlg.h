@@ -19,7 +19,6 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CFmiGriddingOptionsDlg)
 	enum { IDD = IDD_DIALOG_GRIDDING_OPTIONS };
-	int		itsGriddingFunction;
 	//}}AFX_DATA
 
 
@@ -41,8 +40,16 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	void InitDialogTexts(void);
+    void InitLocalFitMethodSelector();
 
     NFmiGriddingProperties itsGriddingProperties;
+    int itsGriddingFunction;
+    double itsRangeLimitInKm = 0.; // 0 = rajaton ja muuten > 0
+    CComboBox itsLocalFitMethodSelector; // [1,2,3,4,5,6]
+    double itsLocalFitDelta = 0.5; // [?]
+    int itsSmoothLevel = 0; // [0 - 5]
+    double itsLocalFitFilterRadius = 1.25; // > 1
+    double itsLocalFitFilterFactor = 0.15; // > 0
 };
 
 //{{AFX_INSERT_LOCATION}}

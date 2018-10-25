@@ -116,25 +116,38 @@ BEGIN
     CONTROL         "Asema dataa",IDC_CUSTOM_GRID_CTRL,"MFCGridCtrl",WS_TABSTOP,7,28,376,260
 END
 
-IDD_DIALOG_GRIDDING_OPTIONS DIALOGEX 0, 0, 232, 98
+IDD_DIALOG_GRIDDING_OPTIONS DIALOGEX 0, 0, 249, 221
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CP hilausfunktio optiot"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "Hyväksy",IDOK,7,77,50,14
-    PUSHBUTTON      "Peruuta",IDCANCEL,75,77,50,14
+    DEFPUSHBUTTON   "Hyväksy",IDOK,7,200,50,14
+    PUSHBUTTON      "Peruuta",IDCANCEL,75,200,50,14
     CONTROL         "Markon oma griddaus funktio (toimii ilman Toolmaster lisenssiä)",IDC_RADIO_GRID_FUNCTION1,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,7,7,218,10
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,10,20,225,10
     CONTROL         "Gridding Fast Local Fit Calculation",IDC_RADIO_GRID_FUNCTION2,
-                    "Button",BS_AUTORADIOBUTTON,7,18,218,10
+                    "Button",BS_AUTORADIOBUTTON,10,31,225,10
     CONTROL         "Gridding Local Fit Calculation",IDC_RADIO_GRID_FUNCTION3,
-                    "Button",BS_AUTORADIOBUTTON,7,29,218,10
+                    "Button",BS_AUTORADIOBUTTON,10,42,225,10
     CONTROL         "Gridding Triangulation Calculation",IDC_RADIO_GRID_FUNCTION4,
-                    "Button",BS_AUTORADIOBUTTON,7,40,218,10
+                    "Button",BS_AUTORADIOBUTTON,10,53,225,10
     CONTROL         "Gridding Least Squares Calculation",IDC_RADIO_GRID_FUNCTION5,
-                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED,7,51,218,10
+                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED,10,64,225,10
     CONTROL         "Gridding Thin Plate Spline Calculation",IDC_RADIO_GRID_FUNCTION6,
-                    "Button",BS_AUTORADIOBUTTON,7,62,218,10
+                    "Button",BS_AUTORADIOBUTTON,10,75,225,10
+    GROUPBOX        "Gridding function",IDC_STATIC_GIDDING_FUNCTION_GROUP,7,7,235,85
+    EDITTEXT        IDC_EDIT_RANGE_LIMIT_IN_KM,7,93,40,14,ES_AUTOHSCROLL
+    LTEXT           "CP-point affect radius [km] (default 0 means limitless)",IDC_STATIC_RANGE_LIMIT_IN_KM_HELP_TEXT,52,95,186,8
+    COMBOBOX        IDC_COMBO_LOCAL_FIT_METHOD,7,111,69,59,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Local fit interpolation method (default W-Avg)",IDC_STATIC_LOCAL_FIT_METHOD_TEXT,79,112,159,8
+    EDITTEXT        IDC_EDIT_LOCAL_FIT_DELTA,7,127,40,14,ES_AUTOHSCROLL
+    LTEXT           "Local fit delta (default 0.5, a limit for forced near CP value to close grid points, range of 0.0 > x >= 5)",IDC_STATIC_LOCAL_FIT_DELTA_TEXT,52,126,186,16
+    EDITTEXT        IDC_EDIT_SMOOTH_LEVEL,7,145,40,14,ES_AUTOHSCROLL
+    LTEXT           "How many extra times [0-5] is field smoothed (default is 0 and every extra time slows calculations)",IDC_STATIC_SMOOTH_LEVEL_TEXT,52,144,186,16
+    EDITTEXT        IDC_EDIT_LOCAL_FIT_FILTER_RANGE,7,164,40,14,ES_AUTOHSCROLL
+    LTEXT           "Local fit filter range, default is 1.25 (value should be in range of 1.0 > x >= 5)",IDC_STATIC_LOCAL_FIT_FILTER_RANGE_TEXT,52,163,186,16
+    EDITTEXT        IDC_EDIT_LOCAL_FIT_FILTER_FACTOR,7,182,40,14,ES_AUTOHSCROLL
+    LTEXT           "Local fit filter factor, default is 0.15 (value should be in range of 0.0 > x >= 5)",IDC_STATIC_LOCAL_FIT_FILTER_FACTOR_TEXT,52,181,186,16
 END
 
 IDD_DIALOG_LANGUAGE_SELECTION DIALOGEX 0, 0, 215, 94
@@ -834,9 +847,9 @@ BEGIN
     IDD_DIALOG_GRIDDING_OPTIONS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 225
+        RIGHTMARGIN, 242
         TOPMARGIN, 7
-        BOTTOMMARGIN, 91
+        BOTTOMMARGIN, 214
     END
 
     IDD_DIALOG_LANGUAGE_SELECTION, DIALOG
@@ -1105,6 +1118,11 @@ BEGIN
 END
 
 IDD_DIALOG_WARNING_MESSAGE_SYMBOL_OPTION AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DIALOG_GRIDDING_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
