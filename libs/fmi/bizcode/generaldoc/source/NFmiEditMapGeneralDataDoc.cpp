@@ -1362,7 +1362,7 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         if(shortAppVerStr.size() < 3)
             throw std::runtime_error(std::string("Invalid application's short version number: '") + shortAppVerStr + "', should be in format X.Y");
         // 3 = 3 eri karttanäyttöä, ei vieläkään missään asetusta tälle, koska pääkarttanäyttö poikkeaa kahdesta apukarttanäytöstä
-        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem(), IsToolMasterAvailable());
+        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem());
 
         // We have to set log level here, now that used log level is read from registry
         CatLog::logLevel(static_cast<CatLog::Severity>(itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LogLevel()));
@@ -13798,6 +13798,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return false;
     }
 
+    void InitGriddingProperties()
+    {
+        ApplicationWinRegistry().InitGriddingProperties(IsToolMasterAvailable());
+    }
+
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
@@ -16460,4 +16465,9 @@ int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes(
 bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
 {
     return pimpl->MakeControlPointAcceleratorAction(action, updateMessage);
+}
+
+void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
+{
+    pimpl->InitGriddingProperties();
 }

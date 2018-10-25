@@ -145,6 +145,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes();
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex);
