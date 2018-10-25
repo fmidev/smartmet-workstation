@@ -1,21 +1,10 @@
-cmake_minimum_required(VERSION 3.6.2)
-
+cmake_minimum_required(VERSION 3.7.1)
 project(MultiProcessToolsMFC)
 
 set(CMAKE_MFC_FLAG 2)
-add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
-
-add_definitions( -D_UNICODE -DUNICODE )
 
 file(GLOB CPP_FILES *.cpp)
 file(GLOB H_FILES *.h)
-
-include_directories(
-    ${LIBS_FMI}/MultiProcessTools/include
-    ${LIBS_FMI}/newbase/include
-    ${BOOST_INCLUDE_DIR}
-    ${UNIRAS_INCLUDE_DIR}
-    )
 
 add_library(
     ${PROJECT_NAME} STATIC
@@ -25,6 +14,28 @@ add_library(
 
 target_link_libraries(
     ${PROJECT_NAME}
-    newbaseEditor
+    Newbase
     MultiProcessTools
+    EditingDataUtils
+    )
+	
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${UNIRAS_INCLUDE_DIR}
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${MultiProcessTools_INCLUDE_DIRS}
+    PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}
+    ${BOOST_INCLUDE_DIR}
+    ${UNIRAS_INCLUDE_DIR}
+    ${Newbase_INCLUDE_DIRS}
+    ${MultiProcessTools_INCLUDE_DIRS}
+    ${EditingDataUtils_INCLUDE_DIRS}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

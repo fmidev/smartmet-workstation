@@ -6,7 +6,7 @@
 #include "WorkerProcessTcpMFC.h"
 
 #include "MainFrm.h"
-#include "NFmiObsDataGridding_from_ModifyEditedData.h"
+#include "NFmiObsDataGridding.h"
 #include "MfcTools.h"
 
 #include "logging.h"

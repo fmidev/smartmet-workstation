@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "toolmaster_tools.h"
 #include "logging.h"
-#include "NFmiObsDataGridding_from_ModifyEditedData.h"
+#include "NFmiObsDataGridding.h"
 
 #include "NFmiRect.h"
 
