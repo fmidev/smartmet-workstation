@@ -19,6 +19,7 @@ using namespace std::literals::string_literals;
 
 long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 30;
 double NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = 20;
+float NFmiControlPointObservationBlendingData::itsNonMissingObservationValueRatioLimit = 10;
 
 void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
 {
@@ -118,6 +119,7 @@ void NFmiControlPointObservationBlendingData::InitFromSettings(const std::string
 
     NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = NFmiSettings::Optional<long>(std::string(itsBaseNameSpace + "::ExpirationTimeInMinutes"), NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes);
     NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = NFmiSettings::Optional<double>(std::string(itsBaseNameSpace + "::MaxAllowedDistanceToStationInKm"), NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm);
+    NFmiControlPointObservationBlendingData::itsNonMissingObservationValueRatioLimit = NFmiSettings::Optional<float>(std::string(itsBaseNameSpace + "::NonMissingObservationValueRatioLimit"), NFmiControlPointObservationBlendingData::itsNonMissingObservationValueRatioLimit);
 }
 
 void NFmiControlPointObservationBlendingData::StoreToSettings(void)
@@ -151,6 +153,16 @@ double NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm(
 void NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm(double newValue)
 {
     itsMaxAllowedDistanceToStationInKm = newValue;
+}
+
+float NFmiControlPointObservationBlendingData::NonMissingObservationValueRatioLimit() 
+{ 
+    return itsNonMissingObservationValueRatioLimit; 
+}
+
+void NFmiControlPointObservationBlendingData::NonMissingObservationValueRatioLimit(float newValue) 
+{ 
+    itsNonMissingObservationValueRatioLimit = newValue; 
 }
 
 float NFmiControlPointObservationBlendingData::BlendData(float editedDataValue, float changeValue, float maskFactor, unsigned long timeSize, unsigned long timeIndex, const NFmiLimitChecker &limitChecker)
@@ -342,8 +354,7 @@ static bool CheckForExistingObservationsOnUsedArea(boost::shared_ptr<NFmiFastQue
     if(stationsOnAreaCount == 0)
         return false; // Jos alueella ei ollut yhtään asemaa => false
     auto nonMissingValueRatioOnArea = 100.f * nonMissingObservationsOnAreaCount / stationsOnAreaCount;
-    auto nonMissingValueRatioLimit = 30.f; // Laitetaan joku raja puuttuvien maksimimääräksi
-    return nonMissingValueRatioOnArea >= nonMissingValueRatioLimit;
+    return nonMissingValueRatioOnArea >= NFmiControlPointObservationBlendingData::NonMissingObservationValueRatioLimit();
 }
 
 // Haetaan datasta viimeisin aika, jolla on riittävästi havaintoja.
