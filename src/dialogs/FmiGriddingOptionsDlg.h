@@ -41,6 +41,7 @@ protected:
 
 	void InitDialogTexts(void);
     void InitLocalFitMethodSelector();
+    void InitControlValuesFromGriddingPropertiesObject();
 
     NFmiGriddingProperties itsGriddingProperties;
     int itsGriddingFunction;
@@ -50,6 +51,8 @@ protected:
     int itsSmoothLevel = 0; // [0 - 5]
     double itsLocalFitFilterRadius = 1.25; // > 1
     double itsLocalFitFilterFactor = 0.15; // > 0
+public:
+    afx_msg void OnBnClickedButtonDefaultValues();
 };
 
 //{{AFX_INSERT_LOCATION}}
