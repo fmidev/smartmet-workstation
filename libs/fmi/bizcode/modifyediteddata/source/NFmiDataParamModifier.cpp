@@ -481,7 +481,8 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
 	std::vector<float> zValues;
     std::string relativeAreaRectStr("0,0,1,1"); // ilmeisesti muokkaus tehd‰‰n aina 0,0 - 1,1 laatikossa (paitsi jos olisi cropattuja alueita)
     NFmiStaticTime timeAtWorkStarted;
-    FmiGriddingFunction griddingFunction = itsGriddingProperties.function();
+    auto griddingPropertiesStr = itsGriddingProperties.toString();
+    auto cpRangeLimitRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(itsGriddingProperties.rangeLimitInKm(), itsInfo->Area()));
     jobIndex++;
 
     // T‰ytet‰‰n ensin task-jono
@@ -497,7 +498,7 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
         itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
         if(!GetChangeValuesWithWork(theActiveTimes.Time(), xValues, yValues, zValues))
 			continue; // t‰lle ajalle ei muutoksia!
-        tasks.push(tcp_tools::task_structure(jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, itsGridData.NX(), itsGridData.NY(), xValues, yValues, zValues, theGuidStr, griddingFunction));
+        tasks.push(tcp_tools::task_structure(jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, itsGridData.NX(), itsGridData.NY(), xValues, yValues, zValues, theGuidStr, griddingPropertiesStr, cpRangeLimitRelative));
 	}
 
     // K‰ynnistet‰‰n clint->server yhteys
