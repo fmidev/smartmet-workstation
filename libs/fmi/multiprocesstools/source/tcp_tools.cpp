@@ -146,6 +146,32 @@ void read_float_vector(std::istream &in, std::vector<float> &values)
     }
 }
 
+// HUOM! vektorin stringeiss‰ ei saa olla white-spaceja!!!
+void WriteExtraOptions(std::ostream &out, const std::vector<std::string> &extraOptionsInSingleWords)
+{
+    out << extraOptionsInSingleWords.size();
+    for(const auto &word : extraOptionsInSingleWords)
+    {
+        out << " " << word;
+    }
+}
+
+void ReadExtraOptions(std::istream &in, std::vector<std::string> &extraOptionsInSingleWords)
+{
+    size_t wordCount = 0;
+    in >> wordCount;
+    if(!in)
+        throw std::runtime_error("Error while reading extra options size from stream");
+    for(auto index = 0; index < wordCount; index++)
+    {
+        std::string word;
+        in >> word;
+        if(!in)
+            throw std::runtime_error("Error while reading extra option from stream");
+        extraOptionsInSingleWords.push_back(word);
+    }
+}
+
 // Tulostetaan task_structure -olio streamiin. 
 // Ei saa sis‰lt‰‰ \n -merkkej‰, t‰m‰ otus laitetaan tcp:ll‰ masterista workeriin.
 std::ostream& operator<<(std::ostream &out, const task_structure &object)
@@ -161,7 +187,14 @@ std::ostream& operator<<(std::ostream &out, const task_structure &object)
     out << " ";
     out << object.smartmet_guid_ << " "; // HUOM! smartmet_guid_ ei saa sis‰lt‰‰ spaceja!!
     out << object.gridding_properties_string_ << " ";
-    out << object.cp_range_limit_relative_;
+    out << object.cp_range_limit_relative_ << " ";
+
+    // Varaudutaan siihen ett‰ tulevaisuudessa tulee lis‰‰ parametreja (= kokonaisia sanoja).
+    // Laitetaan t‰h‰n lukum‰‰r‰ kuinka monta ylim‰‰r‰ist‰ sanaa t‰ll‰ hetkell‰ on
+    std::vector<std::string> extraOptionsInSingleWords;
+////    extraOptionsInSingleWords.push_back("extra-word-1");
+    WriteExtraOptions(out, extraOptionsInSingleWords);
+
     return out;
 }
 
@@ -198,6 +231,11 @@ std::istream& operator >>(std::istream &in, task_structure &object)
     in >> object.cp_range_limit_relative_;
     if(!in)
         throw std::runtime_error("Error while reading cp_range_limit_relative_ from stream");
+
+    // Lopuksi viel‰ luetaan ylim‰‰r‰iset optiot (sanat) ja versiosta riippuen niille tehd‰‰n jotain tai ei.
+    // T‰m‰n pit‰isi siis olla taaksep‰in ja eteenp‰in yhteensopiva optioiden lis‰ys.
+    std::vector<std::string> extraOptionsInSingleWords;
+    ReadExtraOptions(in, extraOptionsInSingleWords);
 
     return in;
 }
