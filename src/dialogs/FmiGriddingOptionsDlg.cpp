@@ -55,6 +55,7 @@ void CFmiGriddingOptionsDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CFmiGriddingOptionsDlg, CDialog)
 	//{{AFX_MSG_MAP(CFmiGriddingOptionsDlg)
 	//}}AFX_MSG_MAP
+    ON_BN_CLICKED(IDC_BUTTON_DEFAULT_VALUES, &CFmiGriddingOptionsDlg::OnBnClickedButtonDefaultValues)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -68,18 +69,26 @@ BOOL CFmiGriddingOptionsDlg::OnInitDialog()
 	this->SetIcon(hIcon, FALSE);
 
 	InitDialogTexts();
-	itsGriddingFunction = itsGriddingProperties.function();
-    itsRangeLimitInKm = itsGriddingProperties.rangeLimitInKm();
     InitLocalFitMethodSelector();
+    InitControlValuesFromGriddingPropertiesObject();
+	UpdateData(FALSE);
+	
+	return TRUE;  // return TRUE unless you set the focus to a control
+	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiGriddingOptionsDlg::InitControlValuesFromGriddingPropertiesObject()
+{
+    itsGriddingFunction = itsGriddingProperties.function();
+    itsRangeLimitInKm = itsGriddingProperties.rangeLimitInKm();
+    // Local fit methods are from 1 to 6, and you have to substract 1 to get 0 based index
+    itsLocalFitMethodSelector.SetCurSel(itsGriddingProperties.localFitMethod() - 1);
     itsLocalFitDelta = itsGriddingProperties.localFitDelta();
     itsSmoothLevel = itsGriddingProperties.smoothLevel();
     itsLocalFitFilterRadius = itsGriddingProperties.localFitFilterRadius();
     itsLocalFitFilterFactor = itsGriddingProperties.localFitFilterFactor();
 
-	UpdateData(FALSE);
-	
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
+    UpdateData(FALSE);
 }
 
 void CFmiGriddingOptionsDlg::InitLocalFitMethodSelector()
@@ -91,9 +100,6 @@ void CFmiGriddingOptionsDlg::InitLocalFitMethodSelector()
     itsLocalFitMethodSelector.InsertString(-1, CA2T(::GetDictionaryString("W-Avg 2 quads").c_str()));
     itsLocalFitMethodSelector.InsertString(-1, CA2T(::GetDictionaryString("W-Avg 3 quads").c_str()));
     itsLocalFitMethodSelector.InsertString(-1, CA2T(::GetDictionaryString("W-Avg 4 quads").c_str()));
-
-    // Local fit methods are from 1 to 6, and you have to substract 1 to get 0 based index
-    itsLocalFitMethodSelector.SetCurSel(itsGriddingProperties.localFitMethod() - 1);
 }
 
 void CFmiGriddingOptionsDlg::OnOK() 
@@ -133,5 +139,13 @@ void CFmiGriddingOptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SMOOTH_LEVEL_TEXT, "How many extra times [0-5] is field smoothed (default is 0 and every extra time slows calculations)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOCAL_FIT_FILTER_RANGE_TEXT, "Local fit filter range, default is 1.25 (value should be in range of 1.0 > x >= 5)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOCAL_FIT_FILTER_FACTOR_TEXT, "Local fit filter factor, default is 0.15 (value should be in range of 0.0 > x >= 5)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_DEFAULT_VALUES, "Default values");
 }
 
+
+
+void CFmiGriddingOptionsDlg::OnBnClickedButtonDefaultValues()
+{
+    itsGriddingProperties = NFmiGriddingProperties(itsGriddingProperties.toolMasterAvailable());
+    InitControlValuesFromGriddingPropertiesObject();
+}

@@ -148,6 +148,7 @@ BEGIN
     LTEXT           "Local fit filter range, default is 1.25 (value should be in range of 1.0 > x >= 5)",IDC_STATIC_LOCAL_FIT_FILTER_RANGE_TEXT,52,163,186,16
     EDITTEXT        IDC_EDIT_LOCAL_FIT_FILTER_FACTOR,7,182,40,14,ES_AUTOHSCROLL
     LTEXT           "Local fit filter factor, default is 0.15 (value should be in range of 0.0 > x >= 5)",IDC_STATIC_LOCAL_FIT_FILTER_FACTOR_TEXT,52,181,186,16
+    PUSHBUTTON      "Default values",IDC_BUTTON_DEFAULT_VALUES,155,200,64,14
 END
 
 IDD_DIALOG_LANGUAGE_SELECTION DIALOGEX 0, 0, 215, 94
