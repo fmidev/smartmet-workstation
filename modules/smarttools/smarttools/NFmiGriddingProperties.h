@@ -26,6 +26,8 @@ public:
     
     NFmiGriddingProperties(bool toolMasterAvailable = false);
 
+    std::string toString() const;
+    bool fromString(const std::string &str);
     bool toolMasterAvailable() const { return toolMasterAvailable_; }
     void toolMasterAvailable(bool toolMasterAvailable) { toolMasterAvailable_ = toolMasterAvailable; }
     FmiGriddingFunction function() const;
