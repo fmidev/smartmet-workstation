@@ -17,7 +17,7 @@
 
 using namespace std::literals::string_literals;
 
-long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 20;
+long NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = 30;
 double NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = 20;
 
 void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
@@ -115,6 +115,9 @@ void NFmiControlPointObservationBlendingData::InitFromSettings(const std::string
     unsigned long prodId = NFmiSettings::Optional<unsigned long>(std::string(itsBaseNameSpace + "::ProdId"), kFmiSYNOP);
     std::string prodName = NFmiSettings::Optional<std::string>(std::string(itsBaseNameSpace + "::ProdName"), "Synop"s);
     itsSelectedProducer = itsLastSessionProducer = NFmiProducer(prodId, prodName);
+
+    NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes = NFmiSettings::Optional<long>(std::string(itsBaseNameSpace + "::ExpirationTimeInMinutes"), NFmiControlPointObservationBlendingData::itsExpirationTimeInMinutes);
+    NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm = NFmiSettings::Optional<double>(std::string(itsBaseNameSpace + "::MaxAllowedDistanceToStationInKm"), NFmiControlPointObservationBlendingData::itsMaxAllowedDistanceToStationInKm);
 }
 
 void NFmiControlPointObservationBlendingData::StoreToSettings(void)
