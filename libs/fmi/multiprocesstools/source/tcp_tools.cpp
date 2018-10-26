@@ -4,6 +4,7 @@
 #include "process_tools.h"
 
 #include "NFmiStaticTime.h"
+#include "NFmiGriddingProperties.h"
 
 #include <chrono>
 
@@ -76,25 +77,27 @@ task_structure::task_structure(void)
 ,relative_area_string_()
 ,size_x_(static_cast<size_t>(-1))
 ,size_y_(static_cast<size_t>(-1))
-,gridding_function_(-1)
 ,x_values_()
 ,y_values_()
 ,z_values_()
 ,smartmet_guid_()
+,gridding_properties_string_()
+,cp_range_limit_relative_(kFloatMissing)
 {}
 
-task_structure::task_structure(std::size_t job_index, std::size_t data_time_index, std::size_t job_time_t, const std::string &relative_area_string, std::size_t size_x, std::size_t size_y, std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values, const std::string &smartmet_guid, int gridding_function)
+task_structure::task_structure(std::size_t job_index, std::size_t data_time_index, std::size_t job_time_t, const std::string &relative_area_string, std::size_t size_x, std::size_t size_y, std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values, const std::string &smartmet_guid, const std::string &gridding_properties_string, float cp_range_limit_relative)
 :job_index_(job_index)
 ,data_time_index_(data_time_index)
 ,job_time_t_(job_time_t)
 ,relative_area_string_(relative_area_string)
 ,size_x_(size_x)
 ,size_y_(size_y)
-,gridding_function_(gridding_function)
 ,x_values_(x_values)
 ,y_values_(y_values)
 ,z_values_(z_values)
 ,smartmet_guid_(smartmet_guid)
+,gridding_properties_string_(gridding_properties_string)
+,cp_range_limit_relative_(cp_range_limit_relative)
 {}
 
 std::string task_structure::to_string(void) const
@@ -149,14 +152,16 @@ std::ostream& operator<<(std::ostream &out, const task_structure &object)
 {
     out << object.job_index_ << " " << object.data_time_index_ << " " << object.job_time_t_ << " ";
     out << object.relative_area_string_ << " "; // HUOM! relative_area_string_ ei saa sisältää spaceja!!
-    out << object.size_x_ << " " << object.size_y_ << " " << object.gridding_function_ << " ";
+    out << object.size_x_ << " " << object.size_y_ << " ";
     write_float_vector(out, object.x_values_);
     out << " ";
     write_float_vector(out, object.y_values_);
     out << " ";
     write_float_vector(out, object.z_values_);
     out << " ";
-    out << object.smartmet_guid_; // HUOM! smartmet_guid_ ei saa sisältää spaceja!!
+    out << object.smartmet_guid_ << " "; // HUOM! smartmet_guid_ ei saa sisältää spaceja!!
+    out << object.gridding_properties_string_ << " ";
+    out << object.cp_range_limit_relative_;
     return out;
 }
 
@@ -181,15 +186,18 @@ std::istream& operator >>(std::istream &in, task_structure &object)
     in >> object.size_y_;
     if(!in)
         throw std::runtime_error("Error while reading size_y_ from stream");
-    in >> object.gridding_function_;
-    if(!in)
-        throw std::runtime_error("Error while reading gridding_function_ from stream");
     read_float_vector(in, object.x_values_);
     read_float_vector(in, object.y_values_);
     read_float_vector(in, object.z_values_);
     in >> object.smartmet_guid_; // HUOM! smartmet_guid_ -stringi ei saa sisältää spaceja, muuten se katkeaa tässä luvussa!!
     if(!in)
         throw std::runtime_error("Error while reading smartmet_guid_ from stream");
+    in >> object.gridding_properties_string_;
+    if(!in)
+        throw std::runtime_error("Error while reading gridding_properties_string_ from stream");
+    in >> object.cp_range_limit_relative_;
+    if(!in)
+        throw std::runtime_error("Error while reading cp_range_limit_relative_ from stream");
 
     return in;
 }
@@ -357,24 +365,26 @@ void fill_work_queue(concurrent_queue<task_structure> &workqueue, size_t &runnin
 
     NFmiStaticTime localTime;
     std::time_t job_time = localTime.EpochTime();
-    int gridding_function = 2; // kFmiXuGriddingLocalFitCalc
+    NFmiGriddingProperties griddingProperties;
+    auto griddingPropertiesStr = griddingProperties.toString();
+    float cp_point_radius_relative = kFloatMissing;
 
-    task_structure task(1, 1, job_time, g_relative_area_string, 4, 5, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    task_structure task(1, 1, job_time, g_relative_area_string, 4, 5, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
     workqueue.push(task);
-    task = task_structure(1, 2, job_time, g_relative_area_string, 5, 3, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    task = task_structure(1, 2, job_time, g_relative_area_string, 5, 3, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
     workqueue.push(task);
     add_point_values_to_vectors(0.5f, 0.42f, -0.3f, x_values, y_values, z_values);
-    task = task_structure(1, 3, job_time, g_relative_area_string, 6, 4, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    task = task_structure(1, 3, job_time, g_relative_area_string, 6, 4, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
     workqueue.push(task);
-    task = task_structure(1, 4, job_time, g_relative_area_string, 2, 3, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    task = task_structure(1, 4, job_time, g_relative_area_string, 2, 3, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
     workqueue.push(task);
     add_point_values_to_vectors(0.8f, 0.72f, 0.73f, x_values, y_values, z_values);
-    task = task_structure(1, 5, job_time, g_relative_area_string, 5, 4, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    task = task_structure(1, 5, job_time, g_relative_area_string, 5, 4, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
     workqueue.push(task);
-    task = task_structure(1, 6, job_time, g_relative_area_string, 3, 3, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    task = task_structure(1, 6, job_time, g_relative_area_string, 3, 3, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
     workqueue.push(task);
     add_point_values_to_vectors(0.23f, 0.87f, 1.3f, x_values, y_values, z_values);
-    task = task_structure(1, 7, job_time, g_relative_area_string, 5, 6, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    task = task_structure(1, 7, job_time, g_relative_area_string, 5, 6, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
     workqueue.push(task);
 
     running_task_index = workqueue.size() + 1;
@@ -390,9 +400,11 @@ task_structure generate_random_task(size_t &running_task_index)
     make_random_point_values(x_values, y_values, z_values);
     NFmiStaticTime localTime;
     std::time_t job_time = localTime.EpochTime();
-    int gridding_function = 2; // kFmiXuGriddingLocalFitCalc
+    NFmiGriddingProperties griddingProperties;
+    auto griddingPropertiesStr = griddingProperties.toString();
+    float cp_point_radius_relative = kFloatMissing;
 
-    return task_structure(2, running_task_index++, job_time, g_relative_area_string, size_x, size_y, x_values, y_values, z_values, g_sample_guid, gridding_function);
+    return task_structure(2, running_task_index++, job_time, g_relative_area_string, size_x, size_y, x_values, y_values, z_values, g_sample_guid, griddingPropertiesStr, cp_point_radius_relative);
 }
 
 void make_random_point_values(std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values)

@@ -3,6 +3,7 @@
 #include "toolmaster_tools.h"
 #include "logging.h"
 #include "NFmiObsDataGridding.h"
+#include "NFmiGriddingProperties.h"
 
 #include "NFmiRect.h"
 
@@ -78,14 +79,14 @@ void close(void)
     XuClose();
 }
 
-bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values, FmiGriddingFunction griddingFunction, std::vector<float> &gridding_values_out)
+bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values, const NFmiGriddingProperties &griddingProperties, float theObservationRadiusRelative, std::vector<float> &gridding_values_out)
 {
     gridding_values_out.resize(size_x * size_y, kFloatMissing);
     int arraySize = static_cast<int>(z_values.size());
     // T‰m‰ griddaus lasku osio on kopsattu ja muutettu NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValues, .... ) -funktiosta,
     // smartmetbizcode\ModifyEditedData -kirjastosta.
 
-    if(griddingFunction == kFmiMarkoGriddingFunction)
+    if(griddingProperties.function() == kFmiMarkoGriddingFunction)
     {
         NFmiObsDataGridding obsDataGridding;
 		obsDataGridding.SearchRange(0.7f);
@@ -100,8 +101,17 @@ bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, st
     else
     {
         XuViewWorldLimits(relative_rect.Left(), relative_rect.Right(), relative_rect.Top(), relative_rect.Bottom(), 0, 0);
+        XuUndefined(kFloatMissing, 2);
+        XuGriddingSmoothLevel(griddingProperties.smoothLevel());
+        XuGriddingLocalFitMethod(griddingProperties.localFitMethod());
+        XuGriddingLocalFitDelta(griddingProperties.localFitDelta());
+        XuGriddingLocalFitFilter(griddingProperties.localFitFilterRadius(), griddingProperties.localFitFilterFactor());
+        if(theObservationRadiusRelative != kFloatMissing)
+            XuGriddingLocalFitRadius(theObservationRadiusRelative);
+        else
+            XuGriddingLocalFitRadius(1.41); // T‰m‰ on laskentaruudun (~ 0,0 - 1,1) kulmapisteiden diagonaalinen et‰isyys, mik‰ on t‰m‰n radiuksen oletusarvo (= kaikkia pisteit‰ k‰ytet‰‰n aina laskuissa)
 
-		switch(griddingFunction)
+		switch(griddingProperties.function())
 		{
 		case kFmiXuGriddingThinPlateSplineCalc:
 			XuGriddingThinPlateSplineCalc(x_values.data(), y_values.data(), z_values.data(), arraySize, gridding_values_out.data(), static_cast<int>(size_y), static_cast<int>(size_x));
@@ -137,7 +147,7 @@ bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, st
 			}
 		default:
             std::string error_string("Unknown gridding function (");
-            error_string += boost::lexical_cast<std::string>(griddingFunction);
+            error_string += boost::lexical_cast<std::string>(griddingProperties.function());
             error_string += ") used in do_gridding_work_with_toolmaster -function, putting empty result";
             log_message(error_string, logging::trivial::error);
             gridding_values_out.clear(); // tyhjennet‰‰n arvo vektori virhetilanteissa, koska sit‰ saatetaan k‰ytt‰‰ tyhj‰n‰ ulkona!
