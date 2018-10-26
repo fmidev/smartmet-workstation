@@ -45,6 +45,10 @@ class NFmiControlPointObservationBlendingData
     static long itsExpirationTimeInMinutes;
     // Mik‰ on maksimi sallittu et‰isyys CP-pisteest‰ l‰himp‰‰n havaintoasemaan
     static double itsMaxAllowedDistanceToStationInKm;
+    // Kun tarkastellaan mik‰ on viimeisin hyv‰ksytty havaintoaika, jolta
+    // ei saa puuttua liikaa havaintoja editointi- tai zoomatun -alueen asemista.
+    static float itsNonMissingObservationValueRatioLimit;
+
 
 public:
     void InitFromSettings(const std::string &theBaseNameSpace);
@@ -66,6 +70,8 @@ public:
     static void ExpirationTimeInMinutes(long newValue);
     static double MaxAllowedDistanceToStationInKm();
     static void MaxAllowedDistanceToStationInKm(double newValue);
+    static float NonMissingObservationValueRatioLimit();
+    static void NonMissingObservationValueRatioLimit(float newValue);
 private:
     bool UpdateProducerInfo(const NFmiProducer &producer);
 };
