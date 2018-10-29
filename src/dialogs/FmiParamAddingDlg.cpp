@@ -123,6 +123,20 @@ std::string combineFilePath(const std::string &fileName, const std::string &file
     }
 }
 
+std::string getFileFilter(const std::string &fileNameFilter)
+{
+    try
+    {
+        std::size_t found = fileNameFilter.find_last_of("/\\");
+        std::string fileFilter = found ? fileNameFilter.substr(found + 1, fileNameFilter.length()) : "";
+        return fileFilter;
+    }
+    catch(...)
+    {
+        return "";
+    }
+}
+
 std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
 {
     if(info == nullptr) //MacroParams don't have FastQueryInfo
@@ -140,12 +154,6 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     //- TimeDescriptor() metodilla aikatietoa, ja siltä voi kysyä onko kyseessä tasavälinen step vai epämääräinen 
     //        aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyydä tasavälinen ValidTimeBag())
     //- Levelit oletkin jo varmaan käynyt läpi toisaalla eli siihen ei tarvii neuvoja
-    //- Parametrit myös tuttuja
-
-
-    auto c = info->HPlaceDescriptor().IsGrid();
-    auto d = info->HPlaceDescriptor().Grid();
-    auto e = info->HPlaceDescriptor().Area();
 
     NFmiTimeList* timeList;
     NFmiTimeBag* timeBag;
@@ -174,15 +182,15 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "</font></b>";
     str += "<br><hr color=blue><br>";
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
-    //str += "<b>File name: </b>\t" + info->DataFilePattern() + "\n";
-    str += "<b>Data loaded: </b>\t \n";
-    str += "<b>File modified: </b>\t  \n";
-    str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC \n";
-    str += "<b>Time range: </b>\t" + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC ";
+    str += "<b>File filter: </b>\t" + getFileFilter(info->DataFilePattern()) + "\n";
+    //str += "<b>Data loaded: </b>\t \n";
+    //str += "<b>File modified: </b>\t  \n";
+    str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC";
     str += "<br><hr color=blue><br>";
-    str += "<b>Time structure: </b> \n";
-    str += "\t\t\ttime steps : " + std::to_string(timeSteps) + "\n";
-    str += "\t\t\tresolution: " + resolution;
+    str += "<b>Time info: </b>";
+    str += "\t\tsteps : " + std::to_string(timeSteps) + "\n";
+    str += "\t\t\tresolution: " + resolution + "\n";
+    str += "\t\t\trange: " + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC ";
     str += "<br><hr color=blue><br>";
     str += "<b>Parameters:  </b>\ttotal: " + std::to_string(info->ParamBag().GetSize());
     str += "<br><hr color=blue><br>";
@@ -190,8 +198,8 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
     str += "<br><hr color=blue><br>";
     str += "<b>File size: </b>\t\t" + fileSize + " MB \n";
-    str += "<b>Local path: </b>\t" + combineFilePath(info->DataFileName(), info->DataFilePattern())  + "\n";
-    str += "<b>Server path: </b>\t \n";
+    str += "<b>Local path: </b>\t" + combineFilePath(info->DataFileName(), info->DataFilePattern());
+    //str += "<b>Server path: </b>\t \n";
     str += "<br><hr color=blue><br>";
     
     return str;
@@ -242,7 +250,6 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
         auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
         
         
-
         if(!fastQueryInfoVector.empty())
         {
             return TooltipText(singleRowItem, fastQueryInfoVector.at(0), fileSizeInMB(singleRowItem));
