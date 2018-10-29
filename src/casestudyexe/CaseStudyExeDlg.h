@@ -2,6 +2,7 @@
 #pragma once
 
 #include "NFmiCaseStudySystem.h"
+#include "WndResizer.h"
 
 const int kFmiStartOperationTimer = 1;
 
@@ -34,12 +35,14 @@ private:
 	void DoCaseDataOperation(void);
 	CWnd* GetCopyDialogPositionWindow(void);
 	void BringDialogUpFront(const std::string &theTitleStr, const std::string &theMessageStr);
+    void DoResizerHooking(void);
 
 	std::string itsSimpleCommandLineStr;
 	std::string itsMetaFileName;
 	std::string itsZipExe;
 	NFmiCaseStudySystem itsCaseStudySystem;
 	UINT itsStartOperationTimer; // k‰ynnistet‰‰n OnInitDialog:in lopuksi timer, joka laukaisee halutun toiminnan initialisoinnin lopuksi pienell‰ viiveell‰ (ett‰ dialogi on varmasti alustettu)
+    CWndResizer m_resizer;
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

@@ -100,6 +100,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "catlog/catlog.h"
 #include "NFmiVoidPtrList.h"
+#include "EditedInfoMaskHandler.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -1179,6 +1180,8 @@ namespace
         ,itsKahaRain2(nullptr)
         ,itsKahaRain3(nullptr)
         ,itsKahaRoadSlippery(nullptr)
+        ,itsKahaFog(nullptr)
+        ,itsKahaWaterTemperature(nullptr)
         ,itsUnknownKaHaMessageType(nullptr)
         ,itsIconSizeInMM_x(9.8)
 		,itsIconSizeInMM_y(9.8)
@@ -1229,6 +1232,8 @@ namespace
             itsKahaRain2 = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-vesisade-2.png");
             itsKahaRain3 = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-vesisade-3.png");
             itsKahaRoadSlippery = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-tieliikennehairio.png");
+            itsKahaFog = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-sumu.png");
+            itsKahaWaterTemperature = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-vedenlampotila.png");
             itsUnknownKaHaMessageType = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/question_mark_kaha_32x32.png");
         }
 
@@ -1275,8 +1280,10 @@ namespace
         Gdiplus::Bitmap *itsKahaRain2;
         Gdiplus::Bitmap *itsKahaRain3;
         Gdiplus::Bitmap *itsKahaRoadSlippery;
+        Gdiplus::Bitmap *itsKahaFog;
+        Gdiplus::Bitmap *itsKahaWaterTemperature;
 
-        Gdiplus::Bitmap *itsUnknownKaHaMessageType; // tuntematon sanoma id, jolloin merkiksi sininen kysymerkki pallo
+        Gdiplus::Bitmap *itsUnknownKaHaMessageType; // tuntematon sanoma id, jolloin merkiksi sininen kysymysmerkki
 
         double itsIconSizeInMM_x; // t‰m‰ on haluttujen 16 x 16 pix ikonien koko printatessa
 		double itsIconSizeInMM_y;
@@ -1312,8 +1319,8 @@ void NFmiStationViewHandler::GetShownMessages()
     itsShownKaHaMessages.clear();
 
     boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
-    int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) * 60));
-    NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(itsTime, editorTimeStep);
+    int timeStepForMessagesInMinutes = itsCtrlViewDocumentInterface->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+    NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(itsTime, timeStepForMessagesInMinutes);
 
     if(itsCtrlViewDocumentInterface->ApplicationWinRegistry().ShowHakeMessages())
         itsShownHakeMessages = itsCtrlViewDocumentInterface->WarningCenterSystem().getHakeMessages(startTime, itsTime, *zoomedArea);
@@ -1573,6 +1580,16 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
     case 10:
     { // Lumensyvyys
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaSnowDepth, 0.85f, 0.85);
+        break;
+    }
+    case 12:
+    { // Sumu
+        DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaFog, 0.85f, 0.85);
+        break;
+    }
+    case 13:
+    { // Veden pintal‰mpˆtila
+        DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaWaterTemperature, 0.85f, 0.85);
         break;
     }
     case 1100:
@@ -2699,7 +2716,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 			if(!cpManager->MouseCaptured())
 			{
 				NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-                cpManager->ActivateCP(latlon, true, false);
+                cpManager->ActivateCP(latlon, true);
 				if((theKey & kShiftKey) && (theKey & kCtrlKey))
                     cpManager->AddCP(latlon);
 				else if((theKey & kShiftKey))
@@ -3797,7 +3814,8 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridColumnNumber);
             break;
 
-			case kFmiPrecipitationForm:
+            case kFmiPrecipitationForm:
+            case kFmiPotentialPrecipitationForm:
 				stationView = new NFmiPrecipitationFormSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 																	  ,itsToolBox
 																	  ,itsDrawingEnvironment
@@ -4130,8 +4148,7 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 		NFmiDrawingEnvironment envi;
 		envi.EnableFill();
 		envi.DisableFrame();
-		unsigned long oldMask = info->MaskType();
-		info->MaskType(NFmiMetEditorTypes::kFmiNoMask); // muutin activaatiomaskin k‰ytˆst‰ kaikkien piirtoon, koska muuten harvennetun datan piirto ei toimi oikein
+        EditedInfoMaskHandler editedInfoMaskHandler(info, NFmiMetEditorTypes::kFmiNoMask); // muutin activaatiomaskin k‰ytˆst‰ kaikkien piirtoon, koska muuten harvennetun datan piirto ei toimi oikein
 		NFmiRect maskRect(CalcMaskRectSize(info));
 		NFmiPoint xy;
 		NFmiPoint latLon;
@@ -4157,7 +4174,6 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 				}
 			}
 		}
-		info->MaskType(oldMask);
 	}
 }
 
@@ -4211,8 +4227,8 @@ void NFmiStationViewHandler::DrawAutocompleteLocations(void)
 
 	g_AutoCompletionRects.clear(); // aluksi aina nollataan laatikot
 
-	// piirret‰‰n autocomplete juttuja vain p‰‰karttan‰yttˆˆn ja 1. rivin 1. sarakkeeseen
-	if(itsMapViewDescTopIndex == 0 && itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
+	// piirret‰‰n autocomplete juttuja vain 1. rivin 1. sarakkeeseen
+	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
 	{
 		std::vector<NFmiACLocationInfo> locInfos = autoComplete.AutoCompleteResults();
 		if(locInfos.size() == 0)

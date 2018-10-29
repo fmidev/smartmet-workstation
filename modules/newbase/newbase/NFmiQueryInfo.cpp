@@ -4398,7 +4398,7 @@ float NFmiQueryInfo::InterpolatedValue(const NFmiPoint &theLatLonPoint,
                                                                bottomRightValue));
           }
         }
-        if (theValue != kFloatMissing) return theValue;
+        return theValue;
       }
     }
   }

@@ -31,7 +31,8 @@ private:
 
 	BOOL fDrawCountryBorders;
 	BOOL fSpaceOutSymbolicGridData;
-	BOOL fLockToMainMapViewTime;
+    BOOL fLockToMainMapViewTime;
+    BOOL fLockToMainMapViewRow;
 	BOOL fShowTrajectorsOnMap;
 	BOOL fShowSoundingMarkersOnMap;
 	BOOL fShowCrossSectionMarkersOnMap;

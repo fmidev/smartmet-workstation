@@ -6,7 +6,7 @@
 #include "WorkerProcessTcpMFC.h"
 
 #include "MainFrm.h"
-#include "NFmiObsDataGridding_from_ModifyEditedData.h"
+#include "NFmiObsDataGridding.h"
 #include "MfcTools.h"
 
 #include "logging.h"
@@ -14,6 +14,8 @@
 #include "toolmaster_tools.h"
 #include "process_helpers.h"
 #include "worker_to_master_connection.h"
+#include "NFmiGriddingHelperInterface.h"
+#include "NFmiGriddingProperties.h"
 
 #include "NFmiRect.h"
 
@@ -191,8 +193,15 @@ static bool do_gridding_work_with_toolmaster(const tcp_tools::task_structure &ta
     std::vector<float> z_values(task_in.z_values_);
     if(use_verbose_logging)
         tcp_tools::log_point_values(task_in, x_values, y_values, z_values);
-    FmiGriddingFunction griddingFunction = static_cast<FmiGriddingFunction>(task_in.gridding_function_);
-    if(!toolmaster_tools::do_gridding(task_in.size_x_, task_in.size_y_, relative_rect, x_values, y_values, z_values, griddingFunction, gridding_values))
+    NFmiGriddingProperties griddingProperties(true);
+    if(!griddingProperties.fromString(task_in.gridding_properties_string_))
+    {
+        log_message(std::string("Gridding-properties string from task was invalid: ") + task_in.gridding_properties_string_, logging::trivial::error);
+        work_result_out = tcp_tools::work_result_structure(task_in.job_index_, task_in.data_time_index_, task_in.job_time_t_, task_in.size_x_, task_in.size_y_, std::vector<float>(), task_in.smartmet_guid_);
+        return false;
+    }
+
+    if(!toolmaster_tools::do_gridding(task_in.size_x_, task_in.size_y_, relative_rect, x_values, y_values, z_values, griddingProperties, task_in.cp_range_limit_relative_, gridding_values))
     {
         work_result_out = tcp_tools::work_result_structure(task_in.job_index_, task_in.data_time_index_, task_in.job_time_t_, task_in.size_x_, task_in.size_y_, std::vector<float>(), task_in.smartmet_guid_);
 		return false;

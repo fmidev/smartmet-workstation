@@ -131,8 +131,20 @@ void NFmiAutoComplete::StoreToSettings(void)
 }
 */
 
+static void MakeErrorLogsFromGetRespond(const std::string &functionName, const std::string &baseError, const std::string &requestString)
+{
+    std::string logStr = functionName;
+    logStr += baseError;
+    CatLog::logMessage(logStr, CatLog::Severity::Error, CatLog::Category::NetRequest);
+
+    logStr = "With following search: ";
+    logStr += requestString;
+    CatLog::logMessage(logStr, CatLog::Severity::Error, CatLog::Category::NetRequest);
+}
+
 std::string NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient, const std::string &theWord, bool logEvents)
 {
+    std::string wantedUrlStr;
 	try
 	{
 		if(g_DoAutoCompleteTest)
@@ -157,7 +169,7 @@ std::string NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient
 			wantedParams += utf8Word;
 
 			std::string resultStr;
-			std::string wantedUrlStr = itsBaseUrl + "?" + wantedParams;
+			wantedUrlStr = itsBaseUrl + "?" + wantedParams;
 			if(logEvents)
 			{
 				std::string logStr("AutoComplete GET str was:\n");
@@ -169,12 +181,17 @@ std::string NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient
 			return resultStr;
 		}
 	}
-	catch(std::exception & /* e */ )
+	catch(std::exception &e)
 	{
-	}
+        std::string baseError = " caused error: ";
+        baseError += e.what();
+        ::MakeErrorLogsFromGetRespond(__FUNCTION__, baseError, wantedUrlStr);
+    }
 	catch(...)
 	{
-	}
+        std::string baseError = " caused unknown error";
+        ::MakeErrorLogsFromGetRespond(__FUNCTION__, baseError, wantedUrlStr);
+    }
 	return std::string();
 }
 
@@ -257,6 +274,14 @@ static void ParseJsonLocations(json_spirit::Value &theValue, std::vector<NFmiACL
 	}
 }
 
+static void LogSearchAndResultStrings(const std::string &searchWord, const std::string &respondStr, CatLog::Severity logSeverity)
+{
+    std::string logStr("LocationFinder-dialog, search: '");
+    logStr += searchWord;
+    logStr += "', respond string was:\n";
+    logStr += respondStr;
+    CatLog::logMessage(logStr, logSeverity, CatLog::Category::NetRequest);
+}
 
 // hakee säädetystä auto complete palvelusta annettua sanaa vastaavat tärkeimpien paikkojen
 // tiedot ja purkaa ja palauttaa NFmiACLocationInfo-vektoriin.
@@ -268,30 +293,35 @@ std::vector<NFmiACLocationInfo> NFmiAutoComplete::DoAutoComplete(NFmiQ2Client &t
 		std::string respondStr = GetAutoCompleteRespond(theHttpClient, theWord, logEvents);
 		if(respondStr.empty() == false)
 		{
-			if(logEvents)
-			{
-				std::string logStr("LocationFinder-dialog, search: '");
-				logStr += theWord;
-				logStr += "', respond string was:\n";
-				logStr += respondStr;
-				CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
-			}
+            std::string errorString = __FUNCTION__;
+            bool reportError = false;
 
 			json_spirit::Value metaDataValue;
-			if(json_spirit::read(respondStr, metaDataValue))
-			{
-				try
-				{
-					::ParseJsonLocations(metaDataValue, resultLocations);
-				}
-				catch(std::exception & /* e */ )
-				{
-				}
-				catch(...)
-				{
-				}
-			}
-		}
+            try
+            {
+                if(json_spirit::read(respondStr, metaDataValue))
+                    ::ParseJsonLocations(metaDataValue, resultLocations);
+            }
+            catch(std::exception &e)
+            {
+                reportError = true;
+                errorString += ": auto-complete request caused error: ";
+                errorString += e.what();
+                errorString += ", with search:";
+            }
+            catch(...)
+            {
+                reportError = true;
+                errorString += ": auto-complete request caused unknown error with search:";
+            }
+
+            if(reportError)
+            {
+                CatLog::logMessage(errorString, CatLog::Severity::Error, CatLog::Category::NetRequest);
+            }
+            if(logEvents || reportError)
+                ::LogSearchAndResultStrings(theWord, respondStr, reportError ? CatLog::Severity::Error : CatLog::Severity::Debug);
+        }
 	}
 	return resultLocations;
 }

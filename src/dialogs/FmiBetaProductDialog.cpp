@@ -64,6 +64,8 @@ CFmiBetaProductDialog::CFmiBetaProductDialog(SmartMetDocumentInterface *smartMet
 , fUseAutoFileNames(FALSE)
 , fDisplayRuntimeInfo(FALSE)
 , itsTotalImagesGenerated(0)
+, itsBetaProductFullFilePath()
+, itsBetaProductNameU_(_T(""))
 {
 
 }
@@ -94,12 +96,14 @@ void CFmiBetaProductDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_WEB_DESCRIPTION_STRING, itsWebSiteDescriptionStringU_);
     DDX_Text(pDX, IDC_STATIC_IMAGE_FILE_NAME_TEMPLATE_STAMPS_TEXT, itsFileNameTemplateStampsStringU_);
     DDX_Control(pDX, IDC_BUTTON_SAVE_BETA_PRODUCT, itsSaveButton);
+    DDX_Control(pDX, IDC_BUTTON_SAVE_AS_BETA_PRODUCT, itsSaveAsButton);
     DDX_Text(pDX, IDC_EDIT_COMMAND_LINE_STRING, itsCommandLineStringU_);
     DDX_Control(pDX, IDC_COMBO_TIME_BOX_LOCATION_SELECTOR, itsTimeBoxLocationSelector);
     DDX_Check(pDX, IDC_CHECK_TIME_BOX_USE_UTC_TIME, fUseUtcTimesInTimeBox);
     DDX_Check(pDX, IDC_CHECK_USE_AUTO_FILE_NAMES, fUseAutoFileNames);
     DDX_Control(pDX, IDC_COMBO_PARAM_BOX_LOCATION_SELECTOR, itsParamBoxLocationSelector);
     DDX_Check(pDX, IDC_CHECK_DISPLAY_RUNTIME_INFO, fDisplayRuntimeInfo);
+    DDX_Text(pDX, IDC_STATIC_BETA_PRODUCT_NAME, itsBetaProductNameU_);
 }
 
 
@@ -133,6 +137,7 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductDialog, CTabPageSSL) //CDialogEx)
     ON_BN_CLICKED(IDC_RADIO_SOUNDING_VIEW, &CFmiBetaProductDialog::OnBnClickedRadioSoundingView)
     ON_BN_CLICKED(IDC_RADIO_CROSS_SECTION_VIEW, &CFmiBetaProductDialog::OnBnClickedRadioCrossSectionView)
     ON_EN_CHANGE(IDC_EDIT_SYNOP_STATION_ID_STRING, &CFmiBetaProductDialog::OnEnChangeEditSynopStationIdString)
+    ON_BN_CLICKED(IDC_BUTTON_SAVE_AS_BETA_PRODUCT, &CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct)
 END_MESSAGE_MAP()
 
 
@@ -311,6 +316,7 @@ void CFmiBetaProductDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_WEB_DESCRIPTION_TEXT, "Web site description text");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_WEB_DESCRIPTION_STAMPS_TEXT, "(Available 'stamps':  <paramName>, <producerName>)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SAVE_BETA_PRODUCT, "Save");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SAVE_AS_BETA_PRODUCT, "Save as");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_BETA_PRODUCT, "Load");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_IMAGE_FILE_NAME_TEMPLATE_STAMPS_TEXT, GetFileNameTemplateStampsString().c_str());
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_COMMAND_LINE_GROUP_TEXT, "Used post image generation command line");
@@ -327,12 +333,17 @@ void CFmiBetaProductDialog::CheckForGenerateButtonActivation()
     {
         // Jos kaikki inputit olivat kunnossa, sallitaan Generate- ja Save -buttonien k‰yttˆ
         itsGenerateImagesButton.EnableWindow(TRUE); 
-        itsSaveButton.EnableWindow(TRUE);
+        itsSaveAsButton.EnableWindow(TRUE);
+        if(itsBetaProductFullFilePath.empty())
+            itsSaveButton.EnableWindow(FALSE);
+        else
+            itsSaveButton.EnableWindow(TRUE);
     }
     else
     {
         // Jos ei, niin estet‰‰n Generate- ja Save -buttonien k‰yttˆ
         itsGenerateImagesButton.EnableWindow(FALSE);
+        itsSaveAsButton.EnableWindow(FALSE);
         itsSaveButton.EnableWindow(FALSE);
     }
 }
@@ -548,7 +559,29 @@ bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDest
             }
         }
         if(fAllowDestinationDelete)
-            ::DeleteAllFiles(CA2T(theDestinationDirectory.c_str()));
+        {
+//            ::DeleteAllFiles(CA2T(theDestinationDirectory.c_str()));
+
+            // Kokeillaan toista hakemiston tyhjennys funktiota, koska kuulemma DeleteAllFiles j‰tt‰‰ joskus vanhoja tiedostoja j‰lkeen?!?
+            try
+            {
+                NFmiFileSystem::CleanDirectory(theDestinationDirectory, 0);
+            }
+            catch(std::exception &e)
+            {
+                std::string errorStr = "\"";
+                errorStr += e.what();
+                errorStr += "\" error encountered while trying to delete files from directory: ";
+                errorStr += theDestinationDirectory;
+                itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, "Beta-product error title not used", CatLog::Severity::Error, CatLog::Category::Operational, true);
+            }
+            catch(...)
+            { 
+                std::string errorStr = "Unknown error while trying to delete files from directory: ";
+                errorStr += theDestinationDirectory;
+                itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, "Beta-product error title not used", CatLog::Severity::Error, CatLog::Category::Operational, true);
+            }
+        }
 
         GenerateWebInfoFiles(theDestinationDirectory, theBetaProduct);
         return true;
@@ -694,11 +727,30 @@ bool CFmiBetaProductDialog::RunViewMacro(const NFmiBetaProduct &theBetaProduct, 
     return true;
 }
 
+#ifdef min
+#undef min
+#endif
+
 static NFmiMetTime CalcWallClockOffsetTime(const NFmiBetaProduct &theBetaProduct, const NFmiBetaProductAutomation::NFmiTimeModeInfo &theTimeMode, const NFmiMetTime &theMakeTime)
 {
     NFmiMetTime aTime = theMakeTime;
-    aTime.SetTimeStep(60); // Tehd‰‰n aloitus/lopeus ajoista tasa tunteja
-    aTime.ChangeByMinutes(boost::math::iround(theTimeMode.itsWallClockOffsetInHours * 60.));
+    long usedOffsetInMinutes = boost::math::iround(theTimeMode.itsWallClockOffsetInHours * 60.);
+    int absoluteOffsetMinutes = std::abs(usedOffsetInMinutes % 60);
+    long usedTimeStepInMinutes = 60;
+    // Yleens‰ halutaan pyˆrist‰‰ aloitus/lopetus ajat l‰himp‰‰n tuntiin, mutta jos annetut wall-time offsetit eiv‰t ole tasatuntisia, 
+    // laitetaan time-stepiksi pienempi 'stepeist‰', jotta p‰‰st‰‰n k‰siksi haluttuihin minuutti lukemiin...
+    if((absoluteOffsetMinutes != 0 && absoluteOffsetMinutes <= 30) || theBetaProduct.TimeStepInMinutes() <= 30)
+    {
+        if(absoluteOffsetMinutes == 0)
+            usedTimeStepInMinutes = theBetaProduct.TimeStepInMinutes();
+        else
+            usedTimeStepInMinutes = std::min(absoluteOffsetMinutes, theBetaProduct.TimeStepInMinutes());
+    }
+    // Varmistetaan ett‰ timestep ei ole mahdoton
+    if(usedTimeStepInMinutes < 1)
+        usedTimeStepInMinutes = 1;
+    aTime.SetTimeStep(usedTimeStepInMinutes);
+    aTime.ChangeByMinutes(usedOffsetInMinutes);
     aTime.SetTimeStep(theBetaProduct.TimeStepInMinutes()); // Laitetaan lopuksi aloitusaika haluttuun aikasteppiin, jotta sille voidaan tehd‰ aika-loopissa NextMetTime
     return aTime;
 }
@@ -1334,18 +1386,32 @@ void CFmiBetaProductDialog::OnBnClickedButtonSaveBetaProduct()
 {
     StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi s‰‰dˆt myˆs dokumenttiin
 
-    BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false);
+    BetaProduct::SaveObjectToKnownFileInJsonFormat(*itsBetaProduct, itsBetaProductFullFilePath, "Beta-product", false);
+}
+
+void CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct()
+{
+    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi s‰‰dˆt myˆs dokumenttiin
+
+    BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath);
+    UpdateBetaProductName();
 }
 
 void CFmiBetaProductDialog::OnBnClickedButtonLoadBetaProduct()
 {
-    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false))
+    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath))
     {
         itsBetaProduct->InitFromJsonRead(GetCurrentViewTime(*itsBetaProduct));
+        UpdateBetaProductName();
         InitControlsFromLoadedBetaProduct();
     }
 }
 
+void CFmiBetaProductDialog::UpdateBetaProductName()
+{
+    itsBetaProductNameU_ = CA2T(PathUtils::getRelativeStrippedFileName(itsBetaProductFullFilePath, itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), NFmiBetaProductionSystem::BetaProductFileExtension()).c_str());
+    UpdateData(FALSE);
+}
 
 void CFmiBetaProductDialog::OnEnChangeEditImageDirectory()
 {
@@ -1473,5 +1539,3 @@ void CFmiBetaProductDialog::OnBnClickedCheckDisplayRuntimeInfo()
     UpdateData(TRUE);
     itsBetaProduct->DisplayRunTimeInfo(fDisplayRuntimeInfo == TRUE);
 }
-
-

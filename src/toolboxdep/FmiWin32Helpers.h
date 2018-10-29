@@ -12,6 +12,7 @@ class CWnd;
 class NFmiToolBox;
 class NFmiPoint;
 class NFmiRect;
+class MfcViewStatus;
 namespace CtrlViewUtils
 {
     struct GraphicalInfo;
@@ -68,7 +69,12 @@ namespace CFmiWin32Helpers
 	// jos näyttö ei osu mihinkään monitoriin (jos SmartMetia on käytetty multi monitori koneessa
 	// ja samoja makroja/asetuksia käytetään yksi monitorisessa ympäristössä voi aiheutta tälläisen tilanteen.)
 	CRect FixWindowPosition(const CRect &theRect, int &theStartCornerCounter);
-	void SetWindowSettings(CWnd *win, const CRect &theRect, bool fShowWindow, CWnd *mainFrame, int &theStartCornerCounter);
+	void SetWindowSettings(CWnd *win, const CRect &theRect, const MfcViewStatus &viewStatus, int &theStartCornerCounter);
+    bool IsWindowMinimized(CWnd *win);
+    bool IsWindowMaximized(CWnd *win);
+    bool IsShowCommandMinimized(UINT showCommand);
+    bool IsShowCommandMaximized(UINT showCommand);
+
 
 	std::auto_ptr<CWaitCursor> GetWaitCursorIfNeeded(bool showWaitCursorWhileDrawingView);
 

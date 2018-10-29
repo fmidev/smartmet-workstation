@@ -13,6 +13,7 @@
 #include "NFmiApplicationDataBase.h"
 #include "NFmiFileSystem.h"
 #include "FmiWin32Helpers.h"
+#include "persist2.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include "execute-command-in-separate-process.h"
@@ -74,9 +75,9 @@ static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<CaseStudyHeader
 
 void CFmiCaseStudyDlg::InitHeaders(void)
 {
-	int basicColumnWidthUnit = 16;
+	int basicColumnWidthUnit = 18;
 	itsHeaders.clear();
-	itsHeaders.push_back(CaseStudyHeaderParInfo("Row", CaseStudyHeaderParInfo::kRowNumber, basicColumnWidthUnit*2));
+	itsHeaders.push_back(CaseStudyHeaderParInfo("Row", CaseStudyHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit*2.5)));
     itsHeaders.push_back(CaseStudyHeaderParInfo("Name", CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 18));
     itsHeaders.push_back(CaseStudyHeaderParInfo("ProdId", CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 4));
 	itsHeaders.push_back(CaseStudyHeaderParInfo("Store", CaseStudyHeaderParInfo::kStoreData, basicColumnWidthUnit*3));

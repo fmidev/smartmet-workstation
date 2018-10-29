@@ -9,6 +9,8 @@
 #include "boost/shared_ptr.hpp"
 #include "NFmiPoint.h"
 #include "NFmiViewPosRegistryInfo.h"
+#include "NFmiDataMatrix.h"
+#include "ControlPointAcceleratorActions.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CTimeEditValuesDlg dialog
@@ -27,7 +29,7 @@ public:
 
     // Construction
 public:
-	typedef boost::function<bool (const std::string&) > SetByName;
+	typedef std::function<bool (const std::string&) > SetByName;
 
 	CTimeEditValuesDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent = NULL);
 	~CTimeEditValuesDlg(void);
@@ -44,15 +46,13 @@ public:
 	enum { IDD = IDD_DIALOG_TIME_EDIT_VALUES };
 	CSliderCtrl	itsSmootherSlider;
 	CSliderCtrl	itsManualModifierLength;
-	CSliderCtrl	itsGriddingFactorSlider;
 	int		itsModifyMode;
 	BOOL	fUseMaskInTimeSerialViews;
 	BOOL	fUseZoomedAreaCP;
     CString	itsSmootherValueStrU_;
-    CString	itsGriddingFactorStrU_;
     CString	itsCPManagerStrU_;
 	BOOL	fUseAnalyzeTool;
-	BOOL	fUseAnalyzeToolWithAllParams;
+	BOOL	fUseControlPointObservationsBlending;
 	//}}AFX_DATA
 
 // Overrides
@@ -82,7 +82,7 @@ protected:
 	afx_msg void OnButtonClearAllCpValues();
 	afx_msg void OnButtonPrint();
 	afx_msg void OnCheckUseAnalyzeTool();
-	afx_msg void OnCheckUseAnalyzeToolWithAllParams();
+	afx_msg void OnCheckUseCpObsBlending();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -96,16 +96,18 @@ private:
 	void UpdateSlider(void);
 	void UpdateSmootherString(void);
 	void UpdateCPManagerString(void);
-	void UpdateGriddingFactorString(void);
 	double CalcRelativeSliderValue();
 	CRect CalcClientArea(void);
 	void EditModeUpdate(void);
 	void InitDialogTexts(void);
 	void UpdateAnalyseActionControl(void);
-	void UpdateProducerLists(void);
-	void UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer);
+    void UpdateProducerLists(void);
+    void UpdateCpObsBlendProducerList(void);
+	void UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer, const checkedVector<NFmiProducer> &producerList, bool isSelectionMadeYet);
 	void OnComboSelectionChanged(CComboBox &theProducerSelector, SetByName setByName);
 	NFmiPoint CalcEditedDataGriddingResolutionInKM(void);
+    void SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, const std::string &logMessage);
+    void HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage);
 
     CTimeEditValuesView* itsTimeEditValuesView;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -140,6 +142,12 @@ public:
     afx_msg void OnBnClickedCheckAllowRightClickSelection();
     afx_msg void OnAcceleratorTimeViewToggleHelpData3();
     afx_msg void OnAcceleratorTimeViewToggleHelpData4();
+    afx_msg void OnAcceleratorCpSelectNext();
+    afx_msg void OnAcceleratorCpSelectPrevious();
+    afx_msg void OnAcceleratorCpSelectLeft();
+    afx_msg void OnAcceleratorCpSelectRight();
+    afx_msg void OnAcceleratorCpSelectUp();
+    afx_msg void OnAcceleratorCpSelectDown();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -44,7 +44,6 @@ public:
 	void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex);
 	void ActivateFilterDlg(void);
 	virtual void DoDraw() ;  // You should subclass from this to get more interesting pictures
-	void InitToolMaster(void);
 	void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
 	void LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
 	void UpdateMapView(unsigned int theDescTopIndex);
@@ -168,9 +167,6 @@ private:
 	CBitmap* itsSynopPlotBitmap;
 	HBITMAP itsSynopPlotBitmapHandle;
 
-	//<STRONG><A NAME="context">Toolmaster context</A>
-	int        m_toolmasterContext ;
-	//</STRONG>
 public:
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);

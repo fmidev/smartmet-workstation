@@ -86,11 +86,6 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsToolMasterAvailable(void)
     return itsDoc->IsToolMasterAvailable();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::DrawDataOnlyOnRightProjection(void)
-{
-    return itsDoc->DrawDataOnlyOnRightProjection();
-}
-
 NFmiDrawParamList* CtrlViewDocumentInterfaceForGeneralDataDoc::DrawParamList(int theDescTopIndex, int theIndex)
 {
     return itsDoc->DrawParamList(theDescTopIndex, theIndex);
@@ -486,9 +481,9 @@ boost::shared_ptr<NFmiEditorControlPointManager> CtrlViewDocumentInterfaceForGen
     return itsDoc->CPManager(getOldSchoolCPManager);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
-    return itsDoc->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector);
+    return itsDoc->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsMasksUsedInTimeSerialViews(void)
@@ -604,11 +599,6 @@ const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::StationPointSize(in
 NFmiMacroParamSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamSystem(void)
 {
     return itsDoc->MacroParamSystem();
-}
-
-std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-{
-    return itsDoc->GetWantedSmartToolStr(theDrawParam);
 }
 
 CtrlViewUtils::FmiEditorModifyToolMode CtrlViewDocumentInterfaceForGeneralDataDoc::ModifyToolMode(void)
@@ -950,13 +940,6 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowWarningMarkersOnMap(int the
     return itsDoc->MapViewDescTop(theDescTopIndex)->ShowWarningMarkersOnMap();
 }
 
-#ifndef DISABLE_CPPRESTSDK
-HakeMessage::Main& CtrlViewDocumentInterfaceForGeneralDataDoc::WarningCenterSystem(void)
-{
-    return itsDoc->WarningCenterSystem();
-}
-#endif // DISABLE_CPPRESTSDK
-
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::MapBlitDC(int theDescTopIndex)
 {
     return itsDoc->MapViewDescTop(theDescTopIndex)->MapBlitDC();
@@ -1284,13 +1267,6 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMaps(bool newValue)
     itsDoc->UseWmsMaps(newValue);
 }
 
-#ifndef DISABLE_CPPRESTSDK
-Wms::WmsSupport& CtrlViewDocumentInterfaceForGeneralDataDoc::WmsSupport()
-{
-    return itsDoc->WmsSupport();
-}
-#endif // DISABLE_CPPRESTSDK
-
 NFmiBetaProductionSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::BetaProductionSystem()
 {
     return itsDoc->BetaProductionSystem();
@@ -1325,3 +1301,23 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLandBorderMapBitmap(unsigned
 {
     itsDoc->MapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap);
 }
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+{
+    return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}
+
+#ifndef DISABLE_CPPRESTSDK
+// ===============================================
+
+HakeMessage::Main& CtrlViewDocumentInterfaceForGeneralDataDoc::WarningCenterSystem(void)
+{
+    return itsDoc->WarningCenterSystem();
+}
+
+Wms::WmsSupport& CtrlViewDocumentInterfaceForGeneralDataDoc::WmsSupport()
+{
+    return itsDoc->WmsSupport();
+}
+
+#endif // DISABLE_CPPRESTSDK

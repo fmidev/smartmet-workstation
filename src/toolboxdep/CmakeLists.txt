@@ -50,7 +50,6 @@ target_include_directories(
     PUBLIC ${CtrlViews_INCLUDE_DIRS}
     PUBLIC ${StationViews_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${UNIRAS_INCLUDE_DIR}
     PUBLIC ${TOOLKITPRO_INCLUDE_DIR}
     )
 
@@ -77,7 +76,6 @@ set(
     ${StationViews_INCLUDE_DIRS}
     ${GridCtrl_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
-    ${UNIRAS_INCLUDE_DIR}
     ${TOOLKITPRO_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

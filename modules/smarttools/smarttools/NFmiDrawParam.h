@@ -99,7 +99,7 @@ class NFmiDrawParam
 
   // --------------- "set" ja "get" metodit -----------------
   const std::string& ParameterAbbreviation(void) const;
-  void ParameterAbbreviation(std::string theParameterAbbreviation)
+  void ParameterAbbreviation(const std::string &theParameterAbbreviation)
   {
     itsParameterAbbreviation = theParameterAbbreviation;
   }

@@ -18,7 +18,3 @@ log.txt
 # Project specific ignores
 /scripts/cmake
 /scripts/git
-
-# Variant specific configuration files
-cap.conf
-wms.conf

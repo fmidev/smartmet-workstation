@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.6.2)
 
 project(SmartMet)
 
+#In future we should change to Visual C++ 2017 and Windows 10.0 SDK, 
+# this should fix problems with Add member variable -wizard when working with dialogs.
+#set(CMAKE_SYSTEM_VERSION 10.0 CACHE TYPE INTERNAL FORCE)
+
 set(CMAKE_PREFIX_PATH ${LIBS_3RD}/cmakefinds )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/runtime_output")
 
@@ -12,15 +16,34 @@ add_definitions(
     -DUSE_POTENTIAL_VALUES_IN_EDITING
     )
 
-# To disable/enable Cpprestsdk usage in SmartMet build do following: 
+# To disable/enable Cpprestsdk usage in SmartMet build, do following: 
 # 1. Set DISABLE_CPPRESTSDK to ON/OFF in smartmet-workstation/CMakeLists.txt
 # 2. Delete the MSVC build directory smartmet-workstation_msvc
 # 3. Run cmake script smartmet-workstation/scripts/cmake/cmake_msvc_build.sh
 # 4. Open smartmet-workstation_msvc/SmartMet.sln in Visual C++ and do full build
 option(DISABLE_CPPRESTSDK "Is CppRestSdk used in build" OFF)
+# This will affect WMS maps and data image functions and also HAKE/KaHA messages.
 
 if(DISABLE_CPPRESTSDK)
 add_definitions(-DDISABLE_CPPRESTSDK)
+endif()	
+
+# To disable/enable Extreme ToolkitPro in smartMet build, do following: 
+# 1. - 4. Same steps as with Cpprestsdk but with option DISABLE_EXTREME_TOOLKITPRO (next line)
+option(DISABLE_EXTREME_TOOLKITPRO "Is Extreme ToolkitPro used in build" OFF)
+# This will affect Smarttool dialog's behaviour.
+
+if(DISABLE_EXTREME_TOOLKITPRO)
+add_definitions(-DDISABLE_EXTREME_TOOLKITPRO)
+endif()	
+
+# To disable/enable Uniras Toolmaster in smartMet build, do following: 
+# 1. - 4. Same steps as with Cpprestsdk but with option DISABLE_UNIRAS_TOOLMASTER (next line)
+option(DISABLE_UNIRAS_TOOLMASTER "Is Uniras Toolmaster used in build" OFF)
+# This will affect isoline/contour visualizations and ControlPoint editing.
+
+if(DISABLE_UNIRAS_TOOLMASTER)
+add_definitions(-DDISABLE_UNIRAS_TOOLMASTER)
 endif()	
 	
 add_compile_options(
@@ -277,6 +300,19 @@ add_subdirectory(
 add_subdirectory(
     src/casestudyexe
     )
+	
+# Put these Master and Worker process projects in comments after 
+# generating a new version binaries. We don't want to generate them all the time.
+add_subdirectory(
+    src/processpool/MultiProcessToolsMFC
+    )
+add_subdirectory(
+    src/processpool/MasterProcessTcpMFC
+    )
+add_subdirectory(
+    src/processpool/WorkerProcessTcpMFC
+    )
+# ---- Master and Worker process projects ends -------------- 
 
 add_subdirectory(
     src/SmartMet 

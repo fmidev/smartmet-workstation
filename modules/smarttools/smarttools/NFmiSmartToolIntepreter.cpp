@@ -1969,6 +1969,9 @@ void NFmiSmartToolIntepreter::CheckVariableString(const std::string &theVariable
   fLevelExist = fProducerExist = false;
 
   std::vector<std::string> variableParts = NFmiStringTools::Split(theVariableText, "_");
+  if(variableParts.empty())
+      throw std::runtime_error(std::string("Error with checked variable text, seems that it was empty (internal error?). If you see this, send message to developers with the problematic smarttool formula..."));
+
   std::vector<std::string> lastParamParts = NFmiStringTools::Split(
       variableParts[variableParts.size() - 1], "[");  // viimeisen parametri osion yhteydessä voi
                                                       // olla [-1] -osio, missä on kerrottu haluttu

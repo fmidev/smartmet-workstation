@@ -54,7 +54,7 @@ namespace tcp_tools
     struct task_structure {
 
         task_structure(void);
-        task_structure(std::size_t job_index, std::size_t data_time_index, std::size_t job_time_t, const std::string &relative_area_string, std::size_t size_x, std::size_t size_y, std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values, const std::string &smartmet_guid, int gridding_function);
+        task_structure(std::size_t job_index, std::size_t data_time_index, std::size_t job_time_t, const std::string &relative_area_string, std::size_t size_x, std::size_t size_y, std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values, const std::string &smartmet_guid, const std::string &gridding_properties_string, float cp_range_limit_relative);
 
         std::string to_string(void) const;
 
@@ -64,11 +64,12 @@ namespace tcp_tools
         std::string relative_area_string_; // tuloshilan relatiivinen alue stringin‰, muotoa: left,top,right,bottom (HUOM! ei saa sis‰lt‰‰ spaceja!)
         std::size_t size_x_; // halutun tuloshilan koko x-suunnassa
         std::size_t size_y_; // halutun tuloshilan koko y-suunnassa
-        int gridding_function_; // haluttu griddaus funktio
         std::vector<float> x_values_; // hilattavien pisteiden relatiiviset x-sijainnit
         std::vector<float> y_values_; // hilattavien pisteiden relatiiviset y-sijainnit
         std::vector<float> z_values_; // hilattavien pisteiden arvot eli ns. 'korkeuskentt‰'
         std::string smartmet_guid_; // tyˆn antaneen smartmet instanssin guid, esim. "9999842d-9afb-4f85-832f-f0522d28dbe9" (HUOM! ei saa sis‰lt‰‰ spaceja!)
+        std::string gridding_properties_string_; // ToolMaster hilauslaskuissa k‰ytetyt optiot, esim. "1,0,1,0.5,0,1.25,0.15" (HUOM! ei saa sis‰lt‰‰ spaceja!)
+        float cp_range_limit_relative_; // Jos CP-pisteiden laskennassa halutaan laittaa rajoitus kunkin CP-pisteen vaikutus alueelle, annetaan t‰h‰n relatiivinen s‰de, jos kFloatMissing, k‰ytet‰‰n 'rajatonta' laskua.
     };
 
     std::ostream& operator <<(std::ostream &out, const task_structure &object);

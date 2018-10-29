@@ -14,6 +14,7 @@
 #include "CloneBitmap.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewFunctions.h"
+#include "persist2.h"
 
 /*
 #ifdef _DEBUG
@@ -231,7 +232,7 @@ CRect CFmiTempDlg::CalcOtherArea(void)
 
 void CFmiTempDlg::OnButtonPrint()
 {
-	((CFmiTempView*)itsView)->DoPrint();
+	itsView->DoPrint();
 	SetActiveWindow(); // aktivoidaan vielä tämä ikkuna, koska jostain syystä print-dialogi aktivoi pääikkunan
 }
 
@@ -256,7 +257,7 @@ void CFmiTempDlg::OnPaint()
 
 CBitmap* CFmiTempDlg::ViewMemoryBitmap(void)
 {
-	return ((CFmiTempView*)itsView)->MemoryBitmap();
+	return itsView->MemoryBitmap();
 }
 
 void CFmiTempDlg::OnClose()

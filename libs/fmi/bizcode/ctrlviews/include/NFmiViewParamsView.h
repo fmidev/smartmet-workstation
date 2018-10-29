@@ -78,7 +78,6 @@ class NFmiViewParamsView : public NFmiParamCommandView
 	bool LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex);
 	static ModelSelectorButtonImageHolder statModelSelectorButtonImages; // tämä on staattinen dataosa, koska näitä timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien käyttöön
 	void DrawData(void);
-	void DrawCrossOverParamNameIfNotDrawed(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &thePlace);
 	void DrawParamCheckBox(int lineIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
 	void DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex);
 	NFmiPoint CalcModelSelectorButtonRelativeSize(Gdiplus::Bitmap *theImage);

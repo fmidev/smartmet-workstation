@@ -100,7 +100,7 @@ std::string NFmiBasicSmartMetConfigurations::MakeDictionaryFilePath() const
     return dictionaryFilePath;
 }
 
-bool NFmiBasicSmartMetConfigurations::Init(void)
+bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersion)
 {
 	GetWorkingDirectory();
 	::_chdir(itsWorkingDirectory.c_str()); // kun versiosta 5.4 alkaen exe:t ajetaan 32/64-bit hakemistoistaan, pitää workin directory asettaa tässä oikeaan
@@ -143,7 +143,7 @@ bool NFmiBasicSmartMetConfigurations::Init(void)
     // logger pitää alustaan ennen InitApplicationDataBase -kutsua
     if(!InitLogger())
         return false;
-	InitApplicationDataBase();
+	InitApplicationDataBase(avsToolMasterVersion);
 
 	return true;
 }
@@ -202,7 +202,7 @@ static bool IsConfigurationFileIgnored(const std::string &theFileName, const std
 
 void NFmiBasicSmartMetConfigurations::InitFactorySettingFiles()
 {
-    std::string factorySettingsDefaultPath = itsWorkingDirectory + "\\FactorySettings";
+    std::string factorySettingsDefaultPath = itsWorkingDirectory + "\\factory_settings";
     itsFactorySettingsConfigurationFilePath = NFmiSettings::Optional<std::string>("SmartMet::FactorySettingsPath", factorySettingsDefaultPath);
     itsFactorySettingsConfigurationFiles = NFmiFileSystem::DirectoryFiles(itsFactorySettingsConfigurationFilePath);
 }
@@ -506,6 +506,14 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     bool betaVersion = false;
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
+
+    CString possibleWarningTextU_; // = _TEXT("Uuden 'CP obs-blending' työkalun lisäys on saattanut rikkoa esim.");
+    if(possibleWarningTextU_.GetLength())
+        itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 370), true));
+
+    CString possibleWarningText2U_; // = _TEXT("Analyysi- ja Kontrollipiste -työkalujen toimintaa");
+    if(possibleWarningText2U_.GetLength())
+        itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningText2U_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 395), true));
 }
 
 // Oletus, theControlPath on absoluuttinen polku joko tiedostoon tai hakemistoon.
@@ -571,14 +579,17 @@ void NFmiBasicSmartMetConfigurations::LogAndWarnUser(const std::string &theMessa
     }
 }
 
-void NFmiBasicSmartMetConfigurations::InitApplicationDataBase(void)
+void NFmiBasicSmartMetConfigurations::InitApplicationDataBase(const std::string &avsToolMasterVersion)
 {
 	try
 	{
 		itsApplicationDataBase.InitFromSettings("SmartMet::ApplicationDataBase");
 		itsApplicationDataBase.ControlBasePath(itsControlBasePath);
 		itsApplicationDataBase.CollectSmartMetData(NFmiApplicationDataBase::kStart, itsLanguage, RunningTimeInSeconds(), fToolMasterAvailable, nullptr);
-	}
+
+        // AVS Toolmaster version is set once outside of NFmiApplicationDataBase class to remove dependency
+        itsApplicationDataBase.avstmversion = avsToolMasterVersion;
+    }
 	catch(std::exception &e)
 	{
 		std::string errStr("InitApplicationDataBase - Initialization error in configurations: \n");

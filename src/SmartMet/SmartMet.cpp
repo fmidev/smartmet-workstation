@@ -22,8 +22,11 @@
 #include "QueryDataReading.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "ApplicationInterfaceForSmartMet.h"
+#include "ToolMasterColorCube.h"
+#include "ToolMasterHelperFunctions.h"
 
 #include "boost/format.hpp"
+#include "unicode/uclean.h"
 
 namespace
 {
@@ -40,8 +43,6 @@ namespace
         #include "CrashRpt.h"
 	#endif
 #endif
-
-#include <agx/agx.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -97,7 +98,6 @@ const GUID CDECL BASED_CODE _tlid =
 const WORD _wVerMajor = 1;
 const WORD _wVerMinor = 0;
 
-
 // CSmartMetApp initialization
 
 BOOL CSmartMetApp::InitInstance()
@@ -123,7 +123,7 @@ BOOL CSmartMetApp::InitInstance()
     if(!TakeControlPathInfo())
         return FALSE;
     // T‰m‰ on kutsuttava aina ja ennen CrashRptInstall-kutsua ja ennen CSplashThreadHolder luontia, koska sinne tulee dynaamista teksti‰ editorin versiota ja build p‰iv‰m‰‰rist‰
-    if(!gBasicSmartMetConfigurations.Init())
+    if(!gBasicSmartMetConfigurations.Init(Toolmaster::MakeAvsToolmasterVersionString()))
         return FALSE;
 
 	CSplashThreadHolder pSplashThreadHolder(SplashStart());
@@ -277,6 +277,7 @@ class CAboutDlg : public CDialog
 {
 public:
     CAboutDlg(const std::string &theTitleStr, const std::string &theVersionStr, const std::vector<DrawStringData> &theDynamicTextsDataVector);
+    ~CAboutDlg();
 
 // Dialog Data
 	enum { IDD = IDD_ABOUTBOX };
@@ -289,8 +290,11 @@ protected:
 	virtual BOOL OnInitDialog();
 	DECLARE_MESSAGE_MAP()
 
+    CRect GetActualWindowRect();
+
     CString	itsTitleStrU_;
     std::vector<DrawStringData> itsDynamicTextsDataVector;
+    CBitmap versionBaseImage;
 public:
     afx_msg void OnPaint();
 };
@@ -303,6 +307,11 @@ CAboutDlg::CAboutDlg(const std::string &theTitleStr, const std::string & theVers
 	EnableActiveAccessibility();
 }
 
+CAboutDlg::~CAboutDlg()
+{
+    versionBaseImage.DeleteObject();
+}
+
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
@@ -312,13 +321,30 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
     ON_WM_PAINT()
 END_MESSAGE_MAP()
 
+CRect CAboutDlg::GetActualWindowRect()
+{
+    WINDOWPLACEMENT wndpl;
+    wndpl.length = sizeof(WINDOWPLACEMENT);
+    // gets current window position and iconized/maximized status
+    BOOL bRet = GetWindowPlacement(&wndpl);
+
+    BOOL status = versionBaseImage.LoadBitmap(IDB_BITMAP_ABOUT_DLG_VER_5_10_NO_TEXTS);
+    //Get the width and height of the DIBSection
+    BITMAP bm;
+    int luku = versionBaseImage.GetObject(sizeof(bm), &bm);
+
+    return CRect(wndpl.rcNormalPosition.left, wndpl.rcNormalPosition.top, wndpl.rcNormalPosition.left + bm.bmWidth, wndpl.rcNormalPosition.top + bm.bmHeight);
+}
+
 BOOL CAboutDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
     SetWindowText(itsTitleStrU_);
 	this->SetIcon(AfxGetApp()->LoadIcon(IDR_MAINFRAME), false);
+    auto actualRect = GetActualWindowRect();
+    MoveWindow(actualRect, FALSE);
 
-	return TRUE;  // return TRUE unless you set the focus to a control
+    return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
@@ -333,8 +359,6 @@ void CAboutDlg::OnPaint()
 {
     CPaintDC dc(this); // device context for painting
 
-    CBitmap versionBaseImage; 
-    BOOL status = versionBaseImage.LoadBitmap(IDB_BITMAP_ABOUT_DLG_VER_5_10_NO_TEXTS);
     //Get the width and height of the DIBSection
     BITMAP bm;
     int luku = versionBaseImage.GetObject(sizeof(bm), &bm);
@@ -350,7 +374,6 @@ void CAboutDlg::OnPaint()
 
     memDC.SelectObject(pOldBitmap);
     memDC.DeleteDC();
-    versionBaseImage.DeleteObject();
 
     // Do not call CDialog::OnPaint() for painting messages
 }
@@ -447,13 +470,27 @@ void CSmartMetApp::CreateMenuDynamically(void)
 }
 */
 
+void CSmartMetApp::CloseToolMaster()
+{
+    if(itsGeneralData->IsToolMasterAvailable())
+    {
+        Toolmaster::CloseToolMaster();
+    }
+}
+
 int CSmartMetApp::ExitInstance()
 {
+    // T‰t‰ pit‰‰ kutsua ennen kuin itsGeneralData tuhotaan!
+    CloseToolMaster();
+
 	// HUOM! itsGeneralData pit‰‰ tuhota ennen kuin GDI+ systeemi lopetetaan, koska
 	// generaldatalla on Gdiplus-bitmappeja tallessa, jotka gdishutdown n‰ytt‰‰ tuhoavan.
 	// Eli ne tuhotaan t‰ss‰ ensin generaldatan destruktorissa, muuten ne yritett‰isiin
 	// tuhota listoista kun ne ovat ei 0-pointtereita, jolloin ohjelma kaatuisi.
 	delete itsGeneralData;
+
+    // ICU kirjasto vuotaa resursseja, jos sit‰ ei erikseen siivota
+    u_cleanup();
 
 	TermGdiplus();
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
@@ -543,34 +580,17 @@ void CSmartMetApp::LoadFileAtStartUp(CCommandLineInfo *theCmdInfo)
 	}
 }
 
+// t‰m‰ pit‰‰ tehd‰ vasta ProcessShellCommand:in j‰lkeen, koska siell‰ syntyy View
+// AVS esimerkeiss‰ luotiin MainFrame ennen ProcessShellCommand:ia, ei syntynyt
+// uutta MainFramea ilmeisesti koska oli MDI systeemi
 bool CSmartMetApp::DoToolMasterInitialization(void)
 {
-	bool useTM = false;
-	int tmStatus = InitToolMaster(fUseToolMasterIfAvailable);
-	if(tmStatus == XuLICOK || tmStatus == XuTRIAL)
-		useTM = true;
-
-	std::string toolmasterLicenseStr("agx ToolMaster license query returned: ");
-	if(tmStatus == XuLICOK)
-		toolmasterLicenseStr += "XuLICOK, graphics-license is in use.";
-	else if(tmStatus == XuTRIAL)
-		toolmasterLicenseStr += "XuTRIAL, graphics-license is in use.";
-	else if(tmStatus == XuMAXUSER)
-		toolmasterLicenseStr += "XuMAXUSER, graphics-license is not in use.";
-	else if(tmStatus == XuEXPIRED)
-		toolmasterLicenseStr += "XuEXPIRED, graphics-license is not in use.";
-	else if(tmStatus == XuLICERROR)
-		toolmasterLicenseStr += "XuLICERROR, graphics-license is not in use.";
-	else if(tmStatus == -1)
-		toolmasterLicenseStr = "agx ToolMaster graphics-license will not be used.";
-	else
-		toolmasterLicenseStr += "Unknown error, graphics-license is not in use.";
-	itsGeneralData->LogMessage(toolmasterLicenseStr, CatLog::Severity::Info, CatLog::Category::Configuration);
-
-	// t‰m‰ pit‰‰ tehd‰ vasta ProcessShellCommand:in j‰lkeen, koska siell‰ syntyy View
-	// AVS esimerkeiss‰ luotiin MainFrame ennen ProcessShellCommand:ia, ei syntynyt
-	// uutta MainFramea ilmeisesti koska oli MDI systeemi
-	return useTM;
+    if(Toolmaster::DoToolMasterInitialization(m_pMainWnd, fUseToolMasterIfAvailable))
+    {
+        itsGeneralData->ToolMasterAvailable(true);
+    }
+    itsGeneralData->InitGriddingProperties();
+    return itsGeneralData->IsToolMasterAvailable();
 }
 
 #pragma warning( push )
@@ -701,37 +721,6 @@ bool CSmartMetApp::TakeControlPathInfo(void)
     return true;
 }
 
-int CSmartMetApp::InitToolMaster(bool fTryToUseToolMaster)
-{
-	int tmStatus = -1;
-	if(fTryToUseToolMaster)
-	{
-		XuLicenseQuery(&tmStatus);
-		if(tmStatus == XuLICOK || tmStatus == XuTRIAL)
-		{
-			itsGeneralData->ToolMasterAvailable(true);
-
-
-			//<STRONG><A NAME="initial">Initialize Toolmaster</A>
-			XuInitialize   (NULL, NULL);
-			XuMessageTypes (XuON,                    // short messages in messagebox
-							XuOFF);                  // long messages in text window
-			XuMessageLevels(XuMESSAGE_CONTINUE, 	 // informational
-							XuMESSAGE_CONTINUE,      // warnings
-							XuMESSAGE_CONTINUE,      // errors
-							XuMESSAGE_KEEP_STATE);   // fatals
-			XuOpen        ((HWND)m_pMainWnd);        // pass any window handle for start up
-			XuContextQuery (&m_defaultContext) ;     // needed as "emergency" context
-			//</STRONG>
-
-			CSmartMetView *mapView = ApplicationInterface::GetSmartMetView();
-			if(mapView)
-				mapView->InitToolMaster(); // t‰m‰ t‰ytyy tehd‰ esimerkeist‰ poiketen erikseen!!!!
-		}
-	}
-	return tmStatus;
-}
-
 bool CSmartMetApp::InitGdiplus()
 {
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -778,13 +767,13 @@ void CSmartMetApp::UpdateCrashRptLogFile()
 
 int exception_handler(LPEXCEPTION_POINTERS p)
 {
-    CatLog::logMessage("SmartMet has detected unknown exception while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational);
+    CatLog::logMessage("SmartMet has detected unknown exception while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational, true);
     exit(1);
 }
 int runtime_check_handler(int errorType, const char *filename, int linenumber, const char *moduleName, const char *format, ...)
 {
     auto errorString = boost::format("type %1% at %2% line %3% in %4%") % errorType % filename % linenumber % moduleName;
-    CatLog::logMessage("SmartMet has detected error: " + errorString.str() + ", while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational);
+    CatLog::logMessage("SmartMet has detected error: " + errorString.str() + ", while crash reporting system was disabled and now SmartMet just shuts down", CatLog::Severity::Error, CatLog::Category::Operational, true);
     exit(1);
 }
 
@@ -866,7 +855,37 @@ void CSmartMetApp::CrashRptUninstall(void)
 #endif // DO_CRASH_REPORTING
 }
 
+static void DoErrorReporting(const std::string &messageStart, const std::string &functionName, const std::string &messageEnd)
+{
+    std::string errorString = messageStart;
+    errorString += " ";
+    errorString += functionName;
+    if(!messageEnd.empty())
+    {
+        errorString += ": ";
+        errorString += messageEnd;
+    }
+    CatLog::logMessage(errorString, CatLog::Severity::Error, CatLog::Category::Operational, true);
+}
+
 int CSmartMetApp::Run()
 {
-    return CFmiUsedAppParent::Run();
+    int status = 0;
+    do
+    {
+        try
+        {
+            status = CFmiUsedAppParent::Run();
+        }
+        catch(std::exception &e)
+        {
+            ::DoErrorReporting("Exception was catched in", __FUNCTION__, e.what());
+        }
+        catch(...)
+        {
+            ::DoErrorReporting("Unknown Exception was catched in", __FUNCTION__, "");
+        }
+
+    } while(!AllowApplicationToClose());
+    return status;
 }

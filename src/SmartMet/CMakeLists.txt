@@ -6,7 +6,7 @@ set(CMAKE_MFC_FLAG 2)
 # Configure the template file
 SET(USER_FILE ${PROJECT_NAME}.vcxproj.user)
 SET(OUTPUT_PATH ${PROJECT_BINARY_DIR}/${USER_FILE})
-SET(COMMANDLINE_ARGUMENTS "-d -p Control/smartmet_sap_scand.conf")
+SET(COMMANDLINE_ARGUMENTS "-d -p ../../../smartmet-workstation-conf-fmi/control/smartmet_sap_scand.conf")
 SET(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 CONFIGURE_FILE(UserTemplate.user ${USER_FILE} @ONLY)
 
@@ -14,15 +14,26 @@ add_definitions(
     -DFMI_DISABLE_MFC_FEATURE_PACK
     )
 
-link_directories(
+set(LINK_DIRECTORIES_LIST 
     ${BOOST_LIB_DIR}
-    ${TOOLKITPRO_LIB_DIR}
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
 
+if(NOT DISABLE_EXTREME_TOOLKITPRO)
+	set(LINK_DIRECTORIES_LIST ${LINK_DIRECTORIES_LIST} ${TOOLKITPRO_LIB_DIR})
+endif()
+	
+link_directories(${LINK_DIRECTORIES_LIST})
+
 file( GLOB CPP_FILES *.cpp )
 file( GLOB H_FILES *.h )
-file( GLOB RES_FILES *.rc res/* ${TOOLKITPRO_INCLUDE_DIR}/*.rc UserImages.bmp )
+
+if(NOT DISABLE_CPPRESTSDK)
+file( GLOB RES_FILES *.rc res/* ${TOOLKITPRO_INCLUDE_DIR}/*.rc)
+else()
+file( GLOB RES_FILES *.rc res/*)
+endif()
+
 file( GLOB REG_FILES *.reg )
 file( GLOB IDL_FILES *.idl )
 
@@ -42,7 +53,7 @@ IF(MSVC)
         )
 ENDIF()
 
-target_link_libraries(
+set(TARGET_LINK_LIBRARIES_LIST 
     ${PROJECT_NAME}
     ToolboxDep
     GeneralDoc
@@ -68,8 +79,13 @@ target_link_libraries(
     optimized ${ICU_OPTIMIZED_LIB_DT}
     optimized ${ICU_OPTIMIZED_LIB_IN}
     optimized ${ICU_OPTIMIZED_LIB_UC}
-    ${UNIRAS_LIB}
     )
+
+if(NOT DISABLE_UNIRAS_TOOLMASTER)
+	set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} ${UNIRAS_LIB})
+endif()
+
+target_link_libraries(${TARGET_LINK_LIBRARIES_LIST})
 
 target_include_directories( 
     ${PROJECT_NAME}
@@ -93,8 +109,8 @@ target_include_directories(
     PUBLIC ${Processes_INCLUDE_DIRS}
     PUBLIC ${AutoComplete_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${UNIRAS_INCLUDE_DIR}
     PUBLIC ${CRASHRPT_INCLUDE_DIR}
+    PUBLIC ${ICU_INCLUDE_DIR}
     )
 
 # OBS! you have to give all the linker flags in one go so you have to put them all in one variable (here its
@@ -152,13 +168,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     )
 endif()
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CRASHRPT_BASE_DIR}/bin/CrashRpt1402.dll
-    ${CRASHRPT_BASE_DIR}/bin/CrashSender1402.exe
-    ${CRASHRPT_BASE_DIR}/bin/crashrpt_lang.ini
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)
-    )
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CRASHRPT_BASE_DIR}/bin/CrashRpt1402.dll

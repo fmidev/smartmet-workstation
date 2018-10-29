@@ -29,6 +29,7 @@
 #include "SynopCodeUtils.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "persist2.h"
 
 using namespace std;
 
@@ -1442,120 +1443,122 @@ boost::shared_ptr<NFmiFastQueryInfo> CFmiSynopDataGridViewDlg::GetWantedInfo(boo
 	}
 }
 
+int g_BasicColumnWidthUnit = 18;
+int g_RowNumberColumnWidth = static_cast<int>(g_BasicColumnWidthUnit * 2.5);
+int g_WmoIdColumnWidth = static_cast<int>(g_BasicColumnWidthUnit * 3.0);
+int g_StationNameColumnWidth = static_cast<int>(g_BasicColumnWidthUnit * 8.0);
+int g_LatlonColumnWidth = static_cast<int>(g_BasicColumnWidthUnit*2.9);
+
 void CFmiSynopDataGridViewDlg::InitSynopHeaders(void)
 {
-	int basicColumnWidthUnit = 16;
 	itsSynopHeaders.clear();
 	std::string numberStr = ::GetDictionaryString("StationDataTableViewNumberAbreviation");
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, basicColumnWidthUnit*2, HeaderParInfo::kRowNumber));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, basicColumnWidthUnit*3, HeaderParInfo::kWmoId));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, g_RowNumberColumnWidth, HeaderParInfo::kRowNumber));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, g_WmoIdColumnWidth, HeaderParInfo::kWmoId));
 	std::string stationStr = ::GetDictionaryString("NormalWordCapitalStation");
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, basicColumnWidthUnit*8, HeaderParInfo::kStationName));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiTemperature, "T", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiDewPoint, "Td", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, basicColumnWidthUnit*2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(basicColumnWidthUnit*2.4)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(basicColumnWidthUnit*2.4)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "ww", true, basicColumnWidthUnit*2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rr", true, basicColumnWidthUnit*2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", true, basicColumnWidthUnit*2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, basicColumnWidthUnit*1));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", true, static_cast<int>(basicColumnWidthUnit*1.8)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, basicColumnWidthUnit*3));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SD", true, basicColumnWidthUnit*2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiPressure, "PPPP", true, basicColumnWidthUnit*3));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiPressureTendency, "a", true, basicColumnWidthUnit*1));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiPressureChange, "ppp", true, basicColumnWidthUnit*2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiMinimumTemperature, "Tmin", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiMaximumTemperature, "Tmax", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiGroundTemperature, "Tg", true, basicColumnWidthUnit*2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLon));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLat));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, g_StationNameColumnWidth, HeaderParInfo::kStationName));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiTemperature, "T", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiDewPoint, "Td", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, g_BasicColumnWidthUnit *2));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "ww", true, g_BasicColumnWidthUnit *2));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rr", true, g_BasicColumnWidthUnit *2));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", true, g_BasicColumnWidthUnit *2));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, g_BasicColumnWidthUnit *1));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", true, static_cast<int>(g_BasicColumnWidthUnit*1.8)));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, g_BasicColumnWidthUnit *3));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SD", true, g_BasicColumnWidthUnit *2));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiPressure, "PPPP", true, g_BasicColumnWidthUnit *3));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiPressureTendency, "a", true, g_BasicColumnWidthUnit *1));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiPressureChange, "ppp", true, g_BasicColumnWidthUnit *2));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiMinimumTemperature, "Tmin", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiMaximumTemperature, "Tmax", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiGroundTemperature, "Tg", true, g_BasicColumnWidthUnit *2));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, g_LatlonColumnWidth, HeaderParInfo::kLon));
+	itsSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, g_LatlonColumnWidth, HeaderParInfo::kLat));
 }
 
 void CFmiSynopDataGridViewDlg::InitForecastSynopHeaders(void)
 {
-	int basicColumnWidthUnit = 16;
 	itsForecastSynopHeaders.clear();
 	std::string numberStr = ::GetDictionaryString("StationDataTableViewNumberAbreviation");
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, basicColumnWidthUnit*2, HeaderParInfo::kRowNumber));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, basicColumnWidthUnit*3, HeaderParInfo::kWmoId));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, g_RowNumberColumnWidth, HeaderParInfo::kRowNumber));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, g_WmoIdColumnWidth, HeaderParInfo::kWmoId));
 	std::string stationStr = ::GetDictionaryString("NormalWordCapitalStation");
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, basicColumnWidthUnit*8, HeaderParInfo::kStationName));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTemperature, "T", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiDewPoint, "Td", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, basicColumnWidthUnit*2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(basicColumnWidthUnit*2.4)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(basicColumnWidthUnit*2.4)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "ww", false, basicColumnWidthUnit*2)); // tässä haetaan hsade1 ww tilalle
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rr", false, basicColumnWidthUnit*2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", false, basicColumnWidthUnit*2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, basicColumnWidthUnit*2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", false, static_cast<int>(basicColumnWidthUnit*1.8)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, basicColumnWidthUnit*3));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SD", true, basicColumnWidthUnit*2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPressure, "PPPP", true, basicColumnWidthUnit*3));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPressureTendency, "a", true, basicColumnWidthUnit*1));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPressureChange, "ppp", true, basicColumnWidthUnit*2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMinimumTemperature, "Tmin", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMaximumTemperature, "Tmax", true, static_cast<int>(basicColumnWidthUnit*2.3)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiGroundTemperature, "Tg", true, basicColumnWidthUnit*2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLon));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLat));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, g_StationNameColumnWidth, HeaderParInfo::kStationName));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTemperature, "T", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiDewPoint, "Td", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, g_BasicColumnWidthUnit *2));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "ww", false, g_BasicColumnWidthUnit *2)); // tässä haetaan hsade1 ww tilalle
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rr", false, g_BasicColumnWidthUnit *2));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", false, g_BasicColumnWidthUnit *2));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, g_BasicColumnWidthUnit *2));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", false, static_cast<int>(g_BasicColumnWidthUnit*1.8)));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, g_BasicColumnWidthUnit *3));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SD", true, g_BasicColumnWidthUnit *2));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPressure, "PPPP", true, g_BasicColumnWidthUnit *3));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPressureTendency, "a", true, g_BasicColumnWidthUnit *1));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPressureChange, "ppp", true, g_BasicColumnWidthUnit *2));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMinimumTemperature, "Tmin", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMaximumTemperature, "Tmax", true, static_cast<int>(g_BasicColumnWidthUnit*2.3)));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiGroundTemperature, "Tg", true, g_BasicColumnWidthUnit *2));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, g_LatlonColumnWidth, HeaderParInfo::kLon));
+	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, g_LatlonColumnWidth, HeaderParInfo::kLat));
 }
 
 void CFmiSynopDataGridViewDlg::InitMinMaxDataHeaders(void)
 {
-	int basicColumnWidthUnit = 16;
 	itsMinMaxDataHeaders.clear();
 	std::string numberStr = ::GetDictionaryString("StationDataTableViewNumberAbreviation");
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, basicColumnWidthUnit*2, HeaderParInfo::kRowNumber)); // MUISTA SetParamData-special kohta
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, basicColumnWidthUnit*3, HeaderParInfo::kWmoId)); // MUISTA SetParamData-special kohta
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, g_RowNumberColumnWidth, HeaderParInfo::kRowNumber)); // MUISTA SetParamData-special kohta
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, g_WmoIdColumnWidth, HeaderParInfo::kWmoId)); // MUISTA SetParamData-special kohta
 	std::string stationStr = ::GetDictionaryString("NormalWordCapitalStation");
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, basicColumnWidthUnit*8, HeaderParInfo::kStationName)); // MUISTA SetParamData-special kohta
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmin", true, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kMin));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, g_StationNameColumnWidth, HeaderParInfo::kStationName)); // MUISTA SetParamData-special kohta
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmin", true, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kMin));
 	std::string timeStr = ::GetDictionaryString("NormalWordCapitalTime");
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmax", true, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kMax));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(basicColumnWidthUnit*2.4), HeaderParInfo::kMax));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "wwmax", false, basicColumnWidthUnit*2, HeaderParInfo::kMax)); // tässä haetaan hsade1 ww tilalle
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rrsum", false, basicColumnWidthUnit*2, HeaderParInfo::kSum));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, basicColumnWidthUnit*3, HeaderParInfo::kMin));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SDmax", true, basicColumnWidthUnit*2, HeaderParInfo::kMax));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLon)); // MUISTA SetParamData-special kohta
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLat)); // MUISTA SetParamData-special kohta
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmax", true, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kMax));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(g_BasicColumnWidthUnit*2.4), HeaderParInfo::kMax));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // tässä haetaan hsade1 ww tilalle
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rrsum", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kSum));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, g_BasicColumnWidthUnit *3, HeaderParInfo::kMin));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SDmax", true, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, g_LatlonColumnWidth, HeaderParInfo::kLon)); // MUISTA SetParamData-special kohta
+	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, g_LatlonColumnWidth, HeaderParInfo::kLat)); // MUISTA SetParamData-special kohta
 }
 
 void CFmiSynopDataGridViewDlg::InitForecastMinMaxDataHeaders(void)
 {
-	int basicColumnWidthUnit = 16;
 	itsForecastMinMaxDataHeaders.clear();
 	std::string numberStr = ::GetDictionaryString("StationDataTableViewNumberAbreviation");
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, basicColumnWidthUnit*2, HeaderParInfo::kRowNumber)); // MUISTA SetParamData-special kohta
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, basicColumnWidthUnit*3, HeaderParInfo::kWmoId)); // MUISTA SetParamData-special kohta
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, numberStr, false, g_RowNumberColumnWidth, HeaderParInfo::kRowNumber)); // MUISTA SetParamData-special kohta
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "WmoID", false, g_WmoIdColumnWidth, HeaderParInfo::kWmoId)); // MUISTA SetParamData-special kohta
 	std::string stationStr = ::GetDictionaryString("NormalWordCapitalStation");
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, basicColumnWidthUnit*8, HeaderParInfo::kStationName)); // MUISTA SetParamData-special kohta
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmin", true, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kMin));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, stationStr, false, g_StationNameColumnWidth, HeaderParInfo::kStationName)); // MUISTA SetParamData-special kohta
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmin", true, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kMin));
 	std::string timeStr = ::GetDictionaryString("NormalWordCapitalTime");
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmax", true, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kMax));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(basicColumnWidthUnit*2.4), HeaderParInfo::kMax));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "wwmax", false, basicColumnWidthUnit*2, HeaderParInfo::kMax)); // tässä haetaan hsade1 ww tilalle
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rrsum", false, basicColumnWidthUnit*2, HeaderParInfo::kSum));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, basicColumnWidthUnit*3, HeaderParInfo::kMin));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SDmax", true, basicColumnWidthUnit*2, HeaderParInfo::kMax));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(basicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLon)); // MUISTA SetParamData-special kohta
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, static_cast<int>(basicColumnWidthUnit*2.5), HeaderParInfo::kLat)); // MUISTA SetParamData-special kohta
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiTemperature, "Tmax", true, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kMax));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(g_BasicColumnWidthUnit*2.4), HeaderParInfo::kMax));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // tässä haetaan hsade1 ww tilalle
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rrsum", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kSum));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, g_BasicColumnWidthUnit *3, HeaderParInfo::kMin));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiSnowDepth, "SDmax", true, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lon", false, g_LatlonColumnWidth, HeaderParInfo::kLon)); // MUISTA SetParamData-special kohta
+	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, "Lat", false, g_LatlonColumnWidth, HeaderParInfo::kLat)); // MUISTA SetParamData-special kohta
 }
 
 void CFmiSynopDataGridViewDlg::TakeWantedHeadersInUse(int theProducerId)
@@ -1680,7 +1683,7 @@ void CFmiSynopDataGridViewDlg::FillSynopDataGridViewMacro(NFmiViewSettingMacro::
 
 void CFmiSynopDataGridViewDlg::ApplySynopDataGridViewMacro(NFmiViewSettingMacro::SynopDataGridView &theViewMacro)
 {
-    itsSmartMetDocumentInterface->SynopDataGridViewOn(theViewMacro.ShowWindow()); // tämäkin on asetettava, arvo saatiin CZeditmap2Doc-luokassa tutkimalla ikkunan tilaa
+    itsSmartMetDocumentInterface->SynopDataGridViewOn(theViewMacro.ViewStatus().ShowWindow()); // tämäkin on asetettava, arvo saatiin CZeditmap2Doc-luokassa tutkimalla ikkunan tilaa
 
 	this->itsWmoIdFilterManager.AllSelected(theViewMacro.AllCountriesSelected());
 	this->itsDayRangeValue = theViewMacro.DayRangeValue();

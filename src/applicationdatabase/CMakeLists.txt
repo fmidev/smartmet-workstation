@@ -30,7 +30,6 @@ target_include_directories(
     PUBLIC ${MfcuUtils_INCLUDE_DIRS}
     PUBLIC ${Q2ClientLib_INCLUDE_DIRS}
     PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
-    PUBLIC ${UNIRAS_INCLUDE_DIR}
     )
 
 set(
@@ -41,6 +40,5 @@ set(
     ${MfcuUtils_INCLUDE_DIRS}
     ${Q2ClientLib_INCLUDE_DIRS}
     ${CtrlViewUtils_INCLUDE_DIRS}
-    ${UNIRAS_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

@@ -238,7 +238,9 @@ static NFmiCaseStudyDataFile::DataCategory GetDataCategory(const NFmiHelpDataInf
 	NFmiInfoData::Type type = theDataInfo.DataType();
 	if(type == NFmiInfoData::kViewable || type == NFmiInfoData::kHybridData|| type == NFmiInfoData::kModelHelpData || type == NFmiInfoData::kTrajectoryHistoryData)
 		return NFmiCaseStudyDataFile::kFmiCategoryModel;
-	else if(type == NFmiInfoData::kAnalyzeData)
+    else if(type == NFmiInfoData::kClimatologyData)
+        return NFmiCaseStudyDataFile::kFmiCategoryModel; // Kaikki fraktiili mallidatat on laitettu tähän kategoriaan. Miten erotella havainto fraktiilit?
+    else if(type == NFmiInfoData::kAnalyzeData)
 		return NFmiCaseStudyDataFile::kFmiCategoryAnalyze;
 	else if(type == NFmiInfoData::kObservations || type == NFmiInfoData::kFlashData || type == NFmiInfoData::kSingleStationRadarData)
 		return NFmiCaseStudyDataFile::kFmiCategoryObservation;

@@ -9,6 +9,7 @@ class NFmiDataIterator;
 class NFmiFastQueryInfo;
 class NFmiGriddingHelperInterface;
 class NFmiDrawParam;
+class NFmiGriddingProperties;
 
 // tämä maski osaa laskea halutulle asemadatalle hilatut arvot halutulle alueelle
 // Jos maskin itsInfo on station-dataa, sen laskut tehdään toisella tavalla kuin 'normaalin'
@@ -27,7 +28,7 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
                                                           boost::shared_ptr<NFmiDrawParam> &,
                                                           NFmiDataMatrix<float> &,
                                                           const NFmiMetTime &,
-                                                          float)>;
+                                                          const NFmiGriddingProperties &griddingProperties)>;
 
   NFmiStation2GridMask(Type theMaskType,
                        NFmiInfoData::Type theDataType,
@@ -41,7 +42,7 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
   virtual void SetGriddingHelpers(NFmiArea *theArea,
                           NFmiGriddingHelperInterface *theGriddingHelper,
                           const NFmiPoint &theStation2GridSize,
-                          float theObservationRadiusRelative);
+                          float theObservationRadiusInKm);
   static void SetGriddingStationDataCallback(
       GriddingFunctionCallBackType theGridStationDataCallback)
   {
@@ -69,7 +70,7 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
                                   // (itsGriddedStationData -koko)
   // Normaalisti havainto laskuissa ei rajoiteta käytettyjä havaintoja etäisyyden perusteellä.
   // Jos tähän annetaan jotain kFloatMissing:istä poikkeavaa, niin silloin rajoitetaan.
-  float itsObservationRadiusRelative;
+  float itsObservationRadiusInKm;
 
   // Kun itsCurrentGriddedStationData -muuttujaa lasketaan tai asetetaan, sen saa tehdä kullekin
   // ajalle vain kerran. Tämä lukko systeemi takaa sen.
@@ -163,7 +164,7 @@ public:
     void SetGriddingHelpers(NFmiArea *theArea,
         NFmiGriddingHelperInterface *theGriddingHelper,
         const NFmiPoint &theStation2GridSize,
-        float theObservationRadiusRelative) override;
+        float theObservationRadiusInKm) override;
 
 protected:
     NFmiMetTime FindLastTime();
