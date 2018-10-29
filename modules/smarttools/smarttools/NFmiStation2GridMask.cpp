@@ -1,6 +1,7 @@
 #include "NFmiStation2GridMask.h"
 #include "NFmiDrawParam.h"
 #include "NFmiGriddingHelperInterface.h"
+#include "NFmiGriddingProperties.h"
 #include <newbase/NFmiFastInfoUtils.h>
 #include <newbase/NFmiFastQueryInfo.h>
 
@@ -23,7 +24,7 @@ NFmiStation2GridMask::NFmiStation2GridMask(Type theMaskType,
       itsAreaPtr(),
       itsGriddingHelper(0),
       itsStation2GridSize(1, 1),
-      itsObservationRadiusRelative(kFloatMissing),
+      itsObservationRadiusInKm(kFloatMissing),
       itsCacheMutex(new MutexType())
 {
 }
@@ -41,7 +42,7 @@ NFmiStation2GridMask::NFmiStation2GridMask(const NFmiStation2GridMask &theOther)
       itsAreaPtr(theOther.itsAreaPtr.get() ? theOther.itsAreaPtr.get()->Clone() : 0),
       itsGriddingHelper(theOther.itsGriddingHelper),
       itsStation2GridSize(theOther.itsStation2GridSize),
-      itsObservationRadiusRelative(theOther.itsObservationRadiusRelative),
+      itsObservationRadiusInKm(theOther.itsObservationRadiusInKm),
       itsCacheMutex(theOther.itsCacheMutex)
 {
 }
@@ -65,12 +66,12 @@ double NFmiStation2GridMask::Value(const NFmiCalculationParams &theCalculationPa
 void NFmiStation2GridMask::SetGriddingHelpers(NFmiArea *theArea,
                                               NFmiGriddingHelperInterface *theGriddingHelper,
                                               const NFmiPoint &theStation2GridSize,
-                                              float theObservationRadiusRelative)
+                                              float theObservationRadiusInKm)
 {
   itsAreaPtr.reset(theArea->Clone());
   itsGriddingHelper = theGriddingHelper;
   itsStation2GridSize = theStation2GridSize;
-  itsObservationRadiusRelative = theObservationRadiusRelative;
+  itsObservationRadiusInKm = theObservationRadiusInKm;
 }
 
 void NFmiStation2GridMask::DoGriddingCheck(const NFmiCalculationParams &theCalculationParams)
@@ -97,13 +98,17 @@ void NFmiStation2GridMask::DoGriddingCheck(const NFmiCalculationParams &theCalcu
             static_cast<NFmiDataMatrix<float>::size_type>(itsStation2GridSize.X()),
             static_cast<NFmiDataMatrix<float>::size_type>(itsStation2GridSize.Y()),
             kFloatMissing);
-        if (itsGridStationDataCallback)
-          itsGridStationDataCallback(itsGriddingHelper,
-                                     itsAreaPtr,
-                                     drawParam,
-                                     griddedData,
-                                     theCalculationParams.itsTime,
-                                     itsObservationRadiusRelative);
+        if(itsGridStationDataCallback)
+        {
+            auto griddingProperties = itsGriddingHelper->GriddingProperties(false);
+            griddingProperties.rangeLimitInKm(itsObservationRadiusInKm); // overridataan käytetty km-rajoitin arvosta, joka saadaan macroParam kaavasta
+            itsGridStationDataCallback(itsGriddingHelper,
+                itsAreaPtr,
+                drawParam,
+                griddedData,
+                theCalculationParams.itsTime,
+                griddingProperties);
+        }
         std::pair<DataCache::iterator, bool> insertResult = itsGriddedStationData->insert(
             std::make_pair(theCalculationParams.itsTime, griddedData));
         if (insertResult.second)
@@ -363,12 +368,12 @@ double NFmiLastTimeValueMask::Value(const NFmiCalculationParams &theCalculationP
 void NFmiLastTimeValueMask::SetGriddingHelpers(NFmiArea *theArea,
     NFmiGriddingHelperInterface *theGriddingHelper,
     const NFmiPoint &theStation2GridSize,
-    float theObservationRadiusRelative)
+    float theObservationRadiusInKm)
 {
     NFmiStation2GridMask::SetGriddingHelpers(theArea,
         theGriddingHelper,
         theStation2GridSize,
-        theObservationRadiusRelative);
+        theObservationRadiusInKm);
     itsLastTimeOfData = FindLastTime();
 }
 

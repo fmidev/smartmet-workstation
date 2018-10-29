@@ -78,7 +78,7 @@ namespace
             bitmap->DeleteObject();
     }
 
-    void askMarkoWhatThisDoes(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, const NFmiPoint& bitmapSize)
+    void CreateBitmapUsedForMapDrawing(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, const NFmiPoint& bitmapSize)
     {
         theUsedBitmap->CreateCompatibleBitmap(theCompatibilityCDC, int(bitmapSize.X()),
             int(bitmapSize.Y()));
@@ -176,7 +176,7 @@ namespace MapDraw
         auto destRect = getDestRect(mfcRect);
         auto sourceRect = getSourceRect(docInterface, theDescTopIndex);
 
-        askMarkoWhatThisDoes(theUsedBitmap, theUsedCDC, theCompatibilityCDC, bitmapSize);
+        CreateBitmapUsedForMapDrawing(theUsedBitmap, theUsedCDC, theCompatibilityCDC, bitmapSize);
         theOldBitmap = theUsedCDC->SelectObject(theUsedBitmap);
 
         if(docInterface->UseWmsMaps())

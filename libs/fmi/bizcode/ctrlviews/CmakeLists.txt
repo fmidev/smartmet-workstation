@@ -19,6 +19,7 @@ target_link_libraries(
     Newbase
     SmetData
     CtrlViewUtils
+    TmUtils
     )
 
 target_include_directories( 
@@ -31,7 +32,7 @@ target_include_directories(
     PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
     PUBLIC ${StlHelp_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${UNIRAS_INCLUDE_DIR}
+    PUBLIC ${TmUtils_INCLUDE_DIRS}
     )
 
 set(
@@ -44,7 +45,7 @@ set(
     ${CtrlViewUtils_INCLUDE_DIRS}
     ${StlHelp_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
-    ${UNIRAS_INCLUDE_DIR}
+    ${TmUtils_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
 

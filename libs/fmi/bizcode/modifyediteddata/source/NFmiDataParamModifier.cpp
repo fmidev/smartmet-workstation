@@ -38,7 +38,11 @@
 #include "NFmiSettings.h"
 #include "client_to_master_connection.h" // HUOM! t‰m‰n pit‰‰ olla ennen #include "MultiProcessClientData.h", koska muuten tulee joku outo Winsock.h allready included error (boost asio -juttu)
 #include "MultiProcessClientData.h"
+#include "ToolMasterHelperFunctions.h"
+#include "EditedInfoMaskHandler.h"
+#include "NFmiGriddingProperties.h"
 
+#include <boost/math/special_functions/round.hpp>
 #include <fstream>
 
 #ifdef _MSC_VER
@@ -49,12 +53,11 @@
 #pragma warning (default : 4244 4267 4512) // laitetaan 4244 takaisin p‰‰lle, koska se on t‰rke‰ (esim. double -> int auto castaus varoitus)
 #endif
 
-#include <agX/agx.h>
 
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiDataParamModifier::NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam,
+NFmiDataParamModifier::NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam,
 												boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
 												unsigned long theAreaMask,
 												const NFmiRect& theSelectedSearchAreaRect)
@@ -73,11 +76,9 @@ NFmiDataParamModifier::NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo
 //   avulla.
 bool NFmiDataParamModifier::ModifyData (void)
 {
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
 	itsParamMaskList->CheckIfMaskUsed();
-	if(itsParamMaskList->UseMask())
-		SyncronizeTimeWithMasks();
+    itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
 
 	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 	{
@@ -90,26 +91,20 @@ bool NFmiDataParamModifier::ModifyData (void)
 			itsInfo->FloatValue(static_cast<float>(Calculate(itsInfo->FloatValue())));
 	}
 
-	itsInfo->MaskType(oldMaskType);
-
 	return true;
 }
 
 // 1999.11.17/Marko Viritetty ympyr‰ muokkauksille
 bool NFmiDataParamModifier::ModifyData2(void)
 {
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-	itsParamMaskList->CheckIfMaskUsed();
-	if(itsParamMaskList->UseMask())
-		SyncronizeTimeWithMasks();
-	PrepareFastIsInsideData();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
+    itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+    PrepareFastIsInsideData();
 
 	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		if(IsPossibleInside(itsInfo->RelativePoint()))
 			itsInfo->FloatValue(static_cast<float>(Calculate2(itsInfo->FloatValue())));
-
-	itsInfo->MaskType(oldMaskType);
 
 	return true;
 }
@@ -126,25 +121,6 @@ double NFmiDataParamModifier::Calculate (const double& theValue)
 }
 
 //--------------------------------------------------------
-// SyncronizeTimeWithMasks
-//--------------------------------------------------------
-//   Tarkistaa onko maskeja k‰ytˆss‰. Jos on,
-//   pyyt‰‰ itsDataParamilta ajan ja antaa masklistalle
-//   ajan synkronointia varten. Palauttaa mita masklistan
-//   funktio palauttaa. K‰ytˆss‰ saattaa olla useita
-//   eri querydatoja, joilla on omat dataparam-otukset
-//   ja ne pit‰‰ saada samaan aikaan, ett‰ maskaus toimisi
-//	 oikein.
-bool NFmiDataParamModifier::SyncronizeTimeWithMasks (void)
-{
-	if(itsParamMaskList->CheckIfMaskUsed())
-	{
-		return itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
-	}
-	else
-		return false;
-}
-//--------------------------------------------------------
 // ModifyTimeSeriesData
 //--------------------------------------------------------
 
@@ -155,16 +131,14 @@ bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveT
 {
 	int modifyFactorIndex = 0;
 
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
 	{
 		itsInfo->Time(theActiveTimes.Time());
-		SyncronizeTimeWithMasks();
-		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		{
 			if(itsParamMaskList->UseMask())
 			{
@@ -177,8 +151,6 @@ bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveT
 		modifyFactorIndex++;
 	}
 
-	itsInfo->MaskType(oldMaskType);
-
 	return true;
 }
 
@@ -186,9 +158,7 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 {
 	int modifyFactorIndex = 0;
 
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
 	itsParamMaskList->CheckIfMaskUsed();
 
 	double searchRectSize = (itsSelectedSearchAreaRect.Width()+1) * (itsSelectedSearchAreaRect.Height()+1);
@@ -200,8 +170,8 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 			modifyFactorIndex = itsInfo->TimeIndex();
 		else
 			continue;
-		SyncronizeTimeWithMasks();
-		double maskFactor = 0;
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        double maskFactor = 0;
 		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		{
 			maskFactor = 1; //itsParamMaskList->MaskValue(itsInfo->LatLon());
@@ -219,8 +189,6 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 		modifyFactorIndex++;
 	}
 
-	itsInfo->MaskType(oldMaskType);
-
 	return true;
 }
 
@@ -231,16 +199,14 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 {
 	int modifyFactorIndex = 0;
 
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
 	{
 		itsInfo->Time(theActiveTimes.Time());
-		SyncronizeTimeWithMasks();
-		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		{
 			if((itsParamMaskList->UseMask() && itsParamMaskList->IsMasked(itsInfo->LatLon()))
 				|| !(itsParamMaskList->UseMask()))
@@ -249,8 +215,6 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 		}
 		modifyFactorIndex++;
 	}
-
-	itsInfo->MaskType(oldMaskType);
 
 	return true;
 }
@@ -263,23 +227,8 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 double NFmiDataParamModifier::Calculate (double theDataValue, double theFactor)
 {
 	double returnValue = kFloatMissing;
-	if(theDataValue == kFloatMissing) //laura 05071999
+	if(theDataValue == kFloatMissing)
 		returnValue = theFactor;
-/*
-	else if(itsDrawParam->ModifyingUnit() == 0)		// %
-	{
-		double value = theDataValue + ((theFactor / 100.0) * theDataValue);
-
-		if(itsInfo->Param().GetParam()->GetIdent() == kFmiWindDirection)
-		{
-			if(theDataValue != 0 && value == 0)
-				value = 360;
-			while (value > 360)
-				value -= 360;
-		}
-		returnValue = value;
-	}
-*/
 	else
 	{
 		returnValue = theDataValue + theFactor;
@@ -320,64 +269,53 @@ bool NFmiDataParamModifier::Param(const NFmiParam& theParam)
 // ****************************************************************************************************
 
 
-NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam
+NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam
 																	,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
 																	,unsigned long theAreaMask
-																	,boost::shared_ptr<NFmiEditorControlPointManager> theCPManager
-																	,float theCPGriddingFactor
+																	,boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager
 																	,const NFmiRect &theCPGridCropRect
 																	,bool theUseGridCrop
-																	,const NFmiPoint &theCropMarginSize)
+																	,const NFmiPoint &theCropMarginSize
+                                                                    , const NFmiGriddingProperties &griddingProperties)
 :NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask, NFmiRect())
 ,itsGridData()
-,itsCoarseGridData()
-,itsCPGriddingFactor(theCPGriddingFactor)
 ,itsCPGridCropRect(theCPGridCropRect)
 ,fUseGridCrop(theUseGridCrop)
 ,fCanGridCropUsed(false)
 ,itsCropMarginSize(theCropMarginSize)
 ,itsCroppedGridData()
-,itsCroppedCoarseGridData()
 ,itsGridCropRelativeRect(0, 0, 1, 1)
 ,itsObsDataGridding(new NFmiObsDataGridding())
 ,itsCPManager(theCPManager)
 ,itsLastTimeIndex(-1)
+,itsGriddingProperties(griddingProperties)
 {
-	static NFmiRect emptyRect(0, 0, 1, 1);
+    static NFmiRect emptyRect(0, 0, 1, 1);
 	if(itsInfo && itsInfo->IsGrid())
 	{
-		if(itsCPGriddingFactor <= 0 || itsCPGriddingFactor > 1)
-			itsCPGriddingFactor = 1;
-
 		const NFmiGrid* grid = itsInfo->Grid();
 		itsGridData.Resize(grid->XNumber(), grid->YNumber(), 0.f);
-		if(IsCPGriddingFactorUsed())
-		{ // jos ggriddauskerroin on nollasta poikkeava, tehd‰‰n harvempi hila
-			size_t nx = FmiRound(itsGridData.NX() * itsCPGriddingFactor);
-			size_t ny = FmiRound(itsGridData.NY() * itsCPGriddingFactor);
-			itsCoarseGridData.Resize(nx, ny, 0.f);
-		}
 
 		fCanGridCropUsed = itsCPGridCropRect != emptyRect;
-		if(fUseGridCrop && fCanGridCropUsed)
-		{
-			size_t nx = FmiRound(itsCPGridCropRect.Width()) + 1;
-			nx = FmiMin(nx, itsGridData.NX());
-			size_t ny = FmiRound(itsCPGridCropRect.Height()) + 1;
-			ny = FmiMin(ny, itsGridData.NY());
-			itsCroppedGridData.Resize(nx, ny, 0.f);
-			if(nx < 4 || ny < 4) // en tied‰ mik‰ olisi pienin loogisin cropattu hila, mutta ei t‰m‰ voi olla liian pieni
-				fUseGridCrop = false; // laitetaan pois p‰‰lt‰ jos cropatusta hilasta tulisi liian pieni
+        if(fUseGridCrop)
+        {
+            if(fCanGridCropUsed)
+            {
+                size_t nx = FmiRound(itsCPGridCropRect.Width()) + 1;
+                nx = FmiMin(nx, itsGridData.NX());
+                size_t ny = FmiRound(itsCPGridCropRect.Height()) + 1;
+                ny = FmiMin(ny, itsGridData.NY());
+                itsCroppedGridData.Resize(nx, ny, 0.f);
+                if(nx < 4 || ny < 4) // en tied‰ mik‰ olisi pienin loogisin cropattu hila, mutta ei t‰m‰ voi olla liian pieni
+                    fUseGridCrop = false; // laitetaan pois p‰‰lt‰ jos cropatusta hilasta tulisi liian pieni
 
-			nx = FmiRound(nx * itsCPGriddingFactor);
-			ny = FmiRound(ny * itsCPGriddingFactor);
-			itsCroppedCoarseGridData.Resize(nx, ny, 0.f);
-			double left = itsCPGridCropRect.Left() / itsGridData.NX();
-			double right = itsCPGridCropRect.Right() / itsGridData.NX();
-			double bottom = itsCPGridCropRect.Bottom() / itsGridData.NY();
-			double top = itsCPGridCropRect.Top() / itsGridData.NY();
-			itsGridCropRelativeRect = NFmiRect(left, top, right, bottom);
-		}
+                double left = itsCPGridCropRect.Left() / itsGridData.NX();
+                double right = itsCPGridCropRect.Right() / itsGridData.NX();
+                double bottom = itsCPGridCropRect.Bottom() / itsGridData.NY();
+                double top = itsCPGridCropRect.Top() / itsGridData.NY();
+                itsGridCropRelativeRect = NFmiRect(left, top, right, bottom);
+            }
+        }
 	}
 }
 
@@ -386,24 +324,22 @@ NFmiDataParamControlPointModifier::~NFmiDataParamControlPointModifier(void)
 	delete itsObsDataGridding;
 }
 
-bool NFmiDataParamControlPointModifier::IsCPGriddingFactorUsed(void) const
+bool NFmiDataParamControlPointModifier::PreventGridCropCalculations()
 {
-	if(itsCPGriddingFactor > 0 && itsCPGriddingFactor < 1)
-		return true; // ainoastaan kertoimet 0 ja 1 v‰lill‰ (ei rajoilla) ovat j‰rkevi‰
-	else
-		return false;
+    if(fUseGridCrop && fCanGridCropUsed == false)
+        return true;
+    else
+        return false;
 }
 
 // HUOM!! eri signerature kuin edell‰!!!
 bool NFmiDataParamControlPointModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks)
 {
-	if(fUseGridCrop && fCanGridCropUsed == false)
-		return false; //  asetuksissa on ett‰ k‰yt‰ croppia, mutta croppausta ei voida toteuttaa, t‰llˆin ei tehd‰ mit‰‰n
+    if(PreventGridCropCalculations())
+        return false;
 
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 	NFmiDataMatrix<float> infoValues;
 	NFmiQueryDataUtil::SetRange(theThreadCallBacks, 0, CalcActualModifiedTimes(theActiveTimes), 1);
 
@@ -412,48 +348,78 @@ bool NFmiDataParamControlPointModifier::ModifyTimeSeriesDataUsingMaskFactors(NFm
 		NFmiQueryDataUtil::CheckIfStopped(theThreadCallBacks);
 		if(itsInfo->Time(theActiveTimes.Time()) == false)
 			continue;
-		SyncronizeTimeWithMasks();
-		bool isZeroGrid = !DoDataGridding();
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+        bool isZeroGrid = !DoDataGridding();
 		if(isZeroGrid)
 			continue; // t‰lle ajalle ei muutoksia!
 		NFmiQueryDataUtil::CheckIfStopped(theThreadCallBacks);
 		NFmiQueryDataUtil::DoStepIt(theThreadCallBacks); // stepataan vasta 0-tarkastuksen j‰lkeen!
-		double maskFactor = 1;
-		if(fUseGridCrop)
-		{
-			unsigned long sizeX = itsInfo->GridXNumber();
-			for(size_t j = 0; j < itsCroppedGridData.NY(); j++)
-			{
-				for(size_t i = 0; i < itsCroppedGridData.NX(); i++)
-				{
-					unsigned long locationIndex = FmiRound(((itsCPGridCropRect.Top() + j) * sizeX) + itsCPGridCropRect.Left() + i);
-					itsInfo->LocationIndex(locationIndex);
-					if(itsParamMaskList->UseMask())
-						maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
-					if(maskFactor)
-						itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsCroppedGridData[i][j], maskFactor)));
-				}
-			}
-		}
-		else
-		{
-			for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-			{
-				if(itsParamMaskList->UseMask())
-					maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
-				if(maskFactor)
-				{
-					int locationIndex = itsInfo->LocationIndex();
-					itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsGridData[locationIndex%itsGridData.NX()][locationIndex/itsGridData.NX()], maskFactor)));
-				}
-			}
-		}
+        DoLocationGridCalculations(GetUsedGridData());
 	}
-
-	itsInfo->MaskType(oldMaskType);
 
 	return true;
 }
+
+void NFmiDataParamControlPointModifier::DoLocationGridCalculations(const NFmiDataMatrix<float> &usedData)
+{
+    if(fUseGridCrop)
+        DoCroppedGridCalculations(usedData);
+    else
+        DoFullGridCalculations(usedData);
+}
+
+void NFmiDataParamControlPointModifier::DoCroppedPointCalculations(const NFmiDataMatrix<float> &usedData, size_t xIndex, size_t yIndex, float maskFactor)
+{
+    itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsCroppedGridData[xIndex][yIndex], maskFactor)));
+}
+
+void NFmiDataParamControlPointModifier::DoNormalPointCalculations(const NFmiDataMatrix<float> &usedData, unsigned long locationIndex, float maskFactor)
+{
+    itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), itsGridData[locationIndex % itsGridData.NX()][locationIndex / itsGridData.NX()], maskFactor)));
+}
+
+void NFmiDataParamControlPointModifier::DoCroppedGridCalculations(const NFmiDataMatrix<float> &usedData)
+{
+    auto useMask = itsParamMaskList->UseMask();
+    float maskFactor = 1;
+    unsigned long sizeX = itsInfo->GridXNumber();
+    for(size_t j = 0; j < usedData.NY(); j++)
+    {
+        for(size_t i = 0; i < usedData.NX(); i++)
+        {
+            auto locationIndex = static_cast<unsigned long>(GridPointToLocationIndex(boost::math::iround(itsCPGridCropRect.Left() + i), boost::math::iround(itsCPGridCropRect.Top() + j), sizeX));
+            itsInfo->LocationIndex(locationIndex);
+            if(useMask)
+                maskFactor = static_cast<float>(itsParamMaskList->MaskValue(itsInfo->LatLon()));
+            if(maskFactor)
+                DoCroppedPointCalculations(usedData, i, j, maskFactor);
+        }
+    }
+}
+
+size_t NFmiDataParamControlPointModifier::GridPointToLocationIndex(size_t gridPointX, size_t gridPointY, size_t gridSizeX)
+{
+    if(gridPointX < gridSizeX)
+        return (gridPointY * gridSizeX) + gridPointX;
+    else
+        return gMissingIndex;
+}
+
+void NFmiDataParamControlPointModifier::DoFullGridCalculations(const NFmiDataMatrix<float> &usedData)
+{
+    auto useMask = itsParamMaskList->UseMask();
+    float maskFactor = 1;
+    for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+    {
+        if(useMask)
+            maskFactor = static_cast<float>(itsParamMaskList->MaskValue(itsInfo->LatLon()));
+        if(maskFactor)
+        {
+            DoNormalPointCalculations(usedData, itsInfo->LocationIndex(), maskFactor);
+        }
+    }
+}
+
 
 // Huom! t‰m‰ pit‰‰ kutsua erilliseen threadiin, muuten blokkaa pitemm‰ksi aikaa
 static void StartNewConnection(const std::string &username, bool use_verbose_logging)
@@ -499,13 +465,14 @@ static void CheckClientToServerConnection(const std::string &log_file_path, cons
 // Tehd‰‰n laskut prosessi poolilla, k‰ytt‰en Tcp tiedonsiirtoa
 bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks)
 {
+    if(PreventGridCropCalculations())
+        return false;
+
     static size_t jobIndex = 0;
 
     bool status = true;
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
+    itsParamMaskList->CheckIfMaskUsed();
 	NFmiDataMatrix<float> infoValues;
     int jobCount = CalcActualModifiedTimes(theActiveTimes);
     NFmiQueryDataUtil::SetRange(theThreadCallBacks, 0, jobCount, 1);
@@ -514,7 +481,8 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
 	std::vector<float> zValues;
     std::string relativeAreaRectStr("0,0,1,1"); // ilmeisesti muokkaus tehd‰‰n aina 0,0 - 1,1 laatikossa (paitsi jos olisi cropattuja alueita)
     NFmiStaticTime timeAtWorkStarted;
-    FmiGriddingFunction griddingFunction = itsCPManager->CPGriddingProperties().Function();
+    auto griddingPropertiesStr = itsGriddingProperties.toString();
+    auto cpRangeLimitRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(itsGriddingProperties.rangeLimitInKm(), itsInfo->Area()));
     jobIndex++;
 
     // T‰ytet‰‰n ensin task-jono
@@ -527,11 +495,10 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
 
 		if(itsInfo->Time(theActiveTimes.Time()) == false)
 			continue;
-		SyncronizeTimeWithMasks();
+        itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
         if(!GetChangeValuesWithWork(theActiveTimes.Time(), xValues, yValues, zValues))
 			continue; // t‰lle ajalle ei muutoksia!
-        tasks.push(tcp_tools::task_structure(jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, itsGridData.NX(), itsGridData.NY(), xValues, yValues, zValues, theGuidStr, griddingFunction));
-//        process_helpers::add_new_task(workqueue, *mpClientDataType.get(), xValues, yValues, zValues, itsGridData.NX(), itsGridData.NY(), theGuidStr, jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, griddingFunction);
+        tasks.push(tcp_tools::task_structure(jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, itsGridData.NX(), itsGridData.NY(), xValues, yValues, zValues, theGuidStr, griddingPropertiesStr, cpRangeLimitRelative));
 	}
 
     // K‰ynnistet‰‰n clint->server yhteys
@@ -594,114 +561,8 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
             break;
     }
 
-	itsInfo->MaskType(oldMaskType);
     return status;
 }
-
-bool NFmiDataParamControlPointModifier::DoProcessPoolCPModifying(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks)
-{
-    static size_t jobIndex = 0;
-
-    bool status = true;
-	unsigned long oldMaskType = itsInfo->MaskType();
-	itsInfo->MaskType(itsMaskType);
-
-	itsParamMaskList->CheckIfMaskUsed();
-	NFmiDataMatrix<float> infoValues;
-    int jobCount = CalcActualModifiedTimes(theActiveTimes);
-    NFmiQueryDataUtil::SetRange(theThreadCallBacks, 0, jobCount, 1);
-	std::vector<float> xValues;
-	std::vector<float> yValues;
-	std::vector<float> zValues;
-    std::string relativeAreaRectStr("0,0,1,1"); // ilmeisesti muokkaus tehd‰‰n aina 0,0 - 1,1 laatikossa (paitsi jos olisi cropattuja alueita)
-    NFmiStaticTime timeAtWorkStarted;
-    FmiGriddingFunction griddingFunction = itsCPManager->CPGriddingProperties().Function();
-    jobIndex++;
-
-    task_queue_ptr_t &workqueue = theMultiProcessClientData.GetMultiProcessClientData()->workqueue;
-    MultiProcessClientData::MultiProcessClientDataType &mpClientDataType = theMultiProcessClientData.GetMultiProcessClientData();
-    // Tehd‰‰n ensin griddaus tyˆt ja laitetaan ne workqueue:en
-	for(theActiveTimes.Reset(); theActiveTimes.Next();)
-	{
-		NFmiQueryDataUtil::CheckIfStopped(theThreadCallBacks);
-
-		if(itsInfo->Time(theActiveTimes.Time()) == false)
-			continue;
-		SyncronizeTimeWithMasks();
-        if(!GetChangeValuesWithWork(theActiveTimes.Time(), xValues, yValues, zValues))
-			continue; // t‰lle ajalle ei muutoksia!
-        process_helpers::add_new_task(workqueue, *mpClientDataType.get(), xValues, yValues, zValues, itsGridData.NX(), itsGridData.NY(), theGuidStr, jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, griddingFunction);
-	}
-
-    int timeLimitInSeconds = static_cast<int>(theMultiProcessClientData.GetMultiProcessClientData()->mpp_options.total_wait_time_limit_in_seconds);
-    // Haetaa loopissa vastauksia (tietyn aikarajan sis‰ll‰), kunnes on saatu niit‰ yht‰ plajon kuin tˆit‰ l‰hetettiin.
-    int resultsReceived = 0;
-    for(;;)
-    {
-		NFmiQueryDataUtil::CheckIfStopped(theThreadCallBacks);
-        NFmiStaticTime timeNow;
-        int waitTimeInSeconds = static_cast<int>(timeNow.EpochTime() - timeAtWorkStarted.EpochTime());
-        if(waitTimeInSeconds > timeLimitInSeconds)
-        {
-            status = false;
-            break;
-        }
-
-        // haetaan t‰h‰n client:iin liittyv‰t tyˆntulokset
-        process_helpers::gridding_results_t griddingResults = process_helpers::get_gridding_results(theMultiProcessClientData.GetMultiProcessClientData()->work_result_queue, theGuidStr);
-
-        if(griddingResults.size())
-        {
-            for(size_t i = 0; i < griddingResults.size(); i++)
-            {
-                process_helpers::gridding_results_t::value_type &result = griddingResults[i];
-                if(result->job_index_ != jobIndex)
-                    break; // eri tyˆ numero, ei voi k‰ytt‰‰ t‰ss‰ (vanhasta tyˆst‰ tullut vasta nyt?)
-
-                resultsReceived++;
-		        NFmiQueryDataUtil::DoStepIt(theThreadCallBacks);
-
-                if(result->values_.size() != itsInfo->SizeLocations())
-                {
-                    // jos jokin menee vikaan workeriss‰, voi sielt‰ tulla esim. 0 kokoinen vastaus vektori
-                    log_message("Non matching size result received from worker, continuing CP modifications...", boost::log::trivial::error);
-                    continue;
-                }
-
-                itsInfo->TimeIndex(static_cast<unsigned long>(result->data_time_index_)); // asetetaan muokattava aika
-		        double maskFactor = 1;
-		        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-		        {
-			        if(itsParamMaskList->UseMask())
-				        maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
-			        if(maskFactor)
-			        {
-				        int locationIndex = itsInfo->LocationIndex();
-                        itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), result->values_[locationIndex], maskFactor)));
-			        }
-		        }
-            }
-        }
-        else
-            boost::this_thread::sleep(boost::posix_time::milliseconds(30)); // jos ei tullut tˆit‰, nukutaan v‰h‰n
-        if(resultsReceived >= jobCount)
-            break;
-    }
-
-	itsInfo->MaskType(oldMaskType);
-    return status;
-}
-
-// k‰ytet‰‰n avuksi least-squeare-metodin yhteydess‰
-struct MultiplyFunctor
-{
-	MultiplyFunctor(double theFactor):itsFactor(theFactor){}
-	double operator()(double theValue)
-	{
-		return theValue*itsFactor;
-	}
-	double itsFactor;
-};
 
 namespace
 {
@@ -713,11 +574,11 @@ namespace
 	MutexType itsToolMasterGriddingMutex;
 }
 
-void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, int theGriddingFunction, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative)
+void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, const NFmiGriddingProperties &griddingProperties, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative)
 {
 	if(arraySize == 0)
 		return ;
-	if(theGriddingFunction == kFmiMarkoGriddingFunction)
+	if(griddingProperties.function() == kFmiMarkoGriddingFunction)
 	{
 		if(theObsDataGridding)
 		{
@@ -730,61 +591,16 @@ void NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValu
 	{
 		std::vector<float> tmGridData(gridData.NX() * gridData.NY(), kFloatMissing);
 
-		{ // HUOM!!! aloitetaan blokki, miss‰ write-lukko tehd‰‰n
+		{ 
+            // HUOM!!! aloitetaan blokki, miss‰ write-lukko tehd‰‰n
 			WriteLock lock(itsToolMasterGriddingMutex);
 			// Toolmaster griddaus funktioiden k‰yttˆ
-			XuViewWorldLimits(theRelativeRect.Left(), theRelativeRect.Right(), theRelativeRect.Top(), theRelativeRect.Bottom(), 0, 0);
-            XuUndefined(kFloatMissing, 2);
-
-            if(theObservationRadiusRelative != kFloatMissing)
-                XuGriddingLocalFitRadius(theObservationRadiusRelative);
-            else
-                XuGriddingLocalFitRadius(1.41); // T‰m‰ on laskentaruudun (~ 0,0 - 1,1) kulmapisteiden diagonaalinen et‰isyys, mik‰ on t‰m‰n radiuksen oletusarvo (= kaikkia pisteit‰ k‰ytet‰‰n aina laskuissa)
-
-			switch(theGriddingFunction)
-			{
-			case kFmiXuGriddingThinPlateSplineCalc:
-				XuGriddingThinPlateSplineCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()));
-				break;
-
-			case kFmiXuGriddingFastLocalFitCalc:
-				XuGriddingFastLocalFitCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()));
-				break;
-			case kFmiXuGriddingLocalFitCalc:
-				XuGriddingLocalFitCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()));
-				break;
-			case kFmiXuGriddingTriangulationCalc: // t‰m‰ ei oikein toimi (joskus teki rumaa mutta j‰rkev‰‰ tulosta, nyt rikki)
-				{
-					// triangulaatio algoritmi vaatii paria tyˆ taulukkoa
-					std::vector<int> int_array(31 * arraySize + (gridData.NY() * gridData.NX()) );
-					std::vector<float> float_array(5 * arraySize);
-					XuGriddingTriangulationCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()), &int_array[0], &float_array[0]);
-					break;
-				}
-			case kFmiXuGriddingLeastSquaresCalc: // en saa tekem‰‰n j‰rkev‰‰ tulosta
-				{
-					const double factor = 100.;
-					MultiplyFunctor mul(factor);
-					XuViewWorldLimits(0, factor, 0, factor, 0, 0);
-					int side_length = static_cast<int>(factor/2); // t‰m‰ menee luultavasti pieleen, pit‰‰ olla int, mutta asetin maailman 0,0 - 1,1:n kokoiseksi
-					int num_y_subgrid = 2;//itsGridYSize/10; // subgridin pit‰isi kai olla jaollinen originaali gridin koosta
-					int num_x_subgrid = 2;//itsGridXSize/10;
-					std::vector<float> tmpXValues(xValues.begin(), xValues.end());
-					std::transform(tmpXValues.begin(), tmpXValues.end(), tmpXValues.begin(), mul);
-					std::vector<float> tmpYValues(yValues.begin(), yValues.end());
-					std::transform(tmpYValues.begin(), tmpYValues.end(), tmpYValues.begin(), mul);
-					XuGriddingLeastSquaresCalc(&tmpXValues[0], &tmpYValues[0], &zValues[0], arraySize, &tmGridData[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()), side_length, num_y_subgrid , num_x_subgrid);
-					break;
-				}
-			default:
-				break;
-			}
-		} // HUOM!!! write-lukko vapautuu t‰ss‰
+            Toolmaster::DoToolMasterGridding(xValues, yValues, zValues, arraySize, theRelativeRect, griddingProperties, theObservationRadiusRelative, gridData, tmGridData);
+		}
 
 		for(unsigned int j=0; j<gridData.NY(); j++)
 			for(unsigned int i=0; i<gridData.NX(); i++)
 				gridData[i][j] = tmGridData[j*gridData.NX() + i];
-		// Toolmaster griddaus funktioiden k‰yttˆ
 	}
 }
 
@@ -875,7 +691,7 @@ static void InterpolateMatrix(const NFmiDataMatrix<float> &source, NFmiDataMatri
 // Cropatun hilan reunoille halutaan 'pehmennys' editointiin, jotta muokkaukset eiv‰t n‰ytt‰isi rumilta.
 // Cropin sis‰reunalla muutos (hilapisteen arvo) otetaan sellaisenaan, mutta mit‰ reunemmaksi menn‰‰n, sit‰ 
 // pienempi osuus hilapisteen arvosta j‰‰ voimaan.
-static void FixCroppedMatrixMargins(NFmiDataMatrix<float> &theCroppedGridData, const NFmiPoint &theCropMarginSize)
+void NFmiDataParamControlPointModifier::FixCroppedMatrixMargins(NFmiDataMatrix<float> &theCroppedGridData, const NFmiPoint &theCropMarginSize)
 {
 	size_t destSizeX = theCroppedGridData.NX();
 	size_t destSizeY = theCroppedGridData.NY();
@@ -917,8 +733,7 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 	{
 		if(itsCPManager->Time(itsInfo->Time()))
 		{
-			FmiGriddingFunction griddingFunction = itsCPManager->CPGriddingProperties().Function();
-			if(griddingFunction == kFmiErrorGriddingFunction)
+			if(itsGriddingProperties.function() == kFmiErrorGriddingFunction)
 				return false;
 			std::vector<float> xValues;
 			std::vector<float> yValues;
@@ -927,63 +742,23 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 			{
 				if(IsZeroModification(zValues) == false)
 				{
-/*
-					static int totalCounter = 1;
-					bool debugCPs = true;
-					std::string baseCpCheckFileName("d:\\cppointcheck.txt");
-					std::string currentCpCheckFileName = baseCpCheckFileName;
-					currentCpCheckFileName += ".";
-					currentCpCheckFileName += NFmiStringTools::Convert(totalCounter);
-					totalCounter++;
-					if(debugCPs)
-					{
-						std::ofstream out(currentCpCheckFileName.c_str());
-						if(out)
-						{
-							out.precision(5);
-							for(size_t i = 0; i < xValues.size(); i++)
-							{
-								out << "P" << i+1 << ": x=" << xValues[i] << ", y=" << yValues[i] << ", z=" << zValues[i] << std::endl;
-							}
-						}
-					}
-*/
-					NFmiDataMatrix<float> *usedGridData = &itsGridData;
-					if(fUseGridCrop)
-					{
-						if(IsCPGriddingFactorUsed())
-							usedGridData = &itsCroppedCoarseGridData;
-						else
-							usedGridData = &itsCroppedGridData;
-					}
-					else if(IsCPGriddingFactorUsed())
-						usedGridData = &itsCoarseGridData;
-					NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), *usedGridData, itsGridCropRelativeRect, griddingFunction, itsObsDataGridding, kFloatMissing);
-/*
-					if(debugCPs)
-					{
-						std::ofstream out(currentCpCheckFileName.c_str(), std::ios::app);
-						if(out)
-						{
-							out.precision(5);
-							out << *usedGridData << std::endl;
-						}
-					}
-*/
-					if(IsCPGriddingFactorUsed())
-					{
-						if(fUseGridCrop)
-							::InterpolateMatrix(itsCroppedCoarseGridData, itsCroppedGridData);
-						else
-							::InterpolateMatrix(itsCoarseGridData, itsGridData);
-					}
+                    auto cpPointRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(itsGriddingProperties.rangeLimitInKm(), itsInfo->Area()));
+                    NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, itsGriddingProperties, itsObsDataGridding, cpPointRadiusRelative);
 
 					if(fUseGridCrop)
-						::FixCroppedMatrixMargins(itsCroppedGridData, itsCropMarginSize);
+						FixCroppedMatrixMargins(GetUsedGridData(), itsCropMarginSize);
 					return true;
 				}
 			}
 		}
 	}
 	return false;
+}
+
+NFmiDataMatrix<float>& NFmiDataParamControlPointModifier::GetUsedGridData()
+{
+    if(fUseGridCrop)
+        return itsCroppedGridData;
+    else
+        return itsGridData;
 }

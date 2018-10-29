@@ -7,7 +7,7 @@
 #include "NFmiDataHints.h"
 #include "NFmiText.h"
 #include "NFmiInfoOrganizer.h"
-#include "mar002.h"
+#include "ToolMasterDrawingFunctions.h"
 #include "NFmiCrossSectionSystem.h"
 #include "NFmiValueString.h"
 #include "NFmiRectangle.h"
@@ -37,6 +37,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "BetaProductParamBoxFunctions.h"
 #include "NFmiFastInfoUtils.h"
+#include "EditedInfoMaskHandler.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -1011,6 +1012,13 @@ bool NFmiCrossSectionView::IsToolMasterAvailable(void)
 	return itsCtrlViewDocumentInterface->IsToolMasterAvailable();
 }
 
+// Jostain syystä karttanäytöille transparency piirtoon liittyvä bitmap pitää deletoida (muuten vuotaa),
+// mutta poikkileikkausnäytössä sitä ei saa tehdä, muuten kaatuu (ei vuoda, vaikka ei deletoida).
+bool NFmiCrossSectionView::DeleteTransparencyBitmap()
+{
+    return false;
+}
+
 void NFmiCrossSectionView::DrawCrossSection(void)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw layer");
@@ -1047,8 +1055,7 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	if(fGetCurrentDataFromQ2Server)
 		return ; // ei vielä q2server tukea poikkileikkausnäytössä!!!!
 
-	unsigned long oldMask = itsInfo->MaskType();
-	itsInfo->MaskType(NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
 	// Kun käytetään imagine piirtoa,ei dataa talleteta isolinedata-rakenteisiin
 	// kuten toolmaster-piirrossa, koska imagine käyttää erilaista data rakennetta (matriisia)
 	if(itsInfo->DataType() == NFmiInfoData::kCrossSectionMacroParam && crossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kObsAndFor)
@@ -1066,7 +1073,6 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	isoLineData.SetIsolineData(itsIsolineValues);
 	Imagine::NFmiDataHints helper(itsIsolineValues);
 	NFmiStationView::GetMinAndMaxValues(itsIsolineValues, isoLineData.itsIsoLineStatistics.itsMinValue, isoLineData.itsIsoLineStatistics.itsMaxValue);
-	itsInfo->MaskType(oldMask); // asetetaan vanha maski päälle takaisin
 
 	// HUOM! TÄMÄ ON VIRITYS!!!! -alkaa
 	// Tuulensuunta-parametri on saatettu laittaa suuntanuoli asetukseen ja se toimiikiin hyvin karttanäytöllä. 
@@ -1160,7 +1166,7 @@ void NFmiCrossSectionView::DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIs
 	if(theIsoLineData.fUseIsoLines)
 		itsCrossSectionIsoLineDrawIndex++;
 	NFmiPoint grid2PixelRatio(0, 0); // tätä ei käytetä vielä toistaiseksi poikkileikkaus näytössä, siksi alustetaan 0:ksi.
-	::mar002(itsToolBox->GetDC(), &theIsoLineData, relRect, zoomedAreaRect, grid2PixelRatio, itsCrossSectionIsoLineDrawIndex);
+	::ToolMasterDraw(itsToolBox->GetDC(), &theIsoLineData, relRect, zoomedAreaRect, grid2PixelRatio, itsCrossSectionIsoLineDrawIndex);
 }
 
 void NFmiCrossSectionView::DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates)
@@ -1363,25 +1369,18 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     }
 
 	NFmiSmartToolModifier smartToolModifier(itsCtrlViewDocumentInterface->InfoOrganizer());
-	try // ensin tulkitaan macro
-	{
-		smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
+    try // ensin tulkitaan macro
+    {
+        smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
 
-		// macroParam niminen macroparametri on erikoistapaus ja sen macroskripti otetaan currentti teksti
-		// muuten macro pitää pyytää macroParaSysteemiltä
-		if(itsDrawParam->ParameterAbbreviation() == std::string("macroParam"))
-			smartToolModifier.InitSmartTool(itsCtrlViewDocumentInterface->SmartToolInfo()->CurrentScript(), true);
-		else
-		{
-			NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
-			if(mpSystem.FindTotal(itsDrawParam->InitFileName()))
-			{
-				smartToolModifier.InitSmartTool(mpSystem.CurrentMacroParam()->MacroText(), true);
-			}
-			else
-				throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + itsDrawParam->ParameterAbbreviation());
-		}
-	}
+        NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
+        if(mpSystem.FindTotal(itsDrawParam->InitFileName()))
+        {
+            smartToolModifier.InitSmartTool(mpSystem.CurrentMacroParam()->MacroText(), true);
+        }
+        else
+            throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + itsDrawParam->ParameterAbbreviation());
+    }
 	catch(exception &e)
 	{
 		string errorText;

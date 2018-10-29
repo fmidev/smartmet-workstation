@@ -1,0 +1,458 @@
+!    SILAM Source Locations
+!!   Nuclear Sources List
+!!   Nuclear Power Plants (NPP)
+!!   Coordinates in decimals, with N/E = positive, S/W= negative
+!!   Data updated 2018-10-05 by STUK
+!!   Data source: IAEA PRIS database
+!! 
+! latitude    longitude        country   NPP-type    Additional Information (plant name, net capacity, age)
+!--------------------------------------------------------------------------------------------------------------------
+!
+-33.9669   S   -59.2086   W   Argentina   PL_PHWR   Atucha 1, 362 MWe, Oper. since 1974
+-33.9673   S   -59.2033   W   Argentina   PL_PHWR   Atucha 2, 745 MWe, Oper. since 2016
+-32.2315   S   -64.4423   W   Argentina   PL_PHWR   Embalse, 648 MWe, Oper. since 1984
+40.1813   N   44.1472   E   Armenia   PL_PWR   Armenian 2, 408 MWe, Oper. since 1980
+51.3227   N   4.25868   E   Belgium   PL_PWR   Doel 1, 454 MWe, Oper. since 1975
+51.3227   N   4.25919   E   Belgium   PL_PWR   Doel 2, 454 MWe, Oper. since 1975
+51.3249   N   4.25658   E   Belgium   PL_PWR   Doel 3, 1056 MWe, Oper. since 1982
+51.3249   N   4.25708   E   Belgium   PL_PWR   Doel 4, 1090 MWe, Oper. since 1985
+50.5333   N   5.271   E   Belgium   PL_PWR   Tihange 1, 1009 MWe, Oper. since 1975
+50.5328   N   5.271   E   Belgium   PL_PWR   Tihange 2, 1055 MWe, Oper. since 1983
+50.5323   N   5.271   E   Belgium   PL_PWR   Tihange 3, 1089 MWe, Oper. since 1985
+-23.008   S   -44.4567   W   Brazil   PL_PWR   Angra 1, 640 MWe, Oper. since 1985
+-23.0065   S   -44.4578   W   Brazil   PL_PWR   Angra 2, 1350 MWe, Oper. since 2001
+43.7466   N   23.7696   E   Bulgaria   PL_PWR   Kozloduy 5, 1000 MWe, Oper. since 1988
+43.7463   N   23.7709   E   Bulgaria   PL_PWR   Kozloduy 6, 1000 MWe, Oper. since 1993
+44.3401   N   -81.5716   W   Canada   PL_PHWR   Bruce 1, 830 MWe, Oper. since 1977
+44.3406   N   -81.5716   W   Canada   PL_PHWR   Bruce 2, 830 MWe, Oper. since 1977
+44.3411   N   -81.5716   W   Canada   PL_PHWR   Bruce 3, 830 MWe, Oper. since 1978
+44.3416   N   -81.5716   W   Canada   PL_PHWR   Bruce 4, 830 MWe, Oper. since 1979
+44.3198   N   -81.588   W   Canada   PL_PHWR   Bruce 5, 872 MWe, Oper. since 1985
+44.3193   N   -81.588   W   Canada   PL_PHWR   Bruce 6, 891 MWe, Oper. since 1984
+44.3188   N   -81.588   W   Canada   PL_PHWR   Bruce 7, 872 MWe, Oper. since 1986
+44.3183   N   -81.588   W   Canada   PL_PHWR   Bruce 8, 872 MWe, Oper. since 1987
+43.867   N   -78.7244   W   Canada   PL_PHWR   Darlington 1, 934 MWe, Oper. since 1992
+43.8665   N   -78.7244   W   Canada   PL_PHWR   Darlington 2, 934 MWe, Oper. since 1990
+43.866   N   -78.7244   W   Canada   PL_PHWR   Darlington 3, 934 MWe, Oper. since 1993
+43.8655   N   -78.7244   W   Canada   PL_PHWR   Darlington 4, 934 MWe, Oper. since 1993
+43.8116   N   -79.0695   W   Canada   PL_PHWR   Pickering 1, 542 MWe, Oper. since 1971
+43.8113   N   -79.0673   W   Canada   PL_PHWR   Pickering 4, 542 MWe, Oper. since 1973
+43.8107   N   -79.0649   W   Canada   PL_PHWR   Pickering 5, 540 MWe, Oper. since 1983
+43.8105   N   -79.0642   W   Canada   PL_PHWR   Pickering 6, 540 MWe, Oper. since 1984
+43.8102   N   -79.063   W   Canada   PL_PHWR   Pickering 7, 540 MWe, Oper. since 1985
+43.81   N   -79.062   W   Canada   PL_PHWR   Pickering 8, 540 MWe, Oper. since 1986
+45.068   N   -66.4554   W   Canada   PL_PHWR   Point Lepreau, 705 MWe, Oper. since 1983
+39.7394   N   116.03   E   China   PL_FBR   Cefr, 25 MWe, Oper. since 
+19.460492   N   108.895886   E   China   PL_PWR   Changjiang 1, 650 MWe, Oper. since 2015
+19.460492   N   108.897163   E   China   PL_PWR   Changjiang 2, 650 MWe, Oper. since 2016
+22.5989   N   114.544   E   China   PL_PWR   Daya Bay 1, 984 MWe, Oper. since 1994
+22.5986   N   114.544   E   China   PL_PWR   Daya Bay 2, 984 MWe, Oper. since 1994
+21.6695   N   108.561   E   China   PL_PWR   Fangchenggang 1, 1086 MWe, Oper. since 2016
+21.6695   N   108.563   E   China   PL_PWR   Fangchenggang 2, 1086 MWe, Oper. since 2016
+30.4163   N   120.951   E   China   PL_PWR   Fangjiashan 1, 1089 MWe, Oper. since 2014
+30.4113   N   120.951   E   China   PL_PWR   Fangjiashan 2, 1089 MWe, Oper. since 2015
+25.437931   N   119.443832   E   China   PL_PWR   Fuqing 1, 1089 MWe, Oper. since 2014
+25.4404   N   119.453   E   China   PL_PWR   Fuqing 2, 1089 MWe, Oper. since 2015
+25.4385   N   119.453   E   China   PL_PWR   Fuqing 3, 1089 MWe, Oper. since 2016
+25.437   N   119.453   E   China   PL_PWR   Fuqing 4, 1089 MWe, Oper. since 2017
+39.79494   N   121.47377   E   China   PL_PWR   Hongyanhe 1, 1119 MWe, Oper. since 2013
+39.8001   N   121.475   E   China   PL_PWR   Hongyanhe 2, 1119 MWe, Oper. since 2014
+39.8051   N   121.468   E   China   PL_PWR   Hongyanhe 3, 1119 MWe, Oper. since 2015
+39.81   N   121.468   E   China   PL_PWR   Hongyanhe 4, 1119 MWe, Oper. since 2016
+22.6058   N   114.55   E   China   PL_PWR   Ling Ao 1, 990 MWe, Oper. since 2002
+22.6053   N   114.55   E   China   PL_PWR   Ling Ao 2, 990 MWe, Oper. since 2003
+22.6089   N   114.552   E   China   PL_PWR   Ling Ao 3, 1086 MWe, Oper. since 2010
+22.6084   N   114.552   E   China   PL_PWR   Ling Ao 4, 1086 MWe, Oper. since 2011
+27.0463   N   120.287   E   China   PL_PWR   Ningde 1, 1089 MWe, Oper. since 2013
+27.0438   N   120.287   E   China   PL_PWR   Ningde 2, 1089 MWe, Oper. since 2014
+27.0426   N   120.284   E   China   PL_PWR   Ningde 3, 1089 MWe, Oper. since 2015
+27.0447   N   120.284   E   China   PL_PWR   Ningde 4, 1089 MWe, Oper. since 2016
+30.421   N   120.945   E   China   PL_PWR   Qinshan 2 1, 650 MWe, Oper. since 2002
+30.4208   N   120.946   E   China   PL_PWR   Qinshan 2 2, 650 MWe, Oper. since 2004
+30.4189   N   120.942   E   China   PL_PWR   Qinshan 2 3, 660 MWe, Oper. since 2010
+30.4186   N   120.943   E   China   PL_PWR   Qinshan 2 4, 660 MWe, Oper. since 2011
+30.436   N   120.961   E   China   PL_PHWR   Qinshan 3 1, 728 MWe, Oper. since 2002
+30.4354   N   120.961   E   China   PL_PHWR   Qinshan 3 2, 728 MWe, Oper. since 2003
+30.4398   N   120.95   E   China   PL_PWR   Qinshan 1, 310 MWe, Oper. since 1994
+34.6898   N   119.456   E   China   PL_PWR   Tianwan 1, 1060 MWe, Oper. since 2007
+34.6888   N   119.456   E   China   PL_PWR   Tianwan 2, 1060 MWe, Oper. since 2007
+21.7064   N   112.256   E   China   PL_PWR   Yangjiang 1, 1086 MWe, Oper. since 2014
+21.7047   N   112.256   E   China   PL_PWR   Yangjiang 2, 1086 MWe, Oper. since 2015
+21.703   N   112.256   E   China   PL_PWR   Yangjiang 3, 1086 MWe, Oper. since 2016
+21.701   N   112.256   E   China   PL_PWR   Yangjiang 4, 1086 MWe, Oper. since 2017
+49.0893   N   16.1491   E   Czech Republic   PL_PWR   Dukovany 1, 500 MWe, Oper. since 1985
+49.0889   N   16.1489   E   Czech Republic   PL_PWR   Dukovany 2, 500 MWe, Oper. since 1986
+49.0886   N   16.1488   E   Czech Republic   PL_PWR   Dukovany 3, 500 MWe, Oper. since 1986
+49.0883   N   16.1486   E   Czech Republic   PL_PWR   Dukovany 4, 500 MWe, Oper. since 1987
+49.1812   N   14.3771   E   Czech Republic   PL_PWR   Temelin 1, 1080 MWe, Oper. since 2002
+49.1807   N   14.3769   E   Czech Republic   PL_PWR   Temelin 2, 1080 MWe, Oper. since 2003
+60.3715   N   26.3423   E   Finland   PL_PWR   Loviisa 1, 526 MWe, Oper. since 1977
+60.3714   N   26.3429   E   Finland   PL_PWR   Loviisa 2, 526 MWe, Oper. since 1981
+61.2354   N   21.444   E   Finland   PL_BWR   Olkiluoto 1, 910 MWe, Oper. since 1979
+61.2354   N   21.445   E   Finland   PL_BWR   Olkiluoto 2, 910 MWe, Oper. since 1982
+47.5105   N   2.87116   E   France   PL_PWR   Belleville 1, 1363 MWe, Oper. since 1988
+47.51   N   2.87123   E   France   PL_PWR   Belleville 2, 1363 MWe, Oper. since 1989
+45.2562   N   -0.691293   W   France   PL_PWR   Blayais 1, 951 MWe, Oper. since 1981
+45.2561   N   -0.690765   W   France   PL_PWR   Blayais 2, 951 MWe, Oper. since 1983
+45.2561   N   -0.690331   W   France   PL_PWR   Blayais 3, 951 MWe, Oper. since 1983
+45.2561   N   -0.689882   W   France   PL_PWR   Blayais 4, 951 MWe, Oper. since 1983
+45.7975   N   5.2672   E   France   PL_PWR   Bugey 2, 945 MWe, Oper. since 1979
+45.7975   N   5.2682   E   France   PL_PWR   Bugey 3, 945 MWe, Oper. since 1979
+45.7998   N   5.26725   E   France   PL_PWR   Bugey 4, 917 MWe, Oper. since 1979
+45.7998   N   5.26825   E   France   PL_PWR   Bugey 5, 917 MWe, Oper. since 1980
+49.4164   N   6.21737   E   France   PL_PWR   Cattenom 1, 1362 MWe, Oper. since 1987
+49.4159   N   6.21737   E   France   PL_PWR   Cattenom 2, 1362 MWe, Oper. since 1988
+49.4154   N   6.21737   E   France   PL_PWR   Cattenom 3, 1362 MWe, Oper. since 1991
+49.4149   N   6.21737   E   France   PL_PWR   Cattenom 4, 1362 MWe, Oper. since 1992
+47.2298   N   0.168232   E   France   PL_PWR   Chinon B 1, 954 MWe, Oper. since 1984
+47.2293   N   0.168249   E   France   PL_PWR   Chinon B 2, 954 MWe, Oper. since 1984
+47.2242   N   0.170887   E   France   PL_PWR   Chinon B 3, 954 MWe, Oper. since 1987
+47.2242   N   0.17147   E   France   PL_PWR   Chinon B 4, 954 MWe, Oper. since 1988
+50.0892   N   4.7907   E   France   PL_PWR   Chooz B 1, 1560 MWe, Oper. since 2000
+50.0885   N   4.7907   E   France   PL_PWR   Chooz B 2, 1560 MWe, Oper. since 2000
+46.4566   N   0.654464   E   France   PL_PWR   Civaux 1, 1561 MWe, Oper. since 2002
+46.4566   N   0.655464   E   France   PL_PWR   Civaux 2, 1561 MWe, Oper. since 2002
+44.6336   N   4.75652   E   France   PL_PWR   Cruas 1, 956 MWe, Oper. since 1984
+44.6331   N   4.75652   E   France   PL_PWR   Cruas 2, 956 MWe, Oper. since 1985
+44.6326   N   4.75652   E   France   PL_PWR   Cruas 3, 956 MWe, Oper. since 1984
+44.6321   N   4.75652   E   France   PL_PWR   Cruas 4, 956 MWe, Oper. since 1985
+47.7323   N   2.51311   E   France   PL_PWR   Dampierre 1, 937 MWe, Oper. since 1980
+47.7323   N   2.51411   E   France   PL_PWR   Dampierre 2, 937 MWe, Oper. since 1981
+47.7323   N   2.51511   E   France   PL_PWR   Dampierre 3, 937 MWe, Oper. since 1981
+47.7323   N   2.51611   E   France   PL_PWR   Dampierre 4, 937 MWe, Oper. since 1981
+47.903   N   7.56437   E   France   PL_PWR   Fessenheim 1, 920 MWe, Oper. since 1978
+47.9029   N   7.56506   E   France   PL_PWR   Fessenheim 2, 920 MWe, Oper. since 1978
+49.5357   N   -1.88112   W   France   PL_PWR   Flamanville 1, 1382 MWe, Oper. since 1986
+49.5367   N   -1.88058   W   France   PL_PWR   Flamanville 2, 1382 MWe, Oper. since 1987
+44.1046   N   0.84536   E   France   PL_PWR   Golfech 1, 1363 MWe, Oper. since 1991
+44.1041   N   0.84536   E   France   PL_PWR   Golfech 2, 1363 MWe, Oper. since 1994
+51.0139   N   2.13752   E   France   PL_PWR   Gravelines 1, 951 MWe, Oper. since 1980
+51.0134   N   2.13752   E   France   PL_PWR   Gravelines 2, 951 MWe, Oper. since 1980
+51.0129   N   2.13752   E   France   PL_PWR   Gravelines 3, 951 MWe, Oper. since 1981
+51.0124   N   2.13752   E   France   PL_PWR   Gravelines 4, 951 MWe, Oper. since 1981
+51.0119   N   2.13752   E   France   PL_PWR   Gravelines 5, 951 MWe, Oper. since 1985
+51.0114   N   2.13752   E   France   PL_PWR   Gravelines 6, 951 MWe, Oper. since 1985
+48.517   N   3.52004   E   France   PL_PWR   Nogent 1, 1363 MWe, Oper. since 1988
+48.5164   N   3.52004   E   France   PL_PWR   Nogent 2, 1363 MWe, Oper. since 1989
+49.8569   N   0.635286   E   France   PL_PWR   Paluel 1, 1382 MWe, Oper. since 1985
+49.8564   N   0.635286   E   France   PL_PWR   Paluel 2, 1382 MWe, Oper. since 1985
+49.8559   N   0.635286   E   France   PL_PWR   Paluel 3, 1382 MWe, Oper. since 1986
+49.8555   N   0.635286   E   France   PL_PWR   Paluel 4, 1382 MWe, Oper. since 1986
+49.975   N   1.21494   E   France   PL_PWR   Penly 1, 1382 MWe, Oper. since 1990
+49.9746   N   1.21494   E   France   PL_PWR   Penly 2, 1382 MWe, Oper. since 1992
+45.404   N   4.75397   E   France   PL_PWR   St. Alban 1, 1381 MWe, Oper. since 1986
+45.404   N   4.75498   E   France   PL_PWR   St. Alban 2, 1381 MWe, Oper. since 1987
+47.7211   N   1.58069   E   France   PL_PWR   St. Laurent B 1, 956 MWe, Oper. since 1983
+47.7204   N   1.58072   E   France   PL_PWR   St. Laurent B 2, 956 MWe, Oper. since 1983
+44.3297   N   4.73318   E   France   PL_PWR   Tricastin 1, 955 MWe, Oper. since 1980
+44.3302   N   4.73318   E   France   PL_PWR   Tricastin 2, 955 MWe, Oper. since 1980
+44.3307   N   4.73318   E   France   PL_PWR   Tricastin 3, 955 MWe, Oper. since 1981
+44.3312   N   4.73318   E   France   PL_PWR   Tricastin 4, 955 MWe, Oper. since 1981
+53.85   N   9.34455   E   Germany   PL_PWR   Brokdorf, 1480 MWe, Oper. since 1986
+52.4706   N   7.32177   E   Germany   PL_PWR   Emsland, 1406 MWe, Oper. since 1988
+52.0332   N   9.41151   E   Germany   PL_PWR   Grohnde, 1430 MWe, Oper. since 1985
+48.5153   N   10.4037   E   Germany   PL_BWR   Gundremmingen B, 1344 MWe, Oper. since 1984
+48.5153   N   10.4042   E   Germany   PL_BWR   Gundremmingen C, 1344 MWe, Oper. since 1985
+48.6069   N   12.2958   E   Germany   PL_PWR   Isar 2, 1485 MWe, Oper. since 1988
+49.0394   N   9.17616   E   Germany   PL_PWR   Neckarwestheim 2, 1400 MWe, Oper. since 1989
+49.2526   N   8.43335   E   Germany   PL_PWR   Philippsburg 2, 1468 MWe, Oper. since 1985
+46.574   N   18.8552   E   Hungary   PL_PWR   Paks 1, 500 MWe, Oper. since 1983
+46.574   N   18.8562   E   Hungary   PL_PWR   Paks 2, 500 MWe, Oper. since 1984
+46.574   N   18.8572   E   Hungary   PL_PWR   Paks 3, 500 MWe, Oper. since 1986
+46.574   N   18.8582   E   Hungary   PL_PWR   Paks 4, 500 MWe, Oper. since 1987
+14.8652   N   74.4381   E   India   PL_PHWR   Kaiga 1, 220 MWe, Oper. since 2000
+14.8652   N   74.4384   E   India   PL_PHWR   Kaiga 2, 220 MWe, Oper. since 2000
+14.8653   N   74.4418   E   India   PL_PHWR   Kaiga 3, 220 MWe, Oper. since 2007
+14.8653   N   74.4422   E   India   PL_PHWR   Kaiga 4, 220 MWe, Oper. since 2011
+21.2355   N   73.3507   E   India   PL_PHWR   Kakrapar 1, 220 MWe, Oper. since 1993
+21.2352   N   73.3507   E   India   PL_PHWR   Kakrapar 2, 220 MWe, Oper. since 1995
+8.16705   N   77.7126   E   India   PL_PWR   Kudankulam 1, 1000 MWe, Oper. since 2014
+8.16666   N   77.7127   E   India   PL_PWR   Kudankulam 2, 1000 MWe, Oper. since 2017
+12.5571   N   80.177   E   India   PL_PHWR   Madras 1, 220 MWe, Oper. since 1984
+12.5571   N   80.177   E   India   PL_PHWR   Madras 2, 220 MWe, Oper. since 1986
+28.1559   N   78.4092   E   India   PL_PHWR   Narora 1, 220 MWe, Oper. since 1991
+28.1554   N   78.4092   E   India   PL_PHWR   Narora 2, 220 MWe, Oper. since 1992
+24.8762   N   75.6083   E   India   PL_PHWR   Rajasthan 1, 100 MWe, Oper. since 1973
+24.8762   N   75.6092   E   India   PL_PHWR   Rajasthan 2, 200 MWe, Oper. since 1981
+24.8723   N   75.619   E   India   PL_PHWR   Rajasthan 3, 220 MWe, Oper. since 2000
+24.8718   N   75.619   E   India   PL_PHWR   Rajasthan 4, 220 MWe, Oper. since 2000
+24.8722   N   75.625   E   India   PL_PHWR   Rajasthan 5, 220 MWe, Oper. since 2010
+24.8722   N   75.6254   E   India   PL_PHWR   Rajasthan 6, 220 MWe, Oper. since 2010
+19.8343   N   72.6567   E   India   PL_BWR   Tarapur 1, 160 MWe, Oper. since 1969
+19.8343   N   72.6569   E   India   PL_BWR   Tarapur 2, 160 MWe, Oper. since 1969
+19.8297   N   72.6632   E   India   PL_PHWR   Tarapur 3, 540 MWe, Oper. since 2006
+19.8297   N   72.6636   E   India   PL_PHWR   Tarapur 4, 540 MWe, Oper. since 2005
+28.8305   N   50.8872   E   Iran   PL_PWR   Bushehr 1, 1000 MWe, Oper. since 2013
+37.3153   N   141.024   E   Japan   PL_BWR   Fukushima Daini 1, 1100 MWe, Oper. since 1982
+37.3153   N   141.025   E   Japan   PL_BWR   Fukushima Daini 2, 1100 MWe, Oper. since 1984
+37.3153   N   141.026   E   Japan   PL_BWR   Fukushima Daini 3, 1100 MWe, Oper. since 1985
+37.3153   N   141.027   E   Japan   PL_BWR   Fukushima Daini 4, 1100 MWe, Oper. since 1987
+33.5174   N   129.837   E   Japan   PL_PWR   Genkai 2, 559 MWe, Oper. since 1981
+33.5169   N   129.837   E   Japan   PL_PWR   Genkai 3, 1180 MWe, Oper. since 1994
+33.5164   N   129.837   E   Japan   PL_PWR   Genkai 4, 1180 MWe, Oper. since 1997
+34.6203   N   138.141   E   Japan   PL_BWR   Hamaoka 3, 1100 MWe, Oper. since 1987
+34.6198   N   138.141   E   Japan   PL_BWR   Hamaoka 4, 1137 MWe, Oper. since 1993
+34.6193   N   138.141   E   Japan   PL_BWR   Hamaoka 5, 1380 MWe, Oper. since 2005
+41.1881   N   141.393   E   Japan   PL_BWR   Higashi Dori 1 (Tohoku), 1100 MWe, Oper. since 2005
+33.491   N   132.31   E   Japan   PL_PWR   Ikata 2, 566 MWe, Oper. since 1982
+33.4908   N   132.312   E   Japan   PL_PWR   Ikata 3, 890 MWe, Oper. since 1994
+37.434   N   138.598   E   Japan   PL_BWR   Kashiwazaki Kariwa 1, 1100 MWe, Oper. since 1985
+37.4335   N   138.598   E   Japan   PL_BWR   Kashiwazaki Kariwa 2, 1100 MWe, Oper. since 1990
+37.433   N   138.598   E   Japan   PL_BWR   Kashiwazaki Kariwa 3, 1100 MWe, Oper. since 1993
+37.4325   N   138.598   E   Japan   PL_BWR   Kashiwazaki Kariwa 4, 1100 MWe, Oper. since 1994
+37.432   N   138.598   E   Japan   PL_BWR   Kashiwazaki Kariwa 5, 1100 MWe, Oper. since 1990
+37.4315   N   138.598   E   Japan   PL_BWR   Kashiwazaki Kariwa 6, 1356 MWe, Oper. since 1996
+37.431   N   138.598   E   Japan   PL_BWR   Kashiwazaki Kariwa 7, 1356 MWe, Oper. since 1997
+35.7034   N   135.961   E   Japan   PL_PWR   Mihama 3, 826 MWe, Oper. since 1976
+35.5437   N   135.652   E   Japan   PL_PWR   Ohi 1, 1175 MWe, Oper. since 1979
+35.5432   N   135.652   E   Japan   PL_PWR   Ohi 2, 1175 MWe, Oper. since 1979
+35.5422   N   135.652   E   Japan   PL_PWR   Ohi 3, 1180 MWe, Oper. since 1991
+35.5422   N   135.652   E   Japan   PL_PWR   Ohi 4, 1180 MWe, Oper. since 1993
+38.4   N   141.504   E   Japan   PL_BWR   Onagawa 1, 524 MWe, Oper. since 1984
+38.4005   N   141.504   E   Japan   PL_BWR   Onagawa 2, 825 MWe, Oper. since 1995
+38.401   N   141.504   E   Japan   PL_BWR   Onagawa 3, 825 MWe, Oper. since 2002
+31.8339   N   130.193   E   Japan   PL_PWR   Sendai 1, 890 MWe, Oper. since 1984
+31.8339   N   130.193   E   Japan   PL_PWR   Sendai 2, 890 MWe, Oper. since 1985
+37.0611   N   136.728   E   Japan   PL_BWR   Shika 1, 540 MWe, Oper. since 1993
+37.0611   N   136.729   E   Japan   PL_BWR   Shika 2, 1206 MWe, Oper. since 2006
+35.5367   N   133.0   E   Japan   PL_BWR   Shimane 2, 820 MWe, Oper. since 1989
+35.5195   N   135.503   E   Japan   PL_PWR   Takahama 1, 826 MWe, Oper. since 1974
+35.52   N   135.503   E   Japan   PL_PWR   Takahama 2, 826 MWe, Oper. since 1975
+35.5205   N   135.503   E   Japan   PL_PWR   Takahama 3, 870 MWe, Oper. since 1985
+35.521   N   135.503   E   Japan   PL_PWR   Takahama 4, 870 MWe, Oper. since 1985
+36.4664   N   140.614   E   Japan   PL_BWR   Tokai 2, 1100 MWe, Oper. since 1978
+43.0375   N   140.515   E   Japan   PL_PWR   Tomari 1, 579 MWe, Oper. since 1989
+43.0375   N   140.516   E   Japan   PL_PWR   Tomari 2, 579 MWe, Oper. since 1991
+43.0344   N   140.517   E   Japan   PL_PWR   Tomari 3, 912 MWe, Oper. since 2009
+35.6725   N   136.08   E   Japan   PL_PWR   Tsuruga 2, 1160 MWe, Oper. since 1987
+19.7189   N   -96.4049   W   Mexico   PL_BWR   Laguna Verde 1, 805 MWe, Oper. since 1990
+19.7189   N   -96.4039   W   Mexico   PL_BWR   Laguna Verde 2, 810 MWe, Oper. since 1995
+51.4311   N   3.71867   E   Netherlands   PL_PWR   Borssele, 515 MWe, Oper. since 1973
+32.3919   N   71.463   E   Pakistan   PL_PWR   Chasnupp 1, 325 MWe, Oper. since 2000
+32.3919   N   71.464   E   Pakistan   PL_PWR   Chasnupp 2, 325 MWe, Oper. since 2011
+32.3919   N   71.465   E   Pakistan   PL_PWR   Chasnupp 3, 340 MWe, Oper. since 2016
+32.3919   N   71.466   E   Pakistan   PL_PWR   Chasnupp 4, 340 MWe, Oper. since 2017
+24.8451   N   66.7895   E   Pakistan   PL_PHWR   Kanupp 1, 100 MWe, Oper. since 1972
+44.3216   N   28.0605   E   Romania   PL_PHWR   Cernavoda 1, 706 MWe, Oper. since 1996
+44.3216   N   28.0615   E   Romania   PL_PHWR   Cernavoda 2, 705 MWe, Oper. since 2007
+52.0915   N   47.9519   E   Russia   PL_PWR   Balakovo 1, 1000 MWe, Oper. since 1986
+52.0921   N   47.9536   E   Russia   PL_PWR   Balakovo 2, 1000 MWe, Oper. since 1988
+52.0927   N   47.9558   E   Russia   PL_PWR   Balakovo 3, 1000 MWe, Oper. since 1989
+52.0932   N   47.9579   E   Russia   PL_PWR   Balakovo 4, 1000 MWe, Oper. since 1993
+56.8415   N   61.3188   E   Russia   PL_FBR   Beloyarsk 3, 600 MWe, Oper. since 1981
+56.8612   N   61.3208   E   Russia   PL_FBR   Beloyarsk 4, 885 MWe, Oper. since 2016
+68.0586   N   166.492   E   Russia   PL_LWGR   Bilibino 1, 12 MWe, Oper. since 1974
+68.0586   N   166.493   E   Russia   PL_LWGR   Bilibino 2, 12 MWe, Oper. since 1975
+68.0586   N   166.494   E   Russia   PL_LWGR   Bilibino 3, 12 MWe, Oper. since 1976
+68.0586   N   166.495   E   Russia   PL_LWGR   Bilibino 4, 12 MWe, Oper. since 1977
+57.9028   N   35.0571   E   Russia   PL_PWR   Kalinin 1, 1000 MWe, Oper. since 1985
+57.9039   N   35.0586   E   Russia   PL_PWR   Kalinin 2, 1000 MWe, Oper. since 1987
+57.9051   N   35.0606   E   Russia   PL_PWR   Kalinin 3, 1000 MWe, Oper. since 2005
+57.9062   N   35.062   E   Russia   PL_PWR   Kalinin 4, 1000 MWe, Oper. since 2012
+67.4667   N   32.4913   E   Russia   PL_PWR   Kola 1, 440 MWe, Oper. since 1973
+67.4667   N   32.4923   E   Russia   PL_PWR   Kola 2, 440 MWe, Oper. since 1975
+67.4667   N   32.4933   E   Russia   PL_PWR   Kola 3, 440 MWe, Oper. since 1982
+67.4667   N   32.4943   E   Russia   PL_PWR   Kola 4, 440 MWe, Oper. since 1984
+51.674   N   35.6067   E   Russia   PL_LWGR   Kursk 1, 1000 MWe, Oper. since 1977
+51.6735   N   35.6067   E   Russia   PL_LWGR   Kursk 2, 1000 MWe, Oper. since 1979
+51.673   N   35.6067   E   Russia   PL_LWGR   Kursk 3, 1000 MWe, Oper. since 1984
+51.6725   N   35.6067   E   Russia   PL_LWGR   Kursk 4, 1000 MWe, Oper. since 1986
+59.8403   N   29.0274   E   Russia   PL_LWGR   Leningrad 1, 1000 MWe, Oper. since 1974
+59.8403   N   29.0284   E   Russia   PL_LWGR   Leningrad 2, 1000 MWe, Oper. since 1976
+59.8403   N   29.0294   E   Russia   PL_LWGR   Leningrad 3, 1000 MWe, Oper. since 1980
+59.8403   N   29.0304   E   Russia   PL_LWGR   Leningrad 4, 1000 MWe, Oper. since 1981
+51.2732   N   39.1966   E   Russia   PL_PWR   Novovoronezh 2 1, 1180 MWe, Oper. since 2017
+51.2739   N   39.2064   E   Russia   PL_PWR   Novovoronezh 4, 417 MWe, Oper. since 1973
+52.3807   N   39.2112   E   Russia   PL_PWR   Novovoronezh 5, 1000 MWe, Oper. since 1981
+47.5988   N   42.373   E   Russia   PL_PWR   Rostov 1, 1000 MWe, Oper. since 2001
+47.6   N   42.3739   E   Russia   PL_PWR   Rostov 2, 1000 MWe, Oper. since 2010
+47.6013   N   42.375   E   Russia   PL_PWR   Rostov 3, 1000 MWe, Oper. since 2015
+54.1688   N   33.2448   E   Russia   PL_LWGR   Smolensk 1, 1000 MWe, Oper. since 1983
+54.1683   N   33.2448   E   Russia   PL_LWGR   Smolensk 2, 1000 MWe, Oper. since 1985
+54.1678   N   33.2448   E   Russia   PL_LWGR   Smolensk 3, 1000 MWe, Oper. since 1990
+48.4921   N   17.6869   E   Slovakia   PL_PWR   Bohunice 3, 505 MWe, Oper. since 1985
+48.4916   N   17.6869   E   Slovakia   PL_PWR   Bohunice 4, 505 MWe, Oper. since 1985
+48.2609   N   18.4547   E   Slovakia   PL_PWR   Mochovce 1, 470 MWe, Oper. since 1998
+48.2604   N   18.4547   E   Slovakia   PL_PWR   Mochovce 2, 470 MWe, Oper. since 2000
+45.9389   N   15.516   E   Slovenia   PL_PWR   Krsko, 727 MWe, Oper. since 1983
+-33.6773   S   18.4334   E   South Africa   PL_PWR   Koeberg 1, 970 MWe, Oper. since 1984
+-33.6773   S   18.4344   E   South Africa   PL_PWR   Koeberg 2, 970 MWe, Oper. since 1985
+35.4039   N   126.419   E   South Korea   PL_PWR   Hanbit 1, 1035 MWe, Oper. since 1986
+35.4034   N   126.419   E   South Korea   PL_PWR   Hanbit 2, 1026 MWe, Oper. since 1987
+35.4029   N   126.419   E   South Korea   PL_PWR   Hanbit 3, 1047 MWe, Oper. since 1995
+35.4024   N   126.419   E   South Korea   PL_PWR   Hanbit 4, 1022 MWe, Oper. since 1996
+35.4019   N   126.419   E   South Korea   PL_PWR   Hanbit 5, 1054 MWe, Oper. since 2002
+35.4014   N   126.419   E   South Korea   PL_PWR   Hanbit 6, 1051 MWe, Oper. since 2002
+37.0929   N   129.393   E   South Korea   PL_PWR   Hanul 1, 1009 MWe, Oper. since 1988
+37.0929   N   129.394   E   South Korea   PL_PWR   Hanul 2, 1013 MWe, Oper. since 1989
+37.0929   N   129.395   E   South Korea   PL_PWR   Hanul 3, 1050 MWe, Oper. since 1998
+37.0929   N   129.396   E   South Korea   PL_PWR   Hanul 4, 1053 MWe, Oper. since 1999
+37.0929   N   129.397   E   South Korea   PL_PWR   Hanul 5, 1052 MWe, Oper. since 2004
+37.0929   N   129.398   E   South Korea   PL_PWR   Hanul 6, 1050 MWe, Oper. since 2005
+35.3212   N   129.296   E   South Korea   PL_PWR   Kori 2, 681 MWe, Oper. since 1983
+35.3212   N   129.297   E   South Korea   PL_PWR   Kori 3, 1043 MWe, Oper. since 1985
+35.3212   N   129.298   E   South Korea   PL_PWR   Kori 4, 1044 MWe, Oper. since 1986
+35.3271   N   129.302   E   South Korea   PL_PWR   Shin Kori 1, 1047 MWe, Oper. since 2011
+35.3291   N   129.302   E   South Korea   PL_PWR   Shin Kori 2, 1046 MWe, Oper. since 2012
+35.3311   N   129.302   E   South Korea   PL_PWR   Shin Kori 3, 1455 MWe, Oper. since 2016
+35.7221   N   129.479   E   South Korea   PL_PWR   Shin Wolsong 1, 1045 MWe, Oper. since 2012
+35.7241   N   129.479   E   South Korea   PL_PWR   Shin Wolsong 2, 1045 MWe, Oper. since 2015
+35.7101   N   129.476   E   South Korea   PL_PHWR   Wolsong 1, 685 MWe, Oper. since 1983
+35.7101   N   129.477   E   South Korea   PL_PHWR   Wolsong 2, 671 MWe, Oper. since 1997
+35.7101   N   129.478   E   South Korea   PL_PHWR   Wolsong 3, 675 MWe, Oper. since 1998
+35.7101   N   129.479   E   South Korea   PL_PHWR   Wolsong 4, 675 MWe, Oper. since 1999
+39.8074   N   -5.69769   W   Spain   PL_PWR   Almaraz 1, 1049 MWe, Oper. since 1983
+39.8074   N   -5.69669   W   Spain   PL_PWR   Almaraz 2, 1044 MWe, Oper. since 1984
+41.2016   N   0.571359   E   Spain   PL_PWR   Asco 1, 1033 MWe, Oper. since 1984
+41.2016   N   0.572359   E   Spain   PL_PWR   Asco 2, 1035 MWe, Oper. since 1986
+39.2162   N   -1.05132   W   Spain   PL_BWR   Cofrentes, 1102 MWe, Oper. since 1985
+40.6993   N   -2.62211   W   Spain   PL_PWR   Trillo 1, 1066 MWe, Oper. since 1988
+40.9485   N   0.867494   E   Spain   PL_PWR   Vandellos 2, 1087 MWe, Oper. since 1988
+60.4047   N   18.1681   E   Sweden   PL_BWR   Forsmark 1, 1022 MWe, Oper. since 1980
+60.4047   N   18.1702   E   Sweden   PL_BWR   Forsmark 2, 1158 MWe, Oper. since 1981
+60.4068   N   18.1546   E   Sweden   PL_BWR   Forsmark 3, 1203 MWe, Oper. since 1985
+57.4161   N   16.671   E   Sweden   PL_BWR   Oskarshamn 3, 1450 MWe, Oper. since 1985
+57.259   N   12.1112   E   Sweden   PL_BWR   Ringhals 1, 910 MWe, Oper. since 1976
+57.259   N   12.1122   E   Sweden   PL_PWR   Ringhals 2, 963 MWe, Oper. since 1975
+57.259   N   12.1132   E   Sweden   PL_PWR   Ringhals 3, 1117 MWe, Oper. since 1981
+57.259   N   12.1142   E   Sweden   PL_PWR   Ringhals 4, 1171 MWe, Oper. since 1983
+47.552   N   8.22946   E   Switzerland   PL_PWR   Beznau 1, 380 MWe, Oper. since 1969
+47.552   N   8.23046   E   Switzerland   PL_PWR   Beznau 2, 380 MWe, Oper. since 1971
+47.3663   N   7.96898   E   Switzerland   PL_PWR   Goesgen, 1060 MWe, Oper. since 1979
+47.6012   N   8.18341   E   Switzerland   PL_BWR   Leibstadt, 1275 MWe, Oper. since 1984
+46.969   N   7.26622   E   Switzerland   PL_BWR   Muehleberg, 390 MWe, Oper. since 1972
+25.2924   N   121.567   E   Taiwan   PL_BWR   Chinshan 1, 636 MWe, Oper. since 1978
+25.2924   N   121.568   E   Taiwan   PL_BWR   Chinshan 2, 636 MWe, Oper. since 1979
+25.2025   N   121.662   E   Taiwan   PL_BWR   Kuosheng 1, 1020 MWe, Oper. since 1981
+25.203   N   121.662   E   Taiwan   PL_BWR   Kuosheng 2, 1020 MWe, Oper. since 1983
+21.9585   N   120.753   E   Taiwan   PL_PWR   Maanshan 1, 951 MWe, Oper. since 1984
+21.9585   N   120.754   E   Taiwan   PL_PWR   Maanshan 2, 951 MWe, Oper. since 1985
+50.3007   N   26.6493   E   Ukraine   PL_PWR   Khmelnitski 1, 1000 MWe, Oper. since 1988
+50.3012   N   26.6471   E   Ukraine   PL_PWR   Khmelnitski 2, 1000 MWe, Oper. since 2005
+51.3261   N   25.8996   E   Ukraine   PL_PWR   Rovno 1, 420 MWe, Oper. since 1981
+51.3261   N   25.9006   E   Ukraine   PL_PWR   Rovno 2, 415 MWe, Oper. since 1982
+51.3261   N   25.9016   E   Ukraine   PL_PWR   Rovno 3, 1000 MWe, Oper. since 1987
+51.3261   N   25.9026   E   Ukraine   PL_PWR   Rovno 4, 1000 MWe, Oper. since 2006
+47.8113   N   31.2199   E   Ukraine   PL_PWR   South Ukraine 1, 1000 MWe, Oper. since 1983
+47.8108   N   31.2199   E   Ukraine   PL_PWR   South Ukraine 2, 1000 MWe, Oper. since 1985
+47.8116   N   31.2238   E   Ukraine   PL_PWR   South Ukraine 3, 1000 MWe, Oper. since 1989
+47.5084   N   34.6265   E   Ukraine   PL_PWR   Zaporozhye 1, 1000 MWe, Oper. since 1985
+47.5079   N   34.6265   E   Ukraine   PL_PWR   Zaporozhye 2, 1000 MWe, Oper. since 1986
+47.5074   N   34.6265   E   Ukraine   PL_PWR   Zaporozhye 3, 1000 MWe, Oper. since 1987
+47.5069   N   34.6265   E   Ukraine   PL_PWR   Zaporozhye 4, 1000 MWe, Oper. since 1988
+47.5064   N   34.6265   E   Ukraine   PL_PWR   Zaporozhye 5, 1000 MWe, Oper. since 1989
+47.5059   N   34.6265   E   Ukraine   PL_PWR   Zaporozhye 6, 1000 MWe, Oper. since 1996
+50.9126   N   0.961755   E   United Kingdom   PL_GCR   Dungeness B 1, 615 MWe, Oper. since 1985
+50.9121   N   0.961755   E   United Kingdom   PL_GCR   Dungeness B 2, 615 MWe, Oper. since 1989
+54.6339   N   -1.17961   W   United Kingdom   PL_GCR   Hartlepool A 1, 655 MWe, Oper. since 1989
+54.6336   N   -1.17961   W   United Kingdom   PL_GCR   Hartlepool A 2, 655 MWe, Oper. since 1989
+54.0287   N   -2.91227   W   United Kingdom   PL_GCR   Heysham A 1, 625 MWe, Oper. since 1989
+54.0282   N   -2.91227   W   United Kingdom   PL_GCR   Heysham A 2, 625 MWe, Oper. since 1989
+54.0277   N   -2.91227   W   United Kingdom   PL_GCR   Heysham B 1, 680 MWe, Oper. since 1989
+54.0272   N   -2.91227   W   United Kingdom   PL_GCR   Heysham B 2, 680 MWe, Oper. since 1989
+51.2082   N   -3.1305   W   United Kingdom   PL_GCR   Hinkley Point B 1, 655 MWe, Oper. since 1978
+51.2077   N   -3.1305   W   United Kingdom   PL_GCR   Hinkley Point B 2, 655 MWe, Oper. since 1976
+55.721   N   -4.89341   W   United Kingdom   PL_GCR   Hunterston B 1, 644 MWe, Oper. since 1976
+55.7205   N   -4.89341   W   United Kingdom   PL_GCR   Hunterston B 2, 644 MWe, Oper. since 1977
+52.2149   N   1.62269   E   United Kingdom   PL_PWR   Sizewell B, 1250 MWe, Oper. since 1995
+55.9664   N   -2.39883   W   United Kingdom   PL_GCR   Torness 1, 682 MWe, Oper. since 1988
+55.9659   N   -2.39883   W   United Kingdom   PL_GCR   Torness 2, 682 MWe, Oper. since 1989
+35.3103   N   -93.2296   W   United States Of America   PL_PWR   Ano 1, 903 MWe, Oper. since 1974
+35.3103   N   -93.2286   W   United States Of America   PL_PWR   Ano 2, 1065 MWe, Oper. since 1980
+40.6238   N   -80.4319   W   United States Of America   PL_PWR   Beaver Valley 1, 959 MWe, Oper. since 1976
+40.6238   N   -80.4309   W   United States Of America   PL_PWR   Beaver Valley 2, 958 MWe, Oper. since 1987
+41.247   N   -88.2296   W   United States Of America   PL_PWR   Braidwood 1, 1270 MWe, Oper. since 1988
+41.247   N   -88.2288   W   United States Of America   PL_PWR   Braidwood 2, 1230 MWe, Oper. since 1988
+34.7038   N   -87.119   W   United States Of America   PL_BWR   Browns Ferry 1, 1155 MWe, Oper. since 1974
+34.7033   N   -87.119   W   United States Of America   PL_BWR   Browns Ferry 2, 1155 MWe, Oper. since 1975
+34.7028   N   -87.119   W   United States Of America   PL_BWR   Browns Ferry 3, 1155 MWe, Oper. since 1977
+33.9579   N   -78.0071   W   United States Of America   PL_BWR   Brunswick 1, 990 MWe, Oper. since 1977
+33.9574   N   -78.0071   W   United States Of America   PL_BWR   Brunswick 2, 960 MWe, Oper. since 1975
+42.0744   N   -89.2766   W   United States Of America   PL_PWR   Byron 1, 1242 MWe, Oper. since 1985
+42.0744   N   -89.2756   W   United States Of America   PL_PWR   Byron 2, 1210 MWe, Oper. since 1987
+38.763   N   -91.7814   W   United States Of America   PL_PWR   Callaway 1, 1275 MWe, Oper. since 1984
+38.4345   N   -76.4389   W   United States Of America   PL_PWR   Calvert Cliffs 1, 918 MWe, Oper. since 1975
+38.434   N   -76.4389   W   United States Of America   PL_PWR   Calvert Cliffs 2, 911 MWe, Oper. since 1977
+35.053   N   -81.071   W   United States Of America   PL_PWR   Catawba 1, 1188 MWe, Oper. since 1985
+35.053   N   -81.07   W   United States Of America   PL_PWR   Catawba 2, 1188 MWe, Oper. since 1986
+40.1717   N   -88.8335   W   United States Of America   PL_BWR   Clinton 1, 1098 MWe, Oper. since 1987
+46.4713   N   -119.333   W   United States Of America   PL_BWR   Columbia, 1190 MWe, Oper. since 1984
+32.3007   N   -97.7865   W   United States Of America   PL_PWR   Comanche Peak 1, 1259 MWe, Oper. since 1990
+32.3007   N   -97.7855   W   United States Of America   PL_PWR   Comanche Peak 2, 1250 MWe, Oper. since 1993
+41.9752   N   -86.5641   W   United States Of America   PL_PWR   Cook 1, 1100 MWe, Oper. since 1975
+41.9752   N   -86.5631   W   United States Of America   PL_PWR   Cook 2, 1151 MWe, Oper. since 1978
+40.3609   N   -95.6434   W   United States Of America   PL_BWR   Cooper, 801 MWe, Oper. since 1974
+41.5969   N   -83.0919   W   United States Of America   PL_PWR   Davis Besse 1, 925 MWe, Oper. since 1978
+35.2122   N   -120.854   W   United States Of America   PL_PWR   Diablo Canyon 1, 1197 MWe, Oper. since 1985
+35.2122   N   -120.853   W   United States Of America   PL_PWR   Diablo Canyon 2, 1197 MWe, Oper. since 1986
+41.3862   N   -88.268   W   United States Of America   PL_BWR   Dresden 2, 950 MWe, Oper. since 1970
+41.3851   N   -88.2684   W   United States Of America   PL_BWR   Dresden 3, 935 MWe, Oper. since 1971
+42.101   N   -91.776   W   United States Of America   PL_BWR   Duane Arnold 1, 624 MWe, Oper. since 1975
+31.2231   N   -85.1145   W   United States Of America   PL_PWR   Farley 1, 918 MWe, Oper. since 1977
+31.2231   N   -85.1135   W   United States Of America   PL_PWR   Farley 2, 928 MWe, Oper. since 1981
+41.9627   N   -83.2566   W   United States Of America   PL_BWR   Fermi 2, 1198 MWe, Oper. since 1988
+43.521   N   -76.4026   W   United States Of America   PL_BWR   Fitzpatrick, 849 MWe, Oper. since 1975
+43.2786   N   -77.3108   W   United States Of America   PL_PWR   Ginna, 608 MWe, Oper. since 1970
+32.0069   N   -91.0452   W   United States Of America   PL_BWR   Grand Gulf 1, 1500 MWe, Oper. since 1985
+35.6349   N   -78.9548   W   United States Of America   PL_PWR   Harris 1, 960 MWe, Oper. since 1987
+31.9347   N   -82.3461   W   United States Of America   PL_BWR   Hatch 1, 911 MWe, Oper. since 1975
+31.9343   N   -82.3461   W   United States Of America   PL_BWR   Hatch 2, 921 MWe, Oper. since 1979
+39.4668   N   -75.5354   W   United States Of America   PL_BWR   Hope Creek 1, 1240 MWe, Oper. since 1986
+41.2693   N   -73.9497   W   United States Of America   PL_PWR   Indian Point 2, 1067 MWe, Oper. since 1974
+41.2688   N   -73.9497   W   United States Of America   PL_PWR   Indian Point 3, 1085 MWe, Oper. since 1976
+41.2461   N   -88.6724   W   United States Of America   PL_BWR   Lasalle 1, 1207 MWe, Oper. since 1984
+41.2456   N   -88.6724   W   United States Of America   PL_BWR   Lasalle 2, 1207 MWe, Oper. since 1984
+40.2251   N   -75.5835   W   United States Of America   PL_BWR   Limerick 1, 1194 MWe, Oper. since 1986
+40.2246   N   -75.5835   W   United States Of America   PL_BWR   Limerick 2, 1194 MWe, Oper. since 1990
+35.4333   N   -80.9463   W   United States Of America   PL_PWR   Mcguire 1, 1215 MWe, Oper. since 1981
+35.4327   N   -80.9463   W   United States Of America   PL_PWR   Mcguire 2, 1215 MWe, Oper. since 1984
+41.3116   N   -72.166   W   United States Of America   PL_PWR   Millstone 2, 918 MWe, Oper. since 1975
+41.3111   N   -72.166   W   United States Of America   PL_PWR   Millstone 3, 1280 MWe, Oper. since 1986
+45.3337   N   -93.8504   W   United States Of America   PL_BWR   Monticello, 691 MWe, Oper. since 1971
+43.5216   N   -76.4124   W   United States Of America   PL_BWR   Nine Mile Point 1, 642 MWe, Oper. since 1969
+43.5205   N   -76.4126   W   United States Of America   PL_BWR   Nine Mile Point 2, 1320 MWe, Oper. since 1988
+38.0612   N   -77.7918   W   United States Of America   PL_PWR   North Anna 1, 990 MWe, Oper. since 1978
+38.0607   N   -77.7918   W   United States Of America   PL_PWR   North Anna 2, 1011 MWe, Oper. since 1980
+34.7964   N   -82.8944   W   United States Of America   PL_PWR   Oconee 1, 891 MWe, Oper. since 1973
+34.7959   N   -82.8944   W   United States Of America   PL_PWR   Oconee 2, 891 MWe, Oper. since 1974
+34.7954   N   -82.8944   W   United States Of America   PL_PWR   Oconee 3, 900 MWe, Oper. since 1974
+39.8146   N   -74.2077   W   United States Of America   PL_BWR   Oyster Creek, 652 MWe, Oper. since 1969
+42.3226   N   -86.3161   W   United States Of America   PL_PWR   Palisades, 850 MWe, Oper. since 1971
+33.3873   N   -112.863   W   United States Of America   PL_PWR   Palo Verde 1, 1414 MWe, Oper. since 1986
+33.3868   N   -112.863   W   United States Of America   PL_PWR   Palo Verde 2, 1414 MWe, Oper. since 1986
+33.3863   N   -112.863   W   United States Of America   PL_PWR   Palo Verde 3, 1414 MWe, Oper. since 1988
+39.7589   N   -76.2702   W   United States Of America   PL_BWR   Peach Bottom 2, 1412 MWe, Oper. since 1974
+39.7584   N   -76.2702   W   United States Of America   PL_BWR   Peach Bottom 3, 1412 MWe, Oper. since 1974
+41.8006   N   -81.1465   W   United States Of America   PL_BWR   Perry 1, 1303 MWe, Oper. since 1987
+41.9449   N   -70.5776   W   United States Of America   PL_BWR   Pilgrim 1, 711 MWe, Oper. since 1972
+44.2816   N   -87.5343   W   United States Of America   PL_PWR   Point Beach 1, 640 MWe, Oper. since 1970
+44.2811   N   -87.5343   W   United States Of America   PL_PWR   Point Beach 2, 640 MWe, Oper. since 1972
+44.6223   N   -92.6314   W   United States Of America   PL_PWR   Prairie Island 1, 566 MWe, Oper. since 1973
+44.6218   N   -92.6314   W   United States Of America   PL_PWR   Prairie Island 2, 560 MWe, Oper. since 1974
+41.7268   N   -90.3078   W   United States Of America   PL_BWR   Quad Cities 1, 940 MWe, Oper. since 1973
+41.7263   N   -90.3078   W   United States Of America   PL_BWR   Quad Cities 2, 940 MWe, Oper. since 1973
+30.7273   N   -91.3716   W   United States Of America   PL_BWR   River Bend 1, 1016 MWe, Oper. since 1986
+34.4024   N   -80.1584   W   United States Of America   PL_PWR   Robinson 2, 780 MWe, Oper. since 1971
+39.463   N   -75.5342   W   United States Of America   PL_PWR   Salem 1, 1254 MWe, Oper. since 1977
+39.4625   N   -75.5342   W   United States Of America   PL_PWR   Salem 2, 1200 MWe, Oper. since 1981
+42.8974   N   -70.8493   W   United States Of America   PL_PWR   Seabrook 1, 1296 MWe, Oper. since 1990
+35.2277   N   -85.0936   W   United States Of America   PL_PWR   Sequoyah 1, 1221 MWe, Oper. since 1981
+35.2272   N   -85.0936   W   United States Of America   PL_PWR   Sequoyah 2, 1200 MWe, Oper. since 1982
+28.7967   N   -96.0444   W   United States Of America   PL_PWR   South Texas 1, 1354 MWe, Oper. since 1988
+28.7962   N   -96.0444   W   United States Of America   PL_PWR   South Texas 2, 1354 MWe, Oper. since 1989
+27.3484   N   -80.2439   W   United States Of America   PL_PWR   St. Lucie 1, 1045 MWe, Oper. since 1976
+27.3484   N   -80.2438   W   United States Of America   PL_PWR   St. Lucie 2, 1050 MWe, Oper. since 1983
+34.2985   N   -81.3138   W   United States Of America   PL_PWR   Summer 1, 1006 MWe, Oper. since 1984
+37.1664   N   -76.7003   W   United States Of America   PL_PWR   Surry 1, 890 MWe, Oper. since 1972
+37.1659   N   -76.7003   W   United States Of America   PL_PWR   Surry 2, 890 MWe, Oper. since 1973
+41.0929   N   -76.1428   W   United States Of America   PL_BWR   Susquehanna 1, 1330 MWe, Oper. since 1983
+41.0924   N   -76.1428   W   United States Of America   PL_BWR   Susquehanna 2, 1330 MWe, Oper. since 1985
+40.1539   N   -76.727   W   United States Of America   PL_PWR   Three Mile Island 1, 880 MWe, Oper. since 1974
+25.4346   N   -80.3301   W   United States Of America   PL_PWR   Turkey Point 3, 829 MWe, Oper. since 1972
+25.4346   N   -80.3291   W   United States Of America   PL_PWR   Turkey Point 4, 829 MWe, Oper. since 1973
+33.1425   N   -81.7596   W   United States Of America   PL_PWR   Vogtle 1, 1229 MWe, Oper. since 1987
+33.142   N   -81.7596   W   United States Of America   PL_PWR   Vogtle 2, 1229 MWe, Oper. since 1989
+29.9944   N   -90.4708   W   United States Of America   PL_PWR   Waterford 3, 1250 MWe, Oper. since 1985
+35.601   N   -84.7893   W   United States Of America   PL_PWR   Watts Bar 1, 1210 MWe, Oper. since 1996
+35.6005   N   -84.7893   W   United States Of America   PL_PWR   Watts Bar 2, 1218 MWe, Oper. since 2016
+38.2392   N   -95.6905   W   United States Of America   PL_PWR   Wolf Creek, 1285 MWe, Oper. since 1985

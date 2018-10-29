@@ -1,18 +1,24 @@
 #include "CtrlViewWin32Functions.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiToolBox.h"
-#include <agx\agx.h>
+#include "ToolMasterHelperFunctions.h"
 
 #include <stdexcept>
 
 namespace CtrlView
 {
-    void DestroyBitmap(CBitmap **bitmap)
+    void DestroyBitmap(CBitmap **bitmap, bool deleteOldBitmap)
     {
-        if((*bitmap))
-            (*bitmap)->DeleteObject();
-        delete (*bitmap);
-        *bitmap = 0;
+        CBitmap *singlePointerBitmap = *bitmap;
+        if(singlePointerBitmap)
+        {
+            singlePointerBitmap->DeleteObject();
+            if(deleteOldBitmap)
+            {
+                delete singlePointerBitmap;
+            }
+            singlePointerBitmap = nullptr;
+        }
     }
 
     void MakeCombatibleBitmap(CWnd *theView, CBitmap **theMemoryBitmap, int cx, int cy)
@@ -100,10 +106,9 @@ namespace CtrlView
     {
         if(fToolMasterAvailable)
         {
-            RECT rc;
-            theView->GetClientRect(&rc);
-            XuWindowSize(rc.right - rc.left, rc.bottom - rc.top);
-            XuWindowSelect(theDC->GetSafeHdc());
+            CRect clientRect;
+            theView->GetClientRect(&clientRect);
+            SetToolMastersDC(theDC, clientRect);
         }
     }
 
@@ -127,7 +132,6 @@ namespace CtrlView
 
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect)
     {
-        XuWindowSize(theClientRect.Width(), theClientRect.Height());
-        XuWindowSelect(theDC->GetSafeHdc());
+        Toolmaster::SetToolMastersDC(theDC, theClientRect);
     }
 }

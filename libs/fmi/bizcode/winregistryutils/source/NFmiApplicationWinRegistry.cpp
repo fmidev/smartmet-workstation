@@ -12,6 +12,83 @@
 #include <unordered_map>
 
 // ************************************************
+// ****   NFmiGriddingPropertiesWinRegistry *******
+// ************************************************
+
+NFmiGriddingPropertiesWinRegistry::NFmiGriddingPropertiesWinRegistry()
+:mInitialized(false)
+,mBaseRegistryPath()
+,mSectionName("\\GriddingProperties")
+,mFunction()
+,mRangeLimitInKm()
+,mLocalFitMethod()
+,mLocalFitDelta()
+,mSmoothLevel()
+,mLocalFitFilterRadius()
+,mLocalFitFilterFactor()
+,mGriddingProperties()
+{}
+
+bool NFmiGriddingPropertiesWinRegistry::Init(const std::string &baseRegistryPath, bool isToolMasterAvailable)
+{
+    if(mInitialized)
+        std::runtime_error("NFmiGriddingPropertiesWinRegistry::Init: all ready initialized.");
+
+    mInitialized = true;
+    mBaseRegistryPath = baseRegistryPath;
+
+    mGriddingProperties.toolMasterAvailable(isToolMasterAvailable);
+
+    // HKEY_CURRENT_USER -keys
+    HKEY usedKey = HKEY_CURRENT_USER;
+
+    // Otetaan kaikki oletusarvot pelkill‰ oletusarvoilla ensin rakennetusta mGriddingProperties dataosasta
+    mFunction = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\Function", usedKey, mGriddingProperties.function());
+    mRangeLimitInKm = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\RangeLimitInKm", usedKey, mGriddingProperties.rangeLimitInKm());
+    mLocalFitMethod = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\LocalFitMethod", usedKey, mGriddingProperties.localFitMethod());
+    mLocalFitDelta = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\LocalFitDelta", usedKey, mGriddingProperties.localFitDelta());
+    mSmoothLevel = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\SmoothLevel", usedKey, mGriddingProperties.smoothLevel());
+    mLocalFitFilterRadius = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\LocalFitFilterRadius", usedKey, mGriddingProperties.localFitFilterRadius());
+    mLocalFitFilterFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\LocalFitFilterFactor", usedKey, mGriddingProperties.localFitFilterFactor());
+
+    // Nyt kun rekisteri arvot on haettu, pit‰‰ p‰ivitt‰‰ t‰m‰ POD tyyppinen kokoomadata niiden mukaan
+    UpdateGriddingPropertiesFromRegistry();
+
+    return true;
+}
+
+void NFmiGriddingPropertiesWinRegistry::Update(const NFmiGriddingProperties &griddingProperties)
+{
+    // Ensin muutokset asetetaan rekiteri muutujiin
+    *mFunction = griddingProperties.function();
+    *mRangeLimitInKm = griddingProperties.rangeLimitInKm();
+    *mLocalFitMethod = griddingProperties.localFitMethod();
+    *mLocalFitDelta = griddingProperties.localFitDelta();
+    *mSmoothLevel = griddingProperties.smoothLevel();
+    *mLocalFitFilterRadius = griddingProperties.localFitFilterRadius();
+    *mLocalFitFilterFactor = griddingProperties.localFitFilterFactor();
+    // Lopuksi luokan oma data-member p‰ivitet‰‰n vastaavasti
+    mGriddingProperties = griddingProperties;
+}
+
+const NFmiGriddingProperties& NFmiGriddingPropertiesWinRegistry::GetGriddingProperties() const
+{
+    return mGriddingProperties;
+}
+
+void NFmiGriddingPropertiesWinRegistry::UpdateGriddingPropertiesFromRegistry()
+{
+    mGriddingProperties.function(static_cast<FmiGriddingFunction>(static_cast<int>(*mFunction)));
+    mGriddingProperties.rangeLimitInKm(*mRangeLimitInKm);
+    mGriddingProperties.localFitMethod(*mLocalFitMethod);
+    mGriddingProperties.localFitDelta(*mLocalFitDelta);
+    mGriddingProperties.smoothLevel(*mSmoothLevel);
+    mGriddingProperties.localFitFilterRadius(*mLocalFitFilterRadius);
+    mGriddingProperties.localFitFilterFactor(*mLocalFitFilterFactor);
+}
+
+
+// ************************************************
 // ******   NFmiHelpDataEnableWinRegistry *********
 // ************************************************
 
@@ -573,8 +650,11 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mLocationFinderThreadTimeOutInMS()
 ,mShowHakeMessages()
 ,mShowKaHaMessages()
+,mMinimumTimeRangeForWarningsOnMapViewsInMinutes()
 ,mDrawObjectScaleFactor()
 ,itsMaximumFontSizeFactor(3.)
+,mEditingToolsGriddingProperties()
+,mVisualizationGriddingProperties()
 {
 }
 
@@ -627,6 +707,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mLocationFinderThreadTimeOutInMS = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\LocationFinderThreadTimeOutInMS", usedKey, 1500, "SmartMet::LocationFinderThreadTimeOutInMS");
     mShowHakeMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowHakeMessages", usedKey, true);
     mShowKaHaMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowKaHaMessages", usedKey, false);
+    mMinimumTimeRangeForWarningsOnMapViewsInMinutes = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\MinimumTimeRangeForWarningsOnMapViewsInMinutes", usedKey, 0);
     mDrawObjectScaleFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\DrawObjectScaleFactor", usedKey, 0.9, "MetEditor::DrawObjectScaleFactor");
     //mMaximumFontSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MaximumFontSizeFactor", usedKey, 2);
 
@@ -634,6 +715,15 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     usedKey = HKEY_LOCAL_MACHINE;
 
     return true;
+}
+
+void NFmiApplicationWinRegistry::InitGriddingProperties(bool isToolMasterAvailable)
+{
+    std::string sectionName = NFmiApplicationWinRegistry::MakeGeneralSectionName();
+    // EditingTools section in general
+    mEditingToolsGriddingProperties.Init(mBaseRegistryPath + "\\" + sectionName + "\\EditingTools", isToolMasterAvailable);
+    // This Visualization section is not yet in Windows registry
+    mVisualizationGriddingProperties.toolMasterAvailable(isToolMasterAvailable);
 }
 
 std::string NFmiApplicationWinRegistry::WindowRectStr(const std::string &keyString)
@@ -837,6 +927,16 @@ void NFmiApplicationWinRegistry::ShowKaHaMessages(bool newValue)
     *mShowKaHaMessages = newValue;
 }
 
+int NFmiApplicationWinRegistry::MinimumTimeRangeForWarningsOnMapViewsInMinutes()
+{
+    return *mMinimumTimeRangeForWarningsOnMapViewsInMinutes;
+}
+
+void NFmiApplicationWinRegistry::MinimumTimeRangeForWarningsOnMapViewsInMinutes(int newValue)
+{
+    *mMinimumTimeRangeForWarningsOnMapViewsInMinutes = newValue;
+}
+
 double NFmiApplicationWinRegistry::DrawObjectScaleFactor()
 {
     return *mDrawObjectScaleFactor;
@@ -857,3 +957,18 @@ void NFmiApplicationWinRegistry::MaximumFontSizeFactor(double newValue)
     itsMaximumFontSizeFactor = newValue;
 }
 
+const NFmiGriddingProperties& NFmiApplicationWinRegistry::GriddingProperties(bool getEditingRelatedProperties) const
+{
+    if(getEditingRelatedProperties)
+        return mEditingToolsGriddingProperties.GetGriddingProperties();
+    else
+        return mVisualizationGriddingProperties;
+}
+
+void NFmiApplicationWinRegistry::SetGriddingProperties(bool setEditingRelatedProperties, const NFmiGriddingProperties &griddingProperties)
+{
+    if(setEditingRelatedProperties)
+        mEditingToolsGriddingProperties.Update(griddingProperties);
+    else
+        mVisualizationGriddingProperties = griddingProperties;
+}

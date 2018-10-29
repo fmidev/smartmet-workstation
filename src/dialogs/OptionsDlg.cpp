@@ -29,7 +29,6 @@ static char THIS_FILE[] = __FILE__;
 COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(COptionsDlg::IDD, pParent)
 	, fUseViewMode(false)
-	, fDrawDataOnlyOnRightProjection(FALSE)
     , itsQ2ServerUrlStrU_(_T(""))
     , itsQ3ServerUrlStrU_(_T(""))
 	, fQ2ServerUsed(FALSE)
@@ -89,7 +88,6 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_UNDO_REDO_DEPTH, itsUndoRedoDepthStrU_);
     DDX_Check(pDX, IDC_CHECK_USE_AUTO_SAVE, fUseAutoSave);
     DDX_Check(pDX, IDC_CHECK_USE_VIEW_MODE, fUseViewMode);
-    DDX_Check(pDX, IDC_CHECK_DRAW_DATA_ONLY_ON_RIGHT_PROJECTION, fDrawDataOnlyOnRightProjection);
     DDX_Text(pDX, IDC_EDIT_ANIMATION_FRAME_LENGTH_IN_MILLISECONDS, itsAnimationFrameDelayInMSecStrU_);
     DDX_Text(pDX, IDC_EDIT_AUTO_SAVE_FREQUENSSI_IN_MINUTES, itsAutoSaveFrequensInMinutesStrU_);
     //}}AFX_DATA_MAP
@@ -171,7 +169,6 @@ BOOL COptionsDlg::OnInitDialog()
 	itsSatelDataUpdateFrequenceInMinutes = itsSmartMetDocumentInterface->SatelDataRefreshTimerInMinutes();
 	fUseAutoSave = metEditorOptionsData.UseAutoSave();
 	fUseViewMode = itsSmartMetDocumentInterface->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal;
-	fDrawDataOnlyOnRightProjection = itsSmartMetDocumentInterface->DrawDataOnlyOnRightProjection();
 
     auto &q2ServerInfo = itsSmartMetDocumentInterface->GetQ2ServerInfo();
     itsQ2ServerUrlStrU_ = CA2T(q2ServerInfo.Q2ServerURLStr().c_str());
@@ -283,7 +280,6 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(0)->SpacingOutFactor(fUseSpacingOut == TRUE ? 1 : 0); // nyt vain on/off säätö
     applicationWinRegistry.KeepMapAspectRatio(fAutoZoom == TRUE);
     itsSmartMetDocumentInterface->SmartMetEditingMode(fUseViewMode ? CtrlViewUtils::kFmiEditingModeViewOnly : CtrlViewUtils::kFmiEditingModeNormal, true);
-    itsSmartMetDocumentInterface->DrawDataOnlyOnRightProjection(fDrawDataOnlyOnRightProjection ? true : false);
 
     NFmiValueString cacheSizeStr = CT2A(itsViewCacheSizeStrU_);
 	float cacheSize = float(cacheSizeStr);
@@ -380,7 +376,6 @@ void COptionsDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SPACINGOUT, "IDC_CHECK_USE_SPACINGOUT");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_AUTO_ZOOM, "IDC_CHECK_USE_AUTO_ZOOM");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_VIEW_MODE, "IDC_CHECK_USE_VIEW_MODE");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_DATA_ONLY_ON_RIGHT_PROJECTION, "IDC_CHECK_DRAW_DATA_ONLY_ON_RIGHT_PROJECTION");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_CACHE_SIZE_STR, "IDC_STATIC_OPTIONS_CACHE_SIZE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_CACHE_SIZE_STR2, "IDC_STATIC_OPTIONS_CACHE_SIZE_STR2");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_UNDO_REDO_1, "IDC_STATIC_UNDO_REDO_1");

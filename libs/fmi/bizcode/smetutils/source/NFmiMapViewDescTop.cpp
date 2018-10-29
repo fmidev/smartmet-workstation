@@ -155,6 +155,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(void)
 ,itsGridPointCache()
 ,itsAnimationData()
 ,fLockToMainMapViewTime(true)
+,fLockToMainMapViewRow(false)
 ,fShowTrajectorsOnMap(true)
 ,fShowSoundingMarkersOnMap(true)
 ,fShowCrossSectionMarkersOnMap(true)
@@ -211,6 +212,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsGridPointCache()
 ,itsAnimationData()
 ,fLockToMainMapViewTime(true)
+,fLockToMainMapViewRow(false)
 ,fShowTrajectorsOnMap(true)
 ,fShowSoundingMarkersOnMap(true)
 ,fShowCrossSectionMarkersOnMap(true)
@@ -320,7 +322,8 @@ void NFmiMapViewDescTop::InitMapViewDescTopFromSettings(void)
     ShowTimeOnMapMode(itsShowTimeOnMapMode); // tämä asettaa myös fShowTimeString:in arvon oikeaan
 	itsDrawOverMapMode = ReadValueFromSettings<int>(itsSettingsBaseName, "DrawOverMapMode");
 	fLockToMainMapViewTime = ReadValueFromSettings<bool>(itsSettingsBaseName, "LockToMainMapViewTime");
-	fShowTrajectorsOnMap = ReadValueFromSettings<bool>(itsSettingsBaseName, "ShowTrajectorsOnMap");
+    fLockToMainMapViewRow = NFmiSettings::Optional<bool>(itsSettingsBaseName + "LockToMainMapViewRow", false);
+    fShowTrajectorsOnMap = ReadValueFromSettings<bool>(itsSettingsBaseName, "ShowTrajectorsOnMap");
 	fShowSoundingMarkersOnMap = ReadValueFromSettings<bool>(itsSettingsBaseName, "ShowSoundingMarkersOnMap");
 	fShowCrossSectionMarkersOnMap = ReadValueFromSettings<bool>(itsSettingsBaseName, "ShowCrossSectionMarkersOnMap");
 	fShowSelectedPointsOnMap = ReadValueFromSettings<bool>(itsSettingsBaseName, "ShowSelectedPointsOnMap");
@@ -351,7 +354,8 @@ void NFmiMapViewDescTop::StoreMapViewDescTopToSettings(void)
 
 	StoreValueToSettings<int>(itsSettingsBaseName, "ShowTimeOnMapMode", itsShowTimeOnMapMode);
 	StoreValueToSettings<int>(itsSettingsBaseName, "DrawOverMapMode", itsDrawOverMapMode);
-	StoreValueToSettings<bool>(itsSettingsBaseName, "LockToMainMapViewTime", fLockToMainMapViewTime);
+    StoreValueToSettings<bool>(itsSettingsBaseName, "LockToMainMapViewTime", fLockToMainMapViewTime);
+    StoreValueToSettings<bool>(itsSettingsBaseName, "LockToMainMapViewRow", fLockToMainMapViewRow);
 	StoreValueToSettings<bool>(itsSettingsBaseName, "ShowTrajectorsOnMap", fShowTrajectorsOnMap);
 	StoreValueToSettings<bool>(itsSettingsBaseName, "ShowSoundingMarkersOnMap", fShowSoundingMarkersOnMap);
 	StoreValueToSettings<bool>(itsSettingsBaseName, "ShowCrossSectionMarkersOnMap", fShowCrossSectionMarkersOnMap);
@@ -841,7 +845,8 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NF
 	itsActiveViewRow = theOther.itsActiveViewRow;
 
 	fDescTopOn = theOther.fDescTopOn;
-	fLockToMainMapViewTime = theOther.fLockToMainMapViewTime;
+    fLockToMainMapViewTime = theOther.fLockToMainMapViewTime;
+    fLockToMainMapViewRow = theOther.fLockToMainMapViewRow;
 	fShowTrajectorsOnMap = theOther.fShowTrajectorsOnMap;
 	fShowSoundingMarkersOnMap = theOther.fShowSoundingMarkersOnMap;
 	fShowCrossSectionMarkersOnMap = theOther.fShowCrossSectionMarkersOnMap;
@@ -907,8 +912,12 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
 
-	std::stringstream extraDataStream;
-	itsAnimationData.Write(extraDataStream);
+    // 'double' muotoisten lisädatojen lisäys
+    extraData.Add(static_cast<double>(fLockToMainMapViewRow)); // talletetaan 1. extra-datana parametri rivin lukitus
+
+    // string muotoisten lisädatojen lisäys
+    std::stringstream extraDataStream;
+    itsAnimationData.Write(extraDataStream);
 	extraData.Add(extraDataStream.str()); // talletetaan 1. extra-datana animaatioon liittyvä data yhtenä stringinä
 	std::string timeBagStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, *(TimeControlViewTimes().ValidTimeBag()));
 	extraData.Add(timeBagStr); // lisätään 2. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
@@ -964,7 +973,13 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	is >> extraData;
 	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
 	// eli jos uusia muutujia tai arvoja, käsittele tässä.
-	if(extraData.itsStringValues.size() >= 1)
+
+    // 'double' muotoisten lisädatojen poiminta
+    if(extraData.itsDoubleValues.size() >= 1)
+        fLockToMainMapViewRow = extraData.itsDoubleValues[0] != 0; // luetaan 1. extra-datana parametri rivin lukitus (HUOM! ei voi static_cast:ata bool:iksi, koska VC++ tekee ystävällisen varoituksen hitaudesta)
+
+    // string muotoisten lisädatojen poiminta
+    if(extraData.itsStringValues.size() >= 1)
 	{// luetaan 1. extra-datana animaatioon liittyvä data yhtenä stringinä
 		if(is.fail())
 			throw std::runtime_error("NFmiMapViewDescTop::Read failed");

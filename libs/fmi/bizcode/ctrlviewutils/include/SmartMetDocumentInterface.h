@@ -6,6 +6,7 @@
 #include "FmiEditorModifyToolMode.h"
 #include "FmiSmartMetEditingMode.h"
 #include "NFmiTimeEditMode.h"
+#include "ControlPointAcceleratorActions.h"
 
 #include "boost/shared_ptr.hpp"
 
@@ -269,8 +270,6 @@ public:
     virtual void TimeEditSmootherMaxValue(int newValue) = 0;
     virtual int TimeEditSmootherValue() = 0;
     virtual void TimeEditSmootherValue(int newValue) = 0;
-    virtual float CPGriddingFactor() = 0;
-    virtual void CPGriddingFactor(float newValue) = 0;
     virtual const NFmiPoint& TimeSerialViewSizeInPixels() const = 0;
     virtual void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust() = 0;
@@ -311,11 +310,9 @@ public:
     virtual NFmiAutoComplete& AutoComplete() = 0;
     virtual void InvalidateMapView(bool bErase = true) = 0;
     virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() = 0;
-#ifndef DISABLE_CPPRESTSDK
-    virtual HakeMessage::Main& WarningCenterSystem() = 0;
-#endif // DISABLE_CPPRESTSDK
     virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) = 0;
     virtual AddParams::ParamAddingSystem& ParamAddingSystem() = 0;
+    virtual void UpdateParamAddingSystem() = 0;
     virtual bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) = 0;
     virtual int DataToDBCheckMethod() = 0;
     virtual void DataToDBCheckMethod(int newValue) = 0;
@@ -323,8 +320,6 @@ public:
     virtual NFmiHelpEditorSystem& HelpEditorSystem() = 0;
     virtual int SatelDataRefreshTimerInMinutes() = 0;
     virtual void SatelDataRefreshTimerInMinutes(int newValue) = 0;
-    virtual bool DrawDataOnlyOnRightProjection() = 0;
-    virtual void DrawDataOnlyOnRightProjection(bool newState) = 0;
     virtual const NFmiPoint& StationDataGridSize() = 0;
     virtual void StationDataGridSize(const NFmiPoint &newValue) = 0;
     virtual bool DoAutoLoadDataAtStartUp() const = 0;
@@ -364,4 +359,11 @@ public:
     virtual void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
+    virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
+    virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+    virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
+
+#ifndef DISABLE_CPPRESTSDK
+    virtual HakeMessage::Main& WarningCenterSystem() = 0;
+#endif // DISABLE_CPPRESTSDK
 };

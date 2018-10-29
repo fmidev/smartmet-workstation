@@ -21,6 +21,7 @@ struct ParamAddingHeaderParInfo
     {
         kRowNumber = 0,
         kItemName,
+        kOrigOrLastTime,
         kItemId
     };
 

@@ -24,6 +24,9 @@
 #include "NFmiCPManagerSet.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewFunctions.h"
+#include "persist2.h"
+
+using namespace std::literals::string_literals;
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
@@ -60,10 +63,9 @@ CTimeEditValuesDlg::CTimeEditValuesDlg(SmartMetDocumentInterface *smartMetDocume
 	fUseMaskInTimeSerialViews = itsSmartMetDocumentInterface->IsMasksUsedInTimeSerialViews();
 	fUseZoomedAreaCP = itsSmartMetDocumentInterface->UseCPGridCrop();
 	itsSmootherValueStrU_ = _T("");
-    itsGriddingFactorStrU_ = _T("");
     itsCPManagerStrU_ = _T("");
 	fUseAnalyzeTool = FALSE;
-	fUseAnalyzeToolWithAllParams = FALSE;
+	fUseControlPointObservationsBlending = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -77,16 +79,14 @@ void CTimeEditValuesDlg::DoDataExchange(CDataExchange* pDX)
     //{{AFX_DATA_MAP(CTimeEditValuesDlg)
     DDX_Control(pDX, IDC_SLIDER_SMOOTHER_VALUE, itsSmootherSlider);
     DDX_Control(pDX, IDC_SLIDER_MODIFIERLENGTH, itsManualModifierLength);
-    DDX_Control(pDX, IDC_SLIDER_GRIDDING_FACTOR, itsGriddingFactorSlider);
     DDX_Check(pDX, IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, fUseMaskInTimeSerialViews);
     DDX_Check(pDX, IDC_CHECK_USE_ZOOMED_AREA_CP, fUseZoomedAreaCP);
 
     DDX_Text(pDX, IDC_STATIC_SMOOTHER_VALUE_STR, itsSmootherValueStrU_);
-    DDX_Text(pDX, IDC_STATIC_GRIDDING_FACTOR_STR, itsGriddingFactorStrU_);
     DDX_Text(pDX, IDC_STATIC_CP_MANAGER_NAME_STR, itsCPManagerStrU_);
 
     DDX_Check(pDX, IDC_CHECK_USE_ANALYZE_TOOL, fUseAnalyzeTool);
-    DDX_Check(pDX, IDC_CHECK_USE_ANALYZE_TOOL_WITH_ALL_PARAMS, fUseAnalyzeToolWithAllParams);
+    DDX_Check(pDX, IDC_CHECK_USE_CP_OBS_BLENDING, fUseControlPointObservationsBlending);
     //}}AFX_DATA_MAP
     DDX_Check(pDX, IDC_CHECK_TIME_SERIAL_AUTO_ADJUST, fDoAutoAdjust);
     DDX_Control(pDX, IDC_COMBO_ANALYZE_PRODUCER1, itsProducer1Selector);
@@ -111,7 +111,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR_ALL_CP_VALUES, OnButtonClearAllCpValues)
 	ON_BN_CLICKED(IDC_BUTTON_PRINT, OnButtonPrint)
 	ON_BN_CLICKED(IDC_CHECK_USE_ANALYZE_TOOL, OnCheckUseAnalyzeTool)
-	ON_BN_CLICKED(IDC_CHECK_USE_ANALYZE_TOOL_WITH_ALL_PARAMS, OnCheckUseAnalyzeToolWithAllParams)
+	ON_BN_CLICKED(IDC_CHECK_USE_CP_OBS_BLENDING, OnCheckUseCpObsBlending)
 	//}}AFX_MSG_MAP
 	ON_WM_MOUSEWHEEL()
 	ON_WM_CTLCOLOR()
@@ -127,6 +127,12 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
     ON_BN_CLICKED(IDC_CHECK_ALLOW_RIGHT_CLICK_SELECTION, &CTimeEditValuesDlg::OnBnClickedCheckAllowRightClickSelection)
     ON_COMMAND(ID_ACCELERATOR_TIME_VIEW_TOGGLE_HELP_DATA3, &CTimeEditValuesDlg::OnAcceleratorTimeViewToggleHelpData3)
     ON_COMMAND(ID_ACCELERATOR_TIME_VIEW_TOGGLE_HELP_DATA4, &CTimeEditValuesDlg::OnAcceleratorTimeViewToggleHelpData4)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_NEXT, &CTimeEditValuesDlg::OnAcceleratorCpSelectNext)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_PREVIOUS, &CTimeEditValuesDlg::OnAcceleratorCpSelectPrevious)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_LEFT, &CTimeEditValuesDlg::OnAcceleratorCpSelectLeft)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_RIGHT, &CTimeEditValuesDlg::OnAcceleratorCpSelectRight)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_UP, &CTimeEditValuesDlg::OnAcceleratorCpSelectUp)
+    ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_DOWN, &CTimeEditValuesDlg::OnAcceleratorCpSelectDown)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -161,9 +167,6 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
 	itsSmootherSlider.SetPos(itsSmartMetDocumentInterface->TimeEditSmootherValue());
 	UpdateSmootherString();
 
-	itsGriddingFactorSlider.SetRange(1, 10);
-	itsGriddingFactorSlider.SetPos(FmiRound(itsSmartMetDocumentInterface->CPGriddingFactor()*10));
-	UpdateGriddingFactorString();
 	UpdateCPManagerString();
 
 	InitDialogTexts();
@@ -178,7 +181,7 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
     fAllowRightClickSelection = itsSmartMetDocumentInterface->AllowRightClickDisplaySelection();
 	fUseAnalyzeTool = FALSE; // alussa analyysi työkalu ei ole käytössä
 	fUseBothProducerData = itsSmartMetDocumentInterface->AnalyzeToolData().UseBothProducers();
-	fUseAnalyzeToolWithAllParams = itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolWithAllParams();
+    fUseControlPointObservationsBlending = itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool();
     fUseMultiProcessCPCalc = itsSmartMetDocumentInterface->UseMultiProcessCpCalc();
 	UpdateControlsAfterAnalyzeMode();
 	UpdateControlsAfterMPCPMode();
@@ -204,31 +207,6 @@ void CTimeEditValuesDlg::UpdateCPManagerString(void)
     itsCPManagerStrU_ = _TEXT("");
 	if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode() && itsSmartMetDocumentInterface->CPManagerSet().UseOldSchoolStyle() == false)
         itsCPManagerStrU_ = CA2T(itsSmartMetDocumentInterface->CPManager()->Name().c_str());
-	UpdateData(FALSE);
-}
-
-void CTimeEditValuesDlg::UpdateGriddingFactorString(void)
-{
-	UpdateData(TRUE);
-	float griddingFactor = itsGriddingFactorSlider.GetPos() / 10.f;
-	NFmiValueString valuStr(griddingFactor, "%0.1f");
-    itsGriddingFactorStrU_ = CA2T(valuStr);
-    itsSmartMetDocumentInterface->CPGriddingFactor(griddingFactor);
-	NFmiPoint griddingReslutionInKM = CalcEditedDataGriddingResolutionInKM();
-	if(griddingReslutionInKM.X() == 0 || griddingReslutionInKM.Y() == 0)
-        itsGriddingFactorStrU_ += _TEXT(" => ? x ? km");
-	else
-	{
-        itsGriddingFactorStrU_ += _TEXT(" => ");
-        CString resStrU_;
-        resStrU_.Format(_TEXT("%0.1f"), griddingReslutionInKM.X() / griddingFactor);
-        itsGriddingFactorStrU_ += resStrU_;
-        itsGriddingFactorStrU_ += _TEXT(" x ");
-        resStrU_.Format(_TEXT("%0.1f"), griddingReslutionInKM.Y() / griddingFactor);
-        itsGriddingFactorStrU_ += resStrU_;
-        itsGriddingFactorStrU_ += _TEXT(" km");
-	}
-
 	UpdateData(FALSE);
 }
 
@@ -398,12 +376,10 @@ void CTimeEditValuesDlg::SeViewModeButtonsSetup(void)
 {
     bool enableEditingControls = itsSmartMetDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal;
     // Riippuen ollaanko ns. view-moodissa vai ei, disabloidaan/enabloidaan editoinnissa käytettyjä nappuloita
-    EnableDlgItem(IDC_CHECK_USE_ANALYZE_TOOL_WITH_ALL_PARAMS, enableEditingControls);
+    EnableDlgItem(IDC_CHECK_USE_CP_OBS_BLENDING, enableEditingControls);
     EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, enableEditingControls);
-    EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, enableEditingControls);
     EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, enableEditingControls);
     EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, enableEditingControls);
-    EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, enableEditingControls);
     EnableDlgItem(IDC_STATIC_SMOOTH_STR, enableEditingControls);
     EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, enableEditingControls);
     EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, enableEditingControls);
@@ -451,6 +427,8 @@ void CTimeEditValuesDlg::Update(void)
             EnableButtons();
             UpdateAnalyseActionControl();
             SeViewModeButtonsSetup();
+            if(itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().OverrideSelection())
+                UpdateControlsAfterAnalyzeMode();
         }
     }
 }
@@ -469,7 +447,6 @@ void CTimeEditValuesDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 	UpdateData(TRUE);
     itsTimeEditValuesView->ManualModifierLength(CalcRelativeSliderValue());
 	UpdateSmootherString();
-	UpdateGriddingFactorString();
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
@@ -542,54 +519,91 @@ void CTimeEditValuesDlg::OnButtonPrint()
 void CTimeEditValuesDlg::OnCheckUseAnalyzeTool() 
 {
 	UpdateData(TRUE);
-	if(itsSmartMetDocumentInterface)
-	{
-        itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolMode(fUseAnalyzeTool == TRUE);
-		UpdateControlsAfterAnalyzeMode();
-		RefreshApplicationViews("TimeSerialDlg: Toggle use analyze tool");
-	}
+    SetAnalyzeRelatedTools(true, "TimeSerialDlg: TimeSerialDlg: Toggle use analyze tool"s);
 }
 
-void CTimeEditValuesDlg::OnCheckUseAnalyzeToolWithAllParams() 
+void CTimeEditValuesDlg::OnCheckUseCpObsBlending()
 {
 	UpdateData(TRUE);
-	if(itsSmartMetDocumentInterface)
-	{
-        itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolWithAllParams(fUseAnalyzeToolWithAllParams == TRUE);
-	}
+    SetAnalyzeRelatedTools(false, "TimeSerialDlg: Toggle use observation blending tool"s);
+}
+
+// Tämän funktion tehtävänä on varmistaa että vain yksi (tai ei yhtään) analyysi-työkaluun liittyvistä 
+// työkaluista on kerrallaan päällä.
+// Jos analyzeToolHasJustBeenSet on true, tällöin varmistetaan että Obs-blenderin asetukset laitetaan sallittuun tilaan
+// ja jos se on false, varmistetaan että analyysi-työkalun asetukset menevät oikein.
+void CTimeEditValuesDlg::SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, const std::string &logMessage)
+{
+    if(itsSmartMetDocumentInterface)
+    {
+        if(analyzeToolHasJustBeenSet)
+        {
+            itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolMode(fUseAnalyzeTool == TRUE);
+            if(fUseAnalyzeTool)
+            {
+                // Analyysityökalu on juuri laitettu päälle, pitää varmistaa että Obs-blender ei ole päällä
+                fUseControlPointObservationsBlending = FALSE;
+                itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool(fUseControlPointObservationsBlending == TRUE);
+            }
+        }
+        else
+        {
+            itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool(fUseControlPointObservationsBlending == TRUE);
+            if(fUseControlPointObservationsBlending)
+            {
+                // Obs-blender on juuri laitettu päälle, pitää varmistaa että analyysi-työkalu ei ole päällä
+                fUseAnalyzeTool = FALSE;
+                itsSmartMetDocumentInterface->AnalyzeToolData().AnalyzeToolMode(fUseAnalyzeTool == TRUE);
+            }
+        }
+        UpdateData(FALSE); // Päivitä checkbox kontrollien tilat
+        UpdateControlsAfterAnalyzeMode();
+        RefreshApplicationViews(logMessage);
+    }
 }
 
 void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
 {
-	if(fUseAnalyzeTool) // jos analyysi-moodi on päällä, pitää moni kontrolli estää ja muutama mahdollistaa ja tuoda näkyviin
+    if(fUseControlPointObservationsBlending)
+    {
+        // Jos CP observation blend -moodi on päällä, pitää moni kontrolli estää ja muutama mahdollistaa ja tuoda näkyviin
+        UpdateCpObsBlendProducerList();
+        bool status = EnableDlgItem(IDC_CHECK_ANALYZE_WITH_BOTH_DATA, false, false);
+        status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER1, true, true);
+        status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, false, false);
+
+        status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, false);
+        status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
+        status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
+        status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
+        status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, false);
+        status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, false);
+    }
+    else if(fUseAnalyzeTool)
 	{
+        // jos analyysi-moodi on päällä, pitää moni kontrolli estää ja muutama mahdollistaa ja tuoda näkyviin
 		UpdateProducerLists();
-		bool status = EnableDlgItem(IDC_CHECK_USE_ANALYZE_TOOL_WITH_ALL_PARAMS, true, true);
-		status = EnableDlgItem(IDC_CHECK_ANALYZE_WITH_BOTH_DATA, true, true);
+        bool status = EnableDlgItem(IDC_CHECK_ANALYZE_WITH_BOTH_DATA, true, true);
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER1, true, true);
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, true, true);
 
 		status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, false);
-		status = EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, false);
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
 		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
-		status = EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, false);
 		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
 		status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, false);
 		status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, false);
 	}
-	else // ja toisin päin
+	else
 	{
-		bool status = EnableDlgItem(IDC_CHECK_USE_ANALYZE_TOOL_WITH_ALL_PARAMS, false, false);
-		status = EnableDlgItem(IDC_CHECK_ANALYZE_WITH_BOTH_DATA, false, false);
+        // Lopuksi kun kumpikaan erikois moodi ei ole päällä
+        bool status = EnableDlgItem(IDC_CHECK_ANALYZE_WITH_BOTH_DATA, false, false);
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER1, false, false);
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, false, false);
 
 		status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, true);
-		status = EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, true);
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, true);
 		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, true);
-		status = EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, true);
 		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, true);
 		status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, true);
 		status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, true);
@@ -601,14 +615,10 @@ void CTimeEditValuesDlg::UpdateControlsAfterMPCPMode(void)
 {
     if(fUseMultiProcessCPCalc)
     {
-		EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, false, true);
-		EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, false, true);
 		EnableDlgItem(IDC_CHECK_USE_ZOOMED_AREA_CP, false, true);
     }
     else
     {
-		EnableDlgItem(IDC_STATIC_GRIDDING_FACTOR_STR, true, true);
-		EnableDlgItem(IDC_SLIDER_GRIDDING_FACTOR, true, true);
 		EnableDlgItem(IDC_CHECK_USE_ZOOMED_AREA_CP, true, true);
     }
 }
@@ -674,7 +684,7 @@ void CTimeEditValuesDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SMOOTH_STR, "IDC_STATIC_SMOOTH_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_TOIMINTO, "IDC_BUTTON_TOIMINTO");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_ANALYZE_TOOL, "IDC_CHECK_USE_ANALYZE_TOOL");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_ANALYZE_TOOL_WITH_ALL_PARAMS, "IDC_CHECK_USE_ANALYZE_TOOL_WITH_ALL_PARAMS");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_CP_OBS_BLENDING, "CP obs blending");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, "IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_ZOOMED_AREA_CP, "Zoomed CP");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CLEAR_ALL_CP_VALUES, "IDC_BUTTON_CLEAR_ALL_CP_VALUES");
@@ -797,15 +807,23 @@ void CTimeEditValuesDlg::OnBnClickedCheckTimeSerialAutoAdjust()
 void CTimeEditValuesDlg::OnCbnSelchangeComboAnalyzeProducer1()
 {
 	UpdateData(TRUE);
-	NFmiAnalyzeToolData &analyzeToolData = itsSmartMetDocumentInterface->AnalyzeToolData();
-	OnComboSelectionChanged(itsProducer1Selector, boost::bind(&NFmiAnalyzeToolData::SelectProducer1ByName, &analyzeToolData, _1));
+	auto &analyzeToolData = itsSmartMetDocumentInterface->AnalyzeToolData();
+    if(analyzeToolData.ControlPointObservationBlendingData().UseBlendingTool())
+    {
+        auto &cpObsBlendingToolData = analyzeToolData.ControlPointObservationBlendingData();
+        OnComboSelectionChanged(itsProducer1Selector, [&cpObsBlendingToolData](const auto &producerName) { return cpObsBlendingToolData.SelectProducer(producerName); });
+    }
+    else
+    {
+        OnComboSelectionChanged(itsProducer1Selector, [&analyzeToolData](const auto &producerName) { return analyzeToolData.SelectProducer1ByName(producerName); });
+    }
 }
 
 void CTimeEditValuesDlg::OnCbnSelchangeComboAnalyzeProducer2()
 {
 	UpdateData(TRUE);
 	NFmiAnalyzeToolData &analyzeToolData = itsSmartMetDocumentInterface->AnalyzeToolData();
-	OnComboSelectionChanged(itsProducer2Selector, boost::bind(&NFmiAnalyzeToolData::SelectProducer2ByName, &analyzeToolData, _1));
+	OnComboSelectionChanged(itsProducer2Selector, [&analyzeToolData](const auto &producerName) { return analyzeToolData.SelectProducer2ByName(producerName); });
 }
 
 void CTimeEditValuesDlg::OnComboSelectionChanged(CComboBox &theProducerSelector, SetByName setByName)
@@ -862,12 +880,32 @@ void CTimeEditValuesDlg::UpdateProducerLists(void)
 	UpdateData(TRUE);
 	NFmiAnalyzeToolData &analyzeToolData = itsSmartMetDocumentInterface->AnalyzeToolData();
 	analyzeToolData.SeekProducers(*itsSmartMetDocumentInterface->InfoOrganizer());
-	UpdateProducerList(itsProducer1Selector, analyzeToolData.SelectedProducer1());
-	UpdateProducerList(itsProducer2Selector, analyzeToolData.SelectedProducer2());
+    const auto &producers = analyzeToolData.Producers();
+    auto isSelectionMadeYet = analyzeToolData.IsSelectionsMadeYet();
+	UpdateProducerList(itsProducer1Selector, analyzeToolData.SelectedProducer1(), producers, isSelectionMadeYet);
+	UpdateProducerList(itsProducer2Selector, analyzeToolData.SelectedProducer2(), producers, isSelectionMadeYet);
 	UpdateData(FALSE);
 }
 
-void CTimeEditValuesDlg::UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer)
+void CTimeEditValuesDlg::UpdateCpObsBlendProducerList(void)
+{
+    UpdateData(TRUE);
+    auto &cpObsBlendingData = itsSmartMetDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData();
+    cpObsBlendingData.SeekProducers(*itsSmartMetDocumentInterface->InfoOrganizer());
+    const auto &producers = cpObsBlendingData.Producers();
+    // Tietyissä tilanteissa pitää producer selectionia päivittää väkisin (kuten kun ollaan valittu toinen tuottaja CP-pisteiksi).
+    // Jos selectionMadeYet on false, tällöin tuottaja otetaan uudestaan cpObsBlendingData:sta.
+    bool selectionMadeYet = cpObsBlendingData.IsSelectionMadeYet();
+    if(cpObsBlendingData.OverrideSelection())
+    {
+        selectionMadeYet = false;
+        cpObsBlendingData.OverrideSelection(false);
+    }
+    UpdateProducerList(itsProducer1Selector, cpObsBlendingData.SelectedProducer(), producers, selectionMadeYet);
+    UpdateData(FALSE);
+}
+
+void CTimeEditValuesDlg::UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer, const checkedVector<NFmiProducer> &producerList, bool isSelectionMadeYet)
 {
 	int lastSelectedProducer = theProducerSelector.GetCurSel();
     CString lastProdNameU_;
@@ -876,15 +914,13 @@ void CTimeEditValuesDlg::UpdateProducerList(CComboBox &theProducerSelector, cons
 
 	// Täytetään sitten lista tuottajista, jotka todellakin löytyivät
 	theProducerSelector.ResetContent();
-	NFmiAnalyzeToolData &analyzeToolData = itsSmartMetDocumentInterface->AnalyzeToolData();
-	const checkedVector<NFmiProducer> &producerList = analyzeToolData.Producers();
 	for(size_t i=0; i < producerList.size(); i++)
 	{
 		theProducerSelector.AddString(CA2T(producerList[i].GetName()));
 	}
 
 	bool selectionMade = false;
-	if(analyzeToolData.IsSelectionsMadeYet() == false)
+	if(isSelectionMadeYet == false)
 	{ // yritetään löytää edellisen smartmet session viimeksi valittua
 		int index = theProducerSelector.FindString(-1, CA2T(theLastSessionProducer.GetName()));
 		if(index != CB_ERR)
@@ -926,18 +962,8 @@ BOOL CTimeEditValuesDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LR
 
 HBRUSH CTimeEditValuesDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	if(pWnd->GetDlgCtrlID() == IDC_STATIC_GRIDDING_FACTOR_STR)
-	{
-		if(itsSmartMetDocumentInterface->CPGriddingFactor() > 0 && itsSmartMetDocumentInterface->CPGriddingFactor() < 1)
-			pDC->SetTextColor(RGB(255, 0, 0)); // varoitetaan punaisella värillä, jos käytössä on hilauksen tarkkuutta harventava kerroin
-		else
-			pDC->SetTextColor(RGB(0, 0, 0));
-	}
-
+    return CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 	// TODO:  Return a different brush if the default is not desired
-	return hbr;
 }
 
 
@@ -959,3 +985,40 @@ void CTimeEditValuesDlg::OnBnClickedCheckAllowRightClickSelection()
     Invalidate(FALSE);
 }
 
+void CTimeEditValuesDlg::HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    if(itsSmartMetDocumentInterface->MakeControlPointAcceleratorAction(action, updateMessage))
+    {
+        Invalidate(FALSE);
+    }
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectNext()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Next, "TimeSerialDlg: Select next Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectPrevious()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Previous, "TimeSerialDlg: Select previous Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectLeft()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Left, "TimeSerialDlg: Select nearest left Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectRight()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Right, "TimeSerialDlg: Select nearest right Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectUp()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Up, "TimeSerialDlg: Select nearest upward Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorCpSelectDown()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Down, "TimeSerialDlg: Select nearest downward Control-point"s);
+}

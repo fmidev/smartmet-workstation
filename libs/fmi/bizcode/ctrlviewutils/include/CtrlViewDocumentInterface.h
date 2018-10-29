@@ -127,7 +127,6 @@ public:
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer(void) = 0;
     virtual bool IsToolMasterAvailable(void) = 0;
-    virtual bool DrawDataOnlyOnRightProjection(void) = 0;
     virtual NFmiDrawParamList* DrawParamList(int theDescTopIndex, int theIndex) = 0;
     virtual NFmiDrawParamList* TimeSerialViewDrawParamList(void) = 0;
     virtual const NFmiColor& HelpColor(void) const = 0;
@@ -207,7 +206,7 @@ public:
     virtual NFmiHelpEditorSystem& HelpEditorSystem(void) = 0;
     virtual NFmiMetEditorOptionsData& MetEditorOptionsData(void) = 0;
     virtual boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector) = 0;
+    virtual boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) = 0;
     virtual bool IsMasksUsedInTimeSerialViews(void) = 0;
     virtual NFmiAnalyzeToolData& AnalyzeToolData(void) = 0;
     virtual const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const = 0;
@@ -231,7 +230,6 @@ public:
     virtual const NFmiColor& StationPointColor(int theMapViewDescTopIndex) const = 0;
     virtual const NFmiPoint& StationPointSize(int theMapViewDescTopIndex) const = 0;
     virtual NFmiMacroParamSystem& MacroParamSystem(void) = 0;
-    virtual std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam) = 0;
     virtual CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void) = 0;
     virtual size_t SelectedGridPointLimit(void) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) = 0;
@@ -302,9 +300,6 @@ public:
     virtual bool ShowTrajectorsOnMap(int theDescTopIndex) = 0;
     virtual std::vector<NFmiProducer>& ExtraSoundingProducerList(void) = 0;
     virtual bool ShowWarningMarkersOnMap(int theDescTopIndex) = 0;
-#ifndef DISABLE_CPPRESTSDK
-    virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
-#endif // DISABLE_CPPRESTSDK
     virtual CDC* MapBlitDC(int theDescTopIndex) = 0;
     virtual void ToolTipColumnIndex(int newIndex) = 0;
     virtual bool HasActiveViewChanged(void) = 0;
@@ -371,9 +366,6 @@ public:
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
     virtual bool UseWmsMaps() = 0;
     virtual void UseWmsMaps(bool newValue) = 0;
-#ifndef DISABLE_CPPRESTSDK
-    virtual Wms::WmsSupport& WmsSupport() = 0;
-#endif // DISABLE_CPPRESTSDK
     virtual NFmiBetaProductionSystem& BetaProductionSystem() = 0;
     virtual void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
@@ -381,4 +373,10 @@ public:
     virtual Warnings::CapDataSystem& GetCapDataSystem() = 0;
     virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) = 0;
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) = 0;
+    virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+
+#ifndef DISABLE_CPPRESTSDK
+    virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
+    virtual Wms::WmsSupport& WmsSupport() = 0;
+#endif // DISABLE_CPPRESTSDK
 };

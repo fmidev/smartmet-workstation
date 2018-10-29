@@ -201,8 +201,6 @@ public:
     void TimeEditSmootherMaxValue(int newValue) override;
     int TimeEditSmootherValue() override;
     void TimeEditSmootherValue(int newValue) override;
-    float CPGriddingFactor() override;
-    void CPGriddingFactor(float newValue) override;
     const NFmiPoint& TimeSerialViewSizeInPixels() const override;
     void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) override;
     bool UseTimeSerialAxisAutoAdjust() override;
@@ -243,11 +241,9 @@ public:
     NFmiAutoComplete& AutoComplete() override;
     void InvalidateMapView(bool bErase = true) override;
     NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() override;
-#ifndef DISABLE_CPPRESTSDK
-    HakeMessage::Main& WarningCenterSystem() override;
-#endif // DISABLE_CPPRESTSDK
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) override;
     AddParams::ParamAddingSystem& ParamAddingSystem() override;
+    void UpdateParamAddingSystem() override;
     bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) override;
     int DataToDBCheckMethod() override;
     void DataToDBCheckMethod(int newValue) override;
@@ -255,8 +251,6 @@ public:
     NFmiHelpEditorSystem& HelpEditorSystem() override;
     int SatelDataRefreshTimerInMinutes() override;
     void SatelDataRefreshTimerInMinutes(int newValue) override;
-    bool DrawDataOnlyOnRightProjection() override;
-    void DrawDataOnlyOnRightProjection(bool newState) override;
     const NFmiPoint& StationDataGridSize() override;
     void StationDataGridSize(const NFmiPoint &newValue) override;
     bool DoAutoLoadDataAtStartUp() const override;
@@ -296,4 +290,11 @@ public:
     void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
+    void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
+    int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
+    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
+
+#ifndef DISABLE_CPPRESTSDK
+    HakeMessage::Main& WarningCenterSystem() override;
+#endif // DISABLE_CPPRESTSDK
 };

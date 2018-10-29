@@ -14,6 +14,7 @@
 #include "FmiSmartMetEditingMode.h"
 #include "FmiEditorModifyToolMode.h"
 #include "catlog/catlog.h"
+#include "ControlPointAcceleratorActions.h"
 
 #include <list>
 #include "boost/shared_ptr.hpp"
@@ -50,7 +51,6 @@ class NFmiMetEditorOptionsData;
 class NFmiMetEditorBaseMacro;
 class NFmiEditorControlPointManager;
 class NFmiProjectionCurvatureInfo;
-struct NFmiCPGriddingProperties;
 class NFmiSmartToolInfo;
 class NFmiPoint;
 class NFmiRect;
@@ -145,6 +145,10 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void InitGriddingProperties();
+    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
+    int GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+    void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex);
     Warnings::CapDataSystem& GetCapDataSystem();
     Q2ServerInfo& GetQ2ServerInfo();
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex);
@@ -153,8 +157,8 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData();
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex);
     bool LoadStaticHelpData(void);
-    void UpdateParamAddingSystem();
     AddParams::ParamAddingSystem& ParamAddingSystem();
+    void UpdateParamAddingSystem();
 #ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport& WmsSupport();
 #endif // DISABLE_CPPRESTSDK
@@ -206,7 +210,7 @@ public:
     bool AllowRightClickDisplaySelection(void);
     void AllowRightClickDisplaySelection(bool newValue);
     NFmiMultiProcessPoolOptions& MultiProcessPoolOptions(void);
-    void MakeSureToolMasterPoolIsRunning(void);
+    bool MakeSureToolMasterPoolIsRunning(void);
     bool UseMultiProcessCpCalc(void);
     void UseMultiProcessCpCalc(bool newValue);
     const std::string& GetSmartMetGuid(void);
@@ -229,8 +233,6 @@ public:
 	bool UseCPGridCrop(void);
 	void UseCPGridCrop(bool newValue);
 	bool IsCPGridCropInAction(void);
-	float CPGriddingFactor(void);
-	void CPGriddingFactor(float newValue);
 	bool DrawSelectionOnThisView(void);
 	void DrawSelectionOnThisView(bool newValue);
 	size_t SelectedGridPointLimit(void);
@@ -390,7 +392,7 @@ public:
 	void OnToggleGridPointSize(unsigned int theDescTopIndex);
 	void OnEditSpaceOut(unsigned int theDescTopIndex);
     bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams);
-	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector);
+	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing);
 	const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const;
 	void OutOfEditedAreaTimeSerialPoint(const NFmiPoint &newValue);
 	void ResetOutOfEditedAreaTimeSerialPoint(void);
@@ -465,8 +467,6 @@ public:
 	void SetHighlightedSynopStation(const NFmiPoint &theLatlon, int theWmoId, bool fShowHighlight);
 	bool SynopDataGridViewOn(void);
 	void SynopDataGridViewOn(bool newState);
-	bool DrawDataOnlyOnRightProjection(void);
-	void DrawDataOnlyOnRightProjection(bool newState);
 	bool TimeSerialDataViewOn(void);
 	void TimeSerialDataViewOn(bool newValue);
 	NFmiMTATempSystem& GetMTATempSystem(void);
@@ -489,7 +489,6 @@ public:
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
 	void AddMacroParamToCrossSectionView(int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
 	NFmiMacroParamSystem& MacroParamSystem(void);
-    std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
 	// Nämä makro tekstin get ja set metodit on makroparam-näyttöä varten tehtyjä virityksiä
 	void SetCurrentSmartToolMacro(const std::string& theMacroText);
 	const std::string& GetCurrentSmartToolMacro(void);
@@ -518,9 +517,6 @@ public:
 
 	bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly);
 	std::string& SmartToolEditingErrorText(void);
-	bool StoreCPGriddingProperties(void);
-	const NFmiCPGriddingProperties& CPGriddingProperties(void);
-	void CPGriddingProperties(const NFmiCPGriddingProperties& newProperties);
 	bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId);
 	const std::string& EditorVersionStr(void);
 	bool IsOperationalModeOn(void);

@@ -37,6 +37,7 @@
 #include "NFmiRectangle.h"
 #include "NFmiText.h"
 #include "CtrlViewFastInfoFunctions.h"
+#include "EditedInfoMaskHandler.h"
 
 #include <boost\math\special_functions\round.hpp>
 
@@ -171,7 +172,9 @@ void NFmiTimeSerialDiscreteDataView::GetLowAndHighLimits(boost::shared_ptr<NFmiD
 	FmiParameterName parName = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
 	if(parName == kFmiPrecipitationForm)
 		theHigherLimit = 8;
-	else if(parName == kFmiFogIntensity)
+    else if(parName == kFmiPotentialPrecipitationForm)
+        theHigherLimit = 8;
+    else if(parName == kFmiFogIntensity)
 		theHigherLimit = 3;
 	else if(parName == kFmiPrecipitationType)
 		theHigherLimit = 3;
@@ -311,22 +314,19 @@ void NFmiTimeSerialDiscreteDataView::DrawModifyFactorPointGrids (void)
 //--------------------------------------------------------
 void NFmiTimeSerialDiscreteDataView::DrawSelectedStationData (void)
 {
-    unsigned long oldMask = itsInfo->MaskType();
-    if(CtrlViewFastInfoFunctions::GetMaskedCount(itsInfo, NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()))
+    auto maskType = CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(itsInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, maskType);
+    if(maskType == NFmiMetEditorTypes::kFmiDisplayedMask)
     {
-        itsInfo->MaskType(NFmiMetEditorTypes::kFmiDisplayedMask);
         for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
             DrawLocationInTime(itsInfo->LatLon(), itsNormalCurveEnvi, itsChangeCurveEnvi);
     }
     else
     {
-        itsInfo->MaskType(NFmiMetEditorTypes::kFmiSelectionMask);
         itsInfo->ResetLocation();
         if(itsInfo->NextLocation())
             DrawLocationInTime(itsInfo->LatLon(), itsNormalCurveEnvi, itsChangeCurveEnvi);
     }
-
-	itsInfo->MaskType(oldMask);
 }
 
 //--------------------------------------------------------

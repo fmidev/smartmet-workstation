@@ -289,6 +289,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "View log",                    ID_VIEW_EDITOR_LOG
+        MENUITEM "Log Viewer\tCtrl+L",          ID_ACCELERATOR_LOG_VIEWER
         MENUITEM SEPARATOR
         MENUITEM "Map view 2",                  ID_EXTRA_MAP_VIEW_1
         MENUITEM "Map view 3",                  ID_EXTRA_MAP_VIEW_2
@@ -298,9 +299,9 @@ BEGIN
         MENUITEM "Zooming tool",                ID_BUTTON_ZOOM_DIALOG
         MENUITEM "Param selection tool\tF8",    ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
         MENUITEM "SmartTool dialog",            ID_BUTTON_OPEN_SMART_TOOL_DLG
-        MENUITEM "View macro tool",             ID_ACCELERATOR_STORE_VIEW_MACRO
+        MENUITEM "View macro tool\tCTRL+I",     ID_ACCELERATOR_STORE_VIEW_MACRO
         MENUITEM "Sounding view",               ID_BUTTON_TEMP_DLG
-        MENUITEM "Animation tool",              ID_BUTTON_ANIMATION
+        MENUITEM "Animation tool\tZ",           ID_BUTTON_ANIMATION
         MENUITEM "Cross section view",          ID_BUTTON_SHOW_CROSS_SECTION
         MENUITEM "Synop plot settings...\tF3",  ID_BUTTON_SHOW_SYNOP_PLOT_SETTINGS
         MENUITEM "Station data grid view",      ID_BUTTON_SYNOP_DATA_GRID_VIEW
@@ -312,7 +313,6 @@ BEGIN
         MENUITEM "Ignore stations\tCtrl+F3",    ID_ACCELERATOR_IGNORE_STATIONS_DLG
         MENUITEM "Case study dialog\tCTRL+F8",  ID_VIEW_CASE_STUDY_DIALOG
         MENUITEM "Beta Production\tSHIFT+F8",   ID_VIEW_BETAPRODUCTION
-        MENUITEM "Log Viewer\tCtrl+L",          ID_ACCELERATOR_LOG_VIEWER
         MENUITEM SEPARATOR
         POPUP "Move views visible"
         BEGIN
@@ -366,6 +366,7 @@ BEGIN
         MENUITEM "&About SmartMet",             ID_APP_ABOUT
         MENUITEM "Shortcuts",                   ID_HELP_SHORT_CUTS
         MENUITEM "Error test (crashes SmartMet!)", ID_OHJE_VIRHETESTI
+        MENUITEM "Exception test (only logs error)", ID_HELP_EXCEPTIONTEST
     END
 END
 
@@ -461,7 +462,7 @@ BEGIN
     "8",            ID_ACCELERATOR_BORROW_PARAMS_8, VIRTKEY, CONTROL, NOINVERT
     "9",            ID_ACCELERATOR_MAP_ROW_9, VIRTKEY, NOINVERT
     "9",            ID_ACCELERATOR_BORROW_PARAMS_9, VIRTKEY, CONTROL, NOINVERT
-    "A",            ID_ACCELERATOR_TOGGLE_ANIMATION_VIEW, VIRTKEY, NOINVERT
+    "Z",            ID_ACCELERATOR_TOGGLE_ANIMATION_VIEW, VIRTKEY, NOINVERT
     "A",            ID_SELECT_ALL,          VIRTKEY, CONTROL, NOINVERT
     "A",            ID_DESELECT_ALL,        VIRTKEY, SHIFT, CONTROL, NOINVERT
     "B",            ID_TOGGLE_SHOW_NAMES_ON_MAP, VIRTKEY, CONTROL, NOINVERT
@@ -556,6 +557,12 @@ BEGIN
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_REDO,           VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_TAB,         ID_ACCELERATOR_CP_SELECT_NEXT, VIRTKEY, NOINVERT
+    VK_TAB,         ID_ACCELERATOR_CP_SELECT_PREVIOUS, VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_ACCELERATOR_CP_SELECT_LEFT, VIRTKEY, NOINVERT
+    "D",            ID_ACCELERATOR_CP_SELECT_RIGHT, VIRTKEY, NOINVERT
+    "W",            ID_ACCELERATOR_CP_SELECT_UP, VIRTKEY, NOINVERT
+    "S",            ID_ACCELERATOR_CP_SELECT_DOWN, VIRTKEY, NOINVERT
 END
 
 
@@ -1059,8 +1066,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,12,13,0
- PRODUCTVERSION 5,12,13,0
+ FILEVERSION 5,12,16,0
+ PRODUCTVERSION 5,12,16,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1077,12 +1084,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
             VALUE "FileDescription", "SmartMet meteorological workstation"
-            VALUE "FileVersion", "5.12.13.0"
+            VALUE "FileVersion", "5.12.16.0"
             VALUE "InternalName", "SmartMet"
             VALUE "LegalCopyright", "(C) 1999-2018 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
-            VALUE "ProductVersion", "5.12.13.0"
+            VALUE "ProductVersion", "5.12.16.0"
         END
     END
     BLOCK "VarFileInfo"

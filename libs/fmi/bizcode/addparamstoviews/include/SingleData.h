@@ -18,6 +18,7 @@ namespace AddParams
         std::unique_ptr<NFmiQueryInfo> latestMetaData_;
         std::string latestDataFilePath_;
         NFmiInfoData::Type dataType_;
+
     public:
         SingleData();
         ~SingleData();
@@ -28,5 +29,6 @@ namespace AddParams
         const NFmiInfoData::Type& dataType() const { return dataType_; }
         unsigned long producerId() const;
         std::vector<SingleRowItem> makeDialogRowData() const;
+        std::string OrigOrLastTime() const;
     };
 }

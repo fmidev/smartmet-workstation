@@ -30,7 +30,7 @@ class NFmiBasicSmartMetConfigurations
 public:
 	NFmiBasicSmartMetConfigurations(void);
 	~NFmiBasicSmartMetConfigurations(void);
-	bool Init(void);
+	bool Init(const std::string &avsToolMasterVersion);
 
 	const std::string& WorkingDirectory(void) const {return itsWorkingDirectory;}
 	const std::string& ControlBasePath(void) const {return itsControlBasePath;}
@@ -71,7 +71,7 @@ private:
     bool InitLogger(void);
 	void SetEditorVersionStr(void);
     void MakeSplashScreenTextDataVector(const NFmiTime &theExeModTimeLocal, const std::string &theVersionString);
-	void InitApplicationDataBase(void);
+	void InitApplicationDataBase(const std::string &avsToolMasterVersion);
     bool DoControlPathChecks(const std::string &theControlPath);
     void SetupFactorySettingFile(const std::string &theConfigurationFile);
     void InitFactorySettingFiles();

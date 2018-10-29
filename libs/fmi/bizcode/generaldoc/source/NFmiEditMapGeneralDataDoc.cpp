@@ -186,8 +186,6 @@ namespace
 	typedef boost::unique_lock<MutexType> WriteLock;
 	MutexType gParamMaskListMutex;
 
-    const std::string tmMasterProcessName = "MasterProcessMFC.exe";
-    const std::string tmWorkerProcessName = "WorkerProcessMFC.exe";
     const std::string tmMasterTcpProcessName = "MasterProcessTcpMFC.exe";
     const std::string tmWorkerTcpProcessName = "WorkerProcessTcpMFC.exe";
 }
@@ -513,7 +511,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsSmartMetEditingMode(CtrlViewUtils::kFmiEditingModeNormal)
 ,itsSavedDirectory()
 ,itsCurrentMacroText()
-,itsMacroParamDrawParam()
 ,itsMacroParamSystem()
 ,itsCrossSectionSystem(CtrlViewUtils::MaxViewGridYSize)
 ,itsPossibleUsedDataLoadingGrid(0)
@@ -524,7 +521,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsCrossSectionDrawParamListVector(0)
 ,itsMTATempSystem()
 ,fTimeSerialDataViewOn(false)
-,fDrawDataOnlyOnRightProjection(false)
 ,fSynopDataGridViewOn(false)
 ,itsSynopHighlightStationWmoId(-1)
 ,fShowSynopHighlightStationMarker(false)
@@ -604,7 +600,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsBasicConfigurations()
 ,fEditedPointsSelectionChanged(false)
 ,fDrawSelectionOnThisView(false)
-,itsCPGriddingFactor(1)
 ,itsCPGridCropRect()
 ,fUseCPGridCrop(false)
 ,itsCPGridCropLatlonArea()
@@ -761,7 +756,6 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitMTATempSystem(); // pit‰‰ kutsua vasta InitProducerSystem- ja InitExtraSoundingProducerListFromSettings -kutsujen j‰lkeen
 
 	InitCPManagerSet();
-	InitCPGriddingProperties();
 	InitDrawDifferenceDrawParam();
 	InitSmartToolInfo();
 	InitMacroParamSystem(true); // macroParamsystem pit‰‰ initialisoida ennen viewMacroSystemin initialisointia!!!!!!!
@@ -1367,7 +1361,8 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         std::string shortAppVerStr = GetShortAppVersionString();
         if(shortAppVerStr.size() < 3)
             throw std::runtime_error(std::string("Invalid application's short version number: '") + shortAppVerStr + "', should be in format X.Y");
-        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem()); // 3 = 3 eri karttan‰yttˆ‰, ei viel‰k‰‰n miss‰‰n asetusta t‰lle, koska p‰‰karttan‰yttˆ poikkeaa kahdesta apukarttan‰ytˆst‰
+        // 3 = 3 eri karttan‰yttˆ‰, ei viel‰k‰‰n miss‰‰n asetusta t‰lle, koska p‰‰karttan‰yttˆ poikkeaa kahdesta apukarttan‰ytˆst‰
+        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem());
 
         // We have to set log level here, now that used log level is read from registry
         CatLog::logLevel(static_cast<CatLog::Severity>(itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LogLevel()));
@@ -1807,7 +1802,6 @@ void InitSettingsFromConfFile(void)
 		itsDoAtSendCommandString = NFmiSettings::Require<string>("MetEditor::AtSending::ShellCommand");
 		fUseDoAtSendCommand = NFmiSettings::Require<bool>("MetEditor::AtSending::DoCommand");
 		itsSmartMetEditingMode = static_cast<CtrlViewUtils::FmiSmartMetEditingMode>(NFmiSettings::Require<int>("MetEditor::EditXMode"));
-		fDrawDataOnlyOnRightProjection = NFmiSettings::Require<bool>("MetEditor::DrawDataOnlyOnRightProjection");
 		fWarnIfCantSaveWorkingFile = NFmiSettings::Optional("MetEditor::WarnIfCantSaveWorkingFile", true);
 
 		fUseOnePressureLevelDrawParam = NFmiSettings::Optional("MetEditor::UseOnePressureLevelDrawParam", false);
@@ -1821,7 +1815,6 @@ void InitSettingsFromConfFile(void)
 
 		itsMapViewTimeLabelInfo.InitFromSettings("SmartMet::TimeLabel");
 		itsSatelDataRefreshTimerInMinutes = NFmiSettings::Require<int>("SmartMet::SatelDataRefreshTimerInMinutes");
-		itsCPGriddingFactor = NFmiSettings::Optional<float>("SmartMet::CPGriddingFactor", 1);
         fStoreLastLoadedFileNameToFile = NFmiSettings::Optional<bool>("SmartMet::StoreLastLoadedFileNameToFile", false);
         itsHardDriveFreeLimitForConfSavesInMB = NFmiSettings::Optional<float>("SmartMet::HardDriveFreeLimitForConfSavesInMB", 10);
         itsHardDriveFreeLimitForEditedDataSavesInMB = NFmiSettings::Optional<float>("SmartMet::HardDriveFreeLimitForEditedDataSavesInMB", 500);
@@ -1839,7 +1832,6 @@ void SaveSettingsToConfFile(void)
 	{
 		SettingsFunctions::SetCommaSeaparatedPointToSettings("MetEditor::StationDataGridSize", itsStationDataGridSize);
 		NFmiSettings::Set("SmartMet::SatelDataRefreshTimerInMinutes", NFmiStringTools::Convert<int>(itsSatelDataRefreshTimerInMinutes), true);
-		NFmiSettings::Set("SmartMet::CPGriddingFactor", NFmiStringTools::Convert<float>(itsCPGriddingFactor), true);
         itsQ2ServerInfo.StoreToSettings();
 	}
 	catch(exception &e)
@@ -2006,17 +1998,6 @@ void InitDrawDifferenceDrawParam(void)
 		itsDrawDifferenceDrawParam->SimpleIsoLineColorShadeMidValueColor(NFmiColor(1.f,0.f,1.f));
 		itsDrawDifferenceDrawParam->SimpleIsoLineColorShadeHighValueColor(NFmiColor(1.f,0.f,0.f));
 		itsDrawDifferenceDrawParam->StationDataViewType(NFmiMetEditorTypes::kFmiIsoLineView);
-
-		// Laitoin initialisoimaan myˆs testi makroParam-drawparamin
-		itsMacroParamDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(998)), 0, NFmiInfoData::kAnyData);
-		if(itsMacroParamDrawParam)
-		{
-			itsMacroParamDrawParam->ParameterAbbreviation("macroParam");
-			itsMacroParamDrawParam->DataType(NFmiInfoData::kMacroParam);
-			NFmiDataIdent dataIdent(itsMacroParamDrawParam->Param());
-			dataIdent.GetParam()->SetName("macroParam");
-			itsMacroParamDrawParam->Param(dataIdent);
-		}
 
 		// Laitoin alustamaan myˆs valittujen hilapisteiden uuden visualisointi piirron
 		itsSelectedGridPointDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSelectedGridPoints)), 0, NFmiInfoData::kAnyData);
@@ -3276,11 +3257,39 @@ bool DoMacroParamVerticalDataChecks(NFmiFastQueryInfo &theInfo, NFmiInfoData::Ty
     return true;
 }
 
+std::string DoGetMacroParamFormula(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CatLog::Category category)
+{
+    static std::set<std::string> reportedMissingMacroParams;
+
+    const auto &initFileName = theDrawParam->InitFileName();
+    std::string logErrorMessage;
+    try
+    {
+        return FmiModifyEditdData::GetMacroParamFormula(MacroParamSystem(), theDrawParam);
+    }
+    catch(std::exception &e)
+    {
+        logErrorMessage = e.what();
+    }
+    catch(...)
+    {
+        logErrorMessage = std::string("Couldn't find macroParam '") + initFileName + "'";
+    }
+    // Raportoidaan puuttuvasta macroParamista vain kerran per ajo
+    if(reportedMissingMacroParams.find(initFileName) == reportedMissingMacroParams.end())
+    {
+        reportedMissingMacroParams.insert(initFileName);
+        LogMessage(logErrorMessage, CatLog::Severity::Error, category);
+    }
+
+    return "";
+}
+
 bool MakeMacroParamDrawingLayerCacheChecks(boost::shared_ptr<NFmiDrawParam> &drawParam, NFmiFastQueryInfo &theInfo, NFmiInfoData::Type theType, NFmiMapViewDescTop &descTop, unsigned int theDescTopIndex, int cacheRowNumber, const std::string &theFileName)
 {
     if(drawParam->DataType() == NFmiInfoData::kMacroParam)
     {
-        std::string macroParamStr = FmiModifyEditdData::GetWantedSmartToolStr(MacroParamSystem(), drawParam);
+        std::string macroParamStr = DoGetMacroParamFormula(drawParam, CatLog::Category::Visualization);
         MacroParamDataChecker macroParamDataChecker;
         auto macroParamDataInfoVector = macroParamDataChecker.getCalculationParametersFromMacroPram(macroParamStr);
         for(const auto &macroParamDataInfo : macroParamDataInfoVector)
@@ -3766,6 +3775,23 @@ void UpdateTimeInLockedDescTops(const NFmiMetTime &theTime, unsigned int theOrig
 	}
 }
 
+void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
+{
+    // eli jos origIndex oli p‰‰ikkuna (index = 0) tai apuikkuna oli lukittu p‰‰ikkunaan, silloin tehd‰‰n rivi p‰ivityksi‰
+    if(theOrigDescTopIndex == 0 || MapViewDescTop(theOrigDescTopIndex)->LockToMainMapViewRow())
+    {
+        auto mapRowStartingIndex = MapViewDescTop(theOrigDescTopIndex)->MapRowStartingIndex();
+        unsigned int desctopCount = static_cast<unsigned int>(itsMapViewDescTopList.size());
+        for(unsigned int descTopIndex = 0; descTopIndex < desctopCount; descTopIndex++)
+        {
+            if(descTopIndex == 0 || MapViewDescTop(descTopIndex)->LockToMainMapViewRow())
+            {
+                MapViewDescTop(descTopIndex)->MapRowStartingIndex(mapRowStartingIndex);
+            }
+        }
+    }
+}
+
 bool IsAnimationTimeBoxVisibleOverTimeControlView(unsigned int theDescTopIndex)
 {
     const auto &animationTimes = MapViewDescTop(theDescTopIndex)->AnimationDataRef().Times();
@@ -4075,7 +4101,7 @@ struct MenuCreationSettings
 void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *thePopupMenu, const std::string &theMenuItemDictionaryStr)
 {
 	std::string menuString = ::GetDictionaryString(theMenuItemDictionaryStr.c_str());
-	NFmiMenuItem *menuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
+	auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
 	NFmiMenuItemList *menuList = new NFmiMenuItemList;
 
 // ********** lis‰t‰‰n "editoitava" data osa *************************
@@ -4098,12 +4124,10 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 
 // ********** lis‰t‰‰n havaintoparametri osa *************************
 	menuString = ::GetDictionaryString("MapViewParamPopUpObservations");
-	NFmiMenuItem *menuItem6 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kObservations); // 0 = NFmiLevel-pointteri
-	AddObservationDataToParamSelectionPopup(theMenuSettings, menuItem6);
+    auto menuItem6 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kObservations);
+	AddObservationDataToParamSelectionPopup(theMenuSettings, menuItem6.get());
 	if(menuItem6->SubMenu()->NumberOfMenuItems() > 0)
-		menuList->Add(menuItem6);
-	else
-		delete menuItem6;
+		menuList->Add(std::move(menuItem6));
 // ********** lis‰t‰‰n havaintoparametri osa *************************
 
 // ********** WMS *************************
@@ -4111,12 +4135,10 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 
 // ********** lis‰t‰‰n apudata-parametri osa *************************
 	menuString = ::GetDictionaryString("MapViewParamPopUpHelpData");
-	NFmiMenuItem *menuItem7 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kViewable); // 0 = NFmiLevel-pointteri
-	AddHelpDataToParamSelectionPopup(theMenuSettings, menuItem7);
+    auto menuItem7 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kViewable);
+	AddHelpDataToParamSelectionPopup(theMenuSettings, menuItem7.get());
 	if(menuItem7->SubMenu()->NumberOfMenuItems() > 0)
-		menuList->Add(menuItem7);
-	else
-		delete menuItem7;
+		menuList->Add(std::move(menuItem7));
 // ********** lis‰t‰‰n apudata-parametri osa *************************
 
 // ********** lis‰t‰‰n talletetut macroParamit osa *************************
@@ -4135,7 +4157,7 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 	AddCustomFoldersToMenu(theMenuSettings, menuList);
 
 	menuItem->AddSubMenu(menuList);
-	thePopupMenu->Add(menuItem);
+	thePopupMenu->Add(std::move(menuItem));
 }
 
 #ifndef DISABLE_CPPRESTSDK
@@ -4146,13 +4168,13 @@ void AddAllWmsProducersToParamSelectionPopup(
     const Wms::CapabilityTree& layerTree
     )
 {
-    NFmiMenuItem *subMenuItem = new NFmiMenuItem(
+    auto subMenuItem = std::make_unique<NFmiMenuItem>(
         theMenuSettings.itsDescTopIndex,
         layerTree.value.name,
         NFmiDataIdent(NFmiParam(layerTree.value.paramId, layerTree.value.name), layerTree.value.producer),
         theMenuSettings.itsMenuCommand,
         NFmiMetEditorTypes::kFmiParamsDefaultView,
-        0,
+        nullptr,
         theDataType
     );
 
@@ -4175,7 +4197,7 @@ void AddAllWmsProducersToParamSelectionPopup(
     {
 
     }
-    producerMenuList->Add(subMenuItem);
+    producerMenuList->Add(std::move(subMenuItem));
 }
 #endif // DISABLE_CPPRESTSDK
 
@@ -4190,13 +4212,13 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
             if(!WmsSupport().isConfigured())
                 return;
             const auto& layerTree = WmsSupport().peekCapabilityTree();
-            NFmiMenuItem *menuItem = new NFmiMenuItem(
+            auto menuItem = std::make_unique<NFmiMenuItem>(
                 theMenuSettings.itsDescTopIndex,
                 "WMS",
                 NFmiDataIdent(NFmiParam(layerTree.value.paramId, layerTree.value.name), layerTree.value.producer),
                 theMenuSettings.itsMenuCommand,
                 NFmiMetEditorTypes::kFmiParamsDefaultView,
-                0,
+                nullptr,
                 theDataType
             );
             try
@@ -4217,7 +4239,7 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
             catch(const std::exception&)
             {
             }
-            theMenuItemList->Add(menuItem);
+            theMenuItemList->Add(std::move(menuItem));
         }
         catch(...)
         {
@@ -4253,17 +4275,15 @@ void AddCustomFoldersToMenu(const MenuCreationSettings &theMenuSettings, NFmiMen
 		std::string customMenuName = customMenuList[i];
         if(customMenuName == g_ObservationMenuName)
             continue; // Observation-menu pit‰‰ skipata t‰‰ll‰, koska se lis‰t‰‰n havaintojen alivalikkoon
-		NFmiMenuItem *customMenuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, customMenuName, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kAnyData); // 0 = NFmiLevel-pointteri
+        auto customMenuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, customMenuName, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kAnyData);
 		NFmiMenuItemList *customMenuItemList = new NFmiMenuItemList;
 
         AddCustomFolderToMenuItemList(usedMenuSettings, customMenuItemList, customMenuName);
 		if(customMenuItem && customMenuItemList)
 		{
 			customMenuItem->AddSubMenu(customMenuItemList);
-			if(customMenuItem->SubMenu()->NumberOfMenuItems() == 0)
-				delete customMenuItem; // jos ei ollutkaan yht‰‰ itemia menulistassa, tuhotaan koko menuItem
-			else
-				theMenuList->Add(customMenuItem);
+			if(customMenuItem->SubMenu()->NumberOfMenuItems())
+				theMenuList->Add(std::move(customMenuItem));
 		}
 	}
 }
@@ -4288,34 +4308,34 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAddAsOnly");
 
 		std::string menuString = ::GetDictionaryString("MapViewParamPopUpremoveAll");
-		NFmiMenuItem *menuItem = new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiRemoveAllViews, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, NFmiDataIdent(), kFmiRemoveAllViews, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
+		itsPopupMenu->Add(std::move(menuItem));
 
         if(theDescTopIndex != CtrlViewUtils::kFmiTimeSerialView)
         {
             menuString = ::GetDictionaryString("Remove all params from all rows");
-            menuItem = new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiRemoveAllParamsFromAllRows, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-            itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiRemoveAllParamsFromAllRows, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+            itsPopupMenu->Add(std::move(menuItem));
         }
 
 		menuString = "Copy all map row params";
-		menuItem = new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiCopyDrawParamsFromMapViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiCopyDrawParamsFromMapViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+		itsPopupMenu->Add(std::move(menuItem));
 		if(fCopyPasteDrawParamListUsedYet)
 		{
 			menuString = "Paste all map row params";
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiPasteDrawParamsToMapViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiPasteDrawParamsToMapViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+			itsPopupMenu->Add(std::move(menuItem));
 		}
 
 		menuString = "Copy all map rows and params";
-		menuItem = new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiCopyMapViewDescTopParams, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiCopyMapViewDescTopParams, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+		itsPopupMenu->Add(std::move(menuItem));
 		if(fCopyPasteDrawParamListVectorUsedYet)
 		{
 			menuString = "Paste all map rows and params";
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiPasteMapViewDescTopParams, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiPasteMapViewDescTopParams, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+			itsPopupMenu->Add(std::move(menuItem));
 		}
 
 // ********* muuta n‰yttˆrivin kaikkien datojen tuottajat halutuiksi *********
@@ -4327,19 +4347,19 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 
 // ********* piilota/n‰yt‰ kaikki  -  havainnot/ennusteet *********
 		menuString = ::GetDictionaryString("MapViewParamPopUpToggleShowAll");
-		menuItem = new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiHideAllMapViewObservations, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
+		menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiHideAllMapViewObservations, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 		NFmiMenuItemList *showHideMenuList = new NFmiMenuItemList;
 		menuString = ::GetDictionaryString("MapViewParamPopUpHideAllObs");
-		showHideMenuList->Add(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiHideAllMapViewObservations, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+		showHideMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, NFmiDataIdent(), kFmiHideAllMapViewObservations, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 		menuString = ::GetDictionaryString("MapViewParamPopUpShowAllObs");
-		showHideMenuList->Add(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiShowAllMapViewObservations, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+		showHideMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, NFmiDataIdent(), kFmiShowAllMapViewObservations, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 		menuString = ::GetDictionaryString("MapViewParamPopUpHideAllFor");
-		showHideMenuList->Add(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiHideAllMapViewForecasts, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+		showHideMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, NFmiDataIdent(), kFmiHideAllMapViewForecasts, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 		menuString = ::GetDictionaryString("MapViewParamPopUpShowAllFor");
-		showHideMenuList->Add(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiShowAllMapViewForecasts, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+		showHideMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, NFmiDataIdent(), kFmiShowAllMapViewForecasts, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 		menuItem->AddSubMenu(showHideMenuList);
 
-		itsPopupMenu->Add(menuItem);
+		itsPopupMenu->Add(std::move(menuItem));
 // ********* piilota/n‰yt‰ kaikki  -  havainnot/ennusteet *********
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
@@ -4354,13 +4374,13 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuList, NFmiInfoData::Type theDataType)
 {
 	string menuString = ::GetDictionaryString("MapViewParamPopUpMacroParams");
-	NFmiMenuItem *menuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kMacroParam); // 0 = NFmiLevel-pointteri
+	auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kMacroParam);
 	NFmiMenuItemList *macroParamsMenuList = new NFmiMenuItemList;
 
 	std::vector<NFmiMacroParamItem> &macroParamItemList = itsMacroParamSystem.MacroParamItemTree();
 	AddMacroParamPartToPopUpMenu(theMenuSettings, macroParamsMenuList, macroParamItemList, theDataType);
 	menuItem->AddSubMenu(macroParamsMenuList);
-	theMenuList->Add(menuItem);
+	theMenuList->Add(std::move(menuItem));
 }
 
 void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
@@ -4368,12 +4388,12 @@ void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NF
 		std::vector<NFmiProducerInfo> &prodVec = ProducerSystem().Producers();
 		if(prodVec.size() > 0)
 		{
-			NFmiMenuItem *menuItem = new NFmiMenuItem(theDescTopIndex, "Change all producers", NFmiDataIdent(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
+            auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Change all producers", NFmiDataIdent(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
 			NFmiMenuItemList *changeProducersMenuList = new NFmiMenuItemList;
 			for(size_t i = 0; i < prodVec.size(); i++)
 			{
 				NFmiDataIdent dataIdent(NFmiParam(), prodVec[i].GetProducer()); // laitetaan feikki parametri ja vain 1. tuottaja listasta
-				changeProducersMenuList->Add(new NFmiMenuItem(theDescTopIndex, prodVec[i].Name(), dataIdent, theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, prodVec[i].Name(), dataIdent, theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 			}
 			// lis‰t‰‰n viel‰ editoitu data ja virallinen data tuottajat listaan, jos ei kyse poikkileikkausn‰ytˆst‰
 			if(crossSectionPopup == false)
@@ -4382,29 +4402,29 @@ void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NF
 				if(editedInfo)
 				{
 					editedInfo->FirstParam();
-					changeProducersMenuList->Add(new NFmiMenuItem(theDescTopIndex, "Edited data", editedInfo->Param(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+					changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Edited data", editedInfo->Param(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 				}
 				boost::shared_ptr<NFmiFastQueryInfo> operativeInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kKepaData);
 				if(operativeInfo) // operatiivinen data
 				{
 					operativeInfo->FirstParam();
-					changeProducersMenuList->Add(new NFmiMenuItem(theDescTopIndex, "Operative data", operativeInfo->Param(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+					changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Operative data", operativeInfo->Param(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 				}
 				boost::shared_ptr<NFmiFastQueryInfo> helpDataInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kEditingHelpData);
 				if(helpDataInfo) // editointi apu data
 				{
 					helpDataInfo->FirstParam();
-					changeProducersMenuList->Add(new NFmiMenuItem(theDescTopIndex, "Help edit data", helpDataInfo->Param(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+					changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Help edit data", helpDataInfo->Param(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 				}
 			}
 			menuItem->AddSubMenu(changeProducersMenuList);
-			theMenuList->Add(menuItem);
+			theMenuList->Add(std::move(menuItem));
 		}
 }
 
 void AddChangeAllDataTypesToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType)
 {
-	std::vector<std::pair<NFmiString, NFmiInfoData::Type> > dataTypeVec;
+	std::vector<std::pair<std::string, NFmiInfoData::Type> > dataTypeVec;
 	dataTypeVec.push_back(std::make_pair("Edited-Data", NFmiInfoData::kEditable));
 	dataTypeVec.push_back(std::make_pair("Model-Data", NFmiInfoData::kViewable));
 	dataTypeVec.push_back(std::make_pair("Observations", NFmiInfoData::kObservations));
@@ -4417,15 +4437,15 @@ void AddChangeAllDataTypesToParamSelectionPopup(unsigned int theDescTopIndex, NF
 
 	if(dataTypeVec.size() > 0)
 	{
-		NFmiMenuItem *menuItem = new NFmiMenuItem(theDescTopIndex, "Change data-types (fix view-macros)", NFmiDataIdent(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
+        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Change data-types (fix view-macros)", NFmiDataIdent(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
 		for(size_t i = 0; i < dataTypeVec.size(); i++)
 		{
-			menuList->Add(new NFmiMenuItem(theDescTopIndex, dataTypeVec[i].first, static_cast<FmiParameterName>(dataTypeVec[i].second), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable));
+			menuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, dataTypeVec[i].first, static_cast<FmiParameterName>(dataTypeVec[i].second), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
 		}
 
 		menuItem->AddSubMenu(menuList);
-		theMenuList->Add(menuItem);
+		theMenuList->Add(std::move(menuItem));
 	}
 }
 
@@ -4437,21 +4457,21 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
 		const NFmiMacroParamItem &macroParamItem = theMacroParamItemList[i];
 		if(macroParamItem.itsMacroParam->IsMacroParamDirectory())
 		{
-			NFmiMenuItem *macroParamsItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, macroParamItem.itsMacroParam->Name().c_str(), NFmiDataIdent(NFmiParam(998, "makro")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, theDataType); // 0 = NFmiLevel-pointteri
+            auto macroParamsItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, macroParamItem.itsMacroParam->Name().c_str(), NFmiDataIdent(NFmiParam(998, "makro")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, theDataType);
 			NFmiMenuItemList *macroParamsMenuList = new NFmiMenuItemList;
 			AddMacroParamPartToPopUpMenu(theMenuSettings, macroParamsMenuList, macroParamItem.itsDirectoryItems, theDataType);
 			macroParamsItem->AddSubMenu(macroParamsMenuList);
-			theMenuList->Add(macroParamsItem);
+			theMenuList->Add(std::move(macroParamsItem));
 		}
 		else
 		{
 			string macroParamName = macroParamItem.itsMacroParam->Name();
 			if(macroParamItem.itsMacroParam->ErrorInMacro())
 				macroParamName += " (ERROR)";
-			NFmiMenuItem *macroParamsItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, macroParamName.c_str(), NFmiDataIdent(NFmiParam(998, "makro")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, theDataType); // 0 = NFmiLevel-pointteri
+            auto macroParamsItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, macroParamName.c_str(), NFmiDataIdent(NFmiParam(998, "makro")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, theDataType);
 			// HUOM! TƒSSƒ pit‰‰ k‰ytt‰‰ drawParamin initfile-namea, koska muuten ei lˆydy macroparamia kuin juuri tasolta
 			macroParamsItem->MacroParamInitName(macroParamItem.itsMacroParam->DrawParam()->InitFileName());
-			theMenuList->Add(macroParamsItem);
+			theMenuList->Add(std::move(macroParamsItem));
 		}
 	}
 }
@@ -4462,6 +4482,7 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 {
 	NFmiMenuItemList *menuList = new NFmiMenuItemList;
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 160); // 160 = mesan 2
+    AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 189); // 189 = MetNo Analysis
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiRADARNRD, NFmiInfoData::kObservations); // tuliset dataa, mutta ei 'tutka'-dataa eli ignooraa kObservations-data tyyppi joka normaali tutkalla on
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 108); // 108 = lumikuorma-datan tuottaja numero
     AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 101); // 101 = kriging-datan tuottaja numero
@@ -4471,16 +4492,16 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 	{
 		NFmiProducer prod(1028); // t‰ll‰ ei ole viel‰ virallista tuottaja id:t‰
 		std::string menuString = "Conceptual analysis";
-		NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, ConceptualModelData().DefaultUserName()), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kConceptualModelData); // 0 = NFmiLevel-pointteri
-		menuList->Add(menuItem1);
+        auto menuItem1 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, ConceptualModelData().DefaultUserName()), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kConceptualModelData);
+		menuList->Add(std::move(menuItem1));
 	}
 
     if(capDataSystem.useCapData())
     {
         NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345)); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
         std::string menuString = "Warnings (CAP)";
-        NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, "cap-data"), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCapData); // 0 = NFmiLevel-pointteri
-        menuList->Add(menuItem1);
+        auto menuItem1 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, "cap-data"), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kCapData);
+        menuList->Add(std::move(menuItem1));
     }
 
 	// T‰ss‰ tehd‰‰n sekaisin kaikkia mahdollisia datoja yhteen popup-osioon.
@@ -4488,29 +4509,12 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 	// Mix popup-osiota ei tehd‰ operatiivisessa moodissa, koska se hidastaa k‰yttˆ‰
 	if(EditorModeDataWCTR()->EditorMode() == NFmiMetEditorModeDataWCTR::kNormal)
 	{
-		NFmiMenuItem *mixMenuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, "Mix", NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kViewable); // 0 = NFmiLevel-pointteri
-		bool mixSuccess = AddMixDataToParamSelectionPopup(theMenuSettings, mixMenuItem);
+        auto mixMenuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, "Mix", NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kViewable);
+		bool mixSuccess = AddMixDataToParamSelectionPopup(theMenuSettings, mixMenuItem.get());
 		if(mixSuccess)
-			menuList->Add(mixMenuItem);
-		else
-			delete mixMenuItem;
+			menuList->Add(std::move(mixMenuItem));
 	}
 	theMenuItem->AddSubMenu(menuList);
-}
-
-void AddHelpModelProducerDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuList, const NFmiString &theName, FmiProducerName theProducerId)
-{
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(theProducerId));
-	int size = static_cast<int>(infos.size());
-	if(size > 0)
-	{
-		NFmiMenuItem *menuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, theName, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kViewable);
-		NFmiMenuItemList *menuList = new NFmiMenuItemList;
-		AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, theProducerId);
-
-		menuItem->AddSubMenu(menuList);
-		theMenuList->Add(menuItem);
-	}
 }
 
 bool IsProducerWanted(int theCurrentProdId, int theProducerId1, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1)
@@ -4555,12 +4559,12 @@ void AddToListAllThisDataTypes(const MenuCreationSettings &theMenuSettings, NFmi
 		for(int i=0; i<size; i++)
 			AddSmartInfoToMenuList(theMenuSettings, infos[i], subMenuList, theDataType);
 
-		NFmiMenuItem *subMenuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, "Radar data", 
+        auto subMenuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, "Radar data",
             NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 
-            0, NFmiInfoData::kSingleStationRadarData); // 0 = NFmiLevel-pointteri
+            nullptr, NFmiInfoData::kSingleStationRadarData);
 
 		subMenuItem->AddSubMenu(subMenuList);
-		theMenuList->Add(subMenuItem);
+		theMenuList->Add(std::move(subMenuItem));
 	}
 }
 
@@ -4568,16 +4572,16 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 {
 	bool anySatelProducersFound = false;
 	std::string menuString = ::GetDictionaryString("MapViewParamPopUpSatelliteData");
-	NFmiMenuItem *menuItem2 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), 
-        theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
+    auto menuItem2 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(),
+        theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kSatelData);
 
 	NFmiMenuItemList *satelProducerMenuList = new NFmiMenuItemList;
 	std::vector<NFmiProducerInfo> &satelProducers = itsSatelImageProducerSystem.Producers();
 	for(size_t j=0; j<satelProducers.size(); j++)
 	{
 		bool anyChannelsFound = false;
-		NFmiMenuItem *menuItemProducer = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, satelProducers[j].Name(), NFmiDataIdent(), 
-            theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
+        auto menuItemProducer = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, satelProducers[j].Name(), NFmiDataIdent(),
+            theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kSatelData);
 		NFmiMenuItemList *satelChannelMenuList = new NFmiMenuItemList;
 		int helpDataSize = HelpDataInfoSystem()->DynamicCount();
 		for(int i=0; i<helpDataSize; i++)
@@ -4589,9 +4593,9 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 				int helpDataProdId = helpDataInfo.FakeProducerId();
 				if(prodId > 0 && prodId == helpDataProdId)
 				{
-					NFmiMenuItem *satelItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, helpDataInfo.ImageDataIdent().GetParamName(), 
-                        helpDataInfo.ImageDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kSatelData); // 0 = NFmiLevel-pointteri
-					satelChannelMenuList->Add(satelItem);
+                    auto satelItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, std::string(helpDataInfo.ImageDataIdent().GetParamName()),
+                        helpDataInfo.ImageDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kSatelData);
+					satelChannelMenuList->Add(std::move(satelItem));
 					anyChannelsFound = true;
 				}
 			}
@@ -4599,23 +4603,23 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 		if(anyChannelsFound)
 		{
 			menuItemProducer->AddSubMenu(satelChannelMenuList);
-			satelProducerMenuList->Add(menuItemProducer);
+			satelProducerMenuList->Add(std::move(menuItemProducer));
 			anySatelProducersFound = true;
 		}
 		else
-		{ // jos ei lˆytynyt, n‰m‰ pit‰‰ tuhota 'k‰sin'
-			delete menuItemProducer;
+		{ 
+            // jos ei lˆytynyt, t‰m‰ pit‰‰ tuhota 'k‰sin'
 			delete satelChannelMenuList;
 		}
 	}
 	if(anySatelProducersFound)
 	{
 		menuItem2->AddSubMenu(satelProducerMenuList);
-		theMenuList->Add(menuItem2);
+		theMenuList->Add(std::move(menuItem2));
 	}
 	else
-	{ // jos ei lˆytynyt, n‰m‰ pit‰‰ tuhota 'k‰sin'
-		delete menuItem2;
+	{ 
+        // jos ei lˆytynyt, t‰m‰ pit‰‰ tuhota 'k‰sin'
 		delete satelProducerMenuList;
 	}
 }
@@ -4645,8 +4649,8 @@ void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenu
 		{
 			NFmiProducer flashProducer(flashType == NFmiInfoData::kEditable ? *(editedInfo->Producer()) : *(itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kFlashData, 0)->Producer()));
 			std::string menuString = ::GetDictionaryString("MapViewParamPopUpFlashData");
-			NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiFlashStrength, "salama"), flashProducer), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, flashType); // 0 = NFmiLevel-pointteri
-			obsMenuList->Add(menuItem1);
+            auto menuItem1 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiFlashStrength, "salama"), flashProducer), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, flashType);
+			obsMenuList->Add(std::move(menuItem1));
 		}
 // ********** lis‰t‰‰n satelliitti osa dynaamisesti *************************
 		AddSatelliteImagesToMenu(theMenuSettings, obsMenuList);
@@ -4663,13 +4667,13 @@ void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenu
 		if(synopType == NFmiInfoData::kEditable || wantedPlotObsFound)
 		{ // lis‰t‰‰n t‰m‰ siis vain jos editoitavassa datassa on synop-dataa, tai lˆytyy yleens‰ synop dataa
 			std::string menuString = ::GetDictionaryString("MapViewParamPopUpSynopPlot");
-			NFmiMenuItem *menuItem3 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, synopType); // 0 = NFmiLevel-pointteri
-			obsMenuList->Add(menuItem3);
+            auto menuItem3 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, synopType);
+			obsMenuList->Add(std::move(menuItem3));
 
 			// lis‰t‰‰n myˆs min/max plot
 			std::string menuStringMinMax = "Min/Max";
-			NFmiMenuItem *menuItem4 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuStringMinMax, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, synopType); // 0 = NFmiLevel-pointteri
-			obsMenuList->Add(menuItem4);
+            auto menuItem4 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuStringMinMax, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, synopType);
+			obsMenuList->Add(std::move(menuItem4));
 		}
 // ********** lis‰t‰‰n synop-plot data osa *************************
 
@@ -4685,8 +4689,8 @@ void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenu
 		if(metarType == NFmiInfoData::kEditable || wantedMetarPlotObsFound)
 		{ // lis‰t‰‰n t‰m‰ siis vain jos editoitavassa datassa on metar-dataa, tai lˆytyy yleens‰ metar dataa
 			std::string menuString = ::GetDictionaryString("Metar-plot");
-			NFmiMenuItem *menuItem3 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, metarType); // 0 = NFmiLevel-pointteri
-			obsMenuList->Add(menuItem3);
+            auto menuItem3 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, metarType);
+			obsMenuList->Add(std::move(menuItem3));
 		}
 // ********** lis‰t‰‰n metar-plot data osa *************************
 
@@ -4697,14 +4701,14 @@ void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenu
 			NFmiInfoData::Type soundingType = soundingInfo->DataType();
 			NFmiLevel defaultLevel(50, "850xxx", 850);
 			std::string menuString = "Sounding-Plot";
-			NFmiMenuItem *menuItem4 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
-			obsMenuList->Add(menuItem4);
+            auto menuItem4 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp")), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
+			obsMenuList->Add(std::move(menuItem4));
 
 			menuString = "Sounding";
-			NFmiMenuItem *menuItem5 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
+            auto menuItem5 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
 			NFmiMenuItemList *soundingMenuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, const_cast<NFmiParamBag*>(&(soundingInfo->ParamBag())), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()), soundingType);
 			menuItem5->AddSubMenu(soundingMenuList);
-			obsMenuList->Add(menuItem5);
+			obsMenuList->Add(std::move(menuItem5));
 		}
 // ********** lis‰t‰‰n luotaus synop-plot data osa *************************
 	} // addOnlyToMapView
@@ -4775,9 +4779,9 @@ void AddConfiguredModelProducerDataToParamSelectionPopup(const MenuCreationSetti
 
 				if(producerMenuItemList && producerMenuItemList->NumberOfMenuItems() > 0)
 				{
-					NFmiMenuItem *producerMenuItem = new NFmiMenuItem(prodInfo.Name().c_str(), kFmiBadParameter);
+                    auto producerMenuItem = std::make_unique<NFmiMenuItem>(prodInfo.Name().c_str(), kFmiBadParameter);
 					producerMenuItem->AddSubMenu(producerMenuItemList);
-					theMenuList->Add(producerMenuItem);
+					theMenuList->Add(std::move(producerMenuItem));
 				}
 				else
 					delete producerMenuItemList;
@@ -4893,14 +4897,12 @@ void AddSmartInfoToMenuList(const MenuCreationSettings &theMenuSettings, boost::
 		if(theMenuSettings.fLevelDataOnly == false || (theMenuSettings.fLevelDataOnly == true && theSmartInfo->SizeLevels() > 1))
 		{
 			std::string menuTitleStr = theDictionaryStr.empty() ? theSmartInfo->FirstParamProducer().GetName() : ::GetDictionaryString(theDictionaryStr.c_str());
-			NFmiMenuItem *menuItem = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuTitleStr, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, theDataType);
-			AddSmartInfoToMenuItem(theMenuSettings, theSmartInfo, menuItem, theDataType, theWantedParamBag);
+            auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuTitleStr, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, theDataType);
+			AddSmartInfoToMenuItem(theMenuSettings, theSmartInfo, menuItem.get(), theDataType, theWantedParamBag);
 			if(menuItem)
 			{
 				if(menuItem->SubMenu() && menuItem->SubMenu()->NumberOfMenuItems() > 0)
-					theMenuItemList->Add(menuItem);
-				else
-					delete menuItem;
+					theMenuItemList->Add(std::move(menuItem));
 			}
 		}
 	}
@@ -4920,16 +4922,16 @@ void AddFirstOfDataTypeToParamSelectionPopup(const MenuCreationSettings &theMenu
 void AddCalculatedParamsToMenu(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuItemList, const std::string &theMenuItemDictionaryStr)
 {
 	std::string menuString = ::GetDictionaryString(theMenuItemDictionaryStr.c_str());
-	NFmiMenuItem *menuItem4 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCalculatedValue); // 0 = NFmiLevel-pointteri
+    auto menuItem4 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kCalculatedValue);
 	NFmiMenuItemList *menuList4 = new NFmiMenuItemList;
 	menuString = ::GetDictionaryString("MapViewMaskSelectionPopUpLatitude");
-	menuList4->Add(new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, kFmiLatitude, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCalculatedValue));
+	menuList4->Add(std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, kFmiLatitude, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kCalculatedValue));
 	menuString = ::GetDictionaryString("MapViewMaskSelectionPopUpLongitude");
-	menuList4->Add(new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, kFmiLongitude, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCalculatedValue));
+	menuList4->Add(std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, kFmiLongitude, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kCalculatedValue));
 	menuString = ::GetDictionaryString("MapViewMaskSelectionPopUpElevationAngle");
-	menuList4->Add(new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, kFmiElevationAngle, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCalculatedValue));
+	menuList4->Add(std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, kFmiElevationAngle, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kCalculatedValue));
 	menuItem4->AddSubMenu(menuList4);
-	theMenuItemList->Add(menuItem4);
+	theMenuItemList->Add(std::move(menuItem4));
 }
 
 bool CreateMaskSelectionPopup(void)
@@ -4949,8 +4951,8 @@ bool CreateMaskSelectionPopup(void)
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewMaskSelectionPopUpAddAsOnly");
 
 		std::string menuString = ::GetDictionaryString("MapViewMaskSelectionPopUpRemoveAll");
-		NFmiMenuItem *menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiRemoveAllMasks, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+        auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiRemoveAllMasks, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
+		itsPopupMenu->Add(std::move(menuItem));
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 			return false;
@@ -4966,7 +4968,7 @@ void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmi
 	{
 		NFmiDataIdent param = theDrawParam->Param();
 		std::string menuString = "SetMultiRunMode"; // ::GetDictionaryString("TimeSerialViewParamPopUpRemove");
-		NFmiMenuItem *menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiTimeSerialModelRunCountSet, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, theDrawParam->DataType(), index); // 0 = NFmiLevel-pointteri
+        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, param, kFmiTimeSerialModelRunCountSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, theDrawParam->DataType(), index);
 
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
 		for(int i = 0; i <= 10; i++)
@@ -4977,13 +4979,13 @@ void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmi
 			else
 				multiModeStr += std::string("Count to ") + NFmiStringTools::Convert(i);
 
-			NFmiMenuItem *item1 = new NFmiMenuItem(theDescTopIndex, multiModeStr, param, kFmiTimeSerialModelRunCountSet, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, theDrawParam->DataType(), index);
+            auto item1 = std::make_unique<NFmiMenuItem>(theDescTopIndex, multiModeStr, param, kFmiTimeSerialModelRunCountSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, theDrawParam->DataType(), index);
 			item1->ExtraParam(i);
-			menuList->Add(item1);
+			menuList->Add(std::move(item1));
 		}
 		menuItem->AddSubMenu(menuList);
 
-		thePopupMenu.Add(menuItem);
+		thePopupMenu.Add(std::move(menuItem));
 	}
 }
 
@@ -5014,8 +5016,8 @@ void AddShowHelperDataOntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInfo
 {
     std::string menuString = ::GetDictionaryString(dictionaryStr.c_str());
     menuString += acceleratorHelpStr;
-    NFmiMenuItem *menuItem = new NFmiMenuItem(-1, menuString, param, commandId, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-    itsPopupMenu->Add(menuItem);
+    auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, param, commandId, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType);
+    itsPopupMenu->Add(std::move(menuItem));
 }
 
 void AddShowHelperData1OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInfoData::Type infoDataType)
@@ -5084,11 +5086,11 @@ bool CreateTimeSerialDialogPopup(int index)
 		{
 			NFmiDataIdent param = itsTimeSerialViewDrawParamList->Current()->Param();
 			std::string menuString = ::GetDictionaryString("TimeSerialViewParamPopUpRemove");
-			NFmiMenuItem *menuItem = new NFmiMenuItem(-1, menuString, param, kFmiRemoveTimeSerialView, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType, index); // 0 = NFmiLevel-pointteri
-			itsPopupMenu->Add(menuItem);
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, param, kFmiRemoveTimeSerialView, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType, index);
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("TimeSerialViewParamPopUpRemoveAll");
-			menuItem = new NFmiMenuItem(-1, menuString, param, kFmiRemoveAllTimeSerialViews, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(-1, menuString, param, kFmiRemoveAllTimeSerialViews, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+			itsPopupMenu->Add(std::move(menuItem));
 
             AddShowHelperData1OntimeSerialViewPopup(param, infoDataType);
             AddShowHelperData2OntimeSerialViewPopup(param, infoDataType);
@@ -5098,12 +5100,12 @@ bool CreateTimeSerialDialogPopup(int index)
 			if(itsTimeSerialViewDrawParamList->NumberOfItems())
 			{
 				menuString = ::GetDictionaryString("TimeSerialViewParamPopUpProperties");
-				menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiAddTimeSerialView, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
+                menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiAddTimeSerialView, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
 				NFmiMenuItemList *menuList = new NFmiMenuItemList;
 				int aIndex = 1;
 				for(itsTimeSerialViewDrawParamList->Reset(); itsTimeSerialViewDrawParamList->Next();)
 				{
-					NFmiMenuItem *item5 = new NFmiMenuItem(-1, itsTimeSerialViewDrawParamList->Current()->ParameterAbbreviation()
+                    auto item5 = std::make_unique<NFmiMenuItem>(-1, itsTimeSerialViewDrawParamList->Current()->ParameterAbbreviation()
 														,itsTimeSerialViewDrawParamList->Current()->Param()
 														,kFmiModifyDrawParam
 														,NFmiMetEditorTypes::kFmiParamsDefaultView
@@ -5111,11 +5113,11 @@ bool CreateTimeSerialDialogPopup(int index)
 														,infoDataType
 														,aIndex
 														,itsTimeSerialViewDrawParamList->Current()->ViewMacroDrawParam());
-					menuList->Add(item5);
+					menuList->Add(std::move(item5));
 					aIndex++;
 				}
 				menuItem->AddSubMenu(menuList);
-				itsPopupMenu->Add(menuItem);
+				itsPopupMenu->Add(std::move(menuItem));
 			}
 		}
 
@@ -5137,7 +5139,7 @@ void AddFixedDrawParamsToMenu(const NFmiFixedDrawParamFolder &theFixedDrawParamF
 {
     if(!theFixedDrawParamFolder.Empty())
     {
-        NFmiMenuItem *menuItem = new NFmiMenuItem(theDescTopIndex, theSubFolderName, theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
+        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, theSubFolderName, theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
         NFmiMenuItemList *subFolderMenuList = new NFmiMenuItemList;
 
         const std::vector<NFmiFixedDrawParamFolder> &subFolders = theFixedDrawParamFolder.SubFolders();
@@ -5148,18 +5150,18 @@ void AddFixedDrawParamsToMenu(const NFmiFixedDrawParamFolder &theFixedDrawParamF
         for(auto drawParam : drawParams)
         {
             std::string menuText = GetFileName(drawParam->InitFileName());
-            NFmiMenuItem *drawParamMenuItem = new NFmiMenuItem(theDescTopIndex, menuText, theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
+            auto drawParamMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuText, theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
             drawParamMenuItem->MacroParamInitName(drawParam->InitFileName()); // t‰m‰n avulla haluttu drawParam etsit‰‰n
-            subFolderMenuList->Add(drawParamMenuItem);
+            subFolderMenuList->Add(std::move(drawParamMenuItem));
         }
 
         menuItem->AddSubMenu(subFolderMenuList);
-        thePopupMenu.Add(menuItem);
+        thePopupMenu.Add(std::move(menuItem));
     }
     else
     { // theFixedDrawParamFolder oli tyhj‰, varoitetaan k‰ytt‰j‰‰ ett‰ ei ole lˆytynyt yht‰‰n tehdasasetuksia
-        NFmiMenuItem *menuItem = new NFmiMenuItem(theDescTopIndex, ::GetDictionaryString("No FixedDrawParams were found!"), theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
-        thePopupMenu.Add(menuItem);
+        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, ::GetDictionaryString("No FixedDrawParams were found!"), theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
+        thePopupMenu.Add(std::move(menuItem));
     }
 }
 
@@ -5186,60 +5188,60 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 			NFmiInfoData::Type dataType = rowDrawParamList->Current()->DataType();
 			itsPopupMenu = new NFmiMenuItemList;
 			std::string menuString;
-			NFmiMenuItem *menuItem = 0;
+			std::unique_ptr<NFmiMenuItem> menuItem;
 			if(crossSectionPopup == false)
 			{ // poikkileikkaus-n‰yttˆ ei tue tekstimuotoista piirtoa
 				menuString = ::GetDictionaryString("MapViewParamOptionPopUpText");
-				menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiTextView, level, dataType, index, drawParam->ViewMacroDrawParam());
-				itsPopupMenu->Add(menuItem);
+				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiTextView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+				itsPopupMenu->Add(std::move(menuItem));
 			}
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpIsoline");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpContour");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiColorContourView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiColorContourView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpContourIsoline");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiColorContourIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiColorContourIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpQuickContour");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiQuickColorContourView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::kFmiQuickColorContourView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpRemove");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiRemoveView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiRemoveView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpHide");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiHideView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiHideView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpShow");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiShowView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiShowView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpActivate");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiActivateView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiActivateView, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 			menuItem->ExtraParam(0); // kun parametria aktivoidaan (tai tulevaisuudessa tehd‰‰n mit‰ vain), k‰ytet‰‰n extraParamia kertomaan miss‰ parametri on, 0=karttan‰yttˆ, 1=poikkileikkaus ja 2=aikasarja
-			itsPopupMenu->Add(menuItem);
+			itsPopupMenu->Add(std::move(menuItem));
             menuString = ::GetDictionaryString("Save DrawParam");
-            menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiStoreDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-            itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiStoreDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            itsPopupMenu->Add(std::move(menuItem));
             
             menuString = ::GetDictionaryString("Reload DrawParam");
-            menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiReloadDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-            itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiReloadDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            itsPopupMenu->Add(std::move(menuItem));
 
             // FixedDrawParam valikko t‰h‰n v‰liin
             AddFixedDrawParamsToMenu(itsFixedDrawParamSystem.RootFolder(), ::GetDictionaryString("FixedDrawParams"), *itsPopupMenu, theDescTopIndex, theRowIndex, index, param, level, dataType, drawParam);
 
 			// copy/paste komennot t‰h‰n
 			menuString = "Copy draw options";
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiCopyDrawParamOptions, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiCopyDrawParamOptions, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 			if(fCopyPasteDrawParamAvailableYet)
 			{
 				menuString = "Paste draw options";
-				menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiPasteDrawParamOptions, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-				itsPopupMenu->Add(menuItem);
+                menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiPasteDrawParamOptions, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+				itsPopupMenu->Add(std::move(menuItem));
 			}
 
 			if(!macroParamInCase)
@@ -5252,37 +5254,37 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 						if(analyzeInfos.size())
 						{
 							menuString = "DiffToAnalyzeData"; // ::GetDictionaryString("DiffToAnalyzeData");
-							NFmiMenuItem *diffToAnalyzeMenuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kNoDataType, index); // 0 = NFmiLevel-pointteri
+							auto diffToAnalyzeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kNoDataType, index);
 							NFmiMenuItemList *diffToAnalyzeMenuList = new NFmiMenuItemList;
 
-							NFmiMenuItem *item1 = new NFmiMenuItem(theDescTopIndex, "Diff To None", param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kNoDataType, index);
+                            auto item1 = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Diff To None", param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kNoDataType, index);
 							item1->ExtraParam(0);
-							diffToAnalyzeMenuList->Add(item1);
+							diffToAnalyzeMenuList->Add(std::move(item1));
 
 							for(size_t i = 0; i < analyzeInfos.size(); i++)
 							{
 								if(analyzeInfos[i]->SizeLevels() <= 1)
 								{ // vain pintadatat otetaan k‰sittelyyn
-									NFmiMenuItem *item2 = new NFmiMenuItem(theDescTopIndex, analyzeInfos[i]->Param().GetProducer()->GetName(), param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, analyzeInfos[i]->DataType(), index);
+                                    auto item2 = std::make_unique<NFmiMenuItem>(theDescTopIndex, std::string(analyzeInfos[i]->Param().GetProducer()->GetName()), param, kFmiDiffToAnalyzeData, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, analyzeInfos[i]->DataType(), index);
 									item2->ExtraParam(analyzeInfos[i]->Param().GetProducer()->GetIdent());
-									diffToAnalyzeMenuList->Add(item2);
+									diffToAnalyzeMenuList->Add(std::move(item2));
 								}
 							}
 
 							diffToAnalyzeMenuItem->AddSubMenu(diffToAnalyzeMenuList);
-							itsPopupMenu->Add(diffToAnalyzeMenuItem);
+							itsPopupMenu->Add(std::move(diffToAnalyzeMenuItem));
 						}
 					}
 				}
 
 				menuString = "Previous model run"; //::GetDictionaryString("MapViewParamOptionPopUpActivate");
-				menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModelRunOffsetPrevious, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-				itsPopupMenu->Add(menuItem);
+				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModelRunOffsetPrevious, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+				itsPopupMenu->Add(std::move(menuItem));
 
 				if(drawParam->IsModelRunDataType())
 				{ // t‰ss‰ lis‰t‰‰n malliajojen ero-piirto -osio
 					std::string menuString2 = "DiffBetweenModelRuns"; // ::GetDictionaryString("DiffBetweenModelRuns");
-					NFmiMenuItem *modelRunDiffMenuItem = new NFmiMenuItem(theDescTopIndex, menuString2, param, kFmiDiffBetweenModelRuns, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, dataType, index); // 0 = NFmiLevel-pointteri
+					auto modelRunDiffMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString2, param, kFmiDiffBetweenModelRuns, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, dataType, index);
 
 					NFmiMenuItemList *modelRunDiffMenuList = new NFmiMenuItemList;
 					for(int i = 0; i >= -10; i--)
@@ -5293,13 +5295,13 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 						else
 							multiModeStr += std::string("Diff of ") + NFmiStringTools::Convert(i);
 
-						NFmiMenuItem *item1 = new NFmiMenuItem(theDescTopIndex, multiModeStr, param, kFmiDiffBetweenModelRuns, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, dataType, index);
+                        auto item1 = std::make_unique<NFmiMenuItem>(theDescTopIndex, multiModeStr, param, kFmiDiffBetweenModelRuns, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, dataType, index);
 						item1->ExtraParam(i);
-						modelRunDiffMenuList->Add(item1);
+						modelRunDiffMenuList->Add(std::move(item1));
 					}
 					modelRunDiffMenuItem->AddSubMenu(modelRunDiffMenuList);
 
-					itsPopupMenu->Add(modelRunDiffMenuItem);
+					itsPopupMenu->Add(std::move(modelRunDiffMenuItem));
 
 					// lis‰t‰‰n multi-model piirto valikko
 					AddMultiModelRunToMenu(drawParam, *itsPopupMenu, theDescTopIndex, index);
@@ -5308,33 +5310,33 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 				if(drawParam && drawParam->ShowDifference())
 				{
 					menuString = ::GetDictionaryString("MapViewParamOptionPopUpTimeDiffOff");
-					menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifference, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
+					menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifference, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 				}
 				else
 				{
 					menuString = ::GetDictionaryString("MapViewParamOptionPopUpTimeDiffOn");
-					menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifference, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
+					menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifference, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 				}
-				itsPopupMenu->Add(menuItem);
+				itsPopupMenu->Add(std::move(menuItem));
 
 				if(crossSectionPopup == false)
 				{
 					if(drawParam && drawParam->ShowDifferenceToOriginalData())
 					{
 						menuString = ::GetDictionaryString("MapViewParamOptionPopUpOrigDiffOff");
-						menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
+						menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 					}
 					else
 					{
 						menuString = ::GetDictionaryString("MapViewParamOptionPopUpOrigDiffOn");
-						menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
+						menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 					}
-					itsPopupMenu->Add(menuItem);
+					itsPopupMenu->Add(std::move(menuItem));
 				}
 			}
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpProperties");
-			menuItem = new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam());
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyDrawParam, NFmiMetEditorTypes::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			itsPopupMenu->Add(std::move(menuItem));
 
 			if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 				return false;
@@ -5365,17 +5367,17 @@ bool CreateMaskParamsPopup(int theRowIndex, int index)
 
 			itsPopupMenu = new NFmiMenuItemList;
 			std::string menuString = ::GetDictionaryString("NormalWordCapitalRemove");
-			NFmiMenuItem *menuItem = new NFmiMenuItem(-1, menuString, param, kFmiRemoveMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index);
-			itsPopupMenu->Add(menuItem);
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, param, kFmiRemoveMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index);
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("NormalWordCapitalUse");
-			menuItem = new NFmiMenuItem(-1, menuString, param, kFmiEnAbleMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index);
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(-1, menuString, param, kFmiEnAbleMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index));
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("NormalWordCapitalDisable");
-			menuItem = new NFmiMenuItem(-1, menuString, param, kFmiDisAbleMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index);
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(-1, menuString, param, kFmiDisAbleMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index));
+			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("NormalWordCapitalModify");
-			menuItem = new NFmiMenuItem(-1, menuString, param, kFmiModifyMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index);
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(-1, menuString, param, kFmiModifyMask, NFmiMetEditorTypes::kFmiParamsDefaultView, level, dataType, index));
+			itsPopupMenu->Add(std::move(menuItem));
 
 			if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 				return false;
@@ -5481,7 +5483,7 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 	NFmiMetTime time;
 	if(itsPopupMenu->Find(theCommandID))
 	{
-		NFmiMenuItem * menuItem = itsPopupMenu->FoundMenuItem();
+		NFmiMenuItem * menuItem = itsPopupMenu->RecursivelyFoundMenuItem();
 		if(!menuItem)
 			return false;
 		FmiMenuCommandType command = menuItem->CommandType();
@@ -5662,13 +5664,13 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiActivateCP:
 			{
 				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), true, false);
+					CPManager()->ActivateCP(CPManager()->CPIndex(), true);
 			}
 			break;
 		case kFmiDeactivateCP:
 			{
 				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), false, true);
+					CPManager()->ActivateCP(CPManager()->CPIndex(), false);
 			}
 			break;
 		case kFmiEnableCP:
@@ -5729,6 +5731,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			itsCPManagerSet.SetCPManager(menuItem->IndexInViewRow());
 			TimeSerialViewDirty(true);
 			break;
+        case kFmiObservationStationsToCpPoints:
+            MakeObservationStationsToCpPoints(*menuItem);
+            break;
 
 		case kFmiHideAllMapViewObservations:
 			HideShowAllMapViewParams(menuItem->MapViewDescTopIndex(), true, false, false, false);
@@ -5904,7 +5909,7 @@ void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFm
 	NFmiInfoData::Type dataType = theMenuItem.DataType();
 	if(NFmiDrawParam::IsMacroParamCase(dataType))
 	{
-		theDrawParam->ParameterAbbreviation(static_cast<char*>(theMenuItem.Text())); // macroParamin tapauksessa pit‰‰ nimi asettaa t‰ss‰ (t‰t‰ nimilyhennett‰ k‰ytet‰‰n tunnisteen‰ myˆhemmin!!)
+		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pit‰‰ nimi asettaa t‰ss‰ (t‰t‰ nimilyhennett‰ k‰ytet‰‰n tunnisteen‰ myˆhemmin!!)
 		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
 	if(theMacroParamInitFileName == 0)
 	{
@@ -5990,7 +5995,7 @@ void SetCrossSectionDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::sh
 	if(theMenuItem.DataType() == NFmiInfoData::kCrossSectionMacroParam)
 	{
 		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
-		theDrawParam->ParameterAbbreviation(static_cast<char*>(theMenuItem.Text())); // macroParamin tapauksessa pit‰‰ nimi asettaa t‰ss‰ (t‰t‰ nimilyhennett‰ k‰ytet‰‰n tunnisteen‰ myˆhemmin!!)
+		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pit‰‰ nimi asettaa t‰ss‰ (t‰t‰ nimilyhennett‰ k‰ytet‰‰n tunnisteen‰ myˆhemmin!!)
 		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
 		if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
 			usedMacroParam = currentFolder->Current();
@@ -6337,8 +6342,8 @@ void PasteDrawParamOptions(const NFmiMenuItem& theMenuItem, int theRowIndex, boo
 			UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
 		if(NFmiDrawParam::IsMacroParamCase(theMenuItem.DataType()))
 		{ // macroParam pit‰‰ viel‰ p‰ivitt‰‰ macroParamSystemiin!!
-			string macroParamName(static_cast<char*>(theMenuItem.DataIdent().GetParamName()));
-			if(macroParamName != string("macroParam") && itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
+			string macroParamName = theMenuItem.DataIdent().GetParamName();
+			if(itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
 				itsMacroParamSystem.CurrentMacroParam()->DrawParam()->Init(&itsCopyPasteDrawParam, true);
 		}
 	}
@@ -6833,13 +6838,17 @@ void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 
 boost::shared_ptr<NFmiDrawParam> GetUsedMacroDrawParam(const NFmiMenuItem& theMenuItem)
 {
-	boost::shared_ptr<NFmiDrawParam> usedDrawParam = itsMacroParamDrawParam; // annetaan defaulMacroParam oletus arvoisesti muokattavaksi
-															// mutta vaihdetaan pointteri osoittamaan oikeaa drawparamia, jos kyse oli jostain muusta talletetusta macroParamista
-	string macroParamName(static_cast<char*>(theMenuItem.DataIdent().GetParamName()));
-	if(macroParamName != string("macroParam") && itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
-		usedDrawParam = itsMacroParamSystem.CurrentMacroParam()->DrawParam();
-	usedDrawParam->ViewMacroDrawParam(theMenuItem.ViewMacroDrawParam()); // t‰m‰ pit‰‰ viel‰ asettaa
-	return usedDrawParam;
+	std::string macroParamName = theMenuItem.DataIdent().GetParamName();
+    if(itsMacroParamSystem.FindTotal(macroParamName)) // t‰ss‰ tod. init fileName
+    {
+        auto usedDrawParam = itsMacroParamSystem.CurrentMacroParam()->DrawParam();
+        if(usedDrawParam)
+        {
+            usedDrawParam->ViewMacroDrawParam(theMenuItem.ViewMacroDrawParam()); // t‰m‰ pit‰‰ viel‰ asettaa
+            return usedDrawParam;
+        }
+    }
+    throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": couldn't find searched macroParam '" + macroParamName + "'");
 }
 
 // muokataan macroParametrin asetuksia
@@ -7285,6 +7294,7 @@ bool ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 	if(MapViewDescTop(theDescTopIndex)->ScrollViewRow(theCount, activeViewRow))
 	{
 		ActiveViewRow(theDescTopIndex, activeViewRow); // asetetaan uusi suhteellinen aktiivinen rivi takaisin desctopiin
+        UpdateRowInLockedDescTops(theDescTopIndex);
 		MapDirty(theDescTopIndex, true, false);
 		return true;
 	}
@@ -7774,60 +7784,37 @@ bool CreateCPPopup()
 		itsPopupMenu = new NFmiMenuItemList;
 
 		std::string menuString = ::GetDictionaryString("ControlPointPopUpActivate");
-		NFmiMenuItem *menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiActivateCP, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+        auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiActivateCP, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType);
+		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("ControlPointPopUpDeactivate");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiDeactivateCP, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiDeactivateCP, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType)); 
+		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("ControlPointPopUpUse");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiEnableCP, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiEnableCP, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("ControlPointPopUpDontUse");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiDisableCP, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiDisableCP, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+		itsPopupMenu->Add(std::move(menuItem));
 
 		menuString = ::GetDictionaryString("ControlPointPopUpAllwaysInTimeSerialView");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiShowCPAllwaysOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiShowCPAllwaysOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("ControlPointPopUpNotAllwaysInTimeSerialView");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiDontShowCPAllwaysOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiDontShowCPAllwaysOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("ControlPointPopUpAllPointsInTimeView");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiShowAllCPsAllwaysOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiShowAllCPsAllwaysOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("ControlPointPopUpOnlyActiveInTimeView");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiShowOnlyActiveCPOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiShowOnlyActiveCPOnTimeView, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+		itsPopupMenu->Add(std::move(menuItem));
 
 		menuString = ::GetDictionaryString("ControlPointPopUpModify");
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiModifyCPAttributes, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiModifyCPAttributes, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
+		itsPopupMenu->Add(std::move(menuItem));
 
-		// Lis‰t‰‰n mahdollisen CPManagerSetin valinnat
-		size_t cpSetSize = itsCPManagerSet.CPSetSize();
-		if(cpSetSize > 1)
-		{
-			NFmiMenuItemList *cpManagerMenuList = new NFmiMenuItemList;
-			for(size_t i = 0; i < cpSetSize; i++)
-			{
-				boost::shared_ptr<NFmiEditorControlPointManager> cpManager = itsCPManagerSet.CPManagerFromSet(i);
-				if(cpManager)
-				{
-					NFmiMenuItem *cpMenuItem = new NFmiMenuItem(-1, cpManager->Name(), NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType, static_cast<int>(i)); // 0 = NFmiLevel-pointteri
-					cpManagerMenuList->Add(cpMenuItem);
-				}
-			}
-			
-			if(cpManagerMenuList->NumberOfMenuItems())
-			{
-				menuString = ::GetDictionaryString("CPManagers");
-				menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, infoDataType); // 0 = NFmiLevel-pointteri
-				menuItem->AddSubMenu(cpManagerMenuList);
-				itsPopupMenu->Add(menuItem);
-			}
-			else
-				delete cpManagerMenuList;
-		}
+        AddCpManagerSetsToCpPopupMenu(itsPopupMenu, infoDataType);
+        AddObservationStationsToCpPointsCommands(itsPopupMenu);
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 			return false;
@@ -7835,6 +7822,84 @@ bool CreateCPPopup()
 		return true;
 	}
 	return false;
+}
+
+// Havaintodatan asemista voidaan tehd‰ ControlPoint pisteet
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu)
+{
+    auto &cpObsBlendingData = AnalyzeToolData().ControlPointObservationBlendingData();
+    cpObsBlendingData.SeekProducers(*InfoOrganizer());
+    AddObservationStationsToCpPointsCommands(mainPopupMenu, cpObsBlendingData.Producers(), NFmiInfoData::kObservations);
+}
+
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, const checkedVector<NFmiProducer> &producerList, NFmiInfoData::Type usedInfoData)
+{
+    if(!producerList.empty())
+    {
+        NFmiParam dummyParam;
+        NFmiMenuItemList *producerMenuList = new NFmiMenuItemList;
+        for(const auto &producer : producerList)
+        {
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, std::string(producer.GetName()), NFmiDataIdent(dummyParam, producer), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
+            producerMenuList->Add(std::move(menuItem));
+        }
+
+        if(producerMenuList->NumberOfMenuItems())
+        {
+            std::string menuString = ::GetDictionaryString("Observations To CP points");
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
+            menuItem->AddSubMenu(producerMenuList);
+            mainPopupMenu->Add(std::move(menuItem));
+        }
+        else
+            delete producerMenuList;
+    }
+}
+
+void MakeObservationStationsToCpPoints(NFmiMenuItem &menuItem)
+{
+    // Haetaan k‰ytˆss‰ oleva CP-manager
+    auto controlPointManager = itsCPManagerSet.CPManager(itsCPManagerSet.UseOldSchoolStyle());
+    if(controlPointManager)
+    {
+        // Haetaan k‰ytetyn datatyypin, halutun tuottajan kaikki tiedostot, jotka ovat pinta datoja (= leveleit‰ on vain 1)
+        auto producerId = menuItem.DataIdent().GetProducer()->GetIdent();
+        auto observationInfos = InfoOrganizer()->GetInfos(menuItem.DataType(), true, producerId);
+        controlPointManager->SetZoomedAreaStationsAsControlPoints(observationInfos, MapViewDescTop(0)->MapHandler()->Area());
+        AnalyzeToolData().ControlPointObservationBlendingData().SelectProducer(producerId);
+
+        // Vain aikasarja pit‰‰ laittaa t‰ss‰ likaiseksi, sielt‰ mist‰ t‰t‰ kutsutaan (MakePopUpCommandUsingRowIndex) laitetaan karttan‰ytˆt likaisiksi.
+        TimeSerialViewDirty(true);
+    }
+}
+
+void AddCpManagerSetsToCpPopupMenu(NFmiMenuItemList *mainPopupMenu, NFmiInfoData::Type infoDataType)
+{
+    // Lis‰t‰‰n mahdollisen CPManagerSetin valinnat
+    size_t cpSetSize = itsCPManagerSet.CPSetSize();
+    if(cpSetSize > 1)
+    {
+        NFmiMenuItemList *cpManagerMenuList = new NFmiMenuItemList;
+        for(size_t i = 0; i < cpSetSize; i++)
+        {
+            boost::shared_ptr<NFmiEditorControlPointManager> cpManager = itsCPManagerSet.CPManagerFromSet(i);
+            if(cpManager)
+            {
+                auto cpMenuItem = std::make_unique<NFmiMenuItem>(-1, cpManager->Name(), NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType, static_cast<int>(i));
+                cpManagerMenuList->Add(std::move(cpMenuItem));
+            }
+        }
+
+        if(cpManagerMenuList->NumberOfMenuItems())
+        {
+            std::string menuString = ::GetDictionaryString("CPManagers");
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType);
+            menuItem->AddSubMenu(cpManagerMenuList);
+            mainPopupMenu->Add(std::move(menuItem));
+        }
+        else
+            delete cpManagerMenuList;
+    }
 }
 
 // nelj‰ tilaa:
@@ -7861,8 +7926,6 @@ bool IsToolMasterAvailable(void) const
 void ToolMasterAvailable(bool newValue)
 {
     itsBasicConfigurations.ToolMasterAvailable(newValue);
-    itsCPGriddingProperties.fToolMasterAvailable = newValue; // En ymm‰rr‰ mihin itsCPGriddingProperties -dataosiota todellakin tarvitaan, voisiko sen poistaa
-    itsCPManagerSet.SetToolMasterAvailable(newValue); // asetetaan kaikille CP-managereille arvo kerralla
 }
 
 // Tallettaa mm. CP pisteet, muutosk‰yr‰t jne.
@@ -8074,32 +8137,6 @@ const string& EditorVersionStr(void)
 	return itsBasicConfigurations.EditorVersionStr();
 }
 
-const NFmiCPGriddingProperties& CPGriddingProperties(void)
-{
-	return itsCPGriddingProperties;
-}
-void CPGriddingProperties(const NFmiCPGriddingProperties& newProperties)
-{
-	itsCPGriddingProperties = newProperties;
-	CPManagerSet().SetCPGriddingProperties(itsCPGriddingProperties);  // p‰ivitet‰‰n t‰m‰ myˆs CPManagerSet:iin, ett‰ ominaisuudet tulevat k‰yttˆˆn
-}
-
-bool StoreCPGriddingProperties(void)
-{
-	try
-	{
-		itsCPGriddingProperties.StoreToSettings();
-		return true;
-	}
-	catch(std::exception &e)
-	{
-		std::string errStr("Error while storing gridding options.\n");
-		errStr += e.what();
-		this->LogAndWarnUser(errStr, "Error while storing gridding options", CatLog::Severity::Error, CatLog::Category::Configuration, false);
-	}
-	return false;
-}
-
 bool InitCPManagerSet(void)
 {
     DoVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -8115,22 +8152,6 @@ bool InitCPManagerSet(void)
 	return false;
 }
 
-bool InitCPGriddingProperties(void)
-{
-    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
-	try
-	{
-		itsCPGriddingProperties.InitFromSettings("SmartMet::GriddingOptions");
-		itsCPGriddingProperties.fToolMasterAvailable = this->IsToolMasterAvailable();
-		CPManagerSet().SetCPGriddingProperties(itsCPGriddingProperties);
-		return true;
-	}
-	catch(std::exception &e)
-	{
-		LogAndWarnUser(e.what(), "Error while initializing Gridding Options", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
-	}
-	return false;
-}
 
 	std::string& SmartToolEditingErrorText(void)
 	{
@@ -8263,7 +8284,22 @@ bool InitCPGriddingProperties(void)
 #endif // DISABLE_CPPRESTSDK
         view.ShowHakeMessages(ApplicationWinRegistry().ShowHakeMessages());
         view.ShowKaHaMessages(ApplicationWinRegistry().ShowKaHaMessages());
+        view.MinimumTimeRangeForWarningsOnMapViewsInMinutes(ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes());
 	}
+
+#ifdef max
+#undef max
+#endif
+
+    int GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+    {
+        int timeStepInMapView = static_cast<int>(::round(MapViewDescTop(0)->TimeControlTimeStep() * 60));
+        int minimumTimeRange = ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes();
+        if(minimumTimeRange <= 0)
+            return timeStepInMapView;
+        else
+            return std::max(timeStepInMapView, minimumTimeRange);
+    }
 
 	void FillSynopPlotSettingsMacro(NFmiViewSettingMacro &theMacro)
 	{
@@ -8312,7 +8348,8 @@ bool InitCPGriddingProperties(void)
 		theMacro.AnimationStartPosition(animationStartOffset);
 		int animationEndOffset = 0; //itsAnimationEndTime.DifferenceInMinutes(TimeControlViewTimes(0).LastTime());
 		theMacro.AnimationEndPosition(animationEndOffset);
-	}
+        theMacro.KeepMapAspectRatio(ApplicationWinRegistry().KeepMapAspectRatio());
+    }
 
 	void SetGeneralDoc(NFmiViewSettingMacro &theMacro)
 	{
@@ -8465,6 +8502,7 @@ bool InitCPGriddingProperties(void)
 #endif // DISABLE_CPPRESTSDK
         ApplicationWinRegistry().ShowHakeMessages(view.ShowHakeMessages());
         ApplicationWinRegistry().ShowKaHaMessages(view.ShowKaHaMessages());
+        ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes(view.MinimumTimeRangeForWarningsOnMapViewsInMinutes());
     }
 
 	void SetSynopPlotSettings(NFmiViewSettingMacro &theMacro)
@@ -8644,6 +8682,8 @@ bool InitCPGriddingProperties(void)
 		// SynopDataGridView hoidetaan CSmartMetDoc-luokassa
 		SetObsComparisonSettings(theMacro);
 		SetMaskSettings(theMacro);
+
+        ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
 
 		// l‰j‰ dirty funktio kutsuja, ota nyt t‰st‰ selv‰‰. Pit‰isi laittaa uuteen uskoon koko p‰ivitys asetus juttu.
 		MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
@@ -9328,19 +9368,6 @@ void SwapArea(unsigned int theDescTopIndex)
 		return itsMacroParamSystem;
 	}
 
-    std::string GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-    {
-        if(theDrawParam->ParameterAbbreviation() == std::string("macroParam"))
-            return GetCurrentSmartToolMacro();
-        else
-        {
-            NFmiMacroParamSystem &mpSystem = MacroParamSystem();
-            if(mpSystem.FindTotal(theDrawParam->InitFileName()))
-                return mpSystem.CurrentMacroParam()->MacroText();
-        }
-        throw std::runtime_error(std::string("GetWantedSmartToolStr: Error, couldn't found macro parameter:") + theDrawParam->ParameterAbbreviation());
-    }
-
 	// lis‰‰ halutun nimisen macroParamin halutun karttan‰ytˆn riville (1-5)
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName)
 	{
@@ -9775,21 +9802,21 @@ void SwapArea(unsigned int theDescTopIndex)
 
 
 		menuString = ::GetDictionaryString("CrossSectionViewSelectionPopUpRemoveAll");
-		NFmiMenuItem *menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiRemoveAllParamsCrossSectionView, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+        auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiRemoveAllParamsCrossSectionView, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
+		itsPopupMenu->Add(std::move(menuItem));
 
         menuString = ::GetDictionaryString("Remove all params from all rows");
-        menuItem = new NFmiMenuItem(CtrlViewUtils::kFmiCrossSectionView, menuString, NFmiDataIdent(), kFmiRemoveAllParamsFromAllRows, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-        itsPopupMenu->Add(menuItem);
+        menuItem.reset(new NFmiMenuItem(CtrlViewUtils::kFmiCrossSectionView, menuString, NFmiDataIdent(), kFmiRemoveAllParamsFromAllRows, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+        itsPopupMenu->Add(std::move(menuItem));
 
 		menuString = "Copy all row params";
-		menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiCopyDrawParamsFromCrossSectionViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-		itsPopupMenu->Add(menuItem);
+		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiCopyDrawParamsFromCrossSectionViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+		itsPopupMenu->Add(std::move(menuItem));
 		if(fCopyPasteCrossSectionDrawParamListUsedYet)
 		{
 			menuString = "Paste all row params";
-			menuItem = new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiPasteDrawParamsToCrossSectionViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kEditable); // 0 = NFmiLevel-pointteri
-			itsPopupMenu->Add(menuItem);
+			menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiPasteDrawParamsToCrossSectionViewRow, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable));
+			itsPopupMenu->Add(std::move(menuItem));
 		}
 
 // ********* muuta n‰yttˆrivin kaikkien datojen tuottajat halutuiksi *********
@@ -9816,13 +9843,13 @@ void AddTimeSettingToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu)
 {
 	if(CrossSectionSystem()->GetCrossMode() == NFmiCrossSectionSystem::kTime && !TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 	{
-		NFmiMenuItem *item = new NFmiMenuItem(-1, ::GetDictionaryString("CrossSectionViewSelectionPopUpSetTimes")
+        auto item = std::make_unique<NFmiMenuItem>(-1, ::GetDictionaryString("CrossSectionViewSelectionPopUpSetTimes")
 											,NFmiDataIdent()
 											,kFmiCrossSectionSetTrajectoryTimes
 											,NFmiMetEditorTypes::kFmiParamsDefaultView
-											,0
+											,nullptr
 											,NFmiInfoData::kViewable);
-		thePopupMenu->Add(item);
+		thePopupMenu->Add(std::move(item));
 	}
 }
 
@@ -9830,41 +9857,41 @@ void AddTrajectoryOptionsToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu)
 {
 	if(TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 	{
-		NFmiMenuItem *menuItem = new NFmiMenuItem(-1, "Trajectories", NFmiDataIdent(), kFmiCrossSectionSetTrajectoryTimes, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kViewable); // 0 = NFmiLevel-pointteri ja NFmiInfoData::kViewable on vain merkityksetˆn default arvo
+        auto menuItem = std::make_unique<NFmiMenuItem>(-1, "Trajectories", NFmiDataIdent(), kFmiCrossSectionSetTrajectoryTimes, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kViewable); // NFmiInfoData::kViewable on vain merkityksetˆn default arvo
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
-		NFmiMenuItem *item = new NFmiMenuItem(-1, ::GetDictionaryString("CrossSectionViewSelectionPopUpSetTimes")
+        auto item = std::make_unique<NFmiMenuItem>(-1, ::GetDictionaryString("CrossSectionViewSelectionPopUpSetTimes")
 											,NFmiDataIdent()
 											,kFmiCrossSectionSetTrajectoryTimes
 											,NFmiMetEditorTypes::kFmiParamsDefaultView
-											,0
+											,nullptr
 											,NFmiInfoData::kViewable);
-		menuList->Add(item);
+		menuList->Add(std::move(item));
 
-		item = new NFmiMenuItem(-1, ::GetDictionaryString("CrossSectionViewSelectionPopUpSetParams")
+		item.reset(new NFmiMenuItem(-1, ::GetDictionaryString("CrossSectionViewSelectionPopUpSetParams")
 											,NFmiDataIdent()
 											,kFmiCrossSectionSetTrajectoryParams
 											,NFmiMetEditorTypes::kFmiParamsDefaultView
-											,0
-											,NFmiInfoData::kViewable);
-		menuList->Add(item);
+											,nullptr
+											,NFmiInfoData::kViewable));
+		menuList->Add(std::move(item));
 
 		menuItem->AddSubMenu(menuList);
-		thePopupMenu->Add(menuItem);
+		thePopupMenu->Add(std::move(menuItem));
 	}
 }
 
-void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamList *theDrawParamList, const NFmiString &theMenuTitle, FmiMenuCommandType theMenuCommand)
+void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamList *theDrawParamList, const std::string &theMenuTitle, FmiMenuCommandType theMenuCommand)
 {
 	if(theDrawParamList && theDrawParamList->NumberOfItems() > 0)
 	{
-		NFmiMenuItem *menuItem = new NFmiMenuItem(-1, theMenuTitle, NFmiDataIdent(), theMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kViewable); // 0 = NFmiLevel-pointteri ja NFmiInfoData::kViewable on vain merkityksetˆn default arvo
+        auto menuItem = std::make_unique<NFmiMenuItem>(-1, theMenuTitle, NFmiDataIdent(), theMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kViewable); // NFmiInfoData::kViewable on vain merkityksetˆn default arvo
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
 		int aIndex = 1;
 		for(theDrawParamList->Reset(); theDrawParamList->Next();)
 		{
 			boost::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
 			NFmiDataIdent param(drawParam->Param());
-			NFmiString usedParamName = drawParam->ParameterAbbreviation();
+			std::string usedParamName = drawParam->ParameterAbbreviation();
 			bool macroParam = (drawParam->DataType() == NFmiInfoData::kCrossSectionMacroParam);
 			if(macroParam)
 				param.GetParam()->SetName(drawParam->InitFileName());
@@ -9879,7 +9906,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				}
 			}
 
-			NFmiMenuItem *item = new NFmiMenuItem(-1, usedParamName
+            auto item = std::make_unique<NFmiMenuItem>(-1, usedParamName
 												,param
 												,theMenuCommand
 												,NFmiMetEditorTypes::kFmiParamsDefaultView
@@ -9888,11 +9915,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 												,aIndex
 												,drawParam->ViewMacroDrawParam());
 			item->ExtraParam(1); // kun parametria aktivoidaan (tai tulevaisuudessa tehd‰‰n mit‰ vain), k‰ytet‰‰n extraParamia kertomaan miss‰ parametri on, 0=karttan‰yttˆ, 1=poikkileikkaus ja 2=aikasarja
-			menuList->Add(item);
+			menuList->Add(std::move(item));
 			aIndex++;
 		}
 		menuItem->AddSubMenu(menuList);
-		thePopupMenu->Add(menuItem);
+		thePopupMenu->Add(std::move(menuItem));
 	}
 }
 
@@ -9935,16 +9962,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void TimeSerialDataViewOn(bool newValue)
 	{
 		fTimeSerialDataViewOn = newValue;
-	}
-
-	bool DrawDataOnlyOnRightProjection(void)
-	{
-		return fDrawDataOnlyOnRightProjection;
-	}
-	void DrawDataOnlyOnRightProjection(bool newState)
-	{
-		fDrawDataOnlyOnRightProjection = newState;
-		NFmiSettings::Set(string("MetEditor::DrawDataOnlyOnRightProjection"), NFmiStringTools::Convert<bool>(fDrawDataOnlyOnRightProjection), true);
 	}
 
 	bool SynopDataGridViewOn(void)
@@ -10661,39 +10678,32 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return theInfo.LocationIndex(minLocInd);
 	}
 
-	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing)
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> info;
-
 		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = (thePossibleInfoVector == 0) ? GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY) : *thePossibleInfoVector;
 
-		std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator it = infoVector.begin();
 		if(infoVector.size() > 0)
 		{ // etsit‰‰n useasta infosta l‰hint‰ asemaa
 			const double defaultDist = 999999999.;
 			double minDist = defaultDist;
 			int wantedInfoIndex = -1;
 			int index = 0;
-			bool fDoShipDataLocations = false;
 			unsigned long minLocationIndex = static_cast<unsigned long>(-1);
-			for( ; it != infoVector.end(); ++it)
+			for(auto &info : infoVector)
 			{
-				if(ignoreTime || (*it)->Time(theTime))
+				if(ignoreTime || info->Time(theTime))
 				{
-					FmiProducerName prod = static_cast<FmiProducerName>((*it)->Producer()->GetIdent());
-					if((*it)->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY))
-						fDoShipDataLocations = true;
-					else
-						fDoShipDataLocations = false;
-
-					if(fDoShipDataLocations ? NearestShipLocation(*(*it), theLocation) : (*it)->NearestLocation(theLocation))
+					FmiProducerName prod = static_cast<FmiProducerName>(info->Producer()->GetIdent());
+                    auto doShipDataLocations = (info->IsGrid() == false && (info->HasLatlonInfoInData()));
+					if(doShipDataLocations ? NearestShipLocation(*info, theLocation) : info->NearestLocation(theLocation))
 					{
-						double currentDistance = theLocation.Distance(fDoShipDataLocations ? (*it)->GetLatlonFromData() : (*it)->LatLon());
-						if(currentDistance < minDist)
+						double currentDistance = theLocation.Distance(doShipDataLocations ? info->GetLatlonFromData() : info->LatLonFast());
+						if(currentDistance < minDist && currentDistance < maxDistanceInMeters)
 						{
 							minDist = currentDistance;
 							wantedInfoIndex = index;
-							minLocationIndex = (*it)->LocationIndex();
+							minLocationIndex = info->LocationIndex();
 						}
 					}
 				}
@@ -10701,9 +10711,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 			if(wantedInfoIndex >=0)
 			{
-				it = infoVector.begin();
-				it += wantedInfoIndex;
-				info = *it;
+				info = infoVector[wantedInfoIndex];
 			}
 		}
 
@@ -10880,6 +10888,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnAcceleratorMapRow(unsigned int theDescTopIndex, int theStartingRow)
 	{
 		MapViewDescTop(theDescTopIndex)->MapRowStartingIndex(theStartingRow);
+        UpdateRowInLockedDescTops(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: changed starting absolute map row");
 	}
 
@@ -12764,16 +12773,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		fDrawSelectionOnThisView = newValue;
 	}
 
-	float CPGriddingFactor(void)
-	{
-		return itsCPGriddingFactor;
-	}
-
-	void CPGriddingFactor(float newValue)
-	{
-		itsCPGriddingFactor = newValue;
-	}
-
 	const NFmiRect& CPGridCropRect(void)
 	{
 		if(IsCPGridCropInAction())
@@ -13030,18 +13029,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     const std::string& GetMasterProcessExeName()
     {
-        if(GetMultiProcessClientData().UseTcpMasterProcess())
-            return tmMasterTcpProcessName;
-        else
-            return tmMasterProcessName;
+        return tmMasterTcpProcessName;
     }
 
     const std::string& GetWorkerProcessExeName()
     {
-        if(GetMultiProcessClientData().UseTcpMasterProcess())
-            return tmWorkerTcpProcessName;
-        else
-            return tmWorkerProcessName;
+        return tmWorkerTcpProcessName;
     }
 
     int MasterProcessRunningCount()
@@ -13052,7 +13045,38 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return NFmiApplicationDataBase::CountProcessCount(appData, appVersionsStrOutDummy);
     }
 
-    void MakeSureToolMasterPoolIsRunning2()
+    // MP-CP systeemiss‰ on marter ja worker prosessi executablet.
+    // T‰m‰ funktio rakentaa tilanteeseen sopivan (master/worker) prosessin bin‰‰rin absoluuttisen polun.
+    // Polku rakennetaan 3 eri tavalla:
+    // 1. bin‰‰rien polkuja ei ole annettu konffeissa, rakenna polku niin ett‰ bin‰‰reill‰ on oletus nimet ja ne sijaitsevat SmartMet bin‰‰ri hakemistossa.
+    // 2. Polut on annettu konffeissa absoluuttisina, palauta se suoraan
+    // 3. Polut on annettu suhteellisina, jolloin lopullinen polku rakennetaan SmartMet bin‰‰rihakemiston suhteen
+    std::string MakeMpcpProcessPath(const std::string &absoluteSmartMetAppPath, const std::string &processSettingsKey, const std::string &defaultProcessName)
+    {
+        std::string configuredMasterProcessPath = NFmiSettings::Optional<std::string>(processSettingsKey, "");
+        if(configuredMasterProcessPath.empty())
+        {
+
+            std::string usedAppPath = absoluteSmartMetAppPath;
+            usedAppPath += "\\";
+            usedAppPath += defaultProcessName;
+            return usedAppPath;
+        }
+        else
+        {
+            
+            if(NFmiFileSystem::IsAbsolutePath(configuredMasterProcessPath))
+            {
+                return configuredMasterProcessPath;
+            }
+            else
+            {
+                return PathUtils::getAbsoluteFilePath(configuredMasterProcessPath, absoluteSmartMetAppPath);
+            }
+        }
+    }
+
+    bool MakeSureToolMasterPoolIsRunning2()
     {
         // Tarkista onko Master-prosessi jo k‰ynniss‰, jos oli, lopetetaan
         if(MasterProcessRunningCount() <= 0)
@@ -13061,74 +13085,40 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             usedAppPath = NFmiStringTools::UrlDecode(usedAppPath); // valitettavasti t‰m‰ stringi on url-encodattu ja se pit‰‰ purkaa...
 
             // Jos ei ollut, k‰ynnist‰ Master-prosessi
-		    std::string commandStr;
-		    commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-		    commandStr += usedAppPath;
-		    commandStr += "\\";
-            commandStr += GetMasterProcessExeName();
-		    commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            std::string commandStr;
+            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::MasterProcessPath", GetMasterProcessExeName());
+            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
 
-		    commandStr += " -H"; // laitetaan TM-master prosessi piiloon -h optiolla
-		    commandStr += " -l \""; // laitetaan lokitiedosto -l optiolla
+            commandStr += " -H"; // laitetaan TM-master prosessi piiloon -h optiolla
+            commandStr += " -l \""; // laitetaan lokitiedosto -l optiolla
             commandStr += itsMultiProcessLogFilePath;
-		    commandStr += "\""; // laitetaan lainausmerkit lokitiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-		    commandStr += " -L "; // laitetaan lokitus taso -L optiolla
+            commandStr += "\""; // laitetaan lainausmerkit lokitiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += " -L "; // laitetaan lokitus taso -L optiolla
             commandStr += boost::lexical_cast<std::string>((int)itsMultiProcessPoolOptions.LogLevel());
             if(itsMultiProcessPoolOptions.MultiProcessPoolOptions().verbose_logging)
-    		    commandStr += " -v"; // laitetaan verbose lokitus p‰‰lle
+                commandStr += " -v"; // laitetaan verbose lokitus p‰‰lle
 
-            if(!GetMultiProcessClientData().UseTcpMasterProcess())
-            { // Vain IPC -pohjaiselle (EI Tcp) serverille annetaan n‰m‰ argumentit
-		        commandStr += " -w "; // laitetaan work-queue size -w optiolla
-                commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().task_queue_size_in_bytes);
-		        commandStr += " -r "; // laitetaan result-queue size -r optiolla
-                commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().result_queue_size_in_bytes);
-            }
-
-		    commandStr += " -W "; // laitetaan Worker-prosessin polku -W optiolla
-		    commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-		    commandStr += usedAppPath;
-		    commandStr += "\\";
-            commandStr += GetWorkerProcessExeName();
-		    commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += " -W "; // laitetaan Worker-prosessin polku -W optiolla
+            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
+            commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::WorkerProcessPath", GetWorkerProcessExeName());
+            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
 
 //            WORD showWindow = SW_HIDE;
-            CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr);
+            return CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true);
         }
-    }
-
-    // Aina kun tehd‰‰n MP-CP editointia (Multi-Process Control-Point), pit‰‰ varmistaa ett‰ 
-    // ToolMaster -prosessi pooli on k‰ynniss‰. ja jos ei ole, se pit‰‰ k‰ynnist‰‰.
-    // Jotta homma sujuisi nopeasti (t‰m‰n funktion kutsujan silmin), tehd‰‰n prosessi tarkastelut ja 
-    // niiden mahdolliset k‰ynnistykset erillisess‰ threadissa.
-    void MakeSureToolMasterPoolIsRunning(void)
-    {
-        MultiProcessQueueClearing(); // T‰t‰ pit‰‰ kutsua ennen kuin multi-process systeemi k‰ynnistet‰‰n
-
-        boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
-        // Eli ei j‰‰d‰ odottamaan lopetusta tt.join():illa
-    }
-
-    // Yritet‰‰n tyhjent‰‰ 1. kerralla mahdollisia olemassa olevia work- ja result-queue:ja
-    void MultiProcessQueueClearing(void)
-    {
-        static bool firstTime = true;
-
-        if(firstTime) // Vain 1. kerralla
+        else
         {
-            firstTime = false;
-
-            // 1. jos ei ole jo alustettu MultiProcessClientData:a
-            if(!GetMultiProcessClientData().IsMultiProcessClientDataInitialized())
-            {
-                // 2. Jos ei ole k‰ynniss‰ Master-processia
-                if(MasterProcessRunningCount() == 0)
-                {
-                    process_helpers::remove_shared_memory_object(work_queue_shared_name);
-                    process_helpers::remove_shared_memory_object(work_result_queue_shared_name);
-                }
-            }
+            LogMessage("MP-CP calculations's Master process was already up and running, continuing to calculations...", CatLog::Severity::Debug, CatLog::Category::Editing);
+            return true;
         }
+    }
+
+    bool MakeSureToolMasterPoolIsRunning(void)
+    {
+        return MakeSureToolMasterPoolIsRunning2();
+//        boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
+        // Eli ei j‰‰d‰ odottamaan lopetusta tt.join():illa
     }
 
     NFmiMultiProcessPoolOptions& MultiProcessPoolOptions(void)
@@ -13728,27 +13718,24 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
-            // Add other data. Joonas: jatka t‰st‰!
-            //if(ConceptualModelData().Use())
-            //{
-            //    NFmiProducer prod(1028); // No official producerId
-            //    std::string menuString = "Conceptual analysis";
-            //    NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, ConceptualModelData().DefaultUserName()), prod), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kConceptualModelData); // 0 = NFmiLevel-pointteri
-            //    menuList->Add(menuItem1);
-            //}
-
+            // Add other data to help data. 
             if(capDataSystem.useCapData())
             {
-                NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345)); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
-                std::string menuString = "Warnings (CAP)";
+                NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345), "CAP"); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
+                std::string menuString = "Warnings";
                 paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
-                //NFmiMenuItem *menuItem1 = new NFmiMenuItem(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, "cap-data"), prod), 
-                //    theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, 0, NFmiInfoData::kCapData);
-                //menuList->Add(menuItem1);
             }
 
-            // TODO alusta eri categoria datoilla ilman varsinaisia datoja (lis‰‰ kyseinen ominaisuus ParamAddingSystem:iin)
-            // WmsSupport()
+            if(ConceptualModelData().Use())
+            {
+                NFmiProducer prod(1028, "Analysis"); // No official producerId
+                std::string menuString = "Conceptual analysis";
+                std::string displayName = ConceptualModelData().DefaultUserName(); // Conceptual analysis uses displayName to fetch correct data!
+                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
+            }
+            
+            // TODO
+            // WmsSupport(), Streamlines, Edited data
         }
         catch(std::exception &e)
         {
@@ -13795,6 +13782,25 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     Warnings::CapDataSystem& GetCapDataSystem()
     {
         return capDataSystem;
+    }
+
+    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+    {
+        if(MetEditorOptionsData().ControlPointMode())
+        {
+            if(CPManager()->MakeControlPointAcceleratorAction(action))
+            {
+                TimeSerialViewDirty(true);
+                RefreshApplicationViewsAndDialogs(updateMessage, true, true, 0);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void InitGriddingProperties()
+    {
+        ApplicationWinRegistry().InitGriddingProperties(IsToolMasterAvailable());
     }
 
     std::string itsLastLoadedViewMacroName; // t‰t‰ nime‰ k‰ytet‰‰n smartmet:in p‰‰ikkunan title tekstiss‰ (jotta k‰ytt‰j‰ n‰kee mik‰ viewMacro on ladattuna)
@@ -13844,8 +13850,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiPoint itsCPGridCropMargin; // t‰ss‰ kerrotaan kuinka monta hilapistett‰ x- ja y-suunnassa on ulko- ja sis‰-laatikon v‰liss‰. 
 									// T‰ll‰ alueella muutokset menev‰t t‰ydest‰ l‰hes nollaan, jotta reunoista tulisi mahdollisimman pehme‰t.
 
-	float itsCPGriddingFactor; // T‰ll‰ s‰‰det‰‰n miten tarkkaa modifikaatio hilaa lasketaan Kontrollipistetyˆkalussa. Kyse on huijauksesta CP-muokkauksen nopeuden t‰hden.
-								// Jos arvo on > 0 ja < 1, lasketaan muutoshila harvennettuun hilaan joka sitten interpoloidaan editoidun datan omaan hilaan ja tehd‰‰n muutokset.
 	bool fDrawSelectionOnThisView; // haluan piirt‰‰ maalattaessa valitut pisteet piirto ikkunaan, t‰m‰ on sit‰ varten tehty kikka vitonen
 	bool fEditedPointsSelectionChanged; // onko muutettu editoinnissa valittuja pisteit‰, jos on, niin ruutua pit‰‰ p‰ivitt‰‰ tietyll‰ tavalla.
 	NFmiBasicSmartMetConfigurations itsBasicConfigurations; // T‰‰ll‰ on tietyt perus asetukset, mitk‰ alustetaan jo ennen GenDocin alustusta
@@ -13965,8 +13969,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool fShowSynopHighlightStationMarker; // n‰ytet‰‰nkˆ merkki kartta n‰ytˆss‰, kun jokin asema on mahdollisesti valittu
 	NFmiPoint itsSynopHighlightLatlon; // t‰ss‰ latlon pisteess‰ oli viimeksi merkattu synop asema synop-teksti-taulukko n‰ytˆss‰
 	bool fSynopDataGridViewOn; // onko synop teksti muodossa katselu ikkuna n‰kyviss‰ vai ei
-	bool fDrawDataOnlyOnRightProjection; // piirret‰‰nkˆ hiladata 'v‰‰r‰n' projektion kartan p‰‰lle, t‰m‰ on editorin asetuksista s‰‰dett‰v‰ optio
-									// joka tarkoitus on est‰‰ k‰ytt‰m‰st‰ omaa grafiikka pakettia 'vahingossa' kun on toolmaster k‰ytˆss‰
 	bool fTimeSerialDataViewOn; // onko aikasarja n‰yttˆ p‰‰ll‰ vai ei
 	NFmiMTATempSystem itsMTATempSystem; // tieto luotaus moodista ja jos MTA-moodi p‰‰ll‰, tietoa luotausn‰ytˆss‰ n‰ytett‰vist‰ luotauksista
 	NFmiPtrList<NFmiDrawParamList> *itsCrossSectionDrawParamListVector; // poikkileikkaus ikkuna-ruudukon drawparamit
@@ -13978,7 +13980,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiCrossSectionSystem itsCrossSectionSystem; // poikkileikkaus piirron pisteiden hanskaus systeemi
 	string itsLatestMacroParamErrorText; // kun macroParam piirret‰‰n karttan‰ytˆlle, ja tulee virhe, talletetaan t‰h‰n aina viimeisin virhe ilmoitus
 	NFmiMacroParamSystem itsMacroParamSystem; // t‰m‰ hanskaa macroParamit, joilla voi piirt‰‰ smarttoolmacroja karttan‰ytˆlle
-	boost::shared_ptr<NFmiDrawParam> itsMacroParamDrawParam; // t‰m‰ on pysyv‰ macroParamien testi DrawParam
 	string itsCurrentMacroText; // t‰ss‰ on tallessa viimeisin smarttool-dialogin teksti
 								// k‰ytet‰‰n macroparam-n‰ytˆn testivaiheessa
 
@@ -14010,8 +14011,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	boost::shared_ptr<NFmiDrawParam> itsSelectedGridPointDrawParam; // t‰m‰n avulla piirret‰‰n toolmasterilla editoinnissa valittujen pisteiden joukko
 	size_t itsSelectedGridPointLimit; // kuinka monta hilapistett‰ pit‰‰ v‰hint‰‰n olla valittuna ennen kuin menn‰‰n uuteen hatchill‰ visualisointi tapaan
 	string itsSmartToolEditingErrorText;
-
-	NFmiCPGriddingProperties itsCPGriddingProperties; // mill‰ funktiolla ja miten tehd‰‰n CP-tyˆkalun griddaus
 
 	bool fActivateParamSelectionDlgAfterLeftDoubleClick; // kikka 6, jotta zeditmap2view tiet‰‰, pit‰‰kˆ dialogi aktivoida
 
@@ -14744,21 +14743,6 @@ bool NFmiEditMapGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, 
 	return pimpl->ExecuteCommand(theMenuItem, theViewIndex, theViewTypeId);
 }
 
-const NFmiCPGriddingProperties& NFmiEditMapGeneralDataDoc::CPGriddingProperties(void)
-{
-	return pimpl->CPGriddingProperties();
-}
-
-void NFmiEditMapGeneralDataDoc::CPGriddingProperties(const NFmiCPGriddingProperties& newProperties)
-{
-	pimpl->CPGriddingProperties(newProperties);
-}
-
-bool NFmiEditMapGeneralDataDoc::StoreCPGriddingProperties(void)
-{
-	return pimpl->StoreCPGriddingProperties();
-}
-
 bool NFmiEditMapGeneralDataDoc::DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
 {
 	return pimpl->DoSmartToolEditing(theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly);
@@ -14891,11 +14875,6 @@ NFmiMacroParamSystem& NFmiEditMapGeneralDataDoc::MacroParamSystem(void)
 	return pimpl->MacroParamSystem();
 }
 
-std::string NFmiEditMapGeneralDataDoc::GetWantedSmartToolStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-{
-    return pimpl->GetWantedSmartToolStr(theDrawParam);
-}
-
 void NFmiEditMapGeneralDataDoc::AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName) // lis‰‰ halutun nimisen macroParamin halutun karttan‰ytˆn riville (1-5)
 {
 	pimpl->AddMacroParamToView(theDescTopIndex, theViewRow, theName);
@@ -14999,14 +14978,6 @@ void NFmiEditMapGeneralDataDoc::TimeSerialDataViewOn(bool newValue)
 	pimpl->TimeSerialDataViewOn(newValue);
 }
 
-bool NFmiEditMapGeneralDataDoc::DrawDataOnlyOnRightProjection(void)
-{
-	return pimpl->DrawDataOnlyOnRightProjection();
-}
-void NFmiEditMapGeneralDataDoc::DrawDataOnlyOnRightProjection(bool newState)
-{
-	pimpl->DrawDataOnlyOnRightProjection(newState);
-}
 bool NFmiEditMapGeneralDataDoc::SynopDataGridViewOn(void)
 {
 	return pimpl->SynopDataGridViewOn();
@@ -15303,9 +15274,9 @@ void NFmiEditMapGeneralDataDoc::ResetOutOfEditedAreaTimeSerialPoint(void)
 	pimpl->ResetOutOfEditedAreaTimeSerialPoint();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
-	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector);
+	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
 
 void NFmiEditMapGeneralDataDoc::TimeControlTimeStep(unsigned int theDescTopIndex, float newValue)
@@ -16083,16 +16054,6 @@ void NFmiEditMapGeneralDataDoc::DrawSelectionOnThisView(bool newValue)
 	pimpl->DrawSelectionOnThisView(newValue);
 }
 
-float NFmiEditMapGeneralDataDoc::CPGriddingFactor(void)
-{
-	return pimpl->CPGriddingFactor();
-}
-
-void NFmiEditMapGeneralDataDoc::CPGriddingFactor(float newValue)
-{
-	pimpl->CPGriddingFactor(newValue);
-}
-
 const NFmiRect& NFmiEditMapGeneralDataDoc::CPGridCropRect(void)
 {
 	return pimpl->CPGridCropRect();
@@ -16203,9 +16164,9 @@ void NFmiEditMapGeneralDataDoc::UseMultiProcessCpCalc(bool newValue)
     pimpl->UseMultiProcessCpCalc(newValue);
 }
 
-void NFmiEditMapGeneralDataDoc::MakeSureToolMasterPoolIsRunning(void)
+bool NFmiEditMapGeneralDataDoc::MakeSureToolMasterPoolIsRunning(void)
 {
-    pimpl->MakeSureToolMasterPoolIsRunning();
+    return pimpl->MakeSureToolMasterPoolIsRunning();
 }
 
 NFmiMultiProcessPoolOptions& NFmiEditMapGeneralDataDoc::MultiProcessPoolOptions(void)
@@ -16489,4 +16450,24 @@ Q2ServerInfo& NFmiEditMapGeneralDataDoc::GetQ2ServerInfo()
 Warnings::CapDataSystem& NFmiEditMapGeneralDataDoc::GetCapDataSystem()
 {
     return pimpl->GetCapDataSystem();
+}
+
+void NFmiEditMapGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
+{
+    pimpl->UpdateRowInLockedDescTops(theOrigDescTopIndex);
+}
+
+int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+{
+    return pimpl->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}
+
+bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    return pimpl->MakeControlPointAcceleratorAction(action, updateMessage);
+}
+
+void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
+{
+    pimpl->InitGriddingProperties();
 }

@@ -296,7 +296,14 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_APPLY_STARTUP_VIEW_MACRO, &CSmartMetDoc::OnAcceleratorApplyStartupViewMacro)
     ON_COMMAND(ID_ACCELERATOR_TOGGLE_WMS_MAP_MODE, &CSmartMetDoc::OnAcceleratorToggleWmsMapMode)
     ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParamAddingDlgPlaceToDefault)
-    END_MESSAGE_MAP()
+        ON_COMMAND(ID_HELP_EXCEPTIONTEST, &CSmartMetDoc::OnHelpExceptiontest)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_NEXT, &CSmartMetDoc::OnAcceleratorCpSelectNext)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_PREVIOUS, &CSmartMetDoc::OnAcceleratorCpSelectPrevious)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_LEFT, &CSmartMetDoc::OnAcceleratorCpSelectLeft)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_RIGHT, &CSmartMetDoc::OnAcceleratorCpSelectRight)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_UP, &CSmartMetDoc::OnAcceleratorCpSelectUp)
+        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
+        END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
 END_DISPATCH_MAP()
@@ -2180,14 +2187,13 @@ void CSmartMetDoc::OnMenuitemGriddingOptions()
 	NFmiEditMapGeneralDataDoc* doc = GetData();
 	if(doc)
 	{
-		NFmiCPGriddingProperties options(doc->CPGriddingProperties());
-		CFmiGriddingOptionsDlg dlg(&options);
+        // Tässä muokataan vain editointiin liittyviä griddaus asetuksia
+		CFmiGriddingOptionsDlg dlg(doc->ApplicationWinRegistry().GriddingProperties(true));
 		if(dlg.DoModal() == IDOK)
 		{
-			doc->CPGriddingProperties(options);
-			doc->StoreCPGriddingProperties();
+            doc->ApplicationWinRegistry().SetGriddingProperties(true, dlg.GetModifiedGriddingProperties());
 			doc->MapDirty(itsMapViewDescTopIndex, true, true);
-			UpdateAllViewsAndDialogs("Used ToolMaster gridding function changed");
+			UpdateAllViewsAndDialogs("Used ToolMaster gridding options changed");
 		}
 	}
 
@@ -2405,7 +2411,7 @@ static bool GenerateViewIfNeededAndContinueToInitializations(const MacroViewInfo
         return true;
     else
     {
-        if(macroViewInfo.ShowWindow())
+        if(macroViewInfo.ViewStatus().ShowWindow())
         {
             viewCreationFunction();
             return (*view != nullptr);
@@ -2421,7 +2427,7 @@ void CSmartMetDoc::LoadViewMacroSettingsForWarningCenterView(NFmiViewSettingMacr
     auto createViewFunction = [this]() {this->CreateWarningCenterDlg(this->itsData); };
     if(::GenerateViewIfNeededAndContinueToInitializations(theViewMacro.GetWarningCenterView(), &itsWarningCenterDlg, createViewFunction))
     {
-        CFmiWin32Helpers::SetWindowSettings(itsWarningCenterDlg, ::NFmiRect2CRect(theViewMacro.GetWarningCenterView().AbsolutRect()), theViewMacro.GetWarningCenterView().ShowWindow(), AfxGetMainWnd(), theStartCornerCounter);
+        CFmiWin32Helpers::SetWindowSettings(itsWarningCenterDlg, ::NFmiRect2CRect(theViewMacro.GetWarningCenterView().AbsolutRect()), theViewMacro.GetWarningCenterView().ViewStatus(), theStartCornerCounter);
         itsWarningCenterDlg->LoadViewMacroSettingsFromDocument();
         itsWarningCenterDlg->Update();
     }
@@ -2433,7 +2439,7 @@ void CSmartMetDoc::LoadViewMacroSettingsForTrajectoryDlg(NFmiViewSettingMacro &t
     auto createViewFunction = [this]() {this->CreateTrajectoryDlg(this->itsData); };
     if(::GenerateViewIfNeededAndContinueToInitializations(theViewMacro.GetTrajectoryView(), &itsTrajectoryDlg, createViewFunction))
     {
-        CFmiWin32Helpers::SetWindowSettings(itsTrajectoryDlg, ::NFmiRect2CRect(theViewMacro.GetTrajectoryView().AbsolutRect()), theViewMacro.GetTrajectoryView().ShowWindow(), AfxGetMainWnd(), theStartCornerCounter);
+        CFmiWin32Helpers::SetWindowSettings(itsTrajectoryDlg, ::NFmiRect2CRect(theViewMacro.GetTrajectoryView().AbsolutRect()), theViewMacro.GetTrajectoryView().ViewStatus(), theStartCornerCounter);
         itsTrajectoryDlg->InitFromTrajectorySystem();
     }
 }
@@ -2444,7 +2450,7 @@ void CSmartMetDoc::LoadViewMacroSettingsForSynopDataGridView(NFmiViewSettingMacr
     auto createViewFunction = [this]() {this->CreateSynopDataGridViewDlg(this->itsData); };
     if(::GenerateViewIfNeededAndContinueToInitializations(theViewMacro.GetSynopDataGridView(), &itsSynopDataGridViewDlg, createViewFunction))
     {
-        CFmiWin32Helpers::SetWindowSettings(itsSynopDataGridViewDlg, ::NFmiRect2CRect(theViewMacro.GetSynopDataGridView().AbsolutRect()), theViewMacro.GetSynopDataGridView().ShowWindow(), AfxGetMainWnd(), theStartCornerCounter);
+        CFmiWin32Helpers::SetWindowSettings(itsSynopDataGridViewDlg, ::NFmiRect2CRect(theViewMacro.GetSynopDataGridView().AbsolutRect()), theViewMacro.GetSynopDataGridView().ViewStatus(), theStartCornerCounter);
         itsSynopDataGridViewDlg->ApplySynopDataGridViewMacro(theViewMacro.GetSynopDataGridView());
         itsSynopDataGridViewDlg->Update();
     }
@@ -2456,7 +2462,7 @@ void CSmartMetDoc::LoadViewMacroSettingsForTempDialog(NFmiViewSettingMacro &theV
     auto createViewFunction = [this]() {this->CreateTempDlg(); };
     if(::GenerateViewIfNeededAndContinueToInitializations(theViewMacro.GetTempView(), &itsTempDialog, createViewFunction))
     {
-        CFmiWin32Helpers::SetWindowSettings(itsTempDialog, ::NFmiRect2CRect(theViewMacro.GetTempView().AbsolutRect()), theViewMacro.GetTempView().ShowWindow(), AfxGetMainWnd(), theStartCornerCounter);
+        CFmiWin32Helpers::SetWindowSettings(itsTempDialog, ::NFmiRect2CRect(theViewMacro.GetTempView().AbsolutRect()), theViewMacro.GetTempView().ViewStatus(), theStartCornerCounter);
         itsTempDialog->Update();
     }
 }
@@ -2467,7 +2473,7 @@ void CSmartMetDoc::LoadViewMacroSettingsForCrossSectionDlg(NFmiViewSettingMacro 
     auto createViewFunction = [this]() {this->CreateCrossSectionDlg(); };
     if(::GenerateViewIfNeededAndContinueToInitializations(theViewMacro.GetCrossSectionView(), &itsCrossSectionDlg, createViewFunction))
     {
-        CFmiWin32Helpers::SetWindowSettings(itsCrossSectionDlg, ::NFmiRect2CRect(theViewMacro.GetCrossSectionView().AbsolutRect()), theViewMacro.GetCrossSectionView().ShowWindow(), AfxGetMainWnd(), theStartCornerCounter);
+        CFmiWin32Helpers::SetWindowSettings(itsCrossSectionDlg, ::NFmiRect2CRect(theViewMacro.GetCrossSectionView().AbsolutRect()), theViewMacro.GetCrossSectionView().ViewStatus(), theStartCornerCounter);
         itsCrossSectionDlg->InitFromCrossSectionSystem();
     }
 }
@@ -2479,7 +2485,7 @@ void CSmartMetDoc::LoadViewMacroSettingsForExtraMapViewDlg(CFmiExtraMapViewDlg *
     auto createViewFunction = [this, theMapViewDescTopIndex, extraMapViewDlg]() {*extraMapViewDlg = this->CreateExtraMapViewDlg(this->itsData, theMapViewDescTopIndex); };
     if(::GenerateViewIfNeededAndContinueToInitializations(mapViewDescTop, extraMapViewDlg, createViewFunction))
     {
-        CFmiWin32Helpers::SetWindowSettings(*extraMapViewDlg, ::NFmiRect2CRect(mapViewDescTop.AbsolutRect()), mapViewDescTop.ShowWindow(), AfxGetMainWnd(), theStartCornerCounter);
+        CFmiWin32Helpers::SetWindowSettings(*extraMapViewDlg, ::NFmiRect2CRect(mapViewDescTop.AbsolutRect()), mapViewDescTop.ViewStatus(), theStartCornerCounter);
         (*extraMapViewDlg)->Update();
     }
 }
@@ -2490,8 +2496,8 @@ void CSmartMetDoc::LoadViewMacroSettingsForTimeSerialDataView(NFmiViewSettingMac
     auto createViewFunction = [this]() {this->CreateTimeEditor(true); };
     if(::GenerateViewIfNeededAndContinueToInitializations(theViewMacro.GetTimeView(), &itsTimeSerialDataEditorDlg, createViewFunction))
     {
-        CFmiWin32Helpers::SetWindowSettings(itsTimeSerialDataEditorDlg, ::NFmiRect2CRect(theViewMacro.GetTimeView().AbsolutRect()), theViewMacro.GetTimeView().ShowWindow(), AfxGetMainWnd(), theStartCornerCounter);
-        GetData()->TimeSerialDataViewOn(theViewMacro.GetTimeView().ShowWindow());
+        CFmiWin32Helpers::SetWindowSettings(itsTimeSerialDataEditorDlg, ::NFmiRect2CRect(theViewMacro.GetTimeView().AbsolutRect()), theViewMacro.GetTimeView().ViewStatus(), theStartCornerCounter);
+        GetData()->TimeSerialDataViewOn(theViewMacro.GetTimeView().ViewStatus().ShowWindow());
         itsTimeSerialDataEditorDlg->fUseMaskInTimeSerialViews = theViewMacro.GetMaskSettings().UseMasksInTimeSerialViews();
         itsTimeSerialDataEditorDlg->UpdateData(FALSE);
     }
@@ -2511,7 +2517,7 @@ void CSmartMetDoc::LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMac
 			int startCornerCounter = 0;
 			// ** kartta eli mainframen sijainti **
 			NFmiViewSettingMacro::MapViewDescTop &mapViewDescTop0 = theViewMacro.ExtraMapViewDescTops()[0];
-			CFmiWin32Helpers::SetWindowSettings(AfxGetMainWnd(), ::NFmiRect2CRect(mapViewDescTop0.AbsolutRect()), mapViewDescTop0.ShowWindow(), 0, startCornerCounter);
+			CFmiWin32Helpers::SetWindowSettings(AfxGetMainWnd(), ::NFmiRect2CRect(mapViewDescTop0.AbsolutRect()), mapViewDescTop0.ViewStatus(), startCornerCounter);
 
             LoadViewMacroSettingsForTimeSerialDataView(theViewMacro, startCornerCounter);
             LoadViewMacroSettingsForTempDialog(theViewMacro, startCornerCounter);
@@ -2534,7 +2540,8 @@ void CSmartMetDoc::LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMac
                 LoadViewMacroSettingsForExtraMapViewDlg(&itsExtraMapViewDlg1, 1, theViewMacro, startCornerCounter);
                 LoadViewMacroSettingsForExtraMapViewDlg(&itsExtraMapViewDlg2, 2, theViewMacro, startCornerCounter);
 			}
-		}
+            MakeViewActivationAfterLoadingViewMacro();
+        }
 		catch(exception &e)
 		{
 			std::string errStr("Unable to load current view-macro, reason: \n");
@@ -2543,6 +2550,16 @@ void CSmartMetDoc::LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMac
 			doc->LogAndWarnUser(errStr, "ViewMacro loading problem", CatLog::Severity::Error, CatLog::Category::Macro, false);
 		}
 	}
+}
+
+void CSmartMetDoc::MakeViewActivationAfterLoadingViewMacro()
+{
+    // Lopuksi aktivoidaan viewMacro-dialogi, koska se on jäänyt luultavasti kaikkien ikkunoiden alle,
+    // tai jos sitä ei ole edes luotu vielä (kun ladataan esim. backup-macro viime ajosta) niin pääikkuna (kuten ennen tehtiin)
+    if(itsViewMacroDlg)
+        itsViewMacroDlg->SetActiveWindow();
+    else
+        AfxGetMainWnd()->SetActiveWindow();
 }
 
 // CTRL+I avaa nykyään vain näyttömakro dialogin, ei muuta, tässä vanha harhaan johtava nimi
@@ -2556,7 +2573,7 @@ void CSmartMetDoc::OnAcceleratorStoreViewMacro()
 }
 
 template<class Tview>
-static void GetWindowSettings(NFmiApplicationWinRegistry &theApplicationWinRegistry, Tview *window, NFmiRect &theRect, bool &fShowWindow, unsigned int theMapViewDescTopIndex)
+static void GetWindowSettings(NFmiApplicationWinRegistry &theApplicationWinRegistry, Tview *window, NFmiRect &theRect, bool &fShowWindow, unsigned int theMapViewDescTopIndex, UINT &showCommand)
 {
     if(window)
     {
@@ -2569,6 +2586,7 @@ static void GetWindowSettings(NFmiApplicationWinRegistry &theApplicationWinRegis
             wndpl.rcNormalPosition.bottom);
         theRect = rect;
         fShowWindow = window->IsWindowVisible() != 0;
+        showCommand = wndpl.showCmd;
     }
     else
     {
@@ -2578,14 +2596,31 @@ static void GetWindowSettings(NFmiApplicationWinRegistry &theApplicationWinRegis
     }
 }
 
+// Haluamme tallettaa ikkunasta minimized/maximized tilan, mutta emme muita tiloja.
+// Aiemmin emme välittäneet min/max tiloista, mutta nyt niin halutaan. En halua kuitenkaan käyttää muita tiloja,
+// koska en tiedä sivuvaikutuksia (erilaisia tiloja on n. 10 kpl). Tämä mahdollistaa sen, että jos showCommand on 0, 
+// toimitaan kuten ennenkin (se arvo on nykyään jokaisessa näyttömakrossa), muuten palautetaan showCommand arvo.
+static bool IsViewShowCommandStoredInViewMacro(UINT showCommand)
+{
+    if(CFmiWin32Helpers::IsShowCommandMinimized(showCommand) || CFmiWin32Helpers::IsShowCommandMaximized(showCommand))
+        return true;
+    else
+        return false;
+}
+
 template<typename  View, typename MacroViewSettings>
 void StoreViewRectToMacro(View *view, MacroViewSettings &macroSettings, NFmiApplicationWinRegistry &applicationWinRegistry, unsigned int theMapViewDescTopIndex)
 {
     NFmiRect windowRect;
     bool showWindow = false;
-    ::GetWindowSettings(applicationWinRegistry, view, windowRect, showWindow, theMapViewDescTopIndex);
+    UINT showCommand = 0;
+    ::GetWindowSettings(applicationWinRegistry, view, windowRect, showWindow, theMapViewDescTopIndex, showCommand);
     macroSettings.AbsolutRect(windowRect);
-    macroSettings.ShowWindow(showWindow);
+    macroSettings.ViewStatus().ShowWindow(showWindow);
+    if(::IsViewShowCommandStoredInViewMacro(showCommand))
+        macroSettings.ViewStatus().ShowCommand(showCommand);
+    else
+        macroSettings.ViewStatus().ShowCommand(0);
 }
 
 // tämä on hankala, tätä kutsutaan viewwmakro-dialogista zeditmapview-otuksen kautta
@@ -3080,6 +3115,14 @@ void CSmartMetDoc::DoCrashTest(void)
 	NFmiDataMatrix<float> bs;
 	bs[10][20] = 4.6f;
 	bs.At(10, 20) = 4.6f;
+}
+
+void CSmartMetDoc::OnHelpExceptiontest()
+{
+    // Yleinen poikkeuksien käsittely hoidetaan nyt applikaation Run metodissa, jossa niistä lokitetaan viestiä, mutta jatketaan.
+    std::string exceptionMessage = "Test exception is thrown from ";
+    exceptionMessage += __FUNCTION__;
+    throw std::runtime_error(exceptionMessage); 
 }
 
 void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
@@ -3740,4 +3783,47 @@ void CSmartMetDoc::OnAcceleratorToggleWmsMapMode()
 {
     itsData->UseWmsMaps(!itsData->UseWmsMaps());
     UpdateAllViewsAndDialogs("Toggle WMS map mode");
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectNext()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Next, "Main map view: Select next Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectPrevious()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Previous, "Main map view: Select previous Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectLeft()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Left, "Main map view: Select nearest left Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectRight()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Right, "Main map view: Select nearest right Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectUp()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Up, "Main map view: Select nearest upward Control-point"s);
+}
+
+
+void CSmartMetDoc::OnAcceleratorCpSelectDown()
+{
+    HandleCpAccelerator(ControlPointAcceleratorActions::Down, "Main map view: Select nearest downward Control-point"s);
+}
+
+void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    if(GetData()->MakeControlPointAcceleratorAction(action, updateMessage))
+    {
+    }
 }

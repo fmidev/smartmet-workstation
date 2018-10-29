@@ -9,7 +9,7 @@
 #include "NFmiValueString.h"
 #include "NFmiSettings.h"
 #include "NFmiFileSystem.h"
-#include "mar002.h"
+#include "ToolMasterDrawingFunctions.h"
 #include "CtrlViewDocumentInterface.h"
 #include "CtrlViewFunctions.h"
 #include "GraphicalInfo.h"

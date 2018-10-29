@@ -149,6 +149,12 @@ set(
     )
 
 set(
+    ICU_INCLUDE_DIR
+    ${ICU_BASE_DIR}/include
+    CACHE INTERNAL "" FORCE
+    )
+	
+set(
     ICU_DEBUG_DLL_DIR
     ${ICU_BASE_DIR}/bin/Debug
     CACHE INTERNAL "" FORCE

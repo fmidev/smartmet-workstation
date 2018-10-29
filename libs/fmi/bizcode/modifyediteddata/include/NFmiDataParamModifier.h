@@ -28,7 +28,7 @@
 #include "NFmiRect.h"
 #include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
-#include "TimeSerialModification.h"
+#include "NFmiGriddingProperties.h"
 
 class NFmiParam;
 class NFmiDrawParam;
@@ -38,12 +38,12 @@ class NFmiFastQueryInfo;
 class NFmiMetTime;
 class NFmiPoint;
 class NFmiThreadCallBacks;
+class MultiProcessClientData;
 
 class NFmiDataParamModifier
 {
-
  public:
-	NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+	NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
 							unsigned long theAreaMask, const NFmiRect& theSelectedSearchAreaRect);
 	virtual ~NFmiDataParamModifier(void){};
 	bool ModifyData (void);
@@ -73,7 +73,6 @@ class NFmiDataParamModifier
 										// muokkaus on. Vähän niin kuin maskien kanssa. Keskellä valinta aluetta muutos
 										// on voimakas ja reunoilla heikompi.
 
-	bool SyncronizeTimeWithMasks (void);
 };
 
 // ****************************************************************************************************
@@ -89,16 +88,17 @@ class NFmiObsDataGridding;
 class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 {
  public:
-	NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
-													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> theCPManager, float theCPGriddingFactor, const NFmiRect &theCPGridCropRect,
-													bool theUseGridCrop, const NFmiPoint &theCropMarginSize);
+	NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
+													bool theUseGridCrop, const NFmiPoint &theCropMarginSize, const NFmiGriddingProperties &griddingProperties);
 	virtual ~NFmiDataParamControlPointModifier(void);
 	// HUOM!! eri signerature kuin edellä!!!
 	bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
-    bool DoProcessPoolCPModifying(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks);
     bool DoProcessPoolCpModifyingTcp(MultiProcessClientData &theMultiProcessClientData, NFmiTimeDescriptor& theActiveTimes, const std::string &theGuidStr, NFmiThreadCallBacks *theThreadCallBacks);
-	static void DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, int theGriddingFunction, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative);
-	int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
+	static void DoDataGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, NFmiDataMatrix<float> &gridData, const NFmiRect &theRelativeRect, const NFmiGriddingProperties &griddingProperties, NFmiObsDataGridding *theObsDataGridding, float theObservationRadiusRelative);
+    static size_t GridPointToLocationIndex(size_t gridPointX, size_t gridPointY, size_t gridSizeX);
+    int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
+    static void FixCroppedMatrixMargins(NFmiDataMatrix<float> &theCroppedGridData, const NFmiPoint &theCropMarginSize);
 
  protected:
 	bool IsTimeModified(const NFmiMetTime &theTime);
@@ -106,21 +106,26 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 	bool GetChangeValues(std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool GetChangeValuesWithWork(const NFmiMetTime &theTime, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool IsZeroModification(const std::vector<float> &theZValues);
-	bool IsCPGriddingFactorUsed(void) const;
+    void DoCroppedGridCalculations(const NFmiDataMatrix<float> &usedData);
+    void DoFullGridCalculations(const NFmiDataMatrix<float> &usedData);
+    bool PreventGridCropCalculations();
+    virtual void DoCroppedPointCalculations(const NFmiDataMatrix<float> &usedData, size_t xIndex, size_t yIndex, float maskFactor);
+    virtual void DoNormalPointCalculations(const NFmiDataMatrix<float> &usedData, unsigned long locationIndex, float maskFactor);
+    void DoLocationGridCalculations(const NFmiDataMatrix<float> &usedData);
+    NFmiDataMatrix<float>& GetUsedGridData();
 
 	NFmiDataMatrix<float> itsGridData;
-	NFmiDataMatrix<float> itsCoarseGridData;
-	float itsCPGriddingFactor;
 	NFmiRect itsCPGridCropRect; // jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, käytetään tätä hilapiste-rect:iä. Täällä on siis bottom-left ja top-right editoidun datan hila-indeksit
 	bool fUseGridCrop; // flagi että käytetäänkö croppia vai ei, tämä tulee siis aikasarjaikkunan säädöistä
 	bool fCanGridCropUsed; // flagi että voidaanko croppia käyttää vai ei, jos fUseGridCrop on true ja tämä on false, ei tehdä mitään...
 	NFmiPoint itsCropMarginSize;
 	NFmiDataMatrix<float> itsCroppedGridData;
-	NFmiDataMatrix<float> itsCroppedCoarseGridData;
 	NFmiRect itsGridCropRelativeRect;
-	NFmiObsDataGridding* itsObsDataGridding; // omistaa
+    // Tämä on Markon tekemä surkea griddaus korvike, jos parempaa systeemiä (esim. ToolMasteria) ei löydy
+	NFmiObsDataGridding* itsObsDataGridding;
 	boost::shared_ptr<NFmiEditorControlPointManager> itsCPManager;
 	int itsLastTimeIndex; // optimointia varten
+    NFmiGriddingProperties itsGriddingProperties;
 };
 
 
