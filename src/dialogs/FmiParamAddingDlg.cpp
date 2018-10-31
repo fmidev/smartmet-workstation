@@ -19,6 +19,7 @@
 #include "NFmiInfoOrganizer.h"
 #include "NFmiTimeList.h"
 #include "NFmiFileSystem.h"
+#include "CtrlViewFunctions.h"
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
@@ -109,7 +110,7 @@ BOOL NFmiParamAddingGridCtrl::OnInitDialog()
     return TRUE;
 }
 
-std::string combineFilePath(const std::string &fileName, const std::string &fileNameFilter)
+const std::string CombineFilePath(const std::string &fileName, const std::string &fileNameFilter)
 {
     try
     {
@@ -123,7 +124,7 @@ std::string combineFilePath(const std::string &fileName, const std::string &file
     }
 }
 
-std::string getFileFilter(const std::string &fileNameFilter)
+std::string GetFileFilter(const std::string &fileNameFilter)
 {
     try
     {
@@ -137,7 +138,37 @@ std::string getFileFilter(const std::string &fileNameFilter)
     }
 }
 
-std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
+std::string ConvertSizeToMBorGB(unsigned long long size)
+{
+    double sizeInMB = static_cast<double>(size) / (1024 * 1000);
+    std::stringstream fileSizeInMB;
+    if(sizeInMB < 1000)
+    {
+        fileSizeInMB << std::fixed << std::setprecision(0) << sizeInMB;
+        return fileSizeInMB.str() + " MB";
+    }
+    else
+    {
+        sizeInMB = sizeInMB / 1000;
+        fileSizeInMB << std::fixed << std::showpoint << std::setprecision(2) << sizeInMB;
+        return fileSizeInMB.str() + " GB";
+    }
+}
+
+
+unsigned long long fileSizeInMB(const std::string &totalFilePath)
+{
+    return  NFmiFileSystem::FileSize(totalFilePath);
+}
+
+unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
+{   
+    return fileSizeInMB(singleRowItem.totalFilePath());
+}
+
+
+
+std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
 {
     if(info == nullptr) //MacroParams don't have FastQueryInfo
         return "No FastQueryInfo";
@@ -177,67 +208,78 @@ std::string tooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
 
     std::string str;
-    str += "<b><font color=blue>";
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
     str += "Data information";
     str += "</font></b>";
-    str += "<br><hr color=blue><br>";
+    str += "<br><hr color=darkblue><br>";
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
-    str += "<b>File filter: </b>\t" + getFileFilter(info->DataFilePattern()) + "\n";
+    str += "<b>File filter: </b>\t" + GetFileFilter(info->DataFilePattern()) + "\n";
     //str += "<b>Data loaded: </b>\t \n";
     //str += "<b>File modified: </b>\t  \n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC";
-    str += "<br><hr color=blue><br>";
+    str += "<br><hr color=darkblue><br>";
     str += "<b>Time info: </b>";
-    str += "\t\tsteps : " + std::to_string(timeSteps) + "\n";
+    str += "\tsteps : " + std::to_string(timeSteps) + "\n";
     str += "\t\t\tresolution: " + resolution + "\n";
     str += "\t\t\trange: " + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC ";
-    str += "<br><hr color=blue><br>";
+    str += "<br><hr color=darkblue><br>";
     str += "<b>Parameters:  </b>\ttotal: " + std::to_string(info->ParamBag().GetSize());
-    str += "<br><hr color=blue><br>";
+    str += "<br><hr color=darkblue><br>";
     str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
     str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
-    str += "<br><hr color=blue><br>";
-    str += "<b>File size: </b>\t\t" + fileSize + " MB \n";
-    str += "<b>Local path: </b>\t" + combineFilePath(info->DataFileName(), info->DataFilePattern());
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
+    str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern());
     //str += "<b>Server path: </b>\t \n";
-    str += "<br><hr color=blue><br>";
+    str += "<br><hr color=darkblue><br>";
     
     return str;
 }
 
-std::string tooltipForProducerType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
+std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector)
 {
-    return "producer";
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Producer information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Name: </b>\t" + singleRowItem.itemName() + "\n";
+    //str += "<b>Short name: </b>\t" + singleRowItem.itemName() + "\n";
+    //str += "<b>Description: </b>\t" + singleRowItem.itemName() + "\n";
+    str += "<b>Id: </b>\t\t" + std::to_string(singleRowItem.itemId());
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Data files:</b>\n";
+    std::string dataFiles;
+    int n = 1;
+    unsigned long long combinedSize = 0;
+
+    std::vector<std::string> colors = {"darkred", "darkblue" };
+
+    for(auto &info : infoVector)
+    {
+        //str += "<font size=\"5\" color=\"darkgrey\">";
+        dataFiles += "<font color=";
+        dataFiles += colors.at(n % 2);
+        dataFiles += ">";
+        dataFiles += "<b>" + std::to_string(n) + ".</b>";
+        n++;
+        auto size = fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()));
+        combinedSize += size;
+        dataFiles += " Name: " + info->DataFileName() + "\n";
+        dataFiles += "    File size: " + ConvertSizeToMBorGB(size) + "\n";
+        dataFiles += "</font>";
+    }
+    str += dataFiles;
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Total size: </b>\t" + ConvertSizeToMBorGB(combinedSize);
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
 }
 
-std::string tooltipForCategoryType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
+std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
 {
     return "category";
-}
-
-std::string TooltipText(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
-{
-    // Tooltip is different for kDataType, kProducerType, kCategoryType and parameters itself
-    switch (singleRowItem.rowType())
-    {
-    case AddParams::RowType::kDataType:
-        return tooltipForDataType(singleRowItem, info, fileSize);
-    case AddParams::RowType::kProducerType:
-        return tooltipForProducerType(singleRowItem, info, fileSize);
-    case AddParams::RowType::kCategoryType:
-        return tooltipForCategoryType(singleRowItem, info, fileSize);
-    default:
-        return "D\'oh!";
-    }
-}
-
-std::string fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
-{
-    auto sizeMB = NFmiFileSystem::FileSize(singleRowItem.totalFilePath()) / (1024 * 1000);
-    std::stringstream fileSizeInMB;
-    fileSizeInMB << std::setprecision(2) << sizeMB;
-
-   return fileSizeInMB.str();
 }
 
 std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
@@ -248,11 +290,15 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
     {
         AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
         auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+        auto producerInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
         
-        
-        if(!fastQueryInfoVector.empty())
+        if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kDataType)
         {
-            return TooltipText(singleRowItem, fastQueryInfoVector.at(0), fileSizeInMB(singleRowItem));
+            return TooltipForDataType(singleRowItem, fastQueryInfoVector.at(0));
+        }
+        else if(!producerInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
+        {
+            return TooltipForProducerType(singleRowItem, producerInfoVector);
         }
         else
             return "No info";
