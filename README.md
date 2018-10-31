@@ -27,7 +27,8 @@ First time build instructions:
 4. Open newly created tag
 5. Press "Edit tag"
 6. Fill in release informations: Title: 5.12.16.0 and Description (if you want): ??? 
-7. If there is changes in 3rd party binaries you have to add new zip file for that 8. Finally press Publish release.
+7. If there is changes in 3rd party binaries you have to add new zip file for that 
+8. Finally press Publish release.
 
 # SmartMet-workstation 3rd party libraries guide
 
