@@ -19,6 +19,15 @@ First time build instructions:
 9. Press F7 to Build solution (key mappings may be different depending on used key mapping schemes)
 10. Press F5 to Run SmartMet in debugger..
 
+# How to make SmartMet release
+
+1. When you have working version in your master branch, make version tag with git to it (e.g. smartmet_release_5_12_16_0)
+2. Push this version to Github (with smartmet-workstation\scripts\git\dev_2_push_master.sh script)
+3. Now in Github, go to tags page https://github.com/fmidev/smartmet-workstation/tags
+4. Open newly created tag
+5. Press "Edit tag"
+6. Fill in release informations: Title: 5.12.16.0 and Description (if you want): ??? 
+7. If there is changes in 3rd party binaries you have to add new zip file for that 8. Finally press Publish release.
 
 # SmartMet-workstation 3rd party libraries guide
 
