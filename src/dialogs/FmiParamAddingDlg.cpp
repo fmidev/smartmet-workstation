@@ -20,6 +20,8 @@
 #include "NFmiTimeList.h"
 #include "NFmiFileSystem.h"
 #include "CtrlViewFunctions.h"
+#include "NFmiHelpDataInfo.h"
+
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
@@ -106,6 +108,7 @@ BOOL NFmiParamAddingGridCtrl::PreTranslateMessage(MSG* pMsg)
 BOOL NFmiParamAddingGridCtrl::OnInitDialog()
 {
     CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID);
+    m_tooltip.SetMaxTipWidth(600);
 
     return TRUE;
 }
@@ -168,22 +171,16 @@ unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
 
 
 
-std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info)
+std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
 {
     if(info == nullptr) //MacroParams don't have FastQueryInfo
         return "No FastQueryInfo";
 
-    //11. Katso tooltip tekstin http muotoiluun ja väreihin liittyviä esimerkkejä vaikka NFmiTimeSerialView luokasta :
-    //-metodit : GetObsFraktileDataToolTipText, GetColoredLocationTooltipStr, MultiModelRunToolTip ja ComposeToolTipText
-    //    - Mm. <b> on boldaus, <br> on rivinvaihto, <hr> on vaaka viiva, <font color = blue> on fontin väri, jne.
-    
     //12. Miten saa tietoja datoista ?
     //-OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisessä Time - sarake jutussa
     //- Katso eri tietoja FastInfosta seuraavilta olioita
     //- HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue 
     //        + resoluutio kilometreissä tekstejä(kysy neuvoa)
-    //- TimeDescriptor() metodilla aikatietoa, ja siltä voi kysyä onko kyseessä tasavälinen step vai epämääräinen 
-    //        aikalista(jos ValidTimeList() - metodi palauttaa nullptr, pyydä tasavälinen ValidTimeBag())
     //- Levelit oletkin jo varmaan käynyt läpi toisaalla eli siihen ei tarvii neuvoja
 
     NFmiTimeList* timeList;
@@ -229,10 +226,10 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
     str += "<br><hr color=darkblue><br>";
     str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
-    str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern());
-    //str += "<b>Server path: </b>\t \n";
+    str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
+    str += "<b>Server path: </b>\t" + CombineFilePath(info->DataFileName(), helpInfo->FileNameFilter());
     str += "<br><hr color=darkblue><br>";
-    
+
     return str;
 }
 
@@ -257,7 +254,6 @@ std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, check
 
     for(auto &info : infoVector)
     {
-        //str += "<font size=\"5\" color=\"darkgrey\">";
         dataFiles += "<font color=";
         dataFiles += colors.at(n % 2);
         dataFiles += ">";
@@ -291,10 +287,11 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
         AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
         auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
         auto producerInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
-        
-        if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kDataType)
+        auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
+                    
+        if(!fastQueryInfoVector.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
         {
-            return TooltipForDataType(singleRowItem, fastQueryInfoVector.at(0));
+            return TooltipForDataType(singleRowItem, fastQueryInfoVector.at(0), helpDataInfo);
         }
         else if(!producerInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
         {
