@@ -186,8 +186,6 @@ namespace
 	typedef boost::unique_lock<MutexType> WriteLock;
 	MutexType gParamMaskListMutex;
 
-    const std::string tmMasterProcessName = "MasterProcessMFC.exe";
-    const std::string tmWorkerProcessName = "WorkerProcessMFC.exe";
     const std::string tmMasterTcpProcessName = "MasterProcessTcpMFC.exe";
     const std::string tmWorkerTcpProcessName = "WorkerProcessTcpMFC.exe";
 }
@@ -602,7 +600,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsBasicConfigurations()
 ,fEditedPointsSelectionChanged(false)
 ,fDrawSelectionOnThisView(false)
-,itsCPGriddingFactor(1)
 ,itsCPGridCropRect()
 ,fUseCPGridCrop(false)
 ,itsCPGridCropLatlonArea()
@@ -759,7 +756,6 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitMTATempSystem(); // pit‰‰ kutsua vasta InitProducerSystem- ja InitExtraSoundingProducerListFromSettings -kutsujen j‰lkeen
 
 	InitCPManagerSet();
-	InitCPGriddingProperties();
 	InitDrawDifferenceDrawParam();
 	InitSmartToolInfo();
 	InitMacroParamSystem(true); // macroParamsystem pit‰‰ initialisoida ennen viewMacroSystemin initialisointia!!!!!!!
@@ -1365,7 +1361,8 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         std::string shortAppVerStr = GetShortAppVersionString();
         if(shortAppVerStr.size() < 3)
             throw std::runtime_error(std::string("Invalid application's short version number: '") + shortAppVerStr + "', should be in format X.Y");
-        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem()); // 3 = 3 eri karttan‰yttˆ‰, ei viel‰k‰‰n miss‰‰n asetusta t‰lle, koska p‰‰karttan‰yttˆ poikkeaa kahdesta apukarttan‰ytˆst‰
+        // 3 = 3 eri karttan‰yttˆ‰, ei viel‰k‰‰n miss‰‰n asetusta t‰lle, koska p‰‰karttan‰yttˆ poikkeaa kahdesta apukarttan‰ytˆst‰
+        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem());
 
         // We have to set log level here, now that used log level is read from registry
         CatLog::logLevel(static_cast<CatLog::Severity>(itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LogLevel()));
@@ -1818,7 +1815,6 @@ void InitSettingsFromConfFile(void)
 
 		itsMapViewTimeLabelInfo.InitFromSettings("SmartMet::TimeLabel");
 		itsSatelDataRefreshTimerInMinutes = NFmiSettings::Require<int>("SmartMet::SatelDataRefreshTimerInMinutes");
-		itsCPGriddingFactor = NFmiSettings::Optional<float>("SmartMet::CPGriddingFactor", 1);
         fStoreLastLoadedFileNameToFile = NFmiSettings::Optional<bool>("SmartMet::StoreLastLoadedFileNameToFile", false);
         itsHardDriveFreeLimitForConfSavesInMB = NFmiSettings::Optional<float>("SmartMet::HardDriveFreeLimitForConfSavesInMB", 10);
         itsHardDriveFreeLimitForEditedDataSavesInMB = NFmiSettings::Optional<float>("SmartMet::HardDriveFreeLimitForEditedDataSavesInMB", 500);
@@ -1836,7 +1832,6 @@ void SaveSettingsToConfFile(void)
 	{
 		SettingsFunctions::SetCommaSeaparatedPointToSettings("MetEditor::StationDataGridSize", itsStationDataGridSize);
 		NFmiSettings::Set("SmartMet::SatelDataRefreshTimerInMinutes", NFmiStringTools::Convert<int>(itsSatelDataRefreshTimerInMinutes), true);
-		NFmiSettings::Set("SmartMet::CPGriddingFactor", NFmiStringTools::Convert<float>(itsCPGriddingFactor), true);
         itsQ2ServerInfo.StoreToSettings();
 	}
 	catch(exception &e)
@@ -5669,13 +5664,13 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiActivateCP:
 			{
 				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), true, false);
+					CPManager()->ActivateCP(CPManager()->CPIndex(), true);
 			}
 			break;
 		case kFmiDeactivateCP:
 			{
 				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), false, true);
+					CPManager()->ActivateCP(CPManager()->CPIndex(), false);
 			}
 			break;
 		case kFmiEnableCP:
@@ -5736,6 +5731,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			itsCPManagerSet.SetCPManager(menuItem->IndexInViewRow());
 			TimeSerialViewDirty(true);
 			break;
+        case kFmiObservationStationsToCpPoints:
+            MakeObservationStationsToCpPoints(*menuItem);
+            break;
 
 		case kFmiHideAllMapViewObservations:
 			HideShowAllMapViewParams(menuItem->MapViewDescTopIndex(), true, false, false, false);
@@ -7815,31 +7813,8 @@ bool CreateCPPopup()
 		menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiModifyCPAttributes, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
 		itsPopupMenu->Add(std::move(menuItem));
 
-		// Lis‰t‰‰n mahdollisen CPManagerSetin valinnat
-		size_t cpSetSize = itsCPManagerSet.CPSetSize();
-		if(cpSetSize > 1)
-		{
-			NFmiMenuItemList *cpManagerMenuList = new NFmiMenuItemList;
-			for(size_t i = 0; i < cpSetSize; i++)
-			{
-				boost::shared_ptr<NFmiEditorControlPointManager> cpManager = itsCPManagerSet.CPManagerFromSet(i);
-				if(cpManager)
-				{
-                    auto cpMenuItem = std::make_unique<NFmiMenuItem>(-1, cpManager->Name(), NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType, static_cast<int>(i));
-					cpManagerMenuList->Add(std::move(cpMenuItem));
-				}
-			}
-			
-			if(cpManagerMenuList->NumberOfMenuItems())
-			{
-				menuString = ::GetDictionaryString("CPManagers");
-				menuItem.reset(new NFmiMenuItem(-1, menuString, NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType));
-				menuItem->AddSubMenu(cpManagerMenuList);
-				itsPopupMenu->Add(std::move(menuItem));
-			}
-			else
-				delete cpManagerMenuList;
-		}
+        AddCpManagerSetsToCpPopupMenu(itsPopupMenu, infoDataType);
+        AddObservationStationsToCpPointsCommands(itsPopupMenu);
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 			return false;
@@ -7847,6 +7822,84 @@ bool CreateCPPopup()
 		return true;
 	}
 	return false;
+}
+
+// Havaintodatan asemista voidaan tehd‰ ControlPoint pisteet
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu)
+{
+    auto &cpObsBlendingData = AnalyzeToolData().ControlPointObservationBlendingData();
+    cpObsBlendingData.SeekProducers(*InfoOrganizer());
+    AddObservationStationsToCpPointsCommands(mainPopupMenu, cpObsBlendingData.Producers(), NFmiInfoData::kObservations);
+}
+
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, const checkedVector<NFmiProducer> &producerList, NFmiInfoData::Type usedInfoData)
+{
+    if(!producerList.empty())
+    {
+        NFmiParam dummyParam;
+        NFmiMenuItemList *producerMenuList = new NFmiMenuItemList;
+        for(const auto &producer : producerList)
+        {
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, std::string(producer.GetName()), NFmiDataIdent(dummyParam, producer), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
+            producerMenuList->Add(std::move(menuItem));
+        }
+
+        if(producerMenuList->NumberOfMenuItems())
+        {
+            std::string menuString = ::GetDictionaryString("Observations To CP points");
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiObservationStationsToCpPoints, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, usedInfoData);
+            menuItem->AddSubMenu(producerMenuList);
+            mainPopupMenu->Add(std::move(menuItem));
+        }
+        else
+            delete producerMenuList;
+    }
+}
+
+void MakeObservationStationsToCpPoints(NFmiMenuItem &menuItem)
+{
+    // Haetaan k‰ytˆss‰ oleva CP-manager
+    auto controlPointManager = itsCPManagerSet.CPManager(itsCPManagerSet.UseOldSchoolStyle());
+    if(controlPointManager)
+    {
+        // Haetaan k‰ytetyn datatyypin, halutun tuottajan kaikki tiedostot, jotka ovat pinta datoja (= leveleit‰ on vain 1)
+        auto producerId = menuItem.DataIdent().GetProducer()->GetIdent();
+        auto observationInfos = InfoOrganizer()->GetInfos(menuItem.DataType(), true, producerId);
+        controlPointManager->SetZoomedAreaStationsAsControlPoints(observationInfos, MapViewDescTop(0)->MapHandler()->Area());
+        AnalyzeToolData().ControlPointObservationBlendingData().SelectProducer(producerId);
+
+        // Vain aikasarja pit‰‰ laittaa t‰ss‰ likaiseksi, sielt‰ mist‰ t‰t‰ kutsutaan (MakePopUpCommandUsingRowIndex) laitetaan karttan‰ytˆt likaisiksi.
+        TimeSerialViewDirty(true);
+    }
+}
+
+void AddCpManagerSetsToCpPopupMenu(NFmiMenuItemList *mainPopupMenu, NFmiInfoData::Type infoDataType)
+{
+    // Lis‰t‰‰n mahdollisen CPManagerSetin valinnat
+    size_t cpSetSize = itsCPManagerSet.CPSetSize();
+    if(cpSetSize > 1)
+    {
+        NFmiMenuItemList *cpManagerMenuList = new NFmiMenuItemList;
+        for(size_t i = 0; i < cpSetSize; i++)
+        {
+            boost::shared_ptr<NFmiEditorControlPointManager> cpManager = itsCPManagerSet.CPManagerFromSet(i);
+            if(cpManager)
+            {
+                auto cpMenuItem = std::make_unique<NFmiMenuItem>(-1, cpManager->Name(), NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType, static_cast<int>(i));
+                cpManagerMenuList->Add(std::move(cpMenuItem));
+            }
+        }
+
+        if(cpManagerMenuList->NumberOfMenuItems())
+        {
+            std::string menuString = ::GetDictionaryString("CPManagers");
+            auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiSelectCPManagerFromSet, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, infoDataType);
+            menuItem->AddSubMenu(cpManagerMenuList);
+            mainPopupMenu->Add(std::move(menuItem));
+        }
+        else
+            delete cpManagerMenuList;
+    }
 }
 
 // nelj‰ tilaa:
@@ -7873,8 +7926,6 @@ bool IsToolMasterAvailable(void) const
 void ToolMasterAvailable(bool newValue)
 {
     itsBasicConfigurations.ToolMasterAvailable(newValue);
-    itsCPGriddingProperties.fToolMasterAvailable = newValue; // En ymm‰rr‰ mihin itsCPGriddingProperties -dataosiota todellakin tarvitaan, voisiko sen poistaa
-    itsCPManagerSet.SetToolMasterAvailable(newValue); // asetetaan kaikille CP-managereille arvo kerralla
 }
 
 // Tallettaa mm. CP pisteet, muutosk‰yr‰t jne.
@@ -8086,32 +8137,6 @@ const string& EditorVersionStr(void)
 	return itsBasicConfigurations.EditorVersionStr();
 }
 
-const NFmiCPGriddingProperties& CPGriddingProperties(void)
-{
-	return itsCPGriddingProperties;
-}
-void CPGriddingProperties(const NFmiCPGriddingProperties& newProperties)
-{
-	itsCPGriddingProperties = newProperties;
-	CPManagerSet().SetCPGriddingProperties(itsCPGriddingProperties);  // p‰ivitet‰‰n t‰m‰ myˆs CPManagerSet:iin, ett‰ ominaisuudet tulevat k‰yttˆˆn
-}
-
-bool StoreCPGriddingProperties(void)
-{
-	try
-	{
-		itsCPGriddingProperties.StoreToSettings();
-		return true;
-	}
-	catch(std::exception &e)
-	{
-		std::string errStr("Error while storing gridding options.\n");
-		errStr += e.what();
-		this->LogAndWarnUser(errStr, "Error while storing gridding options", CatLog::Severity::Error, CatLog::Category::Configuration, false);
-	}
-	return false;
-}
-
 bool InitCPManagerSet(void)
 {
     DoVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -8127,22 +8152,6 @@ bool InitCPManagerSet(void)
 	return false;
 }
 
-bool InitCPGriddingProperties(void)
-{
-    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
-	try
-	{
-		itsCPGriddingProperties.InitFromSettings("SmartMet::GriddingOptions");
-		itsCPGriddingProperties.fToolMasterAvailable = this->IsToolMasterAvailable();
-		CPManagerSet().SetCPGriddingProperties(itsCPGriddingProperties);
-		return true;
-	}
-	catch(std::exception &e)
-	{
-		LogAndWarnUser(e.what(), "Error while initializing Gridding Options", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
-	}
-	return false;
-}
 
 	std::string& SmartToolEditingErrorText(void)
 	{
@@ -10669,39 +10678,32 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return theInfo.LocationIndex(minLocInd);
 	}
 
-	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing)
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> info;
-
 		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = (thePossibleInfoVector == 0) ? GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY) : *thePossibleInfoVector;
 
-		std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator it = infoVector.begin();
 		if(infoVector.size() > 0)
 		{ // etsit‰‰n useasta infosta l‰hint‰ asemaa
 			const double defaultDist = 999999999.;
 			double minDist = defaultDist;
 			int wantedInfoIndex = -1;
 			int index = 0;
-			bool fDoShipDataLocations = false;
 			unsigned long minLocationIndex = static_cast<unsigned long>(-1);
-			for( ; it != infoVector.end(); ++it)
+			for(auto &info : infoVector)
 			{
-				if(ignoreTime || (*it)->Time(theTime))
+				if(ignoreTime || info->Time(theTime))
 				{
-					FmiProducerName prod = static_cast<FmiProducerName>((*it)->Producer()->GetIdent());
-					if((*it)->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY))
-						fDoShipDataLocations = true;
-					else
-						fDoShipDataLocations = false;
-
-					if(fDoShipDataLocations ? NearestShipLocation(*(*it), theLocation) : (*it)->NearestLocation(theLocation))
+					FmiProducerName prod = static_cast<FmiProducerName>(info->Producer()->GetIdent());
+                    auto doShipDataLocations = (info->IsGrid() == false && (info->HasLatlonInfoInData()));
+					if(doShipDataLocations ? NearestShipLocation(*info, theLocation) : info->NearestLocation(theLocation))
 					{
-						double currentDistance = theLocation.Distance(fDoShipDataLocations ? (*it)->GetLatlonFromData() : (*it)->LatLon());
-						if(currentDistance < minDist)
+						double currentDistance = theLocation.Distance(doShipDataLocations ? info->GetLatlonFromData() : info->LatLonFast());
+						if(currentDistance < minDist && currentDistance < maxDistanceInMeters)
 						{
 							minDist = currentDistance;
 							wantedInfoIndex = index;
-							minLocationIndex = (*it)->LocationIndex();
+							minLocationIndex = info->LocationIndex();
 						}
 					}
 				}
@@ -10709,9 +10711,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 			if(wantedInfoIndex >=0)
 			{
-				it = infoVector.begin();
-				it += wantedInfoIndex;
-				info = *it;
+				info = infoVector[wantedInfoIndex];
 			}
 		}
 
@@ -12773,16 +12773,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		fDrawSelectionOnThisView = newValue;
 	}
 
-	float CPGriddingFactor(void)
-	{
-		return itsCPGriddingFactor;
-	}
-
-	void CPGriddingFactor(float newValue)
-	{
-		itsCPGriddingFactor = newValue;
-	}
-
 	const NFmiRect& CPGridCropRect(void)
 	{
 		if(IsCPGridCropInAction())
@@ -13039,18 +13029,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     const std::string& GetMasterProcessExeName()
     {
-        if(GetMultiProcessClientData().UseTcpMasterProcess())
-            return tmMasterTcpProcessName;
-        else
-            return tmMasterProcessName;
+        return tmMasterTcpProcessName;
     }
 
     const std::string& GetWorkerProcessExeName()
     {
-        if(GetMultiProcessClientData().UseTcpMasterProcess())
-            return tmWorkerTcpProcessName;
-        else
-            return tmWorkerProcessName;
+        return tmWorkerTcpProcessName;
     }
 
     int MasterProcessRunningCount()
@@ -13092,7 +13076,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         }
     }
 
-    void MakeSureToolMasterPoolIsRunning2()
+    bool MakeSureToolMasterPoolIsRunning2()
     {
         // Tarkista onko Master-prosessi jo k‰ynniss‰, jos oli, lopetetaan
         if(MasterProcessRunningCount() <= 0)
@@ -13115,58 +13099,26 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(itsMultiProcessPoolOptions.MultiProcessPoolOptions().verbose_logging)
                 commandStr += " -v"; // laitetaan verbose lokitus p‰‰lle
 
-            if(!GetMultiProcessClientData().UseTcpMasterProcess())
-            { // Vain IPC -pohjaiselle (EI Tcp) serverille annetaan n‰m‰ argumentit
-                commandStr += " -w "; // laitetaan work-queue size -w optiolla
-                commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().task_queue_size_in_bytes);
-                commandStr += " -r "; // laitetaan result-queue size -r optiolla
-                commandStr += boost::lexical_cast<std::string>(itsMultiProcessPoolOptions.MultiProcessPoolOptions().result_queue_size_in_bytes);
-            }
-
             commandStr += " -W "; // laitetaan Worker-prosessin polku -W optiolla
             commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
             commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::WorkerProcessPath", GetWorkerProcessExeName());
             commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
 
 //            WORD showWindow = SW_HIDE;
-            CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true);
+            return CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true);
         }
         else
-            LogMessage("MP-CP calculations's Master process was already up and running, continuing to calculations...", CatLog::Severity::Debug, CatLog::Category::Editing);
-    }
-
-    // Aina kun tehd‰‰n MP-CP editointia (Multi-Process Control-Point), pit‰‰ varmistaa ett‰ 
-    // ToolMaster -prosessi pooli on k‰ynniss‰. ja jos ei ole, se pit‰‰ k‰ynnist‰‰.
-    // Jotta homma sujuisi nopeasti (t‰m‰n funktion kutsujan silmin), tehd‰‰n prosessi tarkastelut ja 
-    // niiden mahdolliset k‰ynnistykset erillisess‰ threadissa.
-    void MakeSureToolMasterPoolIsRunning(void)
-    {
-        MultiProcessQueueClearing(); // T‰t‰ pit‰‰ kutsua ennen kuin multi-process systeemi k‰ynnistet‰‰n
-
-        boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
-        // Eli ei j‰‰d‰ odottamaan lopetusta tt.join():illa
-    }
-
-    // Yritet‰‰n tyhjent‰‰ 1. kerralla mahdollisia olemassa olevia work- ja result-queue:ja
-    void MultiProcessQueueClearing(void)
-    {
-        static bool firstTime = true;
-
-        if(firstTime) // Vain 1. kerralla
         {
-            firstTime = false;
-
-            // 1. jos ei ole jo alustettu MultiProcessClientData:a
-            if(!GetMultiProcessClientData().IsMultiProcessClientDataInitialized())
-            {
-                // 2. Jos ei ole k‰ynniss‰ Master-processia
-                if(MasterProcessRunningCount() == 0)
-                {
-                    process_helpers::remove_shared_memory_object(work_queue_shared_name);
-                    process_helpers::remove_shared_memory_object(work_result_queue_shared_name);
-                }
-            }
+            LogMessage("MP-CP calculations's Master process was already up and running, continuing to calculations...", CatLog::Severity::Debug, CatLog::Category::Editing);
+            return true;
         }
+    }
+
+    bool MakeSureToolMasterPoolIsRunning(void)
+    {
+        return MakeSureToolMasterPoolIsRunning2();
+//        boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
+        // Eli ei j‰‰d‰ odottamaan lopetusta tt.join():illa
     }
 
     NFmiMultiProcessPoolOptions& MultiProcessPoolOptions(void)
@@ -13832,6 +13784,25 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return capDataSystem;
     }
 
+    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+    {
+        if(MetEditorOptionsData().ControlPointMode())
+        {
+            if(CPManager()->MakeControlPointAcceleratorAction(action))
+            {
+                TimeSerialViewDirty(true);
+                RefreshApplicationViewsAndDialogs(updateMessage, true, true, 0);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void InitGriddingProperties()
+    {
+        ApplicationWinRegistry().InitGriddingProperties(IsToolMasterAvailable());
+    }
+
     std::string itsLastLoadedViewMacroName; // t‰t‰ nime‰ k‰ytet‰‰n smartmet:in p‰‰ikkunan title tekstiss‰ (jotta k‰ytt‰j‰ n‰kee mik‰ viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
@@ -13879,8 +13850,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiPoint itsCPGridCropMargin; // t‰ss‰ kerrotaan kuinka monta hilapistett‰ x- ja y-suunnassa on ulko- ja sis‰-laatikon v‰liss‰. 
 									// T‰ll‰ alueella muutokset menev‰t t‰ydest‰ l‰hes nollaan, jotta reunoista tulisi mahdollisimman pehme‰t.
 
-	float itsCPGriddingFactor; // T‰ll‰ s‰‰det‰‰n miten tarkkaa modifikaatio hilaa lasketaan Kontrollipistetyˆkalussa. Kyse on huijauksesta CP-muokkauksen nopeuden t‰hden.
-								// Jos arvo on > 0 ja < 1, lasketaan muutoshila harvennettuun hilaan joka sitten interpoloidaan editoidun datan omaan hilaan ja tehd‰‰n muutokset.
 	bool fDrawSelectionOnThisView; // haluan piirt‰‰ maalattaessa valitut pisteet piirto ikkunaan, t‰m‰ on sit‰ varten tehty kikka vitonen
 	bool fEditedPointsSelectionChanged; // onko muutettu editoinnissa valittuja pisteit‰, jos on, niin ruutua pit‰‰ p‰ivitt‰‰ tietyll‰ tavalla.
 	NFmiBasicSmartMetConfigurations itsBasicConfigurations; // T‰‰ll‰ on tietyt perus asetukset, mitk‰ alustetaan jo ennen GenDocin alustusta
@@ -14042,8 +14011,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	boost::shared_ptr<NFmiDrawParam> itsSelectedGridPointDrawParam; // t‰m‰n avulla piirret‰‰n toolmasterilla editoinnissa valittujen pisteiden joukko
 	size_t itsSelectedGridPointLimit; // kuinka monta hilapistett‰ pit‰‰ v‰hint‰‰n olla valittuna ennen kuin menn‰‰n uuteen hatchill‰ visualisointi tapaan
 	string itsSmartToolEditingErrorText;
-
-	NFmiCPGriddingProperties itsCPGriddingProperties; // mill‰ funktiolla ja miten tehd‰‰n CP-tyˆkalun griddaus
 
 	bool fActivateParamSelectionDlgAfterLeftDoubleClick; // kikka 6, jotta zeditmap2view tiet‰‰, pit‰‰kˆ dialogi aktivoida
 
@@ -14776,21 +14743,6 @@ bool NFmiEditMapGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, 
 	return pimpl->ExecuteCommand(theMenuItem, theViewIndex, theViewTypeId);
 }
 
-const NFmiCPGriddingProperties& NFmiEditMapGeneralDataDoc::CPGriddingProperties(void)
-{
-	return pimpl->CPGriddingProperties();
-}
-
-void NFmiEditMapGeneralDataDoc::CPGriddingProperties(const NFmiCPGriddingProperties& newProperties)
-{
-	pimpl->CPGriddingProperties(newProperties);
-}
-
-bool NFmiEditMapGeneralDataDoc::StoreCPGriddingProperties(void)
-{
-	return pimpl->StoreCPGriddingProperties();
-}
-
 bool NFmiEditMapGeneralDataDoc::DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
 {
 	return pimpl->DoSmartToolEditing(theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly);
@@ -15322,9 +15274,9 @@ void NFmiEditMapGeneralDataDoc::ResetOutOfEditedAreaTimeSerialPoint(void)
 	pimpl->ResetOutOfEditedAreaTimeSerialPoint();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
-	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector);
+	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
 
 void NFmiEditMapGeneralDataDoc::TimeControlTimeStep(unsigned int theDescTopIndex, float newValue)
@@ -16102,16 +16054,6 @@ void NFmiEditMapGeneralDataDoc::DrawSelectionOnThisView(bool newValue)
 	pimpl->DrawSelectionOnThisView(newValue);
 }
 
-float NFmiEditMapGeneralDataDoc::CPGriddingFactor(void)
-{
-	return pimpl->CPGriddingFactor();
-}
-
-void NFmiEditMapGeneralDataDoc::CPGriddingFactor(float newValue)
-{
-	pimpl->CPGriddingFactor(newValue);
-}
-
 const NFmiRect& NFmiEditMapGeneralDataDoc::CPGridCropRect(void)
 {
 	return pimpl->CPGridCropRect();
@@ -16222,9 +16164,9 @@ void NFmiEditMapGeneralDataDoc::UseMultiProcessCpCalc(bool newValue)
     pimpl->UseMultiProcessCpCalc(newValue);
 }
 
-void NFmiEditMapGeneralDataDoc::MakeSureToolMasterPoolIsRunning(void)
+bool NFmiEditMapGeneralDataDoc::MakeSureToolMasterPoolIsRunning(void)
 {
-    pimpl->MakeSureToolMasterPoolIsRunning();
+    return pimpl->MakeSureToolMasterPoolIsRunning();
 }
 
 NFmiMultiProcessPoolOptions& NFmiEditMapGeneralDataDoc::MultiProcessPoolOptions(void)
@@ -16518,4 +16460,14 @@ void NFmiEditMapGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDe
 int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
 {
     return pimpl->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
+}
+
+bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
+{
+    return pimpl->MakeControlPointAcceleratorAction(action, updateMessage);
+}
+
+void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
+{
+    pimpl->InitGriddingProperties();
 }

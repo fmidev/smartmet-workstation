@@ -481,9 +481,9 @@ boost::shared_ptr<NFmiEditorControlPointManager> CtrlViewDocumentInterfaceForGen
     return itsDoc->CPManager(getOldSchoolCPManager);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector)
+boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
-    return itsDoc->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector);
+    return itsDoc->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsMasksUsedInTimeSerialViews(void)

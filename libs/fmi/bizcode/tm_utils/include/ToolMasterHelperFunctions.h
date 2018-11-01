@@ -8,13 +8,14 @@ class CRect;
 class NFmiDrawParam;
 class NFmiIsoLineData;
 class CWnd;
+class NFmiGriddingProperties;
 
 namespace Toolmaster
 {
 #ifndef DISABLE_UNIRAS_TOOLMASTER
     // Here are normal function declarations if Uniras ToolMaster is supported
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect);
-    void DoToolMasterGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, const NFmiRect &theRelativeRect, int theGriddingFunction, float theObservationRadiusRelative, const NFmiDataMatrix<float> &gridData, std::vector<float> &toolMasterGridValuesOut);
+    void DoToolMasterGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, const NFmiRect &theRelativeRect, const NFmiGriddingProperties &griddingProperties, float theObservationRadiusRelative, const NFmiDataMatrix<float> &gridData, std::vector<float> &toolMasterGridValuesOut);
     void FillChangingColorIndicesForSimpleIsoline(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData *theIsoLineData, float step, float startValue, float endValue);
     std::string MakeAvsToolmasterVersionString();
     void CloseToolMaster();

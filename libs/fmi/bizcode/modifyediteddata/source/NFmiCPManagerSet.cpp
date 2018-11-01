@@ -57,26 +57,6 @@ void NFmiCPManagerSet::StoreToSettings(void) const
 		throw std::runtime_error("Error in NFmiCPManagerSet::StoreToSettings, unable to store setting.");
 }
 
-void NFmiCPManagerSet::SetCPGriddingProperties(const NFmiCPGriddingProperties& newProperties)
-{
-	if(itsOldSchoolCPManager)
-		itsOldSchoolCPManager->CPGriddingProperties(newProperties);
-	for(size_t i = 0; i < itsCPManagers.size(); i++)
-	{
-		itsCPManagers[i]->CPGriddingProperties(newProperties);
-	}
-}
-
-void NFmiCPManagerSet::SetToolMasterAvailable(bool newValue)
-{
-	if(itsOldSchoolCPManager)
-        itsOldSchoolCPManager->CPGriddingProperties().fToolMasterAvailable = newValue;
-	for(size_t i = 0; i < itsCPManagers.size(); i++)
-	{
-        itsCPManagers[i]->CPGriddingProperties().fToolMasterAvailable = newValue;
-	}
-}
-
 void NFmiCPManagerSet::MakeSureCpManagerDirectoryExist()
 {
     if(!NFmiFileSystem::DirectoryExists(itsCPManagerDirectory))

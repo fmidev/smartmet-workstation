@@ -3,8 +3,8 @@
 // FmiGriddingOptionsDlg.h : header file
 //
 #include "SmartMetDialogs_resource.h"
+#include "NFmiGriddingProperties.h"
 
-struct NFmiCPGriddingProperties;
 /////////////////////////////////////////////////////////////////////////////
 // CFmiGriddingOptionsDlg dialog
 
@@ -12,12 +12,13 @@ class CFmiGriddingOptionsDlg : public CDialog
 {
 // Construction
 public:
-	CFmiGriddingOptionsDlg(NFmiCPGriddingProperties *theOptions, CWnd* pParent = NULL);   // standard constructor
+	CFmiGriddingOptionsDlg(const NFmiGriddingProperties &griddingProperties, CWnd* pParent = NULL);   // standard constructor
+
+    const NFmiGriddingProperties& GetModifiedGriddingProperties() const { return itsGriddingProperties; }
 
 // Dialog Data
 	//{{AFX_DATA(CFmiGriddingOptionsDlg)
 	enum { IDD = IDD_DIALOG_GRIDDING_OPTIONS };
-	int		itsGriddingFunction;
 	//}}AFX_DATA
 
 
@@ -39,8 +40,19 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	void InitDialogTexts(void);
+    void InitLocalFitMethodSelector();
+    void InitControlValuesFromGriddingPropertiesObject();
 
-	NFmiCPGriddingProperties *itsGriddingOptions;
+    NFmiGriddingProperties itsGriddingProperties;
+    int itsGriddingFunction;
+    double itsRangeLimitInKm = 0.; // 0 = rajaton ja muuten > 0
+    CComboBox itsLocalFitMethodSelector; // [1,2,3,4,5,6]
+    double itsLocalFitDelta = 0.5; // [?]
+    int itsSmoothLevel = 0; // [0 - 5]
+    double itsLocalFitFilterRadius = 1.25; // > 1
+    double itsLocalFitFilterFactor = 0.15; // > 0
+public:
+    afx_msg void OnBnClickedButtonDefaultValues();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -26,6 +26,7 @@
 #include "ToolMasterHelperFunctions.h"
 
 #include "boost/format.hpp"
+#include "unicode/uclean.h"
 
 namespace
 {
@@ -488,6 +489,9 @@ int CSmartMetApp::ExitInstance()
 	// tuhota listoista kun ne ovat ei 0-pointtereita, jolloin ohjelma kaatuisi.
 	delete itsGeneralData;
 
+    // ICU kirjasto vuotaa resursseja, jos sitä ei erikseen siivota
+    u_cleanup();
+
 	TermGdiplus();
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
 	ControlBarCleanUp();
@@ -584,10 +588,9 @@ bool CSmartMetApp::DoToolMasterInitialization(void)
     if(Toolmaster::DoToolMasterInitialization(m_pMainWnd, fUseToolMasterIfAvailable))
     {
         itsGeneralData->ToolMasterAvailable(true);
-        return true;
     }
-    else
-        return false;
+    itsGeneralData->InitGriddingProperties();
+    return itsGeneralData->IsToolMasterAvailable();
 }
 
 #pragma warning( push )

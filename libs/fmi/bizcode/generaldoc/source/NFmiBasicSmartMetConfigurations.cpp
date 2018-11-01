@@ -507,9 +507,13 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
 
-    CString possibleWarningTextU_; // = _TEXT("Wms ja Hake + KaHa sanomien tuki otettu pois päältä!");
+    CString possibleWarningTextU_; // = _TEXT("Uuden 'CP obs-blending' työkalun lisäys on saattanut rikkoa esim.");
     if(possibleWarningTextU_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 370), true));
+
+    CString possibleWarningText2U_; // = _TEXT("Analyysi- ja Kontrollipiste -työkalujen toimintaa");
+    if(possibleWarningText2U_.GetLength())
+        itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningText2U_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 395), true));
 }
 
 // Oletus, theControlPath on absoluuttinen polku joko tiedostoon tai hakemistoon.
