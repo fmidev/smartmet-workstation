@@ -30,6 +30,14 @@ First time build instructions:
 7. If there is changes in 3rd party binaries you have to add new zip file for that 
 8. Finally press Publish release.
 
+# SmartMet-workstation 3rd party binary utilities guide
+
+1. If you want to make Case-study data sets, you need 7zip binaries
+2. Go to https://www.7-zip.org/ and download the latest installation executable.
+3. Install 7zip to your PC
+4. Create utils directory in your SmartMet main directory
+5. Copy 7z.exe and 7z.dll in utils directory
+
 # SmartMet-workstation 3rd party libraries guide
 
 Here are library dependencies that are needed but are not included with SmartMet-workstation project.
