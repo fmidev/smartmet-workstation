@@ -5,8 +5,37 @@
 #include <map>
 #include "NFmiCachedRegistryValue.h"
 #include "NFmiDataNotificationSettingsWinRegistry.h"
+#include "NFmiGriddingProperties.h"
 
 class NFmiHelpDataInfoSystem;
+
+class NFmiGriddingPropertiesWinRegistry
+{
+public:
+    NFmiGriddingPropertiesWinRegistry();
+    bool Init(const std::string &baseRegistryPath, bool isToolMasterAvailable);
+    void Update(const NFmiGriddingProperties &griddingProperties);
+    const NFmiGriddingProperties& GetGriddingProperties() const;
+
+private:
+    void UpdateGriddingPropertiesFromRegistry();
+
+    bool mInitialized; // ei sallita tupla initialisointia
+    std::string mBaseRegistryPath;
+    std::string mSectionName; // tässä on GriddingProperties
+
+    // HKEY_CURRENT_USER -keys
+    boost::shared_ptr<CachedRegInt> mFunction;
+    boost::shared_ptr<CachedRegDouble> mRangeLimitInKm;
+    boost::shared_ptr<CachedRegInt> mLocalFitMethod;
+    boost::shared_ptr<CachedRegDouble> mLocalFitDelta;
+    boost::shared_ptr<CachedRegInt> mSmoothLevel;
+    boost::shared_ptr<CachedRegDouble> mLocalFitFilterRadius;
+    boost::shared_ptr<CachedRegDouble> mLocalFitFilterFactor;
+
+    // Tätä yksinkertaistettua kokooma luokkaa käytetään varsinaisesti SmartMetin griddauskoodeissa
+    NFmiGriddingProperties mGriddingProperties;
+};
 
 // NFmiHelpDataInfoSystem:issä olevien kaikkien dynaamisten datojen enable-asetukset Windows rekisterissä
 class NFmiHelpDataEnableWinRegistry
@@ -197,7 +226,7 @@ class NFmiApplicationWinRegistry
 public:
     NFmiApplicationWinRegistry(void);
     bool Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem);
-
+    void InitGriddingProperties(bool isToolMasterAvailable);
     NFmiViewPositionsWinRegistry& OtherViewPositionsWinRegistry(void) {return mOtherViewPositionsWinRegistry;}
     NFmiDataNotificationSettingsWinRegistry& DataNotificationSettingsWinRegistry(void) {return mDataNotificationSettingsWinRegistry;}
     NFmiHelpDataEnableWinRegistry& HelpDataEnableWinRegistry(void) {return mHelpDataEnableWinRegistry;}
@@ -249,6 +278,9 @@ public:
     void DrawObjectScaleFactor(double newValue);
     double MaximumFontSizeFactor();
     void MaximumFontSizeFactor(double newValue);
+
+    const NFmiGriddingProperties& GriddingProperties(bool getEditingRelatedProperties) const;
+    void SetGriddingProperties(bool setEditingRelatedProperties, const NFmiGriddingProperties &griddingProperties);
 
     static std::string MakeBaseRegistryPath(void);
     static std::string MakeGeneralSectionName(void);
@@ -307,6 +339,11 @@ private:
 	boost::shared_ptr<CachedRegBool> mSmartOrientationPrint; // lasketaanko ja käännetäänkö paperi kuvan mukaan automaattisesti vai ei
 	boost::shared_ptr<CachedRegBool> mLowMemoryPrint; // printataanko valmis bitmap kuva (karkea kuva, mutta jos printterissä vähän muistia, tämä auttaa) vai piirretäänkö kuva käyttäen paperin resoluutio tasoa
 	boost::shared_ptr<CachedRegInt> mMaxRangeInPrint; // kuinka monta sivua on mahdollista printata maksimissaan range optiolla
+
+    // Pelkästään editointityökaluihin (CP-työkalu ja Obs-blender) liittyvät (täydet) griddaus säädöt (käyttäjä voi muokata)
+    NFmiGriddingPropertiesWinRegistry mEditingToolsGriddingProperties;
+    // Visualisointiin (mm. havaintojen hilaus visualisointi) ja macroParam laskuihin littyvät griddaus säädöt (käyttäjä ei voi muokata ainakaan vielä)
+    NFmiGriddingProperties mVisualizationGriddingProperties;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 

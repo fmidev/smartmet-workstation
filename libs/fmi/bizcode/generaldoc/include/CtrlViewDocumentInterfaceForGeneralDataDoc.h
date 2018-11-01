@@ -105,7 +105,7 @@ public:
     NFmiHelpEditorSystem& HelpEditorSystem(void) override;
     NFmiMetEditorOptionsData& MetEditorOptionsData(void) override;
     boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) override;
-    boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector) override;
+    boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) override;
     bool IsMasksUsedInTimeSerialViews(void) override;
     NFmiAnalyzeToolData& AnalyzeToolData(void) override;
     const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const override;

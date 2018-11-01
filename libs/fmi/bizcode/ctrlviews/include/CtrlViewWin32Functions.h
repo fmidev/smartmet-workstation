@@ -9,7 +9,7 @@ class NFmiColor;
 // ja toolboxista ja muusta kivasta.
 namespace CtrlView
 {
-    void DestroyBitmap(CBitmap **bitmap);
+    void DestroyBitmap(CBitmap **bitmap, bool deleteOldBitmap = true);
     void MakeCombatibleBitmap(CWnd *theView, CBitmap **theMemoryBitmap, int cx = 0, int cy = 0);
     CBitmap* CreateColorBitmap(CWnd *view, COLORREF color, int x, int y);
     void ColorButtonPressed(CWnd *view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button);

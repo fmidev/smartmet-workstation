@@ -206,7 +206,7 @@ public:
     virtual NFmiHelpEditorSystem& HelpEditorSystem(void) = 0;
     virtual NFmiMetEditorOptionsData& MetEditorOptionsData(void) = 0;
     virtual boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector) = 0;
+    virtual boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) = 0;
     virtual bool IsMasksUsedInTimeSerialViews(void) = 0;
     virtual NFmiAnalyzeToolData& AnalyzeToolData(void) = 0;
     virtual const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const = 0;

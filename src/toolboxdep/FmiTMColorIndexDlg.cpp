@@ -994,6 +994,8 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
     ::InitColorNameMap();
 
 //    ::TESTWriteColorMapToFile(itsColorRectVector);
+    auto rect = CalcRealFinalDialogSize();
+    MoveWindow(rect, TRUE);
 
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -1130,12 +1132,6 @@ void CFmiTMColorIndexDlg::DoDraw(CDC *theDC)
 			   ,NULL); //040397/LW oli NULL
 		theDC->SelectObject(&myFont12);
 
-		CRect rect;
-		GetWindowRect(&rect);
-		CRect lastRect(itsColorRectVector[itsColorRectVector.size()-1].itsColorRect); // oletetaan että viimeinen listalla oleva laatikko on myös oikeassa reunassa
-		rect.right = rect.left + lastRect.right + 20;
-        rect.bottom = rect.top + lastRect.bottom + 52;
-
 		::DrawColorRects(theDC, itsSelectedColorsRectVector, back);
 		::DrawColorRects(theDC, itsColorRectVector, back);
 		DrawSelectedColorMarker(theDC);
@@ -1150,7 +1146,6 @@ void CFmiTMColorIndexDlg::DoDraw(CDC *theDC)
         theDC->SelectObject(oldPen);
 
 		theDC->SelectObject(oldFont);
-		MoveWindow(rect, TRUE);
 	}
 	else
 	{
@@ -1158,6 +1153,16 @@ void CFmiTMColorIndexDlg::DoDraw(CDC *theDC)
 		theDC->SetBkColor(back);
 		theDC->TextOut(0, 0, _TEXT("Colors were not initialized, error in application?"));
 	}
+}
+
+CRect CFmiTMColorIndexDlg::CalcRealFinalDialogSize()
+{
+    CRect rect;
+    GetWindowRect(&rect);
+    CRect lastRect(itsColorRectVector[itsColorRectVector.size() - 1].itsColorRect); // oletetaan että viimeinen listalla oleva laatikko on myös oikeassa reunassa
+    rect.right = rect.left + lastRect.right + 25;
+    rect.bottom = rect.top + lastRect.bottom + 62;
+    return rect;
 }
 
 void CFmiTMColorIndexDlg::OnPaint()

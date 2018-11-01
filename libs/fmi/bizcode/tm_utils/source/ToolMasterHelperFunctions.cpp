@@ -8,6 +8,7 @@
 #include "ToolMasterColorCube.h"
 #include "ToolMasterDrawingFunctions.h"
 #include "NFmiIsoLineData.h"
+#include "NFmiGriddingProperties.h"
 #include "catlog/catlog.h"
 
 #include "agX/agx.h"
@@ -37,18 +38,22 @@ namespace Toolmaster
         XuWindowSelect(theDC->GetSafeHdc());
     }
 
-    void DoToolMasterGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, const NFmiRect &theRelativeRect, int theGriddingFunction, float theObservationRadiusRelative, const NFmiDataMatrix<float> &gridData, std::vector<float> &toolMasterGridValuesOut)
+    void DoToolMasterGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, const NFmiRect &theRelativeRect, const NFmiGriddingProperties &griddingProperties, float theObservationRadiusRelative, const NFmiDataMatrix<float> &gridData, std::vector<float> &toolMasterGridValuesOut)
     {
         // Toolmaster griddaus funktioiden käyttö
         XuViewWorldLimits(theRelativeRect.Left(), theRelativeRect.Right(), theRelativeRect.Top(), theRelativeRect.Bottom(), 0, 0);
         XuUndefined(kFloatMissing, 2);
+        XuGriddingSmoothLevel(griddingProperties.smoothLevel());
+        XuGriddingLocalFitMethod(griddingProperties.localFitMethod());
+        XuGriddingLocalFitDelta(griddingProperties.localFitDelta());
+        XuGriddingLocalFitFilter(griddingProperties.localFitFilterRadius(), griddingProperties.localFitFilterFactor());
 
         if(theObservationRadiusRelative != kFloatMissing)
             XuGriddingLocalFitRadius(theObservationRadiusRelative);
         else
             XuGriddingLocalFitRadius(1.41); // Tämä on laskentaruudun (~ 0,0 - 1,1) kulmapisteiden diagonaalinen etäisyys, mikä on tämän radiuksen oletusarvo (= kaikkia pisteitä käytetään aina laskuissa)
 
-        switch(theGriddingFunction)
+        switch(griddingProperties.function())
         {
         case kFmiXuGriddingThinPlateSplineCalc:
             XuGriddingThinPlateSplineCalc(&xValues[0], &yValues[0], &zValues[0], arraySize, &toolMasterGridValuesOut[0], static_cast<int>(gridData.NY()), static_cast<int>(gridData.NX()));

@@ -17,12 +17,14 @@ add_library(
 target_link_libraries(
     ${PROJECT_NAME}
     Newbase
+    SmartTools
     )
 
 target_include_directories( 
     ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     )
 
@@ -30,6 +32,7 @@ set(
     ${PROJECT_NAME}_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/include
     ${Newbase_INCLUDE_DIRS}
+    ${SmartTools_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

@@ -7,7 +7,6 @@
 #include "NFmiDataMatrix.h" // täältä tulee myös checkedVector
 
 class NFmiEditorControlPointManager;
-struct NFmiCPGriddingProperties;
 
 class NFmiCPManagerSet
 {
@@ -30,8 +29,6 @@ public:
 	int Find(const std::string &theName) const;
 	boost::shared_ptr<NFmiEditorControlPointManager> CPManagerFromSet(size_t theIndex);
 	void UpdateViewMacroCPManager(const boost::shared_ptr<NFmiEditorControlPointManager> &newCPManager);
-    void SetCPGriddingProperties(const NFmiCPGriddingProperties& newProperties);
-    void SetToolMasterAvailable(bool newValue);
 private:
 	void DoOldSchoolStyleInit(void);
 	void DoMultiCPManagerInit();

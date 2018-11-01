@@ -201,8 +201,6 @@ public:
     void TimeEditSmootherMaxValue(int newValue) override;
     int TimeEditSmootherValue() override;
     void TimeEditSmootherValue(int newValue) override;
-    float CPGriddingFactor() override;
-    void CPGriddingFactor(float newValue) override;
     const NFmiPoint& TimeSerialViewSizeInPixels() const override;
     void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) override;
     bool UseTimeSerialAxisAutoAdjust() override;
@@ -294,6 +292,7 @@ public:
         , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
+    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;
