@@ -21,6 +21,7 @@
 #include "NFmiFileSystem.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiHelpDataInfo.h"
+#include "NFmiProducerSystem.h"
 
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
@@ -233,17 +234,18 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     return str;
 }
 
-std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector)
+std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo)
 {
     std::string str;
     str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
     str += "Producer information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
-    str += "<b>Name: </b>\t" + singleRowItem.itemName() + "\n";
-    //str += "<b>Short name: </b>\t" + singleRowItem.itemName() + "\n";
-    //str += "<b>Description: </b>\t" + singleRowItem.itemName() + "\n";
-    str += "<b>Id: </b>\t\t" + std::to_string(singleRowItem.itemId());
+    str += "<b>Name: </b>\t\t" + singleRowItem.itemName() + "\n";
+    str += "<b>Short name: </b>\t" + producerInfo.ShortName() + "\n";
+    str += "<b>Ultra short name: </b>\t" + producerInfo.UltraShortName() + "\n";
+    str += "<b>Description: </b>\t" + producerInfo.Description() + "\n";
+    str += "<b>Id: </b>\t\t\t" + std::to_string(singleRowItem.itemId());
     str += "<br><hr color=darkblue><br>";
     str += "<b>Data files:</b>\n";
     std::string dataFiles;
@@ -285,20 +287,21 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
         && idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
     {
         AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
-        auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
-        auto producerInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
+        auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+        auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
         auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
+        auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
                     
-        if(!fastQueryInfoVector.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
+        if(!fastQueryInfo.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
         {
-            return TooltipForDataType(singleRowItem, fastQueryInfoVector.at(0), helpDataInfo);
+            return TooltipForDataType(singleRowItem, fastQueryInfo.at(0), helpDataInfo);
         }
-        else if(!producerInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
+        else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
         {
-            return TooltipForProducerType(singleRowItem, producerInfoVector);
+            return TooltipForProducerType(singleRowItem, fastQueryInfoVector, producerInfo);
         }
         else
-            return "No info";
+            return "";
 
     }
     
