@@ -189,6 +189,7 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     int timeSteps;
     std::string resolution;
     std::string gridArea;
+    std::string levels;
 
     if(info->TimeDescriptor().ValidTimeList() != nullptr)
     {
@@ -205,6 +206,8 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
 
     gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
 
+    levels = (info->SizeLevels() == 1) ? "surface data" : std::to_string(info->SizeLevels());
+
     std::string str;
     str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
     str += "Data information";
@@ -213,15 +216,16 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
     str += "<b>File filter: </b>\t" + GetFileFilter(info->DataFilePattern()) + "\n";
     //str += "<b>Data loaded: </b>\t \n";
-    //str += "<b>File modified: </b>\t  \n";
+    //str += "<b>File modified: </b>\t" + std::to_string(helpInfo->LatestFileTimeStamp()) + "\n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC";
     str += "<br><hr color=darkblue><br>";
     str += "<b>Time info: </b>";
-    str += "\tsteps : " + std::to_string(timeSteps) + "\n";
+    str += "\tsteps: " + std::to_string(timeSteps) + "\n";
     str += "\t\t\tresolution: " + resolution + "\n";
     str += "\t\t\trange: " + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC ";
     str += "<br><hr color=darkblue><br>";
-    str += "<b>Parameters:  </b>\ttotal: " + std::to_string(info->ParamBag().GetSize());
+    str += "<b>Parameters:  </b>\ttotal: " + std::to_string(info->ParamBag().GetSize()) + "\n";
+    str += "<b>Levels:  </b>\t\t" + levels;
     str += "<br><hr color=darkblue><br>";
     str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
     str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
@@ -236,13 +240,15 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
 
 std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo)
 {
+    std::string shortName = (producerInfo.ShortNameCount() == 0) ? "" : producerInfo.ShortName();
+
     std::string str;
     str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
     str += "Producer information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
     str += "<b>Name: </b>\t\t" + singleRowItem.itemName() + "\n";
-    str += "<b>Short name: </b>\t" + producerInfo.ShortName() + "\n";
+    str += "<b>Short name: </b>\t" + shortName + "\n";
     str += "<b>Ultra short name: </b>\t" + producerInfo.UltraShortName() + "\n";
     str += "<b>Description: </b>\t" + producerInfo.Description() + "\n";
     str += "<b>Id: </b>\t\t\t" + std::to_string(singleRowItem.itemId());
