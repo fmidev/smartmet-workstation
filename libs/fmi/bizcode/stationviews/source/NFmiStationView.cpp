@@ -58,6 +58,7 @@
 #include "NFmiHelpDataInfo.h"
 #include "EditedInfoMaskHandler.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "NFmiCommentStripper.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1381,12 +1382,12 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
 }
 
 // Pelkän tooltipin lasku macroParamista.
-float NFmiStationView::CalcMacroParamTooltipValue()
+float NFmiStationView::CalcMacroParamTooltipValue(std::string &possibleSymbolTooltipFile)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
     NFmiDataMatrix<float> fakeMatrixValues;
-    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints);
+    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, nullptr, &possibleSymbolTooltipFile);
 }
 
 static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -2644,18 +2645,19 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
 		if(info) // satelliitti kuvilla ei ole infoa
 		{
-			if(fGetCurrentDataFromQ2Server || itsDrawParam->DataType() == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
+            std::string possibleSymbolTooltipFile;
+            float value = kFloatMissing;
+            if(fGetCurrentDataFromQ2Server || itsDrawParam->DataType() == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
 			{
 				fDoTimeInterpolation = false;
 				if(info->DataType() != NFmiInfoData::kStationary) // stationaari datalle ei tarvitse ajan osua, koska data on joka ajalle aina sama
 				{
 					fDoTimeInterpolation = !(info->Time(itsCtrlViewDocumentInterface->ToolTipTime()));
 				}
-				float value = kFloatMissing;
 				if(macroParamCase)
 				{
 					itsInfo = info;
-					value = CalcMacroParamTooltipValue();
+					value = CalcMacroParamTooltipValue(possibleSymbolTooltipFile);
 					info = itsInfo;
 				}
 				else
@@ -2705,11 +2707,129 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 
                 ::AddFilePathToTooltip(str, info, fGetCurrentDataFromQ2Server);
             }
+            else
+            {
+                str += GetPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+            }
         }
 		else
 			str += " Selected parameter or data is not currently available.";
 	}
 	return str;
+}
+
+class SymbolTextMapping
+{
+    std::string totalFilePath_;
+    std::map<float, std::string> symbolTextMap_;
+    std::string initializationMessage_;
+public:
+    SymbolTextMapping() = default;
+
+    bool initialize(const std::string &totalFilePath)
+    {
+        return initialize_impl(totalFilePath);
+    }
+
+    bool wasInitializationOk() const
+    {
+        return initializationMessage_.empty();
+    }
+
+    std::string getSymbolText(float symbolValue) const
+    {
+        // Jos initialisointi on epäonnistunut, palautetaan sen virheilmoitus varoituksena, että tätä yritetään käyttää
+        if(!wasInitializationOk())
+            return initializationMessage_;
+        else
+        {
+            auto iter = symbolTextMap_.find(symbolValue);
+            if(iter != symbolTextMap_.end())
+                return iter->second;
+            else
+            {
+                if(symbolValue == kFloatMissing)
+                {
+                    static const std::string missingValueText = "missing value";
+                    return missingValueText;
+                }
+                else
+                {
+                    std::string errorText = "Value ";
+                    errorText += std::to_string(symbolValue);
+                    errorText += " was not found from mappings from file:\n";
+                    errorText += totalFilePath_;
+                    return errorText;
+                }
+            }
+        }
+    }
+
+private:
+    void parseLine(const std::string &line)
+    {
+        auto strippedLine = line;
+        NFmiStringTools::TrimAll(strippedLine);
+        auto lineParts = NFmiStringTools::Split(strippedLine, ";");
+        if(lineParts.size() == 2)
+        {
+            try
+            {
+                float value = std::stof(lineParts[0]);
+                symbolTextMap_.insert(std::make_pair(value, lineParts[1]));
+            }
+            catch(...)
+            { }
+        }
+    }
+
+    bool initialize_impl(const std::string &totalFilePath)
+    {
+        initializationMessage_.clear();
+        totalFilePath_ = totalFilePath;
+        symbolTextMap_.clear();
+        NFmiCommentStripper commentStripper;
+        if(commentStripper.ReadAndStripFile(totalFilePath_))
+        {
+            std::istringstream in(commentStripper.GetString());
+            std::string line;
+            do
+            {
+                std::getline(in, line);
+                parseLine(line);
+            } while(in);
+        }
+        else
+        {
+            initializationMessage_ = std::string("Unable to read symbol text mappings from file: ") + totalFilePath_;
+        }
+
+        return false;
+    }
+};
+
+std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, std::string &possibleSymbolTooltipFile)
+{
+    if(!possibleSymbolTooltipFile.empty())
+    {
+        static std::map<std::string, SymbolTextMapping> symbolMappingsCache;
+
+        std::string str = " (";
+        // Katsotaan löytyykö haluttu tiedosto jo luettuna cache:en
+        auto iter = symbolMappingsCache.find(possibleSymbolTooltipFile);
+        if(iter != symbolMappingsCache.end())
+            str += iter->second.getSymbolText(value);
+        else
+        {
+            // Jos ei löytynyt, luodaan uusi cache otus, alustetaan se ja palautetaan siitä haluttu arvo
+            auto iter = symbolMappingsCache.insert(std::make_pair(possibleSymbolTooltipFile, SymbolTextMapping()));
+            iter.first->second.initialize(possibleSymbolTooltipFile);
+            str += iter.first->second.getSymbolText(value);
+        }
+        str += ")";
+        return str;
+    }
+    return "";
 }
 
 void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)
