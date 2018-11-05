@@ -319,7 +319,9 @@ class NFmiSmartToolIntepreter
   bool ExtractResolutionInfo();
   bool ExtractCalculationPointInfo();
   bool ExtractObservationRadiusInfo();
+  bool ExtractSymbolTooltipFile();
   std::string GetWholeNumberFromTokens();
+  std::string GetEndOfLineFromTokens();
   void CheckMustHaveSimpleConditionFunctions(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo);
   void AddVariableToCalculation(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo, boost::shared_ptr<NFmiAreaMaskInfo> &theVariableInfo);
   void AddSimpleCalculationToCallingAreaMask(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo, const boost::shared_ptr<NFmiAreaMaskInfo> &theSimpleCalculationAreaMask);

@@ -51,6 +51,9 @@ class NFmiExtraMacroParamData
   void ObservationRadiusInKm(float newValue) { itsObservationRadiusInKm = newValue; }
   float ObservationRadiusRelative() const { return itsObservationRadiusRelative; }
   void ObservationRadiusRelative(float newValue) { itsObservationRadiusRelative = newValue; }
+  const std::string& SymbolTooltipFile() const { return itsSymbolTooltipFile; }
+  void SymbolTooltipFile(const std::string &filePath) { itsSymbolTooltipFile = filePath; }
+
  private:
   void InitializeResolutionWithEditedData(NFmiInfoOrganizer &theInfoOrganizer);
   void InitializeResolutionData(NFmiInfoOrganizer &theInfoOrganizer, float usedResolutionInKm);
@@ -98,4 +101,6 @@ class NFmiExtraMacroParamData
   // T‰h‰n lasketaan k‰ytetyn kartta-alueen mukainen relatiivinen et‰isyys (jota k‰ytet‰‰n itse
   // laskuissa)
   float itsObservationRadiusRelative;
+  // Joillekin macroParameilla lasketuille symboleille halutaan antaa selitt‰vi‰ tekstej‰ tooltipiss‰
+  std::string itsSymbolTooltipFile;
 };
