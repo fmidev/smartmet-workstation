@@ -24,6 +24,7 @@
 #include <newbase/NFmiLevelType.h>
 #include <newbase/NFmiLevel.h>
 #include <newbase/NFmiEnumConverter.h>
+#include <newbase/NFmiFileSystem.h>
 
 #include <algorithm>
 #include <cctype>
@@ -2977,6 +2978,54 @@ bool NFmiSmartToolIntepreter::ExtractObservationRadiusInfo()
   throw std::runtime_error(errorStr);
 }
 
+bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
+{
+    // Jos skriptistä on löytynyt 'SymbolTooltipFile = path_to_file'
+    GetToken();
+    string assignOperator = token;
+    if(assignOperator == string("="))
+    {
+        // Haetaan teksti rivin loppuun asti poluksi (polussa voi olla space:ja)
+        string pathToSymbolFile = GetEndOfLineFromTokens();
+        if(NFmiFileSystem::FileExists(pathToSymbolFile))
+        {
+            itsExtraMacroParamData->SymbolTooltipFile(pathToSymbolFile);
+            return true;
+        }
+        else
+        {
+            std::string errorStr = "Given SymbolTooltipFile doesn't exist: ";
+            errorStr += pathToSymbolFile;
+            throw std::runtime_error(errorStr);
+        }
+    }
+
+    std::string errorStr = "Given SymbolTooltipFile -clause was illegal, try something like this:\n";
+    errorStr += "\"SymbolTooltipFile = path_to_file\"";
+    throw std::runtime_error(errorStr);
+}
+
+std::string NFmiSmartToolIntepreter::GetEndOfLineFromTokens()
+{
+    std::string endOfLineStr;
+    for(; GetToken(); )
+    {
+        std::string word = token;
+        auto pos = word.find_first_of("\n\r");
+        if(pos == std::string::npos)
+        {
+            endOfLineStr += word;
+            continue;
+        }
+        else
+        {
+            endOfLineStr += std::string(word.begin(), word.begin() + pos);
+            break;
+        }
+    }
+    return endOfLineStr;
+}
+
 bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theVariableText)
 {
   std::string aVariableText(theVariableText);
@@ -2990,6 +3039,8 @@ bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theV
       return ExtractCalculationPointInfo();
     else if (it->second == NFmiAreaMask::ObservationRadius)
       return ExtractObservationRadiusInfo();
+    else if(it->second == NFmiAreaMask::SymbolTooltipFile)
+        return ExtractSymbolTooltipFile();
   }
   return false;
 }
@@ -3945,6 +3996,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("resolution"), NFmiAreaMask::Resolution));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("calculationpoint"), NFmiAreaMask::CalculationPoint));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("observationradius"), NFmiAreaMask::ObservationRadius));
+    itsExtraInfoCommands.insert(FunctionMap::value_type(string("symboltooltipfile"), NFmiAreaMask::SymbolTooltipFile));
 
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("surface"), kFmiMeanSeaLevel));
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("pressure"), kFmiPressureLevel));

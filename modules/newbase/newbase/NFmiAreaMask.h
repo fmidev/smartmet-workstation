@@ -230,7 +230,8 @@ class _FMI_DLL NFmiAreaMask
     LatestValue,  //!< Hae datasta sen viimeisimmän ajan arvo
     PreviousFullDays, //!< Laske datasta aikasarja integraatio mennen halutun määrän päiviä taaksepäin aina halutun päivän 0 lokaali tuntiin asti.
     TimeDuration,  //!< Katso laskentahetkestä eteen/taaksepäin kuinka kauan simple-condition ehto pitää paikkaansa
-    LocalExtremes  //!< Etsi lokaalit (ja globaalit) minimit ja maksimit kentästä, mutta vain jos ne ovat tarpeeksi 'merkittäviä'
+    LocalExtremes,  //!< Etsi lokaalit (ja globaalit) minimit ja maksimit kentästä, mutta vain jos ne ovat tarpeeksi 'merkittäviä'
+    SymbolTooltipFile //!< Tällä määritetään mahdollinen tiedosto, josta haetaan tooltippiä varten aputekstejä eri symboleille
   };
 
   //! Function direction, e.g. with 'met'-functions x- and/or y-direction
