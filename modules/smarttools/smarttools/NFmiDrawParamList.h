@@ -98,6 +98,8 @@ class NFmiDrawParamList
   bool HasBorrowedParams(void) const { return fHasBorrowedParams; }
   void HasBorrowedParams(bool newValue) { fHasBorrowedParams = newValue; }
   void ActivateOnlyOne(void);
+  ListType::iterator begin() { return itsList.begin(); }
+  ListType::iterator end() { return itsList.end(); }
 
  private:
   void Swap(int index1, int index2);
