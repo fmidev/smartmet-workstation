@@ -1,4 +1,5 @@
 #include "NFmiMacroParamDataCache.h"
+#include "NFmiDrawParamList.h"
 #include "catlog/catlog.h"
 
 static void logMacroParamTotalPathWasInCorrectWarning(const std::string &functionName, const std::string &path1, const std::string &path2)
@@ -98,6 +99,67 @@ bool NFmiMacroParamDataCacheRow::getCache(unsigned long layerIndex, const NFmiMe
     return false;
 }
 
+// Tehdään cachen näyttöriville päivitys. Jos esim. jotain on poistettu tai lisätty riviltä/riville.
+// Tässä siis tarvittaessa otetaan cachen data yhdeltä layer-indeksiltä talteen, sitten
+// luodaan uusi map olio ja siirretään cache-data tälle uudelle map-oliolle ja lopuksi originaali 
+// vielä poistetaan mapista.
+// Siirtyneiden macroParamien tunnistus tehdään käyttämällä macroParamTotalPath:ia.
+// Mitä jos samalla rivillä on kahdessa eri layerissa sama macroParam???? 
+bool NFmiMacroParamDataCacheRow::update(NFmiDrawParamList &drawParamList)
+{
+    LayersCacheType newLayerCache;
+    unsigned long layerIndex = 1;
+    for(auto &drawParam : drawParamList)
+    {
+        if(drawParam->IsMacroParamCase(true))
+        {
+            if(!tryToMoveExistingLayerCache(layerIndex, *drawParam, newLayerCache))
+            {
+                // Jos ei löytynyt listasta valmista layerCachea, niin luodaan sitten uusi sellainen
+                auto insertedIter = newLayerCache.insert(std::make_pair(layerIndex, NFmiMacroParamDataCacheLayer(drawParam->InitFileName())));
+            }
+        }
+        layerIndex++;
+    }
+
+    // Laitetaan lopuksi uusi luotu cache originaalin tilalle
+    layersCache_.swap(newLayerCache);
+    return true;
+}
+
+void NFmiMacroParamDataCacheRow::swapCacheDataFromOriginalToNew(unsigned long layerIndex, LayersCacheType &originalLayersCache, LayersCacheType::iterator &iterToOriginal, LayersCacheType &newLayersCache)
+{
+    std::swap(newLayersCache[layerIndex], iterToOriginal->second);
+    originalLayersCache.erase(iterToOriginal);
+}
+
+bool NFmiMacroParamDataCacheRow::tryToMoveExistingLayerCache(unsigned long layerIndex, const NFmiDrawParam &drawParam, LayersCacheType &newLayersCacheInOut)
+{
+    const auto &drawParamTotalPath = drawParam.InitFileName();
+    auto layerIter = layersCache_.find(layerIndex);
+    if(layerIter != layersCache_.end())
+    {
+        // Katsotaan löytyikö sama macroParam samasta kohtaa layer-listasta
+        if(layerIter->second.macroParamTotalPath() == drawParamTotalPath)
+        {
+            // Jos löytyi, siirretään cache originaalista uuteen cacheen ja poistetaan se originaalista
+            swapCacheDataFromOriginalToNew(layerIndex, layersCache_, layerIter, newLayersCacheInOut);
+            return true;
+        }
+    }
+
+    // Etsitään 1. originaali listasta löytynyt oikealla macroParam tiedostopolulla oleva otus ja 
+    // siirretään se uuteen listaan.
+    auto samePathItemIter = std::find_if(layersCache_.begin(), layersCache_.end(), [&drawParamTotalPath](const auto &layerCache) {return layerCache.second.macroParamTotalPath() == drawParamTotalPath; });
+    if(samePathItemIter != layersCache_.end())
+    {
+        swapCacheDataFromOriginalToNew(layerIndex, layersCache_, samePathItemIter, newLayersCacheInOut);
+        return true;
+    }
+
+    return false;
+}
+
 // ***********************************************************************************************
 
 void NFmiMacroParamDataCacheForView::clearAllLayers()
@@ -135,6 +197,16 @@ bool NFmiMacroParamDataCacheForView::getCache(unsigned long rowIndex, unsigned l
     if(iter != rowsCache_.end())
     {
         return iter->second.getCache(layerIndex, time, macroParamTotalPath, cacheDataOut);
+    }
+    return false;
+}
+
+bool NFmiMacroParamDataCacheForView::update(unsigned long rowIndex, NFmiDrawParamList &drawParamList)
+{
+    auto iter = rowsCache_.find(rowIndex);
+    if(iter != rowsCache_.end())
+    {
+        return iter->second.update(drawParamList);
     }
     return false;
 }
@@ -208,3 +280,27 @@ bool NFmiMacroParamDataCache::getCache(unsigned long viewIndex, unsigned long ro
     return false;
 }
 
+bool NFmiMacroParamDataCache::update(unsigned long viewIndex, unsigned long rowIndex, NFmiDrawParamList &drawParamList)
+{
+    auto iter = viewsCache_.find(viewIndex);
+    if(iter != viewsCache_.end())
+    {
+        return iter->second.update(rowIndex, drawParamList);
+    }
+    return false;
+}
+
+bool NFmiMacroParamDataCache::update(unsigned long viewIndex, NFmiPtrList<NFmiDrawParamList>* drawParamListVector)
+{
+    if(drawParamListVector)
+    {
+        unsigned long rowIndex = 1;
+        auto iter = drawParamListVector->Start();
+        for(; iter.Next(); rowIndex++)
+        {
+            auto &drawParamList = iter.Current();
+            update(viewIndex, rowIndex, drawParamList);
+        }
+    }
+    return true;
+}
