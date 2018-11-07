@@ -174,9 +174,6 @@ unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
 
 std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
 {
-    if(info == nullptr) //MacroParams don't have FastQueryInfo
-        return "No FastQueryInfo";
-
     //12. Miten saa tietoja datoista ?
     //-OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisessä Time - sarake jutussa
     //- Katso eri tietoja FastInfosta seuraavilta olioita
@@ -283,7 +280,7 @@ std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, check
 
 std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
 {
-    return "category";
+    return "Category";
 }
 
 std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
