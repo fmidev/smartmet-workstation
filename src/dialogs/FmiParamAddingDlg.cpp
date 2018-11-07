@@ -174,13 +174,6 @@ unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
 
 std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
 {
-    //12. Miten saa tietoja datoista ?
-    //-OriginTime(NFmiFastInfo) ja LastTime(NFmiTimeDescriptor) oli jo edellisessä Time - sarake jutussa
-    //- Katso eri tietoja FastInfosta seuraavilta olioita
-    //- HPlaceDescriptor() metodilla hila / asemat tietoa, IsGrid() if lauseeseen, hila + projektio alue 
-    //        + resoluutio kilometreissä tekstejä(kysy neuvoa)
-    //- Levelit oletkin jo varmaan käynyt läpi toisaalla eli siihen ei tarvii neuvoja
-
     NFmiTimeList* timeList;
     NFmiTimeBag* timeBag;
     int timeSteps;
@@ -202,7 +195,6 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     }
 
     gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
-
     levels = (info->SizeLevels() == 1) ? "surface data" : std::to_string(info->SizeLevels());
 
     std::string str;
@@ -254,7 +246,6 @@ std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, check
     std::string dataFiles;
     int n = 1;
     unsigned long long combinedSize = 0;
-
     std::vector<std::string> colors = {"darkred", "darkblue" };
 
     for(auto &info : infoVector)
@@ -278,10 +269,67 @@ std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, check
     return str;
 }
 
-std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, std::string fileSize)
+std::string NFmiParamAddingGridCtrl::TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
 {
-    return "Category";
+    int numberOfProducers = 0;
+    int numberOfDataFiles = 0;
+    unsigned long long combinedSize = 0;
+    int depth = singleRowItem.treeDepth();
+    std::vector<AddParams::SingleRowItem> subvector((singleRowItemVector.begin() + rowNumber), singleRowItemVector.end());
+
+    for(auto item : subvector)
+    {
+        if(item.rowType() == AddParams::RowType::kProducerType)
+            numberOfProducers++;
+        if(item.rowType() == AddParams::RowType::kDataType)
+        {
+            numberOfDataFiles++;
+            auto info = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(item.uniqueDataId()).at(0);
+            auto size = fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()));
+            combinedSize += size;
+        }
+        if(item.treeDepth() == depth) // End when one set of category data has been dealt with
+            break;
+    }
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Category information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Producers: </b>\t\t" + std::to_string(numberOfProducers) + "\n";
+    str += "<b>Data files: </b>\t\t" + std::to_string(numberOfDataFiles) + "\n";;
+    str += "<b>Combined size: </b>\t" + ConvertSizeToMBorGB(combinedSize);
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
 }
+
+std::string NFmiParamAddingGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+{
+    int numberOfParams = 0;
+    int depth = singleRowItem.treeDepth();
+    std::vector<AddParams::SingleRowItem> subvector((singleRowItemVector.begin() + rowNumber), singleRowItemVector.end());
+
+    for(auto item : subvector)
+    {
+        if(item.leafNode())
+            numberOfParams++;
+        if(item.treeDepth() == depth) // End when one set of category data has been dealt with
+            break;
+    }
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Category information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Number of macro parameters: </b> \t" + std::to_string(numberOfParams);
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
+}
+
 
 std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
 {
@@ -289,13 +337,19 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
     if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount() 
         && idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
     {
-        AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(idCurrentCell.row - 1);
+        int rowNumber = idCurrentCell.row;
+        AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(rowNumber - 1);
+        std::vector<AddParams::SingleRowItem> singleRowItemVector = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData();
         auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
         auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
         auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
         auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
-                    
-        if(!fastQueryInfo.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
+             
+        if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
+        {
+            return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+        }
+        else if(!fastQueryInfo.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
         {
             return TooltipForDataType(singleRowItem, fastQueryInfo.at(0), helpDataInfo);
         }
@@ -303,9 +357,12 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
         {
             return TooltipForProducerType(singleRowItem, fastQueryInfoVector, producerInfo);
         }
+        else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kCategoryType)
+        {
+            return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+        }
         else
             return "";
-
     }
     
     return std::string("Parameter Selection");
