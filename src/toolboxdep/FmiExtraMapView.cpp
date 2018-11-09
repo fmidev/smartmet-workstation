@@ -542,7 +542,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		if(itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
 		{
-            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina ja joka karttanäyttöön
 		}
 		if(itsSmartMetDocumentInterface->MustDrawTempView())
 		{
@@ -869,4 +869,3 @@ NFmiStationViewHandler* CFmiExtraMapView::GetMapViewHandler(int theRowIndex, int
     else
         return 0;
 }
-
