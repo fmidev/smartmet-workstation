@@ -101,6 +101,7 @@
 #include "catlog/catlog.h"
 #include "NFmiVoidPtrList.h"
 #include "EditedInfoMaskHandler.h"
+#include "ToolBoxStateRestorer.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -747,7 +748,7 @@ void NFmiStationViewHandler::DrawSelectedMTAModeSoundingPlaces(void)
 		markerPolyLine.AddPoint(NFmiPoint(0, -1));
 		markerPolyLine.AddPoint(NFmiPoint(1, 1));
 
-		itsToolBox->RelativeClipRect(itsRect, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
 
         auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
         long pixelSizeX = boost::math::iround(graphicalInfo.itsPixelsPerMM_x * 2.0);
@@ -769,7 +770,6 @@ void NFmiStationViewHandler::DrawSelectedMTAModeSoundingPlaces(void)
 			}
 			index++;
 		}
-		itsToolBox->UseClipping(false);
 	}
 }
 
@@ -904,8 +904,8 @@ void NFmiStationViewHandler::DrawMovingSoundingSymbols(boost::shared_ptr<NFmiFas
 	theSoundingInfo->Param(kFmiPhaseOfFlight);
 	unsigned long phaseIndex = theSoundingInfo->ParamIndex();
 
-	itsToolBox->RelativeClipRect(itsRect, true);
-
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
+    
 	NFmiDrawingEnvironment enviNousu;
 	::SetSoundingSymbolEnvi(enviNousu);
 	enviNousu.SetFillColor(NFmiColor(0.85f,0.85f,0.f));
@@ -966,7 +966,6 @@ void NFmiStationViewHandler::DrawMovingSoundingSymbols(boost::shared_ptr<NFmiFas
 			}
 		}
 	}
-	itsToolBox->UseClipping(false);
 }
 
 void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM)
@@ -1028,7 +1027,7 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 			markerPolyLine.AddPoint(NFmiPoint(1, -1));
 		}
 
-		itsToolBox->RelativeClipRect(itsRect, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
 
         auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
         long pixelSizeX = boost::math::iround(graphicalInfo.itsPixelsPerMM_x * theSymbolSizeInMM);
@@ -1045,7 +1044,6 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(1.f, 0.35f, 0.f)); // ei dataa, oranssi kolmio
 			itsToolBox->DrawPolyline(&markerPolyLine, viewPoint, scale);
 		}
-		itsToolBox->UseClipping(false);
 	}
 }
 
@@ -1340,10 +1338,9 @@ void NFmiStationViewHandler::DrawHALYMessageMarkers(void)
         InitializeWarningSymbols();
         GetShownMessages();
 
-        itsToolBox->RelativeClipRect(itsRect, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
         ShowWarningMessages(itsShownHakeMessages, true);
         ShowWarningMessages(itsShownKaHaMessages, false);
-        itsToolBox->UseClipping(false);
     }
 #endif // DISABLE_CPPRESTSDK
 }
@@ -1792,7 +1789,7 @@ void NFmiStationViewHandler::DrawSeaIcingMessageMarkers(void)
 		double scaleValueX = itsToolBox->SX(1); // yhden pikselin relatiivinen koko
 		double scaleValueY = itsToolBox->SY(1); // yhden pikselin relatiivinen koko
 
-		itsToolBox->RelativeClipRect(itsRect, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
 
 		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
 		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) *60));
@@ -1842,7 +1839,6 @@ void NFmiStationViewHandler::DrawSeaIcingMessageMarkers(void)
 				break;
 			}
 		}
-		itsToolBox->UseClipping(false);
 	}
 }
 
@@ -2251,9 +2247,8 @@ static void DrawLandBorders(NFmiStationViewHandler *mapView, NFmiToolBox *toolbo
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
                 NFmiPoint offSet(mapArea->TopLeft());
-                toolbox->RelativeClipRect(mapArea->XYArea(), true);
+                ToolBoxStateRestorer toolBoxStateRestorer(*toolbox, toolbox->GetTextAlignment(), true, &mapArea->XYArea());
                 ::DrawPolyLineList(toolbox, borderPolyLineList, offSet, mapView);
-                toolbox->UseClipping(false);
             }
         }
         else
@@ -4181,7 +4176,7 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* dummy */ , int theViewIndex, float /* dummy3 */ , void* /* dummy4 */ )
 {
 	itsToolBox = theGTB;
-	itsToolBox->RelativeClipRect(itsRect, true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
 	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 		DrawControlPoints();
 	if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyssä tarkkuus tilassa, milloin valittu piste piirretään jokaiseen karttaruutuun
@@ -4201,8 +4196,6 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
 
 	DrawParamView(theGTB); // piirrettävä viimeiseksi kartan päälle!!!
 	DrawAutocompleteLocations(); // tämä ottaa huomioon, ettei piirrä parametri boxin päälle!
-
-	itsToolBox->UseClipping(false);
 }
 
 static bool IsRectIntersecting(const NFmiRect &theRect, checkedVector<NFmiRect> &theExistingRects)

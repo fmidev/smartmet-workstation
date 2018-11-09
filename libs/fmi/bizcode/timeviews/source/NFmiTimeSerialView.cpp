@@ -39,6 +39,7 @@
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
 #include "NFmiLimitChecker.h"
+#include "ToolBoxStateRestorer.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -199,7 +200,7 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 		NFmiDrawingEnvironment envi;
 		CreateValueScale();
 		itsDataRect = CalculateDataRect();
-		itsToolBox->RelativeClipRect(itsDataRect, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataRect);
 
 		DrawNightShades();
 		envi.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f));
@@ -225,7 +226,6 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 	}
 
 	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
-	itsToolBox->UseClipping(false);
 }
 
 NFmiRect NFmiTimeSerialView::CalculateDataRect(void)
