@@ -292,11 +292,10 @@ public:
 	void ReportProcessMemoryUsage(void);
 	void SetMacroErrorText(const std::string &theErrorStr);
 	void InvalidateMapView(bool bErase = true);
-	void ForceDrawOverBitmapThings(void);
+	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateZoomDialog(int theWantedDescTopIndex);
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord);
 	void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex);
-	void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex);
 	void UpdateTempView(void);
 	void UpdateCrossSectionView(void);
 	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tämä on kirjastojen pilkkomiseen vaadittuja funktioita

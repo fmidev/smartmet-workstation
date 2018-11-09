@@ -554,7 +554,7 @@ void CFmiExtraMapViewDlg::OnAcceleratorMapRow10()
 void CFmiExtraMapViewDlg::OnAcceleratorToggleHelpCursorOnMap()
 {
     itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap(!itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap());
-    itsSmartMetDocumentInterface->ForceOtherMapViewsDrawOverBitmapThings(999);
+    itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorToggleOvermapForeBackGround()

@@ -542,8 +542,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		if(itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
 		{
-			ForceDrawOverBitmapThings(); // hiiren apukursorit pitää joka tapauksessa piirtää aina
-            itsSmartMetDocumentInterface->ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina
 		}
 		if(itsSmartMetDocumentInterface->MustDrawTempView())
 		{
@@ -554,8 +553,8 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 		{
             itsSmartMetDocumentInterface->MustDrawCrossSectionView(false);
             itsSmartMetDocumentInterface->UpdateCrossSectionView();
-			ForceDrawOverBitmapThings();
-		}
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(0, true, false); // Päivitetään vain pääikkunaa, koska sinne piirretään poikkileikkaus jutut
+        }
 	}
 
 //	CView::OnMouseMove(nFlags, point);
@@ -563,7 +562,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 
 // pakotetaan piirtämään bitblitillä bitmap cache karttanäytön päälle
 // ja sitten päälle piirretään nopeasti DrawOverBitmapThings
-void CFmiExtraMapView::ForceDrawOverBitmapThings(void)
+void CFmiExtraMapView::ForceDrawOverBitmapThingsThisExtraMapView(void)
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(true);
     Invalidate(FALSE);
@@ -598,7 +597,7 @@ void CFmiExtraMapView::OnRButtonUp(UINT nFlags, CPoint point)
 	else if(needsUpdate)
 	{
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse right button up");
-        itsSmartMetDocumentInterface->ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+        itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 	}
 
 //	CView::OnRButtonUp(nFlags, point);
@@ -642,7 +641,7 @@ void CFmiExtraMapView::OnLButtonUp(UINT nFlags, CPoint point)
 		if(needsUpdate)
 		{
             itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse left button up");
-            itsSmartMetDocumentInterface->ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 		}
 
 	//	CView::OnLButtonUp(nFlags, point);

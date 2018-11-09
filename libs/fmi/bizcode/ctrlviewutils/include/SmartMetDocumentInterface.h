@@ -180,7 +180,6 @@ public:
     virtual void MiddleMouseButtonDown(bool newState) = 0;
     virtual bool MouseCaptured() = 0;
     virtual void MouseCaptured(bool newState) = 0;
-    virtual void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex) = 0;
     virtual void MustDrawTempView(bool newValue) = 0;
     virtual bool MustDrawTempView() = 0;
     virtual void MustDrawCrossSectionView(bool newValue) = 0;
@@ -334,7 +333,7 @@ public:
     virtual bool SynopDataGridViewOn() = 0;
     virtual void SynopDataGridViewOn(bool newState) = 0;
     virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
-    virtual void ForceDrawOverBitmapThings() = 0;
+    virtual void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) = 0;
     virtual NFmiLocationSelectionTool* LocationSelectionTool2() = 0;
     virtual NFmiParamBag& AllStaticParams() = 0;
     virtual bool SelectNewParamForSelectionTool(int theParamId) = 0;

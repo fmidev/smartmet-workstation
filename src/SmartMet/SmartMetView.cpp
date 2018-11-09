@@ -490,7 +490,7 @@ void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
 		if(needsUpdate)
 		{
 			GetDocument()->UpdateAllViewsAndDialogs("Main map view: left mouse button was released");
-			ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+            ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 		}
 	}
 	catch(...)
@@ -606,7 +606,7 @@ void CSmartMetView::OnRButtonUp(UINT nFlags, CPoint point)
 	else if(needsUpdate)
 	{
 		GetDocument()->UpdateAllViewsAndDialogs("Main map view: right mouse button was released");
-		ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+		ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 	}
 }
 
@@ -837,8 +837,7 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		if(genData->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
 		{
-			ForceDrawOverBitmapThings(); // hiiren apukursorit pit‰‰ joka tapauksessa piirt‰‰ aina
-			ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pit‰‰ joka tapauksessa piirt‰‰ aina
 		}
 		if(genData->MustDrawTempView())
 		{
@@ -854,27 +853,35 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 		{
 			genData->MustDrawCrossSectionView(false);
 			GetDocument()->UpdateCrossSectionView();
-			ForceDrawOverBitmapThings();
+			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, false);
 		}
 	}
 }
 
-void CSmartMetView::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
+static bool IsViewForceUpdated(unsigned int viewIndexToBeUpdated, unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
-	if(theOriginalCallerDescTopIndex != 0)
-		ForceDrawOverBitmapThings();
+    bool originalIsCurrentViewIndex = (viewIndexToBeUpdated == theOriginalCallerDescTopIndex);
+    if(originalIsCurrentViewIndex && doOriginalView)
+        return true;
+    if(!originalIsCurrentViewIndex && doAllOtherMapViews)
+        return true;
 
+    return false;
+}
+
+void CSmartMetView::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
+{
 	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
 	std::vector<NFmiMapViewDescTop *> &mapViewDescTopList = genData->MapViewDescTopList();
 	// t‰ss‰ k‰yd‰‰n vain 1:st‰ eteenp‰in desctoppeja, koska tuossa aluksi k‰ytiin jo l‰pi 1..
 	// t‰m‰ siksi ett‰ 1:st‰ eteenp‰in desctopin mapview on aina samaa tyyppi‰
 	for(size_t i = 1; i < mapViewDescTopList.size(); i++)
 	{
-		if(theOriginalCallerDescTopIndex != i)
+		if(::IsViewForceUpdated(static_cast<unsigned int>(i), theOriginalCallerDescTopIndex, doOriginalView, doAllOtherMapViews))
 		{
 			CFmiExtraMapView *view = dynamic_cast<CFmiExtraMapView*>(mapViewDescTopList[i]->MapView());
 			if(view)
-				view->ForceDrawOverBitmapThings();
+				view->ForceDrawOverBitmapThingsThisExtraMapView();
 		}
 	}
 }
@@ -897,14 +904,21 @@ boost::shared_ptr<NFmiFastQueryInfo> CSmartMetView::GetWantedInfo(int theProduce
 
 // pakotetaan piirt‰m‰‰n bitblitill‰ bitmap cache karttan‰ytˆn p‰‰lle
 // ja sitten p‰‰lle piirret‰‰n nopeasti DrawOverBitmapThings
-void CSmartMetView::ForceDrawOverBitmapThings(void)
+void CSmartMetView::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
-	NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
-	if(data)
-	{
-		data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(true);
-		Invalidate(FALSE);
-	}
+    bool originalCallerIsMainMapview = (originalCallerDescTopIndex == itsMapViewDescTopIndex);
+    bool doMainMapView = (originalCallerIsMainMapview && doOriginalView) || (!originalCallerIsMainMapview && doAllOtherMapViews);
+    if(doMainMapView)
+    {
+        NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
+        if(data)
+        {
+            data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(true);
+            Invalidate(FALSE);
+        }
+    }
+
+    ForceOtherMapViewsDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 void CSmartMetView::CurrentPrintTime(const NFmiMetTime &theTime)

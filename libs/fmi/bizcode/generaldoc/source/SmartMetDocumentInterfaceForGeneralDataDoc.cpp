@@ -501,11 +501,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::MouseCaptured(bool newState)
     itsDoc->MouseCaptured(newState);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-{
-    itsDoc->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
-}
-
 void SmartMetDocumentInterfaceForGeneralDataDoc::MustDrawTempView(bool newValue)
 {
     itsDoc->MustDrawTempView(newValue);
@@ -1271,9 +1266,9 @@ checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> SmartMetDocumentInterfaceFor
     return itsDoc->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ForceDrawOverBitmapThings()
+void SmartMetDocumentInterfaceForGeneralDataDoc::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
-    itsDoc->ForceDrawOverBitmapThings();
+    itsDoc->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 NFmiLocationSelectionTool* SmartMetDocumentInterfaceForGeneralDataDoc::LocationSelectionTool2()
