@@ -1307,6 +1307,11 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOn
     return itsDoc->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
 }
 
+NFmiMacroParamDataCache& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamDataCache()
+{
+    return itsDoc->MacroParamDataCache();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

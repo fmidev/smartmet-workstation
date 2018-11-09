@@ -112,6 +112,7 @@ class ToolboxViewsInterface;
 class CtrlViewDocumentInterface;
 class SmartMetDocumentInterface;
 class Q2ServerInfo;
+class NFmiMacroParamDataCache;
 
 namespace Wms
 {
@@ -145,6 +146,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes();

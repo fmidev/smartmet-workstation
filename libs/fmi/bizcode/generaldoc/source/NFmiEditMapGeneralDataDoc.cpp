@@ -134,6 +134,7 @@
 #include "ApplicationInterface.h"
 #include "MacroParamDataChecker.h"
 #include "CapDataSystem.h"
+#include "NFmiMacroParamDataCache.h"
 
 #ifdef OLDGCC
  #include <strstream>
@@ -796,6 +797,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     // Meaning after modelProducers, obsProducers, satelProducers, wsmSupport, smarttools, etc. have initialized
     InitParamAddingSystem();
     InitLogFileCleaning();
+    InitMacroParamDataCache();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -807,6 +809,20 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
 	LogMessage("SmartMet document initialization ends...", CatLog::Severity::Info, CatLog::Category::Configuration);
 	return true;
+}
+
+void InitMacroParamDataCache()
+{
+    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
+    try
+    {
+        // Alustetaan macroParam cache kaikkien karttanäyttöjen indekseillä (0-2) ja vielä poikkileikkausnäytön indeksillä
+        itsMacroParamDataCache.init({ 0ul, 1ul, 2ul, CtrlViewUtils::kFmiCrossSectionView });
+    }
+    catch(exception &e)
+    {
+        LogAndWarnUser(e.what(), "Problems with MacroParamDataCache initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
+    }
 }
 
 void InitWmsSupport()
@@ -13803,6 +13819,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationWinRegistry().InitGriddingProperties(IsToolMasterAvailable());
     }
 
+    NFmiMacroParamDataCache& MacroParamDataCache()
+    {
+        return itsMacroParamDataCache;
+    }
+
+    NFmiMacroParamDataCache itsMacroParamDataCache;
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
@@ -16470,4 +16492,9 @@ bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAc
 void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
 {
     pimpl->InitGriddingProperties();
+}
+
+NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
+{
+    return pimpl->MacroParamDataCache();
 }

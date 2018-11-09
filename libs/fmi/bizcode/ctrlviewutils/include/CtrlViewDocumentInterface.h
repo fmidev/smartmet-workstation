@@ -68,6 +68,7 @@ class NFmiBetaProductionSystem;
 class NFmiApplicationWinRegistry;
 class Q2ServerInfo;
 class CBitmap;
+class NFmiMacroParamDataCache;
 
 namespace Wms
 {
@@ -374,6 +375,7 @@ public:
     virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) = 0;
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
+    virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
