@@ -231,3 +231,9 @@ void ApplicationInterfaceForSmartMet::UpdateMainFrameTitle()
     ((CMainFrame*)AfxGetMainWnd())->OnUpdateFrameTitle(TRUE);
 }
 
+void ApplicationInterfaceForSmartMet::OpenLocationFinderDialog()
+{
+    auto doc = GetDocument();
+    if(doc)
+        doc->OpenLocationFinderTool();
+}

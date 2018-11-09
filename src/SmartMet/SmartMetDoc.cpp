@@ -3222,18 +3222,23 @@ void CSmartMetDoc::OnToggleShowPreviousNamesOnMap()
 	GetData()->OnToggleShowNamesOnMap(itsMapViewDescTopIndex, false);
 }
 
+void CSmartMetDoc::OpenLocationFinderTool()
+{
+    NFmiEditMapGeneralDataDoc * doc = GetData();
+    if(doc && doc->AutoComplete().Use())
+    {
+        if(itsLocationFinderDlg == 0)
+            CreateLocationFinderDlg(itsData);
+        doc->AutoComplete().AutoCompleteDialogOn(true);
+        itsLocationFinderDlg->ShowWindow(SW_RESTORE);
+        itsLocationFinderDlg->SetActiveWindow();
+        itsLocationFinderDlg->SetFocus();
+    }
+}
+
 void CSmartMetDoc::OnAcceleratorLocationFinderTool()
 {
-	NFmiEditMapGeneralDataDoc * doc = GetData();
-	if(doc && doc->AutoComplete().Use())
-	{
-		if(itsLocationFinderDlg == 0)
-			CreateLocationFinderDlg(itsData);
-		doc->AutoComplete().AutoCompleteDialogOn(true);
-		itsLocationFinderDlg->ShowWindow(SW_RESTORE);
-		itsLocationFinderDlg->SetActiveWindow();
-		itsLocationFinderDlg->SetFocus();
-	}
+    OpenLocationFinderTool();
 }
 
 void CSmartMetDoc::SetMacroErrorText(const std::string &theErrorStr)
