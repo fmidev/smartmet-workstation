@@ -64,4 +64,5 @@ public:
     virtual void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) = 0;
     virtual void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) = 0;
     virtual void UpdateMainFrameTitle() = 0;
+    virtual void OpenLocationFinderDialog() = 0;
 };

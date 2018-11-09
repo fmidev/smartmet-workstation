@@ -20,6 +20,7 @@
 #include "CtrlViewFunctions.h"
 #include "CtrlViewKeyboardFunctions.h"
 #include "persist2.h"
+#include "ApplicationInterface.h"
 
 // CFmiExtraMapViewDlg dialog
 
@@ -120,6 +121,7 @@ ON_WM_GETMINMAXINFO()
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_MANY_MAP_ROWS_UP, &CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsUp)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_MANY_MAP_ROWS_DOWN, &CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsDown)
 ON_COMMAND(ID_ACCELERATOR_LOCK_ROW_TO_MAIN_MAP, &CFmiExtraMapViewDlg::OnAcceleratorLockRowToMainMap)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_LOCATION_FINDER_TOOL, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapLocationFinderTool)
 END_MESSAGE_MAP()
 
 
@@ -765,4 +767,9 @@ void CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsDown()
 {
     if(itsSmartMetDocumentInterface->ScrollViewRow(itsMapViewDescTopIndex, gManyRowsCount))
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Jump down in starting absolute row number");
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapLocationFinderTool()
+{
+    ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLocationFinderDialog();
 }

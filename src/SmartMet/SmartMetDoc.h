@@ -376,6 +376,7 @@ public:
     afx_msg void OnAcceleratorCpSelectRight();
     afx_msg void OnAcceleratorCpSelectUp();
     afx_msg void OnAcceleratorCpSelectDown();
+    void OpenLocationFinderTool();
 };
 
 
