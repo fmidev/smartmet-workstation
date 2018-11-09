@@ -17,6 +17,7 @@
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "catlog/catlog.h"
+#include "ToolBoxStateRestorer.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -109,7 +110,7 @@ void NFmiViewParamsView::DrawData(void)
 	{
 		InitializeGdiplus(itsToolBox, &GetFrame());
 
-		itsToolBox->RelativeClipRect(GetFrame(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &GetFrame());
         DrawMouseDraggingBackground();
 		bool crossSectionView = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
@@ -135,7 +136,6 @@ void NFmiViewParamsView::DrawData(void)
 			}
             DrawMouseDraggingAction();
 		}
-		itsToolBox->UseClipping(false);
 	}
 	catch(...)
 	{

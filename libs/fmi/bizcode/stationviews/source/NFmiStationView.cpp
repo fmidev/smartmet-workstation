@@ -59,6 +59,7 @@
 #include "EditedInfoMaskHandler.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiCommentStripper.h"
+#include "ToolBoxStateRestorer.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -302,8 +303,8 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 		return ;
 
 	itsToolBox = theGTB;
-	itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
-
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
+    
 	SetupUsedDrawParam();
 
 	MakeDrawedInfoVector();
@@ -327,7 +328,6 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 			itsInfo = boost::shared_ptr<NFmiFastQueryInfo>(); // nollataan lopuksi itsInfo-pointteri
 		}
 	}
-	itsToolBox->UseClipping(false);
 }
 
 void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -721,7 +721,7 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, "NFmiStationView: Drawing data's station/grid point markers");
     NFmiDrawingEnvironment stationPointEnvi;
     SetStationPointDrawingEnvi(stationPointEnvi);
-    itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
     itsInfoVectorIter = itsInfoVector.begin();
     if(itsInfoVectorIter != itsInfoVector.end()) // asema datalle (synop) voi olla useita datoja
@@ -737,7 +737,6 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
             }
         }
     }
-    itsToolBox->UseClipping(false);
 }
 
 void NFmiStationView::DrawData(void)
@@ -881,7 +880,7 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 	NFmiInfoData::Type dataType = itsInfo->DataType();
 	if(dataType == NFmiInfoData::kEditable)
 	{
-		itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 		const int kSelectionRectPixelSize = 3;
 		double selectionRectXSize = itsToolBox->SX(kSelectionRectPixelSize);
 		double selectionRectYSize = itsToolBox->SY(kSelectionRectPixelSize);
@@ -956,7 +955,6 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 			}
 		}
 		itsDrawingEnvironment->DisableInvert();
-		itsToolBox->UseClipping(false);
 		return true;
 	}
 	return false;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NFmiGlobals.h"
+#include "NFmiRect.h"
 
 class NFmiToolBox;
 
@@ -10,8 +11,10 @@ class ToolBoxStateRestorer
 {
     FmiDirection oldAligment_ = kNoDirection;
     bool oldUseClipping_ = false;
+    NFmiRect oldClippingRect_;
+    bool restoreClippingRect_ = false;
     NFmiToolBox &toolBox_;
 public:
-    ToolBoxStateRestorer(NFmiToolBox &toolBox, FmiDirection newAligment, bool useClipping);
+    ToolBoxStateRestorer(NFmiToolBox &toolBox, FmiDirection newAligment, bool useClipping, const NFmiRect *possibleNewClippingRect = nullptr);
     ~ToolBoxStateRestorer();
 };

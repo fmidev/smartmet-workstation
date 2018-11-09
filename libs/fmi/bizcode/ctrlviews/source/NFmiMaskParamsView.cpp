@@ -29,6 +29,7 @@
 #include "NFmiAreaMask.h"
 #include "NFmiText.h"
 #include "CtrlViewDocumentInterface.h"
+#include "ToolBoxStateRestorer.h"
 
 //--------------------------------------------------------
 // Constructor/Destructor 
@@ -58,7 +59,7 @@ void NFmiMaskParamsView::DrawMaskCheckBox(int theLineIndex, NFmiAreaMask &theMas
 //--------------------------------------------------------
 void NFmiMaskParamsView::DrawData(void)
 {
-    itsToolBox->RelativeClipRect(GetFrame(), true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &GetFrame());
 
     boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
     if(maskList)
@@ -79,7 +80,6 @@ void NFmiMaskParamsView::DrawData(void)
             DrawMaskCheckBox(counter, *mask);
         }
     }
-    itsToolBox->UseClipping(false);
 }
 
 //--------------------------------------------------------
