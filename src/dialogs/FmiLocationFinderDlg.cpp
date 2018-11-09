@@ -310,7 +310,7 @@ void CFmiLocationFinderDlg::OnCbnEditchangeComboLocationFinder()
 		errorStr += ")";
 		SetErrorStr(errorStr);
 	}
-    itsSmartMetDocumentInterface->InvalidateMapView(false);
+    itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(0, true, true);
 }
 
 void CFmiLocationFinderDlg::SetErrorStr(std::string &theErrorStr)
