@@ -12291,11 +12291,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->DrawOverBitmapThings(theGTB);
 	}
 
-	void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
-	}
-
 	void UpdateTempView(void)
 	{
         ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateTempView();
@@ -12321,9 +12316,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateZoomDialog(theWantedDescTopIndex);
 	}
 
-	void ForceDrawOverBitmapThings(void)
+	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 	}
 
 	void InvalidateMapView(bool bErase)
@@ -15758,11 +15753,6 @@ void NFmiEditMapGeneralDataDoc::DrawOverBitmapThings(NFmiToolBox * theGTB)
 	pimpl->DrawOverBitmapThings(theGTB);
 }
 
-void NFmiEditMapGeneralDataDoc::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-{
-	pimpl->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
-}
-
 void NFmiEditMapGeneralDataDoc::UpdateTempView(void)
 {
 	pimpl->UpdateTempView();
@@ -15788,9 +15778,9 @@ void NFmiEditMapGeneralDataDoc::ActivateZoomDialog(int theWantedDescTopIndex)
 	pimpl->ActivateZoomDialog(theWantedDescTopIndex);
 }
 
-void NFmiEditMapGeneralDataDoc::ForceDrawOverBitmapThings(void)
+void NFmiEditMapGeneralDataDoc::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
-	pimpl->ForceDrawOverBitmapThings();
+	pimpl->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 void NFmiEditMapGeneralDataDoc::InvalidateMapView(bool bErase)

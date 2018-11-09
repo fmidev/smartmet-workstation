@@ -3252,7 +3252,7 @@ void CSmartMetDoc::OnUpdateButtonDataQualityChecker(CCmdUI *pCmdUI)
 void CSmartMetDoc::OnAcceleratorToggleHelpCursorOnMap()
 {
 	GetData()->ShowMouseHelpCursorsOnMap(!GetData()->ShowMouseHelpCursorsOnMap());
-    ApplicationInterface::GetApplicationInterfaceImplementation()->ForceOtherMapViewsDrawOverBitmapThings(999);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 }
 
 // F9 -pressed

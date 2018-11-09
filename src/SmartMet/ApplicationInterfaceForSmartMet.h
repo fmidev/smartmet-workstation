@@ -26,8 +26,7 @@ public:
     void UpdateOnlyExtraMapViews(bool updateMap1, bool updateMap2) override; // CSmartMetDoc
     void RestartHistoryDataCacheThread() override; // CMainFrame
     void DrawOverBitmapThings(NFmiToolBox *theGTB) override;  // CSmartMetView
-    void ForceDrawOverBitmapThings() override;  // CSmartMetView
-    void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex) override;  // CSmartMetView
+    void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;  // CSmartMetView
     void UpdateTempView() override; // CSmartMetDoc
     void UpdateCrossSectionView() override; // CSmartMetDoc
     void ActivateParamAddingDlg() override; // CSmartMetDoc

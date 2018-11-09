@@ -111,7 +111,6 @@ public:
     void MiddleMouseButtonDown(bool newState) override;
     bool MouseCaptured() override;
     void MouseCaptured(bool newState) override;
-    void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex) override;
     void MustDrawTempView(bool newValue) override;
     bool MustDrawTempView() override;
     void MustDrawCrossSectionView(bool newValue) override;
@@ -265,7 +264,7 @@ public:
     bool SynopDataGridViewOn() override;
     void SynopDataGridViewOn(bool newState) override;
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
-    void ForceDrawOverBitmapThings() override;
+    void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;
     NFmiLocationSelectionTool* LocationSelectionTool2() override;
     NFmiParamBag& AllStaticParams() override;
     bool SelectNewParamForSelectionTool(int theParamId) override;
