@@ -352,6 +352,7 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsBetaProductDialog(nullptr)
 ,itsLogViewer(nullptr)
 ,itsParamAddingDlg(nullptr)
+,itsGriddingOptionsDlg(nullptr)
 {
 	CSmartMetApp *app = (CSmartMetApp *)AfxGetApp();
 	itsData = app->GeneralDocData();
@@ -414,6 +415,7 @@ CSmartMetDoc::~CSmartMetDoc()
 	::DestroyModalessDialog((CDialog **)(&itsIgnoreStationsDlg));
     ::DestroyModalessDialog((CDialog **)(&itsCaseStudyDlg));
     ::DestroyModalessDialog((CDialog **)(&itsBetaProductDialog));
+    ::DestroyModalessDialog((CDialog **)(&itsGriddingOptionsDlg));
 
     // Better clear callback function before logviewer is destroyed, just in case
     CatLog::setLogViewerUpdateCallback(std::function<void()>());
@@ -2182,21 +2184,25 @@ void CSmartMetDoc::OnDataStoreTrajectoryViewToPictureFile()
 	}
 }
 
+NFmiApplicationWinRegistry& CSmartMetDoc::ApplicationWinRegistry()
+{
+    return itsData->ApplicationWinRegistry();
+}
+
+void CSmartMetDoc::CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface)
+{
+    if(!itsGriddingOptionsDlg)
+    {
+        CreateModalessDialog(&itsGriddingOptionsDlg, IDD_DIALOG_GRIDDING_OPTIONS, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
+    }
+}
+
 void CSmartMetDoc::OnMenuitemGriddingOptions()
 {
-	NFmiEditMapGeneralDataDoc* doc = GetData();
-	if(doc)
-	{
-        // Tässä muokataan vain editointiin liittyviä griddaus asetuksia
-		CFmiGriddingOptionsDlg dlg(doc->ApplicationWinRegistry().GriddingProperties(true));
-		if(dlg.DoModal() == IDOK)
-		{
-            doc->ApplicationWinRegistry().SetGriddingProperties(true, dlg.GetModifiedGriddingProperties());
-			doc->MapDirty(itsMapViewDescTopIndex, true, true);
-			UpdateAllViewsAndDialogs("Used ToolMaster gridding options changed");
-		}
-	}
-
+    CreateGriddingOptionsDialog(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+    itsGriddingOptionsDlg->ShowWindow(SW_RESTORE);
+    itsGriddingOptionsDlg->SetActiveWindow();
+    GetData()->LogMessage("Opening ToolMaster gridding options dialog", CatLog::Severity::Info, CatLog::Category::Editing);
 }
 
 void CSmartMetDoc::OnUpdateButtonFilterDialog(CCmdUI* pCmdUI)
