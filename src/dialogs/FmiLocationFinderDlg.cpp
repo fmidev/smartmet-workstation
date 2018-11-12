@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-//#include "zeditmap2view.h"
 #include "FmiLocationFinderDlg.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiAutoComplete.h"
@@ -352,10 +351,8 @@ void CFmiLocationFinderDlg::OnCbnSelendcancelComboLocationFinder()
 
 void CFmiLocationFinderDlg::ActivateDialog(CWnd *parentView)
 {
-//    SetPlaceToParentsBottomRightCorner(parentView);
+    SetPlaceToParentsBottomRightCorner(parentView);
     ShowWindow(SW_RESTORE);
     SetActiveWindow();
-//    parentView->SetWindowPos(this, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-//    BringWindowToTop();
     itsLocationFinderComboBox.SetFocus();
 }
