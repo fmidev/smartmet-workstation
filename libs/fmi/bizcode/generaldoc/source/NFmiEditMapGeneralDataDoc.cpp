@@ -3475,8 +3475,15 @@ bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDr
 	// Aluksi vain control-point moodille!!!
 	if(MetEditorOptionsData().ControlPointMode())
 	{
+        std::string operationText = ::GetDictionaryString("Doing Control-Point modifications...");
+        bool operationTextIsWarning = false;
+        if(!UseMultiProcessCpCalc())
+        {
+            operationText = ::GetDictionaryString("Not using MP-CP option while doing Control-\r\nPoint modifications, this way it will be slower");
+            operationTextIsWarning = true;
+        }
 		NFmiStopFunctor stopper;
-		CFmiOperationProgressDlg dlg(stopper, ApplicationInterface::GetSmartMetViewAsCView());
+		CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 		NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 		FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());
@@ -3502,8 +3509,10 @@ bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDr
 // Tätä kutusutaan ulkopuolelta
 bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
 {
-	NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(stopper, ApplicationInterface::GetSmartMetViewAsCView());
+    std::string operationText = ::GetDictionaryString("Doing smarttool modifications...");
+    bool operationTextIsWarning = false;
+    NFmiStopFunctor stopper;
+	CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 	FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());

@@ -118,7 +118,7 @@ void CFmiDataQualityCheckerDialog::OnBnClickedButtonDoQualityCheck()
 
 	// Tehdään datan chekkaukselle progress ja peruutus dialogi ja toiminnot.
 	NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(stopper, this);
+	CFmiOperationProgressDlg dlg(::GetDictionaryString("Calculating edited data's quality checks"), false, stopper, this);
 	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 	// Luodaaan ja laitetaan työ-threadi käyntiin.
