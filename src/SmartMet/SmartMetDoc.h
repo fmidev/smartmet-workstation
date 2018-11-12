@@ -42,6 +42,8 @@ class CFmiBetaProductTabControlDialog;
 class CFmiLogViewer;
 class CFmiParamAddingDlg;
 class SmartMetDocumentInterface;
+class CFmiGriddingOptionsDlg;
+class NFmiApplicationWinRegistry;
 
 class CSmartMetDoc : public CDocument
 {
@@ -68,6 +70,7 @@ public:
     void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut);
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex);
     CWnd* GetView(int theWantedDescTopIndex);
+    NFmiApplicationWinRegistry& ApplicationWinRegistry();
 
 // Overrides
 public:
@@ -107,6 +110,7 @@ public:
     void CreateCaseStudyDlg(NFmiEditMapGeneralDataDoc *theDoc);
     void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void CreateLogViewer(NFmiEditMapGeneralDataDoc *theDoc);
+    void CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void UpdateBetaProductDialog();
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
 	void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
@@ -263,6 +267,7 @@ private:
     CFmiBetaProductTabControlDialog *itsBetaProductDialog;
     CFmiLogViewer *itsLogViewer;
     CFmiParamAddingDlg *itsParamAddingDlg;
+    CFmiGriddingOptionsDlg *itsGriddingOptionsDlg;
     unsigned int itsMapViewDescTopIndex;
 public:
 	afx_msg void OnToggleLandBorderDrawColor();
