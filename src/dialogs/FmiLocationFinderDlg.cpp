@@ -225,22 +225,27 @@ BOOL CFmiLocationFinderDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	// siirretään aluksi dialogi pääkarttanäytön alareunaan
-	CRect mainWinPlace;
-	AfxGetMainWnd()->GetWindowRect(mainWinPlace);
-	WINDOWPLACEMENT wndpl;
-	wndpl.length = sizeof(WINDOWPLACEMENT);
-	// gets current window position
-	BOOL bRet = GetWindowPlacement(&wndpl);
-	CRect oldRect(wndpl.rcNormalPosition);
-	MoveWindow(mainWinPlace.right - oldRect.Width() - 10, 
-			   mainWinPlace.bottom - oldRect.Height() - 5, 
-			   oldRect.Width(), oldRect.Height()); // HUOM! dialogin kokoa ei saa muuttaa!!
+    SetPlaceToParentsBottomRightCorner(AfxGetMainWnd());
 	SetErrorStr(std::string("")); // nollataan mahd. virhe teksti
 
 
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiLocationFinderDlg::SetPlaceToParentsBottomRightCorner(CWnd *parentView)
+{
+    CRect mainWinPlace;
+    parentView->GetWindowRect(mainWinPlace);
+    WINDOWPLACEMENT wndpl;
+    wndpl.length = sizeof(WINDOWPLACEMENT);
+    // gets current window position
+    BOOL bRet = GetWindowPlacement(&wndpl);
+    CRect oldRect(wndpl.rcNormalPosition);
+    MoveWindow(mainWinPlace.right - oldRect.Width() - 10,
+        mainWinPlace.bottom - oldRect.Height() - 5,
+        oldRect.Width(), oldRect.Height()); // HUOM! dialogin kokoa ei saa muuttaa!!
 }
 
 void CFmiLocationFinderDlg::OnCbnSelchangeComboLocationFinder()
@@ -343,4 +348,14 @@ void CFmiLocationFinderDlg::OnCbnSelendcancelComboLocationFinder()
 
 	fReplaceStoredWordOnClose = true;
     itsfReplaceStoredWordOnCloseStrU_ = editStrU_;
+}
+
+void CFmiLocationFinderDlg::ActivateDialog(CWnd *parentView)
+{
+//    SetPlaceToParentsBottomRightCorner(parentView);
+    ShowWindow(SW_RESTORE);
+    SetActiveWindow();
+//    parentView->SetWindowPos(this, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+//    BringWindowToTop();
+    itsLocationFinderComboBox.SetFocus();
 }

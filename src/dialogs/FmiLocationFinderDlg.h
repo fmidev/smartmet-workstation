@@ -31,6 +31,8 @@ public:
 	virtual BOOL OnInitDialog();
 private:
 	void SetErrorStr(std::string &theErrorStr);
+    void SetPlaceToParentsBottomRightCorner(CWnd *parentView);
+
 	CComboBox itsLocationFinderComboBox;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 
@@ -45,4 +47,5 @@ public:
 	afx_msg void OnCbnEditchangeComboLocationFinder();
 	afx_msg void OnCbnCloseupComboLocationFinder();
 	afx_msg void OnCbnSelendcancelComboLocationFinder();
+    void ActivateDialog(CWnd *parentView);
 };
