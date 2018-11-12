@@ -771,5 +771,5 @@ void CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsDown()
 
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapLocationFinderTool()
 {
-    ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLocationFinderDialog();
+    ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLocationFinderDialog(this);
 }

@@ -48,5 +48,5 @@ public:
     void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) override; // CSmartMetDoc
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) override; // CSmartMetDoc
     void UpdateMainFrameTitle() override; // CMainFrame (CMainFrame*)AfxGetMainWnd()
-    void OpenLocationFinderDialog() override;
+    void OpenLocationFinderDialog(CWnd *parentView) override;
 };
