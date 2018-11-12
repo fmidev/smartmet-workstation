@@ -14,6 +14,7 @@ class CBitmap;
 class CSmartMetView;
 class CSmartMetDoc;
 class CDocument;
+class NFmiApplicationWinRegistry;
 
 // Interface that is meant to be used by NFmiEditMapGeneralDataDoc class by using functionalities from SmartMet application.
 class ApplicationInterface
@@ -65,4 +66,5 @@ public:
     virtual void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) = 0;
     virtual void UpdateMainFrameTitle() = 0;
     virtual void OpenLocationFinderDialog(CWnd *parentView) = 0;
+    virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
 };

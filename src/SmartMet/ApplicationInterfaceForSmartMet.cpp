@@ -237,3 +237,8 @@ void ApplicationInterfaceForSmartMet::OpenLocationFinderDialog(CWnd *parentView)
     if(doc)
         doc->OpenLocationFinderTool(parentView);
 }
+
+NFmiApplicationWinRegistry& ApplicationInterfaceForSmartMet::ApplicationWinRegistry()
+{
+    return GetDocument()->ApplicationWinRegistry();
+}
