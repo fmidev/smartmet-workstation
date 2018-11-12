@@ -59,6 +59,7 @@ BEGIN_MESSAGE_MAP(CFmiGriddingOptionsDlg, CDialogEx)
 	//{{AFX_MSG_MAP(CFmiGriddingOptionsDlg)
 	//}}AFX_MSG_MAP
     ON_BN_CLICKED(IDC_BUTTON_DEFAULT_VALUES, &CFmiGriddingOptionsDlg::OnBnClickedButtonDefaultValues)
+    ON_BN_CLICKED(IDC_BUTTON_APPLY_CHANGES, &CFmiGriddingOptionsDlg::OnBnClickedButtonApplyChanges)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -107,6 +108,11 @@ void CFmiGriddingOptionsDlg::InitLocalFitMethodSelector()
 
 void CFmiGriddingOptionsDlg::DoWhenClosing()
 {
+    ApplyChanges();
+}
+
+void CFmiGriddingOptionsDlg::ApplyChanges()
+{
     UpdateData(TRUE);
     itsGriddingProperties.function(static_cast<FmiGriddingFunction>(itsGriddingFunction));
     itsGriddingProperties.rangeLimitInKm(itsRangeLimitInKm);
@@ -150,6 +156,7 @@ void CFmiGriddingOptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOCAL_FIT_FILTER_RANGE_TEXT, "Local fit filter range, default is 1.25 (value should be in range of 1.0 > x >= 5)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOCAL_FIT_FILTER_FACTOR_TEXT, "Local fit filter factor, default is 0.15 (value should be in range of 0.0 > x >= 5)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_DEFAULT_VALUES, "Default values");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_APPLY_CHANGES, "Apply");
 }
 
 
@@ -158,4 +165,11 @@ void CFmiGriddingOptionsDlg::OnBnClickedButtonDefaultValues()
 {
     itsGriddingProperties = NFmiGriddingProperties(itsGriddingProperties.toolMasterAvailable());
     InitControlValuesFromGriddingPropertiesObject();
+    ApplyChanges();
+}
+
+
+void CFmiGriddingOptionsDlg::OnBnClickedButtonApplyChanges()
+{
+    ApplyChanges();
 }

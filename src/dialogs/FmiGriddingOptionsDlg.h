@@ -46,6 +46,7 @@ protected:
     void InitLocalFitMethodSelector();
     void InitControlValuesFromGriddingPropertiesObject();
     void DoWhenClosing();
+    void ApplyChanges();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     NFmiGriddingProperties itsGriddingProperties;
@@ -58,6 +59,7 @@ protected:
     double itsLocalFitFilterFactor = 0.15; // > 0
 public:
     afx_msg void OnBnClickedButtonDefaultValues();
+    afx_msg void OnBnClickedButtonApplyChanges();
 };
 
 //{{AFX_INSERT_LOCATION}}
