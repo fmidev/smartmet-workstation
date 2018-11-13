@@ -596,7 +596,7 @@ void CFmiWarningCenterDlg::OnBnClickedCheckShowKahaMessages()
 void CFmiWarningCenterDlg::ForceMainMapViewUpdate(const std::string &reasonForUpdate)
 {
     // Make main map view dirty and force update on it
-    itsSmartMetDocumentInterface->AreaViewDirty(0, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+    itsSmartMetDocumentInterface->AreaViewDirty(0, false, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
 

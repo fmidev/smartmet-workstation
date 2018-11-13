@@ -962,7 +962,10 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
 	if(data)
 	{
-		data->AreaViewDirty(itsMapViewDescTopIndex, true, true);
+        auto keepMapAspectRatio = data->ApplicationWinRegistry().KeepMapAspectRatio();
+        // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
+        // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
+        data->AreaViewDirty(itsMapViewDescTopIndex, true, true, keepMapAspectRatio, false);
 		data->MapViewDescTop(itsMapViewDescTopIndex)->CalcClientViewXperYRatio(NFmiPoint(cx,cy));
 		data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
 		data->MapDirty(itsMapViewDescTopIndex, true, true);// tämä 'aiheuttaa' datan harvennuksen
@@ -995,9 +998,9 @@ void CSmartMetView::RefreshApplicationViewsAndDialogs(const std::string &reasonF
 	if(fMakeAreaViewDirty)
 	{
 		if(theWantedMapViewDescTop == -1)
-			GetDocument()->GetData()->AreaViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE);
+			GetDocument()->GetData()->AreaViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE, false, false);
 		else
-			GetDocument()->GetData()->AreaViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE);
+			GetDocument()->GetData()->AreaViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE, false, false);
 	}
 
 	GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate);
@@ -1008,9 +1011,9 @@ void CSmartMetView::RefreshApplicationViewsAndDialogs(const std::string &reasonF
     if(fMakeAreaViewDirty)
     {
         if(theWantedMapViewDescTop == -1)
-            GetDocument()->GetData()->AreaViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE);
+            GetDocument()->GetData()->AreaViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE, false, false);
         else
-            GetDocument()->GetData()->AreaViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE);
+            GetDocument()->GetData()->AreaViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE, false, false);
     }
 
     GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate, updatedViewsFlag);

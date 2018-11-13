@@ -486,7 +486,7 @@ void CTimeEditValuesDlg::OnCheckUseZoomedAreaCP()
 
 void CTimeEditValuesDlg::RefreshApplicationViews(const std::string &reasonForUpdate)
 {
-    itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false);
+    itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false, false, false);
 	EnableButtons();
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
@@ -711,7 +711,7 @@ BOOL CTimeEditValuesDlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 				cpManager.PreviousCPManager();
 
             itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
-            itsSmartMetDocumentInterface->AreaViewDirty(0, true, true);
+            itsSmartMetDocumentInterface->AreaViewDirty(0, true, true, false, false);
 			RefreshApplicationViews("TimeSerialDlg: Mouse wheel action");
 			return TRUE;
 		}

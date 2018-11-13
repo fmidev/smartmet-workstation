@@ -2737,7 +2737,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 						if(fWholeCrossSectionReallyMoved && crossSectionSystem->DragWholeCrossSection())
 						{
                             crossSectionSystem->DragWholeCrossSection(false);
-                            itsCtrlViewDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true);
+                            itsCtrlViewDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true, false, false);
 						}
 						else
 						{
@@ -2746,7 +2746,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 								if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
 									SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
 
-                                itsCtrlViewDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true);
+                                itsCtrlViewDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true, false, false);
 						}
 //						return true; // ei mennä hilapisteen valintaan
 					}

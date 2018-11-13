@@ -58,6 +58,7 @@ class NFmiSynopPlotSettings;
 class NFmiSynopStationPrioritySystem;
 class NFmiLightWeightViewSettingMacro;
 class NFmiWindTableSystem;
+class NFmiMacroParamDataCache;
 namespace HakeMessage
 {
     class Main;
@@ -164,7 +165,7 @@ public:
     virtual void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) = 0;
     virtual bool ShowWaitCursorWhileDrawingView() = 0;
     virtual NFmiMenuItemList* PopupMenu() = 0;
-    virtual void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache) = 0;
+    virtual void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) = 0;
     virtual bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) = 0;
     virtual NFmiDataQualityChecker& DataQualityChecker() = 0;
     virtual NFmiTrajectorySystem* TrajectorySystem() = 0;
@@ -361,6 +362,7 @@ public:
     virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
+    virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

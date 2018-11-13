@@ -165,7 +165,7 @@ void CZoomDlg::OnShowZoomedArea()
 
 void CZoomDlg::Zoom(void)
 {
-    itsSmartMetDocumentInterface->AreaViewDirty(itsSelectedMapViewDescTopIndex, true, true);
+    itsSmartMetDocumentInterface->AreaViewDirty(itsSelectedMapViewDescTopIndex, true, true, true, false);
     itsSmartMetDocumentInterface->MapViewDescTop(itsSelectedMapViewDescTopIndex)->BorderDrawDirty(true);
     CatLog::logMessage("Zooming map view.", CatLog::Severity::Info, CatLog::Category::Visualization);
     itsSmartMetDocumentInterface->SetMapArea(itsSelectedMapViewDescTopIndex, ((CZoomView*)itsClientView)->ZoomedArea());

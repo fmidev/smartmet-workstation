@@ -421,9 +421,9 @@ NFmiMenuItemList* SmartMetDocumentInterfaceForGeneralDataDoc::PopupMenu()
     return itsDoc->PopupMenu();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache)
+void SmartMetDocumentInterfaceForGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
 {
-    itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache, clearMacroParamDataCache);
+    itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
@@ -1398,6 +1398,11 @@ int SmartMetDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOn
 bool SmartMetDocumentInterfaceForGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
 {
     return itsDoc->MakeControlPointAcceleratorAction(action, updateMessage);
+}
+
+NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamDataCache()
+{
+    return itsDoc->MacroParamDataCache();
 }
 
 #ifndef DISABLE_CPPRESTSDK
