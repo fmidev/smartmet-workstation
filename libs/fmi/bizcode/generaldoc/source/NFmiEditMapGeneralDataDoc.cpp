@@ -3317,7 +3317,10 @@ bool MakeMacroParamDrawingLayerCacheChecks(boost::shared_ptr<NFmiDrawParam> &dra
                 {
                     if(DoMacroParamVerticalDataChecks(theInfo, theType, macroParamDataInfo))
                     {
-                        descTop.MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
+                        // clean image cache row
+                        descTop.MapViewCache().MakeRowDirty(cacheRowNumber);
+                        // MacroParam data cachen rivit alkavat 1:stä, joten image-cachen riviin on lisättävä +1
+                        MacroParamDataCache().clearMacroParamCache(theDescTopIndex, cacheRowNumber + 1, drawParam->InitFileName());
                         MacroParamDirtiesCacheRowTraceLog(drawParam, macroParamDataInfo, theDescTopIndex, cacheRowNumber, theFileName);
                         return true;
                     }
@@ -5790,10 +5793,74 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			clearCache = false;
 			break;
 		}
+
+        MakeMacroParamCacheUpdatesForCurrentRow(menuItem->MapViewDescTopIndex(), command);
 		if(clearCache)
 			MakeEditorDescTopClearCache(CtrlViewUtils::kDoAllMapViewDescTopIndex, true);
 	}
 	return true;
+}
+
+//bool IsCommandForCrossSectionChanges(FmiMenuCommandType command)
+//{
+//    switch(command)
+//    {
+//    case kFmiAddParamCrossSectionView:
+//    case kFmiAddAsOnlyParamCrossSectionView:
+//    case kFmiDontShowPressureLevelsCrossSectionView:
+//    case kFmiShowPressureLevelsUnderCrossSectionView:
+//    case kFmiShowPressureLevelsOverCrossSectionView:
+//    case kFmiRemoveParamCrossSectionView:
+//    case kFmiRemoveAllParamsCrossSectionView:
+//    case kFmiHideParamCrossSectionView:
+//    case kFmiShowParamCrossSectionView:
+//    case kFmiModifyCrossSectionDrawParam:
+//    case kFmiCrossSectionSetTrajectoryTimes:
+//    case kFmiCrossSectionSetTrajectoryParams:
+//    case kFmiCopyDrawParamOptionsCrossSectionView:
+//    case kFmiPasteDrawParamOptionsCrossSectionView:
+//    case kFmiChangeAllProducersInCrossSectionRow:
+//    case kFmiCopyDrawParamsFromCrossSectionViewRow:
+//    case kFmiPasteDrawParamsToCrossSectionViewRow:
+//    case kFmiActivateCrossSectionDrawParam:
+//    case kFmiChangeAllDataTypesInCrossSectionRow:
+//        return true;
+//    default:
+//        return false;
+//    }
+//}
+
+// Nyt on voitu lisätä/poistaa/muuttaa eri näytöillä olevien parametrien ja siten myös riveillä 
+// olevien macroParamien paikkaa rivissä. Tämän vuoksi pitää päivittää rivin macroParam cachen tila.
+void MakeMacroParamCacheUpdatesForCurrentRow(int mapViewDescTopIndex, FmiMenuCommandType command)
+{
+    int usedRowIndex = 0;
+    if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+    {
+        usedRowIndex = itsCurrentCrossSectionRowIndex;
+    }
+    else if(mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    {
+        usedRowIndex = itsCurrentViewRowIndex;
+    }
+
+    MakeMacroParamCacheUpdatesForWantedRow(mapViewDescTopIndex, usedRowIndex);
+}
+
+void MakeMacroParamCacheUpdatesForWantedRow(int mapViewDescTopIndex, int rowIndex)
+{
+    NFmiDrawParamList *drawParamList = nullptr;
+    if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+    {
+        drawParamList = DrawParamList(mapViewDescTopIndex, itsCurrentCrossSectionRowIndex);
+    }
+    else if(mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    {
+        drawParamList = DrawParamList(mapViewDescTopIndex, itsCurrentViewRowIndex);
+    }
+
+    if(drawParamList)
+        MacroParamDataCache().update(mapViewDescTopIndex, rowIndex, *drawParamList);
 }
 
 bool IsDrawParamForecast(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -8719,6 +8786,7 @@ bool InitCPManagerSet(void)
 			MapViewDescTop(i)->MapViewUpdated(true);
 			MapViewDescTop(i)->BorderDrawDirty(true);
 		}
+        MacroParamDataCache().clearAllLayers();
 
         // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
@@ -9471,6 +9539,7 @@ void SwapArea(unsigned int theDescTopIndex)
 			if(list->MoveActiveParam(fRaise ? -1 : 1))
 			{
 				MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(theMapRow - 1); // täällä rivit alkavat 1:stä, mutta cachessa 0:sta!!!
+                MakeMacroParamCacheUpdatesForWantedRow(theDescTopIndex, theMapRow);
 				return true;
 			}
 		}
