@@ -95,7 +95,7 @@ public:
     void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) override;
     bool ShowWaitCursorWhileDrawingView() override;
     NFmiMenuItemList* PopupMenu() override;
-    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache) override;
+    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache) override;
     bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) override;
     NFmiDataQualityChecker& DataQualityChecker() override;
     NFmiTrajectorySystem* TrajectorySystem() override;

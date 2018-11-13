@@ -366,9 +366,9 @@ float CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlTimeStep(int theDes
     return itsDoc->MapViewDescTop(theDescTopIndex)->TimeControlTimeStep();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache)
 {
-    itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache);
+    itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache, clearMacroParamDataCache);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes)

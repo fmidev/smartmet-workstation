@@ -69,9 +69,9 @@ void NFmiGenDocDataAdapter::AllMapViewDescTopsTimeDirty(const NFmiMetTime &theTi
 	itsDoc->AllMapViewDescTopsTimeDirty(theTime);
 }
 
-void NFmiGenDocDataAdapter::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache)
+void NFmiGenDocDataAdapter::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache)
 {
-	itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache);
+	itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache, clearMacroParamDataCache);
 }
 
 void NFmiGenDocDataAdapter::MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache)
