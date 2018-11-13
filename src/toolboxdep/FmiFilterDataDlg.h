@@ -21,7 +21,7 @@ public:
 	void EnableButtons(void);
 	void InitDialogFromDoc(void);
 	void SetDocumentValues(void);
-	void RefreshApplicationViews(const std::string &reasonForUpdate);
+	void RefreshApplicationViews(const std::string &reasonForUpdate, bool clearEditedDependentMacroParamCacheData);
 
 // Dialog Data
 	//{{AFX_DATA(CFmiFilterDataDlg)

@@ -184,7 +184,7 @@ public:
     virtual void SetTimeFilterEndTime(const NFmiMetTime& theTime) = 0;
     virtual void TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours) = 0;
     virtual float TimeControlTimeStep(int theDescTopIndex) = 0;
-    virtual void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache) = 0;
+    virtual void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) = 0;
     virtual bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) = 0;
     virtual bool SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) = 0;
     virtual void TimeSerialViewTimeBag(const NFmiTimeBag &theTimeBag) = 0;

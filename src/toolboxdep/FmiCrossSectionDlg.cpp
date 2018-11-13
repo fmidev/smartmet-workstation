@@ -12,6 +12,8 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewFunctions.h"
 #include "persist2.h"
+#include "NFmiMacroParamDataCache.h"
+#include "SpecialDesctopIndex.h"
 
 
 // CFmiCrossSectionDlg dialog
@@ -222,8 +224,10 @@ void CFmiCrossSectionDlg::MakeCrossSectionModeUpdates(const std::string &reasonF
     itsView->ViewDirty(true);
     Invalidate(FALSE);
     if(itsSmartMetDocumentInterface->CrossSectionSystem()->CrossSectionSystemActive())
-    { // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
-        itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+    { 
+        // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
+        itsSmartMetDocumentInterface->MacroParamDataCache().clearView(CtrlViewUtils::kFmiCrossSectionView);
+        itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle route cross section mode", TRUE);
     }
 }

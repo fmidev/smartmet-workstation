@@ -55,7 +55,6 @@ protected: // create from serialization only
 public:
 	BOOL StoreData(bool newFile = false, bool askForSave=true);
 	BOOL StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &smart);
-	void MakeViewsDirty(void);
 	BOOL PrepareForLoadingDataFromFile(void);
 	BOOL CheckEditedDataAndStoreIfNeeded(void);
 	void LoadDataFromFileAndAdd(const std::string &theFileName, NFmiInfoData::Type theDatatype, bool useMemoryMapping);

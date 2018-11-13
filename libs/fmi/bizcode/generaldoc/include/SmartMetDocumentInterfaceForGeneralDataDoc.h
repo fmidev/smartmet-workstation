@@ -95,7 +95,7 @@ public:
     void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) override;
     bool ShowWaitCursorWhileDrawingView() override;
     NFmiMenuItemList* PopupMenu() override;
-    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache) override;
+    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
     bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) override;
     NFmiDataQualityChecker& DataQualityChecker() override;
     NFmiTrajectorySystem* TrajectorySystem() override;
@@ -292,6 +292,7 @@ public:
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
+    NFmiMacroParamDataCache& MacroParamDataCache() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

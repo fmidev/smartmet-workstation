@@ -78,9 +78,9 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CFmiFilterDataDlg message handlers
 
-void CFmiFilterDataDlg::RefreshApplicationViews(const std::string &reasonForUpdate)
+void CFmiFilterDataDlg::RefreshApplicationViews(const std::string &reasonForUpdate, bool clearEditedDependentMacroParamCacheData)
 {
-	itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false);
+	itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false, false, clearEditedDependentMacroParamCacheData);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
 
@@ -309,7 +309,7 @@ void CFmiFilterDataDlg::OnButtonAreaFilterAction()
 		CWaitCursor tempCursor;
 		SetDocumentValues();
         itsSmartMetDocumentInterface->DoAreaFiltering();
-		RefreshApplicationViews("Data filter tool: Area filter action");
+		RefreshApplicationViews("Data filter tool: Area filter action", true);
 	}
 }
 
@@ -320,7 +320,7 @@ void CFmiFilterDataDlg::OnButtonTimeFilterAction()
 		CWaitCursor tempCursor;
 		SetDocumentValues();
         itsSmartMetDocumentInterface->DoTimeFiltering();
-		RefreshApplicationViews("Data filter tool: Time filter action");
+		RefreshApplicationViews("Data filter tool: Time filter action", true);
 	}
 }
 
@@ -343,7 +343,7 @@ void CFmiFilterDataDlg::OnButtonReset()
 	if(itsSmartMetDocumentInterface)
 	{
         itsSmartMetDocumentInterface->ResetFilters();
-		RefreshApplicationViews("Data filter tool: Reset filters");
+		RefreshApplicationViews("Data filter tool: Reset filters", false);
 	}
 }
 
@@ -525,7 +525,7 @@ void CFmiFilterDataDlg::OnButtonKlapse()
 	CWaitCursor tempCursor;
 	SetDocumentValues();
     itsSmartMetDocumentInterface->DoCombineModelAndKlapse();
-	RefreshApplicationViews("Data filter tool: Applying radar forecast data");
+	RefreshApplicationViews("Data filter tool: Applying radar forecast data", true);
 }
 
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.

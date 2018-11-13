@@ -24,6 +24,8 @@
 #include "CtrlViewFunctions.h"
 #include "SmartMetMfcUtils_resource.h"
 #include "persist2.h"
+#include "NFmiMacroParamDataCache.h"
+
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
 #endif // DISABLE_EXTREME_TOOLKITPRO
@@ -812,7 +814,9 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
 	itsMacroParamList.SetCurSel(itsMacroParamList.FindString(-1, itsMacroParamNameU_)); // asettaa talletetun macroParamin aktiiviseksi
 	if(updateViews)
 	{
-        itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+        std::vector<std::string> modifiedMacroParamPaths{ initFileName };
+        itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPaths);
+        itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save"); // päivitetään varmuuden vuoksi ruutuja, jos karttanäytöllä olleen macroparametrin macroa on muutettu
 	}
 }

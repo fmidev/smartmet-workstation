@@ -293,7 +293,10 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
     MakeCombatibleBitmap(&itsMemoryBitmap);
-    itsSmartMetDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true);
+    auto keepMapAspectRatio = itsSmartMetDocumentInterface->ApplicationWinRegistry().KeepMapAspectRatio();
+    // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
+    // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
+    itsSmartMetDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true, keepMapAspectRatio, false);
     auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
     mapViewDescTop->CalcClientViewXperYRatio(NFmiPoint(cx, cy));
     mapViewDescTop->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));

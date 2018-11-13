@@ -2,6 +2,7 @@
 
 #include "NFmiDataIdent.h"
 #include "NFmiLevel.h"
+#include "NFmiInfoData.h"
 #include <vector>
 
 // Here is stored all the needed info about used parameters: dataIdent, their possible level info and if param was used with vertical function.
@@ -11,6 +12,7 @@ struct MacroParamDataInfo
     NFmiDataIdent dataIdent_;
     NFmiLevel level_;
     std::string possibleVerticalFunctionName_;
+    NFmiInfoData::Type type_ = NFmiInfoData::kNoDataType;
     bool usedWithVerticalFunction_ = false;
 };
 

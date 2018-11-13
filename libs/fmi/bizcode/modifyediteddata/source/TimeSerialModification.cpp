@@ -624,7 +624,7 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		NFmiTimeDescriptor timeDescriptor(theAdapter.EditedDataTimeDescriptor());
 		return ::MakeDataValiditation(theAdapter, &timeDescriptor, true, 1, fDoMultiThread);
 	}
@@ -849,7 +849,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		// Mutta suoritus vaiheen virheet menevät tällä hetkellä vain loki tiedostoon.
 		if(smartToolModifier.IsInterpretedSkriptMacroParam())
 		{
-			theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+			theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 			return true;
 		}
 
@@ -887,7 +887,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		}
 
         LogSmartToolModifications(theAdapter, modifiedParams, theLogMessage, showLoadedSmartTool);
-		theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, true);
 	}
 	else
 	{
@@ -1245,7 +1245,7 @@ static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Undo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		return status;
 	}
 	return false;
@@ -1265,7 +1265,7 @@ static bool RedoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Redo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		return status;
 	}
 	return false;
