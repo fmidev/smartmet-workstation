@@ -82,7 +82,7 @@ public:
     void SetTimeFilterEndTime(const NFmiMetTime& theTime) override;
     void TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours) override;
     float TimeControlTimeStep(int theDescTopIndex) override;
-    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache) override;
+    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache) override;
     bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;
     bool SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;
     void TimeSerialViewTimeBag(const NFmiTimeBag &theTimeBag) override;
