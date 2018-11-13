@@ -2,6 +2,19 @@
 #include "NFmiDrawParamList.h"
 #include "catlog/catlog.h"
 
+// Kiinnostava map:in tyhjennys predikaatin avulla -funktio
+template< typename ContainerT, typename PredicateT >
+void erase_if_from_map(ContainerT& items, const PredicateT& predicate) 
+{
+    for(auto it = items.begin(); it != items.end(); ) 
+    {
+        if(predicate(*it)) 
+            it = items.erase(it);
+        else 
+            ++it;
+    }
+};
+
 static void logMacroParamTotalPathWasInCorrectWarning(const std::string &functionName, const std::string &path1, const std::string &path2)
 {
     std::string message = functionName;
@@ -63,8 +76,23 @@ bool NFmiMacroParamDataCacheLayer::getCache(const NFmiMetTime &time, const std::
     return false;
 }
 
+void NFmiMacroParamDataCacheLayer::clearLayerCache()
+{
+    layerCache_.clear();
+}
+
 
 // ***********************************************************************************************
+
+// Tyhjennet‰‰n vain kaikki layerit, joissa on kyseinen macroParamPath
+void NFmiMacroParamDataCacheRow::clearMacroParamCache(const std::string &macroParamTotalPath)
+{
+    for(auto &layer : layersCache_) 
+    {
+        if(layer.second.macroParamTotalPath() == macroParamTotalPath)
+            layer.second.clearLayerCache();
+    }
+}
 
 void NFmiMacroParamDataCacheRow::setCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData)
 {
@@ -162,10 +190,31 @@ bool NFmiMacroParamDataCacheRow::tryToMoveExistingLayerCache(unsigned long layer
 
 // ***********************************************************************************************
 
+static void logRowIndexNotFoundWarning(const std::string &functionName, unsigned long rowIndex)
+{
+    std::string errorString = functionName;
+    errorString += " cannot find macroParam row-cache with rowIndex ";
+    errorString += std::to_string(rowIndex);
+    CatLog::logMessage(errorString, CatLog::Severity::Warning, CatLog::Category::Data);
+}
+
 void NFmiMacroParamDataCacheForView::clearAllLayers()
 {
     // Ei menn‰ n‰yttˆtasoa pidemm‰lle kun tehd‰‰n t‰ysi tyhjennys
     rowsCache_.clear();
+}
+
+void NFmiMacroParamDataCacheForView::clearMacroParamCache(unsigned long rowIndex, const std::string &macroParamTotalPath)
+{
+    auto iter = rowsCache_.find(rowIndex);
+    if(iter != rowsCache_.end())
+    {
+        iter->second.clearMacroParamCache(macroParamTotalPath);
+    }
+    else
+    {
+        ::logRowIndexNotFoundWarning(__FUNCTION__, rowIndex);
+    }
 }
 
 void NFmiMacroParamDataCacheForView::setCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData)
@@ -249,6 +298,19 @@ void NFmiMacroParamDataCache::clearView(unsigned long viewIndex)
     if(iter != viewsCache_.end())
     {
         iter->second.clearAllLayers();
+    }
+    else
+    {
+        ::logViewIndexNotFoundWarning(__FUNCTION__, viewIndex);
+    }
+}
+
+void NFmiMacroParamDataCache::clearMacroParamCache(unsigned long viewIndex, unsigned long rowIndex, const std::string &macroParamTotalPath)
+{
+    auto iter = viewsCache_.find(viewIndex);
+    if(iter != viewsCache_.end())
+    {
+        iter->second.clearMacroParamCache(rowIndex, macroParamTotalPath);
     }
     else
     {
