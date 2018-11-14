@@ -18,7 +18,6 @@ public:
     bool CreateMaskSelectionPopup(int theRowIndex) override;
     boost::shared_ptr<NFmiAreaMaskList> ParamMaskListMT() override;
     bool CreateMaskParamsPopup(int theRowIndex, int theParamIndex) override;
-    void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache) override;
     bool CreateParamSelectionPopup(unsigned int theDescTopIndex, int theRowIndex) override;
     void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) override;
     bool ScrollViewRow(unsigned int theDescTopIndex, int theCount) override;
@@ -82,7 +81,7 @@ public:
     void SetTimeFilterEndTime(const NFmiMetTime& theTime) override;
     void TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours) override;
     float TimeControlTimeStep(int theDescTopIndex) override;
-    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
+    void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
     bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;
     bool SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;
     void TimeSerialViewTimeBag(const NFmiTimeBag &theTimeBag) override;

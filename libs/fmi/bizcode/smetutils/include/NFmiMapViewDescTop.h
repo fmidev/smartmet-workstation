@@ -97,8 +97,7 @@ public:
 	void CurrentTime(const NFmiMetTime &newValue) {itsCurrentTime = newValue;}
 	float TimeControlTimeStep(void) const {return itsTimeControlTimeStep;}
 	void TimeControlTimeStep(float newValue);
-	void AreaViewDirty(bool areaViewDirty, bool clearCache);
-	void MapDirty(bool mapDirty, bool clearCache);
+    void MapViewDirty(bool mapDirty, bool clearCache, bool areaViewDirty);
     CtrlViewUtils::MapViewMode MapViewDisplayMode(void) const {return itsMapViewDisplayMode;}
 	void MapViewDisplayMode(CtrlViewUtils::MapViewMode newValue);
 	bool ShowTimeString(void){return fShowTimeString;}

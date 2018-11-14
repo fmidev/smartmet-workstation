@@ -315,7 +315,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 								NFmiMetEditorTypes::kFmiParamsDefaultView, &drawParam->Level(),
 								drawParam->DataType(), index, drawParam->ViewMacroDrawParam());
 							drawParam->HideParam(!drawParam->IsParamHidden()); // tämä on ruma fixi, mutta tupla klikki tekee tämän piilotus asetuksen jostain syystä ja minun pitää laittaa se tässä pois
-							itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true); // ikävä kyllä yksöis klikin jälkeen (ennen tätä toista klikkiä, josta syntyy tupla klikkaus) 
+							itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false); // ikävä kyllä yksöis klikin jälkeen (ennen tätä toista klikkiä, josta syntyy tupla klikkaus) 
 																				// on tehty ruudun päivitys, joka nyt tuplaklikin kohdalla pitää kumota
 							itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("ViewParamsView::LeftDoubleClick: Double click has been pressed over parameter to open Draw-param dialog, this update fixes (UGLY) the first left-click's param show/hide action");
 							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), 1); // 1=viewtype ei määrätty vielä
@@ -388,7 +388,7 @@ bool NFmiViewParamsView::DoAfterParamModeModifications(NFmiDrawParamList *thePar
 {
     theParamList->Dirty(true);
     itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
-    itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+    itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
     return true;
 }
 

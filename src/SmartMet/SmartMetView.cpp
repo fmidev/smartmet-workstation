@@ -965,10 +965,9 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
         auto keepMapAspectRatio = data->ApplicationWinRegistry().KeepMapAspectRatio();
         // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
         // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
-        data->AreaViewDirty(itsMapViewDescTopIndex, true, true, keepMapAspectRatio, false);
+        data->MapViewDirty(itsMapViewDescTopIndex, true, true, true, keepMapAspectRatio, false);
 		data->MapViewDescTop(itsMapViewDescTopIndex)->CalcClientViewXperYRatio(NFmiPoint(cx,cy));
 		data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
-		data->MapDirty(itsMapViewDescTopIndex, true, true);// tämä 'aiheuttaa' datan harvennuksen
         data->MapViewDescTop(itsMapViewDescTopIndex)->BorderDrawDirty(true);
 		CDC *pDC = GetDC();
 		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), data->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
@@ -998,9 +997,9 @@ void CSmartMetView::RefreshApplicationViewsAndDialogs(const std::string &reasonF
 	if(fMakeAreaViewDirty)
 	{
 		if(theWantedMapViewDescTop == -1)
-			GetDocument()->GetData()->AreaViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE, false, false);
+			GetDocument()->GetData()->MapViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE, true, false, false);
 		else
-			GetDocument()->GetData()->AreaViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE, false, false);
+			GetDocument()->GetData()->MapViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE, true, false, false);
 	}
 
 	GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate);
@@ -1011,9 +1010,9 @@ void CSmartMetView::RefreshApplicationViewsAndDialogs(const std::string &reasonF
     if(fMakeAreaViewDirty)
     {
         if(theWantedMapViewDescTop == -1)
-            GetDocument()->GetData()->AreaViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE, false, false);
+            GetDocument()->GetData()->MapViewDirty(itsMapViewDescTopIndex, true, fClearCache == TRUE, true, false, false);
         else
-            GetDocument()->GetData()->AreaViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE, false, false);
+            GetDocument()->GetData()->MapViewDirty(theWantedMapViewDescTop, true, fClearCache == TRUE, true, false, false);
     }
 
     GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate, updatedViewsFlag);
@@ -1382,7 +1381,7 @@ void CSmartMetView::SetPrintCopyCDC(CDC* pDC)
 
 void CSmartMetView::MakePrintViewDirty(bool fViewDirty, bool fCacheDirty)
 {
-	GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->MapDirty(fViewDirty, fCacheDirty);
+	GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true);
 }
 
 int CSmartMetView::CalcPrintingPageShiftInMinutes(void)

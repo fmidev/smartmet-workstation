@@ -434,7 +434,7 @@ void CSmartMetApp::DoFirstTimeOnIdleInitializations()
 
         if(itsGeneralData->ApplicationWinRegistry().KeepMapAspectRatio())
         {
-            itsGeneralData->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+            itsGeneralData->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
             CSmartMetView *mapView = ApplicationInterface::GetSmartMetView();
             if(mapView)
                 mapView->GetDocument()->UpdateAllViewsAndDialogs(__FUNCTION__);

@@ -421,9 +421,9 @@ NFmiMenuItemList* SmartMetDocumentInterfaceForGeneralDataDoc::PopupMenu()
     return itsDoc->PopupMenu();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
+void SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
 {
-    itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
+    itsDoc->MapViewDirty(theDescTopIndex, mapDirty, clearCache, areaViewDirty, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
@@ -439,11 +439,6 @@ NFmiDataQualityChecker& SmartMetDocumentInterfaceForGeneralDataDoc::DataQualityC
 NFmiTrajectorySystem* SmartMetDocumentInterfaceForGeneralDataDoc::TrajectorySystem()
 {
     return itsDoc->TrajectorySystem();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache)
-{
-    itsDoc->MapDirty(theDescTopIndex, mapDirty, clearCache);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ViewBrushed()

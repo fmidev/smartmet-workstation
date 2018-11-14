@@ -423,9 +423,8 @@ public:
 	std::vector<NFmiMapViewDescTop*>& MapViewDescTopList(void);
 	void TimeControlTimeStep(unsigned int theDescTopIndex, float newValue);
 	float TimeControlTimeStep(unsigned int theDescTopIndex);
-	void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache);
-	void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache);
-	bool ActivateParamSelectionDlgAfterLeftDoubleClick(void);
+    void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache);
+    bool ActivateParamSelectionDlgAfterLeftDoubleClick(void);
 	void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue);
 	NFmiMapViewDescTop* MapViewDescTop(unsigned int theIndex);
 	void TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros);

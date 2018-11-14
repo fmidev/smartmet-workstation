@@ -46,11 +46,6 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateMaskParamsPopup(int theRo
     return itsDoc->CreateMaskParamsPopup(theRowIndex, theParamIndex);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache)
-{
-    itsDoc->MapDirty(theDescTopIndex, mapDirty, clearCache);
-}
-
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateParamSelectionPopup(unsigned int theDescTopIndex, int theRowIndex)
 {
     return itsDoc->CreateParamSelectionPopup(theDescTopIndex, theRowIndex);
@@ -366,9 +361,9 @@ float CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlTimeStep(int theDes
     return itsDoc->MapViewDescTop(theDescTopIndex)->TimeControlTimeStep();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
 {
-    itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
+    itsDoc->MapViewDirty(theDescTopIndex, mapDirty, clearCache, areaViewDirty, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes)

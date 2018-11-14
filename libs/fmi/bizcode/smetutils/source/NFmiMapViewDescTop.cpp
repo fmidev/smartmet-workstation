@@ -505,7 +505,7 @@ void NFmiMapViewDescTop::MapRowStartingIndex(int newIndex)
 	// lasketaan sitten mikä on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
 	itsMapRowStartingIndex = FmiMin(maxStartIndex, newIndex);
-	MapDirty(true, false);
+	MapViewDirty(true, false, false);
 }
 
 // Näkyykö kyseinen karttarivi nyt karttanäytössä. TheRowIndex on rivi indeksi, jonka arvo alkaa 1:stä.
@@ -519,23 +519,23 @@ bool NFmiMapViewDescTop::IsVisibleRow(int theRowIndex)
 	return true;
 }
 
-void NFmiMapViewDescTop::AreaViewDirty(bool areaViewDirty, bool clearCache)
+// MapViewDirty metodi tekee kaiken sen mitä ennen tekivät sekavasti AreaViewDirty- ja 
+// MapDirty -metodit yhdessä. Niitä käytettiin sekaisin eri tilanteissa ja yhdessä (sekaisin taas).
+// Yksi pahimmista sekaannuksista aiheutti fAreaViewDirty muuttujan asetus, joka meni 
+// MapDirty -metodin kautta epäsuorasti false:ksi, jos mapDirty ja clearCache parametrit  olivat molemmat true.
+// Uudessa metodissa ei pääse tapahtumaan sekaannuksia.
+void NFmiMapViewDescTop::MapViewDirty(bool mapDirty, bool clearCache, bool areaViewDirty)
 {
-	fAreaViewDirty = areaViewDirty;
-
-	if(clearCache)
-		MapViewCache().MakeDirty(); // laitetaan cache halutessa likaiseksi
-}
-
-void NFmiMapViewDescTop::MapDirty(bool mapDirty, bool clearCache)
-{
-	MapHandler()->MapDirty(mapDirty);
-
-	if(clearCache && mapDirty) // jos true, silloin kartta meni likaiseksi ja cache on tyhjennettava
-	{
-		AreaViewDirty(false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
-		GridPointCache().Clear();
-	}
+    fAreaViewDirty = areaViewDirty;
+    MapHandler()->MapDirty(mapDirty);
+    if(clearCache)
+    {
+        MapViewCache().MakeDirty(); // laitetaan cache halutessa likaiseksi
+        if(mapDirty)
+        {
+            GridPointCache().Clear();
+        }
+    }
 }
 
 // tälle funktiolle annetaan client view:ssä 'kartastolle' käytetty alue pikseleinä
@@ -608,7 +608,7 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 		fShowTimeString = true;
 		break;
 	}
-	MapDirty(true, true);
+	MapViewDirty(true, true, mapAreaDirty);
 	if(mapAreaDirty)
 		BorderDrawDirty(true); // ikkunan koko muuttuu tietyissä tapauksissa, joten rajaviivat on laskettava uudestaan
 	return itsShowTimeOnMapMode;
@@ -685,7 +685,7 @@ void NFmiMapViewDescTop::ToggleStationPointColor(void)
 	if(itsStationPointColorIndex >= static_cast<int>(itsLandBorderColors.size()))
 		itsStationPointColorIndex = 0; // kun menee ympäri, laitetaan 1. väri takaisin päälle
 	if(fShowStationPlotVM)
-		MapDirty(true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		MapViewDirty(true, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 }
 
 void NFmiMapViewDescTop::ToggleStationPointSize(void)
@@ -702,7 +702,7 @@ void NFmiMapViewDescTop::ToggleStationPointSize(void)
 		itsStationPointSize.Y(itsStationPointSize.Y() + 1);
 
 	if(fShowStationPlotVM)
-		MapDirty(true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		MapViewDirty(true, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 }
 
 // tämä asettaa uuden karttanäytön hilaruudukon koon.
@@ -723,7 +723,7 @@ bool NFmiMapViewDescTop::SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWi
 		itsGraphicalInfo.itsViewWidthInMM = oneMapViewSizeInPixels.X() / itsGraphicalInfo.itsPixelsPerMM_x;
 		itsGraphicalInfo.itsViewHeightInMM = oneMapViewSizeInPixels.Y() / itsGraphicalInfo.itsPixelsPerMM_y;
 
-		MapDirty(true, true);
+		MapViewDirty(true, true, true);
 		fMapViewUpdated = true; // tämä saa auto-zoomin toimimaan
 		BorderDrawDirty(true);
 		return true;
@@ -796,7 +796,7 @@ void NFmiMapViewDescTop::ToggleMapViewDisplayMode(void)
     else
         itsMapViewDisplayMode = CtrlViewUtils::MapViewMode::kNormal;
 
-	MapDirty(true, true);
+	MapViewDirty(true, true, false);
 	ViewGridSize(itsViewGridSizeVM, nullptr);
 }
 
