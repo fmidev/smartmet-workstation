@@ -227,7 +227,7 @@ void CFmiCrossSectionDlg::MakeCrossSectionModeUpdates(const std::string &reasonF
     { 
         // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
         itsSmartMetDocumentInterface->MacroParamDataCache().clearView(CtrlViewUtils::kFmiCrossSectionView);
-        itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+        itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle route cross section mode", TRUE);
     }
 }
@@ -257,7 +257,7 @@ void CFmiCrossSectionDlg::OnBnClickedCheckUseCrosssectionMapMode()
 {
 	UpdateData(TRUE);
     itsSmartMetDocumentInterface->CrossSectionSystem()->CrossSectionSystemActive(fUseCrossSectionMapMode == TRUE);
-    itsSmartMetDocumentInterface->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle cross section map mode", TRUE);
 }
 
@@ -291,7 +291,7 @@ void CFmiCrossSectionDlg::OnBnClickedCheckUseCrosssection3PointMode2()
 {
 	UpdateData(TRUE);
     itsSmartMetDocumentInterface->CrossSectionSystem()->CrossSectionMode(fUse3PointMode ? NFmiCrossSectionSystem::k3Point : NFmiCrossSectionSystem::k2Point);
-    itsSmartMetDocumentInterface->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle 2/3-point cross section mode", TRUE);
 }
 
@@ -308,7 +308,7 @@ void CFmiCrossSectionDlg::DoWhenClosing(void)
 	if(crossSectionSystem->CrossSectionSystemActive())
 	{ // jos karttanäytöllä oli poikkileikkaus moodi päällä, laita se pois ja vielä pitää päivittää myös karttanäyttö, että pallukat saadaaan pois
         crossSectionSystem->CrossSectionSystemActive(false);
-        itsSmartMetDocumentInterface->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+        itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Close view", TRUE);
 	}
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
@@ -414,7 +414,7 @@ void CFmiCrossSectionDlg::OnBnClickedCheckCrosssectionShowTrajectories()
 {
 	UpdateData(TRUE);
     itsSmartMetDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView(fShowTrajectories == TRUE);
-    itsSmartMetDocumentInterface->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
 	EnableControls();
 	itsView->Update(true);
 	Invalidate(FALSE);

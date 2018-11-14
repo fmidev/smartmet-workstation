@@ -107,7 +107,7 @@ bool NFmiMaskParamsView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long t
 			if(mask)
 			{
 				mask->Enable(!mask->IsEnabled());
-				itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+				itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
 				return true;
 			}
 		}

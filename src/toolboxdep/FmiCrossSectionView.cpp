@@ -450,7 +450,7 @@ BOOL CFmiCrossSectionView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		{ 
             // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
             itsSmartMetDocumentInterface->MacroParamDataCache().clearView(CtrlViewUtils::kFmiCrossSectionView);
-            itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+            itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
             itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, TRUE);
 		}
 	}

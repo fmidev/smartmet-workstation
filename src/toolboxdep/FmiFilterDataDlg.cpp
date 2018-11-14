@@ -80,7 +80,7 @@ END_MESSAGE_MAP()
 
 void CFmiFilterDataDlg::RefreshApplicationViews(const std::string &reasonForUpdate, bool clearEditedDependentMacroParamCacheData)
 {
-	itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false, false, clearEditedDependentMacroParamCacheData);
+	itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false, false, false, clearEditedDependentMacroParamCacheData);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
 

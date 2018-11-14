@@ -281,7 +281,7 @@ void CFmiExtraMapView::SetPrintCopyCDC(CDC* pDC)
 
 void CFmiExtraMapView::MakePrintViewDirty(bool fViewDirty, bool fCacheDirty)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapDirty(fViewDirty, fCacheDirty);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true);
 }
 
 void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
@@ -296,11 +296,10 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     auto keepMapAspectRatio = itsSmartMetDocumentInterface->ApplicationWinRegistry().KeepMapAspectRatio();
     // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
     // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
-    itsSmartMetDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true, keepMapAspectRatio, false);
+    itsSmartMetDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, true, keepMapAspectRatio, false);
     auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
     mapViewDescTop->CalcClientViewXperYRatio(NFmiPoint(cx, cy));
     mapViewDescTop->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
-    itsSmartMetDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, false); // HUOM! tähän cache piti antaa falsena, ettei mapView dirty lippu mene falseksi // tämä 'aiheuttaa' datan harvennuksen
     mapViewDescTop->BorderDrawDirty(true);
     CDC *theDC = GetDC();
     CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), theDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin

@@ -1440,7 +1440,7 @@ void CMainFrame::DoMacroParamUpdate(void)
 			{ // Kun 1. kerran on luettu macroParamit sisään, pitää varmistaa kaikkien ruutujen päivitys. Koska jos joku on jo ladannut vieMakron, jossa
 				// on makroParameita, ne pitää piirtää nyt uudestaan.
 				firstTime = false;
-				itsDoc->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+				itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
 			}
 			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // tämän on tarkoitus päivittää vain SmartToolView, mutta sillä ei ole omaa päivitys käskyä (ainakaan vielä)
 		}
@@ -1452,7 +1452,7 @@ void CMainFrame::DoDataCheckResultUpdate(void)
 	if(itsDoc)
 	{
 		// En vielä tiedä mitä pitää tehdä tässä, mutta liataan varmuuden vuoksi kaikki ikkunat ja ruutujen åäivitys päälle
-		itsDoc->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+		itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
 		itsDoc->RefreshApplicationViewsAndDialogs(__FUNCTION__);
 	}
 }

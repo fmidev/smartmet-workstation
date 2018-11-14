@@ -2729,7 +2729,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 					if(theKey & kCtrlKey)
 					{ // CTRL-pohjassa aktivoidaan lähin minor piste
                         crossSectionSystem->ActivateNearestMinorPoint(itsMapArea->ToLatLon(thePlace));
-                        itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+                        itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
 						return true; // ei mennä hilapisteen valintaan
 					}
 					else
@@ -2737,7 +2737,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 						if(fWholeCrossSectionReallyMoved && crossSectionSystem->DragWholeCrossSection())
 						{
                             crossSectionSystem->DragWholeCrossSection(false);
-                            itsCtrlViewDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true, false, false);
+                            itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
 						}
 						else
 						{
@@ -2746,7 +2746,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 								if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
 									SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
 
-                                itsCtrlViewDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true, false, false);
+                                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
 						}
 //						return true; // ei mennä hilapisteen valintaan
 					}
@@ -2854,7 +2854,7 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
 			if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimmäiseen ruutuun sallitaan crosssection klikkaukset
 			{
                 itsCtrlViewDocumentInterface->CrossSectionSystem()->MiddlePoint(itsMapArea->ToLatLon(thePlace));
-                itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
 				return true; // ei mennä hilapisteen valintaan
 			}
 		}
@@ -2902,7 +2902,7 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
                 status |= ChangeSatelDataChannel((NFmiStationView*)itsViewList->Current(), theDelta); // sitten mahd. satel image kanava muutos
             }
             if(status)
-                itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
             return status; // jos yksikin level vaihtui, päivitetään ikkunat
 			
 		}
@@ -2924,7 +2924,7 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 				}
 			}
 			if(status)
-                itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
 			return status; // jos yksikin level vaihtui, päivitetään ikkunat
 		}
 		else
@@ -3158,7 +3158,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 				// täytyy myös mahdollistaa pelkän luotaus paikan valinta kun ollaan poikkileikkaus moodissa
 				if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
 					SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
-                itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false);
 				return true; // ei mennä hilapisteen valintaan
 			}
 		}

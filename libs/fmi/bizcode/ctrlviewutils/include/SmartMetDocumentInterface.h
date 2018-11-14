@@ -165,11 +165,10 @@ public:
     virtual void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) = 0;
     virtual bool ShowWaitCursorWhileDrawingView() = 0;
     virtual NFmiMenuItemList* PopupMenu() = 0;
-    virtual void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) = 0;
+    virtual void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) = 0;
     virtual bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) = 0;
     virtual NFmiDataQualityChecker& DataQualityChecker() = 0;
     virtual NFmiTrajectorySystem* TrajectorySystem() = 0;
-    virtual void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache) = 0;
     virtual bool ViewBrushed() = 0;
     virtual void ViewBrushed(bool newState) = 0;
     virtual NFmiPoint GetPrintedMapAreaOnScreenSizeInPixels(unsigned int theDescTopIndex) = 0;

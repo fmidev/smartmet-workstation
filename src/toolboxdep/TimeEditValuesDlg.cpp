@@ -478,7 +478,7 @@ void CTimeEditValuesDlg::OnCheckUseZoomedAreaCP()
 	{
 		UpdateData(TRUE);
         itsSmartMetDocumentInterface->UseCPGridCrop(fUseZoomedAreaCP == TRUE);
-        itsSmartMetDocumentInterface->MapDirty(0, true, true);
+        itsSmartMetDocumentInterface->MapViewDirty(0, true, true, false, false, false);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialDlg: Toggle Zoomed CP setting");
 		Invalidate(FALSE);
 	}
@@ -486,7 +486,7 @@ void CTimeEditValuesDlg::OnCheckUseZoomedAreaCP()
 
 void CTimeEditValuesDlg::RefreshApplicationViews(const std::string &reasonForUpdate)
 {
-    itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false, false, false);
+    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false, false, false, false);
 	EnableButtons();
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
@@ -711,7 +711,7 @@ BOOL CTimeEditValuesDlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 				cpManager.PreviousCPManager();
 
             itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
-            itsSmartMetDocumentInterface->AreaViewDirty(0, true, true, false, false);
+            itsSmartMetDocumentInterface->MapViewDirty(0, true, true, false, false, false);
 			RefreshApplicationViews("TimeSerialDlg: Mouse wheel action");
 			return TRUE;
 		}
@@ -979,7 +979,7 @@ void CTimeEditValuesDlg::OnBnClickedCheckAllowRightClickSelection()
 {
     UpdateData(TRUE);
     itsSmartMetDocumentInterface->AllowRightClickDisplaySelection(fAllowRightClickSelection == TRUE);
-    itsSmartMetDocumentInterface->MapDirty(0, true, true);
+    itsSmartMetDocumentInterface->MapViewDirty(0, true, true, false, false, false);
     itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialDlg: Toggle Allow right click selection setting");
     Invalidate(FALSE);

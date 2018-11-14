@@ -95,11 +95,10 @@ public:
     void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) override;
     bool ShowWaitCursorWhileDrawingView() override;
     NFmiMenuItemList* PopupMenu() override;
-    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
+    void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
     bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) override;
     NFmiDataQualityChecker& DataQualityChecker() override;
     NFmiTrajectorySystem* TrajectorySystem() override;
-    void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache) override;
     bool ViewBrushed() override;
     void ViewBrushed(bool newState) override;
     NFmiPoint GetPrintedMapAreaOnScreenSizeInPixels(unsigned int theDescTopIndex) override;

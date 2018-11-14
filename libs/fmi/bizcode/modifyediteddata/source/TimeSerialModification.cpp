@@ -624,7 +624,7 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		NFmiTimeDescriptor timeDescriptor(theAdapter.EditedDataTimeDescriptor());
 		return ::MakeDataValiditation(theAdapter, &timeDescriptor, true, 1, fDoMultiThread);
 	}
@@ -785,7 +785,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 			}
 		}
 		::CheckAndValidateAfterModifications(theAdapter, theEditorTool, false, fUsedMask, FmiParameterName(theModifiedDrawParam->Param().GetParam()->GetIdent()), fDoMultiThread, false);
-        theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+        theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true);
 //		theAdapter.RefreshMasks();
 
 		return true;
@@ -849,7 +849,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		// Mutta suoritus vaiheen virheet menevät tällä hetkellä vain loki tiedostoon.
 		if(smartToolModifier.IsInterpretedSkriptMacroParam())
 		{
-			theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+			theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 			return true;
 		}
 
@@ -887,7 +887,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		}
 
         LogSmartToolModifications(theAdapter, modifiedParams, theLogMessage, showLoadedSmartTool);
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, true);
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true);
 	}
 	else
 	{
@@ -1245,7 +1245,7 @@ static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Undo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		return status;
 	}
 	return false;
@@ -1265,7 +1265,7 @@ static bool RedoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Redo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		return status;
 	}
 	return false;
@@ -1310,7 +1310,7 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 				else
 				{
 					::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, fPasteClipBoardData);
-                    theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+                    theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true);
                 }
 			}
 			editedData->Time(time);
@@ -1589,7 +1589,7 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 		else
 		{
             ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, usedMaskType, kFmiLastParameter, fDoMultiThread, false);
-            theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+            theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true);
 		}
 
 		editedData->Time(time);
@@ -1732,7 +1732,7 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 		else
 		{
             ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, false);
-            theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+            theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, true);
 //			theAdapter.RefreshMasks();
 		}
 
