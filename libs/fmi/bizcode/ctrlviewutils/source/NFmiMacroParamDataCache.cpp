@@ -66,7 +66,7 @@ bool NFmiMacroParamDataCacheLayer::getCache(const NFmiMetTime &time, const std::
         auto iter = layerCache_.find(time);
         if(iter != layerCache_.end())
         {
-            cacheDataOut.swap(iter->second);
+            cacheDataOut = iter->second;
             return true;
         }
     }
