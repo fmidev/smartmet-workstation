@@ -60,6 +60,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiCommentStripper.h"
 #include "ToolBoxStateRestorer.h"
+#include "NFmiMacroParamDataCache.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1368,15 +1369,30 @@ static void TraceLogSpacedOutMacroParamCalculationSize(boost::shared_ptr<NFmiFas
 // Laskuissa käytetty hila laitetaan theUsedGridOut:in arvoksi.
 void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut)
 {
-    CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": macroParam calculations");
-    auto possibleSpaceOutData = CreatePossibleSpaceOutMacroParamData();
-	FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
-    if(fUseCalculationPoints)
-        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
+    auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), theValues))
+    {
+        if(theUsedGridOut)
+        {
+            *theUsedGridOut = NFmiGrid(itsArea.get(), static_cast<unsigned long>(theValues.NX()), static_cast<unsigned long>(theValues.NY()));
+        }
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was retrieved from cache (=fast)"), this);
+    }
     else
-        ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
-    if(theUsedGridOut && itsInfo && itsInfo->Grid())
-        *theUsedGridOut = *itsInfo->Grid();
+    {
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": macroParam calculations");
+        auto possibleSpaceOutData = CreatePossibleSpaceOutMacroParamData();
+        FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
+        if(fUseCalculationPoints)
+            CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
+        else
+            ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
+        if(theUsedGridOut && itsInfo && itsInfo->Grid())
+            *theUsedGridOut = *itsInfo->Grid();
+
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
+        itsCtrlViewDocumentInterface->MacroParamDataCache().setCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), theValues);
+    }
 }
 
 // Pelkän tooltipin lasku macroParamista.
