@@ -524,6 +524,17 @@ bool NFmiMapViewDescTop::IsVisibleRow(int theRowIndex)
 // Yksi pahimmista sekaannuksista aiheutti fAreaViewDirty muuttujan asetus, joka meni 
 // MapDirty -metodin kautta epäsuorasti false:ksi, jos mapDirty ja clearCache parametrit  olivat molemmat true.
 // Uudessa metodissa ei pääse tapahtumaan sekaannuksia.
+// ======================================================
+// Seuraavassa selitykset parametreille:
+// ======================================================
+// 1. mapDirty, jos true, on tarve laskea uusi zoomaus karttapohjalle ja samalla piirtää karttapohja uudestaan cacheen.
+// 2. clearCache, jos true, tyhjennetään karttanäyttöjen kuva-cachet täysin. Kuva cache:lla tarkoitetaan eri 
+//    näyttöriveillä olevat eri aika-askeleilla olevat karttapohjan ja parametri piirto-layereiden yhteistulos.
+//    Tähän cache kuvaan ei kuulu ns. DrawOverBitmaptThings, joilla piirretään erilaisia merkkejä karttanäytöille.
+// 3. areaViewDirty parametrilla säädetään piirretäänkö karttanäyttö uudestaan, vai käytetäänkö piirrossa suoraan
+//    karttanäyttö-luokkien (CSmartMetView ja CFmiExtraMapView) tallettamaa cache kuvaa. Tämä yksittäinen cache kuva on 
+//    siis vain kulloisellakin hetkellä käytössä siksi että piti tehdä double-buffer kuva, jos esim. toinen ohjelma/näyttö 
+//    siirretään SmartMet näyttöjen yli ja niitä ei tarvitse muuten päivittää.
 void NFmiMapViewDescTop::MapViewDirty(bool mapDirty, bool clearCache, bool areaViewDirty)
 {
     fAreaViewDirty = areaViewDirty;
