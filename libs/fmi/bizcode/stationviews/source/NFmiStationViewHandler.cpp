@@ -2542,8 +2542,9 @@ void NFmiStationViewHandler::Update(void)
 			SetMapAreaAndRect(mapHandler->Area(), itsMapRect);
 		}
 
-		NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
-		if(drawParamList && (mapHandler->MakeNewBackgroundBitmap() || drawParamList->IsDirty()))
+        auto doGeneralViewUpdates = mapHandler->UpdateMapViewDrawingLayers() || mapHandler->MakeNewBackgroundBitmap();
+        NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+		if(drawParamList && (doGeneralViewUpdates || drawParamList->IsDirty()))
 		{
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": forced to recreate layers", this);
 			itsViewList->Clear(true);
