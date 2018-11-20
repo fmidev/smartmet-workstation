@@ -9684,12 +9684,12 @@ void SwapArea(unsigned int theDescTopIndex)
 	// muuten edellinen. Menee päädyistä yli, eli viimeisestä menee 1. parametriin.
 	// Käy läpi myös aliparametri (TotalWind ja W&C).
 	// Palauttaa true jos parametrin vaihto onnistui ja pitää päivittää näytöt, muuten false.
-	bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams)
+	bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theRealMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams)
 	{
 //	TRACE("ChangeActiveMapViewParam 1\n");
-		NFmiDrawParamList *list = DrawParamListWithRealRowNumber(theDescTopIndex, theMapRow);
+		NFmiDrawParamList *list = DrawParamListWithRealRowNumber(theDescTopIndex, theRealMapRow);
 		if(fUseCrossSectionParams)
-			list = CrossSectionViewDrawParamList(theMapRow);
+			list = CrossSectionViewDrawParamList(theRealMapRow);
 		if(list)
 		{
 			if(list->Index(theParamIndex))
@@ -9708,8 +9708,9 @@ void SwapArea(unsigned int theDescTopIndex)
 					if(drawParamTmp)
 					{
 						SetUpChangedDrawParam(drawParam, drawParamTmp);
-                        MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(theMapRow);
-						MapViewDirty(theDescTopIndex, false, false, true, false, false, false);
+                        auto cacheMapRow = theRealMapRow - 1; // real-map-row alkaa 1:stä ja cache-map-row 0:sta
+                        MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(cacheMapRow);
+						MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
 						return true;
 					}
 				}
