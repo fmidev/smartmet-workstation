@@ -503,7 +503,7 @@ void NFmiMapViewDescTop::MapRowStartingIndex(int newIndex)
 	// lasketaan sitten mikä on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
 	itsMapRowStartingIndex = FmiMin(maxStartIndex, newIndex);
-	MapViewDirty(false, false, true, false);
+	MapViewDirty(false, false, true, true);
 }
 
 // Näkyykö kyseinen karttarivi nyt karttanäytössä. TheRowIndex on rivi indeksi, jonka arvo alkaa 1:stä.
