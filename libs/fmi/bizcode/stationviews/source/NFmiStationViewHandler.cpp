@@ -2887,17 +2887,15 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
                 status |= ChangeHybridDataLevel((NFmiStationView*)itsViewList->Current(), theDelta); // muuttaa mallipinta ja painepintaa
                 status |= ChangeSatelDataChannel((NFmiStationView*)itsViewList->Current(), theDelta); // sitten mahd. satel image kanava muutos
             }
-            if(status)
-                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-            return status; // jos yksikin level vaihtui, päivitetään ikkunat
-			
-		}
+            MakeParamLevelChangeDirtyOperations(status); // jos yksikin level vaihtui, päivitetään ikkunat
+            return status;
+        }
 		else if(theKey & kCtrlKey) // jos ctrl-nappi pohjassa zoomataan karttaa
 		{
             itsCtrlViewDocumentInterface->ZoomMapInOrOut(itsMapViewDescTopIndex, itsMapArea, thePlace, (theDelta > 0) ? 0.95 : 1.05);
 			return true;
 		}
-		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan hybrid-datojen leveliä ylös/alas tai satel datan kanavaa
+		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan aktiivisen piirto-layerin hybrid-datojen leveliä ylös/alas tai satel datan kanavaa
 		{
 			bool status = false;
 			for(itsViewList->Reset(); itsViewList->Next(); ) // hybrid data muutos ensin
@@ -2909,9 +2907,8 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 					break;
 				}
 			}
-			if(status)
-                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-			return status; // jos yksikin level vaihtui, päivitetään ikkunat
+            MakeParamLevelChangeDirtyOperations(status); // jos yksikin level vaihtui, päivitetään ikkunat
+			return status; 
 		}
 		else
 		{
@@ -2922,6 +2919,16 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 		}
 	}
 	return false;
+}
+
+void NFmiStationViewHandler::MakeParamLevelChangeDirtyOperations(bool changesHappened)
+{
+    if(changesHappened)
+    {
+        itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, true);
+        auto cacheRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber) - 1;
+        itsCtrlViewDocumentInterface->MapViewCache(itsMapViewDescTopIndex).MakeRowDirty(cacheRowIndex);
+    }
 }
 
 void NFmiStationViewHandler::InitParamHandlerView(void)
