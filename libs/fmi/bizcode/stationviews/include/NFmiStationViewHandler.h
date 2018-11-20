@@ -196,7 +196,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	NFmiPoint itsZoomDragUpPoint;
 	NFmiRect itsOldZoomRect; // t‰ll‰ piirret‰‰n vanha laatikko pois (k‰‰nteis v‰ri kikka)
 	NFmiPoint itsLastMouseDownRelPlace; //yrit‰n t‰ll‰ selvitt‰‰ miksi mouse klick tekee joskus kaksikin turhaa mousemovea
-	bool fRedrawMapAfterMTATempClear; // t‰m‰ on h‰t‰ paska vipu (optimointia baby), kun hiiren oikealla on klikattu karttaa, joskus pit‰‰ ruutu p‰ivitt‰‰
 
 	NFmiParamHandlerView* itsParamHandlerView;
 	NFmiRect itsParamHandlerViewRect;

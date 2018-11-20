@@ -423,7 +423,8 @@ public:
 	std::vector<NFmiMapViewDescTop*>& MapViewDescTopList(void);
 	void TimeControlTimeStep(unsigned int theDescTopIndex, float newValue);
 	float TimeControlTimeStep(unsigned int theDescTopIndex);
-    void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache);
+    void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers);
+    void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex);
     bool ActivateParamSelectionDlgAfterLeftDoubleClick(void);
 	void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue);
 	NFmiMapViewDescTop* MapViewDescTop(unsigned int theIndex);
@@ -446,7 +447,6 @@ public:
 	const std::string& LastTEMPDataStr(void);
 	void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint& theLatLon
 						,const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-						,bool &theRedrawMapAfterMTATempClear
 						,bool fMakeMTAModeAdd
 						,bool fDoOnlyMTAModeAdd);
 	NFmiTrajectorySystem* TrajectorySystem(void);

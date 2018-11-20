@@ -24,7 +24,7 @@ public:
 	void EditedDataNotInPreferredState(bool newValue) override;
 	int DoMessageBox(const std::string & theMessage, const std::string &theTitle, unsigned int theMessageBoxType) override;
 	void AllMapViewDescTopsTimeDirty(const NFmiMetTime &theTime) override;
-    void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
+    void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
     void WindTableSystemMustaUpdateTable(bool newState) override;
 	boost::shared_ptr<NFmiDrawParam> GetUsedDrawParam(const NFmiDataIdent &theDataIdent, NFmiInfoData::Type theDataType) override;
 	NFmiMetEditorOptionsData& MetEditorOptionsData(void) override;

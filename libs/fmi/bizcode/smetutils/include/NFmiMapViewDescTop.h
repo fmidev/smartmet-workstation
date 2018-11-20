@@ -81,8 +81,9 @@ public:
     std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
 
 	NFmiMapViewCache& MapViewCache(void) {return itsMapViewCache;}
-	bool AreaViewDirty(void) {return fAreaViewDirty;}
-	void AreaViewDirty(bool newValue) {fAreaViewDirty = newValue;}
+    bool RedrawMapView(void) const;
+    void SetRedrawMapView(bool newValue);
+    void ClearRedrawMapView();
 	NFmiPtrList<NFmiDrawParamList>* DrawParamListVector(void) {return itsDrawParamListVector;}
 	bool ScrollViewRow(int theCount, int &theActiveViewRow);
     const NFmiPoint& ViewGridSize(void) const {return itsViewGridSizeVM;}
@@ -97,7 +98,7 @@ public:
 	void CurrentTime(const NFmiMetTime &newValue) {itsCurrentTime = newValue;}
 	float TimeControlTimeStep(void) const {return itsTimeControlTimeStep;}
 	void TimeControlTimeStep(float newValue);
-    void MapViewDirty(bool mapDirty, bool clearCache, bool areaViewDirty);
+    void MapViewDirty(bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool updateMapViewDrawingLayers);
     CtrlViewUtils::MapViewMode MapViewDisplayMode(void) const {return itsMapViewDisplayMode;}
 	void MapViewDisplayMode(CtrlViewUtils::MapViewMode newValue);
 	bool ShowTimeString(void){return fShowTimeString;}
@@ -140,8 +141,6 @@ public:
 	void DescTopOn(bool newValue) {fDescTopOn = newValue;}
 	bool MapViewBitmapDirty(void) const {return fMapViewBitmapDirty;}
 	void MapViewBitmapDirty(bool newValue) {fMapViewBitmapDirty = newValue;}
-	bool MapViewUpdated(void) const {return fMapViewUpdated;}
-	void MapViewUpdated(bool newValue) {fMapViewUpdated = newValue;}
 	const NFmiColor& StationPointColor(void) const;
 	const NFmiPoint& StationPointSize(void) const;
 	void ToggleStationPointColor(void);
@@ -212,7 +211,7 @@ private:
                                 // oli PV-projekti jossa dropbox-konffit ja sitä käytettiin VC++ debuggerista.
 	std::vector<NFmiGdiPlusImageMapHandler*> itsGdiPlusImageMapHandlerList; // jokaisella desctopilla pitää olla oma 'map-serverinsä'
 	NFmiMapViewCache itsMapViewCache; // luokka joka pitaa huolta karttanayton cachesta
-	bool fAreaViewDirty;
+	bool fRedrawMapView;
 
 	checkedVector<NFmiColor> itsLandBorderColors; // tähän talletetaan raja viivan piirron väri vaihtoehdot
 	int itsLandBorderColorIndex; // valitunb värin indeksi on tallessa tässä, jos indeksi on negatiivinen, ei piirretä rajaviivoja
@@ -250,11 +249,6 @@ private:
 						// HUOM! tämä on suhteellinen rivinumero eli pitää ottaa huomioon monesko rivi on ensimmäisenä näkyvissä karttanäyttö ruudukossa
 	bool fDescTopOn; // onko tämä desctop näkyvissä vai ei
 	bool fMapViewBitmapDirty; // Piiretäänkö karttanäytölle vain bitmap uudestaan (tällä saadaan pyyhittyä piirretty tooltippi pois)
-	bool fMapViewUpdated;	  // tämä on vastapainoksi mapviewdirtylle. Jos hiirellä klikataan
-								  // ruutua, ei piirretä karttaa, koska asema valinnat piirretään
-								  // vastavärien avulla. Tämän avulla voin laittaa kartan piirron
-								  // hoitumaan zeditmap2doc-luokan updateallviewsanddialogs:ista
-								  // ja sen piiron esto tarvitsee laittaa vain kahteen paikkaa
 	CWnd *itsMapView; // tässä on karttanäytön pointteri
     CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
 	NFmiGridPointCache itsGridPointCache;

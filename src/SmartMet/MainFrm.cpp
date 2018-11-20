@@ -1440,20 +1440,10 @@ void CMainFrame::DoMacroParamUpdate(void)
 			{ // Kun 1. kerran on luettu macroParamit sisään, pitää varmistaa kaikkien ruutujen päivitys. Koska jos joku on jo ladannut vieMakron, jossa
 				// on makroParameita, ne pitää piirtää nyt uudestaan.
 				firstTime = false;
-				itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
+				itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true);
 			}
 			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // tämän on tarkoitus päivittää vain SmartToolView, mutta sillä ei ole omaa päivitys käskyä (ainakaan vielä)
 		}
-	}
-}
-
-void CMainFrame::DoDataCheckResultUpdate(void)
-{
-	if(itsDoc)
-	{
-		// En vielä tiedä mitä pitää tehdä tässä, mutta liataan varmuuden vuoksi kaikki ikkunat ja ruutujen åäivitys päälle
-		itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
-		itsDoc->RefreshApplicationViewsAndDialogs(__FUNCTION__);
 	}
 }
 
@@ -1469,8 +1459,6 @@ BOOL CMainFrame::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* p
 		GetNewSeaIcingMessages();
 	else if(message == ID_MESSAGE_MACRO_PARAMS_UPDATE)
 		DoMacroParamUpdate();
-	else if(message == ID_MESSAGE_WORKING_THREAD_DATA_CHECK_RESULTS)
-		DoDataCheckResultUpdate();
     else if(message == ID_MESSAGE_START_HISTORY_THREAD)
         StartHistoryDataCacheThread();
 

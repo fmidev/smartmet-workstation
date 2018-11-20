@@ -996,10 +996,6 @@ bool NFmiStationView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long theK
 		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 			SelectControlPointLocation(info, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask);
 
-					// HUOM! kartan p‰ivityst‰ ei saa est‰‰ kun on luotaus n‰yttˆ auki ja MTA-moodi on p‰‰ll‰, silloin pit‰‰ piirt‰‰ valittuun pisteeseen 'luotaus' kolmio
-		if(!itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-			itsCtrlViewDocumentInterface->MapViewUpdated(itsMapViewDescTopIndex, false); // karttaa ei piirret‰, mutta aikasarjaikkuna voidaan piirt‰‰ cdoc:in updateallviewsanddialogs
-
 		// piirret‰‰n tietyiss‰ tilanteissa valitut pisteet myˆs ei oikean yl‰kulman kartta ruutuun, mutta ei piirret‰ t‰ss‰ oikeaan yl‰kulmaan koska sinne piirret‰‰n muutenkin
 		if(itsCtrlViewDocumentInterface->DrawSelectionOnThisView())
 		{
@@ -1023,7 +1019,6 @@ bool NFmiStationView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
 	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(info)
 	{
-		fRedrawMapAfterMTATempClear = false; // h‰t‰ paska viritys optimoinnin takia
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
 			// ctrl+shift+right-mouseclick:in avulla voidaan valita aktiivinen n‰yttˆrivi ja aika ilman, ett‰ valinnat muuttuvat
@@ -1040,8 +1035,6 @@ bool NFmiStationView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
             else
                 SelectLocations(info, latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true);
 		}
-		if(!fRedrawMapAfterMTATempClear)
-			itsCtrlViewDocumentInterface->MapViewUpdated(itsMapViewDescTopIndex, false); // karttaa ei piirret‰, mutta aikasarjaikkuna voidaan piirt‰‰ cdoc:in updateallviewsanddialogs
 	}
 	return true;
 }
@@ -2587,7 +2580,7 @@ void NFmiStationView::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theI
 									 ,bool fMakeMTAModeAdd // vain tietyist‰ paikoista kun t‰t‰ metodia kutsutaan, saa luotauksen lis‰t‰ (left buttom up karttan‰ytˆll‰ l‰hinn‰)
 									 ,bool fDoOnlyMTAModeAdd)
 {
-	itsCtrlViewDocumentInterface->SelectLocations(itsMapViewDescTopIndex, theInfo, itsArea, theLatLon, itsTime, theSelectionCombineFunction, theMask, fRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
+	itsCtrlViewDocumentInterface->SelectLocations(itsMapViewDescTopIndex, theInfo, itsArea, theLatLon, itsTime, theSelectionCombineFunction, theMask, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
 
 std::string NFmiStationView::Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType)

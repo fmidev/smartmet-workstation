@@ -386,7 +386,7 @@ void CFmiTrajectoryDlg::DoWhenClosing(void)
 {
 	UpdateTrajectorySystem();
     itsSmartMetDocumentInterface->TrajectorySystem()->TrajectoryViewOn(false);
-    itsSmartMetDocumentInterface->MapViewDirty(0, true, true, false, false, false);
+    itsSmartMetDocumentInterface->MapViewDirty(0, false, true, true, false, false, false);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TrajectoryDlg: Closing view");
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
 }
@@ -531,7 +531,7 @@ void CFmiTrajectoryDlg::RefreshViewsAndDialogs(const std::string &reasonForUpdat
 	for(size_t i = 0; i < mapViewDescTopList.size(); i++)
 	{
 		if(mapViewDescTopList[i]->ShowTrajectorsOnMap())
-			mapViewDescTopList[i]->MapViewDirty(true, true, false);
+			mapViewDescTopList[i]->MapViewDirty(false, true, true, false);
 	}
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }

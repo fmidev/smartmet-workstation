@@ -81,7 +81,8 @@ public:
     void SetTimeFilterEndTime(const NFmiMetTime& theTime) override;
     void TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours) override;
     float TimeControlTimeStep(int theDescTopIndex) override;
-    void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
+    void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
+    void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) override;
     bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;
     bool SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;
     void TimeSerialViewTimeBag(const NFmiTimeBag &theTimeBag) override;
@@ -132,7 +133,6 @@ public:
     size_t SelectedGridPointLimit(void) override;
     boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) override;
     boost::shared_ptr<NFmiDrawParam> GetSelectedGridPointDrawParam(void) override;
-    void MapViewUpdated(int theMapViewDescTopIndex, bool newValue) override;
     bool DrawSelectionOnThisView(void) override;
     void DrawSelectionOnThisView(bool newValue) override;
     const NFmiPoint& ToolTipLatLonPoint(void) const override;
@@ -150,7 +150,7 @@ public:
     NFmiLocationSelectionTool* LocationSelectionTool2(void) override;
     void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, 
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-        , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
+        , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     NFmiEditMapDataListHandler* DataLists(void) override;
     bool ShowObsComparisonOnMap(int theDescTopIndex) override;
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;

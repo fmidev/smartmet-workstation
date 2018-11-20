@@ -143,7 +143,7 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 	}
 	CBitmap *oldBitmap = 0;
     auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
-    if(mapViewDescTop->AreaViewDirty() || itsSmartMetDocumentInterface->ViewBrushed())
+    if(mapViewDescTop->RedrawMapView() || itsSmartMetDocumentInterface->ViewBrushed())
 	{
 		CDC dcMemCopy; // välimuistin apuna käytetty dc
 		dcMemCopy.CreateCompatibleDC(&dc);
@@ -155,7 +155,6 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 			MakeCombatibleBitmap(&itsMemoryBitmap);
 		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
 
-		/* bool mapWasDirty = */ mapViewDescTop->MapHandler()->IsMapDirty();
 		// *** Tässä tehdään background kartta ***
 		CDC dcMem2;
 		dcMem2.CreateCompatibleDC(&dc);
@@ -177,7 +176,7 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 		// *** Tässä background kartan jälkihoito ***
         mapViewDescTop->CopyCDC(0);
 		dcMemCopy.DeleteDC();
-        mapViewDescTop->AreaViewDirty(false);
+        mapViewDescTop->ClearRedrawMapView();
 //		itsDoc->ViewBrushed(false);
 	}
 	else
@@ -198,6 +197,7 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 	itsToolBox->SetDC(pDC);
 	DrawOverBitmapThings(itsToolBox); // tätä voisi tutkia, mitkä voisi siirtää täältä pois.
     mapViewDescTop->MapViewBitmapDirty(false);
+    mapViewDescTop->MapHandler()->ClearUpdateMapViewDrawingLayers();
 }
 
 // CFmiExtraMapView diagnostics
@@ -281,7 +281,7 @@ void CFmiExtraMapView::SetPrintCopyCDC(CDC* pDC)
 
 void CFmiExtraMapView::MakePrintViewDirty(bool fViewDirty, bool fCacheDirty)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true, false);
 }
 
 void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
@@ -296,7 +296,7 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     auto keepMapAspectRatio = itsSmartMetDocumentInterface->ApplicationWinRegistry().KeepMapAspectRatio();
     // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
     // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
-    itsSmartMetDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, true, keepMapAspectRatio, false);
+    itsSmartMetDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
     auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
     mapViewDescTop->CalcClientViewXperYRatio(NFmiPoint(cx, cy));
     mapViewDescTop->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));

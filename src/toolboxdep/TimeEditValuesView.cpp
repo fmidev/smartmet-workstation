@@ -618,7 +618,7 @@ void CTimeEditValuesView::MakeAllMapViewsUpdated(bool newValue)
 {
     auto &mapViewDescTopList = itsSmartMetDocumentInterface->MapViewDescTopList();
     for(auto mapViewDescTop : mapViewDescTopList)
-        mapViewDescTop->MapViewUpdated(newValue); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
+        mapViewDescTop->SetRedrawMapView(newValue); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 }
 
 BOOL CTimeEditValuesView::PreTranslateMessage(MSG* pMsg)

@@ -183,7 +183,8 @@ public:
     virtual void SetTimeFilterEndTime(const NFmiMetTime& theTime) = 0;
     virtual void TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours) = 0;
     virtual float TimeControlTimeStep(int theDescTopIndex) = 0;
-    virtual void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) = 0;
+    virtual void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) = 0;
+    virtual void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) = 0;
     virtual bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) = 0;
     virtual bool SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) = 0;
     virtual void TimeSerialViewTimeBag(const NFmiTimeBag &theTimeBag) = 0;
@@ -234,7 +235,6 @@ public:
     virtual size_t SelectedGridPointLimit(void) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> GetSelectedGridPointDrawParam(void) = 0;
-    virtual void MapViewUpdated(int theMapViewDescTopIndex, bool newValue) = 0;
     virtual bool DrawSelectionOnThisView(void) = 0;
     virtual void DrawSelectionOnThisView(bool newValue) = 0;
     virtual const NFmiPoint& ToolTipLatLonPoint(void) const = 0;
@@ -252,7 +252,7 @@ public:
     virtual NFmiLocationSelectionTool* LocationSelectionTool2(void) = 0;
     virtual void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon , const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-        , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
+        , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual NFmiEditMapDataListHandler* DataLists(void) = 0;
     virtual bool ShowObsComparisonOnMap(int theDescTopIndex) = 0;
     virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;

@@ -153,7 +153,6 @@ protected:
 	void GetNewWarningMessages(void);
 	void GetNewSeaIcingMessages(void);
 	void DoMacroParamUpdate(void);
-	void DoDataCheckResultUpdate(void);
 
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
 	BOOL CreateDockingWindows();

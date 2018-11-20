@@ -69,9 +69,9 @@ void NFmiGenDocDataAdapter::AllMapViewDescTopsTimeDirty(const NFmiMetTime &theTi
 	itsDoc->AllMapViewDescTopsTimeDirty(theTime);
 }
 
-void NFmiGenDocDataAdapter::MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
+void NFmiGenDocDataAdapter::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-    itsDoc->MapViewDirty(theDescTopIndex, mapDirty, clearCache, areaViewDirty, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
+    itsDoc->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
 }
 
 void NFmiGenDocDataAdapter::WindTableSystemMustaUpdateTable(bool newState)

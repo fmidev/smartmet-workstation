@@ -520,7 +520,7 @@ void CFmiSmartToolDlg::RefreshApplicationViewsAndDialogs(const std::string &reas
         std::vector<std::string> modifiedMacroParamPathList{ possibleEditedDrawParamPath };
         itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPathList);
     }
-    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, editedDataModified);
+    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, editedDataModified, false);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
 

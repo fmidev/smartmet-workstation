@@ -361,9 +361,14 @@ float CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlTimeStep(int theDes
     return itsDoc->MapViewDescTop(theDescTopIndex)->TimeControlTimeStep();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-    itsDoc->MapViewDirty(theDescTopIndex, mapDirty, clearCache, areaViewDirty, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
+    itsDoc->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex)
+{
+    itsDoc->ForceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes)
@@ -616,11 +621,6 @@ boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::Get
     return itsDoc->GetSelectedGridPointDrawParam();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewUpdated(int theMapViewDescTopIndex, bool newValue)
-{
-    itsDoc->MapViewDescTop(theMapViewDescTopIndex)->MapViewUpdated(newValue);
-}
-
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::DrawSelectionOnThisView(void)
 {
     return itsDoc->DrawSelectionOnThisView();
@@ -694,10 +694,10 @@ NFmiLocationSelectionTool* CtrlViewDocumentInterfaceForGeneralDataDoc::LocationS
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, 
     const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-    , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
+    , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
 {
     itsDoc->SelectLocations(theDescTopIndex, theInfo, theMapArea,theLatLon, theTime, theSelectionCombineFunction, theMask
-        , theRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
+        , fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
 
 NFmiEditMapDataListHandler* CtrlViewDocumentInterfaceForGeneralDataDoc::DataLists(void)
