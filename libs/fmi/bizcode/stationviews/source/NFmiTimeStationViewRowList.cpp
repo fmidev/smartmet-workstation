@@ -87,7 +87,7 @@ void NFmiTimeStationViewRowList::Update(void)
 	else
 		UpdateRowRects();
 
-    auto updateMapViewDrawingLayers = GetMapHandlerInterface()->UpdateMapViewDrawingLayers();
+    auto doGeneralViewUpdates = GetMapHandlerInterface()->UpdateMapViewDrawingLayers() || GetMapHandlerInterface()->MakeNewBackgroundBitmap();
     CtrlViewUtils::MapViewMode displayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
 	if(displayMode == CtrlViewUtils::MapViewMode::kOneTime)
 	{
@@ -101,7 +101,7 @@ void NFmiTimeStationViewRowList::Update(void)
 				if(drawParamList)
 				{
 					bool paramListDirty = drawParamList->IsDirty();
-					if(updateMapViewDrawingLayers || paramListDirty)
+					if(doGeneralViewUpdates || paramListDirty)
 					{
 						if(rowUpdated == false && itsViewList->Index(i))
 						{
@@ -122,7 +122,7 @@ void NFmiTimeStationViewRowList::Update(void)
 			bool paramListDirty = drawParamList->IsDirty();
 			for(int i = 1; i <= itsRowCount; i++)
 			{
-				if(updateMapViewDrawingLayers || paramListDirty)
+				if(doGeneralViewUpdates || paramListDirty)
 				{
 					if(itsViewList->Index(i))
 						((NFmiTimeStationViewRow*)itsViewList->Current())->Update();
@@ -136,7 +136,7 @@ void NFmiTimeStationViewRowList::Update(void)
 		for(int i = 1; i <= itsRowCount; i++)
 		{
 			NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, i);
-			if(drawParamList && (updateMapViewDrawingLayers || drawParamList->IsDirty()))
+			if(drawParamList && (doGeneralViewUpdates || drawParamList->IsDirty()))
 			{
 				if(itsViewList->Index(i))
 					((NFmiTimeStationViewRow*)itsViewList->Current())->Update();
