@@ -187,6 +187,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void GetMinimumDistanceMessage(const std::vector<HakeMessage::HakeMsg> &messages, const NFmiLocation &wantedLocation, HakeMessage::HakeMsg &minimumDistanceMessage, double &minimumDistance);
 #endif // DISABLE_CPPRESTSDK
     void TraceLogValidTimeAndAbsoluteRow();
+    void MakeParamLevelChangeDirtyOperations(bool changesHappened);
 
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
