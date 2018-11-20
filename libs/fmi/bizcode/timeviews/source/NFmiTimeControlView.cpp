@@ -512,7 +512,7 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
 	}
 	itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex, usedTimeResolutionInMinutes/60.f);
 	itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false);
-	itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+	itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 }
 
 // tällä piirretään tavara, joka tulee myös bitmapin päälle

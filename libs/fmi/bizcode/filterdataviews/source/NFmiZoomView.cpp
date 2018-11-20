@@ -175,7 +175,7 @@ bool NFmiZoomView::LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey
 		{
             auto mapHandlerInterface = GetMapHandlerInterface();
             mapHandlerInterface->SetMaxArea();
-            mapHandlerInterface->MapDirty(true);
+            mapHandlerInterface->SetMakeNewBackgroundBitmap(true);
 			DrawZoomedAreaRect(mapHandlerInterface->Position());
 			return true;
 		}

@@ -37,8 +37,8 @@ public:
 	CSmartMetDoc* GetDocument() const;
 	void CreateEditMapView(void);
     void Update(void);
-    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, BOOL fMakeAreaViewDirty = FALSE, BOOL fClearCache = FALSE, int theWantedMapViewDescTop = -1);
-    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag, BOOL fMakeAreaViewDirty = FALSE, BOOL fClearCache = FALSE, int theWantedMapViewDescTop = -1);
+    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1);
+    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = FALSE, int theWantedMapViewDescTop = -1);
 	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tällä piirretään tavara, joka tulee myös bitmapin päälle
 	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateFilterDlg(void);

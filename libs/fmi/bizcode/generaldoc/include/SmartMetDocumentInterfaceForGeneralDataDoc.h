@@ -95,7 +95,8 @@ public:
     void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) override;
     bool ShowWaitCursorWhileDrawingView() override;
     NFmiMenuItemList* PopupMenu() override;
-    void MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache) override;
+    void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
+    void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) override;
     bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) override;
     NFmiDataQualityChecker& DataQualityChecker() override;
     NFmiTrajectorySystem* TrajectorySystem() override;
@@ -287,7 +288,7 @@ public:
     NFmiWindTableSystem& WindTableSystem() override;
     void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-        , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
+        , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;

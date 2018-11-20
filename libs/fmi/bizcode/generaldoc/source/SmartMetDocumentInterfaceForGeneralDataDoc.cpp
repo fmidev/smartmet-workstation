@@ -421,9 +421,14 @@ NFmiMenuItemList* SmartMetDocumentInterfaceForGeneralDataDoc::PopupMenu()
     return itsDoc->PopupMenu();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache, bool areaViewDirty, bool clearMacroParamDataCache, bool clearEditedDataDependentMacroParamDataCache)
+void SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-    itsDoc->MapViewDirty(theDescTopIndex, mapDirty, clearCache, areaViewDirty, clearMacroParamDataCache, clearEditedDataDependentMacroParamDataCache);
+    itsDoc->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
+}
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex)
+{
+    itsDoc->ForceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
@@ -1373,11 +1378,11 @@ NFmiWindTableSystem& SmartMetDocumentInterfaceForGeneralDataDoc::WindTableSystem
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
     const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-    , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
+    , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
 {
     itsDoc->SelectLocations(theDescTopIndex, theInfo, theMapArea,
         theLatLon, theTime, theSelectionCombineFunction, theMask
-        , theRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
+        , fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)

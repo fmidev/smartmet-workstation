@@ -316,7 +316,7 @@ void CFmiSynopPlotSettingsDlg::RefreshApplicationViews(const std::string &reason
 	// luetaan varmuuden vuoksi priorisointi lista uusiksi, jos ollaan muokattu asema listaa
     auto *synopStationPrioritySystem = itsSmartMetDocumentInterface->SynopStationPrioritySystem();
     synopStationPrioritySystem->Init(synopStationPrioritySystem->InitFileName());
-    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, false, false, false);
+    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
 

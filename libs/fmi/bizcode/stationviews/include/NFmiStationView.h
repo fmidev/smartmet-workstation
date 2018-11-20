@@ -205,7 +205,6 @@ protected:
 
    bool fDoTimeInterpolation; // jos datalle voi tehd‰ aikainterpolaation piirrett‰ess‰
 							// kartalle esim. symboleja, on t‰m‰ true (tarvitaan tieto, ettei vahingossa piirret‰ oikeasti puuttuvaa dataa)
-   bool fRedrawMapAfterMTATempClear; // t‰m‰ on h‰t‰ paska vipu (optimointia baby), kun hiiren oikealla on klikattu karttaa, joskus pit‰‰ ruutu p‰ivitt‰‰
 
    bool fDoShipDataLocations; // normaalisti asemadatassa paikka pyydet‰‰n suoraan datan asema tiedoista. Mutta
 							  // esim. SHIP-havaintojen yhteydess‰ pit‰‰ sijainti katsoa lat-lon parametreist‰
