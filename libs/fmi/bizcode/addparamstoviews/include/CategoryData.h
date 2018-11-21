@@ -10,7 +10,6 @@ class NFmiProducerSystem;
 class NFmiProducer;
 class NFmiMacroParamItem;
 
-
 namespace AddParams
 {
     class ProducerData;
@@ -33,5 +32,6 @@ namespace AddParams
     private:
         void addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
+        bool addCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
     };
 }

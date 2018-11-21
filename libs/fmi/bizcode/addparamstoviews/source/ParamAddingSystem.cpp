@@ -35,14 +35,14 @@ namespace AddParams
     ParamAddingSystem::~ParamAddingSystem() = default;
 
     void ParamAddingSystem::initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem, 
-        NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+        NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector)
     {
         modelProducerSystem_ = &modelProducerSystem;
         obsProducerSystem_ = &obsProducerSystem;
         satelImageProducerSystem_ = &satelImageProducerSystem;
         infoOrganizer_ = &infoOrganizer;
         helpDataInfoSystem_ = &helpDataInfoSystem;
-        helpDataIDs = {101, 107, 108, 109, 160, 189, 242}; // Help Data id's. These are added to Help Data Category
+        helpDataIDs = idVector; // Help Data id's. These are added to Help Data Category
     }
 
     void ParamAddingSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list

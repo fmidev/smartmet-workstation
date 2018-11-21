@@ -13707,13 +13707,35 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     }
 #endif // DISABLE_CPPRESTSDK
 
+    std::vector<int> HelpDataIdsForParamAddingSystem()
+    {
+        std::string idStr;
+        std::vector<int> idVector;
+        idStr = NFmiSettings::Optional("SmartMet::AddParams::helpDataIDs", idStr); 
+        if(!idStr.empty())
+        {
+            try
+            {
+                for (std::string id : NFmiStringTools::Split(idStr, ","))
+                {
+                    idVector.push_back(std::stoi(id));
+                }
+            }
+            catch(std::exception &e)
+            {
+                LogAndWarnUser(e.what(), "Unable to read help data ids", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+            }
+        }
+        return idVector;
+    }
+
     void InitParamAddingSystem()
     {
         DoVerboseFunctionStartingLogReporting(__FUNCTION__);
         try
         {
             paramAddingSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
-                *InfoOrganizer(), *HelpDataInfoSystem());
+                *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParamAddingSystem());
 
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);

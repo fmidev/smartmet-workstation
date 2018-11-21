@@ -60,7 +60,7 @@ namespace AddParams
         ParamAddingSystem();
         ~ParamAddingSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
-            NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+            NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName);
         void updateData();
