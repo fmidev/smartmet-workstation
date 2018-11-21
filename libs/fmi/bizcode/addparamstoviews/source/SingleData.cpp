@@ -155,7 +155,6 @@ namespace AddParams
         {
             dataStruckturesChanged = ::isDataStructuresChanged(info, latestMetaData_);
             latestDataFilePath_ = info->DataFileName();
-            //totalServerPath_ = combineTotalFilePath(info->DataFileName(), helpDataInfo->FileNameFilter());
             totalLocalPath_ = combineTotalFilePath(info->DataFileName(), info->DataFilePattern());
             latestMetaData_ = std::make_unique<NFmiQueryInfo>(*info);
             uniqueDataId_ = info->DataFilePattern();
