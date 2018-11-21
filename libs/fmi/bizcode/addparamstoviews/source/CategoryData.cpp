@@ -3,6 +3,9 @@
 #include "ParamAddingUtils.h"
 #include "NFmiProducerSystem.h"
 #include "NFmiMacroParamSystem.h"
+#include "NFmiInfoOrganizer.h"
+#include "NFmiHelpDataInfo.h"
+#include "NFmiOwnerInfo.h"
 
 namespace
 {
@@ -85,8 +88,33 @@ namespace AddParams
         return dataStruckturesChanged;
     }
 
+    bool CategoryData::addCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+    {
+        // Joonas: tämä ei toimi jos käyttää esim id:tä 8888. Custom menujen rakentelu pitäisi hoitaa ehkä samoin kuin help datan kanssa.
+        auto producerData = infoOrganizer.GetInfos(producer.GetIdent());
+        for(auto &info : producerData)
+        {
+            auto filePattern = info->DataFilePattern();
+            NFmiHelpDataInfo *helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(filePattern);
+            if(helpDataInfo && !helpDataInfo->CustomMenuFolder().empty())
+            {
+                //auto producerDataPtr = std::make_unique<ProducerData>(NFmiProducer(8888, helpDataInfo->CustomMenuFolder()), dataCategory);
+                auto producerDataPtr = std::make_unique<ProducerData>(NFmiProducer(producer.GetIdent(), helpDataInfo->CustomMenuFolder()), dataCategory);
+                producerDataPtr->updateData(infoOrganizer, helpDataInfoSystem);
+                producerDataVector_.push_back(std::move(producerDataPtr));
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     void CategoryData::addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
     {
+        // First check if this producer should be in a custom menu
+        if(addCustomProducerData(producer, infoOrganizer, helpDataInfoSystem, dataCategory))
+            return;
+
         auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
         producerDataPtr->updateData(infoOrganizer, helpDataInfoSystem);
         producerDataVector_.push_back(std::move(producerDataPtr));
