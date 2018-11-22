@@ -119,7 +119,7 @@ void NFmiTimeSerialWindDirectionView::CreateValueScaleView (void)
 // DrawLocationInTime 
 //--------------------------------------------------------
 //void NFmiTimeSerialWindDirectionView::DrawLocationInTime (void)
-void NFmiTimeSerialWindDirectionView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
+void NFmiTimeSerialWindDirectionView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines)
 {
    return;
 }
