@@ -6570,6 +6570,15 @@ void ReloadDrawParamSettings(const NFmiMenuItem& theMenuItem, int theRowIndex)
     ForceStationViewRowUpdate(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex));
 }
 
+void DrawParamSettingsChangedDirtyActions(unsigned int theDescTopIndex, int theRealMapRow, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+{
+    auto bitmapCacheRowIndex = theRealMapRow - 1;
+    MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(bitmapCacheRowIndex);
+    if(theDrawParam->IsMacroParamCase(true))
+        MacroParamDataCache().clearMacroParamCache(theDescTopIndex, theRealMapRow, theDrawParam->InitFileName());
+    MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
+}
+
 bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theRealMapRow, int theParamIndex, bool fNext, bool /* fUseCrossSectionParams */ )
 {
     NFmiDrawParamList *list = DrawParamListWithRealRowNumber(theDescTopIndex, theRealMapRow);
@@ -6587,10 +6596,7 @@ bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int t
                     itsFixedDrawParamSystem.Previous();
                 const std::shared_ptr<NFmiDrawParam> &fixedDrawParam = itsFixedDrawParamSystem.GetCurrentDrawParam();
                 ApplyFixeDrawParam(menuItem, GetRelativeRowNumber(theDescTopIndex, theRealMapRow), fixedDrawParam);
-                MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(theRealMapRow);
-                if(drawParam->IsMacroParamCase(true))
-                    MacroParamDataCache().clearMacroParamCache(theDescTopIndex, theRealMapRow, drawParam->InitFileName());
-                MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
+                DrawParamSettingsChangedDirtyActions(theDescTopIndex, theRealMapRow, drawParam);
                 return true;
             }
         }
