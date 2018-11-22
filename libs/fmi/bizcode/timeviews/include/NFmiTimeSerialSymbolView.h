@@ -22,21 +22,21 @@ public:
 						    ,double theManualModifierLength);
 	virtual ~NFmiTimeSerialSymbolView();
 
-	virtual bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey){return false;}
-	virtual bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey){return false;}
-	virtual void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle);
+	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override {return false;}
+	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override {return false;}
+	void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines) override;
 
 protected:
 	virtual void DrawSymbol(const NFmiPoint &theLatLonPoint, NFmiMetTime& time, NFmiRect& rect, NFmiTimePerioid& step);
 	virtual void DrawSimpleSymbol(const NFmiPoint &theLatLonPoint, NFmiMetTime& time, NFmiRect& rect);
 	NFmiRect CalcSymbolRect(NFmiMetTime& time);
-	virtual void DrawValueAxis(void);
+	void DrawValueAxis(void) override;
 	virtual void DrawValueGrids(NFmiDrawingEnvironment & envi, double minPos, double maxPos){return;}
 	virtual void DrawGrids (NFmiDrawingEnvironment & envi){return;}
-	virtual void CreateValueScale(void);
-	virtual void DrawModifyFactorAxis(void);
-	virtual void DrawModifyingUnit(void);
-	virtual void DrawModifyFactorPoints(void){return;}
+	void CreateValueScale(void) override;
+	void DrawModifyFactorAxis(void) override;
+	void DrawModifyingUnit(void) override;
+	void DrawModifyFactorPoints(void) override {return;}
 	bool AutoAdjustValueScale(void){return false;};
 
 };
