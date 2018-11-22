@@ -5474,7 +5474,6 @@ bool CreateMaskParamsPopup(int theRowIndex, int index)
 // viewType voi kertoa esim. onko kyseeessä kartta tai aikasarja näyttö (tulevaisuudessa lisää esim. luotaus jne.).
 bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int /* theViewTypeId */ )
 {
-	bool status = true;
 	FmiMenuCommandType command = theMenuItem.CommandType();
 	switch(command)
 	{
@@ -5482,23 +5481,19 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int /* th
 		ModifyView(theMenuItem, theViewIndex);
 		break;
 	case kFmiModifyDrawParam:
-		status = ModifyDrawParam(theMenuItem, theViewIndex);
+		ModifyDrawParam(theMenuItem, theViewIndex);
 		break;
 	case kFmiActivateView:
 		ActivateView(theMenuItem, theViewIndex);
-        status = false;
         break;
     case kAddViewWithRealRowNumber:
         AddViewWithRealRowNumber(true, theMenuItem, theViewIndex);
         break;
     default:
-		status = false;
-		break;
-	}
-	if(status)
-        MakeMapViewRowDirty(theMenuItem.MapViewDescTopIndex(), theViewIndex);
+        return false;
+    }
 
-	return status;
+	return true;
 }
 
 void SetModelRunOffset(const NFmiMenuItem &theMenuItem, int theViewRowIndex)
@@ -6080,7 +6075,7 @@ void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFm
 // muuten macroparamin yhteydessä etsitään menuitemista annettua nimeä
 // normalParameterAdd -parametrilla kerrotaan tuleeko normaali lisäys vai erilaisista viewmakroista lisäys. Tämä
 // haluttiin erottaa vielä isViewMacroDrawParam:ista, jolla merkitään vain drawParamin ViewMacroDrawParam -asetus.
-void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMenuItem, int theRowIndex, bool isViewMacroDrawParam = false, const std::string *theMacroParamInitFileName = 0)
+void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMenuItem, int theRealRowIndex, bool isViewMacroDrawParam = false, const std::string *theMacroParamInitFileName = 0)
 {
 	boost::shared_ptr<NFmiDrawParam> drawParam = itsSmartInfoOrganizer->CreateDrawParam(theMenuItem.DataIdent(), theMenuItem.Level(), theMenuItem.DataType());
 	if(!drawParam)
@@ -6091,11 +6086,11 @@ void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMe
 
 	SetDrawMacroSettings(theMenuItem, drawParam, theMacroParamInitFileName);
 
-	if(!ActiveDrawParamWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex))
+	if(!ActiveDrawParamWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRealRowIndex))
 		drawParam->Activate(true);
     drawParam->ViewMacroDrawParam(isViewMacroDrawParam); // asetetaan viewmacrodrawparam-flagin tila
 	boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, true);
-    NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+    NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRealRowIndex);
     if(drawParamList)
 	{
 		string logStr("Added to map view ");
@@ -6123,6 +6118,7 @@ void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMe
 	if(info)
 		groundData = info->SizeLevels() <= 1;
 	UpdateModifiedDrawParam(drawParam, groundData);
+    DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), theRealRowIndex, drawParam);
 }
 
 void AddAsOnlyCrossSectionView(const NFmiMenuItem& theMenuItem, int theRowIndex)
@@ -6305,6 +6301,13 @@ void ActivateView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		{
 			drawParamList->Current()->Activate(true);
 			drawParamList->Dirty(true);
+            if(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theMenuItem.MapViewDescTopIndex())->ShowStationPlot())
+            {
+                // Jos karttanäytöllä näytetään aktiivisen datan pisteet, pitää tässä liata kaikki kuva cachet
+                auto cacheRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex) - 1;
+                MapViewDescTop(theMenuItem.MapViewDescTopIndex())->MapViewCache().MakeRowDirty(cacheRowIndex);
+            }
+            MapViewDirty(theMenuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 		}
 	}
 }
@@ -6514,13 +6517,16 @@ void ModifyView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		else
 			drawParam->GridDataPresentationStyle(viewType);
 		NFmiDrawParamList* drawParamList = DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex);
-		if(drawParamList)
-			drawParamList->Dirty(true);
+        if(drawParamList)
+        {
+            drawParamList->Dirty(true);
+            if(macroParamCase)
+                UpdateMacroDrawParam(theMenuItem, theRowIndex, false, drawParam);
+            else
+                UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
 
-		if(macroParamCase)
-			UpdateMacroDrawParam(theMenuItem, theRowIndex, false, drawParam);
-		else
-			UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
+            DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParam);
+        }
 	}
 }
 
@@ -6963,6 +6969,7 @@ bool ModifyDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		return ModifyMacroDrawParam(theMenuItem, theRowIndex, theMenuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView);
 	else
 	{
+        bool updateStatus = false;
 		boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = GetDrawParamFromViewLists(theMenuItem, theRowIndex);
 		if(modifiedDrawParam)
 		{
@@ -6971,13 +6978,16 @@ bool ModifyDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex)
 			if(dlg.DoModal() == IDOK)
 			{
 				UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), modifiedDrawParam, theRowIndex);
-				return true;
+                updateStatus = true;
 			}
 			else
-				return dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
+                updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
 		}
+
+        if(updateStatus)
+            DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), modifiedDrawParam);
+        return updateStatus;
 	}
-	return false;
 }
 
 void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool fCrossSectionCase, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -6989,6 +6999,7 @@ void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 		{
 			drawParamList->Current()->Init(theDrawParam);
 			drawParamList->Dirty(true);
+            DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), theDrawParam);
 		}
 	}
 }
