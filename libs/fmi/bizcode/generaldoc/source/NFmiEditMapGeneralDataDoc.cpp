@@ -9693,14 +9693,14 @@ void SwapArea(unsigned int theDescTopIndex)
 	bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theRealMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams)
 	{
 //	TRACE("ChangeActiveMapViewParam 1\n");
-		NFmiDrawParamList *list = DrawParamListWithRealRowNumber(theDescTopIndex, theRealMapRow);
+		NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theDescTopIndex, theRealMapRow);
 		if(fUseCrossSectionParams)
-			list = CrossSectionViewDrawParamList(theRealMapRow);
-		if(list)
+            drawParamList = CrossSectionViewDrawParamList(theRealMapRow);
+		if(drawParamList)
 		{
-			if(list->Index(theParamIndex))
+			if(drawParamList->Index(theParamIndex))
 			{
-				boost::shared_ptr<NFmiDrawParam> drawParam = list->Current();
+				boost::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
 				boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartInfoOrganizer->Info(drawParam, fUseCrossSectionParams, true);
 				if(info && info->SizeParams() > 1)
 				{
@@ -9714,6 +9714,7 @@ void SwapArea(unsigned int theDescTopIndex)
 					if(drawParamTmp)
 					{
 						SetUpChangedDrawParam(drawParam, drawParamTmp);
+                        drawParamList->Dirty(true);
                         auto cacheMapRow = theRealMapRow - 1; // real-map-row alkaa 1:stä ja cache-map-row 0:sta
                         MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(cacheMapRow);
 						MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
