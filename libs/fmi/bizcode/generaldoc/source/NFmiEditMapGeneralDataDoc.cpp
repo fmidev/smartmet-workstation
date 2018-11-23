@@ -6626,7 +6626,10 @@ void MaskChangedDirtyActions()
         {
             if(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(desctopIndex)->ShowMasksOnMap())
             {
-                desctop->MapViewCache().MakeRowDirty(desctop->MapRowStartingIndex());
+                // Maskit ovat siis näkyvissä 1. relatiivisella rivillä
+                unsigned int firstVisibleRowIndex = 1;
+                auto cleanedCacheRowIndex = GetRealRowNumber(desctopIndex, firstVisibleRowIndex) - 1;
+                desctop->MapViewCache().MakeRowDirty(cleanedCacheRowIndex);
                 MapViewDirty(desctopIndex, false, false, true, false, false, false);
             }
         }
