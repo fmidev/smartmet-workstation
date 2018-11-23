@@ -82,9 +82,6 @@ typedef enum
 	kFmiPasteDrawParamOptions = 55,
 	kFmiCopyDrawParamOptionsCrossSectionView = 56, // copy/paste toiminnot piirto-ominaisuuksia varten (toimivat parmetrinäytön popup-valikosta)
 	kFmiPasteDrawParamOptionsCrossSectionView = 57,
-	kFmiReloadAllDynamicHelpData = 58, // Tällä komennolla siivotaan NFmiInfoOrganizer apudatat tyhjäksi, ja sen jälkeen kaikki data luetaan uudestaan muistiin.
-									// Katsotaan josko se auttaisi varsinkin uudessa memorymapatussa datassa ajan kanssa esiintyvien ongelmien kanssa.
-									// HUOM! editoitua dataa ja sen kopiota ei kuitenkaan ladata uudestaan...
 	kFmiCopyDrawParamsFromMapViewRow = 59,
 	kFmiPasteDrawParamsToMapViewRow = 60,
 	kFmiCopyMapViewDescTopParams = 61,
