@@ -1737,9 +1737,6 @@ void CSmartMetDoc::OnButtonReloadAllDynamicHelpData()
 {
 	GetData()->ReloadAllDynamicHelpData();
 
-	GetData()->LogMessage("Reloading all the dynamic data.", CatLog::Severity::Info, CatLog::Category::Data);
-	GetData()->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan kaikki kartta näytöt likaiseksi
-    GetData()->MacroParamDataCache().clearAllLayers();
 	CFmiDataLoadingThread2::ResetTimeStamps();
 	CFmiDataLoadingThread2::LoadDataNow();
 	UpdateAllViewsAndDialogs("Reloading all the dynamic data");
