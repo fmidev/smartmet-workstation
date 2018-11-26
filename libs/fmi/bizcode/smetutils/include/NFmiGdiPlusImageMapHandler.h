@@ -56,9 +56,13 @@ public:
 	// aspectratio muodossa x/y
 	double BitmapAspectRatio(void);
 	double BitmapAspectRatioOverMap(void);
-	bool IsMapDirty(void){return fMapDirty;};
-	void MapDirty(bool newState){fMapDirty = newState;};
 	const NFmiRect& Position(void);
+    bool MakeNewBackgroundBitmap() const;
+    void SetMakeNewBackgroundBitmap(bool newState);
+    void ClearMakeNewBackgroundBitmap();
+    bool UpdateMapViewDrawingLayers() const;
+    void SetUpdateMapViewDrawingLayers(bool newState);
+    void ClearUpdateMapViewDrawingLayers();
 
 	int UsedMapIndex(void){return itsUsedMapIndex;};
 	int OverMapBitmapIndex(void) const {return itsUsedOverMapBitmapIndex;}
@@ -98,17 +102,22 @@ private:
 	boost::shared_ptr<NFmiArea> itsOriginalArea;
 	boost::shared_ptr<NFmiArea> itsZoomedArea;
 	NFmiRect itsZoomedAreaPosition;
-	bool fMapDirty;
-	bool fMapReallyChanged; // tämän avulla tiedetään onko karttaa oikeasti zoomattu, edellä olevaa mapDirty:ä voidaan käyttää muissakin tapauksissa
+    // Pitääkö uusi karttapohja rakentaa syystä tai toisesta
+	bool fMakeNewBackgroundBitmap;
+    // Jokin jossain karttanäytön rivin parametri layer rakenteissa on muuttunut ja niitä pitää päivittää
+    bool fUpdateMapViewDrawingLayers;
+    // Tämän avulla tiedetään onko karttaa oikeasti zoomattu, edellä olevaa fMakeNewBackgroundBitmap:ä voidaan käyttää muissakin tapauksissa
+	bool fMapReallyChanged; 
 	std::string itsAreaFileName;
 	checkedVector<std::string> itsMapFileNames;
 	checkedVector<int> itsMapDrawStyles;
 	checkedVector<std::string> itsOverMapBitmapFileNames;
 	checkedVector<int> itsOverMapBitmapDrawStyles;
-	std::string itsControlPath; // smartmetin kontrollipolku (-p optio) pitää laittaa talteen, koska muuten ohjelma ei aina
-								// osaa lukea karttoja suhteellisesta polusta alkaen (tästä seurasi mustat ruudut)
-                                // Tässä oli aiemmin WorkingDirectory, mutta se ei toiminut varsinkaan kun käytössä oli 
-                                // KV-projektien Dropbox konfiguraatiot ja VC++ debuggerin käyttö menossa.
+    // Smartmetin kontrollipolku (-p optio) pitää laittaa talteen, koska muuten ohjelma ei aina
+    // osaa lukea karttoja suhteellisesta polusta alkaen (tästä seurasi mustat ruudut)
+    // Tässä oli aiemmin WorkingDirectory, mutta se ei toiminut varsinkaan kun käytössä oli 
+    // KV-projektien Dropbox konfiguraatiot ja VC++ debuggerin käyttö menossa.
+    std::string itsControlPath; 
 
 	// Nämä swap-base ja swap-back area:t on SmartMetin pika zoomi swap ominaisuutta varten.
 	// Eli halutessa käyttäjä voi tallettaa swap-base arean, johon palataan aina kun painetaan SPACE

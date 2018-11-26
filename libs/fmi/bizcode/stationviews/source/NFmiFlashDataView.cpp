@@ -7,6 +7,7 @@
 #include "NFmiArea.h"
 #include "CtrlViewDocumentInterface.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "ToolBoxStateRestorer.h"
 
 //_________________________________________________________ NFmiFlashDataView
 
@@ -93,7 +94,7 @@ void NFmiFlashDataView::DrawFlashes(NFmiFastQueryInfo &theInfo)
 	{
 		int editorTimeStep = CalcUsedTimeStepInMinutes();
 		NFmiMetTime time1 = CalcFirstTimeOfSpan();
-		itsToolBox->RelativeClipRect(itsRect, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
 		NFmiPoint scale(itsDrawParam->OnlyOneSymbolRelativeSize());
 		// käy läpi halutut salamat (olettaen että muut asetukset ovat kohdallaan)
 		for(unsigned long i=timeIndex1; i<=timeIndex2; i++)
@@ -132,7 +133,6 @@ void NFmiFlashDataView::DrawFlashes(NFmiFastQueryInfo &theInfo)
 				}
 			}
 		}
-		itsToolBox->UseClipping(false);
 	}
 }
 

@@ -63,8 +63,7 @@ public:
     virtual void EditedDataNotInPreferredState(bool newValue) = 0;
     virtual int DoMessageBox(const std::string & theMessage, const std::string & theTitle, unsigned int theMessageBoxType) = 0;
     virtual void AllMapViewDescTopsTimeDirty(const NFmiMetTime &theTime) = 0;
-    virtual void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache) = 0;
-    virtual void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache) = 0;
+    virtual void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) = 0;
     virtual void WindTableSystemMustaUpdateTable(bool newState) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> GetUsedDrawParam(const NFmiDataIdent &theDataIdent, NFmiInfoData::Type theDataType) = 0;
     virtual NFmiMetEditorOptionsData& MetEditorOptionsData(void) = 0;

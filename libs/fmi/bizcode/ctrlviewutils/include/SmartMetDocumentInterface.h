@@ -58,6 +58,7 @@ class NFmiSynopPlotSettings;
 class NFmiSynopStationPrioritySystem;
 class NFmiLightWeightViewSettingMacro;
 class NFmiWindTableSystem;
+class NFmiMacroParamDataCache;
 namespace HakeMessage
 {
     class Main;
@@ -164,11 +165,11 @@ public:
     virtual void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) = 0;
     virtual bool ShowWaitCursorWhileDrawingView() = 0;
     virtual NFmiMenuItemList* PopupMenu() = 0;
-    virtual void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache) = 0;
+    virtual void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) = 0;
+    virtual void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) = 0;
     virtual bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) = 0;
     virtual NFmiDataQualityChecker& DataQualityChecker() = 0;
     virtual NFmiTrajectorySystem* TrajectorySystem() = 0;
-    virtual void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache) = 0;
     virtual bool ViewBrushed() = 0;
     virtual void ViewBrushed(bool newState) = 0;
     virtual NFmiPoint GetPrintedMapAreaOnScreenSizeInPixels(unsigned int theDescTopIndex) = 0;
@@ -180,7 +181,6 @@ public:
     virtual void MiddleMouseButtonDown(bool newState) = 0;
     virtual bool MouseCaptured() = 0;
     virtual void MouseCaptured(bool newState) = 0;
-    virtual void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex) = 0;
     virtual void MustDrawTempView(bool newValue) = 0;
     virtual bool MustDrawTempView() = 0;
     virtual void MustDrawCrossSectionView(bool newValue) = 0;
@@ -334,7 +334,7 @@ public:
     virtual bool SynopDataGridViewOn() = 0;
     virtual void SynopDataGridViewOn(bool newState) = 0;
     virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
-    virtual void ForceDrawOverBitmapThings() = 0;
+    virtual void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) = 0;
     virtual NFmiLocationSelectionTool* LocationSelectionTool2() = 0;
     virtual NFmiParamBag& AllStaticParams() = 0;
     virtual bool SelectNewParamForSelectionTool(int theParamId) = 0;
@@ -358,10 +358,11 @@ public:
     virtual NFmiWindTableSystem& WindTableSystem() = 0;
     virtual void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-        , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
+        , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
+    virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

@@ -59,6 +59,8 @@
 #include "EditedInfoMaskHandler.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiCommentStripper.h"
+#include "ToolBoxStateRestorer.h"
+#include "NFmiMacroParamDataCache.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -302,8 +304,8 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 		return ;
 
 	itsToolBox = theGTB;
-	itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
-
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
+    
 	SetupUsedDrawParam();
 
 	MakeDrawedInfoVector();
@@ -327,7 +329,6 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 			itsInfo = boost::shared_ptr<NFmiFastQueryInfo>(); // nollataan lopuksi itsInfo-pointteri
 		}
 	}
-	itsToolBox->UseClipping(false);
 }
 
 void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -721,7 +722,7 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, "NFmiStationView: Drawing data's station/grid point markers");
     NFmiDrawingEnvironment stationPointEnvi;
     SetStationPointDrawingEnvi(stationPointEnvi);
-    itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
     itsInfoVectorIter = itsInfoVector.begin();
     if(itsInfoVectorIter != itsInfoVector.end()) // asema datalle (synop) voi olla useita datoja
@@ -737,7 +738,6 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
             }
         }
     }
-    itsToolBox->UseClipping(false);
 }
 
 void NFmiStationView::DrawData(void)
@@ -881,7 +881,7 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 	NFmiInfoData::Type dataType = itsInfo->DataType();
 	if(dataType == NFmiInfoData::kEditable)
 	{
-		itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 		const int kSelectionRectPixelSize = 3;
 		double selectionRectXSize = itsToolBox->SX(kSelectionRectPixelSize);
 		double selectionRectYSize = itsToolBox->SY(kSelectionRectPixelSize);
@@ -956,7 +956,6 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 			}
 		}
 		itsDrawingEnvironment->DisableInvert();
-		itsToolBox->UseClipping(false);
 		return true;
 	}
 	return false;
@@ -997,10 +996,6 @@ bool NFmiStationView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long theK
 		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 			SelectControlPointLocation(info, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask);
 
-					// HUOM! kartan p‰ivityst‰ ei saa est‰‰ kun on luotaus n‰yttˆ auki ja MTA-moodi on p‰‰ll‰, silloin pit‰‰ piirt‰‰ valittuun pisteeseen 'luotaus' kolmio
-		if(!itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-			itsCtrlViewDocumentInterface->MapViewUpdated(itsMapViewDescTopIndex, false); // karttaa ei piirret‰, mutta aikasarjaikkuna voidaan piirt‰‰ cdoc:in updateallviewsanddialogs
-
 		// piirret‰‰n tietyiss‰ tilanteissa valitut pisteet myˆs ei oikean yl‰kulman kartta ruutuun, mutta ei piirret‰ t‰ss‰ oikeaan yl‰kulmaan koska sinne piirret‰‰n muutenkin
 		if(itsCtrlViewDocumentInterface->DrawSelectionOnThisView())
 		{
@@ -1024,7 +1019,6 @@ bool NFmiStationView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
 	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(info)
 	{
-		fRedrawMapAfterMTATempClear = false; // h‰t‰ paska viritys optimoinnin takia
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
 			// ctrl+shift+right-mouseclick:in avulla voidaan valita aktiivinen n‰yttˆrivi ja aika ilman, ett‰ valinnat muuttuvat
@@ -1041,8 +1035,6 @@ bool NFmiStationView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
             else
                 SelectLocations(info, latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true);
 		}
-		if(!fRedrawMapAfterMTATempClear)
-			itsCtrlViewDocumentInterface->MapViewUpdated(itsMapViewDescTopIndex, false); // karttaa ei piirret‰, mutta aikasarjaikkuna voidaan piirt‰‰ cdoc:in updateallviewsanddialogs
 	}
 	return true;
 }
@@ -1370,15 +1362,30 @@ static void TraceLogSpacedOutMacroParamCalculationSize(boost::shared_ptr<NFmiFas
 // Laskuissa k‰ytetty hila laitetaan theUsedGridOut:in arvoksi.
 void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut)
 {
-    CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": macroParam calculations");
-    auto possibleSpaceOutData = CreatePossibleSpaceOutMacroParamData();
-	FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
-    if(fUseCalculationPoints)
-        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
+    auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), theValues))
+    {
+        if(theUsedGridOut)
+        {
+            *theUsedGridOut = NFmiGrid(itsArea.get(), static_cast<unsigned long>(theValues.NX()), static_cast<unsigned long>(theValues.NY()));
+        }
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was retrieved from cache (=fast)"), this);
+    }
     else
-        ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
-    if(theUsedGridOut && itsInfo && itsInfo->Grid())
-        *theUsedGridOut = *itsInfo->Grid();
+    {
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": macroParam calculations");
+        auto possibleSpaceOutData = CreatePossibleSpaceOutMacroParamData();
+        FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
+        if(fUseCalculationPoints)
+            CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
+        else
+            ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
+        if(theUsedGridOut && itsInfo && itsInfo->Grid())
+            *theUsedGridOut = *itsInfo->Grid();
+
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
+        itsCtrlViewDocumentInterface->MacroParamDataCache().setCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), theValues);
+    }
 }
 
 // Pelk‰n tooltipin lasku macroParamista.
@@ -2573,7 +2580,7 @@ void NFmiStationView::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theI
 									 ,bool fMakeMTAModeAdd // vain tietyist‰ paikoista kun t‰t‰ metodia kutsutaan, saa luotauksen lis‰t‰ (left buttom up karttan‰ytˆll‰ l‰hinn‰)
 									 ,bool fDoOnlyMTAModeAdd)
 {
-	itsCtrlViewDocumentInterface->SelectLocations(itsMapViewDescTopIndex, theInfo, itsArea, theLatLon, itsTime, theSelectionCombineFunction, theMask, fRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
+	itsCtrlViewDocumentInterface->SelectLocations(itsMapViewDescTopIndex, theInfo, itsArea, theLatLon, itsTime, theSelectionCombineFunction, theMask, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
 
 std::string NFmiStationView::Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType)

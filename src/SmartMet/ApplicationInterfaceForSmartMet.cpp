@@ -121,18 +121,11 @@ void ApplicationInterfaceForSmartMet::DrawOverBitmapThings(NFmiToolBox *theGTB)
         view->DrawOverBitmapThings(theGTB);
 }
 
-void ApplicationInterfaceForSmartMet::ForceDrawOverBitmapThings()
+void ApplicationInterfaceForSmartMet::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
     auto view = ApplicationInterface::GetSmartMetView();
     if(view)
-        view->ForceDrawOverBitmapThings();
-}
-
-void ApplicationInterfaceForSmartMet::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-{
-    auto view = ApplicationInterface::GetSmartMetView();
-    if(view)
-        view->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
+        view->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 void ApplicationInterfaceForSmartMet::UpdateTempView()
@@ -238,3 +231,14 @@ void ApplicationInterfaceForSmartMet::UpdateMainFrameTitle()
     ((CMainFrame*)AfxGetMainWnd())->OnUpdateFrameTitle(TRUE);
 }
 
+void ApplicationInterfaceForSmartMet::OpenLocationFinderDialog(CWnd *parentView)
+{
+    auto doc = GetDocument();
+    if(doc)
+        doc->OpenLocationFinderTool(parentView);
+}
+
+NFmiApplicationWinRegistry& ApplicationInterfaceForSmartMet::ApplicationWinRegistry()
+{
+    return GetDocument()->ApplicationWinRegistry();
+}

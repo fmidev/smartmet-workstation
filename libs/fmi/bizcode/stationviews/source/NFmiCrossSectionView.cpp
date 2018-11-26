@@ -38,6 +38,7 @@
 #include "BetaProductParamBoxFunctions.h"
 #include "NFmiFastInfoUtils.h"
 #include "EditedInfoMaskHandler.h"
+#include "ToolBoxStateRestorer.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -407,7 +408,7 @@ void NFmiCrossSectionView::DrawTrajectory(const NFmiTrajectory &theTrajectory, c
 	if(!itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 		return ;
 
-	itsToolBox->RelativeClipRect(itsDataViewFrame, true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
 
 	// lisätään headeriin myös trajektori tiedot
 	itsHeaderParamString += "  Traj: ";
@@ -438,8 +439,6 @@ void NFmiCrossSectionView::DrawTrajectory(const NFmiTrajectory &theTrajectory, c
 	envi.SetFrameColor(theColor);
 	envi.SetPenSize(NFmiPoint(3 * itsDrawSizeFactorX, 3 * itsDrawSizeFactorY));
 	DrawSingleTrajector(theTrajectory.MainTrajector(), &envi, theTrajectory.TimeStepInMinutes(), FmiRound(7 * itsDrawSizeFactorX), FmiRound(2 * itsDrawSizeFactorX), theTrajectory.Direction());
-
-	itsToolBox->UseClipping(false);
 }
 
 static double Time2X(const NFmiMetTime &theTime, const NFmiMetTime &theStartTime, double theTotalDiffInMinutes, const NFmiRect &theRect)
@@ -2246,9 +2245,7 @@ static double CalcHelpScaleUnitStringYPos(const NFmiRect &theRect, double lastLa
 
 void NFmiCrossSectionView::DrawFlightLevelScale(void)
 {
-	itsToolBox->RelativeClipRect(itsDataViewFrame, true);
-	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
-	itsToolBox->SetTextAlignment(kRight);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kRight, true, &itsDataViewFrame);
 	NFmiDrawingEnvironment envi;
 	int fontSize = FmiRound(16 * itsDrawSizeFactorY);
 	envi.SetPenSize(NFmiPoint(2 * itsDrawSizeFactorX, 2 * itsDrawSizeFactorY));
@@ -2296,8 +2293,6 @@ void NFmiCrossSectionView::DrawFlightLevelScale(void)
 		NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X() - extraOffset, unitStringY), "FL", 0, &envi);
 		itsToolBox->Convert(&txt1);
 	}
-	itsToolBox->SetTextAlignment(oldAlignment);
-	itsToolBox->UseClipping(false);
 }
 
 void NFmiCrossSectionView::GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, NFmiMetTime &theEndTimeOut)
@@ -2355,7 +2350,7 @@ void NFmiCrossSectionView::DrawHelperTimeLines(void)
 		GetStartAndEndTimes(startTime, endTime);
 		long diffInMinutes = endTime.DifferenceInMinutes(startTime);
 
-		itsToolBox->RelativeClipRect(itsDataViewFrame, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
 		NFmiDrawingEnvironment envi;
 		envi.SetFrameColor(NFmiColor(0.65f, 0.65f, 0.65f));
 		envi.SetFillPattern(FMI_DASH);
@@ -2370,7 +2365,6 @@ void NFmiCrossSectionView::DrawHelperTimeLines(void)
 			NFmiPoint p2(x, y2);
 			::DrawLineWithToolBox(p1, p2, &envi, itsToolBox, true, false);
 		}
-		itsToolBox->UseClipping(false);
 	}
 }
 
@@ -2382,8 +2376,8 @@ void NFmiCrossSectionView::DrawObsForModeTimeLine(void)
 	{
 		if(itsCtrlViewDocumentInterface->CrossSectionSystem()->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor && itsFirstForecastTimeIndex >= 0)
 		{
-			itsToolBox->RelativeClipRect(itsDataViewFrame, true);
-			NFmiDrawingEnvironment envi;
+            ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
+            NFmiDrawingEnvironment envi;
 			envi.SetFrameColor(NFmiColor(0.1f, 0.5f, 0.1f));
 			envi.SetPenSize(NFmiPoint(2 * itsDrawSizeFactorX, 2 * itsDrawSizeFactorY));
 
@@ -2412,7 +2406,6 @@ void NFmiCrossSectionView::DrawObsForModeTimeLine(void)
 					::DrawLineWithToolBox(obsp1, obsp2, &envi, itsToolBox, true, false);
 				}
 			}
-			itsToolBox->UseClipping(false);
 		}
 	}
 }
@@ -2480,9 +2473,7 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 		if(usedDecimals >= 2 && ::fabs(minHeightKm) < minMaxHeightInKmForMetresUnit && ::fabs(maxHeightKm) < minMaxHeightInKmForMetresUnit)
 			useKmAsUnit = false;
 
-		itsToolBox->RelativeClipRect(itsDataViewFrame, true);
-		FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
-		itsToolBox->SetTextAlignment(kRight);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kRight, true, &itsDataViewFrame);
 		NFmiDrawingEnvironment envi;
 		int fontSize = FmiRound(16 * itsDrawSizeFactorY);
 		envi.SetFontSize(NFmiPoint(fontSize, fontSize));
@@ -2517,8 +2508,6 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), useKmAsUnit ? "KM" : "m", 0, &envi);
 			itsToolBox->Convert(&txt1);
 		}
-		itsToolBox->SetTextAlignment(oldAlignment);
-		itsToolBox->UseClipping(false);
 	}
 }
 
@@ -2586,8 +2575,8 @@ void NFmiCrossSectionView::DrawHybridLevels(void)
 	{ // piirretään hybridilevelit oikeille kohdilleen poikkileikkaukseen
 		if(itsCtrlViewDocumentInterface->CrossSectionSystem()->ShowHybridLevels())
 		{
-			itsToolBox->RelativeClipRect(itsDataViewFrame, true);
-			int fontSize = FmiRound(15 * itsDrawSizeFactorY);
+            ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
+            int fontSize = FmiRound(15 * itsDrawSizeFactorY);
 			double labelMoveX = itsToolBox->SX(FmiRound(2 * itsDrawSizeFactorX));
 			double labelMoveY = itsToolBox->SY(fontSize)/2.;
 			NFmiDrawingEnvironment envi;
@@ -2628,7 +2617,6 @@ void NFmiCrossSectionView::DrawHybridLevels(void)
 					}
 				}
 			}
-			itsToolBox->UseClipping(false);
 		}
 	}
 }
@@ -2710,8 +2698,8 @@ void NFmiCrossSectionView::DrawGroundLevel(NFmiDrawingEnvironment &theEnvi)
 	::QuickInitMainXYPoints(*crossSectionSystem, itsDataViewFrame);
 	CalcGroundHeights(); // kerää pinta profiili tästä
 
-	itsToolBox->RelativeClipRect(itsDataViewFrame, true);
-
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
+    
 	double startX = crossSectionSystem->StartXYPoint().X();
 	double width = crossSectionSystem->EndXYPoint().X() - startX;
 	NFmiPolyline groundPolyLine(itsDataViewFrame, 0, &theEnvi);
@@ -2731,8 +2719,6 @@ void NFmiCrossSectionView::DrawGroundLevel(NFmiDrawingEnvironment &theEnvi)
 	// Siitä lähtien kun batymetria otettiin mukaan topografia dataan, pitää piirtää meren pinta viiva 
 	// sellaisiin kohtiin missä topo arvot ovat negatiivisia.
 	DrawSeaLevel(); 
-
-	itsToolBox->UseClipping(false);
 }
 
 using NFmiSoundingFunctions::MyPoint;
@@ -2838,7 +2824,7 @@ bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryI
         // Jos datassa ei ollutkaan haluttua parametria, tällöin itsModelGroundPressures on tyhjä ja ei voida piirtää mitään.
         if(itsModelGroundPressures.size())
         {
-            itsToolBox->RelativeClipRect(itsDataViewFrame, true);
+            ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
 
             auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
             double startX = crossSectionSystem->StartXYPoint().X();
@@ -2854,7 +2840,6 @@ bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryI
             groundPolyLine.AddPoint(NFmiPoint(startX, itsDataViewFrame.BottomLeft().Y())); // tehdään suljettu polyline paanpinnasta
             itsToolBox->DrawPolyline(&groundPolyLine, NFmiPoint(0, 0), NFmiPoint(1, 1));
 
-            itsToolBox->UseClipping(false);
             return true;
         }
 	}

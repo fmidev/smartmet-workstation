@@ -39,36 +39,37 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
 								   ,double theManualModifierLength /* = 1. */);
    virtual  ~NFmiTimeSerialDiscreteDataView (void);
 
-   virtual bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   virtual bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-   virtual bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   virtual void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle);
-   virtual void CreateValueScale (void);
-   virtual void DrawValueAxis (void);
+   bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines) override;
+   void CreateValueScale (void) override;
+   void DrawValueAxis (void) override;
    using NFmiTimeSerialView::DrawDataLine;
    virtual void DrawDataLine (const NFmiMetTime& theTime1,  const NFmiMetTime& theTime2, double value1, double value2, NFmiDrawingEnvironment & envi);
    virtual void EvaluateValue (double& theValue);
-    virtual void EditingMode (int newMode);
-	virtual void ChangeTimeSeriesValues(void);
+   void EditingMode (int newMode) override;
+   void ChangeTimeSeriesValues(void) override;
 
  protected:
 	void GetLowAndHighLimits(boost::shared_ptr<NFmiDrawParam> &theDrawParam, float &theLowerLimit, float &theHigherLimit);
 	virtual void CreateValueScaleArrays();
-	virtual void DrawModifyingUnit(void);
+	void DrawModifyingUnit(void) override;
 	bool ModifyFactorPointsSetValue(int theValue, int theIndex);
-	virtual void ResetModifyFactorValues(void);
-	virtual void CreateModifyFactorScaleView(bool fSetScalesDirectlyWithLimits = false, double theValue = kFloatMissing);
-	virtual void FixModifyFactorValue (double & theValue);
-	virtual void DrawModifyFactorPoints(void);
-	virtual void DrawModifyFactorAxis(void);
-	virtual void DrawData (void);
-	virtual void DrawGrids (NFmiDrawingEnvironment & envi);
+	void ResetModifyFactorValues(void) override;
+	void CreateModifyFactorScaleView(bool fSetScalesDirectlyWithLimits = false, double theValue = kFloatMissing) override;
+	void FixModifyFactorValue (double & theValue) override;
+	void DrawModifyFactorPoints(void) override;
+	void DrawModifyFactorAxis(void) override;
+	void DrawData (void) override;
+	void DrawGrids (NFmiDrawingEnvironment & envi) override;
 	void DrawValueGrids (NFmiDrawingEnvironment & envi, double minPos, double maxPos);
 	void DrawModifyFactorPointGrids (void);
 	void DrawSelectedStationData (void);
 	void DrawBackground (void);
-	virtual void CreateValueScaleView (void);
+	void CreateValueScaleView (void) override;
 	bool AutoAdjustValueScale(void){return false;};
+    bool DrawHelperData() const { return false; }
 
 
 	 int itsSizeOfArray;

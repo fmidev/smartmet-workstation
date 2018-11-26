@@ -5,15 +5,18 @@
 #include "SmartMetDialogs_resource.h"
 #include "NFmiGriddingProperties.h"
 
+class SmartMetDocumentInterface;
+
 /////////////////////////////////////////////////////////////////////////////
 // CFmiGriddingOptionsDlg dialog
 
-class CFmiGriddingOptionsDlg : public CDialog
+class CFmiGriddingOptionsDlg : public CDialogEx
 {
 // Construction
 public:
-	CFmiGriddingOptionsDlg(const NFmiGriddingProperties &griddingProperties, CWnd* pParent = NULL);   // standard constructor
-
+	CFmiGriddingOptionsDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent = NULL);   // standard constructor
+    // Update pitää olla UpdateModalessDialog template funktiota varten, jota käytetään tälle luokalle CSmartMetDoc:in syövereissä
+    void Update() {}
     const NFmiGriddingProperties& GetModifiedGriddingProperties() const { return itsGriddingProperties; }
 
 // Dialog Data
@@ -42,7 +45,10 @@ protected:
 	void InitDialogTexts(void);
     void InitLocalFitMethodSelector();
     void InitControlValuesFromGriddingPropertiesObject();
+    void DoWhenClosing();
+    void ApplyChanges();
 
+    SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     NFmiGriddingProperties itsGriddingProperties;
     int itsGriddingFunction;
     double itsRangeLimitInKm = 0.; // 0 = rajaton ja muuten > 0
@@ -53,6 +59,7 @@ protected:
     double itsLocalFitFilterFactor = 0.15; // > 0
 public:
     afx_msg void OnBnClickedButtonDefaultValues();
+    afx_msg void OnBnClickedButtonApplyChanges();
 };
 
 //{{AFX_INSERT_LOCATION}}

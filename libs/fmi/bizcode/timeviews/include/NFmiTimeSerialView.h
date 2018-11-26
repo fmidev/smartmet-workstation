@@ -277,6 +277,7 @@ class NFmiTimeSerialView : public NFmiTimeView
     boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableAnalyzeToolRelatedData(const NFmiPoint &theLatLonPoint);
     boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableObsBlenderData(const NFmiPoint &theLatLonPoint);
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetObsBlenderDataVector();
+    virtual bool DrawHelperData() const { return true; }
 
 	NFmiDrawingEnvironment itsNormalCurveEnvi; // miten normaali k‰yr‰ piirret‰‰n
 	NFmiDrawingEnvironment itsChangeCurveEnvi; // miten muutos k‰yr‰ piirret‰‰n (punainen katkoviiva)

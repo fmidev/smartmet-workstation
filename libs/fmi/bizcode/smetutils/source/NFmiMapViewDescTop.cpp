@@ -119,7 +119,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(void)
 ,itsSelectedMapIndexVM(1)
 ,itsGdiPlusImageMapHandlerList()
 ,itsMapViewCache(CtrlViewUtils::MaxViewGridYSize)
-,fAreaViewDirty(true)
+,fRedrawMapView(true)
 ,itsLandBorderColors()
 ,itsLandBorderColorIndex(0)
 ,itsLandBorderPenSize(1,1)
@@ -149,7 +149,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(void)
 ,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
-,fMapViewUpdated(true)
 ,itsMapView(0)
 ,itsGraphicalInfo()
 ,itsGridPointCache()
@@ -176,7 +175,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsSelectedMapIndexVM(1)
 ,itsGdiPlusImageMapHandlerList()
 ,itsMapViewCache(CtrlViewUtils::MaxViewGridYSize)
-,fAreaViewDirty(true)
+,fRedrawMapView(true)
 ,itsLandBorderColors()
 ,itsLandBorderColorIndex(0)
 ,itsLandBorderPenSize(1,1)
@@ -206,7 +205,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
-,fMapViewUpdated(true)
 ,itsMapView(0)
 ,itsGraphicalInfo()
 ,itsGridPointCache()
@@ -505,7 +503,7 @@ void NFmiMapViewDescTop::MapRowStartingIndex(int newIndex)
 	// lasketaan sitten mik‰ on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
 	itsMapRowStartingIndex = FmiMin(maxStartIndex, newIndex);
-	MapDirty(true, false);
+	MapViewDirty(false, false, true, true);
 }
 
 // N‰kyykˆ kyseinen karttarivi nyt karttan‰ytˆss‰. TheRowIndex on rivi indeksi, jonka arvo alkaa 1:st‰.
@@ -519,23 +517,37 @@ bool NFmiMapViewDescTop::IsVisibleRow(int theRowIndex)
 	return true;
 }
 
-void NFmiMapViewDescTop::AreaViewDirty(bool areaViewDirty, bool clearCache)
+// MapViewDirty metodi tekee kaiken sen mit‰ ennen tekiv‰t sekavasti AreaViewDirty- ja 
+// MapDirty -metodit yhdess‰. Niit‰ k‰ytettiin sekaisin eri tilanteissa ja yhdess‰ (sekaisin taas).
+// Yksi pahimmista sekaannuksista aiheutti fAreaViewDirty muuttujan asetus, joka meni 
+// MapDirty -metodin kautta ep‰suorasti false:ksi, jos mapDirty ja clearCache parametrit  olivat molemmat true.
+// Uudessa metodissa ei p‰‰se tapahtumaan sekaannuksia.
+// ======================================================
+// Seuraavassa selitykset parametreille:
+// ======================================================
+// 1. makeNewBackgroundBitmap, jos true, on tarve laskea uusi zoomaus karttapohjalle tai karttapohja vaihtuu 
+//    ja samalla piirt‰‰ karttapohja uudestaan cacheen.
+// 2. clearMapViewBitmapCacheRows, jos true, tyhjennet‰‰n karttan‰yttˆjen kuva-cachet t‰ysin. Kuva cache:lla tarkoitetaan eri 
+//    n‰yttˆriveill‰ olevat eri aika-askeleilla olevat karttapohjan ja parametri piirto-layereiden yhteistulos.
+//    T‰h‰n cache kuvaan ei kuulu ns. DrawOverBitmaptThings, joilla piirret‰‰n erilaisia merkkej‰ karttan‰ytˆille.
+// 3. redrawMapView parametrilla s‰‰det‰‰n piirret‰‰nkˆ karttan‰yttˆ uudestaan, vai k‰ytet‰‰nkˆ piirrossa suoraan
+//    karttan‰yttˆ-luokkien (CSmartMetView ja CFmiExtraMapView) tallettamaa cache kuvaa. T‰m‰ yksitt‰inen cache kuva on 
+//    siis vain kulloisellakin hetkell‰ k‰ytˆss‰ siksi ett‰ piti tehd‰ double-buffer kuva, jos esim. toinen ohjelma/n‰yttˆ 
+//    siirret‰‰n SmartMet n‰yttˆjen yli ja niit‰ ei tarvitse muuten p‰ivitt‰‰.
+// 4. updateMapViewDrawingLayers parametrilla varmistetaan ett‰ karttan‰yttˆluokat tekev‰t p‰ivityksi‰ piirto-layer rakenteisiin.
+void NFmiMapViewDescTop::MapViewDirty(bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool updateMapViewDrawingLayers)
 {
-	fAreaViewDirty = areaViewDirty;
-
-	if(clearCache)
-		MapViewCache().MakeDirty(); // laitetaan cache halutessa likaiseksi
-}
-
-void NFmiMapViewDescTop::MapDirty(bool mapDirty, bool clearCache)
-{
-	MapHandler()->MapDirty(mapDirty);
-
-	if(clearCache && mapDirty) // jos true, silloin kartta meni likaiseksi ja cache on tyhjennettava
-	{
-		AreaViewDirty(false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
-		GridPointCache().Clear();
-	}
+    SetRedrawMapView(redrawMapView);
+    MapHandler()->SetMakeNewBackgroundBitmap(makeNewBackgroundBitmap);
+    MapHandler()->SetUpdateMapViewDrawingLayers(updateMapViewDrawingLayers);
+    if(clearMapViewBitmapCacheRows)
+    {
+        MapViewCache().MakeDirty(); // laitetaan cache halutessa likaiseksi
+        if(makeNewBackgroundBitmap)
+        {
+            GridPointCache().Clear();
+        }
+    }
 }
 
 // t‰lle funktiolle annetaan client view:ss‰ 'kartastolle' k‰ytetty alue pikselein‰
@@ -608,7 +620,7 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 		fShowTimeString = true;
 		break;
 	}
-	MapDirty(true, true);
+	MapViewDirty(mapAreaDirty, true, true, false);
 	if(mapAreaDirty)
 		BorderDrawDirty(true); // ikkunan koko muuttuu tietyiss‰ tapauksissa, joten rajaviivat on laskettava uudestaan
 	return itsShowTimeOnMapMode;
@@ -685,7 +697,7 @@ void NFmiMapViewDescTop::ToggleStationPointColor(void)
 	if(itsStationPointColorIndex >= static_cast<int>(itsLandBorderColors.size()))
 		itsStationPointColorIndex = 0; // kun menee ymp‰ri, laitetaan 1. v‰ri takaisin p‰‰lle
 	if(fShowStationPlotVM)
-		MapDirty(true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		MapViewDirty(false, true, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 }
 
 void NFmiMapViewDescTop::ToggleStationPointSize(void)
@@ -702,7 +714,7 @@ void NFmiMapViewDescTop::ToggleStationPointSize(void)
 		itsStationPointSize.Y(itsStationPointSize.Y() + 1);
 
 	if(fShowStationPlotVM)
-		MapDirty(true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		MapViewDirty(false, true, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 }
 
 // t‰m‰ asettaa uuden karttan‰ytˆn hilaruudukon koon.
@@ -723,8 +735,7 @@ bool NFmiMapViewDescTop::SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWi
 		itsGraphicalInfo.itsViewWidthInMM = oneMapViewSizeInPixels.X() / itsGraphicalInfo.itsPixelsPerMM_x;
 		itsGraphicalInfo.itsViewHeightInMM = oneMapViewSizeInPixels.Y() / itsGraphicalInfo.itsPixelsPerMM_y;
 
-		MapDirty(true, true);
-		fMapViewUpdated = true; // t‰m‰ saa auto-zoomin toimimaan
+		MapViewDirty(true, true, true, false);
 		BorderDrawDirty(true);
 		return true;
 	}
@@ -796,7 +807,7 @@ void NFmiMapViewDescTop::ToggleMapViewDisplayMode(void)
     else
         itsMapViewDisplayMode = CtrlViewUtils::MapViewMode::kNormal;
 
-	MapDirty(true, true);
+	MapViewDirty(false, true, true, false);
 	ViewGridSize(itsViewGridSizeVM, nullptr);
 }
 
@@ -1131,4 +1142,28 @@ void NFmiMapViewDescTop::SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap)
 {
     delete itsLandBorderMapBitmap;
     itsLandBorderMapBitmap = newBitmap;
+}
+
+
+// Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
+// 1. Nimi muuttui toivottavasti kuvaavammaksi eli RedrawMapView, eli se tarkoittaa
+//    ett‰ seuraavalla piirrooskierroksella n‰yttˆ pit‰‰ piirt‰‰ uusiksi, eik‰ saa vain k‰ytt‰‰ double buffer bitmap:ia.
+// 2. Ns. set-funktiolla voi lipun laittaa vain p‰‰lle, false arvo j‰tet‰‰n huomiotta. Vain clear-funktiolla
+//    lipun tila voidaan nollata. T‰m‰ muutos siksi ett‰ eri paikoista voi tulla samalla likaus kerralla eri arvoja
+//    eik‰ toisaalta tehdyst‰ false asetuksesta ei haluta nollata toisesta tehty‰ true asetusta.
+// 3. Lippu siis nollataan clear-funktiolla, jota kutsutaan piirto toimintojen j‰lkeen.
+bool NFmiMapViewDescTop::RedrawMapView(void) const
+{ 
+    return fRedrawMapView; 
+}
+
+void NFmiMapViewDescTop::SetRedrawMapView(bool newValue) 
+{ 
+    if(newValue)
+        fRedrawMapView = newValue; 
+}
+
+void NFmiMapViewDescTop::ClearRedrawMapView() 
+{ 
+    fRedrawMapView = false; 
 }

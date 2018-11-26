@@ -187,6 +187,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void GetMinimumDistanceMessage(const std::vector<HakeMessage::HakeMsg> &messages, const NFmiLocation &wantedLocation, HakeMessage::HakeMsg &minimumDistanceMessage, double &minimumDistance);
 #endif // DISABLE_CPPRESTSDK
     void TraceLogValidTimeAndAbsoluteRow();
+    void MakeParamLevelChangeDirtyOperations(bool changesHappened);
 
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
@@ -196,7 +197,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	NFmiPoint itsZoomDragUpPoint;
 	NFmiRect itsOldZoomRect; // t‰ll‰ piirret‰‰n vanha laatikko pois (k‰‰nteis v‰ri kikka)
 	NFmiPoint itsLastMouseDownRelPlace; //yrit‰n t‰ll‰ selvitt‰‰ miksi mouse klick tekee joskus kaksikin turhaa mousemovea
-	bool fRedrawMapAfterMTATempClear; // t‰m‰ on h‰t‰ paska vipu (optimointia baby), kun hiiren oikealla on klikattu karttaa, joskus pit‰‰ ruutu p‰ivitt‰‰
 
 	NFmiParamHandlerView* itsParamHandlerView;
 	NFmiRect itsParamHandlerViewRect;

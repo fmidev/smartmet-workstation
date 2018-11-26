@@ -17,6 +17,8 @@
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "catlog/catlog.h"
+#include "ToolBoxStateRestorer.h"
+#include "NFmiMacroParamDataCache.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -109,7 +111,7 @@ void NFmiViewParamsView::DrawData(void)
 	{
 		InitializeGdiplus(itsToolBox, &GetFrame());
 
-		itsToolBox->RelativeClipRect(GetFrame(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &GetFrame());
         DrawMouseDraggingBackground();
 		bool crossSectionView = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
@@ -135,7 +137,6 @@ void NFmiViewParamsView::DrawData(void)
 			}
             DrawMouseDraggingAction();
 		}
-		itsToolBox->UseClipping(false);
 	}
 	catch(...)
 	{
@@ -315,7 +316,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 								NFmiMetEditorTypes::kFmiParamsDefaultView, &drawParam->Level(),
 								drawParam->DataType(), index, drawParam->ViewMacroDrawParam());
 							drawParam->HideParam(!drawParam->IsParamHidden()); // tämä on ruma fixi, mutta tupla klikki tekee tämän piilotus asetuksen jostain syystä ja minun pitää laittaa se tässä pois
-							itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true); // ikävä kyllä yksöis klikin jälkeen (ennen tätä toista klikkiä, josta syntyy tupla klikkaus) 
+							itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // ikävä kyllä yksöis klikin jälkeen (ennen tätä toista klikkiä, josta syntyy tupla klikkaus) 
 																				// on tehty ruudun päivitys, joka nyt tuplaklikin kohdalla pitää kumota
 							itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("ViewParamsView::LeftDoubleClick: Double click has been pressed over parameter to open Draw-param dialog, this update fixes (UGLY) the first left-click's param show/hide action");
 							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), 1); // 1=viewtype ei määrätty vielä
@@ -388,7 +389,9 @@ bool NFmiViewParamsView::DoAfterParamModeModifications(NFmiDrawParamList *thePar
 {
     theParamList->Dirty(true);
     itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
-    itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+    auto rowIndex = GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    itsCtrlViewDocumentInterface->MacroParamDataCache().update(itsMapViewDescTopIndex, static_cast<unsigned long>(rowIndex), *theParamList);
+    itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, true);
     return true;
 }
 

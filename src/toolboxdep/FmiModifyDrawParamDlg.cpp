@@ -878,7 +878,7 @@ void CFmiModifyDrawParamDlg::ForceStationViewUpdate()
     if(itsDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
     {
         // Liataan myös maphandler, jotta käytössä karttanäytössä ollut stationView vaihtuu tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
-        itsSmartMetDocumentInterface->MapViewDescTop(itsDescTopIndex)->MapHandler()->MapDirty(true);
+        itsSmartMetDocumentInterface->MapViewDescTop(itsDescTopIndex)->MapHandler()->SetUpdateMapViewDrawingLayers(true);
     }
 }
 
