@@ -33,6 +33,7 @@ namespace
 
         auto singleRowItem = AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
         singleRowItem.origTime(data.OrigOrLastTime());
+        singleRowItem.totalFilePath(data.totalLocalPath());
         return singleRowItem;
     }
 

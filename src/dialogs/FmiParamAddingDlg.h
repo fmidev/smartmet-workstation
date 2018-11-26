@@ -6,6 +6,7 @@
 #include <vector>
 #include <functional>
 #include "NFmiViewPosRegistryInfo.h"
+#include "PPTooltip.h"
 
 class SmartMetDocumentInterface;
 
@@ -50,12 +51,26 @@ class NFmiParamAddingGridCtrl : public CGridCtrl
 public:
     NFmiParamAddingGridCtrl(int nRows = 0, int nCols = 0, int nFixedRows = 0, int nFixedCols = 0)
         :CGridCtrl(nRows, nCols, nFixedRows, nFixedCols)
+        , itsSmartMetDocumentInterface(nullptr)
     {}
+
     std::function<void(void)> itsLButtonDblClkCallback;
+    void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface) { itsSmartMetDocumentInterface = smartMetDocumentInterface; };
+
+private:
+    std::string ComposeToolTipText(CPoint point);
+    CPPToolTip m_tooltip;
+    SmartMetDocumentInterface *itsSmartMetDocumentInterface;
+    std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
+    std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
 
 public:
     DECLARE_MESSAGE_MAP()
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+    afx_msg void OnSize(UINT nType, int cx, int cy);
+    afx_msg void NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result);
+    virtual BOOL OnInitDialog();
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 // CFmiParamAddingDlg dialog
@@ -121,4 +136,5 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+
 };
