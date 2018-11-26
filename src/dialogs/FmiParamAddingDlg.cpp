@@ -14,6 +14,17 @@
 #include "NFmiMenuItem.h"
 #include "SpecialDesctopIndex.h"
 #include "boost\math\special_functions\round.hpp"
+#include "FmiWin32Helpers.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiInfoOrganizer.h"
+#include "NFmiTimeList.h"
+#include "NFmiFileSystem.h"
+#include "CtrlViewFunctions.h"
+#include "NFmiHelpDataInfo.h"
+#include "NFmiProducerSystem.h"
+
+
+static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
 // *************************************************
 // NFmiParamAddingGridCtrl
@@ -27,6 +38,8 @@ IMPLEMENT_DYNCREATE(NFmiParamAddingGridCtrl, CGridCtrl)
 // CFmiParamAddingDlg message handlers
 BEGIN_MESSAGE_MAP(NFmiParamAddingGridCtrl, CGridCtrl)
     ON_WM_LBUTTONDBLCLK()
+    ON_WM_SIZE()
+    ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
 
 void NFmiParamAddingGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
@@ -37,6 +50,322 @@ void NFmiParamAddingGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 
     if(itsLButtonDblClkCallback)
         itsLButtonDblClkCallback();
+}
+
+void NFmiParamAddingGridCtrl::OnSize(UINT nType, int cx, int cy)
+{
+    CGridCtrl::OnSize(nType, cx, cy);
+
+    static bool firstTime = true;
+    if(firstTime)
+    {
+        OnInitDialog();
+        firstTime = false;
+    }
+
+    CRect rect;
+    GetClientRect(rect);
+    m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, rect);
+}
+
+void NFmiParamAddingGridCtrl::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
+{
+    *result = 0;
+    NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
+
+    if(pNotify->ti->nIDTool == PARAM_ADDING_DIALOG_TOOLTIP_ID)
+    {
+        CPoint pt = *pNotify->pt;
+        ScreenToClient(&pt);
+
+        CString strU_;
+
+        try
+        {
+            strU_ = CA2T(NFmiParamAddingGridCtrl::ComposeToolTipText(pt).c_str());
+        }
+        catch(std::exception &e)
+        {
+            strU_ = _TEXT("Error while making the tooltip string:\n");
+            strU_ += CA2T(e.what());
+        }
+        catch(...)
+        {
+            strU_ = _TEXT("Error (unknown) while making the tooltip string");
+        }
+
+        pNotify->ti->sTooltip = strU_;
+
+    }
+}
+
+BOOL NFmiParamAddingGridCtrl::PreTranslateMessage(MSG* pMsg)
+{
+    m_tooltip.RelayEvent(pMsg);
+
+    return CGridCtrl::PreTranslateMessage(pMsg);
+}
+
+BOOL NFmiParamAddingGridCtrl::OnInitDialog()
+{
+    CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID);
+    m_tooltip.SetMaxTipWidth(600);
+
+    return TRUE;
+}
+
+const std::string CombineFilePath(const std::string &fileName, const std::string &fileNameFilter)
+{
+    try
+    {
+        std::size_t found = fileNameFilter.find_last_of("/\\");
+        std::string filePath = found ? fileNameFilter.substr(0, found + 1) + fileName : "";
+        return filePath;
+    }
+    catch(...)
+    {
+        return "";
+    }
+}
+
+std::string GetFileFilter(const std::string &fileNameFilter)
+{
+    try
+    {
+        std::size_t found = fileNameFilter.find_last_of("/\\");
+        std::string fileFilter = found ? fileNameFilter.substr(found + 1, fileNameFilter.length()) : "";
+        return fileFilter;
+    }
+    catch(...)
+    {
+        return "";
+    }
+}
+
+std::string ConvertSizeToMBorGB(unsigned long long size)
+{
+    double sizeInMB = static_cast<double>(size) / (1024 * 1000);
+    std::stringstream fileSizeInMB;
+    if(sizeInMB < 1000)
+    {
+        fileSizeInMB << std::fixed << std::setprecision(0) << sizeInMB;
+        return fileSizeInMB.str() + " MB";
+    }
+    else
+    {
+        sizeInMB = sizeInMB / 1000;
+        fileSizeInMB << std::fixed << std::showpoint << std::setprecision(2) << sizeInMB;
+        return fileSizeInMB.str() + " GB";
+    }
+}
+
+
+unsigned long long fileSizeInMB(const std::string &totalFilePath)
+{
+    return  NFmiFileSystem::FileSize(totalFilePath);
+}
+
+unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
+{   
+    return fileSizeInMB(singleRowItem.totalFilePath());
+}
+
+
+
+std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
+{
+    NFmiTimeList* timeList;
+    NFmiTimeBag* timeBag;
+    int timeSteps;
+    std::string resolution;
+    std::string gridArea;
+    std::string levels;
+
+    if(info->TimeDescriptor().ValidTimeList() != nullptr)
+    {
+        timeList = info->TimeDescriptor().ValidTimeList();
+        timeSteps = timeList->NumberOfItems();
+        resolution = "varies";
+    }
+    else 
+    {
+        timeBag = info->TimeDescriptor().ValidTimeBag();
+        timeSteps = timeBag->GetSize();
+        resolution = std::to_string(timeBag->Resolution()) + " min";
+    }
+
+    gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
+    levels = (info->SizeLevels() == 1) ? "surface data" : std::to_string(info->SizeLevels());
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Data information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
+    str += "<b>File filter: </b>\t" + GetFileFilter(info->DataFilePattern()) + "\n";
+    //str += "<b>Data loaded: </b>\t \n";
+    //str += "<b>File modified: </b>\t" + std::to_string(helpInfo->LatestFileTimeStamp()) + "\n";
+    str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Time info: </b>";
+    str += "\tsteps: " + std::to_string(timeSteps) + "\n";
+    str += "\t\t\tresolution: " + resolution + "\n";
+    str += "\t\t\trange: " + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC ";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Parameters:  </b>\ttotal: " + std::to_string(info->ParamBag().GetSize()) + "\n";
+    str += "<b>Levels:  </b>\t\t" + levels;
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
+    str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
+    str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
+    str += "<b>Server path: </b>\t" + CombineFilePath(info->DataFileName(), helpInfo->FileNameFilter());
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
+}
+
+std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo)
+{
+    std::string shortName = (producerInfo.ShortNameCount() == 0) ? "" : producerInfo.ShortName();
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Producer information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Name: </b>\t\t" + singleRowItem.itemName() + "\n";
+    str += "<b>Short name: </b>\t" + shortName + "\n";
+    str += "<b>Ultra short name: </b>\t" + producerInfo.UltraShortName() + "\n";
+    str += "<b>Description: </b>\t" + producerInfo.Description() + "\n";
+    str += "<b>Id: </b>\t\t\t" + std::to_string(singleRowItem.itemId());
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Data files:</b>\n";
+    std::string dataFiles;
+    int n = 1;
+    unsigned long long combinedSize = 0;
+    std::vector<std::string> colors = {"darkred", "darkblue" };
+
+    for(auto &info : infoVector)
+    {
+        dataFiles += "<font color=";
+        dataFiles += colors.at(n % 2);
+        dataFiles += ">";
+        dataFiles += "<b>" + std::to_string(n) + ".</b>";
+        n++;
+        auto size = fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()));
+        combinedSize += size;
+        dataFiles += " Name: " + info->DataFileName() + "\n";
+        dataFiles += "    File size: " + ConvertSizeToMBorGB(size) + "\n";
+        dataFiles += "</font>";
+    }
+    str += dataFiles;
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Total size: </b>\t" + ConvertSizeToMBorGB(combinedSize);
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
+}
+
+std::string NFmiParamAddingGridCtrl::TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+{
+    int numberOfProducers = 0;
+    int numberOfDataFiles = 0;
+    unsigned long long combinedSize = 0;
+    int depth = singleRowItem.treeDepth();
+    std::vector<AddParams::SingleRowItem> subvector((singleRowItemVector.begin() + rowNumber), singleRowItemVector.end());
+
+    for(auto item : subvector)
+    {
+        if(item.rowType() == AddParams::RowType::kProducerType)
+            numberOfProducers++;
+        if(item.rowType() == AddParams::RowType::kDataType)
+        {
+            numberOfDataFiles++;
+            auto info = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(item.uniqueDataId()).at(0);
+            auto size = fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()));
+            combinedSize += size;
+        }
+        if(item.treeDepth() == depth) // End when one set of category data has been dealt with
+            break;
+    }
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Category information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Producers: </b>\t\t" + std::to_string(numberOfProducers) + "\n";
+    str += "<b>Data files: </b>\t\t" + std::to_string(numberOfDataFiles) + "\n";;
+    str += "<b>Combined size: </b>\t" + ConvertSizeToMBorGB(combinedSize);
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
+}
+
+std::string NFmiParamAddingGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+{
+    int numberOfParams = 0;
+    int depth = singleRowItem.treeDepth();
+    std::vector<AddParams::SingleRowItem> subvector((singleRowItemVector.begin() + rowNumber), singleRowItemVector.end());
+
+    for(auto item : subvector)
+    {
+        if(item.leafNode())
+            numberOfParams++;
+        if(item.treeDepth() == depth) // End when one set of category data has been dealt with
+            break;
+    }
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Category information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Number of macro parameters: </b> \t" + std::to_string(numberOfParams);
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
+}
+
+
+std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
+{
+    CCellID idCurrentCell = GetCellFromPt(point);
+    if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount() 
+        && idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
+    {
+        int rowNumber = idCurrentCell.row;
+        AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(rowNumber - 1);
+        std::vector<AddParams::SingleRowItem> singleRowItemVector = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData();
+        auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+        auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
+        auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
+        auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
+             
+        if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
+        {
+            return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+        }
+        else if(!fastQueryInfo.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
+        {
+            return TooltipForDataType(singleRowItem, fastQueryInfo.at(0), helpDataInfo);
+        }
+        else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
+        {
+            return TooltipForProducerType(singleRowItem, fastQueryInfoVector, producerInfo);
+        }
+        else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kCategoryType)
+        {
+            return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+        }
+        else
+            return "";
+    }
+    
+    return std::string("Parameter Selection");
 }
 
 
@@ -99,6 +428,7 @@ BOOL CFmiParamAddingDlg::OnInitDialog()
     // Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
     std::string errorBaseStr("Error in CFmiCaseStudyDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
+    itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
 
     // Do not allow selection, it would look bad for one row being all blue
     itsGridCtrl.EnableSelection(FALSE);

@@ -18,6 +18,8 @@ namespace AddParams
         std::unique_ptr<NFmiQueryInfo> latestMetaData_;
         std::string latestDataFilePath_;
         NFmiInfoData::Type dataType_;
+        std::string totalLocalPath_;
+        std::string totalServerPath_;
 
     public:
         SingleData();
@@ -30,5 +32,7 @@ namespace AddParams
         unsigned long producerId() const;
         std::vector<SingleRowItem> makeDialogRowData() const;
         std::string OrigOrLastTime() const;
+        const std::string& totalLocalPath() const { return totalLocalPath_; }
+        const std::string& totalServerPath() const { return totalServerPath_; }
     };
 }
