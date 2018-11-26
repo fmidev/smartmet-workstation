@@ -56,8 +56,6 @@ BEGIN
     ID_MESSAGE_MACRO_PARAMS_UPDATE "MacroParam data has been updated"
     ID_MESSAGE_WORKING_THREAD_DATA_READ2 
                             "Working thread has new data available"
-    ID_MESSAGE_WORKING_THREAD_DATA_CHECK_RESULTS 
-                            "Working thread has new data check results"
     ID_MESSAGE_START_HISTORY_THREAD 
                             "Message that starts history data loading thread"
 END

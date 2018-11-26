@@ -22,6 +22,7 @@
 #include "GraphicalInfo.h"
 #include "NFmiSynopStationPrioritySystem.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "ToolBoxStateRestorer.h"
 
 #include <limits>
 
@@ -183,7 +184,7 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 	itsDrawingEnvironment->EnableFrame();
 	itsDrawingEnvironment->SetFrameColor(itsDrawParam->FrameColor());
 
-	itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 	checkedVector<NFmiRect> synopRects;
 	MakeDrawedInfoVector();
 	itsInfoVectorIter = itsInfoVector.begin();
@@ -245,7 +246,6 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 			}
 		}
 	}
-	itsToolBox->UseClipping(false);
 }
 
 void NFmiSynopPlotView::DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, checkedVector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker)

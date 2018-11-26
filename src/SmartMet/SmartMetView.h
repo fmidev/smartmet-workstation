@@ -37,11 +37,10 @@ public:
 	CSmartMetDoc* GetDocument() const;
 	void CreateEditMapView(void);
     void Update(void);
-    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, BOOL fMakeAreaViewDirty = FALSE, BOOL fClearCache = FALSE, int theWantedMapViewDescTop = -1);
-    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag, BOOL fMakeAreaViewDirty = FALSE, BOOL fClearCache = FALSE, int theWantedMapViewDescTop = -1);
+    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1);
+    void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = FALSE, int theWantedMapViewDescTop = -1);
 	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tällä piirretään tavara, joka tulee myös bitmapin päälle
-	void ForceDrawOverBitmapThings(void);
-	void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex);
+	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateFilterDlg(void);
 	virtual void DoDraw() ;  // You should subclass from this to get more interesting pictures
 	void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
@@ -145,6 +144,7 @@ private:
 	void SetMapViewGridSize(const NFmiPoint &newSize);
 	void DrawSynopPlotImage(bool fDrawSoundingPlot, bool fDrawMinMaxPlot, bool fDrawMetarPlot);
 	std::string MakeActiveDataLocationIndexString(const NFmiPoint &theLatlon);
+    void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 
 	CRect itsClientArea;
 	CBitmap* itsMemoryBitmap;

@@ -58,6 +58,7 @@ static bool checkPossibleVariable(const std::string &possibleVariableWord, Macro
     {
         macroParamDataInfo.variableName_ = possibleVariableWord;
         macroParamDataInfo.dataIdent_ = maskInfo->GetDataIdent();
+        macroParamDataInfo.type_ = maskInfo->GetDataType();
         if(maskInfo->GetLevel())
             macroParamDataInfo.level_ = *(maskInfo->GetLevel());
         if(::wasPreviousWordVerticalFuction(previousActualWord))

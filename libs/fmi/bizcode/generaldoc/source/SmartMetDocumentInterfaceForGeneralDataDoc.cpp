@@ -421,9 +421,14 @@ NFmiMenuItemList* SmartMetDocumentInterfaceForGeneralDataDoc::PopupMenu()
     return itsDoc->PopupMenu();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache)
+void SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-    itsDoc->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache);
+    itsDoc->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
+}
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex)
+{
+    itsDoc->ForceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
@@ -439,11 +444,6 @@ NFmiDataQualityChecker& SmartMetDocumentInterfaceForGeneralDataDoc::DataQualityC
 NFmiTrajectorySystem* SmartMetDocumentInterfaceForGeneralDataDoc::TrajectorySystem()
 {
     return itsDoc->TrajectorySystem();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache)
-{
-    itsDoc->MapDirty(theDescTopIndex, mapDirty, clearCache);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ViewBrushed()
@@ -499,11 +499,6 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::MouseCaptured()
 void SmartMetDocumentInterfaceForGeneralDataDoc::MouseCaptured(bool newState)
 {
     itsDoc->MouseCaptured(newState);
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-{
-    itsDoc->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::MustDrawTempView(bool newValue)
@@ -1271,9 +1266,9 @@ checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> SmartMetDocumentInterfaceFor
     return itsDoc->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ForceDrawOverBitmapThings()
+void SmartMetDocumentInterfaceForGeneralDataDoc::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
-    itsDoc->ForceDrawOverBitmapThings();
+    itsDoc->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 NFmiLocationSelectionTool* SmartMetDocumentInterfaceForGeneralDataDoc::LocationSelectionTool2()
@@ -1383,11 +1378,11 @@ NFmiWindTableSystem& SmartMetDocumentInterfaceForGeneralDataDoc::WindTableSystem
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
     const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-    , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
+    , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
 {
     itsDoc->SelectLocations(theDescTopIndex, theInfo, theMapArea,
         theLatLon, theTime, theSelectionCombineFunction, theMask
-        , theRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
+        , fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
@@ -1403,6 +1398,11 @@ int SmartMetDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOn
 bool SmartMetDocumentInterfaceForGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
 {
     return itsDoc->MakeControlPointAcceleratorAction(action, updateMessage);
+}
+
+NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamDataCache()
+{
+    return itsDoc->MacroParamDataCache();
 }
 
 #ifndef DISABLE_CPPRESTSDK

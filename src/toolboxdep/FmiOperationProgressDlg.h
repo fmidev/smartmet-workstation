@@ -11,7 +11,7 @@ class CFmiOperationProgressDlg : public CDialog, public NFmiOperationProgress
 	DECLARE_DYNAMIC(CFmiOperationProgressDlg)
 
 public:
-	CFmiOperationProgressDlg(NFmiStopFunctor &theStopper, CWnd* pParent = NULL);   // standard constructor
+	CFmiOperationProgressDlg(const std::string &operationText, bool operationTextIsWarning, NFmiStopFunctor &theStopper, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CFmiOperationProgressDlg();
 
 	// overrides from NFmiOperationProgress
@@ -34,9 +34,14 @@ private:
 //	CProgressCtrl itsProgressCtrl;
 	CTextProgressCtrl itsProgressCtrl;
     CString itsOperationStrU_;
-	NFmiStopFunctor &itsStopper;
+    CStatic itsOperationStrControl;
+    CFont warningFont;
+    NFmiStopFunctor &itsStopper;
+    // Piirretäänkö operaatioon liittyvä teksti punaisella vai ei.
+    bool fOperationTextIsWarning;
 public:
 	virtual BOOL OnInitDialog();
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 protected:
 	virtual void OnOK();
 	virtual void OnCancel();

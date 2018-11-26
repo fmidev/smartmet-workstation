@@ -294,7 +294,7 @@ void NFmiGridCtrl::OnRButtonUp(UINT nFlags, CPoint point)
     itsSmartMetDocumentInterface->SetHighlightedSynopStation(latlon, -1, false); // -1 on wmoid, millä ei kait olekaan käyttöä
     itsSmartMetDocumentInterface->LastSelectedSynopWmoId(-1);
 	SetSelectedRange(-1,-1,-1,-1, TRUE, TRUE);
-    itsSmartMetDocumentInterface->ForceDrawOverBitmapThings();
+    itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(0, true, false); // päivitetään vain päänäytön jutut (0 indeksi)
 
 	if(focusCell.row < m_nFixedRows)
 	{ // jos oltiin klikattu otsikko riviä, lähetetään viesti emolle, että se osaa päivittää taulukon uudestaan
@@ -327,14 +327,14 @@ void NFmiGridCtrl::DoMapHighLightThings(const CCellID &idCurrentCell)
 		if(latlon != itsSmartMetDocumentInterface->GetSynopHighlightLatlon())
 		{
             itsSmartMetDocumentInterface->SetHighlightedSynopStation(latlon, -1, true); // -1 on wmoid, millä ei kait olekaan käyttöä
-            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings();
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(0, true, false); // päivitetään vain päänäytön jutut (0 indeksi)
 		}
 	}
 	else
 	{ // muuten nollataan highlight juttu
 		NFmiPoint latlon;
         itsSmartMetDocumentInterface->SetHighlightedSynopStation(latlon, -1, false); // -1 on wmoid, millä ei kait olekaan käyttöä
-        itsSmartMetDocumentInterface->ForceDrawOverBitmapThings();
+        itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(0, true, false); // päivitetään vain päänäytön jutut (0 indeksi)
         itsSmartMetDocumentInterface->LastSelectedSynopWmoId(-1);
 	}
 }
@@ -2203,7 +2203,7 @@ void CFmiSynopDataGridViewDlg::DoWhenClosing(void)
 {
     itsSmartMetDocumentInterface->SynopDataGridViewOn(false);
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
-    itsSmartMetDocumentInterface->ForceDrawOverBitmapThings();
+    itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(0, true, false); // päivitetään vain päänäytön jutut (0 indeksi)
 }
 
 void CFmiSynopDataGridViewDlg::SetDefaultValues(void)

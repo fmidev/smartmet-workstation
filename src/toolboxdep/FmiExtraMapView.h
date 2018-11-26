@@ -121,7 +121,7 @@ protected:
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	void ForceDrawOverBitmapThings(void);
+	void ForceDrawOverBitmapThingsThisExtraMapView(void);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);

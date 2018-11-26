@@ -39,6 +39,7 @@
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
 #include "NFmiLimitChecker.h"
+#include "ToolBoxStateRestorer.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -199,7 +200,7 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 		NFmiDrawingEnvironment envi;
 		CreateValueScale();
 		itsDataRect = CalculateDataRect();
-		itsToolBox->RelativeClipRect(itsDataRect, true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataRect);
 
 		DrawNightShades();
 		envi.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f));
@@ -225,7 +226,6 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 	}
 
 	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
-	itsToolBox->UseClipping(false);
 }
 
 NFmiRect NFmiTimeSerialView::CalculateDataRect(void)
@@ -1736,18 +1736,24 @@ void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmi
 
 void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, int &theDrawedLocationCounter)
 {
-    if(theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirret‰‰n helper-data
+    auto drawHelperData = DrawHelperData();
+    if(drawHelperData && theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirret‰‰n helper-data
     {
         DrawHelperDataLocationInTime(theLatlon);
     }
+
     itsNormalCurveEnvi.SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(theDrawedLocationCounter - 1));
     DrawLocationInTime(theLatlon, itsNormalCurveEnvi, itsChangeCurveEnvi, true);
-    if(theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirret‰‰n havainto-data
+
+    if(drawHelperData)
     {
-        // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
-        DrawHelperObservationData(theLatlon);
+        if(theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirret‰‰n havainto-data
+        {
+            // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
+            DrawHelperObservationData(theLatlon);
+        }
+        DrawStationDataStationNameLegend(theViewedInfo, theLatlon, theDrawedLocationCounter++, itsNormalCurveEnvi);
     }
-    DrawStationDataStationNameLegend(theViewedInfo, theLatlon, theDrawedLocationCounter++, itsNormalCurveEnvi);
 }
 
 void NFmiTimeSerialView::DrawHelperObservationData(const NFmiPoint &theLatlon)

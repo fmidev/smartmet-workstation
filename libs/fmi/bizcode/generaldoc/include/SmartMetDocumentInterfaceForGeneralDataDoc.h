@@ -95,11 +95,11 @@ public:
     void CrossSectionViewSizeInPixels(const NFmiPoint& newSize) override;
     bool ShowWaitCursorWhileDrawingView() override;
     NFmiMenuItemList* PopupMenu() override;
-    void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache) override;
+    void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
+    void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) override;
     bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID) override;
     NFmiDataQualityChecker& DataQualityChecker() override;
     NFmiTrajectorySystem* TrajectorySystem() override;
-    void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache) override;
     bool ViewBrushed() override;
     void ViewBrushed(bool newState) override;
     NFmiPoint GetPrintedMapAreaOnScreenSizeInPixels(unsigned int theDescTopIndex) override;
@@ -111,7 +111,6 @@ public:
     void MiddleMouseButtonDown(bool newState) override;
     bool MouseCaptured() override;
     void MouseCaptured(bool newState) override;
-    void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex) override;
     void MustDrawTempView(bool newValue) override;
     bool MustDrawTempView() override;
     void MustDrawCrossSectionView(bool newValue) override;
@@ -265,7 +264,7 @@ public:
     bool SynopDataGridViewOn() override;
     void SynopDataGridViewOn(bool newState) override;
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
-    void ForceDrawOverBitmapThings() override;
+    void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;
     NFmiLocationSelectionTool* LocationSelectionTool2() override;
     NFmiParamBag& AllStaticParams() override;
     bool SelectNewParamForSelectionTool(int theParamId) override;
@@ -289,10 +288,11 @@ public:
     NFmiWindTableSystem& WindTableSystem() override;
     void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-        , bool &theRedrawMapAfterMTATempClear, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
+        , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
+    NFmiMacroParamDataCache& MacroParamDataCache() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

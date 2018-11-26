@@ -378,7 +378,7 @@ BOOL CFmiWin32Helpers::GeneralHelpWnd_OnPreparePrinting(CView *view, SmartMetDoc
 	{
         smartMetDocumentInterface->Printing(false); // pit‰‰ laittaa false:ksi, jos on painettu cancel:ia, muuten p‰‰ikkuna j‰‰ jumiin
 		// lis‰ksi ainakin p‰‰ikkuna pit‰‰ p‰ivitt‰‰
-        smartMetDocumentInterface->MapDirty(0, true, false);
+        smartMetDocumentInterface->MapViewDirty(0, true, false, true, false, false, false);
         smartMetDocumentInterface->RefreshApplicationViewsAndDialogs("After printing any view, have to update all views");
 		// this->SetActiveWindow(); // HUOM! aktivointi pit‰‰ tehd‰ ylemp‰n‰, t‰‰l‰ ei toimi // aktivoidaan viel‰ t‰m‰ ikkuna, koska jostain syyst‰ print-dialogi aktivoi p‰‰ikkunan
 	}

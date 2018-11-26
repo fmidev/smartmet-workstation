@@ -24,6 +24,8 @@
 #include "CtrlViewFunctions.h"
 #include "SmartMetMfcUtils_resource.h"
 #include "persist2.h"
+#include "NFmiMacroParamDataCache.h"
+
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
 #endif // DISABLE_EXTREME_TOOLKITPRO
@@ -511,9 +513,14 @@ bool CFmiSmartToolDlg::LoadSmarttoolFormula(const std::string &theFilePath)
 #endif // DISABLE_EXTREME_TOOLKITPRO
 }
 
-void CFmiSmartToolDlg::RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate)
+void CFmiSmartToolDlg::RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath)
 {
-    itsSmartMetDocumentInterface->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+    if(!possibleEditedDrawParamPath.empty())
+    {
+        std::vector<std::string> modifiedMacroParamPathList{ possibleEditedDrawParamPath };
+        itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPathList);
+    }
+    itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, editedDataModified, false);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
 
@@ -569,7 +576,7 @@ void CFmiSmartToolDlg::OnButtonAction()
 		counter++;
 		UpdateData(FALSE);
 
-		RefreshApplicationViewsAndDialogs("SmartToolDlg: smarttool data modification");
+		RefreshApplicationViewsAndDialogs("SmartToolDlg: smarttool data modification", true, "");
 	}
 }
 
@@ -812,8 +819,9 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
 	itsMacroParamList.SetCurSel(itsMacroParamList.FindString(-1, itsMacroParamNameU_)); // asettaa talletetun macroParamin aktiiviseksi
 	if(updateViews)
 	{
-        itsSmartMetDocumentInterface->AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
-		RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save"); // päivitetään varmuuden vuoksi ruutuja, jos karttanäytöllä olleen macroparametrin macroa on muutettu
+        std::vector<std::string> modifiedMacroParamPaths{ initFileName };
+        itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPaths);
+		RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save", false, initFileName); // päivitetään varmuuden vuoksi ruutuja, jos karttanäytöllä olleen macroparametrin macroa on muutettu
 	}
 }
 
@@ -885,7 +893,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRemove()
 			}
 			else
 				itsMacroParamList.SetCurSel(LB_ERR);
-			RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param remove"); // päivitetään varmuuden vuoksi ruutuja, jos poitettiin karttanäytöltä macroparametri
+			RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param remove", false, ""); // päivitetään varmuuden vuoksi ruutuja, jos poitettiin karttanäytöltä macroparametri
 		}
 	}
 }
@@ -921,12 +929,12 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamProperties()
             CFmiModifyDrawParamDlg dlg(itsSmartMetDocumentInterface, selectedMacroParam->DrawParam(), itsSmartMetDocumentInterface->InfoOrganizer()->GetDrawParamPath(), true, false, itsSelectedMapViewDescTopIndex, this); // smarttool-dialogista ei voi toistaiseksi lisätä kuin pääkarttanäytölle macroParameja
             if(dlg.DoModal() == IDOK)
             {
-                RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed");
+                RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed", false, selectedMacroParam->DrawParam()->InitFileName());
             }
             else
             {
                 if(dlg.RefreshPressed())
-                    RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed back"); // jos painettu refres-nappia ja sitten cancelia, pitää päivittää ruutu
+                    RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed back", false, selectedMacroParam->DrawParam()->InitFileName()); // jos painettu refres-nappia ja sitten cancelia, pitää päivittää ruutu
             }
         }
     }
@@ -947,7 +955,7 @@ void CFmiSmartToolDlg::AddSelectedMacroParamToRow(int theRow)
             itsSmartMetDocumentInterface->AddMacroParamToCrossSectionView(theRow, tmp);
 		else
             itsSmartMetDocumentInterface->AddMacroParamToView(itsSelectedMapViewDescTopIndex, theRow, tmp);
-		RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param added to some view");
+		RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param added to some view", false, "");
 	}
 }
 
