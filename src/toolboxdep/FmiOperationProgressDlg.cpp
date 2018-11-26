@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "FmiOperationProgressDlg.h"
+#include "boost/math/special_functions/round.hpp"
 
 
 // CFmiOperationProgressDlg dialog
