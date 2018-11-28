@@ -7524,7 +7524,7 @@ bool ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 	{
 		ActiveViewRow(theDescTopIndex, activeViewRow); // asetetaan uusi suhteellinen aktiivinen rivi takaisin desctopiin
         UpdateRowInLockedDescTops(theDescTopIndex);
-		MapViewDirty(theDescTopIndex, false, false, true, false, false, false);
+		MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
 		return true;
 	}
 	else
