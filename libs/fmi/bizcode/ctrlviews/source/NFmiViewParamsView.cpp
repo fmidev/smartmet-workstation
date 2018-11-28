@@ -500,19 +500,20 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 // t‰t‰ tietoa tarvitaan kun pit‰‰ puhdistaa muutoksen takia karttarivi cachesta.
 bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex)
 {
-	if(CalcModelSelectorButtonRect(theRowIndex, 2).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
+    auto usedRowIndex = GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    if(CalcModelSelectorButtonRect(theRowIndex, 2).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
 	{
-		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, -1, itsMapViewDescTopIndex, itsViewGridRowNumber);
+		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, -1, itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
 	else if(CalcModelSelectorButtonRect(theRowIndex, 0).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus next-nappiin (0)
 	{
-		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, 1, itsMapViewDescTopIndex, itsViewGridRowNumber);
+		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, 1, itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
 	else if(CalcModelSelectorButtonRect(theRowIndex, 1).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus nearest-model-nappiin (1)
 	{
-		itsCtrlViewDocumentInterface->SetNearestBeforeModelOrigTimeRunoff(theDrawParam, itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex), itsMapViewDescTopIndex, itsViewGridRowNumber);
+		itsCtrlViewDocumentInterface->SetNearestBeforeModelOrigTimeRunoff(theDrawParam, itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex), itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
 	return false;
