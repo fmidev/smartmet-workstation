@@ -13729,13 +13729,27 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return idVector;
     }
 
+    std::vector<std::string> CustomMenuFolders()
+    {
+        std::vector<std::string> customMenus;
+        std::vector<std::string> customMenuList = HelpDataInfoSystem()->GetUniqueCustomMenuList();
+        for(auto menuItem : customMenuList)
+        {
+            if(menuItem == g_ObservationMenuName)
+                continue; // Observation-menu is skipped, because those needs to be added among existing observations.
+            customMenus.push_back(menuItem);
+        }
+        return customMenus;
+    }
+
     void InitParamAddingSystem()
     {
         DoVerboseFunctionStartingLogReporting(__FUNCTION__);
         try
         {
+            auto customCategories = CustomMenuFolders();
             paramAddingSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
-                *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParamAddingSystem());
+                *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParamAddingSystem(), customCategories);
 
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);

@@ -51,8 +51,9 @@ namespace AddParams
         int itsLastActivatedRowIndex;
 
         // Help data's producer id's
-        std::vector<int> helpDataIDs;
-        std::vector<SingleRowItem> otherHelpData;
+        std::vector<int> helpDataIDs_;
+        std::vector<SingleRowItem> otherHelpData_;
+        std::vector<std::string> customCategories_;
 
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
 
@@ -60,11 +61,11 @@ namespace AddParams
         ParamAddingSystem();
         ~ParamAddingSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
-            NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector);
+            NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName);
         void updateData();
-        void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory);
+        void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         int updateWaitTimeoutInSeconds() const { return updateWaitTimeoutInSeconds_; }
         bool updatePending() const { return updatePending_; }
         void updatePending(bool newValue) { updatePending_ = newValue; }
@@ -80,9 +81,11 @@ namespace AddParams
         void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
 
     private:
-        void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
+        void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
         void updateDialogTreePatternData();
         void updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory);
+        void updateCustomCategories();
+        void updateCustomCategoryData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory);
     };
 }
