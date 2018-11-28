@@ -1405,6 +1405,11 @@ NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamD
     return itsDoc->MacroParamDataCache();
 }
 
+void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+{
+    itsDoc->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 

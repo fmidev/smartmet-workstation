@@ -293,17 +293,11 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
     MakeCombatibleBitmap(&itsMemoryBitmap);
-    auto keepMapAspectRatio = itsSmartMetDocumentInterface->ApplicationWinRegistry().KeepMapAspectRatio();
-    // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
-    // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
-    itsSmartMetDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
-    auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
-    mapViewDescTop->CalcClientViewXperYRatio(NFmiPoint(cx, cy));
-    mapViewDescTop->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
-    mapViewDescTop->BorderDrawDirty(true);
+    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
+
     CDC *theDC = GetDC();
     CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), theDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
-    PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(mapViewDescTop->ActualMapBitmapSizeInPixels(), true));
+    PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
     Invalidate(FALSE);
 }

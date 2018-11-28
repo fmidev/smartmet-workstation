@@ -3161,7 +3161,6 @@ std::vector<std::string> MakeListOfUsedMacroParamsDependedOnEditedData()
     std::vector<std::string> macroParamPathList;
     for(auto *deskTop : itsMapViewDescTopList)
     {
-        int cacheRowNumber = 0; // cache row indeksi alkaa 0:sta!!
         NFmiPtrList<NFmiDrawParamList> *drawParamListVector = deskTop->DrawParamListVector();
         NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
         for(; iter.Next();)
@@ -3178,7 +3177,6 @@ std::vector<std::string> MakeListOfUsedMacroParamsDependedOnEditedData()
                     }
                 }
             }
-            cacheRowNumber++;
         }
     }
     return macroParamPathList;
@@ -7529,6 +7527,65 @@ bool ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 	}
 	else
 		return false;
+}
+
+bool IsMacroParamAndDrawWithSymbols(boost::shared_ptr<NFmiDrawParam> &drawParam)
+{
+    if(drawParam && drawParam->IsMacroParamCase(true))
+    {
+        // MacroParam on aina hila muotoista, joten tarkastetaan hilamuotoinen visualisointi tyyppi
+        auto visualizationType = drawParam->GridDataPresentationStyle();
+        if(!(visualizationType >= NFmiMetEditorTypes::kFmiIsoLineView && visualizationType <= NFmiMetEditorTypes::kFmiQuickColorContourView))
+            return true;
+    }
+    return false;
+}
+
+// Jos karttanäytön koko muutetaan, muuttuu tällöin piirrettävän karttaalueen koko pikseleissä.
+// Tällöin jos näytöllä on macroParametreja, jotka piirretään symboleilla, pitää niiden macroParamCachet 
+// laittaa uusiksi, koska piirto harvennus saattaa muuttua. Ei ole väliä, onko parametri piilotettu tai
+// ei, koska kun alue muuuttuu, pitää varmuuden vuoksi kaikki kyseiset macroParamien datacachet tyhjentää.
+void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
+{
+    auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
+    if(mapViewDesctop)
+    {
+        int rowIndex = 1;
+        NFmiPtrList<NFmiDrawParamList> *drawParamListVector = mapViewDesctop->DrawParamListVector();
+        NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
+        for(; iter.Next();)
+        {
+            NFmiDrawParamList *aList = iter.CurrentPtr();
+            if(aList)
+            {
+                for(aList->Reset(); aList->Next(); )
+                {
+                    boost::shared_ptr<NFmiDrawParam> drawParam = aList->Current();
+                    if(IsMacroParamAndDrawWithSymbols(drawParam))
+                    {
+                        MacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, rowIndex, drawParam->InitFileName());
+                    }
+                }
+            }
+            rowIndex++;
+        }
+    }
+}
+
+void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+{
+    auto keepMapAspectRatio = ApplicationWinRegistry().KeepMapAspectRatio();
+    // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
+    // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
+    MapViewDirty(mapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
+    MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
+    auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
+    if(mapViewDesctop)
+    {
+        mapViewDesctop->CalcClientViewXperYRatio(totalPixelSize);
+        mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
+        mapViewDesctop->BorderDrawDirty(true);
+    }
 }
 
 void TimeControlTimeStep(unsigned int theDescTopIndex, float newValue)
@@ -16785,4 +16842,9 @@ void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
 NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
 {
     return pimpl->MacroParamDataCache();
+}
+
+void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+{
+    pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
 }
