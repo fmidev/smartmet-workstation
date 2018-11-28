@@ -149,11 +149,11 @@ namespace AddParams
     // Returns true, if data's param or level structure is changed
     bool SingleData::updateData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
     {
-        bool dataStruckturesChanged = false;
+        bool dataStructuresChanged = false;
         // No need to do update, if the latest data from infoOrganizer is still the same (with same filename timestamps)
         if(latestDataFilePath_ != info->DataFileName())
         {
-            dataStruckturesChanged = ::isDataStructuresChanged(info, latestMetaData_);
+            dataStructuresChanged = ::isDataStructuresChanged(info, latestMetaData_);
             latestDataFilePath_ = info->DataFileName();
             totalLocalPath_ = combineTotalFilePath(info->DataFileName(), info->DataFilePattern());
             latestMetaData_ = std::make_unique<NFmiQueryInfo>(*info);
@@ -164,7 +164,7 @@ namespace AddParams
                 dataName_ = helpDataInfo->GetCleanedName();
             }
         }
-        return dataStruckturesChanged;
+        return dataStructuresChanged;
     }
 
     std::vector<SingleRowItem> SingleData::makeDialogRowData() const

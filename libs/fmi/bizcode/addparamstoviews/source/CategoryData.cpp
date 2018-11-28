@@ -30,35 +30,66 @@ namespace AddParams
     CategoryData::~CategoryData() = default;
 
     // Returns true, if new producer is added or if some new producer data is added or data's param or level structure is changed
-    bool CategoryData::updateData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, std::vector<int> helpDataIDs)
+    bool CategoryData::updateData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, 
+        NFmiInfoData::Type dataCategory, std::vector<int> helpDataIDs, bool customCategory)
     {
-        bool dataStruckturesChanged = false;
-        for(const auto &producerInfo : categoryProducerSystem.Producers())
-        {
-            NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
-            bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
+        bool dataStructuresChanged = false;
 
-            if(helpData && dataCategory == NFmiInfoData::kModelHelpData) //Add help data only when handling Help Data category
+        //Handle custom categories first
+        if(customCategory)
+        {
+            dataStructuresChanged = updateCustomCategoryData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory);
+        }
+        else
+        {
+            for(const auto &producerInfo : categoryProducerSystem.Producers())
             {
-                dataStruckturesChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-            }          
-            else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData)
-            {
-                dataStruckturesChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+                NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
+                bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
+
+                if(helpData && dataCategory == NFmiInfoData::kModelHelpData) //Add help data only when handling Help Data category
+                {
+                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+                }          
+                else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData)
+                {
+                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+                }
             }
         }
-        return dataStruckturesChanged;
+
+        return dataStructuresChanged;
+    }
+
+    // Returns true, if new custom categories are added
+    bool CategoryData::updateCustomCategoryData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+    {
+        bool dataStructuresChanged = false;
+        for(const auto &info : helpDataInfoSystem.DynamicHelpDataInfos())
+        {
+            if(info.CustomMenuFolder() == categoryName())
+            {
+                checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = infoOrganizer.GetInfos(info.UsedFileNameFilter(helpDataInfoSystem));
+                if(infoVector.size())
+                {
+                    auto queryInfo = infoVector[0];
+                    auto producer = queryInfo->Producer();
+                    dataStructuresChanged = addNewOrUpdateData(*producer, infoOrganizer, helpDataInfoSystem, dataCategory, true);
+                }
+            }
+        }
+        return dataStructuresChanged;
     }
 
     // Returns true, if new macro params are added
     bool CategoryData::updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree, NFmiInfoData::Type dataCategory)
     {
-        bool dataStruckturesChanged = false;
+        bool dataStructuresChanged = false;
         NFmiProducer producer(998, "Macro Param");
         auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer == producerData->producer(); });
         if(iter != producerDataVector_.end())
         {
-            dataStruckturesChanged |= (*iter)->updateMacroParamData(macroParamTree);
+            dataStructuresChanged |= (*iter)->updateMacroParamData(macroParamTree);
         }
         else
         {
@@ -66,14 +97,17 @@ namespace AddParams
             auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
             producerDataPtr->updateMacroParamData(macroParamTree);
             producerDataVector_.push_back(std::move(producerDataPtr));
-            dataStruckturesChanged = true;
+            dataStructuresChanged = true;
         }
-        return dataStruckturesChanged;
+        return dataStructuresChanged;
     }
 
-    bool CategoryData::addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+    bool CategoryData::addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         bool dataStruckturesChanged = false;
+        // Add only when handling custom category
+        if(!customCategory && skipCustomProducerData(producer, infoOrganizer, helpDataInfoSystem))
+            return dataStruckturesChanged;
 
         auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer == producerData->producer(); });
         if(iter != producerDataVector_.end())
@@ -88,9 +122,8 @@ namespace AddParams
         return dataStruckturesChanged;
     }
 
-    bool CategoryData::addCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+    bool CategoryData::skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
-        // Joonas: tämä ei toimi jos käyttää esim id:tä 8888. Custom menujen rakentelu pitäisi hoitaa ehkä samoin kuin help datan kanssa.
         auto producerData = infoOrganizer.GetInfos(producer.GetIdent());
         for(auto &info : producerData)
         {
@@ -98,10 +131,6 @@ namespace AddParams
             NFmiHelpDataInfo *helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(filePattern);
             if(helpDataInfo && !helpDataInfo->CustomMenuFolder().empty())
             {
-                //auto producerDataPtr = std::make_unique<ProducerData>(NFmiProducer(8888, helpDataInfo->CustomMenuFolder()), dataCategory);
-                auto producerDataPtr = std::make_unique<ProducerData>(NFmiProducer(producer.GetIdent(), helpDataInfo->CustomMenuFolder()), dataCategory);
-                producerDataPtr->updateData(infoOrganizer, helpDataInfoSystem);
-                producerDataVector_.push_back(std::move(producerDataPtr));
                 return true;
             }
         }
@@ -111,10 +140,6 @@ namespace AddParams
 
     void CategoryData::addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
     {
-        // First check if this producer should be in a custom menu
-        if(addCustomProducerData(producer, infoOrganizer, helpDataInfoSystem, dataCategory))
-            return;
-
         auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
         producerDataPtr->updateData(infoOrganizer, helpDataInfoSystem);
         producerDataVector_.push_back(std::move(producerDataPtr));
