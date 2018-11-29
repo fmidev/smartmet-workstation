@@ -3695,6 +3695,19 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
+        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiCustomSymbolView)
+        {
+            stationView = new NFmiCustomSymbolView(itsMapViewDescTopIndex, itsMapArea
+                , itsToolBox
+                , itsDrawingEnvironment
+                , theDrawParam
+                , param
+                , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList()
+                , dataOffSet
+                , dataSize
+                , itsViewGridRowNumber
+                , itsViewGridColumnNumber);
+        }
         else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiSynopWeatherSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirret‰‰n data synop-s‰‰ symboleilla, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiStationIndexTextView(itsMapViewDescTopIndex, itsMapArea

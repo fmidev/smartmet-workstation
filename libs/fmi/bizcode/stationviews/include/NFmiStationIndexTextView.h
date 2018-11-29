@@ -290,3 +290,29 @@ protected:
 
     static NFmiImageMap itsSmartSymbolMap;
 };
+
+class NFmiCustomSymbolView : public NFmiStationIndexTextView
+{
+
+public:
+    NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+        , NFmiToolBox * theToolBox
+        , NFmiDrawingEnvironment * theDrawingEnvi
+        , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+        , FmiParameterName theParamIdent
+        , NFmiIndexMessageList * theIndexedWordList
+        , NFmiPoint theOffSet
+        , NFmiPoint theSize
+        , int theRowIndex
+        , int theColumnIndex);
+
+    static void InitCustomSymbolMap(const std::string &theWomlDirectory);
+
+protected:
+    void DrawSymbols(void);
+    void DrawData(void);
+    NFmiPoint GetSpaceOutFontFactor(void);
+    void ModifyTextEnvironment(void);
+
+    static NFmiImageMap itsCustomSymbolMap;
+};

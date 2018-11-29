@@ -25,7 +25,8 @@ typedef enum {
   kFmiSynopWeatherSymbolView = 12,
   kFmiRawMirriFontSymbolView = 13,
   kFmiBetterWeatherSymbolView = 14,
-  kFmiSmartSymbolView = 15
+  kFmiSmartSymbolView = 15,
+  kFmiCustomSymbolView = 16
 } View;
 
 typedef enum {
