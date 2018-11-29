@@ -1362,9 +1362,12 @@ static void TraceLogSpacedOutMacroParamCalculationSize(boost::shared_ptr<NFmiFas
 // Laskuissa käytetty hila laitetaan theUsedGridOut:in arvoksi.
 void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut)
 {
+    NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
     auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
-    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), theValues))
+    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
     {
+        theValues = macroParamLayerCacheDataType.dataMatrix_;
+        fUseCalculationPoints = macroParamLayerCacheDataType.useCalculationPoints_;
         if(theUsedGridOut)
         {
             *theUsedGridOut = NFmiGrid(itsArea.get(), static_cast<unsigned long>(theValues.NX()), static_cast<unsigned long>(theValues.NY()));
@@ -1384,7 +1387,9 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
             *theUsedGridOut = *itsInfo->Grid();
 
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
-        itsCtrlViewDocumentInterface->MacroParamDataCache().setCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), theValues);
+        macroParamLayerCacheDataType.dataMatrix_ = theValues;
+        macroParamLayerCacheDataType.useCalculationPoints_ = fUseCalculationPoints;
+        itsCtrlViewDocumentInterface->MacroParamDataCache().setCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType);
     }
 }
 
