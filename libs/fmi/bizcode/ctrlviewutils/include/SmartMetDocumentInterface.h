@@ -363,6 +363,7 @@ public:
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
+    virtual void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;
