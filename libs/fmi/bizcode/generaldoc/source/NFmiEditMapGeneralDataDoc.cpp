@@ -14018,13 +14018,49 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     }
 #endif // DISABLE_CPPRESTSDK
 
+    std::vector<int> HelpDataIdsForParamAddingSystem()
+    {
+        std::string idStr;
+        std::vector<int> idVector;
+        idStr = NFmiSettings::Optional("SmartMet::AddParams::helpDataIDs", idStr); 
+        if(!idStr.empty())
+        {
+            try
+            {
+                for (std::string id : NFmiStringTools::Split(idStr, ","))
+                {
+                    idVector.push_back(std::stoi(id));
+                }
+            }
+            catch(std::exception &e)
+            {
+                LogAndWarnUser(e.what(), "Unable to read help data ids", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+            }
+        }
+        return idVector;
+    }
+
+    std::vector<std::string> CustomMenuFolders()
+    {
+        std::vector<std::string> customMenus;
+        std::vector<std::string> customMenuList = HelpDataInfoSystem()->GetUniqueCustomMenuList();
+        for(auto menuItem : customMenuList)
+        {
+            if(menuItem == g_ObservationMenuName)
+                continue; // Observation-menu is skipped, because those needs to be added among existing observations.
+            customMenus.push_back(menuItem);
+        }
+        return customMenus;
+    }
+
     void InitParamAddingSystem()
     {
         DoVerboseFunctionStartingLogReporting(__FUNCTION__);
         try
         {
+            auto customCategories = CustomMenuFolders();
             paramAddingSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
-                *InfoOrganizer(), *HelpDataInfoSystem());
+                *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParamAddingSystem(), customCategories);
 
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
