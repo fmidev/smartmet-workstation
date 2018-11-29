@@ -162,7 +162,7 @@ NFmiSmartToolIntepreter::MathFunctionMap NFmiSmartToolIntepreter::itsMathFunctio
 NFmiSmartToolIntepreter::ResolutionLevelTypesMap NFmiSmartToolIntepreter::itsResolutionLevelTypes;
 
 std::string NFmiSmartToolIntepreter::itsBaseDelimiterChars = "+-*/%^=(){}<>&|!,";
-std::string NFmiSmartToolIntepreter::itsFullDelimiterChars = NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\r\0";
+std::string NFmiSmartToolIntepreter::itsFullDelimiterChars = NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\n\r\0";
 
 //--------------------------------------------------------
 // Constructor/Destructor
