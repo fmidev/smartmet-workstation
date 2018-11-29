@@ -61,6 +61,7 @@
 #include "NFmiCommentStripper.h"
 #include "ToolBoxStateRestorer.h"
 #include "NFmiMacroParamDataCache.h"
+#include "Utf8ConversionFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1393,6 +1394,28 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
     }
 }
 
+float NFmiStationView::GetMacroParamTooltipValueFromCache()
+{
+    NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
+    NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
+    NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
+    auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
+    {
+        NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(macroParamLayerCacheDataType.dataMatrix_.NX()), static_cast<unsigned long>(macroParamLayerCacheDataType.dataMatrix_.NY()));
+        grid.Area()->SetXYArea(NFmiRect(0, 0, 1, 1));
+        auto gridPoint = grid.LatLonToGrid(latlon);
+        auto xIndex = boost::math::iround(gridPoint.X());
+        auto yIndex = boost::math::iround(gridPoint.Y());
+        if(xIndex >= 0 && xIndex < macroParamLayerCacheDataType.dataMatrix_.NX() && yIndex >= 0 && yIndex < macroParamLayerCacheDataType.dataMatrix_.NY())
+        {
+            return macroParamLayerCacheDataType.dataMatrix_[xIndex][yIndex];
+        }
+    }
+
+    return kFloatMissing;
+}
+
 // Pelkän tooltipin lasku macroParamista.
 float NFmiStationView::CalcMacroParamTooltipValue(std::string &possibleSymbolTooltipFile)
 {
@@ -2640,6 +2663,24 @@ std::string NFmiStationView::GetLocationTooltipString()
     return CtrlViewUtils::XmlEncode(locationStr);
 }
 
+std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
+{
+    std::string possibleSymbolTooltipFile;
+    itsInfo = usedInfo;
+    float value = CalcMacroParamTooltipValue(possibleSymbolTooltipFile);
+    usedInfo = itsInfo;
+    std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+    str += " ('grude' calculation) ";
+    str += GetPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+    str += "<br>";
+    str += paramName;
+    float cacheValue = GetMacroParamTooltipValueFromCache();
+    str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+    str += " (nearest cache value) ";
+    str += GetPossibleMacroParamSymbolText(cacheValue, possibleSymbolTooltipFile);
+    return str;
+}
+
 std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
 	itsToolTipDiffValue1 = kFloatMissing;
@@ -2657,26 +2698,23 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
 		if(info) // satelliitti kuvilla ei ole infoa
 		{
-            std::string possibleSymbolTooltipFile;
-            float value = kFloatMissing;
             if(fGetCurrentDataFromQ2Server || itsDrawParam->DataType() == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
-			{
-				fDoTimeInterpolation = false;
-				if(info->DataType() != NFmiInfoData::kStationary) // stationaari datalle ei tarvitse ajan osua, koska data on joka ajalle aina sama
-				{
-					fDoTimeInterpolation = !(info->Time(itsCtrlViewDocumentInterface->ToolTipTime()));
-				}
-				if(macroParamCase)
-				{
-					itsInfo = info;
-					value = CalcMacroParamTooltipValue(possibleSymbolTooltipFile);
-					info = itsInfo;
-				}
-				else
-					value = ToolTipValue(theRelativePoint, info);
-
-				str += GetToolTipValueStr(value, info, itsDrawParam);
-			}
+            {
+                fDoTimeInterpolation = false;
+                if(info->DataType() != NFmiInfoData::kStationary) // stationaari datalle ei tarvitse ajan osua, koska data on joka ajalle aina sama
+                {
+                    fDoTimeInterpolation = !(info->Time(itsCtrlViewDocumentInterface->ToolTipTime()));
+                }
+                if(macroParamCase)
+                {
+                    str += MakeMacroParamTotalTooltipString(info, str);
+                }
+                else
+                {
+                    float value = ToolTipValue(theRelativePoint, info);
+                    str += GetToolTipValueStr(value, info, itsDrawParam);
+                }
+            }
 			else
 				str += "?";
 
@@ -2718,10 +2756,6 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
                     str += MultiModelRunToolTip(itsDrawParam, theRelativePoint);
 
                 ::AddFilePathToTooltip(str, info, fGetCurrentDataFromQ2Server);
-            }
-            else
-            {
-                str += GetPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
             }
         }
 		else
@@ -2778,17 +2812,20 @@ public:
     }
 
 private:
+    // Seuraavat line formaatit ovat ok:
+    // 1. key-value;string-value  ==> lineParts.size() == 2
+    // 2. key-value;string-value; (eli puolipiste on rivin lopussa)  ==> lineParts.size() == 3 and lineParts[2] on tyhjä stringi
     void parseLine(const std::string &line)
     {
         auto strippedLine = line;
         NFmiStringTools::TrimAll(strippedLine);
         auto lineParts = NFmiStringTools::Split(strippedLine, ";");
-        if(lineParts.size() == 2)
+        if(lineParts.size() == 2 || (lineParts.size() == 3 && lineParts[2].empty()))
         {
             try
             {
                 float value = std::stof(lineParts[0]);
-                symbolTextMap_.insert(std::make_pair(value, lineParts[1]));
+                symbolTextMap_.insert(std::make_pair(value, fromUtf8toLocaleString(lineParts[1])));
             }
             catch(...)
             { }
