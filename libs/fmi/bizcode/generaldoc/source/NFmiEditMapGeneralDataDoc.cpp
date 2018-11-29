@@ -777,6 +777,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitBetterWeatherSymbolMap();
     InitCapSymbolMap();
     InitSmartSymbolMap();
+    InitCustomSymbolMap();
     InitMultiProcessPoolOptions(); // HUOM! t‰m‰ pit‰‰ kutsua vasta 
     LoadCrashBackUpViewMacro();
     InitBetaProductionSystem(); // T‰t‰ on kutsuttava InitMacroPathSettings- ja InitApplicationWinRegistry -metodien kutsujen j‰lkeen!!
@@ -1094,6 +1095,21 @@ void InitSmartSymbolMap(void)
         string errStr("InitSmartSymbolMap - Initialization error in configurations: \n");
         errStr += e.what();
         LogAndWarnUser(errStr, "Problems in InitSmartSymbolMap", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+    }
+}
+
+void InitCustomSymbolMap(void)
+{
+    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
+    try
+    {
+        NFmiCustomSymbolView::InitCustomSymbolMap(WomlDirectoryPath());
+    }
+    catch(std::exception &e)
+    {
+        string errStr("InitCustomSymbolMap - Initialization error in configurations: \n");
+        errStr += e.what();
+        LogAndWarnUser(errStr, "Problems in InitCustomSymbolMap", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
     }
 }
 
