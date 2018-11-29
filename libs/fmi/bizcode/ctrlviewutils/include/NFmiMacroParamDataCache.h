@@ -8,17 +8,33 @@
 class NFmiDrawParam;
 class NFmiDrawParamList;
 
+// Cacheen dataksi laitetaan itse laskettu data-matriisi, sekä tieto siitä,
+// onko smarttool laskuissa käytetty ns. CalculationPoint:eja.
+class NFmiMacroParamLayerCacheDataType
+{
+public:
+    NFmiMacroParamLayerCacheDataType() = default;
+    NFmiMacroParamLayerCacheDataType(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints)
+    :dataMatrix_(dataMatrix)
+    ,useCalculationPoints_(useCalculationPoints)
+    {}
+
+    NFmiDataMatrix<float> dataMatrix_;
+    bool useCalculationPoints_ = false;
+};
+
+
 // Yhteen piirtolayeriin liittyvät yhden macroParamin datat (kaikki ajat)
 class NFmiMacroParamDataCacheLayer
 {
-    using LayerCacheType = std::map<NFmiMetTime, NFmiDataMatrix<float>>;
+    using LayerCacheType = std::map<NFmiMetTime, NFmiMacroParamLayerCacheDataType>;
     LayerCacheType layerCache_;
     std::string macroParamTotalPath_;
 public:
     NFmiMacroParamDataCacheLayer() = default;
     NFmiMacroParamDataCacheLayer(const std::string &macroParamTotalPath);
-    void setCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData);
-    bool getCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut);
+    void setCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData);
+    bool getCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut);
     const std::string& macroParamTotalPath() const { return macroParamTotalPath_; }
     void clearLayerCache();
 };
@@ -33,8 +49,8 @@ public:
     NFmiMacroParamDataCacheRow() = default;
     void clearMacroParamCache(const std::string &macroParamTotalPath);
     void clearMacroParamCache(const std::vector<std::string> &macroParamTotalPathList);
-    void setCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData);
-    bool getCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut);
+    void setCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData);
+    bool getCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut);
     bool update(NFmiDrawParamList &drawParamList);
 private:
     bool tryToMoveExistingLayerCache(unsigned long layerIndex, const NFmiDrawParam &drawParam, LayersCacheType &newLayersCacheInOut);
@@ -51,8 +67,8 @@ public:
     void clearAllLayers();
     void clearMacroParamCache(unsigned long rowIndex, const std::string &macroParamTotalPath);
     void clearMacroParamCache(const std::vector<std::string> &macroParamTotalPathList);
-    void setCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData);
-    bool getCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut);
+    void setCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData);
+    bool getCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut);
     bool update(unsigned long rowIndex, NFmiDrawParamList &drawParamList);
 };
 
@@ -68,8 +84,8 @@ public:
     void clearView(unsigned long viewIndex);
     void clearMacroParamCache(unsigned long viewIndex, unsigned long rowIndex, const std::string &macroParamTotalPath);
     void clearMacroParamCache(const std::vector<std::string> &macroParamTotalPathList);
-    void setCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData);
-    bool getCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut);
+    void setCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData);
+    bool getCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut);
     bool update(unsigned long viewIndex, unsigned long rowIndex, NFmiDrawParamList &drawParamList);
     bool update(unsigned long viewIndex, NFmiPtrList<NFmiDrawParamList>* drawParamListVector);
 };
