@@ -2687,6 +2687,8 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 			{
                 itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
                 itsCtrlViewDocumentInterface->MapViewCache(itsMapViewDescTopIndex).MakeTimeDirty(itsTime);
+                // Kutsutaan MapViewDirty funktiota, jotta voidaan liata macroParam datat, jotka ovat riippuvaisia editoidusta datasta
+                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, true, false);
 			}
             std::string paramName = "[" + drawParam->ParameterAbbreviation() + "]";
             CatLog::logMessage(paramName + " - modified with Brush tool.", CatLog::Severity::Info, CatLog::Category::Editing, true);
