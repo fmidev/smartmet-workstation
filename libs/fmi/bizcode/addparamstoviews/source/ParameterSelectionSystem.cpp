@@ -1,6 +1,6 @@
-#include "ParamAddingSystem.h"
+#include "ParameterSelectionSystem.h"
 #include "CategoryData.h"
-#include "ParamAddingUtils.h"
+#include "ParameterSelectionUtils.h"
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMacroParamSystem.h"
     
@@ -17,7 +17,7 @@ namespace
 
 namespace AddParams
 {
-    ParamAddingSystem::ParamAddingSystem()
+    ParameterSelectionSystem::ParameterSelectionSystem()
     :updateWaitTimeoutInSeconds_(10)
     ,updatePending_(false)
     ,dialogRowData_()
@@ -33,9 +33,9 @@ namespace AddParams
     {
     }
 
-    ParamAddingSystem::~ParamAddingSystem() = default;
+    ParameterSelectionSystem::~ParameterSelectionSystem() = default;
 
-    void ParamAddingSystem::initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem, 
+    void ParameterSelectionSystem::initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem, 
         NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories)
     {
         modelProducerSystem_ = &modelProducerSystem;
@@ -47,19 +47,19 @@ namespace AddParams
         customCategories_ = customCategories;
     }
 
-    void ParamAddingSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
+    void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
     {
         addHelpData(producer, menuString, dataType, std::string());
     }
 
-    void ParamAddingSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName) //Add at the end of help data list
+    void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName) //Add at the end of help data list
     {
         std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
         SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, dataType, 0, "", true, nullptr, 2, displayName);
         otherHelpData_.push_back(item);
     }
 
-    void ParamAddingSystem::updateData()
+    void ParameterSelectionSystem::updateData()
     {
         updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
@@ -70,7 +70,7 @@ namespace AddParams
         updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
     }
 
-    void ParamAddingSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
+    void ParameterSelectionSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         std::string categoryName = ::GetDictionaryString(catName.c_str());
         auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
@@ -86,7 +86,7 @@ namespace AddParams
         updatePending(false);
     }
 
-    void ParamAddingSystem::updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory)
+    void ParameterSelectionSystem::updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory)
     {
         if(getMacroParamSystemCallback_)
         {
@@ -112,7 +112,7 @@ namespace AddParams
         }
     }
 
-    void ParamAddingSystem::updateCustomCategories()
+    void ParameterSelectionSystem::updateCustomCategories()
     {
         for(auto customCat : customCategories_)
         {
@@ -121,7 +121,7 @@ namespace AddParams
         }
     }
 
-    void ParamAddingSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
+    void ParameterSelectionSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
         categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs_, customCategory);
@@ -129,21 +129,21 @@ namespace AddParams
         dialogDataNeedsUpdate_ = true;
     }
 
-    std::vector<SingleRowItem>& ParamAddingSystem::dialogRowData()
+    std::vector<SingleRowItem>& ParameterSelectionSystem::dialogRowData()
     {
         return dialogRowData_;
     }
 
-    const std::vector<SingleRowItem>& ParamAddingSystem::dialogRowData() const
+    const std::vector<SingleRowItem>& ParameterSelectionSystem::dialogRowData() const
     { 
         return dialogRowData_; 
     }
-    const std::vector<unsigned char>& ParamAddingSystem::dialogTreePatternArray() const
+    const std::vector<unsigned char>& ParameterSelectionSystem::dialogTreePatternArray() const
     { 
         return dialogTreePatternArray_;
     }
 
-    void ParamAddingSystem::updateDialogData()
+    void ParameterSelectionSystem::updateDialogData()
     {
         if(dialogDataNeedsUpdate_)
         {
@@ -154,7 +154,7 @@ namespace AddParams
         }
     }
 
-    void ParamAddingSystem::updateDialogRowData()
+    void ParameterSelectionSystem::updateDialogRowData()
     {
         std::vector<SingleRowItem> dialogRowDataMemory;
         dialogRowDataMemory.swap(dialogRowData_);
@@ -173,7 +173,7 @@ namespace AddParams
     }
 
     // Must be called after updateDialogRowData call.
-    void ParamAddingSystem::updateDialogTreePatternData()
+    void ParameterSelectionSystem::updateDialogTreePatternData()
     {
         dialogTreePatternArray_.clear();
         for(const auto &rowItem : dialogRowData_)

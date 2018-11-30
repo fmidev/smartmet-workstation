@@ -1,6 +1,6 @@
 #include "CategoryData.h"
 #include "ProducerData.h"
-#include "ParamAddingUtils.h"
+#include "ParameterSelectionUtils.h"
 #include "NFmiProducerSystem.h"
 #include "NFmiMacroParamSystem.h"
 #include "NFmiInfoOrganizer.h"

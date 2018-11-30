@@ -1151,14 +1151,14 @@ CtrlViewUtils::GraphicalInfo& SmartMetDocumentInterfaceForGeneralDataDoc::GetGra
     return itsDoc->GetGraphicalInfo(theMapViewDescTopIndex);
 }
 
-AddParams::ParamAddingSystem& SmartMetDocumentInterfaceForGeneralDataDoc::ParamAddingSystem()
+AddParams::ParameterSelectionSystem& SmartMetDocumentInterfaceForGeneralDataDoc::ParameterSelectionSystem()
 {
-    return itsDoc->ParamAddingSystem();
+    return itsDoc->ParameterSelectionSystem();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateParamAddingSystem()
+void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateParameterSelectionSystem()
 {
-    itsDoc->UpdateParamAddingSystem();
+    itsDoc->UpdateParameterSelectionSystem();
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId)

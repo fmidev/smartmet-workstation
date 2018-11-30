@@ -39,7 +39,7 @@ const int kFmiMacroDirectoriesSyncronization = 15;
 const int kFmiStoreViewPosToWinRegistryTimer = 16;
 const int kFmiStoreCrashBackupViewMacroTimer = 17;
 const int kFmiGenerateBetaProductsTimer = 18;
-const int kFmiParamAddingSystemUpdateTimer = 19;
+const int kFmiParameterSelectionSystemUpdateTimer = 19;
 const int kFmiLoggingSystemManagementTimer = 20;
 const int kFmiNewQueryDataReadUpdateViewsTimer = 21;
 
@@ -73,7 +73,7 @@ public:
 	void PutWarningFlagTimerOn(void);
 	void DoAppDataBaseCollection(int theAction);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
-    void ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds);
+    void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds);
 
 // Overrides
 public:
@@ -119,7 +119,7 @@ protected:  // control bar embedded members
     UINT itsStoreViewPosToWinRegistryTimer;
     UINT itsStoreCrashBackupViewMacroTimer;
     UINT itsGenerateBetaProductsTimer;
-    UINT itsParamAddingSystemUpdateTimer;
+    UINT itsParameterSelectionSystemUpdateTimer;
     UINT itsLoggingSystemManagementTimer;
     
 	NFmiEditMapGeneralDataDoc* itsDoc; // ei omista, ei tuhoa

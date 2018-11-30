@@ -37,8 +37,8 @@ std::string SmartMetViewIdGetName(SmartMetViewId singleViewId)
         return "BrushToolDlg";
     case SmartMetViewId::LogViewer:
         return "LogViewer";
-    case SmartMetViewId::ParamAddingDlg:
-        return "ParamAddingDlg";
+    case SmartMetViewId::ParameterSelectionDlg:
+        return "ParameterSelectionDlg";
     case SmartMetViewId::DataQualityCheckerView:
         return "DataQualityCheckerView";
     case SmartMetViewId::ViewMacroDlg:
