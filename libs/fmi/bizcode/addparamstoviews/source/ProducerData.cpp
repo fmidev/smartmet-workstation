@@ -1,6 +1,6 @@
 #include "ProducerData.h"
 #include "SingleData.h"
-#include "ParamAddingUtils.h"
+#include "ParameterSelectionUtils.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiHelpDataInfo.h"

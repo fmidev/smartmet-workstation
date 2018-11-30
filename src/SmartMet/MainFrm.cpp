@@ -1069,9 +1069,9 @@ void CMainFrame::WaitQDataCacheThreadsToStop(void)
 		itsDoc->LogMessage("Some problem with QueryData cache-threads stoppage, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 }
 
-void CMainFrame::ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds)
+void CMainFrame::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
 {
-    itsParamAddingSystemUpdateTimer = static_cast<UINT>(SetTimer(kFmiParamAddingSystemUpdateTimer, waitTimeInSeconds * 1000, NULL));
+    itsParameterSelectionSystemUpdateTimer = static_cast<UINT>(SetTimer(kFmiParameterSelectionSystemUpdateTimer, waitTimeInSeconds * 1000, NULL));
 }
 
 void CMainFrame::UpdateCrashRptLogFile()
@@ -1229,10 +1229,10 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
             return;
         }
 
-        case kFmiParamAddingSystemUpdateTimer:
+        case kFmiParameterSelectionSystemUpdateTimer:
         {
-            KillTimer(itsParamAddingSystemUpdateTimer);
-            itsDoc->UpdateParamAddingSystem();
+            KillTimer(itsParameterSelectionSystemUpdateTimer);
+            itsDoc->UpdateParameterSelectionSystem();
             return;
         }
 
