@@ -15,7 +15,7 @@ namespace AddParams
 {
     class CategoryData;
 
-    class ParamAddingSystem
+    class ParameterSelectionSystem
     {
         std::vector<std::unique_ptr<CategoryData>> categoryDataVector_;
 
@@ -27,7 +27,7 @@ namespace AddParams
         int updateWaitTimeoutInSeconds_;
         bool updatePending_;
 
-        // List of ParamAdding-objects (SingleRowItems), which are used to fill ParamAdding-dialogs Grid Control (tree structure).
+        // List of ParameterSelection-objects (SingleRowItems), which are used to fill ParameterSelection-dialogs Grid Control (tree structure).
         std::vector<SingleRowItem> dialogRowData_;
         // TreeDepth for grid-control is saved here. Uses either treeDepth or category info (category = 1, producer = 2, fileData = 3, param = 4 and level = 5...)
         std::vector<unsigned char> dialogTreePatternArray_;
@@ -58,8 +58,8 @@ namespace AddParams
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
 
     public:
-        ParamAddingSystem();
-        ~ParamAddingSystem();
+        ParameterSelectionSystem();
+        ~ParameterSelectionSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
@@ -86,6 +86,5 @@ namespace AddParams
         void updateDialogTreePatternData();
         void updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
-        void updateCustomCategoryData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory);
     };
 }

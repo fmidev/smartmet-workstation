@@ -21,9 +21,9 @@ ApplicationInterfaceForSmartMet::ApplicationInterfaceForSmartMet()
 {
 }
 
-void ApplicationInterfaceForSmartMet::ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds)
+void ApplicationInterfaceForSmartMet::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
 {
-    ::GetMainFrame()->ParamAddingSystemUpdateTimerStart(waitTimeInSeconds);
+    ::GetMainFrame()->ParameterSelectionSystemUpdateTimerStart(waitTimeInSeconds);
 }
 
 void ApplicationInterfaceForSmartMet::SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound)
@@ -142,11 +142,11 @@ void ApplicationInterfaceForSmartMet::UpdateCrossSectionView()
         doc->UpdateCrossSectionView();
 }
 
-void ApplicationInterfaceForSmartMet::ActivateParamAddingDlg()
+void ApplicationInterfaceForSmartMet::ActivateParameterSelectionDlg()
 {
     auto doc = GetDocument();
     if(doc)
-        doc->ActivateParamAddingDlg();
+        doc->ActivateParameterSelectionDlg();
 }
 
 void ApplicationInterfaceForSmartMet::ActivateZoomDialog(int theWantedDescTopIndex)

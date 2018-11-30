@@ -2670,7 +2670,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
     
     if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-        // Uuden ParamAdding-dialogin tarvitsemia asetuksia laitetaan tällä uudella funktiolla.
+        // Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan tällä uudella funktiolla.
         itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
 
         NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);

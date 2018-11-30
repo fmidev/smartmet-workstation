@@ -123,7 +123,7 @@
 #include "SmartMetDocumentInterfaceForGeneralDataDoc.h"
 #include "NFmiMapViewTimeLabelInfo.h"
 #include "CtrlViewFastInfoFunctions.h"
-#include "ParamAddingSystem.h"
+#include "ParameterSelectionSystem.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "QueryDataReading.h"
 #include <direct.h> // working directory juttuja varten
@@ -625,7 +625,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 #ifndef DISABLE_CPPRESTSDK
 ,wmsSupport()
 #endif // DISABLE_CPPRESTSDK
-,paramAddingSystem()
+,parameterSelectionSystem()
 {
 	NFmiRect bsRect1(0.,0.,1.,0.905);
 	NFmiRect bsRect2(0.,0.,1.,0.91);
@@ -796,7 +796,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
     // This must be initialized AFTER all other data systems have been initialized
     // Meaning after modelProducers, obsProducers, satelProducers, wsmSupport, smarttools, etc. have initialized
-    InitParamAddingSystem();
+    InitParameterSelectionSystem();
     InitLogFileCleaning();
     InitMacroParamDataCache();
 
@@ -2932,10 +2932,10 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 
 void PrepareForParamAddSystemUpdate()
 {
-    if(!ParamAddingSystem().updatePending())
+    if(!ParameterSelectionSystem().updatePending())
     {
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ParamAddingSystemUpdateTimerStart(ParamAddingSystem().updateWaitTimeoutInSeconds());
-        ParamAddingSystem().updatePending(true);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(ParameterSelectionSystem().updateWaitTimeoutInSeconds());
+        ParameterSelectionSystem().updatePending(true);
     }
 }
 
@@ -11584,8 +11584,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
     {
-        ParamAddingSystem().LastAcivatedDescTopIndex(theDescTopIndex);
-        ParamAddingSystem().LastActivatedRowIndex(GetRealRowNumber(theDescTopIndex, theActiveRowIndex));
+        ParameterSelectionSystem().LastAcivatedDescTopIndex(theDescTopIndex);
+        ParameterSelectionSystem().LastActivatedRowIndex(GetRealRowNumber(theDescTopIndex, theActiveRowIndex));
     }
 
 	void CopyDrawParamsList(NFmiPtrList<NFmiDrawParamList> &copyFromList, NFmiPtrList<NFmiDrawParamList> &copyToList)
@@ -12688,7 +12688,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void ActivateViewParamSelectorDlg(int /* theMapViewDescTopIndex */)
 	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParamAddingDlg();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg();
 	}
 
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord)
@@ -14103,7 +14103,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     }
 #endif // DISABLE_CPPRESTSDK
 
-    std::vector<int> HelpDataIdsForParamAddingSystem()
+    std::vector<int> HelpDataIdsForParameterSelectionSystem()
     {
         std::string idStr;
         std::vector<int> idVector;
@@ -14138,24 +14138,24 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return customMenus;
     }
 
-    void InitParamAddingSystem()
+    void InitParameterSelectionSystem()
     {
         DoVerboseFunctionStartingLogReporting(__FUNCTION__);
         try
         {
             auto customCategories = CustomMenuFolders();
-            paramAddingSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
-                *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParamAddingSystem(), customCategories);
+            parameterSelectionSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
+                *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParameterSelectionSystem(), customCategories);
 
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
-            paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
+            parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
             // Add other data to help data. 
             if(capDataSystem.useCapData())
             {
                 NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345), "CAP"); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
                 std::string menuString = "Warnings";
-                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
+                parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
             }
 
             if(ConceptualModelData().Use())
@@ -14163,7 +14163,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 NFmiProducer prod(1028, "Analysis"); // No official producerId
                 std::string menuString = "Conceptual analysis";
                 std::string displayName = ConceptualModelData().DefaultUserName(); // Conceptual analysis uses displayName to fetch correct data!
-                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
+                parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
             }
             
             // TODO
@@ -14171,19 +14171,19 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         }
         catch(std::exception &e)
         {
-            LogAndWarnUser(e.what(), "Problems in InitParamAddingSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+            LogAndWarnUser(e.what(), "Problems in InitParameterSelectionSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
         }
     }
 
-    void UpdateParamAddingSystem()
+    void UpdateParameterSelectionSystem()
     {
-        ParamAddingSystem().updateData();
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Update Param adding dialog system", SmartMetViewId::ParamAddingDlg);
+        ParameterSelectionSystem().updateData();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Update Parameter Selection dialog system", SmartMetViewId::ParameterSelectionDlg);
     }
 
-    AddParams::ParamAddingSystem& ParamAddingSystem()
+    AddParams::ParameterSelectionSystem& ParameterSelectionSystem()
     {
-        return paramAddingSystem;
+        return parameterSelectionSystem;
     }
 
     NFmiBasicSmartMetConfigurations& BasicSmartMetConfigurations()
@@ -14244,7 +14244,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
-    AddParams::ParamAddingSystem paramAddingSystem;
+    AddParams::ParameterSelectionSystem parameterSelectionSystem;
 #ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport wmsSupport;
 #endif // DISABLE_CPPRESTSDK
@@ -16833,14 +16833,14 @@ Wms::WmsSupport& NFmiEditMapGeneralDataDoc::WmsSupport()
 }
 #endif // DISABLE_CPPRESTSDK
 
-AddParams::ParamAddingSystem& NFmiEditMapGeneralDataDoc::ParamAddingSystem()
+AddParams::ParameterSelectionSystem& NFmiEditMapGeneralDataDoc::ParameterSelectionSystem()
 {
-    return pimpl->ParamAddingSystem();
+    return pimpl->ParameterSelectionSystem();
 }
 
-void NFmiEditMapGeneralDataDoc::UpdateParamAddingSystem()
+void NFmiEditMapGeneralDataDoc::UpdateParameterSelectionSystem()
 {
-    pimpl->UpdateParamAddingSystem();
+    pimpl->UpdateParameterSelectionSystem();
 }
 
 bool NFmiEditMapGeneralDataDoc::LoadStaticHelpData(void)
