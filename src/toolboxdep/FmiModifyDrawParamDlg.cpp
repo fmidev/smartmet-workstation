@@ -460,6 +460,8 @@ static int GetStationDataViewSelectorIndex(NFmiMetEditorTypes::View theViewType)
         return theViewType - g_ViewTypeOffset1;
     else if(theViewType <= NFmiMetEditorTypes::kFmiSmartSymbolView)
         return theViewType - g_ViewTypeOffset2;
+    else if(theViewType <= NFmiMetEditorTypes::kFmiCustomSymbolView)
+        return theViewType - g_ViewTypeOffset2;
     else
         return -1;
 }
@@ -488,6 +490,7 @@ void CFmiModifyDrawParamDlg::FillStationDataViewSelector(void)
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Raw Mirri font symbol").c_str())); // Huom! tämän arvo on oikeasti 13, joten pitää tehdä virityksiä
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Better weather symbol").c_str())); // Huom! tämän arvo on oikeasti 14, joten pitää tehdä virityksiä
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("SmartSymbol").c_str())); // Huom! tämän arvo on oikeasti 15, joten pitää tehdä virityksiä
+    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("CustomSymbol").c_str())); // Huom! tämän arvo on oikeasti 16, joten pitää tehdä virityksiä
     itsStationDataViewSelector.SetCurSel(::GetStationDataViewSelectorIndex(itsDrawParam->StationDataViewType()));
 }
 
