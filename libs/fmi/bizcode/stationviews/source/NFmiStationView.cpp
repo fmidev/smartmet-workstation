@@ -1367,8 +1367,7 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
     auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
     if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
     {
-        theValues = macroParamLayerCacheDataType.dataMatrix_;
-        fUseCalculationPoints = macroParamLayerCacheDataType.useCalculationPoints_;
+        macroParamLayerCacheDataType.getCacheValues(theValues, fUseCalculationPoints, fUseAlReadySpacedOutData, itsInfo);
         if(theUsedGridOut)
         {
             *theUsedGridOut = NFmiGrid(itsArea.get(), static_cast<unsigned long>(theValues.NX()), static_cast<unsigned long>(theValues.NY()));
@@ -1388,8 +1387,7 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
             *theUsedGridOut = *itsInfo->Grid();
 
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
-        macroParamLayerCacheDataType.dataMatrix_ = theValues;
-        macroParamLayerCacheDataType.useCalculationPoints_ = fUseCalculationPoints;
+        macroParamLayerCacheDataType.setCacheValues(theValues, fUseCalculationPoints, fUseAlReadySpacedOutData);
         itsCtrlViewDocumentInterface->MacroParamDataCache().setCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType);
     }
 }
@@ -1402,14 +1400,15 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache()
     auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
     if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
     {
-        NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(macroParamLayerCacheDataType.dataMatrix_.NX()), static_cast<unsigned long>(macroParamLayerCacheDataType.dataMatrix_.NY()));
+        const auto &dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
+        NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
         grid.Area()->SetXYArea(NFmiRect(0, 0, 1, 1));
         auto gridPoint = grid.LatLonToGrid(latlon);
         auto xIndex = boost::math::iround(gridPoint.X());
         auto yIndex = boost::math::iround(gridPoint.Y());
-        if(xIndex >= 0 && xIndex < macroParamLayerCacheDataType.dataMatrix_.NX() && yIndex >= 0 && yIndex < macroParamLayerCacheDataType.dataMatrix_.NY())
+        if(xIndex >= 0 && xIndex < dataMatrix.NX() && yIndex >= 0 && yIndex < dataMatrix.NY())
         {
-            return macroParamLayerCacheDataType.dataMatrix_[xIndex][yIndex];
+            return dataMatrix[xIndex][yIndex];
         }
     }
 
