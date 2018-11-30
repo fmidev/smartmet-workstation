@@ -532,7 +532,7 @@ void CFmiParamAddingDlg::InitHeaders(void)
     itsHeaders.clear();
     itsHeaders.push_back(ParamAddingHeaderParInfo("Row", ParamAddingHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
     itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.)));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Time", ParamAddingHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 6.5)));
+    itsHeaders.push_back(ParamAddingHeaderParInfo("Time", ParamAddingHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 5.5)));
     itsHeaders.push_back(ParamAddingHeaderParInfo("Id", ParamAddingHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 3.5)));
 }
 
