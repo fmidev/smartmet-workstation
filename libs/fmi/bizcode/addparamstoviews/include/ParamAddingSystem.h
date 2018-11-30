@@ -86,6 +86,5 @@ namespace AddParams
         void updateDialogTreePatternData();
         void updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
-        void updateCustomCategoryData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory);
     };
 }
