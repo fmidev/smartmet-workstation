@@ -1,15 +1,12 @@
-// FmiParamAddingDlg.cpp : implementation file
-//
-
 #include "stdafx.h"
-#include "FmiParamAddingDlg.h"
+#include "FmiParameterSelectionDlg.h"
 #include "afxdialogex.h"
 #include "PERSIST2.H"
 #include "CloneBitmap.h"
 #include "SmartMetToolboxDep_resource.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "SmartMetDocumentInterface.h"
-#include "ParamAddingSystem.h"
+#include "ParameterSelectionSystem.h"
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMenuItem.h"
 #include "SpecialDesctopIndex.h"
@@ -27,22 +24,22 @@
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
 // *************************************************
-// NFmiParamAddingGridCtrl
+// NFmiParameterSelectionGridCtrl
 
 UINT_PTR g_TitleTextUpdater = 0;
 const UINT_PTR g_TitleTextUpdaterTimer = 1;
-const std::string g_TitleStr = ::GetDictionaryString("Param adding dialog");
+const std::string g_TitleStr = ::GetDictionaryString("Parameter Selection");
 
-IMPLEMENT_DYNCREATE(NFmiParamAddingGridCtrl, CGridCtrl)
+IMPLEMENT_DYNCREATE(NFmiParameterSelectionGridCtrl, CGridCtrl)
 
-// CFmiParamAddingDlg message handlers
-BEGIN_MESSAGE_MAP(NFmiParamAddingGridCtrl, CGridCtrl)
+// CFmiParameterSelectionDlg message handlers
+BEGIN_MESSAGE_MAP(NFmiParameterSelectionGridCtrl, CGridCtrl)
     ON_WM_LBUTTONDBLCLK()
     ON_WM_SIZE()
     ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
 
-void NFmiParamAddingGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
+void NFmiParameterSelectionGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
     // TODO: Add your message handler code here and/or call default
 
@@ -52,7 +49,7 @@ void NFmiParamAddingGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
         itsLButtonDblClkCallback();
 }
 
-void NFmiParamAddingGridCtrl::OnSize(UINT nType, int cx, int cy)
+void NFmiParameterSelectionGridCtrl::OnSize(UINT nType, int cx, int cy)
 {
     CGridCtrl::OnSize(nType, cx, cy);
 
@@ -68,7 +65,7 @@ void NFmiParamAddingGridCtrl::OnSize(UINT nType, int cx, int cy)
     m_tooltip.SetToolRect(this, PARAM_ADDING_DIALOG_TOOLTIP_ID, rect);
 }
 
-void NFmiParamAddingGridCtrl::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
+void NFmiParameterSelectionGridCtrl::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
     *result = 0;
     NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
@@ -82,7 +79,7 @@ void NFmiParamAddingGridCtrl::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * res
 
         try
         {
-            strU_ = CA2T(NFmiParamAddingGridCtrl::ComposeToolTipText(pt).c_str());
+            strU_ = CA2T(NFmiParameterSelectionGridCtrl::ComposeToolTipText(pt).c_str());
         }
         catch(std::exception &e)
         {
@@ -99,14 +96,14 @@ void NFmiParamAddingGridCtrl::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * res
     }
 }
 
-BOOL NFmiParamAddingGridCtrl::PreTranslateMessage(MSG* pMsg)
+BOOL NFmiParameterSelectionGridCtrl::PreTranslateMessage(MSG* pMsg)
 {
     m_tooltip.RelayEvent(pMsg);
 
     return CGridCtrl::PreTranslateMessage(pMsg);
 }
 
-BOOL NFmiParamAddingGridCtrl::OnInitDialog()
+BOOL NFmiParameterSelectionGridCtrl::OnInitDialog()
 {
     CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID);
     m_tooltip.SetMaxTipWidth(600);
@@ -269,7 +266,7 @@ std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, check
     return str;
 }
 
-std::string NFmiParamAddingGridCtrl::TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
 {
     int numberOfProducers = 0;
     int numberOfDataFiles = 0;
@@ -305,7 +302,7 @@ std::string NFmiParamAddingGridCtrl::TooltipForCategoryType(AddParams::SingleRow
     return str;
 }
 
-std::string NFmiParamAddingGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
 {
     int numberOfParams = 0;
     int depth = singleRowItem.treeDepth();
@@ -331,15 +328,15 @@ std::string NFmiParamAddingGridCtrl::TooltipForMacroParamCategoryType(AddParams:
 }
 
 
-std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
+std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
 {
     CCellID idCurrentCell = GetCellFromPt(point);
     if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount() 
         && idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
     {
         int rowNumber = idCurrentCell.row;
-        AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData().at(rowNumber - 1);
-        std::vector<AddParams::SingleRowItem> singleRowItemVector = itsSmartMetDocumentInterface->ParamAddingSystem().dialogRowData();
+        AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData().at(rowNumber - 1);
+        std::vector<AddParams::SingleRowItem> singleRowItemVector = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData();
         auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
         auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
         auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
@@ -370,36 +367,36 @@ std::string NFmiParamAddingGridCtrl::ComposeToolTipText(CPoint point)
 
 
 // *************************************************
-// CFmiParamAddingDlg dialog
+// CFmiParameterSelectionDlg dialog
 
-const NFmiViewPosRegistryInfo CFmiParamAddingDlg::s_ViewPosRegistryInfo(CRect(360, 240, 830, 760), "\\ParamAddingDlg");
+const NFmiViewPosRegistryInfo CFmiParameterSelectionDlg::s_ViewPosRegistryInfo(CRect(360, 240, 830, 760), "\\ParameterSelectionDlg");
 
-IMPLEMENT_DYNAMIC(CFmiParamAddingDlg, CDialogEx)
+IMPLEMENT_DYNAMIC(CFmiParameterSelectionDlg, CDialogEx)
 
-CFmiParamAddingDlg::CFmiParamAddingDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent)
+CFmiParameterSelectionDlg::CFmiParameterSelectionDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent)
     : CDialogEx(IDD_DIALOG_PARAM_ADDING, pParent)
     , itsGridCtrl()
     , itsTreeColumn()
     , itsHeaders()
     , fDialogInitialized(false)
     , itsSmartMetDocumentInterface(smartMetDocumentInterface)
-    , itsParamAddingSystem(&(smartMetDocumentInterface->ParamAddingSystem()))
+    , itsParameterSelectionSystem(&(smartMetDocumentInterface->ParameterSelectionSystem()))
 {
 
 }
 
-CFmiParamAddingDlg::~CFmiParamAddingDlg()
+CFmiParameterSelectionDlg::~CFmiParameterSelectionDlg()
 {
 }
 
-void CFmiParamAddingDlg::DoDataExchange(CDataExchange* pDX)
+void CFmiParameterSelectionDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
     DDX_GridControl(pDX, IDC_CUSTOM_GRID_PARAM_ADDING, itsGridCtrl);
 }
 
 
-BEGIN_MESSAGE_MAP(CFmiParamAddingDlg, CDialogEx)
+BEGIN_MESSAGE_MAP(CFmiParameterSelectionDlg, CDialogEx)
     ON_WM_CLOSE()
     ON_WM_GETMINMAXINFO()
     ON_WM_SIZE()
@@ -407,13 +404,13 @@ BEGIN_MESSAGE_MAP(CFmiParamAddingDlg, CDialogEx)
     ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
-void CFmiParamAddingDlg::SetDefaultValues(void)
+void CFmiParameterSelectionDlg::SetDefaultValues(void)
 {
-    MoveWindow(CFmiParamAddingDlg::ViewPosRegistryInfo().DefaultWindowRect());
+    MoveWindow(CFmiParameterSelectionDlg::ViewPosRegistryInfo().DefaultWindowRect());
     Persist2::WriteWindowRectToWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), MakeUsedWinRegistryKeyStr(0), this);
 }
 
-BOOL CFmiParamAddingDlg::OnInitDialog()
+BOOL CFmiParameterSelectionDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
     fDialogInitialized = true;
@@ -444,33 +441,33 @@ BOOL CFmiParamAddingDlg::OnInitDialog()
                   // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CFmiParamAddingDlg::OnCancel()
+void CFmiParameterSelectionDlg::OnCancel()
 {
     DoWhenClosing();
 
     CDialogEx::OnCancel();
 }
 
-void CFmiParamAddingDlg::OnOK()
+void CFmiParameterSelectionDlg::OnOK()
 {
     DoWhenClosing();
 
     CDialogEx::OnOK();
 }
 
-void CFmiParamAddingDlg::OnClose()
+void CFmiParameterSelectionDlg::OnClose()
 {
     DoWhenClosing();
 
     CDialogEx::OnClose();
 }
 
-void CFmiParamAddingDlg::DoWhenClosing(void)
+void CFmiParameterSelectionDlg::DoWhenClosing(void)
 {
     AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttan‰yttˆ eli mainframe
 }
 
-void CFmiParamAddingDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+void CFmiParameterSelectionDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
     lpMMI->ptMinTrackSize.x = 250;
     lpMMI->ptMinTrackSize.y = 250;
@@ -478,14 +475,14 @@ void CFmiParamAddingDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
     CDialogEx::OnGetMinMaxInfo(lpMMI);
 }
 
-void CFmiParamAddingDlg::OnSize(UINT nType, int cx, int cy)
+void CFmiParameterSelectionDlg::OnSize(UINT nType, int cx, int cy)
 {
     CDialogEx::OnSize(nType, cx, cy);
 
     AdjustDialogControls();
 }
 
-void CFmiParamAddingDlg::AdjustDialogControls(void)
+void CFmiParameterSelectionDlg::AdjustDialogControls(void)
 {
     if(fDialogInitialized)
     {
@@ -504,7 +501,7 @@ void CFmiParamAddingDlg::AdjustDialogControls(void)
 #undef max
 #endif
 
-void CFmiParamAddingDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
+void CFmiParameterSelectionDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
 {
     if(itsGridCtrl.GetColumnCount())
     {
@@ -526,19 +523,19 @@ void CFmiParamAddingDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
 }
 
 
-void CFmiParamAddingDlg::InitHeaders(void)
+void CFmiParameterSelectionDlg::InitHeaders(void)
 {
     int basicColumnWidthUnit = 18;
     itsHeaders.clear();
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Row", ParamAddingHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Name", ParamAddingHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.)));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Time", ParamAddingHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 5.5)));
-    itsHeaders.push_back(ParamAddingHeaderParInfo("Id", ParamAddingHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Row", ParameterSelectionHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Name", ParameterSelectionHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Time", ParameterSelectionHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 5.5)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Id", ParameterSelectionHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 3.5)));
 }
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 
-static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<ParamAddingHeaderParInfo> &theHeaders, int rowCount, int theFixedRowCount, int theFixedColumnCount, bool &fFirstTime)
+static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<ParameterSelectionHeaderParInfo> &theHeaders, int rowCount, int theFixedRowCount, int theFixedColumnCount, bool &fFirstTime)
 {
     int columnCount = static_cast<int>(theHeaders.size());
     theGridCtrl.SetRowCount(rowCount);
@@ -576,9 +573,9 @@ static bool IsTreeNodeCollapsed(CTreeColumn &treeColumnControl, int rowIndex)
         return true;
 }
 
-void CFmiParamAddingDlg::SetTreeNodeInformationBackToDialogRowData()
+void CFmiParameterSelectionDlg::SetTreeNodeInformationBackToDialogRowData()
 {
-    auto &rowData = itsParamAddingSystem->dialogRowData();
+    auto &rowData = itsParameterSelectionSystem->dialogRowData();
     int rowIndex = itsGridCtrl.GetFixedRowCount();
     for(auto &rowItem : rowData)
     {
@@ -586,22 +583,22 @@ void CFmiParamAddingDlg::SetTreeNodeInformationBackToDialogRowData()
     }
 }
 
-void CFmiParamAddingDlg::UpdateGridControlValues(void)
+void CFmiParameterSelectionDlg::UpdateGridControlValues(void)
 {
     static bool fFirstTime = true;
     int fixedRowCount = 1;
     int fixedColumnCount = 1;
 
-    if(fFirstTime || itsParamAddingSystem->dialogDataNeedsUpdate())
+    if(fFirstTime || itsParameterSelectionSystem->dialogDataNeedsUpdate())
     {
         SetTreeNodeInformationBackToDialogRowData();
-        itsParamAddingSystem->updateDialogData();
-        int dataRowCount = static_cast<int>(itsParamAddingSystem->dialogRowData().size());
+        itsParameterSelectionSystem->updateDialogData();
+        int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
         int maxRowCount = fixedRowCount + dataRowCount;
         SetHeaders(itsGridCtrl, itsHeaders, maxRowCount, fixedRowCount, fixedColumnCount, fFirstTime);
         UpdateRows(fixedRowCount, fixedColumnCount, false);
 
-        const auto &treePatternArray = itsParamAddingSystem->dialogTreePatternArray();
+        const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
         if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
         {
             itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
@@ -611,9 +608,9 @@ void CFmiParamAddingDlg::UpdateGridControlValues(void)
     }
 }
 
-void CFmiParamAddingDlg::MakeTreeNodeCollapseSettings()
+void CFmiParameterSelectionDlg::MakeTreeNodeCollapseSettings()
 {
-    const auto &rowItemData = itsParamAddingSystem->dialogRowData();
+    const auto &rowItemData = itsParameterSelectionSystem->dialogRowData();
     int currentRowCount = itsGridCtrl.GetFixedRowCount();
     // First collapse all nodes
     itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
@@ -629,9 +626,9 @@ void CFmiParamAddingDlg::MakeTreeNodeCollapseSettings()
     itsTreeColumn.TreeRefreshRows();
 }
 
-void CFmiParamAddingDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
+void CFmiParameterSelectionDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
 {
-    const auto &rowData = itsParamAddingSystem->dialogRowData();
+    const auto &rowData = itsParameterSelectionSystem->dialogRowData();
     int currentRowCount = fixedRowCount;
     for(size_t i = 0; i < rowData.size(); i++)
     {
@@ -719,13 +716,13 @@ static std::string GetColumnText(int theRow, int theColumn, const AddParams::Sin
 {
     switch(theColumn)
     {
-    case ParamAddingHeaderParInfo::kRowNumber:
+    case ParameterSelectionHeaderParInfo::kRowNumber:
         return std::to_string(theRow);
-    case ParamAddingHeaderParInfo::kItemName:
+    case ParameterSelectionHeaderParInfo::kItemName:
         return theRowItem.itemName();
-    case ParamAddingHeaderParInfo::kOrigOrLastTime:
+    case ParameterSelectionHeaderParInfo::kOrigOrLastTime:
         return theRowItem.origTime();
-    case ParamAddingHeaderParInfo::kItemId:
+    case ParameterSelectionHeaderParInfo::kItemId:
     {
         if(theRowItem.itemId())
             return std::to_string(theRowItem.itemId());
@@ -737,7 +734,7 @@ static std::string GetColumnText(int theRow, int theColumn, const AddParams::Sin
     }
 }
 
-void CFmiParamAddingDlg::SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount)
+void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount)
 {
     for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
     {
@@ -752,38 +749,38 @@ void CFmiParamAddingDlg::SetGridRow(int row, const AddParams::SingleRowItem &the
     }
 }
 
-void CFmiParamAddingDlg::Update()
+void CFmiParameterSelectionDlg::Update()
 {
     if(IsWindowVisible())
         UpdateGridControlValues();
 }
 
-void CFmiParamAddingDlg::InitDialogTexts(void)
+void CFmiParameterSelectionDlg::InitDialogTexts(void)
 {
     SetWindowText(CA2T(g_TitleStr.c_str()));
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "IDC_BUTTON_PRINT");
 }
 
-void CFmiParamAddingDlg::HandleGridCtrlsLButtonDblClk()
+void CFmiParameterSelectionDlg::HandleGridCtrlsLButtonDblClk()
 {
     auto cell = itsGridCtrl.GetFocusCell();
     if(cell.IsValid())
     {
         int rowItemIndex = cell.row - itsGridCtrl.GetFixedRowCount();
-        const auto &rowData = itsParamAddingSystem->dialogRowData();
+        const auto &rowData = itsParameterSelectionSystem->dialogRowData();
         if(rowItemIndex >= 0 && rowItemIndex < rowData.size())
             HandleRowItemSelection(rowData[rowItemIndex]);
     }
 }
 
-void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
+void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
 {    
     if(rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode())
     {
         NFmiMenuItem *addParamCommand;
         if(NFmiDrawParam::IsMacroParamCase(rowItem.dataType())) {
             addParamCommand = new NFmiMenuItem(
-                static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
+                static_cast<int>(itsParameterSelectionSystem->LastAcivatedDescTopIndex()),
                 rowItem.itemName(),
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
@@ -796,7 +793,7 @@ void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &
         else
         {
             addParamCommand = new NFmiMenuItem(
-                static_cast<int>(itsParamAddingSystem->LastAcivatedDescTopIndex()),
+                static_cast<int>(itsParameterSelectionSystem->LastAcivatedDescTopIndex()),
                 "Add some param",
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
@@ -805,15 +802,15 @@ void CFmiParamAddingDlg::HandleRowItemSelection(const AddParams::SingleRowItem &
                 rowItem.dataType());
         }
 
-        itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParamAddingSystem->LastActivatedRowIndex(), 0);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParamAddingDlg: Adding param to map view");
+        itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view");
     }
 }
 
-std::string CFmiParamAddingDlg::MakeActiveViewRowText()
+std::string CFmiParameterSelectionDlg::MakeActiveViewRowText()
 {
     std::string str;
-    itsLastAcivatedDescTopIndex = itsParamAddingSystem->LastAcivatedDescTopIndex();
+    itsLastAcivatedDescTopIndex = itsParameterSelectionSystem->LastAcivatedDescTopIndex();
     if(itsLastAcivatedDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
     {
         str += "Active Map view ";
@@ -829,13 +826,13 @@ std::string CFmiParamAddingDlg::MakeActiveViewRowText()
     }
 
     str += ", active row ";
-    itsLastActivatedRowIndex = itsParamAddingSystem->LastActivatedRowIndex();
+    itsLastActivatedRowIndex = itsParameterSelectionSystem->LastActivatedRowIndex();
     str += std::to_string(itsLastActivatedRowIndex);
 
     return str;
 }
 
-void CFmiParamAddingDlg::OnTimer(UINT_PTR nIDEvent)
+void CFmiParameterSelectionDlg::OnTimer(UINT_PTR nIDEvent)
 {
     switch(nIDEvent)
     {
@@ -852,15 +849,15 @@ void CFmiParamAddingDlg::OnTimer(UINT_PTR nIDEvent)
     CDialogEx::OnTimer(nIDEvent);
 }
 
-bool CFmiParamAddingDlg::NeedToUpdateTitleText()
+bool CFmiParameterSelectionDlg::NeedToUpdateTitleText()
 {
-    if(itsLastAcivatedDescTopIndex != itsParamAddingSystem->LastAcivatedDescTopIndex() || itsLastActivatedRowIndex != itsParamAddingSystem->LastActivatedRowIndex())
+    if(itsLastAcivatedDescTopIndex != itsParameterSelectionSystem->LastAcivatedDescTopIndex() || itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
         return true;
     else
         return false;
 }
 
-std::string CFmiParamAddingDlg::MakeTitleText()
+std::string CFmiParameterSelectionDlg::MakeTitleText()
 {
     std::string str = g_TitleStr;
     str += " (";
@@ -870,7 +867,7 @@ std::string CFmiParamAddingDlg::MakeTitleText()
 }
 
 
-BOOL CFmiParamAddingDlg::OnEraseBkgnd(CDC* pDC)
+BOOL CFmiParameterSelectionDlg::OnEraseBkgnd(CDC* pDC)
 {
     return FALSE;
 

@@ -544,7 +544,7 @@ void CSmartMetView::OnLButtonDblClk(UINT nFlags, CPoint point)
 			if(pDoc->GetData()->ActivateParamSelectionDlgAfterLeftDoubleClick())
 			{
 				pDoc->GetData()->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-				pDoc->ActivateParamAddingDlg();
+				pDoc->ActivateParameterSelectionDlg();
 				return ;
 			}
 		}

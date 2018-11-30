@@ -92,7 +92,7 @@
 #include "NFmiFastInfoUtils.h"
 #include "HakeMessage/Main.h"
 #include "HakeMessage/HakeSystemConfigurations.h"
-#include "FmiParamAddingDlg.h"
+#include "FmiParameterSelectionDlg.h"
 #include "SpecialDesctopIndex.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "QueryDataReading.h"
@@ -296,7 +296,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_MOVE_MANY_MAP_ROWS_DOWN, &CSmartMetDoc::OnAcceleratorMoveManyMapRowsDown)
     ON_COMMAND(ID_ACCELERATOR_APPLY_STARTUP_VIEW_MACRO, &CSmartMetDoc::OnAcceleratorApplyStartupViewMacro)
     ON_COMMAND(ID_ACCELERATOR_TOGGLE_WMS_MAP_MODE, &CSmartMetDoc::OnAcceleratorToggleWmsMapMode)
-    ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParamAddingDlgPlaceToDefault)
+    ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParameterSelectionDlgPlaceToDefault)
         ON_COMMAND(ID_HELP_EXCEPTIONTEST, &CSmartMetDoc::OnHelpExceptiontest)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_NEXT, &CSmartMetDoc::OnAcceleratorCpSelectNext)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_PREVIOUS, &CSmartMetDoc::OnAcceleratorCpSelectPrevious)
@@ -352,7 +352,7 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsCaseStudyDlg(nullptr)
 ,itsBetaProductDialog(nullptr)
 ,itsLogViewer(nullptr)
-,itsParamAddingDlg(nullptr)
+,itsParameterSelectionDlg(nullptr)
 ,itsGriddingOptionsDlg(nullptr)
 {
 	CSmartMetApp *app = (CSmartMetApp *)AfxGetApp();
@@ -421,7 +421,7 @@ CSmartMetDoc::~CSmartMetDoc()
     // Better clear callback function before logviewer is destroyed, just in case
     CatLog::setLogViewerUpdateCallback(std::function<void()>());
     ::DestroyModalessDialog((CDialog **)(&itsLogViewer));
-    ::DestroyModalessDialog((CDialog **)(&itsParamAddingDlg));
+    ::DestroyModalessDialog((CDialog **)(&itsParameterSelectionDlg));
 }
 
 BOOL CSmartMetDoc::OnNewDocument()
@@ -525,15 +525,15 @@ void CSmartMetDoc::OnUpdateButtonTimeEditValuesDlg(CCmdUI *pCmdUI)
 	pCmdUI->SetCheck(itsData->TimeSerialDataViewOn());
 }
 
-void CSmartMetDoc::ActivateParamAddingDlg()
+void CSmartMetDoc::ActivateParameterSelectionDlg()
 {
-    if(!itsParamAddingDlg)
-        CreateParamAddingDlg(itsData);
+    if(!itsParameterSelectionDlg)
+        CreateParameterSelectionDlg(itsData);
 
-    itsParamAddingDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-    itsParamAddingDlg->SetActiveWindow();
+    itsParameterSelectionDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+    itsParameterSelectionDlg->SetActiveWindow();
 
-    GetData()->LogMessage("Param adding dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
+    GetData()->LogMessage("Parameter Selection dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 
@@ -883,9 +883,9 @@ void CSmartMetDoc::CreateTimeEditor(bool callUpdate)
     CreateModalessDialog(&itsTimeSerialDataEditorDlg, IDD_DIALOG_TIME_EDIT_VALUES, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), callUpdate);
 }
 
-void CSmartMetDoc::CreateParamAddingDlg(NFmiEditMapGeneralDataDoc *theDoc)
+void CSmartMetDoc::CreateParameterSelectionDlg(NFmiEditMapGeneralDataDoc *theDoc)
 {
-    CreateModalessDialog(&itsParamAddingDlg, IDD_DIALOG_PARAM_ADDING, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+    CreateModalessDialog(&itsParameterSelectionDlg, IDD_DIALOG_PARAM_ADDING, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
 }
 
 void CSmartMetDoc::CreateSynopDataGridViewDlg(NFmiEditMapGeneralDataDoc *theDoc)
@@ -1327,7 +1327,7 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
 //            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
             ::UpdateModalessDialog(itsBetaProductDialog);
             ::UpdateModalessDialog(itsViewMacroDlg);
-            ::UpdateModalessDialog(itsParamAddingDlg);
+            ::UpdateModalessDialog(itsParameterSelectionDlg);
         }
     }
 }
@@ -1392,8 +1392,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
             ::UpdateModalessDialog(itsBetaProductDialog);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ViewMacroDlg))
             ::UpdateModalessDialog(itsViewMacroDlg);
-        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ParamAddingDlg))
-            ::UpdateModalessDialog(itsParamAddingDlg);
+        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ParameterSelectionDlg))
+            ::UpdateModalessDialog(itsParameterSelectionDlg);
     }
 }
 
@@ -1804,7 +1804,7 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
     CFmiWin32Helpers::SetWindowIconDynamically(itsCaseStudyDlg, usedSmallIcon, usedBigIcon);
     CFmiWin32Helpers::SetWindowIconDynamically(itsBetaProductDialog, usedSmallIcon, usedBigIcon);
     CFmiWin32Helpers::SetWindowIconDynamically(itsLogViewer, usedSmallIcon, usedBigIcon);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsParamAddingDlg, usedSmallIcon, usedBigIcon);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsParameterSelectionDlg, usedSmallIcon, usedBigIcon);
 }
 
 // piti tehdä uuden karttaruudukon valinnan lisäksi paikka mistä
@@ -1944,9 +1944,9 @@ void CSmartMetDoc::OnViewSetCrosssectionViewPlaceToDefault()
 	}
 }
 
-void CSmartMetDoc::OnSetParamAddingDlgPlaceToDefault()
+void CSmartMetDoc::OnSetParameterSelectionDlgPlaceToDefault()
 {
-    ::SetViewPlaceToDefault(this, itsParamAddingDlg, "Param adding dialog set to default size and position");
+    ::SetViewPlaceToDefault(this, itsParameterSelectionDlg, "Parameter Selection dialog set to default size and position");
 }
 
 void CSmartMetDoc::OnViewSetZoomViewPlaceToDefault()
@@ -2143,7 +2143,7 @@ void CSmartMetDoc::OnMenuitemProjectionLineSetup()
 
 void CSmartMetDoc::OnButtonViewSelectParamDialog()
 {
-    ActivateParamAddingDlg();
+    ActivateParameterSelectionDlg();
 }
 
 void CSmartMetDoc::OnDataStoreTimeserialviewToPictureFile()
@@ -2840,7 +2840,7 @@ void CSmartMetDoc::SaveViewPositionsToRegistry(void)
     ::SaveViewPositionToRegistry(itsSmartToolDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsBetaProductDialog, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsLogViewer, applicationWinRegistry, dummyMapDescTopIndex);
-    ::SaveViewPositionToRegistry(itsParamAddingDlg, applicationWinRegistry, dummyMapDescTopIndex);
+    ::SaveViewPositionToRegistry(itsParameterSelectionDlg, applicationWinRegistry, dummyMapDescTopIndex);
 
     // Talletetaan myös tiettyjä GeneralDocissa olevia juttuja aika-ajoin WinRekisteriin
     itsData->StoreSettingsToWinRegistry();
@@ -2926,7 +2926,7 @@ std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
     MakeMakeWindowPosMapInsert<CFmiSmartToolDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiBetaProductTabControlDialog>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiLogViewer>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiParamAddingDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiParameterSelectionDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiWarningMessageOptionsDlg>(windowPosMap);
 
     return windowPosMap;

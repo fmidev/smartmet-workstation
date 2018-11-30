@@ -847,7 +847,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
     if(fForceThreadUpdate)
     {
 		CFmiMacroParamUpdateThread::ForceUpdate(); // tämä pakottaa että myös pop-up valikoiden käyttämää puu rakennetta päivitetään
-        itsSmartMetDocumentInterface->UpdateParamAddingSystem();
+        itsSmartMetDocumentInterface->UpdateParameterSelectionSystem();
     }
 }
 

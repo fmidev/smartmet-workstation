@@ -131,7 +131,7 @@ namespace Imagine
 
 namespace AddParams
 {
-    class ParamAddingSystem;
+    class ParameterSelectionSystem;
 }
 
 namespace Warnings
@@ -159,8 +159,8 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData();
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex);
     bool LoadStaticHelpData(void);
-    AddParams::ParamAddingSystem& ParamAddingSystem();
-    void UpdateParamAddingSystem();
+    AddParams::ParameterSelectionSystem& ParameterSelectionSystem();
+    void UpdateParameterSelectionSystem();
 #ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport& WmsSupport();
 #endif // DISABLE_CPPRESTSDK

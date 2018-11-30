@@ -20,7 +20,7 @@ namespace AddParams
 		kCategoryType,
 	};
 	
-	// This is used to populate ParamAdding dialog's rows
+	// This is used to populate ParameterSelection dialog's rows
     class SingleRowItem
     {
         // Data's file filter is unique id in SmartMet

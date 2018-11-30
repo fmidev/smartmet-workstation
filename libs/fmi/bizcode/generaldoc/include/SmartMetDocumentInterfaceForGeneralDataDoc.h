@@ -241,8 +241,8 @@ public:
     void InvalidateMapView(bool bErase = true) override;
     NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() override;
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) override;
-    AddParams::ParamAddingSystem& ParamAddingSystem() override;
-    void UpdateParamAddingSystem() override;
+    AddParams::ParameterSelectionSystem& ParameterSelectionSystem() override;
+    void UpdateParameterSelectionSystem() override;
     bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) override;
     int DataToDBCheckMethod() override;
     void DataToDBCheckMethod(int newValue) override;
