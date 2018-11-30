@@ -7,20 +7,21 @@
 
 class NFmiDrawParam;
 class NFmiDrawParamList;
+class NFmiFastQueryInfo;
 
 // Cacheen dataksi laitetaan itse laskettu data-matriisi, sekä tieto siitä,
 // onko smarttool laskuissa käytetty ns. CalculationPoint:eja.
 class NFmiMacroParamLayerCacheDataType
 {
-public:
-    NFmiMacroParamLayerCacheDataType() = default;
-    NFmiMacroParamLayerCacheDataType(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints)
-    :dataMatrix_(dataMatrix)
-    ,useCalculationPoints_(useCalculationPoints)
-    {}
-
     NFmiDataMatrix<float> dataMatrix_;
     bool useCalculationPoints_ = false;
+    bool useAlReadySpacedOutData_ = false;
+public:
+    NFmiMacroParamLayerCacheDataType() = default;
+
+    const NFmiDataMatrix<float>& getDataMatrix() const { return dataMatrix_; }
+    void setCacheValues(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints, bool useAlReadySpacedOutData);
+    void getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, boost::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut);
 };
 
 

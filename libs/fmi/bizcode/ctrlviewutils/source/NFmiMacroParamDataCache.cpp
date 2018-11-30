@@ -1,5 +1,7 @@
 #include "NFmiMacroParamDataCache.h"
 #include "NFmiDrawParamList.h"
+#include "NFmiInfoOrganizer.h"
+#include "NFmiFastQueryInfo.h"
 #include "catlog/catlog.h"
 
 // Kiinnostava map:in tyhjennys predikaatin avulla -funktio
@@ -24,6 +26,29 @@ static void logMacroParamTotalPathWasInCorrectWarning(const std::string &functio
     message += path2;
     CatLog::logMessage(message, CatLog::Severity::Warning, CatLog::Category::Data);
 }
+
+void NFmiMacroParamLayerCacheDataType::setCacheValues(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints, bool useAlReadySpacedOutData)
+{
+    dataMatrix_ = dataMatrix;
+    useCalculationPoints_ = useCalculationPoints;
+    useAlReadySpacedOutData_ = useAlReadySpacedOutData;
+}
+
+void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, boost::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut)
+{
+    dataMatrixOut = dataMatrix_;
+    useCalculationPointsOut = useCalculationPoints_;
+    useAlReadySpacedOutDataOut = useAlReadySpacedOutData_;
+    if(useAlReadySpacedOutDataOut)
+    {
+        // Jos cacheen laskettu data oli jo harvennettua, pit‰‰ myˆs nyt k‰ytetty info s‰‰t‰‰ takaisin kyseiseen oikeaan hilakokoon.
+        boost::shared_ptr<NFmiArea> usedArea(usedInfoInOut->Area()->Clone());
+        usedInfoInOut = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(static_cast<int>(dataMatrixOut.NX()), static_cast<int>(dataMatrixOut.NY()), NFmiInfoData::kMacroParam, usedArea);
+    }
+}
+
+// ***********************************************************************************************
+
 
 NFmiMacroParamDataCacheLayer::NFmiMacroParamDataCacheLayer(const std::string &macroParamTotalPath)
 :layerCache_()
