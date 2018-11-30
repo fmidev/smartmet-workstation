@@ -3179,6 +3179,8 @@ std::vector<std::string> MakeListOfUsedMacroParamsDependedOnEditedData()
     {
         NFmiPtrList<NFmiDrawParamList> *drawParamListVector = deskTop->DrawParamListVector();
         NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
+
+        int cacheRowNumber = 0;
         for(; iter.Next();)
         {
             NFmiDrawParamList *aList = iter.CurrentPtr();
@@ -3190,9 +3192,12 @@ std::vector<std::string> MakeListOfUsedMacroParamsDependedOnEditedData()
                     if(IsMacroParamDependentOfEditedData(drawParam))
                     {
                         macroParamPathList.push_back(drawParam->InitFileName());
+                        // Tyhjennetään myös kyseisten näyttörivien bitmap cache (ikävä kaksois vastuu metodilla)
+                        deskTop->MapViewCache().MakeRowDirty(cacheRowNumber);
                     }
                 }
             }
+            cacheRowNumber++;
         }
     }
     return macroParamPathList;
@@ -3311,8 +3316,10 @@ void MacroParamDirtiesCacheRowTraceLog(boost::shared_ptr<NFmiDrawParam> &drawPar
     }
 }
 
-// Tutkii vertikaali macroParam funktioiden kanssa että jos kyse on pressure datasta, että löytyykö samalta tuottajalta myös hybrid dataa, missä on haluttu parametri.
-// Kaikissa muissa tapauksissa palauttaa true (eli tehdään rivin cache likaus), paitsi jos data oressure dataa ja löytyy vastaava hybrid data infoOrganizerista.
+// Tutkii vertikaali macroParam funktioiden kanssa että jos kyse on pressure datasta, että löytyykö 
+// samalta tuottajalta myös hybrid dataa, missä on haluttu parametri.
+// Kaikissa muissa tapauksissa palauttaa true (eli tehdään rivin cache likaus), paitsi jos data 
+// pressure dataa ja löytyy vastaava hybrid data infoOrganizerista.
 bool DoMacroParamVerticalDataChecks(NFmiFastQueryInfo &theInfo, NFmiInfoData::Type theType, const MacroParamDataInfo &macroParamDataInfo)
 {
     if(macroParamDataInfo.usedWithVerticalFunction_)
@@ -8976,6 +8983,19 @@ bool InitCPManagerSet(void)
 		fUseMaskWithBrush = masks.UseMaskWithBrush();
 	}
 
+    void MakeApplyViewMacroDirtyActions()
+    {
+        // läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
+        MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
+        unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
+        for(unsigned int i = 0; i<ssize; i++)
+        {
+            MapViewDescTop(i)->MapViewBitmapDirty(true);
+            MapViewDescTop(i)->BorderDrawDirty(true);
+        }
+        MacroParamDataCache().clearAllLayers();
+    }
+
     void ApplyViewMacro(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro, bool undoRedoAction)
 	{ // ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
 		SetGeneralDoc(theMacro);
@@ -8992,15 +9012,7 @@ bool InitCPManagerSet(void)
 
         ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
 
-		// läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
-		MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
-		unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
-		for(unsigned int i = 0; i<ssize; i++)
-		{
-			MapViewDescTop(i)->MapViewBitmapDirty(true);
-			MapViewDescTop(i)->BorderDrawDirty(true);
-		}
-        MacroParamDataCache().clearAllLayers();
+        MakeApplyViewMacroDirtyActions();
 
         // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
