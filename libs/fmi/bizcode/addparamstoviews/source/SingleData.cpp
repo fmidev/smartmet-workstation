@@ -53,6 +53,28 @@ namespace
         }
     }
 
+    void addMetaStreamlineParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, NFmiQueryInfo &queryInfo, NFmiInfoData::Type dataType, AddParams::RowType rowType)
+    {
+        bool hasLevelData = queryInfo.SizeLevels() > 1;
+        static const NFmiParam streamlineBaseParam(NFmiInfoData::kFmiSpStreamline, "Streamline (meta)");
+        bool addStreamlineParam = queryInfo.IsGrid();
+        bool hasWindParams = queryInfo.Param(kFmiTotalWindMS) || queryInfo.Param(kFmiWindSpeedMS) || queryInfo.Param(kFmiWindUMS);
+        auto parameter = NFmiDataIdent(streamlineBaseParam, *queryInfo.Producer());
+
+        if(addStreamlineParam && hasWindParams)
+        {
+            if(hasLevelData) //Level data
+            {
+                dialogRowData.push_back(::makeRowItem(parameter, dataType, AddParams::RowType::kLevelType)); //Parameter name as "header"
+                ::addLevelRowItems(dialogRowData, parameter, dataType, AddParams::RowType::kSubParamLevelType, queryInfo); //Actual level data
+            }
+            else //Surface data
+            {
+                dialogRowData.push_back(::makeRowItem(parameter, dataType, rowType, true));
+            }
+        }
+    }
+
     void addPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo)
     {
         if(dataIdent.HasDataParams())
@@ -74,6 +96,7 @@ namespace
                         dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType, true));
                     }
                 }
+                addMetaStreamlineParameters(dialogRowData, queryInfo, dataType, rowType);
             }
         }
     }
@@ -118,6 +141,7 @@ namespace
             dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false));
             rowType = AddParams::RowType::kSubParamType; 
             ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);
+            
         }
     }
 
@@ -188,16 +212,13 @@ namespace AddParams
 
      std::string SingleData::OrigOrLastTime() const
     {
-        NFmiFastQueryInfo fastInfo(*latestMetaData_);
-        NFmiMetTime dataTime = fastInfo.OriginTime();
+        NFmiMetTime dataTime = latestMetaData_->OriginTime();
         if(dataType_ == NFmiInfoData::kObservations || dataType_ == NFmiInfoData::kAnalyzeData)
         {
-            dataTime = fastInfo.TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
+            dataTime = latestMetaData_->TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
         }
 
         std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
         return !origTime.empty() ? origTime : "";
-    }
-
-     
+    }   
 }
