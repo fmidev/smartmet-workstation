@@ -14165,9 +14165,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 std::string displayName = ConceptualModelData().DefaultUserName(); // Conceptual analysis uses displayName to fetch correct data!
                 parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
             }
-            
-            // TODO
-            // WmsSupport(), Streamlines, Edited data
         }
         catch(std::exception &e)
         {
