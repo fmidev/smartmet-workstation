@@ -212,16 +212,13 @@ namespace AddParams
 
      std::string SingleData::OrigOrLastTime() const
     {
-        NFmiFastQueryInfo fastInfo(*latestMetaData_);
-        NFmiMetTime dataTime = fastInfo.OriginTime();
+        NFmiMetTime dataTime = latestMetaData_->OriginTime();
         if(dataType_ == NFmiInfoData::kObservations || dataType_ == NFmiInfoData::kAnalyzeData)
         {
-            dataTime = fastInfo.TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
+            dataTime = latestMetaData_->TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
         }
 
         std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
         return !origTime.empty() ? origTime : "";
-    }
-
-     
+    }   
 }
