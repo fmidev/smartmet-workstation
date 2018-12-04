@@ -11162,8 +11162,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		MapViewDescTop(theDescTopIndex)->ShowParamWindowView(!MapViewDescTop(theDescTopIndex)->ShowParamWindowView());
 		MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
-		LogMessage("Show/Hide param-view.", CatLog::Severity::Debug, CatLog::Category::Visualization);
-	}
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/Hide param-view");
+    }
 
 	void OnShowTimeString(unsigned int theDescTopIndex)
 	{
