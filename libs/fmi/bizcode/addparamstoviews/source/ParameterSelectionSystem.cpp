@@ -3,6 +3,8 @@
 #include "ParameterSelectionUtils.h"
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMacroParamSystem.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiMetEditorTypes.h"
     
 
 namespace
@@ -45,6 +47,30 @@ namespace AddParams
         helpDataInfoSystem_ = &helpDataInfoSystem;
         helpDataIDs_ = idVector; // Help Data id's. These are added to Help Data Category
         customCategories_ = customCategories;
+        addEditableAndOfficialDatas();
+    }
+
+    void ParameterSelectionSystem::addEditableAndOfficialDatas()
+    {
+        //Editable data
+        NFmiInfoData::Type theDataType = NFmiInfoData::kEditable;
+        const std::string theDictionaryStr = "MapViewParamPopUpEdited";
+
+        //boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->FindInfo(theDataType);
+        //std::string titleString = theDictionaryStr.empty() ? info->FirstParamProducer().GetName() : ::GetDictionaryString(theDictionaryStr.c_str());
+
+        //// ********** lis‰t‰‰n "editoitava" data osa *************************
+        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kEditable, "MapViewParamPopUpEdited");
+
+        //// ********** lis‰t‰‰n "vertailu-data" data osa *************************
+        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kCopyOfEdited, "MapViewParamPopUpComparisonData");
+
+        //// ********** lis‰t‰‰n "operatiivinen data" data osa *************************
+        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kKepaData, "MapViewParamPopUpOperativeData");
+
+        //// ********** lis‰t‰‰n "helpEditor mode data" data osa *************************
+        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kEditingHelpData, "MapViewParamPopUpHelpEditorData");
+
     }
 
     void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
@@ -61,10 +87,11 @@ namespace AddParams
 
     void ParameterSelectionSystem::updateData()
     {
+        updateData("Operational data", *modelProducerSystem_, NFmiInfoData::kEditable);
         updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
         updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
-        updateMacroParamData("Macro Params", NFmiInfoData::kMacroParam);
+        updateMacroParamData("Macro Parameters", NFmiInfoData::kMacroParam);
         updateCustomCategories();
         updateData("Help data", *modelProducerSystem_, NFmiInfoData::kModelHelpData);
         updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
