@@ -655,6 +655,9 @@ class _FMI_DLL NFmiQueryInfo
   // talletettiin varmuuden vuoksi double:na, jos haluaa käyttää desimaaleja joskus
 
   mutable double itsInfoVersion;
+  // Tämä kertoo mikä versio on viimeisin tuettu queryData mitä ohjelma suostuu lukemaan.
+  // Jos luetussa datatiedostossa on isompi versio numero, Read-metodi heittää poikkeuksen.
+  static const double itsLatestKnownInfoVersion;
 
   unsigned long itsGridXNumber;  // mahdollisen gridi datan x-dimensio
   unsigned long itsGridYNumber;  // mahdollisen gridi datan y-dimensio
