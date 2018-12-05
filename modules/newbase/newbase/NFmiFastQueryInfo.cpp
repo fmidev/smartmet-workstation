@@ -5082,6 +5082,104 @@ float NFmiFastQueryInfo::PeekParamValue(unsigned long theParamIndex)
   return kFloatMissing;
 }
 
+const std::string NFmiFastQueryInfo::DataTypeString()
+{
+    //Ugly but works
+    switch(itsDataType)
+    {
+    case NFmiInfoData::kNoDataType:
+        return "KNoDataType";
+        break;
+    case NFmiInfoData::kEditable:
+        return "kEditable";
+        break;
+    case NFmiInfoData::kViewable:
+        return "kViewable";
+        break;
+    case NFmiInfoData::kStationary:
+        return "kStationary";
+        break;
+    case NFmiInfoData::kCopyOfEdited:
+        return "kCopyOfEdited";
+        break;
+    case NFmiInfoData::kObservations:
+        return "kObservations";
+        break;
+    case NFmiInfoData::kCalculatedValue:
+        return "kCalculatedValue";
+        break;
+    case NFmiInfoData::kKepaData:
+        return "kKepaData";
+        break;
+    case NFmiInfoData::kClimatologyData:
+        return "kClimatologyData";
+        break;
+    case NFmiInfoData::kAnalyzeData:
+        return "kAnalyzeData";
+        break;
+    case NFmiInfoData::kScriptVariableData:
+        return "kScriptVariableData";
+        break;
+    case NFmiInfoData::kAnyData:
+        return "kAnyData";
+        break;
+    case NFmiInfoData::kSatelData:
+        return "kSatelData";
+        break;
+    case NFmiInfoData::kFlashData:
+        return "kFlashData";
+        break;
+    case NFmiInfoData::kMacroParam:
+        return "kMacroParam";
+        break;
+    case NFmiInfoData::kHybridData:
+        return "kHybridData";
+        break;
+    case NFmiInfoData::kFuzzyData:
+        return "kFuzzyData";
+        break;
+    case NFmiInfoData::kVerificationData:
+        return "kVerificationData";
+        break;
+    case NFmiInfoData::kModelHelpData:
+        return "kModelHelpData";
+        break;
+    case NFmiInfoData::kTrajectoryHistoryData:
+        return "kTrajectoryHistoryData";
+        break;
+    case NFmiInfoData::kTEMPCodeSoundingData:
+        return "kTEMPCodeSoundingData";
+        break;
+    case NFmiInfoData::kCrossSectionMacroParam:
+        return "kCrossSectionMacroParam";
+        break;
+    case NFmiInfoData::kEditingHelpData:
+        return "kEditingHelpData";
+        break;
+    case NFmiInfoData::kConceptualModelData:
+        return "kConceptualModelData";
+        break;
+    case NFmiInfoData::kSingleStationRadarData:
+        return "kSingleStationRadarData";
+        break;
+    case NFmiInfoData::kQ3MacroParam:
+        return "kQ3MacroParam";
+        break;
+    case NFmiInfoData::kCapData:
+        return "kCapData";
+        break;
+    case NFmiInfoData::kWmsData:
+        return "kWmsData";
+        break;
+    case NFmiInfoData::kSoundingParameterData:
+        return "kSoundingParameterData";
+        break;
+    default:
+        return "special or undefined";
+        break;
+    }
+}
+
 // Näillä Start/Restore -funktioilla otetaan nykyinen parametri tila talteen ja otetaan käyttöön
 // 'erikois' korkeus-parametri.
 // Palauttaa true, jos muutos oli mahdollinen. Jos kyseistä parametria ei voi käyttää, palauttaa
