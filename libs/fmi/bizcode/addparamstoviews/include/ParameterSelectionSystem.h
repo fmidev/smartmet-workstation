@@ -62,6 +62,7 @@ namespace AddParams
         ~ParameterSelectionSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories);
+        void addEditableAndOfficialDatas();
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName);
         void updateData();

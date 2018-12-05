@@ -201,6 +201,7 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "<br><hr color=darkblue><br>";
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
     str += "<b>File filter: </b>\t" + GetFileFilter(info->DataFilePattern()) + "\n";
+    //str += "<b>Data type: </b>\t" + info->DataType() + "\n";
     //str += "<b>Data loaded: </b>\t \n";
     //str += "<b>File modified: </b>\t" + std::to_string(helpInfo->LatestFileTimeStamp()) + "\n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC";
