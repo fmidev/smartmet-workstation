@@ -4775,6 +4775,38 @@ void NFmiFastQueryInfo::DoWindComponentFix(const NFmiGrid &usedGrid,
   theValues[usedGrid.Index() % usedGrid.XNumber()][usedGrid.Index() / usedGrid.XNumber()] = value;
 }
 
+std::string NFmiFastQueryInfo::interpolationMethodString()
+{
+    FmiInterpolationMethod method = this->Param().GetParam()->InterpolationMethod();
+    switch (method)
+    {
+    case FmiInterpolationMethod::kNoneInterpolation:
+        return "kNoneInterpolation";
+    	break;
+    case FmiInterpolationMethod::kLinearly:
+        return "kLinearly";
+        break;
+    case FmiInterpolationMethod::kNearestPoint:
+        return "kNearestPoint";
+        break;
+    case FmiInterpolationMethod::kByCombinedParam:
+        return "kByCombinedParam";
+        break;
+    case FmiInterpolationMethod::kLinearlyFast:
+        return "kLinearlyFast";
+        break;
+    case FmiInterpolationMethod::kLagrange:
+        return "kLagrange";
+        break;
+    case FmiInterpolationMethod::kNearestNonMissing:
+        return "kNearestNonMissing";
+        break;
+    default:
+        return "undefined";
+        break;
+    }
+}
+
 static void valBufDeleter(float *ptr)
 {
   if (ptr) delete[] ptr;
