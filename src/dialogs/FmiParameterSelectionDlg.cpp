@@ -175,6 +175,7 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     std::string resolution;
     std::string gridArea;
     std::string levels;
+    std::string interpolation;
 
     if(info->TimeDescriptor().ValidTimeList() != nullptr)
     {
@@ -191,7 +192,7 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
 
     gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
     levels = (info->SizeLevels() == 1) ? "surface data" : std::to_string(info->SizeLevels());
-
+    
     std::string str;
     str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
     str += "Data information";
@@ -213,7 +214,8 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "<b>Levels:  </b>\t\t" + levels;
     str += "<br><hr color=darkblue><br>";
     str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
-    str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
+    str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
+    str += "\t\t\tinterpolation: " + info->interpolationMethodString();
     str += "<br><hr color=darkblue><br>";
     str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
     str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
