@@ -52,12 +52,12 @@ namespace AddParams
                 if(helpData && dataCategory == NFmiInfoData::kModelHelpData) //Add help data only when handling Help Data category
                 {
                     dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-                }
-                else if(categoryName() == "Operational data" && dataType == NFmiInfoData::kKepaData)
+                } 
+                else if(!helpData && dataCategory == NFmiInfoData::kEditable)
                 {
                     dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
                 }
-                else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData && !(categoryName() == "Operational data"))
+                else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData && dataType != NFmiInfoData::kKepaData)
                 {
                     dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
                 }

@@ -5,6 +5,8 @@
 #include "NFmiMacroParamSystem.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiMetEditorTypes.h"
+#include "NFmiInfoOrganizer.h"
+#include "NFmiProducerSystem.h"
     
 
 namespace
@@ -14,6 +16,23 @@ namespace
         // If there is memory for this category's rowItem, use it, otherwise put categoryData in non-collapsed mode
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : false;
         return AddParams::SingleRowItem(AddParams::kCategoryType, categoryData.categoryName(), 0, nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
+    }
+
+    NFmiProducerInfo makeProducerInfo(NFmiInfoOrganizer &infoOrganizer, NFmiInfoData::Type theDataType, const std::string theDictionaryStr)
+    {
+        NFmiProducerInfo prod;
+        boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(theDataType);
+        std::string titleString = theDictionaryStr.empty() ? info->FirstParamProducer().GetName() : ::GetDictionaryString(theDictionaryStr.c_str());
+        prod.Name(titleString);
+        int id;
+        if(info)
+        {
+            id = info->FirstParamProducer().GetIdent();
+        }
+        else
+            id = 9898;
+        prod.ProducerId(id);
+        return prod;
     }
 }
 
@@ -47,31 +66,7 @@ namespace AddParams
         helpDataInfoSystem_ = &helpDataInfoSystem;
         helpDataIDs_ = idVector; // Help Data id's. These are added to Help Data Category
         customCategories_ = customCategories;
-        addEditableAndOfficialDatas();
-    }
-
-    void ParameterSelectionSystem::addEditableAndOfficialDatas()
-    {
-        //Editable data
-        NFmiInfoData::Type theDataType = NFmiInfoData::kEditable;
-        const std::string theDictionaryStr = "MapViewParamPopUpEdited";
-
-        //boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->FindInfo(theDataType);
-        //std::string titleString = theDictionaryStr.empty() ? info->FirstParamProducer().GetName() : ::GetDictionaryString(theDictionaryStr.c_str());
-
-        //// ********** lisätään "editoitava" data osa *************************
-        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kEditable, "MapViewParamPopUpEdited");
-
-        //// ********** lisätään "vertailu-data" data osa *************************
-        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kCopyOfEdited, "MapViewParamPopUpComparisonData");
-
-        //// ********** lisätään "operatiivinen data" data osa *************************
-        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kKepaData, "MapViewParamPopUpOperativeData");
-
-        //// ********** lisätään "helpEditor mode data" data osa *************************
-        //AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kEditingHelpData, "MapViewParamPopUpHelpEditorData");
-
-    }
+    } 
 
     void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
     {
@@ -87,7 +82,7 @@ namespace AddParams
 
     void ParameterSelectionSystem::updateData()
     {
-        updateData("Operational data", *modelProducerSystem_, NFmiInfoData::kEditable);
+        updateData("Operational data", operationalProducers(), NFmiInfoData::kEditable);
         updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
         updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
@@ -154,6 +149,21 @@ namespace AddParams
         categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs_, customCategory);
         categoryDataVector_.push_back(std::move(categoryDataPtr));
         dialogDataNeedsUpdate_ = true;
+    }
+
+    NFmiProducerSystem ParameterSelectionSystem::operationalProducers()
+    {
+        NFmiProducerSystem operationalProducers;
+        //Editable data
+        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kEditable, "MapViewParamPopUpEdited"));
+        //Comparison data
+        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kCopyOfEdited, "MapViewParamPopUpComparisonData"));
+        //Operational data
+        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kKepaData, "MapViewParamPopUpOperativeData"));
+        //Help editor data
+        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kEditingHelpData, "MapViewParamPopUpHelpEditorData"));
+
+        return operationalProducers;
     }
 
     std::vector<SingleRowItem>& ParameterSelectionSystem::dialogRowData()
