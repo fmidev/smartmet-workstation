@@ -4782,28 +4782,20 @@ std::string NFmiFastQueryInfo::interpolationMethodString()
     {
     case FmiInterpolationMethod::kNoneInterpolation:
         return "None";
-    	break;
     case FmiInterpolationMethod::kLinearly:
         return "Linear";
-        break;
     case FmiInterpolationMethod::kNearestPoint:
         return "Nearest Point";
-        break;
     case FmiInterpolationMethod::kByCombinedParam:
         return "Combined Parameter";
-        break;
     case FmiInterpolationMethod::kLinearlyFast:
         return "Linear (Fast)";
-        break;
     case FmiInterpolationMethod::kLagrange:
         return "Lagrange";
-        break;
     case FmiInterpolationMethod::kNearestNonMissing:
         return "Nearest Non Missing";
-        break;
     default:
         return "undefined";
-        break;
     }
 }
 
@@ -5121,94 +5113,64 @@ const std::string NFmiFastQueryInfo::DataTypeString()
     {
     case NFmiInfoData::kNoDataType:
         return "No Data Type";
-        break;
     case NFmiInfoData::kEditable:
         return "Editable";
-        break;
     case NFmiInfoData::kViewable:
         return "Viewable";
-        break;
     case NFmiInfoData::kStationary:
         return "Stationary";
-        break;
     case NFmiInfoData::kCopyOfEdited:
         return "Copy Of Edited";
-        break;
     case NFmiInfoData::kObservations:
         return "Observations";
-        break;
     case NFmiInfoData::kCalculatedValue:
         return "Calculated Value";
-        break;
     case NFmiInfoData::kKepaData:
         return "Official Data";
-        break;
     case NFmiInfoData::kClimatologyData:
         return "Climatology Data";
-        break;
     case NFmiInfoData::kAnalyzeData:
         return "Analyze Data";
-        break;
     case NFmiInfoData::kScriptVariableData:
         return "Script Variable Data";
-        break;
     case NFmiInfoData::kAnyData:
         return "Any Data";
-        break;
     case NFmiInfoData::kSatelData:
         return "Satellite Data";
-        break;
     case NFmiInfoData::kFlashData:
         return "Flash Data";
-        break;
     case NFmiInfoData::kMacroParam:
         return "MacroParam";
-        break;
     case NFmiInfoData::kHybridData:
         return "Hybrid Data";
-        break;
     case NFmiInfoData::kFuzzyData:
         return "Fuzzy Data";
-        break;
     case NFmiInfoData::kVerificationData:
         return "Verification Data";
-        break;
     case NFmiInfoData::kModelHelpData:
         return "Model HelpData";
-        break;
     case NFmiInfoData::kTrajectoryHistoryData:
         return "TrajectoryHistory Data";
-        break;
     case NFmiInfoData::kTEMPCodeSoundingData:
         return "TEMP Code SoundingData";
-        break;
     case NFmiInfoData::kCrossSectionMacroParam:
         return "CrossSection MacroParam";
-        break;
     case NFmiInfoData::kEditingHelpData:
         return "Editing HelpData";
-        break;
     case NFmiInfoData::kConceptualModelData:
         return "ConceptualModel Data";
-        break;
     case NFmiInfoData::kSingleStationRadarData:
         return "SingleStation RadarData";
-        break;
     case NFmiInfoData::kQ3MacroParam:
         return "Q3 MacroParam";
-        break;
     case NFmiInfoData::kCapData:
         return "Cap Data";
-        break;
     case NFmiInfoData::kWmsData:
         return "Wms Data";
-        break;
     case NFmiInfoData::kSoundingParameterData:
         return "SoundingParameter Data";
-        break;
     default:
         return "Special or Undefined";
-        break;
     }
 }
 
