@@ -321,7 +321,6 @@ class NFmiSmartToolIntepreter
   bool ExtractObservationRadiusInfo();
   bool ExtractSymbolTooltipFile();
   std::string GetWholeNumberFromTokens();
-  std::string GetEndOfLineFromTokens();
   void CheckMustHaveSimpleConditionFunctions(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo);
   void AddVariableToCalculation(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo, boost::shared_ptr<NFmiAreaMaskInfo> &theVariableInfo);
   void AddSimpleCalculationToCallingAreaMask(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo, const boost::shared_ptr<NFmiAreaMaskInfo> &theSimpleCalculationAreaMask);
@@ -419,7 +418,7 @@ class NFmiSmartToolIntepreter
 
   // GetToken ja IsDelim otettu H. Schilbertin  C++: the Complete Refeference third ed.
   // jouduin muuttamaan niitä vähän sopimaan tähän ympäristöön.
-  bool GetToken(void);
+  bool GetToken();
   bool IsDelim(char c);
   // Ed. funktiot käyttävät seuraavia muuttujia:
   enum types
