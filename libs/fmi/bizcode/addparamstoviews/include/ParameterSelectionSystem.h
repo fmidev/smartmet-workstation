@@ -62,7 +62,6 @@ namespace AddParams
         ~ParameterSelectionSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories);
-        void addEditableAndOfficialDatas();
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName);
         void updateData();
@@ -87,5 +86,7 @@ namespace AddParams
         void updateDialogTreePatternData();
         void updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
+        NFmiProducerSystem operationalProducers();
+        void updateOperationalData(const std::string &categoryName);
     };
 }
