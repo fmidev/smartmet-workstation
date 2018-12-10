@@ -150,7 +150,7 @@ void CFmiFilterDataView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 	else if(parent && itsViewType == NFmiCtrlView::kTimeControlView)
 	{
-		parent->RefreshApplicationViews(__FUNCTION__);
+		parent->RefreshApplicationViews(__FUNCTION__, false);
 	}
 }
 
@@ -182,7 +182,7 @@ void CFmiFilterDataView::OnRButtonUp(UINT nFlags, CPoint point)
 	}
 	else if(parent && itsViewType == NFmiCtrlView::kTimeControlView)
 	{
-		parent->RefreshApplicationViews(__FUNCTION__);
+		parent->RefreshApplicationViews(__FUNCTION__, false);
 	}
 }
 

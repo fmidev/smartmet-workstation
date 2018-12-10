@@ -878,8 +878,7 @@ bool CFmiBetaProductDialog::SetStationIdLocation(const NFmiBetaProduct &theBetaP
             unsigned int mainMapViewIndex = 0;
             auto editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
             auto mapViewDesktop = itsSmartMetDocumentInterface->MapViewDescTop(mainMapViewIndex);
-            bool dummyParam = false;
-            itsSmartMetDocumentInterface->SelectLocations(mainMapViewIndex, editedInfo, mapViewDesktop->MapHandler()->Area(), synopLocation->GetLocation(), itsSmartMetDocumentInterface->CurrentTime(mainMapViewIndex), kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, dummyParam, true, false);
+            itsSmartMetDocumentInterface->SelectLocations(mainMapViewIndex, editedInfo, mapViewDesktop->MapHandler()->Area(), synopLocation->GetLocation(), itsSmartMetDocumentInterface->CurrentTime(mainMapViewIndex), kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, false);
         }
         else if(usedViewRadioButtonIndex == BetaProductViewIndex::kCrossSectionView)
         {

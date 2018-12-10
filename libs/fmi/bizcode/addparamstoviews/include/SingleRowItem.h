@@ -20,7 +20,7 @@ namespace AddParams
 		kCategoryType,
 	};
 	
-	// This is used to populate ParamAdding dialog's rows
+	// This is used to populate ParameterSelection dialog's rows
     class SingleRowItem
     {
         // Data's file filter is unique id in SmartMet
@@ -40,6 +40,7 @@ namespace AddParams
         std::shared_ptr<NFmiLevel> level_;
         int treeDepth_;
         std::string origTime_;
+        std::string totalFilePath_;
 
     public:
         SingleRowItem();
@@ -47,7 +48,7 @@ namespace AddParams
             bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType,
             unsigned long parentItemId = 0, const std::string &parentItemName = "", const bool leafNode = false,
             const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth = 0, std::string &displayName = std::string(), 
-            std::string &origTime = std::string());
+            std::string &origTime = std::string(), std::string &totalFilePath = std::string());
         ~SingleRowItem();
 
         RowType rowType() const { return rowType_; }
@@ -72,5 +73,7 @@ namespace AddParams
         int getTreeDepth(AddParams::RowType rowType);
         const std::string& origTime() const { return origTime_; }
         void origTime(const std::string &origTime) { origTime_ = origTime; }
+        const std::string& totalFilePath() const { return totalFilePath_; }
+        void totalFilePath(const std::string &totalFilePath) { totalFilePath_ = totalFilePath; }
     };
 }

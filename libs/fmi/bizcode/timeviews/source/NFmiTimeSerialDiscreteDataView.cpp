@@ -314,19 +314,7 @@ void NFmiTimeSerialDiscreteDataView::DrawModifyFactorPointGrids (void)
 //--------------------------------------------------------
 void NFmiTimeSerialDiscreteDataView::DrawSelectedStationData (void)
 {
-    auto maskType = CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(itsInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
-    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, maskType);
-    if(maskType == NFmiMetEditorTypes::kFmiDisplayedMask)
-    {
-        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-            DrawLocationInTime(itsInfo->LatLon(), itsNormalCurveEnvi, itsChangeCurveEnvi);
-    }
-    else
-    {
-        itsInfo->ResetLocation();
-        if(itsInfo->NextLocation())
-            DrawLocationInTime(itsInfo->LatLon(), itsNormalCurveEnvi, itsChangeCurveEnvi);
-    }
+    NFmiTimeSerialView::DrawSelectedStationData();
 }
 
 //--------------------------------------------------------
@@ -387,7 +375,7 @@ void NFmiTimeSerialDiscreteDataView::CreateValueScaleView (void)
 }
 
 //void NFmiTimeSerialDiscreteDataView::DrawLocationInTime()
-void NFmiTimeSerialDiscreteDataView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
+void NFmiTimeSerialDiscreteDataView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines)
 {
 	double realValue;
 	NFmiMetTime time1, time;

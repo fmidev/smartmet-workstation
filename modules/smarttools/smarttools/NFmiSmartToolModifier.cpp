@@ -2827,3 +2827,14 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetUsedEditedInfo()
     else
         return itsInfoOrganizer->FindInfo(NFmiInfoData::kEditable);
 }
+
+const NFmiExtraMacroParamData& NFmiSmartToolModifier::ExtraMacroParamData() const
+{
+    if(itsExtraMacroParamData)
+        return *itsExtraMacroParamData;
+    else
+    {
+        static const NFmiExtraMacroParamData emptyDummy;
+        return emptyDummy;
+    }
+}

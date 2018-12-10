@@ -123,7 +123,7 @@
 #include "SmartMetDocumentInterfaceForGeneralDataDoc.h"
 #include "NFmiMapViewTimeLabelInfo.h"
 #include "CtrlViewFastInfoFunctions.h"
-#include "ParamAddingSystem.h"
+#include "ParameterSelectionSystem.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "QueryDataReading.h"
 #include <direct.h> // working directory juttuja varten
@@ -134,6 +134,7 @@
 #include "ApplicationInterface.h"
 #include "MacroParamDataChecker.h"
 #include "CapDataSystem.h"
+#include "NFmiMacroParamDataCache.h"
 
 #ifdef OLDGCC
  #include <strstream>
@@ -624,7 +625,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 #ifndef DISABLE_CPPRESTSDK
 ,wmsSupport()
 #endif // DISABLE_CPPRESTSDK
-,paramAddingSystem()
+,parameterSelectionSystem()
 {
 	NFmiRect bsRect1(0.,0.,1.,0.905);
 	NFmiRect bsRect2(0.,0.,1.,0.91);
@@ -776,6 +777,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitBetterWeatherSymbolMap();
     InitCapSymbolMap();
     InitSmartSymbolMap();
+    InitCustomSymbolMap();
     InitMultiProcessPoolOptions(); // HUOM! tämä pitää kutsua vasta 
     LoadCrashBackUpViewMacro();
     InitBetaProductionSystem(); // Tätä on kutsuttava InitMacroPathSettings- ja InitApplicationWinRegistry -metodien kutsujen jälkeen!!
@@ -794,8 +796,9 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
     // This must be initialized AFTER all other data systems have been initialized
     // Meaning after modelProducers, obsProducers, satelProducers, wsmSupport, smarttools, etc. have initialized
-    InitParamAddingSystem();
+    InitParameterSelectionSystem();
     InitLogFileCleaning();
+    InitMacroParamDataCache();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -807,6 +810,20 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
 	LogMessage("SmartMet document initialization ends...", CatLog::Severity::Info, CatLog::Category::Configuration);
 	return true;
+}
+
+void InitMacroParamDataCache()
+{
+    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
+    try
+    {
+        // Alustetaan macroParam cache kaikkien karttanäyttöjen indekseillä (0-2) ja vielä poikkileikkausnäytön indeksillä
+        itsMacroParamDataCache.init({ 0ul, 1ul, 2ul, CtrlViewUtils::kFmiCrossSectionView });
+    }
+    catch(exception &e)
+    {
+        LogAndWarnUser(e.what(), "Problems with MacroParamDataCache initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
+    }
 }
 
 void InitWmsSupport()
@@ -1078,6 +1095,21 @@ void InitSmartSymbolMap(void)
         string errStr("InitSmartSymbolMap - Initialization error in configurations: \n");
         errStr += e.what();
         LogAndWarnUser(errStr, "Problems in InitSmartSymbolMap", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+    }
+}
+
+void InitCustomSymbolMap(void)
+{
+    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
+    try
+    {
+        NFmiCustomSymbolView::InitCustomSymbolMap(WomlDirectoryPath());
+    }
+    catch(std::exception &e)
+    {
+        string errStr("InitCustomSymbolMap - Initialization error in configurations: \n");
+        errStr += e.what();
+        LogAndWarnUser(errStr, "Problems in InitCustomSymbolMap", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
     }
 }
 
@@ -2900,10 +2932,10 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 
 void PrepareForParamAddSystemUpdate()
 {
-    if(!ParamAddingSystem().updatePending())
+    if(!ParameterSelectionSystem().updatePending())
     {
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ParamAddingSystemUpdateTimerStart(ParamAddingSystem().updateWaitTimeoutInSeconds());
-        ParamAddingSystem().updatePending(true);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(ParameterSelectionSystem().updateWaitTimeoutInSeconds());
+        ParameterSelectionSystem().updatePending(true);
     }
 }
 
@@ -3072,7 +3104,7 @@ void MakeNeededDirtyOperationsWhenDataAdded(NFmiQueryData *theData, NFmiInfoData
         bool flagChanged = !fLastEditedDataSendHasComeBack;
         fLastEditedDataSendHasComeBack = true;
         if(flagChanged && ApplicationWinRegistry().ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView())
-            MapDirty(0, true, false); // 0 = vain pääkarttanäyttö liataan, cacheja ei tarvitse tyhjentää, koska tähän liittyvät jutut piirretään vain karttanäytön päälle, ei karttaruudukkoihin
+            MapViewDirty(0, false, false, true, false, true, false); // 0 = vain pääkarttanäyttö liataan, cacheja ei tarvitse tyhjentää, koska tähän liittyvät jutut piirretään vain karttanäytön päälle, ei karttaruudukkoihin
         LogMessage("Operational data has been loaded.", CatLog::Severity::Info, CatLog::Category::Editing);
     }
 }
@@ -3086,7 +3118,7 @@ void MakeNeededDirtyOperationsWhenDataAdded(unsigned int theDescTopIndex, NFmiFa
 {
     auto dataProducer = theInfo.Producer();
 	NFmiMapViewDescTop *descTop = MapViewDescTop(theDescTopIndex);
-	MapDirty(theDescTopIndex, true, false); // ei laiteta cachea likaiseksi
+	MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // ei laiteta cachea likaiseksi
 
 	int cacheRowNumber = 0; // cache row indeksi alkaa 0:sta!!
 	NFmiPtrList<NFmiDrawParamList> *drawParamListVector = descTop->DrawParamListVector();
@@ -3122,6 +3154,59 @@ void MakeNeededDirtyOperationsWhenDataAdded(unsigned int theDescTopIndex, NFmiFa
 		cacheRowNumber++;
 	}
 
+}
+
+bool IsMacroParamDependentOfEditedData(boost::shared_ptr<NFmiDrawParam> &drawParam)
+{
+    if(drawParam->DataType() == NFmiInfoData::kMacroParam)
+    {
+        std::string macroParamStr = DoGetMacroParamFormula(drawParam, CatLog::Category::Visualization);
+        MacroParamDataChecker macroParamDataChecker;
+        auto macroParamDataInfoVector = macroParamDataChecker.getCalculationParametersFromMacroPram(macroParamStr);
+        for(const auto &macroParamDataInfo : macroParamDataInfoVector)
+        {
+            if(macroParamDataInfo.type_ == NFmiInfoData::kEditable)
+                return true;
+        }
+    }
+    return false;
+}
+
+std::vector<std::string> MakeListOfUsedMacroParamsDependedOnEditedData()
+{
+    std::vector<std::string> macroParamPathList;
+    for(auto *deskTop : itsMapViewDescTopList)
+    {
+        NFmiPtrList<NFmiDrawParamList> *drawParamListVector = deskTop->DrawParamListVector();
+        NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
+
+        int cacheRowNumber = 0;
+        for(; iter.Next();)
+        {
+            NFmiDrawParamList *aList = iter.CurrentPtr();
+            if(aList)
+            {
+                for(aList->Reset(); aList->Next(); )
+                {
+                    boost::shared_ptr<NFmiDrawParam> drawParam = aList->Current();
+                    if(IsMacroParamDependentOfEditedData(drawParam))
+                    {
+                        macroParamPathList.push_back(drawParam->InitFileName());
+                        // Tyhjennetään myös kyseisten näyttörivien bitmap cache (ikävä kaksois vastuu metodilla)
+                        deskTop->MapViewCache().MakeRowDirty(cacheRowNumber);
+                    }
+                }
+            }
+            cacheRowNumber++;
+        }
+    }
+    return macroParamPathList;
+}
+
+void ClearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges()
+{
+    auto macroParamPaths = MakeListOfUsedMacroParamsDependedOnEditedData();
+    MacroParamDataCache().clearMacroParamCache(macroParamPaths);
 }
 
 void NormalDataDirtiesCacheRowTraceLog(boost::shared_ptr<NFmiDrawParam> &drawParam, unsigned int theDescTopIndex, int cacheRowNumber, const std::string &theFileName)
@@ -3231,8 +3316,10 @@ void MacroParamDirtiesCacheRowTraceLog(boost::shared_ptr<NFmiDrawParam> &drawPar
     }
 }
 
-// Tutkii vertikaali macroParam funktioiden kanssa että jos kyse on pressure datasta, että löytyykö samalta tuottajalta myös hybrid dataa, missä on haluttu parametri.
-// Kaikissa muissa tapauksissa palauttaa true (eli tehdään rivin cache likaus), paitsi jos data oressure dataa ja löytyy vastaava hybrid data infoOrganizerista.
+// Tutkii vertikaali macroParam funktioiden kanssa että jos kyse on pressure datasta, että löytyykö 
+// samalta tuottajalta myös hybrid dataa, missä on haluttu parametri.
+// Kaikissa muissa tapauksissa palauttaa true (eli tehdään rivin cache likaus), paitsi jos data 
+// pressure dataa ja löytyy vastaava hybrid data infoOrganizerista.
 bool DoMacroParamVerticalDataChecks(NFmiFastQueryInfo &theInfo, NFmiInfoData::Type theType, const MacroParamDataInfo &macroParamDataInfo)
 {
     if(macroParamDataInfo.usedWithVerticalFunction_)
@@ -3301,7 +3388,10 @@ bool MakeMacroParamDrawingLayerCacheChecks(boost::shared_ptr<NFmiDrawParam> &dra
                 {
                     if(DoMacroParamVerticalDataChecks(theInfo, theType, macroParamDataInfo))
                     {
-                        descTop.MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
+                        // clean image cache row
+                        descTop.MapViewCache().MakeRowDirty(cacheRowNumber);
+                        // MacroParam data cachen rivit alkavat 1:stä, joten image-cachen riviin on lisättävä +1
+                        MacroParamDataCache().clearMacroParamCache(theDescTopIndex, cacheRowNumber + 1, drawParam->InitFileName());
                         MacroParamDirtiesCacheRowTraceLog(drawParam, macroParamDataInfo, theDescTopIndex, cacheRowNumber, theFileName);
                         return true;
                     }
@@ -3459,8 +3549,15 @@ bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDr
 	// Aluksi vain control-point moodille!!!
 	if(MetEditorOptionsData().ControlPointMode())
 	{
+        std::string operationText = ::GetDictionaryString("Doing Control-Point modifications...");
+        bool operationTextIsWarning = false;
+        if(!UseMultiProcessCpCalc())
+        {
+            operationText = ::GetDictionaryString("Not using MP-CP option while doing Control-\r\nPoint modifications, this way it will be slower");
+            operationTextIsWarning = true;
+        }
 		NFmiStopFunctor stopper;
-		CFmiOperationProgressDlg dlg(stopper, ApplicationInterface::GetSmartMetViewAsCView());
+		CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 		NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 		FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());
@@ -3486,8 +3583,10 @@ bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDr
 // Tätä kutusutaan ulkopuolelta
 bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
 {
-	NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(stopper, ApplicationInterface::GetSmartMetViewAsCView());
+    std::string operationText = ::GetDictionaryString("Doing smarttool modifications...");
+    bool operationTextIsWarning = false;
+    NFmiStopFunctor stopper;
+	CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 	FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());
@@ -3517,6 +3616,7 @@ void ParamMaskListMT(const boost::shared_ptr<NFmiAreaMaskList> &theParamMaskList
 		itsParamMaskListMT = boost::shared_ptr<NFmiAreaMaskList>(new NFmiAreaMaskList(*theParamMaskList));
 	else
 		itsParamMaskListMT = theParamMaskList;
+    MaskChangedDirtyActions();
 }
 
 // säätää annetun timebagin niin, että se on editoitavien aikojen sisällä
@@ -4011,8 +4111,11 @@ void UpdateModifiedDrawParamMarko(unsigned int theDescTopIndex, boost::shared_pt
         }
     }
 	NFmiDrawParamList *drawParamList = DrawParamList(theDescTopIndex, theRowIndex);
-	if(drawParamList)
+    if(drawParamList)
+    {
 		drawParamList->Dirty(true);
+        DrawParamSettingsChangedDirtyActions(theDescTopIndex, GetRealRowNumber(theDescTopIndex, theRowIndex), theDrawParam);
+    }
 	if(theRowIndex == gActiveViewRowIndexForTimeSerialView)
 		TimeSerialViewDirty(true);
 	return;
@@ -5394,33 +5497,29 @@ bool CreateMaskParamsPopup(int theRowIndex, int index)
 // Menuitemiin on sisällytetty mm. komento, parametri ja level ja tuottaja tiedot.
 // viewIndex on esim. joko karttarivi tai aikasarjaikkunan indeksi.
 // viewType voi kertoa esim. onko kyseeessä kartta tai aikasarja näyttö (tulevaisuudessa lisää esim. luotaus jne.).
-bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int /* theViewTypeId */ )
+bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* theViewTypeId */ )
 {
-	bool status = true;
 	FmiMenuCommandType command = theMenuItem.CommandType();
 	switch(command)
 	{
 	case kFmiModifyView:
-		ModifyView(theMenuItem, theViewIndex);
+		ModifyView(theMenuItem, theRowIndex);
 		break;
 	case kFmiModifyDrawParam:
-		status = ModifyDrawParam(theMenuItem, theViewIndex);
+		ModifyDrawParam(theMenuItem, theRowIndex);
 		break;
 	case kFmiActivateView:
-		ActivateView(theMenuItem, theViewIndex);
-        status = false;
+		ActivateView(theMenuItem, theRowIndex);
         break;
     case kAddViewWithRealRowNumber:
-        AddViewWithRealRowNumber(true, theMenuItem, theViewIndex);
+        AddViewWithRealRowNumber(true, theMenuItem, theRowIndex);
         break;
     default:
-		status = false;
-		break;
-	}
-	if(status)
-        MakeMapViewRowDirty(theMenuItem.MapViewDescTopIndex(), theViewIndex);
+        return false;
+    }
 
-	return status;
+    MakeMacroParamCacheUpdatesForWantedRow(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+    return true;
 }
 
 void SetModelRunOffset(const NFmiMenuItem &theMenuItem, int theViewRowIndex)
@@ -5449,7 +5548,7 @@ void MakeMapViewRowDirty(int theMapViewDescTopIndex, int theViewRowIndex)
 {
     // mapview cached alkaa 0:sta ja theViewRowIndex alkaa 1:stä
     MapViewDescTop(theMapViewDescTopIndex)->MapViewCache().MakeRowDirty(theViewRowIndex - 1);
-    MapDirty(theMapViewDescTopIndex, true, false);
+    MapViewDirty(theMapViewDescTopIndex, false, false, true, false, false, true);
 }
 
 void SetModelRunDifference(const NFmiMenuItem &theMenuItem, int theViewRowIndex)
@@ -5460,7 +5559,7 @@ void SetModelRunDifference(const NFmiMenuItem &theMenuItem, int theViewRowIndex)
 		modifiedDrawParam->ModelRunDifferenceIndex(static_cast<int>(theMenuItem.ExtraParam()));
 
 		MapViewDescTop(theMenuItem.MapViewDescTopIndex())->MapViewCache().MakeRowDirty(theViewRowIndex);
-		MapDirty(theMenuItem.MapViewDescTopIndex(), true, false);
+		MapViewDirty(theMenuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 	}
 }
 
@@ -5473,7 +5572,7 @@ void SetDiffToAnalyzeData(const NFmiMenuItem &theMenuItem, int theViewRowIndex)
 		modifiedDrawParam->DataComparisonType(theMenuItem.DataType());
 
 		MapViewDescTop(theMenuItem.MapViewDescTopIndex())->MapViewCache().MakeRowDirty(theViewRowIndex);
-		MapDirty(theMenuItem.MapViewDescTopIndex(), true, false);
+		MapViewDirty(theMenuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 	}
 }
 
@@ -5487,35 +5586,26 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		if(!menuItem)
 			return false;
 		FmiMenuCommandType command = menuItem->CommandType();
-		bool clearCache = true;  // laitetaan varmuuden vuoksi cache aika kokonaan uusiksi kaikissa komennoissa
 		switch(command)
 		{
-		case kFmiReloadAllDynamicHelpData:
-			ReloadAllDynamicHelpData();
-			break;
 		case kFmiAddView:
 			AddView(*menuItem, itsCurrentViewRowIndex);
 			break;
 		case kFmiAddParamCrossSectionView:
 			AddCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex, false);
-			clearCache = false;
 			break;
 		case kFmiAddAsOnlyView:
 			AddAsOnlyView(*menuItem, itsCurrentViewRowIndex);
 			break;
 		case kFmiAddAsOnlyParamCrossSectionView:
 			AddAsOnlyCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex);
-			clearCache = false;
 			break;
 		case kFmiRemoveView:
 			RemoveView(*menuItem, itsCurrentViewRowIndex);
 			break;
-
 		case kFmiRemoveParamCrossSectionView:
 			RemoveCrosssectionDrawParam(*menuItem, itsCurrentCrossSectionRowIndex);
-			clearCache = false;
 			break;
-
 		case kFmiRemoveAllViews:
 			RemoveAllViews(menuItem->MapViewDescTopIndex(), itsCurrentViewRowIndex);
 			break;
@@ -5524,7 +5614,6 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
             break;
         case kFmiRemoveAllParamsCrossSectionView:
 			RemoveAllCrossSectionViews(itsCurrentCrossSectionRowIndex);
-			clearCache = false;
 			break;
 		case kFmiModifyView:
 			ModifyView(*menuItem, itsCurrentViewRowIndex);
@@ -5608,16 +5697,14 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			ModifyMask(*menuItem);
 			break;
 		case kFmiModifyDrawParam:
-			clearCache = ModifyDrawParam(*menuItem, itsCurrentViewRowIndex);
+			ModifyDrawParam(*menuItem, itsCurrentViewRowIndex);
 			break;
 		case kFmiModifyCrossSectionDrawParam:
 			ModifyCrossSectionDrawParam(*menuItem, itsCurrentCrossSectionRowIndex);
-			clearCache = false;
 			break;
 		case kFmiShowParamCrossSectionView:
 		case kFmiHideParamCrossSectionView:
 			ShowCrossSectionDrawParam(*menuItem, itsCurrentCrossSectionRowIndex, command == kFmiShowParamCrossSectionView ? true : false);
-			clearCache = false;
 			break;
 		case kFmiCrossSectionSetTrajectoryTimes:
 			SetCrossSectionTrajectoryTimes(itsCurrentCrossSectionRowIndex);
@@ -5662,70 +5749,16 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
             break;
         }
 		case kFmiActivateCP:
-			{
-				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), true);
-			}
-			break;
 		case kFmiDeactivateCP:
-			{
-				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ActivateCP(CPManager()->CPIndex(), false);
-			}
-			break;
 		case kFmiEnableCP:
-			{
-				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->EnableCP(CPManager()->CPIndex(), true);
-			}
-			break;
 		case kFmiDisableCP:
-			{
-				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->EnableCP(CPManager()->CPIndex(), false);
-			}
-			break;
-
 		case kFmiShowCPAllwaysOnTimeView:
-			{
-				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ShowCPAllwaysOnTimeView(true);
-			}
-			break;
 		case kFmiDontShowCPAllwaysOnTimeView:
-			{
-				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-					CPManager()->ShowCPAllwaysOnTimeView(false);
-			}
-			break;
 		case kFmiShowAllCPsAllwaysOnTimeView:
-			{
-				CPManager()->ShowAllCPsAllwaysOnTimeView(true);
-			}
-			break;
 		case kFmiShowOnlyActiveCPOnTimeView:
-			{
-				CPManager()->ShowAllCPsAllwaysOnTimeView(false);
-			}
-			break;
-
 		case kFmiModifyCPAttributes:
-			{
-				if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
-				{
-					boost::shared_ptr<NFmiEditorControlPointManager> tempCPMan(new NFmiEditorControlPointManager(*CPManager()));
-					const NFmiGrid* dataGrid = 0;
-					boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
-					if(editedInfo)
-						dataGrid = editedInfo->Grid();
-					CFmiCPModifyingDlg dlg(&(*tempCPMan), itsToolTipLatLonPoint, dataGrid);
-					if(dlg.DoModal() == IDOK)
-					{
-						itsCPManagerSet.SetCPManager(tempCPMan);
-					}
-				}
-			}
-			break;
+            DoControlPointCommand(command);
+            break;
 
 		case kFmiSelectCPManagerFromSet:
 			itsCPManagerSet.SetCPManager(menuItem->IndexInViewRow());
@@ -5762,14 +5795,137 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			break;
 
 		default:
-			clearCache = false;
-			break;
+			return false;
 		}
-		if(clearCache)
-			MakeEditorDescTopClearCache(CtrlViewUtils::kDoAllMapViewDescTopIndex, true);
 	}
 	return true;
 }
+
+//bool IsCommandForCrossSectionChanges(FmiMenuCommandType command)
+//{
+//    switch(command)
+//    {
+//    case kFmiAddParamCrossSectionView:
+//    case kFmiAddAsOnlyParamCrossSectionView:
+//    case kFmiDontShowPressureLevelsCrossSectionView:
+//    case kFmiShowPressureLevelsUnderCrossSectionView:
+//    case kFmiShowPressureLevelsOverCrossSectionView:
+//    case kFmiRemoveParamCrossSectionView:
+//    case kFmiRemoveAllParamsCrossSectionView:
+//    case kFmiHideParamCrossSectionView:
+//    case kFmiShowParamCrossSectionView:
+//    case kFmiModifyCrossSectionDrawParam:
+//    case kFmiCrossSectionSetTrajectoryTimes:
+//    case kFmiCrossSectionSetTrajectoryParams:
+//    case kFmiCopyDrawParamOptionsCrossSectionView:
+//    case kFmiPasteDrawParamOptionsCrossSectionView:
+//    case kFmiChangeAllProducersInCrossSectionRow:
+//    case kFmiCopyDrawParamsFromCrossSectionViewRow:
+//    case kFmiPasteDrawParamsToCrossSectionViewRow:
+//    case kFmiActivateCrossSectionDrawParam:
+//    case kFmiChangeAllDataTypesInCrossSectionRow:
+//        return true;
+//    default:
+//        return false;
+//    }
+//}
+
+// Nyt on voitu lisätä/poistaa/muuttaa eri näytöillä olevien parametrien ja siten myös riveillä 
+// olevien macroParamien paikkaa rivissä. Tämän vuoksi pitää päivittää rivin macroParam cachen tila.
+void MakeMacroParamCacheUpdatesForCurrentRow(int mapViewDescTopIndex)
+{
+    int usedRowIndex = 0;
+    if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+    {
+        usedRowIndex = itsCurrentCrossSectionRowIndex;
+    }
+    else if(mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    {
+        usedRowIndex = itsCurrentViewRowIndex;
+    }
+
+    MakeMacroParamCacheUpdatesForWantedRow(mapViewDescTopIndex, usedRowIndex);
+}
+
+void MakeMacroParamCacheUpdatesForWantedRow(int mapViewDescTopIndex, int usedRowIndex)
+{
+    NFmiDrawParamList *drawParamList = DrawParamList(mapViewDescTopIndex, usedRowIndex);
+    if(drawParamList)
+        MacroParamDataCache().update(mapViewDescTopIndex, usedRowIndex, *drawParamList);
+}
+
+
+void DoControlPointCommand(FmiMenuCommandType command)
+{
+    switch(command)
+    {
+    case kFmiActivateCP:
+    {
+        if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
+            CPManager()->ActivateCP(CPManager()->CPIndex(), true);
+    }
+    break;
+    case kFmiDeactivateCP:
+    {
+        if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
+            CPManager()->ActivateCP(CPManager()->CPIndex(), false);
+    }
+    break;
+    case kFmiEnableCP:
+    {
+        if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
+            CPManager()->EnableCP(CPManager()->CPIndex(), true);
+    }
+    break;
+    case kFmiDisableCP:
+    {
+        if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
+            CPManager()->EnableCP(CPManager()->CPIndex(), false);
+    }
+    break;
+
+    case kFmiShowCPAllwaysOnTimeView:
+    {
+        if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
+            CPManager()->ShowCPAllwaysOnTimeView(true);
+    }
+    break;
+    case kFmiDontShowCPAllwaysOnTimeView:
+    {
+        if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
+            CPManager()->ShowCPAllwaysOnTimeView(false);
+    }
+    break;
+    case kFmiShowAllCPsAllwaysOnTimeView:
+    {
+        CPManager()->ShowAllCPsAllwaysOnTimeView(true);
+    }
+    break;
+    case kFmiShowOnlyActiveCPOnTimeView:
+    {
+        CPManager()->ShowAllCPsAllwaysOnTimeView(false);
+    }
+    break;
+    case kFmiModifyCPAttributes:
+    {
+        if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
+        {
+            boost::shared_ptr<NFmiEditorControlPointManager> tempCPMan(new NFmiEditorControlPointManager(*CPManager()));
+            const NFmiGrid* dataGrid = 0;
+            boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
+            if(editedInfo)
+                dataGrid = editedInfo->Grid();
+            CFmiCPModifyingDlg dlg(&(*tempCPMan), itsToolTipLatLonPoint, dataGrid);
+            if(dlg.DoModal() == IDOK)
+            {
+                itsCPManagerSet.SetCPManager(tempCPMan);
+            }
+        }
+    }
+    break;
+    }
+}
+
 
 bool IsDrawParamForecast(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
@@ -5862,6 +6018,7 @@ void HideShowAllMapViewParams(unsigned int theDescTopIndex, bool fHideAllObserva
 		}
 	}
 	CheckAnimationLockedModeTimeBags(theDescTopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+    MakeWholeDesctopDirtyActions(theDescTopIndex, nullptr);
 }
 
 void ToggleShowDifferenceOnMapView(const NFmiMenuItem& theMenuItem, int theRowIndex)
@@ -5938,7 +6095,7 @@ void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFm
 // muuten macroparamin yhteydessä etsitään menuitemista annettua nimeä
 // normalParameterAdd -parametrilla kerrotaan tuleeko normaali lisäys vai erilaisista viewmakroista lisäys. Tämä
 // haluttiin erottaa vielä isViewMacroDrawParam:ista, jolla merkitään vain drawParamin ViewMacroDrawParam -asetus.
-void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMenuItem, int theRowIndex, bool isViewMacroDrawParam = false, const std::string *theMacroParamInitFileName = 0)
+void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMenuItem, int theRealRowIndex, bool isViewMacroDrawParam = false, const std::string *theMacroParamInitFileName = 0)
 {
 	boost::shared_ptr<NFmiDrawParam> drawParam = itsSmartInfoOrganizer->CreateDrawParam(theMenuItem.DataIdent(), theMenuItem.Level(), theMenuItem.DataType());
 	if(!drawParam)
@@ -5949,11 +6106,11 @@ void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMe
 
 	SetDrawMacroSettings(theMenuItem, drawParam, theMacroParamInitFileName);
 
-	if(!ActiveDrawParamWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex))
+	if(!ActiveDrawParamWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRealRowIndex))
 		drawParam->Activate(true);
     drawParam->ViewMacroDrawParam(isViewMacroDrawParam); // asetetaan viewmacrodrawparam-flagin tila
 	boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, true);
-    NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+    NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRealRowIndex);
     if(drawParamList)
 	{
 		string logStr("Added to map view ");
@@ -5981,6 +6138,7 @@ void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMe
 	if(info)
 		groundData = info->SizeLevels() <= 1;
 	UpdateModifiedDrawParam(drawParam, groundData);
+    DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), theRealRowIndex, drawParam);
 }
 
 void AddAsOnlyCrossSectionView(const NFmiMenuItem& theMenuItem, int theRowIndex)
@@ -6034,6 +6192,7 @@ void AddCrossSectionView(const NFmiMenuItem& theMenuItem, int theRowIndex, bool 
 		CrossSectionViewDrawParamList(theRowIndex)->Add(drawParam);
 		CrossSectionViewDrawParamList(theRowIndex)->ActivateOnlyOne(); // varmistaa, että yksi ja vain yksi paramtri listassa on aktiivinen
 	}
+    DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParam);
 }
 
 // Funktio, joka palauttaa annetusta drawparamista stringin ,joka kertoo:
@@ -6097,7 +6256,9 @@ void RemoveView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		drawParamList->Remove();
         if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(dataType))
 			CheckAnimationLockedModeTimeBags(theMenuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
-	}
+
+        DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), boost::shared_ptr<NFmiDrawParam>());
+    }
 	if(drawParamList->NumberOfItems() && (!ActiveDrawParam(theMenuItem.MapViewDescTopIndex(), theRowIndex)))
 	{// editoitu parametri poistettiin, asetetaan 1. listasta aktiiviseksi
 		for(drawParamList->Reset(); drawParamList->Next(); )
@@ -6110,22 +6271,23 @@ void RemoveView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 
 void RemoveAllViews(unsigned int theDescTopIndex, int theRowIndex)
 {
-	{
-		NFmiDrawParamList* drawParamList = DrawParamList(theDescTopIndex, theRowIndex);
-		if(!drawParamList)
-			return;
-		drawParamList->Clear();
-	}
+    NFmiDrawParamList* drawParamList = DrawParamList(theDescTopIndex, theRowIndex);
+    if(drawParamList)
+    {
+        drawParamList->Clear();
+        MakeViewRowDirtyActions(theDescTopIndex, GetRealRowNumber(theDescTopIndex, theRowIndex), drawParamList);
+    }
 }
 
 void ReloadAllDynamicHelpData()
 {
-	InfoOrganizer()->ClearDynamicHelpData(); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
+    LogMessage("Reloading all the dynamic data.", CatLog::Severity::Info, CatLog::Category::Data);
+    InfoOrganizer()->ClearDynamicHelpData(); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
 	HelpDataInfoSystem()->ResetAllDynamicDataTimeStamps(); // merkitään kaikkien dynaamisten help datojen aikaleimaksi -1, eli ei ole luettu ollenkaan
     SatelliteImageCacheSystem().ResetImages();
-	LogMessage("Reload all dynamic data -action has been done.", CatLog::Severity::Info, CatLog::Category::Data);
-	// Tämän jälkeen pitää laittaa datan luku threadi heti päälle
-	// ylemmällä tasolla eli CSmartMetDoc-luokassa, mistä tätä metodia on kutsuttukkin.
+    MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan kaikki kartta näytöt likaiseksi
+    MacroParamDataCache().clearAllLayers();
+	// Tämän jälkeen pitää laittaa datan luku threadi heti päälle ylemmällä tasolla eli CSmartMetDoc-luokassa, mistä tätä metodia on kutsuttukkin.
 }
 
 void RemoveAllCrossSectionViews(int theRowIndex)
@@ -6134,20 +6296,20 @@ void RemoveAllCrossSectionViews(int theRowIndex)
 	if(!drawParamList)
 		return;
 	drawParamList->Clear();
+    MakeViewRowDirtyActions(CtrlViewUtils::kFmiCrossSectionView, theRowIndex, drawParamList);
 }
 
 // Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
 // 'virtuaali' karttanäyttöriveistä.
 // Karttarivi indeksit alkavat 1:stä. 1. rivi on 1 ja 2. rivi on kaksi jne.
-void RemoveAllViewsWithRealRowNumber(unsigned int theDescTopIndex, int theRowIndex)
+void RemoveAllViewsWithRealRowNumber(unsigned int theDescTopIndex, int theRealRowIndex)
 {
-	{
-		NFmiDrawParamList* drawParamList = DrawParamListWithRealRowNumber(theDescTopIndex, theRowIndex);
-		if(!drawParamList)
-			return;
-		drawParamList->Clear();
-		MakeEditorDescTopClearCache(theDescTopIndex, true);
-	}
+    NFmiDrawParamList* drawParamList = DrawParamListWithRealRowNumber(theDescTopIndex, theRealRowIndex);
+    if(drawParamList)
+    {
+        drawParamList->Clear();
+        MakeViewRowDirtyActions(theDescTopIndex, theRealRowIndex, drawParamList);
+    }
 }
 
 void ActivateView(const NFmiMenuItem& theMenuItem, int theRowIndex)
@@ -6163,6 +6325,13 @@ void ActivateView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		{
 			drawParamList->Current()->Activate(true);
 			drawParamList->Dirty(true);
+            if(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theMenuItem.MapViewDescTopIndex())->ShowStationPlot())
+            {
+                // Jos karttanäytöllä näytetään aktiivisen datan pisteet, pitää tässä liata kaikki kuva cachet
+                auto cacheRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex) - 1;
+                MapViewDescTop(theMenuItem.MapViewDescTopIndex())->MapViewCache().MakeRowDirty(cacheRowIndex);
+            }
+            MapViewDirty(theMenuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 		}
 	}
 }
@@ -6270,9 +6439,10 @@ void ChangeAllProducersInMapRow(const NFmiMenuItem& theMenuItem, int theRowIndex
 		const NFmiProducer &givenProducer = *(theMenuItem.DataIdent().GetProducer());
 		for(drawParamList->Reset(); drawParamList->Next(); )
 		{
-			if(drawParamList->Current()->DataType() != NFmiInfoData::kSatelData) // yksi poikkeus, satel tuottajaa ei vaihdeta
+            auto drawParam = drawParamList->Current();
+            auto dataType = drawParam->DataType();
+			if(dataType != NFmiInfoData::kSatelData && dataType != NFmiInfoData::kMacroParam && dataType != NFmiInfoData::kQ3MacroParam)
 			{
-				boost::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
 				bool groundData = (drawParam->Level().GetIdent() == 0);
 				NFmiInfoData::Type finalDataType = GetFinalDataType(drawParam, givenProducer, fUseCrossSectionParams, groundData); // pitää päättää vielä muutentun tuottajan datatyyppi
 				// pitää hakea FindInfo:lla tuottajan mukaan dataa, josta saadaan oikea tuottaja (nimineen kaikkineen)
@@ -6285,6 +6455,8 @@ void ChangeAllProducersInMapRow(const NFmiMenuItem& theMenuItem, int theRowIndex
 			}
 		}
 		drawParamList->Dirty(true);
+        auto cacheRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+        MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), theRowIndex, drawParamList);
 	}
 }
 
@@ -6303,6 +6475,7 @@ void ChangeAllDataTypesInMapRow(const NFmiMenuItem& theMenuItem, int theRowIndex
 			drawParamList->Current()->DataType(wantedType);
 		}
 		drawParamList->Dirty(true);
+        MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), theRowIndex, drawParamList);
 	}
 }
 
@@ -6372,13 +6545,16 @@ void ModifyView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		else
 			drawParam->GridDataPresentationStyle(viewType);
 		NFmiDrawParamList* drawParamList = DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex);
-		if(drawParamList)
-			drawParamList->Dirty(true);
+        if(drawParamList)
+        {
+            drawParamList->Dirty(true);
+            if(macroParamCase)
+                UpdateMacroDrawParam(theMenuItem, theRowIndex, false, drawParam);
+            else
+                UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
 
-		if(macroParamCase)
-			UpdateMacroDrawParam(theMenuItem, theRowIndex, false, drawParam);
-		else
-			UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
+            DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParam);
+        }
 	}
 }
 
@@ -6403,12 +6579,13 @@ void SaveDrawParamSettings(const NFmiMenuItem& theMenuItem, int theRowIndex)
     }
 }
 
-void ForceStationViewUpdate(unsigned int theDescTopIndex)
+void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex)
 {
-    if(theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theDescTopIndex, theRealRowIndex);
+    if(drawParamList)
     {
-        // Liataan maphandler, jotta käytössä karttanäytössä ollut stationView vaihtuu tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
-        MapViewDescTop(theDescTopIndex)->MapHandler()->MapDirty(true);
+        // Liataan haluttu drawParamList, jotta käytössä karttanäytössä ollut stationView päivittyy oikein tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
+        drawParamList->Dirty(true);
     }
 }
 
@@ -6422,8 +6599,62 @@ void ReloadDrawParamSettings(const NFmiMenuItem& theMenuItem, int theRowIndex)
         NFmiDrawParam origDrawParam;
         origDrawParam.Init(drawParam->InitFileName());
         drawParam->Init(&origDrawParam, true);
+        DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParam);
     }
-    ForceStationViewUpdate(theMenuItem.MapViewDescTopIndex());
+}
+
+void MakeViewRowDirtyActions(unsigned int theDescTopIndex, int theRealRowIndex, NFmiDrawParamList *drawParamList)
+{
+    auto bitmapCacheRowIndex = theRealRowIndex - 1;
+    try
+    {
+        MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(bitmapCacheRowIndex);
+    }
+    catch(...)
+    {
+    } // Jos jokin muu kuin karttanäyttö, MapViewDescTop(theDescTopIndex) -kutsu heittää poikkeuksen ja se on ok tässä
+
+    if(drawParamList)
+        MacroParamDataCache().update(theDescTopIndex, theRealRowIndex, *drawParamList);
+    MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
+}
+
+void DrawParamSettingsChangedDirtyActions(unsigned int theDescTopIndex, int theRealMapRow, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+{
+    auto bitmapCacheRowIndex = theRealMapRow - 1;
+    try
+    {
+        MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(bitmapCacheRowIndex);
+    }
+    catch(...)
+    {    } // Jos jokin muu kuin karttanäyttö, MapViewDescTop(theDescTopIndex) -kutsu heittää poikkeuksen ja se on ok tässä
+
+    if(theDrawParam)
+    {
+        if(theDrawParam->IsMacroParamCase(true))
+            MacroParamDataCache().clearMacroParamCache(theDescTopIndex, theRealMapRow, theDrawParam->InitFileName());
+    }
+    MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
+}
+
+// Liataan vain 1. näkyvät karttarivit niistä karttanäytöistä, missä näytä-maski on päällä
+void MaskChangedDirtyActions()
+{
+    for(unsigned int desctopIndex = 0; desctopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex; desctopIndex++)
+    {
+        auto desctop = MapViewDescTop(desctopIndex);
+        if(desctop)
+        {
+            if(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(desctopIndex)->ShowMasksOnMap())
+            {
+                // Maskit ovat siis näkyvissä 1. relatiivisella rivillä
+                unsigned int firstVisibleRowIndex = 1;
+                auto cleanedCacheRowIndex = GetRealRowNumber(desctopIndex, firstVisibleRowIndex) - 1;
+                desctop->MapViewCache().MakeRowDirty(cleanedCacheRowIndex);
+                MapViewDirty(desctopIndex, false, false, true, false, false, false);
+            }
+        }
+    }
 }
 
 bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theRealMapRow, int theParamIndex, bool fNext, bool /* fUseCrossSectionParams */ )
@@ -6443,7 +6674,7 @@ bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int t
                     itsFixedDrawParamSystem.Previous();
                 const std::shared_ptr<NFmiDrawParam> &fixedDrawParam = itsFixedDrawParamSystem.GetCurrentDrawParam();
                 ApplyFixeDrawParam(menuItem, GetRelativeRowNumber(theDescTopIndex, theRealMapRow), fixedDrawParam);
-                MapDirty(theDescTopIndex, true, true);
+                DrawParamSettingsChangedDirtyActions(theDescTopIndex, theRealMapRow, drawParam);
                 return true;
             }
         }
@@ -6499,8 +6730,11 @@ boost::shared_ptr<NFmiDrawParam> GetCrosssectionDrawParamFromViewLists(const NFm
 void RemoveCrosssectionDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex)
 {
 	NFmiDrawParamList* drawParamList = this->CrossSectionViewDrawParamList(theRowIndex);
-	if(drawParamList && drawParamList->Index(theMenuItem.IndexInViewRow()))
-		drawParamList->Remove();
+    if(drawParamList && drawParamList->Index(theMenuItem.IndexInViewRow()))
+    {
+        drawParamList->Remove();
+        DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), boost::shared_ptr<NFmiDrawParam>());
+    }
 }
 
 NFmiAreaMask* CreateMask(const NFmiMenuItem& theMenuItem)
@@ -6571,7 +6805,7 @@ void AddMask(const NFmiMenuItem& theMenuItem, int /* theRowIndex */ , bool fClea
 			boost::shared_ptr<NFmiAreaMaskList> paramMaskList = ParamMaskListMT();
 			if(paramMaskList)
 			{
-				string logStr("Otetaan maski käyttöön ");
+				string logStr("Adding mask ");
 				logStr += GetSelectedParamInfoString(mask->DataIdent(), mask->Level());
 				LogMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Editing);
 
@@ -6614,7 +6848,8 @@ void ActivateFirstNonHiddenViewParam(NFmiDrawParamList* theDrawParamList)
 
 void HideView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 {
-	NFmiDrawParamList* drawParamList = DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+    auto mapViewDesctopIndex = theMenuItem.MapViewDescTopIndex();
+	NFmiDrawParamList* drawParamList = DrawParamList(mapViewDesctopIndex, theRowIndex);
 	if(!drawParamList)
 		return;
 	if(drawParamList->Index(theMenuItem.IndexInViewRow()))
@@ -6626,25 +6861,28 @@ void HideView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 			ActivateFirstNonHiddenViewParam(drawParamList);
 		}
 		drawParamList->Dirty(true);
-		CheckAnimationLockedModeTimeBags(theMenuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
-		MapDirty(theMenuItem.MapViewDescTopIndex(), true, true);
+		CheckAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+        MapViewDescTop(mapViewDesctopIndex)->MapViewCache().MakeRowDirty(GetRealRowNumber(mapViewDesctopIndex, theRowIndex));
+		MapViewDirty(mapViewDesctopIndex, false, false, true, false, false, false);
 	}
-	UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParamList->Current(), theRowIndex);
+	UpdateModifiedDrawParamMarko(mapViewDesctopIndex, drawParamList->Current(), theRowIndex);
 }
 
 void ShowView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 {
-	NFmiDrawParamList* drawParamList = DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+    auto mapViewDesctopIndex = theMenuItem.MapViewDescTopIndex();
+    NFmiDrawParamList* drawParamList = DrawParamList(mapViewDesctopIndex, theRowIndex);
 	if(!drawParamList)
 		return;
 	if(drawParamList->Index(theMenuItem.IndexInViewRow()))
 	{
 		drawParamList->Current()->HideParam(false);
 		drawParamList->Dirty(true);
-		CheckAnimationLockedModeTimeBags(theMenuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
-		MapDirty(theMenuItem.MapViewDescTopIndex(), true, true);
+		CheckAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+        MapViewDescTop(mapViewDesctopIndex)->MapViewCache().MakeRowDirty(GetRealRowNumber(mapViewDesctopIndex, theRowIndex));
+        MapViewDirty(mapViewDesctopIndex, false, false, true, false, false, false);
 	}
-	UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParamList->Current(), theRowIndex);
+	UpdateModifiedDrawParamMarko(mapViewDesctopIndex, drawParamList->Current(), theRowIndex);
 }
 
 void RemoveMask(const NFmiMenuItem& theMenuItem)
@@ -6670,7 +6908,8 @@ void DisableMask(const NFmiMenuItem& theMenuItem)
 		if(paramMaskList->Index(theMenuItem.IndexInViewRow()))
 		{
 			paramMaskList->Current()->Enable(false);
-		}
+            ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tällöin lista pitää asettaa dokumenttiin käyttöön, jolloin myös näyttöjen likaukset tehdään oikein
+        }
 	}
 }
 
@@ -6683,7 +6922,8 @@ void EnableMask(const NFmiMenuItem& theMenuItem)
 		if(paramMaskList->Index(theMenuItem.IndexInViewRow()))
 		{
 			paramMaskList->Current()->Enable(true);
-		}
+            ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tällöin lista pitää asettaa dokumenttiin käyttöön, jolloin myös näyttöjen likaukset tehdään oikein
+        }
 	}
 }
 
@@ -6700,7 +6940,8 @@ void ModifyMask(const NFmiMenuItem& theMenuItem)
 			dlg.ParamMask(mask.get());
 			if(dlg.DoModal() == IDOK)
 			{
-			}
+                ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tällöin lista pitää asettaa dokumenttiin käyttöön, jolloin myös näyttöjen likaukset tehdään oikein
+            }
 		}
 	}
 }
@@ -6719,7 +6960,8 @@ void ModifyCrossSectionDrawParam(const NFmiMenuItem& theMenuItem, int theRowInde
             CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, itsMacroPathSettings.DrawParamPath(true), false, true, theMenuItem.MapViewDescTopIndex(), parentView);
 			if(dlg.DoModal() == IDOK)
 			{
-			}
+                DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), modifiedDrawParam);
+            }
 		}
 	}
 }
@@ -6795,8 +7037,11 @@ void SetCrossSectionTrajectoryTimes(int theRowIndex)
 void ShowCrossSectionDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool fShowParam)
 {
 	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = GetCrosssectionDrawParamFromViewLists(theMenuItem, theRowIndex);
-	if(modifiedDrawParam)
+    if(modifiedDrawParam)
+    {
 		modifiedDrawParam->HideParam(!fShowParam);
+        DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), modifiedDrawParam);
+    }
 }
 
 bool ModifyDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex)
@@ -6806,6 +7051,7 @@ bool ModifyDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		return ModifyMacroDrawParam(theMenuItem, theRowIndex, theMenuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView);
 	else
 	{
+        bool updateStatus = false;
 		boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = GetDrawParamFromViewLists(theMenuItem, theRowIndex);
 		if(modifiedDrawParam)
 		{
@@ -6814,13 +7060,16 @@ bool ModifyDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex)
 			if(dlg.DoModal() == IDOK)
 			{
 				UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), modifiedDrawParam, theRowIndex);
-				return true;
+                updateStatus = true;
 			}
 			else
-				return dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
+                updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
 		}
+
+        if(updateStatus)
+            DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), modifiedDrawParam);
+        return updateStatus;
 	}
-	return false;
 }
 
 void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool fCrossSectionCase, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -6832,6 +7081,7 @@ void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 		{
 			drawParamList->Current()->Init(theDrawParam);
 			drawParamList->Dirty(true);
+            DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), theDrawParam);
 		}
 	}
 }
@@ -6909,7 +7159,7 @@ void TimeSerialViewModelRunCountSet(const NFmiMenuItem &theMenuItem, int theRowI
 
 		drawParamList->Dirty(true);
 		CheckAnimationLockedModeTimeBags(theMenuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
-		MapDirty(theMenuItem.MapViewDescTopIndex(), true, true);
+		MapViewDirty(theMenuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 		UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParamList->Current(), theRowIndex);
 		if(theMenuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiTimeSerialView)
 			TimeSerialViewDirty(true);
@@ -7192,7 +7442,7 @@ void ChangeWmsMapType(unsigned int theDescTopIndex, bool fForward)
     else
         WmsSupport().previousBackground();
 
-    MapDirty(theDescTopIndex, true, true);
+    MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
 #endif // DISABLE_CPPRESTSDK
 }
 
@@ -7202,7 +7452,7 @@ void ChangeFileBitmapMapType(unsigned int theDescTopIndex, bool fForward)
         MapViewDescTop(theDescTopIndex)->MapHandler()->NextMap();
     else
         MapViewDescTop(theDescTopIndex)->MapHandler()->PreviousMap();
-    MapDirty(theDescTopIndex, true, true);
+    MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
 }
 
 void ChangeMapType(unsigned int theDescTopIndex, bool fForward)
@@ -7295,11 +7545,70 @@ bool ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 	{
 		ActiveViewRow(theDescTopIndex, activeViewRow); // asetetaan uusi suhteellinen aktiivinen rivi takaisin desctopiin
         UpdateRowInLockedDescTops(theDescTopIndex);
-		MapDirty(theDescTopIndex, true, false);
+		MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
 		return true;
 	}
 	else
 		return false;
+}
+
+bool IsMacroParamAndDrawWithSymbols(boost::shared_ptr<NFmiDrawParam> &drawParam)
+{
+    if(drawParam && drawParam->IsMacroParamCase(true))
+    {
+        // MacroParam on aina hila muotoista, joten tarkastetaan hilamuotoinen visualisointi tyyppi
+        auto visualizationType = drawParam->GridDataPresentationStyle();
+        if(!(visualizationType >= NFmiMetEditorTypes::kFmiIsoLineView && visualizationType <= NFmiMetEditorTypes::kFmiQuickColorContourView))
+            return true;
+    }
+    return false;
+}
+
+// Jos karttanäytön koko muutetaan, muuttuu tällöin piirrettävän karttaalueen koko pikseleissä.
+// Tällöin jos näytöllä on macroParametreja, jotka piirretään symboleilla, pitää niiden macroParamCachet 
+// laittaa uusiksi, koska piirto harvennus saattaa muuttua. Ei ole väliä, onko parametri piilotettu tai
+// ei, koska kun alue muuuttuu, pitää varmuuden vuoksi kaikki kyseiset macroParamien datacachet tyhjentää.
+void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
+{
+    auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
+    if(mapViewDesctop)
+    {
+        int rowIndex = 1;
+        NFmiPtrList<NFmiDrawParamList> *drawParamListVector = mapViewDesctop->DrawParamListVector();
+        NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
+        for(; iter.Next();)
+        {
+            NFmiDrawParamList *aList = iter.CurrentPtr();
+            if(aList)
+            {
+                for(aList->Reset(); aList->Next(); )
+                {
+                    boost::shared_ptr<NFmiDrawParam> drawParam = aList->Current();
+                    if(IsMacroParamAndDrawWithSymbols(drawParam))
+                    {
+                        MacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, rowIndex, drawParam->InitFileName());
+                    }
+                }
+            }
+            rowIndex++;
+        }
+    }
+}
+
+void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+{
+    auto keepMapAspectRatio = ApplicationWinRegistry().KeepMapAspectRatio();
+    // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
+    // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
+    MapViewDirty(mapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
+    MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
+    auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
+    if(mapViewDesctop)
+    {
+        mapViewDesctop->CalcClientViewXperYRatio(totalPixelSize);
+        mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
+        mapViewDesctop->BorderDrawDirty(true);
+    }
 }
 
 void TimeControlTimeStep(unsigned int theDescTopIndex, float newValue)
@@ -7307,8 +7616,10 @@ void TimeControlTimeStep(unsigned int theDescTopIndex, float newValue)
 	if(MapViewDescTop(theDescTopIndex)->TimeControlTimeStep() != newValue)
 	{
 		MapViewDescTop(theDescTopIndex)->TimeControlTimeStep(newValue);
-		AreaViewDirty(theDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
-									// kun aika-askel muuttuu, pitää mahdollisesti piirtää uusiksi aikaerotus juttuja ja salama dataa (ja ehkä jotain muuta?), joten varmuuden vuoksi laitan aina välimuistin likaiseksi
+        // laitetaan viela kaikki ajat likaisiksi cachesta kun aika-askel muuttuu, 
+        // pitää mahdollisesti piirtää uusiksi salama dataa (ja ehkä jotain muuta?), 
+        // joten varmuuden vuoksi laitan aina välimuistin likaiseksi
+		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
 	}
 }
 // palauttaa käytetyn aikastepin tunteina. Jos asetuksissa määrätty aikasteppi
@@ -8576,11 +8887,14 @@ bool InitCPManagerSet(void)
         if(drawParamListVector)
         {
             // Huom! NFmiPtrList:issä indeksit alkavat 1:stä...
-            for(unsigned long i = 1; i <= drawParamListVector->NumberOfItems(); i++)
+            for(unsigned long rowIndex = 1; rowIndex <= drawParamListVector->NumberOfItems(); rowIndex++)
             {
-                auto *drawParamList = drawParamListVector->Index(i).CurrentPtr();
+                auto *drawParamList = drawParamListVector->Index(rowIndex).CurrentPtr();
                 if(drawParamList)
+                {
                     drawParamList->Clear();
+                    MakeViewRowDirtyActions(theDescTopIndex, rowIndex, drawParamList);
+                }
             }
         }
     }
@@ -8669,6 +8983,19 @@ bool InitCPManagerSet(void)
 		fUseMaskWithBrush = masks.UseMaskWithBrush();
 	}
 
+    void MakeApplyViewMacroDirtyActions()
+    {
+        // läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
+        MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
+        unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
+        for(unsigned int i = 0; i<ssize; i++)
+        {
+            MapViewDescTop(i)->MapViewBitmapDirty(true);
+            MapViewDescTop(i)->BorderDrawDirty(true);
+        }
+        MacroParamDataCache().clearAllLayers();
+    }
+
     void ApplyViewMacro(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro, bool undoRedoAction)
 	{ // ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
 		SetGeneralDoc(theMacro);
@@ -8685,15 +9012,7 @@ bool InitCPManagerSet(void)
 
         ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
 
-		// läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
-		MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
-		unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
-		for(unsigned int i = 0; i<ssize; i++)
-		{
-			MapViewDescTop(i)->MapViewBitmapDirty(true);
-			MapViewDescTop(i)->MapViewUpdated(true);
-			MapViewDescTop(i)->BorderDrawDirty(true);
-		}
+        MakeApplyViewMacroDirtyActions();
 
         // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
@@ -9149,43 +9468,106 @@ bool IsRedoableViewMacro(void)
 	void UseMap(unsigned int theDescTopIndex, unsigned int theMapIndex)
 	{
 		SetSelectedMap(theDescTopIndex, theMapIndex);
-		MapDirty(theDescTopIndex, true, true);
+		MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
 	}
 
-	void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache)
-	{
-		// ainakin väliaikaisesti laitan myös aikasarjan likauksen tänne!
-		if(areaViewDirty) // Huom! vain likaus, ei puhdistus!!!!
-		{
-			fTimeSerialViewDirty = true;
-		}
-
-		if(theDescTopIndex == CtrlViewUtils::kDoAllMapViewDescTopIndex)
-			AreaViewDirtyForAllDescTops(areaViewDirty, clearCache);
-		else
-			MapViewDescTop(theDescTopIndex)->AreaViewDirty(areaViewDirty, clearCache);
-	}
-
-void AreaViewDirtyForAllDescTops(bool areaViewDirty, bool fClearCache)
+void ClearMacroParamDataCache(unsigned int theDescTopIndex, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches)
 {
-	unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
-	for(unsigned int i = 0; i<ssize; i++)
-		MapViewDescTop(i)->AreaViewDirty(areaViewDirty, fClearCache);
+    if(clearMacroParamDataCache)
+        MacroParamDataCache().clearView(theDescTopIndex);
+    if(clearEditedDataDependentCaches)
+    {
+        ClearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges();
+        ClearAllViewRowsWithEditedData();
+    }
 }
 
-void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache)
+bool IsEditedRelatedDataType(NFmiInfoData::Type dataType)
 {
-	if(theDescTopIndex == CtrlViewUtils::kDoAllMapViewDescTopIndex)
-		MapDirtyForAllDescTops(mapDirty, clearCache);
-	else
-		MapViewDescTop(theDescTopIndex)->MapDirty(mapDirty, clearCache);
+    return (dataType == NFmiInfoData::kEditable) || (dataType == NFmiInfoData::kCopyOfEdited);
 }
 
-void MapDirtyForAllDescTops(bool mapDirty, bool clearCache)
+bool DrawParamListContainsEditedData(NFmiDrawParamList &drawParamList)
 {
-	unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
-	for(unsigned int i = 0; i<ssize; i++)
-		MapViewDescTop(i)->MapDirty(mapDirty, clearCache);
+    for(drawParamList.Reset(); drawParamList.Next(); )
+    {
+        boost::shared_ptr<NFmiDrawParam> drawParam = drawParamList.Current();
+        if(!drawParam->IsParamHidden())
+        {
+            if(IsEditedRelatedDataType(drawParam->DataType()))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Tyhjennetään bitmap cached eri karttanäytöistä niiltä riveiltä, missä on editoitua dataa katseltavana.
+// Lisäksi liataan aikasarja ikkuna, jos siellä on editoitua parametria valittuna.
+void ClearAllViewRowsWithEditedData()
+{
+    unsigned int descTopIndex = 0;
+    for(auto *deskTop : itsMapViewDescTopList)
+    {
+        auto mapViewDesctop = MapViewDescTop(descTopIndex);
+        int cacheRowNumber = 0; // cache row indeksi alkaa 0:sta!!
+        NFmiPtrList<NFmiDrawParamList> *drawParamListVector = deskTop->DrawParamListVector();
+        NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
+        for(; iter.Next();)
+        {
+            NFmiDrawParamList *drawParamList = iter.CurrentPtr();
+            if(DrawParamListContainsEditedData(*drawParamList))
+            {
+                mapViewDesctop->MapViewCache().MakeRowDirty(cacheRowNumber);
+            }
+            cacheRowNumber++;
+        }
+        descTopIndex++;
+    }
+
+    // Lopuksi vielä likaus aikasarjaan, jos tarvis
+    if(DrawParamListContainsEditedData(*itsTimeSerialViewDrawParamList))
+        fTimeSerialViewDirty = true;
+}
+
+void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
+{
+    if(redrawMapView)
+    {
+        // Ainakin toistaiseksi laitan aikasarjan likauksen tänne
+        fTimeSerialViewDirty = true;
+    }
+
+    if(theDescTopIndex == CtrlViewUtils::kDoAllMapViewDescTopIndex)
+        MapViewDirtyForAllDescTops(makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
+    else
+    {
+        try
+        {
+            MapViewDescTop(theDescTopIndex)->MapViewDirty(makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, updateMapViewDrawingLayers);
+        }
+        catch(...)
+        { } // Jos tätä kutsutaan esim. poikkileikkaus näytölle, lentää poikkeus, mikä on täysin ok
+
+        ClearMacroParamDataCache(theDescTopIndex, clearMacroParamDataCache, clearEditedDataDependentCaches);
+    }
+}
+
+void MapViewDirtyForAllDescTops(bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
+{
+    unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
+    for(unsigned int viewIndex = 0; viewIndex < ssize; viewIndex++)
+    {
+        try
+        {
+            MapViewDescTop(viewIndex)->MapViewDirty(makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, updateMapViewDrawingLayers);
+        }
+        catch(...)
+        { } // Jos tätä kutsutaan esim. poikkileikkaus näytölle, lentää poikkeus, mikä on täysin ok
+
+        ClearMacroParamDataCache(viewIndex, clearMacroParamDataCache, clearEditedDataDependentCaches);
+    }
 }
 
 void MakeEditorDescTopClearCache(unsigned int theDescTopIndex, bool clearCache)
@@ -9215,8 +9597,7 @@ void SetSelectedMap(unsigned int theDescTopIndex, int newMapIndex)
 void SetSelectedMapHandler(unsigned int theDescTopIndex, unsigned int newMapIndex)
 {
     SetSelectedMap(theDescTopIndex, newMapIndex);
-	MapDirty(theDescTopIndex, true, true);
-	MapViewDescTop(theDescTopIndex)->AreaViewDirty(true);
+	MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
 }
 
 boost::shared_ptr<NFmiArea> MakeCPCropArea(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float theShrinkFactor, unsigned long x1, unsigned long y1, unsigned long x2, unsigned long y2, unsigned long shrinkX, unsigned long shrinkY)
@@ -9313,7 +9694,8 @@ void SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> 
 			SetCPCropGridSettings(correctTypeArea);
 		}
 		mapDescTop->BorderDrawDirty(true);
-		AreaViewDirty(theDescTopIndex, true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+        // laitetaan viela kaikki ajat likaisiksi cachesta
+		MapViewDirty(theDescTopIndex, true, true, true, true, false, false);
 		mapDescTop->GridPointCache().Clear();
 	}
 }
@@ -9331,7 +9713,7 @@ void SwapArea(unsigned int theDescTopIndex)
 
 	// sitten vielä tarvittävät likaukset ja päivitykset
 	mapDescTop->BorderDrawDirty(true);
-	AreaViewDirty(theDescTopIndex, true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+	MapViewDirty(theDescTopIndex, true, true, true, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 	mapDescTop->GridPointCache().Clear();
 }
 
@@ -9402,18 +9784,23 @@ void SwapArea(unsigned int theDescTopIndex)
 			if(currentFolder)
 				currentFolder->Remove(theName); // poista macroparam mpsysteemistä (joka tuhoaa myös tiedostot)
 			RemoveMacroParamFromDrawParamLists(theName); // poista macroparam drawparamlistoista
-			AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+			MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		}
 	}
 
 	void RemoveMacroParamFromDrawParamLists(const std::string &theName)
 	{
-		unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
-		for(unsigned int i = 0; i<ssize; i++)
+		auto ssize = static_cast<unsigned long>(itsMapViewDescTopList.size());
+		for(auto viewIndex = 0ul; viewIndex < ssize; viewIndex++)
 		{
-			NFmiPtrList<NFmiDrawParamList>::Iterator iter = MapViewDescTop(i)->DrawParamListVector()->Start();
-			for( ; iter.Next(); )
-				iter.CurrentPtr()->RemoveMacroParam(theName);
+			NFmiPtrList<NFmiDrawParamList>::Iterator iter = MapViewDescTop(viewIndex)->DrawParamListVector()->Start();
+            for(unsigned long rowIndex = 0; iter.Next(); rowIndex++)
+            {
+                if(iter.CurrentPtr()->RemoveMacroParam(theName))
+                {
+                    MacroParamDataCache().update(viewIndex, rowIndex, iter.Current());
+                }
+            }
 		}
 	}
 
@@ -9446,6 +9833,7 @@ void SwapArea(unsigned int theDescTopIndex)
 			if(list->MoveActiveParam(fRaise ? -1 : 1))
 			{
 				MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(theMapRow - 1); // täällä rivit alkavat 1:stä, mutta cachessa 0:sta!!!
+                MakeMacroParamCacheUpdatesForWantedRow(theDescTopIndex, theMapRow);
 				return true;
 			}
 		}
@@ -9474,17 +9862,17 @@ void SwapArea(unsigned int theDescTopIndex)
 	// muuten edellinen. Menee päädyistä yli, eli viimeisestä menee 1. parametriin.
 	// Käy läpi myös aliparametri (TotalWind ja W&C).
 	// Palauttaa true jos parametrin vaihto onnistui ja pitää päivittää näytöt, muuten false.
-	bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams)
+	bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theRealMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams)
 	{
 //	TRACE("ChangeActiveMapViewParam 1\n");
-		NFmiDrawParamList *list = DrawParamListWithRealRowNumber(theDescTopIndex, theMapRow);
+		NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theDescTopIndex, theRealMapRow);
 		if(fUseCrossSectionParams)
-			list = CrossSectionViewDrawParamList(theMapRow);
-		if(list)
+            drawParamList = CrossSectionViewDrawParamList(theRealMapRow);
+		if(drawParamList)
 		{
-			if(list->Index(theParamIndex))
+			if(drawParamList->Index(theParamIndex))
 			{
-				boost::shared_ptr<NFmiDrawParam> drawParam = list->Current();
+				boost::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
 				boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartInfoOrganizer->Info(drawParam, fUseCrossSectionParams, true);
 				if(info && info->SizeParams() > 1)
 				{
@@ -9498,7 +9886,10 @@ void SwapArea(unsigned int theDescTopIndex)
 					if(drawParamTmp)
 					{
 						SetUpChangedDrawParam(drawParam, drawParamTmp);
-						MapDirty(theDescTopIndex, true, true);
+                        drawParamList->Dirty(true);
+                        auto cacheMapRow = theRealMapRow - 1; // real-map-row alkaa 1:stä ja cache-map-row 0:sta
+                        MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(cacheMapRow);
+						MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
 						return true;
 					}
 				}
@@ -10186,7 +10577,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	// Laitoin funktion tänne että ei tarvitse duplikoida hankalaa koodia.
 	void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint& theLatLon
 						,const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-						,bool &theRedrawMapAfterMTATempClear
 						,bool fMakeMTAModeAdd // vain tietyistä paikoista kun tätä metodia kutsutaan, saa luotauksen lisätä (left buttom up karttanäytöllä lähinnä)
 						,bool fDoOnlyMTAModeAdd)
 	{
@@ -10218,7 +10608,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				NFmiMTATempSystem::TempInfo tempInfo(theLatLon, theTime, GetMTATempSystem().CurrentProducer());
 				GetMTATempSystem().AddTemp(tempInfo);
 //				MakeEditorDirty(theDescTopIndex, true, true, true);
-				MapDirty(theDescTopIndex, true, true);
+				MapViewDirty(theDescTopIndex, false, false, true, false, false, false);
 			}
 			else
 			{
@@ -10226,8 +10616,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				GetMTATempSystem().ClearTemps();
 				NFmiMTATempSystem::TempInfo tempInfo(theLatLon, theTime, GetMTATempSystem().CurrentProducer());
 				GetMTATempSystem().AddTemp(tempInfo);
-				AreaViewDirty(theDescTopIndex, false, true);
-				theRedrawMapAfterMTATempClear = true; // hätä paska viritys optimoinnin takia
+				MapViewDirty(theDescTopIndex, false, false, true, false, false, false);
 			}
 		}
 		if(doTrajectoryModeAdd)
@@ -10242,7 +10631,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				else
 					TrajectorySystem()->SelectedLatLon(theLatLon);
 			}
-			AreaViewDirty(theDescTopIndex, true, true);
+            // Trajektorien muutos vaikuttaa kaikkiin karttanäytön ruutuihin joka rivillä (siksi 3. parametri on true)
+			MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
 		}
 	}
 
@@ -10267,10 +10657,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void ClearTEMPData(void)
 	{
-		InfoOrganizer()->ClearData(NFmiInfoData::kTEMPCodeSoundingData); // tyhjennetään TEMP-data
-		// Karttanäyttö on piirrettävä uudestaan, koska siellä saattaa näkyä
-		// uusia luotaus merkkejä.
-		AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+        // tyhjennetään TEMP-data
+		InfoOrganizer()->ClearData(NFmiInfoData::kTEMPCodeSoundingData); 
+		// Karttanäyttö on piirrettävä uudestaan, koska siellä saattaa näkyä  uusia luotaus merkkejä.
+		MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
 	}
 
 	const std::string& LastTEMPDataStr(void)
@@ -10512,7 +10902,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			else
 				drawParamListTo->BorrowParams(*drawParamListFrom);
 
-			AreaViewDirty(theDescTopIndex, true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+			MapViewDirty(theDescTopIndex, false, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+            MacroParamDataCache().update(theDescTopIndex, row, *drawParamListTo);
 		}
 	}
 
@@ -10743,7 +11134,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         bool newState = !ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex)->ShowStationPlot();
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex)->ShowStationPlot(newState);
         MapViewDescTop(theDescTopIndex)->ShowStationPlotVM(newState); // tämä pitää päivittää molempiin paikkoihin, koska jotkin operaatiot riippuvat että MapViewDescTop:issa on päivitetty arvo
-		MapDirty(theDescTopIndex, true, true); // tämä laittaa cachen likaiseksi
+		MapViewDirty(theDescTopIndex, false, true, true, false, false, false); // tämä laittaa cachen likaiseksi
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide active parameters data's grid/station points");
 	}
 
@@ -10762,17 +11153,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnEditSpaceOut(unsigned int theDescTopIndex)
 	{
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex)->ToggleSpacingOutFactor();
-		MapDirty(theDescTopIndex, true, true);
+        // MacroParamDataCache ongelma (MAPADACA): Kun harvennusta muutetaan, pitää liata sellaiset macroParamit, jotka piirretään symboleilla
+		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle spacing out factor");
 	}
 
 	void OnHideParamWindow(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ShowParamWindowView(!MapViewDescTop(theDescTopIndex)->ShowParamWindowView());
-		AreaViewDirty(theDescTopIndex, true, false); // laitetaan kartta likaiseksi
-		MapViewDescTop(theDescTopIndex)->MapView()->Invalidate(FALSE);
-		LogMessage("Show/Hide param-view.", CatLog::Severity::Debug, CatLog::Category::Visualization);
-	}
+		MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/Hide param-view");
+    }
 
 	void OnShowTimeString(unsigned int theDescTopIndex)
 	{
@@ -10783,7 +11174,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnButtonRefresh(void)
 	{
 		LogMessage("Refreshing all views.", CatLog::Severity::Info, CatLog::Category::Visualization);
-		MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true); // laitetaan kartta likaiseksi
+		MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan kartta likaiseksi
+        MacroParamDataCache().clearAllLayers();
         WindTableSystem().MustaUpdateTable(true);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Refreshing all views (F5)");
 	}
@@ -10802,7 +11194,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         else
             WmsSupport().previousOverlay();
 
-        MapDirty(theDescTopIndex, true, true);
+        MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's Wms overlay map type changed");
 #endif // DISABLE_CPPRESTSDK
     }
@@ -10815,7 +11207,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 MapViewDescTop(theDescTopIndex)->MapHandler()->NextOverMap();
             else
                 MapViewDescTop(theDescTopIndex)->MapHandler()->PreviousOverMap();
-            MapDirty(theDescTopIndex, true, true);
+            MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
         }
     }
@@ -10840,7 +11232,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
         bool newValue = !ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(static_cast<int>(theDescTopIndex))->ShowMasksOnMap();
         SetShowMaskOnMap(theDescTopIndex, newValue);
-		MapDirty(theDescTopIndex, true, true);
+		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide masks on map views");
 	}
 
@@ -10854,7 +11246,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(mode > NFmiProjectionCurvatureInfo::kOverEverything)
 				mode = NFmiProjectionCurvatureInfo::kNoDraw;
 			projInfo->SetDrawingMode(mode);
-			MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+			MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false);
 			LogMessage("Projektion line draw style changed.", CatLog::Severity::Debug, CatLog::Category::Visualization);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view projektion line draw style changed");
 		}
@@ -10863,14 +11255,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnToggleLandBorderDrawColor(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleLandBorderColor();
-		MapDirty(theDescTopIndex, true, true);
+		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Toggle land border draw color");
 	}
 
 	void OnToggleLandBorderPenSize(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleLandBorderPenSize();
-		MapDirty(theDescTopIndex, true, true);
+		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Toggle land border draw line width");
 	}
 
@@ -10895,13 +11287,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnToggleOverMapBackForeGround(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->DrawOverMapMode(MapViewDescTop(theDescTopIndex)->DrawOverMapMode() == 0 ? 1 : 0);
-		MapDirty(theDescTopIndex, true, true);
+		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: changed map overlay's draw order");
 	}
 
 	void OnAcceleratorToggleKeepMapRatio(void)
 	{
-        ApplicationWinRegistry().KeepMapAspectRatio(!ApplicationWinRegistry().KeepMapAspectRatio());
+        auto newKeepAspectRatioState = !ApplicationWinRegistry().KeepMapAspectRatio();
+        ApplicationWinRegistry().KeepMapAspectRatio(newKeepAspectRatioState);
 
 		// keep ratio laskut pitää tehdä kaikille karttanäytöille!!!
 		for(size_t i = 0; i<itsMapViewDescTopList.size(); i++)
@@ -10909,7 +11302,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			CRect rect;
 			MapViewDescTop(static_cast<unsigned int>(i))->MapView()->GetClientRect(rect);
 			MapViewDescTop(static_cast<unsigned int>(i))->CalcClientViewXperYRatio(NFmiPoint(rect.Width(), rect.Height()));
-			MapDirty(static_cast<unsigned int>(i), true, true);// tämä 'aiheuttaa' datan harvennuksen
+            // tämä 'aiheuttaa' datan harvennuksen. Jos newKeepAspectRatioState on true, tapahtuu silloin 
+            // automaattinen kartan zoomaus ja macroParamCacheData pitää silloin tyhjentää kaikille karttanäytöille
+			MapViewDirty(static_cast<unsigned int>(i), true, true, true, newKeepAspectRatioState, false, false);
             ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateMapView(static_cast<unsigned int>(i));
 		}
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: toggle keep map's aspect ratio setting");
@@ -11042,39 +11437,32 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void ToggleShowHelperDatasInTimeView(int theCommand)
 	{
-		switch(theCommand)
+        TimeSerialViewDirty(true);
+        switch(theCommand)
 		{
 		case kFmiShowHelperDataOnTimeSerialView:
             SetOnShowHelperData1InTimeSerialView();
-			TimeSerialViewDirty(true);
 			break;
 		case kFmiDontShowHelperDataOnTimeSerialView:
             SetOffShowHelperData1InTimeSerialView();
-			TimeSerialViewDirty(true);
 			break;
 		case kFmiShowHelperData2OnTimeSerialView:
             SetOnShowHelperData2InTimeSerialView();
-            TimeSerialViewDirty(true);
 			break;
 		case kFmiDontShowHelperData2OnTimeSerialView:
             SetOffShowHelperData2InTimeSerialView();
-            TimeSerialViewDirty(true);
 			break;
         case kFmiShowHelperData3OnTimeSerialView:
             ShowHelperData3InTimeSerialView(true);
-            TimeSerialViewDirty(true);
             break;
         case kFmiDontShowHelperData3OnTimeSerialView:
             ShowHelperData3InTimeSerialView(false);
-            TimeSerialViewDirty(true);
             break;
         case kFmiShowHelperData4OnTimeSerialView:
             ShowHelperData4InTimeSerialView(true);
-            TimeSerialViewDirty(true);
             break;
         case kFmiDontShowHelperData4OnTimeSerialView:
             ShowHelperData4InTimeSerialView(false);
-            TimeSerialViewDirty(true);
             break;
         }
 	}
@@ -11156,6 +11544,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				drawParamList->CopyList(itsCopyPasteCrossSectionDrawParamList, false);
 			else
 				drawParamList->CopyList(itsCopyPasteDrawParamList, false);
+            MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParamList);
 		}
 	}
 
@@ -11175,14 +11564,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		if(activeDrawParamList)
 		{
 			activeDrawParamList->CopyList(itsCopyPasteDrawParamList, false);
-			MapDirty(theDescTopIndex, true, true);
+            MakeViewRowDirtyActions(theDescTopIndex, ActiveViewRow(theDescTopIndex), activeDrawParamList);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste drawParams to map view row");
 		}
 	}
 
 	int ActiveViewRow(unsigned int theDescTopIndex)
 	{
-		return MapViewDescTop(theDescTopIndex)->ActiveViewRow();
+        if(theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+            return MapViewDescTop(theDescTopIndex)->ActiveViewRow();
+        else
+            return itsCurrentCrossSectionRowIndex;
 	}
 
 	void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
@@ -11192,8 +11584,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
     {
-        ParamAddingSystem().LastAcivatedDescTopIndex(theDescTopIndex);
-        ParamAddingSystem().LastActivatedRowIndex(GetRealRowNumber(theDescTopIndex, theActiveRowIndex));
+        ParameterSelectionSystem().LastAcivatedDescTopIndex(theDescTopIndex);
+        ParameterSelectionSystem().LastActivatedRowIndex(GetRealRowNumber(theDescTopIndex, theActiveRowIndex));
     }
 
 	void CopyDrawParamsList(NFmiPtrList<NFmiDrawParamList> &copyFromList, NFmiPtrList<NFmiDrawParamList> &copyToList)
@@ -11229,11 +11621,20 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(copiedDrawParamsList)
 			{
 				CopyDrawParamsList(itsCopyPasteDrawParamListVector, *copiedDrawParamsList);
-				MapDirty(theDescTopIndex, true, true);
+                MakeWholeDesctopDirtyActions(theDescTopIndex, copiedDrawParamsList);
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste all copyed parameters on this map view");
 			}
 		}
 	}
+
+    void MakeWholeDesctopDirtyActions(unsigned int theDescTopIndex, NFmiPtrList<NFmiDrawParamList> *drawParamListVector)
+    {
+        MapViewDirty(theDescTopIndex, false, true, true, false, false, true);
+        if(drawParamListVector)
+        {
+            MacroParamDataCache().update(theDescTopIndex, drawParamListVector);
+        }
+    }
 
     // Kun animaatio on päällä, aina ei haluta mennä animaation loppuun asti kokonaan.
     // Tapaus 1: Kun animaatiossa on havaintoja seuraava moodi päällä ja on isompi ruudukko käytössä (esim. 3x2 eli 3 aikaa ja 2 riviä), 
@@ -11627,7 +12028,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 							CenterTimeControlView(static_cast<unsigned long>(i), animMiddleTime, false);
 							// Lisäksi likaa näyttö cachesta uudet löytyneet ajat
 							MakeNewTimesDirtyFromViewCache(*(itsMapViewDescTopList[i]), oldAnimTimes, newAnimTimes);
-							MapDirty(static_cast<unsigned long>(i), true, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
+							MapViewDirty(static_cast<unsigned long>(i), false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
 						}
 					}
 				}
@@ -11653,7 +12054,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		if(descTop)
 		{
 			descTop->AnimationDataRef().ShowTimesOnTimeControl(!(descTop->AnimationDataRef().ShowTimesOnTimeControl()));
-			MapDirty(theDescTopIndex, true, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
+			MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Show/hide animation times on map view's time control view");
 		}
 	}
@@ -11744,7 +12145,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                         NFmiInfoData::Type dataType = drawParam->DataType();
                         if(dataType == NFmiInfoData::kConceptualModelData || dataType == NFmiInfoData::kCapData)
                         {
-                            MapDirty(theDescTopIndex, true, false); // liataan mapView, mutta ei vielä tällä rivillä cachea (menisi kaikki rivit kerralla)
+                            MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // liataan mapView, mutta ei vielä tällä rivillä cachea (menisi kaikki rivit kerralla)
                             descTop->MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
                             needsToUpdateViews = true;
                             if(dataType == NFmiInfoData::kCapData)
@@ -11789,7 +12190,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			newTime.SetTimeStep(static_cast<short>(timeStepInMinutes), true);
 			CurrentTime(theDescTopIndex, newTime);
 		}
-		MapDirty(theDescTopIndex, true, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
+		MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
 	}
 
 	NFmiWindTableSystem& WindTableSystem(void)
@@ -12071,7 +12472,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			else if(modelRunTimeGapInMinutes == 0)
 				return false;
 			MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(GetRealRowNumber(theDescTopIndex, theViewRowIndex)-1);
-			MapDirty(theDescTopIndex, true, false);
+			MapViewDirty(theDescTopIndex, false, false, true, false, false, false);
 			return true;
 		}
 		return false;
@@ -12087,7 +12488,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		if(oldModelRunIndex != theDrawParam->ModelRunIndex())
 		{
 			MapViewDescTop(theDescTopIndex)->MapViewCache().MakeRowDirty(GetRealRowNumber(theDescTopIndex, theViewRowIndex)-1);
-			MapDirty(theDescTopIndex, true, false);
+			MapViewDirty(theDescTopIndex, false, false, true, false, false, false);
 		}
 	}
 
@@ -12275,11 +12676,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->DrawOverBitmapThings(theGTB);
 	}
 
-	void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
-	}
-
 	void UpdateTempView(void)
 	{
         ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateTempView();
@@ -12292,7 +12688,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void ActivateViewParamSelectorDlg(int /* theMapViewDescTopIndex */)
 	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParamAddingDlg();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg();
 	}
 
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord)
@@ -12305,9 +12701,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateZoomDialog(theWantedDescTopIndex);
 	}
 
-	void ForceDrawOverBitmapThings(void)
+	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 	}
 
 	void InvalidateMapView(bool bErase)
@@ -12421,7 +12817,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			if(RedoData())
 			{
-				AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false);
+				MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
 				RefreshApplicationViewsAndDialogs("Edited data modifications Redo", false, false, -1);
 			}
 		}
@@ -12435,7 +12831,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			if(UndoData())
 			{
-				AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, false);
+                MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
 				RefreshApplicationViewsAndDialogs("Edited data modifications Undo", false, false, -1);
 			}
 		}
@@ -12877,11 +13273,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	    if(newZoomedArea)
 	    {
 		    newZoomedArea->SetXYArea(NFmiRect(0,0,1,1)); // Tämä on hämärä juttu, muttu jos xy-areaa ei laiteta 0,0 - 1,1:ksi, macroParam-systeemi ei toimi jos ollaan usean kartan ruudukossa
-		    AreaViewDirty(theMapViewDescTopIndex, true, true);
+		    MapViewDirty(theMapViewDescTopIndex, true, true, true, true, false, false);
 		    MapViewDescTop(theMapViewDescTopIndex)->BorderDrawDirty(true);
 		    SetMapArea(theMapViewDescTopIndex, newZoomedArea);
 	    }
-	    AreaViewDirty(theMapViewDescTopIndex, false, true); // tämä laittaa karttanäytön cachen sileäksi
+	    MapViewDirty(theMapViewDescTopIndex, true, false, true, false, false, false); // tämä laittaa karttanäytön cachen sileäksi
    }
 
     void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)
@@ -13697,7 +14093,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     void UseWmsMaps(bool newValue)
     {
         ApplicationWinRegistry().UseWmsMaps(newValue);
-        MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+        MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
     }
 
 #ifndef DISABLE_CPPRESTSDK
@@ -13707,23 +14103,59 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     }
 #endif // DISABLE_CPPRESTSDK
 
-    void InitParamAddingSystem()
+    std::vector<int> HelpDataIdsForParameterSelectionSystem()
+    {
+        std::string idStr;
+        std::vector<int> idVector;
+        idStr = NFmiSettings::Optional("SmartMet::AddParams::helpDataIDs", idStr); 
+        if(!idStr.empty())
+        {
+            try
+            {
+                for (std::string id : NFmiStringTools::Split(idStr, ","))
+                {
+                    idVector.push_back(std::stoi(id));
+                }
+            }
+            catch(std::exception &e)
+            {
+                LogAndWarnUser(e.what(), "Unable to read help data ids", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+            }
+        }
+        return idVector;
+    }
+
+    std::vector<std::string> CustomMenuFolders()
+    {
+        std::vector<std::string> customMenus;
+        std::vector<std::string> customMenuList = HelpDataInfoSystem()->GetUniqueCustomMenuList();
+        for(auto menuItem : customMenuList)
+        {
+            if(menuItem == g_ObservationMenuName)
+                continue; // Observation-menu is skipped, because those needs to be added among existing observations.
+            customMenus.push_back(menuItem);
+        }
+        return customMenus;
+    }
+
+    void InitParameterSelectionSystem()
     {
         DoVerboseFunctionStartingLogReporting(__FUNCTION__);
         try
         {
-            paramAddingSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
-                *InfoOrganizer(), *HelpDataInfoSystem());
+            auto customCategories = CustomMenuFolders();
+            parameterSelectionSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
+                *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParameterSelectionSystem(), customCategories);
 
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
-            paramAddingSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
+            parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
             // Add other data to help data. 
             if(capDataSystem.useCapData())
             {
                 NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345), "CAP"); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
                 std::string menuString = "Warnings";
-                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
+                parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kCapData);
             }
 
             if(ConceptualModelData().Use())
@@ -13731,27 +14163,24 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 NFmiProducer prod(1028, "Analysis"); // No official producerId
                 std::string menuString = "Conceptual analysis";
                 std::string displayName = ConceptualModelData().DefaultUserName(); // Conceptual analysis uses displayName to fetch correct data!
-                paramAddingSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
+                parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
             }
-            
-            // TODO
-            // WmsSupport(), Streamlines, Edited data
         }
         catch(std::exception &e)
         {
-            LogAndWarnUser(e.what(), "Problems in InitParamAddingSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+            LogAndWarnUser(e.what(), "Problems in InitParameterSelectionSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
         }
     }
 
-    void UpdateParamAddingSystem()
+    void UpdateParameterSelectionSystem()
     {
-        ParamAddingSystem().updateData();
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Update Param adding dialog system", SmartMetViewId::ParamAddingDlg);
+        ParameterSelectionSystem().updateData();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Update Parameter Selection dialog system", SmartMetViewId::ParameterSelectionDlg);
     }
 
-    AddParams::ParamAddingSystem& ParamAddingSystem()
+    AddParams::ParameterSelectionSystem& ParameterSelectionSystem()
     {
-        return paramAddingSystem;
+        return parameterSelectionSystem;
     }
 
     NFmiBasicSmartMetConfigurations& BasicSmartMetConfigurations()
@@ -13803,10 +14232,16 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationWinRegistry().InitGriddingProperties(IsToolMasterAvailable());
     }
 
+    NFmiMacroParamDataCache& MacroParamDataCache()
+    {
+        return itsMacroParamDataCache;
+    }
+
+    NFmiMacroParamDataCache itsMacroParamDataCache;
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
-    AddParams::ParamAddingSystem paramAddingSystem;
+    AddParams::ParameterSelectionSystem parameterSelectionSystem;
 #ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport wmsSupport;
 #endif // DISABLE_CPPRESTSDK
@@ -14827,14 +15262,14 @@ void NFmiEditMapGeneralDataDoc::DoAtSendCommandString(const std::string &newValu
 	pimpl->DoAtSendCommandString(newValue);
 }
 
-void NFmiEditMapGeneralDataDoc::AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache)
+void NFmiEditMapGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-	pimpl->AreaViewDirty(theDescTopIndex, areaViewDirty, clearCache);
+    pimpl->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
 }
 
-void NFmiEditMapGeneralDataDoc::MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache)
+void NFmiEditMapGeneralDataDoc::ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex)
 {
-	pimpl->MapDirty(theDescTopIndex, mapDirty, clearCache);
+    pimpl->ForceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
 }
 
 void NFmiEditMapGeneralDataDoc::SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> &newArea)
@@ -15062,13 +15497,11 @@ NFmiTrajectorySystem* NFmiEditMapGeneralDataDoc::TrajectorySystem(void)
 
 void NFmiEditMapGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint& theLatLon
 						,const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-						,bool &theRedrawMapAfterMTATempClear
 						,bool fMakeMTAModeAdd
 						,bool fDoOnlyMTAModeAdd)
 {
 	pimpl->SelectLocations(theDescTopIndex, theInfo, theMapArea, theLatLon
 						,theTime, theSelectionCombineFunction, theMask
-						,theRedrawMapAfterMTATempClear
 						,fMakeMTAModeAdd
 						,fDoOnlyMTAModeAdd);
 }
@@ -15736,11 +16169,6 @@ void NFmiEditMapGeneralDataDoc::DrawOverBitmapThings(NFmiToolBox * theGTB)
 	pimpl->DrawOverBitmapThings(theGTB);
 }
 
-void NFmiEditMapGeneralDataDoc::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-{
-	pimpl->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
-}
-
 void NFmiEditMapGeneralDataDoc::UpdateTempView(void)
 {
 	pimpl->UpdateTempView();
@@ -15766,9 +16194,9 @@ void NFmiEditMapGeneralDataDoc::ActivateZoomDialog(int theWantedDescTopIndex)
 	pimpl->ActivateZoomDialog(theWantedDescTopIndex);
 }
 
-void NFmiEditMapGeneralDataDoc::ForceDrawOverBitmapThings(void)
+void NFmiEditMapGeneralDataDoc::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
-	pimpl->ForceDrawOverBitmapThings();
+	pimpl->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 void NFmiEditMapGeneralDataDoc::InvalidateMapView(bool bErase)
@@ -16402,14 +16830,14 @@ Wms::WmsSupport& NFmiEditMapGeneralDataDoc::WmsSupport()
 }
 #endif // DISABLE_CPPRESTSDK
 
-AddParams::ParamAddingSystem& NFmiEditMapGeneralDataDoc::ParamAddingSystem()
+AddParams::ParameterSelectionSystem& NFmiEditMapGeneralDataDoc::ParameterSelectionSystem()
 {
-    return pimpl->ParamAddingSystem();
+    return pimpl->ParameterSelectionSystem();
 }
 
-void NFmiEditMapGeneralDataDoc::UpdateParamAddingSystem()
+void NFmiEditMapGeneralDataDoc::UpdateParameterSelectionSystem()
 {
-    pimpl->UpdateParamAddingSystem();
+    pimpl->UpdateParameterSelectionSystem();
 }
 
 bool NFmiEditMapGeneralDataDoc::LoadStaticHelpData(void)
@@ -16470,4 +16898,14 @@ bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAc
 void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
 {
     pimpl->InitGriddingProperties();
+}
+
+NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
+{
+    return pimpl->MacroParamDataCache();
+}
+
+void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+{
+    pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
 }

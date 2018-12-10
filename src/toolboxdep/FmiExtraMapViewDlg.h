@@ -136,4 +136,5 @@ public:
     afx_msg void OnAcceleratorMoveManyMapRowsUp();
     afx_msg void OnAcceleratorMoveManyMapRowsDown();
     afx_msg void OnAcceleratorLockRowToMainMap();
+    afx_msg void OnAcceleratorExtraMapLocationFinderTool();
 };

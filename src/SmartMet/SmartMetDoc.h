@@ -40,8 +40,10 @@ class CFmiCaseStudyDlg;
 class NFmiMetTime;
 class CFmiBetaProductTabControlDialog;
 class CFmiLogViewer;
-class CFmiParamAddingDlg;
+class CFmiParameterSelectionDlg;
 class SmartMetDocumentInterface;
+class CFmiGriddingOptionsDlg;
+class NFmiApplicationWinRegistry;
 
 class CSmartMetDoc : public CDocument
 {
@@ -53,7 +55,6 @@ protected: // create from serialization only
 public:
 	BOOL StoreData(bool newFile = false, bool askForSave=true);
 	BOOL StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &smart);
-	void MakeViewsDirty(void);
 	BOOL PrepareForLoadingDataFromFile(void);
 	BOOL CheckEditedDataAndStoreIfNeeded(void);
 	void LoadDataFromFileAndAdd(const std::string &theFileName, NFmiInfoData::Type theDatatype, bool useMemoryMapping);
@@ -68,6 +69,7 @@ public:
     void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut);
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex);
     CWnd* GetView(int theWantedDescTopIndex);
+    NFmiApplicationWinRegistry& ApplicationWinRegistry();
 
 // Overrides
 public:
@@ -91,7 +93,7 @@ public:
 	void CreateLocationFinderDlg(NFmiEditMapGeneralDataDoc* theDoc);
 	void CreateSmartToolDlg(NFmiEditMapGeneralDataDoc* theDoc);
     void CreateSmartToolsTabControlDlg(NFmiEditMapGeneralDataDoc* theDoc);
-    void CreateParamAddingDlg(NFmiEditMapGeneralDataDoc *theDoc);
+    void CreateParameterSelectionDlg(NFmiEditMapGeneralDataDoc *theDoc);
 	void CreateTempDlg();
 	void CreateShortCutsDlg(void);
 	void CreateViewMacroDlg(NFmiEditMapGeneralDataDoc * theDoc);
@@ -107,6 +109,7 @@ public:
     void CreateCaseStudyDlg(NFmiEditMapGeneralDataDoc *theDoc);
     void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void CreateLogViewer(NFmiEditMapGeneralDataDoc *theDoc);
+    void CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void UpdateBetaProductDialog();
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
 	void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
@@ -115,7 +118,7 @@ public:
 	void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText);
 	void CaseStudyToNormalModeActions(void);
 	void SetAllViewIconsDynamically(void);
-    void ActivateParamAddingDlg();
+    void ActivateParameterSelectionDlg();
 	CFmiSynopDataGridViewDlg* SynopDataGridViewDlg(void){return itsSynopDataGridViewDlg; }
     void UpdateCrossSectionView(void);
     void UpdateTempView(void);
@@ -262,7 +265,8 @@ private:
 	CFmiCaseStudyDlg *itsCaseStudyDlg;
     CFmiBetaProductTabControlDialog *itsBetaProductDialog;
     CFmiLogViewer *itsLogViewer;
-    CFmiParamAddingDlg *itsParamAddingDlg;
+    CFmiParameterSelectionDlg *itsParameterSelectionDlg;
+    CFmiGriddingOptionsDlg *itsGriddingOptionsDlg;
     unsigned int itsMapViewDescTopIndex;
 public:
 	afx_msg void OnToggleLandBorderDrawColor();
@@ -368,7 +372,7 @@ public:
     afx_msg void OnAcceleratorMoveManyMapRowsDown();
     afx_msg void OnAcceleratorApplyStartupViewMacro();
     afx_msg void OnAcceleratorToggleWmsMapMode();
-    afx_msg void OnSetParamAddingDlgPlaceToDefault();
+    afx_msg void OnSetParameterSelectionDlgPlaceToDefault();
     afx_msg void OnHelpExceptiontest();
     afx_msg void OnAcceleratorCpSelectNext();
     afx_msg void OnAcceleratorCpSelectPrevious();
@@ -376,6 +380,7 @@ public:
     afx_msg void OnAcceleratorCpSelectRight();
     afx_msg void OnAcceleratorCpSelectUp();
     afx_msg void OnAcceleratorCpSelectDown();
+    void OpenLocationFinderTool(CWnd *parentView);
 };
 
 

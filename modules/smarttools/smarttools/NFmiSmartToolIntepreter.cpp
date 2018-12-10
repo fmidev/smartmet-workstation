@@ -24,6 +24,7 @@
 #include <newbase/NFmiLevelType.h>
 #include <newbase/NFmiLevel.h>
 #include <newbase/NFmiEnumConverter.h>
+#include <newbase/NFmiFileSystem.h>
 
 #include <algorithm>
 #include <cctype>
@@ -161,7 +162,7 @@ NFmiSmartToolIntepreter::MathFunctionMap NFmiSmartToolIntepreter::itsMathFunctio
 NFmiSmartToolIntepreter::ResolutionLevelTypesMap NFmiSmartToolIntepreter::itsResolutionLevelTypes;
 
 std::string NFmiSmartToolIntepreter::itsBaseDelimiterChars = "+-*/%^=(){}<>&|!,";
-std::string NFmiSmartToolIntepreter::itsFullDelimiterChars = NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\r\0";
+std::string NFmiSmartToolIntepreter::itsFullDelimiterChars = NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\n\r\0";
 
 //--------------------------------------------------------
 // Constructor/Destructor
@@ -964,7 +965,7 @@ void NFmiSmartToolIntepreter::AddSimpleCalculationToCallingAreaMask(boost::share
 // jouduin muuttamaan niitä tähän ympäristöön.
 // Obtain the next token. Palauttaa true, jos sellainen saatiin, jos ollaan lopussa, palauttaa
 // false.
-bool NFmiSmartToolIntepreter::GetToken(void)
+bool NFmiSmartToolIntepreter::GetToken()
 {
   char *temp;
 
@@ -1038,6 +1039,11 @@ bool NFmiSmartToolIntepreter::GetToken(void)
       SearchUntil(exp_ptr, temp, '"', stringLiteralError);
       tok_type = STRING_LITERAL;
       return true;
+  }
+  else
+  {
+      // Tässä on joku outo merkki nyt vastassa, heitetään poikkeus
+      throw std::runtime_error(std::string("Strange character prevents intepreting following clause: ") + std::string(exp_ptr, exp_end));
   }
 
   *temp = '\0';
@@ -2977,6 +2983,35 @@ bool NFmiSmartToolIntepreter::ExtractObservationRadiusInfo()
   throw std::runtime_error(errorStr);
 }
 
+bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
+{
+    // Jos skriptistä on löytynyt 'SymbolTooltipFile = path_to_file'
+    GetToken();
+    string assignOperator = token;
+    if(assignOperator == string("="))
+    {
+        // Haetaan teksti rivin loppuun asti poluksi (polussa voi olla space:ja)
+        string pathToSymbolFile = std::string(exp_ptr, exp_end);
+        // otetään edessä ja mahdolliset perässä olevat spacet pois
+        NFmiStringTools::Trim(pathToSymbolFile);
+        if(NFmiFileSystem::FileExists(pathToSymbolFile))
+        {
+            itsExtraMacroParamData->SymbolTooltipFile(pathToSymbolFile);
+            return true;
+        }
+        else
+        {
+            std::string errorStr = "Given SymbolTooltipFile doesn't exist: ";
+            errorStr += pathToSymbolFile;
+            throw std::runtime_error(errorStr);
+        }
+    }
+
+    std::string errorStr = "Given SymbolTooltipFile -clause was illegal, try something like this:\n";
+    errorStr += "\"SymbolTooltipFile = path_to_file\"";
+    throw std::runtime_error(errorStr);
+}
+
 bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theVariableText)
 {
   std::string aVariableText(theVariableText);
@@ -2990,6 +3025,8 @@ bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theV
       return ExtractCalculationPointInfo();
     else if (it->second == NFmiAreaMask::ObservationRadius)
       return ExtractObservationRadiusInfo();
+    else if(it->second == NFmiAreaMask::SymbolTooltipFile)
+        return ExtractSymbolTooltipFile();
   }
   return false;
 }
@@ -3945,6 +3982,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("resolution"), NFmiAreaMask::Resolution));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("calculationpoint"), NFmiAreaMask::CalculationPoint));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("observationradius"), NFmiAreaMask::ObservationRadius));
+    itsExtraInfoCommands.insert(FunctionMap::value_type(string("symboltooltipfile"), NFmiAreaMask::SymbolTooltipFile));
 
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("surface"), kFmiMeanSeaLevel));
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("pressure"), kFmiPressureLevel));

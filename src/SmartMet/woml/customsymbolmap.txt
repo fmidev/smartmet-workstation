@@ -1,0 +1,36 @@
+# This file is for mapping the custom symbols. 
+
+# Feel free to add your own symbols based on the template. Add your symbols AFTER the existing ones.
+# Symbol's number has to be unique. Do not use the same number than in any other set.
+# Do not modify the prior sets.
+
+
+# Aviation symbols
+# --------------------------------
+
+# Circles
+1;aviation\cir_1.png;aviation\cir_1.png
+2;aviation\cir_2.png;aviation\cir_2.png
+3;aviation\cir_3.png;aviation\cir_3.png
+4;aviation\cir_4.png;aviation\cir_4.png
+5;aviation\cir_5.png;aviation\cir_5.png
+6;aviation\cir_6.png;aviation\cir_6.png
+7;aviation\cir_7.png;aviation\cir_7.png
+8;aviation\cir_8.png;aviation\cir_8.png
+
+# Triangles
+11;aviation\tri_1.png;aviation\tri_1.png
+12;aviation\tri_2.png;aviation\tri_2.png
+13;aviation\tri_3.png;aviation\tri_3.png
+14;aviation\tri_4.png;aviation\tri_4.png
+15;aviation\tri_5.png;aviation\tri_5.png
+16;aviation\tri_6.png;aviation\tri_6.png
+17;aviation\tri_7.png;aviation\tri_5.png
+18;aviation\tri_8.png;aviation\tri_6.png
+
+# Set's name here
+# --------------------------------
+# List of symbol numbers and their locations based on format -> number;set_name\small_image.png;set_name\large_image.png 
+# Small and large images can be same
+# example: 42;life\meaning_small.png;life\meaning_large.png
+# 

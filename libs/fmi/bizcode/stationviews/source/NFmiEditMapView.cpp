@@ -676,7 +676,7 @@ void NFmiEditMapView::UpdateTimeControlView(void)
 void NFmiEditMapView::UpdateMap(void)
 {
     auto mapHandler = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex);
-	if(mapHandler->IsMapDirty())
+	if(mapHandler->MakeNewBackgroundBitmap())
 	{
         itsCtrlViewDocumentInterface->DoAutoZoom(itsMapViewDescTopIndex);
 		NFmiRect mapRect = itsCtrlViewDocumentInterface->RelativeMapRect(itsMapViewDescTopIndex);

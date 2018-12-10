@@ -92,13 +92,14 @@
 #include "NFmiFastInfoUtils.h"
 #include "HakeMessage/Main.h"
 #include "HakeMessage/HakeSystemConfigurations.h"
-#include "FmiParamAddingDlg.h"
+#include "FmiParameterSelectionDlg.h"
 #include "SpecialDesctopIndex.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "QueryDataReading.h"
 #include "SmartMetDocumentInterface.h"
 #include "ApplicationInterface.h"
 #include "FmiWarningMessageOptionsDlg.h"
+#include "NFmiMacroParamDataCache.h"
 
 #include <direct.h> // _chdir()
 #include <cassert>
@@ -295,7 +296,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_MOVE_MANY_MAP_ROWS_DOWN, &CSmartMetDoc::OnAcceleratorMoveManyMapRowsDown)
     ON_COMMAND(ID_ACCELERATOR_APPLY_STARTUP_VIEW_MACRO, &CSmartMetDoc::OnAcceleratorApplyStartupViewMacro)
     ON_COMMAND(ID_ACCELERATOR_TOGGLE_WMS_MAP_MODE, &CSmartMetDoc::OnAcceleratorToggleWmsMapMode)
-    ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParamAddingDlgPlaceToDefault)
+    ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParameterSelectionDlgPlaceToDefault)
         ON_COMMAND(ID_HELP_EXCEPTIONTEST, &CSmartMetDoc::OnHelpExceptiontest)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_NEXT, &CSmartMetDoc::OnAcceleratorCpSelectNext)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_PREVIOUS, &CSmartMetDoc::OnAcceleratorCpSelectPrevious)
@@ -351,7 +352,8 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsCaseStudyDlg(nullptr)
 ,itsBetaProductDialog(nullptr)
 ,itsLogViewer(nullptr)
-,itsParamAddingDlg(nullptr)
+,itsParameterSelectionDlg(nullptr)
+,itsGriddingOptionsDlg(nullptr)
 {
 	CSmartMetApp *app = (CSmartMetApp *)AfxGetApp();
 	itsData = app->GeneralDocData();
@@ -414,11 +416,12 @@ CSmartMetDoc::~CSmartMetDoc()
 	::DestroyModalessDialog((CDialog **)(&itsIgnoreStationsDlg));
     ::DestroyModalessDialog((CDialog **)(&itsCaseStudyDlg));
     ::DestroyModalessDialog((CDialog **)(&itsBetaProductDialog));
+    ::DestroyModalessDialog((CDialog **)(&itsGriddingOptionsDlg));
 
     // Better clear callback function before logviewer is destroyed, just in case
     CatLog::setLogViewerUpdateCallback(std::function<void()>());
     ::DestroyModalessDialog((CDialog **)(&itsLogViewer));
-    ::DestroyModalessDialog((CDialog **)(&itsParamAddingDlg));
+    ::DestroyModalessDialog((CDialog **)(&itsParameterSelectionDlg));
 }
 
 BOOL CSmartMetDoc::OnNewDocument()
@@ -522,15 +525,15 @@ void CSmartMetDoc::OnUpdateButtonTimeEditValuesDlg(CCmdUI *pCmdUI)
 	pCmdUI->SetCheck(itsData->TimeSerialDataViewOn());
 }
 
-void CSmartMetDoc::ActivateParamAddingDlg()
+void CSmartMetDoc::ActivateParameterSelectionDlg()
 {
-    if(!itsParamAddingDlg)
-        CreateParamAddingDlg(itsData);
+    if(!itsParameterSelectionDlg)
+        CreateParameterSelectionDlg(itsData);
 
-    itsParamAddingDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-    itsParamAddingDlg->SetActiveWindow();
+    itsParameterSelectionDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+    itsParameterSelectionDlg->SetActiveWindow();
 
-    GetData()->LogMessage("Param adding dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
+    GetData()->LogMessage("Parameter Selection dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 
@@ -775,7 +778,7 @@ void CSmartMetDoc::OnMenuitemOptiot()
 			GetData()->StoreOptionsData();
             CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(GetData()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
             CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(GetData()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
-			GetData()->MapDirty(itsMapViewDescTopIndex, true, true);
+			GetData()->MapViewDirty(itsMapViewDescTopIndex, true, true, true, false, false, false);
 			bool cacheSettingChanged = oldDoCacheSetting != GetData()->HelpDataInfoSystem()->UseQueryDataCache();
 			if(cacheSettingChanged)
 			{
@@ -798,7 +801,7 @@ void CSmartMetDoc::OnSelectAll()
 		{
 			GetData()->LogMessage("Select all grid points for editing.", CatLog::Severity::Info, CatLog::Category::Editing);
 			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": selected all edited data grid points");
-			GetData()->AreaViewDirty(itsMapViewDescTopIndex, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+			GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
 		}
 	}
 }
@@ -810,7 +813,7 @@ void CSmartMetDoc::OnDeselectAll()
 		if(GetData()->SelectAllLocations(false))
 		{
 			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": deselected all edited data grid points");
-			GetData()->AreaViewDirty(itsMapViewDescTopIndex, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+			GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
 		}
 	}
 }
@@ -880,9 +883,9 @@ void CSmartMetDoc::CreateTimeEditor(bool callUpdate)
     CreateModalessDialog(&itsTimeSerialDataEditorDlg, IDD_DIALOG_TIME_EDIT_VALUES, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), callUpdate);
 }
 
-void CSmartMetDoc::CreateParamAddingDlg(NFmiEditMapGeneralDataDoc *theDoc)
+void CSmartMetDoc::CreateParameterSelectionDlg(NFmiEditMapGeneralDataDoc *theDoc)
 {
-    CreateModalessDialog(&itsParamAddingDlg, IDD_DIALOG_PARAM_ADDING, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+    CreateModalessDialog(&itsParameterSelectionDlg, IDD_DIALOG_PARAM_ADDING, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
 }
 
 void CSmartMetDoc::CreateSynopDataGridViewDlg(NFmiEditMapGeneralDataDoc *theDoc)
@@ -1259,16 +1262,9 @@ void CSmartMetDoc::UpdateAllDialogsButtons(void)
 template<typename View>
 static void UpdateMapView(NFmiEditMapGeneralDataDoc *doc, View *extraMapView, unsigned int mapViewIndex)
 {
-    // karttaa ei päivitetä jos ollaan klikattu hiirellä karttaa ja valittu asema
-    // tällöin ruutu piirretään vain vastaväreillä (voi muuttua tulevaisuudessa!!!)
-
-    if(extraMapView && doc->MapViewDescTop(mapViewIndex)->MapViewUpdated())
-    {
-        doc->AreaViewDirty(mapViewIndex, true, false);
+    doc->MapViewDirty(mapViewIndex, false, false, true, false, false, false);
+    if(extraMapView)
         extraMapView->Update();
-    }
-    else if(extraMapView)
-        doc->MapViewDescTop(mapViewIndex)->MapViewUpdated(true); // tämä tarkoittaa, että seuraavalla kerralla voidaan päivittää karttaa
 }
 
 bool CSmartMetDoc::UpdateAllViewsAndDialogsIsAllowed()
@@ -1331,7 +1327,7 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
 //            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
             ::UpdateModalessDialog(itsBetaProductDialog);
             ::UpdateModalessDialog(itsViewMacroDlg);
-            ::UpdateModalessDialog(itsParamAddingDlg);
+            ::UpdateModalessDialog(itsParameterSelectionDlg);
         }
     }
 }
@@ -1396,8 +1392,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
             ::UpdateModalessDialog(itsBetaProductDialog);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ViewMacroDlg))
             ::UpdateModalessDialog(itsViewMacroDlg);
-        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ParamAddingDlg))
-            ::UpdateModalessDialog(itsParamAddingDlg);
+        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ParameterSelectionDlg))
+            ::UpdateModalessDialog(itsParameterSelectionDlg);
     }
 }
 
@@ -1741,8 +1737,6 @@ void CSmartMetDoc::OnButtonReloadAllDynamicHelpData()
 {
 	GetData()->ReloadAllDynamicHelpData();
 
-	GetData()->LogMessage("Reloading all the dynamic data.", CatLog::Severity::Info, CatLog::Category::Data);
-	GetData()->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true); // laitetaan kaikki kartta näytöt likaiseksi
 	CFmiDataLoadingThread2::ResetTimeStamps();
 	CFmiDataLoadingThread2::LoadDataNow();
 	UpdateAllViewsAndDialogs("Reloading all the dynamic data");
@@ -1754,7 +1748,8 @@ void CSmartMetDoc::CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const
 	CFmiDataLoadingThread2::SettingsChanged(*itsData->HelpDataInfoSystem(), true); // Datan lataus threadille laitetaan tässä uusi CaseStudy-helpDataInfoSetting-olio käyttöön
 	CFmiDataLoadingThread2::ResetTimeStamps();
 	CFmiDataLoadingThread2::LoadDataNow();
-	GetData()->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true); // laitetaan kaikki kartta näytöt likaiseksi
+	GetData()->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan kaikki kartta näytöt likaiseksi
+    GetData()->MacroParamDataCache().clearAllLayers();
 	UpdateAllViewsAndDialogs(updateReasonText);
 }
 
@@ -1809,7 +1804,7 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
     CFmiWin32Helpers::SetWindowIconDynamically(itsCaseStudyDlg, usedSmallIcon, usedBigIcon);
     CFmiWin32Helpers::SetWindowIconDynamically(itsBetaProductDialog, usedSmallIcon, usedBigIcon);
     CFmiWin32Helpers::SetWindowIconDynamically(itsLogViewer, usedSmallIcon, usedBigIcon);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsParamAddingDlg, usedSmallIcon, usedBigIcon);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsParameterSelectionDlg, usedSmallIcon, usedBigIcon);
 }
 
 // piti tehdä uuden karttaruudukon valinnan lisäksi paikka mistä
@@ -1949,9 +1944,9 @@ void CSmartMetDoc::OnViewSetCrosssectionViewPlaceToDefault()
 	}
 }
 
-void CSmartMetDoc::OnSetParamAddingDlgPlaceToDefault()
+void CSmartMetDoc::OnSetParameterSelectionDlgPlaceToDefault()
 {
-    ::SetViewPlaceToDefault(this, itsParamAddingDlg, "Param adding dialog set to default size and position");
+    ::SetViewPlaceToDefault(this, itsParameterSelectionDlg, "Parameter Selection dialog set to default size and position");
 }
 
 void CSmartMetDoc::OnViewSetZoomViewPlaceToDefault()
@@ -2030,7 +2025,7 @@ void CSmartMetDoc::OnButtonEditorControlPointMode()
 		else
 			doc->LogMessage("Closing Control point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
 
-		doc->MapDirty(itsMapViewDescTopIndex, true, true);
+		doc->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
 		UpdateAllViewsAndDialogs("Control point mode changed");
 	}
 }
@@ -2056,15 +2051,10 @@ void CSmartMetDoc::OnButtonDelete()
 	if(doc && doc->MetEditorOptionsData().ControlPointMode())
 	{
 		doc->CPManager()->RemoveCP();
-		doc->MapDirty(itsMapViewDescTopIndex, true, true);
+		doc->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
 		GetData()->LogMessage("Deleting control point.", CatLog::Severity::Debug, CatLog::Category::Editing);
 		UpdateAllViewsAndDialogs("Deleting control point");
 	}
-}
-
-void CSmartMetDoc::MakeViewsDirty(void)
-{
-	GetData()->MapDirty(itsMapViewDescTopIndex, true, true);
 }
 
 void CSmartMetDoc::OnDataStoreViewToPictureFile()
@@ -2144,7 +2134,7 @@ void CSmartMetDoc::OnMenuitemProjectionLineSetup()
 			if(dlg.DoModal() == IDOK)
 			{
 				projInfo->StoreToSettings();
-				doc->MapDirty(itsMapViewDescTopIndex, true, true);
+				doc->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
 				UpdateAllViewsAndDialogs("Projection line drawing setup changed");
 			}
 		}
@@ -2153,7 +2143,7 @@ void CSmartMetDoc::OnMenuitemProjectionLineSetup()
 
 void CSmartMetDoc::OnButtonViewSelectParamDialog()
 {
-    ActivateParamAddingDlg();
+    ActivateParameterSelectionDlg();
 }
 
 void CSmartMetDoc::OnDataStoreTimeserialviewToPictureFile()
@@ -2182,21 +2172,25 @@ void CSmartMetDoc::OnDataStoreTrajectoryViewToPictureFile()
 	}
 }
 
+NFmiApplicationWinRegistry& CSmartMetDoc::ApplicationWinRegistry()
+{
+    return itsData->ApplicationWinRegistry();
+}
+
+void CSmartMetDoc::CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface)
+{
+    if(!itsGriddingOptionsDlg)
+    {
+        CreateModalessDialog(&itsGriddingOptionsDlg, IDD_DIALOG_GRIDDING_OPTIONS, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
+    }
+}
+
 void CSmartMetDoc::OnMenuitemGriddingOptions()
 {
-	NFmiEditMapGeneralDataDoc* doc = GetData();
-	if(doc)
-	{
-        // Tässä muokataan vain editointiin liittyviä griddaus asetuksia
-		CFmiGriddingOptionsDlg dlg(doc->ApplicationWinRegistry().GriddingProperties(true));
-		if(dlg.DoModal() == IDOK)
-		{
-            doc->ApplicationWinRegistry().SetGriddingProperties(true, dlg.GetModifiedGriddingProperties());
-			doc->MapDirty(itsMapViewDescTopIndex, true, true);
-			UpdateAllViewsAndDialogs("Used ToolMaster gridding options changed");
-		}
-	}
-
+    CreateGriddingOptionsDialog(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+    itsGriddingOptionsDlg->ShowWindow(SW_RESTORE);
+    itsGriddingOptionsDlg->SetActiveWindow();
+    GetData()->LogMessage("Opening ToolMaster gridding options dialog", CatLog::Severity::Info, CatLog::Category::Editing);
 }
 
 void CSmartMetDoc::OnUpdateButtonFilterDialog(CCmdUI* pCmdUI)
@@ -2225,7 +2219,7 @@ void CSmartMetDoc::OnButtonTempDlg()
 		itsData->GetMTATempSystem().TempViewOn(!itsData->GetMTATempSystem().TempViewOn());
 		itsData->GetMTATempSystem().ShowMapMarkers(itsData->GetMTATempSystem().TempViewOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		itsData->AreaViewDirty(itsMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		itsData->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("CSmartMetDoc: Opening sounding view", TRUE);
 	}
 }
@@ -2256,7 +2250,7 @@ void CSmartMetDoc::OnButtonShowCrossSection()
 			itsData->LogMessage("Closing cross section view.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		itsData->CrossSectionSystem()->CrossSectionViewOn(!itsData->CrossSectionSystem()->CrossSectionViewOn());
-		itsData->MapDirty(itsMapViewDescTopIndex, true, true);
+		itsData->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("CSmartMetDoc: Opening cross section view", TRUE);
 	}
 }
@@ -2269,7 +2263,7 @@ void CSmartMetDoc::OnUpdateButtonShowCrossSection(CCmdUI *pCmdUI)
 void CSmartMetDoc::OnButtonObservationComparisonMode()
 {
 	GetData()->ObsComparisonInfo().NextComparisonMode();
-	GetData()->MapDirty(itsMapViewDescTopIndex, true, true);
+	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
 	GetData()->LogMessage("Toggling observation comparison mode.", CatLog::Severity::Info, CatLog::Category::Operational);
 	UpdateAllViewsAndDialogs("Changed Obs comparison mode");
 }
@@ -2311,21 +2305,21 @@ void CSmartMetDoc::OnUpdateSynopDataGridView(CCmdUI* pCmdUI)
 void CSmartMetDoc::OnAcceleratorObsComparisonChangeSymbol()
 {
 	GetData()->ObsComparisonInfo().NextSymbolType();
-	GetData()->MapDirty(itsMapViewDescTopIndex, true, true);
+	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
 	UpdateAllViewsAndDialogs("Changed Obs comparison mode symbol");
 }
 
 void CSmartMetDoc::OnAcceleratorObsComparisonChangeSymbolSize()
 {
 	GetData()->ObsComparisonInfo().NextSymbolSize();
-	GetData()->MapDirty(itsMapViewDescTopIndex, true, true);
+	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
 	UpdateAllViewsAndDialogs("Changed Obs comparison symbol size");
 }
 
 void CSmartMetDoc::OnAcceleratorObsComparisonToggleBorderDraw()
 {
 	GetData()->ObsComparisonInfo().DrawBorders(!GetData()->ObsComparisonInfo().DrawBorders());
-	GetData()->MapDirty(itsMapViewDescTopIndex, true, true);
+	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
 	UpdateAllViewsAndDialogs("Changed Obs comparison symbol border draw mode");
 }
 
@@ -2744,7 +2738,7 @@ void CSmartMetDoc::OnAcceleratorCrossSectionMode()
 {
 	GetData()->LogMessage("Set cross section mode on map view.", CatLog::Severity::Info, CatLog::Category::Operational);
 	GetData()->CrossSectionSystem()->CrossSectionSystemActive(!GetData()->CrossSectionSystem()->CrossSectionSystemActive());
-	GetData()->MapDirty(itsMapViewDescTopIndex, true, true);
+	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
 	UpdateAllViewsAndDialogs("Set cross section mode on map view (F4)");
 }
 
@@ -2846,7 +2840,7 @@ void CSmartMetDoc::SaveViewPositionsToRegistry(void)
     ::SaveViewPositionToRegistry(itsSmartToolDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsBetaProductDialog, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsLogViewer, applicationWinRegistry, dummyMapDescTopIndex);
-    ::SaveViewPositionToRegistry(itsParamAddingDlg, applicationWinRegistry, dummyMapDescTopIndex);
+    ::SaveViewPositionToRegistry(itsParameterSelectionDlg, applicationWinRegistry, dummyMapDescTopIndex);
 
     // Talletetaan myös tiettyjä GeneralDocissa olevia juttuja aika-ajoin WinRekisteriin
     itsData->StoreSettingsToWinRegistry();
@@ -2932,7 +2926,7 @@ std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
     MakeMakeWindowPosMapInsert<CFmiSmartToolDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiBetaProductTabControlDialog>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiLogViewer>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiParamAddingDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiParameterSelectionDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiWarningMessageOptionsDlg>(windowPosMap);
 
     return windowPosMap;
@@ -2967,7 +2961,7 @@ void CSmartMetDoc::OnButtonTrajectory()
 		}
 		GetData()->TrajectorySystem()->TrajectoryViewOn(!GetData()->TrajectorySystem()->TrajectoryViewOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->AreaViewDirty(itsMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		UpdateAllViewsAndDialogs("Opening/closing trajectory view");
 	}
 }
@@ -3013,7 +3007,7 @@ void CSmartMetDoc::OnButtonSeaIcingWarningsDlg()
 		}
 		GetData()->SeaIcingWarningSystem().ViewVisible(!GetData()->SeaIcingWarningSystem().ViewVisible());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->AreaViewDirty(itsMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		UpdateAllViewsAndDialogs("Opening/closing sea-icing warnings dialog");
 	}
 }
@@ -3037,7 +3031,7 @@ void CSmartMetDoc::OnExtraMapView(unsigned int theMapViewDescTopIndex, CFmiExtra
 		}
 		GetData()->MapViewDescTop(theMapViewDescTopIndex)->DescTopOn(!GetData()->MapViewDescTop(theMapViewDescTopIndex)->DescTopOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->AreaViewDirty(theMapViewDescTopIndex, true, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		GetData()->MapViewDirty(theMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		UpdateAllViewsAndDialogs("Opening/closing map view " + std::to_string(theMapViewDescTopIndex + 1));
 	}
 }
@@ -3131,7 +3125,7 @@ void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
 	if(dlg.DoModal() == IDOK)
 	{
 		GetData()->HelpEditorSystem().StoreSettings(false);
-		GetData()->MapDirty(itsMapViewDescTopIndex, true, true);// tämä 'aiheuttaa' datan harvennuksen
+		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
 		UpdateAllViewsAndDialogs("Help edit mode settings changed");
 	}
 }
@@ -3139,7 +3133,7 @@ void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
 void CSmartMetDoc::OnButtonHelpEditorMode()
 {
 	GetData()->HelpEditorSystem().HelpEditor(!GetData()->HelpEditorSystem().HelpEditor());
-	GetData()->MapDirty(itsMapViewDescTopIndex, true, true);// tämä 'aiheuttaa' datan harvennuksen
+	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
 	UpdateAllViewsAndDialogs("Help edit mode changed");
 }
 
@@ -3197,7 +3191,7 @@ void CSmartMetDoc::OnButtonWindTableDlg()
 		}
 		GetData()->WindTableSystem().ViewVisible(!GetData()->WindTableSystem().ViewVisible());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->AreaViewDirty(itsMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		UpdateAllViewsAndDialogs("Opening/closing Wind table view");
 	}
 }
@@ -3222,18 +3216,21 @@ void CSmartMetDoc::OnToggleShowPreviousNamesOnMap()
 	GetData()->OnToggleShowNamesOnMap(itsMapViewDescTopIndex, false);
 }
 
+void CSmartMetDoc::OpenLocationFinderTool(CWnd *parentView)
+{
+    NFmiEditMapGeneralDataDoc * doc = GetData();
+    if(doc && doc->AutoComplete().Use())
+    {
+        if(itsLocationFinderDlg == 0)
+            CreateLocationFinderDlg(itsData);
+        doc->AutoComplete().AutoCompleteDialogOn(true);
+        itsLocationFinderDlg->ActivateDialog(parentView);
+    }
+}
+
 void CSmartMetDoc::OnAcceleratorLocationFinderTool()
 {
-	NFmiEditMapGeneralDataDoc * doc = GetData();
-	if(doc && doc->AutoComplete().Use())
-	{
-		if(itsLocationFinderDlg == 0)
-			CreateLocationFinderDlg(itsData);
-		doc->AutoComplete().AutoCompleteDialogOn(true);
-		itsLocationFinderDlg->ShowWindow(SW_RESTORE);
-		itsLocationFinderDlg->SetActiveWindow();
-		itsLocationFinderDlg->SetFocus();
-	}
+    OpenLocationFinderTool(ApplicationInterface::GetSmartMetView());
 }
 
 void CSmartMetDoc::SetMacroErrorText(const std::string &theErrorStr)
@@ -3252,7 +3249,7 @@ void CSmartMetDoc::OnUpdateButtonDataQualityChecker(CCmdUI *pCmdUI)
 void CSmartMetDoc::OnAcceleratorToggleHelpCursorOnMap()
 {
 	GetData()->ShowMouseHelpCursorsOnMap(!GetData()->ShowMouseHelpCursorsOnMap());
-    ApplicationInterface::GetApplicationInterfaceImplementation()->ForceOtherMapViewsDrawOverBitmapThings(999);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 }
 
 // F9 -pressed
@@ -3276,7 +3273,7 @@ void CSmartMetDoc::OnButtonWarningCenterDlg()
 		}
 		GetData()->WarningCenterSystem().getLegacyData().WarningCenterViewOn(!GetData()->WarningCenterSystem().getLegacyData().WarningCenterViewOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->AreaViewDirty(itsMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
 	}
 #endif // DISABLE_CPPRESTSDK

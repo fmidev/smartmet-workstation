@@ -6,16 +6,17 @@
 #include <vector>
 #include <functional>
 #include "NFmiViewPosRegistryInfo.h"
+#include "PPTooltip.h"
 
 class SmartMetDocumentInterface;
 
 namespace AddParams
 {
-    class ParamAddingSystem;
+    class ParameterSelectionSystem;
     class SingleRowItem;
 }
 
-struct ParamAddingHeaderParInfo
+struct ParameterSelectionHeaderParInfo
 {
     enum ColumnFunction
     {
@@ -25,13 +26,13 @@ struct ParamAddingHeaderParInfo
         kItemId
     };
 
-    ParamAddingHeaderParInfo(void)
+    ParameterSelectionHeaderParInfo(void)
         :itsHeader()
         , itsColumnFunction(kItemName)
         , itsColumnWidth(0)
     {}
 
-    ParamAddingHeaderParInfo(const std::string &theHeader, ColumnFunction theColumnFunction, int theColumnWidth)
+    ParameterSelectionHeaderParInfo(const std::string &theHeader, ColumnFunction theColumnFunction, int theColumnWidth)
         :itsHeader(theHeader)
         , itsColumnFunction(theColumnFunction)
         , itsColumnWidth(theColumnWidth)
@@ -43,35 +44,49 @@ struct ParamAddingHeaderParInfo
 };
 
 // pit‰‰ peri‰ oma gridCtrl-luokka, ett‰ se osaa hanskata parit kikat
-class NFmiParamAddingGridCtrl : public CGridCtrl
+class NFmiParameterSelectionGridCtrl : public CGridCtrl
 {
-    DECLARE_DYNCREATE(NFmiParamAddingGridCtrl)
+    DECLARE_DYNCREATE(NFmiParameterSelectionGridCtrl)
 
 public:
-    NFmiParamAddingGridCtrl(int nRows = 0, int nCols = 0, int nFixedRows = 0, int nFixedCols = 0)
+    NFmiParameterSelectionGridCtrl(int nRows = 0, int nCols = 0, int nFixedRows = 0, int nFixedCols = 0)
         :CGridCtrl(nRows, nCols, nFixedRows, nFixedCols)
+        , itsSmartMetDocumentInterface(nullptr)
     {}
+
     std::function<void(void)> itsLButtonDblClkCallback;
+    void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface) { itsSmartMetDocumentInterface = smartMetDocumentInterface; };
+
+private:
+    std::string ComposeToolTipText(CPoint point);
+    CPPToolTip m_tooltip;
+    SmartMetDocumentInterface *itsSmartMetDocumentInterface;
+    std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
+    std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
 
 public:
     DECLARE_MESSAGE_MAP()
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+    afx_msg void OnSize(UINT nType, int cx, int cy);
+    afx_msg void NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result);
+    virtual BOOL OnInitDialog();
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
-// CFmiParamAddingDlg dialog
+// CFmiParameterSelectionDlg dialog
 
-class CFmiParamAddingDlg : public CDialogEx
+class CFmiParameterSelectionDlg : public CDialogEx
 {
 private: // n‰ill‰ talletetaan sijainti ja koko rekisteriin
     static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
 public:
     static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo(void) { return s_ViewPosRegistryInfo; }
     
-    DECLARE_DYNAMIC(CFmiParamAddingDlg)
+    DECLARE_DYNAMIC(CFmiParameterSelectionDlg)
 
 public:
-	CFmiParamAddingDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent = NULL);   // standard constructor
-	virtual ~CFmiParamAddingDlg();
+	CFmiParameterSelectionDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent = NULL);   // standard constructor
+	virtual ~CFmiParameterSelectionDlg();
     void SetDefaultValues(void);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) { return ViewPosRegistryInfo().WinRegistryKeyStr(); }
     void Update();
@@ -98,13 +113,13 @@ private:
     bool NeedToUpdateTitleText();
     std::string MakeTitleText();
 
-    NFmiParamAddingGridCtrl itsGridCtrl;
+    NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
-    std::vector<ParamAddingHeaderParInfo> itsHeaders;
+    std::vector<ParameterSelectionHeaderParInfo> itsHeaders;
     bool fDialogInitialized; // t‰m‰ on OnSize -s‰‰tˆj‰ varten, 1. kerralla ei saa s‰‰t‰‰ ikkunoita, koska niit‰ ei ole viel‰ olemassa.
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
-    AddParams::ParamAddingSystem *itsParamAddingSystem;
+    AddParams::ParameterSelectionSystem *itsParameterSelectionSystem;
     unsigned int itsLastAcivatedDescTopIndex; // Mik‰ oli viimeksi DescTopIndex, kun otsikon teksti‰ tehtiin
     int itsLastActivatedRowIndex; // Mik‰ oli viimeksi RowIndex, kun otsikon teksti‰ tehtiin
 
@@ -121,4 +136,5 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+
 };

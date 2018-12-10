@@ -40,23 +40,23 @@ class NFmiTimeSerialWindDirectionView : public NFmiTimeSerialView
 										,double theManualModifierLength /* = 1. */);
    virtual  ~NFmiTimeSerialWindDirectionView (void);
  
-   virtual bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   virtual bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   virtual void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle);
-   virtual void CreateValueScale (void);
-   virtual void DrawValueAxis (void);
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines) override;
+   void CreateValueScale (void) override;
+   void DrawValueAxis (void) override;
    using NFmiTimeSerialView::DrawDataLine; 
    virtual void DrawDataLine (const NFmiMetTime& theTime1,  const NFmiMetTime& theTime2, double value1, double value2, NFmiDrawingEnvironment & envi);
    virtual void EvaluateValue (double& theValue);
 
  protected:
-   virtual void DrawData (void);
-   virtual void DrawGrids (NFmiDrawingEnvironment & envi);
+   void DrawData (void) override;
+   void DrawGrids (NFmiDrawingEnvironment & envi) override;
    void DrawValueGrids (NFmiDrawingEnvironment & envi, double minPos, double maxPos);
    void DrawModifyFactorPointGrids (void);
    void DrawSelectedStationData (void);
    void DrawBackground (void);
-   virtual void CreateValueScaleView (void);
+   void CreateValueScaleView (void) override;
    bool AutoAdjustValueScale(void){return false;};
 
 };

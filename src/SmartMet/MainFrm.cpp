@@ -1069,9 +1069,9 @@ void CMainFrame::WaitQDataCacheThreadsToStop(void)
 		itsDoc->LogMessage("Some problem with QueryData cache-threads stoppage, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 }
 
-void CMainFrame::ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds)
+void CMainFrame::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
 {
-    itsParamAddingSystemUpdateTimer = static_cast<UINT>(SetTimer(kFmiParamAddingSystemUpdateTimer, waitTimeInSeconds * 1000, NULL));
+    itsParameterSelectionSystemUpdateTimer = static_cast<UINT>(SetTimer(kFmiParameterSelectionSystemUpdateTimer, waitTimeInSeconds * 1000, NULL));
 }
 
 void CMainFrame::UpdateCrashRptLogFile()
@@ -1229,10 +1229,10 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
             return;
         }
 
-        case kFmiParamAddingSystemUpdateTimer:
+        case kFmiParameterSelectionSystemUpdateTimer:
         {
-            KillTimer(itsParamAddingSystemUpdateTimer);
-            itsDoc->UpdateParamAddingSystem();
+            KillTimer(itsParameterSelectionSystemUpdateTimer);
+            itsDoc->UpdateParameterSelectionSystem();
             return;
         }
 
@@ -1440,20 +1440,10 @@ void CMainFrame::DoMacroParamUpdate(void)
 			{ // Kun 1. kerran on luettu macroParamit sisään, pitää varmistaa kaikkien ruutujen päivitys. Koska jos joku on jo ladannut vieMakron, jossa
 				// on makroParameita, ne pitää piirtää nyt uudestaan.
 				firstTime = false;
-				itsDoc->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+				itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true);
 			}
 			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // tämän on tarkoitus päivittää vain SmartToolView, mutta sillä ei ole omaa päivitys käskyä (ainakaan vielä)
 		}
-	}
-}
-
-void CMainFrame::DoDataCheckResultUpdate(void)
-{
-	if(itsDoc)
-	{
-		// En vielä tiedä mitä pitää tehdä tässä, mutta liataan varmuuden vuoksi kaikki ikkunat ja ruutujen åäivitys päälle
-		itsDoc->MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
-		itsDoc->RefreshApplicationViewsAndDialogs(__FUNCTION__);
 	}
 }
 
@@ -1469,8 +1459,6 @@ BOOL CMainFrame::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* p
 		GetNewSeaIcingMessages();
 	else if(message == ID_MESSAGE_MACRO_PARAMS_UPDATE)
 		DoMacroParamUpdate();
-	else if(message == ID_MESSAGE_WORKING_THREAD_DATA_CHECK_RESULTS)
-		DoDataCheckResultUpdate();
     else if(message == ID_MESSAGE_START_HISTORY_THREAD)
         StartHistoryDataCacheThread();
 

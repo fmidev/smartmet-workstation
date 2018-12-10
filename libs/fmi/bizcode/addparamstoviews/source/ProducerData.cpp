@@ -1,6 +1,6 @@
 #include "ProducerData.h"
 #include "SingleData.h"
-#include "ParamAddingUtils.h"
+#include "ParameterSelectionUtils.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiHelpDataInfo.h"
@@ -33,6 +33,7 @@ namespace
 
         auto singleRowItem = AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
         singleRowItem.origTime(data.OrigOrLastTime());
+        singleRowItem.totalFilePath(data.totalLocalPath());
         return singleRowItem;
     }
 
