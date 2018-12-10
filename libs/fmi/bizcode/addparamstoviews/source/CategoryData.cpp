@@ -46,12 +46,18 @@ namespace AddParams
             {
                 NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
                 bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
+                auto fastQueryInfoVector = infoOrganizer.GetInfos(producerInfo.ProducerId());
+                auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
 
                 if(helpData && dataCategory == NFmiInfoData::kModelHelpData) //Add help data only when handling Help Data category
                 {
                     dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-                }          
-                else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData)
+                }
+                else if(categoryName() == "Operational data" && dataType == NFmiInfoData::kKepaData)
+                {
+                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+                }
+                else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData && !(categoryName() == "Operational data"))
                 {
                     dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
                 }
