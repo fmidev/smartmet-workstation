@@ -624,7 +624,7 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		NFmiTimeDescriptor timeDescriptor(theAdapter.EditedDataTimeDescriptor());
 		return ::MakeDataValiditation(theAdapter, &timeDescriptor, true, 1, fDoMultiThread);
 	}
@@ -785,7 +785,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 			}
 		}
 		::CheckAndValidateAfterModifications(theAdapter, theEditorTool, false, fUsedMask, FmiParameterName(theModifiedDrawParam->Param().GetParam()->GetIdent()), fDoMultiThread, false);
-        theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+        theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
 //		theAdapter.RefreshMasks();
 
 		return true;
@@ -849,7 +849,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		// Mutta suoritus vaiheen virheet menevät tällä hetkellä vain loki tiedostoon.
 		if(smartToolModifier.IsInterpretedSkriptMacroParam())
 		{
-			theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+			theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 			return true;
 		}
 
@@ -887,7 +887,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		}
 
         LogSmartToolModifications(theAdapter, modifiedParams, theLogMessage, showLoadedSmartTool);
-		theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
 	}
 	else
 	{
@@ -1245,7 +1245,7 @@ static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Undo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		return status;
 	}
 	return false;
@@ -1265,7 +1265,7 @@ static bool RedoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Redo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.AreaViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 		return status;
 	}
 	return false;
@@ -1310,7 +1310,7 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 				else
 				{
 					::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, fPasteClipBoardData);
-                    theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+                    theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
                 }
 			}
 			editedData->Time(time);
@@ -1589,7 +1589,7 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 		else
 		{
             ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, usedMaskType, kFmiLastParameter, fDoMultiThread, false);
-            theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+            theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
 		}
 
 		editedData->Time(time);
@@ -1732,7 +1732,7 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 		else
 		{
             ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, false);
-            theAdapter.MapDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true);
+            theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
 //			theAdapter.RefreshMasks();
 		}
 
@@ -2599,7 +2599,7 @@ static bool GetGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, Gri
     return false;
 }
 
-static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo)
+static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, std::string *possibleSymbolTooltipFile)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
@@ -2651,6 +2651,10 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 		theUsedMacroInfoOut->Values(theValues);
         if(!smartToolModifier.CalculationPoints().empty())
             theUseCalculationPoints = true;
+        if(possibleSymbolTooltipFile)
+        {
+            *possibleSymbolTooltipFile = smartToolModifier.ExtraMacroParamData().SymbolTooltipFile();
+        }
 	}
 	catch(std::exception &e)
 	{
@@ -2678,9 +2682,9 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	return value;
 }
 
-float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo)
+float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, std::string *possibleSymbolTooltipFile)
 {
-    return ::CalcMacroParamMatrix(theAdapter, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo);
+    return ::CalcMacroParamMatrix(theAdapter, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo, possibleSymbolTooltipFile);
 }
 
 static void SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread)

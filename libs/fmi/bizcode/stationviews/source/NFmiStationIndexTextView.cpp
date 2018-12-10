@@ -715,3 +715,93 @@ void NFmiSmartSymbolView::ModifyTextEnvironment(void)
 {
     itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
+
+// ************************************************************
+// *************  NFmiCustomSymbolView  ************************
+// ************************************************************
+
+NFmiImageMap NFmiCustomSymbolView::itsCustomSymbolMap;
+
+NFmiCustomSymbolView::NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    , NFmiToolBox * theToolBox
+    , NFmiDrawingEnvironment * theDrawingEnvi
+    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , FmiParameterName theParamIdent
+    , NFmiIndexMessageList * theIndexedWordList
+    , NFmiPoint theOffSet
+    , NFmiPoint theSize
+    , int theRowIndex
+    , int theColumnIndex)
+    :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
+        , theToolBox
+        , theDrawingEnvi
+        , theDrawParam
+        , theParamIdent
+        , theIndexedWordList
+        , theOffSet
+        , theSize
+        , theRowIndex
+        , theColumnIndex)
+{
+}
+
+void NFmiCustomSymbolView::DrawSymbols(void)
+{
+    try
+    {
+        InitializeGdiplus(itsToolBox, 0);
+        NFmiStationIndexTextView::DrawSymbols();
+    }
+    catch(...)
+    {
+    }
+
+    CleanGdiplus();
+}
+
+void NFmiCustomSymbolView::DrawData(void)
+{
+    float value = ViewFloatValue();
+    if(value == kFloatMissing)
+        return;
+    bool printing = itsCtrlViewDocumentInterface->Printing();
+    std::string codeStr = boost::lexical_cast<std::string>(value);
+
+    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 128), itsCtrlViewDocumentInterface->Printing()));
+
+    double dataRectFactor = 0.85; // Symbolia pitää hieman pienentää suhteessa DataRect:iin
+    if(printing)
+        dataRectFactor = 0.6; // Printatessa pitää pienentää vielä lisää
+    double relativeSymbolSize = dataRectFactor * (CurrentDataRect().Width() + CurrentDataRect().Height()) / 2.;
+    auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+    double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
+    symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
+    double symbolSizeInPixels = graphicalInfo.itsPixelsPerMM_y * symbolSizeInMM;
+    Gdiplus::Bitmap *symbolBitmap = NFmiCustomSymbolView::itsCustomSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
+    NFmiRect symbolRect(CalcSymbolRelativeRect(CurrentLatLon(), symbolSizeInMM));
+    CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true, false);
+}
+
+void NFmiCustomSymbolView::InitCustomSymbolMap(const std::string &theWomlDirectory)
+{
+    if(!NFmiCustomSymbolView::itsCustomSymbolMap.Initialized())
+    {
+        // hae baseFolder NFmiSettings-luokan asetuksista, tee abs.-suht. polku temput
+        std::string baseFolder = NFmiSettings::Optional<std::string>("CustomSymbol::BaseSymbolFolder", "custom_symbols");
+        baseFolder = NFmiFileSystem::MakeAbsolutePath(baseFolder, theWomlDirectory);
+        // hae initFile NFmiSettings-luokan asetuksista, tee abs.-suht. polku temput
+        std::string initFile = NFmiSettings::Optional<std::string>("CustomSymbol::SymbolMapFile", "customsymbolmap.txt");
+        initFile = NFmiFileSystem::MakeAbsolutePath(initFile, theWomlDirectory);
+        NFmiCustomSymbolView::itsCustomSymbolMap.Initialize(baseFolder, initFile);
+    }
+}
+
+NFmiPoint NFmiCustomSymbolView::GetSpaceOutFontFactor(void)
+{
+    return NFmiPoint(1, 1);
+}
+
+void NFmiCustomSymbolView::ModifyTextEnvironment(void)
+{
+    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
+}

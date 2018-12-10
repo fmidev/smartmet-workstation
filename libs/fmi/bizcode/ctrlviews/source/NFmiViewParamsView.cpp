@@ -17,6 +17,8 @@
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "catlog/catlog.h"
+#include "ToolBoxStateRestorer.h"
+#include "NFmiMacroParamDataCache.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -109,7 +111,7 @@ void NFmiViewParamsView::DrawData(void)
 	{
 		InitializeGdiplus(itsToolBox, &GetFrame());
 
-		itsToolBox->RelativeClipRect(GetFrame(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &GetFrame());
         DrawMouseDraggingBackground();
 		bool crossSectionView = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
@@ -135,7 +137,6 @@ void NFmiViewParamsView::DrawData(void)
 			}
             DrawMouseDraggingAction();
 		}
-		itsToolBox->UseClipping(false);
 	}
 	catch(...)
 	{
@@ -315,7 +316,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 								NFmiMetEditorTypes::kFmiParamsDefaultView, &drawParam->Level(),
 								drawParam->DataType(), index, drawParam->ViewMacroDrawParam());
 							drawParam->HideParam(!drawParam->IsParamHidden()); // t‰m‰ on ruma fixi, mutta tupla klikki tekee t‰m‰n piilotus asetuksen jostain syyst‰ ja minun pit‰‰ laittaa se t‰ss‰ pois
-							itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true); // ik‰v‰ kyll‰ yksˆis klikin j‰lkeen (ennen t‰t‰ toista klikki‰, josta syntyy tupla klikkaus) 
+							itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // ik‰v‰ kyll‰ yksˆis klikin j‰lkeen (ennen t‰t‰ toista klikki‰, josta syntyy tupla klikkaus) 
 																				// on tehty ruudun p‰ivitys, joka nyt tuplaklikin kohdalla pit‰‰ kumota
 							itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("ViewParamsView::LeftDoubleClick: Double click has been pressed over parameter to open Draw-param dialog, this update fixes (UGLY) the first left-click's param show/hide action");
 							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), 1); // 1=viewtype ei m‰‰r‰tty viel‰
@@ -388,7 +389,9 @@ bool NFmiViewParamsView::DoAfterParamModeModifications(NFmiDrawParamList *thePar
 {
     theParamList->Dirty(true);
     itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // kun parametrin n‰kyvyytt‰ vaihdetaan, pit‰‰ tehd‰ mahdollisesti animaatio moodin datan tarkistus
-    itsCtrlViewDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, true);
+    auto rowIndex = GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    itsCtrlViewDocumentInterface->MacroParamDataCache().update(itsMapViewDescTopIndex, static_cast<unsigned long>(rowIndex), *theParamList);
+    itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, true);
     return true;
 }
 
@@ -497,19 +500,20 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 // t‰t‰ tietoa tarvitaan kun pit‰‰ puhdistaa muutoksen takia karttarivi cachesta.
 bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex)
 {
-	if(CalcModelSelectorButtonRect(theRowIndex, 2).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
+    auto usedRowIndex = GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    if(CalcModelSelectorButtonRect(theRowIndex, 2).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
 	{
-		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, -1, itsMapViewDescTopIndex, itsViewGridRowNumber);
+		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, -1, itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
 	else if(CalcModelSelectorButtonRect(theRowIndex, 0).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus next-nappiin (0)
 	{
-		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, 1, itsMapViewDescTopIndex, itsViewGridRowNumber);
+		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, 1, itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
 	else if(CalcModelSelectorButtonRect(theRowIndex, 1).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus nearest-model-nappiin (1)
 	{
-		itsCtrlViewDocumentInterface->SetNearestBeforeModelOrigTimeRunoff(theDrawParam, itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex), itsMapViewDescTopIndex, itsViewGridRowNumber);
+		itsCtrlViewDocumentInterface->SetNearestBeforeModelOrigTimeRunoff(theDrawParam, itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex), itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
 	return false;

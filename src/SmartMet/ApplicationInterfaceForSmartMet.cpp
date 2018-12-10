@@ -21,9 +21,9 @@ ApplicationInterfaceForSmartMet::ApplicationInterfaceForSmartMet()
 {
 }
 
-void ApplicationInterfaceForSmartMet::ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds)
+void ApplicationInterfaceForSmartMet::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
 {
-    ::GetMainFrame()->ParamAddingSystemUpdateTimerStart(waitTimeInSeconds);
+    ::GetMainFrame()->ParameterSelectionSystemUpdateTimerStart(waitTimeInSeconds);
 }
 
 void ApplicationInterfaceForSmartMet::SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound)
@@ -121,18 +121,11 @@ void ApplicationInterfaceForSmartMet::DrawOverBitmapThings(NFmiToolBox *theGTB)
         view->DrawOverBitmapThings(theGTB);
 }
 
-void ApplicationInterfaceForSmartMet::ForceDrawOverBitmapThings()
+void ApplicationInterfaceForSmartMet::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
     auto view = ApplicationInterface::GetSmartMetView();
     if(view)
-        view->ForceDrawOverBitmapThings();
-}
-
-void ApplicationInterfaceForSmartMet::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex)
-{
-    auto view = ApplicationInterface::GetSmartMetView();
-    if(view)
-        view->ForceOtherMapViewsDrawOverBitmapThings(theOriginalCallerDescTopIndex);
+        view->ForceDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 void ApplicationInterfaceForSmartMet::UpdateTempView()
@@ -149,11 +142,11 @@ void ApplicationInterfaceForSmartMet::UpdateCrossSectionView()
         doc->UpdateCrossSectionView();
 }
 
-void ApplicationInterfaceForSmartMet::ActivateParamAddingDlg()
+void ApplicationInterfaceForSmartMet::ActivateParameterSelectionDlg()
 {
     auto doc = GetDocument();
     if(doc)
-        doc->ActivateParamAddingDlg();
+        doc->ActivateParameterSelectionDlg();
 }
 
 void ApplicationInterfaceForSmartMet::ActivateZoomDialog(int theWantedDescTopIndex)
@@ -238,3 +231,14 @@ void ApplicationInterfaceForSmartMet::UpdateMainFrameTitle()
     ((CMainFrame*)AfxGetMainWnd())->OnUpdateFrameTitle(TRUE);
 }
 
+void ApplicationInterfaceForSmartMet::OpenLocationFinderDialog(CWnd *parentView)
+{
+    auto doc = GetDocument();
+    if(doc)
+        doc->OpenLocationFinderTool(parentView);
+}
+
+NFmiApplicationWinRegistry& ApplicationInterfaceForSmartMet::ApplicationWinRegistry()
+{
+    return GetDocument()->ApplicationWinRegistry();
+}

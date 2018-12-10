@@ -33,7 +33,8 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(void)
 ,itsOverMapBitmaps()
 ,itsOriginalArea()
 ,itsZoomedArea()
-,fMapDirty(true)
+,fMakeNewBackgroundBitmap(true)
+,fUpdateMapViewDrawingLayers(true)
 ,fMapReallyChanged(true)
 ,itsAreaFileName()
 ,itsMapFileNames()
@@ -188,7 +189,7 @@ void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea
 				return ; // jokin meni pieleen, ei tehd‰ mit‰‰n
 		}
 		CalcZoomedAreaPosition();
-		MapDirty(true);
+        SetMakeNewBackgroundBitmap(true);
 		MapReallyChanged(true); // t‰m‰ nollataan zoom-dialogissa!!!! ks. NFmiZoomView::Update -metodi
 		itsSwapMode = 0;
 	}
@@ -236,7 +237,7 @@ bool NFmiGdiPlusImageMapHandler::SetMaxArea(void)
 {
 	itsZoomedArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
 	CalcZoomedAreaPosition();
-	MapDirty(true);
+    SetMakeNewBackgroundBitmap(true);
 	return true;
 }
 
@@ -252,7 +253,7 @@ bool NFmiGdiPlusImageMapHandler::SetHalfArea(void)
 	{
 		itsZoomedArea = area;
 		CalcZoomedAreaPosition();
-		MapDirty(true);
+        SetMakeNewBackgroundBitmap(true);
 		return true;
 	}
 }
@@ -531,4 +532,44 @@ void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineList(std::list<NFmiPolyline*>
 	itsDrawBorderPolyLineList = newValue;
 	// tyhjennet‰‰n parametrina annettu lista Mutta ei tuhota polylinej‰ sen sis‰ll‰, koska ne j‰‰v‰t dokumenttiin talteen
 	newValue.clear();
+}
+
+// Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
+// 1. Nimi muuttui toivottavasti kuvaavammaksi eli MakeNewBackgroundBitmap, eli se tarkoittaa
+//    ett‰ seuraavalla piirrooskierroksella karttapohjat pit‰‰ piirt‰‰ uusiksi.
+// 2. Ns. set-funktiolla voi lipun laittaa vain p‰‰lle, false arvo j‰tet‰‰n huomiotta. Vain clear-funktiolla
+//    lipun tila voidaan nollata. T‰m‰ muutos siksi ett‰ eri paikoista voi tulla samalla likaus kerralla eri arvoja
+//    eik‰ toisaalta tehdyst‰ false asetuksesta ei haluta nollata toisesta tehty‰ true asetusta.
+// 3. Lippu siis nollataan clear-funktiolla, jota kutsutaan piirto toimintojen j‰lkeen.
+bool NFmiGdiPlusImageMapHandler::MakeNewBackgroundBitmap() const 
+{ 
+    return fMakeNewBackgroundBitmap; 
+}
+
+void NFmiGdiPlusImageMapHandler::SetMakeNewBackgroundBitmap(bool newState) 
+{ 
+    if(newState)
+        fMakeNewBackgroundBitmap = newState; 
+}
+
+void NFmiGdiPlusImageMapHandler::ClearMakeNewBackgroundBitmap() 
+{ 
+    fMakeNewBackgroundBitmap = false; 
+}
+
+// Sama kysely, asetus ja nollaus mekanismi kuin MakeNewBackgroundBitmap -lipullekin
+bool NFmiGdiPlusImageMapHandler::UpdateMapViewDrawingLayers() const
+{
+    return fUpdateMapViewDrawingLayers;
+}
+
+void NFmiGdiPlusImageMapHandler::SetUpdateMapViewDrawingLayers(bool newState)
+{
+    if(newState)
+        fUpdateMapViewDrawingLayers = newState;
+}
+
+void NFmiGdiPlusImageMapHandler::ClearUpdateMapViewDrawingLayers()
+{
+    fUpdateMapViewDrawingLayers = false;
 }

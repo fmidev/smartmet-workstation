@@ -75,7 +75,7 @@ protected:
 
 	void DisableActionButtomIfInViewMode(void);
 	void AddSelectedMacroParamToRow(int theRow);
-	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate);
+	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath);
 	void UpdateMacroName(void);
 	//std::string GetWantedMacroString(void);
 	NFmiMacroParam* FindSelectedMacroParam(void);

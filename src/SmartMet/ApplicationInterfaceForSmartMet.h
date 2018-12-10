@@ -12,7 +12,7 @@ public:
     ApplicationInterfaceForSmartMet();
 	~ApplicationInterfaceForSmartMet() = default;
 
-    void ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds) override; // CMainFrame (CMainFrame*)AfxGetMainWnd()
+    void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds) override; // CMainFrame (CMainFrame*)AfxGetMainWnd()
     void SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound) override; // CSmartMetView
     CSmartMetDoc* GetDocument() override; // returns CSmartMetDoc
     CDocument* GetDocumentAsCDocument() override; // returns CSmartMetDoc but as CDocument (needed with classes that don't know about CSmartMetView)
@@ -26,11 +26,10 @@ public:
     void UpdateOnlyExtraMapViews(bool updateMap1, bool updateMap2) override; // CSmartMetDoc
     void RestartHistoryDataCacheThread() override; // CMainFrame
     void DrawOverBitmapThings(NFmiToolBox *theGTB) override;  // CSmartMetView
-    void ForceDrawOverBitmapThings() override;  // CSmartMetView
-    void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex) override;  // CSmartMetView
+    void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;  // CSmartMetView
     void UpdateTempView() override; // CSmartMetDoc
     void UpdateCrossSectionView() override; // CSmartMetDoc
-    void ActivateParamAddingDlg() override; // CSmartMetDoc
+    void ActivateParameterSelectionDlg() override; // CSmartMetDoc
     void ActivateZoomDialog(int theWantedDescTopIndex) override;  // CSmartMetView
     std::string GetToolTipString(unsigned int commandID, const std::string &theMagickWordU_) override; // CSmartMetApp
     //{
@@ -49,4 +48,6 @@ public:
     void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) override; // CSmartMetDoc
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) override; // CSmartMetDoc
     void UpdateMainFrameTitle() override; // CMainFrame (CMainFrame*)AfxGetMainWnd()
+    void OpenLocationFinderDialog(CWnd *parentView) override;
+    NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
 };

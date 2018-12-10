@@ -112,6 +112,7 @@ class ToolboxViewsInterface;
 class CtrlViewDocumentInterface;
 class SmartMetDocumentInterface;
 class Q2ServerInfo;
+class NFmiMacroParamDataCache;
 
 namespace Wms
 {
@@ -130,7 +131,7 @@ namespace Imagine
 
 namespace AddParams
 {
-    class ParamAddingSystem;
+    class ParameterSelectionSystem;
 }
 
 namespace Warnings
@@ -145,6 +146,8 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize);
+    NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes();
@@ -157,8 +160,8 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData();
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex);
     bool LoadStaticHelpData(void);
-    AddParams::ParamAddingSystem& ParamAddingSystem();
-    void UpdateParamAddingSystem();
+    AddParams::ParameterSelectionSystem& ParameterSelectionSystem();
+    void UpdateParameterSelectionSystem();
 #ifndef DISABLE_CPPRESTSDK
     Wms::WmsSupport& WmsSupport();
 #endif // DISABLE_CPPRESTSDK
@@ -290,11 +293,10 @@ public:
 	void ReportProcessMemoryUsage(void);
 	void SetMacroErrorText(const std::string &theErrorStr);
 	void InvalidateMapView(bool bErase = true);
-	void ForceDrawOverBitmapThings(void);
+	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateZoomDialog(int theWantedDescTopIndex);
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord);
 	void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex);
-	void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex);
 	void UpdateTempView(void);
 	void UpdateCrossSectionView(void);
 	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tämä on kirjastojen pilkkomiseen vaadittuja funktioita
@@ -422,9 +424,9 @@ public:
 	std::vector<NFmiMapViewDescTop*>& MapViewDescTopList(void);
 	void TimeControlTimeStep(unsigned int theDescTopIndex, float newValue);
 	float TimeControlTimeStep(unsigned int theDescTopIndex);
-	void MapDirty(unsigned int theDescTopIndex, bool mapDirty, bool clearCache);
-	void AreaViewDirty(unsigned int theDescTopIndex, bool areaViewDirty, bool clearCache);
-	bool ActivateParamSelectionDlgAfterLeftDoubleClick(void);
+    void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers);
+    void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex);
+    bool ActivateParamSelectionDlgAfterLeftDoubleClick(void);
 	void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue);
 	NFmiMapViewDescTop* MapViewDescTop(unsigned int theIndex);
 	void TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros);
@@ -446,7 +448,6 @@ public:
 	const std::string& LastTEMPDataStr(void);
 	void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint& theLatLon
 						,const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-						,bool &theRedrawMapAfterMTATempClear
 						,bool fMakeMTAModeAdd
 						,bool fDoOnlyMTAModeAdd);
 	NFmiTrajectorySystem* TrajectorySystem(void);

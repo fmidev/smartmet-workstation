@@ -64,12 +64,12 @@ namespace
 
     bool mapIsNotDirty(CtrlViewDocumentInterface *docInterface, int theDescTopIndex)
     {
-        return !(docInterface && docInterface->GetMapHandlerInterface(theDescTopIndex)->IsMapDirty());
+        return !(docInterface && docInterface->GetMapHandlerInterface(theDescTopIndex)->MakeNewBackgroundBitmap());
     }
 
     void cleanMap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex)
     {
-        docInterface->GetMapHandlerInterface(theDescTopIndex)->MapDirty(false);
+        docInterface->GetMapHandlerInterface(theDescTopIndex)->ClearMakeNewBackgroundBitmap();
     }
 
     void removeBitmap(CBitmap *bitmap)

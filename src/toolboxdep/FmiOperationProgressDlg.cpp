@@ -3,18 +3,25 @@
 
 #include "stdafx.h"
 #include "FmiOperationProgressDlg.h"
+#include "boost/math/special_functions/round.hpp"
 
 
 // CFmiOperationProgressDlg dialog
 
 IMPLEMENT_DYNAMIC(CFmiOperationProgressDlg, CDialog)
 
-CFmiOperationProgressDlg::CFmiOperationProgressDlg(NFmiStopFunctor &theStopper, CWnd* pParent /*=NULL*/)
+CFmiOperationProgressDlg::CFmiOperationProgressDlg(const std::string &operationText, bool operationTextIsWarning, NFmiStopFunctor &theStopper, CWnd* pParent /*=NULL*/)
 	: CDialog(CFmiOperationProgressDlg::IDD, pParent)
 	, itsOperationStrU_(_T(""))
+    , itsOperationStrControl()
+    , warningFont()
 	, itsStopper(theStopper)
+    , fOperationTextIsWarning(operationTextIsWarning)
 {
-
+    if(!operationText.empty())
+    {
+        itsOperationStrU_ = CA2T(operationText.c_str());
+    }
 }
 
 CFmiOperationProgressDlg::~CFmiOperationProgressDlg()
@@ -24,13 +31,15 @@ CFmiOperationProgressDlg::~CFmiOperationProgressDlg()
 void CFmiOperationProgressDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_PROGRESS_OPERATION1, itsProgressCtrl);
+    DDX_Control(pDX, IDC_PROGRESS_OPERATION1, itsProgressCtrl);
     DDX_Text(pDX, IDC_STATIC_CANCEL_DLG_TEXT, itsOperationStrU_);
+    DDX_Control(pDX, IDC_STATIC_CANCEL_DLG_TEXT, itsOperationStrControl);
 }
 
 
 BEGIN_MESSAGE_MAP(CFmiOperationProgressDlg, CDialog)
 	ON_BN_CLICKED(IDCANCEL, &CFmiOperationProgressDlg::OnBnClickedCancel)
+    ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -49,6 +58,17 @@ BOOL CFmiOperationProgressDlg::OnInitDialog()
 	itsProgressCtrl.SetRange(0, 100);
 	itsProgressCtrl.SetStep(1);
 	itsProgressCtrl.SetShowPercent(TRUE);
+
+    if(fOperationTextIsWarning)
+    {
+        // Laitetaanvaroitus tekstit hieman isommalla fontti koolla (ja punaisella värillä, joka asetetaan OnCtlColor metodissa)
+        auto oldFont = itsOperationStrControl.GetFont();
+        LOGFONT newLogFont;
+        oldFont->GetLogFont(&newLogFont);
+        newLogFont.lfHeight = boost::math::iround(newLogFont.lfHeight * 1.2);
+        warningFont.CreateFontIndirect(&newLogFont);
+        itsOperationStrControl.SetFont(&warningFont);
+    }
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
@@ -139,3 +159,20 @@ bool CFmiOperationProgressDlg::WaitUntilInitialized(void)
     return true;
 }
 
+HBRUSH CFmiOperationProgressDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+    HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+
+    // Värjätään operaatioon liittyvä teksti punaisella, jos se on varoitus 
+    // ja mustalla, jos ei.
+    if(pWnd->GetDlgCtrlID() == IDC_STATIC_CANCEL_DLG_TEXT)
+    {
+        if(fOperationTextIsWarning)
+            pDC->SetTextColor(RGB(255, 0, 0));
+        else
+            pDC->SetTextColor(RGB(0, 0, 0));
+    }
+
+    // TODO:  Return a different brush if the default is not desired
+    return hbr;
+}

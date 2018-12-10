@@ -30,10 +30,11 @@ namespace
     // collapsed mode because otherwise dialog's update codes will open it always.
     // Here is used the SingleRowItem's parentItemId to store producerId
     
-    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, const std::string& origTime = std::string())
+    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, const std::string& origTime = std::string(), const std::string& totalFilePath = std::string())
     {
         auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
         rowItem.origTime(origTime);
+        rowItem.totalFilePath(totalFilePath);
         return rowItem;
     }
 
@@ -49,6 +50,28 @@ namespace
         {
             const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(*queryInfo.Level());
             dialogRowData.push_back(::makeLevelRowItem(dataIdent, dataType, rowType, level));
+        }
+    }
+
+    void addMetaStreamlineParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, NFmiQueryInfo &queryInfo, NFmiInfoData::Type dataType, AddParams::RowType rowType)
+    {
+        bool hasLevelData = queryInfo.SizeLevels() > 1;
+        static const NFmiParam streamlineBaseParam(NFmiInfoData::kFmiSpStreamline, "Streamline (meta)");
+        bool addStreamlineParam = queryInfo.IsGrid();
+        bool hasWindParams = queryInfo.Param(kFmiTotalWindMS) || queryInfo.Param(kFmiWindSpeedMS) || queryInfo.Param(kFmiWindUMS);
+        auto parameter = NFmiDataIdent(streamlineBaseParam, *queryInfo.Producer());
+
+        if(addStreamlineParam && hasWindParams)
+        {
+            if(hasLevelData) //Level data
+            {
+                dialogRowData.push_back(::makeRowItem(parameter, dataType, AddParams::RowType::kLevelType)); //Parameter name as "header"
+                ::addLevelRowItems(dialogRowData, parameter, dataType, AddParams::RowType::kSubParamLevelType, queryInfo); //Actual level data
+            }
+            else //Surface data
+            {
+                dialogRowData.push_back(::makeRowItem(parameter, dataType, rowType, true));
+            }
         }
     }
 
@@ -73,6 +96,7 @@ namespace
                         dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType, true));
                     }
                 }
+                addMetaStreamlineParameters(dialogRowData, queryInfo, dataType, rowType);
             }
         }
     }
@@ -97,7 +121,6 @@ namespace
         
         if(!dataIdent.HasDataParams()) 
         {
-
             bool hasLevelData = queryInfo.SizeLevels() > 1;
             rowType = AddParams::RowType::kParamType;
 
@@ -118,6 +141,7 @@ namespace
             dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false));
             rowType = AddParams::RowType::kSubParamType; 
             ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);
+            
         }
     }
 
@@ -129,15 +153,33 @@ namespace AddParams
 
     SingleData::~SingleData() = default;
 
+    std::string combineTotalFilePath(const std::string &dataFileName, const std::string &fileNameFilter = NULL)
+    {
+        if(fileNameFilter.empty())
+            return "";
+        try
+        {
+            std::size_t found = fileNameFilter.find_last_of("/\\");
+            std::string filePath = found ? fileNameFilter.substr(0, found + 1) + dataFileName : "";
+            return filePath;
+        }
+        catch(...)
+        {
+            return "";
+        }
+        return "";
+    }
+
     // Returns true, if data's param or level structure is changed
     bool SingleData::updateData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
     {
-        bool dataStruckturesChanged = false;
+        bool dataStructuresChanged = false;
         // No need to do update, if the latest data from infoOrganizer is still the same (with same filename timestamps)
         if(latestDataFilePath_ != info->DataFileName())
         {
-            dataStruckturesChanged = ::isDataStructuresChanged(info, latestMetaData_);
+            dataStructuresChanged = ::isDataStructuresChanged(info, latestMetaData_);
             latestDataFilePath_ = info->DataFileName();
+            totalLocalPath_ = combineTotalFilePath(info->DataFileName(), info->DataFilePattern());
             latestMetaData_ = std::make_unique<NFmiQueryInfo>(*info);
             uniqueDataId_ = info->DataFilePattern();
             dataType_ = info->DataType();
@@ -146,7 +188,7 @@ namespace AddParams
                 dataName_ = helpDataInfo->GetCleanedName();
             }
         }
-        return dataStruckturesChanged;
+        return dataStructuresChanged;
     }
 
     std::vector<SingleRowItem> SingleData::makeDialogRowData() const
@@ -170,14 +212,13 @@ namespace AddParams
 
      std::string SingleData::OrigOrLastTime() const
     {
-        NFmiFastQueryInfo fastInfo(*latestMetaData_);
-        NFmiMetTime dataTime = fastInfo.OriginTime();
+        NFmiMetTime dataTime = latestMetaData_->OriginTime();
         if(dataType_ == NFmiInfoData::kObservations || dataType_ == NFmiInfoData::kAnalyzeData)
         {
-            dataTime = fastInfo.TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
+            dataTime = latestMetaData_->TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
         }
 
         std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
         return !origTime.empty() ? origTime : "";
-    }
+    }   
 }

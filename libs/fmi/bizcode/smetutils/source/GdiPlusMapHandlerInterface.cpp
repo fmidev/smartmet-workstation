@@ -30,14 +30,24 @@ bool GdiPlusMapHandlerInterface::SetMaxArea()
     return itsMapHandler->SetMaxArea();
 }
 
-void GdiPlusMapHandlerInterface::MapDirty(bool newState)
+void GdiPlusMapHandlerInterface::SetMakeNewBackgroundBitmap(bool newState)
 {
-    itsMapHandler->MapDirty(newState);
+    itsMapHandler->SetMakeNewBackgroundBitmap(newState);
 }
 
-bool GdiPlusMapHandlerInterface::IsMapDirty(void)
+bool GdiPlusMapHandlerInterface::MakeNewBackgroundBitmap()
 {
-    return itsMapHandler->IsMapDirty();
+    return itsMapHandler->MakeNewBackgroundBitmap();
+}
+
+void GdiPlusMapHandlerInterface::ClearMakeNewBackgroundBitmap()
+{
+    itsMapHandler->ClearMakeNewBackgroundBitmap();
+}
+
+bool GdiPlusMapHandlerInterface::UpdateMapViewDrawingLayers()
+{
+    return itsMapHandler->UpdateMapViewDrawingLayers();
 }
 
 const NFmiRect& GdiPlusMapHandlerInterface::Position()

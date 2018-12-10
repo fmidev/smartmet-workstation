@@ -139,6 +139,7 @@ class NFmiSmartToolModifier
   void ModifiedLevel(boost::shared_ptr<NFmiLevel> &theLevel);
   void SetGriddingHelper(NFmiGriddingHelperInterface *theGriddingHelper);
   void SetPossibleSpacedOutMacroInfo(boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo);
+  const NFmiExtraMacroParamData& ExtraMacroParamData() const;
 
  private:
   boost::shared_ptr<NFmiFastQueryInfo> GetUsedEditedInfo();
@@ -285,11 +286,9 @@ class NFmiSmartToolModifier
   boost::shared_ptr<NFmiSmartToolIntepreter> itsSmartToolIntepreter;
   bool fMacroRunnable;
   std::string itsErrorText;
-  std::unique_ptr<NFmiExtraMacroParamData> itsExtraMacroParamData;  // Tämä alustetaan
-                                                                    // smarttool-tulkissa
-                                                                    // (itsSmartToolIntepreter), ja
-                                                                    // otetaan omistukseen
-                                                                    // 'suorittajaan'
+  // Tämä alustetaan smarttool-tulkissa (itsSmartToolIntepreter), ja
+  // otetaan omistukseen 'suorittajaan'
+  std::unique_ptr<NFmiExtraMacroParamData> itsExtraMacroParamData;  
 
   bool fModifySelectedLocationsOnly;
   checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >

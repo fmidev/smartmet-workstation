@@ -24,7 +24,7 @@ enum class SmartMetViewId : size_t
     DataFilterToolDlg = 1 << 11,
     BrushToolDlg = 1 << 12,
     LogViewer = 1 << 13,
-    ParamAddingDlg = 1 << 14,
+    ParameterSelectionDlg = 1 << 14,
     DataQualityCheckerView = 1 << 15,
     ViewMacroDlg = 1 << 16,
     ZoomDlg = 1 << 17,

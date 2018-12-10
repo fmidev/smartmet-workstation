@@ -23,8 +23,10 @@ public:
     virtual NFmiRect TotalAbsolutRect() = 0;
     virtual boost::shared_ptr<NFmiArea> TotalArea() = 0;
     virtual bool SetMaxArea() = 0;
-    virtual void MapDirty(bool newState) = 0;
-    virtual bool IsMapDirty(void) = 0;
+    virtual void SetMakeNewBackgroundBitmap(bool newState) = 0;
+    virtual bool MakeNewBackgroundBitmap() = 0;
+    virtual void ClearMakeNewBackgroundBitmap() = 0;
+    virtual bool UpdateMapViewDrawingLayers() = 0;
     virtual const NFmiRect& Position() = 0;
     virtual int UsedMapIndex() = 0;
     virtual bool MapReallyChanged() = 0;

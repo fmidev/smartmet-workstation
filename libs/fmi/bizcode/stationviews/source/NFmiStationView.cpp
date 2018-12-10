@@ -58,6 +58,10 @@
 #include "NFmiHelpDataInfo.h"
 #include "EditedInfoMaskHandler.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "NFmiCommentStripper.h"
+#include "ToolBoxStateRestorer.h"
+#include "NFmiMacroParamDataCache.h"
+#include "Utf8ConversionFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -301,8 +305,8 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 		return ;
 
 	itsToolBox = theGTB;
-	itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
-
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
+    
 	SetupUsedDrawParam();
 
 	MakeDrawedInfoVector();
@@ -326,7 +330,6 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 			itsInfo = boost::shared_ptr<NFmiFastQueryInfo>(); // nollataan lopuksi itsInfo-pointteri
 		}
 	}
-	itsToolBox->UseClipping(false);
 }
 
 void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -720,7 +723,7 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, "NFmiStationView: Drawing data's station/grid point markers");
     NFmiDrawingEnvironment stationPointEnvi;
     SetStationPointDrawingEnvi(stationPointEnvi);
-    itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
     itsInfoVectorIter = itsInfoVector.begin();
     if(itsInfoVectorIter != itsInfoVector.end()) // asema datalle (synop) voi olla useita datoja
@@ -736,7 +739,6 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
             }
         }
     }
-    itsToolBox->UseClipping(false);
 }
 
 void NFmiStationView::DrawData(void)
@@ -880,7 +882,7 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 	NFmiInfoData::Type dataType = itsInfo->DataType();
 	if(dataType == NFmiInfoData::kEditable)
 	{
-		itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 		const int kSelectionRectPixelSize = 3;
 		double selectionRectXSize = itsToolBox->SX(kSelectionRectPixelSize);
 		double selectionRectYSize = itsToolBox->SY(kSelectionRectPixelSize);
@@ -955,7 +957,6 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 			}
 		}
 		itsDrawingEnvironment->DisableInvert();
-		itsToolBox->UseClipping(false);
 		return true;
 	}
 	return false;
@@ -996,10 +997,6 @@ bool NFmiStationView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long theK
 		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 			SelectControlPointLocation(info, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask);
 
-					// HUOM! kartan p‰ivityst‰ ei saa est‰‰ kun on luotaus n‰yttˆ auki ja MTA-moodi on p‰‰ll‰, silloin pit‰‰ piirt‰‰ valittuun pisteeseen 'luotaus' kolmio
-		if(!itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-			itsCtrlViewDocumentInterface->MapViewUpdated(itsMapViewDescTopIndex, false); // karttaa ei piirret‰, mutta aikasarjaikkuna voidaan piirt‰‰ cdoc:in updateallviewsanddialogs
-
 		// piirret‰‰n tietyiss‰ tilanteissa valitut pisteet myˆs ei oikean yl‰kulman kartta ruutuun, mutta ei piirret‰ t‰ss‰ oikeaan yl‰kulmaan koska sinne piirret‰‰n muutenkin
 		if(itsCtrlViewDocumentInterface->DrawSelectionOnThisView())
 		{
@@ -1023,7 +1020,6 @@ bool NFmiStationView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
 	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(info)
 	{
-		fRedrawMapAfterMTATempClear = false; // h‰t‰ paska viritys optimoinnin takia
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
 			// ctrl+shift+right-mouseclick:in avulla voidaan valita aktiivinen n‰yttˆrivi ja aika ilman, ett‰ valinnat muuttuvat
@@ -1040,8 +1036,6 @@ bool NFmiStationView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
             else
                 SelectLocations(info, latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true);
 		}
-		if(!fRedrawMapAfterMTATempClear)
-			itsCtrlViewDocumentInterface->MapViewUpdated(itsMapViewDescTopIndex, false); // karttaa ei piirret‰, mutta aikasarjaikkuna voidaan piirt‰‰ cdoc:in updateallviewsanddialogs
 	}
 	return true;
 }
@@ -1369,24 +1363,65 @@ static void TraceLogSpacedOutMacroParamCalculationSize(boost::shared_ptr<NFmiFas
 // Laskuissa k‰ytetty hila laitetaan theUsedGridOut:in arvoksi.
 void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut)
 {
-    CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": macroParam calculations");
-    auto possibleSpaceOutData = CreatePossibleSpaceOutMacroParamData();
-	FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
-    if(fUseCalculationPoints)
-        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
+    NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
+    auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
+    {
+        macroParamLayerCacheDataType.getCacheValues(theValues, fUseCalculationPoints, fUseAlReadySpacedOutData, itsInfo);
+        if(theUsedGridOut)
+        {
+            *theUsedGridOut = NFmiGrid(itsArea.get(), static_cast<unsigned long>(theValues.NX()), static_cast<unsigned long>(theValues.NY()));
+        }
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was retrieved from cache (=fast)"), this);
+    }
     else
-        ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
-    if(theUsedGridOut && itsInfo && itsInfo->Grid())
-        *theUsedGridOut = *itsInfo->Grid();
+    {
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": macroParam calculations");
+        auto possibleSpaceOutData = CreatePossibleSpaceOutMacroParamData();
+        FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
+        if(fUseCalculationPoints)
+            CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
+        else
+            ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
+        if(theUsedGridOut && itsInfo && itsInfo->Grid())
+            *theUsedGridOut = *itsInfo->Grid();
+
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
+        macroParamLayerCacheDataType.setCacheValues(theValues, fUseCalculationPoints, fUseAlReadySpacedOutData);
+        itsCtrlViewDocumentInterface->MacroParamDataCache().setCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType);
+    }
+}
+
+float NFmiStationView::GetMacroParamTooltipValueFromCache()
+{
+    NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
+    NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
+    NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
+    auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
+    {
+        const auto &dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
+        NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
+        grid.Area()->SetXYArea(NFmiRect(0, 0, 1, 1));
+        auto gridPoint = grid.LatLonToGrid(latlon);
+        auto xIndex = boost::math::iround(gridPoint.X());
+        auto yIndex = boost::math::iround(gridPoint.Y());
+        if(xIndex >= 0 && xIndex < dataMatrix.NX() && yIndex >= 0 && yIndex < dataMatrix.NY())
+        {
+            return dataMatrix[xIndex][yIndex];
+        }
+    }
+
+    return kFloatMissing;
 }
 
 // Pelk‰n tooltipin lasku macroParamista.
-float NFmiStationView::CalcMacroParamTooltipValue()
+float NFmiStationView::CalcMacroParamTooltipValue(std::string &possibleSymbolTooltipFile)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
     NFmiDataMatrix<float> fakeMatrixValues;
-    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints);
+    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, nullptr, &possibleSymbolTooltipFile);
 }
 
 static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -2572,7 +2607,7 @@ void NFmiStationView::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theI
 									 ,bool fMakeMTAModeAdd // vain tietyist‰ paikoista kun t‰t‰ metodia kutsutaan, saa luotauksen lis‰t‰ (left buttom up karttan‰ytˆll‰ l‰hinn‰)
 									 ,bool fDoOnlyMTAModeAdd)
 {
-	itsCtrlViewDocumentInterface->SelectLocations(itsMapViewDescTopIndex, theInfo, itsArea, theLatLon, itsTime, theSelectionCombineFunction, theMask, fRedrawMapAfterMTATempClear, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
+	itsCtrlViewDocumentInterface->SelectLocations(itsMapViewDescTopIndex, theInfo, itsArea, theLatLon, itsTime, theSelectionCombineFunction, theMask, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
 }
 
 std::string NFmiStationView::Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType)
@@ -2627,6 +2662,24 @@ std::string NFmiStationView::GetLocationTooltipString()
     return CtrlViewUtils::XmlEncode(locationStr);
 }
 
+std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
+{
+    std::string possibleSymbolTooltipFile;
+    itsInfo = usedInfo;
+    float value = CalcMacroParamTooltipValue(possibleSymbolTooltipFile);
+    usedInfo = itsInfo;
+    std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+    str += " ('grude' calculation) ";
+    str += GetPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+    str += "<br>";
+    str += paramName;
+    float cacheValue = GetMacroParamTooltipValueFromCache();
+    str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+    str += " (nearest cache value) ";
+    str += GetPossibleMacroParamSymbolText(cacheValue, possibleSymbolTooltipFile);
+    return str;
+}
+
 std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
 	itsToolTipDiffValue1 = kFloatMissing;
@@ -2644,25 +2697,23 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
 		if(info) // satelliitti kuvilla ei ole infoa
 		{
-			if(fGetCurrentDataFromQ2Server || itsDrawParam->DataType() == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
-			{
-				fDoTimeInterpolation = false;
-				if(info->DataType() != NFmiInfoData::kStationary) // stationaari datalle ei tarvitse ajan osua, koska data on joka ajalle aina sama
-				{
-					fDoTimeInterpolation = !(info->Time(itsCtrlViewDocumentInterface->ToolTipTime()));
-				}
-				float value = kFloatMissing;
-				if(macroParamCase)
-				{
-					itsInfo = info;
-					value = CalcMacroParamTooltipValue();
-					info = itsInfo;
-				}
-				else
-					value = ToolTipValue(theRelativePoint, info);
-
-				str += GetToolTipValueStr(value, info, itsDrawParam);
-			}
+            if(fGetCurrentDataFromQ2Server || itsDrawParam->DataType() == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
+            {
+                fDoTimeInterpolation = false;
+                if(info->DataType() != NFmiInfoData::kStationary) // stationaari datalle ei tarvitse ajan osua, koska data on joka ajalle aina sama
+                {
+                    fDoTimeInterpolation = !(info->Time(itsCtrlViewDocumentInterface->ToolTipTime()));
+                }
+                if(macroParamCase)
+                {
+                    str += MakeMacroParamTotalTooltipString(info, str);
+                }
+                else
+                {
+                    float value = ToolTipValue(theRelativePoint, info);
+                    str += GetToolTipValueStr(value, info, itsDrawParam);
+                }
+            }
 			else
 				str += "?";
 
@@ -2710,6 +2761,123 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 			str += " Selected parameter or data is not currently available.";
 	}
 	return str;
+}
+
+class SymbolTextMapping
+{
+    std::string totalFilePath_;
+    std::map<float, std::string> symbolTextMap_;
+    std::string initializationMessage_;
+public:
+    SymbolTextMapping() = default;
+
+    bool initialize(const std::string &totalFilePath)
+    {
+        return initialize_impl(totalFilePath);
+    }
+
+    bool wasInitializationOk() const
+    {
+        return initializationMessage_.empty();
+    }
+
+    std::string getSymbolText(float symbolValue) const
+    {
+        // Jos initialisointi on ep‰onnistunut, palautetaan sen virheilmoitus varoituksena, ett‰ t‰t‰ yritet‰‰n k‰ytt‰‰
+        if(!wasInitializationOk())
+            return initializationMessage_;
+        else
+        {
+            auto iter = symbolTextMap_.find(symbolValue);
+            if(iter != symbolTextMap_.end())
+                return iter->second;
+            else
+            {
+                if(symbolValue == kFloatMissing)
+                {
+                    static const std::string missingValueText = "missing value";
+                    return missingValueText;
+                }
+                else
+                {
+                    std::string errorText = "Value ";
+                    errorText += std::to_string(symbolValue);
+                    errorText += " was not found from mappings from file:\n";
+                    errorText += totalFilePath_;
+                    return errorText;
+                }
+            }
+        }
+    }
+
+private:
+    // Seuraavat line formaatit ovat ok:
+    // 1. key-value;string-value  ==> lineParts.size() == 2
+    // 2. key-value;string-value; (eli puolipiste on rivin lopussa)  ==> lineParts.size() == 3 and lineParts[2] on tyhj‰ stringi
+    void parseLine(const std::string &line)
+    {
+        auto strippedLine = line;
+        NFmiStringTools::TrimAll(strippedLine);
+        auto lineParts = NFmiStringTools::Split(strippedLine, ";");
+        if(lineParts.size() == 2 || (lineParts.size() == 3 && lineParts[2].empty()))
+        {
+            try
+            {
+                float value = std::stof(lineParts[0]);
+                symbolTextMap_.insert(std::make_pair(value, fromUtf8toLocaleString(lineParts[1])));
+            }
+            catch(...)
+            { }
+        }
+    }
+
+    bool initialize_impl(const std::string &totalFilePath)
+    {
+        initializationMessage_.clear();
+        totalFilePath_ = totalFilePath;
+        symbolTextMap_.clear();
+        NFmiCommentStripper commentStripper;
+        if(commentStripper.ReadAndStripFile(totalFilePath_))
+        {
+            std::istringstream in(commentStripper.GetString());
+            std::string line;
+            do
+            {
+                std::getline(in, line);
+                parseLine(line);
+            } while(in);
+        }
+        else
+        {
+            initializationMessage_ = std::string("Unable to read symbol text mappings from file: ") + totalFilePath_;
+        }
+
+        return false;
+    }
+};
+
+std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, std::string &possibleSymbolTooltipFile)
+{
+    if(!possibleSymbolTooltipFile.empty())
+    {
+        static std::map<std::string, SymbolTextMapping> symbolMappingsCache;
+
+        std::string str = " (";
+        // Katsotaan lˆytyykˆ haluttu tiedosto jo luettuna cache:en
+        auto iter = symbolMappingsCache.find(possibleSymbolTooltipFile);
+        if(iter != symbolMappingsCache.end())
+            str += iter->second.getSymbolText(value);
+        else
+        {
+            // Jos ei lˆytynyt, luodaan uusi cache otus, alustetaan se ja palautetaan siit‰ haluttu arvo
+            auto iter = symbolMappingsCache.insert(std::make_pair(possibleSymbolTooltipFile, SymbolTextMapping()));
+            iter.first->second.initialize(possibleSymbolTooltipFile);
+            str += iter.first->second.getSymbolText(value);
+        }
+        str += ")";
+        return str;
+    }
+    return "";
 }
 
 void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)

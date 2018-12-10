@@ -143,7 +143,7 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 	}
 	CBitmap *oldBitmap = 0;
     auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
-    if(mapViewDescTop->AreaViewDirty() || itsSmartMetDocumentInterface->ViewBrushed())
+    if(mapViewDescTop->RedrawMapView() || itsSmartMetDocumentInterface->ViewBrushed())
 	{
 		CDC dcMemCopy; // välimuistin apuna käytetty dc
 		dcMemCopy.CreateCompatibleDC(&dc);
@@ -155,7 +155,6 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 			MakeCombatibleBitmap(&itsMemoryBitmap);
 		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
 
-		/* bool mapWasDirty = */ mapViewDescTop->MapHandler()->IsMapDirty();
 		// *** Tässä tehdään background kartta ***
 		CDC dcMem2;
 		dcMem2.CreateCompatibleDC(&dc);
@@ -177,7 +176,7 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 		// *** Tässä background kartan jälkihoito ***
         mapViewDescTop->CopyCDC(0);
 		dcMemCopy.DeleteDC();
-        mapViewDescTop->AreaViewDirty(false);
+        mapViewDescTop->ClearRedrawMapView();
 //		itsDoc->ViewBrushed(false);
 	}
 	else
@@ -198,6 +197,7 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 	itsToolBox->SetDC(pDC);
 	DrawOverBitmapThings(itsToolBox); // tätä voisi tutkia, mitkä voisi siirtää täältä pois.
     mapViewDescTop->MapViewBitmapDirty(false);
+    mapViewDescTop->MapHandler()->ClearUpdateMapViewDrawingLayers();
 }
 
 // CFmiExtraMapView diagnostics
@@ -281,7 +281,7 @@ void CFmiExtraMapView::SetPrintCopyCDC(CDC* pDC)
 
 void CFmiExtraMapView::MakePrintViewDirty(bool fViewDirty, bool fCacheDirty)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapDirty(fViewDirty, fCacheDirty);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true, false);
 }
 
 void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
@@ -293,15 +293,11 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
     MakeCombatibleBitmap(&itsMemoryBitmap);
-    itsSmartMetDocumentInterface->AreaViewDirty(itsMapViewDescTopIndex, true, true);
-    auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
-    mapViewDescTop->CalcClientViewXperYRatio(NFmiPoint(cx, cy));
-    mapViewDescTop->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
-    itsSmartMetDocumentInterface->MapDirty(itsMapViewDescTopIndex, true, false); // HUOM! tähän cache piti antaa falsena, ettei mapView dirty lippu mene falseksi // tämä 'aiheuttaa' datan harvennuksen
-    mapViewDescTop->BorderDrawDirty(true);
+    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
+
     CDC *theDC = GetDC();
     CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), theDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
-    PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(mapViewDescTop->ActualMapBitmapSizeInPixels(), true));
+    PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
     Invalidate(FALSE);
 }
@@ -542,8 +538,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		if(itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
 		{
-			ForceDrawOverBitmapThings(); // hiiren apukursorit pitää joka tapauksessa piirtää aina
-            itsSmartMetDocumentInterface->ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina ja joka karttanäyttöön
 		}
 		if(itsSmartMetDocumentInterface->MustDrawTempView())
 		{
@@ -554,8 +549,8 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 		{
             itsSmartMetDocumentInterface->MustDrawCrossSectionView(false);
             itsSmartMetDocumentInterface->UpdateCrossSectionView();
-			ForceDrawOverBitmapThings();
-		}
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(0, true, false); // Päivitetään vain pääikkunaa, koska sinne piirretään poikkileikkaus jutut
+        }
 	}
 
 //	CView::OnMouseMove(nFlags, point);
@@ -563,7 +558,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 
 // pakotetaan piirtämään bitblitillä bitmap cache karttanäytön päälle
 // ja sitten päälle piirretään nopeasti DrawOverBitmapThings
-void CFmiExtraMapView::ForceDrawOverBitmapThings(void)
+void CFmiExtraMapView::ForceDrawOverBitmapThingsThisExtraMapView(void)
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(true);
     Invalidate(FALSE);
@@ -598,7 +593,7 @@ void CFmiExtraMapView::OnRButtonUp(UINT nFlags, CPoint point)
 	else if(needsUpdate)
 	{
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse right button up");
-        itsSmartMetDocumentInterface->ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+        itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 	}
 
 //	CView::OnRButtonUp(nFlags, point);
@@ -642,7 +637,7 @@ void CFmiExtraMapView::OnLButtonUp(UINT nFlags, CPoint point)
 		if(needsUpdate)
 		{
             itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse left button up");
-            itsSmartMetDocumentInterface->ForceOtherMapViewsDrawOverBitmapThings(itsMapViewDescTopIndex);
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 		}
 
 	//	CView::OnLButtonUp(nFlags, point);
@@ -870,4 +865,3 @@ NFmiStationViewHandler* CFmiExtraMapView::GetMapViewHandler(int theRowIndex, int
     else
         return 0;
 }
-

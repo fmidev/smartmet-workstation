@@ -16,8 +16,10 @@ public:
     NFmiRect TotalAbsolutRect() override;
     boost::shared_ptr<NFmiArea> TotalArea() override;
     bool SetMaxArea() override;
-    void MapDirty(bool newState) override;
-    bool IsMapDirty(void) override;
+    void SetMakeNewBackgroundBitmap(bool newState) override;
+    bool MakeNewBackgroundBitmap() override;
+    void ClearMakeNewBackgroundBitmap() override;
+    bool UpdateMapViewDrawingLayers() override;
     const NFmiRect& Position() override;
     int UsedMapIndex() override;
     bool MapReallyChanged() override;

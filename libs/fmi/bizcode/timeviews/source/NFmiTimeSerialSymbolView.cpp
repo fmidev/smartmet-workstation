@@ -92,7 +92,7 @@ void NFmiTimeSerialSymbolView::DrawSimpleSymbol(const NFmiPoint &theLatLonPoint,
 						  ,itsDrawingEnvironment).Build();
 }
 
-void NFmiTimeSerialSymbolView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle)
+void NFmiTimeSerialSymbolView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines)
 {
 	
 	NFmiMetTime time;

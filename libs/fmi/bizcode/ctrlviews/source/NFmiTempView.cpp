@@ -27,6 +27,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiFastInfoUtils.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "ToolBoxStateRestorer.h"
 
 #include <gdiplus.h>
 #include <stdexcept>
@@ -633,70 +634,69 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
 		return ;
 	itsToolBox = theToolBox;
 
-	try
-	{
-		InitializeGdiplus(itsToolBox, 0);
-	    CalcDrawSizeFactors();
+    try
+    {
+        InitializeGdiplus(itsToolBox, 0);
+        CalcDrawSizeFactors();
 
-		// tehd‰‰n GDI+ maailmaan tarvittavat skaala kertoimet
-		itsGdiplusScaleX = itsToolBox->GetClientRect().Width();
-		itsGdiplusScaleY = itsToolBox->GetClientRect().Height();
+        // tehd‰‰n GDI+ maailmaan tarvittavat skaala kertoimet
+        itsGdiplusScaleX = itsToolBox->GetClientRect().Width();
+        itsGdiplusScaleY = itsToolBox->GetClientRect().Height();
 
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         tmax = mtaTempSystem.TAxisEnd();
-		tmin = mtaTempSystem.TAxisStart();
-		dt = tmax - tmin;
+        tmin = mtaTempSystem.TAxisStart();
+        dt = tmax - tmin;
 
-		pmin = mtaTempSystem.PAxisEnd();
-		pmax = mtaTempSystem.PAxisStart();
+        pmin = mtaTempSystem.PAxisEnd();
+        pmax = mtaTempSystem.PAxisStart();
 
-		tdegree = mtaTempSystem.SkewTDegree();
-		itsDataRect = CalcDataRect(); // laske data recti
+        tdegree = mtaTempSystem.SkewTDegree();
+        itsDataRect = CalcDataRect(); // laske data recti
         itsSecondaryDataFrame = CalcSecondaryDataRect();
-		itsStabilityIndexRect = CalcStabilityIndexRect();
-		MakeAnimationControlRects();
-		InitializeHodografRect();
-		DrawBackground();
+        itsStabilityIndexRect = CalcStabilityIndexRect();
+        MakeAnimationControlRects();
+        InitializeHodografRect();
+        DrawBackground();
 
-		x1pix = itsToolBox->SX(1);
-		y1pix = itsToolBox->SY(1);
-		xpix = itsToolBox->HX(itsDataRect.Width());
-		ypix = itsToolBox->HY(itsDataRect.Height());
-		dtperpix = xpix / dt;
-		dlogpperpix = ypix / (::log(pmax) - ::log(pmin));
-
-
+        x1pix = itsToolBox->SX(1);
+        y1pix = itsToolBox->SY(1);
+        xpix = itsToolBox->HX(itsDataRect.Width());
+        ypix = itsToolBox->HY(itsDataRect.Height());
+        dtperpix = xpix / dt;
+        dlogpperpix = ypix / (::log(pmax) - ::log(pmin));
         DrawSecondaryDataRect();
-        itsToolBox->RelativeClipRect(itsDataRect, true);
-		DrawDryAdiapaticks();
-		DrawMoistAdiapaticks();
-        DrawYAxel();
-		DrawXAxel();
-		DrawWindModificationArea();
-		DrawMixingRatio();
-		DrawCondensationTrailProbabilityLines();
-		DrawFlightLevelScale();
-		DrawHeightScale();
 
-		NFmiPoint oldFontSize(itsDrawingEnvironment->GetFontSize());
-		NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
-		itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f)); // laitetaan harmaa tausta teksteille, ett‰ ne erottuu
-		itsDrawingEnvironment->SetFontSize(NFmiPoint(18 * itsDrawSizeFactorX, 18 * itsDrawSizeFactorY));
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactorX, 1 * itsDrawSizeFactorY));
+        {
+            ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataRect);
+            DrawDryAdiapaticks();
+            DrawMoistAdiapaticks();
+            DrawYAxel();
+            DrawXAxel();
+            DrawWindModificationArea();
+            DrawMixingRatio();
+            DrawCondensationTrailProbabilityLines();
+            DrawFlightLevelScale();
+            DrawHeightScale();
 
-		DrawSoundingsInMTAMode();
+            NFmiPoint oldFontSize(itsDrawingEnvironment->GetFontSize());
+            NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
+            itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f)); // laitetaan harmaa tausta teksteille, ett‰ ne erottuu
+            itsDrawingEnvironment->SetFontSize(NFmiPoint(18 * itsDrawSizeFactorX, 18 * itsDrawSizeFactorY));
+            itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactorX, 1 * itsDrawSizeFactorY));
 
-		// siivotaan piirto ominaisuudet takaisin
-		itsDrawingEnvironment->SetFillColor(oldFillColor);
-		itsDrawingEnvironment->SetFontSize(oldFontSize);
+            DrawSoundingsInMTAMode();
 
-		// piirr‰ lopuksi vain data alueen frame, koska diagrammin piirros on sotkenut sit‰
-		itsDrawingEnvironment->DisableFill();
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactorX, 1 * itsDrawSizeFactorY));
-		DrawFrame(itsDrawingEnvironment, itsDataRect);
+            // siivotaan piirto ominaisuudet takaisin
+            itsDrawingEnvironment->SetFillColor(oldFillColor);
+            itsDrawingEnvironment->SetFontSize(oldFontSize);
 
-		itsToolBox->UseClipping(false);
+            // piirr‰ lopuksi vain data alueen frame, koska diagrammin piirros on sotkenut sit‰
+            itsDrawingEnvironment->DisableFill();
+            itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
+            itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactorX, 1 * itsDrawSizeFactorY));
+            DrawFrame(itsDrawingEnvironment, itsDataRect);
+        }
 
         if(mtaTempSystem.ShowSideView())
         {
@@ -870,7 +870,7 @@ void NFmiTempView::DrawLiftedAirParcel(NFmiSoundingDataOpt1 &theData, FmiLCLCalc
 	int trueLineWidth = FmiRound(1 * itsDrawSizeFactorX);
 	bool drawSpecialLines = SetHelpLineDrawingAttributes(itsToolBox, itsDrawingEnvironment, labelInfo, lineInfo, trueLineWidth, true);
 
-	itsToolBox->RelativeClipRect(itsDataRect, true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataRect);
 	for(int i = 0; i < ssize; i++)
 	{
 		if(pValues[i] != kFloatMissing && pValues[i] <= P) // aloitetaan LFC etsint‰ vasta 'aloitus' korkeuden j‰lkeen
@@ -910,7 +910,6 @@ void NFmiTempView::DrawLiftedAirParcel(NFmiSoundingDataOpt1 &theData, FmiLCLCalc
 			}
 		}
 	}
-	itsToolBox->UseClipping(false);
 }
 
 NFmiPoint NFmiTempView::CalcStabilityIndexStartPoint(void)
@@ -1048,7 +1047,7 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 {
 	// Muista: jos t‰m‰ piirret‰‰n muuten kuin kaiken muun j‰lkeen Draw-metodissa,
 	// ei clippausta saa muuttaa kesken kaiken.
-	itsToolBox->RelativeClipRect(itsStabilityIndexRect, true);
+    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsStabilityIndexRect);
 
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     // piirret‰‰n vain 1. luotaukseen liittyv‰t luotaus arvot ja ne piirret‰‰n samalla v‰rilla kuin 1. luotaus
@@ -1084,7 +1083,6 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 	    for(int i=0; i < ssize; i++)
             DrawOneLevelStringData(text, p, i, pVec, tVec, tdVec, zVec, wsVec, wdVec);
     }
-	itsToolBox->UseClipping(false);
 }
 
 // eli piirret‰‰n l‰mpp‰ri apuviivat
@@ -1536,13 +1534,11 @@ void NFmiTempView::DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMo
 {
 	if(theLabelInfo.DrawLabelText())
 	{
-        bool oldClippingState = itsToolBox->UseClipping();
-		itsToolBox->UseClipping(theLabelInfo.ClipWithDataRect());
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), theLabelInfo.ClipWithDataRect());
 		NFmiString str(NFmiStringTools::Convert<double>(theValue));
 		str += thePostStr; // jos joku loppu liite on haluttu laittaa labeliin, se tulee t‰ss‰
 		NFmiText txt(p1 + theMoveLabelRelatively, str, 0, theEnvi);
 		itsToolBox->Convert(&txt);
-        itsToolBox->UseClipping(oldClippingState);
 	}
 }
 
@@ -2998,7 +2994,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 		if(KEYDOWN(VK_SHIFT)) // jos shift pohjassa piirret‰‰n apu viivoja
 		{
 			// PIIRRETƒƒN LUOTAUS IKKUNAAN APUVIIVOJA KURSORIN KOHDALLE, JOS shift-NƒPPƒIN ON POHJASSA (apuviivat=kuiva, kostea ja mix)
-			itsToolBox->RelativeClipRect(itsDataRect, true);
+            ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataRect);
 			NFmiDrawingEnvironment envi;
 			envi.SetFrameColor(NFmiColor(0,0.7f,0));
 			envi.SetPenSize(NFmiPoint(2,2));
@@ -3066,7 +3062,6 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 					}
 				}
 			}
-			itsToolBox->UseClipping(false);
 		}
 	}
 }

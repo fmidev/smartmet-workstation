@@ -62,6 +62,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "catlog/catlog.h"
 #include "EditedInfoMaskHandler.h"
+#include "ToolBoxStateRestorer.h"
 
 #include "datautilities\DataUtilitiesAdapter.h"
 
@@ -1676,9 +1677,8 @@ void NFmiIsoLineView::DrawHatchesWithImagine(NFmiIsoLineData& theIsoLineData, co
 
         ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
 
-        itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
         itsToolBox->DrawMultiPolygon(polyLineList, &envi, theOffSet);
-        itsToolBox->UseClipping(false);
 
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();
@@ -1708,7 +1708,7 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
         labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
         ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), envi);
-        itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
         DrawPolyLineList(itsToolBox, polyLineList, theOffSet);
         if(itsDrawParam->SimpleIsoLineLabelHeight() > 0) // ShowSimpleIsoLineLabelBox())
@@ -1725,7 +1725,6 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
             AddLabelsToDrawList(path, currentIsoLineValue, itsArea->XYArea(), labelBox, theOffSet);
         }
-        itsToolBox->UseClipping(false);
 
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();
@@ -1760,7 +1759,7 @@ void NFmiIsoLineView::DrawCustomIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
         ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), envi);
 
-        itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
         DrawPolyLineList(itsToolBox, polyLineList, theOffSet);
 
@@ -1778,8 +1777,6 @@ void NFmiIsoLineView::DrawCustomIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
             AddLabelsToDrawList(path, currentIsoLineValue, itsArea->XYArea(), labelBox, theOffSet);
         }
-
-        itsToolBox->UseClipping(false);
 
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();
@@ -1816,7 +1813,7 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
 
         ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
 
-        itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
         if(theIsoLineData.fUseSeparatorLinesBetweenColorContourClasses) // 22.9.04/EL
             DrawPolyLineList(itsToolBox, polyLineList, theOffSet);
@@ -1840,8 +1837,6 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
             }
         }
         // 22.9.04/EL <----
-
-        itsToolBox->UseClipping(false);
 
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();
@@ -1889,7 +1884,7 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
 
         ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
 
-        itsToolBox->RelativeClipRect(itsArea->XYArea(), true);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
         if(theIsoLineData.fUseSeparatorLinesBetweenColorContourClasses) // 22.9.04/EL
             DrawPolyLineList(itsToolBox, polyLineList, theOffSet);
@@ -1913,8 +1908,6 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
             }
         }
         // 22.9.04/EL <----
-
-        itsToolBox->UseClipping(false);
 
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();

@@ -14,6 +14,7 @@ class CBitmap;
 class CSmartMetView;
 class CSmartMetDoc;
 class CDocument;
+class NFmiApplicationWinRegistry;
 
 // Interface that is meant to be used by NFmiEditMapGeneralDataDoc class by using functionalities from SmartMet application.
 class ApplicationInterface
@@ -34,7 +35,7 @@ public:
     static CSmartMetView* GetSmartMetView();
     static CView* GetSmartMetViewAsCView();
 
-    virtual void ParamAddingSystemUpdateTimerStart(int waitTimeInSeconds) = 0;
+    virtual void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds) = 0;
     virtual void SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound) = 0;
     virtual CSmartMetDoc* GetDocument() = 0; // returns CSmartMetDoc
     virtual CDocument* GetDocumentAsCDocument() = 0; // returns CSmartMetDoc but as CDocument (needed with classes that don't know about CSmartMetView)
@@ -48,11 +49,10 @@ public:
     virtual void UpdateOnlyExtraMapViews(bool updateMap1, bool updateMap2) = 0;
     virtual void RestartHistoryDataCacheThread() = 0;
     virtual void DrawOverBitmapThings(NFmiToolBox *theGTB) = 0;
-    virtual void ForceDrawOverBitmapThings() = 0;
-    virtual void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex) = 0;
+    virtual void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) = 0;
     virtual void UpdateTempView() = 0;
     virtual void UpdateCrossSectionView() = 0;
-    virtual void ActivateParamAddingDlg() = 0;
+    virtual void ActivateParameterSelectionDlg() = 0;
     virtual void ActivateZoomDialog(int theWantedDescTopIndex) = 0;
     virtual std::string GetToolTipString(unsigned int commandID, const std::string &theMagickWordU_) = 0;
     virtual void InvalidateMainMapView(bool bErase = true) = 0;
@@ -65,4 +65,6 @@ public:
     virtual void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) = 0;
     virtual void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) = 0;
     virtual void UpdateMainFrameTitle() = 0;
+    virtual void OpenLocationFinderDialog(CWnd *parentView) = 0;
+    virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
 };
