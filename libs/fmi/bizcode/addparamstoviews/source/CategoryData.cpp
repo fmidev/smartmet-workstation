@@ -35,35 +35,49 @@ namespace AddParams
     {
         bool dataStructuresChanged = false;
 
-        //Handle custom categories first
-        if(customCategory)
-        {
-            dataStructuresChanged = updateCustomCategoryData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory);
-        }
-        else
-        {
-            for(const auto &producerInfo : categoryProducerSystem.Producers())
-            {
-                NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
-                bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
-                auto fastQueryInfoVector = infoOrganizer.GetInfos(producerInfo.ProducerId());
-                auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
+        dataStructuresChanged = customCategory ? updateCustomCategoryData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory) : 
+            updateNormalData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs);
 
-                if(helpData && dataCategory == NFmiInfoData::kModelHelpData) //Add help data only when handling Help Data category
-                {
-                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-                } 
-                else if(!helpData && dataCategory == NFmiInfoData::kEditable)
-                {
-                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-                }
-                else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData && dataType != NFmiInfoData::kKepaData)
-                {
-                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-                }
+        return dataStructuresChanged;
+    }
+
+    bool CategoryData::updateNormalData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem,
+        NFmiInfoData::Type dataCategory, std::vector<int> helpDataIDs)
+    {
+        bool dataStructuresChanged = false;
+
+        for(const auto &producerInfo : categoryProducerSystem.Producers())
+        {
+            NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
+            bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
+            auto fastQueryInfoVector = infoOrganizer.GetInfos(producerInfo.ProducerId());
+            auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
+
+            if(dataCategory == NFmiInfoData::kEditable) //Joonas: edited datalle ei löydy infoa. Tutki miten sen saisi lisästtyä.
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kViewable && !helpData && dataType != NFmiInfoData::kKepaData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kObservations && !helpData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kSatelData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kMacroParam)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kModelHelpData && helpData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
             }
         }
-
         return dataStructuresChanged;
     }
 
