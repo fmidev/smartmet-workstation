@@ -87,6 +87,5 @@ namespace AddParams
         void updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
         NFmiProducerSystem operationalProducers();
-        void updateOperationalData(const std::string &categoryName);
     };
 }
