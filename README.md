@@ -29,6 +29,7 @@ First time build instructions:
 6. Fill in release informations: Title: 5.12.16.0 and Description (if you want): For example add info about 3rd party binaries 
 7. If there is changes in 3rd party binaries you have to add a new zip file that contains them.
 8. Finally press Publish release.
+9. Add new link to 3rd party libs into readme.
 
 # SmartMet-workstation 3rd party binary utilities guide
 
