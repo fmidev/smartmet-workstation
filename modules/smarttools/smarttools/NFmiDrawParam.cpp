@@ -168,7 +168,6 @@ NFmiDrawParam::NFmiDrawParam()
       fEditedParam(false),
       itsUnit("?"),
       fActive(false),
-      fShowDifference(false),
       fShowDifferenceToOriginalData(false),
       itsDataType(NFmiInfoData::kNoDataType),
       fViewMacroDrawParam(false),
@@ -176,9 +175,6 @@ NFmiDrawParam::NFmiDrawParam()
       itsModelOriginTime(NFmiMetTime::gMissingTime),
       itsModelRunIndex(0),
       itsTimeSerialModelRunCount(0),
-      itsModelRunDifferenceIndex(0),
-      itsDataComparisonProdId(0),
-      itsDataComparisonType(NFmiInfoData::kNoDataType),
       fUseTransparentFillColor(true),
       fUseViewMacrosSettingsForMacroParam(false),
       fDoSparseSymbolVisualization(false)
@@ -316,7 +312,6 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDataIdent& theParam,
       fEditedParam(false),
       itsUnit("?"),
       fActive(false),
-      fShowDifference(false),
       fShowDifferenceToOriginalData(false),
       itsDataType(theDataType),
       fViewMacroDrawParam(false),
@@ -328,9 +323,6 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDataIdent& theParam,
       itsModelOriginTime(NFmiMetTime::gMissingTime),
       itsModelRunIndex(0),
       itsTimeSerialModelRunCount(0),
-      itsModelRunDifferenceIndex(0),
-      itsDataComparisonProdId(0),
-      itsDataComparisonType(NFmiInfoData::kNoDataType),
       fUseTransparentFillColor(true),
       fUseViewMacrosSettingsForMacroParam(false),
       fDoSparseSymbolVisualization(false)
@@ -468,7 +460,6 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       fEditedParam(other.fEditedParam),
       itsUnit(other.itsUnit),
       fActive(other.fActive),
-      fShowDifference(other.fShowDifference),
       fShowDifferenceToOriginalData(other.fShowDifferenceToOriginalData),
       itsDataType(other.itsDataType),
       fViewMacroDrawParam(other.fViewMacroDrawParam),
@@ -484,9 +475,6 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       itsModelOriginTime(other.itsModelOriginTime),
       itsModelRunIndex(other.itsModelRunIndex),
       itsTimeSerialModelRunCount(other.itsTimeSerialModelRunCount),
-      itsModelRunDifferenceIndex(other.itsModelRunDifferenceIndex),
-      itsDataComparisonProdId(other.itsDataComparisonProdId),
-      itsDataComparisonType(other.itsDataComparisonType),
       fUseTransparentFillColor(other.fUseTransparentFillColor),
       fUseViewMacrosSettingsForMacroParam(other.fUseViewMacrosSettingsForMacroParam),
       fDoSparseSymbolVisualization(other.fDoSparseSymbolVisualization)
@@ -529,9 +517,6 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
       itsModelOriginTime = theDrawParam->itsModelOriginTime;
       itsModelRunIndex = theDrawParam->itsModelRunIndex;
       itsTimeSerialModelRunCount = theDrawParam->itsTimeSerialModelRunCount;
-      itsModelRunDifferenceIndex = theDrawParam->itsModelRunDifferenceIndex;
-      itsDataComparisonProdId = theDrawParam->itsDataComparisonProdId;
-      itsDataComparisonType = theDrawParam->itsDataComparisonType;
     }
     itsPriority = theDrawParam->Priority();
 
@@ -582,7 +567,6 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     fShowColors = theDrawParam->ShowColors();
     fShowColoredNumbers = theDrawParam->ShowColoredNumbers();
     fZeroColorMean = theDrawParam->ZeroColorMean();
-    fShowDifference = theDrawParam->ShowDifference();
     fShowDifferenceToOriginalData = theDrawParam->ShowDifferenceToOriginalData();
 
     //***********************************************
@@ -1031,11 +1015,17 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     // modelRunIndex on 3. uusista double-extra-parametreista
     extraData.Add(itsTimeSerialModelRunCount);  
     // itsModelRunDifferenceIndex on 4. uusista double-extra-parametreista
-    extraData.Add(itsModelRunDifferenceIndex);  
+    // HUOM! Nyt jo poistettu ominaisuus, josta piti jättää dummy arvon talletus
+    double removedOption_ModelRunDifferenceIndex = 0.;
+    extraData.Add(removedOption_ModelRunDifferenceIndex);  
     // itsDataComparisonProdId on 5. uusista double-extra-parametreista
-    extraData.Add(static_cast<double>(itsDataComparisonProdId));  
+    // HUOM! Nyt jo poistettu ominaisuus, josta piti jättää dummy talletus
+    double removedOption_DataComparisonProdId = 0.;
+    extraData.Add(static_cast<double>(removedOption_DataComparisonProdId));
     // itsDataComparisonType on 6. uusista double-extra-parametreista
-    extraData.Add(itsDataComparisonType);  
+    // HUOM! Nyt jo poistettu ominaisuus, josta piti jättää dummy talletus
+    double removedOption_DataComparisonType = 0.;
+    extraData.Add(removedOption_DataComparisonType);
     // fUseTransparentFillColor on 7. uusista double-extra-parametreista
     extraData.Add(static_cast<double>(fUseTransparentFillColor));
     // fDoSparseSymbolVisualization on 8. uusista double-extra-parametreista
@@ -1402,24 +1392,22 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
             // laitetaan asetus-funktion läpi, jossa raja tarkistukset
             TimeSerialModelRunCount(static_cast<int>(extraData.itsDoubleValues[2]));
         }
-        itsModelRunDifferenceIndex = 0;   // 0 on default, eli ei ole käytössä
+
+        // HUOM! Nyt jo poistettu ominaisuus (itsModelRunDifferenceIndex), josta piti jättää dummy talletus ja sen luvun skippaus
         if(extraData.itsDoubleValues.size() >= 4)
         {
-            // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-            ModelRunDifferenceIndex(static_cast<int>(extraData.itsDoubleValues[3]));
         }
-        itsDataComparisonProdId = 0;
+
+        // HUOM! Nyt jo poistettu ominaisuus (itsDataComparisonProdId), josta piti jättää dummy talletus ja sen luvun skippaus
         if(extraData.itsDoubleValues.size() >= 5)
         {
-            // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-            DataComparisonProdId(static_cast<unsigned long>(extraData.itsDoubleValues[4]));
         }
-        itsDataComparisonType = NFmiInfoData::kNoDataType;
+
+        // HUOM! Nyt jo poistettu ominaisuus (itsDataComparisonType), josta piti jättää dummy talletus ja sen luvun skippaus
         if(extraData.itsDoubleValues.size() >= 6)
         {
-            // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-            DataComparisonType(static_cast<NFmiInfoData::Type>(static_cast<int>(extraData.itsDoubleValues[5])));
         }
+
         fUseTransparentFillColor = true;
         if(extraData.itsDoubleValues.size() >= 7)
         {
@@ -1519,16 +1507,6 @@ bool NFmiDrawParam::IsModelRunDataType(NFmiInfoData::Type theDataType)
     return true;
   if (theDataType == NFmiInfoData::kClimatologyData)
     return true;
-  return false;
-}
-
-bool NFmiDrawParam::DoDataComparison(void)
-{
-  if (itsDataComparisonProdId != 0)
-  {
-    if (itsDataComparisonType != NFmiInfoData::kNoDataType)
-      return true;
-  }
   return false;
 }
 
