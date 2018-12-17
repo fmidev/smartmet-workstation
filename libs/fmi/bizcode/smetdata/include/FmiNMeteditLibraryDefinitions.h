@@ -40,7 +40,7 @@ typedef enum
 	kFmiAddTimeSerialView = 17,
 	kFmiRemoveTimeSerialView = 18,
 	kFmiActivateView = 19, // 1999.09.20/Marko
-	kFmiToggleShowDifference = 20, // 2000.03.14/Marko // näytä kartalla parametrin vaihtelu aika-askeleen aikana (toggle = on/off)
+	// kFmiToggleShowDifference = 20, // Parametrin vaihtelu aika-askeleen aikana poistettus ominaisuus
 	kFmiRemoveAllTimeSerialViews = 21, // 1999.03.14/Marko
 	kFmiEnableCP = 22, // 2000.11.28/Marko
 	kFmiDisableCP = 23, // 2000.11.28/Marko
@@ -99,8 +99,8 @@ typedef enum
 
 	kFmiChangeAllDataTypesInMapRow = 72,
 	kFmiChangeAllDataTypesInCrossSectionRow = 73,
-	kFmiDiffBetweenModelRuns = 74,
-	kFmiDiffToAnalyzeData = 75,
+	//kFmiDiffBetweenModelRuns = 74, // Parametrin vaihtelu malliajojen välillä on poistettus ominaisuus
+	//kFmiDiffToAnalyzeData = 75, // Parametrin vaihtelu verrattuna johonkin analyysi dataan on poistettus ominaisuus
     kFmiSelectCPManagerFromSet = 76,
     kFmiFixedDrawParam = 77, // Ladataan käyttöön haluttu fixedDrawParam
     kFmiStoreDrawParam = 78, // Tällä talletetaan tehdyt muutokset parametrin piirto-ominaisuuksiin (tiedostoon asti), jotka on tehty DrawParamOptions -dialogin ulkopuolella (esim. valittu joku FixedDrawParam)

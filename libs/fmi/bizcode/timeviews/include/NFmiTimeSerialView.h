@@ -98,6 +98,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	virtual bool AutoAdjustValueScale(void);
     bool EditingMouseMotionsAllowed(void) const {return fEditingMouseMotionsAllowed;}
     void EditingMouseMotionsAllowed(bool newValue) {fEditingMouseMotionsAllowed = newValue;}
+    bool IsTimeSerialView(void) override { return true; };
 
  protected:
 	// ***** uusia selkeitä piirtofunktioita *********
