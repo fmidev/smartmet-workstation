@@ -128,7 +128,7 @@ void NFmiViewParamsView::DrawData(void)
                     DrawActiveParamMarkers(drawParam, counter);
 					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam, itsCtrlViewDocumentInterface));
 
-					NFmiString paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), crossSectionView, false, false));
+					NFmiString paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), crossSectionView, false, false, 0, false));
 					NFmiText text(LineTextPlace(counter, true), paramNameStr, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text);
 					DrawParamCheckBox(counter, drawParam);

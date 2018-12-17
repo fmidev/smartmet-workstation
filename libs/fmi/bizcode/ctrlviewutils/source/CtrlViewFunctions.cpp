@@ -225,7 +225,7 @@ namespace CtrlViewUtils
         return prodNameStr;
     }
 
-    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theNormalOrigTimeFormat, const std::string &theMinuteOrigTimeFormat, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount)
+    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theNormalOrigTimeFormat, const std::string &theMinuteOrigTimeFormat, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase)
     {
         bool betaProductCase = theLongerProducerNameMaxCharCount > 0;
         NFmiInfoData::Type dataType = theDrawParam->DataType();
@@ -254,17 +254,11 @@ namespace CtrlViewUtils
                         str += info->OriginTime().ToStr(NFmiString(theNormalOrigTimeFormat));
                 }
 
-                if(theDrawParam->TimeSerialModelRunCount() > 0)
+                if(fTimeSerialViewCase && theDrawParam->TimeSerialModelRunCount() > 0)
                 { // laitetaan multimodelrun merkit näkyviin
                     str += " (";
                     str += NFmiStringTools::Convert<int>(theDrawParam->TimeSerialModelRunCount());
                     str += "x)";
-                }
-                else if(theDrawParam->ModelRunDifferenceIndex() < 0)
-                { // laitetaan malliajo erotus merkit näkyviin
-                    str += " D[";
-                    str += NFmiStringTools::Convert<int>(theDrawParam->ModelRunIndex() + theDrawParam->ModelRunDifferenceIndex());
-                    str += "]";
                 }
 
                 str += " ";
@@ -341,15 +335,9 @@ namespace CtrlViewUtils
                 str += levStr;
             }
         }
-
-        if(theDrawParam->DoDataComparison())
-            str += "(d)";
-        else if(theDrawParam->ShowDifference())
-            str += "(e)";
-        else if(theDrawParam->ShowDifferenceToOriginalData())
+        
+        if(theDrawParam->ShowDifferenceToOriginalData())
             str += "(o)";
-        else if(theDrawParam->ModelRunDifferenceIndex() < 0)
-            str += "(m)";
 
         if(fMakeTooltipXmlEncode)
             str = CtrlViewUtils::XmlEncode(str);
