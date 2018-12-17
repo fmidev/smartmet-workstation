@@ -296,7 +296,6 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	itsDrawingEnvironment->SetPenSize(NFmiPoint(1, 1));
 	DrawFrame(itsDrawingEnvironment);
-	itsShowDifferenceTimeShift = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(0))); //otetaan aikasiirron pituus pääkarttanäytöstä
 
 	//************** QUICKFIX!!!!! *******************
 	// itsArea:n rectiä tarvitaan NFmiIsoLineView::DrawSimpleIsoLinesWithImagine-metodissa
@@ -685,26 +684,6 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						continue; // tämä on virhe tilanne oikeasti!!!!
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
 
-					if(itsDrawParam->ShowDifference())
-					{
-						int changeByMinutes = itsShowDifferenceTimeShift * 60; // showdiff on tunteina
-						NFmiMetTime tmpTime(aTime);
-						tmpTime.ChangeByMinutes(-changeByMinutes);
-						float value2 = GetLevelValue(info, p, latlon, tmpTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
-						value = ::CalcDiffValue(value, value2);
-					}
-					else if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-					{
-						boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-						if(wantedModelRunInfo == 0)
-							value = kFloatMissing;
-						else
-						{
-							float value2 = GetLevelValue(wantedModelRunInfo, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
-							value = ::CalcDiffValue(value, value2);
-						}
-					}
-
                     if(info->DataType() == NFmiInfoData::kCrossSectionMacroParam)
                     {
                         NFmiIsoLineData isoLineData;
@@ -727,7 +706,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					if(itsDrawParam->IsParamHidden())
 						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
 					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
-					str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true);
+					str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true, 0, false);
 					if(itsDrawParam->IsParamHidden())
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 					str += ":	";
@@ -983,7 +962,7 @@ void NFmiCrossSectionView::AddFooterTextForCurrentData(bool fLastOne)
 {
 	if(itsDrawParam->IsParamHidden())
 		itsHeaderParamString += "("; // jos parametri on piilotettu, laita teksti sulkuihin
-	std::string paramStr = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, false, false);
+	std::string paramStr = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, false, false, 0, false);
 	itsHeaderParamString += paramStr;
 	if(itsDrawParam->IsParamHidden())
 		itsHeaderParamString += ")";
@@ -1337,21 +1316,6 @@ void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> 
 	const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
 	const checkedVector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 	theIsoLineData.itsInfo->RouteCrossSectionValuesLogP(theValues, thePressures, points, times);
-
-	if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-	{
-		fDoCrossSectionDifferenceData = true;
-		boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-		if(wantedModelRunInfo == 0)
-			theValues = kFloatMissing;
-		else
-		{
-			wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-			NFmiDataMatrix<float> values2;
-			wantedModelRunInfo->RouteCrossSectionValuesLogP(values2, thePressures, points, times);
-			theValues -= values2;
-		}
-	}
 }
 
 void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData)
@@ -1728,21 +1692,6 @@ void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theV
         const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
         const checkedVector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->CrossSectionSystem()->RouteTimes();
         theIsoLineData.itsInfo->RouteCrossSectionValuesLogP(theValues, thePressures, points, times);
-
-        if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-        {
-            fDoCrossSectionDifferenceData = true;
-            boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-            if(wantedModelRunInfo == 0)
-                theValues = kFloatMissing;
-            else
-            {
-                wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-                NFmiDataMatrix<float> values2;
-                wantedModelRunInfo->RouteCrossSectionValuesLogP(values2, thePressures, points, times);
-                theValues -= values2;
-            }
-        }
     }
 }
 
@@ -1785,21 +1734,6 @@ void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theVa
         NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
         NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
         theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times);
-
-        if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-        {
-            fDoCrossSectionDifferenceData = true;
-            boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-            if(wantedModelRunInfo == 0)
-                theValues = kFloatMissing;
-            else
-            {
-                wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-                NFmiDataMatrix<float> values2;
-                wantedModelRunInfo->TimeCrossSectionValuesLogP(values2, thePressures, point, times);
-                theValues -= values2;
-            }
-        }
     }
 }
 
@@ -1839,31 +1773,6 @@ void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues
     {
         const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
         theIsoLineData.itsInfo->CrossSectionValuesLogP(theValues, theIsoLineData.itsTime, thePressures, points);
-
-        if(itsDrawParam->ShowDifference())
-        {
-            fDoCrossSectionDifferenceData = true;
-            int changeByMinutes = itsShowDifferenceTimeShift * 60; // showdiff on tunteina
-            NFmiMetTime tmpTime(itsTime);
-            tmpTime.ChangeByMinutes(-changeByMinutes);
-            NFmiDataMatrix<float> values2;
-            theIsoLineData.itsInfo->CrossSectionValuesLogP(values2, tmpTime, thePressures, points);
-            theValues -= values2;
-        }
-        else if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-        {
-            fDoCrossSectionDifferenceData = true;
-            boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-            if(wantedModelRunInfo == 0)
-                theValues = kFloatMissing;
-            else
-            {
-                wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-                NFmiDataMatrix<float> values2;
-                wantedModelRunInfo->CrossSectionValuesLogP(values2, theIsoLineData.itsTime, thePressures, points);
-                theValues -= values2;
-            }
-        }
     }
 }
 
