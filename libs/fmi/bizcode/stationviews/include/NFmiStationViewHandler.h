@@ -87,7 +87,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawSelectedLocations(void);
 	void StoreToolTipDataInDoc(const NFmiPoint& theRelativePlace);
 	void DrawTimeText(void);
-	bool IsActiveColumn(void);
 
 	void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tällä piirretään tavara, joka tulee myös bitmapin päälle
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
@@ -166,8 +165,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawProjetionLines(NFmiToolBox * theGTB);
 	void DrawControlPointData(void);
 	void DrawControlPoints(void);
-	int CalcCacheColumn(void);
-	int CalcCacheRow(void);
 	void DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
 	void SetViewListArea(void);
 	NFmiStationView * CreateStationView(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
