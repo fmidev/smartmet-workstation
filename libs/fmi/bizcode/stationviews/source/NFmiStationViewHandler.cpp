@@ -4069,30 +4069,6 @@ void NFmiStationViewHandler::DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawPar
     }
 }
 
-// laskee 0-kantaisen sarakkeen indeksin
-int NFmiStationViewHandler::CalcCacheColumn(void)
-{
-	int columnIndex = 1;
-	boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->DefaultEditedDrawParam(); // otetaan default datasta aikaresoluutio, koska ikkunat järjestetään default datan aikaresoluution mukaan
-    auto &editedDataTimeBag = itsCtrlViewDocumentInterface->EditedDataTimeBag();
-	int resolution = editedDataTimeBag.Resolution();
-	if(drawParam &&  resolution != 0)
-		columnIndex = (itsTime.DifferenceInMinutes(editedDataTimeBag.FirstTime())/resolution) + 0;
-	return columnIndex;
-}
-
-// laskee 0-kantaisen rivin indeksin
-int NFmiStationViewHandler::CalcCacheRow(void)
-{
-	int rowIndex = itsCtrlViewDocumentInterface->MapRowStartingIndex(itsMapViewDescTopIndex) + itsViewGridRowNumber - 2;
-	return rowIndex;
-}
-
-bool NFmiStationViewHandler::IsActiveColumn(void)
-{
-	return false;
-}
-
 static NFmiRect ClipRect(const NFmiRect &theClipper, const NFmiRect &theRect)
 {
 	static NFmiRect empty;
