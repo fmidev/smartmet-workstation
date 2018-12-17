@@ -91,8 +91,6 @@ public:
 		void Hidden(bool newValue) {fHidden = newValue;}
 		bool Active(void) const {return fActive;}
 		void Active(bool newValue) {fActive = newValue;}
-		bool ShowTimeDifference(void) const {return fShowTimeDifference;}
-		void ShowTimeDifference(bool newValue) {fShowTimeDifference = newValue;}
 		bool ShowDifferenceToOriginalData(void) const {return fShowDifferenceToOriginalData;}
 		void ShowDifferenceToOriginalData(bool newValue) {fShowDifferenceToOriginalData = newValue;}
 		void SetMacroParamInitFileNames(const std::string &theRootPath);
@@ -111,7 +109,6 @@ public:
 		// koska en halua juuri nyt muuttaa drawparamin talletus versiota.
 		bool fHidden;	// näyttö voidaan piiloittaa tämän mukaisesti
 		bool fActive;	// onko kyseinen parametri näytön aktiivinen parametri (jokaisella näyttörivillä aina yksi aktivoitunut parametri)
-		bool fShowTimeDifference;	// näytetäänkö kartalla parametrin arvo, vai erotus edelliseen aikaan (ei ole vielä talletettu tiedostoon)
 		bool fShowDifferenceToOriginalData; // ero originaaliin dataan karttanäytössä
 		// ***********************************************************************************************************
 
