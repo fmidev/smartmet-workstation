@@ -124,7 +124,6 @@ NFmiViewSettingMacro::Param::Param(void)
 ,itsModelOrigTimeOffsetInHours(0)
 ,fHidden(false)
 ,fActive(false)
-,fShowTimeDifference(false)
 ,fShowDifferenceToOriginalData(false)
 {
 	itsDrawParam->ViewMacroDrawParam(true);
@@ -138,7 +137,6 @@ NFmiViewSettingMacro::Param::Param(const boost::shared_ptr<NFmiDrawParam> &theDr
 ,itsModelOrigTimeOffsetInHours(theModelOrigTimeOffsetInHours)
 ,fHidden(theDrawParam->IsParamHidden())
 ,fActive(theDrawParam->IsActive())
-,fShowTimeDifference(theDrawParam->ShowDifference())
 ,fShowDifferenceToOriginalData(theDrawParam->ShowDifferenceToOriginalData())
 {
 	itsDrawParam->ViewMacroDrawParam(true);
@@ -152,7 +150,6 @@ NFmiViewSettingMacro::Param::Param(const NFmiDataIdent &theDataIdent, const NFmi
 ,itsModelOrigTimeOffsetInHours(theModelOrigTimeOffsetInHours)
 ,fHidden(false)
 ,fActive(false)
-,fShowTimeDifference(false)
 ,fShowDifferenceToOriginalData(false)
 {
 	itsDrawParam->ViewMacroDrawParam(true);
@@ -200,7 +197,8 @@ void NFmiViewSettingMacro::Param::Write(std::ostream& os) const
 	os << "// ModelOrigTimeOffsetInHours" << endl;
 	os << itsModelOrigTimeOffsetInHours << endl;
 	os << "// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData" << endl;
-	os << fHidden << " " << fActive << " " << fShowTimeDifference << " " << fShowDifferenceToOriginalData << endl;
+    // fShowTimeDifference is removed option, storing dummy value for backward compatibility
+	os << fHidden << " " << fActive << " " << false << " " << fShowDifferenceToOriginalData << endl;
 
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
@@ -235,8 +233,12 @@ void NFmiViewSettingMacro::Param::Read(std::istream& is)
 	}
 	if(is)
 		is >> itsModelOrigTimeOffsetInHours;
-	if(is)
-		is >> fHidden >> fActive >> fShowTimeDifference >> fShowDifferenceToOriginalData;
+    if(is)
+    {
+        // fShowTimeDifference is removed option, reading dummy value for backward compatibility
+        bool removedOption_fShowTimeDifference = false;
+		is >> fHidden >> fActive >> removedOption_fShowTimeDifference >> fShowDifferenceToOriginalData;
+    }
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
