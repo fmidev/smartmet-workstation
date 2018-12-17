@@ -432,7 +432,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
         return;
 
     bool tryStationGriddingDataDrawWithSeveralSourceDatas = (itsInfo->IsGrid() == false) && (itsInfoVector.size() > 1);
-    if(fGetCurrentDataFromQ2Server == false && itsDrawParam->TimeSerialModelRunCount() == 0)
+    if(fGetCurrentDataFromQ2Server == false)
     {
         if(!itsInfo->TimeDescriptor().IsInside(itsTime) && tryStationGriddingDataDrawWithSeveralSourceDatas == false && IsSpecialMatrixDataDraw() == false)
         {
@@ -454,31 +454,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     {
         if(itsDrawParam)
         {
-            if(itsDrawParam->TimeSerialModelRunCount() > 0)
-            { // piirret‰‰n haluttu m‰‰r‰ malliajoja p‰‰llekk‰in
-                NFmiDrawParam origDrawParam(*itsDrawParam);
-                try
-                {
-                    int startIndex = origDrawParam.ModelRunIndex() - itsDrawParam->TimeSerialModelRunCount();
-
-                    for(int i = startIndex; i <= origDrawParam.ModelRunIndex(); i++)
-                    {
-                        *itsDrawParam = origDrawParam; // joka kierroksella pit‰‰ palauttaa originaali optiot takaisin
-                        double brightningFactor = CtrlView::CalcBrightningFactor(origDrawParam.ModelRunIndex(), origDrawParam.TimeSerialModelRunCount(), i); // mit‰ isompi luku, sit‰ enemm‰n vaalenee (0-100), vanhemmat malliajot vaaleammalla
-                        CtrlView::ModifyColors(itsDrawParam, brightningFactor, true, true, false, *(ToolMasterColorCube::UsedColorsCube()), ToolMasterColorCube::UsedColorTableIndex());
-                        itsDrawParam->ModelRunIndex(i);
-                        itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
-                        if(itsInfo)
-                            DrawIsoLines();
-                    }
-                }
-                catch(...)
-                {
-                }
-                *itsDrawParam = origDrawParam; // palutetaan lopuksi originaali piirto-ominaisuudet
-            }
-            else // muuten piirret‰‰n vain se yksi haluttu t‰h‰n
-                DrawIsoLines();
+            DrawIsoLines();
 
             if(IsAccessoryStationDataDrawn())
             {
@@ -520,16 +496,16 @@ static double GetDifferenceDrawIsoLineGab(double theCurrentIsolineGap)
 void NFmiIsoLineView::SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam)
 {
     fDoDifferenceDrawSwitch = false;
-    if(theUsedDrawParam->TimeSerialModelRunCount() == 0)
+    bool diffParamUsed = theUsedDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpDrawDifferenceParam;
+    // piirret‰‰n toistaiseksi erotus vanhalla tavalla
+    if(diffParamUsed || theUsedDrawParam->ShowDifferenceToOriginalData())
     {
-        bool diffParamUsed = theUsedDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpDrawDifferenceParam;
-        if((diffParamUsed || theUsedDrawParam->DoDataComparison() || theUsedDrawParam->ShowDifference() || theUsedDrawParam->ShowDifferenceToOriginalData() || theUsedDrawParam->ModelRunDifferenceIndex() < 0) && itsCtrlViewDocumentInterface->GetDrawDifferenceDrawParam()) // piirret‰‰n toistaiseksi erotus vanhalla tavalla
+        auto differenceDrawParam = itsCtrlViewDocumentInterface->GetDrawDifferenceDrawParam();
+        if(differenceDrawParam)
         {
             double usedIsoLineStep = ::GetDifferenceDrawIsoLineGab(theUsedDrawParam->IsoLineGab());
             itsBackupDrawParamForDifferenceDrawing = theUsedDrawParam;
-            theUsedDrawParam = itsCtrlViewDocumentInterface->GetDrawDifferenceDrawParam();
-            if(!theUsedDrawParam) // T‰m‰ on selv‰ virhetilanne
-                return;
+            theUsedDrawParam = differenceDrawParam;
             theUsedDrawParam->StationDataViewType(itsBackupDrawParamForDifferenceDrawing->StationDataViewType());
             theUsedDrawParam->IsoLineGab(usedIsoLineStep);
             int numOfShownDigits = 0;
