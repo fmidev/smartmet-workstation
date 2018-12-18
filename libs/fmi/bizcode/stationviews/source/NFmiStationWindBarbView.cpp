@@ -54,9 +54,9 @@ bool NFmiStationWindBarbView::PrepareForStationDraw(void)
 	}
 
     if(GetDataFromLocalInfo())
-        metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(itsInfo);
+        metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(itsInfo);
     else
-        metaWindVectorParamUsage = NFmiFastInfoUtils::MetaWindVectorParamUsage(); // reset this if local data not used
+        metaWindParamUsage = NFmiFastInfoUtils::MetaWindParamUsage(); // reset this if local data not used
 	return status;
 }
 
@@ -136,9 +136,9 @@ bool NFmiStationWindBarbView::GetDataFromLocalInfo() const
 
 float NFmiStationWindBarbView::ViewFloatValue(void)
 {
-    if(metaWindVectorParamUsage.fUseMetaWindVectorParam)
+    if(metaWindParamUsage.MakeMetaWindVectorParam())
     {
-        return NFmiFastInfoUtils::GetMetaWindVectorValue(itsInfo, itsTime, metaWindVectorParamUsage);
+        return NFmiFastInfoUtils::GetMetaWindVectorValue(itsInfo, itsTime, metaWindParamUsage);
     }
     else
         return NFmiStationView::ViewFloatValue();
@@ -146,9 +146,9 @@ float NFmiStationWindBarbView::ViewFloatValue(void)
 
 float NFmiStationWindBarbView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-    if(metaWindVectorParamUsage.fUseMetaWindVectorParam)
+    if(metaWindParamUsage.MakeMetaWindVectorParam())
     {
-        return NFmiFastInfoUtils::GetMetaWindVectorValue(theInfo, theUsedTime, theLatlon, metaWindVectorParamUsage);
+        return NFmiFastInfoUtils::GetMetaWindVectorValue(theInfo, theUsedTime, theLatlon, metaWindParamUsage);
     }
     else
         return NFmiStationView::InterpolatedToolTipValue(theUsedTime, theLatlon, theInfo);

@@ -47,6 +47,6 @@ private:
    bool GetDataFromLocalInfo() const;
 
 
-   NFmiFastInfoUtils::MetaWindVectorParamUsage metaWindVectorParamUsage;
+   NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
 };
 
