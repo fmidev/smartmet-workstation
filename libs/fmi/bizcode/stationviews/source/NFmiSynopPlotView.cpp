@@ -145,9 +145,9 @@ void NFmiSynopPlotView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> 
 {
     NFmiStationView::SetMapViewSettings(theUsedInfo);
     if(GetDataFromLocalInfo())
-        metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(theUsedInfo);
+        metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theUsedInfo);
     else
-        metaWindVectorParamUsage = NFmiFastInfoUtils::MetaWindVectorParamUsage(); // reset this if local data not used
+        metaWindParamUsage = NFmiFastInfoUtils::MetaWindParamUsage(); // reset this if local data not used
 }
 
 // HUOM!! Piirto koodia voisi optimoida kun k‰ytt‰‰ enemm‰n param-index (ja subParam) tekniikkaa. Nyt
@@ -1210,9 +1210,9 @@ float NFmiSynopPlotView::GetSynopPlotValue(boost::shared_ptr<NFmiFastQueryInfo> 
 	}
 	else
 	{
-        if(metaWindVectorParamUsage.fUseMetaWindVectorParam)
+        if(metaWindParamUsage.MakeMetaWindVectorParam())
         {
-            return NFmiFastInfoUtils::GetMetaWindVectorValue(theInfo, metaWindVectorParamUsage);
+            return NFmiFastInfoUtils::GetMetaWindVectorValue(theInfo, metaWindParamUsage);
         }
         else
         {
