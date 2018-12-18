@@ -2793,8 +2793,8 @@ double NFmiSoundingDataOpt1::CalcGDI()
 void NFmiSoundingDataOpt1::FillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     NFmiQueryDataUtil::SignificantSoundingLevels &theSignificantSoundingLevels)
 {
-    auto metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(theInfo);
-    if(!metaWindVectorParamUsage.fUseMetaWindVectorParam)
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    if(metaWindParamUsage.NoWindMetaParamsNeeded())
     {
         // Normal case with totalWind parameter in data
         FillParamData(theInfo, kFmiWindSpeedMS, theSignificantSoundingLevels);
@@ -2805,17 +2805,17 @@ void NFmiSoundingDataOpt1::FillWindData(const boost::shared_ptr<NFmiFastQueryInf
     }
     else
     {
-        if(metaWindVectorParamUsage.fHasWsAndWd)
+        if(metaWindParamUsage.HasWsAndWd())
         {
             FillParamData(theInfo, kFmiWindSpeedMS, theSignificantSoundingLevels);
             FillParamData(theInfo, kFmiWindDirection, theSignificantSoundingLevels);
         }
-        if(metaWindVectorParamUsage.fHasWindComponents)
+        if(metaWindParamUsage.HasWindComponents())
         {
             FillParamData(theInfo, kFmiWindUMS, theSignificantSoundingLevels);
             FillParamData(theInfo, kFmiWindVMS, theSignificantSoundingLevels);
         }
-        FillRestOfWindData(metaWindVectorParamUsage);
+        FillRestOfWindData(metaWindParamUsage);
     }
 }
 
@@ -2823,8 +2823,8 @@ void NFmiSoundingDataOpt1::FillWindData(const boost::shared_ptr<NFmiFastQueryInf
     const NFmiMetTime &theTime,
     const NFmiPoint &theLatlon)
 {
-    auto metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(theInfo);
-    if(!metaWindVectorParamUsage.fUseMetaWindVectorParam)
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    if(!metaWindParamUsage.NoWindMetaParamsNeeded())
     {
         // Normal case with totalWind parameter in data
         FillParamData(theInfo, kFmiWindSpeedMS, theTime, theLatlon);
@@ -2835,24 +2835,24 @@ void NFmiSoundingDataOpt1::FillWindData(const boost::shared_ptr<NFmiFastQueryInf
     }
     else
     {
-        if(metaWindVectorParamUsage.fHasWsAndWd)
+        if(metaWindParamUsage.HasWsAndWd())
         {
             FillParamData(theInfo, kFmiWindSpeedMS, theTime, theLatlon);
             FillParamData(theInfo, kFmiWindDirection, theTime, theLatlon);
         }
-        if(metaWindVectorParamUsage.fHasWindComponents)
+        if(metaWindParamUsage.HasWindComponents())
         {
             FillParamData(theInfo, kFmiWindUMS, theTime, theLatlon);
             FillParamData(theInfo, kFmiWindVMS, theTime, theLatlon);
         }
-        FillRestOfWindData(metaWindVectorParamUsage);
+        FillRestOfWindData(metaWindParamUsage);
     }
 }
 
 void NFmiSoundingDataOpt1::FastFillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-    auto metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(theInfo);
-    if(!metaWindVectorParamUsage.fUseMetaWindVectorParam)
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    if(!metaWindParamUsage.NoWindMetaParamsNeeded())
     {
         // Normal case with totalWind parameter in data
         FastFillParamData(theInfo, kFmiWindSpeedMS);
@@ -2863,28 +2863,28 @@ void NFmiSoundingDataOpt1::FastFillWindData(const boost::shared_ptr<NFmiFastQuer
     }
     else
     {
-        if(metaWindVectorParamUsage.fHasWsAndWd)
+        if(metaWindParamUsage.HasWsAndWd())
         {
             FastFillParamData(theInfo, kFmiWindSpeedMS);
             FastFillParamData(theInfo, kFmiWindDirection);
         }
-        if(metaWindVectorParamUsage.fHasWindComponents)
+        if(metaWindParamUsage.HasWindComponents())
         {
             FastFillParamData(theInfo, kFmiWindUMS);
             FastFillParamData(theInfo, kFmiWindVMS);
         }
-        FillRestOfWindData(metaWindVectorParamUsage);
+        FillRestOfWindData(metaWindParamUsage);
     }
 }
 
-void NFmiSoundingDataOpt1::FillRestOfWindData(NFmiFastInfoUtils::MetaWindVectorParamUsage &metaWindVectorParamUsage)
+void NFmiSoundingDataOpt1::FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
 {
-    if(!metaWindVectorParamUsage.fHasWsAndWd)
+    if(metaWindParamUsage.MakeMetaWsAndWdParams())
     {
         // Fill WS+WD with u+v component data
         NFmiFastInfoUtils::CalcWindSpeedAndDirectionFromComponents(GetParamData(kFmiWindUMS), GetParamData(kFmiWindVMS), GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection));
     }
-    if(!metaWindVectorParamUsage.fHasWindComponents)
+    if(metaWindParamUsage.MakeMetaWindComponents())
     {
         // Fill u+v components with WS+WD data
         NFmiFastInfoUtils::CalcWindComponentsFromSpeedAndDirection(GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection), GetParamData(kFmiWindUMS), GetParamData(kFmiWindVMS));
