@@ -4940,15 +4940,32 @@ std::unique_ptr<NFmiDataIdent> MakePossibleStreamLineDataIdent(const MenuCreatio
         return nullptr;
 }
 
-std::unique_ptr<NFmiDataIdent> MakePossibleWindVectorDataIdent(const MenuCreationSettings &theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo)
+std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(const MenuCreationSettings &theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo)
 {
+    static const NFmiParam windDirectionBaseParam(kFmiWindDirection, "Wind direction (meta)");
+    static const NFmiParam windSpeedBaseParam(kFmiWindVectorMS, "Wind speed (meta)");
     static const NFmiParam windVectorBaseParam(kFmiWindVectorMS, "Wind vector (meta)");
-    auto metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(theSmartInfo);
-    bool addWindVectorParam = metaWindVectorParamUsage.fUseMetaWindVectorParam && (theMenuSettings.fDoMapMenu || theMenuSettings.fLevelDataOnly);
-    if(addWindVectorParam)
-        return std::make_unique<NFmiDataIdent>(windVectorBaseParam, *theSmartInfo->Producer());
-    else
-        return nullptr;
+    static const NFmiParam windUBaseParam(kFmiWindUMS, "Wind u component (meta)");
+    static const NFmiParam windVBaseParam(kFmiWindVMS, "Wind v component (meta)");
+
+    std::vector<std::unique_ptr<NFmiDataIdent>> metaParams;
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theSmartInfo);
+    if(metaWindParamUsage.MakeMetaWindComponents())
+    {
+        metaParams.push_back(std::make_unique<NFmiDataIdent>(windUBaseParam, *theSmartInfo->Producer()));
+        metaParams.push_back(std::make_unique<NFmiDataIdent>(windVBaseParam, *theSmartInfo->Producer()));
+    }
+    if(metaWindParamUsage.MakeMetaWsAndWdParams())
+    {
+        metaParams.push_back(std::make_unique<NFmiDataIdent>(windDirectionBaseParam, *theSmartInfo->Producer()));
+        metaParams.push_back(std::make_unique<NFmiDataIdent>(windSpeedBaseParam, *theSmartInfo->Producer()));
+    }
+    if(metaWindParamUsage.MakeMetaWindVectorParam())
+    {
+        metaParams.push_back(std::make_unique<NFmiDataIdent>(windVectorBaseParam, *theSmartInfo->Producer()));
+    }
+
+    return metaParams;
 }
 
 void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, NFmiMenuItem *theMenuItem, NFmiInfoData::Type theDataType, NFmiParamBag *theWantedParamBag = 0)
@@ -4969,13 +4986,13 @@ void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::
 		if(theSmartInfo->SizeLevels() > 1)
 			levels = const_cast<NFmiLevelBag*>(theSmartInfo->VPlaceDescriptor().Levels());
         auto possibleStreamLineDataIdentPtr = MakePossibleStreamLineDataIdent(theMenuSettings, theSmartInfo);
-        auto possibleWindVectorDataIdentPtr = MakePossibleWindVectorDataIdent(theMenuSettings, theSmartInfo);
+        auto possibleWindMetaParams = MakePossibleWindMetaParams(theMenuSettings, theSmartInfo);
 		NFmiMenuItemList *menuList = 0;
 		bool doCrossSectionMenu = theMenuSettings.fLevelDataOnly && theMenuSettings.fGridDataOnly;
 		if(doCrossSectionMenu == false && levels) // poikkileikkaus menun yhteydessä ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
-            menuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, &paramBag, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, levels, theDataType, kFmiLastParameter, possibleStreamLineDataIdentPtr.get(), possibleWindVectorDataIdentPtr.get());
+            menuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, &paramBag, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, levels, theDataType, kFmiLastParameter, possibleStreamLineDataIdentPtr.get(), &possibleWindMetaParams);
 		else
-			menuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, &paramBag, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, theDataType, possibleStreamLineDataIdentPtr.get(), possibleWindVectorDataIdentPtr.get());
+			menuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, &paramBag, theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, theDataType, possibleStreamLineDataIdentPtr.get(), &possibleWindMetaParams);
 
 		if(menuList)
 			theMenuItem->AddSubMenu(menuList);
