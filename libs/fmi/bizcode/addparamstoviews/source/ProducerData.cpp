@@ -75,7 +75,7 @@ namespace AddParams
     ProducerData::~ProducerData() = default;
 
     // Returns true, if some new producer data is added or data's param or level structure is changed
-    bool ProducerData::updateData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    bool ProducerData::updateData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataType)
     {
         bool dataStructuresChanged = false;
         
@@ -86,6 +86,7 @@ namespace AddParams
         else 
         {
             auto producerData = infoOrganizer.GetInfos(producer_.GetIdent());
+
             for(auto &info : producerData)
             {
                 if(::isDataOnlyOnOneLevel(info))
@@ -137,6 +138,18 @@ namespace AddParams
             }
         }
         return !satelliteDataVector_.empty();
+    }
+
+    bool ProducerData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    {
+        //auto fileFilter = info->DataFileName(); // "\\smartmet\\wrk\\data\\omat\\smartmet_scandinavia_222_x_130955_V001.sqd"
+        auto fileFilter = info->DataFilePattern(); // "D:\\smartmet\\wrk\\data\\local\\HIRLAM_Scand_*.sqd"
+        auto helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(fileFilter);
+        auto singleDataPtr = std::make_unique<SingleData>();
+        singleDataPtr->updateOperationalData(info, helpDataInfo);
+        dataVector_.clear();
+        dataVector_.push_back(std::move(singleDataPtr));
+        return true;
     }
 
     bool ProducerData::updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree)
@@ -192,12 +205,16 @@ namespace AddParams
     void ProducerData::addNewSingleData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
         auto helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(info->DataFilePattern());
+        auto singleDataPtr = std::make_unique<SingleData>();
         if(helpDataInfo)
         {
-            auto singleDataPtr = std::make_unique<SingleData>();
             singleDataPtr->updateData(info, helpDataInfo);
-            dataVector_.push_back(std::move(singleDataPtr));
         }
+        else
+        {
+            singleDataPtr->updateData(info);
+        }
+        dataVector_.push_back(std::move(singleDataPtr));
     }
 
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const

@@ -26,6 +26,7 @@ namespace AddParams
         ~SingleData();
 
         bool updateData(const boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiHelpDataInfo *helpDataInfo = nullptr);
+        bool updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo);
         const std::string& uniqueDataId() const { return uniqueDataId_; }
         const std::string& dataName() const { return dataName_; }
         const NFmiInfoData::Type& dataType() const { return dataType_; }
