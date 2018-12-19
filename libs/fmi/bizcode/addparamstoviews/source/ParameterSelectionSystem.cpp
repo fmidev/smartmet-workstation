@@ -18,22 +18,6 @@ namespace
         return AddParams::SingleRowItem(AddParams::kCategoryType, categoryData.categoryName(), 0, nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
 
-    NFmiProducerInfo makeProducerInfo(NFmiInfoOrganizer &infoOrganizer, NFmiInfoData::Type theDataType, const std::string theDictionaryStr)
-    {
-        NFmiProducerInfo prod;
-        boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(theDataType);
-        std::string titleString = theDictionaryStr.empty() ? info->FirstParamProducer().GetName() : ::GetDictionaryString(theDictionaryStr.c_str());
-        prod.Name(titleString);
-        int id;
-        if(info)
-        {
-            id = info->FirstParamProducer().GetIdent();
-        }
-        else
-            id = 9898;
-        prod.ProducerId(id);
-        return prod;
-    }
 }
 
 namespace AddParams
@@ -82,7 +66,7 @@ namespace AddParams
 
     void ParameterSelectionSystem::updateData()
     {
-        updateData("Operational data", operationalProducers(), NFmiInfoData::kEditable);
+        updateOperationalData("Operational data", NFmiInfoData::kEditable);
         updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
         updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
@@ -108,14 +92,29 @@ namespace AddParams
         updatePending(false);
     }
 
-    void ParameterSelectionSystem::updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory)
+    void ParameterSelectionSystem::updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory)
+    {
+        auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
+        if(iter != categoryDataVector_.end())
+        {
+            dialogDataNeedsUpdate_ |= (*iter)->updateOperationalData(*infoOrganizer_, *helpDataInfoSystem_, dataCategory);
+        }
+        else
+        {
+            auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+            categoryDataPtr->updateOperationalData(*infoOrganizer_, *helpDataInfoSystem_, dataCategory);
+            categoryDataVector_.push_back(std::move(categoryDataPtr));
+            dialogDataNeedsUpdate_ = true;
+        }
+    }
+
+    void ParameterSelectionSystem::updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory)
     {
         if(getMacroParamSystemCallback_)
         {
             auto &macroParamSystem = getMacroParamSystemCallback_();
             auto &macroParamTree = macroParamSystem.MacroParamItemTree();
 
-            std::string categoryName = ::GetDictionaryString(catName.c_str());
             auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
             if(iter != categoryDataVector_.end())
             {
@@ -149,21 +148,6 @@ namespace AddParams
         categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs_, customCategory);
         categoryDataVector_.push_back(std::move(categoryDataPtr));
         dialogDataNeedsUpdate_ = true;
-    }
-
-    NFmiProducerSystem ParameterSelectionSystem::operationalProducers()
-    {
-        NFmiProducerSystem operationalProducers;
-        //Editable data
-        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kEditable, "MapViewParamPopUpEdited"));
-        //Comparison data
-        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kCopyOfEdited, "MapViewParamPopUpComparisonData"));
-        //Operational data
-        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kKepaData, "MapViewParamPopUpOperativeData"));
-        //Help editor data
-        operationalProducers.Add(makeProducerInfo(*infoOrganizer_, NFmiInfoData::kEditingHelpData, "MapViewParamPopUpHelpEditorData"));
-
-        return operationalProducers;
     }
 
     std::vector<SingleRowItem>& ParameterSelectionSystem::dialogRowData()

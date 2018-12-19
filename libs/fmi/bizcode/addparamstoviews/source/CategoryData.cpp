@@ -16,6 +16,17 @@ namespace
         const auto &producer = producerData.producer();
         return AddParams::SingleRowItem(AddParams::kProducerType, std::string(producer.GetName()), producer.GetIdent(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
+
+    std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalProducers(NFmiInfoOrganizer &infoOrganizer)
+    {
+        std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalData;
+        //operationalData.emplace("Editable data", infoOrganizer.FindInfo(NFmiInfoData::kEditable));
+        operationalData.emplace("Comparison data", infoOrganizer.FindInfo(NFmiInfoData::kCopyOfEdited));
+        operationalData.emplace("Operational data", infoOrganizer.FindInfo(NFmiInfoData::kKepaData));
+        operationalData.emplace("Help editor data", infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData));
+
+        return operationalData;
+    }
 }
 
 namespace AddParams
@@ -50,10 +61,9 @@ namespace AddParams
         {
             NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
             bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
-            auto fastQueryInfoVector = infoOrganizer.GetInfos(producerInfo.ProducerId());
-            auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
+            auto dataType = getDataType(infoOrganizer, producer);
 
-            if(dataCategory == NFmiInfoData::kEditable) //Joonas: edited datalle ei löydy infoa. Tutki miten sen saisi lisästtyä.
+            if(dataCategory == NFmiInfoData::kEditable)
             {
                 dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
             }
@@ -96,6 +106,29 @@ namespace AddParams
                     auto producer = queryInfo->Producer();
                     dataStructuresChanged = addNewOrUpdateData(*producer, infoOrganizer, helpDataInfoSystem, dataCategory, true);
                 }
+            }
+        }
+        return dataStructuresChanged;
+    }
+
+    bool CategoryData::updateOperationalData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+    {
+        bool dataStructuresChanged = false;
+        auto infos = operationalProducers(infoOrganizer);
+        for(auto info : infos)
+        {
+            auto producer = NFmiProducer(info.second->Producer()->GetIdent(), info.first);
+            auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer == producerData->producer(); });
+            if(iter != producerDataVector_.end())
+            {
+                dataStructuresChanged |= (*iter)->updateOperationalData(info.second, helpDataInfoSystem);
+            }
+            else
+            {
+                auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
+                producerDataPtr->updateOperationalData(info.second, helpDataInfoSystem);
+                producerDataVector_.push_back(std::move(producerDataPtr));
+                dataStructuresChanged = true;
             }
         }
         return dataStructuresChanged;
@@ -157,7 +190,6 @@ namespace AddParams
         return false;
     }
 
-
     void CategoryData::addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
     {
         auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
@@ -181,6 +213,13 @@ namespace AddParams
             }
         }
         return dialogRowData;
+    }
+
+    NFmiInfoData::Type CategoryData::getDataType(NFmiInfoOrganizer &infoOrganizer, NFmiProducer &producer)
+    {
+        auto fastQueryInfoVector = infoOrganizer.GetInfos(producer.GetIdent());
+        auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
+        return dataType;
     }
 
 }
