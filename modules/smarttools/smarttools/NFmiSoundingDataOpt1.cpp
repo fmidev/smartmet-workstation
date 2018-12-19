@@ -2882,13 +2882,13 @@ void NFmiSoundingDataOpt1::FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUs
     if(metaWindParamUsage.MakeMetaWsAndWdParams())
     {
         // Fill WS+WD with u+v component data
-        NFmiFastInfoUtils::CalcWindSpeedAndDirectionFromComponents(GetParamData(kFmiWindUMS), GetParamData(kFmiWindVMS), GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection));
+        NFmiFastInfoUtils::CalcDequeWindSpeedAndDirectionFromComponents(GetParamData(kFmiWindUMS), GetParamData(kFmiWindVMS), GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection));
     }
     if(metaWindParamUsage.MakeMetaWindComponents())
     {
         // Fill u+v components with WS+WD data
-        NFmiFastInfoUtils::CalcWindComponentsFromSpeedAndDirection(GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection), GetParamData(kFmiWindUMS), GetParamData(kFmiWindVMS));
+        NFmiFastInfoUtils::CalcDequeWindComponentsFromSpeedAndDirection(GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection), GetParamData(kFmiWindUMS), GetParamData(kFmiWindVMS));
     }
     // Finally fill the Wind-vector data
-    NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection), GetParamData(kFmiWindVectorMS));
+    NFmiFastInfoUtils::CalcDequeWindVectorFromSpeedAndDirection(GetParamData(kFmiWindSpeedMS), GetParamData(kFmiWindDirection), GetParamData(kFmiWindVectorMS));
 }

@@ -8,7 +8,6 @@
 #pragma once
 
 #include "NFmiStationView.h"
-#include "NFmiFastInfoUtils.h"
 
 //_________________________________________________________ NFmiStationWindBarbView
 
@@ -36,7 +35,6 @@ public:
 protected:
    bool PrepareForStationDraw(void) override;
    void DrawData (void);
-   float ViewFloatValue(void) override;
    NFmiPoint GetSpaceOutFontFactor(void);
    void ModifyTextEnvironment(void);
    int GetApproxmationOfDataTextLength(void);
@@ -44,9 +42,5 @@ protected:
 
 private:
    void DrawSymbol (void);
-   bool GetDataFromLocalInfo() const;
-
-
-   NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
 };
 

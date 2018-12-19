@@ -232,6 +232,22 @@ bool NFmiStationView::UseQ2ForSynopData(boost::shared_ptr<NFmiDrawParam> &theDra
 	return false;
 }
 
+bool NFmiStationView::GetDataFromLocalInfo() const
+{
+    if(fGetSynopDataFromQ2 || fGetCurrentDataFromQ2Server || fUseMacroParamSpecialCalculations)
+        return false;
+    else
+        return true;
+}
+
+void NFmiStationView::SetupPossibleWindMetaParamData()
+{
+    if(itsInfo && GetDataFromLocalInfo())
+        metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(itsInfo);
+    else
+        metaWindParamUsage = NFmiFastInfoUtils::MetaWindParamUsage(); // reset this if local data not used
+}
+
 // jos palauttaa true, tehdään piirto, muuten ei
 bool NFmiStationView::PrepareForStationDraw(void)
 {
@@ -241,6 +257,7 @@ bool NFmiStationView::PrepareForStationDraw(void)
 	fDoTimeInterpolation = false;
 	if(!itsInfo) // tämä alustetaan jo SetMapViewSettings-metodissa
 		return false;
+    SetupPossibleWindMetaParamData();
 	if(NFmiDrawParam::IsMacroParamCase(itsInfo->DataType()))
 	{
 		if(itsDrawParam->IsParamHidden() == false)
@@ -1161,17 +1178,25 @@ float NFmiStationView::CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQuery
         return kFloatMissing;
     else
     {
-        float currentValue = theInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
-        if(currentValue == kFloatMissing && fAllowNearestTimeInterpolation)
+        auto paramId = itsDrawParam->Param().GetParamIdent();
+        if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
         {
-            auto oldTimeIndex = theInfo->TimeIndex();
-            if(theInfo->FindNearestTime(theTime, kCenter, itsTimeInterpolationRangeInMinutes))
-            {
-                currentValue = theInfo->FloatValue();
-            }
-            theInfo->TimeIndex(oldTimeIndex);
+            return NFmiFastInfoUtils::GetMetaWindValue(itsInfo, itsTime, metaWindParamUsage, paramId);
         }
-        return currentValue;
+        else
+        {
+            float currentValue = theInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
+            if(currentValue == kFloatMissing && fAllowNearestTimeInterpolation)
+            {
+                auto oldTimeIndex = theInfo->TimeIndex();
+                if(theInfo->FindNearestTime(theTime, kCenter, itsTimeInterpolationRangeInMinutes))
+                {
+                    currentValue = theInfo->FloatValue();
+                }
+                theInfo->TimeIndex(oldTimeIndex);
+            }
+            return currentValue;
+        }
     }
 }
 
@@ -1180,55 +1205,63 @@ float NFmiStationView::ViewFloatValue(void)
 {
     if(itsInfo)
         NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo);  // pitää varmistaa että jos kyse on sounding datasta, että level on kohdallaan
-	float value = kFloatMissing;
-	if(fGetSynopDataFromQ2)
-	{
-		StationIdSeekContainer::iterator it = itsSynopDataFromQ2StationIndexies.find(itsInfo->Location()->GetIdent());
-		if(it != itsSynopDataFromQ2StationIndexies.end())
-			return itsSynopDataValuesFromQ2[0][(*it).second];
-		else
-			return kFloatMissing;
-	}
-	else if(fGetCurrentDataFromQ2Server)
-	{
-		value = itsQ2ServerDataValues.InterpolatedValue(LatLonToViewPoint(itsInfo->LatLon()), itsArea->XYArea(), itsParamId);
-	}
-	else if(fUseMacroParamSpecialCalculations)
-	{
-		unsigned long locIndex = itsInfo->LocationIndex();
-		unsigned long columnIndex = locIndex % itsInfo->GridXNumber();
-		unsigned long rowIndex = locIndex / itsInfo->GridXNumber();
-		if(columnIndex < itsMacroParamSpecialCalculationsValues.NX() && rowIndex < itsMacroParamSpecialCalculationsValues.NY())
-			return itsMacroParamSpecialCalculationsValues[columnIndex][rowIndex];
-		else
-			return kFloatMissing;
-	}
-	else if(itsDrawParam->ShowDifferenceToOriginalData())
-	{
-		float currentValue = CalcTimeInterpolatedValue(itsInfo, itsTime);
+    float value = kFloatMissing;
+    if(fGetSynopDataFromQ2)
+    {
+        StationIdSeekContainer::iterator it = itsSynopDataFromQ2StationIndexies.find(itsInfo->Location()->GetIdent());
+        if(it != itsSynopDataFromQ2StationIndexies.end())
+            return itsSynopDataValuesFromQ2[0][(*it).second];
+        else
+            return kFloatMissing;
+    }
+    else if(fGetCurrentDataFromQ2Server)
+    {
+        value = itsQ2ServerDataValues.InterpolatedValue(LatLonToViewPoint(itsInfo->LatLon()), itsArea->XYArea(), itsParamId);
+    }
+    else if(fUseMacroParamSpecialCalculations)
+    {
+        unsigned long locIndex = itsInfo->LocationIndex();
+        unsigned long columnIndex = locIndex % itsInfo->GridXNumber();
+        unsigned long rowIndex = locIndex / itsInfo->GridXNumber();
+        if(columnIndex < itsMacroParamSpecialCalculationsValues.NX() && rowIndex < itsMacroParamSpecialCalculationsValues.NY())
+            return itsMacroParamSpecialCalculationsValues[columnIndex][rowIndex];
+        else
+            return kFloatMissing;
+    }
+    else if(itsDrawParam->ShowDifferenceToOriginalData())
+    {
+        float currentValue = CalcTimeInterpolatedValue(itsInfo, itsTime);
         float origValue = currentValue;
-    	if(itsOriginalDataInfo)
+        if(itsOriginalDataInfo)
         {
-		    itsOriginalDataInfo->LocationIndex(itsInfo->LocationIndex());
+            itsOriginalDataInfo->LocationIndex(itsInfo->LocationIndex());
             origValue = CalcTimeInterpolatedValue(itsOriginalDataInfo, itsTime);
         }
 
-		if(currentValue == kFloatMissing || origValue == kFloatMissing)
-			value = kFloatMissing;
-		else
-			value = currentValue - origValue;
-	}
-	else if(itsInfo)
-	{
+        if(currentValue == kFloatMissing || origValue == kFloatMissing)
+            value = kFloatMissing;
+        else
+            value = currentValue - origValue;
+    }
+    else if(itsInfo)
+    {
         if(fDoTimeInterpolation)
         {
             auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
             value = CalcTimeInterpolatedValue(itsInfo, usedTime);
         }
-		else
-			value = itsInfo->FloatValue();
-	}
-	return value;
+        else
+        {
+            auto paramId = itsDrawParam->Param().GetParamIdent();
+            if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
+            {
+                return NFmiFastInfoUtils::GetMetaWindValue(itsInfo, itsTime, metaWindParamUsage, paramId);
+            }
+            else
+                value = itsInfo->FloatValue();
+        }
+    }
+    return value;
 }
 
 static bool AreMatricesEqual(const NFmiDataMatrix<float> & m1, const NFmiDataMatrix<float> & m2)

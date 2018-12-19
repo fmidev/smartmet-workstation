@@ -12,6 +12,7 @@
 #include "NFmiDataMatrix.h"
 #include "NFmiLocation.h"
 #include "NFmiDataIdent.h"
+#include "NFmiFastInfoUtils.h"
 #include <unordered_map>
 
 //_________________________________________________________ NFmiStationView
@@ -192,6 +193,8 @@ protected:
    std::string GetPossibleMacroParamSymbolText(float value, std::string &possibleSymbolTooltipFile);
    float GetMacroParamTooltipValueFromCache();
    std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
+   void SetupPossibleWindMetaParamData();
+   bool GetDataFromLocalInfo() const;
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
@@ -253,5 +256,6 @@ protected:
    // Rajoitettuihin aikainterpolaatioihin liittyviä muuttujia
    long itsTimeInterpolationRangeInMinutes;
    bool fAllowNearestTimeInterpolation;
+   NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
 };
 
