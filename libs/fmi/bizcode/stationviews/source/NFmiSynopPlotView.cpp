@@ -144,10 +144,7 @@ NFmiRect NFmiSynopPlotView::CalcBaseEmptySoundingMarker(void)
 void NFmiSynopPlotView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo)
 {
     NFmiStationView::SetMapViewSettings(theUsedInfo);
-    if(GetDataFromLocalInfo())
-        metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theUsedInfo);
-    else
-        metaWindParamUsage = NFmiFastInfoUtils::MetaWindParamUsage(); // reset this if local data not used
+    SetupPossibleWindMetaParamData();
 }
 
 // HUOM!! Piirto koodia voisi optimoida kun k‰ytt‰‰ enemm‰n param-index (ja subParam) tekniikkaa. Nyt
@@ -1210,9 +1207,9 @@ float NFmiSynopPlotView::GetSynopPlotValue(boost::shared_ptr<NFmiFastQueryInfo> 
 	}
 	else
 	{
-        if(metaWindParamUsage.MakeMetaWindVectorParam())
+        if(theParam == kFmiWindVectorMS && metaWindParamUsage.MakeMetaWindVectorParam())
         {
-            return NFmiFastInfoUtils::GetMetaWindVectorValue(theInfo, metaWindParamUsage);
+            return NFmiFastInfoUtils::GetMetaWindValue(theInfo, metaWindParamUsage, theParam);
         }
         else
         {

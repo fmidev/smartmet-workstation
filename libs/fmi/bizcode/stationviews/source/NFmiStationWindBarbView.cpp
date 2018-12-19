@@ -52,11 +52,6 @@ bool NFmiStationWindBarbView::PrepareForStationDraw(void)
 		status = true; // macroParam tapauksessa tämä menee false:ksi (NFmiStationView::PrepareForStationDraw),
 						// koska itsInfo:n aika-ayateemi rakennetaan vasta CalcViewFloatValueMatrix-metodin kutsun yhteydessä
 	}
-
-    if(GetDataFromLocalInfo())
-        metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(itsInfo);
-    else
-        metaWindParamUsage = NFmiFastInfoUtils::MetaWindParamUsage(); // reset this if local data not used
 	return status;
 }
 
@@ -126,29 +121,11 @@ int NFmiStationWindBarbView::GetApproxmationOfDataTextLength(void)
 	return 1;
 }
 
-bool NFmiStationWindBarbView::GetDataFromLocalInfo() const
-{
-    if(fGetSynopDataFromQ2 || fGetCurrentDataFromQ2Server || fUseMacroParamSpecialCalculations)
-        return false;
-    else
-        return true;
-}
-
-float NFmiStationWindBarbView::ViewFloatValue(void)
-{
-    if(metaWindParamUsage.MakeMetaWindVectorParam())
-    {
-        return NFmiFastInfoUtils::GetMetaWindVectorValue(itsInfo, itsTime, metaWindParamUsage);
-    }
-    else
-        return NFmiStationView::ViewFloatValue();
-}
-
 float NFmiStationWindBarbView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     if(metaWindParamUsage.MakeMetaWindVectorParam())
     {
-        return NFmiFastInfoUtils::GetMetaWindVectorValue(theInfo, theUsedTime, theLatlon, metaWindParamUsage);
+        return NFmiFastInfoUtils::GetMetaWindValue(theInfo, theUsedTime, theLatlon, metaWindParamUsage, kFmiWindVectorMS);
     }
     else
         return NFmiStationView::InterpolatedToolTipValue(theUsedTime, theLatlon, theInfo);
