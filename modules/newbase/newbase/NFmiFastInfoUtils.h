@@ -15,8 +15,7 @@ namespace NFmiFastInfoUtils
     class FastInfoParamStateRestorer
     {
         NFmiFastQueryInfo &info_;
-        unsigned long paramIndex_;
-        bool subParamUsed_;
+        unsigned long paramId_;
     public:
         FastInfoParamStateRestorer(NFmiFastQueryInfo &info);
         ~FastInfoParamStateRestorer();
