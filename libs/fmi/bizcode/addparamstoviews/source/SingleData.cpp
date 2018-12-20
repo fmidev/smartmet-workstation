@@ -210,6 +210,10 @@ namespace AddParams
         {
             dataName_ = "Comparison data";
         }
+        else if(dataName_.empty() && dataType_ == NFmiInfoData::kEditable)
+        {
+            dataName_ = "Editable data";
+        }
 
         return true;
     }
