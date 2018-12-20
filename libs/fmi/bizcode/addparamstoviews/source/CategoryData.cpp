@@ -20,10 +20,10 @@ namespace
     std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalProducers(NFmiInfoOrganizer &infoOrganizer)
     {
         std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalData;
-        //operationalData.emplace("Editable data", infoOrganizer.FindInfo(NFmiInfoData::kEditable));
-        operationalData.emplace("Comparison data", infoOrganizer.FindInfo(NFmiInfoData::kCopyOfEdited));
-        operationalData.emplace("Operational data", infoOrganizer.FindInfo(NFmiInfoData::kKepaData));
+        operationalData.emplace("Editable data", infoOrganizer.FindInfo(NFmiInfoData::kEditable));
+        //operationalData.emplace("Comparison data", infoOrganizer.FindInfo(NFmiInfoData::kCopyOfEdited));
         operationalData.emplace("Help editor data", infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData));
+        operationalData.emplace("Operational data", infoOrganizer.FindInfo(NFmiInfoData::kKepaData));
 
         return operationalData;
     }
@@ -118,7 +118,8 @@ namespace AddParams
         for(auto info : infos)
         {
             auto producer = NFmiProducer(info.second->Producer()->GetIdent(), info.first);
-            auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer == producerData->producer(); });
+            //auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer == producerData->producer(); });
+            auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer.GetName() == producerData->producer().GetName(); });
             if(iter != producerDataVector_.end())
             {
                 dataStructuresChanged |= (*iter)->updateOperationalData(info.second, helpDataInfoSystem);

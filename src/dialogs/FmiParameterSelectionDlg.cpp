@@ -303,6 +303,18 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::Si
     return str;
 }
 
+std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType()
+{
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Category information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Operational data </b>";
+    str += "<br><hr color=darkblue><br>";
+    return str;
+}
+
 std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
 {
     int numberOfParams = 0;
@@ -328,7 +340,6 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(Add
     return str;
 }
 
-
 std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
 {
     CCellID idCurrentCell = GetCellFromPt(point);
@@ -346,6 +357,10 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
         if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
         {
             return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+        }
+        else if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItem.itemName() == "Operational data")
+        {
+            return TooltipForCategoryType();
         }
         else if(!fastQueryInfo.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
         {

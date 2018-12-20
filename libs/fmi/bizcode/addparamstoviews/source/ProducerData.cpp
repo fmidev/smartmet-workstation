@@ -142,8 +142,7 @@ namespace AddParams
 
     bool ProducerData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
-        //auto fileFilter = info->DataFileName(); // "\\smartmet\\wrk\\data\\omat\\smartmet_scandinavia_222_x_130955_V001.sqd"
-        auto fileFilter = info->DataFilePattern(); // "D:\\smartmet\\wrk\\data\\local\\HIRLAM_Scand_*.sqd"
+        auto fileFilter = info->DataFilePattern();
         auto helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(fileFilter);
         auto singleDataPtr = std::make_unique<SingleData>();
         singleDataPtr->updateOperationalData(info, helpDataInfo);

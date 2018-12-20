@@ -62,6 +62,7 @@ private:
     CPPToolTip m_tooltip;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
+    std::string TooltipForCategoryType();
     std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
 
 public:
