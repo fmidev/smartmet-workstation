@@ -125,6 +125,11 @@ namespace
         return ::CalcMetaWindVectorValue(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theTime); });
     }
 
+    float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindVectorValue(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon); });
+    }
+
     float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
     {
         return ::CalcMetaWindVectorValue(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon, theTime); });
@@ -140,6 +145,11 @@ namespace
         return ::GetMetaWsWdValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theTime); });
     }
 
+    std::pair<float, float> GetMetaWsWdValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::GetMetaWsWdValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon); });
+    }
+
     std::pair<float, float> GetMetaWsWdValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
     {
         return ::GetMetaWsWdValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon, theTime); });
@@ -153,6 +163,11 @@ namespace
     std::pair<float, float> GetMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
     {
         return ::CalcMetaWindComponentsValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theTime); });
+    }
+
+    std::pair<float, float> GetMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindComponentsValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon); });
     }
 
     std::pair<float, float> GetMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
@@ -440,6 +455,25 @@ float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, cons
         return ::GetMetaWindComponentsValues(theInfo, theTime, metaWindParamUsage).first;
     case kFmiWindVMS:
         return ::GetMetaWindComponentsValues(theInfo, theTime, metaWindParamUsage).second;
+    default:
+        return kFloatMissing;
+    }
+}
+
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
+{
+    switch(wantedParamId)
+    {
+    case kFmiWindDirection:
+        return ::GetMetaWsWdValues(theInfo, theLatlon, metaWindParamUsage).second;
+    case kFmiWindSpeedMS:
+        return ::GetMetaWsWdValues(theInfo, theLatlon, metaWindParamUsage).first;
+    case kFmiWindVectorMS:
+        return ::GetMetaWindVectorValue(theInfo, theLatlon, metaWindParamUsage);
+    case kFmiWindUMS:
+        return ::GetMetaWindComponentsValues(theInfo, theLatlon, metaWindParamUsage).first;
+    case kFmiWindVMS:
+        return ::GetMetaWindComponentsValues(theInfo, theLatlon, metaWindParamUsage).second;
     default:
         return kFloatMissing;
     }
