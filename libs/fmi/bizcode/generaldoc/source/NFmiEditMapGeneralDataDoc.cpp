@@ -3177,9 +3177,10 @@ std::vector<std::string> MakeListOfUsedMacroParamsDependedOnEditedData()
     std::vector<std::string> macroParamPathList;
     for(auto *deskTop : itsMapViewDescTopList)
     {
-        int cacheRowNumber = 0; // cache row indeksi alkaa 0:sta!!
         NFmiPtrList<NFmiDrawParamList> *drawParamListVector = deskTop->DrawParamListVector();
         NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
+
+        int cacheRowNumber = 0;
         for(; iter.Next();)
         {
             NFmiDrawParamList *aList = iter.CurrentPtr();
@@ -3191,6 +3192,8 @@ std::vector<std::string> MakeListOfUsedMacroParamsDependedOnEditedData()
                     if(IsMacroParamDependentOfEditedData(drawParam))
                     {
                         macroParamPathList.push_back(drawParam->InitFileName());
+                        // Tyhjennetään myös kyseisten näyttörivien bitmap cache (ikävä kaksois vastuu metodilla)
+                        deskTop->MapViewCache().MakeRowDirty(cacheRowNumber);
                     }
                 }
             }
@@ -3313,8 +3316,10 @@ void MacroParamDirtiesCacheRowTraceLog(boost::shared_ptr<NFmiDrawParam> &drawPar
     }
 }
 
-// Tutkii vertikaali macroParam funktioiden kanssa että jos kyse on pressure datasta, että löytyykö samalta tuottajalta myös hybrid dataa, missä on haluttu parametri.
-// Kaikissa muissa tapauksissa palauttaa true (eli tehdään rivin cache likaus), paitsi jos data oressure dataa ja löytyy vastaava hybrid data infoOrganizerista.
+// Tutkii vertikaali macroParam funktioiden kanssa että jos kyse on pressure datasta, että löytyykö 
+// samalta tuottajalta myös hybrid dataa, missä on haluttu parametri.
+// Kaikissa muissa tapauksissa palauttaa true (eli tehdään rivin cache likaus), paitsi jos data 
+// pressure dataa ja löytyy vastaava hybrid data infoOrganizerista.
 bool DoMacroParamVerticalDataChecks(NFmiFastQueryInfo &theInfo, NFmiInfoData::Type theType, const MacroParamDataInfo &macroParamDataInfo)
 {
     if(macroParamDataInfo.usedWithVerticalFunction_)
@@ -7540,11 +7545,70 @@ bool ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 	{
 		ActiveViewRow(theDescTopIndex, activeViewRow); // asetetaan uusi suhteellinen aktiivinen rivi takaisin desctopiin
         UpdateRowInLockedDescTops(theDescTopIndex);
-		MapViewDirty(theDescTopIndex, false, false, true, false, false, false);
+		MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
 		return true;
 	}
 	else
 		return false;
+}
+
+bool IsMacroParamAndDrawWithSymbols(boost::shared_ptr<NFmiDrawParam> &drawParam)
+{
+    if(drawParam && drawParam->IsMacroParamCase(true))
+    {
+        // MacroParam on aina hila muotoista, joten tarkastetaan hilamuotoinen visualisointi tyyppi
+        auto visualizationType = drawParam->GridDataPresentationStyle();
+        if(!(visualizationType >= NFmiMetEditorTypes::kFmiIsoLineView && visualizationType <= NFmiMetEditorTypes::kFmiQuickColorContourView))
+            return true;
+    }
+    return false;
+}
+
+// Jos karttanäytön koko muutetaan, muuttuu tällöin piirrettävän karttaalueen koko pikseleissä.
+// Tällöin jos näytöllä on macroParametreja, jotka piirretään symboleilla, pitää niiden macroParamCachet 
+// laittaa uusiksi, koska piirto harvennus saattaa muuttua. Ei ole väliä, onko parametri piilotettu tai
+// ei, koska kun alue muuuttuu, pitää varmuuden vuoksi kaikki kyseiset macroParamien datacachet tyhjentää.
+void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
+{
+    auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
+    if(mapViewDesctop)
+    {
+        int rowIndex = 1;
+        NFmiPtrList<NFmiDrawParamList> *drawParamListVector = mapViewDesctop->DrawParamListVector();
+        NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
+        for(; iter.Next();)
+        {
+            NFmiDrawParamList *aList = iter.CurrentPtr();
+            if(aList)
+            {
+                for(aList->Reset(); aList->Next(); )
+                {
+                    boost::shared_ptr<NFmiDrawParam> drawParam = aList->Current();
+                    if(IsMacroParamAndDrawWithSymbols(drawParam))
+                    {
+                        MacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, rowIndex, drawParam->InitFileName());
+                    }
+                }
+            }
+            rowIndex++;
+        }
+    }
+}
+
+void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+{
+    auto keepMapAspectRatio = ApplicationWinRegistry().KeepMapAspectRatio();
+    // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
+    // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
+    MapViewDirty(mapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
+    MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
+    auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
+    if(mapViewDesctop)
+    {
+        mapViewDesctop->CalcClientViewXperYRatio(totalPixelSize);
+        mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
+        mapViewDesctop->BorderDrawDirty(true);
+    }
 }
 
 void TimeControlTimeStep(unsigned int theDescTopIndex, float newValue)
@@ -8919,6 +8983,19 @@ bool InitCPManagerSet(void)
 		fUseMaskWithBrush = masks.UseMaskWithBrush();
 	}
 
+    void MakeApplyViewMacroDirtyActions()
+    {
+        // läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
+        MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
+        unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
+        for(unsigned int i = 0; i<ssize; i++)
+        {
+            MapViewDescTop(i)->MapViewBitmapDirty(true);
+            MapViewDescTop(i)->BorderDrawDirty(true);
+        }
+        MacroParamDataCache().clearAllLayers();
+    }
+
     void ApplyViewMacro(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro, bool undoRedoAction)
 	{ // ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
 		SetGeneralDoc(theMacro);
@@ -8935,15 +9012,7 @@ bool InitCPManagerSet(void)
 
         ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
 
-		// läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
-		MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
-		unsigned int ssize = static_cast<unsigned int>(itsMapViewDescTopList.size());
-		for(unsigned int i = 0; i<ssize; i++)
-		{
-			MapViewDescTop(i)->MapViewBitmapDirty(true);
-			MapViewDescTop(i)->BorderDrawDirty(true);
-		}
-        MacroParamDataCache().clearAllLayers();
+        MakeApplyViewMacroDirtyActions();
 
         // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
@@ -11093,8 +11162,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		MapViewDescTop(theDescTopIndex)->ShowParamWindowView(!MapViewDescTop(theDescTopIndex)->ShowParamWindowView());
 		MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
-		LogMessage("Show/Hide param-view.", CatLog::Severity::Debug, CatLog::Category::Visualization);
-	}
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/Hide param-view");
+    }
 
 	void OnShowTimeString(unsigned int theDescTopIndex)
 	{
@@ -16834,4 +16903,9 @@ void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
 NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
 {
     return pimpl->MacroParamDataCache();
+}
+
+void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+{
+    pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
 }

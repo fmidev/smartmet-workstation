@@ -83,7 +83,7 @@ std::vector<MacroParamDataInfo> MacroParamDataChecker::getCalculationParametersF
     std::vector<MacroParamDataInfo> usedParamList;
     for(const auto &word : words)
     {
-        if(containsUnderScore(word))
+        if(!word.empty())
         {
             MacroParamDataInfo macroParamDataInfo;
             if(::checkPossibleVariable(word, macroParamDataInfo, previousActualWord))

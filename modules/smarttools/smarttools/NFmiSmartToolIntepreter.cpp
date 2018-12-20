@@ -162,7 +162,7 @@ NFmiSmartToolIntepreter::MathFunctionMap NFmiSmartToolIntepreter::itsMathFunctio
 NFmiSmartToolIntepreter::ResolutionLevelTypesMap NFmiSmartToolIntepreter::itsResolutionLevelTypes;
 
 std::string NFmiSmartToolIntepreter::itsBaseDelimiterChars = "+-*/%^=(){}<>&|!,";
-std::string NFmiSmartToolIntepreter::itsFullDelimiterChars = NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\r\0";
+std::string NFmiSmartToolIntepreter::itsFullDelimiterChars = NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\n\r\0";
 
 //--------------------------------------------------------
 // Constructor/Destructor
@@ -965,7 +965,7 @@ void NFmiSmartToolIntepreter::AddSimpleCalculationToCallingAreaMask(boost::share
 // jouduin muuttamaan niitä tähän ympäristöön.
 // Obtain the next token. Palauttaa true, jos sellainen saatiin, jos ollaan lopussa, palauttaa
 // false.
-bool NFmiSmartToolIntepreter::GetToken(void)
+bool NFmiSmartToolIntepreter::GetToken()
 {
   char *temp;
 
@@ -1039,6 +1039,11 @@ bool NFmiSmartToolIntepreter::GetToken(void)
       SearchUntil(exp_ptr, temp, '"', stringLiteralError);
       tok_type = STRING_LITERAL;
       return true;
+  }
+  else
+  {
+      // Tässä on joku outo merkki nyt vastassa, heitetään poikkeus
+      throw std::runtime_error(std::string("Strange character prevents intepreting following clause: ") + std::string(exp_ptr, exp_end));
   }
 
   *temp = '\0';
@@ -2986,7 +2991,9 @@ bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
     if(assignOperator == string("="))
     {
         // Haetaan teksti rivin loppuun asti poluksi (polussa voi olla space:ja)
-        string pathToSymbolFile = GetEndOfLineFromTokens();
+        string pathToSymbolFile = std::string(exp_ptr, exp_end);
+        // otetään edessä ja mahdolliset perässä olevat spacet pois
+        NFmiStringTools::Trim(pathToSymbolFile);
         if(NFmiFileSystem::FileExists(pathToSymbolFile))
         {
             itsExtraMacroParamData->SymbolTooltipFile(pathToSymbolFile);
@@ -3003,27 +3010,6 @@ bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
     std::string errorStr = "Given SymbolTooltipFile -clause was illegal, try something like this:\n";
     errorStr += "\"SymbolTooltipFile = path_to_file\"";
     throw std::runtime_error(errorStr);
-}
-
-std::string NFmiSmartToolIntepreter::GetEndOfLineFromTokens()
-{
-    std::string endOfLineStr;
-    for(; GetToken(); )
-    {
-        std::string word = token;
-        auto pos = word.find_first_of("\n\r");
-        if(pos == std::string::npos)
-        {
-            endOfLineStr += word;
-            continue;
-        }
-        else
-        {
-            endOfLineStr += std::string(word.begin(), word.begin() + pos);
-            break;
-        }
-    }
-    return endOfLineStr;
 }
 
 bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theVariableText)

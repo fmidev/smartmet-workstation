@@ -758,9 +758,9 @@ static std::string GetAviationCloudStr(boost::shared_ptr<NFmiFastQueryInfo> &the
 		theInfo->Param(theCloudTypePar);
 		float cloudType = theInfo->FloatValue();
 		if(cloudType == 2)
-			str += "CB";
-		if(cloudType == 3)
 			str += "TCU";
+		if(cloudType == 3)
+			str += "CB";
 	}
 	return str;
 }
