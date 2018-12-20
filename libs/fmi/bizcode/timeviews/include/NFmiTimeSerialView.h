@@ -39,6 +39,11 @@ class NFmiProducer;
 class NFmiParam;
 class NFmiEditorControlPointManager;
 
+namespace NFmiFastInfoUtils
+{
+    class MetaWindParamUsage;
+}
+
 namespace ModelClimatology
 {
     using ParamIds = std::vector<FmiParameterName>;
@@ -106,8 +111,8 @@ class NFmiTimeSerialView : public NFmiTimeView
 	void DrawEditedDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines);
 	void PlotTimeSerialData(const checkedVector<double> &theValues, const checkedVector<NFmiMetTime> &theTimes, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines = false);
 	void PlotTimeSerialDataOpt(const checkedVector<double> &theValues, double xPosStart, double xStep, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines = false);
-	void FillTimeSerialDataFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiPoint &theLatLonPoint, checkedVector<double> &theValues);
-	void FillTimeSerialDataFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiPoint &theLatLonPoint, const NFmiTimeBag &theLimitTimes, checkedVector<double> &theValues);
+	void FillTimeSerialDataFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiPoint &theLatLonPoint, checkedVector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+	void FillTimeSerialDataFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiPoint &theLatLonPoint, const NFmiTimeBag &theLimitTimes, checkedVector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
 	void FillTimeSerialMaskValues(const checkedVector<NFmiMetTime> &theTimes, const NFmiPoint &theLatLonPoint, checkedVector<double> &theMaskValues);
 	void FillTimeSerialChangedValues(const checkedVector<double> &theValues, const checkedVector<double> &theMaskValues, checkedVector<double> &theChangedValues);
 	void FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourceInfo, checkedVector<NFmiMetTime> &theTimes);
@@ -296,7 +301,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	NFmiRect itsDataRect; // t‰lle alueelle piirret‰‰n aikasarja ikkunassa k‰yr‰t
 
  protected:
-	bool ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut);
+	bool ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
 
 	bool fJustScanningForMinMaxValues; // auto-adjust s‰‰dˆt lasketaan lˆydettyjen min ja max arvojen avulla. Jos t‰m‰ optio on true, 
 										// ei piirret‰ mit‰‰n, etsit‰‰n vain min ja max arvoja. Tarkoitus on ett‰ optio laitetaan p‰‰lle
