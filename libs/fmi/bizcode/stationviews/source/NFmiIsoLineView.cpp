@@ -427,6 +427,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     if(itsInfoVectorIter == itsInfoVector.end())
         return;
     SetMapViewSettings(*itsInfoVectorIter);
+    SetupPossibleWindMetaParamData();
 
     if(itsDrawParam->Alpha() <= 0)
         return;
