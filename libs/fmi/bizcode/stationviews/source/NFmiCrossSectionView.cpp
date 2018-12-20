@@ -775,9 +775,9 @@ float NFmiCrossSectionView::GetLevelValueForMetaParam(boost::shared_ptr<NFmiFast
         case kFmiWindVectorMS:
             return NFmiFastInfoUtils::CalcWindVectorFromWindComponents(u, v);
         case kFmiWindDirection:
-            return NFmiFastInfoUtils::CalcU(u, v);
+            return NFmiFastInfoUtils::CalcWD(u, v);
         case kFmiWindSpeedMS:
-            return NFmiFastInfoUtils::CalcV(u, v);
+            return NFmiFastInfoUtils::CalcWS(u, v);
         default:
             return kFloatMissing;
         }
