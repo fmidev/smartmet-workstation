@@ -1,5 +1,7 @@
 #include "NFmiMacroParamDataCache.h"
 #include "NFmiDrawParamList.h"
+#include "NFmiInfoOrganizer.h"
+#include "NFmiFastQueryInfo.h"
 #include "catlog/catlog.h"
 
 // Kiinnostava map:in tyhjennys predikaatin avulla -funktio
@@ -25,13 +27,36 @@ static void logMacroParamTotalPathWasInCorrectWarning(const std::string &functio
     CatLog::logMessage(message, CatLog::Severity::Warning, CatLog::Category::Data);
 }
 
+void NFmiMacroParamLayerCacheDataType::setCacheValues(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints, bool useAlReadySpacedOutData)
+{
+    dataMatrix_ = dataMatrix;
+    useCalculationPoints_ = useCalculationPoints;
+    useAlReadySpacedOutData_ = useAlReadySpacedOutData;
+}
+
+void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, boost::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut)
+{
+    dataMatrixOut = dataMatrix_;
+    useCalculationPointsOut = useCalculationPoints_;
+    useAlReadySpacedOutDataOut = useAlReadySpacedOutData_;
+    if(useAlReadySpacedOutDataOut)
+    {
+        // Jos cacheen laskettu data oli jo harvennettua, pitää myös nyt käytetty info säätää takaisin kyseiseen oikeaan hilakokoon.
+        boost::shared_ptr<NFmiArea> usedArea(usedInfoInOut->Area()->Clone());
+        usedInfoInOut = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(static_cast<int>(dataMatrixOut.NX()), static_cast<int>(dataMatrixOut.NY()), NFmiInfoData::kMacroParam, usedArea);
+    }
+}
+
+// ***********************************************************************************************
+
+
 NFmiMacroParamDataCacheLayer::NFmiMacroParamDataCacheLayer(const std::string &macroParamTotalPath)
 :layerCache_()
 ,macroParamTotalPath_(macroParamTotalPath)
 {
 }
 
-void NFmiMacroParamDataCacheLayer::setCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData)
+void NFmiMacroParamDataCacheLayer::setCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData)
 {
     if(macroParamTotalPath == macroParamTotalPath_)
     {
@@ -59,7 +84,7 @@ void NFmiMacroParamDataCacheLayer::setCache(const NFmiMetTime &time, const std::
         ::logMacroParamTotalPathWasInCorrectWarning(__FUNCTION__, macroParamTotalPath, macroParamTotalPath_);
 }
 
-bool NFmiMacroParamDataCacheLayer::getCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut)
+bool NFmiMacroParamDataCacheLayer::getCache(const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut)
 {
     if(macroParamTotalPath == macroParamTotalPath_)
     {
@@ -102,7 +127,7 @@ void NFmiMacroParamDataCacheRow::clearMacroParamCache(const std::vector<std::str
     }
 }
 
-void NFmiMacroParamDataCacheRow::setCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData)
+void NFmiMacroParamDataCacheRow::setCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData)
 {
     auto iter = layersCache_.find(layerIndex);
     if(iter != layersCache_.end())
@@ -125,7 +150,7 @@ void NFmiMacroParamDataCacheRow::setCache(unsigned long layerIndex, const NFmiMe
     }
 }
 
-bool NFmiMacroParamDataCacheRow::getCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut)
+bool NFmiMacroParamDataCacheRow::getCache(unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut)
 {
     auto iter = layersCache_.find(layerIndex);
     if(iter != layersCache_.end())
@@ -233,7 +258,7 @@ void NFmiMacroParamDataCacheForView::clearMacroParamCache(const std::vector<std:
     }
 }
 
-void NFmiMacroParamDataCacheForView::setCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData)
+void NFmiMacroParamDataCacheForView::setCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData)
 {
     auto iter = rowsCache_.find(rowIndex);
     if(iter != rowsCache_.end())
@@ -256,7 +281,7 @@ void NFmiMacroParamDataCacheForView::setCache(unsigned long rowIndex, unsigned l
     }
 }
 
-bool NFmiMacroParamDataCacheForView::getCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut)
+bool NFmiMacroParamDataCacheForView::getCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut)
 {
     auto iter = rowsCache_.find(rowIndex);
     if(iter != rowsCache_.end())
@@ -342,7 +367,7 @@ void NFmiMacroParamDataCache::clearMacroParamCache(const std::vector<std::string
     }
 }
 
-void NFmiMacroParamDataCache::setCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiDataMatrix<float> &cacheData)
+void NFmiMacroParamDataCache::setCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData)
 {
     // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
     auto iter = viewsCache_.find(viewIndex);
@@ -356,7 +381,7 @@ void NFmiMacroParamDataCache::setCache(unsigned long viewIndex, unsigned long ro
     }
 }
 
-bool NFmiMacroParamDataCache::getCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiDataMatrix<float> &cacheDataOut)
+bool NFmiMacroParamDataCache::getCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut)
 {
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())

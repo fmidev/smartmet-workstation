@@ -80,6 +80,8 @@ int NFmiQueryInfo::itsDestructorCalls = 0;
 // datan 1. ja viimeisestä sarakkeesta.
 static const unsigned long gStrechedGlobalGridIndex = static_cast<unsigned long>(-2);
 
+const double NFmiQueryInfo::itsLatestKnownInfoVersion = 7.0;
+
 #if 0
 // ----------------------------------------------------------------------
 /*!
@@ -1262,6 +1264,16 @@ std::istream &NFmiQueryInfo::Read(std::istream &file)
     char tmp[3];
     file >> tmp;
     file >> itsInfoVersion;
+    if(itsInfoVersion > itsLatestKnownInfoVersion)
+    {
+        std::string errorMessage = __FUNCTION__;
+        errorMessage += " trying to read higher queryData version data than supported, ";
+        errorMessage += std::to_string(itsInfoVersion);
+        errorMessage += " > ";
+        errorMessage += std::to_string(itsLatestKnownInfoVersion);
+        throw runtime_error(errorMessage);
+    }
+
     FmiInfoVersion = static_cast<unsigned short>(itsInfoVersion);
   }
   else

@@ -965,13 +965,7 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
 	if(data)
 	{
-        auto keepMapAspectRatio = data->ApplicationWinRegistry().KeepMapAspectRatio();
-        // Jos karttanäyttöä venytetään ja keepMapAspectRatio on true, tällöin tapahtuu automaattinen 
-        // alueen zoomaus ja silloin macroParamDataCache pitää tyhjentää tälle näytölle.
-        data->MapViewDirty(itsMapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
-		data->MapViewDescTop(itsMapViewDescTopIndex)->CalcClientViewXperYRatio(NFmiPoint(cx,cy));
-		data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
-        data->MapViewDescTop(itsMapViewDescTopIndex)->BorderDrawDirty(true);
+        data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
 		CDC *pDC = GetDC();
 		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), data->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
 
