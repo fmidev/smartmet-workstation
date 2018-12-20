@@ -2928,7 +2928,13 @@ float NFmiStationView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, 
 {
     float interpolatedValue = kFloatMissing;
     if(!(fDoTimeInterpolation && itsTimeInterpolationRangeInMinutes == 0))
-        interpolatedValue = fDoTimeInterpolation ? theInfo->InterpolatedValue(theLatlon, theUsedTime, itsTimeInterpolationRangeInMinutes) : theInfo->InterpolatedValue(theLatlon);
+    {
+        auto paramId = itsDrawParam->Param().GetParamIdent();
+        if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
+            interpolatedValue = NFmiFastInfoUtils::GetMetaWindValue(theInfo, theUsedTime, theLatlon, metaWindParamUsage, paramId);
+        else
+            interpolatedValue = fDoTimeInterpolation ? theInfo->InterpolatedValue(theLatlon, theUsedTime, itsTimeInterpolationRangeInMinutes) : theInfo->InterpolatedValue(theLatlon);
+    }
     return interpolatedValue;
 }
 
