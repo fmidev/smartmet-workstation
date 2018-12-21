@@ -12,6 +12,7 @@
 #include "NFmiGrid.h"  // täältä tulee NFmiTimeCache-luokka (tiedän, pitäisi jakaa newbase:a osiin)
 #include "NFmiLevel.h"
 #include "NFmiMetTime.h"
+#include "NFmiFastInfoUtils.h"
 
 class NFmiDataModifier;
 
@@ -30,10 +31,12 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
                    Type theMaskType,
                    NFmiInfoData::Type theDataType,
                    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                   unsigned long thePossibleMetaParamId,
                    BinaryOperator thePostBinaryOperator = kNoValue);
 
   NFmiInfoAreaMask(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                   BinaryOperator thePostBinaryOperator = kNoValue);
+      unsigned long thePossibleMetaParamId,
+      BinaryOperator thePostBinaryOperator = kNoValue);
   NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMask &operator=(const NFmiInfoAreaMask &theMask) = delete;
@@ -42,6 +45,7 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
   double HeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams) override;
   double PressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams) override;
+
   // Pitää olla ei virtuaalinen versio PressureValue-metodista, jotta tietyissä tilanteissa estetään
   // mahdollisen lapsiluokan metodin virtuaalinen kutsu
   double PressureValueStatic(double thePressure, const NFmiCalculationParams &theCalculationParams);
@@ -94,8 +98,12 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   double CalcValueFromLocation(const NFmiPoint &theLatLon) const override;
   const NFmiString MakeSubMaskString(void) const override;
   bool IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlways) const;
-
- protected:
+  template<typename GetFunction>
+  double CalcMetaParamValueWithFunction(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways, GetFunction getFunction);
+  double CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+  double CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
+  double CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
+protected:
   boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
   NFmiDataIdent itsDataIdent;
   NFmiLevel itsLevel;
@@ -107,6 +115,9 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
                                           // painepinta interpolointeja
   double itsUsedPressureLevelValue;  // jos fUsePressureLevelInterpolation on true, käytetään
                                      // laskuissa tätä painepintaa
+  unsigned long itsPossibleMetaParamId;
+  NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
+  int fCheckMetaParamCalculation = 1;
 
 };  // class NFmiInfoAreaMask
 
@@ -122,12 +133,14 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
                          const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                          int theXOffset,
                          int theYOffset,
-                         BinaryOperator thePostBinaryOperator = kNoValue);
+                          unsigned long thePossibleMetaParamId,
+                          BinaryOperator thePostBinaryOperator = kNoValue);
 
   NFmiInfoAreaMaskPeekXY(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                          int theXOffset,
                          int theYOffset,
-                         BinaryOperator thePostBinaryOperator = kNoValue);
+                          unsigned long thePossibleMetaParamId,
+                          BinaryOperator thePostBinaryOperator = kNoValue);
   NFmiInfoAreaMaskPeekXY(const NFmiInfoAreaMaskPeekXY &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskPeekXY &operator=(const NFmiInfoAreaMaskPeekXY &theMask) = delete;
@@ -164,12 +177,14 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
                           const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
                           int theXOffset,
                           int theYOffset,
+                          unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator = kNoValue);
 
   NFmiInfoAreaMaskPeekXY2(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                           const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
                           int theXOffset,
                           int theYOffset,
+                          unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator = kNoValue);
   NFmiInfoAreaMaskPeekXY2(const NFmiInfoAreaMaskPeekXY2 &theOther);
   NFmiAreaMask *Clone(void) const override;
@@ -205,12 +220,14 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY3 : public NFmiInfoAreaMask
                           const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
                           double theXOffsetInKM,
                           double theYOffsetInKM,
+                          unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator = kNoValue);
 
   NFmiInfoAreaMaskPeekXY3(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                           const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
                           double theXOffsetInKM,
                           double theYOffsetInKM,
+                          unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator = kNoValue);
   NFmiInfoAreaMaskPeekXY3(const NFmiInfoAreaMaskPeekXY3 &theOther);
   NFmiAreaMask *Clone(void) const override;
@@ -242,6 +259,7 @@ class _FMI_DLL NFmiInfoAreaMaskMetFuncBase : public NFmiInfoAreaMask
                               const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                               bool thePeekAlongTudes,
                               MetFunctionDirection theMetFuncDirection,
+                              unsigned long thePossibleMetaParamId,
                               BinaryOperator thePostBinaryOperator = kNoValue);
   NFmiInfoAreaMaskMetFuncBase(const NFmiInfoAreaMaskMetFuncBase &theOther);
   NFmiInfoAreaMaskMetFuncBase &operator=(const NFmiInfoAreaMaskMetFuncBase &theMask) = delete;
@@ -448,7 +466,8 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
                            const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                            NFmiAreaMask::FunctionType thePrimaryFunc,
                            NFmiAreaMask::FunctionType theSecondaryFunc,
-                           int theArgumentCount);
+                           int theArgumentCount,
+                           unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskVertFunc(const NFmiInfoAreaMaskVertFunc &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskVertFunc &operator=(const NFmiInfoAreaMaskVertFunc &theMask) = delete;
@@ -554,7 +573,8 @@ class _FMI_DLL NFmiInfoAreaMaskVertConditionalFunc : public NFmiInfoAreaMaskVert
                                       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                       NFmiAreaMask::FunctionType thePrimaryFunc,
                                       NFmiAreaMask::FunctionType theSecondaryFunc,
-                                      int theArgumentCount);
+                                      int theArgumentCount,
+                                      unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskVertConditionalFunc(const NFmiInfoAreaMaskVertConditionalFunc &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskVertConditionalFunc &operator=(const NFmiInfoAreaMaskVertConditionalFunc &theMask) = delete;
@@ -583,7 +603,8 @@ class NFmiInfoAreaMaskTimeVertFunc : public NFmiInfoAreaMaskVertFunc
                                const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                NFmiAreaMask::FunctionType thePrimaryFunc,
                                NFmiAreaMask::FunctionType theSecondaryFunc,
-                               int theArgumentCount);
+                               int theArgumentCount,
+                               unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskTimeVertFunc(const NFmiInfoAreaMaskTimeVertFunc &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskTimeVertFunc &operator=(const NFmiInfoAreaMaskTimeVertFunc &theMask) = delete;
@@ -611,7 +632,8 @@ class _FMI_DLL NFmiInfoAreaMaskProbFunc : public NFmiInfoAreaMask
                            const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                            NFmiAreaMask::FunctionType thePrimaryFunc,
                            NFmiAreaMask::FunctionType theSecondaryFunc,
-                           int theArgumentCount);
+                           int theArgumentCount,
+                            unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskProbFunc(const NFmiInfoAreaMaskProbFunc &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskProbFunc &operator=(const NFmiInfoAreaMaskProbFunc &theMask) = delete;
@@ -681,7 +703,8 @@ class _FMI_DLL NFmiInfoTimeIntegrator : public NFmiInfoAreaMaskMetFuncBase
                          const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                          NFmiAreaMask::FunctionType theIntegrationFunc,
                          int theStartTimeOffset,
-                         int theEndTimeOffset);
+                         int theEndTimeOffset,
+                         unsigned long thePossibleMetaParamId);
   NFmiInfoTimeIntegrator(const NFmiInfoTimeIntegrator &theOther);
   NFmiAreaMask *Clone(void) const override;
 
@@ -731,7 +754,8 @@ class _FMI_DLL NFmiInfoRectAreaIntegrator : public NFmiInfoAreaMaskMetFuncBase
                              int theStartXOffset,
                              int theEndXOffset,
                              int theStartYOffset,
-                             int theEndYOffset);
+                             int theEndYOffset,
+                             unsigned long thePossibleMetaParamId);
   NFmiInfoRectAreaIntegrator(const NFmiInfoRectAreaIntegrator &theOther);
   NFmiAreaMask *Clone(void) const override;
 
@@ -781,7 +805,8 @@ public:
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         NFmiAreaMask::FunctionType thePrimaryFunc,
         NFmiAreaMask::FunctionType theSecondaryFunc,
-        int theArgumentCount);
+        int theArgumentCount,
+        unsigned long thePossibleMetaParamId);
     NFmiInfoAreaIntegrationFunc(const NFmiInfoAreaIntegrationFunc &theOther);
     NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaIntegrationFunc &operator=(const NFmiInfoAreaIntegrationFunc &theMask) = delete;
@@ -812,7 +837,8 @@ public:
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         NFmiAreaMask::FunctionType thePrimaryFunc,
         NFmiAreaMask::FunctionType theSecondaryFunc,
-        int theArgumentCount);
+        int theArgumentCount,
+        unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskAreaProbFunc(const NFmiInfoAreaIntegrationFunc &theOther);
     NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskAreaProbFunc &operator=(const NFmiInfoAreaMaskAreaProbFunc &theMask) = delete;
@@ -834,6 +860,7 @@ public:
         NFmiInfoData::Type theDataType,
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         float theTimeOffsetInHours,
+        unsigned long thePossibleMetaParamId,
         BinaryOperator thePostBinaryOperator = kNoValue);
     NFmiTimeShiftedInfoAreaMask(const NFmiTimeShiftedInfoAreaMask &theOther);
     NFmiAreaMask *Clone(void) const override;
