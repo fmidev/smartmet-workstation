@@ -202,15 +202,30 @@ static bool CheckDataType(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
   return false;
 }
 
-static bool CheckMetaWindVectorCase(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    const NFmiDataIdent &theDataIdent)
+static bool CheckMetaWindParamCases(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    const NFmiDataIdent &theDataIdent, bool fUseParIdOnly)
 {
-    // Meta wind-vector tapaus on myös tarkasteltava erikseen
-    if(theDataIdent.GetParamIdent() == kFmiWindVectorMS)
+    if(fUseParIdOnly || (*theInfo->Producer() == *theDataIdent.GetProducer()))
     {
-        NFmiFastInfoUtils::MetaWindVectorParamUsage metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(theInfo);
-        if(metaWindVectorParamUsage.fUseMetaWindVectorParam)
-            return true;
+        // Tutki onko haluttu parametri joku mahdollisista tuulen meta parametreista
+        switch(theDataIdent.GetParamIdent())
+        {
+        case kFmiWindDirection:
+        case kFmiWindSpeedMS:
+        case kFmiWindVectorMS:
+        case kFmiWindUMS:
+        case kFmiWindVMS:
+        {
+            NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+            if(metaWindParamUsage.HasWsAndWd() || metaWindParamUsage.HasWindComponents())
+            {
+                // Jos löytyy jompi kumpi parametri pareista, voidaan mitä tahansa laskea meta parametreina
+                return true; 
+            }
+        }
+        default:
+            break;
+        }
     }
     return false;
 }
@@ -256,7 +271,7 @@ static bool CheckDataIdent(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       return true;
     else if (::CheckStreamlineCase(theInfo, theDataIdent, fUseParIdOnly))
         return true;
-    else if(::CheckMetaWindVectorCase(theInfo, theDataIdent))
+    else if(::CheckMetaWindParamCases(theInfo, theDataIdent, fUseParIdOnly))
             return true;
   }
   return false;

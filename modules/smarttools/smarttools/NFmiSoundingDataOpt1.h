@@ -184,7 +184,7 @@ class NFmiSoundingDataOpt1
       const NFmiMetTime &theTime,
       const NFmiPoint &theLatlon);
   void FastFillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  void FillRestOfWindData(NFmiFastInfoUtils::MetaWindVectorParamUsage &metaWindVectorParamUsage);
+  void FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage);
   void InitZeroHeight(void);  // tätä kutsutaan FillParamData-metodeista
   void CalculateHumidityData(void);
   std::string MakeCacheString(double T, double Td, double fromP, double toP);

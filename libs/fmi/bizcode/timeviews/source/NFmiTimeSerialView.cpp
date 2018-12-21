@@ -40,6 +40,7 @@
 #include "ToolBoxStateRestorer.h"
 #include "NFmiLimitChecker.h"
 #include "ToolBoxStateRestorer.h"
+#include "NFmiFastInfoUtils.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -1188,22 +1189,53 @@ void NFmiTimeSerialView::DrawStationNameLegend(const NFmiLocation* theLocation, 
 	}
 }
 
-static float GetWantedValue(NFmiFastQueryInfo &theInfo, const NFmiPoint &theLatLonPoint, int theWantedLocationIndex)
+static float GetWantedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatLonPoint, int theWantedLocationIndex, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
-	if(theWantedLocationIndex < 0)
-		return theInfo.InterpolatedValue(theLatLonPoint);
-	else
-	{
-		theInfo.LocationIndex(theWantedLocationIndex);
-		return theInfo.FloatValue();
-	}
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+    {
+        if(theWantedLocationIndex < 0)
+            return NFmiFastInfoUtils::GetMetaWindValue(theInfo, theLatLonPoint, metaWindParamUsage, wantedParamId);
+        else
+            return NFmiFastInfoUtils::GetMetaWindValue(theInfo, metaWindParamUsage, wantedParamId);
+    }
+    else
+    {
+        if(theWantedLocationIndex < 0)
+            return theInfo->InterpolatedValue(theLatLonPoint);
+        else
+        {
+            theInfo->LocationIndex(theWantedLocationIndex);
+            return theInfo->FloatValue();
+        }
+    }
+}
+
+static double GetTimeSerialValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool interpolateValues, const NFmiPoint &theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
+{
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+    {
+        if(interpolateValues)
+            return NFmiFastInfoUtils::GetMetaWindValue(theInfo, theLatlon, metaWindParamUsage, wantedParamId);
+        else
+            return NFmiFastInfoUtils::GetMetaWindValue(theInfo, metaWindParamUsage, wantedParamId);
+    }
+    else
+    {
+        if(interpolateValues)
+            return theInfo->InterpolatedValue(theLatlon);
+        else
+            return theInfo->FloatValue();
+    }
 }
 
 void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawedTimes, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatLonPoint, int theTimeWhenDrawedInMinutes, const NFmiPoint& theSinglePointSize, bool drawConnectingLines, int theWantedLocationIndex)
 {
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    auto paramId = itsDrawParam->Param().GetParamIdent();
+
 	if(fJustScanningForMinMaxValues)
 	{
-		ScanDataForMinAndMaxValues(theInfo, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues);
+		ScanDataForMinAndMaxValues(theInfo, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
 		return ;
 	}
 
@@ -1214,7 +1246,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
 		NFmiDrawingEnvironment blackLineEnvi;
 		theInfo->Time(theDrawedTimes.FirstTime()); // pit‰‰ asettaa 1. aika p‰‰lle, mutta ei tarvitse tarkistaa sit‰
 		NFmiPoint pointSize(1, 1);
-		double realValue1 = ::GetWantedValue(*theInfo, theLatLonPoint, theWantedLocationIndex)
+		double realValue1 = ::GetWantedValue(theInfo, theLatLonPoint, theWantedLocationIndex, metaWindParamUsage, paramId)
 			  ,realValue2 = kFloatMissing;
 		double lastNonMissingValue = kFloatMissing;
 		NFmiMetTime time1(theDrawedTimes.FirstTime())
@@ -1226,7 +1258,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
 		{
 			time2 = theInfo->Time();
 			time2.ChangeByMinutes(theTimeWhenDrawedInMinutes);
-			realValue2 = ::GetWantedValue(*theInfo, theLatLonPoint, theWantedLocationIndex);
+			realValue2 = ::GetWantedValue(theInfo, theLatLonPoint, theWantedLocationIndex, metaWindParamUsage, paramId);
 			if(drawConnectingLines && realValue1 == kFloatMissing && realValue2 != kFloatMissing && lastNonMissingValue != kFloatMissing)
 			{ // piirret‰‰n ohut musta yhteysviiv‰ katkonaisiin kohtiin, jos niin on s‰‰detty
 				// ja piirret‰‰n se t‰p‰n alle, jokat tehd‰‰n kun on toinen arvoista on puuttuvaa.
@@ -1264,9 +1296,11 @@ void NFmiTimeSerialView::DrawSinglePointData(double value, const NFmiMetTime &ti
 
 void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatlon, int theTimeWhenDrawedInMinutes, const NFmiPoint& theSinglePointSize, bool fUseValueAxis)
 {
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    auto paramId = itsDrawParam->Param().GetParamIdent();
 	if(fJustScanningForMinMaxValues)
 	{
-		ScanDataForMinAndMaxValues(theInfo, theLatlon, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues);
+		ScanDataForMinAndMaxValues(theInfo, theLatlon, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
 		return ;
 	}
 	itsToolBox->UseClipping(true);
@@ -1279,8 +1313,8 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQu
 	{
 		NFmiPoint pointSize(1, 1);
 		theInfo->FirstTime();
-		double realValue1 = interpolateValues ? theInfo->InterpolatedValue(theLatlon) : theInfo->FloatValue()
-			  ,realValue2 = kFloatMissing;
+        double realValue1 = ::GetTimeSerialValue(theInfo, interpolateValues, theLatlon, metaWindParamUsage, paramId);
+        double realValue2 = kFloatMissing;
 		NFmiMetTime time1(theInfo->TimeDescriptor().FirstTime())
 				   ,time2;
 		time1.ChangeByMinutes(theTimeWhenDrawedInMinutes);
@@ -1288,7 +1322,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQu
 		{
 			time2 = theInfo->Time();
 			time2.ChangeByMinutes(theTimeWhenDrawedInMinutes);
-			realValue2 = interpolateValues ? theInfo->InterpolatedValue(theLatlon) : theInfo->FloatValue();
+			realValue2 = ::GetTimeSerialValue(theInfo, interpolateValues, theLatlon, metaWindParamUsage, paramId);
 			DrawDataLine(time1, time2, realValue1, realValue2, theEnvi, pointSize, theSinglePointSize, fUseValueAxis);
 			realValue1 = realValue2;
 			time1 = time2;
@@ -2573,7 +2607,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 	return false;
 }
 
-bool NFmiTimeSerialView::ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut)
+bool NFmiTimeSerialView::ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
 //	if(theInfo->Location(theLatlon))
 	{
@@ -2597,7 +2631,7 @@ bool NFmiTimeSerialView::ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQu
 		{
 			if(theInfo->TimeIndex(i))
 			{
-				float value = interpolateLocation ? theInfo->InterpolatedValue(theLatlon) : theInfo->FloatValue();
+				float value = static_cast<float>(::GetTimeSerialValue(theInfo, interpolateLocation, theLatlon, metaWindParamUsage, wantedParamId));
 				theAutoAdjustMinMaxValuesOut.Calculate(value);
 			}
 		}
@@ -3998,31 +4032,31 @@ NFmiTimeBag NFmiTimeSerialView::GetViewLimitingTimes(void)
 	return itsCtrlViewDocumentInterface->TimeSerialViewTimeBag();
 }
 
-void NFmiTimeSerialView::FillTimeSerialDataFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiPoint &theLatLonPoint, checkedVector<double> &theValues)
+void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, checkedVector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
 	// Onko t‰m‰ oikein????, linitingtimesit otetaan sourceInfosta ja niill‰ rajoitetaan FillTimeSerialDataFromInfo-metodissa
 	// taas sourceInfosta haettavia aikoja.
-	NFmiTimeBag limitingTimes(theSourceInfo.TimeDescriptor().FirstTime(), theSourceInfo.TimeDescriptor().LastTime(), 60); // resoluutiolla ei ole merkityst‰, 60 vain heitet‰‰n siihen
-	FillTimeSerialDataFromInfo(theSourceInfo, theLatLonPoint, limitingTimes, theValues);
+	NFmiTimeBag limitingTimes(theSourceInfo->TimeDescriptor().FirstTime(), theSourceInfo->TimeDescriptor().LastTime(), 60); // resoluutiolla ei ole merkityst‰, 60 vain heitet‰‰n siihen
+	FillTimeSerialDataFromInfo(theSourceInfo, theLatLonPoint, limitingTimes, theValues, metaWindParamUsage, wantedParamId);
 }
 
 // HUOM! yritt‰‰ ottaa myˆs yhdet ajat ja arvot aikareunojen yli
-void NFmiTimeSerialView::FillTimeSerialDataFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiPoint &theLatLonPoint, const NFmiTimeBag &theLimitTimes, checkedVector<double> &theValues)
+void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, const NFmiTimeBag &theLimitTimes, checkedVector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
-	if(theSourceInfo.TimeToNearestStep(theLimitTimes.FirstTime(), kBackward))
+	if(theSourceInfo->TimeToNearestStep(theLimitTimes.FirstTime(), kBackward))
 	{
-		bool interpolateValues = theSourceInfo.IsGrid();
+		bool interpolateValues = theSourceInfo->IsGrid();
 		NFmiLocation wantedLocation(theLatLonPoint);
-		if(interpolateValues == false && (theSourceInfo.NearestLocation(wantedLocation, gMaxDistanceToFractileStation) == false))
+		if(interpolateValues == false && (theSourceInfo->NearestLocation(wantedLocation, gMaxDistanceToFractileStation) == false))
 			return ; // jos asema dataa ei lˆydy 500 km sis‰lt‰ haluttua pistett‰, ei k‰ytet‰ sit‰
-		float value = interpolateValues ? theSourceInfo.InterpolatedValue(theLatLonPoint) : theSourceInfo.FloatValue();
+		float value = static_cast<float>(::GetTimeSerialValue(theSourceInfo, interpolateValues, theLatLonPoint, metaWindParamUsage, wantedParamId));
 		theValues.push_back(value);
 		NFmiMetTime currentInfoTime;
-		for( ; theSourceInfo.NextTime(); )
+		for( ; theSourceInfo->NextTime(); )
 		{
-			value = interpolateValues ? theSourceInfo.InterpolatedValue(theLatLonPoint) : theSourceInfo.FloatValue();
+			value = static_cast<float>(::GetTimeSerialValue(theSourceInfo, interpolateValues, theLatLonPoint, metaWindParamUsage, wantedParamId));
 			theValues.push_back(value);
-			if(!theLimitTimes.IsInside(theSourceInfo.Time()))
+			if(!theLimitTimes.IsInside(theSourceInfo->Time()))
 				break; // oletus, ett‰ ajat j‰rjestyksess‰ ja loopitus voidaan lopettaa
 		}
 	}
@@ -4107,13 +4141,16 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 				boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
 				if(info)
 				{
+                    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
+                    auto paramId = itsDrawParam->Param().GetParamIdent();
+
 					if(fJustScanningForMinMaxValues)
 					{
-						ScanDataForMinAndMaxValues(info, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues);
+						ScanDataForMinAndMaxValues(info, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
 					}
 					else
 					{
-						FillTimeSerialDataFromInfo(*info, theLatLonPoint, values);
+						FillTimeSerialDataFromInfo(info, theLatLonPoint, values, metaWindParamUsage, paramId);
 						checkedVector<NFmiMetTime> times;
 						FillTimeSerialTimesFromInfo(*info, times);
 
@@ -4153,7 +4190,9 @@ bool NFmiTimeSerialView::DrawEditedDataLocationInTime_PreliminaryActions(const N
 
     if(fJustScanningForMinMaxValues)
     {
-        ScanDataForMinAndMaxValues(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues);
+        auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
+        auto paramId = itsDrawParam->Param().GetParamIdent();
+        ScanDataForMinAndMaxValues(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
         return false;
     }
 
@@ -4204,8 +4243,10 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLine(const NFm
 
 void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines)
 {
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
+    auto paramId = itsDrawParam->Param().GetParamIdent();
     checkedVector<double> values;
-    FillTimeSerialDataFromInfo(*Info(), theLatLonPoint, values);
+    FillTimeSerialDataFromInfo(Info(), theLatLonPoint, values, metaWindParamUsage, paramId);
 
     // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
     double xStartPos = 0;
@@ -4218,8 +4259,10 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFm
 
 void NFmiTimeSerialView::DrawEditedDataLocationInTime_Timelist(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines)
 {
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
+    auto paramId = itsDrawParam->Param().GetParamIdent();
     checkedVector<double> values;
-    FillTimeSerialDataFromInfo(*Info(), theLatLonPoint, values);
+    FillTimeSerialDataFromInfo(Info(), theLatLonPoint, values, metaWindParamUsage, paramId);
     if(drawModificationLines)
         DrawEditedDataLocationInTime_ModificationLine(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
     PlotTimeSerialData(values, theTimes, theCurrentDataLineStyle, g_PointNormal, g_PointSingle, true, true);

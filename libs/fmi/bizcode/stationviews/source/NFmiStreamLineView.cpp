@@ -711,7 +711,7 @@ void NFmiStreamLineView::DrawStreamLineData(void)
             itsInfo->Param(kFmiWindDirection);
             NFmiDataMatrix<float> wd;
             itsInfo->Values(wd, itsTime);
-            NFmiFastInfoUtils::CalcWindComponentsFromSpeedAndDirection(ws, wd, itsWindUComponent, itsWindVComponent);
+            NFmiFastInfoUtils::CalcMatrixWindComponentsFromSpeedAndDirection(ws, wd, itsWindUComponent, itsWindVComponent);
         }
         else
             return;
