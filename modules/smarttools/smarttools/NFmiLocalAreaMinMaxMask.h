@@ -52,7 +52,8 @@ public:
         NFmiInfoData::Type theDataType,
         boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         int theArgumentCount,
-        const NFmiGrid &theCalculationGrid);
+        const NFmiGrid &theCalculationGrid,
+        unsigned long thePossibleMetaParamId);
     ~NFmiLocalAreaMinMaxMask(void);
     NFmiLocalAreaMinMaxMask(const NFmiLocalAreaMinMaxMask &theOther);
     NFmiAreaMask *Clone(void) const override;

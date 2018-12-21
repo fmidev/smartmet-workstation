@@ -19,7 +19,8 @@ class _FMI_DLL NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
                              NFmiAreaMask::FunctionType theSecondaryFunc,
                              int theArgumentCount,
                              const boost::shared_ptr<NFmiArea> &theCalculationArea,
-                             bool synopXCase);
+                             bool synopXCase,
+                             unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOccurrance &theOther);
   void Initialize(void) override;  // Tätä kutsutaan konstruktorin jälkeen, tässä alustetaan tietyille
                           // datoille mm. käytetyt aikaindeksit ja käytetyt locaaion indeksit
@@ -90,7 +91,8 @@ public:
         NFmiAreaMask::FunctionType theSecondaryFunc,
         int theArgumentCount,
         const boost::shared_ptr<NFmiArea> &theCalculationArea,
-        bool synopXCase);
+        bool synopXCase,
+        unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskOccurranceSimpleCondition(const NFmiInfoAreaMaskOccurranceSimpleCondition &theOther);
     NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskOccurranceSimpleCondition &operator=(const NFmiInfoAreaMaskOccurranceSimpleCondition &theMask) = delete;
@@ -116,7 +118,8 @@ public:
         NFmiInfoData::Type theDataType,
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         int theArgumentCount,
-        double observationRadiusInKm);
+        double observationRadiusInKm,
+        unsigned long thePossibleMetaParamId);
     ~NFmiPeekTimeMask(void);
     NFmiPeekTimeMask(const NFmiPeekTimeMask &theOther);
     NFmiAreaMask *Clone(void) const override;
@@ -149,7 +152,8 @@ public:
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         NFmiAreaMask::FunctionType theIntegrationFunc,
         int theArgumentCount,
-        double observationRadiusInKm);
+        double observationRadiusInKm,
+        unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskTimeRange(const NFmiInfoAreaMaskTimeRange &theOther);
     NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskTimeRange &operator=(const NFmiInfoAreaMaskTimeRange &theMask) = delete;
@@ -195,7 +199,8 @@ public:
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         NFmiAreaMask::FunctionType theIntegrationFunc,
         int theArgumentCount,
-        double observationRadiusInKm);
+        double observationRadiusInKm,
+        unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskPreviousFullDays(const NFmiInfoAreaMaskPreviousFullDays &theOther);
     NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskPreviousFullDays &operator=(const NFmiInfoAreaMaskPreviousFullDays &theMask) = delete;
@@ -220,7 +225,8 @@ public:
         NFmiInfoData::Type theDataType,
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         int theArgumentCount,
-        double observationRadiusInKm);
+        double observationRadiusInKm,
+        unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskTimeDuration(const NFmiInfoAreaMaskTimeDuration &theOther);
     NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskTimeDuration &operator=(const NFmiInfoAreaMaskTimeDuration &theMask) = delete;

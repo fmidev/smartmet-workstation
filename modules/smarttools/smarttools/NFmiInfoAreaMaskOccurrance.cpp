@@ -28,14 +28,16 @@ NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     const boost::shared_ptr<NFmiArea> &theCalculationArea,
-    bool synopXCase)
+    bool synopXCase,
+    unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMaskProbFunc(theOperation,
                                theMaskType,
                                theDataType,
                                theInfo,
                                thePrimaryFunc,
                                theSecondaryFunc,
-                               theArgumentCount),
+                               theArgumentCount, 
+                               thePossibleMetaParamId),
       fSynopXCase(synopXCase),
       fUseMultiSourceData(false),
       itsCalculationArea(theCalculationArea),
@@ -304,7 +306,8 @@ NFmiInfoAreaMaskOccurranceSimpleCondition::NFmiInfoAreaMaskOccurranceSimpleCondi
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     const boost::shared_ptr<NFmiArea> &theCalculationArea,
-    bool synopXCase)
+    bool synopXCase,
+    unsigned long thePossibleMetaParamId)
     :NFmiInfoAreaMaskOccurrance(theOperation,
         theMaskType,
         theDataType,
@@ -313,7 +316,8 @@ NFmiInfoAreaMaskOccurranceSimpleCondition::NFmiInfoAreaMaskOccurranceSimpleCondi
         theSecondaryFunc,
         theArgumentCount,
         theCalculationArea,
-        synopXCase)
+        synopXCase,
+        thePossibleMetaParamId)
 {}
 
 NFmiInfoAreaMaskOccurranceSimpleCondition::NFmiInfoAreaMaskOccurranceSimpleCondition(const NFmiInfoAreaMaskOccurranceSimpleCondition &theOther)
@@ -388,9 +392,10 @@ NFmiPeekTimeMask::NFmiPeekTimeMask(Type theMaskType,
     NFmiInfoData::Type theDataType,
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     int theArgumentCount,
-    double observationRadiusInKm)
+    double observationRadiusInKm,
+    unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMask(
-        NFmiCalculationCondition(), theMaskType, theDataType, theInfo, NFmiAreaMask::kNoValue),
+        NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId, NFmiAreaMask::kNoValue),
     itsTimeOffsetInMinutes(0),
     fUseMultiSourceData(false),
     itsInfoVector(),
@@ -506,8 +511,9 @@ NFmiInfoAreaMaskTimeRange::NFmiInfoAreaMaskTimeRange(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     NFmiAreaMask::FunctionType theIntegrationFunc,
     int theArgumentCount,
-    double observationRadiusInKm)
-    : NFmiPeekTimeMask(theMaskType, theDataType, theInfo, theArgumentCount, observationRadiusInKm),
+    double observationRadiusInKm,
+    unsigned long thePossibleMetaParamId)
+    : NFmiPeekTimeMask(theMaskType, theDataType, theInfo, theArgumentCount, observationRadiusInKm, thePossibleMetaParamId),
     itsIntegrationFunc(theIntegrationFunc),
     itsFunctionModifier(),
     itsArgumentVector(),
@@ -679,14 +685,16 @@ NFmiInfoAreaMaskPreviousFullDays::NFmiInfoAreaMaskPreviousFullDays(const NFmiCal
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     NFmiAreaMask::FunctionType theIntegrationFunc,
     int theArgumentCount,
-    double observationRadiusInKm)
+    double observationRadiusInKm,
+    unsigned long thePossibleMetaParamId)
     :NFmiInfoAreaMaskTimeRange(theOperation,
         theMaskType,
         theDataType,
         theInfo,
         theIntegrationFunc,
         theArgumentCount,
-        observationRadiusInKm)
+        observationRadiusInKm,
+        thePossibleMetaParamId)
     , itsPreviousDayCount(0)
 {}
 
@@ -783,14 +791,16 @@ NFmiInfoAreaMaskTimeDuration::NFmiInfoAreaMaskTimeDuration(const NFmiCalculation
     NFmiInfoData::Type theDataType,
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     int theArgumentCount,
-    double observationRadiusInKm)
+    double observationRadiusInKm,
+    unsigned long thePossibleMetaParamId)
     :NFmiInfoAreaMaskTimeRange(theOperation,
         theMaskType,
         theDataType,
         theInfo,
         NFmiAreaMask::Min, // tähän on vain pakko antaa joku integraatio funktio, vaikka sitä ei käytetäkään tässä luokassa
         theArgumentCount,
-        observationRadiusInKm)
+        observationRadiusInKm,
+        thePossibleMetaParamId)
     ,itsSeekTimeInHours(0)
     ,itsSeekTimeInMinutes(0)
     ,itsCalculatedTimeDurationInMinutes(0)
