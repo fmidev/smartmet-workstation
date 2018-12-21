@@ -10,14 +10,38 @@ class NFmiPoint;
 
 namespace NFmiFastInfoUtils
 {
-    struct MetaWindVectorParamUsage
+    // Apu luokka tekem‰‰n ik‰v‰n fastInfon parametrin valinta tilan palautuksen (indeksi + aliparametri juttu).
+    // Tila otetaan konstruktorissa ja palautetaan destruktorissa.
+    class FastInfoParamStateRestorer
     {
-        // Data has no kFmiWindVectorMS parameter, so we have to make meta parameter of it.
-        bool fUseMetaWindVectorParam = false;
+        NFmiFastQueryInfo &info_;
+        unsigned long paramId_;
+    public:
+        FastInfoParamStateRestorer(NFmiFastQueryInfo &info);
+        ~FastInfoParamStateRestorer();
+    };
+
+    class MetaWindParamUsage
+    {
+        // If Totalwind combine parameter is present, no need for any meta parameters...
+        bool fHasTotalWind = false;
+        // Data has kFmiWindVectorMS parameter, so no need to make meta parameter of it.
+        bool fHasWindVectorParam = false;
         // Data has wind speed and wind direction (that can be used to calculate wind vector)
         bool fHasWsAndWd = false;
         // data has u- and v-components of the wind (that can be used to calculate wind vector)
         bool fHasWindComponents = false;
+    public:
+        bool ParamNeedsMetaCalculations(unsigned long paramId) const;
+        bool NoWindMetaParamsNeeded() const;
+        bool MakeMetaWindVectorParam() const;
+        bool MakeMetaWsAndWdParams() const;
+        bool MakeMetaWindComponents() const;
+        bool HasWsAndWd() const { return fHasWsAndWd; }
+        bool HasWindComponents() const { return fHasWindComponents; }
+
+
+        friend MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
     };
 
 bool IsInfoShipTypeData(NFmiFastQueryInfo &theInfo);
@@ -36,15 +60,27 @@ bool FindTimeIndicesForGivenTimeRange(const boost::shared_ptr<NFmiFastQueryInfo>
 bool FindMovingSoundingDataTime(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                 const NFmiMetTime &theTime,
                                 NFmiLocation &theLocation);
-MetaWindVectorParamUsage CheckMetaWindVectorParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const MetaWindVectorParamUsage &metaWindVectorParamUsage);
-float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const MetaWindVectorParamUsage &metaWindVectorParamUsage);
-float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const MetaWindVectorParamUsage &metaWindVectorParamUsage);
-void CalcWindSpeedAndDirectionFromComponents(const std::deque<float> &u, const std::deque<float> &v, std::deque<float> &wsOut, std::deque<float> &wdOut);
-void CalcWindComponentsFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &uOut, std::deque<float> &vOut);
-void CalcWindComponentsFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &uOut, NFmiDataMatrix<float> &vOut);
-void CalcWindVectorFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &windVectorOut);
-void CalcWindVectorFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex = 0);
-void CalcWindVectorFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex = 0);
+MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+void CalcDequeWindSpeedAndDirectionFromComponents(const std::deque<float> &u, const std::deque<float> &v, std::deque<float> &wsOut, std::deque<float> &wdOut);
+void CalcDequeWindComponentsFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &uOut, std::deque<float> &vOut);
+void CalcMatrixWindComponentsFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &uOut, NFmiDataMatrix<float> &vOut);
+void CalcDequeWindVectorFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &windVectorOut);
+void CalcMatrixWindVectorFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex = 0);
+void CalcMatrixWindVectorFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex = 0);
+void CalcMatrixWsFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &wsOut, unsigned int theStartColumnIndex = 0);
+void CalcMatrixWdFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &wdOut, unsigned int theStartColumnIndex = 0);
+void CalcMatrixUcomponentFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &uOut, unsigned int theStartColumnIndex = 0);
+void CalcMatrixVcomponentFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &vOut, unsigned int theStartColumnIndex = 0);
 bool SetInfoToGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned long gridPointX, unsigned long gridPointY);
+
+float CalcWS(float u, float v);
+float CalcWD(float u, float v);
+float CalcU(float WS, float WD);
+float CalcV(float WS, float WD);
+float CalcWindVectorFromWindComponents(float u, float v);
+float CalcWindVectorFromSpeedAndDirection(float WS, float WD);
 }
