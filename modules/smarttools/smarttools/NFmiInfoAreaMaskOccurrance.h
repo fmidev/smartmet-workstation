@@ -21,9 +21,9 @@ class _FMI_DLL NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
                              const boost::shared_ptr<NFmiArea> &theCalculationArea,
                              bool synopXCase);
   NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOccurrance &theOther);
-  void Initialize(void);  // Tätä kutsutaan konstruktorin jälkeen, tässä alustetaan tietyille
+  void Initialize(void) override;  // Tätä kutsutaan konstruktorin jälkeen, tässä alustetaan tietyille
                           // datoille mm. käytetyt aikaindeksit ja käytetyt locaaion indeksit
-  NFmiAreaMask *Clone(void) const;
+  NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskProbFunc &operator=(const NFmiInfoAreaMaskProbFunc &theMask) = delete;
 
   static void SetMultiSourceDataGetterCallback(
@@ -39,7 +39,7 @@ class _FMI_DLL NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
   static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> CreateShallowCopyOfInfoVector(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
  protected:
   bool IsGridData() const;
@@ -92,7 +92,7 @@ public:
         const boost::shared_ptr<NFmiArea> &theCalculationArea,
         bool synopXCase);
     NFmiInfoAreaMaskOccurranceSimpleCondition(const NFmiInfoAreaMaskOccurranceSimpleCondition &theOther);
-    NFmiAreaMask *Clone(void) const;
+    NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskOccurranceSimpleCondition &operator=(const NFmiInfoAreaMaskOccurranceSimpleCondition &theMask) = delete;
 
     double Value(const NFmiCalculationParams &theCalculationParams,
@@ -119,11 +119,11 @@ public:
         double observationRadiusInKm);
     ~NFmiPeekTimeMask(void);
     NFmiPeekTimeMask(const NFmiPeekTimeMask &theOther);
-    NFmiAreaMask *Clone(void) const;
-    void Initialize(void);
+    NFmiAreaMask *Clone(void) const override;
+    void Initialize(void) override;
 
-    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
-    void SetArguments(std::vector<float> &theArgumentVector);
+    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+    void SetArguments(std::vector<float> &theArgumentVector) override;
 
 protected:
     double CalcValueFromObservation(const NFmiPoint &theLatlon, const NFmiMetTime &thePeekTime);
@@ -151,12 +151,12 @@ public:
         int theArgumentCount,
         double observationRadiusInKm);
     NFmiInfoAreaMaskTimeRange(const NFmiInfoAreaMaskTimeRange &theOther);
-    NFmiAreaMask *Clone(void) const;
+    NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskTimeRange &operator=(const NFmiInfoAreaMaskTimeRange &theMask) = delete;
-    void SetArguments(std::vector<float> &theArgumentVector);
+    void SetArguments(std::vector<float> &theArgumentVector) override;
 
     // tätä kaytetaan smarttool-modifierin yhteydessä
-    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
 protected:
     virtual void InitializeFromArguments(void);
@@ -197,7 +197,7 @@ public:
         int theArgumentCount,
         double observationRadiusInKm);
     NFmiInfoAreaMaskPreviousFullDays(const NFmiInfoAreaMaskPreviousFullDays &theOther);
-    NFmiAreaMask *Clone(void) const;
+    NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskPreviousFullDays &operator=(const NFmiInfoAreaMaskPreviousFullDays &theMask) = delete;
 
 protected:
@@ -222,7 +222,7 @@ public:
         int theArgumentCount,
         double observationRadiusInKm);
     NFmiInfoAreaMaskTimeDuration(const NFmiInfoAreaMaskTimeDuration &theOther);
-    NFmiAreaMask *Clone(void) const;
+    NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMaskTimeDuration &operator=(const NFmiInfoAreaMaskTimeDuration &theMask) = delete;
 
     // tätä kaytetaan smarttool-modifierin yhteydessä

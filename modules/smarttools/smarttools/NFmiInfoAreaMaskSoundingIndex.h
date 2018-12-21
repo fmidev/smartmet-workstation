@@ -20,7 +20,7 @@ class NFmiInfoAreaMaskSoundingIndex : public NFmiInfoAreaMask
   NFmiInfoAreaMaskSoundingIndex(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                 FmiSoundingParameters theSoundingParam);
   NFmiInfoAreaMaskSoundingIndex(const NFmiInfoAreaMaskSoundingIndex &theOther);
-  NFmiAreaMask *Clone(void) const;
+  NFmiAreaMask *Clone(void) const override;
 
   FmiSoundingParameters SoundingParam(void) const { return itsSoundingParam; }
   void SoundingParam(FmiSoundingParameters newValue) { itsSoundingParam = newValue; }

@@ -35,10 +35,10 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
                        boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   ~NFmiStation2GridMask(void);
   NFmiStation2GridMask(const NFmiStation2GridMask &theOther);
-  NFmiAreaMask *Clone(void) const;
+  NFmiAreaMask *Clone(void) const override;
   NFmiStation2GridMask &operator=(const NFmiStation2GridMask &theMask) = delete;
 
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
   virtual void SetGriddingHelpers(NFmiArea *theArea,
                           NFmiGriddingHelperInterface *theGriddingHelper,
                           const NFmiPoint &theStation2GridSize,
@@ -102,14 +102,14 @@ class NFmiNearestObsValue2GridMask : public NFmiInfoAreaMask
                                int theArgumentCount);
   ~NFmiNearestObsValue2GridMask(void);
   NFmiNearestObsValue2GridMask(const NFmiNearestObsValue2GridMask &theOther);
-  NFmiAreaMask *Clone(void) const;
+  NFmiAreaMask *Clone(void) const override;
   NFmiStation2GridMask &operator=(const NFmiStation2GridMask &theMask) = delete;
 
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
   void SetGriddingHelpers(NFmiArea *theArea,
                           NFmiGriddingHelperInterface *theGriddingHelper,
                           const NFmiPoint &theResultGridSize);
-  void SetArguments(std::vector<float> &theArgumentVector);
+  void SetArguments(std::vector<float> &theArgumentVector) override;
 
  private:
   void DoNearestValueGriddingCheck(const NFmiCalculationParams &theCalculationParams);
@@ -157,10 +157,10 @@ public:
         int theArgumentCount);
     ~NFmiLastTimeValueMask(void);
     NFmiLastTimeValueMask(const NFmiLastTimeValueMask &theOther);
-    NFmiAreaMask *Clone(void) const;
+    NFmiAreaMask *Clone(void) const override;
     NFmiLastTimeValueMask &operator=(const NFmiLastTimeValueMask &theMask) = delete;
 
-    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
     void SetGriddingHelpers(NFmiArea *theArea,
         NFmiGriddingHelperInterface *theGriddingHelper,
         const NFmiPoint &theStation2GridSize,
@@ -184,10 +184,10 @@ public:
         float theTimeOffsetInHours);
     ~NFmiStation2GridTimeShiftMask(void);
     NFmiStation2GridTimeShiftMask(const NFmiStation2GridTimeShiftMask &theOther);
-    NFmiAreaMask *Clone(void) const;
+    NFmiAreaMask *Clone(void) const override;
     NFmiStation2GridTimeShiftMask &operator=(const NFmiStation2GridTimeShiftMask &theMask) = delete;
 
-    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
 protected:
     NFmiCalculationParams GetUsedCalculationParams(const NFmiCalculationParams &theCalculationParams);
