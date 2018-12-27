@@ -117,8 +117,9 @@ namespace AddParams
         auto infos = operationalProducers(infoOrganizer);
         for(auto info : infos)
         {
+            if(!info.second)
+                continue;
             auto producer = NFmiProducer(info.second->Producer()->GetIdent(), info.first);
-            //auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer == producerData->producer(); });
             auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer.GetName() == producerData->producer().GetName(); });
             if(iter != producerDataVector_.end())
             {
@@ -147,7 +148,7 @@ namespace AddParams
         }
         else
         {
-            // Add macro params as new producer
+            // Add macro params as a new producer
             auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
             producerDataPtr->updateMacroParamData(macroParamTree);
             producerDataVector_.push_back(std::move(producerDataPtr));
