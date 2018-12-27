@@ -6,6 +6,7 @@
 #include "NFmiInfoOrganizer.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiOwnerInfo.h"
+#include "SingleRowItem.h"
 
 namespace
 {
@@ -199,7 +200,7 @@ namespace AddParams
         producerDataVector_.push_back(std::move(producerDataPtr));
     }
 
-    std::vector<SingleRowItem> CategoryData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const
+    std::vector<SingleRowItem> CategoryData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const
     {
         std::vector<SingleRowItem> dialogRowData;
         for(const auto &producerData : producerDataVector_)
@@ -214,6 +215,11 @@ namespace AddParams
                 dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
             }
         }
+        if(categoryName() == "Observation data")
+        {
+            auto data = customObservationData(infoOrganizer);
+            dialogRowData.insert(dialogRowData.end(), data.begin(), data.end());
+        }
         return dialogRowData;
     }
 
@@ -222,6 +228,22 @@ namespace AddParams
         auto fastQueryInfoVector = infoOrganizer.GetInfos(producer.GetIdent());
         auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
         return dataType;
+    }
+
+    std::vector<SingleRowItem> CategoryData::customObservationData(NFmiInfoOrganizer &infoOrganizer) const
+    {
+        std::vector<SingleRowItem> customObservationData;
+        // *** Flash ***
+        if(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0))
+        {
+            NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0)->Producer()));
+            std::string menuString = "Lightning data";
+            std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
+            SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, NFmiInfoData::kFlashData, 0, "", true, nullptr, 2, menuString);
+            customObservationData.push_back(item);
+        }
+
+        return customObservationData;
     }
 
 }
