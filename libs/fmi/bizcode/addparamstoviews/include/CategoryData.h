@@ -32,8 +32,9 @@ namespace AddParams
         const std::string& categoryName() const { return categoryName_; }
         const std::vector<std::unique_ptr<ProducerData>>& producerDataVector() const { return producerDataVector_; }
         bool empty() const { return producerDataVector_.empty(); }
-        std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const;
+        std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const;
         NFmiInfoData::Type getDataType(NFmiInfoOrganizer &infoOrganizer, NFmiProducer &producer);
+        std::vector<SingleRowItem> customObservationData(NFmiInfoOrganizer &infoOrganizer) const;
     private:
         void addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);

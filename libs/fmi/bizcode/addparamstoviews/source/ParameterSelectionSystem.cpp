@@ -184,7 +184,7 @@ namespace AddParams
             const std::string &uniqueId = category->categoryName();
             auto *categoryMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
             dialogRowData_.push_back(::makeRowItem(*category, uniqueId, categoryMemory));
-            auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory);
+            auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory, *infoOrganizer_);
             dialogRowData_.insert(dialogRowData_.end(), gategoryRowData.begin(), gategoryRowData.end());
         }
         for(const auto &rowItem : otherHelpData_)
