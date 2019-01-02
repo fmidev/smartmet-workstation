@@ -106,6 +106,7 @@ NFmiInfoAreaMask::NFmiInfoAreaMask()
       fUsePressureLevelInterpolation(false),
       itsUsedPressureLevelValue(kFloatMissing)
 {
+    DoConstructorInitializations();
 }
 
 // ----------------------------------------------------------------------
@@ -137,9 +138,7 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiCalculationCondition &theOperation,
       itsUsedPressureLevelValue(kFloatMissing),
     itsPossibleMetaParamId(thePossibleMetaParamId)
 {
-  if (theInfo && theInfo->Level()) 
-      itsLevel = *theInfo->Level();
-  metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    DoConstructorInitializations();
 }
 
 // ----------------------------------------------------------------------
@@ -166,9 +165,7 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const boost::shared_ptr<NFmiFastQueryInfo> &t
       itsUsedPressureLevelValue(kFloatMissing),
       itsPossibleMetaParamId(thePossibleMetaParamId)
 {
-  if (theInfo && theInfo->Level()) 
-      itsLevel = *theInfo->Level();
-  metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    DoConstructorInitializations();
 }
 
 NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
@@ -183,6 +180,14 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
       metaWindParamUsage(theOther.metaWindParamUsage),
       fCheckMetaParamCalculation(theOther.fCheckMetaParamCalculation)
 {
+}
+
+void NFmiInfoAreaMask::DoConstructorInitializations()
+{
+    if(itsInfo && itsInfo->Level())
+        itsLevel = *itsInfo->Level();
+    metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(itsInfo);
+    fCheckMetaParamCalculation = metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId);
 }
 
 NFmiAreaMask *NFmiInfoAreaMask::Clone() const { return new NFmiInfoAreaMask(*this); }
