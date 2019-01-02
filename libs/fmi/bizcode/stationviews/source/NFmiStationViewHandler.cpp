@@ -4566,93 +4566,16 @@ void NFmiStationViewHandler::GetMinimumDistanceMessage(const std::vector<HakeMes
         }
     }
 }
-#endif // DISABLE_CPPRESTSDK
-
-std::string NFmiStationViewHandler::ComposeWarningMessageToolTipText(void)
-{
-	std::string str;
-#ifndef DISABLE_CPPRESTSDK
-    if(ShowWarningMessages())
-	{
-        GetShownMessages();
-        NFmiLocation wantedLocation(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-		double minDistHake = 9999999999;
-        double minDistKaha = 9999999999;
-        HakeMessage::HakeMsg hakeMessage = HakeMessage::HakeMsg::unInitialized;
-        HakeMessage::HakeMsg kahaMessage = HakeMessage::HakeMsg::unInitialized;
-        GetMinimumDistanceMessage(itsShownHakeMessages, wantedLocation, hakeMessage, minDistHake);
-        GetMinimumDistanceMessage(itsShownKaHaMessages, wantedLocation, kahaMessage, minDistKaha);
-        
-        //Treat Hake and KaHa messages differently
-        if(!(hakeMessage == HakeMessage::HakeMsg::unInitialized) || !(kahaMessage == HakeMessage::HakeMsg::unInitialized))
-        {
-            str = (minDistHake < minDistKaha) ? HakeToolTipText(hakeMessage) : KahaToolTipText(kahaMessage); //Hake or Kaha tooltip
-        }
-	}
-#endif // DISABLE_CPPRESTSDK
-	return str;
-}
-
-// IKƒVƒƒ tupla koodia taas edellisen ComposeWarningMessageToolTipText-metodin kanssa
-std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(void)
-{
-	std::string str;
-	if(ShowSeaIcingWarningMessages())
-	{
-		NFmiLocation wantedLoc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
-		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) *60));
-		std::vector<NFmiSeaIcingWarningMessage*> warningMessages = itsCtrlViewDocumentInterface->SeaIcingWarningSystem().GetWantedWarningMessages(itsTime, editorTimeStep, zoomedArea);
-
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator it = warningMessages.begin();
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator endIt = warningMessages.end();
-		double minDist = 9999999999;
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator minIter = endIt; // iteraattori l‰himp‰‰n viestiin
-		for( ; it != endIt; ++it)
-		{
-			double currDist = wantedLoc.Distance((*it)->LatlonPoint());;
-			if(currDist < minDist)
-			{
-				minDist = currDist;
-				minIter = it;
-			}
-		}
-		if(minIter != endIt)
-		{
-			str += (*minIter)->TotalMessageStr();
-			// Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
-			::ConvertXML2PlainCode(str);
-		}
-	}
-	return str;
-}
-
-#ifndef DISABLE_CPPRESTSDK
-std::string NFmiStationViewHandler::HakeToolTipText(HakeMessage::HakeMsg &msg)
-{
-    std::string str;
-    std::vector<std::string>messageNodes = NFmiStringTools::Split(msg.TotalMessageStr(), ">");
-    for(unsigned int i = 0; i<messageNodes.size(); i++)
-    {
-    	str += messageNodes[i];
-    	str += ">\n";
-    }
-    // Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
-    ::ConvertXML2PlainCode(str);
-
-    return str;
-}
-#endif // DISABLE_CPPRESTSDK
 
 void AddLeadingZero(std::string& s)
 {
-    if(s.length() < 2) 
+    if(s.length() < 2)
     {
         s = "0" + s;
     }
 }
 
-std::string KahaUTCTime(HakeMessage::HakeMsg &msg)
+std::string KahaUTCTime(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
 
@@ -4673,25 +4596,25 @@ void KahaMinutesToPrintableTime(std::string& s)
     int time = stoi(s);
     if(time > 60 * 24 * 20) { //month category
         s = "kuukausi";
-    } 
-    else if (time > 60 * 24 * 5){ //week category
+    }
+    else if(time > 60 * 24 * 5) { //week category
         s = "viikko";
     }
-    else if (time > 60 * 12) { // day category
+    else if(time > 60 * 12) { // day category
         s = "p‰iv‰";
-    } 
+    }
     else if(time > 30) { // hour category
         s = "tunti";
     }
-    else if (time > 1){
+    else if(time > 1) {
         s = "10 min";
-    } 
+    }
     else {
         s = "-";
     }
 }
 
-std::string KahaTooltipAccuracy(HakeMessage::HakeMsg &msg)
+std::string KahaTooltipAccuracy(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
     std::stringstream strStream;
@@ -4704,14 +4627,13 @@ std::string KahaTooltipAccuracy(HakeMessage::HakeMsg &msg)
         strStream.str(msg.TotalMessageStr().substr(found + 9));
         std::getline(strStream, tempStr);
     }
-    std::string s = std::regex_replace( tempStr, std::regex("[^0-9]+"), std::string("") ); // Remove all but digits
+    std::string s = std::regex_replace(tempStr, std::regex("[^0-9]+"), std::string("")); // Remove all but digits
     KahaMinutesToPrintableTime(s);
     str += s;
     return str;
 }
 
-#ifndef DISABLE_CPPRESTSDK
-std::string NFmiStationViewHandler::KahaToolTipText(HakeMessage::HakeMsg &msg)
+static std::string KahaToolTipText(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
     std::string remainingStr = msg.ReasonStr();
@@ -4754,8 +4676,170 @@ std::string NFmiStationViewHandler::KahaToolTipText(HakeMessage::HakeMsg &msg)
 
     return str;
 }
+
+// Xml pohjaisessa sanomassa pit‰‰ eri kokonaisviesti jakaa xml-node riveihin, 
+// jotta siit‰ saa selv‰‰ (originaali viesti on yhdell‰ rivill‰).
+static std::string GetFinalXmlBaseHakeToolTipText(const HakeMessage::HakeMsg &msg)
+{
+    std::string str;
+    std::vector<std::string>messageNodes = NFmiStringTools::Split(msg.TotalMessageStr(), ">");
+    for(unsigned int i = 0; i<messageNodes.size(); i++)
+    {
+        str += messageNodes[i];
+        str += ">\n";
+    }
+    // Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
+    ::ConvertXML2PlainCode(str);
+
+    return str;
+}
+
+static bool ContainsAnyAlphaNumerals(const std::string &str)
+{
+    auto it = std::find_if(str.begin(), str.end(), 
+        [](char c) {
+        return std::isalnum(c);
+    });
+
+    return it != str.end();
+}
+
+// Jos teksti sis‰lt‰‰ lopussa merkit [], palauta true.
+// Palauta myˆs true, jos lopussa on tyhj‰t hipsut eli ""
+static bool ContainsJsonEmptyArrayInEnd(const std::string &str)
+{
+    auto strSize = str.size();
+    if(strSize >= 2)
+    {
+        if(str[strSize - 1] == ']' && str[strSize - 2] == '[')
+            return true;
+        if(str[strSize - 1] == '"' && str[strSize - 2] == '"')
+            return true;
+    }
+    return false;
+}
+
+// Poistetaan viel‰ rivin lopusta mahdolliset seuraavat merkit: ensin mahdollinen ',' ja sitten '{', '}', '[', ']'
+static void RemoveJsonMarkersFromEnd(std::string &str)
+{
+    if(!str.empty())
+    {
+        const std::string jsonMarkers = "{}[]";
+        if(jsonMarkers.find(str.back()) != std::string::npos)
+        {
+            str.pop_back();
+        }
+    }
+}
+
+// Json pohjaisesta viestist‰ pit‰‰ poistaa turhat json krumeluurit eli
+// sellaiset rivit, jolla on vain json:in aloitus/lopetus merkkej‰ kuten '{', '}', '[', ']'
+// Jos niit‰ ei poista, paisuu tooltipin 'puhekupla' todella pitk‰ksi ja vaikea selkoiseksi.
+static std::string GetFinalJsonBaseHakeToolTipText(const HakeMessage::HakeMsg &msg)
+{
+    std::vector<std::string> messageLines = NFmiStringTools::Split(msg.TotalMessageStr(), "\n");
+    std::string str;
+    // poistetaan sellaiset rivit, joilla ei ole yht‰‰n alpha-numeraalia
+    for(auto lineStr : messageLines)
+    {
+        if(::ContainsAnyAlphaNumerals(lineStr))
+        {
+            // Poista pilkku rivin lopusta
+            if(lineStr.back() == ',')
+                lineStr.pop_back();
+
+            // Tyhj‰t taulukot (esim. "announcements":[] ) ja tyhj‰t arvot, miss‰ xxx : "", j‰tet‰‰n pois h‰iritsem‰st‰
+            if(!::ContainsJsonEmptyArrayInEnd(lineStr))
+            {
+                ::RemoveJsonMarkersFromEnd(lineStr);
+                str += lineStr;
+                str += "\n"; // rivinvaihto pit‰‰ lis‰t‰ rivien per‰‰n, koska se on poistettu splittauksen yhteydess‰ 
+            }
+        }
+    }
+    return str;
+}
+
+static std::string HakeToolTipText(const HakeMessage::HakeMsg &msg)
+{
+    if(msg.IsFromXmlFormat())
+        return ::GetFinalXmlBaseHakeToolTipText(msg);
+    else
+        return ::GetFinalJsonBaseHakeToolTipText(msg);
+}
+
+static std::string GetFinalWarningMessageForTooltip(double minDistHake, double minDistKaha, const HakeMessage::HakeMsg &hakeMessage, const HakeMessage::HakeMsg &kahaMessage)
+{
+    //Treat Hake and KaHa messages differently
+    if(!(hakeMessage == HakeMessage::HakeMsg::unInitialized) || !(kahaMessage == HakeMessage::HakeMsg::unInitialized))
+    {
+        if(minDistHake < minDistKaha)
+        {
+            return ::HakeToolTipText(hakeMessage);
+        }
+        else
+        {
+            return ::KahaToolTipText(kahaMessage);
+        }
+    }
+    return "";
+}
+
 #endif // DISABLE_CPPRESTSDK
 
+std::string NFmiStationViewHandler::ComposeWarningMessageToolTipText(void)
+{
+#ifndef DISABLE_CPPRESTSDK
+    if(ShowWarningMessages())
+	{
+        GetShownMessages();
+        NFmiLocation wantedLocation(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
+		double minDistHake = 9999999999;
+        double minDistKaha = 9999999999;
+        HakeMessage::HakeMsg hakeMessage = HakeMessage::HakeMsg::unInitialized;
+        HakeMessage::HakeMsg kahaMessage = HakeMessage::HakeMsg::unInitialized;
+        GetMinimumDistanceMessage(itsShownHakeMessages, wantedLocation, hakeMessage, minDistHake);
+        GetMinimumDistanceMessage(itsShownKaHaMessages, wantedLocation, kahaMessage, minDistKaha);
+        
+        return ::GetFinalWarningMessageForTooltip(minDistHake, minDistKaha, hakeMessage, kahaMessage);
+	}
+#endif // DISABLE_CPPRESTSDK
+	return "";
+}
+
+// IKƒVƒƒ tupla koodia taas edellisen ComposeWarningMessageToolTipText-metodin kanssa
+std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(void)
+{
+	std::string str;
+	if(ShowSeaIcingWarningMessages())
+	{
+		NFmiLocation wantedLoc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
+		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
+		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) *60));
+		std::vector<NFmiSeaIcingWarningMessage*> warningMessages = itsCtrlViewDocumentInterface->SeaIcingWarningSystem().GetWantedWarningMessages(itsTime, editorTimeStep, zoomedArea);
+
+		std::vector<NFmiSeaIcingWarningMessage*>::iterator it = warningMessages.begin();
+		std::vector<NFmiSeaIcingWarningMessage*>::iterator endIt = warningMessages.end();
+		double minDist = 9999999999;
+		std::vector<NFmiSeaIcingWarningMessage*>::iterator minIter = endIt; // iteraattori l‰himp‰‰n viestiin
+		for( ; it != endIt; ++it)
+		{
+			double currDist = wantedLoc.Distance((*it)->LatlonPoint());;
+			if(currDist < minDist)
+			{
+				minDist = currDist;
+				minIter = it;
+			}
+		}
+		if(minIter != endIt)
+		{
+			str += (*minIter)->TotalMessageStr();
+			// Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
+			::ConvertXML2PlainCode(str);
+		}
+	}
+	return str;
+}
 
 static const NFmiPoint kMissingLatlon(kFloatMissing, kFloatMissing);
 

@@ -130,10 +130,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	std::string ComposeWarningMessageToolTipText(void);
 	std::string ComposeSeaIcingWarningMessageToolTipText(void);
 	std::string ComposeSilamLocationsToolTipText(void);
-#ifndef DISABLE_CPPRESTSDK
-    std::string HakeToolTipText(HakeMessage::HakeMsg &msg);
-    std::string KahaToolTipText(HakeMessage::HakeMsg &msg);
-#endif // DISABLE_CPPRESTSDK
 	void DrawMouseCursorHelperCrossHair(void);
 	void DrawSelectedSynopFromGridView(void);
 	bool ChangeHybridDataLevel(NFmiStationView* theView, short theDelta);
