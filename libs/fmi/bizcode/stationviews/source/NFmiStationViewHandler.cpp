@@ -4171,36 +4171,31 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 }
 
 // t‰ll‰ piirret‰‰n tavara, joka tulee myˆs bitmapin p‰‰lle
-void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* dummy */ , int theViewIndex, float /* dummy3 */ , void* /* dummy4 */ )
+void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* dummy */, int theViewIndex, float /* dummy3 */, void* /* dummy4 */)
 {
-	itsToolBox = theGTB;
+    itsToolBox = theGTB;
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
     InitializeGdiplus(itsToolBox, &GetFrame());
 
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
-		DrawControlPoints();
-	if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun
-		DrawSelectedLocations();
+    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+        DrawControlPoints();
+    if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun
+        DrawSelectedLocations();
 
-////????	if(itsCtrlViewDocumentInterface->ShowWaitCursorWhileDrawingView() == true)
-		// ei piirret‰ animaation aikana mm. timetext-laatikkoa  ja muita juttuja v‰lkkymisen est‰miseksi
-		// (HUOM! tarkastuksen pit‰‰ olla DrawTimeText-metodin ulkopuolella, koska metodia kutsutaan myˆs
-		// silloin kun karttaa piirret‰‰n normaalisti ja sen pit‰‰ tull‰ piirtoon mukaan)
-	{
-		DrawSelectedMTAModeSoundingPlaces();
-		DrawSoundingPlaces();
-		DrawCrossSectionPoints(); // n‰m‰ piirret‰‰n vain vasempaan yl‰ kulmaan karttaruudukossa
-        DrawTimeText();
-    }
-	DrawMouseCursorHelperCrossHair();
-	DrawSelectedSynopFromGridView();
+    DrawSelectedMTAModeSoundingPlaces();
+    DrawSoundingPlaces();
+    DrawCrossSectionPoints(); // n‰m‰ piirret‰‰n vain vasempaan yl‰ kulmaan karttaruudukossa
+    DrawTimeText();
 
-	DrawParamView(theGTB); // piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
-	DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
+    DrawMouseCursorHelperCrossHair();
+    DrawSelectedSynopFromGridView();
+
+    DrawParamView(theGTB); // piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
+    DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
     CleanGdiplus();
 }
 
-static bool IsRectIntersecting(const NFmiRect &theRect, checkedVector<NFmiRect> &theExistingRects)
+static bool IsRectIntersecting(const NFmiRect &theRect, std::vector<NFmiRect> &theExistingRects)
 {
 	for(size_t i=0; i < theExistingRects.size(); i++)
 	{
@@ -4210,62 +4205,33 @@ static bool IsRectIntersecting(const NFmiRect &theRect, checkedVector<NFmiRect> 
 	return false;
 }
 
-checkedVector<NFmiRect> g_AutoCompletionRects; // t‰h‰n talletet‰‰n autocompletionissa piirrettyjen nimi laatikkojen ja piste makkerien laatikot. 
-												// Kun etsit‰‰n paikkaa seuraavalle laatikoille, ne eiv‰t saa menn‰ p‰‰llekk‰in.
-
-
 void NFmiStationViewHandler::DrawAutocompleteLocations(void)
 {
     auto &autoComplete = itsCtrlViewDocumentInterface->AutoComplete();
-	if(autoComplete.AutoCompleteDialogOn() == false)
-		return ;
+    if(autoComplete.AutoCompleteDialogOn() == false)
+        return;
 
-	g_AutoCompletionRects.clear(); // aluksi aina nollataan laatikot
+    itsAutoCompletionRects.clear(); // aluksi aina nollataan laatikot
 
-	// piirret‰‰n autocomplete juttuja vain 1. rivin 1. sarakkeeseen
-	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
-	{
-		std::vector<NFmiACLocationInfo> locInfos = autoComplete.AutoCompleteResults();
-		if(locInfos.size() == 0)
-			return ;
+    // piirret‰‰n autocomplete juttuja vain 1. rivin 1. sarakkeeseen
+    if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
+    {
+        std::vector<NFmiACLocationInfo> locInfos = autoComplete.AutoCompleteResults();
+        if(locInfos.size() == 0)
+            return;
 
-		Gdiplus::Graphics *gdiPlusGraphics = Gdiplus::Graphics::FromHDC(itsToolBox->GetDC()->GetSafeHdc());
-		try
-		{
-			if(gdiPlusGraphics == 0)
-				throw runtime_error("Error in NFmiStationViewHandler::DrawAutocompleteLocations-method, unable to initialize Gdiplus::Graphics, application error.");
+        NFmiRect markerCircleBase = CalcBaseMarkerRect(autoComplete.MarkerSizeInMM());
+        // Lis‰t‰‰n jo t‰ss‰ vaiheessa kaikki markerit rect-Listaan, ett‰ niiden p‰‰lle ei piirret‰ mit‰‰n
+        for(size_t i = 0; i < locInfos.size(); i++)
+        {
+            markerCircleBase.Center(LatLonToViewPoint(locInfos[i].itsLatlon));
+            itsAutoCompletionRects.push_back(markerCircleBase);
+        }
 
-			if(itsToolBox->GetDC()->IsPrinting())
-				gdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // t‰h‰n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pit‰‰ laittaa siihen
-			gdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, GetFrame()));
-
-			NFmiRect markerCircleBase = CalcBaseMarkerRect(autoComplete.MarkerSizeInMM());
-			// Lis‰t‰‰n jo t‰ss‰ vaiheessa kaikki markerit rect-Listaan, ett‰ niiden p‰‰lle ei piirret‰ mit‰‰n
-			for(size_t i = 0; i < locInfos.size(); i++)
-			{
-				markerCircleBase.Center(LatLonToViewPoint(locInfos[i].itsLatlon));
-				g_AutoCompletionRects.push_back(markerCircleBase);
-			}
-
-			// varsinainen piirto rutiini alkaa t‰st‰
-			for(size_t i = 0; i < locInfos.size(); i++)
-				DrawAutocompleteLocation(gdiPlusGraphics, locInfos[i], markerCircleBase);
-
-		}
-		catch(std::exception & /* e */ )
-		{
-	//		string errStr = e.what();
-		}
-		catch(...)
-		{ // otetaan kaikki vain kiinni ett‰ voidaan varmasti tuhota itsGdiPlusGraphics-olio
-		}
-		gdiPlusGraphics->ResetClip();
-		if(gdiPlusGraphics)
-		{
-			delete gdiPlusGraphics;
-			gdiPlusGraphics = 0;
-		}
-	}
+        // varsinainen piirto rutiini alkaa t‰st‰
+        for(size_t i = 0; i < locInfos.size(); i++)
+            DrawAutocompleteLocation(itsGdiPlusGraphics, locInfos[i], markerCircleBase);
+    }
 }
 
 static double GetUsedRadius(int index, double theBoxHeight)
@@ -4291,7 +4257,7 @@ NFmiPoint NFmiStationViewHandler::CalcNewCenterPoint(double relativeX, double re
 	return NFmiPoint(newCenterX, newCenterY);
 }
 
-static bool IsBoundinBoxInGoodPlace(const NFmiRect &theRelativeBoundingBox, checkedVector<NFmiRect> &theAutoCompletionRects, const NFmiRect &theViewRect)
+static bool IsBoundinBoxInGoodPlace(const NFmiRect &theRelativeBoundingBox, std::vector<NFmiRect> &theAutoCompletionRects, const NFmiRect &theViewRect)
 {
 	if(theViewRect.IsInside(theRelativeBoundingBox))
 	{
@@ -4301,7 +4267,7 @@ static bool IsBoundinBoxInGoodPlace(const NFmiRect &theRelativeBoundingBox, chec
 	return false;
 }
 
-bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, checkedVector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace)
+bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, std::vector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace)
 {
 	theBoundBox.Center(CalcNewCenterPoint(relativeX, relativeY, relativeW, radius, angle));
 	if(::IsBoundinBoxInGoodPlace(theBoundBox, theAutoCompletionRects, GetFrame()))
@@ -4319,7 +4285,7 @@ bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, checkedVect
 // Halutun rectin koko on theRelativeBoundingBox:in kokoinen.
 // Etsit‰‰n uusi paikka puoliympyr‰n muotoiselta alueelta, kolmella eri s‰teell‰. S‰de m‰‰r‰ytyy theRelativeBoundingBox:in korkeuden mukaan. 
 // 1. kierroksella 1/2 korkeutta, 2. kierroksella 1/3 korkeutta ja lopuksi 2/3 korkeutta.
-NFmiRect NFmiStationViewHandler::SearchNameBoxLocation(const NFmiPoint &theRelativePoint, const NFmiRect &theRelativeBoundingBox, checkedVector<NFmiRect> &theAutoCompletionRects, double theOneLineBoxHeight, FmiDirection &theMarkerConnectingPlace)
+NFmiRect NFmiStationViewHandler::SearchNameBoxLocation(const NFmiPoint &theRelativePoint, const NFmiRect &theRelativeBoundingBox, std::vector<NFmiRect> &theAutoCompletionRects, double theOneLineBoxHeight, FmiDirection &theMarkerConnectingPlace)
 {
 	NFmiRect newRelativeBoundingBox(theRelativeBoundingBox);
 	double relWidth = theRelativeBoundingBox.Width();
@@ -4386,8 +4352,8 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 
 		// etsi laatikon paikka niin ett‰ se ei ole p‰‰llekk‰in muiden kanssa, eik‰ se ole paikan itsens‰ p‰‰ll‰
 		FmiDirection markerConnectingPlace = kLeft;
-		NFmiRect foundRect = SearchNameBoxLocation(relativePoint, relativeBoundingBox, g_AutoCompletionRects, relativeOneLineBoundingBox.Height(), markerConnectingPlace);
-		g_AutoCompletionRects.push_back(foundRect);
+		NFmiRect foundRect = SearchNameBoxLocation(relativePoint, relativeBoundingBox, itsAutoCompletionRects, relativeOneLineBoundingBox.Height(), markerConnectingPlace);
+        itsAutoCompletionRects.push_back(foundRect);
 		Gdiplus::Rect foundBoundingBox = CtrlView::Relative2GdiplusRect(itsToolBox, foundRect);
 
 
@@ -4410,7 +4376,7 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 									kTopLeft);
 
 		// Piirr‰ viel‰ paikan markkeri (musta ympyr‰, jossa punainen keskus) ja siit‰ viiva laatikkoon!!!
-		DrawMarkerPoint(relativePoint, foundRect, g_AutoCompletionRects, markerConnectingPlace, theMarkerCircleBase);
+		DrawMarkerPoint(relativePoint, foundRect, itsAutoCompletionRects, markerConnectingPlace, theMarkerCircleBase);
 	}
 }
 
@@ -4425,7 +4391,7 @@ NFmiRect NFmiStationViewHandler::CalcBaseMarkerRect(double theMarkerSizeInMM)
 	return NFmiRect(0, 0, xWidth, yWidth);
 }
 
-void NFmiStationViewHandler::DrawMarkerPoint(const NFmiPoint &theRelativePlace, const NFmiRect &theTextRect, checkedVector<NFmiRect> &theAutoCompletionRects, FmiDirection theMarkerConnectingPlace, NFmiRect &theMarkerCircleBase)
+void NFmiStationViewHandler::DrawMarkerPoint(const NFmiPoint &theRelativePlace, const NFmiRect &theTextRect, std::vector<NFmiRect> &theAutoCompletionRects, FmiDirection theMarkerConnectingPlace, NFmiRect &theMarkerCircleBase)
 {
     auto &autoComplete = itsCtrlViewDocumentInterface->AutoComplete();
 	double lineWidthInMM = autoComplete.ConnectingLinePenSizeInMM();

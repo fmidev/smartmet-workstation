@@ -107,11 +107,11 @@ class NFmiStationViewHandler : public NFmiCtrlView
 #endif // DISABLE_CPPRESTSDK
 
 	void InitializeWarningSymbols(void);
-	bool CheckBoundingBox(NFmiRect &theBoundBox, checkedVector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace);
+	bool CheckBoundingBox(NFmiRect &theBoundBox, std::vector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace);
 	NFmiPoint CalcNewCenterPoint(double relativeX, double relativeY, double relativeW, double radius, double angle);
-	NFmiRect SearchNameBoxLocation(const NFmiPoint &theRelativePoint, const NFmiRect &theRelativeBoundingBox, checkedVector<NFmiRect> &theAutoCompletionRects, double theOneLineBoxHeight, FmiDirection &theMarkerConnectingPlace);
+	NFmiRect SearchNameBoxLocation(const NFmiPoint &theRelativePoint, const NFmiRect &theRelativeBoundingBox, std::vector<NFmiRect> &theAutoCompletionRects, double theOneLineBoxHeight, FmiDirection &theMarkerConnectingPlace);
 	NFmiRect CalcBaseMarkerRect(double theMarkerSizeInMM);
-	void DrawMarkerPoint(const NFmiPoint &theRelativePlace, const NFmiRect &theTextRect, checkedVector<NFmiRect> &theAutoCompletionRects, FmiDirection theMarkerConnectingPlace, NFmiRect &theMarkerCircleBase);
+	void DrawMarkerPoint(const NFmiPoint &theRelativePlace, const NFmiRect &theTextRect, std::vector<NFmiRect> &theAutoCompletionRects, FmiDirection theMarkerConnectingPlace, NFmiRect &theMarkerCircleBase);
 	void DrawAutocompleteLocations(void);
 	void DrawAutocompleteLocation(Gdiplus::Graphics *theGdiPlusGraphics, const NFmiACLocationInfo &theLocInfo, NFmiRect &theMarkerCircleBase);
 	void DrawAreaMask(Gdiplus::Graphics &theGdiPlusGraphics, NFmiWindTableSystem::AreaMaskData &theAreaMaskData);
@@ -194,6 +194,11 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	NFmiParamHandlerView* itsParamHandlerView;
 	NFmiRect itsParamHandlerViewRect;
 	bool fWholeCrossSectionReallyMoved; 
+    // T‰h‰n talletet‰‰n autocompletionissa piirrettyjen nimi laatikkojen ja piste makkerien laatikot. 
+    // Kun etsit‰‰n paikkaa seuraavalle laatikoille, ne eiv‰t saa menn‰ p‰‰llekk‰in.
+    std::vector<NFmiRect> itsAutoCompletionRects;
+
+
 #ifndef DISABLE_CPPRESTSDK
     std::vector<HakeMessage::HakeMsg> itsShownHakeMessages;
     std::vector<HakeMessage::KahaMsg> itsShownKaHaMessages;
