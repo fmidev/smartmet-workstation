@@ -103,6 +103,7 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   double CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
   double CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
   double CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
+  void DoConstructorInitializations();
 protected:
   boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
   NFmiDataIdent itsDataIdent;
