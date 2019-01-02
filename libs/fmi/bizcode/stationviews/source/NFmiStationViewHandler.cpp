@@ -4841,12 +4841,10 @@ std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(voi
 	return str;
 }
 
-static const NFmiPoint kMissingLatlon(kFloatMissing, kFloatMissing);
-
 static NFmiSilamStationList::Station GetClosestSilamStation(NFmiSilamStationList &theLocations, const NFmiLocation &theSearchPlace)
 {
 	NFmiSilamStationList::Station closestLoc;
-	closestLoc.itsLatlon = kMissingLatlon;
+	closestLoc.itsLatlon = NFmiPoint::gMissingLatlon;
 	checkedVector<NFmiSilamStationList::Station> &locList = theLocations.Locations();
 	double minDist = 9999999999;
 	for(size_t i=0; i < locList.size(); i++)
