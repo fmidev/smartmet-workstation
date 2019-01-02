@@ -242,29 +242,35 @@ namespace AddParams
             SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, NFmiInfoData::kFlashData, 0, "", true, nullptr, 2, menuString);
             customObservationData.push_back(item);
         }
-        // *** Synop-plot ***
-        else if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, 0))
+        // *** Synop plot ***
+        if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true) != 0)
         {
-            bool wantedPlotObsFound = (infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true) != 0);
+            NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
+            std::string menuString = "Synop plot";
+            std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
+            auto param = NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop");
+            SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
+            customObservationData.push_back(item);
 
-            if(wantedPlotObsFound)
-            {
-                NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
-                std::string menuString = "Synop plot";
-                std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
-                auto param = NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop");
-                SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
-                customObservationData.push_back(item);
+            // Add also a min/max plot
+            NFmiProducer producer2(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
+            menuString = "Synop min/max";
+            uniqueDataId = std::string(producer2.GetName()) + " - " + menuString;
+            param = NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max");
+            item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
+            customObservationData.push_back(item);
+        }
 
-                // Add also a min/max plot
-                NFmiProducer producer2(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
-                menuString = "Synop min/max";
-                uniqueDataId = std::string(producer2.GetName()) + " - " + menuString;
-                param = NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max");
-                item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
-                customObservationData.push_back(item);
-            }
-        }       
+        // *** Metar plot ***
+        if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiMETAR), true) != 0)
+        {
+            NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiMETAR), true)->Producer()));
+            std::string menuString = "Metar plot";
+            std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
+            auto param = NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar");
+            SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
+            customObservationData.push_back(item);
+        }
 
         return customObservationData;
     }
