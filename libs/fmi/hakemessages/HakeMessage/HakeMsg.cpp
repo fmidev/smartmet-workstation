@@ -157,4 +157,14 @@ namespace HakeMessage
     {
         itsTotalMessageStr = newValue;
     }
+
+    bool HakeMsg::IsFromXmlFormat() const
+    {
+        return fIsFromXmlFormat;
+    }
+
+    void HakeMsg::IsFromXmlFormat(bool newValue)
+    {
+        fIsFromXmlFormat = newValue;
+    }
 }
