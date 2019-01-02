@@ -3341,74 +3341,87 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
         return itsParamHandlerView->MouseMove(thePlace, theKey);
 
     if(!GetFrame().IsInside(thePlace))
-		return false;
+        return false;
 
     if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
-            return false; // ei move handlausta, jos ollaa parametri boxin sis‰ll‰, koska muuten ei voi oikea klikill‰ lis‰t‰ parametreja, jos hiiri liikahtaa
+        return false; // ei move handlausta, jos ollaa parametri boxin sis‰ll‰, koska muuten ei voi oikea klikill‰ lis‰t‰ parametreja, jos hiiri liikahtaa
 
-	if(itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MouseCaptured())
-		return MouseDragZooming(thePlace); // tehd‰‰n zoomi laatikon piirtoa suoraan karttan‰ytˆlle
-    else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
-		return MouseMoveBrushAction(thePlace);
-	else if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
-		return MouseMoveControlPointAction(thePlace);
 
-	NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-	if(itsCtrlViewDocumentInterface->MouseCaptured() && crossSectionSystem->CrossSectionSystemActive())
-	{
-		if(itsCtrlViewDocumentInterface->LeftMouseButtonDown())
-		{
-			if(crossSectionSystem->DragWholeCrossSection())
-			{
-				NFmiPoint moveBy(thePlace - crossSectionSystem->LastMousePosition());
-				NFmiPoint relStartPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
-				NFmiPoint relMiddlePoint(LatLonToViewPoint(crossSectionSystem->MiddlePoint()));
-				NFmiPoint relEndPoint(LatLonToViewPoint(crossSectionSystem->EndPoint()));
-				relStartPoint += moveBy;
-				relMiddlePoint += moveBy;
-				relEndPoint += moveBy;
-				NFmiPoint startLatlon(itsMapArea->ToLatLon(relStartPoint));
-				NFmiPoint middleLatlon(itsMapArea->ToLatLon(relMiddlePoint));
-				NFmiPoint endLatlon(itsMapArea->ToLatLon(relEndPoint));
-                crossSectionSystem->StartPoint(startLatlon);
-                crossSectionSystem->MiddlePoint(middleLatlon);
-                crossSectionSystem->EndPoint(endLatlon);
-                crossSectionSystem->LastMousePosition(thePlace);
+    try
+    {
+        InitializeGdiplus(itsToolBox, &GetFrame());
+
+        if(itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MouseCaptured())
+            return MouseDragZooming(thePlace); // tehd‰‰n zoomi laatikon piirtoa suoraan karttan‰ytˆlle
+        else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
+            return MouseMoveBrushAction(thePlace);
+        else if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+            return MouseMoveControlPointAction(thePlace);
+
+        NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
+        auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
+        if(itsCtrlViewDocumentInterface->MouseCaptured() && crossSectionSystem->CrossSectionSystemActive())
+        {
+            if(itsCtrlViewDocumentInterface->LeftMouseButtonDown())
+            {
+                if(crossSectionSystem->DragWholeCrossSection())
+                {
+                    NFmiPoint moveBy(thePlace - crossSectionSystem->LastMousePosition());
+                    NFmiPoint relStartPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
+                    NFmiPoint relMiddlePoint(LatLonToViewPoint(crossSectionSystem->MiddlePoint()));
+                    NFmiPoint relEndPoint(LatLonToViewPoint(crossSectionSystem->EndPoint()));
+                    relStartPoint += moveBy;
+                    relMiddlePoint += moveBy;
+                    relEndPoint += moveBy;
+                    NFmiPoint startLatlon(itsMapArea->ToLatLon(relStartPoint));
+                    NFmiPoint middleLatlon(itsMapArea->ToLatLon(relMiddlePoint));
+                    NFmiPoint endLatlon(itsMapArea->ToLatLon(relEndPoint));
+                    crossSectionSystem->StartPoint(startLatlon);
+                    crossSectionSystem->MiddlePoint(middleLatlon);
+                    crossSectionSystem->EndPoint(endLatlon);
+                    crossSectionSystem->LastMousePosition(thePlace);
+                    itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
+                    fWholeCrossSectionReallyMoved = true;
+                }
+                else
+                {
+                    crossSectionSystem->StartPoint(latlon);
+                    itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
+                }
+            }
+            else if(itsCtrlViewDocumentInterface->RightMouseButtonDown())
+            {
+                crossSectionSystem->EndPoint(latlon);
                 itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-				fWholeCrossSectionReallyMoved = true;
-			}
-			else
-			{
-                crossSectionSystem->StartPoint(latlon);
-                itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-			}
-		}
-		else if(itsCtrlViewDocumentInterface->RightMouseButtonDown())
-		{
-            crossSectionSystem->EndPoint(latlon);
-            itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-		}
-	}
-	if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-	{
-		NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-		NFmiMTATempSystem::Container &temps = const_cast<NFmiMTATempSystem::Container &>(itsCtrlViewDocumentInterface->GetMTATempSystem().GetTemps());
-		if(temps.size())
-		{ // siirret‰‰n 1. luotaus hiiren osoittamaan paikkaan
-			temps[0].Latlon(latlon);
-			if(itsLastMouseDownRelPlace != thePlace)
-                itsCtrlViewDocumentInterface->MustDrawTempView(true);
-		}
-	}
-	DoTotalLocationSelection(thePlace, latlon, theKey, true);
-	if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->TimeSerialDataViewOn())
-	{
-        itsCtrlViewDocumentInterface->MustDrawTimeSerialView(true);
-        itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
-	}
-	
-	return false;
+            }
+        }
+        if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
+        {
+            NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
+            NFmiMTATempSystem::Container &temps = const_cast<NFmiMTATempSystem::Container &>(itsCtrlViewDocumentInterface->GetMTATempSystem().GetTemps());
+            if(temps.size())
+            { // siirret‰‰n 1. luotaus hiiren osoittamaan paikkaan
+                temps[0].Latlon(latlon);
+                if(itsLastMouseDownRelPlace != thePlace)
+                    itsCtrlViewDocumentInterface->MustDrawTempView(true);
+            }
+        }
+        DoTotalLocationSelection(thePlace, latlon, theKey, true);
+        if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->TimeSerialDataViewOn())
+        {
+            itsCtrlViewDocumentInterface->MustDrawTimeSerialView(true);
+            itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
+        }
+    }
+    catch(std::exception &e)
+    {
+        itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in NFmiStationViewHandler::Draw: ") + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+    }
+    catch(...)
+    {
+    }
+    CleanGdiplus(); // t‰t‰ pit‰‰ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+    return false;
 }
 
 //--------------------------------------------------------
