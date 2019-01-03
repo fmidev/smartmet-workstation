@@ -13560,8 +13560,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         {
             itsSatelliteImageCacheSystemPtr->Init(*HelpDataInfoSystem());
             NFmiSatelliteImageCacheSystem::StartUpdateThreads(itsSatelliteImageCacheSystemPtr);
-            std::function<void(const ImageCacheUpdateData&)> updateCallback = std::bind(&GeneralDocImpl::ImageCacheUpdatedCallback, this, std::placeholders::_1);
-            std::function<void(const ImageCacheUpdateData&)> loadCallback = std::bind(&GeneralDocImpl::ImageCacheLoadedCallback, this, std::placeholders::_1);
+            NFmiSatelliteImageCacheSystem::ImageUpdateCallbackFunction updateCallback = std::bind(&GeneralDocImpl::ImageCacheUpdatedCallback, this, std::placeholders::_1);
+            NFmiSatelliteImageCacheSystem::ImageUpdateCallbackFunction loadCallback = std::bind(&GeneralDocImpl::ImageCacheLoadedCallback, this, std::placeholders::_1);
             itsSatelliteImageCacheSystemPtr->SetCallbacks(updateCallback, loadCallback);
         }
         catch(std::exception &e)
@@ -13573,16 +13573,16 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         }
     }
 
-    void ImageCacheUpdatedCallback(const ImageCacheUpdateData &theUpdatedData)
+    void ImageCacheUpdatedCallback(ImageCacheUpdateData &theUpdatedData)
     {
         std::lock_guard<std::mutex> lock(itsImageCacheUpdateDataMutex);
-        itsImageCacheUpdateData.insert(itsImageCacheUpdateData.end(), theUpdatedData.begin(), theUpdatedData.end());
+        itsImageCacheUpdateData.splice(itsImageCacheUpdateData.end(), theUpdatedData);
     }
 
-    void ImageCacheLoadedCallback(const ImageCacheUpdateData &theLoadedData)
+    void ImageCacheLoadedCallback(ImageCacheUpdateData &theLoadedData)
     {
         std::lock_guard<std::mutex> lock(itsImageCacheUpdateDataMutex);
-        itsImageCacheUpdateData.insert(itsImageCacheUpdateData.end(), theLoadedData.begin(), theLoadedData.end());
+        itsImageCacheUpdateData.splice(itsImageCacheUpdateData.end(), theLoadedData);
     }
 
     int DoImageCacheUpdates(const ImageCacheUpdateData &theImageCacheUpdateData)
