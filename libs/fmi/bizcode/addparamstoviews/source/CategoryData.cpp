@@ -7,6 +7,8 @@
 #include "NFmiHelpDataInfo.h"
 #include "NFmiOwnerInfo.h"
 #include "SingleRowItem.h"
+#include "NFmiDictionaryFunction.h"
+
 
 namespace
 {
@@ -237,7 +239,7 @@ namespace AddParams
         if(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0))
         {
             NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0)->Producer()));
-            std::string menuString = "Lightning data";
+            std::string menuString = ::GetDictionaryString("MapViewParamPopUpFlashData");
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, NFmiInfoData::kFlashData, 0, "", true, nullptr, 2, menuString);
             customObservationData.push_back(item);
@@ -246,7 +248,7 @@ namespace AddParams
         if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true) != 0)
         {
             NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
-            std::string menuString = "Synop plot";
+            std::string menuString = ::GetDictionaryString("MapViewParamPopUpSynopPlot");
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             auto param = NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop");
             SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
@@ -260,12 +262,11 @@ namespace AddParams
             item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
             customObservationData.push_back(item);
         }
-
         // *** Metar plot ***
         if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiMETAR), true) != 0)
         {
             NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiMETAR), true)->Producer()));
-            std::string menuString = "Metar plot";
+            std::string menuString = ::GetDictionaryString("Metar plot");
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             auto param = NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar");
             SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
@@ -285,6 +286,7 @@ namespace AddParams
             customObservationData.push_back(item);
 
             menuString = "Sounding";
+            //SingleRowItem item = SingleRowItem(kParamType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, 2, menuString);
 
         }
 
@@ -292,12 +294,12 @@ namespace AddParams
         //boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
         //if(soundingInfo)
         //{
-        //    menuString = "Sounding";
-        //    auto menuItem5 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), 
-        //        theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
+            //menuString = "Sounding";
+            //auto menuItem5 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), 
+            //    theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
 
-        //    NFmiMenuItemList *soundingMenuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, const_cast<NFmiParamBag*>(&(soundingInfo->ParamBag())), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()), soundingType);
-        //    menuItem5->AddSubMenu(soundingMenuList);
+            //NFmiMenuItemList *soundingMenuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, const_cast<NFmiParamBag*>(&(soundingInfo->ParamBag())), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()), soundingType);
+            //menuItem5->AddSubMenu(soundingMenuList);
         //    obsMenuList->Add(std::move(menuItem5));
         //}
 
