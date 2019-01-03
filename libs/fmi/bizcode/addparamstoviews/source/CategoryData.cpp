@@ -272,6 +272,35 @@ namespace AddParams
             customObservationData.push_back(item);
         }
 
+        // *** Sounding and sounding plot ***
+        boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = infoOrganizer.GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
+        if(soundingInfo)
+        {
+            NFmiInfoData::Type soundingType = soundingInfo->DataType();
+            const std::shared_ptr<NFmiLevel> defaultLevel = std::make_shared<NFmiLevel>(NFmiLevel(50, "850xxx", 850));
+            std::string menuString = "Sounding plot";
+            auto param = NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp");
+            std::string uniqueDataId = "Temp - " + menuString;
+            SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, 2, menuString);
+            customObservationData.push_back(item);
+
+            menuString = "Sounding";
+
+        }
+
+
+        //boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
+        //if(soundingInfo)
+        //{
+        //    menuString = "Sounding";
+        //    auto menuItem5 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), 
+        //        theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
+
+        //    NFmiMenuItemList *soundingMenuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, const_cast<NFmiParamBag*>(&(soundingInfo->ParamBag())), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()), soundingType);
+        //    menuItem5->AddSubMenu(soundingMenuList);
+        //    obsMenuList->Add(std::move(menuItem5));
+        //}
+
         return customObservationData;
     }
 
