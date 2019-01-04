@@ -105,9 +105,14 @@ namespace AddParams
                 checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = infoOrganizer.GetInfos(info.UsedFileNameFilter(helpDataInfoSystem));
                 if(infoVector.size())
                 {
+                    //A little bit of fiddle to get the producer name that is used in model_producer.conf file.
                     auto queryInfo = infoVector[0];
-                    auto producer = queryInfo->Producer();
-                    dataStructuresChanged = addNewOrUpdateData(*producer, infoOrganizer, helpDataInfoSystem, dataCategory, true);
+                    auto index = categoryProducerSystem.FindProducerInfo(NFmiProducer(queryInfo->Producer()->GetIdent()));
+                    if(index != 0)
+                    {
+                        auto producer = categoryProducerSystem.Producer(index).GetProducer();
+                        dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory, true);
+                    }
                 }
             }
         }
@@ -287,19 +292,19 @@ namespace AddParams
 
             menuString = "Sounding";
             //SingleRowItem item = SingleRowItem(kParamType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, 2, menuString);
-
+            //Joonas: Hae pimpl:stä const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()) ja luo alimenu missä TEMP:lle vain nuo levelit. Muista myös estää alkuperäinen TEMP menun luonti, missä on kaikki levelit.
         }
 
 
         //boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
         //if(soundingInfo)
         //{
-            //menuString = "Sounding";
-            //auto menuItem5 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), 
-            //    theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
+        //    menuString = "Sounding";
+        //    auto menuItem5 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(),
+        //        theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
 
-            //NFmiMenuItemList *soundingMenuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, const_cast<NFmiParamBag*>(&(soundingInfo->ParamBag())), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()), soundingType);
-            //menuItem5->AddSubMenu(soundingMenuList);
+        //    NFmiMenuItemList *soundingMenuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, const_cast<NFmiParamBag*>(&(soundingInfo->ParamBag())), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()), soundingType);
+        //    menuItem5->AddSubMenu(soundingMenuList);
         //    obsMenuList->Add(std::move(menuItem5));
         //}
 
