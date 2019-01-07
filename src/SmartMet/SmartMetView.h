@@ -67,7 +67,8 @@ public:
 	const NFmiRect* RelativePrintRect(void);
 	void RelativePrintRect(const NFmiRect &theRect);
 	CBitmap* MemoryBitmap(void) {return itsMemoryBitmap;}
-	CSize GetPrintedAreaOnScreenSizeInPixels(void);
+    CBitmap* MapBitmap() { return itsMapBitmap; }
+    CSize GetPrintedAreaOnScreenSizeInPixels(void);
 	NFmiPoint PrintViewSizeInPixels(void);
 	void PrintViewSizeInPixels(const NFmiPoint &theSize);
 	void SetPrintCopyCDC(CDC* pDC);
