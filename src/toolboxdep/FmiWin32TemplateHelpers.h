@@ -313,7 +313,7 @@ namespace CFmiWin32TemplateHelpers
         CDC dcMem2;
         dcMem2.CreateCompatibleDC(&dc);
         CBitmap *oldBitmap2 = 0;
-        theView->GenerateMapBitmap(theView->MemoryBitmap(), &dcMem2, &dc, oldBitmap2);
+        theView->GenerateMapBitmap(theView->MapBitmap(), &dcMem2, &dc, oldBitmap2);
         smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->MapBlitDC(&dcMem2);
         // *** T‰ss‰ tehd‰‰n background kartta ***
 

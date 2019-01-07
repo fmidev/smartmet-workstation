@@ -53,7 +53,8 @@ public:
 	void CurrentPrintTime(const NFmiMetTime &theTime);
 	const NFmiRect* RelativePrintRect(void); 
 	void RelativePrintRect(const NFmiRect &theRect); 
-	CBitmap* MemoryBitmap(void) {return itsMemoryBitmap;}
+    CBitmap* MemoryBitmap(void) { return itsMemoryBitmap; }
+    CBitmap* MapBitmap(void) { return itsMapBitmap; }
 	CSize GetPrintedAreaOnScreenSizeInPixels(void);
 	NFmiPoint PrintViewSizeInPixels(void);
 	void PrintViewSizeInPixels(const NFmiPoint &theSize);
