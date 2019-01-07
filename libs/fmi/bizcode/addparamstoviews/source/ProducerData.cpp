@@ -142,13 +142,28 @@ namespace AddParams
 
     bool ProducerData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
+        bool dataStructuresChanged = false;
         auto fileFilter = info->DataFilePattern();
+        if(!dataVector_.empty() && info->DataType() == NFmiInfoData::kEditable) //Comparison for editable data
+        {
+            if(dataVector_.front()->uniqueDataId() == info->DataFileName())
+                return dataStructuresChanged;
+        }
+        else if(!dataVector_.empty() && (info->DataType() == NFmiInfoData::kEditingHelpData || info->DataType() == NFmiInfoData::kKepaData)) //Comparison for operational/ help data
+        {
+            if(dataVector_.front()->latestDataFilePath() == info->DataFileName())
+                return dataStructuresChanged;
+        }
+        
         auto helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(fileFilter);
         auto singleDataPtr = std::make_unique<SingleData>();
-        singleDataPtr->updateOperationalData(info, helpDataInfo);
-        dataVector_.clear();
-        dataVector_.push_back(std::move(singleDataPtr));
-        return true;
+        dataStructuresChanged = singleDataPtr->updateOperationalData(info, helpDataInfo);
+        if(dataStructuresChanged)
+        {
+            dataVector_.clear();
+            dataVector_.push_back(std::move(singleDataPtr));
+        }
+        return dataStructuresChanged;
     }
 
     bool ProducerData::updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree)
