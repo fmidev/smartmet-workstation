@@ -856,7 +856,7 @@ UINT CFmiQueryDataCacheLoaderThread::DoThread(LPVOID pParam)
                 }
                 catch(NFmiStopThreadException & /* e */)
                 {
-                    break; // SmartMet haluaa lopettaa, tullaan ulos for-loopista
+                    return 0; // SmartMet haluaa lopettaa, tullaan ulos thred funktiosta
                 }
                 catch(...)
                 {
