@@ -313,7 +313,6 @@ void NFmiStationViewHandler::Draw(NFmiToolBox * theGTB)
                 {
                     DoCacheDrawing(theGTB, frame, destDC, cacheRowIndex);
                 }
-                DrawParamView(theGTB);
             }
             catch(std::exception &e)
             {
@@ -330,7 +329,6 @@ void NFmiStationViewHandler::Draw(NFmiToolBox * theGTB)
             CBitmap* oldBitmap = destDC->SelectObject(viewCache);
 			theGTB->DrawDC(destDC, frame);
 			destDC->SelectObject(oldBitmap);
-            DrawParamView(theGTB);
         }
 	}
 }
@@ -2741,7 +2739,6 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 				}
 			}
 			DoTotalLocationSelection(thePlace, latlon, theKey, false);
-			DrawParamView(itsToolBox); // mitenk‰s toolboxin laita on ??// piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
 		}
 		// 8.2.2000/Marko Muutin t‰m‰n palauttamaan aina true:n jos piste on ollut sis‰ll‰
 		// toivon, ett‰ outo takkuisuus loppuu t‰ll‰ tavalla, kun klikkaa ruutua, miss‰ ei ole parametreja
@@ -2762,7 +2759,6 @@ bool NFmiStationViewHandler::LeftDoubleClick(const NFmiPoint &thePlace, unsigned
 			bool result = itsViewList->LeftDoubleClick(thePlace, theKey);
             if(result)
             {
-    			DrawParamView(itsToolBox); // mitenk‰s toolboxin laita on ??// piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
     			return result;
             }
             else
@@ -2784,7 +2780,6 @@ bool NFmiStationViewHandler::RightDoubleClick(const NFmiPoint &thePlace, unsigne
 			bool result = itsViewList->RightDoubleClick(thePlace, theKey);
             if(result)
             {
-    			DrawParamView(itsToolBox); // mitenk‰s toolboxin laita on ??// piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
     			return result;
             }
             else
