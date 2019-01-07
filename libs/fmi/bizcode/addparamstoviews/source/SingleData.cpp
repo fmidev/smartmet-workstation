@@ -255,4 +255,5 @@ namespace AddParams
         std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
         return !origTime.empty() ? origTime : "";
     }   
+
 }
