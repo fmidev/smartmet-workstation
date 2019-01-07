@@ -139,8 +139,12 @@ namespace Wms
                 return image;
             }
         }
-        catch(const std::exception&)
+        catch(const std::exception &e)
         {
+            std::string errorMessage = __FUNCTION__;
+            errorMessage += "failed: ";
+            errorMessage += e.what();
+            CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
             return nullptr;
         }
     }
