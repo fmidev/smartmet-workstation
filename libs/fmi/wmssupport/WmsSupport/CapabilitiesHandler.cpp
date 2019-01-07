@@ -90,12 +90,8 @@ namespace Wms
                         .setPath(server.generic.path)
                         .setService("WMS")
                         .setVersion(server.version)
-                        .setFormat("image/png")
                         .setRequest("GetCapabilities")
-                        .setStyles("")
                         .setTransparency(true)
-                        .setWidth(0)
-                        .setHeight(0)
                         .setToken(server.generic.token)
                         .build();
 
