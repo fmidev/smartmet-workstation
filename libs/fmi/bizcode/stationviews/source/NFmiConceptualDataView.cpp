@@ -938,23 +938,6 @@ void NFmiConceptualDataView::Draw(NFmiToolBox *theGTB)
 		InitializeGdiplus(itsToolBox, &GetFrame());
 		itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yll‰tt‰v‰n paljon piirtoa
 
-		if(itsDrawParam->ShowDifference())
-		{ // eli nyt oli aikaerotus optio p‰‰ll‰, piirret‰‰n edellinen aika himme‰mm‰ll‰
-			try
-			{
-				NFmiMetTime prevTime(itsTime);
-				prevTime.ChangeByMinutes(static_cast<long>(::round(-(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex)*60))));
-				float alphaBlendFactor = 0.5f; // jos aika erotus p‰‰ll‰, aikaisemmat k‰site-oliot ovat 'haaleammalla' piirrettyj‰
-				GetConceptualData(prevTime);
-				for(size_t j=0; j<itsConceptualObjectDatas.size(); j++)
-					DrawConseptualData(itsConceptualObjectDatas[j], alphaBlendFactor);
-			}
-			catch(...)
-			{
-				// pit‰‰ napata edellisess‰ aijassa olevat virheet tai esim datan kokonaan puuttuminen, ett‰ voidaan piirt‰‰ nykyhetki
-			}
-		}
-
 		float alphaBlendFactor = 1.0f; // jos aika erotus p‰‰ll‰, aikaisemmat k‰site-oliot ovat 'haaleammalla' piirrettyj‰
 		GetConceptualData(itsTime);
 		for(size_t j=0; j<itsConceptualObjectDatas.size(); j++)

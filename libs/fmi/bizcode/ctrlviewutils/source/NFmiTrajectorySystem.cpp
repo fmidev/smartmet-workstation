@@ -8,6 +8,7 @@
 #include "NFmiValueString.h"
 #include "NFmiTrajectory.h"
 #include "NFmiPathUtils.h"
+#include "NFmiFastInfoUtils.h"
 
 #include <fstream>
 
@@ -174,7 +175,8 @@ void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory>
 
 void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-	if(theInfo && theInfo->Param(kFmiWindSpeedMS) && theInfo->Param(kFmiWindDirection))
+    // Datasta pit‰‰ lˆyty‰ joko WS+WD tai u+v komponentit
+	if(theInfo && (theInfo->Param(kFmiWindSpeedMS) && theInfo->Param(kFmiWindDirection)) || (theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS)))
 	{
         bool pacificView = ::IsPacificViewData(theInfo);
 		theInfo->First();
@@ -261,45 +263,9 @@ void NFmiTrajectorySystem::CalculateSingleTrajectory(boost::shared_ptr<NFmiFastQ
 		CalculateSingle3DTrajectory(theInfo, theTrajector, theTimeStepInMinutes, theTimeLengthInHours, theRandFactor, theRandStep, theDirection, fIsentropic, fCalcBalloonTrajectory, theTempBalloonTrajectorSettings);
 	else
 	{
-        bool pacificView = ::IsPacificViewData(theInfo);
-		bool forwardDir = (theDirection == kForward);
-		theTrajector.AddPoint(theTrajector.StartLatLon()); // 1. piste pit‰‰ lis‰t‰ erikseen listaan
-		NFmiLocation currentLoc(theTrajector.StartLatLon());
-		NFmiLocation nextLoc;
-		NFmiMetTime startTime(theTrajector.StartTime());
-		NFmiMetTime currentTime(startTime);
-		currentTime.SetTimeStep(static_cast<short>(theTimeStepInMinutes));
-		NFmiMetTime endTime(startTime);
-		endTime.ChangeByHours(forwardDir ? theTimeLengthInHours : -theTimeLengthInHours);
-		double WS = kFloatMissing;
-		double WSdiff = 0;
-		double WD = kFloatMissing;
-		double WDdiff = 0;
-		int index = 0;
-		for( ; forwardDir ? (currentTime <= endTime) : (currentTime >= endTime) ; forwardDir ? currentTime.NextMetTime() : currentTime.PreviousMetTime() )
-		{
-			theInfo->Param(kFmiWindSpeedMS);
-			WS = theInfo->InterpolatedValue(currentLoc.GetLocation(), currentTime);
-			theInfo->Param(kFmiWindDirection);
-			WD = theInfo->InterpolatedValue(currentLoc.GetLocation(), currentTime);
-			if(WS == kFloatMissing || WD == kFloatMissing)
-				break;
-			if(theRandStep && (index % theRandStep) == 0)
-			{
-				WSdiff = RandomizeWSValue(WS, theRandFactor);
-				WDdiff = RandomizeWDValue(theRandFactor, 360);
-			}
-			WS = ::fabs(WS+WSdiff); // fabs = varmistetaan ett‰ lopullinen nopeus aina positiivinen
-			WD = ::WDAdd(WD, WDdiff, 360);
-			double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metrein‰
-			double dir = ::fmod(WD + 180, 360);
-			if(!forwardDir)
-				dir = ::fmod(WD, 360); // backwardissa k‰‰nnet‰‰n tuuli 180 astetta
-			nextLoc = currentLoc.GetLocation(dir, dist, pacificView);
-			theTrajector.AddPoint(nextLoc.GetLocation());
-			currentLoc = nextLoc;
-			index++;
-		}
+        std::string errorMessage = __FUNCTION__;
+        errorMessage += " doesn't support surface data (only 1 layer) trajectory calculations";
+        throw std::runtime_error(errorMessage);
 	}
 }
 
@@ -391,7 +357,27 @@ void NFmiTrajectorySystem::Make3DRandomizing(double &WS, double &WD, double &w, 
 	w += theTrajector.Randwdiff();
 }
 
-static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double xInd, double yInd, double tInd, unsigned long theLevelIndex, bool isHybridData, FmiParameterName theUsedWParam)
+static void GetWsAndWsValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, double xInd, double yInd, double tInd, double pInd, double &WS_out, double &WD_out)
+{
+    if(metaWindParamUsage.HasWsAndWd())
+    {
+        theInfo->Param(kFmiWindSpeedMS);
+        WS_out = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
+        theInfo->Param(kFmiWindDirection);
+        WD_out = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
+    }
+    else if(metaWindParamUsage.HasWindComponents())
+    {
+        theInfo->Param(kFmiWindUMS);
+        float u = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
+        theInfo->Param(kFmiWindVMS);
+        float v = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
+        WS_out = NFmiFastInfoUtils::CalcWS(u, v);
+        WD_out = NFmiFastInfoUtils::CalcWD(u, v);
+    }
+}
+
+static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, double xInd, double yInd, double tInd, unsigned long theLevelIndex, bool isHybridData, FmiParameterName theUsedWParam)
 {
 	if(WS == kFloatMissing || WD == kFloatMissing || w == kFloatMissing)
 	{ // jos joku n‰ist‰ puuttuvaa, voi olla ett‰ ollaan menty maan "sis‰‰n" ja pit‰‰ laskea pinta arvot
@@ -400,11 +386,10 @@ static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, b
 		{ // jos ollaan tarpeeksi l‰hell‰ maanpintaa (hybridi datan ollessa kyseess‰)
 
 			theInfo->Param(kFmiPressure);
-			float groundP = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theLevelIndex);
-			theInfo->Param(kFmiWindSpeedMS);
-			float groundWS = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theLevelIndex);
-			theInfo->Param(kFmiWindDirection);
-			float groundWD = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theLevelIndex);
+			double groundP = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theLevelIndex);
+            double groundWS = kFloatMissing;
+            double groundWD = kFloatMissing;
+            ::GetWsAndWsValues(theInfo, metaWindParamUsage, xInd, yInd, tInd, theLevelIndex, groundWS, groundWD);
 			theInfo->Param(theUsedWParam);
 			float groundw = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theLevelIndex);
 
@@ -710,6 +695,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 	NFmiPoint currentLatLon;
 	theTempBalloonTrajectorSettings.Reset();
     bool pacificView = ::IsPacificViewData(theInfo);
+    NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
 
 	for( ; forwardDir ? (currentTime < endTime) : (currentTime > endTime) ;  )
 	{
@@ -730,10 +716,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 		bool status3 = theInfo->GetLevelIndex(currentLatLon, currentTime, currentPressure, pInd);
 		if(status1 && status2 && status3)
 		{
-			theInfo->Param(kFmiWindSpeedMS);
-			WS = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
-			theInfo->Param(kFmiWindDirection);
-			WD = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
+            ::GetWsAndWsValues(theInfo, metaWindParamUsage, xInd, yInd, tInd, pInd, WS, WD);
 			theInfo->Param(usedWParam);
 			w = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
 			if(fIsentropic && index == 0)
@@ -748,7 +731,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 		else if(status1 == false || status2 == false)
 			break;
 
-		if(!::MakeGroundAdjustment(WS, WD, w, currentPressure, theInfo, xInd, yInd, tInd, groundLevelIndex, hybridData, usedWParam))
+		if(!::MakeGroundAdjustment(WS, WD, w, currentPressure, theInfo, metaWindParamUsage, xInd, yInd, tInd, groundLevelIndex, hybridData, usedWParam))
 			break;
 		NFmiTrajectorySystem::Make3DRandomizing(WS, WD, w, theRandStep, index, theRandFactor, theTrajector);
         nextLoc = ::CalcNewLocation(currentLoc, WS, WD, theTimeStepInMinutes, forwardDir, pacificView);

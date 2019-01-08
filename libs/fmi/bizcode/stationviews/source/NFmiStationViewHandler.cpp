@@ -313,7 +313,6 @@ void NFmiStationViewHandler::Draw(NFmiToolBox * theGTB)
                 {
                     DoCacheDrawing(theGTB, frame, destDC, cacheRowIndex);
                 }
-                DrawParamView(theGTB);
             }
             catch(std::exception &e)
             {
@@ -330,7 +329,6 @@ void NFmiStationViewHandler::Draw(NFmiToolBox * theGTB)
             CBitmap* oldBitmap = destDC->SelectObject(viewCache);
 			theGTB->DrawDC(destDC, frame);
 			destDC->SelectObject(oldBitmap);
-            DrawParamView(theGTB);
         }
 	}
 }
@@ -2741,7 +2739,6 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 				}
 			}
 			DoTotalLocationSelection(thePlace, latlon, theKey, false);
-			DrawParamView(itsToolBox); // mitenk‰s toolboxin laita on ??// piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
 		}
 		// 8.2.2000/Marko Muutin t‰m‰n palauttamaan aina true:n jos piste on ollut sis‰ll‰
 		// toivon, ett‰ outo takkuisuus loppuu t‰ll‰ tavalla, kun klikkaa ruutua, miss‰ ei ole parametreja
@@ -2762,7 +2759,6 @@ bool NFmiStationViewHandler::LeftDoubleClick(const NFmiPoint &thePlace, unsigned
 			bool result = itsViewList->LeftDoubleClick(thePlace, theKey);
             if(result)
             {
-    			DrawParamView(itsToolBox); // mitenk‰s toolboxin laita on ??// piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
     			return result;
             }
             else
@@ -2784,7 +2780,6 @@ bool NFmiStationViewHandler::RightDoubleClick(const NFmiPoint &thePlace, unsigne
 			bool result = itsViewList->RightDoubleClick(thePlace, theKey);
             if(result)
             {
-    			DrawParamView(itsToolBox); // mitenk‰s toolboxin laita on ??// piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
     			return result;
             }
             else
@@ -3341,74 +3336,87 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
         return itsParamHandlerView->MouseMove(thePlace, theKey);
 
     if(!GetFrame().IsInside(thePlace))
-		return false;
+        return false;
 
     if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
-            return false; // ei move handlausta, jos ollaa parametri boxin sis‰ll‰, koska muuten ei voi oikea klikill‰ lis‰t‰ parametreja, jos hiiri liikahtaa
+        return false; // ei move handlausta, jos ollaa parametri boxin sis‰ll‰, koska muuten ei voi oikea klikill‰ lis‰t‰ parametreja, jos hiiri liikahtaa
 
-	if(itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MouseCaptured())
-		return MouseDragZooming(thePlace); // tehd‰‰n zoomi laatikon piirtoa suoraan karttan‰ytˆlle
-    else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
-		return MouseMoveBrushAction(thePlace);
-	else if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
-		return MouseMoveControlPointAction(thePlace);
 
-	NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-	if(itsCtrlViewDocumentInterface->MouseCaptured() && crossSectionSystem->CrossSectionSystemActive())
-	{
-		if(itsCtrlViewDocumentInterface->LeftMouseButtonDown())
-		{
-			if(crossSectionSystem->DragWholeCrossSection())
-			{
-				NFmiPoint moveBy(thePlace - crossSectionSystem->LastMousePosition());
-				NFmiPoint relStartPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
-				NFmiPoint relMiddlePoint(LatLonToViewPoint(crossSectionSystem->MiddlePoint()));
-				NFmiPoint relEndPoint(LatLonToViewPoint(crossSectionSystem->EndPoint()));
-				relStartPoint += moveBy;
-				relMiddlePoint += moveBy;
-				relEndPoint += moveBy;
-				NFmiPoint startLatlon(itsMapArea->ToLatLon(relStartPoint));
-				NFmiPoint middleLatlon(itsMapArea->ToLatLon(relMiddlePoint));
-				NFmiPoint endLatlon(itsMapArea->ToLatLon(relEndPoint));
-                crossSectionSystem->StartPoint(startLatlon);
-                crossSectionSystem->MiddlePoint(middleLatlon);
-                crossSectionSystem->EndPoint(endLatlon);
-                crossSectionSystem->LastMousePosition(thePlace);
+    try
+    {
+        InitializeGdiplus(itsToolBox, &GetFrame());
+
+        if(itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MouseCaptured())
+            return MouseDragZooming(thePlace); // tehd‰‰n zoomi laatikon piirtoa suoraan karttan‰ytˆlle
+        else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
+            return MouseMoveBrushAction(thePlace);
+        else if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+            return MouseMoveControlPointAction(thePlace);
+
+        NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
+        auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
+        if(itsCtrlViewDocumentInterface->MouseCaptured() && crossSectionSystem->CrossSectionSystemActive())
+        {
+            if(itsCtrlViewDocumentInterface->LeftMouseButtonDown())
+            {
+                if(crossSectionSystem->DragWholeCrossSection())
+                {
+                    NFmiPoint moveBy(thePlace - crossSectionSystem->LastMousePosition());
+                    NFmiPoint relStartPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
+                    NFmiPoint relMiddlePoint(LatLonToViewPoint(crossSectionSystem->MiddlePoint()));
+                    NFmiPoint relEndPoint(LatLonToViewPoint(crossSectionSystem->EndPoint()));
+                    relStartPoint += moveBy;
+                    relMiddlePoint += moveBy;
+                    relEndPoint += moveBy;
+                    NFmiPoint startLatlon(itsMapArea->ToLatLon(relStartPoint));
+                    NFmiPoint middleLatlon(itsMapArea->ToLatLon(relMiddlePoint));
+                    NFmiPoint endLatlon(itsMapArea->ToLatLon(relEndPoint));
+                    crossSectionSystem->StartPoint(startLatlon);
+                    crossSectionSystem->MiddlePoint(middleLatlon);
+                    crossSectionSystem->EndPoint(endLatlon);
+                    crossSectionSystem->LastMousePosition(thePlace);
+                    itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
+                    fWholeCrossSectionReallyMoved = true;
+                }
+                else
+                {
+                    crossSectionSystem->StartPoint(latlon);
+                    itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
+                }
+            }
+            else if(itsCtrlViewDocumentInterface->RightMouseButtonDown())
+            {
+                crossSectionSystem->EndPoint(latlon);
                 itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-				fWholeCrossSectionReallyMoved = true;
-			}
-			else
-			{
-                crossSectionSystem->StartPoint(latlon);
-                itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-			}
-		}
-		else if(itsCtrlViewDocumentInterface->RightMouseButtonDown())
-		{
-            crossSectionSystem->EndPoint(latlon);
-            itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-		}
-	}
-	if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-	{
-		NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-		NFmiMTATempSystem::Container &temps = const_cast<NFmiMTATempSystem::Container &>(itsCtrlViewDocumentInterface->GetMTATempSystem().GetTemps());
-		if(temps.size())
-		{ // siirret‰‰n 1. luotaus hiiren osoittamaan paikkaan
-			temps[0].Latlon(latlon);
-			if(itsLastMouseDownRelPlace != thePlace)
-                itsCtrlViewDocumentInterface->MustDrawTempView(true);
-		}
-	}
-	DoTotalLocationSelection(thePlace, latlon, theKey, true);
-	if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->TimeSerialDataViewOn())
-	{
-        itsCtrlViewDocumentInterface->MustDrawTimeSerialView(true);
-        itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
-	}
-	
-	return false;
+            }
+        }
+        if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
+        {
+            NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
+            NFmiMTATempSystem::Container &temps = const_cast<NFmiMTATempSystem::Container &>(itsCtrlViewDocumentInterface->GetMTATempSystem().GetTemps());
+            if(temps.size())
+            { // siirret‰‰n 1. luotaus hiiren osoittamaan paikkaan
+                temps[0].Latlon(latlon);
+                if(itsLastMouseDownRelPlace != thePlace)
+                    itsCtrlViewDocumentInterface->MustDrawTempView(true);
+            }
+        }
+        DoTotalLocationSelection(thePlace, latlon, theKey, true);
+        if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->TimeSerialDataViewOn())
+        {
+            itsCtrlViewDocumentInterface->MustDrawTimeSerialView(true);
+            itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
+        }
+    }
+    catch(std::exception &e)
+    {
+        itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in NFmiStationViewHandler::Draw: ") + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+    }
+    catch(...)
+    {
+    }
+    CleanGdiplus(); // t‰t‰ pit‰‰ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+    return false;
 }
 
 //--------------------------------------------------------
@@ -4069,30 +4077,6 @@ void NFmiStationViewHandler::DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawPar
     }
 }
 
-// laskee 0-kantaisen sarakkeen indeksin
-int NFmiStationViewHandler::CalcCacheColumn(void)
-{
-	int columnIndex = 1;
-	boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->DefaultEditedDrawParam(); // otetaan default datasta aikaresoluutio, koska ikkunat j‰rjestet‰‰n default datan aikaresoluution mukaan
-    auto &editedDataTimeBag = itsCtrlViewDocumentInterface->EditedDataTimeBag();
-	int resolution = editedDataTimeBag.Resolution();
-	if(drawParam &&  resolution != 0)
-		columnIndex = (itsTime.DifferenceInMinutes(editedDataTimeBag.FirstTime())/resolution) + 0;
-	return columnIndex;
-}
-
-// laskee 0-kantaisen rivin indeksin
-int NFmiStationViewHandler::CalcCacheRow(void)
-{
-	int rowIndex = itsCtrlViewDocumentInterface->MapRowStartingIndex(itsMapViewDescTopIndex) + itsViewGridRowNumber - 2;
-	return rowIndex;
-}
-
-bool NFmiStationViewHandler::IsActiveColumn(void)
-{
-	return false;
-}
-
 static NFmiRect ClipRect(const NFmiRect &theClipper, const NFmiRect &theRect)
 {
 	static NFmiRect empty;
@@ -4182,36 +4166,31 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 }
 
 // t‰ll‰ piirret‰‰n tavara, joka tulee myˆs bitmapin p‰‰lle
-void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* dummy */ , int theViewIndex, float /* dummy3 */ , void* /* dummy4 */ )
+void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* dummy */, int theViewIndex, float /* dummy3 */, void* /* dummy4 */)
 {
-	itsToolBox = theGTB;
+    itsToolBox = theGTB;
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
     InitializeGdiplus(itsToolBox, &GetFrame());
 
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
-		DrawControlPoints();
-	if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun
-		DrawSelectedLocations();
+    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+        DrawControlPoints();
+    if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun
+        DrawSelectedLocations();
 
-////????	if(itsCtrlViewDocumentInterface->ShowWaitCursorWhileDrawingView() == true)
-		// ei piirret‰ animaation aikana mm. timetext-laatikkoa  ja muita juttuja v‰lkkymisen est‰miseksi
-		// (HUOM! tarkastuksen pit‰‰ olla DrawTimeText-metodin ulkopuolella, koska metodia kutsutaan myˆs
-		// silloin kun karttaa piirret‰‰n normaalisti ja sen pit‰‰ tull‰ piirtoon mukaan)
-	{
-		DrawSelectedMTAModeSoundingPlaces();
-		DrawSoundingPlaces();
-		DrawCrossSectionPoints(); // n‰m‰ piirret‰‰n vain vasempaan yl‰ kulmaan karttaruudukossa
-        DrawTimeText();
-    }
-	DrawMouseCursorHelperCrossHair();
-	DrawSelectedSynopFromGridView();
+    DrawSelectedMTAModeSoundingPlaces();
+    DrawSoundingPlaces();
+    DrawCrossSectionPoints(); // n‰m‰ piirret‰‰n vain vasempaan yl‰ kulmaan karttaruudukossa
+    DrawTimeText();
 
-	DrawParamView(theGTB); // piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
-	DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
+    DrawMouseCursorHelperCrossHair();
+    DrawSelectedSynopFromGridView();
+
+    DrawParamView(theGTB); // piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
+    DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
     CleanGdiplus();
 }
 
-static bool IsRectIntersecting(const NFmiRect &theRect, checkedVector<NFmiRect> &theExistingRects)
+static bool IsRectIntersecting(const NFmiRect &theRect, std::vector<NFmiRect> &theExistingRects)
 {
 	for(size_t i=0; i < theExistingRects.size(); i++)
 	{
@@ -4221,62 +4200,33 @@ static bool IsRectIntersecting(const NFmiRect &theRect, checkedVector<NFmiRect> 
 	return false;
 }
 
-checkedVector<NFmiRect> g_AutoCompletionRects; // t‰h‰n talletet‰‰n autocompletionissa piirrettyjen nimi laatikkojen ja piste makkerien laatikot. 
-												// Kun etsit‰‰n paikkaa seuraavalle laatikoille, ne eiv‰t saa menn‰ p‰‰llekk‰in.
-
-
 void NFmiStationViewHandler::DrawAutocompleteLocations(void)
 {
     auto &autoComplete = itsCtrlViewDocumentInterface->AutoComplete();
-	if(autoComplete.AutoCompleteDialogOn() == false)
-		return ;
+    if(autoComplete.AutoCompleteDialogOn() == false)
+        return;
 
-	g_AutoCompletionRects.clear(); // aluksi aina nollataan laatikot
+    itsAutoCompletionRects.clear(); // aluksi aina nollataan laatikot
 
-	// piirret‰‰n autocomplete juttuja vain 1. rivin 1. sarakkeeseen
-	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
-	{
-		std::vector<NFmiACLocationInfo> locInfos = autoComplete.AutoCompleteResults();
-		if(locInfos.size() == 0)
-			return ;
+    // piirret‰‰n autocomplete juttuja vain 1. rivin 1. sarakkeeseen
+    if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
+    {
+        std::vector<NFmiACLocationInfo> locInfos = autoComplete.AutoCompleteResults();
+        if(locInfos.size() == 0)
+            return;
 
-		Gdiplus::Graphics *gdiPlusGraphics = Gdiplus::Graphics::FromHDC(itsToolBox->GetDC()->GetSafeHdc());
-		try
-		{
-			if(gdiPlusGraphics == 0)
-				throw runtime_error("Error in NFmiStationViewHandler::DrawAutocompleteLocations-method, unable to initialize Gdiplus::Graphics, application error.");
+        NFmiRect markerCircleBase = CalcBaseMarkerRect(autoComplete.MarkerSizeInMM());
+        // Lis‰t‰‰n jo t‰ss‰ vaiheessa kaikki markerit rect-Listaan, ett‰ niiden p‰‰lle ei piirret‰ mit‰‰n
+        for(size_t i = 0; i < locInfos.size(); i++)
+        {
+            markerCircleBase.Center(LatLonToViewPoint(locInfos[i].itsLatlon));
+            itsAutoCompletionRects.push_back(markerCircleBase);
+        }
 
-			if(itsToolBox->GetDC()->IsPrinting())
-				gdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // t‰h‰n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pit‰‰ laittaa siihen
-			gdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, GetFrame()));
-
-			NFmiRect markerCircleBase = CalcBaseMarkerRect(autoComplete.MarkerSizeInMM());
-			// Lis‰t‰‰n jo t‰ss‰ vaiheessa kaikki markerit rect-Listaan, ett‰ niiden p‰‰lle ei piirret‰ mit‰‰n
-			for(size_t i = 0; i < locInfos.size(); i++)
-			{
-				markerCircleBase.Center(LatLonToViewPoint(locInfos[i].itsLatlon));
-				g_AutoCompletionRects.push_back(markerCircleBase);
-			}
-
-			// varsinainen piirto rutiini alkaa t‰st‰
-			for(size_t i = 0; i < locInfos.size(); i++)
-				DrawAutocompleteLocation(gdiPlusGraphics, locInfos[i], markerCircleBase);
-
-		}
-		catch(std::exception & /* e */ )
-		{
-	//		string errStr = e.what();
-		}
-		catch(...)
-		{ // otetaan kaikki vain kiinni ett‰ voidaan varmasti tuhota itsGdiPlusGraphics-olio
-		}
-		gdiPlusGraphics->ResetClip();
-		if(gdiPlusGraphics)
-		{
-			delete gdiPlusGraphics;
-			gdiPlusGraphics = 0;
-		}
-	}
+        // varsinainen piirto rutiini alkaa t‰st‰
+        for(size_t i = 0; i < locInfos.size(); i++)
+            DrawAutocompleteLocation(itsGdiPlusGraphics, locInfos[i], markerCircleBase);
+    }
 }
 
 static double GetUsedRadius(int index, double theBoxHeight)
@@ -4302,7 +4252,7 @@ NFmiPoint NFmiStationViewHandler::CalcNewCenterPoint(double relativeX, double re
 	return NFmiPoint(newCenterX, newCenterY);
 }
 
-static bool IsBoundinBoxInGoodPlace(const NFmiRect &theRelativeBoundingBox, checkedVector<NFmiRect> &theAutoCompletionRects, const NFmiRect &theViewRect)
+static bool IsBoundinBoxInGoodPlace(const NFmiRect &theRelativeBoundingBox, std::vector<NFmiRect> &theAutoCompletionRects, const NFmiRect &theViewRect)
 {
 	if(theViewRect.IsInside(theRelativeBoundingBox))
 	{
@@ -4312,7 +4262,7 @@ static bool IsBoundinBoxInGoodPlace(const NFmiRect &theRelativeBoundingBox, chec
 	return false;
 }
 
-bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, checkedVector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace)
+bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, std::vector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace)
 {
 	theBoundBox.Center(CalcNewCenterPoint(relativeX, relativeY, relativeW, radius, angle));
 	if(::IsBoundinBoxInGoodPlace(theBoundBox, theAutoCompletionRects, GetFrame()))
@@ -4330,7 +4280,7 @@ bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, checkedVect
 // Halutun rectin koko on theRelativeBoundingBox:in kokoinen.
 // Etsit‰‰n uusi paikka puoliympyr‰n muotoiselta alueelta, kolmella eri s‰teell‰. S‰de m‰‰r‰ytyy theRelativeBoundingBox:in korkeuden mukaan. 
 // 1. kierroksella 1/2 korkeutta, 2. kierroksella 1/3 korkeutta ja lopuksi 2/3 korkeutta.
-NFmiRect NFmiStationViewHandler::SearchNameBoxLocation(const NFmiPoint &theRelativePoint, const NFmiRect &theRelativeBoundingBox, checkedVector<NFmiRect> &theAutoCompletionRects, double theOneLineBoxHeight, FmiDirection &theMarkerConnectingPlace)
+NFmiRect NFmiStationViewHandler::SearchNameBoxLocation(const NFmiPoint &theRelativePoint, const NFmiRect &theRelativeBoundingBox, std::vector<NFmiRect> &theAutoCompletionRects, double theOneLineBoxHeight, FmiDirection &theMarkerConnectingPlace)
 {
 	NFmiRect newRelativeBoundingBox(theRelativeBoundingBox);
 	double relWidth = theRelativeBoundingBox.Width();
@@ -4397,8 +4347,8 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 
 		// etsi laatikon paikka niin ett‰ se ei ole p‰‰llekk‰in muiden kanssa, eik‰ se ole paikan itsens‰ p‰‰ll‰
 		FmiDirection markerConnectingPlace = kLeft;
-		NFmiRect foundRect = SearchNameBoxLocation(relativePoint, relativeBoundingBox, g_AutoCompletionRects, relativeOneLineBoundingBox.Height(), markerConnectingPlace);
-		g_AutoCompletionRects.push_back(foundRect);
+		NFmiRect foundRect = SearchNameBoxLocation(relativePoint, relativeBoundingBox, itsAutoCompletionRects, relativeOneLineBoundingBox.Height(), markerConnectingPlace);
+        itsAutoCompletionRects.push_back(foundRect);
 		Gdiplus::Rect foundBoundingBox = CtrlView::Relative2GdiplusRect(itsToolBox, foundRect);
 
 
@@ -4421,7 +4371,7 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 									kTopLeft);
 
 		// Piirr‰ viel‰ paikan markkeri (musta ympyr‰, jossa punainen keskus) ja siit‰ viiva laatikkoon!!!
-		DrawMarkerPoint(relativePoint, foundRect, g_AutoCompletionRects, markerConnectingPlace, theMarkerCircleBase);
+		DrawMarkerPoint(relativePoint, foundRect, itsAutoCompletionRects, markerConnectingPlace, theMarkerCircleBase);
 	}
 }
 
@@ -4436,7 +4386,7 @@ NFmiRect NFmiStationViewHandler::CalcBaseMarkerRect(double theMarkerSizeInMM)
 	return NFmiRect(0, 0, xWidth, yWidth);
 }
 
-void NFmiStationViewHandler::DrawMarkerPoint(const NFmiPoint &theRelativePlace, const NFmiRect &theTextRect, checkedVector<NFmiRect> &theAutoCompletionRects, FmiDirection theMarkerConnectingPlace, NFmiRect &theMarkerCircleBase)
+void NFmiStationViewHandler::DrawMarkerPoint(const NFmiPoint &theRelativePlace, const NFmiRect &theTextRect, std::vector<NFmiRect> &theAutoCompletionRects, FmiDirection theMarkerConnectingPlace, NFmiRect &theMarkerCircleBase)
 {
     auto &autoComplete = itsCtrlViewDocumentInterface->AutoComplete();
 	double lineWidthInMM = autoComplete.ConnectingLinePenSizeInMM();
@@ -4590,93 +4540,16 @@ void NFmiStationViewHandler::GetMinimumDistanceMessage(const std::vector<HakeMes
         }
     }
 }
-#endif // DISABLE_CPPRESTSDK
-
-std::string NFmiStationViewHandler::ComposeWarningMessageToolTipText(void)
-{
-	std::string str;
-#ifndef DISABLE_CPPRESTSDK
-    if(ShowWarningMessages())
-	{
-        GetShownMessages();
-        NFmiLocation wantedLocation(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-		double minDistHake = 9999999999;
-        double minDistKaha = 9999999999;
-        HakeMessage::HakeMsg hakeMessage = HakeMessage::HakeMsg::unInitialized;
-        HakeMessage::HakeMsg kahaMessage = HakeMessage::HakeMsg::unInitialized;
-        GetMinimumDistanceMessage(itsShownHakeMessages, wantedLocation, hakeMessage, minDistHake);
-        GetMinimumDistanceMessage(itsShownKaHaMessages, wantedLocation, kahaMessage, minDistKaha);
-        
-        //Treat Hake and KaHa messages differently
-        if(!(hakeMessage == HakeMessage::HakeMsg::unInitialized) || !(kahaMessage == HakeMessage::HakeMsg::unInitialized))
-        {
-            str = (minDistHake < minDistKaha) ? HakeToolTipText(hakeMessage) : KahaToolTipText(kahaMessage); //Hake or Kaha tooltip
-        }
-	}
-#endif // DISABLE_CPPRESTSDK
-	return str;
-}
-
-// IKƒVƒƒ tupla koodia taas edellisen ComposeWarningMessageToolTipText-metodin kanssa
-std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(void)
-{
-	std::string str;
-	if(ShowSeaIcingWarningMessages())
-	{
-		NFmiLocation wantedLoc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
-		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) *60));
-		std::vector<NFmiSeaIcingWarningMessage*> warningMessages = itsCtrlViewDocumentInterface->SeaIcingWarningSystem().GetWantedWarningMessages(itsTime, editorTimeStep, zoomedArea);
-
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator it = warningMessages.begin();
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator endIt = warningMessages.end();
-		double minDist = 9999999999;
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator minIter = endIt; // iteraattori l‰himp‰‰n viestiin
-		for( ; it != endIt; ++it)
-		{
-			double currDist = wantedLoc.Distance((*it)->LatlonPoint());;
-			if(currDist < minDist)
-			{
-				minDist = currDist;
-				minIter = it;
-			}
-		}
-		if(minIter != endIt)
-		{
-			str += (*minIter)->TotalMessageStr();
-			// Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
-			::ConvertXML2PlainCode(str);
-		}
-	}
-	return str;
-}
-
-#ifndef DISABLE_CPPRESTSDK
-std::string NFmiStationViewHandler::HakeToolTipText(HakeMessage::HakeMsg &msg)
-{
-    std::string str;
-    std::vector<std::string>messageNodes = NFmiStringTools::Split(msg.TotalMessageStr(), ">");
-    for(unsigned int i = 0; i<messageNodes.size(); i++)
-    {
-    	str += messageNodes[i];
-    	str += ">\n";
-    }
-    // Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
-    ::ConvertXML2PlainCode(str);
-
-    return str;
-}
-#endif // DISABLE_CPPRESTSDK
 
 void AddLeadingZero(std::string& s)
 {
-    if(s.length() < 2) 
+    if(s.length() < 2)
     {
         s = "0" + s;
     }
 }
 
-std::string KahaUTCTime(HakeMessage::HakeMsg &msg)
+std::string KahaUTCTime(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
 
@@ -4697,25 +4570,25 @@ void KahaMinutesToPrintableTime(std::string& s)
     int time = stoi(s);
     if(time > 60 * 24 * 20) { //month category
         s = "kuukausi";
-    } 
-    else if (time > 60 * 24 * 5){ //week category
+    }
+    else if(time > 60 * 24 * 5) { //week category
         s = "viikko";
     }
-    else if (time > 60 * 12) { // day category
+    else if(time > 60 * 12) { // day category
         s = "p‰iv‰";
-    } 
+    }
     else if(time > 30) { // hour category
         s = "tunti";
     }
-    else if (time > 1){
+    else if(time > 1) {
         s = "10 min";
-    } 
+    }
     else {
         s = "-";
     }
 }
 
-std::string KahaTooltipAccuracy(HakeMessage::HakeMsg &msg)
+std::string KahaTooltipAccuracy(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
     std::stringstream strStream;
@@ -4728,14 +4601,13 @@ std::string KahaTooltipAccuracy(HakeMessage::HakeMsg &msg)
         strStream.str(msg.TotalMessageStr().substr(found + 9));
         std::getline(strStream, tempStr);
     }
-    std::string s = std::regex_replace( tempStr, std::regex("[^0-9]+"), std::string("") ); // Remove all but digits
+    std::string s = std::regex_replace(tempStr, std::regex("[^0-9]+"), std::string("")); // Remove all but digits
     KahaMinutesToPrintableTime(s);
     str += s;
     return str;
 }
 
-#ifndef DISABLE_CPPRESTSDK
-std::string NFmiStationViewHandler::KahaToolTipText(HakeMessage::HakeMsg &msg)
+static std::string KahaToolTipText(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
     std::string remainingStr = msg.ReasonStr();
@@ -4778,15 +4650,175 @@ std::string NFmiStationViewHandler::KahaToolTipText(HakeMessage::HakeMsg &msg)
 
     return str;
 }
+
+// Xml pohjaisessa sanomassa pit‰‰ eri kokonaisviesti jakaa xml-node riveihin, 
+// jotta siit‰ saa selv‰‰ (originaali viesti on yhdell‰ rivill‰).
+static std::string GetFinalXmlBaseHakeToolTipText(const HakeMessage::HakeMsg &msg)
+{
+    std::string str;
+    std::vector<std::string>messageNodes = NFmiStringTools::Split(msg.TotalMessageStr(), ">");
+    for(unsigned int i = 0; i<messageNodes.size(); i++)
+    {
+        str += messageNodes[i];
+        str += ">\n";
+    }
+    // Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
+    ::ConvertXML2PlainCode(str);
+
+    return str;
+}
+
+static bool ContainsAnyAlphaNumerals(const std::string &str)
+{
+    auto it = std::find_if(str.begin(), str.end(), 
+        [](char c) {
+        return std::isalnum(c);
+    });
+
+    return it != str.end();
+}
+
+// Jos teksti sis‰lt‰‰ lopussa merkit [], palauta true.
+// Palauta myˆs true, jos lopussa on tyhj‰t hipsut eli ""
+static bool ContainsJsonEmptyArrayInEnd(const std::string &str)
+{
+    auto strSize = str.size();
+    if(strSize >= 2)
+    {
+        if(str[strSize - 1] == ']' && str[strSize - 2] == '[')
+            return true;
+        if(str[strSize - 1] == '"' && str[strSize - 2] == '"')
+            return true;
+    }
+    return false;
+}
+
+// Poistetaan viel‰ rivin lopusta mahdolliset seuraavat merkit: ensin mahdollinen ',' ja sitten '{', '}', '[', ']'
+static void RemoveJsonMarkersFromEnd(std::string &str)
+{
+    if(!str.empty())
+    {
+        const std::string jsonMarkers = "{}[]";
+        if(jsonMarkers.find(str.back()) != std::string::npos)
+        {
+            str.pop_back();
+        }
+    }
+}
+
+// Json pohjaisesta viestist‰ pit‰‰ poistaa turhat json krumeluurit eli
+// sellaiset rivit, jolla on vain json:in aloitus/lopetus merkkej‰ kuten '{', '}', '[', ']'
+// Jos niit‰ ei poista, paisuu tooltipin 'puhekupla' todella pitk‰ksi ja vaikea selkoiseksi.
+static std::string GetFinalJsonBaseHakeToolTipText(const HakeMessage::HakeMsg &msg)
+{
+    std::vector<std::string> messageLines = NFmiStringTools::Split(msg.TotalMessageStr(), "\n");
+    std::string str;
+    // poistetaan sellaiset rivit, joilla ei ole yht‰‰n alpha-numeraalia
+    for(auto lineStr : messageLines)
+    {
+        if(::ContainsAnyAlphaNumerals(lineStr))
+        {
+            // Poista pilkku rivin lopusta
+            if(lineStr.back() == ',')
+                lineStr.pop_back();
+
+            // Tyhj‰t taulukot (esim. "announcements":[] ) ja tyhj‰t arvot, miss‰ xxx : "", j‰tet‰‰n pois h‰iritsem‰st‰
+            if(!::ContainsJsonEmptyArrayInEnd(lineStr))
+            {
+                ::RemoveJsonMarkersFromEnd(lineStr);
+                str += lineStr;
+                str += "\n"; // rivinvaihto pit‰‰ lis‰t‰ rivien per‰‰n, koska se on poistettu splittauksen yhteydess‰ 
+            }
+        }
+    }
+    return str;
+}
+
+static std::string HakeToolTipText(const HakeMessage::HakeMsg &msg)
+{
+    if(msg.IsFromXmlFormat())
+        return ::GetFinalXmlBaseHakeToolTipText(msg);
+    else
+        return ::GetFinalJsonBaseHakeToolTipText(msg);
+}
+
+static std::string GetFinalWarningMessageForTooltip(double minDistHake, double minDistKaha, const HakeMessage::HakeMsg &hakeMessage, const HakeMessage::HakeMsg &kahaMessage)
+{
+    //Treat Hake and KaHa messages differently
+    if(!(hakeMessage == HakeMessage::HakeMsg::unInitialized) || !(kahaMessage == HakeMessage::HakeMsg::unInitialized))
+    {
+        if(minDistHake < minDistKaha)
+        {
+            return ::HakeToolTipText(hakeMessage);
+        }
+        else
+        {
+            return ::KahaToolTipText(kahaMessage);
+        }
+    }
+    return "";
+}
+
 #endif // DISABLE_CPPRESTSDK
 
+std::string NFmiStationViewHandler::ComposeWarningMessageToolTipText(void)
+{
+#ifndef DISABLE_CPPRESTSDK
+    if(ShowWarningMessages())
+	{
+        GetShownMessages();
+        NFmiLocation wantedLocation(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
+		double minDistHake = 9999999999;
+        double minDistKaha = 9999999999;
+        HakeMessage::HakeMsg hakeMessage = HakeMessage::HakeMsg::unInitialized;
+        HakeMessage::HakeMsg kahaMessage = HakeMessage::HakeMsg::unInitialized;
+        GetMinimumDistanceMessage(itsShownHakeMessages, wantedLocation, hakeMessage, minDistHake);
+        GetMinimumDistanceMessage(itsShownKaHaMessages, wantedLocation, kahaMessage, minDistKaha);
+        
+        return ::GetFinalWarningMessageForTooltip(minDistHake, minDistKaha, hakeMessage, kahaMessage);
+	}
+#endif // DISABLE_CPPRESTSDK
+	return "";
+}
 
-static const NFmiPoint kMissingLatlon(kFloatMissing, kFloatMissing);
+// IKƒVƒƒ tupla koodia taas edellisen ComposeWarningMessageToolTipText-metodin kanssa
+std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(void)
+{
+	std::string str;
+	if(ShowSeaIcingWarningMessages())
+	{
+		NFmiLocation wantedLoc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
+		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
+		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) *60));
+		std::vector<NFmiSeaIcingWarningMessage*> warningMessages = itsCtrlViewDocumentInterface->SeaIcingWarningSystem().GetWantedWarningMessages(itsTime, editorTimeStep, zoomedArea);
+
+		std::vector<NFmiSeaIcingWarningMessage*>::iterator it = warningMessages.begin();
+		std::vector<NFmiSeaIcingWarningMessage*>::iterator endIt = warningMessages.end();
+		double minDist = 9999999999;
+		std::vector<NFmiSeaIcingWarningMessage*>::iterator minIter = endIt; // iteraattori l‰himp‰‰n viestiin
+		for( ; it != endIt; ++it)
+		{
+			double currDist = wantedLoc.Distance((*it)->LatlonPoint());;
+			if(currDist < minDist)
+			{
+				minDist = currDist;
+				minIter = it;
+			}
+		}
+		if(minIter != endIt)
+		{
+			str += (*minIter)->TotalMessageStr();
+			// Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
+			::ConvertXML2PlainCode(str);
+		}
+	}
+	return str;
+}
 
 static NFmiSilamStationList::Station GetClosestSilamStation(NFmiSilamStationList &theLocations, const NFmiLocation &theSearchPlace)
 {
 	NFmiSilamStationList::Station closestLoc;
-	closestLoc.itsLatlon = kMissingLatlon;
+	closestLoc.itsLatlon = NFmiPoint::gMissingLatlon;
 	checkedVector<NFmiSilamStationList::Station> &locList = theLocations.Locations();
 	double minDist = 9999999999;
 	for(size_t i=0; i < locList.size(); i++)

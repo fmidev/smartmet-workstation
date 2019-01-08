@@ -37,7 +37,7 @@ namespace
             {
                 auto drawParamPtr = drawParamList->Current();
                 if(!drawParamPtr->IsParamHidden())
-                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, ctrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), fCrossSectionInfoWanted, false, false, 10));
+                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, ctrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), fCrossSectionInfoWanted, false, false, 10, false));
             }
         }
 
@@ -64,7 +64,6 @@ namespace
 
     std::unique_ptr<Gdiplus::Font> MakeParamBoxFont(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex, double sizeFactor)
     {
-        std::vector<std::string> paramBoxTexts; // = MakeBetaProductParamBoxTexts();
         std::wstring fontNameStr(L"Arial");
         double fontSizeInMM = 1.6 * ::CalcViewSizeFactor(ctrlViewDocumentInterface, mapViewDescTopIndex) * sizeFactor;
         int font1Size = static_cast<int>(fontSizeInMM * ctrlViewDocumentInterface->GetGraphicalInfo(mapViewDescTopIndex).itsPixelsPerMM_y * 1.88);

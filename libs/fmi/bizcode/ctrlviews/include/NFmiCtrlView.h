@@ -126,6 +126,7 @@ class NFmiCtrlView
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
    virtual NFmiPoint ViewPointToLatLon(const NFmiPoint & /* theViewPoint */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
    inline virtual bool IsSingleSymbolView(void) { return true; }; // T‰t‰ k‰ytet‰‰n, kun arvioidaan kartalle piirrett‰v‰n tekstin pituutta (liittyy hiladatan piirron harvennukseen). Eli jos true, 'tekstin' pituus on aina 1, muuten se lasketaan lennossa
+   inline virtual bool IsTimeSerialView(void) { return false; };
    static const float gGreyColorBaseComponent; // mill‰ kertoimella rakennetaan gGreyColorDefault
    static const NFmiColor gGreyColorDefault; // Mik‰ on Windowssin perus harmaa v‰ris‰vy
    CtrlViewDocumentInterface* GetCtrlViewDocumentInterface();

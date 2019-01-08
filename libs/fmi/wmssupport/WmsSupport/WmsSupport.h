@@ -80,6 +80,20 @@ namespace Wms
 
             if(time > layerInfo.endTime || time < layerInfo.startTime)
             {
+                if(CatLog::logLevel() <= CatLog::Severity::Debug)
+                {
+                    const NFmiString usedTimeFormat = "YYYY.MM.DD HH:mm";
+                    std::string noTimeDebugLevelMessage = __FUNCTION__;
+                    noTimeDebugLevelMessage += " requested time ";
+                    noTimeDebugLevelMessage += time.ToStr(usedTimeFormat);
+                    noTimeDebugLevelMessage += " was out of available server time range ";
+                    noTimeDebugLevelMessage += layerInfo.startTime.ToStr(usedTimeFormat);
+                    noTimeDebugLevelMessage += " - ";
+                    noTimeDebugLevelMessage += layerInfo.endTime.ToStr(usedTimeFormat);
+                    noTimeDebugLevelMessage += " for layer: ";
+                    noTimeDebugLevelMessage += layerInfo.name;
+                    CatLog::logMessage(noTimeDebugLevelMessage, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                }
                 return nullptr;
             }
 
