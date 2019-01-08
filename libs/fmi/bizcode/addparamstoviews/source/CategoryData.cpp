@@ -240,7 +240,7 @@ namespace AddParams
     std::vector<SingleRowItem> CategoryData::customObservationData(NFmiInfoOrganizer &infoOrganizer) const
     {
         std::vector<SingleRowItem> customObservationData;
-        // *** Flash ***
+        // *** Lightning ***
         if(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0))
         {
             NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0)->Producer()));
@@ -259,7 +259,7 @@ namespace AddParams
             SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, 2, menuString);
             customObservationData.push_back(item);
 
-            // Add also a min/max plot
+            // Add also a min/max synop plot
             NFmiProducer producer2(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
             menuString = "Synop min/max";
             uniqueDataId = std::string(producer2.GetName()) + " - " + menuString;
@@ -292,7 +292,7 @@ namespace AddParams
 
             menuString = "Sounding";
             //SingleRowItem item = SingleRowItem(kParamType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, 2, menuString);
-            //Joonas: Hae pimpl:stä const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()) ja luo alimenu missä TEMP:lle vain nuo levelit. Muista myös estää alkuperäinen TEMP menun luonti, missä on kaikki levelit.
+            //Joonas: SoundingPlotLevels.Levels()) ja luo alimenu missä TEMP:lle vain nuo levelit. Muista myös estää alkuperäinen TEMP menun luonti, missä on kaikki levelit.
         }
 
 

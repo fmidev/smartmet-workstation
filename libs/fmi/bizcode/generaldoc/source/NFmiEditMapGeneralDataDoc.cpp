@@ -14028,6 +14028,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
+            //ParameterSelectionSystem.soundingLevels(SoundingPlotLevels());
+
             // Add other data to help data. 
             if(capDataSystem.useCapData())
             {
