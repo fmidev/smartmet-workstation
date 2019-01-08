@@ -73,6 +73,7 @@ namespace HakeMessage
     HakeMsg XmlHakeParser::parse(const std::string &xmlString)
     {
         auto xmlMessage = HakeMsg{};
+        xmlMessage.IsFromXmlFormat(true);
         static std::auto_ptr<NFmiArea> areaPtr;
         static bool firstTime = true;
         if(firstTime)

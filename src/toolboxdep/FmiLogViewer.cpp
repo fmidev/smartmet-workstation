@@ -407,7 +407,20 @@ const std::string& severityToString(CatLog::Severity severity)
 
 static void SetGridCell(CGridCtrl &theGridCtrl, int row, int column, const std::string &str)
 { 
-    theGridCtrl.SetItemText(row, column, CA2T(str.c_str()));
+    // Tool long text brokes visualizing the text in cell and causes runtime problems with tooltip.
+    // Limiting final text length here so that these problems won't occur.
+    // OBS! Making this limitation only to logger-view (only place where this problem has appeared), 
+    // so that it wouldn't slow down the original CGridCtrl class too much (it would have to 
+    // calculate length's of LPCTSTR objects for any grid-ctrl object in anywhere in smartMet)
+    const size_t maxCellTextLength = 1000; // No need to support longer text, thay won't be seen anyway...
+
+    if(str.length() <= maxCellTextLength)
+        theGridCtrl.SetItemText(row, column, CA2T(str.c_str()));
+    else
+    {
+        std::string shortText(str.c_str(), maxCellTextLength);
+        theGridCtrl.SetItemText(row, column, CA2T(shortText.c_str()));
+    }
     theGridCtrl.SetItemState(row, column, theGridCtrl.GetItemState(row, column) | GVIS_READONLY);
 }
 

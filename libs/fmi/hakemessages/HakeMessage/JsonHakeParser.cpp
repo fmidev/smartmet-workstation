@@ -89,6 +89,7 @@ namespace HakeMessage
     HakeMsg JsonHakeParser::parseHake(const std::string &jsonString)
     {
         auto hakeMsg = HakeMsg{};
+        hakeMsg.IsFromXmlFormat(false);
         auto json = Json::parse(jsonString);
 
         if(json.is_array() && !json.empty())

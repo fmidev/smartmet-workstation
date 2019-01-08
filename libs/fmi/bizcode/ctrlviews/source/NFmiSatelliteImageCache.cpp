@@ -3,6 +3,7 @@
 #include "NFmiFileString.h"
 #include "NFmiStringTools.h"
 #include "CtrlViewGdiPlusFunctions.h"
+#include "catlog/catlog.h"
 
 
 static NFmiMetTime ConvertStampToTime(const std::string &theTimeStamp)
@@ -137,27 +138,36 @@ NFmiImageHolder NFmiSatelliteImageCache::StartLoadingImage()
 // Palauttaa true jos lataus valmistunut, oli se onnistunut tai ei, muuten palautetaan aina false.
 bool NFmiSatelliteImageCache::CheckOnImageLoading(int waitForMs)
 {
-    if(mImageHolder->mState == NFmiImageData::kLoading)
+    if(!mImageHolder)
     {
-        if(mImageHolderFuture.wait_for(std::chrono::milliseconds(waitForMs)) == std::future_status::ready)
+        std::string errorMessage = __FUNCTION__;
+        errorMessage += ", mImageHolder was nullptr, this is logical error in program, notify developer...";
+        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Data, true);
+    }
+    else
+    {
+        if(mImageHolder->mState == NFmiImageData::kLoading)
         {
-            std::lock_guard<std::mutex> lock(mImageLoadingMutex);
-            mImageHolder = mImageHolderFuture.get();
-            // HUOM! Ei saa k‰ytt‰‰ SetImageState-metodia statuksen asetuksessa, koska siell‰kin on lukitus
-            if(!mImageHolder->mErrorMessage.empty() || mImageHolder->mImage == nullptr)
-                mImageHolder->mState = NFmiImageData::kErrorneus; // Jos image holderin error-text osiossa on jotain tai image-ptr oli nullptr, ep‰onnistui lataus
-            else
-                mImageHolder->mState = NFmiImageData::kOk; // Laitetaan status ok:ksi
-            return true;
-        }
+            if(mImageHolderFuture.wait_for(std::chrono::milliseconds(waitForMs)) == std::future_status::ready)
+            {
+                std::lock_guard<std::mutex> lock(mImageLoadingMutex);
+                mImageHolder = mImageHolderFuture.get();
+                // HUOM! Ei saa k‰ytt‰‰ SetImageState-metodia statuksen asetuksessa, koska siell‰kin on lukitus
+                if(!mImageHolder->mErrorMessage.empty() || mImageHolder->mImage == nullptr)
+                    mImageHolder->mState = NFmiImageData::kErrorneus; // Jos image holderin error-text osiossa on jotain tai image-ptr oli nullptr, ep‰onnistui lataus
+                else
+                    mImageHolder->mState = NFmiImageData::kOk; // Laitetaan status ok:ksi
+                return true;
+            }
 
-        if(mLoadingTimer.CurrentTimeDiffInMSeconds() > mImageLoadingFailedWaitTimeMs)
-        { // Kuvaa on latailtu tuloksetta tarpeeksi kauan, laitetaan error -tila p‰‰lle ja laitetaan imageHolderille error teksti
-            std::lock_guard<std::mutex> lock(mImageLoadingMutex);
-            mImageHolder->mErrorMessage = std::string("Image loading took too long time, loading failed for image-file:") + "\n" + mImageFileName;
-            mImageHolder->mState = NFmiImageData::kErrorLoadingTookTooLong;
-            mImageHolderFuture = std::future<NFmiImageHolder>(); // nollataan t‰ss‰ tilanteessa future
-            return true; // Palautetaan true, koska saatiin joku ratkaisu aikaiseksi (loading lasted too long error)
+            if(mLoadingTimer.CurrentTimeDiffInMSeconds() > mImageLoadingFailedWaitTimeMs)
+            { // Kuvaa on latailtu tuloksetta tarpeeksi kauan, laitetaan error -tila p‰‰lle ja laitetaan imageHolderille error teksti
+                std::lock_guard<std::mutex> lock(mImageLoadingMutex);
+                mImageHolder->mErrorMessage = std::string("Image loading took too long time, loading failed for image-file:") + "\n" + mImageFileName;
+                mImageHolder->mState = NFmiImageData::kErrorLoadingTookTooLong;
+                mImageHolderFuture = std::future<NFmiImageHolder>(); // nollataan t‰ss‰ tilanteessa future
+                return true; // Palautetaan true, koska saatiin joku ratkaisu aikaiseksi (loading lasted too long error)
+            }
         }
     }
     return false;

@@ -5,13 +5,37 @@
 
 namespace
 {
-    float CalcWindVectorFromSpeedAndDirection(float WS, float WD)
+    template<typename VectorContainer, typename Operation>
+    VectorContainer VectorCalculations(const VectorContainer &v1, const VectorContainer &v2, Operation oper)
     {
-        if(WS != kFloatMissing && WD != kFloatMissing)
+        VectorContainer result;
+        if(v1.size() == v2.size())
         {
-            return std::round(WS) * 100 + std::round(WD / 10.f);
+            result.resize(v1.size(), kFloatMissing);
+            for(size_t index = 0; index < v1.size(); index++)
+            {
+                result[index] = oper(v1[index], v2[index]);
+            }
         }
-        return kFloatMissing;
+        return result;
+    }
+
+    template<typename MatrixContainer, typename Operation>
+    MatrixContainer MatrixCalculations(const MatrixContainer &m1, const MatrixContainer &m2, unsigned int theStartColumnIndex, Operation oper)
+    {
+        MatrixContainer result;
+        if(m1.NX() == m2.NX() && m1.NY() == m2.NY())
+        {
+            result.Resize(m1.NX(), m2.NY(), kFloatMissing);
+            for(size_t yIndex = 0; yIndex < m1.NY(); yIndex++)
+            {
+                for(size_t xIndex = theStartColumnIndex; xIndex < m1.NX(); xIndex++)
+                {
+                    result[xIndex][yIndex] = oper(m1[xIndex][yIndex], m2[xIndex][yIndex]);
+                }
+            }
+        }
+        return result;
     }
 
     // Huomasin merkitt‰vi‰ eroja meta wind-vector visualisoinnissa, kun 
@@ -31,50 +55,124 @@ namespace
         return u != kFloatMissing && v != kFloatMissing;
     }
 
-    float CalcWS(float u, float v)
+    template<typename GetFunction>
+    float CalcMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetFunction getFunction)
     {
-        if(!AreWindComponentsOk(u, v))
-            return kFloatMissing;
-        float WS = std::sqrt(u*u + v*v);
-        WS = ::DoWindSpeedFromWindComponentsRoundingFix(WS);
-        return WS;
+        NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+        if(metaWindParamUsage.HasWsAndWd())
+        {
+            theInfo->Param(kFmiWindSpeedMS);
+            auto WS = getFunction();
+            theInfo->Param(kFmiWindDirection);
+            auto WD = getFunction();
+            return NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(WS, WD);
+        }
+        else if(metaWindParamUsage.HasWindComponents())
+        {
+            theInfo->Param(kFmiWindUMS);
+            auto u = getFunction();
+            theInfo->Param(kFmiWindVMS);
+            auto v = getFunction();
+            return NFmiFastInfoUtils::CalcWindVectorFromWindComponents(u, v);
+        }
+
+        return kFloatMissing;
     }
 
-    float CalcWD(float u, float v)
+    template<typename GetFunction>
+    std::pair<float, float> GetMetaWsWdValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetFunction getFunction)
     {
-        NFmiWindDirection windDirection(u, v);
-        return static_cast<float>(windDirection.Value());
+        if(metaWindParamUsage.HasWindComponents())
+        {
+            NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+            theInfo->Param(kFmiWindUMS);
+            auto u = getFunction();
+            theInfo->Param(kFmiWindVMS);
+            auto v = getFunction();
+            float WS = NFmiFastInfoUtils::CalcWS(u, v);
+            float WD = NFmiFastInfoUtils::CalcWD(u, v);
+            return std::make_pair(WS, WD);
+        }
+
+        return std::make_pair(kFloatMissing, kFloatMissing);
     }
 
-    float CalcU(float WS, float WD)
+    template<typename GetFunction>
+    std::pair<float, float> CalcMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetFunction getFunction)
     {
-        if(!AreWindComponentsOk(WS, WD))
-            return kFloatMissing;
-        // jos tuulensuunta on vaihtelevaa (999), palautetaan 0 arvo (voisi olla myˆs puuttuvaa)
-        if(WD == 999)
-            return 0;
-        // huom! tuulen suunta pit‰‰ ensin k‰‰nt‰‰ 180 astetta ja sitten
-        // muuttaa radiaaneiksi kulma/360 * 2*pii
-        float value = WS * sin(((fmod(180.f + WD, 360.f) / 360.f) * (2.f * static_cast<float>(kPii))));
-        return value;
+        if(metaWindParamUsage.HasWsAndWd())
+        {
+            NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+            theInfo->Param(kFmiWindSpeedMS);
+            auto WS = getFunction();
+            theInfo->Param(kFmiWindDirection);
+            auto WD = getFunction();
+            float u = NFmiFastInfoUtils::CalcU(WS, WD);
+            float v = NFmiFastInfoUtils::CalcV(WS, WD);
+            return std::make_pair(u, v);
+        }
+
+        return std::make_pair(kFloatMissing, kFloatMissing);
     }
 
-    float CalcV(float WS, float WD)
+    float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
     {
-        if(!AreWindComponentsOk(WS, WD))
-            return kFloatMissing;
-        // jos tuulensuunta on vaihtelevaa (999), palautetaan 0 arvo (voisi olla myˆs puuttuvaa)
-        if(WD == 999)
-            return 0;
-        // Huom! tuulen suunta pit‰‰ ensin k‰‰nt‰‰ 180 astetta ja sitten
-        // muuttaa radiaaneiksi kulma/360 * 2*pii
-        float value = WS * cos(((fmod(180.f + WD, 360.f) / 360.f) * (2.f * static_cast<float>(kPii))));
-        return value;
+        return ::CalcMetaWindVectorValue(theInfo, metaWindParamUsage, [&]() {return theInfo->FloatValue(); });
     }
 
-    float CalcWindVectorFromWindComponents(float u, float v)
+    float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
     {
-        return ::CalcWindVectorFromSpeedAndDirection(::CalcWS(u, v), ::CalcWD(u, v));
+        return ::CalcMetaWindVectorValue(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theTime); });
+    }
+
+    float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindVectorValue(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon); });
+    }
+
+    float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindVectorValue(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon, theTime); });
+    }
+
+    std::pair<float, float> GetMetaWsWdValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::GetMetaWsWdValues(theInfo, metaWindParamUsage, [&]() {return theInfo->FloatValue(); });
+    }
+
+    std::pair<float, float> GetMetaWsWdValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::GetMetaWsWdValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theTime); });
+    }
+
+    std::pair<float, float> GetMetaWsWdValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::GetMetaWsWdValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon); });
+    }
+
+    std::pair<float, float> GetMetaWsWdValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::GetMetaWsWdValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon, theTime); });
+    }
+
+    std::pair<float, float> GetMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindComponentsValues(theInfo, metaWindParamUsage, [&]() {return theInfo->FloatValue(); });
+    }
+
+    std::pair<float, float> GetMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindComponentsValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theTime); });
+    }
+
+    std::pair<float, float> GetMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindComponentsValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon); });
+    }
+
+    std::pair<float, float> GetMetaWindComponentsValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+    {
+        return ::CalcMetaWindComponentsValues(theInfo, metaWindParamUsage, [&]() {return theInfo->InterpolatedValue(theLatlon, theTime); });
     }
 }
 
@@ -258,180 +356,199 @@ bool FindMovingSoundingDataTime(const boost::shared_ptr<NFmiFastQueryInfo> &theI
   return false;
 }
 
-MetaWindVectorParamUsage CheckMetaWindVectorParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+FastInfoParamStateRestorer::FastInfoParamStateRestorer(NFmiFastQueryInfo &info)
+:info_(info)
+,paramId_(info.Param().GetParamIdent())
 {
-    MetaWindVectorParamUsage metaWindVectorParamUsage;
+}
+
+FastInfoParamStateRestorer::~FastInfoParamStateRestorer()
+{
+    info_.Param(static_cast<FmiParameterName>(paramId_));
+}
+
+bool MetaWindParamUsage::ParamNeedsMetaCalculations(unsigned long paramId) const
+{
+    switch(paramId)
+    {
+    case kFmiWindDirection:
+    case kFmiWindSpeedMS:
+        return MakeMetaWsAndWdParams();
+    case kFmiWindVectorMS:
+        return MakeMetaWindVectorParam();
+    case kFmiWindUMS:
+    case kFmiWindVMS:
+        return MakeMetaWindComponents();
+    default:
+        return false;
+    }
+}
+
+bool MetaWindParamUsage::NoWindMetaParamsNeeded() const
+{
+    return fHasTotalWind || (fHasWindVectorParam && fHasWsAndWd && fHasWindComponents);
+}
+
+bool MetaWindParamUsage::MakeMetaWindVectorParam() const
+{
+    return (!fHasWindVectorParam) && (HasWsAndWd() || HasWindComponents());
+}
+
+bool MetaWindParamUsage::MakeMetaWsAndWdParams() const
+{
+    return (!HasWsAndWd() && HasWindComponents());
+}
+
+bool MetaWindParamUsage::MakeMetaWindComponents() const
+{
+    return (HasWsAndWd() && !HasWindComponents());
+}
+
+MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+{
+    MetaWindParamUsage metaWindParamUsage;
     if(theInfo)
     {
-        if(!theInfo->Param(kFmiWindVectorMS))
-        {
-            if(theInfo->Param(kFmiWindDirection) && theInfo->Param(kFmiWindSpeedMS))
-            {
-                metaWindVectorParamUsage.fUseMetaWindVectorParam = true;
-                metaWindVectorParamUsage.fHasWsAndWd = true;
-            }
+        FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+        if(theInfo->Param(kFmiWindVectorMS))
+            metaWindParamUsage.fHasWindVectorParam = true;
 
-            if(theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS))
-            {
-                metaWindVectorParamUsage.fUseMetaWindVectorParam = true;
-                metaWindVectorParamUsage.fHasWindComponents = true;
-            }
-        }
+        if(theInfo->Param(kFmiWindDirection) && theInfo->Param(kFmiWindSpeedMS))
+            metaWindParamUsage.fHasWsAndWd = true;
+
+        if(theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS))
+            metaWindParamUsage.fHasWindComponents = true;
     }
-    return metaWindVectorParamUsage;
+    return metaWindParamUsage;
 }
 
-float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const MetaWindVectorParamUsage &metaWindVectorParamUsage)
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
-    if(metaWindVectorParamUsage.fHasWsAndWd)
+    switch(wantedParamId)
     {
-        theInfo->Param(kFmiWindSpeedMS);
-        auto WS = theInfo->FloatValue();
-        theInfo->Param(kFmiWindDirection);
-        auto WD = theInfo->FloatValue();
-        return ::CalcWindVectorFromSpeedAndDirection(WS, WD);
-    }
-    else if(metaWindVectorParamUsage.fHasWindComponents)
-    {
-        theInfo->Param(kFmiWindUMS);
-        auto u = theInfo->FloatValue();
-        theInfo->Param(kFmiWindVMS);
-        auto v = theInfo->FloatValue();
-        return ::CalcWindVectorFromWindComponents(u, v);
-    }
-
-    return kFloatMissing;
-}
-
-float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const MetaWindVectorParamUsage &metaWindVectorParamUsage)
-{
-    if(metaWindVectorParamUsage.fHasWsAndWd)
-    {
-        theInfo->Param(kFmiWindSpeedMS);
-        auto WS = theInfo->InterpolatedValue(theTime);
-        theInfo->Param(kFmiWindDirection);
-        auto WD = theInfo->InterpolatedValue(theTime);
-        return ::CalcWindVectorFromSpeedAndDirection(WS, WD);
-    }
-    else if(metaWindVectorParamUsage.fHasWindComponents)
-    {
-        theInfo->Param(kFmiWindUMS);
-        auto u = theInfo->InterpolatedValue(theTime);
-        theInfo->Param(kFmiWindVMS);
-        auto v = theInfo->InterpolatedValue(theTime);
-        return ::CalcWindVectorFromWindComponents(u, v);
-    }
-
-    return kFloatMissing;
-}
-
-float GetMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const MetaWindVectorParamUsage &metaWindVectorParamUsage)
-{
-    if(metaWindVectorParamUsage.fHasWsAndWd)
-    {
-        theInfo->Param(kFmiWindSpeedMS);
-        auto WS = theInfo->InterpolatedValue(theLatlon, theTime);
-        theInfo->Param(kFmiWindDirection);
-        auto WD = theInfo->InterpolatedValue(theLatlon, theTime);
-        return ::CalcWindVectorFromSpeedAndDirection(WS, WD);
-    }
-    else if(metaWindVectorParamUsage.fHasWindComponents)
-    {
-        theInfo->Param(kFmiWindUMS);
-        auto u = theInfo->InterpolatedValue(theLatlon, theTime);
-        theInfo->Param(kFmiWindVMS);
-        auto v = theInfo->InterpolatedValue(theLatlon, theTime);
-        return ::CalcWindVectorFromWindComponents(u, v);
-    }
-
-    return kFloatMissing;
-}
-
-void CalcWindSpeedAndDirectionFromComponents(const std::deque<float> &u, const std::deque<float> &v, std::deque<float> &wsOut, std::deque<float> &wdOut)
-{
-    if(u.size() == v.size())
-    {
-        wsOut.resize(u.size(), kFloatMissing);
-        wdOut.resize(u.size(), kFloatMissing);
-        for(size_t index = 0; index < u.size(); index++)
-        {
-            wsOut[index] = ::CalcWS(u[index], v[index]);
-            wdOut[index] = ::CalcWD(u[index], v[index]);
-        }
+    case kFmiWindDirection:
+        return ::GetMetaWsWdValues(theInfo, metaWindParamUsage).second;
+    case kFmiWindSpeedMS:
+        return ::GetMetaWsWdValues(theInfo, metaWindParamUsage).first;
+    case kFmiWindVectorMS:
+        return ::GetMetaWindVectorValue(theInfo, metaWindParamUsage);
+    case kFmiWindUMS:
+        return ::GetMetaWindComponentsValues(theInfo, metaWindParamUsage).first;
+    case kFmiWindVMS:
+        return ::GetMetaWindComponentsValues(theInfo, metaWindParamUsage).second;
+    default:
+        return kFloatMissing;
     }
 }
 
-void CalcWindComponentsFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &uOut, std::deque<float> &vOut)
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
-    if(ws.size() == wd.size())
+    switch(wantedParamId)
     {
-        uOut.resize(ws.size(), kFloatMissing);
-        vOut.resize(ws.size(), kFloatMissing);
-        for(size_t index = 0; index < ws.size(); index++)
-        {
-            uOut[index] = ::CalcU(ws[index], wd[index]);
-            vOut[index] = ::CalcV(ws[index], wd[index]);
-        }
+    case kFmiWindDirection:
+        return ::GetMetaWsWdValues(theInfo, theTime, metaWindParamUsage).second;
+    case kFmiWindSpeedMS:
+        return ::GetMetaWsWdValues(theInfo, theTime, metaWindParamUsage).first;
+    case kFmiWindVectorMS:
+        return ::GetMetaWindVectorValue(theInfo, theTime, metaWindParamUsage);
+    case kFmiWindUMS:
+        return ::GetMetaWindComponentsValues(theInfo, theTime, metaWindParamUsage).first;
+    case kFmiWindVMS:
+        return ::GetMetaWindComponentsValues(theInfo, theTime, metaWindParamUsage).second;
+    default:
+        return kFloatMissing;
     }
 }
 
-void CalcWindComponentsFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &uOut, NFmiDataMatrix<float> &vOut)
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
-    if(ws.NX() == wd.NX() && ws.NY() == wd.NY())
+    switch(wantedParamId)
     {
-        uOut.Resize(ws.NX(), ws.NY(), kFloatMissing);
-        vOut.Resize(ws.NX(), ws.NY(), kFloatMissing);
-        for(size_t yIndex = 0; yIndex < ws.NY(); yIndex++)
-        {
-            for(size_t xIndex = 0; xIndex < ws.NX(); xIndex++)
-            {
-                uOut[xIndex][yIndex] = ::CalcU(ws[xIndex][yIndex], wd[xIndex][yIndex]);
-                vOut[xIndex][yIndex] = ::CalcV(ws[xIndex][yIndex], wd[xIndex][yIndex]);
-            }
-        }
+    case kFmiWindDirection:
+        return ::GetMetaWsWdValues(theInfo, theLatlon, metaWindParamUsage).second;
+    case kFmiWindSpeedMS:
+        return ::GetMetaWsWdValues(theInfo, theLatlon, metaWindParamUsage).first;
+    case kFmiWindVectorMS:
+        return ::GetMetaWindVectorValue(theInfo, theLatlon, metaWindParamUsage);
+    case kFmiWindUMS:
+        return ::GetMetaWindComponentsValues(theInfo, theLatlon, metaWindParamUsage).first;
+    case kFmiWindVMS:
+        return ::GetMetaWindComponentsValues(theInfo, theLatlon, metaWindParamUsage).second;
+    default:
+        return kFloatMissing;
     }
 }
 
-void CalcWindVectorFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &windVectorOut)
+float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const NFmiPoint& theLatlon, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
-    if(ws.size() == wd.size())
+    switch(wantedParamId)
     {
-        windVectorOut.resize(ws.size(), kFloatMissing);
-        for(size_t index = 0; index < ws.size(); index++)
-        {
-            windVectorOut[index] = ::CalcWindVectorFromSpeedAndDirection(ws[index], wd[index]);
-        }
+        case kFmiWindDirection:
+            return ::GetMetaWsWdValues(theInfo, theTime, theLatlon, metaWindParamUsage).second;
+        case kFmiWindSpeedMS:
+            return ::GetMetaWsWdValues(theInfo, theTime, theLatlon, metaWindParamUsage).first;
+        case kFmiWindVectorMS:
+            return ::GetMetaWindVectorValue(theInfo, theTime, theLatlon, metaWindParamUsage);
+        case kFmiWindUMS:
+            return ::GetMetaWindComponentsValues(theInfo, theTime, theLatlon, metaWindParamUsage).first;
+        case kFmiWindVMS:
+            return ::GetMetaWindComponentsValues(theInfo, theTime, theLatlon, metaWindParamUsage).second;
+        default:
+            return kFloatMissing;
     }
 }
 
-void CalcWindVectorFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex)
+void CalcDequeWindSpeedAndDirectionFromComponents(const std::deque<float> &u, const std::deque<float> &v, std::deque<float> &wsOut, std::deque<float> &wdOut)
 {
-    if(ws.NX() == wd.NX() && ws.NY() == wd.NY())
-    {
-        windVectorOut.Resize(ws.NX(), ws.NY(), kFloatMissing);
-        for(size_t yIndex = 0; yIndex < ws.NY(); yIndex++)
-        {
-            for(size_t xIndex = theStartColumnIndex; xIndex < ws.NX(); xIndex++)
-            {
-                windVectorOut[xIndex][yIndex] = ::CalcWindVectorFromSpeedAndDirection(ws[xIndex][yIndex], wd[xIndex][yIndex]);
-            }
-        }
-    }
+    wsOut = ::VectorCalculations(u, v, CalcWS);
+    wdOut = ::VectorCalculations(u, v, CalcWD);
 }
 
-void CalcWindVectorFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex)
+void CalcDequeWindComponentsFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &uOut, std::deque<float> &vOut)
 {
-    if(u.NX() == v.NX() && u.NY() == v.NY())
-    {
-        windVectorOut.Resize(u.NX(), u.NY(), kFloatMissing);
-        for(size_t yIndex = 0; yIndex < u.NY(); yIndex++)
-        {
-            for(size_t xIndex = theStartColumnIndex; xIndex < u.NX(); xIndex++)
-            {
-                windVectorOut[xIndex][yIndex] = ::CalcWindVectorFromWindComponents(u[xIndex][yIndex], v[xIndex][yIndex]);
-            }
-        }
-    }
+    uOut = ::VectorCalculations(ws, wd, CalcU);
+    vOut = ::VectorCalculations(ws, wd, CalcV);
+}
+
+void CalcMatrixWindComponentsFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &uOut, NFmiDataMatrix<float> &vOut)
+{
+    uOut = ::MatrixCalculations(ws, wd, 0, CalcU);
+    vOut = ::MatrixCalculations(ws, wd, 0, CalcV);
+}
+
+void CalcDequeWindVectorFromSpeedAndDirection(const std::deque<float> &ws, const std::deque<float> &wd, std::deque<float> &windVectorOut)
+{
+    windVectorOut = ::VectorCalculations(ws, wd, CalcWindVectorFromSpeedAndDirection);
+}
+
+void CalcMatrixWindVectorFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex)
+{
+    windVectorOut = ::MatrixCalculations(ws, wd, theStartColumnIndex, CalcWindVectorFromSpeedAndDirection);
+}
+
+void CalcMatrixWindVectorFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &windVectorOut, unsigned int theStartColumnIndex)
+{
+    windVectorOut = ::MatrixCalculations(u, v, theStartColumnIndex, CalcWindVectorFromWindComponents);
+}
+
+void CalcMatrixWsFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &wsOut, unsigned int theStartColumnIndex)
+{
+    wsOut = ::MatrixCalculations(u, v, theStartColumnIndex, CalcWS);
+}
+
+void CalcMatrixWdFromWindComponents(const NFmiDataMatrix<float> &u, const NFmiDataMatrix<float> &v, NFmiDataMatrix<float> &wdOut, unsigned int theStartColumnIndex)
+{
+    wdOut = ::MatrixCalculations(u, v, theStartColumnIndex, CalcWD);
+}
+
+void CalcMatrixUcomponentFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &uOut, unsigned int theStartColumnIndex)
+{
+    uOut = ::MatrixCalculations(ws, wd, theStartColumnIndex, CalcU);
+}
+
+void CalcMatrixVcomponentFromSpeedAndDirection(const NFmiDataMatrix<float> &ws, const NFmiDataMatrix<float> &wd, NFmiDataMatrix<float> &vOut, unsigned int theStartColumnIndex)
+{
+    vOut = ::MatrixCalculations(ws, wd, theStartColumnIndex, CalcV);
 }
 
 bool SetInfoToGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned long gridPointX, unsigned long gridPointY)
@@ -441,6 +558,61 @@ bool SetInfoToGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned lon
         return false;
     auto locationIndex = info->Grid()->DataIndex(gridPointX, gridPointY);
     return info->LocationIndex(locationIndex);
+}
+
+float CalcWS(float u, float v)
+{
+    if(!AreWindComponentsOk(u, v))
+        return kFloatMissing;
+    float WS = std::sqrt(u*u + v*v);
+    WS = ::DoWindSpeedFromWindComponentsRoundingFix(WS);
+    return WS;
+}
+
+float CalcWD(float u, float v)
+{
+    NFmiWindDirection windDirection(u, v);
+    return static_cast<float>(windDirection.Value());
+}
+
+float CalcU(float WS, float WD)
+{
+    if(!AreWindComponentsOk(WS, WD))
+        return kFloatMissing;
+    // jos tuulensuunta on vaihtelevaa (999), palautetaan 0 arvo (voisi olla myˆs puuttuvaa)
+    if(WD == 999)
+        return 0;
+    // huom! tuulen suunta pit‰‰ ensin k‰‰nt‰‰ 180 astetta ja sitten
+    // muuttaa radiaaneiksi kulma/360 * 2*pii
+    float value = WS * sin(((fmod(180.f + WD, 360.f) / 360.f) * (2.f * static_cast<float>(kPii))));
+    return value;
+}
+
+float CalcV(float WS, float WD)
+{
+    if(!AreWindComponentsOk(WS, WD))
+        return kFloatMissing;
+    // jos tuulensuunta on vaihtelevaa (999), palautetaan 0 arvo (voisi olla myˆs puuttuvaa)
+    if(WD == 999)
+        return 0;
+    // Huom! tuulen suunta pit‰‰ ensin k‰‰nt‰‰ 180 astetta ja sitten
+    // muuttaa radiaaneiksi kulma/360 * 2*pii
+    float value = WS * cos(((fmod(180.f + WD, 360.f) / 360.f) * (2.f * static_cast<float>(kPii))));
+    return value;
+}
+
+float CalcWindVectorFromWindComponents(float u, float v)
+{
+    return CalcWindVectorFromSpeedAndDirection(CalcWS(u, v), CalcWD(u, v));
+}
+
+float CalcWindVectorFromSpeedAndDirection(float WS, float WD)
+{
+    if(WS != kFloatMissing && WD != kFloatMissing)
+    {
+        return std::round(WS) * 100 + std::round(WD / 10.f);
+    }
+    return kFloatMissing;
 }
 
 }

@@ -122,18 +122,23 @@ void NFmiSatelliteImageCacheSystem::DoCacheFileChecks()
 
 void NFmiSatelliteImageCacheSystem::DoLoadingStatusChecks()
 {
+    ImageCacheUpdateData totalLoadedImageList;
     for(auto &channelCacheItem : mSatelliteImageChannelCacheList)
     {
         ::DoThreadStoppageCheck();
         ImageCacheUpdateData loadedImageList = channelCacheItem->CheckOnCacheLoading();
+        ::DoThreadStoppageCheck();
         if(loadedImageList.size())
         {
-            ::DoThreadStoppageCheck();
-            // Joku kuva on saatu ladattua, pit‰‰ kutsua p‰ivitys callback-funktiota
-            if(mLoadedCacheCallback)
-                mLoadedCacheCallback(loadedImageList);
+            // Lis‰t‰‰n (splice = move) t‰m‰n kanavan p‰ivitykset totaalilistaan
+            totalLoadedImageList.splice(totalLoadedImageList.end(), loadedImageList);
         }
     }
+
+    // Kun joku/jotain kuv(i)a on saatu ladattua, pit‰‰ kutsua p‰ivitys callback-funktiota.
+    // Tehd‰‰n t‰m‰ p‰ivitys kutsu vain kerran kaikille ladatuille kuville.
+    if((!totalLoadedImageList.empty()) && mLoadedCacheCallback)
+        mLoadedCacheCallback(totalLoadedImageList);
 }
 
 // 'Resetoi' kaikkien kanavien kaikkien kuvien imageen liittyv‰n datan, jolloin ne on ladattava uudestaan, kun ruutuja p‰ivitet‰‰n.
@@ -159,7 +164,7 @@ void NFmiSatelliteImageCacheSystem::Clear()
     mSatelliteImageChannelCacheList.clear();
 }
 
-void NFmiSatelliteImageCacheSystem::SetCallbacks(std::function<void(const ImageCacheUpdateData&)> &updatedCacheCallback, std::function<void(const ImageCacheUpdateData&)> &loadedCacheCallback)
+void NFmiSatelliteImageCacheSystem::SetCallbacks(ImageUpdateCallbackFunction &updatedCacheCallback, ImageUpdateCallbackFunction &loadedCacheCallback)
 {
     mUpdatedCacheCallback = updatedCacheCallback;
     mLoadedCacheCallback = loadedCacheCallback;
