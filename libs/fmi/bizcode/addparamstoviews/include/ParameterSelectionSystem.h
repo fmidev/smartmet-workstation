@@ -5,6 +5,7 @@
 #include "NFmiProducer.h"
 #include <vector>
 #include <functional>
+#include "NFmiLevelBag.h"
 
 class NFmiHelpDataInfoSystem;
 class NFmiInfoOrganizer;
@@ -12,7 +13,7 @@ class NFmiProducerSystem;
 class NFmiMacroParamSystem;
 
 namespace AddParams
-{
+{   
     class CategoryData;
 
     class ParameterSelectionSystem
@@ -56,6 +57,7 @@ namespace AddParams
         std::vector<std::string> customCategories_;
 
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
+        const NFmiLevelBag *soundingLevels_;
 
     public:
         ParameterSelectionSystem();
@@ -79,7 +81,8 @@ namespace AddParams
         int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
         void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
-
+        void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
+        
     private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
