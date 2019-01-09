@@ -200,7 +200,6 @@ std::string timeSteps(boost::shared_ptr<NFmiFastQueryInfo> info)
 
 std::string timeResolution(boost::shared_ptr<NFmiFastQueryInfo> info)
 {
-    NFmiTimeList* timeList;
     NFmiTimeBag* timeBag;
     std::string resolution;
 
