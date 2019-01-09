@@ -14022,13 +14022,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         try
         {
             auto customCategories = CustomMenuFolders();
+            auto levelBag = SoundingPlotLevels().Levels();
+            parameterSelectionSystem.setSoundingLevels(*levelBag);
+            
             parameterSelectionSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
                 *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParameterSelectionSystem(), customCategories);
 
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
-
-            //ParameterSelectionSystem.soundingLevels(SoundingPlotLevels());
 
             // Add other data to help data. 
             if(capDataSystem.useCapData())
