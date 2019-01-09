@@ -8,7 +8,7 @@
 #include "NFmiOwnerInfo.h"
 #include "SingleRowItem.h"
 #include "NFmiDictionaryFunction.h"
-
+#include "ParameterSelectionSystem.h"
 
 namespace
 {
@@ -38,6 +38,7 @@ namespace AddParams
     :categoryName_(categoryName)
     ,dataCategory_(dataCategory)
     ,producerDataVector_()
+    ,soundingLevels_()
     {
     }
 
@@ -53,6 +54,11 @@ namespace AddParams
             updateNormalData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs);
 
         return dataStructuresChanged;
+    }
+
+    void CategoryData::setSoungindLevels(const NFmiLevelBag &soundingLevels)
+    {
+        soundingLevels_ = &soundingLevels;
     }
 
     bool CategoryData::updateNormalData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem,
@@ -290,25 +296,80 @@ namespace AddParams
             SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, 2, menuString);
             customObservationData.push_back(item);
 
+            //Joonas: Luo alimenu missä TEMP:lle vain nuo levelit. Muista myös estää alkuperäinen TEMP menun luonti, missä on kaikki levelit.
             menuString = "Sounding";
-            //SingleRowItem item = SingleRowItem(kParamType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, 2, menuString);
-            //Joonas: SoundingPlotLevels.Levels()) ja luo alimenu missä TEMP:lle vain nuo levelit. Muista myös estää alkuperäinen TEMP menun luonti, missä on kaikki levelit.
+            uniqueDataId = "Temp - " + menuString;
+            item = SingleRowItem(kParamType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, 2, menuString);
+            auto paramBag = soundingInfo->ParamBag();
+            customObservationData.push_back(item);
+            auto subMenuItems = soundingSubMenu(paramBag, *soundingLevels_, soundingType);
+            customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());   
         }
 
-
-        //boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
-        //if(soundingInfo)
-        //{
-        //    menuString = "Sounding";
-        //    auto menuItem5 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(),
-        //        theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, &defaultLevel, soundingType);
-
-        //    NFmiMenuItemList *soundingMenuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, const_cast<NFmiParamBag*>(&(soundingInfo->ParamBag())), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, const_cast<NFmiLevelBag*>(itsSoundingPlotLevels.Levels()), soundingType);
-        //    menuItem5->AddSubMenu(soundingMenuList);
-        //    obsMenuList->Add(std::move(menuItem5));
-        //}
-
         return customObservationData;
+    }
+
+    std::vector<SingleRowItem> addPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiParamBag &theParamBag)
+    {
+        //if(dataIdent.HasDataParams())
+        //{
+        //    auto subParams = dataIdent.GetDataParams();
+        //    if(subParams)
+        //    {
+        //        for(const auto &subParam : subParams->ParamsVector())
+        //        {
+        //            bool hasLevelData = queryInfo.SizeLevels() > 1;
+
+        //            if(hasLevelData) //Level wind data
+        //            {
+        //                dialogRowData.push_back(::makeRowItem(subParam, dataType, AddParams::RowType::kLevelType)); //Parameter name as "header"
+        //                ::addLevelRowItems(dialogRowData, subParam, dataType, AddParams::RowType::kSubParamLevelType, queryInfo); //Actual level data
+        //            }
+        //            else //Surface wind data
+        //            {
+        //                dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType, true));
+        //            }
+        //        }
+        //        addMetaStreamlineParameters(dialogRowData, queryInfo, dataType, rowType);
+        //    }
+        //}
+        return dialogRowData;
+    }
+
+    std::vector<SingleRowItem> CategoryData::soundingSubMenu(NFmiParamBag &theParamBag, const NFmiLevelBag &theLevels, NFmiInfoData::Type theDataType) const
+    {
+        std::vector<SingleRowItem> subMenuItems;
+        int treeDepth = 3;
+        if(!theParamBag.ParamsVector().empty()) // && theLevels)
+        {
+            for(theParamBag.Reset(); theParamBag.Next();)
+            {
+                auto dataIdent = theParamBag.Current();
+                std::string menuString = dataIdent->GetParamName();
+                std::string uniqueDataId = "Temp - " + menuString;
+
+                SingleRowItem item = SingleRowItem(kParamType, menuString, dataIdent->GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
+                subMenuItems.push_back(item);
+                //auto dataIdent = theParamBag.Current();
+                //addPossibleSubParameters(subMenuItems, *dataIdent, theDataType, AddParams::RowType::kSubParamLevelType, theParamBag.Current())
+
+
+
+                //if(dataIdent->HasDataParams())
+                //{
+                //    menuItemList = new NFmiMenuItemList(theMapViewDescTopIndex, dataIdent->GetDataParams(), theMenuCommandType, theViewType, theLevels, theDataType);
+                //    menuItem->AddSubMenu(menuItemList);
+                //}
+                //else
+                //{
+                //    NFmiMenuItemList* menuItemList = new NFmiMenuItemList(theMapViewDescTopIndex, *dataIdent, theMenuCommandType, theLevels, theDataType);
+                //    menuItem->AddSubMenu(menuItemList);
+                //}
+                //Add(std::move(menuItem));
+               
+            }
+        }
+        return subMenuItems;
     }
 
 }

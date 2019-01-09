@@ -3,6 +3,8 @@
 #include "SingleRowItem.h"
 #include "boost/shared_ptr.hpp"
 #include <vector>
+#include "NFmiParamBag.h"
+#include "NFmiLevelBag.h"
 
 class NFmiHelpDataInfoSystem;
 class NFmiInfoOrganizer;
@@ -19,6 +21,8 @@ namespace AddParams
 		std::string categoryName_;
         NFmiInfoData::Type dataCategory_;
         std::vector<std::unique_ptr<ProducerData>> producerDataVector_;
+        const NFmiLevelBag* soundingLevels_;
+
     public:
         CategoryData(const std::string &categoryName, NFmiInfoData::Type dataCategory);
         ~CategoryData();
@@ -35,9 +39,11 @@ namespace AddParams
         std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const;
         NFmiInfoData::Type getDataType(NFmiInfoOrganizer &infoOrganizer, NFmiProducer &producer);
         std::vector<SingleRowItem> customObservationData(NFmiInfoOrganizer &infoOrganizer) const;
+        void setSoungindLevels(const NFmiLevelBag& soundingLevels);
     private:
         void addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         bool skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        std::vector<SingleRowItem> soundingSubMenu(NFmiParamBag &theParamBag, const NFmiLevelBag &theLevels, NFmiInfoData::Type theDataType) const;
     };
 }
