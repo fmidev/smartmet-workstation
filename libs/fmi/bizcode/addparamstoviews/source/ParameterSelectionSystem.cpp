@@ -145,6 +145,8 @@ namespace AddParams
     void ParameterSelectionSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+        if(dataCategory == NFmiInfoData::kObservations) 
+            categoryDataPtr->setSoungindLevels(*soundingLevels_);
         categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs_, customCategory);
         categoryDataVector_.push_back(std::move(categoryDataPtr));
         dialogDataNeedsUpdate_ = true;
