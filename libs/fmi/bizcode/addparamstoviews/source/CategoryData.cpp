@@ -34,9 +34,13 @@ namespace
         return operationalData;
     }
 
+    AddParams::RowType EnumOfIndex(int i) { return static_cast<AddParams::RowType>(i); }
+    int IndexOfEnum(AddParams::RowType e) { return static_cast<int>(e); }
+
     std::vector<AddParams::SingleRowItem> addSpecificSoundingLevels(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, int parentId, const NFmiLevelBag* soundingLevels, int treeDepth)
     {
         treeDepth++;
+        rowType = EnumOfIndex(IndexOfEnum(rowType) - 1);
         std::vector<AddParams::SingleRowItem> items;
         NFmiLevelBag* levels = const_cast<NFmiLevelBag*>(soundingLevels);
 
@@ -48,15 +52,16 @@ namespace
             std::string menuString = dataIdent.GetParamName() + " " + levelStr;
             std::string uniqueDataId = "Temp - " + menuString;
 
-            AddParams::SingleRowItem item = AddParams::SingleRowItem(AddParams::RowType::kSubParamLevelType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", true, level, treeDepth, menuString);
+            AddParams::SingleRowItem item = AddParams::SingleRowItem(rowType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", true, level, treeDepth, menuString);
             items.push_back(item);
         }
         return items;
     }
 
-    std::vector<AddParams::SingleRowItem> soundingSubMenu(NFmiParamBag &theParamBag, NFmiInfoData::Type theDataType, int parentId, const NFmiLevelBag* soundingLevels, int treeDepth)
+    std::vector<AddParams::SingleRowItem> soundingSubMenu(NFmiParamBag &theParamBag, NFmiInfoData::Type theDataType, int parentId, const NFmiLevelBag* soundingLevels, int treeDepth, AddParams::RowType rowType)
     {
         treeDepth++;
+        rowType = EnumOfIndex(IndexOfEnum(rowType) - 1);
         std::vector<AddParams::SingleRowItem> subMenuItems;
 
         if(!theParamBag.ParamsVector().empty())
@@ -74,16 +79,16 @@ namespace
                 std::string menuString = dataIdent.GetParamName();
                 std::string uniqueDataId = "Temp - " + menuString;
 
-                AddParams::SingleRowItem item = AddParams::SingleRowItem(AddParams::RowType::kParamType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
+                AddParams::SingleRowItem item = AddParams::SingleRowItem(rowType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
                 subMenuItems.push_back(item);
                 std::vector<AddParams::SingleRowItem> subItems;
                 if(dataIdent.HasDataParams()) //Wind submenu
                 {
-                    subItems = soundingSubMenu(*(dataIdent.GetDataParams()), theDataType, parentId, soundingLevels, treeDepth);
+                    subItems = soundingSubMenu(*(dataIdent.GetDataParams()), theDataType, parentId, soundingLevels, treeDepth, rowType);
                 }
                 else
                 {
-                    subItems = addSpecificSoundingLevels(dataIdent, theDataType, AddParams::RowType::kSubParamLevelType, parentId, soundingLevels, treeDepth);
+                    subItems = addSpecificSoundingLevels(dataIdent, theDataType, rowType, parentId, soundingLevels, treeDepth);
                 }
                 subMenuItems.insert(subMenuItems.end(), subItems.begin(), subItems.end());
             }
@@ -306,6 +311,7 @@ namespace AddParams
     std::vector<SingleRowItem> CategoryData::customObservationData(NFmiInfoOrganizer &infoOrganizer) const
     {
         int treeDepth = 2;
+        AddParams::RowType rowType = kProducerType;
         std::vector<SingleRowItem> customObservationData;
         // *** Lightning ***
         if(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0))
@@ -313,7 +319,7 @@ namespace AddParams
             NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0)->Producer()));
             std::string menuString = ::GetDictionaryString("MapViewParamPopUpFlashData");
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
-            SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, NFmiInfoData::kFlashData, 0, "", true, nullptr, treeDepth, menuString);
+            SingleRowItem item = SingleRowItem(rowType, menuString, producer.GetIdent(), true, uniqueDataId, NFmiInfoData::kFlashData, 0, "", true, nullptr, treeDepth, menuString);
             customObservationData.push_back(item);
         }
         // *** Synop plot ***
@@ -323,7 +329,7 @@ namespace AddParams
             std::string menuString = ::GetDictionaryString("MapViewParamPopUpSynopPlot");
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             auto param = NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop");
-            SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
+            SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
             customObservationData.push_back(item);
 
             // Add also a min/max synop plot
@@ -331,7 +337,7 @@ namespace AddParams
             menuString = "Synop min/max";
             uniqueDataId = std::string(producer2.GetName()) + " - " + menuString;
             param = NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max");
-            item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
+            item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
             customObservationData.push_back(item);
         }
         // *** Metar plot ***
@@ -341,7 +347,7 @@ namespace AddParams
             std::string menuString = ::GetDictionaryString("Metar plot");
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             auto param = NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar");
-            SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
+            SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
             customObservationData.push_back(item);
         }
 
@@ -354,16 +360,16 @@ namespace AddParams
             std::string menuString = "Sounding plot";
             auto param = NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp");
             std::string uniqueDataId = "Temp - " + menuString;
-            SingleRowItem item = SingleRowItem(kParamType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, treeDepth, menuString);
+            SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, treeDepth, menuString);
             customObservationData.push_back(item);
 
             //Joonas: Luo alimenu missä TEMP:lle vain nuo levelit. Muista myös estää alkuperäinen TEMP menun luonti, missä on kaikki levelit.
             menuString = "Sounding";
             uniqueDataId = "Temp - " + menuString;
-            item = SingleRowItem(kParamType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
+            item = SingleRowItem(rowType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
             auto paramBag = soundingInfo->ParamBag();
             customObservationData.push_back(item);
-            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth);
+            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, rowType);
             customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());   
         }
 
