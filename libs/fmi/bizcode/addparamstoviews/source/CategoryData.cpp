@@ -133,6 +133,8 @@ namespace AddParams
 
         for(const auto &producerInfo : categoryProducerSystem.Producers())
         {
+            if(producerInfo.ProducerId() == NFmiProducer(kFmiTEMP).GetIdent())
+                continue;
             NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
             bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
             auto dataType = getDataType(infoOrganizer, producer);
