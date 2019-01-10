@@ -315,6 +315,28 @@ namespace AddParams
         int treeDepth = 2;
         AddParams::RowType rowType = kProducerType;
         std::vector<SingleRowItem> customObservationData;
+        
+        // *** Sounding and sounding plot ***
+        boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = infoOrganizer.GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
+        if(soundingInfo)
+        {
+            NFmiInfoData::Type soundingType = soundingInfo->DataType();
+            const std::shared_ptr<NFmiLevel> defaultLevel = std::make_shared<NFmiLevel>(NFmiLevel(50, "850xxx", 850));
+
+            std::string menuString = "Sounding";
+            std::string uniqueDataId = "Temp - " + menuString;
+            SingleRowItem item = SingleRowItem(rowType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
+            auto paramBag = soundingInfo->ParamBag();
+            customObservationData.push_back(item);
+            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, rowType);
+            customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());
+            
+            menuString = "Sounding plot";
+            auto param = NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp");
+            uniqueDataId = "Temp - " + menuString;
+            item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, treeDepth, menuString);
+            customObservationData.push_back(item);
+        } 
         // *** Lightning ***
         if(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0))
         {
@@ -351,28 +373,6 @@ namespace AddParams
             auto param = NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar");
             SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
             customObservationData.push_back(item);
-        }
-
-        // *** Sounding and sounding plot ***
-        boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = infoOrganizer.GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
-        if(soundingInfo)
-        {
-            NFmiInfoData::Type soundingType = soundingInfo->DataType();
-            const std::shared_ptr<NFmiLevel> defaultLevel = std::make_shared<NFmiLevel>(NFmiLevel(50, "850xxx", 850));
-            std::string menuString = "Sounding plot";
-            auto param = NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp");
-            std::string uniqueDataId = "Temp - " + menuString;
-            SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, treeDepth, menuString);
-            customObservationData.push_back(item);
-
-            //Joonas: Luo alimenu missä TEMP:lle vain nuo levelit. Muista myös estää alkuperäinen TEMP menun luonti, missä on kaikki levelit.
-            menuString = "Sounding";
-            uniqueDataId = "Temp - " + menuString;
-            item = SingleRowItem(rowType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
-            auto paramBag = soundingInfo->ParamBag();
-            customObservationData.push_back(item);
-            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, rowType);
-            customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());   
         }
 
         return customObservationData;
