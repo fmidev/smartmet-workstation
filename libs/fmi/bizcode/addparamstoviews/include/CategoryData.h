@@ -44,6 +44,7 @@ namespace AddParams
         void addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         bool skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
-        std::vector<SingleRowItem> soundingSubMenu(NFmiParamBag &theParamBag, const NFmiLevelBag &theLevels, NFmiInfoData::Type theDataType) const;
+        std::vector<SingleRowItem> soundingSubMenu(NFmiParamBag &theParamBag, NFmiInfoData::Type theDataType, int parentId, int treeDepth) const;
+        std::vector<SingleRowItem> addSpecificSoundingLevels(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, int parentId, int treeDepth) const;
     };
 }
