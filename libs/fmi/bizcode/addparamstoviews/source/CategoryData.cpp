@@ -10,6 +10,9 @@
 #include "NFmiDictionaryFunction.h"
 #include "ParameterSelectionSystem.h"
 
+#include <boost/algorithm/string.hpp>
+
+
 namespace
 {
     AddParams::SingleRowItem makeRowItem(const AddParams::ProducerData &producerData, const std::string &uniqueId, const AddParams::SingleRowItem *rowItemMemory)
@@ -317,24 +320,31 @@ namespace AddParams
 
         if(!theParamBag.ParamsVector().empty())
         {
-            for(theParamBag.Reset(); theParamBag.Next();)
+            //Firs put params into vector and sort, then create menu items
+            std::vector<NFmiDataIdent> paramsVector;
+            for(auto &dataIdent : theParamBag.ParamsVector())
             {
-                auto dataIdent = theParamBag.Current();
-                std::string menuString = dataIdent->GetParamName();
+                paramsVector.push_back(dataIdent);
+            }
+            std::sort(paramsVector.begin(), paramsVector.end(), ([](const auto &a, const auto &b) { return boost::algorithm::ilexicographical_compare(std::string(a.GetParamName()), std::string(b.GetParamName())); }));
+
+            for(auto dataIdent : paramsVector)
+            {
+                std::string menuString = dataIdent.GetParamName();
                 std::string uniqueDataId = "Temp - " + menuString;
 
-                SingleRowItem item = SingleRowItem(kParamType, menuString, dataIdent->GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
+                SingleRowItem item = SingleRowItem(kParamType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
                 subMenuItems.push_back(item);
                 std::vector<SingleRowItem> subItems;
-                if(dataIdent->HasDataParams()) //Wind submenu
+                if(dataIdent.HasDataParams()) //Wind submenu
                 {
-                    subItems = soundingSubMenu(*(dataIdent->GetDataParams()), theDataType, parentId, treeDepth);
+                    subItems = soundingSubMenu(*(dataIdent.GetDataParams()), theDataType, parentId, treeDepth);
                 }
                 else
                 {
-                    subItems = addSpecificSoundingLevels(*dataIdent, theDataType, AddParams::RowType::kSubParamLevelType, parentId, treeDepth);
+                    subItems = addSpecificSoundingLevels(dataIdent, theDataType, AddParams::RowType::kSubParamLevelType, parentId, treeDepth);
                 }
-                subMenuItems.insert(subMenuItems.end(), subItems.begin(), subItems.end());    
+                subMenuItems.insert(subMenuItems.end(), subItems.begin(), subItems.end());
             }
         }
         return subMenuItems;
