@@ -33,6 +33,63 @@ namespace
 
         return operationalData;
     }
+
+    std::vector<AddParams::SingleRowItem> addSpecificSoundingLevels(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, int parentId, const NFmiLevelBag* soundingLevels, int treeDepth)
+    {
+        treeDepth++;
+        std::vector<AddParams::SingleRowItem> items;
+        NFmiLevelBag* levels = const_cast<NFmiLevelBag*>(soundingLevels);
+
+        for(levels->Reset(); levels->Next();)
+        {
+            auto lvl = levels->Level();
+            const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(NFmiLevel(lvl->GetIdent(), lvl->GetName(), lvl->LevelValue()));
+            std::string levelStr = level->GetName();
+            std::string menuString = dataIdent.GetParamName() + " " + levelStr;
+            std::string uniqueDataId = "Temp - " + menuString;
+
+            AddParams::SingleRowItem item = AddParams::SingleRowItem(AddParams::RowType::kSubParamLevelType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", true, level, treeDepth, menuString);
+            items.push_back(item);
+        }
+        return items;
+    }
+
+    std::vector<AddParams::SingleRowItem> soundingSubMenu(NFmiParamBag &theParamBag, NFmiInfoData::Type theDataType, int parentId, const NFmiLevelBag* soundingLevels, int treeDepth)
+    {
+        treeDepth++;
+        std::vector<AddParams::SingleRowItem> subMenuItems;
+
+        if(!theParamBag.ParamsVector().empty())
+        {
+            //Firs put params into vector and sort, then create menu items
+            std::vector<NFmiDataIdent> paramsVector;
+            for(auto &dataIdent : theParamBag.ParamsVector())
+            {
+                paramsVector.push_back(dataIdent);
+            }
+            std::sort(paramsVector.begin(), paramsVector.end(), ([](const auto &a, const auto &b) { return boost::algorithm::ilexicographical_compare(std::string(a.GetParamName()), std::string(b.GetParamName())); }));
+
+            for(auto dataIdent : paramsVector)
+            {
+                std::string menuString = dataIdent.GetParamName();
+                std::string uniqueDataId = "Temp - " + menuString;
+
+                AddParams::SingleRowItem item = AddParams::SingleRowItem(AddParams::RowType::kParamType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
+                subMenuItems.push_back(item);
+                std::vector<AddParams::SingleRowItem> subItems;
+                if(dataIdent.HasDataParams()) //Wind submenu
+                {
+                    subItems = soundingSubMenu(*(dataIdent.GetDataParams()), theDataType, parentId, soundingLevels, treeDepth);
+                }
+                else
+                {
+                    subItems = addSpecificSoundingLevels(dataIdent, theDataType, AddParams::RowType::kSubParamLevelType, parentId, soundingLevels, treeDepth);
+                }
+                subMenuItems.insert(subMenuItems.end(), subItems.begin(), subItems.end());
+            }
+        }
+        return subMenuItems;
+    }
 }
 
 namespace AddParams
@@ -306,68 +363,11 @@ namespace AddParams
             item = SingleRowItem(kParamType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
             auto paramBag = soundingInfo->ParamBag();
             customObservationData.push_back(item);
-            auto subMenuItems = soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), treeDepth);
+            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth);
             customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());   
         }
 
         return customObservationData;
-    }
-
-    std::vector<SingleRowItem> CategoryData::soundingSubMenu(NFmiParamBag &theParamBag, NFmiInfoData::Type theDataType, int parentId, int treeDepth) const
-    {
-        treeDepth++;
-        std::vector<SingleRowItem> subMenuItems;
-
-        if(!theParamBag.ParamsVector().empty())
-        {
-            //Firs put params into vector and sort, then create menu items
-            std::vector<NFmiDataIdent> paramsVector;
-            for(auto &dataIdent : theParamBag.ParamsVector())
-            {
-                paramsVector.push_back(dataIdent);
-            }
-            std::sort(paramsVector.begin(), paramsVector.end(), ([](const auto &a, const auto &b) { return boost::algorithm::ilexicographical_compare(std::string(a.GetParamName()), std::string(b.GetParamName())); }));
-
-            for(auto dataIdent : paramsVector)
-            {
-                std::string menuString = dataIdent.GetParamName();
-                std::string uniqueDataId = "Temp - " + menuString;
-
-                SingleRowItem item = SingleRowItem(kParamType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
-                subMenuItems.push_back(item);
-                std::vector<SingleRowItem> subItems;
-                if(dataIdent.HasDataParams()) //Wind submenu
-                {
-                    subItems = soundingSubMenu(*(dataIdent.GetDataParams()), theDataType, parentId, treeDepth);
-                }
-                else
-                {
-                    subItems = addSpecificSoundingLevels(dataIdent, theDataType, AddParams::RowType::kSubParamLevelType, parentId, treeDepth);
-                }
-                subMenuItems.insert(subMenuItems.end(), subItems.begin(), subItems.end());
-            }
-        }
-        return subMenuItems;
-    }
-
-    std::vector<SingleRowItem> CategoryData::addSpecificSoundingLevels(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, int parentId, int treeDepth) const
-    {
-        treeDepth++;
-        std::vector<SingleRowItem> items;
-        NFmiLevelBag* levels = const_cast<NFmiLevelBag*>(soundingLevels_);
-
-        for(levels->Reset(); levels->Next();)
-        {
-            auto lvl = levels->Level();
-            const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(NFmiLevel(lvl->GetIdent(), lvl->GetName(), lvl->LevelValue()));
-            std::string levelStr = level->GetName();
-            std::string menuString = dataIdent.GetParamName() + " " + levelStr;
-            std::string uniqueDataId = "Temp - " + menuString;
-
-            SingleRowItem item = SingleRowItem(kSubParamLevelType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", true, level, treeDepth, menuString);
-            items.push_back(item);
-        }
-        return items;
     }
 
 }
