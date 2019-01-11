@@ -7,6 +7,7 @@
 #include "NFmiMetEditorTypes.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerSystem.h"
+#include "..\..\..\catlog\catlog\catlogutils.h"
     
 
 namespace
@@ -202,4 +203,26 @@ namespace AddParams
         for(const auto &rowItem : dialogRowData_)
             dialogTreePatternArray_.push_back(rowItem.treeDepth());
     }
+
+    void ParameterSelectionSystem::searchWords()
+    {
+        std::vector<SingleRowItem> resultRowData;
+        std::vector<std::string> searchedWords; // Joonas: jatka tästä
+        searchedWords.push_back("Ecmwf");
+
+        for(auto row : dialogRowData_)
+        {
+
+            if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
+            {
+                resultRowData.push_back(row);
+            }
+
+        }
+
+        //if(searchedWords.empty() || CatLogUtils::containsAllSearchedWordsCaseInsensitive(logData->message_, searchedWords))
+        //    return true;
+
+    }
+
 }

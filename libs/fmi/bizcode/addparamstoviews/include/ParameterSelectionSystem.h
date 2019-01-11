@@ -90,5 +90,6 @@ namespace AddParams
         void updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
+        void searchWords();
     };
 }
