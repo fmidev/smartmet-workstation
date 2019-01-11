@@ -17,6 +17,7 @@ namespace AddParams
         , displayName_()
         , origTime_()
         , totalFilePath_()
+        , searchWords_()
     {}
 
     SingleRowItem::SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
@@ -41,6 +42,7 @@ namespace AddParams
     {
         if(treeDepth_ == 0) { treeDepth_ = getTreeDepth(rowType); }
         if(displayName_.empty()) { displayName_ = itemName; }
+        searchWords_ = createSearchWords();
     }
 
     SingleRowItem::~SingleRowItem() = default;
@@ -65,6 +67,18 @@ namespace AddParams
         default:
             throw std::runtime_error("Error in getDialogTreeDepth function: Illegal row-item type");
         }
+    }
+
+    std::string SingleRowItem::createSearchWords()
+    {
+        std::string searchWords;
+        searchWords += (!displayName_.empty()) ? displayName_ + " " : "";
+        searchWords += (!std::to_string(itemId_).empty()) ? std::to_string(itemId_) + " " : "";
+        searchWords += level_ ? std::string(level_->GetName()) + " " : "";
+        searchWords += (!parentItemName_.empty()) ? parentItemName_ + " " : "";
+        searchWords += (!totalFilePath_.empty()) ? totalFilePath_ + " " : "";
+
+        return searchWords;
     }
 
 }
