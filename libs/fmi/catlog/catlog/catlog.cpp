@@ -1,4 +1,5 @@
 #include "catlog/catlog.h"
+#include "catlog/catlogutils.h"
 #include "spdlog/spdlog.h"
 
 #include <boost/algorithm/string.hpp>
@@ -101,37 +102,6 @@ namespace
         }
     }
 
-    bool containsStringCaseInsensitive(const string &searchThis, const string &findThis)
-    {
-        auto findRange = boost::algorithm::ifind_first(searchThis, findThis);
-        return !findRange.empty();
-    }
-
-    bool isExcludeWord(const string &word)
-    {
-        return word.size() && word[0] == '-';
-    }
-
-    bool containsAllSearchedWordsCaseInsensitive(const string &searchThis, const std::vector<std::string> &searchedWords)
-    {
-        for(const auto &word : searchedWords)
-        {
-            if(::isExcludeWord(word))
-            {
-                // Presumes that all word's given here are longer than 1 character
-                std::string excludeWord(word.begin() + 1, word.end());
-                if(::containsStringCaseInsensitive(searchThis, excludeWord))
-                    return false;
-            }
-            else
-            {
-                if(!::containsStringCaseInsensitive(searchThis, word))
-                    return false;
-            }
-        }
-        return true;
-    }
-
     bool isMessageMatch(const std::shared_ptr<LogData> &logData, const std::vector<std::string> & searchedWords, Category categoryLimit, Severity severityLimit)
     {
         if(logData)
@@ -140,7 +110,7 @@ namespace
             {
                 if(logData->severity_ >= severityLimit || severityLimit == Severity::NoSeverity)
                 {
-                    if(searchedWords.empty() || ::containsAllSearchedWordsCaseInsensitive(logData->message_, searchedWords))
+                    if(searchedWords.empty() || CatLogUtils::containsAllSearchedWordsCaseInsensitive(logData->message_, searchedWords))
                         return true;
                 }
             }
