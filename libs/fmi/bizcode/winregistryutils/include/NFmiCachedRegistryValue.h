@@ -1,5 +1,6 @@
 #pragma once
 
+#include "NFmiSettings.h"
 #include "registry_value.h"
 #include "boost/shared_ptr.hpp"
 
@@ -74,4 +75,13 @@ static boost::shared_ptr<RegValue> CreateRegValue(const std::string &baseRegistr
             *regValueKey = defaultValue;
     }
     return regValueKey;
+}
+
+template<typename RegValue>
+static boost::shared_ptr<RegValue> CreateRegValue(const std::string &baseRegistryPath, const std::string &sectionName, const std::string &keyName, HKEY usedKey, typename RegValue::value_type defaultValue, const std::string &settingsKeyForDefaultValue)
+{
+    if(settingsKeyForDefaultValue.empty())
+        return CreateRegValue<RegValue>(baseRegistryPath, sectionName, keyName, usedKey, defaultValue, nullptr);
+    else
+        return CreateRegValue<RegValue>(baseRegistryPath, sectionName, keyName, usedKey, defaultValue, settingsKeyForDefaultValue.c_str());
 }
