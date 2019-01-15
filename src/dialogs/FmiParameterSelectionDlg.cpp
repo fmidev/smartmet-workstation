@@ -437,6 +437,7 @@ CFmiParameterSelectionDlg::CFmiParameterSelectionDlg(SmartMetDocumentInterface *
     , fDialogInitialized(false)
     , itsSmartMetDocumentInterface(smartMetDocumentInterface)
     , itsParameterSelectionSystem(&(smartMetDocumentInterface->ParameterSelectionSystem()))
+    , itsSearchText(_T(""))
 {
 
 }
@@ -447,8 +448,9 @@ CFmiParameterSelectionDlg::~CFmiParameterSelectionDlg()
 
 void CFmiParameterSelectionDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
+    CDialogEx::DoDataExchange(pDX);
     DDX_GridControl(pDX, IDC_CUSTOM_GRID_PARAM_ADDING, itsGridCtrl);
+    DDX_Text(pDX, IDC_EDIT_TEXT, itsSearchText);
 }
 
 
@@ -458,6 +460,7 @@ BEGIN_MESSAGE_MAP(CFmiParameterSelectionDlg, CDialogEx)
     ON_WM_SIZE()
     ON_WM_TIMER()
     ON_WM_ERASEBKGND()
+    ON_EN_CHANGE(IDC_EDIT_TEXT, &CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText)
 END_MESSAGE_MAP()
 
 void CFmiParameterSelectionDlg::SetDefaultValues(void)
@@ -808,6 +811,7 @@ void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowIt
 void CFmiParameterSelectionDlg::Update()
 {
     if(IsWindowVisible())
+        itsParameterSelectionSystem->searchItemsThatMatchToSearchWords(CFmiWin32Helpers::CT2std(itsSearchText));
         UpdateGridControlValues();
 }
 
@@ -928,4 +932,15 @@ BOOL CFmiParameterSelectionDlg::OnEraseBkgnd(CDC* pDC)
     return FALSE;
 
     //return CDialogEx::OnEraseBkgnd(pDC);
+}
+
+void CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText()
+{
+    // TODO:  If this is a RICHEDIT control, the control will not
+    // send this notification unless you override the CDialogEx::OnInitDialog()
+    // function and call CRichEditCtrl().SetEventMask()
+    // with the ENM_CHANGE flag ORed into the mask.
+
+    UpdateData(TRUE);
+    Update();
 }
