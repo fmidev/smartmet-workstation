@@ -121,6 +121,7 @@ private:
     AddParams::ParameterSelectionSystem *itsParameterSelectionSystem;
     unsigned int itsLastAcivatedDescTopIndex; // Mikä oli viimeksi DescTopIndex, kun otsikon tekstiä tehtiin
     int itsLastActivatedRowIndex; // Mikä oli viimeksi RowIndex, kun otsikon tekstiä tehtiin
+    CString itsSearchText;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -135,5 +136,5 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-
+    afx_msg void OnEnChangeEditParameterSelectionSearchText();
 };
