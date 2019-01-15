@@ -240,7 +240,7 @@ class registry_int : public registry_value
 			return T(returnval);
 		}
 
-		const registry_int & operator=(const T & value)
+		const registry_int & operator=(T value)
 		{
 			if(open(true) == true)
 			{
@@ -251,6 +251,50 @@ class registry_int : public registry_value
 
             return *this;
 		}
+};
+
+// Tehd‰‰n specialization bool tyypille, koska muuten normaali template koodi 
+// tekee todella pitki‰ VC++ 2015 k‰‰nt‰j‰ varoituksia DWORD => bool casteista.
+template<>
+class registry_int<bool> : public registry_value
+{
+public:
+    typedef typename bool value_type;
+
+    registry_int(const std::string & name, HKEY base) : registry_value(name, base)
+    {
+    }
+
+    operator bool()
+    {
+        // Pakko k‰ytt‰‰ bool:in kanssa pohjana DWORD:ia, koska Win-rekisterin kanssa jutellaan niiden kautta.
+        DWORD returnval = DWORD();
+
+        if(open(false) == true)
+        {
+            DWORD type, size = sizeof(DWORD);
+            if(query_value(&type, &size, &returnval) == true)
+            {
+                assert(type == REG_DWORD);
+            }
+
+            close();
+        }
+
+        return returnval != 0;
+    }
+
+    const registry_int & operator=(bool value)
+    {
+        if(open(true) == true)
+        {
+            DWORD data(value);
+            set_value(REG_DWORD, sizeof(DWORD), &data);
+            close();
+        }
+
+        return *this;
+    }
 };
 
 
