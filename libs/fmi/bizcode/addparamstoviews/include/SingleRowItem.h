@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "NFmiInfoData.h"
 #include "NFmiLevel.h"
@@ -41,7 +42,7 @@ namespace AddParams
         int treeDepth_;
         std::string origTime_;
         std::string totalFilePath_;
-        std::string searchWords_;
+        std::vector<std::string> searchWords_;
 
     public:
         SingleRowItem();
@@ -76,9 +77,9 @@ namespace AddParams
         void origTime(const std::string &origTime) { origTime_ = origTime; }
         const std::string& totalFilePath() const { return totalFilePath_; }
         void totalFilePath(const std::string &totalFilePath) { totalFilePath_ = totalFilePath; }
-        std::string searchWords() { return searchWords_; }
+        std::vector<std::string>& searchWords() { return searchWords_; }
 
     private:
-        std::string createSearchWords();
+        void createSearchWords();
     };
 }

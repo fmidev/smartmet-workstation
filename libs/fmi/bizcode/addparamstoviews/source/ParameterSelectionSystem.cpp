@@ -204,21 +204,20 @@ namespace AddParams
             dialogTreePatternArray_.push_back(rowItem.treeDepth());
     }
 
-    void ParameterSelectionSystem::searchWords()
+    void ParameterSelectionSystem::searchItemsThatMatchToSearchWords(std::string words)
     {
-        std::vector<SingleRowItem> resultRowData;
-        std::vector<std::string> searchedWords; // Joonas: jatka tästä
-        searchedWords.push_back("Ecmwf");
+        std::vector<SingleRowItem> resultRowData; // Joonas: jatka tästä!
 
         for(auto row : dialogRowData_)
         {
-
-            if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
+            if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(words, row.searchWords()))
             {
                 resultRowData.push_back(row);
             }
 
         }
+        if(!resultRowData.empty())
+            dialogRowData_.swap(resultRowData);
 
         //if(searchedWords.empty() || CatLogUtils::containsAllSearchedWordsCaseInsensitive(logData->message_, searchedWords))
         //    return true;
