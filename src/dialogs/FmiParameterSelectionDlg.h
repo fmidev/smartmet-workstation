@@ -98,6 +98,8 @@ public:
 private:
     void DoWhenClosing(void);
     void AdjustDialogControls(void);
+    void AdjustGridControl(void);
+    CRect CalcGridArea(void);
     void InitHeaders();
     void UpdateGridControlValues(void);
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);

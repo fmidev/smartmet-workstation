@@ -1,4 +1,5 @@
 #include "SingleRowItem.h"
+#include <vector>
 
 namespace AddParams
 {
@@ -42,7 +43,7 @@ namespace AddParams
     {
         if(treeDepth_ == 0) { treeDepth_ = getTreeDepth(rowType); }
         if(displayName_.empty()) { displayName_ = itemName; }
-        searchWords_ = createSearchWords();
+        createSearchWords();
     }
 
     SingleRowItem::~SingleRowItem() = default;
@@ -69,16 +70,13 @@ namespace AddParams
         }
     }
 
-    std::string SingleRowItem::createSearchWords()
+    void SingleRowItem::createSearchWords()
     {
-        std::string searchWords;
-        searchWords += (!displayName_.empty()) ? displayName_ + " " : "";
-        searchWords += (!std::to_string(itemId_).empty()) ? std::to_string(itemId_) + " " : "";
-        searchWords += level_ ? std::string(level_->GetName()) + " " : "";
-        searchWords += (!parentItemName_.empty()) ? parentItemName_ + " " : "";
-        searchWords += (!totalFilePath_.empty()) ? totalFilePath_ + " " : "";
-
-        return searchWords;
+        searchWords_.push_back((!displayName_.empty()) ? displayName_ + " " : "");
+        searchWords_.push_back((!std::to_string(itemId_).empty()) ? std::to_string(itemId_) + " " : "");
+        searchWords_.push_back(level_ ? std::string(level_->GetName()) + " " : "");
+        searchWords_.push_back((!parentItemName_.empty()) ? parentItemName_ + " " : "");
+        searchWords_.push_back((!totalFilePath_.empty()) ? totalFilePath_ + " " : "");
     }
 
 }

@@ -545,16 +545,96 @@ void CFmiParameterSelectionDlg::AdjustDialogControls(void)
 {
     if(fDialogInitialized)
     {
-        CWnd *win = GetDlgItem(IDC_CUSTOM_GRID_PARAM_ADDING);
-        if(win)
-        {
-            CRect gridControlRect;
-            GetClientRect(&gridControlRect);
-            win->MoveWindow(gridControlRect);
-            FitNameColumnOnVisibleArea(gridControlRect.Width());
-        }
+        AdjustGridControl();
+        //AdjustControl(IDC_EDIT_NAME_STR, 10);
+        //CRect browseRect = CalcBrowseButtomRect();
+        //AdjustBrowseButton(browseRect);
+
+        //CWnd *win = GetDlgItem(IDC_CUSTOM_GRID_PARAM_ADDING);
+        //if(win)
+        //{
+        //    CRect gridControlRect;
+        //    GetClientRect(&gridControlRect);
+        //    win->MoveWindow(gridControlRect);
+        //    FitNameColumnOnVisibleArea(gridControlRect.Width());
+        //}
     }
 }
+
+void CFmiParameterSelectionDlg::AdjustGridControl(void)
+{
+    CWnd *win = GetDlgItem(IDC_CUSTOM_GRID_PARAM_ADDING);
+    if(win)
+    {
+        CRect gridControlRect = CalcGridArea();
+        win->MoveWindow(gridControlRect);
+        FitNameColumnOnVisibleArea(gridControlRect.Width());
+    }
+}
+
+CRect CFmiParameterSelectionDlg::CalcGridArea(void)
+{
+    CRect clientRect;
+    GetClientRect(clientRect);
+    CWnd *win = GetDlgItem(IDC_EDIT_TEXT); //This is used to get the bottom boundary
+    if(win)
+    {
+        CRect rect2;
+        win->GetWindowRect(rect2);
+        CPoint pt(rect2.BottomRight());
+        ScreenToClient(&pt);
+        clientRect.top = clientRect.top + pt.y; // rect2.Height();
+    }
+    return clientRect;
+}
+
+// Adjust control widths
+//void CFmiCaseStudyDlg::AdjustControl(int theControlId, int rightOffset) 
+//{
+//    CWnd *win = GetDlgItem(theControlId);
+//    if(win)
+//    {
+//        CRect clientRect;
+//        GetClientRect(clientRect);
+//
+//        CRect rect2;
+//        win->GetWindowRect(rect2);
+//        CPoint tl(rect2.TopLeft());
+//        ScreenToClient(&tl);
+//        CPoint br(rect2.BottomRight());
+//        ScreenToClient(&br);
+//        br.x = clientRect.right - rightOffset;
+//
+//        CRect nameRect(tl, br);
+//        win->MoveWindow(nameRect);
+//    }
+//}
+
+// Button that is attached to the right edge
+//CRect CFmiCaseStudyDlg::CalcBrowseButtomRect(void) 
+//{
+//    CRect buttomRect;
+//    CWnd *win = GetDlgItem(IDC_BUTTON_BROWSE);
+//    if(win)
+//    {
+//        CRect clientRect;
+//        GetClientRect(clientRect);
+//
+//        win->GetWindowRect(buttomRect);
+//        ScreenToClient(&buttomRect);
+//        buttomRect.MoveToX(clientRect.right - buttomRect.Width() - 10);
+//    }
+//    return buttomRect;
+//}
+
+//void CFmiCaseStudyDlg::AdjustBrowseButton(const CRect &theButtonRect)
+//{
+//    CWnd *win = GetDlgItem(IDC_BUTTON_BROWSE);
+//    if(win)
+//    {
+//        win->MoveWindow(theButtonRect);
+//    }
+//}
 
 #ifdef max
 #undef max
