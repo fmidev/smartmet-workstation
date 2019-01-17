@@ -17,7 +17,7 @@ class NFmiArea;
 class ModelSoundingDataServerConfigurations
 {
     boost::shared_ptr<CachedRegInt> producerId_;
-    boost::shared_ptr<CachedRegString> modelNameOnServer_;
+    boost::shared_ptr<CachedRegString> dataNameOnServer_;
     boost::shared_ptr<CachedRegBool> useServerData_;
 
     // Producer namea ei laiteta rekiteriin suoraan, vaan siit‰ tehd‰‰n hakemisto/section, johon loput rekisteri arvot laitetaan.
@@ -34,8 +34,8 @@ public:
     const std::string& producerName() const { return producerName_; }
     int producerId() const { return *producerId_; }
     void SetProducerId(int producerId) { *producerId_ = producerId; }
-    const std::string& modelNameOnServer() const { return *modelNameOnServer_; }
-    void SetModelNameOnServer(const std::string &modelNameOnServer) { *modelNameOnServer_ = modelNameOnServer; }
+    std::string dataNameOnServer() const { return *dataNameOnServer_; }
+    void SetDataNameOnServer(const std::string &dataNameOnServer) { *dataNameOnServer_ = dataNameOnServer; }
     bool useServerData() const { return *useServerData_; }
     void SetUseServerData(bool useServerData) { *useServerData_ = useServerData; }
 };
@@ -61,6 +61,7 @@ public:
     {}
 
     bool init(const std::string &baseRegistryPath, const std::string &baseConfigurationPath);
+    std::vector<ModelSoundingDataServerConfigurations>& modelConfigurations() { return modelConfigurations_; }
 
 private:
     bool mustDoConfigurationOverride(HKEY usedKey);
