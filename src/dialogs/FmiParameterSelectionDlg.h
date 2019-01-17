@@ -100,6 +100,7 @@ private:
     void AdjustDialogControls(void);
     void AdjustGridControl(void);
     CRect CalcGridArea(void);
+    void AdjustControlWidth(int theControlId, int rightOffset, int maxWidth);
     void InitHeaders();
     void UpdateGridControlValues(void);
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
