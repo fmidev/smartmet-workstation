@@ -44,6 +44,7 @@ class CFmiParameterSelectionDlg;
 class SmartMetDocumentInterface;
 class CFmiGriddingOptionsDlg;
 class NFmiApplicationWinRegistry;
+class CFmiSoundingDataServerConfigurationsDlg;
 
 class CSmartMetDoc : public CDocument
 {
@@ -109,6 +110,7 @@ public:
     void CreateCaseStudyDlg(NFmiEditMapGeneralDataDoc *theDoc);
     void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void CreateLogViewer(NFmiEditMapGeneralDataDoc *theDoc);
+    void CreateSoundingDataServerConfigurationsDlg();
     void CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void UpdateBetaProductDialog();
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
@@ -267,6 +269,7 @@ private:
     CFmiLogViewer *itsLogViewer;
     CFmiParameterSelectionDlg *itsParameterSelectionDlg;
     CFmiGriddingOptionsDlg *itsGriddingOptionsDlg;
+    CFmiSoundingDataServerConfigurationsDlg *itsSoundingDataServerConfigurationsDlg;
     unsigned int itsMapViewDescTopIndex;
 public:
 	afx_msg void OnToggleLandBorderDrawColor();
@@ -381,6 +384,7 @@ public:
     afx_msg void OnAcceleratorCpSelectUp();
     afx_msg void OnAcceleratorCpSelectDown();
     void OpenLocationFinderTool(CWnd *parentView);
+    afx_msg void OnEditSoundingDataFromServerSettings();
 };
 
 
