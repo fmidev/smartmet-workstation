@@ -51,10 +51,10 @@ bool ModelSoundingDataServerConfigurations::init(const std::string &configuratio
     producerId_ = ::CreateOverrideRegValue<CachedRegInt>(baseRegistryPath, usedRegistrySectionName, "ProducerId", usedKey, nonLegalProducerId, usedConfigurationPath, configurationOverride);
     if(*producerId_ == nonLegalProducerId)
         throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for ProducerId (non 0 value) with model '" + configurationModelName + "'");
-    modelNameOnServer_ = ::CreateOverrideRegValue<CachedRegString>(baseRegistryPath, usedRegistrySectionName, "ModelNameOnServer", usedKey, std::string(""), usedConfigurationPath, configurationOverride);
+    dataNameOnServer_ = ::CreateOverrideRegValue<CachedRegString>(baseRegistryPath, usedRegistrySectionName, "DataNameOnServer", usedKey, std::string(""), usedConfigurationPath, configurationOverride);
     // Jostain syyst‰ string-olion saaminen CachedRegString oliosta on hankalaa, siksi k‰ytet‰‰n operator std::string():i‰...
-    if((*modelNameOnServer_).operator std::string().empty())
-        throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for ModelNameOnServer (non empty) with model '" + configurationModelName + "'");
+    if((*dataNameOnServer_).operator std::string().empty())
+        throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for DataNameOnServer (non empty) with model '" + configurationModelName + "'");
     // useServerData asetusta ei oteta konffeista vaikka configurationOverride olisi true
     useServerData_ = ::CreateOverrideRegValue<CachedRegBool>(baseRegistryPath, usedRegistrySectionName, "UseServerData", usedKey, false, usedConfigurationPath, false);
 
@@ -123,7 +123,11 @@ bool SoundingDataServerConfigurations::mustDoConfigurationOverride(HKEY usedKey)
     versionNumber_ = ::CreateRegValue<CachedRegInt>(baseRegistryPath_, registrySectionName_, parameterRegistryName, usedKey, nonLegalVersionNumber, finalParameterConfigurationPath);
     int versionNumberFromConfiguration = NFmiSettings::Optional<int>(finalParameterConfigurationPath, nonLegalVersionNumber);
     if(*versionNumber_ < versionNumberFromConfiguration)
+    {
+        // Uusi versio numero pit‰‰ ottaa myˆs talteen Win-rekisteriin
+        *versionNumber_ = versionNumberFromConfiguration;
         return true;
+    }
     else
         return false;
 }
