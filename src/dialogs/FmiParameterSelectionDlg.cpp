@@ -461,6 +461,7 @@ BEGIN_MESSAGE_MAP(CFmiParameterSelectionDlg, CDialogEx)
     ON_WM_TIMER()
     ON_WM_ERASEBKGND()
     ON_EN_CHANGE(IDC_EDIT_TEXT, &CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText)
+    ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 void CFmiParameterSelectionDlg::SetDefaultValues(void)
@@ -1023,4 +1024,17 @@ void CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText()
 
     UpdateData(TRUE);
     Update();
+}
+
+
+void CFmiParameterSelectionDlg::OnPaint()
+{
+    CPaintDC dc(this); 
+    // tämä on pika viritys, kun muuten Print (ja muiden ) -nappulan kohdalta jää kaista maalaamatta kun laitoin ikkunaan välkkymättömän päivityksen
+    CBrush brush(RGB(240, 240, 240));
+    CRect gridCtrlArea(CalcGridArea());
+    CRect clientRect;
+    GetClientRect(clientRect);
+    clientRect.bottom = gridCtrlArea.top;
+    dc.FillRect(&clientRect, &brush);
 }
