@@ -15,6 +15,7 @@
 
 #include "PPToolTip.h"
 #include "NFmiToolBox.h"
+#include "GridCtrl.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -656,4 +657,35 @@ void CFmiWin32Helpers::InitCategoryComboBox(CComboBox &comboBox)
     comboBox.AddString(CA2T(::GetDictionaryString("Macro").c_str()));
     comboBox.AddString(CA2T(::GetDictionaryString("Operational").c_str()));
     comboBox.AddString(CA2T(::GetDictionaryString("NetRequest").c_str()));
+}
+
+#ifdef max
+#undef max
+#endif
+
+void CFmiWin32Helpers::FitLastColumnOnVisibleArea(CWnd *gridCtrlParentView, CGridCtrl &gridCtrl, bool &firstTime, int minimumLastColumnWidthInPixels)
+{
+    if(!gridCtrlParentView)
+        return;
+
+    if(firstTime)
+        firstTime = false;
+    else
+    {
+        if(gridCtrl.GetColumnCount())
+        {
+            CRect clientRect;
+            gridCtrlParentView->GetClientRect(clientRect);
+
+            int lastColumnIndex = gridCtrl.GetColumnCount() - 1;
+            CRect lastHeaderCellRect;
+            gridCtrl.GetCellRect(0, lastColumnIndex, lastHeaderCellRect);
+            // Calculate new width for last column so that it will fill the client area
+            // Total width (cx) - lastColumns left edge - some value (40) that represents the width of the vertical scroll control
+            int newLastColumnWidth = clientRect.Width() - lastHeaderCellRect.left - 40;
+            // Let's make sure that last column isn't shrinken too much
+            newLastColumnWidth = std::max(newLastColumnWidth, 220);
+            gridCtrl.SetColumnWidth(lastColumnIndex, newLastColumnWidth);
+        }
+    }
 }
