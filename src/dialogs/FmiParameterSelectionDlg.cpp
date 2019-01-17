@@ -547,18 +547,7 @@ void CFmiParameterSelectionDlg::AdjustDialogControls(void)
     if(fDialogInitialized)
     {
         AdjustGridControl();
-        //AdjustControl(IDC_EDIT_NAME_STR, 10);
-        //CRect browseRect = CalcBrowseButtomRect();
-        //AdjustBrowseButton(browseRect);
-
-        //CWnd *win = GetDlgItem(IDC_CUSTOM_GRID_PARAM_ADDING);
-        //if(win)
-        //{
-        //    CRect gridControlRect;
-        //    GetClientRect(&gridControlRect);
-        //    win->MoveWindow(gridControlRect);
-        //    FitNameColumnOnVisibleArea(gridControlRect.Width());
-        //}
+        AdjustControlWidth(IDC_EDIT_TEXT, 15, 600);
     }
 }
 
@@ -589,53 +578,27 @@ CRect CFmiParameterSelectionDlg::CalcGridArea(void)
     return clientRect;
 }
 
-// Adjust control widths
-//void CFmiCaseStudyDlg::AdjustControl(int theControlId, int rightOffset) 
-//{
-//    CWnd *win = GetDlgItem(theControlId);
-//    if(win)
-//    {
-//        CRect clientRect;
-//        GetClientRect(clientRect);
-//
-//        CRect rect2;
-//        win->GetWindowRect(rect2);
-//        CPoint tl(rect2.TopLeft());
-//        ScreenToClient(&tl);
-//        CPoint br(rect2.BottomRight());
-//        ScreenToClient(&br);
-//        br.x = clientRect.right - rightOffset;
-//
-//        CRect nameRect(tl, br);
-//        win->MoveWindow(nameRect);
-//    }
-//}
+void CFmiParameterSelectionDlg::AdjustControlWidth(int theControlId, int rightOffset, int maxWidth)
+{
+    CWnd *win = GetDlgItem(theControlId);
+    if(win)
+    {
+        CRect clientRect;
+        GetClientRect(clientRect);
 
-// Button that is attached to the right edge
-//CRect CFmiCaseStudyDlg::CalcBrowseButtomRect(void) 
-//{
-//    CRect buttomRect;
-//    CWnd *win = GetDlgItem(IDC_BUTTON_BROWSE);
-//    if(win)
-//    {
-//        CRect clientRect;
-//        GetClientRect(clientRect);
-//
-//        win->GetWindowRect(buttomRect);
-//        ScreenToClient(&buttomRect);
-//        buttomRect.MoveToX(clientRect.right - buttomRect.Width() - 10);
-//    }
-//    return buttomRect;
-//}
-
-//void CFmiCaseStudyDlg::AdjustBrowseButton(const CRect &theButtonRect)
-//{
-//    CWnd *win = GetDlgItem(IDC_BUTTON_BROWSE);
-//    if(win)
-//    {
-//        win->MoveWindow(theButtonRect);
-//    }
-//}
+        CRect rect2;
+        win->GetWindowRect(rect2);
+        CPoint tl(rect2.TopLeft());
+        ScreenToClient(&tl);
+        CPoint br(rect2.BottomRight());
+        ScreenToClient(&br);
+        br.x = clientRect.right - rightOffset;
+        if(br.x > maxWidth)
+            br.x = maxWidth;
+        CRect nameRect(tl, br);
+        win->MoveWindow(nameRect);
+    }
+}
 
 #ifdef max
 #undef max
@@ -1030,7 +993,6 @@ void CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText()
 void CFmiParameterSelectionDlg::OnPaint()
 {
     CPaintDC dc(this); 
-    // tämä on pika viritys, kun muuten Print (ja muiden ) -nappulan kohdalta jää kaista maalaamatta kun laitoin ikkunaan välkkymättömän päivityksen
     CBrush brush(RGB(240, 240, 240));
     CRect gridCtrlArea(CalcGridArea());
     CRect clientRect;
