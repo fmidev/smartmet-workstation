@@ -76,7 +76,6 @@ class NFmiSoundingDataOpt1
                         bool useFastFill = false);
   bool FillSoundingData(const std::vector<FmiParameterName> &parametersInServerData, const std::string &theServerDataAsciiFormat,
       const NFmiMetTime &theTime,
-      const NFmiMetTime &theOriginTime,
       const NFmiLocation &theLocation,
       const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
   void CutEmptyData(void);  // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että
