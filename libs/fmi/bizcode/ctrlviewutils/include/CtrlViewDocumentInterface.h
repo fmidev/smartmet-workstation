@@ -69,6 +69,7 @@ class NFmiApplicationWinRegistry;
 class Q2ServerInfo;
 class CBitmap;
 class NFmiMacroParamDataCache;
+class SoundingDataServerConfigurations;
 
 namespace Wms
 {
@@ -375,6 +376,7 @@ public:
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
+    virtual SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

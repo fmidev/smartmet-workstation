@@ -511,33 +511,9 @@ void CFmiLogViewer::OnSize(UINT nType, int cx, int cy)
     FitLastColumnOnVisibleArea();
 }
 
-#ifdef max
-#undef max
-#endif
-
 void CFmiLogViewer::FitLastColumnOnVisibleArea()
 {
     static bool firstTime = true;
 
-    if(firstTime)
-        firstTime = false;
-    else
-    {
-        if(itsGridCtrl.GetColumnCount())
-        {
-            CRect clientRect;
-            GetClientRect(clientRect);
-
-            int lastColumnIndex = itsGridCtrl.GetColumnCount() - 1;
-            CRect lastHeaderCellRect;
-            itsGridCtrl.GetCellRect(0, lastColumnIndex, lastHeaderCellRect);
-            // Calculate new width for last column so that it will fill the client area
-            // Total width (cx) - lastColumns left edge - some value (40) that represents the width of the vertical scroll control
-            int newLastColumnWidth = clientRect.Width() - lastHeaderCellRect.left - 40;
-            // Let's make sure that last column isn't shrinken too much
-            newLastColumnWidth = std::max(newLastColumnWidth, 220);
-            itsGridCtrl.SetColumnWidth(lastColumnIndex, newLastColumnWidth);
-        }
-    }
+    CFmiWin32Helpers::FitLastColumnOnVisibleArea(this, itsGridCtrl, firstTime, 220);
 }
-

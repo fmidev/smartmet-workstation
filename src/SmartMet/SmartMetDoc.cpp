@@ -100,6 +100,7 @@
 #include "ApplicationInterface.h"
 #include "FmiWarningMessageOptionsDlg.h"
 #include "NFmiMacroParamDataCache.h"
+#include "FmiSoundingDataServerConfigurationsDlg.h"
 
 #include <direct.h> // _chdir()
 #include <cassert>
@@ -304,6 +305,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_RIGHT, &CSmartMetDoc::OnAcceleratorCpSelectRight)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_UP, &CSmartMetDoc::OnAcceleratorCpSelectUp)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
+        ON_COMMAND(ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS, &CSmartMetDoc::OnEditSoundingDataFromServerSettings)
         END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -352,6 +354,7 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsCaseStudyDlg(nullptr)
 ,itsBetaProductDialog(nullptr)
 ,itsLogViewer(nullptr)
+,itsSoundingDataServerConfigurationsDlg(nullptr)
 ,itsParameterSelectionDlg(nullptr)
 ,itsGriddingOptionsDlg(nullptr)
 {
@@ -421,6 +424,7 @@ CSmartMetDoc::~CSmartMetDoc()
     // Better clear callback function before logviewer is destroyed, just in case
     CatLog::setLogViewerUpdateCallback(std::function<void()>());
     ::DestroyModalessDialog((CDialog **)(&itsLogViewer));
+    ::DestroyModalessDialog((CDialog **)(&itsSoundingDataServerConfigurationsDlg));
     ::DestroyModalessDialog((CDialog **)(&itsParameterSelectionDlg));
 }
 
@@ -980,6 +984,16 @@ void CSmartMetDoc::CreateLogViewer(NFmiEditMapGeneralDataDoc *theDoc)
         auto refreshCallback = [this]() { this->itsLogViewer->StartRefreshTimer(); };
         CatLog::setLogViewerUpdateCallback(refreshCallback);
     }
+}
+
+void CSmartMetDoc::CreateSoundingDataServerConfigurationsDlg()
+{
+    if(itsSoundingDataServerConfigurationsDlg)
+        return; // Ei luoda dialogia uudestaan
+
+    CSmartMetView *smartmetView = ApplicationInterface::GetSmartMetView();
+    itsSoundingDataServerConfigurationsDlg = new CFmiSoundingDataServerConfigurationsDlg(&itsData->GetSmartMetDocumentInterface(), smartmetView);
+    BOOL status = itsSoundingDataServerConfigurationsDlg->Create(IDD_DIALOG_SOUNDING_DATA_SERVER_CONFIGURATIONS, smartmetView->GetDesktopWindow());
 }
 
 void CSmartMetDoc::OnAcceleratorIgnoreStationsDlg()
@@ -1804,6 +1818,7 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
     CFmiWin32Helpers::SetWindowIconDynamically(itsCaseStudyDlg, usedSmallIcon, usedBigIcon);
     CFmiWin32Helpers::SetWindowIconDynamically(itsBetaProductDialog, usedSmallIcon, usedBigIcon);
     CFmiWin32Helpers::SetWindowIconDynamically(itsLogViewer, usedSmallIcon, usedBigIcon);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsSoundingDataServerConfigurationsDlg, usedSmallIcon, usedBigIcon);
     CFmiWin32Helpers::SetWindowIconDynamically(itsParameterSelectionDlg, usedSmallIcon, usedBigIcon);
 }
 
@@ -2806,6 +2821,61 @@ void CSmartMetDoc::OnMuokkaaMakropolkuasetukset()
 	}
 }
 
+static const int g_missingViewIndex = -9999;
+
+template<typename View>
+void MakeMakeWindowPosMapInsert(std::map<std::string, std::string> &windowPosMap, int possibleViewIndex = g_missingViewIndex)
+{
+    std::string winDefaultRectStr = Persist2::MakeWindowRectString(View::ViewPosRegistryInfo().DefaultWindowRect());
+    std::string winRegistryKeyStr = View::ViewPosRegistryInfo().WinRegistryKeyStr();
+    if(possibleViewIndex != g_missingViewIndex)
+        winRegistryKeyStr += NFmiStringTools::Convert(possibleViewIndex);
+    windowPosMap.insert(std::make_pair(winRegistryKeyStr, winDefaultRectStr));
+}
+
+// Tehdään map, jossa on kaikkien eri karttanäyttöjen Win-rekisteri avaimet ja default-ikkuna rect stringinä
+std::map<std::string, std::string> CSmartMetDoc::MakeMapWindowPosMap(void)
+{
+    std::map<std::string, std::string> windowPosMap;
+
+    // Pääkarttanäyttö
+    MakeMakeWindowPosMapInsert<CMainFrame>(windowPosMap);
+
+    // apukarttanäytöille pitää antaa avaimeen tuleva indeksi, koska sitä ei voi kysyä suoraan luokan staattiselta funktiolta
+    MakeMakeWindowPosMapInsert<CFmiExtraMapViewDlg>(windowPosMap, 2);
+    MakeMakeWindowPosMapInsert<CFmiExtraMapViewDlg>(windowPosMap, 3);
+
+    return windowPosMap;
+}
+
+// Tehdään map, jossa on kaikkien eri ei-karttanäyttöjen Win-rekisteri avaimet ja default-ikkuna rect stringinä.
+// Ks. CSmartMetDoc::SaveViewPositionsToRegistry, jossa talletetaan oikeasti täällä määritellyt näytöt.
+std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
+{
+    std::map<std::string, std::string> windowPosMap;
+
+    MakeMakeWindowPosMapInsert<CFmiCrossSectionDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CTimeEditValuesDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiTrajectoryDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CZoomDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiTempDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiSynopDataGridViewDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiViewMacroDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiWarningCenterDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiSeaIcingWarningsDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiWindTableDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiDataQualityCheckerDialog>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiCaseStudyDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiSmartToolDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiBetaProductTabControlDialog>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiLogViewer>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiSoundingDataServerConfigurationsDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiParameterSelectionDlg>(windowPosMap);
+    MakeMakeWindowPosMapInsert<CFmiWarningMessageOptionsDlg>(windowPosMap);
+
+    return windowPosMap;
+}
+
 template<class TView>
 static void SaveViewPositionToRegistry(TView *theView, NFmiApplicationWinRegistry &theApplicationWinRegistry, unsigned int theMapViewDescTopIndex)
 {
@@ -2813,6 +2883,7 @@ static void SaveViewPositionToRegistry(TView *theView, NFmiApplicationWinRegistr
         Persist2::WriteWindowRectToWinRegistry(theApplicationWinRegistry, theView->MakeUsedWinRegistryKeyStr(theMapViewDescTopIndex), theView);
 }
 
+// ks. CSmartMetDoc::MakeOtherWindowPosMap, jossa tehdään lista talletettavista näytöistä.
 void CSmartMetDoc::SaveViewPositionsToRegistry(void)
 {
 	// tässä pitää tallettaa 'permanent' dialogien sijainnit rekisteriin.
@@ -2840,6 +2911,7 @@ void CSmartMetDoc::SaveViewPositionsToRegistry(void)
     ::SaveViewPositionToRegistry(itsSmartToolDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsBetaProductDialog, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsLogViewer, applicationWinRegistry, dummyMapDescTopIndex);
+    ::SaveViewPositionToRegistry(itsSoundingDataServerConfigurationsDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsParameterSelectionDlg, applicationWinRegistry, dummyMapDescTopIndex);
 
     // Talletetaan myös tiettyjä GeneralDocissa olevia juttuja aika-ajoin WinRekisteriin
@@ -2877,59 +2949,6 @@ void CSmartMetDoc::DoOnClose(void)
 {
 	if(itsCaseStudyDlg)
 		itsCaseStudyDlg->GetBasicInfoFromDialog(); // jos caseStudy-dialogissa on tehty perus infoihin muutoksia, eikä dialogia ole suljettu, pitää arvot ottaa erikseen talteen dokumentin olioon ennen arvojen talletuksia tiedostoon.
-}
-
-static const int g_missingViewIndex = -9999;
-
-template<typename View>
-void MakeMakeWindowPosMapInsert(std::map<std::string, std::string> &windowPosMap, int possibleViewIndex = g_missingViewIndex)
-{
-    std::string winDefaultRectStr = Persist2::MakeWindowRectString(View::ViewPosRegistryInfo().DefaultWindowRect());
-    std::string winRegistryKeyStr = View::ViewPosRegistryInfo().WinRegistryKeyStr();
-    if(possibleViewIndex != g_missingViewIndex)
-        winRegistryKeyStr += NFmiStringTools::Convert(possibleViewIndex);
-    windowPosMap.insert(std::make_pair(winRegistryKeyStr, winDefaultRectStr));
-}
-
-// Tehdään map, jossa on kaikkien eri karttanäyttöjen Win-rekisteri avaimet ja default-ikkuna rect stringinä
-std::map<std::string, std::string> CSmartMetDoc::MakeMapWindowPosMap(void)
-{
-    std::map<std::string, std::string> windowPosMap;
-
-    // Pääkarttanäyttö
-    MakeMakeWindowPosMapInsert<CMainFrame>(windowPosMap);
-
-    // apukarttanäytöille pitää antaa avaimeen tuleva indeksi, koska sitä ei voi kysyä suoraan luokan staattiselta funktiolta
-    MakeMakeWindowPosMapInsert<CFmiExtraMapViewDlg>(windowPosMap, 2);
-    MakeMakeWindowPosMapInsert<CFmiExtraMapViewDlg>(windowPosMap, 3);
-
-    return windowPosMap;
-}
-
-// Tehdään map, jossa on kaikkien eri ei-karttanäyttöjen Win-rekisteri avaimet ja default-ikkuna rect stringinä
-std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
-{
-    std::map<std::string, std::string> windowPosMap;
-
-    MakeMakeWindowPosMapInsert<CFmiCrossSectionDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CTimeEditValuesDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiTrajectoryDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CZoomDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiTempDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiSynopDataGridViewDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiViewMacroDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiWarningCenterDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiSeaIcingWarningsDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiWindTableDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiDataQualityCheckerDialog>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiCaseStudyDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiSmartToolDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiBetaProductTabControlDialog>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiLogViewer>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiParameterSelectionDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiWarningMessageOptionsDlg>(windowPosMap);
-
-    return windowPosMap;
 }
 
 void CSmartMetDoc::OnOhjeVirhetesti()
@@ -3650,6 +3669,18 @@ void CSmartMetDoc::OnAcceleratorLogViewer()
     GetData()->LogMessage("Log Viewer on.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
+void CSmartMetDoc::OnEditSoundingDataFromServerSettings()
+{
+    if(!itsSoundingDataServerConfigurationsDlg)
+        CreateSoundingDataServerConfigurationsDlg();
+
+    itsSoundingDataServerConfigurationsDlg->ShowWindow(SW_SHOW);
+    itsSoundingDataServerConfigurationsDlg->SetActiveWindow();
+    itsSoundingDataServerConfigurationsDlg->Update();
+
+    GetData()->LogMessage("Sounding data server configurations Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
+}
+
 static const std::string gCalculationPointStartStr = "calculationpoint = ";
 static const std::string gMaxLatlonLengthStr = "-123.123,-12.123";
 
@@ -3824,3 +3855,4 @@ void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, co
     {
     }
 }
+
