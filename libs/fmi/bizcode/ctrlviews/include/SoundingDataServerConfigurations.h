@@ -69,7 +69,7 @@ public:
     bool init(const std::string &baseRegistryPath, const std::string &baseConfigurationPath);
     std::vector<ModelSoundingDataServerConfigurations>& modelConfigurations() { return modelConfigurations_; }
     bool useServerSoundingData(int producerId) const;
-    std::string makeFinalServerRequestUri(int producerId, const NFmiMetTime &validTime, const NFmiMetTime &originTime, const NFmiPoint &latlon) const;
+    std::string makeFinalServerRequestUri(int producerId, const NFmiMetTime &validTime, const NFmiPoint &latlon) const;
     const std::vector<FmiParameterName>& wantedParameters() const { return wantedParameters_; }
 
 private:
