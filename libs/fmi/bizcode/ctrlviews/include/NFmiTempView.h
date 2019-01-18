@@ -109,6 +109,8 @@ class NFmiTempView : public NFmiCtrlView
     void DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
     double SecondaryDataFrameXoffset(double theValue);
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
+    bool UseServerForSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+    bool FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
 
 	double es(double t);
 	double ws(double t, double p);
