@@ -29,6 +29,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "ToolBoxStateRestorer.h"
 #include "SoundingDataServerConfigurations.h"
+#include "catlog/catlog.h"
 
 #include <gdiplus.h>
 #include <stdexcept>
@@ -3298,13 +3299,68 @@ bool NFmiTempView::UseServerForSoundingData(boost::shared_ptr<NFmiFastQueryInfo>
     return itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().useServerSoundingData(theInfo->Producer()->GetIdent());
 }
 
+static std::string MakeProdTimeLocString(const NFmiProducer &producer, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
+{
+    std::string str = "producer: ";
+    str += producer.GetName();
+    str += ", for time: ";
+    str += theTime.ToStr("YYYY.MM.DD HH:mm");
+    str += ", at location: ";
+    str += std::to_string(theLocation.GetLongitude());
+    str += ",";
+    str += std::to_string(theLocation.GetLatitude());
+    return str;
+}
+
+static void TraceLogSoundingFromServerRequest(const std::string &requestUriStr, const NFmiProducer &producer, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
+{
+    if(requestUriStr.empty())
+    {
+        std::string logMessage = "Unable to make sounding data request URL for ";
+        ::MakeProdTimeLocString(producer, theTime, theLocation);
+        CatLog::logMessage(requestUriStr, CatLog::Severity::Warning, CatLog::Category::NetRequest);
+    }
+    else
+    {
+        if(CatLog::doTraceLevelLogging())
+        {
+            CatLog::logMessage(requestUriStr, CatLog::Severity::Trace, CatLog::Category::NetRequest);
+        }
+    }
+}
+
+static void ReportFailedSoundingFromServerRequest(const std::string &requestUriStr, const NFmiProducer &producer, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
+{
+    if(!CatLog::doTraceLevelLogging())
+    {
+        // Jos ei olla trace loggin tilassa, ei edell‰ lokitettu t‰t‰ requestia, tehd‰‰n se nyt kun tuli ongelmia sen kanssa
+        CatLog::logMessage(requestUriStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+    }
+
+    std::string logMessage = "Sounding data server request failed for ";
+    logMessage += ::MakeProdTimeLocString(producer, theTime, theLocation);
+    CatLog::logMessage(logMessage, CatLog::Severity::Warning, CatLog::Category::NetRequest);
+}
+
 bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
     auto requestUriStr = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().makeFinalServerRequestUri(theInfo->Producer()->GetIdent(), theTime, theInfo->OriginTime(), theLocation.GetLocation());
+    ::TraceLogSoundingFromServerRequest(requestUriStr, *theInfo->Producer(), theTime, theLocation);
     if(requestUriStr.empty())
         return false;
     std::string soundingDataResponseFromServer;
-    itsCtrlViewDocumentInterface->MakeHTTPRequest(requestUriStr, soundingDataResponseFromServer, true);
+
+    {
+        // Raportoidaan trace tasolla pelk‰n haun kesto
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(this, "Sounding data from server request");
+        itsCtrlViewDocumentInterface->MakeHTTPRequest(requestUriStr, soundingDataResponseFromServer, true);
+    }
+
+    if(soundingDataResponseFromServer.empty())
+    {
+        ::ReportFailedSoundingFromServerRequest(requestUriStr, *theInfo->Producer(), theTime, theLocation);
+        return false;
+    }
     const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().wantedParameters();
     auto status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, theGroundDataInfo);
     // Laitetaan lopuksi serverilt‰ haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
