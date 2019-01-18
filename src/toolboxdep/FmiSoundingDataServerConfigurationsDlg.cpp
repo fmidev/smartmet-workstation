@@ -66,7 +66,7 @@ void CFmiSoundingDataServerConfigurationsDlg::InitHeaders(void)
     itsHeaders.push_back(SoundingConfHeaderParInfo("Data name on server", SoundingConfHeaderParInfo::kDataNameOnServer, basicColumnWidthUnit * 15));
 }
 
-const NFmiViewPosRegistryInfo CFmiSoundingDataServerConfigurationsDlg::s_ViewPosRegistryInfo(CRect(320, 270, 770, 680), "\\SoundingDataServerConfigurationsDlg");
+const NFmiViewPosRegistryInfo CFmiSoundingDataServerConfigurationsDlg::s_ViewPosRegistryInfo(CRect(320, 270, 970, 680), "\\SoundingDataServerConfigurationsDlg");
 
 // CFmiSoundingDataServerConfigurationsDlg dialog
 
@@ -107,7 +107,7 @@ END_MESSAGE_MAP()
 
 void CFmiSoundingDataServerConfigurationsDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
-	lpMMI->ptMinTrackSize.x = 450;
+	lpMMI->ptMinTrackSize.x = 550;
 	lpMMI->ptMinTrackSize.y = 350;
 
     CDialogEx::OnGetMinMaxInfo(lpMMI);
