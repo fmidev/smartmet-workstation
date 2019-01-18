@@ -77,8 +77,9 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     initialized_ = true;
     baseRegistryPath_ = baseRegistryPath;
     baseConfigurationPath_ = baseConfigurationPath;
-    // paramsInServerData:n lopussa oleva kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
-    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel };
+    // Huom. 1. kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
+    // Huom. 2. kFmiLastParameter on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
+    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, kFmiLastParameter };
     wantedParametersString_ = makeWantedParametersString();
 
     smartmetServerBaseUri_ = NFmiSettings::Optional<std::string>(baseConfigurationPath + "::SmartmetServerBaseUri", "http://smartmet.fmi.fi/timeseries?");
@@ -131,7 +132,10 @@ std::string SoundingDataServerConfigurations::makeWantedParametersString() const
     {
         if(!str.empty())
             str += ",";
-        str += enumConverter.ToString(paramId);
+        if(paramId == kFmiLastParameter)
+            str += "origintime";
+        else
+            str += enumConverter.ToString(paramId);
     }
     return str;
 }
@@ -212,8 +216,12 @@ std::string SoundingDataServerConfigurations::makeFinalServerRequestUri(int prod
         requestStr += "&timesteps=1";
         requestStr += "&format=ascii";
         requestStr += "&precision=double";
-        requestStr += "&origintime=";
-        requestStr += originTime.ToStr(kYYYYMMDDHHMM);
+        // Oletus paluu formaatti on YYYYMMDDTHHMISS eli siinä on 'T' kirjain päiväyksen ja kellon välissä
+        // Nyt halutaan käyttää timestamp formaattia, jossa iso integer luku ilman sekunteja ja 'T' kirjainta eli muotoa: YYYYMMDDHHmm
+        requestStr += "&timeformat=timestamp";
+        // Ei haeta origintime:n avulla, haetaan toistaiseksi vain viimeisintä mallidataa, joka löytyy serveriltä
+        //requestStr += "&origintime=";
+        //requestStr += originTime.ToStr(kYYYYMMDDHHMM);
         requestStr += "&starttime=";
         requestStr += validTime.ToStr(kYYYYMMDDHHMM);
         return requestStr;

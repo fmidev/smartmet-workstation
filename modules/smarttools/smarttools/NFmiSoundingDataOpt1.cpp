@@ -2903,19 +2903,34 @@ void NFmiSoundingDataOpt1::FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUs
 // Oletus: on jo tarkistettu että ei ole tyhjä token.
 // Jos token = nan, arvo on missing.
 // Muuten tehdään normaali konversio luvulle.
-static float ParseServerDataParameter(const std::string &token)
+static double ParseServerDataParameter(const std::string &token)
 {
     const std::string nanToken = "nan";
     if(boost::iequals(token, nanToken))
         return kFloatMissing;
     else
-        return std::stof(token);
+        return std::stod(token);
+}
+
+static void CalcPossibleOriginTime(bool &origintimeRetrieved, const std::vector<FmiParameterName> &parametersInServerData, size_t parameterIndex, double value, NFmiMetTime &originTimeOut)
+{
+    if(!origintimeRetrieved)
+    {
+        // kFmiLastParameter on feikki arvo origintime parametrille, sille ei ole omaa arvoa FmiParameter enumissa.
+        if(parametersInServerData[parameterIndex] == kFmiLastParameter)
+        {
+            // Muutetaan suuri arvo ensin 64-bit integeriksi, jotta valueStr:iin ei tulisi mitään exponentti juttuja
+            auto dateValue = static_cast<long long>(value);
+            std::string valueStr = std::to_string(dateValue);
+            originTimeOut.FromStr(valueStr, kYYYYMMDDHHMM);
+            origintimeRetrieved = true;
+        }
+    }
 }
 
 bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> &parametersInServerData,
     const std::string &theServerDataAsciiFormat,
     const NFmiMetTime &theTime,
-    const NFmiMetTime &theOriginTime,
     const NFmiLocation &theLocation,
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
@@ -2926,7 +2941,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
         fObservationData = false;
         itsLocation = theLocation;
         itsTime = theTime;
-        itsOriginTime = theOriginTime;
+//        itsOriginTime = theOriginTime;
 
         // Täytetään ensin server-stringista saadut datat erilliseen datataulukkoon kokonaisuudessaan.
         auto parameterCount = parametersInServerData.size();
@@ -2939,8 +2954,11 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
         // ...
         std::istringstream in(theServerDataAsciiFormat);
         std::string token;
-        float value = kFloatMissing;
+        // Luetaan arvot double:en, jotta esim. origintime arvo (muotoa YYYYMMDDHHmm) saadaan kokonaisena talteen
+        double value = kFloatMissing;
         size_t valueCounter = 0;
+        // Yhtenä parametrina tulee mallidatan origintime serverillä. Haetaan sitä vain kerran.
+        bool origintimeRetrieved = false; 
         try
         {
             for(;;)
@@ -2953,7 +2971,9 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
 
                 value = ::ParseServerDataParameter(token);
                 // Sijoitetaan arvo oikeaan kohtaan parametri taulukkoa (moduluksen avulla)
-                serverDataVector[valueCounter % parameterCount].push_back(value);
+                auto parameterIndex = valueCounter % parameterCount;
+                ::CalcPossibleOriginTime(origintimeRetrieved, parametersInServerData, parameterIndex, value, itsOriginTime);
+                serverDataVector[parameterIndex].push_back(static_cast<float>(value));
                 valueCounter++;
             }
         }

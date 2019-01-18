@@ -3306,6 +3306,6 @@ bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInf
     std::string soundingDataResponseFromServer;
     itsCtrlViewDocumentInterface->MakeHTTPRequest(requestUriStr, soundingDataResponseFromServer, true);
     const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().wantedParameters();
-    return theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theInfo->OriginTime(), theLocation, theGroundDataInfo);
+    return theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, theGroundDataInfo);
 }
 
