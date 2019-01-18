@@ -1307,6 +1307,11 @@ NFmiMacroParamDataCache& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamD
     return itsDoc->MacroParamDataCache();
 }
 
+SoundingDataServerConfigurations& CtrlViewDocumentInterfaceForGeneralDataDoc::GetSoundingDataServerConfigurations()
+{
+    return itsDoc->GetSoundingDataServerConfigurations();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 
