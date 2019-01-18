@@ -69,8 +69,7 @@ bool NFmiSoundingIndexCalculator::FillSoundingDataOpt1(
       return theSoundingData.FillSoundingData(theInfo,
                                               theTime,
                                               theInfo->OriginTime(),
-                                              theLocation.GetLocation(),
-                                              theLocation.GetName(),
+                                              theLocation,
                                               theGroundDataInfo);
     else
       return theSoundingData.FillSoundingData(theInfo, theTime, theInfo->OriginTime(), theLocation);
@@ -104,15 +103,13 @@ static bool FillSoundingDataOpt1(const boost::shared_ptr<NFmiFastQueryInfo> &the
                                  const NFmiPoint &theLatlon,
                                  bool useFastFill)
 {
-  static NFmiString bsName("bsname");
   if (theInfo)
   {
     if (theInfo->IsGrid())
       return theSoundingDataOpt1.FillSoundingData(theInfo,
                                                   theTime,
                                                   theInfo->OriginTime(),
-                                                  theLatlon,
-                                                  bsName,
+                                                  NFmiLocation(theLatlon),
                                                   thePossibleGroundInfo,
                                                   useFastFill);
   }
