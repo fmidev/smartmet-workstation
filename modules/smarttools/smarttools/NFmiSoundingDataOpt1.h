@@ -75,6 +75,11 @@ class NFmiSoundingDataOpt1
                         const NFmiString &theName,
                         const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
                         bool useFastFill = false);
+  bool FillSoundingData(const std::vector<FmiParameterName> &parametersInServerData, const std::string &theServerDataAsciiFormat,
+      const NFmiMetTime &theTime,
+      const NFmiMetTime &theOriginTime,
+      const NFmiLocation &theLocation,
+      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
   void CutEmptyData(void);  // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että
                             // pelkät puuttuvat kerrokset otetaan pois
   static bool HasRealSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingLevelInfo);
@@ -207,6 +212,10 @@ class NFmiSoundingDataOpt1
       NFmiQueryDataUtil::SignificantSoundingLevels &significantLevels);
   void MakeReverseLevelsChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   void MakeFillDataPostChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo = nullptr);
+  void MakeFillDataPostChecksForServerData(const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
+  void FillMissingServerData();
+  void SetServerDataFromGroundLevelUp();
+  void ReverseAllData();
 
   NFmiLocation itsLocation;
   NFmiMetTime itsTime;
