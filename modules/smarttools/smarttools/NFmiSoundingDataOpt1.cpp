@@ -2896,7 +2896,7 @@ void NFmiSoundingDataOpt1::FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUs
 
 // Oletus: on jo tarkistettu että ei ole tyhjä token.
 // Jos token = nan, arvo on missing.
-// Muuten tehdään normaali std::itof konversio luvulle.
+// Muuten tehdään normaali konversio luvulle.
 static float ParseServerDataParameter(const std::string &token)
 {
     const std::string nanToken = "nan";
