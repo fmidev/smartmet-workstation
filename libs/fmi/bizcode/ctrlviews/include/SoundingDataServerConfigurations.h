@@ -62,6 +62,7 @@ public:
 
     bool init(const std::string &baseRegistryPath, const std::string &baseConfigurationPath);
     std::vector<ModelSoundingDataServerConfigurations>& modelConfigurations() { return modelConfigurations_; }
+    bool useServerSoundingData(int producerId) const;
 
 private:
     bool mustDoConfigurationOverride(HKEY usedKey);
