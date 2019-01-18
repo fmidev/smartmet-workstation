@@ -138,3 +138,14 @@ ModelSoundingDataServerConfigurations SoundingDataServerConfigurations::MakeMode
     modelConfiguration.init(modelName, baseRegistryPath_ + registrySectionName_, baseConfigurationPath_, configurationOverride);
     return modelConfiguration;
 }
+
+bool SoundingDataServerConfigurations::useServerSoundingData(int producerId) const
+{
+    auto iter = std::find_if(modelConfigurations_.begin(), modelConfigurations_.end(), [producerId](const auto &modelConfiguration) {return producerId == modelConfiguration.producerId(); });
+    if(iter != modelConfigurations_.end())
+    {
+        return iter->useServerData();
+    }
+    else
+        return false;
+}
