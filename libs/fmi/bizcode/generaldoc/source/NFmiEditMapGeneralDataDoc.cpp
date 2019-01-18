@@ -14026,7 +14026,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         for(auto menuItem : customMenuList)
         {
             if(menuItem == g_ObservationMenuName)
-                continue; // Observation-menu is skipped, because those needs to be added among existing observations.
+                continue; // Observation-menu is skipped, because those needs to be added among existing observations.  //Joonas:tsekkaa nämä!
             customMenus.push_back(menuItem);
         }
         return customMenus;
@@ -14038,6 +14038,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         try
         {
             auto customCategories = CustomMenuFolders();
+            auto levelBag = SoundingPlotLevels().Levels();
+            parameterSelectionSystem.setSoundingLevels(*levelBag);
+            
             parameterSelectionSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
                 *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParameterSelectionSystem(), customCategories);
 

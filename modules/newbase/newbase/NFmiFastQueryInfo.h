@@ -472,6 +472,7 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
      // lopuksi datan (TÄMÄ siis overridataan lapsessa!)
   NFmiInfoData::Type DataType(void) const { return itsDataType; };
   void DataType(NFmiInfoData::Type newType) { itsDataType = newType; };
+  const std::string DataTypeString();
   // Näillä Start/Restore -funktioilla otetaan nykyinen parametri tila talteen ja otetaan käyttöön
   // 'erikois' korkeus-parametri. Ja käytön jälkeen palautus.
   // HUOM! Jos Start-funktio palauttaa true:n, on kyseisen korkeus parametrin käyttö mahdollista ja
@@ -531,6 +532,8 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
   float GetCurrentLevelPressure(void);
   float GetCurrentLevelPressure(const NFmiPoint &theLatlon);
   float GetCurrentLevelPressure(const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
+  std::string interpolationMethodString();
+
  protected:
   size_t Index(void) const;
 
