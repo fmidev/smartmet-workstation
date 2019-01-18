@@ -1741,8 +1741,9 @@ static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentIn
 void NFmiTempView::DrawOneSounding(const NFmiProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto useServerData = UseServerForSoundingData(theProducer);
-    NFmiMetTime usedSoundingTime = useServerData ? NFmiMetTime::gMissingTime : ::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo);
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedSoundingTime, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+    NFmiMetTime usedSoundingTime = ::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo);
+    auto dataSearchRestrictingTime = useServerData ? NFmiMetTime::gMissingTime : usedSoundingTime;
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, dataSearchRestrictingTime, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
 	if(info)
 	{
 		NFmiLocation location = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
@@ -3368,6 +3369,9 @@ bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInf
     // Laitetaan lopuksi serveriltä haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
     NFmiLocation finalLocation = theSoundingData.Location();
     ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, producer, theSoundingData.OriginTime(), true);
+    NFmiString finalNameWithServerMarker = "(S) ";
+    finalNameWithServerMarker += finalLocation.GetName();
+    finalLocation.SetName(finalNameWithServerMarker);
     theSoundingData.Location(finalLocation);
     return status;
 }
