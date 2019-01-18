@@ -27,7 +27,8 @@ namespace AddParams
         ProducerData(const NFmiProducer &producer, NFmiInfoData::Type dataCategory);
         ~ProducerData();
 
-        bool updateData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        bool updateData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataType = NFmiInfoData::kNoDataType);
+        bool updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem);
         bool updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree);
         const NFmiProducer& producer() const { return producer_; }
         const std::vector<std::unique_ptr<SingleData>>& dataVector() const { return dataVector_; }

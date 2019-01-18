@@ -62,8 +62,7 @@ private:
     CPPToolTip m_tooltip;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
-    std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
-
+    std::string TooltipForCategoryType();
 public:
     DECLARE_MESSAGE_MAP()
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);

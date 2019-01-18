@@ -91,5 +91,4 @@ enum SpecialParameters
   kFmiSpMatrixDataDraw =
       9998  // isolineview-luokalla piirrettävän matriisi-dataan liittyvä piirto-parametri
 };
-
 }  // end of namespace NFmiInfoData

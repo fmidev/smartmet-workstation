@@ -156,6 +156,65 @@ std::string ConvertSizeToMBorGB(unsigned long long size)
     }
 }
 
+std::string gridSizeInKm(const NFmiGrid *grid)
+{
+    if(grid)
+    {
+        auto dataAreaWidthInKm = grid->Area()->WorldRect().Width() / 1000.;
+        auto dataAreaHeightInKm = grid->Area()->WorldRect().Height() / 1000.;
+        auto gridSizeXinKm = dataAreaWidthInKm / (grid->XNumber() - 1);
+        auto gridSizeYinKm = dataAreaHeightInKm / (grid->YNumber() - 1);
+        std::stringstream gridSizeX;
+        std::stringstream gridSizeY;
+
+        gridSizeX << std::fixed << std::setprecision(2) << gridSizeXinKm;
+        gridSizeY << std::fixed << std::setprecision(2) << gridSizeYinKm;
+        return gridSizeX.str() + " km x " + gridSizeY.str() + " km";
+    }
+    else
+        return "-";
+}
+
+std::string timeSteps(boost::shared_ptr<NFmiFastQueryInfo> info)
+{
+    NFmiTimeList* timeList;
+    NFmiTimeBag* timeBag;
+    int timeSteps;
+    std::string resolution;
+
+    if(info->TimeDescriptor().ValidTimeList() != nullptr)
+    {
+        timeList = info->TimeDescriptor().ValidTimeList();
+        timeSteps = timeList->NumberOfItems();
+        resolution = "varies";
+    }
+    else
+    {
+        timeBag = info->TimeDescriptor().ValidTimeBag();
+        timeSteps = timeBag->GetSize();
+        resolution = std::to_string(timeBag->Resolution()) + " min";
+    }
+
+    return std::to_string(timeSteps);
+}
+
+std::string timeResolution(boost::shared_ptr<NFmiFastQueryInfo> info)
+{
+    NFmiTimeBag* timeBag;
+    std::string resolution;
+
+    if(info->TimeDescriptor().ValidTimeList() != nullptr)
+    {
+        resolution = "varies";
+    }
+    else
+    {
+        timeBag = info->TimeDescriptor().ValidTimeBag();
+        resolution = std::to_string(timeBag->Resolution()) + " min";
+    }
+
+    return resolution;
+}
 
 unsigned long long fileSizeInMB(const std::string &totalFilePath)
 {
@@ -167,29 +226,10 @@ unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
     return fileSizeInMB(singleRowItem.totalFilePath());
 }
 
-
-
 std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
 {
-    NFmiTimeList* timeList;
-    NFmiTimeBag* timeBag;
-    int timeSteps;
-    std::string resolution;
     std::string gridArea;
     std::string levels;
-
-    if(info->TimeDescriptor().ValidTimeList() != nullptr)
-    {
-        timeList = info->TimeDescriptor().ValidTimeList();
-        timeSteps = timeList->NumberOfItems();
-        resolution = "varies";
-    }
-    else 
-    {
-        timeBag = info->TimeDescriptor().ValidTimeBag();
-        timeSteps = timeBag->GetSize();
-        resolution = std::to_string(timeBag->Resolution()) + " min";
-    }
 
     gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
     levels = (info->SizeLevels() == 1) ? "surface data" : std::to_string(info->SizeLevels());
@@ -201,20 +241,21 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "<br><hr color=darkblue><br>";
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
     str += "<b>File filter: </b>\t" + GetFileFilter(info->DataFilePattern()) + "\n";
-    //str += "<b>Data loaded: </b>\t \n";
-    //str += "<b>File modified: </b>\t" + std::to_string(helpInfo->LatestFileTimeStamp()) + "\n";
+    str += "<b>Data type: </b>\t" + info->DataTypeString() + "\n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC";
     str += "<br><hr color=darkblue><br>";
     str += "<b>Time info: </b>";
-    str += "\tsteps: " + std::to_string(timeSteps) + "\n";
-    str += "\t\t\tresolution: " + resolution + "\n";
+    str += "\tsteps: " + timeSteps(info) + "\n";
+    str += "\t\t\tresolution: " + timeResolution(info) + "\n";
     str += "\t\t\trange: " + singleRowItem.origTime() + " - " + info->TimeDescriptor().LastTime().ToStr("YYYY.MM.DD HH:mm") + " UTC ";
     str += "<br><hr color=darkblue><br>";
     str += "<b>Parameters:  </b>\ttotal: " + std::to_string(info->ParamBag().GetSize()) + "\n";
     str += "<b>Levels:  </b>\t\t" + levels;
     str += "<br><hr color=darkblue><br>";
     str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
-    str += "\t\t\tgrid size: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber());
+    str += "\t\t\tgrid points: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
+    str += "\t\t\thorizontal resolution: " + gridSizeInKm(info->Grid()) + "\n";
+    str += "\t\t\tinterpolation: " + info->interpolationMethodString();
     str += "<br><hr color=darkblue><br>";
     str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
     str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
@@ -302,7 +343,19 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::Si
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType()
+{
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Category information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Operational data </b>";
+    str += "<br><hr color=darkblue><br>";
+    return str;
+}
+
+std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
 {
     int numberOfParams = 0;
     int depth = singleRowItem.treeDepth();
@@ -327,7 +380,6 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(Add
     return str;
 }
 
-
 std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
 {
     CCellID idCurrentCell = GetCellFromPt(point);
@@ -345,6 +397,10 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
         if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
         {
             return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+        }
+        else if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItem.itemName() == "Operational data")
+        {
+            return TooltipForCategoryType();
         }
         else if(!fastQueryInfo.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
         {
