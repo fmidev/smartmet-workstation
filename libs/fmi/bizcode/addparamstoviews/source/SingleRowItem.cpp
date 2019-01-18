@@ -72,11 +72,11 @@ namespace AddParams
 
     void SingleRowItem::createSearchWords()
     {
-        searchWords_.push_back((!displayName_.empty()) ? displayName_ + " " : "");
-        searchWords_.push_back((!std::to_string(itemId_).empty()) ? std::to_string(itemId_) + " " : "");
-        searchWords_.push_back(level_ ? std::string(level_->GetName()) + " " : "");
-        searchWords_.push_back((!parentItemName_.empty()) ? parentItemName_ + " " : "");
-        searchWords_.push_back((!totalFilePath_.empty()) ? totalFilePath_ + " " : "");
+        searchWords_ += ((!displayName_.empty()) ? displayName_ + " " : "");
+        searchWords_ += ((!std::to_string(itemId_).empty()) ? std::to_string(itemId_) + " " : "");
+        searchWords_ += (level_ ? std::string(level_->GetName()) + " " : "");
+        searchWords_ += ((!parentItemName_.empty()) ? parentItemName_ + " " : "");
+        searchWords_ += ((!totalFilePath_.empty()) ? totalFilePath_ + " " : "");
     }
 
 }

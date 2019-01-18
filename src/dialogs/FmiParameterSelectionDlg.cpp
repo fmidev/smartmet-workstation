@@ -573,7 +573,7 @@ CRect CFmiParameterSelectionDlg::CalcGridArea(void)
         win->GetWindowRect(rect2);
         CPoint pt(rect2.BottomRight());
         ScreenToClient(&pt);
-        clientRect.top = clientRect.top + pt.y; // rect2.Height();
+        clientRect.top = clientRect.top + pt.y + 2;
     }
     return clientRect;
 }
@@ -691,8 +691,9 @@ void CFmiParameterSelectionDlg::UpdateGridControlValues(void)
     static bool fFirstTime = true;
     int fixedRowCount = 1;
     int fixedColumnCount = 1;
+    std::string searchText = CFmiWin32Helpers::CT2std(itsSearchText);
 
-    if(fFirstTime || itsParameterSelectionSystem->dialogDataNeedsUpdate())
+    if(fFirstTime || itsParameterSelectionSystem->dialogDataNeedsUpdate() && searchText.empty())
     {
         SetTreeNodeInformationBackToDialogRowData();
         itsParameterSelectionSystem->updateDialogData();
@@ -708,6 +709,25 @@ void CFmiParameterSelectionDlg::UpdateGridControlValues(void)
             MakeTreeNodeCollapseSettings();
         }
         fFirstTime = false;
+    }
+    else if(!searchText.empty())
+        UpdateGridControlValuesWhenSearchActive();
+}
+
+void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
+{
+    int fixedRowCount = 1;
+    int fixedColumnCount = 1;
+    SetTreeNodeInformationBackToDialogRowData(); //Joonas: t‰m‰ kaataa koska gridCtrl:lla liikaa rivej‰ vs. dialogRows
+    int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
+    int maxRowCount = fixedRowCount + dataRowCount;
+    UpdateRows(fixedRowCount, fixedColumnCount, false);
+
+    const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
+    if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
+    {
+        itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
+        MakeTreeNodeCollapseSettings(); // Joonas: pit‰iskˆ avata kaikki kun haku p‰‰ll‰?!
     }
 }
 
@@ -855,14 +875,16 @@ void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowIt
 void CFmiParameterSelectionDlg::Update()
 {
     if(IsWindowVisible())
+    {
+        //Joonas: talleta search word ja vertaile, onko se muuttunut. Jos on, tee p‰ivitys.
         itsParameterSelectionSystem->searchItemsThatMatchToSearchWords(CFmiWin32Helpers::CT2std(itsSearchText));
         UpdateGridControlValues();
+    }
 }
 
 void CFmiParameterSelectionDlg::InitDialogTexts(void)
 {
     SetWindowText(CA2T(g_TitleStr.c_str()));
-//    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "IDC_BUTTON_PRINT");
 }
 
 void CFmiParameterSelectionDlg::HandleGridCtrlsLButtonDblClk()
@@ -970,7 +992,6 @@ std::string CFmiParameterSelectionDlg::MakeTitleText()
     return str;
 }
 
-
 BOOL CFmiParameterSelectionDlg::OnEraseBkgnd(CDC* pDC)
 {
     return FALSE;
@@ -980,15 +1001,9 @@ BOOL CFmiParameterSelectionDlg::OnEraseBkgnd(CDC* pDC)
 
 void CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText()
 {
-    // TODO:  If this is a RICHEDIT control, the control will not
-    // send this notification unless you override the CDialogEx::OnInitDialog()
-    // function and call CRichEditCtrl().SetEventMask()
-    // with the ENM_CHANGE flag ORed into the mask.
-
     UpdateData(TRUE);
     Update();
 }
-
 
 void CFmiParameterSelectionDlg::OnPaint()
 {
