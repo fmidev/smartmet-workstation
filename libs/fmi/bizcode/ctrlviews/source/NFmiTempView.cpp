@@ -3306,6 +3306,11 @@ bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInf
     std::string soundingDataResponseFromServer;
     itsCtrlViewDocumentInterface->MakeHTTPRequest(requestUriStr, soundingDataResponseFromServer, true);
     const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().wantedParameters();
-    return theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, theGroundDataInfo);
+    auto status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, theGroundDataInfo);
+    // Laitetaan lopuksi serveriltä haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
+    NFmiLocation finalLocation = theSoundingData.Location();
+    ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, *theInfo->Producer(), theSoundingData.OriginTime(), true);
+    theSoundingData.Location(finalLocation);
+    return status;
 }
 
