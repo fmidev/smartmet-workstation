@@ -1,5 +1,6 @@
 #include "SoundingDataServerConfigurations.h"
 #include "NFmiSettings.h"
+#include "NFmiEnumConverter.h"
 #include "catlog/catlog.h"
 
 static const std::string g_VersionNumberName = "VersionNumber";
@@ -19,7 +20,7 @@ static bool IsModelNameLegit(const std::string &modelName)
 // Haluan tehdä homman nyt niin että rakennetaan normaalisti rekisteri-olio, mutta jos configurationOverride on true,
 // tällöin hataan lopullinen arvo pakotetusti konfiguraatioista.
 template<typename RegValueType, typename ValueType>
-boost::shared_ptr<RegValueType> CreateOverrideRegValue(const std::string &baseRegistryPath, const std::string &registrySection, const std::string &parameterName, HKEY usedKey, ValueType defaultValue, const std::string &baseConfigurationPath, bool configurationOverride)
+static boost::shared_ptr<RegValueType> CreateOverrideRegValue(const std::string &baseRegistryPath, const std::string &registrySection, const std::string &parameterName, HKEY usedKey, ValueType defaultValue, const std::string &baseConfigurationPath, bool configurationOverride)
 {
     std::string parameterRegistryName = std::string("\\") + parameterName;
     std::string parameterConfigurationName = std::string("::") + parameterName;
@@ -31,6 +32,8 @@ boost::shared_ptr<RegValueType> CreateOverrideRegValue(const std::string &baseRe
     }
     return regValuePtr;
 }
+
+// ================================== ModelSoundingDataServerConfigurations ======================================================
 
 bool ModelSoundingDataServerConfigurations::init(const std::string &configurationModelName, const std::string &baseRegistryPath, const std::string &baseConfigurationPath, bool configurationOverride)
 {
@@ -64,6 +67,8 @@ bool ModelSoundingDataServerConfigurations::init(const std::string &configuratio
     return true;
 }
 
+// ================================== SoundingDataServerConfigurations ======================================================
+
 bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath, const std::string &baseConfigurationPath)
 {
     if(initialized_)
@@ -72,6 +77,11 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     initialized_ = true;
     baseRegistryPath_ = baseRegistryPath;
     baseConfigurationPath_ = baseConfigurationPath;
+    // paramsInServerData:n lopussa oleva kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
+    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel };
+    wantedParametersString_ = makeWantedParametersString();
+
+    smartmetServerBaseUri_ = NFmiSettings::Optional<std::string>(baseConfigurationPath + "::SmartmetServerBaseUri", "http://smartmet.fmi.fi/timeseries?");
 
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
@@ -113,6 +123,19 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     }
 }
 
+std::string SoundingDataServerConfigurations::makeWantedParametersString() const
+{
+    NFmiEnumConverter enumConverter;
+    std::string str;
+    for(auto paramId : wantedParameters_)
+    {
+        if(!str.empty())
+            str += ",";
+        str += enumConverter.ToString(paramId);
+    }
+    return str;
+}
+
 // Jos rekisterissä ollut SoundingDataServerConfigurations versionumero on pienempi kuin
 // mitä on konffeissa, pitää arvot ottaa käyttöön konffeista.
 bool SoundingDataServerConfigurations::mustDoConfigurationOverride(HKEY usedKey)
@@ -139,13 +162,68 @@ ModelSoundingDataServerConfigurations SoundingDataServerConfigurations::MakeMode
     return modelConfiguration;
 }
 
-bool SoundingDataServerConfigurations::useServerSoundingData(int producerId) const
+static auto makeFindProducerLambda(int producerId)
 {
-    auto iter = std::find_if(modelConfigurations_.begin(), modelConfigurations_.end(), [producerId](const auto &modelConfiguration) {return producerId == modelConfiguration.producerId(); });
-    if(iter != modelConfigurations_.end())
+    return [producerId](const auto &modelConfiguration) {return producerId == modelConfiguration.producerId(); };
+}
+
+template<typename Container, typename IterCallback, typename ReturnType>
+static ReturnType getInfoFromProducer(int producerId, const Container &container, ReturnType notFoundReturnValue, IterCallback iterCallback)
+{
+    auto findProducerLambda = makeFindProducerLambda(producerId);
+    auto iter = std::find_if(container.begin(), container.end(), findProducerLambda);
+    if(iter != container.end())
     {
-        return iter->useServerData();
+        return iterCallback(iter);
     }
     else
-        return false;
+        return notFoundReturnValue;
+}
+
+bool SoundingDataServerConfigurations::useServerSoundingData(int producerId) const
+{
+    return ::getInfoFromProducer(producerId, modelConfigurations_, false, [](auto &iter) {return iter->useServerData(); });
+}
+
+std::string SoundingDataServerConfigurations::dataNameOnServer(int producerId) const
+{
+    return ::getInfoFromProducer(producerId, modelConfigurations_, std::string(), [](auto &iter) {return iter->dataNameOnServer(); });
+}
+
+static std::string makeLonlatString(const NFmiPoint &latlon)
+{
+    std::string str = std::to_string(latlon.X());
+    str += ",";
+    str += std::to_string(latlon.Y());
+    return str;
+}
+
+std::string SoundingDataServerConfigurations::makeFinalServerRequestUri(int producerId, const NFmiMetTime &validTime, const NFmiMetTime &originTime, const NFmiPoint &latlon) const
+{
+    try
+    {
+        std::string requestStr = smartmetServerBaseUri_;
+        requestStr += "producer=";
+        requestStr += dataNameOnServer(producerId);
+        requestStr += "&lonlat=";
+        requestStr += makeLonlatString(latlon);
+        requestStr += "&param=";
+        requestStr += wantedParametersString_;
+        requestStr += "&timesteps=1";
+        requestStr += "&format=ascii";
+        requestStr += "&precision=double";
+        requestStr += "&origintime=";
+        requestStr += originTime.ToStr(kYYYYMMDDHHMM);
+        requestStr += "&starttime=";
+        requestStr += validTime.ToStr(kYYYYMMDDHHMM);
+        return requestStr;
+    }
+    catch(std::exception &e)
+    {
+        std::string errorStr = __FUNCTION__;
+        errorStr += ": unable to construct sounding data request URI for smartmet-server: ";
+        errorStr += e.what();
+        CatLog::logMessage(errorStr, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+    }
+    return "";
 }

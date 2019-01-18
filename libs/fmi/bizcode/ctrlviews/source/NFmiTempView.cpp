@@ -3300,7 +3300,12 @@ bool NFmiTempView::UseServerForSoundingData(boost::shared_ptr<NFmiFastQueryInfo>
 
 bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
-    // paramsInServerData:n lopussa oleva kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
-    const std::vector<FmiParameterName> paramsInServerData{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel };
-    return theSoundingData.FillSoundingData(paramsInServerData, soundingFromServerTestString, theTime, theInfo->OriginTime(), theLocation, theGroundDataInfo);
+    auto requestUriStr = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().makeFinalServerRequestUri(theInfo->Producer()->GetIdent(), theTime, theInfo->OriginTime(), theLocation.GetLocation());
+    if(requestUriStr.empty())
+        return false;
+    std::string soundingDataResponseFromServer;
+    itsCtrlViewDocumentInterface->MakeHTTPRequest(requestUriStr, soundingDataResponseFromServer, true);
+    const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().wantedParameters();
+    return theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theInfo->OriginTime(), theLocation, theGroundDataInfo);
 }
+
