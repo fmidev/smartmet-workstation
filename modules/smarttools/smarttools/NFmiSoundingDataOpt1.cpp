@@ -2912,7 +2912,7 @@ static double ParseServerDataParameter(const std::string &token)
         return std::stod(token);
 }
 
-static void CalcPossibleOriginTime(bool &origintimeRetrieved, const std::vector<FmiParameterName> &parametersInServerData, size_t parameterIndex, double value, NFmiMetTime &originTimeOut)
+static void CalcPossibleOriginTime(bool &origintimeRetrieved, const std::vector<FmiParameterName> &parametersInServerData, size_t parameterIndex, double value, const NFmiLocation &theLocation, NFmiMetTime &originTimeOut)
 {
     if(!origintimeRetrieved)
     {
@@ -2922,7 +2922,10 @@ static void CalcPossibleOriginTime(bool &origintimeRetrieved, const std::vector<
             // Muutetaan suuri arvo ensin 64-bit integeriksi, jotta valueStr:iin ei tulisi mitään exponentti juttuja
             auto dateValue = static_cast<long long>(value);
             std::string valueStr = std::to_string(dateValue);
-            originTimeOut.FromStr(valueStr, kYYYYMMDDHHMM);
+            // Aikaleima pitää lukea lokaali aikaan, koska tieseries-plugin palauttaa ajat lokaalissa
+            NFmiTime localTime;
+            localTime.FromStr(valueStr, kYYYYMMDDHHMM);
+            originTimeOut = localTime.UTCTime(theLocation);
             origintimeRetrieved = true;
         }
     }
@@ -2972,7 +2975,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
                 value = ::ParseServerDataParameter(token);
                 // Sijoitetaan arvo oikeaan kohtaan parametri taulukkoa (moduluksen avulla)
                 auto parameterIndex = valueCounter % parameterCount;
-                ::CalcPossibleOriginTime(origintimeRetrieved, parametersInServerData, parameterIndex, value, itsOriginTime);
+                ::CalcPossibleOriginTime(origintimeRetrieved, parametersInServerData, parameterIndex, value, theLocation, itsOriginTime);
                 serverDataVector[parameterIndex].push_back(static_cast<float>(value));
                 valueCounter++;
             }
