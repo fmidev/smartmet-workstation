@@ -992,62 +992,67 @@ void NFmiSoundingDataOpt1::CutEmptyData(void)
 
 // Tälle anntaan asema dataa ja ei tehdä minkäänlaisia interpolointeja.
 bool NFmiSoundingDataOpt1::FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                            const NFmiMetTime &theTime,
-                                            const NFmiMetTime &theOriginTime,
-                                            const NFmiLocation &theLocation,
-                                            int useStationIdOnly)
+    const NFmiMetTime &theTime,
+    const NFmiMetTime &theOriginTime,
+    const NFmiLocation &theLocation,
+    int useStationIdOnly)
 {
-  NFmiMetTime usedTime = theTime;
-  NFmiLocation usedLocation(theLocation);
-  ClearDatas();
-  if (theInfo && !theInfo->IsGrid())
-  {
-    fMovingSounding = theInfo->HasLatlonInfoInData();
-    fObservationData = true;
-    theInfo->FirstLevel();
-    bool isMovingSounding = NFmiFastInfoUtils::IsMovingSoundingData(theInfo);
-    bool timeOk = false;
-    if (isMovingSounding)
+    NFmiMetTime usedTime = theTime;
+    NFmiLocation usedLocation(theLocation);
+    ClearDatas();
+    if(theInfo && !theInfo->IsGrid())
     {
-      timeOk = NFmiFastInfoUtils::FindMovingSoundingDataTime(theInfo, usedTime, usedLocation);
-      usedTime = theInfo->Time();
-    }
-    else
-      timeOk = theInfo->Time(usedTime);
-    if (timeOk)
-    {
-      bool stationOk = false;
-      if (isMovingSounding)
-        stationOk = true;  // asemaa ei etsitä, jokainen lento liittyy tiettyyn aikaa
-      else
-        stationOk = (useStationIdOnly ? theInfo->Location(usedLocation.GetIdent())
-                                      : theInfo->Location(usedLocation));
-      if (stationOk)
-      {
-        itsLocation = usedLocation;
-        itsTime = usedTime;
-        itsOriginTime = theOriginTime;
-        auto significantLevelIndices =
-            NFmiQueryDataUtil::GetSignificantSoundingLevelIndices(*theInfo);
+        fMovingSounding = theInfo->HasLatlonInfoInData();
+        fObservationData = true;
+        theInfo->FirstLevel();
+        bool isMovingSounding = NFmiFastInfoUtils::IsMovingSoundingData(theInfo);
+        bool timeOk = false;
+        if(isMovingSounding)
+        {
+            timeOk = NFmiFastInfoUtils::FindMovingSoundingDataTime(theInfo, usedTime, usedLocation);
+            usedTime = theInfo->Time();
+        }
+        else
+            timeOk = theInfo->Time(usedTime);
+        if(timeOk)
+        {
+            bool stationOk = false;
+            if(isMovingSounding)
+                stationOk = true;  // asemaa ei etsitä, jokainen lento liittyy tiettyyn aikaa
+            else
+                stationOk = (useStationIdOnly ? theInfo->Location(usedLocation.GetIdent())
+                    : theInfo->Location(usedLocation));
+            if(stationOk)
+            {
+                itsLocation = usedLocation;
+                itsTime = usedTime;
+                itsOriginTime = theOriginTime;
+                auto significantLevelIndices =
+                    NFmiQueryDataUtil::GetSignificantSoundingLevelIndices(*theInfo);
 
-        FillParamData(theInfo, kFmiTemperature, significantLevelIndices);
-        FillParamData(theInfo, kFmiDewPoint, significantLevelIndices);
-        FillParamData(theInfo, kFmiPressure, significantLevelIndices);
-        if (!FillParamData(theInfo, kFmiGeomHeight, significantLevelIndices))
-          if (!FillParamData(theInfo, kFmiGeopHeight, significantLevelIndices))
-            if (!FillParamData(theInfo,
-                               kFmiFlAltitude,
-                               significantLevelIndices))  // eri datoissa on geom ja geop heightia,
-                                                          // kokeillaan molempia tarvittaessa
-              FillHeightDataFromLevels(theInfo);
-        FillWindData(theInfo, significantLevelIndices);
+                FillParamData(theInfo, kFmiTemperature, significantLevelIndices);
+                FillParamData(theInfo, kFmiDewPoint, significantLevelIndices);
+                FillParamData(theInfo, kFmiPressure, significantLevelIndices);
+                if(!FillParamData(theInfo, kFmiGeomHeight, significantLevelIndices))
+                {
 
-        MakeFillDataPostChecks(theInfo);
-        return true;
-      }
+                    if(!FillParamData(theInfo, kFmiGeopHeight, significantLevelIndices))
+                    {
+                        // eri datoissa on geom ja geop heightia, kokeillaan molempia tarvittaessa
+                        if(!FillParamData(theInfo,
+                            kFmiFlAltitude,
+                            significantLevelIndices))
+                            FillHeightDataFromLevels(theInfo);
+                    }
+                }
+                FillWindData(theInfo, significantLevelIndices);
+
+                MakeFillDataPostChecks(theInfo);
+                return true;
+            }
+        }
     }
-  }
-  return false;
+    return false;
 }
 
 // Tälle annetaan hiladataa, ja interpolointi tehdään tarvittaessa ajassa ja paikassa.
@@ -1055,52 +1060,53 @@ bool NFmiSoundingDataOpt1::FillSoundingData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     const NFmiMetTime &theTime,
     const NFmiMetTime &theOriginTime,
-    const NFmiPoint &theLatlon,
-    const NFmiString &theName,
+    const NFmiLocation &theLocation,
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
     bool useFastFill)
 {
-  ClearDatas();
-  if (theInfo && theInfo->IsGrid())
-  {
-    fMovingSounding = theInfo->HasLatlonInfoInData();
-    fObservationData = false;
-    itsLocation = NFmiLocation(theLatlon);
-    itsLocation.SetName(theName);
-    itsTime = theTime;
-    itsOriginTime = theOriginTime;
-
-    if (useFastFill)
+    ClearDatas();
+    if(theInfo && theInfo->IsGrid())
     {
-      FastFillParamData(theInfo, kFmiTemperature);
-      FastFillParamData(theInfo, kFmiDewPoint);
-      FastFillParamData(theInfo, kFmiPressure);
-      if (!FastFillParamData(theInfo, kFmiGeomHeight))
-        if (!FastFillParamData(theInfo, kFmiGeopHeight))  // eri datoissa on geom ja geop heightia,
-                                                          // kokeillaan molempia tarvittaessa
-          FillHeightDataFromLevels(theInfo);
-      FastFillWindData(theInfo);
-      FastFillParamData(theInfo, kFmiTotalCloudCover);
-    }
-    else
-    {
-      FillParamData(theInfo, kFmiTemperature, theTime, theLatlon);
-      FillParamData(theInfo, kFmiDewPoint, theTime, theLatlon);
-      FillParamData(theInfo, kFmiPressure, theTime, theLatlon);
-      if (!FillParamData(theInfo, kFmiGeomHeight, theTime, theLatlon))
-        if (!FillParamData(theInfo, kFmiGeopHeight, theTime, theLatlon))  // eri datoissa on geom ja
-                                                                          // geop heightia,
-                                                                          // kokeillaan molempia
-                                                                          // tarvittaessa
-          FillHeightDataFromLevels(theInfo);
-      FillWindData(theInfo, theTime, theLatlon);
-      FillParamData(theInfo, kFmiTotalCloudCover, theTime, theLatlon);
-    }
+        fMovingSounding = theInfo->HasLatlonInfoInData();
+        fObservationData = false;
+        itsLocation = theLocation;
+        itsTime = theTime;
+        itsOriginTime = theOriginTime;
 
-    MakeFillDataPostChecks(theInfo, theGroundDataInfo);
-    return true;
-  }
-  return false;
+        if(useFastFill)
+        {
+            FastFillParamData(theInfo, kFmiTemperature);
+            FastFillParamData(theInfo, kFmiDewPoint);
+            FastFillParamData(theInfo, kFmiPressure);
+            if(!FastFillParamData(theInfo, kFmiGeomHeight))
+            {
+                // eri datoissa on geom ja geop heightia, kokeillaan molempia tarvittaessa
+                if(!FastFillParamData(theInfo, kFmiGeopHeight))
+                    FillHeightDataFromLevels(theInfo);
+            }
+            FastFillWindData(theInfo);
+            FastFillParamData(theInfo, kFmiTotalCloudCover);
+        }
+        else
+        {
+            const auto &latlon = itsLocation.GetLocation();
+            FillParamData(theInfo, kFmiTemperature, theTime, latlon);
+            FillParamData(theInfo, kFmiDewPoint, theTime, latlon);
+            FillParamData(theInfo, kFmiPressure, theTime, latlon);
+            if(!FillParamData(theInfo, kFmiGeomHeight, theTime, latlon))
+            {
+                // eri datoissa on geom ja geop heightia, kokeillaan molempia tarvittaessa
+                if(!FillParamData(theInfo, kFmiGeopHeight, theTime, latlon))  
+                    FillHeightDataFromLevels(theInfo);
+            }
+            FillWindData(theInfo, theTime, latlon);
+            FillParamData(theInfo, kFmiTotalCloudCover, theTime, latlon);
+        }
+
+        MakeFillDataPostChecks(theInfo, theGroundDataInfo);
+        return true;
+    }
+    return false;
 }
 
 void NFmiSoundingDataOpt1::MakeFillDataPostChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)

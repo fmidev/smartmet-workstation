@@ -71,8 +71,7 @@ class NFmiSoundingDataOpt1
   bool FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                         const NFmiMetTime &theTime,
                         const NFmiMetTime &theOriginTime,
-                        const NFmiPoint &theLatlon,
-                        const NFmiString &theName,
+                        const NFmiLocation &theLocation,
                         const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
                         bool useFastFill = false);
   bool FillSoundingData(const std::vector<FmiParameterName> &parametersInServerData, const std::string &theServerDataAsciiFormat,
