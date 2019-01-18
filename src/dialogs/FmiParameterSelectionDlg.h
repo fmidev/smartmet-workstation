@@ -103,6 +103,7 @@ private:
     void AdjustControlWidth(int theControlId, int rightOffset, int maxWidth);
     void InitHeaders();
     void UpdateGridControlValues(void);
+    void UpdateGridControlValuesWhenSearchActive(void);
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
     void SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount);
     void InitDialogTexts(void);

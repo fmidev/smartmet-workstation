@@ -144,23 +144,6 @@ namespace
         ::logPiledMessagesToFile();
     }
 
-    std::vector<std::string> getSearchedWords(const std::string &searchString)
-    {
-        std::vector<std::string> words;
-        // This will generate, in Debug configuration, about 100 lines of compiler warnings (boost not using secure functions blaa blaa). 
-        // Couldn't disable those in any other way but to disable that warning from catlog library's CMakeLists.txt with add_compile_options with /wd4996
-        boost::split(words, searchString, boost::is_any_of("\t "));
-        // E.g. empty string generates vector with 1 empty element, have to remove all empty values from vector
-        words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word.empty(); }), words.end());
-        // Minus character at start of word means excluded word, if user has started to write excluded word with '-' character, ignore it 
-        // And also igone word if there is only single character after - sign like "-a", so that not all the messages that have 'a' would be ignored. 
-        words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word == "-"; }), words.end());
-        words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word.size() == 2 && word[0] == '-'; }), words.end());
-
-        return words;
-    }
-
-
     // Limited number of returned messages is tricky. You have to go through messages in reverse order
     // and then put them in returned vector in reverse order. Because loggedMessages_ contains messages in oldest to newest arder 
     // and with limited returns we want to return only the newest messages, but they must be returned in oldest to newest order.
@@ -168,7 +151,7 @@ namespace
     {
         std::vector<std::shared_ptr<LogData>> foundMessages;
         {
-            auto searchedWords = ::getSearchedWords(searchString);
+            auto searchedWords = CatLogUtils::getSearchedWords(searchString);
             lock_guard<mutex> lock(messageMutex_);
             // This little trick makes range for loop go in reverse order
             for(const auto &logData : boost::adaptors::reverse(loggedMessages_))
@@ -188,7 +171,7 @@ namespace
     std::vector<std::shared_ptr<LogData>> unlimitedMessageSearch(const std::string &searchString, Category categoryLimit, Severity severityLimit)
     {
         std::vector<std::shared_ptr<LogData>> foundMessages;
-        auto searchedWords = ::getSearchedWords(searchString);
+        auto searchedWords = CatLogUtils::getSearchedWords(searchString);
         lock_guard<mutex> lock(messageMutex_);
         for(const auto &logData : loggedMessages_)
         {

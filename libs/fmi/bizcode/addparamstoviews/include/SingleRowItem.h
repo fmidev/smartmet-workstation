@@ -42,7 +42,7 @@ namespace AddParams
         int treeDepth_;
         std::string origTime_;
         std::string totalFilePath_;
-        std::vector<std::string> searchWords_;
+        std::string searchWords_;
 
     public:
         SingleRowItem();
@@ -77,7 +77,7 @@ namespace AddParams
         void origTime(const std::string &origTime) { origTime_ = origTime; }
         const std::string& totalFilePath() const { return totalFilePath_; }
         void totalFilePath(const std::string &totalFilePath) { totalFilePath_ = totalFilePath; }
-        std::vector<std::string>& searchWords() { return searchWords_; }
+        std::string& searchWords() { return searchWords_; }
 
     private:
         void createSearchWords();

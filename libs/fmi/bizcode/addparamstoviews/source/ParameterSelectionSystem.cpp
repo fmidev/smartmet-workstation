@@ -206,22 +206,23 @@ namespace AddParams
 
     void ParameterSelectionSystem::searchItemsThatMatchToSearchWords(std::string words)
     {
-        std::vector<SingleRowItem> resultRowData; // Joonas: jatka tästä!
+        if(words.empty())
+            return;
+        // Needs to fill dialogRowData before new search
+        updateDialogRowData();
+
+        std::vector<SingleRowItem> resultRowData;
+        auto searchedWords = CatLogUtils::getSearchedWords(words);
 
         for(auto row : dialogRowData_)
         {
-            if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(words, row.searchWords()))
+            if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
             {
                 resultRowData.push_back(row);
             }
-
         }
-        if(!resultRowData.empty())
-            dialogRowData_.swap(resultRowData);
-
-        //if(searchedWords.empty() || CatLogUtils::containsAllSearchedWordsCaseInsensitive(logData->message_, searchedWords))
-        //    return true;
-
+        dialogRowData_.swap(resultRowData);
+        updateDialogTreePatternData();
+        dialogDataNeedsUpdate_ = true;
     }
-
 }
