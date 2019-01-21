@@ -385,6 +385,7 @@ public:
     afx_msg void OnAcceleratorCpSelectDown();
     void OpenLocationFinderTool(CWnd *parentView);
     afx_msg void OnEditSoundingDataFromServerSettings();
+    afx_msg void OnViewSetSoundingsFromServerSettingsPlaceToDefault();
 };
 
 

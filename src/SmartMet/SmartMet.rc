@@ -333,6 +333,7 @@ BEGIN
             MENUITEM "Sea icing view position",     ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT
             MENUITEM "Wind table view position",    ID_VIEW_SET_WIND_TABLE_DLG_PLACE_TO_DEFAULT
             MENUITEM "Data quality checker position", ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Soundings from server settings position", ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT
         END
         MENUITEM SEPARATOR
         POPUP "Notification settings"
