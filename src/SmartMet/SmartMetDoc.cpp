@@ -306,6 +306,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_UP, &CSmartMetDoc::OnAcceleratorCpSelectUp)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
         ON_COMMAND(ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS, &CSmartMetDoc::OnEditSoundingDataFromServerSettings)
+        ON_COMMAND(ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault)
         END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -2002,6 +2003,11 @@ void CSmartMetDoc::OnViewSetDataQualityCheckerDlgPlaceToDefault()
 		itsDataQualityCheckerDialog->SetDefaultValues();
 		itsDataQualityCheckerDialog->SetActiveWindow();
 	}
+}
+
+void CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault()
+{
+    ::SetViewPlaceToDefault(this, itsSoundingDataServerConfigurationsDlg, "Sounding data from server settings dialog set to default size and position");
 }
 
 void CSmartMetDoc::OnFileOpen()
