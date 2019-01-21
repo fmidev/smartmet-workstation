@@ -90,7 +90,7 @@ public:
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) { return ViewPosRegistryInfo().WinRegistryKeyStr(); }
     void Update();
 
-// Dialog Data
+    // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_PARAM_ADDING };
 #endif
@@ -104,6 +104,7 @@ private:
     void InitHeaders();
     void UpdateGridControlValues(void);
     void UpdateGridControlValuesWhenSearchActive(void);
+    void ExpandAllNodes();
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
     void SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount);
     void InitDialogTexts(void);
@@ -115,6 +116,7 @@ private:
     std::string MakeActiveViewRowText();
     bool NeedToUpdateTitleText();
     std::string MakeTitleText();
+    void UpdateSearchIfNeeded();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
@@ -126,6 +128,7 @@ private:
     unsigned int itsLastAcivatedDescTopIndex; // Mikä oli viimeksi DescTopIndex, kun otsikon tekstiä tehtiin
     int itsLastActivatedRowIndex; // Mikä oli viimeksi RowIndex, kun otsikon tekstiä tehtiin
     CString itsSearchText;
+    std::string itsPreviousSearchText;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

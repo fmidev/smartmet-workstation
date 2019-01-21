@@ -718,17 +718,30 @@ void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
 {
     int fixedRowCount = 1;
     int fixedColumnCount = 1;
-    SetTreeNodeInformationBackToDialogRowData(); //Joonas: t‰m‰ kaataa koska gridCtrl:lla liikaa rivej‰ vs. dialogRows
     int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
     int maxRowCount = fixedRowCount + dataRowCount;
-    UpdateRows(fixedRowCount, fixedColumnCount, false);
 
     const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
     if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
     {
         itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
-        MakeTreeNodeCollapseSettings(); // Joonas: pit‰iskˆ avata kaikki kun haku p‰‰ll‰?!
+        ExpandAllNodes();
     }
+    UpdateRows(fixedRowCount, fixedColumnCount, false);
+}
+
+void CFmiParameterSelectionDlg::ExpandAllNodes()
+{
+    const auto &rowItemData = itsParameterSelectionSystem->dialogRowData();
+    int currentRowCount = itsGridCtrl.GetFixedRowCount();
+
+    // Then open them one by one according to settings
+    for(const auto &rowItem : rowItemData)
+    {
+        itsTreeColumn.TreeDataExpandOneLevel(currentRowCount); 
+        currentRowCount++;
+    }
+    itsTreeColumn.TreeRefreshRows();
 }
 
 void CFmiParameterSelectionDlg::MakeTreeNodeCollapseSettings()
@@ -758,6 +771,20 @@ void CFmiParameterSelectionDlg::UpdateRows(int fixedRowCount, int fixedColumnCou
         SetGridRow(currentRowCount++, rowData[i], fixedColumnCount);
     }
 }
+
+//void CFmiParameterSelectionDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
+//{
+//    const auto &rowData = itsParameterSelectionSystem->dialogRowData();
+//    //auto success = itsGridCtrl.SetRowCount(rowData.size() - 1);
+//    //if(success)
+//    //{
+//        int currentRowCount = fixedRowCount;
+//        for(size_t i = 0; i < rowData.size(); i++)
+//        {
+//            SetGridRow(currentRowCount++, rowData[i], fixedColumnCount);
+//        }
+//    //}
+//}
 
 static const COLORREF gCategoryColor = RGB(250, 220, 220);
 static const COLORREF gProducerColor = RGB(220, 250, 220);
@@ -857,6 +884,21 @@ static std::string GetColumnText(int theRow, int theColumn, const AddParams::Sin
     }
 }
 
+//void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount)
+//{
+//    for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
+//    {
+//        itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theRowItem).c_str()));
+//        if(column >= theFixedColumnCount)
+//        {
+//            // Laita read-only -bitti p‰‰lle
+//            itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY);
+//            COLORREF usedBkColor = ::getUsedBackgroundColor(theRowItem);
+//            itsGridCtrl.SetItemBkColour(row, column, usedBkColor);
+//        }
+//    }
+//}
+
 void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount)
 {
     for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
@@ -864,8 +906,9 @@ void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowIt
         itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theRowItem).c_str()));
         if(column >= theFixedColumnCount)
         {
+            auto state = 128 | GVIS_READONLY;
             // Laita read-only -bitti p‰‰lle
-            itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY); 
+            itsGridCtrl.SetItemState(row, column, state);
             COLORREF usedBkColor = ::getUsedBackgroundColor(theRowItem);
             itsGridCtrl.SetItemBkColour(row, column, usedBkColor);
         }
@@ -876,9 +919,30 @@ void CFmiParameterSelectionDlg::Update()
 {
     if(IsWindowVisible())
     {
-        //Joonas: talleta search word ja vertaile, onko se muuttunut. Jos on, tee p‰ivitys.
-        itsParameterSelectionSystem->searchItemsThatMatchToSearchWords(CFmiWin32Helpers::CT2std(itsSearchText));
+        UpdateSearchIfNeeded();
         UpdateGridControlValues();
+    }
+}
+
+void CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
+{
+    //If search word has changed, do update.
+    auto searchtext = CFmiWin32Helpers::CT2std(itsSearchText);
+    if(searchtext != itsPreviousSearchText)
+    {   
+        itsParameterSelectionSystem->searchItemsThatMatchToSearchWords(searchtext);
+        itsPreviousSearchText = searchtext;
+        if(searchtext.empty()) //If search text is removed, collapse all but category nodes
+        {
+            int currentRowCount = itsGridCtrl.GetFixedRowCount();
+            for(auto &row : itsParameterSelectionSystem->dialogRowData())
+            {
+                if(row.rowType() != AddParams::RowType::kCategoryType)
+                {
+                    itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount++);
+                }
+            }
+        }
     }
 }
 
