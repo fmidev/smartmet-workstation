@@ -705,7 +705,6 @@ bool NFmiSoundingDataOpt1::FillParamData(
         FillParamDataFromSignificantLevels(theInfo, data, theSoungingLevels);
       else
         FillParamDataNormally(theInfo, data);
-      DoAfterFillChecks(theInfo, data, theId);
       return true;
     }
   }
@@ -762,19 +761,6 @@ bool NFmiSoundingDataOpt1::LookForFilledParamFromInfo(
   if (paramFound == false && theId == kFmiDewPoint)
     paramFound = theInfo->Param(kFmiDewPoint2M);
   return paramFound;
-}
-
-void NFmiSoundingDataOpt1::DoAfterFillChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                             std::deque<float> &data,
-                                             FmiParameterName theId)
-{
-  // jos ei nousevassa järjestyksessä, käännetään vektorissa olevat arvot
-  if (theInfo->HeightParamIsRising() == false)
-    std::reverse(data.begin(), data.end());
-  if (theId == kFmiPressure)
-    fPressureDataAvailable = true;
-  if (theId == kFmiGeomHeight || theId == kFmiGeopHeight || theId == kFmiFlAltitude)
-    fHeightDataAvailable = true;
 }
 
 // Oletus, tässä info on jo parametrissa ja ajassa kohdallaan.
@@ -1111,7 +1097,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(
 
 void NFmiSoundingDataOpt1::MakeFillDataPostChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
-    MakeReverseLevelsChecks(theInfo);
+    SetServerDataFromGroundLevelUp();
     CalculateHumidityData();
     InitZeroHeight();
     FixPressureDataSoundingWithGroundData(theGroundDataInfo);
@@ -1132,15 +1118,6 @@ static bool HasActualGeopHeightData(const std::deque<float> &geopHeightData)
         }
     }
     return false;
-}
-
-void NFmiSoundingDataOpt1::MakeReverseLevelsChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
-{
-    bool hasActualGeopHeightData = ::HasActualGeopHeightData(GetParamData(kFmiGeopHeight));
-    for(auto &paramData : itsParamDataVector)
-    {
-        ::ReverseSoundingData(theInfo, paramData, hasActualGeopHeightData);
-    }
 }
 
 static bool AnyGoodValues(const std::deque<float> &values)
