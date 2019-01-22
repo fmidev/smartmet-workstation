@@ -177,29 +177,7 @@ void CSmartMetView::OnDraw(CDC* pDC)
 
 	auto &gInfo = data->GetGraphicalInfo(itsMapViewDescTopIndex);
 	CFmiWin32Helpers::SetDescTopGraphicalInfo(gInfo, pDC, PrintViewSizeInPixels(), data->DrawObjectScaleFactor());
-	static bool graphInfoReported = false;
-	if(graphInfoReported == false)
-	{ // vain 1. kerran tehd‰‰n lokiin raportti
-		graphInfoReported = true;
-		std::stringstream sstream;
-		sstream << "\nViewWidthInMM: " << gInfo.itsViewWidthInMM << std::endl;
-		sstream << "ViewHeightInMM: " << gInfo.itsViewHeightInMM << std::endl;
-		sstream << "ScreenWidthInMM: " << gInfo.itsScreenWidthInMM << std::endl;
-		sstream << "ScreenHeightInMM: " << gInfo.itsScreenHeightInMM << std::endl;
-		sstream << "ScreenWidthInPixels: " << gInfo.itsScreenWidthInPixels << std::endl;
-		sstream << "ScreenHeightInPixels: " << gInfo.itsScreenHeightInPixels << std::endl;
-		sstream << "DPI x: " << gInfo.itsDpiX << std::endl;
-		sstream << "DPI y: " << gInfo.itsDpiY << std::endl;
-		double scaleFactor = data->DrawObjectScaleFactor();
-		sstream << "DrawObjectScaleFactor (editor.conf - MetEditor::DrawObjectScaleFactor ): " << scaleFactor << std::endl;
-		if(scaleFactor == 0)
-			sstream << "Using ScreenWidthInMM and ScreenHeightInMM to calculate pixels-per-mm values" << std::endl;
-		else
-			sstream << "Using DPI x and y and DrawObjectScaleFactor to calculate pixels-per-mm values" << std::endl;
-		sstream << "PixelsPerMM_x: " << gInfo.itsPixelsPerMM_x << std::endl;
-		sstream << "PixelsPerMM_y: " << gInfo.itsPixelsPerMM_y << std::endl;
-		data->LogMessage(sstream.str(), CatLog::Severity::Debug, CatLog::Category::Visualization);
-	}
+    DoGraphReportOnDraw(gInfo, data->DrawObjectScaleFactor());
 
 	CClientDC dc(this);
 	CDC dcMem;
@@ -277,7 +255,7 @@ void CSmartMetView::OnDraw(CDC* pDC)
 
 	itsToolBox->SetDC(pDC);
 	DrawOverBitmapThings(itsToolBox); // t‰t‰ voisi tutkia, mitk‰ voisi siirt‰‰ t‰‰lt‰ pois.
-	data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(false);
+    mapViewDesctop->MapViewBitmapDirty(false);
     mapViewDesctop->MapHandler()->ClearUpdateMapViewDrawingLayers();
 }
 
@@ -335,6 +313,32 @@ bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, C
 {
 	NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
 	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, theOldBitmap);
+}
+
+void CSmartMetView::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor)
+{
+    static bool graphInfoReported = false;
+    if(graphInfoReported == false)
+    { // vain 1. kerran tehd‰‰n lokiin raportti
+        graphInfoReported = true;
+        std::stringstream sstream;
+        sstream << "\nViewWidthInMM: " << graphicalInfo.itsViewWidthInMM << std::endl;
+        sstream << "ViewHeightInMM: " << graphicalInfo.itsViewHeightInMM << std::endl;
+        sstream << "ScreenWidthInMM: " << graphicalInfo.itsScreenWidthInMM << std::endl;
+        sstream << "ScreenHeightInMM: " << graphicalInfo.itsScreenHeightInMM << std::endl;
+        sstream << "ScreenWidthInPixels: " << graphicalInfo.itsScreenWidthInPixels << std::endl;
+        sstream << "ScreenHeightInPixels: " << graphicalInfo.itsScreenHeightInPixels << std::endl;
+        sstream << "DPI x: " << graphicalInfo.itsDpiX << std::endl;
+        sstream << "DPI y: " << graphicalInfo.itsDpiY << std::endl;
+        sstream << "DrawObjectScaleFactor (editor.conf - MetEditor::DrawObjectScaleFactor ): " << scaleFactor << std::endl;
+        if(scaleFactor == 0)
+            sstream << "Using ScreenWidthInMM and ScreenHeightInMM to calculate pixels-per-mm values" << std::endl;
+        else
+            sstream << "Using DPI x and y and DrawObjectScaleFactor to calculate pixels-per-mm values" << std::endl;
+        sstream << "PixelsPerMM_x: " << graphicalInfo.itsPixelsPerMM_x << std::endl;
+        sstream << "PixelsPerMM_y: " << graphicalInfo.itsPixelsPerMM_y << std::endl;
+        CatLog::logMessage(sstream.str(), CatLog::Severity::Debug, CatLog::Category::Visualization);
+    }
 }
 
 // CSmartMetView printing

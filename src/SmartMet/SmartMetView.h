@@ -146,6 +146,7 @@ private:
 	void DrawSynopPlotImage(bool fDrawSoundingPlot, bool fDrawMinMaxPlot, bool fDrawMetarPlot);
 	std::string MakeActiveDataLocationIndexString(const NFmiPoint &theLatlon);
     void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
+    void DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor);
 
 	CRect itsClientArea;
 	CBitmap* itsMemoryBitmap;
