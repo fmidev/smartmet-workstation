@@ -686,106 +686,6 @@ void CFmiParameterSelectionDlg::SetTreeNodeInformationBackToDialogRowData()
     }
 }
 
-void CFmiParameterSelectionDlg::UpdateGridControlValues(void)
-{
-    static bool fFirstTime = true;
-    int fixedRowCount = 1;
-    int fixedColumnCount = 1;
-    std::string searchText = CFmiWin32Helpers::CT2std(itsSearchText);
-
-    if(fFirstTime || itsParameterSelectionSystem->dialogDataNeedsUpdate() && searchText.empty())
-    {
-        SetTreeNodeInformationBackToDialogRowData();
-        itsParameterSelectionSystem->updateDialogData();
-        int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
-        int maxRowCount = fixedRowCount + dataRowCount;
-        SetHeaders(itsGridCtrl, itsHeaders, maxRowCount, fixedRowCount, fixedColumnCount, fFirstTime);
-        UpdateRows(fixedRowCount, fixedColumnCount, false);
-
-        const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
-        if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
-        {
-            itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
-            MakeTreeNodeCollapseSettings();
-        }
-        fFirstTime = false;
-    }
-    else if(!searchText.empty())
-        UpdateGridControlValuesWhenSearchActive();
-}
-
-void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
-{
-    int fixedRowCount = 1;
-    int fixedColumnCount = 1;
-    int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
-    int maxRowCount = fixedRowCount + dataRowCount;
-
-    const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
-    if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
-    {
-        itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
-        ExpandAllNodes();
-    }
-    UpdateRows(fixedRowCount, fixedColumnCount, false);
-}
-
-void CFmiParameterSelectionDlg::ExpandAllNodes()
-{
-    const auto &rowItemData = itsParameterSelectionSystem->dialogRowData();
-    int currentRowCount = itsGridCtrl.GetFixedRowCount();
-
-    // Then open them one by one according to settings
-    for(const auto &rowItem : rowItemData)
-    {
-        itsTreeColumn.TreeDataExpandOneLevel(currentRowCount); 
-        currentRowCount++;
-    }
-    itsTreeColumn.TreeRefreshRows();
-}
-
-void CFmiParameterSelectionDlg::MakeTreeNodeCollapseSettings()
-{
-    const auto &rowItemData = itsParameterSelectionSystem->dialogRowData();
-    int currentRowCount = itsGridCtrl.GetFixedRowCount();
-    // First collapse all nodes
-    itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
-    // Then open them one by one according to settings
-    for(const auto &rowItem : rowItemData)
-    {
-        if(!rowItem.dialogTreeNodeCollapsed())
-        {
-            itsTreeColumn.TreeDataExpandOneLevel(currentRowCount);
-        }
-        currentRowCount++;
-    }
-    itsTreeColumn.TreeRefreshRows();
-}
-
-void CFmiParameterSelectionDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
-{
-    const auto &rowData = itsParameterSelectionSystem->dialogRowData();
-    int currentRowCount = fixedRowCount;
-    for(size_t i = 0; i < rowData.size(); i++)
-    {
-        SetGridRow(currentRowCount++, rowData[i], fixedColumnCount);
-    }
-}
-
-//void CFmiParameterSelectionDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
-//{
-//    const auto &rowData = itsParameterSelectionSystem->dialogRowData();
-//    //auto success = itsGridCtrl.SetRowCount(rowData.size() - 1);
-//    //if(success)
-//    //{
-//        int currentRowCount = fixedRowCount;
-//        for(size_t i = 0; i < rowData.size(); i++)
-//        {
-//            SetGridRow(currentRowCount++, rowData[i], fixedColumnCount);
-//        }
-//    //}
-//}
-
 static const COLORREF gCategoryColor = RGB(250, 220, 220);
 static const COLORREF gProducerColor = RGB(220, 250, 220);
 //static const COLORREF gDataColor = RGB(220, 220, 250);
@@ -884,21 +784,6 @@ static std::string GetColumnText(int theRow, int theColumn, const AddParams::Sin
     }
 }
 
-//void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount)
-//{
-//    for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
-//    {
-//        itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theRowItem).c_str()));
-//        if(column >= theFixedColumnCount)
-//        {
-//            // Laita read-only -bitti p‰‰lle
-//            itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY);
-//            COLORREF usedBkColor = ::getUsedBackgroundColor(theRowItem);
-//            itsGridCtrl.SetItemBkColour(row, column, usedBkColor);
-//        }
-//    }
-//}
-
 void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount)
 {
     for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
@@ -906,12 +791,120 @@ void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowIt
         itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theRowItem).c_str()));
         if(column >= theFixedColumnCount)
         {
-            auto state = 128 | GVIS_READONLY;
             // Laita read-only -bitti p‰‰lle
+            auto state = 128 | GVIS_READONLY;
             itsGridCtrl.SetItemState(row, column, state);
+            //itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY);
             COLORREF usedBkColor = ::getUsedBackgroundColor(theRowItem);
             itsGridCtrl.SetItemBkColour(row, column, usedBkColor);
         }
+    }
+}
+
+void CFmiParameterSelectionDlg::UpdateGridControlValues(bool collapseAll)
+{
+    static bool fFirstTime = true;
+    int fixedRowCount = 1;
+    int fixedColumnCount = 1;
+    std::string searchText = CFmiWin32Helpers::CT2std(itsSearchText);
+
+    if(fFirstTime || itsParameterSelectionSystem->dialogDataNeedsUpdate() && searchText.empty())
+    {
+        SetTreeNodeInformationBackToDialogRowData();
+        itsParameterSelectionSystem->updateDialogData();
+        int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
+        int maxRowCount = fixedRowCount + dataRowCount;
+        SetHeaders(itsGridCtrl, itsHeaders, maxRowCount, fixedRowCount, fixedColumnCount, fFirstTime);
+        UpdateRows(fixedRowCount, fixedColumnCount, false);
+
+        const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
+        if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
+        {
+            itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
+            collapseAll ? CollapseAllButCategories() : MakeTreeNodeCollapseSettings();
+        }
+        fFirstTime = false;
+    }
+    else if(!searchText.empty())
+        UpdateGridControlValuesWhenSearchActive();
+}
+
+void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
+{
+    int fixedRowCount = 1;
+    int fixedColumnCount = 1;
+    int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
+    int maxRowCount = fixedRowCount + dataRowCount;
+
+    const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
+    if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
+    {
+        itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
+        ExpandAllNodes();
+    }
+    UpdateRows(fixedRowCount, fixedColumnCount, false);
+}
+
+void CFmiParameterSelectionDlg::ExpandAllNodes()
+{
+    const auto &rowItemData = itsParameterSelectionSystem->dialogRowData();
+    int currentRowCount = itsGridCtrl.GetFixedRowCount();
+    for(const auto &rowItem : rowItemData)
+    {
+        itsTreeColumn.TreeDataExpandOneLevel(currentRowCount);
+        currentRowCount++;
+    }
+    itsTreeColumn.TreeRefreshRows();
+}
+
+void CFmiParameterSelectionDlg::MakeTreeNodeCollapseSettings()
+{
+    const auto &rowItemData = itsParameterSelectionSystem->dialogRowData();
+    int currentRowCount = itsGridCtrl.GetFixedRowCount();
+    // First collapse all nodes
+    itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
+    // Then open them one by one according to settings
+    for(const auto &rowItem : rowItemData)
+    {
+        if(!rowItem.dialogTreeNodeCollapsed())
+        {
+            itsTreeColumn.TreeDataExpandOneLevel(currentRowCount);
+        }
+        currentRowCount++;
+    }
+    itsTreeColumn.TreeRefreshRows();
+}
+
+void CFmiParameterSelectionDlg::CollapseAllButCategories()
+{
+    int currentRowCount = itsGridCtrl.GetFixedRowCount();
+    // First collapse all nodes
+    //itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
+    //Then open only categories
+    //for(auto &rowItem : itsParameterSelectionSystem->dialogRowData())
+    //{
+    //    rowItem.dialogTreeNodeCollapsed(true);
+    //    if(rowItem.rowType() == AddParams::RowType::kCategoryType)
+    //    {
+    //        rowItem.dialogTreeNodeCollapsed(false);
+    //        itsTreeColumn.TreeDataExpandOneLevel(currentRowCount++);
+    //    }
+    //}
+    for(auto &rowItem : itsParameterSelectionSystem->dialogRowData())
+    {
+        itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount++);
+    }
+    SetTreeNodeInformationBackToDialogRowData();
+    itsTreeColumn.TreeRefreshRows();
+}
+
+void CFmiParameterSelectionDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
+{
+    const auto &rowData = itsParameterSelectionSystem->dialogRowData();
+    int currentRowCount = fixedRowCount;
+    for(size_t i = 0; i < rowData.size(); i++)
+    {
+        SetGridRow(currentRowCount++, rowData[i], fixedColumnCount);
     }
 }
 
@@ -919,12 +912,13 @@ void CFmiParameterSelectionDlg::Update()
 {
     if(IsWindowVisible())
     {
-        UpdateSearchIfNeeded();
-        UpdateGridControlValues();
+        bool collapseAll = UpdateSearchIfNeeded();
+        UpdateGridControlValues(collapseAll);
     }
 }
 
-void CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
+// Returns true if search word is removed
+bool CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
 {
     //If search word has changed, do update.
     auto searchtext = CFmiWin32Helpers::CT2std(itsSearchText);
@@ -934,16 +928,10 @@ void CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
         itsPreviousSearchText = searchtext;
         if(searchtext.empty()) //If search text is removed, collapse all but category nodes
         {
-            int currentRowCount = itsGridCtrl.GetFixedRowCount();
-            for(auto &row : itsParameterSelectionSystem->dialogRowData())
-            {
-                if(row.rowType() != AddParams::RowType::kCategoryType)
-                {
-                    itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount++);
-                }
-            }
-        }
+            return true;
+        }  
     }
+    return false;
 }
 
 void CFmiParameterSelectionDlg::InitDialogTexts(void)

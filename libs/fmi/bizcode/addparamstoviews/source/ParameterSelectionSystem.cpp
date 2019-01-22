@@ -206,11 +206,16 @@ namespace AddParams
 
     void ParameterSelectionSystem::searchItemsThatMatchToSearchWords(std::string words)
     {
-        if(words.empty())
-            return;
         // Needs to fill dialogRowData before new search
         updateDialogRowData();
 
+        if(words.empty())
+        {
+            updateDialogTreePatternData();
+            dialogDataNeedsUpdate_ = true;
+            return;
+        }
+             
         std::vector<SingleRowItem> resultRowData;
         auto searchedWords = CatLogUtils::getSearchedWords(words);
 

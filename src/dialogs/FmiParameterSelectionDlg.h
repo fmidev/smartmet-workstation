@@ -102,7 +102,7 @@ private:
     CRect CalcGridArea(void);
     void AdjustControlWidth(int theControlId, int rightOffset, int maxWidth);
     void InitHeaders();
-    void UpdateGridControlValues(void);
+    void UpdateGridControlValues(bool collapseAll = false);
     void UpdateGridControlValuesWhenSearchActive(void);
     void ExpandAllNodes();
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
@@ -116,7 +116,8 @@ private:
     std::string MakeActiveViewRowText();
     bool NeedToUpdateTitleText();
     std::string MakeTitleText();
-    void UpdateSearchIfNeeded();
+    bool UpdateSearchIfNeeded();
+    void CollapseAllButCategories();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
