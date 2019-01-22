@@ -317,13 +317,14 @@
 #define ID_ACCELERATOR_CP_SELECT_UP     42259
 #define ID_ACCELERATOR42260             42260
 #define ID_ACCELERATOR_CP_SELECT_DOWN   42260
+#define ID_                             42261
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        2028
-#define _APS_NEXT_COMMAND_VALUE         42261
+#define _APS_NEXT_COMMAND_VALUE         42262
 #define _APS_NEXT_CONTROL_VALUE         2000
 #define _APS_NEXT_SYMED_VALUE           2002
 #endif
