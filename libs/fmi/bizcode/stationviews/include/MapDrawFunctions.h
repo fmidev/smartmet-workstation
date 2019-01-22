@@ -8,6 +8,7 @@ class CRect;
 class CBitmap;
 class NFmiRect;
 class NFmiToolBox;
+class CWnd;
 
 namespace Gdiplus
 {
@@ -24,4 +25,5 @@ namespace MapDraw
     NFmiPoint getBitmapSize(CtrlViewDocumentInterface *docInterface, int theDescTopIndex);
     Gdiplus::RectF getDestRect(const CRect& mfcRect);
     bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap);
+    bool stopDrawingTooSmallMapview(CWnd *mapView, int theDescTopIndex);
 }

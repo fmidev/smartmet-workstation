@@ -124,23 +124,15 @@ void CFmiExtraMapView::OnDraw(CDC* pDC)
 
 	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor());
 
+    if(MapDraw::stopDrawingTooSmallMapview(this, itsMapViewDescTopIndex))
+        return;
+
 	CClientDC dc(this);
 	CDC dcMem;
 	dcMem.CreateCompatibleDC(&dc);
 
 	CRect clientArea;
 	GetClientRect(&clientArea);
-	if(clientArea.Height() < 4)
-	{
-		dcMem.DeleteDC();
-		return ; // kun ruudun korkeus on tarpeeksi pieni, ohjelma kaatuu jos sitä
-				 // yritetään piirtää. Lisäksi turha piirtää koska mitään ei näy.
-				 // Lisäksi en saanut selville mikä kaataa ohjelman.  Kun ei piirretä
-				 // projektio viivoja, ohjelma kaatuu dcMem.SelectObject(itsMemoryBitmap)
-				 // kohtaan, mutta en voinut debugata MFC:n sisälle.
-				 // Kun projektio viivojen piirto on päällä, ohjelma kaatuu jotenkin
-				 // oudosti projektio viivojen tuhoamiseen.
-	}
 	CBitmap *oldBitmap = 0;
     auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
     if(mapViewDescTop->RedrawMapView() || itsSmartMetDocumentInterface->ViewBrushed())
