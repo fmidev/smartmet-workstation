@@ -164,20 +164,13 @@ void CSmartMetView::OnDraw(CDC* pDC)
 	static int counter = 0;
 	counter++;
 
-	CSmartMetDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-
-	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
-	if(data == 0)
-		return ;
-	if(data->Printing())
+    auto smartMetDocumentInterface = GetSmartMetDocumentInterface();
+	if(smartMetDocumentInterface->Printing())
 		return ; // tulee ongelmia, jos ruutua päivitetään kun samalla printataan
-	if(data->GetLatestMacroParamErrorText().empty())
-		data->SetLatestMacroParamErrorText("Drawing the map view, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei jää vanhoja muistiin
 
-	auto &gInfo = data->GetGraphicalInfo(itsMapViewDescTopIndex);
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(gInfo, pDC, PrintViewSizeInPixels(), data->DrawObjectScaleFactor());
-    DoGraphReportOnDraw(gInfo, data->DrawObjectScaleFactor());
+	auto &gInfo = smartMetDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	CFmiWin32Helpers::SetDescTopGraphicalInfo(gInfo, pDC, PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor());
+    DoGraphReportOnDraw(gInfo, smartMetDocumentInterface->DrawObjectScaleFactor());
 
     if(MapDraw::stopDrawingTooSmallMapview(this, itsMapViewDescTopIndex))
         return;
@@ -188,22 +181,17 @@ void CSmartMetView::OnDraw(CDC* pDC)
 
 	GetClientRect(&itsClientArea);
 	CBitmap *oldBitmap = 0;
-    auto mapViewDesctop = data->MapViewDescTop(itsMapViewDescTopIndex);
-	if(mapViewDesctop->RedrawMapView() || data->ViewBrushed())
+    auto mapViewDesctop = smartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
+	if(mapViewDesctop->RedrawMapView() || smartMetDocumentInterface->ViewBrushed())
 	{
 		CDC dcMemCopy; // välimuistin apuna käytetty dc
 		dcMemCopy.CreateCompatibleDC(&dc);
         mapViewDesctop->CopyCDC(&dcMemCopy);
 
-		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(data->ShowWaitCursorWhileDrawingView());
-		if(!data->ViewBrushed())
+		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+		if(!smartMetDocumentInterface->ViewBrushed())
 		{
-			if(itsMemoryBitmap)
-				itsMemoryBitmap->DeleteObject();
-
-			itsMemoryBitmap->CreateCompatibleBitmap(&dc,itsClientArea.Width()
-													,itsClientArea.Height());
-			ASSERT(itsMemoryBitmap->m_hObject != 0);
+            CtrlView::MakeCombatibleBitmap(this, &itsMemoryBitmap);
 		}
 		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
 		itsToolBox->SetDC(&dcMem);
@@ -228,7 +216,7 @@ void CSmartMetView::OnDraw(CDC* pDC)
         mapViewDesctop->CopyCDC(0);
 		dcMemCopy.DeleteDC();
         mapViewDesctop->ClearRedrawMapView();
-        data->ViewBrushed(false);
+        smartMetDocumentInterface->ViewBrushed(false);
 	}
 	else
 		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
@@ -968,7 +956,7 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
         if(counter > 2)
             PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
-		pDoc->UpdateAllViewsAndDialogs("Main map view: view rezized");
+		pDoc->UpdateAllViewsAndDialogs("Main map view resized", SmartMetViewId::ZoomDlg);
 	}
     counter++;
 	Invalidate(FALSE);
