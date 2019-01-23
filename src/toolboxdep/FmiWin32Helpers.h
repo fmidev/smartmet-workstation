@@ -113,6 +113,7 @@ namespace CFmiWin32Helpers
     void InitCategoryComboBox(CComboBox &comboBox);
 
     void FitLastColumnOnVisibleArea(CWnd *gridCtrlParentView, CGridCtrl &gridCtrl, bool &firstTime, int minimumLastColumnWidthInPixels);
+    void DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor);
 };
 
 
