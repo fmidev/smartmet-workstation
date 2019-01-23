@@ -1317,6 +1317,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
         if(fUpdateOnlyMapViews)
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": only map-views are updated", nullptr);
 
+        itsData->SetLatestMacroParamErrorText("Starting view updates, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei j‰‰ vanhoja muistiin
+
         if(fUpdateOnlyMapViews == false)
             ::UpdateModalessDialog(itsZoomDlg);
 
@@ -1368,6 +1370,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
     {
         ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + "-v2 ***** {Reason: " + reasonForUpdate + "}", g_UpdateAllViewsAndDialogsCounter);
         ::MakeUpdatedViewsTraceLogging(__FUNCTION__, updatedViewsFlag);
+
+        itsData->SetLatestMacroParamErrorText("Starting view updates, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei j‰‰ vanhoja muistiin
 
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ZoomDlg))
             ::UpdateModalessDialog(itsZoomDlg);
