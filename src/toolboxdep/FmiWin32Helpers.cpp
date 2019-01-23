@@ -689,3 +689,29 @@ void CFmiWin32Helpers::FitLastColumnOnVisibleArea(CWnd *gridCtrlParentView, CGri
         }
     }
 }
+
+void CFmiWin32Helpers::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor)
+{
+    static bool graphInfoReported = false;
+    if(graphInfoReported == false)
+    { // vain 1. kerran tehd‰‰n lokiin raportti
+        graphInfoReported = true;
+        std::stringstream sstream;
+        sstream << "\nViewWidthInMM: " << graphicalInfo.itsViewWidthInMM << std::endl;
+        sstream << "ViewHeightInMM: " << graphicalInfo.itsViewHeightInMM << std::endl;
+        sstream << "ScreenWidthInMM: " << graphicalInfo.itsScreenWidthInMM << std::endl;
+        sstream << "ScreenHeightInMM: " << graphicalInfo.itsScreenHeightInMM << std::endl;
+        sstream << "ScreenWidthInPixels: " << graphicalInfo.itsScreenWidthInPixels << std::endl;
+        sstream << "ScreenHeightInPixels: " << graphicalInfo.itsScreenHeightInPixels << std::endl;
+        sstream << "DPI x: " << graphicalInfo.itsDpiX << std::endl;
+        sstream << "DPI y: " << graphicalInfo.itsDpiY << std::endl;
+        sstream << "DrawObjectScaleFactor (editor.conf - MetEditor::DrawObjectScaleFactor ): " << scaleFactor << std::endl;
+        if(scaleFactor == 0)
+            sstream << "Using ScreenWidthInMM and ScreenHeightInMM to calculate pixels-per-mm values" << std::endl;
+        else
+            sstream << "Using DPI x and y and DrawObjectScaleFactor to calculate pixels-per-mm values" << std::endl;
+        sstream << "PixelsPerMM_x: " << graphicalInfo.itsPixelsPerMM_x << std::endl;
+        sstream << "PixelsPerMM_y: " << graphicalInfo.itsPixelsPerMM_y << std::endl;
+        CatLog::logMessage(sstream.str(), CatLog::Severity::Debug, CatLog::Category::Visualization);
+    }
+}
