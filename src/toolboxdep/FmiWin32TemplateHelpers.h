@@ -462,6 +462,87 @@ namespace CFmiWin32TemplateHelpers
         }
     }
 
+    template<class Tview>
+    void MapViewOnDraw(Tview *mapView, CDC* pDC, SmartMetDocumentInterface *smartMetDocumentInterface)
+    {
+        if(smartMetDocumentInterface->Printing())
+            return; // tulee ongelmia, jos ruutua päivitetään kun samalla printataan
+
+        auto mapViewDescTopIndex = mapView->MapViewDescTopIndex();
+        auto &gInfo = smartMetDocumentInterface->GetGraphicalInfo(mapViewDescTopIndex);
+        CFmiWin32Helpers::SetDescTopGraphicalInfo(gInfo, pDC, mapView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor());
+        CFmiWin32Helpers::DoGraphReportOnDraw(gInfo, smartMetDocumentInterface->DrawObjectScaleFactor());
+
+        if(MapDraw::stopDrawingTooSmallMapview(mapView, mapViewDescTopIndex))
+            return;
+
+        CClientDC dc(mapView);
+        CDC dcMem;
+        dcMem.CreateCompatibleDC(&dc);
+
+        auto memoryBitmap = mapView->MemoryBitmap();
+        CBitmap *oldBitmap = 0;
+        auto mapViewDesctop = smartMetDocumentInterface->MapViewDescTop(mapViewDescTopIndex);
+        if(mapViewDesctop->RedrawMapView() || smartMetDocumentInterface->ViewBrushed())
+        {
+            CDC dcMemCopy; // välimuistin apuna käytetty dc
+            dcMemCopy.CreateCompatibleDC(&dc);
+            mapViewDesctop->CopyCDC(&dcMemCopy);
+
+            std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+            if(!smartMetDocumentInterface->ViewBrushed())
+            {
+                CtrlView::MakeCombatibleBitmap(mapView, &memoryBitmap);
+            }
+            oldBitmap = dcMem.SelectObject(memoryBitmap);
+
+            // *** Tässä tehdään background kartta ***
+            CDC dcMem2;
+            dcMem2.CreateCompatibleDC(&dc);
+            CBitmap *oldBitmap2 = 0;
+            mapView->GenerateMapBitmap(mapView->MapBitmap(), &dcMem2, &dc, oldBitmap2);
+            mapViewDesctop->MapBlitDC(&dcMem2);
+            // *** Tässä tehdään background kartta ***
+
+            {
+                // Varsinainen piirto tässä
+                mapView->SetToolsDCs(&dcMem);
+                mapView->DoDraw();
+            }
+
+            // *** Tässä background kartan jälkihoito ***
+            mapViewDesctop->MapBlitDC(0);
+            dcMem2.SelectObject(oldBitmap2);
+            dcMem2.DeleteDC();
+            // *** Tässä background kartan jälkihoito ***
+            mapViewDesctop->CopyCDC(0);
+            dcMemCopy.DeleteDC();
+            mapViewDesctop->ClearRedrawMapView();
+            smartMetDocumentInterface->ViewBrushed(false);
+        }
+        else
+            oldBitmap = dcMem.SelectObject(memoryBitmap);
+
+        CRect clientArea;
+        mapView->GetClientRect(&clientArea);
+        pDC->BitBlt(0
+            , 0
+            , clientArea.Width()
+            , clientArea.Height()
+            , &dcMem
+            , 0
+            , 0
+            , SRCCOPY);
+
+        memoryBitmap = dcMem.SelectObject(oldBitmap);
+        dcMem.DeleteDC();
+
+        auto toolbox = mapView->ToolBox();
+        toolbox->SetDC(pDC);
+        mapView->DrawOverBitmapThings(toolbox); // tätä voisi tutkia, mitkä voisi siirtää täältä pois.
+        mapViewDesctop->MapViewBitmapDirty(false);
+        mapViewDesctop->MapHandler()->ClearUpdateMapViewDrawingLayers();
+    }
 };
 
 
