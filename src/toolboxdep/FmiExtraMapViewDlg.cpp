@@ -196,7 +196,7 @@ void CFmiExtraMapViewDlg::OnSize(UINT nType, int cx, int cy)
 	if(itsView)
 		itsView->MoveWindow(CalcClientArea(), FALSE);
 	Invalidate(FALSE);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: View rezised");
+    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Help map view (2/3) was rezised", SmartMetViewId::ZoomDlg);
 }
 
 CRect CFmiExtraMapViewDlg::CalcClientArea(void)
