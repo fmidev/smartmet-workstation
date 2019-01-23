@@ -87,7 +87,6 @@ protected:
 
 private:
 	void CreateEditMapView(void);
-	void MakeCombatibleBitmap(CBitmap **theMemoryBitmap, int cx = 0, int cy = 0);
 
     SmartMetDocumentInterface* itsSmartMetDocumentInterface;
 
