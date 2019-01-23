@@ -294,6 +294,7 @@ public:
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
     NFmiMacroParamDataCache& MacroParamDataCache() override;
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) override;
+    SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;
