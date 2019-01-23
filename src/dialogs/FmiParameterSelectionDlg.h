@@ -103,7 +103,9 @@ private:
     void AdjustControlWidth(int theControlId, int rightOffset, int maxWidth);
     void InitHeaders();
     void UpdateGridControlValues(bool collapseAll = false);
+    void UpdateGridControlValuesInNormalMode(bool fFirstTime);
     void UpdateGridControlValuesWhenSearchActive(void);
+    void UpdateGridControlValuesWhenSearchRemoved(void);
     void ExpandAllNodes();
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
     void SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount);
