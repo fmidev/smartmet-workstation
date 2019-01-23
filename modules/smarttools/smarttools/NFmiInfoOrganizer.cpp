@@ -833,7 +833,8 @@ static bool IsGivenTimeInDataRange(const boost::shared_ptr<NFmiFastQueryInfo> &i
         return false;
     if(wantedDataTime == NFmiMetTime::gMissingTime)
         return true; // with missing-time we don't care if time in data's range
-    return info->TimeDescriptor().IsInside(wantedDataTime);
+    else
+        return info->TimeDescriptor().IsInside(wantedDataTime);
 }
 
 // Hakee parhaan luotaus infon tuottajalle. Eli jos kyseessä esim hirlam tuottaja, katsotaan

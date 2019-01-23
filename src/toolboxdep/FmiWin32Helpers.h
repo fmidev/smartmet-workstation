@@ -13,6 +13,7 @@ class NFmiToolBox;
 class NFmiPoint;
 class NFmiRect;
 class MfcViewStatus;
+class CGridCtrl;
 namespace CtrlViewUtils
 {
     struct GraphicalInfo;
@@ -110,6 +111,8 @@ namespace CFmiWin32Helpers
 
     void InitLogLevelComboBox(CComboBox &comboBox);
     void InitCategoryComboBox(CComboBox &comboBox);
+
+    void FitLastColumnOnVisibleArea(CWnd *gridCtrlParentView, CGridCtrl &gridCtrl, bool &firstTime, int minimumLastColumnWidthInPixels);
 };
 
 

@@ -258,6 +258,7 @@ BEGIN
         MENUITEM "Macro path settings...",      ID_MUOKKAA_MAKROPOLKUASETUKSET
         MENUITEM "Help edit mode settings...",  ID_MENUITEM_HELP_EDITOR_SETTINGS
         MENUITEM "Language...",                 ID_MENUITEM_MUOKKAA_KIELI
+        MENUITEM "Sounding data from server settings...", ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS
         MENUITEM "Do macro directory syncronization\tF6", ID_ACCELERATOR_DO_MACRO_DIRECTORIES_SYNCRONIZATION
         POPUP "Reload Data"
         BEGIN
@@ -850,7 +851,7 @@ BEGIN
     ID_BUTTON_FILTER_DIALOG "Data filter tool\nData filter tool"
     ID_BUTTON_ZOOM_DIALOG   "Zooming tool\nZooming tool"
     ID_BUTTON_VIEW_SELECT_PARAM_DIALOG 
-                            "Param selection tool\nParam selection tool"
+                            "Parameter selection dialog\nParameter selection dialog"
     ID_BUTTON_OPEN_SMART_TOOL_DLG "SmartTool dialog\nSmartTool dialog"
     ID_ACCELERATOR_STORE_VIEW_MACRO "View macro tool\nView macro tool"
     ID_BUTTON_TEMP_DLG      "Sounding view\nSounding view"
@@ -935,6 +936,12 @@ STRINGTABLE
 BEGIN
     ID_VIEW_SET_SMARTTOOL_VIEW_PLACE_TO_DEFAULT 
                             "SmartTool view position\nSmartTool view position"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS 
+                            "Sounding data from server settings...\nSounding data from server settings..."
 END
 
 #endif    // English (United States) resources

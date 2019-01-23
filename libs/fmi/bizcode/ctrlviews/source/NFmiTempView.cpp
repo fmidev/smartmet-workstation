@@ -28,6 +28,8 @@
 #include "NFmiFastInfoUtils.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "ToolBoxStateRestorer.h"
+#include "SoundingDataServerConfigurations.h"
+#include "catlog/catlog.h"
 
 #include <gdiplus.h>
 #include <stdexcept>
@@ -1738,8 +1740,10 @@ static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentIn
 
 void NFmiTempView::DrawOneSounding(const NFmiProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
 {
+    auto useServerData = UseServerForSoundingData(theProducer);
     NFmiMetTime usedSoundingTime = ::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo);
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedSoundingTime, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+    auto dataSearchRestrictingTime = useServerData ? NFmiMetTime::gMissingTime : usedSoundingTime;
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, dataSearchRestrictingTime, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
 	if(info)
 	{
 		NFmiLocation location = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
@@ -1748,7 +1752,7 @@ void NFmiTempView::DrawOneSounding(const NFmiProducer &theProducer, const NFmiMT
 			groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kAnalyzeData);  // t‰m‰ on siksi ett‰ LAPS data on nyky‰‰n analyysi dataa, pit‰‰ korjata t‰m‰ infoorganizer sotku joskus kunnolla!!!
 
 		NFmiSoundingDataOpt1 sounding;
-		FillSoundingData(info, sounding, usedSoundingTime, location, groundDataInfo);
+		FillSoundingData(info, sounding, usedSoundingTime, location, groundDataInfo, useServerData);
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         NFmiColor usedColor(mtaTempSystem.SoundingColor(theIndex));
 		if(theBrightningFactor != 0)
@@ -1760,9 +1764,12 @@ void NFmiTempView::DrawOneSounding(const NFmiProducer &theProducer, const NFmiMT
 	}
 }
 
-bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
+bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, bool useServerData)
 {
-	return NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+    if(useServerData)
+        return FillSoundingDataFromServer(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+    else
+        return NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
 }
 
 // palauttaa annetun laatikon sis‰lt‰ pisteen, johon relatiivisessa 0,0 - 1,1 maailmassa
@@ -3201,3 +3208,171 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
 	}
 	return str;
 }
+
+// Luotausdatan esimerkkihaku: ec-euro-mallipintadata, lonlat-piste,parametrilista, ascii formaatti, haluttu origintime, haluttu starttime, tarkkuus double => 1 desimaali
+// http://smartmet.fmi.fi/timeseries?producer=ecmwf_eurooppa_mallipinta&lonlat=23.6,64.3&param=temperature,dewpoint,relativehumidity,pressure,geomheight,totalcloudcover,windspeedms,winddirection,level&timesteps=1&format=ascii&precision=double&origintime=201901170000&starttime=201901191200
+
+// Sen tulos :
+
+std::string soundingFromServerTestString =
+"-53.9 nan 2.0 93.4 15872.5 0.0 10.6 307.5 59.0 "
+"-54.0 nan 2.1 98.4 15533.9 0.0 11.0 307.7 60.0 "
+"-54.1 nan 2.3 103.7 15198.3 0.0 11.5 310.0 61.0 "
+"-54.1 nan 2.4 109.2 14865.5 0.0 12.0 307.2 62.0 "
+"-54.0 nan 2.5 115.0 14535.4 0.0 12.1 307.0 63.0 "
+"-53.9 nan 2.6 121.0 14208.0 0.0 11.9 305.0 64.0 "
+"-53.9 nan 2.7 127.3 13883.3 0.0 11.8 307.0 65.0 "
+"-53.9 nan 2.9 133.9 13561.2 0.0 12.2 308.6 66.0 "
+"-54.1 nan 3.1 140.7 13242.1 0.0 13.1 308.6 67.0 "
+"-54.1 nan 3.3 147.8 12925.8 0.0 13.8 303.7 68.0 "
+"-53.9 nan 3.4 155.2 12612.1 0.0 14.2 300.2 69.0 "
+"-53.6 nan 3.4 163.0 12300.8 0.0 13.9 300.0 70.0 "
+"-53.3 nan 3.5 171.0 11991.6 0.0 13.4 300.0 71.0 "
+"-53.1 nan 3.6 179.3 11684.8 0.0 12.9 300.0 72.0 "
+"-52.9 nan 3.9 188.0 11380.3 0.0 12.5 300.4 73.0 "
+"-52.6 nan 4.2 197.0 11078.1 0.0 12.1 301.4 74.0 "
+"-52.5 nan 4.7 206.4 10778.2 0.0 11.4 301.1 75.0 "
+"-52.4 nan 5.1 216.1 10480.7 0.0 10.8 303.1 76.0 "
+"-52.5 nan 5.5 226.2 10185.7 0.0 10.4 301.6 77.0 "
+"-52.6 nan 5.9 236.7 9893.4 0.0 9.9 301.6 78.0 "
+"-52.9 nan 6.8 247.6 9603.8 0.0 9.6 301.2 79.0 "
+"-53.3 nan 8.3 258.9 9317.0 0.0 9.0 295.0 80.0 "
+"-53.8 nan 9.9 270.5 9033.2 0.0 8.2 293.0 81.0 "
+"-54.3 nan 11.6 282.7 8752.5 0.0 7.3 285.0 82.0 "
+"-54.8 nan 14.2 295.2 8474.7 0.0 6.5 272.5 83.0 "
+"-55.3 nan 19.0 308.2 8200.0 0.0 5.9 263.1 84.0 "
+"-55.6 nan 32.0 321.7 7928.0 0.0 5.7 244.2 85.0 "
+"-55.5 nan 54.7 335.5 7658.3 0.0 5.8 227.4 86.0 "
+"-54.9 nan 68.0 350.0 7390.5 0.0 6.2 213.7 87.0 "
+"-53.9 nan 77.3 364.8 7123.8 0.0 6.6 207.1 88.0 "
+"-52.7 nan 77.7 380.3 6858.1 0.0 6.8 199.2 89.0 "
+"-51.2 nan 72.9 396.1 6592.9 0.0 6.8 200.1 90.0 "
+"-49.8 nan 70.2 412.6 6328.1 0.0 6.4 203.7 91.0 "
+"-48.3 nan 71.2 429.6 6063.8 0.0 5.9 210.7 92.0 "
+"-46.8 nan 72.9 447.1 5799.9 0.6 5.3 221.0 93.0 "
+"-45.4 nan 76.7 465.2 5536.5 2.2 4.8 235.2 94.0 "
+"-43.8 nan 81.9 483.8 5273.4 4.8 4.5 256.1 95.0 "
+"-41.9 nan 88.6 503.0 5010.9 5.6 4.9 278.8 96.0 "
+"-39.8 nan 86.2 522.8 4749.6 3.8 5.7 299.4 97.0 "
+"-37.5 nan 80.9 542.9 4490.7 2.0 6.6 309.1 98.0 "
+"-35.3 nan 77.7 563.2 4235.6 1.5 7.4 318.8 99.0 "
+"-33.3 nan 77.8 583.8 3985.4 2.6 8.2 323.3 100.0 "
+"-31.3 nan 80.5 604.4 3741.0 6.3 8.5 326.2 101.0 "
+"-29.4 nan 83.3 625.0 3503.2 11.8 8.2 325.1 102.0 "
+"-27.7 nan 88.7 645.4 3273.0 19.1 7.8 324.1 103.0 "
+"-26.0 nan 93.1 665.6 3050.9 22.6 7.8 323.0 104.0 "
+"-24.5 nan 96.8 685.5 2837.3 25.9 8.1 319.5 105.0 "
+"-23.1 nan 99.3 705.0 2632.9 31.4 8.3 319.8 106.0 "
+"-21.8 nan 99.8 724.0 2437.9 38.6 8.1 326.6 107.0 "
+"-20.7 nan 99.8 742.4 2252.4 47.5 7.7 325.2 108.0 "
+"-19.5 nan 99.9 760.3 2076.7 52.4 7.5 323.5 109.0 "
+"-18.5 nan 99.7 777.4 1910.6 53.4 7.3 319.5 110.0 "
+"-17.6 nan 99.5 794.0 1754.0 47.3 7.1 317.1 111.0 "
+"-16.7 nan 99.3 809.7 1606.8 43.5 6.8 317.6 112.0 "
+"-15.8 nan 98.7 824.7 1468.8 41.5 6.5 312.2 113.0 "
+"-15.0 nan 98.0 838.9 1339.6 35.9 6.1 312.2 114.0 "
+"-14.4 nan 96.9 852.4 1219.1 27.7 5.5 310.9 115.0 "
+"-13.8 nan 95.5 865.1 1106.8 24.5 4.5 307.3 116.0 "
+"-13.4 nan 94.4 877.1 1002.4 29.2 3.7 294.9 117.0 "
+"-13.0 nan 93.6 888.3 905.6 35.9 3.4 289.5 118.0 "
+"-12.7 nan 94.1 898.9 816.0 41.7 3.2 286.9 119.0 "
+"-12.4 nan 95.5 908.7 733.0 47.3 3.2 285.6 120.0 "
+"-12.1 nan 97.6 917.9 656.5 54.0 3.1 284.3 121.0 "
+"-11.7 nan 98.2 926.4 585.8 60.8 3.1 280.8 122.0 "
+"-11.2 nan 99.1 934.3 520.6 62.7 3.3 282.3 123.0 "
+"-10.6 nan 99.1 941.6 460.6 62.5 3.5 281.0 124.0 "
+"-10.1 nan 99.5 948.4 405.3 61.7 3.6 281.9 125.0 "
+"-9.6 nan 99.2 954.7 354.5 57.4 3.8 281.4 126.0 "
+"-9.2 nan 99.0 960.5 307.8 41.8 3.9 282.9 127.0 "
+"-8.8 nan 97.9 965.9 264.9 26.8 4.0 281.0 128.0 "
+"-8.4 nan 97.0 970.8 225.5 20.2 4.0 281.0 129.0 "
+"-8.1 nan 95.6 975.3 189.4 9.6 4.0 283.8 130.0 "
+"-7.8 nan 94.3 979.5 156.4 7.8 4.2 286.0 131.0 "
+"-7.6 nan 93.2 983.3 126.1 6.5 4.1 284.8 132.0 "
+"-7.4 nan 92.2 986.8 98.3 5.3 4.0 284.2 133.0 "
+"-7.3 nan 90.9 990.1 73.0 3.5 3.9 283.0 134.0 "
+"-7.0 nan 89.5 993.0 49.8 2.7 3.7 283.0 135.0 "
+"-6.8 nan 88.6 995.7 28.6 2.4 3.4 283.0 136.0 "
+"-6.5 nan 88.0 998.2 9.3 1.2 2.9 282.4 137.0 ";
+
+
+bool NFmiTempView::UseServerForSoundingData(const NFmiProducer &producer)
+{
+    return itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().useServerSoundingData(producer.GetIdent());
+}
+
+static std::string MakeProdTimeLocString(const NFmiProducer &producer, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
+{
+    std::string str = "producer: ";
+    str += producer.GetName();
+    str += ", for time: ";
+    str += theTime.ToStr("YYYY.MM.DD HH:mm");
+    str += ", at location: ";
+    str += std::to_string(theLocation.GetLongitude());
+    str += ",";
+    str += std::to_string(theLocation.GetLatitude());
+    return str;
+}
+
+static void TraceLogSoundingFromServerRequest(const std::string &requestUriStr, const NFmiProducer &producer, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
+{
+    if(requestUriStr.empty())
+    {
+        std::string logMessage = "Unable to make sounding data request URL for ";
+        ::MakeProdTimeLocString(producer, theTime, theLocation);
+        CatLog::logMessage(requestUriStr, CatLog::Severity::Warning, CatLog::Category::NetRequest);
+    }
+    else
+    {
+        if(CatLog::doTraceLevelLogging())
+        {
+            CatLog::logMessage(requestUriStr, CatLog::Severity::Trace, CatLog::Category::NetRequest);
+        }
+    }
+}
+
+static void ReportFailedSoundingFromServerRequest(const std::string &requestUriStr, const NFmiProducer &producer, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
+{
+    if(!CatLog::doTraceLevelLogging())
+    {
+        // Jos ei olla trace loggin tilassa, ei edell‰ lokitettu t‰t‰ requestia, tehd‰‰n se nyt kun tuli ongelmia sen kanssa
+        CatLog::logMessage(requestUriStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+    }
+
+    std::string logMessage = "Sounding data server request failed for ";
+    logMessage += ::MakeProdTimeLocString(producer, theTime, theLocation);
+    CatLog::logMessage(logMessage, CatLog::Severity::Warning, CatLog::Category::NetRequest);
+}
+
+bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
+{
+    const auto &producer = *theInfo->Producer();
+    auto requestUriStr = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().makeFinalServerRequestUri(producer.GetIdent(), theTime, theLocation.GetLocation());
+    ::TraceLogSoundingFromServerRequest(requestUriStr, producer, theTime, theLocation);
+    if(requestUriStr.empty())
+        return false;
+    std::string soundingDataResponseFromServer;
+
+    {
+        // Raportoidaan trace tasolla pelk‰n haun kesto
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(this, "Sounding data from server request");
+        itsCtrlViewDocumentInterface->MakeHTTPRequest(requestUriStr, soundingDataResponseFromServer, true);
+    }
+
+    if(soundingDataResponseFromServer.empty())
+    {
+        ::ReportFailedSoundingFromServerRequest(requestUriStr, producer, theTime, theLocation);
+        return false;
+    }
+    const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().wantedParameters();
+    auto status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, theGroundDataInfo);
+    // Laitetaan lopuksi serverilt‰ haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
+    NFmiLocation finalLocation = theSoundingData.Location();
+    ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, producer, theSoundingData.OriginTime(), true);
+    NFmiString finalNameWithServerMarker = "(S) ";
+    finalNameWithServerMarker += finalLocation.GetName();
+    finalLocation.SetName(finalNameWithServerMarker);
+    theSoundingData.Location(finalLocation);
+    return status;
+}
+
