@@ -34,6 +34,7 @@ IMPLEMENT_DYNCREATE(CFmiExtraMapView, CView)
 CFmiExtraMapView::CFmiExtraMapView()
 :CView()
 ,itsSmartMetDocumentInterface(nullptr)
+,itsFinalMapViewImageBitmap(new CBitmap)
 ,itsMemoryBitmap(new CBitmap)
 ,itsMapBitmap(new CBitmap)
 ,itsSynopPlotBitmap(new CBitmap)
@@ -53,7 +54,8 @@ CFmiExtraMapView::~CFmiExtraMapView()
 	delete itsEditMapView;
 	delete itsToolBox;
 
-	CtrlView::DestroyBitmap(&itsMemoryBitmap);
+    CtrlView::DestroyBitmap(&itsFinalMapViewImageBitmap);
+    CtrlView::DestroyBitmap(&itsMemoryBitmap);
     CtrlView::DestroyBitmap(&itsMapBitmap);
 	delete itsSynopPlotBitmap; // tähän ei saa käyttää DestroyBitmap-funktiota
 }
@@ -61,6 +63,7 @@ CFmiExtraMapView::~CFmiExtraMapView()
 CFmiExtraMapView::CFmiExtraMapView(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned int theMapViewDescTopIndex)
 :CView()
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
+,itsFinalMapViewImageBitmap(new CBitmap)
 ,itsMemoryBitmap(new CBitmap)
 ,itsMapBitmap(new CBitmap)
 ,itsSynopPlotBitmap(new CBitmap)
@@ -247,9 +250,9 @@ void CFmiExtraMapView::DoDraw(void)
     itsSmartMetDocumentInterface->TransparencyContourDrawView(0); // lopuksi pitää nollata läpinäkyvyys-näyttö pointteri
 }
 
-bool CFmiExtraMapView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap)
+bool CFmiExtraMapView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
-	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, theOldBitmap);
+	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
 }
 
 // asettaa toolmasterin ja toolboxin DC:t

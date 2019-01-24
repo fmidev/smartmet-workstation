@@ -109,7 +109,8 @@ END_MESSAGE_MAP()
 // CSmartMetView construction/destruction
 
 CSmartMetView::CSmartMetView()
-:itsMemoryBitmap(new CBitmap)
+:itsFinalMapViewImageBitmap(new CBitmap)
+,itsMemoryBitmap(new CBitmap)
 ,itsMapBitmap(new CBitmap)
 ,itsOverMapBitmap(new CBitmap)
 ,itsEditMapView(0)
@@ -140,6 +141,7 @@ CSmartMetView::~CSmartMetView()
 {
 	delete itsEditMapView;
 	delete itsToolBox;
+    CtrlView::DestroyBitmap(&itsFinalMapViewImageBitmap);
     CtrlView::DestroyBitmap(&itsMemoryBitmap);
     CtrlView::DestroyBitmap(&itsMapBitmap);
     CtrlView::DestroyBitmap(&itsOverMapBitmap);
@@ -213,10 +215,10 @@ void CSmartMetView::DrawOverBitmapThings(NFmiToolBox * theGTB)
 	}
 }
 
-bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap)
+bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
 	NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
-	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, theOldBitmap);
+	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
 }
 
 void CSmartMetView::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor)

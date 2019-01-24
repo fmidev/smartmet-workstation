@@ -53,6 +53,7 @@ public:
 	void CurrentPrintTime(const NFmiMetTime &theTime);
 	const NFmiRect* RelativePrintRect(void); 
 	void RelativePrintRect(const NFmiRect &theRect); 
+    CBitmap* FinalMapViewImageBitmap() { return itsFinalMapViewImageBitmap; }
     CBitmap* MemoryBitmap(void) { return itsMemoryBitmap; }
     CBitmap* MapBitmap(void) { return itsMapBitmap; }
 	CSize GetPrintedAreaOnScreenSizeInPixels(void);
@@ -66,7 +67,7 @@ public:
 															// Tämä siksi että kunnon prittaus ei jostain syystä toimi oikein ainoastaan tälle näytölle.
 															// ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
     int MapViewDescTopIndex(void) { return itsMapViewDescTopIndex; }
-    bool GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap);
+    bool GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC);
     void SetToolMastersDC(CDC* theDC);
     // ********************************************************************************************
     void SetToolsDCs(CDC* theDC);
@@ -90,7 +91,8 @@ private:
 
     SmartMetDocumentInterface* itsSmartMetDocumentInterface;
 
-	CBitmap* itsMemoryBitmap;
+    CBitmap* itsFinalMapViewImageBitmap;
+    CBitmap* itsMemoryBitmap;
 	CBitmap* itsMapBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
 	// Bitmapin, johon mahdollinen synop-plot image talletetaan.
 	CBitmap* itsSynopPlotBitmap;
