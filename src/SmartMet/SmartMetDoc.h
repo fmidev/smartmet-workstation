@@ -240,6 +240,7 @@ private:
     void LoadViewMacroSettingsForTimeSerialDataView(NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);
     void MakeViewActivationAfterLoadingViewMacro();
     void HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage);
+    void StoreBitmapImageToFile(const std::string &callingFunctionName, const std::string &imageViewName, CBitmap *bitmap, const NFmiRect *theRelativeOutputArea);
 
 	CTimeEditValuesDlg *itsTimeSerialDataEditorDlg;
 	NFmiEditMapGeneralDataDoc* itsData;
