@@ -66,7 +66,8 @@ public:
 	void CurrentPrintTime(const NFmiMetTime &theTime);
 	const NFmiRect* RelativePrintRect(void);
 	void RelativePrintRect(const NFmiRect &theRect);
-	CBitmap* MemoryBitmap(void) {return itsMemoryBitmap;}
+    CBitmap* FinalMapViewImageBitmap() { return itsFinalMapViewImageBitmap; }
+    CBitmap* MemoryBitmap(void) {return itsMemoryBitmap;}
     CBitmap* MapBitmap() { return itsMapBitmap; }
     CSize GetPrintedAreaOnScreenSizeInPixels(void);
 	NFmiPoint PrintViewSizeInPixels(void);
@@ -79,7 +80,7 @@ public:
 	bool DoAllwaysLowMemoryPrint(void) const {return false;} // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
     int MapViewDescTopIndex(void) { return itsMapViewDescTopIndex; }
     void SetToolMastersDC(CDC* theDC); // toolmasterin DC:n
-    bool GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap);
+    bool GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC);
     // ************************************
     void SetToolsDCs(CDC* theDC); // asettaa toolmasterin ja toolboxin DC:t
     NFmiEditMapView* EditMapView() { return itsEditMapView; }
@@ -148,6 +149,7 @@ private:
     void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
     void DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor);
 
+    CBitmap* itsFinalMapViewImageBitmap;
 	CBitmap* itsMemoryBitmap;
 	CBitmap* itsMapBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
 	CBitmap* itsOverMapBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä

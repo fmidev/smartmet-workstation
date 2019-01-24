@@ -618,7 +618,16 @@ CBitmap* CFmiExtraMapViewDlg::MemoryBitmap(void)
 {
 	if(itsView)
 		return itsView->MemoryBitmap();
-	return 0;
+    else
+    	return nullptr;
+}
+
+CBitmap* CFmiExtraMapViewDlg::FinalMapViewImageBitmap() 
+{ 
+    if(itsView)
+        return itsView->FinalMapViewImageBitmap();
+    else
+        return nullptr;
 }
 
 void CFmiExtraMapViewDlg::OnButtonZoomDialog()
