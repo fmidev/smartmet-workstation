@@ -27,7 +27,8 @@ public:
 	void Update(bool fUpdateHiddenView = false);
 	void SetDefaultValues(void);
 	CFmiExtraMapView* MapView(void) {return itsView;}
-	CBitmap* MemoryBitmap(void);
+    CBitmap* FinalMapViewImageBitmap();
+    CBitmap* MemoryBitmap(void);
 	unsigned int MapViewDescTopIndex(void) const {return itsMapViewDescTopIndex;}
     static std::string MakeUsedWinRegistryKeyStr(unsigned int theMapViewDescTopIndex);
 

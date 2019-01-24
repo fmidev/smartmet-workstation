@@ -29,6 +29,7 @@ namespace CtrlView
             (*theMemoryBitmap)->DeleteObject();
         else
             *theMemoryBitmap = new CBitmap;
+        // Muista ett‰ CClientDC:n kanssa ei tehd‰ lopuksi DeleteDC -kutsua kuten muiden Device Context otusten kanssa tehd‰‰n.
         CClientDC dc(theView);
         CRect clientArea(0, 0, cx, cy);
         if(cx == 0 && cy == 0)
