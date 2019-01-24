@@ -2084,7 +2084,7 @@ void CSmartMetDoc::OnButtonDelete()
 
 void CSmartMetDoc::OnDataStoreViewToPictureFile()
 {
-	CBitmap* bm = ApplicationInterface::GetSmartMetView()->MemoryBitmap();
+	CBitmap* bm = ApplicationInterface::GetSmartMetView()->FinalMapViewImageBitmap();
 	BOOL status = SaveViewToFilePicture("CSmartMetDoc::StoreMainMapViewImage", bm, &(GetData()->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect()));
 	if(status)
 		GetData()->LogMessage("Stored map view to image file.", CatLog::Severity::Info, CatLog::Category::Operational);
@@ -2101,7 +2101,7 @@ void CSmartMetDoc::OnDataStoreExtraMapViewToPictureFile(CFmiExtraMapViewDlg *the
 {
 	if(theExtraMapViewDlg)
 	{
-		CBitmap* bm = theExtraMapViewDlg->MemoryBitmap();
+		CBitmap* bm = theExtraMapViewDlg->FinalMapViewImageBitmap();
 		BOOL status = SaveViewToFilePicture(__FUNCTION__, bm, &(GetData()->MapViewDescTop(theExtraMapViewDlg->MapViewDescTopIndex())->RelativeMapRect()));
 		if(status)
 			GetData()->LogMessage("Stored map view to image file.", CatLog::Severity::Info, CatLog::Category::Operational);
