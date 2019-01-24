@@ -2713,13 +2713,12 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
     float value = CalcMacroParamTooltipValue(possibleSymbolTooltipFile);
     usedInfo = itsInfo;
     std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
-    str += " ('grude' calculation) ";
+    str += " (crude) ";
     str += GetPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
-    str += "<br>";
-    str += paramName;
+    str += ", ";
     float cacheValue = GetMacroParamTooltipValueFromCache();
     str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
-    str += " (nearest cache value) ";
+    str += " (cache) ";
     str += GetPossibleMacroParamSymbolText(cacheValue, possibleSymbolTooltipFile);
     return str;
 }
