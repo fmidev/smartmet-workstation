@@ -161,11 +161,11 @@ namespace MapDraw
             static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
     }
 
-    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap)
+    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
     {
         if(mapIsNotDirty(docInterface, theDescTopIndex))
         {
-            theOldBitmap = theUsedCDC->SelectObject(theUsedBitmap);
+            theUsedCDC->SelectObject(theUsedBitmap);
             return true;
         }
         cleanMap(docInterface, theDescTopIndex);
@@ -177,7 +177,7 @@ namespace MapDraw
         auto sourceRect = getSourceRect(docInterface, theDescTopIndex);
 
         CreateBitmapUsedForMapDrawing(theUsedBitmap, theUsedCDC, theCompatibilityCDC, bitmapSize);
-        theOldBitmap = theUsedCDC->SelectObject(theUsedBitmap);
+        theUsedCDC->SelectObject(theUsedBitmap);
 
         if(docInterface->UseWmsMaps())
         {
