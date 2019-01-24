@@ -6,10 +6,9 @@ lastloadedfile.txt
 UnpackSmartMetDataFilesExe.exe
 cp_data.bak
 running_status.dat
-viewmacro.dat
 log.txt
 *.aps
-/src/SmartMet/local/control/
+/src/SmartMet/local/
 
 # 3rd party lib binaries should not be added to version control
 /libs/3rd*

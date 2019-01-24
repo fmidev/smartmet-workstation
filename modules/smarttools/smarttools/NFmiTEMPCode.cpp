@@ -982,11 +982,12 @@ static NFmiParamBag MakeParamBag(const NFmiProducer &theWantedProducer)
   params.Add(NFmiDataIdent(NFmiParam(kFmiPressure, "P"), theWantedProducer));
   params.Add(NFmiDataIdent(NFmiParam(kFmiTemperature, "T"), theWantedProducer));
   params.Add(NFmiDataIdent(NFmiParam(kFmiDewPoint, "Td"), theWantedProducer));
+  params.Add(NFmiDataIdent(NFmiParam(kFmiGeomHeight, "h"), theWantedProducer));
+
   NFmiTotalWind totWind;
   NFmiDataIdent *newDataIdent = totWind.CreateParam(theWantedProducer);
   boost::shared_ptr<NFmiDataIdent> newDataIdentPtr(newDataIdent);
   params.Add(*newDataIdent);
-  params.Add(NFmiDataIdent(NFmiParam(kFmiGeomHeight, "h"), theWantedProducer));
   return params;
 }
 

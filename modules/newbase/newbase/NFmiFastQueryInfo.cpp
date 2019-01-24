@@ -5281,6 +5281,8 @@ float NFmiFastQueryInfo::GetLevelHeightValue(FmiParameterName theParId,
       heightValue = CachedInterpolation(theLocationCache, theTimeCache);
       RestoreAfterUsingHeightParam();
     }
+    else if(fHeightLevelDataAvailable)
+        heightValue = itsHeightLevelDataHeights[itsLevelIndex];
   }
 
   return heightValue;

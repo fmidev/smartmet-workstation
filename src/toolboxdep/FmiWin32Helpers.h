@@ -113,6 +113,20 @@ namespace CFmiWin32Helpers
     void InitCategoryComboBox(CComboBox &comboBox);
 
     void FitLastColumnOnVisibleArea(CWnd *gridCtrlParentView, CGridCtrl &gridCtrl, bool &firstTime, int minimumLastColumnWidthInPixels);
+    void DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor);
+
+    // Tarkoitus helpottaa väliaikaisten device contextien käyttöä, hoitaa myös siivouksen poistuttaessa skoopista.
+    class DeviceContextHelper
+    {
+        CDC memoryDc;
+        CBitmap *originalBitmap = nullptr;
+    public:
+        DeviceContextHelper(CDC *originalDc);
+        ~DeviceContextHelper();
+
+        CDC& getDc() { return memoryDc; }
+        void SelectBitmap(CBitmap *usedBitmap);
+    };
 };
 
 

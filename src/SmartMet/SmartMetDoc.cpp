@@ -306,6 +306,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_UP, &CSmartMetDoc::OnAcceleratorCpSelectUp)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
         ON_COMMAND(ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS, &CSmartMetDoc::OnEditSoundingDataFromServerSettings)
+        ON_COMMAND(ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault)
         END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -1316,6 +1317,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
         if(fUpdateOnlyMapViews)
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": only map-views are updated", nullptr);
 
+        itsData->SetLatestMacroParamErrorText("Starting view updates, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei jää vanhoja muistiin
+
         if(fUpdateOnlyMapViews == false)
             ::UpdateModalessDialog(itsZoomDlg);
 
@@ -1367,6 +1370,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
     {
         ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + "-v2 ***** {Reason: " + reasonForUpdate + "}", g_UpdateAllViewsAndDialogsCounter);
         ::MakeUpdatedViewsTraceLogging(__FUNCTION__, updatedViewsFlag);
+
+        itsData->SetLatestMacroParamErrorText("Starting view updates, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei jää vanhoja muistiin
 
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ZoomDlg))
             ::UpdateModalessDialog(itsZoomDlg);
@@ -2004,6 +2009,11 @@ void CSmartMetDoc::OnViewSetDataQualityCheckerDlgPlaceToDefault()
 	}
 }
 
+void CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault()
+{
+    ::SetViewPlaceToDefault(this, itsSoundingDataServerConfigurationsDlg, "Sounding data from server settings dialog set to default size and position");
+}
+
 void CSmartMetDoc::OnFileOpen()
 {
 	OnDataLoadFromFile();
@@ -2072,14 +2082,18 @@ void CSmartMetDoc::OnButtonDelete()
 	}
 }
 
+void CSmartMetDoc::StoreBitmapImageToFile(const std::string &callingFunctionName, const std::string &imageViewName, CBitmap *bitmap, const NFmiRect *theRelativeOutputArea)
+{
+    BOOL status = SaveViewToFilePicture(callingFunctionName, bitmap, theRelativeOutputArea);
+    if(status)
+        GetData()->LogMessage(std::string("Stored ") + imageViewName + " to image file.", CatLog::Severity::Info, CatLog::Category::Operational);
+    else
+        GetData()->LogMessage(std::string("Storing ") + imageViewName + " to image file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+}
+
 void CSmartMetDoc::OnDataStoreViewToPictureFile()
 {
-	CBitmap* bm = ApplicationInterface::GetSmartMetView()->MemoryBitmap();
-	BOOL status = SaveViewToFilePicture("CSmartMetDoc::StoreMainMapViewImage", bm, &(GetData()->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect()));
-	if(status)
-		GetData()->LogMessage("Stored map view to image file.", CatLog::Severity::Info, CatLog::Category::Operational);
-	else
-		GetData()->LogMessage("Storing map view to image file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+    StoreBitmapImageToFile(__FUNCTION__, "map view", ApplicationInterface::GetSmartMetView()->FinalMapViewImageBitmap(), &GetData()->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect());
 }
 
 void CSmartMetDoc::OnUpdateDataStoreViewToPictureFile(CCmdUI* pCmdUI)
@@ -2091,12 +2105,7 @@ void CSmartMetDoc::OnDataStoreExtraMapViewToPictureFile(CFmiExtraMapViewDlg *the
 {
 	if(theExtraMapViewDlg)
 	{
-		CBitmap* bm = theExtraMapViewDlg->MemoryBitmap();
-		BOOL status = SaveViewToFilePicture(__FUNCTION__, bm, &(GetData()->MapViewDescTop(theExtraMapViewDlg->MapViewDescTopIndex())->RelativeMapRect()));
-		if(status)
-			GetData()->LogMessage("Stored map view to image file.", CatLog::Severity::Info, CatLog::Category::Operational);
-		else
-			GetData()->LogMessage("Storing map view to image file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+        StoreBitmapImageToFile(__FUNCTION__, "help map view", theExtraMapViewDlg->FinalMapViewImageBitmap(), &GetData()->MapViewDescTop(theExtraMapViewDlg->MapViewDescTopIndex())->RelativeMapRect());
 	}
 }
 
@@ -2165,12 +2174,7 @@ void CSmartMetDoc::OnDataStoreTimeserialviewToPictureFile()
 {
 	if(itsTimeSerialDataEditorDlg)
 	{
-		CBitmap* bm = itsTimeSerialDataEditorDlg->ViewMemoryBitmap();
-		BOOL status = SaveViewToFilePicture(__FUNCTION__, bm, 0);
-		if(status)
-			GetData()->LogMessage("Storing image from time serial view to file.", CatLog::Severity::Info, CatLog::Category::Operational);
-		else
-			GetData()->LogMessage("Storing image from time serial view to file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+        StoreBitmapImageToFile(__FUNCTION__, "time serial view", itsTimeSerialDataEditorDlg->ViewMemoryBitmap(), nullptr);
 	}
 }
 
@@ -2178,12 +2182,7 @@ void CSmartMetDoc::OnDataStoreTrajectoryViewToPictureFile()
 {
 	if(itsTrajectoryDlg)
 	{
-		CBitmap* bm = itsTrajectoryDlg->MemoryBitmap();
-		BOOL status = SaveViewToFilePicture(__FUNCTION__, bm, 0);
-		if(status)
-			GetData()->LogMessage("Storing trajectory-view image to file.", CatLog::Severity::Info, CatLog::Category::Operational);
-		else
-			GetData()->LogMessage("Storing trajectory-view image to file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+        StoreBitmapImageToFile(__FUNCTION__, "trajectory view", itsTrajectoryDlg->MemoryBitmap(), nullptr);
 	}
 }
 
@@ -2353,12 +2352,7 @@ void CSmartMetDoc::OnDataStoreTempviewToPictureFile()
 {
 	if(itsTempDialog)
 	{
-		CBitmap* bm = itsTempDialog->ViewMemoryBitmap();
-		BOOL status = SaveViewToFilePicture(__FUNCTION__, bm, 0);
-		if(status)
-			GetData()->LogMessage("Store image from sounding view to file.", CatLog::Severity::Info, CatLog::Category::Operational);
-		else
-			GetData()->LogMessage("Storing image from sounding view to file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+        StoreBitmapImageToFile(__FUNCTION__, "sounding view", itsTempDialog->ViewMemoryBitmap(), nullptr);
 	}
 }
 
@@ -2366,12 +2360,7 @@ void CSmartMetDoc::OnDataStoreCrosssectionviewToPictureFile()
 {
 	if(itsCrossSectionDlg)
 	{
-		CBitmap* bm = itsCrossSectionDlg->MemoryBitmap();
-		BOOL status = SaveViewToFilePicture(__FUNCTION__, bm, 0);
-		if(status)
-			GetData()->LogMessage("Store image from cross section view to file.", CatLog::Severity::Info, CatLog::Category::Operational);
-		else
-			GetData()->LogMessage("Storing image from cross section view to file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+        StoreBitmapImageToFile(__FUNCTION__, "cross section view", itsCrossSectionDlg->MemoryBitmap(), nullptr);
 	}
 }
 

@@ -193,9 +193,6 @@ class NFmiSoundingDataOpt1
   std::string MakeCacheString(double T, double Td, double fromP, double toP);
   bool FillHeightDataFromLevels(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   void SetVerticalParamStatus(void);
-  void DoAfterFillChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                         std::deque<float> &data,
-                         FmiParameterName theId);
   bool LookForFilledParamFromInfo(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                   FmiParameterName theId);
   std::deque<float> &GetResizedParamData(
@@ -208,7 +205,6 @@ class NFmiSoundingDataOpt1
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       std::deque<float> &data,
       NFmiQueryDataUtil::SignificantSoundingLevels &significantLevels);
-  void MakeReverseLevelsChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   void MakeFillDataPostChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo = nullptr);
   void MakeFillDataPostChecksForServerData(const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
   void FillMissingServerData();

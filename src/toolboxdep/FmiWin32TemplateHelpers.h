@@ -312,19 +312,18 @@ namespace CFmiWin32TemplateHelpers
         // *** Tässä tehdään background kartta ***
         CDC dcMem2;
         dcMem2.CreateCompatibleDC(&dc);
-        CBitmap *oldBitmap2 = 0;
-        theView->GenerateMapBitmap(theView->MapBitmap(), &dcMem2, &dc, oldBitmap2);
+        theView->GenerateMapBitmap(theView->MapBitmap(), &dcMem2, &dc);
         smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->MapBlitDC(&dcMem2);
         // *** Tässä tehdään background kartta ***
 
         {
-            theView->SetToolMastersDC(&dcMem);
+            theView->SetToolsDCs(&dcMem);
             theView->DoDraw();
         }
 
         // *** Tässä background kartan jälkihoito ***
         smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->MapBlitDC(0);
-        /* itsMapBitmap = */ dcMem2.SelectObject(oldBitmap2);
+        dcMem2.SelectObject(static_cast<CBitmap*>(nullptr));
         dcMem2.DeleteDC();
         // *** Tässä background kartan jälkihoito ***
         smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->CopyCDC(0);
@@ -462,6 +461,96 @@ namespace CFmiWin32TemplateHelpers
         }
     }
 
+    template<class Tview>
+    void MapViewOnDraw(Tview *mapView, CDC* pDC, SmartMetDocumentInterface *smartMetDocumentInterface)
+    {
+        if(smartMetDocumentInterface->Printing())
+            return; // tulee ongelmia, jos ruutua päivitetään kun samalla printataan
+
+        auto mapViewDescTopIndex = mapView->MapViewDescTopIndex();
+        auto &gInfo = smartMetDocumentInterface->GetGraphicalInfo(mapViewDescTopIndex);
+        CFmiWin32Helpers::SetDescTopGraphicalInfo(gInfo, pDC, mapView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor());
+        CFmiWin32Helpers::DoGraphReportOnDraw(gInfo, smartMetDocumentInterface->DrawObjectScaleFactor());
+
+        if(MapDraw::stopDrawingTooSmallMapview(mapView, mapViewDescTopIndex))
+            return;
+
+        CClientDC dc(mapView);
+        CFmiWin32Helpers::DeviceContextHelper dcMem(&dc);
+
+        auto memoryBitmap = mapView->MemoryBitmap();
+        auto mapViewDesctop = smartMetDocumentInterface->MapViewDescTop(mapViewDescTopIndex);
+        if(mapViewDesctop->RedrawMapView() || smartMetDocumentInterface->ViewBrushed())
+        {
+            // välimuistin apuna käytetty dc
+            CFmiWin32Helpers::DeviceContextHelper dcMemCopy(&dc);
+            mapViewDesctop->CopyCDC(&dcMemCopy.getDc());
+
+            std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+            if(!smartMetDocumentInterface->ViewBrushed())
+            {
+                CtrlView::MakeCombatibleBitmap(mapView, &memoryBitmap);
+                // Aina kun memoryBitmap:ia säädetään, pitää myös finalImageBitmap säätää samalla
+                auto finalImageBitmap = mapView->FinalMapViewImageBitmap();
+                CtrlView::MakeCombatibleBitmap(mapView, &finalImageBitmap);
+            }
+            dcMem.SelectBitmap(memoryBitmap);
+
+            // *** Tässä tehdään background kartta ***
+            CFmiWin32Helpers::DeviceContextHelper dcMem2(&dc);
+            mapView->GenerateMapBitmap(mapView->MapBitmap(), &dcMem2.getDc(), &dc);
+            mapViewDesctop->MapBlitDC(&dcMem2.getDc());
+            // *** Tässä tehdään background kartta ***
+
+            {
+                // Varsinainen piirto tässä
+                mapView->SetToolsDCs(&dcMem.getDc());
+                mapView->DoDraw();
+            }
+
+            // *** Tässä background kartan jälkihoito ***
+            mapViewDesctop->MapBlitDC(0);
+            // *** Tässä background kartan jälkihoito ***
+            mapViewDesctop->CopyCDC(0);
+            mapViewDesctop->ClearRedrawMapView();
+            smartMetDocumentInterface->ViewBrushed(false);
+        }
+        else
+            dcMem.SelectBitmap(memoryBitmap);
+
+        // Erilaisista visualisointi optimoinneista johtuen pitää kartta kuvasta piirtää ensin
+        // pohjadata ja sitten sen päälle lopullinen kuva, mihin tulee kaikki mahdollinen.
+        // Molemmat kuvat pitää ottaa erikseen talteen eri käyttötarkoituksiin.
+        CFmiWin32Helpers::DeviceContextHelper finalImageDc(&dc);
+        finalImageDc.SelectBitmap(mapView->FinalMapViewImageBitmap());
+
+        CRect clientArea;
+        mapView->GetClientRect(&clientArea);
+        finalImageDc.getDc().BitBlt(0
+            , 0
+            , clientArea.Width()
+            , clientArea.Height()
+            , &dcMem.getDc()
+            , 0
+            , 0
+            , SRCCOPY);
+
+        auto toolbox = mapView->ToolBox();
+        toolbox->SetDC(&finalImageDc.getDc());
+        mapView->DrawOverBitmapThings(toolbox); // tätä voisi tutkia, mitkä voisi siirtää täältä pois.
+        mapViewDesctop->MapViewBitmapDirty(false);
+        mapViewDesctop->MapHandler()->ClearUpdateMapViewDrawingLayers();
+
+        // Lopuksi viimeinen kuva pitää piirtää originaali piirtopinnalle kerrallaan
+        pDC->BitBlt(0
+            , 0
+            , clientArea.Width()
+            , clientArea.Height()
+            , &finalImageDc.getDc()
+            , 0
+            , 0
+            , SRCCOPY);
+    }
 };
 
 
