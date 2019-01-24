@@ -903,22 +903,15 @@ void CFmiParameterSelectionDlg::MakeTreeNodeCollapseSettings()
 void CFmiParameterSelectionDlg::CollapseAllButCategories()
 {
     int currentRowCount = itsGridCtrl.GetFixedRowCount();
-    // First collapse all nodes
-    itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount + 1); //Joonas: tämä taitaa collapsoida vain yhden sublevel setin?!
-    //Then open only categories
-    //for(auto &rowItem : itsParameterSelectionSystem->dialogRowData())
-    //{
-    //    rowItem.dialogTreeNodeCollapsed(true);
-    //    if(rowItem.rowType() == AddParams::RowType::kCategoryType)
-    //    {
-    //        rowItem.dialogTreeNodeCollapsed(false);
-    //        itsTreeColumn.TreeDataExpandOneLevel(currentRowCount++);
-    //    }
-    //}
-    //for(auto &rowItem : itsParameterSelectionSystem->dialogRowData())
-    //{
-    //    itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount++);
-    //}
+    // Collapse producers' sub levels
+    for(auto &rowItem : itsParameterSelectionSystem->dialogRowData())
+    {
+        if(rowItem.rowType() == AddParams::RowType::kProducerType)
+        {
+            itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);       
+        }
+        currentRowCount++;
+    }
     SetTreeNodeInformationBackToDialogRowData();
     itsTreeColumn.TreeRefreshRows();
 }
