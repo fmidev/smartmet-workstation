@@ -715,3 +715,20 @@ void CFmiWin32Helpers::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &g
         CatLog::logMessage(sstream.str(), CatLog::Severity::Debug, CatLog::Category::Visualization);
     }
 }
+
+CFmiWin32Helpers::DeviceContextHelper::DeviceContextHelper(CDC *originalDc)
+:memoryDc()
+{
+    memoryDc.CreateCompatibleDC(originalDc);
+}
+
+CFmiWin32Helpers::DeviceContextHelper::~DeviceContextHelper()
+{
+    memoryDc.SelectObject(originalBitmap);
+    memoryDc.DeleteDC();
+}
+
+void CFmiWin32Helpers::DeviceContextHelper::SelectBitmap(CBitmap *usedBitmap)
+{
+    originalBitmap = memoryDc.SelectObject(usedBitmap);
+}
