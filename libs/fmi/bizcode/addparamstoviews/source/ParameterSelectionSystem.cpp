@@ -221,13 +221,50 @@ namespace AddParams
 
         for(auto row : dialogRowData_)
         {
-            if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
+            if(!row.leafNode()) { resultRowData.push_back(row); }
+            else if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
             {
                 resultRowData.push_back(row);
             }
         }
+
+        getOnlyParentsThatHaveChildNodesOrIsLeafNode(resultRowData);
         dialogRowData_.swap(resultRowData);
         updateDialogTreePatternData();
         dialogDataNeedsUpdate_ = true;
+    }
+
+    void ParameterSelectionSystem::getOnlyParentsThatHaveChildNodesOrIsLeafNode(std::vector<SingleRowItem> &resultRowData)
+    {
+        std::vector<SingleRowItem> rowData;
+
+        int index = 0;
+        for(auto row : resultRowData)
+        {
+            if(row.treeDepth() == 1) { rowData.push_back(row); }
+            else if(hasChildNodesOrIsLeafNode(index, row.treeDepth(), resultRowData))
+            {
+                rowData.push_back(row);
+            }
+            index++;
+        }
+        resultRowData.swap(rowData);
+    }
+
+    bool ParameterSelectionSystem::hasChildNodesOrIsLeafNode(int index, int treeDepth, std::vector<SingleRowItem> &resultRowData)
+    {
+        auto row = resultRowData.at(index); //Joonas: jatka tästä karsinna hiomista!
+        if(row.leafNode())
+        {
+            return true;
+        }
+
+        row = resultRowData.at(index++);
+        if(row.treeDepth() > treeDepth)
+        {
+            return hasChildNodesOrIsLeafNode(index, row.treeDepth(), resultRowData);
+        }
+
+        return false;
     }
 }
