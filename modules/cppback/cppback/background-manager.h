@@ -82,7 +82,7 @@ namespace cppback
             }
             catch(const std::exception& e)
             {
-                logException(e, "BackgroundManager::addTaskImpl->void");
+                logException(e, "BackgroundManager::addTaskImpl->result");
                 --running_;
                 throw e;
             }
@@ -105,7 +105,7 @@ namespace cppback
             }
             catch(const std::exception& e)
             {
-                logException(e, "BackgroundManager::addTaskImpl->result");
+                logException(e, "BackgroundManager::addTaskImpl->void");
                 --running_;
                 throw e;
             }
