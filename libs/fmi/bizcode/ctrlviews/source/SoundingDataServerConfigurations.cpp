@@ -1,6 +1,7 @@
 #include "SoundingDataServerConfigurations.h"
 #include "NFmiSettings.h"
 #include "NFmiEnumConverter.h"
+#include "NFmiSoundingDataOpt1.h"
 #include "catlog/catlog.h"
 
 static const std::string g_VersionNumberName = "VersionNumber";
@@ -78,8 +79,9 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     baseRegistryPath_ = baseRegistryPath;
     baseConfigurationPath_ = baseConfigurationPath;
     // Huom. 1. kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
-    // Huom. 2. kFmiLastParameter on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
-    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, kFmiLastParameter };
+    // Huom. 2. OriginTimeParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
+    // Huom. 3. TimeZoneParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
+    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId, NFmiSoundingDataOpt1::TimeZoneParameterId };
     wantedParametersString_ = makeWantedParametersString();
 
     smartmetServerBaseUri_ = NFmiSettings::Optional<std::string>(baseConfigurationPath + "::SmartmetServerBaseUri", "http://smartmet.fmi.fi/timeseries?");
@@ -132,8 +134,10 @@ std::string SoundingDataServerConfigurations::makeWantedParametersString() const
     {
         if(!str.empty())
             str += ",";
-        if(paramId == kFmiLastParameter)
+        if(paramId == NFmiSoundingDataOpt1::OriginTimeParameterId)
             str += "origintime";
+        else if(paramId == NFmiSoundingDataOpt1::TimeZoneParameterId)
+            str += "tz";
         else
             str += enumConverter.ToString(paramId);
     }
