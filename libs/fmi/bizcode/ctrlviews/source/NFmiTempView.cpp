@@ -3362,6 +3362,9 @@ bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInf
     if(soundingDataResponseFromServer.empty())
     {
         ::ReportFailedSoundingFromServerRequest(requestUriStr, producer, theTime, theLocation);
+        NFmiLocation errorLocation = theSoundingData.Location();
+        errorLocation.SetName("No data from server");
+        theSoundingData.Location(errorLocation);
         return false;
     }
     const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().wantedParameters();
