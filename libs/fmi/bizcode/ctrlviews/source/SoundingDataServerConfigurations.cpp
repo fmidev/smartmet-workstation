@@ -137,7 +137,7 @@ std::string SoundingDataServerConfigurations::makeWantedParametersString() const
         if(paramId == NFmiSoundingDataOpt1::OriginTimeParameterId)
             str += "origintime";
         else if(paramId == NFmiSoundingDataOpt1::TimeZoneParameterId)
-            str += "tz";
+            str += "localtz";
         else
             str += enumConverter.ToString(paramId);
     }
