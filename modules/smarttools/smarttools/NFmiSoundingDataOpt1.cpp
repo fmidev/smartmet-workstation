@@ -2889,22 +2889,18 @@ static double ParseServerDataParameter(const std::string &token)
         return std::stod(token);
 }
 
-static void CalcPossibleOriginTime(bool &origintimeRetrieved, const std::vector<FmiParameterName> &parametersInServerData, size_t parameterIndex, double value, const NFmiLocation &theLocation, NFmiMetTime &originTimeOut)
+static void CalcPossibleOriginTime(double localOriginTimeValue, double usedTimeZoneValue, NFmiMetTime &originTimeOut)
 {
-    if(!origintimeRetrieved)
+    if(localOriginTimeValue != kFloatMissing && usedTimeZoneValue != kFloatMissing)
     {
-        // kFmiLastParameter on feikki arvo origintime parametrille, sille ei ole omaa arvoa FmiParameter enumissa.
-        if(parametersInServerData[parameterIndex] == kFmiLastParameter)
-        {
-            // Muutetaan suuri arvo ensin 64-bit integeriksi, jotta valueStr:iin ei tulisi mitään exponentti juttuja
-            auto dateValue = static_cast<long long>(value);
-            std::string valueStr = std::to_string(dateValue);
-            // Aikaleima pitää lukea lokaali aikaan, koska tieseries-plugin palauttaa ajat lokaalissa
-            NFmiTime localTime;
-            localTime.FromStr(valueStr, kYYYYMMDDHHMM);
-            originTimeOut = localTime.UTCTime(theLocation);
-            origintimeRetrieved = true;
-        }
+        // Muutetaan suuri arvo ensin 64-bit integeriksi, jotta valueStr:iin ei tulisi mitään exponentti juttuja
+        auto dateValue = static_cast<long long>(localOriginTimeValue);
+        std::string valueStr = std::to_string(dateValue);
+        // Aikaleima pitää lukea lokaali aikaan, koska timeseries-plugin palauttaa ajat lokaalissa
+        NFmiMetTime originTimeFromServer;
+        originTimeFromServer.FromStr(valueStr, kYYYYMMDDHHMM);
+        originTimeFromServer.ChangeByMinutes(static_cast<long>(usedTimeZoneValue * 60.));
+        originTimeOut = originTimeFromServer;
     }
 }
 
@@ -2936,9 +2932,9 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
         std::string token;
         // Luetaan arvot double:en, jotta esim. origintime arvo (muotoa YYYYMMDDHHmm) saadaan kokonaisena talteen
         double value = kFloatMissing;
+        double localOriginTimeValue = kFloatMissing;
+        double usedTimeZoneValue = kFloatMissing;
         size_t valueCounter = 0;
-        // Yhtenä parametrina tulee mallidatan origintime serverillä. Haetaan sitä vain kerran.
-        bool origintimeRetrieved = false; 
         try
         {
             for(;;)
@@ -2952,8 +2948,11 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
                 value = ::ParseServerDataParameter(token);
                 // Sijoitetaan arvo oikeaan kohtaan parametri taulukkoa (moduluksen avulla)
                 auto parameterIndex = valueCounter % parameterCount;
-                ::CalcPossibleOriginTime(origintimeRetrieved, parametersInServerData, parameterIndex, value, theLocation, itsOriginTime);
                 serverDataVector[parameterIndex].push_back(static_cast<float>(value));
+                if(localOriginTimeValue == kFloatMissing && parametersInServerData[parameterIndex] == OriginTimeParameterId)
+                    localOriginTimeValue = value;
+                if(usedTimeZoneValue == kFloatMissing && parametersInServerData[parameterIndex] == TimeZoneParameterId)
+                    usedTimeZoneValue = value;
                 valueCounter++;
             }
         }
@@ -2961,6 +2960,9 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
         {
             // Lopetetaan loopitus heti ensimmäiseen poikkeukseen, mutta yritetään jatkaa vielä
         }
+
+        // Origin time lasketaan kahden eri kentän avulla tässä
+        ::CalcPossibleOriginTime(localOriginTimeValue, usedTimeZoneValue, itsOriginTime);
 
         for(size_t paramIndex = 0; paramIndex < parametersInServerData.size(); paramIndex++)
         {
