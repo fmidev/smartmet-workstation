@@ -95,15 +95,23 @@ namespace Wms
                         .setToken(server.generic.token)
                         .build();
 
-                    auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-                    auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest));
-                    // Doing logging only the first time
-                    serverKV.second.logFetchCapabilitiesRequest = false;
-                    changedLayers_.changedLayers.clear();
-                    children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
-                    if(!changedLayers_.changedLayers.empty())
+                    try
                     {
-                        cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
+
+                        auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
+                        auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest));
+                        // Doing logging only the first time
+                        serverKV.second.logFetchCapabilitiesRequest = false;
+                        changedLayers_.changedLayers.clear();
+                        children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
+                        if(!changedLayers_.changedLayers.empty())
+                        {
+                            cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
+                        }
+                    }
+                    catch(...)
+                    {
+                        // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa
                     }
                 }
                 capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
