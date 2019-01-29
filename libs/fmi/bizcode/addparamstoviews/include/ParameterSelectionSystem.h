@@ -82,6 +82,7 @@ namespace AddParams
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
         void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
         void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
+        void searchItemsThatMatchToSearchWords(std::string words);
         
     private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
@@ -90,5 +91,8 @@ namespace AddParams
         void updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
+        void getOnlyParentsThatHaveChildNodesOrIsLeafNode(std::vector<SingleRowItem> &resultRowData);
+        bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
+        void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
     };
 }

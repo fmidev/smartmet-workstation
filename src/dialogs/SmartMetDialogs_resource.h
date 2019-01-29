@@ -605,6 +605,8 @@
 #define IDC_BUTTON_DEFAULT_VALUES       8107
 #define IDC_BUTTON_DEFAULT_VALUES2      8108
 #define IDC_BUTTON_APPLY_CHANGES        8108
+#define IDC_STATIC_TEXT                 8108
+#define IDC_EDIT_SEARCH_STR             8109
 
 // Next default values for new objects
 // 
@@ -612,7 +614,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        8021
 #define _APS_NEXT_COMMAND_VALUE         48004
-#define _APS_NEXT_CONTROL_VALUE         8108
+#define _APS_NEXT_CONTROL_VALUE         8110
 #define _APS_NEXT_SYMED_VALUE           8002
 #endif
 #endif
