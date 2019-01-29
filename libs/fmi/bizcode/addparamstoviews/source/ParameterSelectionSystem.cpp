@@ -7,6 +7,7 @@
 #include "NFmiMetEditorTypes.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerSystem.h"
+#include "..\..\..\catlog\catlog\catlogutils.h"
     
 
 namespace
@@ -201,5 +202,88 @@ namespace AddParams
         dialogTreePatternArray_.clear();
         for(const auto &rowItem : dialogRowData_)
             dialogTreePatternArray_.push_back(rowItem.treeDepth());
+    }
+
+    void ParameterSelectionSystem::searchItemsThatMatchToSearchWords(std::string words)
+    {
+        // Needs to fill dialogRowData before new search
+        updateDialogRowData();
+
+        if(words.empty())
+        {
+            updateDialogTreePatternData();
+            dialogDataNeedsUpdate_ = true;
+            return;
+        }
+             
+        std::vector<SingleRowItem> resultRowData;
+        auto searchedWords = CatLogUtils::getSearchedWords(words);
+        for(auto row : dialogRowData_)
+        {
+            if(!row.leafNode()) { resultRowData.push_back(row); }
+            else if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
+            {
+                resultRowData.push_back(row);
+            }
+        }
+
+        removeNodesThatDontHaveLeafs(resultRowData);
+        if(!resultRowData.empty())
+        dialogRowData_.swap(resultRowData);
+        updateDialogTreePatternData();
+        dialogDataNeedsUpdate_ = true;
+    }
+
+    void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData)
+    {
+        std::vector<SingleRowItem> rowData;
+        int index = 0;
+
+        //Remove nodes with no childs
+        for(auto row : resultRowData)
+        {
+            if(row.leafNode()) { rowData.push_back(row); }
+            if((index + 1 < resultRowData.size()))
+            {
+                if(resultRowData.at(index + 1).treeDepth() != row.treeDepth())
+                {
+                    rowData.push_back(row);
+                }
+            }
+            index++;
+        }
+        resultRowData.swap(rowData);
+        rowData.clear();
+
+        //Then remove nodes with no leaf node as a child
+        index = 0;
+        for(auto row : resultRowData)
+        {
+            if(row.treeDepth() == 1) { rowData.push_back(row); }
+            else if(hasLeafNodeAsAChild(index, resultRowData))
+            {
+                rowData.push_back(row);
+            }
+            index++;
+        }
+        resultRowData.swap(rowData);
+    }
+
+    bool ParameterSelectionSystem::hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData)
+    {
+        auto row = resultRowData.at(index);
+        
+        if(row.leafNode())
+        {
+            return true;
+        }
+        else if(index + 1 <  resultRowData.size())
+        {
+            if(resultRowData.at(++index).treeDepth() > row.treeDepth())
+            {
+                return hasLeafNodeAsAChild(index, resultRowData);
+            }
+        }
+        return false;
     }
 }
