@@ -72,6 +72,7 @@ namespace AddParams
 
     void SingleRowItem::createSearchWords()
     {
+        searchWords_ += ((!itemName_.empty()) ? itemName_ + " " : "");
         searchWords_ += ((!displayName_.empty()) ? displayName_ + " " : "");
         searchWords_ += ((!std::to_string(itemId_).empty()) ? std::to_string(itemId_) + " " : "");
         searchWords_ += (level_ ? std::string(level_->GetName()) + " " : "");
