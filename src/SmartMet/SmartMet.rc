@@ -300,7 +300,7 @@ BEGIN
         MENUITEM "Grid point selection tool",   ID_BUTTON_SELECTION_TOOL_DLG
         MENUITEM "Data filter tool",            ID_BUTTON_FILTER_DIALOG
         MENUITEM "Zooming tool",                ID_BUTTON_ZOOM_DIALOG
-        MENUITEM "Param selection tool\tF8",    ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
+        MENUITEM "Parameter selection\tF8",     ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
         MENUITEM "View macro tool\tCTRL+I",     ID_ACCELERATOR_STORE_VIEW_MACRO
         MENUITEM "SmartTool dialog",            ID_BUTTON_OPEN_SMART_TOOL_DLG
         MENUITEM "Sounding view",               ID_BUTTON_TEMP_DLG
