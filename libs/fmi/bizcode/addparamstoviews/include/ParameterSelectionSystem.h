@@ -92,6 +92,7 @@ namespace AddParams
         void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
         void getOnlyParentsThatHaveChildNodesOrIsLeafNode(std::vector<SingleRowItem> &resultRowData);
-        bool hasChildNodesOrIsLeafNode(int index, int treeDepth, std::vector<SingleRowItem> &resultRowData);
+        bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
+        void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
     };
 }
