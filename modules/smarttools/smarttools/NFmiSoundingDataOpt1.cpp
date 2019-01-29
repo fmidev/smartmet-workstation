@@ -2898,17 +2898,16 @@ static double ParseServerDataParameter(const std::string &token)
     }
 }
 
-static void CalcPossibleOriginTime(const NFmiLocation &location, double localOriginTimeValue, NFmiMetTime &originTimeOut)
+static void CalcPossibleOriginTime(double localOriginTimeValue, NFmiMetTime &originTimeOut)
 {
     if(localOriginTimeValue != kFloatMissing)
     {
         // Muutetaan suuri arvo ensin 64-bit integeriksi, jotta valueStr:iin ei tulisi mitään exponentti juttuja
         auto dateValue = static_cast<long long>(localOriginTimeValue);
         std::string valueStr = std::to_string(dateValue);
-        // Aikaleima pitää lukea lokaali aikaan, koska timeseries-plugin palauttaa ajat lokaalissa
-        NFmiTime originTimeFromServer;
+        NFmiMetTime originTimeFromServer;
         originTimeFromServer.FromStr(valueStr, kYYYYMMDDHHMM);
-        originTimeOut = originTimeFromServer.UTCTime(location);
+        originTimeOut = originTimeFromServer;
     }
 }
 
@@ -2966,8 +2965,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
             // Lopetetaan loopitus heti ensimmäiseen poikkeukseen, mutta yritetään jatkaa vielä
         }
 
-        // Origin time lasketaan kahden eri kentän avulla tässä
-        ::CalcPossibleOriginTime(theLocation, localOriginTimeValue, itsOriginTime);
+        ::CalcPossibleOriginTime(localOriginTimeValue, itsOriginTime);
 
         for(size_t paramIndex = 0; paramIndex < parametersInServerData.size(); paramIndex++)
         {

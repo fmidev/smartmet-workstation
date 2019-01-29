@@ -80,8 +80,7 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     baseConfigurationPath_ = baseConfigurationPath;
     // Huom. 1. kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
     // Huom. 2. OriginTimeParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
-    // Huom. 3. TimeZoneParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
-    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId, NFmiSoundingDataOpt1::TimeZoneParameterId };
+    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId};
     wantedParametersString_ = makeWantedParametersString();
 
     smartmetServerBaseUri_ = NFmiSettings::Optional<std::string>(baseConfigurationPath + "::SmartmetServerBaseUri", "http://smartmet.fmi.fi/timeseries?");
@@ -136,8 +135,6 @@ std::string SoundingDataServerConfigurations::makeWantedParametersString() const
             str += ",";
         if(paramId == NFmiSoundingDataOpt1::OriginTimeParameterId)
             str += "origintime";
-        else if(paramId == NFmiSoundingDataOpt1::TimeZoneParameterId)
-            str += "localtz";
         else
             str += enumConverter.ToString(paramId);
     }
@@ -223,6 +220,8 @@ std::string SoundingDataServerConfigurations::makeFinalServerRequestUri(int prod
         // Oletus paluu formaatti on YYYYMMDDTHHMISS eli siinä on 'T' kirjain päiväyksen ja kellon välissä
         // Nyt halutaan käyttää timestamp formaattia, jossa iso integer luku ilman sekunteja ja 'T' kirjainta eli muotoa: YYYYMMDDHHmm
         requestStr += "&timeformat=timestamp";
+        // Kaikki requestissa ja palauuarvoissa olevat ajat halutaan UTC ajassa
+        requestStr += "&tz=utc";
         // Ei haeta origintime:n avulla, haetaan toistaiseksi vain viimeisintä mallidataa, joka löytyy serveriltä
         //requestStr += "&origintime=";
         //requestStr += originTime.ToStr(kYYYYMMDDHHMM);
