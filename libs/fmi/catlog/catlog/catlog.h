@@ -11,6 +11,7 @@
 // So users may search log messages with these categories to narrow down results.
 // One can log messages before logger is initilaized. 
 
+
 namespace CatLog
 {
     enum class Category
