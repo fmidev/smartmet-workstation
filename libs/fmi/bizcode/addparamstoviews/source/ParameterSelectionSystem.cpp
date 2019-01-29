@@ -218,7 +218,6 @@ namespace AddParams
              
         std::vector<SingleRowItem> resultRowData;
         auto searchedWords = CatLogUtils::getSearchedWords(words);
-
         for(auto row : dialogRowData_)
         {
             if(!row.leafNode()) { resultRowData.push_back(row); }
@@ -228,21 +227,41 @@ namespace AddParams
             }
         }
 
-        getOnlyParentsThatHaveChildNodesOrIsLeafNode(resultRowData);
+        removeNodesThatDontHaveLeafs(resultRowData);
+        if(!resultRowData.empty())
         dialogRowData_.swap(resultRowData);
         updateDialogTreePatternData();
         dialogDataNeedsUpdate_ = true;
     }
 
-    void ParameterSelectionSystem::getOnlyParentsThatHaveChildNodesOrIsLeafNode(std::vector<SingleRowItem> &resultRowData)
+    void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData)
     {
         std::vector<SingleRowItem> rowData;
-
         int index = 0;
+
+        //Remove nodes with no childs
         for(auto row : resultRowData)
         {
+            if(row.leafNode()) { rowData.push_back(row); }
+            if((index + 1 < resultRowData.size()))
+            {
+                if(resultRowData.at(index + 1).treeDepth() != row.treeDepth())
+                {
+                    rowData.push_back(row);
+                }
+            }
+            index++;
+        }
+        resultRowData.swap(rowData);
+        rowData.clear();
+
+        //Then remove nodes with no leaf node as a child
+        index = 0;
+        for(auto row : resultRowData)
+        {
+            //if(row.treeDepth() == 1 || row.treeDepth() == 2) { rowData.push_back(row); }
             if(row.treeDepth() == 1) { rowData.push_back(row); }
-            else if(hasChildNodesOrIsLeafNode(index, row.treeDepth(), resultRowData))
+            else if(hasLeafNodeAsAChild(index, resultRowData))
             {
                 rowData.push_back(row);
             }
@@ -251,20 +270,21 @@ namespace AddParams
         resultRowData.swap(rowData);
     }
 
-    bool ParameterSelectionSystem::hasChildNodesOrIsLeafNode(int index, int treeDepth, std::vector<SingleRowItem> &resultRowData)
+    bool ParameterSelectionSystem::hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData)
     {
-        auto row = resultRowData.at(index); //Joonas: jatka tästä karsinna hiomista!
+        auto row = resultRowData.at(index);
+        
         if(row.leafNode())
         {
             return true;
         }
-
-        row = resultRowData.at(index++);
-        if(row.treeDepth() > treeDepth)
+        else if(index + 1 <  resultRowData.size())
         {
-            return hasChildNodesOrIsLeafNode(index, row.treeDepth(), resultRowData);
+            if(resultRowData.at(++index).treeDepth() > row.treeDepth())
+            {
+                return hasLeafNodeAsAChild(index, resultRowData);
+            }
         }
-
         return false;
     }
 }
