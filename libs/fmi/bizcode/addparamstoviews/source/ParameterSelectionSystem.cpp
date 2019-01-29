@@ -259,7 +259,6 @@ namespace AddParams
         index = 0;
         for(auto row : resultRowData)
         {
-            //if(row.treeDepth() == 1 || row.treeDepth() == 2) { rowData.push_back(row); }
             if(row.treeDepth() == 1) { rowData.push_back(row); }
             else if(hasLeafNodeAsAChild(index, resultRowData))
             {
