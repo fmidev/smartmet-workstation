@@ -882,7 +882,8 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
         if(counter > 2)
             PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
-		pDoc->UpdateAllViewsAndDialogs("Main map view resized", SmartMetViewId::ZoomDlg);
+        // Vain tämä näyttö itse ja zoomaus dialogi pitää päivittää
+		pDoc->UpdateAllViewsAndDialogs("Main map view resized", SmartMetViewId::MainMapView | SmartMetViewId::ZoomDlg);
 	}
     counter++;
 	Invalidate(FALSE);
