@@ -227,8 +227,6 @@ unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
 
 std::string GetParameterInterpolationMethodString(FmiInterpolationMethod method)
 {
-    //FmiInterpolationMethod method = info->Param().GetParam()->InterpolationMethod();
-
     switch(method)
     {
     case FmiInterpolationMethod::kNoneInterpolation:
@@ -279,7 +277,6 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::Single
     str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
     str += "\t\t\tgrid points: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
     str += "\t\t\thorizontal resolution: " + gridSizeInKm(info->Grid()) + "\n";
-    str += "\t\t\tinterpolation: " + GetParameterInterpolationMethodString(info->Param().GetParam()->InterpolationMethod());
     str += "<br><hr color=darkblue><br>";
     str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
     str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
@@ -404,6 +401,41 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(Add
     return str;
 }
 
+std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(AddParams::SingleRowItem &rowItem)
+{
+    FmiInterpolationMethod interpolation = kNoneInterpolation;   
+    NFmiParamBag params = itsSmartMetDocumentInterface->InfoOrganizer()->GetParams(rowItem.parentItemId());
+    for(auto &dataIdent : params.ParamsVector())
+    {
+        auto id = dataIdent.GetParamIdent();
+        if(id == rowItem.itemId())
+        {
+            interpolation = dataIdent.GetParam()->InterpolationMethod();
+            break;
+        }
+    }    
+    //Joonas: jatka tästä ja katso mitä muuta voisi laittaa tooltippiin.
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "Parameter information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "Interpolation: " + GetParameterInterpolationMethodString(interpolation);
+    str += "<br><hr color=darkblue><br>";
+    return str;
+}
+
+bool IsParameterType(AddParams::RowType rowType)
+{
+    if(rowType == AddParams::RowType::kParamType || rowType == AddParams::RowType::kSubParamType
+        || rowType == AddParams::RowType::kLevelType || rowType == AddParams::RowType::kSubParamLevelType)
+    {
+        return true;
+    }
+    return false;
+}
+
 std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
 {
     CCellID idCurrentCell = GetCellFromPt(point);
@@ -417,7 +449,7 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
         auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
         auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
         auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
-             
+
         if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
         {
             return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
@@ -437,6 +469,10 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
         else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kCategoryType)
         {
             return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+        }
+        else if(IsParameterType(singleRowItem.rowType()))
+        {
+            return TooltipForParameterType(singleRowItem);
         }
         else
             return "";
