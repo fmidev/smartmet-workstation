@@ -18,7 +18,6 @@
 #include "NFmiFileSystem.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiHelpDataInfo.h"
-#include "NFmiProducerSystem.h"
 
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
@@ -226,7 +225,32 @@ unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
     return fileSizeInMB(singleRowItem.totalFilePath());
 }
 
-std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
+std::string GetParameterInterpolationMethodString(FmiInterpolationMethod method)
+{
+    //FmiInterpolationMethod method = info->Param().GetParam()->InterpolationMethod();
+
+    switch(method)
+    {
+    case FmiInterpolationMethod::kNoneInterpolation:
+        return "None";
+    case FmiInterpolationMethod::kLinearly:
+        return "Linear";
+    case FmiInterpolationMethod::kNearestPoint:
+        return "Nearest Point";
+    case FmiInterpolationMethod::kByCombinedParam:
+        return "Combined Parameter";
+    case FmiInterpolationMethod::kLinearlyFast:
+        return "Linear (Fast)";
+    case FmiInterpolationMethod::kLagrange:
+        return "Lagrange";
+    case FmiInterpolationMethod::kNearestNonMissing:
+        return "Nearest Non Missing";
+    default:
+        return "undefined";
+    }
+}
+
+std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
 {
     std::string gridArea;
     std::string levels;
@@ -255,7 +279,7 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
     str += "\t\t\tgrid points: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
     str += "\t\t\thorizontal resolution: " + gridSizeInKm(info->Grid()) + "\n";
-    str += "\t\t\tinterpolation: " + info->interpolationMethodString();
+    str += "\t\t\tinterpolation: " + GetParameterInterpolationMethodString(info->Param().GetParam()->InterpolationMethod());
     str += "<br><hr color=darkblue><br>";
     str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
     str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
@@ -265,7 +289,7 @@ std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::sh
     return str;
 }
 
-std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo)
+std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo)
 {
     std::string shortName = (producerInfo.ShortNameCount() == 0) ? "" : producerInfo.ShortName();
 
@@ -355,7 +379,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType()
     return str;
 }
 
-std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
 {
     int numberOfParams = 0;
     int depth = singleRowItem.treeDepth();
