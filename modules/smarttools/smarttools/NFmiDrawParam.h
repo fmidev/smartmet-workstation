@@ -83,13 +83,6 @@ class NFmiDrawParam
     if (itsTimeSerialModelRunCount < 0)
       itsTimeSerialModelRunCount = 0;
   }
-  int ModelRunDifferenceIndex(void) const { return itsModelRunDifferenceIndex; }
-  void ModelRunDifferenceIndex(int newValue) { itsModelRunDifferenceIndex = newValue; }
-  unsigned long DataComparisonProdId(void) const { return itsDataComparisonProdId; }
-  void DataComparisonProdId(unsigned long newValue) { itsDataComparisonProdId = newValue; }
-  NFmiInfoData::Type DataComparisonType(void) const { return itsDataComparisonType; }
-  void DataComparisonType(NFmiInfoData::Type newValue) { itsDataComparisonType = newValue; }
-  bool DoDataComparison(void);
 
   NFmiInfoData::Type DataType(void) const { return itsDataType; }
   // HUOM! tämä asettaa vain itsDataType-dataosan arvon, ei mahdollista itsInfon data tyyppiä!!!!!!
@@ -238,8 +231,6 @@ class NFmiDrawParam
   void ZeroColorMean(bool theValue) { fZeroColorMean = theValue; }
   bool IsActive(void) const { return fActive; };
   void Activate(bool newState) { fActive = newState; };
-  bool ShowDifference(void) const { return fShowDifference; };
-  void ShowDifference(bool newState) { fShowDifference = newState; };
   bool ShowDifferenceToOriginalData(void) const { return fShowDifferenceToOriginalData; }
   void ShowDifferenceToOriginalData(bool newValue) { fShowDifferenceToOriginalData = newValue; }
   //**************************************************************
@@ -888,52 +879,46 @@ class NFmiDrawParam
   std::string itsUnit;
   bool fActive;  // onko kyseinen parametri näytön aktiivinen parametri (jokaisella näyttörivillä
                  // aina yksi aktivoitunut parametri)
-  bool fShowDifference;  // näytetäänkö kartalla parametrin arvo, vai erotus edelliseen aikaan (ei
-                         // ole vielä talletettu tiedostoon)
   bool fShowDifferenceToOriginalData;
 
-  NFmiInfoData::Type itsDataType;  // lisäsin tämän, kun laitoin editoriin satelliitti kuvien
-                                   // katselun mahdollisuuden (satel-datalla ei ole infoa)
-  bool fViewMacroDrawParam;  // is this DrawParam from viewmacro, if it is, then some things are
-                             // handled
-                             // differently when modifying options, default value is false
-                             // This is not stored in file!
-  bool fBorrowedParam;       // onko parametri lainassa vai ei (A-J Punkan vilkutus juttu)
+  // lisäsin tämän, kun laitoin editoriin satelliitti kuvien
+  // katselun mahdollisuuden (satel-datalla ei ole infoa)
+  NFmiInfoData::Type itsDataType;  
+  
+  
+  // is this DrawParam from viewmacro, if it is, then some things are handled
+  // differently when modifying options, default value is false This is not stored in file!
+  bool fViewMacroDrawParam;
 
-  // Arkistodatan käyttöön liittyviä asetuksia (historialliseen dataan voidaan viitata kahdella eri
-  // tavalla)
-  // Joko suoraan fixatulla itsModelOriginTime:lla tai itsModelRunIndex:illä, jolla kerrotaan
-  // monesko ajo
+
+  // onko parametri lainassa vai ei (A-J Punkan vilkutus juttu)
+  // Arkistodatan käyttöön liittyviä asetuksia (historialliseen dataan voidaan viitata kahdella eri tavalla)
+  // Joko suoraan fixatulla itsModelOriginTime:lla tai itsModelRunIndex:illä, jolla kerrotaan monesko ajo
   // kiinnostaa viimeiseen nähden.
   // Prioriteetti järjestys on, että ensin tarkistetaan löytyykö fiksattu aika (itsModelOriginTime)
   // ja sitten vasta onko suhteellinen.
-  NFmiMetTime itsModelOriginTime;  // Jos tässä arvo, etsitään arkistosta (SmartMetin
-                                   // (tulevaisuudessa) oma tai Q2Server)
-  // suoraan kyseinen aika. Jos arvo on NFmiDrawParam::gMissingOriginTime, tämä ei
-  // ole käytössä.
-  int itsModelRunIndex;  // Jos tässä on negatiivinen arvo (-1 on edellinen malliajo, -2 on sitä
-                         // edellinen jne.), haetaan
-  // arkistosta dataa. Tämä luku on siis verrattuna kyseisen mallin viimeisimpään data osaan, joka
-  // löytyy.
+  bool fBorrowedParam;       
+
+  // Jos tässä arvo, etsitään arkistosta (SmartMetin (tulevaisuudessa) oma tai Q2Server)
+  // suoraan kyseinen aika. Jos arvo on NFmiDrawParam::gMissingOriginTime, tämä ei ole käytössä.
+  NFmiMetTime itsModelOriginTime;  
+
+
+  // Jos tässä on negatiivinen arvo (-1 on edellinen malliajo, -2 on sitä edellinen jne.), haetaan
+  // arkistosta dataa. Tämä luku on siis verrattuna kyseisen mallin viimeisimpään data osaan, joka löytyy.
   // Tarkoittaen että jos Hirlamista on pinta ja painepinta datasta tullut jo 06:n ajo ja
   // mallipintadatasta vasta 00, silloin viimeisin ajo on 06 ja -1 viittaa tällöin 00-ajoon.
   // Jos tämä on 0 tai positiivinen, tämä ei ole käytössä.
-  NFmiMetTime itsModelOriginTimeCalculated;  // tähän lasketaan relatiivisen malliajon mukainen
-  // origin aika, jotä käytetään sitten mm. tooltipeissä
-  // ja muualla
-  int itsTimeSerialModelRunCount;  // tähän määrätään kuinka monta viimeista ajoa näytetään mallille
-  // kerrallaa aikasarjassa. Jos arvo on 0 (default), ei näytetä kuin viimeinen ajo normaalisti.
-  int itsModelRunDifferenceIndex;  // tämän avulla on tarkoitus verrata eri malliajoja. Jos tämä on
-                                   // >= 0, ei ole vertailua, jos se on -1 verrataan edelliseen
-                                   // ajoon, -2:lla verrataan sitä edelliseen jne
+  int itsModelRunIndex;  
 
-  // Mallidatoja voidaan verrata analyysi ja havainto datoihin. Siis sellaiseen dataan, millä on
-  // vain yhdet arvot kullekin havainto hetkelle.
-  unsigned long itsDataComparisonProdId;  // Jos tämä on 0, ei vertailu-optio ole päällä. Muuten
-                                          // tässä on halutun vertailudatan tuottaja id
-                                          // (analyysi/havainto datan)
-  NFmiInfoData::Type
-      itsDataComparisonType;  // tässä on käytetty datatyyppi esim. kAnalyzeData tai kObservations
+  // tähän lasketaan relatiivisen malliajon mukainen
+  // origin aika, jotä käytetään sitten mm. tooltipeissä ja muualla
+  NFmiMetTime itsModelOriginTimeCalculated;  
+
+  // tähän määrätään kuinka monta viimeista ajoa näytetään mallille
+  // kerrallaa aikasarjassa. Jos arvo on 0 (default), ei näytetä kuin viimeinen ajo normaalisti.
+  int itsTimeSerialModelRunCount;  
+
   // Default is true (like old behaviour). If set false, label boxes will be filled with itsIsolineLabelBoxFillColor.
   bool fUseTransparentFillColor;
   // This is FIX for complicated SmartMet code in case where we wan't to prevent loading macroParameter's drawing settings

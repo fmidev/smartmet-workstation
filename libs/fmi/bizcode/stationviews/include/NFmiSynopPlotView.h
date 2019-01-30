@@ -80,6 +80,5 @@ private:
 	bool fMetarPlotDraw; // onko kyseessä metar-plot menossa?
 
 	checkedVector<FmiParameterName> itsQ2WantedParamVector; // jos dataa haetaan q2-serveriltä, haetaan nämä parametrit
-    NFmiFastInfoUtils::MetaWindVectorParamUsage metaWindVectorParamUsage;
 };
 

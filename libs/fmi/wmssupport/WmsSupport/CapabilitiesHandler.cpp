@@ -4,6 +4,7 @@
 
 #include <webclient/Client.h>
 
+#include <catlog/catlog.h>
 #include <cppback/background-manager.h>
 #include <boost/property_tree/xml_parser.hpp>
 
@@ -17,16 +18,25 @@ namespace Wms
             boost::property_tree::read_xml(std::stringstream{ xml }, pTree);
             return pTree;
         }
-        std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query)
+        std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging)
         {
             try
             {
-                auto httpResponseFut = client.queryFor(toBaseUri(query), toRequest(query));
+                auto baseUriStr = toBaseUri(query);
+                auto requestStr = toRequest(query);
+                if(doLogging)
+                    CatLog::logMessage(std::string("fetchCapabilitiesXml Wms request, base-uri: ") + baseUriStr + " , request: " + requestStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                auto httpResponseFut = client.queryFor(baseUriStr, requestStr);
                 httpResponseFut.wait();
-                return httpResponseFut.get();
+                auto responseStr = httpResponseFut.get();
+                if(doLogging)
+                    CatLog::logMessage(std::string("fetchCapabilitiesXml response: ") + responseStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                return responseStr;
             }
-            catch(const std::exception&)
+            catch(const std::exception &e)
             {
+                // Errors are logged always
+                CatLog::logMessage(std::string(__FUNCTION__) + " request failed: " + e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest);
                 return "";
             }
         }
@@ -72,7 +82,7 @@ namespace Wms
             {
                 auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
 
-                for(const auto& serverKV : servers_)
+                for(auto& serverKV : servers_)
                 {
                     auto server = serverKV.second;
                     auto query = QueryBuilder{}.setScheme(server.generic.scheme)
@@ -80,22 +90,28 @@ namespace Wms
                         .setPath(server.generic.path)
                         .setService("WMS")
                         .setVersion(server.version)
-                        .setFormat("image/png")
                         .setRequest("GetCapabilities")
-                        .setStyles("")
                         .setTransparency(true)
-                        .setWidth(0)
-                        .setHeight(0)
                         .setToken(server.generic.token)
                         .build();
 
-                    auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-                    auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query));
-                    changedLayers_.changedLayers.clear();
-                    children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
-                    if(!changedLayers_.changedLayers.empty())
+                    try
                     {
-                        cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
+
+                        auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
+                        auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest));
+                        // Doing logging only the first time
+                        serverKV.second.logFetchCapabilitiesRequest = false;
+                        changedLayers_.changedLayers.clear();
+                        children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
+                        if(!changedLayers_.changedLayers.empty())
+                        {
+                            cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
+                        }
+                    }
+                    catch(...)
+                    {
+                        // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa
                     }
                 }
                 capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));

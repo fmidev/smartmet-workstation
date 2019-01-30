@@ -39,6 +39,7 @@
 #include "NFmiFastInfoUtils.h"
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
+#include "catlog/catlog.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -50,17 +51,6 @@ using namespace std;
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-static bool DoWindVectorSpecialData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-{
-    if(theDrawParam->Param().GetParamIdent() == kFmiWindVectorMS)
-    {
-        NFmiFastInfoUtils::MetaWindVectorParamUsage metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(theInfo);
-        return metaWindVectorParamUsage.fUseMetaWindVectorParam;
-    }
-    else
-        return false;
-}
 
 // tämä viritetty viivan piirto pitäisi korvata GDI+ piirroilla!!!!!
 static void DrawLineWithToolBox(const NFmiPoint& theStartingPoint, const NFmiPoint& theEndingPoint, NFmiDrawingEnvironment *theEnvi, NFmiToolBox *theToolBox, bool moveXDir, bool moveYDir)
@@ -296,7 +286,6 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	itsDrawingEnvironment->SetPenSize(NFmiPoint(1, 1));
 	DrawFrame(itsDrawingEnvironment);
-	itsShowDifferenceTimeShift = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(0))); //otetaan aikasiirron pituus pääkarttanäytöstä
 
 	//************** QUICKFIX!!!!! *******************
 	// itsArea:n rectiä tarvitaan NFmiIsoLineView::DrawSimpleIsoLinesWithImagine-metodissa
@@ -328,7 +317,8 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 			itsDrawParam = dpList->Current(); // asetetaan todella käytetty drawParam käyttöön
 			SetupUsedDrawParam(); // tämä updeittaa mm. macroParam-drawparamin
 			itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true, fGetCurrentDataFromQ2Server);
-			if(itsInfo == 0 || itsDrawParam == 0)
+            NFmiStationView::SetupPossibleWindMetaParamData();
+            if(itsInfo == 0 || itsDrawParam == 0)
 			{ // voi mennä tähän esim. jos on tiputtanut ensin editoriin level dataa ja katsoo
 			  // editoituna datana vaikka lämpötilaa. Sitten laitetaan editori operatiiviseen
 			  // tilaan painamalla Lataa-nappia, jolloin editoitava data on pinta dataa (nyt
@@ -685,26 +675,6 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						continue; // tämä on virhe tilanne oikeasti!!!!
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
 
-					if(itsDrawParam->ShowDifference())
-					{
-						int changeByMinutes = itsShowDifferenceTimeShift * 60; // showdiff on tunteina
-						NFmiMetTime tmpTime(aTime);
-						tmpTime.ChangeByMinutes(-changeByMinutes);
-						float value2 = GetLevelValue(info, p, latlon, tmpTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
-						value = ::CalcDiffValue(value, value2);
-					}
-					else if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-					{
-						boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-						if(wantedModelRunInfo == 0)
-							value = kFloatMissing;
-						else
-						{
-							float value2 = GetLevelValue(wantedModelRunInfo, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
-							value = ::CalcDiffValue(value, value2);
-						}
-					}
-
                     if(info->DataType() == NFmiInfoData::kCrossSectionMacroParam)
                     {
                         NFmiIsoLineData isoLineData;
@@ -727,7 +697,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					if(itsDrawParam->IsParamHidden())
 						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
 					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
-					str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true);
+					str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true, 0, false);
 					if(itsDrawParam->IsParamHidden())
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 					str += ":	";
@@ -751,19 +721,69 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 	return str;
 }
 
-float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
+// HUOM! Tämä ei tue tuulen meta parametreja, eli mm. tooltippiin ei saada oikeita arvoja niissä tapauksissa.
+float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck)
 {
-	if(theInfo)
-	{
-		if(theInfo->PressureDataAvailable() == false && theInfo->HeightDataAvailable())
-		{
-			float heightValue = static_cast<float>(::CalcHeightAtPressure(P) * 1000.);
-			return theInfo->HeightValue(heightValue, theLatlon, theTime);
-		}
-		else if(theInfo->PressureDataAvailable())
-			return theInfo->PressureLevelValue(P, theLatlon, theTime);
-	}
-	return kFloatMissing;
+    if(theInfo)
+    {
+        if(doMetaParamCheck && metaWindParamUsage.ParamNeedsMetaCalculations(itsDrawParam->Param().GetParamIdent()))
+            return GetLevelValueForMetaParam(theInfo, P, theLatlon, theTime);
+        else
+        {
+            if(theInfo->PressureDataAvailable() == false && theInfo->HeightDataAvailable())
+            {
+                float heightValue = static_cast<float>(::CalcHeightAtPressure(P) * 1000.);
+                return theInfo->HeightValue(heightValue, theLatlon, theTime);
+            }
+            else if(theInfo->PressureDataAvailable())
+                return theInfo->PressureLevelValue(P, theLatlon, theTime);
+        }
+    }
+    return kFloatMissing;
+}
+
+float NFmiCrossSectionView::GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
+{
+    NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+    auto paramId = itsDrawParam->Param().GetParamIdent();
+    if(metaWindParamUsage.HasWsAndWd())
+    {
+        theInfo->Param(kFmiWindSpeedMS);
+        float WS = GetLevelValue(theInfo, P, theLatlon, theTime, false);
+        theInfo->Param(kFmiWindDirection);
+        float WD = GetLevelValue(theInfo, P, theLatlon, theTime, false);
+        switch(paramId)
+        {
+        case kFmiWindVectorMS:
+            return NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(WS, WD);
+        case kFmiWindUMS:
+            return NFmiFastInfoUtils::CalcU(WS, WD);
+        case kFmiWindVMS:
+            return NFmiFastInfoUtils::CalcV(WS, WD);
+        default:
+            return kFloatMissing;
+        }
+    }
+    else if(metaWindParamUsage.HasWindComponents())
+    {
+        theInfo->Param(kFmiWindUMS);
+        float u = GetLevelValue(theInfo, P, theLatlon, theTime, false);
+        theInfo->Param(kFmiWindVMS);
+        float v = GetLevelValue(theInfo, P, theLatlon, theTime, false);
+        switch(paramId)
+        {
+        case kFmiWindVectorMS:
+            return NFmiFastInfoUtils::CalcWindVectorFromWindComponents(u, v);
+        case kFmiWindDirection:
+            return NFmiFastInfoUtils::CalcWD(u, v);
+        case kFmiWindSpeedMS:
+            return NFmiFastInfoUtils::CalcWS(u, v);
+        default:
+            return kFloatMissing;
+        }
+    }
+
+    return kFloatMissing;
 }
 
 NFmiDrawingEnvironment NFmiCrossSectionView::GetToolTipEnvironment(void)
@@ -983,7 +1003,7 @@ void NFmiCrossSectionView::AddFooterTextForCurrentData(bool fLastOne)
 {
 	if(itsDrawParam->IsParamHidden())
 		itsHeaderParamString += "("; // jos parametri on piilotettu, laita teksti sulkuihin
-	std::string paramStr = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, false, false);
+	std::string paramStr = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, false, false, 0, false);
 	itsHeaderParamString += paramStr;
 	if(itsDrawParam->IsParamHidden())
 		itsHeaderParamString += ")";
@@ -1337,21 +1357,6 @@ void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> 
 	const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
 	const checkedVector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 	theIsoLineData.itsInfo->RouteCrossSectionValuesLogP(theValues, thePressures, points, times);
-
-	if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-	{
-		fDoCrossSectionDifferenceData = true;
-		boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-		if(wantedModelRunInfo == 0)
-			theValues = kFloatMissing;
-		else
-		{
-			wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-			NFmiDataMatrix<float> values2;
-			wantedModelRunInfo->RouteCrossSectionValuesLogP(values2, thePressures, points, times);
-			theValues -= values2;
-		}
-	}
 }
 
 void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData)
@@ -1602,7 +1607,7 @@ static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFast
 	}
 }
 
-static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiTimeBag &theTimes, checkedVector<float> &thePressures, int &theFirstForecastTimeIndex, checkedVector<NFmiMetTime> &theObsForModeFoundObsTimes)
+static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiTimeBag &theTimes, checkedVector<float> &thePressures, int &theFirstForecastTimeIndex, checkedVector<NFmiMetTime> &theObsForModeFoundObsTimes, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
 {
 	bool foundDataYet = false;
 	int firstDataIndex = -1;
@@ -1615,7 +1620,7 @@ static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &t
 			if(NFmiSoundingData::HasRealSoundingData(*theInfo))
 			{ // dataa löytyi asemalta johonkin aikaan, täytetään matriisi siltä kohdalta, ja merkitään viimeksi löytynyt aika-indeksi talteen
 				FmiParameterName parId = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
-				if(theInfo->Param(parId) || parId == kFmiHumidity || ::DoWindVectorSpecialData(theInfo, theDrawParam)) // humidity lasketaan vaikka sitä ei löydy infosta
+				if(theInfo->Param(parId) || parId == kFmiHumidity || metaWindParamUsage.ParamNeedsMetaCalculations(theDrawParam->Param().GetParamIdent())) // humidity lasketaan vaikka sitä ei löydy infosta
 				{
 					theFirstForecastTimeIndex = theTimes.CurrentIndex();
 					if(foundDataYet == false)
@@ -1668,7 +1673,7 @@ void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &
         crossSectionSystem->ObsForModeLocation(*soundingInfo->Location());
 		try
 		{
-			::FillCrossSectionMatrixWithObservedSoundings(theValues, soundingInfo, itsDrawParam, times, thePressures, firstForecastTimeIndex, itsObsForModeFoundObsTimes);
+			::FillCrossSectionMatrixWithObservedSoundings(theValues, soundingInfo, itsDrawParam, times, thePressures, firstForecastTimeIndex, itsObsForModeFoundObsTimes, metaWindParamUsage);
 		}
 		catch(...)
 		{ // luultavasti haluttua parametria ei löytynyt
@@ -1682,8 +1687,9 @@ void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &
 	}
 
 	// lopuksi täytetään loppu osa matriisista halutulla ennuste datalla
-    if(::DoWindVectorSpecialData(theIsoLineData.itsInfo, itsDrawParam))
-        FillTimeCrossSectionDataForMetaWindVector(theValues, theIsoLineData, thePressures, firstForecastTimeIndex);
+    auto wantedParamId = itsDrawParam->Param().GetParamIdent();
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+        FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, firstForecastTimeIndex, wantedParamId);
     else
     {
         theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times, firstForecastTimeIndex);
@@ -1691,179 +1697,127 @@ void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &
     }
 }
 
-void NFmiCrossSectionView::FillRouteCrossSectionDataForMetaWindVector(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
+template<typename GetDataFunction>
+bool CalcCrossSectionMetaWindParamMatrix(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiDataMatrix<float> &theValues, checkedVector<float> &thePressures, unsigned long wantedParamId, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetDataFunction getDataFunction)
+{
+    if(metaWindParamUsage.HasWsAndWd())
+    {
+        NFmiDataMatrix<float> wsValues;
+        info->Param(kFmiWindSpeedMS);
+        getDataFunction(wsValues);
+        NFmiDataMatrix<float> wdValues;
+        info->Param(kFmiWindDirection);
+        getDataFunction(wdValues);
+        if(wantedParamId == kFmiWindVectorMS)
+        {
+            NFmiFastInfoUtils::CalcMatrixWindVectorFromSpeedAndDirection(wsValues, wdValues, theValues);
+            return true;
+        }
+        else if(wantedParamId == kFmiWindUMS)
+        {
+            NFmiDataMatrix<float> dummyValuesV;
+            NFmiFastInfoUtils::CalcMatrixWindComponentsFromSpeedAndDirection(wsValues, wdValues, theValues, dummyValuesV);
+            return true;
+        }
+        else if(wantedParamId == kFmiWindVMS)
+        {
+            NFmiDataMatrix<float> dummyValuesU;
+            NFmiFastInfoUtils::CalcMatrixWindComponentsFromSpeedAndDirection(wsValues, wdValues, dummyValuesU, theValues);
+            return true;
+        }
+    }
+    else if(metaWindParamUsage.HasWindComponents())
+    {
+        NFmiDataMatrix<float> uValues;
+        info->Param(kFmiWindUMS);
+        getDataFunction(uValues);
+        NFmiDataMatrix<float> vValues;
+        info->Param(kFmiWindVMS);
+        getDataFunction(vValues);
+        if(wantedParamId == kFmiWindVectorMS)
+        {
+            NFmiFastInfoUtils::CalcMatrixWindVectorFromWindComponents(uValues, vValues, theValues);
+            return true;
+        }
+        else if(wantedParamId == kFmiWindSpeedMS)
+        {
+            NFmiFastInfoUtils::CalcMatrixWsFromWindComponents(uValues, vValues, theValues);
+            return true;
+        }
+        else if(wantedParamId == kFmiWindDirection)
+        {
+            NFmiFastInfoUtils::CalcMatrixWdFromWindComponents(uValues, vValues, theValues);
+            return true;
+        }
+    }
+
+    std::string warningString = "CrossSection meta wind param calculation logic error with param: ";
+    warningString += std::to_string(wantedParamId);
+    CatLog::logMessage(warningString, CatLog::Severity::Warning, CatLog::Category::Visualization);
+    return false;
+}
+
+bool NFmiCrossSectionView::FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId)
 {
     const auto &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
     const auto &times = itsCtrlViewDocumentInterface->CrossSectionSystem()->RouteTimes();
     const auto &info = theIsoLineData.itsInfo;
-    NFmiFastInfoUtils::MetaWindVectorParamUsage metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(info);
-    if(metaWindVectorParamUsage.fHasWsAndWd)
-    {
-        NFmiDataMatrix<float> wsValues;
-        info->Param(kFmiWindSpeedMS);
-        info->RouteCrossSectionValuesLogP(wsValues, thePressures, points, times);
-        NFmiDataMatrix<float> wdValues;
-        info->Param(kFmiWindDirection);
-        info->RouteCrossSectionValuesLogP(wdValues, thePressures, points, times);
-        NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(wsValues, wdValues, theValues);
-    }
-    else
-    {
-        NFmiDataMatrix<float> uValues;
-        info->Param(kFmiWindUMS);
-        info->RouteCrossSectionValuesLogP(uValues, thePressures, points, times);
-        NFmiDataMatrix<float> vValues;
-        info->Param(kFmiWindVMS);
-        info->RouteCrossSectionValuesLogP(vValues, thePressures, points, times);
-        NFmiFastInfoUtils::CalcWindVectorFromWindComponents(uValues, vValues, theValues);
-    }
+    return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->RouteCrossSectionValuesLogP(valuesOut, thePressures, points, times); });
 }
 
 void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
 {
-    if(::DoWindVectorSpecialData(theIsoLineData.itsInfo, itsDrawParam))
-        FillRouteCrossSectionDataForMetaWindVector(theValues, theIsoLineData, thePressures);
+    auto wantedParamId = itsDrawParam->Param().GetParamIdent();
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+        FillRouteCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, wantedParamId);
     else
     {
         const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
         const checkedVector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->CrossSectionSystem()->RouteTimes();
         theIsoLineData.itsInfo->RouteCrossSectionValuesLogP(theValues, thePressures, points, times);
-
-        if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-        {
-            fDoCrossSectionDifferenceData = true;
-            boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-            if(wantedModelRunInfo == 0)
-                theValues = kFloatMissing;
-            else
-            {
-                wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-                NFmiDataMatrix<float> values2;
-                wantedModelRunInfo->RouteCrossSectionValuesLogP(values2, thePressures, points, times);
-                theValues -= values2;
-            }
-        }
     }
 }
 
-void NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindVector(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex)
+bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId)
 {
     auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
     const auto &info = theIsoLineData.itsInfo;
     NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
-    NFmiFastInfoUtils::MetaWindVectorParamUsage metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(info);
-    if(metaWindVectorParamUsage.fHasWsAndWd)
-    {
-        NFmiDataMatrix<float> wsValues;
-        info->Param(kFmiWindSpeedMS);
-        info->TimeCrossSectionValuesLogP(wsValues, thePressures, point, times, theStartTimeIndex);
-        NFmiDataMatrix<float> wdValues;
-        info->Param(kFmiWindDirection);
-        info->TimeCrossSectionValuesLogP(wdValues, thePressures, point, times, theStartTimeIndex);
-        NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(wsValues, wdValues, theValues, theStartTimeIndex);
-    }
-    else
-    {
-        NFmiDataMatrix<float> uValues;
-        info->Param(kFmiWindUMS);
-        info->TimeCrossSectionValuesLogP(uValues, thePressures, point, times, theStartTimeIndex);
-        NFmiDataMatrix<float> vValues;
-        info->Param(kFmiWindVMS);
-        info->TimeCrossSectionValuesLogP(vValues, thePressures, point, times, theStartTimeIndex);
-        NFmiFastInfoUtils::CalcWindVectorFromWindComponents(uValues, vValues, theValues, theStartTimeIndex);
-    }
+    return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->TimeCrossSectionValuesLogP(valuesOut, thePressures, point, times, theStartTimeIndex); });
 }
 
 void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
 { // kerää dataa matriisiin siten, että alhaalla (pinnalla) olevat datat ovat
   // matriisin y-akselin alapäässä.
-    if(::DoWindVectorSpecialData(theIsoLineData.itsInfo, itsDrawParam))
-        FillTimeCrossSectionDataForMetaWindVector(theValues, theIsoLineData, thePressures);
+    auto wantedParamId = itsDrawParam->Param().GetParamIdent();
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+        FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, 0, wantedParamId);
     else
     {
         // x-akseli täytetään timebagistä tulevilla ajoilla
         NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
         NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
         theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times);
-
-        if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-        {
-            fDoCrossSectionDifferenceData = true;
-            boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-            if(wantedModelRunInfo == 0)
-                theValues = kFloatMissing;
-            else
-            {
-                wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-                NFmiDataMatrix<float> values2;
-                wantedModelRunInfo->TimeCrossSectionValuesLogP(values2, thePressures, point, times);
-                theValues -= values2;
-            }
-        }
     }
 }
 
-void NFmiCrossSectionView::FillCrossSectionDataForMetaWindVector(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
+bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId)
 {
     const auto &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
     const auto &info = theIsoLineData.itsInfo;
-    NFmiFastInfoUtils::MetaWindVectorParamUsage metaWindVectorParamUsage = NFmiFastInfoUtils::CheckMetaWindVectorParamUsage(info);
-    if(metaWindVectorParamUsage.fHasWsAndWd)
-    {
-        NFmiDataMatrix<float> wsValues;
-        info->Param(kFmiWindSpeedMS);
-        info->CrossSectionValuesLogP(wsValues, theIsoLineData.itsTime, thePressures, points);
-        NFmiDataMatrix<float> wdValues;
-        info->Param(kFmiWindDirection);
-        info->CrossSectionValuesLogP(wdValues, theIsoLineData.itsTime, thePressures, points);
-        NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(wsValues, wdValues, theValues);
-    }
-    else
-    {
-        NFmiDataMatrix<float> uValues;
-        info->Param(kFmiWindUMS);
-        info->CrossSectionValuesLogP(uValues, theIsoLineData.itsTime, thePressures, points);
-        NFmiDataMatrix<float> vValues;
-        info->Param(kFmiWindVMS);
-        info->CrossSectionValuesLogP(vValues, theIsoLineData.itsTime, thePressures, points);
-        NFmiFastInfoUtils::CalcWindVectorFromWindComponents(uValues, vValues, theValues);
-    }
+    return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->CrossSectionValuesLogP(valuesOut, theIsoLineData.itsTime, thePressures, points); });
 }
 
 void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
 { // kerää dataa matriisiin siten, että alhaalla (pinnalla) olevat datat ovat
   // matriisin y-akselin alapäässä
-    if(::DoWindVectorSpecialData(theIsoLineData.itsInfo, itsDrawParam))
-        FillCrossSectionDataForMetaWindVector(theValues, theIsoLineData, thePressures);
+    auto wantedParamId = itsDrawParam->Param().GetParamIdent();
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+        FillCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, wantedParamId);
     else
     {
         const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
         theIsoLineData.itsInfo->CrossSectionValuesLogP(theValues, theIsoLineData.itsTime, thePressures, points);
-
-        if(itsDrawParam->ShowDifference())
-        {
-            fDoCrossSectionDifferenceData = true;
-            int changeByMinutes = itsShowDifferenceTimeShift * 60; // showdiff on tunteina
-            NFmiMetTime tmpTime(itsTime);
-            tmpTime.ChangeByMinutes(-changeByMinutes);
-            NFmiDataMatrix<float> values2;
-            theIsoLineData.itsInfo->CrossSectionValuesLogP(values2, tmpTime, thePressures, points);
-            theValues -= values2;
-        }
-        else if(itsDrawParam->ModelRunDifferenceIndex() < 0)
-        {
-            fDoCrossSectionDifferenceData = true;
-            boost::shared_ptr<NFmiFastQueryInfo> wantedModelRunInfo = GetModelrunDifferenceInfo(itsDrawParam, true);
-            if(wantedModelRunInfo == 0)
-                theValues = kFloatMissing;
-            else
-            {
-                wantedModelRunInfo->LocationIndex(itsInfo->LocationIndex());
-                NFmiDataMatrix<float> values2;
-                wantedModelRunInfo->CrossSectionValuesLogP(values2, theIsoLineData.itsTime, thePressures, points);
-                theValues -= values2;
-            }
-        }
     }
 }
 

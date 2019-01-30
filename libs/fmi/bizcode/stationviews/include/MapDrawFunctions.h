@@ -8,6 +8,7 @@ class CRect;
 class CBitmap;
 class NFmiRect;
 class NFmiToolBox;
+class CWnd;
 
 namespace Gdiplus
 {
@@ -23,5 +24,6 @@ namespace MapDraw
     void drawOverlayMap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, int wantedDrawOverMapMode, CDC *theUsedCDC, Gdiplus::RectF& destRect, const NFmiPoint& bitmapSize);
     NFmiPoint getBitmapSize(CtrlViewDocumentInterface *docInterface, int theDescTopIndex);
     Gdiplus::RectF getDestRect(const CRect& mfcRect);
-    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap);
+    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC);
+    bool stopDrawingTooSmallMapview(CWnd *mapView, int theDescTopIndex);
 }

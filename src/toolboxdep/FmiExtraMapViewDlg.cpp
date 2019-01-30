@@ -196,7 +196,12 @@ void CFmiExtraMapViewDlg::OnSize(UINT nType, int cx, int cy)
 	if(itsView)
 		itsView->MoveWindow(CalcClientArea(), FALSE);
 	Invalidate(FALSE);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: View rezised");
+    if(ApplicationInterface::GetApplicationInterfaceImplementation)
+    {
+        // Vain tämä näyttö itse ja zoomaus dialogi pitää päivittää
+        SmartMetViewId thisMapViewId = (itsMapViewDescTopIndex == 1) ? SmartMetViewId::MapView2 : SmartMetViewId::MapView3;
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Help map view (2/3) was rezised", thisMapViewId | SmartMetViewId::ZoomDlg);
+    }
 }
 
 CRect CFmiExtraMapViewDlg::CalcClientArea(void)
@@ -617,7 +622,16 @@ CBitmap* CFmiExtraMapViewDlg::MemoryBitmap(void)
 {
 	if(itsView)
 		return itsView->MemoryBitmap();
-	return 0;
+    else
+    	return nullptr;
+}
+
+CBitmap* CFmiExtraMapViewDlg::FinalMapViewImageBitmap() 
+{ 
+    if(itsView)
+        return itsView->FinalMapViewImageBitmap();
+    else
+        return nullptr;
 }
 
 void CFmiExtraMapViewDlg::OnButtonZoomDialog()

@@ -25,6 +25,10 @@ class NFmiFastQueryInfo;
 class NFmiSoundingDataOpt1
 {
  public:
+
+   // Yhdelle serveriltä haetulle erikoishakuparametrille pitää tehdä oma param-id
+   static const FmiParameterName OriginTimeParameterId = static_cast<FmiParameterName>(kFmiLastParameter + 1);
+
   class LFCIndexCache
   {
    public:
@@ -71,10 +75,13 @@ class NFmiSoundingDataOpt1
   bool FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                         const NFmiMetTime &theTime,
                         const NFmiMetTime &theOriginTime,
-                        const NFmiPoint &theLatlon,
-                        const NFmiString &theName,
+                        const NFmiLocation &theLocation,
                         const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
                         bool useFastFill = false);
+  bool FillSoundingData(const std::vector<FmiParameterName> &parametersInServerData, const std::string &theServerDataAsciiFormat,
+      const NFmiMetTime &theTime,
+      const NFmiLocation &theLocation,
+      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
   void CutEmptyData(void);  // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että
                             // pelkät puuttuvat kerrokset otetaan pois
   static bool HasRealSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingLevelInfo);
@@ -184,15 +191,12 @@ class NFmiSoundingDataOpt1
       const NFmiMetTime &theTime,
       const NFmiPoint &theLatlon);
   void FastFillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  void FillRestOfWindData(NFmiFastInfoUtils::MetaWindVectorParamUsage &metaWindVectorParamUsage);
+  void FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage);
   void InitZeroHeight(void);  // tätä kutsutaan FillParamData-metodeista
   void CalculateHumidityData(void);
   std::string MakeCacheString(double T, double Td, double fromP, double toP);
   bool FillHeightDataFromLevels(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   void SetVerticalParamStatus(void);
-  void DoAfterFillChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                         std::deque<float> &data,
-                         FmiParameterName theId);
   bool LookForFilledParamFromInfo(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                   FmiParameterName theId);
   std::deque<float> &GetResizedParamData(
@@ -205,8 +209,11 @@ class NFmiSoundingDataOpt1
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       std::deque<float> &data,
       NFmiQueryDataUtil::SignificantSoundingLevels &significantLevels);
-  void MakeReverseLevelsChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   void MakeFillDataPostChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo = nullptr);
+  void MakeFillDataPostChecksForServerData(const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
+  void FillMissingServerData();
+  void SetServerDataFromGroundLevelUp();
+  void ReverseAllData();
 
   NFmiLocation itsLocation;
   NFmiMetTime itsTime;

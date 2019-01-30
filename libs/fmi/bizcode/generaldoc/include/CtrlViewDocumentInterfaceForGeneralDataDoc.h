@@ -273,6 +273,7 @@ public:
     void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) override;
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     NFmiMacroParamDataCache& MacroParamDataCache() override;
+    SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

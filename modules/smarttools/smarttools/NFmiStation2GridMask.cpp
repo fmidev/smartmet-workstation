@@ -15,9 +15,10 @@ NFmiStation2GridMask::GriddingFunctionCallBackType NFmiStation2GridMask::itsGrid
 
 NFmiStation2GridMask::NFmiStation2GridMask(Type theMaskType,
                                            NFmiInfoData::Type theDataType,
-                                           boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+                                           boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                           unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMask(
-          NFmiCalculationCondition(), theMaskType, theDataType, theInfo, NFmiAreaMask::kNoValue),
+          NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId, NFmiAreaMask::kNoValue),
       itsGriddedStationData(new DataCache()),
       itsCurrentGriddedStationData(0),
       itsLastCalculatedTime(NFmiMetTime::gMissingTime),
@@ -132,9 +133,10 @@ NFmiNearestObsValue2GridMask::NFmiNearestObsValue2GridMask(
     Type theMaskType,
     NFmiInfoData::Type theDataType,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    int theArgumentCount)
+    int theArgumentCount,
+    unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMask(
-          NFmiCalculationCondition(), theMaskType, theDataType, theInfo, NFmiAreaMask::kNoValue),
+          NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId, NFmiAreaMask::kNoValue),
       itsNearestObsValuesData(new DataCache()),
       itsCurrentNearestObsValuesData(0),
       itsLastCalculatedTime(NFmiMetTime::gMissingTime),
@@ -329,8 +331,9 @@ void NFmiNearestObsValue2GridMask::DoNearestValueGriddingCheck(
 NFmiLastTimeValueMask::NFmiLastTimeValueMask(Type theMaskType,
     NFmiInfoData::Type theDataType,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    int theArgumentCount)
-    :NFmiStation2GridMask(theMaskType, theDataType,theInfo)
+    int theArgumentCount,
+    unsigned long thePossibleMetaParamId)
+    :NFmiStation2GridMask(theMaskType, theDataType, theInfo, thePossibleMetaParamId)
     , itsLastTimeIndex(gMissingIndex)
     ,itsLastTimeOfData(NFmiMetTime::gMissingTime)
 {
@@ -413,8 +416,9 @@ NFmiMetTime NFmiLastTimeValueMask::FindLastTime()
 NFmiStation2GridTimeShiftMask::NFmiStation2GridTimeShiftMask(Type theMaskType,
     NFmiInfoData::Type theDataType,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    float theTimeOffsetInHours)
-    :NFmiStation2GridMask(theMaskType, theDataType, theInfo)
+    float theTimeOffsetInHours,
+    unsigned long thePossibleMetaParamId)
+    :NFmiStation2GridMask(theMaskType, theDataType, theInfo, thePossibleMetaParamId)
     ,itsTimeOffsetInHours(theTimeOffsetInHours)
     ,itsChangeByMinutesValue(boost::math::lround(theTimeOffsetInHours*60.f))
 {}

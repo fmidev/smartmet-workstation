@@ -34,9 +34,10 @@ IMPLEMENT_DYNCREATE(CFmiExtraMapView, CView)
 CFmiExtraMapView::CFmiExtraMapView()
 :CView()
 ,itsSmartMetDocumentInterface(nullptr)
-,itsMemoryBitmap(nullptr)
-,itsMapBitmap(nullptr)
-,itsSynopPlotBitmap(nullptr)
+,itsFinalMapViewImageBitmap(new CBitmap)
+,itsMemoryBitmap(new CBitmap)
+,itsMapBitmap(new CBitmap)
+,itsSynopPlotBitmap(new CBitmap)
 ,itsSynopPlotBitmapHandle(0)
 ,itsEditMapView(nullptr)
 ,itsToolBox(nullptr)
@@ -53,7 +54,8 @@ CFmiExtraMapView::~CFmiExtraMapView()
 	delete itsEditMapView;
 	delete itsToolBox;
 
-	CtrlView::DestroyBitmap(&itsMemoryBitmap);
+    CtrlView::DestroyBitmap(&itsFinalMapViewImageBitmap);
+    CtrlView::DestroyBitmap(&itsMemoryBitmap);
     CtrlView::DestroyBitmap(&itsMapBitmap);
 	delete itsSynopPlotBitmap; // tähän ei saa käyttää DestroyBitmap-funktiota
 }
@@ -61,9 +63,10 @@ CFmiExtraMapView::~CFmiExtraMapView()
 CFmiExtraMapView::CFmiExtraMapView(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned int theMapViewDescTopIndex)
 :CView()
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
-,itsMemoryBitmap(nullptr)
-,itsMapBitmap(nullptr)
-,itsSynopPlotBitmap(nullptr)
+,itsFinalMapViewImageBitmap(new CBitmap)
+,itsMemoryBitmap(new CBitmap)
+,itsMapBitmap(new CBitmap)
+,itsSynopPlotBitmap(new CBitmap)
 ,itsSynopPlotBitmapHandle(0)
 ,itsEditMapView(nullptr)
 ,itsToolBox(nullptr)
@@ -78,7 +81,6 @@ CFmiExtraMapView::CFmiExtraMapView(SmartMetDocumentInterface *smartMetDocumentIn
 	// SYY miksi joudun luomaan bitmapin resursseista on siinä että en saanut win32 ImageList-systeemiä toimimaan muuten.
 	// HUOM!2 Perus bitmapin pitää olla neliö, koska synop-plot piirto perustuu siihen!
 	itsSynopPlotBitmapHandle = CFmiWin32Helpers::GetBitmapFromResources(IDB_BITMAP_SYNOP_PLOT_TOOLTIP_BASE_EXTRA_MAP);
-	itsSynopPlotBitmap = new CBitmap;
 	itsSynopPlotBitmap->Attach(itsSynopPlotBitmapHandle);
 }
 
@@ -98,106 +100,11 @@ BEGIN_MESSAGE_MAP(CFmiExtraMapView, CView)
     ON_WM_RBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
-// päivitä käyttämään CFmiWin32Helpers-versiota funktiosta, ja poista tästä ja esim. CFmiZeditmap2View-luokasta.
-void CFmiExtraMapView::MakeCombatibleBitmap(CBitmap **theMemoryBitmap, int cx, int cy)
-{
-	if(*theMemoryBitmap)
-		(*theMemoryBitmap)->DeleteObject();
-	else
-		*theMemoryBitmap = new CBitmap;
-	CClientDC dc(this);
-	CRect clientArea(0, 0, cx, cy);
-	if(cx == 0 && cy == 0)
-		GetClientRect(&clientArea);
-
-	(*theMemoryBitmap)->CreateCompatibleBitmap(&dc,clientArea.Width()
-											,clientArea.Height());
-	ASSERT((*theMemoryBitmap)->m_hObject != 0);
-}
-
 // CFmiExtraMapView drawing
 
 void CFmiExtraMapView::OnDraw(CDC* pDC)
 {
-	if(itsSmartMetDocumentInterface->Printing())
-		return ; // tulee ongelmia, jos ruutua päivitetään kun samalla printataan
-
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor());
-
-	CClientDC dc(this);
-	CDC dcMem;
-	dcMem.CreateCompatibleDC(&dc);
-
-	CRect clientArea;
-	GetClientRect(&clientArea);
-	if(clientArea.Height() < 4)
-	{
-		dcMem.DeleteDC();
-		return ; // kun ruudun korkeus on tarpeeksi pieni, ohjelma kaatuu jos sitä
-				 // yritetään piirtää. Lisäksi turha piirtää koska mitään ei näy.
-				 // Lisäksi en saanut selville mikä kaataa ohjelman.  Kun ei piirretä
-				 // projektio viivoja, ohjelma kaatuu dcMem.SelectObject(itsMemoryBitmap)
-				 // kohtaan, mutta en voinut debugata MFC:n sisälle.
-				 // Kun projektio viivojen piirto on päällä, ohjelma kaatuu jotenkin
-				 // oudosti projektio viivojen tuhoamiseen.
-	}
-	CBitmap *oldBitmap = 0;
-    auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
-    if(mapViewDescTop->RedrawMapView() || itsSmartMetDocumentInterface->ViewBrushed())
-	{
-		CDC dcMemCopy; // välimuistin apuna käytetty dc
-		dcMemCopy.CreateCompatibleDC(&dc);
-        mapViewDescTop->CopyCDC(&dcMemCopy);
-
-		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
-
-		if(itsMemoryBitmap == 0)
-			MakeCombatibleBitmap(&itsMemoryBitmap);
-		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
-
-		// *** Tässä tehdään background kartta ***
-		CDC dcMem2;
-		dcMem2.CreateCompatibleDC(&dc);
-		CBitmap *oldBitmap2 = 0;
-		if(itsMapBitmap == 0)
-			MakeCombatibleBitmap(&itsMapBitmap);
-		/* bool mapStatus = */ GenerateMapBitmap(itsMapBitmap, &dcMem2, &dc, oldBitmap2);
-        mapViewDescTop->MapBlitDC(&dcMem2);
-		// *** Tässä tehdään background kartta ***
-		{
-			SetToolsDCs(&dcMem);
-			DoDraw();
-		}
-
-		// *** Tässä background kartan jälkihoito ***
-        mapViewDescTop->MapBlitDC(0);
-		/* itsMapBitmap = */ dcMem2.SelectObject(oldBitmap2);
-		dcMem2.DeleteDC();
-		// *** Tässä background kartan jälkihoito ***
-        mapViewDescTop->CopyCDC(0);
-		dcMemCopy.DeleteDC();
-        mapViewDescTop->ClearRedrawMapView();
-//		itsDoc->ViewBrushed(false);
-	}
-	else
-		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
-
-	pDC->BitBlt(0
-							 ,0
-							 ,clientArea.Width()
-							 ,clientArea.Height()
-							 ,&dcMem
-						     ,0
-						     ,0
-						     ,SRCCOPY);
-
-	itsMemoryBitmap = dcMem.SelectObject(oldBitmap);
-	dcMem.DeleteDC();
-
-	itsToolBox->SetDC(pDC);
-	DrawOverBitmapThings(itsToolBox); // tätä voisi tutkia, mitkä voisi siirtää täältä pois.
-    mapViewDescTop->MapViewBitmapDirty(false);
-    mapViewDescTop->MapHandler()->ClearUpdateMapViewDrawingLayers();
+    CFmiWin32TemplateHelpers::MapViewOnDraw(this, pDC, itsSmartMetDocumentInterface);
 }
 
 // CFmiExtraMapView diagnostics
@@ -292,7 +199,6 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     GetClientRect(rect);
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
-    MakeCombatibleBitmap(&itsMemoryBitmap);
     itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
 
     CDC *theDC = GetDC();
@@ -344,9 +250,9 @@ void CFmiExtraMapView::DoDraw(void)
     itsSmartMetDocumentInterface->TransparencyContourDrawView(0); // lopuksi pitää nollata läpinäkyvyys-näyttö pointteri
 }
 
-bool CFmiExtraMapView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap)
+bool CFmiExtraMapView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
-	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, theOldBitmap);
+	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
 }
 
 // asettaa toolmasterin ja toolboxin DC:t

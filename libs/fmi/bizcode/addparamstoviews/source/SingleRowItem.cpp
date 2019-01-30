@@ -1,4 +1,5 @@
 #include "SingleRowItem.h"
+#include <vector>
 
 namespace AddParams
 {
@@ -17,6 +18,7 @@ namespace AddParams
         , displayName_()
         , origTime_()
         , totalFilePath_()
+        , searchWords_()
     {}
 
     SingleRowItem::SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
@@ -41,6 +43,7 @@ namespace AddParams
     {
         if(treeDepth_ == 0) { treeDepth_ = getTreeDepth(rowType); }
         if(displayName_.empty()) { displayName_ = itemName; }
+        createSearchWords();
     }
 
     SingleRowItem::~SingleRowItem() = default;
@@ -65,6 +68,16 @@ namespace AddParams
         default:
             throw std::runtime_error("Error in getDialogTreeDepth function: Illegal row-item type");
         }
+    }
+
+    void SingleRowItem::createSearchWords()
+    {
+        searchWords_ += ((!itemName_.empty()) ? itemName_ + " " : "");
+        searchWords_ += ((!displayName_.empty()) ? displayName_ + " " : "");
+        searchWords_ += ((!std::to_string(itemId_).empty()) ? std::to_string(itemId_) + " " : "");
+        searchWords_ += (level_ ? std::string(level_->GetName()) + " " : "");
+        searchWords_ += ((!parentItemName_.empty()) ? parentItemName_ + " " : "");
+        searchWords_ += ((!totalFilePath_.empty()) ? totalFilePath_ + " " : "");
     }
 
 }

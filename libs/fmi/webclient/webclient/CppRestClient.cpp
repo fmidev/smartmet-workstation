@@ -1,6 +1,23 @@
 #include "webclient/CppRestClient.h"
+#include "catlog/catlog.h"
 
 using namespace utility::conversions;
+
+namespace
+{
+    void makeTraceLevelRequestLogging(const std::string& domain, const std::string& request)
+    {
+        if(CatLog::doTraceLevelLogging())
+        {
+            auto loggingMessage = domain;
+            // poistetaan domain:in lopussa ollut kenoviiva, koska sellainen on myös request:in alussa
+            loggingMessage.pop_back();
+            loggingMessage += request;
+            CatLog::logMessage(loggingMessage, CatLog::Severity::Trace, CatLog::Category::NetRequest, true);
+        }
+    }
+
+}
 
 namespace Web
 {
@@ -12,6 +29,7 @@ namespace Web
 
     std::future<std::string> CppRestClient::queryFor(const std::string& domain, const std::string& request) const
     {
+        ::makeTraceLevelRequestLogging(domain, request);
             return bManager_->addTask(
                 [&,
                 domain = domain,

@@ -93,6 +93,7 @@ IDB_INFO                BITMAP                  "res\\info.bmp"
 
 IDR_MAINFRAME TOOLBAR 16, 16
 BEGIN
+    BUTTON      ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
     BUTTON      ID_BUTTON_LOAD_DATA
     BUTTON      ID_BUTTON_STORE_DATA
     BUTTON      ID_BUTTON_DATA_TO_DATABASE
@@ -135,6 +136,7 @@ END
 
 IDR_MAINFRAME_256 TOOLBAR 16, 16
 BEGIN
+    BUTTON      ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
     BUTTON      ID_BUTTON_LOAD_DATA
     BUTTON      ID_BUTTON_STORE_DATA
     BUTTON      ID_BUTTON_DATA_TO_DATABASE
@@ -256,6 +258,7 @@ BEGIN
         MENUITEM "Macro path settings...",      ID_MUOKKAA_MAKROPOLKUASETUKSET
         MENUITEM "Help edit mode settings...",  ID_MENUITEM_HELP_EDITOR_SETTINGS
         MENUITEM "Language...",                 ID_MENUITEM_MUOKKAA_KIELI
+        MENUITEM "Sounding data from server settings...", ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS
         MENUITEM "Do macro directory syncronization\tF6", ID_ACCELERATOR_DO_MACRO_DIRECTORIES_SYNCRONIZATION
         POPUP "Reload Data"
         BEGIN
@@ -297,9 +300,9 @@ BEGIN
         MENUITEM "Grid point selection tool",   ID_BUTTON_SELECTION_TOOL_DLG
         MENUITEM "Data filter tool",            ID_BUTTON_FILTER_DIALOG
         MENUITEM "Zooming tool",                ID_BUTTON_ZOOM_DIALOG
-        MENUITEM "Param selection tool\tF8",    ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
-        MENUITEM "SmartTool dialog",            ID_BUTTON_OPEN_SMART_TOOL_DLG
+        MENUITEM "Parameter selection\tF8",     ID_BUTTON_VIEW_SELECT_PARAM_DIALOG
         MENUITEM "View macro tool\tCTRL+I",     ID_ACCELERATOR_STORE_VIEW_MACRO
+        MENUITEM "SmartTool dialog",            ID_BUTTON_OPEN_SMART_TOOL_DLG
         MENUITEM "Sounding view",               ID_BUTTON_TEMP_DLG
         MENUITEM "Animation tool\tZ",           ID_BUTTON_ANIMATION
         MENUITEM "Cross section view",          ID_BUTTON_SHOW_CROSS_SECTION
@@ -332,6 +335,7 @@ BEGIN
             MENUITEM "Sea icing view position",     ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT
             MENUITEM "Wind table view position",    ID_VIEW_SET_WIND_TABLE_DLG_PLACE_TO_DEFAULT
             MENUITEM "Data quality checker position", ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Soundings from server settings position", ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT
         END
         MENUITEM SEPARATOR
         POPUP "Notification settings"
@@ -848,7 +852,7 @@ BEGIN
     ID_BUTTON_FILTER_DIALOG "Data filter tool\nData filter tool"
     ID_BUTTON_ZOOM_DIALOG   "Zooming tool\nZooming tool"
     ID_BUTTON_VIEW_SELECT_PARAM_DIALOG 
-                            "Param selection tool\nParam selection tool"
+                            "Parameter selection dialog\nParameter selection dialog"
     ID_BUTTON_OPEN_SMART_TOOL_DLG "SmartTool dialog\nSmartTool dialog"
     ID_ACCELERATOR_STORE_VIEW_MACRO "View macro tool\nView macro tool"
     ID_BUTTON_TEMP_DLG      "Sounding view\nSounding view"
@@ -933,6 +937,12 @@ STRINGTABLE
 BEGIN
     ID_VIEW_SET_SMARTTOOL_VIEW_PLACE_TO_DEFAULT 
                             "SmartTool view position\nSmartTool view position"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS 
+                            "Sounding data from server settings...\nSounding data from server settings..."
 END
 
 #endif    // English (United States) resources
@@ -1066,8 +1076,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,12,17,2
- PRODUCTVERSION 5,12,17,2
+ FILEVERSION 5,12,18,0
+ PRODUCTVERSION 5,12,18,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1084,12 +1094,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
             VALUE "FileDescription", "SmartMet meteorological workstation"
-            VALUE "FileVersion", "5.12.17.2"
+            VALUE "FileVersion", "5.12.18.0"
             VALUE "InternalName", "SmartMet"
-            VALUE "LegalCopyright", "(C) 1999-2018 FMI (Finnish Meteorological Instituet).  All rights reserved"
+            VALUE "LegalCopyright", "(C) 1999-2019 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
-            VALUE "ProductVersion", "5.12.17.2"
+            VALUE "ProductVersion", "5.12.18.0"
         END
     END
     BLOCK "VarFileInfo"

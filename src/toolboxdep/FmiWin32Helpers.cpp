@@ -15,6 +15,7 @@
 
 #include "PPToolTip.h"
 #include "NFmiToolBox.h"
+#include "GridCtrl.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -656,4 +657,78 @@ void CFmiWin32Helpers::InitCategoryComboBox(CComboBox &comboBox)
     comboBox.AddString(CA2T(::GetDictionaryString("Macro").c_str()));
     comboBox.AddString(CA2T(::GetDictionaryString("Operational").c_str()));
     comboBox.AddString(CA2T(::GetDictionaryString("NetRequest").c_str()));
+}
+
+#ifdef max
+#undef max
+#endif
+
+void CFmiWin32Helpers::FitLastColumnOnVisibleArea(CWnd *gridCtrlParentView, CGridCtrl &gridCtrl, bool &firstTime, int minimumLastColumnWidthInPixels)
+{
+    if(!gridCtrlParentView)
+        return;
+
+    if(firstTime)
+        firstTime = false;
+    else
+    {
+        if(gridCtrl.GetColumnCount())
+        {
+            CRect clientRect;
+            gridCtrlParentView->GetClientRect(clientRect);
+
+            int lastColumnIndex = gridCtrl.GetColumnCount() - 1;
+            CRect lastHeaderCellRect;
+            gridCtrl.GetCellRect(0, lastColumnIndex, lastHeaderCellRect);
+            // Calculate new width for last column so that it will fill the client area
+            // Total width (cx) - lastColumns left edge - some value (40) that represents the width of the vertical scroll control
+            int newLastColumnWidth = clientRect.Width() - lastHeaderCellRect.left - 40;
+            // Let's make sure that last column isn't shrinken too much
+            newLastColumnWidth = std::max(newLastColumnWidth, 220);
+            gridCtrl.SetColumnWidth(lastColumnIndex, newLastColumnWidth);
+        }
+    }
+}
+
+void CFmiWin32Helpers::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor)
+{
+    static bool graphInfoReported = false;
+    if(graphInfoReported == false)
+    { // vain 1. kerran tehd‰‰n lokiin raportti
+        graphInfoReported = true;
+        std::stringstream sstream;
+        sstream << "\nViewWidthInMM: " << graphicalInfo.itsViewWidthInMM << std::endl;
+        sstream << "ViewHeightInMM: " << graphicalInfo.itsViewHeightInMM << std::endl;
+        sstream << "ScreenWidthInMM: " << graphicalInfo.itsScreenWidthInMM << std::endl;
+        sstream << "ScreenHeightInMM: " << graphicalInfo.itsScreenHeightInMM << std::endl;
+        sstream << "ScreenWidthInPixels: " << graphicalInfo.itsScreenWidthInPixels << std::endl;
+        sstream << "ScreenHeightInPixels: " << graphicalInfo.itsScreenHeightInPixels << std::endl;
+        sstream << "DPI x: " << graphicalInfo.itsDpiX << std::endl;
+        sstream << "DPI y: " << graphicalInfo.itsDpiY << std::endl;
+        sstream << "DrawObjectScaleFactor (editor.conf - MetEditor::DrawObjectScaleFactor ): " << scaleFactor << std::endl;
+        if(scaleFactor == 0)
+            sstream << "Using ScreenWidthInMM and ScreenHeightInMM to calculate pixels-per-mm values" << std::endl;
+        else
+            sstream << "Using DPI x and y and DrawObjectScaleFactor to calculate pixels-per-mm values" << std::endl;
+        sstream << "PixelsPerMM_x: " << graphicalInfo.itsPixelsPerMM_x << std::endl;
+        sstream << "PixelsPerMM_y: " << graphicalInfo.itsPixelsPerMM_y << std::endl;
+        CatLog::logMessage(sstream.str(), CatLog::Severity::Debug, CatLog::Category::Visualization);
+    }
+}
+
+CFmiWin32Helpers::DeviceContextHelper::DeviceContextHelper(CDC *originalDc)
+:memoryDc()
+{
+    memoryDc.CreateCompatibleDC(originalDc);
+}
+
+CFmiWin32Helpers::DeviceContextHelper::~DeviceContextHelper()
+{
+    memoryDc.SelectObject(originalBitmap);
+    memoryDc.DeleteDC();
+}
+
+void CFmiWin32Helpers::DeviceContextHelper::SelectBitmap(CBitmap *usedBitmap)
+{
+    originalBitmap = memoryDc.SelectObject(usedBitmap);
 }

@@ -51,7 +51,19 @@ void CFmiTempCodeInsertDlg::OnBnClickedOk()
 	// 2. Anna se dokumentille ja käynnistä tarkistus ja datojen käyttöön otto
 	std::string tempCodeCheckReportStr; // tätä ei käytetä koska dialogi suljetaan
 	CWaitCursor cursor;
-    itsSmartMetDocumentInterface->DoTEMPDataUpdate(tempCodeTextStr, tempCodeCheckReportStr);
+    try
+    {
+        itsSmartMetDocumentInterface->DoTEMPDataUpdate(tempCodeTextStr, tempCodeCheckReportStr);
+    }
+    catch(std::exception &e)
+    {
+        // Pakko napata mahdolliset poikkeukset kiinni, koska jos modaalittoman dialogi heittää poikkeuksen tässä kohtaa, 
+        // jää pääohjelma jumiin, kun poikkeus otetaan kiinni CSmartMetApp::Run metodissa
+        std::string errorMessage = "Error while trying to construct TEMP based sounding data: ";
+        errorMessage += e.what();
+        itsSmartMetDocumentInterface->LogAndWarnUser(errorMessage, "", CatLog::Severity::Error, CatLog::Category::Data, true, false, true);
+    }
+
 	OnOK();
 }
 

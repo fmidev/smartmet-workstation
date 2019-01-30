@@ -22,6 +22,7 @@ namespace HakeMessage {
         std::string itsAddress2; // esim. <Katu2>MERVENTIE</Katu2>
         NFmiPoint itsLatlonPoint = NFmiPoint::gMissingLatlon; // otetaan <KoordX>3356592.9</KoordX> ja <KoordY>6775576.18</KoordY> nodeista
         std::string itsTotalMessageStr; // koko message xml löpinä
+        bool fIsFromXmlFormat = true; // Hakesanomat voivat olla joko xml tai json formaatista purettuja (tieto tarvitaan, koska json pitää käsitellä erilailla tooltiptekstejä varten)
     public:
         static const HakeMsg unInitialized;
 
@@ -69,6 +70,9 @@ namespace HakeMessage {
 
         const std::string& TotalMessageStr() const;
         void TotalMessageStr(const std::string &newValue);
+
+        bool IsFromXmlFormat() const;
+        void IsFromXmlFormat(bool newValue);
     };
 
     inline bool operator==(const HakeMsg& msg1, const HakeMsg& msg2)

@@ -33,6 +33,7 @@
 
 #include <list>
 #include <memory>
+#include <vector>
 
 class NFmiParamBag;
 class NFmiDrawParamList;
@@ -48,12 +49,12 @@ class NFmiMenuItemList
 	NFmiMenuItemList(void);
 	NFmiMenuItemList(NFmiParamBag* theParamBag);
 	NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* theParamBag, const FmiMenuCommandType &theMenuCommandType,
-					const NFmiMetEditorTypes::View &theViewType, NFmiInfoData::Type theDataType, const NFmiDataIdent *thePossibleStreamLineParam = nullptr, const NFmiDataIdent *thePossibleWindVectorParam = nullptr);
+					const NFmiMetEditorTypes::View &theViewType, NFmiInfoData::Type theDataType, const NFmiDataIdent *thePossibleStreamLineParam = nullptr, const std::vector<std::unique_ptr<NFmiDataIdent>> *possibleMetaParams = nullptr);
 	NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIdent& theDataIdent, 
 					const FmiMenuCommandType& theMenuCommandType, NFmiLevelBag* theLevels, NFmiInfoData::Type theDataType);
 
 	NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* theParamBag, const FmiMenuCommandType &theMenuCommandType,
-						const NFmiMetEditorTypes::View &theViewType, NFmiLevelBag* theLevels, NFmiInfoData::Type theDataType, FmiParameterName notLevelParam = kFmiLastParameter, const NFmiDataIdent *thePossibleStreamLineParam = nullptr, const NFmiDataIdent *thePossibleWindVectorParam = nullptr);
+						const NFmiMetEditorTypes::View &theViewType, NFmiLevelBag* theLevels, NFmiInfoData::Type theDataType, FmiParameterName notLevelParam = kFmiLastParameter, const NFmiDataIdent *thePossibleStreamLineParam = nullptr, const std::vector<std::unique_ptr<NFmiDataIdent>> *possibleMetaParams = nullptr);
 	virtual ~NFmiMenuItemList(void);
 	
 	// Asettaa listan menuItemeille ID:t:

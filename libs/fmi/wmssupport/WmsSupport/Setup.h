@@ -37,6 +37,7 @@ namespace Wms
         NFmiProducer producer;
         std::string version;
         bool transparency;
+        bool logFetchCapabilitiesRequest = true;
         std::string delimiter;
         ServerSetup generic;
     };
