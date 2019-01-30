@@ -70,14 +70,11 @@ namespace SettingsFunctions
     // sen jälkeiset merkit jäisi pois url-stringistä. Nämä apufunktiot tekevät tavittavat muutokset
     // haettaessa ja asetettaessa asetuksia. //-merkit korvataan ¤¤-merkeillä
     // *****
-    // HUOM! Älä tee urlSlashReplaceStr -muuttujasta tiedoston sisäistä staattista muuttujaa tai laita sitä
-    // nimettömään namespace:n (näin sen saisi alustettua yhdellä kertaa molempiin funktioihin)
-    // Tämä siksi että jostain syystä VC++ 2008 kääntäjä ei saa alustettua muuttujaa kun alustetaan
-    // NFmiBasicSmartMetConfigurations-luokkaa CSmartMetApp::InitInstance-metodissa.
+
+    const std::string urlSlashReplaceStr = "¤¤";
 
     std::string GetUrlFromSettings(const std::string &theSettingKey, bool fDoOptional, const std::string &theOptionalValue)
     {
-        const std::string urlSlashReplaceStr = "¤¤";
         std::string urlStr;
         if(fDoOptional)
             urlStr = NFmiSettings::Optional<std::string>(theSettingKey.c_str(), theOptionalValue);
@@ -91,7 +88,6 @@ namespace SettingsFunctions
 
     void SetUrlToSettings(const std::string &theSettingKey, const std::string &theUrlStr)
     {
-        const std::string urlSlashReplaceStr = "¤¤";
         std::string tmpStr = theUrlStr;
         NFmiStringTools::ReplaceAll(tmpStr, "//", urlSlashReplaceStr); // Url-osoite pitää tallettaa konffi-tiedostoon ilman //-merkkejä:
                                                                        // http://fff.fmi.fi sijasta sinne laitetaan http:¤¤fff.fmi.fi, koska muuten
