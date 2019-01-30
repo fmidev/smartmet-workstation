@@ -6158,8 +6158,13 @@ string GetSelectedParamInfoString(const NFmiDataIdent *theDataIdent, const NFmiL
 
 void AddAsOnlyView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 {
-	if(DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex))
-		DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex)->Clear();
+    auto drawParamList = DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+    if(drawParamList)
+    {
+        drawParamList->Clear();
+        // Tyhjennän macroParamDataCache rivin tässä, koska se on helpointa tässä vaiheessa
+        MacroParamDataCache().clearMacroParamCacheRow(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex));
+    }
 	AddView(theMenuItem, theRowIndex);
 }
 
