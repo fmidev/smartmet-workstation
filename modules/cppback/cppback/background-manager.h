@@ -2,6 +2,7 @@
 #define BACKGROUND_MANAGER_SINGLETON_H
 
 #include "cppback/error.h"
+#include "catlog/catlog.h"
 
 #include <future>
 #include <type_traits>
@@ -17,6 +18,16 @@ namespace cppback
             auto res = task.get_future();
             std::thread{ std::move(task) }.detach();
             return res;
+        }
+
+        void logException(const std::exception &e, const std::string &functionName)
+        {
+            // Have to log errors here, because otherwise exceptions are lost in std::function/future inner works...
+            std::string errorMessage = "Error in ";
+            errorMessage += functionName;
+            errorMessage += ": ";
+            errorMessage += e.what();
+            CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
         }
     }
 
@@ -71,6 +82,7 @@ namespace cppback
             }
             catch(const std::exception& e)
             {
+                logException(e, "BackgroundManager::addTaskImpl->result");
                 --running_;
                 throw e;
             }
@@ -93,6 +105,7 @@ namespace cppback
             }
             catch(const std::exception& e)
             {
+                logException(e, "BackgroundManager::addTaskImpl->void");
                 --running_;
                 throw e;
             }

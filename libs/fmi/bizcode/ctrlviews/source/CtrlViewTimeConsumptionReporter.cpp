@@ -72,7 +72,7 @@ namespace CtrlViewUtils
         {
             bool crossSectionView = false;
             identifier += "'";
-            identifier += CtrlViewUtils::GetParamNameString(ctrlView->DrawParam(), ctrlView->GetCtrlViewDocumentInterface(), ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), crossSectionView, false, false);
+            identifier += CtrlViewUtils::GetParamNameString(ctrlView->DrawParam(), ctrlView->GetCtrlViewDocumentInterface(), ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), crossSectionView, false, false, 0, ctrlView->IsTimeSerialView());
             identifier += "' ";
         }
 

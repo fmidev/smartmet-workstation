@@ -44,6 +44,7 @@ class CFmiParameterSelectionDlg;
 class SmartMetDocumentInterface;
 class CFmiGriddingOptionsDlg;
 class NFmiApplicationWinRegistry;
+class CFmiSoundingDataServerConfigurationsDlg;
 
 class CSmartMetDoc : public CDocument
 {
@@ -109,6 +110,7 @@ public:
     void CreateCaseStudyDlg(NFmiEditMapGeneralDataDoc *theDoc);
     void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void CreateLogViewer(NFmiEditMapGeneralDataDoc *theDoc);
+    void CreateSoundingDataServerConfigurationsDlg();
     void CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void UpdateBetaProductDialog();
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
@@ -238,6 +240,7 @@ private:
     void LoadViewMacroSettingsForTimeSerialDataView(NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);
     void MakeViewActivationAfterLoadingViewMacro();
     void HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage);
+    void StoreBitmapImageToFile(const std::string &callingFunctionName, const std::string &imageViewName, CBitmap *bitmap, const NFmiRect *theRelativeOutputArea);
 
 	CTimeEditValuesDlg *itsTimeSerialDataEditorDlg;
 	NFmiEditMapGeneralDataDoc* itsData;
@@ -267,6 +270,7 @@ private:
     CFmiLogViewer *itsLogViewer;
     CFmiParameterSelectionDlg *itsParameterSelectionDlg;
     CFmiGriddingOptionsDlg *itsGriddingOptionsDlg;
+    CFmiSoundingDataServerConfigurationsDlg *itsSoundingDataServerConfigurationsDlg;
     unsigned int itsMapViewDescTopIndex;
 public:
 	afx_msg void OnToggleLandBorderDrawColor();
@@ -381,6 +385,8 @@ public:
     afx_msg void OnAcceleratorCpSelectUp();
     afx_msg void OnAcceleratorCpSelectDown();
     void OpenLocationFinderTool(CWnd *parentView);
+    afx_msg void OnEditSoundingDataFromServerSettings();
+    afx_msg void OnViewSetSoundingsFromServerSettingsPlaceToDefault();
 };
 
 

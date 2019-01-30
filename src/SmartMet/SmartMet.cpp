@@ -472,7 +472,7 @@ void CSmartMetApp::CreateMenuDynamically(void)
 
 void CSmartMetApp::CloseToolMaster()
 {
-    if(itsGeneralData->IsToolMasterAvailable())
+    if(itsGeneralData && itsGeneralData->IsToolMasterAvailable())
     {
         Toolmaster::CloseToolMaster();
     }

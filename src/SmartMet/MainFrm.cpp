@@ -610,7 +610,8 @@ void CMainFrame::ConfigureToolbarControls()
 {
 	// Hide / Show various toolbar controls based on the configuration options
 	// Configuration option -> COMMAND ID mapping
-	SetControlHiding("MetEditor::Toolbar::LoadData", ID_BUTTON_LOAD_DATA);
+    SetControlHiding("MetEditor::Toolbar::SelectParamDlg", ID_BUTTON_VIEW_SELECT_PARAM_DIALOG);
+    SetControlHiding("MetEditor::Toolbar::LoadData", ID_BUTTON_LOAD_DATA);
 	SetControlHiding("MetEditor::Toolbar::StoreData", ID_BUTTON_STORE_DATA);
 	SetControlHiding("MetEditor::Toolbar::DataToDatabase", ID_BUTTON_DATA_TO_DATABASE);
 	SetControlHiding("MetEditor::Toolbar::HelpEditorMode", ID_BUTTON_HELP_EDITOR_MODE); //x = unable to find corresponding menu item

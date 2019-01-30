@@ -161,11 +161,11 @@ namespace MapDraw
             static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
     }
 
-    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap)
+    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
     {
         if(mapIsNotDirty(docInterface, theDescTopIndex))
         {
-            theOldBitmap = theUsedCDC->SelectObject(theUsedBitmap);
+            theUsedCDC->SelectObject(theUsedBitmap);
             return true;
         }
         cleanMap(docInterface, theDescTopIndex);
@@ -177,7 +177,7 @@ namespace MapDraw
         auto sourceRect = getSourceRect(docInterface, theDescTopIndex);
 
         CreateBitmapUsedForMapDrawing(theUsedBitmap, theUsedCDC, theCompatibilityCDC, bitmapSize);
-        theOldBitmap = theUsedCDC->SelectObject(theUsedBitmap);
+        theUsedCDC->SelectObject(theUsedBitmap);
 
         if(docInterface->UseWmsMaps())
         {
@@ -198,4 +198,31 @@ namespace MapDraw
         drawOverlayMap(docInterface, theDescTopIndex, 0, theUsedCDC, destRect, bitmapSize);
         return true;
     }
+
+    // Kun karttanäyttö ruudun korkeus on tarpeeksi pieni, ohjelma kaatuu jos sitä
+    // yritetään piirtää. Lisäksi turha piirtää mitään koska mitään ei kuitenkaan näy.
+    // Lisäksi en saanut selville mikä kaataa ohjelman.  Kun ei piirretä
+    // projektio viivoja, ohjelma kaatuu dcMem.SelectObject(itsMemoryBitmap)
+    // kohtaan, mutta en voinut debugata MFC:n sisälle.
+    // Kun projektio viivojen piirto on päällä, ohjelma kaatuu jotenkin
+    // oudosti projektio viivojen tuhoamiseen.
+    bool stopDrawingTooSmallMapview(CWnd *mapView, int theDescTopIndex)
+    {
+        if(!mapView)
+            return true;
+
+        CRect clientRect;
+        mapView->GetClientRect(&clientRect);
+        if(clientRect.Height() < 4)
+        {
+            std::string warningMessage = "Map view ";
+            warningMessage += std::to_string(theDescTopIndex);
+            warningMessage += " was too small to be drawn at all";
+            CatLog::logMessage(warningMessage, CatLog::Severity::Warning, CatLog::Category::Visualization, true);
+            return true; 
+        }
+
+        return false;
+    }
+
 }

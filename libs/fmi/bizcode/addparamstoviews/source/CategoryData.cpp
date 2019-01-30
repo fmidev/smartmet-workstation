@@ -6,6 +6,12 @@
 #include "NFmiInfoOrganizer.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiOwnerInfo.h"
+#include "SingleRowItem.h"
+#include "NFmiDictionaryFunction.h"
+#include "ParameterSelectionSystem.h"
+
+#include <boost/algorithm/string.hpp>
+
 
 namespace
 {
@@ -16,6 +22,79 @@ namespace
         const auto &producer = producerData.producer();
         return AddParams::SingleRowItem(AddParams::kProducerType, std::string(producer.GetName()), producer.GetIdent(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
+
+    std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalProducers(NFmiInfoOrganizer &infoOrganizer)
+    {
+        std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalData;
+        operationalData.emplace("Editable data", infoOrganizer.FindInfo(NFmiInfoData::kEditable));
+        //operationalData.emplace("Comparison data", infoOrganizer.FindInfo(NFmiInfoData::kCopyOfEdited));
+        operationalData.emplace("Help editor data", infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData));
+        operationalData.emplace("Operational data", infoOrganizer.FindInfo(NFmiInfoData::kKepaData));
+
+        return operationalData;
+    }
+
+    AddParams::RowType EnumOfIndex(int i) { return static_cast<AddParams::RowType>(i); }
+    int IndexOfEnum(AddParams::RowType e) { return static_cast<int>(e); }
+
+    std::vector<AddParams::SingleRowItem> addSpecificSoundingLevels(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, int parentId, const NFmiLevelBag* soundingLevels, int treeDepth)
+    {
+        treeDepth++;
+        rowType = EnumOfIndex(IndexOfEnum(rowType) - 1);
+        std::vector<AddParams::SingleRowItem> items;
+        NFmiLevelBag* levels = const_cast<NFmiLevelBag*>(soundingLevels);
+
+        for(levels->Reset(); levels->Next();)
+        {
+            auto lvl = levels->Level();
+            const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(NFmiLevel(lvl->GetIdent(), lvl->GetName(), lvl->LevelValue()));
+            std::string levelStr = level->GetName();
+            std::string menuString = dataIdent.GetParamName() + " " + levelStr;
+            std::string uniqueDataId = "Temp - " + menuString;
+
+            AddParams::SingleRowItem item = AddParams::SingleRowItem(rowType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", true, level, treeDepth, menuString);
+            items.push_back(item);
+        }
+        return items;
+    }
+
+    std::vector<AddParams::SingleRowItem> soundingSubMenu(NFmiParamBag &theParamBag, NFmiInfoData::Type theDataType, int parentId, const NFmiLevelBag* soundingLevels, int treeDepth, AddParams::RowType rowType)
+    {
+        treeDepth++;
+        rowType = EnumOfIndex(IndexOfEnum(rowType) - 1);
+        std::vector<AddParams::SingleRowItem> subMenuItems;
+
+        if(!theParamBag.ParamsVector().empty())
+        {
+            //Firs put params into vector and sort, then create menu items
+            std::vector<NFmiDataIdent> paramsVector;
+            for(auto &dataIdent : theParamBag.ParamsVector())
+            {
+                paramsVector.push_back(dataIdent);
+            }
+            std::sort(paramsVector.begin(), paramsVector.end(), ([](const auto &a, const auto &b) { return boost::algorithm::ilexicographical_compare(std::string(a.GetParamName()), std::string(b.GetParamName())); }));
+
+            for(auto dataIdent : paramsVector)
+            {
+                std::string menuString = dataIdent.GetParamName();
+                std::string uniqueDataId = "Temp - " + menuString;
+
+                AddParams::SingleRowItem item = AddParams::SingleRowItem(rowType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
+                subMenuItems.push_back(item);
+                std::vector<AddParams::SingleRowItem> subItems;
+                if(dataIdent.HasDataParams()) //Wind submenu
+                {
+                    subItems = soundingSubMenu(*(dataIdent.GetDataParams()), theDataType, parentId, soundingLevels, treeDepth, rowType);
+                }
+                else
+                {
+                    subItems = addSpecificSoundingLevels(dataIdent, theDataType, rowType, parentId, soundingLevels, treeDepth);
+                }
+                subMenuItems.insert(subMenuItems.end(), subItems.begin(), subItems.end());
+            }
+        }
+        return subMenuItems;
+    }
 }
 
 namespace AddParams
@@ -24,6 +103,7 @@ namespace AddParams
     :categoryName_(categoryName)
     ,dataCategory_(dataCategory)
     ,producerDataVector_()
+    ,soundingLevels_()
     {
     }
 
@@ -35,29 +115,55 @@ namespace AddParams
     {
         bool dataStructuresChanged = false;
 
-        //Handle custom categories first
-        if(customCategory)
-        {
-            dataStructuresChanged = updateCustomCategoryData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory);
-        }
-        else
-        {
-            for(const auto &producerInfo : categoryProducerSystem.Producers())
-            {
-                NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
-                bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
+        dataStructuresChanged = customCategory ? updateCustomCategoryData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory) : 
+            updateNormalData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs);
 
-                if(helpData && dataCategory == NFmiInfoData::kModelHelpData) //Add help data only when handling Help Data category
-                {
-                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-                }          
-                else if(!helpData && dataCategory != NFmiInfoData::kModelHelpData)
-                {
-                    dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
-                }
+        return dataStructuresChanged;
+    }
+
+    void CategoryData::setSoungindLevels(const NFmiLevelBag &soundingLevels)
+    {
+        soundingLevels_ = &soundingLevels;
+    }
+
+    bool CategoryData::updateNormalData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem,
+        NFmiInfoData::Type dataCategory, std::vector<int> helpDataIDs)
+    {
+        bool dataStructuresChanged = false;
+
+        for(const auto &producerInfo : categoryProducerSystem.Producers())
+        {
+            if(producerInfo.ProducerId() == NFmiProducer(kFmiTEMP).GetIdent())
+                continue;
+            NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
+            bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
+            auto dataType = getDataType(infoOrganizer, producer);
+
+            if(dataCategory == NFmiInfoData::kEditable)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kViewable && !helpData && dataType != NFmiInfoData::kKepaData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kObservations && !helpData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kSatelData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kMacroParam)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+            }
+            else if(dataCategory == NFmiInfoData::kModelHelpData && helpData)
+            {
+                dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
             }
         }
-
         return dataStructuresChanged;
     }
 
@@ -72,10 +178,40 @@ namespace AddParams
                 checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = infoOrganizer.GetInfos(info.UsedFileNameFilter(helpDataInfoSystem));
                 if(infoVector.size())
                 {
+                    //A little bit of fiddle to get the producer name that is used in model_producer.conf file.
                     auto queryInfo = infoVector[0];
-                    auto producer = queryInfo->Producer();
-                    dataStructuresChanged = addNewOrUpdateData(*producer, infoOrganizer, helpDataInfoSystem, dataCategory, true);
+                    auto index = categoryProducerSystem.FindProducerInfo(NFmiProducer(queryInfo->Producer()->GetIdent()));
+                    if(index != 0)
+                    {
+                        auto producer = categoryProducerSystem.Producer(index).GetProducer();
+                        dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory, true);
+                    }
                 }
+            }
+        }
+        return dataStructuresChanged;
+    }
+
+    bool CategoryData::updateOperationalData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+    {
+        bool dataStructuresChanged = false;
+        auto infos = operationalProducers(infoOrganizer);
+        for(auto info : infos)
+        {
+            if(!info.second)
+                continue;
+            auto producer = NFmiProducer(info.second->Producer()->GetIdent(), info.first);
+            auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer.GetName() == producerData->producer().GetName(); });
+            if(iter != producerDataVector_.end())
+            {
+                dataStructuresChanged |= (*iter)->updateOperationalData(info.second, helpDataInfoSystem);
+            }
+            else
+            {
+                auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
+                producerDataPtr->updateOperationalData(info.second, helpDataInfoSystem);
+                producerDataVector_.push_back(std::move(producerDataPtr));
+                dataStructuresChanged = true;
             }
         }
         return dataStructuresChanged;
@@ -93,7 +229,7 @@ namespace AddParams
         }
         else
         {
-            // Add macro params as new producer
+            // Add macro params as a new producer
             auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
             producerDataPtr->updateMacroParamData(macroParamTree);
             producerDataVector_.push_back(std::move(producerDataPtr));
@@ -137,7 +273,6 @@ namespace AddParams
         return false;
     }
 
-
     void CategoryData::addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
     {
         auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
@@ -145,7 +280,7 @@ namespace AddParams
         producerDataVector_.push_back(std::move(producerDataPtr));
     }
 
-    std::vector<SingleRowItem> CategoryData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const
+    std::vector<SingleRowItem> CategoryData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const
     {
         std::vector<SingleRowItem> dialogRowData;
         for(const auto &producerData : producerDataVector_)
@@ -160,7 +295,87 @@ namespace AddParams
                 dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
             }
         }
+        if(categoryName() == "Observation data")
+        {
+            auto data = customObservationData(infoOrganizer);
+            dialogRowData.insert(dialogRowData.end(), data.begin(), data.end());
+        }
         return dialogRowData;
+    }
+
+    NFmiInfoData::Type CategoryData::getDataType(NFmiInfoOrganizer &infoOrganizer, NFmiProducer &producer)
+    {
+        auto fastQueryInfoVector = infoOrganizer.GetInfos(producer.GetIdent());
+        auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
+        return dataType;
+    }
+
+    std::vector<SingleRowItem> CategoryData::customObservationData(NFmiInfoOrganizer &infoOrganizer) const
+    {
+        int treeDepth = 2;
+        AddParams::RowType rowType = kProducerType;
+        std::vector<SingleRowItem> customObservationData;
+        
+        // *** Sounding and sounding plot ***
+        boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = infoOrganizer.GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
+        if(soundingInfo)
+        {
+            NFmiInfoData::Type soundingType = soundingInfo->DataType();
+            const std::shared_ptr<NFmiLevel> defaultLevel = std::make_shared<NFmiLevel>(NFmiLevel(50, "850xxx", 850));
+
+            std::string menuString = "Sounding";
+            std::string uniqueDataId = "Temp - " + menuString;
+            SingleRowItem item = SingleRowItem(rowType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
+            auto paramBag = soundingInfo->ParamBag();
+            customObservationData.push_back(item);
+            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, rowType);
+            customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());
+            
+            menuString = "Sounding plot";
+            auto param = NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp");
+            uniqueDataId = "Temp - " + menuString;
+            item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, treeDepth, menuString);
+            customObservationData.push_back(item);
+        } 
+        // *** Lightning ***
+        if(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0))
+        {
+            NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0)->Producer()));
+            std::string menuString = ::GetDictionaryString("MapViewParamPopUpFlashData");
+            std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
+            SingleRowItem item = SingleRowItem(rowType, menuString, producer.GetIdent(), true, uniqueDataId, NFmiInfoData::kFlashData, 0, "", true, nullptr, treeDepth, menuString);
+            customObservationData.push_back(item);
+        }
+        // *** Synop plot ***
+        if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true) != 0)
+        {
+            NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
+            std::string menuString = ::GetDictionaryString("MapViewParamPopUpSynopPlot");
+            std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
+            auto param = NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop");
+            SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
+            customObservationData.push_back(item);
+
+            // Add also a min/max synop plot
+            NFmiProducer producer2(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
+            menuString = "Synop min/max";
+            uniqueDataId = std::string(producer2.GetName()) + " - " + menuString;
+            param = NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max");
+            item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
+            customObservationData.push_back(item);
+        }
+        // *** Metar plot ***
+        if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiMETAR), true) != 0)
+        {
+            NFmiProducer producer(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiMETAR), true)->Producer()));
+            std::string menuString = ::GetDictionaryString("Metar plot");
+            std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
+            auto param = NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar");
+            SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
+            customObservationData.push_back(item);
+        }
+
+        return customObservationData;
     }
 
 }

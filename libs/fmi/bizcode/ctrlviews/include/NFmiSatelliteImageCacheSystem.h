@@ -20,10 +20,11 @@ class NFmiSatelliteImageCacheSystem : public boost::noncopyable
 public:
     typedef std::unique_ptr<NFmiSatelliteImageChannelCache> ChannelCacheItem;
     typedef std::list<ChannelCacheItem> ChannelCacheList;
+    using ImageUpdateCallbackFunction = std::function<void(ImageCacheUpdateData&)>;
 
     NFmiSatelliteImageCacheSystem();
     void Init(NFmiHelpDataInfoSystem &satelInfoSystem);
-    void SetCallbacks(std::function<void(const ImageCacheUpdateData&)> &updatedCacheCallback, std::function<void(const ImageCacheUpdateData&)> &loadedCacheCallback);
+    void SetCallbacks(ImageUpdateCallbackFunction &updatedCacheCallback, ImageUpdateCallbackFunction &loadedCacheCallback);
 
     NFmiImageHolder FindImage(const NFmiDataIdent &wantedDataIdent, const NFmiMetTime &wantedTime, int maxOffSetInMinutes = 0);
     ChannelCacheItem& FindChannelCache(const NFmiDataIdent &wantedDataIdent);
@@ -43,6 +44,6 @@ public:
 private:
     bool mInitialized; // ei sallita tupla initialisointia, heitt‰‰ poikkeuksen ongelma tilanteissa
     ChannelCacheList mSatelliteImageChannelCacheList;
-    std::function<void(const ImageCacheUpdateData&)> mUpdatedCacheCallback;
-    std::function<void(const ImageCacheUpdateData&)> mLoadedCacheCallback;
+    ImageUpdateCallbackFunction mUpdatedCacheCallback;
+    ImageUpdateCallbackFunction mLoadedCacheCallback;
 };

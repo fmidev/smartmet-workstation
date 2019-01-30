@@ -3,6 +3,11 @@
 #include "ParameterSelectionUtils.h"
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMacroParamSystem.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiMetEditorTypes.h"
+#include "NFmiInfoOrganizer.h"
+#include "NFmiProducerSystem.h"
+#include "..\..\..\catlog\catlog\catlogutils.h"
     
 
 namespace
@@ -13,6 +18,7 @@ namespace
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : false;
         return AddParams::SingleRowItem(AddParams::kCategoryType, categoryData.categoryName(), 0, nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
+
 }
 
 namespace AddParams
@@ -45,7 +51,7 @@ namespace AddParams
         helpDataInfoSystem_ = &helpDataInfoSystem;
         helpDataIDs_ = idVector; // Help Data id's. These are added to Help Data Category
         customCategories_ = customCategories;
-    }
+    } 
 
     void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
     {
@@ -61,10 +67,11 @@ namespace AddParams
 
     void ParameterSelectionSystem::updateData()
     {
+        updateOperationalData("Operational data", NFmiInfoData::kEditable);
         updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
         updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
-        updateMacroParamData("Macro Params", NFmiInfoData::kMacroParam);
+        updateMacroParamData("Macro Parameters", NFmiInfoData::kMacroParam);
         updateCustomCategories();
         updateData("Help data", *modelProducerSystem_, NFmiInfoData::kModelHelpData);
         updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
@@ -86,14 +93,29 @@ namespace AddParams
         updatePending(false);
     }
 
-    void ParameterSelectionSystem::updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory)
+    void ParameterSelectionSystem::updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory)
+    {
+        auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
+        if(iter != categoryDataVector_.end())
+        {
+            dialogDataNeedsUpdate_ |= (*iter)->updateOperationalData(*infoOrganizer_, *helpDataInfoSystem_, dataCategory);
+        }
+        else
+        {
+            auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+            categoryDataPtr->updateOperationalData(*infoOrganizer_, *helpDataInfoSystem_, dataCategory);
+            categoryDataVector_.push_back(std::move(categoryDataPtr));
+            dialogDataNeedsUpdate_ = true;
+        }
+    }
+
+    void ParameterSelectionSystem::updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory)
     {
         if(getMacroParamSystemCallback_)
         {
             auto &macroParamSystem = getMacroParamSystemCallback_();
             auto &macroParamTree = macroParamSystem.MacroParamItemTree();
 
-            std::string categoryName = ::GetDictionaryString(catName.c_str());
             auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
             if(iter != categoryDataVector_.end())
             {
@@ -124,6 +146,8 @@ namespace AddParams
     void ParameterSelectionSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+        if(dataCategory == NFmiInfoData::kObservations) 
+            categoryDataPtr->setSoungindLevels(*soundingLevels_);
         categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs_, customCategory);
         categoryDataVector_.push_back(std::move(categoryDataPtr));
         dialogDataNeedsUpdate_ = true;
@@ -163,7 +187,7 @@ namespace AddParams
             const std::string &uniqueId = category->categoryName();
             auto *categoryMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
             dialogRowData_.push_back(::makeRowItem(*category, uniqueId, categoryMemory));
-            auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory);
+            auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory, *infoOrganizer_);
             dialogRowData_.insert(dialogRowData_.end(), gategoryRowData.begin(), gategoryRowData.end());
         }
         for(const auto &rowItem : otherHelpData_)
@@ -178,5 +202,88 @@ namespace AddParams
         dialogTreePatternArray_.clear();
         for(const auto &rowItem : dialogRowData_)
             dialogTreePatternArray_.push_back(rowItem.treeDepth());
+    }
+
+    void ParameterSelectionSystem::searchItemsThatMatchToSearchWords(std::string words)
+    {
+        // Needs to fill dialogRowData before new search
+        updateDialogRowData();
+
+        if(words.empty())
+        {
+            updateDialogTreePatternData();
+            dialogDataNeedsUpdate_ = true;
+            return;
+        }
+             
+        std::vector<SingleRowItem> resultRowData;
+        auto searchedWords = CatLogUtils::getSearchedWords(words);
+        for(auto row : dialogRowData_)
+        {
+            if(!row.leafNode()) { resultRowData.push_back(row); }
+            else if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
+            {
+                resultRowData.push_back(row);
+            }
+        }
+
+        removeNodesThatDontHaveLeafs(resultRowData);
+        if(!resultRowData.empty())
+        dialogRowData_.swap(resultRowData);
+        updateDialogTreePatternData();
+        dialogDataNeedsUpdate_ = true;
+    }
+
+    void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData)
+    {
+        std::vector<SingleRowItem> rowData;
+        int index = 0;
+
+        //Remove nodes with no childs
+        for(auto row : resultRowData)
+        {
+            if(row.leafNode()) { rowData.push_back(row); }
+            if((index + 1 < resultRowData.size()))
+            {
+                if(resultRowData.at(index + 1).treeDepth() != row.treeDepth())
+                {
+                    rowData.push_back(row);
+                }
+            }
+            index++;
+        }
+        resultRowData.swap(rowData);
+        rowData.clear();
+
+        //Then remove nodes with no leaf node as a child
+        index = 0;
+        for(auto row : resultRowData)
+        {
+            if(row.treeDepth() == 1) { rowData.push_back(row); }
+            else if(hasLeafNodeAsAChild(index, resultRowData))
+            {
+                rowData.push_back(row);
+            }
+            index++;
+        }
+        resultRowData.swap(rowData);
+    }
+
+    bool ParameterSelectionSystem::hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData)
+    {
+        auto row = resultRowData.at(index);
+        
+        if(row.leafNode())
+        {
+            return true;
+        }
+        else if(index + 1 <  resultRowData.size())
+        {
+            if(resultRowData.at(++index).treeDepth() > row.treeDepth())
+            {
+                return hasLeafNodeAsAChild(index, resultRowData);
+            }
+        }
+        return false;
     }
 }

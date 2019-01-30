@@ -101,9 +101,10 @@ namespace
         }
     }
 
-    bool compareDisplayName(const AddParams::SingleRowItem &a, const  AddParams::SingleRowItem &b)
+    bool compareName(const NFmiDataIdent &a, const NFmiDataIdent &b)
     {
-        return boost::algorithm::ilexicographical_compare(a.displayName(), b.displayName());
+        return boost::algorithm::ilexicographical_compare(std::string(a.GetParamName()), std::string(b.GetParamName()));
+        return false;
     }
 
     //Create dailogRowData with proper RowType
@@ -132,7 +133,6 @@ namespace
             else //Surface data
             {
                 dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true));
-                std::sort(dialogRowData.begin(), dialogRowData.end(), compareDisplayName);
             }
         }
         else //Wind sub menu
@@ -140,8 +140,7 @@ namespace
             rowType = AddParams::RowType::kParamType;
             dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false));
             rowType = AddParams::RowType::kSubParamType; 
-            ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);
-            
+            ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);            
         }
     }
 
@@ -181,7 +180,7 @@ namespace AddParams
             latestDataFilePath_ = info->DataFileName();
             totalLocalPath_ = combineTotalFilePath(info->DataFileName(), info->DataFilePattern());
             latestMetaData_ = std::make_unique<NFmiQueryInfo>(*info);
-            uniqueDataId_ = info->DataFilePattern();
+            uniqueDataId_ = (info->DataFilePattern().empty()) ? info->DataFileName() : info->DataFilePattern();
             dataType_ = info->DataType();
             if(helpDataInfo)
             {
@@ -191,11 +190,46 @@ namespace AddParams
         return dataStructuresChanged;
     }
 
+    // Returns true, if data's param or level structure is changed
+    bool SingleData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
+    {
+        bool dataStructuresChanged = false;
+
+        dataStructuresChanged = ::isDataStructuresChanged(info, latestMetaData_);
+        latestDataFilePath_ = info->DataFileName();
+        totalLocalPath_ = combineTotalFilePath(info->DataFileName(), info->DataFilePattern());
+        latestMetaData_ = std::make_unique<NFmiQueryInfo>(*info);
+        uniqueDataId_ = (info->DataFilePattern().empty()) ? info->DataFileName() : info->DataFilePattern();
+        dataType_ = info->DataType();
+        if(helpDataInfo)
+        {
+            dataType_ = helpDataInfo->DataType();
+            dataName_ = (helpDataInfo->NotificationLabel().empty()) ? helpDataInfo->GetCleanedName() : helpDataInfo->NotificationLabel();
+        }
+        if(dataName_.empty() && dataType_ == NFmiInfoData::kCopyOfEdited)
+        {
+            dataName_ = "Comparison data";
+        }
+        else if(dataName_.empty() && dataType_ == NFmiInfoData::kEditable)
+        {
+            dataName_ = "Editable data";
+        }
+
+        return true;
+    }
+
     std::vector<SingleRowItem> SingleData::makeDialogRowData() const
     {
         std::vector<SingleRowItem> dialogRowData;
+        std::vector<NFmiDataIdent> paramsVector;
         const auto &paramVector = latestMetaData_->ParamBag().ParamsVector();
         for(const auto &dataIdent : paramVector)
+        {
+            paramsVector.push_back(dataIdent);
+        }
+        std::sort(paramsVector.begin(), paramsVector.end(), compareName);
+
+        for(const auto &dataIdent : paramsVector)
         {
             ::addParameterAndPossibleSubParameters(dialogRowData, dataIdent, dataType_, *latestMetaData_);
         }
@@ -221,4 +255,5 @@ namespace AddParams
         std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
         return !origTime.empty() ? origTime : "";
     }   
+
 }

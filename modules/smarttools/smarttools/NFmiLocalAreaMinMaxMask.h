@@ -52,14 +52,15 @@ public:
         NFmiInfoData::Type theDataType,
         boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         int theArgumentCount,
-        const NFmiGrid &theCalculationGrid);
+        const NFmiGrid &theCalculationGrid,
+        unsigned long thePossibleMetaParamId);
     ~NFmiLocalAreaMinMaxMask(void);
     NFmiLocalAreaMinMaxMask(const NFmiLocalAreaMinMaxMask &theOther);
-    NFmiAreaMask *Clone(void) const;
+    NFmiAreaMask *Clone(void) const override;
     NFmiLocalAreaMinMaxMask &operator=(const NFmiLocalAreaMinMaxMask &theMask) = delete;
 
-    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
-    void SetArguments(std::vector<float> &theArgumentVector);
+    double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+    void SetArguments(std::vector<float> &theArgumentVector) override;
 
 protected:
     void DoCalculationCheck(const NFmiCalculationParams &theCalculationParams);

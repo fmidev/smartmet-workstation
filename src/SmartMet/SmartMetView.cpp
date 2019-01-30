@@ -109,7 +109,7 @@ END_MESSAGE_MAP()
 // CSmartMetView construction/destruction
 
 CSmartMetView::CSmartMetView()
-:itsClientArea()
+:itsFinalMapViewImageBitmap(new CBitmap)
 ,itsMemoryBitmap(new CBitmap)
 ,itsMapBitmap(new CBitmap)
 ,itsOverMapBitmap(new CBitmap)
@@ -141,6 +141,7 @@ CSmartMetView::~CSmartMetView()
 {
 	delete itsEditMapView;
 	delete itsToolBox;
+    CtrlView::DestroyBitmap(&itsFinalMapViewImageBitmap);
     CtrlView::DestroyBitmap(&itsMemoryBitmap);
     CtrlView::DestroyBitmap(&itsMapBitmap);
     CtrlView::DestroyBitmap(&itsOverMapBitmap);
@@ -161,124 +162,7 @@ BOOL CSmartMetView::PreCreateWindow(CREATESTRUCT& cs)
 
 void CSmartMetView::OnDraw(CDC* pDC)
 {
-	static int counter = 0;
-	counter++;
-
-	CSmartMetDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-
-	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
-	if(data == 0)
-		return ;
-	if(data->Printing())
-		return ; // tulee ongelmia, jos ruutua p‰ivitet‰‰n kun samalla printataan
-	if(data->GetLatestMacroParamErrorText().empty())
-		data->SetLatestMacroParamErrorText("Drawing the map view, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei j‰‰ vanhoja muistiin
-
-	auto &gInfo = data->GetGraphicalInfo(itsMapViewDescTopIndex);
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(gInfo, pDC, PrintViewSizeInPixels(), data->DrawObjectScaleFactor());
-	static bool graphInfoReported = false;
-	if(graphInfoReported == false)
-	{ // vain 1. kerran tehd‰‰n lokiin raportti
-		graphInfoReported = true;
-		std::stringstream sstream;
-		sstream << "\nViewWidthInMM: " << gInfo.itsViewWidthInMM << std::endl;
-		sstream << "ViewHeightInMM: " << gInfo.itsViewHeightInMM << std::endl;
-		sstream << "ScreenWidthInMM: " << gInfo.itsScreenWidthInMM << std::endl;
-		sstream << "ScreenHeightInMM: " << gInfo.itsScreenHeightInMM << std::endl;
-		sstream << "ScreenWidthInPixels: " << gInfo.itsScreenWidthInPixels << std::endl;
-		sstream << "ScreenHeightInPixels: " << gInfo.itsScreenHeightInPixels << std::endl;
-		sstream << "DPI x: " << gInfo.itsDpiX << std::endl;
-		sstream << "DPI y: " << gInfo.itsDpiY << std::endl;
-		double scaleFactor = data->DrawObjectScaleFactor();
-		sstream << "DrawObjectScaleFactor (editor.conf - MetEditor::DrawObjectScaleFactor ): " << scaleFactor << std::endl;
-		if(scaleFactor == 0)
-			sstream << "Using ScreenWidthInMM and ScreenHeightInMM to calculate pixels-per-mm values" << std::endl;
-		else
-			sstream << "Using DPI x and y and DrawObjectScaleFactor to calculate pixels-per-mm values" << std::endl;
-		sstream << "PixelsPerMM_x: " << gInfo.itsPixelsPerMM_x << std::endl;
-		sstream << "PixelsPerMM_y: " << gInfo.itsPixelsPerMM_y << std::endl;
-		data->LogMessage(sstream.str(), CatLog::Severity::Debug, CatLog::Category::Visualization);
-	}
-
-	CClientDC dc(this);
-	CDC dcMem;
-	dcMem.CreateCompatibleDC(&dc);
-
-	GetClientRect(&itsClientArea);
-	if(itsClientArea.Height() < 4)
-	{
-		dcMem.DeleteDC();
-		return ; // kun ruudun korkeus on tarpeeksi pieni, ohjelma kaatuu jos sit‰
-				 // yritet‰‰n piirt‰‰. Lis‰ksi turha piirt‰‰ koska mit‰‰n ei n‰y.
-				 // Lis‰ksi en saanut selville mik‰ kaataa ohjelman.  Kun ei piirret‰
-				 // projektio viivoja, ohjelma kaatuu dcMem.SelectObject(itsMemoryBitmap)
-				 // kohtaan, mutta en voinut debugata MFC:n sis‰lle.
-				 // Kun projektio viivojen piirto on p‰‰ll‰, ohjelma kaatuu jotenkin
-				 // oudosti projektio viivojen tuhoamiseen.
-	}
-	CBitmap *oldBitmap = 0;
-    auto mapViewDesctop = data->MapViewDescTop(itsMapViewDescTopIndex);
-	if(mapViewDesctop->RedrawMapView() || data->ViewBrushed())
-	{
-		CDC dcMemCopy; // v‰limuistin apuna k‰ytetty dc
-		dcMemCopy.CreateCompatibleDC(&dc);
-        mapViewDesctop->CopyCDC(&dcMemCopy);
-
-		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(data->ShowWaitCursorWhileDrawingView());
-		if(!data->ViewBrushed())
-		{
-			if(itsMemoryBitmap)
-				itsMemoryBitmap->DeleteObject();
-
-			itsMemoryBitmap->CreateCompatibleBitmap(&dc,itsClientArea.Width()
-													,itsClientArea.Height());
-			ASSERT(itsMemoryBitmap->m_hObject != 0);
-		}
-		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
-		itsToolBox->SetDC(&dcMem);
-
-		// *** T‰ss‰ tehd‰‰n background kartta ***
-		CDC dcMem2;
-		dcMem2.CreateCompatibleDC(&dc);
-		CBitmap *oldBitmap2 = 0;
-		GenerateMapBitmap(itsMapBitmap, &dcMem2, &dc, oldBitmap2);
-        mapViewDesctop->MapBlitDC(&dcMem2);
-		// *** T‰ss‰ tehd‰‰n background kartta ***
-		{
-			SetToolMastersDC(&dcMem);
-			DoDraw();
-		}
-
-		// *** T‰ss‰ background kartan j‰lkihoito ***
-        mapViewDesctop->MapBlitDC(0);
-		/* itsMapBitmap = */ dcMem2.SelectObject(oldBitmap2);
-		dcMem2.DeleteDC();
-		// *** T‰ss‰ background kartan j‰lkihoito ***
-        mapViewDesctop->CopyCDC(0);
-		dcMemCopy.DeleteDC();
-        mapViewDesctop->ClearRedrawMapView();
-        data->ViewBrushed(false);
-	}
-	else
-		oldBitmap = dcMem.SelectObject(itsMemoryBitmap);
-
-	pDC->BitBlt( 0
-				,0
-				,itsClientArea.Width()
-				,itsClientArea.Height()
-				,&dcMem
-				,0
-				,0
-				,SRCCOPY);
-
-	itsMemoryBitmap = dcMem.SelectObject(oldBitmap);
-	dcMem.DeleteDC();
-
-	itsToolBox->SetDC(pDC);
-	DrawOverBitmapThings(itsToolBox); // t‰t‰ voisi tutkia, mitk‰ voisi siirt‰‰ t‰‰lt‰ pois.
-	data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(false);
-    mapViewDesctop->MapHandler()->ClearUpdateMapViewDrawingLayers();
+    CFmiWin32TemplateHelpers::MapViewOnDraw(this, pDC, GetSmartMetDocumentInterface());
 }
 
 void CSmartMetView::DoDraw()
@@ -331,10 +215,36 @@ void CSmartMetView::DrawOverBitmapThings(NFmiToolBox * theGTB)
 	}
 }
 
-bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, CBitmap *theOldBitmap)
+bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
 	NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
-	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, theOldBitmap);
+	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
+}
+
+void CSmartMetView::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor)
+{
+    static bool graphInfoReported = false;
+    if(graphInfoReported == false)
+    { // vain 1. kerran tehd‰‰n lokiin raportti
+        graphInfoReported = true;
+        std::stringstream sstream;
+        sstream << "\nViewWidthInMM: " << graphicalInfo.itsViewWidthInMM << std::endl;
+        sstream << "ViewHeightInMM: " << graphicalInfo.itsViewHeightInMM << std::endl;
+        sstream << "ScreenWidthInMM: " << graphicalInfo.itsScreenWidthInMM << std::endl;
+        sstream << "ScreenHeightInMM: " << graphicalInfo.itsScreenHeightInMM << std::endl;
+        sstream << "ScreenWidthInPixels: " << graphicalInfo.itsScreenWidthInPixels << std::endl;
+        sstream << "ScreenHeightInPixels: " << graphicalInfo.itsScreenHeightInPixels << std::endl;
+        sstream << "DPI x: " << graphicalInfo.itsDpiX << std::endl;
+        sstream << "DPI y: " << graphicalInfo.itsDpiY << std::endl;
+        sstream << "DrawObjectScaleFactor (editor.conf - MetEditor::DrawObjectScaleFactor ): " << scaleFactor << std::endl;
+        if(scaleFactor == 0)
+            sstream << "Using ScreenWidthInMM and ScreenHeightInMM to calculate pixels-per-mm values" << std::endl;
+        else
+            sstream << "Using DPI x and y and DrawObjectScaleFactor to calculate pixels-per-mm values" << std::endl;
+        sstream << "PixelsPerMM_x: " << graphicalInfo.itsPixelsPerMM_x << std::endl;
+        sstream << "PixelsPerMM_y: " << graphicalInfo.itsPixelsPerMM_y << std::endl;
+        CatLog::logMessage(sstream.str(), CatLog::Severity::Debug, CatLog::Category::Visualization);
+    }
 }
 
 // CSmartMetView printing
@@ -972,7 +882,8 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
         if(counter > 2)
             PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
-		pDoc->UpdateAllViewsAndDialogs("Main map view: view rezized");
+        // Vain t‰m‰ n‰yttˆ itse ja zoomaus dialogi pit‰‰ p‰ivitt‰‰
+		pDoc->UpdateAllViewsAndDialogs("Main map view resized", SmartMetViewId::MainMapView | SmartMetViewId::ZoomDlg);
 	}
     counter++;
 	Invalidate(FALSE);

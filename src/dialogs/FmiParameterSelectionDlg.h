@@ -62,8 +62,7 @@ private:
     CPPToolTip m_tooltip;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
-    std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
-
+    std::string TooltipForCategoryType();
 public:
     DECLARE_MESSAGE_MAP()
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
@@ -91,7 +90,7 @@ public:
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) { return ViewPosRegistryInfo().WinRegistryKeyStr(); }
     void Update();
 
-// Dialog Data
+    // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_PARAM_ADDING };
 #endif
@@ -99,8 +98,15 @@ public:
 private:
     void DoWhenClosing(void);
     void AdjustDialogControls(void);
+    void AdjustGridControl(void);
+    CRect CalcGridArea(void);
+    void AdjustControlWidth(int theControlId, int rightOffset, int maxWidth);
     void InitHeaders();
-    void UpdateGridControlValues(void);
+    void UpdateGridControlValues(bool collapseAll = false);
+    void UpdateGridControlValuesInNormalMode(bool fFirstTime);
+    void UpdateGridControlValuesWhenSearchActive(void);
+    void UpdateGridControlValuesWhenSearchRemoved(void);
+    void ExpandAllNodes();
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
     void SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount);
     void InitDialogTexts(void);
@@ -112,6 +118,8 @@ private:
     std::string MakeActiveViewRowText();
     bool NeedToUpdateTitleText();
     std::string MakeTitleText();
+    bool UpdateSearchIfNeeded();
+    void CollapseAllButCategories();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
@@ -122,6 +130,8 @@ private:
     AddParams::ParameterSelectionSystem *itsParameterSelectionSystem;
     unsigned int itsLastAcivatedDescTopIndex; // Mikä oli viimeksi DescTopIndex, kun otsikon tekstiä tehtiin
     int itsLastActivatedRowIndex; // Mikä oli viimeksi RowIndex, kun otsikon tekstiä tehtiin
+    CString itsSearchText;
+    std::string itsPreviousSearchText;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -136,5 +146,6 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-
+    afx_msg void OnEnChangeEditParameterSelectionSearchText();
+    afx_msg void OnPaint();
 };

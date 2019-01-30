@@ -10,8 +10,9 @@ NFmiLocalAreaMinMaxMask::NFmiLocalAreaMinMaxMask(Type theMaskType,
     NFmiInfoData::Type theDataType,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     int theArgumentCount,
-    const NFmiGrid &theCalculationGrid)
-    :NFmiInfoAreaMask(NFmiCalculationCondition(), theMaskType, theDataType, theInfo)
+    const NFmiGrid &theCalculationGrid,
+    unsigned long thePossibleMetaParamId)
+    :NFmiInfoAreaMask(NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId)
     ,itsLocalAreaSearchRangeInKm(0)
 ,itsDataCache(std::make_shared<DataCache>())
 ,itsCurrentDataMatrix(nullptr)

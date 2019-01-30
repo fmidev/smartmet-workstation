@@ -5,6 +5,7 @@
 #include "NFmiProducer.h"
 #include <vector>
 #include <functional>
+#include "NFmiLevelBag.h"
 
 class NFmiHelpDataInfoSystem;
 class NFmiInfoOrganizer;
@@ -12,7 +13,7 @@ class NFmiProducerSystem;
 class NFmiMacroParamSystem;
 
 namespace AddParams
-{
+{   
     class CategoryData;
 
     class ParameterSelectionSystem
@@ -56,6 +57,7 @@ namespace AddParams
         std::vector<std::string> customCategories_;
 
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
+        const NFmiLevelBag *soundingLevels_;
 
     public:
         ParameterSelectionSystem();
@@ -79,12 +81,18 @@ namespace AddParams
         int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
         void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
-
+        void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
+        void searchItemsThatMatchToSearchWords(std::string words);
+        
     private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
         void updateDialogTreePatternData();
-        void updateMacroParamData(std::string catName, NFmiInfoData::Type dataCategory);
+        void updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory);
+        void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
+        void getOnlyParentsThatHaveChildNodesOrIsLeafNode(std::vector<SingleRowItem> &resultRowData);
+        bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
+        void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
     };
 }
