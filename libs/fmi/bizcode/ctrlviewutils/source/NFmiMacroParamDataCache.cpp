@@ -237,6 +237,15 @@ void NFmiMacroParamDataCacheForView::clearAllLayers()
     rowsCache_.clear();
 }
 
+void NFmiMacroParamDataCacheForView::clearMacroParamCacheRow(unsigned long rowIndex)
+{
+    auto removedCount = rowsCache_.erase(rowIndex);
+    if(removedCount == 0)
+    {
+        ::logRowIndexNotFoundWarning(__FUNCTION__, rowIndex);
+    }
+}
+
 void NFmiMacroParamDataCacheForView::clearMacroParamCache(unsigned long rowIndex, const std::string &macroParamTotalPath)
 {
     auto iter = rowsCache_.find(rowIndex);
@@ -339,6 +348,19 @@ void NFmiMacroParamDataCache::clearView(unsigned long viewIndex)
     if(iter != viewsCache_.end())
     {
         iter->second.clearAllLayers();
+    }
+    else
+    {
+        ::logViewIndexNotFoundWarning(__FUNCTION__, viewIndex);
+    }
+}
+
+void NFmiMacroParamDataCache::clearMacroParamCacheRow(unsigned long viewIndex, unsigned long rowIndex)
+{
+    auto iter = viewsCache_.find(viewIndex);
+    if(iter != viewsCache_.end())
+    {
+        iter->second.clearMacroParamCacheRow(rowIndex);
     }
     else
     {

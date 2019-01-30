@@ -66,6 +66,7 @@ class NFmiMacroParamDataCacheForView
 public:
     NFmiMacroParamDataCacheForView() = default;
     void clearAllLayers();
+    void clearMacroParamCacheRow(unsigned long rowIndex);
     void clearMacroParamCache(unsigned long rowIndex, const std::string &macroParamTotalPath);
     void clearMacroParamCache(const std::vector<std::string> &macroParamTotalPathList);
     void setCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData);
@@ -83,6 +84,7 @@ public:
     bool init(const std::initializer_list<unsigned long> &viewIndexList);
     void clearAllLayers();
     void clearView(unsigned long viewIndex);
+    void clearMacroParamCacheRow(unsigned long viewIndex, unsigned long rowIndex);
     void clearMacroParamCache(unsigned long viewIndex, unsigned long rowIndex, const std::string &macroParamTotalPath);
     void clearMacroParamCache(const std::vector<std::string> &macroParamTotalPathList);
     void setCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData);
