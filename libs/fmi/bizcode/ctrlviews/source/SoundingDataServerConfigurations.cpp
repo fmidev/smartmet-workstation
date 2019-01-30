@@ -3,18 +3,22 @@
 #include "NFmiEnumConverter.h"
 #include "NFmiSoundingDataOpt1.h"
 #include "catlog/catlog.h"
+#include "SettingsFunctions.h"
 
 static const std::string g_VersionNumberName = "VersionNumber";
+static const std::string g_SmartmetServerBaseUriName = "SmartmetServerBaseUri";
+
+// Kun pyydet‰‰n konffeista NFmiSettings::ListChildren:ill‰ mallidata kohtaista listaa, meid‰n pit‰‰ 
+// ohittaa tietyt sanat, koska niill‰ nimill‰ on asetukset 'p‰‰tasolla', ja ne tullaan lis‰‰m‰‰n tuohon
+// ListChildren listaan. Lis‰t‰‰n myˆs tyhj‰‰ sana listaan, jotta tarkastelut  yksinkertaistuvat.
+static const std::vector<std::string> g_IgnoredConfigurationVariableNames{ "", g_VersionNumberName, g_SmartmetServerBaseUriName };
 
 static bool IsModelNameLegit(const std::string &modelName)
 {
-    if(!modelName.empty())
-    {
-        if(modelName != g_VersionNumberName)
-            return true;
-    }
-
-    return false;
+    if(std::find(g_IgnoredConfigurationVariableNames.begin(), g_IgnoredConfigurationVariableNames.end(), modelName) != g_IgnoredConfigurationVariableNames.end())
+        return false;
+    else
+        return true;
 }
 
 // CreateRegValue -funktio hakee ensin arvoa Win-rekisterist‰ ja sitten optionaalisesti konfiguraatioista ja lopuksi k‰ytt‰‰ oletusarvoa.
@@ -83,7 +87,7 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId};
     wantedParametersString_ = makeWantedParametersString();
 
-    smartmetServerBaseUri_ = NFmiSettings::Optional<std::string>(baseConfigurationPath + "::SmartmetServerBaseUri", "http://smartmet.fmi.fi/timeseries?");
+    smartmetServerBaseUri_ = SettingsFunctions::GetUrlFromSettings(baseConfigurationPath + "::" + g_SmartmetServerBaseUriName, true, "http://smartmet.fmi.fi/timeseries?");
 
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
