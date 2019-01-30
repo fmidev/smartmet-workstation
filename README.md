@@ -5,7 +5,7 @@ First time build instructions:
 1. Get master from github in bash:
   <br>git clone git@github.com:fmidev/smartmet-workstation.git
 2. Get 3rd party binaries from link below:
- <br>https://github.com/fmidev/smartmet-workstation/releases/download/smartmet_release_5_12_16_0/libs.zip
+ <br>https://github.com/fmidev/smartmet-workstation/releases/download/smartmet_release_5_12_17_2/libs.zip
  <br>Should be extracted into repo root for compilation.
 3. Run smartmet-workstation/scripts/move_scripts_here.sh script
 4. Run cmake build script smartmet-workstation/scripts/cmake/cmake_msvc_build.sh
@@ -29,6 +29,7 @@ First time build instructions:
 6. Fill in release informations: Title: 5.12.16.0 and Description (if you want): For example add info about 3rd party binaries 
 7. If there is changes in 3rd party binaries you have to add a new zip file that contains them.
 8. Finally press Publish release.
+9. Add new link to 3rd party libs into readme.
 
 # SmartMet-workstation 3rd party binary utilities guide
 
