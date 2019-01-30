@@ -44,3 +44,9 @@ enum class SmartMetViewId : size_t
 bool SmartMetViewIdFlagCheck(SmartMetViewId viewsFlag, SmartMetViewId checkedSingleViewId);
 std::string SmartMetViewIdGetName(SmartMetViewId singleViewId);
 std::string SmartMetViewIdGetNameList(SmartMetViewId viewsFlag);
+
+inline SmartMetViewId operator | (SmartMetViewId lhs, SmartMetViewId rhs)
+{
+    using T = std::underlying_type_t <SmartMetViewId>;
+    return static_cast<SmartMetViewId>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
