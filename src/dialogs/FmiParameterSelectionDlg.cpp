@@ -257,7 +257,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::Single
     levels = (info->SizeLevels() == 1) ? "surface data" : std::to_string(info->SizeLevels());
 
     std::string str;
-    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
     str += "Data information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
@@ -291,7 +291,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(AddParams::Si
     std::string shortName = (producerInfo.ShortNameCount() == 0) ? "" : producerInfo.ShortName();
 
     std::string str;
-    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
     str += "Producer information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
@@ -352,7 +352,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::Si
     }
 
     std::string str;
-    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
     str += "Category information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
@@ -367,7 +367,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::Si
 std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType()
 {
     std::string str;
-    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
     str += "Category information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
@@ -391,7 +391,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(Add
     }
 
     std::string str;
-    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
     str += "Category information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
@@ -404,24 +404,35 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(Add
 std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(AddParams::SingleRowItem &rowItem)
 {
     FmiInterpolationMethod interpolation = kNoneInterpolation;   
-    NFmiParamBag params = itsSmartMetDocumentInterface->InfoOrganizer()->GetParams(rowItem.parentItemId());
+    NFmiParamBag params = itsSmartMetDocumentInterface->InfoOrganizer()->GetParams(rowItem.parentItemId()); 
+    NFmiParam *param = nullptr;
+
     for(auto &dataIdent : params.ParamsVector())
     {
         auto id = dataIdent.GetParamIdent();
         if(id == rowItem.itemId())
         {
-            interpolation = dataIdent.GetParam()->InterpolationMethod();
+            param = dataIdent.GetParam();
             break;
         }
-    }    
-    //Joonas: jatka tästä ja katso mitä muuta voisi laittaa tooltippiin.
+    }
+    if(param == nullptr)
+    {
+        return "";
+    }
+        
+    std::string paramName = std::string(param->GetName());
+    std::string paramId = std::to_string(param->GetIdent());
+    interpolation = param->InterpolationMethod();
 
     std::string str;
-    str += "<b><font face=\"Serif\" size=\"6\" color=\"darkblue\">";
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
     str += "Parameter information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
-    str += "Interpolation: " + GetParameterInterpolationMethodString(interpolation);
+    str += "Name:\t\t" + paramName + "\n";
+    str += "Id:\t\t\t" + paramId + "\n";
+    str += "Interpolation:\t" + GetParameterInterpolationMethodString(interpolation);
     str += "<br><hr color=darkblue><br>";
     return str;
 }
