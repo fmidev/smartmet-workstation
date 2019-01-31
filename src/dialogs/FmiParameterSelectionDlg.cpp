@@ -248,8 +248,28 @@ std::string GetParameterInterpolationMethodString(FmiInterpolationMethod method)
     }
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::SingleRowItem singleRowItem, boost::shared_ptr<NFmiFastQueryInfo> info, NFmiHelpDataInfo *helpInfo)
+std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::SingleRowItem singleRowItem)
 {
+    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+    NFmiHelpDataInfo *helpDataInfo;
+    boost::shared_ptr<NFmiFastQueryInfo> info;
+    std::string serverPath = "";
+
+    if(!infoVector.empty())
+    {
+        info = infoVector.at(0);
+    }
+    if(singleRowItem.itemName() == "Editable data")
+    {
+        info = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
+    }
+
+    helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
+    if(helpDataInfo != nullptr)
+    {
+        serverPath = CombineFilePath(info->DataFileName(), helpDataInfo->FileNameFilter());
+    }
+
     std::string gridArea;
     std::string levels;
 
@@ -276,11 +296,11 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::Single
     str += "<br><hr color=darkblue><br>";
     str += "<b>Grid info: </b>\tarea: " + gridArea + "\n";
     str += "\t\t\tgrid points: " + std::to_string(info->GridXNumber()) + " x " + std::to_string(info->GridYNumber()) + "\n";
-    str += "\t\t\thorizontal resolution: " + gridSizeInKm(info->Grid()) + "\n";
+    str += "\t\t\thorizontal resolution: " + gridSizeInKm(info->Grid());
     str += "<br><hr color=darkblue><br>";
     str += "<b>File size: </b>\t\t" + ConvertSizeToMBorGB(fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()))) + "\n";
     str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
-    str += "<b>Server path: </b>\t" + CombineFilePath(info->DataFileName(), helpInfo->FileNameFilter());
+    str += "<b>Server path: </b>\t" + serverPath;
     str += "<br><hr color=darkblue><br>";
 
     return str;
@@ -437,6 +457,26 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(AddParams::S
     return str;
 }
 
+std::string NFmiParameterSelectionGridCtrl::TooltipForEditableData(AddParams::SingleRowItem &singleRowItem)
+{
+    auto info = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
+    auto size = fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()));
+
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
+    str += "Producer information";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Name: </b>\t\t" + singleRowItem.itemName() + "\n";
+    str += "<b>Id: </b>\t\t\t" + std::to_string(singleRowItem.itemId());
+    str += "Name: " + info->DataFileName() + "\n";
+    str += "<b>File size: </b>\t\t: " + ConvertSizeToMBorGB(size) + "\n";
+    str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
+}
+
 bool IsParameterType(AddParams::RowType rowType)
 {
     if(rowType == AddParams::RowType::kParamType || rowType == AddParams::RowType::kSubParamType
@@ -469,9 +509,9 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
         {
             return TooltipForCategoryType();
         }
-        else if(!fastQueryInfo.empty() && helpDataInfo != nullptr && singleRowItem.rowType() == AddParams::RowType::kDataType)
+        else if(singleRowItem.rowType() == AddParams::RowType::kDataType)
         {
-            return TooltipForDataType(singleRowItem, fastQueryInfo.at(0), helpDataInfo);
+            return TooltipForDataType(singleRowItem);
         }
         else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
         {
