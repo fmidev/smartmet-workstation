@@ -8583,6 +8583,7 @@ bool InitCPManagerSet(void)
 		int animationEndOffset = 0; //itsAnimationEndTime.DifferenceInMinutes(TimeControlViewTimes(0).LastTime());
 		theMacro.AnimationEndPosition(animationEndOffset);
         theMacro.KeepMapAspectRatio(ApplicationWinRegistry().KeepMapAspectRatio());
+        theMacro.UseControlPoinTool(MetEditorOptionsData().ControlPointMode());
     }
 
 	void SetGeneralDoc(NFmiViewSettingMacro &theMacro)
@@ -8913,6 +8914,7 @@ bool InitCPManagerSet(void)
 		SetMaskSettings(theMacro);
 
         ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
+        MetEditorOptionsData().ControlPointMode(theMacro.UseControlPoinTool());
 
         MakeApplyViewMacroDirtyActions();
 
