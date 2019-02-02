@@ -81,19 +81,19 @@ void NFmiControlPointObservationBlender::MakeAnalysisModificationToStartOfEdited
             itsBlendingDataHelper.blendingTimeIndex = 0;
             do
             {
-                // Sallitut havaintoajat ovat vain kulloikin läpikäytävä ajan hetki editoidussa datassa
+                // Sallitut havaintoajat ovat vain kulloinkin läpikäytävä ajan hetki editoidussa datassa
                 const auto &currentTime = itsInfo->Time();
                 NFmiTimeDescriptor allowedObservationTimes(currentTime, NFmiTimeBag(currentTime, currentTime, 60));
                 std::vector<float> xValues, yValues, zValues;
                 if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedObservationTimes))
                 {
-                    // 4. Täydennä CP-pisteiden arvoja seuraavasti, jos CP-pisteessä on puuttuva, otetaan editoidusta datasta 0-hetkeltä arvo siihen (0-muutos)
+                    // 4. Täydennä CP-pisteiden arvoja seuraavasti, jos CP-pisteessä on puuttuva, laitetaan siihen 0-muutos
                     FillZeroChangeValuesForMissingCpPoints(zValues);
                     // 5. Laske CP-pisteiden avulla 0-hetken 'analyysikenttä'
                     DoBlendingDataGridding(xValues, yValues, zValues);
-                    // 6. Laske analyysikentän ja editoidun datan 0-hetken kentän avulla muutoskenttä
-                    itsBlendingDataHelper.changeField = CalcChangeField(GetUsedGridData());
-                    itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
+                    // 6. Ota muutoskenttä talteen itsBlendingDataHelper:iin
+                    itsBlendingDataHelper.changeField = GetUsedGridData();
+                    itsParamMaskList->SyncronizeMaskTime(currentTime);
                     DoLocationGridCalculations(itsBlendingDataHelper.changeField);
                 }
             } while(itsInfo->PreviousTime());
