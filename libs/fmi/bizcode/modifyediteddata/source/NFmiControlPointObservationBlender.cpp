@@ -7,6 +7,8 @@
 
 #include <boost/math/special_functions/round.hpp>
 
+#include <fstream>
+
 NFmiControlPointObservationBlender::BlendingDataHelper::BlendingDataHelper()
 :changeField()
 ,limitChecker(kFloatMissing, kFloatMissing, kFmiBadParameter)
@@ -36,33 +38,31 @@ static NFmiTimeDescriptor CalcAllowedTimes(const NFmiMetTime &actualFirstTime, l
 
 bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks)
 {
+    // assert(itsInfo->Param().GetParamIdent() == kFmiTemperature);
     // 1. Mikä on sallittu aikahaarukka? esim. 10.00 - 10.20 Utc
     auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes());
+    // 2. Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
+    if(!itsInfo->Time(theActiveTimes.FirstTime()))
+    {
+        itsInfo->FirstTime();
+    }
+    auto firstModifiedTimeIndex = itsInfo->TimeIndex();
+
     // 3. Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisessä CP-pisteessä on 0 (merkitään missing arvolla).
     std::vector<float> xValues, yValues, zValues;
     if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedTimes))
     {
-        // Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
-        if(!itsInfo->Time(theActiveTimes.FirstTime()))
-        {
-            itsInfo->FirstTime();
-        }
-        auto firstModifiedTimeIndex = itsInfo->TimeIndex();
-        // Olen kuullut että Obs-blender voi muokata väärää parametria, varmistetaan että tässä on oikea parametri päällä
-        if(Param(*itsDrawParam->Param().GetParam()))
-        {
-            // 4. Täydennä CP-pisteiden arvoja seuraavasti, jos CP-pisteessä on puuttuva, otetaan editoidusta datasta 0-hetkeltä arvo siihen (0-muutos)
-            FillZeroChangeValuesForMissingCpPoints(zValues);
-            // 5. Laske CP-pisteiden avulla 0-hetken 'analyysikenttä'
-            DoBlendingDataGridding(xValues, yValues, zValues);
-            // 6. Laske analyysikentän ja editoidun datan 0-hetken kentän avulla muutoskenttä
-            itsBlendingDataHelper.changeField = CalcChangeField(GetUsedGridData());
-            // 7. Blendaa muutoskenttä editoituun dataan liu'uttamalla
-            auto status = MakeBlendingOperation(theActiveTimes);
-            // 8. Lasketaan 'analyysit' ja niiden sijoitus editoituun dataan myös 0-hetkeä edeltäville editoidun datan ajoille
-            MakeAnalysisModificationToStartOfEditedData(firstModifiedTimeIndex);
-            return status;
-        }
+        // 4. Täydennä CP-pisteiden arvoja seuraavasti, jos CP-pisteessä on puuttuva arvo, laitetaan siihen 0 muutos.
+        FillZeroChangeValuesForMissingCpPoints(zValues);
+        // 5. Laske CP-pisteiden avulla 0-hetken 'muutoskenttä'
+        DoBlendingDataGridding(xValues, yValues, zValues);
+        // 6. Ota muutoskenttä talteen itsBlendingDataHelper:iin
+        itsBlendingDataHelper.changeField = GetUsedGridData();
+        // 7. Blendaa muutoskenttä editoituun dataan liu'uttamalla
+        auto status = MakeBlendingOperation(theActiveTimes);
+        // 8. Lasketaan 'analyysit' ja niiden sijoitus editoituun dataan myös 0-hetkeä edeltäville editoidun datan ajoille
+        MakeAnalysisModificationToStartOfEditedData(firstModifiedTimeIndex);
+        return status;
     }
     return false;
 }
@@ -171,12 +171,11 @@ const double g_missingDistanceToStationInKm = 9999999999.;
 
 void NFmiControlPointObservationBlender::FillZeroChangeValuesForMissingCpPoints(std::vector<float> &zValues)
 {
-    const auto &cpLatlonPoints = itsCPManager->CPLocationVector();
-    for(size_t cpLocationIndex = 0; cpLocationIndex < zValues.size(); cpLocationIndex++)
+    for(auto &value : zValues)
     {
-        if(zValues[cpLocationIndex] == kFloatMissing)
+        if(value == kFloatMissing)
         {
-            zValues[cpLocationIndex] = itsInfo->InterpolatedValue(cpLatlonPoints[cpLocationIndex]);
+            value = 0;
         }
     }
 }
@@ -191,7 +190,7 @@ static bool NeedToLookForObservationValuesForCpPoint(const std::vector<float> &c
         return true;
 }
 
-// Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisessä CP-pisteessä on 0 (merkitään missing arvolla).
+// Hae muutosarvot originaali kentän arvoon sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisessä CP-pisteessä on 0 (merkitään missing arvolla).
 bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange)
 {
     // 1. Haetaan käytetystä CP-managerista pohjat, eli x- ja y-koordinaatit ja jotkut pohja-arvot z eli muutoskentälle.
@@ -235,7 +234,10 @@ bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std:
                                     // 6.2. Sitten ratkaiseen viimeisimmän sallitun ajan ei-puuttuva arvo
                                     if(zValues[cpLocationIndex] == kFloatMissing)
                                     {
-                                        zValues[cpLocationIndex] = info->FloatValue();
+                                        float obsValue = info->FloatValue();
+                                        float origValue = itsInfo->InterpolatedValue(cpLocation.GetLocation());
+                                        if(obsValue != kFloatMissing && origValue != kFloatMissing)
+                                            zValues[cpLocationIndex] = origValue - obsValue;
                                     }
                                 }
                             }
