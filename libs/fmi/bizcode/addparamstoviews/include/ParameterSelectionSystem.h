@@ -14,6 +14,12 @@ class NFmiMacroParamSystem;
 
 namespace AddParams
 {   
+    enum SortOrder
+    {
+        Name = 0,
+        Id,
+    };
+
     class CategoryData;
 
     class ParameterSelectionSystem
@@ -58,6 +64,8 @@ namespace AddParams
 
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
         const NFmiLevelBag *soundingLevels_;
+        SortOrder sortOrder_;
+
 
     public:
         ParameterSelectionSystem();
@@ -94,5 +102,7 @@ namespace AddParams
         void getOnlyParentsThatHaveChildNodesOrIsLeafNode(std::vector<SingleRowItem> &resultRowData);
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
+        void sortDialogRowData();
+        void sortByName();
     };
 }

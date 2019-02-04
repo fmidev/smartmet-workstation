@@ -18,7 +18,6 @@ namespace
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : false;
         return AddParams::SingleRowItem(AddParams::kCategoryType, categoryData.categoryName(), 0, nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
-
 }
 
 namespace AddParams
@@ -37,6 +36,7 @@ namespace AddParams
     ,helpDataIDs_()
     ,customCategories_()
     {
+        sortOrder_ = Name;
     }
 
     ParameterSelectionSystem::~ParameterSelectionSystem() = default;
@@ -174,6 +174,7 @@ namespace AddParams
             dialogDataNeedsUpdate_ = false;
             updateData();
             updateDialogRowData();
+            sortDialogRowData();
             updateDialogTreePatternData();
         }
     }
@@ -286,4 +287,25 @@ namespace AddParams
         }
         return false;
     }
+
+    void ParameterSelectionSystem::sortDialogRowData() //Joonas: poista, jos j‰‰ turhaksi
+    {
+        switch(sortOrder_)
+        {
+        case AddParams::Name:
+            sortByName();
+            break;
+        case AddParams::Id:
+            break;
+        default:
+            sortByName();
+            break;
+        }
+    }
+
+    void ParameterSelectionSystem::sortByName() //Joonas: poista, jos j‰‰ turhaksi
+    {
+        dialogRowData_;
+    }
+
 }
