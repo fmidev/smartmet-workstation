@@ -248,6 +248,73 @@ std::string GetParameterInterpolationMethodString(FmiInterpolationMethod method)
     }
 }
 
+const std::string NFmiParameterSelectionGridCtrl::DataTypeString(NFmiInfoData::Type dataType)
+{
+    switch(dataType)
+    {
+    case NFmiInfoData::kNoDataType:
+        return "No Data Type";
+    case NFmiInfoData::kEditable:
+        return "Editable";
+    case NFmiInfoData::kViewable:
+        return "Viewable";
+    case NFmiInfoData::kStationary:
+        return "Stationary";
+    case NFmiInfoData::kCopyOfEdited:
+        return "Copy Of Edited";
+    case NFmiInfoData::kObservations:
+        return "Observations";
+    case NFmiInfoData::kCalculatedValue:
+        return "Calculated Value";
+    case NFmiInfoData::kKepaData:
+        return "Official Data";
+    case NFmiInfoData::kClimatologyData:
+        return "Climatology Data";
+    case NFmiInfoData::kAnalyzeData:
+        return "Analyze Data";
+    case NFmiInfoData::kScriptVariableData:
+        return "Script Variable Data";
+    case NFmiInfoData::kAnyData:
+        return "Any Data";
+    case NFmiInfoData::kSatelData:
+        return "Satellite Data";
+    case NFmiInfoData::kFlashData:
+        return "Flash Data";
+    case NFmiInfoData::kMacroParam:
+        return "MacroParam";
+    case NFmiInfoData::kHybridData:
+        return "Hybrid Data";
+    case NFmiInfoData::kFuzzyData:
+        return "Fuzzy Data";
+    case NFmiInfoData::kVerificationData:
+        return "Verification Data";
+    case NFmiInfoData::kModelHelpData:
+        return "Model HelpData";
+    case NFmiInfoData::kTrajectoryHistoryData:
+        return "TrajectoryHistory Data";
+    case NFmiInfoData::kTEMPCodeSoundingData:
+        return "TEMP Code SoundingData";
+    case NFmiInfoData::kCrossSectionMacroParam:
+        return "CrossSection MacroParam";
+    case NFmiInfoData::kEditingHelpData:
+        return "Editing HelpData";
+    case NFmiInfoData::kConceptualModelData:
+        return "ConceptualModel Data";
+    case NFmiInfoData::kSingleStationRadarData:
+        return "SingleStation RadarData";
+    case NFmiInfoData::kQ3MacroParam:
+        return "Q3 MacroParam";
+    case NFmiInfoData::kCapData:
+        return "Cap Data";
+    case NFmiInfoData::kWmsData:
+        return "Wms Data";
+    case NFmiInfoData::kSoundingParameterData:
+        return "SoundingParameter Data";
+    default:
+        return "Special or Undefined";
+    }
+}
+
 std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::SingleRowItem singleRowItem)
 {
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
@@ -283,7 +350,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::Single
     str += "<br><hr color=darkblue><br>";
     str += "<b>Item name: </b>\t" + singleRowItem.itemName() + "\n";
     str += "<b>File filter: </b>\t" + GetFileFilter(info->DataFilePattern()) + "\n";
-    str += "<b>Data type: </b>\t" + info->DataTypeString() + "\n";
+    str += "<b>Data type: </b>\t" + DataTypeString(info->DataType()) + "\n";
     str += "<b>Origin Time: </b>\t" + singleRowItem.origTime() + " UTC";
     str += "<br><hr color=darkblue><br>";
     str += "<b>Time info: </b>";
