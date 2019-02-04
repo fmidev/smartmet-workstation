@@ -530,26 +530,6 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(AddParams::S
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForEditableData(AddParams::SingleRowItem &singleRowItem)
-{
-    auto info = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
-    auto size = fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()));
-
-    std::string str;
-    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
-    str += "Producer information";
-    str += "</font></b>";
-    str += "<br><hr color=darkblue><br>";
-    str += "<b>Name: </b>\t\t" + singleRowItem.itemName() + "\n";
-    str += "<b>Id: </b>\t\t\t" + std::to_string(singleRowItem.itemId());
-    str += "Name: " + info->DataFileName() + "\n";
-    str += "<b>File size: </b>\t\t: " + ConvertSizeToMBorGB(size) + "\n";
-    str += "<b>Local path: </b>\t" + CombineFilePath(info->DataFileName(), info->DataFilePattern()) + "\n";
-    str += "<br><hr color=darkblue><br>";
-
-    return str;
-}
-
 bool IsParameterType(AddParams::RowType rowType)
 {
     if(rowType == AddParams::RowType::kParamType || rowType == AddParams::RowType::kSubParamType
