@@ -322,15 +322,18 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::Single
     boost::shared_ptr<NFmiFastQueryInfo> info;
     std::string serverPath = "";
 
-    if(!infoVector.empty())
-    {
-        info = infoVector.at(0);
-    }
     if(singleRowItem.itemName() == "Editable data")
     {
         info = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
     }
-
+    else if(infoVector.empty())
+    {
+        return "";
+    }
+    else
+    {
+        info = infoVector.at(0);
+    }
     helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
     if(helpDataInfo != nullptr)
     {
@@ -430,7 +433,10 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::Si
         if(item.rowType() == AddParams::RowType::kDataType)
         {
             numberOfDataFiles++;
-            auto info = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(item.uniqueDataId()).at(0);
+            auto infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(item.uniqueDataId()); //.at(0);
+            if(infoVector.empty())
+                continue;
+            auto info = infoVector.at(0);
             auto size = fileSizeInMB(CombineFilePath(info->DataFileName(), info->DataFilePattern()));
             combinedSize += size;
         }
@@ -517,9 +523,9 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(AddParams::S
     str += "Parameter information";
     str += "</font></b>";
     str += "<br><hr color=darkblue><br>";
-    str += "Name:\t\t" + paramName + "\n";
-    str += "Id:\t\t\t" + paramId + "\n";
-    str += "Interpolation:\t" + GetParameterInterpolationMethodString(interpolation);
+    str += "<b>Name:</b>\t\t" + paramName + "\n";
+    str += "<b>Id:</b>\t\t\t" + paramId + "\n";
+    str += "<b>Interpolation:</b>\t" + GetParameterInterpolationMethodString(interpolation);
     str += "<br><hr color=darkblue><br>";
     return str;
 }
