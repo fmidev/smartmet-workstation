@@ -73,6 +73,7 @@ private:
     std::string TooltipForEditableData(AddParams::SingleRowItem &rowItem);
     std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem);
     std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo);
+    const std::string DataTypeString(NFmiInfoData::Type dataType);
 public:
     DECLARE_MESSAGE_MAP()
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
