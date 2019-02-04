@@ -70,7 +70,6 @@ private:
     std::string TooltipForCategoryType();
     std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
     std::string TooltipForParameterType(AddParams::SingleRowItem &rowItem);
-    std::string TooltipForEditableData(AddParams::SingleRowItem &rowItem);
     std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem);
     std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo);
     const std::string DataTypeString(NFmiInfoData::Type dataType);
