@@ -148,7 +148,9 @@ namespace AddParams
         if(dataCategory == NFmiInfoData::kObservations) 
             categoryDataPtr->setSoungindLevels(*soundingLevels_);
         categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs_, customCategory);
-        categoryDataVector_.push_back(std::move(categoryDataPtr));
+        if(categoryDataPtr->producerDataVector().size() > 0) { //Hide categories that don't have data
+            categoryDataVector_.push_back(std::move(categoryDataPtr));
+        }
         dialogDataNeedsUpdate_ = true;
     }
 
