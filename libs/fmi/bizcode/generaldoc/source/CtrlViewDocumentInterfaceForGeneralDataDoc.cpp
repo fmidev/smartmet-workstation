@@ -5,6 +5,7 @@
 #include "GraphicalInfo.h"
 #include "GdiPlusMapHandlerInterface.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "TimeSerialModification.h"
 
 CtrlViewDocumentInterfaceForGeneralDataDoc::CtrlViewDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -1310,6 +1311,11 @@ NFmiMacroParamDataCache& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamD
 SoundingDataServerConfigurations& CtrlViewDocumentInterfaceForGeneralDataDoc::GetSoundingDataServerConfigurations()
 {
     return itsDoc->GetSoundingDataServerConfigurations();
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
+{
+    return FmiModifyEditdData::SetupObsBlenderData(itsDoc->GenDocDataAdapter(), theLatlon, theParam, theDataType, fGroundData, theProducer, firstEditedTimeOut, usedObsBlenderInfoOut, analyzeValueOut, messagesOut);
 }
 
 #ifndef DISABLE_CPPRESTSDK

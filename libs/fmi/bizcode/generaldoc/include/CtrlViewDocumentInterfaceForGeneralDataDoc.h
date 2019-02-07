@@ -274,6 +274,7 @@ public:
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     NFmiMacroParamDataCache& MacroParamDataCache() override;
     SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() override;
+    bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;
