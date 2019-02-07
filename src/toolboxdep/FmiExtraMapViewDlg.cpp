@@ -197,7 +197,11 @@ void CFmiExtraMapViewDlg::OnSize(UINT nType, int cx, int cy)
 		itsView->MoveWindow(CalcClientArea(), FALSE);
 	Invalidate(FALSE);
     if(ApplicationInterface::GetApplicationInterfaceImplementation)
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Help map view (2/3) was rezised", SmartMetViewId::ZoomDlg);
+    {
+        // Vain tämä näyttö itse ja zoomaus dialogi pitää päivittää
+        SmartMetViewId thisMapViewId = (itsMapViewDescTopIndex == 1) ? SmartMetViewId::MapView2 : SmartMetViewId::MapView3;
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Help map view (2/3) was rezised", thisMapViewId | SmartMetViewId::ZoomDlg);
+    }
 }
 
 CRect CFmiExtraMapViewDlg::CalcClientArea(void)

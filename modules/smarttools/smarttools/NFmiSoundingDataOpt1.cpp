@@ -20,6 +20,26 @@
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 
+// On käynyt niin että haettaessa dataa serveriltä, on jokin data vektoreista jäänyt vajaaksi tai tyhjäksi.
+// Tässä täytetään kaikki parametrit puuttuvilla, jotta ohjelma ei kaadu myöhemmin vajaaseen
+// dataa, kun optimointien takia data-vektoreiden kokoja ei enää tarkastella eri indeksien lasku funktioissa.
+static void FillAllDataContainersWithMissingValuesIfNeeded(std::vector<std::deque<float>> &paramDataVector)
+{
+    size_t maxVectorSize = 0;
+    for(const auto &paramContainer : paramDataVector)
+    {
+        if(paramContainer.size() > maxVectorSize)
+            maxVectorSize = paramContainer.size();
+    }
+
+    for(auto &paramContainer : paramDataVector)
+    {
+        if(paramContainer.size() < maxVectorSize)
+            paramContainer.resize(maxVectorSize, kFloatMissing);
+    }
+}
+
+
 NFmiSoundingDataOpt1::NFmiSoundingDataOpt1(void)
 :itsLocation()
 ,itsTime(NFmiMetTime::gMissingTime)
@@ -1097,11 +1117,18 @@ bool NFmiSoundingDataOpt1::FillSoundingData(
 
 void NFmiSoundingDataOpt1::MakeFillDataPostChecks(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
-    SetServerDataFromGroundLevelUp();
-    CalculateHumidityData();
-    InitZeroHeight();
-    FixPressureDataSoundingWithGroundData(theGroundDataInfo);
-    SetVerticalParamStatus();
+    try
+    {
+        SetServerDataFromGroundLevelUp();
+        CalculateHumidityData();
+        InitZeroHeight();
+        FixPressureDataSoundingWithGroundData(theGroundDataInfo);
+        SetVerticalParamStatus();
+    }
+    catch(...)
+    {
+    }
+    ::FillAllDataContainersWithMissingValuesIfNeeded(itsParamDataVector);
 }
 
 static bool HasActualGeopHeightData(const std::deque<float> &geopHeightData)
@@ -2898,17 +2925,16 @@ static double ParseServerDataParameter(const std::string &token)
     }
 }
 
-static void CalcPossibleOriginTime(const NFmiLocation &location, double localOriginTimeValue, NFmiMetTime &originTimeOut)
+static void CalcPossibleOriginTime(double localOriginTimeValue, NFmiMetTime &originTimeOut)
 {
     if(localOriginTimeValue != kFloatMissing)
     {
         // Muutetaan suuri arvo ensin 64-bit integeriksi, jotta valueStr:iin ei tulisi mitään exponentti juttuja
         auto dateValue = static_cast<long long>(localOriginTimeValue);
         std::string valueStr = std::to_string(dateValue);
-        // Aikaleima pitää lukea lokaali aikaan, koska timeseries-plugin palauttaa ajat lokaalissa
-        NFmiTime originTimeFromServer;
+        NFmiMetTime originTimeFromServer;
         originTimeFromServer.FromStr(valueStr, kYYYYMMDDHHMM);
-        originTimeOut = originTimeFromServer.UTCTime(location);
+        originTimeOut = originTimeFromServer;
     }
 }
 
@@ -2966,8 +2992,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const std::vector<FmiParameterName> 
             // Lopetetaan loopitus heti ensimmäiseen poikkeukseen, mutta yritetään jatkaa vielä
         }
 
-        // Origin time lasketaan kahden eri kentän avulla tässä
-        ::CalcPossibleOriginTime(theLocation, localOriginTimeValue, itsOriginTime);
+        ::CalcPossibleOriginTime(localOriginTimeValue, itsOriginTime);
 
         for(size_t paramIndex = 0; paramIndex < parametersInServerData.size(); paramIndex++)
         {
@@ -3146,9 +3171,16 @@ void NFmiSoundingDataOpt1::ReverseAllData()
 
 void NFmiSoundingDataOpt1::MakeFillDataPostChecksForServerData(const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
-    FillMissingServerData();
-    SetServerDataFromGroundLevelUp();
-    InitZeroHeight();
-    FixPressureDataSoundingWithGroundData(theGroundDataInfo);
-    SetVerticalParamStatus();
+    try
+    {
+        FillMissingServerData();
+        SetServerDataFromGroundLevelUp();
+        InitZeroHeight();
+        FixPressureDataSoundingWithGroundData(theGroundDataInfo);
+        SetVerticalParamStatus();
+    }
+    catch(...)
+    {
+    }
+    ::FillAllDataContainersWithMissingValuesIfNeeded(itsParamDataVector);
 }
