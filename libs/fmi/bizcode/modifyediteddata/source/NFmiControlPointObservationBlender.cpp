@@ -28,9 +28,9 @@ NFmiControlPointObservationBlender::NFmiControlPointObservationBlender(boost::sh
 {
 }
 
-static NFmiTimeDescriptor CalcAllowedTimes(const NFmiMetTime &actualFirstTime, long expirationTimeInMinutes)
+NFmiTimeDescriptor NFmiControlPointObservationBlender::CalcAllowedObsBlenderTimes(const NFmiMetTime &actualFirstTime, const NFmiMetTime &firstEditedTime, long expirationTimeInMinutes)
 {
-    auto allowedRangeStartTime = actualFirstTime;
+    auto allowedRangeStartTime = (actualFirstTime > firstEditedTime) ? actualFirstTime : firstEditedTime;
     allowedRangeStartTime.SetTimeStep(1, false);
     allowedRangeStartTime.ChangeByMinutes(-expirationTimeInMinutes);
     return NFmiTimeDescriptor(actualFirstTime, NFmiTimeBag(allowedRangeStartTime, actualFirstTime, expirationTimeInMinutes));
@@ -40,7 +40,7 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
 {
     // assert(itsInfo->Param().GetParamIdent() == kFmiTemperature);
     // 1. Mik‰ on sallittu aikahaarukka? esim. 10.00 - 10.20 Utc
-    auto allowedTimes = ::CalcAllowedTimes(itsActualFirstTime, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes());
+    auto allowedTimes = NFmiControlPointObservationBlender::CalcAllowedObsBlenderTimes(itsActualFirstTime, itsActualFirstTime, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes());
     // 2. Laitetaan editoitu data osoittamaan 1. muokattavaan aikaan
     if(!itsInfo->Time(theActiveTimes.FirstTime()))
     {
@@ -50,7 +50,7 @@ bool NFmiControlPointObservationBlender::ModifyTimeSeriesDataUsingMaskFactors(NF
 
     // 3. Hae arvot sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
     std::vector<float> xValues, yValues, zValues;
-    if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedTimes))
+    if(NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(itsCPManager, itsInfo, itsObservationInfos, xValues, yValues, zValues, allowedTimes))
     {
         // 4. T‰ydenn‰ CP-pisteiden arvoja seuraavasti, jos CP-pisteess‰ on puuttuva arvo, laitetaan siihen 0 muutos.
         FillZeroChangeValuesForMissingCpPoints(zValues);
@@ -85,7 +85,7 @@ void NFmiControlPointObservationBlender::MakeAnalysisModificationToStartOfEdited
                 const auto &currentTime = itsInfo->Time();
                 NFmiTimeDescriptor allowedObservationTimes(currentTime, NFmiTimeBag(currentTime, currentTime, 60));
                 std::vector<float> xValues, yValues, zValues;
-                if(GetObservationsToChangeValueFields(xValues, yValues, zValues, allowedObservationTimes))
+                if(NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(itsCPManager, itsInfo, itsObservationInfos, xValues, yValues, zValues, allowedObservationTimes))
                 {
                     // 4. T‰ydenn‰ CP-pisteiden arvoja seuraavasti, jos CP-pisteess‰ on puuttuva, laitetaan siihen 0-muutos
                     FillZeroChangeValuesForMissingCpPoints(zValues);
@@ -107,7 +107,8 @@ bool NFmiControlPointObservationBlender::DoBlendingDataGridding(std::vector<floa
     {
         auto obsBlenderCalculationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(itsGriddingProperties.rangeLimitInKm(), itsInfo->Area()));
         NFmiDataParamControlPointModifier::DoDataGridding(xValues, yValues, zValues, static_cast<int>(xValues.size()), GetUsedGridData(), itsGridCropRelativeRect, itsGriddingProperties, itsObsDataGridding, obsBlenderCalculationRadiusRelative);
-
+        if(fUseGridCrop)
+            FixCroppedMatrixMargins(GetUsedGridData(), itsCropMarginSize);
         return true;
     }
     return false;
@@ -180,72 +181,74 @@ void NFmiControlPointObservationBlender::FillZeroChangeValuesForMissingCpPoints(
     }
 }
 
-static bool NeedToLookForObservationValuesForCpPoint(const std::vector<float> &cpValues, const std::vector<double> &cpDistanceToStationInKm, size_t cpLocationIndex)
+bool NFmiControlPointObservationBlender::SeekClosestObsBlenderData(const NFmiLocation &cpLocation, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiTimeDescriptor &allowedTimeRange, float &zValueOut, boost::shared_ptr<NFmiFastQueryInfo> &closestObsBlenderInfoOut)
 {
-    // Jos tietyss‰ cp-pisteess‰ on jo et‰isyys minimi eli 0 km ja cp-arvo ei ole puuttuvaa, 
-    // t‰llˆin ei en‰‰ tarvitse etsi‰ parempia asemia tai arvoja.
-    if(cpDistanceToStationInKm[cpLocationIndex] == 0 && cpValues[cpLocationIndex] != kFloatMissing)
-        return false;
-    else
-        return true;
-}
-
-// Hae muutosarvot originaali kent‰n arvoon sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
-bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange)
-{
-    // 1. Haetaan k‰ytetyst‰ CP-managerista pohjat, eli x- ja y-koordinaatit ja jotkut pohja-arvot z eli muutoskent‰lle.
-    if(GetChangeValues(xValues, yValues, zValues))
+    closestObsBlenderInfoOut.reset();
+    double cpDistanceToStationInKm = g_missingDistanceToStationInKm;
+    // 2. K‰y kaikki datat l‰pi
+    for(auto &info : observationInfos)
     {
-        // 1.1. Laita z-kentt‰‰n puuttuvaa arvoa
-        zValues = std::vector<float>(zValues.size(), kFloatMissing);
-        // 1.2. Vektori, jossa minimi et‰isyydet CP-pisteiden ja lˆydettyjen asemien v‰lill‰
-        std::vector<double> cpDistanceToStationInKm(zValues.size(), g_missingDistanceToStationInKm);
-        // 1.3. Varsinaiset CP-pisteiden lokaatiot, joiden avulla et‰isyyksi‰ lasketaan
-        const auto &cpLatlonPoints = itsCPManager->CPLocationVector();
-        // 2. K‰y kaikki datat l‰pi
-        for(auto &info : itsObservationInfos)
+        // 3. K‰y l‰pi datan sallitut ajat uusimmasta taaksep‰in
+        if(info->FindNearestTime(allowedTimeRange.LastTime(), kBackward))
         {
-            // 3. K‰y l‰pi datan sallitut ajat uusimmasta taaksep‰in
-            if(info->FindNearestTime(allowedTimeRange.LastTime(), kBackward))
+            for(; allowedTimeRange.IsInside(info->Time()); )
             {
-                for( ; allowedTimeRange.IsInside(info->Time()); )
+                if(info->NearestLocation(cpLocation, NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000))
                 {
-                    // 4. K‰y l‰pi CP-pisteet ja etsi jokaiseen l‰hin asema. 
-                    for(size_t cpLocationIndex = 0; cpLocationIndex < cpLatlonPoints.size(); cpLocationIndex++)
+                    auto distanceInKm = cpLocation.Distance(info->LatLonFast());
+                    // Jos on lˆytynyt uusi l‰hin asema, pit‰‰ ensin muutos arvo nollata mahdollisesta edellisen datan l‰hipisteen arvosta
+                    if(distanceInKm < cpDistanceToStationInKm)
                     {
-                        if(::NeedToLookForObservationValuesForCpPoint(zValues, cpDistanceToStationInKm, cpLocationIndex))
+                        // Nollataan ensin muutos, koska haluamme l‰himm‰lt‰ asemalta vaikka puuttuvaa
+                        zValueOut = kFloatMissing;
+                        // 5. Laita aseman et‰isyys pisteeseen joka CP-pisteeseen talteen, jotta voidaan etsi‰ toisista datoista l‰hempi‰ asemia
+                        cpDistanceToStationInKm = distanceInKm;
+                    }
+                    // T‰ss‰ etsit‰‰n myˆh‰isimm‰n sallitun ajan ei-puuttuvaa arvoa (t‰m‰ erillinen ehto hanskaa mm. seuraavaa tilannetta, kahdessa eri datassa on sama asema ja toisessa on puuttuvia arvoja)
+                    if(distanceInKm == cpDistanceToStationInKm)
+                    {
+                        // 6. Miten CP-pisteiden arvoja rankataan t‰rkeysj‰rjestykseen?
+                        // 6.1. Ensin ratkaisee ett‰ on l‰hin asema (vaikka datalle ei lˆytyisi sopivia aikoja)
+                        // 6.2. Sitten ratkaiseen viimeisimm‰n sallitun ajan ei-puuttuva arvo
+                        if(zValueOut == kFloatMissing)
                         {
-                            NFmiLocation cpLocation(cpLatlonPoints[cpLocationIndex]);
-                            if(info->NearestLocation(cpLocation, NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000))
+                            float obsValue = info->FloatValue();
+                            float origValue = theInfo->InterpolatedValue(cpLocation.GetLocation());
+                            if(obsValue != kFloatMissing && origValue != kFloatMissing)
                             {
-                                auto distanceInKm = cpLocation.Distance(info->LatLonFast());
-                                // Jos on lˆytynyt uusi l‰hin asema, pit‰‰ ensin muutos arvo nollata mahdollisesta edellisen datan l‰hipisteen arvosta
-                                if(distanceInKm < cpDistanceToStationInKm[cpLocationIndex])
-                                {
-                                    zValues[cpLocationIndex] = kFloatMissing;
-                                    // 5. Laita aseman et‰isyys pisteeseen joka CP-pisteeseen talteen, jotta voidaan etsi‰ toisista datoista l‰hempi‰ asemia
-                                    cpDistanceToStationInKm[cpLocationIndex] = distanceInKm;
-                                }
-                                // T‰ss‰ etsit‰‰n myˆh‰isimm‰n sallitun ajan ei-puuttuvaa arvoa
-                                if(distanceInKm == cpDistanceToStationInKm[cpLocationIndex])
-                                {
-                                    // 6. Miten CP-pisteiden arvoja rankataan t‰rkeysj‰rjestykseen?
-                                    // 6.1. Ensin ratkaisee ett‰ on l‰hin asema (vaikka datalle ei lˆytyisi sopivia aikoja)
-                                    // 6.2. Sitten ratkaiseen viimeisimm‰n sallitun ajan ei-puuttuva arvo
-                                    if(zValues[cpLocationIndex] == kFloatMissing)
-                                    {
-                                        float obsValue = info->FloatValue();
-                                        float origValue = itsInfo->InterpolatedValue(cpLocation.GetLocation());
-                                        if(obsValue != kFloatMissing && origValue != kFloatMissing)
-                                            zValues[cpLocationIndex] = origValue - obsValue;
-                                    }
-                                }
+                                zValueOut = origValue - obsValue;
+                                // Otetaan talteen l‰himm‰n aseman data, jossa lokaatio on laitettu osoittamaan kyseiseen asemaan
+                                closestObsBlenderInfoOut = info;
                             }
                         }
                     }
-                    if(!info->PreviousTime())
-                        break; // Jos edellist‰ aikaa ei ole datassa, voidaan myˆs lopettaa
                 }
+                if(!info->PreviousTime())
+                    break; // Jos edellist‰ aikaa ei ole datassa, lopetetaan aikalooppi
+            }
+        }
+    }
+    return closestObsBlenderInfoOut != nullptr;
+}
+
+// Hae muutosarvot originaali kent‰n arvoon sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
+bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange)
+{
+    // 1. Haetaan k‰ytetyst‰ CP-managerista pohjat, eli x- ja y-koordinaatit ja jotkut pohja-arvot z eli muutoskent‰lle.
+    if(NFmiDataParamControlPointModifier::GetChangeValues(theCPManager, xValues, yValues, zValues))
+    {
+        // 1.1. Laita z-kentt‰‰n puuttuvaa arvoa
+        zValues = std::vector<float>(zValues.size(), kFloatMissing);
+        // 1.3. Varsinaiset CP-pisteiden lokaatiot, joiden avulla et‰isyyksi‰ lasketaan
+        const auto &cpLatlonPoints = theCPManager->CPLocationVector();
+        // 4. K‰y l‰pi CP-pisteet ja etsi jokaiseen l‰hin asema. 
+        for(size_t cpLocationIndex = 0; cpLocationIndex < cpLatlonPoints.size(); cpLocationIndex++)
+        {
+            NFmiLocation cpLocation(cpLatlonPoints[cpLocationIndex]);
+            boost::shared_ptr<NFmiFastQueryInfo> dummyInfo;
+            if(NFmiControlPointObservationBlender::SeekClosestObsBlenderData(cpLocation, theInfo, observationInfos, allowedTimeRange, zValues[cpLocationIndex], dummyInfo))
+            {
+                // ei tarvii tehd‰ mit‰‰n t‰‰ll‰
             }
         }
         return true;

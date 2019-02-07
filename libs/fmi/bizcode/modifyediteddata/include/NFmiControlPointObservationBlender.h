@@ -34,9 +34,11 @@ class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModif
          bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime, const NFmiGriddingProperties &griddingProperties);
 
      bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
+     static bool GetObservationsToChangeValueFields(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange);
+     static bool SeekClosestObsBlenderData(const NFmiLocation &cpLocation, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiTimeDescriptor &allowedTimeRange, float &zValueOut, boost::shared_ptr<NFmiFastQueryInfo> &closestObsBlenderInfoOut);
+     static NFmiTimeDescriptor CalcAllowedObsBlenderTimes(const NFmiMetTime &actualFirstTime, const NFmiMetTime &firstEditedTime, long expirationTimeInMinutes);
 
 protected:
-    bool GetObservationsToChangeValueFields(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange);
     void FillZeroChangeValuesForMissingCpPoints(std::vector<float> &zValues);
     NFmiDataMatrix<float> CalcChangeField(const NFmiDataMatrix<float> &analysisField);
     bool MakeBlendingOperation(NFmiTimeDescriptor &blendingTimes);
