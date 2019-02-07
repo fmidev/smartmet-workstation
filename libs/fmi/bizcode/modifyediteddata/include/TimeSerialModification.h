@@ -9,6 +9,7 @@
 #include "NFmiTimeDescriptor.h"
 #include "FmiSmartMetEditingMode.h"
 #include "TimeSerialModificationDataInterface.h"
+#include "NFmiProducer.h"
 
 class NFmiThreadCallBacks;
 
@@ -63,4 +64,6 @@ namespace FmiModifyEditdData
     std::string GetModifiedParamsForLog(NFmiParamBag & modifiedParams);
     std::string GetMacroParamFormula(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
     std::string DataFilterToolsParamsForLog(TimeSerialModificationDataInterface &theAdapter);
+    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType, bool fGroundData, int theProducerId, int theProducerId2 = -1);
+    bool SetupObsBlenderData(TimeSerialModificationDataInterface &theAdapter, const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut);
 }
