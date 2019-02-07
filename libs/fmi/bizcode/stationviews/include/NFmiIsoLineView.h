@@ -29,6 +29,7 @@
 #pragma once
 
 #include "NFmiStationView.h"
+#include "stdafx.h"
 #include "matrix3d.h"
 #include "NFmiPath.h"
 #include <list>
@@ -201,6 +202,7 @@ class NFmiIsoLineView : public NFmiStationView
 	void DrawHatchesWithImagine(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet);
 	void SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
 	void RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
+    CRect GetTrueClientRect();
  private:
 	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
 	bool FillIsoLineGridData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData);
@@ -215,7 +217,7 @@ protected:
 	CBitmap *itsTransparencyDrawOldBitmap;
 	CDC *itsTransparencyDrawDC;
 	CDC *itsTransparencyDrawBackupDC; // tähän talletetaan väliaikaisesti oikea DC, kun piirto suoritetaan väliaikaisesti tranparentti DC:lle
-	NFmiPoint itsLastBitmapSize;
+	CSize itsLastBitmapSize;
 	bool fDrawUsingTransparency;
     std::unique_ptr<SmartMetDataUtilities::DataUtilitiesAdapter<>> dataUtilitiesAdapter;
     // Preventing to calling drawing related ToolMaster functions simultaneously from different places

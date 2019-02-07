@@ -63,6 +63,7 @@
 #include "catlog/catlog.h"
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
+#include "SpecialDesctopIndex.h"
 
 #include "datautilities\DataUtilitiesAdapter.h"
 
@@ -337,23 +338,33 @@ void NFmiIsoLineView::PrepareForTransparentDraw(void)
         fDrawUsingTransparency = true;
     if(fDrawUsingTransparency)
     {
-        CRect clientRect = itsToolBox->GetClientRect(); // oletus, t‰h‰n on jo laskettu oikea alue
-        NFmiPoint clientAreaSize = NFmiPoint(clientRect.Width(), clientRect.Height());
+        CRect clientRect = GetTrueClientRect();
+        CSize clientAreaSize = clientRect.Size();
         itsTransparencyDrawDC = new CDC;
         itsTransparencyDrawDC->CreateCompatibleDC(itsToolBox->GetDC());
         if(itsTransparencyDrawBitmap == 0 || itsLastBitmapSize != clientAreaSize || itsCtrlViewDocumentInterface->Printing())
         {
             itsLastBitmapSize = clientAreaSize;
-            CtrlView::DestroyBitmap(&itsTransparencyDrawBitmap, DeleteTransparencyBitmap());
-            CtrlView::MakeCombatibleBitmap(itsCtrlViewDocumentInterface->TransparencyContourDrawView(), &itsTransparencyDrawBitmap, static_cast<int>(itsLastBitmapSize.X()), static_cast<int>(itsLastBitmapSize.Y()));
+            CtrlView::MakeCombatibleBitmap(itsCtrlViewDocumentInterface->TransparencyContourDrawView(), &itsTransparencyDrawBitmap, itsLastBitmapSize.cx, itsLastBitmapSize.cy);
         }
         itsTransparencyDrawBackupDC = itsToolBox->GetDC();
         itsTransparencyDrawOldBitmap = itsTransparencyDrawDC->SelectObject(itsTransparencyDrawBitmap);
         // t‰ytet‰‰n tyhj‰ kuva jollain ihmev‰rill‰, joka on sitten loppu peliss‰ t‰ysin l‰pin‰kyv‰
-        CRect fillArea(0, 0, static_cast<int>(itsLastBitmapSize.X()), static_cast<int>(itsLastBitmapSize.Y()));
+        CRect fillArea(0, 0, itsLastBitmapSize.cx, itsLastBitmapSize.cy);
         CBrush aBrush(gFullyTransparentColor);
         itsTransparencyDrawDC->FillRect(fillArea, &aBrush);
         CtrlView::SetToolsDCs(itsTransparencyDrawDC, itsToolBox, clientRect, itsCtrlViewDocumentInterface->IsToolMasterAvailable());
+    }
+}
+
+CRect NFmiIsoLineView::GetTrueClientRect()
+{
+    if(itsMapViewDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
+        return itsToolBox->GetClientRect();
+    else
+    {
+        auto viewSizeInPixels = itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex);
+        return CRect(0, 0, static_cast<int>(viewSizeInPixels.X()), static_cast<int>(viewSizeInPixels.Y()));
     }
 }
 

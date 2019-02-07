@@ -26,9 +26,8 @@ class NFmiSoundingDataOpt1
 {
  public:
 
-   // Kahdelle serveriltä haetulle erikoishakuparametrille pitää tehdä omat param-id:t
+   // Yhdelle serveriltä haetulle erikoishakuparametrille pitää tehdä oma param-id
    static const FmiParameterName OriginTimeParameterId = static_cast<FmiParameterName>(kFmiLastParameter + 1);
-   static const FmiParameterName TimeZoneParameterId = static_cast<FmiParameterName>(kFmiLastParameter + 2);
 
   class LFCIndexCache
   {
