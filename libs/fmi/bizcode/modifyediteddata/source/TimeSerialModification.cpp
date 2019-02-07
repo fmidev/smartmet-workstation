@@ -339,8 +339,8 @@ static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapt
 	return ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
 }
 
-static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
-    bool fGroundData, int theProducerId, int theProducerId2 = -1)
+checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> FmiModifyEditdData::GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
+    bool fGroundData, int theProducerId, int theProducerId2)
 {
     auto infoVector = infoOrganizer.GetInfos(theType, fGroundData, theProducerId, theProducerId2);
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> finalInfos;
@@ -385,6 +385,32 @@ static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDat
     return dataModifier.ModifyTimeSeriesDataUsingMaskFactors(analyzeToolTimes, nullptr);
 }
 
+// 1. Mik‰ on editoidun datan 1. muokkausaika
+// 2. Hae CP - pisteeseen sopivimmasta datasta sopivimpaan aikaan oleva arvo
+// 3. Mik‰ on k‰ytetyn datan k‰ytetty location, jotta voidaan piirt‰‰ kyseinen k‰yr‰ sellaisenaan aikasarjaan
+bool FmiModifyEditdData::SetupObsBlenderData(TimeSerialModificationDataInterface &theAdapter, const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
+{
+    auto infoOrganizer = theAdapter.InfoOrganizer();
+    if(infoOrganizer)
+    {
+        auto editedInfo = theAdapter.EditedInfo();
+        if(editedInfo)
+        {
+            auto obsBlenderInfos = FmiModifyEditdData::GetAnalyzeToolInfos(*infoOrganizer, theParam, theDataType, fGroundData, theProducer.GetIdent());
+            if(!obsBlenderInfos.empty())
+            {
+                auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
+                NFmiMetTime actualFirstTime;
+                std::tie(actualFirstTime, firstEditedTimeOut) = NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(obsBlenderInfos, editedInfo, usedAreaPtr, true, std::string(theProducer.GetName()));
+                auto allowedTimes = NFmiControlPointObservationBlender::CalcAllowedObsBlenderTimes(actualFirstTime, firstEditedTimeOut, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes());
+                NFmiLocation cpLocation(theLatlon);
+                return NFmiControlPointObservationBlender::SeekClosestObsBlenderData(cpLocation, editedInfo, obsBlenderInfos, allowedTimes, analyzeValueOut, usedObsBlenderInfoOut);
+            }
+        }
+    }
+    return false;
+}
+
 static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
@@ -394,7 +420,7 @@ static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, Ti
         NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
         if(infoOrganizer)
         {
-            auto analyzeToolInfos = ::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
+            auto analyzeToolInfos = FmiModifyEditdData::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
             if(!analyzeToolInfos.empty())
             {
                 auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
