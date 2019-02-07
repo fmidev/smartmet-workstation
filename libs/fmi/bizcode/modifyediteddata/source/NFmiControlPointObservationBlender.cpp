@@ -189,13 +189,13 @@ bool NFmiControlPointObservationBlender::SeekClosestObsBlenderData(const NFmiLoc
     for(auto &info : observationInfos)
     {
         // 3. Käy läpi datan sallitut ajat uusimmasta taaksepäin
-        if(info->FindNearestTime(allowedTimeRange.LastTime(), kBackward))
+        if(info->FindNearestTime(allowedTimeRange.LastTime(), kCenter))
         {
             for(; allowedTimeRange.IsInside(info->Time()); )
             {
                 if(info->NearestLocation(cpLocation, NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000))
                 {
-                    auto distanceInKm = cpLocation.Distance(info->LatLonFast());
+                    auto distanceInKm = cpLocation.Distance(info->LatLonFast()) / 1000.;
                     // Jos on löytynyt uusi lähin asema, pitää ensin muutos arvo nollata mahdollisesta edellisen datan lähipisteen arvosta
                     if(distanceInKm < cpDistanceToStationInKm)
                     {
