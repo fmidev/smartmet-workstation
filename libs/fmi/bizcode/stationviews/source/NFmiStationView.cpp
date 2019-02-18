@@ -2050,6 +2050,22 @@ void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &
         theInfo->Values(theValues, usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
 }
 
+// Kannattaako yrittää piirtää annetun datan annettua aikaa karttanäyttöön?
+bool NFmiStationView::DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime)
+{
+    // Jos annettu aika on datan aikarakenteen sisällä, yritetään piirtoa
+    if(itsInfo->TimeDescriptor().IsInside(usedTime))
+        return true;
+    if(fAllowNearestTimeInterpolation)
+    {
+        auto oldTimeIndex = theInfo->TimeIndex();
+        bool foundNearTime = theInfo->FindNearestTime(usedTime, kCenter, itsTimeInterpolationRangeInMinutes);
+        theInfo->TimeIndex(oldTimeIndex);
+        return foundNearTime;
+    }
+    return false;
+}
+
 void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId)
 {
     NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
