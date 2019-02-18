@@ -140,6 +140,7 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
     ON_COMMAND(ID_SEARCHOPTION_MATCHANYWHERE, &CFmiSmartToolDlg::OnSearchOptionMatchAnywhere)
     ON_EN_CHANGE(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, &CFmiSmartToolDlg::OnEnChangeEditSpeedSearchViewMacro)
     ON_WM_SIZE()
+    ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -167,6 +168,7 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
 	UpdateMacroParamDisplayList(false);
 
 	InitDialogTexts();
+    EnableColorCodedControls();
 	NFmiPoint gridSize(itsSmartMetDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize());
 	itsMacroParamDataGridSizeX = static_cast<int>(gridSize.X());
 	itsMacroParamDataGridSizeY = static_cast<int>(gridSize.Y());
@@ -180,6 +182,12 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
+
+void CFmiSmartToolDlg::EnableColorCodedControls()
+{
+    CFmiWin32Helpers::EnableColorCodedControl(this, IDC_CHECK_Q3_MACRO);
+}
+
 
 void CFmiSmartToolDlg::WarnUserAboutNoEditingSmarttools()
 {
@@ -1152,6 +1160,7 @@ void CFmiSmartToolDlg::InitDialogTexts(void)
 
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_PARAM_DATA_GRID_SIZE_STR, "IDC_STATIC_MACRO_PARAM_DATA_GRID_SIZE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_DATA_GRID_SIZE_USE, "NormalWordCapitalUse");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_Q3_MACRO, "Q3 scripts");
 }
 
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamDataGridSizeUse()
@@ -1346,4 +1355,15 @@ void CFmiSmartToolDlg::OnSize(UINT nType, int cx, int cy)
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     AdjustSyntaxEditControlWindows();
 #endif // DISABLE_EXTREME_TOOLKITPRO
+}
+
+
+HBRUSH CFmiSmartToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+    HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+
+    if(pWnd->GetDlgCtrlID() == IDC_CHECK_Q3_MACRO)
+        CFmiWin32Helpers::SetErrorColorForTextControl(pDC, !fQ3Macro);
+
+    return hbr;
 }
