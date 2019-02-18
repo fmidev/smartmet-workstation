@@ -2014,19 +2014,27 @@ public:
             }
             else
             {
-                isInsideAtAll = info.IsInside(theInterpolatedTime);
-                if(isInsideAtAll)
+                if(this->doNearestTimeIfPossible)
                 {
-                    if(info.TimeToNearestStep(theInterpolatedTime, kBackward, theTimeRangeInMinutes) || this->doNearestTimeIfPossible)
+                    if(info.TimeToNearestStep(theInterpolatedTime, kCenter, theTimeRangeInMinutes))
                     {
-                        previousTime = info.Time();
-                        previousTimeIndex = info.TimeIndex();
-                        previousToInterpolatedTimeDifferenceInMinutes = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(previousTime));
-                        if(info.TimeToNearestStep(theInterpolatedTime, kForward, theTimeRangeInMinutes))
+                        SetPreviousTimeValues(info, theInterpolatedTime);
+                    }
+                }
+                else
+                {
+                    isInsideAtAll = info.IsInside(theInterpolatedTime);
+                    if(isInsideAtAll)
+                    {
+                        if(info.TimeToNearestStep(theInterpolatedTime, kBackward, theTimeRangeInMinutes) || this->doNearestTimeIfPossible)
                         {
-                            nextTime = info.Time();
-                            nextTimeIndex = info.TimeIndex();
-                            previousToNextTimeDifferenceInMinutes = static_cast<float>(nextTime.DifferenceInMinutes(previousTime));
+                            SetPreviousTimeValues(info, theInterpolatedTime);
+                            if(info.TimeToNearestStep(theInterpolatedTime, kForward, theTimeRangeInMinutes))
+                            {
+                                nextTime = info.Time();
+                                nextTimeIndex = info.TimeIndex();
+                                previousToNextTimeDifferenceInMinutes = static_cast<float>(nextTime.DifferenceInMinutes(previousTime));
+                            }
                         }
                     }
                 }
@@ -2040,8 +2048,6 @@ public:
             return false;
         if(hasWantedTime)
             return true;
-        if(!isInsideAtAll)
-            return false;
         if(doNearestTimeIfPossible)
         {
             if(previousTimeIndex == gMissingIndex && nextTimeIndex == gMissingIndex)
@@ -2049,6 +2055,8 @@ public:
         }
         else
         {
+            if(!isInsideAtAll)
+                return false;
             if(previousTimeIndex == gMissingIndex || nextTimeIndex == gMissingIndex)
                 return false;
         }
@@ -2072,6 +2080,13 @@ public:
         }
 
         return false;
+    }
+
+    void SetPreviousTimeValues(NFmiFastQueryInfo &info, const NFmiMetTime &theInterpolatedTime)
+    {
+        previousTime = info.Time();
+        previousTimeIndex = info.TimeIndex();
+        previousToInterpolatedTimeDifferenceInMinutes = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(previousTime));
     }
 };
 
