@@ -110,6 +110,7 @@ BEGIN_MESSAGE_MAP(CFmiViewMacroDlg, CDialog)
     ON_COMMAND(ID_SEARCHOPTION_MATCHANYWHERE, &CFmiViewMacroDlg::OnSearchOptionMatchAnywhere)
     ON_EN_CHANGE(IDC_EDIT_SPEED_SEARCH_VIEW_MACRO, &CFmiViewMacroDlg::OnEnChangeEditSpeedSearchViewMacro)
     ON_WM_DESTROY()
+    ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<ViewMacroHeaderParInfo> &theHeaders)
@@ -446,6 +447,7 @@ BOOL CFmiViewMacroDlg::OnInitDialog()
 	fDisableWindowManipulations = itsSmartMetDocumentInterface->MetEditorOptionsData().DisableWindowManipulations();
 
 	InitDialogTexts();
+    EnableColorCodedControls();
 
 	InitMacroListFromDoc();
     InitSpeedSearchControl();
@@ -456,6 +458,11 @@ BOOL CFmiViewMacroDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiViewMacroDlg::EnableColorCodedControls()
+{
+    CFmiWin32Helpers::EnableColorCodedControl(this, IDC_CHECK_DISABLE_WINDOW_MANIPULATION);
 }
 
 void CFmiViewMacroDlg::DoResizerHooking(void)
@@ -707,7 +714,7 @@ void CFmiViewMacroDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH_LIST, "IDC_BUTTON_REFRESH_LIST");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_NAME_STR, "IDC_STATIC_VIEW_MACRO_NAME_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_DESCRIPTION, "IDC_STATIC_VIEW_MACRO_DESCRIPTION");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DISABLE_WINDOW_MANIPULATION, "No SmartMet win manip.");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DISABLE_WINDOW_MANIPULATION, "No SmartMet wiew manipulations");
 }
 
 void CFmiViewMacroDlg::OnOK()
@@ -909,4 +916,15 @@ void CFmiViewMacroDlg::ResetSearchResource()
 void CFmiViewMacroDlg::OnDestroy()
 {
     CDialog::OnDestroy();
+}
+
+
+HBRUSH CFmiViewMacroDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+    HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+
+    if(pWnd->GetDlgCtrlID() == IDC_CHECK_DISABLE_WINDOW_MANIPULATION)
+        CFmiWin32Helpers::SetErrorColorForTextControl(pDC, !fDisableWindowManipulations);
+
+    return hbr;
 }
