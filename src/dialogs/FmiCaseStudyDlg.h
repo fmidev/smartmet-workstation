@@ -110,6 +110,7 @@ private:
 	bool IsThereCaseStudyMakerRunning(void);
     void ShowEnableColumn(void);
     void UpdateEditEnableDataText(void);
+    void EnableColorCodedControls();
 
 	NFmiCaseStudyGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
