@@ -1121,7 +1121,6 @@ void NFmiSoundingDataOpt1::MakeFillDataPostChecks(const boost::shared_ptr<NFmiFa
     {
         SetServerDataFromGroundLevelUp();
         CalculateHumidityData();
-        InitZeroHeight();
         FixPressureDataSoundingWithGroundData(theGroundDataInfo);
         SetVerticalParamStatus();
     }
@@ -1129,6 +1128,7 @@ void NFmiSoundingDataOpt1::MakeFillDataPostChecks(const boost::shared_ptr<NFmiFa
     {
     }
     ::FillAllDataContainersWithMissingValuesIfNeeded(itsParamDataVector);
+    InitZeroHeight();
 }
 
 static bool HasActualGeopHeightData(const std::deque<float> &geopHeightData)
