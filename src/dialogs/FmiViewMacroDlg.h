@@ -121,6 +121,7 @@ private:
     void StoreWinRegistrySettings();
     void EnsureWantedRowVisibilityAfterDirectoryChange(const std::string &theDirectoryName, const std::string &theOldPath);
     int FindMacroNameRow(const std::string &theMacroName);
+    void EnableColorCodedControls();
 
     NFmiViewMacroGridCtrl itsGridCtrl;
     std::vector<ViewMacroHeaderParInfo> itsHeaders;
@@ -163,4 +164,5 @@ protected:
 public:
     CString itsCurrentPathStringU_;
     afx_msg void OnDestroy();
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };
