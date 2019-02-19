@@ -4,6 +4,7 @@
 #include "NFmiDrawingEnvironment.h"
 #include "NFmiMetTime.h"
 #include "PPToolTip.h"
+#include "CtrlViewWin32Functions.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiEditMapView;
@@ -16,6 +17,20 @@ namespace CtrlViewUtils
 class NFmiRect;
 class SmartMetDocumentInterface;
 class NFmiStationViewHandler;
+
+
+struct BitmapDeleter 
+{
+    bool deleteBitmap_ = true;
+    BitmapDeleter(bool deleteBitmap)
+        :deleteBitmap_(deleteBitmap)
+    {}
+
+    void operator()(CBitmap *bitmap) 
+    { 
+        CtrlView::DestroyBitmap(&bitmap, true);
+    }
+};
 
 // CFmiExtraMapView view
 
@@ -53,9 +68,9 @@ public:
 	void CurrentPrintTime(const NFmiMetTime &theTime);
 	const NFmiRect* RelativePrintRect(void); 
 	void RelativePrintRect(const NFmiRect &theRect); 
-    CBitmap* FinalMapViewImageBitmap() { return itsFinalMapViewImageBitmap; }
-    CBitmap* MemoryBitmap(void) { return itsMemoryBitmap; }
-    CBitmap* MapBitmap(void) { return itsMapBitmap; }
+    CBitmap* FinalMapViewImageBitmap() { return itsFinalMapViewImageBitmap.get(); }
+    CBitmap* MemoryBitmap(void) { return itsMemoryBitmap.get(); }
+    CBitmap* MapBitmap(void) { return itsMapBitmap.get(); }
 	CSize GetPrintedAreaOnScreenSizeInPixels(void);
 	NFmiPoint PrintViewSizeInPixels(void);
 	void PrintViewSizeInPixels(const NFmiPoint &theSize);
@@ -72,8 +87,7 @@ public:
     // ********************************************************************************************
     void SetToolsDCs(CDC* theDC);
     NFmiEditMapView* EditMapView() { return itsEditMapView; }
-    CBitmap* SynopPlotBitmap() { return itsSynopPlotBitmap; }
-    void SynopPlotBitmap(CBitmap *bitmap) { itsSynopPlotBitmap = bitmap; }
+    CBitmap* SynopPlotBitmap() { return itsSynopPlotBitmap.get(); }
     HBITMAP SynopPlotBitmapHandle() { return itsSynopPlotBitmapHandle; }
     CPPToolTip* ToolTipControl() { return &m_tooltip; }
     void SetToolBoxsDC(CDC* theDC);
@@ -91,11 +105,18 @@ private:
 
     SmartMetDocumentInterface* itsSmartMetDocumentInterface;
 
-    CBitmap* itsFinalMapViewImageBitmap;
-    CBitmap* itsMemoryBitmap;
-	CBitmap* itsMapBitmap; // t‰h‰n tehd‰‰n yksi kartta bitmap, jota sitten 'l‰tkit‰‰n' oikeisiin kohtiin ruudukkon‰ytˆss‰
-	// Bitmapin, johon mahdollinen synop-plot image talletetaan.
-	CBitmap* itsSynopPlotBitmap;
+    // CBitmap membereille k‰ytet‰‰n unique_ptr ratkaisua, koska tˆrm‰sin tosi outoon SmartMet kaato bugiin,
+    // kun avattiin apukarttan‰yttˆj‰. Kun karttan‰yttˆ luotiin, oli sen itsMapBitmap luotu normaalisti.
+    // Mutta kun karttan‰yttˆ‰ yritettiin piirt‰‰ CFmiWin32TemplateHelpers::MapViewOnDraw funktiossa, palautti
+    // mapView->MapBitmap() -kutsu nullptr olion. Oliota ei oltu miss‰‰n vaiheessa tuhottu/nollattu. 
+    // Mielest‰ni kyse oli jostain h‰m‰r‰st‰ VC++ 2015 k‰‰nt‰j‰n bugista. Kun muutin koodin k‰ytt‰m‰‰n
+    // unique_ptr -oliota, ei ongelmaa en‰‰ esiintynyt. Siksi kaikki CBitmap oliot t‰‰ll‰ laitetaan nyt unique_ptr:in sis‰‰n.
+    std::unique_ptr<CBitmap, BitmapDeleter> itsFinalMapViewImageBitmap;
+    std::unique_ptr<CBitmap, BitmapDeleter> itsMemoryBitmap;
+    // T‰h‰n tehd‰‰n yksi kartta bitmap, jota sitten 'l‰tkit‰‰n' oikeisiin kohtiin ruudukkon‰ytˆss‰
+	std::unique_ptr<CBitmap, BitmapDeleter> itsMapBitmap;
+	// Bitmapin, johon mahdollinen synop-plot image talletetaan. T‰h‰n ei saa k‰ytt‰‰ BitmapDeleter unique_ptr deleteria!
+    std::unique_ptr<CBitmap> itsSynopPlotBitmap;
 	HBITMAP itsSynopPlotBitmapHandle;
 	NFmiEditMapView* itsEditMapView;
 	NFmiToolBox * itsToolBox;
@@ -104,11 +125,14 @@ private:
 	int itsMapViewDescTopIndex;
 	bool fMouseCursorOnWnd;
 	CPPToolTip m_tooltip;
-	NFmiMetTime itsPrintingStartTime; // t‰m‰ on moni sivu printtauksessa oleva alkuaika
-	int itsPrintingPageShiftInMinutes; // n‰in monta minuuttia on eri printattavien sivujen alku aikojen erotus
-	bool fPrintingOnDontSetDcs; // Kun apukarttan‰ytˆll‰ printataan, pit‰‰ t‰m‰ lippu asettaa true:ksi ja sen j‰lkeen pit‰‰ est‰‰ kaikki
-								// CDC asetukset, koska jostain syyst‰ t‰m‰ apukarttan‰yttˆ toimii erilailla printtaus-dialogin kanssa ja
-								// se ei esim. blokkaa mit‰‰n hiirien k‰sittelyj‰, kuten muut n‰ytˆt (mm. p‰‰kartta-, luotaus-, aikasarja- ja poikkileikkausn‰ytˆt)
+    // T‰m‰ on moni sivu printtauksessa oleva alkuaika
+	NFmiMetTime itsPrintingStartTime; 
+    // N‰in monta minuuttia on eri printattavien sivujen alku aikojen erotus
+	int itsPrintingPageShiftInMinutes; 
+    // Kun apukarttan‰ytˆll‰ printataan, pit‰‰ t‰m‰ lippu asettaa true:ksi ja sen j‰lkeen pit‰‰ est‰‰ kaikki
+    // CDC asetukset, koska jostain syyst‰ t‰m‰ apukarttan‰yttˆ toimii erilailla printtaus-dialogin kanssa ja
+    // se ei esim. blokkaa mit‰‰n hiirien k‰sittelyj‰, kuten muut n‰ytˆt (mm. p‰‰kartta-, luotaus-, aikasarja- ja poikkileikkausn‰ytˆt)
+	bool fPrintingOnDontSetDcs; 
 public:
 	virtual void OnInitialUpdate();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
