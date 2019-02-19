@@ -91,11 +91,11 @@ private:
 
     SmartMetDocumentInterface* itsSmartMetDocumentInterface;
 
-    CBitmap* itsFinalMapViewImageBitmap;
-    CBitmap* itsMemoryBitmap;
-	CBitmap* itsMapBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
+    CBitmap* itsFinalMapViewImageBitmap = new CBitmap;
+    CBitmap* itsMemoryBitmap = new CBitmap;
+	CBitmap* itsMapBitmap = new CBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
 	// Bitmapin, johon mahdollinen synop-plot image talletetaan.
-	CBitmap* itsSynopPlotBitmap;
+	CBitmap* itsSynopPlotBitmap = new CBitmap;
 	HBITMAP itsSynopPlotBitmapHandle;
 	NFmiEditMapView* itsEditMapView;
 	NFmiToolBox * itsToolBox;
