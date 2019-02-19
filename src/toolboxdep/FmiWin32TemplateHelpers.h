@@ -395,7 +395,7 @@ namespace CFmiWin32TemplateHelpers
 
         drawingrect.Inflate(-0.23); // en tiedä miksi, mutta tällälailla pitää piirto laatikkoa pienentää, muuten synop-plotti leviää piirrettäessä bitmappiin
         view->EditMapView()->DrawSynopPlotOnToolTip(view->ToolBox(), drawingrect, fDrawSoundingPlot, fDrawMinMaxPlot, fDrawMetarPlot);
-        view->SynopPlotBitmap(dcMem.SelectObject(oldBitmap));
+        dcMem.SelectObject(oldBitmap);
         dcMem.DeleteDC();
     }
 
