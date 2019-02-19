@@ -85,7 +85,6 @@ public:
     void SetToolsDCs(CDC* theDC); // asettaa toolmasterin ja toolboxin DC:t
     NFmiEditMapView* EditMapView() { return itsEditMapView; }
     CBitmap* SynopPlotBitmap() { return itsSynopPlotBitmap; }
-    void SynopPlotBitmap(CBitmap *bitmap) { itsSynopPlotBitmap = bitmap; }
     CPPToolTip* ToolTipControl() { return m_tooltip; }
     HBITMAP SynopPlotBitmapHandle() { return itsSynopPlotBitmapHandle; }
     void SetToolBoxsDC(CDC* theDC); // toolboxin DC:n
