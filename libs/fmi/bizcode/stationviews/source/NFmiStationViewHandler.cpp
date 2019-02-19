@@ -209,7 +209,6 @@ void NFmiStationViewHandler::DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect
     DrawHALYMessageMarkers();
     DrawSeaIcingMessageMarkers();
     DrawWindTableAreas();
-    DrawCurrentFrame(theGTB);
 }
 
 void NFmiStationViewHandler::DoCacheDrawing(NFmiToolBox * theGTB, const NFmiRect &theMapFrame, CDC *destinationDc, int cacheRowIndex)
@@ -4187,6 +4186,7 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
 
     DrawParamView(theGTB); // piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
     DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
+    DrawCurrentFrame(theGTB);
     CleanGdiplus();
 }
 
