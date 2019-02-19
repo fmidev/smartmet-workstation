@@ -93,7 +93,8 @@ private:
 
     CBitmap* itsFinalMapViewImageBitmap = new CBitmap;
     CBitmap* itsMemoryBitmap = new CBitmap;
-	CBitmap* itsMapBitmap = new CBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
+    // Tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
+	CBitmap* itsMapBitmap = new CBitmap;
 	// Bitmapin, johon mahdollinen synop-plot image talletetaan.
 	CBitmap* itsSynopPlotBitmap = new CBitmap;
 	HBITMAP itsSynopPlotBitmapHandle;
@@ -104,11 +105,14 @@ private:
 	int itsMapViewDescTopIndex;
 	bool fMouseCursorOnWnd;
 	CPPToolTip m_tooltip;
-	NFmiMetTime itsPrintingStartTime; // tämä on moni sivu printtauksessa oleva alkuaika
-	int itsPrintingPageShiftInMinutes; // näin monta minuuttia on eri printattavien sivujen alku aikojen erotus
-	bool fPrintingOnDontSetDcs; // Kun apukarttanäytöllä printataan, pitää tämä lippu asettaa true:ksi ja sen jälkeen pitää estää kaikki
-								// CDC asetukset, koska jostain syystä tämä apukarttanäyttö toimii erilailla printtaus-dialogin kanssa ja
-								// se ei esim. blokkaa mitään hiirien käsittelyjä, kuten muut näytöt (mm. pääkartta-, luotaus-, aikasarja- ja poikkileikkausnäytöt)
+    // Tämä on moni sivu printtauksessa oleva alkuaika
+	NFmiMetTime itsPrintingStartTime; 
+    // Näin monta minuuttia on eri printattavien sivujen alku aikojen erotus
+	int itsPrintingPageShiftInMinutes; 
+    // Kun apukarttanäytöllä printataan, pitää tämä lippu asettaa true:ksi ja sen jälkeen pitää estää kaikki
+    // CDC asetukset, koska jostain syystä tämä apukarttanäyttö toimii erilailla printtaus-dialogin kanssa ja
+    // se ei esim. blokkaa mitään hiirien käsittelyjä, kuten muut näytöt (mm. pääkartta-, luotaus-, aikasarja- ja poikkileikkausnäytöt)
+	bool fPrintingOnDontSetDcs; 
 public:
 	virtual void OnInitialUpdate();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
