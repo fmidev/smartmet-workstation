@@ -135,12 +135,14 @@ namespace Wms
             auto beginEnd = std::pair<NFmiMetTime, NFmiMetTime>{};
             if(isTimeTable(dimension))
             {
-                auto startB = dimension.find_first_not_of(' ');
-                auto endB = dimension.find_first_of(',');
-                beginEnd.first = parseMetTime(dimension.substr(startB, endB));
-                auto beginE = endB + 1;
-                auto endE = dimension.find_first_of(',', beginE);
-                beginEnd.first = parseMetTime(dimension.substr(beginE, endE));
+                // Tämä on pilkulla eriteltu lista aikoja, otetaan niistä 1. viimeinen. Esim.
+                // 2019-02-13T12:00:55Z, 2019-02-14T11:50:18Z, 2019-02-15T12:02:33Z, 2019-02-16T11:43:52Z, 2019-02-17T11:41:21Z, 2019-02-18T11:13:24Z, 2019-02-19T11:29:36Z, 2019-02-20T11:34:05Z
+                auto startFirstTime = dimension.find_first_not_of(' ');
+                auto endFirstTime = dimension.find_first_of(',');
+                beginEnd.first = parseMetTime(dimension.substr(startFirstTime, endFirstTime));
+                auto startLastTime = dimension.find_last_of(',') + 1;
+                auto endLastTime = std::string::npos;
+                beginEnd.second = parseMetTime(dimension.substr(startLastTime, endLastTime));
             }
             else
             {
