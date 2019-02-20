@@ -8,6 +8,8 @@
 #include "NFmiMacroParam.h"
 #include "NFmiDrawParam.h"
 
+#include <boost/algorithm/string.hpp>
+
 
 namespace
 {
@@ -229,6 +231,11 @@ namespace AddParams
             singleDataPtr->updateData(info);
         }
         dataVector_.push_back(std::move(singleDataPtr));
+        if(dataVector_.size() > 1)
+        {
+            std::sort(dataVector_.begin(), dataVector_.end(), ([](const auto &a, const auto &b)
+                { return boost::algorithm::ilexicographical_compare(std::string(a->dataName()), std::string(b->dataName())); }));
+        }
     }
 
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const
