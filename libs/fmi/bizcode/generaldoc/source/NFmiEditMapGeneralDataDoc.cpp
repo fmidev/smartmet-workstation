@@ -3151,20 +3151,14 @@ void MakeNeededDirtyOperationsWhenDataAdded(unsigned int theDescTopIndex, NFmiFa
                 if(drawParam->IsParamHidden())
                     continue;
 
-                if(MakeNormalDataDrawingLayerCahceChecks(theDescTopIndex, theInfo, theType, theDirtyViewTimes, theFileName, drawParam, *dataProducer, *descTop, cacheRowNumber))
-					break; // voidaan mennä seuraavalle riville saman tien
-
+                MakeNormalDataDrawingLayerCahceChecks(theDescTopIndex, theInfo, theType, theDirtyViewTimes, theFileName, drawParam, *dataProducer, *descTop, cacheRowNumber);
 				if(theType == NFmiInfoData::kEditable && (drawParam->DataType() == NFmiInfoData::kEditable || drawParam->DataType() == NFmiInfoData::kCopyOfEdited))
-				{ // jos kyseessä oli editoitavan datan päivitys, laitetaan uusiksi ne rivit missä on editoitavan datan ja sen kopion parametreja näkyvissä (tuottajalla ei ole väliä)
+				{ 
+                    // jos kyseessä oli editoitavan datan päivitys, laitetaan uusiksi ne rivit missä on editoitavan datan ja sen kopion parametreja näkyvissä (tuottajalla ei ole väliä)
 					descTop->MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
-					break; // voidaan mennä seuraavalle riville saman tien
 				}
-
-                if(MakeMacroParamDrawingLayerCacheChecks(drawParam, theInfo, theType, *descTop, theDescTopIndex, cacheRowNumber, theFileName))
-                    break; // voidaan mennä seuraavalle riville saman tien
-
-                if(CheckAllSynopPlotTypeUpdates(theDescTopIndex, drawParam, *dataProducer, *descTop, cacheRowNumber, theFileName))
-                    break; // voidaan mennä seuraavalle riville saman tien
+                MakeMacroParamDrawingLayerCacheChecks(drawParam, theInfo, theType, *descTop, theDescTopIndex, cacheRowNumber, theFileName);
+                CheckAllSynopPlotTypeUpdates(theDescTopIndex, drawParam, *dataProducer, *descTop, cacheRowNumber, theFileName);
 			}
 		}
 		cacheRowNumber++;
