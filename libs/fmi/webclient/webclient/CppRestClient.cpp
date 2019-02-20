@@ -10,8 +10,6 @@ namespace
         if(CatLog::doTraceLevelLogging())
         {
             auto loggingMessage = domain;
-            // poistetaan domain:in lopussa ollut kenoviiva, koska sellainen on myös request:in alussa
-            loggingMessage.pop_back();
             loggingMessage += request;
             CatLog::logMessage(loggingMessage, CatLog::Severity::Trace, CatLog::Category::NetRequest, true);
         }
