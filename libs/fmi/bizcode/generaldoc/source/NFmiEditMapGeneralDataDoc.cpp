@@ -11861,15 +11861,33 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 	}
 
-	bool IsAnimationTimebagCheckNeeded(void)
-	{
-		for(size_t i = 0; i<itsMapViewDescTopList.size(); i++)
-		{
-			if(itsMapViewDescTopList[i]->AnimationDataRef().ShowTimesOnTimeControl())
-				return true;
-		}
-		return false;
-	}
+    bool IsAnimationTimebagCheckNeeded(unsigned int theDescTopIndex)
+    {
+        if(theDescTopIndex == CtrlViewUtils::kDoAllMapViewDescTopIndex)
+        {
+            for(auto mapViewDescTop : itsMapViewDescTopList)
+            {
+                if(mapViewDescTop->AnimationDataRef().ShowTimesOnTimeControl())
+                    return true;
+            }
+        }
+        else
+        {
+            try
+            {
+                auto mapViewDescTop = MapViewDescTop(theDescTopIndex);
+                if(mapViewDescTop)
+                    return mapViewDescTop->AnimationDataRef().ShowTimesOnTimeControl();
+            }
+            catch(std::exception &e)
+            {
+                std::string errorString = "Error in IsAnimationTimebagCheckNeeded: ";
+                errorString += e.what();
+                LogMessage(errorString, CatLog::Severity::Error, CatLog::Category::Operational, true);
+            }
+        }
+        return false;
+    }
 
 	// Tätä kutsutaan mm. CFmiMainFrame:n OnTimer:ista kerran minuutissa.
 	// Tarkistaa eri näyttöjen animaation tilan ja moodit.
@@ -11879,7 +11897,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	// Jos theDescTopIndex:in arvo on kDoAllMapViewDescTopIndex, silloin tarkistus tehdään kaikille näytöille.
 	void CheckAnimationLockedModeTimeBags(unsigned int theDescTopIndex, bool ignoreSatelImages)
 	{
-		if(IsAnimationTimebagCheckNeeded())
+		if(IsAnimationTimebagCheckNeeded(theDescTopIndex))
 		{ // edellinen metodi tarkisti, onko jossain animaatio boksi näkyvissä.
             bool needToUpdateViews = false;
 			// tutkitaan eri näyttöjen animaattoreita ja niiden tiloja
