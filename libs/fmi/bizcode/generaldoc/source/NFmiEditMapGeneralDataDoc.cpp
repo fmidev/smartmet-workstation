@@ -2817,6 +2817,31 @@ int DoMemoryCheckForUndoRedoDepth(NFmiQueryData* theData, int currentUndoRedoDep
     return usedUndoRedoDepth;
 }
 
+// TotalWind yhdistelm‰ parametrilla on jostain syyst‰ valittu wind-vector metaparametrin 
+// interpolaatioksi nearest, mik‰ on turhaa ja aiheuttaa ristiriitoja tuulen suunnan ja 
+// nopeuksien kanssa, kun niit‰ interpoloidaan lineaarisesti. T‰m‰ on j‰lkik‰teen tehty
+// dataan teht‰v‰ fiksaus ja t‰ss‰ asetetaan interpolaatio halutuksia, jos datasta lˆytyy total-wind.
+void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data)
+{
+    if(data)
+    {
+        if(data->Info()->Param(kFmiTotalWindMS))
+        {
+            auto paramDescriptor = data->Info()->ParamDescriptor();
+            if(paramDescriptor.Param(kFmiWindVectorMS))
+            {
+                auto &windVector = paramDescriptor.EditParam(false);
+                auto interpolationMethod = windVector.GetParam()->InterpolationMethod();
+                if(interpolationMethod == kNearestPoint || interpolationMethod == kNoneInterpolation)
+                {
+                    windVector.GetParam()->InterpolationMethod(kLinearly);
+                    data->Info()->SetParamDescriptor(paramDescriptor);
+                }
+            }
+        }
+    }
+}
+
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
 			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false)
 {
@@ -2832,7 +2857,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 	}
 
 	NormalizeGridDataArea(theData);
-
+    FixTotalWindsWindVectorInterpolation(theData);
 	NFmiTimeDescriptor removedDatasTimesOut; // t‰t‰ k‰ytet‰‰n mm. tutka-datan ruudun likaus optimointiin
 
 	if(theData)
