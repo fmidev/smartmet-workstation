@@ -66,7 +66,7 @@ namespace
 
         if(!theParamBag.ParamsVector().empty())
         {
-            //Firs put params into vector and sort, then create menu items
+            //First put params into vector and sort, then create menu items
             std::vector<NFmiDataIdent> paramsVector;
             for(auto &dataIdent : theParamBag.ParamsVector())
             {
@@ -278,6 +278,11 @@ namespace AddParams
         auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
         producerDataPtr->updateData(infoOrganizer, helpDataInfoSystem);
         producerDataVector_.push_back(std::move(producerDataPtr));
+        if(producerDataVector_.size() > 1)
+        { 
+            std::sort(producerDataVector_.begin(), producerDataVector_.end(), ([](const auto &a, const auto &b) 
+                { return boost::algorithm::ilexicographical_compare(std::string(a->producer().GetName()), std::string(b->producer().GetName())); }));
+        }
     }
 
     std::vector<SingleRowItem> CategoryData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const
