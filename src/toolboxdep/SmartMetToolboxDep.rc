@@ -1340,6 +1340,7 @@ IDB_BITMAP_TEMP_LINE_STYLES BITMAP                  "res\\temp_line_styles.bmp"
 
 IDR_TOOLBAR_EXTRA_MAP_VIEW TOOLBAR 16, 16
 BEGIN
+    BUTTON      ID_BUTTON_VIEW_SELECT_PARAM_DIALOG_EXTRA_MAP
     BUTTON      ID_BUTTON_ZOOM_DIALOG_EXTRA_MAP
     BUTTON      ID_BUTTON_DATA_AREA_EXTRA_MAP
     BUTTON      ID_BUTTON_SELECT_FINLAND_MAP_EXTRA_MAP
@@ -1469,6 +1470,12 @@ STRINGTABLE
 BEGIN
     ID_BUTTON_MAP_VIEW_SETTINGS_EXTRA_MAP 
                             "Extra map view settings\nExtra map view settings"
+END
+
+STRINGTABLE
+BEGIN
+    ID_BUTTON_VIEW_SELECT_PARAM_DIALOG_EXTRA_MAP 
+                            "Parameter selection dialog\nParameter selection dialog"
 END
 
 #endif    // Finnish (Finland) resources
