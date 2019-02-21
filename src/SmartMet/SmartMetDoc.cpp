@@ -307,6 +307,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
         ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
         ON_COMMAND(ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS, &CSmartMetDoc::OnEditSoundingDataFromServerSettings)
         ON_COMMAND(ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault)
+        ON_COMMAND(ID_BUTTON_BETA_PRODUCT_DIALOG, &CSmartMetDoc::OnButtonBetaProductDialog)
+
         END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -2168,6 +2170,11 @@ void CSmartMetDoc::OnMenuitemProjectionLineSetup()
 void CSmartMetDoc::OnButtonViewSelectParamDialog()
 {
     ActivateParameterSelectionDlg();
+}
+
+void CSmartMetDoc::OnButtonBetaProductDialog()
+{
+    OnViewBetaproduction();
 }
 
 void CSmartMetDoc::OnDataStoreTimeserialviewToPictureFile()
