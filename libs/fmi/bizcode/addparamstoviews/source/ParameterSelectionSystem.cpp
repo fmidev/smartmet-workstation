@@ -172,10 +172,10 @@ namespace AddParams
     {
         if(dialogDataNeedsUpdate_)
         {
-            dialogDataNeedsUpdate_ = false;
             updateData();
             updateDialogRowData();
             updateDialogTreePatternData();
+            dialogDataNeedsUpdate_ = false;
         }
     }
 
