@@ -624,7 +624,7 @@ bool NFmiDataParamControlPointModifier::GetChangeValuesWithWork(const NFmiMetTim
         theXValues.clear();
         theYValues.clear();
         theZValues.clear();
-		if(GetChangeValues(theXValues, theYValues, theZValues))
+		if(NFmiDataParamControlPointModifier::GetChangeValues(itsCPManager, theXValues, theYValues, theZValues))
 		{
 			if(!IsZeroModification(theZValues))
 				return true;
@@ -640,7 +640,7 @@ bool NFmiDataParamControlPointModifier::IsTimeModified(const NFmiMetTime &theTim
 		std::vector<float> xValues;
 		std::vector<float> yValues;
 		std::vector<float> zValues;
-		if(GetChangeValues(xValues, yValues, zValues))
+		if(NFmiDataParamControlPointModifier::GetChangeValues(itsCPManager, xValues, yValues, zValues))
 		{
 			if(IsZeroModification(zValues) == false)
 				return true;
@@ -649,10 +649,10 @@ bool NFmiDataParamControlPointModifier::IsTimeModified(const NFmiMetTime &theTim
 	return false;
 }
 
-bool NFmiDataParamControlPointModifier::GetChangeValues(std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues)
+bool NFmiDataParamControlPointModifier::GetChangeValues(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues)
 {
 	int arraySize = 0;
-	itsCPManager->ChangeValues(theXValues, theYValues, theZValues, arraySize);
+	theCPManager->ChangeValues(theXValues, theYValues, theZValues, arraySize);
 	if(arraySize > 0)
 		return true;
 	return false;
@@ -738,7 +738,7 @@ bool NFmiDataParamControlPointModifier::DoDataGridding(void)
 			std::vector<float> xValues;
 			std::vector<float> yValues;
 			std::vector<float> zValues;
-			if(GetChangeValues(xValues, yValues, zValues))
+			if(NFmiDataParamControlPointModifier::GetChangeValues(itsCPManager, xValues, yValues, zValues))
 			{
 				if(IsZeroModification(zValues) == false)
 				{

@@ -168,8 +168,8 @@ class NFmiTimeSerialView : public NFmiTimeView
 	void DrawSimpleDataVectorInTimeSerial(checkedVector<std::pair<double, NFmiMetTime> > &theDataVector, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePenSize, const NFmiPoint& theSinglePointSize);
 	void DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo);
 	void DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoint);
-	void DrawAnalyzeToolEndTimeLine(void);
-    bool SetAnalyzeToolRelatedInfoToLastSuitableTime(boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo, bool isObservationData);
+    void DrawObsBlenderChangeLine(const NFmiPoint &theLatLonPoint);
+    void DrawAnalyzeToolEndTimeLine(void);
     void DrawAnalyzeToolRelatedMessages(const std::vector<std::string> &messages, NFmiDrawingEnvironment &envi);
     void DrawStationNameLegend(const NFmiLocation* theLocation, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theFontSize, const NFmiPoint& theTextPos, const NFmiString& thePreLocationString, FmiDirection theTextAligment, double theDistanceInMeters = kFloatMissing);
 	void DrawModelDataLegend(const std::vector<NFmiColor> &theUsedColors, const std::vector<std::string> &theFoundProducerNames);
@@ -280,10 +280,10 @@ class NFmiTimeSerialView : public NFmiTimeView
     void DrawSinglePointData(double value, const NFmiMetTime &time, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theSinglePointSize);
     void DrawObservationBlenderDataInCpMode();
     bool IsModificationLineDrawn() const;
-    boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableAnalyzeToolRelatedData(const NFmiPoint &theLatLonPoint);
-    boost::shared_ptr<NFmiFastQueryInfo> GetMostSuitableObsBlenderData(const NFmiPoint &theLatLonPoint);
+    boost::shared_ptr<NFmiFastQueryInfo> GetAnalyzeToolData();
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetObsBlenderDataVector();
     virtual bool DrawHelperData() const { return true; }
+    void DrawAnalyzeToolRelatedChangeLineFinal(bool useObservationData, float usedAnalyzeValue, const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, boost::shared_ptr<NFmiFastQueryInfo> &usedToolInfo, const NFmiMetTime &startTime, std::vector<std::string> &messages);
 
 	NFmiDrawingEnvironment itsNormalCurveEnvi; // miten normaali k‰yr‰ piirret‰‰n
 	NFmiDrawingEnvironment itsChangeCurveEnvi; // miten muutos k‰yr‰ piirret‰‰n (punainen katkoviiva)

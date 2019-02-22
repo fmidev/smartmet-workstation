@@ -112,7 +112,8 @@ public:
 	afx_msg void OnAcceleratorToggleTooltip();
 	afx_msg void OnAcceleratorToggleKeepMapRatio();
 	afx_msg BOOL OnToolTipText(UINT nID, NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnButtonZoomDialog();
+    afx_msg void OnButtonSelectParamDialogExtraMap();
+    afx_msg void OnButtonZoomDialog();
 	afx_msg void OnToggleMapViewDisplayMode();
 	afx_msg void OnButtonExtraMapPrint();
 	afx_msg void OnAcceleratorLockTimeToMainMap();

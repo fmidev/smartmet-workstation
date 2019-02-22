@@ -2817,6 +2817,31 @@ int DoMemoryCheckForUndoRedoDepth(NFmiQueryData* theData, int currentUndoRedoDep
     return usedUndoRedoDepth;
 }
 
+// TotalWind yhdistelmä parametrilla on jostain syystä valittu wind-vector metaparametrin 
+// interpolaatioksi nearest, mikä on turhaa ja aiheuttaa ristiriitoja tuulen suunnan ja 
+// nopeuksien kanssa, kun niitä interpoloidaan lineaarisesti. Tämä on jälkikäteen tehty
+// dataan tehtävä fiksaus ja tässä asetetaan interpolaatio halutuksia, jos datasta löytyy total-wind.
+void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data)
+{
+    if(data)
+    {
+        if(data->Info()->Param(kFmiTotalWindMS))
+        {
+            auto paramDescriptor = data->Info()->ParamDescriptor();
+            if(paramDescriptor.Param(kFmiWindVectorMS))
+            {
+                auto &windVector = paramDescriptor.EditParam(false);
+                auto interpolationMethod = windVector.GetParam()->InterpolationMethod();
+                if(interpolationMethod == kNearestPoint || interpolationMethod == kNoneInterpolation)
+                {
+                    windVector.GetParam()->InterpolationMethod(kLinearly);
+                    data->Info()->SetParamDescriptor(paramDescriptor);
+                }
+            }
+        }
+    }
+}
+
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
 			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false)
 {
@@ -2832,7 +2857,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 	}
 
 	NormalizeGridDataArea(theData);
-
+    FixTotalWindsWindVectorInterpolation(theData);
 	NFmiTimeDescriptor removedDatasTimesOut; // tätä käytetään mm. tutka-datan ruudun likaus optimointiin
 
 	if(theData)
@@ -3151,20 +3176,14 @@ void MakeNeededDirtyOperationsWhenDataAdded(unsigned int theDescTopIndex, NFmiFa
                 if(drawParam->IsParamHidden())
                     continue;
 
-                if(MakeNormalDataDrawingLayerCahceChecks(theDescTopIndex, theInfo, theType, theDirtyViewTimes, theFileName, drawParam, *dataProducer, *descTop, cacheRowNumber))
-					break; // voidaan mennä seuraavalle riville saman tien
-
+                MakeNormalDataDrawingLayerCahceChecks(theDescTopIndex, theInfo, theType, theDirtyViewTimes, theFileName, drawParam, *dataProducer, *descTop, cacheRowNumber);
 				if(theType == NFmiInfoData::kEditable && (drawParam->DataType() == NFmiInfoData::kEditable || drawParam->DataType() == NFmiInfoData::kCopyOfEdited))
-				{ // jos kyseessä oli editoitavan datan päivitys, laitetaan uusiksi ne rivit missä on editoitavan datan ja sen kopion parametreja näkyvissä (tuottajalla ei ole väliä)
+				{ 
+                    // jos kyseessä oli editoitavan datan päivitys, laitetaan uusiksi ne rivit missä on editoitavan datan ja sen kopion parametreja näkyvissä (tuottajalla ei ole väliä)
 					descTop->MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
-					break; // voidaan mennä seuraavalle riville saman tien
 				}
-
-                if(MakeMacroParamDrawingLayerCacheChecks(drawParam, theInfo, theType, *descTop, theDescTopIndex, cacheRowNumber, theFileName))
-                    break; // voidaan mennä seuraavalle riville saman tien
-
-                if(CheckAllSynopPlotTypeUpdates(theDescTopIndex, drawParam, *dataProducer, *descTop, cacheRowNumber, theFileName))
-                    break; // voidaan mennä seuraavalle riville saman tien
+                MakeMacroParamDrawingLayerCacheChecks(drawParam, theInfo, theType, *descTop, theDescTopIndex, cacheRowNumber, theFileName);
+                CheckAllSynopPlotTypeUpdates(theDescTopIndex, drawParam, *dataProducer, *descTop, cacheRowNumber, theFileName);
 			}
 		}
 		cacheRowNumber++;
@@ -8583,6 +8602,7 @@ bool InitCPManagerSet(void)
 		int animationEndOffset = 0; //itsAnimationEndTime.DifferenceInMinutes(TimeControlViewTimes(0).LastTime());
 		theMacro.AnimationEndPosition(animationEndOffset);
         theMacro.KeepMapAspectRatio(ApplicationWinRegistry().KeepMapAspectRatio());
+        theMacro.UseControlPoinTool(MetEditorOptionsData().ControlPointMode());
     }
 
 	void SetGeneralDoc(NFmiViewSettingMacro &theMacro)
@@ -8913,6 +8933,7 @@ bool InitCPManagerSet(void)
 		SetMaskSettings(theMacro);
 
         ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
+        MetEditorOptionsData().ControlPointMode(theMacro.UseControlPoinTool());
 
         MakeApplyViewMacroDirtyActions();
 
@@ -11865,15 +11886,33 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 	}
 
-	bool IsAnimationTimebagCheckNeeded(void)
-	{
-		for(size_t i = 0; i<itsMapViewDescTopList.size(); i++)
-		{
-			if(itsMapViewDescTopList[i]->AnimationDataRef().ShowTimesOnTimeControl())
-				return true;
-		}
-		return false;
-	}
+    bool IsAnimationTimebagCheckNeeded(unsigned int theDescTopIndex)
+    {
+        if(theDescTopIndex == CtrlViewUtils::kDoAllMapViewDescTopIndex)
+        {
+            for(auto mapViewDescTop : itsMapViewDescTopList)
+            {
+                if(mapViewDescTop->AnimationDataRef().ShowTimesOnTimeControl())
+                    return true;
+            }
+        }
+        else
+        {
+            try
+            {
+                auto mapViewDescTop = MapViewDescTop(theDescTopIndex);
+                if(mapViewDescTop)
+                    return mapViewDescTop->AnimationDataRef().ShowTimesOnTimeControl();
+            }
+            catch(std::exception &e)
+            {
+                std::string errorString = "Error in IsAnimationTimebagCheckNeeded: ";
+                errorString += e.what();
+                LogMessage(errorString, CatLog::Severity::Error, CatLog::Category::Operational, true);
+            }
+        }
+        return false;
+    }
 
 	// Tätä kutsutaan mm. CFmiMainFrame:n OnTimer:ista kerran minuutissa.
 	// Tarkistaa eri näyttöjen animaation tilan ja moodit.
@@ -11883,7 +11922,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	// Jos theDescTopIndex:in arvo on kDoAllMapViewDescTopIndex, silloin tarkistus tehdään kaikille näytöille.
 	void CheckAnimationLockedModeTimeBags(unsigned int theDescTopIndex, bool ignoreSatelImages)
 	{
-		if(IsAnimationTimebagCheckNeeded())
+		if(IsAnimationTimebagCheckNeeded(theDescTopIndex))
 		{ // edellinen metodi tarkisti, onko jossain animaatio boksi näkyvissä.
             bool needToUpdateViews = false;
 			// tutkitaan eri näyttöjen animaattoreita ja niiden tiloja

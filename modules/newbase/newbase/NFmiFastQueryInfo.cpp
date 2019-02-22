@@ -2014,19 +2014,27 @@ public:
             }
             else
             {
-                isInsideAtAll = info.IsInside(theInterpolatedTime);
-                if(isInsideAtAll)
+                if(this->doNearestTimeIfPossible)
                 {
-                    if(info.TimeToNearestStep(theInterpolatedTime, kBackward, theTimeRangeInMinutes) || this->doNearestTimeIfPossible)
+                    if(info.TimeToNearestStep(theInterpolatedTime, kCenter, theTimeRangeInMinutes))
                     {
-                        previousTime = info.Time();
-                        previousTimeIndex = info.TimeIndex();
-                        previousToInterpolatedTimeDifferenceInMinutes = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(previousTime));
-                        if(info.TimeToNearestStep(theInterpolatedTime, kForward, theTimeRangeInMinutes))
+                        SetPreviousTimeValues(info, theInterpolatedTime);
+                    }
+                }
+                else
+                {
+                    isInsideAtAll = info.IsInside(theInterpolatedTime);
+                    if(isInsideAtAll)
+                    {
+                        if(info.TimeToNearestStep(theInterpolatedTime, kBackward, theTimeRangeInMinutes) || this->doNearestTimeIfPossible)
                         {
-                            nextTime = info.Time();
-                            nextTimeIndex = info.TimeIndex();
-                            previousToNextTimeDifferenceInMinutes = static_cast<float>(nextTime.DifferenceInMinutes(previousTime));
+                            SetPreviousTimeValues(info, theInterpolatedTime);
+                            if(info.TimeToNearestStep(theInterpolatedTime, kForward, theTimeRangeInMinutes))
+                            {
+                                nextTime = info.Time();
+                                nextTimeIndex = info.TimeIndex();
+                                previousToNextTimeDifferenceInMinutes = static_cast<float>(nextTime.DifferenceInMinutes(previousTime));
+                            }
                         }
                     }
                 }
@@ -2040,8 +2048,6 @@ public:
             return false;
         if(hasWantedTime)
             return true;
-        if(!isInsideAtAll)
-            return false;
         if(doNearestTimeIfPossible)
         {
             if(previousTimeIndex == gMissingIndex && nextTimeIndex == gMissingIndex)
@@ -2049,6 +2055,8 @@ public:
         }
         else
         {
+            if(!isInsideAtAll)
+                return false;
             if(previousTimeIndex == gMissingIndex || nextTimeIndex == gMissingIndex)
                 return false;
         }
@@ -2072,6 +2080,13 @@ public:
         }
 
         return false;
+    }
+
+    void SetPreviousTimeValues(NFmiFastQueryInfo &info, const NFmiMetTime &theInterpolatedTime)
+    {
+        previousTime = info.Time();
+        previousTimeIndex = info.TimeIndex();
+        previousToInterpolatedTimeDifferenceInMinutes = static_cast<float>(theInterpolatedTime.DifferenceInMinutes(previousTime));
     }
 };
 
@@ -4775,30 +4790,6 @@ void NFmiFastQueryInfo::DoWindComponentFix(const NFmiGrid &usedGrid,
   theValues[usedGrid.Index() % usedGrid.XNumber()][usedGrid.Index() / usedGrid.XNumber()] = value;
 }
 
-std::string NFmiFastQueryInfo::interpolationMethodString()
-{
-    FmiInterpolationMethod method = this->Param().GetParam()->InterpolationMethod();
-    switch (method)
-    {
-    case FmiInterpolationMethod::kNoneInterpolation:
-        return "None";
-    case FmiInterpolationMethod::kLinearly:
-        return "Linear";
-    case FmiInterpolationMethod::kNearestPoint:
-        return "Nearest Point";
-    case FmiInterpolationMethod::kByCombinedParam:
-        return "Combined Parameter";
-    case FmiInterpolationMethod::kLinearlyFast:
-        return "Linear (Fast)";
-    case FmiInterpolationMethod::kLagrange:
-        return "Lagrange";
-    case FmiInterpolationMethod::kNearestNonMissing:
-        return "Nearest Non Missing";
-    default:
-        return "undefined";
-    }
-}
-
 static void valBufDeleter(float *ptr)
 {
   if (ptr) delete[] ptr;
@@ -5104,74 +5095,6 @@ float NFmiFastQueryInfo::PeekParamValue(unsigned long theParamIndex)
     }
   }
   return kFloatMissing;
-}
-
-const std::string NFmiFastQueryInfo::DataTypeString()
-{
-    //Ugly but works
-    switch(itsDataType)
-    {
-    case NFmiInfoData::kNoDataType:
-        return "No Data Type";
-    case NFmiInfoData::kEditable:
-        return "Editable";
-    case NFmiInfoData::kViewable:
-        return "Viewable";
-    case NFmiInfoData::kStationary:
-        return "Stationary";
-    case NFmiInfoData::kCopyOfEdited:
-        return "Copy Of Edited";
-    case NFmiInfoData::kObservations:
-        return "Observations";
-    case NFmiInfoData::kCalculatedValue:
-        return "Calculated Value";
-    case NFmiInfoData::kKepaData:
-        return "Official Data";
-    case NFmiInfoData::kClimatologyData:
-        return "Climatology Data";
-    case NFmiInfoData::kAnalyzeData:
-        return "Analyze Data";
-    case NFmiInfoData::kScriptVariableData:
-        return "Script Variable Data";
-    case NFmiInfoData::kAnyData:
-        return "Any Data";
-    case NFmiInfoData::kSatelData:
-        return "Satellite Data";
-    case NFmiInfoData::kFlashData:
-        return "Flash Data";
-    case NFmiInfoData::kMacroParam:
-        return "MacroParam";
-    case NFmiInfoData::kHybridData:
-        return "Hybrid Data";
-    case NFmiInfoData::kFuzzyData:
-        return "Fuzzy Data";
-    case NFmiInfoData::kVerificationData:
-        return "Verification Data";
-    case NFmiInfoData::kModelHelpData:
-        return "Model HelpData";
-    case NFmiInfoData::kTrajectoryHistoryData:
-        return "TrajectoryHistory Data";
-    case NFmiInfoData::kTEMPCodeSoundingData:
-        return "TEMP Code SoundingData";
-    case NFmiInfoData::kCrossSectionMacroParam:
-        return "CrossSection MacroParam";
-    case NFmiInfoData::kEditingHelpData:
-        return "Editing HelpData";
-    case NFmiInfoData::kConceptualModelData:
-        return "ConceptualModel Data";
-    case NFmiInfoData::kSingleStationRadarData:
-        return "SingleStation RadarData";
-    case NFmiInfoData::kQ3MacroParam:
-        return "Q3 MacroParam";
-    case NFmiInfoData::kCapData:
-        return "Cap Data";
-    case NFmiInfoData::kWmsData:
-        return "Wms Data";
-    case NFmiInfoData::kSoundingParameterData:
-        return "SoundingParameter Data";
-    default:
-        return "Special or Undefined";
-    }
 }
 
 // Näillä Start/Restore -funktioilla otetaan nykyinen parametri tila talteen ja otetaan käyttöön

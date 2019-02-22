@@ -339,8 +339,8 @@ static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapt
 	return ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
 }
 
-static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
-    bool fGroundData, int theProducerId, int theProducerId2 = -1)
+checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> FmiModifyEditdData::GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
+    bool fGroundData, int theProducerId, int theProducerId2)
 {
     auto infoVector = infoOrganizer.GetInfos(theType, fGroundData, theProducerId, theProducerId2);
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> finalInfos;
@@ -385,50 +385,92 @@ static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDat
     return dataModifier.ModifyTimeSeriesDataUsingMaskFactors(analyzeToolTimes, nullptr);
 }
 
-static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
+// 1. Mik‰ on editoidun datan 1. muokkausaika
+// 2. Hae CP - pisteeseen sopivimmasta datasta sopivimpaan aikaan oleva arvo
+// 3. Mik‰ on k‰ytetyn datan k‰ytetty location, jotta voidaan piirt‰‰ kyseinen k‰yr‰ sellaisenaan aikasarjaan
+bool FmiModifyEditdData::SetupObsBlenderData(TimeSerialModificationDataInterface &theAdapter, const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
-    if(editedInfo)
+    auto infoOrganizer = theAdapter.InfoOrganizer();
+    if(infoOrganizer)
     {
-        auto maskList = NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(theAdapter);
-        NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
-        if(infoOrganizer)
+        auto editedInfo = theAdapter.EditedInfo();
+        if(editedInfo)
         {
-            auto analyzeToolInfos = ::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
-            if(!analyzeToolInfos.empty())
+            if(editedInfo->Param(theParam))
             {
-                auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
-                NFmiMetTime actualFirstTime, firstTime;
-                std::tie(actualFirstTime, firstTime) = NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo, usedAreaPtr, useObservationBlenderTool, std::string(producer.GetName()));
-                if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
+                auto obsBlenderInfos = FmiModifyEditdData::GetAnalyzeToolInfos(*infoOrganizer, theParam, theDataType, fGroundData, theProducer.GetIdent());
+                if(!obsBlenderInfos.empty())
                 {
-                    auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
-                    try
-                    {
-                        ::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), normalLogMessage, times.FirstTime(), times.LastTime());
-                    }
-                    catch(...)
-                    {
-                        // heitetty poikkeus eli halutaan lopettaa toiminto
-                        ::LogMessage(theAdapter, "Unknown error occured while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
-                        return false;
-                    }
-
-                    EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
-                    ::LogMessage(theAdapter, normalLogMessage, CatLog::Severity::Info, CatLog::Category::Editing);
-                    if(useObservationBlenderTool)
-                        return ::DoFinalObservationBlenderToolModifications(theAdapter, editedInfo, analyzeToolInfos, theParam, fUsedMask, maskList, times, dataType, actualFirstTime);
-                    else
-                        return ::DoFinalAnalyzeToolModifications(theAdapter, editedInfo, analyzeToolInfos[0], theParam, fUsedMask, maskList, times, dataType);
+                    auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
+                    NFmiMetTime actualFirstTime;
+                    std::tie(actualFirstTime, firstEditedTimeOut) = NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(obsBlenderInfos, editedInfo, usedAreaPtr, true, std::string(theProducer.GetName()));
+                    auto allowedTimes = NFmiControlPointObservationBlender::CalcAllowedObsBlenderTimes(actualFirstTime, firstEditedTimeOut, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes());
+                    NFmiLocation cpLocation(theLatlon);
+                    return NFmiControlPointObservationBlender::SeekClosestObsBlenderData(cpLocation, editedInfo, obsBlenderInfos, allowedTimes, analyzeValueOut, usedObsBlenderInfoOut);
                 }
                 else
-                    ::LogMessage(theAdapter, "Analyze tool's end time was greater than calculated start time for analyze related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+                    messagesOut.push_back("No obs. data for Obs-blender");
             }
             else
-                ::LogMessage(theAdapter, "Couldn't find any data while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+                messagesOut.push_back("Edited data didn't have edited param");
         }
+        else
+            messagesOut.push_back("No Edited data?");
     }
-	return false;
+    return false;
+}
+
+static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
+{
+    boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+    if(editedInfo)
+    {
+        if(editedInfo->Param(theParam))
+        {
+            auto maskList = NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(theAdapter);
+            NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
+            if(infoOrganizer)
+            {
+                auto analyzeToolInfos = FmiModifyEditdData::GetAnalyzeToolInfos(*infoOrganizer, theParam, dataType, true, producer.GetIdent());
+                if(!analyzeToolInfos.empty())
+                {
+                    auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(theAdapter, editedInfo);
+                    NFmiMetTime actualFirstTime, firstTime;
+                    std::tie(actualFirstTime, firstTime) = NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, editedInfo, usedAreaPtr, useObservationBlenderTool, std::string(producer.GetName()));
+                    if(theAdapter.AnalyzeToolData().AnalyzeToolEndTime() > firstTime)
+                    {
+                        auto times = ::GetAnalyzeToolModificationTimes(theAdapter, editedInfo, firstTime);
+                        try
+                        {
+                            ::SnapShotData(theAdapter, editedInfo, editedInfo->Param(), normalLogMessage, times.FirstTime(), times.LastTime());
+                        }
+                        catch(...)
+                        {
+                            // heitetty poikkeus eli halutaan lopettaa toiminto
+                            ::LogMessage(theAdapter, "Unknown error occured while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+                            return false;
+                        }
+
+                        EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, fUsedMask);
+                        ::LogMessage(theAdapter, normalLogMessage, CatLog::Severity::Info, CatLog::Category::Editing);
+                        if(useObservationBlenderTool)
+                            return ::DoFinalObservationBlenderToolModifications(theAdapter, editedInfo, analyzeToolInfos, theParam, fUsedMask, maskList, times, dataType, actualFirstTime);
+                        else
+                            return ::DoFinalAnalyzeToolModifications(theAdapter, editedInfo, analyzeToolInfos[0], theParam, fUsedMask, maskList, times, dataType);
+                    }
+                    else
+                        ::LogMessage(theAdapter, "Analyze tool's end time was greater than calculated start time for analyze related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+                }
+                else
+                    ::LogMessage(theAdapter, "Couldn't find any data while trying to use Analyze tools related editing", CatLog::Severity::Error, CatLog::Category::Editing);
+            }
+        }
+        else
+            ::LogMessage(theAdapter, std::string("Edited data didn't contain param '") + theParam.GetName().CharPtr() + "'", CatLog::Severity::Error, CatLog::Category::Editing);
+    }
+    else
+        ::LogMessage(theAdapter, std::string("No edited data available?"), CatLog::Severity::Error, CatLog::Category::Editing);
+    return false;
 }
 
 static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, NFmiThreadCallBacks *theThreadCallBacks)

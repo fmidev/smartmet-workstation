@@ -732,3 +732,18 @@ void CFmiWin32Helpers::DeviceContextHelper::SelectBitmap(CBitmap *usedBitmap)
 {
     originalBitmap = memoryDc.SelectObject(usedBitmap);
 }
+
+// Kontrollin värejä ei voi muuttaa OnCtlColor metodeissa, ellei niistä
+// ole ensin poistettu window themea?!?!?!?!?!?
+void CFmiWin32Helpers::EnableColorCodedControl(CWnd *view, DWORD controlId)
+{
+    if(view)
+    {
+        auto controlHwnd = ::GetDlgItem(view->GetSafeHwnd(), controlId);
+        if(controlHwnd)
+        {
+            // Laitetaan teemaksi joku olematon teeman nimi
+            ::SetWindowTheme(controlHwnd, L"BS-theme", L"BS-theme");
+        }
+    }
+}

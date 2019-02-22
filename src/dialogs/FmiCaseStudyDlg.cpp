@@ -217,10 +217,16 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
 
 	UpdateButtonStates();
     UpdateEditEnableDataText();
+    EnableColorCodedControls();
 
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiCaseStudyDlg::EnableColorCodedControls()
+{
+    CFmiWin32Helpers::EnableColorCodedControl(this, IDC_CHECK_EDIT_ENABLE_DATA);
 }
 
 void CFmiCaseStudyDlg::UpdateEditEnableDataText(void)
@@ -992,10 +998,7 @@ HBRUSH CFmiCaseStudyDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
     if(pWnd && pWnd->GetDlgCtrlID() == IDC_CHECK_EDIT_ENABLE_DATA)
     {
-        if(fEditEnableData)
-            pDC->SetTextColor(RGB(255, 0, 0)); // Jos Enable -sarake on näkyvissä, tulee "Enable edit data"-checkboxin kohdalle varoitus teksti punaisella
-        else
-            pDC->SetTextColor(RGB(0, 0, 0)); // normaali tila, normaali teksti tavallisella mustalla
+        CFmiWin32Helpers::SetErrorColorForTextControl(pDC, !fEditEnableData);
     }
 
     return hbr;

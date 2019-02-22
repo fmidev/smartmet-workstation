@@ -15,7 +15,6 @@
 #include "FmiWin32Helpers.h"
 #include "NFmiRectangle.h"
 #include "FmiWin32TemplateHelpers.h"
-#include "CtrlViewWin32Functions.h"
 #include "CtrlViewFunctions.h"
 #include "CtrlViewKeyboardFunctions.h"
 #include "MapDrawFunctions.h"
@@ -34,10 +33,10 @@ IMPLEMENT_DYNCREATE(CFmiExtraMapView, CView)
 CFmiExtraMapView::CFmiExtraMapView()
 :CView()
 ,itsSmartMetDocumentInterface(nullptr)
-,itsFinalMapViewImageBitmap(new CBitmap)
-,itsMemoryBitmap(new CBitmap)
-,itsMapBitmap(new CBitmap)
-,itsSynopPlotBitmap(new CBitmap)
+,itsFinalMapViewImageBitmap(new CBitmap, BitmapDeleter(true))
+,itsMemoryBitmap(new CBitmap, BitmapDeleter(true))
+,itsMapBitmap(new CBitmap, BitmapDeleter(true))
+,itsSynopPlotBitmap(std::make_unique<CBitmap>())
 ,itsSynopPlotBitmapHandle(0)
 ,itsEditMapView(nullptr)
 ,itsToolBox(nullptr)
@@ -53,20 +52,15 @@ CFmiExtraMapView::~CFmiExtraMapView()
 {
 	delete itsEditMapView;
 	delete itsToolBox;
-
-    CtrlView::DestroyBitmap(&itsFinalMapViewImageBitmap);
-    CtrlView::DestroyBitmap(&itsMemoryBitmap);
-    CtrlView::DestroyBitmap(&itsMapBitmap);
-	delete itsSynopPlotBitmap; // t‰h‰n ei saa k‰ytt‰‰ DestroyBitmap-funktiota
 }
 
 CFmiExtraMapView::CFmiExtraMapView(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned int theMapViewDescTopIndex)
 :CView()
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
-,itsFinalMapViewImageBitmap(new CBitmap)
-,itsMemoryBitmap(new CBitmap)
-,itsMapBitmap(new CBitmap)
-,itsSynopPlotBitmap(new CBitmap)
+,itsFinalMapViewImageBitmap(new CBitmap, BitmapDeleter(true))
+,itsMemoryBitmap(new CBitmap, BitmapDeleter(true))
+,itsMapBitmap(new CBitmap, BitmapDeleter(true))
+,itsSynopPlotBitmap(std::make_unique<CBitmap>())
 ,itsSynopPlotBitmapHandle(0)
 ,itsEditMapView(nullptr)
 ,itsToolBox(nullptr)
@@ -412,7 +406,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 	CClientDC dc(this);
 	CDC dcMem;
 	dcMem.CreateCompatibleDC(&dc);
-	CBitmap* oldBitmap2 = dcMem.SelectObject(itsMapBitmap);
+	CBitmap* oldBitmap2 = dcMem.SelectObject(itsMapBitmap.get());
     auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
     mapViewDescTop->MapBlitDC(&dcMem);
 
@@ -421,7 +415,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 	bool needsUpdate = itsEditMapView ? itsEditMapView->MouseMove(viewPoint, itsToolBox->ConvertCtrlKey(nFlags)) : false;
 	ReleaseDC(theDC);
     mapViewDescTop->MapBlitDC(0);
-	itsMapBitmap = dcMem.SelectObject(oldBitmap2);
+	dcMem.SelectObject(oldBitmap2);
 	dcMem.DeleteDC();
 
 	bool drawOverBitmapAnyway = itsSmartMetDocumentInterface->EditedPointsSelectionChanged(false); // pyydet‰‰n vanha arvo drawOverBitmapAnyway -muuttujaan ja asetetaan samalla false:ksi

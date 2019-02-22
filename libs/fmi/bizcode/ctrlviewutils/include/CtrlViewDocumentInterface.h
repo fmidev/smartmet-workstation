@@ -9,6 +9,7 @@
 #include "NFmiTimeEditMode.h"
 #include "FmiEditorModifyToolMode.h"
 #include "NFmiProducer.h"
+#include "NFmiInfoData.h"
 
 #include <functional>
 #include <list>
@@ -70,6 +71,7 @@ class Q2ServerInfo;
 class CBitmap;
 class NFmiMacroParamDataCache;
 class SoundingDataServerConfigurations;
+class NFmiParam;
 
 namespace Wms
 {
@@ -377,6 +379,7 @@ public:
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
     virtual SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() = 0;
+    virtual bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

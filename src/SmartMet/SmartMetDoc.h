@@ -387,6 +387,7 @@ public:
     void OpenLocationFinderTool(CWnd *parentView);
     afx_msg void OnEditSoundingDataFromServerSettings();
     afx_msg void OnViewSetSoundingsFromServerSettingsPlaceToDefault();
+    afx_msg void OnButtonBetaProductDialog();
 };
 
 
