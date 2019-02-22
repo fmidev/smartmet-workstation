@@ -96,6 +96,7 @@ ON_COMMAND(ID_ACCELERATOR_TOGGLE_TEMP_VIEW_TOOLTIP, OnAcceleratorToggleTooltip)
 ON_COMMAND(ID_ACCELERATOR_TOGGLE_KEEP_EXTRA_MAP_RATIO, OnAcceleratorToggleKeepMapRatio)
 ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTW, 0, 0xFFFF, OnToolTipText)
 ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTA, 0, 0xFFFF, OnToolTipText)
+ON_COMMAND(ID_BUTTON_VIEW_SELECT_PARAM_DIALOG_EXTRA_MAP, OnButtonSelectParamDialogExtraMap)
 ON_COMMAND(ID_BUTTON_ZOOM_DIALOG_EXTRA_MAP, OnButtonZoomDialog)
 ON_COMMAND(ID_TOGGLE_EXTRA_MAP_VIEW_DISPLAY_MODE, OnToggleMapViewDisplayMode)
 ON_COMMAND(IDC_BUTTON_PRINT, OnButtonExtraMapPrint)
@@ -637,6 +638,11 @@ CBitmap* CFmiExtraMapViewDlg::FinalMapViewImageBitmap()
 void CFmiExtraMapViewDlg::OnButtonZoomDialog()
 {
     itsSmartMetDocumentInterface->ActivateZoomDialog(itsMapViewDescTopIndex);
+}
+
+void CFmiExtraMapViewDlg::OnButtonSelectParamDialogExtraMap()
+{
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg();
 }
 
 void CFmiExtraMapViewDlg::OnToggleMapViewDisplayMode()

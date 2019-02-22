@@ -127,6 +127,8 @@ namespace CFmiWin32Helpers
         CDC& getDc() { return memoryDc; }
         void SelectBitmap(CBitmap *usedBitmap);
     };
+
+    void EnableColorCodedControl(CWnd *view, DWORD controlId);
 };
 
 

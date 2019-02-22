@@ -41,6 +41,7 @@
 #include "NFmiLimitChecker.h"
 #include "ToolBoxStateRestorer.h"
 #include "NFmiFastInfoUtils.h"
+#include "catlog/catlog.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -3713,34 +3714,110 @@ void NFmiTimeSerialView::DrawAnalyzeToolEndTimeLine(void)
 	itsToolBox->Convert(&line);
 }
 
-bool NFmiTimeSerialView::SetAnalyzeToolRelatedInfoToLastSuitableTime(boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo, bool isObservationData)
+void NFmiTimeSerialView::DrawObsBlenderChangeLine(const NFmiPoint &theLatLonPoint)
 {
-    if(!isObservationData)
+    NFmiDrawingEnvironment envi;
+    std::vector<std::string> messages;
+    auto editedInfo = Info();
+    boost::shared_ptr<NFmiFastQueryInfo> usedObsBlenderInfo;
+    auto &controlPointObservationBlendingData = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData();
+    NFmiMetTime firstEditedTime;
+    float obsBlenderValue = kFloatMissing;
+    try
     {
-        analyzeDataInfo->LastTime();
-        return true;
+        if(itsCtrlViewDocumentInterface->SetupObsBlenderData(theLatLonPoint, *editedInfo->Param().GetParam(), NFmiInfoData::kObservations, true, controlPointObservationBlendingData.SelectedProducer(), firstEditedTime, usedObsBlenderInfo, obsBlenderValue, messages))
+        {
+            // 4. Mikä on lopetusaika(helppo)
+            // 5. Piirrä muutoskäppyrä(helppoa, kun kohdat 1 - 2 hoidettu)
+            DrawAnalyzeToolRelatedChangeLineFinal(true, obsBlenderValue, theLatLonPoint, envi, editedInfo, usedObsBlenderInfo, firstEditedTime, messages);
+        }
+        else
+            messages.push_back("No suitable obs. data for this CP point"s);
+    }
+    catch(std::exception &e)
+    {
+        messages.push_back(e.what());
+        itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Warning, CatLog::Category::Visualization, true);
+    }
+
+    DrawAnalyzeToolRelatedMessages(messages, envi);
+}
+
+static std::string GetMaskFactorEffectText(float maskFactor)
+{
+    if(maskFactor < 0.05)
+        return " (no change)";
+    else if(maskFactor < 0.3)
+        return " (mild change)";
+    else if(maskFactor < 0.7)
+        return " (moderate change)";
+    else if(maskFactor < 0.9)
+        return " (strong change)";
+    else
+        return " (full change)";
+}
+
+void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservationData, float usedAnalyzeValue, const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, boost::shared_ptr<NFmiFastQueryInfo> &usedToolInfo, const NFmiMetTime &startTime, std::vector<std::string> &messages)
+{
+    DrawAnalyzeToolDataLocationInTime(theLatLonPoint, envi, usedToolInfo); // piirretään ensin analyysi data ja sitten sen aiheuttama muutoskäyrä
+    NFmiMetTime endTime(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolEndTime());
+    if(startTime < endTime)
+    {
+        // Jos hila-analyysidatan aikaa ei löydy editoitavasta datasta, ei kannata jatkaa
+        if(useObservationData ? editedInfo->FindNearestTime(startTime, kCenter, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes()) : editedInfo->Time(startTime))
+        {
+            auto firstEditDataValue = useObservationData ? editedInfo->InterpolatedValue(theLatLonPoint) : editedInfo->FloatValue();
+            if(usedAnalyzeValue != kFloatMissing && firstEditDataValue != kFloatMissing)
+            {
+                NFmiLimitChecker limitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(editedInfo->Param().GetParamIdent()));
+                auto maskList = NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(itsCtrlViewDocumentInterface->GenDocDataAdapter());
+                bool useMask = maskList->UseMask();
+                auto changeValue = useObservationData ? usedAnalyzeValue : (firstEditDataValue - usedAnalyzeValue);
+                // Muutosarvo pitää kertoa -1:llä, jotta selittävään tekstiin saadaan oikean suuntainen muutosarvo, en tiedä miksi logiikka menee näin
+                auto helpText = "Selected point change value: "s + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(-changeValue, 2));
+                messages.push_back(helpText);
+                NFmiTimeBag times(startTime, endTime, editedInfo->TimeDescriptor().Resolution());
+                auto timeSize = times.GetSize();
+                auto timeIndex = 0;
+                NFmiDrawingEnvironment envi2(ChangeStationDataCurveEnvironment());
+                envi2.SetFrameColor(NFmiColor(0.98f, 0.134f, 0.14f));
+                envi2.SetPenSize(NFmiPoint(2, 2));
+                checkedVector<pair<double, NFmiMetTime> > dataVector;
+                auto maskHelpText = "Starting mask factor: "s;
+                for(times.Reset(); times.Next(); timeIndex++)
+                {
+                    auto editDataValue = kFloatMissing;
+                    float maskFactor = 1.f;
+                    if(editedInfo->Time(times.CurrentTime()))
+                    {
+                        editDataValue = useObservationData ? editedInfo->InterpolatedValue(theLatLonPoint) : editedInfo->FloatValue();
+                        if(useMask)
+                        {
+                            maskList->SyncronizeMaskTime(editedInfo->Time());
+                            maskFactor = static_cast<float>(maskList->MaskValue(editedInfo->LatLonFast()));
+                        }
+                    }
+                    if(timeIndex == 0)
+                    {
+                        maskHelpText += NFmiValueString::GetStringWithMaxDecimalsSmartWay(maskFactor, 1);
+                        maskHelpText += GetMaskFactorEffectText(maskFactor);
+                    }
+                    auto modifiedValue = NFmiControlPointObservationBlendingData::BlendData(editDataValue, changeValue, maskFactor, timeSize, timeIndex, limitChecker);
+                    dataVector.push_back(std::make_pair(modifiedValue, times.CurrentTime()));
+                }
+                messages.push_back(maskHelpText);
+                DrawSimpleDataVectorInTimeSerial(dataVector, envi2, NFmiPoint(2, 2), NFmiPoint(6, 6));
+            }
+            else
+            {
+                messages.push_back("Missing value in analyze data"s);
+            }
+        }
+        else
+            messages.push_back("Suitable start time not in edited data"s);
     }
     else
-    {
-        try
-        {
-            checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> analyzeToolInfos = GetObsBlenderDataVector();
-            auto usedAreaPtr = NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(itsCtrlViewDocumentInterface->GenDocDataAdapter(), Info());
-            auto useObservationBlenderTool = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool();
-            std::string producerName = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer().GetName();
-            NFmiMetTime actualFirstTime, usedFirstTime;
-            std::tie(actualFirstTime, usedFirstTime) = NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(analyzeToolInfos, Info(), usedAreaPtr, useObservationBlenderTool, producerName);
-            if(usedFirstTime > analyzeDataInfo->TimeDescriptor().LastTime())
-                return analyzeDataInfo->Time(actualFirstTime);
-            else
-                return analyzeDataInfo->Time(usedFirstTime);
-        }
-        catch(std::exception &)
-        {
-            analyzeDataInfo->ResetTime();
-            return false;
-        }
-    }
+        messages.push_back("Start/end editing time range illegal"s);
 }
 
 // piirtää katkoviivalla käyrän, joka kuvaa valitun pisteen kohdalla tapahtuvaa muutosta.
@@ -3749,96 +3826,34 @@ void NFmiTimeSerialView::DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoi
 {
     if(fJustScanningForMinMaxValues)
         return;
+
+    if(itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool())
+    {
+        DrawObsBlenderChangeLine(theLatLonPoint);
+        return;
+    }
+
     NFmiDrawingEnvironment envi;
 
-    auto useObservationBlender = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool();
     std::vector<std::string> messages;
-    boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo = GetMostSuitableAnalyzeToolRelatedData(theLatLonPoint);
+    boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo = GetAnalyzeToolData();
     if(analyzeDataInfo)
     {
-        bool isObservationData = !analyzeDataInfo->IsGrid();
-        DrawAnalyzeToolDataLocationInTime(theLatLonPoint, envi, analyzeDataInfo); // piirretään ensin analyysi data ja sitten sen aiheuttama muutoskäyrä
         analyzeDataInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
         auto editedInfo = Info();
         if(analyzeDataInfo->Param(*editedInfo->Param().GetParam())) // parametrikin pitää asettaa kohdalleen
         {
-            NFmiMetTime startTime(analyzeDataInfo->TimeDescriptor().LastTime());
-            NFmiMetTime endTime(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolEndTime());
-            if(startTime < endTime)
-            {
-                if(SetAnalyzeToolRelatedInfoToLastSuitableTime(analyzeDataInfo, isObservationData))
-                {
-                    // Havainto datan tapauksessa etsitään lähin aika, mutta jos hila-analyysidatan aikaa ei löydy editoitavasta datasta, ei kannata jatkaa
-                    if(isObservationData ? editedInfo->FindNearestTime(startTime) : editedInfo->Time(startTime))
-                    {
-                        if(isObservationData)
-                            startTime = editedInfo->Time(); // Asetetaan havaintoaikaa lähin editoitava aika alkuajaksi (havainnoissa voi olla pienempi aika-askel, ja se pitää sovittaa editoituun dataan)
-                        // Havaintodatalle ei tehdä paikka interpolaatiota
-                        auto analyzeValue = isObservationData ? analyzeDataInfo->FloatValue() : analyzeDataInfo->InterpolatedValue(theLatLonPoint);
-                        auto firstEditDataValue = editedInfo->FloatValue();
-                        if(analyzeValue != kFloatMissing && firstEditDataValue != kFloatMissing)
-                        {
-                            NFmiLimitChecker limitChecker(static_cast<float>(itsDrawParam->AbsoluteMinValue()), static_cast<float>(itsDrawParam->AbsoluteMaxValue()), static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent()));
-                            auto maskList = NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(itsCtrlViewDocumentInterface->GenDocDataAdapter());
-                            bool useMask = maskList->UseMask();
-                            auto changeValue = firstEditDataValue - analyzeValue;
-                            auto helpText = "Selected point change value: "s + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(changeValue, 2));
-                            messages.push_back(helpText);
-                            NFmiTimeBag times(startTime, endTime, editedInfo->TimeDescriptor().Resolution());
-                            auto timeSize = times.GetSize();
-                            auto timeIndex = 0;
-                            NFmiDrawingEnvironment envi2(ChangeStationDataCurveEnvironment());
-                            envi2.SetFrameColor(NFmiColor(0.98f, 0.134f, 0.14f));
-                            envi2.SetPenSize(NFmiPoint(2, 2));
-                            checkedVector<pair<double, NFmiMetTime> > dataVector;
-                            auto maskHelpText = "Starting mask factor: "s;
-                            for(times.Reset(); times.Next(); timeIndex++)
-                            {
-                                auto editDataValue = kFloatMissing;
-                                float maskFactor = 1.f;
-                                if(editedInfo->Time(times.CurrentTime()))
-                                {
-                                    editDataValue = editedInfo->FloatValue();
-                                    if(useMask)
-                                    {
-                                        maskList->SyncronizeMaskTime(editedInfo->Time());
-                                        maskFactor = static_cast<float>(maskList->MaskValue(editedInfo->LatLonFast()));
-                                    }
-                                }
-                                if(timeIndex == 0)
-                                    maskHelpText += NFmiValueString::GetStringWithMaxDecimalsSmartWay(maskFactor, 1);
-                                auto modifiedValue = NFmiControlPointObservationBlendingData::BlendData(editDataValue, changeValue, maskFactor, timeSize, timeIndex, limitChecker);
-                                dataVector.push_back(std::make_pair(modifiedValue, times.CurrentTime()));
-                            }
-                            messages.push_back(maskHelpText);
-                            DrawSimpleDataVectorInTimeSerial(dataVector, envi2, NFmiPoint(2, 2), NFmiPoint(6, 6));
-                        }
-                        else
-                        {
-                            if(useObservationBlender)
-                                messages.push_back("Selected point is zero change CP"s);
-                            else
-                                messages.push_back("Missing value in analyze data"s);
-                        }
-                    }
-                    else
-                        messages.push_back("Suitable start time not in edited data"s);
-                }
-                else
-                    messages.push_back("No suitable time for obs-blender"s);
-            }
-            else
-                messages.push_back("Start/end editing time range illegal"s);
+            analyzeDataInfo->LastTime();
+            NFmiMetTime startTime = analyzeDataInfo->Time();
+            auto analyzeValue = analyzeDataInfo->InterpolatedValue(theLatLonPoint);
+            DrawAnalyzeToolRelatedChangeLineFinal(false, analyzeValue, theLatLonPoint, envi, editedInfo, analyzeDataInfo, startTime, messages);
         }
         else
             messages.push_back("No param in selected data"s);
     }
     else
     {
-        if(useObservationBlender)
-            messages.push_back("No suitable obs-blender data"s);
-        else
-            messages.push_back("No suitable analyze data"s);
+        messages.push_back("No suitable analyze data"s);
     }
     DrawAnalyzeToolRelatedMessages(messages, envi);
 }
@@ -3859,12 +3874,9 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedMessages(const std::vector<std::s
     }
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetMostSuitableAnalyzeToolRelatedData(const NFmiPoint &theLatLonPoint)
+boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetAnalyzeToolData()
 {
-    if(itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool())
-        return GetMostSuitableObsBlenderData(theLatLonPoint);
-    else
-        return itsCtrlViewDocumentInterface->InfoOrganizer()->Info(NFmiDataIdent(*(Info()->Param().GetParam()), itsCtrlViewDocumentInterface->AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
+    return itsCtrlViewDocumentInterface->InfoOrganizer()->Info(NFmiDataIdent(*(Info()->Param().GetParam()), itsCtrlViewDocumentInterface->AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
 }
 
 static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVectorIn, FmiParameterName wantedParamId)
@@ -3881,14 +3893,6 @@ static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedPar
         return false;
     });
     return infoVectorResult;
-}
-
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetMostSuitableObsBlenderData(const NFmiPoint &theLatLonPoint)
-{
-    auto infosWithParamVector = GetObsBlenderDataVector();
-    // Haetaan data, jossa on lähin asema, jonka pitää olla myös määrätyn hakusäteen sisällä
-    auto maxDistanceInMeters = NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000.;
-    return itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(NFmiLocation(theLatLonPoint), NFmiMetTime::gMissingTime, true, &infosWithParamVector, maxDistanceInMeters);
 }
 
 checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiTimeSerialView::GetObsBlenderDataVector()

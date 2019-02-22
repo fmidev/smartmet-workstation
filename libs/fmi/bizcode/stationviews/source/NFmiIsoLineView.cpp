@@ -446,7 +446,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     bool tryStationGriddingDataDrawWithSeveralSourceDatas = (itsInfo->IsGrid() == false) && (itsInfoVector.size() > 1);
     if(fGetCurrentDataFromQ2Server == false)
     {
-        if(!itsInfo->TimeDescriptor().IsInside(itsTime) && tryStationGriddingDataDrawWithSeveralSourceDatas == false && IsSpecialMatrixDataDraw() == false)
+        if(!DataIsDrawable(itsInfo,itsTime) && tryStationGriddingDataDrawWithSeveralSourceDatas == false && IsSpecialMatrixDataDraw() == false)
         {
             if(itsInfo->DataType() != NFmiInfoData::kStationary && itsInfo->DataType() != NFmiInfoData::kMacroParam && itsInfo->DataType() != NFmiInfoData::kQ3MacroParam)
             {

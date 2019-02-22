@@ -105,6 +105,7 @@ protected:
     std::string GetMacroParamFilePath(NFmiMacroParamSystem &theMacroParamSystem);
     NFmiInfoData::Type GetUsedMacroParamType();
     void DoFinalMacroParamWrite(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiMacroParam> &macroParamPointer);
+    void EnableColorCodedControls();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
@@ -162,6 +163,7 @@ public:
     afx_msg void OnSearchOptionMatchAnywhere();
     afx_msg void OnEnChangeEditSpeedSearchViewMacro();
     afx_msg void OnSize(UINT nType, int cx, int cy);
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

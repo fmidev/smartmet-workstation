@@ -34,12 +34,22 @@ void NFmiMacroParamLayerCacheDataType::setCacheValues(const NFmiDataMatrix<float
     useAlReadySpacedOutData_ = useAlReadySpacedOutData;
 }
 
+static bool IsGridSizeSame(NFmiDataMatrix<float> &matrix, boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+    if(info)
+    {
+        if(matrix.NX() == info->GridXNumber() && matrix.NY() == info->GridYNumber())
+            return true;
+    }
+    return false;
+}
+
 void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, boost::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut)
 {
     dataMatrixOut = dataMatrix_;
     useCalculationPointsOut = useCalculationPoints_;
     useAlReadySpacedOutDataOut = useAlReadySpacedOutData_;
-    if(useAlReadySpacedOutDataOut)
+    if(useAlReadySpacedOutDataOut || !::IsGridSizeSame(dataMatrixOut, usedInfoInOut))
     {
         // Jos cacheen laskettu data oli jo harvennettua, pit‰‰ myˆs nyt k‰ytetty info s‰‰t‰‰ takaisin kyseiseen oikeaan hilakokoon.
         boost::shared_ptr<NFmiArea> usedArea(usedInfoInOut->Area()->Clone());

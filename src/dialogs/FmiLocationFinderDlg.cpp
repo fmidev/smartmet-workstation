@@ -9,6 +9,7 @@
 #include "boost/shared_ptr.hpp"
 #include "afxmt.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "ApplicationInterface.h"
 
 
 namespace
@@ -193,7 +194,8 @@ END_MESSAGE_MAP()
 void CFmiLocationFinderDlg::DoWhenClosing(void)
 {
 	itsSmartMetDocumentInterface->AutoComplete().AutoCompleteDialogOn(false);
-    itsSmartMetDocumentInterface->InvalidateMapView(false);
+    // Suljettaessa pitää pyyhkiä kaikista karttanäytöistä mahdolliset haettujen paikkojen merkit pois
+    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Closing Location-finder dialog, update map-views", SmartMetViewId::AllMapViews);
 }
 
 // CFmiLocationFinderDlg message handlers

@@ -99,11 +99,11 @@ class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
     static size_t GridPointToLocationIndex(size_t gridPointX, size_t gridPointY, size_t gridSizeX);
     int CalcActualModifiedTimes(NFmiTimeDescriptor& theActiveTimes);
     static void FixCroppedMatrixMargins(NFmiDataMatrix<float> &theCroppedGridData, const NFmiPoint &theCropMarginSize);
+    static bool GetChangeValues(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 
  protected:
 	bool IsTimeModified(const NFmiMetTime &theTime);
 	bool DoDataGridding(void);
-	bool GetChangeValues(std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool GetChangeValuesWithWork(const NFmiMetTime &theTime, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues);
 	bool IsZeroModification(const std::vector<float> &theZValues);
     void DoCroppedGridCalculations(const NFmiDataMatrix<float> &usedData);

@@ -41,6 +41,7 @@
 #include <stdexcept>
 // abort()
 
+#include <boost/math/special_functions.hpp>
 #ifdef FMI_COMPRESSION
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/iostreams/filter/bzip2.hpp>
@@ -3808,6 +3809,31 @@ static float InterpolateWindDir(std::vector<float> &theWSvalues,
   // (tämä pitää tehdä jotenkin fiksummin)
 }
 
+static float InterpolateWindVector(std::vector<float> &theWSvalues,
+    std::vector<float> &theWDvalues,
+    size_t theWDStartIndex,
+    const NFmiPoint &theGridPoint)
+{
+    double dx = theGridPoint.X() - floor(theGridPoint.X());
+    double dy = theGridPoint.Y() - floor(theGridPoint.Y());
+    NFmiInterpolation::WindInterpolator windInterpolator;
+    windInterpolator.operator()(
+        theWSvalues[0], theWDvalues[theWDStartIndex + 0], (1 - dx) * (1 - dy));
+    windInterpolator.operator()(theWSvalues[1], theWDvalues[theWDStartIndex + 1], dx *(1 - dy));
+    windInterpolator.operator()(theWSvalues[2], theWDvalues[theWDStartIndex + 2], dx *dy);
+    windInterpolator.operator()(theWSvalues[3], theWDvalues[theWDStartIndex + 3], (1 - dx) * dy);
+
+    // Lopuksi tuuli muutetaan wind-vector formaattiin
+    if(windInterpolator.Direction() != kFloatMissing && windInterpolator.Speed() != kFloatMissing)
+    {
+        float windVectorValue = static_cast<float>(boost::math::iround(windInterpolator.Direction() / 10.f));
+        windVectorValue += boost::math::iround(windInterpolator.Speed()) * 100.f;
+        return windVectorValue;
+    }
+    else
+        return kFloatMissing;
+}
+
 float NFmiQueryInfo::CachedLocationInterpolatedValue(std::vector<float> &theValues,
                                                      size_t theStartIndex,
                                                      const NFmiLocationCache &theLocationCache,
@@ -3845,8 +3871,22 @@ float NFmiQueryInfo::CachedLocationInterpolatedValue(std::vector<float> &theValu
       Param(kFmiWindSpeedMS);  // asetetaan parametriksi väliaikaisesti tuulennopeus
       std::vector<float> WSvalues(4, kFloatMissing);
       GetCachedValues(theLocationCache, WSvalues);
-      Param(kFmiWindDirection);  // palautetaan tuulensuunta takaisin parametriksi
+      Param(theParId);  // palautetaan tuulensuunta takaisin parametriksi
       value = ::InterpolateWindDir(WSvalues, theValues, theStartIndex, gpoint);
+    }
+    else if(theParId == kFmiWindVectorMS)
+    {  
+        // Tehdään wind-vec laskut WD ja WS avulla jolloin interpolointi on parempaa.
+        // Asetetaan parametriksi väliaikaisesti tuulen nopeus
+        Param(kFmiWindSpeedMS);  
+        std::vector<float> WSvalues(4, kFloatMissing);
+        GetCachedValues(theLocationCache, WSvalues);
+        // Asetetaan sitten parametriksi väliaikaisesti tuulen suunta
+        Param(kFmiWindDirection);
+        std::vector<float> WDvalues(4, kFloatMissing);
+        GetCachedValues(theLocationCache, WDvalues);
+        Param(theParId);  // palautetaan tuulensuunta takaisin parametriksi
+        value = ::InterpolateWindVector(WSvalues, WDvalues, theStartIndex, gpoint);
     }
     else if (theParId == kFmiWaveDirection)
     {
