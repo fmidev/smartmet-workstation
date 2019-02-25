@@ -3405,7 +3405,9 @@ float NFmiFastQueryInfo::PressureLevelValue(float P, const NFmiPoint &theLatlon)
       float value1 = InterpolatedValue(theLatlon);
 
       auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-      if (param != kFmiWindDirection && param != kFmiWaveDirection)
+      if(param == kFmiWindVectorMS)
+          return static_cast<float>(CalcLogInterpolatedWindWectorValue(p1, p2, P, value1, value2));
+      else if (param != kFmiWindDirection && param != kFmiWaveDirection)
         return static_cast<float>(CalcLogInterpolatedValue(p1, p2, P, value1, value2));
 
       float factor = ::fabs(P - p1) / ::fabs(p2 - p1);
