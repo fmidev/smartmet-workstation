@@ -226,7 +226,6 @@ BEGIN
         MENUITEM "To Database",                 ID_BUTTON_DATA_TO_DATABASE
         MENUITEM SEPARATOR
         MENUITEM "Load from file",              ID_DATA_LOAD_FROM_FILE
-        MENUITEM "Store Data to file",          ID_DATA_STORE_TO_FILE
         MENUITEM "Save data file as",           ID_MENUITEM_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Store map view image",        ID_DATA_STORE_VIEW_TO_PICTURE_FILE
@@ -787,7 +786,6 @@ BEGIN
     ID_BUTTON_DATA_TO_DATABASE "To Database\nTo Database"
     ID_DATA_LOAD_FROM_FILEID_DATA_LOAD_FROM_FILE 
                             "Load from file\nLoad from file"
-    ID_DATA_STORE_TO_FILE   "Store Data to file\nStore Data to file"
     ID_MENUITEM_SAVE_AS     "Save data file as\nSave data file as"
     ID_DATA_STORE_VIEW_TO_PICTURE_FILE 
                             "Store map view image\nStore map view image"
