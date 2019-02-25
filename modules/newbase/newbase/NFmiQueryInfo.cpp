@@ -3156,8 +3156,11 @@ float NFmiQueryInfo::InterpolatedValueFromTimeBag(const NFmiMetTime &theTime, in
           }
           else if (param == kFmiWaveDirection)
           {
-            returnValue =
-                static_cast<float>(NFmiInterpolation::ModLinear(offset1, value1, value2, 360));
+            returnValue = static_cast<float>(NFmiInterpolation::ModLinear(offset1, value1, value2, 360));
+          }
+          else if(param == kFmiWindVectorMS)
+          {
+              returnValue = static_cast<float>(NFmiInterpolation::WindVector(offset1, value1, value2));
           }
           else
             returnValue = float(offset1 * value1 + (1.f - offset1) * value2);
@@ -3538,10 +3541,13 @@ float NFmiQueryInfo::Interpolate(const NFmiDataIdent &theDataIdent,
     }
     else  // muuten lineaarinen interpolointi
     {
-      if (param == kFmiWindDirection || param == kFmiWaveDirection)
+      if(param == kFmiWindVectorMS)
       {  // HUOM!! korjaa koodeja niin että kFmiWindDirection -parametrilla ei tätä kutsuta!!!!
-        returnValue =
-            static_cast<float>(NFmiInterpolation::ModLinear(1 - offset1, theValue1, theValue2));
+          returnValue = static_cast<float>(NFmiInterpolation::WindVector(1 - offset1, theValue1, theValue2));
+      }
+      else if (param == kFmiWindDirection || param == kFmiWaveDirection)
+      {  // HUOM!! korjaa koodeja niin että kFmiWindDirection -parametrilla ei tätä kutsuta!!!!
+        returnValue = static_cast<float>(NFmiInterpolation::ModLinear(1 - offset1, theValue1, theValue2));
       }
       else
         returnValue = float(offset1 * theValue1 + (1.f - offset1) * theValue2);
@@ -3976,9 +3982,10 @@ float NFmiQueryInfo::CachedTimeInterpolatedValue(float theValue1,
           // suunta (tämä pitää tehdä
           // jotenkin fiksummin)
         }
-        else if (theParId == kFmiWaveDirection)
-          value =
-              static_cast<float>(NFmiInterpolation::ModLinear(offset, theValue1, theValue2, 360));
+        else if(theParId == kFmiWaveDirection)
+            value = static_cast<float>(NFmiInterpolation::ModLinear(offset, theValue1, theValue2, 360));
+        else if (theParId == kFmiWindVectorMS)
+          value = static_cast<float>(NFmiInterpolation::WindVector(offset, theValue1, theValue2));
         else
           value = static_cast<float>(NFmiInterpolation::Linear(offset, theValue1, theValue2));
       }
