@@ -57,6 +57,15 @@ void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dat
     }
 }
 
+// Tämä tarkistaa, onko dataMatrix_ tyhjä vai ei.
+bool NFmiMacroParamLayerCacheDataType::isEmpty() const
+{
+    if(dataMatrix_.NX() && dataMatrix_.NY())
+        return false;
+    else
+        return true;
+}
+
 // ***********************************************************************************************
 
 
@@ -401,6 +410,9 @@ void NFmiMacroParamDataCache::clearMacroParamCache(const std::vector<std::string
 
 void NFmiMacroParamDataCache::setCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData)
 {
+    if(cacheData.isEmpty())
+        return; // Ei viedä tyhjää dataa cacheen, siitä tulisi ongelmia
+
     // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
