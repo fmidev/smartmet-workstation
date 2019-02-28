@@ -134,10 +134,10 @@ double WindVector(double theX,
 
   // Grid cell edges
 
-  if (dy == 0) return Linear(dx, theBottomLeft, theBottomRight);
-  if (dy == 1) return Linear(dx, theTopLeft, theTopRight);
-  if (dx == 0) return Linear(dy, theBottomLeft, theTopLeft);
-  if (dx == 1) return Linear(dy, theBottomRight, theTopRight);
+  if (dy == 0) return WindVector(dx, theBottomLeft, theBottomRight);
+  if (dy == 1) return WindVector(dx, theTopLeft, theTopRight);
+  if (dx == 0) return WindVector(dy, theBottomLeft, theTopLeft);
+  if (dx == 1) return WindVector(dy, theBottomRight, theTopRight);
 
   return kFloatMissing;
 }

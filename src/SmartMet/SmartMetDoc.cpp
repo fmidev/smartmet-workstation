@@ -137,7 +137,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_BUTTON_SELECT_FINLAND_MAP, OnButtonSelectFinlandMap)
 	ON_COMMAND(ID_BUTTON_DATA_TO_DATABASE, OnButtonDataToDatabase)
 	ON_COMMAND(ID_DATA_LOAD_FROM_FILE, OnDataLoadFromFile)
-	ON_COMMAND(ID_DATA_STORE_TO_FILE, OnDataStoreToFile)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
 	ON_COMMAND(ID_HIDE_PARAM_WINDOW, OnHideParamWindow)
@@ -204,7 +203,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_MENUITEM_SAVE_AS, OnUpdateMenuitemSaveAs)
 	ON_UPDATE_COMMAND_UI(ID_MENUITEM_GRIDDING_OPTIONS, OnUpdateMenuitemGriddingOptions)
 	ON_UPDATE_COMMAND_UI(ID_DESELECT_ALL, OnUpdateDeselectAll)
-	ON_UPDATE_COMMAND_UI(ID_DATA_STORE_TO_FILE, OnUpdateDataStoreToFile)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_MAKE_EDITED_DATA_COPY, OnUpdateButtonMakeEditedDataCopy)
 	ON_UPDATE_COMMAND_UI(ID_MAKE_GRID_FILE, OnUpdateMakeGridFile)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
@@ -1260,12 +1258,6 @@ BOOL CSmartMetDoc::LoadDataFromFile(const char* theFileName)
 
 	return FALSE;
 }
-
-void CSmartMetDoc::OnDataStoreToFile()
-{
-	StoreData();
-}
-
 
 // lähinnä undo- ja redo-nappuloiden päivitys (aikasarjadialogissa ja filtteröintidialogissa)
 void CSmartMetDoc::UpdateAllDialogsButtons(void)
@@ -2710,12 +2702,6 @@ void CSmartMetDoc::OnUpdateMenuitemGriddingOptions(CCmdUI *pCmdUI)
 }
 
 void CSmartMetDoc::OnUpdateDeselectAll(CCmdUI *pCmdUI)
-{
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
-		pCmdUI->Enable(FALSE);
-}
-
-void CSmartMetDoc::OnUpdateDataStoreToFile(CCmdUI *pCmdUI)
 {
 	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);

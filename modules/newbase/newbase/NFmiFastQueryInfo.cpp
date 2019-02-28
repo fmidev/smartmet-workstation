@@ -3041,7 +3041,9 @@ float NFmiFastQueryInfo::FastPressureLevelValue(double xInd, double yInd, double
     if (IsGrid() && interp == kLinearly)
     {  // lineaarinen interpolointi
       auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-      if (param == kFmiWindDirection || param == kFmiWaveDirection)
+      if(param == kFmiWindVectorMS)
+          value = static_cast<float>(NFmiInterpolation::WindVector(factor, value1, value2));
+      else if (param == kFmiWindDirection || param == kFmiWaveDirection)
         value = static_cast<float>(NFmiInterpolation::ModLinear(factor, value1, value2, 360));
       else
         value = static_cast<float>(NFmiInterpolation::Linear(factor, value1, value2));
@@ -3090,7 +3092,9 @@ float NFmiFastQueryInfo::FastPressureLevelValue(double xInd, double yInd, double
     if (IsGrid() && interp == kLinearly)
     {  // lineaarinen interpolointi
       auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-      if (param == kFmiWindDirection || param == kFmiWaveDirection)
+      if(param == kFmiWindVectorMS)
+          value = static_cast<float>(NFmiInterpolation::WindVector(factor, value1, value2));
+      else if (param == kFmiWindDirection || param == kFmiWaveDirection)
         value = static_cast<float>(NFmiInterpolation::ModLinear(factor, value1, value2, 360));
       else
         value = static_cast<float>(NFmiInterpolation::Linear(factor, value1, value2));
@@ -3148,17 +3152,26 @@ float NFmiFastQueryInfo::FastPressureLevelValue(double xInd, double yInd)
     float topLeftValue = FloatValue();
 
     auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-    if (param == kFmiWindDirection || param == kFmiWaveDirection)
-      value = static_cast<float>(NFmiInterpolation::ModBiLinear(xInd - floor(xInd),
-                                                                yInd - floor(yInd),
+    double dx = xInd - floor(xInd);
+    double dy = yInd - floor(yInd);
+    if(param == kFmiWindVectorMS)
+        value = static_cast<float>(NFmiInterpolation::WindVector(dx,
+            dy,
+            topLeftValue,
+            topRightValue,
+            bottomLeftValue,
+            bottomRightValue));
+    else if (param == kFmiWindDirection || param == kFmiWaveDirection)
+      value = static_cast<float>(NFmiInterpolation::ModBiLinear(dx,
+                                                                dy,
                                                                 topLeftValue,
                                                                 topRightValue,
                                                                 bottomLeftValue,
                                                                 bottomRightValue,
                                                                 360));
     else
-      value = static_cast<float>(NFmiInterpolation::BiLinear(xInd - floor(xInd),
-                                                             yInd - floor(yInd),
+      value = static_cast<float>(NFmiInterpolation::BiLinear(dx,
+                                                             dy,
                                                              topLeftValue,
                                                              topRightValue,
                                                              bottomLeftValue,
@@ -3352,14 +3365,15 @@ float NFmiFastQueryInfo::PressureLevelValue(float P)
       if (IsGrid() && interp == kLinearly)
       {  // lineaarinen interpolointi
         auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-        if (param == kFmiWindDirection || param == kFmiWaveDirection)
+        if(param == kFmiWindVectorMS)
+            return static_cast<float>(CalcLogInterpolatedWindWectorValue(pressureValue, lastPressure, P, value1, value2));
+        else if (param == kFmiWindDirection || param == kFmiWaveDirection)
         {
           float factor = ::fabs(P - lastPressure) / ::fabs(lastPressure - pressureValue);
           value = static_cast<float>(NFmiInterpolation::ModLinear(factor, value1, value2, 360));
         }
         else
-          value = static_cast<float>(
-              CalcLogInterpolatedValue(pressureValue, lastPressure, P, value1, value2));
+          value = static_cast<float>(CalcLogInterpolatedValue(pressureValue, lastPressure, P, value1, value2));
       }
       else
       {  // muut tapaukset eli nearest interpolointi
@@ -3405,7 +3419,9 @@ float NFmiFastQueryInfo::PressureLevelValue(float P, const NFmiPoint &theLatlon)
       float value1 = InterpolatedValue(theLatlon);
 
       auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-      if (param != kFmiWindDirection && param != kFmiWaveDirection)
+      if(param == kFmiWindVectorMS)
+          return static_cast<float>(CalcLogInterpolatedWindWectorValue(p1, p2, P, value1, value2));
+      else if (param != kFmiWindDirection && param != kFmiWaveDirection)
         return static_cast<float>(CalcLogInterpolatedValue(p1, p2, P, value1, value2));
 
       float factor = ::fabs(P - p1) / ::fabs(p2 - p1);
@@ -3555,9 +3571,10 @@ float NFmiFastQueryInfo::HeightValue(float theHeight)
           {  // lineaarinen interpolointi
             float factor = ::fabs(theHeight - lastHeight) / ::fabs(lastHeight - heightValue);
             auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-            if (param == kFmiWindDirection || param == kFmiWaveDirection)
-              value = static_cast<float>(
-                  NFmiInterpolation::ModLinear((1. - factor), value1, value2, 360));
+            if(param == kFmiWindVectorMS)
+                value = static_cast<float>(NFmiInterpolation::WindVector((1. - factor), value1, value2));
+            else if (param == kFmiWindDirection || param == kFmiWaveDirection)
+              value = static_cast<float>(NFmiInterpolation::ModLinear((1. - factor), value1, value2, 360));
             else
               value = static_cast<float>(NFmiInterpolation::Linear((1. - factor), value1, value2));
           }
@@ -3608,17 +3625,27 @@ float NFmiFastQueryInfo::HeightValue(float theHeight, const NFmiPoint &theLatlon
       float topRightValue = HeightValue(theHeight);
 
       auto param = static_cast<FmiParameterName>(Param().GetParamIdent());
-      if (param == kFmiWindDirection || param == kFmiWaveDirection)
-        value = static_cast<float>(NFmiInterpolation::ModBiLinear(gpoint.X() - floor(gpoint.X()),
-                                                                  gpoint.Y() - floor(gpoint.Y()),
+      double dx = gpoint.X() - floor(gpoint.X());
+      double dy = gpoint.Y() - floor(gpoint.Y());
+
+      if(param == kFmiWindVectorMS)
+          value = static_cast<float>(NFmiInterpolation::WindVector(dx,
+              dy,
+              topLeftValue,
+              topRightValue,
+              bottomLeftValue,
+              bottomRightValue));
+      else if (param == kFmiWindDirection || param == kFmiWaveDirection)
+        value = static_cast<float>(NFmiInterpolation::ModBiLinear(dx,
+                                                                  dy,
                                                                   topLeftValue,
                                                                   topRightValue,
                                                                   bottomLeftValue,
                                                                   bottomRightValue,
                                                                   360));
       else
-        value = static_cast<float>(NFmiInterpolation::BiLinear(gpoint.X() - floor(gpoint.X()),
-                                                               gpoint.Y() - floor(gpoint.Y()),
+        value = static_cast<float>(NFmiInterpolation::BiLinear(dx,
+                                                               dy,
                                                                topLeftValue,
                                                                topRightValue,
                                                                bottomLeftValue,
