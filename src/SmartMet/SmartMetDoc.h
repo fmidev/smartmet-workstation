@@ -154,7 +154,6 @@ protected:
 	afx_msg void OnButtonSelectFinlandMap();
 	afx_msg void OnButtonDataToDatabase();
 	afx_msg void OnDataLoadFromFile();
-	afx_msg void OnDataStoreToFile();
 	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
 	afx_msg void OnHideParamWindow();
@@ -283,7 +282,6 @@ public:
 	afx_msg void OnUpdateMenuitemSaveAs(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateMenuitemGriddingOptions(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateDeselectAll(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateDataStoreToFile(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateButtonMakeEditedDataCopy(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateMakeGridFile(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateEditPaste(CCmdUI *pCmdUI);
