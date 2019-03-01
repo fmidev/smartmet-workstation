@@ -406,32 +406,41 @@ void CFmiWin32Helpers::SetDialogItemVisibility(CWnd *theDlg, int theDlgItemId, b
     }
 }
 
+static CPoint GetFixedStartPoint(int &theStartCornerCounter)
+{
+    const int roundingValue = 8; // jos startinCounter menee yli tämän luvun, siirretään aloitus kulma takasin vasempaan, mutta pykälän alas
+
+    theStartCornerCounter++;
+    int startLeft = 10 * (theStartCornerCounter%roundingValue);
+    int startTop = 10 * (theStartCornerCounter%roundingValue) + (theStartCornerCounter / roundingValue) * 10;
+    return CPoint(startLeft, startTop);
+}
+
 // Tarkastetaan josko annettu alue näkyy jossain monitorissa, niin annetaan sen olla.
 // Jos ikkunaa ei näy missään näytössä, laitetaan se näkyviin lähimpään näyttöön.
 // theStartCornerCounter:in avulla voidaan laskea erilaisia aloitus kulmia, kun pitää pakottaa ikkunoita
 // sopimaan näkyvien näyttöjen alueelle.
 CRect CFmiWin32Helpers::FixWindowPosition(const CRect &theRect, int &theStartCornerCounter)
 {
-	RECT rc = theRect;
+    CRect rect = theRect;
+    RECT rc = rect;
 /*
-	rc.left = static_cast<LONG>(theRect.Left());
-	rc.right = static_cast<LONG>(theRect.Right());
-	rc.top = static_cast<LONG>(theRect.Top());
-	rc.bottom = static_cast<LONG>(theRect.Bottom());
+	rc.left = static_cast<LONG>(rect.Left());
+	rc.right = static_cast<LONG>(rect.Right());
+	rc.top = static_cast<LONG>(rect.Top());
+	rc.bottom = static_cast<LONG>(rect.Bottom());
 */
 	HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONULL);
 	if(hMonitor == NULL)
-	{ // annettu alue ei osu minkään näytön alueelle, sitä pitää fiksata
-		int roundingValue = 8; // jos startinCounter menee yli tämän luvun, siirretään aloitus kulma takasin vasempaan, mutta pykälän alas
-		theStartCornerCounter++;
-		int startLeft = 10*(theStartCornerCounter%roundingValue);
-		int startTop = 10*(theStartCornerCounter%roundingValue) + (theStartCornerCounter/roundingValue)*10;
-		SIZE ssize = {theRect.Size().cx, theRect.Size().cy};
+	{ 
+        // annettu alue ei osu minkään näytön alueelle, sitä pitää fiksata
+        auto startPoint = ::GetFixedStartPoint(theStartCornerCounter);
+		SIZE ssize = { rect.Size().cx, rect.Size().cy};
 		HMONITOR hMonitor2 = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
 		if(hMonitor2 == NULL)
-		{ // jotain vikaa MonitorFromRect-funktio kutsussa, sijoitetaan alue vain pää näytön yläkulmaan
-			POINT usedStartPoint = {startLeft, startTop};
-			return CRect(usedStartPoint, ssize);
+		{ 
+            // jotain vikaa MonitorFromRect-funktio kutsussa, sijoitetaan alue vain pää näytön yläkulmaan
+			return CRect(startPoint, ssize);
 		}
 		else
 		{
@@ -439,12 +448,23 @@ CRect CFmiWin32Helpers::FixWindowPosition(const CRect &theRect, int &theStartCor
 			mi.cbSize = sizeof(mi);
 			GetMonitorInfo(hMonitor2, &mi);
 			RECT aMonitorRect = mi.rcMonitor;
-			POINT usedStartPoint = {aMonitorRect.left + startLeft, aMonitorRect.top + startTop};
+			POINT usedStartPoint = {aMonitorRect.left + startPoint.x, aMonitorRect.top + startPoint.y};
 			return CRect(usedStartPoint, ssize);
 		}
 	}
-	else
-		return theRect;
+    else
+    {
+        // On erikois tapaus, missä top on pitkälti negatiivinen ja bottom on pikkuisen positiivinen,
+        // Tällöin ikkuna jää piiloon jostain syystä, ja se pitää tuoda väkisin esille
+        LONG bottomLimit = 10;
+        if(rect.top < 0 && rect.bottom > 0 && rect.bottom < bottomLimit)
+        {
+            auto startPoint = ::GetFixedStartPoint(theStartCornerCounter);
+            rect.MoveToXY(startPoint);
+        }
+    }
+
+    return rect;
 }
 
 bool CFmiWin32Helpers::IsShowCommandMinimized(UINT showCommand)
