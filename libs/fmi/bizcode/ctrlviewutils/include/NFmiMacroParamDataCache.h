@@ -22,6 +22,7 @@ public:
     const NFmiDataMatrix<float>& getDataMatrix() const { return dataMatrix_; }
     void setCacheValues(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints, bool useAlReadySpacedOutData);
     void getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, boost::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut);
+    bool isEmpty() const;
 };
 
 
