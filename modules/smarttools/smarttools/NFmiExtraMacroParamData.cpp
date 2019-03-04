@@ -15,7 +15,8 @@ NFmiExtraMacroParamData::NFmiExtraMacroParamData()
       itsCalculationPointProducer(),
       itsObservationRadiusInKm(kFloatMissing),
       itsObservationRadiusRelative(kFloatMissing),
-      itsSymbolTooltipFile()
+      itsSymbolTooltipFile(),
+      itsMacroParamDescription()
 {
 }
 
