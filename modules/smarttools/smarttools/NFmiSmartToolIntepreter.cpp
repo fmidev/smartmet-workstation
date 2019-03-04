@@ -3012,6 +3012,26 @@ bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
     throw std::runtime_error(errorStr);
 }
 
+bool NFmiSmartToolIntepreter::ExtractMacroParamDescription()
+{
+    // Jos skriptistä on löytynyt 'MacroParamDescription = description-text'
+    GetToken();
+    std::string assignOperator = token;
+    if(assignOperator == string("="))
+    {
+        // Haetaan teksti rivin loppuun asti description:iksi
+        std::string descriptionText = std::string(exp_ptr, exp_end);
+        // otetään edessä ja mahdolliset perässä olevat spacet pois
+        NFmiStringTools::Trim(descriptionText);
+        itsExtraMacroParamData->MacroParamDescription(descriptionText);
+        return true;
+    }
+
+    std::string errorStr = "Given MacroParamDescription -clause was illegal, try something like this:\n";
+    errorStr += "\"MacroParamDescription = description-texts\"";
+    throw std::runtime_error(errorStr);
+}
+
 bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theVariableText)
 {
   std::string aVariableText(theVariableText);
@@ -3027,6 +3047,8 @@ bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theV
       return ExtractObservationRadiusInfo();
     else if(it->second == NFmiAreaMask::SymbolTooltipFile)
         return ExtractSymbolTooltipFile();
+    else if(it->second == NFmiAreaMask::MacroParamDescription)
+        return ExtractMacroParamDescription();
   }
   return false;
 }
@@ -3983,6 +4005,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("calculationpoint"), NFmiAreaMask::CalculationPoint));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("observationradius"), NFmiAreaMask::ObservationRadius));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("symboltooltipfile"), NFmiAreaMask::SymbolTooltipFile));
+    itsExtraInfoCommands.insert(FunctionMap::value_type(string("macroparamdescription"), NFmiAreaMask::MacroParamDescription));
 
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("surface"), kFmiMeanSeaLevel));
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("pressure"), kFmiPressureLevel));

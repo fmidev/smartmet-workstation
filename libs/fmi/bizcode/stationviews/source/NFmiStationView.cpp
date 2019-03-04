@@ -62,6 +62,7 @@
 #include "ToolBoxStateRestorer.h"
 #include "NFmiMacroParamDataCache.h"
 #include "Utf8ConversionFunctions.h"
+#include "NFmiExtraMacroParamData.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1429,12 +1430,12 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache()
 }
 
 // Pelkän tooltipin lasku macroParamista.
-float NFmiStationView::CalcMacroParamTooltipValue(std::string &possibleSymbolTooltipFile)
+float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
     NFmiDataMatrix<float> fakeMatrixValues;
-    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, nullptr, &possibleSymbolTooltipFile);
+    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, nullptr, &extraMacroParamData);
 }
 
 static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -2724,18 +2725,24 @@ std::string NFmiStationView::GetLocationTooltipString()
 
 std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
 {
-    std::string possibleSymbolTooltipFile;
+    NFmiExtraMacroParamData extraMacroParamData;
     itsInfo = usedInfo;
-    float value = CalcMacroParamTooltipValue(possibleSymbolTooltipFile);
+    float value = CalcMacroParamTooltipValue(extraMacroParamData);
     usedInfo = itsInfo;
     std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
     str += " (crude) ";
-    str += GetPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+    str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
     str += ", ";
     float cacheValue = GetMacroParamTooltipValueFromCache();
     str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
     str += " (cache) ";
-    str += GetPossibleMacroParamSymbolText(cacheValue, possibleSymbolTooltipFile);
+    str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+    if(!extraMacroParamData.MacroParamDescription().empty())
+    {
+        str += "<font color = magenta> (";
+        str += extraMacroParamData.MacroParamDescription();
+        str += ")</font>";
+    }
     return str;
 }
 
@@ -2907,7 +2914,7 @@ private:
     }
 };
 
-std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, std::string &possibleSymbolTooltipFile)
+std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile)
 {
     if(!possibleSymbolTooltipFile.empty())
     {
