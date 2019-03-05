@@ -4978,7 +4978,7 @@ std::unique_ptr<NFmiDataIdent> MakePossibleStreamLineDataIdent(const MenuCreatio
 std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(const MenuCreationSettings &theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo)
 {
     static const NFmiParam windDirectionBaseParam(kFmiWindDirection, "Wind direction (meta)");
-    static const NFmiParam windSpeedBaseParam(kFmiWindVectorMS, "Wind speed (meta)");
+    static const NFmiParam windSpeedBaseParam(kFmiWindSpeedMS, "Wind speed (meta)");
     static const NFmiParam windVectorBaseParam(kFmiWindVectorMS, "Wind vector (meta)");
     static const NFmiParam windUBaseParam(kFmiWindUMS, "Wind u component (meta)");
     static const NFmiParam windVBaseParam(kFmiWindVMS, "Wind v component (meta)");
