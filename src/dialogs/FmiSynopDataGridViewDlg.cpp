@@ -2218,7 +2218,6 @@ void CFmiSynopDataGridViewDlg::FillGridWithForecastData(checkedVector<boost::sha
 		if(doShipData)
 			continue; // liikkuville datoille on liian vaikeaa laittaa mukaan ennusteita
 
-        NFmiFastInfoUtils::MetaWindParamUsage xxx = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
         for(info->ResetLocation(); info->NextLocation(); )
 		{
 			if(zoomedArea->IsInside(info->LatLon()) == false)
