@@ -369,6 +369,9 @@ FastInfoParamStateRestorer::~FastInfoParamStateRestorer()
 
 bool MetaWindParamUsage::ParamNeedsMetaCalculations(unsigned long paramId) const
 {
+    if(fHasTotalWind)
+        return false;
+
     switch(paramId)
     {
     case kFmiWindDirection:
@@ -410,6 +413,9 @@ MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQuery
     if(theInfo)
     {
         FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+        if(theInfo->Param(kFmiTotalWindMS))
+            metaWindParamUsage.fHasTotalWind = true;
+
         if(theInfo->Param(kFmiWindVectorMS))
             metaWindParamUsage.fHasWindVectorParam = true;
 
