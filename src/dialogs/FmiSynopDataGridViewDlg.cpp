@@ -1394,6 +1394,44 @@ checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > CFmiSynopDataGridViewDlg::G
 	return infoVector;
 }
 
+static int CalcSuitableParameters(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<FmiParameterName> &wantedParameters)
+{
+    NFmiFastInfoUtils::FastInfoParamStateRestorer restorer(*info);
+    int suitableParametercounter = 0;
+    for(auto paramId : wantedParameters)
+    {
+        if(info->Param(paramId))
+            suitableParametercounter++;
+    }
+    return suitableParametercounter;
+}
+
+static boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos)
+{
+    if(infos.size() == 0)
+        return boost::shared_ptr<NFmiFastQueryInfo>();
+    else if(infos.size() == 1)
+        return infos[0]; // palauta ainoa info listalta
+    else
+    {
+        // palauta sopivin info listalta, missä niistä on eniten haluttuja parametreja
+        std::vector<FmiParameterName> wantedParameters{ kFmiTemperature, kFmiDewPoint, kFmiWindDirection, kFmiWindSpeedMS, kFmiMaximumWind, kFmiPresentWeather, kFmiPrecipitationAmount, kFmiTotalCloudCover, kFmiCloudHeight, kFmiLowCloudCover, kFmiVisibility, kFmiSnowDepth, kFmiPressure, kFmiPressureTendency, kFmiPressureChange, kFmiMinimumTemperature, kFmiMaximumTemperature, kFmiGroundTemperature };
+
+        boost::shared_ptr<NFmiFastQueryInfo> bestSuitableInfo;
+        int mostSuitableParameters = 0;
+        for(auto &info : infos)
+        {
+            auto suitableParameters = ::CalcSuitableParameters(info, wantedParameters);
+            if(mostSuitableParameters < suitableParameters)
+            {
+                bestSuitableInfo = info;
+                mostSuitableParameters = suitableParameters;
+            }
+        }
+        return bestSuitableInfo;
+    }
+}
+
 // tämä on ikävä kopio CZeditmap2View-luokasta, tämä pitäisi laittaa
 // dokumenttiin, että saataisiin yhtenevä funktio molemmissa paikoissa
 boost::shared_ptr<NFmiFastQueryInfo> CFmiSynopDataGridViewDlg::GetWantedInfo(bool fGetObsStationData)
@@ -1419,27 +1457,7 @@ boost::shared_ptr<NFmiFastQueryInfo> CFmiSynopDataGridViewDlg::GetWantedInfo(boo
 																						itsProducerList[selProd].itsDataType,
 																						itsProducerList[selProd].fGroundData,
 																						itsProducerList[selProd].itsProducerId);
-		if(infoVec.size() == 0)
-			return boost::shared_ptr<NFmiFastQueryInfo>();
-		else if(infoVec.size() == 1)
-			return infoVec[0]; // palauta ainoa info listalta
-		else
-		{ // paluta sopivin info listalta
-			boost::shared_ptr<NFmiFastQueryInfo> bestSuitableInfo;
-			unsigned long mostParamNumbers = 0;
-			for(size_t i = 0; i < infoVec.size(); i++)
-			{
-				boost::shared_ptr<NFmiFastQueryInfo> &info = infoVec[i];
-				if(info->Param(kFmiTemperature) && info->Param(kFmiPressure) && info->Param(kFmiWindSpeedMS))
-					return info; // jos datasta löytyy tietyt perus parametrit, palautetaan se
-				if(mostParamNumbers < info->SizeParams())
-				{
-					bestSuitableInfo = info;
-					mostParamNumbers = info->SizeParams();
-				}
-			}
-			return bestSuitableInfo;
-		}
+        return ::GetBestSuitableData(infoVec);
 	}
 }
 
