@@ -3100,26 +3100,48 @@ bool NFmiTempView::MouseMove(const NFmiPoint &thePlace, unsigned long  theKey)
 	return false;
 }
 
+static float GetFinalTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParId, float P, const NFmiPoint &theLatlon, const NFmiMetTime &usedTime)
+{
+    NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(theParId))
+    {
+        // Kun tullaan tähän kohtaan, oletetaan että halutaan WD/WD parametreja, mutta datasta löytyy vain tuulen u ja v komponentit
+        NFmiFastInfoUtils::FastInfoParamStateRestorer restorer(*theInfo);
+        theInfo->Param(kFmiWindUMS);
+        float u = theInfo->PressureLevelValue(P, theLatlon, usedTime);
+        theInfo->Param(kFmiWindVMS);
+        float v = theInfo->PressureLevelValue(P, theLatlon, usedTime);
+        if(theParId == kFmiWindSpeedMS)
+            return NFmiFastInfoUtils::CalcWS(u, v);
+        else if(theParId == kFmiWindDirection)
+            return NFmiFastInfoUtils::CalcWD(u, v);
+        else
+            return kFloatMissing;
+    }
+    else
+        return theInfo->PressureLevelValue(P, theLatlon, usedTime);
+}
+
 static float GetDewPointWithTandRH(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiMTATempSystem::TempInfo &theTempInfo)
 {
-	theInfo->Param(kFmiTemperature);
-	float T = theInfo->PressureLevelValue(P, theTempInfo.Latlon(), theTempInfo.Time());
-	theInfo->Param(kFmiHumidity);
-	float RH = theInfo->PressureLevelValue(P, theTempInfo.Latlon(), theTempInfo.Time());
+    theInfo->Param(kFmiTemperature);
+    float T = ::GetFinalTooltipValue(theInfo, kFmiTemperature, P, theTempInfo.Latlon(), theTempInfo.Time());
+    theInfo->Param(kFmiHumidity);
+    float RH = ::GetFinalTooltipValue(theInfo, kFmiHumidity,P, theTempInfo.Latlon(), theTempInfo.Time());
 
-	return static_cast<float>(NFmiSoundingFunctions::CalcDP(T, RH));
+    return static_cast<float>(NFmiSoundingFunctions::CalcDP(T, RH));
 }
 
 static std::string GetTooltipValueStr(const std::string &theParStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParId, int theMaxDecimalCount, const NFmiMTATempSystem::TempInfo &theTempInfo, float P, const NFmiMetTime &usedTime)
 {
 	std::string str = theParStr;
 	theInfo->Param(theParId);
-	float value = theInfo->PressureLevelValue(P, theTempInfo.Latlon(), usedTime);
+	float value = ::GetFinalTooltipValue(theInfo, theParId, P, theTempInfo.Latlon(), usedTime);
 	if(theParId == kFmiDewPoint && value == kFloatMissing)
 	{
 		// kokeillaan ensin, löytyykö parametria kFmiDewPoint2M -parametrina
 		theInfo->Param(kFmiDewPoint2M);
-		value = theInfo->PressureLevelValue(P, theTempInfo.Latlon(), usedTime);
+		value = ::GetFinalTooltipValue(theInfo, theParId, P, theTempInfo.Latlon(), usedTime);
 		if(value == kFloatMissing) // jos ei vieläkään löytynyt, kokeillaan vielä lasketa Td T:n ja RH:n avulla.
 			value = ::GetDewPointWithTandRH(theInfo, P, theTempInfo);
 	}
