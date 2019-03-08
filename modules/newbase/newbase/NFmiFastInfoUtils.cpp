@@ -58,7 +58,7 @@ namespace
     template<typename GetFunction>
     float CalcMetaWindVectorValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetFunction getFunction)
     {
-        NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+        NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
         if(metaWindParamUsage.HasWsAndWd())
         {
             theInfo->Param(kFmiWindSpeedMS);
@@ -84,7 +84,7 @@ namespace
     {
         if(metaWindParamUsage.HasWindComponents())
         {
-            NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+            NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
             theInfo->Param(kFmiWindUMS);
             auto u = getFunction();
             theInfo->Param(kFmiWindVMS);
@@ -102,7 +102,7 @@ namespace
     {
         if(metaWindParamUsage.HasWsAndWd())
         {
-            NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+            NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
             theInfo->Param(kFmiWindSpeedMS);
             auto WS = getFunction();
             theInfo->Param(kFmiWindDirection);
@@ -356,13 +356,13 @@ bool FindMovingSoundingDataTime(const boost::shared_ptr<NFmiFastQueryInfo> &theI
   return false;
 }
 
-FastInfoParamStateRestorer::FastInfoParamStateRestorer(NFmiFastQueryInfo &info)
+QueryInfoParamStateRestorer::QueryInfoParamStateRestorer(NFmiQueryInfo &info)
 :info_(info)
 ,paramId_(info.Param().GetParamIdent())
 {
 }
 
-FastInfoParamStateRestorer::~FastInfoParamStateRestorer()
+QueryInfoParamStateRestorer::~QueryInfoParamStateRestorer()
 {
     info_.Param(static_cast<FmiParameterName>(paramId_));
 }
@@ -417,7 +417,7 @@ MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQuery
     MetaWindParamUsage metaWindParamUsage;
     if(theInfo)
     {
-        FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+        QueryInfoParamStateRestorer restorer(*theInfo);
         if(theInfo->Param(kFmiTotalWindMS))
             metaWindParamUsage.fHasTotalWind = true;
 
@@ -461,7 +461,10 @@ std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(boost::sh
     }
     if(allowStreamlineParameter && metaWindParamUsage.IsStreamlinePossible())
     {
-        metaParams.push_back(std::make_unique<NFmiDataIdent>(streamlineBaseParam, producer));
+        if(theSmartInfo->IsGrid())
+        {
+            metaParams.push_back(std::make_unique<NFmiDataIdent>(streamlineBaseParam, producer));
+        }
     }
 
     return metaParams;

@@ -3106,7 +3106,7 @@ static float GetFinalTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     if(metaWindParamUsage.ParamNeedsMetaCalculations(theParId))
     {
         // Kun tullaan tähän kohtaan, oletetaan että halutaan WS/WD parametreja, mutta datasta löytyy vain tuulen u ja v komponentit
-        NFmiFastInfoUtils::FastInfoParamStateRestorer restorer(*theInfo);
+        NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
         theInfo->Param(kFmiWindUMS);
         float u = theInfo->PressureLevelValue(P, theLatlon, usedTime);
         theInfo->Param(kFmiWindVMS);

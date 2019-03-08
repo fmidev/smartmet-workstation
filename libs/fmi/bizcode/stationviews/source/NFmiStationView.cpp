@@ -2069,7 +2069,7 @@ bool NFmiStationView::DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theIn
 
 void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId)
 {
-    NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+    NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
     if(metaWindParamUsage.HasWsAndWd())
     {
         theInfo->Param(kFmiWindSpeedMS);

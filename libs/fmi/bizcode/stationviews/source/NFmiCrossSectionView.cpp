@@ -744,7 +744,7 @@ float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &
 
 float NFmiCrossSectionView::GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
 {
-    NFmiFastInfoUtils::FastInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+    NFmiFastInfoUtils::QueryInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
     auto paramId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.HasWsAndWd())
     {

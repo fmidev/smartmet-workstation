@@ -8,18 +8,19 @@
 class NFmiFastQueryInfo;
 class NFmiLevel;
 class NFmiPoint;
+class NFmiQueryInfo;
 
 namespace NFmiFastInfoUtils
 {
     // Apu luokka tekem‰‰n ik‰v‰n fastInfon parametrin valinta tilan palautuksen (indeksi + aliparametri juttu).
     // Tila otetaan konstruktorissa ja palautetaan destruktorissa.
-    class FastInfoParamStateRestorer
+    class QueryInfoParamStateRestorer
     {
-        NFmiFastQueryInfo &info_;
+        NFmiQueryInfo &info_;
         unsigned long paramId_;
     public:
-        FastInfoParamStateRestorer(NFmiFastQueryInfo &info);
-        ~FastInfoParamStateRestorer();
+        QueryInfoParamStateRestorer(NFmiQueryInfo &info);
+        ~QueryInfoParamStateRestorer();
     };
 
     class MetaWindParamUsage
