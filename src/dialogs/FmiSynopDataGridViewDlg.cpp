@@ -893,7 +893,7 @@ static float GetFinalModelDataValue(boost::shared_ptr<NFmiFastQueryInfo> &theInf
     if(metaWindParamUsage && metaWindParamUsage->ParamNeedsMetaCalculations(parId))
     {
         // Kun tullaan tähän kohtaan, oletetaan että halutaan WS/WD parametreja, mutta datasta löytyy vain tuulen u ja v komponentit
-        NFmiFastInfoUtils::FastInfoParamStateRestorer restorer(*theInfo);
+        NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
         theInfo->Param(kFmiWindUMS);
         float u = theInfo->InterpolatedValue(theLatlon, theTime);
         theInfo->Param(kFmiWindVMS);
@@ -1418,7 +1418,7 @@ checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > CFmiSynopDataGridViewDlg::G
 
 static int CalcSuitableParameters(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<FmiParameterName> &wantedParameters)
 {
-    NFmiFastInfoUtils::FastInfoParamStateRestorer restorer(*info);
+    NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*info);
     int suitableParametercounter = 0;
     for(auto paramId : wantedParameters)
     {
