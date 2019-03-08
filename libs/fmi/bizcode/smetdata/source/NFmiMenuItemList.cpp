@@ -97,13 +97,11 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
     const FmiMenuCommandType &theMenuCommandType,
     const NFmiMetEditorTypes::View &theViewType,
     NFmiInfoData::Type theDataType,
-    const NFmiDataIdent *thePossibleStreamLineParam,
     const std::vector<std::unique_ptr<NFmiDataIdent>> *possibleMetaParams)
     :itsMenuItemList()
 {
     if(theParamBag)
     {
-        bool streamLineParamAdded = false;
         theParamBag->Reset();
         while(theParamBag->Next())
         {
@@ -114,18 +112,13 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
             {
                 NFmiMenuItemList* menuItemList =
                     new NFmiMenuItemList(theMapViewDescTopIndex, theParamBag->Current()->GetDataParams(),
-                        theMenuCommandType, theViewType, theDataType, thePossibleStreamLineParam);
-                if(thePossibleStreamLineParam && theParamBag->Current()->GetParamIdent() == kFmiTotalWindMS)
-                {
-                    streamLineParamAdded = true;
-                }
+                        theMenuCommandType, theViewType, theDataType);
                 menuItem->AddSubMenu(menuItemList);
             }
             Add(std::move(menuItem));
         }
 
         ::AddPossibleMetaParams(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theDataType, possibleMetaParams, false);
-        ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theDataType, thePossibleStreamLineParam, streamLineParamAdded);
         SortParamsInAlphabeticalOrder();
     }
 }
@@ -167,10 +160,9 @@ static void AddPossibleMetaParam(NFmiMenuItemList &menuItemList
     , const NFmiMetEditorTypes::View &theViewType
     , NFmiLevelBag* theLevels
     , NFmiInfoData::Type theDataType
-    , const NFmiDataIdent *thePossibleMetaParam
-    , bool paramAddedAlready)
+    , const NFmiDataIdent *thePossibleMetaParam)
 {
-    if(thePossibleMetaParam && !paramAddedAlready)
+    if(thePossibleMetaParam)
     {
         auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, std::string(thePossibleMetaParam->GetParamName()),
             *thePossibleMetaParam, theMenuCommandType, theViewType, nullptr, theDataType);
@@ -187,15 +179,14 @@ static void AddPossibleMetaParams(NFmiMenuItemList &menuItemList
     , const NFmiMetEditorTypes::View &theViewType
     , NFmiLevelBag* theLevels
     , NFmiInfoData::Type theDataType
-    , const std::vector<std::unique_ptr<NFmiDataIdent>> *possibleMetaParams
-    , bool paramAddedAlready)
+    , const std::vector<std::unique_ptr<NFmiDataIdent>> *possibleMetaParams)
 {
     if(possibleMetaParams)
     {
         for(const auto &metaParamPtr : *possibleMetaParams)
         {
             if(metaParamPtr)
-                ::AddPossibleMetaParam(menuItemList, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, metaParamPtr.get(), paramAddedAlready);
+                ::AddPossibleMetaParam(menuItemList, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, metaParamPtr.get());
         }
     }
 }
@@ -206,13 +197,11 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 								  ,NFmiLevelBag* theLevels
 								  ,NFmiInfoData::Type theDataType
 								  ,FmiParameterName notLevelParam
-                                  ,const NFmiDataIdent *thePossibleStreamLineParam
                                   ,const std::vector<std::unique_ptr<NFmiDataIdent>> *possibleMetaParams)
 :itsMenuItemList()
 {
 	if(theParamBag && theLevels)
 	{
-        bool streamLineParamAdded = false;
         for(theParamBag->Reset(); theParamBag->Next();)
 		{
             auto dataIdent = theParamBag->Current();
@@ -230,22 +219,8 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
 
 				if (dataIdent->HasDataParams())
 				{
-					NFmiMenuItemList* menuItemList = 0;
-                    if(thePossibleStreamLineParam && dataIdent->GetParamIdent() == kFmiTotalWindMS)
-                    {
-                        streamLineParamAdded = true;
-                        NFmiParamBag tmpParamBag(*dataIdent->GetDataParams());
-                        tmpParamBag.Add(*thePossibleStreamLineParam);
-					    menuItemList = 
-						    new NFmiMenuItemList(theMapViewDescTopIndex, &tmpParamBag,
-												    theMenuCommandType, theViewType, theLevels, theDataType);
-                    }
-                    else
-                    {
-					    menuItemList = 
-						    new NFmiMenuItemList(theMapViewDescTopIndex, dataIdent->GetDataParams(),
+					NFmiMenuItemList* menuItemList = new NFmiMenuItemList(theMapViewDescTopIndex, dataIdent->GetDataParams(),
 												    theMenuCommandType,theViewType, theLevels, theDataType);
-                    }
                     menuItem -> AddSubMenu(menuItemList);
 				}
 				else
@@ -258,8 +233,7 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* the
             }
 		}
 
-        ::AddPossibleMetaParams(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, possibleMetaParams, false);
-        ::AddPossibleMetaParam(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, thePossibleStreamLineParam, streamLineParamAdded);
+        ::AddPossibleMetaParams(*this, theMapViewDescTopIndex, theMenuCommandType, theViewType, theLevels, theDataType, possibleMetaParams);
         SortParamsInAlphabeticalOrder();
     }
 }
