@@ -414,26 +414,32 @@ bool MetaWindParamUsage::IsStreamlinePossible() const
 
 MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-    MetaWindParamUsage metaWindParamUsage;
     if(theInfo)
-    {
-        QueryInfoParamStateRestorer restorer(*theInfo);
-        if(theInfo->Param(kFmiTotalWindMS))
-            metaWindParamUsage.fHasTotalWind = true;
+        return CheckMetaWindParamUsage(*theInfo);
+    else
+        return MetaWindParamUsage();
+}
 
-        if(theInfo->Param(kFmiWindVectorMS))
-            metaWindParamUsage.fHasWindVectorParam = true;
+MetaWindParamUsage CheckMetaWindParamUsage(NFmiQueryInfo &theInfo)
+{
+    QueryInfoParamStateRestorer restorer(theInfo);
+    MetaWindParamUsage metaWindParamUsage;
+    if(theInfo.Param(kFmiTotalWindMS))
+        metaWindParamUsage.fHasTotalWind = true;
 
-        if(theInfo->Param(kFmiWindDirection) && theInfo->Param(kFmiWindSpeedMS))
-            metaWindParamUsage.fHasWsAndWd = true;
+    if(theInfo.Param(kFmiWindVectorMS))
+        metaWindParamUsage.fHasWindVectorParam = true;
 
-        if(theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS))
-            metaWindParamUsage.fHasWindComponents = true;
-    }
+    if(theInfo.Param(kFmiWindDirection) && theInfo.Param(kFmiWindSpeedMS))
+        metaWindParamUsage.fHasWsAndWd = true;
+
+    if(theInfo.Param(kFmiWindUMS) && theInfo.Param(kFmiWindVMS))
+        metaWindParamUsage.fHasWindComponents = true;
+
     return metaWindParamUsage;
 }
 
-std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool allowStreamlineParameter)
+std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(NFmiQueryInfo &theInfo, bool allowStreamlineParameter)
 {
     static const NFmiParam windDirectionBaseParam(kFmiWindDirection, "Wind direction (meta)", kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", kLinearly);
     static const NFmiParam windSpeedBaseParam(kFmiWindSpeedMS, "Wind speed (meta)", kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", kLinearly);
@@ -443,8 +449,8 @@ std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(boost::sh
     static const NFmiParam streamlineBaseParam(NFmiInfoData::kFmiSpStreamline, "Streamline (meta)");
 
     std::vector<std::unique_ptr<NFmiDataIdent>> metaParams;
-    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theSmartInfo);
-    const auto &producer = *theSmartInfo->Producer();
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+    const auto &producer = *theInfo.Producer();
     if(metaWindParamUsage.MakeMetaWindComponents())
     {
         metaParams.push_back(std::make_unique<NFmiDataIdent>(windUBaseParam, producer));
@@ -461,7 +467,7 @@ std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(boost::sh
     }
     if(allowStreamlineParameter && metaWindParamUsage.IsStreamlinePossible())
     {
-        if(theSmartInfo->IsGrid())
+        if(theInfo.IsGrid())
         {
             metaParams.push_back(std::make_unique<NFmiDataIdent>(streamlineBaseParam, producer));
         }

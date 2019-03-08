@@ -4982,7 +4982,7 @@ void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::
 		if(theSmartInfo->SizeLevels() > 1)
 			levels = const_cast<NFmiLevelBag*>(theSmartInfo->VPlaceDescriptor().Levels());
         bool allowStreamlineParameter = theMenuSettings.fDoMapMenu;
-        auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(theSmartInfo, allowStreamlineParameter);
+        auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(*theSmartInfo, allowStreamlineParameter);
 		NFmiMenuItemList *menuList = 0;
 		bool doCrossSectionMenu = theMenuSettings.fLevelDataOnly && theMenuSettings.fGridDataOnly;
 		if(doCrossSectionMenu == false && levels) // poikkileikkaus menun yhteydessä ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
