@@ -2,6 +2,7 @@
 
 #include "NFmiMetTime.h"
 #include "NFmiDataMatrix.h"
+#include "NFmiDataIdent.h"
 #include <boost/shared_ptr.hpp>
 
 class NFmiFastQueryInfo;
@@ -39,6 +40,7 @@ namespace NFmiFastInfoUtils
         bool MakeMetaWindComponents() const;
         bool HasWsAndWd() const { return fHasWsAndWd; }
         bool HasWindComponents() const { return fHasWindComponents; }
+        bool IsStreamlinePossible() const;
 
 
         friend MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
@@ -61,6 +63,7 @@ bool FindMovingSoundingDataTime(const boost::shared_ptr<NFmiFastQueryInfo> &theI
                                 const NFmiMetTime &theTime,
                                 NFmiLocation &theLocation);
 MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool allowStreamlineParameter);
 float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
 float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
 float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
