@@ -1871,6 +1871,19 @@ void NFmiStreamLineView::DrawArroyHeads(const StreamlineCalculationParameters &t
 	}
 }
 
+static float CalcTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long theParamId, const NFmiPoint &theLatLon, const NFmiMetTime &theTime)
+{
+    if(metaWindParamUsage.ParamNeedsMetaCalculations(theParamId))
+    {
+        return NFmiFastInfoUtils::GetMetaWindValue(theInfo, theTime, theLatLon, metaWindParamUsage, theParamId);
+    }
+    else
+    {
+        theInfo->Param(static_cast<FmiParameterName>(theParamId));
+        return theInfo->InterpolatedValue(theLatLon, theTime);
+    }
+}
+
 std::string NFmiStreamLineView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
 	std::string tabStr = "	";
@@ -1883,12 +1896,10 @@ std::string NFmiStreamLineView::ComposeToolTipText(const NFmiPoint& theRelativeP
         itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
         if(itsInfo && itsInfo->Grid() && itsInfo->TimeDescriptor().IsInside(itsTime))
         {
-            itsInfo->Param(kFmiWindSpeedMS);
-            float WS = itsInfo->InterpolatedValue(itsCtrlViewDocumentInterface->ToolTipLatLonPoint(), itsTime);
+            float WS = ::CalcTooltipValue(itsInfo, metaWindParamUsage, kFmiWindSpeedMS,  itsCtrlViewDocumentInterface->ToolTipLatLonPoint(), itsTime);
             str += " WS=";
             str += GetToolTipValueStr(WS, itsInfo, itsDrawParam);
-            itsInfo->Param(kFmiWindDirection);
-            float WD = itsInfo->InterpolatedValue(itsCtrlViewDocumentInterface->ToolTipLatLonPoint(), itsTime);
+            float WD = ::CalcTooltipValue(itsInfo, metaWindParamUsage, kFmiWindDirection, itsCtrlViewDocumentInterface->ToolTipLatLonPoint(), itsTime);
             str += " WD=";
             str += GetToolTipValueStr(WD, itsInfo, itsDrawParam);
         }
