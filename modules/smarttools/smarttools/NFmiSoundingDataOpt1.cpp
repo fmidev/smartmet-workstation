@@ -1198,6 +1198,8 @@ void NFmiSoundingDataOpt1::FixPressureDataSoundingWithGroundData(
     float groundT = theGroundDataInfo->InterpolatedValue(wantedLatlon, itsTime);
     theGroundDataInfo->Param(kFmiDewPoint);
     float groundTd = theGroundDataInfo->InterpolatedValue(wantedLatlon, itsTime);
+
+    // Yritetään hakea tuulia ensin normaalisti
     theGroundDataInfo->Param(kFmiWindSpeedMS);
     float groundWS = theGroundDataInfo->InterpolatedValue(wantedLatlon, itsTime);
     theGroundDataInfo->Param(kFmiWindDirection);
@@ -1208,6 +1210,25 @@ void NFmiSoundingDataOpt1::FixPressureDataSoundingWithGroundData(
     float groundV = theGroundDataInfo->InterpolatedValue(wantedLatlon, itsTime);
     theGroundDataInfo->Param(kFmiWindVectorMS);
     float groundWv = theGroundDataInfo->InterpolatedValue(wantedLatlon, itsTime);
+
+    // Haetaan pinta tuuli parametrit tarvittaessa metana
+    auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theGroundDataInfo);
+    if(!metaWindParamUsage.NoWindMetaParamsNeeded())
+    {
+        if(metaWindParamUsage.HasWsAndWd())
+        {
+            groundU = NFmiFastInfoUtils::GetMetaWindValue(theGroundDataInfo, itsTime, wantedLatlon, metaWindParamUsage, kFmiWindUMS);
+            groundV = NFmiFastInfoUtils::GetMetaWindValue(theGroundDataInfo, itsTime, wantedLatlon, metaWindParamUsage, kFmiWindVMS);
+            groundWv = NFmiFastInfoUtils::GetMetaWindValue(theGroundDataInfo, itsTime, wantedLatlon, metaWindParamUsage, kFmiWindVectorMS);
+        }
+        else if(metaWindParamUsage.HasWindComponents())
+        {
+            groundWS = NFmiFastInfoUtils::GetMetaWindValue(theGroundDataInfo, itsTime, wantedLatlon, metaWindParamUsage, kFmiWindSpeedMS);
+            groundWD = NFmiFastInfoUtils::GetMetaWindValue(theGroundDataInfo, itsTime, wantedLatlon, metaWindParamUsage, kFmiWindDirection);
+            groundWv = NFmiFastInfoUtils::GetMetaWindValue(theGroundDataInfo, itsTime, wantedLatlon, metaWindParamUsage, kFmiWindVectorMS);
+        }
+    }
+
     theGroundDataInfo->Param(kFmiPressureAtStationLevel);
     float groundStationPressure = theGroundDataInfo->InterpolatedValue(wantedLatlon, itsTime);
     theGroundDataInfo->Param(kFmiHumidity);

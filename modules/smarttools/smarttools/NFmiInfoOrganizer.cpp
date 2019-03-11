@@ -25,14 +25,11 @@ void NFmiInfoOrganizer::InitializeCheckParams(void)
   if (!fCheckParamsInitialized)
   {
     fCheckParamsInitialized = true;
+    // Tuuliparametreja ei tarvitse lisätä näihin listoihin, ne tarkastetaan erikseen CheckForSoundingParams funktiossa
     itsWantedSoundingParams.push_back(kFmiTemperature);
     itsWantedSoundingParams.push_back(kFmiDewPoint);
     itsWantedSoundingParams.push_back(kFmiHumidity);
-    itsWantedSoundingParams.push_back(kFmiWindSpeedMS);
-    itsWantedSoundingParams.push_back(kFmiWindDirection);
 
-    itsWantedTrajectoryParams.push_back(kFmiWindSpeedMS);
-    itsWantedTrajectoryParams.push_back(kFmiWindDirection);
     itsWantedTrajectoryParams.push_back(kFmiVelocityPotential);
     itsWantedTrajectoryParams.push_back(kFmiVerticalVelocityMMS);
   }
@@ -693,31 +690,46 @@ static bool CheckForVerticalData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
   return theInfo->PressureDataAvailable() || theInfo->HeightDataAvailable();
 }
 
-static bool CheckForParams(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                           const std::vector<FmiParameterName> &wantedParams,
-                           bool trajectorySpecial = false)
+// Luotaus dataksi kelpaa, jos siitä löytyy jotkut tuuliparametrit (WS+WD tai u+v) TAI joku annetun listan parametreista.
+static bool CheckForSoundingParams(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    const std::vector<FmiParameterName> &wantedParams)
 {
-  if (::CheckForVerticalData(theInfo))
-  {
-    size_t paramsFound = 0;
-    for (size_t i = 0; i < wantedParams.size(); i++)
+    if(::CheckForVerticalData(theInfo))
     {
-      if (theInfo->Param(wantedParams[i]))
-        paramsFound++;
+        NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+        if(metaWindParamUsage.HasWsAndWd() || metaWindParamUsage.HasWindComponents())
+            return true;
+
+        for(size_t i = 0; i < wantedParams.size(); i++)
+        {
+            // Riittää kun yksikin halutuista parametreista löytyy
+            if(theInfo->Param(wantedParams[i]))
+                return true;
+        }
     }
 
-    if (trajectorySpecial)  // trajektori parametreista pitää olla kolme neljästä, muuten laskuja ei
-    // tehdä ollenkaan (tämä ei ole täydellinen tarkistus, koska pitää olla
-    // WS, WD ja toinen w -parametreista)
-    {
-      if (paramsFound >= wantedParams.size() - 1)
-        return true;
-    }
-    else if (paramsFound)
-      return true;
-  }
+    return false;
+}
 
-  return false;
+// Trajektori dataksi kelpaa, jos siitä löytyy jotkut tuuliparametrit (WS+WD tai u+v) JA joku annetun listan parametreista.
+static bool CheckForTrajectoryParams(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    const std::vector<FmiParameterName> &wantedParams)
+{
+    if(::CheckForVerticalData(theInfo))
+    {
+        NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
+        if(metaWindParamUsage.HasWsAndWd() || metaWindParamUsage.HasWindComponents())
+        {
+            for(size_t i = 0; i < wantedParams.size(); i++)
+            {
+                // Riittää kun yksikin listatuista parametreista löytyy (= jompi kumpi vertikaaliliike parametreista)
+                if(theInfo->Param(wantedParams[i]))
+                    return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool NFmiInfoOrganizer::IsTempData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
@@ -785,12 +797,9 @@ bool NFmiInfoOrganizer::HasGoodParamsForSoundingData(boost::shared_ptr<NFmiFastQ
   InitializeCheckParams();  // varmistetaan että on alustettu lista tarkistettavista parametreista
 
   if (paramCheckFlags.fSounding)
-    return ::CheckForParams(theInfo, itsWantedSoundingParams);
+    return ::CheckForSoundingParams(theInfo, itsWantedSoundingParams);
   else if (paramCheckFlags.fTrajectory)
-    return ::CheckForParams(theInfo, itsWantedTrajectoryParams, true);  // trajektori datassa pitää
-                                                                        // olla kaikki vaaditut
-                                                                        // parametrit, muuten
-  // laskuista ei tule mitään
+    return ::CheckForTrajectoryParams(theInfo, itsWantedTrajectoryParams);
 
   return true;
 }

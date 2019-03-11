@@ -1,6 +1,7 @@
 #include "SingleData.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiHelpDataInfo.h"
+#include "NFmiFastInfoUtils.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -53,25 +54,14 @@ namespace
         }
     }
 
-    void addMetaStreamlineParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, NFmiQueryInfo &queryInfo, NFmiInfoData::Type dataType, AddParams::RowType rowType)
+    void addMetaWindParameters(std::vector<NFmiDataIdent> &paramsVectorInOut, NFmiQueryInfo &queryInfo)
     {
-        bool hasLevelData = queryInfo.SizeLevels() > 1;
-        static const NFmiParam streamlineBaseParam(NFmiInfoData::kFmiSpStreamline, "Streamline (meta)");
-        bool addStreamlineParam = queryInfo.IsGrid();
-        bool hasWindParams = queryInfo.Param(kFmiTotalWindMS) || queryInfo.Param(kFmiWindSpeedMS) || queryInfo.Param(kFmiWindUMS);
-        auto parameter = NFmiDataIdent(streamlineBaseParam, *queryInfo.Producer());
+        bool allowStreamlineParameter = true; // Mahdollinen lisäys vain karttanäyttö tilanteissa
+        auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(queryInfo, allowStreamlineParameter);
 
-        if(addStreamlineParam && hasWindParams)
+        for(const auto &metaParameter : possibleWindMetaParams)
         {
-            if(hasLevelData) //Level data
-            {
-                dialogRowData.push_back(::makeRowItem(parameter, dataType, AddParams::RowType::kLevelType)); //Parameter name as "header"
-                ::addLevelRowItems(dialogRowData, parameter, dataType, AddParams::RowType::kSubParamLevelType, queryInfo); //Actual level data
-            }
-            else //Surface data
-            {
-                dialogRowData.push_back(::makeRowItem(parameter, dataType, rowType, true));
-            }
+            paramsVectorInOut.push_back(*metaParameter);
         }
     }
 
@@ -96,7 +86,6 @@ namespace
                         dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType, true));
                     }
                 }
-                addMetaStreamlineParameters(dialogRowData, queryInfo, dataType, rowType);
             }
         }
     }
@@ -227,6 +216,8 @@ namespace AddParams
         {
             paramsVector.push_back(dataIdent);
         }
+        addMetaWindParameters(paramsVector, *latestMetaData_);
+
         std::sort(paramsVector.begin(), paramsVector.end(), compareName);
 
         for(const auto &dataIdent : paramsVector)

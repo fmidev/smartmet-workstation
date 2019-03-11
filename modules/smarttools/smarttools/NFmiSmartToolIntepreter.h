@@ -320,6 +320,7 @@ class NFmiSmartToolIntepreter
   bool ExtractCalculationPointInfo();
   bool ExtractObservationRadiusInfo();
   bool ExtractSymbolTooltipFile();
+  bool ExtractMacroParamDescription();
   std::string GetWholeNumberFromTokens();
   void CheckMustHaveSimpleConditionFunctions(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo);
   void AddVariableToCalculation(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo, boost::shared_ptr<NFmiAreaMaskInfo> &theVariableInfo);

@@ -24,6 +24,7 @@ class NFmiGrid;
 class NFmiGriddingHelperInterface;
 class NFmiHelpDataInfo;
 class NFmiGriddingProperties;
+class NFmiExtraMacroParamData;
 
 class CRect;
 class CDC;
@@ -156,7 +157,7 @@ protected:
    void MakeDrawedInfoVector(void);
    void MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    void CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut);
-   float CalcMacroParamTooltipValue(std::string &possibleSymbolTooltipFile);
+   float CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData);
    virtual bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2);
    void GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
    void GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
@@ -190,7 +191,7 @@ protected:
    NFmiHelpDataInfo* GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2);
    float CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
-   std::string GetPossibleMacroParamSymbolText(float value, std::string &possibleSymbolTooltipFile);
+   std::string GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile);
    float GetMacroParamTooltipValueFromCache();
    std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
    void SetupPossibleWindMetaParamData();

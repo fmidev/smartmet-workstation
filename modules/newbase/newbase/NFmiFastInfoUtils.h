@@ -2,23 +2,25 @@
 
 #include "NFmiMetTime.h"
 #include "NFmiDataMatrix.h"
+#include "NFmiDataIdent.h"
 #include <boost/shared_ptr.hpp>
 
 class NFmiFastQueryInfo;
 class NFmiLevel;
 class NFmiPoint;
+class NFmiQueryInfo;
 
 namespace NFmiFastInfoUtils
 {
     // Apu luokka tekem‰‰n ik‰v‰n fastInfon parametrin valinta tilan palautuksen (indeksi + aliparametri juttu).
     // Tila otetaan konstruktorissa ja palautetaan destruktorissa.
-    class FastInfoParamStateRestorer
+    class QueryInfoParamStateRestorer
     {
-        NFmiFastQueryInfo &info_;
+        NFmiQueryInfo &info_;
         unsigned long paramId_;
     public:
-        FastInfoParamStateRestorer(NFmiFastQueryInfo &info);
-        ~FastInfoParamStateRestorer();
+        QueryInfoParamStateRestorer(NFmiQueryInfo &info);
+        ~QueryInfoParamStateRestorer();
     };
 
     class MetaWindParamUsage
@@ -39,9 +41,9 @@ namespace NFmiFastInfoUtils
         bool MakeMetaWindComponents() const;
         bool HasWsAndWd() const { return fHasWsAndWd; }
         bool HasWindComponents() const { return fHasWindComponents; }
+        bool IsStreamlinePossible() const;
 
-
-        friend MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+        friend MetaWindParamUsage CheckMetaWindParamUsage(NFmiQueryInfo &theInfo);
     };
 
 bool IsInfoShipTypeData(NFmiFastQueryInfo &theInfo);
@@ -61,6 +63,8 @@ bool FindMovingSoundingDataTime(const boost::shared_ptr<NFmiFastQueryInfo> &theI
                                 const NFmiMetTime &theTime,
                                 NFmiLocation &theLocation);
 MetaWindParamUsage CheckMetaWindParamUsage(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+MetaWindParamUsage CheckMetaWindParamUsage(NFmiQueryInfo &theInfo);
+std::vector<std::unique_ptr<NFmiDataIdent>> MakePossibleWindMetaParams(NFmiQueryInfo &theInfo, bool allowStreamlineParameter);
 float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
 float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
 float GetMetaWindValue(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatlon, const MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
