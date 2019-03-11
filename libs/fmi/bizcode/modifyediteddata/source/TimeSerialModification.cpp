@@ -2641,7 +2641,7 @@ static bool GetGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, Gri
     return false;
 }
 
-static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, std::string *possibleSymbolTooltipFile)
+static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
@@ -2693,9 +2693,9 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 		theUsedMacroInfoOut->Values(theValues);
         if(!smartToolModifier.CalculationPoints().empty())
             theUseCalculationPoints = true;
-        if(possibleSymbolTooltipFile)
+        if(possibleExtraMacroParamData)
         {
-            *possibleSymbolTooltipFile = smartToolModifier.ExtraMacroParamData().SymbolTooltipFile();
+            *possibleExtraMacroParamData = smartToolModifier.ExtraMacroParamData();
         }
 	}
 	catch(std::exception &e)
@@ -2724,9 +2724,9 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	return value;
 }
 
-float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, std::string *possibleSymbolTooltipFile)
+float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
-    return ::CalcMacroParamMatrix(theAdapter, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo, possibleSymbolTooltipFile);
+    return ::CalcMacroParamMatrix(theAdapter, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo, possibleExtraMacroParamData);
 }
 
 static void SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread)

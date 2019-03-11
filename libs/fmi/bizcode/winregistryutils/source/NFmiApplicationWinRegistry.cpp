@@ -655,6 +655,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,itsMaximumFontSizeFactor(3.)
 ,mEditingToolsGriddingProperties()
 ,mVisualizationGriddingProperties()
+,mSaveImageExtensionFilterIndex()
 {
 }
 
@@ -710,6 +711,9 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mMinimumTimeRangeForWarningsOnMapViewsInMinutes = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\MinimumTimeRangeForWarningsOnMapViewsInMinutes", usedKey, 0);
     mDrawObjectScaleFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\DrawObjectScaleFactor", usedKey, 0.9, "MetEditor::DrawObjectScaleFactor");
     //mMaximumFontSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MaximumFontSizeFactor", usedKey, 2);
+    mSaveImageExtensionFilterIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\SaveImageExtensionFilterIndex", usedKey, 1);
+    // Pit‰‰ viel‰ varmistaa ett‰ rekisterist‰ luettu indeksi menee rajojen sis‰lle oikein, siksi kutsutaan viel‰ sen Set-metodia, joka tekee tarkasteluja.
+    SetSaveImageExtensionFilterIndex(*mSaveImageExtensionFilterIndex);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! n‰m‰ vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -971,4 +975,30 @@ void NFmiApplicationWinRegistry::SetGriddingProperties(bool setEditingRelatedPro
         mEditingToolsGriddingProperties.Update(griddingProperties);
     else
         mVisualizationGriddingProperties = griddingProperties;
+}
+
+int NFmiApplicationWinRegistry::SaveImageExtensionFilterIndex() const
+{
+    return *mSaveImageExtensionFilterIndex;
+}
+
+void NFmiApplicationWinRegistry::SetSaveImageExtensionFilterIndex(int newValue)
+{
+    if(newValue < 1 || newValue >= mSaveImageFileFilterExtensions.size())
+        newValue = 1;
+    *mSaveImageExtensionFilterIndex = newValue;
+}
+
+const std::vector<std::string>& NFmiApplicationWinRegistry::SaveImageFileFilterExtensions() const
+{
+    return mSaveImageFileFilterExtensions;
+}
+
+const std::string& NFmiApplicationWinRegistry::GetCurrentSaveImageFileFilterExtension() const
+{
+    size_t usedVectorIndex = *mSaveImageExtensionFilterIndex - 1;
+    if(usedVectorIndex < mSaveImageFileFilterExtensions.size())
+        return mSaveImageFileFilterExtensions[usedVectorIndex];
+    else
+        return mSaveImageFileFilterExtensions[0];
 }

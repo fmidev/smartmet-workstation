@@ -9,6 +9,9 @@
 
 class NFmiHelpDataInfoSystem;
 
+// En osaa laittaa tälläistä muuttujaa luokan muuttujaksi, koska siinä on tyhjä taulukko ja kääntäjä tekee erinäisiä valituksia sellaisen käytöstä luokan dataosana.
+const TCHAR BASED_CODE g_SaveImageFileFilter[] = _TEXT("PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|TIFF (*.tiff)|*.tiff|GIF (*.gif)|*.gif|");
+
 class NFmiGriddingPropertiesWinRegistry
 {
 public:
@@ -282,6 +285,11 @@ public:
     const NFmiGriddingProperties& GriddingProperties(bool getEditingRelatedProperties) const;
     void SetGriddingProperties(bool setEditingRelatedProperties, const NFmiGriddingProperties &griddingProperties);
 
+    int SaveImageExtensionFilterIndex() const;
+    void SetSaveImageExtensionFilterIndex(int newValue);
+    const std::vector<std::string>& SaveImageFileFilterExtensions() const;
+    const std::string& GetCurrentSaveImageFileFilterExtension() const;
+
     static std::string MakeBaseRegistryPath(void);
     static std::string MakeGeneralSectionName(void);
     
@@ -344,6 +352,12 @@ private:
     NFmiGriddingPropertiesWinRegistry mEditingToolsGriddingProperties;
     // Visualisointiin (mm. havaintojen hilaus visualisointi) ja macroParam laskuihin littyvät griddaus säädöt (käyttäjä ei voi muokata ainakaan vielä)
     NFmiGriddingProperties mVisualizationGriddingProperties;
+
+    // Kun kuvia talletetaan png/jpg/bmp/tiff/gif formaatissa, laitetaan käytetty filtteri talteen rekisteriin.
+    // Indeksi alkaa 1:stä.
+    boost::shared_ptr<CachedRegInt> mSaveImageExtensionFilterIndex; 
+    // mSaveImageFileFilterExtensions vektorin ja g_SaveImageFileFilter:in sisällöt pitää asettaa kohdilleen, jos meinaa muuttaa filtterien listaa tai niiden järjestystä!
+    const std::vector<std::string> mSaveImageFileFilterExtensions = { "png", "jpg", "bmp", "tiff", "gif" };
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 

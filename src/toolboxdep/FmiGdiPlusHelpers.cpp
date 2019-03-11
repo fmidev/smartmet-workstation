@@ -19,6 +19,7 @@
 #include "FmiWin32Helpers.h"
 #include "NFmiColorSpaces.h"
 #include "CtrlViewGdiPlusFunctions.h"
+#include "NFmiApplicationWinRegistry.h"
 #include "boost/math/special_functions/round.hpp"
 
 std::string CFmiGdiPlusHelpers::StrToUtf8(const std::string &theString)
@@ -62,22 +63,52 @@ static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 	return -1;  // Failure
 }
 
+static std::string GetFinalFilePath(CFileDialog &fileSaveDlg, NFmiApplicationWinRegistry &applicationWinRegistry)
+{
+    std::string fileName = CT2A(fileSaveDlg.GetPathName());
+    if(!fileName.empty())
+    {
+        applicationWinRegistry.SetSaveImageExtensionFilterIndex(fileSaveDlg.m_pOFN->nFilterIndex);
+        auto defaultFileExtension = applicationWinRegistry.GetCurrentSaveImageFileFilterExtension();
+        std::string fileExtension = CT2A(fileSaveDlg.GetFileExt());
+        if(fileExtension.empty() && defaultFileExtension.empty() == false)
+        {
+            if(fileName.back() != '.')
+                fileName.push_back('.');
+            fileName += defaultFileExtension;
+        }
+        return fileName;
+    }
+
+    return "";
+}
+
+// filterIndex parametri alkaa 1:stä.
+static std::string GetDefaultFilename(NFmiApplicationWinRegistry &applicationWinRegistry)
+{
+    std::string filename = "image1.";
+    filename += applicationWinRegistry.GetCurrentSaveImageFileFilterExtension();
+    return filename;
+}
+
+
 bool CFmiGdiPlusHelpers::SaveMfcBitmapToFile(const std::string &theCallingFunctionName, CBitmap *bm, SmartMetDocumentInterface *smartMetDocumentInterface, const NFmiRect *theRelativeOutputArea)
 {
-	static TCHAR BASED_CODE filter[] = _TEXT("PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|TIFF (*.tiff)|*.tiff|GIF (*.gif)|*.gif|");
 	if(bm)
 	{
+        auto &applicationWinRegistry = smartMetDocumentInterface->ApplicationWinRegistry();
 		CFileDialog myDlg(FALSE,
 							NULL,
-							_TEXT("image1.png"),
+							CA2T(::GetDefaultFilename(applicationWinRegistry).c_str()),
 							OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-							filter,
+                            g_SaveImageFileFilter,
 							NULL );
         myDlg.m_ofn.lpstrInitialDir = CA2T(smartMetDocumentInterface->FileDialogDirectoryMemory().c_str());
+        myDlg.m_ofn.nFilterIndex = applicationWinRegistry.SaveImageExtensionFilterIndex();
 
 		if (myDlg.DoModal()==IDOK)
 		{
-			std::string fileName = CT2A(myDlg.GetPathName());
+			std::string fileName = ::GetFinalFilePath(myDlg, applicationWinRegistry);
             smartMetDocumentInterface->MakeAndStoreFileDialogDirectoryMemory(fileName);
 			return CFmiGdiPlusHelpers::SaveMfcBitmapToFile(theCallingFunctionName, bm, fileName, theRelativeOutputArea);
 		}
