@@ -258,13 +258,13 @@ static bool CheckStreamlineCase(const boost::shared_ptr<NFmiFastQueryInfo> &theI
     return false;
 }
 
-static bool CheckDataIdent(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+bool NFmiInfoOrganizer::CheckForDataIdent(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                            const NFmiDataIdent &theDataIdent,
                            bool fUseParIdOnly)
 {
   if (theInfo)
   {
-    if (CheckNormalDataIdentCase(theInfo, theDataIdent, fUseParIdOnly))
+    if (::CheckNormalDataIdentCase(theInfo, theDataIdent, fUseParIdOnly))
       return true;
     else if (::CheckStreamlineCase(theInfo, theDataIdent, fUseParIdOnly))
         return true;
@@ -417,7 +417,7 @@ static bool MatchData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                       bool fUseParIdOnly,
                       const NFmiLevel *theLevel)
 {
-  if (::CheckDataType(theInfo, theType) && ::CheckDataIdent(theInfo, theDataIdent, fUseParIdOnly) &&
+  if (::CheckDataType(theInfo, theType) && NFmiInfoOrganizer::CheckForDataIdent(theInfo, theDataIdent, fUseParIdOnly) &&
       ::CheckLevel(theInfo, theLevel))
     return true;
 
@@ -429,7 +429,7 @@ static bool MatchCrossSectionData(const boost::shared_ptr<NFmiFastQueryInfo> &th
                                   const NFmiDataIdent &theDataIdent,
                                   bool fUseParIdOnly)
 {
-  if (::CheckDataType(theInfo, theType) && ::CheckDataIdent(theInfo, theDataIdent, fUseParIdOnly) &&
+  if (::CheckDataType(theInfo, theType) && NFmiInfoOrganizer::CheckForDataIdent(theInfo, theDataIdent, fUseParIdOnly) &&
       theInfo->SizeLevels() > 1)
     return true;
 
@@ -458,7 +458,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> DoArchiveCheck(
       aInfo = boost::shared_ptr<NFmiFastQueryInfo>();  // ei löytynyt arkisto dataa, nollataan
     // info-pointteri, että data koetetaan sitten
     // hakea q2serveriltä
-    ::CheckDataIdent(
+    NFmiInfoOrganizer::CheckForDataIdent(
         aInfo, theDataIdent, fUseParIdOnly);  // pitää asettaa arkisto datakin oikeaan parametriin
     ::CheckLevel(aInfo, theLevel);
   }
