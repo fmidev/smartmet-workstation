@@ -90,6 +90,9 @@ class NFmiInfoOrganizer
   static boost::shared_ptr<NFmiFastQueryInfo> GetInfoWithMostWantedParams(
       checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &infos,
       const std::vector<FmiParameterName> &wantedParameters);
+  static bool CheckForDataIdent(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+      const NFmiDataIdent &theDataIdent,
+      bool fUseParIdOnly);
 
   // ***************************************************************************************************************
   // Tässä perässä on pienin mahdollinen julkinen rajapinta, jonka sain siivottua originaali
