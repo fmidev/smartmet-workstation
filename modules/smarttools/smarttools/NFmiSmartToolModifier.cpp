@@ -2442,8 +2442,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetPossibleLevelInte
       if (flightLevelWanted ? (tmpInfo->HeightValueAvailable())
                             : (tmpInfo->PressureDataAvailable()))
       {
-        if (tmpInfo->Param(
-                static_cast<FmiParameterName>(theAreaMaskInfo.GetDataIdent().GetParamIdent())))
+        if (NFmiInfoOrganizer::CheckForDataIdent(tmpInfo, theAreaMaskInfo.GetDataIdent(), true))
         {
           tmpInfo->FirstLevel();
           if (tmpInfo->Level()->GetIdent() == kFmiHybridLevel)
