@@ -90,7 +90,7 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
       const NFmiMetTime &theEndTime,
       unsigned long *theStartTimeIndexOut,
       unsigned long *theEndTimeIndexOut);
-  static void AddValuesToFunctionModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+  void AddValuesToFunctionModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
       const NFmiLocationCache &theLocationCache,
       NFmiAreaMask::FunctionType integrationFunction);
@@ -99,10 +99,13 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   const NFmiString MakeSubMaskString(void) const override;
   bool IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlways) const;
   template<typename GetFunction>
-  double CalcMetaParamValueWithFunction(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways, GetFunction getFunction);
-  double CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
-  double CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
-  double CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
+  float CalcMetaParamValueWithFunction(GetFunction getFunction);
+  float CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+  float CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
+  float CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
+  float CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
+  float CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
+
   void DoConstructorInitializations();
 protected:
   boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
