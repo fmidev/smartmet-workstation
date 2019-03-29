@@ -608,7 +608,7 @@ void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForGridData(unsigned long 
         if(itsSimpleCondition)
             theCalculationParams.itsTime = itsInfo->Time();
         if(SimpleConditionCheck(theCalculationParams))
-            NFmiInfoAreaMask::AddValuesToFunctionModifier(itsInfo, itsFunctionModifier, theLocationCache, itsIntegrationFunc);
+            AddValuesToFunctionModifier(itsInfo, itsFunctionModifier, theLocationCache, itsIntegrationFunc);
     }
 }
 
