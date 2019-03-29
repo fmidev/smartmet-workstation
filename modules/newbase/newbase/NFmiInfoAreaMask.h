@@ -297,6 +297,8 @@ class _FMI_DLL NFmiInfoAreaMaskMetFuncBase : public NFmiInfoAreaMask
                              bool fDoX,
                              double theRealGridPointComponent,
                              int theGridSizeComponent);
+  float CalcCachedPressureLevelValue(float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache);
+  float CalcMetaParamCachedPressureLevelValue(float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache);
 
   NFmiTimeCache
       itsTimeCache;  // tähän lasketaan time-metodissa optimoinnissa käytetty aika-cache laskuri
@@ -666,6 +668,7 @@ class _FMI_DLL NFmiInfoAreaMaskProbFunc : public NFmiInfoAreaMask
   void DoIntegrationCalculations(float value) override;
   void InitializeIntegrationValues() override;
   float CalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime) override;
+  float CalcMetaParamCalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime);
 
   // Esim. Over, Under, Between, Equal
   NFmiAreaMask::FunctionType itsPrimaryFunc;    
