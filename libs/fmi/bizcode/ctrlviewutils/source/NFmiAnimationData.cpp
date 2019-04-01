@@ -215,11 +215,17 @@ static bool IsTimeBagTimeResolutionsOk(const NFmiTimeBag &theTimeBag, int theTim
 static NFmiTimeBag CalcFixedTimeBag(const NFmiTimeBag &theTimeBag, int theTimeRes)
 {
     NFmiTimeBag retTimes = theTimeBag;
-    if(::IsTimeBagTimeResolutionsOk(theTimeBag, theTimeRes) == false)
+    if(retTimes.FirstTime() > retTimes.LastTime())
+    {
+        // Jollain ilmeell‰ on saatu aikaan timebagi, jossa on ollut 1. aika on ollut myˆh‰isempi aika kuin viimeinen,
+        // t‰ss‰ simppeli ratkaisu ja vain vaihdetaan em. aikojen j‰rjestyst‰...
+        retTimes = NFmiTimeBag(retTimes.LastTime(), retTimes.FirstTime(), theTimeRes);
+    }
+    if(!::IsTimeBagTimeResolutionsOk(retTimes, theTimeRes))
     { // pit‰‰ fiksailla timebagia
-        NFmiMetTime tmpTime1(theTimeBag.FirstTime());
+        NFmiMetTime tmpTime1(retTimes.FirstTime());
         tmpTime1.SetTimeStep(theTimeRes, true);
-        NFmiMetTime tmpTime2(theTimeBag.LastTime());
+        NFmiMetTime tmpTime2(retTimes.LastTime());
         tmpTime2.SetTimeStep(theTimeRes, true);
         if(tmpTime1 == tmpTime2)
             tmpTime2.NextMetTime();
@@ -299,13 +305,15 @@ void NFmiAnimationData::Read(std::istream& is)
 {
     is >> fShowTimesOnTimeControl >> fAnimationOn >> itsFrameDelayInMS;
     NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
-    NFmiDataStoringHelpers::ReadTimeBagWithOffSets(usedViewMacroTime, itsTimes, is);
-    itsShowTimebag = itsTimes;
+    NFmiTimeBag times;
+    NFmiDataStoringHelpers::ReadTimeBagWithOffSets(usedViewMacroTime, times, is);
     int tmpRunMode = 0;
     int tmpLockMode = 0;
     is >> itsTimeStepInMinutes >> tmpRunMode >> tmpLockMode >> itsLockModeTimeDifferenceInMinutes;
     itsRunMode = static_cast<RunMode>(tmpRunMode);
     itsLockMode = static_cast<AnimationLockMode>(tmpLockMode);
+    // T‰ss‰ tehd‰‰n tarvittavat tarkastelut ja asetukset luetulle timebagille
+    Times(times); 
 
     if(is.fail())
         throw std::runtime_error("NFmiAnimationData::Read failed");
