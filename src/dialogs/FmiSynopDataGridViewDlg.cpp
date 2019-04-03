@@ -465,9 +465,7 @@ void NFmiGridCtrl::DoLastSort(void)
 	{
 		this->SetSortAscending(this->fLastSortedAscending);
 		this->SetSortColumn(itsLastSortedCell.col);
-		fEnableFixedColumnSelection = false; // estet‰‰n hetkeksi FixedColumnSelection toiminto, n‰in ei mene valitut ruudut sekaisen
-		OnFixedRowClick(this->itsLastSortedCell);
-		fEnableFixedColumnSelection = true; // laitetaan se taas p‰‰lle
+        SortItems(GetSortColumn(), GetSortAscending(), GetSortAscending());
 	}
 }
 
