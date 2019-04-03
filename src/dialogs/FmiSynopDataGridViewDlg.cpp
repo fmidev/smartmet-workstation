@@ -1030,14 +1030,19 @@ static void DoSynopFontSetup(NFmiGridCtrl &theGridCtrl, int row, int column, flo
     theGridCtrl.SetItemFgColour(row, column, CtrlView::Color2ColorRef(synopCodeColor));
 }
 
+static void DoSynopWeatherCellFixes(NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, float *valueInOut)
+{
+    if(::isWwColumnParamId(parId))
+    {
+        *valueInOut = ::ConvertPossible_WaWa_2_WW(*valueInOut);
+        ::DoSynopFontSetup(theGridCtrl, row, column, *valueInOut);
+    }
+}
+
 static void SetGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
 {
 	float value = GetParamValue(theInfo, parId, theLocation, theTime, useForecast, metaWindParamUsage);
-    if(::isWwColumnParamId(parId))
-    {
-        value = ::ConvertPossible_WaWa_2_WW(value);
-        ::DoSynopFontSetup(theGridCtrl, row, column, value);
-    }
+    ::DoSynopWeatherCellFixes(theGridCtrl, parId, row, column, &value);
 	bool isLatestGoodValue = false;
 	if(!useForecast)
 		isLatestGoodValue = IsLatestGoodValue(theInfo, value);
@@ -1257,7 +1262,8 @@ static void SetMinMaxGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 {
 	string foundDateString;
 	float value = GetMinMaxParamValue(theInfo, theLocation, useForecast, theStartTimeIndex, theEndTimeIndex, theHeaderParInfo, theTimeDateMap, foundDateString);
-	string str(GetStringValue(value, GetWantedDecimalCount(theHeaderParInfo.itsParId), theHeaderParInfo.itsParId));
+    ::DoSynopWeatherCellFixes(theGridCtrl, theHeaderParInfo.itsParId, row, column, &value);
+    string str(GetStringValue(value, GetWantedDecimalCount(theHeaderParInfo.itsParId), theHeaderParInfo.itsParId));
     theGridCtrl.SetItemText(row, column, CA2T(str.c_str()));
 	theGridCtrl.SetItemState(row, column, theGridCtrl.GetItemState(row, column) | GVIS_READONLY);
 	if(useForecast)
@@ -1502,9 +1508,10 @@ void CFmiSynopDataGridViewDlg::InitSynopHeaders(void)
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, g_BasicColumnWidthUnit *2));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "ww", true, g_BasicColumnWidthUnit *2));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rr", true, g_BasicColumnWidthUnit *2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", true, g_BasicColumnWidthUnit *2));
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsSynopHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "ww", true, g_BasicColumnWidthUnit * 2));
+    itsSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", true, g_BasicColumnWidthUnit *2));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, g_BasicColumnWidthUnit *1));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", true, static_cast<int>(g_BasicColumnWidthUnit*1.8)));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, g_BasicColumnWidthUnit *3));
@@ -1532,9 +1539,10 @@ void CFmiSynopDataGridViewDlg::InitForecastSynopHeaders(void)
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, g_BasicColumnWidthUnit *2));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "ww", false, g_BasicColumnWidthUnit *2)); // t‰ss‰ haetaan hsade1 ww tilalle
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rr", false, g_BasicColumnWidthUnit *2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", false, g_BasicColumnWidthUnit *2));
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "ww", false, g_BasicColumnWidthUnit * 2)); // t‰ss‰ haetaan hsade1 ww tilalle
+    itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", false, g_BasicColumnWidthUnit *2));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, g_BasicColumnWidthUnit *2));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", false, static_cast<int>(g_BasicColumnWidthUnit*1.8)));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, g_BasicColumnWidthUnit *3));
@@ -1564,7 +1572,8 @@ void CFmiSynopDataGridViewDlg::InitMinMaxDataHeaders(void)
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(g_BasicColumnWidthUnit*2.4), HeaderParInfo::kMax));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rrsum", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kSum));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, g_BasicColumnWidthUnit *3, HeaderParInfo::kMin));
@@ -1590,7 +1599,8 @@ void CFmiSynopDataGridViewDlg::InitForecastMinMaxDataHeaders(void)
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(g_BasicColumnWidthUnit*2.4), HeaderParInfo::kMax));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rrsum", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kSum));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, g_BasicColumnWidthUnit *3, HeaderParInfo::kMin));
@@ -1825,7 +1835,6 @@ static int CalcUsedStationCount(checkedVector<boost::shared_ptr<NFmiFastQueryInf
 	return stationsFound;
 }
 
-// HUOM!! t‰m‰ pit‰‰ optimoida, ett‰ ei tehd‰ turhaa p‰ivityst‰, jos ikkuna on piilossa
 void CFmiSynopDataGridViewDlg::Update(void)
 {
     static bool fFirstTime = true; // sarakkeiden s‰‰tˆ tehd‰‰n vain 1. kerran
