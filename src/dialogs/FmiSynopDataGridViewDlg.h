@@ -145,6 +145,33 @@ private:
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista/tuhoa
 };
 
+// Tänne talletetaan käytössä olleet datatiedostojen nimet.
+// Niiden avulla voidaan optimoida, että tarvitaanko Update metodissa todella päivittää
+// Kaikkea taulukkoon liittyvää.
+class SynopDataGridViewUsedFileNames
+{
+    // Valitun tuottajan ja käytetyn datan tiedostonimi (esim. synop data tai ecmwf/Hirlam/gfs normi-pintadata)
+    std::string itsUsedDataFileName;
+    // Kaikkien synop-havaintodatojen tiedosto nimet, niistä otetaan asematiedot kun käytetään mallidataa
+    std::vector<std::string> itsObsDataFileNames;
+    // Miltä ajanhetkeltä data on piirretty
+    NFmiMetTime itsValidTime = NFmiMetTime::gMissingTime;
+public:
+    SynopDataGridViewUsedFileNames() = default;
+    SynopDataGridViewUsedFileNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime);
+    SynopDataGridViewUsedFileNames(const SynopDataGridViewUsedFileNames &other) = default;
+
+    bool IsUpdateNeeded(const SynopDataGridViewUsedFileNames &other, bool modelDataCase, bool minMaxModeUsed) const;
+    bool IsUpdateNeededDueTimeChange(const SynopDataGridViewUsedFileNames &other, bool minMaxModeUsed) const;
+    void Clear();
+    bool Empty() const;
+    std::string GetChangedFileNames(const SynopDataGridViewUsedFileNames &other, bool modelDataCase) const;
+private:
+    void ClearNames();
+    void UpdateNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
+    std::string GetChangedFileNames(const std::vector<std::string> &otherObsDataFileNames) const;
+};
+
 struct HeaderParInfo
 {
 	enum RangeFunction
@@ -283,7 +310,8 @@ public:
 public:
 	CFmiSynopDataGridViewDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CFmiSynopDataGridViewDlg();
-	void Update(void);
+    void Update(void);
+    void MakeNextUpdateForced();
 	void SetDefaultValues(void);
 	void EnsureVisibleStationRow(void);
 	void FillSynopDataGridViewMacro(NFmiViewSettingMacro::SynopDataGridView &theViewMacro);
@@ -305,11 +333,17 @@ public:
 	afx_msg void OnBnClickedButtonPreviousTime2();
 	afx_msg void OnBnClickedButtonNextTime();
 	afx_msg void OnCbnSelchangeComboProducerSelection();
+    afx_msg void OnBnClickedCheckMinMaxMode();
+    afx_msg void OnEnChangeEditDayCount();
+    afx_msg void OnDtnDatetimechangeDatetimepickerMinmaxDate(NMHDR *pNMHDR, LRESULT *pResult);
+    afx_msg void OnDtnDatetimechangeDatetimepickerMinmaxTime(NMHDR *pNMHDR, LRESULT *pResult);
+    afx_msg void OnBnClickedButtonAutoSizeColumns();
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual void OnCancel();
 	virtual void OnOK();
+    virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 
 	DECLARE_MESSAGE_MAP()
 private:
@@ -339,6 +373,10 @@ private:
 	bool IsSadeDataUsed(void);
 	void InitDialogTexts(void);
 	void SelectProducer(const NFmiProducer &theProducer);
+    bool GridControlNeedsUpdate(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
+    bool IsSelectedProducerModelData() const;
+    void ForcedUpdate();
+    const NFmiMetTime& GetMainMapViewTime() const;
 
 	NFmiGridCtrl itsGridCtrl;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
@@ -363,21 +401,11 @@ private:
 	NFmiMetTime itsMinMaxRangeStartTime; // tätä  säädetään aika ja kalenteri kontrollien avulla
 	bool fUseSadeData; // jos katsellaan synop-tuottajaa, silloin laitetaan myös sadedataa mukaan
 	bool fUpdateHeadersAfterViewMacroLoad;
-public:
-	afx_msg void OnBnClickedCheckMinMaxMode();
-private:
-	BOOL fMinMaxModeOn;
-public:
-	afx_msg void OnEnChangeEditDayCount();
-private:
-	// Min/max moodissa lasketaan arvoja näin monen päivän yli, myös desimaalit mukana eli 0.25 on 6 tuntia
-	double itsDayRangeValue;
-	CDateTimeCtrl itsMinMaxDatePicker;
-	CDateTimeCtrl itsMinMaxTimePicker;
-public:
-	afx_msg void OnDtnDatetimechangeDatetimepickerMinmaxDate(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnDtnDatetimechangeDatetimepickerMinmaxTime(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnBnClickedButtonAutoSizeColumns();
-protected:
-	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
+    BOOL fMinMaxModeOn;
+    // Min/max moodissa lasketaan arvoja näin monen päivän yli, myös desimaalit mukana eli 0.25 on 6 tuntia
+    double itsDayRangeValue;
+    CDateTimeCtrl itsMinMaxDatePicker;
+    CDateTimeCtrl itsMinMaxTimePicker;
+    // Käytetään optimoimaan Update metodia, eli aina kun Update:ia kutsutaan, ei ole tarvis päivittää taulukkoa, koska uutta dataa ei ole käytössä.
+    SynopDataGridViewUsedFileNames itsUsedFileNames;
 };

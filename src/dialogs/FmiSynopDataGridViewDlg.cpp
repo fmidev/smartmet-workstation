@@ -122,6 +122,119 @@ void WmoIdFilterManager::SetSelectedCountryAbbrStr(const std::string &theStr)
 	}
 }
 
+
+SynopDataGridViewUsedFileNames::SynopDataGridViewUsedFileNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime)
+:itsUsedDataFileName()
+,itsObsDataFileNames()
+,itsValidTime(validTime)
+{
+    UpdateNames(obsInfos, usedInfo);
+}
+
+bool SynopDataGridViewUsedFileNames::IsUpdateNeeded(const SynopDataGridViewUsedFileNames &other, bool modelDataCase, bool minMaxModeUsed) const
+{
+    // Tarkastellaan ensin onko aika muuttunut
+    if(IsUpdateNeededDueTimeChange(other, minMaxModeUsed))
+        return true;
+
+    if(modelDataCase)
+    {
+        // Jos itsUsedDataFileName on erilainen TAI itsObsDataFileNames.size() ovat erikokoisia
+        if(itsUsedDataFileName != other.itsUsedDataFileName)
+            return true;
+        if(itsObsDataFileNames.size() != other.itsObsDataFileNames.size())
+            return true;
+    }
+    else
+    {
+        // Synop datat tulee aina tietyssä prioriteetti järjestyksessä, joten voimme suoraan verrata vectro:eita, 
+        // ilman että tarvitsee etsiä tiettyjä tiedoston nimiä toisesta vektorista erikseen...
+        if(itsObsDataFileNames != other.itsObsDataFileNames)
+            return true;
+    }
+
+    return false;
+}
+
+bool SynopDataGridViewUsedFileNames::IsUpdateNeededDueTimeChange(const SynopDataGridViewUsedFileNames &other, bool minMaxModeUsed) const
+{
+    // Tarkastelu vain jos ei olla min/max moodissa, siinä tulee aina pakotettu update, kun aikakontrolleja muutetaan.
+    if(!minMaxModeUsed)
+    {
+        if(itsValidTime != other.itsValidTime)
+            return true;
+    }
+
+    return false;
+}
+
+std::string SynopDataGridViewUsedFileNames::GetChangedFileNames(const SynopDataGridViewUsedFileNames &other, bool modelDataCase) const
+{
+    if(modelDataCase)
+    {
+        // Jos itsUsedDataFileName on erilainen TAI itsObsDataFileNames.size() ovat erikokoisia
+        if(itsUsedDataFileName != other.itsUsedDataFileName)
+            return other.itsUsedDataFileName;
+        if(itsObsDataFileNames.size() != other.itsObsDataFileNames.size())
+            return GetChangedFileNames(other.itsObsDataFileNames);
+    }
+    else
+    {
+        if(itsObsDataFileNames != other.itsObsDataFileNames)
+            return GetChangedFileNames(other.itsObsDataFileNames);
+    }
+
+    return "";
+}
+
+std::string SynopDataGridViewUsedFileNames::GetChangedFileNames(const std::vector<std::string> &otherObsDataFileNames) const
+{
+    std::string changedFileNames;
+    for(const auto &fileName : otherObsDataFileNames)
+    {
+        auto iter = std::find(itsObsDataFileNames.begin(), itsObsDataFileNames.end(), fileName);
+        if(iter == itsObsDataFileNames.end())
+        {
+            if(!changedFileNames.empty())
+                changedFileNames += ", ";
+            changedFileNames += fileName;
+        }
+    }
+
+    return changedFileNames;
+}
+
+void SynopDataGridViewUsedFileNames::Clear()
+{
+    ClearNames();
+    itsValidTime = NFmiMetTime::gMissingTime;
+}
+
+void SynopDataGridViewUsedFileNames::ClearNames()
+{
+    itsUsedDataFileName.clear();
+    itsObsDataFileNames.clear();
+}
+
+bool SynopDataGridViewUsedFileNames::Empty() const
+{
+    if(itsUsedDataFileName.empty() && itsObsDataFileNames.empty())
+        return true;
+    else
+        return false;
+}
+
+void SynopDataGridViewUsedFileNames::UpdateNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+{
+    ClearNames();
+    if(usedInfo)
+        itsUsedDataFileName = usedInfo->DataFileName();
+    for(const auto &info : obsInfos)
+        itsObsDataFileNames.push_back(info->DataFileName());
+}
+
+
+
 static string GetMinMaxDateString(const NFmiMetTime &theTime)
 {
 	string str(theTime.ToStr("DD.MM.YYYY HH:mm"));
@@ -572,8 +685,8 @@ CFmiSynopDataGridViewDlg::CFmiSynopDataGridViewDlg(SmartMetDocumentInterface *sm
 ,itsForecastMinMaxDataHeaders()
 ,itsWmoIdFilterManager(0)
 ,itsProducerList()
-, fMinMaxModeOn(FALSE)
-, itsDayRangeValue(1)
+,fMinMaxModeOn(FALSE)
+,itsDayRangeValue(1)
 ,itsUsedHeaders(0)
 ,fUseSadeData(false)
 ,fUpdateHeadersAfterViewMacroLoad(false)
@@ -663,7 +776,7 @@ BOOL CFmiSynopDataGridViewDlg::OnInitDialog()
 	if(win)
 		win->SetFont(&itsTimeAndStationTextFont);
 	EnableDisableControls();
-	Update();
+    ForcedUpdate();
 
 	UpdateData(FALSE);
 
@@ -1833,6 +1946,75 @@ static int CalcUsedStationCount(checkedVector<boost::shared_ptr<NFmiFastQueryInf
 	return stationsFound;
 }
 
+// Synop data on ainoa havainto data tuottajalistassa, joten jos valittu 
+// tuottaja ei ole synop, on se mallidataa.
+bool CFmiSynopDataGridViewDlg::IsSelectedProducerModelData() const
+{
+    return itsProducerList[itsProducerSelector.GetCurSel()].itsProducerId != kFmiSYNOP;
+}
+
+bool CFmiSynopDataGridViewDlg::GridControlNeedsUpdate(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+{
+    const std::string baseFunctionNameForLogging = "Station-data-grid-view";
+
+    const auto &wantedTime = GetMainMapViewTime();
+    SynopDataGridViewUsedFileNames usedFileNames(obsInfos, usedInfo, wantedTime);
+    bool modelDataCase = IsSelectedProducerModelData();
+    bool minMaxModeUsed = fMinMaxModeOn == TRUE;
+    if(itsUsedFileNames.IsUpdateNeeded(usedFileNames, modelDataCase, minMaxModeUsed))
+    {
+        if(CatLog::doTraceLevelLogging())
+        {
+            std::string message = baseFunctionNameForLogging;
+            if(itsUsedFileNames.Empty())
+            {
+                message += ": 'forced' update to grid-control view's content";
+                CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+            }
+            else if(itsUsedFileNames.IsUpdateNeededDueTimeChange(usedFileNames, minMaxModeUsed))
+            {
+                message += ": time was changed to ";
+                message += wantedTime.ToStr("YYYY.MM.DD HH:mm", kEnglish);
+                CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+            }
+            else
+            {
+                message += ": update needed due following file(s) changed: ";
+                message += itsUsedFileNames.GetChangedFileNames(usedFileNames, modelDataCase);
+                CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+            }
+        }
+
+        // Tiedostojen mukaan tarvitaan taulukon päivitys, otetaan uusin tiedosto nimilista talteen ja palautetaan true
+        itsUsedFileNames = usedFileNames;
+        return true;
+    }
+
+    if(CatLog::doTraceLevelLogging())
+    {
+        std::string message = baseFunctionNameForLogging;
+        message += ": none of used data have changed, no need to update grid-control view";
+        CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+    }
+    return false;
+}
+
+void CFmiSynopDataGridViewDlg::MakeNextUpdateForced()
+{
+    itsUsedFileNames.Clear();
+}
+
+void CFmiSynopDataGridViewDlg::ForcedUpdate()
+{
+    MakeNextUpdateForced();
+    Update();
+}
+
+const NFmiMetTime& CFmiSynopDataGridViewDlg::GetMainMapViewTime() const
+{
+    return itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
+}
+
 void CFmiSynopDataGridViewDlg::Update(void)
 {
     static bool fFirstTime = true; // sarakkeiden säätö tehdään vain 1. kerran
@@ -1849,7 +2031,7 @@ void CFmiSynopDataGridViewDlg::Update(void)
         }
         if(itsSmartMetDocumentInterface->SynopDataGridViewOn() == false)
             return;
-        NFmiMetTime wantedTime(itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+        const auto &wantedTime = GetMainMapViewTime();
         int fixedRowCount = 1;
         int fixedColumnCount = 1;
 
@@ -1857,6 +2039,8 @@ void CFmiSynopDataGridViewDlg::Update(void)
         boost::shared_ptr<NFmiFastQueryInfo> sadeInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kObservations, NFmiProducer(10002), true);
         fUseSadeData = sadeInfo && IsSadeDataUsed(); // jos katsellaan synop-tuottajaa, silloin laitetaan myös sadedataa mukaan
         boost::shared_ptr<NFmiFastQueryInfo> usedInfo = GetWantedInfo(false);
+        if(!GridControlNeedsUpdate(obsInfos, usedInfo))
+            return;
         // kuinka monta asemaa datassa on aktivoitu nykyiseen zoomattuun alueeseen
         int maxStationCount = GetMaxStationCount(obsInfos);
         int stationCount = 0;
@@ -2353,7 +2537,7 @@ void CFmiSynopDataGridViewDlg::OnBnClickedButtonNextTime()
 
 void CFmiSynopDataGridViewDlg::WhenProducerRadioButtonClikked(void)
 {
-	Update();
+    ForcedUpdate();
 }
 
 static void SetCountryFilterValues(CountryFilter &theCountryFilter, char* shortName, char* longName, bool sharesIdRange, int low1, int high1, int low2 = -1, int high2 = -1, int low3 = -1, int high3 = -1, int low4 = -1, int high4 = -1, int low5 = -1, int high5 = -1, int low6 = -1, int high6 = -1, int low7 = -1, int high7 = -1, int low8 = -1, int high8 = -1, int low9 = -1, int high9 = -1, int low10 = -1, int high10 = -1)
@@ -2388,7 +2572,7 @@ void CFmiSynopDataGridViewDlg::OnBnClickedButtonCountryFilterDlg()
 	CFmiCountryFilterDlg dlg(&itsWmoIdFilterManager, this);
 	if(dlg.DoModal() == IDOK)
 	{
-		Update();
+        ForcedUpdate();
 	}
 }
 
@@ -3149,13 +3333,13 @@ void CFmiSynopDataGridViewDlg::OnBnClickedCheckMinMaxMode()
 {
 	UpdateData(TRUE);
 	EnableDisableControls();
-	Update();
+    ForcedUpdate();
 }
 
 void CFmiSynopDataGridViewDlg::OnEnChangeEditDayCount()
 {
 	UpdateData(TRUE);
-	Update();
+    ForcedUpdate();
 }
 
 void CFmiSynopDataGridViewDlg::OnDtnDatetimechangeDatetimepickerMinmaxDate(NMHDR *pNMHDR, LRESULT *pResult)
@@ -3163,7 +3347,7 @@ void CFmiSynopDataGridViewDlg::OnDtnDatetimechangeDatetimepickerMinmaxDate(NMHDR
 	LPNMDATETIMECHANGE pDTChange = reinterpret_cast<LPNMDATETIMECHANGE>(pNMHDR);
 	UpdateData(TRUE);
 	UpdateMinMaxRangeStartTime();
-	Update();
+    ForcedUpdate();
 	*pResult = 0;
 }
 
@@ -3172,7 +3356,7 @@ void CFmiSynopDataGridViewDlg::OnDtnDatetimechangeDatetimepickerMinmaxTime(NMHDR
 	LPNMDATETIMECHANGE pDTChange = reinterpret_cast<LPNMDATETIMECHANGE>(pNMHDR);
 	UpdateData(TRUE);
 	UpdateMinMaxRangeStartTime();
-	Update();
+    ForcedUpdate();
 	*pResult = 0;
 }
 
@@ -3226,7 +3410,7 @@ BOOL CFmiSynopDataGridViewDlg::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* p
 
 	// jos oltiin klikattu otsikko riviä, lähetetään viesti emolle, että se osaa päivittää taulukon uudestaan
 	if(itsGridCtrl.UpdateParent())
-		Update();
+        ForcedUpdate();
 	itsGridCtrl.UpdateParent(false);
 
 	return CDialog::OnNotify(wParam, lParam, pResult);
