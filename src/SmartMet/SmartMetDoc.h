@@ -240,6 +240,7 @@ private:
     void MakeViewActivationAfterLoadingViewMacro();
     void HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage);
     void StoreBitmapImageToFile(const std::string &callingFunctionName, const std::string &imageViewName, CBitmap *bitmap, const NFmiRect *theRelativeOutputArea);
+    void MakeNextUpdateOnSynopDataGridViewDlgForced();
 
 	CTimeEditValuesDlg *itsTimeSerialDataEditorDlg;
 	NFmiEditMapGeneralDataDoc* itsData;
