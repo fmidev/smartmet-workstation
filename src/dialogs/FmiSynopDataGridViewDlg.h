@@ -268,6 +268,7 @@ protected:
     void PrintHeader(CDC *pDC, CPrintInfo *pInfo);
 private:
 	void DoMapHighLightThings(const CCellID &idCurrentCell);
+    void StoreLastSortInformation(CCellID& cell);
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista/tuhoa
 	WmoIdFilterManager *itsWmoIdFilterManager; // ei omista/tuhoa

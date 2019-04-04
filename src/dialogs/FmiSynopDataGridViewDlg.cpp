@@ -543,15 +543,13 @@ void NFmiGridCtrl::OnFixedRowClick(CCellID& cell)
 
     if (GetHeaderSort())
     {
-		itsLastSortedCell = cell;
-		fLastSortedAscending = GetSortAscending();
-		fLastSortedExist = true;
-
 		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
         if (cell.col == GetSortColumn())
             SortItems(cell.col, !GetSortAscending(), !GetSortAscending()); // *** KOLMAS parametri annettu t‰ss‰ koodissa ****
         else
             SortItems(cell.col, TRUE, TRUE); // *** KOLMAS parametri annettu t‰ss‰ koodissa ********
+        // sorttaus info talletus tehd‰‰n vasta SortItems kutsun j‰lkeen!
+        StoreLastSortInformation(cell);
         Invalidate();
     }
 
@@ -570,6 +568,13 @@ void NFmiGridCtrl::OnFixedRowClick(CCellID& cell)
             OnSelecting(cell);
         }
     }
+}
+
+void NFmiGridCtrl::StoreLastSortInformation(CCellID& cell)
+{
+    itsLastSortedCell = cell;
+    fLastSortedAscending = GetSortAscending();
+    fLastSortedExist = true;
 }
 
 void NFmiGridCtrl::DoLastSort(void)
