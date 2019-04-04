@@ -1741,14 +1741,22 @@ void CSmartMetDoc::CreateSmartToolsTabControlDlg(NFmiEditMapGeneralDataDoc* theD
     BOOL status = itsSmarttoolsTabControlDlg->Create(pView->GetDesktopWindow());
 }
 
+void CSmartMetDoc::MakeNextUpdateOnSynopDataGridViewDlgForced()
+{
+    if(itsSynopDataGridViewDlg)
+        itsSynopDataGridViewDlg->MakeNextUpdateForced();
+}
+
 void CSmartMetDoc::OnButtonRefresh()
 {
+    MakeNextUpdateOnSynopDataGridViewDlgForced();
 	GetData()->OnButtonRefresh();
 }
 
 void CSmartMetDoc::OnButtonReloadAllDynamicHelpData()
 {
-	GetData()->ReloadAllDynamicHelpData();
+    MakeNextUpdateOnSynopDataGridViewDlgForced();
+    GetData()->ReloadAllDynamicHelpData();
 
 	CFmiDataLoadingThread2::ResetTimeStamps();
 	CFmiDataLoadingThread2::LoadDataNow();
