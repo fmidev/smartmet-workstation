@@ -6358,8 +6358,8 @@ void ChangeAllProducersInMapRow(const NFmiMenuItem& theMenuItem, int theRowIndex
 			}
 		}
 		drawParamList->Dirty(true);
-        auto cacheRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex);
-        MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), theRowIndex, drawParamList);
+        auto realRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+        MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), realRowIndex, drawParamList);
 	}
 }
 
