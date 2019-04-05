@@ -11441,11 +11441,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void PasteDrawParamsToMapViewRow(unsigned int theDescTopIndex)
 	{
-		NFmiDrawParamList * activeDrawParamList = DrawParamList(theDescTopIndex, ActiveViewRow(theDescTopIndex));
+        auto relativeActiveRowIndex = ActiveViewRow(theDescTopIndex);
+		NFmiDrawParamList * activeDrawParamList = DrawParamList(theDescTopIndex, relativeActiveRowIndex);
 		if(activeDrawParamList)
 		{
 			activeDrawParamList->CopyList(itsCopyPasteDrawParamList, false);
-            MakeViewRowDirtyActions(theDescTopIndex, ActiveViewRow(theDescTopIndex), activeDrawParamList);
+            auto realActiveRowIndex = GetRealRowNumber(theDescTopIndex, relativeActiveRowIndex);
+            MakeViewRowDirtyActions(theDescTopIndex, realActiveRowIndex, activeDrawParamList);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste drawParams to map view row");
 		}
 	}
