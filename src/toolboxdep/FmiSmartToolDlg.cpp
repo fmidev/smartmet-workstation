@@ -221,6 +221,7 @@ bool CFmiSmartToolDlg::LoadSmarttoolToSyntaxEditControl(const std::string &theFi
             pDataMan->Serialize(arText);
 
             itsSyntaxEditControl->RefreshColors();
+            itsSyntaxEditControl->SetTopRow(1);
             itsSyntaxEditControl->RecalcScrollBars();
 
             itsSyntaxEditControl->SendMessage(WM_NCPAINT);
