@@ -17,6 +17,7 @@ namespace NFmiFastInfoUtils
     class QueryInfoParamStateRestorer
     {
         NFmiQueryInfo &info_;
+        unsigned long paramIndex_;
         unsigned long paramId_;
     public:
         QueryInfoParamStateRestorer(NFmiQueryInfo &info);

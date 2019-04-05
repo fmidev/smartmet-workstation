@@ -358,13 +358,17 @@ bool FindMovingSoundingDataTime(const boost::shared_ptr<NFmiFastQueryInfo> &theI
 
 QueryInfoParamStateRestorer::QueryInfoParamStateRestorer(NFmiQueryInfo &info)
 :info_(info)
+,paramIndex_(info.ParamIndex())
 ,paramId_(info.Param().GetParamIdent())
 {
 }
 
 QueryInfoParamStateRestorer::~QueryInfoParamStateRestorer()
 {
-    info_.Param(static_cast<FmiParameterName>(paramId_));
+    if(paramIndex_ != gMissingIndex)
+        info_.Param(static_cast<FmiParameterName>(paramId_));
+    else
+        info_.ParamIndex(paramIndex_);
 }
 
 bool MetaWindParamUsage::ParamNeedsMetaCalculations(unsigned long paramId) const
