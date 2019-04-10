@@ -122,6 +122,119 @@ void WmoIdFilterManager::SetSelectedCountryAbbrStr(const std::string &theStr)
 	}
 }
 
+
+SynopDataGridViewUsedFileNames::SynopDataGridViewUsedFileNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime)
+:itsUsedDataFileName()
+,itsObsDataFileNames()
+,itsValidTime(validTime)
+{
+    UpdateNames(obsInfos, usedInfo);
+}
+
+bool SynopDataGridViewUsedFileNames::IsUpdateNeeded(const SynopDataGridViewUsedFileNames &other, bool modelDataCase, bool minMaxModeUsed) const
+{
+    // Tarkastellaan ensin onko aika muuttunut
+    if(IsUpdateNeededDueTimeChange(other, minMaxModeUsed))
+        return true;
+
+    if(modelDataCase)
+    {
+        // Jos itsUsedDataFileName on erilainen TAI itsObsDataFileNames.size() ovat erikokoisia
+        if(itsUsedDataFileName != other.itsUsedDataFileName)
+            return true;
+        if(itsObsDataFileNames.size() != other.itsObsDataFileNames.size())
+            return true;
+    }
+    else
+    {
+        // Synop datat tulee aina tietyss‰ prioriteetti j‰rjestyksess‰, joten voimme suoraan verrata vectro:eita, 
+        // ilman ett‰ tarvitsee etsi‰ tiettyj‰ tiedoston nimi‰ toisesta vektorista erikseen...
+        if(itsObsDataFileNames != other.itsObsDataFileNames)
+            return true;
+    }
+
+    return false;
+}
+
+bool SynopDataGridViewUsedFileNames::IsUpdateNeededDueTimeChange(const SynopDataGridViewUsedFileNames &other, bool minMaxModeUsed) const
+{
+    // Tarkastelu vain jos ei olla min/max moodissa, siin‰ tulee aina pakotettu update, kun aikakontrolleja muutetaan.
+    if(!minMaxModeUsed)
+    {
+        if(itsValidTime != other.itsValidTime)
+            return true;
+    }
+
+    return false;
+}
+
+std::string SynopDataGridViewUsedFileNames::GetChangedFileNames(const SynopDataGridViewUsedFileNames &other, bool modelDataCase) const
+{
+    if(modelDataCase)
+    {
+        // Jos itsUsedDataFileName on erilainen TAI itsObsDataFileNames.size() ovat erikokoisia
+        if(itsUsedDataFileName != other.itsUsedDataFileName)
+            return other.itsUsedDataFileName;
+        if(itsObsDataFileNames.size() != other.itsObsDataFileNames.size())
+            return GetChangedFileNames(other.itsObsDataFileNames);
+    }
+    else
+    {
+        if(itsObsDataFileNames != other.itsObsDataFileNames)
+            return GetChangedFileNames(other.itsObsDataFileNames);
+    }
+
+    return "";
+}
+
+std::string SynopDataGridViewUsedFileNames::GetChangedFileNames(const std::vector<std::string> &otherObsDataFileNames) const
+{
+    std::string changedFileNames;
+    for(const auto &fileName : otherObsDataFileNames)
+    {
+        auto iter = std::find(itsObsDataFileNames.begin(), itsObsDataFileNames.end(), fileName);
+        if(iter == itsObsDataFileNames.end())
+        {
+            if(!changedFileNames.empty())
+                changedFileNames += ", ";
+            changedFileNames += fileName;
+        }
+    }
+
+    return changedFileNames;
+}
+
+void SynopDataGridViewUsedFileNames::Clear()
+{
+    ClearNames();
+    itsValidTime = NFmiMetTime::gMissingTime;
+}
+
+void SynopDataGridViewUsedFileNames::ClearNames()
+{
+    itsUsedDataFileName.clear();
+    itsObsDataFileNames.clear();
+}
+
+bool SynopDataGridViewUsedFileNames::Empty() const
+{
+    if(itsUsedDataFileName.empty() && itsObsDataFileNames.empty())
+        return true;
+    else
+        return false;
+}
+
+void SynopDataGridViewUsedFileNames::UpdateNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+{
+    ClearNames();
+    if(usedInfo)
+        itsUsedDataFileName = usedInfo->DataFileName();
+    for(const auto &info : obsInfos)
+        itsObsDataFileNames.push_back(info->DataFileName());
+}
+
+
+
 static string GetMinMaxDateString(const NFmiMetTime &theTime)
 {
 	string str(theTime.ToStr("DD.MM.YYYY HH:mm"));
@@ -430,15 +543,13 @@ void NFmiGridCtrl::OnFixedRowClick(CCellID& cell)
 
     if (GetHeaderSort())
     {
-		itsLastSortedCell = cell;
-		fLastSortedAscending = GetSortAscending();
-		fLastSortedExist = true;
-
 		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
         if (cell.col == GetSortColumn())
             SortItems(cell.col, !GetSortAscending(), !GetSortAscending()); // *** KOLMAS parametri annettu t‰ss‰ koodissa ****
         else
             SortItems(cell.col, TRUE, TRUE); // *** KOLMAS parametri annettu t‰ss‰ koodissa ********
+        // sorttaus info talletus tehd‰‰n vasta SortItems kutsun j‰lkeen!
+        StoreLastSortInformation(cell);
         Invalidate();
     }
 
@@ -459,15 +570,20 @@ void NFmiGridCtrl::OnFixedRowClick(CCellID& cell)
     }
 }
 
+void NFmiGridCtrl::StoreLastSortInformation(CCellID& cell)
+{
+    itsLastSortedCell = cell;
+    fLastSortedAscending = GetSortAscending();
+    fLastSortedExist = true;
+}
+
 void NFmiGridCtrl::DoLastSort(void)
 {
 	if(this->fLastSortedExist)
 	{
 		this->SetSortAscending(this->fLastSortedAscending);
 		this->SetSortColumn(itsLastSortedCell.col);
-		fEnableFixedColumnSelection = false; // estet‰‰n hetkeksi FixedColumnSelection toiminto, n‰in ei mene valitut ruudut sekaisen
-		OnFixedRowClick(this->itsLastSortedCell);
-		fEnableFixedColumnSelection = true; // laitetaan se taas p‰‰lle
+        SortItems(GetSortColumn(), GetSortAscending(), GetSortAscending());
 	}
 }
 
@@ -574,8 +690,8 @@ CFmiSynopDataGridViewDlg::CFmiSynopDataGridViewDlg(SmartMetDocumentInterface *sm
 ,itsForecastMinMaxDataHeaders()
 ,itsWmoIdFilterManager(0)
 ,itsProducerList()
-, fMinMaxModeOn(FALSE)
-, itsDayRangeValue(1)
+,fMinMaxModeOn(FALSE)
+,itsDayRangeValue(1)
 ,itsUsedHeaders(0)
 ,fUseSadeData(false)
 ,fUpdateHeadersAfterViewMacroLoad(false)
@@ -665,7 +781,7 @@ BOOL CFmiSynopDataGridViewDlg::OnInitDialog()
 	if(win)
 		win->SetFont(&itsTimeAndStationTextFont);
 	EnableDisableControls();
-	Update();
+    ForcedUpdate();
 
 	UpdateData(FALSE);
 
@@ -1030,14 +1146,19 @@ static void DoSynopFontSetup(NFmiGridCtrl &theGridCtrl, int row, int column, flo
     theGridCtrl.SetItemFgColour(row, column, CtrlView::Color2ColorRef(synopCodeColor));
 }
 
+static void DoSynopWeatherCellFixes(NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, float *valueInOut)
+{
+    if(::isWwColumnParamId(parId))
+    {
+        *valueInOut = ::ConvertPossible_WaWa_2_WW(*valueInOut);
+        ::DoSynopFontSetup(theGridCtrl, row, column, *valueInOut);
+    }
+}
+
 static void SetGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
 {
 	float value = GetParamValue(theInfo, parId, theLocation, theTime, useForecast, metaWindParamUsage);
-    if(::isWwColumnParamId(parId))
-    {
-        value = ::ConvertPossible_WaWa_2_WW(value);
-        ::DoSynopFontSetup(theGridCtrl, row, column, value);
-    }
+    ::DoSynopWeatherCellFixes(theGridCtrl, parId, row, column, &value);
 	bool isLatestGoodValue = false;
 	if(!useForecast)
 		isLatestGoodValue = IsLatestGoodValue(theInfo, value);
@@ -1257,7 +1378,8 @@ static void SetMinMaxGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 {
 	string foundDateString;
 	float value = GetMinMaxParamValue(theInfo, theLocation, useForecast, theStartTimeIndex, theEndTimeIndex, theHeaderParInfo, theTimeDateMap, foundDateString);
-	string str(GetStringValue(value, GetWantedDecimalCount(theHeaderParInfo.itsParId), theHeaderParInfo.itsParId));
+    ::DoSynopWeatherCellFixes(theGridCtrl, theHeaderParInfo.itsParId, row, column, &value);
+    string str(GetStringValue(value, GetWantedDecimalCount(theHeaderParInfo.itsParId), theHeaderParInfo.itsParId));
     theGridCtrl.SetItemText(row, column, CA2T(str.c_str()));
 	theGridCtrl.SetItemState(row, column, theGridCtrl.GetItemState(row, column) | GVIS_READONLY);
 	if(useForecast)
@@ -1502,9 +1624,10 @@ void CFmiSynopDataGridViewDlg::InitSynopHeaders(void)
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, g_BasicColumnWidthUnit *2));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "ww", true, g_BasicColumnWidthUnit *2));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rr", true, g_BasicColumnWidthUnit *2));
-	itsSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", true, g_BasicColumnWidthUnit *2));
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsSynopHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "ww", true, g_BasicColumnWidthUnit * 2));
+    itsSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", true, g_BasicColumnWidthUnit *2));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, g_BasicColumnWidthUnit *1));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", true, static_cast<int>(g_BasicColumnWidthUnit*1.8)));
 	itsSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, g_BasicColumnWidthUnit *3));
@@ -1532,9 +1655,10 @@ void CFmiSynopDataGridViewDlg::InitForecastSynopHeaders(void)
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindDirection, "dd", false, g_BasicColumnWidthUnit *2));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "ff(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiMaximumWind, "fx(ms)", false, static_cast<int>(g_BasicColumnWidthUnit*2.4)));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "ww", false, g_BasicColumnWidthUnit *2)); // t‰ss‰ haetaan hsade1 ww tilalle
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rr", false, g_BasicColumnWidthUnit *2));
-	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", false, g_BasicColumnWidthUnit *2));
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "ww", false, g_BasicColumnWidthUnit * 2)); // t‰ss‰ haetaan hsade1 ww tilalle
+    itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiTotalCloudCover, "N", false, g_BasicColumnWidthUnit *2));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiCloudHeight, "h", true, g_BasicColumnWidthUnit *2));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiLowCloudCover, "Nh", false, static_cast<int>(g_BasicColumnWidthUnit*1.8)));
 	itsForecastSynopHeaders.push_back(HeaderParInfo(kFmiVisibility, "V", true, g_BasicColumnWidthUnit *3));
@@ -1564,7 +1688,8 @@ void CFmiSynopDataGridViewDlg::InitMinMaxDataHeaders(void)
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(g_BasicColumnWidthUnit*2.4), HeaderParInfo::kMax));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPresentWeather, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitationAmount, "rrsum", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kSum));
 	itsMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, g_BasicColumnWidthUnit *3, HeaderParInfo::kMin));
@@ -1590,7 +1715,8 @@ void CFmiSynopDataGridViewDlg::InitForecastMinMaxDataHeaders(void)
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWindSpeedMS, "fx", false, static_cast<int>(g_BasicColumnWidthUnit*2.4), HeaderParInfo::kMax));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
-	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
+    // HUOM! s‰‰symboli parametrin (kFmiPresentWeather tai kFmiWeatherSymbol1) pit‰‰ olla aina samassa sarakkeessa (fontin s‰‰tˆ juttu), nyt 10. sarake
+    itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiWeatherSymbol1, "wwmax", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kMax)); // t‰ss‰ haetaan hsade1 ww tilalle
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiBadParameter, timeStr, false, static_cast<int>(g_BasicColumnWidthUnit*2.3), HeaderParInfo::kDateAndTime));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiPrecipitation1h, "rrsum", false, g_BasicColumnWidthUnit *2, HeaderParInfo::kSum));
 	itsForecastMinMaxDataHeaders.push_back(HeaderParInfo(kFmiVisibility, "Vmin", true, g_BasicColumnWidthUnit *3, HeaderParInfo::kMin));
@@ -1825,7 +1951,75 @@ static int CalcUsedStationCount(checkedVector<boost::shared_ptr<NFmiFastQueryInf
 	return stationsFound;
 }
 
-// HUOM!! t‰m‰ pit‰‰ optimoida, ett‰ ei tehd‰ turhaa p‰ivityst‰, jos ikkuna on piilossa
+// Synop data on ainoa havainto data tuottajalistassa, joten jos valittu 
+// tuottaja ei ole synop, on se mallidataa.
+bool CFmiSynopDataGridViewDlg::IsSelectedProducerModelData() const
+{
+    return itsProducerList[itsProducerSelector.GetCurSel()].itsProducerId != kFmiSYNOP;
+}
+
+bool CFmiSynopDataGridViewDlg::GridControlNeedsUpdate(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+{
+    const std::string baseFunctionNameForLogging = "Station-data-grid-view";
+
+    const auto &wantedTime = GetMainMapViewTime();
+    SynopDataGridViewUsedFileNames usedFileNames(obsInfos, usedInfo, wantedTime);
+    bool modelDataCase = IsSelectedProducerModelData();
+    bool minMaxModeUsed = fMinMaxModeOn == TRUE;
+    if(itsUsedFileNames.IsUpdateNeeded(usedFileNames, modelDataCase, minMaxModeUsed))
+    {
+        if(CatLog::doTraceLevelLogging())
+        {
+            std::string message = baseFunctionNameForLogging;
+            if(itsUsedFileNames.Empty())
+            {
+                message += ": 'forced' update to grid-control view's content";
+                CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+            }
+            else if(itsUsedFileNames.IsUpdateNeededDueTimeChange(usedFileNames, minMaxModeUsed))
+            {
+                message += ": time was changed to ";
+                message += wantedTime.ToStr("YYYY.MM.DD HH:mm", kEnglish);
+                CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+            }
+            else
+            {
+                message += ": update needed due following file(s) changed: ";
+                message += itsUsedFileNames.GetChangedFileNames(usedFileNames, modelDataCase);
+                CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+            }
+        }
+
+        // Tiedostojen mukaan tarvitaan taulukon p‰ivitys, otetaan uusin tiedosto nimilista talteen ja palautetaan true
+        itsUsedFileNames = usedFileNames;
+        return true;
+    }
+
+    if(CatLog::doTraceLevelLogging())
+    {
+        std::string message = baseFunctionNameForLogging;
+        message += ": none of used data have changed, no need to update grid-control view";
+        CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+    }
+    return false;
+}
+
+void CFmiSynopDataGridViewDlg::MakeNextUpdateForced()
+{
+    itsUsedFileNames.Clear();
+}
+
+void CFmiSynopDataGridViewDlg::ForcedUpdate()
+{
+    MakeNextUpdateForced();
+    Update();
+}
+
+const NFmiMetTime& CFmiSynopDataGridViewDlg::GetMainMapViewTime() const
+{
+    return itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
+}
+
 void CFmiSynopDataGridViewDlg::Update(void)
 {
     static bool fFirstTime = true; // sarakkeiden s‰‰tˆ tehd‰‰n vain 1. kerran
@@ -1842,7 +2036,7 @@ void CFmiSynopDataGridViewDlg::Update(void)
         }
         if(itsSmartMetDocumentInterface->SynopDataGridViewOn() == false)
             return;
-        NFmiMetTime wantedTime(itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+        const auto &wantedTime = GetMainMapViewTime();
         int fixedRowCount = 1;
         int fixedColumnCount = 1;
 
@@ -1850,6 +2044,8 @@ void CFmiSynopDataGridViewDlg::Update(void)
         boost::shared_ptr<NFmiFastQueryInfo> sadeInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kObservations, NFmiProducer(10002), true);
         fUseSadeData = sadeInfo && IsSadeDataUsed(); // jos katsellaan synop-tuottajaa, silloin laitetaan myˆs sadedataa mukaan
         boost::shared_ptr<NFmiFastQueryInfo> usedInfo = GetWantedInfo(false);
+        if(!GridControlNeedsUpdate(obsInfos, usedInfo))
+            return;
         // kuinka monta asemaa datassa on aktivoitu nykyiseen zoomattuun alueeseen
         int maxStationCount = GetMaxStationCount(obsInfos);
         int stationCount = 0;
@@ -2346,7 +2542,7 @@ void CFmiSynopDataGridViewDlg::OnBnClickedButtonNextTime()
 
 void CFmiSynopDataGridViewDlg::WhenProducerRadioButtonClikked(void)
 {
-	Update();
+    ForcedUpdate();
 }
 
 static void SetCountryFilterValues(CountryFilter &theCountryFilter, char* shortName, char* longName, bool sharesIdRange, int low1, int high1, int low2 = -1, int high2 = -1, int low3 = -1, int high3 = -1, int low4 = -1, int high4 = -1, int low5 = -1, int high5 = -1, int low6 = -1, int high6 = -1, int low7 = -1, int high7 = -1, int low8 = -1, int high8 = -1, int low9 = -1, int high9 = -1, int low10 = -1, int high10 = -1)
@@ -2381,7 +2577,7 @@ void CFmiSynopDataGridViewDlg::OnBnClickedButtonCountryFilterDlg()
 	CFmiCountryFilterDlg dlg(&itsWmoIdFilterManager, this);
 	if(dlg.DoModal() == IDOK)
 	{
-		Update();
+        ForcedUpdate();
 	}
 }
 
@@ -3142,13 +3338,13 @@ void CFmiSynopDataGridViewDlg::OnBnClickedCheckMinMaxMode()
 {
 	UpdateData(TRUE);
 	EnableDisableControls();
-	Update();
+    ForcedUpdate();
 }
 
 void CFmiSynopDataGridViewDlg::OnEnChangeEditDayCount()
 {
 	UpdateData(TRUE);
-	Update();
+    ForcedUpdate();
 }
 
 void CFmiSynopDataGridViewDlg::OnDtnDatetimechangeDatetimepickerMinmaxDate(NMHDR *pNMHDR, LRESULT *pResult)
@@ -3156,7 +3352,7 @@ void CFmiSynopDataGridViewDlg::OnDtnDatetimechangeDatetimepickerMinmaxDate(NMHDR
 	LPNMDATETIMECHANGE pDTChange = reinterpret_cast<LPNMDATETIMECHANGE>(pNMHDR);
 	UpdateData(TRUE);
 	UpdateMinMaxRangeStartTime();
-	Update();
+    ForcedUpdate();
 	*pResult = 0;
 }
 
@@ -3165,7 +3361,7 @@ void CFmiSynopDataGridViewDlg::OnDtnDatetimechangeDatetimepickerMinmaxTime(NMHDR
 	LPNMDATETIMECHANGE pDTChange = reinterpret_cast<LPNMDATETIMECHANGE>(pNMHDR);
 	UpdateData(TRUE);
 	UpdateMinMaxRangeStartTime();
-	Update();
+    ForcedUpdate();
 	*pResult = 0;
 }
 
@@ -3219,7 +3415,7 @@ BOOL CFmiSynopDataGridViewDlg::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* p
 
 	// jos oltiin klikattu otsikko rivi‰, l‰hetet‰‰n viesti emolle, ett‰ se osaa p‰ivitt‰‰ taulukon uudestaan
 	if(itsGridCtrl.UpdateParent())
-		Update();
+        ForcedUpdate();
 	itsGridCtrl.UpdateParent(false);
 
 	return CDialog::OnNotify(wParam, lParam, pResult);

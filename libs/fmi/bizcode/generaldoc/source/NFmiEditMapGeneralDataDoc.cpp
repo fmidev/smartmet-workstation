@@ -4239,7 +4239,8 @@ struct MenuCreationSettings
 void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *thePopupMenu, const std::string &theMenuItemDictionaryStr)
 {
 	std::string menuString = ::GetDictionaryString(theMenuItemDictionaryStr.c_str());
-	auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, std::string(__FUNCTION__) + ": " + menuString);
+    auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
 	NFmiMenuItemList *menuList = new NFmiMenuItemList;
 
 // ********** lis‰t‰‰n "editoitava" data osa *************************
@@ -4349,6 +4350,7 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
         {
             if(!WmsSupport().isConfigured())
                 return;
+            CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
             const auto& layerTree = WmsSupport().peekCapabilityTree();
             auto menuItem = std::make_unique<NFmiMenuItem>(
                 theMenuSettings.itsDescTopIndex,
@@ -4405,7 +4407,8 @@ void AddCustomFolderToMenuItemList(const MenuCreationSettings &theMenuSettings, 
 
 void AddCustomFoldersToMenu(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuList)
 {
-	MenuCreationSettings usedMenuSettings(theMenuSettings);
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
+    MenuCreationSettings usedMenuSettings(theMenuSettings);
 	usedMenuSettings.fMakeCustomMenu = true;
 	std::vector<std::string> customMenuList = HelpDataInfoSystem()->GetUniqueCustomMenuList();
 	for(size_t i = 0; i<customMenuList.size(); i++)
@@ -4428,6 +4431,7 @@ void AddCustomFoldersToMenu(const MenuCreationSettings &theMenuSettings, NFmiMen
 
 bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 {
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
 	if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		return CreateCrossSectionViewPopup(itsCurrentViewRowIndex);
 
@@ -4512,7 +4516,8 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuList, NFmiInfoData::Type theDataType)
 {
 	string menuString = ::GetDictionaryString("MapViewParamPopUpMacroParams");
-	auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kMacroParam);
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, std::string(__FUNCTION__) + ": " + menuString);
+    auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kMacroParam);
 	NFmiMenuItemList *macroParamsMenuList = new NFmiMenuItemList;
 
 	std::vector<NFmiMacroParamItem> &macroParamItemList = itsMacroParamSystem.MacroParamItemTree();
@@ -4523,7 +4528,8 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
 
 void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
 {
-		std::vector<NFmiProducerInfo> &prodVec = ProducerSystem().Producers();
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
+    std::vector<NFmiProducerInfo> &prodVec = ProducerSystem().Producers();
 		if(prodVec.size() > 0)
 		{
             auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Change all producers", NFmiDataIdent(), theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kEditable);
@@ -4562,7 +4568,8 @@ void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NF
 
 void AddChangeAllDataTypesToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType)
 {
-	std::vector<std::pair<std::string, NFmiInfoData::Type> > dataTypeVec;
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
+    std::vector<std::pair<std::string, NFmiInfoData::Type> > dataTypeVec;
 	dataTypeVec.push_back(std::make_pair("Edited-Data", NFmiInfoData::kEditable));
 	dataTypeVec.push_back(std::make_pair("Model-Data", NFmiInfoData::kViewable));
 	dataTypeVec.push_back(std::make_pair("Observations", NFmiInfoData::kObservations));
@@ -4618,7 +4625,8 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
 // mm. mesan, tuliset,verifikaatiot, fuzzy, geo-data, macroparamit jne.
 void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItem *theMenuItem)
 {
-	NFmiMenuItemList *menuList = new NFmiMenuItemList;
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
+    NFmiMenuItemList *menuList = new NFmiMenuItemList;
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 160); // 160 = mesan 2
     AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 189); // 189 = MetNo Analysis
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiRADARNRD, NFmiInfoData::kObservations); // tuliset dataa, mutta ei 'tutka'-dataa eli ignooraa kObservations-data tyyppi joka normaali tutkalla on
@@ -4896,6 +4904,7 @@ void AddConfiguredModelProducerDataToParamSelectionPopup(const MenuCreationSetti
 		{
 			NFmiProducerInfo &prodInfo = ProducerSystem().Producer(theModelIndex);
 			string menuString(prodInfo.Name());
+            CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, std::string(__FUNCTION__) + ": " + prodInfo.Name());
 
 			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(prodInfo.ProducerId()));
 			int size = static_cast<int>(infos.size());
@@ -5037,7 +5046,8 @@ void AddFirstOfDataTypeToParamSelectionPopup(const MenuCreationSettings &theMenu
 
 void AddCalculatedParamsToMenu(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuItemList, const std::string &theMenuItemDictionaryStr)
 {
-	std::string menuString = ::GetDictionaryString(theMenuItemDictionaryStr.c_str());
+    std::string menuString = ::GetDictionaryString(theMenuItemDictionaryStr.c_str());
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, std::string(__FUNCTION__) + ": " + menuString);
     auto menuItem4 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, NFmiMetEditorTypes::kFmiParamsDefaultView, nullptr, NFmiInfoData::kCalculatedValue);
 	NFmiMenuItemList *menuList4 = new NFmiMenuItemList;
 	menuString = ::GetDictionaryString("MapViewMaskSelectionPopUpLatitude");
@@ -6358,8 +6368,8 @@ void ChangeAllProducersInMapRow(const NFmiMenuItem& theMenuItem, int theRowIndex
 			}
 		}
 		drawParamList->Dirty(true);
-        auto cacheRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex);
-        MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), theRowIndex, drawParamList);
+        auto realRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+        MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), realRowIndex, drawParamList);
 	}
 }
 
@@ -11441,11 +11451,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void PasteDrawParamsToMapViewRow(unsigned int theDescTopIndex)
 	{
-		NFmiDrawParamList * activeDrawParamList = DrawParamList(theDescTopIndex, ActiveViewRow(theDescTopIndex));
+        auto relativeActiveRowIndex = ActiveViewRow(theDescTopIndex);
+		NFmiDrawParamList * activeDrawParamList = DrawParamList(theDescTopIndex, relativeActiveRowIndex);
 		if(activeDrawParamList)
 		{
 			activeDrawParamList->CopyList(itsCopyPasteDrawParamList, false);
-            MakeViewRowDirtyActions(theDescTopIndex, ActiveViewRow(theDescTopIndex), activeDrawParamList);
+            auto realActiveRowIndex = GetRealRowNumber(theDescTopIndex, relativeActiveRowIndex);
+            MakeViewRowDirtyActions(theDescTopIndex, realActiveRowIndex, activeDrawParamList);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste drawParams to map view row");
 		}
 	}

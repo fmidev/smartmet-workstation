@@ -359,7 +359,7 @@ public:
 };
 
 template<typename GetFunction>
-double NFmiInfoAreaMask::CalcMetaParamValueWithFunction(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways, GetFunction getFunction)
+float NFmiInfoAreaMask::CalcMetaParamValueWithFunction(GetFunction getFunction)
 {
     IntegerStateRestorer metaParamCheckRestorer(&fCheckMetaParamCalculation);
     fCheckMetaParamCalculation = 0; // Tästä funktiosta kutsutuissa Value -metodeissa ei ole tarkoitus tehdä metaparam tarkastusta
@@ -404,23 +404,40 @@ double NFmiInfoAreaMask::CalcMetaParamValueWithFunction(const NFmiCalculationPar
     return kFloatMissing;
 }
 
-double NFmiInfoAreaMask::CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
+float NFmiInfoAreaMask::CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
 {
-    return CalcMetaParamValueWithFunction(theCalculationParams, fUseTimeInterpolationAlways, [&]() {return static_cast<float>(Value(theCalculationParams, fUseTimeInterpolationAlways)); });
+    return CalcMetaParamValueWithFunction([&]() {return static_cast<float>(Value(theCalculationParams, fUseTimeInterpolationAlways)); });
 }
 
-double NFmiInfoAreaMask::CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams)
+float NFmiInfoAreaMask::CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams)
 {
-    return CalcMetaParamValueWithFunction(theCalculationParams, true, [&]() {return itsInfo->HeightValue(static_cast<float>(theHeight), theCalculationParams.itsLatlon, theCalculationParams.itsTime); });
+    return CalcMetaParamValueWithFunction([&]() {return itsInfo->HeightValue(static_cast<float>(theHeight), theCalculationParams.itsLatlon, theCalculationParams.itsTime); });
 }
 
-double NFmiInfoAreaMask::CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams)
+float NFmiInfoAreaMask::CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams)
 {
-    return CalcMetaParamValueWithFunction(theCalculationParams, true, [&]() {return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
+    return CalcMetaParamValueWithFunction([&]() {return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
         theCalculationParams.itsLatlon,
         theCalculationParams.itsTime); });
 }
 
+float NFmiInfoAreaMask::CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache)
+{
+    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+        return CalcMetaParamCachedInterpolation(theUsedInfo, theLocationCache, theTimeCache);
+    else
+    {
+        if(theTimeCache)
+            return theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache);
+        else
+            return theUsedInfo->CachedInterpolation(theLocationCache);
+    }
+}
+
+float NFmiInfoAreaMask::CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache)
+{
+    return CalcMetaParamValueWithFunction([&]() {return theTimeCache ? theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache): theUsedInfo->CachedInterpolation(theLocationCache); });
+}
 
 double NFmiInfoAreaMask::HeightValue(double theHeight,
                                      const NFmiCalculationParams &theCalculationParams)
@@ -644,7 +661,7 @@ void NFmiInfoAreaMask::AddValuesToFunctionModifier(boost::shared_ptr<NFmiFastQue
     if(integrationFunction == NFmiAreaMask::Max || integrationFunction == NFmiAreaMask::Min)
         ::AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
     else
-        theFunctionModifier->Calculate(theInfo->CachedInterpolation(theLocationCache));
+        theFunctionModifier->Calculate(CalcCachedInterpolation(theInfo, theLocationCache, nullptr));
 }
 
 // ======================================================================
@@ -1038,18 +1055,30 @@ float NFmiInfoAreaMaskMetFuncBase::Peek(const NFmiLocationCache &theLocationCach
   float value = kFloatMissing;
   if (UsePressureLevelInterpolation())
   {
-    if (Level()->LevelType() == kFmiFlightLevel)  // Lasse poisto alkaa
+    if (Level()->LevelType() == kFmiFlightLevel)
     {
       double P = ::CalcFlightLevelPressure(UsedPressureLevelValue() * 100);
-      value = itsInfo->CachedPressureLevelValue(static_cast<float>(P), peekPoint, itsTimeCache);
+      value = CalcCachedPressureLevelValue(static_cast<float>(P), peekPoint, itsTimeCache);
     }
-    else  // Lasse poisto loppuu
-      value = itsInfo->CachedPressureLevelValue(
-          static_cast<float>(UsedPressureLevelValue()), peekPoint, itsTimeCache);
+    else
+      value = CalcCachedPressureLevelValue(static_cast<float>(UsedPressureLevelValue()), peekPoint, itsTimeCache);
   }
   else
-    value = itsInfo->CachedInterpolation(peekPoint, itsTimeCache);
+    value = CalcCachedInterpolation(itsInfo, peekPoint, &itsTimeCache);
   return value;
+}
+
+float NFmiInfoAreaMaskMetFuncBase::CalcCachedPressureLevelValue(float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache)
+{
+    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+        return CalcMetaParamCachedPressureLevelValue(P, theLocationCache, theTimeCache);
+    else
+        return itsInfo->CachedPressureLevelValue(P, theLocationCache, theTimeCache);
+}
+
+float NFmiInfoAreaMaskMetFuncBase::CalcMetaParamCachedPressureLevelValue(float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache)
+{
+    return CalcMetaParamValueWithFunction([&]() {return itsInfo->CachedPressureLevelValue(P, theLocationCache, theTimeCache); });
 }
 
 float NFmiInfoAreaMaskMetFuncBase::CalcMetFuncWithFactors(
@@ -1330,8 +1359,8 @@ double NFmiInfoAreaMaskAdvection::Value(const NFmiCalculationParams &theCalculat
       locationCache, false, locationCache.itsGridPoint.Y(), itsGridSizeY);  // y-komponentti
   if (itsMetFunctionDirection == DirectionXandY && gradX != kFloatMissing && gradY != kFloatMissing)
   {
-    float u = itsInfoUwind->CachedInterpolation(locationCache, itsTimeCache);
-    float v = itsInfoVwind->CachedInterpolation(locationCache, itsTimeCache);
+    float u = CalcCachedInterpolation(itsInfoUwind, locationCache, &itsTimeCache);
+    float v = CalcCachedInterpolation(itsInfoVwind, locationCache, &itsTimeCache);
     if (u != kFloatMissing && v != kFloatMissing)
     {
       float advectionValue =
@@ -1344,7 +1373,7 @@ double NFmiInfoAreaMaskAdvection::Value(const NFmiCalculationParams &theCalculat
   }
   else if (itsMetFunctionDirection == DirectionX && gradX != kFloatMissing)
   {
-    float u = itsInfoUwind->CachedInterpolation(locationCache, itsTimeCache);
+    float u = CalcCachedInterpolation(itsInfoUwind, locationCache, &itsTimeCache);
     if (u != kFloatMissing)
     {
       float advectionValue =
@@ -1356,7 +1385,7 @@ double NFmiInfoAreaMaskAdvection::Value(const NFmiCalculationParams &theCalculat
   }
   else if (itsMetFunctionDirection == DirectionY && gradY != kFloatMissing)
   {
-    float v = itsInfoVwind->CachedInterpolation(locationCache, itsTimeCache);
+    float v = CalcCachedInterpolation(itsInfoVwind, locationCache, &itsTimeCache);
     if (v != kFloatMissing)
     {
       float advectionValue =
@@ -1901,15 +1930,12 @@ float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocati
 {
     if(itsSecondaryFunc == NFmiAreaMask::VertZ)
     {
-        float value = itsInfo->HeightValue(
-            theLevelValue, theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-//        return value;
+        float value = static_cast<float>(HeightValue(theLevelValue, theCalculationParams));
         return ::DoLowestLevelHeightValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
     }
     else if(itsSecondaryFunc == NFmiAreaMask::VertP || itsSecondaryFunc == NFmiAreaMask::VertFL)
     {
-        float value = itsInfo->PressureLevelValue(
-            theLevelValue, theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+        float value = static_cast<float>(PressureValue(theLevelValue, theCalculationParams));
         return ::DoLowestLevelPressureValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
     }
   else
@@ -1918,7 +1944,7 @@ float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocati
     NFmiLevel aLevel(*itsInfo->Level());
     aLevel.LevelValue(theLevelValue);
     itsInfo->Level(aLevel);
-    return itsInfo->CachedInterpolation(theLocationCache, itsTimeCache);
+    return CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
   }
 }
 
@@ -1935,7 +1961,7 @@ unsigned long NFmiInfoAreaMaskVertFunc::GetNonMissingStartLevelIndex(
     // Lambda funktio joka annetaan iterointi metodille
     auto findLevelFunction = [&]()
     {
-        float value = itsInfo->CachedInterpolation(theLocationCache, itsTimeCache);
+        float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
         if(value != kFloatMissing)
         {
             iterationBreakingData.index = itsInfo->LevelIndex();
@@ -2064,7 +2090,7 @@ float NFmiInfoAreaMaskVertFunc::DoFindFunction(const NFmiLocationCache &theLocat
     if(realStartLevelIndex != gMissingIndex)
     {
         itsInfo->LevelIndex(realStartLevelIndex);
-        value1 = itsInfo->CachedInterpolation(theLocationCache, itsTimeCache);
+        value1 = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
         height1 = GetLevelHeightValue(theLocationCache);
 
         bool isUnder = ::IsUnder(searchedValue, value1);
@@ -2073,7 +2099,7 @@ float NFmiInfoAreaMaskVertFunc::DoFindFunction(const NFmiLocationCache &theLocat
         // Lambda funktio joka annetaan iterointi metodille
         auto findValueFunction = [&]()
         {
-            value2 = itsInfo->CachedInterpolation(theLocationCache, itsTimeCache);
+            value2 = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
             if(value2 != kFloatMissing)
             {
                 height2 = GetLevelHeightValue(theLocationCache);
@@ -2213,7 +2239,7 @@ float NFmiInfoAreaMaskVertFunc::DoNormalFunction(const NFmiLocationCache &theLoc
     // Lambda funktio joka annetaan iterointi metodille
     auto heightSeekerFunction = [&]()
     {
-        float primaryValue = itsInfo->CachedInterpolation(theLocationCache, itsTimeCache);
+        float primaryValue = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
         float heightValue = GetLevelHeightValue(theLocationCache);
         valueSearcher.Values(primaryValue, heightValue);
     };
@@ -2227,7 +2253,7 @@ float NFmiInfoAreaMaskVertFunc::DoNormalFunction(const NFmiLocationCache &theLoc
     // Lambda funktio joka annetaan iterointi metodille
     auto valueFunction = [&]()
     {
-        itsFunctionModifier->Calculate(itsInfo->CachedInterpolation(theLocationCache, itsTimeCache));
+        itsFunctionModifier->Calculate(CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache));
     };
     VerticalIterationBreakingData noIterationBreaking;
     IterateLevelsFromGroundUpward(valueFunction, noIterationBreaking, static_cast<int>(itsStartLevelIndex), theCalculationParams);
@@ -2347,7 +2373,7 @@ float NFmiInfoAreaMaskVertConditionalFunc::DoFindConditionalFunction(
       // Lambda funktio joka annetaan iterointi metodille
       auto findValueHeightFunction = [&]()
       {
-          float value = itsInfo->CachedInterpolation(theLocationCache, itsTimeCache);
+          float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
           if(CheckProbabilityCondition(value))
           {
               iterationBreakingData.value = GetLevelHeightValue(theLocationCache);
@@ -2775,10 +2801,18 @@ bool NFmiInfoAreaMaskProbFunc::IsCalculationPointInsideCircle(const NFmiLocation
 
 float NFmiInfoAreaMaskProbFunc::CalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime)
 {
+    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+        return CalcMetaParamCalculationPointValue(theOffsetX, theOffsetY, theInterpolationTime, useInterpolatedTime);
+
     if(useInterpolatedTime)
         return itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime);
     else
         return itsInfo->PeekLocationValue(theOffsetX, theOffsetY);
+}
+
+float NFmiInfoAreaMaskProbFunc::CalcMetaParamCalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime)
+{
+    return CalcMetaParamValueWithFunction([&]() {return useInterpolatedTime ? itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime) : itsInfo->PeekLocationValue(theOffsetX, theOffsetY); });
 }
 
 void NFmiInfoAreaMaskProbFunc::DoIntegrationCalculations(float value)
@@ -2860,7 +2894,7 @@ double NFmiInfoTimeIntegrator::Value(const NFmiCalculationParams &theCalculation
   for (int i = usedStartIndex; i <= usedEndIndex; i++)
   {
     itsInfo->TimeIndex(i);
-    float tmpValue = itsInfo->CachedInterpolation(locationCache);
+    float tmpValue = CalcCachedInterpolation(itsInfo, locationCache, nullptr);
     itsFunctionModifier->Calculate(tmpValue);
   }
   itsInfo->TimeIndex(oldTimeIndex);

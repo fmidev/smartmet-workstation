@@ -437,12 +437,16 @@ void NFmiPeekTimeMask::Initialize(void)
 }
 
 double NFmiPeekTimeMask::Value(const NFmiCalculationParams &theCalculationParams,
-    bool /* fUseTimeInterpolationAlways */)
+    bool fUseTimeInterpolationAlways)
 {
     NFmiMetTime peekTime(theCalculationParams.itsTime);
     peekTime.ChangeByMinutes(itsTimeOffsetInMinutes);
     if(itsInfo->IsGrid())
-        return itsInfo->InterpolatedValue(theCalculationParams.itsLatlon, peekTime);
+    {
+        NFmiCalculationParams peekCalculationParams(theCalculationParams);
+        peekCalculationParams.itsTime = peekTime;
+        return NFmiInfoAreaMask::Value(peekCalculationParams, fUseTimeInterpolationAlways);
+    }
     else
         return CalcValueFromObservation(theCalculationParams.itsLatlon, peekTime);
 }
@@ -608,7 +612,7 @@ void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForGridData(unsigned long 
         if(itsSimpleCondition)
             theCalculationParams.itsTime = itsInfo->Time();
         if(SimpleConditionCheck(theCalculationParams))
-            NFmiInfoAreaMask::AddValuesToFunctionModifier(itsInfo, itsFunctionModifier, theLocationCache, itsIntegrationFunc);
+            AddValuesToFunctionModifier(itsInfo, itsFunctionModifier, theLocationCache, itsIntegrationFunc);
     }
 }
 

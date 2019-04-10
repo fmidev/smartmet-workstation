@@ -648,6 +648,7 @@ void CFmiExtraMapViewDlg::OnButtonSelectParamDialogExtraMap()
 void CFmiExtraMapViewDlg::OnToggleMapViewDisplayMode()
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ToggleMapViewDisplayMode();
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(false, true, true, true);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle map view display mode");
 }
 
