@@ -25,6 +25,7 @@
 #include "SmartMetMfcUtils_resource.h"
 #include "persist2.h"
 #include "NFmiMacroParamDataCache.h"
+#include <fstream>
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
@@ -203,9 +204,17 @@ void CFmiSmartToolDlg::WarnUserAboutNoEditingSmarttools()
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 // ========================================================================================================
 
-// Huom! Tähän metodiin tulee theFilePath arvoja, joita ei löydy ja ne heittävät poikkeuksen:
-// 1. Kun vaihdetaan kansiota
-// 2. Käynnistyessä "Last smarttool" -muistissa on tiedosto, joka sijaitsee jossain alihakemistossa eikä root-hakemistossa.
+static void MakeSmarttoolFileErrorLogging(std::string errorPart1, std::string errorPart2, const std::string &filePath, std::exception *possibleException)
+{
+    std::string errorMessage = errorPart1;
+    errorMessage += filePath;
+    errorMessage += errorPart2;
+    if(possibleException)
+        errorMessage += possibleException->what();
+    CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Macro);
+}
+
+
 bool CFmiSmartToolDlg::LoadSmarttoolToSyntaxEditControl(const std::string &theFilePath)
 {
     try
@@ -214,30 +223,29 @@ bool CFmiSmartToolDlg::LoadSmarttoolToSyntaxEditControl(const std::string &theFi
         if(pDataMan)
         {
             pDataMan->SetFileExt(_TEXT(".st"));
+            std::string fileContent;
+            if(NFmiFileSystem::ReadFile2String(theFilePath, fileContent))
+            {
+                CString fileContentUnicode = CA2T(fileContent.c_str());
+                itsSyntaxEditControl->SetText(fileContentUnicode);
+                itsSyntaxEditControl->RefreshColors();
+                itsSyntaxEditControl->SetTopRow(1);
+                itsSyntaxEditControl->RecalcScrollBars();
 
-            CFile fileText(CA2T(theFilePath.c_str()), CFile::modeRead);
-            CArchive arText(&fileText, CArchive::load);
+                itsSyntaxEditControl->SendMessage(WM_NCPAINT);
 
-            pDataMan->Serialize(arText);
-
-            itsSyntaxEditControl->RefreshColors();
-            itsSyntaxEditControl->RecalcScrollBars();
-
-            itsSyntaxEditControl->SendMessage(WM_NCPAINT);
-
-            UpdateSyntaxEditControl();
-            return true;
+                UpdateSyntaxEditControl();
+                return true;
+            }
         }
     }
-    catch(CFileException *pE)
+    catch(std::exception &e)
     {
-//        pE->ReportError();
-        pE->Delete(); // Poikkeukset pitää napata, ja kutsua niiden Delete -metodia, muuten ne vuotavat!!
+        ::MakeSmarttoolFileErrorLogging("Loading smarttool from file '", "' failed, with error: ", theFilePath, &e);
     }
-    catch(CArchiveException *pE)
+    catch(...)
     {
-        //pE->ReportError();
-        pE->Delete();
+        ::MakeSmarttoolFileErrorLogging("Loading smarttool from file '", "' failed, with unknown error", theFilePath, nullptr);
     }
 
     return false;
@@ -252,31 +260,28 @@ bool CFmiSmartToolDlg::StoreSmarttoolFromSyntaxEditControl(const std::string &th
 {
     try
     {
-        CFile fileText(CA2T(theFilePath.c_str()), CFile::modeWrite | CFile::modeCreate);
-        CArchive arText(&fileText, CArchive::store);
-
         CXTPSyntaxEditBufferManager* pDataMan = itsSyntaxEditControl->GetEditBuffer();
         if(pDataMan)
         {
-            pDataMan->Serialize(arText);
-
-            arText.Close();
-            fileText.Close();
-
+            auto formulaContentUnicode = itsSyntaxEditControl->GetText();
+            std::string formulaContent = CT2A(formulaContentUnicode);
+            std::ofstream out(theFilePath, std::ios::binary | std::ios::out);
+            if(out)
+                out.write(formulaContent.c_str(), formulaContent.size());
+            else
+                ::MakeSmarttoolFileErrorLogging("Saving smarttool to file '", "' failed, with unknown error", theFilePath, nullptr);
             itsSyntaxEditControl->RefreshColors();
             UpdateSyntaxEditControl();
             return true;
         }
     }
-    catch(CFileException *pE)
+    catch(std::exception &e)
     {
-        //pE->ReportError();
-        pE->Delete();
+        ::MakeSmarttoolFileErrorLogging("Saving smarttool to file '", "' failed, with error: ", theFilePath, &e);
     }
-    catch(CArchiveException *pE)
+    catch(...)
     {
-        //pE->ReportError();
-        pE->Delete();
+        ::MakeSmarttoolFileErrorLogging("Saving smarttool to file '", "' failed, with unknown error", theFilePath, nullptr);
     }
     return false;
 }
