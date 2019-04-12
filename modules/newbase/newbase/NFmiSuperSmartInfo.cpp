@@ -1264,7 +1264,7 @@ NFmiBitmapAreaMask* NFmiSuperSmartInfo::CreateHelperBinaryMask(int theUsedVariat
   if (theUsedVariationFactor == 0) return CreateZeroVariationHelperBinaryMask();
 
   auto* helperMask =
-      new NFmiBitmapAreaMask(itsGridXNumber, itsGridYNumber, Area(), &Param(), Level());
+      new NFmiBitmapAreaMask(itsGridXNumber, itsGridYNumber, Area(), &Param(), Level(), NFmiAreaMask::kNoValue);
   if (!helperMask) return nullptr;
 
   int moveByX = theUsedVariationFactor * 2 + 1;
@@ -1507,7 +1507,7 @@ void NFmiSuperSmartInfo::InitEmptyAreaMask()
   NFmiDataIdent dummyParam;
   NFmiLevel dummyLevel;
   delete itsAreaMask;
-  itsAreaMask = new NFmiBitmapAreaMask(*Grid(), &dummyParam, &dummyLevel);
+  itsAreaMask = new NFmiBitmapAreaMask(*Grid(), &dummyParam, &dummyLevel, NFmiAreaMask::kNoValue);
 }
 
 // ----------------------------------------------------------------------

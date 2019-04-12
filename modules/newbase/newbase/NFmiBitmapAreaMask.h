@@ -30,12 +30,12 @@ class _FMI_DLL NFmiBitmapAreaMask : public NFmiAreaMaskImpl
                      const NFmiArea* theArea,
                      const NFmiDataIdent* theDataIdent,
                      const NFmiLevel* theLevel,
-                     BinaryOperator thePostBinaryOperator = kNoValue);
+                     BinaryOperator thePostBinaryOperator);
 
   NFmiBitmapAreaMask(const NFmiGrid& theGrid,
                      const NFmiDataIdent* theDataIdent,
                      const NFmiLevel* theLevel,
-                     BinaryOperator thePostBinaryOperator = kNoValue);
+                     BinaryOperator thePostBinaryOperator);
 
   NFmiAreaMask* Clone(void) const;
 #ifdef UNIX
