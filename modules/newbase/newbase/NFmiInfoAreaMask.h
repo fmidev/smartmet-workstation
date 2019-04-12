@@ -105,6 +105,7 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   float CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
   float CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
   float CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
+  void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDataModifier> &theFunctionModifier, const NFmiLocationCache &theLocationCache);
 
   void DoConstructorInitializations();
 protected:

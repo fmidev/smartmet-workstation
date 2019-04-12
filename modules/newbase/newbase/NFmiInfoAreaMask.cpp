@@ -636,16 +636,70 @@ bool NFmiInfoAreaMask::CalcTimeLoopIndexies(boost::shared_ptr<NFmiFastQueryInfo>
 // min ja max funktioille voidaan laskuissa ottaa interpoloidun arvon sijasta kaikki interpolaatio
 // pistettä ympäröivät arvot sellaisenaan. Interpolaatio kun muuttaa min/max arvoja ikävästi
 // neljästä luvusta lasketuksi painotetuksi keskiarvoksi.
-static void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
     const NFmiLocationCache &theLocationCache)
 {
     if(!theLocationCache.NoValue())
     {
-        std::vector<float> values(4, kFloatMissing);
-        theInfo->GetCachedValues(theLocationCache, values);
-        for(float value : values)
-            theFunctionModifier->Calculate(value);
+        if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+        {
+            if(metaWindParamUsage.HasWsAndWd())
+            {
+                theInfo->Param(kFmiWindSpeedMS);
+                std::vector<float> wsValues(4, kFloatMissing);
+                theInfo->GetCachedValues(theLocationCache, wsValues);
+                theInfo->Param(kFmiWindDirection);
+                std::vector<float> wdValues(4, kFloatMissing);
+                theInfo->GetCachedValues(theLocationCache, wdValues);
+                for(auto index = 0; index < wsValues.size(); index++)
+                {
+                    switch(itsPossibleMetaParamId)
+                    {
+                    case kFmiWindUMS:
+                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcU(wsValues[index], wdValues[index]));
+                        break;
+                    case kFmiWindVMS:
+                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcV(wsValues[index], wdValues[index]));
+                        break;
+                    case kFmiWindVectorMS:
+                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(wsValues[index], wdValues[index]));
+                        break;
+                    }
+                }
+            }
+            else if(metaWindParamUsage.HasWindComponents())
+            {
+                theInfo->Param(kFmiWindUMS);
+                std::vector<float> uValues(4, kFloatMissing);
+                theInfo->GetCachedValues(theLocationCache, uValues);
+                theInfo->Param(kFmiWindVMS);
+                std::vector<float> vValues(4, kFloatMissing);
+                theInfo->GetCachedValues(theLocationCache, vValues);
+                for(auto index = 0; index < uValues.size(); index++)
+                {
+                    switch(itsPossibleMetaParamId)
+                    {
+                    case kFmiWindSpeedMS:
+                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWS(uValues[index], vValues[index]));
+                        break;
+                    case kFmiWindDirection:
+                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWD(uValues[index], vValues[index]));
+                        break;
+                    case kFmiWindVectorMS:
+                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromWindComponents(uValues[index], vValues[index]));
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            std::vector<float> values(4, kFloatMissing);
+            theInfo->GetCachedValues(theLocationCache, values);
+            for(float value : values)
+                theFunctionModifier->Calculate(value);
+        }
     }
 }
 
@@ -659,7 +713,7 @@ void NFmiInfoAreaMask::AddValuesToFunctionModifier(boost::shared_ptr<NFmiFastQue
     NFmiAreaMask::FunctionType integrationFunction)
 {
     if(integrationFunction == NFmiAreaMask::Max || integrationFunction == NFmiAreaMask::Min)
-        ::AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
+        AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
     else
         theFunctionModifier->Calculate(CalcCachedInterpolation(theInfo, theLocationCache, nullptr));
 }
