@@ -12,7 +12,7 @@ NFmiLocalAreaMinMaxMask::NFmiLocalAreaMinMaxMask(Type theMaskType,
     int theArgumentCount,
     const NFmiGrid &theCalculationGrid,
     unsigned long thePossibleMetaParamId)
-    :NFmiInfoAreaMask(NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId)
+    :NFmiInfoAreaMask(NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId, kNoValue)
     ,itsLocalAreaSearchRangeInKm(0)
 ,itsDataCache(std::make_shared<DataCache>())
 ,itsCurrentDataMatrix(nullptr)

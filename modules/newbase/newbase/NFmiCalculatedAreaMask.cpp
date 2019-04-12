@@ -73,7 +73,7 @@ NFmiCalculatedAreaMask::NFmiCalculatedAreaMask() : NFmiAreaMaskImpl(), itsDataId
 
 NFmiCalculatedAreaMask::NFmiCalculatedAreaMask(const NFmiDataIdent& theParam,
                                                const NFmiCalculationCondition& theOperation)
-    : NFmiAreaMaskImpl(theOperation, kCalculated, NFmiInfoData::kCalculatedValue),
+    : NFmiAreaMaskImpl(theOperation, kCalculated, NFmiInfoData::kCalculatedValue, kNoValue),
       itsDataIdent(new NFmiDataIdent(theParam))
 {
 }

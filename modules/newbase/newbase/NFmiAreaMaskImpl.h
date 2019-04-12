@@ -22,7 +22,7 @@ class _FMI_DLL NFmiAreaMaskImpl : public NFmiAreaMask
   NFmiAreaMaskImpl(const NFmiCalculationCondition &theOperation,
                    Type theMaskType,
                    NFmiInfoData::Type theDataType,
-                   BinaryOperator thePostBinaryOperator = kNoValue);
+                   BinaryOperator thePostBinaryOperator);
   NFmiAreaMaskImpl(const NFmiAreaMaskImpl &theOther);
   void Initialize(void) override;
 

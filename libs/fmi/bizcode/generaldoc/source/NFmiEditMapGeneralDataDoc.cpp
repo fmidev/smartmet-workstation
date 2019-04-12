@@ -6692,12 +6692,12 @@ NFmiAreaMask* CreateMask(const NFmiMenuItem& theMenuItem)
 				if(infoCopy->Param().Type() != kContinuousParam)
 				{
 					NFmiCalculationCondition calCond(kFmiMaskEqual, 0.,0.);
-					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, NFmiAreaMask::kNoValue);
+					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, theMenuItem.DataIdent().GetParamIdent(), NFmiAreaMask::kNoValue);
 				}
 				else
 				{
 					NFmiCalculationCondition calCond(kFmiMaskGreaterThan, 0.,1.);
-					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, NFmiAreaMask::kNoValue);
+					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, theMenuItem.DataIdent().GetParamIdent(), NFmiAreaMask::kNoValue);
 				}
 			}
 		}
