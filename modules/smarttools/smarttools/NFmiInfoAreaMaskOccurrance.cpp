@@ -445,7 +445,8 @@ double NFmiPeekTimeMask::Value(const NFmiCalculationParams &theCalculationParams
     {
         NFmiCalculationParams peekCalculationParams(theCalculationParams);
         peekCalculationParams.itsTime = peekTime;
-        return NFmiInfoAreaMask::Value(peekCalculationParams, fUseTimeInterpolationAlways);
+        // Pitää aina olla aikainterpolaatio päällä (2. parametri true), koska tämä menee tuulen meta-parametrien takia emoluokan metodin läpi
+        return NFmiInfoAreaMask::Value(peekCalculationParams, true);
     }
     else
         return CalcValueFromObservation(theCalculationParams.itsLatlon, peekTime);
