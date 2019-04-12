@@ -308,7 +308,7 @@ double NFmiInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams
                                bool fUseTimeInterpolationAlways)
 {
     if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
-        return CalcMetaParamValue(theCalculationParams, fUseTimeInterpolationAlways);
+        return CalcMetaParamValue(theCalculationParams);
 
   double result = kFloatMissing;
   if (UsePressureLevelInterpolation())
@@ -404,9 +404,9 @@ float NFmiInfoAreaMask::CalcMetaParamValueWithFunction(GetFunction getFunction)
     return kFloatMissing;
 }
 
-float NFmiInfoAreaMask::CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
+float NFmiInfoAreaMask::CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams)
 {
-    return CalcMetaParamValueWithFunction([&]() {return static_cast<float>(Value(theCalculationParams, fUseTimeInterpolationAlways)); });
+    return CalcMetaParamValueWithFunction([&]() {return itsInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime); });
 }
 
 float NFmiInfoAreaMask::CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams)
@@ -1221,6 +1221,7 @@ NFmiInfoAreaMaskGrad::NFmiInfoAreaMaskGrad(const NFmiCalculationCondition &theOp
                                            const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                            bool thePeekAlongTudes,
                                            MetFunctionDirection theMetFuncDirection,
+                                           unsigned long thePossibleMetaParamId,
                                            BinaryOperator thePostBinaryOperator)
     : NFmiInfoAreaMaskMetFuncBase(theOperation,
                                   theMaskType,
@@ -1228,6 +1229,7 @@ NFmiInfoAreaMaskGrad::NFmiInfoAreaMaskGrad(const NFmiCalculationCondition &theOp
                                   theInfo,
                                   thePeekAlongTudes,
                                   theMetFuncDirection,
+                                  thePossibleMetaParamId,
                                   thePostBinaryOperator),
       fCalculateDivergence(false)
 {
@@ -1318,6 +1320,7 @@ NFmiInfoAreaMaskAdvection::NFmiInfoAreaMaskAdvection(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfoVwind,
     bool thePeekAlongTudes,
     MetFunctionDirection theMetFuncDirection,
+    unsigned long thePossibleMetaParamId,
     BinaryOperator thePostBinaryOperator)
     : NFmiInfoAreaMaskGrad(theOperation,
                            theMaskType,
@@ -1325,6 +1328,7 @@ NFmiInfoAreaMaskAdvection::NFmiInfoAreaMaskAdvection(
                            theInfo,
                            thePeekAlongTudes,
                            theMetFuncDirection,
+                           thePossibleMetaParamId,
                            thePostBinaryOperator),
       itsInfoUwind(theInfoUwind),
       itsInfoVwind(theInfoVwind)
@@ -1439,6 +1443,7 @@ NFmiInfoAreaMaskLaplace::NFmiInfoAreaMaskLaplace(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     bool thePeekAlongTudes,
     MetFunctionDirection theMetFuncDirection,
+    unsigned long thePossibleMetaParamId,
     BinaryOperator thePostBinaryOperator)
     : NFmiInfoAreaMaskMetFuncBase(theOperation,
                                   theMaskType,
@@ -1446,6 +1451,7 @@ NFmiInfoAreaMaskLaplace::NFmiInfoAreaMaskLaplace(
                                   theInfo,
                                   thePeekAlongTudes,
                                   theMetFuncDirection,
+                                  thePossibleMetaParamId,
                                   thePostBinaryOperator)
 {
   NFmiInfoAreaMaskLaplace::InitCalcFactorVectors();
@@ -1510,6 +1516,7 @@ NFmiInfoAreaMaskRotor::NFmiInfoAreaMaskRotor(const NFmiCalculationCondition &the
                                              const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                              bool thePeekAlongTudes,
                                              MetFunctionDirection theMetFuncDirection,
+                                             unsigned long thePossibleMetaParamId,
                                              BinaryOperator thePostBinaryOperator)
     : NFmiInfoAreaMaskGrad(theOperation,
                            theMaskType,
@@ -1517,6 +1524,7 @@ NFmiInfoAreaMaskRotor::NFmiInfoAreaMaskRotor(const NFmiCalculationCondition &the
                            theInfo,
                            thePeekAlongTudes,
                            theMetFuncDirection,
+                           thePossibleMetaParamId,
                            thePostBinaryOperator)
 {
 }
@@ -1577,7 +1585,7 @@ NFmiInfoAreaMaskVertFunc::NFmiInfoAreaMaskVertFunc(
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     unsigned long thePossibleMetaParamId)
-    : NFmiInfoAreaMaskMetFuncBase(theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId),
+    : NFmiInfoAreaMaskMetFuncBase(theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId, kNoValue),
       itsPrimaryFunc(thePrimaryFunc),
       itsSecondaryFunc(theSecondaryFunc),
       itsArgumentVector(),
@@ -2517,7 +2525,7 @@ NFmiInfoAreaMaskProbFunc::NFmiInfoAreaMaskProbFunc(
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     unsigned long thePossibleMetaParamId)
-    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId),
+    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, kNoValue),
       itsPrimaryFunc(thePrimaryFunc),
       itsSecondaryFunc(theSecondaryFunc),
       itsArgumentVector(),
@@ -2850,7 +2858,7 @@ NFmiInfoTimeIntegrator::NFmiInfoTimeIntegrator(const NFmiCalculationCondition &t
                                                int theEndTimeOffset,
                                                unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMaskMetFuncBase(
-          theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId),
+          theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId, kNoValue),
       itsIntegrationFunc(theIntegrationFunc),
       itsFunctionModifier(),
       itsStartTimeOffset(theStartTimeOffset),
@@ -2922,7 +2930,7 @@ NFmiInfoRectAreaIntegrator::NFmiInfoRectAreaIntegrator(
     int theEndYOffset,
     unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMaskMetFuncBase(
-          theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId),
+          theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId, kNoValue),
       itsIntegrationFunc(theIntegrationFunc),
       itsFunctionModifier(),
       itsStartXOffset(theStartXOffset),
