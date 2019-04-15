@@ -174,8 +174,9 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
 
 };  // class NFmiInfoAreaMaskPeekXY
 
-//! Tämä luokka toimii kuten NFmiInfoAreaMaskPeekXY käyttää kurkkaukseen editoritavan-datan tai
-//! macroParam-datan hilaväliä, tällöin voidaan käyttää uutta GridSizeX ja Y funktioita
+//! Tämä luokka toimii kuten NFmiInfoAreaMaskPeekXY mutta käyttää kurkkaukseen editoritavan-datan tai
+//! macroParam-datan karttaprojektiota ja X/Y kurkkaukset tehdään siinä kilometreissa. Tämä kurkkaus 
+//! ei välttämättä mene lat-lon suuntaisesti kuin ehkä jos pohjana on latlon area.
 class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
 {
  public:
@@ -191,12 +192,6 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
                           unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator);
 
-  NFmiInfoAreaMaskPeekXY2(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                          const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
-                          int theXOffset,
-                          int theYOffset,
-                          unsigned long thePossibleMetaParamId,
-                          BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskPeekXY2(const NFmiInfoAreaMaskPeekXY2 &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskPeekXY2 &operator=(const NFmiInfoAreaMaskPeekXY2 &theMask) = delete;

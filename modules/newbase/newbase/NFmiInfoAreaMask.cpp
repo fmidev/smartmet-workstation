@@ -864,24 +864,10 @@ NFmiInfoAreaMaskPeekXY2::NFmiInfoAreaMaskPeekXY2(
 {
 }
 
-NFmiInfoAreaMaskPeekXY2::NFmiInfoAreaMaskPeekXY2(
-    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
-    int theXOffset,
-    int theYOffset,
-    unsigned long thePossibleMetaParamId,
-    BinaryOperator thePostBinaryOperator)
-    : NFmiInfoAreaMask(theInfo, thePossibleMetaParamId, thePostBinaryOperator),
-      itsXOffset(theXOffset),
-      itsYOffset(theYOffset),
-      itsEditedInfo(theEditedInfo)
-{
-}
-
 NFmiInfoAreaMaskPeekXY2::NFmiInfoAreaMaskPeekXY2(const NFmiInfoAreaMaskPeekXY2 &theOther)
     : NFmiInfoAreaMask(theOther),
-      itsXOffset(theOther.itsXOffset),
-      itsYOffset(theOther.itsYOffset),
+    itsXOffset(theOther.itsXOffset),
+    itsYOffset(theOther.itsYOffset),
       itsEditedInfo(NFmiAreaMask::DoShallowCopy(theOther.itsEditedInfo))
 {
 }
@@ -891,13 +877,22 @@ NFmiAreaMask *NFmiInfoAreaMaskPeekXY2::Clone() const { return new NFmiInfoAreaMa
 NFmiCalculationParams NFmiInfoAreaMaskPeekXY2::MakeModifiedCalculationParams(
     const NFmiCalculationParams &theCalculationParams)
 {
-  NFmiPoint gridPoint(itsEditedInfo->Grid()->LatLonToGrid(theCalculationParams.itsLatlon));
-  gridPoint.X(gridPoint.X() + itsXOffset);
-  gridPoint.Y(gridPoint.Y() + itsYOffset);
-  NFmiPoint wantedLatlon(itsEditedInfo->Grid()->GridToLatLon(gridPoint));
-  NFmiCalculationParams modifiedCalculationParams(theCalculationParams);
-  modifiedCalculationParams.itsLatlon = wantedLatlon;
-  return modifiedCalculationParams;
+    NFmiCalculationParams modifiedCalculationParams(theCalculationParams);
+    auto area = itsEditedInfo->Area();
+    if(area)
+    {
+        // worldXy on annettu latlon piste kartta-alueen metrisessä maailmassa
+        NFmiPoint worldXyPoint = area->LatLonToWorldXY(modifiedCalculationParams.itsLatlon);
+        // offsetit on annettu kilometreissa, joten ne pitää kertoa 1000:lla
+        worldXyPoint.X(worldXyPoint.X() + itsXOffset * 1000.);
+        worldXyPoint.Y(worldXyPoint.Y() + itsYOffset * 1000.);
+        modifiedCalculationParams.itsLatlon = area->WorldXYToLatLon(worldXyPoint);
+    }
+    else
+    {
+        modifiedCalculationParams.itsLatlon = NFmiPoint::gMissingLatlon;
+    }
+    return modifiedCalculationParams;
 }
 
 // tätä kaytetaan smarttool-modifierin yhteydessä
