@@ -1347,14 +1347,17 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekFunctionAreaMas
     info = tmp;
   }
   NFmiAreaMask::CalculationOperationType maskType = theAreaMaskInfo.GetOperationType();
+  const auto &offsetPoint1 = theAreaMaskInfo.GetOffsetPoint1();
+  int offsetX = boost::math::iround(offsetPoint1.X());
+  int offsetY = boost::math::iround(offsetPoint1.Y());
   if (maskType == NFmiAreaMask::FunctionPeekXY)
     areaMask = boost::shared_ptr<NFmiAreaMask>(
         new NFmiInfoAreaMaskPeekXY(theAreaMaskInfo.GetMaskCondition(),
                                    NFmiAreaMask::kInfo,
                                    theAreaMaskInfo.GetDataType(),
                                    info,
-                                   static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().X()),
-                                   static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().Y()),
+                                   offsetX,
+                                   offsetY,
                                    theAreaMaskInfo.GetDataIdent().GetParamIdent(),
                                    NFmiAreaMask::kNoValue));
   else if (maskType == NFmiAreaMask::FunctionPeekXY2)
@@ -1364,8 +1367,8 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekFunctionAreaMas
         theAreaMaskInfo.GetDataType(),
         info,
         GetUsedEditedInfo(),
-        static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().X()),
-        static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().Y()),
+        offsetX,
+        offsetY,
         theAreaMaskInfo.GetDataIdent().GetParamIdent(),
         NFmiAreaMask::kNoValue));
   else if (maskType == NFmiAreaMask::FunctionPeekXY3)
@@ -1375,8 +1378,8 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekFunctionAreaMas
         theAreaMaskInfo.GetDataType(),
         info,
         GetUsedEditedInfo(),
-        theAreaMaskInfo.GetOffsetPoint1().X(),
-        theAreaMaskInfo.GetOffsetPoint1().Y(),
+        offsetX,
+        offsetY,
         theAreaMaskInfo.GetDataIdent().GetParamIdent(),
         NFmiAreaMask::kNoValue));
 
