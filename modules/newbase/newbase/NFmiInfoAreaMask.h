@@ -16,11 +16,20 @@
 
 class NFmiDataModifier;
 
-// Perus areamask-luokka.
-// Sisältää myös listan mahdollisiin 'ali'-maskeihin. Niihin yhteys vain
-// indeksin kautta. Ylimaski on indeksillä 1 ja muut seuraavat numerojärjestyksessä.
-
-//! Undocumented
+class MetaParamDataHolder
+{
+    NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage_;
+    unsigned long possibleMetaParamId_ = kFmiBadParameter;
+    bool checkMetaParamCalculation_ = false;
+public:
+    MetaParamDataHolder() = default;
+    void initialize(const boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned long possibleMetaParamId);
+    bool isMetaParameterCalculationNeeded() const;
+    unsigned long possibleMetaParamId() const { return possibleMetaParamId_; }
+    const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage() const { return metaWindParamUsage_; }
+    bool checkMetaParamCalculation()const { return checkMetaParamCalculation_; }
+    void setCheckMetaParamCalculation(bool checkMetaParamCalculation) { checkMetaParamCalculation_ = checkMetaParamCalculation; }
+};
 
 class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
 {
@@ -107,23 +116,20 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   float CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
   void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDataModifier> &theFunctionModifier, const NFmiLocationCache &theLocationCache);
 
-  void DoConstructorInitializations();
+  void DoConstructorInitializations(unsigned long thePossibleMetaParamId);
 protected:
   boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
   NFmiDataIdent itsDataIdent;
   NFmiLevel itsLevel;
-  NFmiMetTime itsTime;  // jos vanhassa maski jutussa tarvitaan aikainterpolointia, tässä on
-                        // interpoloitava aika
-  bool fIsTimeIntepolationNeededInValue;  // erikois optimointia Value-metodin ja Time-metodin
-                                          // käytössä
-  bool fUsePressureLevelInterpolation;    // tämä asetetaan trueksi jos tarvitaan tehdä lennossa
-                                          // painepinta interpolointeja
-  double itsUsedPressureLevelValue;  // jos fUsePressureLevelInterpolation on true, käytetään
-                                     // laskuissa tätä painepintaa
-  unsigned long itsPossibleMetaParamId;
-  NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
-  int fCheckMetaParamCalculation = 1;
-
+  // jos vanhassa maski jutussa tarvitaan aikainterpolointia, tässä on interpoloitava aika
+  NFmiMetTime itsTime;  
+  // erikois optimointia Value-metodin ja Time-metodin käytössä
+  bool fIsTimeIntepolationNeededInValue;  
+  // tämä asetetaan trueksi jos tarvitaan tehdä lennossa painepinta interpolointeja
+  bool fUsePressureLevelInterpolation;    
+  // jos fUsePressureLevelInterpolation on true, käytetään laskuissa tätä painepintaa
+  double itsUsedPressureLevelValue;  
+  MetaParamDataHolder metaParamDataHolder;
 };  // class NFmiInfoAreaMask
 
 //! Tämä luokka toimii kuten NFmiInfoAreaMask mutta kurkkaa halutun x-y hila pisteen yli arvoa
