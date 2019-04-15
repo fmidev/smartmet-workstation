@@ -425,7 +425,24 @@ float NFmiInfoAreaMask::CalcMetaParamValueWithFunction(GetFunction getFunction)
 
 float NFmiInfoAreaMask::CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams)
 {
-    return CalcMetaParamValueWithFunction([&]() {return itsInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime); });
+    if(UsePressureLevelInterpolation())
+    {
+        if(Level()->LevelType() == kFmiFlightLevel)
+        {
+            double P = ::CalcFlightLevelPressure(UsedPressureLevelValue() * 100);
+            return CalcMetaParamPressureValue(P, theCalculationParams);
+        }
+        else if(Level()->LevelType() == kFmiHeight)
+        {
+            return CalcMetaParamHeightValue(UsedPressureLevelValue(), theCalculationParams);
+        }
+        else
+            return CalcMetaParamPressureValue(UsedPressureLevelValue(), theCalculationParams);
+    }
+    else
+    {
+        return CalcMetaParamValueWithFunction([&]() {return itsInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime); });
+    }
 }
 
 float NFmiInfoAreaMask::CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams)
