@@ -31,6 +31,22 @@
 // Kyseiset projektit menivät läpi vielä aiemmin, mutta kun lisäsin boostin iround -kutsut, ei enää.
 // SIKSI joudun käyttämään FmiRound -funktioita.
 
+
+void MetaParamDataHolder::initialize(const boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned long possibleMetaParamId)
+{
+    possibleMetaParamId_ = possibleMetaParamId;
+    metaWindParamUsage_ = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
+    checkMetaParamCalculation_ = metaWindParamUsage_.ParamNeedsMetaCalculations(possibleMetaParamId_);
+}
+
+bool MetaParamDataHolder::isMetaParameterCalculationNeeded() const
+{
+    if(checkMetaParamCalculation_ && metaWindParamUsage_.ParamNeedsMetaCalculations(possibleMetaParamId_))
+        return true;
+    else
+        return false;
+}
+
 static bool IsFindFunction(NFmiAreaMask::FunctionType theFunction)
 {
   if (theFunction == NFmiAreaMask::FindH || theFunction == NFmiAreaMask::FindC)
@@ -104,9 +120,10 @@ NFmiInfoAreaMask::NFmiInfoAreaMask()
       itsLevel(),
       fIsTimeIntepolationNeededInValue(false),
       fUsePressureLevelInterpolation(false),
-      itsUsedPressureLevelValue(kFloatMissing)
+      itsUsedPressureLevelValue(kFloatMissing),
+      metaParamDataHolder()
 {
-    DoConstructorInitializations();
+    DoConstructorInitializations(kFmiBadParameter);
 }
 
 // ----------------------------------------------------------------------
@@ -136,9 +153,9 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiCalculationCondition &theOperation,
       fIsTimeIntepolationNeededInValue(false),
       fUsePressureLevelInterpolation(false),
       itsUsedPressureLevelValue(kFloatMissing),
-    itsPossibleMetaParamId(thePossibleMetaParamId)
+      metaParamDataHolder()
 {
-    DoConstructorInitializations();
+    DoConstructorInitializations(thePossibleMetaParamId);
 }
 
 // ----------------------------------------------------------------------
@@ -163,9 +180,9 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const boost::shared_ptr<NFmiFastQueryInfo> &t
       fIsTimeIntepolationNeededInValue(false),
       fUsePressureLevelInterpolation(false),
       itsUsedPressureLevelValue(kFloatMissing),
-      itsPossibleMetaParamId(thePossibleMetaParamId)
+      metaParamDataHolder()
 {
-    DoConstructorInitializations();
+    DoConstructorInitializations(thePossibleMetaParamId);
 }
 
 NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
@@ -176,18 +193,18 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
       fIsTimeIntepolationNeededInValue(theOther.fIsTimeIntepolationNeededInValue),
       fUsePressureLevelInterpolation(theOther.fUsePressureLevelInterpolation),
       itsUsedPressureLevelValue(theOther.itsUsedPressureLevelValue),
-      itsPossibleMetaParamId(theOther.itsPossibleMetaParamId),
-      metaWindParamUsage(theOther.metaWindParamUsage),
-      fCheckMetaParamCalculation(theOther.fCheckMetaParamCalculation)
+      metaParamDataHolder(theOther.metaParamDataHolder)
 {
 }
 
-void NFmiInfoAreaMask::DoConstructorInitializations()
+void NFmiInfoAreaMask::DoConstructorInitializations(unsigned long thePossibleMetaParamId)
 {
-    if(itsInfo && itsInfo->Level())
-        itsLevel = *itsInfo->Level();
-    metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(itsInfo);
-    fCheckMetaParamCalculation = metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId);
+    if(itsInfo)
+    {
+        metaParamDataHolder.initialize(itsInfo, thePossibleMetaParamId);
+        if(itsInfo->Level())
+            itsLevel = *itsInfo->Level();
+    }
 }
 
 NFmiAreaMask *NFmiInfoAreaMask::Clone() const { return new NFmiInfoAreaMask(*this); }
@@ -307,7 +324,7 @@ bool NFmiInfoAreaMask::IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlway
 double NFmiInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams,
                                bool fUseTimeInterpolationAlways)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamValue(theCalculationParams);
 
   double result = kFloatMissing;
@@ -343,34 +360,36 @@ double NFmiInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams
   return result;
 }
 
-class IntegerStateRestorer
+class MetaParamDataHolderDoCheckStateRestorer
 {
-    int *state_;
-    int origStateValue_;
+    MetaParamDataHolder &metaParamDataHolder_;
+    bool originalCheckMetaParamCalculationState_;
 public:
-    IntegerStateRestorer(int *state)
-        :state_(state)
-        , origStateValue_(*state)
-    {}
-    ~IntegerStateRestorer()
+    MetaParamDataHolderDoCheckStateRestorer(MetaParamDataHolder &metaParamDataHolder, bool wantedCheckMetaParamCalculationState)
+        :metaParamDataHolder_(metaParamDataHolder)
+        ,originalCheckMetaParamCalculationState_(metaParamDataHolder.checkMetaParamCalculation())
     {
-        *state_ = origStateValue_;
+        metaParamDataHolder_.setCheckMetaParamCalculation(wantedCheckMetaParamCalculationState);
+    }
+    ~MetaParamDataHolderDoCheckStateRestorer()
+    {
+        metaParamDataHolder_.setCheckMetaParamCalculation(originalCheckMetaParamCalculationState_);
     }
 };
 
 template<typename GetFunction>
 float NFmiInfoAreaMask::CalcMetaParamValueWithFunction(GetFunction getFunction)
 {
-    IntegerStateRestorer metaParamCheckRestorer(&fCheckMetaParamCalculation);
-    fCheckMetaParamCalculation = 0; // Tästä funktiosta kutsutuissa Value -metodeissa ei ole tarkoitus tehdä metaparam tarkastusta
+    // Tästä funktiosta kutsutuissa Value -metodeissa ei ole tarkoitus tehdä metaparam tarkastusta, siksi se laitetaan väliaikaisesti pois päältä
+    MetaParamDataHolderDoCheckStateRestorer metaParamDataHolderDoCheckStateRestorer(metaParamDataHolder, false);
 
-    if(metaWindParamUsage.HasWsAndWd())
+    if(metaParamDataHolder.metaWindParamUsage().HasWsAndWd())
     {
         itsInfo->Param(kFmiWindSpeedMS);
         float WS = getFunction();
         itsInfo->Param(kFmiWindDirection);
         float WD = getFunction();
-        switch(itsPossibleMetaParamId)
+        switch(metaParamDataHolder.possibleMetaParamId())
         {
         case kFmiWindUMS:
             return NFmiFastInfoUtils::CalcU(WS, WD);
@@ -382,13 +401,13 @@ float NFmiInfoAreaMask::CalcMetaParamValueWithFunction(GetFunction getFunction)
             return kFloatMissing;
         }
     }
-    else if(metaWindParamUsage.HasWindComponents())
+    else if(metaParamDataHolder.metaWindParamUsage().HasWindComponents())
     {
         itsInfo->Param(kFmiWindUMS);
         float u = getFunction();
         itsInfo->Param(kFmiWindVMS);
         float v = getFunction();
-        switch(itsPossibleMetaParamId)
+        switch(metaParamDataHolder.possibleMetaParamId())
         {
         case kFmiWindDirection:
             return NFmiFastInfoUtils::CalcWD(u, v);
@@ -423,7 +442,7 @@ float NFmiInfoAreaMask::CalcMetaParamPressureValue(double thePressure, const NFm
 
 float NFmiInfoAreaMask::CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamCachedInterpolation(theUsedInfo, theLocationCache, theTimeCache);
     else
     {
@@ -442,7 +461,7 @@ float NFmiInfoAreaMask::CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiF
 double NFmiInfoAreaMask::HeightValue(double theHeight,
                                      const NFmiCalculationParams &theCalculationParams)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamHeightValue(theHeight, theCalculationParams);
     else
         return itsInfo->HeightValue(static_cast<float>(theHeight), theCalculationParams.itsLatlon, theCalculationParams.itsTime);
@@ -451,7 +470,7 @@ double NFmiInfoAreaMask::HeightValue(double theHeight,
 double NFmiInfoAreaMask::HeightValueStatic(double theHeight,
                                            const NFmiCalculationParams &theCalculationParams)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamHeightValue(theHeight, theCalculationParams);
     else
         return itsInfo->HeightValue(static_cast<float>(theHeight), theCalculationParams.itsLatlon, theCalculationParams.itsTime);
@@ -460,7 +479,7 @@ double NFmiInfoAreaMask::HeightValueStatic(double theHeight,
 double NFmiInfoAreaMask::PressureValue(double thePressure,
                                        const NFmiCalculationParams &theCalculationParams)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamPressureValue(thePressure, theCalculationParams);
     else
         return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
@@ -471,7 +490,7 @@ double NFmiInfoAreaMask::PressureValue(double thePressure,
 double NFmiInfoAreaMask::PressureValueStatic(double thePressure,
                                              const NFmiCalculationParams &theCalculationParams)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamPressureValue(thePressure, theCalculationParams);
     else
         return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
@@ -642,9 +661,9 @@ void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &th
 {
     if(!theLocationCache.NoValue())
     {
-        if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+        if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         {
-            if(metaWindParamUsage.HasWsAndWd())
+            if(metaParamDataHolder.metaWindParamUsage().HasWsAndWd())
             {
                 theInfo->Param(kFmiWindSpeedMS);
                 std::vector<float> wsValues(4, kFloatMissing);
@@ -654,7 +673,7 @@ void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &th
                 theInfo->GetCachedValues(theLocationCache, wdValues);
                 for(auto index = 0; index < wsValues.size(); index++)
                 {
-                    switch(itsPossibleMetaParamId)
+                    switch(metaParamDataHolder.possibleMetaParamId())
                     {
                     case kFmiWindUMS:
                         theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcU(wsValues[index], wdValues[index]));
@@ -668,7 +687,7 @@ void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &th
                     }
                 }
             }
-            else if(metaWindParamUsage.HasWindComponents())
+            else if(metaParamDataHolder.metaWindParamUsage().HasWindComponents())
             {
                 theInfo->Param(kFmiWindUMS);
                 std::vector<float> uValues(4, kFloatMissing);
@@ -678,7 +697,7 @@ void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &th
                 theInfo->GetCachedValues(theLocationCache, vValues);
                 for(auto index = 0; index < uValues.size(); index++)
                 {
-                    switch(itsPossibleMetaParamId)
+                    switch(metaParamDataHolder.possibleMetaParamId())
                     {
                     case kFmiWindSpeedMS:
                         theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWS(uValues[index], vValues[index]));
@@ -1124,7 +1143,7 @@ float NFmiInfoAreaMaskMetFuncBase::Peek(const NFmiLocationCache &theLocationCach
 
 float NFmiInfoAreaMaskMetFuncBase::CalcCachedPressureLevelValue(float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamCachedPressureLevelValue(P, theLocationCache, theTimeCache);
     else
         return itsInfo->CachedPressureLevelValue(P, theLocationCache, theTimeCache);
@@ -2863,7 +2882,7 @@ bool NFmiInfoAreaMaskProbFunc::IsCalculationPointInsideCircle(const NFmiLocation
 
 float NFmiInfoAreaMaskProbFunc::CalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime)
 {
-    if(fCheckMetaParamCalculation && metaWindParamUsage.ParamNeedsMetaCalculations(itsPossibleMetaParamId))
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
         return CalcMetaParamCalculationPointValue(theOffsetX, theOffsetY, theInterpolationTime, useInterpolatedTime);
 
     if(useInterpolatedTime)
