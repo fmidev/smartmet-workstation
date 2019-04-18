@@ -6,13 +6,21 @@
 #include <boost/math/special_functions/round.hpp>
 #include <future>
 
+static float GetTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const MetaParamDataHolder &metaParamDataHolder, const NFmiMetTime &theTime)
+{
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
+        return NFmiFastInfoUtils::GetMetaWindValue(theInfo, theTime, metaParamDataHolder.metaWindParamUsage(), metaParamDataHolder.possibleMetaParamId());
+    else
+        return theInfo->InterpolatedValue(theTime);
+}
+
 NFmiLocalAreaMinMaxMask::NFmiLocalAreaMinMaxMask(Type theMaskType,
     NFmiInfoData::Type theDataType,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     int theArgumentCount,
     const NFmiGrid &theCalculationGrid,
     unsigned long thePossibleMetaParamId)
-    :NFmiInfoAreaMask(NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId)
+    :NFmiInfoAreaMask(NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId, kNoValue)
     ,itsLocalAreaSearchRangeInKm(0)
 ,itsDataCache(std::make_shared<DataCache>())
 ,itsCurrentDataMatrix(nullptr)
@@ -409,13 +417,13 @@ public:
         }
     }
 
-    bool CheckExtremeConditionFromOffset(const LocalExtreme &localExtreme, boost::shared_ptr<NFmiFastQueryInfo> &info, SearchDirections searchDirection, unsigned long checkGridPointX, unsigned long checkGridPointY, const NFmiMetTime &interpolationTime)
+    bool CheckExtremeConditionFromOffset(const LocalExtreme &localExtreme, boost::shared_ptr<NFmiFastQueryInfo> &info, SearchDirections searchDirection, unsigned long checkGridPointX, unsigned long checkGridPointY, const NFmiMetTime &interpolationTime, const MetaParamDataHolder &metaParamDataHolder)
     {
         if(continueIterations[searchDirection])
         {
             if(NFmiFastInfoUtils::SetInfoToGridPoint(info, checkGridPointX, checkGridPointY))
             {
-                auto value = info->InterpolatedValue(interpolationTime);
+                auto value = ::GetTimeInterpolatedValue(info, metaParamDataHolder, interpolationTime);
                 if(ExtremeAreaContinues(localExtreme, value, valueOnExtremeAreaEdge[searchDirection]))
                 {
                     lengthInGridPoints[searchDirection]++;
@@ -434,7 +442,7 @@ public:
     }
 };
 
-static LocalExtremesSearcher SearchLocalMinAndMax(boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiRect &gridPointBoundings, const NFmiMetTime &interpolationTime)
+static LocalExtremesSearcher SearchLocalMinAndMax(boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiRect &gridPointBoundings, const NFmiMetTime &interpolationTime, const MetaParamDataHolder &metaParamDataHolder)
 {
     // 1. Käy läpi jokainen aliruudukon hilapiste
     auto left = static_cast<unsigned long>(gridPointBoundings.Left());
@@ -450,7 +458,7 @@ static LocalExtremesSearcher SearchLocalMinAndMax(boost::shared_ptr<NFmiFastQuer
             if(NFmiFastInfoUtils::SetInfoToGridPoint(info, gridPointX, gridPointY))
             {
                 // 2. Etsi siitä minimi ja maksimi (jos samoja arvoja, 1. löytynyt otetaan)
-                extremesSearcher.checkForExtremes(info->InterpolatedValue(interpolationTime), gridPointX, gridPointY, info->LatLonFast());
+                extremesSearcher.checkForExtremes(::GetTimeInterpolatedValue(info, metaParamDataHolder, interpolationTime), gridPointX, gridPointY, info->LatLonFast());
             }
         }
     }
@@ -478,7 +486,7 @@ static NFmiPoint CalcBaseGridPointSizeInKM(boost::shared_ptr<NFmiFastQueryInfo> 
 // Laskee ääripisteen alueen koon 8 suuntaa (vaaka/pysty/diagonaalit) kilometreissa ja laskee niistä keskiarvon.
 // Jos palautettu indeksi on 0, ei kyseessä ollut oikea lokaali ääripiste (se saattoi olla alihilan reunalla ollut 
 // ääripiste, mutta alihilan ulkopuolelta löytyy isompia/pienempiä arvoja)
-static bool CalcExtremesAreaSizeIndex(LocalExtreme &localExtreme, boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiMetTime &interpolationTime, float localAreaSearchRangeInKm)
+static bool CalcExtremesAreaSizeIndex(LocalExtreme &localExtreme, boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiMetTime &interpolationTime, float localAreaSearchRangeInKm, const MetaParamDataHolder &metaParamDataHolder)
 {
     auto gridPointSizeInKM = ::CalcBaseGridPointSizeInKM(info);
     auto centralGridPointX = static_cast<unsigned long>(localExtreme.itsOrigDataGridPoint.X());
@@ -492,26 +500,26 @@ static bool CalcExtremesAreaSizeIndex(LocalExtreme &localExtreme, boost::shared_
         for(unsigned long gridPointOffset = 1; gridPointOffset < maxGridPointOffset; gridPointOffset++)
         {
             bool anyDirectionContinues = false;
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_N, centralGridPointX, centralGridPointY + gridPointOffset, interpolationTime);
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_S, centralGridPointX, centralGridPointY - gridPointOffset, interpolationTime);
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_W, centralGridPointX - gridPointOffset, centralGridPointY, interpolationTime);
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_E, centralGridPointX + gridPointOffset, centralGridPointY, interpolationTime);
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NW, centralGridPointX - gridPointOffset, centralGridPointY + gridPointOffset, interpolationTime);
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NE, centralGridPointX + gridPointOffset, centralGridPointY + gridPointOffset, interpolationTime);
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SW, centralGridPointX - gridPointOffset, centralGridPointY - gridPointOffset, interpolationTime);
-            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SE, centralGridPointX + gridPointOffset, centralGridPointY - gridPointOffset, interpolationTime);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_N, centralGridPointX, centralGridPointY + gridPointOffset, interpolationTime, metaParamDataHolder);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_S, centralGridPointX, centralGridPointY - gridPointOffset, interpolationTime, metaParamDataHolder);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_W, centralGridPointX - gridPointOffset, centralGridPointY, interpolationTime, metaParamDataHolder);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_E, centralGridPointX + gridPointOffset, centralGridPointY, interpolationTime, metaParamDataHolder);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NW, centralGridPointX - gridPointOffset, centralGridPointY + gridPointOffset, interpolationTime, metaParamDataHolder);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NE, centralGridPointX + gridPointOffset, centralGridPointY + gridPointOffset, interpolationTime, metaParamDataHolder);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SW, centralGridPointX - gridPointOffset, centralGridPointY - gridPointOffset, interpolationTime, metaParamDataHolder);
+            anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SE, centralGridPointX + gridPointOffset, centralGridPointY - gridPointOffset, interpolationTime, metaParamDataHolder);
             // Kahdella jaollisille kohdille voidaan laskea väli-väli ilmansuunnat mukaan
             if(gridPointOffset % 2 == 0)
             {
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_WNW, centralGridPointX - gridPointOffset, centralGridPointY + (gridPointOffset / 2), interpolationTime);
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_ENE, centralGridPointX + gridPointOffset, centralGridPointY + (gridPointOffset / 2), interpolationTime);
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NNW, centralGridPointX - (gridPointOffset / 2), centralGridPointY + gridPointOffset, interpolationTime);
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NNE, centralGridPointX + (gridPointOffset / 2), centralGridPointY + gridPointOffset, interpolationTime);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_WNW, centralGridPointX - gridPointOffset, centralGridPointY + (gridPointOffset / 2), interpolationTime, metaParamDataHolder);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_ENE, centralGridPointX + gridPointOffset, centralGridPointY + (gridPointOffset / 2), interpolationTime, metaParamDataHolder);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NNW, centralGridPointX - (gridPointOffset / 2), centralGridPointY + gridPointOffset, interpolationTime, metaParamDataHolder);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_NNE, centralGridPointX + (gridPointOffset / 2), centralGridPointY + gridPointOffset, interpolationTime, metaParamDataHolder);
 
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_WSW, centralGridPointX - gridPointOffset, centralGridPointY - (gridPointOffset / 2), interpolationTime);
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_ESE, centralGridPointX + gridPointOffset, centralGridPointY - (gridPointOffset / 2), interpolationTime);
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SSW, centralGridPointX - (gridPointOffset / 2), centralGridPointY - gridPointOffset, interpolationTime);
-                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SSE, centralGridPointX + (gridPointOffset / 2), centralGridPointY - gridPointOffset, interpolationTime);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_WSW, centralGridPointX - gridPointOffset, centralGridPointY - (gridPointOffset / 2), interpolationTime, metaParamDataHolder);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_ESE, centralGridPointX + gridPointOffset, centralGridPointY - (gridPointOffset / 2), interpolationTime, metaParamDataHolder);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SSW, centralGridPointX - (gridPointOffset / 2), centralGridPointY - gridPointOffset, interpolationTime, metaParamDataHolder);
+                anyDirectionContinues |= localExtremeSearcherData.CheckExtremeConditionFromOffset(localExtreme, info, SearchDirection_SSE, centralGridPointX + (gridPointOffset / 2), centralGridPointY - gridPointOffset, interpolationTime, metaParamDataHolder);
             }
 
             if(!anyDirectionContinues)
@@ -530,14 +538,14 @@ static bool CalcExtremesAreaSizeIndex(LocalExtreme &localExtreme, boost::shared_
     return false;
 }
 
-static void CheckLocalExtreme(LocalExtreme localExtremeCopy, boost::shared_ptr<NFmiFastQueryInfo> &info, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime, std::vector<LocalExtreme> &acceptedLocalExtremesInOut)
+static void CheckLocalExtreme(LocalExtreme localExtremeCopy, boost::shared_ptr<NFmiFastQueryInfo> &info, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime, std::vector<LocalExtreme> &acceptedLocalExtremesInOut, const MetaParamDataHolder &metaParamDataHolder)
 {
     // 3. Tutki onko löytynyt min/max koko data-alueen reunalla (jos on, eliminoi)
     if(!::IsExtremePointOnEdge(localExtremeCopy, info))
     {
         // 4. Tutki min/max:in alueen suuruus (km)
         // 5. Tutki min/max:in syvyys (gradienttien tai ero keskustan ja reunojen välillä)
-        if(::CalcExtremesAreaSizeIndex(localExtremeCopy, info, interpolationTime, localAreaSearchRangeInKm))
+        if(::CalcExtremesAreaSizeIndex(localExtremeCopy, info, interpolationTime, localAreaSearchRangeInKm, metaParamDataHolder))
         {
             // 6. Laske suuruuden ja syvyyden avulla joku merkitsevyys indeksi
             localExtremeCopy.itsSignificance = localExtremeCopy.itsAreaSizeAvgInKM * localExtremeCopy.itsDeepnessAvg * localExtremeCopy.itsSymmetryIndex;
@@ -751,20 +759,20 @@ static void FillLocationInfoToAdditionalLocalExtreme(LocalExtreme &localExtreme,
         localExtreme.itsLatlon = info->LatLonFast();
 }
 
-static void FillAdditionalLocalExtremesWithData(std::vector<LocalExtreme> &additionalLocalExtremesInOut, boost::shared_ptr<NFmiFastQueryInfo> &info, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime)
+static void FillAdditionalLocalExtremesWithData(std::vector<LocalExtreme> &additionalLocalExtremesInOut, boost::shared_ptr<NFmiFastQueryInfo> &info, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime, const MetaParamDataHolder &metaParamDataHolder)
 {
     std::vector<LocalExtreme> finalLocalExtremes;
     for(auto &localExtreme : additionalLocalExtremesInOut)
     {
         ::FillLocationInfoToAdditionalLocalExtreme(localExtreme, info);
-        ::CheckLocalExtreme(localExtreme, info, localAreaSearchRangeInKm, interpolationTime, finalLocalExtremes);
+        ::CheckLocalExtreme(localExtreme, info, localAreaSearchRangeInKm, interpolationTime, finalLocalExtremes, metaParamDataHolder);
     }
     additionalLocalExtremesInOut.swap(finalLocalExtremes);
 }
 
 // Käydään vielä läpi alihilaruudukko (jonka gridPointBoundings määrittelee) 3x3 hilaruudun etsintä ytimellä.
 // Riippuen ytimen arvoista (keskusarvo vs reuna arvot), voidaan saada uusia lokaaleja min/max arvoja ja pisteitä.
-static void LookForAdditionalLocalExtremes(std::vector<LocalExtreme> &localExtremesInOut, boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiRect &gridPointBoundings, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime)
+static void LookForAdditionalLocalExtremes(std::vector<LocalExtreme> &localExtremesInOut, boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiRect &gridPointBoundings, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime, const MetaParamDataHolder &metaParamDataHolder)
 {
     NFmiDataMatrix<float> subGridValues;
     int x1 = static_cast<int>(gridPointBoundings.Left());
@@ -778,22 +786,22 @@ static void LookForAdditionalLocalExtremes(std::vector<LocalExtreme> &localExtre
     ::RemoveTooCloseAdditionalLocalExtremes(additionalLocalExtremes, info, localAreaSearchRangeInKm);
     if(!additionalLocalExtremes.empty())
     {
-        ::FillAdditionalLocalExtremesWithData(additionalLocalExtremes, info, localAreaSearchRangeInKm, interpolationTime);
+        ::FillAdditionalLocalExtremesWithData(additionalLocalExtremes, info, localAreaSearchRangeInKm, interpolationTime, metaParamDataHolder);
         // Lisätään mahdolliset löytyneet extra ääripisteet lopulliseen vektoriin
         localExtremesInOut.insert(localExtremesInOut.end(), additionalLocalExtremes.begin(), additionalLocalExtremes.end());
     }
 }
 
-static std::vector<LocalExtreme> CalculateLocalExtremesFromGivenSubGrid(boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiRect &gridPointBoundings, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime)
+static std::vector<LocalExtreme> CalculateLocalExtremesFromGivenSubGrid(boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiRect &gridPointBoundings, float localAreaSearchRangeInKm, const NFmiMetTime &interpolationTime, const MetaParamDataHolder &metaParamDataHolder)
 {
     std::vector<LocalExtreme> localExtremes;
-    auto extremeSearcher = SearchLocalMinAndMax(info, gridPointBoundings, interpolationTime);
+    auto extremeSearcher = ::SearchLocalMinAndMax(info, gridPointBoundings, interpolationTime, metaParamDataHolder);
     // Jos minimin ja maksimin arvot samoja (myös puuttuvia), ei ole olemassa lokaaleja min/max paikkoja
     if(extremeSearcher.getMinimum().itsValue != extremeSearcher.getMaximum().itsValue)
     {
-        ::CheckLocalExtreme(extremeSearcher.getMinimum(), info, localAreaSearchRangeInKm, interpolationTime, localExtremes);
-        ::CheckLocalExtreme(extremeSearcher.getMaximum(), info, localAreaSearchRangeInKm, interpolationTime, localExtremes);
-        ::LookForAdditionalLocalExtremes(localExtremes, info, gridPointBoundings, localAreaSearchRangeInKm, interpolationTime);
+        ::CheckLocalExtreme(extremeSearcher.getMinimum(), info, localAreaSearchRangeInKm, interpolationTime, localExtremes, metaParamDataHolder);
+        ::CheckLocalExtreme(extremeSearcher.getMaximum(), info, localAreaSearchRangeInKm, interpolationTime, localExtremes, metaParamDataHolder);
+        ::LookForAdditionalLocalExtremes(localExtremes, info, gridPointBoundings, localAreaSearchRangeInKm, interpolationTime, metaParamDataHolder);
     }
     return localExtremes;
 }
@@ -821,12 +829,12 @@ NFmiDataMatrix<float> NFmiLocalAreaMinMaxMask::CalculateLocalMinMaxMatrix()
             for(size_t index = 0; index < boundaryVector.size(); index++)
             {
 #ifdef DEBUG_LOCAL_EXTREMES
-                results.push_back(::CalculateLocalExtremesFromGivenSubGrid(itsInfo, boundaryVector[index], itsLocalAreaSearchRangeInKm, itsTime));
+                results.push_back(::CalculateLocalExtremesFromGivenSubGrid(itsInfo, boundaryVector[index], itsLocalAreaSearchRangeInKm, itsTime, std::ref(metaParamDataHolder)));
 #else
                 // Jokaiselle säikeelle pitää tehdä oma 'kevyt' kopio datan iteraattorista
                 infos[index] = NFmiAreaMask::DoShallowCopy(itsInfo);
                 // launch a task asynchronously
-                results.emplace_back(std::async(std::launch::async, ::CalculateLocalExtremesFromGivenSubGrid, infos[index], boundaryVector[index], itsLocalAreaSearchRangeInKm, itsTime));
+                results.emplace_back(std::async(std::launch::async, ::CalculateLocalExtremesFromGivenSubGrid, infos[index], boundaryVector[index], itsLocalAreaSearchRangeInKm, itsTime, std::ref(metaParamDataHolder)));
 #endif
             }
             // Odotetaan että kaikki taskit tekevät työnsä tekemälle kaikille future:ille get

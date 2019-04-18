@@ -79,6 +79,7 @@ private:
 	void CrashRptUninstall(void);
     void InitNonDictionaryToolbarItems();
     void DoFirstTimeOnIdleInitializations();
+    void SetWin32LocalesToEnglish();
 
 	NFmiEditMapGeneralDataDoc* itsGeneralData; // UGLY but I couldn't put this in mainframe
 	bool fUseToolMasterIfAvailable; // komentorivi argumentilla -n voidaan estää toolmasterin käyttö kokonaan, tämä on true, jos -n optiota ei ole käytetty

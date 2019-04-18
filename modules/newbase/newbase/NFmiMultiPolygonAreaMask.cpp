@@ -197,7 +197,7 @@ std::istream& NFmiMultiPolygonAreaMask::Read(std::istream& file)
 
 NFmiBitmapAreaMask* NFmiMultiPolygonAreaMask::CreateBitmapAreaMask(const NFmiGrid& theGrid)
 {
-  auto* mask = new NFmiBitmapAreaMask(theGrid, nullptr, nullptr);
+  auto* mask = new NFmiBitmapAreaMask(theGrid, nullptr, nullptr, kNoValue);
   if (mask)
   {
     NFmiGrid grid(theGrid);  // tehdään hilasta kopio, että voidaan käydä hila läpi

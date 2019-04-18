@@ -355,15 +355,16 @@ NFmiAreaMask* NFmiLastTimeValueMask::Clone(void) const
 
 double NFmiLastTimeValueMask::Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
 {
+    NFmiCalculationParams calculationParams(theCalculationParams);
+    calculationParams.itsTime = itsLastTimeOfData;
     if(itsInfo->IsGrid())
     {
-        itsInfo->TimeIndex(itsLastTimeIndex);
-        return itsInfo->InterpolatedValue(theCalculationParams.itsLatlon);
+        // Hiladatan laskut hoidataan NFmiInfoAreaMask::Value:ssa, joka hanskaa mm. tuulen meta-parametrit
+        return NFmiInfoAreaMask::Value(calculationParams, fUseTimeInterpolationAlways);
     }
     else
     {
-        NFmiCalculationParams calculationParams(theCalculationParams);
-        calculationParams.itsTime = itsLastTimeOfData;
+        // Havainto data menee hilaus-funktioiden kautta ja niille ei laiteta toistaiseksi tuulen meta-parametri tukea
         return NFmiStation2GridMask::Value(calculationParams, fUseTimeInterpolationAlways);
     }
 }
