@@ -39,6 +39,7 @@
 #include <newbase/NFmiRelativeTimeIntegrationIterator.h>
 #include <newbase/NFmiSimpleCondition.h>
 
+#include <boost/math/special_functions/round.hpp>
 #include <stdexcept>
 
 #ifdef _MSC_VER
