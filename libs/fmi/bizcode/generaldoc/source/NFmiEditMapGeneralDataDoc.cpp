@@ -10584,6 +10584,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		InfoOrganizer()->SetMacroParamDataGridSize(xSize, ySize);
 		SaveMacroParamDataGridSizeSettings();
+        // Pitää tyhjentää kaikkien ikkunoiden kaikkien rivien macroParam datat (voisi optimoida, jos tiedettäisiin, missä on käytössä "RESOLUTION = xxx", niitä ei tarvitsisi tyhjentää)
+        MacroParamDataCache().clearAllLayers();
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set macro-param general data grid size", TRUE, TRUE);
 	}
 
