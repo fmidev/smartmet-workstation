@@ -16,11 +16,20 @@
 
 class NFmiDataModifier;
 
-// Perus areamask-luokka.
-// Sisältää myös listan mahdollisiin 'ali'-maskeihin. Niihin yhteys vain
-// indeksin kautta. Ylimaski on indeksillä 1 ja muut seuraavat numerojärjestyksessä.
-
-//! Undocumented
+class MetaParamDataHolder
+{
+    NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage_;
+    unsigned long possibleMetaParamId_ = kFmiBadParameter;
+    bool checkMetaParamCalculation_ = false;
+public:
+    MetaParamDataHolder() = default;
+    void initialize(const boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned long possibleMetaParamId);
+    bool isMetaParameterCalculationNeeded() const;
+    unsigned long possibleMetaParamId() const { return possibleMetaParamId_; }
+    const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage() const { return metaWindParamUsage_; }
+    bool checkMetaParamCalculation()const { return checkMetaParamCalculation_; }
+    void setCheckMetaParamCalculation(bool checkMetaParamCalculation) { checkMetaParamCalculation_ = checkMetaParamCalculation; }
+};
 
 class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
 {
@@ -32,11 +41,11 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
                    NFmiInfoData::Type theDataType,
                    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                    unsigned long thePossibleMetaParamId,
-                   BinaryOperator thePostBinaryOperator = kNoValue);
+                   BinaryOperator thePostBinaryOperator);
 
   NFmiInfoAreaMask(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       unsigned long thePossibleMetaParamId,
-      BinaryOperator thePostBinaryOperator = kNoValue);
+      BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMask &operator=(const NFmiInfoAreaMask &theMask) = delete;
@@ -100,29 +109,27 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   bool IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlways) const;
   template<typename GetFunction>
   float CalcMetaParamValueWithFunction(GetFunction getFunction);
-  float CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
+  float CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams);
   float CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
   float CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
   float CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
   float CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
+  void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDataModifier> &theFunctionModifier, const NFmiLocationCache &theLocationCache);
 
-  void DoConstructorInitializations();
+  void DoConstructorInitializations(unsigned long thePossibleMetaParamId);
 protected:
   boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
   NFmiDataIdent itsDataIdent;
   NFmiLevel itsLevel;
-  NFmiMetTime itsTime;  // jos vanhassa maski jutussa tarvitaan aikainterpolointia, tässä on
-                        // interpoloitava aika
-  bool fIsTimeIntepolationNeededInValue;  // erikois optimointia Value-metodin ja Time-metodin
-                                          // käytössä
-  bool fUsePressureLevelInterpolation;    // tämä asetetaan trueksi jos tarvitaan tehdä lennossa
-                                          // painepinta interpolointeja
-  double itsUsedPressureLevelValue;  // jos fUsePressureLevelInterpolation on true, käytetään
-                                     // laskuissa tätä painepintaa
-  unsigned long itsPossibleMetaParamId;
-  NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
-  int fCheckMetaParamCalculation = 1;
-
+  // jos vanhassa maski jutussa tarvitaan aikainterpolointia, tässä on interpoloitava aika
+  NFmiMetTime itsTime;  
+  // erikois optimointia Value-metodin ja Time-metodin käytössä
+  bool fIsTimeIntepolationNeededInValue;  
+  // tämä asetetaan trueksi jos tarvitaan tehdä lennossa painepinta interpolointeja
+  bool fUsePressureLevelInterpolation;    
+  // jos fUsePressureLevelInterpolation on true, käytetään laskuissa tätä painepintaa
+  double itsUsedPressureLevelValue;  
+  MetaParamDataHolder metaParamDataHolder;
 };  // class NFmiInfoAreaMask
 
 //! Tämä luokka toimii kuten NFmiInfoAreaMask mutta kurkkaa halutun x-y hila pisteen yli arvoa
@@ -138,13 +145,13 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
                          int theXOffset,
                          int theYOffset,
                           unsigned long thePossibleMetaParamId,
-                          BinaryOperator thePostBinaryOperator = kNoValue);
+                          BinaryOperator thePostBinaryOperator);
 
   NFmiInfoAreaMaskPeekXY(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                          int theXOffset,
                          int theYOffset,
                           unsigned long thePossibleMetaParamId,
-                          BinaryOperator thePostBinaryOperator = kNoValue);
+                          BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskPeekXY(const NFmiInfoAreaMaskPeekXY &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskPeekXY &operator=(const NFmiInfoAreaMaskPeekXY &theMask) = delete;
@@ -167,8 +174,9 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
 
 };  // class NFmiInfoAreaMaskPeekXY
 
-//! Tämä luokka toimii kuten NFmiInfoAreaMaskPeekXY käyttää kurkkaukseen editoritavan-datan tai
-//! macroParam-datan hilaväliä, tällöin voidaan käyttää uutta GridSizeX ja Y funktioita
+//! Tämä luokka toimii kuten NFmiInfoAreaMaskPeekXY mutta käyttää kurkkaukseen editoritavan-datan tai
+//! macroParam-datan karttaprojektiota ja X/Y kurkkaukset tehdään siinä kilometreissa. Tämä kurkkaus 
+//! ei välttämättä mene lat-lon suuntaisesti kuin ehkä jos pohjana on latlon area.
 class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
 {
  public:
@@ -182,14 +190,8 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
                           int theXOffset,
                           int theYOffset,
                           unsigned long thePossibleMetaParamId,
-                          BinaryOperator thePostBinaryOperator = kNoValue);
+                          BinaryOperator thePostBinaryOperator);
 
-  NFmiInfoAreaMaskPeekXY2(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                          const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
-                          int theXOffset,
-                          int theYOffset,
-                          unsigned long thePossibleMetaParamId,
-                          BinaryOperator thePostBinaryOperator = kNoValue);
   NFmiInfoAreaMaskPeekXY2(const NFmiInfoAreaMaskPeekXY2 &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskPeekXY2 &operator=(const NFmiInfoAreaMaskPeekXY2 &theMask) = delete;
@@ -225,14 +227,14 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY3 : public NFmiInfoAreaMask
                           double theXOffsetInKM,
                           double theYOffsetInKM,
                           unsigned long thePossibleMetaParamId,
-                          BinaryOperator thePostBinaryOperator = kNoValue);
+                          BinaryOperator thePostBinaryOperator);
 
   NFmiInfoAreaMaskPeekXY3(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                           const boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo,
                           double theXOffsetInKM,
                           double theYOffsetInKM,
                           unsigned long thePossibleMetaParamId,
-                          BinaryOperator thePostBinaryOperator = kNoValue);
+                          BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskPeekXY3(const NFmiInfoAreaMaskPeekXY3 &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskPeekXY3 &operator=(const NFmiInfoAreaMaskPeekXY2 &theMask) = delete;
@@ -264,7 +266,7 @@ class _FMI_DLL NFmiInfoAreaMaskMetFuncBase : public NFmiInfoAreaMask
                               bool thePeekAlongTudes,
                               MetFunctionDirection theMetFuncDirection,
                               unsigned long thePossibleMetaParamId,
-                              BinaryOperator thePostBinaryOperator = kNoValue);
+                              BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskMetFuncBase(const NFmiInfoAreaMaskMetFuncBase &theOther);
   NFmiInfoAreaMaskMetFuncBase &operator=(const NFmiInfoAreaMaskMetFuncBase &theMask) = delete;
   void Initialize(void) override;
@@ -325,7 +327,8 @@ class _FMI_DLL NFmiInfoAreaMaskGrad : public NFmiInfoAreaMaskMetFuncBase
                        const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                        bool thePeekAlongTudes,
                        MetFunctionDirection theMetFuncDirection,
-                       BinaryOperator thePostBinaryOperator = kNoValue);
+                       unsigned long thePossibleMetaParamId,
+                       BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskGrad(const NFmiInfoAreaMaskGrad &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskGrad &operator=(const NFmiInfoAreaMaskGrad &theMask) = delete;
@@ -367,7 +370,8 @@ class _FMI_DLL NFmiInfoAreaMaskAdvection : public NFmiInfoAreaMaskGrad
                             const boost::shared_ptr<NFmiFastQueryInfo> &theInfoVwind,
                             bool thePeekAlongTudes,
                             MetFunctionDirection theMetFuncDirection,
-                            BinaryOperator thePostBinaryOperator = kNoValue);
+                            unsigned long thePossibleMetaParamId,
+                            BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskAdvection(const NFmiInfoAreaMaskAdvection &theOther);
   NFmiAreaMask *Clone(void) const override;
 
@@ -392,7 +396,8 @@ class _FMI_DLL NFmiInfoAreaMaskLaplace : public NFmiInfoAreaMaskMetFuncBase
                           const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                           bool thePeekAlongTudes,
                           MetFunctionDirection theMetFuncDirection,
-                          BinaryOperator thePostBinaryOperator = kNoValue);
+                          unsigned long thePossibleMetaParamId,
+                          BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskLaplace(const NFmiInfoAreaMaskLaplace &theOther);
   NFmiAreaMask *Clone(void) const override;
   NFmiInfoAreaMaskLaplace &operator=(const NFmiInfoAreaMaskLaplace &theMask) = delete;
@@ -428,7 +433,8 @@ class _FMI_DLL NFmiInfoAreaMaskRotor : public NFmiInfoAreaMaskGrad
                         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                         bool thePeekAlongTudes,
                         MetFunctionDirection theMetFuncDirection,
-                        BinaryOperator thePostBinaryOperator = kNoValue);
+                        unsigned long thePossibleMetaParamId,
+                        BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskRotor(const NFmiInfoAreaMaskRotor &theOther);
   NFmiAreaMask *Clone(void) const override;
 
@@ -868,7 +874,7 @@ public:
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         float theTimeOffsetInHours,
         unsigned long thePossibleMetaParamId,
-        BinaryOperator thePostBinaryOperator = kNoValue);
+        BinaryOperator thePostBinaryOperator);
     NFmiTimeShiftedInfoAreaMask(const NFmiTimeShiftedInfoAreaMask &theOther);
     NFmiAreaMask *Clone(void) const override;
     NFmiInfoAreaMask &operator=(const NFmiInfoAreaMask &theMask) = delete;

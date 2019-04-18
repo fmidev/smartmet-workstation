@@ -6692,12 +6692,12 @@ NFmiAreaMask* CreateMask(const NFmiMenuItem& theMenuItem)
 				if(infoCopy->Param().Type() != kContinuousParam)
 				{
 					NFmiCalculationCondition calCond(kFmiMaskEqual, 0.,0.);
-					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, NFmiAreaMask::kNoValue);
+					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, theMenuItem.DataIdent().GetParamIdent(), NFmiAreaMask::kNoValue);
 				}
 				else
 				{
 					NFmiCalculationCondition calCond(kFmiMaskGreaterThan, 0.,1.);
-					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, NFmiAreaMask::kNoValue);
+					mask = new NFmiInfoAreaMask(calCond, NFmiAreaMask::kInfo, infoCopy->DataType(), infoCopy, theMenuItem.DataIdent().GetParamIdent(), NFmiAreaMask::kNoValue);
 				}
 			}
 		}
@@ -10584,6 +10584,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		InfoOrganizer()->SetMacroParamDataGridSize(xSize, ySize);
 		SaveMacroParamDataGridSizeSettings();
+        // Pitää tyhjentää kaikkien ikkunoiden kaikkien rivien macroParam datat (voisi optimoida, jos tiedettäisiin, missä on käytössä "RESOLUTION = xxx", niitä ei tarvitsisi tyhjentää)
+        MacroParamDataCache().clearAllLayers();
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set macro-param general data grid size", TRUE, TRUE);
 	}
 

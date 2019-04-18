@@ -868,8 +868,20 @@ static void DoErrorReporting(const std::string &messageStart, const std::string 
     CatLog::logMessage(errorString, CatLog::Severity::Error, CatLog::Category::Operational, true);
 }
 
+// This make sure that certain default locales, in win32 environment, are set to english.
+// This fixes used symbol bug, when using special fonts (like Synop and Mirri), are shown correctly in
+// PCs that use certain languages (like russian). Problem lies somewhere in used default language
+// and using string conversion macros (CA2T, etc.) that can do strange conversions when used character's
+// value is between 128 and 255. ENGLISH_US sets latin-1 as default codepage that is needed for special fonts here...
+void CSmartMetApp::SetWin32LocalesToEnglish()
+{
+    SetThreadLocale(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT));
+}
+
 int CSmartMetApp::Run()
 {
+    SetWin32LocalesToEnglish();
+
     int status = 0;
     do
     {

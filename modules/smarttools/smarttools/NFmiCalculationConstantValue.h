@@ -83,7 +83,7 @@ class NFmiCalculationRampFuction : public NFmiInfoAreaMask
                              NFmiInfoData::Type theDataType,
                              boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                               unsigned long thePossibleMetaParamId,
-                              BinaryOperator thePostBinaryOperator = kNoValue);
+                              BinaryOperator thePostBinaryOperator);
   ~NFmiCalculationRampFuction(void);
   NFmiCalculationRampFuction(const NFmiCalculationRampFuction &theOther);
   NFmiAreaMask *Clone(void) const override;
@@ -101,7 +101,7 @@ class NFmiCalculationRampFuctionWithAreaMask : public NFmiAreaMaskImpl
                                          Type theMaskType,
                                          NFmiInfoData::Type theDataType,
                                          boost::shared_ptr<NFmiAreaMask> &theAreaMask,
-                                         BinaryOperator thePostBinaryOperator = kNoValue);
+                                         BinaryOperator thePostBinaryOperator);
   ~NFmiCalculationRampFuctionWithAreaMask(void);
   NFmiCalculationRampFuctionWithAreaMask(const NFmiCalculationRampFuctionWithAreaMask &theOther);
   NFmiAreaMask *Clone(void) const override;

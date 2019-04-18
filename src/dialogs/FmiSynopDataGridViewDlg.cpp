@@ -2750,7 +2750,7 @@ void CFmiSynopDataGridViewDlg::InitWmoIdFilterManager(void)
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
 	SetCountryFilterValues(cFilter, "SR", "SINGAPORE", false, 48690, 46999);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
-	SetCountryFilterValues(cFilter, "VS", "VIET NAM", false, 48800, 48920);
+	SetCountryFilterValues(cFilter, "VN", "VIETNAM", false, 48800, 48920);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
 	SetCountryFilterValues(cFilter, "LA", "LAO PEOPLE*S DEMOCRATIC REPUBLIC", false, 48930, 48959);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);

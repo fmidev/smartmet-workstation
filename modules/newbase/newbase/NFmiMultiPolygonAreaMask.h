@@ -25,7 +25,7 @@ class _FMI_DLL NFmiMultiPolygonAreaMask : public NFmiAreaMaskImpl
   NFmiMultiPolygonAreaMask(const NFmiCalculationCondition &theOperation,
                            Type theMaskType,
                            NFmiInfoData::Type theDataType,
-                           BinaryOperator thePostBinaryOperator = kNoValue);
+                           BinaryOperator thePostBinaryOperator);
 
   NFmiBitmapAreaMask *CreateBitmapAreaMask(const NFmiGrid &theGrid);
 

@@ -39,6 +39,7 @@
 #include <newbase/NFmiRelativeTimeIntegrationIterator.h>
 #include <newbase/NFmiSimpleCondition.h>
 
+#include <boost/math/special_functions/round.hpp>
 #include <stdexcept>
 
 #ifdef _MSC_VER
@@ -1347,14 +1348,18 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekFunctionAreaMas
     info = tmp;
   }
   NFmiAreaMask::CalculationOperationType maskType = theAreaMaskInfo.GetOperationType();
+  const auto &offsetPoint1 = theAreaMaskInfo.GetOffsetPoint1();
+  int offsetX = boost::math::iround(offsetPoint1.X());
+  int offsetY = boost::math::iround(offsetPoint1.Y());
   if (maskType == NFmiAreaMask::FunctionPeekXY)
     areaMask = boost::shared_ptr<NFmiAreaMask>(
         new NFmiInfoAreaMaskPeekXY(theAreaMaskInfo.GetMaskCondition(),
                                    NFmiAreaMask::kInfo,
                                    theAreaMaskInfo.GetDataType(),
                                    info,
-                                   static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().X()),
-                                   static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().Y()),
+                                   offsetX,
+                                   offsetY,
+                                   theAreaMaskInfo.GetDataIdent().GetParamIdent(),
                                    NFmiAreaMask::kNoValue));
   else if (maskType == NFmiAreaMask::FunctionPeekXY2)
     areaMask = boost::shared_ptr<NFmiAreaMask>(new NFmiInfoAreaMaskPeekXY2(
@@ -1363,8 +1368,9 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekFunctionAreaMas
         theAreaMaskInfo.GetDataType(),
         info,
         GetUsedEditedInfo(),
-        static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().X()),
-        static_cast<int>(theAreaMaskInfo.GetOffsetPoint1().Y()),
+        offsetX,
+        offsetY,
+        theAreaMaskInfo.GetDataIdent().GetParamIdent(),
         NFmiAreaMask::kNoValue));
   else if (maskType == NFmiAreaMask::FunctionPeekXY3)
     areaMask = boost::shared_ptr<NFmiAreaMask>(new NFmiInfoAreaMaskPeekXY3(
@@ -1373,8 +1379,9 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekFunctionAreaMas
         theAreaMaskInfo.GetDataType(),
         info,
         GetUsedEditedInfo(),
-        theAreaMaskInfo.GetOffsetPoint1().X(),
-        theAreaMaskInfo.GetOffsetPoint1().Y(),
+        offsetX,
+        offsetY,
+        theAreaMaskInfo.GetDataIdent().GetParamIdent(),
         NFmiAreaMask::kNoValue));
 
   if (fUseLevelData)
@@ -1446,7 +1453,9 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateMetFunctionAreaMask
                                  theAreaMaskInfo.GetDataType(),
                                  info,
                                  peekAlongTudes,
-                                 theAreaMaskInfo.MetFunctionDirection()));
+                                 theAreaMaskInfo.MetFunctionDirection(),
+                                 theAreaMaskInfo.GetDataIdent().GetParamIdent(),
+                                 NFmiAreaMask::kNoValue));
     if (funcType == NFmiAreaMask::Divergence || funcType == NFmiAreaMask::Divergence2)
       dynamic_cast<NFmiInfoAreaMaskGrad *>(areaMask.get())->CalculateDivergence(true);
   }
@@ -1465,7 +1474,9 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateMetFunctionAreaMask
                                         infoUwind,
                                         infoVwind,
                                         peekAlongTudes,
-                                        theAreaMaskInfo.MetFunctionDirection()));
+                                        theAreaMaskInfo.MetFunctionDirection(),
+                                        theAreaMaskInfo.GetDataIdent().GetParamIdent(),
+                                        NFmiAreaMask::kNoValue));
     else
       DoErrorExceptionForMetFunction(
           theAreaMaskInfo,
@@ -1480,7 +1491,9 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateMetFunctionAreaMask
                                     theAreaMaskInfo.GetDataType(),
                                     info,
                                     peekAlongTudes,
-                                    theAreaMaskInfo.MetFunctionDirection()));
+                                    theAreaMaskInfo.MetFunctionDirection(),
+                                    theAreaMaskInfo.GetDataIdent().GetParamIdent(),
+                                    NFmiAreaMask::kNoValue));
   else if (funcType == NFmiAreaMask::Rot || funcType == NFmiAreaMask::Rot2)
   {
     if (theAreaMaskInfo.GetDataIdent().GetParamIdent() == kFmiTotalWindMS)
@@ -1490,7 +1503,9 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateMetFunctionAreaMask
                                     theAreaMaskInfo.GetDataType(),
                                     info,
                                     peekAlongTudes,
-                                    theAreaMaskInfo.MetFunctionDirection()));
+                                    theAreaMaskInfo.MetFunctionDirection(),
+                                    theAreaMaskInfo.GetDataIdent().GetParamIdent(),
+                                    NFmiAreaMask::kNoValue));
     else
       DoErrorExceptionForMetFunction(
           theAreaMaskInfo,
@@ -1532,12 +1547,12 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateInfoVariableMask(
   if(theAreaMaskInfo.TimeOffsetInHours())
   {
       return boost::shared_ptr<NFmiAreaMask>(new NFmiTimeShiftedInfoAreaMask(
-          theAreaMaskInfo.GetMaskCondition(), NFmiAreaMask::kInfo, info->DataType(), info, theAreaMaskInfo.TimeOffsetInHours(), theAreaMaskInfo.GetDataIdent().GetParamIdent()));
+          theAreaMaskInfo.GetMaskCondition(), NFmiAreaMask::kInfo, info->DataType(), info, theAreaMaskInfo.TimeOffsetInHours(), theAreaMaskInfo.GetDataIdent().GetParamIdent(), NFmiAreaMask::kNoValue));
   }
   else
   {
       return boost::shared_ptr<NFmiAreaMask>(new NFmiInfoAreaMask(
-          theAreaMaskInfo.GetMaskCondition(), NFmiAreaMask::kInfo, info->DataType(), info, theAreaMaskInfo.GetDataIdent().GetParamIdent()));
+          theAreaMaskInfo.GetMaskCondition(), NFmiAreaMask::kInfo, info->DataType(), info, theAreaMaskInfo.GetDataIdent().GetParamIdent(), NFmiAreaMask::kNoValue));
   }
 }
 
@@ -1555,7 +1570,7 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateRampFunctionMask(
         new NFmiCalculationRampFuction(theAreaMaskInfo.GetMaskCondition(),
                                        NFmiAreaMask::kInfo,
                                        theAreaMaskInfo.GetDataType(),
-                                       info, theAreaMaskInfo.GetDataIdent().GetParamIdent()));
+                                       info, theAreaMaskInfo.GetDataIdent().GetParamIdent(), NFmiAreaMask::kNoValue));
   }
   else
   {
@@ -1564,7 +1579,7 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateRampFunctionMask(
         new NFmiCalculationRampFuctionWithAreaMask(theAreaMaskInfo.GetMaskCondition(),
                                                    NFmiAreaMask::kInfo,
                                                    theAreaMaskInfo.GetDataType(),
-                                                   areaMask2));
+                                                   areaMask2, NFmiAreaMask::kNoValue));
   }
 }
 

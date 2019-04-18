@@ -1010,6 +1010,7 @@ static boost::shared_ptr<NFmiAreaMaskList> CreateNewParamMaskListWithReplacedEdi
 															,mask->MaskType()
 															,mask->GetDataType()
 															,info
+                                                            ,kFmiBadParameter
 															,NFmiAreaMask::kNoValue));
 				newMaskList->Add(newMask);
 			}
