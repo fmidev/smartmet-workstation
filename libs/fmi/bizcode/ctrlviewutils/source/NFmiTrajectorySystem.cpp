@@ -176,43 +176,46 @@ void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory>
 void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     // Datasta pitää löytyä joko WS+WD tai u+v komponentit
-	if(theInfo && (theInfo->Param(kFmiWindSpeedMS) && theInfo->Param(kFmiWindDirection)) || (theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS)))
+	if(theInfo)
 	{
-        bool pacificView = ::IsPacificViewData(theInfo);
-		theInfo->First();
-		theTrajectory->Clear(); // nollataan trajektori varmuuden vuoksi
-		theTrajectory->Calculated(true); // merkitään trajektori lasketuksi
-		theTrajectory->OriginTime(theInfo->OriginTime());
-		// lasketaan ensin "pää" trajektory
-		NFmiTempBalloonTrajectorSettings balloonTrajectorSettings(theTrajectory->TempBalloonTrajectorSettings());
-		NFmiSingleTrajector trajector(theTrajectory->LatLon(), theTrajectory->Time(), theTrajectory->PressureLevel());
-		CalculateSingleTrajectory(theInfo, trajector, theTrajectory->TimeStepInMinutes(), theTrajectory->TimeLengthInHours(), 0, 0, theTrajectory->Direction(), theTrajectory->Isentropic(), theTrajectory->CalcTempBalloonTrajectories(), balloonTrajectorSettings);
-		theTrajectory->MainTrajector(trajector);
+        if((theInfo->Param(kFmiWindSpeedMS) && theInfo->Param(kFmiWindDirection)) || (theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS)))
+        {
+            bool pacificView = ::IsPacificViewData(theInfo);
+            theInfo->First();
+            theTrajectory->Clear(); // nollataan trajektori varmuuden vuoksi
+            theTrajectory->Calculated(true); // merkitään trajektori lasketuksi
+            theTrajectory->OriginTime(theInfo->OriginTime());
+            // lasketaan ensin "pää" trajektory
+            NFmiTempBalloonTrajectorSettings balloonTrajectorSettings(theTrajectory->TempBalloonTrajectorSettings());
+            NFmiSingleTrajector trajector(theTrajectory->LatLon(), theTrajectory->Time(), theTrajectory->PressureLevel());
+            CalculateSingleTrajectory(theInfo, trajector, theTrajectory->TimeStepInMinutes(), theTrajectory->TimeLengthInHours(), 0, 0, theTrajectory->Direction(), theTrajectory->Isentropic(), theTrajectory->CalcTempBalloonTrajectories(), balloonTrajectorSettings);
+            theTrajectory->MainTrajector(trajector);
 
-		if(theTrajectory->PlumesUsed())
-		{ // lasketaan halutut pluumi tarjektorit myös
-			int trajCount = theTrajectory->PlumeParticleCount();
-			int randStep = CalcRandomizerStep(theTrajectory->TimeStepInMinutes(), 30);
-			double randFactor = theTrajectory->PlumeProbFactor();
-			NFmiMetTime startTime(theTrajectory->Time());
-			NFmiMetTime usedTime(startTime);
-			NFmiPoint startPoint(theTrajectory->LatLon());
-			NFmiPoint usedPoint(startPoint);
-			double startPressureLevel = theTrajectory->PressureLevel();
-			double usedPressureLevel = startPressureLevel;
-			for(int i=0; i<trajCount; i++)
-			{
-				if(theTrajectory->StartLocationRangeInKM())
-                    usedPoint = ::CalcRandStartPoint(startPoint, theTrajectory->StartLocationRangeInKM(), pacificView);
-				if(theTrajectory->StartTimeRangeInMinutes())
-					usedTime = ::CalcRandStartTime(startTime, theTrajectory->StartTimeRangeInMinutes(), 10);
-				if(theTrajectory->StartPressureLevelRange())
-					usedPressureLevel = ::CalcRandStartPressureLevel(startPressureLevel, theTrajectory->StartPressureLevelRange(), 1000);
-				boost::shared_ptr<NFmiSingleTrajector> aTrajector(new NFmiSingleTrajector(usedPoint, usedTime, usedPressureLevel));
-				CalculateSingleTrajectory(theInfo, *(aTrajector.get()), theTrajectory->TimeStepInMinutes(), theTrajectory->TimeLengthInHours(), randFactor, randStep, theTrajectory->Direction(), theTrajectory->Isentropic(), theTrajectory->CalcTempBalloonTrajectories(), balloonTrajectorSettings);
-				theTrajectory->AddPlumeTrajector(aTrajector);
-			}
-		}
+            if(theTrajectory->PlumesUsed())
+            { // lasketaan halutut pluumi tarjektorit myös
+                int trajCount = theTrajectory->PlumeParticleCount();
+                int randStep = CalcRandomizerStep(theTrajectory->TimeStepInMinutes(), 30);
+                double randFactor = theTrajectory->PlumeProbFactor();
+                NFmiMetTime startTime(theTrajectory->Time());
+                NFmiMetTime usedTime(startTime);
+                NFmiPoint startPoint(theTrajectory->LatLon());
+                NFmiPoint usedPoint(startPoint);
+                double startPressureLevel = theTrajectory->PressureLevel();
+                double usedPressureLevel = startPressureLevel;
+                for(int i = 0; i < trajCount; i++)
+                {
+                    if(theTrajectory->StartLocationRangeInKM())
+                        usedPoint = ::CalcRandStartPoint(startPoint, theTrajectory->StartLocationRangeInKM(), pacificView);
+                    if(theTrajectory->StartTimeRangeInMinutes())
+                        usedTime = ::CalcRandStartTime(startTime, theTrajectory->StartTimeRangeInMinutes(), 10);
+                    if(theTrajectory->StartPressureLevelRange())
+                        usedPressureLevel = ::CalcRandStartPressureLevel(startPressureLevel, theTrajectory->StartPressureLevelRange(), 1000);
+                    boost::shared_ptr<NFmiSingleTrajector> aTrajector(new NFmiSingleTrajector(usedPoint, usedTime, usedPressureLevel));
+                    CalculateSingleTrajectory(theInfo, *(aTrajector.get()), theTrajectory->TimeStepInMinutes(), theTrajectory->TimeLengthInHours(), randFactor, randStep, theTrajectory->Direction(), theTrajectory->Isentropic(), theTrajectory->CalcTempBalloonTrajectories(), balloonTrajectorSettings);
+                    theTrajectory->AddPlumeTrajector(aTrajector);
+                }
+            }
+        }
 	}
 }
 
