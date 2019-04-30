@@ -4431,6 +4431,7 @@ void AddCustomFoldersToMenu(const MenuCreationSettings &theMenuSettings, NFmiMen
 
 bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 {
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter::increaseCurrentUpdateId();
     CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
 	if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		return CreateCrossSectionViewPopup(itsCurrentViewRowIndex);

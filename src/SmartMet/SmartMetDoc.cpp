@@ -1289,25 +1289,21 @@ bool CSmartMetDoc::UpdateAllViewsAndDialogsIsAllowed()
     return true;
 }
 
-static void MakeGeneralUpdateTraceLogging(const std::string &totalLogMessage, size_t &updateCounter)
+static void MakeGeneralUpdateTraceLogging(const std::string &totalLogMessage)
 {
     // OBS! Don't do the CatLog::doTraceLevelLogging check here, because we want that updateCounter keeps incremented through out all application life time.
 
-    CtrlViewUtils::CtrlViewTimeConsumptionReporter::setCurrentUpdateId(updateCounter++);
+    CtrlViewUtils::CtrlViewTimeConsumptionReporter::increaseCurrentUpdateId();
     // HUOM! ei kannata mitata koko UpdateAllViewsAndDialogs metodin k‰ytt‰m‰‰ aikaa, koska se vain tekee p‰ivitys pyyntˆj‰ eri ikkunoille,
     // joille win32 systeemi jakaa k‰skyj‰ miten haluaa. Eli kokonais SmartMet ikkunoiden p‰ivitys aikaa on mahdoton koostaa suoraan.
     CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(totalLogMessage, nullptr);
 }
 
-// Lasketaan update counter indeksi‰, jonka avulla voidaan lokiviesteist‰ hakea tietyn update kierroksen lokituksia.
-// Ei aloiteta lukua 1:st‰, koska jos etsii vain lukua 1 tai 2-9, tulee liian paljon osumia v‰‰rist‰ lokiviesteist‰
-static size_t g_UpdateAllViewsAndDialogsCounter = 1001;
-
 void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, bool fUpdateOnlyMapViews)
 {
     if(UpdateAllViewsAndDialogsIsAllowed())
     {
-        ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + " ***** {Reason: " + reasonForUpdate + "}", g_UpdateAllViewsAndDialogsCounter);
+        ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + " ***** {Reason: " + reasonForUpdate + "}");
         if(fUpdateOnlyMapViews)
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": only map-views are updated", nullptr);
 
@@ -1362,7 +1358,7 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
         UpdateAllViewsAndDialogs(reasonForUpdate);
     else if(UpdateAllViewsAndDialogsIsAllowed())
     {
-        ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + "-v2 ***** {Reason: " + reasonForUpdate + "}", g_UpdateAllViewsAndDialogsCounter);
+        ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + "-v2 ***** {Reason: " + reasonForUpdate + "}");
         ::MakeUpdatedViewsTraceLogging(__FUNCTION__, updatedViewsFlag);
 
         itsData->SetLatestMacroParamErrorText("Starting view updates, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei j‰‰ vanhoja muistiin
