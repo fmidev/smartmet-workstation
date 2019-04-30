@@ -9,7 +9,7 @@
 
 namespace CtrlViewUtils
 {
-    size_t CtrlViewTimeConsumptionReporter::currentUpdateId_ = 1000;
+    size_t CtrlViewTimeConsumptionReporter::currentUpdateId_ = 1001;
 
     CtrlViewTimeConsumptionReporter::CtrlViewTimeConsumptionReporter(NFmiCtrlView *ctrlView, const std::string &eventName)
         :ctrlView_(ctrlView)
@@ -127,4 +127,10 @@ namespace CtrlViewUtils
     {
         return std::string("[") + std::to_string(currentUpdateId_) + "]";
     }
+
+    void CtrlViewTimeConsumptionReporter::increaseCurrentUpdateId()
+    {
+        currentUpdateId_++;
+    }
+
 }
