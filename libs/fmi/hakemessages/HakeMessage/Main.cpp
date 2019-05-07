@@ -18,55 +18,79 @@
 #include "cppback/background-manager.h"
 #include "cppback/loop-signal-checker.h"
 
+namespace
+{
+    std::vector<HakeMessage::HakeMsg> filterMessages(const std::multiset<HakeMessage::HakeMsg> msgsToFilter, const NFmiMetTime& startTime, const NFmiMetTime& endTime, const NFmiArea& area, HakeLegacySupport::HakeSystemConfigurations &hakeSystemConfigurations)
+    {
+        auto msgs = std::vector<HakeMessage::HakeMsg>{};
+
+        std::copy_if(msgsToFilter.cbegin(), msgsToFilter.cend(), std::back_inserter(msgs), [&startTime, &endTime, &area, &hakeSystemConfigurations](const auto& message)
+        {
+            return startTime.IsLessThan(message.StartTime())
+                && message.StartTime().IsLessThan(endTime)
+                && area.IsInside(message.LatlonPoint())
+                && hakeSystemConfigurations.IsMessageShown(message);
+        });
+
+        return msgs;
+    }
+
+    std::string timePointToString(const std::chrono::system_clock::time_point &timePoint, const std::string &timeFormat)
+    {
+        auto time_t1 = std::chrono::system_clock::to_time_t(timePoint);
+        std::stringstream out;
+#pragma warning(push)
+#pragma warning(disable:4996)
+        out << std::put_time(std::gmtime(&time_t1), timeFormat.data());
+#pragma warning(pop)
+        return out.str();
+    }
+
+    // This is wanted tiem range string made here:
+    // "?starttime=2017-06-20 00:00&endtime=2017-06-21 00:00"
+    std::string makeKahaTimeRangeString(int hourRange)
+    {
+        // Had to add space between day and hour using url encoded character %20 which has to be given to 
+        // std::put_time function (which uses it finally) with %-escape character. So space between day and hour is %%20.
+        const std::string timeFormat = "%Y-%m-%d%%20%H:%M";
+        auto currentTime = std::chrono::system_clock::now();
+        auto startTime = currentTime;
+        startTime -= std::chrono::hours(hourRange);
+        std::string timeRangeString = "&starttime=";
+        timeRangeString += ::timePointToString(startTime, timeFormat);
+        timeRangeString += "&endtime=";
+        timeRangeString += ::timePointToString(currentTime, timeFormat);
+        return timeRangeString;
+    }
+
+    void makeMessageRelatedErrorLog(const std::string &baseMessage, std::exception &e, CatLog::Severity severity)
+    {
+        std::string logMessage = baseMessage;
+        logMessage += ": ";
+        logMessage += e.what();
+        CatLog::logMessage(logMessage, severity, CatLog::Category::Data);
+    }
+
+    void makeMessageReadLogMessage(const std::string &baseMessage, size_t messagesRead)
+    {
+        std::string logMessage = baseMessage;
+        logMessage += ": ";
+        logMessage += std::to_string(messagesRead);
+        CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Data);
+    }
+
+    void makeNoMessagesReadTraceLogMessage(const std::string &message)
+    {
+        if(CatLog::doTraceLevelLogging())
+        {
+            CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Data);
+        }
+    }
+}
+
 
 namespace HakeMessage
 {
-    namespace
-    {
-        std::vector<HakeMsg> filterMessages(const std::multiset<HakeMsg> msgsToFilter, const NFmiMetTime& startTime, const NFmiMetTime& endTime, const NFmiArea& area, HakeLegacySupport::HakeSystemConfigurations &hakeSystemConfigurations)
-        {
-            auto msgs = std::vector<HakeMsg>{};
-
-            std::copy_if(msgsToFilter.cbegin(), msgsToFilter.cend(), std::back_inserter(msgs), [&startTime, &endTime, &area, &hakeSystemConfigurations](const auto& message)
-            {
-                return startTime.IsLessThan(message.StartTime())
-                    && message.StartTime().IsLessThan(endTime)
-                    && area.IsInside(message.LatlonPoint())
-                    && hakeSystemConfigurations.IsMessageShown(message);
-            });
-
-            return msgs;
-        }
-
-        std::string timePointToString(const std::chrono::system_clock::time_point &timePoint, const std::string &timeFormat)
-        {
-            auto time_t1 = std::chrono::system_clock::to_time_t(timePoint);
-            std::stringstream out;
-#pragma warning(push)
-#pragma warning(disable:4996)
-            out << std::put_time(std::gmtime(&time_t1), timeFormat.data());
-#pragma warning(pop)
-            return out.str();
-        }
-
-        // This is wanted tiem range string made here:
-        // "?starttime=2017-06-20 00:00&endtime=2017-06-21 00:00"
-        std::string makeKahaTimeRangeString(int hourRange)
-        {
-            // Had to add space between day and hour using url encoded character %20 which has to be given to 
-            // std::put_time function (which uses it finally) with %-escape character. So space between day and hour is %%20.
-            const std::string timeFormat = "%Y-%m-%d%%20%H:%M";
-            auto currentTime = std::chrono::system_clock::now();
-            auto startTime = currentTime;
-            startTime -= std::chrono::hours(hourRange);
-            std::string timeRangeString = "&starttime=";
-            timeRangeString += timePointToString(startTime, timeFormat);
-            timeRangeString += "&endtime=";
-            timeRangeString += timePointToString(currentTime, timeFormat);
-            return timeRangeString;
-        }
-    }
-
     Main::Main()
     {
         bManager_ = std::make_shared<cppback::BackgroundManager>();
@@ -111,12 +135,12 @@ namespace HakeMessage
 
     std::vector<HakeMsg> Main::getHakeMessages(const NFmiMetTime &startTime, const NFmiMetTime &endTime, const NFmiArea &area) const
     {
-        return filterMessages(hakeMessages_->peekMessages(), startTime, endTime, area, *legacyData_);
+        return ::filterMessages(hakeMessages_->peekMessages(), startTime, endTime, area, *legacyData_);
     }
 
     std::vector<KahaMsg> Main::getKahaMessages(const NFmiMetTime &startTime, const NFmiMetTime &endTime, const NFmiArea &area) const
     {
-        return filterMessages(kahaMessages_->peekMessages(), startTime, endTime, area, *legacyData_);
+        return ::filterMessages(kahaMessages_->peekMessages(), startTime, endTime, area, *legacyData_);
     }
 
     void Main::goToWorkAfter(std::chrono::milliseconds delay)
@@ -130,8 +154,8 @@ namespace HakeMessage
             {
                 using namespace std::literals;
                 bManager_->sleepInIntervals(tmp, 500ms, "hakeMessageFetch");
-                handleKahaMessages();
                 handleHakeMessages(configurer_->maxNumberOfMessagesReadAtOnce);
+                handleKahaMessages();
                 if(firstRound)
                 {
                     tmp = configurer_->checkForNewMessagesDelay;
@@ -144,16 +168,20 @@ namespace HakeMessage
     void Main::handleHakeMessages(unsigned int maxNumberOfMessagesToRead)
     {
         auto messagesInitSize = hakeMessages_->getSize();
-        size_t messagesRead;
+        size_t messagesRead = 0;
+        // Loopissa luetaan sanomia niin kauan kuin löytyy tarpeeksi luettuja uusia sanomia
         do
         {
             messagesRead = 0;
-            messagesRead += handleHakeXml(maxNumberOfMessagesToRead / 2);
-            messagesRead += handleHakeJson(maxNumberOfMessagesToRead / 2);
-            if(updateApplicationCallback_)
+            messagesRead += handleHakeXml(maxNumberOfMessagesToRead);
+            messagesRead += handleHakeJson(maxNumberOfMessagesToRead);
+            if(messagesRead > 0)
             {
-                updateApplicationCallback_();
+                ::makeMessageReadLogMessage("Hake messages read", messagesRead);
+                doUpdateApplicationCallback();
             }
+            else
+                ::makeNoMessagesReadTraceLogMessage("No more Hake messages to read");
         } while(messagesRead > maxNumberOfMessagesToRead / 3);
 
         if(hakeMessages_->getSize() != messagesInitSize)
@@ -166,6 +194,11 @@ namespace HakeMessage
     {
         auto messagesInitSize = kahaMessages_->getSize();
         size_t messagesRead = handleKahaJson();
+
+        if(messagesRead > 0)
+            ::makeMessageReadLogMessage("KaHa messages read", messagesRead);
+        else
+            ::makeNoMessagesReadTraceLogMessage("No more KaHa messages to read");
 
         if(kahaMessages_->getSize() != messagesInitSize)
         {
@@ -185,9 +218,10 @@ namespace HakeMessage
             {
                 hakeMessages_->addMessage(MsgParser::parseXmlToHakeMessage(xmlMsg));
             }
-            catch(...)
+            catch(std::exception &e)
             {
-
+                // Ei viitti laittaa näihin korkeata severity tasoa, koska virheellisiä viestejä on aika paljon
+                ::makeMessageRelatedErrorLog("Hake xml type message parsing failed", e, CatLog::Severity::Debug);
             }
         }
         return xmlMsgs.size();
@@ -204,9 +238,10 @@ namespace HakeMessage
             {
                 hakeMessages_->addMessage(MsgParser::parseJsonToHakeMessage(jsonMsg));
             }
-            catch(...)
+            catch(std::exception &e)
             {
-
+                // Ei viitti laittaa näihin korkeata severity tasoa, koska virheellisiä viestejä on aika paljon
+                ::makeMessageRelatedErrorLog("Hake json type message parsing failed", e, CatLog::Severity::Debug);
             }
         }
         return jsonMsgs.size();
@@ -217,7 +252,7 @@ namespace HakeMessage
         try
         {
             std::string kahaRequestString = "/mobile/interfaces/crowd/map.php?smartmet=1";
-            kahaRequestString += makeKahaTimeRangeString(7 * 24);
+            kahaRequestString += ::makeKahaTimeRangeString(7 * 24);
             auto jsonFut = client_->queryFor("http://m.fmi.fi", kahaRequestString);
 
             jsonFut.wait();
@@ -233,9 +268,10 @@ namespace HakeMessage
                 {
                     kahaMessages_->addMessage(MsgParser::parseJsonToKahaMessage(json.dump()));
                 }
-                catch(...)
+                catch(std::exception &e)
                 {
-
+                    // Ei viitti laittaa näihin korkeata severity tasoa, koska virheellisiä viestejä on aika paljon
+                    ::makeMessageRelatedErrorLog("KaHa type message parsing failed", e, CatLog::Severity::Debug);
                 }
             }
             return jsons.size();
@@ -246,21 +282,29 @@ namespace HakeMessage
         }
     }
 
+    void Main::doUpdateApplicationCallback()
+    {
+        if(updateApplicationCallback_)
+        {
+            updateApplicationCallback_();
+        }
+    }
+
     void Main::createHakeQueryData()
     {
         bManager_->addTask([&] {
             auto msgs = hakeMessages_->peekMessages();
+            if(msgs.empty())
+                return;
             try
             {
                 auto hakeProducer = NFmiProducer{ kFmiHakeMessages, "HAKE" };
                 hakeData_ = queryDataMaker_->createQueryDataFrom(msgs, hakeProducer);
-                if(updateApplicationCallback_)
-                {
-                    updateApplicationCallback_();
-                }
+                doUpdateApplicationCallback();
             }
-            catch(const std::exception&)
+            catch(std::exception &e)
             {
+                ::makeMessageRelatedErrorLog("Hake based queryData generation failed", e, CatLog::Severity::Warning);
             }
         });
     }
@@ -269,11 +313,17 @@ namespace HakeMessage
     {
         bManager_->addTask([&] {
             auto msgs = kahaMessages_->peekMessages();
-            auto kahaProducer = NFmiProducer{ kFmiKaHaMessages, "KaHa" };
-            kahaData_ = queryDataMaker_->createQueryDataFrom(msgs, kahaProducer);
-            if(updateApplicationCallback_)
+            if(msgs.empty())
+                return;
+            try
             {
-                updateApplicationCallback_();
+                auto kahaProducer = NFmiProducer{ kFmiKaHaMessages, "KaHa" };
+            kahaData_ = queryDataMaker_->createQueryDataFrom(msgs, kahaProducer);
+            doUpdateApplicationCallback();
+            }
+            catch(std::exception &e)
+            {
+                ::makeMessageRelatedErrorLog("KaHa based queryData generation failed", e, CatLog::Severity::Warning);
             }
         });
     }
