@@ -172,6 +172,7 @@ NFmiBetaProduct::NFmiBetaProduct()
 ,itsWebSiteDescriptionString()
 ,itsCommandLineString()
 ,fDisplayRunTimeInfo(false)
+,fShowModelOriginTime(false)
 ,itsSynopStationIdListString()
 ,fSynopStationIdListInputOk(false)
 ,itsSynopStationIdList()
@@ -669,6 +670,7 @@ static const std::string gJsonName_WebSiteTitle = "WebSiteTitle";
 static const std::string gJsonName_WebSiteDescription = "WebSiteDescription";
 static const std::string gJsonName_CommandLine = "CommandLine";
 static const std::string gJsonName_DisplayRuntimeInfo = "DisplayRuntimeInfo";
+static const std::string gJsonName_ShowModelOriginTime = "ShowModelOriginTime";
 static const std::string gJsonName_SynopStationIdList = "SynopStationIdList";
 
 static void AddNonEmptyStringJsonPair(const std::string &value, const std::string &valueJsonName, json_spirit::Object &jsonObject)
@@ -696,6 +698,8 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
         jsonObject.push_back(json_spirit::Pair(gJsonName_ParamboxLocation, betaProduct.ParamBoxLocation()));
     if(defaultBetaProduct.DisplayRunTimeInfo() != betaProduct.DisplayRunTimeInfo())
         jsonObject.push_back(json_spirit::Pair(gJsonName_DisplayRuntimeInfo, betaProduct.DisplayRunTimeInfo()));
+    if(defaultBetaProduct.ShowModelOriginTime() != betaProduct.ShowModelOriginTime())
+        jsonObject.push_back(json_spirit::Pair(gJsonName_ShowModelOriginTime, betaProduct.ShowModelOriginTime()));
     ::AddNonEmptyStringJsonPair(betaProduct.RowIndexListString(), gJsonName_RowIndexList, jsonObject);
     ::AddNonEmptyStringJsonPair(betaProduct.RowSubdirectoryTemplate(), gJsonName_RowSubdirectoryTemplate, jsonObject);
     ::AddNonEmptyStringJsonPair(betaProduct.OriginalViewMacroPath(), gJsonName_ViewMacroPath, jsonObject);
@@ -744,6 +748,8 @@ void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
         itsParamBoxLocation = static_cast<FmiDirection>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_DisplayRuntimeInfo)
         fDisplayRunTimeInfo = thePair.value_.get_bool();
+    else if(thePair.name_ == gJsonName_ShowModelOriginTime)
+        fShowModelOriginTime = thePair.value_.get_bool();
     else if(thePair.name_ == gJsonName_RowIndexList)
         itsRowIndexListString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_RowSubdirectoryTemplate)
@@ -1766,6 +1772,7 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 , mBetaProductWebSiteDescription()
 , mBetaProductCommandLine()
 , mBetaProductDisplayRuntime()
+, mBetaProductShowModelOriginTime()
 , mBetaProductSaveInitialPath()
 , mBetaProductSynopStationIdListString()
 , mAutomationModeOn()
@@ -1825,6 +1832,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductWebSiteDescription = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\WebSiteDescription", usedKey, "");
     mBetaProductCommandLine = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\CommandLine", usedKey, "");
     mBetaProductDisplayRuntime = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\DisplayRuntime", usedKey, false);
+    mBetaProductShowModelOriginTime = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\ShowModelOriginTime", usedKey, false);
     mBetaProductSynopStationIdListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\SynopStationIdList", usedKey, "");
 
     mAutomationModeOn = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\AutomationModeOn", usedKey, false, "");
@@ -2047,6 +2055,16 @@ bool NFmiBetaProductionSystem::BetaProductDisplayRuntime()
 void NFmiBetaProductionSystem::BetaProductDisplayRuntime(bool newValue)
 {
     *mBetaProductDisplayRuntime = newValue;
+}
+
+bool NFmiBetaProductionSystem::BetaProductShowModelOriginTime()
+{
+    return *mBetaProductShowModelOriginTime;
+}
+
+void NFmiBetaProductionSystem::BetaProductShowModelOriginTime(bool newValue)
+{
+    *mBetaProductShowModelOriginTime = newValue;
 }
 
 std::string NFmiBetaProductionSystem::BetaProductSynopStationIdListString()

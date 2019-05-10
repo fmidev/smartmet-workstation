@@ -26,7 +26,7 @@ namespace
         return currentBetaProduct->ParamBoxLocation();
     }
 
-    std::vector<std::string> MakeBetaProductParamBoxTexts(CtrlViewDocumentInterface *ctrlViewDocumentInterface, NFmiDrawParamList *drawParamList, bool fCrossSectionInfoWanted)
+    std::vector<std::string> MakeBetaProductParamBoxTexts(CtrlViewDocumentInterface *ctrlViewDocumentInterface, NFmiDrawParamList *drawParamList, bool fCrossSectionInfoWanted, bool fShowModelOriginTime)
     {
         std::vector<std::string> paramBoxTexts;
         if(drawParamList == nullptr || drawParamList->NumberOfItems() == 0)
@@ -37,7 +37,7 @@ namespace
             {
                 auto drawParamPtr = drawParamList->Current();
                 if(!drawParamPtr->IsParamHidden())
-                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, ctrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), fCrossSectionInfoWanted, false, false, 10, false));
+                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, ctrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), fCrossSectionInfoWanted, false, false, 10, false, fShowModelOriginTime));
             }
         }
 
@@ -290,7 +290,7 @@ namespace StationViews
                     {
                         auto mapViewDescTopIndex = view->MapViewDescTopIndex();
                         NFmiDrawParamList *drawParamList = ctrlViewDocumentInterface->DrawParamList(mapViewDescTopIndex, view->GetUsedParamRowIndex(view->ViewGridRowNumber(), view->ViewGridColumnNumber()));
-                        std::vector<std::string> paramBoxTexts = ::MakeBetaProductParamBoxTexts(ctrlViewDocumentInterface, drawParamList, fCrossSectionInfoWanted);
+                        std::vector<std::string> paramBoxTexts = ::MakeBetaProductParamBoxTexts(ctrlViewDocumentInterface, drawParamList, fCrossSectionInfoWanted, currentBetaProduct->ShowModelOriginTime());
                         std::vector<NFmiColor> paramBoxTextColors = ::MakeBetaProductParamBoxTextColors(ctrlViewDocumentInterface, drawParamList);
                         std::unique_ptr<Gdiplus::Font> usedFont = ::MakeParamBoxFont(ctrlViewDocumentInterface, mapViewDescTopIndex, 1.0);
                         Gdiplus::StringFormat stringFormat;
