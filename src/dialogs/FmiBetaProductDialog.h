@@ -107,6 +107,7 @@ private:
     BOOL fUseAutoFileNames;
     CComboBox itsParamBoxLocationSelector;
     BOOL fDisplayRuntimeInfo;
+    BOOL fShowModelOriginTime;
     int itsTotalImagesGenerated;
     std::string itsBetaProductFullFilePath;
     CString itsBetaProductNameU_;
@@ -156,4 +157,5 @@ public:
     afx_msg void OnBnClickedCheckDisplayRuntimeInfo();
     afx_msg void OnEnChangeEditSynopStationIdString();
     afx_msg void OnBnClickedButtonSaveAsBetaProduct();
+    afx_msg void OnBnClickedCheckShowModelOriginTime();
 };
