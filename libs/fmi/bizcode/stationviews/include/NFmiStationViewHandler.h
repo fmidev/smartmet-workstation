@@ -181,6 +181,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 #endif // DISABLE_CPPRESTSDK
     void TraceLogValidTimeAndAbsoluteRow();
     void MakeParamLevelChangeDirtyOperations(bool changesHappened);
+    bool IsMouseCursorOverParameterBox(const NFmiPoint & theMouseCursorPlace);
 
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
