@@ -225,7 +225,7 @@ namespace CtrlViewUtils
         return prodNameStr;
     }
 
-    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theNormalOrigTimeFormat, const std::string &theMinuteOrigTimeFormat, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase)
+    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theNormalOrigTimeFormat, const std::string &theMinuteOrigTimeFormat, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool fShowModelOriginTime)
     {
         bool betaProductCase = theLongerProducerNameMaxCharCount > 0;
         NFmiInfoData::Type dataType = theDrawParam->DataType();
@@ -236,8 +236,6 @@ namespace CtrlViewUtils
             if(info)
             {
                 str += GetProducerName(theCtrlViewDocumentInterface->ProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
-                //if(betaProductCase) 
-                //    str += "\t"; // Jostain syystä GDI+ ei osaa piirtää tabulaattoreja ilman jotain erikois asetuksia
 
                 if(theDrawParam->UseArchiveModelData())
                 { // laitetaan arkisto datan kohdalle viittaus verrattuna viimeiseen malli dataan esim. H[-1] joka on siis edellinen malli jne.
@@ -250,8 +248,12 @@ namespace CtrlViewUtils
                 }
                 else
                 {
-                    if(!betaProductCase)
+                    if(fShowModelOriginTime)
+                    {
+                        if(betaProductCase)
+                            str += " ";
                         str += info->OriginTime().ToStr(NFmiString(theNormalOrigTimeFormat));
+                    }
                 }
 
                 if(fTimeSerialViewCase && theDrawParam->TimeSerialModelRunCount() > 0)
