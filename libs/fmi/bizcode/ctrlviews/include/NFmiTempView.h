@@ -22,6 +22,7 @@ class NFmiTempView : public NFmiCtrlView
 		kCross = 3
 	} MarkerShape;
 
+    using SoundingDataCacheMap = std::map<NFmiMTATempSystem::SoundingDataCacheMapKey, NFmiSoundingDataOpt1>;
 
 	NFmiTempView( const NFmiRect& theRect
 				 ,NFmiToolBox* theToolBox);
@@ -165,9 +166,13 @@ class NFmiTempView : public NFmiCtrlView
 	double itsDrawSizeFactorY;
 	double itsLastScreenDrawPixelSizeInMM_x;
 	double itsLastScreenDrawPixelSizeInMM_y;
-	double itsLastScreenDataRectPressureScaleRatio; // tämän avulla yritetään vielä korjata koko laskuja, koska näytönohjaimet eivät anna aina 
-												// oikeita millimetri kokoja näytöille. Jos 0, ei ole tietoa suhteesta, eikä korjausta voi tehdä.
-    NFmiRect itsSecondaryDataFrame; // tämä määrittää suhteellisen alueen, mihin piirretään 0 - 100 asteikko (vaakasuunnassa) ja siihen piirretään mm. seuraavia parametreja (jos datasta löytyy niitä) WS, N, RH
+    // tämän avulla yritetään vielä korjata koko laskuja, koska näytönohjaimet eivät anna aina 
+    // oikeita millimetri kokoja näytöille. Jos 0, ei ole tietoa suhteesta, eikä korjausta voi tehdä.
+	double itsLastScreenDataRectPressureScaleRatio; 
+    // tämä määrittää suhteellisen alueen, mihin piirretään 0 - 100 asteikko (vaakasuunnassa) ja siihen piirretään mm. seuraavia parametreja (jos datasta löytyy niitä) WS, N, RH
+    NFmiRect itsSecondaryDataFrame; 
+    // Jotta luotauskäyrien tooltipit saadaan varmasti laskettua kaikissa tilanteissa, laitetaan kaikki piirretyt luotausdatat erilliseen cacheen talteen.
+    SoundingDataCacheMap itsSoundingDataCacheForTooltips;
 };
 
 
