@@ -64,6 +64,8 @@ namespace CatLogUtils
         // And also igone word if there is only single character after - sign like "-a", so that not all the messages that have 'a' would be ignored. 
         words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word == "-"; }), words.end());
         words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word.size() == 2 && word[0] == '-'; }), words.end());
+		//exclude singular + as well
+		words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word == "+"; }), words.end());
 
         return words;
     }
