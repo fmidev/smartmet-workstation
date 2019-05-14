@@ -1706,10 +1706,9 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
     int modelRunCount = mtaTempSystem.ModelRunCount();
 	int index = 0;
 	const NFmiMTATempSystem::Container &temps = mtaTempSystem.GetTemps();
-	vector<NFmiProducer> prodVec = mtaTempSystem.SoundingComparisonProducers();
 	for(NFmiMTATempSystem::Container::const_iterator it = temps.begin() ; it != temps.end(); ++it)
 	{
-		for(vector<NFmiProducer>::iterator prodIt = prodVec.begin(); prodIt != prodVec.end(); ++prodIt)
+		for(const auto &selectedProducer : mtaTempSystem.SoundingComparisonProducers())
 		{
 			if(modelRunCount > 0)
 			{
@@ -1717,12 +1716,12 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
 				for(int i = startIndex; i <= 0; i++)
 				{
 					double brightningFactor = CtrlView::CalcBrightningFactor(0, modelRunCount, i); // mitä isompi luku, sitä enemmän vaalenee (0-100), vanhemmat malliajot vaaleammalla
-					DrawOneSounding(*prodIt, *it, index, brightningFactor, i);
+					DrawOneSounding(selectedProducer, *it, index, brightningFactor, i);
 				}
 			}
 			else
 			{
-				DrawOneSounding(*prodIt, *it, index, 0, 0);
+				DrawOneSounding(selectedProducer, *it, index, 0, 0);
 			}
 			index++;
 		}
@@ -1738,9 +1737,9 @@ static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentIn
     return usedSoundingTime;
 }
 
-void NFmiTempView::DrawOneSounding(const NFmiProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
+void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
 {
-    auto useServerData = UseServerForSoundingData(theProducer);
+    auto useServerData = theProducer.useServer();
     NFmiMetTime usedSoundingTime = ::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo);
     auto dataSearchRestrictingTime = useServerData ? NFmiMetTime::gMissingTime : usedSoundingTime;
 	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, dataSearchRestrictingTime, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
@@ -3190,36 +3189,40 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
 		float pressure = static_cast<float>(y2p(theRelativePoint.Y()));
 		int index = 0;
 		const NFmiMTATempSystem::Container &temps = mtaTempSystem.GetTemps();
-		vector<NFmiProducer> prodVec = mtaTempSystem.SoundingComparisonProducers();
 		for(NFmiMTATempSystem::Container::const_iterator it = temps.begin() ; it != temps.end(); ++it)
 		{
-			for(vector<NFmiProducer>::iterator prodIt = prodVec.begin(); prodIt != prodVec.end(); ++prodIt)
+			for(const auto &selectedProducer : mtaTempSystem.SoundingComparisonProducers())
 			{
                 NFmiMetTime usedSoundingTime = ::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, *it);
-                boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(*prodIt, usedSoundingTime, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+                boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedSoundingTime, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
 				if(info)
 				{
 					NFmiLocation location = ::GetSoundingLocation(info, *it, itsCtrlViewDocumentInterface->ProducerSystem());
 					str += "<b><font color=";
 					str += CtrlViewUtils::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
 					str += ">";
-					str += ::GetSoundingToolTipText(info, *it, pressure, location, index, true, usedSoundingTime);
-					if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
-					{ // lisätään edelliset malliajo -osio tooltippiin 
-						for(int i = -1; i >= -modelRunCount; i--)
-						{
-							str += "\n[";
-							str += NFmiStringTools::Convert(i);
-							str += "]\t";
-							boost::shared_ptr<NFmiFastQueryInfo> prevModelInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(*prodIt, usedSoundingTime, i, NFmiInfoOrganizer::ParamCheckFlags(true));
-							if(prevModelInfo)
-							{
-								str += ::GetSoundingToolTipText(prevModelInfo, *it, pressure, location, index, false, usedSoundingTime);
-							}
-							else
-								str += " P: - T: - Td: - WD: - WS: -";
-						}
-					}
+                    if(selectedProducer.useServer())
+                        str += " no tooltip for server data yet";
+                    else
+                    {
+                        str += ::GetSoundingToolTipText(info, *it, pressure, location, index, true, usedSoundingTime);
+                        if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
+                        { // lisätään edelliset malliajo -osio tooltippiin 
+                            for(int i = -1; i >= -modelRunCount; i--)
+                            {
+                                str += "\n[";
+                                str += NFmiStringTools::Convert(i);
+                                str += "]\t";
+                                boost::shared_ptr<NFmiFastQueryInfo> prevModelInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedSoundingTime, i, NFmiInfoOrganizer::ParamCheckFlags(true));
+                                if(prevModelInfo)
+                                {
+                                    str += ::GetSoundingToolTipText(prevModelInfo, *it, pressure, location, index, false, usedSoundingTime);
+                                }
+                                else
+                                    str += " P: - T: - Td: - WD: - WS: -";
+                            }
+                        }
+                    }
 					str += "</font></b>";
 
 					str += "<br><hr color=red><br>"; // väliviiva
@@ -3318,11 +3321,6 @@ std::string soundingFromServerTestString =
 "-6.5 nan 88.0 998.2 9.3 1.2 2.9 282.4 137.0 ";
 
 
-bool NFmiTempView::UseServerForSoundingData(const NFmiProducer &producer)
-{
-    return itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().useServerSoundingData(producer.GetIdent());
-}
-
 static std::string MakeProdTimeLocString(const NFmiProducer &producer, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
 {
     std::string str = "producer: ";
@@ -3369,7 +3367,7 @@ static void ReportFailedSoundingFromServerRequest(const std::string &requestUriS
 bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
     const auto &producer = *theInfo->Producer();
-    auto requestUriStr = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().makeFinalServerRequestUri(producer.GetIdent(), theTime, theLocation.GetLocation());
+    auto requestUriStr = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().makeFinalServerRequestUri(producer.GetIdent(), theTime, theLocation.GetLocation());
     ::TraceLogSoundingFromServerRequest(requestUriStr, producer, theTime, theLocation);
     if(requestUriStr.empty())
         return false;
@@ -3389,7 +3387,7 @@ bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInf
         theSoundingData.Location(errorLocation);
         return false;
     }
-    const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetSoundingDataServerConfigurations().wantedParameters();
+    const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().wantedParameters();
     auto status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, theGroundDataInfo);
     // Laitetaan lopuksi serveriltä haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
     NFmiLocation finalLocation = theSoundingData.Location();
