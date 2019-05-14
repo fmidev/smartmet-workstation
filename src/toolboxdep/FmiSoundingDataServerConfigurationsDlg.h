@@ -17,7 +17,6 @@ struct SoundingConfHeaderParInfo
 		kRowNumber = 0,
 		kModelName,
         kModerProducerId,
-		kUseServer,
 		kDataNameOnServer
 	};
 
@@ -86,10 +85,7 @@ private:
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
 	void InitHeaders(void);
 	void SetGridRow(int row, const ModelSoundingDataServerConfigurations &theSoundingConf, int theFixedColumnCount, bool updateOnly);
-    void SetupCheckbox(int row, int column, bool updateOnly, const ModelSoundingDataServerConfigurations &theSoundingConf);
-    CGridCellCheck* GetGridCtrlCheckbox(int row, int column);
     void GetProducerIdFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
-    void GetUseServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
     void GetDataNameOnServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
     void GetModelConfigurationFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
     void GetModelConfigurationsFromGridCtrlRow(ModelSoundingDataServerConfigurations &modelConfiguration, int row);

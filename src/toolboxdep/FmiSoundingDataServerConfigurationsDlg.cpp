@@ -9,6 +9,7 @@
 #include "catlog/catlog.h"
 #include "NFmiDictionaryFunction.h"
 #include "FmiWin32Helpers.h"
+#include "NFmiMTATempSystem.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include <boost/function.hpp>
@@ -62,7 +63,6 @@ void CFmiSoundingDataServerConfigurationsDlg::InitHeaders(void)
 	itsHeaders.push_back(SoundingConfHeaderParInfo("Row", SoundingConfHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit*2.5)));
     itsHeaders.push_back(SoundingConfHeaderParInfo("Name", SoundingConfHeaderParInfo::kModelName, basicColumnWidthUnit * 6));
     itsHeaders.push_back(SoundingConfHeaderParInfo("ProdId", SoundingConfHeaderParInfo::kModerProducerId, basicColumnWidthUnit * 4));
-	itsHeaders.push_back(SoundingConfHeaderParInfo("Use Server", SoundingConfHeaderParInfo::kUseServer, basicColumnWidthUnit*5));
     itsHeaders.push_back(SoundingConfHeaderParInfo("Data name on server", SoundingConfHeaderParInfo::kDataNameOnServer, basicColumnWidthUnit * 15));
 }
 
@@ -244,27 +244,9 @@ void CFmiSoundingDataServerConfigurationsDlg::SetGridRow(int row, const ModelSou
             {
 				itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) & ~GVIS_READONLY); // Laita read-only -bitti pois päältä
                 itsGridCtrl.SetItemBkColour(row, column, gNormalBkColor);
-                if(column == SoundingConfHeaderParInfo::kUseServer)
-                    SetupCheckbox(row, column, updateOnly, theSoundingConf);
             }
 		}
 	}
-}
-
-void CFmiSoundingDataServerConfigurationsDlg::SetupCheckbox(int row, int column, bool updateOnly, const ModelSoundingDataServerConfigurations &theSoundingConf)
-{
-    if(!updateOnly)
-    {
-        // Nämä jutut tehdään vain 1. initialisoinnin yhteydessä
-        itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
-    }
-    auto tempCheckboxPtr = GetGridCtrlCheckbox(row, column);
-    tempCheckboxPtr->SetCheck(theSoundingConf.useServerData());
-}
-
-CGridCellCheck* CFmiSoundingDataServerConfigurationsDlg::GetGridCtrlCheckbox(int row, int column)
-{
-    return dynamic_cast<CGridCellCheck *>(itsGridCtrl.GetCell(row, column));
 }
 
 void CFmiSoundingDataServerConfigurationsDlg::InitGridControlValues(void)
@@ -273,7 +255,7 @@ void CFmiSoundingDataServerConfigurationsDlg::InitGridControlValues(void)
 	int fixedRowCount = 1;
 	int fixedColumnCount = 1;
 
-    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetSoundingDataServerConfigurations().modelConfigurations();
+    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().modelConfigurations();
     int dataRowCount = static_cast<int>(soundingDataConfigurations.size());
 	int maxRowCount = fixedRowCount + dataRowCount;
 	SetHeaders(itsGridCtrl, itsHeaders, maxRowCount, fFirstTime, fixedRowCount, fixedColumnCount);
@@ -284,7 +266,7 @@ void CFmiSoundingDataServerConfigurationsDlg::InitGridControlValues(void)
 
 void CFmiSoundingDataServerConfigurationsDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
 {
-    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetSoundingDataServerConfigurations().modelConfigurations();
+    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().modelConfigurations();
     int currentRowCount = fixedRowCount;
 	for(const auto soundingConf : soundingDataConfigurations)
 	{
@@ -361,24 +343,6 @@ void CFmiSoundingDataServerConfigurationsDlg::GetProducerIdFromGridCtrlCell(Mode
     }
 }
 
-void CFmiSoundingDataServerConfigurationsDlg::GetUseServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column)
-{
-    auto useServerCheckbox = GetGridCtrlCheckbox(row, column);
-    if(useServerCheckbox)
-    {
-        modelConfiguration.SetUseServerData(useServerCheckbox->GetCheck() == TRUE);
-    }
-    else
-    {
-        itsGridCtrl.SetItemBkColour(row, column, gErrorBkColor);
-
-        std::string errorMessage = "Internal program error";
-        errorMessage += ::MakeBaseGridCellErrorSting(row, column);
-        errorMessage += "unable to get checkbox control for Use server -option";
-        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
-    }
-}
-
 void CFmiSoundingDataServerConfigurationsDlg::GetDataNameOnServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column)
 {
     std::string dataNameOnServer = CT2A(itsGridCtrl.GetItemText(row, column));
@@ -405,11 +369,6 @@ void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationFromGridCtrlC
         GetProducerIdFromGridCtrlCell(modelConfiguration, row, column);
         break;
     }
-    case SoundingConfHeaderParInfo::kUseServer:
-    {
-        GetUseServerFromGridCtrlCell(modelConfiguration, row, column);
-        break;
-    }
     case SoundingConfHeaderParInfo::kDataNameOnServer:
     {
         GetDataNameOnServerFromGridCtrlCell(modelConfiguration, row, column);
@@ -431,7 +390,7 @@ void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationsFromGridCtrl
 void CFmiSoundingDataServerConfigurationsDlg::GetSettingsFromDialog()
 {
 	UpdateData(TRUE);
-    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetSoundingDataServerConfigurations().modelConfigurations();
+    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().modelConfigurations();
     int gridCtrlRowIndex = itsGridCtrl.GetFixedRowCount();
     for(auto &modelConfiguration : soundingDataConfigurations)
     {
