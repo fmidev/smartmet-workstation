@@ -1410,11 +1410,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDesc
     itsDoc->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
 }
 
-SoundingDataServerConfigurations& SmartMetDocumentInterfaceForGeneralDataDoc::GetSoundingDataServerConfigurations()
-{
-    return itsDoc->GetSoundingDataServerConfigurations();
-}
-
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 

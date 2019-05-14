@@ -1308,11 +1308,6 @@ NFmiMacroParamDataCache& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamD
     return itsDoc->MacroParamDataCache();
 }
 
-SoundingDataServerConfigurations& CtrlViewDocumentInterfaceForGeneralDataDoc::GetSoundingDataServerConfigurations()
-{
-    return itsDoc->GetSoundingDataServerConfigurations();
-}
-
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
 {
     return FmiModifyEditdData::SetupObsBlenderData(itsDoc->GenDocDataAdapter(), theLatlon, theParam, theDataType, fGroundData, theProducer, firstEditedTimeOut, usedObsBlenderInfoOut, analyzeValueOut, messagesOut);
