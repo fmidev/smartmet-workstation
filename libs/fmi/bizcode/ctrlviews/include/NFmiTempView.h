@@ -43,7 +43,7 @@ class NFmiTempView : public NFmiCtrlView
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
 
  private:
-	void DrawOneSounding(const NFmiProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex);
+	void DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex);
 	double ExtraPrintLineThicknesFactor(bool fMainCurve);
 	NFmiPoint ScaleOffsetPoint(const NFmiPoint &thePoint);
 	double CalcPressureScaleWidth(void);
@@ -109,7 +109,6 @@ class NFmiTempView : public NFmiCtrlView
     void DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
     double SecondaryDataFrameXoffset(double theValue);
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
-    bool UseServerForSoundingData(const NFmiProducer &producer);
     bool FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
 
 	double es(double t);
