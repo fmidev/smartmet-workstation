@@ -1769,7 +1769,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 		bool mainCurve = theModelRunIndex == 0;
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
 		DrawSounding(sounding, theIndex, usedColor, mainCurve, onSouthernHemiSphere);
-        itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(theTempInfo, theProducer, theModelRunIndex), sounding));
+        itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
 	}
 }
 
