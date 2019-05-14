@@ -135,7 +135,6 @@
 #include "MacroParamDataChecker.h"
 #include "CapDataSystem.h"
 #include "NFmiMacroParamDataCache.h"
-#include "SoundingDataServerConfigurations.h"
 
 #ifdef OLDGCC
  #include <strstream>
@@ -627,7 +626,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,wmsSupport()
 #endif // DISABLE_CPPRESTSDK
 ,parameterSelectionSystem()
-,itsSoundingDataServerConfigurations()
 {
 	NFmiRect bsRect1(0.,0.,1.,0.905);
 	NFmiRect bsRect2(0.,0.,1.,0.91);
@@ -801,7 +799,6 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitParameterSelectionSystem();
     InitLogFileCleaning();
     InitMacroParamDataCache();
-    InitSoundingDataServerConfigurations();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -826,19 +823,6 @@ void InitMacroParamDataCache()
     catch(exception &e)
     {
         LogAndWarnUser(e.what(), "Problems with MacroParamDataCache initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
-    }
-}
-
-void InitSoundingDataServerConfigurations()
-{
-    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
-    try
-    {
-        itsSoundingDataServerConfigurations.init(NFmiApplicationWinRegistry::MakeBaseRegistryPath(), "SmartMet::SoundingDataServerConfigurations");
-    }
-    catch(exception &e)
-    {
-        LogAndWarnUser(e.what(), "Problems with SoundingDataServerConfigurations initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
     }
 }
 
@@ -14154,12 +14138,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return itsMacroParamDataCache;
     }
 
-    SoundingDataServerConfigurations& GetSoundingDataServerConfigurations()
-    {
-        return itsSoundingDataServerConfigurations;
-    }
-
-    SoundingDataServerConfigurations itsSoundingDataServerConfigurations;
     NFmiMacroParamDataCache itsMacroParamDataCache;
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
@@ -16831,9 +16809,4 @@ NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
 void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
 {
     pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
-}
-
-SoundingDataServerConfigurations& NFmiEditMapGeneralDataDoc::GetSoundingDataServerConfigurations()
-{
-    return pimpl->GetSoundingDataServerConfigurations();
 }
