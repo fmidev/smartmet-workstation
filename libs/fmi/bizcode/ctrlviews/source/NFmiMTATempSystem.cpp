@@ -994,10 +994,11 @@ void NFmiMTATempSystem::Read(std::istream& is)
 
     if(extraData.itsStringValues.size() > 0)
         ReadSecondaryDataLineInfoFromString(extraData.itsStringValues[0]);
+    std::string producerContainerServerUsageString;
     if(extraData.itsStringValues.size() > 1)
-    {
-        itsSoundingComparisonProducers = ::MakeSoundingComparisonProducersFromLegacyData(legacySoundingComparisonProducers, extraData.itsStringValues[1]);
-    }
+        producerContainerServerUsageString = extraData.itsStringValues[1];
+
+    itsSoundingComparisonProducers = ::MakeSoundingComparisonProducersFromLegacyData(legacySoundingComparisonProducers, producerContainerServerUsageString);
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
