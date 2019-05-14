@@ -1760,7 +1760,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 			groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kAnalyzeData);  // tämä on siksi että LAPS data on nykyään analyysi dataa, pitää korjata tämä infoorganizer sotku joskus kunnolla!!!
 
 		NFmiSoundingDataOpt1 sounding;
-		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, useServerData);
+		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         NFmiColor usedColor(mtaTempSystem.SoundingColor(theIndex));
 		if(theBrightningFactor != 0)
@@ -1773,10 +1773,10 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	}
 }
 
-bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, bool useServerData)
+bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer)
 {
-    if(useServerData)
-        return FillSoundingDataFromServer(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+    if(theProducer.useServer())
+        return FillSoundingDataFromServer(theProducer, theSoundingData, theTime, theLocation);
     else
         return NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
 }
@@ -3352,11 +3352,10 @@ static void ReportFailedSoundingFromServerRequest(const std::string &requestUriS
     CatLog::logMessage(logMessage, CatLog::Severity::Warning, CatLog::Category::NetRequest);
 }
 
-bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
+bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
 {
-    const auto &producer = *theInfo->Producer();
-    auto requestUriStr = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().makeFinalServerRequestUri(producer.GetIdent(), theTime, theLocation.GetLocation());
-    ::TraceLogSoundingFromServerRequest(requestUriStr, producer, theTime, theLocation);
+    auto requestUriStr = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().makeFinalServerRequestUri(theProducer.GetIdent(), theTime, theLocation.GetLocation());
+    ::TraceLogSoundingFromServerRequest(requestUriStr, theProducer, theTime, theLocation);
     if(requestUriStr.empty())
         return false;
     std::string soundingDataResponseFromServer;
@@ -3369,17 +3368,17 @@ bool NFmiTempView::FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInf
 
     if(soundingDataResponseFromServer.empty())
     {
-        ::ReportFailedSoundingFromServerRequest(requestUriStr, producer, theTime, theLocation);
+        ::ReportFailedSoundingFromServerRequest(requestUriStr, theProducer, theTime, theLocation);
         NFmiLocation errorLocation = theSoundingData.Location();
         errorLocation.SetName("No data from server");
         theSoundingData.Location(errorLocation);
         return false;
     }
     const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().wantedParameters();
-    auto status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, theGroundDataInfo);
+    auto status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, nullptr);
     // Laitetaan lopuksi serveriltä haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
     NFmiLocation finalLocation = theSoundingData.Location();
-    ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, producer, theSoundingData.OriginTime(), true);
+    ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, theProducer, theSoundingData.OriginTime(), true);
     NFmiString finalNameWithServerMarker = "(S) ";
     finalNameWithServerMarker += finalLocation.GetName();
     finalLocation.SetName(finalNameWithServerMarker);
