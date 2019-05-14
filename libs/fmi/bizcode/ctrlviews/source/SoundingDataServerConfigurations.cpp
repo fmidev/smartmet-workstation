@@ -63,8 +63,6 @@ bool ModelSoundingDataServerConfigurations::init(const std::string &configuratio
     // Jostain syyst‰ string-olion saaminen CachedRegString oliosta on hankalaa, siksi k‰ytet‰‰n operator std::string():i‰...
     if((*dataNameOnServer_).operator std::string().empty())
         throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for DataNameOnServer (non empty) with model '" + configurationModelName + "'");
-    // useServerData asetusta ei oteta konffeista vaikka configurationOverride olisi true
-    useServerData_ = ::CreateOverrideRegValue<CachedRegBool>(baseRegistryPath, usedRegistrySectionName, "UseServerData", usedKey, false, usedConfigurationPath, false);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! n‰m‰ vaatii Admin oikeuksia Vista/Win7/Win10)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -187,11 +185,6 @@ static ReturnType getInfoFromProducer(int producerId, const Container &container
     }
     else
         return notFoundReturnValue;
-}
-
-bool SoundingDataServerConfigurations::useServerSoundingData(int producerId) const
-{
-    return ::getInfoFromProducer(producerId, modelConfigurations_, false, [](auto &iter) {return iter->useServerData(); });
 }
 
 std::string SoundingDataServerConfigurations::dataNameOnServer(int producerId) const
