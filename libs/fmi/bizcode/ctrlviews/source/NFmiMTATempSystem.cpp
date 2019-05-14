@@ -54,9 +54,30 @@ bool NFmiMTATempSystem::ServerProducer::operator!=(const NFmiProducer &other) co
     return !ProducersAreEqual(*this, other);
 }
 
+bool NFmiMTATempSystem::ServerProducer::operator<(const ServerProducer &other) const
+{
+    if(GetIdent() != other.GetIdent())
+        return GetIdent() < other.GetIdent();
+    if(GetName() != other.GetName())
+        return GetName() < other.GetName();
+    else
+        return useServer() < other.useServer();
+}
+
+
 // ****************************************************
 // ** Tästä alkaa NFmiMTATempSystem::TempInfo osio ****
 // ****************************************************
+
+bool NFmiMTATempSystem::TempInfo::operator<(const TempInfo &other) const
+{
+    if(Latlon() != other.Latlon())
+        return Latlon() < other.Latlon();
+    if(Time() != other.Time())
+        return Time() < other.Time();
+    else
+        return Producer() < other.Producer();
+}
 
 void NFmiMTATempSystem::TempInfo::Write(std::ostream& os) const
 {
@@ -97,6 +118,24 @@ void NFmiMTATempSystem::TempInfo::Read(std::istream& is)
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::TempInfo::Read failed");
 }
+
+
+NFmiMTATempSystem::SoundingDataCacheMapKey::SoundingDataCacheMapKey(const TempInfo &tempInfo, const ServerProducer &serverProducer, int modelRunIndex)
+    :tempInfo_(tempInfo)
+    ,serverProducer_(serverProducer)
+    ,modelRunIndex_(modelRunIndex)
+{}
+
+bool NFmiMTATempSystem::SoundingDataCacheMapKey::operator<(const SoundingDataCacheMapKey &other) const
+{
+    if(serverProducer_ != other.serverProducer_)
+        return serverProducer_ < other.serverProducer_;
+    if(modelRunIndex_ != other.modelRunIndex_)
+        return modelRunIndex_ < other.modelRunIndex_;
+    else
+        return tempInfo_ < other.tempInfo_;
+}
+
 
 const double gDefaultSecondaryDataFrameWidthFactor = 0.15;
 

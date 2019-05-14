@@ -47,6 +47,7 @@ class NFmiMTATempSystem
         bool operator!=(const ServerProducer &other) const;
         bool operator!=(const NFmiProducer &other) const;
         static bool ProducersAreEqual(const NFmiProducer &first, const NFmiProducer &second);
+        bool operator<(const ServerProducer &other) const;
     };
 
 	class TempInfo
@@ -70,6 +71,7 @@ class NFmiMTATempSystem
 		void Time(const NFmiMetTime &newValue) {itsTime = newValue;}
 		const NFmiProducer& Producer(void) const {return itsProducer;}
 		void Producer(const NFmiProducer &newValue) {itsProducer = newValue;}
+        bool operator<(const TempInfo &other) const;
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
@@ -78,6 +80,19 @@ class NFmiMTATempSystem
 		NFmiMetTime itsTime;
 		NFmiProducer itsProducer;
 	};
+
+    class SoundingDataCacheMapKey
+    {
+        TempInfo tempInfo_;
+        ServerProducer serverProducer_;
+        int modelRunIndex_ = 0;
+    public:
+        SoundingDataCacheMapKey() = default;
+        SoundingDataCacheMapKey(const SoundingDataCacheMapKey &) = default;
+        SoundingDataCacheMapKey(const TempInfo &tempInfo, const ServerProducer &serverProducer, int modelRunIndex);
+
+        bool operator<(const SoundingDataCacheMapKey &other) const;
+    };
 
     // voidaan helposti siirtyä käyttämään tavallista vector-luokkaa jos haluaa halutaan
 	using Container = checkedVector<TempInfo>; 
