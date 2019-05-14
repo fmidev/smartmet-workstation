@@ -1661,18 +1661,21 @@ static NFmiLocation GetSoundingLocation(boost::shared_ptr<NFmiFastQueryInfo> &th
 {
 	bool movingSounding = NFmiFastInfoUtils::IsMovingSoundingData(theInfo);
 	NFmiLocation location(theTempInfo.Latlon());
-	if(theInfo->IsGrid() == false)// && ((*it).Producer().GetIdent() == kFmiTEMP || (*it).Producer().GetIdent() == kFmiRAWTEMP))
-	{
-		if(!movingSounding)
-		{
-			if(theInfo->NearestLocation(location, 1000 * 1000))  // 1000km max etäisyys
-				location = *theInfo->Location();
-		}
-		else
-			::SetMovingSoundingLocationName(location, *theInfo->Producer());
-	}
-	else
-		::SetLocationNameByItsLatlon(theProdSystem, location, theInfo->IsGrid() ? *theInfo->Producer() : theTempInfo.Producer(), theInfo->OriginTime(), theInfo->IsGrid());
+    if(theInfo)
+    {
+        if(theInfo->IsGrid() == false)// && ((*it).Producer().GetIdent() == kFmiTEMP || (*it).Producer().GetIdent() == kFmiRAWTEMP))
+        {
+            if(!movingSounding)
+            {
+                if(theInfo->NearestLocation(location, 1000 * 1000))  // 1000km max etäisyys
+                    location = *theInfo->Location();
+            }
+            else
+                ::SetMovingSoundingLocationName(location, *theInfo->Producer());
+        }
+        else
+            ::SetLocationNameByItsLatlon(theProdSystem, location, theInfo->IsGrid() ? *theInfo->Producer() : theTempInfo.Producer(), theInfo->OriginTime(), theInfo->IsGrid());
+    }
 	return location;
 }
 
@@ -1680,28 +1683,32 @@ static NFmiLocation GetSoundingLocation(boost::shared_ptr<NFmiFastQueryInfo> &th
 static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiProducer &theProducer, NFmiInfoOrganizer &theInfoOrganizer, NFmiInfoData::Type theDataType)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo;
-	theInfo->FirstLevel();
-	if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
-	{ // jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = theInfoOrganizer.GetInfos(theDataType, true, theProducer.GetIdent());
-		if(infoVec.size())
-		{
-			for(size_t i = 0; i < infoVec.size(); i++)
-			{
-				boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
-				if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
-				{
-					groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
-					break;
-				}
-			}
-		}
-	}
+    if(theInfo)
+    {
+        theInfo->FirstLevel();
+        if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
+        { // jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
+            checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = theInfoOrganizer.GetInfos(theDataType, true, theProducer.GetIdent());
+            if(infoVec.size())
+            {
+                for(size_t i = 0; i < infoVec.size(); i++)
+                {
+                    boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
+                    if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
+                    {
+                        groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
+                        break;
+                    }
+                }
+            }
+        }
+    }
 	return groundDataInfo;
 }
 
 void NFmiTempView::DrawSoundingsInMTAMode(void)
 {
+    itsSoundingDataCacheForTooltips.clear();
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     int modelRunCount = mtaTempSystem.ModelRunCount();
 	int index = 0;
@@ -1713,10 +1720,10 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
 			if(modelRunCount > 0)
 			{
 				int startIndex = -modelRunCount;
-				for(int i = startIndex; i <= 0; i++)
+				for(int modelRunIndex = startIndex; modelRunIndex <= 0; modelRunIndex++)
 				{
-					double brightningFactor = CtrlView::CalcBrightningFactor(0, modelRunCount, i); // mitä isompi luku, sitä enemmän vaalenee (0-100), vanhemmat malliajot vaaleammalla
-					DrawOneSounding(selectedProducer, *it, index, brightningFactor, i);
+					double brightningFactor = CtrlView::CalcBrightningFactor(0, modelRunCount, modelRunIndex); // mitä isompi luku, sitä enemmän vaalenee (0-100), vanhemmat malliajot vaaleammalla
+					DrawOneSounding(selectedProducer, *it, index, brightningFactor, modelRunIndex);
 				}
 			}
 			else
@@ -1739,27 +1746,30 @@ static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentIn
 
 void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
 {
+    auto usedTempInfo(theTempInfo);
     auto useServerData = theProducer.useServer();
-    NFmiMetTime usedSoundingTime = ::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo);
-    auto dataSearchRestrictingTime = useServerData ? NFmiMetTime::gMissingTime : usedSoundingTime;
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, dataSearchRestrictingTime, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
-	if(info)
+    usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo));
+    
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+	if(useServerData || info)
 	{
-		NFmiLocation location = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
+        auto usedLocationWithName = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
+        usedTempInfo.Latlon(usedLocationWithName.GetLocation());
 		boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kViewable);
 		if(groundDataInfo == 0)
 			groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kAnalyzeData);  // tämä on siksi että LAPS data on nykyään analyysi dataa, pitää korjata tämä infoorganizer sotku joskus kunnolla!!!
 
 		NFmiSoundingDataOpt1 sounding;
-		FillSoundingData(info, sounding, usedSoundingTime, location, groundDataInfo, useServerData);
+		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, useServerData);
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         NFmiColor usedColor(mtaTempSystem.SoundingColor(theIndex));
 		if(theBrightningFactor != 0)
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
 		itsDrawingEnvironment->SetFrameColor(usedColor);
 		bool mainCurve = theModelRunIndex == 0;
-        bool onSouthernHemiSphere = location.GetLatitude() < 0;
+        bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
 		DrawSounding(sounding, theIndex, usedColor, mainCurve, onSouthernHemiSphere);
+        itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(theTempInfo, theProducer, theModelRunIndex), sounding));
 	}
 }
 
@@ -3121,29 +3131,10 @@ static float GetFinalTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         return theInfo->PressureLevelValue(P, theLatlon, usedTime);
 }
 
-static float GetDewPointWithTandRH(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiMTATempSystem::TempInfo &theTempInfo)
-{
-    theInfo->Param(kFmiTemperature);
-    float T = ::GetFinalTooltipValue(theInfo, kFmiTemperature, P, theTempInfo.Latlon(), theTempInfo.Time());
-    theInfo->Param(kFmiHumidity);
-    float RH = ::GetFinalTooltipValue(theInfo, kFmiHumidity,P, theTempInfo.Latlon(), theTempInfo.Time());
-
-    return static_cast<float>(NFmiSoundingFunctions::CalcDP(T, RH));
-}
-
-static std::string GetTooltipValueStr(const std::string &theParStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParId, int theMaxDecimalCount, const NFmiMTATempSystem::TempInfo &theTempInfo, float P, const NFmiMetTime &usedTime)
+static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSoundingDataOpt1 &soundingData, FmiParameterName theParId, int theMaxDecimalCount, float P)
 {
 	std::string str = theParStr;
-	theInfo->Param(theParId);
-	float value = ::GetFinalTooltipValue(theInfo, theParId, P, theTempInfo.Latlon(), usedTime);
-	if(theParId == kFmiDewPoint && value == kFloatMissing)
-	{
-		// kokeillaan ensin, löytyykö parametria kFmiDewPoint2M -parametrina
-		theInfo->Param(kFmiDewPoint2M);
-		value = ::GetFinalTooltipValue(theInfo, theParId, P, theTempInfo.Latlon(), usedTime);
-		if(value == kFloatMissing) // jos ei vieläkään löytynyt, kokeillaan vielä lasketa Td T:n ja RH:n avulla.
-			value = ::GetDewPointWithTandRH(theInfo, P, theTempInfo);
-	}
+	float value =  soundingData.GetValueAtPressure(theParId, P);
 	if(value == kFloatMissing)
 		str += " - ";
 	else
@@ -3151,7 +3142,7 @@ static std::string GetTooltipValueStr(const std::string &theParStr, boost::share
 	return str;
 }
 
-static std::string GetSoundingToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMTATempSystem::TempInfo &theTempInfo, float P, const NFmiLocation &theLocation, int theZeroBasedIndex, bool doNormalString, const NFmiMetTime &usedTime)
+static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &soundingDataCache, const NFmiMTATempSystem::ServerProducer &producer, const NFmiMTATempSystem::TempInfo &theTempInfo, int modelRunIndex, float P, int theZeroBasedIndex, bool doNormalString, const NFmiString &locationName)
 {
 	std::string str;
 	if(doNormalString)
@@ -3159,78 +3150,75 @@ static std::string GetSoundingToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &
 		str += NFmiStringTools::Convert(theZeroBasedIndex+1);
 		str += ": ";
 
-		NFmiString timestr(usedTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
+		NFmiString timestr(theTempInfo.Time().ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
 		str += static_cast<char*>(timestr);
 		str += "\n";
-		str += theLocation.GetName();
+		str += locationName;
 		str += "\n";
 	}
 
-	// sitten laitetaan interpoloidut arvot annetun korkeuden mukaan eri parametreille
-	str += "P: ";
-	str += static_cast<char*>(NFmiValueString::GetStringWithMaxDecimalsSmartWay(P, 1));
-	str += ::GetTooltipValueStr(" T: ", theInfo, kFmiTemperature, 1, theTempInfo, P, usedTime);
-	str += ::GetTooltipValueStr(" Td: ", theInfo, kFmiDewPoint, 1, theTempInfo, P, usedTime);
-	str += ::GetTooltipValueStr(" WD: ", theInfo, kFmiWindDirection, 0, theTempInfo, P, usedTime);
-    str += ::GetTooltipValueStr(" WS: ", theInfo, kFmiWindSpeedMS, 1, theTempInfo, P, usedTime);
-    str += ::GetTooltipValueStr(" N: ", theInfo, kFmiTotalCloudCover, 0, theTempInfo, P, usedTime);
-    str += ::GetTooltipValueStr(" RH: ", theInfo, kFmiHumidity, 1, theTempInfo, P, usedTime);
-
-	return str;
+    auto soundingDataIter = soundingDataCache.find(NFmiMTATempSystem::SoundingDataCacheMapKey(theTempInfo, producer, modelRunIndex));
+    if(soundingDataIter != soundingDataCache.end())
+    {
+        // sitten laitetaan interpoloidut arvot annetun korkeuden mukaan eri parametreille
+        str += "P: ";
+        str += static_cast<char*>(NFmiValueString::GetStringWithMaxDecimalsSmartWay(P, 1));
+        str += ::GetTooltipValueStr(" T: ", soundingDataIter->second, kFmiTemperature, 1, P);
+        str += ::GetTooltipValueStr(" Td: ", soundingDataIter->second, kFmiDewPoint, 1, P);
+        str += ::GetTooltipValueStr(" WD: ", soundingDataIter->second, kFmiWindDirection, 0, P);
+        str += ::GetTooltipValueStr(" WS: ", soundingDataIter->second, kFmiWindSpeedMS, 1, P);
+        str += ::GetTooltipValueStr(" N: ", soundingDataIter->second, kFmiTotalCloudCover, 0, P);
+        str += ::GetTooltipValueStr(" RH: ", soundingDataIter->second, kFmiHumidity, 1, P);
+    }
+    else
+        str += " P: - T: - Td: - WD: - WS: -";
+    return str;
 }
 
 std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
 {
 	std::string str;
     if(itsDataRect.IsInside(theRelativePoint) || itsSecondaryDataFrame.IsInside(theRelativePoint))
-	{
+    {
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         int modelRunCount = mtaTempSystem.ModelRunCount();
-		float pressure = static_cast<float>(y2p(theRelativePoint.Y()));
-		int index = 0;
-		const NFmiMTATempSystem::Container &temps = mtaTempSystem.GetTemps();
-		for(NFmiMTATempSystem::Container::const_iterator it = temps.begin() ; it != temps.end(); ++it)
-		{
-			for(const auto &selectedProducer : mtaTempSystem.SoundingComparisonProducers())
-			{
-                NFmiMetTime usedSoundingTime = ::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, *it);
-                boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedSoundingTime, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
-				if(info)
-				{
-					NFmiLocation location = ::GetSoundingLocation(info, *it, itsCtrlViewDocumentInterface->ProducerSystem());
-					str += "<b><font color=";
-					str += CtrlViewUtils::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
-					str += ">";
-                    if(selectedProducer.useServer())
-                        str += " no tooltip for server data yet";
-                    else
-                    {
-                        str += ::GetSoundingToolTipText(info, *it, pressure, location, index, true, usedSoundingTime);
-                        if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
-                        { // lisätään edelliset malliajo -osio tooltippiin 
-                            for(int i = -1; i >= -modelRunCount; i--)
-                            {
-                                str += "\n[";
-                                str += NFmiStringTools::Convert(i);
-                                str += "]\t";
-                                boost::shared_ptr<NFmiFastQueryInfo> prevModelInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedSoundingTime, i, NFmiInfoOrganizer::ParamCheckFlags(true));
-                                if(prevModelInfo)
-                                {
-                                    str += ::GetSoundingToolTipText(prevModelInfo, *it, pressure, location, index, false, usedSoundingTime);
-                                }
-                                else
-                                    str += " P: - T: - Td: - WD: - WS: -";
-                            }
+        float pressure = static_cast<float>(y2p(theRelativePoint.Y()));
+        int index = 0;
+        const NFmiMTATempSystem::Container &tempInfos = mtaTempSystem.GetTemps();
+        for(const auto &constantLoopTempInfo : tempInfos)
+        {
+            NFmiMTATempSystem::TempInfo usedTempInfo = constantLoopTempInfo;
+            for(const auto &selectedProducer : mtaTempSystem.SoundingComparisonProducers())
+            {
+                usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, usedTempInfo));
+                boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedTempInfo.Time(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+                if(selectedProducer.useServer() || info)
+                {
+                    auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
+                    usedTempInfo.Latlon(usedLocationWithName.GetLocation());
+                    str += "<b><font color=";
+                    str += CtrlViewUtils::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
+                    str += ">";
+                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunCount, pressure, index, true, usedLocationWithName.GetName());
+                    if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
+                    { 
+                        // lisätään edelliset malliajo -osio tooltippiin 
+                        for(int modelRunIndex = -1; modelRunIndex >= -modelRunCount; modelRunIndex--)
+                        {
+                            str += "\n[";
+                            str += NFmiStringTools::Convert(modelRunIndex);
+                            str += "]\t";
+                            str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunIndex, pressure, index, false, usedLocationWithName.GetName());
                         }
                     }
-					str += "</font></b>";
+                    str += "</font></b>";
 
-					str += "<br><hr color=red><br>"; // väliviiva
-					index++;
-				}
-			}
-		}
-	}
+                    str += "<br><hr color=red><br>"; // väliviiva
+                    index++;
+                }
+            }
+        }
+    }
 	return str;
 }
 
