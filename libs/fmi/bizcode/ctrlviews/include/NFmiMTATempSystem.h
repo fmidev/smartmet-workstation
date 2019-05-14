@@ -46,6 +46,7 @@ class NFmiMTATempSystem
         bool operator==(const NFmiProducer &other) const;
         bool operator!=(const ServerProducer &other) const;
         bool operator!=(const NFmiProducer &other) const;
+        static bool ProducersAreEqual(const NFmiProducer &first, const NFmiProducer &second);
     };
 
 	class TempInfo

@@ -29,29 +29,29 @@ NFmiMTATempSystem::ServerProducer::ServerProducer(const NFmiProducer &producer, 
     ,useServer_(useServer)
 {}
 
-static bool IsEqual(const NFmiProducer &first, const NFmiProducer &second)
+bool NFmiMTATempSystem::ServerProducer::ProducersAreEqual(const NFmiProducer &first, const NFmiProducer &second)
 {
     return first.GetIdent() == second.GetIdent() && first.GetName() == second.GetName();
 }
 
 bool NFmiMTATempSystem::ServerProducer::operator==(const ServerProducer &other) const
 {
-    return ::IsEqual(*this, other) && useServer() == other.useServer();
+    return ProducersAreEqual(*this, other) && useServer() == other.useServer();
 }
 
 bool NFmiMTATempSystem::ServerProducer::operator==(const NFmiProducer &other) const
 {
-    return ::IsEqual(*this, other);
+    return ProducersAreEqual(*this, other);
 }
 
 bool NFmiMTATempSystem::ServerProducer::operator!=(const ServerProducer &other) const
 {
-    return !(::IsEqual(*this, other) && useServer() == other.useServer());
+    return !(ProducersAreEqual(*this, other) && useServer() == other.useServer());
 }
 
 bool NFmiMTATempSystem::ServerProducer::operator!=(const NFmiProducer &other) const
 {
-    return !::IsEqual(*this, other);
+    return !ProducersAreEqual(*this, other);
 }
 
 // ****************************************************
