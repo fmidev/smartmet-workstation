@@ -75,11 +75,21 @@ bool NFmiStation2GridMask::IsNearestPointCalculationUsed() const
     return itsObservationRadiusInKm != kFloatMissing && fUseCalculationPoints;
 }
 
+double NFmiStation2GridMask::GetFinalValueFromNearestLocationWithMetaParameterChecks(const boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
+    {
+        return CalcMetaParamValueWithFunction([&]() {return info->FloatValue(); });
+    }
+    else
+        return info->FloatValue();
+}
+
 double NFmiStation2GridMask::GetFinalValueFromNearestLocation(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiIgnoreStationsData &ignoreStationData, const NFmiLocation &calculationLocation)
 {
     if(!ignoreStationData.IsStationBlocked(*(info->Location()), true))
     {
-        return info->FloatValue();
+        return GetFinalValueFromNearestLocationWithMetaParameterChecks(info);
     }
     else
     {
@@ -92,7 +102,7 @@ double NFmiStation2GridMask::GetFinalValueFromNearestLocation(const boost::share
             {
                 if(!ignoreStationData.IsStationBlocked(*(info->Location()), true))
                 {
-                    return info->FloatValue();
+                    return GetFinalValueFromNearestLocationWithMetaParameterChecks(info);
                 }
             }
         }
@@ -113,8 +123,7 @@ double NFmiStation2GridMask::DoNearestPointCalculations(const NFmiCalculationPar
         {
             if(info->Time(theCalculationParams.itsTime))
             {
-                // HUOM! En jaksa lisätä meta-tuuliparametrien hanskausta!!
-                if(info->Param(static_cast<FmiParameterName>(itsDataIdent.GetParamIdent())))
+                if(metaParamDataHolder.isMetaParameterCalculationNeeded() || info->Param(static_cast<FmiParameterName>(itsDataIdent.GetParamIdent())))
                 {
                     // HUOM! ei hanskaa blokattuja havaintoasemia
                     if(info->NearestLocation(calculationLocation, itsAreaPtr.get(), itsObservationRadiusInKm * 1000.))
