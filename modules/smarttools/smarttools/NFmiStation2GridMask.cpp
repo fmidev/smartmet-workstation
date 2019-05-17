@@ -2,6 +2,7 @@
 #include "NFmiDrawParam.h"
 #include "NFmiGriddingHelperInterface.h"
 #include "NFmiGriddingProperties.h"
+#include "NFmiIgnoreStationsData.h"
 #include <newbase/NFmiFastInfoUtils.h>
 #include <newbase/NFmiFastQueryInfo.h>
 
@@ -74,10 +75,36 @@ bool NFmiStation2GridMask::IsNearestPointCalculationUsed() const
     return itsObservationRadiusInKm != kFloatMissing && fUseCalculationPoints;
 }
 
+double NFmiStation2GridMask::GetFinalValueFromNearestLocation(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiIgnoreStationsData &ignoreStationData, const NFmiLocation &calculationLocation)
+{
+    if(!ignoreStationData.IsStationBlocked(*(info->Location()), true))
+    {
+        return info->FloatValue();
+    }
+    else
+    {
+        // Jos datan lähin asema oli blokattu, etsitään n kpl lähintä asemaa ja katsotaan onko nekin blokattu
+        auto nearestLocationsInfo = info->NearestLocations(calculationLocation, 3, itsObservationRadiusInKm * 1000.);
+        // skipataan se lähin paikka, koska jo tiedetään että se on blokattu
+        for(size_t index = 1; index < nearestLocationsInfo.size(); index++)
+        {
+            if(info->Location(nearestLocationsInfo[index].first))
+            {
+                if(!ignoreStationData.IsStationBlocked(*(info->Location()), true))
+                {
+                    return info->FloatValue();
+                }
+            }
+        }
+    }
+    return kFloatMissing;
+}
+
 double NFmiStation2GridMask::DoNearestPointCalculations(const NFmiCalculationParams &theCalculationParams)
 {
     GetUsedObservationInfoVector();
     NFmiLocation calculationLocation(theCalculationParams.itsLatlon);
+    NFmiIgnoreStationsData &ignorestationdata = itsGriddingHelper->IgnoreStationsData();
     double nearestValue = kFloatMissing;
     double nearestValueDistanceInMeters = 99999999;
     for(const auto &info : itsUsedObservationInfoVector)
@@ -86,13 +113,13 @@ double NFmiStation2GridMask::DoNearestPointCalculations(const NFmiCalculationPar
         {
             if(info->Time(theCalculationParams.itsTime))
             {
-                // HUOM! Pitää lisätä meta-tuulien hanskaus!!
+                // HUOM! En jaksa lisätä meta-tuuliparametrien hanskausta!!
                 if(info->Param(static_cast<FmiParameterName>(itsDataIdent.GetParamIdent())))
                 {
                     // HUOM! ei hanskaa blokattuja havaintoasemia
                     if(info->NearestLocation(calculationLocation, itsAreaPtr.get(), itsObservationRadiusInKm * 1000.))
                     {
-                        double value = info->FloatValue();
+                        double value = GetFinalValueFromNearestLocation(info, ignorestationdata, calculationLocation);
                         double distanceInMeters = calculationLocation.Distance(info->LatLonFast());
                         if(distanceInMeters < nearestValueDistanceInMeters)
                         {

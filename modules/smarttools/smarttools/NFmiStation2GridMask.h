@@ -10,6 +10,7 @@ class NFmiFastQueryInfo;
 class NFmiGriddingHelperInterface;
 class NFmiDrawParam;
 class NFmiGriddingProperties;
+class NFmiIgnoreStationsData;
 
 // tämä maski osaa laskea halutulle asemadatalle hilatut arvot halutulle alueelle
 // Jos maskin itsInfo on station-dataa, sen laskut tehdään toisella tavalla kuin 'normaalin'
@@ -57,6 +58,7 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
   double DoNearestPointCalculations(const NFmiCalculationParams &theCalculationParams);
   void GetUsedObservationInfoVector();
   boost::shared_ptr<NFmiDrawParam> MakeUsedDataRetrievingDrawParam() const;
+  double GetFinalValueFromNearestLocation(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiIgnoreStationsData &ignoreStationData, const NFmiLocation &calculationLocation);
 
   // tässä on asemadatasta lasketut hilatut arvot, tämä jaetaan kaikkien kopioiden kesken,
   // jotta multi-thread -koodi saa jaettua työtä
