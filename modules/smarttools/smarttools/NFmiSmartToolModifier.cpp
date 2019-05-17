@@ -1906,11 +1906,13 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateLatestValueMask(con
     {
         NFmiLastTimeValueMask *latestValueMask = new NFmiLastTimeValueMask(
             NFmiAreaMask::kInfo, info->DataType(), info, theAreaMaskInfo.FunctionArgumentCount(), theAreaMaskInfo.GetDataIdent().GetParamIdent());
+        auto isCalculationPointsUsed = !CalculationPoints().empty();
         latestValueMask->SetGriddingHelpers(
             itsWorkingGrid->itsArea,
             itsGriddingHelper,
             NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
-            itsExtraMacroParamData->ObservationRadiusInKm());
+            itsExtraMacroParamData->ObservationRadiusInKm(),
+            isCalculationPointsUsed);
         boost::shared_ptr<NFmiAreaMask> areaMask =
             boost::shared_ptr<NFmiAreaMask>(latestValueMask);
         MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
@@ -2089,11 +2091,13 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
               else
                   station2GridMask = new NFmiStation2GridMask(areaMask->MaskType(), areaMask->GetDataType(), info, theAreaMaskInfo.GetDataIdent().GetParamIdent());
 
+              auto isCalculationPointsUsed = !CalculationPoints().empty();
               station2GridMask->SetGriddingHelpers(
                   itsWorkingGrid->itsArea,
                   itsGriddingHelper,
                   NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
-                  itsExtraMacroParamData->ObservationRadiusInKm());
+                  itsExtraMacroParamData->ObservationRadiusInKm(),
+                  isCalculationPointsUsed);
               areaMask = boost::shared_ptr<NFmiAreaMask>(station2GridMask);
               MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
           }

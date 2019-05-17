@@ -43,7 +43,8 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
   virtual void SetGriddingHelpers(NFmiArea *theArea,
                           NFmiGriddingHelperInterface *theGriddingHelper,
                           const NFmiPoint &theStation2GridSize,
-                          float theObservationRadiusInKm);
+                          float theObservationRadiusInKm,
+                          bool useCalculationPoints);
   static void SetGriddingStationDataCallback(
       GriddingFunctionCallBackType theGridStationDataCallback)
   {
@@ -52,23 +53,25 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
 
  protected:
   void DoGriddingCheck(const NFmiCalculationParams &theCalculationParams);
+  bool IsNearestPointCalculationUsed() const;
+  double DoNearestPointCalculations(const NFmiCalculationParams &theCalculationParams);
+  void GetUsedObservationInfoVector();
+  boost::shared_ptr<NFmiDrawParam> MakeUsedDataRetrievingDrawParam() const;
 
-  //  NFmiDataMatrix<float> itsGriddedStationData; // tässä on asemadatasta lasketut hilatut arvot
-  boost::shared_ptr<DataCache> itsGriddedStationData;   // Tämä jaetaan kaikkien kopioiden kesken,
-                                                        // jotta multi-thread -koodi saa jaettua
-                                                        // työtä
-  NFmiDataMatrix<float> *itsCurrentGriddedStationData;  // tähän on laitettu se matriisi, joka
-                                                        // sisältää halutun ajan asemadatasta
-                                                        // lasketut hilatut arvot
-  NFmiMetTime itsLastCalculatedTime;  // tälle ajanhetkelle on station data laskettu (tai puuttuva
-                                      // aika), mutta onko se sama kuin itsTime, jos ei ole, pitää
-                                      // laskea juuri tälle ajalle
+  // tässä on asemadatasta lasketut hilatut arvot, tämä jaetaan kaikkien kopioiden kesken,
+  // jotta multi-thread -koodi saa jaettua työtä
+  boost::shared_ptr<DataCache> itsGriddedStationData;   
+  // tähän on laitettu se matriisi, joka/ sisältää halutun ajan asemadatasta lasketut hilatut arvot
+  NFmiDataMatrix<float> *itsCurrentGriddedStationData;  
+  // tälle ajanhetkelle on station data laskettu (tai puuttuva aika), mutta onko se sama kuin itsTime, 
+  // jos ei ole, pitää laskea juuri tälle ajalle
+  NFmiMetTime itsLastCalculatedTime;  
 
   // Näille muuttujille pitää asettaa arvot erillisellä SetGridHelpers-funktiolla
-  boost::shared_ptr<NFmiArea> itsAreaPtr;  // omistaa ja tuhoaa!!
+  boost::shared_ptr<NFmiArea> itsAreaPtr;
   NFmiGriddingHelperInterface *itsGriddingHelper;
-  NFmiPoint itsStation2GridSize;  // tämän kokoiseen hilaan asema data lasketaan
-                                  // (itsGriddedStationData -koko)
+  // tämän kokoiseen hilaan asema data lasketaan (itsGriddedStationData -koko)
+  NFmiPoint itsStation2GridSize;  
   // Normaalisti havainto laskuissa ei rajoiteta käytettyjä havaintoja etäisyyden perusteellä.
   // Jos tähän annetaan jotain kFloatMissing:istä poikkeavaa, niin silloin rajoitetaan.
   float itsObservationRadiusInKm;
@@ -76,13 +79,22 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
   // Kun itsCurrentGriddedStationData -muuttujaa lasketaan tai asetetaan, sen saa tehdä kullekin
   // ajalle vain kerran. Tämä lukko systeemi takaa sen.
   typedef boost::shared_mutex MutexType;
-  typedef boost::shared_lock<MutexType>
-      ReadLock;  // Read-lockia ei oikeasti tarvita, mutta laitan sen tähän, jos joskus tarvitaankin
+  // Read-lockia ei oikeasti tarvita, mutta laitan sen tähän, jos joskus tarvitaankin
+  typedef boost::shared_lock<MutexType> ReadLock;  
   typedef boost::unique_lock<MutexType> WriteLock;
   // TÄMÄ jaetaan kaikkien kopioiden kesken, jotta multi-thread -koodi saa jaettua työtä
   boost::shared_ptr<MutexType> itsCacheMutex;
   // Callback funktio asemadatan griddaus funktioon
   static GriddingFunctionCallBackType itsGridStationDataCallback;
+
+  // Uusi ominaisuus eli käytetään nearest havaintoa laskuissa, kun käytössä yhtäaikaa calculationpoint
+  // ja ObservationRadiusInKm. Tälläisessä tilanteessa laskenta pisteeseen etsitään hakurajoituksen puitteissa
+  // lähin ei puuttuva arvo. Lisäksi hakuihion ei oteta mukaan ns. liikuvaa asemadataa, kuten ship/buoy.
+  bool fUseCalculationPoints = false;
+  // Haetaan vain kerran käytetyt datat. Tätä muuttujaa käytetään siksi, että jos kyseistä dataa ei löydy 
+  // ollenkaan, tiedetään että haku on tehty kuitenkin (nyt ei siis riitä itsUsedObservationInfoVector.empty -tarkastelu).
+  bool fUsedObservationInfoVectorRetrieved = false;
+  checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > itsUsedObservationInfoVector;
 };
 
 // NFmiNearestObsValue2GridMask -luokka laskee havainto datasta sellaisen
@@ -167,7 +179,8 @@ public:
     void SetGriddingHelpers(NFmiArea *theArea,
         NFmiGriddingHelperInterface *theGriddingHelper,
         const NFmiPoint &theStation2GridSize,
-        float theObservationRadiusInKm) override;
+        float theObservationRadiusInKm,
+        bool useCalculationPoints) override;
 
 protected:
     NFmiMetTime FindLastTime();
