@@ -1468,10 +1468,9 @@ static bool DataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, cons
     if(::IsIsolinesDrawn(theOrigIsoLineData))
     {
         const NFmiPoint zeroChangeFactor(1, 1);
-        const double criticalGrid2PixelRatioX = 2.5;
-        const double criticalGrid2PixelRatioY = criticalGrid2PixelRatioX;
-        theDownSizeFactor.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatioX, theGrid2PixelRatio.X()));
-        theDownSizeFactor.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatioY, theGrid2PixelRatio.Y()));
+        const double criticalGrid2PixelRatio = 3.0;
+        theDownSizeFactor.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
+        theDownSizeFactor.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
         return theDownSizeFactor != zeroChangeFactor;
     }
     return false;
