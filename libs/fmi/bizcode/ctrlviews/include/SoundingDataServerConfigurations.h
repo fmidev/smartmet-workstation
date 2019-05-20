@@ -55,7 +55,8 @@ class SoundingDataServerConfigurations
     std::string baseRegistryPath_;
     std::string registrySectionName_ = "\\SoundingDataServerConfigurations";
     std::string baseConfigurationPath_;
-    std::string smartmetServerBaseUri_;
+    std::vector<std::string> serverBaseUrls_;
+    boost::shared_ptr<CachedRegInt> selectedBaseUrlIndex_;
     std::vector<FmiParameterName> wantedParameters_;
     std::string wantedParametersString_;
     bool initialized_ = false;
@@ -67,11 +68,16 @@ public:
     std::vector<ModelSoundingDataServerConfigurations>& modelConfigurations() { return modelConfigurations_; }
     std::string makeFinalServerRequestUri(int producerId, const NFmiMetTime &validTime, const NFmiPoint &latlon) const;
     const std::vector<FmiParameterName>& wantedParameters() const { return wantedParameters_; }
+    const std::vector<std::string>& serverBaseUrls() const { return serverBaseUrls_; }
+    int selectedBaseUrlIndex() const;
+    void setSelectedBaseUrlIndex(int newValue);
+    const std::string& getSelectedBaseUrl() const;
 
 private:
     bool mustDoConfigurationOverride(HKEY usedKey);
     ModelSoundingDataServerConfigurations MakeModelConfiguration(const std::string &modelName, bool configurationOverride);
     std::string makeWantedParametersString() const;
     std::string dataNameOnServer(int producerId) const;
+    void initBaseUrlVector();
 };
 

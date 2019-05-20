@@ -7,18 +7,30 @@
 
 static const std::string g_VersionNumberName = "VersionNumber";
 static const std::string g_SmartmetServerBaseUriName = "SmartmetServerBaseUri";
+static const std::string g_SmartmetServerBaseUrlStart = "SmartmetServerBaseUrl_";
 
 // Kun pyydet‰‰n konffeista NFmiSettings::ListChildren:ill‰ mallidata kohtaista listaa, meid‰n pit‰‰ 
 // ohittaa tietyt sanat, koska niill‰ nimill‰ on asetukset 'p‰‰tasolla', ja ne tullaan lis‰‰m‰‰n tuohon
 // ListChildren listaan. Lis‰t‰‰n myˆs tyhj‰‰ sana listaan, jotta tarkastelut  yksinkertaistuvat.
 static const std::vector<std::string> g_IgnoredConfigurationVariableNames{ "", g_VersionNumberName, g_SmartmetServerBaseUriName };
 
+// Seuraavan alkuiset sanat ignoorataan myˆs (n‰ill‰ listataan n kpl server url:eja)
+static const std::vector<std::string> g_IgnoredConfigurationVariablesWithStart{ g_SmartmetServerBaseUrlStart };
+
 static bool IsModelNameLegit(const std::string &modelName)
 {
     if(std::find(g_IgnoredConfigurationVariableNames.begin(), g_IgnoredConfigurationVariableNames.end(), modelName) != g_IgnoredConfigurationVariableNames.end())
         return false;
     else
+    {
+        for(const auto &ignoredVariableNameStart : g_IgnoredConfigurationVariablesWithStart)
+        {
+            if(modelName.find(ignoredVariableNameStart) != std::string::npos)
+                return false;
+        }
+
         return true;
+    }
 }
 
 // CreateRegValue -funktio hakee ensin arvoa Win-rekisterist‰ ja sitten optionaalisesti konfiguraatioista ja lopuksi k‰ytt‰‰ oletusarvoa.
@@ -84,8 +96,7 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     // Huom. 2. OriginTimeParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, t‰lle erikoisk‰sittely
     wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId};
     wantedParametersString_ = makeWantedParametersString();
-
-    smartmetServerBaseUri_ = SettingsFunctions::GetUrlFromSettings(baseConfigurationPath + "::" + g_SmartmetServerBaseUriName, true, "http://smartmet.fmi.fi/timeseries?");
+    initBaseUrlVector();
 
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
@@ -117,6 +128,9 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
             }
         }
 
+        // 4. Mik‰ oli valittu serveri
+        selectedBaseUrlIndex_ = ::CreateRegValue<CachedRegInt>(baseRegistryPath_, registrySectionName_, "\\SelectedBaseUrlIndex", usedKey, 0);
+
         // HKEY_LOCAL_MACHINE -keys (HUOM! n‰m‰ vaatii Admin oikeuksia Vista/Win7/Win10)
         usedKey = HKEY_LOCAL_MACHINE;
 
@@ -124,6 +138,36 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
             return false;
         else
             return true;
+    }
+}
+
+void SoundingDataServerConfigurations::initBaseUrlVector()
+{
+    for(int index = 1; index <= 20; index++)
+    {
+        try
+        {
+
+        std::string usedKey = baseConfigurationPath_ + "::" + g_SmartmetServerBaseUrlStart;
+        usedKey += std::to_string(index);
+        auto serverUrl = SettingsFunctions::GetUrlFromSettings(usedKey, true);
+        if(!serverUrl.empty())
+            serverBaseUrls_.push_back(serverUrl);
+        }
+        catch(std::exception &e)
+        {
+            std::string errorMessage = __FUNCTION__;
+            errorMessage += " error: ";
+            errorMessage += e.what();
+            CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
+        }
+    }
+
+    if(serverBaseUrls_.empty())
+    {
+        const std::string defaultSoundingDataServerUrl = "http ://smartmet.fmi.fi/timeseries";
+        CatLog::logMessage(std::string("Using default sounding data server: ") + defaultSoundingDataServerUrl, CatLog::Severity::Warning, CatLog::Category::Configuration);
+        serverBaseUrls_.push_back(defaultSoundingDataServerUrl);
     }
 }
 
@@ -204,7 +248,9 @@ std::string SoundingDataServerConfigurations::makeFinalServerRequestUri(int prod
 {
     try
     {
-        std::string requestStr = smartmetServerBaseUri_;
+        std::string requestStr = getSelectedBaseUrl();
+        if(requestStr.empty())
+            throw std::runtime_error("Error in SoundingDataServerConfigurations::makeFinalServerRequestUri, illegal server url selected (empty)");
         requestStr += "producer=";
         requestStr += dataNameOnServer(producerId);
         requestStr += "&lonlat=";
@@ -234,4 +280,26 @@ std::string SoundingDataServerConfigurations::makeFinalServerRequestUri(int prod
         CatLog::logMessage(errorStr, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
     }
     return "";
+}
+
+int SoundingDataServerConfigurations::selectedBaseUrlIndex() const
+{
+    return *selectedBaseUrlIndex_;
+}
+
+void SoundingDataServerConfigurations::setSelectedBaseUrlIndex(int newValue)
+{
+    *selectedBaseUrlIndex_ = newValue;
+}
+
+const std::string& SoundingDataServerConfigurations::getSelectedBaseUrl() const
+{
+    auto selectedIndex = *selectedBaseUrlIndex_;
+    if(selectedIndex < serverBaseUrls_.size())
+        return serverBaseUrls_[selectedIndex];
+    else
+    {
+        static const std::string emptyValue;
+        return emptyValue;
+    }
 }
