@@ -307,6 +307,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
         ON_COMMAND(ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault)
         ON_COMMAND(ID_BUTTON_BETA_PRODUCT_DIALOG, &CSmartMetDoc::OnButtonBetaProductDialog)
 
+        ON_COMMAND(ID_ACCELERATOR_DO_VISUALIZATION_PROFILING, &CSmartMetDoc::OnAcceleratorDoVisualizationProfiling)
         END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -3657,8 +3658,7 @@ void CSmartMetDoc::OnAcceleratorLogViewer()
 
 void CSmartMetDoc::OnEditSoundingDataFromServerSettings()
 {
-    if(!itsSoundingDataServerConfigurationsDlg)
-        CreateSoundingDataServerConfigurationsDlg();
+    CreateSoundingDataServerConfigurationsDlg();
 
     itsSoundingDataServerConfigurationsDlg->ShowWindow(SW_SHOW);
     itsSoundingDataServerConfigurationsDlg->SetActiveWindow();
@@ -3842,3 +3842,7 @@ void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, co
     }
 }
 
+void CSmartMetDoc::OnAcceleratorDoVisualizationProfiling()
+{
+    // TODO: Add your command handler code here
+}
