@@ -91,6 +91,9 @@ public:
 
     bool DisplayRunTimeInfo() const { return fDisplayRunTimeInfo; }
     void DisplayRunTimeInfo(bool newValue) { fDisplayRunTimeInfo = newValue; }
+    bool ShowModelOriginTime() const { return fShowModelOriginTime; }
+    void ShowModelOriginTime(bool newValue) { fShowModelOriginTime = newValue; }
+
     const std::string& SynopStationIdListString() const { return itsSynopStationIdListString; }
     void SynopStationIdListString(const std::string &newValue) { itsSynopStationIdListString = newValue; }
     const std::vector<int>& SynopStationIdList() const { return itsSynopStationIdList; }
@@ -149,6 +152,8 @@ private:
     std::string itsCommandLineString; // Kun kuvat on tuotettu kohde hakemistoon, mikä on käyttäjän haluama komentorivi ajo, jolla esim. generoidaan avi-tiedosto, tai pakataan ja kopsataan kuvat jonnekin erikois paikkaan.
     // Is image generation run time information displayed in beta-product parambox or not.
     bool fDisplayRunTimeInfo;
+    // Is model's origin time shown in parameter box or not.
+    bool fShowModelOriginTime;
     std::string itsSynopStationIdListString; // Mistä kaikista synop asemista halutaan tehdä kuvia (käy vain tietyille näytöille ja moodeille)
     bool fSynopStationIdListInputOk;
     std::vector<int> itsSynopStationIdList; // Tähän puretaan synop station id:t itsSynopStationIdListString -muuttujasta
@@ -444,6 +449,8 @@ public:
     void BetaProductCommandLine(const std::string &newValue);
     bool BetaProductDisplayRuntime();
     void BetaProductDisplayRuntime(bool newValue);
+    bool BetaProductShowModelOriginTime();
+    void BetaProductShowModelOriginTime(bool newValue);
     std::string BetaProductSynopStationIdListString();
     void BetaProductSynopStationIdListString(const std::string &newValue);
 
@@ -517,6 +524,7 @@ private:
     boost::shared_ptr<CachedRegString> mBetaProductWebSiteDescription; // Beta product web-site Description (tarkempi kuvaus, pienempi teksti), talletetaan erilliseen tekstitiedostoon kohde hakemistoissa
     boost::shared_ptr<CachedRegString> mBetaProductCommandLine; // Minkälaisen komentorivi komennnon käyttäjä haluaa ajaa jokaiselle tuottamalleen välilehti tuotteelle
     boost::shared_ptr<CachedRegBool> mBetaProductDisplayRuntime;
+    boost::shared_ptr<CachedRegBool> mBetaProductShowModelOriginTime;
     boost::shared_ptr<CachedRegString> mBetaProductSynopStationIdListString; // Mistä kaikista synop asemista halutaan tehdä kuvia (käy vain tietyille näytöille ja moodeille)
     // Beta Product Automation dialog tab control settings
     boost::shared_ptr<CachedRegBool> mAutomationModeOn; // Onko SmartMet ns. Beta tuotanto automaatio moodissa, jolloin kuvia tuotetaan säädösten mukaan haluttuina aikoina.

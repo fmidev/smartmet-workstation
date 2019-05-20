@@ -5,12 +5,23 @@ using namespace utility::conversions;
 
 namespace
 {
+    std::string makeFinalLogMessage(const std::string& domain, const std::string& request)
+    {
+        auto loggingMessage = domain;
+        // Halutaan v‰ltt‰‰ tupla kenoviiva domain:in ja request:in v‰liss‰ lokiviestiin,
+        // jos domain loppuu ja request alkaa kenoviivalla.
+        if(domain.back() == '/' && request.front() == '/' && request.empty() == false)
+            loggingMessage += std::string(request.begin() + 1, request.end());
+        else
+            loggingMessage += request;
+        return loggingMessage;
+    }
+
     void makeTraceLevelRequestLogging(const std::string& domain, const std::string& request)
     {
         if(CatLog::doTraceLevelLogging())
         {
-            auto loggingMessage = domain;
-            loggingMessage += request;
+            auto loggingMessage = ::makeFinalLogMessage(domain, request);
             CatLog::logMessage(loggingMessage, CatLog::Severity::Trace, CatLog::Category::NetRequest, true);
         }
     }

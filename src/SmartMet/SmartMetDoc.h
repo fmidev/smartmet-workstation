@@ -387,6 +387,7 @@ public:
     afx_msg void OnEditSoundingDataFromServerSettings();
     afx_msg void OnViewSetSoundingsFromServerSettingsPlaceToDefault();
     afx_msg void OnButtonBetaProductDialog();
+    afx_msg void OnAcceleratorDoVisualizationProfiling();
 };
 
 

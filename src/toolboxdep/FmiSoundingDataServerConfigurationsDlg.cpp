@@ -9,6 +9,7 @@
 #include "catlog/catlog.h"
 #include "NFmiDictionaryFunction.h"
 #include "FmiWin32Helpers.h"
+#include "NFmiMTATempSystem.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include <boost/function.hpp>
@@ -62,7 +63,6 @@ void CFmiSoundingDataServerConfigurationsDlg::InitHeaders(void)
 	itsHeaders.push_back(SoundingConfHeaderParInfo("Row", SoundingConfHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit*2.5)));
     itsHeaders.push_back(SoundingConfHeaderParInfo("Name", SoundingConfHeaderParInfo::kModelName, basicColumnWidthUnit * 6));
     itsHeaders.push_back(SoundingConfHeaderParInfo("ProdId", SoundingConfHeaderParInfo::kModerProducerId, basicColumnWidthUnit * 4));
-	itsHeaders.push_back(SoundingConfHeaderParInfo("Use Server", SoundingConfHeaderParInfo::kUseServer, basicColumnWidthUnit*5));
     itsHeaders.push_back(SoundingConfHeaderParInfo("Data name on server", SoundingConfHeaderParInfo::kDataNameOnServer, basicColumnWidthUnit * 15));
 }
 
@@ -89,6 +89,7 @@ void CFmiSoundingDataServerConfigurationsDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_GridControl(pDX, IDC_CUSTOM_GRID_SOUNDING_CONF, itsGridCtrl);
+    DDX_Control(pDX, IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER, itsServerUrlSelector);
 }
 
 BEGIN_MESSAGE_MAP(CFmiSoundingDataServerConfigurationsDlg, CDialogEx)
@@ -100,6 +101,7 @@ BEGIN_MESSAGE_MAP(CFmiSoundingDataServerConfigurationsDlg, CDialogEx)
 	ON_WM_TIMER()
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_APPLY, &CFmiSoundingDataServerConfigurationsDlg::OnBnClickedButtonApply)
+    ON_CBN_SELCHANGE(IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER, &CFmiSoundingDataServerConfigurationsDlg::OnCbnSelchangeComboSelectedSoundingDataServer)
 END_MESSAGE_MAP()
 
 
@@ -133,6 +135,7 @@ BOOL CFmiSoundingDataServerConfigurationsDlg::OnInitDialog()
     // Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
 	std::string errorBaseStr("Error in CFmiSoundingDataServerConfigurationsDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
+    InitSelectedServerUrlSelector();
     InitDialogTexts();
     InitGridControlValues();
     FitLastColumnOnVisibleArea();
@@ -142,12 +145,23 @@ BOOL CFmiSoundingDataServerConfigurationsDlg::OnInitDialog()
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
+void CFmiSoundingDataServerConfigurationsDlg::InitSelectedServerUrlSelector()
+{
+    itsServerUrlSelector.ResetContent();
+    for(const auto &serverUrl : itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().serverBaseUrls())
+    {
+        itsServerUrlSelector.AddString(CA2T(serverUrl.c_str()));
+    }
+    itsServerUrlSelector.SetCurSel(itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().selectedBaseUrlIndex());
+}
+
 void CFmiSoundingDataServerConfigurationsDlg::InitDialogTexts()
 {
     SetWindowText(CA2T(::GetDictionaryString("Sounding data from server settings").c_str()));
     CFmiWin32Helpers::SetDialogItemText(this, IDOK, "OK");
     CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "Cancel");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_APPLY, "Apply");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_USED_SERVER_URL_STRING, "Used server Url");
 }
 
 void CFmiSoundingDataServerConfigurationsDlg::DoResizerHooking()
@@ -159,6 +173,8 @@ void CFmiSoundingDataServerConfigurationsDlg::DoResizerHooking()
     bOk = m_resizer.SetAnchor(IDCANCEL, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_APPLY, ANCHOR_TOP | ANCHOR_LEFT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER, ANCHOR_HORIZONTALLY | ANCHOR_TOP);
     ASSERT(bOk == TRUE);
     // GridControl takes rest of the view
     bOk = m_resizer.SetAnchor(IDC_CUSTOM_GRID_SOUNDING_CONF, ANCHOR_HORIZONTALLY | ANCHOR_VERTICALLY);
@@ -244,27 +260,9 @@ void CFmiSoundingDataServerConfigurationsDlg::SetGridRow(int row, const ModelSou
             {
 				itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) & ~GVIS_READONLY); // Laita read-only -bitti pois päältä
                 itsGridCtrl.SetItemBkColour(row, column, gNormalBkColor);
-                if(column == SoundingConfHeaderParInfo::kUseServer)
-                    SetupCheckbox(row, column, updateOnly, theSoundingConf);
             }
 		}
 	}
-}
-
-void CFmiSoundingDataServerConfigurationsDlg::SetupCheckbox(int row, int column, bool updateOnly, const ModelSoundingDataServerConfigurations &theSoundingConf)
-{
-    if(!updateOnly)
-    {
-        // Nämä jutut tehdään vain 1. initialisoinnin yhteydessä
-        itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
-    }
-    auto tempCheckboxPtr = GetGridCtrlCheckbox(row, column);
-    tempCheckboxPtr->SetCheck(theSoundingConf.useServerData());
-}
-
-CGridCellCheck* CFmiSoundingDataServerConfigurationsDlg::GetGridCtrlCheckbox(int row, int column)
-{
-    return dynamic_cast<CGridCellCheck *>(itsGridCtrl.GetCell(row, column));
 }
 
 void CFmiSoundingDataServerConfigurationsDlg::InitGridControlValues(void)
@@ -273,7 +271,7 @@ void CFmiSoundingDataServerConfigurationsDlg::InitGridControlValues(void)
 	int fixedRowCount = 1;
 	int fixedColumnCount = 1;
 
-    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetSoundingDataServerConfigurations().modelConfigurations();
+    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().modelConfigurations();
     int dataRowCount = static_cast<int>(soundingDataConfigurations.size());
 	int maxRowCount = fixedRowCount + dataRowCount;
 	SetHeaders(itsGridCtrl, itsHeaders, maxRowCount, fFirstTime, fixedRowCount, fixedColumnCount);
@@ -284,7 +282,7 @@ void CFmiSoundingDataServerConfigurationsDlg::InitGridControlValues(void)
 
 void CFmiSoundingDataServerConfigurationsDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
 {
-    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetSoundingDataServerConfigurations().modelConfigurations();
+    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().modelConfigurations();
     int currentRowCount = fixedRowCount;
 	for(const auto soundingConf : soundingDataConfigurations)
 	{
@@ -301,7 +299,10 @@ void CFmiSoundingDataServerConfigurationsDlg::UpdateGridControlValues()
 
 void CFmiSoundingDataServerConfigurationsDlg::Update()
 {
-//    Invalidate(TRUE);
+    // Jos ollaan tultu cancelilla ulos, nollataan mahdolliset muutokset dialogissa alustamalla
+    // määrätyt kontrollit uudestaan
+    InitSelectedServerUrlSelector();
+    InitGridControlValues();
 }
 
 BOOL CFmiSoundingDataServerConfigurationsDlg::OnEraseBkgnd(CDC* pDC)
@@ -361,24 +362,6 @@ void CFmiSoundingDataServerConfigurationsDlg::GetProducerIdFromGridCtrlCell(Mode
     }
 }
 
-void CFmiSoundingDataServerConfigurationsDlg::GetUseServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column)
-{
-    auto useServerCheckbox = GetGridCtrlCheckbox(row, column);
-    if(useServerCheckbox)
-    {
-        modelConfiguration.SetUseServerData(useServerCheckbox->GetCheck() == TRUE);
-    }
-    else
-    {
-        itsGridCtrl.SetItemBkColour(row, column, gErrorBkColor);
-
-        std::string errorMessage = "Internal program error";
-        errorMessage += ::MakeBaseGridCellErrorSting(row, column);
-        errorMessage += "unable to get checkbox control for Use server -option";
-        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
-    }
-}
-
 void CFmiSoundingDataServerConfigurationsDlg::GetDataNameOnServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column)
 {
     std::string dataNameOnServer = CT2A(itsGridCtrl.GetItemText(row, column));
@@ -405,11 +388,6 @@ void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationFromGridCtrlC
         GetProducerIdFromGridCtrlCell(modelConfiguration, row, column);
         break;
     }
-    case SoundingConfHeaderParInfo::kUseServer:
-    {
-        GetUseServerFromGridCtrlCell(modelConfiguration, row, column);
-        break;
-    }
     case SoundingConfHeaderParInfo::kDataNameOnServer:
     {
         GetDataNameOnServerFromGridCtrlCell(modelConfiguration, row, column);
@@ -431,12 +409,13 @@ void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationsFromGridCtrl
 void CFmiSoundingDataServerConfigurationsDlg::GetSettingsFromDialog()
 {
 	UpdateData(TRUE);
-    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetSoundingDataServerConfigurations().modelConfigurations();
+    auto &soundingDataConfigurations = itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().modelConfigurations();
     int gridCtrlRowIndex = itsGridCtrl.GetFixedRowCount();
     for(auto &modelConfiguration : soundingDataConfigurations)
     {
         GetModelConfigurationsFromGridCtrlRow(modelConfiguration, gridCtrlRowIndex++);
     }
+    itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().setSelectedBaseUrlIndex(itsServerUrlSelector.GetCurSel());
     // Päivitetaan dialogi siltä varalta, jos painettu Apply nappia ja on ollut virheitä
     UpdateData(FALSE);
 }
@@ -445,4 +424,8 @@ void CFmiSoundingDataServerConfigurationsDlg::GetSettingsFromDialog()
 void CFmiSoundingDataServerConfigurationsDlg::OnBnClickedButtonApply()
 {
     GetSettingsFromDialog();
+}
+
+void CFmiSoundingDataServerConfigurationsDlg::OnCbnSelchangeComboSelectedSoundingDataServer()
+{
 }

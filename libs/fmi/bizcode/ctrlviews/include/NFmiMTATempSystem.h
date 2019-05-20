@@ -16,6 +16,7 @@
 #include "GraphicalInfo.h"
 #include "NFmiTempLineInfo.h"
 #include "NFmiTempLabelInfo.h"
+#include "SoundingDataServerConfigurations.h"
 
 class NFmiProducerSystem;
 
@@ -25,6 +26,29 @@ class NFmiMTATempSystem
  public:
 	static double itsLatestVersionNumber;
 	mutable double itsCurrentVersionNumber;
+
+    // ServerProducer luokalla on tieto, käyttääkö se data lähteenään lokaali queryDataa vai serveriä.
+    class ServerProducer : public NFmiProducer
+    {
+        bool useServer_ = false;
+    public:
+        ServerProducer();
+        ServerProducer(const NFmiProducer &producer, bool useServer);
+        ServerProducer(const ServerProducer &) = default;
+        ServerProducer& operator=(const ServerProducer &) = default;
+
+        bool useServer() const { return useServer_; }
+        void useServer(bool useServer) { useServer_ = useServer; }
+
+        // Tehdään vertailu operaattorit, jotka vertaavat prod-id, name ja ServerProducer tapauksissa myös useServer -tilaa.
+        // Originaali NFmiProducer vertailut vertaavat vain prod-id:tä.
+        bool operator==(const ServerProducer &other) const;
+        bool operator==(const NFmiProducer &other) const;
+        bool operator!=(const ServerProducer &other) const;
+        bool operator!=(const NFmiProducer &other) const;
+        static bool ProducersAreEqual(const NFmiProducer &first, const NFmiProducer &second);
+        bool operator<(const ServerProducer &other) const;
+    };
 
 	class TempInfo
 	{
@@ -47,6 +71,7 @@ class NFmiMTATempSystem
 		void Time(const NFmiMetTime &newValue) {itsTime = newValue;}
 		const NFmiProducer& Producer(void) const {return itsProducer;}
 		void Producer(const NFmiProducer &newValue) {itsProducer = newValue;}
+        bool operator<(const TempInfo &other) const;
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
@@ -56,7 +81,25 @@ class NFmiMTATempSystem
 		NFmiProducer itsProducer;
 	};
 
-	typedef checkedVector<TempInfo> Container; // voidaan helposti siirtyä käyttämään tavallista vector-luokkaa jos haluaa halutaan
+    class SoundingDataCacheMapKey
+    {
+        TempInfo tempInfo_;
+        ServerProducer serverProducer_;
+        int modelRunIndex_ = 0;
+    public:
+        SoundingDataCacheMapKey() = default;
+        SoundingDataCacheMapKey(const SoundingDataCacheMapKey &) = default;
+        SoundingDataCacheMapKey(const TempInfo &tempInfo, const ServerProducer &serverProducer, int modelRunIndex);
+
+        bool operator<(const SoundingDataCacheMapKey &other) const;
+    };
+
+    // voidaan helposti siirtyä käyttämään tavallista vector-luokkaa jos haluaa halutaan
+	using Container = checkedVector<TempInfo>; 
+    // SoundingProducer:in bool osa tarkoittaa sitä että haetaanko itse luotausdata lokaali queryDatasta (false) vai serveriltä (true)
+    using SoundingProducer = ServerProducer;
+    using SelectedProducerContainer = checkedVector<SoundingProducer>;
+    using SelectedProducerLegacyContainer = checkedVector<NFmiProducer>;
 
 	NFmiMTATempSystem(void);
 	virtual ~NFmiMTATempSystem(void);
@@ -67,9 +110,9 @@ class NFmiMTATempSystem
 	void ClearTemps(void);
 	const Container& GetTemps(void) const {return itsTempInfos;}
     void SetAllTempTimes(const NFmiMetTime &theTime);
-	checkedVector<NFmiProducer>& PossibleProducerList(void) {return itsPossibleProducerList;}
-	const checkedVector<NFmiProducer>& SoundingComparisonProducers(void){ return itsSoundingComparisonProducers; }
-	void SoundingComparisonProducers(const checkedVector<NFmiProducer> &theProducers){ itsSoundingComparisonProducers = theProducers; }
+    SelectedProducerContainer& PossibleProducerList() {return itsPossibleProducerList;}
+	const SelectedProducerContainer& SoundingComparisonProducers() const { return itsSoundingComparisonProducers; }
+    void SoundingComparisonProducers(const SelectedProducerLegacyContainer &selectedProducersLegacyContainer);
 
 	int MaxTempsShowed(void) const {return itsMaxTempsShowed;}
 	void MaxTempsShowed(int newValue) {itsMaxTempsShowed = newValue;}
@@ -221,21 +264,27 @@ class NFmiMTATempSystem
     void SoundingTextUpward(bool newValue) { fSoundingTextUpwardWinReg = newValue; }
     bool SoundingTimeLockWithMapView() const { return fSoundingTimeLockWithMapViewWinReg; }
     void SoundingTimeLockWithMapView(bool newValue) { fSoundingTimeLockWithMapViewWinReg = newValue; }
+    SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() { return itsSoundingDataServerConfigurations; }
 
 	void Write(std::ostream& os) const;
 	void Read(std::istream& is);
 private:
-    void InitProducerList(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers);
-	void InitializeSoundingColors(void);
+    void InitPossibleProducerList(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers);
+	void InitializeSoundingColors();
+    void InitializeSoundingDataServerConfigurations();
     std::string MakeSecondaryDataLineInfoString() const;
     void ReadSecondaryDataLineInfoFromString(const std::string &theStr);
+    void AddSpecialDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList);
+    void AddVerticalModelDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, NFmiProducerSystem &theProducerSystem);
+    void AddExtraSoundingDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, const std::vector<NFmiProducer>& theExtraSoundingProducers);
+    void AddSoundingDataFromServerToPossibleProducerList(SelectedProducerContainer &possibleProducerList);
 
 	Container itsTempInfos;
 	int itsMaxTempsShowed; // MTA-moodissa tämän enempää ei oteta listaan näytettäviä temppejä. Jos joku lisää
 							// tempin ja listassa on jo näin monta, tyhjennetään ensin lista ja lisätään
 							// sitten tämä uusi luotaus tieto
-	checkedVector<NFmiProducer> itsPossibleProducerList; // lista kaikista mahdollisista luotaus tuottajista
-	checkedVector<NFmiProducer> itsSoundingComparisonProducers; // näyden tuottajien luotauksia näytetään comp-moodissa luotaus näytössä
+    SelectedProducerContainer itsPossibleProducerList; // lista kaikista mahdollisista luotaus tuottajista
+    SelectedProducerContainer itsSoundingComparisonProducers; // näyden tuottajien luotauksia näytetään comp-moodissa luotaus näytössä
 	int itsSelectedProducer; // indeksi edelliseen listaan, -1 jos ei ole valittu mitään
 	bool fTempViewOn; // onko luotaus ikkuna auki vai kiinni
 	double itsSkewTDegree; // tuetaan ainakin 0 ja 45 astetta
@@ -335,6 +384,7 @@ private:
     // Windows registry:ssä oikeasti talletetut muttujat, jotka otetaan myös tänne talteen, että ne saadaan mukaan näyttömakroihin
     bool fSoundingTextUpwardWinReg; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)
     bool fSoundingTimeLockWithMapViewWinReg; // Luotausnäytössä voi olla nyt aikalukko päällä, jolloin luotausten ajat sidotaan pääkarttanäyttöön, eli niitä säädetään jos karttanäytöllä vaihdetaan aikaa
+    SoundingDataServerConfigurations itsSoundingDataServerConfigurations;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMTATempSystem::TempInfo& item){item.Write(os); return os;}

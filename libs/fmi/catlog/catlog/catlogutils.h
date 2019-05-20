@@ -18,11 +18,18 @@ namespace CatLogUtils
     {
         return word.size() && word[0] == '-';
     }
+	static bool isRequiredWord(const string &word)
+	{
+		return word.size()>1 && word[0] == '+';
+	}
 
     static bool containsAllSearchedWordsCaseInsensitive(const string &searchFromThis, const std::vector<std::string> &searchedWords)
     {
+		bool searchTerms = false; //does the search have unquantified terms
+ 		bool searchHits = false; //did any of the unquantified terms match
         for(const auto &word : searchedWords)
         {
+
             if(isExcludeWord(word))
             {
                 // Presumes that all word's given here are longer than 1 character
@@ -30,13 +37,19 @@ namespace CatLogUtils
                 if(containsStringCaseInsensitive(searchFromThis, excludeWord))
                     return false;
             }
-            else
+            else if(isRequiredWord(word)) 
             {
-                if(!containsStringCaseInsensitive(searchFromThis, word))
+				std::string requireWord(word.begin() + 1, word.end());
+				if (!containsStringCaseInsensitive(searchFromThis, requireWord))
                     return false;
-            }
+			}
+			else {
+				searchTerms= true;
+				if (containsStringCaseInsensitive(searchFromThis,word))
+					searchHits = true;
+			}
         }
-        return true;
+        return !searchTerms || searchHits; //a search with no unquantified terms matches everything
     }
 
     static std::vector<std::string> getSearchedWords(const std::string &searchString)
@@ -51,6 +64,8 @@ namespace CatLogUtils
         // And also igone word if there is only single character after - sign like "-a", so that not all the messages that have 'a' would be ignored. 
         words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word == "-"; }), words.end());
         words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word.size() == 2 && word[0] == '-'; }), words.end());
+		//exclude singular + as well
+		words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word == "+"; }), words.end());
 
         return words;
     }

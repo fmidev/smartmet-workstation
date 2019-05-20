@@ -31,6 +31,23 @@ public:
     void setCheckMetaParamCalculation(bool checkMetaParamCalculation) { checkMetaParamCalculation_ = checkMetaParamCalculation; }
 };
 
+class MetaParamDataHolderDoCheckStateRestorer
+{
+    MetaParamDataHolder &metaParamDataHolder_;
+    bool originalCheckMetaParamCalculationState_;
+public:
+    MetaParamDataHolderDoCheckStateRestorer(MetaParamDataHolder &metaParamDataHolder, bool wantedCheckMetaParamCalculationState)
+        :metaParamDataHolder_(metaParamDataHolder)
+        , originalCheckMetaParamCalculationState_(metaParamDataHolder.checkMetaParamCalculation())
+    {
+        metaParamDataHolder_.setCheckMetaParamCalculation(wantedCheckMetaParamCalculationState);
+    }
+    ~MetaParamDataHolderDoCheckStateRestorer()
+    {
+        metaParamDataHolder_.setCheckMetaParamCalculation(originalCheckMetaParamCalculationState_);
+    }
+};
+
 class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
 {
  public:
@@ -107,8 +124,6 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   double CalcValueFromLocation(const NFmiPoint &theLatLon) const override;
   const NFmiString MakeSubMaskString(void) const override;
   bool IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlways) const;
-  template<typename GetFunction>
-  float CalcMetaParamValueWithFunction(GetFunction getFunction);
   float CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams);
   float CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
   float CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
@@ -130,6 +145,53 @@ protected:
   // jos fUsePressureLevelInterpolation on true, käytetään laskuissa tätä painepintaa
   double itsUsedPressureLevelValue;  
   MetaParamDataHolder metaParamDataHolder;
+
+  template<typename GetFunction>
+  float CalcMetaParamValueWithFunction(GetFunction getFunction)
+  {
+      // Tästä funktiosta kutsutuissa Value -metodeissa ei ole tarkoitus tehdä metaparam tarkastusta, siksi se laitetaan väliaikaisesti pois päältä
+      MetaParamDataHolderDoCheckStateRestorer metaParamDataHolderDoCheckStateRestorer(metaParamDataHolder, false);
+
+      if(metaParamDataHolder.metaWindParamUsage().HasWsAndWd())
+      {
+          itsInfo->Param(kFmiWindSpeedMS);
+          float WS = getFunction();
+          itsInfo->Param(kFmiWindDirection);
+          float WD = getFunction();
+          switch(metaParamDataHolder.possibleMetaParamId())
+          {
+          case kFmiWindUMS:
+              return NFmiFastInfoUtils::CalcU(WS, WD);
+          case kFmiWindVMS:
+              return NFmiFastInfoUtils::CalcV(WS, WD);
+          case kFmiWindVectorMS:
+              return NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(WS, WD);
+          default:
+              return kFloatMissing;
+          }
+      }
+      else if(metaParamDataHolder.metaWindParamUsage().HasWindComponents())
+      {
+          itsInfo->Param(kFmiWindUMS);
+          float u = getFunction();
+          itsInfo->Param(kFmiWindVMS);
+          float v = getFunction();
+          switch(metaParamDataHolder.possibleMetaParamId())
+          {
+          case kFmiWindDirection:
+              return NFmiFastInfoUtils::CalcWD(u, v);
+          case kFmiWindSpeedMS:
+              return NFmiFastInfoUtils::CalcWS(u, v);
+          case kFmiWindVectorMS:
+              return NFmiFastInfoUtils::CalcWindVectorFromWindComponents(u, v);
+          default:
+              return kFloatMissing;
+          }
+      }
+
+      return kFloatMissing;
+  }
+
 };  // class NFmiInfoAreaMask
 
 //! Tämä luokka toimii kuten NFmiInfoAreaMask mutta kurkkaa halutun x-y hila pisteen yli arvoa
