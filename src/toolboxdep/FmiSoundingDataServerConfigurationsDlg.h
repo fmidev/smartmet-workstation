@@ -93,6 +93,7 @@ private:
     void DoResizerHooking();
     void InitDialogTexts();
     void FitLastColumnOnVisibleArea();
+    void InitSelectedServerUrlSelector();
 
 	NFmiSoundingConfGridCtrl itsGridCtrl;
 	std::vector<SoundingConfHeaderParInfo> itsHeaders;
@@ -101,6 +102,7 @@ private:
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     CWndResizer m_resizer;
+    CComboBox itsServerUrlSelector;
 public:
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	virtual BOOL OnInitDialog();
@@ -113,4 +115,5 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 //	afx_msg void OnPaint();
     afx_msg void OnBnClickedButtonApply();
+    afx_msg void OnCbnSelchangeComboSelectedSoundingDataServer();
 };
