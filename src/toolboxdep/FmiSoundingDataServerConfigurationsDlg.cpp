@@ -89,6 +89,7 @@ void CFmiSoundingDataServerConfigurationsDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_GridControl(pDX, IDC_CUSTOM_GRID_SOUNDING_CONF, itsGridCtrl);
+    DDX_Control(pDX, IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER, itsServerUrlSelector);
 }
 
 BEGIN_MESSAGE_MAP(CFmiSoundingDataServerConfigurationsDlg, CDialogEx)
@@ -100,6 +101,7 @@ BEGIN_MESSAGE_MAP(CFmiSoundingDataServerConfigurationsDlg, CDialogEx)
 	ON_WM_TIMER()
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_APPLY, &CFmiSoundingDataServerConfigurationsDlg::OnBnClickedButtonApply)
+    ON_CBN_SELCHANGE(IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER, &CFmiSoundingDataServerConfigurationsDlg::OnCbnSelchangeComboSelectedSoundingDataServer)
 END_MESSAGE_MAP()
 
 
@@ -133,6 +135,7 @@ BOOL CFmiSoundingDataServerConfigurationsDlg::OnInitDialog()
     // Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
 	std::string errorBaseStr("Error in CFmiSoundingDataServerConfigurationsDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
+    InitSelectedServerUrlSelector();
     InitDialogTexts();
     InitGridControlValues();
     FitLastColumnOnVisibleArea();
@@ -140,6 +143,16 @@ BOOL CFmiSoundingDataServerConfigurationsDlg::OnInitDialog()
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiSoundingDataServerConfigurationsDlg::InitSelectedServerUrlSelector()
+{
+    itsServerUrlSelector.Clear();
+    for(const auto &serverUrl : itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().serverBaseUrls())
+    {
+        itsServerUrlSelector.AddString(CA2T(serverUrl.c_str()));
+    }
+    itsServerUrlSelector.SetCurSel(itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().selectedBaseUrlIndex());
 }
 
 void CFmiSoundingDataServerConfigurationsDlg::InitDialogTexts()
@@ -177,6 +190,16 @@ void CFmiSoundingDataServerConfigurationsDlg::FitLastColumnOnVisibleArea()
     static bool firstTime = true;
 
     CFmiWin32Helpers::FitLastColumnOnVisibleArea(this, itsGridCtrl, firstTime, 120);
+    CWnd *serverDropDownControl = GetDlgItem(IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER);
+    if(serverDropDownControl)
+    {
+        WINDOWPLACEMENT gridCtrlPlacement;
+        itsGridCtrl.GetWindowPlacement(&gridCtrlPlacement);
+        WINDOWPLACEMENT dropDownPlacement;
+        serverDropDownControl->GetWindowPlacement(&dropDownPlacement);
+        dropDownPlacement.rcNormalPosition.right = gridCtrlPlacement.rcNormalPosition.right;
+        serverDropDownControl->SetWindowPlacement(&dropDownPlacement);
+    }
 }
 
 void CFmiSoundingDataServerConfigurationsDlg::DoOnOk(void)
@@ -396,6 +419,7 @@ void CFmiSoundingDataServerConfigurationsDlg::GetSettingsFromDialog()
     {
         GetModelConfigurationsFromGridCtrlRow(modelConfiguration, gridCtrlRowIndex++);
     }
+    itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().setSelectedBaseUrlIndex(itsServerUrlSelector.GetCurSel());
     // Päivitetaan dialogi siltä varalta, jos painettu Apply nappia ja on ollut virheitä
     UpdateData(FALSE);
 }
@@ -404,4 +428,8 @@ void CFmiSoundingDataServerConfigurationsDlg::GetSettingsFromDialog()
 void CFmiSoundingDataServerConfigurationsDlg::OnBnClickedButtonApply()
 {
     GetSettingsFromDialog();
+}
+
+void CFmiSoundingDataServerConfigurationsDlg::OnCbnSelchangeComboSelectedSoundingDataServer()
+{
 }
