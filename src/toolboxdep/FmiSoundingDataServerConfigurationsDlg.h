@@ -17,7 +17,6 @@ struct SoundingConfHeaderParInfo
 		kRowNumber = 0,
 		kModelName,
         kModerProducerId,
-		kUseServer,
 		kDataNameOnServer
 	};
 
@@ -86,10 +85,7 @@ private:
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
 	void InitHeaders(void);
 	void SetGridRow(int row, const ModelSoundingDataServerConfigurations &theSoundingConf, int theFixedColumnCount, bool updateOnly);
-    void SetupCheckbox(int row, int column, bool updateOnly, const ModelSoundingDataServerConfigurations &theSoundingConf);
-    CGridCellCheck* GetGridCtrlCheckbox(int row, int column);
     void GetProducerIdFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
-    void GetUseServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
     void GetDataNameOnServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
     void GetModelConfigurationFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
     void GetModelConfigurationsFromGridCtrlRow(ModelSoundingDataServerConfigurations &modelConfiguration, int row);
@@ -97,6 +93,7 @@ private:
     void DoResizerHooking();
     void InitDialogTexts();
     void FitLastColumnOnVisibleArea();
+    void InitSelectedServerUrlSelector();
 
 	NFmiSoundingConfGridCtrl itsGridCtrl;
 	std::vector<SoundingConfHeaderParInfo> itsHeaders;
@@ -105,6 +102,7 @@ private:
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     CWndResizer m_resizer;
+    CComboBox itsServerUrlSelector;
 public:
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	virtual BOOL OnInitDialog();
@@ -117,4 +115,5 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 //	afx_msg void OnPaint();
     afx_msg void OnBnClickedButtonApply();
+    afx_msg void OnCbnSelchangeComboSelectedSoundingDataServer();
 };

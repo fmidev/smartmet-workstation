@@ -67,6 +67,7 @@ namespace HakeMessage
         size_t handleHakeJson(unsigned int maxNumberOfMessagesToRead);
         size_t handleHakeXml(unsigned int maxNumberOfMessagesToRead);
         size_t handleKahaJson();
+        void doUpdateApplicationCallback();
     };
 }
 

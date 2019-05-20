@@ -63,6 +63,7 @@ CFmiBetaProductDialog::CFmiBetaProductDialog(SmartMetDocumentInterface *smartMet
 , fUseUtcTimesInTimeBox(FALSE)
 , fUseAutoFileNames(FALSE)
 , fDisplayRuntimeInfo(FALSE)
+, fShowModelOriginTime(FALSE)
 , itsTotalImagesGenerated(0)
 , itsBetaProductFullFilePath()
 , itsBetaProductNameU_(_T(""))
@@ -103,6 +104,7 @@ void CFmiBetaProductDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_USE_AUTO_FILE_NAMES, fUseAutoFileNames);
     DDX_Control(pDX, IDC_COMBO_PARAM_BOX_LOCATION_SELECTOR, itsParamBoxLocationSelector);
     DDX_Check(pDX, IDC_CHECK_DISPLAY_RUNTIME_INFO, fDisplayRuntimeInfo);
+    DDX_Check(pDX, IDC_CHECK_SHOW_MODEL_ORIGIN_TIME, fShowModelOriginTime);
     DDX_Text(pDX, IDC_STATIC_BETA_PRODUCT_NAME, itsBetaProductNameU_);
 }
 
@@ -133,6 +135,7 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductDialog, CTabPageSSL) //CDialogEx)
     ON_BN_CLICKED(IDC_CHECK_USE_AUTO_FILE_NAMES, &CFmiBetaProductDialog::OnBnClickedCheckUseAutoFileNames)
     ON_CBN_SELCHANGE(IDC_COMBO_PARAM_BOX_LOCATION_SELECTOR, &CFmiBetaProductDialog::OnCbnSelchangeComboParamBoxLocationSelector)
     ON_BN_CLICKED(IDC_CHECK_DISPLAY_RUNTIME_INFO, &CFmiBetaProductDialog::OnBnClickedCheckDisplayRuntimeInfo)
+    ON_BN_CLICKED(IDC_CHECK_SHOW_MODEL_ORIGIN_TIME, &CFmiBetaProductDialog::OnBnClickedCheckShowModelOriginTime)
     ON_BN_CLICKED(IDC_RADIO_TIME_SERIAL_VIEW, &CFmiBetaProductDialog::OnBnClickedRadioTimeSerialView)
     ON_BN_CLICKED(IDC_RADIO_SOUNDING_VIEW, &CFmiBetaProductDialog::OnBnClickedRadioSoundingView)
     ON_BN_CLICKED(IDC_RADIO_CROSS_SECTION_VIEW, &CFmiBetaProductDialog::OnBnClickedRadioCrossSectionView)
@@ -185,6 +188,7 @@ void CFmiBetaProductDialog::InitControlsFromDocument()
     SetBoxLocationSelector(itsTimeBoxLocationSelector, itsBetaProductionSystem->BetaProductTimeBoxLocation());
     SetBoxLocationSelector(itsParamBoxLocationSelector, itsBetaProductionSystem->BetaProductParamBoxLocation());
     fDisplayRuntimeInfo = itsBetaProductionSystem->BetaProductDisplayRuntime();
+    fShowModelOriginTime = itsBetaProductionSystem->BetaProductShowModelOriginTime();
     try
     {
         itsTimeLengthInHoursStringU_ = CA2T(boost::lexical_cast<std::string>(itsBetaProductionSystem->BetaProductTimeLengthInHours()).c_str());
@@ -229,6 +233,7 @@ void CFmiBetaProductDialog::InitControlsFromLoadedBetaProduct()
     SetBoxLocationSelector(itsTimeBoxLocationSelector, itsBetaProduct->TimeBoxLocation());
     SetBoxLocationSelector(itsParamBoxLocationSelector, itsBetaProduct->ParamBoxLocation());
     fDisplayRuntimeInfo = itsBetaProduct->DisplayRunTimeInfo();
+    fShowModelOriginTime = itsBetaProduct->ShowModelOriginTime();
 
     itsTimeRangeInfoTextU_ = CA2T(itsBetaProduct->TimeRangeInfoText().c_str());
     itsRowIndexListInfoTextU_ = CA2T(itsBetaProduct->RowIndexListInfoText().c_str());
@@ -258,6 +263,7 @@ void CFmiBetaProductDialog::StoreControlValuesToDocument()
     itsBetaProductionSystem->BetaProductTimeBoxLocation(GetSelectedBoxLocation(true));
     itsBetaProductionSystem->BetaProductParamBoxLocation(GetSelectedBoxLocation(false));
     itsBetaProductionSystem->BetaProductDisplayRuntime(fDisplayRuntimeInfo == TRUE);
+    itsBetaProductionSystem->BetaProductShowModelOriginTime(fShowModelOriginTime == TRUE);
 
     try
     {
@@ -321,6 +327,7 @@ void CFmiBetaProductDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_IMAGE_FILE_NAME_TEMPLATE_STAMPS_TEXT, GetFileNameTemplateStampsString().c_str());
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_COMMAND_LINE_GROUP_TEXT, "Used post image generation command line");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DISPLAY_RUNTIME_INFO, "Display runtime info");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_MODEL_ORIGIN_TIME, "Show model orig. time");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_STATION_ID_VIEW_GROUP_TEXT, "Synop station ids: <empty> OR id1,id2,id3-id4,...");
 
     InitLocationSelector(itsTimeBoxLocationSelector);
@@ -370,6 +377,7 @@ void CFmiBetaProductDialog::Update()
     itsTimeRangeInfoTextU_ = CA2T(itsBetaProduct->TimeRangeInfoText().c_str());
     itsBetaProduct->ImageStoragePath(CFmiWin32Helpers::CT2std(itsImageStoragePathU_));
     itsBetaProduct->DisplayRunTimeInfo(fDisplayRuntimeInfo == TRUE);
+    itsBetaProduct->ShowModelOriginTime(fShowModelOriginTime == TRUE);
     CheckForGenerateButtonActivation();
 
     UpdateData(FALSE);
@@ -1537,4 +1545,11 @@ void CFmiBetaProductDialog::OnBnClickedCheckDisplayRuntimeInfo()
 {
     UpdateData(TRUE);
     itsBetaProduct->DisplayRunTimeInfo(fDisplayRuntimeInfo == TRUE);
+}
+
+
+void CFmiBetaProductDialog::OnBnClickedCheckShowModelOriginTime()
+{
+    UpdateData(TRUE);
+    itsBetaProduct->ShowModelOriginTime(fShowModelOriginTime == TRUE);
 }

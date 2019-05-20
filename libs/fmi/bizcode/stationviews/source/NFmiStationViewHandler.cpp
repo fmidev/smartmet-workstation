@@ -2559,6 +2559,14 @@ void NFmiStationViewHandler::Update(void)
 	}
 }
 
+bool NFmiStationViewHandler::IsMouseCursorOverParameterBox(const NFmiPoint & theMouseCursorPlace)
+{
+    if(ShowParamHandlerView() && itsParamHandlerView->IsIn(theMouseCursorPlace))
+        return true;
+    else
+        return false;
+}
+
 //--------------------------------------------------------
 // LeftButtonDown
 //--------------------------------------------------------
@@ -2572,7 +2580,7 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
         auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-        if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace)) // param-näytön on napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
+        if(IsMouseCursorOverParameterBox(thePlace)) // param-näytön on napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
 		{
             return itsParamHandlerView->LeftButtonDown(thePlace, theKey);
 		}
@@ -2673,7 +2681,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
         NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
 
-		if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
+		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
 		{
 			return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
 		}
@@ -2750,7 +2758,7 @@ bool NFmiStationViewHandler::LeftDoubleClick(const NFmiPoint &thePlace, unsigned
 {
 	if(IsIn(thePlace))
 	{
-		if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
+		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
 			return itsParamHandlerView->LeftDoubleClick(thePlace, theKey);
 
 		if(itsViewList && itsViewList->IsIn(thePlace))
@@ -2870,7 +2878,7 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 {
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-		if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
+		if(IsMouseCursorOverParameterBox(thePlace))
 		{
 			return itsParamHandlerView->MouseWheel(thePlace, theKey, theDelta);
 		}
@@ -3119,7 +3127,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
 		// ensin pitää handlata parametrin lisäys param boxista jos hiiren oikea klikattu
-		if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
+		if(IsMouseCursorOverParameterBox(thePlace))
 			return itsParamHandlerView->RightButtonUp(thePlace, theKey);
 
 		NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
@@ -3337,7 +3345,7 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
     if(!GetFrame().IsInside(thePlace))
         return false;
 
-    if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
+    if(IsMouseCursorOverParameterBox(thePlace))
         return false; // ei move handlausta, jos ollaa parametri boxin sisällä, koska muuten ei voi oikea klikillä lisätä parametreja, jos hiiri liikahtaa
 
 
@@ -4489,6 +4497,10 @@ void NFmiStationViewHandler::DrawSelectedSynopFromGridView(void)
 std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
 	std::string str;
+    // Parametri laatikon päältä ei tehdä tooltippiä, koska jotkut tooltipien laskut ovat super hitaita ja saattavat häiritä parametrin valinta popupin avautumista.
+    // Tehdään param-boxille oma tooltip jos tarvis...
+    if(IsMouseCursorOverParameterBox(theRelativePoint))
+        return str;
 	if(itsViewList)
 	{
 		int count = itsViewList->NumberOfItems();

@@ -22,6 +22,7 @@ class NFmiTempView : public NFmiCtrlView
 		kCross = 3
 	} MarkerShape;
 
+    using SoundingDataCacheMap = std::map<NFmiMTATempSystem::SoundingDataCacheMapKey, NFmiSoundingDataOpt1>;
 
 	NFmiTempView( const NFmiRect& theRect
 				 ,NFmiToolBox* theToolBox);
@@ -43,7 +44,7 @@ class NFmiTempView : public NFmiCtrlView
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
 
  private:
-	void DrawOneSounding(const NFmiProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex);
+	void DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex);
 	double ExtraPrintLineThicknesFactor(bool fMainCurve);
 	NFmiPoint ScaleOffsetPoint(const NFmiPoint &thePoint);
 	double CalcPressureScaleWidth(void);
@@ -65,7 +66,7 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int theIndex);
 	NFmiPoint GetRelativePointFromHodograf(double u, double v);
 	void DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData);
-	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, bool useServerData);
+	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
 	void DrawSounding(NFmiSoundingDataOpt1 &theData, int theIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere);
 	void DrawSoundingsInMTAMode(void);
 	void DrawBackground(void);
@@ -109,8 +110,7 @@ class NFmiTempView : public NFmiCtrlView
     void DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
     double SecondaryDataFrameXoffset(double theValue);
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
-    bool UseServerForSoundingData(const NFmiProducer &producer);
-    bool FillSoundingDataFromServer(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
+    bool FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation);
 
 	double es(double t);
 	double ws(double t, double p);
@@ -166,9 +166,13 @@ class NFmiTempView : public NFmiCtrlView
 	double itsDrawSizeFactorY;
 	double itsLastScreenDrawPixelSizeInMM_x;
 	double itsLastScreenDrawPixelSizeInMM_y;
-	double itsLastScreenDataRectPressureScaleRatio; // tämän avulla yritetään vielä korjata koko laskuja, koska näytönohjaimet eivät anna aina 
-												// oikeita millimetri kokoja näytöille. Jos 0, ei ole tietoa suhteesta, eikä korjausta voi tehdä.
-    NFmiRect itsSecondaryDataFrame; // tämä määrittää suhteellisen alueen, mihin piirretään 0 - 100 asteikko (vaakasuunnassa) ja siihen piirretään mm. seuraavia parametreja (jos datasta löytyy niitä) WS, N, RH
+    // tämän avulla yritetään vielä korjata koko laskuja, koska näytönohjaimet eivät anna aina 
+    // oikeita millimetri kokoja näytöille. Jos 0, ei ole tietoa suhteesta, eikä korjausta voi tehdä.
+	double itsLastScreenDataRectPressureScaleRatio; 
+    // tämä määrittää suhteellisen alueen, mihin piirretään 0 - 100 asteikko (vaakasuunnassa) ja siihen piirretään mm. seuraavia parametreja (jos datasta löytyy niitä) WS, N, RH
+    NFmiRect itsSecondaryDataFrame; 
+    // Jotta luotauskäyrien tooltipit saadaan varmasti laskettua kaikissa tilanteissa, laitetaan kaikki piirretyt luotausdatat erilliseen cacheen talteen.
+    SoundingDataCacheMap itsSoundingDataCacheForTooltips;
 };
 
 

@@ -95,6 +95,15 @@ namespace
         }
         return subMenuItems;
     }
+
+    bool isObservationCustomMenuFolder(NFmiInfoData::Type dataCategory, const NFmiHelpDataInfo &helpDataInfo)
+    {
+        // Jos kategoria on havainnot, pitää tehdä poikkeus "observation" nimisistä CustomMenuFolder:eista
+        if(dataCategory == NFmiInfoData::kObservations && boost::iequals(helpDataInfo.CustomMenuFolder(), "observation"))
+            return true;
+        else
+            return false;
+    }
 }
 
 namespace AddParams
@@ -242,7 +251,7 @@ namespace AddParams
     {
         bool dataStruckturesChanged = false;
         // Add only when handling custom category
-        if(!customCategory && skipCustomProducerData(producer, infoOrganizer, helpDataInfoSystem))
+        if(!customCategory && skipCustomProducerData(producer, infoOrganizer, helpDataInfoSystem, dataCategory))
             return dataStruckturesChanged;
 
         auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto &producerData) {return producer == producerData->producer(); });
@@ -258,7 +267,7 @@ namespace AddParams
         return dataStruckturesChanged;
     }
 
-    bool CategoryData::skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    bool CategoryData::skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
     {
         auto producerData = infoOrganizer.GetInfos(producer.GetIdent());
         for(auto &info : producerData)
@@ -267,7 +276,8 @@ namespace AddParams
             NFmiHelpDataInfo *helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(filePattern);
             if(helpDataInfo && !helpDataInfo->CustomMenuFolder().empty())
             {
-                return true;
+                if(!::isObservationCustomMenuFolder(dataCategory, *helpDataInfo))
+                    return true;
             }
         }
         return false;

@@ -4,6 +4,8 @@
 #include "NFmiProducerSystem.h"
 #include "NFmiDataStoringHelpers.h"
 #include "SettingsFunctions.h"
+#include "NFmiApplicationWinRegistry.h"
+#include "catlog/catlog.h"
 
 /*
 #ifdef _DEBUG
@@ -16,8 +18,66 @@ static char THIS_FILE[] = __FILE__;
 double NFmiMTATempSystem::itsLatestVersionNumber = 1.0;
 
 // ****************************************************
+// ** Tästä alkaa NFmiMTATempSystem::ServerProducer osio ****
+// ****************************************************
+
+NFmiMTATempSystem::ServerProducer::ServerProducer()
+{}
+
+NFmiMTATempSystem::ServerProducer::ServerProducer(const NFmiProducer &producer, bool useServer)
+    :NFmiProducer(producer)
+    ,useServer_(useServer)
+{}
+
+bool NFmiMTATempSystem::ServerProducer::ProducersAreEqual(const NFmiProducer &first, const NFmiProducer &second)
+{
+    return first.GetIdent() == second.GetIdent() && first.GetName() == second.GetName();
+}
+
+bool NFmiMTATempSystem::ServerProducer::operator==(const ServerProducer &other) const
+{
+    return ProducersAreEqual(*this, other) && useServer() == other.useServer();
+}
+
+bool NFmiMTATempSystem::ServerProducer::operator==(const NFmiProducer &other) const
+{
+    return ProducersAreEqual(*this, other);
+}
+
+bool NFmiMTATempSystem::ServerProducer::operator!=(const ServerProducer &other) const
+{
+    return !(ProducersAreEqual(*this, other) && useServer() == other.useServer());
+}
+
+bool NFmiMTATempSystem::ServerProducer::operator!=(const NFmiProducer &other) const
+{
+    return !ProducersAreEqual(*this, other);
+}
+
+bool NFmiMTATempSystem::ServerProducer::operator<(const ServerProducer &other) const
+{
+    if(GetIdent() != other.GetIdent())
+        return GetIdent() < other.GetIdent();
+    if(GetName() != other.GetName())
+        return GetName() < other.GetName();
+    else
+        return useServer() < other.useServer();
+}
+
+
+// ****************************************************
 // ** Tästä alkaa NFmiMTATempSystem::TempInfo osio ****
 // ****************************************************
+
+bool NFmiMTATempSystem::TempInfo::operator<(const TempInfo &other) const
+{
+    if(Latlon() != other.Latlon())
+        return Latlon() < other.Latlon();
+    if(Time() != other.Time())
+        return Time() < other.Time();
+    else
+        return Producer() < other.Producer();
+}
 
 void NFmiMTATempSystem::TempInfo::Write(std::ostream& os) const
 {
@@ -59,6 +119,24 @@ void NFmiMTATempSystem::TempInfo::Read(std::istream& is)
 		throw std::runtime_error("NFmiMTATempSystem::TempInfo::Read failed");
 }
 
+
+NFmiMTATempSystem::SoundingDataCacheMapKey::SoundingDataCacheMapKey(const TempInfo &tempInfo, const ServerProducer &serverProducer, int modelRunIndex)
+    :tempInfo_(tempInfo)
+    ,serverProducer_(serverProducer)
+    ,modelRunIndex_(modelRunIndex)
+{}
+
+bool NFmiMTATempSystem::SoundingDataCacheMapKey::operator<(const SoundingDataCacheMapKey &other) const
+{
+    if(serverProducer_ != other.serverProducer_)
+        return serverProducer_ < other.serverProducer_;
+    if(modelRunIndex_ != other.modelRunIndex_)
+        return modelRunIndex_ < other.modelRunIndex_;
+    else
+        return tempInfo_ < other.tempInfo_;
+}
+
+
 const double gDefaultSecondaryDataFrameWidthFactor = 0.15;
 
 // ******************************************
@@ -92,6 +170,7 @@ NFmiMTATempSystem::NFmiMTATempSystem(void)
 ,itsRHLineInfo(NFmiColor(), 2, FMI_DOT, true)
 ,fSoundingTextUpwardWinReg(true)
 ,fSoundingTimeLockWithMapViewWinReg(false)
+,itsSoundingDataServerConfigurations()
 {
 }
 
@@ -104,9 +183,24 @@ void NFmiMTATempSystem::Init(NFmiProducerSystem &theProducerSystem, const std::v
 	fInitializationOk = false;
     fSoundingTextUpwardWinReg = theSoundingTextUpward;
     fSoundingTimeLockWithMapViewWinReg = theSoundingTimeLockWithMapView;
+    InitializeSoundingDataServerConfigurations();
     InitializeSoundingColors();
-    InitProducerList(theProducerSystem, theExtraSoundingProducers);
+    InitPossibleProducerList(theProducerSystem, theExtraSoundingProducers);
 	fInitializationOk = true; // jos ei poikkeuksia lentänyt laitetaan true:ksi
+}
+
+void NFmiMTATempSystem::InitializeSoundingDataServerConfigurations()
+{
+    try
+    {
+        itsSoundingDataServerConfigurations.init(NFmiApplicationWinRegistry::MakeBaseRegistryPath(), "SmartMet::SoundingDataServerConfigurations");
+    }
+    catch(std::exception &e)
+    {
+        std::string errorMessage = "Problem with SoundingDataServerConfigurations: ";
+        errorMessage += e.what();
+        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
+    }
 }
 
 void NFmiMTATempSystem::AddTemp(const TempInfo &theTempInfo)
@@ -534,41 +628,69 @@ void NFmiMTATempSystem::PreviousAnimationStep(void)
 }
 
 // initialisoi tuottaja lista
-void NFmiMTATempSystem::InitProducerList(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers)
+void NFmiMTATempSystem::InitPossibleProducerList(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers)
 {
 	itsPossibleProducerList.clear();
-	// 1. edited + havainto + TEMP (=raaka-luotaukset)
-	itsPossibleProducerList.push_back(NFmiProducer(kFmiMETEOR, "Edited"));
-    itsPossibleProducerList.push_back(NFmiProducer(kFmiTEMP, "Sounding"));
-    itsPossibleProducerList.push_back(NFmiProducer(kFmiBufrTEMP, "BufrSounding"));
-	itsPossibleProducerList.push_back(NFmiProducer(kFmiRAWTEMP, "TEMP"));
+    AddSpecialDataToPossibleProducerList(itsPossibleProducerList);
+    AddVerticalModelDataToPossibleProducerList(itsPossibleProducerList, theProducerSystem);
+    AddSoundingDataFromServerToPossibleProducerList(itsPossibleProducerList);
+    AddExtraSoundingDataToPossibleProducerList(itsPossibleProducerList, theExtraSoundingProducers);
+}
 
-	size_t i=0;
-	// 2. malli datat jotka on määritelty docin producer listassa
-	size_t modelCount = theProducerSystem.Producers().size();
-	for(i=0; i<modelCount; i++)
-	{
-		if(theProducerSystem.Producer(static_cast<unsigned int>(i+1)).HasRealVerticalData())
+void NFmiMTATempSystem::AddSoundingDataFromServerToPossibleProducerList(SelectedProducerContainer &possibleProducerList)
+{
+    // 3. tuottajat, joiden data haetaan serverilta
+    for(const auto &modelSoundingDataFromServerConfiguration : itsSoundingDataServerConfigurations.modelConfigurations())
+    {
+        const std::string serverDataNamePrefix = "(S) ";
+        NFmiProducer producer(modelSoundingDataFromServerConfiguration.producerId(), serverDataNamePrefix + modelSoundingDataFromServerConfiguration.producerName());
+        possibleProducerList.push_back(SoundingProducer(producer, true));
+    }
+}
+
+void NFmiMTATempSystem::AddExtraSoundingDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, const std::vector<NFmiProducer>& theExtraSoundingProducers)
+{
+    // 4. extra tuottajat, jotka saadaan myös docilta
+    for(const auto &producer : theExtraSoundingProducers)
+        possibleProducerList.push_back(SoundingProducer(producer, false));
+}
+
+void NFmiMTATempSystem::AddVerticalModelDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, NFmiProducerSystem &theProducerSystem)
+{
+    // 2. malli datat jotka on määritelty docin producer listassa
+    const auto &producers = theProducerSystem.Producers();
+    for(auto producerIndex = 0u; producerIndex < static_cast<unsigned int>(producers.size()); producerIndex++)
+    {
+        if(theProducerSystem.Producer(producerIndex + 1).HasRealVerticalData())
         {
-            NFmiProducerInfo &producerInfo = theProducerSystem.Producer(static_cast<unsigned int>(i+1)); // +1 johtuu producersystemin 1-pohjaisesta indeksi systeemistä
+            NFmiProducerInfo &producerInfo = theProducerSystem.Producer(producerIndex + 1); // +1 johtuu producersystemin 1-pohjaisesta indeksi systeemistä
             NFmiProducer producer = producerInfo.GetProducer();
             const unsigned long nameLengthLimit = 12; // Jos tuottajan normaalinimi menee yli tämä rajan, käytetään ShortName:a
             if(producer.GetName().GetLen() > nameLengthLimit)
                 producer.SetName(producerInfo.ShortName());
-			itsPossibleProducerList.push_back(producer);
+            itsPossibleProducerList.push_back(SoundingProducer(producer, false));
         }
-	}
-	// 3. extra tuottajat, jotka saadaan myös docilta
-    for(i = 0; i < theExtraSoundingProducers.size(); i++)
-        itsPossibleProducerList.push_back(theExtraSoundingProducers[i]);
+    }
+}
+
+void NFmiMTATempSystem::AddSpecialDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList)
+{
+    // 1. edited + havainto + TEMP (=raaka-luotaukset)
+    possibleProducerList.push_back(SoundingProducer(NFmiProducer(kFmiMETEOR, "Edited"), false));
+    possibleProducerList.push_back(SoundingProducer(NFmiProducer(kFmiTEMP, "Sounding"), false));
+    possibleProducerList.push_back(SoundingProducer(NFmiProducer(kFmiBufrTEMP, "BufrSounding"), false));
+    possibleProducerList.push_back(SoundingProducer(NFmiProducer(kFmiRAWTEMP, "TEMP"), false));
 }
 
 const NFmiProducer& NFmiMTATempSystem::CurrentProducer(void) const
 {
-	static NFmiProducer dummy(0, "Error Producer");
 	if(itsSelectedProducer>=0 && itsSelectedProducer < static_cast<int>(itsPossibleProducerList.size()))
 		return itsPossibleProducerList[itsSelectedProducer];
-	return dummy;
+    else
+    {
+        static const SoundingProducer dummy(NFmiProducer(0, "Error Producer"), false);
+    	return dummy;
+    }
 }
 
 void NFmiMTATempSystem::CurrentProducer(const NFmiProducer &newValue)
@@ -576,7 +698,7 @@ void NFmiMTATempSystem::CurrentProducer(const NFmiProducer &newValue)
 	itsSelectedProducer = -1;
 	for(int i=0; i<static_cast<int>(itsPossibleProducerList.size()); i++)
 	{
-		if(itsPossibleProducerList[i].GetIdent() == newValue.GetIdent())
+		if(itsPossibleProducerList[i] == newValue)
 		{
 			itsSelectedProducer = i;
 			break;
@@ -596,6 +718,47 @@ void NFmiMTATempSystem::ChangeWindBarbSpaceOutFactor(void)
 	WindBarbSpaceOutFactor(WindBarbSpaceOutFactor()+1);
 }
 
+static checkedVector<NFmiProducer> MakeLegacyProducerContainer(const NFmiMTATempSystem::SelectedProducerContainer &producerContainer)
+{
+    checkedVector<NFmiProducer> legacyContainer;
+    for(const auto &producer : producerContainer)
+    {
+        legacyContainer.push_back(producer);
+    }
+
+    return legacyContainer;
+}
+
+static std::string MakeProducerContainerServerUsageString(const NFmiMTATempSystem::SelectedProducerContainer &producerContainer)
+{
+    std::string serverUsageString;
+    for(const auto &producer : producerContainer)
+    {
+        if(!serverUsageString.empty())
+            serverUsageString.push_back(' ');
+        serverUsageString.push_back(producer.useServer() ? '1' : '0');
+    }
+
+    return serverUsageString;
+}
+
+static const NFmiMTATempSystem::SelectedProducerContainer MakeSoundingComparisonProducersFromLegacyData(const checkedVector<NFmiProducer> &legacyProducerContainer, const std::string &serverDataUsageString)
+{
+    std::istringstream in(serverDataUsageString);
+    NFmiMTATempSystem::SelectedProducerContainer finalComparisonProducers;
+    bool serverUsage = false;
+    for(const auto &producer : legacyProducerContainer)
+    {
+        in >> serverUsage;
+        if(in)
+            finalComparisonProducers.push_back(NFmiMTATempSystem::SoundingProducer(producer, serverUsage));
+        else
+            finalComparisonProducers.push_back(NFmiMTATempSystem::SoundingProducer(producer, false));
+    }
+
+    return finalComparisonProducers;
+}
+
 void NFmiMTATempSystem::Write(std::ostream& os) const
 {
 	os << "// NFmiMTATempSystem::Write..." << std::endl;
@@ -611,7 +774,7 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	os << itsMaxTempsShowed << std::endl;
 
 	os << "// Selected producers checkedVector<NFmiProducer>" << std::endl;
-	NFmiDataStoringHelpers::WriteContainer(itsSoundingComparisonProducers, os, std::string("\n"));
+	NFmiDataStoringHelpers::WriteContainer(::MakeLegacyProducerContainer(itsSoundingComparisonProducers), os, std::string("\n"));
 
 	os << "// SelectedProducer index + tempViewOn + SkewTDegree" << std::endl;
 	os << itsSelectedProducer << " " << fTempViewOn << " " << itsSkewTDegree << std::endl;
@@ -722,6 +885,7 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
     extraData.Add(static_cast<double>(fSoundingTimeLockWithMapViewWinReg)); // fSoundingTimeLockWithMapViewWinReg on 7. uusi double arvo
 
     extraData.Add(MakeSecondaryDataLineInfoString()); // WS + N + RH lineInfor yhtenä stringinä on 1. uusi string arvo extroissa
+    extraData.Add(::MakeProducerContainerServerUsageString(itsSoundingComparisonProducers)); // 2. uusi string arvo extroissa on valittujen tuottajien server/local data käyttötila tyyliin "0 1 0 0"
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -762,7 +926,8 @@ void NFmiMTATempSystem::Read(std::istream& is)
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
-	NFmiDataStoringHelpers::ReadContainer(itsSoundingComparisonProducers, is);
+    checkedVector<NFmiProducer> legacySoundingComparisonProducers;
+	NFmiDataStoringHelpers::ReadContainer(legacySoundingComparisonProducers, is);
 
 	is >> itsSelectedProducer >> fTempViewOn >> itsSkewTDegree;
 
@@ -868,6 +1033,11 @@ void NFmiMTATempSystem::Read(std::istream& is)
 
     if(extraData.itsStringValues.size() > 0)
         ReadSecondaryDataLineInfoFromString(extraData.itsStringValues[0]);
+    std::string producerContainerServerUsageString;
+    if(extraData.itsStringValues.size() > 1)
+        producerContainerServerUsageString = extraData.itsStringValues[1];
+
+    itsSoundingComparisonProducers = ::MakeSoundingComparisonProducersFromLegacyData(legacySoundingComparisonProducers, producerContainerServerUsageString);
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
@@ -983,4 +1153,21 @@ void NFmiMTATempSystem::SetAllTempTimes(const NFmiMetTime &theTime)
     {
         tempInfo.Time(theTime);
     }
+}
+
+// Kun luotaus-dialogista annetaan takaisin valitut tuottajat, ne annetaan pelkkänä tuottaja listana,
+// ilman tietoa onko kyseessä serveriltä haettava data vai ei.
+// Täällä päätellää tuottajanimien avulla, mitkä tuottajat oikeasti on kyseessä.
+void NFmiMTATempSystem::SoundingComparisonProducers(const SelectedProducerLegacyContainer &selectedProducersLegacyContainer)
+{
+    SelectedProducerContainer selectedProducers;
+    for(const auto &producer : selectedProducersLegacyContainer)
+    {
+        auto producerIterator = std::find_if(itsPossibleProducerList.begin(), itsPossibleProducerList.end(),
+            [&producer](const auto &possibleProducer) { return possibleProducer == producer; });
+        if(producerIterator != itsPossibleProducerList.end())
+            selectedProducers.push_back(*producerIterator);
+    }
+
+    itsSoundingComparisonProducers = selectedProducers;
 }

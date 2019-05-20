@@ -17,6 +17,7 @@ namespace CtrlViewUtils
         static std::string makeCtrlViewIdentifier(NFmiCtrlView *ctrlView);
         static void setCurrentUpdateId(size_t currentUpdateId);
         static std::string makeCurrentUpdateIdString();
+        static void increaseCurrentUpdateId();
     private:
         std::string makeReadableDurationString(const std::chrono::duration<float> &durationValue);
 
@@ -24,6 +25,8 @@ namespace CtrlViewUtils
         std::string eventName_;
         std::string identifier_;
         std::chrono::system_clock::time_point startTime_;
+        // Lasketaan update counter indeksi‰, jonka avulla voidaan lokiviesteist‰ hakea tietyn update kierroksen lokituksia.
+        // Ei aloiteta lukua 1:st‰, koska jos etsii vain lukua 1 tai 2-9, tulee liian paljon osumia v‰‰rist‰ lokiviesteist‰
         static size_t currentUpdateId_;
     };
 

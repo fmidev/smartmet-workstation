@@ -483,14 +483,14 @@ void CFmiTempDlg::SetSelectedProducer(void)
 void CFmiTempDlg::SetSelectedProducersFromViewMacro(void)
 {
 	itsMultiProducerSelector.SelectAll(false);
-	const checkedVector<NFmiProducer> &selectedProducers = itsSmartMetDocumentInterface->GetMTATempSystem().SoundingComparisonProducers();
+	const auto &selectedProducers = itsSmartMetDocumentInterface->GetMTATempSystem().SoundingComparisonProducers();
 	checkedVector<NFmiProducer>::size_type ssize = selectedProducers.size();
 	checkedVector<NFmiProducer>::size_type xsize = itsProducerListWithData.size();
 	for(checkedVector<NFmiProducer>::size_type i=0; i<ssize; i++)
 	{
 		for(checkedVector<NFmiProducer>::size_type j=0; j<xsize; j++)
 		{
-			if(selectedProducers[i].GetIdent() == itsProducerListWithData[j].GetIdent())
+			if(selectedProducers[i] == itsProducerListWithData[j])
 				itsMultiProducerSelector.SetCheck(static_cast<int>(j), true);
 		}
 	}
@@ -525,31 +525,44 @@ static bool FindProducer(const std::vector<std::pair<int, CString> > &theSelecti
 	return false;
 }
 
+// Normaali NFmiProducer yhtäsuuruus testi vertaa vain tuottaja id:t, nyt server datan kanssa tarvitaan myös nimi vertailu
+static bool ProducerVectorsAreEqual(const checkedVector<NFmiProducer> &producers1, const checkedVector<NFmiProducer> &producers2)
+{
+    if(producers1.size() != producers2.size())
+        return false;
+    for(size_t producerIndex = 0; producerIndex < producers1.size(); producerIndex++)
+    {
+        if(!NFmiMTATempSystem::ServerProducer::ProducersAreEqual(producers1[producerIndex], producers2[producerIndex]))
+            return false;
+    }
+
+    return true;
+}
+
 void CFmiTempDlg::UpdateProducerList(void)
 {
 	std::vector<std::pair<int, CString> > selectionVec = itsMultiProducerSelector.GetSelectedWithStr();
 
 	checkedVector<NFmiProducer> tmpProducerListWithData;
-	size_t i = 0;
 	// 1. kysy täysi tuottajalista MTASystemiltä
-	checkedVector<NFmiProducer>& possibleProdList = itsSmartMetDocumentInterface->GetMTATempSystem().PossibleProducerList();
+	const auto &possibleProdList = itsSmartMetDocumentInterface->GetMTATempSystem().PossibleProducerList();
 	// 2. käy lista läpi ja katso mille tuottajalle löytyy dataa
-	for(i=0; i<possibleProdList.size(); i++)
+	for(const auto possibleProducer : possibleProdList)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindSoundingInfo(possibleProdList[i], 0, NFmiInfoOrganizer::ParamCheckFlags(true));
-	// 3. laita ne tuottajat, joille löytyi dataa itsProducerListWithData-listaan
-		if(info || ::FindProducer(selectionVec, possibleProdList[i].GetName())) // laitetaan sittenkin kaikki tuottajat aina listaan, että datojen reload ei tuhoa listaa (testi)
-			tmpProducerListWithData.push_back(possibleProdList[i]);
+		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindSoundingInfo(possibleProducer, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+	// 3. laita ne tuottajat, joille löytyi dataa itsProducerListWithData-listaan, tai jos ne ovat serveriltä haettavaa dataa
+		if(info || possibleProducer.useServer() || ::FindProducer(selectionVec, possibleProducer.GetName())) // laitetaan sittenkin kaikki tuottajat aina listaan, että datojen reload ei tuhoa listaa (testi)
+			tmpProducerListWithData.push_back(possibleProducer);
 	}
 
-	if(tmpProducerListWithData != itsProducerListWithData)
+	if(!::ProducerVectorsAreEqual(tmpProducerListWithData, itsProducerListWithData))
 	{ // Päivitetään listoja vain jos lista on muuttunut
 		itsProducerListWithData = tmpProducerListWithData;
 		// 4. laita tämän listan nimet itsProducerSelector-comboboxiin
 
 		itsMultiProducerSelector.ResetContent();
-		for(i=0; i<itsProducerListWithData.size(); i++)
-			itsMultiProducerSelector.AddString(CA2T(itsProducerListWithData[i].GetName()));
+		for(size_t producerIndex = 0; producerIndex < itsProducerListWithData.size(); producerIndex++)
+			itsMultiProducerSelector.AddString(CA2T(itsProducerListWithData[producerIndex].GetName()));
 		int ssize = itsMultiProducerSelector.GetCount();
 
 		if(fProducerSelectorUsedYet == false)

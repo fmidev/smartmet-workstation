@@ -113,7 +113,6 @@ class CtrlViewDocumentInterface;
 class SmartMetDocumentInterface;
 class Q2ServerInfo;
 class NFmiMacroParamDataCache;
-class SoundingDataServerConfigurations;
 
 namespace Wms
 {
@@ -147,7 +146,6 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
-    SoundingDataServerConfigurations& GetSoundingDataServerConfigurations();
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize);
     NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
