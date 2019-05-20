@@ -147,7 +147,7 @@ BOOL CFmiSoundingDataServerConfigurationsDlg::OnInitDialog()
 
 void CFmiSoundingDataServerConfigurationsDlg::InitSelectedServerUrlSelector()
 {
-    itsServerUrlSelector.Clear();
+    itsServerUrlSelector.ResetContent();
     for(const auto &serverUrl : itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().serverBaseUrls())
     {
         itsServerUrlSelector.AddString(CA2T(serverUrl.c_str()));
@@ -161,6 +161,7 @@ void CFmiSoundingDataServerConfigurationsDlg::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDOK, "OK");
     CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "Cancel");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_APPLY, "Apply");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_USED_SERVER_URL_STRING, "Used server Url");
 }
 
 void CFmiSoundingDataServerConfigurationsDlg::DoResizerHooking()
@@ -172,6 +173,8 @@ void CFmiSoundingDataServerConfigurationsDlg::DoResizerHooking()
     bOk = m_resizer.SetAnchor(IDCANCEL, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_APPLY, ANCHOR_TOP | ANCHOR_LEFT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER, ANCHOR_HORIZONTALLY | ANCHOR_TOP);
     ASSERT(bOk == TRUE);
     // GridControl takes rest of the view
     bOk = m_resizer.SetAnchor(IDC_CUSTOM_GRID_SOUNDING_CONF, ANCHOR_HORIZONTALLY | ANCHOR_VERTICALLY);
@@ -190,16 +193,6 @@ void CFmiSoundingDataServerConfigurationsDlg::FitLastColumnOnVisibleArea()
     static bool firstTime = true;
 
     CFmiWin32Helpers::FitLastColumnOnVisibleArea(this, itsGridCtrl, firstTime, 120);
-    CWnd *serverDropDownControl = GetDlgItem(IDC_COMBO_SELECTED_SOUNDING_DATA_SERVER);
-    if(serverDropDownControl)
-    {
-        WINDOWPLACEMENT gridCtrlPlacement;
-        itsGridCtrl.GetWindowPlacement(&gridCtrlPlacement);
-        WINDOWPLACEMENT dropDownPlacement;
-        serverDropDownControl->GetWindowPlacement(&dropDownPlacement);
-        dropDownPlacement.rcNormalPosition.right = gridCtrlPlacement.rcNormalPosition.right;
-        serverDropDownControl->SetWindowPlacement(&dropDownPlacement);
-    }
 }
 
 void CFmiSoundingDataServerConfigurationsDlg::DoOnOk(void)
@@ -306,7 +299,10 @@ void CFmiSoundingDataServerConfigurationsDlg::UpdateGridControlValues()
 
 void CFmiSoundingDataServerConfigurationsDlg::Update()
 {
-//    Invalidate(TRUE);
+    // Jos ollaan tultu cancelilla ulos, nollataan mahdolliset muutokset dialogissa alustamalla
+    // m‰‰r‰tyt kontrollit uudestaan
+    InitSelectedServerUrlSelector();
+    InitGridControlValues();
 }
 
 BOOL CFmiSoundingDataServerConfigurationsDlg::OnEraseBkgnd(CDC* pDC)
