@@ -18,6 +18,7 @@
 #include <newbase/NFmiFastInfoUtils.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 #include <fstream>
 
 // On käynyt niin että haettaessa dataa serveriltä, on jokin data vektoreista jäänyt vajaaksi tai tyhjäksi.
