@@ -6,6 +6,7 @@
 #include <boost/thread/thread.hpp> 
 #include <boost/random.hpp>
 #include <boost/math/special_functions/round.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace process_helpers
 {
