@@ -10,6 +10,7 @@
 
 #include "resource.h"       // main symbols
 #include <map>
+#include <string>
 #include <gdiplus.h>
 
 #ifdef FMI_DISABLE_MFC_FEATURE_PACK
