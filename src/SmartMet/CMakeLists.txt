@@ -73,12 +73,6 @@ set(TARGET_LINK_LIBRARIES_LIST
     Processes
     AutoComplete
     optimized ${CRASHRPT_LIB}
-    debug ${ICU_DEBUG_LIB_DT}
-    debug ${ICU_DEBUG_LIB_IN}
-    debug ${ICU_DEBUG_LIB_UC}
-    optimized ${ICU_OPTIMIZED_LIB_DT}
-    optimized ${ICU_OPTIMIZED_LIB_IN}
-    optimized ${ICU_OPTIMIZED_LIB_UC}
     )
 
 if(NOT DISABLE_UNIRAS_TOOLMASTER)
@@ -110,7 +104,6 @@ target_include_directories(
     PUBLIC ${AutoComplete_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     PUBLIC ${CRASHRPT_INCLUDE_DIR}
-    PUBLIC ${ICU_INCLUDE_DIR}
     )
 
 # OBS! you have to give all the linker flags in one go so you have to put them all in one variable (here its
@@ -122,27 +115,6 @@ set(
 set_target_properties( 
     ${PROJECT_NAME}
     PROPERTIES LINK_FLAGS ${SMARTMET_RES_DEPENDENCIES}
-    )
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E copy_directory 
-    ${ICU_OPTIMIZED_DLL_DIR}
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/RelWithDebInfo
-    VERBATIM
-    )
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E copy_directory 
-    ${ICU_OPTIMIZED_DLL_DIR}
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release
-    VERBATIM
-    )
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E copy_directory 
-    ${ICU_DEBUG_DLL_DIR}
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug
-    VERBATIM
     )
 
 if(NOT DISABLE_CPPRESTSDK)
