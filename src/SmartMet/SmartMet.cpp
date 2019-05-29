@@ -26,7 +26,6 @@
 #include "ToolMasterHelperFunctions.h"
 
 #include "boost/format.hpp"
-#include "unicode/uclean.h"
 
 namespace
 {
@@ -488,9 +487,6 @@ int CSmartMetApp::ExitInstance()
 	// Eli ne tuhotaan tässä ensin generaldatan destruktorissa, muuten ne yritettäisiin
 	// tuhota listoista kun ne ovat ei 0-pointtereita, jolloin ohjelma kaatuisi.
 	delete itsGeneralData;
-
-    // ICU kirjasto vuotaa resursseja, jos sitä ei erikseen siivota
-    u_cleanup();
 
 	TermGdiplus();
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
