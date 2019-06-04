@@ -28,7 +28,7 @@ link_directories(${LINK_DIRECTORIES_LIST})
 file( GLOB CPP_FILES *.cpp )
 file( GLOB H_FILES *.h )
 
-if(NOT DISABLE_CPPRESTSDK)
+if(NOT DISABLE_EXTREME_TOOLKITPRO)
 file( GLOB RES_FILES *.rc res/* ${TOOLKITPRO_INCLUDE_DIR}/*.rc)
 else()
 file( GLOB RES_FILES *.rc res/*)
@@ -139,7 +139,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     VERBATIM
     )
 endif()
-
+	
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CRASHRPT_BASE_DIR}/bin/CrashRpt1402.dll
