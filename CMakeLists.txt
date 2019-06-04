@@ -30,7 +30,7 @@ endif()
 
 # To disable/enable Extreme ToolkitPro in smartMet build, do following: 
 # 1. - 4. Same steps as with Cpprestsdk but with option DISABLE_EXTREME_TOOLKITPRO (next line)
-option(DISABLE_EXTREME_TOOLKITPRO "Is Extreme ToolkitPro used in build" ON)
+option(DISABLE_EXTREME_TOOLKITPRO "Is Extreme ToolkitPro used in build" OFF)
 # This will affect Smarttool dialog's behaviour.
 
 if(DISABLE_EXTREME_TOOLKITPRO)
