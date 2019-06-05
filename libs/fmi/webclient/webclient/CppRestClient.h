@@ -4,6 +4,7 @@
 
 #include "cpprest/http_client.h"
 #include "cpprest/http_msg.h"
+#undef U // This fixes cpprest's U -macro clash with boost library move code (really dangerous to give macro name like U !!!!)
 
 #include <cppback/background-manager.h>
 

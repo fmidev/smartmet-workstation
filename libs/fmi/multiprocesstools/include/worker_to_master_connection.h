@@ -15,16 +15,6 @@
 
 #include "tcp_tools.h"
 
-namespace boost
-{
-    namespace asio
-    {
-        class io_service;
-    }
-}
-
-
-
 
 /** simple connection to server:
     - logs in just with username (no password)

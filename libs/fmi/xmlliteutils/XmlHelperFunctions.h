@@ -1,6 +1,7 @@
 #pragma once
 
 #include "xmlliteutils/XMLite.h"
+#include <string>
 
 namespace XmlHelper 
 {
