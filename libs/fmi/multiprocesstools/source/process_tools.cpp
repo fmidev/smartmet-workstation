@@ -12,13 +12,7 @@ boost::process::child start_process(const std::string &executable, const std::ve
 {
     try 
     { 
-        bp::args final_args;
-        for(size_t i= 0; i < args1.size(); i++)
-            final_args(args1[i]);
-        return bp::make_child(
-            bp::paths(executable),
-            final_args
-            );
+        return bp::child(boost::filesystem::path(executable), args1);
     } 
     catch (boost::system::system_error &ex) 
     { 

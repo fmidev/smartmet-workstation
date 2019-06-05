@@ -8,6 +8,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 // Luokka pit‰‰ tietoa mit‰ hakemistoa on tarkoitus siivota **kaikista** tiedostoista 
 // (ei rekursiivinen). Pit‰‰ sis‰ll‰‰n hakemiston polkua ja vanhuus p‰iv‰‰ eli kuinka monta p‰iv‰‰

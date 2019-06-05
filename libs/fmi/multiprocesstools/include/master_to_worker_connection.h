@@ -19,13 +19,6 @@ namespace tcp_tools
     struct task_structure;
 }
 
-namespace boost
-{
-    namespace asio
-    {
-        class io_service;
-    }
-}
 
 /** Connection class between server (Master) and client (Worker or real client like SmartMet) process:
     - all connections are initiated by the client: client asks, server answers
