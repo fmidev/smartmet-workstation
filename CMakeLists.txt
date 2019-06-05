@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.6.2)
+# Not sure which CMake version is minimum for Visual C++ 2019 support
+cmake_minimum_required(VERSION 3.14.4)
+
+# This should fix problems with Add member variable -wizard when working with dialogs when working on Windows 10.
+set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING INTERNAL FORCE)
 
 project(SmartMet)
-
-#In future we should change to Visual C++ 2017 and Windows 10.0 SDK, 
-# this should fix problems with Add member variable -wizard when working with dialogs.
-#set(CMAKE_SYSTEM_VERSION 10.0 CACHE TYPE INTERNAL FORCE)
 
 set(CMAKE_PREFIX_PATH ${LIBS_3RD}/cmakefinds )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/runtime_output")

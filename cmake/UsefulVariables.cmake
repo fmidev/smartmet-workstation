@@ -24,7 +24,7 @@ set(
 
 set(
     BOOST_VERSION
-    1_61_0
+    1_70_0
     CACHE INTERNAL "" FORCE
     )
 
@@ -130,77 +130,6 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
-set(
-    ICU_VERSION
-    55_1
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_BASE_DIR
-    ${LIBS_3RD}/icu_${ICU_VERSION}
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_LIB_DIR
-    ${ICU_BASE_DIR}/lib
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_INCLUDE_DIR
-    ${ICU_BASE_DIR}/include
-    CACHE INTERNAL "" FORCE
-    )
-	
-set(
-    ICU_DEBUG_DLL_DIR
-    ${ICU_BASE_DIR}/bin/Debug
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_OPTIMIZED_DLL_DIR
-    ${ICU_BASE_DIR}/bin/Release
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_DEBUG_LIB_DT
-    ${ICU_LIB_DIR}/icudtd.lib 
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_DEBUG_LIB_IN
-    ${ICU_LIB_DIR}/icuind.lib 
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_DEBUG_LIB_UC
-    ${ICU_LIB_DIR}/icuucd.lib 
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_OPTIMIZED_LIB_DT
-    ${ICU_LIB_DIR}/icudt.lib 
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_OPTIMIZED_LIB_IN
-    ${ICU_LIB_DIR}/icuin.lib 
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    ICU_OPTIMIZED_LIB_UC
-    ${ICU_LIB_DIR}/icuuc.lib 
-    CACHE INTERNAL "" FORCE
-    )
 
 if(NOT DISABLE_CPPRESTSDK)	
 set(
@@ -235,13 +164,13 @@ set(
 
 set(
     CPPRESTSDK_OPTIMIZED_LIB
-    ${CPPRESTSDK_LIB_DIR}/cpprest140_2_9.lib
+    ${CPPRESTSDK_LIB_DIR}/cpprest142_2_10.lib
     CACHE INTERNAL "" FORCE
     )
 
 set(
     CPPRESTSDK_DEBUG_LIB
-    ${CPPRESTSDK_LIB_DIR}/cpprest140d_2_9.lib
+    ${CPPRESTSDK_LIB_DIR}/cpprest142_2_10d.lib
     CACHE INTERNAL "" FORCE
     )
 endif()
