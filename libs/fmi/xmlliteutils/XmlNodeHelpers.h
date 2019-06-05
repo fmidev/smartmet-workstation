@@ -1,4 +1,5 @@
 #include "xmlliteutils/XMLite.h"
+#include <string>
 
 namespace XmlLiteUtils
 {
