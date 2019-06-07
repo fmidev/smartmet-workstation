@@ -16,6 +16,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     Newbase
     SmartTools
+    Win32Utils
     )
 
 target_include_directories( 
@@ -23,6 +24,7 @@ target_include_directories(
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${Win32Utils_INCLUDE_DIRS}
     )
 
 set(
@@ -30,5 +32,6 @@ set(
     ${PROJECT_SOURCE_DIR}/include
     ${Newbase_INCLUDE_DIRS}
     ${SmartTools_INCLUDE_DIRS}
+    ${Win32Utils_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
