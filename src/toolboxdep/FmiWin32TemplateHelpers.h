@@ -6,6 +6,7 @@
 #include "SmartMetDocumentInterface.h"
 #include "catlog/catlog.h"
 #include "CtrlViewWin32Functions.h"
+#include "UnicodeStringConversions.h"
 
 namespace CFmiWin32TemplateHelpers
 {
@@ -422,7 +423,7 @@ namespace CFmiWin32TemplateHelpers
                 view->SetToolsDCs(theDC);
                 NFmiPoint relativePoint(view->ToolBox()->ToViewPoint(pt.x, pt.y));
                 view->ReleaseDC(theDC);
-                strU_ = CA2T(view->EditMapView()->ComposeToolTipText(relativePoint).c_str());
+                strU_ = ::convertPossibleUtf8StringToWideString(view->EditMapView()->ComposeToolTipText(relativePoint)).c_str();
             }
             catch(std::exception &e)
             {
