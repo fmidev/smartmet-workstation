@@ -30,6 +30,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "persist2.h"
+#include "UnicodeStringConversions.h"
 
 using namespace std;
 
@@ -1419,7 +1420,7 @@ static void SetMinMaxParamData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NF
 		}
 		else if(theHeaderParInfo.itsRangeCalculationFunction == HeaderParInfo::kStationName)
 		{
-            theGridCtrl.SetItemText(row, column, CA2T(theLocation->GetName()));
+            theGridCtrl.SetItemText(row, column, ::convertPossibleUtf8StringToWideString(std::string(theLocation->GetName())).c_str());
 			theGridCtrl.SetItemState(row, column, theGridCtrl.GetItemState(row, column) | GVIS_READONLY);
 		}
 		else if(theHeaderParInfo.itsRangeCalculationFunction == HeaderParInfo::kLon)
@@ -1471,7 +1472,8 @@ static void SetParamData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGrid
 		}
 		else if(theHeaderParInfo.itsRangeCalculationFunction == HeaderParInfo::kStationName)
 		{
-            theGridCtrl.SetItemText(row, column, CA2T(theLocation->GetName()));
+            auto unicodeLocationName = ::convertPossibleUtf8StringToWideString(std::string(theLocation->GetName()));
+            theGridCtrl.SetItemText(row, column, unicodeLocationName.c_str());
 			theGridCtrl.SetItemState(row, column, theGridCtrl.GetItemState(row, column) | GVIS_READONLY);
 		}
 		else if(theHeaderParInfo.itsRangeCalculationFunction == HeaderParInfo::kLon)
