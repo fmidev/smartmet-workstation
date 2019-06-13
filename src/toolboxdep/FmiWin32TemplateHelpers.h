@@ -400,11 +400,22 @@ namespace CFmiWin32TemplateHelpers
         dcMem.DeleteDC();
     }
 
-    template<class Tview>
-    void NotifyDisplayTooltip(Tview *view, NMHDR * pNMHDR, LRESULT * result, bool printingOn_DontSetDcs, int tooltipId)
+    inline bool AllowTooltipDisplay(SmartMetDocumentInterface* smartMetDocumentInterface)
     {
-        if(printingOn_DontSetDcs)
-            return; // pit‰‰ est‰‰ erikseen apukarttan‰ytˆiss‰ kaikenlaiset CDC-asetuksen kesken printtauksen!
+        if(smartMetDocumentInterface->Printing())
+            return false; // Printtauksen yhteydess‰ ei tehd‰ mit‰‰n tooltip virityksi‰!
+        if(smartMetDocumentInterface->MouseCaptured())
+            return false; // Jos hiirt‰ raahataan mitenk‰‰n, ei tehd‰ tooltippej‰!
+
+        return true;
+    }
+
+    template<class Tview>
+    void NotifyDisplayTooltip(Tview *view, NMHDR * pNMHDR, LRESULT * result, SmartMetDocumentInterface* smartMetDocumentInterface, int tooltipId)
+    {
+        if(!AllowTooltipDisplay(smartMetDocumentInterface))
+            return;
+
         *result = 0;
         NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
 
