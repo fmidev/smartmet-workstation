@@ -11,6 +11,7 @@
 #include "NFmiViewPosRegistryInfo.h"
 #include "NFmiDataMatrix.h"
 #include "ControlPointAcceleratorActions.h"
+#include "SmartMetViewId.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CTimeEditValuesDlg dialog
@@ -36,7 +37,7 @@ public:
 	void Update(void);
 	void SetDefaultValues(void);
 	void EnableButtons();
-	void RefreshApplicationViews(const std::string &reasonForUpdate);
+	void RefreshApplicationViews(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag);
 	CBitmap* ViewMemoryBitmap(void);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
     CTimeEditValuesView* GetTimeEditValuesView() { return itsTimeEditValuesView; }
