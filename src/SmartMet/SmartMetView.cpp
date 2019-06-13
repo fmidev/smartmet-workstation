@@ -417,21 +417,30 @@ void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CSmartMetView::OnMButtonUp(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
+    try
+    {
+        CDC* theDC = GetDC();
+        if(!theDC)
+            return;
+        SetToolsDCs(theDC);
 
-	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+        CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
-	bool needsUpdate = itsEditMapView ? itsEditMapView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
-		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
-	Invalidate(FALSE);
-	if(needsUpdate)
-	{
-		GetDocument()->UpdateAllViewsAndDialogs("Main map view: middle mouse button was released");
-	}
+        bool needsUpdate = itsEditMapView ? itsEditMapView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
+            , itsToolBox->ConvertCtrlKey(nFlags)) : false;
+        ReleaseDC(theDC);
+        Invalidate(FALSE);
+        if(needsUpdate)
+        {
+            GetDocument()->UpdateAllViewsAndDialogs("Main map view: middle mouse button was released");
+        }
+    }
+    catch(...)
+    {
+        ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön
+        throw; // laitetaan poikkeus eteenpäin
+    }
+    ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön (OnLButtonDown:issa laitettiin SetCapture päälle)
 }
 
 void CSmartMetView::OnLButtonDblClk(UINT nFlags, CPoint point)
@@ -1100,6 +1109,7 @@ void CSmartMetView::OnMButtonDown(UINT nFlags, CPoint point)
 	{
 		GetDocument()->UpdateAllViewsAndDialogs("Main map view: mouse middle button down");
 	}
+    SetCapture(); // otetaan hiiren liikkeet/viestit talteeen toistaiseksi tähän ikkunaan
 }
 
 void CSmartMetView::OnMenuitemViewGridSelectionDlg()
