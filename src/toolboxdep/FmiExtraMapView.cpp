@@ -750,7 +750,7 @@ std::string::size_type CFmiExtraMapView::FindPlotImagePosition(const std::string
 
 void CFmiExtraMapView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
-    CFmiWin32TemplateHelpers::NotifyDisplayTooltip(this, pNMHDR, result, fPrintingOnDontSetDcs, EXTRAMAPVIEW_TOOLTIP_ID);
+    CFmiWin32TemplateHelpers::NotifyDisplayTooltip(this, pNMHDR, result, GetSmartMetDocumentInterface(), EXTRAMAPVIEW_TOOLTIP_ID);
 }
 
 // tätä kutsutaan yleisessä printtaus funktiossa

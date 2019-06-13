@@ -1209,7 +1209,7 @@ BOOL CSmartMetView::PreTranslateMessage(MSG* pMsg)
 // CSmartMetView ja CFmiExtraMapView. Mieti joska ne voisi yhdistää käyttämään samaa koodia.
 void CSmartMetView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
-    CFmiWin32TemplateHelpers::NotifyDisplayTooltip(this, pNMHDR, result, GetGeneralDoc()->Printing(), MAINMAPVIEW_TOOLTIP_ID);
+    CFmiWin32TemplateHelpers::NotifyDisplayTooltip(this, pNMHDR, result, GetSmartMetDocumentInterface(), MAINMAPVIEW_TOOLTIP_ID);
 }
 
 void CSmartMetView::DrawSynopPlotImage(bool fDrawSoundingPlot, bool fDrawMinMaxPlot, bool fDrawMetarPlot)
