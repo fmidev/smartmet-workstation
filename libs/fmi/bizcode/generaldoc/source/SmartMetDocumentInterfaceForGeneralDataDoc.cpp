@@ -1,5 +1,6 @@
 #include "SmartMetDocumentInterfaceForGeneralDataDoc.h"
 #include "NFmiEditMapGeneralDataDoc.h"
+#include "NFmiMapViewDescTop.h"
 
 SmartMetDocumentInterfaceForGeneralDataDoc::SmartMetDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -1408,6 +1409,11 @@ NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamD
 void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
 {
     itsDoc->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+}
+
+NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int mapViewDescTopIndex)
+{
+    return itsDoc->MapViewDescTop(mapViewDescTopIndex)->MapHandler();
 }
 
 #ifndef DISABLE_CPPRESTSDK
