@@ -7,6 +7,7 @@
 #include "FmiSmartMetEditingMode.h"
 #include "NFmiTimeEditMode.h"
 #include "ControlPointAcceleratorActions.h"
+#include "SmartMetViewId.h"
 
 #include "boost/shared_ptr.hpp"
 
@@ -94,6 +95,7 @@ public:
     virtual void FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription) = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) = 0;
+    virtual void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag) = 0;
     virtual NFmiMapViewDescTop* MapViewDescTop(unsigned int theIndex) = 0;
     virtual NFmiDrawParamList* DrawParamListWithRealRowNumber(unsigned int theDescTopIndex, int theRealRowIndex) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer() = 0;
