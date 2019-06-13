@@ -31,6 +31,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "persist2.h"
 #include "UnicodeStringConversions.h"
+#include "MapDrawFunctions.h"
 
 using namespace std;
 
@@ -1963,6 +1964,17 @@ bool CFmiSynopDataGridViewDlg::IsSelectedProducerModelData() const
 bool CFmiSynopDataGridViewDlg::GridControlNeedsUpdate(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
 {
     const std::string baseFunctionNameForLogging = "Station-data-grid-view";
+
+    if(!MapDraw::mapIsNotDirty(itsSmartMetDocumentInterface, 0))
+    {
+        if(CatLog::doTraceLevelLogging())
+        {
+            std::string message = baseFunctionNameForLogging;
+            message += ": 'forced' update to grid-control due main-map-view's area changed";
+            CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization);
+        }
+        return true;
+    }
 
     const auto &wantedTime = GetMainMapViewTime();
     SynopDataGridViewUsedFileNames usedFileNames(obsInfos, usedInfo, wantedTime);
