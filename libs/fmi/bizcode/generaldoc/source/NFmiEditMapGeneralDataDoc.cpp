@@ -9491,8 +9491,11 @@ boost::shared_ptr<NFmiArea> MakeCPCropArea(boost::shared_ptr<NFmiFastQueryInfo> 
 	return boost::shared_ptr<NFmiArea>(new NFmiLatLonArea(bottomLeftLatlon, topRightLatlon));
 }
 
-void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea)
+void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned int theDescTopIndex)
 {
+    if(theDescTopIndex != 0)
+        return; // Ei tehdä CP-crop juttuja kuin pääkarttanäytön kanssa
+
 	itsCPGridCropMargin = NFmiPoint();
 	itsCPGridCropRect = NFmiRect(); // asetetaan tyhjä crop-recti aluksi
 	itsCPGridCropLatlonArea = boost::shared_ptr<NFmiArea>();
@@ -9546,7 +9549,7 @@ void SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> 
 		if(NFmiQueryDataUtil::AreAreasSameKind(newArea.get(), mapDescTop->MapHandler()->TotalArea().get()))
 		{
 			mapDescTop->MapHandler()->Area(newArea);
-			SetCPCropGridSettings(newArea);
+			SetCPCropGridSettings(newArea, theDescTopIndex);
 		}
 		else
 		{ // tehdään sitten karttapohjalle sopiva area
@@ -9570,7 +9573,7 @@ void SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> 
 				}
 			}
 			mapDescTop->MapHandler()->Area(correctTypeArea);
-			SetCPCropGridSettings(correctTypeArea);
+			SetCPCropGridSettings(correctTypeArea, theDescTopIndex);
 		}
 		mapDescTop->BorderDrawDirty(true);
         // laitetaan viela kaikki ajat likaisiksi cachesta
