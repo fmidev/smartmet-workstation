@@ -228,7 +228,7 @@ void CFmiCrossSectionDlg::MakeCrossSectionModeUpdates(const std::string &reasonF
         // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
         itsSmartMetDocumentInterface->MacroParamDataCache().clearView(CtrlViewUtils::kFmiCrossSectionView);
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle route cross section mode", TRUE);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle route cross section mode", SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
     }
 }
 
@@ -258,7 +258,7 @@ void CFmiCrossSectionDlg::OnBnClickedCheckUseCrosssectionMapMode()
 	UpdateData(TRUE);
     itsSmartMetDocumentInterface->CrossSectionSystem()->CrossSectionSystemActive(fUseCrossSectionMapMode == TRUE);
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle cross section map mode", TRUE);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle cross section map mode", SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
 }
 
 // map modea on muutettu muualla, nyt pitää päivittää ruksin tilaa
@@ -292,7 +292,7 @@ void CFmiCrossSectionDlg::OnBnClickedCheckUseCrosssection3PointMode2()
 	UpdateData(TRUE);
     itsSmartMetDocumentInterface->CrossSectionSystem()->CrossSectionMode(fUse3PointMode ? NFmiCrossSectionSystem::k3Point : NFmiCrossSectionSystem::k2Point);
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle 2/3-point cross section mode", TRUE);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle 2/3-point cross section mode", SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
 }
 
 void CFmiCrossSectionDlg::OnClose()
@@ -309,7 +309,7 @@ void CFmiCrossSectionDlg::DoWhenClosing(void)
 	{ // jos karttanäytöllä oli poikkileikkaus moodi päällä, laita se pois ja vielä pitää päivittää myös karttanäyttö, että pallukat saadaaan pois
         crossSectionSystem->CrossSectionSystemActive(false);
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Close view", TRUE);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Close view", SmartMetViewId::MainMapView);
 	}
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
 }
@@ -418,7 +418,7 @@ void CFmiCrossSectionDlg::OnBnClickedCheckCrosssectionShowTrajectories()
 	EnableControls();
 	itsView->Update(true);
 	Invalidate(FALSE);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle show trajectories cross section mode", TRUE);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle show trajectories cross section mode", SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
 }
 
 void CFmiCrossSectionDlg::OnAcceleratorToggleTooltip()
