@@ -129,13 +129,13 @@ void CFmiCrossSectionView::DoDraw(void)
 		std::string errorTitleStr("Error with cross-section-view drawing");
 		std::string errorStr("Error while drawing cross-section-view, there won't be more reports of these:\n");
 		errorStr += e.what();
-        itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, false);
+        itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 	catch(...)
 	{
 		std::string errorTitleStr("Unknown error with cross-section-view drawing");
 		std::string errorStr("Unknown error while drawing cross-section-view, there won't be more reports of these.");
-        itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, false);
+        itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
     itsSmartMetDocumentInterface->TransparencyContourDrawView(0); // lopuksi pitää nollata läpinäkyvyys-näyttö pointteri
 }
@@ -275,7 +275,7 @@ void CFmiCrossSectionView::OnLButtonUp(UINT nFlags, CPoint point)
 		if(needsUpdate)
 		{
 			fViewDirty = true;
-            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true);
+            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
 			Invalidate(FALSE);
 		}
 	}
@@ -308,7 +308,7 @@ void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 			return ;
 		}
 		Invalidate(FALSE);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
 	}
 //	CView::OnLButtonDblClk(nFlags, point);
 }
@@ -327,7 +327,7 @@ void CFmiCrossSectionView::OnMButtonUp(UINT nFlags, CPoint point)
 	if(needsUpdate)
 	{
 		fViewDirty = true;
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
 		Invalidate(FALSE);
 	}
 
@@ -364,7 +364,7 @@ void CFmiCrossSectionView::OnRButtonUp(UINT nFlags, CPoint point)
 		{
 			fViewDirty = true;
 			Invalidate(FALSE);
-            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true);
+            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
 		}
 	}
 }
@@ -451,7 +451,7 @@ BOOL CFmiCrossSectionView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
             // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
             itsSmartMetDocumentInterface->MacroParamDataCache().clearView(CtrlViewUtils::kFmiCrossSectionView);
             itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, TRUE);
+            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
 		}
 	}
 	return TRUE;
