@@ -210,7 +210,7 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 			{
 				MakeAllMapViewsUpdated(itsManagerView->TimeScaleUpdated()); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 				itsManagerView->TimeScaleUpdated(false);
-                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Left mouse button up action", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
+                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Left mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 			}
 
 			if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode())
@@ -244,7 +244,7 @@ void CTimeEditValuesView::OnMButtonUp(UINT nFlags, CPoint point)
 		{
 			Invalidate(FALSE);
 			if(itsSmartMetDocumentInterface->TimeSerialViewDirty())
-                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Middle mouse button up action", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
+                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Middle mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 		}
 		else
 		{
@@ -327,7 +327,7 @@ void CTimeEditValuesView::OnRButtonUp(UINT nFlags, CPoint point)
 			{
 				MakeAllMapViewsUpdated(itsManagerView->TimeScaleUpdated()); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 				itsManagerView->TimeScaleUpdated(false);
-                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Right mouse button up action", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
+                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Right mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 			}
 		}
 	}
@@ -597,7 +597,7 @@ BOOL CTimeEditValuesView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		{
 			MakeAllMapViewsUpdated(itsManagerView->TimeScaleUpdated()); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 			itsManagerView->TimeScaleUpdated(false);
-            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Mouse wheel action", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
+            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Mouse wheel action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 		}
 		else if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode())
             itsSmartMetDocumentInterface->DrawOverBitmapThings(0);
