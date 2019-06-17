@@ -135,6 +135,7 @@
 #include "MacroParamDataChecker.h"
 #include "CapDataSystem.h"
 #include "NFmiMacroParamDataCache.h"
+#include "TimeSerialParameters.h"
 
 #ifdef OLDGCC
  #include <strstream>
@@ -799,6 +800,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitParameterSelectionSystem();
     InitLogFileCleaning();
     InitMacroParamDataCache();
+	InitTimeSerialParameters();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -14145,6 +14147,24 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return itsMacroParamDataCache;
     }
 
+    void InitTimeSerialParameters()
+    {
+        try
+        {
+            itsTimeSerialParameters.initializeFromConfigurations();
+        }
+        catch(std::exception& e)
+        {
+            LogAndWarnUser(e.what(), "Error with TimeSerialParameter configuration", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
+        }
+    }
+
+    TimeSerialParameters& GetTimeSerialParameters()
+    {
+        return itsTimeSerialParameters;
+    }
+
+    TimeSerialParameters itsTimeSerialParameters;
     NFmiMacroParamDataCache itsMacroParamDataCache;
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
@@ -16816,4 +16836,9 @@ NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
 void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
 {
     pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+}
+
+TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()
+{
+    return pimpl->GetTimeSerialParameters();
 }
