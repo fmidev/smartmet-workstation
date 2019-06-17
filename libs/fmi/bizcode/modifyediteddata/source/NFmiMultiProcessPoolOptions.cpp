@@ -1,4 +1,4 @@
-
+#include "targetver.h"
 #include "NFmiMultiProcessPoolOptions.h"
 #include "NFmiSettings.h"
 #include "process_helpers.h"
