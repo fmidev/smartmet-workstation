@@ -1,4 +1,5 @@
 
+#include "targetver.h"
 #include "TimeSerialModification.h"
 #include "NFmiDrawParam.h"
 #include "NFmiAreaMaskList.h"
@@ -2153,7 +2154,7 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 	// etsitään 1. primäärituottajasta poikkeava, jos eri suuri kuin end, löytyi muitakin tuottajia ja pika latausta ei voida suorittaa
 	if(thePrimaryProducer == 2 || thePrimaryProducer == 3) // 2 == oma työdata ja 3 == virallinen db data
 	{
-		checkedVector<int>::iterator pos = std::find_if(theModelIndexVector.begin(), theModelIndexVector.end(), std::not1(std::bind2nd(std::equal_to<int>(), thePrimaryProducer)));
+        checkedVector<int>::iterator pos = std::find_if(theModelIndexVector.begin(), theModelIndexVector.end(), [=](auto modelIndex) { return modelIndex != thePrimaryProducer; });
 		if(pos == theModelIndexVector.end())
 		{
 			if(::CheckIfSpeedLoadFileHasSimilaGridAsWanted(theAdapter, theLoadedFile))
@@ -2166,8 +2167,8 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 				catch(...)
 				{ // ei tehdä vielä mitään, tähän voisi lisätä lokitusta, tai messagebox-varoitus tms
 				}
-				std::auto_ptr<NFmiQueryData> dataPtr(data);
-				if(dataPtr.get())
+				std::unique_ptr<NFmiQueryData> dataPtr(data);
+				if(dataPtr)
 				{
 					if(!theAdapter.UseEditedDataParamDescriptor() || theAdapter.EditedDataParamDescriptor() == dataPtr->Info()->ParamDescriptor())
 					{
