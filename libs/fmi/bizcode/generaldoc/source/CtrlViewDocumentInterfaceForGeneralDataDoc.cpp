@@ -1313,6 +1313,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetupObsBlenderData(const NFmiP
     return FmiModifyEditdData::SetupObsBlenderData(itsDoc->GenDocDataAdapter(), theLatlon, theParam, theDataType, fGroundData, theProducer, firstEditedTimeOut, usedObsBlenderInfoOut, analyzeValueOut, messagesOut);
 }
 
+TimeSerialParameters& CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeSerialParameters()
+{
+    return itsDoc->GetTimeSerialParameters();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 
