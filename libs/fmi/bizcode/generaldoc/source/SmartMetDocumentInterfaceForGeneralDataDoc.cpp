@@ -1,5 +1,7 @@
 #include "SmartMetDocumentInterfaceForGeneralDataDoc.h"
 #include "NFmiEditMapGeneralDataDoc.h"
+#include "NFmiMapViewDescTop.h"
+#include "ApplicationInterface.h"
 
 SmartMetDocumentInterfaceForGeneralDataDoc::SmartMetDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -59,6 +61,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::LogAndWarnUser(const std::strin
 void SmartMetDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty, bool fClearCache, int theWantedMapViewDescTop)
 {
     itsDoc->RefreshApplicationViewsAndDialogs(reasonForUpdate, fMakeAreaViewDirty, fClearCache, theWantedMapViewDescTop);
+}
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag)
+{
+    if(ApplicationInterface::GetApplicationInterfaceImplementation)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(reasonForUpdate, updatedViewsFlag);
 }
 
 NFmiMapViewDescTop* SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDescTop(unsigned int theIndex)
@@ -1408,6 +1416,11 @@ NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamD
 void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
 {
     itsDoc->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+}
+
+NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int mapViewDescTopIndex)
+{
+    return itsDoc->MapViewDescTop(mapViewDescTopIndex)->MapHandler();
 }
 
 #ifndef DISABLE_CPPRESTSDK

@@ -44,6 +44,7 @@
 #include "NFmiLine.h"
 #include "NFmiPolyLine.h"
 #include "NFmiValueLine.h"
+#include "UnicodeStringConversions.h"
 
 /* RR aikaisemman prototyypin kanssa
 extern "C"	ei tarvittu enää
@@ -758,11 +759,11 @@ bool NFmiToolBox::BuildText (const NFmiText *fmiShape)
   if(doMultiLineDrawing)
   {
 	  CRect drawrect(theMFCPoint.x - 1, theMFCPoint.y, theMFCPoint.x + 1, theMFCPoint.y - 1);
-	  pDC->DrawText(CString(CA2T(drawedString.c_str())), drawrect, DT_WORDBREAK | DT_CALCRECT);
-      pDC->DrawText(CString(CA2T(drawedString.c_str())), drawrect, DT_WORDBREAK | DT_NOCLIP);
+	  pDC->DrawText(::convertPossibleUtf8StringToWideString(drawedString).c_str(), drawrect, DT_WORDBREAK | DT_CALCRECT);
+      pDC->DrawText(::convertPossibleUtf8StringToWideString(drawedString).c_str(), drawrect, DT_WORDBREAK | DT_NOCLIP);
   }
   else
-      pDC->TextOut(theMFCPoint.x, theMFCPoint.y, CString(CA2T(fmiShape->GetText())));
+      pDC->TextOut(theMFCPoint.x, theMFCPoint.y, ::convertPossibleUtf8StringToWideString(drawedString).c_str());
 
 
   pDC->SelectObject(oldFont);

@@ -131,32 +131,23 @@ void CTimeEditValuesView::OnDraw(CDC* pDC)
 
 void CTimeEditValuesView::DoDraw(void)
 {
-	static bool firstTimeInError = true;
-	try
-	{
-		itsManagerView->Draw(itsToolBox);
-	}
-	catch(std::exception &e)
-	{
-		if(firstTimeInError)
-		{
-			firstTimeInError = false;
-			std::string errorTitleStr("Error with sounding-view drawing");
-			std::string errorStr("Error while drawing sounding-view, there won't be more reports of these:\n");
-			errorStr += e.what();
-            itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, false);
-		}
-	}
-	catch(...)
-	{
-		if(firstTimeInError)
-		{
-			firstTimeInError = false;
-			std::string errorTitleStr("Unknown error with sounding-view drawing");
-			std::string errorStr("Unknown error while drawing sounding-view, there won't be more reports of these.");
-            itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, false);
-		}
-	}
+    try
+    {
+        itsManagerView->Draw(itsToolBox);
+    }
+    catch(std::exception& e)
+    {
+        std::string errorTitleStr("Error with time-serial-view drawing");
+        std::string errorStr("Error while drawing sounding-view, there won't be more reports of these:\n");
+        errorStr += e.what();
+        itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, true);
+    }
+    catch(...)
+    {
+        std::string errorTitleStr("Unknown error with time-serial-view drawing");
+        std::string errorStr("Unknown error while drawing sounding-view, there won't be more reports of these.");
+        itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorTitleStr, CatLog::Severity::Error, CatLog::Category::Visualization, true);
+    }
 }
 
 void CTimeEditValuesView::DrawOverBitmapThings(NFmiToolBox * /* theToolBox */ )
@@ -219,7 +210,7 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 			{
 				MakeAllMapViewsUpdated(itsManagerView->TimeScaleUpdated()); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 				itsManagerView->TimeScaleUpdated(false);
-                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Left mouse button up action");
+                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Left mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 			}
 
 			if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode())
@@ -253,7 +244,7 @@ void CTimeEditValuesView::OnMButtonUp(UINT nFlags, CPoint point)
 		{
 			Invalidate(FALSE);
 			if(itsSmartMetDocumentInterface->TimeSerialViewDirty())
-                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Middle mouse button up action");
+                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Middle mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 		}
 		else
 		{
@@ -336,7 +327,7 @@ void CTimeEditValuesView::OnRButtonUp(UINT nFlags, CPoint point)
 			{
 				MakeAllMapViewsUpdated(itsManagerView->TimeScaleUpdated()); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 				itsManagerView->TimeScaleUpdated(false);
-                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Right mouse button up action");
+                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Right mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 			}
 		}
 	}
@@ -606,7 +597,7 @@ BOOL CTimeEditValuesView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		{
 			MakeAllMapViewsUpdated(itsManagerView->TimeScaleUpdated()); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 			itsManagerView->TimeScaleUpdated(false);
-            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Mouse wheel action");
+            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Mouse wheel action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 		}
 		else if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode())
             itsSmartMetDocumentInterface->DrawOverBitmapThings(0);

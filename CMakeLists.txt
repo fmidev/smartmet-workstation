@@ -146,6 +146,10 @@ add_subdirectory(
     )
 
 add_subdirectory(
+    libs/fmi/bizcode/win32utils
+    )
+	
+add_subdirectory(
     libs/fmi/bizcode/toolbox
     )
 

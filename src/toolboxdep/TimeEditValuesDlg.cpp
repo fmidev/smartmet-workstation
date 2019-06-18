@@ -294,7 +294,7 @@ void CTimeEditValuesDlg::OnButtonToiminto()
 	if((itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode() == false) || (anyDataModified == false))
 	{
 		EnableButtons();
-		RefreshApplicationViews("TimeSerialDlg: Modify edited data in CP mode had no effect");
+		RefreshApplicationViews("TimeSerialDlg: Modify edited data in CP mode had no effect", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 	}
 }
 
@@ -479,16 +479,16 @@ void CTimeEditValuesDlg::OnCheckUseZoomedAreaCP()
 		UpdateData(TRUE);
         itsSmartMetDocumentInterface->UseCPGridCrop(fUseZoomedAreaCP == TRUE);
         itsSmartMetDocumentInterface->MapViewDirty(0, false, true, true, false, false, false);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialDlg: Toggle Zoomed CP setting");
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialDlg: Toggle Zoomed CP setting", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
 		Invalidate(FALSE);
 	}
 }
 
-void CTimeEditValuesDlg::RefreshApplicationViews(const std::string &reasonForUpdate)
+void CTimeEditValuesDlg::RefreshApplicationViews(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag)
 {
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
 	EnableButtons();
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, updatedViewsFlag);
 }
 
 void CTimeEditValuesDlg::SetDefaultValues(void)
@@ -505,7 +505,7 @@ void CTimeEditValuesDlg::OnButtonClearAllCpValues()
             itsSmartMetDocumentInterface->CPManager()->ClearAllChangeValues(0, 0.); // 0=kaikkien CP:en kaikki arvot, 0. nollaus arvo
 		else
             itsTimeEditValuesView->ResetAllModifyFactorValues();
-		RefreshApplicationViews("TimeSerialDlg: Clear all CP values");
+		RefreshApplicationViews("TimeSerialDlg: Clear all CP values", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
 	}
 }
 
@@ -558,7 +558,7 @@ void CTimeEditValuesDlg::SetAnalyzeRelatedTools(bool analyzeToolHasJustBeenSet, 
         }
         UpdateData(FALSE); // Päivitä checkbox kontrollien tilat
         UpdateControlsAfterAnalyzeMode();
-        RefreshApplicationViews(logMessage);
+        RefreshApplicationViews(logMessage, SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
     }
 }
 
@@ -712,7 +712,7 @@ BOOL CTimeEditValuesDlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
             itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
             itsSmartMetDocumentInterface->MapViewDirty(0, false, true, true, false, false, false);
-			RefreshApplicationViews("TimeSerialDlg: Mouse wheel action");
+			RefreshApplicationViews("TimeSerialDlg: Mouse wheel action", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
 			return TRUE;
 		}
 	}
@@ -953,7 +953,7 @@ BOOL CTimeEditValuesDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LR
 	{
 		EnableDlgItem(IDC_BUTTON_TOIMINTO, true); // enabloidaan aikasarja muokkausten jälkeen taas muokkaa-nappi
 		EnableButtons();
-		RefreshApplicationViews("TimeSerialDlg: Modify edited data");
+		RefreshApplicationViews("TimeSerialDlg: Modify edited data", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 		return TRUE;
 	}
 
@@ -981,7 +981,7 @@ void CTimeEditValuesDlg::OnBnClickedCheckAllowRightClickSelection()
     itsSmartMetDocumentInterface->AllowRightClickDisplaySelection(fAllowRightClickSelection == TRUE);
     itsSmartMetDocumentInterface->MapViewDirty(0, false, false, true, false, false, false);
     itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialDlg: Toggle Allow right click selection setting");
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialDlg: Toggle Allow right click selection setting", SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
     Invalidate(FALSE);
 }
 

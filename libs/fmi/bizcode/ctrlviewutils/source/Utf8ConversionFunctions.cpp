@@ -1,5 +1,7 @@
 #include "Utf8ConversionFunctions.h"
 #include "boost/locale.hpp"
+#include <locale>
+#include <codecvt>
 
 std::string fromLocaleStringToUtf8(const std::string &localeStr)
 {

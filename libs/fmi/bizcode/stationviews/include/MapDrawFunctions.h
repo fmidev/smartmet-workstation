@@ -26,4 +26,10 @@ namespace MapDraw
     Gdiplus::RectF getDestRect(const CRect& mfcRect);
     bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC);
     bool stopDrawingTooSmallMapview(CWnd *mapView, int theDescTopIndex);
+
+    template<typename DocumentInterface>
+    bool mapIsNotDirty(DocumentInterface* docInterface, int theDescTopIndex)
+    {
+        return !(docInterface && docInterface->GetMapHandlerInterface(theDescTopIndex)->MakeNewBackgroundBitmap());
+    }
 }

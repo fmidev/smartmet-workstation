@@ -30,6 +30,7 @@ target_link_libraries(
     GridCtrl
     CtrlViews
 	StationViews
+	Win32Utils
     )
 
 target_include_directories( 
@@ -51,6 +52,7 @@ target_include_directories(
     PUBLIC ${StationViews_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     PUBLIC ${TOOLKITPRO_INCLUDE_DIR}
+    PUBLIC ${Win32Utils_INCLUDE_DIR}
     )
 
 set(${PROJECT_NAME}_RES_FILE
@@ -77,5 +79,6 @@ set(
     ${GridCtrl_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
     ${TOOLKITPRO_INCLUDE_DIR}
+    ${Win32Utils_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
