@@ -135,6 +135,7 @@
 #include "MacroParamDataChecker.h"
 #include "CapDataSystem.h"
 #include "NFmiMacroParamDataCache.h"
+#include "TimeSerialParameters.h"
 
 #ifdef OLDGCC
  #include <strstream>
@@ -799,6 +800,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitParameterSelectionSystem();
     InitLogFileCleaning();
     InitMacroParamDataCache();
+	InitTimeSerialParameters();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -2251,10 +2253,10 @@ void ReportHardDriveUsage(const std::string &driveDescription, char driveLetter)
     if(GetHardDriveInfo(driveLetter, freeGigaBytesAvailable, totalNumberOfGigaBytes, freeDriveSpaceInProcents))
     {
         auto logSeverity = GetHardDriveFreeSpaceLogSeverity(freeDriveSpaceInProcents);
-        LogMessage(GetHardDriveReportString(driveDescription, freeGigaBytesAvailable, freeDriveSpaceInProcents), logSeverity, CatLog::Category::Operational, true);
+        LogSystemInfo(GetHardDriveReportString(driveDescription, freeGigaBytesAvailable, freeDriveSpaceInProcents), logSeverity);
     }
     else
-        LogMessage(driveDescription + "Unable to get info from " + driveLetter + " drive", CatLog::Severity::Error, CatLog::Category::Operational, true);
+        LogSystemInfo(driveDescription + "Unable to get info from " + driveLetter + " drive", CatLog::Severity::Error);
 }
 
 void ReportSystemHardDriveUsage()
@@ -2279,41 +2281,45 @@ void ReportSmartMetHardDriveUsage()
 
 void ReportHardDriveUsage()
 {
-
-    LogMessage("SmartMet harddrive usage report:", CatLog::Severity::Debug, CatLog::Category::Operational, true);
-    LogMessage("------------------------------------------------------", CatLog::Severity::Debug, CatLog::Category::Operational, true);
+    LogSystemInfo("SmartMet harddrive usage report:");
+    LogSystemInfo("------------------------------------------------------");
     ReportSystemHardDriveUsage();
     ReportSmartMetHardDriveUsage();
-    LogMessage("------------------------------------------------------", CatLog::Severity::Debug, CatLog::Category::Operational, true);
+    LogSystemInfo("------------------------------------------------------");
+}
+
+void LogSystemInfo(std::string message, CatLog::Severity logSeverity = CatLog::Severity::Debug, CatLog::Category logCategory = CatLog::Category::Operational, bool flushLog = true)
+{
+    LogMessage(message, logSeverity, logCategory, flushLog);
 }
 
 void ReportProcessMemoryUsage(void)
 {
-	double megabyte = 1024*1024;
+    ReportHardDriveUsage();
+
+	const double megabyte = 1024. * 1024.;
 	DWORD currentProcessId = GetCurrentProcessId();
 	HANDLE hProcess;
 	PROCESS_MEMORY_COUNTERS pmc;
 	// Print information about the memory usage of the process.
-	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, currentProcessId);
+	hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ, FALSE, currentProcessId);
 	if (NULL == hProcess)
 		return;
 
-    ReportHardDriveUsage();
-
 	if (GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc)))
 	{
-        LogMessage("SmartMet Memory usage report:", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage("------------------------------------------------------", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tPageFaultCount: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PageFaultCount/megabyte, 2)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tPeakWorkingSetSize: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PeakWorkingSetSize/megabyte, 1)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tWorkingSetSize: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.WorkingSetSize/megabyte, 1)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tQuotaPeakPagedPoolUsage: \t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaPeakPagedPoolUsage/megabyte, 2)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tQuotaPagedPoolUsage: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaPagedPoolUsage/megabyte, 2)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tQuotaPeakNonPagedPoolUsage: \t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaPeakNonPagedPoolUsage/megabyte, 2)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tQuotaNonPagedPoolUsage: \t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaNonPagedPoolUsage/megabyte, 2)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tPagefileUsage: \t\t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PagefileUsage/megabyte, 1)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage(std::string("\t\tPeakPagefileUsage: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PeakPagefileUsage/megabyte, 1)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-        LogMessage("------------------------------------------------------", CatLog::Severity::Debug, CatLog::Category::Operational);
+        LogSystemInfo("SmartMet Memory usage report:");
+        LogSystemInfo("------------------------------------------------------");
+        LogSystemInfo(std::string("\t\tPageFaultCount: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PageFaultCount/megabyte, 2)) + " MB");
+        LogSystemInfo(std::string("\t\tPeakWorkingSetSize: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PeakWorkingSetSize/megabyte, 1)) + " MB");
+        LogSystemInfo(std::string("\t\tWorkingSetSize: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.WorkingSetSize/megabyte, 1)) + " MB");
+        LogSystemInfo(std::string("\t\tQuotaPeakPagedPoolUsage: \t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaPeakPagedPoolUsage/megabyte, 2)) + " MB");
+        LogSystemInfo(std::string("\t\tQuotaPagedPoolUsage: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaPagedPoolUsage/megabyte, 2)) + " MB");
+        LogSystemInfo(std::string("\t\tQuotaPeakNonPagedPoolUsage: \t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaPeakNonPagedPoolUsage/megabyte, 2)) + " MB");
+        LogSystemInfo(std::string("\t\tQuotaNonPagedPoolUsage: \t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.QuotaNonPagedPoolUsage/megabyte, 2)) + " MB");
+        LogSystemInfo(std::string("\t\tPagefileUsage: \t\t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PagefileUsage/megabyte, 1)) + " MB");
+        LogSystemInfo(std::string("\t\tPeakPagefileUsage: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(pmc.PeakPagefileUsage/megabyte, 1)) + " MB");
+        LogSystemInfo("------------------------------------------------------");
 	}
 	CloseHandle( hProcess );
 	ReportSystemMemoryUsage();
@@ -2321,22 +2327,22 @@ void ReportProcessMemoryUsage(void)
 
 void ReportSystemMemoryUsage(void)
 {
-	double megabyte = 1024*1024;
-	double gigabyte = megabyte*1024;
+    const double megabyte = 1024. * 1024.;
+    const double gigabyte = megabyte * 1024.;
 	MEMORYSTATUSEX statex;
 	statex.dwLength = sizeof(statex);
 	GlobalMemoryStatusEx (&statex);
 
-    LogMessage("Computers memory usage report:", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage("------------------------------------------------------", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage(std::string("\t\tMemory in use: \t\t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.dwMemoryLoad, 0)) + " %", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage(std::string("\t\tTotal physical memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullTotalPhys/megabyte, 0)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage(std::string("\t\tFree physical memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullAvailPhys/megabyte, 1)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage(std::string("\t\tTotal paging file: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullTotalPageFile/megabyte, 0)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage(std::string("\t\tFree paging file: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullAvailPageFile/megabyte, 1)) + " MB", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage(std::string("\t\tTotal virtual memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullTotalVirtual/gigabyte, 0)) + " GB", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage(std::string("\t\tFree virtual memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullAvailVirtual/gigabyte, 1)) + " GB", CatLog::Severity::Debug, CatLog::Category::Operational);
-    LogMessage("------------------------------------------------------", CatLog::Severity::Debug, CatLog::Category::Operational);
+    LogSystemInfo("Computers memory usage report:");
+    LogSystemInfo("------------------------------------------------------");
+    LogSystemInfo(std::string("\t\tMemory in use: \t\t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.dwMemoryLoad, 0)) + " %");
+    LogSystemInfo(std::string("\t\tTotal physical memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullTotalPhys/megabyte, 0)) + " MB");
+    LogSystemInfo(std::string("\t\tFree physical memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullAvailPhys/megabyte, 1)) + " MB");
+    LogSystemInfo(std::string("\t\tTotal paging file: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullTotalPageFile/megabyte, 0)) + " MB");
+    LogSystemInfo(std::string("\t\tFree paging file: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullAvailPageFile/megabyte, 1)) + " MB");
+    LogSystemInfo(std::string("\t\tTotal virtual memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullTotalVirtual/gigabyte, 0)) + " GB");
+    LogSystemInfo(std::string("\t\tFree virtual memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullAvailVirtual/gigabyte, 1)) + " GB");
+    LogSystemInfo("------------------------------------------------------");
 }
 
 // onko samanlaisia prosesseja muita käynnissä (= sama nimi ja exe-polku)
@@ -2830,7 +2836,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false)
 {
 	StoreLastLoadedFileNameToLog(theDataFileName);
-	if(theData && theData->Info() == 0)
+	if(theData == nullptr || theData->Info() == nullptr)
 	{
 		// HUOM! joskus tulee ehkä jonkin luku virheen takia queryData, jonka rawData on roskaa ja info on 0-pointteri. Sellainen data ignoorataan 
 		// tässä, huom vuotaa muistia, koska en voi deletoida kun rawData-pointteri osoittaa ties minne.
@@ -9491,8 +9497,11 @@ boost::shared_ptr<NFmiArea> MakeCPCropArea(boost::shared_ptr<NFmiFastQueryInfo> 
 	return boost::shared_ptr<NFmiArea>(new NFmiLatLonArea(bottomLeftLatlon, topRightLatlon));
 }
 
-void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea)
+void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned int theDescTopIndex)
 {
+    if(theDescTopIndex != 0)
+        return; // Ei tehdä CP-crop juttuja kuin pääkarttanäytön kanssa
+
 	itsCPGridCropMargin = NFmiPoint();
 	itsCPGridCropRect = NFmiRect(); // asetetaan tyhjä crop-recti aluksi
 	itsCPGridCropLatlonArea = boost::shared_ptr<NFmiArea>();
@@ -9546,7 +9555,7 @@ void SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> 
 		if(NFmiQueryDataUtil::AreAreasSameKind(newArea.get(), mapDescTop->MapHandler()->TotalArea().get()))
 		{
 			mapDescTop->MapHandler()->Area(newArea);
-			SetCPCropGridSettings(newArea);
+			SetCPCropGridSettings(newArea, theDescTopIndex);
 		}
 		else
 		{ // tehdään sitten karttapohjalle sopiva area
@@ -9570,7 +9579,7 @@ void SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> 
 				}
 			}
 			mapDescTop->MapHandler()->Area(correctTypeArea);
-			SetCPCropGridSettings(correctTypeArea);
+			SetCPCropGridSettings(correctTypeArea, theDescTopIndex);
 		}
 		mapDescTop->BorderDrawDirty(true);
         // laitetaan viela kaikki ajat likaisiksi cachesta
@@ -14138,6 +14147,24 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return itsMacroParamDataCache;
     }
 
+    void InitTimeSerialParameters()
+    {
+        try
+        {
+            itsTimeSerialParameters.initializeFromConfigurations();
+        }
+        catch(std::exception& e)
+        {
+            LogAndWarnUser(e.what(), "Error with TimeSerialParameter configuration", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
+        }
+    }
+
+    TimeSerialParameters& GetTimeSerialParameters()
+    {
+        return itsTimeSerialParameters;
+    }
+
+    TimeSerialParameters itsTimeSerialParameters;
     NFmiMacroParamDataCache itsMacroParamDataCache;
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
     Warnings::CapDataSystem capDataSystem;
@@ -16809,4 +16836,9 @@ NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
 void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
 {
     pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+}
+
+TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()
+{
+    return pimpl->GetTimeSerialParameters();
 }

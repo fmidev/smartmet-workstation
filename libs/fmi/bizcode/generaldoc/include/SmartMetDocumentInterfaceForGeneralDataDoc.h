@@ -23,6 +23,7 @@ public:
     void FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription) override;
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) override;
     void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) override;
+    void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag);
     NFmiMapViewDescTop* MapViewDescTop(unsigned int theIndex) override;
     NFmiDrawParamList* DrawParamListWithRealRowNumber(unsigned int theDescTopIndex, int theRealRowIndex) override;
     NFmiInfoOrganizer* InfoOrganizer() override;
@@ -294,6 +295,7 @@ public:
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
     NFmiMacroParamDataCache& MacroParamDataCache() override;
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) override;
+    NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

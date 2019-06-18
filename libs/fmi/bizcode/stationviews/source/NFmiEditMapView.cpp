@@ -506,12 +506,17 @@ bool NFmiEditMapView::MiddleButtonDown(const NFmiPoint & thePlace, unsigned long
 
 bool NFmiEditMapView::MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey)
 {
+    bool status = false;
     ActivateMapView(thePlace);
 	if(itsViewGrid && itsViewGrid->IsIn(thePlace))
-		return itsViewGrid->MiddleButtonUp(thePlace, theKey);
+        status = itsViewGrid->MiddleButtonUp(thePlace, theKey);
 	else if(itsTimeControlView && itsTimeControlView->IsIn(thePlace))
-		return itsTimeControlView->MiddleButtonUp(thePlace, theKey);
-	return false;
+        status = itsTimeControlView->MiddleButtonUp(thePlace, theKey);
+
+    itsCtrlViewDocumentInterface->MouseCaptured(false);
+    itsCtrlViewDocumentInterface->MiddleMouseButtonDown(false);
+
+    return status;
 }
 
 bool NFmiEditMapView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) // Marko lisäsi 14.12.2001

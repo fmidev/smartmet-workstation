@@ -118,7 +118,8 @@ class NFmiInfoOrganizer
                                             NFmiInfoData::Type theType,
                                             bool fUseParIdOnly = false,
                                             bool fLevelData = false,
-                                            int theModelRunIndex = 0);
+                                            int theModelRunIndex = 0,
+      const std::vector<FmiParameterName> *possibleComparisonParameters = nullptr);
   checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
       const std::string &theFileNameFilter,
       int theModelRunIndex = 0);  // palauttaa vectorin halutunlaisia infoja

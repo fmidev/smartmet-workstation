@@ -19,6 +19,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     SmartTools
     ToolboxDep
+    Win32Utils
     MfcUtils
     GridCtrl
     Newbase
@@ -45,6 +46,7 @@ target_include_directories(
     PUBLIC ${PROJECT_SOURCE_DIR}
     PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${ToolboxDep_INCLUDE_DIRS}
+    PUBLIC ${Win32Utils_INCLUDE_DIRS}
     PUBLIC ${MfcuUtils_INCLUDE_DIRS}
     PUBLIC ${GridCtrl_INCLUDE_DIRS}
     PUBLIC ${Newbase_INCLUDE_DIRS}
@@ -77,6 +79,7 @@ set(
     ${PROJECT_SOURCE_DIR}
     ${SmartTools_INCLUDE_DIRS}
     ${ToolboxDep_INCLUDE_DIRS}
+    ${Win32Utils_INCLUDE_DIRS}
     ${MfcuUtils_INCLUDE_DIRS}
     ${GridCtrl_INCLUDE_DIRS}
     ${Newbase_INCLUDE_DIRS}

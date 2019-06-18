@@ -356,31 +356,38 @@ void CFmiExtraMapView::OnMButtonDown(UINT nFlags, CPoint point)
 	{
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse middle button down");
 	}
-
-//	CView::OnMButtonDown(nFlags, point);
+    SetCapture(); // otetaan hiiren liikkeet/viestit talteeen toistaiseksi tähän ikkunaan
 }
 
 void CFmiExtraMapView::OnMButtonUp(UINT nFlags, CPoint point)
 {
-	if(fPrintingOnDontSetDcs)
-		return ; // pitää estää erikseen apukarrtanäytössä kaikenlaiset CDC-asetuksen kesken printtauksen!
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+    try
+    {
+        if(fPrintingOnDontSetDcs)
+            return; // pitää estää erikseen apukarrtanäytössä kaikenlaiset CDC-asetuksen kesken printtauksen!
+        CDC* theDC = GetDC();
+        if(!theDC)
+            return;
+        SetToolsDCs(theDC);
+        CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
-	bool needsUpdate = itsEditMapView ? itsEditMapView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
-		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
-	Invalidate(FALSE);
-	if(needsUpdate)
-	{
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse middle button up");
-	}
-
-//	CView::OnMButtonUp(nFlags, point);
+        bool needsUpdate = itsEditMapView ? itsEditMapView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
+            , itsToolBox->ConvertCtrlKey(nFlags)) : false;
+        ReleaseDC(theDC);
+        Invalidate(FALSE);
+        if(needsUpdate)
+        {
+            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse middle button up");
+        }
+    }
+    catch(...)
+    {
+        ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön
+        throw; // laitetaan poikkeus eteenpäin
+    }
+    ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön (OnLButtonDown:issa laitettiin SetCapture päälle)
 }
+
 
 void CFmiExtraMapView::PutTextInStatusBar(const std::string &theText)
 {
@@ -743,7 +750,7 @@ std::string::size_type CFmiExtraMapView::FindPlotImagePosition(const std::string
 
 void CFmiExtraMapView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
-    CFmiWin32TemplateHelpers::NotifyDisplayTooltip(this, pNMHDR, result, fPrintingOnDontSetDcs, EXTRAMAPVIEW_TOOLTIP_ID);
+    CFmiWin32TemplateHelpers::NotifyDisplayTooltip(this, pNMHDR, result, GetSmartMetDocumentInterface(), EXTRAMAPVIEW_TOOLTIP_ID);
 }
 
 // tätä kutsutaan yleisessä printtaus funktiossa

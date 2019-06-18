@@ -1,4 +1,4 @@
-
+#include "targetver.h"
 #include "MultiProcessClientData.h"
 
 MultiProcessClientData::MultiProcessClientData(void)

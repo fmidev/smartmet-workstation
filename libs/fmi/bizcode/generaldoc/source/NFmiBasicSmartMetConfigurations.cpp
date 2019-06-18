@@ -503,15 +503,15 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     copyrightStringU_ += _TEXT(" Finnish Meteorological Institute");
     itsSplashScreenTextDataVector.push_back(DrawStringData(copyrightStringU_, _TEXT("Arial"), 18, RGB(0, 0, 0), CPoint(22, 325), true));
 
-    bool betaVersion = false;
+    bool betaVersion = true;
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
 
-    CString possibleWarningTextU_; // = _TEXT("Paljon muutoksia näyttöjen 'likaus' ja päivitys rutiineissa");
+    CString possibleWarningTextU_; // = _TEXT("Remember to install new dll's with new vcredist_x64.exe");
     if(possibleWarningTextU_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 370), true));
 
-    CString possibleWarningText2U_; // = _TEXT("liittyen optimointeihin, kaikkea pitäisi testata!");
+    CString possibleWarningText2U_; // = _TEXT("(Dropbox (FMI)\\SmartMet\\MetEditor_5_13_0_0_beta\\bin_x64)");
     if(possibleWarningText2U_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningText2U_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 395), true));
 }

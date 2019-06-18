@@ -7,6 +7,7 @@
 #include "FmiSmartMetEditingMode.h"
 #include "NFmiTimeEditMode.h"
 #include "ControlPointAcceleratorActions.h"
+#include "SmartMetViewId.h"
 
 #include "boost/shared_ptr.hpp"
 
@@ -59,6 +60,7 @@ class NFmiSynopStationPrioritySystem;
 class NFmiLightWeightViewSettingMacro;
 class NFmiWindTableSystem;
 class NFmiMacroParamDataCache;
+class NFmiGdiPlusImageMapHandler;
 namespace HakeMessage
 {
     class Main;
@@ -93,6 +95,7 @@ public:
     virtual void FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription) = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) = 0;
+    virtual void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag) = 0;
     virtual NFmiMapViewDescTop* MapViewDescTop(unsigned int theIndex) = 0;
     virtual NFmiDrawParamList* DrawParamListWithRealRowNumber(unsigned int theDescTopIndex, int theRealRowIndex) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer() = 0;
@@ -364,6 +367,7 @@ public:
     virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
     virtual void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) = 0;
+    virtual NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;
