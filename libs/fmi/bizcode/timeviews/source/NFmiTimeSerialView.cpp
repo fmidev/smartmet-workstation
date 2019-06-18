@@ -42,6 +42,7 @@
 #include "ToolBoxStateRestorer.h"
 #include "NFmiFastInfoUtils.h"
 #include "catlog/catlog.h"
+#include "TimeSerialParameters.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -59,33 +60,25 @@ const NFmiColor g_OfficialDataColor(0.78f, 0.082f, 0.52f); // viinin punainen ke
 
 using namespace std;
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theViewedDrawParam, const NFmiProducer &theWantedProducer, NFmiInfoData::Type theWantedType, bool fIgnoreParam = false)
+static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theViewedDrawParam, const NFmiProducer &theWantedProducer, NFmiInfoData::Type theWantedType)
 {
 	bool useParamIdOnly = theWantedProducer.GetIdent() == 0;
 	NFmiDataIdent dataIdent(*(theViewedDrawParam->Param().GetParam()), theWantedProducer);
 	NFmiInfoData::Type usedType = theWantedType;
 	if(usedType == NFmiInfoData::kViewable && theViewedDrawParam->DataType() == NFmiInfoData::kHybridData)
 		usedType = NFmiInfoData::kHybridData;
-	const NFmiLevel *level = 0;
+	const NFmiLevel *level = nullptr;
 	if(theViewedDrawParam->Level().LevelValue() != kFloatMissing)
 		level = &theViewedDrawParam->Level();
+    auto possibleComparisonParameters = theCtrlViewDocumentInterface->GetTimeSerialParameters().getComparisonParameters(static_cast<FmiParameterName>(dataIdent.GetParamIdent()));
 
-	boost::shared_ptr<NFmiFastQueryInfo> wantedInfo;
-	if(fIgnoreParam)
-	{
-		bool groundData = (level == 0);
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos = theCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(usedType, groundData, theWantedProducer.GetIdent());
-		if(infos.size())
-			wantedInfo = infos[0]; // palauteataan vain 1. info vektorista
-	}
-	else
-	{
-		wantedInfo = theCtrlViewDocumentInterface->InfoOrganizer()->Info(dataIdent, level, usedType, useParamIdOnly, false);
-	}
+	boost::shared_ptr<NFmiFastQueryInfo> wantedInfo = theCtrlViewDocumentInterface->InfoOrganizer()->Info(dataIdent, level, usedType, useParamIdOnly, false, 0, possibleComparisonParameters);
 
-	if(wantedInfo == 0)
+    if(!wantedInfo)
+    {
 		if(usedType == NFmiInfoData::kViewable) // jos ei löytynyt kViewable-tyypillä, kokeillaan vielä kModelHelpData
-			wantedInfo = ::GetWantedData(theCtrlViewDocumentInterface, theViewedDrawParam, theWantedProducer, NFmiInfoData::kModelHelpData, fIgnoreParam);
+			wantedInfo = ::GetWantedData(theCtrlViewDocumentInterface, theViewedDrawParam, theWantedProducer, NFmiInfoData::kModelHelpData);
+    }
 
 	return wantedInfo;
 }
@@ -605,13 +598,35 @@ void NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &env
 	envi.SetPenSize(NFmiPoint(1, 1)); // laitetaan vielä varmuuden vuoksi ohut viiva takaisin
 }
 
-static bool DataHasNeededParameters(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long wantedParamId)
+// Originaali parametria ei löytynyt, katsotaan löytyykö 'sijais' parametreja datasta
+static bool DataHasComparisonParameter(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, FmiParameterName wantedParamId, CtrlViewDocumentInterface* ctrlViewDocumentInterface)
+{
+    auto timeSerialParameters = ctrlViewDocumentInterface->GetTimeSerialParameters().getComparisonParameters(wantedParamId);
+    if(timeSerialParameters)
+    {
+        auto iter = std::find_if(timeSerialParameters->begin(), timeSerialParameters->end(), 
+            [&](auto paramId) {return theInfo->Param(paramId); });
+
+        if(iter != timeSerialParameters->end())
+            return true;
+    }
+
+    return false;
+}
+
+static bool DataHasNeededParameters(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long wantedParamId, CtrlViewDocumentInterface *ctrlViewDocumentInterface)
 {
     NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
         return true;
     else
-        return theInfo->Param(static_cast<FmiParameterName>(wantedParamId));
+    {
+        auto wantedParam = static_cast<FmiParameterName>(wantedParamId);
+        if(theInfo->Param(wantedParam))
+            return true;
+        else
+            return ::DataHasComparisonParameter(theInfo, wantedParam, ctrlViewDocumentInterface);
+    }
 }
 
 bool NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon, const NFmiProducer &theProducer)
@@ -623,7 +638,7 @@ bool NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &env
 		info->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
 //		if(info->Grid() && info->Area()->IsInside(theLatlon))
 		{
-			if(::DataHasNeededParameters(info, itsDrawParam->Param().GetParamIdent())) // parametrikin pitää asettaa
+			if(::DataHasNeededParameters(info, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
 			{
 				DrawSimpleDataInTimeSerial(info, envi, theLatlon, 0, NFmiPoint(6, 6)); // 0=ei siirretä aikasarjaa mihinkään suuntaa piirrossa
 				return true;
@@ -639,7 +654,7 @@ void NFmiTimeSerialView::DrawWantedDataLocationInTime(NFmiDrawingEnvironment &en
 	if(info)
 	{
 		info->ResetTime(); // varmuuden vuoksi asetan 1. leveliin
-		if(::DataHasNeededParameters(info, itsDrawParam->Param().GetParamIdent())) // parametrikin pitää asettaa
+		if(::DataHasNeededParameters(info, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
 		{
 			envi.SetPenSize(NFmiPoint(1, 1));
 			DrawSimpleDataInTimeSerial(info, envi, theLatlon, 0, NFmiPoint(6, 6)); // 0=ei siirretä aikasarjaa mihinkään suuntaa piirrossa
@@ -696,7 +711,7 @@ const NFmiPoint& NFmiTimeSerialView::GetUsedLatlon(void)
 	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 		return itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
 	else
-		return Info()->LatLon();
+		return Info()->LatLonFast();
 }
 
 bool NFmiTimeSerialView::GetDrawedTimes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag &theTimesOut)
@@ -734,7 +749,7 @@ bool NFmiTimeSerialView::SetObsDataToNearestLocationWhereIsData(boost::shared_pt
 boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetObservationInfo(const NFmiParam &theParam, const NFmiPoint &theLatlon)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> obsInfo = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(NFmiLocation(theLatlon), NFmiMetTime(), true, 0);
-    if(!obsInfo || ::DataHasNeededParameters(obsInfo, theParam.GetIdent()) == false)
+    if(!obsInfo || ::DataHasNeededParameters(obsInfo, theParam.GetIdent(), itsCtrlViewDocumentInterface) == false)
         obsInfo = GetNonSynopObservation(theParam);
     return obsInfo;
 }
@@ -754,7 +769,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetNonSynopObservation(
         std::set<long>::iterator it = excludedProducerIds.find(currentInfo->Producer()->GetIdent());
         if(it == excludedProducerIds.end())
         {
-            if(::DataHasNeededParameters(currentInfo, theParam.GetIdent()))
+            if(::DataHasNeededParameters(currentInfo, theParam.GetIdent(), itsCtrlViewDocumentInterface))
                 return currentInfo;
         }
     }
@@ -769,7 +784,7 @@ void NFmiTimeSerialView::DrawObservationDataLocationInTime(NFmiDrawingEnvironmen
 	if(obsInfo)
 	{
 		obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
-		if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent())) // parametrikin pitää asettaa
+		if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
 		{
 			NFmiTimeBag drawedTimes;
 			if(GetDrawedTimes(obsInfo, drawedTimes))
@@ -923,7 +938,7 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 
 void NFmiTimeSerialView::DrawParamInTime(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatlon, FmiParameterName theParam, const NFmiColor &theColor, const NFmiPoint &theEmptyPointSize)
 {
-	if(::DataHasNeededParameters(theInfo, theParam))
+	if(::DataHasNeededParameters(theInfo, theParam, itsCtrlViewDocumentInterface))
 	{
 		theEnvi.SetFrameColor(theColor);
 		DrawSimpleDataInTimeSerial(theInfo, theEnvi, theLatlon, 0, theEmptyPointSize); // 0=ei siirretä aikasarjaa mihinkään suuntaa piirrossa
@@ -3940,7 +3955,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theL
 	if(analyzeDataInfo)
 	{
         analyzeDataInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
-		if(::DataHasNeededParameters(analyzeDataInfo, itsDrawParam->Param().GetParamIdent())) // parametrikin pitää asettaa kohdalleen
+		if(::DataHasNeededParameters(analyzeDataInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa kohdalleen
 		{
 			NFmiMetTime firstTime(Value2Time(NFmiPoint(0,0))); // haetaan aika, joka on ruudun alussa
             NFmiTimeDescriptor infoTimes(analyzeDataInfo->TimeDescriptor());
@@ -4803,7 +4818,7 @@ std::string NFmiTimeSerialView::GetObservationToolTipText(boost::shared_ptr<NFmi
 		if(obsInfo)
 		{
 			obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
-			if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent())) // parametrikin pitää asettaa
+			if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
 			{
 				NFmiTimeBag drawedTimes;
 				if(GetDrawedTimes(obsInfo, drawedTimes))
@@ -4940,7 +4955,7 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 				boost::shared_ptr<NFmiFastQueryInfo> kepaInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kKepaData);
 				if(kepaInfo)
 				{
-					if(::DataHasNeededParameters(kepaInfo, itsDrawParam->Param().GetParamIdent())) // parametrikin pitää asettaa
+					if(::DataHasNeededParameters(kepaInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
 					{
 						str += "\n";
 						::AddValueLineString(str, "Official edited ", normalTitleColor, ::GetTooltipValue(kepaInfo, primaryLocationLatlon, aTime, itsDrawParam->Param().GetParamIdent()), itsDrawParam, false);
