@@ -207,7 +207,7 @@ namespace AddParams
         return true;
     }
 
-    std::vector<SingleRowItem> SingleData::makeDialogRowData() const
+    std::vector<SingleRowItem> SingleData::makeDialogRowData(const std::vector<SingleRowItem>& dialogRowDataMemory) const
     {
         std::vector<SingleRowItem> dialogRowData;
         std::vector<NFmiDataIdent> paramsVector;
