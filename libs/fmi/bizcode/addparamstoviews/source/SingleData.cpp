@@ -2,6 +2,7 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFastInfoUtils.h"
+#include "ParameterSelectionUtils.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -31,9 +32,9 @@ namespace
     // collapsed mode because otherwise dialog's update codes will open it always.
     // Here is used the SingleRowItem's parentItemId to store producerId
     
-    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false)
+    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, bool treeNodeCollapsed = true)
     {
-        auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
+        auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), treeNodeCollapsed, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
         return rowItem;
     }
 
@@ -94,8 +95,17 @@ namespace
         return false;
     }
 
+    bool isThisParameterTreeNodeCollapsed(const std::vector<AddParams::SingleRowItem>& dialogRowDataMemory, const std::string& uniqueIdForBaseData, unsigned long parameterId)
+    {
+        auto rowItemPtr = AddParams::findParameterDataRowItem(uniqueIdForBaseData, parameterId, dialogRowDataMemory);
+        if(rowItemPtr)
+            return rowItemPtr->dialogTreeNodeCollapsed();
+        else
+            return true; // default arvo parametri tasolla on true eli node on suljettu
+    }
+
     //Create dailogRowData with proper RowType
-    void addParameterAndPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, NFmiQueryInfo &queryInfo)
+    void addParameterAndPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, NFmiQueryInfo &queryInfo, const std::vector<AddParams::SingleRowItem>& dialogRowDataMemory, const std::string& uniqueIdForBaseData)
     {
         AddParams::RowType rowType;
         //kNoType = 0,
@@ -106,6 +116,8 @@ namespace
         //kDataType = 5,
         //kProducerType = 6,
         //kCategoryType = 7,
+
+        bool treeNodeCollapsed = ::isThisParameterTreeNodeCollapsed(dialogRowDataMemory, uniqueIdForBaseData, dataIdent.GetParamIdent());
         
         if(!dataIdent.HasDataParams()) 
         {
@@ -114,18 +126,18 @@ namespace
 
             if(hasLevelData) //Level data
             {
-                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false)); //Parameter name as "header", not actual data
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false, treeNodeCollapsed)); //Parameter name as "header", not actual data
                 ::addLevelRowItems(dialogRowData, dataIdent, dataType, AddParams::RowType::kLevelType, queryInfo); //Actual level data
             } 
             else //Surface data
             {
-                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true));
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true, treeNodeCollapsed));
             }
         }
         else //Wind sub menu
         {
             rowType = AddParams::RowType::kParamType;
-            dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false));
+            dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false, treeNodeCollapsed));
             rowType = AddParams::RowType::kSubParamType; 
             ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);            
         }
@@ -220,7 +232,7 @@ namespace AddParams
 
         for(const auto &dataIdent : paramsVector)
         {
-            ::addParameterAndPossibleSubParameters(dialogRowData, dataIdent, dataType_, *latestMetaData_);
+            ::addParameterAndPossibleSubParameters(dialogRowData, dataIdent, dataType_, *latestMetaData_, dialogRowDataMemory, uniqueDataId());
         }
         return dialogRowData;
     }
