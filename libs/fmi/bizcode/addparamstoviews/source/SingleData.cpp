@@ -31,11 +31,9 @@ namespace
     // collapsed mode because otherwise dialog's update codes will open it always.
     // Here is used the SingleRowItem's parentItemId to store producerId
     
-    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, const std::string& origTime = std::string(), const std::string& totalFilePath = std::string())
+    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false)
     {
         auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
-        rowItem.origTime(origTime);
-        rowItem.totalFilePath(totalFilePath);
         return rowItem;
     }
 
