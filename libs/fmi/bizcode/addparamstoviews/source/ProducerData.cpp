@@ -252,7 +252,7 @@ namespace AddParams
             const std::string &uniqueId = singleData->uniqueDataId();
             auto *singleDataMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
             dialogRowData.push_back(::makeRowItem(*singleData, uniqueId, singleDataMemory));
-            auto rowData = singleData->makeDialogRowData();
+            auto rowData = singleData->makeDialogRowData(dialogRowDataMemory);
             dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
         }   
         return dialogRowData;
