@@ -131,23 +131,33 @@ private:
 	TimeToModifyCalculator(const TimeToModifyCalculator & ); // ei toteuteta kopio konstruktoria
 };
 
-static void ModifySingleTimeGridInThread(NFmiFastQueryInfo &theModifiedInfo,
-							     TimeToModifyCalculator &theTimeToModifyCalculator,
-								 NFmiDataModifier *theModifier)
+static void ModifySingleTimeGridInThread(NFmiFastQueryInfo& theModifiedInfo,
+    TimeToModifyCalculator& theTimeToModifyCalculator,
+    NFmiDataModifier* theModifier)
 {
-	NFmiMetTime aTime;
-	for( ; theTimeToModifyCalculator.GetCurrentTime(aTime); )
-	{
-		if(theModifiedInfo.Time(aTime))
-		{
-			theModifier->SetTimeIndex(theModifiedInfo.TimeIndex());
-			for(theModifiedInfo.ResetLocation(); theModifiedInfo.NextLocation(); )
-			{
-				theModifier->SetLocationIndex(theModifiedInfo.LocationIndex());
-				theModifiedInfo.FloatValue(theModifier->FloatOperation(theModifiedInfo.FloatValue()));
-			}
-		}
-	}
+    try
+    {
+        NFmiMetTime aTime;
+        for(; theTimeToModifyCalculator.GetCurrentTime(aTime); )
+        {
+            if(theModifiedInfo.Time(aTime))
+            {
+                theModifier->SetTimeIndex(theModifiedInfo.TimeIndex());
+                for(theModifiedInfo.ResetLocation(); theModifiedInfo.NextLocation(); )
+                {
+                    theModifier->SetLocationIndex(theModifiedInfo.LocationIndex());
+                    theModifiedInfo.FloatValue(theModifier->FloatOperation(theModifiedInfo.FloatValue()));
+                }
+            }
+        }
+    }
+    catch(std::exception& e)
+    {
+        std::string errorMessage = __FUNCTION__;
+        errorMessage += ": ";
+        errorMessage += e.what();
+        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Editing, true);
+    }
 }
 
 static void ModifyTimesLocationData_FullMT(boost::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiDataModifier * theModifier, NFmiTimeDescriptor & theTimeDescriptor)
@@ -914,7 +924,10 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 					smartToolModifier.ModifyData_ver2(&theTimes, fSelectedLocationsOnly, false, theThreadCallBacks);
 				else
 					smartToolModifier.ModifyData(&theTimes, fSelectedLocationsOnly, false, theThreadCallBacks);
-			}
+
+                if(!smartToolModifier.LastExceptionMessageFromThreads().empty())
+                    ::LogMessage(theAdapter, smartToolModifier.LastExceptionMessageFromThreads(), CatLog::Severity::Error, CatLog::Category::Editing);
+            }
 			catch(std::exception &e)
 			{
 				theAdapter.SmartToolEditingErrorText() = e.what();
@@ -2691,6 +2704,10 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 			else
 				smartToolModifier.ModifyData(&times, false, true, 0); // false tarkoittaa että laskut tehdään kaikkiin pisteisiin eikä vain valittuihin pisteisiin
 		}
+
+        if(!smartToolModifier.LastExceptionMessageFromThreads().empty())
+            ::LogMessage(theAdapter, smartToolModifier.LastExceptionMessageFromThreads(), CatLog::Severity::Error, CatLog::Category::Editing);
+
 		theUsedMacroInfoOut->First(); // asetetaan varmuuden vuoksi First:iin
 		theUsedMacroInfoOut->Values(theValues);
         if(!smartToolModifier.CalculationPoints().empty())
