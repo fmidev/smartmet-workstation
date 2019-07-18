@@ -31,7 +31,7 @@ namespace AddParams
         const std::string& dataName() const { return dataName_; }
         const NFmiInfoData::Type& dataType() const { return dataType_; }
         unsigned long producerId() const;
-        std::vector<SingleRowItem> makeDialogRowData() const;
+        std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem>& dialogRowDataMemory) const;
         std::string OrigOrLastTime() const;
         const std::string& totalLocalPath() const { return totalLocalPath_; }
         const std::string& totalServerPath() const { return totalServerPath_; }
