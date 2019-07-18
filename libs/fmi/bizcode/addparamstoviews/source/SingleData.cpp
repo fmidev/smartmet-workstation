@@ -64,7 +64,16 @@ namespace
         }
     }
 
-    void addPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo)
+    bool isThisParameterTreeNodeCollapsed(const std::vector<AddParams::SingleRowItem>& dialogRowDataMemory, const std::string& uniqueIdForBaseData, unsigned long parameterId)
+    {
+        auto rowItemPtr = AddParams::findParameterDataRowItem(uniqueIdForBaseData, parameterId, dialogRowDataMemory);
+        if(rowItemPtr)
+            return rowItemPtr->dialogTreeNodeCollapsed();
+        else
+            return true; // default arvo parametri tasolla on true eli node on suljettu
+    }
+
+    void addPossibleSubParameters(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo, const std::vector<AddParams::SingleRowItem>& dialogRowDataMemory, const std::string& uniqueIdForBaseData)
     {
         if(dataIdent.HasDataParams())
         {
@@ -77,7 +86,8 @@ namespace
 
                     if(hasLevelData) //Level wind data
                     {
-                        dialogRowData.push_back(::makeRowItem(subParam, dataType, AddParams::RowType::kLevelType)); //Parameter name as "header"
+                        bool treeNodeCollapsed = ::isThisParameterTreeNodeCollapsed(dialogRowDataMemory, uniqueIdForBaseData, subParam.GetParamIdent());
+                        dialogRowData.push_back(::makeRowItem(subParam, dataType, AddParams::RowType::kLevelType, false, treeNodeCollapsed)); //Parameter name as "header"
                         ::addLevelRowItems(dialogRowData, subParam, dataType, AddParams::RowType::kSubParamLevelType, queryInfo); //Actual level data
                     }
                     else //Surface wind data
@@ -93,15 +103,6 @@ namespace
     {
         return boost::algorithm::ilexicographical_compare(std::string(a.GetParamName()), std::string(b.GetParamName()));
         return false;
-    }
-
-    bool isThisParameterTreeNodeCollapsed(const std::vector<AddParams::SingleRowItem>& dialogRowDataMemory, const std::string& uniqueIdForBaseData, unsigned long parameterId)
-    {
-        auto rowItemPtr = AddParams::findParameterDataRowItem(uniqueIdForBaseData, parameterId, dialogRowDataMemory);
-        if(rowItemPtr)
-            return rowItemPtr->dialogTreeNodeCollapsed();
-        else
-            return true; // default arvo parametri tasolla on true eli node on suljettu
     }
 
     //Create dailogRowData with proper RowType
@@ -139,7 +140,7 @@ namespace
             rowType = AddParams::RowType::kParamType;
             dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false, treeNodeCollapsed));
             rowType = AddParams::RowType::kSubParamType; 
-            ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo);            
+            ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo, dialogRowDataMemory, uniqueIdForBaseData);
         }
     }
 
