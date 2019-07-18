@@ -532,6 +532,9 @@ bool NFmiRawData::Pimple::SetValue(size_t index, float value)
   }
   else if (itsOffset > 0)
   {
+    if(itsMappedFile->flags() == boost::iostreams::mapped_file::readonly)
+      throw std::runtime_error("Can't modify read-only memory-mapped data");
+
     // We have mmapped output data
     auto *ptr = reinterpret_cast<float *>(itsMappedFile->data() + itsOffset);
     ptr[index] = value;
