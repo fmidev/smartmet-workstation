@@ -271,6 +271,7 @@ namespace AddParams
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, const std::vector<std::unique_ptr<SingleRowItem>> &thisDataVector) const
     {
         std::vector<SingleRowItem> dialogRowData;
+        dialogRowData.reserve(thisDataVector.size());
         for(const auto &singleRowData : thisDataVector)
         {
             dialogRowData.push_back(*singleRowData);
