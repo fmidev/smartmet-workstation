@@ -275,6 +275,10 @@ namespace AddParams
         for(const auto &singleRowData : thisDataVector)
         {
             dialogRowData.push_back(*singleRowData);
+            auto& rowItem = dialogRowData.back();
+            const auto* rowItemMemory = findDataRowItem(rowItem.uniqueDataId(), dialogRowDataMemory);
+            if(rowItemMemory)
+                rowItem.dialogTreeNodeCollapsed(rowItemMemory->dialogTreeNodeCollapsed());
         }
         return dialogRowData;
     }
