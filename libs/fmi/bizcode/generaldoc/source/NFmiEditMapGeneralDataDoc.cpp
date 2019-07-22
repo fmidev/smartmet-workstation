@@ -831,10 +831,19 @@ void InitMacroParamDataCache()
 void InitWmsSupport()
 {
 #ifndef DISABLE_CPPRESTSDK
-    wmsSupport.initialSetUp();
-    if(!wmsSupport.isConfigured())
+    try
     {
-        UseWmsMaps(false);
+        wmsSupport.initialSetUp();
+        if(!wmsSupport.isConfigured())
+        {
+            UseWmsMaps(false);
+        }
+    }
+    catch(exception& e)
+    {
+        std::string errorMessage = "Problems with WMS initializations: ";
+        errorMessage += e.what();
+        LogAndWarnUser(errorMessage, "Problems with WMS initializations", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
     }
 #endif // DISABLE_CPPRESTSDK
 }
@@ -14539,11 +14548,25 @@ SmartMetDocumentInterface& NFmiEditMapGeneralDataDoc::GetSmartMetDocumentInterfa
 //--------------------------------------------------------
 bool NFmiEditMapGeneralDataDoc::Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::map<std::string, std::string> &mapViewsPositionMap, std::map<std::string, std::string> &otherViewsPositionPosMap)
 {
-    SetGeneralDataDocInterfaceCallbacks();
-    bool status = pimpl->Init(theBasicConfigurations, mapViewsPositionMap, otherViewsPositionPosMap);
-    CrossSectionSystem()->SetDocumentInterface(&GetCtrlViewDocumentInterface());
-
-	return status;
+    try
+    {
+        SetGeneralDataDocInterfaceCallbacks();
+        bool status = pimpl->Init(theBasicConfigurations, mapViewsPositionMap, otherViewsPositionPosMap);
+        CrossSectionSystem()->SetDocumentInterface(&GetCtrlViewDocumentInterface());
+        return status;
+    }
+    catch(std::exception& e)
+    {
+        std::string errorMessage = "Uncaught exeption was thrown from SmartMet's initialization: ";
+        errorMessage += e.what();
+        LogAndWarnUser(errorMessage, "SmartMet initialization failed", CatLog::Severity::Error, CatLog::Category::Configuration, false, true, true);
+    }
+    catch(...)
+    {
+        std::string errorMessage = "Unknown uncaught exeption was thrown from SmartMet's initialization";
+        LogAndWarnUser(errorMessage, "SmartMet initialization failed", CatLog::Severity::Error, CatLog::Category::Configuration, false, true, true);
+    }
+    return false;
 }
 
 
