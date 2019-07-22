@@ -1292,7 +1292,7 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
 
             // Tämä doExternalDataThreads juttu on ongelmien debuggaamis avustusta, eli
             // jos ei halua kaiken maailman datan haku systeemien tekevän töitään, laita tähän false.
-            const bool doExternalDataThreads = false;
+            const bool doExternalDataThreads = true;
             if(doExternalDataThreads)
             {
                 // Käynnistetään CombineData-threadi vain yhden kerran, jolloin se jää sitten pyörimään sinne itsekseen,
