@@ -98,10 +98,6 @@ namespace Wms
 
     QueryBuilder& QueryBuilder::setVersion(const std::string& version)
     {
-        if(version != "1.3.0")
-        {
-            throw runtime_error("Only version 1.3.0 is supported at the moment.");
-        }
         query_.query["VERSION"] = version;
         return *this;
     }
