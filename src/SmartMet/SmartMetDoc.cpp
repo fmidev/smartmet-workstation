@@ -1304,38 +1304,46 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
 {
     if(UpdateAllViewsAndDialogsIsAllowed())
     {
-        ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + " ***** {Reason: " + reasonForUpdate + "}");
-        if(fUpdateOnlyMapViews)
-            CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": only map-views are updated", nullptr);
-
-        itsData->SetLatestMacroParamErrorText("Starting view updates, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei j‰‰ vanhoja muistiin
-
-        if(fUpdateOnlyMapViews == false)
-            ::UpdateModalessDialog(itsZoomDlg);
-
-        ::UpdateMapView(GetData(), ApplicationInterface::GetSmartMetView(), 0);
-        ::UpdateMapView(GetData(), itsExtraMapViewDlg1, 1);
-        ::UpdateMapView(GetData(), itsExtraMapViewDlg2, 2);
-
-        if(fUpdateOnlyMapViews == false)
+        if(HasUpdatedViewsFlagSignificantValue())
         {
-            ::UpdateModalessDialog(itsTimeSerialDataEditorDlg);
-            ::UpdateModalessDialog(itsFilterDlg);
-            ::UpdateModalessDialog(itsBrushToolDlg);
-            UpdateAllDialogsButtons();
-            ::UpdateModalessDialog(itsTempDialog);
-            ::UpdateModalessDialog(itsCrossSectionDlg);
-            ::UpdateModalessDialog(itsSynopPlotSettingsDlg);
-            ::UpdateModalessDialog(itsSmartToolDlg);
-            ::UpdateModalessDialog(itsSynopDataGridViewDlg);
-            ::UpdateModalessDialog(itsTrajectoryDlg);
-            ::UpdateModalessDialog(itsWarningCenterDlg);
-            ::UpdateModalessDialog(itsSeaIcingWarningsDlg);
-            ::UpdateModalessDialog(itsWindTableDlg);
-//            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
-            ::UpdateModalessDialog(itsBetaProductDialog);
-            ::UpdateModalessDialog(itsViewMacroDlg);
-            ::UpdateModalessDialog(itsParameterSelectionDlg);
+            // Jos haluttiin vain tietyt n‰ytˆt p‰ivitykseen, tehd‰‰n se t‰ss‰
+            UpdateAllViewsAndDialogs(reasonForUpdate, GetAndResetUpdatedViewsFlag());
+        }
+        else
+        {
+            ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + " ***** {Reason: " + reasonForUpdate + "}");
+            if(fUpdateOnlyMapViews)
+                CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": only map-views are updated", nullptr);
+
+            itsData->SetLatestMacroParamErrorText("Starting view updates, no errors."); // 'nollataan' macroParam virhetekstiaina piirron aluksi, ettei j‰‰ vanhoja muistiin
+
+            if(fUpdateOnlyMapViews == false)
+                ::UpdateModalessDialog(itsZoomDlg);
+
+            ::UpdateMapView(GetData(), ApplicationInterface::GetSmartMetView(), 0);
+            ::UpdateMapView(GetData(), itsExtraMapViewDlg1, 1);
+            ::UpdateMapView(GetData(), itsExtraMapViewDlg2, 2);
+
+            if(fUpdateOnlyMapViews == false)
+            {
+                ::UpdateModalessDialog(itsTimeSerialDataEditorDlg);
+                ::UpdateModalessDialog(itsFilterDlg);
+                ::UpdateModalessDialog(itsBrushToolDlg);
+                UpdateAllDialogsButtons();
+                ::UpdateModalessDialog(itsTempDialog);
+                ::UpdateModalessDialog(itsCrossSectionDlg);
+                ::UpdateModalessDialog(itsSynopPlotSettingsDlg);
+                ::UpdateModalessDialog(itsSmartToolDlg);
+                ::UpdateModalessDialog(itsSynopDataGridViewDlg);
+                ::UpdateModalessDialog(itsTrajectoryDlg);
+                ::UpdateModalessDialog(itsWarningCenterDlg);
+                ::UpdateModalessDialog(itsSeaIcingWarningsDlg);
+                ::UpdateModalessDialog(itsWindTableDlg);
+                //            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
+                ::UpdateModalessDialog(itsBetaProductDialog);
+                ::UpdateModalessDialog(itsViewMacroDlg);
+                ::UpdateModalessDialog(itsParameterSelectionDlg);
+            }
         }
     }
 }
@@ -1352,12 +1360,23 @@ static void MakeUpdatedViewsTraceLogging(const std::string &functionName, SmartM
     }
 }
 
-// If updatedViewsFlag = SmartMetViewId::NoViews, it means that all the views are updated, and it's handled by other UpdateAllViewsAndDialogs method
-void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag)
+void CSmartMetDoc::ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) 
+{ 
+    // Lis‰t‰‰n jo olemassa olevaan maskiin parametrina annettu maski OR operandilla (voidaan vain lis‰t‰, nollaamiseen on oma metodi)
+    itsUpdatedViewsFlag = itsUpdatedViewsFlag | updatedViewsFlag;
+}
+
+SmartMetViewId CSmartMetDoc::GetAndResetUpdatedViewsFlag() 
+{ 
+    SmartMetViewId returnedValue = itsUpdatedViewsFlag;
+    itsUpdatedViewsFlag = SmartMetViewId::NoViews; 
+    return returnedValue;
+}
+
+void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag)
 {
-    if(updatedViewsFlag == SmartMetViewId::NoViews)
-        UpdateAllViewsAndDialogs(reasonForUpdate);
-    else if(UpdateAllViewsAndDialogsIsAllowed())
+    GetAndResetUpdatedViewsFlag(); // nollataan t‰m‰ varmuuden vuoksi
+    if(UpdateAllViewsAndDialogsIsAllowed())
     {
         ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + "-v2 ***** {Reason: " + reasonForUpdate + "}");
         ::MakeUpdatedViewsTraceLogging(__FUNCTION__, updatedViewsFlag);
