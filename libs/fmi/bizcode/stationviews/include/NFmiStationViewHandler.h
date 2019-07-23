@@ -183,6 +183,12 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void MakeParamLevelChangeDirtyOperations(bool changesHappened);
     bool IsMouseCursorOverParameterBox(const NFmiPoint & theMouseCursorPlace);
     void UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
+    template<typename T>
+    bool MakeParamHandlerViewActions(T action)
+    {
+        UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
+        return action();
+    }
 
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
