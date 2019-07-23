@@ -182,6 +182,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void TraceLogValidTimeAndAbsoluteRow();
     void MakeParamLevelChangeDirtyOperations(bool changesHappened);
     bool IsMouseCursorOverParameterBox(const NFmiPoint & theMouseCursorPlace);
+    void UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
 
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
