@@ -3911,6 +3911,9 @@ void UpdateTimeInLockedDescTops(const NFmiMetTime &theTime, unsigned int theOrig
 
 void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
 {
+    // Tehdään ensin theOrigDescTopIndex:iin liittyvän mapView päivitys, koska tätä funktiota 
+    // käytetään monista rivin vaihtoon liittyvistä funktioista, on se hyvä saada yhteen paikkaan suoritetuksi yhteisesti.
+    CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theOrigDescTopIndex);
     // eli jos origIndex oli pääikkuna (index = 0) tai apuikkuna oli lukittu pääikkunaan, silloin tehdään rivi päivityksiä
     if(theOrigDescTopIndex == 0 || MapViewDescTop(theOrigDescTopIndex)->LockToMainMapViewRow())
     {
@@ -3920,6 +3923,7 @@ void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
         {
             if(descTopIndex == 0 || MapViewDescTop(descTopIndex)->LockToMainMapViewRow())
             {
+                CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(descTopIndex);
                 MapViewDescTop(descTopIndex)->MapRowStartingIndex(mapRowStartingIndex);
             }
         }
