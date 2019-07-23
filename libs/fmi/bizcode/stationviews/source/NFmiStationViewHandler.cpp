@@ -2868,10 +2868,16 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
                     itsCtrlViewDocumentInterface->ZoomMapWithRelativeRect(itsMapViewDescTopIndex, itsMapArea, itsOldZoomRect);
 				}
 			}
+            UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
 			return true;
 		}
 	}
 	return false;
+}
+
+void NFmiStationViewHandler::UpdateOnlyThisMapViewAtNextGeneralViewUpdate()
+{
+    itsCtrlViewDocumentInterface->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(itsMapViewDescTopIndex); // optimointia
 }
 
 bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
