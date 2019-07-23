@@ -2582,8 +2582,7 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
         auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
         if(IsMouseCursorOverParameterBox(thePlace)) // param-näytön on napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
 		{
-            UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-            return itsParamHandlerView->LeftButtonDown(thePlace, theKey);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonDown(thePlace, theKey); });
 		}
 		else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
 		{
@@ -2673,8 +2672,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
     // mouse captured pitää hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
     {
-        UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-        return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
+        return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
     }
     
     if(itsViewList && GetFrame().IsInside(thePlace))
@@ -2687,8 +2685,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 
 		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
 		{
-            UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-            return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
 		}
 		else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush && itsCtrlViewDocumentInterface->ViewBrushed())
 		{
@@ -2765,8 +2762,7 @@ bool NFmiStationViewHandler::LeftDoubleClick(const NFmiPoint &thePlace, unsigned
 	{
         if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
         {
-            UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-            return itsParamHandlerView->LeftDoubleClick(thePlace, theKey);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftDoubleClick(thePlace, theKey); });
         }
 
 		if(itsViewList && itsViewList->IsIn(thePlace))
@@ -2894,8 +2890,7 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 	{
 		if(IsMouseCursorOverParameterBox(thePlace))
 		{
-            UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-            return itsParamHandlerView->MouseWheel(thePlace, theKey, theDelta);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->MouseWheel(thePlace, theKey, theDelta); });
 		}
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
@@ -3144,8 +3139,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 		// ensin pitää handlata parametrin lisäys param boxista jos hiiren oikea klikattu
         if(IsMouseCursorOverParameterBox(thePlace))
         {
-            UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-			return itsParamHandlerView->RightButtonUp(thePlace, theKey);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->RightButtonUp(thePlace, theKey); });
         }
 
 		NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
@@ -3359,8 +3353,7 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
     // mouse captured pitää hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
     {
-        UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-        return itsParamHandlerView->MouseMove(thePlace, theKey);
+        return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->MouseMove(thePlace, theKey); });
     }
 
     if(!GetFrame().IsInside(thePlace))
