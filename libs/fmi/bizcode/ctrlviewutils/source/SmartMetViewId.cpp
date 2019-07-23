@@ -1,4 +1,5 @@
 #include "SmartMetViewId.h"
+#include "SpecialDesctopIndex.h"
 
 bool SmartMetViewIdFlagCheck(SmartMetViewId viewsFlag, SmartMetViewId checkedSingleViewId)
 {
@@ -82,4 +83,24 @@ std::string SmartMetViewIdGetNameList(SmartMetViewId viewsFlag)
         checkedViewId = static_cast<SmartMetViewId>(static_cast<size_t>(checkedViewId) << 1);
     }
     return nameList;
+}
+
+SmartMetViewId GetWantedMapViewIdFlag(int theMapViewDescTopIndex)
+{
+    if(theMapViewDescTopIndex >= 0 && theMapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    {
+        switch(theMapViewDescTopIndex)
+        {
+        case 0:
+            return SmartMetViewId::MainMapView;
+        case 1:
+            return SmartMetViewId::MapView2;
+        case 2:
+            return SmartMetViewId::MapView3;
+        default:
+            break;
+        }
+    }
+
+    return SmartMetViewId::NoViews;
 }

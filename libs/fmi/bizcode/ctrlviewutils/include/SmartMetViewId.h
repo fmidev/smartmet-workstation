@@ -9,15 +9,15 @@
 // These enums are used e.g. to tell system which views need to be updated.
 enum class SmartMetViewId : size_t
 {
-	NoViews = 0,    // NoViews means also in some cases that all the views
+    NoViews = 0,
     MainMapView = 1 << 0,
     MapView2 = 1 << 1,
-	MapView3 = 1 << 2,
-	MapView4 = 1 << 3,
-	MapView5 = 1 << 4,
-	TimeSerialView = 1 << 5,
-	SoundingView = 1 << 6,
-	CrossSectionView = 1 << 7,
+    MapView3 = 1 << 2,
+    MapView4 = 1 << 3,
+    MapView5 = 1 << 4,
+    TimeSerialView = 1 << 5,
+    SoundingView = 1 << 6,
+    CrossSectionView = 1 << 7,
     SmartToolDlg = 1 << 8,
     TrajectoryView = 1 << 9,
     StationDataTableView = 1 << 10,
@@ -38,12 +38,15 @@ enum class SmartMetViewId : size_t
 
     LastViewId = BetaProductionDlg, // set the last view id here also
     // Special combo view ids
-    AllMapViews = MainMapView | MapView2 | MapView3 | MapView4 | MapView5
+    AllMapViews = MainMapView | MapView2 | MapView3 | MapView4 | MapView5,
+    // Laitetaan kaikki bitit päälle kun size_t:hen (unsigned __int64/long long) asetetaan -1
+    AllViews = -1 // kaikkien näyttöjen päivitys
 };
 
 bool SmartMetViewIdFlagCheck(SmartMetViewId viewsFlag, SmartMetViewId checkedSingleViewId);
 std::string SmartMetViewIdGetName(SmartMetViewId singleViewId);
 std::string SmartMetViewIdGetNameList(SmartMetViewId viewsFlag);
+SmartMetViewId GetWantedMapViewIdFlag(int theMapViewDescTopIndex);
 
 inline SmartMetViewId operator | (SmartMetViewId lhs, SmartMetViewId rhs)
 {
