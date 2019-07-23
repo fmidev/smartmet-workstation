@@ -380,6 +380,7 @@ public:
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
     virtual bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) = 0;
     virtual TimeSerialParameters& GetTimeSerialParameters() = 0;
+    virtual void UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
