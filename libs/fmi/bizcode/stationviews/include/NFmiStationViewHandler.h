@@ -183,6 +183,9 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void MakeParamLevelChangeDirtyOperations(bool changesHappened);
     bool IsMouseCursorOverParameterBox(const NFmiPoint & theMouseCursorPlace);
     void UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
+    bool IsBrushToolUsed();
+    void LeftButtonUpBrushToolActions();
+
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
     {
