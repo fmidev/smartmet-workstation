@@ -185,6 +185,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
     bool IsBrushToolUsed();
     void LeftButtonUpBrushToolActions();
+    bool IsControlPointModeOn();
+    void LeftButtonUpControlPointModeActions(const NFmiPoint& thePlace, unsigned long theKey);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)

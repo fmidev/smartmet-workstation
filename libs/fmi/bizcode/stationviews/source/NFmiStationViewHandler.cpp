@@ -2590,7 +2590,7 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
 			updateRect.Center(thePlace);
             itsCtrlViewDocumentInterface->UpdateRect(updateRect);
 		}
-		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+		else if(IsControlPointModeOn())
 		{
 		}
 		else if(crossSectionSystem->CrossSectionSystemActive())
@@ -2642,7 +2642,7 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 			if(info)
 			{
-				if(itsCtrlViewDocumentInterface->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush && !itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()) // siveltimen kanssa ei voi valita asemia???
+				if(itsCtrlViewDocumentInterface->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush && !IsControlPointModeOn()) // siveltimen kanssa ei voi valita asemia???
 				{
 					dynamic_cast<NFmiSmartInfo*>(info.get())->LocationSelectionSnapShot();
 
@@ -2691,19 +2691,9 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 		{
             LeftButtonUpBrushToolActions();
 		}
-		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+		else if(IsControlPointModeOn())
 		{
-            auto cpManager = itsCtrlViewDocumentInterface->CPManager();
-			if(!cpManager->MouseCaptured())
-			{
-				NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-                cpManager->ActivateCP(latlon, true);
-				if((theKey & kShiftKey) && (theKey & kCtrlKey))
-                    cpManager->AddCP(latlon);
-				else if((theKey & kShiftKey))
-                    cpManager->EnableCP(!cpManager->IsEnabledCP());
-			}
-            cpManager->MouseCaptured(false);
+            LeftButtonUpControlPointModeActions(thePlace, theKey);
 		}
 		else 
 		{
@@ -2745,6 +2735,28 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 		return true;
 	}
 	return false;
+}
+
+void NFmiStationViewHandler::LeftButtonUpControlPointModeActions(const NFmiPoint& thePlace, unsigned long theKey)
+{
+    auto cpManager = itsCtrlViewDocumentInterface->CPManager();
+    if(!cpManager->MouseCaptured())
+    {
+        NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
+        cpManager->ActivateCP(latlon, true);
+        if((theKey & kShiftKey) && (theKey & kCtrlKey))
+            cpManager->AddCP(latlon);
+        else if((theKey & kShiftKey))
+            cpManager->EnableCP(!cpManager->IsEnabledCP());
+    }
+    cpManager->MouseCaptured(false);
+    // P‰ivityst‰ vaatii vain t‰m‰ karttan‰yttˆ ja aikasarjaikkuna
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex) | SmartMetViewId::TimeSerialView);
+}
+
+bool NFmiStationViewHandler::IsControlPointModeOn()
+{
+    return itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode();
 }
 
 void NFmiStationViewHandler::LeftButtonUpBrushToolActions()
@@ -3159,7 +3171,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 
 		NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
-		if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+		if(IsControlPointModeOn())
 		{
 			return itsCtrlViewDocumentInterface->CreateCPPopup();
 		}
@@ -3386,7 +3398,7 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
             return MouseDragZooming(thePlace); // tehd‰‰n zoomi laatikon piirtoa suoraan karttan‰ytˆlle
         else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
             return MouseMoveBrushAction(thePlace);
-        else if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+        else if(itsCtrlViewDocumentInterface->MouseCaptured() && IsControlPointModeOn())
             return MouseMoveControlPointAction(thePlace);
 
         NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
@@ -4208,7 +4220,7 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
     InitializeGdiplus(itsToolBox, &GetFrame());
 
-    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+    if(IsControlPointModeOn())
         DrawControlPoints();
     if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun
         DrawSelectedLocations();
