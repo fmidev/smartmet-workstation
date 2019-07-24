@@ -2661,7 +2661,10 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 				}
 			}
 		}
-	}
+        // Paikkojen valinta vaikuttaa lähinnä seuraaviin näyttöihin, joten vain ne päivitetään (optimointia):
+        // Kaikki karttanäytöt, aikasarja, luotaus, poikkileikkaus
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::SoundingView | SmartMetViewId::TimeSerialView);
+    }
 	catch(...)
 	{ // haluan vain varmistaa että asetus menee lopuksi pois päältä
         itsCtrlViewDocumentInterface->DrawSelectionOnThisView(false);
@@ -2709,7 +2712,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
             }
             NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
             DoTotalLocationSelection(thePlace, latlon, theKey, false);
-		}
+        }
 		// 8.2.2000/Marko Muutin tämän palauttamaan aina true:n jos piste on ollut sisällä
 		// toivon, että outo takkuisuus loppuu tällä tavalla, kun klikkaa ruutua, missä ei ole parametreja
 		return true;
@@ -2726,6 +2729,7 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
     { // CTRL-pohjassa aktivoidaan lähin minor piste
         crossSectionSystem->ActivateNearestMinorPoint(latlon);
         itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
         return true; // ei mennä hilapisteen valintaan
     }
     else
