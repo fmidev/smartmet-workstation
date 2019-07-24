@@ -187,6 +187,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void LeftButtonUpBrushToolActions();
     bool IsControlPointModeOn();
     void LeftButtonUpControlPointModeActions(const NFmiPoint& thePlace, unsigned long theKey);
+    bool AllowCrossSectionPointManipulations();
+    void LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
