@@ -16,10 +16,10 @@ std::string SmartMetViewIdGetName(SmartMetViewId singleViewId)
         return "MapView2";
     case SmartMetViewId::MapView3:
         return "MapView3";
-    case SmartMetViewId::MapView4:
-        return "MapView4";
-    case SmartMetViewId::MapView5:
-        return "MapView5";
+    //case SmartMetViewId::MapView4:
+    //    return "MapView4";
+    //case SmartMetViewId::MapView5:
+    //    return "MapView5";
     case SmartMetViewId::TimeSerialView:
         return "TimeSerialView";
     case SmartMetViewId::SoundingView:

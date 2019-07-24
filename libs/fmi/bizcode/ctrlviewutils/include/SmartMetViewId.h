@@ -13,8 +13,8 @@ enum class SmartMetViewId : size_t
     MainMapView = 1 << 0,
     MapView2 = 1 << 1,
     MapView3 = 1 << 2,
-    MapView4 = 1 << 3,
-    MapView5 = 1 << 4,
+//    MapView4 = 1 << 3,
+//    MapView5 = 1 << 4,
     TimeSerialView = 1 << 5,
     SoundingView = 1 << 6,
     CrossSectionView = 1 << 7,
@@ -38,7 +38,7 @@ enum class SmartMetViewId : size_t
 
     LastViewId = BetaProductionDlg, // set the last view id here also
     // Special combo view ids
-    AllMapViews = MainMapView | MapView2 | MapView3 | MapView4 | MapView5,
+    AllMapViews = MainMapView | MapView2 | MapView3, // | MapView4 | MapView5,
     // Laitetaan kaikki bitit päälle kun size_t:hen (unsigned __int64/long long) asetetaan -1
     AllViews = -1 // kaikkien näyttöjen päivitys
 };
