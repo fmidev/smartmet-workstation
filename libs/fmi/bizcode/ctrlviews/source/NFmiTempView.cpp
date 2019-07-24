@@ -35,6 +35,8 @@
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
 
+#include <thread>
+
 using namespace std;
 using namespace Gdiplus;
 
@@ -632,6 +634,9 @@ void NFmiTempView::CalcDrawSizeFactors(void)
 void NFmiTempView::Draw(NFmiToolBox *theToolBox)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
+
+//    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
     if(theToolBox == 0)
 		return ;
 	itsToolBox = theToolBox;
