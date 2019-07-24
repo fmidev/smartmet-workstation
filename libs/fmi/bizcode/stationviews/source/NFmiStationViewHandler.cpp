@@ -2579,10 +2579,9 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
     itsCtrlViewDocumentInterface->MouseCaptured(true);
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-        auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
         if(IsMouseCursorOverParameterBox(thePlace)) // param-n‰ytˆn on napattava ensimm‰iseksi hiiren toiminnot!!!!!!!!
 		{
-            return itsParamHandlerView->LeftButtonDown(thePlace, theKey);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonDown(thePlace, theKey); });
 		}
 		else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
 		{
@@ -2590,27 +2589,34 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
 			updateRect.Center(thePlace);
             itsCtrlViewDocumentInterface->UpdateRect(updateRect);
 		}
-		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+		else if(IsControlPointModeOn())
 		{
 		}
-		else if(crossSectionSystem->CrossSectionSystemActive())
+		else if(AllowCrossSectionPointManipulations())
 		{
-            crossSectionSystem->DragWholeCrossSection(false); // varmistus asetus
-			NFmiCrossSectionSystem::CrossMode mode = crossSectionSystem->GetCrossMode();
-			if(mode == NFmiCrossSectionSystem::kNormal || mode == NFmiCrossSectionSystem::kRoute)
-			{
-				double maxRelDist = 0.03;
-				NFmiPoint relPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
-				if(!(::fabs(relPoint.X() - thePlace.X()) < maxRelDist && ::fabs(relPoint.Y() - thePlace.Y()) < maxRelDist))
-				{ // jos klikattu piste oli tarpeeksi kaukana aloituspisteest‰
-                    crossSectionSystem->DragWholeCrossSection(true);
-                    crossSectionSystem->LastMousePosition(thePlace);
-				}
-			}
+            LeftButtonDownCrossSectionActions(thePlace, theKey);
 		}
 	}
 	return false;
 }
+
+void NFmiStationViewHandler::LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long )
+{
+    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
+    crossSectionSystem->DragWholeCrossSection(false); // varmistus asetus
+    NFmiCrossSectionSystem::CrossMode mode = crossSectionSystem->GetCrossMode();
+    if(mode == NFmiCrossSectionSystem::kNormal || mode == NFmiCrossSectionSystem::kRoute)
+    {
+        double maxRelDist = 0.03;
+        NFmiPoint relPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
+        if(!(::fabs(relPoint.X() - thePlace.X()) < maxRelDist && ::fabs(relPoint.Y() - thePlace.Y()) < maxRelDist))
+        { // jos klikattu piste oli tarpeeksi kaukana aloituspisteest‰
+            crossSectionSystem->DragWholeCrossSection(true);
+            crossSectionSystem->LastMousePosition(thePlace);
+        }
+    }
+}
+
 
 void NFmiStationViewHandler::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
 									 ,int theSelectionCombineFunction
@@ -2642,7 +2648,7 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 			if(info)
 			{
-				if(itsCtrlViewDocumentInterface->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush && !itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()) // siveltimen kanssa ei voi valita asemia???
+				if(itsCtrlViewDocumentInterface->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush && !IsControlPointModeOn()) // siveltimen kanssa ei voi valita asemia???
 				{
 					dynamic_cast<NFmiSmartInfo*>(info.get())->LocationSelectionSnapShot();
 
@@ -2655,7 +2661,10 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 				}
 			}
 		}
-	}
+        // Paikkojen valinta vaikuttaa l‰hinn‰ seuraaviin n‰yttˆihin, joten vain ne p‰ivitet‰‰n (optimointia):
+        // Kaikki karttan‰ytˆt, aikasarja, luotaus, poikkileikkaus
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::SoundingView | SmartMetViewId::TimeSerialView);
+    }
 	catch(...)
 	{ // haluan vain varmistaa ett‰ asetus menee lopuksi pois p‰‰lt‰
         itsCtrlViewDocumentInterface->DrawSelectionOnThisView(false);
@@ -2671,82 +2680,39 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 {
     // mouse captured pit‰‰ hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
-        return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
+    {
+        return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
+    }
     
     if(itsViewList && GetFrame().IsInside(thePlace))
 	{
         // Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan t‰ll‰ uudella funktiolla.
         itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
 
-        NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
 
 		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimm‰iseksi hiiren toiminnot!!!!!!!!
 		{
-			return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
 		}
-		else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush && itsCtrlViewDocumentInterface->ViewBrushed())
+		else if(IsBrushToolUsed())
 		{
-			boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsViewGridRowNumber);
-			if(drawParam)
-			{
-                itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
-                itsCtrlViewDocumentInterface->MapViewCache(itsMapViewDescTopIndex).MakeTimeDirty(itsTime);
-                // Kutsutaan MapViewDirty funktiota, jotta voidaan liata macroParam datat, jotka ovat riippuvaisia editoidusta datasta
-                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, true, false);
-			}
-            std::string paramName = "[" + drawParam->ParameterAbbreviation() + "]";
-            CatLog::logMessage(paramName + " - modified with Brush tool.", CatLog::Severity::Info, CatLog::Category::Editing, true);
+            LeftButtonUpBrushToolActions();
 		}
-		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+		else if(IsControlPointModeOn())
 		{
-            auto cpManager = itsCtrlViewDocumentInterface->CPManager();
-			if(!cpManager->MouseCaptured())
-			{
-				NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-                cpManager->ActivateCP(latlon, true);
-				if((theKey & kShiftKey) && (theKey & kCtrlKey))
-                    cpManager->AddCP(latlon);
-				else if((theKey & kShiftKey))
-                    cpManager->EnableCP(!cpManager->IsEnabledCP());
-			}
-            cpManager->MouseCaptured(false);
+            LeftButtonUpControlPointModeActions(thePlace, theKey);
 		}
 		else 
 		{
-            auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-			if(crossSectionSystem->CrossSectionSystemActive() && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
-			{
-				if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimm‰iseen ruutuun sallitaan crosssection klikkaukset
-				{
-					if(theKey & kCtrlKey)
-					{ // CTRL-pohjassa aktivoidaan l‰hin minor piste
-                        crossSectionSystem->ActivateNearestMinorPoint(itsMapArea->ToLatLon(thePlace));
-                        itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-						return true; // ei menn‰ hilapisteen valintaan
-					}
-					else
-					{
-						if(fWholeCrossSectionReallyMoved && crossSectionSystem->DragWholeCrossSection())
-						{
-                            crossSectionSystem->DragWholeCrossSection(false);
-                            itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-						}
-						else
-						{
-                            crossSectionSystem->StartPoint(itsMapArea->ToLatLon(thePlace));
-								// t‰ytyy myˆs mahdollistaa pelk‰n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
-								if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-									SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
-
-                                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-						}
-//						return true; // ei menn‰ hilapisteen valintaan
-					}
-				}
-			}
-			DoTotalLocationSelection(thePlace, latlon, theKey, false);
-		}
+            if(AllowCrossSectionPointManipulations())
+            {
+                if(LeftButtonUpCrossSectionActions(thePlace, theKey))
+                    return true;
+            }
+            NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
+            DoTotalLocationSelection(thePlace, latlon, theKey, false);
+        }
 		// 8.2.2000/Marko Muutin t‰m‰n palauttamaan aina true:n jos piste on ollut sis‰ll‰
 		// toivon, ett‰ outo takkuisuus loppuu t‰ll‰ tavalla, kun klikkaa ruutua, miss‰ ei ole parametreja
 		return true;
@@ -2754,12 +2720,113 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 	return false;
 }
 
+// Jos palauttaa true, ei saa jatkaa kutsuvassa metodissa hilapisteiden valintaan.
+bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey)
+{
+    NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
+    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
+    if(theKey & kCtrlKey)
+    { // CTRL-pohjassa aktivoidaan l‰hin minor piste
+        crossSectionSystem->ActivateNearestMinorPoint(latlon);
+        itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
+        return true; // ei menn‰ hilapisteen valintaan
+    }
+    else
+    {
+        if(fWholeCrossSectionReallyMoved && crossSectionSystem->DragWholeCrossSection())
+        {
+            crossSectionSystem->DragWholeCrossSection(false);
+            itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+        }
+        else
+        {
+            crossSectionSystem->StartPoint(latlon);
+            // t‰ytyy myˆs mahdollistaa pelk‰n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
+            if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
+                SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
+
+            itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+        }
+    }
+    return false; // Jatketaan hilapisteen valintaan
+}
+
+// Jotta hiirell‰ voidaan manipuloida poikkileikkausn‰ytˆn pisteit‰, pit‰‰ seuraavat ehdot pit‰‰ paikkaansa:
+// 1. Poikkileikkausn‰ytˆn pit‰‰ olla p‰‰ll‰.
+// 2. Siin‰ ei saa olla trajektori -moodi p‰‰ll‰, koska silloin ei voi s‰‰t‰‰ aloituspisteit‰.
+// 3. Karttan‰ytˆn pit‰‰ olla moodissa miss‰ pisteet n‰ytet‰‰n kartalla.
+// 4. Karttaruudun pit‰‰ olla vasemmalla ylh‰‰ll‰ (1. ruutu), koska vain siihen piirret‰‰n kyseiset pisteet.
+bool NFmiStationViewHandler::AllowCrossSectionPointManipulations()
+{
+    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
+    if(crossSectionSystem->CrossSectionSystemActive() && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
+    {
+        if(itsCtrlViewDocumentInterface->ShowCrossSectionMarkersOnMap(itsMapViewDescTopIndex))
+        {
+            if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimm‰iseen ruutuun sallitaan crosssection klikkaukset
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void NFmiStationViewHandler::LeftButtonUpControlPointModeActions(const NFmiPoint& thePlace, unsigned long theKey)
+{
+    auto cpManager = itsCtrlViewDocumentInterface->CPManager();
+    if(!cpManager->MouseCaptured())
+    {
+        NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
+        cpManager->ActivateCP(latlon, true);
+        if((theKey & kShiftKey) && (theKey & kCtrlKey))
+            cpManager->AddCP(latlon);
+        else if((theKey & kShiftKey))
+            cpManager->EnableCP(!cpManager->IsEnabledCP());
+    }
+    cpManager->MouseCaptured(false);
+    // P‰ivityst‰ vaatii vain t‰m‰ karttan‰yttˆ, p‰‰karttan‰yttˆ ja aikasarjaikkuna
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex) | SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
+}
+
+bool NFmiStationViewHandler::IsControlPointModeOn()
+{
+    return itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() && itsCtrlViewDocumentInterface->ShowControlPointsOnMap(itsMapViewDescTopIndex);
+}
+
+void NFmiStationViewHandler::LeftButtonUpBrushToolActions()
+{
+    boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    if(drawParam)
+    {
+        itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
+        itsCtrlViewDocumentInterface->MapViewCache(itsMapViewDescTopIndex).MakeTimeDirty(itsTime);
+        // Kutsutaan MapViewDirty funktiota, jotta voidaan liata macroParam datat, jotka ovat riippuvaisia editoidusta datasta
+        itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, true, false);
+        std::string paramName = "[" + drawParam->ParameterAbbreviation() + "]";
+        CatLog::logMessage(paramName + " - modified with Brush tool.", CatLog::Severity::Info, CatLog::Category::Editing, true);
+        // P‰ivitet‰‰n pensseli vedon lopuksi vain karttan‰yttˆj‰ (voisi p‰ivitt‰‰ viel‰ aikasarja ja taulukkon‰ytˆn, mutta optimoidaan)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+    }
+}
+
+bool NFmiStationViewHandler::IsBrushToolUsed()
+{
+    if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush && itsCtrlViewDocumentInterface->ViewBrushed())
+        return true;
+    else
+        return false;
+}
+
 bool NFmiStationViewHandler::LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey)
 {
 	if(IsIn(thePlace))
 	{
-		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimm‰iseksi hiiren toiminnot!!!!!!!!
-			return itsParamHandlerView->LeftDoubleClick(thePlace, theKey);
+        if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimm‰iseksi hiiren toiminnot!!!!!!!!
+        {
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftDoubleClick(thePlace, theKey); });
+        }
 
 		if(itsViewList && itsViewList->IsIn(thePlace))
 		{
@@ -2799,7 +2866,7 @@ bool NFmiStationViewHandler::RightDoubleClick(const NFmiPoint &thePlace, unsigne
 	return false;
 }
 
-static bool IsCrossSectionSystemDisableingMiddleMouseButtonUse(CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
+static bool IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse(CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
 {
     auto crossSectionSystem = theCtrlViewDocumentInterface->CrossSectionSystem();
 	if(crossSectionSystem->CrossSectionSystemActive())
@@ -2818,7 +2885,7 @@ bool NFmiStationViewHandler::MiddleButtonDown(const NFmiPoint & thePlace, unsign
 {
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-		if(::IsCrossSectionSystemDisableingMiddleMouseButtonUse(itsCtrlViewDocumentInterface) == false)
+		if(::IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse(itsCtrlViewDocumentInterface) == false)
 		{ // poikkileikkaus moodi ei saa olla p‰‰ll‰ kun l‰hdet‰‰n tekem‰‰n zoomia
 			itsCtrlViewDocumentInterface->MiddleMouseButtonDown(true);
 			itsZoomDragDownPoint = thePlace;
@@ -2839,15 +2906,12 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
         itsCtrlViewDocumentInterface->MapMouseDragPanMode(false);
-		if(::IsCrossSectionSystemDisableingMiddleMouseButtonUse(itsCtrlViewDocumentInterface) == true) // eli k‰ytet‰‰n sitten keski nappia poikkileikkausn‰ytˆlle
-		{
-			if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimm‰iseen ruutuun sallitaan crosssection klikkaukset
-			{
-                itsCtrlViewDocumentInterface->CrossSectionSystem()->MiddlePoint(itsMapArea->ToLatLon(thePlace));
-                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-				return true; // ei menn‰ hilapisteen valintaan
-			}
-		}
+        if(AllowCrossSectionPointManipulations() && ::IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse(itsCtrlViewDocumentInterface) == true) // eli k‰ytet‰‰n sitten keski nappia poikkileikkausn‰ytˆlle
+        {
+            itsCtrlViewDocumentInterface->CrossSectionSystem()->MiddlePoint(itsMapArea->ToLatLon(thePlace));
+            itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+            return true; // ei menn‰ hilapisteen valintaan
+        }
 		else if(itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MouseCaptured())
 		{ // tehd‰‰ varsinainen zoomaus sitten
 			if(itsCtrlViewDocumentInterface->MapMouseDragPanMode()) // en tied‰ miksi t‰ll‰inen ehto on, koska juuri aiemmin on t‰m‰ laitettu false:ksi
@@ -2868,10 +2932,16 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
                     itsCtrlViewDocumentInterface->ZoomMapWithRelativeRect(itsMapViewDescTopIndex, itsMapArea, itsOldZoomRect);
 				}
 			}
+            UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
 			return true;
 		}
 	}
 	return false;
+}
+
+void NFmiStationViewHandler::UpdateOnlyThisMapViewAtNextGeneralViewUpdate()
+{
+    itsCtrlViewDocumentInterface->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(itsMapViewDescTopIndex); // optimointia
 }
 
 bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
@@ -2880,7 +2950,7 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 	{
 		if(IsMouseCursorOverParameterBox(thePlace))
 		{
-			return itsParamHandlerView->MouseWheel(thePlace, theKey, theDelta);
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->MouseWheel(thePlace, theKey, theDelta); });
 		}
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
@@ -3127,12 +3197,14 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
 		// ensin pit‰‰ handlata parametrin lis‰ys param boxista jos hiiren oikea klikattu
-		if(IsMouseCursorOverParameterBox(thePlace))
-			return itsParamHandlerView->RightButtonUp(thePlace, theKey);
+        if(IsMouseCursorOverParameterBox(thePlace))
+        {
+            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->RightButtonUp(thePlace, theKey); });
+        }
 
 		NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
-		if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+		if(IsControlPointModeOn())
 		{
 			return itsCtrlViewDocumentInterface->CreateCPPopup();
 		}
@@ -3147,18 +3219,15 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
             std::string paramName = "[" + drawParam->ParameterAbbreviation() + "]";
             CatLog::logMessage(paramName + " - modified with Brush tool.", CatLog::Severity::Info, CatLog::Category::Editing, true);
 		}
-		else if(itsCtrlViewDocumentInterface->CrossSectionSystem()->CrossSectionSystemActive() && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
-		{
-			if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimm‰iseen ruutuun sallitaan crosssection klikkaukset
-			{
-                itsCtrlViewDocumentInterface->CrossSectionSystem()->EndPoint(itsMapArea->ToLatLon(thePlace));
-				// t‰ytyy myˆs mahdollistaa pelk‰n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
-				if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-					SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
-                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-				return true; // ei menn‰ hilapisteen valintaan
-			}
-		}
+        else if(AllowCrossSectionPointManipulations())
+        {
+            itsCtrlViewDocumentInterface->CrossSectionSystem()->EndPoint(latlon);
+            // t‰ytyy myˆs mahdollistaa pelk‰n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
+            if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
+                SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
+            itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+            return true; // ei menn‰ hilapisteen valintaan
+        }
 		if(itsViewList->NumberOfItems() > 0) // jos yksikin n‰yttˆ listassa, hoidetaan hiiren klikkaus siell‰
 			return itsViewList->RightButtonUp(thePlace, theKey);
 		else
@@ -3340,7 +3409,9 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
 {
     // mouse captured pit‰‰ hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
-        return itsParamHandlerView->MouseMove(thePlace, theKey);
+    {
+        return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->MouseMove(thePlace, theKey); });
+    }
 
     if(!GetFrame().IsInside(thePlace))
         return false;
@@ -3357,45 +3428,12 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
             return MouseDragZooming(thePlace); // tehd‰‰n zoomi laatikon piirtoa suoraan karttan‰ytˆlle
         else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
             return MouseMoveBrushAction(thePlace);
-        else if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+        else if(itsCtrlViewDocumentInterface->MouseCaptured() && IsControlPointModeOn())
             return MouseMoveControlPointAction(thePlace);
 
-        NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-        auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-        if(itsCtrlViewDocumentInterface->MouseCaptured() && crossSectionSystem->CrossSectionSystemActive())
+        if(AllowCrossSectionPointManipulations())
         {
-            if(itsCtrlViewDocumentInterface->LeftMouseButtonDown())
-            {
-                if(crossSectionSystem->DragWholeCrossSection())
-                {
-                    NFmiPoint moveBy(thePlace - crossSectionSystem->LastMousePosition());
-                    NFmiPoint relStartPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
-                    NFmiPoint relMiddlePoint(LatLonToViewPoint(crossSectionSystem->MiddlePoint()));
-                    NFmiPoint relEndPoint(LatLonToViewPoint(crossSectionSystem->EndPoint()));
-                    relStartPoint += moveBy;
-                    relMiddlePoint += moveBy;
-                    relEndPoint += moveBy;
-                    NFmiPoint startLatlon(itsMapArea->ToLatLon(relStartPoint));
-                    NFmiPoint middleLatlon(itsMapArea->ToLatLon(relMiddlePoint));
-                    NFmiPoint endLatlon(itsMapArea->ToLatLon(relEndPoint));
-                    crossSectionSystem->StartPoint(startLatlon);
-                    crossSectionSystem->MiddlePoint(middleLatlon);
-                    crossSectionSystem->EndPoint(endLatlon);
-                    crossSectionSystem->LastMousePosition(thePlace);
-                    itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-                    fWholeCrossSectionReallyMoved = true;
-                }
-                else
-                {
-                    crossSectionSystem->StartPoint(latlon);
-                    itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-                }
-            }
-            else if(itsCtrlViewDocumentInterface->RightMouseButtonDown())
-            {
-                crossSectionSystem->EndPoint(latlon);
-                itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
-            }
+            MouseMoveCrossSectionActions(thePlace, theKey);
         }
         if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
         {
@@ -3408,6 +3446,7 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
                     itsCtrlViewDocumentInterface->MustDrawTempView(true);
             }
         }
+        NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
         DoTotalLocationSelection(thePlace, latlon, theKey, true);
         if(itsCtrlViewDocumentInterface->MouseCaptured() && itsCtrlViewDocumentInterface->TimeSerialDataViewOn())
         {
@@ -3424,6 +3463,44 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
     }
     CleanGdiplus(); // t‰t‰ pit‰‰ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
     return false;
+}
+
+void NFmiStationViewHandler::MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey)
+{
+    NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
+    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
+    if(itsCtrlViewDocumentInterface->LeftMouseButtonDown())
+    {
+        if(crossSectionSystem->DragWholeCrossSection())
+        {
+            NFmiPoint moveBy(thePlace - crossSectionSystem->LastMousePosition());
+            NFmiPoint relStartPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
+            NFmiPoint relMiddlePoint(LatLonToViewPoint(crossSectionSystem->MiddlePoint()));
+            NFmiPoint relEndPoint(LatLonToViewPoint(crossSectionSystem->EndPoint()));
+            relStartPoint += moveBy;
+            relMiddlePoint += moveBy;
+            relEndPoint += moveBy;
+            NFmiPoint startLatlon(itsMapArea->ToLatLon(relStartPoint));
+            NFmiPoint middleLatlon(itsMapArea->ToLatLon(relMiddlePoint));
+            NFmiPoint endLatlon(itsMapArea->ToLatLon(relEndPoint));
+            crossSectionSystem->StartPoint(startLatlon);
+            crossSectionSystem->MiddlePoint(middleLatlon);
+            crossSectionSystem->EndPoint(endLatlon);
+            crossSectionSystem->LastMousePosition(thePlace);
+            itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
+            fWholeCrossSectionReallyMoved = true;
+        }
+        else
+        {
+            crossSectionSystem->StartPoint(latlon);
+            itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
+        }
+    }
+    else if(itsCtrlViewDocumentInterface->RightMouseButtonDown())
+    {
+        crossSectionSystem->EndPoint(latlon);
+        itsCtrlViewDocumentInterface->MustDrawCrossSectionView(true);
+    }
 }
 
 //--------------------------------------------------------
@@ -4179,7 +4256,7 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
     InitializeGdiplus(itsToolBox, &GetFrame());
 
-    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+    if(IsControlPointModeOn())
         DrawControlPoints();
     if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun
         DrawSelectedLocations();

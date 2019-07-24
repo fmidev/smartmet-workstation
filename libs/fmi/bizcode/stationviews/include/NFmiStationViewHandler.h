@@ -182,6 +182,22 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void TraceLogValidTimeAndAbsoluteRow();
     void MakeParamLevelChangeDirtyOperations(bool changesHappened);
     bool IsMouseCursorOverParameterBox(const NFmiPoint & theMouseCursorPlace);
+    void UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
+    bool IsBrushToolUsed();
+    void LeftButtonUpBrushToolActions();
+    bool IsControlPointModeOn();
+    void LeftButtonUpControlPointModeActions(const NFmiPoint& thePlace, unsigned long theKey);
+    bool AllowCrossSectionPointManipulations();
+    void LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+
+    template<typename T>
+    bool MakeParamHandlerViewActions(T action)
+    {
+        UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
+        return action();
+    }
 
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
