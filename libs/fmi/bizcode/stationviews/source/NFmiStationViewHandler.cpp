@@ -2687,18 +2687,9 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 		{
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
 		}
-		else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush && itsCtrlViewDocumentInterface->ViewBrushed())
+		else if(IsBrushToolUsed())
 		{
-			boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsViewGridRowNumber);
-			if(drawParam)
-			{
-                itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
-                itsCtrlViewDocumentInterface->MapViewCache(itsMapViewDescTopIndex).MakeTimeDirty(itsTime);
-                // Kutsutaan MapViewDirty funktiota, jotta voidaan liata macroParam datat, jotka ovat riippuvaisia editoidusta datasta
-                itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, true, false);
-			}
-            std::string paramName = "[" + drawParam->ParameterAbbreviation() + "]";
-            CatLog::logMessage(paramName + " - modified with Brush tool.", CatLog::Severity::Info, CatLog::Category::Editing, true);
+            LeftButtonUpBrushToolActions();
 		}
 		else if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 		{
@@ -2754,6 +2745,30 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 		return true;
 	}
 	return false;
+}
+
+void NFmiStationViewHandler::LeftButtonUpBrushToolActions()
+{
+    boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    if(drawParam)
+    {
+        itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
+        itsCtrlViewDocumentInterface->MapViewCache(itsMapViewDescTopIndex).MakeTimeDirty(itsTime);
+        // Kutsutaan MapViewDirty funktiota, jotta voidaan liata macroParam datat, jotka ovat riippuvaisia editoidusta datasta
+        itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, true, false);
+        std::string paramName = "[" + drawParam->ParameterAbbreviation() + "]";
+        CatLog::logMessage(paramName + " - modified with Brush tool.", CatLog::Severity::Info, CatLog::Category::Editing, true);
+        // Päivitetään pensseli vedon lopuksi vain karttanäyttöjä (voisi päivittää vielä aikasarja ja taulukkonäytön, mutta optimoidaan)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+    }
+}
+
+bool NFmiStationViewHandler::IsBrushToolUsed()
+{
+    if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush && itsCtrlViewDocumentInterface->ViewBrushed())
+        return true;
+    else
+        return false;
 }
 
 bool NFmiStationViewHandler::LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey)
