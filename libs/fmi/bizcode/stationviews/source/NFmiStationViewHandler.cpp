@@ -2750,13 +2750,13 @@ void NFmiStationViewHandler::LeftButtonUpControlPointModeActions(const NFmiPoint
             cpManager->EnableCP(!cpManager->IsEnabledCP());
     }
     cpManager->MouseCaptured(false);
-    // Päivitystä vaatii vain tämä karttanäyttö ja aikasarjaikkuna
-    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex) | SmartMetViewId::TimeSerialView);
+    // Päivitystä vaatii vain tämä karttanäyttö, pääkarttanäyttö ja aikasarjaikkuna
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex) | SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
 }
 
 bool NFmiStationViewHandler::IsControlPointModeOn()
 {
-    return itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode();
+    return itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() && itsCtrlViewDocumentInterface->ShowControlPointsOnMap(itsMapViewDescTopIndex);
 }
 
 void NFmiStationViewHandler::LeftButtonUpBrushToolActions()
