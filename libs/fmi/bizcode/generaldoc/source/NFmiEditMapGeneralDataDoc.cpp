@@ -3911,6 +3911,9 @@ void UpdateTimeInLockedDescTops(const NFmiMetTime &theTime, unsigned int theOrig
 
 void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
 {
+    // Tehdään ensin theOrigDescTopIndex:iin liittyvän mapView päivitys, koska tätä funktiota 
+    // käytetään monista rivin vaihtoon liittyvistä funktioista, on se hyvä saada yhteen paikkaan suoritetuksi yhteisesti.
+    CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theOrigDescTopIndex);
     // eli jos origIndex oli pääikkuna (index = 0) tai apuikkuna oli lukittu pääikkunaan, silloin tehdään rivi päivityksiä
     if(theOrigDescTopIndex == 0 || MapViewDescTop(theOrigDescTopIndex)->LockToMainMapViewRow())
     {
@@ -3920,6 +3923,7 @@ void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
         {
             if(descTopIndex == 0 || MapViewDescTop(descTopIndex)->LockToMainMapViewRow())
             {
+                CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(descTopIndex);
                 MapViewDescTop(descTopIndex)->MapRowStartingIndex(mapRowStartingIndex);
             }
         }
@@ -13192,8 +13196,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		    MapViewDirty(theMapViewDescTopIndex, true, true, true, true, false, false);
 		    MapViewDescTop(theMapViewDescTopIndex)->BorderDrawDirty(true);
 		    SetMapArea(theMapViewDescTopIndex, newZoomedArea);
-	    }
-	    MapViewDirty(theMapViewDescTopIndex, true, false, true, false, false, false); // tämä laittaa karttanäytön cachen sileäksi
+            // Laitetaan tähän "Ohitetaan normi päivitä kaikki näytöt ja päivitä vain muuttunutta karttanäyttöä" -toiminto optimoinnin takia.
+            // HUOM! Optimoinnin voi laittaa tänne, koska esim. viewMacrojen latauksissa ei käytetä tätä metodia (jolloin tarvitsee päivittää kaikkia näyttöjä)
+            CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theMapViewDescTopIndex);
+        }
    }
 
     void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)

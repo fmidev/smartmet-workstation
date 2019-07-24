@@ -6,6 +6,7 @@
 #include "GdiPlusMapHandlerInterface.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "TimeSerialModification.h"
+#include "ApplicationInterface.h"
 
 CtrlViewDocumentInterfaceForGeneralDataDoc::CtrlViewDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -1316,6 +1317,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetupObsBlenderData(const NFmiP
 TimeSerialParameters& CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeSerialParameters()
 {
     return itsDoc->GetTimeSerialParameters();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex)
+{
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(theMapViewDescTopIndex));
 }
 
 #ifndef DISABLE_CPPRESTSDK

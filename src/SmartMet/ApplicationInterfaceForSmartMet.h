@@ -50,4 +50,5 @@ public:
     void UpdateMainFrameTitle() override; // CMainFrame (CMainFrame*)AfxGetMainWnd()
     void OpenLocationFinderDialog(CWnd *parentView) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
+    void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) override;
 };
