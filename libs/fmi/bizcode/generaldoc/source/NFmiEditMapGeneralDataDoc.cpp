@@ -11468,6 +11468,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			activeDrawParamList->CopyList(itsCopyPasteDrawParamList, false);
             auto realActiveRowIndex = GetRealRowNumber(theDescTopIndex, relativeActiveRowIndex);
             MakeViewRowDirtyActions(theDescTopIndex, realActiveRowIndex, activeDrawParamList);
+            CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste drawParams to map view row");
 		}
 	}
@@ -11525,6 +11526,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			{
 				CopyDrawParamsList(itsCopyPasteDrawParamListVector, *copiedDrawParamsList);
                 MakeWholeDesctopDirtyActions(theDescTopIndex, copiedDrawParamsList);
+                CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste all copyed parameters on this map view");
 			}
 		}
