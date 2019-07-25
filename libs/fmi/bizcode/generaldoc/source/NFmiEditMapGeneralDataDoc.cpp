@@ -11083,6 +11083,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
 	{
 		ChangeMapType(theDescTopIndex, fForward);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's background map style changed");
 	}
 
@@ -14787,11 +14788,6 @@ void NFmiEditMapGeneralDataDoc::SetTimeFilterEndTime(const NFmiMetTime& theTime)
 void NFmiEditMapGeneralDataDoc::SetActiveParamMissingValues(double theValue)
 {
 	pimpl->SetActiveParamMissingValues(theValue);
-}
-
-void NFmiEditMapGeneralDataDoc::ChangeMapType(unsigned int theDescTopIndex, bool fForward)
-{
-	pimpl->ChangeMapType(theDescTopIndex, fForward);
 }
 
 bool NFmiEditMapGeneralDataDoc::MakeDataValiditation(void)
