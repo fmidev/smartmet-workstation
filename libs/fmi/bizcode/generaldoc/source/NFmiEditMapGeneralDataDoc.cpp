@@ -9616,6 +9616,7 @@ void SwapArea(unsigned int theDescTopIndex)
 	// sitten vielä tarvittävät likaukset ja päivitykset
 	mapDescTop->BorderDrawDirty(true);
 	MapViewDirty(theDescTopIndex, true, true, true, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+    CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
 	mapDescTop->GridPointCache().Clear();
 }
 
@@ -11146,6 +11147,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         bool newValue = !ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(static_cast<int>(theDescTopIndex))->ShowMasksOnMap();
         SetShowMaskOnMap(theDescTopIndex, newValue);
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide masks on map views");
 	}
 
@@ -11223,6 +11225,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			MapViewDirty(static_cast<unsigned int>(i), true, true, true, newKeepAspectRatioState, false, false);
             ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateMapView(static_cast<unsigned int>(i));
 		}
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: toggle keep map's aspect ratio setting");
 	}
 
