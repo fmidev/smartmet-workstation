@@ -806,8 +806,9 @@ void CSmartMetDoc::OnSelectAll()
 		if(GetData()->SelectAllLocations(true))
 		{
 			GetData()->LogMessage("Select all grid points for editing.", CatLog::Severity::Info, CatLog::Category::Editing);
-			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": selected all edited data grid points");
-			GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+            UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": selected all edited data grid points");
 		}
 	}
 }
@@ -818,8 +819,9 @@ void CSmartMetDoc::OnDeselectAll()
 	{
 		if(GetData()->SelectAllLocations(false))
 		{
-			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": deselected all edited data grid points");
-			GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+            UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": deselected all edited data grid points");
 		}
 	}
 }
