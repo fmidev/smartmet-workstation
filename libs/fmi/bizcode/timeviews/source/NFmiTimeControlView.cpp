@@ -19,6 +19,8 @@
 #include "NFmiAnimationData.h"
 #include "NFmiTimeDescriptor.h"
 #include "catlog/catlog.h"
+#include "SmartMetViewId.h"
+#include "ApplicationInterface.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -916,6 +918,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
             if(CalcFullTimeRangeButtonRect().IsInside(thePlace))
             {
                 itsCtrlViewDocumentInterface->ResetTimeFilterTimes();
+                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg);
                 status = true;
             }
 			else if(theKey & kCtrlKey)
