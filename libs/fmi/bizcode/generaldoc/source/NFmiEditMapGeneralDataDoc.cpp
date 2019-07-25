@@ -3882,8 +3882,21 @@ const NFmiMetTime& CurrentTime(unsigned int theDescTopIndex)
 		return MapViewDescTop(theDescTopIndex)->CurrentTime();
 }
 
+SmartMetViewId GetUpdatedViewIdMaskForChangingTime()
+{
+    SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::CrossSectionView | SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg;
+    if(GetMTATempSystem().SoundingTimeLockWithMapView())
+        updatedViewIds = updatedViewIds | SmartMetViewId::SoundingView;
+    if(WindTableSystem().UseMapTime())
+        updatedViewIds = updatedViewIds | SmartMetViewId::WindTableDlg;
+    return updatedViewIds;
+}
+
 void UpdateTimeInLockedDescTops(const NFmiMetTime &theTime, unsigned int theOrigDescTopIndex)
 {
+    // Jos tehdään jotain aika muutoksia mihinkään karttanäyttöön, laitetaan optimoitu update maski päälle
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetUpdatedViewIdMaskForChangingTime());
+
     // Päivitetään ajan muutoksessa myös aina luotausnäyttöä, jos säädöt ovat kohdallaan
     if(GetMTATempSystem().SoundingTimeLockWithMapView() && GetMTATempSystem().TempViewOn())
         UpdateTempView();
