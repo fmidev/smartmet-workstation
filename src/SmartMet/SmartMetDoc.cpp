@@ -2059,7 +2059,8 @@ void CSmartMetDoc::OnButtonEditorControlPointMode()
 			doc->LogMessage("Closing Control point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
 
 		doc->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-		UpdateAllViewsAndDialogs("Control point mode changed");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+        UpdateAllViewsAndDialogs("Control point mode changed");
 	}
 }
 
@@ -2086,7 +2087,8 @@ void CSmartMetDoc::OnButtonDelete()
 		doc->CPManager()->RemoveCP();
 		doc->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
 		GetData()->LogMessage("Deleting control point.", CatLog::Severity::Debug, CatLog::Category::Editing);
-		UpdateAllViewsAndDialogs("Deleting control point");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+        UpdateAllViewsAndDialogs("Deleting control point");
 	}
 }
 
@@ -2167,6 +2169,7 @@ void CSmartMetDoc::OnMenuitemProjectionLineSetup()
 			{
 				projInfo->StoreToSettings();
 				doc->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+                ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 				UpdateAllViewsAndDialogs("Projection line drawing setup changed");
 			}
 		}
@@ -2756,7 +2759,8 @@ void CSmartMetDoc::OnAcceleratorCrossSectionMode()
 	GetData()->LogMessage("Set cross section mode on map view.", CatLog::Severity::Info, CatLog::Category::Operational);
 	GetData()->CrossSectionSystem()->CrossSectionSystemActive(!GetData()->CrossSectionSystem()->CrossSectionSystemActive());
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-	UpdateAllViewsAndDialogs("Set cross section mode on map view (F4)");
+    ApplyUpdatedViewsFlag(SmartMetViewId::MainMapView);
+    UpdateAllViewsAndDialogs("Set cross section mode on map view (F4)");
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow1()
@@ -3150,7 +3154,8 @@ void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
 	{
 		GetData()->HelpEditorSystem().StoreSettings(false);
 		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-		UpdateAllViewsAndDialogs("Help edit mode settings changed");
+        ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+        UpdateAllViewsAndDialogs("Help edit mode settings changed");
 	}
 }
 
@@ -3158,7 +3163,8 @@ void CSmartMetDoc::OnButtonHelpEditorMode()
 {
 	GetData()->HelpEditorSystem().HelpEditor(!GetData()->HelpEditorSystem().HelpEditor());
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-	UpdateAllViewsAndDialogs("Help edit mode changed");
+    ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+    UpdateAllViewsAndDialogs("Help edit mode changed");
 }
 
 void CSmartMetDoc::OnUpdateButtonHelpEditorMode(CCmdUI *pCmdUI)
