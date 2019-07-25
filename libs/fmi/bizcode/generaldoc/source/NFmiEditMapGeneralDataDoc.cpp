@@ -11094,9 +11094,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             WmsSupport().nextOverlay();
         else
             WmsSupport().previousOverlay();
-
-        MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's Wms overlay map type changed");
 #endif // DISABLE_CPPRESTSDK
     }
 
@@ -11108,8 +11105,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 MapViewDescTop(theDescTopIndex)->MapHandler()->NextOverMap();
             else
                 MapViewDescTop(theDescTopIndex)->MapHandler()->PreviousOverMap();
-            MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
         }
     }
 
@@ -11119,7 +11114,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             ChangeWmsOverlayMapType(theDescTopIndex, fForward);
         else
             ChangeFileBitmapOverlayMapType(theDescTopIndex, fForward);
-	}
+
+        MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
+    }
 
     // Tämä asettaa maskOnMap -asetuksen kahteen paikkaan, windows rekistereihin ja 
     // SmartMetin sisäiseen käyttöön.
