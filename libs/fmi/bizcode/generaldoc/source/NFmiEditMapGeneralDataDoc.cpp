@@ -11055,6 +11055,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex)->ToggleSpacingOutFactor();
         // MacroParamDataCache ongelma (MAPADACA): Kun harvennusta muutetaan, pitää liata sellaiset macroParamit, jotka piirretään symboleilla
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle spacing out factor");
 	}
 
