@@ -11035,18 +11035,21 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex)->ShowStationPlot(newState);
         MapViewDescTop(theDescTopIndex)->ShowStationPlotVM(newState); // tämä pitää päivittää molempiin paikkoihin, koska jotkin operaatiot riippuvat että MapViewDescTop:issa on päivitetty arvo
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false); // tämä laittaa cachen likaiseksi
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide active parameters data's grid/station points");
 	}
 
 	void OnToggleGridPointColor(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleStationPointColor();
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Change active parameters data's grid/station points color");
 	}
 
 	void OnToggleGridPointSize(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleStationPointSize();
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Change active parameters data's grid/station points size");
 	}
 
