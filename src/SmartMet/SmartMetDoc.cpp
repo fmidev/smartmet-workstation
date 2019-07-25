@@ -3661,6 +3661,7 @@ void CSmartMetDoc::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopInde
 void CSmartMetDoc::OnAcceleratorResetTimeFilterTimes()
 {
     GetData()->ResetTimeFilterTimes();
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg);
     UpdateAllViewsAndDialogs("Reset time filter times (data editing related)", true);
 }
 
