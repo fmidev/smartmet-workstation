@@ -14145,6 +14145,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(CPManager()->MakeControlPointAcceleratorAction(action))
             {
                 TimeSerialViewDirty(true);
+                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
                 RefreshApplicationViewsAndDialogs(updateMessage, true, true, 0);
                 return true;
             }
