@@ -9496,6 +9496,7 @@ void SetSelectedMapHandler(unsigned int theDescTopIndex, unsigned int newMapInde
 {
     SetSelectedMap(theDescTopIndex, newMapIndex);
 	MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
 }
 
 boost::shared_ptr<NFmiArea> MakeCPCropArea(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float theShrinkFactor, unsigned long x1, unsigned long y1, unsigned long x2, unsigned long y2, unsigned long shrinkX, unsigned long shrinkY)
@@ -10890,7 +10891,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		LogMessage("Map view grid changed.", CatLog::Severity::Info, CatLog::Category::Visualization);
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
-        return MapViewDescTop(theDescTopIndex)->SetMapViewGrid(newValue, mapViewWinRegistry.get());
+        if(MapViewDescTop(theDescTopIndex)->SetMapViewGrid(newValue, mapViewWinRegistry.get()))
+        {
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
+            return true;
+        }
+        else
+            return false;
 	}
 
 	CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(unsigned int theDescTopIndex)
@@ -11153,7 +11160,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				mode = NFmiProjectionCurvatureInfo::kNoDraw;
 			projInfo->SetDrawingMode(mode);
 			MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false);
-			LogMessage("Projektion line draw style changed.", CatLog::Severity::Debug, CatLog::Category::Visualization);
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view projektion line draw style changed");
 		}
 	}
@@ -14027,6 +14034,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         ApplicationWinRegistry().UseWmsMaps(newValue);
         MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     }
 
 #ifndef DISABLE_CPPRESTSDK
