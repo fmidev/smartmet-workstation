@@ -11066,12 +11066,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		MapViewDescTop(theDescTopIndex)->ShowParamWindowView(!MapViewDescTop(theDescTopIndex)->ShowParamWindowView());
 		MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/Hide param-view");
     }
 
 	void OnShowTimeString(unsigned int theDescTopIndex)
 	{
 		ToggleShowTimeOnMapMode(theDescTopIndex);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle show time on map view mode");
 	}
 
