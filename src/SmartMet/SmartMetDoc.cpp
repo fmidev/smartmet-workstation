@@ -806,8 +806,9 @@ void CSmartMetDoc::OnSelectAll()
 		if(GetData()->SelectAllLocations(true))
 		{
 			GetData()->LogMessage("Select all grid points for editing.", CatLog::Severity::Info, CatLog::Category::Editing);
-			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": selected all edited data grid points");
-			GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+            UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": selected all edited data grid points");
 		}
 	}
 }
@@ -818,8 +819,9 @@ void CSmartMetDoc::OnDeselectAll()
 	{
 		if(GetData()->SelectAllLocations(false))
 		{
-			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": deselected all edited data grid points");
-			GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+            ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+            UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": deselected all edited data grid points");
 		}
 	}
 }
@@ -1973,13 +1975,7 @@ void CSmartMetDoc::OnViewSetTempViewPlaceToDefault()
 
 void CSmartMetDoc::OnViewSetCrosssectionViewPlaceToDefault()
 {
-	if(itsCrossSectionDlg)
-	{
-		itsCrossSectionDlg->SetDefaultValues();
-		itsCrossSectionDlg->Update();
-		itsCrossSectionDlg->SetActiveWindow();
-		UpdateAllViewsAndDialogs("Cross section view set to default size and position");
-	}
+    ::SetViewPlaceToDefault(this, itsCrossSectionDlg, "Cross section view set to default size and position");
 }
 
 void CSmartMetDoc::OnSetParameterSelectionDlgPlaceToDefault()
@@ -2009,13 +2005,7 @@ void CSmartMetDoc::OnViewSetSynopTextViewPlaceToDefault()
 
 void CSmartMetDoc::OnViewSetTrajectoryViewPlaceToDefault()
 {
-	if(itsTrajectoryDlg)
-	{
-		itsTrajectoryDlg->SetDefaultValues();
-		itsTrajectoryDlg->Update();
-		itsTrajectoryDlg->SetActiveWindow();
-		UpdateAllViewsAndDialogs("trajectory view set to default size and position");
-	}
+    ::SetViewPlaceToDefault(this, itsTrajectoryDlg, "Trajectory view set to default size and position");
 }
 
 void CSmartMetDoc::OnViewSetDataQualityCheckerDlgPlaceToDefault()
@@ -2069,7 +2059,8 @@ void CSmartMetDoc::OnButtonEditorControlPointMode()
 			doc->LogMessage("Closing Control point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
 
 		doc->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-		UpdateAllViewsAndDialogs("Control point mode changed");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+        UpdateAllViewsAndDialogs("Control point mode changed");
 	}
 }
 
@@ -2096,7 +2087,8 @@ void CSmartMetDoc::OnButtonDelete()
 		doc->CPManager()->RemoveCP();
 		doc->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
 		GetData()->LogMessage("Deleting control point.", CatLog::Severity::Debug, CatLog::Category::Editing);
-		UpdateAllViewsAndDialogs("Deleting control point");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+        UpdateAllViewsAndDialogs("Deleting control point");
 	}
 }
 
@@ -2177,6 +2169,7 @@ void CSmartMetDoc::OnMenuitemProjectionLineSetup()
 			{
 				projInfo->StoreToSettings();
 				doc->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+                ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 				UpdateAllViewsAndDialogs("Projection line drawing setup changed");
 			}
 		}
@@ -2257,6 +2250,7 @@ void CSmartMetDoc::OnButtonTempDlg()
 		itsData->GetMTATempSystem().ShowMapMarkers(itsData->GetMTATempSystem().TempViewOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
 		itsData->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SoundingView);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("CSmartMetDoc: Opening sounding view", TRUE);
 	}
 }
@@ -2288,6 +2282,7 @@ void CSmartMetDoc::OnButtonShowCrossSection()
 		}
 		itsData->CrossSectionSystem()->CrossSectionViewOn(!itsData->CrossSectionSystem()->CrossSectionViewOn());
 		itsData->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("CSmartMetDoc: Opening cross section view", TRUE);
 	}
 }
@@ -2302,7 +2297,8 @@ void CSmartMetDoc::OnButtonObservationComparisonMode()
 	GetData()->ObsComparisonInfo().NextComparisonMode();
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
 	GetData()->LogMessage("Toggling observation comparison mode.", CatLog::Severity::Info, CatLog::Category::Operational);
-	UpdateAllViewsAndDialogs("Changed Obs comparison mode");
+    ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+    UpdateAllViewsAndDialogs("Changed Obs comparison mode");
 }
 
 void CSmartMetDoc::OnUpdateButtonObservationComparisonMode(CCmdUI* pCmdUI)
@@ -2343,21 +2339,24 @@ void CSmartMetDoc::OnAcceleratorObsComparisonChangeSymbol()
 {
 	GetData()->ObsComparisonInfo().NextSymbolType();
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
-	UpdateAllViewsAndDialogs("Changed Obs comparison mode symbol");
+    ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+    UpdateAllViewsAndDialogs("Changed Obs comparison mode symbol");
 }
 
 void CSmartMetDoc::OnAcceleratorObsComparisonChangeSymbolSize()
 {
 	GetData()->ObsComparisonInfo().NextSymbolSize();
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
-	UpdateAllViewsAndDialogs("Changed Obs comparison symbol size");
+    ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+    UpdateAllViewsAndDialogs("Changed Obs comparison symbol size");
 }
 
 void CSmartMetDoc::OnAcceleratorObsComparisonToggleBorderDraw()
 {
 	GetData()->ObsComparisonInfo().DrawBorders(!GetData()->ObsComparisonInfo().DrawBorders());
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
-	UpdateAllViewsAndDialogs("Changed Obs comparison symbol border draw mode");
+    ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+    UpdateAllViewsAndDialogs("Changed Obs comparison symbol border draw mode");
 }
 
 void CSmartMetDoc::OnButtonShowSynopPlotSettings()
@@ -2760,7 +2759,8 @@ void CSmartMetDoc::OnAcceleratorCrossSectionMode()
 	GetData()->LogMessage("Set cross section mode on map view.", CatLog::Severity::Info, CatLog::Category::Operational);
 	GetData()->CrossSectionSystem()->CrossSectionSystemActive(!GetData()->CrossSectionSystem()->CrossSectionSystemActive());
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-	UpdateAllViewsAndDialogs("Set cross section mode on map view (F4)");
+    ApplyUpdatedViewsFlag(SmartMetViewId::MainMapView);
+    UpdateAllViewsAndDialogs("Set cross section mode on map view (F4)");
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow1()
@@ -2987,7 +2987,8 @@ void CSmartMetDoc::OnButtonTrajectory()
 		GetData()->TrajectorySystem()->TrajectoryViewOn(!GetData()->TrajectorySystem()->TrajectoryViewOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
 		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-		UpdateAllViewsAndDialogs("Opening/closing trajectory view");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TrajectoryView);
+        UpdateAllViewsAndDialogs("Opening/closing trajectory view");
 	}
 }
 
@@ -3033,7 +3034,8 @@ void CSmartMetDoc::OnButtonSeaIcingWarningsDlg()
 		GetData()->SeaIcingWarningSystem().ViewVisible(!GetData()->SeaIcingWarningSystem().ViewVisible());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
 		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-		UpdateAllViewsAndDialogs("Opening/closing sea-icing warnings dialog");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SeaIcingDlg);
+        UpdateAllViewsAndDialogs("Opening/closing sea-icing warnings dialog");
 	}
 }
 
@@ -3057,6 +3059,7 @@ void CSmartMetDoc::OnExtraMapView(unsigned int theMapViewDescTopIndex, CFmiExtra
 		GetData()->MapViewDescTop(theMapViewDescTopIndex)->DescTopOn(!GetData()->MapViewDescTop(theMapViewDescTopIndex)->DescTopOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
 		GetData()->MapViewDirty(theMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
+        ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theMapViewDescTopIndex));
 		UpdateAllViewsAndDialogs("Opening/closing map view " + std::to_string(theMapViewDescTopIndex + 1));
 	}
 }
@@ -3151,7 +3154,8 @@ void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
 	{
 		GetData()->HelpEditorSystem().StoreSettings(false);
 		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-		UpdateAllViewsAndDialogs("Help edit mode settings changed");
+        ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+        UpdateAllViewsAndDialogs("Help edit mode settings changed");
 	}
 }
 
@@ -3159,7 +3163,8 @@ void CSmartMetDoc::OnButtonHelpEditorMode()
 {
 	GetData()->HelpEditorSystem().HelpEditor(!GetData()->HelpEditorSystem().HelpEditor());
 	GetData()->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-	UpdateAllViewsAndDialogs("Help edit mode changed");
+    ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+    UpdateAllViewsAndDialogs("Help edit mode changed");
 }
 
 void CSmartMetDoc::OnUpdateButtonHelpEditorMode(CCmdUI *pCmdUI)
@@ -3217,7 +3222,8 @@ void CSmartMetDoc::OnButtonWindTableDlg()
 		GetData()->WindTableSystem().ViewVisible(!GetData()->WindTableSystem().ViewVisible());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
 		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-		UpdateAllViewsAndDialogs("Opening/closing Wind table view");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::WindTableDlg);
+        UpdateAllViewsAndDialogs("Opening/closing Wind table view");
 	}
 }
 
@@ -3299,7 +3305,8 @@ void CSmartMetDoc::OnButtonWarningCenterDlg()
 		GetData()->WarningCenterSystem().getLegacyData().WarningCenterViewOn(!GetData()->WarningCenterSystem().getLegacyData().WarningCenterViewOn());
 		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
 		GetData()->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-		UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
+        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::WarningCenterDlg);
+        UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
 	}
 #endif // DISABLE_CPPRESTSDK
 }
@@ -3659,6 +3666,7 @@ void CSmartMetDoc::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopInde
 void CSmartMetDoc::OnAcceleratorResetTimeFilterTimes()
 {
     GetData()->ResetTimeFilterTimes();
+    ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg);
     UpdateAllViewsAndDialogs("Reset time filter times (data editing related)", true);
 }
 
