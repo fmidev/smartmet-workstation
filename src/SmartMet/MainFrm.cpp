@@ -1423,8 +1423,11 @@ void CMainFrame::GetNewWarningMessages(void)
     if(itsDoc)
 	{
         itsDoc->CheckForNewWarningMessageData();
-		if(itsDoc->WarningCenterSystem().getLegacyData().WarningCenterViewOn())
-			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Warning messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
+        if(itsDoc->WarningCenterSystem().getLegacyData().WarningCenterViewOn())
+        {
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Warning messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
+        }
 	}
 #endif // DISABLE_CPPRESTSDK
 }
@@ -1434,8 +1437,11 @@ void CMainFrame::GetNewSeaIcingMessages(void)
 	if(itsDoc)
 	{
 		CFmiSeaIcingMessageThread::GetNewSeaIcingMessages(itsDoc->SeaIcingWarningSystem());
-		if(itsDoc->SeaIcingWarningSystem().ViewVisible())
-			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Sea-icing messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
+        if(itsDoc->SeaIcingWarningSystem().ViewVisible())
+        {
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Sea-icing messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
+        }
 	}
 }
 
@@ -1452,7 +1458,8 @@ void CMainFrame::DoMacroParamUpdate(void)
 				firstTime = false;
 				itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true);
 			}
-			itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
+            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)
 		}
 	}
 }
