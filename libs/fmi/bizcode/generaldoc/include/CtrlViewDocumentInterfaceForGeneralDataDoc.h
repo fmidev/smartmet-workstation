@@ -36,6 +36,7 @@ public:
     bool Printing() override;
     bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int index) override;
     void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) override;
+    void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1) override;
     bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) override;
     bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) override;
     bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) override;
