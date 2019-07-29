@@ -47,6 +47,7 @@ bool SmartMetViewIdFlagCheck(SmartMetViewId viewsFlag, SmartMetViewId checkedSin
 std::string SmartMetViewIdGetName(SmartMetViewId singleViewId);
 std::string SmartMetViewIdGetNameList(SmartMetViewId viewsFlag);
 SmartMetViewId GetWantedMapViewIdFlag(int theMapViewDescTopIndex);
+SmartMetViewId GetUpdatedViewIdMaskForEditingData();
 
 inline SmartMetViewId operator | (SmartMetViewId lhs, SmartMetViewId rhs)
 {

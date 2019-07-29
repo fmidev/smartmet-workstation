@@ -104,3 +104,9 @@ SmartMetViewId GetWantedMapViewIdFlag(int theMapViewDescTopIndex)
 
     return SmartMetViewId::NoViews;
 }
+
+SmartMetViewId GetUpdatedViewIdMaskForEditingData()
+{
+    SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::StationDataTableView | SmartMetViewId::WindTableDlg;
+    return updatedViewIds;
+}
