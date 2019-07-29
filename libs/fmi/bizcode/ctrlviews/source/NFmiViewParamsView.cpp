@@ -315,10 +315,12 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 							NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", param, kFmiModifyDrawParam, 
 								NFmiMetEditorTypes::kFmiParamsDefaultView, &drawParam->Level(),
 								drawParam->DataType(), index, drawParam->ViewMacroDrawParam());
-							drawParam->HideParam(!drawParam->IsParamHidden()); // t‰m‰ on ruma fixi, mutta tupla klikki tekee t‰m‰n piilotus asetuksen jostain syyst‰ ja minun pit‰‰ laittaa se t‰ss‰ pois
-							itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // ik‰v‰ kyll‰ yksˆis klikin j‰lkeen (ennen t‰t‰ toista klikki‰, josta syntyy tupla klikkaus) 
-																				// on tehty ruudun p‰ivitys, joka nyt tuplaklikin kohdalla pit‰‰ kumota
-							itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("ViewParamsView::LeftDoubleClick: Double click has been pressed over parameter to open Draw-param dialog, this update fixes (UGLY) the first left-click's param show/hide action");
+                            // T‰m‰ on ruma fixi, mutta tupla klikki tekee t‰m‰n piilotus asetuksen jostain syyst‰ ja minun pit‰‰ laittaa se t‰ss‰ pois
+                            drawParam->HideParam(!drawParam->IsParamHidden());
+                            // Ik‰v‰ kyll‰ yksˆis klikin j‰lkeen (ennen t‰t‰ toista klikki‰, josta syntyy tupla klikkaus) 
+                            // on tehty ruudun p‰ivitys, joka nyt tuplaklikin kohdalla pit‰‰ kumota
+							itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); 
+							itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("ViewParamsView::LeftDoubleClick: Double click has been pressed over parameter to open Draw-param dialog, this update fixes (UGLY) the first left-click's param show/hide action", GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
 							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), 1); // 1=viewtype ei m‰‰r‰tty viel‰
 						}
 					}
