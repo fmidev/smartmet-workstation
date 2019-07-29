@@ -1178,7 +1178,7 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
         }
 
         itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view");
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view", ::GetWantedMapViewIdFlag(itsParameterSelectionSystem->LastAcivatedDescTopIndex()));
     }
 }
 

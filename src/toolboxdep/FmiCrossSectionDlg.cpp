@@ -228,7 +228,7 @@ void CFmiCrossSectionDlg::MakeCrossSectionModeUpdates(const std::string &reasonF
         // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
         itsSmartMetDocumentInterface->MacroParamDataCache().clearView(CtrlViewUtils::kFmiCrossSectionView);
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle route cross section mode", SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
     }
 }
 
@@ -309,7 +309,7 @@ void CFmiCrossSectionDlg::DoWhenClosing(void)
 	{ // jos karttanäytöllä oli poikkileikkaus moodi päällä, laita se pois ja vielä pitää päivittää myös karttanäyttö, että pallukat saadaaan pois
         crossSectionSystem->CrossSectionSystemActive(false);
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Close view", SmartMetViewId::MainMapView);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Close view", SmartMetViewId::AllMapViews);
 	}
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
 }
