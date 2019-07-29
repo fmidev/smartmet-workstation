@@ -32,6 +32,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 AnimationButtonImageHolder NFmiTimeControlView::statAnimationButtonImages;
+SmartMetViewId g_EditedDataTimeRangeChangedUpdateViewIdMask = SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg;
 
 //_________________________________________________________ AnimationButtonImageHolder
 
@@ -391,11 +392,13 @@ const NFmiMetTime& NFmiTimeControlView::EndTime(void) const
 void NFmiTimeControlView::StartTime(const NFmiMetTime &newValue)
 {
     itsCtrlViewDocumentInterface->SetTimeFilterStartTime(newValue);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
 }
 
 void NFmiTimeControlView::EndTime(const NFmiMetTime &newValue)
 {
     itsCtrlViewDocumentInterface->SetTimeFilterEndTime(newValue);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
 }
 
 // lasketaan pikseleissa annetusta fonttikoosta sellainen fontti koko, mikä jää annetun
@@ -515,6 +518,7 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
 	itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex, usedTimeResolutionInMinutes/60.f);
 	itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false);
 	itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
 }
 
 // tällä piirretään tavara, joka tulee myös bitmapin päälle
@@ -816,7 +820,8 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 			animData.ShowVerticalControl(!animData.ShowVerticalControl());
 		}
 
-		return true;
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+        return true;
 	}
 	else
 		return false;
@@ -911,14 +916,14 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				}
 				status = true;
 			}
-		}
+        }
 		if(status == false)
 		{
 			// jos hiirtä ei oltu raahattu, tehdään vain jotain seuraavista
             if(CalcFullTimeRangeButtonRect().IsInside(thePlace))
             {
                 itsCtrlViewDocumentInterface->ResetTimeFilterTimes();
-                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg);
+                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
                 status = true;
             }
 			else if(theKey & kCtrlKey)
@@ -947,7 +952,14 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 		}
 	}
 
-	ClearAllMouseCaptureFlags();
+    if(status)
+    {
+        // Jos status on laitettu true:ksi, varmistetaan että tehdään ainakin kyseisen karttanäytön päivitys. 
+        // Optimointia, ettei kaikkia näyttöjä päivitetä. Jos halutaan että tehdään laajempia näyttöjen päivityksiä, pitää eri kohdissa laittaa enemmän näyttöjen päivityslippuja päälle
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+    }
+
+    ClearAllMouseCaptureFlags();
 	itsCtrlViewDocumentInterface->MouseCaptured(false);
 	return status;
 }
@@ -1117,7 +1129,7 @@ bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long
 		if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
 		{
 			EndTime(itsTimeBag->CurrentTime());
-			return true;
+            return true;
 		}
 	}
 	else if(theKey & kCtrlKey)
@@ -1135,7 +1147,8 @@ bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long
 				currentDelayInMS = 2000;
             currentDelayInMS = boost::math::iround(currentDelayInMS / 100.) * 100; // fiksataan vielä lähimpää 10 jaolliseen lukuun
 			animData.FrameDelayInMS(currentDelayInMS);
-			return true;
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+            return true;
 		}
 		else if(CalcAnimationBoxRect().IsInside(thePlace) && CalcLastFrameDelayFactorButtonRect().IsInside(thePlace))
 		{
@@ -1146,7 +1159,8 @@ bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long
 				currentLastFrameDelay = 5;
 			currentLastFrameDelay = ::round(currentLastFrameDelay/0.5)*0.5; // fiksataan vielä lähimpää 0.5 jaolliseen lukuun
 			animData.LastFrameDelayFactor(currentLastFrameDelay);
-			return true;
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+            return true;
 		}
 		else if(itsCtrlViewDocumentInterface->SetDataToNextTime(itsMapViewDescTopIndex))
 		{
@@ -1241,7 +1255,8 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 			else if(currentDelayInMS > 2000)
 				currentDelayInMS = 2000;
 			animData.FrameDelayInMS(currentDelayInMS);
-			return true;
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+            return true;
 		}
 		else if(CalcAnimationBoxRect().IsInside(thePlace) && CalcLastFrameDelayFactorButtonRect().IsInside(thePlace))
 		{
@@ -1253,7 +1268,8 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 			else if(currentLastFrameDelay > 5)
 				currentLastFrameDelay = 5;
 			animData.LastFrameDelayFactor(currentLastFrameDelay);
-			return true;
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+            return true;
 		}
 		else
 		{
@@ -1263,7 +1279,9 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 			else
                 itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex, true);
 		}
-		return true;
+
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+        return true;
 	}
 	return false;
 }
@@ -1410,12 +1428,11 @@ bool NFmiTimeControlView::MouseMove(const NFmiPoint& thePlace, unsigned long the
                                                 // näin vasen hiiren klikkaus pystyy tekemään aika-askel taaksepäin toiminnon, jos hiiri ei merkittävästi liiku
         }
 
-        if(fDrawViewInMouseMove)
-            Draw(itsToolBox);
+        if(fixLastPosition)
+            itsLastMousePosition = thePlace;
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+        return true;
     }
-
-    if(fixLastPosition)
-        itsLastMousePosition = thePlace;
 
     return false;
 }

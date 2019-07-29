@@ -10,6 +10,7 @@
 #include "FmiEditorModifyToolMode.h"
 #include "NFmiProducer.h"
 #include "NFmiInfoData.h"
+#include "SmartMetViewId.h"
 
 #include <functional>
 #include <list>
@@ -141,6 +142,7 @@ public:
     virtual bool Printing() = 0;
     virtual bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int index) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) = 0;
+    virtual void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1) = 0;
     virtual bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) = 0;
     virtual bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) = 0;
     virtual bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) = 0;

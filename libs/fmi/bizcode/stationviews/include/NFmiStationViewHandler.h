@@ -195,8 +195,13 @@ class NFmiStationViewHandler : public NFmiCtrlView
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
     {
-        UpdateOnlyThisMapViewAtNextGeneralViewUpdate(); // optimointia
-        return action();
+        // Ensin pit‰‰ suorittaa toiminto, ja ottaa status talteen
+        auto status = action();
+        // Vasta sitten laitetaan optimointi likauslippu p‰‰lle. Ainakin yhdess‰ action funktiossa (double-click) tehd‰‰n 
+        // ruudun p‰ivitys v‰liss‰ jonka j‰lkeen pit‰‰ tehd‰ viel‰ lopuksi toinen ruudun p‰ivitys, kun t‰‰lt‰ palataan.
+        UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
+        // Palautetaan status lopuksi
+        return status;
     }
 
     boost::shared_ptr<NFmiArea> itsMapArea;

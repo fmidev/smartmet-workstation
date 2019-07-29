@@ -201,7 +201,7 @@ protected:
    bool fMouseCaptured; // t‰m‰ pit‰isi siirt‰‰ dokumenttiin??? siirret‰‰nkˆ aikamuokkauskahvoja hiirell‰ vet‰m‰ll‰
    bool fMouseCapturedMoveTimeLine; // siirret‰‰nkˆ hiirell‰ koko aikaikkunan alku/loppu aikoja
    bool fMouseCapturedMoveSelectedTime; // raahataanko hiirell‰ sit‰ vihre‰‰ laatikkoa, jolla osoitetaan 1. valittua aikaa
-   bool fMouseCapturedAnimationBox; // hiirell‰ raahataan animaatio boxia (sinert‰v‰‰ llatikkoa)
+   bool fMouseCapturedAnimationBox = false; // hiirell‰ raahataan animaatio boxia (sinert‰v‰‰ llatikkoa)
    FmiDirection itsAnimationDragDirection; // jos fMouseCapturedAnimationBox ollessa true, 
 										// arvo on kLeft, venytet‰‰n vasenta reunaa, 
 										// jos arvo on kRight, venytet‰‰n oikeaa reunaa ja 
