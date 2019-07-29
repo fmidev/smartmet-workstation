@@ -138,6 +138,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialo
     itsDoc->RefreshApplicationViewsAndDialogs(reasonForUpdate, fMakeAreaViewDirty, fClearCache, theWantedMapViewDescTop);
 }
 
+void CtrlViewDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView, bool clearMapViewBitmapCacheRows, int theWantedMapViewDescTop)
+{
+    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(reasonForUpdate, updatedViewsFlag, redrawMapView, clearMapViewBitmapCacheRows, theWantedMapViewDescTop);
+}
+
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId)
 {
     return itsDoc->ExecuteCommand(theMenuItem, theViewIndex, theViewTypeId);
