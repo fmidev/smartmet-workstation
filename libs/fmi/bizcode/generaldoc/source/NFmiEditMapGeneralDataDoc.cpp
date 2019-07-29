@@ -3750,8 +3750,11 @@ void TimeControlViewTimes(unsigned int theDescTopIndex, const NFmiTimeDescriptor
 		for(unsigned int i = 0; i<ssize; i++)
 			MapViewDescTop(i)->TimeControlViewTimes(newTimeDescriptor);
 	}
-	else
-		MapViewDescTop(theDescTopIndex)->TimeControlViewTimes(newTimeDescriptor);
+    else
+    {
+        MapViewDescTop(theDescTopIndex)->TimeControlViewTimes(newTimeDescriptor);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
+    }
 }
 
 const NFmiTimeDescriptor& TimeControlViewTimes(unsigned int theDescTopIndex)
@@ -7806,7 +7809,7 @@ void DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRo
 	if(ignoreArchives)
 		commandStr += " -ignorearchives"; // jos jompi kumpi hakemistoista oli poistettu, ignoorataan arkistot (näin ei pääse tapahtumaan isoja tuhoja aikaan)
 
-    CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, nullptr, false, theShowWindow, waitExecutionToStop, dwCreationFlags);
+    CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, false, theShowWindow, waitExecutionToStop, dwCreationFlags);
 }
 
 std::string CreateHelpEditorFileNameWithPath(void)
@@ -7828,7 +7831,7 @@ bool StoreDataToDataBase(const std::string &theForecasterId, const std::string &
         // Change last send time to current time and reset return flag for edited data.
         itsLastEditedDataSendTime = NFmiMetTime(1);
         fLastEditedDataSendHasComeBack = false;
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Sending edited data to database", TRUE, FALSE, 0);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Sending edited data to database", SmartMetViewId::MainMapView, true, false, 0);
     }
     return status;
 }
@@ -10608,7 +10611,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		SaveMacroParamDataGridSizeSettings();
         // Pitää tyhjentää kaikkien ikkunoiden kaikkien rivien macroParam datat (voisi optimoida, jos tiedettäisiin, missä on käytössä "RESOLUTION = xxx", niitä ei tarvitsisi tyhjentää)
         MacroParamDataCache().clearAllLayers();
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set macro-param general data grid size", TRUE, TRUE);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set macro-param general data grid size", SmartMetViewId::AllMapViews, true, true);
 	}
 
 	void SaveMacroParamDataGridSizeSettings(void)
@@ -11274,7 +11277,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			LogMessage("Setting zoomed are the same as map area.", CatLog::Severity::Info, CatLog::Category::Visualization);
 			SetMapArea(theDescTopIndex, MapViewDescTop(theDescTopIndex)->MapHandler()->TotalArea());
 		}
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: data area button pressed");
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: data area button pressed", GetWantedMapViewIdFlag(theDescTopIndex));
 	}
 
 	double DrawObjectScaleFactor(void)
@@ -11628,7 +11631,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(maxStatus == 2)
 			{
 				if(mainViewMustBeUpdated)
-                    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related main map view update");
+                    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related main map view update", GetUpdatedViewIdMaskForChangingTime());
                 else
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Animation related map view 2/3 update", nullptr);
@@ -11989,7 +11992,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 
             if(needToUpdateViews)
-                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related update because locked time mode event occured"); // vielä päivitetään näytöt
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related update because locked time mode event occured", GetUpdatedViewIdMaskForChangingTime()); // vielä päivitetään näytöt
         }
 	}
 
@@ -12009,7 +12012,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			descTop->AnimationDataRef().ShowTimesOnTimeControl(!(descTop->AnimationDataRef().ShowTimesOnTimeControl()));
 			MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Show/hide animation times on map view's time control view");
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Show/hide animation times on map view's time control view", GetWantedMapViewIdFlag(theDescTopIndex));
 		}
 	}
 
@@ -12066,7 +12069,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             needsToUpdateViews |= CheckForNewConceptualModelDataBruteForce(i);
 
         if(needsToUpdateViews)
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Brute force conceptual model data update required");
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Brute force conceptual model data update required", SmartMetViewId::AllMapViews);
 	}
 
     bool CheckForNewConceptualModelDataBruteForce(unsigned int theDescTopIndex)
@@ -12772,7 +12775,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(RedoData())
 			{
 				MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-				RefreshApplicationViewsAndDialogs("Edited data modifications Redo", false, false, -1);
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Edited data modifications Redo", GetUpdatedViewIdMaskForEditingData());
 			}
 		}
 	}
@@ -12786,8 +12789,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(UndoData())
 			{
                 MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-				RefreshApplicationViewsAndDialogs("Edited data modifications Undo", false, false, -1);
-			}
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Edited data modifications Undo", GetUpdatedViewIdMaskForEditingData());
+            }
 		}
 	}
 
@@ -13673,7 +13676,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
             if(foundUpdates)
             {
-                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: satellite images from files loaded update"); // tämä sitten päivittää kaikki ruudut
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: satellite images from files loaded update", SmartMetViewId::AllMapViews); // tämä sitten päivittää kaikki ruudut
                 return 1;
             }
         }
@@ -13752,7 +13755,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         SatelliteImageCacheSystem().ResetFailedImages(imageCacheUpdateData);
         if(DoImageCacheUpdates(imageCacheUpdateData))
         {
-            RefreshApplicationViewsAndDialogs("Map view: Reload failed satellite images update", true, false);
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Reload failed satellite images update", SmartMetViewId::AllMapViews, true, false);
         }
     }
 
