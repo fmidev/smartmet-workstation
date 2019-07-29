@@ -26,6 +26,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "EditedInfoMaskHandler.h"
 #include "persist2.h"
+#include "ApplicationInterface.h"
 
 #include <fstream>
 
@@ -497,6 +498,7 @@ void CFmiWindTableDlg::DoWhenClosing(void)
 {
     itsSmartMetDocumentInterface->WindTableSystem().ViewVisible(false);
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 }
 
@@ -705,5 +707,6 @@ void CFmiWindTableDlg::OnCbnSelchangeComboWindAreaFilterSelector()
 	UpdateData(TRUE);
 	
     itsSmartMetDocumentInterface->WindTableSystem().SelectedAreaMaskList(itsAreaFilterSelector.GetCurSel());
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true, itsMapViewDescTopIndex);
 }

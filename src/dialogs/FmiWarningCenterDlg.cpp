@@ -19,6 +19,7 @@
 #include "HakeMessage/HakeSystemConfigurations.h"
 #include "HakeMessage/HakeMsg.h"
 #include "persist2.h"
+#include "ApplicationInterface.h"
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 
@@ -234,6 +235,7 @@ void CFmiWarningCenterDlg::DoWhenClosing(void)
     itsSmartMetDocumentInterface->WarningCenterSystem().getLegacyData().WarningCenterViewOn(false);
 #endif // DISABLE_CPPRESTSDK
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 }
 
@@ -316,6 +318,7 @@ void CFmiWarningCenterDlg::OnBnClickedButtonWarningCenterOptions()
 	if(dlg.DoModal() == IDOK)
 	{
         warningCenterSystem.getLegacyData().StoreSettings();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 	}
 #endif // DISABLE_CPPRESTSDK
@@ -544,6 +547,7 @@ void CFmiWarningCenterDlg::OnBnClickedCheckShowAllMessages()
 #ifndef DISABLE_CPPRESTSDK
     UpdateData(TRUE);
     itsSmartMetDocumentInterface->WarningCenterSystem().getLegacyData().ShowAllMessages(fShowAllMessages == TRUE);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 #endif // DISABLE_CPPRESTSDK
 }
@@ -597,6 +601,7 @@ void CFmiWarningCenterDlg::ForceMainMapViewUpdate(const std::string &reasonForUp
 {
     // Make main map view dirty and force update on it
     itsSmartMetDocumentInterface->MapViewDirty(0, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
 }
 
