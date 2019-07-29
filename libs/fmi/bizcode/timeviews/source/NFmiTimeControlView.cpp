@@ -32,6 +32,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 AnimationButtonImageHolder NFmiTimeControlView::statAnimationButtonImages;
+SmartMetViewId g_EditedDataTimeRangeChangedUpdateViewIdMask = SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg;
 
 //_________________________________________________________ AnimationButtonImageHolder
 
@@ -391,11 +392,13 @@ const NFmiMetTime& NFmiTimeControlView::EndTime(void) const
 void NFmiTimeControlView::StartTime(const NFmiMetTime &newValue)
 {
     itsCtrlViewDocumentInterface->SetTimeFilterStartTime(newValue);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
 }
 
 void NFmiTimeControlView::EndTime(const NFmiMetTime &newValue)
 {
     itsCtrlViewDocumentInterface->SetTimeFilterEndTime(newValue);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
 }
 
 // lasketaan pikseleissa annetusta fonttikoosta sellainen fontti koko, mikä jää annetun
@@ -824,8 +827,6 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 		return false;
 }
 
-SmartMetViewId g_EditedDataTimeRangeChangedUpdateViewIdMask = SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg;
-
 bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long theKey)
 {
 	bool status = false;
@@ -846,7 +847,6 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
                 if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
                 {
                     StartTime(itsTimeBag->CurrentTime());
-                    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
                     return true;
                 }
             }
@@ -1129,7 +1129,6 @@ bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long
 		if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
 		{
 			EndTime(itsTimeBag->CurrentTime());
-            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
             return true;
 		}
 	}
@@ -1429,13 +1428,11 @@ bool NFmiTimeControlView::MouseMove(const NFmiPoint& thePlace, unsigned long the
                                                 // näin vasen hiiren klikkaus pystyy tekemään aika-askel taaksepäin toiminnon, jos hiiri ei merkittävästi liiku
         }
 
-        // TÄMÄ AIHEUTTAA mouse movessa YLIMÄÄRÄISIÄ (MFC frameworkin aiheuttamia) esim. Temp-view päivityksiä, jotka ovat irrallaan smartmetin tekemistä päivityksistä
-        if(fDrawViewInMouseMove)
-            Draw(itsToolBox);
+        if(fixLastPosition)
+            itsLastMousePosition = thePlace;
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+        return true;
     }
-
-    if(fixLastPosition)
-        itsLastMousePosition = thePlace;
 
     return false;
 }
