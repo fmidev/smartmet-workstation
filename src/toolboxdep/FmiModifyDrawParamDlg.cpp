@@ -21,6 +21,7 @@
 #include "ToolMasterColorCube.h"
 #include "PERSIST2.H"
 #include "CtrlViewGdiPlusFunctions.h"
+#include "ApplicationInterface.h"
 
 #include <direct.h> // working directory juttuja varten
 
@@ -1305,6 +1306,7 @@ void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamRefresh()
 	fRefreshPressed = true;
     ForceStationViewUpdate();
 
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, TRUE, TRUE, itsDescTopIndex);
 }
 
@@ -1322,6 +1324,7 @@ void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamUseWithAll()
 	TakeDrawParamModificationInUse(); // vain onok:ssa (ja kun asetukset otetaan kaikkialle käyttöön)
 									  // initialisoidaan takaisin originaali drawparamiin. cancel ei siirrä muutoksia
     itsSmartMetDocumentInterface->TakeDrawParamInUseEveryWhere(itsDrawParam, fModifyMapViewParam, fModifyMapViewParam, fModifyCrossSectionViewParam, fModifyMapViewParam);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Using these setting for all similar parameters button pressed", TRUE, TRUE);
 }
 
@@ -1397,6 +1400,7 @@ void CFmiModifyDrawParamDlg::OnCbnSelchangeComboFixedDrawParamSelector()
         {
             fRefreshPressed = true;
             ForceStationViewUpdate();
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
             itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Fixed draw param selected", TRUE, TRUE, itsDescTopIndex); // päivitetään näyttöjä
         }
     }
@@ -1409,5 +1413,6 @@ void CFmiModifyDrawParamDlg::OnBnClickedButtonReloadOriginal()
     InitDialogFromDrawParam(); // alustetaan dialogin arvot itsDrawParam:in arvoilla
     UpdateData(FALSE);
 
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Reload original draw param settings", TRUE, TRUE, itsDescTopIndex); // päivitetään näyttöjä
 }

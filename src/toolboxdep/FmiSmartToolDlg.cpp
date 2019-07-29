@@ -25,6 +25,7 @@
 #include "SmartMetMfcUtils_resource.h"
 #include "persist2.h"
 #include "NFmiMacroParamDataCache.h"
+#include "ApplicationInterface.h"
 #include <fstream>
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
@@ -534,7 +535,7 @@ void CFmiSmartToolDlg::RefreshApplicationViewsAndDialogs(const std::string &reas
         itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPathList);
     }
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, editedDataModified, false);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
 }
 
 bool CFmiSmartToolDlg::EnableDlgItem(int theDlgId, bool fEnable)
@@ -1092,10 +1093,16 @@ void CFmiSmartToolDlg::ClearMapViewRow(int theRowIndex)
 	UpdateData(TRUE);
 	if(itsSmartMetDocumentInterface)
 	{
-		if(fCrossSectionMode)
+        if(fCrossSectionMode)
+        {
             itsSmartMetDocumentInterface->RemoveAllParamsFromCrossSectionViewRow(theRowIndex);
-		else
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::CrossSectionView);
+        }
+        else
+        {
             itsSmartMetDocumentInterface->RemoveAllParamsFromMapViewRow(itsSelectedMapViewDescTopIndex, theRowIndex);
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsSelectedMapViewDescTopIndex));
+        }
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("SmartToolDlg: clear view row's all params");
 	}
 }
