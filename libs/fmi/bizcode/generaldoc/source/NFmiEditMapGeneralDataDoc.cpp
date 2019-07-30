@@ -3147,6 +3147,24 @@ void MakeNeededDirtyOperationsWhenDataAdded(NFmiQueryData *theData, NFmiInfoData
             MapViewDirty(0, false, false, true, false, true, false); // 0 = vain pääkarttanäyttö liataan, cacheja ei tarvitse tyhjentää, koska tähän liittyvät jutut piirretään vain karttanäytön päälle, ei karttaruudukkoihin
         LogMessage("Operational data has been loaded.", CatLog::Severity::Info, CatLog::Category::Editing);
     }
+    SetUpdatedViewIdMaskAfterDataLoaded(fastInfo, theType);
+}
+
+// HUOM! tämä ei läitä päivityksiä päälle Parameter-selection dialogille, se hoidetaan toista kautta
+void SetUpdatedViewIdMaskAfterDataLoaded(NFmiFastQueryInfo &fastInfo, NFmiInfoData::Type theType)
+{
+    // Kaikkien datojen kanssa pitää päivittää varmuuden vuoksi karttanäytöt, aikasarja ja case-study
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::CaseStudyDlg);
+    if(fastInfo.SizeLevels() > 2)
+    {
+        // vertikaali datojen kanssa pitää päivittää myös luotaus, poikkileikkaus ja trajektori näytöt
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::SoundingView | SmartMetViewId::CrossSectionView | SmartMetViewId::TrajectoryView);
+    }
+    else if(fastInfo.SizeLevels() == 1)
+    {
+        // surface datojen kanssa pitää päivittää myös asema-data-taulukko, wind-table
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView | SmartMetViewId::WindTableDlg);
+    }
 }
 
 void StoreLastLoadedFileNameToLog(const std::string &theFileName)
