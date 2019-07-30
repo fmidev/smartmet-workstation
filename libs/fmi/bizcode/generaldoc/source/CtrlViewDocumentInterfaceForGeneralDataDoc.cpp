@@ -6,6 +6,7 @@
 #include "GdiPlusMapHandlerInterface.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "TimeSerialModification.h"
+#include "ApplicationInterface.h"
 
 CtrlViewDocumentInterfaceForGeneralDataDoc::CtrlViewDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -135,6 +136,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateViewParamsPopup(unsigned 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty, bool fClearCache, int theWantedMapViewDescTop)
 {
     itsDoc->RefreshApplicationViewsAndDialogs(reasonForUpdate, fMakeAreaViewDirty, fClearCache, theWantedMapViewDescTop);
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView, bool clearMapViewBitmapCacheRows, int theWantedMapViewDescTop)
+{
+    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(reasonForUpdate, updatedViewsFlag, redrawMapView, clearMapViewBitmapCacheRows, theWantedMapViewDescTop);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId)
@@ -1316,6 +1322,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetupObsBlenderData(const NFmiP
 TimeSerialParameters& CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeSerialParameters()
 {
     return itsDoc->GetTimeSerialParameters();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex)
+{
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(theMapViewDescTopIndex));
 }
 
 #ifndef DISABLE_CPPRESTSDK

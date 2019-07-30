@@ -1046,12 +1046,27 @@ void CFmiParameterSelectionDlg::ExpandAllNodes()
     itsTreeColumn.TreeRefreshRows();
 }
 
+void CFmiParameterSelectionDlg::CollapseAllTreeNodes()
+{
+    const auto& rowItemData = itsParameterSelectionSystem->dialogRowData();
+    int currentRowCount = itsGridCtrl.GetFixedRowCount();
+    // Go through all top level (category) nodes and collapse them
+    for(const auto& rowItem : rowItemData)
+    {
+        if(rowItem.rowType() == AddParams::kCategoryType)
+        {
+            itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
+        }
+        currentRowCount++;
+    }
+}
+
 void CFmiParameterSelectionDlg::MakeTreeNodeCollapseSettings()
 {
     const auto &rowItemData = itsParameterSelectionSystem->dialogRowData();
     int currentRowCount = itsGridCtrl.GetFixedRowCount();
     // First collapse all nodes
-    itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
+    CollapseAllTreeNodes();
     // Then open them one by one according to settings
     for(const auto &rowItem : rowItemData)
     {
@@ -1163,7 +1178,7 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
         }
 
         itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view");
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view", ::GetWantedMapViewIdFlag(itsParameterSelectionSystem->LastAcivatedDescTopIndex()));
     }
 }
 

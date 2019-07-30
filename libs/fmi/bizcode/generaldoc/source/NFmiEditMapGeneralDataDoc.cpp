@@ -831,10 +831,19 @@ void InitMacroParamDataCache()
 void InitWmsSupport()
 {
 #ifndef DISABLE_CPPRESTSDK
-    wmsSupport.initialSetUp();
-    if(!wmsSupport.isConfigured())
+    try
     {
-        UseWmsMaps(false);
+        wmsSupport.initialSetUp();
+        if(!wmsSupport.isConfigured())
+        {
+            UseWmsMaps(false);
+        }
+    }
+    catch(exception& e)
+    {
+        std::string errorMessage = "Problems with WMS initializations: ";
+        errorMessage += e.what();
+        LogAndWarnUser(errorMessage, "Problems with WMS initializations", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
     }
 #endif // DISABLE_CPPRESTSDK
 }
@@ -3138,6 +3147,24 @@ void MakeNeededDirtyOperationsWhenDataAdded(NFmiQueryData *theData, NFmiInfoData
             MapViewDirty(0, false, false, true, false, true, false); // 0 = vain pääkarttanäyttö liataan, cacheja ei tarvitse tyhjentää, koska tähän liittyvät jutut piirretään vain karttanäytön päälle, ei karttaruudukkoihin
         LogMessage("Operational data has been loaded.", CatLog::Severity::Info, CatLog::Category::Editing);
     }
+    SetUpdatedViewIdMaskAfterDataLoaded(fastInfo, theType);
+}
+
+// HUOM! tämä ei läitä päivityksiä päälle Parameter-selection dialogille, se hoidetaan toista kautta
+void SetUpdatedViewIdMaskAfterDataLoaded(NFmiFastQueryInfo &fastInfo, NFmiInfoData::Type theType)
+{
+    // Kaikkien datojen kanssa pitää päivittää varmuuden vuoksi karttanäytöt, aikasarja ja case-study
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::CaseStudyDlg);
+    if(fastInfo.SizeLevels() > 2)
+    {
+        // vertikaali datojen kanssa pitää päivittää myös luotaus, poikkileikkaus ja trajektori näytöt
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::SoundingView | SmartMetViewId::CrossSectionView | SmartMetViewId::TrajectoryView);
+    }
+    else if(fastInfo.SizeLevels() == 1)
+    {
+        // surface datojen kanssa pitää päivittää myös asema-data-taulukko, wind-table
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView | SmartMetViewId::WindTableDlg);
+    }
 }
 
 void StoreLastLoadedFileNameToLog(const std::string &theFileName)
@@ -3741,8 +3768,11 @@ void TimeControlViewTimes(unsigned int theDescTopIndex, const NFmiTimeDescriptor
 		for(unsigned int i = 0; i<ssize; i++)
 			MapViewDescTop(i)->TimeControlViewTimes(newTimeDescriptor);
 	}
-	else
-		MapViewDescTop(theDescTopIndex)->TimeControlViewTimes(newTimeDescriptor);
+    else
+    {
+        MapViewDescTop(theDescTopIndex)->TimeControlViewTimes(newTimeDescriptor);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
+    }
 }
 
 const NFmiTimeDescriptor& TimeControlViewTimes(unsigned int theDescTopIndex)
@@ -3873,8 +3903,21 @@ const NFmiMetTime& CurrentTime(unsigned int theDescTopIndex)
 		return MapViewDescTop(theDescTopIndex)->CurrentTime();
 }
 
+SmartMetViewId GetUpdatedViewIdMaskForChangingTime()
+{
+    SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::CrossSectionView | SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg;
+    if(GetMTATempSystem().SoundingTimeLockWithMapView())
+        updatedViewIds = updatedViewIds | SmartMetViewId::SoundingView;
+    if(WindTableSystem().UseMapTime())
+        updatedViewIds = updatedViewIds | SmartMetViewId::WindTableDlg;
+    return updatedViewIds;
+}
+
 void UpdateTimeInLockedDescTops(const NFmiMetTime &theTime, unsigned int theOrigDescTopIndex)
 {
+    // Jos tehdään jotain aika muutoksia mihinkään karttanäyttöön, laitetaan optimoitu update maski päälle
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetUpdatedViewIdMaskForChangingTime());
+
     // Päivitetään ajan muutoksessa myös aina luotausnäyttöä, jos säädöt ovat kohdallaan
     if(GetMTATempSystem().SoundingTimeLockWithMapView() && GetMTATempSystem().TempViewOn())
         UpdateTempView();
@@ -3902,6 +3945,9 @@ void UpdateTimeInLockedDescTops(const NFmiMetTime &theTime, unsigned int theOrig
 
 void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
 {
+    // Tehdään ensin theOrigDescTopIndex:iin liittyvän mapView päivitys, koska tätä funktiota 
+    // käytetään monista rivin vaihtoon liittyvistä funktioista, on se hyvä saada yhteen paikkaan suoritetuksi yhteisesti.
+    CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theOrigDescTopIndex);
     // eli jos origIndex oli pääikkuna (index = 0) tai apuikkuna oli lukittu pääikkunaan, silloin tehdään rivi päivityksiä
     if(theOrigDescTopIndex == 0 || MapViewDescTop(theOrigDescTopIndex)->LockToMainMapViewRow())
     {
@@ -3911,6 +3957,7 @@ void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
         {
             if(descTopIndex == 0 || MapViewDescTop(descTopIndex)->LockToMainMapViewRow())
             {
+                CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(descTopIndex);
                 MapViewDescTop(descTopIndex)->MapRowStartingIndex(mapRowStartingIndex);
             }
         }
@@ -7780,7 +7827,7 @@ void DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRo
 	if(ignoreArchives)
 		commandStr += " -ignorearchives"; // jos jompi kumpi hakemistoista oli poistettu, ignoorataan arkistot (näin ei pääse tapahtumaan isoja tuhoja aikaan)
 
-    CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, nullptr, false, theShowWindow, waitExecutionToStop, dwCreationFlags);
+    CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, false, theShowWindow, waitExecutionToStop, dwCreationFlags);
 }
 
 std::string CreateHelpEditorFileNameWithPath(void)
@@ -7802,7 +7849,7 @@ bool StoreDataToDataBase(const std::string &theForecasterId, const std::string &
         // Change last send time to current time and reset return flag for edited data.
         itsLastEditedDataSendTime = NFmiMetTime(1);
         fLastEditedDataSendHasComeBack = false;
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Sending edited data to database", TRUE, FALSE, 0);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Sending edited data to database", SmartMetViewId::MainMapView, true, false, 0);
     }
     return status;
 }
@@ -9483,6 +9530,7 @@ void SetSelectedMapHandler(unsigned int theDescTopIndex, unsigned int newMapInde
 {
     SetSelectedMap(theDescTopIndex, newMapIndex);
 	MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
 }
 
 boost::shared_ptr<NFmiArea> MakeCPCropArea(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float theShrinkFactor, unsigned long x1, unsigned long y1, unsigned long x2, unsigned long y2, unsigned long shrinkX, unsigned long shrinkY)
@@ -9602,6 +9650,7 @@ void SwapArea(unsigned int theDescTopIndex)
 	// sitten vielä tarvittävät likaukset ja päivitykset
 	mapDescTop->BorderDrawDirty(true);
 	MapViewDirty(theDescTopIndex, true, true, true, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+    CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
 	mapDescTop->GridPointCache().Clear();
 }
 
@@ -10580,7 +10629,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		SaveMacroParamDataGridSizeSettings();
         // Pitää tyhjentää kaikkien ikkunoiden kaikkien rivien macroParam datat (voisi optimoida, jos tiedettäisiin, missä on käytössä "RESOLUTION = xxx", niitä ei tarvitsisi tyhjentää)
         MacroParamDataCache().clearAllLayers();
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set macro-param general data grid size", TRUE, TRUE);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set macro-param general data grid size", SmartMetViewId::AllMapViews, true, true);
 	}
 
 	void SaveMacroParamDataGridSizeSettings(void)
@@ -10877,7 +10926,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		LogMessage("Map view grid changed.", CatLog::Severity::Info, CatLog::Category::Visualization);
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
-        return MapViewDescTop(theDescTopIndex)->SetMapViewGrid(newValue, mapViewWinRegistry.get());
+        if(MapViewDescTop(theDescTopIndex)->SetMapViewGrid(newValue, mapViewWinRegistry.get()))
+        {
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
+            return true;
+        }
+        else
+            return false;
 	}
 
 	CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(unsigned int theDescTopIndex)
@@ -11022,18 +11077,21 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex)->ShowStationPlot(newState);
         MapViewDescTop(theDescTopIndex)->ShowStationPlotVM(newState); // tämä pitää päivittää molempiin paikkoihin, koska jotkin operaatiot riippuvat että MapViewDescTop:issa on päivitetty arvo
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false); // tämä laittaa cachen likaiseksi
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide active parameters data's grid/station points");
 	}
 
 	void OnToggleGridPointColor(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleStationPointColor();
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Change active parameters data's grid/station points color");
 	}
 
 	void OnToggleGridPointSize(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleStationPointSize();
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Change active parameters data's grid/station points size");
 	}
 
@@ -11042,6 +11100,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex)->ToggleSpacingOutFactor();
         // MacroParamDataCache ongelma (MAPADACA): Kun harvennusta muutetaan, pitää liata sellaiset macroParamit, jotka piirretään symboleilla
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle spacing out factor");
 	}
 
@@ -11049,12 +11108,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		MapViewDescTop(theDescTopIndex)->ShowParamWindowView(!MapViewDescTop(theDescTopIndex)->ShowParamWindowView());
 		MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/Hide param-view");
     }
 
 	void OnShowTimeString(unsigned int theDescTopIndex)
 	{
 		ToggleShowTimeOnMapMode(theDescTopIndex);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle show time on map view mode");
 	}
 
@@ -11070,6 +11131,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
 	{
 		ChangeMapType(theDescTopIndex, fForward);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's background map style changed");
 	}
 
@@ -11080,9 +11142,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             WmsSupport().nextOverlay();
         else
             WmsSupport().previousOverlay();
-
-        MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's Wms overlay map type changed");
 #endif // DISABLE_CPPRESTSDK
     }
 
@@ -11094,8 +11153,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 MapViewDescTop(theDescTopIndex)->MapHandler()->NextOverMap();
             else
                 MapViewDescTop(theDescTopIndex)->MapHandler()->PreviousOverMap();
-            MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
         }
     }
 
@@ -11105,7 +11162,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             ChangeWmsOverlayMapType(theDescTopIndex, fForward);
         else
             ChangeFileBitmapOverlayMapType(theDescTopIndex, fForward);
-	}
+
+        MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
+    }
 
     // Tämä asettaa maskOnMap -asetuksen kahteen paikkaan, windows rekistereihin ja 
     // SmartMetin sisäiseen käyttöön.
@@ -11120,6 +11181,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         bool newValue = !ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(static_cast<int>(theDescTopIndex))->ShowMasksOnMap();
         SetShowMaskOnMap(theDescTopIndex, newValue);
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide masks on map views");
 	}
 
@@ -11134,7 +11196,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				mode = NFmiProjectionCurvatureInfo::kNoDraw;
 			projInfo->SetDrawingMode(mode);
 			MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false);
-			LogMessage("Projektion line draw style changed.", CatLog::Severity::Debug, CatLog::Category::Visualization);
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view projektion line draw style changed");
 		}
 	}
@@ -11143,6 +11205,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleLandBorderColor();
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Toggle land border draw color");
 	}
 
@@ -11150,6 +11213,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		MapViewDescTop(theDescTopIndex)->ToggleLandBorderPenSize();
 		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Toggle land border draw line width");
 	}
 
@@ -11174,7 +11238,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnToggleOverMapBackForeGround(unsigned int theDescTopIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->DrawOverMapMode(MapViewDescTop(theDescTopIndex)->DrawOverMapMode() == 0 ? 1 : 0);
-		MapViewDirty(theDescTopIndex, false, true, true, false, false, false);
+		MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: changed map overlay's draw order");
 	}
 
@@ -11194,6 +11259,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			MapViewDirty(static_cast<unsigned int>(i), true, true, true, newKeepAspectRatioState, false, false);
             ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateMapView(static_cast<unsigned int>(i));
 		}
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: toggle keep map's aspect ratio setting");
 	}
 
@@ -11229,7 +11295,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			LogMessage("Setting zoomed are the same as map area.", CatLog::Severity::Info, CatLog::Category::Visualization);
 			SetMapArea(theDescTopIndex, MapViewDescTop(theDescTopIndex)->MapHandler()->TotalArea());
 		}
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: data area button pressed");
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: data area button pressed", GetWantedMapViewIdFlag(theDescTopIndex));
 	}
 
 	double DrawObjectScaleFactor(void)
@@ -11454,6 +11520,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			activeDrawParamList->CopyList(itsCopyPasteDrawParamList, false);
             auto realActiveRowIndex = GetRealRowNumber(theDescTopIndex, relativeActiveRowIndex);
             MakeViewRowDirtyActions(theDescTopIndex, realActiveRowIndex, activeDrawParamList);
+            CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste drawParams to map view row");
 		}
 	}
@@ -11511,6 +11578,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			{
 				CopyDrawParamsList(itsCopyPasteDrawParamListVector, *copiedDrawParamsList);
                 MakeWholeDesctopDirtyActions(theDescTopIndex, copiedDrawParamsList);
+                CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste all copyed parameters on this map view");
 			}
 		}
@@ -11581,7 +11649,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(maxStatus == 2)
 			{
 				if(mainViewMustBeUpdated)
-                    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related main map view update");
+                    ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related main map view update", GetUpdatedViewIdMaskForChangingTime());
                 else
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Animation related map view 2/3 update", nullptr);
@@ -11942,7 +12010,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 
             if(needToUpdateViews)
-                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related update because locked time mode event occured"); // vielä päivitetään näytöt
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related update because locked time mode event occured", GetUpdatedViewIdMaskForChangingTime()); // vielä päivitetään näytöt
         }
 	}
 
@@ -11962,7 +12030,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			descTop->AnimationDataRef().ShowTimesOnTimeControl(!(descTop->AnimationDataRef().ShowTimesOnTimeControl()));
 			MapViewDirty(theDescTopIndex, false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Show/hide animation times on map view's time control view");
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Show/hide animation times on map view's time control view", GetWantedMapViewIdFlag(theDescTopIndex));
 		}
 	}
 
@@ -12019,7 +12087,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             needsToUpdateViews |= CheckForNewConceptualModelDataBruteForce(i);
 
         if(needsToUpdateViews)
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Brute force conceptual model data update required");
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Brute force conceptual model data update required", SmartMetViewId::AllMapViews);
 	}
 
     bool CheckForNewConceptualModelDataBruteForce(unsigned int theDescTopIndex)
@@ -12725,7 +12793,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(RedoData())
 			{
 				MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-				RefreshApplicationViewsAndDialogs("Edited data modifications Redo", false, false, -1);
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Edited data modifications Redo", GetUpdatedViewIdMaskForEditingData());
 			}
 		}
 	}
@@ -12739,8 +12807,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(UndoData())
 			{
                 MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-				RefreshApplicationViewsAndDialogs("Edited data modifications Undo", false, false, -1);
-			}
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Edited data modifications Undo", GetUpdatedViewIdMaskForEditingData());
+            }
 		}
 	}
 
@@ -13183,8 +13251,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		    MapViewDirty(theMapViewDescTopIndex, true, true, true, true, false, false);
 		    MapViewDescTop(theMapViewDescTopIndex)->BorderDrawDirty(true);
 		    SetMapArea(theMapViewDescTopIndex, newZoomedArea);
-	    }
-	    MapViewDirty(theMapViewDescTopIndex, true, false, true, false, false, false); // tämä laittaa karttanäytön cachen sileäksi
+            // Laitetaan tähän "Ohitetaan normi päivitä kaikki näytöt ja päivitä vain muuttunutta karttanäyttöä" -toiminto optimoinnin takia.
+            // HUOM! Optimoinnin voi laittaa tänne, koska esim. viewMacrojen latauksissa ei käytetä tätä metodia (jolloin tarvitsee päivittää kaikkia näyttöjä)
+            CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theMapViewDescTopIndex);
+        }
    }
 
     void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)
@@ -13624,7 +13694,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
             if(foundUpdates)
             {
-                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: satellite images from files loaded update"); // tämä sitten päivittää kaikki ruudut
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: satellite images from files loaded update", SmartMetViewId::AllMapViews); // tämä sitten päivittää kaikki ruudut
                 return 1;
             }
         }
@@ -13703,7 +13773,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         SatelliteImageCacheSystem().ResetFailedImages(imageCacheUpdateData);
         if(DoImageCacheUpdates(imageCacheUpdateData))
         {
-            RefreshApplicationViewsAndDialogs("Map view: Reload failed satellite images update", true, false);
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Reload failed satellite images update", SmartMetViewId::AllMapViews, true, false);
         }
     }
 
@@ -14001,6 +14071,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         ApplicationWinRegistry().UseWmsMaps(newValue);
         MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     }
 
 #ifndef DISABLE_CPPRESTSDK
@@ -14130,6 +14201,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(CPManager()->MakeControlPointAcceleratorAction(action))
             {
                 TimeSerialViewDirty(true);
+                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
                 RefreshApplicationViewsAndDialogs(updateMessage, true, true, 0);
                 return true;
             }
@@ -14539,11 +14611,25 @@ SmartMetDocumentInterface& NFmiEditMapGeneralDataDoc::GetSmartMetDocumentInterfa
 //--------------------------------------------------------
 bool NFmiEditMapGeneralDataDoc::Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::map<std::string, std::string> &mapViewsPositionMap, std::map<std::string, std::string> &otherViewsPositionPosMap)
 {
-    SetGeneralDataDocInterfaceCallbacks();
-    bool status = pimpl->Init(theBasicConfigurations, mapViewsPositionMap, otherViewsPositionPosMap);
-    CrossSectionSystem()->SetDocumentInterface(&GetCtrlViewDocumentInterface());
-
-	return status;
+    try
+    {
+        SetGeneralDataDocInterfaceCallbacks();
+        bool status = pimpl->Init(theBasicConfigurations, mapViewsPositionMap, otherViewsPositionPosMap);
+        CrossSectionSystem()->SetDocumentInterface(&GetCtrlViewDocumentInterface());
+        return status;
+    }
+    catch(std::exception& e)
+    {
+        std::string errorMessage = "Uncaught exeption was thrown from SmartMet's initialization: ";
+        errorMessage += e.what();
+        LogAndWarnUser(errorMessage, "SmartMet initialization failed", CatLog::Severity::Error, CatLog::Category::Configuration, false, true, true);
+    }
+    catch(...)
+    {
+        std::string errorMessage = "Unknown uncaught exeption was thrown from SmartMet's initialization";
+        LogAndWarnUser(errorMessage, "SmartMet initialization failed", CatLog::Severity::Error, CatLog::Category::Configuration, false, true, true);
+    }
+    return false;
 }
 
 
@@ -14758,11 +14844,6 @@ void NFmiEditMapGeneralDataDoc::SetTimeFilterEndTime(const NFmiMetTime& theTime)
 void NFmiEditMapGeneralDataDoc::SetActiveParamMissingValues(double theValue)
 {
 	pimpl->SetActiveParamMissingValues(theValue);
-}
-
-void NFmiEditMapGeneralDataDoc::ChangeMapType(unsigned int theDescTopIndex, bool fForward)
-{
-	pimpl->ChangeMapType(theDescTopIndex, fForward);
 }
 
 bool NFmiEditMapGeneralDataDoc::MakeDataValiditation(void)

@@ -44,6 +44,7 @@
 #include <fstream>
 #include <newbase/NFmiEnumConverter.h>
 #include "NFmiControlPointObservationBlender.h"
+#include "ApplicationInterface.h"
 
 
 #ifdef _MSC_VER
@@ -131,23 +132,33 @@ private:
 	TimeToModifyCalculator(const TimeToModifyCalculator & ); // ei toteuteta kopio konstruktoria
 };
 
-static void ModifySingleTimeGridInThread(NFmiFastQueryInfo &theModifiedInfo,
-							     TimeToModifyCalculator &theTimeToModifyCalculator,
-								 NFmiDataModifier *theModifier)
+static void ModifySingleTimeGridInThread(NFmiFastQueryInfo& theModifiedInfo,
+    TimeToModifyCalculator& theTimeToModifyCalculator,
+    NFmiDataModifier* theModifier)
 {
-	NFmiMetTime aTime;
-	for( ; theTimeToModifyCalculator.GetCurrentTime(aTime); )
-	{
-		if(theModifiedInfo.Time(aTime))
-		{
-			theModifier->SetTimeIndex(theModifiedInfo.TimeIndex());
-			for(theModifiedInfo.ResetLocation(); theModifiedInfo.NextLocation(); )
-			{
-				theModifier->SetLocationIndex(theModifiedInfo.LocationIndex());
-				theModifiedInfo.FloatValue(theModifier->FloatOperation(theModifiedInfo.FloatValue()));
-			}
-		}
-	}
+    try
+    {
+        NFmiMetTime aTime;
+        for(; theTimeToModifyCalculator.GetCurrentTime(aTime); )
+        {
+            if(theModifiedInfo.Time(aTime))
+            {
+                theModifier->SetTimeIndex(theModifiedInfo.TimeIndex());
+                for(theModifiedInfo.ResetLocation(); theModifiedInfo.NextLocation(); )
+                {
+                    theModifier->SetLocationIndex(theModifiedInfo.LocationIndex());
+                    theModifiedInfo.FloatValue(theModifier->FloatOperation(theModifiedInfo.FloatValue()));
+                }
+            }
+        }
+    }
+    catch(std::exception& e)
+    {
+        std::string errorMessage = __FUNCTION__;
+        errorMessage += ": ";
+        errorMessage += e.what();
+        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Editing, true);
+    }
 }
 
 static void ModifyTimesLocationData_FullMT(boost::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiDataModifier * theModifier, NFmiTimeDescriptor & theTimeDescriptor)
@@ -662,12 +673,20 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 	return false;
 }
 
+static void MakeBasicViewUpdatePreparationsAfterDataModifications(TimeSerialModificationDataInterface& theAdapter, bool clearEditedDataRelatedCaches = true)
+{
+    // 1. Kaikkien karttanäyttöjen image cachet tyhjiksi, pakotetaan piirto ja editoituun dataan riippuvaisten cachejen (macroParam) tyhjennys
+    theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, clearEditedDataRelatedCaches, false);
+    // 2. Optimoidaan smartmetin näyttöjen päivitystä, vain ne näytöt pitää päivittää, jotka voivat käyttää editoitua dataa
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetUpdatedViewIdMaskForEditingData());
+}
+
 static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
-		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+        ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
 		NFmiTimeDescriptor timeDescriptor(theAdapter.EditedDataTimeDescriptor());
 		return ::MakeDataValiditation(theAdapter, &timeDescriptor, true, 1, fDoMultiThread);
 	}
@@ -828,8 +847,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 			}
 		}
 		::CheckAndValidateAfterModifications(theAdapter, theEditorTool, false, fUsedMask, FmiParameterName(theModifiedDrawParam->Param().GetParam()->GetIdent()), fDoMultiThread, false);
-        theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-//		theAdapter.RefreshMasks();
+        ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
 
 		return true;
 	}
@@ -892,8 +910,8 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		// Mutta suoritus vaiheen virheet menevät tällä hetkellä vain loki tiedostoon.
 		if(smartToolModifier.IsInterpretedSkriptMacroParam())
 		{
-			theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-			return true;
+            ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter, false);
+            return true;
 		}
 
         NFmiParamBag modifiedParams = smartToolModifier.ModifiedParams();
@@ -914,7 +932,10 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 					smartToolModifier.ModifyData_ver2(&theTimes, fSelectedLocationsOnly, false, theThreadCallBacks);
 				else
 					smartToolModifier.ModifyData(&theTimes, fSelectedLocationsOnly, false, theThreadCallBacks);
-			}
+
+                if(!smartToolModifier.LastExceptionMessageFromThreads().empty())
+                    ::LogMessage(theAdapter, smartToolModifier.LastExceptionMessageFromThreads(), CatLog::Severity::Error, CatLog::Category::Editing);
+            }
 			catch(std::exception &e)
 			{
 				theAdapter.SmartToolEditingErrorText() = e.what();
@@ -930,8 +951,8 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		}
 
         LogSmartToolModifications(theAdapter, modifiedParams, theLogMessage, showLoadedSmartTool);
-		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-	}
+        ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
+    }
 	else
 	{
 		theAdapter.SmartToolEditingErrorText() = "Error: there were no edited data available.";
@@ -1289,8 +1310,8 @@ static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Undo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-		return status;
+        ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
+        return status;
 	}
 	return false;
 }
@@ -1309,8 +1330,8 @@ static bool RedoData(TimeSerialModificationDataInterface &theAdapter)
 			theAdapter.WindTableSystemMustaUpdateTable(true);
             ::LogMessage(theAdapter, "Redo " + modificationDescription + ".", CatLog::Severity::Info, CatLog::Category::Editing);
 		}
-		theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-		return status;
+        ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
+        return status;
 	}
 	return false;
 }
@@ -1354,7 +1375,7 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 				else
 				{
 					::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, fPasteClipBoardData);
-                    theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
+                    ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
                 }
 			}
 			editedData->Time(time);
@@ -1633,8 +1654,8 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 		else
 		{
             ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, usedMaskType, kFmiLastParameter, fDoMultiThread, false);
-            theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-		}
+            ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
+        }
 
 		editedData->Time(time);
         LogDataFilterToolsModifications(theAdapter, false);
@@ -1776,9 +1797,8 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 		else
 		{
             ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, false);
-            theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, true, false);
-//			theAdapter.RefreshMasks();
-		}
+            ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
+        }
 
 		editedData->Time(time);
 
@@ -2691,6 +2711,10 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 			else
 				smartToolModifier.ModifyData(&times, false, true, 0); // false tarkoittaa että laskut tehdään kaikkiin pisteisiin eikä vain valittuihin pisteisiin
 		}
+
+        if(!smartToolModifier.LastExceptionMessageFromThreads().empty())
+            ::LogMessage(theAdapter, smartToolModifier.LastExceptionMessageFromThreads(), CatLog::Severity::Error, CatLog::Category::Editing);
+
 		theUsedMacroInfoOut->First(); // asetetaan varmuuden vuoksi First:iin
 		theUsedMacroInfoOut->Values(theValues);
         if(!smartToolModifier.CalculationPoints().empty())

@@ -15,6 +15,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewFunctions.h"
 #include "persist2.h"
+#include "ApplicationInterface.h"
 
 /*
 #ifdef _DEBUG
@@ -276,6 +277,7 @@ void CFmiTempDlg::DoWhenClosing(void)
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
 	// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Sounding view: Closing view", TRUE);
 }
 
@@ -307,6 +309,7 @@ void CFmiTempDlg::OnBnClickedShowMapMarkers()
 	// Karttanäyttö on piirrettävä uudestaan, koska siellä saattaa näkyä
 	// uusia luotaus merkkejä.
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Sounding view: Toggle show map markers", TRUE);
 }
 
@@ -414,6 +417,7 @@ void CFmiTempDlg::OnBnClickedTempCode()
 		// Karttanäyttö on piirrettävä uudestaan, koska siellä saattaa näkyä
 		// uusia luotaus merkkejä.
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SoundingView);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Sounding view: Applying new Temp Code data", TRUE);
 	}
 }
@@ -717,6 +721,7 @@ void CFmiTempDlg::OnBnClickedCheckUseMapTimeWithSoundings()
     itsSmartMetDocumentInterface->GetMTATempSystem().SoundingTimeLockWithMapView(itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTimeLockWithMapView()); // Asetus pitää laittaa talteen myös MTATempSystem -luokalle!
 	Update();
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SoundingView);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Sounding view: Toggle Use map time");
 }
 

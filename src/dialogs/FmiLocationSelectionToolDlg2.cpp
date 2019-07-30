@@ -456,7 +456,7 @@ void CFmiLocationSelectionToolDlg2::OnButtonSelectionRedo()
 	if(editedInfo && editedInfo->LocationSelectionRedo())
 	{
 		editedInfo->LocationSelectionRedoData();
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 	}
 }
 
@@ -467,7 +467,7 @@ void CFmiLocationSelectionToolDlg2::OnButtonSelectionUndo()
 	if(editedInfo && editedInfo->LocationSelectionUndo())
 	{
 		editedInfo->LocationSelectionUndoData();
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
 	}
 }
 
