@@ -120,6 +120,7 @@ private:
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
     void SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount);
     void InitDialogTexts(void);
+    void CollapseAllTreeNodes();
     void MakeTreeNodeCollapseSettings();
     void SetTreeNodeInformationBackToDialogRowData();
     void HandleGridCtrlsLButtonDblClk();

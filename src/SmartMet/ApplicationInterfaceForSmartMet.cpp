@@ -242,3 +242,8 @@ NFmiApplicationWinRegistry& ApplicationInterfaceForSmartMet::ApplicationWinRegis
 {
     return GetDocument()->ApplicationWinRegistry();
 }
+
+void ApplicationInterfaceForSmartMet::ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag)
+{
+    GetDocument()->ApplyUpdatedViewsFlag(updatedViewsFlag);
+}

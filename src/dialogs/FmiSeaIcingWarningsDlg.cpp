@@ -16,6 +16,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiGdiPlusImageMapHandler.h"
 #include "persist2.h"
+#include "ApplicationInterface.h"
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 
@@ -173,6 +174,7 @@ void CFmiSeaIcingWarningsDlg::DoWhenClosing(void)
 {
 	itsSmartMetDocumentInterface->SeaIcingWarningSystem().ViewVisible(false);
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 	itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 }
 
@@ -249,6 +251,7 @@ void CFmiSeaIcingWarningsDlg::OnBnClickedButtonWarningCenterRefreshMessages()
 {
     itsSmartMetDocumentInterface->SeaIcingWarningSystem().Clear(false);
     itsSmartMetDocumentInterface->SeaIcingWarningSystem().CheckForNewMessages(0);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 }
 
@@ -257,6 +260,7 @@ void CFmiSeaIcingWarningsDlg::OnBnClickedCheckShowAllMessages()
 	UpdateData(TRUE);
 	// Tämä onkin ikävä juttu että tämä avain pitää olla useissa paikoissa annettuna (esim. genDocissa)
     itsSmartMetDocumentInterface->SeaIcingWarningSystem().StoreSettings("MetEditor::SeaIcingWarningSystem::");
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, true, true);
 }
 

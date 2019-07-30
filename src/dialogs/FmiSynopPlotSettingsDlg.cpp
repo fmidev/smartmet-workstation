@@ -317,7 +317,7 @@ void CFmiSynopPlotSettingsDlg::RefreshApplicationViews(const std::string &reason
     auto *synopStationPrioritySystem = itsSmartMetDocumentInterface->SynopStationPrioritySystem();
     synopStationPrioritySystem->Init(synopStationPrioritySystem->InitFileName());
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews);
 }
 
 void CFmiSynopPlotSettingsDlg::OnBnClickedButtonStationPriorities()

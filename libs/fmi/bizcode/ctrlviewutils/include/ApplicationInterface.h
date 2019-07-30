@@ -67,4 +67,5 @@ public:
     virtual void UpdateMainFrameTitle() = 0;
     virtual void OpenLocationFinderDialog(CWnd *parentView) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
+    virtual void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) = 0;
 };

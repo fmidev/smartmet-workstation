@@ -265,7 +265,16 @@ namespace Wms
         {
             for(const auto&setup : serverSetups)
             {
-                dynamicClients_[setup.first] = createClient(setup.second, proxyUrl);
+                try
+                {
+                    dynamicClients_[setup.first] = createClient(setup.second, proxyUrl);
+                }
+                catch(std::exception& e)
+                {
+                    std::string errorMessage = "Initializing WMS client failed: ";
+                    errorMessage += e.what();
+                    CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                }
             }
         }
 

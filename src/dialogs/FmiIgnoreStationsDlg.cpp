@@ -14,6 +14,7 @@
 #include "SmartMetToolboxDep_resource.h"
 #include "NFmiDictionaryFunction.h"
 #include "CtrlViewFunctions.h"
+#include "ApplicationInterface.h"
 
 // CFmiIgnoreStationsDlg dialog
 
@@ -187,6 +188,7 @@ void CFmiIgnoreStationsDlg::OnBnClickedButtonUpdate()
 	StoreSettingsToDoc();
 	itsSmartMetDocumentInterface->IgnoreStationsData().StoreToSettings();
 	NFmiSettings::Save();
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 	itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("IgnoreStationsDlg: Update pressed", true, true, CtrlViewUtils::kDoAllMapViewDescTopIndex);
 }
 

@@ -252,7 +252,7 @@ namespace AddParams
             const std::string &uniqueId = singleData->uniqueDataId();
             auto *singleDataMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
             dialogRowData.push_back(::makeRowItem(*singleData, uniqueId, singleDataMemory));
-            auto rowData = singleData->makeDialogRowData();
+            auto rowData = singleData->makeDialogRowData(dialogRowDataMemory);
             dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
         }   
         return dialogRowData;
@@ -271,9 +271,14 @@ namespace AddParams
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, const std::vector<std::unique_ptr<SingleRowItem>> &thisDataVector) const
     {
         std::vector<SingleRowItem> dialogRowData;
+        dialogRowData.reserve(thisDataVector.size());
         for(const auto &singleRowData : thisDataVector)
         {
             dialogRowData.push_back(*singleRowData);
+            auto& rowItem = dialogRowData.back();
+            const auto* rowItemMemory = findDataRowItem(rowItem.uniqueDataId(), dialogRowDataMemory);
+            if(rowItemMemory)
+                rowItem.dialogTreeNodeCollapsed(rowItemMemory->dialogTreeNodeCollapsed());
         }
         return dialogRowData;
     }

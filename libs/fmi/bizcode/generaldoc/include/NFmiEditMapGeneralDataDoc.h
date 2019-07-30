@@ -684,7 +684,6 @@ public:
 	void SetTimeFilterStartTime(const NFmiMetTime& theTime);
 	void SetTimeFilterEndTime(const NFmiMetTime& theTime);
 	void SetActiveParamMissingValues(double theValue);
-	void ChangeMapType(unsigned int theDescTopIndex, bool fForward);
 
 	int FilterDialogUpdateStatus(void);
 	void FilterDialogUpdateStatus(int newState);

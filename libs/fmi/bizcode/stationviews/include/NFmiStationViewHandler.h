@@ -182,6 +182,27 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void TraceLogValidTimeAndAbsoluteRow();
     void MakeParamLevelChangeDirtyOperations(bool changesHappened);
     bool IsMouseCursorOverParameterBox(const NFmiPoint & theMouseCursorPlace);
+    void UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
+    bool IsBrushToolUsed();
+    void LeftButtonUpBrushToolActions();
+    bool IsControlPointModeOn();
+    void LeftButtonUpControlPointModeActions(const NFmiPoint& thePlace, unsigned long theKey);
+    bool AllowCrossSectionPointManipulations();
+    void LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+
+    template<typename T>
+    bool MakeParamHandlerViewActions(T action)
+    {
+        // Ensin pit‰‰ suorittaa toiminto, ja ottaa status talteen
+        auto status = action();
+        // Vasta sitten laitetaan optimointi likauslippu p‰‰lle. Ainakin yhdess‰ action funktiossa (double-click) tehd‰‰n 
+        // ruudun p‰ivitys v‰liss‰ jonka j‰lkeen pit‰‰ tehd‰ viel‰ lopuksi toinen ruudun p‰ivitys, kun t‰‰lt‰ palataan.
+        UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
+        // Palautetaan status lopuksi
+        return status;
+    }
 
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;

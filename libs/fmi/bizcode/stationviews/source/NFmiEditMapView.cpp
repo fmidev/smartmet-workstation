@@ -606,8 +606,8 @@ bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
             if(index == itsVerticalAnimationInfo.itsUsedLabelCount - 1)
             {
                 animData.AnimationOn(true);
-                itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels 'animate' label");
-                return true;
+                itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels 'animate' label", GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+                return false; // Palauta false, koska edellä tehtiin jo ruutujen päivitys oikeilla loki teksteillä
             }
             else if(itsVerticalAnimationInfo.itsUsedTimes.SetTime(index))
             {
@@ -616,9 +616,10 @@ bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
                 NFmiMetTime oldTime = itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
                 if(newTime != oldTime)
                 {
-                    itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex, newTime);
+                    // Tämä laittaa optimoidun näyttöjen päivityksen päälle, joten seuraavan rivin RefreshApplicationViewsAndDialogs voi olla ilman näyttö maskia
+                    itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex, newTime); 
                     itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels sigle valid time label");
-                    return true;
+                    return false; // Palauta false, koska edellä tehtiin jo ruutujen päivitys oikeilla loki teksteillä
                 }
             }
         }
