@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "process_helpers.h"
 #include "process_tools.h"
 
