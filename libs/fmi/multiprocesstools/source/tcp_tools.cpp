@@ -1,4 +1,5 @@
 
+#include "stdafx.h"
 #include "tcp_tools.h"
 #include "logging.h"
 #include "process_tools.h"
@@ -34,6 +35,18 @@ void use_binary_transfer(bool new_value)
     g_use_binary_transfer = new_value;
 }
 
+std::string make_argument_string(const std::vector<std::string>& final_args)
+{
+    std::string str;
+    for(const auto& arg : final_args)
+    {
+        if(!str.empty())
+            str += " ";
+        str += arg;
+    }
+    return str;
+}
+
 void create_worker_process(const std::string &executable_path, const std::string &worker_name, const std::string &create_worker_start_message, const std::vector<std::string> &extra_args, bool add_command_line_flags)
 {
     std::vector<std::string> final_args;
@@ -46,6 +59,8 @@ void create_worker_process(const std::string &executable_path, const std::string
     std::string worker_string = create_worker_start_message;
     worker_string += worker_name;
     log_message(worker_string, logging::trivial::info);
+    log_message(std::string("Worker exe path: ") + executable_path, logging::trivial::debug);
+    log_message(std::string("Worker exe args: ") + make_argument_string(final_args), logging::trivial::debug);
 
     // child:ia ei saa ottaa talteen, koska sen destruktori kaataa ohjelman, kun se yritt‰‰ sulkea
     // process-handlen. Mystisesti ongelmia ei tapahdu, kun start_process-funktio palauttaa child:in
