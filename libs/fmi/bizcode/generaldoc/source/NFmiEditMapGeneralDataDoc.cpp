@@ -137,6 +137,9 @@
 #include "NFmiMacroParamDataCache.h"
 #include "TimeSerialParameters.h"
 
+
+#include "AnimationProfiler.h"
+
 #ifdef OLDGCC
  #include <strstream>
 #else
@@ -627,6 +630,8 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,wmsSupport()
 #endif // DISABLE_CPPRESTSDK
 ,parameterSelectionSystem()
+,profiler()
+,profiling(false)
 {
 	NFmiRect bsRect1(0.,0.,1.,0.905);
 	NFmiRect bsRect2(0.,0.,1.,0.91);
@@ -11552,6 +11557,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		bool helpView1Updated = false;
 		bool helpView2Updated = false;
 		double minWaitTimeInMS = NFmiAnimationData::kNoAnimationWaitTime;
+
+		if (profiling) profiler.Tick();
+
 		for(size_t i = 0; i<itsMapViewDescTopList.size(); i++)
 		{
 			NFmiMapViewDescTop &descTop = *itsMapViewDescTopList[i];
@@ -11573,6 +11581,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(status == 2)
 			{
 				descTop.CurrentTime(animationData.CurrentTime());
+			}
+
+			if (profiling && i == itsMapViewDescTopList.size()-1 
+				&& descTop.CurrentTime() == animationData.Times().LastTime() )
+			{
+				StopProfiling();
 			}
 		}
 
@@ -11605,6 +11619,76 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 		else
 			return 0;
+	}
+
+
+	void StartProfiling() {
+
+		if (profiling) {
+			StopProfiling();
+			return;
+		}
+
+		int i = 0;
+
+		for (auto&& descTop : MapViewDescTopList())
+		{
+			NFmiAnimationData& animationData = descTop->AnimationDataRef();
+
+
+			MapViewDirty(i, false, true, true, true, false, false);
+
+			profiler.getSettings().push_back(animationData);
+
+			animationData.SetRunMode(NFmiAnimationData::kNormal);
+
+			animationData.FrameDelayInMS(0);
+
+
+
+			animationData.Times( *descTop->TimeControlViewTimes().ValidTimeBag() );
+
+			descTop->CurrentTime(animationData.Times().FirstTime());
+			animationData.CurrentTime(animationData.Times().FirstTime());
+
+			animationData.TimeStepInMinutes( animationData.Times().Resolution() );
+
+			animationData.ShowTimesOnTimeControl(true);
+
+			animationData.AnimationOn(true);
+
+			i++;
+		}
+
+
+		profiling = true;
+
+	}
+
+	void StopProfiling() {
+
+		int i = 0;
+
+		for (auto&& descTop : MapViewDescTopList())
+		{
+			NFmiAnimationData& animationData = descTop->AnimationDataRef();
+
+
+			animationData = profiler.getSettings()[i];
+
+
+			animationData.ShowTimesOnTimeControl(true);
+
+			i++;
+		}
+
+		CatLog::logMessage(profiler.report(), CatLog::Severity::Info, CatLog::Category::Visualization);
+
+
+
+		profiler.Reset();
+
+		profiling = false;
 	}
 
 	// tarkasta CView-näyttöluokissa, onko mahdollisesti animaatiota käynnissä. Jos on, älä laita odota-cursoria näkyviin, koska se vilkuttaa ikävästi
@@ -14491,6 +14575,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiMetEditorOptionsData itsMetEditorOptionsData;
 	NFmiCPManagerSet itsCPManagerSet;
 
+	AnimationProfiler profiler;
+	bool profiling;
 };
 // **********************************************************
 // ************ UUSI PIMPL idiooma **************************
@@ -15001,6 +15087,19 @@ void NFmiEditMapGeneralDataDoc::UpdateModifiedDrawParamMarko(boost::shared_ptr<N
 	// esim. kärtta näytön drawparameja tällä, täytyy metodit tehdä uusiksi.
 	// Lisäksi jouduin laittamaan 0 desctop indeksin, vaikka aikasarjaikkunalla ei ole desctopindeksiä.
 	pimpl->UpdateModifiedDrawParamMarko(0, theDrawParam, gActiveViewRowIndexForTimeSerialView);
+}
+
+AnimationProfiler& NFmiEditMapGeneralDataDoc::GetProfiler() { return pimpl->profiler; }
+
+void NFmiEditMapGeneralDataDoc::StartProfiling() {
+
+	pimpl->StartProfiling();
+
+}
+
+void NFmiEditMapGeneralDataDoc::StopProfiling() {
+
+	pimpl->StopProfiling();
 }
 
 // tallettaa mm. CP pisteet, muutoskäyrät jne.
