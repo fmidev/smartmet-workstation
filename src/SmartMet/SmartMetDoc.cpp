@@ -102,6 +102,8 @@
 #include "NFmiMacroParamDataCache.h"
 #include "FmiSoundingDataServerConfigurationsDlg.h"
 
+#include "AnimationProfiler.h"
+
 #include <direct.h> // _chdir()
 #include <cassert>
 #include <fstream>
@@ -3844,5 +3846,5 @@ void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, co
 
 void CSmartMetDoc::OnAcceleratorDoVisualizationProfiling()
 {
-    // TODO: Add your command handler code here
+	GetData()->StartProfiling();
 }

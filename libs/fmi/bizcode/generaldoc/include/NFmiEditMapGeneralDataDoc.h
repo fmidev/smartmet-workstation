@@ -19,6 +19,7 @@
 #include <list>
 #include "boost/shared_ptr.hpp"
 
+
 class NFmiColor;
 class NFmiString;
 class NFmiGrid;
@@ -114,6 +115,7 @@ class SmartMetDocumentInterface;
 class Q2ServerInfo;
 class NFmiMacroParamDataCache;
 class TimeSerialParameters;
+class AnimationProfiler;
 
 namespace Wms
 {
@@ -699,6 +701,9 @@ public:
 	void Printing(bool newStatus);
 	int ToggleShowTimeOnMapMode(unsigned int theDescTopIndex); // neljä tilaa: 0 = näytä aikakontrolliikkuna+teksti 1=vain aik.kont.ikkuna, 2=älä näytä kumpaakaan ja 3= näytä vain teksti
 
+	AnimationProfiler& GetProfiler();
+	void StartProfiling();
+	void StopProfiling();
 private:
     void SetGeneralDataDocInterfaceCallbacks();
 
