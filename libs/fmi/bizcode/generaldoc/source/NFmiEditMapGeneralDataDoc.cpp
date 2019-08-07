@@ -11583,7 +11583,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				descTop.CurrentTime(animationData.CurrentTime());
 			}
 
-			if (profiling && i == itsMapViewDescTopList.size()-1 
+			if (profiling && i == 0
 				&& descTop.CurrentTime() == animationData.Times().LastTime() )
 			{
 				StopProfiling();
@@ -11636,8 +11636,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			NFmiAnimationData& animationData = descTop->AnimationDataRef();
 
 
-			MapViewDirty(i, false, true, true, true, false, false);
-
 			profiler.getSettings().push_back(animationData);
 
 			animationData.SetRunMode(NFmiAnimationData::kNormal);
@@ -11645,17 +11643,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			animationData.FrameDelayInMS(0);
 
 
-
-			animationData.Times( *descTop->TimeControlViewTimes().ValidTimeBag() );
+ 			if(!animationData.ShowTimesOnTimeControl() )
+				animationData.Times( *descTop->TimeControlViewTimes().ValidTimeBag() );
 
 			descTop->CurrentTime(animationData.Times().FirstTime());
 			animationData.CurrentTime(animationData.Times().FirstTime());
 
 			animationData.TimeStepInMinutes( animationData.Times().Resolution() );
 
+
 			animationData.ShowTimesOnTimeControl(true);
 
 			animationData.AnimationOn(true);
+
+
+
+			MapViewDirty(i, false, true, true, true, false, false);
 
 			i++;
 		}
@@ -11671,11 +11674,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 		for (auto&& descTop : MapViewDescTopList())
 		{
+
+			auto times = descTop->AnimationDataRef().Times();
+
 			NFmiAnimationData& animationData = descTop->AnimationDataRef();
 
 
 			animationData = profiler.getSettings()[i];
 
+			animationData.Times(times);
 
 			animationData.ShowTimesOnTimeControl(true);
 
