@@ -214,7 +214,7 @@ void master_to_worker_connection::on_check_idle_timeout(const error_code & /* er
     long long time_lasted_in_ms = 0;
     if(tcp_tools::is_timeout(last_working_action_time, no_work_server_time_out_in_ms_, &time_lasted_in_ms)) 
     {
-        log_message("No-work timeout (last work " + boost::lexical_cast<std::string>(time_lasted_in_ms) + " ms ago), time to stop master server", logging::trivial::info);
+        log_message(std::string("No-work timeout (last work ") + boost::lexical_cast<std::string>(time_lasted_in_ms) + " ms ago), time to stop master server", logging::trivial::info);
         stop_master_server = true;
         master_to_worker_connection::post_check_stopping_service(); // aletaan tutkimaan, milloin kaikki yhteydet on suljettu, jotta voidaan sulkea Asio-service ja p‰‰ohjelma.
     }
@@ -390,7 +390,7 @@ void master_to_worker_connection::set_last_working_action_time()
 void master_to_worker_connection::on_read(const error_code & err, size_t bytes) 
 {
     //if(use_verbose_logging_)
-    //    log_message("on_read -function from: " + username_, logging::trivial::trace);
+    //    log_message(std::string("on_read -function from: ") + username_, logging::trivial::trace);
 
     if ( err) 
     {
@@ -401,11 +401,13 @@ void master_to_worker_connection::on_read(const error_code & err, size_t bytes)
     if ( !started() ) 
         return;
 
+    tcp_tools::boost_asio_async_read_behaviour_change_fix(bytes, binary_read_buffer_, &binary_reading_state_);
+
     last_ping_ = boost::posix_time::microsec_clock::local_time(); // viimeksi kun ollaan oltu yhteydess‰ clientiin
     if(binary_reading_state_ == tcp_tools::binary_read_state_found)
     {
         if(use_verbose_logging_)
-            log_message("Binary transmission starts from: " + username_, logging::trivial::trace);
+            log_message(std::string("Binary transmission starts from: ") + username_, logging::trivial::trace);
 
         binary_read_buffer_.resize(binary_read_buffer_size_);
         do_read(); // jatketaan binary sanoman lukua
@@ -413,7 +415,7 @@ void master_to_worker_connection::on_read(const error_code & err, size_t bytes)
     else if(transmission_incomplete_)
     {
         if(use_verbose_logging_)
-            log_message("incomplete transmission from: " + username_, logging::trivial::trace);
+            log_message(std::string("incomplete transmission from: ") + username_, logging::trivial::trace);
 
         complete_message_from_read_ += std::string(fixed_size_read_buffer_.data(), bytes);
         do_read(); // jatketaan sanoman lukua
@@ -435,7 +437,7 @@ void master_to_worker_connection::on_read(const error_code & err, size_t bytes)
         else
         {
             if(use_verbose_logging_)
-                log_message("complete message from: " + username_, logging::trivial::trace);
+                log_message(std::string("complete message from: ") + username_, logging::trivial::trace);
 
             if(tcp_tools::find_from_start_of_string(msg, "login ", tcp_tools::g_search_message_start_max_chars))
                 on_login(msg);
@@ -447,7 +449,7 @@ void master_to_worker_connection::on_read(const error_code & err, size_t bytes)
                 on_error_result(msg);
             else 
             {
-                log_message("invalid msg: " + msg + ", continuing to on_ping...", logging::trivial::error);
+                log_message(std::string("invalid msg: ") + msg + ", continuing to on_ping...", logging::trivial::error);
                 on_ping();
             }
         }
@@ -456,7 +458,7 @@ void master_to_worker_connection::on_read(const error_code & err, size_t bytes)
     
 void master_to_worker_connection::on_error_result(const std::string & msg) 
 {
-    log_message("Task sended to worker was returned with error: " + msg, logging::trivial::error);
+    log_message(std::string("Task sended to worker was returned with error: ") + msg, logging::trivial::error);
     do_next_task();
 }
 
@@ -549,7 +551,7 @@ void master_to_worker_connection::log_task(const tcp_tools::task_structure &task
 void master_to_worker_connection::do_ping() 
 {
     //if(use_verbose_logging())
-    //    log_message("do_ping " + username_, logging::trivial::trace);
+    //    log_message(std::string("do_ping ") + username_, logging::trivial::trace);
 
     worker_is_doing_task_ = false;
     do_write("ping\n", false); // false = ei lokitusta miss‰‰n tapauksessa, pingej‰ tehd‰‰n 10x sekunnissa per worker
@@ -694,7 +696,7 @@ class binary_work_result_matcher
 void master_to_worker_connection::do_next_results(void)
 {
     if(use_verbose_logging())
-        log_message("do_next_results " + username_, logging::trivial::trace);
+        log_message(std::string("do_next_results ") + username_, logging::trivial::trace);
     std::list<tcp_tools::work_result_structure> new_results = get_new_work_results();
     if(!new_results.empty())
         do_send_new_work_results_to_client(new_results);
@@ -723,7 +725,7 @@ void master_to_worker_connection::on_check_ping()
 {
     if(stop_master_server) 
     {
-        log_message("stopping " + username_ + " -connection because user request", logging::trivial::info);
+        log_message(std::string("stopping ") + username_ + " -connection because user request", logging::trivial::info);
         stop();
     }
     else
@@ -741,7 +743,7 @@ void master_to_worker_connection::on_check_ping()
         else
         {
             if((on_check_ping_counter++ % 10) == 0 && use_verbose_logging_) // tulostetaan vain joka 10. ping tarkastus, eli joka 10. sekunti
-                log_message("on_check_ping: waited for " + username_ + "'s ping for " + boost::lexical_cast<std::string>(time_lasted_in_ms) + " ms", logging::trivial::trace);
+                log_message(std::string("on_check_ping: waited for ") + username_ + "'s ping for " + boost::lexical_cast<std::string>(time_lasted_in_ms) + " ms", logging::trivial::trace);
             post_check_ping(); // k‰ynnistet‰‰n t‰m‰ aina uudelleen
         }
     }
@@ -784,12 +786,14 @@ void master_to_worker_connection::on_write(const error_code & /* err */ , size_t
 void master_to_worker_connection::do_read() 
 {
     //if(use_verbose_logging_)
-    //    log_message("do_read -function from: " + username_, logging::trivial::trace);
+    //    log_message(std::string("do_read -function from: ") + username_, logging::trivial::trace);
 
     if(binary_reading_state_ == tcp_tools::binary_read_state_found)
     { // binary sanoman loppuosan luku
         async_read(sock_, boost::asio::buffer(binary_read_buffer_), 
             MEMBER_FUNC2(binary_read_complete,_1,_2), MEMBER_FUNC2(on_read,_1,_2));
+
+        tcp_tools::trace_log_start_of_container("do_read reads following binary message: ", use_verbose_logging_, binary_read_buffer_);
     }
     else
     { // normaali tavu kerrallaan luku
