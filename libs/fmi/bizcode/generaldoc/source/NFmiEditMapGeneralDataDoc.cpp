@@ -11639,9 +11639,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			profiler.getSettings().push_back(animationData);
 
 			animationData.SetRunMode(NFmiAnimationData::kNormal);
+			animationData.LockMode(NFmiAnimationData::kNoLock);
 
 			animationData.FrameDelayInMS(0);
+			animationData.LastFrameDelayFactor(0);
 
+			animationData.ShowVerticalControl(false);
 
  			if(!animationData.ShowTimesOnTimeControl() )
 				animationData.Times( *descTop->TimeControlViewTimes().ValidTimeBag() );
