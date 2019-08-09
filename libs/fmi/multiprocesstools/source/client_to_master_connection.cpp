@@ -98,6 +98,8 @@ void client_to_master_connection::on_read(const error_code & err, size_t bytes)
     if ( !started() ) 
         return;
 
+    tcp_tools::boost_asio_async_read_behaviour_change_fix(bytes, binary_read_buffer_, &binary_reading_state_);
+
     if(binary_reading_state_ == tcp_tools::binary_read_state_found)
     {
         if(use_verbose_logging_)
@@ -138,7 +140,7 @@ void client_to_master_connection::on_read(const error_code & err, size_t bytes)
                 on_new_results(msg);
             else
             {
-                log_message("invalid msg, continuing: " + msg, logging::trivial::error);
+                log_message(std::string("invalid msg, continuing: ") + msg, logging::trivial::error);
                 on_ping(msg);
             }
         }
@@ -262,7 +264,7 @@ void client_to_master_connection::postpone_ping()
     //if(counter == 5)
     //    millis = 7000;
     //if(use_verbose_logging_)
-    //    log_message("Postponing ping " + boost::lexical_cast<std::string>(millis) + " millis", logging::trivial::trace);
+    //    log_message(std::string("Postponing ping ") + boost::lexical_cast<std::string>(millis) + " millis", logging::trivial::trace);
     timer_.expires_from_now(boost::posix_time::millisec(millis));
     timer_.async_wait( MEMBER_FUNC(do_ping));
 }
