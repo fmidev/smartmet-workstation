@@ -62,16 +62,7 @@ struct multi_process_pool_options
 
 void add_point_values_to_vectors(float x, float y, float z, std::vector<float> &x_values, std::vector<float> &y_values, std::vector<float> &z_values);
 void starting_workers_log(int worker_count);
-worker_process_info_vector_t create_workers(int worker_count, const base_worker_process_start_info &base_info, const multi_process_pool_options &mpp_options_in);
 std::string make_worker_executable_full_path(const std::string &worker_executable_absolute_path, const std::string &worker_executable_name, const std::string &worker_project_name);
-std::vector<std::string> make_worker_executable_base_args(const base_worker_process_start_info &base_info);
-boost::shared_ptr<worker_process_info> create_worker_process(const std::string &executable_path, const std::vector<std::string> &base_args, int worker_index, const std::string &runnin_info_opening_start_message, const std::string &create_worker_start_message, const base_worker_process_start_info &base_info);
-bool create_worker_process(worker_process_info_vector_t &worker_process_infos, int index, bool recreate_dead_process, const std::string &runnin_info_opening_start_message, const std::string &create_worker_start_message, const base_worker_process_start_info &base_info, const multi_process_pool_options &mpp_options_in);
-bool recreate_worker(worker_process_info_vector_t &worker_process_infos, int index, const std::string &runnin_info_opening_start_message, const std::string &create_worker_start_message, const multi_process_pool_options &mpp_options_in);
-void make_heart_beat(worker_running_info_ptr_t &master_info);
-void check_worker_heartbeats(worker_process_info_vector_t &worker_process_infos, const multi_process_pool_options &mpp_options_in);
-bool are_all_workers_dead(worker_process_info_vector_t &worker_process_infos);
-bool have_there_been_zero_work_in_time_limit(worker_process_info_vector_t &worker_process_infos, heartbeat_checker &no_tasks_timeout_timer);
 
 void log_workqueue_size(task_queue_ptr_t &workqueue, logging::trivial::severity_level log_level);
 void log_and_wait(const std::string &base_message, float wait_time_in_seconds);
@@ -235,88 +226,6 @@ typedef std::vector<gridding_result_ptr_t> gridding_results_t;
 
 gridding_results_t get_gridding_results(result_queue_ptr_t &resultqueue, const std::string &client_guid);
 void clear_old_results_from_queue(result_queue_ptr_t &resultqueue);
-
-// Valvoo erilaisia tapahtumia. Varmistaa myös että lopetuksen yhteydessä workerit lopetetaan.
-// Kasvattaa omaa elossa olo counteria.
-template<typename MasterProcessStuff>
-void master_loop(MasterProcessStuff &master_process_data, boost::function<int(void)> check_if_key_pressed, bool &close_program_from_outside, bool demo_mode)
-{
-    // heartbeat_checker:iä voidaan käyttää myös simppelinä timer:ina, tässä tehdään jokin juttu vain kun timerissa on riittävästi aikaa kulunut
-    heartbeat_checker heartbeat_check_timer(1000);
-    heartbeat_checker random_task_generator_timer(5000);
-    heartbeat_checker no_work_check_timer(1000); // tehdään tämä no-work tarkistus vain sekunnin välein
-    heartbeat_checker no_work_timeout_timer(15*60*1000); // onko tullut yhtään työtä tietyn ajan sisällä
-    heartbeat_checker clear_old_results_check_timer(30*1000); // tehdään vanhojen tulosten siivous tietyn väliajoin
-    int random_task_generator_speed = 0;
-    for( ; ; )
-    {
-        int ch = check_if_key_pressed();
-        if(ch == 'q' || ch == 'Q' || close_program_from_outside)
-        { // Käyttäjä haluaa lopettaa, lopetetaan workerit ja master
-            log_message("User pressed quit key (q)", logging::trivial::info);
-            stop_workers(master_process_data.worker_process_infos);
-            log_and_wait("Waiting workers to close", 1.3f);
-            report_worker_activity_on_close(master_process_data.worker_process_infos);
-            break;
-        }
-        else if(ch == 'e' || ch == 'E' )
-        { // Käyttäjä haluaa että heitetään outo poikkeus
-            log_message("User pressed crash-master key (e)", logging::trivial::info);
-            throw 1;
-        }
-        else if(ch >= '0' && ch <= '9' )
-        { // Käyttäjä haluaa muuttaa taskien luonti nopeutta
-            random_task_generator_speed = ch - '0';
-            std::string speed_message = "User pressed task generation speed key (";
-            speed_message += boost::lexical_cast<std::string>(random_task_generator_speed);
-            speed_message += ")";
-            log_message(speed_message, logging::trivial::info);
-        }
-
-        if(heartbeat_check_timer.is_heartbeat_expired())
-        {
-            heartbeat_check_timer.reset_heartbeat(); // uusi odotus jakso aloitetaan tässä
-            check_worker_heartbeats(master_process_data.worker_process_infos, master_process_data.mpp_options);
-        }
-
-        if(are_all_workers_dead(master_process_data.worker_process_infos))
-        {
-            log_message("All workers seems to be dead, stopping", logging::trivial::error);
-            break;
-        }
-
-        if(no_work_check_timer.is_heartbeat_expired())
-        {
-            no_work_check_timer.reset_heartbeat();
-            if(have_there_been_zero_work_in_time_limit(master_process_data.worker_process_infos, no_work_timeout_timer))
-            {
-                log_message("No work at all in the given time limit, stopping", logging::trivial::info);
-                stop_workers(master_process_data.worker_process_infos);
-                log_and_wait("Waiting workers to close", 0.5f);
-                break;
-            }
-        }
-
-        if(clear_old_results_check_timer.is_heartbeat_expired())
-        {
-            clear_old_results_check_timer.reset_heartbeat();
-            clear_old_results_from_queue(master_process_data.work_result_queue);
-        }
-
-        if(random_task_generator_timer.is_heartbeat_expired())
-        {
-            random_task_generator_timer.reset_heartbeat(); // uusi odotus jakso aloitetaan tässä
-            generate_random_tasks(master_process_data.workqueue, master_process_data.allocator_holder, random_task_generator_speed, global_task_index);
-        }
-
-        make_heart_beat(master_process_data.master_info);
-
-        if(demo_mode) // vain demo moodissa luetaan tuloksia ja otetaan ne pois result-jonosta
-            log_results(master_process_data.work_result_queue, "Result from job-index: ", logging::trivial::info);
-
-        boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // nukutaan pätkiä, jottei CPU tukahdu
-    }
-}
 
 template<typename TaskQueue, typename ResultQueue>
 class worker_process_stuff

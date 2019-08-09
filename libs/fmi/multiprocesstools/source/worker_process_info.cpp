@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "worker_process_info.h"
 
 base_worker_process_start_info::base_worker_process_start_info()

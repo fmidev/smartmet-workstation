@@ -486,7 +486,7 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
     jobIndex++;
 
     // T‰ytet‰‰n ensin task-jono
-    tcp_tools::concurrent_queue<tcp_tools::task_structure> &tasks = client_to_master_connection::task_queue();
+    auto &tasks = client_to_master_connection::task_queue();
 
     // Tehd‰‰n ensin griddaus tyˆt ja laitetaan ne serverille
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
@@ -500,6 +500,12 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
 			continue; // t‰lle ajalle ei muutoksia!
         tasks.push(tcp_tools::task_structure(jobIndex, itsInfo->TimeIndex(), timeAtWorkStarted.EpochTime(), relativeAreaRectStr, itsGridData.NX(), itsGridData.NY(), xValues, yValues, zValues, theGuidStr, griddingPropertiesStr, cpRangeLimitRelative));
 	}
+
+    if(tasks.size() == 0)
+    {
+        log_message("No actual task at this time, stopping MP-CP editing action...", boost::log::trivial::info);
+        return false;
+    }
 
     // K‰ynnistet‰‰n clint->server yhteys
     std::string username = tcp_tools::g_client_login_base_string + theGuidStr;
