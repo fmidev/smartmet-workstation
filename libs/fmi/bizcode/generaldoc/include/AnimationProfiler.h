@@ -51,9 +51,13 @@ public:
 
 
 
-	std::string report() {
+	void Report() {
 
-		if (!data.size() ) return "No data collected";
+		if (!data.size()) {
+
+			CatLog::logMessage("No data", CatLog::Severity::Info, CatLog::Category::Visualization);
+			return;
+		}
  		auto ret = std::stringstream{};
 
 		std::vector < std::chrono::duration<double,std::milli> > datams;
@@ -74,7 +78,11 @@ public:
 
 		double median = datams[datams.size() / 2].count();
 
-		ret << "Min: " << datams.front().count() << "ms , Max: " << datams.back().count() << "ms, median: " << median << "ms    ";
+		double dataMin = datams.front().count();
+
+		double dataMax = datams.back().count();
+
+		ret << "Min: " << dataMin << "ms , Max: " << dataMax << "ms, median: " << median << "ms    ";
 
 		double stddev = std::accumulate(begin(datams), end(datams), 0, [=](double a, const std::chrono::duration<double, std::milli>  &b) {
 			return (a + (b.count() - median) * (b.count() - median) );
@@ -85,7 +93,52 @@ public:
 
 		ret << "Std. deviation: " << stddev << "ms";
 
-		return ret.str();
+
+		CatLog::logMessage(ret.str(), CatLog::Severity::Info, CatLog::Category::Visualization);
+
+
+		constexpr int binCount = 16;
+
+		double binSize = (dataMax - dataMin) / binCount;
+
+		double currBinVal = dataMin + binSize;
+
+		int currBin = 0;
+
+		std::array<size_t, binCount> bins = { 0 };
+
+
+		for (auto&& p : datams) {
+
+			double val = p.count();
+			while ( val > currBinVal) {
+				currBinVal += binSize;
+				currBin++;
+			}
+
+			bins[currBin>=binCount?binCount-1:currBin]++;
+
+
+		}
+
+		size_t maxCount = 0;
+		for (int i = 0; i < binCount; i++)
+			if (bins[i] > maxCount) maxCount = bins[i];
+
+		constexpr int maxBar = 40;
+
+		for (int i = 0; i < binCount; i++) {
+			std::stringstream line;
+			auto binVal = dataMin + binSize * i;
+			line << "> "  << std::setfill('0') << std::setw(7) << binVal << "ms : " << std::setw(3) << bins[i] << " | ";
+			int barLen = double(bins[i]) / maxCount * maxBar;
+			if (barLen > 0)
+				for (int j = 0; j < barLen; j++)
+					line << " # ";
+			else if (bins[i] > 0)
+				line << " * ";
+			CatLog::logMessage(line.str(), CatLog::Severity::Info, CatLog::Category::Visualization);
+		}
 	}
 
 };

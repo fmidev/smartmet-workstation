@@ -11692,9 +11692,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			i++;
 		}
 
-		CatLog::logMessage(profiler.report(), CatLog::Severity::Info, CatLog::Category::Visualization);
-
-
+		profiler.Report();
 
 		profiler.Reset();
 
