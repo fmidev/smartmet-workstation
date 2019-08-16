@@ -22,7 +22,8 @@ public:
     void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) override;
     bool ScrollViewRow(unsigned int theDescTopIndex, int theCount) override;
     const std::string& HelpDataPath(void) const override;
-    void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) override;
+	const std::string& ControlPath(void) const;
+	void LogAndWarnUser(const std::string& theMessageStr, const std::string& theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) override;
     NFmiInfoOrganizer* InfoOrganizer(void) override;
     bool IsToolMasterAvailable(void) override;
     NFmiDrawParamList* DrawParamList(int theDescTopIndex, int theIndex) override;
