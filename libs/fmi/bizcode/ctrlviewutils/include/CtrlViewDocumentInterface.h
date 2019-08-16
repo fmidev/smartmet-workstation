@@ -128,6 +128,7 @@ public:
     virtual void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) = 0;
     virtual bool ScrollViewRow(unsigned int theDescTopIndex, int theCount) = 0;
     virtual const std::string& HelpDataPath(void) const = 0;
+	virtual const std::string& ControlPath(void) const = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer(void) = 0;
     virtual bool IsToolMasterAvailable(void) = 0;

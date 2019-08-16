@@ -1277,14 +1277,29 @@ namespace
 	AnimationButtonImageHolder gAnimationButtonImageHolder; // yksi instannsi luodaan nimettömään namespaceen
 }
 
+void NFmiStationViewHandler::InitializeWarningSymbolFiles(void)
+{
+	std::string confName = "SmartMet::WomlDirectoryPath";
+	if (NFmiSettings::IsSet(confName))
+	{
+		std::string name = NFmiSettings::Require<std::string>(confName);
+		gAnimationButtonImageHolder.itsBitmapFolder = itsCtrlViewDocumentInterface->ControlPath() + name + "\\warning-icons";
+		gAnimationButtonImageHolder.Initialize();
+	}
+	else
+	{
+		gAnimationButtonImageHolder.itsBitmapFolder = itsCtrlViewDocumentInterface->HelpDataPath() + "\\warning-icons";
+		gAnimationButtonImageHolder.Initialize();
+	}
+}
+
 void NFmiStationViewHandler::InitializeWarningSymbols(void)
 {
 	if(gAnimationButtonImageHolder.fInitialized == false)
 	{
 		try
 		{
-			gAnimationButtonImageHolder.itsBitmapFolder = itsCtrlViewDocumentInterface->HelpDataPath() + "\\warning-icons";
-			gAnimationButtonImageHolder.Initialize();
+			InitializeWarningSymbolFiles();
 		}
 		catch(std::exception &e)
 		{

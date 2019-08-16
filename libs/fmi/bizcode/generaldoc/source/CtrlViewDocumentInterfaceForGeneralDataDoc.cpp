@@ -68,6 +68,11 @@ const std::string& CtrlViewDocumentInterfaceForGeneralDataDoc::HelpDataPath(void
     return itsDoc->HelpDataPath();
 }
 
+const std::string& CtrlViewDocumentInterfaceForGeneralDataDoc::ControlPath(void) const
+{
+	return itsDoc->ControlDirectory();
+}
+
 void CtrlViewDocumentInterfaceForGeneralDataDoc::LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption, bool flushLogger)
 {
     itsDoc->LogAndWarnUser(theMessageStr, theDialogTitleStr, severity, category, justLog, addAbortOption, flushLogger);

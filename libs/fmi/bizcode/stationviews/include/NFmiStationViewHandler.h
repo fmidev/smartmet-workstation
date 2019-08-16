@@ -106,6 +106,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void DrawKaHaMessageIcon(const HakeMessage::HakeMsg &theWarningMessage, const NFmiPoint &latlon);
 #endif // DISABLE_CPPRESTSDK
 
+	void InitializeWarningSymbolFiles(void);
 	void InitializeWarningSymbols(void);
 	bool CheckBoundingBox(NFmiRect &theBoundBox, std::vector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace);
 	NFmiPoint CalcNewCenterPoint(double relativeX, double relativeY, double relativeW, double radius, double angle);
