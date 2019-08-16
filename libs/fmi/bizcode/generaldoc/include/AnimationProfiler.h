@@ -70,6 +70,14 @@ public:
 			return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(a);
 			});
 
+		size_t j = 0;
+		for (auto&& a : datams) {
+			std::stringstream line;
+			line << j <<" : "<< a.count() << "ms";
+			CatLog::logMessage(line.str(), CatLog::Severity::Info, CatLog::Category::Visualization);
+			j++;
+		}
+
 		ret << "Samples: " << data.size() << "    ";
 
 		std::chrono::duration<double> total(0);
