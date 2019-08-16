@@ -203,6 +203,11 @@ namespace Wms
             try
             {
                 setup_ = std::make_unique<Setup>(SetupParser::parse());
+                if(!setup_->isConfigured)
+                {
+                    CatLog::logMessage(std::string("No meaningful Wms configurations were given, no WMS support available"), CatLog::Severity::Info, CatLog::Category::Configuration);
+                    return;
+                }
             }
             catch(const std::exception& e)
             {
