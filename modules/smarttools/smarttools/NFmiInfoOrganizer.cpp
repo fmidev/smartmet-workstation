@@ -1036,13 +1036,19 @@ checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiInfoOrganizer::GetInfos
   checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
   if (theType == NFmiInfoData::kEditable)
   {
-    boost::shared_ptr<NFmiFastQueryInfo> info = itsEditedDataKeeper->GetIter();
-    if (info) infoVector.push_back(itsEditedDataKeeper->GetIter());
+    if (itsEditedDataKeeper)
+    {
+      boost::shared_ptr<NFmiFastQueryInfo> info = itsEditedDataKeeper->GetIter();
+      if (info) infoVector.push_back(itsEditedDataKeeper->GetIter());
+    }
   }
   else if (theType == NFmiInfoData::kCopyOfEdited)
   {
-    boost::shared_ptr<NFmiFastQueryInfo> info = itsCopyOfEditedDataKeeper->GetIter();
-    if (info) infoVector.push_back(itsEditedDataKeeper->GetIter());
+    if (itsCopyOfEditedDataKeeper)
+    {
+      boost::shared_ptr<NFmiFastQueryInfo> info = itsCopyOfEditedDataKeeper->GetIter();
+      if (info) infoVector.push_back(itsEditedDataKeeper->GetIter());
+    }
   }
   else
   {
