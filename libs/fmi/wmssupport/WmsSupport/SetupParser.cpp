@@ -116,8 +116,8 @@ namespace Wms
         UserUrlServerSetup parseBase(const std::string& nspace)
         {
             auto serverSetup = UserUrlServerSetup{};
-            serverSetup.transparency = NFmiSettings::Require<bool>(nspace + "::Transparency");
-            serverSetup.version = NFmiSettings::Require<std::string>(nspace + "::Version");
+            serverSetup.transparency = NFmiSettings::Optional(nspace + "::Transparency", false);
+            serverSetup.version = NFmiSettings::Optional(nspace + "::Version", std::string(""));
             return serverSetup;
         }
     }
@@ -127,8 +127,8 @@ namespace Wms
         auto settings = Setup{};
         settings.backgroundBackwardAmount = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::Backward", 1);
         settings.backgroundForwardAmount = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::Forward", 1);
-        settings.numberOfCaches = NFmiSettings::Require<int>("SmartMet::Wms2::Cache::NumberOfCaches");
-        settings.numberOfLayersPerCache = NFmiSettings::Require<int>("SmartMet::Wms2::Cache::NumberOfLayersPerCache");
+        settings.numberOfCaches = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfCaches", 0);
+        settings.numberOfLayersPerCache = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfLayersPerCache", 0);
         settings.proxyUrl = "http://" + NFmiSettings::Optional("SmartMet::Wms2::ProxyUrl", std::string(""));
         settings.intervalToPollGetCapabilities = std::chrono::seconds{ NFmiSettings::Optional("SmartMet::Wms2::GetCapabilities::PollInterval", 5 * 60) };
         parseDynamics("SmartMet::Wms2::DynamicDatas", settings.dynamics);
@@ -141,7 +141,7 @@ namespace Wms
         settings.background = parseUserUrl("SmartMet::Wms2::UserUrls::Backgrounds", knownServers, backgroundBase);
         settings.overlay = parseUserUrl("SmartMet::Wms2::UserUrls::Overlays", knownServers, overlayBase);
 
-        settings.isConfigured = true;
+        settings.checkForMeaningfulConfigurations();
         return settings;
     }
 }
