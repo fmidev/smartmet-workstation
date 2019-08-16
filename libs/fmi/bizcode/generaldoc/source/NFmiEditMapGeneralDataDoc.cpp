@@ -11583,8 +11583,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				descTop.CurrentTime(animationData.CurrentTime());
 			}
 
-			if (profiling && i == 0
-				&& descTop.CurrentTime() == animationData.Times().LastTime() )
+			if (profiling && i == 0 && profiler.dataCount()>0
+				&& descTop.CurrentTime() == animationData.Times().FirstTime() )
 			{
 				StopProfiling();
 			}
