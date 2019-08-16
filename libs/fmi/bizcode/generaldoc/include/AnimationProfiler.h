@@ -20,7 +20,7 @@ class AnimationProfiler {
 
 public:
 
-	AnimationProfiler(): lastTick(), settings(), data() {};
+	AnimationProfiler(): lastTick(std::chrono::high_resolution_clock::now() ), settings(), data() {};
 
 	void Reset() {
 		data.clear();
@@ -31,6 +31,10 @@ public:
 
 	std::vector< NFmiAnimationData >& getSettings() {
 		return settings;
+	}
+
+	size_t dataCount() {
+		return data.size();
 	}
 
 	void Tick() {
