@@ -13254,6 +13254,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             // Laitetaan tähän "Ohitetaan normi päivitä kaikki näytöt ja päivitä vain muuttunutta karttanäyttöä" -toiminto optimoinnin takia.
             // HUOM! Optimoinnin voi laittaa tänne, koska esim. viewMacrojen latauksissa ei käytetä tätä metodia (jolloin tarvitsee päivittää kaikkia näyttöjä)
             CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theMapViewDescTopIndex);
+            if(GetWantedMapViewIdFlag(theMapViewDescTopIndex) == SmartMetViewId::MainMapView)
+            {
+                // Jos kyse pääkarttanäytön zoomista, pitää myös päivittää asemadatataulukkonäyttöä, koska siihen laitetaan
+                // vain päkartalla näkyvät synop asemat.
+                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView);
+            }
         }
    }
 
@@ -14071,7 +14077,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         ApplicationWinRegistry().UseWmsMaps(newValue);
         MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+        if(ApplicationInterface::GetApplicationInterfaceImplementation)
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     }
 
 #ifndef DISABLE_CPPRESTSDK
