@@ -12753,9 +12753,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateCrossSectionView();
 	}
 
-	void ActivateViewParamSelectorDlg(int /* theMapViewDescTopIndex */)
+	void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex)
 	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg(theMapViewDescTopIndex);
 	}
 
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord)
@@ -16302,7 +16302,7 @@ void NFmiEditMapGeneralDataDoc::UpdateCrossSectionView(void)
 	pimpl->UpdateCrossSectionView();
 }
 
-void NFmiEditMapGeneralDataDoc::ActivateViewParamSelectorDlg(int theMapViewDescTopIndex)
+void NFmiEditMapGeneralDataDoc::ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex)
 {
 	pimpl->ActivateViewParamSelectorDlg(theMapViewDescTopIndex);
 }

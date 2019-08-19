@@ -394,7 +394,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ActivateParamSelectionDlgAfterL
     itsDoc->ActivateParamSelectionDlgAfterLeftDoubleClick(newValue);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ActivateViewParamSelectorDlg(int theMapViewDescTopIndex)
+void SmartMetDocumentInterfaceForGeneralDataDoc::ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex)
 {
     itsDoc->ActivateViewParamSelectorDlg(theMapViewDescTopIndex);
 }
