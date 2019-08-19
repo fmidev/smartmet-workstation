@@ -642,7 +642,7 @@ void CFmiExtraMapViewDlg::OnButtonZoomDialog()
 
 void CFmiExtraMapViewDlg::OnButtonSelectParamDialogExtraMap()
 {
-    ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg();
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg(itsMapViewDescTopIndex);
 }
 
 void CFmiExtraMapViewDlg::OnToggleMapViewDisplayMode()

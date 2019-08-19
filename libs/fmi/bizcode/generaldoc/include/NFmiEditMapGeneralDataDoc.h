@@ -300,7 +300,7 @@ public:
 	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateZoomDialog(int theWantedDescTopIndex);
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord);
-	void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex);
+	void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex);
 	void UpdateTempView(void);
 	void UpdateCrossSectionView(void);
 	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tämä on kirjastojen pilkkomiseen vaadittuja funktioita

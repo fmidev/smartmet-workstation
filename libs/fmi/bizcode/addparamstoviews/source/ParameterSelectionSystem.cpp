@@ -31,7 +31,7 @@ namespace AddParams
     ,modelProducerSystem_(nullptr)
     ,infoOrganizer_(nullptr)
     ,helpDataInfoSystem_(nullptr)
-    ,itsLastAcivatedDescTopIndex(0)
+    ,itsLastActivatedDeskTopIndex(0)
     ,itsLastActivatedRowIndex(1)
     ,helpDataIDs_()
     ,customCategories_()

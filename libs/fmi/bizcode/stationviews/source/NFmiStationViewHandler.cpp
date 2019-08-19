@@ -2701,7 +2701,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
     
     if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-        // Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan tällä uudella funktiolla.
+        // ParameterSelection-dialogin tarvitsemia asetuksia laitetaan tällä uudella funktiolla.
         itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
 
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);

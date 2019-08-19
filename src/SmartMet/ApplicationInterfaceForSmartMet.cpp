@@ -142,11 +142,11 @@ void ApplicationInterfaceForSmartMet::UpdateCrossSectionView()
         doc->UpdateCrossSectionView();
 }
 
-void ApplicationInterfaceForSmartMet::ActivateParameterSelectionDlg()
+void ApplicationInterfaceForSmartMet::ActivateParameterSelectionDlg(unsigned int theDescTopIndex)
 {
     auto doc = GetDocument();
     if(doc)
-        doc->ActivateParameterSelectionDlg();
+        doc->ActivateParameterSelectionDlg(theDescTopIndex);
 }
 
 void ApplicationInterfaceForSmartMet::ActivateZoomDialog(int theWantedDescTopIndex)

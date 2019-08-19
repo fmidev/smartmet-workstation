@@ -89,7 +89,7 @@ public:
     NFmiCrossSectionSystem* CrossSectionSystem() override;
     bool ActivateParamSelectionDlgAfterLeftDoubleClick() override;
     void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) override;
-    void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex) override;
+    void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex = 0) override;
     bool OpenPopupMenu() override;
     void OpenPopupMenu(bool newState) override;
     const NFmiPoint& CrossSectionViewSizeInPixels() override;
