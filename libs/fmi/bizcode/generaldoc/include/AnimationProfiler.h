@@ -70,12 +70,25 @@ public:
 			return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(a);
 			});
 
-		size_t j = 0;
-		for (auto&& a : datams) {
-			std::stringstream line;
-			line << j <<" : "<< a.count() << "ms";
-			CatLog::logMessage(line.str(), CatLog::Severity::Info, CatLog::Category::Visualization);
-			j++;
+		size_t pos = 1;
+		constexpr int lineLen = 10;
+
+		std::stringstream dataLine;
+
+		dataLine << std::setprecision(2) << std::fixed;
+
+
+		for (size_t i = 0; i < datams.size(); i++) {
+			auto a = datams[i];
+			dataLine << i <<" : "<< a.count() << "ms | ";
+			if (pos % lineLen == 0 || i == datams.size() - 1) {
+				CatLog::logMessage(dataLine.str(), CatLog::Severity::Info, CatLog::Category::Visualization);
+				pos = 1;
+				dataLine = std::stringstream{};
+
+				dataLine << std::setprecision(2) << std::fixed;
+			}
+			else pos++;
 		}
 
 		ret << "Samples: " << data.size() << "    ";
