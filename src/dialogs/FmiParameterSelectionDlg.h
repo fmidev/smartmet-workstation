@@ -139,7 +139,7 @@ private:
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     AddParams::ParameterSelectionSystem *itsParameterSelectionSystem;
-    unsigned int itsLastAcivatedDescTopIndex; // Mikä oli viimeksi DescTopIndex, kun otsikon tekstiä tehtiin
+    unsigned int itsLastActivatedDesktopIndex; // Mikä oli viimeksi DesktopIndex, kun otsikon tekstiä tehtiin
     int itsLastActivatedRowIndex; // Mikä oli viimeksi RowIndex, kun otsikon tekstiä tehtiin
     CString itsSearchText;
     std::string itsPreviousSearchText;
@@ -159,4 +159,5 @@ public:
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
     afx_msg void OnEnChangeEditParameterSelectionSearchText();
     afx_msg void OnPaint();
+	void SetIndexes(unsigned int theDescTopIndex);
 };
