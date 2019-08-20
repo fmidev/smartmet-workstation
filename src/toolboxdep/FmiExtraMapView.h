@@ -81,7 +81,7 @@ public:
 															// Apukarttanäytöt ovat ainoa poikkeus, eli ne printataan aina käyttäen cache kuvaa. 
 															// Tämä siksi että kunnon prittaus ei jostain syystä toimi oikein ainoastaan tälle näytölle.
 															// ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
-    int MapViewDescTopIndex(void) { return itsMapViewDescTopIndex; }
+    int MapViewDescTopIndex(void) { return itsMapViewDesktopIndex; }
     bool GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC);
     void SetToolMastersDC(CDC* theDC);
     // ********************************************************************************************
@@ -122,7 +122,7 @@ private:
 	NFmiToolBox * itsToolBox;
 	NFmiDrawingEnvironment itsDrawingEnvironment;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
-	int itsMapViewDescTopIndex;
+	int itsMapViewDesktopIndex;
 	bool fMouseCursorOnWnd;
 	CPPToolTip m_tooltip;
     // Tämä on moni sivu printtauksessa oleva alkuaika

@@ -46,7 +46,7 @@ namespace AddParams
         // used to insert selected parameters to right places.
         // 0 = main map, 1 = map-view-2, 2 = map-view-3
         // In future these will be added: 98 = cross-section-view, 99 = time-serial-view
-        unsigned int itsLastActivatedDeskTopIndex;
+        unsigned int itsLastActivatedDesktopIndex;
         // The view row that has been last clicked with mouse.
         // This index starts from 1 !!
         int itsLastActivatedRowIndex;
@@ -76,8 +76,8 @@ namespace AddParams
         std::vector<SingleRowItem>& dialogRowData();
         const std::vector<SingleRowItem>& dialogRowData() const;
         const std::vector<unsigned char>& dialogTreePatternArray() const;
-        unsigned int LastAcivatedDescTopIndex() const { return itsLastActivatedDeskTopIndex; }
-        void LastAcivatedDescTopIndex(unsigned int newValue) { itsLastActivatedDeskTopIndex = newValue; }
+        unsigned int LastActivatedDesktopIndex() const { return itsLastActivatedDesktopIndex; }
+        void LastActivatedDesktopIndex(unsigned int newValue) { itsLastActivatedDesktopIndex = newValue; }
         int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
         void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }

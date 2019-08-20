@@ -11543,10 +11543,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		MapViewDescTop(theDescTopIndex)->ActiveViewRow(theActiveRowIndex);
 	}
 
-    void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
+    void SetLastActiveDescTopAndViewRow(unsigned int theDesktopIndex, int theActiveRowIndex)
     {
-        ParameterSelectionSystem().LastAcivatedDescTopIndex(theDescTopIndex);
-        ParameterSelectionSystem().LastActivatedRowIndex(GetRealRowNumber(theDescTopIndex, theActiveRowIndex));
+        ParameterSelectionSystem().LastActivatedDesktopIndex(theDesktopIndex);
+        ParameterSelectionSystem().LastActivatedRowIndex(GetRealRowNumber(theDesktopIndex, theActiveRowIndex));
     }
 
 	void CopyDrawParamsList(NFmiPtrList<NFmiDrawParamList> &copyFromList, NFmiPtrList<NFmiDrawParamList> &copyToList)

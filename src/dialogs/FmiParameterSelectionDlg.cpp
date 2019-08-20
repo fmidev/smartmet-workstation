@@ -1155,7 +1155,7 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
         NFmiMenuItem *addParamCommand;
         if(NFmiDrawParam::IsMacroParamCase(rowItem.dataType())) {
             addParamCommand = new NFmiMenuItem(
-                static_cast<int>(itsParameterSelectionSystem->LastAcivatedDescTopIndex()),
+                static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
                 rowItem.itemName(),
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
@@ -1168,7 +1168,7 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
         else
         {
             addParamCommand = new NFmiMenuItem(
-                static_cast<int>(itsParameterSelectionSystem->LastAcivatedDescTopIndex()),
+                static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
                 "Add some param",
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
@@ -1178,24 +1178,24 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
         }
 
         itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view", ::GetWantedMapViewIdFlag(itsParameterSelectionSystem->LastAcivatedDescTopIndex()));
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view", ::GetWantedMapViewIdFlag(itsParameterSelectionSystem->LastActivatedDesktopIndex()));
     }
 }
 
 std::string CFmiParameterSelectionDlg::MakeActiveViewRowText()
 {
     std::string str;
-    itsLastAcivatedDescTopIndex = itsParameterSelectionSystem->LastAcivatedDescTopIndex();
-    if(itsLastAcivatedDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    itsLastActivatedDesktopIndex = itsParameterSelectionSystem->LastActivatedDesktopIndex();
+    if(itsLastActivatedDesktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
     {
         str += "Active Map view ";
-        str += std::to_string(itsLastAcivatedDescTopIndex + 1);
+        str += std::to_string(itsLastActivatedDesktopIndex + 1);
     }
-    else if(itsLastAcivatedDescTopIndex == CtrlViewUtils::kFmiTimeSerialView)
+    else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
     {
         str += "Time view active";
     }
-    else if(itsLastAcivatedDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+    else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
     {
         str += "Cross section view active";
     }
@@ -1226,7 +1226,7 @@ void CFmiParameterSelectionDlg::OnTimer(UINT_PTR nIDEvent)
 
 bool CFmiParameterSelectionDlg::NeedToUpdateTitleText()
 {
-    if(itsLastAcivatedDescTopIndex != itsParameterSelectionSystem->LastAcivatedDescTopIndex() || itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
+    if(itsLastActivatedDesktopIndex != itsParameterSelectionSystem->LastActivatedDesktopIndex() || itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
         return true;
     else
         return false;
@@ -1263,4 +1263,13 @@ void CFmiParameterSelectionDlg::OnPaint()
     GetClientRect(clientRect);
     clientRect.bottom = gridCtrlArea.top;
     dc.FillRect(&clientRect, &brush);
+}
+
+void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
+{
+	itsParameterSelectionSystem->LastActivatedDesktopIndex(theDesktopIndex);
+	itsParameterSelectionSystem->LastActivatedRowIndex(1); 
+// Joonas: tsekkaa miten saa tuon real rownumberin
+// 	itsParameterSelectionSystem->LastActivatedRowIndex(GetRealRowNumber(theDesktopIndex, 1));
+	SetWindowText(CA2T(MakeTitleText().c_str()));
 }

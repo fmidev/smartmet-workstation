@@ -533,14 +533,14 @@ void CSmartMetDoc::OnUpdateButtonTimeEditValuesDlg(CCmdUI *pCmdUI)
 	pCmdUI->SetCheck(itsData->TimeSerialDataViewOn());
 }
 
-void CSmartMetDoc::ActivateParameterSelectionDlg(unsigned int theDescTopIndex)
+void CSmartMetDoc::ActivateParameterSelectionDlg(unsigned int theDesktopIndex)
 {
     if(!itsParameterSelectionDlg)
         CreateParameterSelectionDlg(itsData);
 
     itsParameterSelectionDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
     itsParameterSelectionDlg->SetActiveWindow();
-// Joonas: laita tässä itsParameterSelectionDlg:lle rivinumerot kuntoon!
+	itsParameterSelectionDlg->SetIndexes(theDesktopIndex);
     GetData()->LogMessage("Parameter Selection dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
