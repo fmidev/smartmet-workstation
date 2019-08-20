@@ -20,7 +20,7 @@ class AnimationProfiler {
 
 public:
 
-	AnimationProfiler(): lastTick(), settings(), data() {};
+	AnimationProfiler(): lastTick(std::chrono::high_resolution_clock::now() ), settings(), data() {};
 
 	void Reset() {
 		data.clear();
@@ -31,6 +31,10 @@ public:
 
 	std::vector< NFmiAnimationData >& getSettings() {
 		return settings;
+	}
+
+	size_t dataCount() {
+		return data.size();
 	}
 
 	void Tick() {
@@ -65,6 +69,27 @@ public:
 		std::transform(begin(data), end(data), std::back_inserter(datams), [](const std::chrono::nanoseconds &a) {
 			return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(a);
 			});
+
+		size_t pos = 1;
+		constexpr int lineLen = 10;
+
+		std::stringstream dataLine;
+
+		dataLine << std::setprecision(2) << std::fixed;
+
+
+		for (size_t i = 0; i < datams.size(); i++) {
+			auto a = datams[i];
+			dataLine << i <<" : "<< a.count() << "ms | ";
+			if (pos % lineLen == 0 || i == datams.size() - 1) {
+				CatLog::logMessage(dataLine.str(), CatLog::Severity::Info, CatLog::Category::Visualization);
+				pos = 1;
+				dataLine = std::stringstream{};
+
+				dataLine << std::setprecision(2) << std::fixed;
+			}
+			else pos++;
+		}
 
 		ret << "Samples: " << data.size() << "    ";
 
