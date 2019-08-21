@@ -11538,6 +11538,16 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             return itsCurrentCrossSectionRowIndex;
 	}
 
+	int GetFirstRowNumber(unsigned int theDescTopIndex)
+	{
+		if (theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+		{
+			return GetRealRowNumber(theDescTopIndex, 1);
+		}
+		else
+			return itsCurrentCrossSectionRowIndex;
+	}
+
 	void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ActiveViewRow(theActiveRowIndex);
@@ -15072,6 +15082,10 @@ void NFmiEditMapGeneralDataDoc::ActiveViewTime(const NFmiMetTime& theTime){pimpl
 int NFmiEditMapGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
 {
 	return pimpl->ActiveViewRow(theDescTopIndex);
+}
+int NFmiEditMapGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
+{
+	return pimpl->GetFirstRowNumber(theDescTopIndex);
 }
 void NFmiEditMapGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
 {

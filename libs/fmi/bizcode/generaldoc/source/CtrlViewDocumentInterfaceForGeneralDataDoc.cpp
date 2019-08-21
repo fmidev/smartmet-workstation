@@ -737,6 +737,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theD
     itsDoc->ActiveViewRow(theDescTopIndex, theActiveRowIndex);
 }
 
+int CtrlViewDocumentInterfaceForGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
+{
+	return itsDoc->GetFirstRowNumber(theDescTopIndex);
+}
+
 NFmiSynopPlotSettings* CtrlViewDocumentInterfaceForGeneralDataDoc::SynopPlotSettings(void)
 {
     return itsDoc->SynopPlotSettings();

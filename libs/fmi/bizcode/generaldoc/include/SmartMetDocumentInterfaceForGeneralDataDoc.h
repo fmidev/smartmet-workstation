@@ -51,7 +51,8 @@ public:
     boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) override;
     int ActiveViewRow(unsigned int theDescTopIndex) override;
     void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
-    double BrushSpecialParamValue() override;
+	int GetFirstRowNumber(unsigned int theDescTopIndex) override;
+	double BrushSpecialParamValue() override;
     void BrushSpecialParamValue(double newValue) override;
     boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() override;
     void OnButtonRedo() override;

@@ -196,7 +196,12 @@ boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::Act
 
 int SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
 {
-    return itsDoc->ActiveViewRow(theDescTopIndex);
+	return itsDoc->ActiveViewRow(theDescTopIndex);
+}
+
+int SmartMetDocumentInterfaceForGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
+{
+	return itsDoc->GetFirstRowNumber(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)

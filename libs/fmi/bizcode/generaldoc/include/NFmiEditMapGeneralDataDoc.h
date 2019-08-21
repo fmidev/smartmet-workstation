@@ -150,7 +150,7 @@ class NFmiEditMapGeneralDataDoc
 {
 public:
     TimeSerialParameters& GetTimeSerialParameters();
-    void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize);
+	void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& totalPixelSize, const NFmiPoint& clientPixelSize);
     NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
@@ -632,6 +632,7 @@ public:
 	void ActiveViewTime(const NFmiMetTime& theTime);
 	int ActiveViewRow(unsigned int theDescTopIndex);
 	void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex);
+	int GetFirstRowNumber(unsigned int theDescTopIndex);
 	bool UseMasksWithFilterTool(void);
 	void UseMasksWithFilterTool(bool newStatus);
 	const NFmiRect& AreaFilterRangeLimits(void);
