@@ -29,12 +29,15 @@ namespace AddParams
     ,dialogTreePatternArray_()
     ,dialogDataNeedsUpdate_(true)
     ,modelProducerSystem_(nullptr)
+	,obsProducerSystem_(nullptr)
+	,satelImageProducerSystem_(nullptr)
     ,infoOrganizer_(nullptr)
     ,helpDataInfoSystem_(nullptr)
     ,itsLastActivatedDesktopIndex(0)
     ,itsLastActivatedRowIndex(1)
     ,helpDataIDs_()
     ,customCategories_()
+	,soundingLevels_(nullptr)
     {
     }
 

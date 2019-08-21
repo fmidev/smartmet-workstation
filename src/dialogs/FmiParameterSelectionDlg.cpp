@@ -140,7 +140,7 @@ std::string GetFileFilter(const std::string &fileNameFilter)
 
 std::string ConvertSizeToMBorGB(unsigned long long size)
 {
-    double sizeInMB = static_cast<double>(size) / (1024 * 1000);
+    double sizeInMB = static_cast<double>(size) / (1024.0 * 1000.0);
     std::stringstream fileSizeInMB;
     if(sizeInMB < 1000)
     {
