@@ -1267,9 +1267,8 @@ void CFmiParameterSelectionDlg::OnPaint()
 
 void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 {
+	auto row = itsSmartMetDocumentInterface->GetFirstRowNumber(theDesktopIndex);
 	itsParameterSelectionSystem->LastActivatedDesktopIndex(theDesktopIndex);
-	itsParameterSelectionSystem->LastActivatedRowIndex(1); 
-// Joonas: tsekkaa miten saa tuon real rownumberin
-// 	itsParameterSelectionSystem->LastActivatedRowIndex(GetRealRowNumber(theDesktopIndex, 1));
+	itsParameterSelectionSystem->LastActivatedRowIndex(row);
 	SetWindowText(CA2T(MakeTitleText().c_str()));
 }
