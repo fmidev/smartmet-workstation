@@ -15,6 +15,7 @@ namespace BetaProduct
 
     std::string& InitialSavePath();
     bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName);
+    bool GetFilePathFromUserTotal(const std::string& theFileFilter, const std::string& theInitialDirectory, std::string& theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, const std::string& theFileExtension, const std::string& theRootDirectory, CWnd* theView);
     void SetLoggerFunction(LogAndWarnFunctionType &theLoggerFunction);
     LogAndWarnFunctionType GetLoggerFunction();
 
