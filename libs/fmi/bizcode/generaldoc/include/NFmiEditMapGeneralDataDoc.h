@@ -514,7 +514,7 @@ public:
 	bool RemoveViewMacro(const std::string& theMacroName);
 	void RefreshViewMacroList(void);
 	bool LoadViewMacro(const std::string &theName);
-	void StoreViewMacro(const std::string &theName, const std::string &theDescription);
+	void StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription);
 
 	NFmiSmartToolInfo* SmartToolInfo(void);
 	boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void);
