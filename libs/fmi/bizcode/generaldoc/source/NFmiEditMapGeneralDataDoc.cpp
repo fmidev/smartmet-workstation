@@ -9238,16 +9238,16 @@ bool IsRedoableViewMacro(void)
 		FillViewMacro(theViewMacro, theName, theDescription); // tähän on jo täytetty windows ikkunoiden asetukset ulkopuolella
 	}
 
-	void StoreViewMacro(const std::string &theName, const std::string &theDescription)
+	void StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription)
 	{
-        // theName on StoreViewMacro -metodissa jatkossa aina absoluuttinen polku
-        NFmiFileString fileString(theName);
+        NFmiFileString fileString(theAbsoluteMacroFilePath);
 		FillViewMacroInfo(itsHelperViewMacro, std::string(fileString.Header()), theDescription);
 
-		string fileName(theName);
-		WriteViewMacro(itsHelperViewMacro, fileName);
-		RefreshViewMacroList();
+		WriteViewMacro(itsHelperViewMacro, theAbsoluteMacroFilePath);
+        ChangeCurrentViewMacroDirectory(theAbsoluteMacroFilePath);
+        RefreshViewMacroList();
 	}
+
 	std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro(void)
 	{
         return itsCurrentViewMacro;
@@ -10376,6 +10376,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		if(usedPos != string::npos)
 			thePath = string(thePath.begin(), thePath.begin()+usedPos+1);
 	}
+
+    void ChangeCurrentViewMacroDirectory(const string& theAbsoluteMacroFilePath)
+    {
+        NFmiFileString fileString(theAbsoluteMacroFilePath);
+        itsViewMacroPath = fileString.Device();
+        itsViewMacroPath += fileString.Path();
+        PathUtils::addDirectorySeparatorAtEnd(itsViewMacroPath);
+        // HUOM! tässä ei ole tarkoitus päivittää rootti-hakemistoa, koska nyt mennään
+        // vain johonkin rootin alihakemistoihin
+        RefreshViewMacroList();
+    }
 
 	void ChangeCurrentViewMacroDirectory(const string & theDirectoryName, bool fUseRootPathAsBase)
 	{
@@ -15346,9 +15357,9 @@ bool NFmiEditMapGeneralDataDoc::LoadViewMacro(const std::string &theName)
 {
 	return pimpl->LoadViewMacro(theName);
 }
-void NFmiEditMapGeneralDataDoc::StoreViewMacro(const std::string &theName, const std::string &theDescription)
+void NFmiEditMapGeneralDataDoc::StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription)
 {
-	pimpl->StoreViewMacro(theName, theDescription);
+	pimpl->StoreViewMacro(theAbsoluteMacroFilePath, theDescription);
 }
 
 void NFmiEditMapGeneralDataDoc::RefreshViewMacroList(void)
