@@ -26,6 +26,7 @@
 #include "persist2.h"
 #include "NFmiMacroParamDataCache.h"
 #include "ApplicationInterface.h"
+#include "NFmiBetaProductHelperFunctions.h"
 #include <fstream>
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
@@ -54,14 +55,13 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 ,itsSmartToolInfo(smartMetDocumentInterface ? smartMetDocumentInterface->SmartToolInfo() : 0)
 ,itsSelectedMapViewDescTopIndex(0)
 ,itsMacroParamNameU_(_T(""))
-, itsMacroNameU_(_T(""))
 ,itsMacroParamDataGridSizeX(0)
 ,itsMacroParamDataGridSizeY(0)
 ,fCrossSectionMode(FALSE)
 ,fQ3Macro(FALSE)
 ,fSearchOptionCaseSensitive(FALSE)
 ,fSearchOptionMatchAnywhere(TRUE)
-,itsUsedMacroPathU_(_T(""))
+,itsLoadedSmarttoolMacroPathU_(_T(""))
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 ,itsSyntaxEditControl()
 ,itsSyntaxEditControlAcceleratorTable(NULL)
@@ -89,14 +89,13 @@ void CFmiSmartToolDlg::DoDataExchange(CDataExchange* pDX)
     //}}AFX_DATA_MAP
     DDX_Text(pDX, IDC_EDIT_MACRO_PARAM_NAME, itsMacroParamNameU_);
     DDX_Control(pDX, IDC_LIST_PARAM_MACROS, itsMacroParamList);
-    DDX_Text(pDX, IDC_EDIT_MACRO_NAME, itsMacroNameU_);
     DDX_Text(pDX, IDC_EDIT_MACRO_PARAM_DATA_GRID_SIZE_X, itsMacroParamDataGridSizeX);
     DDX_Text(pDX, IDC_EDIT_MACRO_PARAM_DATA_GRID_SIZE_Y, itsMacroParamDataGridSizeY);
     DDX_Check(pDX, IDC_CHECK_MACRO_PARAM_CROSSSECTION_MODE, fCrossSectionMode);
     DDX_Check(pDX, IDC_CHECK_Q3_MACRO, fQ3Macro);
     DDX_Radio(pDX, IDC_RADIO_VIEWMACRO_SELECTED_MAP1, itsSelectedMapViewDescTopIndex);
     DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, itsSpeedSearchMacroControl);
-    DDX_Text(pDX, IDC_STATIC_MACRO_PATH_TEXT, itsUsedMacroPathU_);
+    DDX_Text(pDX, IDC_STATIC_MACRO_PATH_TEXT, itsLoadedSmarttoolMacroPathU_);
 }
 
 
@@ -166,7 +165,6 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
 #endif // DISABLE_EXTREME_TOOLKITPRO
 
 	fMakeDBCheckAtSend = itsSmartToolInfo->MakeDBCheckAtSend();
-	UpdateMacroName();
 	UpdateMacroParamDisplayList(false);
 
 	InitDialogTexts();
@@ -174,7 +172,7 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
 	NFmiPoint gridSize(itsSmartMetDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize());
 	itsMacroParamDataGridSizeX = static_cast<int>(gridSize.X());
 	itsMacroParamDataGridSizeY = static_cast<int>(gridSize.Y());
-    UpdateLoadDirectoryString();
+    UpdateLoadedSmarttoolMacroPathString();
     InitSpeedSearchControl();
     ResetSearchResource();
     DisableActionButtomIfInViewMode();
@@ -388,8 +386,6 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_EDIT_MACRO_NAME, ANCHOR_TOP | ANCHOR_RIGHT);
-    ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_SYNTAX_EDIT_CONTROL_PLACER, ANCHOR_HORIZONTALLY | ANCHOR_VERTICALLY);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_ERROR_STR, ANCHOR_BOTTOM | ANCHOR_LEFT);
@@ -470,7 +466,7 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PATH_TEXT, ANCHOR_TOP | ANCHOR_RIGHT);
+    bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PATH_TEXT, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
     
 }
@@ -619,12 +615,11 @@ void CFmiSmartToolDlg::DoSmartToolLoad(const std::string &theSmartToolName, bool
         status = itsSmartToolInfo->LoadScript(theSmartToolName);
 
     DoTimedResetSearchResource();
-    UpdateLoadDirectoryString();
     if(status)
     {
         CatLog::logMessage(string("Loaded smartTool: ") + theSmartToolName, CatLog::Severity::Info, CatLog::Category::Macro);
         LoadSmarttoolFormula(GetSmarttoolFilePath());
-        UpdateMacroName();
+        UpdateLoadedSmarttoolMacroPathString();
         itsMacroParamNameU_ = _TEXT(""); // tyhjennetään varmuuden vuoksi makroParam name, koska kaksi save-nappia voi aiheuttaa sekaannuksia
         itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
         UpdateData(FALSE);
@@ -659,41 +654,41 @@ static int StripExtraCarrigeReturns(CString &theString)
 //	return str;
 //}
 
+const std::string g_SmarttoolFileExtension = "st";
+const std::string g_SmarttoolFileFilter = "Smarttool Files (*." + g_SmarttoolFileExtension + ")|*." + g_SmarttoolFileExtension + "|All Files (*.*)|*.*||";
+
 void CFmiSmartToolDlg::OnButtonSmartToolSave()
 {
 	UpdateData(TRUE);
-    string tmpName = CT2A(itsMacroNameU_);
-	NFmiStringTools::Trim(tmpName, ' '); // pakko trimmata pois mahdolliset vasemman/oikeanpuoleiset välilyönnit, muuten makroa ei voi valita enää myöhemmin
-	if(tmpName.empty())
-		return ;
-    bool scriptExist = itsSmartToolInfo->ScriptExist(tmpName);
-    if(scriptExist)
-	{
-		std::string messageStr(::GetDictionaryString("SmartToolDlgOverWrite"));
-		messageStr += "\n\"";
-		messageStr += tmpName;
-		messageStr += "\"";
-        if (::MessageBox(this->GetSafeHwnd(), CA2T(messageStr.c_str()), CA2T(::GetDictionaryString("SmartToolDlgOverWrite2").c_str()), MB_ICONINFORMATION | MB_OKCANCEL) != IDOK)
-			return ;
-	}
-	// pitää ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
-	itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText());
-    if(itsSmartToolInfo->SaveScript(tmpName))
-    {
-        CatLog::logMessage(string("Saved smartTool: ") + string(tmpName), CatLog::Severity::Info, CatLog::Category::Macro);
-        if(!scriptExist)
-            ResetSearchResource();
-    }
-	else
-	{
-		std::string errMsgTitle("Cannot save smarttool skript");
-		std::string errMsg("Cannot save smarttool skript:\n");
-		std::string fullFileName(itsSmartToolInfo->GetFullScriptFileName(tmpName));
-		errMsg += fullFileName;
-		errMsg += "\nCheck that the folder exists and you have write permissions there.";
 
-        ::MessageBox(this->GetSafeHwnd(), CA2T(errMsg.c_str()), CA2T(errMsgTitle.c_str()), MB_ICONINFORMATION | MB_OK);
-	}
+    const auto &smarttoolInfo = *itsSmartMetDocumentInterface->SmartToolInfo();
+    std::string initialPath = smarttoolInfo.RootLoadDirectory() + smarttoolInfo.GetRelativeLoadPath();
+    std::string initialFilename = smarttoolInfo.CurrentScriptName();
+    if(!initialFilename.empty())
+        initialFilename += "." + g_SmarttoolFileExtension;
+    std::string filePath;
+    if(BetaProduct::GetFilePathFromUserTotal(g_SmarttoolFileFilter, initialPath, filePath, false, initialFilename, g_SmarttoolFileExtension, smarttoolInfo.RootLoadDirectory(), this))
+    {
+
+        // pitää ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
+        itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText());
+        if(itsSmartToolInfo->SaveScript(filePath))
+        {
+            CatLog::logMessage(string("Saved smartTool: ") + string(filePath), CatLog::Severity::Info, CatLog::Category::Macro);
+            ResetSearchResource();
+            UpdateLoadedSmarttoolMacroPathString();
+        }
+        else
+        {
+            std::string errMsgTitle("Cannot save smarttool skript");
+            std::string errMsg("Cannot save smarttool skript:\n");
+            std::string fullFileName(itsSmartToolInfo->GetFullScriptFileName(filePath));
+            errMsg += fullFileName;
+            errMsg += "\nCheck that the folder exists and you have write permissions there.";
+
+            ::MessageBox(this->GetSafeHwnd(), CA2T(errMsg.c_str()), CA2T(errMsgTitle.c_str()), MB_ICONINFORMATION | MB_OK);
+        }
+    }
 }
 
 void CFmiSmartToolDlg::OnButtonSmartToolSaveDbChecker()
@@ -716,11 +711,6 @@ void CFmiSmartToolDlg::OnCheckMakeDbCheckAtSend()
 {
 	UpdateData(TRUE);
 	itsSmartToolInfo->MakeDBCheckAtSend(fMakeDBCheckAtSend == TRUE);
-}
-
-void CFmiSmartToolDlg::UpdateMacroName(void)
-{
-    itsMacroNameU_ = CA2T(itsSmartToolInfo->CurrentScriptName().c_str());
 }
 
 void CFmiSmartToolDlg::OnBnClickedCheckModifyOnlySelectedLocations()
@@ -1026,7 +1016,7 @@ void CFmiSmartToolDlg::OnLbnSelchangeListParamMacros()
 		{
 			itsMacroParamNameU_ = nameU_;
             LoadSmarttoolFormula(GetMacroParamFilePath(mpSystem));
-			itsMacroNameU_ = _TEXT(""); // Tyhjennetään varmuuden vuoksi smartToolin nimi, että kahden save-napin takia ei tule talletettua vahingossa väärällä napilla
+			itsLoadedSmarttoolMacroPathU_ = _TEXT(""); // Tyhjennetään varmuuden vuoksi smartToolin nimi, että kahden save-napin takia ei tule talletettua vahingossa väärällä napilla
 		}
 		else
 			fMakeEmpty = true;
@@ -1076,13 +1066,12 @@ void CFmiSmartToolDlg::OnBnClickedButtonSmartToolRemove()
 	if(dlg.DoModal() == IDOK)
 	{
         ResetSearchResource();
-        UpdateLoadDirectoryString();
         bool status = itsSmartToolInfo->LoadScript(dlg.SelectedScriptName());
 		if(status)
 		{
             LoadSmarttoolFormula(GetSmarttoolFilePath());
-			UpdateMacroName();
-			itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
+            UpdateLoadedSmarttoolMacroPathString();
+            itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
             UpdateData(FALSE);
 		}
 	}
@@ -1227,10 +1216,11 @@ void CFmiSmartToolDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
     lpMMI->ptMinTrackSize.y = 539;
 }
 
-void CFmiSmartToolDlg::UpdateLoadDirectoryString()
+void CFmiSmartToolDlg::UpdateLoadedSmarttoolMacroPathString()
 {
-    std::string usedLoadDirectory = "\\" + itsSmartToolInfo->GetRelativeLoadPath();
-    itsUsedMacroPathU_ = CA2T(usedLoadDirectory.c_str());
+    std::string usedLoadedMacroPath = "\\" + itsSmartToolInfo->GetRelativeLoadPath();
+    usedLoadedMacroPath += itsSmartToolInfo->CurrentScriptName();
+    itsLoadedSmarttoolMacroPathU_ = CA2T(usedLoadedMacroPath.c_str());
     UpdateData(FALSE);
 }
 
