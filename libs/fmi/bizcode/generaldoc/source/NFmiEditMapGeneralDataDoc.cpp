@@ -8451,7 +8451,11 @@ bool InitCPManagerSet(void)
 
 	std::string GetViewMacroFileName(const std::string &theName)
 	{
-		string fileName(itsViewMacroPath);
+        NFmiFileString fileString(theName);
+        if(fileString.IsAbsolutePath())
+            return theName;
+
+        string fileName(itsViewMacroPath);
         PathUtils::addDirectorySeparatorAtEnd(fileName);
 		fileName += theName;
 		fileName += ".vmr"; // vmr = ViewMacRo
@@ -9236,9 +9240,11 @@ bool IsRedoableViewMacro(void)
 
 	void StoreViewMacro(const std::string &theName, const std::string &theDescription)
 	{
-		FillViewMacroInfo(itsHelperViewMacro, theName, theDescription);
+        // theName on StoreViewMacro -metodissa jatkossa aina absoluuttinen polku
+        NFmiFileString fileString(theName);
+		FillViewMacroInfo(itsHelperViewMacro, std::string(fileString.Header()), theDescription);
 
-		string fileName(GetViewMacroFileName(theName));
+		string fileName(theName);
 		WriteViewMacro(itsHelperViewMacro, fileName);
 		RefreshViewMacroList();
 	}
