@@ -308,6 +308,16 @@ void CFmiViewMacroDlg::OnBnClickedButtonStore()
     if(BetaProduct::GetFilePathFromUser(g_ViewMacroFileFilter, initialPath, filePath, false, initialFilename))
     {
         filePath = PathUtils::getTrueFilePath(filePath, itsSmartMetDocumentInterface->RootViewMacroPath(), g_ViewMacroFileExtension);
+        // Must check again if given file already exists, if user has given filename without extension
+        if(NFmiFileSystem::FileExists(filePath))
+        {
+            std::string message = ::GetDictionaryString("File '");
+            message += filePath;
+            message += ",\n" + ::GetDictionaryString("already exists, do you want to overwrite it?");
+            std::string messageBoxTitle = ::GetDictionaryString("Macro file overwrite");
+            if(::MessageBox(this->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OKCANCEL | MB_ICONWARNING) == IDCANCEL)
+                return;
+        }
 
         std::string description = CT2A(itsMacroDescriptionU_);
 		description.erase(std::remove(description.begin(), description.end(), '\r'), description.end());
@@ -642,6 +652,8 @@ void CFmiViewMacroDlg::EnsureWantedRowVisibilityAfterDirectoryChange(const std::
         std::string subDirectory = ::GetLastPartOfDirectory(theOldPath);
         std::string searchStr = "<" + subDirectory + ">"; // Etsint‰ stringiin pit‰‰ lis‰t‰ kulmasulut, koska alihakemistot ovat siin‰ muodossa grid-kontrollissa
         wantedVisibleRow = FindMacroNameRow(searchStr);
+        if(wantedVisibleRow == -1)
+            wantedVisibleRow = 1;
         itsGridCtrl.SetSelectedRange(wantedVisibleRow, 0, wantedVisibleRow, itsGridCtrl.GetColumnCount()-1); // Valitaan viel‰ se alikansio mist‰ tultiin merkiksi k‰ytt‰j‰lle
     }
     else
