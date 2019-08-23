@@ -177,13 +177,13 @@ void CFmiViewMacroDlg::LeftClickedGridCell(const CCellID &theSelectedCell)
 {
     if(IsClickedCellOk(theSelectedCell))
     {
-        std::string name = GetSelectedMacroName(); // T‰t‰ ei voi pyyt‰‰ suoraan theSelectedCell:in row numerolla, koska pit‰‰ ottaa huomioon otsikko rivi
-        if(!name.empty())
+        itsSelectedMacroName = GetSelectedMacroName(); // T‰t‰ ei voi pyyt‰‰ suoraan theSelectedCell:in row numerolla, koska pit‰‰ ottaa huomioon otsikko rivi
+        if(!itsSelectedMacroName.empty())
         {
             try
             {
                 std::vector<NFmiLightWeightViewSettingMacro> &macroList = itsSmartMetDocumentInterface->ViewMacroDescriptionList();
-                auto foundIter = std::find_if(macroList.begin(), macroList.end(), [&](const NFmiLightWeightViewSettingMacro &macro){return name == macro.itsName; });
+                auto foundIter = std::find_if(macroList.begin(), macroList.end(), [&](const NFmiLightWeightViewSettingMacro &macro){return itsSelectedMacroName == macro.itsName; });
                 if(foundIter != macroList.end())
                 {
                     std::string descriptionStr(::ConvertDescriptionStringToWantedFormat(foundIter->itsDescription));
@@ -193,7 +193,7 @@ void CFmiViewMacroDlg::LeftClickedGridCell(const CCellID &theSelectedCell)
             catch(std::exception &e)
             {
                 std::string errStr("Unable to change view-macro: ");
-                errStr += name;
+                errStr += itsSelectedMacroName;
                 errStr += "\nReason: ";
                 errStr += e.what();
                 // pit‰isikˆ raportoida message boxin avulla?
@@ -301,7 +301,9 @@ void CFmiViewMacroDlg::OnBnClickedButtonStore()
 	UpdateData(TRUE);
 
     std::string initialPath = itsSmartMetDocumentInterface->RootViewMacroPath() + itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
-    std::string initialFilename = "viewmacro1" + g_ViewMacroFileExtension;
+    std::string initialFilename = itsSelectedMacroName;
+    if(!initialFilename.empty())
+        initialFilename += "." + g_ViewMacroFileExtension;
     std::string filePath;
     if(BetaProduct::GetFilePathFromUser(g_ViewMacroFileFilter, initialPath, filePath, false, initialFilename))
     {

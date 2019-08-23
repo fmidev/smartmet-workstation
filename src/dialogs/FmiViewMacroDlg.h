@@ -129,6 +129,7 @@ private:
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     CString itsMacroDescriptionU_;
+    std::string itsSelectedMacroName;
     BOOL fDisableWindowManipulations;
     CWndResizer m_resizer;
     CGUSIconEdit itsSpeedSearchViewMacroControl;
