@@ -305,20 +305,8 @@ void CFmiViewMacroDlg::OnBnClickedButtonStore()
     if(!initialFilename.empty())
         initialFilename += "." + g_ViewMacroFileExtension;
     std::string filePath;
-    if(BetaProduct::GetFilePathFromUser(g_ViewMacroFileFilter, initialPath, filePath, false, initialFilename))
+    if(BetaProduct::GetFilePathFromUserTotal(g_ViewMacroFileFilter, initialPath, filePath, false, initialFilename, g_ViewMacroFileExtension, itsSmartMetDocumentInterface->RootViewMacroPath(), this))
     {
-        filePath = PathUtils::getTrueFilePath(filePath, itsSmartMetDocumentInterface->RootViewMacroPath(), g_ViewMacroFileExtension);
-        // Must check again if given file already exists, if user has given filename without extension
-        if(NFmiFileSystem::FileExists(filePath))
-        {
-            std::string message = ::GetDictionaryString("File '");
-            message += filePath;
-            message += ",\n" + ::GetDictionaryString("already exists, do you want to overwrite it?");
-            std::string messageBoxTitle = ::GetDictionaryString("Macro file overwrite");
-            if(::MessageBox(this->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OKCANCEL | MB_ICONWARNING) == IDCANCEL)
-                return;
-        }
-
         std::string description = CT2A(itsMacroDescriptionU_);
 		description.erase(std::remove(description.begin(), description.end(), '\r'), description.end());
         itsSmartMetDocumentInterface->StoreViewMacro(filePath, description);
