@@ -18,6 +18,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "SmartMetMfcUtils_resource.h"
 #include "persist2.h"
+#include "NFmiBetaProductHelperFunctions.h"
 
 #include "boost/filesystem.hpp"
 
@@ -59,7 +60,6 @@ CFmiViewMacroDlg::CFmiViewMacroDlg(SmartMetDocumentInterface *smartMetDocumentIn
 , itsGridCtrl()
 , itsHeaders()
 , fGridControlInitialized(false)
-, itsMacroNameU_(_T(""))
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
 ,itsMacroDescriptionU_(_T(""))
 ,fDisableWindowManipulations(FALSE)
@@ -83,7 +83,6 @@ void CFmiViewMacroDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialog::DoDataExchange(pDX);
     DDX_GridControl(pDX, IDC_CUSTOM_VIEW_MACRO_GRID_CONTROL, itsGridCtrl);
-    DDX_Text(pDX, IDC_EDIT_MACRO_NAME, itsMacroNameU_);
     DDX_Text(pDX, IDC_EDIT_MACRO_DESCRIPTION, itsMacroDescriptionU_);
     DDX_Check(pDX, IDC_CHECK_DISABLE_WINDOW_MANIPULATION, fDisableWindowManipulations);
     DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_VIEW_MACRO, itsSpeedSearchViewMacroControl);
@@ -181,12 +180,10 @@ void CFmiViewMacroDlg::LeftClickedGridCell(const CCellID &theSelectedCell)
         std::string name = GetSelectedMacroName(); // T‰t‰ ei voi pyyt‰‰ suoraan theSelectedCell:in row numerolla, koska pit‰‰ ottaa huomioon otsikko rivi
         if(!name.empty())
         {
-            itsMacroNameU_ = CA2T(name.c_str());
             try
             {
-                std::string macroNameStr = CT2A(itsMacroNameU_);
                 std::vector<NFmiLightWeightViewSettingMacro> &macroList = itsSmartMetDocumentInterface->ViewMacroDescriptionList();
-                auto foundIter = std::find_if(macroList.begin(), macroList.end(), [&](const NFmiLightWeightViewSettingMacro &macro){return macroNameStr == macro.itsName; });
+                auto foundIter = std::find_if(macroList.begin(), macroList.end(), [&](const NFmiLightWeightViewSettingMacro &macro){return name == macro.itsName; });
                 if(foundIter != macroList.end())
                 {
                     std::string descriptionStr(::ConvertDescriptionStringToWantedFormat(foundIter->itsDescription));
@@ -196,7 +193,7 @@ void CFmiViewMacroDlg::LeftClickedGridCell(const CCellID &theSelectedCell)
             catch(std::exception &e)
             {
                 std::string errStr("Unable to change view-macro: ");
-                errStr += CT2A(itsMacroNameU_);
+                errStr += name;
                 errStr += "\nReason: ";
                 errStr += e.what();
                 // pit‰isikˆ raportoida message boxin avulla?
@@ -295,55 +292,36 @@ static bool IsCr(char value)
    return value == '\r';
 }
 
+const std::string g_ViewMacroFileExtension = "vmr";
+const std::string g_ViewMacroFileFilter = "View-macro Files (*." + g_ViewMacroFileExtension + ")|*." + g_ViewMacroFileExtension + "|All Files (*.*)|*.*||";
+
+
 void CFmiViewMacroDlg::OnBnClickedButtonStore()
 {
 	UpdateData(TRUE);
-    std::string name = CT2A(itsMacroNameU_);
-    NFmiStringTools::Trim(name, ' '); // pakko trimmata pois mahdolliset vasemman/oikeanpuoleiset v‰lilyˆnnit, muuten makroa ei voi valita en‰‰ myˆhemmin
-    if(name.size() == 0)
-	{
-        ::MessageBox(this->GetSafeHwnd(), CA2T(::GetDictionaryString("ViewMacroDlgMustHaveName").c_str()), CA2T(::GetDictionaryString("NormalWordCapitalError").c_str()), MB_ICONINFORMATION | IDOK);
-		return ;
-	}
-	bool doContinue = true;
-	int index = -1;
-    if(name[0] == '<')
-	{
-        CreateNewDirectory(name);
-		return ;
-	}
 
-    bool isNewMacro = IsNewMacro(name, index);
-    if(!isNewMacro)
+    std::string initialPath = itsSmartMetDocumentInterface->RootViewMacroPath() + itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
+    std::string initialFilename = "viewmacro1" + g_ViewMacroFileExtension;
+    std::string filePath;
+    if(BetaProduct::GetFilePathFromUser(g_ViewMacroFileFilter, initialPath, filePath, false, initialFilename))
     {
-        std::string str(::GetDictionaryString("ViewMacroDlgOverWrite1"));
-        str += "\n'";
-        str += name;
-        str += "'\n";
-        str += ::GetDictionaryString("ViewMacroDlgOverWrite2");
-        if(::MessageBox(this->GetSafeHwnd(), CA2T(str.c_str()), CA2T(::GetDictionaryString("ViewMacroDlgOverWrite3").c_str()), MB_ICONINFORMATION | MB_OKCANCEL) == IDCANCEL)
-            doContinue = false;
-    }
+        filePath = PathUtils::getTrueFilePath(filePath, itsSmartMetDocumentInterface->RootViewMacroPath(), g_ViewMacroFileExtension);
 
-	if(doContinue)
-	{
         std::string description = CT2A(itsMacroDescriptionU_);
 		description.erase(std::remove(description.begin(), description.end(), '\r'), description.end());
-        itsSmartMetDocumentInterface->StoreViewMacro(name, description);
+        itsSmartMetDocumentInterface->StoreViewMacro(filePath, description);
 		InitMacroListFromDoc();
-		SelectMacro(name);
-
-        if(isNewMacro)
-            ResetSearchResource();
+		SelectMacro(filePath);
+        ResetSearchResource();
 	}
 }
 
-void CFmiViewMacroDlg::SelectMacro(const std::string &theName)
+void CFmiViewMacroDlg::SelectMacro(const std::string & theFilePath)
 {
 //    itsGridCtrl.SelectMacro(theName, ::FindWantedHeaderColumn(itsHeaders, ViewMacroHeaderParInfo::kMacroName));
     // Haetaan macro listasta nimen perusteell‰ macron iteraattori
     std::vector<NFmiLightWeightViewSettingMacro> &macroList = itsSmartMetDocumentInterface->ViewMacroDescriptionList();
-    auto iter = std::find_if(macroList.begin(), macroList.end(), [&](const NFmiLightWeightViewSettingMacro &macro){return macro.itsName == theName; });
+    auto iter = std::find_if(macroList.begin(), macroList.end(), [&](const NFmiLightWeightViewSettingMacro &macro){return macro.itsInitFilePath == theFilePath; });
     if(iter != macroList.end())
     {
         // Lasketaan rivin indeksi ja lis‰t‰‰n siihen otsikkorivi
@@ -405,7 +383,6 @@ void CFmiViewMacroDlg::OnBnClickedButtonRemove()
             {
                 InitMacroListFromDoc();
                 itsGridCtrl.SetSelectedRange(-1, -1, -1, -1);
-                itsMacroNameU_ = _TEXT("");
                 itsMacroDescriptionU_ = _TEXT("");
                 ResetSearchResource();
                 UpdateData(FALSE);
@@ -484,10 +461,6 @@ void CFmiViewMacroDlg::DoResizerHooking(void)
     bOk = m_resizer.SetAnchor(IDC_BUTTON_VIEW_MACRO_UNDO, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_VIEW_MACRO_REDO, ANCHOR_TOP | ANCHOR_LEFT);
-    ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_STATIC_VIEW_MACRO_NAME_STR, ANCHOR_TOP | ANCHOR_LEFT);
-    ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_EDIT_MACRO_NAME, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_VIEW_MACRO_DESCRIPTION, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
@@ -712,7 +685,6 @@ void CFmiViewMacroDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_STORE, "IDC_BUTTON_STORE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REMOVE, "IDC_BUTTON_REMOVE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH_LIST, "IDC_BUTTON_REFRESH_LIST");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_NAME_STR, "IDC_STATIC_VIEW_MACRO_NAME_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_DESCRIPTION, "IDC_STATIC_VIEW_MACRO_DESCRIPTION");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DISABLE_WINDOW_MANIPULATION, "No SmartMet wiew manipulations");
 }
