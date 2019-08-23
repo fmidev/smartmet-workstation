@@ -276,7 +276,7 @@ public:
     bool RemoveViewMacro(const std::string& theMacroName) override;
     void RefreshViewMacroList() override;
     bool LoadViewMacro(const std::string &theName) override;
-    void StoreViewMacro(const std::string &theName, const std::string &theDescription) override;
+    void StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription) override;
     bool CreateNewViewMacroDirectory(const std::string &thePath) override;
     void UndoViewMacro() override;
     void RedoViewMacro() override;
