@@ -11558,7 +11558,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		bool helpView2Updated = false;
 		double minWaitTimeInMS = NFmiAnimationData::kNoAnimationWaitTime;
 
-		if (profiling) profiler.Tick();
 
 		for(size_t i = 0; i<itsMapViewDescTopList.size(); i++)
 		{
@@ -11583,10 +11582,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				descTop.CurrentTime(animationData.CurrentTime());
 			}
 
-			if (profiling && i == 0 && profiler.dataCount()>0
-				&& descTop.CurrentTime() == animationData.Times().FirstTime() )
-			{
-				StopProfiling();
+			if (profiling && i == 0) {
+
+				profiler.Tick(descTop.CurrentTime());
+
+				if( profiler.dataCount() > 0
+					&& descTop.CurrentTime() == animationData.Times().FirstTime() )
+				{
+					StopProfiling();
+				}
 			}
 		}
 

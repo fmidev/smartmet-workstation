@@ -6,6 +6,9 @@
 #include <numeric>
 #include <algorithm>
 
+
+#include "NFmiMetTime.h"
+
 typedef std::chrono::time_point<std::chrono::steady_clock> profilePoint;
 
 class NFmiAnimationData;
@@ -17,13 +20,15 @@ class AnimationProfiler {
 	std::vector<NFmiAnimationData> settings;
 
 	std::vector<std::chrono::high_resolution_clock::duration> data;
+	std::vector<NFmiMetTime> dataTimes;
 
 public:
 
-	AnimationProfiler(): lastTick(std::chrono::high_resolution_clock::now() ), settings(), data() {};
+	AnimationProfiler(): lastTick(std::chrono::high_resolution_clock::now() ), settings(), data(), dataTimes() {};
 
 	void Reset() {
 		data.clear();
+		dataTimes.clear();
 		settings.clear();
 
 		lastTick = profilePoint();
@@ -37,7 +42,7 @@ public:
 		return data.size();
 	}
 
-	void Tick() {
+	void Tick(const NFmiMetTime&tb) {
 
 		auto currTime = std::chrono::high_resolution_clock::now();
 
@@ -46,6 +51,7 @@ public:
 			auto t = currTime - lastTick;
 
 			data.push_back(t);
+			dataTimes.push_back(tb);
 
 		}
 
@@ -80,7 +86,7 @@ public:
 
 		for (size_t i = 0; i < datams.size(); i++) {
 			auto a = datams[i];
-			dataLine << i <<" : "<< a.count() << "ms | ";
+			dataLine << dataTimes[i] <<" : "<< a.count() << "ms | ";
 			if (pos % lineLen == 0 || i == datams.size() - 1) {
 				CatLog::logMessage(dataLine.str(), CatLog::Severity::Info, CatLog::Category::Visualization);
 				pos = 1;
