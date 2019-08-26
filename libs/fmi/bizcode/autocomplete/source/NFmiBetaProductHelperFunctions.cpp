@@ -4,6 +4,7 @@
 #include "NFmiStringTools.h"
 #include "NFmiFileSystem.h"
 #include "NFmiDictionaryFunction.h"
+#include <filesystem>
 #include <afxdlgs.h>
 
 namespace BetaProduct
@@ -11,6 +12,23 @@ namespace BetaProduct
     namespace
     {
         LogAndWarnFunctionType gLoggerFunction;
+        bool IsPathInGivenDirectory(const std::string& absolutePath, const std::string& absoluteDirectory)
+        {
+            std::experimental::filesystem::path aPath(absolutePath);
+            std::experimental::filesystem::path aDirectory(absoluteDirectory);
+            if(!absoluteDirectory.empty() && absoluteDirectory.back() == '\\' || absoluteDirectory.back() == '/')
+                aDirectory = aDirectory.parent_path();
+
+            for(;;)
+            {
+                aPath = aPath.parent_path();
+                if(aPath.empty())
+                    return false;
+                if(aPath == aDirectory)
+                    return true;
+            }
+            return false;
+        }
     }
 
     void SetLoggerFunction(LogAndWarnFunctionType &theLoggerFunction)
@@ -53,6 +71,22 @@ namespace BetaProduct
         {
             auto originalFilePath = theFilePathOut;
             theFilePathOut = PathUtils::getTrueFilePath(theFilePathOut, theRootDirectory, theFileExtension);
+
+            // If user gives path outside the given root-path, we must reject the path
+            if(!IsPathInGivenDirectory(theFilePathOut, theRootDirectory))
+            {
+                std::string message = ::GetDictionaryString("File");
+                message += ":\n";
+                message += theFilePathOut;
+                message += "\n" + ::GetDictionaryString("was outside of the root path");
+                message += ":\n";
+                message += theRootDirectory;
+                message += "\n" + ::GetDictionaryString("cannot continue saving the file");
+                std::string messageBoxTitle = ::GetDictionaryString("File outside root path");
+                ::MessageBox(theView->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OK | MB_ICONERROR);
+                return false;
+            }
+
             // Must check again if given file already exists, if user has given filename without extension
             if(originalFilePath != theFilePathOut && NFmiFileSystem::FileExists(theFilePathOut))
             {
