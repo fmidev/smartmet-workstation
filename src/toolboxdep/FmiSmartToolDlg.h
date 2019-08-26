@@ -78,7 +78,6 @@ protected:
 	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath);
 	NFmiMacroParam* FindSelectedMacroParam(void);
 	void ClearMapViewRow(int theRowIndex);
-	bool CreateNewMacroParamDirectory(const std::string &thePath);
 	void InitDialogTexts(void);
 	bool EnableDlgItem(int theDlgId, bool fEnable);
     void DoResizerHooking(void);
@@ -108,7 +107,6 @@ protected:
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
 	int itsSelectedMapViewDescTopIndex;
-    CString itsMacroParamNameU_;
     CListBox itsMacroParamList;
     int itsMacroParamDataGridSizeX;
     int itsMacroParamDataGridSizeY;
