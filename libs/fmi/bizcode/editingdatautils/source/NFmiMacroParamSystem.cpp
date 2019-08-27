@@ -177,17 +177,21 @@ bool NFmiMacroParamSystem::FindTotal(const std::string &theTotalFileName)
 	if(ind != -1)
 	{
 	// 2.2 jos löytyy
+        itsCurrentPath = pathStr;
+        itsCurrentIndexPois = ind;
 		// 2.2.1 initilaisoi folderi tarvittaessa
-		if(!itsMacroParamFolders[ind]->Initialized())
-			itsMacroParamFolders[ind]->RefreshMacroParams();
+        auto macroParamFolder = GetCurrent();
+        if(macroParamFolder)
+		if(!macroParamFolder->Initialized())
+            macroParamFolder->RefreshMacroParams();
 
 		// 2.2.2 irrota theTotalFileName:sta ns. lyhenne eli ilman polkua ja ilman extensiota
 		std::string fileNameStr(fileStr.Header());
 		// 2.2.3 etsi lyhennettä folderista
-		if(itsMacroParamFolders[ind]->Find(fileNameStr))
+		if(macroParamFolder->Find(fileNameStr))
 		{
 			// 2.2.4 jos löytyy aseta itsFoundMacroParam ja palauta true,
-			itsFoundMacroParam = itsMacroParamFolders[ind]->Current();
+			itsFoundMacroParam = macroParamFolder->Current();
 			return true;
 		}
 	}
