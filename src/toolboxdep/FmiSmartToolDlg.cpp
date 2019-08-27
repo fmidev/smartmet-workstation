@@ -29,6 +29,7 @@
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiFileString.h"
 #include <fstream>
+#include <filesystem>
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
@@ -751,6 +752,20 @@ void CFmiSmartToolDlg::DoFinalMacroParamWrite(NFmiMacroParamSystem& macroParamSy
     }
 }
 
+static bool IsInCurrentMacroParamDirectory(NFmiMacroParamSystem& mpSystem, const std::string filePath)
+{
+    std::experimental::filesystem::path currentMacroParamDirectory = mpSystem.CurrentPath();
+    currentMacroParamDirectory.make_preferred();
+    auto currentDirectoryString = currentMacroParamDirectory.string();
+    // Otetaan mahdollinen loppu kenoviiva pois polusta
+    if(currentDirectoryString.back() == '\\')
+        currentMacroParamDirectory = currentMacroParamDirectory.parent_path();
+    std::experimental::filesystem::path filePathDirectory = filePath;
+    filePathDirectory.remove_filename();
+    return currentMacroParamDirectory == filePathDirectory;
+}
+
+
 const std::string g_MacroParamFileExtension = "dpa";
 const std::string g_MacroParamFileFilter = "MacroParam Files (*." + g_MacroParamFileExtension + ")|*." + g_MacroParamFileExtension + "|All Files (*.*)|*.*||";
 
@@ -784,6 +799,11 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
                 macroParamPointer->DrawParam(currentMacroParam->DrawParam()); // pitää ottaa talteen vanhat piirto-ominaisuudet!
                 updateViews = true; // nyt tiedetään, että pitää päivittää näyttöjä
             }
+        }
+        else if(!::IsInCurrentMacroParamDirectory(mpSystem, filePath))
+        {
+            // Jos macroa ei löydy nyky hakemistosta, pitää hakemisto hakea globaalisti root-hakemiston alta
+            mpSystem.SetCurrentPathByAbsolutePath(filePath);
         }
 
         macroParamPointer->DrawParam()->InitFileName(filePath);
