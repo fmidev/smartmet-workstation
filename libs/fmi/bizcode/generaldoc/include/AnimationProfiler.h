@@ -24,14 +24,14 @@ class AnimationProfiler {
 
 public:
 
-	AnimationProfiler(): lastTick(std::chrono::high_resolution_clock::now() ), settings(), data(), dataTimes() {};
+	AnimationProfiler(): lastTick( ), settings(), data(), dataTimes() {};
 
 	void Reset() {
 		data.clear();
 		dataTimes.clear();
 		settings.clear();
 
-		lastTick = std::chrono::high_resolution_clock::now();
+		lastTick = profilePoint();
 	}
 
 	std::vector< NFmiAnimationData >& getSettings() {
@@ -77,11 +77,11 @@ public:
 			});
 
 		size_t pos = 1;
-		constexpr int lineLen = 10;
+		constexpr int lineLen = 8;
 
 		std::stringstream dataLine;
 
-		dataLine << std::setprecision(2) << std::fixed;
+		dataLine << std::setprecision(0) << std::fixed;
 
 
 		for (size_t i = 0; i < datams.size(); i++) {
@@ -92,7 +92,7 @@ public:
 				pos = 1;
 				dataLine = std::stringstream{};
 
-				dataLine << std::setprecision(2) << std::fixed;
+				dataLine << std::setprecision(0) << std::fixed;
 			}
 			else pos++;
 		}
@@ -129,6 +129,9 @@ public:
 
 
 		constexpr int binCount = 16;
+
+
+		if (data.size() < binCount) return;
 
 		double binSize = (dataMax - dataMin) / binCount;
 

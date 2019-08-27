@@ -11584,12 +11584,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 			if (profiling && i == 0) {
 
-				profiler.Tick(descTop.CurrentTime());
-
 				if( profiler.dataCount() > 0
 					&& descTop.CurrentTime() == animationData.Times().FirstTime() )
 				{
 					StopProfiling();
+				}
+				else {
+
+					profiler.Tick(descTop.CurrentTime());
+
 				}
 			}
 		}
@@ -11663,12 +11666,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 			animationData.AnimationOn(true);
 
-
+			if(i==0)
+				profiler.Tick(descTop->CurrentTime());
 
 			MapViewDirty(i, false, true, true, true, false, false);
 
 			i++;
 		}
+
 
 
 		profiling = true;
@@ -11699,6 +11704,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		profiler.Report();
 
 		profiler.Reset();
+
 
 		profiling = false;
 	}
