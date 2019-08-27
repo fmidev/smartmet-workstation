@@ -195,6 +195,19 @@ bool NFmiMacroParamSystem::FindTotal(const std::string &theTotalFileName)
 	return false;
 }
 
+// T‰m‰ on hakemistoon siirtymis metodi, t‰t‰ k‰ytet‰‰n jos file-browserilla talletetaan
+// uusi macroParam mahdollisesti t‰ysin uuteen hakemistoon (file-browserilla tehty hakemisto).
+void NFmiMacroParamSystem::SetCurrentPathByAbsolutePath(const std::string& absolutePath)
+{
+    if(!absolutePath.empty())
+    {
+        Rebuild(nullptr);
+        NFmiFileString fileString(absolutePath);
+        std::string wantedPath = fileString.Device() + fileString.Path();
+        SetWantedPath(wantedPath);
+    }
+}
+
 // t‰m‰ on alihakemistoon siirtymis metodi
 void NFmiMacroParamSystem::CurrentPath(const std::string &newValue)
 {
@@ -208,24 +221,30 @@ void NFmiMacroParamSystem::CurrentPath(const std::string &newValue)
 	NFmiStringTools::TrimL(usedDirectoryName, '<');
 	NFmiStringTools::TrimR(usedDirectoryName, '>');
 
+    std::string wantedPath = itsCurrentPath;
 	if(usedDirectoryName == "..")
 	{
-		MacroParam::RemoveLastPartOfDirectory(itsCurrentPath);
+		MacroParam::RemoveLastPartOfDirectory(wantedPath);
 	}
 	else
 	{
-		itsCurrentPath += usedDirectoryName;
+		wantedPath += usedDirectoryName;
 	}
 
-	itsCurrentPath = MacroParam::ConvertPathToOneUsedFormat(itsCurrentPath);
-	itsCurrentIndexPois = FindPath(itsCurrentPath);
-	boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetCurrent();
-	if(currentFolder)
-	{
-		if(!currentFolder->Initialized())
-			currentFolder->RefreshMacroParams();
-		InsertAllSubdirectories(itsMacroParamFolders, itsCurrentPath, itsRootPath, 0);
-	}
+    SetWantedPath(wantedPath);
+}
+
+void NFmiMacroParamSystem::SetWantedPath(const std::string& wantedPath)
+{
+    itsCurrentPath = MacroParam::ConvertPathToOneUsedFormat(wantedPath);
+    itsCurrentIndexPois = FindPath(itsCurrentPath);
+    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetCurrent();
+    if(currentFolder)
+    {
+        if(!currentFolder->Initialized())
+            currentFolder->RefreshMacroParams();
+        InsertAllSubdirectories(itsMacroParamFolders, itsCurrentPath, itsRootPath, 0);
+    }
 }
 
 void NFmiMacroParamSystem::ClearMacros(void)
