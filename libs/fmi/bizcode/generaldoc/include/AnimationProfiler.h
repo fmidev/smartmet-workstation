@@ -26,7 +26,7 @@ public:
 		data.clear();
 		settings.clear();
 
-		lastTick = profilePoint();
+		lastTick = std::chrono::high_resolution_clock::now();
 	}
 
 	std::vector< NFmiAnimationData >& getSettings() {
