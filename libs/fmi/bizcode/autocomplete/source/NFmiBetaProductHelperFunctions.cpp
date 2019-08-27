@@ -4,6 +4,7 @@
 #include "NFmiStringTools.h"
 #include "NFmiFileSystem.h"
 #include "NFmiDictionaryFunction.h"
+#include "boost/algorithm/string/replace.hpp"
 #include <filesystem>
 #include <afxdlgs.h>
 
@@ -12,22 +13,33 @@ namespace BetaProduct
     namespace
     {
         LogAndWarnFunctionType gLoggerFunction;
-        bool IsPathInGivenDirectory(const std::string& absolutePath, const std::string& absoluteDirectory)
-        {
-            std::experimental::filesystem::path aPath(absolutePath);
-            std::experimental::filesystem::path aDirectory(absoluteDirectory);
-            if(!absoluteDirectory.empty() && absoluteDirectory.back() == '\\' || absoluteDirectory.back() == '/')
-                aDirectory = aDirectory.parent_path();
 
-            for(;;)
+        void NormalizePathDirectorySeparators(std::string& aPath)
+        {
+            boost::replace_all(aPath, "/", "\\");
+        }
+
+        void RemoveDirectorySeparatorFromEnd(std::string& aPath)
+        {
+            // aPath must be atleast 2 characters long before removing anything, otherwise "/" root directory won't work
+            if(aPath.size() > 1 && (aPath.back() == '\\' || aPath.back() == '/'))
             {
-                aPath = aPath.parent_path();
-                if(aPath.empty())
-                    return false;
-                if(aPath == aDirectory)
-                    return true;
+                aPath.resize(aPath.size() - 1);
             }
-            return false;
+        }
+
+        // Function that checks if given absolutePath (file or directory) is located in the 
+        // absoluteDirectory or it's any subdirectory.
+        bool IsPathInGivenDirectory(std::string absolutePath, std::string absoluteDirectory)
+        {
+            NormalizePathDirectorySeparators(absolutePath);
+            NormalizePathDirectorySeparators(absoluteDirectory);
+            RemoveDirectorySeparatorFromEnd(absoluteDirectory);
+
+            if(absolutePath.empty() || absoluteDirectory.empty())
+                return false;
+            auto pos = absolutePath.find(absoluteDirectory);
+            return pos != std::string::npos;
         }
     }
 
