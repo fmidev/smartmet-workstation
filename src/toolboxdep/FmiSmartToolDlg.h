@@ -103,6 +103,7 @@ protected:
     NFmiInfoData::Type GetUsedMacroParamType();
     void DoFinalMacroParamWrite(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiMacroParam> &macroParamPointer);
     void EnableColorCodedControls();
+    std::string GetSelectedMacroParamName() const;
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
