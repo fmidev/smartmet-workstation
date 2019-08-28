@@ -511,8 +511,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsViewMacroPath()
 ,itsRootViewMacroPath()
 ,itsCurrentViewMacro(new NFmiViewSettingMacro())
-,itsDoAtSendCommandString()
-,fUseDoAtSendCommand(false)
 ,itsSmartMetEditingMode(CtrlViewUtils::kFmiEditingModeNormal)
 ,itsSavedDirectory()
 ,itsCurrentMacroText()
@@ -1847,8 +1845,6 @@ void InitSettingsFromConfFile(void)
     DoVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsDoAtSendCommandString = NFmiSettings::Require<string>("MetEditor::AtSending::ShellCommand");
-		fUseDoAtSendCommand = NFmiSettings::Require<bool>("MetEditor::AtSending::DoCommand");
 		itsSmartMetEditingMode = static_cast<CtrlViewUtils::FmiSmartMetEditingMode>(NFmiSettings::Require<int>("MetEditor::EditXMode"));
 		fWarnIfCantSaveWorkingFile = NFmiSettings::Optional("MetEditor::WarnIfCantSaveWorkingFile", true);
 
@@ -7727,10 +7723,6 @@ bool StoreDataToDataBase(const std::string &theForecasterId)
 {
     std::string helperForecasterId = GetHelperForecasterId();
     bool status = StoreDataToDataBase(theForecasterId, helperForecasterId);
-    if(status && fUseDoAtSendCommand)
-    {
-        status = status && CFmiProcessHelpers::ExecuteCommandInSeparateProcess(itsDoAtSendCommandString);
-    }
     return status;
 }
 
@@ -9380,26 +9372,6 @@ bool IsRedoableViewMacro(void)
 		itsSmartMetEditingMode = newValue;
         if(modifySettings)
     		NFmiSettings::Set(string("MetEditor::EditXMode"), NFmiStringTools::Convert<int>(itsSmartMetEditingMode), true);
-	}
-
-	bool UseDoAtSendCommandString(void)
-	{
-		return fUseDoAtSendCommand;
-	}
-
-	void UseDoAtSendCommandString(bool newValue)
-	{
-		fUseDoAtSendCommand = newValue;
-	}
-
-	std::string DoAtSendCommandString(void)
-	{
-		return itsDoAtSendCommandString;
-	}
-
-	void DoAtSendCommandString(const std::string &newValue)
-	{
-		itsDoAtSendCommandString = newValue;
 	}
 
 	void UseMap(unsigned int theDescTopIndex, unsigned int theMapIndex)
@@ -14529,8 +14501,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiString itsSavedDirectory; // talletettu työhakemisto, mikä voidaan ladata käyttöön myöhemmin
 
-	string itsDoAtSendCommandString; // tämä stringi annetaan system-komennolla (jos niin asetettu) kun dataa lähetetään tietokantaan
-	bool fUseDoAtSendCommand; // tehdäänkö ed. mainittu komento dataa lähetettäessä.
     CtrlViewUtils::FmiSmartMetEditingMode itsSmartMetEditingMode;
 
 	string itsViewMacroPath;
@@ -15377,26 +15347,6 @@ CtrlViewUtils::FmiSmartMetEditingMode NFmiEditMapGeneralDataDoc::SmartMetEditing
 void NFmiEditMapGeneralDataDoc::SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings)
 {
 	pimpl->SmartMetEditingMode(newValue, modifySettings);
-}
-
-bool NFmiEditMapGeneralDataDoc::UseDoAtSendCommandString(void)
-{
-	return pimpl->UseDoAtSendCommandString();
-}
-
-void NFmiEditMapGeneralDataDoc::UseDoAtSendCommandString(bool newValue)
-{
-	pimpl->UseDoAtSendCommandString(newValue);
-}
-
-std::string NFmiEditMapGeneralDataDoc::DoAtSendCommandString(void)
-{
-	return pimpl->DoAtSendCommandString();
-}
-
-void NFmiEditMapGeneralDataDoc::DoAtSendCommandString(const std::string &newValue)
-{
-	pimpl->DoAtSendCommandString(newValue);
 }
 
 void NFmiEditMapGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)

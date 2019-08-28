@@ -758,7 +758,7 @@ BOOL CFmiLoadDataDialog::DoSetup()
 		itsDataLoadingInfo->ComboDataBase1FileName(tmp);
 	}
 
-	//toiset redionappulat
+	//toiset radionappulat
 	itsDataLoadingInfo->TimeInterpolationSetting(itsEnableInterpolation);
 
 	if(!itsModelProducerIndexView->IsProducerIndexInTimeVectorFilled())
