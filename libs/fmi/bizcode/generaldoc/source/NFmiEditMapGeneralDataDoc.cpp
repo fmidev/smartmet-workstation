@@ -11564,7 +11564,23 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			NFmiMapViewDescTop &descTop = *itsMapViewDescTopList[i];
             NFmiAnimationData &animationData = descTop.AnimationDataRef();
 			animationData.CurrentTime(descTop.CurrentTime()); // currentti aika pit‰‰ ottaa desctopista ja antaa animaattorille
-            int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), descTop.MapViewDisplayMode(), static_cast<int>(descTop.ViewGridSize().X()));
+ 
+
+			if (profiling && i == 0) {
+
+				if (profiler.dataCount() > 0
+					&& descTop.CurrentTime() == animationData.Times().FirstTime())
+				{
+					StopProfiling();
+				}
+				else {
+
+					profiler.Tick(descTop.CurrentTime());
+
+				}
+			}
+			
+			int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), descTop.MapViewDisplayMode(), static_cast<int>(descTop.ViewGridSize().X()));
             status = animationData.Animate(reducedAnimationTimeSteps);
 			double waitTimeInMS = animationData.CalcWaitTimeInMSForNextFrame();
 			if(waitTimeInMS < minWaitTimeInMS)
@@ -11582,19 +11598,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				descTop.CurrentTime(animationData.CurrentTime());
 			}
 
-			if (profiling && i == 0) {
-
-				if( profiler.dataCount() > 0
-					&& descTop.CurrentTime() == animationData.Times().FirstTime() )
-				{
-					StopProfiling();
-				}
-				else {
-
-					profiler.Tick(descTop.CurrentTime());
-
-				}
-			}
 		}
 
 		if(maxStatus)
@@ -11666,8 +11669,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 			animationData.AnimationOn(true);
 
-			if(i==0)
-				profiler.Tick(descTop->CurrentTime());
 
 			MapViewDirty(i, false, true, true, true, false, false);
 
