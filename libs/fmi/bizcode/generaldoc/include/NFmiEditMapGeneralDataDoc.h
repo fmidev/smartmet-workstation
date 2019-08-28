@@ -507,10 +507,6 @@ public:
 	void SetSelectedMapHandler(unsigned int theDescTopIndex, unsigned int newMapIndex);
 	CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void);
 	void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings);
-	bool UseDoAtSendCommandString(void);
-	void UseDoAtSendCommandString(bool newValue);
-	std::string DoAtSendCommandString(void);
-	void DoAtSendCommandString(const std::string &newValue);
 	bool RemoveViewMacro(const std::string& theMacroName);
 	void RefreshViewMacroList(void);
 	bool LoadViewMacro(const std::string &theName);
