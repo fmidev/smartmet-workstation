@@ -46,12 +46,14 @@ public:
 
 		auto currTime = std::chrono::high_resolution_clock::now();
 
+
+		dataTimes.push_back(tb);
+
 		if (lastTick != profilePoint()) {
 
 			auto t = currTime - lastTick;
 
 			data.push_back(t);
-			dataTimes.push_back(tb);
 
 		}
 
