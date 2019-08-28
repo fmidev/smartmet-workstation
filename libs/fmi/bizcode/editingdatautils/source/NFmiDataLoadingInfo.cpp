@@ -273,8 +273,6 @@ void NFmiDataLoadingInfo::Configure()
 	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEOUTPATH);
 	itsDataBaseOutPath = NFmiString(temp);
 
-	itsErrorFilePath = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_ERRORFILEPATH);
-
 	itsDataLengthInHours = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_DATALENGTHINHOURS);
 
     itsFileNameTimeStampTemplate = NFmiSettings::Optional<std::string>("MetEditor::DataLoadingInfo::FileNameTimeStampTemplate", "DDHH");
