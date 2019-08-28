@@ -235,8 +235,6 @@ void NFmiDataLoadingInfo::Configure()
 	itsPrimaryProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_PRIMARYPRODUCERSETTING);
 	itsSecondaryProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_SECONDARYPRODUCERSETTING);
 	itsThirdProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_THIRDPRODUCERSETTING);
-	itsTimeInterpolationSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_TIMEINTERPOLATIONSETTING);
-	itsParamCombinationSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_PARAMCOMBINATIONSETTING);
 
 	itsAreaIdentifier = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_AREAIDENTIFIER);
 
