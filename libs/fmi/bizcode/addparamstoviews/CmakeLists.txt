@@ -17,6 +17,7 @@ target_link_libraries(
     Newbase
     SmartTools
     EditingDataUtils
+    CtrlViewUtils
     )
 
 target_include_directories( 
@@ -26,6 +27,7 @@ target_include_directories(
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
+    PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
     )
 
 set(
@@ -35,6 +37,7 @@ set(
     ${Newbase_INCLUDE_DIRS}
     ${SmartTools_INCLUDE_DIRS}
     ${EditingDataUtils_INCLUDE_DIRS}
+    ${CtrlViewUtils_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
 
