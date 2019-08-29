@@ -1156,19 +1156,31 @@ void CPPToolTip::OutputTooltipOnScreen(LPPOINT lpPoint, HDC hDC /* = NULL */)
 // Marko fix: Windows OS has had following bug since atleast 2006 and MicroSoft won't fix it.
 // Bug description: Tooltip view can be left behind the Taskbar, so that Taskbar is the system top most view
 // when tooltip should be always the top most.
-// Crude fix does following: If Taskbar is visible and has size and Taskbar is on bottom edge, we narrow 
-// screen size given to tooltip positioning and direction calculations by that taskbar heigth.
+// Crude fix does following: If Taskbar is visible and has size, we narrow 
+// screen size given to tooltip positioning and direction calculations by that taskbar area.
 static void DoTooltipBehindTaskBarFixToScreenRect(CRect& screenRectInOut)
 {
     APPBARDATA appbarData;
     memset(&appbarData, 0, sizeof(appbarData));
     appbarData.cbSize = sizeof(appbarData);
     auto status = SHAppBarMessage(ABM_GETTASKBARPOS, &appbarData);
-    if(appbarData.rc.bottom != appbarData.rc.top)
+    if(appbarData.rc.bottom != appbarData.rc.top && appbarData.rc.left != appbarData.rc.right)
     {
         if(appbarData.uEdge == ABE_BOTTOM)
         {
             screenRectInOut.bottom = appbarData.rc.top;
+        }
+        else if(appbarData.uEdge == ABE_TOP)
+        {
+            screenRectInOut.top = appbarData.rc.bottom;
+        }
+        else if(appbarData.uEdge == ABE_LEFT)
+        {
+            screenRectInOut.left = appbarData.rc.right;
+        }
+        else if(appbarData.uEdge == ABE_RIGHT)
+        {
+            screenRectInOut.right = appbarData.rc.left;
         }
     }
 }
