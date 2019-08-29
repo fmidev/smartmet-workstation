@@ -62,7 +62,8 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 ,fQ3Macro(FALSE)
 ,fSearchOptionCaseSensitive(FALSE)
 ,fSearchOptionMatchAnywhere(TRUE)
-,itsLoadedSmarttoolMacroPathU_(_T(""))
+,itsLoadedSmarttoolMacroPathU_()
+,itsLoadedMacroParamPathText(_T(""))
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 ,itsSyntaxEditControl()
 ,itsSyntaxEditControlAcceleratorTable(NULL)
@@ -96,6 +97,7 @@ void CFmiSmartToolDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Radio(pDX, IDC_RADIO_VIEWMACRO_SELECTED_MAP1, itsSelectedMapViewDescTopIndex);
     DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, itsSpeedSearchMacroControl);
     DDX_Text(pDX, IDC_STATIC_MACRO_PATH_TEXT, itsLoadedSmarttoolMacroPathU_);
+    DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_TEXT, itsLoadedMacroParamPathText);
 }
 
 
@@ -464,7 +466,9 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PATH_TEXT, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
-    
+    bOk = m_resizer.SetAnchor(IDC_STATIC_LOADED_MACRO_PARAM_TEXT, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
+    ASSERT(bOk == TRUE);
+
 }
 
 void CFmiSmartToolDlg::SetDefaultValues(void)
@@ -510,8 +514,18 @@ std::string CFmiSmartToolDlg::GetSmarttoolFormulaText()
 #endif // DISABLE_EXTREME_TOOLKITPRO
 }
 
-bool CFmiSmartToolDlg::LoadSmarttoolFormula(const std::string &theFilePath)
+bool CFmiSmartToolDlg::LoadSmarttoolFormula(const std::string &theFilePath, bool smarttoolCase)
 {
+    if(smarttoolCase)
+    {
+        UpdateLoadedSmarttoolMacroPathString();
+        itsLoadedMacroParamPathText.Empty();
+    }
+    else
+    {
+        UpdateLoadedMacroParamPathString();
+        itsLoadedSmarttoolMacroPathU_.Empty();
+    }
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     return LoadSmarttoolToSyntaxEditControl(theFilePath);
 #else
@@ -614,16 +628,25 @@ void CFmiSmartToolDlg::DoSmartToolLoad(const std::string &theSmartToolName, bool
     if(status)
     {
         CatLog::logMessage(string("Loaded smartTool: ") + theSmartToolName, CatLog::Severity::Info, CatLog::Category::Macro);
-        LoadSmarttoolFormula(GetSmarttoolFilePath());
-        UpdateLoadedSmarttoolMacroPathString();
+        LoadFormulaFromSmarttool();
         itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
         UpdateData(FALSE);
     }
 }
 
+void CFmiSmartToolDlg::LoadFormulaFromSmarttool()
+{
+    LoadSmarttoolFormula(GetSmarttoolFilePath(), true);
+}
+
+void CFmiSmartToolDlg::LoadFormulaFromMacroParam()
+{
+    LoadSmarttoolFormula(GetMacroParamFilePath(itsSmartMetDocumentInterface->MacroParamSystem()), false);
+}
+
 void CFmiSmartToolDlg::OnButtonSmartToolLoadDbChecker()
 { // ladataan virallinen DBCheck-macro ruudulle esim. testi käyttöön
-    LoadSmarttoolFormula(itsSmartToolInfo->DBCheckerFileName());
+    LoadSmarttoolFormula(itsSmartToolInfo->DBCheckerFileName(), true);
 	itsSmartToolInfo->CurrentScript(itsSmartToolInfo->DBCheckerText()); // pitää päivittää myös currenttia skriptiä
 
 	itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
@@ -843,7 +866,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 	}
 	itsMacroParamList.SetCurSel(currentSelection);
     if(mpSystem.FindMacro(GetSelectedMacroParamName()))
-        LoadSmarttoolFormula(GetMacroParamFilePath(mpSystem));
+        LoadFormulaFromMacroParam();
 
     if(fForceThreadUpdate)
     {
@@ -1009,8 +1032,7 @@ void CFmiSmartToolDlg::OnLbnSelchangeListParamMacros()
 		NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
 		if(mpSystem.FindMacro(macroParamName))
 		{
-            LoadSmarttoolFormula(GetMacroParamFilePath(mpSystem));
-			itsLoadedSmarttoolMacroPathU_ = _TEXT(""); // Tyhjennetään varmuuden vuoksi smartToolin nimi, että kahden save-napin takia ei tule talletettua vahingossa väärällä napilla
+            LoadFormulaFromMacroParam();
 		}
 	}
 	itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText()); // päivitetään myös currentiksi macro-tekstiksi
@@ -1052,8 +1074,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonSmartToolRemove()
         bool status = itsSmartToolInfo->LoadScript(dlg.SelectedScriptName());
 		if(status)
 		{
-            LoadSmarttoolFormula(GetSmarttoolFilePath());
-            UpdateLoadedSmarttoolMacroPathString();
+            LoadFormulaFromSmarttool();
             itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
             UpdateData(FALSE);
 		}
@@ -1205,6 +1226,19 @@ void CFmiSmartToolDlg::UpdateLoadedSmarttoolMacroPathString()
     itsLoadedSmarttoolMacroPathU_ = CA2T(usedLoadedMacroPath.c_str());
     UpdateData(FALSE);
 }
+
+void CFmiSmartToolDlg::UpdateLoadedMacroParamPathString()
+{
+    auto& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+    if(mpSystem.CurrentMacroParam())
+    {
+        std::string usedLoadedMacroPath = "\\" + mpSystem.RelativePath();
+        usedLoadedMacroPath += "\\" + mpSystem.CurrentMacroParam()->Name();
+        itsLoadedMacroParamPathText = CA2T(usedLoadedMacroPath.c_str());
+        UpdateData(FALSE);
+    }
+}
+
 
 LRESULT CFmiSmartToolDlg::OnGUSIconEditLeftIconClicked(WPARAM wParam, LPARAM lParam)
 {

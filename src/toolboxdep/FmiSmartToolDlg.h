@@ -82,6 +82,7 @@ protected:
 	bool EnableDlgItem(int theDlgId, bool fEnable);
     void DoResizerHooking(void);
     void UpdateLoadedSmarttoolMacroPathString();
+    void UpdateLoadedMacroParamPathString();
     void ResetSearchResource();
     void InitSpeedSearchControl();
     void DoTimedResetSearchResource();
@@ -89,7 +90,7 @@ protected:
     std::string GetSmarttoolFilePath();
     void WarnUserAboutNoEditingSmarttools();
     std::string GetSmarttoolFormulaText();
-    bool LoadSmarttoolFormula(const std::string &theFilePath);
+    bool LoadSmarttoolFormula(const std::string &theFilePath, bool smarttoolCase);
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     void InitializeSyntaxEditControl();
     std::string MakeSyntaxEditConfigFilePath();
@@ -104,6 +105,8 @@ protected:
     void DoFinalMacroParamWrite(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiMacroParam> &macroParamPointer);
     void EnableColorCodedControls();
     std::string GetSelectedMacroParamName() const;
+    void LoadFormulaFromSmarttool();
+    void LoadFormulaFromMacroParam();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
@@ -119,6 +122,7 @@ protected:
     BOOL fSearchOptionCaseSensitive;
     BOOL fSearchOptionMatchAnywhere;
     CString itsLoadedSmarttoolMacroPathU_;
+    CString itsLoadedMacroParamPathText;
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     std::unique_ptr<CXTPSyntaxEditCtrl>	itsSyntaxEditControl;
