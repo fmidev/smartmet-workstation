@@ -348,7 +348,7 @@ public:
     virtual bool RemoveViewMacro(const std::string& theMacroName) = 0;
     virtual void RefreshViewMacroList() = 0;
     virtual bool LoadViewMacro(const std::string &theName) = 0;
-    virtual void StoreViewMacro(const std::string &theName, const std::string &theDescription) = 0;
+    virtual void StoreViewMacro(const std::string &theAbsoluteMacroFilePath, const std::string &theDescription) = 0;
     virtual bool CreateNewViewMacroDirectory(const std::string &thePath) = 0;
     virtual void UndoViewMacro() = 0;
     virtual void RedoViewMacro() = 0;

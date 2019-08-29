@@ -113,7 +113,7 @@ private:
     void DoTimedResetSearchResource();
     void InitHeaders(void);
     int GetSelectedViewMacroRow();
-    void SelectMacro(const std::string &theName);
+    void SelectMacro(const std::string &theFilePath);
     std::string GetSelectedMacroName();
     std::string GetMacroName(int index);
     void SetGridRow(int row, const NFmiLightWeightViewSettingMacro &theListItem);
@@ -128,8 +128,8 @@ private:
     bool fGridControlInitialized;
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
-    CString itsMacroNameU_;
     CString itsMacroDescriptionU_;
+    std::string itsSelectedMacroName;
     BOOL fDisableWindowManipulations;
     CWndResizer m_resizer;
     CGUSIconEdit itsSpeedSearchViewMacroControl;
