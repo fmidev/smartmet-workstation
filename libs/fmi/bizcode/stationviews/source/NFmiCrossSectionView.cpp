@@ -1099,8 +1099,8 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	// näytöllä vaan maantieteellisesti. WindBarb on eri asia ja se piirretään kuten kartalla, mutta siihen ollaan totuttu...
 	// Lisäksi nyt kun valitsin tuulen suunnan näytölle, ei tapahdu mitään, koska piirto ei tue suunta-nuolen piirtoa.
 	// ELI JOS paramtri on tuulen suunta ja hilaesitys on nuoli, muuta se isoviiva esitykseksi.
-	if(isoLineData.itsParam.GetParamIdent() == kFmiWindDirection && itsDrawParam->GridDataPresentationStyle() == 6)
-		itsDrawParam->GridDataPresentationStyle(2);
+	if(isoLineData.itsParam.GetParamIdent() == kFmiWindDirection && itsDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiSymbolView)
+		itsDrawParam->GridDataPresentationStyle(NFmiMetEditorTypes::View::kFmiIsoLineView);
 	// HUOM! TÄMÄ ON VIRITYS!!!! - loppuu
 
 	if(fDoCrossSectionDifferenceData)

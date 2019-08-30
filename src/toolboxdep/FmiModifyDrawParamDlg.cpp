@@ -457,12 +457,12 @@ const int g_ViewTypeOffset1 = 1;
 const int g_ViewTypeOffset2 = 4;
 static int GetStationDataViewSelectorIndex(NFmiMetEditorTypes::View theViewType)
 {
-    if(theViewType >= NFmiMetEditorTypes::kFmiTextView && theViewType <= NFmiMetEditorTypes::kFmiIndexedTextView)
-        return theViewType - g_ViewTypeOffset1;
-    else if(theViewType <= NFmiMetEditorTypes::kFmiSmartSymbolView)
-        return theViewType - g_ViewTypeOffset2;
-    else if(theViewType <= NFmiMetEditorTypes::kFmiCustomSymbolView)
-        return theViewType - g_ViewTypeOffset2;
+    if(theViewType >= NFmiMetEditorTypes::View::kFmiTextView && theViewType <= NFmiMetEditorTypes::View::kFmiIndexedTextView)
+        return static_cast<int>(theViewType) - g_ViewTypeOffset1;
+    else if(theViewType <= NFmiMetEditorTypes::View::kFmiSmartSymbolView)
+        return static_cast<int>(theViewType) - g_ViewTypeOffset2;
+    else if(theViewType <= NFmiMetEditorTypes::View::kFmiCustomSymbolView)
+        return static_cast<int>(theViewType) - g_ViewTypeOffset2;
     else
         return -1;
 }
@@ -470,7 +470,7 @@ static int GetStationDataViewSelectorIndex(NFmiMetEditorTypes::View theViewType)
 static NFmiMetEditorTypes::View GetSelectedStationDataViewType(CComboBox &theStationDataViewSelector)
 {
     auto currentSelection = theStationDataViewSelector.GetCurSel();
-    if(currentSelection >= (NFmiMetEditorTypes::kFmiTextView - g_ViewTypeOffset1) && currentSelection <= (NFmiMetEditorTypes::kFmiIndexedTextView - g_ViewTypeOffset1))
+    if(currentSelection >= (static_cast<int>(NFmiMetEditorTypes::View::kFmiTextView) - g_ViewTypeOffset1) && currentSelection <= (static_cast<int>(NFmiMetEditorTypes::View::kFmiIndexedTextView) - g_ViewTypeOffset1))
         return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset1);
     else
         return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset2);
@@ -517,7 +517,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	itsIsoLineStyle = itsDrawParam->SimpleIsoLineLineStyle();
 	itsIsoLineWidth = itsDrawParam->SimpleIsoLineWidth();
 	itsIsoLineZeroValue_NEW = itsDrawParam->SimpleIsoLineZeroValue();
-	itsGridDataDrawStyle = itsDrawParam->GridDataPresentationStyle()-1;
+	itsGridDataDrawStyle = static_cast<int>(itsDrawParam->GridDataPresentationStyle()) - 1;
 
 	itsSimpleClassCount = itsDrawParam->SimpleIsoLineColorShadeClassCount();
 	itsSimpleClassEndValue = itsDrawParam->SimpleIsoLineColorShadeHighValue();
@@ -651,7 +651,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->SimpleIsoLineLineStyle(itsIsoLineStyle);
 	itsDrawParam->SimpleIsoLineWidth(itsIsoLineWidth);
 	itsDrawParam->SimpleIsoLineZeroValue(static_cast<float>(itsIsoLineZeroValue_NEW));
-	itsDrawParam->GridDataPresentationStyle(itsGridDataDrawStyle+1);
+	itsDrawParam->GridDataPresentationStyle(static_cast<NFmiMetEditorTypes::View>(itsGridDataDrawStyle+1));
 
 	itsDrawParam->SimpleIsoLineColorShadeClassCount(itsSimpleClassCount);
 	itsDrawParam->SimpleIsoLineColorShadeHighValue(itsSimpleClassEndValue);

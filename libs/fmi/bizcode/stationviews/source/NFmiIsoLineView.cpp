@@ -814,15 +814,15 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
     if(theIsoLineData->itsIsoLineStatistics.itsMinValue == kFloatMissing || theIsoLineData->itsIsoLineStatistics.itsMaxValue == kFloatMissing)
         return false;
 
-    int viewType = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
-    if(viewType == 3 || viewType == 4 || viewType == 5) // 3=col.cont, 4=col.cont+isoline, 5=quick col.cont
+    auto viewType = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
+    if(viewType == NFmiMetEditorTypes::View::kFmiColorContourView || viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView || viewType == NFmiMetEditorTypes::View::kFmiQuickColorContourView)
     {
         if(theDrawParam->UseSimpleIsoLineDefinitions())
             FillSimpleColorContourInfo(theDrawParam, theIsoLineData, fStationData);
         else
             FillCustomColorContourInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed);
     }
-    if(viewType == 2 || viewType == 4) // 2=isoline
+    if(viewType == NFmiMetEditorTypes::View::kFmiIsoLineView || viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
     {
         if(theDrawParam->UseSimpleIsoLineDefinitions()) // 2=isoline
             FillIsoLineInfoSimple(theDrawParam, theIsoLineData, fToolMasterUsed);
@@ -889,12 +889,12 @@ void NFmiIsoLineView::FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam
     theIsoLineData->fUseColorContours = 1;
     theIsoLineData->fUseIsoLineGabWithCustomContours = fToolMasterUsed ? theDrawParam->UseIsoLineGabWithCustomContours() : false; // jos imagine piirto, tämä pitää laittaa falseksi, muuten tulee sotkua
     theIsoLineData->fUseCustomColorContoursClasses = true;
-    int presentStyle = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
-    if(presentStyle == 3 && theDrawParam->UseSeparatorLinesBetweenColorContourClasses())
+    auto presentStyle = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
+    if(presentStyle == NFmiMetEditorTypes::View::kFmiColorContourView && theDrawParam->UseSeparatorLinesBetweenColorContourClasses())
         theIsoLineData->fUseSeparatorLinesBetweenColorContourClasses = true;
-    if(presentStyle == 5)
+    if(presentStyle == NFmiMetEditorTypes::View::kFmiQuickColorContourView)
         theIsoLineData->fUseColorContours = 2; // 2 asettaa quick contourin päälle
-    if(presentStyle == 4)
+    if(presentStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
         theIsoLineData->fDrawLabelsOverContours = true;
 
     const checkedVector<float>& values = theDrawParam->SpecialIsoLineValues();
@@ -951,10 +951,10 @@ void NFmiIsoLineView::FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam
     theIsoLineData->fUseIsoLines = 0; // toistaiseksi vielä ilman isoviivoja!!!
     theIsoLineData->fUseColorContours = 1;
 
-    int presentStyle = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
-    if(presentStyle == 3 && theDrawParam->UseSeparatorLinesBetweenColorContourClasses())
+    auto presentStyle = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
+    if(presentStyle == NFmiMetEditorTypes::View::kFmiColorContourView && theDrawParam->UseSeparatorLinesBetweenColorContourClasses())
         theIsoLineData->fUseSeparatorLinesBetweenColorContourClasses = true;
-    if(presentStyle == 5)
+    if(presentStyle == NFmiMetEditorTypes::View::kFmiQuickColorContourView)
         theIsoLineData->fUseColorContours = 2; // 2 asettaa quick contourin päälle
     theIsoLineData->fUseCustomColorContoursClasses = false;
 
@@ -1092,8 +1092,8 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
     theIsoLineData->itsIsoLineBoxFillColorIndex = ::GetLabelBoxFillColorIndex(theDrawParam->IsolineLabelBoxFillColor(), theDrawParam->UseTransparentFillColor());
 
     const checkedVector<int>& lineColors = theDrawParam->SpecialIsoLineColorIndexies();
-    int vieStyle = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
-    bool colorContourAndIsolines = vieStyle == 4; // 4=col.cont+isoline
+    auto vieStyle = fStationData ? theDrawParam->StationDataViewType() : theDrawParam->GridDataPresentationStyle();
+    bool colorContourAndIsolines = vieStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
     size = static_cast<int>(lineColors.size());
     theIsoLineData->itsIsoLineColor[0] = 3; // oletus arvo, jos puuttuu
     for(i = 0; i < size; i++)
