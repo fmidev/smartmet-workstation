@@ -313,7 +313,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 								param.GetParam()->SetName(drawParam->InitFileName());
 
 							NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", param, kFmiModifyDrawParam, 
-								NFmiMetEditorTypes::kFmiParamsDefaultView, &drawParam->Level(),
+								NFmiMetEditorTypes::View::kFmiParamsDefaultView, &drawParam->Level(),
 								drawParam->DataType(), index, drawParam->ViewMacroDrawParam());
                             // T‰m‰ on ruma fixi, mutta tupla klikki tekee t‰m‰n piilotus asetuksen jostain syyst‰ ja minun pit‰‰ laittaa se t‰ss‰ pois
                             drawParam->HideParam(!drawParam->IsParamHidden());
@@ -338,7 +338,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 bool NFmiViewParamsView::ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex)
 {
     NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", theDrawParam->Param(), kFmiActivateView,
-        NFmiMetEditorTypes::kFmiParamsDefaultView, &theDrawParam->Level(),
+        NFmiMetEditorTypes::View::kFmiParamsDefaultView, &theDrawParam->Level(),
         theDrawParam->DataType(), theParamIndex, theDrawParam->ViewMacroDrawParam());
     return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), 1); // 1=viewtype ei m‰‰r‰tty viel‰
 }

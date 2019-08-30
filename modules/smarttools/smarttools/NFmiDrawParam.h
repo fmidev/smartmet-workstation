@@ -286,8 +286,8 @@ class NFmiDrawParam
   void UsedSymbolListIndex(int newValue) { itsUsedSymbolListIndex = newValue; }
   int SymbolIndexingMapListIndex(void) const { return itsSymbolIndexingMapListIndex; }
   void SymbolIndexingMapListIndex(int newValue) { itsSymbolIndexingMapListIndex = newValue; }
-  int GridDataPresentationStyle(void) const { return itsGridDataPresentationStyle; }
-  void GridDataPresentationStyle(int newValue) { itsGridDataPresentationStyle = newValue; }
+  NFmiMetEditorTypes::View GridDataPresentationStyle(void) const { return itsGridDataPresentationStyle; }
+  void GridDataPresentationStyle(NFmiMetEditorTypes::View newValue) { itsGridDataPresentationStyle = newValue; }
   bool UseIsoLineFeathering(void) const { return fUseIsoLineFeathering; }
   void UseIsoLineFeathering(bool newValue)
   {
@@ -778,8 +778,7 @@ class NFmiDrawParam
   int itsSymbolIndexingMapListIndex;  // indeksi johonkin symbolilistaan, jossa on mapattu arvot
                                       // haluttuihin symboleihin
 
-  int itsGridDataPresentationStyle;  // 1=asema muodossa, 2=isoviiva, 3=color contouring, 4=
-                                     // contour+isoviiva, 5=quick color contouring
+  NFmiMetEditorTypes::View itsGridDataPresentationStyle;  // isoviiva, color contouring, contour+isoviiva, quick color contouring, etc.
   bool fUseIsoLineFeathering;        // isoviivojen harvennus optio
   bool fUseContourFeathering;        // **** Versio 3 parametri ****
   bool fIsoLineLabelsOverLapping;    // voivatko isoviiva labelit mennä päällekkäin vai ei?

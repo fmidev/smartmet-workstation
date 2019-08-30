@@ -202,7 +202,7 @@ void NFmiStationViewHandler::DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect
 {
     DrawMap(theGTB, theMapFrame); // synop-plot printtausta varten pit‰‰ tehd‰ oma muuttuja, jolloin ei karttaa piirret‰
     DrawData(theGTB);
-    DrawLegend(theGTB);
+    DrawLegends(theGTB);
     DrawOverMap(theGTB, theMapFrame); // piirret‰‰n haluttaessa kartan ja datan p‰‰lle l‰pin‰kyv‰ esim. kaupunkien nimet/tiestˆ kartta
     DrawSilamStationMarkers();
     DrawTrajectories();
@@ -1853,7 +1853,26 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 	return itsMapArea->ToLatLon(theViewPoint);
 }
 
-void NFmiStationViewHandler::DrawLegend(NFmiToolBox* theGTB)
+static bool DrawLegend(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+{
+    return false;
+//    auto visu = drawParam->GridDataPresentationStyle()
+}
+
+void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
+{
+    itsToolBox = theGTB;
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    if(drawParamList)
+    {
+        for(const auto& drawParam : *drawParamList)
+        {
+
+        }
+    }
+}
+
+void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 {
 #ifndef DISABLE_CPPRESTSDK
     if(!theGTB || (itsDrawParam && itsDrawParam->IsParamHidden()))
@@ -3664,6 +3683,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		NFmiPoint dataSize(20,20);
 		FmiParameterName param = FmiParameterName(theDrawParam->Param().GetParam()->GetIdent());
         bool isGridData = info ? (info->IsGrid() == true) : false;
+        bool useTextView = theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiTextView;
 
         if(param == NFmiInfoData::kFmiSpSynoPlot || param == NFmiInfoData::kFmiSpSoundingPlot || param == NFmiInfoData::kFmiSpMinMaxPlot || param == NFmiInfoData::kFmiSpMetarPlot) // jos synop plottia halutaan tai sounding-plottia tai min/max plottia (9996)
 		{
@@ -3730,7 +3750,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                             , itsViewGridColumnNumber);
 
 		}
-		else if(theDrawParam->GridDataPresentationStyle() == 6)
+		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiSymbolView)
 		{
 			stationView = new NFmiStationArrowView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -3752,7 +3772,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                                     , itsViewGridRowNumber
                                                                     , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiPrecipFormSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiPrecipFormSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirret‰‰n data sateen olomuoto n‰ytˆll‰, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiPrecipitationFormSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 																	,itsToolBox
@@ -3765,7 +3785,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                                     , itsViewGridRowNumber
                                                                     , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiRawMirriFontSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiRawMirriFontSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirret‰‰n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiRawMirriFontSymbolTextView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3778,7 +3798,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiBetterWeatherSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiBetterWeatherSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirret‰‰n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiBetterWeatherSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3791,7 +3811,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiSmartSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiSmartSymbolView)
         {
             stationView = new NFmiSmartSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3804,7 +3824,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiCustomSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiCustomSymbolView)
         {
             stationView = new NFmiCustomSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3817,7 +3837,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiSynopWeatherSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiSynopWeatherSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirret‰‰n data synop-s‰‰ symboleilla, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiStationIndexTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
@@ -3830,7 +3850,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridRowNumber
                                                     , itsViewGridColumnNumber);
         }
-		else if(theDrawParam->GridDataPresentationStyle() == 7 || (info && info->IsGrid() == false && theDrawParam->StationDataViewType() == 7))
+		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiIndexedTextView || (info && info->IsGrid() == false && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiIndexedTextView))
 		{
 			stationView = new NFmiStationWindBarbView(itsMapViewDescTopIndex, itsMapArea
 													 ,itsToolBox
@@ -3842,7 +3862,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridRowNumber
                                                     , itsViewGridColumnNumber);
         }
-		else if(theDrawParam->GridDataPresentationStyle() != 1 && info && info->IsGrid())
+		else if((!useTextView) && info && info->IsGrid())
 		{
 			stationView = new NFmiIsoLineView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -3854,7 +3874,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 											 ,itsViewGridRowNumber
                                              ,itsViewGridColumnNumber);
 		}
-		else if(theDrawParam->StationDataViewType() != 1 && info && info->IsGrid() == false)
+		else if(theDrawParam->StationDataViewType() != NFmiMetEditorTypes::View::kFmiTextView && info && info->IsGrid() == false)
 		{ // eli tarvittaessa myˆs asema data voidaan haluta piirt‰‰ isoviivoina tai contoureina
 			stationView = new NFmiIsoLineView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox

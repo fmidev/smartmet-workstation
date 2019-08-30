@@ -51,8 +51,8 @@ NFmiDrawParam::NFmiDrawParam()
       itsParameterAbbreviation("?"),
       itsPriority(1),
       itsInitFileName(""),
-      itsViewType(NFmiMetEditorTypes::kFmiIsoLineView),
-      itsStationDataViewType(NFmiMetEditorTypes::kFmiTextView),
+      itsViewType(NFmiMetEditorTypes::View::kFmiIsoLineView),
+      itsStationDataViewType(NFmiMetEditorTypes::View::kFmiTextView),
       itsFrameColor(NFmiColor(0., 0., 0.))  // musta
       ,
       itsFillColor(NFmiColor(0., 0., 0.))  // musta
@@ -90,7 +90,7 @@ NFmiDrawParam::NFmiDrawParam()
       fUseSymbolsInTextMode(false),
       itsUsedSymbolListIndex(0),
       itsSymbolIndexingMapListIndex(-1),
-      itsGridDataPresentationStyle(2),
+      itsGridDataPresentationStyle(NFmiMetEditorTypes::View::kFmiIsoLineView),
       fUseIsoLineFeathering(false),
       fUseContourFeathering(false),
       fIsoLineLabelsOverLapping(true),
@@ -179,8 +179,8 @@ NFmiDrawParam::NFmiDrawParam()
       fUseViewMacrosSettingsForMacroParam(false),
       fDoSparseSymbolVisualization(false)
 {
-  itsPossibleViewTypeList[0] = NFmiMetEditorTypes::kFmiTextView;
-  itsPossibleViewTypeList[1] = NFmiMetEditorTypes::kFmiIsoLineView;
+  itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
+  itsPossibleViewTypeList[1] = NFmiMetEditorTypes::View::kFmiIsoLineView;
 }
 
 //-------------------------------------------------------
@@ -195,8 +195,8 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDataIdent& theParam,
       itsParameterAbbreviation("?"),
       itsPriority(thePriority),
       itsInitFileName(""),
-      itsViewType(NFmiMetEditorTypes::kFmiIsoLineView),
-      itsStationDataViewType(NFmiMetEditorTypes::kFmiTextView),
+      itsViewType(NFmiMetEditorTypes::View::kFmiIsoLineView),
+      itsStationDataViewType(NFmiMetEditorTypes::View::kFmiTextView),
       itsFrameColor(NFmiColor(0., 0., 0.))  // musta
       ,
       itsFillColor(NFmiColor(0., 0., 0.))  // musta
@@ -236,7 +236,7 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDataIdent& theParam,
       fUseSymbolsInTextMode(false),
       itsUsedSymbolListIndex(0),
       itsSymbolIndexingMapListIndex(-1),
-      itsGridDataPresentationStyle(2),
+      itsGridDataPresentationStyle(NFmiMetEditorTypes::View::kFmiIsoLineView),
       fUseIsoLineFeathering(false),
       fUseContourFeathering(false),
       fIsoLineLabelsOverLapping(true),
@@ -327,8 +327,8 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDataIdent& theParam,
       fUseViewMacrosSettingsForMacroParam(false),
       fDoSparseSymbolVisualization(false)
 {
-  itsPossibleViewTypeList[0] = NFmiMetEditorTypes::kFmiTextView;
-  itsPossibleViewTypeList[1] = NFmiMetEditorTypes::kFmiIsoLineView;
+  itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
+  itsPossibleViewTypeList[1] = NFmiMetEditorTypes::View::kFmiIsoLineView;
 }
 
 NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
@@ -480,8 +480,8 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       fDoSparseSymbolVisualization(other.fDoSparseSymbolVisualization)
 {
   Alpha(itsAlpha);  // varmistus että pysytään rajoissa
-  itsPossibleViewTypeList[0] = NFmiMetEditorTypes::kFmiTextView;
-  itsPossibleViewTypeList[1] = NFmiMetEditorTypes::kFmiIsoLineView;
+  itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
+  itsPossibleViewTypeList[1] = NFmiMetEditorTypes::View::kFmiIsoLineView;
 }
 
 //-------------------------------------------------------
@@ -841,7 +841,7 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
   // lukuun 100. Luettaessa vähennetään tuo 100. Jos luku tällöin
   // on pienempi kuin 1, annetaan arvoksi 1.
   file << "'StationDataViewType'" << endl;  // selittävä teksti
-  file << static_cast<int>(itsStationDataViewType + 100) << endl;
+  file << (static_cast<int>(itsStationDataViewType) + 100) << endl;
   file << "'EditableParam'" << endl;  // selittävä teksti
   file << false << endl;     // tämä muuttuja poistettu, muttä jokin arvo laitettava tähän
   file << "'Unit'" << endl;  // selittävä teksti
@@ -874,7 +874,7 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     file << fUseSymbolsInTextMode << endl;
     file << itsUsedSymbolListIndex << endl;
     file << itsSymbolIndexingMapListIndex << endl;
-    file << itsGridDataPresentationStyle << endl;
+    file << static_cast<int>(itsGridDataPresentationStyle) << endl;
     file << fUseIsoLineFeathering << endl;
     file << fIsoLineLabelsOverLapping << endl;
     file << fShowColorLegend << endl;
@@ -1229,7 +1229,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         file >> fUseSymbolsInTextMode;
         file >> itsUsedSymbolListIndex;
         file >> itsSymbolIndexingMapListIndex;
-        file >> itsGridDataPresentationStyle;
+        file >> number;
+        itsGridDataPresentationStyle = static_cast<NFmiMetEditorTypes::View>(number);
         file >> fUseIsoLineFeathering;
         file >> fIsoLineLabelsOverLapping;
         file >> fShowColorLegend;

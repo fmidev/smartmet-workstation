@@ -169,7 +169,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
 	void DrawOverMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
 	void DrawData(NFmiToolBox* theGTB); // Piirt‰‰ datan ruutuun
-    void DrawLegend(NFmiToolBox* theGTB);
+    void DrawLegends(NFmiToolBox* theGTB);
+    void DrawWmsLegends(NFmiToolBox* theGTB);
 	void DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmiRect& theRect);
 	void DrawMasksOnMap(NFmiToolBox* theGTB);
     void DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect &theMapFrame);
