@@ -45,7 +45,7 @@ namespace AddParams
         // Here is information about last activated view and its row. these are
         // used to insert selected parameters to right places.
         // 0 = main map, 1 = map-view-2, 2 = map-view-3
-        // In future these will be added: 98 = cross-section-view, 99 = time-serial-view
+        // 98 = cross-section-view, 99 = time-serial-view
         unsigned int itsLastActivatedDesktopIndex;
         // The view row that has been last clicked with mouse.
         // This index starts from 1 !!
@@ -72,6 +72,7 @@ namespace AddParams
         bool updatePending() const { return updatePending_; }
         void updatePending(bool newValue) { updatePending_ = newValue; }
         bool dialogDataNeedsUpdate() const { return dialogDataNeedsUpdate_; }
+		void dialogDataNeedsUpdate(bool value) { dialogDataNeedsUpdate_ = value; }
         void updateDialogData();
         std::vector<SingleRowItem>& dialogRowData();
         const std::vector<SingleRowItem>& dialogRowData() const;
@@ -82,9 +83,9 @@ namespace AddParams
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
         void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
         void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
-        void searchItemsThatMatchToSearchWords(std::string words);
-        
-    private:
+        void searchItemsThatMatchToSearchWords(std::string words); 
+
+	private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
         void updateDialogTreePatternData();
@@ -93,5 +94,6 @@ namespace AddParams
         void updateCustomCategories();
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
+		void trimDialogRowDataDependingOnActiveView();
     };
 }
