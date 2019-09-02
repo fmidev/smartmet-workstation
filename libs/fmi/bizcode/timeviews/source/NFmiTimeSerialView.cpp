@@ -1273,7 +1273,10 @@ static float GetTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, cons
         if(doInterpolation)
             return theInfo->InterpolatedValue(theLatlon, theTime);
         else
+        {
+            theInfo->Time(theTime);
             return theInfo->FloatValue();
+        }
     }
 }
 
@@ -4897,6 +4900,10 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
         if(mainDataTimeResolution > 60)
             mainDataTimeResolution = 60;
         aTime.SetTimeStep(mainDataTimeResolution); // asetetaan tooltipin ajaksi joko päädatatan aikaresoluutio tai maksimissaan 60 minuuttia
+
+        // Tämä varmistaa että myös erikoistapaus eli synop-data menee oikein
+        viewedInfo = ::GetUsedSmartInfo(itsCtrlViewDocumentInterface, primaryLocationLatlon, viewedInfo, aTime, itsDrawParam);
+
 	    NFmiString timeStr1 = aTime.ToStr("Nnnn DD. YYYY\nWwww HH:mm [UTC]", itsCtrlViewDocumentInterface->Language());
 	    str += timeStr1;
 	    str += "<br><hr color=red><br>";
