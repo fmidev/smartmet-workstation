@@ -433,7 +433,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::Si
         if(item.rowType() == AddParams::RowType::kDataType)
         {
             numberOfDataFiles++;
-            auto infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(item.uniqueDataId()); //.at(0);
+            auto infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(item.uniqueDataId());
             if(infoVector.empty())
                 continue;
             auto info = infoVector.at(0);
@@ -985,8 +985,6 @@ void CFmiParameterSelectionDlg::UpdateGridControlValues(bool searchRemoved)
 
 void CFmiParameterSelectionDlg::UpdateGridControlValuesInNormalMode(bool fFirstTime)
 {
-    int fixedRowCount = 1;
-    int fixedColumnCount = 1;
     SetTreeNodeInformationBackToDialogRowData();
     itsParameterSelectionSystem->updateDialogData();
     int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
@@ -1004,8 +1002,6 @@ void CFmiParameterSelectionDlg::UpdateGridControlValuesInNormalMode(bool fFirstT
 
 void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
 {
-    int fixedRowCount = 1;
-    int fixedColumnCount = 1;
     int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
     int maxRowCount = fixedRowCount + dataRowCount;
 
@@ -1020,8 +1016,6 @@ void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
 
 void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchRemoved(void)
 {
-    int fixedRowCount = 1;
-    int fixedColumnCount = 1;
     int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
     int maxRowCount = fixedRowCount + dataRowCount;
 
@@ -1097,7 +1091,7 @@ void CFmiParameterSelectionDlg::CollapseAllButCategories()
 
 void CFmiParameterSelectionDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
 {
-    const auto &rowData = itsParameterSelectionSystem->dialogRowData();
+	std::vector<AddParams::SingleRowItem>& rowData = itsParameterSelectionSystem->dialogRowData();
     int currentRowCount = fixedRowCount;
     for(size_t i = 0; i < rowData.size(); i++)
     {
@@ -1193,7 +1187,7 @@ std::string CFmiParameterSelectionDlg::MakeActiveViewRowText()
     }
     else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
     {
-        str += "Time view active";
+        str += "Time serial view active";
     }
     else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
     {
@@ -1271,4 +1265,6 @@ void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 	itsParameterSelectionSystem->LastActivatedDesktopIndex(theDesktopIndex);
 	itsParameterSelectionSystem->LastActivatedRowIndex(row);
 	SetWindowText(CA2T(MakeTitleText().c_str()));
+	itsParameterSelectionSystem->dialogDataNeedsUpdate(true); //Joonas tsekkaa että päivitystä ei tehdä turhaan!
+	Update();
 }

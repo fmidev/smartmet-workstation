@@ -8,7 +8,9 @@
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerSystem.h"
 #include "..\..\..\catlog\catlog\catlogutils.h"
+#include "SpecialDesctopIndex.h"
     
+class NFmiInfoOrganizer;
 
 namespace
 {
@@ -198,7 +200,36 @@ namespace AddParams
         {
             dialogRowData_.push_back(rowItem);
         }
+
+		trimDialogRowDataDependingOnActiveView();
     }
+
+	void ParameterSelectionSystem::trimDialogRowDataDependingOnActiveView()
+	{
+		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
+		{
+			for (auto& row : dialogRowData_)
+			{
+				if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+				{
+					trimmedRowData.push_back(row);
+				}
+				checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+				if (!infoVector.empty())
+				{
+					auto info = infoVector.at(0);
+					if (info->SizeLevels() > 1 && info->IsGrid())
+					{
+						trimmedRowData.push_back(row);
+						//Joonas lis‰‰ kaikki kyseisen tason alla oleva nodet!
+					}
+				}
+// 				removeNodesThatDontHaveLeafs(trimmedRowData);
+			}
+			dialogRowData_.swap(trimmedRowData);
+		}
+	}
 
     // Must be called after updateDialogRowData call.
     void ParameterSelectionSystem::updateDialogTreePatternData()
@@ -238,7 +269,7 @@ namespace AddParams
         dialogDataNeedsUpdate_ = true;
     }
 
-    void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData)
+	void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem>& resultRowData)
     {
         std::vector<SingleRowItem> rowData;
         int index = 0;

@@ -14,6 +14,7 @@
 class SmartMetDocumentInterface;
 class NFmiFastQueryInfo;
 class NFmiHelpDataInfo;
+class SingleRowItem;
 
 namespace AddParams
 {
@@ -88,6 +89,9 @@ class CFmiParameterSelectionDlg : public CDialogEx
 {
 private: // näillä talletetaan sijainti ja koko rekisteriin
     static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
+	int fixedRowCount = 1;
+	int fixedColumnCount = 1;
+
 public:
     static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo(void) { return s_ViewPosRegistryInfo; }
     
