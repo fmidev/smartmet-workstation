@@ -95,5 +95,6 @@ namespace AddParams
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
 		void trimDialogRowDataDependingOnActiveView();
-    };
+		std::vector<SingleRowItem> addSubmenu(SingleRowItem& row, int index);
+	};
 }
