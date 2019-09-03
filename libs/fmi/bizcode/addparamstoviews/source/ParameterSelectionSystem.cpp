@@ -209,6 +209,7 @@ namespace AddParams
 		std::vector<AddParams::SingleRowItem> trimmedRowData;
 		if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		{
+			int index = 0;
 			for (auto& row : dialogRowData_)
 			{
 				if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
@@ -222,13 +223,33 @@ namespace AddParams
 					if (info->SizeLevels() > 1 && info->IsGrid())
 					{
 						trimmedRowData.push_back(row);
-						//Joonas lis‰‰ kaikki kyseisen tason alla oleva nodet!
+						auto subRows = addSubmenu(row, index);
+						trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
 					}
 				}
 // 				removeNodesThatDontHaveLeafs(trimmedRowData);
+				index++;
 			}
 			dialogRowData_.swap(trimmedRowData);
 		}
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::addSubmenu(SingleRowItem& row, int index)
+	{
+		//Add all sub items
+		std::vector<AddParams::SingleRowItem> rowData;
+		if (index + 1 < dialogRowData_.size())
+		{
+			while (dialogRowData_.at(index + 1).treeDepth() > row.treeDepth())
+			{
+				if (!dialogRowData_.at(index + 1).leafNode())
+					rowData.push_back(dialogRowData_.at(index + 1));
+				index++;
+				if (index + 1 >= dialogRowData_.size())
+					break;
+			}
+		}
+		return rowData;
 	}
 
     // Must be called after updateDialogRowData call.
