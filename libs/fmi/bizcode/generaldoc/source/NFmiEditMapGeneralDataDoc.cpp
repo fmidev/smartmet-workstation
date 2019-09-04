@@ -5507,6 +5507,9 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* the
     case kAddViewWithRealRowNumber:
         AddViewWithRealRowNumber(true, theMenuItem, theRowIndex);
         break;
+	case kFmiAddParamCrossSectionView:
+		AddCrossSectionView(theMenuItem, theRowIndex, false);
+		break;
     default:
         return false;
     }
@@ -6587,6 +6590,10 @@ void DrawParamSettingsChangedDirtyActions(unsigned int theDescTopIndex, int theR
             MacroParamDataCache().clearMacroParamCache(theDescTopIndex, theRealMapRow, theDrawParam->InitFileName());
     }
     MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
+	if (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView) // Joonas: kysy Markolta kelpaako tämä vai pitääkö päivitys tehdä jotenkin muuten? Ei taida toimia edes aina
+	{
+		this->RefreshApplicationViewsAndDialogs("Param added", false, false, theDescTopIndex);
+	}
 }
 
 // Liataan vain 1. näkyvät karttarivit niistä karttanäytöistä, missä näytä-maski on päällä

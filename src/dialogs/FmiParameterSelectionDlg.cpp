@@ -1144,7 +1144,9 @@ void CFmiParameterSelectionDlg::HandleGridCtrlsLButtonDblClk()
 
 void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
 {    
-    if(rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode())
+    if((rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode()) 
+		|| (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView && rowItem.crossSectionLeafNode())
+		)
     {
         NFmiMenuItem *addParamCommand;
         if(NFmiDrawParam::IsMacroParamCase(rowItem.dataType())) {
@@ -1159,6 +1161,17 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
                                                                                                                                                                                                                                                           
             addParamCommand->MacroParamInitName(rowItem.uniqueDataId());
         } 
+		else if (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView && rowItem.crossSectionLeafNode())
+		{
+			addParamCommand = new NFmiMenuItem(
+				static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
+				rowItem.itemName(),
+				NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+				kFmiAddParamCrossSectionView,
+				NFmiMetEditorTypes::kFmiParamsDefaultView,
+				rowItem.level().get(),
+				rowItem.dataType());
+		}
         else
         {
             addParamCommand = new NFmiMenuItem(
