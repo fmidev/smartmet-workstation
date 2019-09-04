@@ -227,9 +227,9 @@ namespace AddParams
 						trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
 					}
 				}
-// 				removeNodesThatDontHaveLeafs(trimmedRowData);
 				index++;
 			}
+// 			removeNodesThatDontHaveLeafs(trimmedRowData);
 			dialogRowData_.swap(trimmedRowData);
 		}
 	}
@@ -243,7 +243,10 @@ namespace AddParams
 			while (dialogRowData_.at(index + 1).treeDepth() > row.treeDepth())
 			{
 				if (!dialogRowData_.at(index + 1).leafNode())
+				{
+					dialogRowData_.at(index + 1).crossSectionLeafNode(true);
 					rowData.push_back(dialogRowData_.at(index + 1));
+				}
 				index++;
 				if (index + 1 >= dialogRowData_.size())
 					break;
@@ -298,7 +301,10 @@ namespace AddParams
         //Remove nodes with no childs
         for(auto row : resultRowData)
         {
-            if(row.leafNode()) { rowData.push_back(row); }
+            if(row.leafNode() || (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView && row.crossSectionLeafNode())) 
+			{ 
+				rowData.push_back(row); 
+			}
             if((index + 1 < resultRowData.size()))
             {
                 if(resultRowData.at(index + 1).treeDepth() != row.treeDepth())
@@ -329,7 +335,7 @@ namespace AddParams
     {
         auto row = resultRowData.at(index);
         
-        if(row.leafNode())
+        if(row.leafNode() || (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView && row.crossSectionLeafNode()))
         {
             return true;
         }
