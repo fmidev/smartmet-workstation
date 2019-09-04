@@ -19,6 +19,7 @@ namespace AddParams
         , origTime_()
         , totalFilePath_()
         , searchWords_()
+		, crossSectionLeafNode_(false)
     {}
 
     SingleRowItem::SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
@@ -40,6 +41,7 @@ namespace AddParams
         , displayName_(displayName)
         , origTime_(origTime)
         , totalFilePath_(totalFilePath)
+		, crossSectionLeafNode_(false)
     {
         if(treeDepth_ == 0) { treeDepth_ = getTreeDepth(rowType); }
         if(displayName_.empty()) { displayName_ = itemName; }
