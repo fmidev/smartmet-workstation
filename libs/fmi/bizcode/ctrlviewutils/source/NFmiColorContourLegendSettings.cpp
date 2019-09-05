@@ -1,6 +1,7 @@
 #include "NFmiColorContourLegendSettings.h"
 #include "NFmiSettings.h"
 #include "SettingsFunctions.h"
+#include "catlog/catlog.h"
 
 void NFmiColorRectSettings::InitFromSettings(const std::string &initialNameSpace)
 {
@@ -27,12 +28,14 @@ void NFmiColorContourLegendSettings::InitFromSettings(const std::string &initial
     spaceBetweenLegendsInMM_ = NFmiSettings::Optional<double>(initialNameSpace + "::spaceBetweenLegendsInMM", spaceBetweenLegendsInMM_);
     try
     {
-        // Yritet‰‰n hakea arvoa asetuksista, jos niit‰ ei lˆydy, lent‰‰ poikkeus ja oletusarvo s‰ilyy
-        relativeStartPosition_ = SettingsFunctions::GetCommaSeaparatedPointFromSettings(initialNameSpace + "::relativeStartPosition");
+        relativeStartPosition_ = SettingsFunctions::GetCommaSeparatedPointFromSettings(initialNameSpace + "::relativeStartPosition", &relativeStartPosition_);
     }
-    catch(...)
+    catch(std::exception &e)
     { 
-        // Ei tarvitse tehd‰ mit‰‰n, t‰m‰ on normaali tilanne
+        std::string logMessage = "Exception occured when reading color-contour legend setting 'relativeStartPosition': ";
+        logMessage += e.what();
+        logMessage += ". Will use default setting instead";
+        CatLog::logMessage(logMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
     }
 }
 
