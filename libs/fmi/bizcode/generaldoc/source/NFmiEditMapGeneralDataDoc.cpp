@@ -6590,9 +6590,10 @@ void DrawParamSettingsChangedDirtyActions(unsigned int theDescTopIndex, int theR
             MacroParamDataCache().clearMacroParamCache(theDescTopIndex, theRealMapRow, theDrawParam->InitFileName());
     }
     MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
-	if (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView) // Joonas: kysy Markolta kelpaako tämä vai pitääkö päivitys tehdä jotenkin muuten? Ei taida toimia edes aina
+
+	if (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView) // Joonas: kysy Markolta kelpaako tämä vai pitääkö päivitys tehdä jotenkin muuten?
 	{
-		this->RefreshApplicationViewsAndDialogs("Param added", false, false, theDescTopIndex);
+		this->RefreshApplicationViewsAndDialogs("Param added", true, true, theDescTopIndex);
 	}
 }
 
