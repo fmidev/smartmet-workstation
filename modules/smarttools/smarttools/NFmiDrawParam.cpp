@@ -31,8 +31,8 @@
 //
 //**********************************************************
 #include "NFmiDrawParam.h"
-#include "NFmiDataStoringHelpers.h"
 #include "NFmiColorSpaces.h"
+#include "NFmiDataStoringHelpers.h"
 
 #include <fstream>
 
@@ -487,9 +487,7 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
 //-------------------------------------------------------
 // ~NFmiDrawParam
 //-------------------------------------------------------
-NFmiDrawParam::~NFmiDrawParam(void)
-{
-}
+NFmiDrawParam::~NFmiDrawParam(void) {}
 
 //-------------------------------------------------------
 // Init
@@ -813,10 +811,10 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
   file << "'TimeSeriesScaleMax'" << endl;  // selittävä teksti
   file << itsTimeSeriesScaleMax << endl;
 
-  file << "'RelativeSize'" << endl;  // selittävä teksti
-  file << NFmiPoint(1, 1); // legacy dataa on kirjoitettava
-  file << "'RelativePositionOffset'" << endl;  // selittävä teksti
-  file << NFmiPoint(0, 0); // legacy dataa on kirjoitettava
+  file << "'RelativeSize'" << endl;               // selittävä teksti
+  file << NFmiPoint(1, 1);                        // legacy dataa on kirjoitettava
+  file << "'RelativePositionOffset'" << endl;     // selittävä teksti
+  file << NFmiPoint(0, 0);                        // legacy dataa on kirjoitettava
   file << "'OnlyOneSymbolRelativeSize'" << endl;  // selittävä teksti
   file << itsOnlyOneSymbolRelativeSize;
   file << "'OnlyOneSymbolRelativePositionOffset'" << endl;  // selittävä teksti
@@ -1004,20 +1002,20 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
 
     file << fUseCustomIsoLineing << " " << itsContourLabelDigitCount << endl;
 
-    // Lopuksi vielä mahdollinen extra data. Kun tulee uusia muuttujia, tee tähän extradatan 
+    // Lopuksi vielä mahdollinen extra data. Kun tulee uusia muuttujia, tee tähän extradatan
     // täyttöä, jotta se saadaan talteen tiedopstoon siten että
     // edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
-    NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;  
+    NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
     // alpha on siis 1. uusista double-extra-parametreista
-    extraData.Add(itsAlpha);          
+    extraData.Add(itsAlpha);
     // modelRunIndex on 2. uusista double-extra-parametreista
-    extraData.Add(itsModelRunIndex);  
+    extraData.Add(itsModelRunIndex);
     // modelRunIndex on 3. uusista double-extra-parametreista
-    extraData.Add(itsTimeSerialModelRunCount);  
+    extraData.Add(itsTimeSerialModelRunCount);
     // itsModelRunDifferenceIndex on 4. uusista double-extra-parametreista
     // HUOM! Nyt jo poistettu ominaisuus, josta piti jättää dummy arvon talletus
     double removedOption_ModelRunDifferenceIndex = 0.;
-    extraData.Add(removedOption_ModelRunDifferenceIndex);  
+    extraData.Add(removedOption_ModelRunDifferenceIndex);
     // itsDataComparisonProdId on 5. uusista double-extra-parametreista
     // HUOM! Nyt jo poistettu ominaisuus, josta piti jättää dummy talletus
     double removedOption_DataComparisonProdId = 0.;
@@ -1032,13 +1030,12 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     extraData.Add(static_cast<double>(fDoSparseSymbolVisualization));
 
     // modelRunIndex on 1. uusista string-extra-parametreista
-    extraData.Add(::MetTime2String(itsModelOriginTime));  
+    extraData.Add(::MetTime2String(itsModelOriginTime));
 
     file << "possible_extra_data" << std::endl;
     file << extraData;
 
-    if (file.fail())
-      throw std::runtime_error("NFmiDrawParam::Write failed");
+    if (file.fail()) throw std::runtime_error("NFmiDrawParam::Write failed");
     //***********************************************
     //********** 'versio 3' parametreja *************
     //***********************************************
@@ -1070,8 +1067,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
   char temp[80];
   std::string tmpStr;
   int number;
-  if (!file)
-    return file;
+  if (!file) return file;
   file >> temp;
   if (std::string(temp) == std::string("Version"))
   {
@@ -1083,8 +1079,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
 
     if (itsInitFileVersionNumber >= 1.)  // tämä on vain esimerkki siitä mitä joskus tulee olemaan
     {
-      if (!file)
-        return file;
+      if (!file) return file;
       file >> temp;                // luetaan nimike pois
       std::getline(file, tmpStr);  // luetaan ed. rivinvaihto pois jaloista
       std::getline(file, tmpStr);  // luetaan rivin loppuun, jos lyhenteessä spaceja mahdollisesti
@@ -1140,16 +1135,15 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       file >> temp;  // luetaan nimike pois
       file >> itsAbsoluteMaxValue;
 
-      if (!file)
-        return file;
+      if (!file) return file;
 
       file >> temp;  // luetaan nimike pois
       file >> itsTimeSeriesScaleMin;
       file >> temp;  // luetaan nimike pois
       file >> itsTimeSeriesScaleMax;
 
-      file >> temp;  // luetaan nimike pois
-      NFmiPoint legacyDataPoint; // legacy data on myös luettava
+      file >> temp;               // luetaan nimike pois
+      NFmiPoint legacyDataPoint;  // legacy data on myös luettava
       file >> legacyDataPoint;
       file >> temp;  // luetaan nimike pois
       file >> legacyDataPoint;
@@ -1161,16 +1155,14 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       file >> temp;  // luetaan nimike pois
       file >> itsPossibleViewTypeCount;
       file >> temp;  // luetaan nimike pois
-      if (!file)
-        return file;
+      if (!file) return file;
       for (int ind = 0; ind < itsPossibleViewTypeCount; ind++)
       {
         file >> number;
         itsPossibleViewTypeList[ind] = NFmiMetEditorTypes::View(number);
       }
 
-      if (!file)
-        return file;
+      if (!file) return file;
 
       file >> temp;  // luetaan nimike pois
       file >> itsTimeSerialModifyingLimit;
@@ -1187,8 +1179,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       // on pienempi kuin 1, annetaan arvoksi 1.
       file >> number;
       number -= 100;
-      if (number < 1)
-        number = 1;
+      if (number < 1) number = 1;
       itsStationDataViewType = NFmiMetEditorTypes::View(number);
       file >> temp;  // luetaan nimike pois
       bool tmpBool = false;
@@ -1196,8 +1187,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
 
       file >> temp;  // luetaan nimike pois
       file >> temp;
-      if (!file)
-        return file;
+      if (!file) return file;
       itsUnit = std::string(temp);
 
       file >> temp;  // luetaan nimike pois
@@ -1217,8 +1207,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       //***********************************************
       if (itsInitFileVersionNumber >= 2.)  // tämä on vain esimerkki siitä mitä joskus tulee olemaan
       {
-        if (!file)
-          return file;
+        if (!file) return file;
         file >> itsStationSymbolColorShadeLowValue;
         file >> itsStationSymbolColorShadeMidValue;
         file >> itsStationSymbolColorShadeHighValue;
@@ -1252,8 +1241,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         file >> itsSimpleIsoLineColorShadeHighValueColor;
         file >> itsSimpleIsoLineColorShadeClassCount;
 
-        if (!file)
-          return file;
+        if (!file) return file;
         int i = 0;
         int size;
         file >> size;
@@ -1291,21 +1279,18 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
           itsSpecialIsoLineShowLabelBox[i] = foobar;
         }
 
-        if (!file)
-          return file;
+        if (!file) return file;
         file >> fDrawOnlyOverMask;
         file >> fUseCustomColorContouring;
 
         file >> size;
-        if (!file)
-          return file;
+        if (!file) return file;
         itsSpecialColorContouringValues.resize(size);
         for (i = 0; i < size; i++)
           file >> itsSpecialColorContouringValues[i];
 
         file >> size;
-        if (!file)
-          return file;
+        if (!file) return file;
         itsSpecialColorContouringColorIndexies.resize(size);
         for (i = 0; i < size; i++)
           file >> itsSpecialColorContouringColorIndexies[i];
@@ -1332,8 +1317,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         file >> itsIsoLineHatchColor2;
         file >> itsColorContouringColorShadeHigh2ValueColor;
         file >> itsIsoLineLabelDigitCount;
-        if (!file)
-          return file;
+        if (!file) return file;
         //***********************************************
         //********** 'versio 2' parametreja *************
         //***********************************************
@@ -1363,8 +1347,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
 
         file >> fUseCustomIsoLineing >> itsContourLabelDigitCount;
 
-        if (file.fail())
-          throw std::runtime_error("NFmiDrawParam::Read failed");
+        if (file.fail()) throw std::runtime_error("NFmiDrawParam::Read failed");
 
         file >> temp;  // luetaan 'possible_extra_data' pois
         NFmiDataStoringHelpers::NFmiExtraDataStorage
@@ -1374,61 +1357,63 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         // eli jos uusia muutujia tai arvoja, käsittele tässä.
 
         // tämä on siis default arvo alphalle (täysin läpinäkyvä)
-        itsAlpha = 100.f;  
-        if(extraData.itsDoubleValues.size() >= 1)
+        itsAlpha = 100.f;
+        if (extraData.itsDoubleValues.size() >= 1)
         {
-            // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-            Alpha(static_cast<float>(extraData.itsDoubleValues[0]));
+          // laitetaan asetus-funktion läpi, jossa raja tarkistukset
+          Alpha(static_cast<float>(extraData.itsDoubleValues[0]));
         }
         // 0 on default, eli ei ole käytössä
-        itsModelRunIndex = 0;             
-        if(extraData.itsDoubleValues.size() >= 2)
+        itsModelRunIndex = 0;
+        if (extraData.itsDoubleValues.size() >= 2)
         {
-            // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-            ModelRunIndex(static_cast<int>(extraData.itsDoubleValues[1]));
+          // laitetaan asetus-funktion läpi, jossa raja tarkistukset
+          ModelRunIndex(static_cast<int>(extraData.itsDoubleValues[1]));
         }
         itsTimeSerialModelRunCount = 0;
-        if(extraData.itsDoubleValues.size() >= 3)
+        if (extraData.itsDoubleValues.size() >= 3)
         {
-            // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-            TimeSerialModelRunCount(static_cast<int>(extraData.itsDoubleValues[2]));
+          // laitetaan asetus-funktion läpi, jossa raja tarkistukset
+          TimeSerialModelRunCount(static_cast<int>(extraData.itsDoubleValues[2]));
         }
 
-        // HUOM! Nyt jo poistettu ominaisuus (itsModelRunDifferenceIndex), josta piti jättää dummy talletus ja sen luvun skippaus
-        if(extraData.itsDoubleValues.size() >= 4)
-        {
-        }
-
-        // HUOM! Nyt jo poistettu ominaisuus (itsDataComparisonProdId), josta piti jättää dummy talletus ja sen luvun skippaus
-        if(extraData.itsDoubleValues.size() >= 5)
+        // HUOM! Nyt jo poistettu ominaisuus (itsModelRunDifferenceIndex), josta piti jättää dummy
+        // talletus ja sen luvun skippaus
+        if (extraData.itsDoubleValues.size() >= 4)
         {
         }
 
-        // HUOM! Nyt jo poistettu ominaisuus (itsDataComparisonType), josta piti jättää dummy talletus ja sen luvun skippaus
-        if(extraData.itsDoubleValues.size() >= 6)
+        // HUOM! Nyt jo poistettu ominaisuus (itsDataComparisonProdId), josta piti jättää dummy
+        // talletus ja sen luvun skippaus
+        if (extraData.itsDoubleValues.size() >= 5)
+        {
+        }
+
+        // HUOM! Nyt jo poistettu ominaisuus (itsDataComparisonType), josta piti jättää dummy
+        // talletus ja sen luvun skippaus
+        if (extraData.itsDoubleValues.size() >= 6)
         {
         }
 
         fUseTransparentFillColor = true;
-        if(extraData.itsDoubleValues.size() >= 7)
+        if (extraData.itsDoubleValues.size() >= 7)
         {
-            fUseTransparentFillColor = extraData.itsDoubleValues[6] != 0;
+          fUseTransparentFillColor = extraData.itsDoubleValues[6] != 0;
         }
         fDoSparseSymbolVisualization = false;
-        if(extraData.itsDoubleValues.size() >= 8)
+        if (extraData.itsDoubleValues.size() >= 8)
         {
-            fDoSparseSymbolVisualization = extraData.itsDoubleValues[7] != 0;
+          fDoSparseSymbolVisualization = extraData.itsDoubleValues[7] != 0;
         }
 
         itsModelOriginTime = NFmiMetTime::gMissingTime;  // tämä on oletus arvo eli ei ole käytössä
-        if(extraData.itsStringValues.size() >= 1)
+        if (extraData.itsStringValues.size() >= 1)
         {
-            // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-            ModelOriginTime(::String2MetTime(extraData.itsStringValues[0]));
+          // laitetaan asetus-funktion läpi, jossa raja tarkistukset
+          ModelOriginTime(::String2MetTime(extraData.itsStringValues[0]));
         }
 
-        if (file.fail())
-          throw std::runtime_error("NFmiDrawParam::Read failed");
+        if (file.fail()) throw std::runtime_error("NFmiDrawParam::Read failed");
         //***********************************************
         //********** 'versio 3' parametreja *************
         //***********************************************
@@ -1487,10 +1472,8 @@ bool NFmiDrawParam::UseArchiveModelData(void) const
 {
   if (IsModelRunDataType())
   {
-    if (itsModelOriginTime != NFmiMetTime::gMissingTime)
-      return true;
-    if (itsModelRunIndex < 0)
-      return true;
+    if (itsModelOriginTime != NFmiMetTime::gMissingTime) return true;
+    if (itsModelRunIndex < 0) return true;
   }
   return false;
 }
@@ -1506,8 +1489,7 @@ bool NFmiDrawParam::IsModelRunDataType(NFmiInfoData::Type theDataType)
       theDataType == NFmiInfoData::kModelHelpData || theDataType == NFmiInfoData::kKepaData ||
       theDataType == NFmiInfoData::kTrajectoryHistoryData)
     return true;
-  if (theDataType == NFmiInfoData::kClimatologyData)
-    return true;
+  if (theDataType == NFmiInfoData::kClimatologyData) return true;
   return false;
 }
 
@@ -1525,16 +1507,38 @@ bool NFmiDrawParam::IsMacroParamCase(bool justCheckDataType)
 {
   if (justCheckDataType)
   {
-    if (IsMacroParamCase(itsDataType))
-      return true;
+    if (IsMacroParamCase(itsDataType)) return true;
   }
   else
   {
-      if(!fUseViewMacrosSettingsForMacroParam)
-      {
-          if(ViewMacroDrawParam() == false && (IsMacroParamCase(itsDataType)))
-              return true;
-      }
+    if (!fUseViewMacrosSettingsForMacroParam)
+    {
+      if (ViewMacroDrawParam() == false && (IsMacroParamCase(itsDataType))) return true;
+    }
   }
   return false;
+}
+
+NFmiMetEditorTypes::View NFmiDrawParam::GetViewType(bool isStationData) const
+{
+  return isStationData ? StationDataViewType() : GridDataPresentationStyle();
+}
+
+bool NFmiDrawParam::IsColorContourType(NFmiMetEditorTypes::View viewType) 
+{
+  if (viewType == NFmiMetEditorTypes::View::kFmiColorContourView ||
+      viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView ||
+      viewType == NFmiMetEditorTypes::View::kFmiQuickColorContourView)
+    return true;
+  else
+    return false;
+}
+
+bool NFmiDrawParam::IsIsolineType(NFmiMetEditorTypes::View viewType) 
+{
+  if (viewType == NFmiMetEditorTypes::View::kFmiIsoLineView ||
+      viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
+    return true;
+  else
+    return false;
 }

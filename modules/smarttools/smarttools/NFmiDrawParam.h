@@ -698,6 +698,9 @@ class NFmiDrawParam
   void UseViewMacrosSettingsForMacroParam(bool newValue) { fUseViewMacrosSettingsForMacroParam = newValue; }
   bool DoSparseSymbolVisualization() const { return fDoSparseSymbolVisualization; }
   void DoSparseSymbolVisualization(bool newValue) { fDoSparseSymbolVisualization = newValue; }
+  NFmiMetEditorTypes::View GetViewType(bool isStationData) const;
+  static bool IsColorContourType(NFmiMetEditorTypes::View viewType);
+  static bool IsIsolineType(NFmiMetEditorTypes::View viewType);
 
  protected:
   NFmiDataIdent itsParameter;
