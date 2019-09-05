@@ -1895,7 +1895,7 @@ void InitColorContourLegendSettings()
     DoVerboseFunctionStartingLogReporting(__FUNCTION__);
     try
     {
-        itsColorContourLegendSettings.InitFromSettings("SmartMet::ColorContourLegendSettings");
+        itsColorContourLegendSettings.initFromSettings("SmartMet::ColorContourLegendSettings");
     }
     catch(exception& e)
     {
