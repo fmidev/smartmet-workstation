@@ -79,11 +79,11 @@ namespace HakeMessage
         for(const auto &hakeMessage : messages)
         {
             hakeInfo->Param(kFmiHakeMessageType);
-            hakeInfo->FloatValue(hakeMessage.Category());
+            hakeInfo->FloatValue(static_cast<float>(hakeMessage.Category()));
             hakeInfo->Param(kFmiLongitude);
-            hakeInfo->FloatValue(hakeMessage.LatlonPoint().X());
+            hakeInfo->FloatValue(static_cast<float>(hakeMessage.LatlonPoint().X()));
             hakeInfo->Param(kFmiLatitude);
-            hakeInfo->FloatValue(hakeMessage.LatlonPoint().Y());
+            hakeInfo->FloatValue(static_cast<float>(hakeMessage.LatlonPoint().Y()));
 
             hakeInfo->NextTime();
 
