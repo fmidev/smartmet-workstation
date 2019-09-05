@@ -102,6 +102,7 @@
 #include "NFmiVoidPtrList.h"
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
+#include "NFmiColorContourLegendValues.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -1853,12 +1854,6 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 	return itsMapArea->ToLatLon(theViewPoint);
 }
 
-static bool DrawLegend(const boost::shared_ptr<NFmiDrawParam>& drawParam)
-{
-    return false;
-//    auto visu = drawParam->GridDataPresentationStyle()
-}
-
 void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 {
     itsToolBox = theGTB;
@@ -1867,7 +1862,13 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
     {
         for(const auto& drawParam : *drawParamList)
         {
+            auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+            auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
+            NFmiColorContourLegendValues legendValues(drawParamPtr, fastInfo);
+            if(legendValues.useLegend())
+            {
 
+            }
         }
     }
 }
