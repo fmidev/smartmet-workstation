@@ -136,7 +136,7 @@
 #include "CapDataSystem.h"
 #include "NFmiMacroParamDataCache.h"
 #include "TimeSerialParameters.h"
-
+#include "NFmiColorContourLegendSettings.h"
 
 #include "AnimationProfiler.h"
 
@@ -807,6 +807,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitLogFileCleaning();
     InitMacroParamDataCache();
 	InitTimeSerialParameters();
+    InitColorContourLegendSettings();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -1860,7 +1861,7 @@ void InitSettingsFromConfFile(void)
 		if(rawTempUnknownStartLonLatStrVec.size() != 2)
 			throw runtime_error("InitSettingsFromConfFile MetEditor::RawTempUnknownStartLonLat was invlid, has to be two numbers (like x,y).");
 		itsRawTempUnknownStartLonLat = NFmiPoint(rawTempUnknownStartLonLatStrVec[0], rawTempUnknownStartLonLatStrVec[1]);
-		itsStationDataGridSize = SettingsFunctions::GetCommaSeaparatedPointFromSettings("MetEditor::StationDataGridSize");
+		itsStationDataGridSize = SettingsFunctions::GetCommaSeparatedPointFromSettings("MetEditor::StationDataGridSize");
 
 		itsMapViewTimeLabelInfo.InitFromSettings("SmartMet::TimeLabel");
 		itsSatelDataRefreshTimerInMinutes = NFmiSettings::Require<int>("SmartMet::SatelDataRefreshTimerInMinutes");
@@ -1879,7 +1880,7 @@ void SaveSettingsToConfFile(void)
 {
 	try
 	{
-		SettingsFunctions::SetCommaSeaparatedPointToSettings("MetEditor::StationDataGridSize", itsStationDataGridSize);
+		SettingsFunctions::SetCommaSeparatedPointToSettings("MetEditor::StationDataGridSize", itsStationDataGridSize);
 		NFmiSettings::Set("SmartMet::SatelDataRefreshTimerInMinutes", NFmiStringTools::Convert<int>(itsSatelDataRefreshTimerInMinutes), true);
         itsQ2ServerInfo.StoreToSettings();
 	}
@@ -1887,6 +1888,19 @@ void SaveSettingsToConfFile(void)
 	{
         ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(e.what()), _TEXT("Problems with InitSettingsFromConfFile!"), MB_OK);
 	}
+}
+
+void InitColorContourLegendSettings()
+{
+    DoVerboseFunctionStartingLogReporting(__FUNCTION__);
+    try
+    {
+        itsColorContourLegendSettings.InitFromSettings("SmartMet::ColorContourLegendSettings");
+    }
+    catch(exception& e)
+    {
+        ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(e.what()), _TEXT("Problems with InitColorContourLegendSettings!"), MB_OK);
+    }
 }
 
 void InitMacroParamSystem(bool haveAbortOption)
@@ -14353,6 +14367,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return itsTimeSerialParameters;
     }
 
+    NFmiColorContourLegendSettings& ColorContourLegendSettings()
+    {
+        return itsColorContourLegendSettings;
+    }
+
+    NFmiColorContourLegendSettings itsColorContourLegendSettings;
     TimeSerialParameters itsTimeSerialParameters;
     NFmiMacroParamDataCache itsMacroParamDataCache;
     std::string itsLastLoadedViewMacroName; // tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
@@ -17054,4 +17074,9 @@ void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const N
 TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()
 {
     return pimpl->GetTimeSerialParameters();
+}
+
+NFmiColorContourLegendSettings& NFmiEditMapGeneralDataDoc::ColorContourLegendSettings()
+{
+    return pimpl->ColorContourLegendSettings();
 }
