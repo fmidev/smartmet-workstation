@@ -1334,6 +1334,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateOnlyGivenMapViewAtNextGen
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(theMapViewDescTopIndex));
 }
 
+NFmiColorContourLegendSettings& CtrlViewDocumentInterfaceForGeneralDataDoc::ColorContourLegendSettings()
+{
+    return itsDoc->ColorContourLegendSettings();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 
