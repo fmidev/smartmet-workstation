@@ -45,18 +45,24 @@ namespace SettingsFunctions
     }
 
     // Tässä point on talletettu "x,y" muodossa, eli x-arvo, pilkku, y-arvo.
-    NFmiPoint GetCommaSeaparatedPointFromSettings(const std::string &theKey)
+    NFmiPoint GetCommaSeparatedPointFromSettings(const std::string &theKey, const NFmiPoint* theOptionalPoint)
     {
-        std::string gridStr = NFmiSettings::Require<std::string>(theKey.c_str());
+        bool isOptional = theOptionalPoint != 0;
+        std::string gridStr = (isOptional) ? NFmiSettings::Optional<std::string>(theKey.c_str(), "") : NFmiSettings::Require<std::string>(theKey.c_str());
 
-        checkedVector<int> gridValues = NFmiStringTools::Split<checkedVector<int> >(gridStr, ",");
-        if(gridValues.size() != 2)
-            throw std::runtime_error(std::string("GetCommaSeaparatedPointFromSettings had invalid setting with key: ") + theKey + "\nand value: " + gridStr + "\n, has to be to numbers (e.g. x,y).");
+        if(isOptional && gridStr.empty())
+            return *theOptionalPoint;
+        else
+        {
+            checkedVector<int> gridValues = NFmiStringTools::Split<checkedVector<int> >(gridStr, ",");
+            if(gridValues.size() != 2)
+                throw std::runtime_error(std::string("GetCommaSeparatedPointFromSettings had invalid setting with key: ") + theKey + "\nand value: " + gridStr + "\n, has to be to numbers (e.g. x,y).");
 
-        return NFmiPoint(gridValues[0], gridValues[1]);
+            return NFmiPoint(gridValues[0], gridValues[1]);
+        }
     }
 
-    void SetCommaSeaparatedPointToSettings(const std::string &theKey, const NFmiPoint &theGridSize)
+    void SetCommaSeparatedPointToSettings(const std::string &theKey, const NFmiPoint &theGridSize)
     {
         std::string gridStr;
         gridStr += NFmiStringTools::Convert<int>(static_cast<int>(theGridSize.X()));
