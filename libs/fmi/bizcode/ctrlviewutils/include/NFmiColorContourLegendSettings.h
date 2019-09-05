@@ -19,7 +19,7 @@ class NFmiColorRectSettings
     NFmiColor fillColor_ = NFmiColor(1, 1, 1, 1);
 public:
     NFmiColorRectSettings() = default;
-    void InitFromSettings(const std::string &initialNameSpace);
+    void initFromSettings(const std::string &initialNameSpace);
 
     double frameLineWidthInMM() const { return frameLineWidthInMM_; }
     void frameLineWidthInMM(double newValue) { frameLineWidthInMM_ = newValue; }
@@ -48,7 +48,7 @@ class NFmiColorContourLegendSettings
 public:
 
     NFmiColorContourLegendSettings(void) = default;
-    void InitFromSettings(const std::string &initialNameSpace);
+    void initFromSettings(const std::string &initialNameSpace);
 
     const NFmiColorRectSettings& backgroundRectSettings() const { return  backgroundRectSettings_; }
     void backgroundRectSettings(const NFmiColorRectSettings &newValue) { backgroundRectSettings_ = newValue; }

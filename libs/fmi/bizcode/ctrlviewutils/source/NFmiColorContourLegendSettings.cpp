@@ -3,7 +3,7 @@
 #include "SettingsFunctions.h"
 #include "catlog/catlog.h"
 
-void NFmiColorRectSettings::InitFromSettings(const std::string &initialNameSpace)
+void NFmiColorRectSettings::initFromSettings(const std::string &initialNameSpace)
 {
     frameLineWidthInMM_ = NFmiSettings::Optional<double>(initialNameSpace + "::frameLineWidthInMM", frameLineWidthInMM_);
     frameLineColor_ = SettingsFunctions::GetColorFromSettings(initialNameSpace + "::frameLineColor", &frameLineColor_);
@@ -12,14 +12,14 @@ void NFmiColorRectSettings::InitFromSettings(const std::string &initialNameSpace
 
 }
 
-void NFmiColorContourLegendSettings::InitFromSettings(const std::string &initialNameSpace)
+void NFmiColorContourLegendSettings::initFromSettings(const std::string &initialNameSpace)
 {
     if(initialized_)
         throw std::runtime_error(std::string(__FUNCTION__) + ": all ready initialized");
 
     initialized_ = true;
     initialNameSpace_ = initialNameSpace;
-    backgroundRectSettings_.InitFromSettings(initialNameSpace + "::backgroundRectSettings");
+    backgroundRectSettings_.initFromSettings(initialNameSpace + "::backgroundRectSettings");
     initializeInvisibleColorRectSettings();
 
     fontSizeInMM_ = NFmiSettings::Optional<double>(initialNameSpace + "::fontSizeInMM", fontSizeInMM_);
