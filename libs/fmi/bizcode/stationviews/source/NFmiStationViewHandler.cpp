@@ -1862,7 +1862,9 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
     if(drawParamList)
     {
-        auto lastLegendRelativeBottomRightCorner = itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition();
+        auto xyArea = itsMapArea->XYArea();
+        auto lastLegendRelativeBottomRightCorner = xyArea.Project(itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+
         for(const auto& drawParam : *drawParamList)
         {
             auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
