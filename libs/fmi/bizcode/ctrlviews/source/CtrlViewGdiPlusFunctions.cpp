@@ -220,10 +220,15 @@ namespace CtrlView
 
     Gdiplus::RectF GetStringBoundingBox(Gdiplus::Graphics &theGdiPlusGraphics, const std::string &theString, float theFontSizeInPixels, const Gdiplus::PointF &theOringinInPixels, const std::wstring &theFontNameStr)
     {
-        std::wstring wideStr = StringToWString(theString);
         Gdiplus::Font aFont(theFontNameStr.c_str(), theFontSizeInPixels, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+        return GetStringBoundingBox(theGdiPlusGraphics, theString, theOringinInPixels, aFont);
+    }
+
+    Gdiplus::RectF GetStringBoundingBox(Gdiplus::Graphics& theGdiPlusGraphics, const std::string& theString, const Gdiplus::PointF& theOringinInPixels, const Gdiplus::Font& theFont)
+    {
+        std::wstring wideStr = StringToWString(theString);
         Gdiplus::RectF boundinBox;
-        theGdiPlusGraphics.MeasureString(wideStr.c_str(), static_cast<INT>(wideStr.size()), &aFont, theOringinInPixels, &boundinBox);
+        theGdiPlusGraphics.MeasureString(wideStr.c_str(), static_cast<INT>(wideStr.size()), &theFont, theOringinInPixels, &boundinBox);
         return boundinBox;
     }
 
@@ -549,19 +554,30 @@ namespace CtrlView
         return totalDrawedPointCount;
     }
 
+    std::unique_ptr<Gdiplus::Font> CreateFontPtr(float theFontSizeInPixels, const std::wstring& theFontNameStr, Gdiplus::FontStyle theFontStyle)
+    {
+        return std::make_unique<Gdiplus::Font>(theFontNameStr.c_str(), theFontSizeInPixels, theFontStyle, Gdiplus::UnitPixel);
+    }
+
+    std::unique_ptr<Gdiplus::Font> CreateFontPtr(double theFontSizeInMM, double pixelsPerMM, const std::wstring& theFontNameStr, Gdiplus::FontStyle theFontStyle)
+    {
+        float usedFontSizeInPixels = static_cast<float>(theFontSizeInMM * pixelsPerMM);
+        return CreateFontPtr(usedFontSizeInPixels, theFontNameStr, theFontStyle);
+    }
+
+
     void DrawTextToRelativeLocation(Gdiplus::Graphics &theGdiPlusGraphics, const NFmiColor &theColor, double theFontSizeInMM, const std::string &theStr, const NFmiPoint &thePlace, double pixelsPerMM, NFmiToolBox *theToolbox, const std::wstring &theFontNameStr, FmiDirection theAlingment, Gdiplus::FontStyle theFontStyle)
     {
         Gdiplus::Color usedColor(NFmiColor2GdiplusColor(theColor));
         Gdiplus::SolidBrush aBrush(usedColor);
         Gdiplus::StringFormat stringFormat;
         SetGdiplusAlignment(theAlingment, stringFormat);
-        float usedFontSizeInPixels = static_cast<float>(theFontSizeInMM * pixelsPerMM);
-        Gdiplus::Font aFont(theFontNameStr.c_str(), usedFontSizeInPixels, theFontStyle, Gdiplus::UnitPixel);
+        auto aFont = CreateFontPtr(theFontSizeInMM, pixelsPerMM, theFontNameStr, theFontStyle);
 
         std::wstring wideStr = StringToWString(theStr);
 
         Gdiplus::PointF aPlace = Relative2GdiplusPoint(theToolbox, thePlace);
-        theGdiPlusGraphics.DrawString(wideStr.c_str(), static_cast<INT>(wideStr.size()), &aFont, aPlace, &stringFormat, &aBrush);
+        theGdiPlusGraphics.DrawString(wideStr.c_str(), static_cast<INT>(wideStr.size()), aFont.get(), aPlace, &stringFormat, &aBrush);
     }
 
     void DrawSimpleText(Gdiplus::Graphics &theGdiPlusGraphics, const NFmiColor &theColor, float theFontSizeInPixels, const std::string &theStr, const NFmiPoint &theAbsPlace, const std::wstring &theFontNameStr, FmiDirection theAlingment, const NFmiColor *theBkColor)
@@ -570,7 +586,7 @@ namespace CtrlView
         Gdiplus::SolidBrush aBrush(usedColor);
         Gdiplus::StringFormat stringFormat;
         SetGdiplusAlignment(theAlingment, stringFormat);
-        Gdiplus::Font aFont(theFontNameStr.c_str(), theFontSizeInPixels, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+        auto aFont = CreateFontPtr(theFontSizeInPixels, theFontNameStr, Gdiplus::FontStyleRegular);
 
         std::wstring wideStr = StringToWString(theStr);
 
@@ -578,12 +594,12 @@ namespace CtrlView
         if(theBkColor)
         {
             Gdiplus::RectF boundingRect;
-            theGdiPlusGraphics.MeasureString(wideStr.c_str(), static_cast<INT>(wideStr.size()), &aFont, aPlace, &stringFormat, &boundingRect);
+            theGdiPlusGraphics.MeasureString(wideStr.c_str(), static_cast<INT>(wideStr.size()), aFont.get(), aPlace, &stringFormat, &boundingRect);
             Gdiplus::Color usedBkColor(NFmiColor2GdiplusColor(*theBkColor));
             Gdiplus::SolidBrush bkFillBrush(usedBkColor);
             theGdiPlusGraphics.FillRectangle(&bkFillBrush, boundingRect);
         }
-        theGdiPlusGraphics.DrawString(wideStr.c_str(), static_cast<INT>(wideStr.size()), &aFont, aPlace, &stringFormat, &aBrush);
+        theGdiPlusGraphics.DrawString(wideStr.c_str(), static_cast<INT>(wideStr.size()), aFont.get(), aPlace, &stringFormat, &aBrush);
     }
 
     void DrawLine(Gdiplus::Graphics &theGdiPlusGraphics, int x1, int y1, int x2, int y2, const NFmiColor &theColor, float thePenWidthInPixels, Gdiplus::DashStyle theDashStyle)
