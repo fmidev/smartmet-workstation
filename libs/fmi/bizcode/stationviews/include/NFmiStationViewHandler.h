@@ -50,6 +50,7 @@ class NFmiACLocationInfo;
 class NFmiColor;
 class CDC;
 class NFmiBetaProduct;
+class NFmiColorContourLegendValues;
 
 namespace Gdiplus
 {
@@ -58,6 +59,17 @@ namespace Gdiplus
     class Font;
     class StringFormat;
 }
+
+class LegendDrawingMeasures
+{
+public:
+    NFmiPoint backgroundRectSizeInPixels = NFmiPoint(0, 0);
+    NFmiPoint colorRectSizeInPixels = NFmiPoint(0, 0);
+    double maxValueStringLengthInPixels = 0;
+    double paddingLengthInPixels = 0;
+    double usedFontSizeInPixels = 0;
+    double usedFontSizeInMM = 0;
+};
 
 class NFmiStationViewHandler : public NFmiCtrlView
 {
@@ -193,6 +205,9 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    void DrawNormalColorContourLegend(const NFmiColorContourLegendValues &colorContourLegendValues, NFmiPoint &lastLegendRelativeBottomRightCornerInOut);
+    LegendDrawingMeasures CalculateLegendDrawingMeasures(const NFmiColorContourLegendValues& colorContourLegendValues, float sizeFactor);
+    void DrawNormalColorContourLegendBackground(const LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::PointF &lastLegendBottomRightCornerInPixels);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
