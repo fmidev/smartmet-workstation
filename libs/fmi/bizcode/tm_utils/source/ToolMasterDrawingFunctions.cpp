@@ -1392,14 +1392,6 @@ static void SetIsolineMinLength(NFmiIsoLineData& theIsoLineData, double currentV
     }
 }
 
-static void DrawColoContourLegend(NFmiIsoLineData& theIsoLineData, const NFmiRect& theRelViewRect, const NFmiPoint &theTotalViewSizeInPixels)
-{
-    double xOrigin = theTotalViewSizeInPixels.X() * 0.01;
-    double yOrigin = theTotalViewSizeInPixels.Y() * 0.3;
-    int legendType = XuSTEPPED;
-    XuShadingLegendDraw(xOrigin, yOrigin, legendType);
-}
-
 static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, int theCrossSectionIsoLineDrawIndex)
 {
     static checkedVector<float> gridNodesX;
@@ -1430,7 +1422,6 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
                 ::DrawCustomColorContours(theIsoLineData);
             else
                 ::DrawSimpleColorContours(theIsoLineData);
-            ::DrawColoContourLegend(theIsoLineData, theRelViewRect, totalViewSize);
         }
         if(theIsoLineData.itsHatch1.fUseHatch || theIsoLineData.itsHatch2.fUseHatch)
         {
