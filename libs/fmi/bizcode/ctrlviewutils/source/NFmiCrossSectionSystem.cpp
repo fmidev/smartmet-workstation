@@ -318,7 +318,7 @@ void NFmiCrossSectionSystem::CrossSectionDrawParam(boost::shared_ptr<NFmiDrawPar
 	itsCrossSectionDrawParam = newValue;
 }
 
-// paluu arvo kertoo tarvitaanko näytön päivitystä
+// Paluuarvo kertoo tarvitaanko näytön päivitystä
 bool NFmiCrossSectionSystem::ChangeStartRowIndex(bool fMoveUp)
 {
 	int oldIndex = itsStartRowIndex;

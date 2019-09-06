@@ -6593,7 +6593,7 @@ void DrawParamSettingsChangedDirtyActions(unsigned int theDescTopIndex, int theR
 
 	if (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView) // Joonas: kysy Markolta kelpaako tämä vai pitääkö päivitys tehdä jotenkin muuten?
 	{
-		this->RefreshApplicationViewsAndDialogs("Param added", true, true, theDescTopIndex);
+		this->RefreshApplicationViewsAndDialogs("Parameter added to cross section view", true, true, theDescTopIndex);
 	}
 }
 
@@ -13871,7 +13871,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         if(CaseStudyModeOn())
             currentTime = itsLoadedCaseStudySystem.Time(); // CaseStudy moodissa seinäkelloksi otetaan CasStudyn oma aika
         CenterTimeControlView(theMapViewDescTopIndex, currentTime, true);
-        RefreshApplicationViewsAndDialogs("Map view: Selcted map time is set to wall clock time", true, false, theMapViewDescTopIndex);
+        RefreshApplicationViewsAndDialogs("Map view: Selected map time is set to wall clock time", true, false, theMapViewDescTopIndex);
     }
 
     const std::string& RootViewMacroPath()
