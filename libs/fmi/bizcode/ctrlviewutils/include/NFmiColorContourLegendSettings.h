@@ -40,8 +40,9 @@ class NFmiColorContourLegendSettings
     std::string fontName_ = "Arial";
     // Tämän verran laitetaan karttaruudun vasemman reuna ja 1. legenda laatikon väliin (skaalataan karttaruudun koon mukaan)
     double spaceBetweenLegendsInMM_ = 0;
-    // Legenda laatikoiden piirto aloitetaan (1. piirretyn color-contour layerin legenda kenttä) bottom-left paikka 0,0 - 1,1 laatikossa
-    NFmiPoint relativeStartPosition_ = NFmiPoint(0, 0.1);
+    // Legenda laatikoiden piirto aloitetaan (1. piirretyn color-contour layerin legenda kenttä) bottom-left 
+    // paikka 0,0 - 1,1 laatikossa (Huom! vasen yläkulma on 0,0 ja oikea alakulma on 1,1)
+    NFmiPoint relativeStartPosition_ = NFmiPoint(0, 0.85);
 
     bool initialized_ = false;
     std::string initialNameSpace_;
