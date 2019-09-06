@@ -28,7 +28,7 @@ NFmiColorContourLegendValues::NFmiColorContourLegendValues(const boost::shared_p
 void NFmiColorContourLegendValues::init(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info)
 {
     clear();
-    if(drawParam && drawParam->ShowColorLegend())
+    if(drawParam && !drawParam->ShowColorLegend())
     {
         if(::acceptableDataTypeForNormalLegendDraw(drawParam->DataType()))
         {
@@ -78,7 +78,7 @@ void NFmiColorContourLegendValues::FillSimpleColorContourValues(const boost::sha
 
 void NFmiColorContourLegendValues::FillCustomColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
-    classLimitValues_ = drawParam->SpecialColorContouringValues();
+    classLimitValues_ = drawParam->SpecialContourValues();
     auto colorIndices = drawParam->SpecialContourColorIndexies();
     for(auto colorIndex : colorIndices)
         classColors_.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
@@ -98,5 +98,5 @@ void NFmiColorContourLegendValues::FillCustomColorContourValues(const boost::sha
 void NFmiColorContourLegendValues::FillClassLimitTextsVector()
 {
     for(auto classLimitValue : classLimitValues_)
-        classLimitTexts_.push_back(std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(classLimitValue, 3)));
+        classLimitTexts_.push_back(std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(classLimitValue, 2)));
 }
