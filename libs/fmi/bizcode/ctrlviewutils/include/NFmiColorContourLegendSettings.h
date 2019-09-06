@@ -58,7 +58,9 @@ public:
     void fontSizeInMM(double newValue) { fontSizeInMM_ = newValue; }
     const NFmiColor& fontColor() const { return  fontColor_; }
     void fontColor(const NFmiColor &newColor) { fontColor_ = newColor; }
-    void fontName(const std::string &newValue) { fontName_ = newValue; }
+    const std::string& fontName() const { return fontName_; }
+    void fontName(const std::string& newValue) { fontName_ = newValue; }
+    double spaceBetweenLegendsInMM() const { return spaceBetweenLegendsInMM_; }
     void spaceBetweenLegendsInMM(double newValue) { spaceBetweenLegendsInMM_ = newValue; }
     const NFmiPoint& relativeStartPosition() const { return  relativeStartPosition_; }
     void relativeStartPosition(const NFmiPoint &newValue) { relativeStartPosition_ = newValue; }
