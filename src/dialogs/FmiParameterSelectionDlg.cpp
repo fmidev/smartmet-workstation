@@ -18,6 +18,7 @@
 #include "NFmiFileSystem.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiHelpDataInfo.h"
+#include "CtrlViewUtils.h"
 
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
@@ -1185,7 +1186,7 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
         }
 
         itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Adding param to map view", ::GetWantedMapViewIdFlag(itsParameterSelectionSystem->LastActivatedDesktopIndex()));
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Parameter added from Parameter selection dialog", ::GetWantedMapViewIdFlag(itsParameterSelectionSystem->LastActivatedDesktopIndex()));
     }
 }
 
@@ -1275,6 +1276,7 @@ void CFmiParameterSelectionDlg::OnPaint()
 void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 {
 	auto row = itsSmartMetDocumentInterface->GetFirstRowNumber(theDesktopIndex);
+	auto row2 = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
 	itsParameterSelectionSystem->LastActivatedDesktopIndex(theDesktopIndex);
 	itsParameterSelectionSystem->LastActivatedRowIndex(row);
 	SetWindowText(CA2T(MakeTitleText().c_str()));

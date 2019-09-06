@@ -304,7 +304,10 @@ void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-            itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
+			
+// 			itsSmartMetDocumentInterface->SetCrossSectionViewRowNumber(itsView->GetUsedParamRowIndex());
+			auto row = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
+			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex()); //Joonas välitä rivinumero jotain kautta generalDocille
 			return ;
 		}
 		Invalidate(FALSE);
