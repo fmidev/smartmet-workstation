@@ -2066,22 +2066,6 @@ void InitDrawDifferenceDrawParam(void)
 		itsSelectedGridPointDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSelectedGridPoints)), 0, NFmiInfoData::kAnyData);
 		if(itsSelectedGridPointDrawParam)
 		{
-			// HUOM!!!! ei saa laittaa läpinäkyvyyttä päälle!!!!!!
-//			itsSelectedGridPointDrawParam->UseCustomIsoLineing(true);
-//			checkedVector<float> specialIsolineValues;
-//			const float isolineValue = 0.7f;
-//			specialIsolineValues.push_back(isolineValue);
-//			itsSelectedGridPointDrawParam->SetSpecialIsoLineValues(specialIsolineValues);
-//			checkedVector<int> specialIsolineColorIndexies;
-//			specialIsolineColorIndexies.push_back(10);
-//			itsSelectedGridPointDrawParam->SetSpecialIsoLineColorIndexies(specialIsolineColorIndexies);
-//			checkedVector<float> specialIsolineLabelHeights;
-//			specialIsolineLabelHeights.push_back(0.f);
-//			itsSelectedGridPointDrawParam->SetSpecialIsoLineLabelHeight(specialIsolineLabelHeights);
-//			checkedVector<int> specialIsolineLineStyles;
-//			specialIsolineColorIndexies.push_back(1);
-//			itsSelectedGridPointDrawParam->SetSpecialIsoLineStyle(specialIsolineColorIndexies);
-
 			itsSelectedGridPointLimit = NFmiSettings::Optional<int>("SmartMet::SelectedGridPointsDrawLimit", 100);
 			bool doBorders = NFmiSettings::Optional<bool>("SmartMet::SelectedGridPointsDrawBorders", false);
 			itsSelectedGridPointDrawParam->IsoLineGab(doBorders ? 1 : 5);
