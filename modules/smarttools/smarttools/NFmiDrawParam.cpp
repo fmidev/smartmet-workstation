@@ -132,10 +132,6 @@ NFmiDrawParam::NFmiDrawParam()
       itsSpecialContourColorIndexies(),
       itsSpecialIsoLineShowLabelBox(),
       fDrawOnlyOverMask(false),
-      fUseCustomColorContouring(false),
-      fUseCustomIsoLineing(false),
-      itsSpecialColorContouringValues(),
-      itsSpecialColorContouringColorIndexies(),
       itsColorContouringColorShadeLowValue(0),
       itsColorContouringColorShadeMidValue(50),
       itsColorContouringColorShadeHighValue(100),
@@ -278,10 +274,6 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDataIdent& theParam,
       itsSpecialContourColorIndexies(),
       itsSpecialIsoLineShowLabelBox(),
       fDrawOnlyOverMask(false),
-      fUseCustomColorContouring(false),
-      fUseCustomIsoLineing(false),
-      itsSpecialColorContouringValues(),
-      itsSpecialColorContouringColorIndexies(),
       itsColorContouringColorShadeLowValue(0),
       itsColorContouringColorShadeMidValue(50),
       itsColorContouringColorShadeHighValue(100),
@@ -422,10 +414,6 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       itsSpecialContourColorIndexies(other.itsSpecialContourColorIndexies),
       itsSpecialIsoLineShowLabelBox(other.itsSpecialIsoLineShowLabelBox),
       fDrawOnlyOverMask(other.fDrawOnlyOverMask),
-      fUseCustomColorContouring(other.fUseCustomColorContouring),
-      fUseCustomIsoLineing(other.fUseCustomIsoLineing),
-      itsSpecialColorContouringValues(other.itsSpecialColorContouringValues),
-      itsSpecialColorContouringColorIndexies(other.itsSpecialColorContouringColorIndexies),
       itsColorContouringColorShadeLowValue(other.itsColorContouringColorShadeLowValue),
       itsColorContouringColorShadeMidValue(other.itsColorContouringColorShadeMidValue),
       itsColorContouringColorShadeHighValue(other.itsColorContouringColorShadeHighValue),
@@ -611,9 +599,6 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     itsSpecialIsoLineColorIndexies = theDrawParam->SpecialIsoLineColorIndexies();
     itsSpecialIsoLineShowLabelBox = theDrawParam->SpecialIsoLineShowLabelBox();
     fDrawOnlyOverMask = theDrawParam->DrawOnlyOverMask();
-    fUseCustomColorContouring = theDrawParam->UseCustomColorContouring();
-    itsSpecialColorContouringValues = theDrawParam->SpecialColorContouringValues();
-    itsSpecialColorContouringColorIndexies = theDrawParam->SpecialColorContouringColorIndexies();
     itsColorContouringColorShadeLowValue = theDrawParam->ColorContouringColorShadeLowValue();
     itsColorContouringColorShadeMidValue = theDrawParam->ColorContouringColorShadeMidValue();
     itsColorContouringColorShadeHighValue = theDrawParam->ColorContouringColorShadeHighValue();
@@ -667,7 +652,6 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     itsSpecialContourWidth = theDrawParam->itsSpecialContourWidth;
     itsSpecialContourStyle = theDrawParam->itsSpecialContourStyle;
     itsSpecialContourColorIndexies = theDrawParam->itsSpecialContourColorIndexies;
-    fUseCustomIsoLineing = theDrawParam->fUseCustomIsoLineing;
     itsContourLabelDigitCount = theDrawParam->itsContourLabelDigitCount;
     //***********************************************
     //********** 'versio 3' parametreja *************
@@ -857,6 +841,9 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
   file << "'ZeroColorMean'" << endl;  // selittävä teksti
   file << fZeroColorMean << endl;
 
+  bool dummyLegacyValue = false;
+  checkedVector<float> dummyLegacyFloatVectorValues;
+  checkedVector<int> dummyLegacyIntVectorValues;
   if (itsFileVersionNumber >= 2.)  // tämä on vain esimerkki siitä mitä joskus tulee olemaan
   {
     //***********************************************
@@ -932,18 +919,18 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     file << endl;
 
     file << fDrawOnlyOverMask << endl;
-    file << fUseCustomColorContouring << endl;
+    file << dummyLegacyValue << endl;
 
-    size = itsSpecialColorContouringValues.size();
+    size = dummyLegacyFloatVectorValues.size();
     file << size << endl;
     for (i = 0; i < size; i++)
-      file << itsSpecialColorContouringValues[i] << " ";
+      file << dummyLegacyFloatVectorValues[i] << " ";
     file << endl;
 
-    size = itsSpecialColorContouringColorIndexies.size();
+    size = dummyLegacyIntVectorValues.size();
     file << size << endl;
     for (i = 0; i < size; i++)
-      file << itsSpecialColorContouringColorIndexies[i] << " ";
+      file << dummyLegacyIntVectorValues[i] << " ";
     file << endl;
 
     file << itsColorContouringColorShadeLowValue << endl;
@@ -1000,7 +987,7 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     NFmiDataStoringHelpers::WriteContainer(itsSpecialContourColorIndexies, file, std::string(" "));
     file << endl;
 
-    file << fUseCustomIsoLineing << " " << itsContourLabelDigitCount << endl;
+    file << dummyLegacyValue << " " << itsContourLabelDigitCount << endl;
 
     // Lopuksi vielä mahdollinen extra data. Kun tulee uusia muuttujia, tee tähän extradatan
     // täyttöä, jotta se saadaan talteen tiedopstoon siten että
@@ -1202,6 +1189,9 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       file >> temp;  // luetaan nimike pois
       file >> fZeroColorMean;
 
+      bool dummyLegacyValue = false;
+      checkedVector<float> dummyLegacyFloatVectorValues;
+      checkedVector<int> dummyLegacyIntVectorValues;
       //***********************************************
       //********** 'versio 2' parametreja *************
       //***********************************************
@@ -1281,19 +1271,19 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
 
         if (!file) return file;
         file >> fDrawOnlyOverMask;
-        file >> fUseCustomColorContouring;
+        file >> dummyLegacyValue;
 
         file >> size;
         if (!file) return file;
-        itsSpecialColorContouringValues.resize(size);
+        dummyLegacyFloatVectorValues.resize(size);
         for (i = 0; i < size; i++)
-          file >> itsSpecialColorContouringValues[i];
+          file >> dummyLegacyFloatVectorValues[i];
 
         file >> size;
         if (!file) return file;
-        itsSpecialColorContouringColorIndexies.resize(size);
+        dummyLegacyIntVectorValues.resize(size);
         for (i = 0; i < size; i++)
-          file >> itsSpecialColorContouringColorIndexies[i];
+          file >> dummyLegacyIntVectorValues[i];
 
         file >> itsColorContouringColorShadeLowValue;
         file >> itsColorContouringColorShadeMidValue;
@@ -1345,7 +1335,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         NFmiDataStoringHelpers::ReadContainer(itsSpecialContourStyle, file);
         NFmiDataStoringHelpers::ReadContainer(itsSpecialContourColorIndexies, file);
 
-        file >> fUseCustomIsoLineing >> itsContourLabelDigitCount;
+        file >> dummyLegacyValue >> itsContourLabelDigitCount;
 
         if (file.fail()) throw std::runtime_error("NFmiDrawParam::Read failed");
 
@@ -1444,7 +1434,6 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         itsSpecialContourStyle = itsSpecialIsoLineStyle;
         itsSpecialContourColorIndexies = itsSpecialIsoLineColorIndexies;
 
-        fUseCustomIsoLineing = fUseCustomColorContouring;
         itsContourLabelDigitCount = itsIsoLineLabelDigitCount;
         itsAlpha = 100.f;  // tämä on siis default arvo alphalle (täysin läpinäkyvä)
       }

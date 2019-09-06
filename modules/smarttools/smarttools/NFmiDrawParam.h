@@ -525,31 +525,7 @@ class NFmiDrawParam
   }
   bool DrawOnlyOverMask(void) const { return fDrawOnlyOverMask; }
   void DrawOnlyOverMask(bool newValue) { fDrawOnlyOverMask = newValue; }
-  bool UseCustomColorContouring(void) const { return fUseCustomColorContouring; }
-  void UseCustomColorContouring(bool newValue)
-  {
-    fUseCustomColorContouring = newValue;
-    fUseCustomIsoLineing = newValue;
-  }
 
-  bool UseCustomIsoLineing(void) const { return fUseCustomIsoLineing; }
-  void UseCustomIsoLineing(bool newValue) { fUseCustomIsoLineing = newValue; }
-  const checkedVector<float>& SpecialColorContouringValues(void) const
-  {
-    return itsSpecialColorContouringValues;
-  }
-  void SetSpecialColorContouringValues(const checkedVector<float>& newValue)
-  {
-    itsSpecialColorContouringValues = newValue;
-  }
-  const checkedVector<int>& SpecialColorContouringColorIndexies(void) const
-  {
-    return itsSpecialColorContouringColorIndexies;
-  }
-  void SpecialColorContouringColorIndexies(checkedVector<int>& newValue)
-  {
-    itsSpecialColorContouringColorIndexies = newValue;
-  }
   float ColorContouringColorShadeLowValue(void) const
   {
     return itsColorContouringColorShadeLowValue;
@@ -833,12 +809,6 @@ class NFmiDrawParam
                                                       // näyttö taulukko käyttäjälle)
   // colorcontouring ja quick contouring asetukset
   bool fDrawOnlyOverMask;          // jos true, data piirretään vain maskin päälle
-  bool fUseCustomColorContouring;  // true ja saa määritellä luokka rajat ja värit
-  bool fUseCustomIsoLineing;       // **** Versio 3 parametri ****
-  checkedVector<float> itsSpecialColorContouringValues;  // tähän laitetaan kaikki arvot, johon
-                                                         // halutaan color contour luokka rajoiksi
-  checkedVector<int> itsSpecialColorContouringColorIndexies;  // eri viivojen väri indeksit (pitää
-  // tehdä näyttö taulukko käyttäjälle)
   float itsColorContouringColorShadeLowValue;  // väri skaalaus alkaa tästä arvosta
   float itsColorContouringColorShadeMidValue;  // väri skaalauksen keskiarvo
   float itsColorContouringColorShadeHighValue;
