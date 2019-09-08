@@ -535,7 +535,7 @@ void CFmiTrajectoryDlg::RefreshViewsAndDialogs(const std::string &reasonForUpdat
 		if(mapViewDescTopList[i]->ShowTrajectorsOnMap())
 			mapViewDescTopList[i]->MapViewDirty(false, true, true, false);
 	}
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews | SmartMetViewId::TrajectoryView);
 }
 
 void CFmiTrajectoryDlg::OnBnClickedButtonTrajectoryRecalculate()
