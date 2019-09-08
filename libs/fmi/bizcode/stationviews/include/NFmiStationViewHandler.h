@@ -33,9 +33,11 @@
 
 #pragma once
 
+#include "stdafx.h"
 #include "NFmiCtrlView.h"
 #include "NFmiWindTableSystem.h"
 #include "HakeMessage\Main.h"
+#include <gdiplus.h>
 
 class NFmiArea;
 class NFmiCtrlViewList;
@@ -51,6 +53,7 @@ class NFmiColor;
 class CDC;
 class NFmiBetaProduct;
 class NFmiColorContourLegendValues;
+class NFmiColorRectSettings;
 
 namespace Gdiplus
 {
@@ -58,6 +61,7 @@ namespace Gdiplus
 	class PointF;
     class Font;
     class StringFormat;
+    class Rect;
 }
 
 class LegendDrawingMeasures
@@ -69,6 +73,7 @@ public:
     double paddingLengthInPixels = 0;
     double usedFontSizeInPixels = 0;
     double usedFontSizeInMM = 0;
+    Gdiplus::Rect backgroundRectInPixels;
 };
 
 class NFmiStationViewHandler : public NFmiCtrlView
@@ -207,7 +212,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     void DrawNormalColorContourLegend(const NFmiColorContourLegendValues &colorContourLegendValues, NFmiPoint &lastLegendRelativeBottomRightCornerInOut);
     LegendDrawingMeasures CalculateLegendDrawingMeasures(const NFmiColorContourLegendValues& colorContourLegendValues, float sizeFactor);
-    void DrawNormalColorContourLegendBackground(const LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::PointF &lastLegendBottomRightCornerInPixels);
+    void DrawNormalColorContourLegendBackground(LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::PointF &lastLegendBottomRightCornerInPixels);
+    void DrawNormalColorContourLegendClassColors(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels);
+    void DrawNormalColorContourLegendClassColorRect(const NFmiColorRectSettings& drawSettings, const Gdiplus::Rect& rectInPixels, const NFmiColor& color, bool transparentColor);
+    void DrawNormalColorContourLegendClassValueTexts(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)

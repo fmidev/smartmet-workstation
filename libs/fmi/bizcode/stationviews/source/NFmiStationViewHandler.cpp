@@ -116,8 +116,6 @@
 #include "CtrlViewWin32Functions.h"
 #include "BetaProductParamBoxFunctions.h"
 
-#include <gdiplus.h>
-
 #include <list>
 #include <regex>
 #include "boost\math\special_functions\round.hpp"
@@ -1856,14 +1854,29 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 	return itsMapArea->ToLatLon(theViewPoint);
 }
 
+// xyArea sis‰lt‰‰ suhteellisen kartan alueen, joka voi olla 0,0 - 1,1 (kartta peitt‰‰ koko n‰ytˆn ilman
+// aikakontrolli-ikkunaa) tai esim. 0, 0 - 0.5, 0.46 (karttan‰ytˆll‰ 2x2 ruudukko ja aikakontrolli-ikkuna vie
+// n‰ytˆn alaosan).
+// xyPoint on sijainti 0,0 - 1,1 maailmassa (voi olla myˆs sen ulkona).
+// Lasketaan piste, joka on xyArea:n maailmassa, mutta sijoitettuna niin kuin xyPoint
+// olisi sijoitettu 0,0 - 1,1 laatikkoon. Esim.
+// xyArea = 0, 0 - 0.5, 0.46
+// xyPoint = 0.3, 0.4
+// => 0.15, 0.184
+static NFmiPoint CalcProjectedPointInRectsXyArea(const NFmiRect& xyArea, const NFmiPoint& xyPoint)
+{
+    auto x = xyArea.Left() + xyArea.Width() * xyPoint.X();
+    auto y = xyArea.Top() + xyArea.Height() * xyPoint.Y();
+    return NFmiPoint(x, y);
+}
+
 void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 {
     itsToolBox = theGTB;
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
     if(drawParamList)
     {
-        auto xyArea = itsMapArea->XYArea();
-        auto lastLegendRelativeBottomRightCorner = xyArea.Project(itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+        auto lastLegendRelativeBottomRightCorner = ::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
 
         for(const auto& drawParam : *drawParamList)
         {
@@ -1900,8 +1913,8 @@ LegendDrawingMeasures NFmiStationViewHandler::CalculateLegendDrawingMeasures(con
         if(maxStringLengthInPixels < stringBoundingRectInPixels.Width)
             maxStringLengthInPixels = stringBoundingRectInPixels.Width;
     }
-    legendDrawingMeasures.maxValueStringLengthInPixels = maxStringLengthInPixels / pixelsPerMM;
-    legendDrawingMeasures.paddingLengthInPixels = legendDrawingMeasures.usedFontSizeInPixels * 0.1;
+    legendDrawingMeasures.maxValueStringLengthInPixels = maxStringLengthInPixels;
+    legendDrawingMeasures.paddingLengthInPixels = legendDrawingMeasures.usedFontSizeInPixels * 0.3;
 
     // 1.3. Koko laatikon korkeus = N kpl laatikoiden korkeus
     double backgroundRectHeigthInPixels = colorContourLegendValues.classColors().size() * legendDrawingMeasures.colorRectSizeInPixels.Y();
@@ -1916,20 +1929,94 @@ LegendDrawingMeasures NFmiStationViewHandler::CalculateLegendDrawingMeasures(con
     return legendDrawingMeasures;
 }
 
-void NFmiStationViewHandler::DrawNormalColorContourLegendBackground(const LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels)
+void NFmiStationViewHandler::DrawNormalColorContourLegendBackground(LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels)
 {
     auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
-    Gdiplus::Point locationInPixels(boost::math::iround(lastLegendBottomRightCornerInPixels.X), boost::math::iround(lastLegendBottomRightCornerInPixels.Y));
+    // Laatikko pit‰‰ viel‰ 'k‰‰nt‰‰' y-akselin suhteen
+    auto yLocationInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.Y - legendDrawingMeasures.backgroundRectSizeInPixels.Y());
+    Gdiplus::Point locationInPixels(boost::math::iround(lastLegendBottomRightCornerInPixels.X), yLocationInPixels);
     Gdiplus::Size sizeInPixels(boost::math::iround(legendDrawingMeasures.backgroundRectSizeInPixels.X()), boost::math::iround(legendDrawingMeasures.backgroundRectSizeInPixels.Y()));
-    Gdiplus::Rect backgroundRectInPixels(locationInPixels, sizeInPixels);
+    legendDrawingMeasures.backgroundRectInPixels = Gdiplus::Rect(locationInPixels, sizeInPixels);
 
     CtrlView::DrawRect(*itsGdiPlusGraphics, 
-        backgroundRectInPixels, 
+        legendDrawingMeasures.backgroundRectInPixels,
         colorContourLegendSettings.backgroundRectSettings().frameLineColor(),
         colorContourLegendSettings.backgroundRectSettings().fillColor(), 
         true, true, true, 
         static_cast<float>(colorContourLegendSettings.backgroundRectSettings().frameLineWidthInMM()),
         static_cast<Gdiplus::DashStyle>(colorContourLegendSettings.backgroundRectSettings().frameLineType()));
+}
+
+static bool IsTransparentColor(const NFmiColor& color)
+{
+    return color.Alpha() == 0;
+}
+
+void NFmiStationViewHandler::DrawNormalColorContourLegendClassColorRect(const NFmiColorRectSettings &drawSettings, const Gdiplus::Rect &rectInPixels, const NFmiColor &color, bool transparentColor)
+{
+    auto pixelsPerMM = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
+    auto useFill = !transparentColor;
+    CtrlView::DrawRect(*itsGdiPlusGraphics,
+        rectInPixels,
+        drawSettings.frameLineColor(),
+        color,
+        useFill, true, false,
+        static_cast<float>(boost::math::iround(drawSettings.frameLineWidthInMM() * pixelsPerMM)),
+        static_cast<Gdiplus::DashStyle>(drawSettings.frameLineType()));
+}
+
+void NFmiStationViewHandler::DrawNormalColorContourLegendClassColors(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels)
+{
+    auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
+    const auto& classColors = colorContourLegendValues.classColors();
+    auto paddingInPixels = boost::math::iround(legendDrawingMeasures.paddingLengthInPixels);
+    int currentRectTopInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.Y - paddingInPixels);
+    int rectLeftInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels);
+    auto widthInPixels = boost::math::iround(legendDrawingMeasures.colorRectSizeInPixels.X());
+    auto heigthInPixels = boost::math::iround(legendDrawingMeasures.colorRectSizeInPixels.Y());
+    for(size_t index = 0; index < classColors.size(); index++)
+    {
+        currentRectTopInPixels -= heigthInPixels;
+        auto colorRectInPixels = Gdiplus::Rect(rectLeftInPixels, currentRectTopInPixels, widthInPixels, heigthInPixels);
+        const auto& color = classColors[index];
+
+        if(::IsTransparentColor(color))
+        {
+            DrawNormalColorContourLegendClassColorRect(colorContourLegendSettings.invsibleColorRectSettings(), colorRectInPixels, color, true);
+        }
+        else
+        {
+            DrawNormalColorContourLegendClassColorRect(colorContourLegendSettings.backgroundRectSettings(), colorRectInPixels, color, false);
+        }
+    }
+}
+
+void NFmiStationViewHandler::DrawNormalColorContourLegendClassValueTexts(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels)
+{
+    const auto &colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
+    const auto& textColor = colorContourLegendSettings.backgroundRectSettings().frameLineColor();
+    auto pixelsPerMM = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
+    const auto& fontName = CtrlView::StringToWString(colorContourLegendSettings.fontName());
+    auto paddingInPixels = boost::math::iround(legendDrawingMeasures.paddingLengthInPixels);
+    auto heigthInPixels = boost::math::iround(legendDrawingMeasures.colorRectSizeInPixels.Y());
+    int currentTextPosXInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels);
+    int currentTextPosYInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.Y - paddingInPixels + heigthInPixels * 0.15);
+    for(const auto& classLimitText : colorContourLegendValues.classLimitTexts())
+    {
+        currentTextPosYInPixels -= heigthInPixels;
+        auto textLocationInPixels = Gdiplus::Point(currentTextPosXInPixels, currentTextPosYInPixels);
+        auto relativeTextPosition = CtrlView::GdiplusPoint2Relative(itsToolBox, textLocationInPixels);
+        CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, textColor, legendDrawingMeasures.usedFontSizeInMM, classLimitText, relativeTextPosition, pixelsPerMM, itsToolBox, fontName, kRight, Gdiplus::FontStyleRegular);
+    }
+
+    // Piirret‰‰n viel‰ otsikko
+    currentTextPosXInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.X + paddingInPixels);
+    currentTextPosYInPixels -= boost::math::iround(heigthInPixels * 1.7);
+    auto textLocationInPixels = Gdiplus::Point(currentTextPosXInPixels, currentTextPosYInPixels);
+    auto relativeTextPosition = CtrlView::GdiplusPoint2Relative(itsToolBox, textLocationInPixels);
+    itsGdiPlusGraphics->SetClip(legendDrawingMeasures.backgroundRectInPixels);
+    CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, textColor, legendDrawingMeasures.usedFontSizeInMM, colorContourLegendValues.name(), relativeTextPosition, pixelsPerMM, itsToolBox, fontName, kLeft, Gdiplus::FontStyleRegular);
+    itsGdiPlusGraphics->ResetClip();
 }
 
 void NFmiStationViewHandler::DrawNormalColorContourLegend(const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut)
@@ -1941,11 +2028,10 @@ void NFmiStationViewHandler::DrawNormalColorContourLegend(const NFmiColorContour
     // 2. Piirr‰ pohja laatikko
     DrawNormalColorContourLegendBackground(legendDrawingMeasures, lastLegendBottomRightCornerInPixels);
     // 3. Piirr‰ value tekstit loopissa
+    DrawNormalColorContourLegendClassValueTexts(legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels);
     // 4. Piirr‰ v‰ri laatikot loopissa
+    DrawNormalColorContourLegendClassColors(legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels);
     // 5. Piirr‰ otsikko teksti
-
-//    Gdiplus::Color gdiplusColor = CtrlView::NFmiColor2GdiplusColor(const NFmiColor & theColor, bool fUseAlpha = false);
-//    DrawTextToRelativeLocation(Gdiplus::Graphics & theGdiPlusGraphics, const NFmiColor & theColor, double theFontSizeInMM, const std::string & theStr, const NFmiPoint & thePlace, double pixelsPerMM, NFmiToolBox * theToolbox, const std::wstring & theFontNameStr, FmiDirection theAlingment, Gdiplus::FontStyle theFontStyle = Gdiplus::FontStyleRegular);
 
 }
 
