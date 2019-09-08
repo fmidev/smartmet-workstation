@@ -211,6 +211,14 @@ namespace CtrlView
         return relativeRect;
     }
 
+    const NFmiPoint GdiplusPoint2Relative(NFmiToolBox* theToolBox, const Gdiplus::Point& theGdiplusPoint)
+    {
+        CPoint abolutePoint(theGdiplusPoint.X, theGdiplusPoint.Y);
+        NFmiPoint relativePoint;
+        theToolBox->ConvertPoint(abolutePoint, relativePoint);
+        return relativePoint;
+    }
+
     void MakePathFromRect(Gdiplus::GraphicsPath &thePath, NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect)
     {
         thePath.Reset();
