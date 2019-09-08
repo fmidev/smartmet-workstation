@@ -35,7 +35,7 @@ class NFmiColorContourLegendSettings
 {
     NFmiColorRectSettings backgroundRectSettings_;
     NFmiColorRectSettings invsibleColorRectSettings_;
-    double fontSizeInMM_ = 3;
+    double fontSizeInMM_ = 5;
     NFmiColor fontColor_ = NFmiColor(0, 0, 0, 1);
     std::string fontName_ = "Arial";
     // Tämän verran laitetaan karttaruudun vasemman reuna ja 1. legenda laatikon väliin (skaalataan karttaruudun koon mukaan)
