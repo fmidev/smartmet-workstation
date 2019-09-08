@@ -2030,9 +2030,11 @@ void NFmiStationViewHandler::DrawNormalColorContourLegend(const NFmiColorContour
     // 3. Piirrä value tekstit loopissa
     DrawNormalColorContourLegendClassValueTexts(legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels);
     // 4. Piirrä väri laatikot loopissa
-    DrawNormalColorContourLegendClassColors(legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels);
     // 5. Piirrä otsikko teksti
-
+    DrawNormalColorContourLegendClassColors(legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels);
+    // 6. Move last legend BR corner
+    auto relativeLegendRect = CtrlView::GdiplusRect2Relative(itsToolBox, legendDrawingMeasures.backgroundRectInPixels);
+    lastLegendRelativeBottomRightCornerInOut = relativeLegendRect.BottomRight();
 }
 
 void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
