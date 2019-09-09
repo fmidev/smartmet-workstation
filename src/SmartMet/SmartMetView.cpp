@@ -884,9 +884,9 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
 	if(data)
 	{
-        data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
 		CDC *pDC = GetDC();
 		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), data->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+        data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
 
         if(counter > 2)
             PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
