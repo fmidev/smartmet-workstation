@@ -76,6 +76,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , itsSimpleClassMiddleValue_NEW(0)
 , fUseTransparentLabelBoxFillColor(TRUE)
 , fDoSparseDataSymbolVisualization(FALSE)
+, fUseLegend(FALSE)
 {
 	if(theDrawParam)
 	{
@@ -253,6 +254,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_MIDDLE_VALUE_NEW, itsSimpleClassMiddleValue_NEW);
     DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_TRANSPARENT_LABEL_FILL_COLOR, fUseTransparentLabelBoxFillColor);
     DDX_Check(pDX, IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, fDoSparseDataSymbolVisualization);
+    DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_LEGEND, fUseLegend);
 }
 
 
@@ -539,6 +541,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	fUseIsoLineGabWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
     fUseTransparentLabelBoxFillColor = itsDrawParam->UseTransparentFillColor();
     fDoSparseDataSymbolVisualization = itsDrawParam->DoSparseSymbolVisualization();
+    fUseLegend = itsDrawParam->ShowColorLegend();
 
     FillStationDataViewSelector();
 	InitSpecialClassesData();
@@ -677,6 +680,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->StationDataViewType(::GetSelectedStationDataViewType(itsStationDataViewSelector));
     itsDrawParam->UseTransparentFillColor(fUseTransparentLabelBoxFillColor == TRUE);
     itsDrawParam->DoSparseSymbolVisualization(fDoSparseDataSymbolVisualization == TRUE);
+    itsDrawParam->ShowColorLegend(fUseLegend == TRUE);
 
 	ReadSpecialClassesData();
 }
@@ -1294,6 +1298,7 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, "IDC_MODIFY_DRW_PARAM_USE_WITH_ALL");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParams");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CONTOUR_ALPHA_STR, "Alpha 5-100");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_LEGEND, "Use legend");
     
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_APPLY_FIXED_DRAW_PARAMS_RIGHT_AWAY, "Apply Fixed Settings At Once");
 }
