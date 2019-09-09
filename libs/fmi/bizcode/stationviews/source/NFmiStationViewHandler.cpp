@@ -2022,6 +2022,8 @@ void NFmiStationViewHandler::DrawNormalColorContourLegendClassValueTexts(const L
 void NFmiStationViewHandler::DrawNormalColorContourLegend(const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut)
 {
     float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM), 1.1f);
+    if(sizeFactor < 1)
+        sizeFactor = std::pow(sizeFactor, 1.4f);
     auto legendDrawingMeasures = CalculateLegendDrawingMeasures(colorContourLegendValues, sizeFactor);
     Gdiplus::PointF lastLegendBottomRightCornerInPixels = CtrlView::Relative2GdiplusPoint(itsToolBox, lastLegendRelativeBottomRightCornerInOut);
     lastLegendBottomRightCornerInPixels.X += static_cast<float>(legendDrawingMeasures.paddingLengthInPixels);
