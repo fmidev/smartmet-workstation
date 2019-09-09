@@ -28,7 +28,7 @@ NFmiColorContourLegendValues::NFmiColorContourLegendValues(const boost::shared_p
 void NFmiColorContourLegendValues::init(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info)
 {
     clear();
-    if(drawParam && !drawParam->ShowColorLegend())
+    if(drawParam && drawParam->ShowColorLegend())
     {
         if(::acceptableDataTypeForNormalLegendDraw(drawParam->DataType()))
         {
