@@ -203,7 +203,6 @@ void NFmiStationViewHandler::DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect
 {
     DrawMap(theGTB, theMapFrame); // synop-plot printtausta varten pit‰‰ tehd‰ oma muuttuja, jolloin ei karttaa piirret‰
     DrawData(theGTB);
-    DrawLegends(theGTB);
     DrawOverMap(theGTB, theMapFrame); // piirret‰‰n haluttaessa kartan ja datan p‰‰lle l‰pin‰kyv‰ esim. kaupunkien nimet/tiestˆ kartta
     DrawSilamStationMarkers();
     DrawTrajectories();
@@ -1873,7 +1872,7 @@ static NFmiPoint CalcProjectedPointInRectsXyArea(const NFmiRect& xyArea, const N
 void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 {
     itsToolBox = theGTB;
-    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
     if(drawParamList)
     {
         auto lastLegendRelativeBottomRightCorner = ::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
@@ -1883,12 +1882,36 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
             auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
             auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
             NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
-            if(colorContourLegendValues.useLegend())
+            if(DrawContourLegendOnThisMapRow() && colorContourLegendValues.useLegend())
             {
                 DrawNormalColorContourLegend(colorContourLegendValues, lastLegendRelativeBottomRightCorner);
             }
         }
     }
+}
+
+bool NFmiStationViewHandler::DrawContourLegendOnThisMapRow()
+{
+    bool drawLegend = false;
+    CtrlViewUtils::MapViewMode displayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
+    if(displayMode == CtrlViewUtils::MapViewMode::kOneTime)
+    { 
+        // 1-time -moodissa piirret‰‰n legenda jokaiseen ruutuun
+        drawLegend = true;
+    }
+    else if(displayMode == CtrlViewUtils::MapViewMode::kRunningTime)
+    {
+        // running-time -moodissa piirret‰‰n legenda vain alimman rivin oikean puoleiseen ruutuun
+        if((itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y()) && (itsViewGridColumnNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X()))
+            drawLegend = true;
+    }
+    else
+    {
+        // normaali -moodissa piirret‰‰n legenda vain oikean puoleiseen sarakkeeseen
+        if((itsViewGridColumnNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X()))
+            drawLegend = true;
+    }
+    return drawLegend;
 }
 
 LegendDrawingMeasures NFmiStationViewHandler::CalculateLegendDrawingMeasures(const NFmiColorContourLegendValues& colorContourLegendValues, float sizeFactor)
@@ -2050,7 +2073,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 
     auto registeredLayers = itsCtrlViewDocumentInterface->WmsSupport()
         .getRegisteredLayers(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
-    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 
     for (const auto& registered : registeredLayers)
     {
@@ -2741,7 +2764,7 @@ void NFmiStationViewHandler::Update(void)
 		}
 
         auto doGeneralViewUpdates = mapHandler->UpdateMapViewDrawingLayers() || mapHandler->MakeNewBackgroundBitmap();
-        NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+        NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 		if(drawParamList && (doGeneralViewUpdates || drawParamList->IsDirty()))
 		{
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": forced to recreate layers", this);
@@ -2888,7 +2911,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
     if(itsViewList && GetFrame().IsInside(thePlace))
 	{
         // Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan t‰ll‰ uudella funktiolla.
-        itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+        itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
 
@@ -4458,6 +4481,7 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
     InitializeGdiplus(itsToolBox, &GetFrame());
 
+    DrawLegends(theGTB);
     if(IsControlPointModeOn())
         DrawControlPoints();
     if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun

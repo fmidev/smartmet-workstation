@@ -216,6 +216,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void DrawNormalColorContourLegendClassColors(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels);
     void DrawNormalColorContourLegendClassColorRect(const NFmiColorRectSettings& drawSettings, const Gdiplus::Rect& rectInPixels, const NFmiColor& color, bool transparentColor);
     void DrawNormalColorContourLegendClassValueTexts(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels);
+    bool DrawContourLegendOnThisMapRow();
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
