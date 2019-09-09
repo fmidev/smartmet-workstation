@@ -92,7 +92,8 @@ class NFmiCrossSectionView : public NFmiIsoLineView
    void SetupUsedDrawParam(void);
    float GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck = true);
    float GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
- private:
+   void DrawLegends();
+private:
 	const NFmiMetTime& CurrentTime(void);
 	void UpdateParamHandler(void);
 	bool ShowParamHandlerView(void);
