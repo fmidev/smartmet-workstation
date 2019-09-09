@@ -201,6 +201,7 @@ private:
     int CalcVisibleRowCount() const;
     int CalcMaxRowStartingIndex() const;
 	void StoreHandlerSelectedMapsToSettings(void);
+    void UpdateOneMapViewSize();
 
 	std::string itsSettingsBaseName; // tällä aloitus pohjalla luetaan conffi fileistä tarvittavat alustukset (esim. "MapViewDescTop::map1")
 	NFmiMapConfigurationSystem *itsMapConfigurationSystem; // tämä on dokumentin omistuksessa
