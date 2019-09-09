@@ -36,7 +36,6 @@ void NFmiColorContourLegendValues::init(const boost::shared_ptr<NFmiDrawParam>& 
             auto viewType = drawParam->GetViewType(isStationData_);
             if(NFmiDrawParam::IsColorContourType(viewType))
             {
-                useLegend_ = true;
                 name_ = drawParam->ParameterAbbreviation();
 
                 if(drawParam->UseSimpleIsoLineDefinitions())
@@ -82,17 +81,21 @@ void NFmiColorContourLegendValues::FillCustomColorContourValues(const boost::sha
     auto colorIndices = drawParam->SpecialContourColorIndexies();
     for(auto colorIndex : colorIndices)
         classColors_.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
+
+    FinalizeFillingValues();
+}
+
+void NFmiColorContourLegendValues::FinalizeFillingValues()
+{
     if(classLimitValues_.empty() || classColors_.empty())
-    {
-        useLegend_ = false;
         return;
-    }
 
     if(classLimitValues_.size() > classColors_.size() - 1)
         classLimitValues_.resize(classColors_.size() - 1);
     else if(classLimitValues_.size() < classColors_.size() - 1)
         classColors_.resize(classLimitValues_.size() + 1);
     FillClassLimitTextsVector();
+    useLegend_ = true;
 }
 
 void NFmiColorContourLegendValues::FillClassLimitTextsVector()
