@@ -39,10 +39,14 @@
 #include "NFmiFastInfoUtils.h"
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
+#include "CtrlViewColorContourLegendDrawingFunctions.h"
+#include "NFmiColorContourLegendSettings.h"
+#include "NFmiColorContourLegendValues.h"
 #include "catlog/catlog.h"
 
 #include <stdexcept>
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
+#include "boost/make_shared.hpp"
 
 using namespace std;
 
@@ -277,6 +281,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 
 	if(!itsCtrlViewDocumentInterface->CrossSectionSystem()->IsViewVisible(itsViewGridRowNumber))
 		return ;
+    InitializeGdiplus(itsToolBox, &itsRect);
 	// Tyhjennetään aina piirron aluksi
 	itsExistingLabels.clear(); //EL
 
@@ -342,6 +347,8 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 				EndTransparentDraw(); // jos piirrossa oli läpinäkyvyyttä, pitää vielä tehdä pari kikkaa ja siivota jäljet
 			}
 		}
+
+        DrawLegends();
 		DrawTrajectory(itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1), itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
 		DrawHeader(); // piirretää lopuksi koko header rimpsu kerralla
 		DrawObsForModeTimeLine();
@@ -365,6 +372,29 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	itsDrawParam = oldDrawParam; // laitetaan mikä oli sitten ennen piirtoa drawParam takaisin
 	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
 	//************** QUICKFIX!!!!! *******************
+    CleanGdiplus();
+}
+
+void NFmiCrossSectionView::DrawLegends()
+{
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    if(drawParamList)
+    {
+        auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
+        auto& graphicalInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
+        auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsDataViewFrame, itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+
+        for(const auto& drawParam : *drawParamList)
+        {
+            auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+            auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
+            NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
+            if(colorContourLegendValues.useLegend())
+            {
+                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics);
+            }
+        }
+    }
 }
 
 // Tämä pitää viritttää poikkileikkaus näytössä näin, koska parametrin piilotus/näyttö optio menee muuten hukkaan.
