@@ -2,6 +2,7 @@
 
 class NFmiToolBox;
 class NFmiPoint;
+class NFmiRect;
 class NFmiColorContourLegendSettings;
 class NFmiColorContourLegendValues;
 
@@ -18,4 +19,5 @@ namespace Gdiplus
 namespace CtrlView
 {
     void DrawNormalColorContourLegend(const NFmiColorContourLegendSettings& colorContourLegendSettings, const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut, NFmiToolBox* toolbox, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics);
+    NFmiPoint CalcProjectedPointInRectsXyArea(const NFmiRect& xyArea, const NFmiPoint& xyPoint);
 }

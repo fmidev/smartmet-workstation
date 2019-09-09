@@ -1854,22 +1854,6 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 	return itsMapArea->ToLatLon(theViewPoint);
 }
 
-// xyArea sisältää suhteellisen kartan alueen, joka voi olla 0,0 - 1,1 (kartta peittää koko näytön ilman
-// aikakontrolli-ikkunaa) tai esim. 0, 0 - 0.5, 0.46 (karttanäytöllä 2x2 ruudukko ja aikakontrolli-ikkuna vie
-// näytön alaosan).
-// xyPoint on sijainti 0,0 - 1,1 maailmassa (voi olla myös sen ulkona).
-// Lasketaan piste, joka on xyArea:n maailmassa, mutta sijoitettuna niin kuin xyPoint
-// olisi sijoitettu 0,0 - 1,1 laatikkoon. Esim.
-// xyArea = 0, 0 - 0.5, 0.46
-// xyPoint = 0.3, 0.4
-// => 0.15, 0.184
-static NFmiPoint CalcProjectedPointInRectsXyArea(const NFmiRect& xyArea, const NFmiPoint& xyPoint)
-{
-    auto x = xyArea.Left() + xyArea.Width() * xyPoint.X();
-    auto y = xyArea.Top() + xyArea.Height() * xyPoint.Y();
-    return NFmiPoint(x, y);
-}
-
 void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 {
     itsToolBox = theGTB;
@@ -1878,7 +1862,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
     {
         auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
         auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-        auto lastLegendRelativeBottomRightCorner = ::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+        auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
 
         for(const auto& drawParam : *drawParamList)
         {
