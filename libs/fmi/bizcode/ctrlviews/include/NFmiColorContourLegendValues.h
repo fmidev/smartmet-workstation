@@ -46,6 +46,7 @@ private:
     void FillSimpleColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam);
     void FillCustomColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam);
     void FillClassLimitTextsVector();
+    void FinalizeFillingValues();
 };
 
 
