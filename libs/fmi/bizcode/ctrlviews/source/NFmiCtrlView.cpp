@@ -175,6 +175,11 @@ int NFmiCtrlView::GetUsedParamRowIndex(int theRowIndex, int theColumnIndex)
 		return theRowIndex; // normaali moodissa (tai muissa tapauksissa) palautetaan normaali rivi indeksi
 }
 
+int NFmiCtrlView::GetUsedParamRowIndex()
+{
+    return GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+}
+
 // Näytetty rivi numero täällä (theRowIndex) ei ole aina sama kuin dokumentin
 // rivi, koska nykyään näyttörivejä voi selata myös pystysuunnassa.
 int NFmiCtrlView::CalcRealRowIndex(int theRowIndex, int theColumnIndex)
