@@ -136,7 +136,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawWindTableAreas(void);
 	void DrawSilamStationMarkers(NFmiSilamStationList &theStationList, NFmiDrawingEnvironment &theEnvi, const NFmiString &theSynopStr, double symbolXShift, double symbolYShift, NFmiRect &thePlaceRect);
 	bool ShowParamHandlerView(void);
-    void DrawBetaProductParamBox();
     NFmiRect CalcParamHandlerViewRect(void);
 	void InitParamHandlerView(void);
 	void UpdateParamHandler(void);
@@ -210,12 +209,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
-    void DrawNormalColorContourLegend(const NFmiColorContourLegendValues &colorContourLegendValues, NFmiPoint &lastLegendRelativeBottomRightCornerInOut);
-    LegendDrawingMeasures CalculateLegendDrawingMeasures(const NFmiColorContourLegendValues& colorContourLegendValues, float sizeFactor);
-    void DrawNormalColorContourLegendBackground(LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::PointF &lastLegendBottomRightCornerInPixels);
-    void DrawNormalColorContourLegendClassColors(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels);
-    void DrawNormalColorContourLegendClassColorRect(const NFmiColorRectSettings& drawSettings, const Gdiplus::Rect& rectInPixels, const NFmiColor& color, bool transparentColor);
-    void DrawNormalColorContourLegendClassValueTexts(const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels);
     bool DrawContourLegendOnThisMapRow();
 
     template<typename T>
