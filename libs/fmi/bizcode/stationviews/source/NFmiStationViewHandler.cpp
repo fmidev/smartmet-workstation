@@ -2081,6 +2081,12 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
         {
             itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
+        else
+        {
+            // Vielä jos piirto-optioissa ei ole legendan piirto päällä, poistetaan rekisteröidyistä (en ymmärrä logiikkaa, miten sen saa taas päälle)
+            if(!drawParamList->Current()->ShowColorLegend())
+                itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+        }
     }
 
     auto legends = itsCtrlViewDocumentInterface->WmsSupport().getLegends(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
