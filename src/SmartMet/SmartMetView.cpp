@@ -385,7 +385,7 @@ void CSmartMetView::CreateEditMapView()
 	itsEditMapView = new NFmiEditMapView(itsMapViewDescTopIndex, itsToolBox, &itsDrawingEnvironment, itsDrawParam);
 }
 
-void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
+void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point) // Joonas: ota tästä eteenpäin mallia (LeftButtonUp)
 {
 	try // try-catch -blokilla varmistetaan että lopuksi ReleaseCapture todellakin kutsutaan
 	{

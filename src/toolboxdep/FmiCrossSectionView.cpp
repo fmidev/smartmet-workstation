@@ -259,7 +259,7 @@ void CFmiCrossSectionView::DoPrint(void)
 
 }
 
-void CFmiCrossSectionView::OnLButtonUp(UINT nFlags, CPoint point)
+void CFmiCrossSectionView::OnLButtonUp(UINT nFlags, CPoint point) //Joonas lis‰‰ t‰nne samat kikat kuin SmarMetView:ss‰ on, jotta saat aktiivisen rivin cross sectioniin
 {
 	try
 	{
