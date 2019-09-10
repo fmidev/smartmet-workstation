@@ -3788,7 +3788,7 @@ const NFmiTimeDescriptor& TimeControlViewTimes(unsigned int theDescTopIndex)
 // Oikeat karttarivit alkavat siis 1:stä.
 unsigned int GetRealRowNumber(unsigned int theDescTopIndex, int theRowIndex)
 {
-	if(theRowIndex >= gActiveViewRowIndexForTimeSerialView) // aikasarja rivi numerot ovat erikseen
+	if(theRowIndex >= gActiveViewRowIndexForTimeSerialView || theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		return theRowIndex;
 	else
 		return theRowIndex + MapViewDescTop(theDescTopIndex)->MapRowStartingIndex() - 1;
