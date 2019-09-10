@@ -54,7 +54,7 @@ namespace SettingsFunctions
             return *theOptionalPoint;
         else
         {
-            checkedVector<int> gridValues = NFmiStringTools::Split<checkedVector<int> >(gridStr, ",");
+            checkedVector<double> gridValues = NFmiStringTools::Split<checkedVector<double> >(gridStr, ",");
             if(gridValues.size() != 2)
                 throw std::runtime_error(std::string("GetCommaSeparatedPointFromSettings had invalid setting with key: ") + theKey + "\nand value: " + gridStr + "\n, has to be to numbers (e.g. x,y).");
 
@@ -65,9 +65,9 @@ namespace SettingsFunctions
     void SetCommaSeparatedPointToSettings(const std::string &theKey, const NFmiPoint &theGridSize)
     {
         std::string gridStr;
-        gridStr += NFmiStringTools::Convert<int>(static_cast<int>(theGridSize.X()));
+        gridStr += NFmiStringTools::Convert<double>(theGridSize.X());
         gridStr += ",";
-        gridStr += NFmiStringTools::Convert<int>(static_cast<int>(theGridSize.Y()));
+        gridStr += NFmiStringTools::Convert<double>(theGridSize.Y());
         NFmiSettings::Set(theKey, gridStr, true);
     }
 
