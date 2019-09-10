@@ -1854,6 +1854,14 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 	return itsMapArea->ToLatLon(theViewPoint);
 }
 
+static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo &graphicalInfo)
+{
+    float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
+    if(sizeFactor < 1)
+        sizeFactor = std::pow(sizeFactor, 1.4f);
+    return sizeFactor;
+}
+
 void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 {
     itsToolBox = theGTB;
@@ -1862,6 +1870,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
     {
         auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
         auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+        auto sizeFactor = ::CalcUsedLegendSizeFactor(graphicalInfo);
         auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
 
         for(const auto& drawParam : *drawParamList)
@@ -1871,7 +1880,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
             NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
             if(DrawContourLegendOnThisMapRow() && colorContourLegendValues.useLegend())
             {
-                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics);
+                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
             }
         }
     }

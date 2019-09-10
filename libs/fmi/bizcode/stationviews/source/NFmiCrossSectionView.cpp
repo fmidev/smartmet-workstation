@@ -375,6 +375,14 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
     CleanGdiplus();
 }
 
+static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo& graphicalInfo, int visibleRowCount)
+{
+    float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM / visibleRowCount), 1.1f);
+    if(sizeFactor < 1)
+        sizeFactor = std::pow(sizeFactor, 1.4f);
+    return sizeFactor;
+}
+
 void NFmiCrossSectionView::DrawLegends()
 {
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
@@ -382,6 +390,7 @@ void NFmiCrossSectionView::DrawLegends()
     {
         auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
         auto& graphicalInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
+        auto sizeFactor = ::CalcUsedLegendSizeFactor(graphicalInfo, itsCtrlViewDocumentInterface->CrossSectionSystem()->RowCount());
         auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsDataViewFrame, itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
 
         for(const auto& drawParam : *drawParamList)
@@ -391,7 +400,7 @@ void NFmiCrossSectionView::DrawLegends()
             NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
             if(colorContourLegendValues.useLegend())
             {
-                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics);
+                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
             }
         }
     }
