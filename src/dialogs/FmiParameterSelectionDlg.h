@@ -131,8 +131,8 @@ private:
     void HandleRowItemSelection(const AddParams::SingleRowItem &rowItem);
     void FitNameColumnOnVisibleArea(int gridCtrlWidth);
     std::string MakeActiveViewRowText();
-    bool NeedToUpdateTitleText();
-    std::string MakeTitleText();
+	void UpdateGridControlIfNeeded();
+	std::string MakeTitleText();
     bool UpdateSearchIfNeeded();
     void CollapseAllButCategories();
 

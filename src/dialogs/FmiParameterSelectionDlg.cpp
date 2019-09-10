@@ -1219,25 +1219,27 @@ void CFmiParameterSelectionDlg::OnTimer(UINT_PTR nIDEvent)
 {
     switch(nIDEvent)
     {
-    case g_TitleTextUpdaterTimer:
-    {
-        if(NeedToUpdateTitleText())
-        {
-            SetWindowText(CA2T(MakeTitleText().c_str()));
-        }
-        return;
-    }
+		case g_TitleTextUpdaterTimer:
+		{
+			UpdateGridControlIfNeeded();
+		}
     }
 
     CDialogEx::OnTimer(nIDEvent);
 }
 
-bool CFmiParameterSelectionDlg::NeedToUpdateTitleText()
+void CFmiParameterSelectionDlg::UpdateGridControlIfNeeded()
 {
-    if(itsLastActivatedDesktopIndex != itsParameterSelectionSystem->LastActivatedDesktopIndex() || itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
-        return true;
-    else
-        return false;
+	if (itsLastActivatedDesktopIndex != itsParameterSelectionSystem->LastActivatedDesktopIndex())
+	{
+		SetWindowText(CA2T(MakeTitleText().c_str()));
+		itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
+		Update();
+	}
+	else if (itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
+	{
+		SetWindowText(CA2T(MakeTitleText().c_str()));
+	}
 }
 
 std::string CFmiParameterSelectionDlg::MakeTitleText()
