@@ -12,11 +12,12 @@ namespace
     class LegendDrawingMeasures
     {
     public:
-        NFmiPoint backgroundRectSizeInPixels = NFmiPoint(0, 0);
-        NFmiPoint colorRectSizeInPixels = NFmiPoint(0, 0);
-        double maxValueStringLengthInPixels = 0;
-        double paddingLengthInPixels = 0;
-        double usedFontSizeInPixels = 0;
+        Gdiplus::Point backgroundRectSizeInPixels = Gdiplus::Point(0, 0);
+        Gdiplus::Point colorRectSizeInPixels = Gdiplus::Point(0, 0);
+        int maxValueStringLengthInPixels = 0;
+        int paddingLengthInPixels = 0;
+        int usedFontSizeInPixels = 0;
+        double usedFontSizeInPixelsReal = 0;
         double usedFontSizeInMM = 0;
         Gdiplus::Rect backgroundRectInPixels;
     };
@@ -33,8 +34,9 @@ namespace
         // 1. Laske pohjalaatikon koko
         // 1.1. Laske tekstin korkeus, siit‰ riippuu muidenkin osien koot
         legendDrawingMeasures.usedFontSizeInMM = colorContourLegendSettings.fontSizeInMM() * sizeFactor;
-        legendDrawingMeasures.usedFontSizeInPixels = legendDrawingMeasures.usedFontSizeInMM * pixelsPerMM;
-        legendDrawingMeasures.colorRectSizeInPixels = NFmiPoint(legendDrawingMeasures.usedFontSizeInPixels, legendDrawingMeasures.usedFontSizeInPixels);
+        legendDrawingMeasures.usedFontSizeInPixelsReal = legendDrawingMeasures.usedFontSizeInMM * pixelsPerMM;
+        legendDrawingMeasures.usedFontSizeInPixels = boost::math::iround(legendDrawingMeasures.usedFontSizeInPixelsReal);
+        legendDrawingMeasures.colorRectSizeInPixels = Gdiplus::Point(legendDrawingMeasures.usedFontSizeInPixels, legendDrawingMeasures.usedFontSizeInPixels);
         // 1.2. Laske maksimi tekstin leveys
         double maxStringLengthInPixels = 0;
         auto fontNameWide = CtrlView::StringToWString(colorContourLegendSettings.fontName());
@@ -47,28 +49,28 @@ namespace
             if(maxStringLengthInPixels < stringBoundingRectInPixels.Width)
                 maxStringLengthInPixels = stringBoundingRectInPixels.Width;
         }
-        legendDrawingMeasures.maxValueStringLengthInPixels = maxStringLengthInPixels;
-        legendDrawingMeasures.paddingLengthInPixels = legendDrawingMeasures.usedFontSizeInPixels * 0.3;
+        legendDrawingMeasures.maxValueStringLengthInPixels = static_cast<int>(std::ceil(maxStringLengthInPixels));
+        legendDrawingMeasures.paddingLengthInPixels = boost::math::iround(legendDrawingMeasures.usedFontSizeInPixelsReal * 0.3);
 
         // 1.3. Koko laatikon korkeus = N kpl laatikoiden korkeus
-        double backgroundRectHeigthInPixels = colorContourLegendValues.classColors().size() * legendDrawingMeasures.colorRectSizeInPixels.Y();
+        int backgroundRectHeigthInPixels = static_cast<int>(colorContourLegendValues.classColors().size()) * legendDrawingMeasures.colorRectSizeInPixels.Y;
         // Lis‰t‰‰n korkeuteen viel‰ padding ala ja yl‰reunaan ja otsikkorivin korkeus
-        backgroundRectHeigthInPixels += legendDrawingMeasures.colorRectSizeInPixels.Y() + 2 * legendDrawingMeasures.paddingLengthInPixels;
+        backgroundRectHeigthInPixels += legendDrawingMeasures.colorRectSizeInPixels.Y + (2 * legendDrawingMeasures.paddingLengthInPixels);
         // 1.4. Koko laatikon leveys = maksimi tekstin leveys + laatikon leveys
-        double backgroundRectWidthInPixels = legendDrawingMeasures.maxValueStringLengthInPixels + legendDrawingMeasures.colorRectSizeInPixels.X();
+        int backgroundRectWidthInPixels = legendDrawingMeasures.maxValueStringLengthInPixels + legendDrawingMeasures.colorRectSizeInPixels.X;
         // Lis‰t‰‰n leveyteen viel‰ padding vasempaan ja oikeaan reunaan
-        backgroundRectWidthInPixels += 2 * legendDrawingMeasures.paddingLengthInPixels;
-        legendDrawingMeasures.backgroundRectSizeInPixels = NFmiPoint(backgroundRectWidthInPixels, backgroundRectHeigthInPixels);
+        backgroundRectWidthInPixels += (2 * legendDrawingMeasures.paddingLengthInPixels);
+        legendDrawingMeasures.backgroundRectSizeInPixels = Gdiplus::Point(backgroundRectWidthInPixels, backgroundRectHeigthInPixels);
 
         return legendDrawingMeasures;
     }
 
-    void DrawNormalColorContourLegendBackground(const NFmiColorContourLegendSettings& colorContourLegendSettings, LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels, Gdiplus::Graphics& gdiPlusGraphics)
+    void DrawNormalColorContourLegendBackground(const NFmiColorContourLegendSettings& colorContourLegendSettings, LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, Gdiplus::Graphics& gdiPlusGraphics)
     {
         // Laatikko pit‰‰ viel‰ 'k‰‰nt‰‰' y-akselin suhteen
-        auto yLocationInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.Y - legendDrawingMeasures.backgroundRectSizeInPixels.Y());
-        Gdiplus::Point locationInPixels(boost::math::iround(lastLegendBottomRightCornerInPixels.X), yLocationInPixels);
-        Gdiplus::Size sizeInPixels(boost::math::iround(legendDrawingMeasures.backgroundRectSizeInPixels.X()), boost::math::iround(legendDrawingMeasures.backgroundRectSizeInPixels.Y()));
+        auto yLocationInPixels = lastLegendBottomRightCornerInPixels.Y - legendDrawingMeasures.backgroundRectSizeInPixels.Y;
+        Gdiplus::Point locationInPixels(lastLegendBottomRightCornerInPixels.X, yLocationInPixels);
+        Gdiplus::Size sizeInPixels(legendDrawingMeasures.backgroundRectSizeInPixels.X, legendDrawingMeasures.backgroundRectSizeInPixels.Y);
         legendDrawingMeasures.backgroundRectInPixels = Gdiplus::Rect(locationInPixels, sizeInPixels);
 
         CtrlView::DrawRect(gdiPlusGraphics,
@@ -80,15 +82,15 @@ namespace
             static_cast<Gdiplus::DashStyle>(colorContourLegendSettings.backgroundRectSettings().frameLineType()));
     }
 
-    void DrawNormalColorContourLegendClassValueTexts(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels, NFmiToolBox* toolbox, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
+    void DrawNormalColorContourLegendClassValueTexts(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, NFmiToolBox* toolbox, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
     {
         const auto& textColor = colorContourLegendSettings.backgroundRectSettings().frameLineColor();
         auto pixelsPerMM = graphicalInfo.itsPixelsPerMM_y;
         const auto& fontName = CtrlView::StringToWString(colorContourLegendSettings.fontName());
-        auto paddingInPixels = boost::math::iround(legendDrawingMeasures.paddingLengthInPixels);
-        auto heigthInPixels = boost::math::iround(legendDrawingMeasures.colorRectSizeInPixels.Y());
-        int currentTextPosXInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels);
-        int currentTextPosYInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.Y - paddingInPixels + heigthInPixels * 0.15);
+        auto paddingInPixels = legendDrawingMeasures.paddingLengthInPixels;
+        auto heigthInPixels = legendDrawingMeasures.colorRectSizeInPixels.Y;
+        int currentTextPosXInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels;
+        int currentTextPosYInPixels = lastLegendBottomRightCornerInPixels.Y - paddingInPixels + boost::math::iround(heigthInPixels * 0.15);
         for(const auto& classLimitText : colorContourLegendValues.classLimitTexts())
         {
             currentTextPosYInPixels -= heigthInPixels;
@@ -98,7 +100,7 @@ namespace
         }
 
         // Piirret‰‰n viel‰ otsikko
-        currentTextPosXInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.X + paddingInPixels);
+        currentTextPosXInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels;
         currentTextPosYInPixels -= boost::math::iround(heigthInPixels * 1.7);
         auto textLocationInPixels = Gdiplus::Point(currentTextPosXInPixels, currentTextPosYInPixels);
         auto relativeTextPosition = CtrlView::GdiplusPoint2Relative(toolbox, textLocationInPixels);
@@ -120,14 +122,14 @@ namespace
             static_cast<Gdiplus::DashStyle>(drawSettings.frameLineType()));
     }
 
-    void DrawNormalColorContourLegendClassColors(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::PointF& lastLegendBottomRightCornerInPixels, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
+    void DrawNormalColorContourLegendClassColors(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
     {
         const auto& classColors = colorContourLegendValues.classColors();
-        auto paddingInPixels = boost::math::iround(legendDrawingMeasures.paddingLengthInPixels);
-        int currentRectTopInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.Y - paddingInPixels);
-        int rectLeftInPixels = boost::math::iround(lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels);
-        auto widthInPixels = boost::math::iround(legendDrawingMeasures.colorRectSizeInPixels.X());
-        auto heigthInPixels = boost::math::iround(legendDrawingMeasures.colorRectSizeInPixels.Y());
+        auto paddingInPixels = legendDrawingMeasures.paddingLengthInPixels;
+        int currentRectTopInPixels = lastLegendBottomRightCornerInPixels.Y - paddingInPixels;
+        int rectLeftInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels;
+        auto widthInPixels = legendDrawingMeasures.colorRectSizeInPixels.X;
+        auto heigthInPixels = legendDrawingMeasures.colorRectSizeInPixels.Y;
         for(size_t index = 0; index < classColors.size(); index++)
         {
             currentRectTopInPixels -= heigthInPixels;
@@ -144,6 +146,11 @@ namespace
             }
         }
     }
+
+    Gdiplus::Point ConvertRealPointToIntPoint(const Gdiplus::PointF& realPoint)
+    {
+        return Gdiplus::Point(boost::math::iround(realPoint.X), boost::math::iround(realPoint.Y));
+    }
 }
 
 namespace CtrlView
@@ -151,8 +158,8 @@ namespace CtrlView
     void DrawNormalColorContourLegend(const NFmiColorContourLegendSettings & colorContourLegendSettings, const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut, NFmiToolBox *toolbox, const CtrlViewUtils::GraphicalInfo &graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics, float sizeFactor)
     {
         auto legendDrawingMeasures = CalculateLegendDrawingMeasures(colorContourLegendSettings, colorContourLegendValues, sizeFactor, graphicalInfo, gdiPlusGraphics);
-        Gdiplus::PointF lastLegendBottomRightCornerInPixels = CtrlView::Relative2GdiplusPoint(toolbox, lastLegendRelativeBottomRightCornerInOut);
-        lastLegendBottomRightCornerInPixels.X += static_cast<float>(legendDrawingMeasures.paddingLengthInPixels);
+        auto lastLegendBottomRightCornerInPixels = ConvertRealPointToIntPoint(CtrlView::Relative2GdiplusPoint(toolbox, lastLegendRelativeBottomRightCornerInOut));
+        lastLegendBottomRightCornerInPixels.X += legendDrawingMeasures.paddingLengthInPixels;
         // 2. Piirr‰ pohja laatikko
         DrawNormalColorContourLegendBackground(colorContourLegendSettings, legendDrawingMeasures, lastLegendBottomRightCornerInPixels, gdiPlusGraphics);
         // 3. Piirr‰ value tekstit loopissa
