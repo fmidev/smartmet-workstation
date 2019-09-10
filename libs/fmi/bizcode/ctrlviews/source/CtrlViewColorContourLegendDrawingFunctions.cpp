@@ -148,11 +148,8 @@ namespace
 
 namespace CtrlView
 {
-    void DrawNormalColorContourLegend(const NFmiColorContourLegendSettings & colorContourLegendSettings, const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut, NFmiToolBox *toolbox, const CtrlViewUtils::GraphicalInfo &graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
+    void DrawNormalColorContourLegend(const NFmiColorContourLegendSettings & colorContourLegendSettings, const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut, NFmiToolBox *toolbox, const CtrlViewUtils::GraphicalInfo &graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics, float sizeFactor)
     {
-        float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
-        if(sizeFactor < 1)
-            sizeFactor = std::pow(sizeFactor, 1.4f);
         auto legendDrawingMeasures = CalculateLegendDrawingMeasures(colorContourLegendSettings, colorContourLegendValues, sizeFactor, graphicalInfo, gdiPlusGraphics);
         Gdiplus::PointF lastLegendBottomRightCornerInPixels = CtrlView::Relative2GdiplusPoint(toolbox, lastLegendRelativeBottomRightCornerInOut);
         lastLegendBottomRightCornerInPixels.X += static_cast<float>(legendDrawingMeasures.paddingLengthInPixels);
