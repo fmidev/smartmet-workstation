@@ -209,7 +209,7 @@ void NFmiCrossSectionView::DrawParamView(NFmiToolBox * theGTB)
         // HUOM! Gdiplus piirtoja k‰ytet‰‰n poikkileikkaus piirrossa vain t‰ss‰ erikoistapauksessa. 
         // Jos se otetaan muuallakin k‰yttˆˆn, alustus ja siivous pit‰‰ siirt‰‰ NFmiCrossSectionView::Draw metodiin.
         InitializeGdiplus(itsToolBox, &GetFrame());
-        StationViews::DrawBetaProductParamBox(this, true);
+        StationViews::DrawBetaProductParamBox(this, true, nullptr);
         CleanGdiplus();
     }
     else
