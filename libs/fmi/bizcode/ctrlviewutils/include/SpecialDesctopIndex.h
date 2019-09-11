@@ -6,8 +6,10 @@ namespace CtrlViewUtils
 	// Tähän on laitettu muutama erikois indeksi.
 	enum SpecialDesctopIndex
 	{
-		kFmiMaxMapDescTopIndex = 2, // karttanäyttöjen indeksit 0-2
-		kFmiCrossSectionView = 98,
+        kFmiDescTopIndexNone = -1, // 'resetoitu' indeksi, joka ei osoita mihinkään
+        kFmiMaxMapDescTopIndex = 2, // karttanäyttöjen indeksit 0-2
+        kFmiSoundingView = 97,
+        kFmiCrossSectionView = 98,
 		kFmiTimeSerialView = 99
 	};
 }
