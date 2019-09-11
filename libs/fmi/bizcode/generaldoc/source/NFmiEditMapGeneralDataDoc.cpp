@@ -14596,6 +14596,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void Printing(bool newStatus){fPrinting = newStatus;}
 	bool fPrinting;
 
+    void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) { itsPrintedDescTopIndex = nowPrintedDescTopIndex; }
+    int GetPrintedDescTopIndex() { return itsPrintedDescTopIndex; }
+    void ResetPrintedDescTopIndex() { itsPrintedDescTopIndex = CtrlViewUtils::kFmiDescTopIndexNone; }
+
+    int itsPrintedDescTopIndex = CtrlViewUtils::kFmiDescTopIndexNone;
+
 	NFmiEditMapDataListHandler* itsListHandler; //laura lisäsi 30081999
 	NFmiDataLoadingInfo itsDataLoadingInfoNormal;
 	NFmiDataLoadingInfo itsDataLoadingInfoCaseStudy;
@@ -17063,4 +17069,19 @@ TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()
 NFmiColorContourLegendSettings& NFmiEditMapGeneralDataDoc::ColorContourLegendSettings()
 {
     return pimpl->ColorContourLegendSettings();
+}
+
+void NFmiEditMapGeneralDataDoc::SetPrintedDescTopIndex(int nowPrintedDescTopIndex) 
+{ 
+    pimpl->SetPrintedDescTopIndex(nowPrintedDescTopIndex);
+}
+
+int NFmiEditMapGeneralDataDoc::GetPrintedDescTopIndex() 
+{ 
+    return pimpl->GetPrintedDescTopIndex();
+}
+
+void NFmiEditMapGeneralDataDoc::ResetPrintedDescTopIndex() 
+{ 
+    pimpl->ResetPrintedDescTopIndex();
 }
