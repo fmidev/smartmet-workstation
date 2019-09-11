@@ -259,7 +259,7 @@ void CFmiCrossSectionView::DoPrint(void)
 
 }
 
-void CFmiCrossSectionView::OnLButtonUp(UINT nFlags, CPoint point) //Joonas lisää tänne samat kikat kuin SmarMetView:ssä on, jotta saat aktiivisen rivin cross sectioniin
+void CFmiCrossSectionView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	try
 	{
@@ -304,10 +304,8 @@ void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-			
-// 			itsSmartMetDocumentInterface->SetCrossSectionViewRowNumber(itsView->GetUsedParamRowIndex());
 			auto row = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
-			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex()); //Joonas välitä rivinumero jotain kautta generalDocille
+			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
 			return ;
 		}
 		Invalidate(FALSE);
