@@ -52,6 +52,7 @@ public:
 	// ********************************************************************************************
 	void DoDraw(void);
 	void DrawOverBitmapThings(NFmiToolBox *theToolBox);
+    int MapViewDescTopIndex(void);
     void SetToolMastersDC(CDC* theDC);
     virtual void OnInitialUpdate();
     virtual void OnPrepareDC(CDC* pDC, CPrintInfo* pInfo = NULL);
