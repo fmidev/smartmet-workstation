@@ -216,6 +216,10 @@ namespace AddParams
 				{
 					trimmedRowData.push_back(row);
 				}
+				if (row.dataType() == NFmiInfoData::kMacroParam)
+				{
+					trimmedRowData.push_back(row);
+				}
 				checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
 				if (!infoVector.empty())
 				{
@@ -229,7 +233,6 @@ namespace AddParams
 				}
 				index++;
 			}
-// 			removeNodesThatDontHaveLeafs(trimmedRowData);
 			dialogRowData_.swap(trimmedRowData);
 		}
 	}
