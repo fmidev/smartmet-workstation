@@ -150,6 +150,9 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void SetPrintedDescTopIndex(int nowPrintedDescTopIndex);
+    int GetPrintedDescTopIndex();
+    void ResetPrintedDescTopIndex();
     NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize);

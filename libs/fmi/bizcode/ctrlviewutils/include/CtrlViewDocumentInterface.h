@@ -386,6 +386,9 @@ public:
     virtual TimeSerialParameters& GetTimeSerialParameters() = 0;
     virtual void UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex) = 0;
     virtual NFmiColorContourLegendSettings& ColorContourLegendSettings() = 0;
+    virtual void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) = 0;
+    virtual int GetPrintedDescTopIndex() = 0;
+    virtual void ResetPrintedDescTopIndex() = 0;
 
 
 #ifndef DISABLE_CPPRESTSDK

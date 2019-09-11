@@ -279,6 +279,9 @@ public:
     TimeSerialParameters& GetTimeSerialParameters() override;
     void UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex) override;
     NFmiColorContourLegendSettings& ColorContourLegendSettings() override;
+    void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) override;
+    int GetPrintedDescTopIndex() override;
+    void ResetPrintedDescTopIndex() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;
