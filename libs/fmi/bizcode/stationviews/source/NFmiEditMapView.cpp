@@ -220,7 +220,8 @@ void NFmiEditMapView::LogWarningForTooLongMapViewDrawTime(NFmiMilliSecondTimer &
 // tällä piirretään tavara, joka tulee myös bitmapin päälle
 void NFmiEditMapView::DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4)
 {
-	if(itsCtrlViewDocumentInterface->Printing()) // printatessa ruutujen päivitys voi aiheuttaa ongelmia
+    // Ei jatketa, jos on käynnissä jonkun muun näytön printtaus,printatessa muiden ruutujen päivitys voi aiheuttaa ongelmia...
+	if(itsCtrlViewDocumentInterface->Printing() && !IsPrintedMapViewDesctop())
 		return ;
 	if(itsCtrlViewDocumentInterface->DataModificationInProgress()) // Uusien datan muokkaus rutiinien kanssa ruutujen päivitys voi aiheuttaa ongelmia 
 												// Multi-thread ja/tai progress/cancel (-> erillinen muokkaus threadi) systeemit menevät jotenkin sekaisin
