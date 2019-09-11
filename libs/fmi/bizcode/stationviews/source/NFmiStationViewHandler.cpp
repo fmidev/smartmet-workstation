@@ -3126,8 +3126,14 @@ bool NFmiStationViewHandler::ShowParamHandlerView(void)
 
 void NFmiStationViewHandler::DrawParamView(NFmiToolBox * theGTB)
 {
-    if(itsCtrlViewDocumentInterface->BetaProductGenerationRunning())
-        StationViews::DrawBetaProductParamBox(this, false);
+    bool doBetaProductParameterBox = itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
+    bool doBetaParamBoxDuePrinting = (itsCtrlViewDocumentInterface->Printing() && IsPrintedMapViewDesctop());
+    if(doBetaProductParameterBox || doBetaParamBoxDuePrinting)
+    {
+        const NFmiBetaProduct *optionalPrintingBetaProduct = doBetaParamBoxDuePrinting ? &StationViews::GetPrintingBetaProductForParamBoxDraw(itsMapViewDescTopIndex, *itsCtrlViewDocumentInterface) : nullptr;
+        
+        StationViews::DrawBetaProductParamBox(this, false, optionalPrintingBetaProduct);
+    }
     else
     {
         if(ShowParamHandlerView())
