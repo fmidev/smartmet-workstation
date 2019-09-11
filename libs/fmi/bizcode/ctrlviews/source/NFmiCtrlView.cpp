@@ -180,6 +180,13 @@ int NFmiCtrlView::GetUsedParamRowIndex()
     return GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
 }
 
+bool NFmiCtrlView::IsPrintedMapViewDesctop()
+{
+    if(itsCtrlViewDocumentInterface)
+        return itsCtrlViewDocumentInterface->GetPrintedDescTopIndex() == itsMapViewDescTopIndex;
+    return false;
+}
+
 // Näytetty rivi numero täällä (theRowIndex) ei ole aina sama kuin dokumentin
 // rivi, koska nykyään näyttörivejä voi selata myös pystysuunnassa.
 int NFmiCtrlView::CalcRealRowIndex(int theRowIndex, int theColumnIndex)
