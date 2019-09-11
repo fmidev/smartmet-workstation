@@ -678,7 +678,10 @@ void CSmartMetView::PutTextInStatusBar(const std::string &theText)
 
 void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
+    NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
+    if(genData->Printing())
+        return;
+    CDC *theDC = GetDC();
 	if(!theDC)
 		return;
 	SetToolsDCs(theDC);
@@ -690,7 +693,6 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	CDC dcMem;
 	dcMem.CreateCompatibleDC(&dc);
 	CBitmap* oldBitmap2 = dcMem.SelectObject(itsMapBitmap);
-	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
 	genData->MapViewDescTop(itsMapViewDescTopIndex)->MapBlitDC(&dcMem);
 
 	NFmiPoint viewPoint(itsToolBox->ToViewPoint(point.x, point.y));
