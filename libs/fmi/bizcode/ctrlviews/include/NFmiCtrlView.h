@@ -123,6 +123,7 @@ class NFmiCtrlView
    void ViewRowLayerNumber(int viewRowLayerNumber) { itsViewRowLayerNumber = viewRowLayerNumber; }
    int GetUsedParamRowIndex(int theRowIndex, int theColumnIndex);
    int GetUsedParamRowIndex();
+   bool IsPrintedMapViewDesctop();
 
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
    virtual NFmiPoint ViewPointToLatLon(const NFmiPoint & /* theViewPoint */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
