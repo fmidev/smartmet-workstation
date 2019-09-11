@@ -805,23 +805,27 @@ static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 
 static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<ParameterSelectionHeaderParInfo> &theHeaders, int rowCount, int theFixedRowCount, int theFixedColumnCount, bool &fFirstTime)
 {
-    int columnCount = static_cast<int>(theHeaders.size());
+	int columnCount = static_cast<int>(theHeaders.size());
+
+	if (fFirstTime) // These can be set directly only once!
+	{
+		theGridCtrl.SetFixedRowCount(theFixedRowCount);
+		theGridCtrl.SetFixedColumnCount(theFixedColumnCount);
+		theGridCtrl.SetListMode(TRUE);
+		theGridCtrl.SetHeaderSort(FALSE);
+	}
     theGridCtrl.SetRowCount(rowCount);
     theGridCtrl.SetColumnCount(columnCount);
     theGridCtrl.SetGridLines(GVL_BOTH);
-    theGridCtrl.SetFixedRowCount(theFixedRowCount);
-    theGridCtrl.SetFixedColumnCount(theFixedColumnCount);
-    theGridCtrl.SetListMode(TRUE);
-    theGridCtrl.SetHeaderSort(FALSE);
     theGridCtrl.SetFixedBkColor(gFixedBkColor);
 
     int currentRow = 0;
-    // 1. on otsikko rivi on parametrien nimi‰ varten
+    // 1st row is for parameter names
     for(int i = 0; i<columnCount; i++)
     {
         theGridCtrl.SetItemText(currentRow, i, CA2T(theHeaders[i].itsHeader.c_str()));
         theGridCtrl.SetItemState(currentRow, i, theGridCtrl.GetItemState(currentRow, i) | GVIS_READONLY);
-        if(fFirstTime) // s‰‰det‰‰n sarakkeiden leveydet vain 1. kerran
+        if(fFirstTime) // Adjust column width only once!
             theGridCtrl.SetColumnWidth(i, theHeaders[i].itsColumnWidth);
     }
     fFirstTime = false;
@@ -994,7 +998,7 @@ void CFmiParameterSelectionDlg::UpdateGridControlValuesInNormalMode(bool fFirstT
     UpdateRows(fixedRowCount, fixedColumnCount, false);
 
     const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
-    if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
+    if(treePatternArray.size()) // Test for 0 size, otherwise can crash
     {
         itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
         MakeTreeNodeCollapseSettings();
@@ -1003,11 +1007,8 @@ void CFmiParameterSelectionDlg::UpdateGridControlValuesInNormalMode(bool fFirstT
 
 void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
 {
-    int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
-    int maxRowCount = fixedRowCount + dataRowCount;
-
     const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
-    if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
+    if(treePatternArray.size()) // Test for 0 size, otherwise can crash
     {
         itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
         ExpandAllNodes();
@@ -1017,11 +1018,8 @@ void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchActive(void)
 
 void CFmiParameterSelectionDlg::UpdateGridControlValuesWhenSearchRemoved(void)
 {
-    int dataRowCount = static_cast<int>(itsParameterSelectionSystem->dialogRowData().size());
-    int maxRowCount = fixedRowCount + dataRowCount;
-
     const auto &treePatternArray = itsParameterSelectionSystem->dialogTreePatternArray();
-    if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
+    if(treePatternArray.size()) // Test for 0 size, otherwise can crash
     {
         itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
         CollapseAllButCategories();
@@ -1282,6 +1280,6 @@ void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 	itsParameterSelectionSystem->LastActivatedDesktopIndex(theDesktopIndex);
 	itsParameterSelectionSystem->LastActivatedRowIndex(row);
 	SetWindowText(CA2T(MakeTitleText().c_str()));
-	itsParameterSelectionSystem->dialogDataNeedsUpdate(true); //Joonas tsekkaa ett‰ p‰ivityst‰ ei tehd‰ turhaan!
+	itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
 	Update();
 }
