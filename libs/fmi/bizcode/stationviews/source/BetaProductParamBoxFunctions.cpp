@@ -16,9 +16,12 @@ namespace
     // koko on n. puolet koko näytön korkeudesta.
     double CalcViewSizeFactor(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex)
     {
+        const double optimalViewHeightFraction = 700. / 1440.;
+        auto& graphicalInfo = ctrlViewDocumentInterface->GetGraphicalInfo(mapViewDescTopIndex);
+        double comparisonHeightInPixels = graphicalInfo.itsScreenHeightInPixels * optimalViewHeightFraction;
         // pikaviritys, koska yllä oleva koodi ei suostunut toimimaan ollenkaan!!!!
         NFmiPoint subViewSizeInPixels(ctrlViewDocumentInterface->ActualMapBitmapSizeInPixels(mapViewDescTopIndex));
-        return 0.7 * (subViewSizeInPixels.Y() - 700.) / 700. + 1.;
+        return (0.7 * (subViewSizeInPixels.Y() - comparisonHeightInPixels) / comparisonHeightInPixels) + 1.;
     }
 
     FmiDirection GetBetaProductParamBoxLocation(const NFmiBetaProduct *currentBetaProduct)
@@ -245,6 +248,8 @@ namespace
         ::DrawAllParamRows(*gdiPlusGraphics, paramTextBoundingBox, theParamBoxTexts, theUsedFont, theStringFormat, theParamBoxTextColors);
         DrawBetaProductRuntimeInfo(ctrlViewDocumentInterface, gdiPlusGraphics, theParamBoxAbsoluteRect, theUsedRuntimeFont, theStringFormat, paramStartingPointX, currentBetaProduct);
     }
+
+    NFmiBetaProduct g_BetaProductForParamboxDraw;
 }
 
 namespace StationViews
@@ -273,7 +278,7 @@ namespace StationViews
             theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left() - (theObjectBoxAbsolute.Width() / 2.), theObjectBoxAbsolute.Top()));
     }
 
-	void DrawBetaProductParamBox(NFmiCtrlView *view, bool fCrossSectionInfoWanted)
+	void DrawBetaProductParamBox(NFmiCtrlView *view, bool fCrossSectionInfoWanted, const NFmiBetaProduct* optionalBetaProduct)
 	{
         if(view)
         {
@@ -282,7 +287,7 @@ namespace StationViews
             auto ctrlViewDocumentInterface = view->GetCtrlViewDocumentInterface();
             if(gdiPlusGraphics && ctrlViewDocumentInterface)
             {
-                const NFmiBetaProduct *currentBetaProduct = ctrlViewDocumentInterface->GetCurrentGeneratedBetaProduct();
+                const NFmiBetaProduct *currentBetaProduct = optionalBetaProduct ? optionalBetaProduct : ctrlViewDocumentInterface->GetCurrentGeneratedBetaProduct();
                 if(currentBetaProduct)
                 {
                     FmiDirection paramBoxLocation = ::GetBetaProductParamBoxLocation(currentBetaProduct);
@@ -307,4 +312,23 @@ namespace StationViews
             }
         }
 	}
+
+    const NFmiBetaProduct& GetPrintingBetaProductForParamBoxDraw(int viewDesctopIndex, CtrlViewDocumentInterface& ctrlViewDocumentInterface)
+    {
+        static bool betaProductInitialized = false;
+        if(!betaProductInitialized)
+        {
+            betaProductInitialized = true;
+            g_BetaProductForParamboxDraw.ShowModelOriginTime(true);
+            g_BetaProductForParamboxDraw.ParamBoxLocation(kTopLeft);
+        }
+
+        if(ctrlViewDocumentInterface.ShowParamWindowView(viewDesctopIndex))
+            g_BetaProductForParamboxDraw.ParamBoxLocation(kTopLeft);
+        else
+            g_BetaProductForParamboxDraw.ParamBoxLocation(kNoDirection);
+
+        return g_BetaProductForParamboxDraw;
+    }
+
 }
