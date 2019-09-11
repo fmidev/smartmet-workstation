@@ -6591,7 +6591,7 @@ void DrawParamSettingsChangedDirtyActions(unsigned int theDescTopIndex, int theR
     }
     MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
 
-	if (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView) // Joonas: kysy Markolta kelpaako tämä vai pitääkö päivitys tehdä jotenkin muuten?
+	if (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 	{
 		this->RefreshApplicationViewsAndDialogs("Parameter added to cross section view", true, true, theDescTopIndex);
 	}
