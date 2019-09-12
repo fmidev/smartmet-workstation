@@ -1630,6 +1630,12 @@ void NFmiToolBox::ConvertRect(const CRect & absoluteRect, NFmiRect & relativeRec
 	relativeRect.Right(itsXDirection * (static_cast<double>(absoluteRect.right) / mClientRect.Width()));
 }
 
+void NFmiToolBox::ConvertPoint(const CPoint& absolutePoint, NFmiPoint& relativePoint)
+{
+    relativePoint.X(itsXDirection * (static_cast<double>(absolutePoint.x) / mClientRect.Width()));
+    relativePoint.Y(itsYDirection * (static_cast<double>(absolutePoint.y) / mClientRect.Height()));
+}
+
 #endif
 
 

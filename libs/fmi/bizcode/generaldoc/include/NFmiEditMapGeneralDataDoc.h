@@ -116,6 +116,7 @@ class Q2ServerInfo;
 class NFmiMacroParamDataCache;
 class TimeSerialParameters;
 class AnimationProfiler;
+class NFmiColorContourLegendSettings;
 
 namespace Wms
 {
@@ -149,6 +150,10 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void SetPrintedDescTopIndex(int nowPrintedDescTopIndex);
+    int GetPrintedDescTopIndex();
+    void ResetPrintedDescTopIndex();
+    NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize);
     NFmiMacroParamDataCache& MacroParamDataCache();

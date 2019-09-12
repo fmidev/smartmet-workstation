@@ -14,6 +14,7 @@
 #include "FmiWin32Helpers.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "ApplicationInterface.h"
+#include "SpecialDesctopIndex.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -154,6 +155,11 @@ void CTimeEditValuesView::DrawOverBitmapThings(NFmiToolBox * /* theToolBox */ )
 {
 }
 
+int CTimeEditValuesView::MapViewDescTopIndex(void) 
+{
+    return CtrlViewUtils::kFmiTimeSerialView; 
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CTimeEditValuesView diagnostics
 
@@ -254,7 +260,9 @@ void CTimeEditValuesView::OnMButtonUp(UINT nFlags, CPoint point)
 
 void CTimeEditValuesView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	if(!itsSmartMetDocumentInterface->MouseCapturedInTimeWindow())
+    if(itsSmartMetDocumentInterface->Printing())
+        return;
+    if(!itsSmartMetDocumentInterface->MouseCapturedInTimeWindow())
 		return;
 	CDC *theDC = GetDC();
 	if(!theDC)
@@ -622,6 +630,9 @@ BOOL CTimeEditValuesView::PreTranslateMessage(MSG* pMsg)
 
 void CTimeEditValuesView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
+    if(!CFmiWin32TemplateHelpers::AllowTooltipDisplay(itsSmartMetDocumentInterface))
+        return;
+
 	*result = 0;
 	NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
 
