@@ -379,7 +379,7 @@ static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo& graphi
 {
     float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM / visibleRowCount), 1.1f);
     if(sizeFactor < 1)
-        sizeFactor = std::pow(sizeFactor, 1.4f);
+        sizeFactor = std::pow(sizeFactor, 2.f);
     return sizeFactor;
 }
 

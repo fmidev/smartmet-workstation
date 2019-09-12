@@ -1858,7 +1858,7 @@ static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo &graphi
 {
     float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
     if(sizeFactor < 1)
-        sizeFactor = std::pow(sizeFactor, 1.4f);
+        sizeFactor = std::pow(sizeFactor, 2.f);
     return sizeFactor;
 }
 
@@ -1875,12 +1875,15 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 
         for(const auto& drawParam : *drawParamList)
         {
-            auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
-            auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
-            NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
-            if(DrawContourLegendOnThisMapRow() && colorContourLegendValues.useLegend())
+            if(!drawParam->IsParamHidden())
             {
-                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
+                auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+                auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
+                NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
+                if(DrawContourLegendOnThisMapRow() && colorContourLegendValues.useLegend())
+                {
+                    CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
+                }
             }
         }
     }
