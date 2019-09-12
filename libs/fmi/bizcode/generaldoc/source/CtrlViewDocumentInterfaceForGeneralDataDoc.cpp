@@ -1334,6 +1334,26 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateOnlyGivenMapViewAtNextGen
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(theMapViewDescTopIndex));
 }
 
+NFmiColorContourLegendSettings& CtrlViewDocumentInterfaceForGeneralDataDoc::ColorContourLegendSettings()
+{
+    return itsDoc->ColorContourLegendSettings();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetPrintedDescTopIndex(int nowPrintedDescTopIndex)
+{
+    itsDoc->SetPrintedDescTopIndex(nowPrintedDescTopIndex);
+}
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::GetPrintedDescTopIndex()
+{
+    return itsDoc->GetPrintedDescTopIndex();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ResetPrintedDescTopIndex()
+{
+    itsDoc->ResetPrintedDescTopIndex();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

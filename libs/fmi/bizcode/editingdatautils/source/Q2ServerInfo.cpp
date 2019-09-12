@@ -19,7 +19,7 @@ void Q2ServerInfo::InitFromSettings()
     q2ServerDecimalCount_ = NFmiSettings::Require<int>("MetEditor::Q2ServerDecimalCount");
     q2ServerUsedZipMethod_ = NFmiSettings::Require<int>("MetEditor::Q2ServerUsedZipMethod");
     useQ2Server_ = NFmiSettings::Require<bool>("MetEditor::UseQ2Server");
-    q2ServerGridSize_ = SettingsFunctions::GetCommaSeaparatedPointFromSettings("MetEditor::Q2ServerGridSize");
+    q2ServerGridSize_ = SettingsFunctions::GetCommaSeparatedPointFromSettings("MetEditor::Q2ServerGridSize");
     q3ServerUrl_ = SettingsFunctions::GetUrlFromSettings("SmartMet::Q3ServerUrl");
 }
 
@@ -29,6 +29,6 @@ void Q2ServerInfo::StoreToSettings()
     NFmiSettings::Set("MetEditor::Q2ServerDecimalCount", NFmiStringTools::Convert<int>(q2ServerDecimalCount_), true);
     NFmiSettings::Set("MetEditor::Q2ServerUsedZipMethod", NFmiStringTools::Convert<int>(q2ServerUsedZipMethod_), true);
     NFmiSettings::Set("MetEditor::UseQ2Server", NFmiStringTools::Convert<bool>(useQ2Server_), true);
-    SettingsFunctions::SetCommaSeaparatedPointToSettings("MetEditor::Q2ServerGridSize", q2ServerGridSize_);
+    SettingsFunctions::SetCommaSeparatedPointToSettings("MetEditor::Q2ServerGridSize", q2ServerGridSize_);
     SettingsFunctions::SetUrlToSettings("SmartMet::Q3ServerUrl", q3ServerUrl_);
 }

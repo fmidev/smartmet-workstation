@@ -114,7 +114,7 @@ void NFmiViewParamsView::DrawData(void)
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &GetFrame());
         DrawMouseDraggingBackground();
 		bool crossSectionView = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
-		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 		if(paramList)
 		{
 			itsDrawingEnvironment->SetFontSize(itsFontSize);
@@ -267,7 +267,7 @@ bool NFmiViewParamsView::RightButtonUp(const NFmiPoint& thePlace, unsigned long 
 	if(IsIn(thePlace))
 	{
 		int index = CalcIndex(thePlace);
-		return itsCtrlViewDocumentInterface->CreateViewParamsPopup(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), index) == true;
+		return itsCtrlViewDocumentInterface->CreateViewParamsPopup(itsMapViewDescTopIndex, GetUsedParamRowIndex(), index) == true;
 	}
 	return false;
 }
@@ -279,7 +279,7 @@ NFmiRect NFmiViewParamsView::CalcSize(void)
 {
 	NFmiRect returnRect(GetFrame());
 	int lineCount = 1; // minimi
-    NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+    NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
     if(drawParamList && drawParamList->NumberOfItems())
         lineCount = drawParamList->NumberOfItems();
 
@@ -294,7 +294,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 {
 	if(IsIn(thePlace))
 	{
-		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 		if(paramList)
 		{
 			int index = CalcIndex(thePlace);
@@ -313,7 +313,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 								param.GetParam()->SetName(drawParam->InitFileName());
 
 							NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", param, kFmiModifyDrawParam, 
-								NFmiMetEditorTypes::kFmiParamsDefaultView, &drawParam->Level(),
+								NFmiMetEditorTypes::View::kFmiParamsDefaultView, &drawParam->Level(),
 								drawParam->DataType(), index, drawParam->ViewMacroDrawParam());
                             // T‰m‰ on ruma fixi, mutta tupla klikki tekee t‰m‰n piilotus asetuksen jostain syyst‰ ja minun pit‰‰ laittaa se t‰ss‰ pois
                             drawParam->HideParam(!drawParam->IsParamHidden());
@@ -321,7 +321,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
                             // on tehty ruudun p‰ivitys, joka nyt tuplaklikin kohdalla pit‰‰ kumota
 							itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); 
 							itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("ViewParamsView::LeftDoubleClick: Double click has been pressed over parameter to open Draw-param dialog, this update fixes (UGLY) the first left-click's param show/hide action", GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
-							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), 1); // 1=viewtype ei m‰‰r‰tty viel‰
+							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(), 1); // 1=viewtype ei m‰‰r‰tty viel‰
 						}
 					}
 					else
@@ -338,9 +338,9 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 bool NFmiViewParamsView::ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex)
 {
     NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", theDrawParam->Param(), kFmiActivateView,
-        NFmiMetEditorTypes::kFmiParamsDefaultView, &theDrawParam->Level(),
+        NFmiMetEditorTypes::View::kFmiParamsDefaultView, &theDrawParam->Level(),
         theDrawParam->DataType(), theParamIndex, theDrawParam->ViewMacroDrawParam());
-    return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber), 1); // 1=viewtype ei m‰‰r‰tty viel‰
+    return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(), 1); // 1=viewtype ei m‰‰r‰tty viel‰
 }
 
 // CalcIndex-metodi ei mielest‰ni oikein toimi kunnolla, siksi virittelin t‰h‰n
@@ -357,7 +357,7 @@ static int CalcBetterIndex(const NFmiPoint &thePlace, const NFmiRect &theFrame, 
 
 int NFmiViewParamsView::GetParamCount(void)
 {
-	NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+	NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 	if(paramList)
 	{
 		return static_cast<int>(paramList->NumberOfItems());
@@ -391,7 +391,7 @@ bool NFmiViewParamsView::DoAfterParamModeModifications(NFmiDrawParamList *thePar
 {
     theParamList->Dirty(true);
     itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // kun parametrin n‰kyvyytt‰ vaihdetaan, pit‰‰ tehd‰ mahdollisesti animaatio moodin datan tarkistus
-    auto rowIndex = GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    auto rowIndex = GetUsedParamRowIndex();
     itsCtrlViewDocumentInterface->MacroParamDataCache().update(itsMapViewDescTopIndex, static_cast<unsigned long>(rowIndex), *theParamList);
     itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, true);
     return true;
@@ -447,7 +447,7 @@ bool NFmiViewParamsView::IsMouseDraggingOn(void)
 
 NFmiDrawParamList* NFmiViewParamsView::GetDrawParamList()
 {
-    return itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+    return itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 }
 
 bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey)
@@ -502,7 +502,7 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 // t‰t‰ tietoa tarvitaan kun pit‰‰ puhdistaa muutoksen takia karttarivi cachesta.
 bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex)
 {
-    auto usedRowIndex = GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+    auto usedRowIndex = GetUsedParamRowIndex();
     if(CalcModelSelectorButtonRect(theRowIndex, 2).IsInside(thePlace)) // t‰ss‰ tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
 	{
 		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, -1, itsMapViewDescTopIndex, usedRowIndex);

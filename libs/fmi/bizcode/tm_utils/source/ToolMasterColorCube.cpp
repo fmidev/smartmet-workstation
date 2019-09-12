@@ -161,7 +161,7 @@ namespace ToolMasterColorCube
     NFmiColor ColorIndexToRgb(int theColorIndex)
     {
         if(theColorIndex < gUsedDefaultToolMasterColorTableIndexStart)
-            return NFmiColor(0, 0, 0); // en jaksa palauttaa foreground, background ja hollow värejä
+            return NFmiColor(0, 0, 0, 0); // en jaksa palauttaa foreground, background ja hollow värejä
 
         theColorIndex -= gUsedDefaultToolMasterColorTableIndexStart;
         float blue = (theColorIndex % gColorTableBlueSize) / (gColorTableBlueSize - 1.f);
@@ -170,7 +170,7 @@ namespace ToolMasterColorCube
         theColorIndex = theColorIndex / gColorTableGreenSize;
         float red = (theColorIndex % gColorTableRedSize) / (gColorTableRedSize - 1.f);
 
-        return NFmiColor(red, green, blue);
+        return NFmiColor(red, green, blue, 1);
     }
 
 }

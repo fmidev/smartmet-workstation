@@ -1379,6 +1379,18 @@ static void RaportVisualizationMetrics(float theViewHeight)
     }
 }
 
+static void SetIsolineMinLength(NFmiIsoLineData& theIsoLineData, double currentViewSizeInMM)
+{
+    static int counter = 0;
+    if(counter++ % 2 == 0)
+    {
+        XuIsolineMinLength(currentViewSizeInMM / 50.);
+    }
+    else
+    {
+        XuIsolineMinLength(0);
+    }
+}
 
 static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, int theCrossSectionIsoLineDrawIndex)
 {
@@ -1421,6 +1433,9 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
             ::RaportVisualizationMetrics(usedLength);
             if(theCrossSectionIsoLineDrawIndex >= 0)
                 usedLength = static_cast<float>(totalViewSize.X()); // jos ollaan poikkileikkaus piirrossa (eli if lause tosi), k‰ytet‰‰n label harvennuksen laskuissa ruudun leveytt‰ kertoimena
+
+            // ::SetIsolineMinLength(theIsoLineData, usedLength);
+
             if(theIsoLineData.fUseCustomIsoLineClasses)
                 ::DrawCustomIsoLines(theIsoLineData, usedLength, theCrossSectionIsoLineDrawIndex);
             else
