@@ -191,6 +191,16 @@ bool NFmiTimeValueEditManagerView::LeftButtonUp (const NFmiPoint & thePlace, uns
    return status;
 }
 
+bool NFmiTimeValueEditManagerView::LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	bool status = itsViewList->LeftDoubleClick(thePlace, theKey);
+	if (!status && IsIn(thePlace))
+	{
+		status = true;
+	}
+	return status;
+}
+
 bool NFmiTimeValueEditManagerView::MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey)
 {
 	if(itsUpperTimeView && itsUpperTimeView->MiddleButtonUp(thePlace, theKey))

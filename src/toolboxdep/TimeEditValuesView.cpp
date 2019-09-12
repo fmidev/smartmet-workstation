@@ -73,6 +73,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesView, CView)
 	ON_WM_MOUSEWHEEL()
 	ON_NOTIFY (UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 	ON_WM_MBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -228,6 +229,30 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 		throw ; // laitetaan poikkeus eteenpäin
 	}
 	ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön (OnLButtonDown:issa laitettiin SetCapture päälle)
+}
+
+void CTimeEditValuesView::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	CDC* theDC = GetDC();
+	if (!theDC)
+		return;
+	itsToolBox->SetDC(theDC);
+
+	bool needsUpdate = itsManagerView ? itsManagerView->LeftDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+	ReleaseDC(theDC);
+	if (needsUpdate)
+	{
+		if (itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick()) // Joonas jatka tästä, tsekkaa missä tämä laitetaan true:ksi
+		{
+			itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
+// 			auto row = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
+// 			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
+			return;
+		}
+		Invalidate(FALSE);
+		itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+	}
 }
 
 void CTimeEditValuesView::OnMButtonUp(UINT nFlags, CPoint point)
