@@ -90,7 +90,11 @@ namespace
         auto paddingInPixels = legendDrawingMeasures.paddingLengthInPixels;
         auto heigthInPixels = legendDrawingMeasures.colorRectSizeInPixels.Y;
         int currentTextPosXInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels;
-        int currentTextPosYInPixels = lastLegendBottomRightCornerInPixels.Y - paddingInPixels + boost::math::iround(heigthInPixels * 0.15);
+        int currentTextPosYInPixels = lastLegendBottomRightCornerInPixels.Y - paddingInPixels;
+        float startPositionAdjustFactor = 0.15f;
+        if(colorContourLegendValues.isSimpleContour())
+            startPositionAdjustFactor = 0.65f;
+        currentTextPosYInPixels += boost::math::iround(heigthInPixels * startPositionAdjustFactor);
         for(const auto& classLimitText : colorContourLegendValues.classLimitTexts())
         {
             currentTextPosYInPixels -= heigthInPixels;
@@ -101,7 +105,10 @@ namespace
 
         // Piirret‰‰n viel‰ otsikko
         currentTextPosXInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels;
-        currentTextPosYInPixels -= boost::math::iround(heigthInPixels * 1.7);
+        startPositionAdjustFactor = 1.7f;
+        if(colorContourLegendValues.isSimpleContour())
+            startPositionAdjustFactor = 1.2f;
+        currentTextPosYInPixels -= boost::math::iround(heigthInPixels * startPositionAdjustFactor);
         auto textLocationInPixels = Gdiplus::Point(currentTextPosXInPixels, currentTextPosYInPixels);
         auto relativeTextPosition = CtrlView::GdiplusPoint2Relative(toolbox, textLocationInPixels);
         gdiPlusGraphics.SetClip(legendDrawingMeasures.backgroundRectInPixels);
