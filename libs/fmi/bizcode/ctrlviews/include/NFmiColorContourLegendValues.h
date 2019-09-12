@@ -52,6 +52,8 @@ private:
     void FillClassLimitTextsVector();
     void FinalizeFillingValues();
     void MakeFinalSimpleColorContourValues(const std::vector<float>& originalClasses, const std::vector<NFmiColor>& originalColors, float contourStep, int actualLimitCount);
+    void RemoveTransparentColorsFromEdges();
+    bool hasEmptyValues();
 };
 
 
