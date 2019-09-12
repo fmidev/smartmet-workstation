@@ -5,6 +5,7 @@
 #include "ToolMasterColorCube.h"
 #include "NFmiValueString.h"
 #include "CtrlViewFunctions.h"
+#include "boost/range/adaptor/reversed.hpp"
 
 namespace
 {
@@ -261,7 +262,7 @@ void NFmiColorContourLegendValues::FillCustomColorContourValues(const boost::sha
 
 void NFmiColorContourLegendValues::FinalizeFillingValues()
 {
-    if(classLimitValues_.empty() || classColors_.empty())
+    if(hasEmptyValues())
         return;
 
     if(isSimpleContour_)
@@ -280,8 +281,71 @@ void NFmiColorContourLegendValues::FinalizeFillingValues()
         else if(classLimitValues_.size() < classColors_.size() - 1)
             classColors_.resize(classLimitValues_.size() + 1);
     }
+    RemoveTransparentColorsFromEdges();
+    if(hasEmptyValues())
+        return;
+
     FillClassLimitTextsVector();
     useLegend_ = true;
+}
+
+bool NFmiColorContourLegendValues::hasEmptyValues()
+{
+    return classLimitValues_.empty() || classColors_.empty();
+}
+
+static bool IsTransparent(const NFmiColor& color)
+{
+    return color.Alpha() == 0;
+}
+
+template<typename Container>
+static void RemoveItemsFromStart(Container& container, size_t removedCount)
+{
+    if(removedCount)
+    {
+        if(removedCount == container.size())
+            container.clear();
+        else
+            container = Container(container.begin() + removedCount, container.end());
+    }
+}
+
+void NFmiColorContourLegendValues::RemoveTransparentColorsFromEdges()
+{
+    // Ensin tutkitaan kuinka monta peräkkäistä läpinäkyvää väriä on alussa
+    size_t counter = 0;
+    for(const auto& color : classColors_)
+    {
+        if(::IsTransparent(color))
+            counter++;
+        else
+            break;
+    }
+    if(counter > 1)
+    {
+        // Jos läpinäkyviä on enemmän kuin 1, poistetaan värejä ja rajoja n-1 kpl
+        auto actuallyRemovedCount = counter - 1;
+        ::RemoveItemsFromStart(classColors_, actuallyRemovedCount);
+        ::RemoveItemsFromStart(classLimitValues_, actuallyRemovedCount);
+    }
+
+    // Sitten tutkitaan kuinka monta peräkkäistä läpinäkyvää väriä on lopussa
+    counter = 0;
+    for(const auto& color : boost::adaptors::reverse(classColors_))
+    {
+        if(::IsTransparent(color))
+            counter++;
+        else
+            break;
+    }
+    if(counter > 1)
+    {
+        // Jos läpinäkyviä on enemmän kuin 1, poistetaan värejä ja rajoja n-1 kpl
+        auto actuallyRemovedCount = counter - 1;
+        classColors_.resize(classColors_.size() - actuallyRemovedCount);
+        classLimitValues_.resize(classLimitValues_.size() - actuallyRemovedCount);
+    }
 }
 
 void NFmiColorContourLegendValues::FillClassLimitTextsVector()
