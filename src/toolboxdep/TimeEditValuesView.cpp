@@ -14,6 +14,8 @@
 #include "FmiWin32Helpers.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "ApplicationInterface.h"
+#include "SpecialDesctopIndex.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -204,6 +206,9 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 		bool needsUpdate = itsManagerView ? itsManagerView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 			,itsToolBox->ConvertCtrlKey(nFlags)) : false;
 		ReleaseDC(theDC);
+
+		itsManagerView->MapViewDescTopIndex(CtrlViewUtils::kFmiTimeSerialView);
+
 		if(needsUpdate)
 		{
 			Invalidate(FALSE);
@@ -243,11 +248,10 @@ void CTimeEditValuesView::OnLButtonDblClk(UINT nFlags, CPoint point)
 	ReleaseDC(theDC);
 	if (needsUpdate)
 	{
-		if (itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick()) // Joonas jatka tästä, tsekkaa missä tämä laitetaan true:ksi
+		if (itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
 			itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-// 			auto row = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
-// 			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
+			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsManagerView->MapViewDescTopIndex());
 			return;
 		}
 		Invalidate(FALSE);
