@@ -304,7 +304,6 @@ void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-			auto row = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
 			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
 			return ;
 		}
