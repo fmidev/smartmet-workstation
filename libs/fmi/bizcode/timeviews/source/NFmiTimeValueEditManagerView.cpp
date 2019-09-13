@@ -14,6 +14,7 @@
 #include "NFmiStepTimeScale.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 
+
 const double kFmiEmptySpaceBetweenSubViews = 100.;
 const long kFmiSymbolViewHeigth = 70;
 //--------------------------------------------------------
@@ -194,8 +195,11 @@ bool NFmiTimeValueEditManagerView::LeftButtonUp (const NFmiPoint & thePlace, uns
 bool NFmiTimeValueEditManagerView::LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey)
 {
 	bool status = itsViewList->LeftDoubleClick(thePlace, theKey);
+	if (!status && itsUpperTimeView && itsUpperTimeView->IsIn(thePlace))
+		status = itsUpperTimeView->RightButtonUp(thePlace, theKey); // Uses rightButtonUp function to check the correct area
 	if (!status && IsIn(thePlace))
 	{
+		itsCtrlViewDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(true);
 		status = true;
 	}
 	return status;
