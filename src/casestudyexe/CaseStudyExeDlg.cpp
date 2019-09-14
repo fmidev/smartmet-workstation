@@ -16,6 +16,31 @@
 #define new DEBUG_NEW
 #endif
 
+static int GetUsedCoreCount()
+{
+#ifdef max
+#undef max
+#endif
+
+    auto existingCoreCount = std::thread::hardware_concurrency();
+    auto usedCoreCount = boost::math::iround(existingCoreCount * 0.3333);
+    usedCoreCount = std::max(1, usedCoreCount);
+    return usedCoreCount;
+}
+
+static std::string GetNumberOfCpuThreadsFor7zipOption()
+{
+    auto usedCoreCount = ::GetUsedCoreCount();
+    if(usedCoreCount > 1)
+    {
+        std::string optionString = " -mmt";
+        optionString += std::to_string(usedCoreCount);
+        return optionString;
+    }
+
+    return "";
+}
+
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialog
@@ -220,12 +245,54 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
         itsCaseStudySystem.MakeCaseStudyData(itsMetaFileName, this, GetCopyDialogPositionWindow());
 
         // 2. Zippaa datapaketti
-        if(DoCaseDataCompression(pathStr))
-            return;
+        if(!itsZipExe.empty())
+        {
+            // 2. Zippaa datapaketti
+            //	esim: "D:\smartmet\MetEditor_5_8\utils\7z a -xr!*.zip -y -r -tzip -mmt3 -mx5 Case1.zip Case1*"
+            WORD showWindow = IsIconic() ? SW_MINIMIZE : SW_SHOW;
+            std::string commandStr;
+            commandStr += itsZipExe;
+            commandStr += " a";  // arkistoidaan dataa
+            commandStr += " -xr!*.zip"; // excluudataan *.zip tiedostot (jos tekee uuden tallennuksen samaan paikkaa samalla nimellä, menee edellisellä kerralla luotu zip-tiedosto muuten mukaan)
+            commandStr += " -y";  // ohita kaikki kysymykset yes-vastauksella
+            commandStr += " -r";  // tee rekursiivinen tiedosto tallennus
+            commandStr += " -tzip";  // tee tallennus zip-formaatissa
+            commandStr += ::GetNumberOfCpuThreadsFor7zipOption();  // multi-core pakkaus, n. 1/3 coreista otetaan käyttöön esim. -mmt3
+            commandStr += " -mx5";  // tallennuksen pakkaus taso
+                                    // 0 = ei pakkausta
+                                    // 1 = low
+                                    // 3 = fast
+                                    // 5 = normaali
+                                    // 7 = max
+                                    // 9 = ultra
+            commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+            commandStr += pathStr + itsCaseStudySystem.Name();
+            commandStr += ".zip";
+            commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+            commandStr += pathStr + itsCaseStudySystem.Name();
+            commandStr += "*\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+            if(CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, showWindow, true, BELOW_NORMAL_PRIORITY_CLASS))
+            {
+                DoSuccessReport();
+            }
+            else
+            {
+                std::string errorStr = "Could not execute the system call";
+                errorStr += ":\n";
+                errorStr += commandStr;
+
+                std::string titleStr(::GetDictionaryString("Compression operation failed"));
+                std::string messageStr = errorStr;
+                messageStr += "\n\n";
+                messageStr += "You can now close this dialog";
+                BringDialogUpFront(titleStr, messageStr);
+                return;
+            }
+        }
         else
         {
             DoSuccessReport();
-            return;
+            return ;
         }
     }
     catch(CaseStudyOperationCanceledException& /* e */)
@@ -266,31 +333,6 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
     }
 
     BringDialogUpFront(titleStr, messageStr);
-}
-
-static int GetUsedCoreCount()
-{
-#ifdef max
-#undef max
-#endif
-
-    auto existingCoreCount = std::thread::hardware_concurrency();
-    auto usedCoreCount = boost::math::iround(existingCoreCount * 0.3333);
-    usedCoreCount = std::max(1, usedCoreCount);
-    return usedCoreCount;
-}
-
-static std::string GetNumberOfCpuThreadsFor7zipOption()
-{
-    auto usedCoreCount = ::GetUsedCoreCount();
-    if(usedCoreCount > 1)
-    {
-        std::string optionString = " -mmt";
-        optionString += std::to_string(usedCoreCount);
-        return optionString;
-    }
-
-    return "";
 }
 
 bool CCaseStudyExeDlg::DoCaseDataCompression(const std::string& pathString)
