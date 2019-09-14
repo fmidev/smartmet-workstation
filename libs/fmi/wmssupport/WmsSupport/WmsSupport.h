@@ -198,11 +198,11 @@ namespace Wms
             state_->setOverlayIndex(state_->getCurrentOverlayIndex() - 1);
         }
 
-        void initialSetUp()
+        void initialSetUp(bool doVerboseLogging)
         {
             try
             {
-                setup_ = std::make_unique<Setup>(SetupParser::parse());
+                setup_ = std::make_unique<Setup>(SetupParser::parse(doVerboseLogging));
                 if(!setup_->isConfigured)
                 {
                     CatLog::logMessage(std::string("No meaningful Wms configurations were given, no WMS support available"), CatLog::Severity::Info, CatLog::Category::Configuration);
