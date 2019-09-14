@@ -22,6 +22,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     Newbase
     MfcUtils
+    Processes
     CaseStudyLib
     )
 
@@ -30,6 +31,7 @@ target_include_directories(
     PUBLIC ${BOOST_INCLUDE_DIR}
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${MfcUtils_INCLUDE_DIRS}
+    PUBLIC ${Processes_INCLUDE_DIRS}
     PUBLIC ${CaseStudyLib_INCLUDE_DIRS}
     )
 
