@@ -448,7 +448,6 @@
 #define IDD_DIALOG1                     8015
 #define IDD_DIALOG_PARAM_ADDING         8015
 #define IDC_CHECK_DELETE_TMP_DATA       8017
-#define IDC_CHECK_UPDATE_DATA           8019
 #define IDC_STATIC_GROUP                8019
 #define IDC_STATIC_SNOW_LIMIT           8020
 #define IDC_CHECK_UPDATE_DATA2          8020
@@ -607,6 +606,7 @@
 #define IDC_BUTTON_APPLY_CHANGES        8108
 #define IDC_STATIC_TEXT                 8108
 #define IDC_EDIT_SEARCH_STR             8109
+#define IDC_CHECK_ZIP_DATA              8110
 
 // Next default values for new objects
 // 
@@ -614,7 +614,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        8021
 #define _APS_NEXT_COMMAND_VALUE         48004
-#define _APS_NEXT_CONTROL_VALUE         8110
+#define _APS_NEXT_CONTROL_VALUE         8111
 #define _APS_NEXT_SYMED_VALUE           8002
 #endif
 #endif
