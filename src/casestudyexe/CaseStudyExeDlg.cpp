@@ -7,9 +7,10 @@
 #include "CaseStudyExeDlg.h"
 #include "CloneBitmap.h"
 #include "NFmiDictionaryFunction.h"
-#include "FmiSystemCommand.h"
 #include "NFmiStringTools.h"
 #include "NFmiFileSystem.h"
+#include "execute-command-in-separate-process.h"
+#include <thread>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -80,12 +81,11 @@ BEGIN_MESSAGE_MAP(CCaseStudyExeDlg, CDialog)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
-
 // CCaseStudyExeDlg message handlers
 
 BOOL CCaseStudyExeDlg::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+    CDialog::OnInitDialog();
     DoResizerHooking();
 
 	// Add "About..." menu item to system menu.
@@ -211,91 +211,144 @@ void CCaseStudyExeDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CCaseStudyExeDlg::DoCaseDataOperation(void)
 {
-	bool operationCanceled = false;
-	std::string errorStr;
-	std::string pathStr = NFmiFileSystem::PathFromPattern(itsMetaFileName);
-	try
-	{
-		// 1. Kopioidaan data-tiedostot haluttuun hakemisto rakenteeseen
-		itsCaseStudySystem.MakeCaseStudyData(itsMetaFileName, this, GetCopyDialogPositionWindow());
+    bool operationCanceled = false;
+    std::string errorStr;
+    std::string pathStr = NFmiFileSystem::PathFromPattern(itsMetaFileName);
+    try
+    {
+        // 1. Kopioidaan data-tiedostot haluttuun hakemisto rakenteeseen
+        itsCaseStudySystem.MakeCaseStudyData(itsMetaFileName, this, GetCopyDialogPositionWindow());
 
-		// 2. Zippaa datapaketti
-		//	esim: "D:\smartmet\MetEditor_5_8\utils\7z a -xr!*.zip -y -r -tzip -mx5 Case1.zip Case1*"
-		WORD showWindow = IsIconic() ? SW_MINIMIZE : SW_SHOW;
-		std::string commandStr;
-		commandStr += itsZipExe;
-		commandStr += " a";  // arkistoidaan dataa
-		commandStr += " -xr!*.zip"; // excluudataan *.zip tiedostot (jos tekee uuden tallennuksen samaan paikkaa samalla nimellä, menee edellisellä kerralla luotu zip-tiedosto muuten mukaan)
-		commandStr += " -y";  // ohita kaikki kysymykset yes-vastauksella
-		commandStr += " -r";  // tee rekursiivinen tiedosto tallennus
-		commandStr += " -tzip";  // tee tallennus zip-formaatissa
-		commandStr += " -mx5";  // tallennuksen pakkaus taso
-								// 0 = ei pakkausta
-								// 1 = low
-								// 3 = fast
-								// 5 = normaali
-								// 7 = max
-								// 9 = ultra
-		commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-		commandStr += pathStr + itsCaseStudySystem.Name();
-		commandStr += ".zip";
-		commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-		commandStr += pathStr + itsCaseStudySystem.Name();
-		commandStr += "*\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-		if(CFmiSystemCommand::DoCommand(commandStr, showWindow, true, BELOW_NORMAL_PRIORITY_CLASS))
-		{
-			std::string titleStr(::GetDictionaryString("CaseStudy-data complete"));
-			std::string messageStr(::GetDictionaryString("CaseStudy-data is now complete"));
-			messageStr += "\n\n";
-			messageStr += "You can now close this dialog";
-			BringDialogUpFront(titleStr, messageStr);
-			return;
-		}
-		else
-		{
-			errorStr = "Could not execute the system call";
-			errorStr += ":\n";
-			errorStr += commandStr;
-		}
-	}
-	catch(CaseStudyOperationCanceledException & /* e */ )
-	{
-		operationCanceled = true;
-	}
-	catch(std::exception &e)
-	{
-		errorStr = "Error in CCaseStudyExeDlg::DoCaseDataOperation:\n";
-		errorStr += e.what();
-	}
-	catch(...)
-	{
-		errorStr = "Unknown error in CCaseStudyExeDlg::DoCaseDataOperation";
-	}
-	std::string titleStr(::GetDictionaryString("Error while storing CaseStudy-data"));
+        // 2. Zippaa datapaketti
+        if(DoCaseDataCompression(pathStr))
+            return;
+        else
+        {
+            DoSuccessReport();
+            return;
+        }
+    }
+    catch(CaseStudyOperationCanceledException& /* e */)
+    {
+        operationCanceled = true;
+    }
+    catch(std::exception& e)
+    {
+        errorStr = "Error in CCaseStudyExeDlg::DoCaseDataOperation:\n";
+        errorStr += e.what();
+    }
+    catch(...)
+    {
+        errorStr = "Unknown error in CCaseStudyExeDlg::DoCaseDataOperation";
+    }
+    std::string titleStr(::GetDictionaryString("Error while storing CaseStudy-data"));
 
-	std::string messageStr;
-	if(operationCanceled)
-	{
-		titleStr = ::GetDictionaryString("CaseStudy-data operation was canceled");
-		messageStr = ::GetDictionaryString("The CaseStudy-data operation was canceled by the user.");
-		messageStr += "\n";
-		messageStr += ::GetDictionaryString("You have to delete generated files by yourself from the directory");
-		messageStr += ":\n";
-		messageStr += pathStr;
-		messageStr += "\n";
-		messageStr += ::GetDictionaryString("You can now close this dialog");
-	}
-	else
-	{
-		titleStr = ::GetDictionaryString("Error while storing CaseStudy-data");
-		messageStr = (::GetDictionaryString("Error while doing CaseStudy-data"));
-		messageStr += "\n";
-		messageStr += errorStr;
-		messageStr += "\n";
-		messageStr += ::GetDictionaryString("You can now close this dialog");
-	}
+    std::string messageStr;
+    if(operationCanceled)
+    {
+        titleStr = ::GetDictionaryString("CaseStudy-data operation was canceled");
+        messageStr = ::GetDictionaryString("The CaseStudy-data operation was canceled by the user.");
+        messageStr += "\n";
+        messageStr += ::GetDictionaryString("You have to delete generated files by yourself from the directory");
+        messageStr += ":\n";
+        messageStr += pathStr;
+        messageStr += "\n";
+        messageStr += ::GetDictionaryString("You can now close this dialog");
+    }
+    else
+    {
+        titleStr = ::GetDictionaryString("Error while storing CaseStudy-data");
+        messageStr = (::GetDictionaryString("Error while doing CaseStudy-data"));
+        messageStr += "\n";
+        messageStr += errorStr;
+        messageStr += "\n";
+        messageStr += ::GetDictionaryString("You can now close this dialog");
+    }
 
-	BringDialogUpFront(titleStr, messageStr);
+    BringDialogUpFront(titleStr, messageStr);
+}
+
+static int GetUsedCoreCount()
+{
+#ifdef max
+#undef max
+#endif
+
+    auto existingCoreCount = std::thread::hardware_concurrency();
+    auto usedCoreCount = boost::math::iround(existingCoreCount * 0.3333);
+    usedCoreCount = std::max(1, usedCoreCount);
+    return usedCoreCount;
+}
+
+static std::string GetNumberOfCpuThreadsFor7zipOption()
+{
+    auto usedCoreCount = ::GetUsedCoreCount();
+    if(usedCoreCount > 1)
+    {
+        std::string optionString = " -mmt";
+        optionString += std::to_string(usedCoreCount);
+        return optionString;
+    }
+
+    return "";
+}
+
+bool CCaseStudyExeDlg::DoCaseDataCompression(const std::string& pathString)
+{
+    if(!itsZipExe.empty())
+    {
+        // 2. Zippaa datapaketti
+        //	esim: "D:\smartmet\MetEditor_5_8\utils\7z a -xr!*.zip -y -r -tzip -mmt3 -mx5 Case1.zip Case1*"
+        WORD showWindow = IsIconic() ? SW_MINIMIZE : SW_SHOW;
+        std::string commandStr;
+        commandStr += itsZipExe;
+        commandStr += " a";  // arkistoidaan dataa
+        commandStr += " -xr!*.zip"; // excluudataan *.zip tiedostot (jos tekee uuden tallennuksen samaan paikkaa samalla nimellä, menee edellisellä kerralla luotu zip-tiedosto muuten mukaan)
+        commandStr += " -y";  // ohita kaikki kysymykset yes-vastauksella
+        commandStr += " -r";  // tee rekursiivinen tiedosto tallennus
+        commandStr += " -tzip";  // tee tallennus zip-formaatissa
+        commandStr += ::GetNumberOfCpuThreadsFor7zipOption();  // multi-core pakkaus, n. 1/3 coreista otetaan käyttöön esim. -mmt3
+        commandStr += " -mx5";  // tallennuksen pakkaus taso
+                                // 0 = ei pakkausta
+                                // 1 = low
+                                // 3 = fast
+                                // 5 = normaali
+                                // 7 = max
+                                // 9 = ultra
+        commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+        commandStr += pathString + itsCaseStudySystem.Name();
+        commandStr += ".zip";
+        commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+        commandStr += pathString + itsCaseStudySystem.Name();
+        commandStr += "*\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+        if(CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, showWindow, true, BELOW_NORMAL_PRIORITY_CLASS))
+        {
+            DoSuccessReport();
+        }
+        else
+        {
+            std::string errorStr = "Could not execute the system call";
+            errorStr += ":\n";
+            errorStr += commandStr;
+
+            std::string titleStr(::GetDictionaryString("Compression operation failed"));
+            std::string messageStr = errorStr;
+            messageStr += "\n\n";
+            messageStr += "You can now close this dialog";
+            BringDialogUpFront(titleStr, messageStr);
+        }
+        return true; // BringDialogUpFront -method called
+    }
+    return false;
+}
+
+void CCaseStudyExeDlg::DoSuccessReport()
+{
+    std::string titleStr(::GetDictionaryString("CaseStudy-data complete"));
+    std::string messageStr(::GetDictionaryString("CaseStudy-data is now complete"));
+    messageStr += "\n\n";
+    messageStr += "You can now close this dialog";
+    BringDialogUpFront(titleStr, messageStr);
 }
 
 void CCaseStudyExeDlg::BringDialogUpFront(const std::string &theTitleStr, const std::string &theMessageStr)
@@ -304,5 +357,6 @@ void CCaseStudyExeDlg::BringDialogUpFront(const std::string &theTitleStr, const 
 	CWnd *win = GetDlgItem(IDC_STATIC_MAIN_MESSAGE_STR);
 	if(win)
         win->SetWindowText(CA2T(theMessageStr.c_str()));
-	ShowWindow(SW_RESTORE);
+
+    ShowWindow(SW_SHOWNORMAL);
 }

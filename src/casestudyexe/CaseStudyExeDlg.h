@@ -36,6 +36,8 @@ private:
 	CWnd* GetCopyDialogPositionWindow(void);
 	void BringDialogUpFront(const std::string &theTitleStr, const std::string &theMessageStr);
     void DoResizerHooking(void);
+    bool DoCaseDataCompression(const std::string &pathString);
+    void DoSuccessReport();
 
 	std::string itsSimpleCommandLineStr;
 	std::string itsMetaFileName;
