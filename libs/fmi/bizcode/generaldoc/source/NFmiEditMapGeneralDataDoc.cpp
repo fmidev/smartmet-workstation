@@ -840,7 +840,7 @@ void InitWmsSupport()
 #ifndef DISABLE_CPPRESTSDK
     try
     {
-        wmsSupport.initialSetUp();
+        wmsSupport.initialSetUp(BasicSmartMetConfigurations().Verbose());
         if(!wmsSupport.isConfigured())
         {
             UseWmsMaps(false);
