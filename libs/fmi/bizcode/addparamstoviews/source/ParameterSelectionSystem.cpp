@@ -9,6 +9,7 @@
 #include "NFmiProducerSystem.h"
 #include "..\..\..\catlog\catlog\catlogutils.h"
 #include "SpecialDesctopIndex.h"
+#include "NFmiHelpDataInfo.h"
     
 class NFmiInfoOrganizer;
 
@@ -57,17 +58,30 @@ namespace AddParams
         customCategories_ = customCategories;
     } 
 
-    void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
-    {
-        addHelpData(producer, menuString, dataType, std::string());
-    }
-
     void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName) //Add at the end of help data list
     {
         std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
         SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, dataType, 0, "", true, nullptr, 2, displayName);
         otherHelpData_.push_back(item);
     }
+
+	void ParameterSelectionSystem::addStaticHelpData()
+	{
+		const checkedVector<NFmiHelpDataInfo>& staticHelpDataInfos = helpDataInfoSystem_->StaticHelpDataInfos(); // Joonas jatka tästä Geo tietojen lisäilyä
+// 		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer_->FindInfo(NFmiInfoData::kStationary);
+		if (!staticHelpDataInfos.empty())
+		{
+			for (auto& info : staticHelpDataInfos)
+			{
+				if (info.DataType() == NFmiInfoData::kStationary)
+				{
+					auto test = info;
+// 					SingleRowItem item = SingleRowItem(kProducerType, "Geo", 987654, true, 
+				}
+			}
+		}
+// 		addHelpData
+	}
 
     void ParameterSelectionSystem::updateData()
     {
@@ -78,7 +92,7 @@ namespace AddParams
         updateMacroParamData("Macro Parameters", NFmiInfoData::kMacroParam);
         updateCustomCategories();
         updateData("Help data", *modelProducerSystem_, NFmiInfoData::kModelHelpData);
-        updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
+		updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
     }
 
     void ParameterSelectionSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
