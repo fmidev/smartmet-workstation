@@ -145,7 +145,8 @@ namespace
 
             if(::IsTransparentColor(color))
             {
-                DrawNormalColorContourLegendClassColorRect(colorContourLegendSettings.invsibleColorRectSettings(), colorRectInPixels, color, true, graphicalInfo, gdiPlusGraphics);
+                if(colorContourLegendSettings.drawTransparentRects())
+                    DrawNormalColorContourLegendClassColorRect(colorContourLegendSettings.invsibleColorRectSettings(), colorRectInPixels, color, true, graphicalInfo, gdiPlusGraphics);
             }
             else
             {
