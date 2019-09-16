@@ -87,7 +87,9 @@ std::string SmartMetViewIdGetNameList(SmartMetViewId viewsFlag)
 
 SmartMetViewId GetWantedMapViewIdFlag(int theMapViewDescTopIndex)
 {
-    if(theMapViewDescTopIndex >= 0 && theMapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    if((theMapViewDescTopIndex >= 0 && theMapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex) || 
+		theMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView || 
+		theMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView)
     {
         switch(theMapViewDescTopIndex)
         {
@@ -97,11 +99,14 @@ SmartMetViewId GetWantedMapViewIdFlag(int theMapViewDescTopIndex)
             return SmartMetViewId::MapView2;
         case 2:
             return SmartMetViewId::MapView3;
+		case 98:
+			return SmartMetViewId::CrossSectionView;
+		case 99:
+			return SmartMetViewId::TimeSerialView;
         default:
             break;
         }
     }
-
     return SmartMetViewId::NoViews;
 }
 
