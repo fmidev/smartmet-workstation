@@ -43,6 +43,7 @@
 #include "NFmiColorContourLegendSettings.h"
 #include "NFmiColorContourLegendValues.h"
 #include "catlog/catlog.h"
+#include "NFmiApplicationWinRegistry.h"
 
 #include <stdexcept>
 #include "boost/math/special_functions/round.hpp"
@@ -1086,6 +1087,7 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	isoLineData.itsInfo = this->itsInfo;
 	isoLineData.itsParam = itsDrawParam->Param();
 	isoLineData.itsTime = CurrentTime();
+    isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
 
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 	int oldVerticalPointCount = crossSectionSystem->VerticalPointCount();
