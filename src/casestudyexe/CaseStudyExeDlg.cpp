@@ -254,11 +254,13 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
             commandStr += itsZipExe;
             commandStr += " a";  // arkistoidaan dataa
             commandStr += " -xr!*.zip"; // excluudataan *.zip tiedostot (jos tekee uuden tallennuksen samaan paikkaa samalla nimellä, menee edellisellä kerralla luotu zip-tiedosto muuten mukaan)
+            commandStr += " -xr!*.7z"; // excluudataan *.7z tiedostot (jos tekee uuden tallennuksen samaan paikkaa samalla nimellä, menee edellisellä kerralla luotu zip-tiedosto muuten mukaan)
             commandStr += " -y";  // ohita kaikki kysymykset yes-vastauksella
             commandStr += " -r";  // tee rekursiivinen tiedosto tallennus
-            commandStr += " -tzip";  // tee tallennus zip-formaatissa
+            // Oletus tallennus formaatti on LZMA2 joka on nopea, joten käytetään sitä ja unohdetaan hidas zip jupina
+//            commandStr += " -tzip";  // tee tallennus zip-formaatissa
             commandStr += ::GetNumberOfCpuThreadsFor7zipOption();  // multi-core pakkaus, n. 1/3 coreista otetaan käyttöön esim. -mmt3
-            commandStr += " -mx5";  // tallennuksen pakkaus taso
+            commandStr += " -mx3";  // tallennuksen pakkaus taso
                                     // 0 = ei pakkausta
                                     // 1 = low
                                     // 3 = fast
@@ -267,13 +269,14 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
                                     // 9 = ultra
             commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
             commandStr += pathStr + itsCaseStudySystem.Name();
-            commandStr += ".zip";
+            commandStr += ".7z";
             commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
             commandStr += pathStr + itsCaseStudySystem.Name();
             commandStr += "*\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
             if(CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, showWindow, true, BELOW_NORMAL_PRIORITY_CLASS))
             {
                 DoSuccessReport();
+                return;
             }
             else
             {
@@ -333,55 +336,6 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
     }
 
     BringDialogUpFront(titleStr, messageStr);
-}
-
-bool CCaseStudyExeDlg::DoCaseDataCompression(const std::string& pathString)
-{
-    if(!itsZipExe.empty())
-    {
-        // 2. Zippaa datapaketti
-        //	esim: "D:\smartmet\MetEditor_5_8\utils\7z a -xr!*.zip -y -r -tzip -mmt3 -mx5 Case1.zip Case1*"
-        WORD showWindow = IsIconic() ? SW_MINIMIZE : SW_SHOW;
-        std::string commandStr;
-        commandStr += itsZipExe;
-        commandStr += " a";  // arkistoidaan dataa
-        commandStr += " -xr!*.zip"; // excluudataan *.zip tiedostot (jos tekee uuden tallennuksen samaan paikkaa samalla nimellä, menee edellisellä kerralla luotu zip-tiedosto muuten mukaan)
-        commandStr += " -y";  // ohita kaikki kysymykset yes-vastauksella
-        commandStr += " -r";  // tee rekursiivinen tiedosto tallennus
-        commandStr += " -tzip";  // tee tallennus zip-formaatissa
-        commandStr += ::GetNumberOfCpuThreadsFor7zipOption();  // multi-core pakkaus, n. 1/3 coreista otetaan käyttöön esim. -mmt3
-        commandStr += " -mx5";  // tallennuksen pakkaus taso
-                                // 0 = ei pakkausta
-                                // 1 = low
-                                // 3 = fast
-                                // 5 = normaali
-                                // 7 = max
-                                // 9 = ultra
-        commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-        commandStr += pathString + itsCaseStudySystem.Name();
-        commandStr += ".zip";
-        commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-        commandStr += pathString + itsCaseStudySystem.Name();
-        commandStr += "*\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-        if(CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, showWindow, true, BELOW_NORMAL_PRIORITY_CLASS))
-        {
-            DoSuccessReport();
-        }
-        else
-        {
-            std::string errorStr = "Could not execute the system call";
-            errorStr += ":\n";
-            errorStr += commandStr;
-
-            std::string titleStr(::GetDictionaryString("Compression operation failed"));
-            std::string messageStr = errorStr;
-            messageStr += "\n\n";
-            messageStr += "You can now close this dialog";
-            BringDialogUpFront(titleStr, messageStr);
-        }
-        return true; // BringDialogUpFront -method called
-    }
-    return false;
 }
 
 void CCaseStudyExeDlg::DoSuccessReport()
