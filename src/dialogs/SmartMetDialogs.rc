@@ -478,18 +478,18 @@ BEGIN
     PUSHBUTTON      "Peruuta",IDCANCEL,285,14,50,14
     PUSHBUTTON      "Järkevyys tarkastelut",ID_BUTTON_VALIDATION_DIALOG,261,28,74,15
     GROUPBOX        "General Options 1",IDC_STATIC_GENERAL_OPTIONS1,7,8,153,131
-    CONTROL         "Näytä asema pisteet",IDC_CHECK_STATION_PLOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,25,144,12
+    CONTROL         "Näytä asema pisteet",IDC_CHECK_STATION_PLOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,24,144,12
     CONTROL         "Näytä vihje kartalla (keltainen laatikko)",IDC_CHECK_SHOW_TOOLTIP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,35,144,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,34,144,12
     CONTROL         "Näytössä olevan datan autom. harvennus",IDC_CHECK_USE_SPACINGOUT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,45,144,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,44,144,12
     CONTROL         "Säilytä kattanäytöllä aina oikeat suhteet",IDC_CHECK_USE_AUTO_ZOOM,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,55,144,12
-    CONTROL         "Näyttömoodi päällä",IDC_CHECK_USE_VIEW_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,65,144,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,54,144,12
+    CONTROL         "Näyttömoodi päällä",IDC_CHECK_USE_VIEW_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,64,144,12
     CONTROL         "Auto load data at startup",IDC_CHECK_DO_AUTO_LOAD_DATA_AT_STARTUP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,75,144,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,74,144,12
     CONTROL         "Auto load new cache data",IDC_CHECK_DO_AUTO_LOAD_NEW_CACHE_DATA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,85,144,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,84,144,12
     GROUPBOX        "General Options 2",IDC_STATIC_GENERAL_OPTIONS2,164,41,171,98
     LTEXT           "Näytön välimuistin koko (MB)",IDC_STATIC_OPTIONS_CACHE_SIZE_STR,166,50,131,8,0,WS_EX_RIGHT
     EDITTEXT        IDC_EDIT_VIEW_CACHE_SIZE,301,48,29,12,ES_AUTOHSCROLL
@@ -549,14 +549,16 @@ BEGIN
     LTEXT           "URL",IDC_STATIC_URL2_STR,10,295,16,10
     EDITTEXT        IDC_EDIT_FMI_SYS_INFO_DB_URL,29,292,132,14,ES_AUTOHSCROLL
     CONTROL         "Show last send time on main map view",IDC_CHECK_SHOW_LAST_SEND_TIME_ON_MAP_VIEW,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,95,144,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,94,144,12
     LTEXT           "Static",IDC_STATIC_OPTIONS_FIXEX_DRAW_PARAM_PATH,174,183,157,9
-    CONTROL         "Use WMS map mode",IDC_CHECK_WMS_MAP_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,105,144,12
+    CONTROL         "Use WMS map mode",IDC_CHECK_WMS_MAP_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,104,144,12
     GROUPBOX        "Logging",IDC_STATIC_OPTIONS_LOG_GROUP,164,5,112,23
     COMBOBOX        IDC_COMBO_OPTIONS_LOG_LEVEL,215,12,54,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Log level",IDC_STATIC_OPTIONS_LOG_LEVEL_TEXT,175,15,35,8
     CONTROL         "Dropped data editable (slow to drop)",IDC_CHECK_DROPPED_DATA_EDITABLE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,116,144,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,114,144,12
+    EDITTEXT        IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR,12,125,26,12,ES_AUTOHSCROLL
+    LTEXT           "Isoline min length (0-100)",IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT,40,126,116,8
 END
 
 IDD_DIALOG_WIND_TABLE DIALOGEX 0, 0, 340, 214

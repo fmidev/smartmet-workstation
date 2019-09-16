@@ -59,6 +59,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , itsFixedDrawParamPathSettingU_(_T(""))
     , fWmsMapMode(FALSE)
     , fDroppedDataEditable(FALSE)
+    , itsIsolineMinimumLengthFactor(1)
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -128,6 +129,8 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_WMS_MAP_MODE, fWmsMapMode);
     DDX_Control(pDX, IDC_COMBO_OPTIONS_LOG_LEVEL, itsLogLevelComboBox);
     DDX_Check(pDX, IDC_CHECK_DROPPED_DATA_EDITABLE, fDroppedDataEditable);
+    DDX_Text(pDX, IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR, itsIsolineMinimumLengthFactor);
+	DDV_MinMaxDouble(pDX, itsIsolineMinimumLengthFactor, 0, 100);
 }
 
 
@@ -205,6 +208,7 @@ BOOL COptionsDlg::OnInitDialog()
     fWmsMapMode = applicationWinRegistry.UseWmsMaps();
     InitLogLevelComboBox();
     fDroppedDataEditable = applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable();
+    itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
 
 	DisableControls();
 
@@ -342,6 +346,7 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.UseWmsMaps(fWmsMapMode == TRUE);
     SetLogLevelOnOk();
     applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable(fDroppedDataEditable == TRUE);
+    applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
 
 	CDialog::OnOK();
 }
