@@ -37,6 +37,7 @@ void NFmiColorContourLegendSettings::initFromSettings(const std::string &initial
         logMessage += ". Will use default setting instead";
         CatLog::logMessage(logMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
     }
+    drawTransparentRects_ = NFmiSettings::Optional<bool>(initialNameSpace + "::drawTransparentRects", drawTransparentRects_);
 }
 
 void NFmiColorContourLegendSettings::initializeInvisibleColorRectSettings()
