@@ -43,6 +43,7 @@ class NFmiColorContourLegendSettings
     // Legenda laatikoiden piirto aloitetaan (1. piirretyn color-contour layerin legenda kenttä) bottom-left 
     // paikka 0,0 - 1,1 laatikossa (Huom! vasen yläkulma on 0,0 ja oikea alakulma on 1,1)
     NFmiPoint relativeStartPosition_ = NFmiPoint(0, 0.85);
+    bool drawTransparentRects_ = false;
 
     bool initialized_ = false;
     std::string initialNameSpace_;
@@ -65,6 +66,8 @@ public:
     void spaceBetweenLegendsInMM(double newValue) { spaceBetweenLegendsInMM_ = newValue; }
     const NFmiPoint& relativeStartPosition() const { return  relativeStartPosition_; }
     void relativeStartPosition(const NFmiPoint &newValue) { relativeStartPosition_ = newValue; }
+    bool drawTransparentRects() const { return drawTransparentRects_; }
+    void drawTransparentRects(bool newValue) { drawTransparentRects_ = newValue; }
 
 private:
     void initializeInvisibleColorRectSettings();
