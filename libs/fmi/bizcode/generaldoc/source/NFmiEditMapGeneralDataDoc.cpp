@@ -6590,11 +6590,6 @@ void DrawParamSettingsChangedDirtyActions(unsigned int theDescTopIndex, int theR
             MacroParamDataCache().clearMacroParamCache(theDescTopIndex, theRealMapRow, theDrawParam->InitFileName());
     }
     MapViewDirty(theDescTopIndex, false, false, true, false, false, true);
-
-	if (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
-	{
-		this->RefreshApplicationViewsAndDialogs("Parameter added to cross section view", true, true, theDescTopIndex);
-	}
 }
 
 // Liataan vain 1. näkyvät karttarivit niistä karttanäytöistä, missä näytä-maski on päällä
