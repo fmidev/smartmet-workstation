@@ -221,7 +221,6 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 
 			if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode())
                 itsSmartMetDocumentInterface->DrawOverBitmapThings(0);
-
 		}
 		else
 		{
