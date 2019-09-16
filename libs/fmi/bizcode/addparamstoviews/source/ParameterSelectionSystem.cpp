@@ -207,9 +207,10 @@ namespace AddParams
 	void ParameterSelectionSystem::trimDialogRowDataDependingOnActiveView()
 	{
 		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		int index = 0;
+
 		if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		{
-			int index = 0;
 			for (auto& row : dialogRowData_)
 			{
 				if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
@@ -235,6 +236,33 @@ namespace AddParams
 			}
 			dialogRowData_.swap(trimmedRowData);
 		}
+		else if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
+		{
+			for (auto& row : dialogRowData_)
+			{
+				if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+				{
+					trimmedRowData.push_back(row);
+				}
+				else if (row.itemId() == 2001 || row.parentItemId() == 2001)
+				{
+					trimmedRowData.push_back(row);
+				}
+				checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+				if (!infoVector.empty())
+				{
+					auto info = infoVector.at(0);
+					if (info->IsGrid())
+					{
+						trimmedRowData.push_back(row);
+						auto subRows = addAllChildNodes(row, index);
+						trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+					}
+				}
+				index++;
+			}
+			dialogRowData_.swap(trimmedRowData);
+		}
 	}
 
 	std::vector<SingleRowItem> ParameterSelectionSystem::addSubmenu(SingleRowItem& row, int index)
@@ -250,6 +278,23 @@ namespace AddParams
 					dialogRowData_.at(index + 1).crossSectionLeafNode(true);
 					rowData.push_back(dialogRowData_.at(index + 1));
 				}
+				index++;
+				if (index + 1 >= dialogRowData_.size())
+					break;
+			}
+		}
+		return rowData;
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::addAllChildNodes(SingleRowItem& row, int index)
+	{
+		//Add all child items
+		std::vector<AddParams::SingleRowItem> rowData;
+		if (index + 1 < dialogRowData_.size())
+		{
+			while (dialogRowData_.at(index + 1).treeDepth() > row.treeDepth())
+			{
+				rowData.push_back(dialogRowData_.at(index + 1));
 				index++;
 				if (index + 1 >= dialogRowData_.size())
 					break;
