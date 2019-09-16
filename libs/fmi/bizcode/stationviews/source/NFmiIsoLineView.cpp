@@ -66,6 +66,7 @@
 #include "SpecialDesctopIndex.h"
 
 #include "datautilities\DataUtilitiesAdapter.h"
+#include "NFmiApplicationWinRegistry.h"
 
 #include <limits>
 
@@ -2391,6 +2392,7 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
     int y1 = 0;
     int x2 = 0;
     int y2 = 0;
+    isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
     if(itsInfo->IsGrid())
     {
         // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
