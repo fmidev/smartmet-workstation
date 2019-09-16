@@ -1199,11 +1199,12 @@ std::string CFmiParameterSelectionDlg::MakeActiveViewRowText()
     }
     else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
     {
-        str += "Time serial view active";
+        str += "Time Series view active";
+		return str;
     }
     else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
     {
-        str += "Cross section view active";
+        str += "Cross Section view active";
     }
 
     str += ", active row ";

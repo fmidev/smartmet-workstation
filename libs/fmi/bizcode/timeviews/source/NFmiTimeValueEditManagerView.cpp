@@ -13,6 +13,7 @@
 #include "NFmiRectangle.h"
 #include "NFmiStepTimeScale.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "SpecialDesctopIndex.h"
 
 
 const double kFmiEmptySpaceBetweenSubViews = 100.;
@@ -182,7 +183,7 @@ bool NFmiTimeValueEditManagerView::LeftButtonUp (const NFmiPoint & thePlace, uns
 		status = itsUpperTimeView->LeftButtonUp(thePlace, theKey);
 	if(!status)
 	{
-		// TEE IKKUNAN OMAT JUTUT TÄSSÄ
+		itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(CtrlViewUtils::kFmiTimeSerialView, 1);
 	}
 	else
         itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
