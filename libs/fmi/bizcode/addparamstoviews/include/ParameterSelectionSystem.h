@@ -103,6 +103,7 @@ namespace AddParams
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
 		void trimDialogRowDataDependingOnActiveView();
 		std::vector<SingleRowItem> crossSectionData();
+		std::vector<SingleRowItem> timeSeriesData();
 		std::vector<SingleRowItem> addSubmenu(SingleRowItem& row, int index);
 		std::vector<SingleRowItem> addAllChildNodes(SingleRowItem& row, int index);
 	};
