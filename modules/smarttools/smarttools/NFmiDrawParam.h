@@ -286,8 +286,8 @@ class NFmiDrawParam
   void UsedSymbolListIndex(int newValue) { itsUsedSymbolListIndex = newValue; }
   int SymbolIndexingMapListIndex(void) const { return itsSymbolIndexingMapListIndex; }
   void SymbolIndexingMapListIndex(int newValue) { itsSymbolIndexingMapListIndex = newValue; }
-  int GridDataPresentationStyle(void) const { return itsGridDataPresentationStyle; }
-  void GridDataPresentationStyle(int newValue) { itsGridDataPresentationStyle = newValue; }
+  NFmiMetEditorTypes::View GridDataPresentationStyle(void) const { return itsGridDataPresentationStyle; }
+  void GridDataPresentationStyle(NFmiMetEditorTypes::View newValue) { itsGridDataPresentationStyle = newValue; }
   bool UseIsoLineFeathering(void) const { return fUseIsoLineFeathering; }
   void UseIsoLineFeathering(bool newValue)
   {
@@ -525,31 +525,7 @@ class NFmiDrawParam
   }
   bool DrawOnlyOverMask(void) const { return fDrawOnlyOverMask; }
   void DrawOnlyOverMask(bool newValue) { fDrawOnlyOverMask = newValue; }
-  bool UseCustomColorContouring(void) const { return fUseCustomColorContouring; }
-  void UseCustomColorContouring(bool newValue)
-  {
-    fUseCustomColorContouring = newValue;
-    fUseCustomIsoLineing = newValue;
-  }
 
-  bool UseCustomIsoLineing(void) const { return fUseCustomIsoLineing; }
-  void UseCustomIsoLineing(bool newValue) { fUseCustomIsoLineing = newValue; }
-  const checkedVector<float>& SpecialColorContouringValues(void) const
-  {
-    return itsSpecialColorContouringValues;
-  }
-  void SetSpecialColorContouringValues(const checkedVector<float>& newValue)
-  {
-    itsSpecialColorContouringValues = newValue;
-  }
-  const checkedVector<int>& SpecialColorContouringColorIndexies(void) const
-  {
-    return itsSpecialColorContouringColorIndexies;
-  }
-  void SpecialColorContouringColorIndexies(checkedVector<int>& newValue)
-  {
-    itsSpecialColorContouringColorIndexies = newValue;
-  }
   float ColorContouringColorShadeLowValue(void) const
   {
     return itsColorContouringColorShadeLowValue;
@@ -698,6 +674,9 @@ class NFmiDrawParam
   void UseViewMacrosSettingsForMacroParam(bool newValue) { fUseViewMacrosSettingsForMacroParam = newValue; }
   bool DoSparseSymbolVisualization() const { return fDoSparseSymbolVisualization; }
   void DoSparseSymbolVisualization(bool newValue) { fDoSparseSymbolVisualization = newValue; }
+  NFmiMetEditorTypes::View GetViewType(bool isStationData) const;
+  static bool IsColorContourType(NFmiMetEditorTypes::View viewType);
+  static bool IsIsolineType(NFmiMetEditorTypes::View viewType);
 
  protected:
   NFmiDataIdent itsParameter;
@@ -778,8 +757,7 @@ class NFmiDrawParam
   int itsSymbolIndexingMapListIndex;  // indeksi johonkin symbolilistaan, jossa on mapattu arvot
                                       // haluttuihin symboleihin
 
-  int itsGridDataPresentationStyle;  // 1=asema muodossa, 2=isoviiva, 3=color contouring, 4=
-                                     // contour+isoviiva, 5=quick color contouring
+  NFmiMetEditorTypes::View itsGridDataPresentationStyle;  // isoviiva, color contouring, contour+isoviiva, quick color contouring, etc.
   bool fUseIsoLineFeathering;        // isoviivojen harvennus optio
   bool fUseContourFeathering;        // **** Versio 3 parametri ****
   bool fIsoLineLabelsOverLapping;    // voivatko isoviiva labelit mennä päällekkäin vai ei?
@@ -831,12 +809,6 @@ class NFmiDrawParam
                                                       // näyttö taulukko käyttäjälle)
   // colorcontouring ja quick contouring asetukset
   bool fDrawOnlyOverMask;          // jos true, data piirretään vain maskin päälle
-  bool fUseCustomColorContouring;  // true ja saa määritellä luokka rajat ja värit
-  bool fUseCustomIsoLineing;       // **** Versio 3 parametri ****
-  checkedVector<float> itsSpecialColorContouringValues;  // tähän laitetaan kaikki arvot, johon
-                                                         // halutaan color contour luokka rajoiksi
-  checkedVector<int> itsSpecialColorContouringColorIndexies;  // eri viivojen väri indeksit (pitää
-  // tehdä näyttö taulukko käyttäjälle)
   float itsColorContouringColorShadeLowValue;  // väri skaalaus alkaa tästä arvosta
   float itsColorContouringColorShadeMidValue;  // väri skaalauksen keskiarvo
   float itsColorContouringColorShadeHighValue;

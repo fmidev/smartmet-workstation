@@ -1334,9 +1334,9 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::LoadViewMacro(const std::string
     return itsDoc->LoadViewMacro(theName);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::StoreViewMacro(const std::string &theName, const std::string &theDescription)
+void SmartMetDocumentInterfaceForGeneralDataDoc::StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription)
 {
-    itsDoc->StoreViewMacro(theName, theDescription);
+    itsDoc->StoreViewMacro(theAbsoluteMacroFilePath, theDescription);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::CreateNewViewMacroDirectory(const std::string &thePath)

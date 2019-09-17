@@ -15,7 +15,7 @@ namespace Wms
     class SetupParser
     {
     public:
-        static Setup parse();
+        static Setup parse(bool doVerboseLogging);
     };
 }
 

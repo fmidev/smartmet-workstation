@@ -63,6 +63,7 @@ public:
     void SetToolMastersDC(CDC * /* theDC */) {};
     void DoDraw(void);
 	void DrawOverBitmapThings(NFmiToolBox *theToolBox);
+    int MapViewDescTopIndex(void);
 
 public:
 

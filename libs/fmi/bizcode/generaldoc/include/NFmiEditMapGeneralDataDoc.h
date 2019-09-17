@@ -116,6 +116,7 @@ class Q2ServerInfo;
 class NFmiMacroParamDataCache;
 class TimeSerialParameters;
 class AnimationProfiler;
+class NFmiColorContourLegendSettings;
 
 namespace Wms
 {
@@ -149,6 +150,10 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void SetPrintedDescTopIndex(int nowPrintedDescTopIndex);
+    int GetPrintedDescTopIndex();
+    void ResetPrintedDescTopIndex();
+    NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
 	void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& totalPixelSize, const NFmiPoint& clientPixelSize);
     NFmiMacroParamDataCache& MacroParamDataCache();
@@ -510,7 +515,7 @@ public:
 	bool RemoveViewMacro(const std::string& theMacroName);
 	void RefreshViewMacroList(void);
 	bool LoadViewMacro(const std::string &theName);
-	void StoreViewMacro(const std::string &theName, const std::string &theDescription);
+	void StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription);
 
 	NFmiSmartToolInfo* SmartToolInfo(void);
 	boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void);

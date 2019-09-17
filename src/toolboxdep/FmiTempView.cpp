@@ -10,6 +10,7 @@
 #include "FmiWin32TemplateHelpers.h"
 #include "NFmiMapViewDescTop.h"
 #include "ApplicationInterface.h"
+#include "SpecialDesctopIndex.h"
 
 /*
 #ifdef _DEBUG
@@ -323,7 +324,9 @@ BOOL CFmiTempView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 void CFmiTempView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	isCurrentMousePoint = point;
+    if(itsSmartMetDocumentInterface->Printing())
+        return;
+    isCurrentMousePoint = point;
 	CDC *theDC = GetDC();
 	if(!theDC)
 		return;
@@ -345,6 +348,11 @@ void CFmiTempView::DrawOverBitmapThings(NFmiToolBox *theToolBox)
 {
 	itsToolBox = theToolBox;
 	itsView->DrawOverBitmapThings(itsToolBox, itsToolBox->ToViewPoint(isCurrentMousePoint.x, isCurrentMousePoint.y));
+}
+
+int CFmiTempView::MapViewDescTopIndex(void)
+{
+    return CtrlViewUtils::kFmiSoundingView;
 }
 
 void CFmiTempView::ResetSoundingData(void)
@@ -476,6 +484,9 @@ BOOL CFmiTempView::PreTranslateMessage(MSG* pMsg)
 
 void CFmiTempView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
+    if(!CFmiWin32TemplateHelpers::AllowTooltipDisplay(itsSmartMetDocumentInterface))
+        return;
+
 	*result = 0;
 	NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
 

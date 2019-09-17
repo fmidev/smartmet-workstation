@@ -145,7 +145,7 @@ NFmiMenuItemList::NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIde
 			menuItemText += NFmiStringTools::Convert(level->LevelValue());
 
             auto menuItem = std::make_unique<NFmiMenuItem>(theMapViewDescTopIndex, menuItemText, theDataIdent
-				, theMenuCommandType, NFmiMetEditorTypes::kFmiParamsDefaultView, level, theDataType);
+				, theMenuCommandType, NFmiMetEditorTypes::View::kFmiParamsDefaultView, level, theDataType);
 			Add(std::move(menuItem));
             levelCounter++;
             if(levelCounter >= maxLevelsIncludedInPopup)

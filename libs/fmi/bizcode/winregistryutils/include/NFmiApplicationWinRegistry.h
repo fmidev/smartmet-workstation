@@ -281,6 +281,8 @@ public:
     void DrawObjectScaleFactor(double newValue);
     double MaximumFontSizeFactor();
     void MaximumFontSizeFactor(double newValue);
+    double IsolineMinLengthFactor();
+    void IsolineMinLengthFactor(double newValue);
 
     const NFmiGriddingProperties& GriddingProperties(bool getEditingRelatedProperties) const;
     void SetGriddingProperties(bool setEditingRelatedProperties, const NFmiGriddingProperties &griddingProperties);
@@ -339,7 +341,16 @@ private:
     // voidaan vaikka väliaikaisesti vaikka suurentaa/pienentää (kuten web-selaimissa) (EI VOIKAAN, SITÄ VARTEN PITÄÄ TEHDÄ OMA KERROIN, koska kaikkea 
     // ei luultavasti haluta isontaa esim. param-boxia ihan lennossa).
     boost::shared_ptr<CachedRegDouble> mDrawObjectScaleFactor; 
-    double itsMaximumFontSizeFactor; // tämä avulla skaalataan maksimi fontti kokoa (ei laiteta vielä rekisteriin, koska sitä ei ole mahdollista muokata)
+    // Tämän avulla skaalataan maksimi fontti kokoa (ei laiteta vielä rekisteriin, koska sitä ei ole mahdollista muokata)
+    double itsMaximumFontSizeFactor; 
+    // Tällä voidaan säätää piirrettävien yksittäisten isoviivojen minimipituutta, jos ei haluta 
+    // piirtää kaikkea pientä söherrystä jollain tiheällä datalla.
+    // Tämä on globaali kerroin kaikelle isoviiva piirrolle.
+    // Jos arvo on 0, rajoitin on pois päältä.
+    // Jos arvo on 1, rajoitetaan n. 4 mm pituisten isoviivojen piirtoa n. 20 cm korkealla näytöllä (tämä elää dynaamisesti käytettyjen näyttöjen mukaan).
+    // Jos arvo < 0, minimi pituus on pienempi kuin tuo 4 mm ja jos se on > 1, min pituus on suurempi.
+    // Tälle voidaan antaa arvo välillä 0-100.
+    boost::shared_ptr<CachedRegDouble> mIsolineMinLengthFactor;
 
 
     // General Printing options

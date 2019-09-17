@@ -1400,7 +1400,7 @@ void CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct()
 {
     StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
 
-    BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath);
+    BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", "Betaproduct1", false, &itsBetaProductFullFilePath);
     UpdateBetaProductName();
 }
 

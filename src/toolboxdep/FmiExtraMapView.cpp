@@ -42,7 +42,7 @@ CFmiExtraMapView::CFmiExtraMapView()
 ,itsToolBox(nullptr)
 ,itsDrawingEnvironment()
 ,itsDrawParam()
-,itsMapViewDesktopIndex(0)
+,itsMapViewDescTopIndex(0)
 ,fMouseCursorOnWnd(false)
 ,fPrintingOnDontSetDcs(false)
 {
@@ -66,7 +66,7 @@ CFmiExtraMapView::CFmiExtraMapView(SmartMetDocumentInterface *smartMetDocumentIn
 ,itsToolBox(nullptr)
 ,itsDrawingEnvironment()
 ,itsDrawParam(new NFmiDrawParam())
-,itsMapViewDesktopIndex(theMapViewDescTopIndex)
+,itsMapViewDescTopIndex(theMapViewDescTopIndex)
 ,fMouseCursorOnWnd(false)
 ,fPrintingOnDontSetDcs(false)
 {
@@ -130,7 +130,7 @@ void CFmiExtraMapView::OnInitialUpdate()
 	itsToolBox->UpdateClientRect(); // ilman tätä toolboxilla ei ole kykyä laskea esim. SX, SY metodeja oikein
 
 	CreateEditMapView();
-	itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->MapView(this);
+	itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapView(this);
 
 	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, EXTRAMAPVIEW_TOOLTIP_ID);
 	CRect winRec;
@@ -141,48 +141,48 @@ void CFmiExtraMapView::OnInitialUpdate()
 void CFmiExtraMapView::CreateEditMapView()
 {
 	delete itsEditMapView;
-	itsEditMapView = new NFmiEditMapView(itsMapViewDesktopIndex, itsToolBox, &itsDrawingEnvironment, itsDrawParam);
+	itsEditMapView = new NFmiEditMapView(itsMapViewDescTopIndex, itsToolBox, &itsDrawingEnvironment, itsDrawParam);
 }
 
 void CFmiExtraMapView::CurrentPrintTime(const NFmiMetTime &theTime)
 {
-    itsSmartMetDocumentInterface->CurrentTime(itsMapViewDesktopIndex, theTime);
+    itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex, theTime);
 }
 
 const NFmiRect* CFmiExtraMapView::RelativePrintRect(void) 
 {
-	return &(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->RelativeMapRect());
+	return &(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect());
 }
 
 CSize CFmiExtraMapView::GetPrintedAreaOnScreenSizeInPixels(void)
 {
-    auto pixelSize = itsSmartMetDocumentInterface->GetPrintedMapAreaOnScreenSizeInPixels(itsMapViewDesktopIndex);
+    auto pixelSize = itsSmartMetDocumentInterface->GetPrintedMapAreaOnScreenSizeInPixels(itsMapViewDescTopIndex);
     return CPoint(static_cast<int>(pixelSize.X()), static_cast<int>(pixelSize.Y()));
 }
 
 NFmiPoint CFmiExtraMapView::PrintViewSizeInPixels(void)
 {
-	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->MapViewSizeInPixels();
+	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels();
 }
 
 void CFmiExtraMapView::RelativePrintRect(const NFmiRect &theRect) 
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->RelativeMapRect(theRect);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect(theRect);
 }
 
 void CFmiExtraMapView::PrintViewSizeInPixels(const NFmiPoint &theSize)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->MapViewSizeInPixels(theSize, true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, true);
 }
 
 void CFmiExtraMapView::SetPrintCopyCDC(CDC* pDC)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->CopyCDC(pDC);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->CopyCDC(pDC);
 }
 
 void CFmiExtraMapView::MakePrintViewDirty(bool fViewDirty, bool fCacheDirty)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true, false);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true, false);
 }
 
 void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
@@ -193,23 +193,22 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     GetClientRect(rect);
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
-    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDesktopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
-
     CDC *theDC = GetDC();
     CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), theDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
-    PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->ActualMapBitmapSizeInPixels(), true));
+    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
+    PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
     Invalidate(FALSE);
 }
 
 CtrlViewUtils::GraphicalInfo& CFmiExtraMapView::GetGraphicalInfo(void)
 {
-	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->GetGraphicalInfo();
+	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->GetGraphicalInfo();
 }
 
 int CFmiExtraMapView::CalcPrintingPageShiftInMinutes(void)
 {
-	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->CalcPrintingPageShiftInMinutes();
+	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->CalcPrintingPageShiftInMinutes();
 }
 
 void CFmiExtraMapView::DoDraw(void)
@@ -246,7 +245,7 @@ void CFmiExtraMapView::DoDraw(void)
 
 bool CFmiExtraMapView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
-	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDesktopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
+	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
 }
 
 // asettaa toolmasterin ja toolboxin DC:t
@@ -414,7 +413,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 	CDC dcMem;
 	dcMem.CreateCompatibleDC(&dc);
 	CBitmap* oldBitmap2 = dcMem.SelectObject(itsMapBitmap.get());
-    auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex);
+    auto mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex);
     mapViewDescTop->MapBlitDC(&dcMem);
 
 	NFmiPoint viewPoint(itsToolBox->ToViewPoint(point.x, point.y));
@@ -445,7 +444,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		if(itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
 		{
-            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDesktopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina ja joka karttanäyttöön
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina ja joka karttanäyttöön
 		}
 		if(itsSmartMetDocumentInterface->MustDrawTempView())
 		{
@@ -467,7 +466,7 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 // ja sitten päälle piirretään nopeasti DrawOverBitmapThings
 void CFmiExtraMapView::ForceDrawOverBitmapThingsThisExtraMapView(void)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->MapViewBitmapDirty(true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(true);
     Invalidate(FALSE);
 }
 
@@ -500,7 +499,7 @@ void CFmiExtraMapView::OnRButtonUp(UINT nFlags, CPoint point)
 	else if(needsUpdate)
 	{
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse right button up");
-        itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDesktopIndex, false, true);
+        itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 	}
 
 //	CView::OnRButtonUp(nFlags, point);
@@ -544,7 +543,7 @@ void CFmiExtraMapView::OnLButtonUp(UINT nFlags, CPoint point)
 		if(needsUpdate)
 		{
             itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Mouse left button up");
-            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDesktopIndex, false, true);
+            itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
 		}
 
 	//	CView::OnLButtonUp(nFlags, point);
@@ -596,7 +595,7 @@ void CFmiExtraMapView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-            itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsMapViewDesktopIndex);
+            itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsMapViewDescTopIndex);
 			return ;
 		}
 		Invalidate(FALSE);
@@ -756,13 +755,13 @@ void CFmiExtraMapView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 // tätä kutsutaan yleisessä printtaus funktiossa
 void CFmiExtraMapView::OldWayPrintUpdate(void)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDesktopIndex)->BorderDrawDirty(true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->BorderDrawDirty(true);
 	itsEditMapView->Update(); // tämä pitää tehdä että prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
 }
 
 NFmiMetTime CFmiExtraMapView::CalcPrintingStartTime(void)
 {
-	return itsSmartMetDocumentInterface->CurrentTime(itsMapViewDesktopIndex);
+	return itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
 }
 
 NFmiStationViewHandler* CFmiExtraMapView::GetMapViewHandler(int theRowIndex, int theIndex)
