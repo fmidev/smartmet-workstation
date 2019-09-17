@@ -230,30 +230,7 @@ namespace AddParams
 		}
 		else if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
 		{
-			for (auto& row : dialogRowData_)
-			{
-				if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
-				{
-					trimmedRowData.push_back(row);
-				}
-				else if (row.itemId() == 2001 || row.parentItemId() == 2001)
-				{
-					trimmedRowData.push_back(row);
-				}
-				checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
-				if (!infoVector.empty())
-				{
-					auto info = infoVector.at(0);
-					if (info->IsGrid())
-					{
-						trimmedRowData.push_back(row);
-						auto subRows = addAllChildNodes(row, index);
-						trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
-					}
-				}
-				index++;
-			}
-			dialogRowData_.swap(trimmedRowData);
+			dialogRowData_.swap(timeSeriesData());
 		}
 	}
 
@@ -290,6 +267,39 @@ namespace AddParams
 				{
 					trimmedRowData.push_back(row);
 					auto subRows = addSubmenu(row, index);
+					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+				}
+			}
+			index++;
+		}
+		removeNodesThatDontHaveLeafs(trimmedRowData);
+		return trimmedRowData;
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::timeSeriesData()
+	{
+		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		int index = 0;
+		bool suitableCategory = true;
+
+		for (auto& row : dialogRowData_)
+		{
+			if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+			{
+				trimmedRowData.push_back(row);
+			}
+			else if (row.itemId() == 2001 || row.parentItemId() == 2001)
+			{
+				trimmedRowData.push_back(row);
+			}
+			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+			if (!infoVector.empty())
+			{
+				auto info = infoVector.at(0);
+				if (info->IsGrid())
+				{
+					trimmedRowData.push_back(row);
+					auto subRows = addAllChildNodes(row, index);
 					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
 				}
 			}

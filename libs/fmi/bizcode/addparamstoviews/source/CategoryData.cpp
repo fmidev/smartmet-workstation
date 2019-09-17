@@ -328,7 +328,7 @@ namespace AddParams
     std::vector<SingleRowItem> CategoryData::customObservationData(NFmiInfoOrganizer &infoOrganizer) const
     {
         int treeDepth = 2;
-        AddParams::RowType rowType = kProducerType;
+        AddParams::RowType rowType = kDataType;
         std::vector<SingleRowItem> customObservationData;
         
         // *** Sounding and sounding plot ***
@@ -343,7 +343,7 @@ namespace AddParams
             SingleRowItem item = SingleRowItem(rowType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
             auto paramBag = soundingInfo->ParamBag();
             customObservationData.push_back(item);
-            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, rowType);
+            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, kParamType);
             customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());
             
             menuString = "Sounding plot";
