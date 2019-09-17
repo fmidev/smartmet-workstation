@@ -45,8 +45,8 @@ namespace AddParams
         // Here is information about last activated view and its row. these are
         // used to insert selected parameters to right places.
         // 0 = main map, 1 = map-view-2, 2 = map-view-3
-        // In future these will be added: 98 = cross-section-view, 99 = time-serial-view
-        unsigned int itsLastAcivatedDescTopIndex;
+        // 98 = cross-section-view, 99 = time-serial-view
+        unsigned int itsLastActivatedDesktopIndex;
         // The view row that has been last clicked with mouse.
         // This index starts from 1 !!
         int itsLastActivatedRowIndex;
@@ -64,35 +64,38 @@ namespace AddParams
         ~ParameterSelectionSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories);
-        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType);
-        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName);
-        void updateData();
+        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName = std::string());
+		void addStaticHelpData();
+		void updateData();
         void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         int updateWaitTimeoutInSeconds() const { return updateWaitTimeoutInSeconds_; }
         bool updatePending() const { return updatePending_; }
         void updatePending(bool newValue) { updatePending_ = newValue; }
         bool dialogDataNeedsUpdate() const { return dialogDataNeedsUpdate_; }
+		void dialogDataNeedsUpdate(bool value) { dialogDataNeedsUpdate_ = value; }
         void updateDialogData();
         std::vector<SingleRowItem>& dialogRowData();
         const std::vector<SingleRowItem>& dialogRowData() const;
         const std::vector<unsigned char>& dialogTreePatternArray() const;
-        unsigned int LastAcivatedDescTopIndex() const { return itsLastAcivatedDescTopIndex; }
-        void LastAcivatedDescTopIndex(unsigned int newValue) { itsLastAcivatedDescTopIndex = newValue; }
+        unsigned int LastActivatedDesktopIndex() const { return itsLastActivatedDesktopIndex; }
+        void LastActivatedDesktopIndex(unsigned int newValue) { itsLastActivatedDesktopIndex = newValue; }
         int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
         void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
         void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
-        void searchItemsThatMatchToSearchWords(std::string words);
-        
-    private:
+        void searchItemsThatMatchToSearchWords(std::string words); 
+
+	private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
         void updateDialogTreePatternData();
         void updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
-        void getOnlyParentsThatHaveChildNodesOrIsLeafNode(std::vector<SingleRowItem> &resultRowData);
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
-    };
+		void trimDialogRowDataDependingOnActiveView();
+		std::vector<SingleRowItem> addSubmenu(SingleRowItem& row, int index);
+		std::vector<SingleRowItem> addAllChildNodes(SingleRowItem& row, int index);
+	};
 }

@@ -512,8 +512,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsViewMacroPath()
 ,itsRootViewMacroPath()
 ,itsCurrentViewMacro(new NFmiViewSettingMacro())
-,itsDoAtSendCommandString()
-,fUseDoAtSendCommand(false)
 ,itsSmartMetEditingMode(CtrlViewUtils::kFmiEditingModeNormal)
 ,itsSavedDirectory()
 ,itsCurrentMacroText()
@@ -1849,8 +1847,6 @@ void InitSettingsFromConfFile(void)
     DoVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsDoAtSendCommandString = NFmiSettings::Require<string>("MetEditor::AtSending::ShellCommand");
-		fUseDoAtSendCommand = NFmiSettings::Require<bool>("MetEditor::AtSending::DoCommand");
 		itsSmartMetEditingMode = static_cast<CtrlViewUtils::FmiSmartMetEditingMode>(NFmiSettings::Require<int>("MetEditor::EditXMode"));
 		fWarnIfCantSaveWorkingFile = NFmiSettings::Optional("MetEditor::WarnIfCantSaveWorkingFile", true);
 
@@ -3791,7 +3787,7 @@ const NFmiTimeDescriptor& TimeControlViewTimes(unsigned int theDescTopIndex)
 // Oikeat karttarivit alkavat siis 1:stä.
 unsigned int GetRealRowNumber(unsigned int theDescTopIndex, int theRowIndex)
 {
-	if(theRowIndex >= gActiveViewRowIndexForTimeSerialView) // aikasarja rivi numerot ovat erikseen
+	if(theRowIndex >= gActiveViewRowIndexForTimeSerialView || theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		return theRowIndex;
 	else
 		return theRowIndex + MapViewDescTop(theDescTopIndex)->MapRowStartingIndex() - 1;
@@ -5510,6 +5506,9 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* the
     case kAddViewWithRealRowNumber:
         AddViewWithRealRowNumber(true, theMenuItem, theRowIndex);
         break;
+	case kFmiAddParamCrossSectionView:
+		AddCrossSectionView(theMenuItem, theRowIndex, false);
+		break;
     default:
         return false;
     }
@@ -7726,10 +7725,6 @@ bool StoreDataToDataBase(const std::string &theForecasterId)
 {
     std::string helperForecasterId = GetHelperForecasterId();
     bool status = StoreDataToDataBase(theForecasterId, helperForecasterId);
-    if(status && fUseDoAtSendCommand)
-    {
-        status = status && CFmiProcessHelpers::ExecuteCommandInSeparateProcess(itsDoAtSendCommandString);
-    }
     return status;
 }
 
@@ -9385,26 +9380,6 @@ bool IsRedoableViewMacro(void)
 		itsSmartMetEditingMode = newValue;
         if(modifySettings)
     		NFmiSettings::Set(string("MetEditor::EditXMode"), NFmiStringTools::Convert<int>(itsSmartMetEditingMode), true);
-	}
-
-	bool UseDoAtSendCommandString(void)
-	{
-		return fUseDoAtSendCommand;
-	}
-
-	void UseDoAtSendCommandString(bool newValue)
-	{
-		fUseDoAtSendCommand = newValue;
-	}
-
-	std::string DoAtSendCommandString(void)
-	{
-		return itsDoAtSendCommandString;
-	}
-
-	void DoAtSendCommandString(const std::string &newValue)
-	{
-		itsDoAtSendCommandString = newValue;
 	}
 
 	void UseMap(unsigned int theDescTopIndex, unsigned int theMapIndex)
@@ -11554,15 +11529,25 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             return itsCurrentCrossSectionRowIndex;
 	}
 
+	int GetFirstRowNumber(unsigned int theDescTopIndex)
+	{
+		if (theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+		{
+			return GetRealRowNumber(theDescTopIndex, 1);
+		}
+		else
+			return itsCurrentCrossSectionRowIndex;
+	}
+
 	void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
 	{
 		MapViewDescTop(theDescTopIndex)->ActiveViewRow(theActiveRowIndex);
 	}
 
-    void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
+    void SetLastActiveDescTopAndViewRow(unsigned int theDesktopIndex, int theActiveRowIndex)
     {
-        ParameterSelectionSystem().LastAcivatedDescTopIndex(theDescTopIndex);
-        ParameterSelectionSystem().LastActivatedRowIndex(GetRealRowNumber(theDescTopIndex, theActiveRowIndex));
+        ParameterSelectionSystem().LastActivatedDesktopIndex(theDesktopIndex);
+        ParameterSelectionSystem().LastActivatedRowIndex(GetRealRowNumber(theDesktopIndex, theActiveRowIndex));
     }
 
 	void CopyDrawParamsList(NFmiPtrList<NFmiDrawParamList> &copyFromList, NFmiPtrList<NFmiDrawParamList> &copyToList)
@@ -12769,9 +12754,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateCrossSectionView();
 	}
 
-	void ActivateViewParamSelectorDlg(int /* theMapViewDescTopIndex */)
+	void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex)
 	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg();
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg(theMapViewDescTopIndex);
 	}
 
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord)
@@ -13897,7 +13882,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         if(CaseStudyModeOn())
             currentTime = itsLoadedCaseStudySystem.Time(); // CaseStudy moodissa seinäkelloksi otetaan CasStudyn oma aika
         CenterTimeControlView(theMapViewDescTopIndex, currentTime, true);
-        RefreshApplicationViewsAndDialogs("Map view: Selcted map time is set to wall clock time", true, false, theMapViewDescTopIndex);
+        RefreshApplicationViewsAndDialogs("Map view: Selected map time is set to wall clock time", true, false, theMapViewDescTopIndex);
     }
 
     const std::string& RootViewMacroPath()
@@ -14247,6 +14232,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
             // Add other data to help data. 
+			parameterSelectionSystem.addStaticHelpData();
             if(capDataSystem.useCapData())
             {
                 NFmiProducer prod(NFmiSettings::Optional<int>("SmartMet::Warnings::ProducerId", 12345), "CAP"); // No official producerId, reads this from Cap.conf. If multiple ids, read them all here.
@@ -14541,8 +14527,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiString itsSavedDirectory; // talletettu työhakemisto, mikä voidaan ladata käyttöön myöhemmin
 
-	string itsDoAtSendCommandString; // tämä stringi annetaan system-komennolla (jos niin asetettu) kun dataa lähetetään tietokantaan
-	bool fUseDoAtSendCommand; // tehdäänkö ed. mainittu komento dataa lähetettäessä.
     CtrlViewUtils::FmiSmartMetEditingMode itsSmartMetEditingMode;
 
 	string itsViewMacroPath;
@@ -15101,6 +15085,10 @@ int NFmiEditMapGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
 {
 	return pimpl->ActiveViewRow(theDescTopIndex);
 }
+int NFmiEditMapGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
+{
+	return pimpl->GetFirstRowNumber(theDescTopIndex);
+}
 void NFmiEditMapGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
 {
 	pimpl->ActiveViewRow(theDescTopIndex, theActiveRowIndex);
@@ -15391,26 +15379,6 @@ CtrlViewUtils::FmiSmartMetEditingMode NFmiEditMapGeneralDataDoc::SmartMetEditing
 void NFmiEditMapGeneralDataDoc::SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings)
 {
 	pimpl->SmartMetEditingMode(newValue, modifySettings);
-}
-
-bool NFmiEditMapGeneralDataDoc::UseDoAtSendCommandString(void)
-{
-	return pimpl->UseDoAtSendCommandString();
-}
-
-void NFmiEditMapGeneralDataDoc::UseDoAtSendCommandString(bool newValue)
-{
-	pimpl->UseDoAtSendCommandString(newValue);
-}
-
-std::string NFmiEditMapGeneralDataDoc::DoAtSendCommandString(void)
-{
-	return pimpl->DoAtSendCommandString();
-}
-
-void NFmiEditMapGeneralDataDoc::DoAtSendCommandString(const std::string &newValue)
-{
-	pimpl->DoAtSendCommandString(newValue);
 }
 
 void NFmiEditMapGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
@@ -16330,7 +16298,7 @@ void NFmiEditMapGeneralDataDoc::UpdateCrossSectionView(void)
 	pimpl->UpdateCrossSectionView();
 }
 
-void NFmiEditMapGeneralDataDoc::ActivateViewParamSelectorDlg(int theMapViewDescTopIndex)
+void NFmiEditMapGeneralDataDoc::ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex)
 {
 	pimpl->ActivateViewParamSelectorDlg(theMapViewDescTopIndex);
 }

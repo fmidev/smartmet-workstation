@@ -46,8 +46,7 @@ float NFmiDataLoadingInfo::itsFileVersionNumber = 2.0;
 // Constructor/Destructor 
 //--------------------------------------------------------
 NFmiDataLoadingInfo::NFmiDataLoadingInfo()
-:itsCurrentFileVersionNumber(itsFileVersionNumber)
-,itsAreaIdentifier("Suomi")
+:itsAreaIdentifier("Suomi")
 ,itsProducer() //esim Kepa 
 ,itsWorkingNameInDialog("Omat")
 ,itsDataBaseNameInDialog1("Vir. lyhyt")
@@ -83,8 +82,7 @@ NFmiDataLoadingInfo::NFmiDataLoadingInfo()
 ,itsFileNameTimeStampTemplate("DDHH")
 ,fUseWallClockTimeInTimeStamp(false)
 {
-	if(itsCurrentFileVersionNumber >= 3.f)
-		fUseDataBaseOutName = true;
+	fUseDataBaseOutName = true;
 	UpdatedTimeDescriptor();
 }
 
@@ -92,7 +90,6 @@ NFmiDataLoadingInfo& NFmiDataLoadingInfo::operator=(NFmiDataLoadingInfo& theInfo
 {
 	if(this != &theInfo)
 	{
-		itsCurrentFileVersionNumber = theInfo.itsCurrentFileVersionNumber;
 		itsAreaIdentifier = theInfo.itsAreaIdentifier;
 		itsProducer = theInfo.itsProducer;
 		itsModel1NameInDialog = theInfo.itsModel1NameInDialog;
@@ -182,7 +179,6 @@ void NFmiDataLoadingInfo::InitFileNameLists()
 }
 
 // Configuration keys
-#define CONFIG_DATALOADINGINFO_CURRENTFILEVERSIONNUMBER "MetEditor::DataLoadingInfo::CurrentFileVersionNumber"
 #define CONFIG_DATALOADINGINFO_PRIMARYPRODUCERSETTING "MetEditor::DataLoadingInfo::PrimaryProducerSetting"
 #define CONFIG_DATALOADINGINFO_SECONDARYPRODUCERSETTING "MetEditor::DataLoadingInfo::SecondaryProducerSetting"
 #define CONFIG_DATALOADINGINFO_THIRDPRODUCERSETTING "MetEditor::DataLoadingInfo::ThirdProducerSetting"
@@ -234,87 +230,74 @@ void NFmiDataLoadingInfo::Configure()
 	std::string temp;
 	NFmiString producerName;
 
-	itsCurrentFileVersionNumber = NFmiSettings::Require<float>(CONFIG_DATALOADINGINFO_CURRENTFILEVERSIONNUMBER);
+	fUseDataBaseOutName = true;
 
-	if (itsCurrentFileVersionNumber >= 3.)
-		fUseDataBaseOutName = true;
+	itsPrimaryProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_PRIMARYPRODUCERSETTING);
+	itsSecondaryProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_SECONDARYPRODUCERSETTING);
+	itsThirdProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_THIRDPRODUCERSETTING);
 
-	if (itsCurrentFileVersionNumber >= 1.)  
-	{
-		itsPrimaryProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_PRIMARYPRODUCERSETTING);
-		itsSecondaryProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_SECONDARYPRODUCERSETTING);
-		itsThirdProducerSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_THIRDPRODUCERSETTING);
-		itsTimeInterpolationSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_TIMEINTERPOLATIONSETTING);
-		itsParamCombinationSetting = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_PARAMCOMBINATIONSETTING);
+	itsAreaIdentifier = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_AREAIDENTIFIER);
 
-		itsAreaIdentifier = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_AREAIDENTIFIER);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_PRODUCERNAME);
+	producerName = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_PRODUCERNAME);
-		producerName = NFmiString(temp);
+	itsProducer.SetContents(NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_PRODUCERIDENT), producerName);
 
-		itsProducer.SetContents(NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_PRODUCERIDENT), producerName);
+	itsModel1NameInDialog = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL1NAMEINDIALOG);
+	itsModel2NameInDialog = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL2NAMEINDIALOG);
 
-		itsModel1NameInDialog = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL1NAMEINDIALOG);
-		itsModel2NameInDialog = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL2NAMEINDIALOG);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_WORKINGNAMEINDIALOG);
+	itsWorkingNameInDialog = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_WORKINGNAMEINDIALOG);
-		itsWorkingNameInDialog = NFmiString(temp);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASENAMEINDIALOG1);
+	itsDataBaseNameInDialog1 = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASENAMEINDIALOG1);
-		itsDataBaseNameInDialog1 = NFmiString(temp);
+	itsModel1FilePattern = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL1FILENAMEPATTERN);
+	itsModel2FilePattern = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL2FILENAMEPATTERN);
 
-		itsModel1FilePattern = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL1FILENAMEPATTERN);
-		itsModel2FilePattern = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_MODEL2FILENAMEPATTERN);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_WORKINGFILENAME);
+	itsWorkingFileName = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_WORKINGFILENAME);
-		itsWorkingFileName = NFmiString(temp);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEFILENAMEIN);
+	itsDataBaseFileNameIn = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEFILENAMEIN);
-		itsDataBaseFileNameIn = NFmiString(temp);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEFILENAMEOUT);
+	itsDataBaseFileNameOut = NFmiString(temp);
 
-		if (itsCurrentFileVersionNumber >= 3.)  
-		{
-			temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEFILENAMEOUT);
-			itsDataBaseFileNameOut = NFmiString(temp);
-		}
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_WORKINGPATH);
+	itsWorkingPath = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_WORKINGPATH);
-		itsWorkingPath = NFmiString(temp);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEINPATH);
+	itsDataBaseInPath = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEINPATH);
-		itsDataBaseInPath = NFmiString(temp);
+	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEOUTPATH);
+	itsDataBaseOutPath = NFmiString(temp);
 
-		temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEOUTPATH);
-		itsDataBaseOutPath = NFmiString(temp);
+	itsDataLengthInHours = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_DATALENGTHINHOURS);
 
-		itsErrorFilePath = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_ERRORFILEPATH);
+    itsFileNameTimeStampTemplate = NFmiSettings::Optional<std::string>("MetEditor::DataLoadingInfo::FileNameTimeStampTemplate", "DDHH");
+    fUseWallClockTimeInTimeStamp = ::IsWallClockUsedWithTimeStamp(itsFileNameTimeStampTemplate);
 
-		itsDataLengthInHours = NFmiSettings::Require<int>(CONFIG_DATALOADINGINFO_DATALENGTHINHOURS);
+	if(!itsMetEditorModeDataWCTR)
+			itsMetEditorModeDataWCTR = new NFmiMetEditorModeDataWCTR;
 
-        itsFileNameTimeStampTemplate = NFmiSettings::Optional<std::string>("MetEditor::DataLoadingInfo::FileNameTimeStampTemplate", "DDHH");
-        fUseWallClockTimeInTimeStamp = ::IsWallClockUsedWithTimeStamp(itsFileNameTimeStampTemplate);
+	// NFmiMetEditorModeDataWCTR knows how to initialize itself from the global settings.
+	itsMetEditorModeDataWCTR->Configure();
 
-		if(!itsMetEditorModeDataWCTR)
-				itsMetEditorModeDataWCTR = new NFmiMetEditorModeDataWCTR;
+	// HUOM! t‰ss‰ cache-hakemiston alustuksessa on ik‰v‰‰ kaksois koodia, t‰m‰ on jo tehty
+	// NFmiHelpDataInfoSystem::InitFromSettings -metodissa, mutta pika-virityksen‰ kopsasin koodin t‰nne.
+	std::string baseNameSpaceStr("MetEditor::HelpData");
+	std::string tmpCacheDir = NFmiSettings::Require<std::string>(baseNameSpaceStr + "::CacheDirectory");
+	::FixPathEndWithSeparator(tmpCacheDir);
+	itsCacheDir = tmpCacheDir;
+	fUseDataCache = NFmiSettings::Require<bool>(baseNameSpaceStr + "::UseQueryDataCache");
+	NormalizeAllPathDelimiters(); // t‰m‰ pit‰‰ tehd‰ ensin, ett‰ kenoviivat on oikein
+	itsModel1CacheFilePattern = MakeCacheFilePattern(itsModel1FilePattern);
+	itsModel2CacheFilePattern = MakeCacheFilePattern(itsModel2FilePattern);
 
-		// NFmiMetEditorModeDataWCTR knows how to initialize itself from the global settings.
-		itsMetEditorModeDataWCTR->Configure();
-
-		// HUOM! t‰ss‰ cache-hakemiston alustuksessa on ik‰v‰‰ kaksois koodia, t‰m‰ on jo tehty
-		// NFmiHelpDataInfoSystem::InitFromSettings -metodissa, mutta pika-virityksen‰ kopsasin koodin t‰nne.
-		std::string baseNameSpaceStr("MetEditor::HelpData");
-		std::string tmpCacheDir = NFmiSettings::Require<std::string>(baseNameSpaceStr + "::CacheDirectory");
-		::FixPathEndWithSeparator(tmpCacheDir);
-		itsCacheDir = tmpCacheDir;
-		fUseDataCache = NFmiSettings::Require<bool>(baseNameSpaceStr + "::UseQueryDataCache");
-		NormalizeAllPathDelimiters(); // t‰m‰ pit‰‰ tehd‰ ensin, ett‰ kenoviivat on oikein
-		itsModel1CacheFilePattern = MakeCacheFilePattern(itsModel1FilePattern);
-		itsModel2CacheFilePattern = MakeCacheFilePattern(itsModel2FilePattern);
-
-		NormalizeAllPathDelimiters(); // tehd‰‰n t‰m‰ viel‰ toistamiseen ett‰ varmasti kaikki kenot on oikein p‰in
-		InitFileNameLists(); //luodaan tiedostonnimilistat valmiiksi, koska t‰m‰ on yleisin tapa luoda info
-		UpdatedTimeDescriptor();
-	}
+	NormalizeAllPathDelimiters(); // tehd‰‰n t‰m‰ viel‰ toistamiseen ett‰ varmasti kaikki kenot on oikein p‰in
+	InitFileNameLists(); //luodaan tiedostonnimilistat valmiiksi, koska t‰m‰ on yleisin tapa luoda info
+	UpdatedTimeDescriptor();
 
 }
 

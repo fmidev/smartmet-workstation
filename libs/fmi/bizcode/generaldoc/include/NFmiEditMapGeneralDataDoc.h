@@ -155,7 +155,7 @@ public:
     void ResetPrintedDescTopIndex();
     NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
-    void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize);
+	void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& totalPixelSize, const NFmiPoint& clientPixelSize);
     NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
@@ -305,7 +305,7 @@ public:
 	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateZoomDialog(int theWantedDescTopIndex);
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord);
-	void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex);
+	void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex);
 	void UpdateTempView(void);
 	void UpdateCrossSectionView(void);
 	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tämä on kirjastojen pilkkomiseen vaadittuja funktioita
@@ -512,10 +512,6 @@ public:
 	void SetSelectedMapHandler(unsigned int theDescTopIndex, unsigned int newMapIndex);
 	CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void);
 	void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings);
-	bool UseDoAtSendCommandString(void);
-	void UseDoAtSendCommandString(bool newValue);
-	std::string DoAtSendCommandString(void);
-	void DoAtSendCommandString(const std::string &newValue);
 	bool RemoveViewMacro(const std::string& theMacroName);
 	void RefreshViewMacroList(void);
 	bool LoadViewMacro(const std::string &theName);
@@ -637,6 +633,7 @@ public:
 	void ActiveViewTime(const NFmiMetTime& theTime);
 	int ActiveViewRow(unsigned int theDescTopIndex);
 	void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex);
+	int GetFirstRowNumber(unsigned int theDescTopIndex);
 	bool UseMasksWithFilterTool(void);
 	void UseMasksWithFilterTool(bool newStatus);
 	const NFmiRect& AreaFilterRangeLimits(void);

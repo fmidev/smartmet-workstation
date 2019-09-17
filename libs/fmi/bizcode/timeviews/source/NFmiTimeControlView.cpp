@@ -22,6 +22,7 @@
 #include "SmartMetViewId.h"
 #include "ApplicationInterface.h"
 
+
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
 
