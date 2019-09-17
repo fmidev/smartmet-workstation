@@ -193,7 +193,7 @@ std::string NFmiStationIndexTextView::Value2ToolTipString(float theValue, int /*
 	std::string symbolStr(GetPrintedText(theValue));
 	symbolStr = ::HtmlXmlCharacterEncode(symbolStr);
     std::string fontFaceName = "synop";
-    if(itsDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiRawMirriFontSymbolView)
+    if(itsDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiRawMirriFontSymbolView)
         fontFaceName = "mirri";
 	std::string str;
     str += "<font face=";

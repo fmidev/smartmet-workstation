@@ -1135,11 +1135,10 @@ static double CalcUsedGraceFactor(int theCrossSectionIsoLineDrawIndex)
     return usedGraceFactor;
 }
 
-void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex)
+void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex, float scaleFactor)
 {
     int oldColorTable;
     XuColorTableActiveQuery(&oldColorTable);
-    float scaleFactor = CalcMMSizeFactor(theViewHeight, 1.1f);
 
     // HUOM! ToolMaster bugi, kun piirret‰‰n contour+isoviiva (aiemmin tehty XuClassesMinMax-kutsu jyr‰‰ nyt teht‰v‰n XuClasses-kutsun)
 //	int classes1 = 0;
@@ -1186,10 +1185,8 @@ void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, in
 
 }
 
-void DrawSimpleIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex)
+void DrawSimpleIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex, float scaleFactor)
 {
-    float scaleFactor = CalcMMSizeFactor(theViewHeight, 1.1f);
-
     XuIsolineSplineSmoothing(theIsoLineData.itsIsoLineSplineSmoothingFactor);
     XuClassesStartStep(theIsoLineData.itsIsoLineStartClassValue, theIsoLineData.itsIsoLineStep, theIsoLineData.itsTrueIsoLineCount);
 
@@ -1379,6 +1376,13 @@ static void RaportVisualizationMetrics(float theViewHeight)
     }
 }
 
+static void SetIsolineMinLength(double currentViewSizeInMM, double usedIsolineMinLengthFactor)
+{
+    // Peruss‰‰dˆill‰ n. 200 mm korkea n‰yttˆ saa pituudeksi n. 4 mm
+    double viewSizeFactor = currentViewSizeInMM / 50.;
+    double usedIsolineMinLengthInMM = viewSizeFactor * usedIsolineMinLengthFactor;
+    XuIsolineMinLength(usedIsolineMinLengthInMM);
+}
 
 static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, int theCrossSectionIsoLineDrawIndex)
 {
@@ -1421,10 +1425,13 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
             ::RaportVisualizationMetrics(usedLength);
             if(theCrossSectionIsoLineDrawIndex >= 0)
                 usedLength = static_cast<float>(totalViewSize.X()); // jos ollaan poikkileikkaus piirrossa (eli if lause tosi), k‰ytet‰‰n label harvennuksen laskuissa ruudun leveytt‰ kertoimena
+            float scaleFactor = CalcMMSizeFactor(usedLength, 1.1f);
+            ::SetIsolineMinLength(usedLength, theIsoLineData.itsIsolineMinLengthFactor);
+
             if(theIsoLineData.fUseCustomIsoLineClasses)
-                ::DrawCustomIsoLines(theIsoLineData, usedLength, theCrossSectionIsoLineDrawIndex);
+                ::DrawCustomIsoLines(theIsoLineData, usedLength, theCrossSectionIsoLineDrawIndex, scaleFactor);
             else
-                ::DrawSimpleIsoLines(theIsoLineData, usedLength, theCrossSectionIsoLineDrawIndex);
+                ::DrawSimpleIsoLines(theIsoLineData, usedLength, theCrossSectionIsoLineDrawIndex, scaleFactor);
         }
     }
     catch(...)
@@ -1520,6 +1527,7 @@ static void BuildDownSizedData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineD
     theDownSizedIsoLineData.Init(newSizeX, newSizeY, theOrigIsoLineData.itsMaxAllowedIsoLineCount);
     // Alustetaan uuden isoline datan piirtoasetukset originaalista
     theDownSizedIsoLineData.InitDrawOptions(theOrigIsoLineData);
+    theDownSizedIsoLineData.itsIsolineMinLengthFactor = theOrigIsoLineData.itsIsolineMinLengthFactor;
     // T‰ytet‰‰n uuden isolineDatan hila-arvot halutuille osaalueilleen.
     NFmiDataMatrix<float> downSizedGridData(newSizeX, newSizeY, kFloatMissing);
     ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, static_cast<FmiParameterName>(theOrigIsoLineData.itsParam.GetParamIdent()));

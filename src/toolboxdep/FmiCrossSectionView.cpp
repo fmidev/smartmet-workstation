@@ -150,6 +150,11 @@ void CFmiCrossSectionView::DrawOverBitmapThings(NFmiToolBox *theToolBox)
 {
 }
 
+int CFmiCrossSectionView::MapViewDescTopIndex(void)
+{
+    return CtrlViewUtils::kFmiCrossSectionView;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CFmiTempView diagnostics
 
@@ -390,6 +395,8 @@ void CFmiCrossSectionView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CFmiCrossSectionView::OnMouseMove(UINT nFlags, CPoint point)
 {
+    if(itsSmartMetDocumentInterface->Printing())
+        return;
 	isCurrentMousePoint = point;
 
 	CDC *theDC = GetDC();
@@ -487,6 +494,8 @@ BOOL CFmiCrossSectionView::PreTranslateMessage(MSG* pMsg)
 
 void CFmiCrossSectionView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
+    if(!CFmiWin32TemplateHelpers::AllowTooltipDisplay(itsSmartMetDocumentInterface))
+        return;
 
 	*result = 0;
 	NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;

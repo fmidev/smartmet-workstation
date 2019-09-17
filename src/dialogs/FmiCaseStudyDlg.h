@@ -149,6 +149,7 @@ private:
     CString itsInfoStrU_;
     CString itsPathStrU_;
     BOOL fEditEnableData;
+    BOOL fZipData;
 public:
 	afx_msg void OnBnClickedButtonStoreData();
 	afx_msg void OnBnClickedButtonLoadData();

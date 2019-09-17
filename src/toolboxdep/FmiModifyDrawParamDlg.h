@@ -262,6 +262,7 @@ private:
     int itsIconTypeFileId;
     BOOL fUseTransparentLabelBoxFillColor;
     BOOL fDoSparseDataSymbolVisualization;
+    BOOL fUseLegend;
 
 public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);

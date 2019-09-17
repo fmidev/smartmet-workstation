@@ -102,6 +102,10 @@
 #include "NFmiVoidPtrList.h"
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
+#include "NFmiColorContourLegendSettings.h"
+#include "NFmiColorContourLegendValues.h"
+#include "ToolMasterDrawingFunctions.h"
+#include "CtrlViewColorContourLegendDrawingFunctions.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -112,8 +116,6 @@
 #include "ApplicationInterface.h"
 #include "CtrlViewWin32Functions.h"
 #include "BetaProductParamBoxFunctions.h"
-
-#include <gdiplus.h>
 
 #include <list>
 #include <regex>
@@ -202,7 +204,6 @@ void NFmiStationViewHandler::DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect
 {
     DrawMap(theGTB, theMapFrame); // synop-plot printtausta varten pit‰‰ tehd‰ oma muuttuja, jolloin ei karttaa piirret‰
     DrawData(theGTB);
-    DrawLegend(theGTB);
     DrawOverMap(theGTB, theMapFrame); // piirret‰‰n haluttaessa kartan ja datan p‰‰lle l‰pin‰kyv‰ esim. kaupunkien nimet/tiestˆ kartta
     DrawSilamStationMarkers();
     DrawTrajectories();
@@ -1853,7 +1854,66 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 	return itsMapArea->ToLatLon(theViewPoint);
 }
 
-void NFmiStationViewHandler::DrawLegend(NFmiToolBox* theGTB)
+static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo &graphicalInfo)
+{
+    float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
+    if(sizeFactor < 1)
+        sizeFactor = std::pow(sizeFactor, 2.f);
+    return sizeFactor;
+}
+
+void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
+{
+    itsToolBox = theGTB;
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
+    if(drawParamList)
+    {
+        auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
+        auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+        auto sizeFactor = ::CalcUsedLegendSizeFactor(graphicalInfo);
+        auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+
+        for(const auto& drawParam : *drawParamList)
+        {
+            if(!drawParam->IsParamHidden())
+            {
+                auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+                auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
+                NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
+                if(DrawContourLegendOnThisMapRow() && colorContourLegendValues.useLegend())
+                {
+                    CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
+                }
+            }
+        }
+    }
+}
+
+bool NFmiStationViewHandler::DrawContourLegendOnThisMapRow()
+{
+    bool drawLegend = false;
+    CtrlViewUtils::MapViewMode displayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
+    if(displayMode == CtrlViewUtils::MapViewMode::kOneTime)
+    { 
+        // 1-time -moodissa piirret‰‰n legenda jokaiseen ruutuun
+        drawLegend = true;
+    }
+    else if(displayMode == CtrlViewUtils::MapViewMode::kRunningTime)
+    {
+        // running-time -moodissa piirret‰‰n legenda vain alimman rivin oikean puoleiseen ruutuun
+        if((itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y()) && (itsViewGridColumnNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X()))
+            drawLegend = true;
+    }
+    else
+    {
+        // normaali -moodissa piirret‰‰n legenda vain oikean puoleiseen sarakkeeseen
+        if((itsViewGridColumnNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X()))
+            drawLegend = true;
+    }
+    return drawLegend;
+}
+
+void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 {
 #ifndef DISABLE_CPPRESTSDK
     if(!theGTB || (itsDrawParam && itsDrawParam->IsParamHidden()))
@@ -1864,13 +1924,19 @@ void NFmiStationViewHandler::DrawLegend(NFmiToolBox* theGTB)
 
     auto registeredLayers = itsCtrlViewDocumentInterface->WmsSupport()
         .getRegisteredLayers(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
-    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 
     for (const auto& registered : registeredLayers)
     {
         if(!drawParamList->Find(registered, nullptr, NFmiInfoData::kWmsData))
         {
             itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+        }
+        else
+        {
+            // Viel‰ jos piirto-optioissa ei ole legendan piirto p‰‰ll‰, poistetaan rekisterˆidyist‰ (en ymm‰rr‰ logiikkaa, miten sen saa taas p‰‰lle)
+            if(!drawParamList->Current()->ShowColorLegend())
+                itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
     }
 
@@ -2555,7 +2621,7 @@ void NFmiStationViewHandler::Update(void)
 		}
 
         auto doGeneralViewUpdates = mapHandler->UpdateMapViewDrawingLayers() || mapHandler->MakeNewBackgroundBitmap();
-        NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+        NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 		if(drawParamList && (doGeneralViewUpdates || drawParamList->IsDirty()))
 		{
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": forced to recreate layers", this);
@@ -2701,8 +2767,8 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
     
     if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-        // ParameterSelection-dialogin tarvitsemia asetuksia laitetaan t‰ll‰ uudella funktiolla.
-        itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+        // Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan t‰ll‰ uudella funktiolla.
+        itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
 
@@ -3063,8 +3129,14 @@ bool NFmiStationViewHandler::ShowParamHandlerView(void)
 
 void NFmiStationViewHandler::DrawParamView(NFmiToolBox * theGTB)
 {
-    if(itsCtrlViewDocumentInterface->BetaProductGenerationRunning())
-        StationViews::DrawBetaProductParamBox(this, false);
+    bool doBetaProductParameterBox = itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
+    bool doBetaParamBoxDuePrinting = (itsCtrlViewDocumentInterface->Printing() && IsPrintedMapViewDesctop());
+    if(doBetaProductParameterBox || doBetaParamBoxDuePrinting)
+    {
+        const NFmiBetaProduct *optionalPrintingBetaProduct = doBetaParamBoxDuePrinting ? &StationViews::GetPrintingBetaProductForParamBoxDraw(itsMapViewDescTopIndex, *itsCtrlViewDocumentInterface) : nullptr;
+        
+        StationViews::DrawBetaProductParamBox(this, false, optionalPrintingBetaProduct);
+    }
     else
     {
         if(ShowParamHandlerView())
@@ -3664,6 +3736,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		NFmiPoint dataSize(20,20);
 		FmiParameterName param = FmiParameterName(theDrawParam->Param().GetParam()->GetIdent());
         bool isGridData = info ? (info->IsGrid() == true) : false;
+        bool useTextView = theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiTextView;
 
         if(param == NFmiInfoData::kFmiSpSynoPlot || param == NFmiInfoData::kFmiSpSoundingPlot || param == NFmiInfoData::kFmiSpMinMaxPlot || param == NFmiInfoData::kFmiSpMetarPlot) // jos synop plottia halutaan tai sounding-plottia tai min/max plottia (9996)
 		{
@@ -3730,7 +3803,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                             , itsViewGridColumnNumber);
 
 		}
-		else if(theDrawParam->GridDataPresentationStyle() == 6)
+		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiSymbolView)
 		{
 			stationView = new NFmiStationArrowView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -3752,7 +3825,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                                     , itsViewGridRowNumber
                                                                     , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiPrecipFormSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiPrecipFormSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirret‰‰n data sateen olomuoto n‰ytˆll‰, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiPrecipitationFormSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 																	,itsToolBox
@@ -3765,7 +3838,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                                     , itsViewGridRowNumber
                                                                     , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiRawMirriFontSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiRawMirriFontSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirret‰‰n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiRawMirriFontSymbolTextView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3778,7 +3851,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiBetterWeatherSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiBetterWeatherSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirret‰‰n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiBetterWeatherSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3791,7 +3864,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiSmartSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiSmartSymbolView)
         {
             stationView = new NFmiSmartSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3804,7 +3877,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiCustomSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiCustomSymbolView)
         {
             stationView = new NFmiCustomSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3817,7 +3890,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(((isGridData && theDrawParam->GridDataPresentationStyle() == 1) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::kFmiSynopWeatherSymbolView)
+        else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiSynopWeatherSymbolView)
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirret‰‰n data synop-s‰‰ symboleilla, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiStationIndexTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
@@ -3830,7 +3903,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridRowNumber
                                                     , itsViewGridColumnNumber);
         }
-		else if(theDrawParam->GridDataPresentationStyle() == 7 || (info && info->IsGrid() == false && theDrawParam->StationDataViewType() == 7))
+		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiIndexedTextView || (info && info->IsGrid() == false && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiIndexedTextView))
 		{
 			stationView = new NFmiStationWindBarbView(itsMapViewDescTopIndex, itsMapArea
 													 ,itsToolBox
@@ -3842,7 +3915,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridRowNumber
                                                     , itsViewGridColumnNumber);
         }
-		else if(theDrawParam->GridDataPresentationStyle() != 1 && info && info->IsGrid())
+		else if((!useTextView) && info && info->IsGrid())
 		{
 			stationView = new NFmiIsoLineView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -3854,7 +3927,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 											 ,itsViewGridRowNumber
                                              ,itsViewGridColumnNumber);
 		}
-		else if(theDrawParam->StationDataViewType() != 1 && info && info->IsGrid() == false)
+		else if(theDrawParam->StationDataViewType() != NFmiMetEditorTypes::View::kFmiTextView && info && info->IsGrid() == false)
 		{ // eli tarvittaessa myˆs asema data voidaan haluta piirt‰‰ isoviivoina tai contoureina
 			stationView = new NFmiIsoLineView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -4271,6 +4344,7 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
     InitializeGdiplus(itsToolBox, &GetFrame());
 
+    DrawLegends(theGTB);
     if(IsControlPointModeOn())
         DrawControlPoints();
     if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyss‰ tarkkuus tilassa, milloin valittu piste piirret‰‰n jokaiseen karttaruutuun

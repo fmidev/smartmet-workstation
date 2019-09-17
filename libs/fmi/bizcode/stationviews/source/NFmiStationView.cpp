@@ -1306,7 +1306,7 @@ bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
     {
         auto gridDataDrawStyle = itsDrawParam->GridDataPresentationStyle();
         // Tyylit 2-5 ovat isoline, contour, isoline+contour, quickcontour
-        if(gridDataDrawStyle >= 2 && gridDataDrawStyle <= 5)
+        if(gridDataDrawStyle >= NFmiMetEditorTypes::View::kFmiIsoLineView && gridDataDrawStyle <= NFmiMetEditorTypes::View::kFmiQuickColorContourView)
             return false;
         else
         {
@@ -2192,7 +2192,7 @@ bool NFmiStationView::GetCurrentDataMatrixFromQ2Server(NFmiDataMatrix<float> &th
 
 bool NFmiStationView::IsStationDataGridded()
 {
-    if(itsDrawParam->StationDataViewType() != NFmiMetEditorTypes::kFmiTextView && itsInfo->IsGrid() == false)
+    if(itsDrawParam->StationDataViewType() != NFmiMetEditorTypes::View::kFmiTextView && itsInfo->IsGrid() == false)
         return true;
     else
         return false;

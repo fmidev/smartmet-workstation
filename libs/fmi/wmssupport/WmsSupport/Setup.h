@@ -38,6 +38,7 @@ namespace Wms
         std::string version;
         bool transparency;
         bool logFetchCapabilitiesRequest = true;
+        bool doVerboseLogging = false;
         std::string delimiter;
         ServerSetup generic;
     };

@@ -604,7 +604,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonBetaAutomationSaveAs()
 {
     StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
 
-    BetaProduct::SaveObjectInJsonFormat(*itsBetaProductAutomation, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaAutomationFileFilter(), NFmiBetaProductionSystem::BetaAutomationFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-automation", false, &itsSelectedAutomationFullFilePath);
+    BetaProduct::SaveObjectInJsonFormat(*itsBetaProductAutomation, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaAutomationFileFilter(), NFmiBetaProductionSystem::BetaAutomationFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-automation", "Betaautomation1", false, &itsSelectedAutomationFullFilePath);
     itsAutomationNameU_ = CA2T(PathUtils::getRelativeStrippedFileName(itsSelectedAutomationFullFilePath, itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), NFmiBetaProductionSystem::BetaAutomationFileExtension()).c_str());
     MakeAutomationComparisonObject();
     UpdateData(FALSE);
@@ -793,7 +793,7 @@ void CFmiBetaProductAutomationDialog::AddAutomationToList(const std::string &the
 void CFmiBetaProductAutomationDialog::OnBnClickedButtonAddBetaAutomationToList()
 {
     std::string filePath;
-    if(BetaProduct::GetFilePathFromUser(NFmiBetaProductionSystem::BetaAutomationFileFilter(), BetaProduct::InitialSavePath(), filePath, true))
+    if(BetaProduct::GetFilePathFromUser(NFmiBetaProductionSystem::BetaAutomationFileFilter(), BetaProduct::InitialSavePath(), filePath, true, ""))
     {
         AddAutomationToList(filePath);
     }
@@ -842,7 +842,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonSaveAsAutomationList()
     StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
 
     std::string usedAbsoluteFilePath;
-    if(BetaProduct::SaveObjectInJsonFormat(itsBetaProductionSystem->UsedAutomationList(), BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaAutomationListFileFilter(), NFmiBetaProductionSystem::BetaAutomationListFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Automation-list", false, &usedAbsoluteFilePath))
+    if(BetaProduct::SaveObjectInJsonFormat(itsBetaProductionSystem->UsedAutomationList(), BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaAutomationListFileFilter(), NFmiBetaProductionSystem::BetaAutomationListFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Automation-list", "Automationlist1", false, &usedAbsoluteFilePath))
     {
         itsBetaProductionSystem->UsedAutomationListPathString(usedAbsoluteFilePath);
         UpdateSelectedAutomationListName();
