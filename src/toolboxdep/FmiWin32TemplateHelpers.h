@@ -7,6 +7,7 @@
 #include "catlog/catlog.h"
 #include "CtrlViewWin32Functions.h"
 #include "UnicodeStringConversions.h"
+#include "CtrlViewDocumentInterface.h"
 
 namespace CFmiWin32TemplateHelpers
 {
@@ -88,6 +89,7 @@ namespace CFmiWin32TemplateHelpers
 	template<class Tview>
 	void OnPrintMapView(Tview *theView, CDC* pDC, CPrintInfo* pInfo)
 	{
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->SetPrintedDescTopIndex(theView->MapViewDescTopIndex());
         SmartMetDocumentInterface *smartMetDocumentInterface = theView->GetSmartMetDocumentInterface();
 		if(pInfo->m_nCurPage > 1) // jos ollaan sivuilla 2-n, pitää aina askeltaa desctopin aikaa eteenpäin. Muista että pitää ottaa huomioon vielä eri aikamoodit ja kartta ruudukon koko
 		{
@@ -123,7 +125,8 @@ namespace CFmiWin32TemplateHelpers
 		// jos ollaan viimeisellä printti sivulla ja ollaan printattu monisivu printtiä, pitää originaali aika vielä asettaa takaisin
 		if(pInfo->m_nCurPage > 1 && pInfo->GetToPage() == pInfo->m_nCurPage)
 			theView->CurrentPrintTime(theView->PrintingStartTime());
-	}
+        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->ResetPrintedDescTopIndex();
+    }
 
     // Halutaan että kun mistä tahansa näytöstä käynnistetään tämä prnttaus prosessi, 
     // niin printtaavan ikkunan pitää olla Printtaus-dialogin emoikkuna, jotta dialogi 

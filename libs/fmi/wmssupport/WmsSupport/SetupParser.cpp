@@ -19,7 +19,7 @@ namespace Wms
             return serverSetup;
         }
 
-        DynamicServerSetup parseDynamic(const std::string& path)
+        DynamicServerSetup parseDynamic(const std::string& path, bool doVerboseLogging)
         {
             auto dynamicSetup = DynamicServerSetup{};
             dynamicSetup.producer = NFmiProducer{
@@ -30,15 +30,16 @@ namespace Wms
             dynamicSetup.transparency = NFmiSettings::Optional(path + "::Transparency", true);
             dynamicSetup.delimiter = NFmiSettings::Optional(path + "::Delimiter", std::string(","));
             dynamicSetup.generic = parseServer(path);
+            dynamicSetup.doVerboseLogging = doVerboseLogging;
             return dynamicSetup;
         }
 
-        void parseDynamics(const std::string& nspace, std::unordered_map<int, DynamicServerSetup>& dynamics)
+        void parseDynamics(const std::string& nspace, std::unordered_map<int, DynamicServerSetup>& dynamics, bool doVerboseLogging)
         {
             auto dynamicKeys = NFmiSettings::ListChildren(nspace);
             for(const auto& key : dynamicKeys)
             {
-                auto dynamicSetup = parseDynamic(nspace + "::" + key);
+                auto dynamicSetup = parseDynamic(nspace + "::" + key, doVerboseLogging);
                 dynamics[dynamicSetup.producer.GetIdent()] = dynamicSetup;
             }
         }
@@ -116,22 +117,22 @@ namespace Wms
         UserUrlServerSetup parseBase(const std::string& nspace)
         {
             auto serverSetup = UserUrlServerSetup{};
-            serverSetup.transparency = NFmiSettings::Require<bool>(nspace + "::Transparency");
-            serverSetup.version = NFmiSettings::Require<std::string>(nspace + "::Version");
+            serverSetup.transparency = NFmiSettings::Optional(nspace + "::Transparency", false);
+            serverSetup.version = NFmiSettings::Optional(nspace + "::Version", std::string(""));
             return serverSetup;
         }
     }
 
-    Setup SetupParser::parse()
+    Setup SetupParser::parse(bool doVerboseLogging)
     {
         auto settings = Setup{};
         settings.backgroundBackwardAmount = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::Backward", 1);
         settings.backgroundForwardAmount = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::Forward", 1);
-        settings.numberOfCaches = NFmiSettings::Require<int>("SmartMet::Wms2::Cache::NumberOfCaches");
-        settings.numberOfLayersPerCache = NFmiSettings::Require<int>("SmartMet::Wms2::Cache::NumberOfLayersPerCache");
+        settings.numberOfCaches = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfCaches", 0);
+        settings.numberOfLayersPerCache = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfLayersPerCache", 0);
         settings.proxyUrl = "http://" + NFmiSettings::Optional("SmartMet::Wms2::ProxyUrl", std::string(""));
         settings.intervalToPollGetCapabilities = std::chrono::seconds{ NFmiSettings::Optional("SmartMet::Wms2::GetCapabilities::PollInterval", 5 * 60) };
-        parseDynamics("SmartMet::Wms2::DynamicDatas", settings.dynamics);
+        parseDynamics("SmartMet::Wms2::DynamicDatas", settings.dynamics, doVerboseLogging);
 
         auto knownServers = parseKnownServers("SmartMet::Wms2::KnownServers");
 
@@ -141,7 +142,7 @@ namespace Wms
         settings.background = parseUserUrl("SmartMet::Wms2::UserUrls::Backgrounds", knownServers, backgroundBase);
         settings.overlay = parseUserUrl("SmartMet::Wms2::UserUrls::Overlays", knownServers, overlayBase);
 
-        settings.isConfigured = true;
+        settings.checkForMeaningfulConfigurations();
         return settings;
     }
 }

@@ -14,6 +14,7 @@
 #include "FmiWin32Helpers.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "ApplicationInterface.h"
+#include "SpecialDesctopIndex.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -73,6 +74,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesView, CView)
 	ON_WM_MOUSEWHEEL()
 	ON_NOTIFY (UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 	ON_WM_MBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -154,6 +156,11 @@ void CTimeEditValuesView::DrawOverBitmapThings(NFmiToolBox * /* theToolBox */ )
 {
 }
 
+int CTimeEditValuesView::MapViewDescTopIndex(void) 
+{
+    return CtrlViewUtils::kFmiTimeSerialView; 
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CTimeEditValuesView diagnostics
 
@@ -203,6 +210,9 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 		bool needsUpdate = itsManagerView ? itsManagerView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 			,itsToolBox->ConvertCtrlKey(nFlags)) : false;
 		ReleaseDC(theDC);
+
+		itsManagerView->MapViewDescTopIndex(CtrlViewUtils::kFmiTimeSerialView);
+
 		if(needsUpdate)
 		{
 			Invalidate(FALSE);
@@ -215,7 +225,6 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 
 			if(itsSmartMetDocumentInterface->MetEditorOptionsData().ControlPointMode())
                 itsSmartMetDocumentInterface->DrawOverBitmapThings(0);
-
 		}
 		else
 		{
@@ -228,6 +237,29 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 		throw ; // laitetaan poikkeus eteenpäin
 	}
 	ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön (OnLButtonDown:issa laitettiin SetCapture päälle)
+}
+
+void CTimeEditValuesView::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	CDC* theDC = GetDC();
+	if (!theDC)
+		return;
+	itsToolBox->SetDC(theDC);
+
+	bool needsUpdate = itsManagerView ? itsManagerView->LeftDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+	ReleaseDC(theDC);
+	if (needsUpdate)
+	{
+		if (itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
+		{
+			itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
+			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsManagerView->MapViewDescTopIndex());
+			return;
+		}
+		Invalidate(FALSE);
+		itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+	}
 }
 
 void CTimeEditValuesView::OnMButtonUp(UINT nFlags, CPoint point)
@@ -254,7 +286,9 @@ void CTimeEditValuesView::OnMButtonUp(UINT nFlags, CPoint point)
 
 void CTimeEditValuesView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	if(!itsSmartMetDocumentInterface->MouseCapturedInTimeWindow())
+    if(itsSmartMetDocumentInterface->Printing())
+        return;
+    if(!itsSmartMetDocumentInterface->MouseCapturedInTimeWindow())
 		return;
 	CDC *theDC = GetDC();
 	if(!theDC)
@@ -622,6 +656,9 @@ BOOL CTimeEditValuesView::PreTranslateMessage(MSG* pMsg)
 
 void CTimeEditValuesView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
+    if(!CFmiWin32TemplateHelpers::AllowTooltipDisplay(itsSmartMetDocumentInterface))
+        return;
+
 	*result = 0;
 	NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
 

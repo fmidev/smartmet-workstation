@@ -67,7 +67,8 @@ public:
   void Draw(NFmiMetaFileView * theView);
 
   unsigned long ConvertCtrlKey (UINT theHardCtrl) const;
-  void ConvertPoint(const NFmiPoint & relativePoint, CPoint & absolutePoint);
+  void ConvertPoint(const NFmiPoint& relativePoint, CPoint& absolutePoint);
+  void ConvertPoint(const CPoint & absolutePoint, NFmiPoint & relativePoint);
   void ConvertPoint(const NFmiRect & theFrame, const NFmiPoint & relativePoint, CPoint & absolutePoint);
   void ConvertRect(const NFmiRect & relativeRect, CRect & absoluteRect);
   void ConvertRect(const CRect & absoluteRect, NFmiRect & relativeRect);

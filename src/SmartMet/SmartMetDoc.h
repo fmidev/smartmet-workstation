@@ -120,7 +120,7 @@ public:
 	void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText);
 	void CaseStudyToNormalModeActions(void);
 	void SetAllViewIconsDynamically(void);
-    void ActivateParameterSelectionDlg();
+    void ActivateParameterSelectionDlg(unsigned int theDescTopIndex = 0);
 	CFmiSynopDataGridViewDlg* SynopDataGridViewDlg(void){return itsSynopDataGridViewDlg; }
     void UpdateCrossSectionView(void);
     void UpdateTempView(void);

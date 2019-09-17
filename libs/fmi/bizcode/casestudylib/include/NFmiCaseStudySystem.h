@@ -276,8 +276,8 @@ public:
 	void CaseStudyPath(const std::string &newValue);
 	const NFmiMetTime& Time(void) const {return itsTime;}
 	void Time(const NFmiMetTime &newValue) {itsTime = newValue;}
-	bool ZipFiles(void) const {return fZipFiles;}
-	void ZipFiles(bool newValue) {fZipFiles = newValue;}
+    bool ZipFiles(void) const;
+    void ZipFiles(bool newValue);
 	bool DeleteTmpFiles(void) const {return fDeleteTmpFiles;}
 	void DeleteTmpFiles(bool newValue) {fDeleteTmpFiles = newValue;}
 	bool ApproximateOnlyLocalDataSize(void) const {return fApproximateOnlyLocalDataSize;}
@@ -312,9 +312,9 @@ private:
 	std::string itsName; // talletettavan case-studyn nimi
 	std::string itsInfo; // talletettavan case-studyn info
     boost::shared_ptr<CachedRegString> itsCaseStudyPath; // tässä on abs polku hakemistoon johon on tarkoitus tehdä case study talletuksia
-	std::string itsSmartMetLocalCachePath; // polku johon smartmet tallettaa queryDatat, jos data löytyy tämän polun alta, sen koko voidaan aina arvioida
+    boost::shared_ptr<CachedRegBool> fZipFiles; // pakataanko tehty case-study data lopuksi vai ei
+    std::string itsSmartMetLocalCachePath; // polku johon smartmet tallettaa queryDatat, jos data löytyy tämän polun alta, sen koko voidaan aina arvioida
 	NFmiMetTime itsTime; // talletetttavan case-studyn ns. seinäkello aika
-	bool fZipFiles; // zipataanko case-study datat
 	bool fDeleteTmpFiles; // deletoidaanko case-study datat zippauksen jälkeen
 	bool fApproximateOnlyLocalDataSize; // arvioidaan vain lokaali cachellä olevien datojen koko, kaikki muualla olevat tavarat merkitään 0:ksi
 	std::vector<NFmiCaseStudyCategoryData> itsCategoriesData;

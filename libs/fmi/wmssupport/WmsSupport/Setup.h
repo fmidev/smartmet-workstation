@@ -38,6 +38,7 @@ namespace Wms
         std::string version;
         bool transparency;
         bool logFetchCapabilitiesRequest = true;
+        bool doVerboseLogging = false;
         std::string delimiter;
         ServerSetup generic;
     };
@@ -59,6 +60,19 @@ namespace Wms
         UserUrlServerSetup background;
         UserUrlServerSetup overlay;
         std::unordered_map<int, DynamicServerSetup> dynamics;
+
+        // If there is some configurations given, then we must be able
+        // to set this WMS system in on -mode (=> isConfigured = true).
+        void checkForMeaningfulConfigurations()
+        {
+            if(numberOfCaches && numberOfLayersPerCache)
+            {
+                if(background.parsedServers.size() || dynamics.size())
+                {
+                    isConfigured = true;
+                }
+            }
+        }
     };
 }
 

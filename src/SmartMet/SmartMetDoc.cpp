@@ -102,6 +102,8 @@
 #include "NFmiMacroParamDataCache.h"
 #include "FmiSoundingDataServerConfigurationsDlg.h"
 
+#include "AnimationProfiler.h"
+
 #include <direct.h> // _chdir()
 #include <cassert>
 #include <fstream>
@@ -531,14 +533,14 @@ void CSmartMetDoc::OnUpdateButtonTimeEditValuesDlg(CCmdUI *pCmdUI)
 	pCmdUI->SetCheck(itsData->TimeSerialDataViewOn());
 }
 
-void CSmartMetDoc::ActivateParameterSelectionDlg()
+void CSmartMetDoc::ActivateParameterSelectionDlg(unsigned int theDesktopIndex)
 {
     if(!itsParameterSelectionDlg)
         CreateParameterSelectionDlg(itsData);
 
     itsParameterSelectionDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
     itsParameterSelectionDlg->SetActiveWindow();
-
+	itsParameterSelectionDlg->SetIndexes(theDesktopIndex);
     GetData()->LogMessage("Parameter Selection dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
@@ -3871,5 +3873,5 @@ void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, co
 
 void CSmartMetDoc::OnAcceleratorDoVisualizationProfiling()
 {
-    // TODO: Add your command handler code here
+	GetData()->StartProfiling();
 }

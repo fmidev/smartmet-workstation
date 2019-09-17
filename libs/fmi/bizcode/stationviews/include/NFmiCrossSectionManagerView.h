@@ -46,7 +46,7 @@ class NFmiCrossSectionManagerView : public NFmiCtrlView
 	~NFmiCrossSectionManagerView(void);
 	void Update(void);
 	void Draw(NFmiToolBox* theToolBox); 
-	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonUp(const NFmiPoint& thePlace, unsigned long theKey);
 	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
 	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
 	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
@@ -84,6 +84,7 @@ class NFmiCrossSectionManagerView : public NFmiCtrlView
 	bool CreateTimeControlView(void);
 	void DrawFooter(void);
 	void DrawHeader(void);
+	void ActivateCrossSectionView(const NFmiPoint& thePlace);
 
 	NFmiRect itsHeaderRect; // t‰lle alueelle piirret‰‰n poikkileikkaus datasta mm. aika, mahd. paikka, v- ja h-resoluutiot
 	NFmiRect itsFooterRect; // t‰lle alueelle piirret‰‰n poikkileikkaus datasta mm. mahd. aikakontrolli-n‰yttˆ tai p‰‰pisteiden koordinaatit

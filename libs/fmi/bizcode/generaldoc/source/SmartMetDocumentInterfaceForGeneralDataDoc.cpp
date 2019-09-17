@@ -196,7 +196,12 @@ boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::Act
 
 int SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
 {
-    return itsDoc->ActiveViewRow(theDescTopIndex);
+	return itsDoc->ActiveViewRow(theDescTopIndex);
+}
+
+int SmartMetDocumentInterfaceForGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
+{
+	return itsDoc->GetFirstRowNumber(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
@@ -394,7 +399,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ActivateParamSelectionDlgAfterL
     itsDoc->ActivateParamSelectionDlgAfterLeftDoubleClick(newValue);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ActivateViewParamSelectorDlg(int theMapViewDescTopIndex)
+void SmartMetDocumentInterfaceForGeneralDataDoc::ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex)
 {
     itsDoc->ActivateViewParamSelectorDlg(theMapViewDescTopIndex);
 }
@@ -1329,9 +1334,9 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::LoadViewMacro(const std::string
     return itsDoc->LoadViewMacro(theName);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::StoreViewMacro(const std::string &theName, const std::string &theDescription)
+void SmartMetDocumentInterfaceForGeneralDataDoc::StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription)
 {
-    itsDoc->StoreViewMacro(theName, theDescription);
+    itsDoc->StoreViewMacro(theAbsoluteMacroFilePath, theDescription);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::CreateNewViewMacroDirectory(const std::string &thePath)

@@ -55,7 +55,7 @@ void NFmiViewParamCommandView::DrawData(void)
 bool NFmiViewParamCommandView::RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey)
 {
 	if(IsIn(thePlace))
-		return itsCtrlViewDocumentInterface->CreateParamSelectionPopup(itsMapViewDescTopIndex, GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber)) == true;
+		return itsCtrlViewDocumentInterface->CreateParamSelectionPopup(itsMapViewDescTopIndex, GetUsedParamRowIndex()) == true;
 	return false;
 }
 
