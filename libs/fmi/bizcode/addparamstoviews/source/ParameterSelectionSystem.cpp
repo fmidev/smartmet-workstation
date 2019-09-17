@@ -76,7 +76,7 @@ namespace AddParams
 				if (info.DataType() == NFmiInfoData::kStationary)
 				{
 					auto test = info;
-// 					SingleRowItem item = SingleRowItem(kProducerType, "Geo", 987654, true, 
+// 					SingleRowItem item = SingleRowItem(kProducerType, "Geo", 987654, true, "Geo", NFmiInfoData::kStationary, 0, "", false, nullptr, 2, "Geo");
 				}
 			}
 		}
@@ -85,14 +85,14 @@ namespace AddParams
 
     void ParameterSelectionSystem::updateData()
     {
-        updateOperationalData("Operational data", NFmiInfoData::kEditable);
-        updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
-        updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
-        updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
-        updateMacroParamData("Macro Parameters", NFmiInfoData::kMacroParam);
+        updateOperationalData(OperationalDataStr, NFmiInfoData::kEditable);
+        updateData(ModellDataStr, *modelProducerSystem_, NFmiInfoData::kViewable);
+        updateData(ObservationDataStr, *obsProducerSystem_, NFmiInfoData::kObservations);
+        updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
+        updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
         updateCustomCategories();
-        updateData("Help data", *modelProducerSystem_, NFmiInfoData::kModelHelpData);
-		updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
+        updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
+		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
     }
 
     void ParameterSelectionSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
@@ -222,61 +222,91 @@ namespace AddParams
 	{
 		std::vector<AddParams::SingleRowItem> trimmedRowData;
 		int index = 0;
+		bool suitableCategory = true;
 
 		if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		{
-			for (auto& row : dialogRowData_)
-			{
-				if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
-				{
-					trimmedRowData.push_back(row);
-				}
-				if (row.dataType() == NFmiInfoData::kMacroParam)
-				{
-					trimmedRowData.push_back(row);
-				}
-				checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
-				if (!infoVector.empty())
-				{
-					auto info = infoVector.at(0);
-					if (info->SizeLevels() > 1 && info->IsGrid())
-					{
-						trimmedRowData.push_back(row);
-						auto subRows = addSubmenu(row, index);
-						trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
-					}
-				}
-				index++;
-			}
-			dialogRowData_.swap(trimmedRowData);
+			dialogRowData_.swap(crossSectionData());
 		}
 		else if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
 		{
-			for (auto& row : dialogRowData_)
-			{
-				if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
-				{
-					trimmedRowData.push_back(row);
-				}
-				else if (row.itemId() == 2001 || row.parentItemId() == 2001)
-				{
-					trimmedRowData.push_back(row);
-				}
-				checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
-				if (!infoVector.empty())
-				{
-					auto info = infoVector.at(0);
-					if (info->IsGrid())
-					{
-						trimmedRowData.push_back(row);
-						auto subRows = addAllChildNodes(row, index);
-						trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
-					}
-				}
-				index++;
-			}
-			dialogRowData_.swap(trimmedRowData);
+			dialogRowData_.swap(timeSeriesData());
 		}
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::crossSectionData()
+	{
+		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		int index = 0;
+		bool suitableCategory = true;
+
+		for (auto& row : dialogRowData_)
+		{
+			if (row.rowType() == AddParams::RowType::kCategoryType)
+				suitableCategory = (row.displayName() == ModellDataStr || row.displayName() == MacroParametersStr) ? true : false;
+
+			if (!suitableCategory)
+			{
+				index++;
+				continue;
+			}
+
+			if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+			{
+				trimmedRowData.push_back(row);
+			}
+			if (row.dataType() == NFmiInfoData::kMacroParam)
+			{
+				trimmedRowData.push_back(row);
+			}
+			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+			if (!infoVector.empty())
+			{
+				auto info = infoVector.at(0);
+				if (info->SizeLevels() > 1 && info->IsGrid())
+				{
+					trimmedRowData.push_back(row);
+					auto subRows = addSubmenu(row, index);
+					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+				}
+			}
+			index++;
+		}
+		removeNodesThatDontHaveLeafs(trimmedRowData);
+		return trimmedRowData;
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::timeSeriesData()
+	{
+		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		int index = 0;
+		bool suitableCategory = true;
+
+		for (auto& row : dialogRowData_)
+		{
+			if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+			{
+				trimmedRowData.push_back(row);
+			}
+			else if (row.itemId() == 2001 || row.parentItemId() == 2001)
+			{
+				trimmedRowData.push_back(row);
+			}
+			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+			if (!infoVector.empty())
+			{
+				auto info = infoVector.at(0);
+				if (info->IsGrid())
+				{
+					trimmedRowData.push_back(row);
+					auto subRows = addAllChildNodes(row, index);
+					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+				}
+			}
+			index++;
+		}
+		removeNodesThatDontHaveLeafs(trimmedRowData);
+		return trimmedRowData;
 	}
 
 	std::vector<SingleRowItem> ParameterSelectionSystem::addSubmenu(SingleRowItem& row, int index)
@@ -367,12 +397,12 @@ namespace AddParams
 			{ 
 				rowData.push_back(row); 
 			}
-            if((index + 1 < resultRowData.size()))
+            else if((index + 1 < resultRowData.size()))
             {
-                if(resultRowData.at(index + 1).treeDepth() != row.treeDepth())
-                {
-                    rowData.push_back(row);
-                }
+				if (resultRowData.at(index + 1).treeDepth() != row.treeDepth())
+				{
+					rowData.push_back(row);
+				}
             }
             index++;
         }

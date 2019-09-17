@@ -59,6 +59,13 @@ namespace AddParams
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
         const NFmiLevelBag *soundingLevels_;
 
+		const std::string OperationalDataStr = "Operational data",
+			ModellDataStr = "Model data",
+			ObservationDataStr = "Observation data",
+			SatelliteImagesStr = "Satellite images",
+			MacroParametersStr = "Macro Parameters",
+			HelpDataStr = "Help data";
+
     public:
         ParameterSelectionSystem();
         ~ParameterSelectionSystem();
@@ -95,6 +102,8 @@ namespace AddParams
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
 		void trimDialogRowDataDependingOnActiveView();
+		std::vector<SingleRowItem> crossSectionData();
+		std::vector<SingleRowItem> timeSeriesData();
 		std::vector<SingleRowItem> addSubmenu(SingleRowItem& row, int index);
 		std::vector<SingleRowItem> addAllChildNodes(SingleRowItem& row, int index);
 	};
