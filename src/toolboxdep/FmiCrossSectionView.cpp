@@ -57,13 +57,13 @@ BEGIN_MESSAGE_MAP(CFmiCrossSectionView, CView)
 	//}}AFX_MSG_MAP
 	ON_WM_LBUTTONUP()
 	ON_WM_RBUTTONUP()
-ON_WM_MOUSEMOVE()
-ON_WM_SIZE()
-ON_WM_MOUSEWHEEL()
+	ON_WM_MOUSEMOVE()
+	ON_WM_SIZE()
+	ON_WM_MOUSEWHEEL()
 	ON_NOTIFY (UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 	ON_WM_LBUTTONDOWN()
-ON_WM_MBUTTONUP()
-ON_WM_LBUTTONDBLCLK()
+	ON_WM_MBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -309,7 +309,7 @@ void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-            itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
+			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
 			return ;
 		}
 		Invalidate(FALSE);

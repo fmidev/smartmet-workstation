@@ -240,6 +240,8 @@ namespace AddParams
 
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const
     {
+		
+
         if(dataCategory_ == NFmiInfoData::kSatelData)
             return makeDialogRowData(dialogRowDataMemory, satelliteDataVector_);
 

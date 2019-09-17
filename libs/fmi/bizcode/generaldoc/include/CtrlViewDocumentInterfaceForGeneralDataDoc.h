@@ -158,7 +158,8 @@ public:
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
     int ActiveViewRow(unsigned int theDescTopIndex) override;
     void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
-    NFmiSynopPlotSettings* SynopPlotSettings(void) override;
+	int GetFirstRowNumber(unsigned int theDescTopIndex) override;
+	NFmiSynopPlotSettings* SynopPlotSettings(void) override;
     NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) override;
     NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) override;
     NFmiConceptualModelData& ConceptualModelData(void) override;

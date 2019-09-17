@@ -265,6 +265,7 @@ public:
     virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
     virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
+	virtual int GetFirstRowNumber(unsigned int theDescTopIndex) = 0;
     virtual NFmiSynopPlotSettings* SynopPlotSettings(void) = 0;
     virtual NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) = 0;
     virtual NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) = 0;
