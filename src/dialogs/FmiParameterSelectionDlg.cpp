@@ -1167,7 +1167,7 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
 				rowItem.itemName(),
 				NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
 				kFmiAddParamCrossSectionView,
-				NFmiMetEditorTypes::kFmiParamsDefaultView,
+				NFmiMetEditorTypes::View::kFmiParamsDefaultView,
 				rowItem.level().get(),
 				rowItem.dataType());
 		}
