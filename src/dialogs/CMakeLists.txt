@@ -39,6 +39,7 @@ target_link_libraries(
     Q2ClientLib
 	AddParamsToViews
 	ApplicationDataBase
+    CtrlViewUtils
     )
 
 target_include_directories(
@@ -66,6 +67,7 @@ target_include_directories(
     PUBLIC ${Q2ClientLib_INCLUDE_DIRS}
     PUBLIC ${AddParamsToViews_INCLUDE_DIRS}
     PUBLIC ${ApplicationDataBase_INCLUDE_DIRS}
+    PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     )
 
@@ -99,6 +101,7 @@ set(
     ${Q2ClientLib_INCLUDE_DIRS}
 	${AddParamsToViews_INCLUDE_DIRS}
     ${ApplicationDataBase_INCLUDE_DIRS}
+    ${CtrlViewUtils_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

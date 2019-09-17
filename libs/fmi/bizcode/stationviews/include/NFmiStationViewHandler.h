@@ -33,9 +33,11 @@
 
 #pragma once
 
+#include "stdafx.h"
 #include "NFmiCtrlView.h"
 #include "NFmiWindTableSystem.h"
 #include "HakeMessage\Main.h"
+#include <gdiplus.h>
 
 class NFmiArea;
 class NFmiCtrlViewList;
@@ -50,6 +52,8 @@ class NFmiACLocationInfo;
 class NFmiColor;
 class CDC;
 class NFmiBetaProduct;
+class NFmiColorContourLegendValues;
+class NFmiColorRectSettings;
 
 namespace Gdiplus
 {
@@ -57,7 +61,20 @@ namespace Gdiplus
 	class PointF;
     class Font;
     class StringFormat;
+    class Rect;
 }
+
+class LegendDrawingMeasures
+{
+public:
+    NFmiPoint backgroundRectSizeInPixels = NFmiPoint(0, 0);
+    NFmiPoint colorRectSizeInPixels = NFmiPoint(0, 0);
+    double maxValueStringLengthInPixels = 0;
+    double paddingLengthInPixels = 0;
+    double usedFontSizeInPixels = 0;
+    double usedFontSizeInMM = 0;
+    Gdiplus::Rect backgroundRectInPixels;
+};
 
 class NFmiStationViewHandler : public NFmiCtrlView
 {
@@ -106,6 +123,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void DrawKaHaMessageIcon(const HakeMessage::HakeMsg &theWarningMessage, const NFmiPoint &latlon);
 #endif // DISABLE_CPPRESTSDK
 
+	void InitializeWarningSymbolFiles(void);
 	void InitializeWarningSymbols(void);
 	bool CheckBoundingBox(NFmiRect &theBoundBox, std::vector<NFmiRect> &theAutoCompletionRects, double relativeX, double relativeY, double relativeW, double radius, double angle, FmiDirection &theMarkerConnectingPlace);
 	NFmiPoint CalcNewCenterPoint(double relativeX, double relativeY, double relativeW, double radius, double angle);
@@ -118,7 +136,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawWindTableAreas(void);
 	void DrawSilamStationMarkers(NFmiSilamStationList &theStationList, NFmiDrawingEnvironment &theEnvi, const NFmiString &theSynopStr, double symbolXShift, double symbolYShift, NFmiRect &thePlaceRect);
 	bool ShowParamHandlerView(void);
-    void DrawBetaProductParamBox();
     NFmiRect CalcParamHandlerViewRect(void);
 	void InitParamHandlerView(void);
 	void UpdateParamHandler(void);
@@ -168,7 +185,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
 	void DrawOverMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
 	void DrawData(NFmiToolBox* theGTB); // Piirt‰‰ datan ruutuun
-    void DrawLegend(NFmiToolBox* theGTB);
+    void DrawLegends(NFmiToolBox* theGTB);
+    void DrawWmsLegends(NFmiToolBox* theGTB);
 	void DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmiRect& theRect);
 	void DrawMasksOnMap(NFmiToolBox* theGTB);
     void DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect &theMapFrame);
@@ -191,6 +209,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
+    bool DrawContourLegendOnThisMapRow();
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)

@@ -40,7 +40,8 @@ public:
 
 	const std::string& CurrentPath(void) const {return itsCurrentPath;}
 	std::string RelativePath(void) const;
-	void CurrentPath(const std::string &newValue); // tämä on alihakemistoon siirtymis metodi
+    void CurrentPath(const std::string& newValue); // tämä on alihakemistoon siirtymis metodi
+    void SetCurrentPathByAbsolutePath(const std::string &absolutePath); // tämä on hakemistoon siirtymis metodi
 	std::vector<NFmiMacroParamItem>& MacroParamItemTree(void) {return itsMacroItemTree;}
 	void Rebuild(NFmiStopFunctor *theStopFunctor);
 	void SwapMacroData(NFmiMacroParamSystem &theOther);
@@ -53,6 +54,7 @@ private:
 	void ClearMacros(void);
 	void InitMacroParamTree(NFmiStopFunctor *theStopFunctor);
 	void MakeMacroParamItemTree(NFmiStopFunctor *theStopFunctor);
+    void SetWantedPath(const std::string& wantedPath);
 
 	std::string itsCurrentPath; // mihin paikkaan on macroparamit talletettu
 	std::string itsRootPath; // tämän avulla saadaan kansio systeemille root kansio, josta ylöspäin ei voi mennä ..-hakiksen kautta

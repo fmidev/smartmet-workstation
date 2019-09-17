@@ -29,7 +29,8 @@ public:
 	bool ViewDirty(void){return fViewDirty;}
 	void ViewDirty(bool newState){fViewDirty = newState;}
 	void DrawOverBitmapThings(NFmiToolBox *theToolBox);
-	void ResetSoundingData(void);
+    int MapViewDescTopIndex(void);
+    void ResetSoundingData(void);
 	const std::string& SoundingIndexStr(void) const;
 	void DoDraw(void);
 

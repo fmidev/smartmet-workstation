@@ -29,7 +29,7 @@ public:
     void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;  // CSmartMetView
     void UpdateTempView() override; // CSmartMetDoc
     void UpdateCrossSectionView() override; // CSmartMetDoc
-    void ActivateParameterSelectionDlg() override; // CSmartMetDoc
+    void ActivateParameterSelectionDlg(unsigned int theDescTopIndex = 0) override; // CSmartMetDoc
     void ActivateZoomDialog(int theWantedDescTopIndex) override;  // CSmartMetView
     std::string GetToolTipString(unsigned int commandID, const std::string &theMagickWordU_) override; // CSmartMetApp
     //{

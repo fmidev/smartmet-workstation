@@ -28,6 +28,7 @@ class NFmiSoundingDataOpt1
 
    // Yhdelle serveriltä haetulle erikoishakuparametrille pitää tehdä oma param-id
    static const FmiParameterName OriginTimeParameterId = static_cast<FmiParameterName>(kFmiLastParameter + 1);
+   static const FmiParameterName LevelParameterId = static_cast<FmiParameterName>(kFmiLastParameter + 2);
 
   class LFCIndexCache
   {
@@ -214,6 +215,7 @@ class NFmiSoundingDataOpt1
   void FillMissingServerData();
   void SetServerDataFromGroundLevelUp();
   void ReverseAllData();
+  void CheckForAlternativeParameterFill(FmiParameterName parameterId, std::deque<float> &parametersInServerData);
 
   NFmiLocation itsLocation;
   NFmiMetTime itsTime;

@@ -68,6 +68,11 @@ const std::string& CtrlViewDocumentInterfaceForGeneralDataDoc::HelpDataPath(void
     return itsDoc->HelpDataPath();
 }
 
+const std::string& CtrlViewDocumentInterfaceForGeneralDataDoc::ControlPath(void) const
+{
+	return itsDoc->ControlDirectory();
+}
+
 void CtrlViewDocumentInterfaceForGeneralDataDoc::LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption, bool flushLogger)
 {
     itsDoc->LogAndWarnUser(theMessageStr, theDialogTitleStr, severity, category, justLog, addAbortOption, flushLogger);
@@ -732,6 +737,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theD
     itsDoc->ActiveViewRow(theDescTopIndex, theActiveRowIndex);
 }
 
+int CtrlViewDocumentInterfaceForGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
+{
+	return itsDoc->GetFirstRowNumber(theDescTopIndex);
+}
+
 NFmiSynopPlotSettings* CtrlViewDocumentInterfaceForGeneralDataDoc::SynopPlotSettings(void)
 {
     return itsDoc->SynopPlotSettings();
@@ -1327,6 +1337,26 @@ TimeSerialParameters& CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeSerialP
 void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex)
 {
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(theMapViewDescTopIndex));
+}
+
+NFmiColorContourLegendSettings& CtrlViewDocumentInterfaceForGeneralDataDoc::ColorContourLegendSettings()
+{
+    return itsDoc->ColorContourLegendSettings();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetPrintedDescTopIndex(int nowPrintedDescTopIndex)
+{
+    itsDoc->SetPrintedDescTopIndex(nowPrintedDescTopIndex);
+}
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::GetPrintedDescTopIndex()
+{
+    return itsDoc->GetPrintedDescTopIndex();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ResetPrintedDescTopIndex()
+{
+    itsDoc->ResetPrintedDescTopIndex();
 }
 
 #ifndef DISABLE_CPPRESTSDK

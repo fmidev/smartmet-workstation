@@ -109,6 +109,7 @@ CFmiCaseStudyDlg::CFmiCaseStudyDlg(SmartMetDocumentInterface *smartMetDocumentIn
     , itsInfoStrU_(_T(""))
     , itsPathStrU_(_T(""))
     , fEditEnableData(FALSE)
+    , fZipData(FALSE)
 {
 
 }
@@ -151,6 +152,7 @@ void CFmiCaseStudyDlg::DoDataExchange(CDataExchange* pDX)
         }
     }
     DDX_Check(pDX, IDC_CHECK_EDIT_ENABLE_DATA, fEditEnableData);
+    DDX_Check(pDX, IDC_CHECK_ZIP_DATA, fZipData);
 }
 
 #define WM_CASE_STUDY_OFFSET_EDITED = WM_USER + 222
@@ -214,6 +216,7 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
 	itsNameStrU_ = CA2T(caseStudySystem.Name().c_str());
     itsInfoStrU_ = CA2T(caseStudySystem.Info().c_str());
     itsPathStrU_ = CA2T(caseStudySystem.CaseStudyPath().c_str());
+    fZipData = caseStudySystem.ZipFiles();
 
 	UpdateButtonStates();
     UpdateEditEnableDataText();
@@ -828,57 +831,62 @@ void CFmiCaseStudyDlg::GetBasicInfoFromDialog(void)
 	NFmiStringTools::TrimR(strippedPathString, '/');
 	NFmiStringTools::ReplaceChars(strippedPathString, '/', '\\'); // varmistetaan vielä että kaikki kenot ovat winkkarin omaan suuntaan.
     caseStudySystem.CaseStudyPath(strippedPathString);
+
+    caseStudySystem.ZipFiles(fZipData == TRUE);
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
 {
-//	return; // Store-napin toiminta on väliaikaisesti disabloitu, että saan tehtyä 5.8.3.1-jakeluversion, joka korjaa kaatumistaudin 
+    //	return; // Store-napin toiminta on väliaikaisesti disabloitu, että saan tehtyä 5.8.3.1-jakeluversion, joka korjaa kaatumistaudin 
 
-	EnableButton(IDC_BUTTON_STORE_DATA, FALSE);
-	UpdateData(TRUE);
-	GetBasicInfoFromDialog();
+    EnableButton(IDC_BUTTON_STORE_DATA, FALSE);
+    UpdateData(TRUE);
+    GetBasicInfoFromDialog();
 
-	itsSmartMetDocumentInterface->StoreCaseStudyMemory(); // laitetaan CaseStudy-datan tilanne varmuudeksi talteen erilliseen 'muisti'-tiedostoon
-	std::string dummyStr;
-	if(IsThereCaseStudyMakerRunning())
-	{ // vain yksi CaseStudyMaker voi olla käynnisssä kerrallaan...
-		std::string noticeStr(::GetDictionaryString("Only one Case Study data collector can be run at once."));
-		noticeStr += "\n";
-		noticeStr += (::GetDictionaryString("Stopping this data storing action."));
-		noticeStr += "\n";
-		noticeStr += (::GetDictionaryString("Try again later..."));
-		std::string titleStr(::GetDictionaryString("Case Study data won't be stored"));
+    itsSmartMetDocumentInterface->StoreCaseStudyMemory(); // laitetaan CaseStudy-datan tilanne varmuudeksi talteen erilliseen 'muisti'-tiedostoon
+    std::string dummyStr;
+    if(IsThereCaseStudyMakerRunning())
+    { // vain yksi CaseStudyMaker voi olla käynnisssä kerrallaan...
+        std::string noticeStr(::GetDictionaryString("Only one Case Study data collector can be run at once."));
+        noticeStr += "\n";
+        noticeStr += (::GetDictionaryString("Stopping this data storing action."));
+        noticeStr += "\n";
+        noticeStr += (::GetDictionaryString("Try again later..."));
+        std::string titleStr(::GetDictionaryString("Case Study data won't be stored"));
         ::MessageBox(this->GetSafeHwnd(), CA2T(noticeStr.c_str()), CA2T(titleStr.c_str()), MB_OK | MB_ICONSTOP);
-		UpdateButtonStates();
-		return;
-	}
+        UpdateButtonStates();
+        return;
+    }
 
-	std::string metaDataTotalFileName;
-	if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, metaDataTotalFileName, false))
-	{
-		std::string commandStr;
-		commandStr += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
-		commandStr += itsSmartMetDocumentInterface->ApplicationDataBase().apppath;
-		commandStr = NFmiStringTools::UrlDecode(commandStr); // valitettavasti tämä stringi on url-encodattu ja se pitää purkaa...
-		commandStr += "\\";
-		commandStr += gCaseStudyMakerData.first;
-		commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-		commandStr += metaDataTotalFileName;
-		commandStr += "\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-		commandStr += "?"; // tämä kysymysmerkki on erotin, jolla erotellaan metatiedosto ja zip-ohjelman polku+nimi
-						// En keksinyt tähän hätään muuta keinoa antaa winExelle erilaisia argumentteja yhdellä kertaa, joutuisin tekemään erillesen komentorivi 
-						// parserin, joka osaisi käsitellä erilaisia optioita (kuten SmartMetissa tehdään).
-						// '?' on erotin, koska sellaista kirjainta ei voi olla polussa kuin wild-card -merkkinä, ei varsinaisessa polussa tai tiedoston nimessä.
-		std::string zipCommandStr = "\""; // myös zip-commandin ympärille lainausmerkit
-        zipCommandStr += itsSmartMetDocumentInterface->WorkingDirectory();
-		zipCommandStr += "\\utils\\";
-		zipCommandStr += "7z.exe";
-		zipCommandStr += "\"";
-		commandStr += zipCommandStr;
+    std::string metaDataTotalFileName;
+    if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, metaDataTotalFileName, false))
+    {
+        std::string commandStr;
+        commandStr += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
+        commandStr += itsSmartMetDocumentInterface->ApplicationDataBase().apppath;
+        commandStr = NFmiStringTools::UrlDecode(commandStr); // valitettavasti tämä stringi on url-encodattu ja se pitää purkaa...
+        commandStr += "\\";
+        commandStr += gCaseStudyMakerData.first;
+        commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+        commandStr += metaDataTotalFileName;
+        commandStr += "\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+        if(fZipData)
+        {
+            commandStr += "?"; // tämä kysymysmerkki on erotin, jolla erotellaan metatiedosto ja zip-ohjelman polku+nimi
+                            // En keksinyt tähän hätään muuta keinoa antaa winExelle erilaisia argumentteja yhdellä kertaa, joutuisin tekemään erillesen komentorivi 
+                            // parserin, joka osaisi käsitellä erilaisia optioita (kuten SmartMetissa tehdään).
+                            // '?' on erotin, koska sellaista kirjainta ei voi olla polussa kuin wild-card -merkkinä, ei varsinaisessa polussa tai tiedoston nimessä.
+            std::string zipCommandStr = "\""; // myös zip-commandin ympärille lainausmerkit
+            zipCommandStr += itsSmartMetDocumentInterface->WorkingDirectory();
+            zipCommandStr += "\\utils\\";
+            zipCommandStr += "7z.exe";
+            zipCommandStr += "\"";
+            commandStr += zipCommandStr;
+        }
 
-		CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, nullptr, false, SW_MINIMIZE);
-	}
-	UpdateButtonStates();
+        CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, SW_MINIMIZE);
+    }
+    UpdateButtonStates();
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonLoadData()

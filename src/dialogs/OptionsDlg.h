@@ -93,6 +93,7 @@ private:
     BOOL fWmsMapMode;
     CComboBox itsLogLevelComboBox;
     BOOL fDroppedDataEditable;
+    double itsIsolineMinimumLengthFactor;
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -71,12 +71,13 @@ bool NFmiSmartToolInfo::SpeedLoadScript(const std::string &theScriptName)
   return false;
 }
 
-bool NFmiSmartToolInfo::SaveScript(const std::string &theScriptName)
+bool NFmiSmartToolInfo::SaveScript(const std::string &theFullScriptPath)
 {
-  string fullFileName(GetFullScriptFileName(theScriptName));
-  if (WriteScript2File(fullFileName, itsCurrentScript))
+  if (WriteScript2File(theFullScriptPath, itsCurrentScript))
   {
-    itsCurrentScriptName = theScriptName;
+    NFmiFileString fileString(theFullScriptPath);
+    itsCurrentScriptName = fileString.Header();
+    itsLoadDirectory = fileString.Device() + fileString.Path();
     return SaveSettings();
   }
   return false;

@@ -184,8 +184,6 @@ private:
 	bool CheckAndCreateDirectory(const NFmiString& thePath);
 
 	static float itsFileVersionNumber;
-	//   Kun tiedostoa luetaan, tämä on luettavan tiedoston versio.
-	float itsCurrentFileVersionNumber;
 
 	NFmiString itsAreaIdentifier;
 	NFmiProducer itsProducer;

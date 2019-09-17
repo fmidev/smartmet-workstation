@@ -123,6 +123,7 @@ public:
     virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) = 0;
     virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
+	virtual int GetFirstRowNumber(unsigned int theDescTopIndex) = 0;
     virtual double BrushSpecialParamValue() = 0;
     virtual void BrushSpecialParamValue(double newValue) = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() = 0;
@@ -161,7 +162,7 @@ public:
     virtual NFmiCrossSectionSystem* CrossSectionSystem() = 0;
     virtual bool ActivateParamSelectionDlgAfterLeftDoubleClick() = 0;
     virtual void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) = 0;
-    virtual void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex) = 0;
+    virtual void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex) = 0;
     virtual bool OpenPopupMenu() = 0;
     virtual void OpenPopupMenu(bool newState) = 0;
     virtual const NFmiPoint& CrossSectionViewSizeInPixels() = 0;
@@ -348,7 +349,7 @@ public:
     virtual bool RemoveViewMacro(const std::string& theMacroName) = 0;
     virtual void RefreshViewMacroList() = 0;
     virtual bool LoadViewMacro(const std::string &theName) = 0;
-    virtual void StoreViewMacro(const std::string &theName, const std::string &theDescription) = 0;
+    virtual void StoreViewMacro(const std::string &theAbsoluteMacroFilePath, const std::string &theDescription) = 0;
     virtual bool CreateNewViewMacroDirectory(const std::string &thePath) = 0;
     virtual void UndoViewMacro() = 0;
     virtual void RedoViewMacro() = 0;

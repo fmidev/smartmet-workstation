@@ -22,7 +22,8 @@ public:
     void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) override;
     bool ScrollViewRow(unsigned int theDescTopIndex, int theCount) override;
     const std::string& HelpDataPath(void) const override;
-    void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) override;
+	const std::string& ControlPath(void) const;
+	void LogAndWarnUser(const std::string& theMessageStr, const std::string& theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) override;
     NFmiInfoOrganizer* InfoOrganizer(void) override;
     bool IsToolMasterAvailable(void) override;
     NFmiDrawParamList* DrawParamList(int theDescTopIndex, int theIndex) override;
@@ -157,7 +158,8 @@ public:
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
     int ActiveViewRow(unsigned int theDescTopIndex) override;
     void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
-    NFmiSynopPlotSettings* SynopPlotSettings(void) override;
+	int GetFirstRowNumber(unsigned int theDescTopIndex) override;
+	NFmiSynopPlotSettings* SynopPlotSettings(void) override;
     NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) override;
     NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) override;
     NFmiConceptualModelData& ConceptualModelData(void) override;
@@ -277,6 +279,10 @@ public:
     bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) override;
     TimeSerialParameters& GetTimeSerialParameters() override;
     void UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex) override;
+    NFmiColorContourLegendSettings& ColorContourLegendSettings() override;
+    void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) override;
+    int GetPrintedDescTopIndex() override;
+    void ResetPrintedDescTopIndex() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

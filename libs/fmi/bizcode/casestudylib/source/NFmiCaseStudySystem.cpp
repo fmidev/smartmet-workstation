@@ -1116,7 +1116,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
 ,itsCaseStudyPath()
 ,itsSmartMetLocalCachePath()
 ,itsTime()
-,fZipFiles(true)
+,fZipFiles()
 ,fDeleteTmpFiles(true)
 ,fApproximateOnlyLocalDataSize(true)
 ,itsCategoriesData()
@@ -1127,6 +1127,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
     std::string sectionName = "\\General";
     std::string baseRegistryPath = "Software\\Fmi\\SmartMet";
     itsCaseStudyPath = ::CreateRegValue<CachedRegString>(baseRegistryPath, sectionName, "\\CaseStudyPath", usedKey, "D:\\data\\case");
+    fZipFiles = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\ZipFiles", usedKey, true);
 }
 
 NFmiCaseStudySystem::~NFmiCaseStudySystem(void)
@@ -1495,7 +1496,7 @@ bool NFmiCaseStudySystem::AreStoredMetaDataChanged(const NFmiCaseStudySystem &ot
     if(itsCaseStudyPath != other.itsCaseStudyPath)
         return true;
     // Huom! aikaa ei tässä tarkastella, koska siihen otetaan aina vain nykyinen ajan hetki ja se muuttuisi aina
-    if(fZipFiles != other.fZipFiles)
+    if(*fZipFiles != *other.fZipFiles)
         return true;
     if(fDeleteTmpFiles != other.fDeleteTmpFiles)
         return true;
@@ -1679,7 +1680,7 @@ void NFmiCaseStudySystem::ParseJsonPair(json_spirit::Pair &thePair)
 		itsTime = tmpTime;
 	}
 	else if(thePair.name_ == gJsonName_ZipFiles)
-		fZipFiles = thePair.value_.get_bool();
+		*fZipFiles = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_DeleteTmpFiles)
 		fDeleteTmpFiles = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_DataArray)
@@ -1804,7 +1805,7 @@ static void CopyFilesToDestination(const std::list<std::string> &theCopyedFiles,
       TRUE,				// flag - suppress confirmation messages?
       TRUE,				// flag - suppress confirmation messages when making directories?
       FALSE,			// flag - rename files when name collisions occur?
-      TRUE				// flag - simple progress dialog?
+      FALSE				// flag - simple progress dialog?
 	  );
 
 	std::string progresstitleStr(::GetDictionaryString("Case Study copy"));
@@ -2170,6 +2171,16 @@ std::string NFmiCaseStudySystem::CaseStudyPath(void) const
 void NFmiCaseStudySystem::CaseStudyPath(const std::string &newValue)
 {
     *itsCaseStudyPath = newValue;
+}
+
+bool NFmiCaseStudySystem::ZipFiles(void) const 
+{ 
+    return *fZipFiles; 
+}
+
+void NFmiCaseStudySystem::ZipFiles(bool newValue) 
+{ 
+    *fZipFiles = newValue; 
 }
 
 // ************************************************************

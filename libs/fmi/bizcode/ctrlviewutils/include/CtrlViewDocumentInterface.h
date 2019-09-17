@@ -73,6 +73,7 @@ class CBitmap;
 class NFmiMacroParamDataCache;
 class NFmiParam;
 class TimeSerialParameters;
+class NFmiColorContourLegendSettings;
 
 namespace Wms
 {
@@ -128,6 +129,7 @@ public:
     virtual void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) = 0;
     virtual bool ScrollViewRow(unsigned int theDescTopIndex, int theCount) = 0;
     virtual const std::string& HelpDataPath(void) const = 0;
+	virtual const std::string& ControlPath(void) const = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer(void) = 0;
     virtual bool IsToolMasterAvailable(void) = 0;
@@ -263,6 +265,7 @@ public:
     virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
     virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
+	virtual int GetFirstRowNumber(unsigned int theDescTopIndex) = 0;
     virtual NFmiSynopPlotSettings* SynopPlotSettings(void) = 0;
     virtual NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) = 0;
     virtual NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) = 0;
@@ -383,6 +386,11 @@ public:
     virtual bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) = 0;
     virtual TimeSerialParameters& GetTimeSerialParameters() = 0;
     virtual void UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex) = 0;
+    virtual NFmiColorContourLegendSettings& ColorContourLegendSettings() = 0;
+    virtual void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) = 0;
+    virtual int GetPrintedDescTopIndex() = 0;
+    virtual void ResetPrintedDescTopIndex() = 0;
+
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

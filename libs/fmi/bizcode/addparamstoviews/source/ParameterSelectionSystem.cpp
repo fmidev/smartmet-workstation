@@ -8,7 +8,10 @@
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerSystem.h"
 #include "..\..\..\catlog\catlog\catlogutils.h"
+#include "SpecialDesctopIndex.h"
+#include "NFmiHelpDataInfo.h"
     
+class NFmiInfoOrganizer;
 
 namespace
 {
@@ -29,12 +32,15 @@ namespace AddParams
     ,dialogTreePatternArray_()
     ,dialogDataNeedsUpdate_(true)
     ,modelProducerSystem_(nullptr)
+	,obsProducerSystem_(nullptr)
+	,satelImageProducerSystem_(nullptr)
     ,infoOrganizer_(nullptr)
     ,helpDataInfoSystem_(nullptr)
-    ,itsLastAcivatedDescTopIndex(0)
+    ,itsLastActivatedDesktopIndex(0)
     ,itsLastActivatedRowIndex(1)
     ,helpDataIDs_()
     ,customCategories_()
+	,soundingLevels_(nullptr)
     {
     }
 
@@ -52,11 +58,6 @@ namespace AddParams
         customCategories_ = customCategories;
     } 
 
-    void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType) //Add at the end of help data list
-    {
-        addHelpData(producer, menuString, dataType, std::string());
-    }
-
     void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName) //Add at the end of help data list
     {
         std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
@@ -64,16 +65,34 @@ namespace AddParams
         otherHelpData_.push_back(item);
     }
 
+	void ParameterSelectionSystem::addStaticHelpData()
+	{
+		const checkedVector<NFmiHelpDataInfo>& staticHelpDataInfos = helpDataInfoSystem_->StaticHelpDataInfos(); // Joonas jatka tästä Geo tietojen lisäilyä
+// 		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer_->FindInfo(NFmiInfoData::kStationary);
+		if (!staticHelpDataInfos.empty())
+		{
+			for (auto& info : staticHelpDataInfos)
+			{
+				if (info.DataType() == NFmiInfoData::kStationary)
+				{
+					auto test = info;
+// 					SingleRowItem item = SingleRowItem(kProducerType, "Geo", 987654, true, "Geo", NFmiInfoData::kStationary, 0, "", false, nullptr, 2, "Geo");
+				}
+			}
+		}
+// 		addHelpData
+	}
+
     void ParameterSelectionSystem::updateData()
     {
-        updateOperationalData("Operational data", NFmiInfoData::kEditable);
-        updateData("Model data", *modelProducerSystem_, NFmiInfoData::kViewable);
-        updateData("Observation data", *obsProducerSystem_, NFmiInfoData::kObservations);
-        updateData("Satellite images", *satelImageProducerSystem_, NFmiInfoData::kSatelData);
-        updateMacroParamData("Macro Parameters", NFmiInfoData::kMacroParam);
+        updateOperationalData(OperationalDataStr, NFmiInfoData::kEditable);
+        updateData(ModellDataStr, *modelProducerSystem_, NFmiInfoData::kViewable);
+        updateData(ObservationDataStr, *obsProducerSystem_, NFmiInfoData::kObservations);
+        updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
+        updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
         updateCustomCategories();
-        updateData("Help data", *modelProducerSystem_, NFmiInfoData::kModelHelpData);
-        updateData("Help data", *obsProducerSystem_, NFmiInfoData::kModelHelpData);
+        updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
+		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
     }
 
     void ParameterSelectionSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
@@ -195,7 +214,138 @@ namespace AddParams
         {
             dialogRowData_.push_back(rowItem);
         }
+
+		trimDialogRowDataDependingOnActiveView();
     }
+
+	void ParameterSelectionSystem::trimDialogRowDataDependingOnActiveView()
+	{
+		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		int index = 0;
+		bool suitableCategory = true;
+
+		if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
+		{
+			dialogRowData_.swap(crossSectionData());
+		}
+		else if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
+		{
+			dialogRowData_.swap(timeSeriesData());
+		}
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::crossSectionData()
+	{
+		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		int index = 0;
+		bool suitableCategory = true;
+
+		for (auto& row : dialogRowData_)
+		{
+			if (row.rowType() == AddParams::RowType::kCategoryType)
+				suitableCategory = (row.displayName() == ModellDataStr || row.displayName() == MacroParametersStr) ? true : false;
+
+			if (!suitableCategory)
+			{
+				index++;
+				continue;
+			}
+
+			if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+			{
+				trimmedRowData.push_back(row);
+			}
+			if (row.dataType() == NFmiInfoData::kMacroParam)
+			{
+				trimmedRowData.push_back(row);
+			}
+			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+			if (!infoVector.empty())
+			{
+				auto info = infoVector.at(0);
+				if (info->SizeLevels() > 1 && info->IsGrid())
+				{
+					trimmedRowData.push_back(row);
+					auto subRows = addSubmenu(row, index);
+					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+				}
+			}
+			index++;
+		}
+		removeNodesThatDontHaveLeafs(trimmedRowData);
+		return trimmedRowData;
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::timeSeriesData()
+	{
+		std::vector<AddParams::SingleRowItem> trimmedRowData;
+		int index = 0;
+		bool suitableCategory = true;
+
+		for (auto& row : dialogRowData_)
+		{
+			if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+			{
+				trimmedRowData.push_back(row);
+			}
+			else if (row.itemId() == 2001 || row.parentItemId() == 2001)
+			{
+				trimmedRowData.push_back(row);
+			}
+			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+			if (!infoVector.empty())
+			{
+				auto info = infoVector.at(0);
+				if (info->IsGrid())
+				{
+					trimmedRowData.push_back(row);
+					auto subRows = addAllChildNodes(row, index);
+					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+				}
+			}
+			index++;
+		}
+		removeNodesThatDontHaveLeafs(trimmedRowData);
+		return trimmedRowData;
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::addSubmenu(SingleRowItem& row, int index)
+	{
+		//Add all sub items
+		std::vector<AddParams::SingleRowItem> rowData;
+		if (index + 1 < dialogRowData_.size())
+		{
+			while (dialogRowData_.at(index + 1).treeDepth() > row.treeDepth())
+			{
+				if (!dialogRowData_.at(index + 1).leafNode())
+				{
+					dialogRowData_.at(index + 1).crossSectionLeafNode(true);
+					rowData.push_back(dialogRowData_.at(index + 1));
+				}
+				index++;
+				if (index + 1 >= dialogRowData_.size())
+					break;
+			}
+		}
+		return rowData;
+	}
+
+	std::vector<SingleRowItem> ParameterSelectionSystem::addAllChildNodes(SingleRowItem& row, int index)
+	{
+		//Add all child items
+		std::vector<AddParams::SingleRowItem> rowData;
+		if (index + 1 < dialogRowData_.size())
+		{
+			while (dialogRowData_.at(index + 1).treeDepth() > row.treeDepth())
+			{
+				rowData.push_back(dialogRowData_.at(index + 1));
+				index++;
+				if (index + 1 >= dialogRowData_.size())
+					break;
+			}
+		}
+		return rowData;
+	}
 
     // Must be called after updateDialogRowData call.
     void ParameterSelectionSystem::updateDialogTreePatternData()
@@ -235,7 +385,7 @@ namespace AddParams
         dialogDataNeedsUpdate_ = true;
     }
 
-    void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData)
+	void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem>& resultRowData)
     {
         std::vector<SingleRowItem> rowData;
         int index = 0;
@@ -243,13 +393,16 @@ namespace AddParams
         //Remove nodes with no childs
         for(auto row : resultRowData)
         {
-            if(row.leafNode()) { rowData.push_back(row); }
-            if((index + 1 < resultRowData.size()))
+            if(row.leafNode() || (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView && row.crossSectionLeafNode())) 
+			{ 
+				rowData.push_back(row); 
+			}
+            else if((index + 1 < resultRowData.size()))
             {
-                if(resultRowData.at(index + 1).treeDepth() != row.treeDepth())
-                {
-                    rowData.push_back(row);
-                }
+				if (resultRowData.at(index + 1).treeDepth() != row.treeDepth())
+				{
+					rowData.push_back(row);
+				}
             }
             index++;
         }
@@ -274,7 +427,7 @@ namespace AddParams
     {
         auto row = resultRowData.at(index);
         
-        if(row.leafNode())
+        if(row.leafNode() || (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView && row.crossSectionLeafNode()))
         {
             return true;
         }
