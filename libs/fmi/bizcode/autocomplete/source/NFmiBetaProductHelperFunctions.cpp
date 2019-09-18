@@ -96,22 +96,6 @@ namespace BetaProduct
             return p.length() ? p : "/";
         }
 
-        std::string simplifyWindowsPath(std::string path)
-        {
-            std::experimental::filesystem::path originalPath(path);
-            // K‰‰nnet‰‰n varmuuden vuoksi kaikki separaattorit ensin windows tyylisiksi
-            originalPath = originalPath.make_preferred();
-            // T‰h‰n tulee windowsissa esim. D:
-            auto rootNamePath = originalPath.root_name();
-            // T‰h‰n tulee absoluuttinen polku ilman driveria, esim. \xxx\yyy
-            std::string basicRootPathString = originalPath.root_directory().string() + originalPath.relative_path().string();
-            auto unixRootPathString = boost::replace_all_copy(basicRootPathString, "\\", "/");
-            auto simplifiedUnixRootPathString = simplifyUnixPath(unixRootPathString);
-            auto simplifiedWindowsRootPathString = rootNamePath.string() + boost::replace_all_copy(simplifiedUnixRootPathString, "/", "\\");
-            if(LastCharacterIsSeparator(path))
-                PathUtils::addDirectorySeparatorAtEnd(simplifiedWindowsRootPathString);
-            return simplifiedWindowsRootPathString;
-        }
     }
 
     void SetLoggerFunction(LogAndWarnFunctionType &theLoggerFunction)
@@ -139,7 +123,7 @@ namespace BetaProduct
         auto originalPathString = theInitialDirectory + theInitialFileName;
         // Esim. "D:\\smartmet\\Dropbox (FMI)\\SmartMet\\MetEditor_5_13_2_0\\..\\..\\Macros\\FMI\\ViewMacros\\"
         // => "D:\\smartmet\\Dropbox (FMI)\\Macros\\FMI\\ViewMacros\\", muuten CFileDialog ei toimi kuten pit‰‰.
-        std::string simplyfiedPathString = simplifyWindowsPath(originalPathString);
+        std::string simplyfiedPathString = SimplifyWindowsPath(originalPathString);
 
         CString initialFilePath = CA2T(simplyfiedPathString.c_str());
         CFileDialog dlg(fLoadFile, NULL, initialFilePath, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, CA2T(theFileFilter.c_str()));
@@ -157,17 +141,18 @@ namespace BetaProduct
         if(BetaProduct::GetFilePathFromUser(theFileFilter, theInitialDirectory, theFilePathOut, fLoadFile, theInitialFileName))
         {
             auto originalFilePath = theFilePathOut;
+            auto simplifiedRootDirectory = SimplifyWindowsPath(theRootDirectory);
             theFilePathOut = PathUtils::getTrueFilePath(theFilePathOut, theRootDirectory, theFileExtension);
 
             // If user gives path outside the given root-path, we must reject the path
-            if(!IsPathInGivenDirectory(theFilePathOut, theRootDirectory))
+            if(!IsPathInGivenDirectory(theFilePathOut, simplifiedRootDirectory))
             {
                 std::string message = ::GetDictionaryString("File");
                 message += ":\n";
                 message += theFilePathOut;
                 message += "\n" + ::GetDictionaryString("was outside of the root path");
                 message += ":\n";
-                message += theRootDirectory;
+                message += simplifiedRootDirectory;
                 message += "\n" + ::GetDictionaryString("cannot continue saving the file");
                 std::string messageBoxTitle = ::GetDictionaryString("File outside root path");
                 ::MessageBox(theView->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OK | MB_ICONERROR);
@@ -187,5 +172,22 @@ namespace BetaProduct
             return true;
         }
         return false;
+    }
+
+    std::string SimplifyWindowsPath(const std::string &pathstring)
+    {
+        std::experimental::filesystem::path originalPath(pathstring);
+        // K‰‰nnet‰‰n varmuuden vuoksi kaikki separaattorit ensin windows tyylisiksi
+        originalPath = originalPath.make_preferred();
+        // T‰h‰n tulee windowsissa esim. D:
+        auto rootNamePath = originalPath.root_name();
+        // T‰h‰n tulee absoluuttinen polku ilman driveria, esim. \xxx\yyy
+        std::string basicRootPathString = originalPath.root_directory().string() + originalPath.relative_path().string();
+        auto unixRootPathString = boost::replace_all_copy(basicRootPathString, "\\", "/");
+        auto simplifiedUnixRootPathString = simplifyUnixPath(unixRootPathString);
+        auto simplifiedWindowsRootPathString = rootNamePath.string() + boost::replace_all_copy(simplifiedUnixRootPathString, "/", "\\");
+        if(LastCharacterIsSeparator(pathstring))
+            PathUtils::addDirectorySeparatorAtEnd(simplifiedWindowsRootPathString);
+        return simplifiedWindowsRootPathString;
     }
 }

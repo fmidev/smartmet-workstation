@@ -5,6 +5,8 @@
 
 #include <functional>
 
+class CWnd;
+
 namespace BetaProduct
 {
     // **************************************************************
@@ -16,6 +18,7 @@ namespace BetaProduct
     std::string& InitialSavePath();
     bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName);
     bool GetFilePathFromUserTotal(const std::string& theFileFilter, const std::string& theInitialDirectory, std::string& theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, const std::string& theFileExtension, const std::string& theRootDirectory, CWnd* theView);
+    std::string SimplifyWindowsPath(const std::string& pathstring);
     void SetLoggerFunction(LogAndWarnFunctionType &theLoggerFunction);
     LogAndWarnFunctionType GetLoggerFunction();
 
