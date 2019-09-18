@@ -72,7 +72,7 @@ private:
 	void SetEditorVersionStr(void);
     void MakeSplashScreenTextDataVector(const NFmiTime &theExeModTimeLocal, const std::string &theVersionString);
 	void InitApplicationDataBase(const std::string &avsToolMasterVersion);
-    bool DoControlPathChecks(const std::string &theControlPath);
+    bool DoControlPathChecks(std::string theControlPath);
     void SetupFactorySettingFile(const std::string &theConfigurationFile);
     void InitFactorySettingFiles();
     void ReadConfigurationFile(const std::string &theConfigurationFilePath);
