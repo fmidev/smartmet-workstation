@@ -60,6 +60,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , fWmsMapMode(FALSE)
     , fDroppedDataEditable(FALSE)
     , itsIsolineMinimumLengthFactor(1)
+    , fGenerateTimeCombinationData(FALSE)
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -130,7 +131,8 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_COMBO_OPTIONS_LOG_LEVEL, itsLogLevelComboBox);
     DDX_Check(pDX, IDC_CHECK_DROPPED_DATA_EDITABLE, fDroppedDataEditable);
     DDX_Text(pDX, IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR, itsIsolineMinimumLengthFactor);
-	DDV_MinMaxDouble(pDX, itsIsolineMinimumLengthFactor, 0, 100);
+    DDV_MinMaxDouble(pDX, itsIsolineMinimumLengthFactor, 0, 100);
+    DDX_Check(pDX, IDC_CHECK_MAKE_COMBINATION_DATA, fGenerateTimeCombinationData);
 }
 
 
@@ -209,6 +211,7 @@ BOOL COptionsDlg::OnInitDialog()
     InitLogLevelComboBox();
     fDroppedDataEditable = applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable();
     itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
+    fGenerateTimeCombinationData = applicationWinRegistry.GenerateTimeCombinationData();
 
 	DisableControls();
 
@@ -347,6 +350,7 @@ void COptionsDlg::OnOK()
     SetLogLevelOnOk();
     applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable(fDroppedDataEditable == TRUE);
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
+    applicationWinRegistry.GenerateTimeCombinationData(fGenerateTimeCombinationData == TRUE);
 
 	CDialog::OnOK();
 }
@@ -424,6 +428,8 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_LOG_GROUP, "Logging");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_LOG_LEVEL_TEXT, "Log level");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DROPPED_DATA_EDITABLE, "Dropped data editable (slower to drop)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT, "Isoline min length [mm] (0-100)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_COMBINATION_DATA, "Generate time combination data (unchecking might prevent crashes)");
 }
 
 void COptionsDlg::InitLogLevelComboBox()
