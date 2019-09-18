@@ -303,10 +303,25 @@ namespace AddParams
 					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
 				}
 			}
+			if (isObservationsData(row, index))
+			{
+				trimmedRowData.push_back(row);
+				auto subRows = addAllChildNodes(row, index);
+				trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+			}
 			index++;
 		}
 		removeNodesThatDontHaveLeafs(trimmedRowData);
 		return trimmedRowData;
+	}
+
+	bool ParameterSelectionSystem::isObservationsData(SingleRowItem& row, int index)
+	{
+		if (row.rowType() == AddParams::RowType::kDataType)
+		{
+			return dialogRowData_.at(++index).dataType() == NFmiInfoData::kObservations;
+		}
+		return false;
 	}
 
 	std::vector<SingleRowItem> ParameterSelectionSystem::addSubmenu(SingleRowItem& row, int index)
