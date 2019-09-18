@@ -19,10 +19,15 @@ namespace BetaProduct
             boost::replace_all(aPath, "/", "\\");
         }
 
+        bool LastCharacterIsSeparator(const std::string& aPath)
+        {
+            return (aPath.back() == '\\' || aPath.back() == '/');
+        }
+
         void RemoveDirectorySeparatorFromEnd(std::string& aPath)
         {
             // aPath must be atleast 2 characters long before removing anything, otherwise "/" root directory won't work
-            if(aPath.size() > 1 && (aPath.back() == '\\' || aPath.back() == '/'))
+            if(aPath.size() > 1 && LastCharacterIsSeparator(aPath))
             {
                 aPath.resize(aPath.size() - 1);
             }
@@ -40,6 +45,72 @@ namespace BetaProduct
                 return false;
             auto pos = absolutePath.find(absoluteDirectory);
             return pos != std::string::npos;
+        }
+
+        std::vector<std::string> split(std::string path, char d)
+        {
+            std::vector<std::string> r;
+            int j = 0;
+            for(int i = 0; i < path.length(); i++)
+            {
+                if(path[i] == d)
+                {
+                    std::string cur = path.substr(j, i - j);
+                    if(cur.length())
+                    {
+                        r.push_back(cur);
+                    }
+                    j = i + 1; // start of next match
+                }
+            }
+            if(j < path.length())
+            {
+                r.push_back(path.substr(j));
+            }
+            return r;
+        }
+
+        std::string simplifyUnixPath(std::string path)
+        {
+            std::vector<std::string> ps = split(path, '/');
+            std::string p = "";
+            std::vector<std::string> st;
+            for(int i = 0; i < ps.size(); i++)
+            {
+                if(ps[i] == "..")
+                {
+                    if(st.size() > 0)
+                    {
+                        st.pop_back();
+                    }
+                }
+                else if(ps[i] != ".")
+                {
+                    st.push_back(ps[i]);
+                }
+            }
+            for(int i = 0; i < st.size(); i++)
+            {
+                p += "/" + st[i];
+            }
+            return p.length() ? p : "/";
+        }
+
+        std::string simplifyWindowsPath(std::string path)
+        {
+            std::experimental::filesystem::path originalPath(path);
+            // K‰‰nnet‰‰n varmuuden vuoksi kaikki separaattorit ensin windows tyylisiksi
+            originalPath = originalPath.make_preferred();
+            // T‰h‰n tulee windowsissa esim. D:
+            auto rootNamePath = originalPath.root_name();
+            // T‰h‰n tulee absoluuttinen polku ilman driveria, esim. \xxx\yyy
+            std::string basicRootPathString = originalPath.root_directory().string() + originalPath.relative_path().string();
+            auto unixRootPathString = boost::replace_all_copy(basicRootPathString, "\\", "/");
+            auto simplifiedUnixRootPathString = simplifyUnixPath(unixRootPathString);
+            auto simplifiedWindowsRootPathString = rootNamePath.string() + boost::replace_all_copy(simplifiedUnixRootPathString, "/", "\\");
+            if(LastCharacterIsSeparator(path))
+                PathUtils::addDirectorySeparatorAtEnd(simplifiedWindowsRootPathString);
+            return simplifiedWindowsRootPathString;
         }
     }
 
@@ -65,8 +136,12 @@ namespace BetaProduct
     // Kun CFileDialog:ille annetaan alkuarvaus tiedoston nimest‰ t‰ysine polkuineen, avataan dialogi aina halutussa kansiossa.
     bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName)
     {
-        CString initialFilePath = CA2T(theInitialDirectory.c_str());
-        initialFilePath += CA2T(theInitialFileName.c_str());
+        auto originalPathString = theInitialDirectory + theInitialFileName;
+        // Esim. "D:\\smartmet\\Dropbox (FMI)\\SmartMet\\MetEditor_5_13_2_0\\..\\..\\Macros\\FMI\\ViewMacros\\"
+        // => "D:\\smartmet\\Dropbox (FMI)\\Macros\\FMI\\ViewMacros\\", muuten CFileDialog ei toimi kuten pit‰‰.
+        std::string simplyfiedPathString = simplifyWindowsPath(originalPathString);
+
+        CString initialFilePath = CA2T(simplyfiedPathString.c_str());
         CFileDialog dlg(fLoadFile, NULL, initialFilePath, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, CA2T(theFileFilter.c_str()));
         if(dlg.DoModal() == IDOK)
         {
