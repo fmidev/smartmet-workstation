@@ -517,8 +517,9 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
 }
 
 // Oletus, theControlPath on absoluuttinen polku joko tiedostoon tai hakemistoon.
-bool NFmiBasicSmartMetConfigurations::DoControlPathChecks(const std::string &theControlPath)
+bool NFmiBasicSmartMetConfigurations::DoControlPathChecks(std::string theControlPath)
 {
+    theControlPath = BetaProduct::SimplifyWindowsPath(theControlPath);
     if(NFmiFileSystem::DirectoryExists(theControlPath))
     {
         itsControlPath = theControlPath;
