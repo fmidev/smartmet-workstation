@@ -8,6 +8,7 @@
 #include "NFmiFileString.h"
 #include "NFmiSettings.h"
 #include "NFmiPathUtils.h"
+#include "NFmiBetaProductHelperFunctions.h"
 
 NFmiMacroPathSettings::NFmiMacroPathSettings(void)
 :fUseLocalCache(false)
@@ -89,10 +90,10 @@ void NFmiMacroPathSettings::InitFromSettings(const std::string &theInitNameSpace
 	fUseLocalCache = NFmiSettings::Require<bool>(theInitNameSpace + "::UseLocalCache");
 	itsSyncIntervalInMinutes = NFmiSettings::Require<int>(theInitNameSpace + "::SyncIntervalInMinutes");
 
-	itsOrigSmartToolPath = ::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::SmartTools::LoadDirectory");
-	itsOrigMacroParamPath = ::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::MacroParams::LoadDirectory");
-	itsOrigDrawParamPath = ::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::DrawParams::LoadDirectory");
-	itsOrigViewMacroPath = ::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::ViewMacro::LoadDirectory");
+	itsOrigSmartToolPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::SmartTools::LoadDirectory"));
+	itsOrigMacroParamPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::MacroParams::LoadDirectory"));
+	itsOrigDrawParamPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::DrawParams::LoadDirectory"));
+	itsOrigViewMacroPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::ViewMacro::LoadDirectory"));
 }
 
 void NFmiMacroPathSettings::StoreToSettings(void)

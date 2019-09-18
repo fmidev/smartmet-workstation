@@ -1805,6 +1805,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
 {
     // Nämä alustetaan vain ja ainoastaan konffeista ainakin toistaiseksi
     itsBetaProductionBaseDirectory = NFmiSettings::Optional<std::string>("BetaProduction::BaseDirectory", "C:\\smartmet\\BetaProducts\\");
+    itsBetaProductionBaseDirectory = BetaProduct::SimplifyWindowsPath(itsBetaProductionBaseDirectory);
     fDoCacheSyncronization = NFmiSettings::Optional<bool>("BetaProduction::DoCacheSyncronization", false);
 
     itsBetaProductionBaseCacheDirectory = itsBetaProductionBaseDirectory;
