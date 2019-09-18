@@ -283,6 +283,8 @@ public:
     void MaximumFontSizeFactor(double newValue);
     double IsolineMinLengthFactor();
     void IsolineMinLengthFactor(double newValue);
+    bool GenerateTimeCombinationData();
+    void GenerateTimeCombinationData(bool newValue);
 
     const NFmiGriddingProperties& GriddingProperties(bool getEditingRelatedProperties) const;
     void SetGriddingProperties(bool setEditingRelatedProperties, const NFmiGriddingProperties &griddingProperties);
@@ -351,6 +353,12 @@ private:
     // Jos arvo < 0, minimi pituus on pienempi kuin tuo 4 mm ja jos se on > 1, min pituus on suurempi.
     // T‰lle voidaan antaa arvo v‰lill‰ 0-100.
     boost::shared_ptr<CachedRegDouble> mIsolineMinLengthFactor;
+    // T‰m‰n avulla s‰‰det‰‰n rakennetaanko, mahdollisesti konffattuja aikakombinaatio datoja. N‰ihin
+    // datoihin kuuluu mm. analyysi- ja tutkadatat, joihin siis tippuu yksi aika-askel dataa kerrallaan ja 
+    // joista palasista rakennetaan halutun pituinen aikajakso yhdistelm‰.
+    // On osoittautunut ett‰ n‰iden datojen rakentaminen ja/tai ottaminen SmartMetin k‰yttˆˆn voi aiheuttaa 
+    // toistaiseksi mystisi‰ kaatoja. T‰ll‰ siis yritet‰‰n est‰‰ kaadot ja mahdollisesti kartoittaa ongelmaa.
+    boost::shared_ptr<CachedRegBool> mGenerateTimeCombinationData;
 
 
     // General Printing options
