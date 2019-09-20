@@ -18,6 +18,7 @@ target_link_libraries(
     SmartTools
     EditingDataUtils
     CtrlViewUtils
+    WmsSupport
     )
 
 target_include_directories( 
@@ -28,6 +29,7 @@ target_include_directories(
     PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
     PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
+    PUBLIC ${WmsSupport_INCLUDE_DIRS}
     )
 
 set(
@@ -38,6 +40,7 @@ set(
     ${SmartTools_INCLUDE_DIRS}
     ${EditingDataUtils_INCLUDE_DIRS}
     ${CtrlViewUtils_INCLUDE_DIRS}
+    ${WmsSupport_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
 
