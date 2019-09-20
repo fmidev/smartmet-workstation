@@ -14231,6 +14231,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
             parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
+			auto wmsCallBackFunction = [this]() {return std::ref(this->WmsSupport()); };
+			parameterSelectionSystem.setWmsSystemCallback(wmsCallBackFunction);
+
             // Add other data to help data. 
 			parameterSelectionSystem.addStaticHelpData();
             if(capDataSystem.useCapData())

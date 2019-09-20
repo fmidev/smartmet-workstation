@@ -10,6 +10,13 @@
 #include "..\..\..\catlog\catlog\catlogutils.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiHelpDataInfo.h"
+
+ #ifndef DISABLE_CPPRESTSDK
+ #include "WmsSupport.h"
+//  #include "CapabilitiesHandler.h"
+//  #include "CapabilityTree.h"
+ #endif // DISABLE_CPPRESTSDK
+
     
 class NFmiInfoOrganizer;
 
@@ -91,6 +98,7 @@ namespace AddParams
         updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
         updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
         updateCustomCategories();
+		updateWmsData(MacroParametersStr, NFmiInfoData::kWmsData);
         updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
 		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
     }
@@ -151,6 +159,47 @@ namespace AddParams
             updatePending(false);
         }
     }
+
+#ifndef DISABLE_CPPRESTSDK
+	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory) //Joonas jatka tästä
+	{
+		try
+		{
+			if (getWmsSystemCallback_)
+			{
+				auto& wmsSupport = getWmsSystemCallback_();
+// 			if (!WmsSupport().isConfigured())
+// 				return;
+// 			const auto& layerTree = WmsSupport().peekCapabilityTree();
+
+// 			auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex,	"WMS", NFmiDataIdent(NFmiParam(layerTree.value.paramId, layerTree.value.name), layerTree.value.producer),
+// 				theMenuSettings.itsMenuCommand,	g_DefaultParamView,	nullptr, theDataType);
+// 			try
+// 			{
+// 				//Rakenna puu rekursiivisesti
+// 				const auto& layerTreeCasted = dynamic_cast<const Wms::CapabilityNode&>(layerTree);
+// 				auto* subMenuList = menuItem->SubMenu();
+// 				if (!subMenuList)
+// 				{
+// 					subMenuList = new NFmiMenuItemList;
+// 				}
+// 
+// 				for (const auto& child : layerTreeCasted.children)
+// 				{
+// 					AddAllWmsProducersToParamSelectionPopup(theMenuSettings, theDataType, subMenuList, *child);
+// 				}
+// 				menuItem->AddSubMenu(subMenuList);
+// 			}
+// 			catch (const std::exception&)
+// 			{
+// 			}
+// 			theMenuItemList->Add(std::move(menuItem));
+		}
+		catch (...)
+		{
+		}
+	}
+#endif // DISABLE_CPPRESTSDK
 
     void ParameterSelectionSystem::updateCustomCategories()
     {
@@ -362,7 +411,7 @@ namespace AddParams
 		return rowData;
 	}
 
-    // Must be called after updateDialogRowData call.
+	// Must be called after updateDialogRowData call.
     void ParameterSelectionSystem::updateDialogTreePatternData()
     {
         dialogTreePatternArray_.clear();
