@@ -5376,7 +5376,15 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpRemove");
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiRemoveView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
-			menuString = ::GetDictionaryString("MapViewParamOptionPopUpHide");
+
+            if(drawParam->ShowColorLegend())
+                menuString = ::GetDictionaryString("Hide legend");
+            else
+                menuString = ::GetDictionaryString("Show legend");
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowLegendState, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            itsPopupMenu->Add(std::move(menuItem));
+
+            menuString = ::GetDictionaryString("MapViewParamOptionPopUpHide");
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiHideView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpShow");
@@ -5573,7 +5581,10 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiRemoveView:
 			RemoveView(*menuItem, itsCurrentViewRowIndex);
 			break;
-		case kFmiRemoveParamCrossSectionView:
+        case kFmiToggleShowLegendState:
+            ToggleShowLegendState(*menuItem, itsCurrentViewRowIndex);
+            break;
+        case kFmiRemoveParamCrossSectionView:
 			RemoveCrosssectionDrawParam(*menuItem, itsCurrentCrossSectionRowIndex);
 			break;
 		case kFmiRemoveAllViews:
@@ -6510,6 +6521,25 @@ void ModifyView(const NFmiMenuItem& theMenuItem, int theRowIndex)
             DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParam);
         }
 	}
+}
+
+void ToggleShowLegendState(const NFmiMenuItem& theMenuItem, int theRowIndex)
+{
+    bool macroParamCase = NFmiDrawParam::IsMacroParamCase(theMenuItem.DataType());
+    boost::shared_ptr<NFmiDrawParam> drawParam = macroParamCase ? GetUsedMacroDrawParam(theMenuItem) : GetUsedMapViewDrawParam(theMenuItem, theRowIndex);
+    if(drawParam)
+    {
+        drawParam->ShowColorLegend(!drawParam->ShowColorLegend());
+        NFmiDrawParamList* drawParamList = DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+        if(drawParamList)
+        {
+            drawParamList->Dirty(true);
+            if(macroParamCase)
+                UpdateMacroDrawParam(theMenuItem, theRowIndex, false, drawParam);
+            else
+                UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
+        }
+    }
 }
 
 void SaveDrawParamSettings(const NFmiMenuItem& theMenuItem, int theRowIndex)
