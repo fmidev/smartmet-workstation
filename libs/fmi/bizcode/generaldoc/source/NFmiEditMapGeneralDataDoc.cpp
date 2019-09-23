@@ -14232,7 +14232,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
 			auto wmsCallBackFunction = [this]() {return std::ref(this->WmsSupport()); };
-			parameterSelectionSystem.setWmsSystemCallback(wmsCallBackFunction);
+// 			parameterSelectionSystem.setWmsSystemCallback(wmsCallBackFunction);
 
             // Add other data to help data. 
 			parameterSelectionSystem.addStaticHelpData();
