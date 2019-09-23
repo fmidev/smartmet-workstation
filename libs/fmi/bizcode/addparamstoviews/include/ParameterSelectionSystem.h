@@ -11,7 +11,11 @@ class NFmiHelpDataInfoSystem;
 class NFmiInfoOrganizer;
 class NFmiProducerSystem;
 class NFmiMacroParamSystem;
-class WmsSupport;
+
+namespace Wms
+{
+	class WmsSupport;
+};
 
 namespace AddParams
 {   
@@ -58,7 +62,7 @@ namespace AddParams
         std::vector<std::string> customCategories_;
 
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
-		std::function<WmsSupport&()> getWmsSystemCallback_;
+		std::function<Wms::WmsSupport&()> getWmsCallback_;
         const NFmiLevelBag *soundingLevels_;
 
 		const std::string OperationalDataStr = "Operational data",
@@ -92,7 +96,7 @@ namespace AddParams
         int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
 		void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem& ()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
-		void setWmsSystemCallback(std::function<WmsSupport& ()> wmsSystemCallback) { getWmsSystemCallback_ = wmsSystemCallback; }
+		void setWmsCallback(std::function<Wms::WmsSupport& ()> wmsCallBack) { getWmsCallback_ = wmsCallBack; }
 		void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
         void searchItemsThatMatchToSearchWords(std::string words); 
 

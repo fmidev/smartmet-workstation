@@ -12,7 +12,7 @@
 #include "NFmiHelpDataInfo.h"
 
 //  #ifndef DISABLE_CPPRESTSDK
- #include "WmsSupport.h"
+//  #include "WmsSupport.h"
 //  #include "CapabilitiesHandler.h"
 //  #include "CapabilityTree.h"
 //  #endif // DISABLE_CPPRESTSDK
@@ -160,13 +160,12 @@ namespace AddParams
         }
     }
 
-#ifndef DISABLE_CPPRESTSDK
 	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory) //Joonas jatka tästä
 	{
-		if (getWmsSystemCallback_)
-		{
-			auto& wmsSupport = getWmsSystemCallback_();
-		}
+// 		if (getWmsCapabilityTreeCallback_)
+// 		{
+// 			auto& wmsCapabilityTree = getWmsCapabilityTreeCallback_();
+// 		}
 // 		try
 // 		{
 // 			if (!WmsSupport().isConfigured())
@@ -200,7 +199,6 @@ namespace AddParams
 // 		{
 // 		}
 	}
-#endif // DISABLE_CPPRESTSDK
 
     void ParameterSelectionSystem::updateCustomCategories()
     {
