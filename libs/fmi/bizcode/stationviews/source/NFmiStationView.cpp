@@ -590,7 +590,7 @@ bool NFmiStationView::IsStationDataMacroParam(void)
         if(fUseCalculationPoints)
             return true;
     	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
-        if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != -1)
+        if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != CtrlViewUtils::ci_string_not_found)
             return true;
     }
     catch(...)
