@@ -12,14 +12,18 @@ add_library(
     ${H_FILES} 
     )
 
-target_link_libraries(
+set(TARGET_LINK_LIBRARIES_LIST 
     ${PROJECT_NAME}
     Newbase
     SmartTools
     EditingDataUtils
     CtrlViewUtils
-    WmsSupport
     )
+if(NOT DISABLE_CPPRESTSDK)
+    set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} WmsSupport)
+endif()
+
+target_link_libraries(${TARGET_LINK_LIBRARIES_LIST})
 
 target_include_directories( 
     ${PROJECT_NAME}
