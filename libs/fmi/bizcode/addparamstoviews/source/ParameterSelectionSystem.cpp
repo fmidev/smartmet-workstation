@@ -11,11 +11,11 @@
 #include "SpecialDesctopIndex.h"
 #include "NFmiHelpDataInfo.h"
 
- #ifndef DISABLE_CPPRESTSDK
+//  #ifndef DISABLE_CPPRESTSDK
  #include "WmsSupport.h"
 //  #include "CapabilitiesHandler.h"
 //  #include "CapabilityTree.h"
- #endif // DISABLE_CPPRESTSDK
+//  #endif // DISABLE_CPPRESTSDK
 
     
 class NFmiInfoOrganizer;
@@ -163,11 +163,12 @@ namespace AddParams
 #ifndef DISABLE_CPPRESTSDK
 	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory) //Joonas jatka tästä
 	{
-		try
+		if (getWmsSystemCallback_)
 		{
-			if (getWmsSystemCallback_)
-			{
-				auto& wmsSupport = getWmsSystemCallback_();
+			auto& wmsSupport = getWmsSystemCallback_();
+		}
+// 		try
+// 		{
 // 			if (!WmsSupport().isConfigured())
 // 				return;
 // 			const auto& layerTree = WmsSupport().peekCapabilityTree();
@@ -194,10 +195,10 @@ namespace AddParams
 // 			{
 // 			}
 // 			theMenuItemList->Add(std::move(menuItem));
-		}
-		catch (...)
-		{
-		}
+// 		}
+// 		catch (...)
+// 		{
+// 		}
 	}
 #endif // DISABLE_CPPRESTSDK
 

@@ -92,7 +92,7 @@ namespace AddParams
         int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
 		void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem& ()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
-		void setWmsSystemCallback(std::function<Wms::WmsSupport& ()> wmsSystemCallback) { getWmsSystemCallback_ = wmsSystemCallback; }
+		void setWmsSystemCallback(std::function<WmsSupport& ()> wmsSystemCallback) { getWmsSystemCallback_ = wmsSystemCallback; }
 		void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
         void searchItemsThatMatchToSearchWords(std::string words); 
 
