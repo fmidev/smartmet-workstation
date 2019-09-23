@@ -111,7 +111,8 @@ typedef enum
     kAddViewWithRealRowNumber = 83,
     kFmiShowHelperData4OnTimeSerialView = 84,
     kFmiDontShowHelperData4OnTimeSerialView = 85,
-    kFmiObservationStationsToCpPoints = 86
+    kFmiObservationStationsToCpPoints = 86,
+    kFmiToggleShowLegendState = 87
 }FmiMenuCommandType;
 
 // s‰‰ koodi annetaan t‰nne. Jos se on AWS wawa koodia (arvo 100-199), konvertoidaan se WW-koodiksi, muuten
