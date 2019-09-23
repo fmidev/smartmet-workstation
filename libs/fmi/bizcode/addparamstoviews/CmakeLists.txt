@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(AddParamsToViews)
 
-set(CMAKE_MFC_FLAG 0)
+set(CMAKE_MFC_FLAG 2)
 
 file( GLOB CPP_FILES source/*.cpp )
 file( GLOB H_FILES include/*.h )
