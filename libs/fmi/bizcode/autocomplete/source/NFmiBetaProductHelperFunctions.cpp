@@ -4,6 +4,7 @@
 #include "NFmiStringTools.h"
 #include "NFmiFileSystem.h"
 #include "NFmiDictionaryFunction.h"
+#include "CtrlViewFunctions.h"
 #include "boost/algorithm/string/replace.hpp"
 #include <filesystem>
 #include <afxdlgs.h>
@@ -43,8 +44,9 @@ namespace BetaProduct
 
             if(absolutePath.empty() || absoluteDirectory.empty())
                 return false;
-            auto pos = absolutePath.find(absoluteDirectory);
-            return pos != std::string::npos;
+            // Tämä etsintä työ pitää tehdä case-insensitiivisti, Koska Windows käsittelee polkuja siten.
+            auto pos = CtrlViewUtils::ci_find_substr(absolutePath, absoluteDirectory); 
+            return pos != CtrlViewUtils::ci_string_not_found;
         }
 
         std::vector<std::string> split(std::string path, char d)
