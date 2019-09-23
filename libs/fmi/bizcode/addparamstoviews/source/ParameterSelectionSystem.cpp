@@ -10,12 +10,11 @@
 #include "..\..\..\catlog\catlog\catlogutils.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiHelpDataInfo.h"
-
-//  #ifndef DISABLE_CPPRESTSDK
-//  #include "WmsSupport.h"
-//  #include "CapabilitiesHandler.h"
-//  #include "CapabilityTree.h"
-//  #endif // DISABLE_CPPRESTSDK
+#ifndef DISABLE_CPPRESTSDK
+#include "WmsSupport.h"
+#include "CapabilitiesHandler.h"
+#include "CapabilityTree.h"
+#endif // DISABLE_CPPRESTSDK
 
     
 class NFmiInfoOrganizer;
