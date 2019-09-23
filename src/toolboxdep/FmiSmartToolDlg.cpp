@@ -789,8 +789,15 @@ static bool IsInCurrentMacroParamDirectory(NFmiMacroParamSystem& mpSystem, const
 }
 
 
-const std::string g_MacroParamFileExtension = "dpa";
+const std::string g_MacroParamFileExtension = "st";
 const std::string g_MacroParamFileFilter = "MacroParam Files (*." + g_MacroParamFileExtension + ")|*." + g_MacroParamFileExtension + "|All Files (*.*)|*.*||";
+
+static std::string GetRealMacroParamDrawParamFileName(const std::string& macroParamFormulaFileName)
+{
+    std::experimental::filesystem::path drawParamFilePath = macroParamFormulaFileName;
+    drawParamFilePath.replace_extension("dpa");
+    return drawParamFilePath.string();
+}
 
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
 {
@@ -829,7 +836,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
             mpSystem.SetCurrentPathByAbsolutePath(filePath);
         }
 
-        macroParamPointer->DrawParam()->InitFileName(filePath);
+        macroParamPointer->DrawParam()->InitFileName(::GetRealMacroParamDrawParamFileName(filePath));
         macroParamPointer->DrawParam()->MacroParamRelativePath(mpSystem.RelativePath());
         DoFinalMacroParamWrite(mpSystem, macroParamPointer);
 
