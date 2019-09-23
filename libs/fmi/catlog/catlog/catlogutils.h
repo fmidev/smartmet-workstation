@@ -52,20 +52,27 @@ namespace CatLogUtils
         return !searchTerms || searchHits; //a search with no unquantified terms matches everything
     }
 
+    template<typename Container, typename Predicate>
+    void removeFromContainer(Container& container, const Predicate& predicate)
+    {
+        if(!container.empty())
+            container.erase(std::remove_if(container.begin(), container.end(), predicate), container.end());
+    }
+
     static std::vector<std::string> getSearchedWords(const std::string &searchString)
     {
+        // We want to ignore really short words and use shortWordLength to do that. Short words are ignored
+        // so that log-viewer or other systems won't do unwanted work when user is just starting to type search words.
+        const size_t shortWordLength = 1;
         std::vector<std::string> words;
         // This will generate, in Debug configuration, about 100 lines of compiler warnings (boost not using secure functions blaa blaa). 
         // Couldn't disable those in any other way but to disable that warning from catlog library's CMakeLists.txt with add_compile_options with /wd4996
         boost::split(words, searchString, boost::is_any_of("\t "));
-        // E.g. empty string generates vector with 1 empty element, have to remove all empty values from vector
-        words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word.empty(); }), words.end());
-        // Minus character at start of word means excluded word, if user has started to write excluded word with '-' character, ignore it 
-        // And also igone word if there is only single character after - sign like "-a", so that not all the messages that have 'a' would be ignored. 
-        words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word == "-"; }), words.end());
-        words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word.size() == 2 && word[0] == '-'; }), words.end());
-		//exclude singular + as well
-		words.erase(std::remove_if(words.begin(), words.end(), [](const auto &word) {return word == "+"; }), words.end());
+        // Removing just short words, this will include the following special cases too:
+        // 1) empty words, 2) '+' and '-' words
+        removeFromContainer(words, [=](const auto& word) {return word.size() <= shortWordLength; });
+        // Removing short words with signs in front
+        removeFromContainer(words, [=](const auto& word) {return (word[0] == '-' || word[0] == '+') && word.size() <= shortWordLength + 1; });
 
         return words;
     }
