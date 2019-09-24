@@ -835,8 +835,8 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
             // Jos macroa ei löydy nyky hakemistosta, pitää hakemisto hakea globaalisti root-hakemiston alta
             mpSystem.SetCurrentPathByAbsolutePath(filePath);
         }
-
-        macroParamPointer->DrawParam()->InitFileName(::GetRealMacroParamDrawParamFileName(filePath));
+        auto realMacroParamDrawParamFileName = ::GetRealMacroParamDrawParamFileName(filePath);
+        macroParamPointer->DrawParam()->InitFileName();
         macroParamPointer->DrawParam()->MacroParamRelativePath(mpSystem.RelativePath());
         DoFinalMacroParamWrite(mpSystem, macroParamPointer);
 
@@ -845,7 +845,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
         itsMacroParamList.SetCurSel(itsMacroParamList.FindString(-1, macroParamNameU)); // asettaa talletetun macroParamin aktiiviseksi
         if(updateViews)
         {
-            std::vector<std::string> modifiedMacroParamPaths{ filePath };
+            std::vector<std::string> modifiedMacroParamPaths{ realMacroParamDrawParamFileName };
             itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPaths);
             RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save", false, filePath); // päivitetään varmuuden vuoksi ruutuja, jos karttanäytöllä olleen macroparametrin macroa on muutettu
         }
