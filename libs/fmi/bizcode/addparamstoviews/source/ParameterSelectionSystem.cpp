@@ -95,9 +95,9 @@ namespace AddParams
         updateData(ModellDataStr, *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData(ObservationDataStr, *obsProducerSystem_, NFmiInfoData::kObservations);
         updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
+		updateWmsData(WmsStr, NFmiInfoData::kWmsData);
         updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
         updateCustomCategories();
-		updateWmsData(WmsStr, NFmiInfoData::kWmsData);
         updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
 		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
     }
