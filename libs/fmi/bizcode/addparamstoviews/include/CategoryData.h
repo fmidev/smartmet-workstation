@@ -11,6 +11,17 @@ class NFmiInfoOrganizer;
 class NFmiProducerSystem;
 class NFmiProducer;
 class NFmiMacroParamItem;
+namespace cppext
+{
+	template <typename> class Tree;
+	template <typename> class Node;
+};
+namespace Wms
+{
+	struct Capability;
+	using CapabilityTree = cppext::Tree<Capability>;
+};
+
 
 namespace AddParams
 {
@@ -33,7 +44,8 @@ namespace AddParams
         bool updateCustomCategoryData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool updateOperationalData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree, NFmiInfoData::Type dataCategory);
-        const std::string& categoryName() const { return categoryName_; }
+		bool updateWmsData(const cppext::Node<Wms::Capability>& wmsLayerTree, NFmiInfoData::Type dataCategory);
+		const std::string& categoryName() const { return categoryName_; }
         const std::vector<std::unique_ptr<ProducerData>>& producerDataVector() const { return producerDataVector_; }
         bool empty() const { return producerDataVector_.empty(); }
         std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const;
