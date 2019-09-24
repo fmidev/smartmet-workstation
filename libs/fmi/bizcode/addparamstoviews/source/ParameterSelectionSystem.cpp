@@ -97,7 +97,7 @@ namespace AddParams
         updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
         updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
         updateCustomCategories();
-		updateWmsData(MacroParametersStr, NFmiInfoData::kWmsData);
+		updateWmsData(WmsStr, NFmiInfoData::kWmsData);
         updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
 		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
     }
@@ -161,42 +161,36 @@ namespace AddParams
 
 	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory) //Joonas jatka tästä
 	{
-// 		if (getWmsCapabilityTreeCallback_)
-// 		{
-// 			auto& wmsCapabilityTree = getWmsCapabilityTreeCallback_();
-// 		}
-// 		try
-// 		{
-// 			if (!WmsSupport().isConfigured())
-// 				return;
-// 			const auto& layerTree = WmsSupport().peekCapabilityTree();
+	#ifndef DISABLE_CPPRESTSDK
 
-// 			auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex,	"WMS", NFmiDataIdent(NFmiParam(layerTree.value.paramId, layerTree.value.name), layerTree.value.producer),
-// 				theMenuSettings.itsMenuCommand,	g_DefaultParamView,	nullptr, theDataType);
-// 			try
-// 			{
-// 				//Rakenna puu rekursiivisesti
-// 				const auto& layerTreeCasted = dynamic_cast<const Wms::CapabilityNode&>(layerTree);
-// 				auto* subMenuList = menuItem->SubMenu();
-// 				if (!subMenuList)
-// 				{
-// 					subMenuList = new NFmiMenuItemList;
-// 				}
-// 
-// 				for (const auto& child : layerTreeCasted.children)
-// 				{
-// 					AddAllWmsProducersToParamSelectionPopup(theMenuSettings, theDataType, subMenuList, *child);
-// 				}
-// 				menuItem->AddSubMenu(subMenuList);
-// 			}
-// 			catch (const std::exception&)
-// 			{
-// 			}
-// 			theMenuItemList->Add(std::move(menuItem));
-// 		}
-// 		catch (...)
-// 		{
-// 		}
+		try
+		{
+			auto& wmsSupport = getWmsCallback_();
+			if (!wmsSupport.isConfigured())
+				return;
+			const auto& layerTree = wmsSupport.peekCapabilityTree();
+			const auto& wmsLayerTree = dynamic_cast<const Wms::CapabilityNode&>(layerTree);
+
+			auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto& categoryData) {return categoryName == categoryData->categoryName(); });
+			if (iter != categoryDataVector_.end())
+			{
+				dialogDataNeedsUpdate_ |= (*iter)->updateWmsData(wmsLayerTree, dataCategory);
+			}
+			else
+			{
+				// Add wms layers as a new category
+				auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+				categoryDataPtr->updateWmsData(wmsLayerTree, dataCategory);
+				categoryDataVector_.push_back(std::move(categoryDataPtr));
+				dialogDataNeedsUpdate_ = true;
+			}
+
+			updatePending(false);
+		}
+		catch (...)
+		{
+		}
+	#endif // DISABLE_CPPRESTSDK
 	}
 
     void ParameterSelectionSystem::updateCustomCategories()
