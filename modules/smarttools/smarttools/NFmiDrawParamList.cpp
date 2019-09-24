@@ -47,10 +47,7 @@ NFmiDrawParamList::NFmiDrawParamList(void)
 //--------------------------------------------------------
 // Destructor  ~NFmiDrawParamList
 //--------------------------------------------------------
-NFmiDrawParamList::~NFmiDrawParamList(void)
-{
-  Clear();
-}
+NFmiDrawParamList::~NFmiDrawParamList(void) { Clear(); }
 
 //--------------------------------------------------------
 // Add
@@ -120,8 +117,7 @@ void NFmiDrawParamList::ClearBorrowedParams(void)
 {
   for (Reset(); Next();)
   {
-    if (Current()->BorrowedParam())
-      Remove();
+    if (Current()->BorrowedParam()) Remove();
   }
   HasBorrowedParams(false);
 }
@@ -150,8 +146,7 @@ bool NFmiDrawParamList::Reset(void)
 //--------------------------------------------------------
 bool NFmiDrawParamList::Next(void)
 {
-  if (itsIter == itsList.end())
-    return false;
+  if (itsIter == itsList.end()) return false;
   if (fBeforeFirstItem)
   {
     fBeforeFirstItem = false;
@@ -228,9 +223,7 @@ bool NFmiDrawParamList::Find(NFmiDrawParam* item)
 //--------------------------------------------------------
 // Update
 //--------------------------------------------------------
-void NFmiDrawParamList::Update(void)
-{
-}
+void NFmiDrawParamList::Update(void) {}
 
 void NFmiDrawParamList::HideAllParams(bool newState)
 {
@@ -263,8 +256,7 @@ bool NFmiDrawParamList::Find(const NFmiDataIdent& theParam,
     if (theParam.GetParamIdent() ==
         NFmiInfoData::kFmiSpSynoPlot)  // pirun synop-parametrille pitää taas tehdä virityksiä
     {
-      if (fUseOnlyParamId || drawParam->Param() == theParam)
-        return true;
+      if (fUseOnlyParamId || drawParam->Param() == theParam) return true;
     }
     else
     {
@@ -273,15 +265,12 @@ bool NFmiDrawParamList::Find(const NFmiDataIdent& theParam,
       {
         if (theDataType == NFmiInfoData::kAnyData || drawParam->DataType() == theDataType)
         {
-          if (fIgnoreLevelInfo)
-            return true;
-          if (theLevel == 0 && drawParam->Level().LevelType() == 0)
-            return true;
+          if (fIgnoreLevelInfo) return true;
+          if (theLevel == 0 && drawParam->Level().LevelType() == 0) return true;
           if (drawParam->Level().LevelType() == 0 && (theLevel->LevelType() == kFmiAnyLevelType ||
                                                       theLevel->LevelType() == kFmiMeanSeaLevel))
             return true;  // tämä case tulee kun nykyään tehdään pinta parametreja
-          if (theLevel && (*(theLevel) == drawParam->Level()))
-            return true;
+          if (theLevel && (*(theLevel) == drawParam->Level())) return true;
         }
       }
     }
@@ -511,8 +500,7 @@ int NFmiDrawParamList::FindActive(void)
   int index = 1;
   for (Reset(); Next(); index++)
   {
-    if (Current()->IsActive())
-      return index;
+    if (Current()->IsActive()) return index;
   }
   return 0;
 }
@@ -522,8 +510,7 @@ int NFmiDrawParamList::FindEdited(void)
   int index = 1;
   for (Reset(); Next(); index++)
   {
-    if (Current()->IsParamEdited())
-      return index;
+    if (Current()->IsParamEdited()) return index;
   }
   return 0;
 }
@@ -531,11 +518,10 @@ int NFmiDrawParamList::FindEdited(void)
 /*!
  * Tekee annetusta listasta kopioidut drawParamit omaan listaansa. clearList parametrilla voidaan
  * 'this' -lista tyhjentää ennen kopiointia.
-*/
+ */
 void NFmiDrawParamList::CopyList(NFmiDrawParamList& theList, bool clearFirst)
 {
-  if (clearFirst)
-    Clear();
+  if (clearFirst) Clear();
 
   for (theList.Reset(); theList.Next();)
   {
@@ -550,12 +536,27 @@ void NFmiDrawParamList::CopyList(NFmiDrawParamList& theList, bool clearFirst)
 // Jos listassa ei ole yhtään aktiivista, ensimmäinen aktivoidaan.
 void NFmiDrawParamList::ActivateOnlyOne(void)
 {
-  if (NumberOfItems() == 0)
-    return;
+  if (NumberOfItems() == 0) return;
   int activeIndex = FindActive();
   DeactivateAll();
-  if (activeIndex == 0)
-    activeIndex++;
+  if (activeIndex == 0) activeIndex++;
   if (Index(activeIndex))  // pitäisi löytyä!!
     Current()->Activate(true);
+}
+
+void NFmiDrawParamList::Swap(NFmiDrawParamList* otherList)
+{
+  if (otherList)
+  {
+      // Iteraattoreita ei voi swapata, pitää siirtää index:eillä oikeaan kohtaan lopuksi
+    auto index1 = std::distance(itsList.begin(), itsIter);
+    auto index2 = std::distance(otherList->itsList.begin(), otherList->itsIter);
+    itsList.swap(otherList->itsList);
+    std::swap(fHasBorrowedParams, otherList->fHasBorrowedParams);
+    Index(static_cast<unsigned long>(index1));
+    otherList->Index(static_cast<unsigned long>(index2));
+    // Laitetaan vielä listat likaisiksi
+    Dirty(true);
+    otherList->Dirty(true);
+  }
 }

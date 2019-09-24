@@ -44,6 +44,7 @@ public:
 		double CalcUsedSize(void);
 		double MakeRoom(double theMinCleareSizeMB);
 		void MakeTimesDirty(const NFmiMetTime &theMinTime, const NFmiMetTime &theMaxTime);
+        void Swap(CacheRow& otherCacheRow);
 
 	private:
 		std::list<CacheSlot>::iterator Find(const NFmiMetTime &theTime);
@@ -66,6 +67,7 @@ public:
 	void MaxSizeMB(double newValue) 
 	{itsMaxSizeMB = newValue; if(itsMaxSizeMB == 0) MakeDirty();}
 	bool IsCacheUsed(void) const {return itsMaxSizeMB > 0;}
+    void SwapRows(int theRowIndex1, int theRowIndex2);
 
 private:
 	void ClearRow(int theRowIndex);
@@ -73,6 +75,7 @@ private:
 	double MakeRoom(double theMinCleareSizeMB);
 	double MakeRoomFromNonUsedRows(double theMinCleareSizeMB);
 	double MakeRoomFromUsedRows(double theMinCleareSizeMB);
+    bool IsCacheRowIndexOk(int theRowIndex);
 
 	checkedVector<CacheRow> itsCacheRows;
 	checkedVector<int> itsUsedRowIndexies; // mitka rivit ovat editorin kartalla nakyvissa

@@ -100,6 +100,7 @@ class NFmiDrawParamList
   void ActivateOnlyOne(void);
   ListType::iterator begin() { return itsList.begin(); }
   ListType::iterator end() { return itsList.end(); }
+  void Swap(NFmiDrawParamList* otherList);
 
  private:
   void Swap(int index1, int index2);

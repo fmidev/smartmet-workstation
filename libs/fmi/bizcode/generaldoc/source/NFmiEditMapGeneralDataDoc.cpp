@@ -4487,6 +4487,8 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 		menuSettings.SetMapViewSettings(theDescTopIndex, kFmiAddAsOnlyView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAddAsOnly");
 
+        AddSwapViewRowsToPopup(theDescTopIndex, itsPopupMenu);
+
 		std::string menuString = ::GetDictionaryString("MapViewParamPopUpremoveAll");
         auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, NFmiDataIdent(), kFmiRemoveAllViews, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		itsPopupMenu->Add(std::move(menuItem));
@@ -4562,6 +4564,36 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
 	AddMacroParamPartToPopUpMenu(theMenuSettings, macroParamsMenuList, macroParamItemList, theDataType);
 	menuItem->AddSubMenu(macroParamsMenuList);
 	theMenuList->Add(std::move(menuItem));
+}
+
+void AddSwapViewRowsToPopup(unsigned int theDescTopIndex, NFmiMenuItemList* theMenuList)
+{
+    bool crossSectionCase = (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView);
+    int maxRowIndex = crossSectionCase ? CtrlViewUtils::MaxViewGridYSize : CtrlViewUtils::MaxViewGridXSize * CtrlViewUtils::MaxViewGridYSize;
+    int currentAbsoluteRowIndex = GetRealRowNumber(theDescTopIndex, itsCurrentViewRowIndex);
+    std::string menuText = "Swap row ";
+    menuText += std::to_string(currentAbsoluteRowIndex);
+    menuText += " with row";
+    auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuText, NFmiDataIdent(), kFmiSwapViewRows, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+    AddSwapViewRowsToToMenuItem(theDescTopIndex, menuItem.get(), maxRowIndex, currentAbsoluteRowIndex);
+    theMenuList->Add(std::move(menuItem));
+}
+
+void AddSwapViewRowsToToMenuItem(unsigned int theDescTopIndex, NFmiMenuItem* theMenuItem, int maxRowIndex, int currentAbsoluteRowIndex)
+{
+    NFmiMenuItemList* rowNumbersMenuList = new NFmiMenuItemList;
+    for(int rowIndex = 1; rowIndex <= maxRowIndex; rowIndex++)
+    {
+        if(rowIndex != currentAbsoluteRowIndex)
+        {
+            std::string menuText = std::to_string(rowIndex);
+            // NFmiMenuItem:in IndexInViewRow saa arvokseen currentAbsoluteRowIndex:in ja rowIndex menee ExtraParam:iin talteen
+            auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuText, NFmiDataIdent(), kFmiSwapViewRows, g_DefaultParamView, nullptr, NFmiInfoData::kEditable, currentAbsoluteRowIndex);
+            menuItem->ExtraParam(rowIndex);
+            rowNumbersMenuList->Add(std::move(menuItem));
+        }
+    }
+    theMenuItem->AddSubMenu(rowNumbersMenuList);
 }
 
 void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
@@ -5584,6 +5616,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
         case kFmiToggleShowLegendState:
             ToggleShowLegendState(*menuItem, itsCurrentViewRowIndex);
             break;
+        case kFmiSwapViewRows:
+            SwapViewRows(*menuItem);
+            break;
         case kFmiRemoveParamCrossSectionView:
 			RemoveCrosssectionDrawParam(*menuItem, itsCurrentCrossSectionRowIndex);
 			break;
@@ -6539,6 +6574,23 @@ void ToggleShowLegendState(const NFmiMenuItem& theMenuItem, int theRowIndex)
             else
                 UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
         }
+    }
+}
+
+void SwapViewRows(const NFmiMenuItem& theMenuItem)
+{
+    auto viewIndex = theMenuItem.MapViewDescTopIndex();
+    int realRowNumber1 = theMenuItem.IndexInViewRow();
+    auto drawParamList1 = DrawParamListWithRealRowNumber(viewIndex, realRowNumber1);
+    int realRowNumber2 = static_cast<int>(theMenuItem.ExtraParam());
+    auto drawParamList2 = DrawParamListWithRealRowNumber(viewIndex, realRowNumber2);
+    if(drawParamList1 && drawParamList2)
+    {
+        drawParamList1->Swap(drawParamList2);
+        // HUOM! tosi rivi numerosta pitää vähentää 1, kun manipuloidaan bitmap cache rivejä!!!
+        MapViewDescTop(viewIndex)->MapViewCache().SwapRows(realRowNumber1 - 1, realRowNumber2 - 1);
+        MacroParamDataCache().swapMacroParamCacheRows(viewIndex, realRowNumber1, realRowNumber2);
+        MapViewDirty(viewIndex, false, false, true, false, false, true);
     }
 }
 
@@ -10118,6 +10170,8 @@ void SwapArea(unsigned int theDescTopIndex)
 
 		menuSettings.SetCrossSectionSettings(kFmiAddAsOnlyParamCrossSectionView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "CrossSectionViewSelectionPopUpAddAsOnly");
+
+        AddSwapViewRowsToPopup(CtrlViewUtils::kFmiCrossSectionView, itsPopupMenu);
 
 		NFmiDrawParamList * dpList = this->CrossSectionViewDrawParamList(theRowIndex);
 		std::string menuString = ::GetDictionaryString("NormalWordCapitalShow");
