@@ -103,7 +103,8 @@ namespace AddParams
 	private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
-        void updateDialogTreePatternData();
+		void otherHelpDataTodialog();
+		void updateDialogTreePatternData();
         void updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
