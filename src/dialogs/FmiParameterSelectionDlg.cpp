@@ -878,27 +878,27 @@ static COLORREF getUsedBackgroundColor(const AddParams::SingleRowItem &theRowIte
     // Params always have white background color
     if(theRowItem.leafNode()) { return gParamColor; }
 
-    if(!NFmiDrawParam::IsMacroParamCase(theRowItem.dataType()))
-    {
-        switch(theRowItem.rowType())
-        {
-        case AddParams::kCategoryType:
-            return gCategoryColor;
-        case AddParams::kProducerType:
-            return gProducerColor;
-        case AddParams::kDataType:
-            return gDataColor;
-        case AddParams::kParamType:
-            return gParamColor;
-        case AddParams::kSubParamType:
-        case AddParams::kSubParamLevelType:
-            return gSubParamColor;
-        case AddParams::kLevelType:
-            return gLevelColor1;
-        default:
-            return gErrorColor;
-        }
-    }
+//     if(!NFmiDrawParam::IsMacroParamCase(theRowItem.dataType()))
+//     {
+//         switch(theRowItem.rowType())
+//         {
+//         case AddParams::kCategoryType:
+//             return gCategoryColor;
+//         case AddParams::kProducerType:
+//             return gProducerColor;
+//         case AddParams::kDataType:
+//             return gDataColor;
+//         case AddParams::kParamType:
+//             return gParamColor;
+//         case AddParams::kSubParamType:
+//         case AddParams::kSubParamLevelType:
+//             return gSubParamColor;
+//         case AddParams::kLevelType:
+//             return gLevelColor1;
+//         default:
+//             return gErrorColor;
+//         }
+//     }
 
     switch(theRowItem.treeDepth())
     {
