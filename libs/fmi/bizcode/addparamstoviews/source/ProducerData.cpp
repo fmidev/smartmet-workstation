@@ -256,26 +256,33 @@ namespace AddParams
 		{
 			try
 			{
-				const auto& wmsNode = dynamic_cast<const Wms::CapabilityNode&>(*wmsChild);
-				auto paramName = wmsNode.value.name;
-				auto paramId = wmsNode.value.paramId;
-				auto paramProducer = wmsNode.value.producer;			
-				bool leafNode = wmsNode.children.size() > 0 ? false : true;
+				auto paramName = wmsChild->value.name;
+				auto paramId = wmsChild->value.paramId;
+				auto producer = wmsChild->value.producer;
+				bool leafNode = true;
+
+				try
+				{
+					const auto& wmsNode = dynamic_cast<const Wms::CapabilityNode&>(*wmsChild);
+					leafNode = wmsNode.children.size() > 0 ? false : true;
+					if (!leafNode)
+					{
+						wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, "", dataCategory_, leafNode, treeDepth));
+						wmsDataToVector(wmsVector, wmsNode, ++treeDepth);
+						treeDepth--;
+					}
+				}
+				catch (const std::exception&)
+				{		
+				}
 
 				if (leafNode)
 				{
-					wmsVector.push_back(::makeDataRowItem(paramProducer, paramId, paramName, "", dataCategory_, leafNode, treeDepth));
-				}
-				else // Directory, increase treeDepth
-				{
-					wmsVector.push_back(::makeDataRowItem(paramProducer, paramId, paramName, "", dataCategory_, leafNode, treeDepth));
-// 					wmsDataToVector(wmsVector, wmsNode, ++treeDepth);
-					treeDepth--;
-				}
+					wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, "", dataCategory_, leafNode, treeDepth));
+				}				
 			}
 			catch (...)
 			{
-				return treeDepth;
 			}
 		}
 		return treeDepth;
