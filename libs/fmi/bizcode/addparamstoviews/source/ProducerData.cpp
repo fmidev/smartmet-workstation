@@ -34,7 +34,7 @@ namespace
 
     AddParams::SingleRowItem makeRowItem(const AddParams::SingleData &data, const std::string &uniqueId, const AddParams::SingleRowItem *rowItemMemory)
     {
-        // If there is memory for this data's rowItem, use it, otherwise put singleData in collapsed mode
+        // If there is memory for this data's rowItem, use it, otherwise put row in collapsed mode
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : true;
 
         auto singleRowItem = AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
@@ -259,6 +259,7 @@ namespace AddParams
 				auto paramName = wmsChild->value.name;
 				auto paramId = wmsChild->value.paramId;
 				auto producer = wmsChild->value.producer;
+				const std::string& uniqueId = paramName + "-" + std::to_string(paramId) + "-" + std::to_string(producer.GetIdent());
 				bool leafNode = true;
 
 				try
@@ -267,7 +268,7 @@ namespace AddParams
 					leafNode = wmsNode.children.size() > 0 ? false : true;
 					if (!leafNode)
 					{
-						wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, "", dataCategory_, leafNode, treeDepth));
+						wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, uniqueId, dataCategory_, leafNode, treeDepth));
 						wmsDataToVector(wmsVector, wmsNode, ++treeDepth);
 						treeDepth--;
 					}
@@ -278,7 +279,7 @@ namespace AddParams
 
 				if (leafNode)
 				{
-					wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, "", dataCategory_, leafNode, treeDepth));
+					wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, uniqueId, dataCategory_, leafNode, treeDepth));
 				}				
 			}
 			catch (...)
@@ -324,8 +325,8 @@ namespace AddParams
         for(const auto &singleData : dataVector_)
         {
             const std::string &uniqueId = singleData->uniqueDataId();
-            auto *singleDataMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
-            dialogRowData.push_back(::makeRowItem(*singleData, uniqueId, singleDataMemory));
+            auto *rowDataMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
+            dialogRowData.push_back(::makeRowItem(*singleData, uniqueId, rowDataMemory));
             auto rowData = singleData->makeDialogRowData(dialogRowDataMemory);
             dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
         }   
