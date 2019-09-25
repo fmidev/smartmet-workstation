@@ -86,7 +86,6 @@ namespace AddParams
 				}
 			}
 		}
-// 		addHelpData
 	}
 
     void ParameterSelectionSystem::updateData()
@@ -250,14 +249,18 @@ namespace AddParams
             dialogRowData_.push_back(::makeRowItem(*category, uniqueId, categoryMemory));
             auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory, *infoOrganizer_);
             dialogRowData_.insert(dialogRowData_.end(), gategoryRowData.begin(), gategoryRowData.end());
+			if (category->categoryName() == HelpDataStr) { otherHelpDataTodialog(); }
         }
-        for(const auto &rowItem : otherHelpData_)
-        {
-            dialogRowData_.push_back(rowItem);
-        }
-
 		trimDialogRowDataDependingOnActiveView();
     }
+
+	void ParameterSelectionSystem::otherHelpDataTodialog()
+	{
+		for (const auto& rowItem : otherHelpData_)
+		{
+			dialogRowData_.push_back(rowItem);
+		}
+	}
 
 	void ParameterSelectionSystem::trimDialogRowDataDependingOnActiveView()
 	{
