@@ -12,6 +12,11 @@ class NFmiInfoOrganizer;
 class NFmiProducerSystem;
 class NFmiMacroParamSystem;
 
+namespace Wms
+{
+	class WmsSupport;
+};
+
 namespace AddParams
 {   
     class CategoryData;
@@ -57,13 +62,15 @@ namespace AddParams
         std::vector<std::string> customCategories_;
 
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
+		std::function<Wms::WmsSupport&()> getWmsCallback_;
         const NFmiLevelBag *soundingLevels_;
 
 		const std::string OperationalDataStr = "Operational data",
 			ModellDataStr = "Model data",
 			ObservationDataStr = "Observation data",
 			SatelliteImagesStr = "Satellite images",
-			MacroParametersStr = "Macro Parameters",
+			MacroParametersStr = "Macro Parameters", 
+			WmsStr = "WMS",
 			HelpDataStr = "Help data";
 
     public:
@@ -88,17 +95,20 @@ namespace AddParams
         void LastActivatedDesktopIndex(unsigned int newValue) { itsLastActivatedDesktopIndex = newValue; }
         int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
         void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
-        void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem&()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
-        void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
+		void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem& ()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
+		void setWmsCallback(std::function<Wms::WmsSupport& ()> wmsCallBack) { getWmsCallback_ = wmsCallBack; }
+		void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
         void searchItemsThatMatchToSearchWords(std::string words); 
 
 	private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
-        void updateDialogTreePatternData();
+		void otherHelpDataTodialog();
+		void updateDialogTreePatternData();
         void updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
+		void updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory);
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
 		void trimDialogRowDataDependingOnActiveView();

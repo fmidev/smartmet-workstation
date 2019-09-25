@@ -796,9 +796,9 @@ void CFmiParameterSelectionDlg::InitHeaders(void)
     int basicColumnWidthUnit = 18;
     itsHeaders.clear();
     itsHeaders.push_back(ParameterSelectionHeaderParInfo("Row", ParameterSelectionHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
-    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Name", ParameterSelectionHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Name", ParameterSelectionHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.0)));
     itsHeaders.push_back(ParameterSelectionHeaderParInfo("Time", ParameterSelectionHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 6.5)));
-    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Id", ParameterSelectionHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Id", ParameterSelectionHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 4.0)));
 }
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
@@ -878,27 +878,27 @@ static COLORREF getUsedBackgroundColor(const AddParams::SingleRowItem &theRowIte
     // Params always have white background color
     if(theRowItem.leafNode()) { return gParamColor; }
 
-    if(!NFmiDrawParam::IsMacroParamCase(theRowItem.dataType()))
-    {
-        switch(theRowItem.rowType())
-        {
-        case AddParams::kCategoryType:
-            return gCategoryColor;
-        case AddParams::kProducerType:
-            return gProducerColor;
-        case AddParams::kDataType:
-            return gDataColor;
-        case AddParams::kParamType:
-            return gParamColor;
-        case AddParams::kSubParamType:
-        case AddParams::kSubParamLevelType:
-            return gSubParamColor;
-        case AddParams::kLevelType:
-            return gLevelColor1;
-        default:
-            return gErrorColor;
-        }
-    }
+//     if(!NFmiDrawParam::IsMacroParamCase(theRowItem.dataType()))
+//     {
+//         switch(theRowItem.rowType())
+//         {
+//         case AddParams::kCategoryType:
+//             return gCategoryColor;
+//         case AddParams::kProducerType:
+//             return gProducerColor;
+//         case AddParams::kDataType:
+//             return gDataColor;
+//         case AddParams::kParamType:
+//             return gParamColor;
+//         case AddParams::kSubParamType:
+//         case AddParams::kSubParamLevelType:
+//             return gSubParamColor;
+//         case AddParams::kLevelType:
+//             return gLevelColor1;
+//         default:
+//             return gErrorColor;
+//         }
+//     }
 
     switch(theRowItem.treeDepth())
     {

@@ -14331,6 +14331,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 std::string displayName = ConceptualModelData().DefaultUserName(); // Conceptual analysis uses displayName to fetch correct data!
                 parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
             }
+#ifndef DISABLE_CPPRESTSDK
+			if (WmsSupport().isConfigured())
+			{
+				auto wmsCallBackFunction = [this]() {return std::ref(this->WmsSupport()); };
+				parameterSelectionSystem.setWmsCallback(wmsCallBackFunction);
+			}
+#endif // DISABLE_CPPRESTSDK
+
         }
         catch(std::exception &e)
         {
