@@ -80,6 +80,7 @@ ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_DEFAULT_AXIS_ALL, &CFmiCrossSectionD
 ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_SPECIAL_AXIS_ALL, &CFmiCrossSectionDlg::OnAcceleratorSetCrossSectionSpecialAxisAll)
 ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_DEFAULT_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionDefaultAxis)
 ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_SPECIAL_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionSpecialAxis)
+ON_BN_CLICKED(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION, &CFmiCrossSectionDlg::OnBnClickedButtonCrossSectionParameterSelection)
 END_MESSAGE_MAP()
 
 // CFmiCrossSectionDlg message handlers
@@ -484,4 +485,10 @@ void CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionDefaultAxis()
 void CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionSpecialAxis()
 {
     itsSmartMetDocumentInterface->CrossSectionSystem()->SaveCrossSectionSpecialAxisValues();
+}
+
+
+void CFmiCrossSectionDlg::OnBnClickedButtonCrossSectionParameterSelection()
+{
+	itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsView->MapViewDescTopIndex());
 }

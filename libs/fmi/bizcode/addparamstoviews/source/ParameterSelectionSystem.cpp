@@ -158,7 +158,7 @@ namespace AddParams
         }
     }
 
-	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory) //Joonas jatka tästä
+	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory)
 	{
 	#ifndef DISABLE_CPPRESTSDK
 
