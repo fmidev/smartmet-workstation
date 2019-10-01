@@ -21,6 +21,7 @@
 const NFmiViewPosRegistryInfo CFmiCrossSectionDlg::s_ViewPosRegistryInfo(CRect(400, 200, 1000, 700), "\\CrossSectionView");
 
 IMPLEMENT_DYNAMIC(CFmiCrossSectionDlg, CDialog)
+
 CFmiCrossSectionDlg::CFmiCrossSectionDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent /*=NULL*/)
 :CDialog(CFmiCrossSectionDlg::IDD, pParent)
 ,itsView(0)
@@ -56,7 +57,6 @@ void CFmiCrossSectionDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CFmiCrossSectionDlg, CDialog)
-	ON_BN_CLICKED(IDC_BUTTON_REFRESH, OnBnClickedButtonRefresh)
 	ON_BN_CLICKED(IDC_BUTTON_PRINT, OnBnClickedButtonPrint)
 	ON_WM_SIZE()
 	ON_WM_ERASEBKGND()
@@ -97,11 +97,6 @@ void CFmiCrossSectionDlg::Update()
 			itsView->Update(true);
 		Invalidate(FALSE);
 	}
-}
-
-void CFmiCrossSectionDlg::OnBnClickedButtonRefresh()
-{
-	Update();
 }
 
 void CFmiCrossSectionDlg::OnBnClickedButtonPrint()
@@ -162,7 +157,7 @@ BOOL CFmiCrossSectionDlg::OnInitDialog()
 	SetWindowPos(&wndBottom, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);	 // not possible, thus child stays still upon its parent
 
 	InitFromCrossSectionSystem();
-
+	SetAddParametersIcon();
 	InitDialogTexts();
 	UpdateData(FALSE);
 
@@ -183,6 +178,23 @@ void CFmiCrossSectionDlg::InitFromCrossSectionSystem(void)
 	EnableControls();
 
 	UpdateData(FALSE);
+}
+
+void CFmiCrossSectionDlg::SetAddParametersIcon()
+{
+	CButton* pButton = (CButton*)GetDlgItem(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION);
+
+	pButton->ModifyStyle(0, BS_BITMAP);
+
+	HBITMAP bitmap = (HBITMAP)LoadImage(
+		AfxGetApp()->m_hInstance,
+		MAKEINTRESOURCE(IDB_BITMAP_PLUS),
+		IMAGE_BITMAP,
+		16, 16,
+		LR_DEFAULTCOLOR
+	);
+
+	pButton->SetBitmap(bitmap);
 }
 
 void CFmiCrossSectionDlg::OnSize(UINT nType, int cx, int cy)
@@ -282,7 +294,7 @@ void CFmiCrossSectionDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScroll
 void CFmiCrossSectionDlg::OnNMReleasedcaptureSliderCrossSectionViewCount(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	// Kikka vitonen: pitää laittaa fokus jollekin toiselle kontrollille, koska muuten hiiren rulla jää slideriin
-	CWnd *win = this->GetDlgItem(IDC_BUTTON_REFRESH);
+	CWnd *win = this->GetDlgItem(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION);
 	if(win)
 		win->SetFocus();
 	*pResult = 0;
@@ -349,7 +361,7 @@ void CFmiCrossSectionDlg::OnOK()
 void CFmiCrossSectionDlg::InitDialogTexts(void)
 {
     SetWindowText(CA2T(::GetDictionaryString("CrossSectionDlgTitle").c_str()));
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH, "IDC_BUTTON_REFRESH");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION, "+");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "IDC_BUTTON_PRINT");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_TIME_CROSS_SECTION, "IDC_CHECK_USE_TIME_CROSS_SECTION");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_CROSSSECTION_MAP_MODE, "IDC_CHECK_USE_CROSSSECTION_MAP_MODE");

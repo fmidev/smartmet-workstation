@@ -12,6 +12,7 @@ class CFmiCrossSectionDlg : public CDialog
 {
 private:
     static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
+	void SetAddParametersIcon();
 public:
     static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo(void){return s_ViewPosRegistryInfo;}
 
@@ -64,7 +65,6 @@ private:
     BOOL fUseObsAndForCrossSection;
 
 public:
-	afx_msg void OnBnClickedButtonRefresh();
 	afx_msg void OnBnClickedButtonPrint();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
