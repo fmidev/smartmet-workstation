@@ -2630,8 +2630,9 @@ static bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemo
 
 std::string FmiModifyEditdData::GetMacroParamFormula(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
-    if(macroParamSystem.FindTotal(theDrawParam->InitFileName()))
-        return macroParamSystem.CurrentMacroParam()->MacroText();
+    auto macroParamPtr = macroParamSystem.GetWantedMacro(theDrawParam->InitFileName());
+    if(macroParamPtr)
+        return macroParamPtr->MacroText();
     throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
 }
 

@@ -6056,31 +6056,36 @@ void AddView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		CheckAnimationLockedModeTimeBags(theMenuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
 }
 
-void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string *theMacroParamInitFileName)
+void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string* theMacroParamInitFileName)
 {
-	NFmiInfoData::Type dataType = theMenuItem.DataType();
-	if(NFmiDrawParam::IsMacroParamCase(dataType))
-	{
-		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
-		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
-	if(theMacroParamInitFileName == 0)
-	{
-		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
-			if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
-				usedMacroParam = currentFolder->Current();
-			// kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
-			else if(MacroParamSystem().FindTotal(theMenuItem.MacroParamInitName()))
-				usedMacroParam = MacroParamSystem().CurrentMacroParam();
-	}
-	else if(MacroParamSystem().FindTotal(*theMacroParamInitFileName))
-			usedMacroParam = MacroParamSystem().CurrentMacroParam();
-		if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
-		{
-			theDrawParam->Init(usedMacroParam->DrawParam());
-			theDrawParam->DataType(usedMacroParam->DrawParam()->DataType());; // q3macroparam tyyppi pitää asettaa tässä
-																		// PITÄISIKÖ se asettaa jo DrawParam:in Init-metodissa?!?!?
-		}
-	}
+    NFmiInfoData::Type dataType = theMenuItem.DataType();
+    if(NFmiDrawParam::IsMacroParamCase(dataType))
+    {
+        theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
+        boost::shared_ptr<NFmiMacroParam> usedMacroParam;
+        if(theMacroParamInitFileName == nullptr)
+        {
+            boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
+            if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
+                usedMacroParam = currentFolder->Current();
+            else
+            {
+                // kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
+                usedMacroParam = MacroParamSystem().GetWantedMacro(theMenuItem.MacroParamInitName());
+            }
+        }
+        else
+        {
+            usedMacroParam = MacroParamSystem().GetWantedMacro(*theMacroParamInitFileName);
+        }
+
+        if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
+        {
+            theDrawParam->Init(usedMacroParam->DrawParam());
+            // q3macroparam tyyppi pitää asettaa tässä, PITÄISIKÖ se asettaa jo DrawParam:in Init-metodissa?!?!?
+            theDrawParam->DataType(usedMacroParam->DrawParam()->DataType());
+        }
+    }
 }
 
 // Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
@@ -6149,12 +6154,15 @@ void SetCrossSectionDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::sh
 	{
 		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
 		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
-		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
+		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
 		if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
 			usedMacroParam = currentFolder->Current();
-		// kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
-		else if(MacroParamSystem().FindTotal(theMenuItem.MacroParamInitName()))
-			usedMacroParam = MacroParamSystem().CurrentMacroParam();
+        else
+        {
+            // kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
+            usedMacroParam = MacroParamSystem().GetWantedMacro(theMenuItem.MacroParamInitName());
+        }
+
 		if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
 		{
 			theDrawParam->Init(usedMacroParam->DrawParam());
@@ -6514,10 +6522,12 @@ void PasteDrawParamOptions(const NFmiMenuItem& theMenuItem, int theRowIndex, boo
 		if(fUseCrossSectionParams == false)
 			UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
 		if(NFmiDrawParam::IsMacroParamCase(theMenuItem.DataType()))
-		{ // macroParam pitää vielä päivittää macroParamSystemiin!!
-			string macroParamName = theMenuItem.DataIdent().GetParamName();
-			if(itsMacroParamSystem.FindTotal(macroParamName)) // tässä tod. init fileName
-				itsMacroParamSystem.CurrentMacroParam()->DrawParam()->Init(&itsCopyPasteDrawParam, true);
+		{ 
+            // macroParam pitää vielä päivittää macroParamSystemiin!!
+			string macroParamName = theMenuItem.DataIdent().GetParamName(); // tässä tod. init fileName
+            auto macroParamPtr = itsMacroParamSystem.GetWantedMacro(macroParamName);
+			if(macroParamPtr)
+                macroParamPtr->DrawParam()->Init(&itsCopyPasteDrawParam, true);
 		}
 	}
 }
@@ -7124,10 +7134,11 @@ void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 
 boost::shared_ptr<NFmiDrawParam> GetUsedMacroDrawParam(const NFmiMenuItem& theMenuItem)
 {
-	std::string macroParamName = theMenuItem.DataIdent().GetParamName();
-    if(itsMacroParamSystem.FindTotal(macroParamName)) // tässä tod. init fileName
+	std::string macroParamName = theMenuItem.DataIdent().GetParamName(); // tässä tod. init fileName
+    auto macroParamPtr = itsMacroParamSystem.GetWantedMacro(macroParamName);
+    if(macroParamPtr)
     {
-        auto usedDrawParam = itsMacroParamSystem.CurrentMacroParam()->DrawParam();
+        auto usedDrawParam = macroParamPtr->DrawParam();
         if(usedDrawParam)
         {
             usedDrawParam->ViewMacroDrawParam(theMenuItem.ViewMacroDrawParam()); // tämä pitää vielä asettaa
@@ -9784,7 +9795,7 @@ void SwapArea(unsigned int theDescTopIndex)
 		}
 		else
 		{
-			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
+			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
 			if(currentFolder)
 				currentFolder->Remove(theName); // poista macroparam mpsysteemistä (joka tuhoaa myös tiedostot)
 			RemoveMacroParamFromDrawParamLists(theName); // poista macroparam drawparamlistoista
