@@ -74,6 +74,7 @@ protected:
 	afx_msg void OnButtonToiminto();
 	afx_msg void OnButtonClose();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnButtonOpenParameterSelection();
 	afx_msg void OnButtonRedo();
 	afx_msg void OnButtonUndo();
 	afx_msg void OnClose();
@@ -101,6 +102,7 @@ private:
 	CRect CalcClientArea(void);
 	void EditModeUpdate(void);
 	void InitDialogTexts(void);
+	void SetParameterSelectionIcon();
 	void UpdateAnalyseActionControl(void);
     void UpdateProducerLists(void);
     void UpdateCpObsBlendProducerList(void);
