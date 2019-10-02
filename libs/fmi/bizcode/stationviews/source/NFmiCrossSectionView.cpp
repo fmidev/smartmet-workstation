@@ -1419,9 +1419,10 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
         smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
 
         NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
-        if(mpSystem.FindTotal(itsDrawParam->InitFileName()))
+        auto macroParamPtr = mpSystem.GetWantedMacro(itsDrawParam->InitFileName());
+        if(macroParamPtr)
         {
-            smartToolModifier.InitSmartTool(mpSystem.CurrentMacroParam()->MacroText(), true);
+            smartToolModifier.InitSmartTool(macroParamPtr->MacroText(), true);
         }
         else
             throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + itsDrawParam->ParameterAbbreviation());
