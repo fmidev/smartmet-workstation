@@ -81,6 +81,8 @@ private:
     std::string MakeDictionaryFilePath() const;
     bool FileNeedsForcedUpdate(const std::string &localConfFilePath, std::string &factorySettingFilePath);
     size_t GetForcedUpdateVersionNumber(const std::string &filePath);
+    void LogBasicPaths();
+    void LogOtherPaths();
 
 
     // SmartMetin työhakemisto
