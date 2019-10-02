@@ -94,7 +94,21 @@ void NFmiMacroPathSettings::InitFromSettings(const std::string &theInitNameSpace
 	itsOrigMacroParamPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::MacroParams::LoadDirectory"));
 	itsOrigDrawParamPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::DrawParams::LoadDirectory"));
 	itsOrigViewMacroPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::ViewMacro::LoadDirectory"));
+    LogMacroPaths();
 }
+
+void NFmiMacroPathSettings::LogMacroPaths()
+{
+    CatLog::logMessage(std::string("MacroPathSettings::UseLocalCache = ") + (fUseLocalCache ? "true" : "false"), CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    if(fUseLocalCache)
+        CatLog::logMessage(std::string("MacroPathSettings::LocalCacheBasePath = ") + itsLocalCacheBasePath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("MacroPathSettings::SmartMetWorkingDirectory = ") + itsSmartMetWorkingDirectory, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("MacroPathSettings::SmartToolPath = ") + itsOrigSmartToolPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("MacroPathSettings::ViewMacroPath = ") + itsOrigViewMacroPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("MacroPathSettings::MacroParamPath = ") + itsOrigMacroParamPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("MacroPathSettings::DrawParamPath = ") + itsOrigDrawParamPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+}
+
 
 void NFmiMacroPathSettings::StoreToSettings(void)
 {
