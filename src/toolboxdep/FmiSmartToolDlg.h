@@ -75,7 +75,7 @@ protected:
 
 	void DisableActionButtomIfInViewMode(void);
 	void AddSelectedMacroParamToRow(int theRow);
-	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath);
+	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath, bool makeMapDirtyActions = true);
 	NFmiMacroParam* FindSelectedMacroParam(void);
 	void ClearMapViewRow(int theRowIndex);
 	void InitDialogTexts(void);
