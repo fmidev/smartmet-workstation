@@ -80,7 +80,7 @@ ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_DEFAULT_AXIS_ALL, &CFmiCrossSectionD
 ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_SPECIAL_AXIS_ALL, &CFmiCrossSectionDlg::OnAcceleratorSetCrossSectionSpecialAxisAll)
 ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_DEFAULT_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionDefaultAxis)
 ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_SPECIAL_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionSpecialAxis)
-ON_BN_CLICKED(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION, &CFmiCrossSectionDlg::OnBnClickedButtonCrossSectionParameterSelection)
+ON_BN_CLICKED(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION, &CFmiCrossSectionDlg::OnButtonOpenParameterSelection)
 END_MESSAGE_MAP()
 
 // CFmiCrossSectionDlg message handlers
@@ -157,7 +157,7 @@ BOOL CFmiCrossSectionDlg::OnInitDialog()
 	SetWindowPos(&wndBottom, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);	 // not possible, thus child stays still upon its parent
 
 	InitFromCrossSectionSystem();
-	SetAddParametersIcon();
+	SetParameterSelectionIcon();
 	InitDialogTexts();
 	UpdateData(FALSE);
 
@@ -180,7 +180,7 @@ void CFmiCrossSectionDlg::InitFromCrossSectionSystem(void)
 	UpdateData(FALSE);
 }
 
-void CFmiCrossSectionDlg::SetAddParametersIcon()
+void CFmiCrossSectionDlg::SetParameterSelectionIcon()
 {
 	CButton* pButton = (CButton*)GetDlgItem(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION);
 
@@ -500,7 +500,7 @@ void CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionSpecialAxis()
 }
 
 
-void CFmiCrossSectionDlg::OnBnClickedButtonCrossSectionParameterSelection()
+void CFmiCrossSectionDlg::OnButtonOpenParameterSelection()
 {
 	itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsView->MapViewDescTopIndex());
 }

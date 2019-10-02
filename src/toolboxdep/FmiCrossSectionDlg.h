@@ -12,7 +12,7 @@ class CFmiCrossSectionDlg : public CDialog
 {
 private:
     static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
-	void SetAddParametersIcon();
+	void SetParameterSelectionIcon();
 public:
     static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo(void){return s_ViewPosRegistryInfo;}
 
@@ -90,5 +90,5 @@ public:
 	afx_msg void OnAcceleratorSetCrossSectionSpecialAxisAll();
 	afx_msg void OnAcceleratorSaveCrossSectionDefaultAxis();
 	afx_msg void OnAcceleratorSaveCrossSectionSpecialAxis();
-	afx_msg void OnBnClickedButtonCrossSectionParameterSelection();
+	afx_msg void OnButtonOpenParameterSelection();
 };
