@@ -277,7 +277,7 @@ void NFmiMacroParamSystem::CurrentPath(const std::string &newValue)
 void NFmiMacroParamSystem::SetWantedPath(const std::string& wantedPath)
 {
     auto currentPath = MacroParam::ConvertPathToOneUsedFormat(wantedPath);
-    auto currentFolderIndex = FindPath(itsCurrentPath);
+    auto currentFolderIndex = FindPath(currentPath);
     boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetFolder(currentFolderIndex);
     if(currentFolder)
     {
