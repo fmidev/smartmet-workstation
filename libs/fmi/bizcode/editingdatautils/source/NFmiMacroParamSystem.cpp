@@ -276,11 +276,14 @@ void NFmiMacroParamSystem::CurrentPath(const std::string &newValue)
 
 void NFmiMacroParamSystem::SetWantedPath(const std::string& wantedPath)
 {
-    itsCurrentPath = MacroParam::ConvertPathToOneUsedFormat(wantedPath);
-    itsCurrentFolderIndex = FindPath(itsCurrentPath);
-    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetCurrentFolder();
+    auto currentPath = MacroParam::ConvertPathToOneUsedFormat(wantedPath);
+    auto currentFolderIndex = FindPath(itsCurrentPath);
+    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetFolder(currentFolderIndex);
     if(currentFolder)
     {
+        // Vasta kun on varmistunut että polku löytyy systeemistä, asetetaan luokan sisäinen tila vastaamaan sitä
+        itsCurrentPath = currentPath;
+        itsCurrentFolderIndex = currentFolderIndex;
         if(!currentFolder->Initialized())
             currentFolder->RefreshMacroParams();
         InsertAllSubdirectories(itsMacroParamFolders, itsCurrentPath, itsRootPath, 0);
