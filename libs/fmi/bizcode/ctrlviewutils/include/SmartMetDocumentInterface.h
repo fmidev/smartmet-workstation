@@ -162,7 +162,7 @@ public:
     virtual NFmiCrossSectionSystem* CrossSectionSystem() = 0;
     virtual bool ActivateParamSelectionDlgAfterLeftDoubleClick() = 0;
     virtual void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) = 0;
-    virtual void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex) = 0;
+    virtual void ActivateParameterSelectionDlg(unsigned int theMapViewDescTopIndex) = 0;
     virtual bool OpenPopupMenu() = 0;
     virtual void OpenPopupMenu(bool newState) = 0;
     virtual const NFmiPoint& CrossSectionViewSizeInPixels() = 0;
