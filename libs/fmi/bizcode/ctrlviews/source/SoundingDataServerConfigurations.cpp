@@ -246,7 +246,7 @@ static std::string makeLonlatString(const NFmiPoint &latlon)
     return str;
 }
 
-std::string SoundingDataServerConfigurations::makeFinalServerRequestUri(int producerId, const NFmiMetTime &validTime, const NFmiPoint &latlon) const
+std::string SoundingDataServerConfigurations::makeFinalServerRequestUrl(int producerId, const NFmiMetTime &validTime, const NFmiPoint &latlon) const
 {
     try
     {
