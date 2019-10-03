@@ -505,12 +505,14 @@ static NFmiViewSettingMacro::MapRow MakeMapRow(NFmiDrawParamList *theDrawParamLi
 	{
 		boost::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
 		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
-		{ // tämä on ikävää koodia, mutta en keksinyt tähän hätään parempaa. Eli pitää saada viewMacrossa olevaan macroParamiin
+		{ 
+            // tämä on ikävää koodia, mutta en keksinyt tähän hätään parempaa. Eli pitää saada viewMacrossa olevaan macroParamiin
 			// suhteellinen polku talteen, joka talletetaan drawParamiin. Mutta tämä drawParam on kahdessa paikassa
 			// hieman erilaisena ja oikean suht.polun saa vain MacroParamSystemistä löytyvästä macroParamin DrawParamista
 			// eika dokumentista löytyvästä DrawParamListasta.
-			if(theMacroParamSystem.FindTotal(drawParam->InitFileName()))
-				drawParam->MacroParamRelativePath(theMacroParamSystem.CurrentMacroParam()->DrawParam()->MacroParamRelativePath());
+            auto macroParamPtr = theMacroParamSystem.GetWantedMacro(drawParam->InitFileName());
+			if(macroParamPtr)
+				drawParam->MacroParamRelativePath(macroParamPtr->DrawParam()->MacroParamRelativePath());
 		}
 		NFmiViewSettingMacro::Param param(drawParam, drawParam->Level(), drawParam->DataType(), 0);
 		mapRow.Add(param);

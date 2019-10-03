@@ -4487,6 +4487,8 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 		menuSettings.SetMapViewSettings(theDescTopIndex, kFmiAddAsOnlyView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAddAsOnly");
 
+        AddSwapViewRowsToPopup(theDescTopIndex, itsPopupMenu);
+
 		std::string menuString = ::GetDictionaryString("MapViewParamPopUpremoveAll");
         auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, NFmiDataIdent(), kFmiRemoveAllViews, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		itsPopupMenu->Add(std::move(menuItem));
@@ -4562,6 +4564,36 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
 	AddMacroParamPartToPopUpMenu(theMenuSettings, macroParamsMenuList, macroParamItemList, theDataType);
 	menuItem->AddSubMenu(macroParamsMenuList);
 	theMenuList->Add(std::move(menuItem));
+}
+
+void AddSwapViewRowsToPopup(unsigned int theDescTopIndex, NFmiMenuItemList* theMenuList)
+{
+    bool crossSectionCase = (theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView);
+    int maxRowIndex = crossSectionCase ? CtrlViewUtils::MaxViewGridYSize : CtrlViewUtils::MaxViewGridXSize * CtrlViewUtils::MaxViewGridYSize;
+    int currentAbsoluteRowIndex = GetRealRowNumber(theDescTopIndex, itsCurrentViewRowIndex);
+    std::string menuText = "Swap row ";
+    menuText += std::to_string(currentAbsoluteRowIndex);
+    menuText += " with row";
+    auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuText, NFmiDataIdent(), kFmiSwapViewRows, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+    AddSwapViewRowsToToMenuItem(theDescTopIndex, menuItem.get(), maxRowIndex, currentAbsoluteRowIndex);
+    theMenuList->Add(std::move(menuItem));
+}
+
+void AddSwapViewRowsToToMenuItem(unsigned int theDescTopIndex, NFmiMenuItem* theMenuItem, int maxRowIndex, int currentAbsoluteRowIndex)
+{
+    NFmiMenuItemList* rowNumbersMenuList = new NFmiMenuItemList;
+    for(int rowIndex = 1; rowIndex <= maxRowIndex; rowIndex++)
+    {
+        if(rowIndex != currentAbsoluteRowIndex)
+        {
+            std::string menuText = std::to_string(rowIndex);
+            // NFmiMenuItem:in IndexInViewRow saa arvokseen currentAbsoluteRowIndex:in ja rowIndex menee ExtraParam:iin talteen
+            auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuText, NFmiDataIdent(), kFmiSwapViewRows, g_DefaultParamView, nullptr, NFmiInfoData::kEditable, currentAbsoluteRowIndex);
+            menuItem->ExtraParam(rowIndex);
+            rowNumbersMenuList->Add(std::move(menuItem));
+        }
+    }
+    theMenuItem->AddSubMenu(rowNumbersMenuList);
 }
 
 void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
@@ -5376,7 +5408,15 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpRemove");
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiRemoveView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
-			menuString = ::GetDictionaryString("MapViewParamOptionPopUpHide");
+
+            if(drawParam->ShowColorLegend())
+                menuString = ::GetDictionaryString("Hide legend");
+            else
+                menuString = ::GetDictionaryString("Show legend");
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowLegendState, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            itsPopupMenu->Add(std::move(menuItem));
+
+            menuString = ::GetDictionaryString("MapViewParamOptionPopUpHide");
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiHideView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpShow");
@@ -5573,7 +5613,13 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiRemoveView:
 			RemoveView(*menuItem, itsCurrentViewRowIndex);
 			break;
-		case kFmiRemoveParamCrossSectionView:
+        case kFmiToggleShowLegendState:
+            ToggleShowLegendState(*menuItem, itsCurrentViewRowIndex);
+            break;
+        case kFmiSwapViewRows:
+            SwapViewRows(*menuItem);
+            break;
+        case kFmiRemoveParamCrossSectionView:
 			RemoveCrosssectionDrawParam(*menuItem, itsCurrentCrossSectionRowIndex);
 			break;
 		case kFmiRemoveAllViews:
@@ -6010,31 +6056,36 @@ void AddView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 		CheckAnimationLockedModeTimeBags(theMenuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
 }
 
-void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string *theMacroParamInitFileName)
+void SetDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string* theMacroParamInitFileName)
 {
-	NFmiInfoData::Type dataType = theMenuItem.DataType();
-	if(NFmiDrawParam::IsMacroParamCase(dataType))
-	{
-		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
-		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
-	if(theMacroParamInitFileName == 0)
-	{
-		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
-			if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
-				usedMacroParam = currentFolder->Current();
-			// kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
-			else if(MacroParamSystem().FindTotal(theMenuItem.MacroParamInitName()))
-				usedMacroParam = MacroParamSystem().CurrentMacroParam();
-	}
-	else if(MacroParamSystem().FindTotal(*theMacroParamInitFileName))
-			usedMacroParam = MacroParamSystem().CurrentMacroParam();
-		if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
-		{
-			theDrawParam->Init(usedMacroParam->DrawParam());
-			theDrawParam->DataType(usedMacroParam->DrawParam()->DataType());; // q3macroparam tyyppi pitää asettaa tässä
-																		// PITÄISIKÖ se asettaa jo DrawParam:in Init-metodissa?!?!?
-		}
-	}
+    NFmiInfoData::Type dataType = theMenuItem.DataType();
+    if(NFmiDrawParam::IsMacroParamCase(dataType))
+    {
+        theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
+        boost::shared_ptr<NFmiMacroParam> usedMacroParam;
+        if(theMacroParamInitFileName == nullptr)
+        {
+            boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
+            if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
+                usedMacroParam = currentFolder->Current();
+            else
+            {
+                // kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
+                usedMacroParam = MacroParamSystem().GetWantedMacro(theMenuItem.MacroParamInitName());
+            }
+        }
+        else
+        {
+            usedMacroParam = MacroParamSystem().GetWantedMacro(*theMacroParamInitFileName);
+        }
+
+        if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
+        {
+            theDrawParam->Init(usedMacroParam->DrawParam());
+            // q3macroparam tyyppi pitää asettaa tässä, PITÄISIKÖ se asettaa jo DrawParam:in Init-metodissa?!?!?
+            theDrawParam->DataType(usedMacroParam->DrawParam()->DataType());
+        }
+    }
 }
 
 // Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
@@ -6103,12 +6154,15 @@ void SetCrossSectionDrawMacroSettings(const NFmiMenuItem& theMenuItem, boost::sh
 	{
 		boost::shared_ptr<NFmiMacroParam> usedMacroParam;
 		theDrawParam->ParameterAbbreviation(theMenuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
-		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
+		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
 		if(currentFolder && currentFolder->Find(theDrawParam->ParameterAbbreviation()))
 			usedMacroParam = currentFolder->Current();
-		// kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
-		else if(MacroParamSystem().FindTotal(theMenuItem.MacroParamInitName()))
-			usedMacroParam = MacroParamSystem().CurrentMacroParam();
+        else
+        {
+            // kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
+            usedMacroParam = MacroParamSystem().GetWantedMacro(theMenuItem.MacroParamInitName());
+        }
+
 		if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
 		{
 			theDrawParam->Init(usedMacroParam->DrawParam());
@@ -6468,10 +6522,12 @@ void PasteDrawParamOptions(const NFmiMenuItem& theMenuItem, int theRowIndex, boo
 		if(fUseCrossSectionParams == false)
 			UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
 		if(NFmiDrawParam::IsMacroParamCase(theMenuItem.DataType()))
-		{ // macroParam pitää vielä päivittää macroParamSystemiin!!
-			string macroParamName = theMenuItem.DataIdent().GetParamName();
-			if(itsMacroParamSystem.FindTotal(macroParamName)) // tässä tod. init fileName
-				itsMacroParamSystem.CurrentMacroParam()->DrawParam()->Init(&itsCopyPasteDrawParam, true);
+		{ 
+            // macroParam pitää vielä päivittää macroParamSystemiin!!
+			string macroParamName = theMenuItem.DataIdent().GetParamName(); // tässä tod. init fileName
+            auto macroParamPtr = itsMacroParamSystem.GetWantedMacro(macroParamName);
+			if(macroParamPtr)
+                macroParamPtr->DrawParam()->Init(&itsCopyPasteDrawParam, true);
 		}
 	}
 }
@@ -6510,6 +6566,42 @@ void ModifyView(const NFmiMenuItem& theMenuItem, int theRowIndex)
             DrawParamSettingsChangedDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParam);
         }
 	}
+}
+
+void ToggleShowLegendState(const NFmiMenuItem& theMenuItem, int theRowIndex)
+{
+    bool macroParamCase = NFmiDrawParam::IsMacroParamCase(theMenuItem.DataType());
+    boost::shared_ptr<NFmiDrawParam> drawParam = macroParamCase ? GetUsedMacroDrawParam(theMenuItem) : GetUsedMapViewDrawParam(theMenuItem, theRowIndex);
+    if(drawParam)
+    {
+        drawParam->ShowColorLegend(!drawParam->ShowColorLegend());
+        NFmiDrawParamList* drawParamList = DrawParamList(theMenuItem.MapViewDescTopIndex(), theRowIndex);
+        if(drawParamList)
+        {
+            drawParamList->Dirty(true);
+            if(macroParamCase)
+                UpdateMacroDrawParam(theMenuItem, theRowIndex, false, drawParam);
+            else
+                UpdateModifiedDrawParamMarko(theMenuItem.MapViewDescTopIndex(), drawParam, theRowIndex);
+        }
+    }
+}
+
+void SwapViewRows(const NFmiMenuItem& theMenuItem)
+{
+    auto viewIndex = theMenuItem.MapViewDescTopIndex();
+    int realRowNumber1 = theMenuItem.IndexInViewRow();
+    auto drawParamList1 = DrawParamListWithRealRowNumber(viewIndex, realRowNumber1);
+    int realRowNumber2 = static_cast<int>(theMenuItem.ExtraParam());
+    auto drawParamList2 = DrawParamListWithRealRowNumber(viewIndex, realRowNumber2);
+    if(drawParamList1 && drawParamList2)
+    {
+        drawParamList1->Swap(drawParamList2);
+        // HUOM! tosi rivi numerosta pitää vähentää 1, kun manipuloidaan bitmap cache rivejä!!!
+        MapViewDescTop(viewIndex)->MapViewCache().SwapRows(realRowNumber1 - 1, realRowNumber2 - 1);
+        MacroParamDataCache().swapMacroParamCacheRows(viewIndex, realRowNumber1, realRowNumber2);
+        MapViewDirty(viewIndex, false, false, true, false, false, true);
+    }
 }
 
 void SaveDrawParamSettings(const NFmiMenuItem& theMenuItem, int theRowIndex)
@@ -7042,10 +7134,11 @@ void UpdateMacroDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 
 boost::shared_ptr<NFmiDrawParam> GetUsedMacroDrawParam(const NFmiMenuItem& theMenuItem)
 {
-	std::string macroParamName = theMenuItem.DataIdent().GetParamName();
-    if(itsMacroParamSystem.FindTotal(macroParamName)) // tässä tod. init fileName
+	std::string macroParamName = theMenuItem.DataIdent().GetParamName(); // tässä tod. init fileName
+    auto macroParamPtr = itsMacroParamSystem.GetWantedMacro(macroParamName);
+    if(macroParamPtr)
     {
-        auto usedDrawParam = itsMacroParamSystem.CurrentMacroParam()->DrawParam();
+        auto usedDrawParam = macroParamPtr->DrawParam();
         if(usedDrawParam)
         {
             usedDrawParam->ViewMacroDrawParam(theMenuItem.ViewMacroDrawParam()); // tämä pitää vielä asettaa
@@ -9702,7 +9795,7 @@ void SwapArea(unsigned int theDescTopIndex)
 		}
 		else
 		{
-			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrent();
+			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
 			if(currentFolder)
 				currentFolder->Remove(theName); // poista macroparam mpsysteemistä (joka tuhoaa myös tiedostot)
 			RemoveMacroParamFromDrawParamLists(theName); // poista macroparam drawparamlistoista
@@ -10088,6 +10181,8 @@ void SwapArea(unsigned int theDescTopIndex)
 
 		menuSettings.SetCrossSectionSettings(kFmiAddAsOnlyParamCrossSectionView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "CrossSectionViewSelectionPopUpAddAsOnly");
+
+        AddSwapViewRowsToPopup(CtrlViewUtils::kFmiCrossSectionView, itsPopupMenu);
 
 		NFmiDrawParamList * dpList = this->CrossSectionViewDrawParamList(theRowIndex);
 		std::string menuString = ::GetDictionaryString("NormalWordCapitalShow");
@@ -14247,6 +14342,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 std::string displayName = ConceptualModelData().DefaultUserName(); // Conceptual analysis uses displayName to fetch correct data!
                 parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
             }
+#ifndef DISABLE_CPPRESTSDK
+			if (WmsSupport().isConfigured())
+			{
+				auto wmsCallBackFunction = [this]() {return std::ref(this->WmsSupport()); };
+				parameterSelectionSystem.setWmsCallback(wmsCallBackFunction);
+			}
+#endif // DISABLE_CPPRESTSDK
+
         }
         catch(std::exception &e)
         {

@@ -590,7 +590,7 @@ bool NFmiStationView::IsStationDataMacroParam(void)
         if(fUseCalculationPoints)
             return true;
     	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
-        if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != -1)
+        if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != CtrlViewUtils::ci_string_not_found)
             return true;
     }
     catch(...)
@@ -3009,9 +3009,10 @@ void NFmiStationView::SetupUsedDrawParam(void)
 		if(itsDrawParam->IsMacroParamCase(false))
 		{
 			NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
-			if(mpSystem.FindTotal(itsDrawParam->InitFileName()))
+            auto macroParamPtr = mpSystem.GetWantedMacro(itsDrawParam->InitFileName());
+            if(macroParamPtr)
 			{
-				itsDrawParam->Init(mpSystem.CurrentMacroParam()->DrawParam());
+				itsDrawParam->Init(macroParamPtr->DrawParam());
 				itsDrawParam->DataType(dataType); // datatyypin pitää säilyä!! muuten poikkileikkausnäytössä ei tuleoikeaa tyyppiä
 			}
 		}

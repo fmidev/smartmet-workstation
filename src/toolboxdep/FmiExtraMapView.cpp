@@ -595,7 +595,7 @@ void CFmiExtraMapView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-            itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsMapViewDescTopIndex);
+            itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsMapViewDescTopIndex);
 			return ;
 		}
 		Invalidate(FALSE);

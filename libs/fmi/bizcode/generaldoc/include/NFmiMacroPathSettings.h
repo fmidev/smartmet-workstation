@@ -33,6 +33,8 @@ public:
 	void SetOrigDrawParamPath(const std::string &newValue) {itsOrigDrawParamPath = newValue;}
 
 private:
+    void LogMacroPaths();
+
 	bool fUseLocalCache;
 	std::string itsLocalCacheBasePath;
 	int itsSyncIntervalInMinutes;

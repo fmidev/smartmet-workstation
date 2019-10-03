@@ -254,7 +254,7 @@ void CTimeEditValuesView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if (itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
 			itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-			itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsManagerView->MapViewDescTopIndex());
+			itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsManagerView->MapViewDescTopIndex());
 			return;
 		}
 		Invalidate(FALSE);
