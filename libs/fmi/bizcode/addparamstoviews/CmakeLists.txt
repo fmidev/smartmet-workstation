@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(AddParamsToViews)
 
-set(CMAKE_MFC_FLAG 0)
+set(CMAKE_MFC_FLAG 2)
 
 file( GLOB CPP_FILES source/*.cpp )
 file( GLOB H_FILES include/*.h )
@@ -12,13 +12,18 @@ add_library(
     ${H_FILES} 
     )
 
-target_link_libraries(
+set(TARGET_LINK_LIBRARIES_LIST 
     ${PROJECT_NAME}
     Newbase
     SmartTools
     EditingDataUtils
     CtrlViewUtils
     )
+if(NOT DISABLE_CPPRESTSDK)
+    set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} WmsSupport)
+endif()
+
+target_link_libraries(${TARGET_LINK_LIBRARIES_LIST})
 
 target_include_directories( 
     ${PROJECT_NAME}
@@ -28,6 +33,7 @@ target_include_directories(
     PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
     PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
+    PUBLIC ${WmsSupport_INCLUDE_DIRS}
     )
 
 set(
@@ -38,6 +44,7 @@ set(
     ${SmartTools_INCLUDE_DIRS}
     ${EditingDataUtils_INCLUDE_DIRS}
     ${CtrlViewUtils_INCLUDE_DIRS}
+    ${WmsSupport_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
 

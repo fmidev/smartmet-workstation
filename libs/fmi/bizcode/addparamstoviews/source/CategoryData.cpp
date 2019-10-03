@@ -9,6 +9,10 @@
 #include "SingleRowItem.h"
 #include "NFmiDictionaryFunction.h"
 #include "ParameterSelectionSystem.h"
+#ifndef DISABLE_CPPRESTSDK
+#include "CapabilityTree.h"
+#endif // DISABLE_CPPRESTSDK
+#include "cppext/tree.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -246,6 +250,29 @@ namespace AddParams
         }
         return dataStructuresChanged;
     }
+
+	// Returns true, if new wms layers are added
+	bool CategoryData::updateWmsData(const cppext::Node<Wms::Capability>& wmsLayerTree, NFmiInfoData::Type dataCategory)
+	{
+#ifndef DISABLE_CPPRESTSDK
+		bool dataStructuresChanged = false;
+		NFmiProducer producer(wmsLayerTree.value.paramId, "WMS");
+		auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto& producerData) {return producer == producerData->producer(); });
+		if (iter != producerDataVector_.end())
+		{
+			dataStructuresChanged |= (*iter)->updateWmsData(wmsLayerTree);
+		}
+		else
+		{
+			// Add wms as a new producer
+			auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
+			producerDataPtr->updateWmsData(wmsLayerTree);
+			producerDataVector_.push_back(std::move(producerDataPtr));
+			dataStructuresChanged = true;
+		}
+		return dataStructuresChanged;
+#endif
+	}
 
     bool CategoryData::addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {

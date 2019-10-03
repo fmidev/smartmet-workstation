@@ -10,6 +10,12 @@
 #include "..\..\..\catlog\catlog\catlogutils.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiHelpDataInfo.h"
+#ifndef DISABLE_CPPRESTSDK
+#include "WmsSupport.h"
+#include "CapabilitiesHandler.h"
+#include "CapabilityTree.h"
+#endif // DISABLE_CPPRESTSDK
+
     
 class NFmiInfoOrganizer;
 
@@ -80,7 +86,6 @@ namespace AddParams
 				}
 			}
 		}
-// 		addHelpData
 	}
 
     void ParameterSelectionSystem::updateData()
@@ -89,6 +94,7 @@ namespace AddParams
         updateData(ModellDataStr, *modelProducerSystem_, NFmiInfoData::kViewable);
         updateData(ObservationDataStr, *obsProducerSystem_, NFmiInfoData::kObservations);
         updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
+		updateWmsData(WmsStr, NFmiInfoData::kWmsData);
         updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
         updateCustomCategories();
         updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
@@ -152,6 +158,40 @@ namespace AddParams
         }
     }
 
+	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory)
+	{
+	#ifndef DISABLE_CPPRESTSDK
+
+		try
+		{
+			auto& wmsSupport = getWmsCallback_();
+			if (!wmsSupport.isConfigured())
+				return;
+			const auto& layerTree = wmsSupport.peekCapabilityTree();
+			const auto& wmsLayerTree = dynamic_cast<const Wms::CapabilityNode&>(layerTree);
+
+			auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto& categoryData) {return categoryName == categoryData->categoryName(); });
+			if (iter != categoryDataVector_.end())
+			{
+				dialogDataNeedsUpdate_ |= (*iter)->updateWmsData(wmsLayerTree, dataCategory);
+			}
+			else
+			{
+				// Add wms layers as a new category
+				auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+				categoryDataPtr->updateWmsData(wmsLayerTree, dataCategory);
+				categoryDataVector_.push_back(std::move(categoryDataPtr));
+				dialogDataNeedsUpdate_ = true;
+			}
+
+			updatePending(false);
+		}
+		catch (...)
+		{
+		}
+	#endif // DISABLE_CPPRESTSDK
+	}
+
     void ParameterSelectionSystem::updateCustomCategories()
     {
         for(auto customCat : customCategories_)
@@ -209,14 +249,18 @@ namespace AddParams
             dialogRowData_.push_back(::makeRowItem(*category, uniqueId, categoryMemory));
             auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory, *infoOrganizer_);
             dialogRowData_.insert(dialogRowData_.end(), gategoryRowData.begin(), gategoryRowData.end());
+			if (category->categoryName() == HelpDataStr) { otherHelpDataTodialog(); }
         }
-        for(const auto &rowItem : otherHelpData_)
-        {
-            dialogRowData_.push_back(rowItem);
-        }
-
 		trimDialogRowDataDependingOnActiveView();
     }
+
+	void ParameterSelectionSystem::otherHelpDataTodialog()
+	{
+		for (const auto& rowItem : otherHelpData_)
+		{
+			dialogRowData_.push_back(rowItem);
+		}
+	}
 
 	void ParameterSelectionSystem::trimDialogRowDataDependingOnActiveView()
 	{
@@ -362,7 +406,7 @@ namespace AddParams
 		return rowData;
 	}
 
-    // Must be called after updateDialogRowData call.
+	// Must be called after updateDialogRowData call.
     void ParameterSelectionSystem::updateDialogTreePatternData()
     {
         dialogTreePatternArray_.clear();
