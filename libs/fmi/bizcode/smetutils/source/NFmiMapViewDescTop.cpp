@@ -174,7 +174,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsControlPath(theControlPath)
 ,itsSelectedMapIndexVM(1)
 ,itsGdiPlusImageMapHandlerList()
-,itsMapViewCache(CtrlViewUtils::MaxViewGridYSize)
+,itsMapViewCache(CtrlViewUtils::MaxViewGridXSize * CtrlViewUtils::MaxViewGridYSize)
 ,fRedrawMapView(true)
 ,itsLandBorderColors()
 ,itsLandBorderColorIndex(0)

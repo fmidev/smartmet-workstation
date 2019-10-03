@@ -6,6 +6,7 @@
 #include "NFmiFileString.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiMacroParamFunctions.h"
+#include "boost/algorithm/string.hpp"
 #include <list>
 
 using namespace std;
@@ -56,7 +57,7 @@ NFmiMacroParamSystem::NFmiMacroParamSystem(void)
 :itsCurrentPath()
 ,itsRootPath()
 ,itsMacroParamFolders()
-,itsCurrentIndexPois(-1)
+,itsCurrentFolderIndex(-1)
 ,itsFoundMacroParam()
 ,fUpdateMacroParamListView(true)
 {
@@ -83,9 +84,9 @@ void NFmiMacroParamSystem::SwapMacroData(NFmiMacroParamSystem &theOther)
 	if(pathIndex >= 0)
 	{
 		if(itsFoundMacroParam.get())
-			FindMacro((*itsFoundMacroParam).Name());
-		if(itsCurrentIndexPois < 0 && itsMacroParamFolders.size() > 0)
-			itsCurrentIndexPois = 0; // jos on polku ok ja löytyy macroParam-hakemisto, laitetaan osoittamaan roottiin, jos muuten indksi osoittaa -1:een
+			FindMacroFromCurrentFolder((*itsFoundMacroParam).Name());
+		if(itsCurrentFolderIndex < 0 && itsMacroParamFolders.size() > 0)
+            itsCurrentFolderIndex = 0; // jos on polku ok ja löytyy macroParam-hakemisto, laitetaan osoittamaan roottiin, jos muuten indksi osoittaa -1:een
 	}
 }
 
@@ -98,7 +99,7 @@ void NFmiMacroParamSystem::Rebuild(NFmiStopFunctor *theStopFunctor)
 	boost::shared_ptr<NFmiMacroParamFolder> tmp(new NFmiMacroParamFolder(itsCurrentPath, itsRootPath));
 	tmp->RefreshMacroParams();
 	itsMacroParamFolders.push_back(tmp);
-	itsCurrentIndexPois = 0;
+    itsCurrentFolderIndex = 0;
 	NFmiQueryDataUtil::CheckIfStopped(theStopFunctor);
 	InsertAllSubdirectories(itsMacroParamFolders, itsCurrentPath, itsRootPath, theStopFunctor);
 	NFmiQueryDataUtil::CheckIfStopped(theStopFunctor);
@@ -133,9 +134,9 @@ bool NFmiMacroParamSystem::IsUpdateNeeded(NFmiMacroParamSystem &theOther)
 // etsii folder-otusta polku nimellä
 // palauta sen indeksi, -1 jos ei löydy
 // jos löytyy, ei aseta currentiksi folderiksi!
-int NFmiMacroParamSystem::FindPath(const std::string &thePathName)
+int NFmiMacroParamSystem::FindPath(const std::string &thePathName) const
 {
-	checkedVector<boost::shared_ptr<NFmiMacroParamFolder> >::iterator it = std::find_if(itsMacroParamFolders.begin(), itsMacroParamFolders.end(), PathFinderFunctor(thePathName));
+	auto it = std::find_if(itsMacroParamFolders.begin(), itsMacroParamFolders.end(), PathFinderFunctor(thePathName));
 	if(it == itsMacroParamFolders.end())
 		return -1;
 	else
@@ -143,19 +144,24 @@ int NFmiMacroParamSystem::FindPath(const std::string &thePathName)
 }
 
 // tällä voi säädellä Find:illa etsityn folder-otuksen arvoja ja asetuksia
-boost::shared_ptr<NFmiMacroParamFolder> NFmiMacroParamSystem::GetCurrent(void)
+boost::shared_ptr<NFmiMacroParamFolder> NFmiMacroParamSystem::GetCurrentFolder(void)
 {
-	if(itsCurrentIndexPois >= 0 && itsCurrentIndexPois < itsMacroParamFolders.size())
-		return itsMacroParamFolders[itsCurrentIndexPois];
-	else
-		return boost::shared_ptr<NFmiMacroParamFolder>();
+    return GetFolder(itsCurrentFolderIndex);
+}
+
+boost::shared_ptr<NFmiMacroParamFolder> NFmiMacroParamSystem::GetFolder(int index) const
+{
+    if(index >= 0 && index < itsMacroParamFolders.size())
+        return itsMacroParamFolders[index];
+    else
+        return boost::shared_ptr<NFmiMacroParamFolder>();
 }
 
 // etsii currentista folderista haluttua makroa
 // jos löytää, asettaa sen itsFoundMacroParam:iksi
-bool NFmiMacroParamSystem::FindMacro(const std::string &theMacroName)
+bool NFmiMacroParamSystem::FindMacroFromCurrentFolder(const std::string &theMacroName)
 {
-	boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetCurrent();
+	boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetCurrentFolder();
 	if(currentFolder && currentFolder->Find(theMacroName))
 	{
 		itsFoundMacroParam = currentFolder->Current();
@@ -164,39 +170,69 @@ bool NFmiMacroParamSystem::FindMacro(const std::string &theMacroName)
 	return false;
 }
 
-bool NFmiMacroParamSystem::FindTotal(const std::string &theTotalFileName)
+bool NFmiMacroParamSystem::CurrentMacroPointerData::wasMacroFound() const
+{
+    if(currentPath.empty() || currentFolderIndex < 0 || foundMacroParam == nullptr)
+        return false;
+    else
+        return true;
+}
+
+NFmiMacroParamSystem::CurrentMacroPointerData NFmiMacroParamSystem::FindCurrentMacroPointerData(const std::string& theTotalFileName) const
+{
+    // 1. irrota polku theTotalFileName:sta
+    NFmiFileString fileStr(theTotalFileName);
+    std::string pathStr(fileStr.Device());
+    pathStr += fileStr.Path();
+    pathStr = MacroParam::ConvertPathToOneUsedFormat(pathStr);
+    // 2. etsi itsMacroParamFolders-listasta folderi joka on tämä polku
+    int folderIndex = FindPath(pathStr);
+    if(folderIndex != -1)
+    {
+        // 2.2 jos löytyy hakemisto
+        // 2.2.1 initilaisoi folderi tarvittaessa
+        auto macroParamFolder = GetFolder(folderIndex);
+        if(macroParamFolder)
+        {
+            if(!macroParamFolder->Initialized())
+                macroParamFolder->RefreshMacroParams();
+        }
+
+        // 2.2.2 irrota theTotalFileName:sta ns. lyhenne eli ilman polkua ja ilman extensiota
+        std::string fileNameStr(fileStr.Header());
+        // 2.2.3 etsi lyhennettä folderista
+        if(macroParamFolder->Find(fileNameStr))
+        {
+            // 2.2.4 jos löytyy alusta CurrentMacroPointerData olio ja palauta se
+            return CurrentMacroPointerData{ pathStr , folderIndex, macroParamFolder->Current() };
+        }
+    }
+    // 2.1 jos ei löydy, palauta false
+    return CurrentMacroPointerData{};
+}
+
+bool NFmiMacroParamSystem::SetCurrentToWantedMacroPath(const std::string &theTotalFileName)
 {
 	itsFoundMacroParam.reset();
-	// 1. irrota polku theTotalFileName:sta
-	NFmiFileString fileStr(theTotalFileName);
-	std::string pathStr(fileStr.Device());
-	pathStr += fileStr.Path();
-	pathStr = MacroParam::ConvertPathToOneUsedFormat(pathStr);
-	// 2. etsi itsMacroParamFolders-listasta folderi joka on tämä polku
-	int ind = FindPath(pathStr);
-	if(ind != -1)
-	{
-	// 2.2 jos löytyy
-        itsCurrentPath = pathStr;
-        itsCurrentIndexPois = ind;
-		// 2.2.1 initilaisoi folderi tarvittaessa
-        auto macroParamFolder = GetCurrent();
-        if(macroParamFolder)
-		if(!macroParamFolder->Initialized())
-            macroParamFolder->RefreshMacroParams();
+    auto currentMacroPointerData = FindCurrentMacroPointerData(theTotalFileName);
+    if(currentMacroPointerData.wasMacroFound())
+    {
+        itsCurrentPath = currentMacroPointerData.currentPath;
+        itsCurrentFolderIndex = currentMacroPointerData.currentFolderIndex;
+        itsFoundMacroParam = currentMacroPointerData.foundMacroParam;
+        return true;
+    }
 
-		// 2.2.2 irrota theTotalFileName:sta ns. lyhenne eli ilman polkua ja ilman extensiota
-		std::string fileNameStr(fileStr.Header());
-		// 2.2.3 etsi lyhennettä folderista
-		if(macroParamFolder->Find(fileNameStr))
-		{
-			// 2.2.4 jos löytyy aseta itsFoundMacroParam ja palauta true,
-			itsFoundMacroParam = macroParamFolder->Current();
-			return true;
-		}
-	}
-	// 2.1 jos ei löydy, palauta false
 	return false;
+}
+
+boost::shared_ptr<NFmiMacroParam> NFmiMacroParamSystem::GetWantedMacro(const std::string& theTotalFileName) const
+{
+    auto currentMacroPointerData = FindCurrentMacroPointerData(theTotalFileName);
+    if(currentMacroPointerData.wasMacroFound())
+        return currentMacroPointerData.foundMacroParam;
+    else
+        return nullptr;
 }
 
 // Tämä on hakemistoon siirtymis metodi, tätä käytetään jos file-browserilla talletetaan
@@ -240,11 +276,14 @@ void NFmiMacroParamSystem::CurrentPath(const std::string &newValue)
 
 void NFmiMacroParamSystem::SetWantedPath(const std::string& wantedPath)
 {
-    itsCurrentPath = MacroParam::ConvertPathToOneUsedFormat(wantedPath);
-    itsCurrentIndexPois = FindPath(itsCurrentPath);
-    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetCurrent();
+    auto currentPath = MacroParam::ConvertPathToOneUsedFormat(wantedPath);
+    auto currentFolderIndex = FindPath(currentPath);
+    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = GetFolder(currentFolderIndex);
     if(currentFolder)
     {
+        // Vasta kun on varmistunut että polku löytyy systeemistä, asetetaan luokan sisäinen tila vastaamaan sitä
+        itsCurrentPath = currentPath;
+        itsCurrentFolderIndex = currentFolderIndex;
         if(!currentFolder->Initialized())
             currentFolder->RefreshMacroParams();
         InsertAllSubdirectories(itsMacroParamFolders, itsCurrentPath, itsRootPath, 0);
@@ -255,7 +294,7 @@ void NFmiMacroParamSystem::ClearMacros(void)
 {
 	itsCurrentPath = itsRootPath;
 	itsMacroParamFolders.clear();
-	itsCurrentIndexPois = -1;
+    itsCurrentFolderIndex = -1;
 	itsFoundMacroParam.reset();
 	itsMacroItemTree.clear();
 }
@@ -288,11 +327,7 @@ void NFmiMacroParamSystem::MakeMacroParamItemTree(NFmiStopFunctor *theStopFuncto
 
 bool MacroParamLessThan(const NFmiMacroParamItem &item1, const NFmiMacroParamItem &item2)
 {
-	std::string name1 = item1.itsMacroParam->Name();
-	std::string name2 = item2.itsMacroParam->Name();
-	NFmiStringTools::LowerCase(name1);
-	NFmiStringTools::LowerCase(name2);
-	return name1 < name2;
+    return boost::algorithm::lexicographical_compare(item1.itsMacroParam->Name(), item2.itsMacroParam->Name(), boost::algorithm::is_iless());
 }
 
 void NFmiMacroParamSystem::AddToMacroParamItemTree(std::vector<NFmiMacroParamItem> &theMacroItemList, const checkedVector<boost::shared_ptr<NFmiMacroParam> >& theMacroParams, NFmiStopFunctor *theStopFunctor)

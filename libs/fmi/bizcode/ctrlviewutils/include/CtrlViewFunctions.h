@@ -17,6 +17,7 @@ namespace CtrlViewUtils
     const int MaxViewGridXSize = 10;
     const int MaxViewGridYSize = 5; // tämä on myös viewcachen max rivikoko
     const unsigned int kDoAllMapViewDescTopIndex = 999;
+    const int ci_string_not_found = -1;
 
    NFmiPoint CalcTimeScaleFontSizeInPixels(double thePixelsPerMMinX);
    // lat/lon-string helpers
@@ -43,10 +44,11 @@ namespace CtrlViewUtils
    template<typename T>
    int ci_find_substr(const T& str1, const T& str2, const std::locale& loc = std::locale())
    {
-       typename T::const_iterator it = std::search(str1.begin(), str1.end(),
-           str2.begin(), str2.end(), case_insensitive_equal<typename T::value_type>(loc));
-       if(it != str1.end()) return static_cast<int>(it - str1.begin());
-       else return -1; // not found
+       typename T::const_iterator it = std::search(str1.begin(), str1.end(), str2.begin(), str2.end(), case_insensitive_equal<typename T::value_type>(loc));
+       if(it != str1.end()) 
+           return static_cast<int>(it - str1.begin());
+       else 
+           return ci_string_not_found;
    }
 
    template<class T>

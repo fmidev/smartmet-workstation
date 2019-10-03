@@ -1265,7 +1265,7 @@ static std::string MakeConceptualObjectInfoString(const ConceptualObjectData &th
         str += theObject.itsParameterValueStr;
         str += ::GetMirwaSymbolLocationTooltipString(theObject);
 
-        if(CtrlViewUtils::ci_find_substr(theObject.itsWomlSymbolInfoStr, std::string("wind")) != -1)
+        if(CtrlViewUtils::ci_find_substr(theObject.itsWomlSymbolInfoStr, std::string("wind")) != CtrlViewUtils::ci_string_not_found)
         {  // tuulisymbolit hanskataan pikkuisen erilailla
             str = ""; // tyhjennet‰‰n stringi ensin
             str += theObject.itsWomlSymbolInfoStr;
