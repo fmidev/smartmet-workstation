@@ -1400,13 +1400,13 @@ void CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct()
 {
     StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
 
-    BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", "Betaproduct1", false, &itsBetaProductFullFilePath);
+    BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", "Betaproduct1", false, &itsBetaProductFullFilePath, this);
     UpdateBetaProductName();
 }
 
 void CFmiBetaProductDialog::OnBnClickedButtonLoadBetaProduct()
 {
-    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath))
+    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath, this))
     {
         itsBetaProduct->InitFromJsonRead(GetCurrentViewTime(*itsBetaProduct));
         UpdateBetaProductName();
