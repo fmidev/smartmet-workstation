@@ -120,7 +120,7 @@ namespace BetaProduct
 
     // theInitialFileName on siis vain polku/xxx.ext -tyyppisessa polussa xxx -osio.
     // Kun CFileDialog:ille annetaan alkuarvaus tiedoston nimestä täysine polkuineen, avataan dialogi aina halutussa kansiossa.
-    bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName)
+    bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, CWnd* parentView)
     {
         auto originalPathString = theInitialDirectory + theInitialFileName;
         // Esim. "D:\\smartmet\\Dropbox (FMI)\\SmartMet\\MetEditor_5_13_2_0\\..\\..\\Macros\\FMI\\ViewMacros\\"
@@ -128,7 +128,7 @@ namespace BetaProduct
         std::string simplyfiedPathString = SimplifyWindowsPath(originalPathString);
 
         CString initialFilePath = CA2T(simplyfiedPathString.c_str());
-        CFileDialog dlg(fLoadFile, NULL, initialFilePath, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, CA2T(theFileFilter.c_str()));
+        CFileDialog dlg(fLoadFile, NULL, initialFilePath, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, CA2T(theFileFilter.c_str()), parentView);
         if(dlg.DoModal() == IDOK)
         {
             CString loadFilePath = dlg.GetPathName();
@@ -138,9 +138,9 @@ namespace BetaProduct
         return false;
     }
 
-    bool GetFilePathFromUserTotal(const std::string& theFileFilter, const std::string& theInitialDirectory, std::string& theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, const std::string& theFileExtension, const std::string& theRootDirectory, CWnd *theView)
+    bool GetFilePathFromUserTotal(const std::string& theFileFilter, const std::string& theInitialDirectory, std::string& theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, const std::string& theFileExtension, const std::string& theRootDirectory, CWnd * parentView)
     {
-        if(BetaProduct::GetFilePathFromUser(theFileFilter, theInitialDirectory, theFilePathOut, fLoadFile, theInitialFileName))
+        if(BetaProduct::GetFilePathFromUser(theFileFilter, theInitialDirectory, theFilePathOut, fLoadFile, theInitialFileName, parentView))
         {
             auto originalFilePath = theFilePathOut;
             auto simplifiedRootDirectory = SimplifyWindowsPath(theRootDirectory);
@@ -157,7 +157,7 @@ namespace BetaProduct
                 message += simplifiedRootDirectory;
                 message += "\n" + ::GetDictionaryString("cannot continue saving the file");
                 std::string messageBoxTitle = ::GetDictionaryString("File outside root path");
-                ::MessageBox(theView->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OK | MB_ICONERROR);
+                ::MessageBox(parentView->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OK | MB_ICONERROR);
                 return false;
             }
 
@@ -168,7 +168,7 @@ namespace BetaProduct
                 message += theFilePathOut;
                 message += "\n" + ::GetDictionaryString("already exists, do you want to overwrite it?");
                 std::string messageBoxTitle = ::GetDictionaryString("File overwrite");
-                if(::MessageBox(theView->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OKCANCEL | MB_ICONWARNING) == IDCANCEL)
+                if(::MessageBox(parentView->GetSafeHwnd(), CA2T(message.c_str()), CA2T(messageBoxTitle.c_str()), MB_OKCANCEL | MB_ICONWARNING) == IDCANCEL)
                     return false;
             }
             return true;
