@@ -30,6 +30,7 @@
 #include "ToolBoxStateRestorer.h"
 #include "SoundingDataServerConfigurations.h"
 #include "catlog/catlog.h"
+#include "ModelDataServerConfiguration.h"
 
 #include <gdiplus.h>
 #include <stdexcept>
