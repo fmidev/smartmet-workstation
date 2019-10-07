@@ -6,6 +6,8 @@
 #include "SettingsFunctions.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "catlog/catlog.h"
+#include "ModelDataServerConfiguration.h"
+
 
 /*
 #ifdef _DEBUG
