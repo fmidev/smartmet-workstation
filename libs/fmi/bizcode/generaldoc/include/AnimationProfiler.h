@@ -60,7 +60,7 @@ public:
 		lastTick = currTime;
 	}
 
-
+	typedef std::chrono::duration<double, std::milli> doubleMS;
 
 
 	void Report() {
@@ -72,7 +72,7 @@ public:
 		}
  		auto ret = std::stringstream{};
 
-		std::vector < std::chrono::duration<double,std::milli> > datams;
+		std::vector < doubleMS > datams;
 
 		std::transform(begin(data), end(data), std::back_inserter(datams), [](const std::chrono::nanoseconds &a) {
 			return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(a);
@@ -117,7 +117,8 @@ public:
 
 		ret << "Min: " << dataMin << "ms , Max: " << dataMax << "ms, median: " << median << "ms    ";
 
-		double stddev = std::accumulate(begin(datams), end(datams), 0, [=](double a, const std::chrono::duration<double, std::milli>  &b) {
+		double stddev = std::accumulate<std::vector<doubleMS>::iterator, double>
+			(begin(datams), end(datams), 0, [=](double a, const std::chrono::duration<double, std::milli>  &b) {
 			return (a + (b.count() - median) * (b.count() - median) );
 			});
 		stddev = std::sqrt( stddev/(data.size()-1) );
@@ -167,7 +168,7 @@ public:
 			std::stringstream line;
 			auto binVal = dataMin + binSize * i;
 			line << "> "  << std::setfill('0') << std::setw(7) << binVal << "ms : " << std::setw(3) << bins[i] << " | ";
-			int barLen = double(bins[i]) / maxCount * maxBar;
+			int barLen = static_cast<int>( static_cast<double>(bins[i]) / maxCount * maxBar );
 			if (barLen > 0)
 				for (int j = 0; j < barLen; j++)
 					line << " # ";
