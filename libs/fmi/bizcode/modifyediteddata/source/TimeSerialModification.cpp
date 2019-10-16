@@ -24,7 +24,6 @@
 #include "NFmiQueryDataUtil.h"
 #include "NFmiProducerIdLister.h"
 #include "NFmiProducerSystem.h"
-#include "NFmiStreamQueryData.h"
 #include "NFmiFileString.h"
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiValueString.h"
