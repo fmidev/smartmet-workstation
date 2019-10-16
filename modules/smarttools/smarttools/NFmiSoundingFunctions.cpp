@@ -9,8 +9,8 @@
 
 #include "NFmiSoundingFunctions.h"
 #include <newbase/NFmiAngle.h>
-#include <newbase/NFmiValueString.h>
 #include <newbase/NFmiInterpolation.h>
+#include <newbase/NFmiValueString.h>
 
 namespace NFmiSoundingFunctions
 {
@@ -78,8 +78,7 @@ double WMR(double T, double P)
 double ESAT(double T)  // T kelvineinä tai celsiuksina
 {
   double T0 = 0.;
-  if (T < 105.)
-    T0 = 273.15;
+  if (T < 105.) T0 = 273.15;
 
   // Formula with T = temperature in K
   //   esat = exp( -6763.6/(T+T0) - 4.9283*alog((T+T0)) + 54.2190 )
@@ -221,8 +220,7 @@ double TSA(double OS, double P)
     D = D / 2.;
     double X = A * ::exp(-2.6518986 * MIXR_SAT(TQ, P) / TQ) - TQ * (::pow((1000. / P), .286));
     //;  IF THE TEMPERATURE DIFFERENCE, X, IS SMALL, EXIT THIS LOOP.
-    if (::fabs(X) < 0.01)
-      break;
+    if (::fabs(X) < 0.01) break;
     D = (X < 0) ? -fabs(D) : fabs(D);  // hämärää koodia alkuperäisessä kielessä
     TQ = TQ + D;
   }
@@ -340,16 +338,17 @@ double CalcMixingRatio(double T, double Td, double P)
 // Mixing ratio (r) [kg/kg], notice the difference in units compared to another version!
 double CalcMixingRatioUsingKelvinsAndRH(double RH, double Tkelvin, double P)
 {
-    double Tcelsius = Tkelvin - 273.15;
-    double e = RH / 100 * 0.611 * std::exp((17.27 * Tcelsius) / (Tcelsius + 237.3));
-    double r = 0.622 * e / (P - e);
-    return r;
+  double Tcelsius = Tkelvin - 273.15;
+  double e = RH / 100 * 0.611 * std::exp((17.27 * Tcelsius) / (Tcelsius + 237.3));
+  double r = 0.622 * e / (P - e);
+  return r;
 }
 
 // Mixing ratio (r), notice the difference in units compared to other versions!
 double CalcMixingRatioUsingCelsiusAndRH(double RH, double Tcelsius)
 {
-  return 0.01 * RH * 6.112 * std::exp((17.67 * Tcelsius) / (Tcelsius + 237.3));
+  double e = 0.01 * RH * 6.112 * std::exp((17.67 * Tcelsius) / (Tcelsius + 237.3));
+  return 0.622 * (e / (1000 - e));
 }
 
 // Laskee kastepisteen.
@@ -398,8 +397,7 @@ double CalcLCLPressure(double T, double Td, double P)
     double Tw = TMR(w, currentP);
     double Tdry = Tpot2t(tpot, currentP);
 
-    if (Tdry < Tw)
-      break;
+    if (Tdry < Tw) break;
     lastP = currentP;  // viimeisinta painetta ennen kuin Tw ja Tdry ovat leikanneet, voidaan
                        // käyttää tarkemman LCL painepinnan interpolointiin
   }
@@ -443,8 +441,7 @@ double CalcLCLPressureFast(double T, double Td, double P)
   {
     iterationCount++;
     currentP = IterateMixMoistDiffWithNewtonMethod(w, tpot, currentP, diff);
-    if (::fabs(diff) < 0.01)
-      break;
+    if (::fabs(diff) < 0.01) break;
     if (currentP < 100)  // most unstable tapauksissa etsintä piste saattaa pompata tosi ylös
     {  // tässä on paineen arvoksi tullut niin pieni että nostetaan sitä takaisin ylös ja jatketaan
       // etsintöjä
