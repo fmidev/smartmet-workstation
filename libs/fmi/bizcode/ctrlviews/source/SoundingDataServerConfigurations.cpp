@@ -4,6 +4,7 @@
 #include "NFmiSoundingDataOpt1.h"
 #include "catlog/catlog.h"
 #include "SettingsFunctions.h"
+#include "ModelDataServerConfiguration.h"
 
 static const std::string g_VersionNumberName = "VersionNumber";
 static const std::string g_SmartmetServerBaseUriName = "SmartmetServerBaseUri";
@@ -17,72 +18,21 @@ static const std::vector<std::string> g_IgnoredConfigurationVariableNames{ "", g
 // Seuraavan alkuiset sanat ignoorataan myös (näillä listataan n kpl server url:eja)
 static const std::vector<std::string> g_IgnoredConfigurationVariablesWithStart{ g_SmartmetServerBaseUrlStart };
 
-static bool IsModelNameLegit(const std::string &modelName)
+static bool IsModelNameLegit(const std::string& modelName)
 {
-    if(std::find(g_IgnoredConfigurationVariableNames.begin(), g_IgnoredConfigurationVariableNames.end(), modelName) != g_IgnoredConfigurationVariableNames.end())
-        return false;
-    else
-    {
-        for(const auto &ignoredVariableNameStart : g_IgnoredConfigurationVariablesWithStart)
-        {
-            if(modelName.find(ignoredVariableNameStart) != std::string::npos)
-                return false;
-        }
+	if (std::find(g_IgnoredConfigurationVariableNames.begin(), g_IgnoredConfigurationVariableNames.end(), modelName) != g_IgnoredConfigurationVariableNames.end())
+		return false;
+	else
+	{
+		for (const auto& ignoredVariableNameStart : g_IgnoredConfigurationVariablesWithStart)
+		{
+			if (modelName.find(ignoredVariableNameStart) != std::string::npos)
+				return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 }
-
-// CreateRegValue -funktio hakee ensin arvoa Win-rekisteristä ja sitten optionaalisesti konfiguraatioista ja lopuksi käyttää oletusarvoa.
-// Haluan tehdä homman nyt niin että rakennetaan normaalisti rekisteri-olio, mutta jos configurationOverride on true,
-// tällöin hataan lopullinen arvo pakotetusti konfiguraatioista.
-template<typename RegValueType, typename ValueType>
-static boost::shared_ptr<RegValueType> CreateOverrideRegValue(const std::string &baseRegistryPath, const std::string &registrySection, const std::string &parameterName, HKEY usedKey, ValueType defaultValue, const std::string &baseConfigurationPath, bool configurationOverride)
-{
-    std::string parameterRegistryName = std::string("\\") + parameterName;
-    std::string parameterConfigurationName = std::string("::") + parameterName;
-    std::string usedConfigurationPath = baseConfigurationPath + parameterConfigurationName;
-    auto regValuePtr = ::CreateRegValue<RegValueType>(baseRegistryPath, registrySection, parameterRegistryName, usedKey, defaultValue, usedConfigurationPath);
-    if(configurationOverride)
-    {
-        *regValuePtr = NFmiSettings::Require<ValueType>(usedConfigurationPath);
-    }
-    return regValuePtr;
-}
-
-// ================================== ModelSoundingDataServerConfigurations ======================================================
-
-bool ModelSoundingDataServerConfigurations::init(const std::string &configurationModelName, const std::string &baseRegistryPath, const std::string &baseConfigurationPath, bool configurationOverride)
-{
-    if(initialized_)
-        throw std::runtime_error(std::string(__FUNCTION__) + ": all ready initialized with model '" + configurationModelName + "'");
-
-    initialized_ = true;
-    producerName_ = configurationModelName;
-    baseRegistryPath_ = baseRegistryPath;
-    baseConfigurationPath_ = baseConfigurationPath;
-    auto usedConfigurationPath = baseConfigurationPath_ + "::" + configurationModelName;
-    std::string usedRegistrySectionName = "\\" + configurationModelName;
-
-    // HKEY_CURRENT_USER -keys
-    HKEY usedKey = HKEY_CURRENT_USER;
-
-    int nonLegalProducerId = 0;
-    producerId_ = ::CreateOverrideRegValue<CachedRegInt>(baseRegistryPath, usedRegistrySectionName, "ProducerId", usedKey, nonLegalProducerId, usedConfigurationPath, configurationOverride);
-    if(*producerId_ == nonLegalProducerId)
-        throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for ProducerId (non 0 value) with model '" + configurationModelName + "'");
-    dataNameOnServer_ = ::CreateOverrideRegValue<CachedRegString>(baseRegistryPath, usedRegistrySectionName, "DataNameOnServer", usedKey, std::string(""), usedConfigurationPath, configurationOverride);
-    // Jostain syystä string-olion saaminen CachedRegString oliosta on hankalaa, siksi käytetään operator std::string():iä...
-    if((*dataNameOnServer_).operator std::string().empty())
-        throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for DataNameOnServer (non empty) with model '" + configurationModelName + "'");
-
-    // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7/Win10)
-    usedKey = HKEY_LOCAL_MACHINE;
-
-    return true;
-}
-
-// ================================== SoundingDataServerConfigurations ======================================================
 
 bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath, const std::string &baseConfigurationPath)
 {
@@ -94,7 +44,9 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     baseConfigurationPath_ = baseConfigurationPath;
     // Huom. 1. kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
     // Huom. 2. OriginTimeParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
-    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId, NFmiSoundingDataOpt1::LevelParameterId, kFmiWindUMS, kFmiWindVMS, kFmiGeopHeight };
+    wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover
+		, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId, NFmiSoundingDataOpt1::LevelParameterId
+		, kFmiWindUMS, kFmiWindVMS, kFmiGeopHeight };
     wantedParametersString_ = makeWantedParametersString();
     initBaseUrlVector();
 
@@ -147,11 +99,10 @@ void SoundingDataServerConfigurations::initBaseUrlVector()
     {
         try
         {
-
-        std::string usedKey = baseConfigurationPath_ + "::" + g_SmartmetServerBaseUrlStart;
-        usedKey += std::to_string(index);
-        auto serverUrl = SettingsFunctions::GetUrlFromSettings(usedKey, true);
-        if(!serverUrl.empty())
+			std::string usedKey = baseConfigurationPath_ + "::" + g_SmartmetServerBaseUrlStart;
+			usedKey += std::to_string(index);
+			auto serverUrl = SettingsFunctions::GetUrlFromSettings(usedKey, true);
+			if (!serverUrl.empty())
             serverBaseUrls_.push_back(serverUrl);
         }
         catch(std::exception &e)
@@ -208,9 +159,9 @@ bool SoundingDataServerConfigurations::mustDoConfigurationOverride(HKEY usedKey)
         return false;
 }
 
-ModelSoundingDataServerConfigurations SoundingDataServerConfigurations::MakeModelConfiguration(const std::string &modelName, bool configurationOverride)
+ModelDataServerConfiguration SoundingDataServerConfigurations::MakeModelConfiguration(const std::string &modelName, bool configurationOverride)
 {
-    ModelSoundingDataServerConfigurations modelConfiguration;
+    ModelDataServerConfiguration modelConfiguration;
     modelConfiguration.init(modelName, baseRegistryPath_ + registrySectionName_, baseConfigurationPath_, configurationOverride);
     return modelConfiguration;
 }
@@ -246,7 +197,7 @@ static std::string makeLonlatString(const NFmiPoint &latlon)
     return str;
 }
 
-std::string SoundingDataServerConfigurations::makeFinalServerRequestUri(int producerId, const NFmiMetTime &validTime, const NFmiPoint &latlon) const
+std::string SoundingDataServerConfigurations::makeFinalServerRequestUrl(int producerId, const NFmiMetTime &validTime, const NFmiPoint &latlon) const
 {
     try
     {
