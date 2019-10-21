@@ -73,6 +73,7 @@ public:
     void setCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData);
     bool getCache(unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut);
     bool update(unsigned long rowIndex, NFmiDrawParamList &drawParamList);
+    void swapRows(unsigned long rowIndex1, unsigned long rowIndex2);
 };
 
 // Kokonais cache macroParamiin liittyviin datoihin SmartMetissa (käsittää kaikki kartta- ja poikkileikkausnäytöt)
@@ -92,4 +93,5 @@ public:
     bool getCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, NFmiMacroParamLayerCacheDataType &cacheDataOut);
     bool update(unsigned long viewIndex, unsigned long rowIndex, NFmiDrawParamList &drawParamList);
     bool update(unsigned long viewIndex, NFmiPtrList<NFmiDrawParamList>* drawParamListVector);
+    void swapMacroParamCacheRows(unsigned long viewIndex, unsigned long rowIndex1, unsigned long rowIndex2);
 };

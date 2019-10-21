@@ -220,7 +220,8 @@ void NFmiEditMapView::LogWarningForTooLongMapViewDrawTime(NFmiMilliSecondTimer &
 // tällä piirretään tavara, joka tulee myös bitmapin päälle
 void NFmiEditMapView::DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4)
 {
-	if(itsCtrlViewDocumentInterface->Printing()) // printatessa ruutujen päivitys voi aiheuttaa ongelmia
+    // Ei jatketa, jos on käynnissä jonkun muun näytön printtaus,printatessa muiden ruutujen päivitys voi aiheuttaa ongelmia...
+	if(itsCtrlViewDocumentInterface->Printing() && !IsPrintedMapViewDesctop())
 		return ;
 	if(itsCtrlViewDocumentInterface->DataModificationInProgress()) // Uusien datan muokkaus rutiinien kanssa ruutujen päivitys voi aiheuttaa ongelmia 
 												// Multi-thread ja/tai progress/cancel (-> erillinen muokkaus threadi) systeemit menevät jotenkin sekaisin
@@ -606,8 +607,8 @@ bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
             if(index == itsVerticalAnimationInfo.itsUsedLabelCount - 1)
             {
                 animData.AnimationOn(true);
-                itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels 'animate' label");
-                return true;
+                itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels 'animate' label", GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+                return false; // Palauta false, koska edellä tehtiin jo ruutujen päivitys oikeilla loki teksteillä
             }
             else if(itsVerticalAnimationInfo.itsUsedTimes.SetTime(index))
             {
@@ -616,9 +617,10 @@ bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
                 NFmiMetTime oldTime = itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
                 if(newTime != oldTime)
                 {
-                    itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex, newTime);
+                    // Tämä laittaa optimoidun näyttöjen päivityksen päälle, joten seuraavan rivin RefreshApplicationViewsAndDialogs voi olla ilman näyttö maskia
+                    itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex, newTime); 
                     itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels sigle valid time label");
-                    return true;
+                    return false; // Palauta false, koska edellä tehtiin jo ruutujen päivitys oikeilla loki teksteillä
                 }
             }
         }

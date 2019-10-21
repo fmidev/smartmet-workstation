@@ -193,10 +193,9 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     GetClientRect(rect);
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
-    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
-
     CDC *theDC = GetDC();
     CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), theDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
     PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
     Invalidate(FALSE);
@@ -596,7 +595,7 @@ void CFmiExtraMapView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-            itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsMapViewDescTopIndex);
+            itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsMapViewDescTopIndex);
 			return ;
 		}
 		Invalidate(FALSE);

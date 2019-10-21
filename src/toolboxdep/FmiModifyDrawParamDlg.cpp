@@ -21,6 +21,7 @@
 #include "ToolMasterColorCube.h"
 #include "PERSIST2.H"
 #include "CtrlViewGdiPlusFunctions.h"
+#include "ApplicationInterface.h"
 
 #include <direct.h> // working directory juttuja varten
 
@@ -75,6 +76,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , itsSimpleClassMiddleValue_NEW(0)
 , fUseTransparentLabelBoxFillColor(TRUE)
 , fDoSparseDataSymbolVisualization(FALSE)
+, fUseLegend(FALSE)
 {
 	if(theDrawParam)
 	{
@@ -252,6 +254,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_MIDDLE_VALUE_NEW, itsSimpleClassMiddleValue_NEW);
     DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_TRANSPARENT_LABEL_FILL_COLOR, fUseTransparentLabelBoxFillColor);
     DDX_Check(pDX, IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, fDoSparseDataSymbolVisualization);
+    DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_LEGEND, fUseLegend);
 }
 
 
@@ -456,12 +459,12 @@ const int g_ViewTypeOffset1 = 1;
 const int g_ViewTypeOffset2 = 4;
 static int GetStationDataViewSelectorIndex(NFmiMetEditorTypes::View theViewType)
 {
-    if(theViewType >= NFmiMetEditorTypes::kFmiTextView && theViewType <= NFmiMetEditorTypes::kFmiIndexedTextView)
-        return theViewType - g_ViewTypeOffset1;
-    else if(theViewType <= NFmiMetEditorTypes::kFmiSmartSymbolView)
-        return theViewType - g_ViewTypeOffset2;
-    else if(theViewType <= NFmiMetEditorTypes::kFmiCustomSymbolView)
-        return theViewType - g_ViewTypeOffset2;
+    if(theViewType >= NFmiMetEditorTypes::View::kFmiTextView && theViewType <= NFmiMetEditorTypes::View::kFmiIndexedTextView)
+        return static_cast<int>(theViewType) - g_ViewTypeOffset1;
+    else if(theViewType <= NFmiMetEditorTypes::View::kFmiSmartSymbolView)
+        return static_cast<int>(theViewType) - g_ViewTypeOffset2;
+    else if(theViewType <= NFmiMetEditorTypes::View::kFmiCustomSymbolView)
+        return static_cast<int>(theViewType) - g_ViewTypeOffset2;
     else
         return -1;
 }
@@ -469,7 +472,7 @@ static int GetStationDataViewSelectorIndex(NFmiMetEditorTypes::View theViewType)
 static NFmiMetEditorTypes::View GetSelectedStationDataViewType(CComboBox &theStationDataViewSelector)
 {
     auto currentSelection = theStationDataViewSelector.GetCurSel();
-    if(currentSelection >= (NFmiMetEditorTypes::kFmiTextView - g_ViewTypeOffset1) && currentSelection <= (NFmiMetEditorTypes::kFmiIndexedTextView - g_ViewTypeOffset1))
+    if(currentSelection >= (static_cast<int>(NFmiMetEditorTypes::View::kFmiTextView) - g_ViewTypeOffset1) && currentSelection <= (static_cast<int>(NFmiMetEditorTypes::View::kFmiIndexedTextView) - g_ViewTypeOffset1))
         return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset1);
     else
         return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset2);
@@ -516,7 +519,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	itsIsoLineStyle = itsDrawParam->SimpleIsoLineLineStyle();
 	itsIsoLineWidth = itsDrawParam->SimpleIsoLineWidth();
 	itsIsoLineZeroValue_NEW = itsDrawParam->SimpleIsoLineZeroValue();
-	itsGridDataDrawStyle = itsDrawParam->GridDataPresentationStyle()-1;
+	itsGridDataDrawStyle = static_cast<int>(itsDrawParam->GridDataPresentationStyle()) - 1;
 
 	itsSimpleClassCount = itsDrawParam->SimpleIsoLineColorShadeClassCount();
 	itsSimpleClassEndValue = itsDrawParam->SimpleIsoLineColorShadeHighValue();
@@ -538,6 +541,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	fUseIsoLineGabWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
     fUseTransparentLabelBoxFillColor = itsDrawParam->UseTransparentFillColor();
     fDoSparseDataSymbolVisualization = itsDrawParam->DoSparseSymbolVisualization();
+    fUseLegend = itsDrawParam->ShowColorLegend();
 
     FillStationDataViewSelector();
 	InitSpecialClassesData();
@@ -650,7 +654,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->SimpleIsoLineLineStyle(itsIsoLineStyle);
 	itsDrawParam->SimpleIsoLineWidth(itsIsoLineWidth);
 	itsDrawParam->SimpleIsoLineZeroValue(static_cast<float>(itsIsoLineZeroValue_NEW));
-	itsDrawParam->GridDataPresentationStyle(itsGridDataDrawStyle+1);
+	itsDrawParam->GridDataPresentationStyle(static_cast<NFmiMetEditorTypes::View>(itsGridDataDrawStyle+1));
 
 	itsDrawParam->SimpleIsoLineColorShadeClassCount(itsSimpleClassCount);
 	itsDrawParam->SimpleIsoLineColorShadeHighValue(itsSimpleClassEndValue);
@@ -676,6 +680,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->StationDataViewType(::GetSelectedStationDataViewType(itsStationDataViewSelector));
     itsDrawParam->UseTransparentFillColor(fUseTransparentLabelBoxFillColor == TRUE);
     itsDrawParam->DoSparseSymbolVisualization(fDoSparseDataSymbolVisualization == TRUE);
+    itsDrawParam->ShowColorLegend(fUseLegend == TRUE);
 
 	ReadSpecialClassesData();
 }
@@ -1288,11 +1293,12 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_TIME_SERIAL_MOD_LIMIT_CHANGE_STR, "IDC_STATIC_DRAW_PARAM_TIME_SERIAL_MOD_LIMIT_CHANGE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_VALUE_LOW_STR, "IDC_STATIC_DRAW_PARAM_VALUE_LOW_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_VALUE_HIGH_STR, "IDC_STATIC_DRAW_PARAM_VALUE_HIGH_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_REFRESH, "IDC_BUTTON_REFRESH");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_REFRESH, "Refresh");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_DRAW_PARAM_LOAD_FROM, "IDC_DRAW_PARAM_LOAD_FROM");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, "IDC_MODIFY_DRW_PARAM_USE_WITH_ALL");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParams");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CONTOUR_ALPHA_STR, "Alpha 5-100");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_LEGEND, "Use legend");
     
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_APPLY_FIXED_DRAW_PARAMS_RIGHT_AWAY, "Apply Fixed Settings At Once");
 }
@@ -1305,6 +1311,7 @@ void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamRefresh()
 	fRefreshPressed = true;
     ForceStationViewUpdate();
 
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, TRUE, TRUE, itsDescTopIndex);
 }
 
@@ -1322,6 +1329,7 @@ void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamUseWithAll()
 	TakeDrawParamModificationInUse(); // vain onok:ssa (ja kun asetukset otetaan kaikkialle käyttöön)
 									  // initialisoidaan takaisin originaali drawparamiin. cancel ei siirrä muutoksia
     itsSmartMetDocumentInterface->TakeDrawParamInUseEveryWhere(itsDrawParam, fModifyMapViewParam, fModifyMapViewParam, fModifyCrossSectionViewParam, fModifyMapViewParam);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Using these setting for all similar parameters button pressed", TRUE, TRUE);
 }
 
@@ -1397,6 +1405,7 @@ void CFmiModifyDrawParamDlg::OnCbnSelchangeComboFixedDrawParamSelector()
         {
             fRefreshPressed = true;
             ForceStationViewUpdate();
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
             itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Fixed draw param selected", TRUE, TRUE, itsDescTopIndex); // päivitetään näyttöjä
         }
     }
@@ -1409,5 +1418,6 @@ void CFmiModifyDrawParamDlg::OnBnClickedButtonReloadOriginal()
     InitDialogFromDrawParam(); // alustetaan dialogin arvot itsDrawParam:in arvoilla
     UpdateData(FALSE);
 
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Reload original draw param settings", TRUE, TRUE, itsDescTopIndex); // päivitetään näyttöjä
 }

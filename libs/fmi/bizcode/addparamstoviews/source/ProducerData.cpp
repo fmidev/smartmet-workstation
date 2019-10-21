@@ -7,6 +7,10 @@
 #include "NFmiMacroParamSystem.h"
 #include "NFmiMacroParam.h"
 #include "NFmiDrawParam.h"
+#ifndef DISABLE_CPPRESTSDK
+#include "CapabilityTree.h"
+#endif // DISABLE_CPPRESTSDK
+#include "cppext/tree.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -30,7 +34,7 @@ namespace
 
     AddParams::SingleRowItem makeRowItem(const AddParams::SingleData &data, const std::string &uniqueId, const AddParams::SingleRowItem *rowItemMemory)
     {
-        // If there is memory for this data's rowItem, use it, otherwise put singleData in collapsed mode
+        // If there is memory for this data's rowItem, use it, otherwise put row in collapsed mode
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : true;
 
         auto singleRowItem = AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
@@ -44,19 +48,19 @@ namespace
         return std::make_unique<AddParams::SingleRowItem>(AddParams::kParamType, paramName, paramId, true, uniqueId, dataCategory, producer.GetIdent(), std::string(producer.GetName()), true, nullptr, 3);
     }
 
-    std::unique_ptr<AddParams::SingleRowItem> makeMacroParamRowItem(const NFmiProducer &producer, unsigned long paramId, const std::string &paramName, const std::string &uniqueId, NFmiInfoData::Type dataCategory, bool leafNode, int treeDepth)
+    std::unique_ptr<AddParams::SingleRowItem> makeDataRowItem(const NFmiProducer &producer, unsigned long paramId, const std::string &paramName, const std::string &uniqueId, NFmiInfoData::Type dataCategory, bool leafNode, int treeDepth)
     {
         AddParams::RowType paramType = (leafNode) ? AddParams::kParamType : AddParams::kDataType;
         return std::make_unique<AddParams::SingleRowItem>(paramType, paramName, paramId, true, uniqueId, dataCategory, producer.GetIdent(), std::string(producer.GetName()), leafNode, nullptr, treeDepth);
     }
 
-    bool areMacroParamVectorsDifferent(std::vector<std::unique_ptr<AddParams::SingleRowItem>> &newMacroParamDataVector, std::vector<std::unique_ptr<AddParams::SingleRowItem>> &macroParamDataVector_)
+    bool areDataVectorsDifferent(std::vector<std::unique_ptr<AddParams::SingleRowItem>> &newDataVector, std::vector<std::unique_ptr<AddParams::SingleRowItem>> &oldDataVector_)
     {
-        if(newMacroParamDataVector.size() != macroParamDataVector_.size())
+        if(newDataVector.size() != oldDataVector_.size())
             return true;
-        for(int i = 0; i < newMacroParamDataVector.size(); i++)
+        for(int i = 0; i < newDataVector.size(); i++)
         {
-            if((newMacroParamDataVector[i]->uniqueDataId() != macroParamDataVector_[i]->uniqueDataId()))
+            if((newDataVector[i]->uniqueDataId() != oldDataVector_[i]->uniqueDataId()))
                 return true;
         }
         return false;
@@ -71,6 +75,7 @@ namespace AddParams
     ,dataVector_()
     ,satelliteDataVector_()
     ,macroParamDataVector_()
+	,wmsDataVector_()
     {
     }
 
@@ -171,16 +176,32 @@ namespace AddParams
     bool ProducerData::updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree)
     {
         int treeDepth = 3;
-        std::vector<std::unique_ptr<SingleRowItem>> newMacroParamDataVector = createMacroParamVector(macroParamTree, treeDepth);
+        std::vector<std::unique_ptr<SingleRowItem>> newDataVector = createMacroParamVector(macroParamTree, treeDepth);
         //Compare vectors and update if different
-        if(::areMacroParamVectorsDifferent(newMacroParamDataVector, macroParamDataVector_))
+        if(::areDataVectorsDifferent(newDataVector, macroParamDataVector_))
         {
             macroParamDataVector_.clear();
-            macroParamDataVector_ = std::move(newMacroParamDataVector);
+            macroParamDataVector_ = std::move(newDataVector);
             return true;
         }
         return false;;
     }
+
+	bool ProducerData::updateWmsData(const cppext::Node<Wms::Capability>& wmsLayerTree)
+	{
+#ifndef DISABLE_CPPRESTSDK
+		int treeDepth = 3;
+		std::vector<std::unique_ptr<SingleRowItem>> newDataVector = createWmsDataVector(wmsLayerTree, treeDepth);
+		//Compare vectors and update if different
+		if (::areDataVectorsDifferent(newDataVector, wmsDataVector_))
+		{
+			wmsDataVector_.clear();
+			wmsDataVector_ = std::move(newDataVector);
+			return true;
+		}
+		return false;;
+#endif
+	}
 
     std::vector<std::unique_ptr<SingleRowItem>> ProducerData::createMacroParamVector(const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth)
     {
@@ -188,6 +209,15 @@ namespace AddParams
         macroParamsToVector(macroParamVector, macroParamTree, treeDepth);
         return macroParamVector;
     }
+
+	std::vector<std::unique_ptr<SingleRowItem>> ProducerData::createWmsDataVector(const cppext::Node<Wms::Capability>& wmsLayerTree, int treeDepth)
+	{
+#ifndef DISABLE_CPPRESTSDK
+		std::vector<std::unique_ptr<SingleRowItem>> wmsVector;
+		wmsDataToVector(wmsVector, wmsLayerTree, treeDepth);
+		return wmsVector;
+#endif
+	}
 
     int ProducerData::macroParamsToVector(std::vector<std::unique_ptr<SingleRowItem>> &macroParamVector, const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth)
     {
@@ -202,7 +232,7 @@ namespace AddParams
 
             if(!isDirectory) //Leaf node
             {
-                macroParamVector.push_back(::makeMacroParamRowItem(producer_, producer_.GetIdent(), param->Name(), param->DrawParam()->InitFileName(), dataCategory_, leafNode, treeDepth));
+                macroParamVector.push_back(::makeDataRowItem(producer_, producer_.GetIdent(), param->Name(), param->DrawParam()->InitFileName(), dataCategory_, leafNode, treeDepth));
             }
             else // Directory, increase treeDepth
             {
@@ -210,13 +240,55 @@ namespace AddParams
                 if(macroParamItem.itsMacroParam->ErrorInMacro())
                     paramName += " (ERROR)";
                 auto &subtree = macroParamRow.itsDirectoryItems;
-                macroParamVector.push_back(::makeMacroParamRowItem(producer_, producer_.GetIdent(), paramName, param->MacroParamDirectoryPath(), dataCategory_, leafNode, treeDepth));
+                macroParamVector.push_back(::makeDataRowItem(producer_, producer_.GetIdent(), paramName, param->MacroParamDirectoryPath(), dataCategory_, leafNode, treeDepth));
                 macroParamsToVector(macroParamVector, subtree, ++treeDepth);
                 treeDepth--;
             }
         }
         return treeDepth;
     }
+
+	int ProducerData::wmsDataToVector(std::vector<std::unique_ptr<SingleRowItem>>& wmsVector, const cppext::Node<Wms::Capability>& wmsLayerTree, int treeDepth)
+	{
+#ifndef DISABLE_CPPRESTSDK
+		//Recursively loop through wmsLayerTree and create SingleRowItems
+		for (auto const& wmsChild : wmsLayerTree.children)
+		{
+			try
+			{
+				auto paramName = wmsChild->value.name;
+				auto paramId = wmsChild->value.paramId;
+				auto producer = wmsChild->value.producer;
+				const std::string& uniqueId = paramName + "-" + std::to_string(paramId) + "-" + std::to_string(producer.GetIdent());
+				bool leafNode = true;
+
+				try
+				{
+					const auto& wmsNode = dynamic_cast<const Wms::CapabilityNode&>(*wmsChild);
+					leafNode = wmsNode.children.size() > 0 ? false : true;
+					if (!leafNode)
+					{
+						wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, uniqueId, dataCategory_, leafNode, treeDepth));
+						wmsDataToVector(wmsVector, wmsNode, ++treeDepth);
+						treeDepth--;
+					}
+				}
+				catch (const std::exception&)
+				{		
+				}
+
+				if (leafNode)
+				{
+					wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, uniqueId, dataCategory_, leafNode, treeDepth));
+				}				
+			}
+			catch (...)
+			{
+			}
+		}
+		return treeDepth;
+#endif
+	}
 
     void ProducerData::addNewSingleData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
@@ -246,13 +318,16 @@ namespace AddParams
         if(dataCategory_ == NFmiInfoData::kMacroParam)
             return makeDialogRowData(dialogRowDataMemory, macroParamDataVector_);
 
+		if (dataCategory_ == NFmiInfoData::kWmsData)
+			return makeDialogRowData(dialogRowDataMemory, wmsDataVector_);
+
         std::vector<SingleRowItem> dialogRowData;
         for(const auto &singleData : dataVector_)
         {
             const std::string &uniqueId = singleData->uniqueDataId();
-            auto *singleDataMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
-            dialogRowData.push_back(::makeRowItem(*singleData, uniqueId, singleDataMemory));
-            auto rowData = singleData->makeDialogRowData();
+            auto *rowDataMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
+            dialogRowData.push_back(::makeRowItem(*singleData, uniqueId, rowDataMemory));
+            auto rowData = singleData->makeDialogRowData(dialogRowDataMemory);
             dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
         }   
         return dialogRowData;
@@ -271,9 +346,14 @@ namespace AddParams
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, const std::vector<std::unique_ptr<SingleRowItem>> &thisDataVector) const
     {
         std::vector<SingleRowItem> dialogRowData;
+        dialogRowData.reserve(thisDataVector.size());
         for(const auto &singleRowData : thisDataVector)
         {
             dialogRowData.push_back(*singleRowData);
+            auto& rowItem = dialogRowData.back();
+            const auto* rowItemMemory = findDataRowItem(rowItem.uniqueDataId(), dialogRowDataMemory);
+            if(rowItemMemory)
+                rowItem.dialogTreeNodeCollapsed(rowItemMemory->dialogTreeNodeCollapsed());
         }
         return dialogRowData;
     }

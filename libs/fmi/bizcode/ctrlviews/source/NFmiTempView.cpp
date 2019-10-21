@@ -30,10 +30,13 @@
 #include "ToolBoxStateRestorer.h"
 #include "SoundingDataServerConfigurations.h"
 #include "catlog/catlog.h"
+#include "ModelDataServerConfiguration.h"
 
 #include <gdiplus.h>
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
+
+#include <thread>
 
 using namespace std;
 using namespace Gdiplus;
@@ -632,6 +635,9 @@ void NFmiTempView::CalcDrawSizeFactors(void)
 void NFmiTempView::Draw(NFmiToolBox *theToolBox)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
+
+//    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
     if(theToolBox == 0)
 		return ;
 	itsToolBox = theToolBox;
@@ -3354,7 +3360,7 @@ static void ReportFailedSoundingFromServerRequest(const std::string &requestUriS
 
 bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
 {
-    auto requestUriStr = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().makeFinalServerRequestUri(theProducer.GetIdent(), theTime, theLocation.GetLocation());
+    auto requestUriStr = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().makeFinalServerRequestUrl(theProducer.GetIdent(), theTime, theLocation.GetLocation());
     ::TraceLogSoundingFromServerRequest(requestUriStr, theProducer, theTime, theLocation);
     if(requestUriStr.empty())
         return false;

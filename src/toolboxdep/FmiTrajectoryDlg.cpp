@@ -20,6 +20,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CloneBitmap.h"
 #include "persist2.h"
+#include "ApplicationInterface.h"
 
 // CFmiTrajectoryDlg dialog
 
@@ -387,6 +388,7 @@ void CFmiTrajectoryDlg::DoWhenClosing(void)
 	UpdateTrajectorySystem();
     itsSmartMetDocumentInterface->TrajectorySystem()->TrajectoryViewOn(false);
     itsSmartMetDocumentInterface->MapViewDirty(0, false, true, true, false, false, false);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TrajectoryDlg: Closing view");
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
 }
@@ -533,7 +535,7 @@ void CFmiTrajectoryDlg::RefreshViewsAndDialogs(const std::string &reasonForUpdat
 		if(mapViewDescTopList[i]->ShowTrajectorsOnMap())
 			mapViewDescTopList[i]->MapViewDirty(false, true, true, false);
 	}
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews | SmartMetViewId::TrajectoryView);
 }
 
 void CFmiTrajectoryDlg::OnBnClickedButtonTrajectoryRecalculate()
@@ -602,6 +604,7 @@ void CFmiTrajectoryDlg::OnBnClickedCheckTrajectoryShowInCrossSectionView()
 {
 	UpdateData(TRUE);
     itsSmartMetDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView(fShowTrajectoriesInCrossSectionView == TRUE);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::TrajectoryView);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TrajectoryDlg: Toggle show in cross section view option", false, false);
 }
 

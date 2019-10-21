@@ -642,14 +642,14 @@ void CFmiExtraMapViewDlg::OnButtonZoomDialog()
 
 void CFmiExtraMapViewDlg::OnButtonSelectParamDialogExtraMap()
 {
-    ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg();
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ActivateParameterSelectionDlg(itsMapViewDescTopIndex);
 }
 
 void CFmiExtraMapViewDlg::OnToggleMapViewDisplayMode()
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ToggleMapViewDisplayMode();
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(false, true, true, true);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle map view display mode");
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle map view display mode", ::GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
 }
 
 void CFmiExtraMapViewDlg::OnButtonExtraMapPrint()
@@ -668,14 +668,14 @@ CString CFmiExtraMapViewDlg::GetFinalStatusString(UINT nID, const CString &strPr
 void CFmiExtraMapViewDlg::OnAcceleratorLockTimeToMainMap()
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewTime(!itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewTime());
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle lock time to main map view");
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle lock time to main map view", SmartMetViewId::AllMapViews);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorLockRowToMainMap()
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewRow(!itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewRow());
     itsSmartMetDocumentInterface->UpdateRowInLockedDescTops(itsMapViewDescTopIndex);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle lock row to main map view");
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Toggle lock row to main map view", SmartMetViewId::AllMapViews);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorMakeSwapBaseArea()

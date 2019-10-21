@@ -39,10 +39,15 @@
 #include "NFmiFastInfoUtils.h"
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
+#include "CtrlViewColorContourLegendDrawingFunctions.h"
+#include "NFmiColorContourLegendSettings.h"
+#include "NFmiColorContourLegendValues.h"
 #include "catlog/catlog.h"
+#include "NFmiApplicationWinRegistry.h"
 
 #include <stdexcept>
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
+#include "boost/make_shared.hpp"
 
 using namespace std;
 
@@ -205,7 +210,7 @@ void NFmiCrossSectionView::DrawParamView(NFmiToolBox * theGTB)
         // HUOM! Gdiplus piirtoja käytetään poikkileikkaus piirrossa vain tässä erikoistapauksessa. 
         // Jos se otetaan muuallakin käyttöön, alustus ja siivous pitää siirtää NFmiCrossSectionView::Draw metodiin.
         InitializeGdiplus(itsToolBox, &GetFrame());
-        StationViews::DrawBetaProductParamBox(this, true);
+        StationViews::DrawBetaProductParamBox(this, true, nullptr);
         CleanGdiplus();
     }
     else
@@ -277,6 +282,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 
 	if(!itsCtrlViewDocumentInterface->CrossSectionSystem()->IsViewVisible(itsViewGridRowNumber))
 		return ;
+    InitializeGdiplus(itsToolBox, &itsRect);
 	// Tyhjennetään aina piirron aluksi
 	itsExistingLabels.clear(); //EL
 
@@ -342,6 +348,8 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 				EndTransparentDraw(); // jos piirrossa oli läpinäkyvyyttä, pitää vielä tehdä pari kikkaa ja siivota jäljet
 			}
 		}
+
+        DrawLegends();
 		DrawTrajectory(itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1), itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
 		DrawHeader(); // piirretää lopuksi koko header rimpsu kerralla
 		DrawObsForModeTimeLine();
@@ -365,6 +373,38 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	itsDrawParam = oldDrawParam; // laitetaan mikä oli sitten ennen piirtoa drawParam takaisin
 	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
 	//************** QUICKFIX!!!!! *******************
+    CleanGdiplus();
+}
+
+static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo& graphicalInfo, int visibleRowCount)
+{
+    float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM / visibleRowCount), 1.1f);
+    if(sizeFactor < 1)
+        sizeFactor = std::pow(sizeFactor, 2.f);
+    return sizeFactor;
+}
+
+void NFmiCrossSectionView::DrawLegends()
+{
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    if(drawParamList)
+    {
+        auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
+        auto& graphicalInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
+        auto sizeFactor = ::CalcUsedLegendSizeFactor(graphicalInfo, itsCtrlViewDocumentInterface->CrossSectionSystem()->RowCount());
+        auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsDataViewFrame, itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+
+        for(const auto& drawParam : *drawParamList)
+        {
+            auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+            auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
+            NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
+            if(colorContourLegendValues.useLegend())
+            {
+                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
+            }
+        }
+    }
 }
 
 // Tämä pitää viritttää poikkileikkaus näytössä näin, koska parametrin piilotus/näyttö optio menee muuten hukkaan.
@@ -1047,6 +1087,7 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	isoLineData.itsInfo = this->itsInfo;
 	isoLineData.itsParam = itsDrawParam->Param();
 	isoLineData.itsTime = CurrentTime();
+    isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
 
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 	int oldVerticalPointCount = crossSectionSystem->VerticalPointCount();
@@ -1099,8 +1140,8 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	// näytöllä vaan maantieteellisesti. WindBarb on eri asia ja se piirretään kuten kartalla, mutta siihen ollaan totuttu...
 	// Lisäksi nyt kun valitsin tuulen suunnan näytölle, ei tapahdu mitään, koska piirto ei tue suunta-nuolen piirtoa.
 	// ELI JOS paramtri on tuulen suunta ja hilaesitys on nuoli, muuta se isoviiva esitykseksi.
-	if(isoLineData.itsParam.GetParamIdent() == kFmiWindDirection && itsDrawParam->GridDataPresentationStyle() == 6)
-		itsDrawParam->GridDataPresentationStyle(2);
+	if(isoLineData.itsParam.GetParamIdent() == kFmiWindDirection && itsDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiSymbolView)
+		itsDrawParam->GridDataPresentationStyle(NFmiMetEditorTypes::View::kFmiIsoLineView);
 	// HUOM! TÄMÄ ON VIRITYS!!!! - loppuu
 
 	if(fDoCrossSectionDifferenceData)
@@ -1378,9 +1419,10 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
         smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
 
         NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
-        if(mpSystem.FindTotal(itsDrawParam->InitFileName()))
+        auto macroParamPtr = mpSystem.GetWantedMacro(itsDrawParam->InitFileName());
+        if(macroParamPtr)
         {
-            smartToolModifier.InitSmartTool(mpSystem.CurrentMacroParam()->MacroText(), true);
+            smartToolModifier.InitSmartTool(macroParamPtr->MacroText(), true);
         }
         else
             throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + itsDrawParam->ParameterAbbreviation());
@@ -1868,6 +1910,9 @@ bool NFmiCrossSectionView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long
 
 	if(!itsRect.IsInside(thePlace))
 		return false;
+
+	itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, 
+		GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
 
 	// ensin pitää handlata parametrin lisäys param boxista jos hiiren oikea klikattu
 	if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))

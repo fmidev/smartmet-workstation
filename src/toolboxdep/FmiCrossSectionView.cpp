@@ -57,13 +57,13 @@ BEGIN_MESSAGE_MAP(CFmiCrossSectionView, CView)
 	//}}AFX_MSG_MAP
 	ON_WM_LBUTTONUP()
 	ON_WM_RBUTTONUP()
-ON_WM_MOUSEMOVE()
-ON_WM_SIZE()
-ON_WM_MOUSEWHEEL()
+	ON_WM_MOUSEMOVE()
+	ON_WM_SIZE()
+	ON_WM_MOUSEWHEEL()
 	ON_NOTIFY (UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 	ON_WM_LBUTTONDOWN()
-ON_WM_MBUTTONUP()
-ON_WM_LBUTTONDBLCLK()
+	ON_WM_MBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -148,6 +148,11 @@ void CFmiCrossSectionView::SetToolMastersDC(CDC* theDC)
 
 void CFmiCrossSectionView::DrawOverBitmapThings(NFmiToolBox *theToolBox)
 {
+}
+
+int CFmiCrossSectionView::MapViewDescTopIndex(void)
+{
+    return CtrlViewUtils::kFmiCrossSectionView;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -304,7 +309,7 @@ void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
 		{
             itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-            itsSmartMetDocumentInterface->ActivateViewParamSelectorDlg(itsView->MapViewDescTopIndex());
+			itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsView->MapViewDescTopIndex());
 			return ;
 		}
 		Invalidate(FALSE);
@@ -390,6 +395,8 @@ void CFmiCrossSectionView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CFmiCrossSectionView::OnMouseMove(UINT nFlags, CPoint point)
 {
+    if(itsSmartMetDocumentInterface->Printing())
+        return;
 	isCurrentMousePoint = point;
 
 	CDC *theDC = GetDC();
@@ -487,6 +494,8 @@ BOOL CFmiCrossSectionView::PreTranslateMessage(MSG* pMsg)
 
 void CFmiCrossSectionView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 {
+    if(!CFmiWin32TemplateHelpers::AllowTooltipDisplay(itsSmartMetDocumentInterface))
+        return;
 
 	*result = 0;
 	NM_PPTOOLTIP_DISPLAY * pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;

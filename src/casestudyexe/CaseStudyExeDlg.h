@@ -36,6 +36,7 @@ private:
 	CWnd* GetCopyDialogPositionWindow(void);
 	void BringDialogUpFront(const std::string &theTitleStr, const std::string &theMessageStr);
     void DoResizerHooking(void);
+    void DoSuccessReport();
 
 	std::string itsSimpleCommandLineStr;
 	std::string itsMetaFileName;

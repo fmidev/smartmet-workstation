@@ -51,7 +51,8 @@ public:
     boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) override;
     int ActiveViewRow(unsigned int theDescTopIndex) override;
     void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
-    double BrushSpecialParamValue() override;
+	int GetFirstRowNumber(unsigned int theDescTopIndex) override;
+	double BrushSpecialParamValue() override;
     void BrushSpecialParamValue(double newValue) override;
     boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() override;
     void OnButtonRedo() override;
@@ -89,7 +90,7 @@ public:
     NFmiCrossSectionSystem* CrossSectionSystem() override;
     bool ActivateParamSelectionDlgAfterLeftDoubleClick() override;
     void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) override;
-    void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex) override;
+    void ActivateParameterSelectionDlg(unsigned int theMapViewDescTopIndex = 0) override;
     bool OpenPopupMenu() override;
     void OpenPopupMenu(bool newState) override;
     const NFmiPoint& CrossSectionViewSizeInPixels() override;
@@ -276,7 +277,7 @@ public:
     bool RemoveViewMacro(const std::string& theMacroName) override;
     void RefreshViewMacroList() override;
     bool LoadViewMacro(const std::string &theName) override;
-    void StoreViewMacro(const std::string &theName, const std::string &theDescription) override;
+    void StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription) override;
     bool CreateNewViewMacroDirectory(const std::string &thePath) override;
     void UndoViewMacro() override;
     void RedoViewMacro() override;

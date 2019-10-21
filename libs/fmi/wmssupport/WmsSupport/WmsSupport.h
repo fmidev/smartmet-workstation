@@ -198,11 +198,16 @@ namespace Wms
             state_->setOverlayIndex(state_->getCurrentOverlayIndex() - 1);
         }
 
-        void initialSetUp()
+        void initialSetUp(bool doVerboseLogging)
         {
             try
             {
-                setup_ = std::make_unique<Setup>(SetupParser::parse());
+                setup_ = std::make_unique<Setup>(SetupParser::parse(doVerboseLogging));
+                if(!setup_->isConfigured)
+                {
+                    CatLog::logMessage(std::string("No meaningful Wms configurations were given, no WMS support available"), CatLog::Severity::Info, CatLog::Category::Configuration);
+                    return;
+                }
             }
             catch(const std::exception& e)
             {
@@ -265,7 +270,16 @@ namespace Wms
         {
             for(const auto&setup : serverSetups)
             {
-                dynamicClients_[setup.first] = createClient(setup.second, proxyUrl);
+                try
+                {
+                    dynamicClients_[setup.first] = createClient(setup.second, proxyUrl);
+                }
+                catch(std::exception& e)
+                {
+                    std::string errorMessage = "Initializing WMS client failed: ";
+                    errorMessage += e.what();
+                    CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                }
             }
         }
 

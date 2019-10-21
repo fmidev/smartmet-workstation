@@ -16,34 +16,39 @@ NFmiMacroParam::NFmiMacroParam(void)
 {
 }
 
-bool NFmiMacroParam::Store(const std::string &thePath, const std::string &theName)
+bool NFmiMacroParam::Store(const std::string& thePath, const std::string& theName)
 {
-	string drawParamFileName;
-	string macroFileName;
-	MacroParam::GetFileNames(thePath, theName.empty() ? itsName : theName, drawParamFileName, macroFileName, DrawParam()->DataType());
+    string drawParamFileName;
+    string macroFileName;
+    MacroParam::GetFileNames(thePath, theName.empty() ? itsName : theName, drawParamFileName, macroFileName, DrawParam()->DataType());
 
-	ofstream out1(drawParamFileName.c_str(), std::ios::binary);
-	if(out1)
-	{
-		out1 << *itsDrawParam << endl;
-	}
-	else
-		throw runtime_error(string("NFmiMacroParam::Store: Can't save/create macroParam file:\n") + drawParamFileName + "\n");
+    // Smarttool dialogista tehdyt talletukset tekevät piirto-ominaisuuksien talletuksen vain 1. kerralla.
+    // Piirto-ominaisuudet pitää jatkossa tallettaa erikseen piirto-optio dialogin säätöjen kautta.
+    if(!NFmiFileSystem::FileExists(drawParamFileName))
+    {
+        ofstream out1(drawParamFileName.c_str(), std::ios::binary);
+        if(out1)
+        {
+            out1 << *itsDrawParam << endl;
+        }
+        else
+            throw runtime_error(string("NFmiMacroParam::Store: Can't save/create macroParam file:\n") + drawParamFileName + "\n");
+    }
 
-	ofstream out2(macroFileName.c_str(), std::ios::binary);
-	if(out2)
-	{
-		// Tää on ihan tajutonta tämä cr:ien poisto, en ymmärrä miten tää pitäis hoitaa, nyt
-		// poistan niitä jo ainakin kahdessa kohtaa kun mikään ei riitä. cr:ien luku/kirjoitus on ongelma
-		// koska niitä ei kai kirjoiteta tiedostoon, mutta jossain niitä aina sitten lisätää enkä
-		// ole varma missä.
-		itsMacroText.erase(std::remove(itsMacroText.begin(), itsMacroText.end(), '\r'), itsMacroText.end());
-		out2 << itsMacroText;
-	}
-	else
-		throw runtime_error(string("NFmiMacroParam::Store: Can't save/create macroParam file:\n") + macroFileName + "\n");
+    ofstream out2(macroFileName.c_str(), std::ios::binary);
+    if(out2)
+    {
+        // Tää on ihan tajutonta tämä cr:ien poisto, en ymmärrä miten tää pitäis hoitaa, nyt
+        // poistan niitä jo ainakin kahdessa kohtaa kun mikään ei riitä. cr:ien luku/kirjoitus on ongelma
+        // koska niitä ei kai kirjoiteta tiedostoon, mutta jossain niitä aina sitten lisätää enkä
+        // ole varma missä.
+        itsMacroText.erase(std::remove(itsMacroText.begin(), itsMacroText.end(), '\r'), itsMacroText.end());
+        out2 << itsMacroText;
+    }
+    else
+        throw runtime_error(string("NFmiMacroParam::Store: Can't save/create macroParam file:\n") + macroFileName + "\n");
 
-	return true;
+    return true;
 }
 
 bool NFmiMacroParam::Load(const std::string &thePath, const std::string &theName)

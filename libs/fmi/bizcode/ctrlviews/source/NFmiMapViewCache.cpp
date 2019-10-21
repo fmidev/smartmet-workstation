@@ -165,6 +165,11 @@ double NFmiMapViewCache::CacheRow::MakeRoom(double theMinCleareSizeMB)
 	return freedSizeMB;
 }
 
+void NFmiMapViewCache::CacheRow::Swap(CacheRow& otherCacheRow)
+{
+    itsFifoCache.swap(otherCacheRow.itsFifoCache);
+}
+
 NFmiMapViewCache::NFmiMapViewCache(int theRowCount)
 :itsCacheRows(theRowCount)
 {
@@ -195,7 +200,7 @@ void NFmiMapViewCache::MakeTimeDirty(const NFmiMetTime &theTime)
 
 void NFmiMapViewCache::MakeTimesDirty(const NFmiMetTime &theMinTime, const NFmiMetTime &theMaxTime, int theRowIndex)
 {
-	if(static_cast<size_t>(theRowIndex) < itsCacheRows.size())
+	if(IsCacheRowIndexOk(theRowIndex))
 		itsCacheRows[theRowIndex].MakeTimesDirty(theMinTime, theMaxTime);
 }
 
@@ -203,7 +208,7 @@ CBitmap* NFmiMapViewCache::MapImage(const NFmiMetTime &theTime, int theRowIndex)
 {
 	if(itsMaxSizeMB == 0)
 		return 0;
-	if(static_cast<size_t>(theRowIndex) < itsCacheRows.size())
+	if(IsCacheRowIndexOk(theRowIndex))
 		return itsCacheRows[theRowIndex].MapImage(theTime);
 	else
 		return 0;
@@ -216,13 +221,26 @@ void NFmiMapViewCache::MapImage(const NFmiMetTime &theTime, int theRowIndex, CBi
 	double usedSizeMB = CalcUsedSize();
 	if(usedSizeMB > itsMaxSizeMB)
 		MakeRoom(usedSizeMB - itsMaxSizeMB);
-	if(static_cast<size_t>(theRowIndex) < itsCacheRows.size())
+	if(IsCacheRowIndexOk(theRowIndex))
 		itsCacheRows[theRowIndex].MapImage(theTime, theMapImage);
+}
+
+bool NFmiMapViewCache::IsCacheRowIndexOk(int theRowIndex)
+{
+    return static_cast<size_t>(theRowIndex) < itsCacheRows.size();
+}
+
+void NFmiMapViewCache::SwapRows(int theRowIndex1, int theRowIndex2)
+{
+    if(IsCacheRowIndexOk(theRowIndex1) && IsCacheRowIndexOk(theRowIndex2))
+    {
+        itsCacheRows[theRowIndex1].Swap(itsCacheRows[theRowIndex2]);
+    }
 }
 
 void NFmiMapViewCache::ClearRow(int theRowIndex)
 {
-	if(static_cast<size_t>(theRowIndex) < itsCacheRows.size())
+	if(IsCacheRowIndexOk(theRowIndex))
 		itsCacheRows[theRowIndex].Clear();
 }
 

@@ -55,7 +55,7 @@ void worker_to_master_connection::stop()
 void worker_to_master_connection::on_connect(const error_code & err) 
 {
     if ( !err)
-        do_write("login " + username_ + "\n");
+        do_write(std::string("login ") + username_ + "\n");
     else
         stop();
 }
@@ -89,7 +89,7 @@ void worker_to_master_connection::on_read(const error_code & err, size_t bytes)
             on_new_task(msg);
         else
         {
-            log_message("invalid msg: " + msg, logging::trivial::error);
+            log_message(std::string("invalid msg: ") + msg, logging::trivial::error);
             do_ping();
         }
     }
@@ -177,7 +177,7 @@ void worker_to_master_connection::postpone_ping()
     int millis = tcp_tools::g_postpone_ping_timeout_in_ms; // tietyin v‰liajoin kysell‰‰n pingill‰ onko teht‰vi‰
     //if(counter == 5)
     //    millis = 7000;
-    //log_message("Postponing ping " + boost::lexical_cast<std::string>(millis) + " millis", logging::trivial::trace);
+    //log_message(std::string("Postponing ping ") + boost::lexical_cast<std::string>(millis) + " millis", logging::trivial::trace);
     timer_.expires_from_now(boost::posix_time::millisec(millis));
     timer_.async_wait( MEMBER_FUNC(do_ping));
 }
@@ -199,6 +199,8 @@ void worker_to_master_connection::do_write(const std::string & msg)
         return;
     if(write_buffer_.size() < msg.size())
         write_buffer_.resize(msg.size()); // kasvatetaan write bufferin kokoa tarvittaessa
+
+    tcp_tools::trace_log_start_of_container("do_write sends following message: ", use_verbose_logging_, msg);
 
     std::copy(msg.begin(), msg.end(), write_buffer_.begin());
     sock_.async_write_some( boost::asio::buffer(write_buffer_, msg.size()), 

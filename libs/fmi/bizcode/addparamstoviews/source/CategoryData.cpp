@@ -9,6 +9,10 @@
 #include "SingleRowItem.h"
 #include "NFmiDictionaryFunction.h"
 #include "ParameterSelectionSystem.h"
+#ifndef DISABLE_CPPRESTSDK
+#include "CapabilityTree.h"
+#endif // DISABLE_CPPRESTSDK
+#include "cppext/tree.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -247,6 +251,29 @@ namespace AddParams
         return dataStructuresChanged;
     }
 
+	// Returns true, if new wms layers are added
+	bool CategoryData::updateWmsData(const cppext::Node<Wms::Capability>& wmsLayerTree, NFmiInfoData::Type dataCategory)
+	{
+#ifndef DISABLE_CPPRESTSDK
+		bool dataStructuresChanged = false;
+		NFmiProducer producer(wmsLayerTree.value.paramId, "WMS");
+		auto iter = std::find_if(producerDataVector_.begin(), producerDataVector_.end(), [producer](const auto& producerData) {return producer == producerData->producer(); });
+		if (iter != producerDataVector_.end())
+		{
+			dataStructuresChanged |= (*iter)->updateWmsData(wmsLayerTree);
+		}
+		else
+		{
+			// Add wms as a new producer
+			auto producerDataPtr = std::make_unique<ProducerData>(producer, dataCategory);
+			producerDataPtr->updateWmsData(wmsLayerTree);
+			producerDataVector_.push_back(std::move(producerDataPtr));
+			dataStructuresChanged = true;
+		}
+		return dataStructuresChanged;
+#endif
+	}
+
     bool CategoryData::addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         bool dataStruckturesChanged = false;
@@ -328,7 +355,7 @@ namespace AddParams
     std::vector<SingleRowItem> CategoryData::customObservationData(NFmiInfoOrganizer &infoOrganizer) const
     {
         int treeDepth = 2;
-        AddParams::RowType rowType = kProducerType;
+        AddParams::RowType rowType = kDataType;
         std::vector<SingleRowItem> customObservationData;
         
         // *** Sounding and sounding plot ***
@@ -343,7 +370,7 @@ namespace AddParams
             SingleRowItem item = SingleRowItem(rowType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
             auto paramBag = soundingInfo->ParamBag();
             customObservationData.push_back(item);
-            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, rowType);
+            auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, kParamType);
             customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());
             
             menuString = "Sounding plot";

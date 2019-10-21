@@ -120,12 +120,16 @@ public:
 	void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText);
 	void CaseStudyToNormalModeActions(void);
 	void SetAllViewIconsDynamically(void);
-    void ActivateParameterSelectionDlg();
+    void ActivateParameterSelectionDlg(unsigned int theDescTopIndex = 0);
 	CFmiSynopDataGridViewDlg* SynopDataGridViewDlg(void){return itsSynopDataGridViewDlg; }
     void UpdateCrossSectionView(void);
     void UpdateTempView(void);
     void UpdateTimeSerialView(void);
     void UpdateTrajectorySystem(void);
+    void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag);
+    SmartMetViewId GetUpdatedViewsFlag() const { return itsUpdatedViewsFlag; }
+    SmartMetViewId GetAndResetUpdatedViewsFlag();
+    bool HasUpdatedViewsFlagSignificantValue() const { return itsUpdatedViewsFlag != SmartMetViewId::NoViews; }
 
 	NFmiEditMapGeneralDataDoc* GetData(void);
 	virtual ~CSmartMetDoc();
@@ -272,6 +276,13 @@ private:
     CFmiGriddingOptionsDlg *itsGriddingOptionsDlg;
     CFmiSoundingDataServerConfigurationsDlg *itsSoundingDataServerConfigurationsDlg;
     unsigned int itsMapViewDescTopIndex;
+    // Joskus halutaan sallia päivitys vain osalle näyttöjä (optimointia), vaikka lopulta 
+    // käytetäänkin päivityksen aloitukseen yleistä CSmartMetDoc::UpdateAllViewsAndDialogs -metodia, jonka 
+    // tarkoitus on päivittää kaikkia mahdollisia näyttöjä (jotka ovat auki).
+    // Jos itsUpdatedViewsFlag:in arvoksi on laitettu jotain muuta kuin NoViews, tällöin toteutetaankin
+    // se CSmartMetDoc::UpdateAllViewsAndDialogs -metodi, jolle annetaan updatedViewsFlag -parametri.
+    // Lopuksi aina nollataan itsUpdatedViewsFlag:in arvo.
+    SmartMetViewId itsUpdatedViewsFlag = SmartMetViewId::NoViews;
 public:
 	afx_msg void OnToggleLandBorderDrawColor();
 	afx_msg void OnToggleLandBorderPenSize();

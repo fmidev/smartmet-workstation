@@ -123,6 +123,7 @@ public:
 	float itsIsoLineStartClassValue; // jos steppaavat isoviivat, t‰m‰ arvo pit‰‰ laskea, t‰st‰ arvosta alkaa steputus
 	float itsMinValue; // colorcontour alku arvo (kun k‰ytet‰‰n tasa steppi‰)
 	float itsMaxValue; // colorcontour loppu arvo (kun k‰ytet‰‰n tasa steppi‰)
+    double itsIsolineMinLengthFactor = 1;
 
 	NFmiIsoLineStatistics itsIsoLineStatistics;
 	NFmiIsoLineStatistics itsColorContoursStatistics;

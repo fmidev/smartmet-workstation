@@ -19,6 +19,7 @@ target_link_libraries(
     EditingDataUtils
     JsonSpirit
     WinRegistryUtils
+    CtrlViewUtils
     )
 
 target_include_directories( 
@@ -29,6 +30,7 @@ target_include_directories(
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
     PUBLIC ${JsonSpirit_INCLUDE_DIRS}
     PUBLIC ${WinRegistryUtils_INCLUDE_DIRS}
+    PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     )
 
@@ -40,6 +42,7 @@ set(
     ${EditingDataUtils_INCLUDE_DIRS}
     ${JsonSpirit_INCLUDE_DIRS}
     ${WinRegistryUtils_INCLUDE_DIRS}
+    ${CtrlViewUtils_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

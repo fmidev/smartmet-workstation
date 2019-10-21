@@ -100,11 +100,26 @@ std::string NFmiBasicSmartMetConfigurations::MakeDictionaryFilePath() const
     return dictionaryFilePath;
 }
 
+void NFmiBasicSmartMetConfigurations::LogBasicPaths()
+{
+    CatLog::logMessage(std::string("WorkingDirectory = ") + itsWorkingDirectory, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("ControlBasePath = ") + itsControlBasePath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("ControlPath = ") + itsControlPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("BaseConfigurationFilePath = ") + itsBaseConfigurationFilePath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+}
+
+void NFmiBasicSmartMetConfigurations::LogOtherPaths()
+{
+    CatLog::logMessage(std::string("FactorySettingsConfigurationFilePath = ") + itsFactorySettingsConfigurationFilePath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("HelpDataPath = ") + itsHelpDataPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+    CatLog::logMessage(std::string("LogFileDirectory = ") + itsLogFileDirectory, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+}
+
 bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersion)
 {
 	GetWorkingDirectory();
 	::_chdir(itsWorkingDirectory.c_str()); // kun versiosta 5.4 alkaen exe:t ajetaan 32/64-bit hakemistoistaan, pit‰‰ workin directory asettaa t‰ss‰ oikeaan
-
+    LogBasicPaths();
 	// Read all configurations compatible NFmiSettings
 	if(!ReadConfigurations())
 		return false;
@@ -144,6 +159,7 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
     if(!InitLogger())
         return false;
 	InitApplicationDataBase(avsToolMasterVersion);
+    LogOtherPaths();
 
 	return true;
 }
@@ -503,7 +519,7 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     copyrightStringU_ += _TEXT(" Finnish Meteorological Institute");
     itsSplashScreenTextDataVector.push_back(DrawStringData(copyrightStringU_, _TEXT("Arial"), 18, RGB(0, 0, 0), CPoint(22, 325), true));
 
-    bool betaVersion = true;
+    bool betaVersion = false;
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
 
@@ -517,8 +533,9 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
 }
 
 // Oletus, theControlPath on absoluuttinen polku joko tiedostoon tai hakemistoon.
-bool NFmiBasicSmartMetConfigurations::DoControlPathChecks(const std::string &theControlPath)
+bool NFmiBasicSmartMetConfigurations::DoControlPathChecks(std::string theControlPath)
 {
+    theControlPath = BetaProduct::SimplifyWindowsPath(theControlPath);
     if(NFmiFileSystem::DirectoryExists(theControlPath))
     {
         itsControlPath = theControlPath;
