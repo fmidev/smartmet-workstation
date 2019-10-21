@@ -38,6 +38,7 @@ namespace AddParams
         unsigned long parentItemId_;
         std::string parentItemName_;
         bool leafNode_;
+		bool crossSectionLeafNode_;
         std::shared_ptr<NFmiLevel> level_;
         int treeDepth_;
         std::string origTime_;
@@ -69,6 +70,8 @@ namespace AddParams
         unsigned long parentItemId() const { return parentItemId_; }
         const std::string& parentItemName() const { return parentItemName_; }
         bool leafNode() const { return leafNode_; }
+		bool crossSectionLeafNode() const { return crossSectionLeafNode_; }
+		void crossSectionLeafNode(bool newValue) { crossSectionLeafNode_ = newValue; }
         std::shared_ptr<NFmiLevel> level() const { return level_; }
         void level(const std::shared_ptr<NFmiLevel>& level) {level_ = level; }
         int treeDepth() const { return treeDepth_; }

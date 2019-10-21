@@ -276,6 +276,44 @@ namespace tcp_tools
     binary_read_state get_binary_reading_reset_state();
     void log_start_of_binary_message(const std::string &log_message_start, const std::string &real_binary_message, size_t max_chars_from_message, logging::trivial::severity_level log_level);
 
+    // Oletus: virhe koodit on jo tarkistettu.
+    // Rikkovia muutoksia seuraavassa tiedostossa boost kirjastion asio:ssa:
+    // boost_1_70_0\boost\asio\impl\read.hpp
+    // class read_op::operator()(const boost::system::error_code& ec, std::size_t bytes_transferred, int start = 0) -metodissa.
+    // Mit‰ koodi teki aina ennen: Tutki onko ollut virheit‰, jos ei, kutsuttiin aina check_for_completion -funktiota, joka tekee
+    // SmartMetin p‰‰ss‰ tiettyj‰ tarkistuksia ja asetuksia (mm. binary_reading_state_ = tcp_tools::binary_read_state_finished)
+    // Mit‰ koodi tekee muutoksen j‰lkeen (en tied‰ mink‰ versioon muutos tehtiin):
+    // 1) Tutki virhe tilanne
+    // 2) Katso onko bufferi luettu tyhjiin, jos on, kutsu handler funktiota (t‰m‰ oikopolku aiheuttaa ongelman!!!)
+    // 3) Jos bufferi ei oltu luettu tyhj‰ksi, kutsu check_for_completion -funktiota...
+    template<typename BinaryBuffer>
+    void boost_asio_async_read_behaviour_change_fix(size_t bytes, const BinaryBuffer& binary_read_buffer, tcp_tools::binary_read_state* binary_reading_state_in_out)
+    {
+        if(*binary_reading_state_in_out == tcp_tools::binary_read_state_found && !binary_read_buffer.empty())
+        {
+            if(bytes >= binary_read_buffer.size())
+                * binary_reading_state_in_out = tcp_tools::binary_read_state_finished;
+        }
+    }
+
+    template<typename CharContainer>
+    void trace_log_start_of_container(std::string&& log_message_start, bool verbose_logging, const CharContainer& characters, const size_t max_characters_logged_from_message = 1000)
+    {
+        if(verbose_logging)
+        {
+            if(characters.size() < max_characters_logged_from_message)
+            {
+                std::string whole_message(characters.begin(), characters.end());
+                log_message(log_message_start + whole_message, logging::trivial::trace);
+            }
+            else
+            {
+                std::string start_of_message(characters.begin(), characters.begin() + max_characters_logged_from_message);
+                log_message(log_message_start + start_of_message, logging::trivial::trace);
+            }
+        }
+    }
+
 struct multi_process_tcp_pool_options
 {
 	multi_process_tcp_pool_options(void)

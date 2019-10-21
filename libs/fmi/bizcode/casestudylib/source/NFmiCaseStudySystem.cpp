@@ -11,6 +11,7 @@
 #include "CShellFileOp.h"
 #include "NFmiAreaFactory.h"
 #include "NFmiDataLoadingInfo.h"
+#include "CtrlViewFunctions.h"
 
 #include "boost/shared_ptr.hpp"
 #include <boost/filesystem/operations.hpp>
@@ -1116,7 +1117,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
 ,itsCaseStudyPath()
 ,itsSmartMetLocalCachePath()
 ,itsTime()
-,fZipFiles(true)
+,fZipFiles()
 ,fDeleteTmpFiles(true)
 ,fApproximateOnlyLocalDataSize(true)
 ,itsCategoriesData()
@@ -1127,6 +1128,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
     std::string sectionName = "\\General";
     std::string baseRegistryPath = "Software\\Fmi\\SmartMet";
     itsCaseStudyPath = ::CreateRegValue<CachedRegString>(baseRegistryPath, sectionName, "\\CaseStudyPath", usedKey, "D:\\data\\case");
+    fZipFiles = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\ZipFiles", usedKey, true);
 }
 
 NFmiCaseStudySystem::~NFmiCaseStudySystem(void)
@@ -1495,7 +1497,7 @@ bool NFmiCaseStudySystem::AreStoredMetaDataChanged(const NFmiCaseStudySystem &ot
     if(itsCaseStudyPath != other.itsCaseStudyPath)
         return true;
     // Huom! aikaa ei tässä tarkastella, koska siihen otetaan aina vain nykyinen ajan hetki ja se muuttuisi aina
-    if(fZipFiles != other.fZipFiles)
+    if(*fZipFiles != *other.fZipFiles)
         return true;
     if(fDeleteTmpFiles != other.fDeleteTmpFiles)
         return true;
@@ -1679,7 +1681,7 @@ void NFmiCaseStudySystem::ParseJsonPair(json_spirit::Pair &thePair)
 		itsTime = tmpTime;
 	}
 	else if(thePair.name_ == gJsonName_ZipFiles)
-		fZipFiles = thePair.value_.get_bool();
+		*fZipFiles = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_DeleteTmpFiles)
 		fDeleteTmpFiles = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_DataArray)
@@ -1804,7 +1806,7 @@ static void CopyFilesToDestination(const std::list<std::string> &theCopyedFiles,
       TRUE,				// flag - suppress confirmation messages?
       TRUE,				// flag - suppress confirmation messages when making directories?
       FALSE,			// flag - rename files when name collisions occur?
-      TRUE				// flag - simple progress dialog?
+      FALSE				// flag - simple progress dialog?
 	  );
 
 	std::string progresstitleStr(::GetDictionaryString("Case Study copy"));
@@ -2049,62 +2051,6 @@ boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoS
 	}
 	return helpDataInfoSystem;
 }
-/*
-using std::basic_string;
-using std::char_traits;
-
-struct ci_char_traits : public char_traits<char> // just inherit all the other functions that we don't need to override
-{
-    static bool eq( char c1, char c2 )
-      { return toupper(c1) == toupper(c2); }
-
-    static bool ne( char c1, char c2 )
-      { return toupper(c1) != toupper(c2); }
-
-    static bool lt( char c1, char c2 )
-      { return toupper(c1) <  toupper(c2); }
-
-    static int compare( const char* s1, const char* s2, size_t n ) 
-	{
-      return ::_memicmp( s1, s2, n );
-             // if available on your compiler,
-             //  otherwise you can roll your own
-    }
-
-    static const char* find( const char* s, int n, char a ) 
-	{
-      while( n-- > 0 && toupper(*s) != toupper(a) ) 
-	  {
-          ++s;
-      }
-      return s;
-    }
-  };
-
-typedef basic_string<char, ci_char_traits> ci_string;
-*/
-
-// templated version of my_equal so it could work with both char and wchar_t
-template<typename charT>
-struct my_equal {
-    my_equal( const std::locale& loc ) : loc_(loc) {}
-    bool operator()(charT ch1, charT ch2) {
-        return std::toupper(ch1, loc_) == std::toupper(ch2, loc_);
-    }
-private:
-    const std::locale& loc_;
-};
-
-// find substring (case insensitive)
-template<typename T>
-static size_t ci_find_substr( const T& str1, const T& str2, const std::locale& loc = std::locale() )
-{
-    T::const_iterator it = std::search( str1.begin(), str1.end(), 
-        str2.begin(), str2.end(), my_equal<T::value_type>(loc) );
-    if ( it != str1.end() ) return it - str1.begin();
-	else return std::string::npos; // not found
-}
-
 
 std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath)
 {
@@ -2122,8 +2068,8 @@ std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &the
 				for(size_t k = 0; k < dataFileVector.size(); k++)
 				{
 					NFmiCaseStudyDataFile &dataFile = dataFileVector[k];
-					size_t pos = ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // tämä etsintä työ pitää tehdä case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pitää olla tarkalleen samalla lailla kirjoitettu
-					if(pos != std::string::npos)
+					auto pos = CtrlViewUtils::ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // tämä etsintä työ pitää tehdä case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pitää olla tarkalleen samalla lailla kirjoitettu
+					if(pos != CtrlViewUtils::ci_string_not_found)
 					{ // löytyi haluttu data, rakenna nyt siihen sopiva file-filter
 						std::string newFilePattern = theBasePath;
 						newFilePattern += dataFile.RelativeStoredFileFilter();
@@ -2170,6 +2116,16 @@ std::string NFmiCaseStudySystem::CaseStudyPath(void) const
 void NFmiCaseStudySystem::CaseStudyPath(const std::string &newValue)
 {
     *itsCaseStudyPath = newValue;
+}
+
+bool NFmiCaseStudySystem::ZipFiles(void) const 
+{ 
+    return *fZipFiles; 
+}
+
+void NFmiCaseStudySystem::ZipFiles(bool newValue) 
+{ 
+    *fZipFiles = newValue; 
 }
 
 // ************************************************************

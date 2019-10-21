@@ -52,7 +52,7 @@ public:
     virtual void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) = 0;
     virtual void UpdateTempView() = 0;
     virtual void UpdateCrossSectionView() = 0;
-    virtual void ActivateParameterSelectionDlg() = 0;
+    virtual void ActivateParameterSelectionDlg(unsigned int theDescTopIndex) = 0;
     virtual void ActivateZoomDialog(int theWantedDescTopIndex) = 0;
     virtual std::string GetToolTipString(unsigned int commandID, const std::string &theMagickWordU_) = 0;
     virtual void InvalidateMainMapView(bool bErase = true) = 0;
@@ -67,4 +67,5 @@ public:
     virtual void UpdateMainFrameTitle() = 0;
     virtual void OpenLocationFinderDialog(CWnd *parentView) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
+    virtual void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) = 0;
 };

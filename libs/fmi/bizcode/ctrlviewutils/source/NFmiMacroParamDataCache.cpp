@@ -329,6 +329,16 @@ bool NFmiMacroParamDataCacheForView::update(unsigned long rowIndex, NFmiDrawPara
     return false;
 }
 
+void NFmiMacroParamDataCacheForView::swapRows(unsigned long rowIndex1, unsigned long rowIndex2)
+{
+    auto iter1 = rowsCache_.find(rowIndex1);
+    auto iter2 = rowsCache_.find(rowIndex2);
+    if(iter1 != rowsCache_.end() && iter2 != rowsCache_.end())
+    {
+        std::swap(iter1->second, iter2->second);
+    }
+}
+
 // ***********************************************************************************************
 
 bool NFmiMacroParamDataCache::init(const std::initializer_list<unsigned long> &viewIndexList)
@@ -458,4 +468,16 @@ bool NFmiMacroParamDataCache::update(unsigned long viewIndex, NFmiPtrList<NFmiDr
         }
     }
     return true;
+}
+
+void NFmiMacroParamDataCache::swapMacroParamCacheRows(unsigned long viewIndex, unsigned long rowIndex1, unsigned long rowIndex2)
+{
+    if(rowIndex1 != rowIndex2)
+    {
+        auto iter = viewsCache_.find(viewIndex);
+        if(iter != viewsCache_.end())
+        {
+            iter->second.swapRows(rowIndex1, rowIndex2);
+        }
+    }
 }

@@ -306,10 +306,7 @@ namespace CtrlViewUtils
 
         if(dataType == NFmiInfoData::kCopyOfEdited)
             str += "(c)"; // kopioidut parametrit merkitään (c):llä
-        std::string parNameStr = theDrawParam->ParameterAbbreviation();
-        if(parNameStr == std::string("") || parNameStr == std::string("?") || parNameStr == std::string("Koiranpentu"))
-            parNameStr = theDrawParam->Param().GetParam()->GetName();
-        str += parNameStr;
+        str += theDrawParam->ParameterAbbreviation();
         if(fAddIdInfos)
             str += GetIdString(theDrawParam->Param().GetParamIdent());
 

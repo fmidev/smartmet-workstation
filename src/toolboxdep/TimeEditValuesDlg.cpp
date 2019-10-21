@@ -133,6 +133,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
     ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_RIGHT, &CTimeEditValuesDlg::OnAcceleratorCpSelectRight)
     ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_UP, &CTimeEditValuesDlg::OnAcceleratorCpSelectUp)
     ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_DOWN, &CTimeEditValuesDlg::OnAcceleratorCpSelectDown)
+	ON_BN_CLICKED(IDC_BUTTON_TIME_SERIAL_PARAMETER_SELECTION, &CTimeEditValuesDlg::OnButtonOpenParameterSelection)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -168,7 +169,7 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
 	UpdateSmootherString();
 
 	UpdateCPManagerString();
-
+	SetParameterSelectionIcon();
 	InitDialogTexts();
 
 	EnableButtons();
@@ -388,6 +389,11 @@ void CTimeEditValuesDlg::SeViewModeButtonsSetup(void)
     EnableDlgItem(IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, enableEditingControls);
     EnableDlgItem(IDC_CHECK_USE_ZOOMED_AREA_CP, enableEditingControls);
     EnableDlgItem(IDC_CHECK_USE_ANALYZE_TOOL, enableEditingControls);
+}
+
+void CTimeEditValuesDlg::OnButtonOpenParameterSelection()
+{
+	itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsTimeEditValuesView->MapViewDescTopIndex());
 }
 
 void CTimeEditValuesDlg::OnButtonRedo() 
@@ -692,6 +698,24 @@ void CTimeEditValuesDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_UNDO, "IDC_BUTTON_UNDO");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REDO, "IDC_BUTTON_REDO");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "IDC_BUTTON_PRINT");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_TIME_SERIAL_PARAMETER_SELECTION, "+");
+}
+
+void CTimeEditValuesDlg::SetParameterSelectionIcon()
+{
+	CButton* pButton = (CButton*)GetDlgItem(IDC_BUTTON_TIME_SERIAL_PARAMETER_SELECTION);
+
+	pButton->ModifyStyle(0, BS_BITMAP);
+
+	HBITMAP bitmap = (HBITMAP)LoadImage(
+		AfxGetApp()->m_hInstance,
+		MAKEINTRESOURCE(IDB_BITMAP_PLUS),
+		IMAGE_BITMAP,
+		16, 16,
+		LR_DEFAULTCOLOR
+	);
+
+	pButton->SetBitmap(bitmap);
 }
 
 BOOL CTimeEditValuesDlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)

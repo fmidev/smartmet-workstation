@@ -175,11 +175,7 @@ void NFmiSatelView::DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &
 
 std::string NFmiSatelView::ComposeToolTipText(const NFmiPoint& /* theRelativePoint */ )
 {
-	string str;
-	if(itsDrawParam->ParameterAbbreviation() != std::string("?"))
-		str += itsDrawParam->ParameterAbbreviation();
-	else
-		str += itsDrawParam->Param().GetParamName();
+	string str = itsDrawParam->ParameterAbbreviation();
     str += " ";
 
     NFmiImageHolder imageHolder = GetImageFromCache();

@@ -174,7 +174,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsControlPath(theControlPath)
 ,itsSelectedMapIndexVM(1)
 ,itsGdiPlusImageMapHandlerList()
-,itsMapViewCache(CtrlViewUtils::MaxViewGridYSize)
+,itsMapViewCache(CtrlViewUtils::MaxViewGridXSize * CtrlViewUtils::MaxViewGridYSize)
 ,fRedrawMapView(true)
 ,itsLandBorderColors()
 ,itsLandBorderColorIndex(0)
@@ -578,6 +578,8 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, bool fHid
 
     // lopuksi pitää vielä päivittää x-y suhde
     CalcClientViewXperYRatio(newSize);
+
+    UpdateOneMapViewSize();
 }
 
 const NFmiRect& NFmiMapViewDescTop::RelativeMapRect(void)
@@ -730,16 +732,21 @@ bool NFmiMapViewDescTop::SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWi
 		CRect aRect;
 		itsMapView->GetClientRect(aRect);
 		CalcClientViewXperYRatio(NFmiPoint(aRect.Width(), aRect.Height()));
-		// lasketaan myös yhden kartta ruudun koko mm uudestaan
-		NFmiPoint oneMapViewSizeInPixels = ActualMapBitmapSizeInPixels();
-		itsGraphicalInfo.itsViewWidthInMM = oneMapViewSizeInPixels.X() / itsGraphicalInfo.itsPixelsPerMM_x;
-		itsGraphicalInfo.itsViewHeightInMM = oneMapViewSizeInPixels.Y() / itsGraphicalInfo.itsPixelsPerMM_y;
+        UpdateOneMapViewSize();
 
 		MapViewDirty(true, true, true, false);
 		BorderDrawDirty(true);
 		return true;
 	}
 	return false;
+}
+
+void NFmiMapViewDescTop::UpdateOneMapViewSize()
+{
+    // lasketaan myös yhden kartta ruudun koko mm uudestaan
+    NFmiPoint oneMapViewSizeInPixels = ActualMapBitmapSizeInPixels();
+    itsGraphicalInfo.itsViewWidthInMM = oneMapViewSizeInPixels.X() / itsGraphicalInfo.itsPixelsPerMM_x;
+    itsGraphicalInfo.itsViewHeightInMM = oneMapViewSizeInPixels.Y() / itsGraphicalInfo.itsPixelsPerMM_y;
 }
 
 void NFmiMapViewDescTop::SetSelectedMapsFromSettings(void)

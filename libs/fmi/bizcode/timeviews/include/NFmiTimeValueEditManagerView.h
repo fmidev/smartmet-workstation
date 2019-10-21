@@ -30,7 +30,8 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	void MaxStationShowed (const unsigned int & newCount);
 	void ManualModifierLength(double newValue);
 	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey);
+	bool RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey);
 	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
 	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
 	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey);

@@ -75,16 +75,14 @@ protected:
 
 	void DisableActionButtomIfInViewMode(void);
 	void AddSelectedMacroParamToRow(int theRow);
-	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath);
-	void UpdateMacroName(void);
-	//std::string GetWantedMacroString(void);
+	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath, bool makeMapDirtyActions = true);
 	NFmiMacroParam* FindSelectedMacroParam(void);
 	void ClearMapViewRow(int theRowIndex);
-	bool CreateNewMacroParamDirectory(const std::string &thePath);
 	void InitDialogTexts(void);
 	bool EnableDlgItem(int theDlgId, bool fEnable);
     void DoResizerHooking(void);
-    void UpdateLoadDirectoryString();
+    void UpdateLoadedSmarttoolMacroPathString();
+    void UpdateLoadedMacroParamPathString();
     void ResetSearchResource();
     void InitSpeedSearchControl();
     void DoTimedResetSearchResource();
@@ -92,7 +90,7 @@ protected:
     std::string GetSmarttoolFilePath();
     void WarnUserAboutNoEditingSmarttools();
     std::string GetSmarttoolFormulaText();
-    bool LoadSmarttoolFormula(const std::string &theFilePath);
+    bool LoadSmarttoolFormula(const std::string &theFilePath, bool smarttoolCase);
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     void InitializeSyntaxEditControl();
     std::string MakeSyntaxEditConfigFilePath();
@@ -106,13 +104,14 @@ protected:
     NFmiInfoData::Type GetUsedMacroParamType();
     void DoFinalMacroParamWrite(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiMacroParam> &macroParamPointer);
     void EnableColorCodedControls();
+    std::string GetSelectedMacroParamName() const;
+    void LoadFormulaFromSmarttool();
+    void LoadFormulaFromMacroParam();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
 	int itsSelectedMapViewDescTopIndex;
-    CString itsMacroParamNameU_;
     CListBox itsMacroParamList;
-    CString itsMacroNameU_;
     int itsMacroParamDataGridSizeX;
     int itsMacroParamDataGridSizeY;
     BOOL fCrossSectionMode;
@@ -122,7 +121,8 @@ protected:
     CMenu itsSpeedSearchMacroControlMenu;
     BOOL fSearchOptionCaseSensitive;
     BOOL fSearchOptionMatchAnywhere;
-    CString itsUsedMacroPathU_;
+    CString itsLoadedSmarttoolMacroPathU_;
+    CString itsLoadedMacroParamPathText;
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     std::unique_ptr<CXTPSyntaxEditCtrl>	itsSyntaxEditControl;

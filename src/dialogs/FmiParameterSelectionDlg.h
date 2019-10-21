@@ -14,6 +14,7 @@
 class SmartMetDocumentInterface;
 class NFmiFastQueryInfo;
 class NFmiHelpDataInfo;
+class SingleRowItem;
 
 namespace AddParams
 {
@@ -88,6 +89,9 @@ class CFmiParameterSelectionDlg : public CDialogEx
 {
 private: // näillä talletetaan sijainti ja koko rekisteriin
     static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
+	int fixedRowCount = 1;
+	int fixedColumnCount = 1;
+
 public:
     static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo(void) { return s_ViewPosRegistryInfo; }
     
@@ -120,14 +124,15 @@ private:
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
     void SetGridRow(int row, const AddParams::SingleRowItem &theRowItem, int theFixedColumnCount);
     void InitDialogTexts(void);
+    void CollapseAllTreeNodes();
     void MakeTreeNodeCollapseSettings();
     void SetTreeNodeInformationBackToDialogRowData();
     void HandleGridCtrlsLButtonDblClk();
     void HandleRowItemSelection(const AddParams::SingleRowItem &rowItem);
     void FitNameColumnOnVisibleArea(int gridCtrlWidth);
     std::string MakeActiveViewRowText();
-    bool NeedToUpdateTitleText();
-    std::string MakeTitleText();
+	void UpdateGridControlIfNeeded();
+	std::string MakeTitleText();
     bool UpdateSearchIfNeeded();
     void CollapseAllButCategories();
 
@@ -138,7 +143,7 @@ private:
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     AddParams::ParameterSelectionSystem *itsParameterSelectionSystem;
-    unsigned int itsLastAcivatedDescTopIndex; // Mikä oli viimeksi DescTopIndex, kun otsikon tekstiä tehtiin
+    unsigned int itsLastActivatedDesktopIndex; // Mikä oli viimeksi DesktopIndex, kun otsikon tekstiä tehtiin
     int itsLastActivatedRowIndex; // Mikä oli viimeksi RowIndex, kun otsikon tekstiä tehtiin
     CString itsSearchText;
     std::string itsPreviousSearchText;
@@ -158,4 +163,5 @@ public:
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
     afx_msg void OnEnChangeEditParameterSelectionSearchText();
     afx_msg void OnPaint();
+	void SetIndexes(unsigned int theDescTopIndex);
 };

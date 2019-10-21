@@ -116,6 +116,7 @@ class Q2ServerInfo;
 class NFmiMacroParamDataCache;
 class TimeSerialParameters;
 class AnimationProfiler;
+class NFmiColorContourLegendSettings;
 
 namespace Wms
 {
@@ -149,8 +150,12 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    void SetPrintedDescTopIndex(int nowPrintedDescTopIndex);
+    int GetPrintedDescTopIndex();
+    void ResetPrintedDescTopIndex();
+    NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
-    void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize);
+	void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& totalPixelSize, const NFmiPoint& clientPixelSize);
     NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
@@ -300,7 +305,7 @@ public:
 	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateZoomDialog(int theWantedDescTopIndex);
 	std::string GetToolTipString(unsigned int commandID, std::string &theMagickWord);
-	void ActivateViewParamSelectorDlg(int theMapViewDescTopIndex);
+	void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex);
 	void UpdateTempView(void);
 	void UpdateCrossSectionView(void);
 	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tämä on kirjastojen pilkkomiseen vaadittuja funktioita
@@ -507,14 +512,10 @@ public:
 	void SetSelectedMapHandler(unsigned int theDescTopIndex, unsigned int newMapIndex);
 	CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void);
 	void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings);
-	bool UseDoAtSendCommandString(void);
-	void UseDoAtSendCommandString(bool newValue);
-	std::string DoAtSendCommandString(void);
-	void DoAtSendCommandString(const std::string &newValue);
 	bool RemoveViewMacro(const std::string& theMacroName);
 	void RefreshViewMacroList(void);
 	bool LoadViewMacro(const std::string &theName);
-	void StoreViewMacro(const std::string &theName, const std::string &theDescription);
+	void StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription);
 
 	NFmiSmartToolInfo* SmartToolInfo(void);
 	boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void);
@@ -632,6 +633,7 @@ public:
 	void ActiveViewTime(const NFmiMetTime& theTime);
 	int ActiveViewRow(unsigned int theDescTopIndex);
 	void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex);
+	int GetFirstRowNumber(unsigned int theDescTopIndex);
 	bool UseMasksWithFilterTool(void);
 	void UseMasksWithFilterTool(bool newStatus);
 	const NFmiRect& AreaFilterRangeLimits(void);
@@ -686,7 +688,6 @@ public:
 	void SetTimeFilterStartTime(const NFmiMetTime& theTime);
 	void SetTimeFilterEndTime(const NFmiMetTime& theTime);
 	void SetActiveParamMissingValues(double theValue);
-	void ChangeMapType(unsigned int theDescTopIndex, bool fForward);
 
 	int FilterDialogUpdateStatus(void);
 	void FilterDialogUpdateStatus(int newState);

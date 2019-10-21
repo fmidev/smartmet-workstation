@@ -21,6 +21,7 @@
 const NFmiViewPosRegistryInfo CFmiCrossSectionDlg::s_ViewPosRegistryInfo(CRect(400, 200, 1000, 700), "\\CrossSectionView");
 
 IMPLEMENT_DYNAMIC(CFmiCrossSectionDlg, CDialog)
+
 CFmiCrossSectionDlg::CFmiCrossSectionDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent /*=NULL*/)
 :CDialog(CFmiCrossSectionDlg::IDD, pParent)
 ,itsView(0)
@@ -56,7 +57,6 @@ void CFmiCrossSectionDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CFmiCrossSectionDlg, CDialog)
-	ON_BN_CLICKED(IDC_BUTTON_REFRESH, OnBnClickedButtonRefresh)
 	ON_BN_CLICKED(IDC_BUTTON_PRINT, OnBnClickedButtonPrint)
 	ON_WM_SIZE()
 	ON_WM_ERASEBKGND()
@@ -80,6 +80,7 @@ ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_DEFAULT_AXIS_ALL, &CFmiCrossSectionD
 ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_SPECIAL_AXIS_ALL, &CFmiCrossSectionDlg::OnAcceleratorSetCrossSectionSpecialAxisAll)
 ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_DEFAULT_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionDefaultAxis)
 ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_SPECIAL_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionSpecialAxis)
+ON_BN_CLICKED(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION, &CFmiCrossSectionDlg::OnButtonOpenParameterSelection)
 END_MESSAGE_MAP()
 
 // CFmiCrossSectionDlg message handlers
@@ -96,11 +97,6 @@ void CFmiCrossSectionDlg::Update()
 			itsView->Update(true);
 		Invalidate(FALSE);
 	}
-}
-
-void CFmiCrossSectionDlg::OnBnClickedButtonRefresh()
-{
-	Update();
 }
 
 void CFmiCrossSectionDlg::OnBnClickedButtonPrint()
@@ -161,7 +157,7 @@ BOOL CFmiCrossSectionDlg::OnInitDialog()
 	SetWindowPos(&wndBottom, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);	 // not possible, thus child stays still upon its parent
 
 	InitFromCrossSectionSystem();
-
+	SetParameterSelectionIcon();
 	InitDialogTexts();
 	UpdateData(FALSE);
 
@@ -182,6 +178,23 @@ void CFmiCrossSectionDlg::InitFromCrossSectionSystem(void)
 	EnableControls();
 
 	UpdateData(FALSE);
+}
+
+void CFmiCrossSectionDlg::SetParameterSelectionIcon()
+{
+	CButton* pButton = (CButton*)GetDlgItem(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION);
+
+	pButton->ModifyStyle(0, BS_BITMAP);
+
+	HBITMAP bitmap = (HBITMAP)LoadImage(
+		AfxGetApp()->m_hInstance,
+		MAKEINTRESOURCE(IDB_BITMAP_PLUS),
+		IMAGE_BITMAP,
+		16, 16,
+		LR_DEFAULTCOLOR
+	);
+
+	pButton->SetBitmap(bitmap);
 }
 
 void CFmiCrossSectionDlg::OnSize(UINT nType, int cx, int cy)
@@ -228,7 +241,7 @@ void CFmiCrossSectionDlg::MakeCrossSectionModeUpdates(const std::string &reasonF
         // jos karttanäytössä crosssection moodi päällä, päivitetään kartta ja muutkin näytöt
         itsSmartMetDocumentInterface->MacroParamDataCache().clearView(CtrlViewUtils::kFmiCrossSectionView);
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Toggle route cross section mode", SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::MainMapView | SmartMetViewId::CrossSectionView);
     }
 }
 
@@ -281,7 +294,7 @@ void CFmiCrossSectionDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScroll
 void CFmiCrossSectionDlg::OnNMReleasedcaptureSliderCrossSectionViewCount(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	// Kikka vitonen: pitää laittaa fokus jollekin toiselle kontrollille, koska muuten hiiren rulla jää slideriin
-	CWnd *win = this->GetDlgItem(IDC_BUTTON_REFRESH);
+	CWnd *win = this->GetDlgItem(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION);
 	if(win)
 		win->SetFocus();
 	*pResult = 0;
@@ -309,7 +322,7 @@ void CFmiCrossSectionDlg::DoWhenClosing(void)
 	{ // jos karttanäytöllä oli poikkileikkaus moodi päällä, laita se pois ja vielä pitää päivittää myös karttanäyttö, että pallukat saadaaan pois
         crossSectionSystem->CrossSectionSystemActive(false);
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
-        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Close view", SmartMetViewId::MainMapView);
+        itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("CrossSectionDlg: Close view", SmartMetViewId::AllMapViews);
 	}
 	AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
 }
@@ -348,7 +361,7 @@ void CFmiCrossSectionDlg::OnOK()
 void CFmiCrossSectionDlg::InitDialogTexts(void)
 {
     SetWindowText(CA2T(::GetDictionaryString("CrossSectionDlgTitle").c_str()));
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH, "IDC_BUTTON_REFRESH");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION, "+");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "IDC_BUTTON_PRINT");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_TIME_CROSS_SECTION, "IDC_CHECK_USE_TIME_CROSS_SECTION");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_CROSSSECTION_MAP_MODE, "IDC_CHECK_USE_CROSSSECTION_MAP_MODE");
@@ -484,4 +497,10 @@ void CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionDefaultAxis()
 void CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionSpecialAxis()
 {
     itsSmartMetDocumentInterface->CrossSectionSystem()->SaveCrossSectionSpecialAxisValues();
+}
+
+
+void CFmiCrossSectionDlg::OnButtonOpenParameterSelection()
+{
+	itsSmartMetDocumentInterface->ActivateParameterSelectionDlg(itsView->MapViewDescTopIndex());
 }

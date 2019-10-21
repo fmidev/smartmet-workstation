@@ -653,6 +653,8 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mMinimumTimeRangeForWarningsOnMapViewsInMinutes()
 ,mDrawObjectScaleFactor()
 ,itsMaximumFontSizeFactor(3.)
+,mIsolineMinLengthFactor()
+,mGenerateTimeCombinationData()
 ,mEditingToolsGriddingProperties()
 ,mVisualizationGriddingProperties()
 ,mSaveImageExtensionFilterIndex()
@@ -711,6 +713,8 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mMinimumTimeRangeForWarningsOnMapViewsInMinutes = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\MinimumTimeRangeForWarningsOnMapViewsInMinutes", usedKey, 0);
     mDrawObjectScaleFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\DrawObjectScaleFactor", usedKey, 0.9, "MetEditor::DrawObjectScaleFactor");
     //mMaximumFontSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MaximumFontSizeFactor", usedKey, 2);
+    mIsolineMinLengthFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\IsolineMinLengthFactor", usedKey, 1.);
+    mGenerateTimeCombinationData = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\GenerateTimeCombinationData", usedKey, true);
     mSaveImageExtensionFilterIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\SaveImageExtensionFilterIndex", usedKey, 1);
     // Pit‰‰ viel‰ varmistaa ett‰ rekisterist‰ luettu indeksi menee rajojen sis‰lle oikein, siksi kutsutaan viel‰ sen Set-metodia, joka tekee tarkasteluja.
     SetSaveImageExtensionFilterIndex(*mSaveImageExtensionFilterIndex);
@@ -959,6 +963,33 @@ double NFmiApplicationWinRegistry::MaximumFontSizeFactor()
 void NFmiApplicationWinRegistry::MaximumFontSizeFactor(double newValue)
 {
     itsMaximumFontSizeFactor = newValue;
+}
+
+double NFmiApplicationWinRegistry::IsolineMinLengthFactor()
+{
+    return *mIsolineMinLengthFactor;
+}
+
+#ifdef min
+#undef min
+#undef max
+#endif
+
+void NFmiApplicationWinRegistry::IsolineMinLengthFactor(double newValue)
+{
+    // Rajataan k‰ytetty kerroin arvov‰lille 0-100
+    auto usedValue = std::min(100., std::max(0., newValue));
+    *mIsolineMinLengthFactor = usedValue;
+}
+
+bool NFmiApplicationWinRegistry::GenerateTimeCombinationData()
+{
+    return *mGenerateTimeCombinationData;
+}
+
+void NFmiApplicationWinRegistry::GenerateTimeCombinationData(bool newValue)
+{
+    *mGenerateTimeCombinationData = newValue;
 }
 
 const NFmiGriddingProperties& NFmiApplicationWinRegistry::GriddingProperties(bool getEditingRelatedProperties) const

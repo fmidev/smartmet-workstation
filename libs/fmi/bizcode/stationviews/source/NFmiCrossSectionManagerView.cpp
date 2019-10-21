@@ -172,8 +172,15 @@ void NFmiCrossSectionManagerView::Draw(NFmiToolBox* theToolBox)
 	DrawFooter();
 }
 
+void NFmiCrossSectionManagerView::ActivateCrossSectionView(const NFmiPoint& thePlace)
+{
+	if (IsIn(thePlace))
+		itsCtrlViewDocumentInterface->ActiveMapDescTopIndex(itsMapViewDescTopIndex);
+}
+
 bool NFmiCrossSectionManagerView::LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey)
 {
+	ActivateCrossSectionView(thePlace);
 	bool status = false;
     // Ensin on hanskattava parametrinäytön ja aikakontrolli-ikkunan raahaukset
     if(itsViewList->IsMouseDraggingOn())

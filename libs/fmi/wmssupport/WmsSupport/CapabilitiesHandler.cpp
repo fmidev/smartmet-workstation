@@ -18,7 +18,7 @@ namespace Wms
             boost::property_tree::read_xml(std::stringstream{ xml }, pTree);
             return pTree;
         }
-        std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging)
+        std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging, bool doVerboseLogging)
         {
             try
             {
@@ -30,7 +30,16 @@ namespace Wms
                 httpResponseFut.wait();
                 auto responseStr = httpResponseFut.get();
                 if(doLogging)
-                    CatLog::logMessage(std::string("fetchCapabilitiesXml response: ") + responseStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                {
+                    const size_t maxLength = 1000;
+                    if(doVerboseLogging || responseStr.size() < maxLength)
+                        CatLog::logMessage(std::string("fetchCapabilitiesXml response: ") + responseStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                    else
+                    {
+                        auto shortLogString = std::string(responseStr.begin(), responseStr.begin() + maxLength);
+                        CatLog::logMessage(std::string("fetchCapabilitiesXml response: ") + shortLogString, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                    }
+                }
                 return responseStr;
             }
             catch(const std::exception &e)
@@ -99,7 +108,7 @@ namespace Wms
                     {
 
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-                        auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest));
+                        auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging));
                         // Doing logging only the first time
                         serverKV.second.logFetchCapabilitiesRequest = false;
                         changedLayers_.changedLayers.clear();

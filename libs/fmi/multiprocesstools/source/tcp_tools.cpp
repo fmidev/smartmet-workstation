@@ -1,4 +1,5 @@
 
+#include "stdafx.h"
 #include "tcp_tools.h"
 #include "logging.h"
 #include "process_tools.h"
@@ -34,6 +35,18 @@ void use_binary_transfer(bool new_value)
     g_use_binary_transfer = new_value;
 }
 
+std::string make_argument_string(const std::vector<std::string>& final_args)
+{
+    std::string str;
+    for(const auto& arg : final_args)
+    {
+        if(!str.empty())
+            str += " ";
+        str += arg;
+    }
+    return str;
+}
+
 void create_worker_process(const std::string &executable_path, const std::string &worker_name, const std::string &create_worker_start_message, const std::vector<std::string> &extra_args, bool add_command_line_flags)
 {
     std::vector<std::string> final_args;
@@ -46,11 +59,11 @@ void create_worker_process(const std::string &executable_path, const std::string
     std::string worker_string = create_worker_start_message;
     worker_string += worker_name;
     log_message(worker_string, logging::trivial::info);
+    log_message(std::string("Worker exe path: ") + executable_path, logging::trivial::debug);
+    log_message(std::string("Worker exe args: ") + make_argument_string(final_args), logging::trivial::debug);
 
-    // child:ia ei saa ottaa talteen, koska sen destruktori kaataa ohjelman, kun se yrittää sulkea
-    // process-handlen. Mystisesti ongelmia ei tapahdu, kun start_process-funktio palauttaa child:in
-    // ja destruktoria kutsutaan heti tässä (ja kun sitä ei laiteta talteen mihinkään).
-    /* boost::process::child child_process = */ start_process(executable_path, final_args);
+    // child:ia ei saa ottaa talteen, se pitää irroittaa (detach), muuten homma ei toimi uudella boost:in process -kirjastolla.
+    start_process(executable_path, final_args).detach();
 }
 
 // Etsitään message -stringin alusta (tai halutusta alusta, jos search_start_pos != 0), löytyykö
@@ -514,7 +527,7 @@ void seed_random_generator(uint32_t base_seed, std::string used_hash_string)
         used_base_seed = std::hash<std::string>()(used_hash_string) * used_base_seed;
 
     uint32_t used_seed = static_cast<uint32_t>(used_base_seed);
-    log_message("Used random seed: " + boost::lexical_cast<std::string>(used_seed), logging::trivial::debug);
+    log_message(std::string("Used random seed: ") + boost::lexical_cast<std::string>(used_seed), logging::trivial::debug);
     get_random_generator().seed(used_seed);
 }
 
@@ -552,7 +565,7 @@ bool make_some_fake_result(const task_structure &task_in, work_result_structure 
     //if(counter == 5)
     //    fake_work_time_in_ms = 60 * 1000;
     boost::this_thread::sleep(boost::posix_time::milliseconds(fake_work_time_in_ms));
-    log_message("Fake working time: " + boost::lexical_cast<std::string>(fake_work_time_in_ms) + " [ms]", logging::trivial::trace);
+    log_message(std::string("Fake working time: ") + boost::lexical_cast<std::string>(fake_work_time_in_ms) + " [ms]", logging::trivial::trace);
     if(use_verbose_logging)
         log_point_values(task_in, task_in.x_values_, task_in.y_values_, task_in.z_values_);
 

@@ -20,7 +20,7 @@ class NFmiSmartToolInfo
 
   bool LoadScript(const std::string& theScriptName);
   bool SpeedLoadScript(const std::string& theScriptName);
-  bool SaveScript(const std::string& theScriptName);
+  bool SaveScript(const std::string& theFullScriptPath);
   bool RemoveScript(const std::string& theScriptName);
   bool LoadDBChecker(void);
   bool SaveDBChecker(void);

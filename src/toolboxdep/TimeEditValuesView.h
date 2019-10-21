@@ -63,6 +63,7 @@ public:
     void SetToolMastersDC(CDC * /* theDC */) {};
     void DoDraw(void);
 	void DrawOverBitmapThings(NFmiToolBox *theToolBox);
+    int MapViewDescTopIndex(void);
 
 public:
 
@@ -121,6 +122,7 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	void HideToolTip(void);
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -13,6 +13,8 @@
 #include "NFmiRectangle.h"
 #include "NFmiStepTimeScale.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "SpecialDesctopIndex.h"
+
 
 const double kFmiEmptySpaceBetweenSubViews = 100.;
 const long kFmiSymbolViewHeigth = 70;
@@ -181,7 +183,7 @@ bool NFmiTimeValueEditManagerView::LeftButtonUp (const NFmiPoint & thePlace, uns
 		status = itsUpperTimeView->LeftButtonUp(thePlace, theKey);
 	if(!status)
 	{
-		// TEE IKKUNAN OMAT JUTUT TÄSSÄ
+		itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(CtrlViewUtils::kFmiTimeSerialView, 1);
 	}
 	else
         itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
@@ -189,6 +191,19 @@ bool NFmiTimeValueEditManagerView::LeftButtonUp (const NFmiPoint & thePlace, uns
 		fTimeScaleUpdated = true;
 
    return status;
+}
+
+bool NFmiTimeValueEditManagerView::LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	bool status = itsViewList->LeftDoubleClick(thePlace, theKey);
+	if (!status && itsUpperTimeView && itsUpperTimeView->IsIn(thePlace))
+		status = itsUpperTimeView->RightButtonUp(thePlace, theKey); // Uses rightButtonUp function to check the correct area
+	if (!status && IsIn(thePlace))
+	{
+		itsCtrlViewDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick(true);
+		status = true;
+	}
+	return status;
 }
 
 bool NFmiTimeValueEditManagerView::MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey)
