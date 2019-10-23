@@ -33,6 +33,9 @@ namespace AddParams
         int updateWaitTimeoutInSeconds_;
         bool updatePending_;
 
+		//Static data will be added only once
+		bool staticDataAdded_;
+
         // List of ParameterSelection-objects (SingleRowItems), which are used to fill ParameterSelection-dialogs Grid Control (tree structure).
         std::vector<SingleRowItem> dialogRowData_;
         // TreeDepth for grid-control is saved here. Uses either treeDepth or category info (category = 1, producer = 2, fileData = 3, param = 4 and level = 5...)
@@ -79,7 +82,6 @@ namespace AddParams
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories);
         void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName = std::string());
-		void addStaticHelpData();
 		void updateData();
         void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         int updateWaitTimeoutInSeconds() const { return updateWaitTimeoutInSeconds_; }

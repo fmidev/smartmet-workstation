@@ -117,6 +117,7 @@ namespace AddParams
     ,dataCategory_(dataCategory)
     ,producerDataVector_()
     ,soundingLevels_()
+	,staticDataAdded_(false)
     {
     }
 
@@ -128,8 +129,15 @@ namespace AddParams
     {
         bool dataStructuresChanged = false;
 
-        dataStructuresChanged = customCategory ? updateCustomCategoryData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory) : 
-            updateNormalData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs);
+		if (dataCategory == NFmiInfoData::kStationary)
+		{
+			dataStructuresChanged = addStaticData(infoOrganizer, helpDataInfoSystem, dataCategory);
+		}
+		else
+		{
+			dataStructuresChanged = customCategory ? updateCustomCategoryData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory) : 
+				updateNormalData(categoryProducerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs);
+		}
 
         return dataStructuresChanged;
     }
@@ -294,6 +302,21 @@ namespace AddParams
         return dataStruckturesChanged;
     }
 
+	bool CategoryData::addStaticData(NFmiInfoOrganizer& infoOrganizer, NFmiHelpDataInfoSystem& helpDataInfoSystem, NFmiInfoData::Type dataCategory)
+	{
+		bool dataStructuresChanged = false;
+		if (staticDataAdded_) return false;
+
+		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(NFmiInfoData::kStationary);
+		if (!info) return false;
+
+		NFmiProducer producer = *info->Producer();
+		dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
+		if (dataStructuresChanged) staticDataAdded_ = true;
+
+		return dataStructuresChanged;
+	}
+
     bool CategoryData::skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory)
     {
         auto producerData = infoOrganizer.GetInfos(producer.GetIdent());
@@ -419,5 +442,6 @@ namespace AddParams
 
         return customObservationData;
     }
+
 
 }

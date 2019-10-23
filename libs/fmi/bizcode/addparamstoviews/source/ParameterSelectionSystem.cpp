@@ -34,6 +34,7 @@ namespace AddParams
     ParameterSelectionSystem::ParameterSelectionSystem()
     :updateWaitTimeoutInSeconds_(10)
     ,updatePending_(false)
+	,staticDataAdded_(false)
     ,dialogRowData_()
     ,dialogTreePatternArray_()
     ,dialogDataNeedsUpdate_(true)
@@ -71,23 +72,6 @@ namespace AddParams
         otherHelpData_.push_back(item);
     }
 
-	void ParameterSelectionSystem::addStaticHelpData()
-	{
-		const checkedVector<NFmiHelpDataInfo>& staticHelpDataInfos = helpDataInfoSystem_->StaticHelpDataInfos(); // Joonas jatka tästä Geo tietojen lisäilyä
-// 		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer_->FindInfo(NFmiInfoData::kStationary);
-		if (!staticHelpDataInfos.empty())
-		{
-			for (auto& info : staticHelpDataInfos)
-			{
-				if (info.DataType() == NFmiInfoData::kStationary)
-				{
-					auto test = info;
-// 					SingleRowItem item = SingleRowItem(kProducerType, "Geo", 987654, true, "Geo", NFmiInfoData::kStationary, 0, "", false, nullptr, 2, "Geo");
-				}
-			}
-		}
-	}
-
     void ParameterSelectionSystem::updateData()
     {
         updateOperationalData(OperationalDataStr, NFmiInfoData::kEditable);
@@ -99,6 +83,7 @@ namespace AddParams
         updateCustomCategories();
         updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
 		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
+		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kStationary);
     }
 
     void ParameterSelectionSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
