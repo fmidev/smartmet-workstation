@@ -839,7 +839,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
             mpSystem.SetCurrentPathByAbsolutePath(filePath);
         }
         auto realMacroParamDrawParamFileName = ::GetRealMacroParamDrawParamFileName(filePath);
-        macroParamPointer->DrawParam()->InitFileName();
+        macroParamPointer->DrawParam()->InitFileName(realMacroParamDrawParamFileName);
         macroParamPointer->DrawParam()->MacroParamRelativePath(mpSystem.RelativePath());
         DoFinalMacroParamWrite(mpSystem, macroParamPointer);
 

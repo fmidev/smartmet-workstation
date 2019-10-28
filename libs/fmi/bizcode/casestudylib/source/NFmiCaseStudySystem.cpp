@@ -12,6 +12,7 @@
 #include "NFmiAreaFactory.h"
 #include "NFmiDataLoadingInfo.h"
 #include "CtrlViewFunctions.h"
+#include "NFmiMacroParamfunctions.h"
 
 #include "boost/shared_ptr.hpp"
 #include <boost/filesystem/operations.hpp>
@@ -2068,8 +2069,8 @@ std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &the
 				for(size_t k = 0; k < dataFileVector.size(); k++)
 				{
 					NFmiCaseStudyDataFile &dataFile = dataFileVector[k];
-					auto pos = CtrlViewUtils::ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // tämä etsintä työ pitää tehdä case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pitää olla tarkalleen samalla lailla kirjoitettu
-					if(pos != CtrlViewUtils::ci_string_not_found)
+					auto pos = MacroParam::ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // tämä etsintä työ pitää tehdä case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pitää olla tarkalleen samalla lailla kirjoitettu
+					if(pos != MacroParam::ci_string_not_found)
 					{ // löytyi haluttu data, rakenna nyt siihen sopiva file-filter
 						std::string newFilePattern = theBasePath;
 						newFilePattern += dataFile.RelativeStoredFileFilter();
