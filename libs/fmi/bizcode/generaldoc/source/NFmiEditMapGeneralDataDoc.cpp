@@ -11722,14 +11722,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		bool helpView2Updated = false;
 		double minWaitTimeInMS = NFmiAnimationData::kNoAnimationWaitTime;
 
-		if (profiling) profiler.Tick();
+		if (profiling) return DoAllProfilingAnimations();
 
 		for(size_t i = 0; i<itsMapViewDescTopList.size(); i++)
 		{
 			NFmiMapViewDescTop &descTop = *itsMapViewDescTopList[i];
             NFmiAnimationData &animationData = descTop.AnimationDataRef();
 			animationData.CurrentTime(descTop.CurrentTime()); // currentti aika pit‰‰ ottaa desctopista ja antaa animaattorille
-            int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), descTop.MapViewDisplayMode(), static_cast<int>(descTop.ViewGridSize().X()));
+ 
+			int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), descTop.MapViewDisplayMode(), static_cast<int>(descTop.ViewGridSize().X()));
             status = animationData.Animate(reducedAnimationTimeSteps);
 			double waitTimeInMS = animationData.CalcWaitTimeInMSForNextFrame();
 			if(waitTimeInMS < minWaitTimeInMS)
@@ -11747,11 +11748,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				descTop.CurrentTime(animationData.CurrentTime());
 			}
 
-			if (profiling && i == 0 && profiler.dataCount()>0
-				&& descTop.CurrentTime() == animationData.Times().FirstTime() )
-			{
-				StopProfiling();
-			}
 		}
 
 		if(maxStatus)
@@ -11785,6 +11781,32 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			return 0;
 	}
 
+	int DoAllProfilingAnimations() {
+
+			NFmiMapViewDescTop& descTop = *itsMapViewDescTopList[0];
+			NFmiAnimationData& animationData = descTop.AnimationDataRef();
+
+			animationData.CurrentTime(descTop.CurrentTime()); // currentti aika pit‰‰ ottaa desctopista ja antaa animaattorille
+			int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), descTop.MapViewDisplayMode(), static_cast<int>(descTop.ViewGridSize().X()));
+			int status = animationData.Animate(reducedAnimationTimeSteps);
+
+				if (profiler.dataCount() > 0
+					&& descTop.CurrentTime() == animationData.Times().FirstTime())
+				{
+					StopProfiling();
+					return 0;
+				}
+				else {
+
+					profiler.Tick(descTop.CurrentTime());
+				}
+
+				descTop.CurrentTime(animationData.CurrentTime());
+				ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related main map view update (profiling)");
+
+				return 1;
+	}
+
 
 	void StartProfiling() {
 
@@ -11794,20 +11816,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 
 		int i = 0;
-
 		for (auto&& descTop : MapViewDescTopList())
 		{
 			NFmiAnimationData& animationData = descTop->AnimationDataRef();
-
-
 			profiler.getSettings().push_back(animationData);
 
 			animationData.SetRunMode(NFmiAnimationData::kNormal);
 			animationData.LockMode(NFmiAnimationData::kNoLock);
-
 			animationData.FrameDelayInMS(0);
 			animationData.LastFrameDelayFactor(0);
-
 			animationData.ShowVerticalControl(false);
 
  			if(!animationData.ShowTimesOnTimeControl() )
@@ -11815,51 +11832,32 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 			descTop->CurrentTime(animationData.Times().FirstTime());
 			animationData.CurrentTime(animationData.Times().FirstTime());
-
 			animationData.TimeStepInMinutes( animationData.Times().Resolution() );
-
-
 			animationData.ShowTimesOnTimeControl(true);
-
 			animationData.AnimationOn(true);
 
-
-
 			MapViewDirty(i, false, true, true, true, false, false);
-
 			i++;
 		}
 
-
 		profiling = true;
-
 	}
 
 	void StopProfiling() {
-
 		int i = 0;
 
 		for (auto&& descTop : MapViewDescTopList())
 		{
-
 			auto times = descTop->AnimationDataRef().Times();
-
 			NFmiAnimationData& animationData = descTop->AnimationDataRef();
-
-
 			animationData = profiler.getSettings()[i];
-
 			animationData.Times(times);
-
 			animationData.ShowTimesOnTimeControl(true);
-
 			i++;
 		}
 
 		profiler.Report();
-
 		profiler.Reset();
-
 		profiling = false;
 	}
 
@@ -16205,6 +16203,11 @@ void NFmiEditMapGeneralDataDoc::PasteMapViewDescTopParams(unsigned int theDescTo
 int NFmiEditMapGeneralDataDoc::DoAllAnimations(void)
 {
 	return pimpl->DoAllAnimations();
+}
+
+int NFmiEditMapGeneralDataDoc::DoAllProfilingAnimations(void)
+{
+	return pimpl->DoAllProfilingAnimations();
 }
 
 bool NFmiEditMapGeneralDataDoc::ShowWaitCursorWhileDrawingView(void)

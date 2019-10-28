@@ -703,8 +703,10 @@ public:
 	int ToggleShowTimeOnMapMode(unsigned int theDescTopIndex); // neljä tilaa: 0 = näytä aikakontrolliikkuna+teksti 1=vain aik.kont.ikkuna, 2=älä näytä kumpaakaan ja 3= näytä vain teksti
 
 	AnimationProfiler& GetProfiler();
+	int DoAllProfilingAnimations();
 	void StartProfiling();
 	void StopProfiling();
+
 private:
     void SetGeneralDataDocInterfaceCallbacks();
 
