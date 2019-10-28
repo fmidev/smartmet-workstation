@@ -11799,14 +11799,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				else {
 
 					profiler.Tick(descTop.CurrentTime());
-
 				}
 
-
 				descTop.CurrentTime(animationData.CurrentTime());
-
-
-
 				ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related main map view update (profiling)");
 
 				return 1;
@@ -11821,20 +11816,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 
 		int i = 0;
-
 		for (auto&& descTop : MapViewDescTopList())
 		{
 			NFmiAnimationData& animationData = descTop->AnimationDataRef();
-
-
 			profiler.getSettings().push_back(animationData);
 
 			animationData.SetRunMode(NFmiAnimationData::kNormal);
 			animationData.LockMode(NFmiAnimationData::kNoLock);
-
 			animationData.FrameDelayInMS(0);
 			animationData.LastFrameDelayFactor(0);
-
 			animationData.ShowVerticalControl(false);
 
  			if(!animationData.ShowTimesOnTimeControl() )
@@ -11842,52 +11832,32 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 			descTop->CurrentTime(animationData.Times().FirstTime());
 			animationData.CurrentTime(animationData.Times().FirstTime());
-
 			animationData.TimeStepInMinutes( animationData.Times().Resolution() );
-
-
 			animationData.ShowTimesOnTimeControl(true);
-
 			animationData.AnimationOn(true);
 
-
 			MapViewDirty(i, false, true, true, true, false, false);
-
 			i++;
 		}
 
-
-
 		profiling = true;
-
 	}
 
 	void StopProfiling() {
-
 		int i = 0;
 
 		for (auto&& descTop : MapViewDescTopList())
 		{
-
 			auto times = descTop->AnimationDataRef().Times();
-
 			NFmiAnimationData& animationData = descTop->AnimationDataRef();
-
-
 			animationData = profiler.getSettings()[i];
-
 			animationData.Times(times);
-
 			animationData.ShowTimesOnTimeControl(true);
-
 			i++;
 		}
 
 		profiler.Report();
-
 		profiler.Reset();
-
-
 		profiling = false;
 	}
 
