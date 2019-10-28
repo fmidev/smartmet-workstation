@@ -31,8 +31,8 @@ namespace MacroParam
     {
         if(theRootPath == theCurrentPath)
             return std::string();
-        std::string::size_type pos = theCurrentPath.find(theRootPath);
-        if(pos != std::string::npos)
+        std::string::size_type pos = ci_find_substr(theCurrentPath, theRootPath);
+        if(pos != ci_string_not_found)
         {
             std::string tmp(theCurrentPath.begin() + pos + theRootPath.size(), theCurrentPath.end());
             NFmiStringTools::TrimL(tmp, kFmiDirectorySeparator);

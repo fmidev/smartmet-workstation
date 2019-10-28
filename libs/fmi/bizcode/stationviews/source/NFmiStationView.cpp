@@ -63,6 +63,7 @@
 #include "NFmiMacroParamDataCache.h"
 #include "Utf8ConversionFunctions.h"
 #include "NFmiExtraMacroParamData.h"
+#include "NFmiMacroParamfunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -590,7 +591,7 @@ bool NFmiStationView::IsStationDataMacroParam(void)
         if(fUseCalculationPoints)
             return true;
     	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
-        if(CtrlViewUtils::ci_find_substr(macroParamStr, std::string("closestvalue")) != CtrlViewUtils::ci_string_not_found)
+        if(MacroParam::ci_find_substr(macroParamStr, std::string("closestvalue")) != MacroParam::ci_string_not_found)
             return true;
     }
     catch(...)
