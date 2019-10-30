@@ -173,6 +173,22 @@ namespace Wms
             }
             return "";
         }
+
+		std::string getNameOrTitle(const std::pair<const std::string, boost::property_tree::ptree>& layerKV)
+		{
+			auto name = layerKV.second.get_optional<std::string>("Name");
+			auto title = layerKV.second.get_optional<std::string>("Title");
+
+			if (name)
+			{
+				return layerKV.second.get<std::string>("Name");
+			}
+			else if (title)
+			{
+				return layerKV.second.get<std::string>("Title");
+			}
+			return std::string{};
+		}
     }
 
     CapabilityTreeParser::CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback)
@@ -189,12 +205,13 @@ namespace Wms
         for(const auto& layerKV : layerTree)
         {
             auto name = std::string{};
+			auto title = std::string{};
             auto timeWindow = std::string{};
             auto startTime = NFmiMetTime{};
             auto endTime = NFmiMetTime{};
             try
             {
-                name = layerKV.second.get<std::string>("Name");
+				name = getNameOrTitle(layerKV);
                 auto tmpTimeWindow = parseTimeWindow(layerKV.second);
                 if(cacheHitCallback_(producer_.GetIdent(), name))
                 {
