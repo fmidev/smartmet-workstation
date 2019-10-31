@@ -25,5 +25,9 @@ namespace Wms
         CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback);
 
         std::unique_ptr<CapabilityTree> parse(const boost::property_tree::ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
-    };
+
+	private:
+		void addWithPossibleStyles(const std::pair<const std::string, boost::property_tree::ptree>& layerKV, std::unique_ptr<CapabilityNode>& subTree,
+			std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name);
+	};
 }
