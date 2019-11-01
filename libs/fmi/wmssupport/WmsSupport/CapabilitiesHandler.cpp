@@ -112,7 +112,8 @@ namespace Wms
                         // Doing logging only the first time
                         serverKV.second.logFetchCapabilitiesRequest = false;
                         changedLayers_.changedLayers.clear();
-                        children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
+						auto path = std::list<std::string>{};
+						children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, path, changedLayers_));
                         if(!changedLayers_.changedLayers.empty())
                         {
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
