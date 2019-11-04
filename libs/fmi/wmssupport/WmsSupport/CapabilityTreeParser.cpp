@@ -101,7 +101,16 @@ namespace Wms
 
         std::tm parseTime(const std::string& value)
         {
+			
             auto dateAndTime = cppext::split(value, std::string("T"));
+			
+			if (dateAndTime.size() < 2) //If no time, use current time
+			{
+				std::time_t t = std::time(0);  
+				std::tm* currentTime = std::localtime(&t);
+				return *currentTime;
+			}
+
             auto date = dateAndTime[0];
             auto time = dateAndTime[1];
             time.pop_back();
@@ -120,15 +129,15 @@ namespace Wms
 
         NFmiMetTime parseMetTime(const std::string& timeStr)
         {
-            auto time = parseTime(timeStr);
-            return NFmiMetTime{
-                static_cast<short>(time.tm_year + 1900),
-                static_cast<short>(time.tm_mon + 1),
-                static_cast<short>(time.tm_mday),
-                static_cast<short>(time.tm_hour),
-                static_cast<short>(time.tm_min),
-                static_cast<short>(time.tm_sec)
-            };
+			auto time = parseTime(timeStr);
+			return NFmiMetTime{
+				static_cast<short>(time.tm_year + 1900),
+				static_cast<short>(time.tm_mon + 1),
+				static_cast<short>(time.tm_mday),
+				static_cast<short>(time.tm_hour),
+				static_cast<short>(time.tm_min),
+				static_cast<short>(time.tm_sec)
+			};
         }
 
         std::pair<NFmiMetTime, NFmiMetTime> parseDimension(const std::string& dimension)
@@ -209,88 +218,89 @@ namespace Wms
     {}
 
 	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parse(const boost::property_tree::ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes, std::list<std::string> &path, ChangedLayers& changedLayers) const
+	{
+		auto subTree = std::make_unique<CapabilityNode>();
+		subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
+		changedLayers.setProducerId(producer_.GetIdent());
+		for (const auto& layerKV : layerTree)
 		{
-			auto subTree = std::make_unique<CapabilityNode>();
-			subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
-			changedLayers.setProducerId(producer_.GetIdent());
-			for (const auto& layerKV : layerTree)
-			{
-				std::list<std::string> layerPath = path;
-				auto name = getNameOrTitle(layerKV);
-				auto timeWindow = std::string{};
+			std::list<std::string> layerPath = path;
+			auto name = getNameOrTitle(layerKV);
+			auto timeWindow = std::string{};
 				
-				if (name.empty()) continue;  //Irrelevant layer
+			if (name.empty()) continue;  //Irrelevant layer
 					
-				auto tmpTimeWindow = parseTimeWindow(layerKV.second);
-				// If timeWindow empty, check child layers, but add this to the path.
-				if (cacheHitCallback_(producer_.GetIdent(), name))
-				{
-					timeWindow = tmpTimeWindow;
-				}
-				auto startEnd = parseDimension(tmpTimeWindow);
-
-				splitToList(name, delimiter_, layerPath);
-
-				//Check possible child layers
-				if (name.empty() || tmpTimeWindow.empty()) {
-					try
-					{
-						const auto& subLayerTree = layerKV.second.get_child("Layer");
-						parse(subLayerTree, hashes, layerPath, changedLayers);
-					}
-					catch (...)
-					{
-						continue;
-					}
-				}
-				else
-				{
-					addWithPossibleStyles(layerKV, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
-				}			
+			auto tmpTimeWindow = parseTimeWindow(layerKV.second);
+			// If timeWindow empty, check child layers, but add this to the path.
+			if (cacheHitCallback_(producer_.GetIdent(), name))
+			{
+				timeWindow = tmpTimeWindow;
 			}
+			auto startEnd = parseDimension(tmpTimeWindow);
 
-			return std::move(subTree);
+			splitToList(name, delimiter_, layerPath);
+
+			//Check possible child layers
+			if (name.empty() || tmpTimeWindow.empty()) {
+				try
+				{
+					const auto& subLayerTree = layerKV.second.get_child("Layer");
+					auto capabilityTree = parse(subLayerTree, hashes, layerPath, changedLayers);
+					insertSubTree(*subTree, *capabilityTree, layerPath);
+				}
+				catch (...)
+				{
+					continue;
+				}
+			}
+			else
+			{
+				addWithPossibleStyles(layerKV, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
+			}			
 		}
 
-		void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, boost::property_tree::ptree> &layerKV, std::unique_ptr<CapabilityNode> &subTree, 
-			std::list<std::string> &path, std::string &timeWindow, ChangedLayers &changedLayers, std::map<long, std::map<long, LayerInfo>> &hashes, std::pair<NFmiMetTime, NFmiMetTime> &startEnd, std::string& name) const
+		return std::move(subTree);
+	}
+
+	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, boost::property_tree::ptree> &layerKV, std::unique_ptr<CapabilityNode> &subTree, 
+		std::list<std::string> &path, std::string &timeWindow, ChangedLayers &changedLayers, std::map<long, std::map<long, LayerInfo>> &hashes, std::pair<NFmiMetTime, NFmiMetTime> &startEnd, std::string& name) const
+	{
+		//Check if layer has multiple styles (then add all possibilities)
+		auto styles = lookForStyles(layerKV.second);
+		if (styles.empty())
 		{
-			//Check if layer has multiple styles (then add all possibilities)
-			auto styles = lookForStyles(layerKV.second);
-			if (styles.empty())
+			auto hashedName = static_cast<long>(std::hash<std::string>{}(name));
+			insertLeaf(
+				*subTree,
+				CapabilityLeaf{ Capability{ producer_, hashedName,  popLastElementFrom(path) } },
+				path
+			);
+
+			auto layerInfo = LayerInfo{ name };
+			layerInfo.startTime = startEnd.first;
+			layerInfo.endTime = startEnd.second;
+			changedLayers.update(hashedName, layerInfo, timeWindow);
+			hashes[producer_.GetIdent()][hashedName] = layerInfo;
+		}
+		else
+		{
+			for (const auto& style : styles)
 			{
-				auto hashedName = static_cast<long>(std::hash<std::string>{}(name));
+				auto hashedName = static_cast<long>(std::hash<std::string>{}(name + style.name));
+
+				auto tmpPath = path;
 				insertLeaf(
 					*subTree,
-					CapabilityLeaf{ Capability{ producer_, hashedName,  popLastElementFrom(path) } },
-					path
+					CapabilityLeaf{ Capability{ producer_, hashedName, tmpPath.back() + ":" + style.name } },
+					tmpPath
 				);
 
-				auto layerInfo = LayerInfo{ name };
+				auto layerInfo = LayerInfo{ name, style };
 				layerInfo.startTime = startEnd.first;
 				layerInfo.endTime = startEnd.second;
 				changedLayers.update(hashedName, layerInfo, timeWindow);
 				hashes[producer_.GetIdent()][hashedName] = layerInfo;
 			}
-			else
-			{
-				for (const auto& style : styles)
-				{
-					auto hashedName = static_cast<long>(std::hash<std::string>{}(name + style.name));
-
-					auto tmpPath = path;
-					insertLeaf(
-						*subTree,
-						CapabilityLeaf{ Capability{ producer_, hashedName, tmpPath.back() + ":" + style.name } },
-						tmpPath
-					);
-
-					auto layerInfo = LayerInfo{ name, style };
-					layerInfo.startTime = startEnd.first;
-					layerInfo.endTime = startEnd.second;
-					changedLayers.update(hashedName, layerInfo, timeWindow);
-					hashes[producer_.GetIdent()][hashedName] = layerInfo;
-				}
-			}
 		}
+	}
 }
