@@ -236,15 +236,17 @@ namespace Wms
 	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode> &subTree, const std::pair<const std::string, boost::property_tree::ptree>& layerKV
 		, std::list<std::string> &path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
 	{
+		if (layerKV.first != "Layer") return;
+
 		auto layerNode = std::make_unique<CapabilityNode>();
 
 		std::list<std::string> layerPath = path;
 		auto name = getNameOrTitle(layerKV);
 		auto timeWindow = std::string{};
 
-		if (name.empty()) return;  //Irrelevant layer
+// 		if (name.empty()) return;  //Irrelevant layer
 
-		auto tmpTimeWindow = parseTimeWindow(layerKV.second); // If timeWindow empty, check child layers, but still add this to the path.
+		auto tmpTimeWindow = parseTimeWindow(layerKV.second); 
 		if (cacheHitCallback_(producer_.GetIdent(), name))
 		{
 			timeWindow = tmpTimeWindow;
@@ -253,12 +255,15 @@ namespace Wms
 
 		splitToList(name, delimiter_, layerPath);
 
-		//Check possible child layers
+		// If timeWindow is empty, check child layers, but still add this name to the path.
 		if (tmpTimeWindow.empty()) {
 			try
 			{
-				const auto& subLayerTree = layerKV.second.get_child("Layer");
-				parseNodes(subTree, layerKV, layerPath, hashes, changedLayers);
+				const auto& subLayerTree = layerKV.second.get_child("Layer"); // Joonas koita saada alilayerit täysin omaan puuhun
+				for (const auto& layer : subLayerTree)
+				{
+					parseNodes(subTree, layerKV, layerPath, hashes, changedLayers);
+				}
 				// insertSubTree(*subTree, *capabilityTree, layerPath);
 			}
 			catch (...)
