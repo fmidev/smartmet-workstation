@@ -217,53 +217,65 @@ namespace Wms
         , cacheHitCallback_{ cacheHitCallback }
     {}
 
-	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parse(const boost::property_tree::ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes, std::list<std::string> &path, ChangedLayers& changedLayers) const
+	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parse(const boost::property_tree::ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes
+		, ChangedLayers& changedLayers) const
 	{
 		auto subTree = std::make_unique<CapabilityNode>();
 		subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
 		changedLayers.setProducerId(producer_.GetIdent());
+		auto path = std::list<std::string>{};
+
 		for (const auto& layerKV : layerTree)
 		{
-			std::list<std::string> layerPath = path;
-			auto name = getNameOrTitle(layerKV);
-			auto timeWindow = std::string{};
-				
-			if (name.empty()) continue;  //Irrelevant layer
-					
-			auto tmpTimeWindow = parseTimeWindow(layerKV.second);
-			// If timeWindow empty, check child layers, but add this to the path.
-			if (cacheHitCallback_(producer_.GetIdent(), name))
-			{
-				timeWindow = tmpTimeWindow;
-			}
-			auto startEnd = parseDimension(tmpTimeWindow);
-
-			splitToList(name, delimiter_, layerPath);
-
-			//Check possible child layers
-			if (name.empty() || tmpTimeWindow.empty()) {
-				try
-				{
-					const auto& subLayerTree = layerKV.second.get_child("Layer");
-					auto capabilityTree = parse(subLayerTree, hashes, layerPath, changedLayers);
-					insertSubTree(*subTree, *capabilityTree, layerPath);
-				}
-				catch (...)
-				{
-					continue;
-				}
-			}
-			else
-			{
-				addWithPossibleStyles(layerKV, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
-			}			
+			parseNodes(subTree, layerKV, path, hashes, changedLayers);
 		}
 
 		return std::move(subTree);
 	}
 
+	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode> &subTree, const std::pair<const std::string, boost::property_tree::ptree>& layerKV
+		, std::list<std::string> &path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
+	{
+		auto layerNode = std::make_unique<CapabilityNode>();
+
+		std::list<std::string> layerPath = path;
+		auto name = getNameOrTitle(layerKV);
+		auto timeWindow = std::string{};
+
+		if (name.empty()) return;  //Irrelevant layer
+
+		auto tmpTimeWindow = parseTimeWindow(layerKV.second); // If timeWindow empty, check child layers, but still add this to the path.
+		if (cacheHitCallback_(producer_.GetIdent(), name))
+		{
+			timeWindow = tmpTimeWindow;
+		}
+		auto startEnd = parseDimension(tmpTimeWindow);
+
+		splitToList(name, delimiter_, layerPath);
+
+		//Check possible child layers
+		if (tmpTimeWindow.empty()) {
+			try
+			{
+				const auto& subLayerTree = layerKV.second.get_child("Layer");
+				parseNodes(subTree, layerKV, layerPath, hashes, changedLayers);
+				// insertSubTree(*subTree, *capabilityTree, layerPath);
+			}
+			catch (...)
+			{
+				return;
+			}
+		}
+		else
+		{
+			addWithPossibleStyles(layerKV, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
+		}
+		
+	}
+
 	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, boost::property_tree::ptree> &layerKV, std::unique_ptr<CapabilityNode> &subTree, 
-		std::list<std::string> &path, std::string &timeWindow, ChangedLayers &changedLayers, std::map<long, std::map<long, LayerInfo>> &hashes, std::pair<NFmiMetTime, NFmiMetTime> &startEnd, std::string& name) const
+		std::list<std::string> &path, std::string &timeWindow, ChangedLayers &changedLayers, std::map<long, std::map<long, LayerInfo>> &hashes
+		, std::pair<NFmiMetTime, NFmiMetTime> &startEnd, std::string& name) const
 	{
 		//Check if layer has multiple styles (then add all possibilities)
 		auto styles = lookForStyles(layerKV.second);
