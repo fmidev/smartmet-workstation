@@ -2816,6 +2816,17 @@ int DoMemoryCheckForUndoRedoDepth(NFmiQueryData* theData, int currentUndoRedoDep
     return usedUndoRedoDepth;
 }
 
+bool ModifyParametersInterpolationToLinear(NFmiDataIdent& editedData)
+{
+    auto interpolationMethod = editedData.GetParam()->InterpolationMethod();
+    if(interpolationMethod == kNearestPoint || interpolationMethod == kNoneInterpolation)
+    {
+        editedData.GetParam()->InterpolationMethod(kLinearly);
+        return true;
+    }
+    return false;
+}
+
 // TotalWind yhdistelmä parametrilla on jostain syystä valittu wind-vector metaparametrin 
 // interpolaatioksi nearest, mikä on turhaa ja aiheuttaa ristiriitoja tuulen suunnan ja 
 // nopeuksien kanssa, kun niitä interpoloidaan lineaarisesti. Tämä on jälkikäteen tehty
@@ -2824,20 +2835,23 @@ void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data)
 {
     if(data)
     {
-        if(data->Info()->Param(kFmiTotalWindMS))
+        auto paramDescriptor = data->Info()->ParamDescriptor();
+        bool parameterModified = false;
+        if(paramDescriptor.Param(kFmiTotalWindMS))
         {
-            auto paramDescriptor = data->Info()->ParamDescriptor();
             if(paramDescriptor.Param(kFmiWindVectorMS))
             {
-                auto &windVector = paramDescriptor.EditParam(false);
-                auto interpolationMethod = windVector.GetParam()->InterpolationMethod();
-                if(interpolationMethod == kNearestPoint || interpolationMethod == kNoneInterpolation)
-                {
-                    windVector.GetParam()->InterpolationMethod(kLinearly);
-                    data->Info()->SetParamDescriptor(paramDescriptor);
-                }
+                parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam(false));
             }
         }
+        else if(paramDescriptor.Param(kFmiWindDirection))
+        {
+            // Tehtävä #2: jos päätasolla on tuulensuunta parametri, varmista että sekin on lineaarisesti interpoloitu (muuten tulee ongelmia macroParamien kanssa)
+            parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam());
+        }
+
+        if(parameterModified)
+            data->Info()->SetParamDescriptor(paramDescriptor);
     }
 }
 
