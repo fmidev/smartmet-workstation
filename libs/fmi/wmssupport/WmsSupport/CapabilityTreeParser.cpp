@@ -5,10 +5,13 @@
 
 #include <regex>
 
+using namespace boost::property_tree;
+
 namespace Wms
-{
-    namespace
+{   
+	namespace
     {
+
         void splitToList(const std::string& name, const std::string& delimiter, std::list<std::string>& path)
         {
             auto tmp = cppext::split(name, delimiter);
@@ -31,7 +34,7 @@ namespace Wms
             return *result.begin();
         }
 
-        std::pair<std::string, std::string> parseLegendUrl(const boost::property_tree::ptree& legendTree)
+        std::pair<std::string, std::string> parseLegendUrl(const ptree& legendTree)
         {
             auto legendUrlString = legendTree
                 .get_child("OnlineResource")
@@ -46,7 +49,7 @@ namespace Wms
             return domainRequest;
         }
 
-        Style parseStyle(const boost::property_tree::ptree& styleTree)
+        Style parseStyle(const ptree& styleTree)
         {
             auto domainRequest = parseLegendUrl(styleTree.get_child("LegendURL"));
             return Style
@@ -57,7 +60,7 @@ namespace Wms
             };
         }
 
-        std::set<Style> lookForStyles(const boost::property_tree::ptree& layerTree)
+        std::set<Style> lookForStyles(const ptree& layerTree)
         {
             auto styles = std::set<Style>();
             for(const auto& attributeKV : layerTree)
@@ -83,6 +86,31 @@ namespace Wms
                 return styles;
             }
         }
+
+		ptree lookForSubLayer(const ptree& layerTree)
+		{
+// 			std::pair<const std::string, ptree> pTree;
+			auto pTree = ptree{};
+			for (const auto& attributeKV : layerTree)
+			{
+				try
+				{
+					if (attributeKV.first == "Layer")
+					{
+						auto a1 = attributeKV.first;
+						auto a2 = attributeKV.second;
+						pTree = attributeKV.second;
+						return pTree.get_child("Layer");
+					}
+				}
+				catch (...)
+				{
+					continue;
+				}
+			}
+
+			return pTree;
+		}
 
 		//Checks whether given time is a table and not range ( 2019-06-06T13:00:00.000Z/2019-06-06T13:00:00.000Z/PT1H )
         bool isTimeTable(const std::string& dimension) 
@@ -173,7 +201,7 @@ namespace Wms
             return beginEnd;
         }
 
-        std::string parseTimeWindow(const boost::property_tree::ptree& layerTree)
+        std::string parseTimeWindow(const ptree& layerTree)
         {
 			try
 			{
@@ -194,7 +222,7 @@ namespace Wms
 			}            
         }
 
-		std::string getNameOrTitle(const std::pair<const std::string, boost::property_tree::ptree>& layerKV)
+		std::string getNameOrTitle(const std::pair<const std::string, ptree>& layerKV)
 		{
 			auto name = layerKV.second.get_optional<std::string>("Name");
 			auto title = layerKV.second.get_optional<std::string>("Title");
@@ -217,7 +245,7 @@ namespace Wms
         , cacheHitCallback_{ cacheHitCallback }
     {}
 
-	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parse(const boost::property_tree::ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes
+	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parse(const ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes
 		, ChangedLayers& changedLayers) const
 	{
 		auto subTree = std::make_unique<CapabilityNode>();
@@ -233,12 +261,12 @@ namespace Wms
 		return std::move(subTree);
 	}
 
-	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode> &subTree, const std::pair<const std::string, boost::property_tree::ptree>& layerKV
+	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode> &subTree, const std::pair<const std::string, ptree>& layerKV
 		, std::list<std::string> &path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
 	{
 		if (layerKV.first != "Layer") return;
 
-		auto layerNode = std::make_unique<CapabilityNode>();
+// 		auto layerNode = std::make_unique<CapabilityNode>();
 
 		std::list<std::string> layerPath = path;
 		auto name = getNameOrTitle(layerKV);
@@ -259,7 +287,8 @@ namespace Wms
 		if (tmpTimeWindow.empty()) {
 			try
 			{
-				const auto& subLayerTree = layerKV.second.get_child("Layer"); // Joonas koita saada alilayerit täysin omaan puuhun
+// 				const auto& subLayerTree = layerKV.second.get_child("Layer"); // Joonas koita saada alilayerit täysin omaan puuhun
+				ptree& subLayerTree = lookForSubLayer(layerKV.second);
 				for (const auto& layer : subLayerTree)
 				{
 					parseNodes(subTree, layerKV, layerPath, hashes, changedLayers);
@@ -278,7 +307,7 @@ namespace Wms
 		
 	}
 
-	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, boost::property_tree::ptree> &layerKV, std::unique_ptr<CapabilityNode> &subTree, 
+	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, ptree> &layerKV, std::unique_ptr<CapabilityNode> &subTree, 
 		std::list<std::string> &path, std::string &timeWindow, ChangedLayers &changedLayers, std::map<long, std::map<long, LayerInfo>> &hashes
 		, std::pair<NFmiMetTime, NFmiMetTime> &startEnd, std::string& name) const
 	{
