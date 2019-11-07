@@ -50,34 +50,4 @@ namespace Wms
         }
     }
 
-	void insertSubTree(CapabilityNode& node, CapabilityTree& subTree, std::list<std::string>& path)
-	{
-		auto testi = subTree.value;
-		//Looppaa kaikki subTreen nodet l‰pi ja k‰yt‰ insertLeaf:ia niiden lis‰‰miseen?!
-
-
-
-		if (path.empty())
-		{
-			auto jotain = subTree.value;
-// 			for (auto child : subTree.)
-// // 			{
-// // 
-// // 			}
-// 			node.children.push_back(std::make_unique<CapabilityNode>(subTree));
-			return;
-		}
-
-		try
-		{
-			auto& treeNode = findNodeWithName(node.children, path.front());  //If there is node with this name, add child here
-// 			path.pop_front();
-// 			insertSubTree(treeNode, subTree, path);
-		}
-		catch (const std::exception&) //If there isn't node named like this, create one.
-		{
-// 			path.pop_front();
-// 			node.children.push_back(std::make_unique<CapabilityNode>(subTree));
-		}
-	}
 }
