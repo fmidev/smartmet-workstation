@@ -1,12 +1,14 @@
 #include "CapabilitiesHandler.h"
 #include "WmsQuery.h"
 #include "SetupParser.h"
+#include "xmlliteutils/XmlHelperFunctions.h"
 
 #include <webclient/Client.h>
 
 #include <catlog/catlog.h>
 #include <cppback/background-manager.h>
 #include <boost/property_tree/xml_parser.hpp>
+
 
 namespace Wms
 {
@@ -18,6 +20,7 @@ namespace Wms
             boost::property_tree::read_xml(std::stringstream{ xml }, pTree);
             return pTree;
         }
+
         std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging, bool doVerboseLogging)
         {
             try
@@ -49,6 +52,26 @@ namespace Wms
                 return "";
             }
         }
+
+		bool parseXMLtoWmsTree()
+		{
+			try
+			{
+				CString sxmlU_(CA2T(fileContent.c_str()));
+				XNode xmlRoot;
+				if (xmlRoot.Load(sxmlU_) == false)
+				{
+					throw std::runtime_error(std::string("CapData::load - xmlRoot.Load(sxmlU_) failed for string: \n") + fileContent);
+				}
+				//Save layers as a LayerMembers in a (layers_) vector;
+// 				initializeWarnings(xmlRoot);
+				return true;
+			}
+			catch (CException* e)
+			{
+				return false;
+			}
+		}
     }
 
     CapabilitiesHandler::CapabilitiesHandler(
@@ -108,7 +131,11 @@ namespace Wms
                     {
 
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-                        auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging));
+						auto xml = fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging);
+						//Joonas testaa tässä toista parseria ja sen rakenteita
+						
+
+                        auto capabilities = parseXmlToPropertyTree(xml);
                         // Doing logging only the first time
                         serverKV.second.logFetchCapabilitiesRequest = false;
                         changedLayers_.changedLayers.clear();
