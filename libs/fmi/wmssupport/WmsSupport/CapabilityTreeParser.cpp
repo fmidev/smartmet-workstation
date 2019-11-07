@@ -89,7 +89,6 @@ namespace Wms
 
 		ptree lookForSubLayer(const ptree& layerTree)
 		{
-// 			std::pair<const std::string, ptree> pTree;
 			auto pTree = ptree{};
 			for (const auto& attributeKV : layerTree)
 			{
@@ -97,8 +96,6 @@ namespace Wms
 				{
 					if (attributeKV.first == "Layer")
 					{
-						auto a1 = attributeKV.first;
-						auto a2 = attributeKV.second;
 						pTree = attributeKV.second;
 						return pTree.get_child("Layer");
 					}
@@ -266,13 +263,9 @@ namespace Wms
 	{
 		if (layerKV.first != "Layer") return;
 
-// 		auto layerNode = std::make_unique<CapabilityNode>();
-
 		std::list<std::string> layerPath = path;
 		auto name = getNameOrTitle(layerKV);
 		auto timeWindow = std::string{};
-
-// 		if (name.empty()) return;  //Irrelevant layer
 
 		auto tmpTimeWindow = parseTimeWindow(layerKV.second); 
 		if (cacheHitCallback_(producer_.GetIdent(), name))
@@ -287,13 +280,11 @@ namespace Wms
 		if (tmpTimeWindow.empty()) {
 			try
 			{
-// 				const auto& subLayerTree = layerKV.second.get_child("Layer"); // Joonas koita saada alilayerit täysin omaan puuhun
 				ptree& subLayerTree = lookForSubLayer(layerKV.second);
 				for (const auto& layer : subLayerTree)
 				{
 					parseNodes(subTree, layerKV, layerPath, hashes, changedLayers);
 				}
-				// insertSubTree(*subTree, *capabilityTree, layerPath);
 			}
 			catch (...)
 			{
