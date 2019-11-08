@@ -1,9 +1,10 @@
 #include "CapabilityTreeParser.h"
 #include "QueryBuilder.h"
-
 #include "NFmiParameterName.h"
+#include "xmlliteutils/XmlHelperFunctions.h"
 
 #include <regex>
+#include <algorithm>
 
 using namespace boost::property_tree;
 
@@ -254,6 +255,31 @@ namespace Wms
 		{
 			parseNodes(subTree, layerKV, path, hashes, changedLayers);
 		}
+
+		return std::move(subTree);
+	}
+
+	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parseXml(XNode& xmlNode, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
+	{
+		auto subTree = std::make_unique<CapabilityNode>();
+		subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
+		changedLayers.setProducerId(producer_.GetIdent());
+		auto path = std::list<std::string>{};
+
+		XNodes nodes = xmlNode.GetChilds(_TEXT("Layer"));
+		for (size_t i = 0; i < nodes.size(); i++)
+		{
+			LPXNode aNode = nodes[i];
+// 			shared_ptr<WarningMember> member = make_shared<WarningMember>();
+// 			member->Initialize(aNode);
+// 			warnings_.push_back(member);
+		}
+
+
+// 		for (const auto& layerKV : layerTree)
+// 		{
+// 			parseNodes(subTree, layerKV, path, hashes, changedLayers);
+// 		}
 
 		return std::move(subTree);
 	}
