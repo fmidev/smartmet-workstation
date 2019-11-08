@@ -53,23 +53,23 @@ namespace Wms
             }
         }
 
-		bool parseXMLtoWmsTree()
+		XNode parseXMLtoWmsTree(const std::string& xml)
 		{
+			XNode xmlRoot;
 			try
 			{
-				CString sxmlU_(CA2T(fileContent.c_str()));
-				XNode xmlRoot;
+				CString sxmlU_(CA2T(xml.c_str()));
 				if (xmlRoot.Load(sxmlU_) == false)
 				{
-					throw std::runtime_error(std::string("CapData::load - xmlRoot.Load(sxmlU_) failed for string: \n") + fileContent);
+					throw std::runtime_error(std::string("CapData::load - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
 				}
 				//Save layers as a LayerMembers in a (layers_) vector;
 // 				initializeWarnings(xmlRoot);
-				return true;
+				return xmlRoot;
 			}
-			catch (CException* e)
+			catch (...)
 			{
-				return false;
+				return XNode{};
 			}
 		}
     }
@@ -132,14 +132,22 @@ namespace Wms
 
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
 						auto xml = fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging);
-						//Joonas testaa tässä toista parseria ja sen rakenteita
 						
+						// Doing logging only the first time
+						serverKV.second.logFetchCapabilitiesRequest = false;
+						changedLayers_.changedLayers.clear();
+						
+						if (server.delimiter == "0") //Joonas testaa tässä toista parseria ja sen rakenteita
+						{
+							auto xmlNode = parseXMLtoWmsTree(xml);
+							children.push_back(capabilityTreeParser.parseXml(xmlNode, hashes_, changedLayers_));
+						}
+						else
+						{
+							auto capabilities = parseXmlToPropertyTree(xml);
+							children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
+						}
 
-                        auto capabilities = parseXmlToPropertyTree(xml);
-                        // Doing logging only the first time
-                        serverKV.second.logFetchCapabilitiesRequest = false;
-                        changedLayers_.changedLayers.clear();
-						children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
                         if(!changedLayers_.changedLayers.empty())
                         {
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
