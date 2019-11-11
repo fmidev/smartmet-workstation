@@ -7,7 +7,8 @@
 #include "NFmiMacroParamfunctions.h"
 #include "CtrlViewFunctions.h"
 #include "boost/algorithm/string/replace.hpp"
-#include <filesystem>
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
 #include <afxdlgs.h>
 
 namespace BetaProduct
