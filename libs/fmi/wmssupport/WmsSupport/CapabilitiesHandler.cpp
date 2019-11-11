@@ -53,25 +53,6 @@ namespace Wms
             }
         }
 
-		XNode parseXMLtoWmsTree(const std::string& xml)
-		{
-			XNode xmlRoot;
-			try
-			{
-				CString sxmlU_(CA2T(xml.c_str()));
-				if (xmlRoot.Load(sxmlU_) == false)
-				{
-					throw std::runtime_error(std::string("CapData::load - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
-				}
-				//Save layers as a LayerMembers in a (layers_) vector;
-// 				initializeWarnings(xmlRoot);
-				return xmlRoot;
-			}
-			catch (...)
-			{
-				return XNode{};
-			}
-		}
     }
 
     CapabilitiesHandler::CapabilitiesHandler(
@@ -113,6 +94,7 @@ namespace Wms
             while(true)
             {
                 auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
+				XNodes xmlNode;
 
                 for(auto& serverKV : servers_)
                 {
@@ -129,25 +111,22 @@ namespace Wms
 
                     try
                     {
-
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
 						auto xml = fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging);
 						
 						// Doing logging only the first time
 						serverKV.second.logFetchCapabilitiesRequest = false;
 						changedLayers_.changedLayers.clear();
-						
+
 						if (server.delimiter == "0") //Joonas testaa tässä toista parseria ja sen rakenteita
-						{
-							auto xmlNode = parseXMLtoWmsTree(xml);
-							children.push_back(capabilityTreeParser.parseXml(xmlNode, hashes_, changedLayers_));
+						{				
+							children.push_back(capabilityTreeParser.parseXml(xml, hashes_, changedLayers_));
 						}
 						else
 						{
 							auto capabilities = parseXmlToPropertyTree(xml);
 							children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
 						}
-
                         if(!changedLayers_.changedLayers.empty())
                         {
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
@@ -165,4 +144,5 @@ namespace Wms
             }
         });
     }
+
 }
