@@ -106,15 +106,14 @@ namespace Wms
 					continue;
 				}
 			}
-
 			return pTree;
 		}
 
 		//Checks whether given time is a table and not range ( 2019-06-06T13:00:00.000Z/2019-06-06T13:00:00.000Z/PT1H )
         bool isTimeTable(const std::string& dimension) 
         {
-            auto pos = std::min(dimension.length(), static_cast<size_t>(100));
-            auto lookEnd = dimension.cbegin() + pos;
+			auto pos = min(dimension.length(), static_cast<size_t>(100));
+			auto lookEnd = dimension.cbegin() + pos;
             auto res = std::find(dimension.cbegin(), lookEnd, '/');
             return res == lookEnd;
         }
@@ -259,29 +258,39 @@ namespace Wms
 		return std::move(subTree);
 	}
 
-	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parseXml(XNode& xmlNode, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
+	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parseXml(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
 	{
 		auto subTree = std::make_unique<CapabilityNode>();
 		subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
 		changedLayers.setProducerId(producer_.GetIdent());
 		auto path = std::list<std::string>{};
 
-		XNodes nodes = xmlNode.GetChilds(_TEXT("Layer"));
-		for (size_t i = 0; i < nodes.size(); i++)
+		parseXMLtoNodes(xml);
+
+		for (size_t i = 0; i < nodes_.size(); i++)
 		{
-			LPXNode aNode = nodes[i];
-// 			shared_ptr<WarningMember> member = make_shared<WarningMember>();
-// 			member->Initialize(aNode);
-// 			warnings_.push_back(member);
+			LPXNode aNode = nodes_[i];
+			parseNodes(subTree, aNode, path, hashes, changedLayers);
 		}
 
-
-// 		for (const auto& layerKV : layerTree)
-// 		{
-// 			parseNodes(subTree, layerKV, path, hashes, changedLayers);
-// 		}
-
 		return std::move(subTree);
+	}
+
+	void CapabilityTreeParser::parseXMLtoNodes(const std::string& xml)
+	{
+		try
+		{
+			XNode xmlRoot;
+			CString sxmlU_(CA2T(xml.c_str()));
+			if (xmlRoot.Load(sxmlU_) == false)
+			{
+				throw std::runtime_error(std::string("CapabilitiesHandler::startFetchingCapabilitiesInBackground - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
+			}
+			nodes_ = xmlRoot.GetChilds(_TEXT("Capability"));
+		}
+		catch (...)
+		{
+		}
 	}
 
 	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode> &subTree, const std::pair<const std::string, ptree>& layerKV
@@ -320,8 +329,49 @@ namespace Wms
 		else
 		{
 			addWithPossibleStyles(layerKV, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
-		}
+		}	
+	}
+
+	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const LPXNode& aNode
+		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
+	{
+		if (XmlHelper::GetChildNodeText(aNode, "alert:publication_id") != "Layer") return;
 		
+		std::list<std::string> layerPath = path;
+// 		auto name = getNameOrTitle(aNode);
+		
+// 		std::list<std::string> layerPath = path;
+// 		auto name = getNameOrTitle(aNode);
+// 		auto timeWindow = std::string{};
+// 
+// 		auto tmpTimeWindow = parseTimeWindow(aNode.second);
+// 		if (cacheHitCallback_(producer_.GetIdent(), name))
+// 		{
+// 			timeWindow = tmpTimeWindow;
+// 		}
+// 		auto startEnd = parseDimension(tmpTimeWindow);
+// 
+// 		splitToList(name, delimiter_, layerPath);
+// 
+// 		// If timeWindow is empty, check child layers, but still add this name to the path.
+// 		if (tmpTimeWindow.empty()) {
+// 			try
+// 			{
+// 				ptree& subLayerTree = lookForSubLayer(aNode.second);
+// 				for (const auto& layer : subLayerTree)
+// 				{
+// 					parseNodes(subTree, aNode, layerPath, hashes, changedLayers);
+// 				}
+// 			}
+// 			catch (...)
+// 			{
+// 				return;
+// 			}
+// 		}
+// 		else
+// 		{
+// 			addWithPossibleStyles(aNode, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
+// 		}
 	}
 
 	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, ptree> &layerKV, std::unique_ptr<CapabilityNode> &subTree, 
