@@ -29,7 +29,8 @@
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiFileString.h"
 #include <fstream>
-#include <filesystem>
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
