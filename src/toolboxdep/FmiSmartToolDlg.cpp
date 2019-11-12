@@ -29,7 +29,8 @@
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiFileString.h"
 #include <fstream>
-#include <filesystem>
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
@@ -839,7 +840,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
             mpSystem.SetCurrentPathByAbsolutePath(filePath);
         }
         auto realMacroParamDrawParamFileName = ::GetRealMacroParamDrawParamFileName(filePath);
-        macroParamPointer->DrawParam()->InitFileName();
+        macroParamPointer->DrawParam()->InitFileName(realMacroParamDrawParamFileName);
         macroParamPointer->DrawParam()->MacroParamRelativePath(mpSystem.RelativePath());
         DoFinalMacroParamWrite(mpSystem, macroParamPointer);
 

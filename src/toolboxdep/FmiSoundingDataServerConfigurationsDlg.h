@@ -7,7 +7,7 @@
 #include "WndResizer.h"
 
 class SmartMetDocumentInterface;
-class ModelSoundingDataServerConfigurations;
+class ModelDataServerConfiguration;
 class CGridCellCheck;
 
 struct SoundingConfHeaderParInfo
@@ -84,11 +84,11 @@ private:
     void UpdateGridControlValues();
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
 	void InitHeaders(void);
-	void SetGridRow(int row, const ModelSoundingDataServerConfigurations &theSoundingConf, int theFixedColumnCount, bool updateOnly);
-    void GetProducerIdFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
-    void GetDataNameOnServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
-    void GetModelConfigurationFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column);
-    void GetModelConfigurationsFromGridCtrlRow(ModelSoundingDataServerConfigurations &modelConfiguration, int row);
+	void SetGridRow(int row, const ModelDataServerConfiguration &theSoundingConf, int theFixedColumnCount, bool updateOnly);
+    void GetProducerIdFromGridCtrlCell(ModelDataServerConfiguration &modelConfiguration, int row, int column);
+    void GetDataNameOnServerFromGridCtrlCell(ModelDataServerConfiguration &modelConfiguration, int row, int column);
+    void GetModelConfigurationFromGridCtrlCell(ModelDataServerConfiguration &modelConfiguration, int row, int column);
+    void GetModelConfigurationsFromGridCtrlRow(ModelDataServerConfiguration &modelConfiguration, int row);
     void GetSettingsFromDialog();
     void DoResizerHooking();
     void InitDialogTexts();

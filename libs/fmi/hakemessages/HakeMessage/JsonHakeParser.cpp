@@ -44,7 +44,8 @@ namespace HakeMessage
             auto hour = std::stoi(timeSubStrings[0]);
             auto minute = std::stoi(timeSubStrings[1]);
 
-            return NFmiMetTime(NFmiTime(year, month, day, hour, minute, 0).UTCTime(), 1);
+            // In json HAKE messages, times are in UTC already (old xml messages had finnish times)
+            return NFmiMetTime(year, month, day, hour, minute, 0, 1);
         }
 
         std::string lastWordOfDescription(const std::string& jsonString)

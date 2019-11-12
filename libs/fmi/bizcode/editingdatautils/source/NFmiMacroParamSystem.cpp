@@ -17,7 +17,7 @@ struct PathFinderFunctor
 
 	bool operator()(boost::shared_ptr<NFmiMacroParamFolder> theFolder)
 	{
-		return theFolder->Path() == itsPath;
+		return boost::iequals(theFolder->Path(), itsPath);
 	}
 
 	std::string itsPath;

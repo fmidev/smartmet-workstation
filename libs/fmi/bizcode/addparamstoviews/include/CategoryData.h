@@ -33,6 +33,7 @@ namespace AddParams
         NFmiInfoData::Type dataCategory_;
         std::vector<std::unique_ptr<ProducerData>> producerDataVector_;
         const NFmiLevelBag* soundingLevels_;
+		bool staticDataAdded_;
 
     public:
         CategoryData(const std::string &categoryName, NFmiInfoData::Type dataCategory);
@@ -56,5 +57,6 @@ namespace AddParams
         void addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         bool skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
-    };
+		bool addStaticData(NFmiInfoOrganizer& infoOrganizer, NFmiHelpDataInfoSystem& helpDataInfoSystem, NFmiInfoData::Type dataCategory);
+	};
 }
