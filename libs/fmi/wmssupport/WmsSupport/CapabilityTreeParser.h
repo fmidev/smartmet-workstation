@@ -20,7 +20,6 @@ namespace Wms
         NFmiProducer producer_;
         std::string delimiter_;
         std::function<bool(long, const std::string&)> cacheHitCallback_;
-		std::vector<LPXNode> nodes_;
 
     public:
         CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback);
@@ -32,8 +31,7 @@ namespace Wms
 			std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const;
 		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::pair<const std::string, boost::property_tree::ptree>& layerKV, std::list<std::string>& path, 
 			std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
-		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const LPXNode& aNode, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
-		void parseXMLtoNodes(const std::string& xml);
+		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, std::unique_ptr<LPXNode>& aNode, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
 
 	};
 }

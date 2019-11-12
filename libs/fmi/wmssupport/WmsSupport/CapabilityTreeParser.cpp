@@ -9,84 +9,84 @@
 using namespace boost::property_tree;
 
 namespace Wms
-{   
+{
 	namespace
-    {
+	{
 
-        void splitToList(const std::string& name, const std::string& delimiter, std::list<std::string>& path)
-        {
-            auto tmp = cppext::split(name, delimiter);
-            std::copy(tmp.begin(), tmp.end(), std::back_inserter(path));
-        }
+		void splitToList(const std::string& name, const std::string& delimiter, std::list<std::string>& path)
+		{
+			auto tmp = cppext::split(name, delimiter);
+			std::copy(tmp.begin(), tmp.end(), std::back_inserter(path));
+		}
 
-        std::string popLastElementFrom(std::list<std::string>& path)
-        {
-            auto valueName = path.back();
-            path.pop_back();
-            return valueName;
-        }
+		std::string popLastElementFrom(std::list<std::string>& path)
+		{
+			auto valueName = path.back();
+			path.pop_back();
+			return valueName;
+		}
 
-        static auto domainRegex = std::regex{ "^http[s]?:\\/\\/.+?(?=\\/)", std::regex::icase };
+		static auto domainRegex = std::regex{ "^http[s]?:\\/\\/.+?(?=\\/)", std::regex::icase };
 
-        std::string parseDomain(std::string& legendUrl)
-        {
-            auto result = std::smatch{};
-            std::regex_search(legendUrl, result, domainRegex);
-            return *result.begin();
-        }
+		std::string parseDomain(std::string& legendUrl)
+		{
+			auto result = std::smatch{};
+			std::regex_search(legendUrl, result, domainRegex);
+			return *result.begin();
+		}
 
-        std::pair<std::string, std::string> parseLegendUrl(const ptree& legendTree)
-        {
-            auto legendUrlString = legendTree
-                .get_child("OnlineResource")
-                .get_child("<xmlattr>")
-                .get<std::string>("xlink:href");
+		std::pair<std::string, std::string> parseLegendUrl(const ptree& legendTree)
+		{
+			auto legendUrlString = legendTree
+				.get_child("OnlineResource")
+				.get_child("<xmlattr>")
+				.get<std::string>("xlink:href");
 
-            auto domainRequest = std::pair<std::string, std::string>{};
+			auto domainRequest = std::pair<std::string, std::string>{};
 
-            domainRequest.first = parseDomain(legendUrlString);
-            domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
+			domainRequest.first = parseDomain(legendUrlString);
+			domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
 
-            return domainRequest;
-        }
+			return domainRequest;
+		}
 
-        Style parseStyle(const ptree& styleTree)
-        {
-            auto domainRequest = parseLegendUrl(styleTree.get_child("LegendURL"));
-            return Style
-            {
-            styleTree.get<std::string>("Name"),
-            domainRequest.first,
-            domainRequest.second
-            };
-        }
+		Style parseStyle(const ptree& styleTree)
+		{
+			auto domainRequest = parseLegendUrl(styleTree.get_child("LegendURL"));
+			return Style
+			{
+			styleTree.get<std::string>("Name"),
+			domainRequest.first,
+			domainRequest.second
+			};
+		}
 
-        std::set<Style> lookForStyles(const ptree& layerTree)
-        {
-            auto styles = std::set<Style>();
-            for(const auto& attributeKV : layerTree)
-            {
-                try
-                {
-                    if(attributeKV.first == "Style")
-                    {
-                        styles.insert(parseStyle(attributeKV.second));
-                    }
-                }
-                catch(...)
-                {
-                    continue;
-                }
-            }
-            if(styles.size() == 1 && styles.begin()->name == "Default")
-            {
-                return std::set<Style>{};
-            }
-            else
-            {
-                return styles;
-            }
-        }
+		std::set<Style> lookForStyles(const ptree& layerTree)
+		{
+			auto styles = std::set<Style>();
+			for (const auto& attributeKV : layerTree)
+			{
+				try
+				{
+					if (attributeKV.first == "Style")
+					{
+						styles.insert(parseStyle(attributeKV.second));
+					}
+				}
+				catch (...)
+				{
+					continue;
+				}
+			}
+			if (styles.size() == 1 && styles.begin()->name == "Default")
+			{
+				return std::set<Style>{};
+			}
+			else
+			{
+				return styles;
+			}
+		}
 
 		ptree lookForSubLayer(const ptree& layerTree)
 		{
@@ -110,50 +110,50 @@ namespace Wms
 		}
 
 		//Checks whether given time is a table and not range ( 2019-06-06T13:00:00.000Z/2019-06-06T13:00:00.000Z/PT1H )
-        bool isTimeTable(const std::string& dimension) 
-        {
+		bool isTimeTable(const std::string& dimension)
+		{
 			auto pos = min(dimension.length(), static_cast<size_t>(100));
 			auto lookEnd = dimension.cbegin() + pos;
-            auto res = std::find(dimension.cbegin(), lookEnd, '/');
-            return res == lookEnd;
-        }
+			auto res = std::find(dimension.cbegin(), lookEnd, '/');
+			return res == lookEnd;
+		}
 
-        bool beginningIsSeparated(const std::string& dimension)
-        {
-            auto res = std::find(dimension.cbegin(), dimension.cend(), ',');
-            return res != dimension.cend();
-        }
+		bool beginningIsSeparated(const std::string& dimension)
+		{
+			auto res = std::find(dimension.cbegin(), dimension.cend(), ',');
+			return res != dimension.cend();
+		}
 
-        std::tm parseTime(const std::string& value)
-        {
-			
-            auto dateAndTime = cppext::split(value, std::string("T"));
-			
+		std::tm parseTime(const std::string& value)
+		{
+
+			auto dateAndTime = cppext::split(value, std::string("T"));
+
 			if (dateAndTime.size() < 2) //If no time, use current time
 			{
-				std::time_t t = std::time(0);  
+				std::time_t t = std::time(0);
 				std::tm* currentTime = std::localtime(&t);
 				return *currentTime;
 			}
 
-            auto date = dateAndTime[0];
-            auto time = dateAndTime[1];
-            time.pop_back();
-            auto YearMonthDay = cppext::split(date, std::string("-"));
-            auto HourMinuteSecond = cppext::split(time, std::string(":"));
+			auto date = dateAndTime[0];
+			auto time = dateAndTime[1];
+			time.pop_back();
+			auto YearMonthDay = cppext::split(date, std::string("-"));
+			auto HourMinuteSecond = cppext::split(time, std::string(":"));
 
-            return std::tm{
-                std::stoi(HourMinuteSecond[2]) ,
-                std::stoi(HourMinuteSecond[1]) ,
-                std::stoi(HourMinuteSecond[0]) ,
-                std::stoi(YearMonthDay[2]) ,
-                std::stoi(YearMonthDay[1]) - 1 ,
-                std::stoi(YearMonthDay[0]) - 1900
-            };
-        }
+			return std::tm{
+				std::stoi(HourMinuteSecond[2]) ,
+				std::stoi(HourMinuteSecond[1]) ,
+				std::stoi(HourMinuteSecond[0]) ,
+				std::stoi(YearMonthDay[2]) ,
+				std::stoi(YearMonthDay[1]) - 1 ,
+				std::stoi(YearMonthDay[0]) - 1900
+			};
+		}
 
-        NFmiMetTime parseMetTime(const std::string& timeStr)
-        {
+		NFmiMetTime parseMetTime(const std::string& timeStr)
+		{
 			auto time = parseTime(timeStr);
 			return NFmiMetTime{
 				static_cast<short>(time.tm_year + 1900),
@@ -163,43 +163,43 @@ namespace Wms
 				static_cast<short>(time.tm_min),
 				static_cast<short>(time.tm_sec)
 			};
-        }
+		}
 
-        std::pair<NFmiMetTime, NFmiMetTime> parseDimension(const std::string& dimension)
-        {
-            auto beginEnd = std::pair<NFmiMetTime, NFmiMetTime>{};
+		std::pair<NFmiMetTime, NFmiMetTime> parseDimension(const std::string& dimension)
+		{
+			auto beginEnd = std::pair<NFmiMetTime, NFmiMetTime>{};
 			if (dimension.empty())
 				return beginEnd;
 
-            if(isTimeTable(dimension))
-            {
-                // Tämä on pilkulla eritelty lista aikoja, otetaan niistä 1. ja viimeinen. Esim.
-                // 2019-02-13T12:00:55Z, 2019-02-14T11:50:18Z, 2019-02-15T12:02:33Z, 2019-02-16T11:43:52Z, 2019-02-17T11:41:21Z, 2019-02-18T11:13:24Z, 2019-02-19T11:29:36Z, 2019-02-20T11:34:05Z
-                auto startFirstTime = dimension.find_first_not_of(' ');
-                auto endFirstTime = dimension.find_first_of(',');
-                beginEnd.first = parseMetTime(dimension.substr(startFirstTime, endFirstTime));
-                auto startLastTime = dimension.find_last_of(',') + 1;
-                auto endLastTime = std::string::npos;
-                beginEnd.second = parseMetTime(dimension.substr(startLastTime, endLastTime));
-            }
-            else
-            {
-                if(beginningIsSeparated(dimension))
-                {
-                    beginEnd.first = parseMetTime(cppext::split(dimension, ',').front());
-                }
-                else
-                {
-                    beginEnd.first = parseMetTime(cppext::split(dimension, '/').front());
-                }
-                beginEnd.second = parseMetTime(cppext::split(dimension, '/').at(1));
-            }
+			if (isTimeTable(dimension))
+			{
+				// Tämä on pilkulla eritelty lista aikoja, otetaan niistä 1. ja viimeinen. Esim.
+				// 2019-02-13T12:00:55Z, 2019-02-14T11:50:18Z, 2019-02-15T12:02:33Z, 2019-02-16T11:43:52Z, 2019-02-17T11:41:21Z, 2019-02-18T11:13:24Z, 2019-02-19T11:29:36Z, 2019-02-20T11:34:05Z
+				auto startFirstTime = dimension.find_first_not_of(' ');
+				auto endFirstTime = dimension.find_first_of(',');
+				beginEnd.first = parseMetTime(dimension.substr(startFirstTime, endFirstTime));
+				auto startLastTime = dimension.find_last_of(',') + 1;
+				auto endLastTime = std::string::npos;
+				beginEnd.second = parseMetTime(dimension.substr(startLastTime, endLastTime));
+			}
+			else
+			{
+				if (beginningIsSeparated(dimension))
+				{
+					beginEnd.first = parseMetTime(cppext::split(dimension, ',').front());
+				}
+				else
+				{
+					beginEnd.first = parseMetTime(cppext::split(dimension, '/').front());
+				}
+				beginEnd.second = parseMetTime(cppext::split(dimension, '/').at(1));
+			}
 
-            return beginEnd;
-        }
+			return beginEnd;
+		}
 
-        std::string parseTimeWindow(const ptree& layerTree)
-        {
+		std::string parseTimeWindow(const ptree& layerTree)
+		{
 			try
 			{
 				auto dimensionName = layerTree
@@ -216,8 +216,8 @@ namespace Wms
 			catch (...)
 			{
 				return "";
-			}            
-        }
+			}
+		}
 
 		std::string getNameOrTitle(const std::pair<const std::string, ptree>& layerKV)
 		{
@@ -234,13 +234,13 @@ namespace Wms
 			}
 			return std::string{};
 		}
-    }
+	}
 
-    CapabilityTreeParser::CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback)
-        :producer_{ producer }
-        , delimiter_{ delimiter }
-        , cacheHitCallback_{ cacheHitCallback }
-    {}
+	CapabilityTreeParser::CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback)
+		:producer_{ producer }
+		, delimiter_{ delimiter }
+		, cacheHitCallback_{ cacheHitCallback }
+	{}
 
 	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parse(const ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes
 		, ChangedLayers& changedLayers) const
@@ -265,36 +265,40 @@ namespace Wms
 		changedLayers.setProducerId(producer_.GetIdent());
 		auto path = std::list<std::string>{};
 
-		parseXMLtoNodes(xml);
-
-		for (size_t i = 0; i < nodes_.size(); i++)
+		XNode xmlRoot;
+		CString sxmlU_(CA2T(xml.c_str()));
+		if (xmlRoot.Load(sxmlU_) == false)
 		{
-			LPXNode aNode = nodes_[i];
-			parseNodes(subTree, aNode, path, hashes, changedLayers);
+			throw std::runtime_error(std::string("CapabilitiesHandler::startFetchingCapabilitiesInBackground - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
+		}
+
+		// 		auto capabilityNode = std::make_unique<XNodes>(xmlRoot.GetChild(_TEXT("Capability")));
+		// 		if (capabilityNode->size() > 0)
+		// 		{
+		// 			auto aNode = std::make_unique<LPXNode>((*capabilityNode)[0]);
+		// 			for (size_t i = 0; i < (*aNode)->GetChilds().size(); i++)
+		// 			{
+		// 				auto childNode = std::make_unique<LPXNode>((*aNode)->GetChild(i));
+		// 				parseNodes(subTree, childNode, path, hashes, changedLayers);
+		// 			}
+		// 		}
+
+		auto nodes = std::make_unique<XNodes>(xmlRoot.GetChilds(_TEXT("Capability")));
+		for (size_t i = 0; i < (*nodes).size(); i++)
+		{
+			auto aNode = std::make_unique<LPXNode>((*nodes)[i]);
+			for (size_t i = 0; i < (*aNode)->GetChilds().size(); i++)
+			{
+				auto childNode = std::make_unique<LPXNode>((*aNode)->GetChild(i));
+				parseNodes(subTree, childNode, path, hashes, changedLayers);
+			}
 		}
 
 		return std::move(subTree);
 	}
 
-	void CapabilityTreeParser::parseXMLtoNodes(const std::string& xml)
-	{
-		try
-		{
-			XNode xmlRoot;
-			CString sxmlU_(CA2T(xml.c_str()));
-			if (xmlRoot.Load(sxmlU_) == false)
-			{
-				throw std::runtime_error(std::string("CapabilitiesHandler::startFetchingCapabilitiesInBackground - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
-			}
-			nodes_ = xmlRoot.GetChilds(_TEXT("Capability"));
-		}
-		catch (...)
-		{
-		}
-	}
-
-	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode> &subTree, const std::pair<const std::string, ptree>& layerKV
-		, std::list<std::string> &path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
+	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::pair<const std::string, ptree>& layerKV
+		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
 	{
 		if (layerKV.first != "Layer") return;
 
@@ -302,7 +306,7 @@ namespace Wms
 		auto name = getNameOrTitle(layerKV);
 		auto timeWindow = std::string{};
 
-		auto tmpTimeWindow = parseTimeWindow(layerKV.second); 
+		auto tmpTimeWindow = parseTimeWindow(layerKV.second);
 		if (cacheHitCallback_(producer_.GetIdent(), name))
 		{
 			timeWindow = tmpTimeWindow;
@@ -329,21 +333,24 @@ namespace Wms
 		else
 		{
 			addWithPossibleStyles(layerKV, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
-		}	
+		}
 	}
 
-	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const LPXNode& aNode
+	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, std::unique_ptr<LPXNode>& aNode
 		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
 	{
-		if (XmlHelper::GetChildNodeText(aNode, "alert:publication_id") != "Layer") return;
-		
+		if ((*aNode)->name != "Layer") return;
+
+
 		std::list<std::string> layerPath = path;
-// 		auto name = getNameOrTitle(aNode);
-		
-// 		std::list<std::string> layerPath = path;
-// 		auto name = getNameOrTitle(aNode);
-// 		auto timeWindow = std::string{};
-// 
+		std::wstring wname = (*aNode)->name;
+		std::string name(wname.begin(), wname.end());
+		auto timeWindow = std::string{};
+
+		auto dimensionName = XmlHelper::GetChildNodeText((*aNode), "Dimension");
+		auto dimensionNode = (*aNode)->GetChilds(_TEXT("Dimension")); //Hakee niin syvältä, että löytyy
+		// Joonas jatka tästä
+
 // 		auto tmpTimeWindow = parseTimeWindow(aNode.second);
 // 		if (cacheHitCallback_(producer_.GetIdent(), name))
 // 		{
@@ -374,9 +381,9 @@ namespace Wms
 // 		}
 	}
 
-	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, ptree> &layerKV, std::unique_ptr<CapabilityNode> &subTree, 
-		std::list<std::string> &path, std::string &timeWindow, ChangedLayers &changedLayers, std::map<long, std::map<long, LayerInfo>> &hashes
-		, std::pair<NFmiMetTime, NFmiMetTime> &startEnd, std::string& name) const
+	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, ptree>& layerKV, std::unique_ptr<CapabilityNode>& subTree,
+		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
+		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const
 	{
 		//Check if layer has multiple styles (then add all possibilities)
 		auto styles = lookForStyles(layerKV.second);

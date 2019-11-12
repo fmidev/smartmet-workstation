@@ -93,8 +93,7 @@ namespace Wms
         {
             while(true)
             {
-                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
-				XNodes xmlNode;
+                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};			
 
                 for(auto& serverKV : servers_)
                 {
@@ -118,7 +117,7 @@ namespace Wms
 						serverKV.second.logFetchCapabilitiesRequest = false;
 						changedLayers_.changedLayers.clear();
 
-						if (server.delimiter == "0") //Joonas testaa tässä toista parseria ja sen rakenteita
+						if (server.delimiter == "0") // Alternative parser that is/should be used outside FMI
 						{				
 							children.push_back(capabilityTreeParser.parseXml(xml, hashes_, changedLayers_));
 						}
