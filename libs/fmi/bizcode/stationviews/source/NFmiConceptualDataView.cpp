@@ -25,6 +25,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiValueString.h"
+#include "NFmiMacroParamfunctions.h"
 #include "catlog/catlog.h"
 
 #include <gdiplus.h>
@@ -1265,7 +1266,7 @@ static std::string MakeConceptualObjectInfoString(const ConceptualObjectData &th
         str += theObject.itsParameterValueStr;
         str += ::GetMirwaSymbolLocationTooltipString(theObject);
 
-        if(CtrlViewUtils::ci_find_substr(theObject.itsWomlSymbolInfoStr, std::string("wind")) != CtrlViewUtils::ci_string_not_found)
+        if(MacroParam::ci_find_substr(theObject.itsWomlSymbolInfoStr, std::string("wind")) != MacroParam::ci_string_not_found)
         {  // tuulisymbolit hanskataan pikkuisen erilailla
             str = ""; // tyhjennet‰‰n stringi ensin
             str += theObject.itsWomlSymbolInfoStr;

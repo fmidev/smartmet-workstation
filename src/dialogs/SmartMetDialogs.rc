@@ -558,7 +558,7 @@ BEGIN
     CONTROL         "Dropped data editable (slow to drop)",IDC_CHECK_DROPPED_DATA_EDITABLE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,114,144,12
     EDITTEXT        IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR,301,138,29,12,ES_AUTOHSCROLL
-    LTEXT           "Isoline min length [mm] (0-100)",IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT,173,138,122,8,0,WS_EX_RIGHT
+    LTEXT           "Isoline min length factor (0-100)",IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT,173,138,122,8,0,WS_EX_RIGHT
     CONTROL         "Generate time combination data (unchecking might prevent crashes)",IDC_CHECK_MAKE_COMBINATION_DATA,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,12,124,144,19
 END

@@ -10,6 +10,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "FmiWin32Helpers.h"
 #include "NFmiMTATempSystem.h"
+#include "ModelDataServerConfiguration.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include <boost/function.hpp>
@@ -222,7 +223,7 @@ void CFmiSoundingDataServerConfigurationsDlg::OnClose()
     CDialogEx::OnClose();
 }
 
-static std::string GetColumnText(int theRow, int theColumn, const ModelSoundingDataServerConfigurations &theSoundingConf)
+static std::string GetColumnText(int theRow, int theColumn, const ModelDataServerConfiguration &theSoundingConf)
 {
 	switch(theColumn)
 	{
@@ -243,7 +244,7 @@ static const COLORREF gNormalBkColor = RGB(255, 255, 255);
 static const COLORREF gReadOnlyBkColor = RGB(245, 245, 245);
 static const COLORREF gErrorBkColor = RGB(255, 200, 200);
 
-void CFmiSoundingDataServerConfigurationsDlg::SetGridRow(int row, const ModelSoundingDataServerConfigurations &theSoundingConf, int theFixedColumnCount, bool updateOnly)
+void CFmiSoundingDataServerConfigurationsDlg::SetGridRow(int row, const ModelDataServerConfiguration &theSoundingConf, int theFixedColumnCount, bool updateOnly)
 {
 	for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
 	{
@@ -341,13 +342,13 @@ static std::string MakeBaseGridCellErrorSting(int row, int column)
     return errorMessage;
 }
 
-void CFmiSoundingDataServerConfigurationsDlg::GetProducerIdFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column)
+void CFmiSoundingDataServerConfigurationsDlg::GetProducerIdFromGridCtrlCell(ModelDataServerConfiguration &modelConfiguration, int row, int column)
 {
     std::string prodIdString;
     try
     {
         prodIdString = CT2A(itsGridCtrl.GetItemText(row, column));
-        modelConfiguration.SetProducerId(std::stoi(prodIdString));
+        modelConfiguration.setProducerId(std::stoi(prodIdString));
     }
     catch(std::exception &e)
     {
@@ -362,11 +363,11 @@ void CFmiSoundingDataServerConfigurationsDlg::GetProducerIdFromGridCtrlCell(Mode
     }
 }
 
-void CFmiSoundingDataServerConfigurationsDlg::GetDataNameOnServerFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column)
+void CFmiSoundingDataServerConfigurationsDlg::GetDataNameOnServerFromGridCtrlCell(ModelDataServerConfiguration &modelConfiguration, int row, int column)
 {
     std::string dataNameOnServer = CT2A(itsGridCtrl.GetItemText(row, column));
     if(!dataNameOnServer.empty())
-        modelConfiguration.SetDataNameOnServer(dataNameOnServer);
+        modelConfiguration.setDataNameOnServer(dataNameOnServer);
     else
     {
         itsGridCtrl.SetItemBkColour(row, column, gErrorBkColor);
@@ -378,7 +379,7 @@ void CFmiSoundingDataServerConfigurationsDlg::GetDataNameOnServerFromGridCtrlCel
     }
 }
 
-void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationFromGridCtrlCell(ModelSoundingDataServerConfigurations &modelConfiguration, int row, int column)
+void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationFromGridCtrlCell(ModelDataServerConfiguration &modelConfiguration, int row, int column)
 {
     auto columnFunction = itsHeaders.at(column).itsColumnFunction;
     switch(columnFunction)
@@ -398,7 +399,7 @@ void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationFromGridCtrlC
     }
 }
 
-void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationsFromGridCtrlRow(ModelSoundingDataServerConfigurations &modelConfiguration, int row)
+void CFmiSoundingDataServerConfigurationsDlg::GetModelConfigurationsFromGridCtrlRow(ModelDataServerConfiguration &modelConfiguration, int row)
 {
     for(int column = itsGridCtrl.GetFixedColumnCount(); column < itsGridCtrl.GetColumnCount(); column++)
     {
