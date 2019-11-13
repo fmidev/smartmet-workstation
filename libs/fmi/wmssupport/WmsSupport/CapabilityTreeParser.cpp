@@ -19,6 +19,11 @@ namespace Wms
 			std::copy(tmp.begin(), tmp.end(), std::back_inserter(path));
 		}
 
+		void addToList(const std::string& name, std::list<std::string>& path)
+		{
+			path.emplace_back(name);
+		}
+
 		std::string popLastElementFrom(std::list<std::string>& path)
 		{
 			auto valueName = path.back();
@@ -168,6 +173,7 @@ namespace Wms
 		std::pair<NFmiMetTime, NFmiMetTime> parseDimension(const std::string& dimension)
 		{
 			auto beginEnd = std::pair<NFmiMetTime, NFmiMetTime>{};
+
 			if (dimension.empty())
 				return beginEnd;
 
@@ -272,26 +278,21 @@ namespace Wms
 			throw std::runtime_error(std::string("CapabilitiesHandler::startFetchingCapabilitiesInBackground - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
 		}
 
-		// 		auto capabilityNode = std::make_unique<XNodes>(xmlRoot.GetChild(_TEXT("Capability")));
-		// 		if (capabilityNode->size() > 0)
-		// 		{
-		// 			auto aNode = std::make_unique<LPXNode>((*capabilityNode)[0]);
-		// 			for (size_t i = 0; i < (*aNode)->GetChilds().size(); i++)
-		// 			{
-		// 				auto childNode = std::make_unique<LPXNode>((*aNode)->GetChild(i));
-		// 				parseNodes(subTree, childNode, path, hashes, changedLayers);
-		// 			}
-		// 		}
-
-		auto nodes = std::make_unique<XNodes>(xmlRoot.GetChilds(_TEXT("Capability")));
-		for (size_t i = 0; i < (*nodes).size(); i++)
+		try
 		{
-			auto aNode = std::make_unique<LPXNode>((*nodes)[i]);
-			for (size_t i = 0; i < (*aNode)->GetChilds().size(); i++)
+			auto nodes = std::make_unique<XNodes>(xmlRoot.GetChilds(_TEXT("Capability")));
+			for (size_t i = 0; i < (*nodes).size(); i++)
 			{
-				auto childNode = std::make_unique<LPXNode>((*aNode)->GetChild(i));
-				parseNodes(subTree, childNode, path, hashes, changedLayers);
+				auto aNode = std::make_unique<LPXNode>((*nodes)[i]);
+				for (size_t i = 0; i < (*aNode)->GetChilds().size(); i++)
+				{
+					auto childNode = std::make_unique<LPXNode>((*aNode)->GetChild(i));
+					parseNodes(subTree, childNode, path, hashes, changedLayers);
+				}
 			}
+		}
+		catch (...)
+		{
 		}
 
 		return std::move(subTree);
@@ -341,44 +342,39 @@ namespace Wms
 	{
 		if ((*aNode)->name != "Layer") return;
 
-
 		std::list<std::string> layerPath = path;
-		std::wstring wname = (*aNode)->name;
-		std::string name(wname.begin(), wname.end());
+		auto layerNode = *aNode;
+
+		std::string title = XmlHelper::GetChildNodeText(layerNode, "Title");
+		addToList(title, layerPath);
+
 		auto timeWindow = std::string{};
 
-		auto dimensionName = XmlHelper::GetChildNodeText((*aNode), "Dimension");
-		auto dimensionNode = (*aNode)->GetChilds(_TEXT("Dimension")); //Hakee niin syvältä, että löytyy
-		// Joonas jatka tästä
-
-// 		auto tmpTimeWindow = parseTimeWindow(aNode.second);
-// 		if (cacheHitCallback_(producer_.GetIdent(), name))
-// 		{
-// 			timeWindow = tmpTimeWindow;
-// 		}
-// 		auto startEnd = parseDimension(tmpTimeWindow);
-// 
-// 		splitToList(name, delimiter_, layerPath);
-// 
-// 		// If timeWindow is empty, check child layers, but still add this name to the path.
-// 		if (tmpTimeWindow.empty()) {
-// 			try
-// 			{
-// 				ptree& subLayerTree = lookForSubLayer(aNode.second);
-// 				for (const auto& layer : subLayerTree)
-// 				{
-// 					parseNodes(subTree, aNode, layerPath, hashes, changedLayers);
-// 				}
-// 			}
-// 			catch (...)
-// 			{
-// 				return;
-// 			}
-// 		}
-// 		else
-// 		{
-// 			addWithPossibleStyles(aNode, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
-// 		}
+		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension"));  //Hakee vain seuraavan tason?
+		
+		if (dimensionNode.empty()) //No dimension, no leaf node!
+		{
+			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
+			{
+				auto childNode = std::make_unique<LPXNode>(layerNode->GetChild(i));
+				parseNodes(subTree, childNode, layerPath, hashes, changedLayers);
+			}			
+		}
+		else
+		{
+			auto dNode = dimensionNode.at(0);
+			std::string dimensionNodeValue = XmlHelper::AttributeValue(dNode, "name");
+			if (dimensionNodeValue == "time")
+			{
+				auto tmpTimeWindow = XmlHelper::ChildNodeValue(layerNode, "Dimension");
+				if (cacheHitCallback_(producer_.GetIdent(), title))
+				{
+					timeWindow = tmpTimeWindow;
+				}
+				auto startEnd = parseDimension(tmpTimeWindow);
+// 				addWithPossibleStyles(layerNode, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, title);
+			}
+		}
 	}
 
 	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, ptree>& layerKV, std::unique_ptr<CapabilityNode>& subTree,
@@ -422,5 +418,51 @@ namespace Wms
 				hashes[producer_.GetIdent()][hashedName] = layerInfo;
 			}
 		}
+	}
+
+	void CapabilityTreeParser::addWithPossibleStyles(const std::unique_ptr<LPXNode>& layerNode, std::unique_ptr<CapabilityNode>& subTree,
+		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
+		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const
+	{
+		//Check if layer has multiple styles (then add all possibilities)
+// 		auto styles = lookForStyles(layerNode);
+		// Joonas jatka tästä
+			   
+// 		auto styles = lookForStyles(layerKV.second);
+// 		if (styles.empty())
+// 		{
+// 			auto hashedName = static_cast<long>(std::hash<std::string>{}(name));
+// 			insertLeaf(
+// 				*subTree,
+// 				CapabilityLeaf{ Capability{ producer_, hashedName,  popLastElementFrom(path) } },
+// 				path
+// 			);
+// 
+// 			auto layerInfo = LayerInfo{ name };
+// 			layerInfo.startTime = startEnd.first;
+// 			layerInfo.endTime = startEnd.second;
+// 			changedLayers.update(hashedName, layerInfo, timeWindow);
+// 			hashes[producer_.GetIdent()][hashedName] = layerInfo;
+// 		}
+// 		else
+// 		{
+// 			for (const auto& style : styles)
+// 			{
+// 				auto hashedName = static_cast<long>(std::hash<std::string>{}(name + style.name));
+// 
+// 				auto tmpPath = path;
+// 				insertLeaf(
+// 					*subTree,
+// 					CapabilityLeaf{ Capability{ producer_, hashedName, tmpPath.back() + ":" + style.name } },
+// 					tmpPath
+// 				);
+// 
+// 				auto layerInfo = LayerInfo{ name, style };
+// 				layerInfo.startTime = startEnd.first;
+// 				layerInfo.endTime = startEnd.second;
+// 				changedLayers.update(hashedName, layerInfo, timeWindow);
+// 				hashes[producer_.GetIdent()][hashedName] = layerInfo;
+// 			}
+// 		}
 	}
 }

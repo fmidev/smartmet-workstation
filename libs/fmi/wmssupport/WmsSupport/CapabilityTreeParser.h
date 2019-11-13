@@ -29,7 +29,9 @@ namespace Wms
 	private:
 		void addWithPossibleStyles(const std::pair<const std::string, boost::property_tree::ptree>& layerKV, std::unique_ptr<CapabilityNode>& subTree, std::list<std::string>& path, 
 			std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const;
-		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::pair<const std::string, boost::property_tree::ptree>& layerKV, std::list<std::string>& path, 
+		void addWithPossibleStyles(const std::unique_ptr<LPXNode>& layerNode, std::unique_ptr<CapabilityNode>& subTree, std::list<std::string>& path, std::string& timeWindow, 
+			ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const;
+		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::pair<const std::string, boost::property_tree::ptree>& layerKV, std::list<std::string>& path,
 			std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
 		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, std::unique_ptr<LPXNode>& aNode, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
 
