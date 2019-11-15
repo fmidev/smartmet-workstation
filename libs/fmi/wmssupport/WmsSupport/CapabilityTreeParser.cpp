@@ -443,6 +443,22 @@ namespace Wms
 	{
 		//Check if layer has multiple styles (then add all possibilities)
 		auto styles = lookForStyles(layerKV.second);
+		addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);
+	}
+
+	void CapabilityTreeParser::addWithPossibleStyles(const LPXNode& layerNode, std::unique_ptr<CapabilityNode>& subTree,
+		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
+		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const
+	{
+		// Check if layer has multiple styles (then add all possibilities)
+		auto styles = lookForStyles(layerNode);
+		addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);	
+	}
+
+	void CapabilityTreeParser::addWithStyles(std::unique_ptr<CapabilityNode>& subTree,
+		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
+		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, std::set<Wms::Style>& styles) const
+	{
 		if (styles.empty())
 		{
 			auto hashedName = static_cast<long>(std::hash<std::string>{}(name));
@@ -478,51 +494,5 @@ namespace Wms
 				hashes[producer_.GetIdent()][hashedName] = layerInfo;
 			}
 		}
-	}
-
-	void CapabilityTreeParser::addWithPossibleStyles(const LPXNode& layerNode, std::unique_ptr<CapabilityNode>& subTree,
-		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
-		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const
-	{
-		// Check if layer has multiple styles (then add all possibilities)
-		auto styles = lookForStyles(layerNode);
-					
-
-// 		auto styles = lookForStyles(layerKV.second);
-// 		if (styles.empty())
-// 		{
-// 			auto hashedName = static_cast<long>(std::hash<std::string>{}(name));
-// 			insertLeaf(
-// 				*subTree,
-// 				CapabilityLeaf{ Capability{ producer_, hashedName,  popLastElementFrom(path) } },
-// 				path
-// 			);
-// 
-// 			auto layerInfo = LayerInfo{ name };
-// 			layerInfo.startTime = startEnd.first;
-// 			layerInfo.endTime = startEnd.second;
-// 			changedLayers.update(hashedName, layerInfo, timeWindow);
-// 			hashes[producer_.GetIdent()][hashedName] = layerInfo;
-// 		}
-// 		else
-// 		{
-// 			for (const auto& style : styles)
-// 			{
-// 				auto hashedName = static_cast<long>(std::hash<std::string>{}(name + style.name));
-// 
-// 				auto tmpPath = path;
-// 				insertLeaf(
-// 					*subTree,
-// 					CapabilityLeaf{ Capability{ producer_, hashedName, tmpPath.back() + ":" + style.name } },
-// 					tmpPath
-// 				);
-// 
-// 				auto layerInfo = LayerInfo{ name, style };
-// 				layerInfo.startTime = startEnd.first;
-// 				layerInfo.endTime = startEnd.second;
-// 				changedLayers.update(hashedName, layerInfo, timeWindow);
-// 				hashes[producer_.GetIdent()][hashedName] = layerInfo;
-// 			}
-// 		}
 	}
 }
