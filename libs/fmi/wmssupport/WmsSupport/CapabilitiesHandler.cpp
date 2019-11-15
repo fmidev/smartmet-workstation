@@ -117,11 +117,12 @@ namespace Wms
 						serverKV.second.logFetchCapabilitiesRequest = false;
 						changedLayers_.changedLayers.clear();
 
-						if (server.delimiter == "0") // Alternative parser that is/should be used outside FMI
+						// Two options on how to deal with wms capability xmls (parseXml/parseXmlToPropertyTree).
+						if (server.delimiter == "0") // Parser that is/should be used outside FMI
 						{				
 							children.push_back(capabilityTreeParser.parseXml(xml, hashes_, changedLayers_));
 						}
-						else
+						else // This second method suits FMI specific style
 						{
 							auto capabilities = parseXmlToPropertyTree(xml);
 							children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));

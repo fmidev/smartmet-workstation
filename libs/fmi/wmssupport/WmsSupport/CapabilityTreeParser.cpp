@@ -340,13 +340,13 @@ namespace Wms
 
 		try
 		{
-			auto nodes = std::make_unique<XNodes>(xmlRoot.GetChilds(_TEXT("Capability")));
-			for (size_t i = 0; i < (*nodes).size(); i++)
+			auto nodes = xmlRoot.GetChilds(_TEXT("Capability"));
+			for (size_t i = 0; i < nodes.size(); i++)
 			{
-				auto aNode = std::make_unique<LPXNode>((*nodes)[i]);
-				for (size_t i = 0; i < (*aNode)->GetChilds().size(); i++)
+				auto aNode = nodes[i];
+				for (size_t i = 0; i < aNode->GetChilds().size(); i++)
 				{
-					const auto childNode = std::make_unique<LPXNode>((*aNode)->GetChild(i));
+					const auto childNode = aNode->GetChild(i);
 					parseNodes(subTree, childNode, path, hashes, changedLayers);
 				}
 			}
@@ -397,26 +397,24 @@ namespace Wms
 		}
 	}
 
-	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::unique_ptr<LPXNode>& aNode
+	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const LPXNode& layerNode
 		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
 	{
-		if ((*aNode)->name != "Layer") return;
+		if (layerNode->name != "Layer") return;
 
 		std::list<std::string> layerPath = path;
-		const auto& layerNode = *aNode;
-
 		std::string title = XmlHelper::GetChildNodeText(layerNode, "Title");
 		addToList(title, layerPath);
 
 		auto timeWindow = std::string{};
 
-		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension"));  //Hakee vain seuraavan tason?
+		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension")); 
 		
 		if (dimensionNode.empty()) //No dimension, no leaf node!
 		{
 			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
 			{
-				const auto childNode = std::make_unique<LPXNode>(layerNode->GetChild(i));
+				const auto childNode = layerNode->GetChild(i);
 				parseNodes(subTree, childNode, layerPath, hashes, changedLayers);
 			}			
 		}
