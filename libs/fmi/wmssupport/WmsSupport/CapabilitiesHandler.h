@@ -53,8 +53,7 @@ namespace Wms
         );
 
         void startFetchingCapabilitiesInBackground();
-
-        const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
+		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
         const CapabilityTree& peekCapabilityTree() const;
     };
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(WmsSupport)
 
-set(CMAKE_MFC_FLAG 0)
+set(CMAKE_MFC_FLAG 2)
 
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/wd4503>
@@ -25,6 +25,7 @@ target_link_libraries(
     cppext
     cppback
     CatLog
+	XmlLiteUtils
     )
 
 target_include_directories( 
@@ -37,6 +38,7 @@ target_include_directories(
     PUBLIC ${cppext_INCLUDE_DIRS}
     PUBLIC ${cppback_INCLUDE_DIRS}
     PUBLIC ${CatLog_INCLUDE_DIRS}
+	PUBLIC ${XmlLiteUtils_INCLUDE_DIRS}
     )
 
 source_group( 
@@ -54,5 +56,6 @@ set(
     ${cppext_INCLUDE_DIRS}
     ${cppback_INCLUDE_DIRS}
     ${CatLog_INCLUDE_DIRS}
+	${XmlLiteUtils_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
