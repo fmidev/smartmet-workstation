@@ -857,78 +857,45 @@ void CFmiParameterSelectionDlg::SetTreeNodeInformationBackToDialogRowData()
 
 static const COLORREF gCategoryColor = RGB(250, 220, 220);
 static const COLORREF gProducerColor = RGB(220, 250, 220);
-//static const COLORREF gDataColor = RGB(220, 220, 250);
-static const COLORREF gDataColor = RGB(200, 200, 255);
 static const COLORREF gParamColor = RGB(255, 255, 255);
-static const COLORREF gSubParamColor = RGB(255, 255, 245);
-static const COLORREF gLevelColor1 = RGB(200, 200, 255);
-static const COLORREF gLevelColor2 = RGB(170, 170, 255);
-static const COLORREF gLevelColor3 = RGB(140, 140, 255);
-static const COLORREF gLevelColor4 = RGB(110, 110, 255);
-static const COLORREF gLevelColor5 = RGB(90, 90, 255);
-static const COLORREF gLevelColor6 = RGB(60, 60, 255);
-static const COLORREF gLevelColor7 = RGB(40, 40, 255);
-static const COLORREF gLevelColor8 = RGB(20, 20, 255);
-static const COLORREF gLevelColor9 = RGB(10, 10, 255);
-static const COLORREF gLevelColor10 = RGB(0, 0, 255);
 static const COLORREF gErrorColor = RGB(190, 190, 190);
+
+COLORREF levelColor(int level)
+{
+	int step = 10, red = 220, green = 220, blue = 255;
+
+	int newRed = red - (level * step);
+	int newGreen = green - (level * step);
+	int newBlue = blue - level;
+	if (newRed < 0) newRed = 0;
+	if (newGreen < 0) newGreen = 0;
+	if (newBlue < 0) newBlue = 0;
+
+	return RGB(newRed, newGreen, newBlue);
+}
 
 static COLORREF getUsedBackgroundColor(const AddParams::SingleRowItem &theRowItem)
 {
     // Params always have white background color
-    if(theRowItem.leafNode()) { return gParamColor; }
-
-//     if(!NFmiDrawParam::IsMacroParamCase(theRowItem.dataType()))
-//     {
-//         switch(theRowItem.rowType())
-//         {
-//         case AddParams::kCategoryType:
-//             return gCategoryColor;
-//         case AddParams::kProducerType:
-//             return gProducerColor;
-//         case AddParams::kDataType:
-//             return gDataColor;
-//         case AddParams::kParamType:
-//             return gParamColor;
-//         case AddParams::kSubParamType:
-//         case AddParams::kSubParamLevelType:
-//             return gSubParamColor;
-//         case AddParams::kLevelType:
-//             return gLevelColor1;
-//         default:
-//             return gErrorColor;
-//         }
-//     }
-
-    switch(theRowItem.treeDepth())
-    {
-    case 1:
-        return gCategoryColor;
-    case 2:
-        return gProducerColor;
-    case 3:
-        return gLevelColor1;
-    case 4:
-        return gLevelColor2;
-    case 5:
-        return gLevelColor3;
-    case 6:
-        return gLevelColor4;
-    case 7:
-        return gLevelColor5;
-    case 8:
-        return gLevelColor6;
-    case 9:
-        return gLevelColor7;
-    case 10:
-        return gLevelColor8;
-    case 11:
-        return gLevelColor9;
-    case 12:
-        return gLevelColor10;
-    default:
-        return gErrorColor;
-    }
+    if(theRowItem.leafNode()) 
+	{ 
+		return gParamColor; 
+	}
+	else if (theRowItem.treeDepth() == 1) { 
+		return gCategoryColor;	
+	}
+	else if (theRowItem.treeDepth() == 2) 
+	{ 
+		return gProducerColor; 
+	}
+	else if (theRowItem.treeDepth())
+	{
+		return levelColor(theRowItem.treeDepth());
+	}
+	else
+	{
+		return gErrorColor;
+	}
 }
 
 static std::string GetColumnText(int theRow, int theColumn, const AddParams::SingleRowItem &theRowItem)
