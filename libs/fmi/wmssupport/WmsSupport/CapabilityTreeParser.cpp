@@ -191,7 +191,6 @@ namespace Wms
 
 		std::tm parseTime(const std::string& value)
 		{
-
 			auto dateAndTime = cppext::split(value, std::string("T"));
 
 			if (dateAndTime.size() < 2) //If no time, use current time
@@ -300,6 +299,7 @@ namespace Wms
 			}
 			return std::string{};
 		}
+
 	}
 
 	CapabilityTreeParser::CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback)
@@ -407,7 +407,6 @@ namespace Wms
 		addToList(title, layerPath);
 
 		auto timeWindow = std::string{};
-
 		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension")); 
 		
 		if (dimensionNode.empty()) //No dimension, no leaf node!
@@ -425,12 +424,13 @@ namespace Wms
 			if (dimensionNodeValue == "time")
 			{
 				auto tmpTimeWindow = XmlHelper::ChildNodeValue(layerNode, "Dimension");
-				if (cacheHitCallback_(producer_.GetIdent(), title))
+				auto name = XmlHelper::GetChildNodeText(layerNode, "Name");
+				if (cacheHitCallback_(producer_.GetIdent(), name))
 				{
 					timeWindow = tmpTimeWindow;
 				}
 				auto startEnd = parseDimension(tmpTimeWindow);
-				addWithPossibleStyles(layerNode, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, title);
+				addWithPossibleStyles(layerNode, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
 			}
 		}
 	}
