@@ -11,6 +11,7 @@
 #define _WIN32_WINNT 0x0600 // boost/asio.hpp include pyyt‰‰ ett‰ _WIN32_WINNT m‰‰ritett‰isiin, nyt minimi platformi on t‰ss‰ Windows Vista (600)
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <fstream>
 
@@ -75,92 +76,104 @@ NFmiQ2Client::~NFmiQ2Client(void)
 {
 }
 
-static bool MakeHttpCommand(const std::string &theServerStr, const std::string &thePortStr, const std::string &theParamStr, std::string &theHeaderStr, std::string &theResponseStr, std::string &theErrorStr, bool fDoGet)
+static bool MakeHttpCommand(const std::string &theServerStr, const std::string &thePortStr, const std::string &theParamStr, std::string &theHeaderStr, 
+	std::string &theResponseStr, std::string &theErrorStr, bool fDoGet, std::string& scheme = std::string())
 {
    theHeaderStr.clear();
    theResponseStr.clear();
    theErrorStr.clear();
+ 
    try
    {
-       boost::asio::io_service io_service;
-
-       // Get a list of endpoints corresponding to the server name.
-       tcp::resolver resolver(io_service);
-	   tcp::resolver::query query(theServerStr, thePortStr.empty() ? "http" : thePortStr);
-       tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-       tcp::resolver::iterator end;
-
-       // Try each endpoint until we successfully establish a connection.
-       tcp::socket socket(io_service);
-       boost::system::error_code error = boost::asio::error::host_not_found;
-       while (error && endpoint_iterator != end)
-       {
-           socket.close();
-           socket.connect(*endpoint_iterator++, error);
-       }
-       if (error)
-           throw boost::system::system_error(error);
-
-       // Form the request. We specify the "Connection: close" header so that the
-       // server will close the socket after transmitting the response. This will
-       // allow us to treat all data up until the EOF as the content.
-       boost::asio::streambuf request;
-       std::ostream request_stream(&request);
-
-	   request_stream << (fDoGet ? "GET " : "POST ") << theParamStr << " HTTP/1.1\r\n";
-	   request_stream << "Host: " << theServerStr;
-	   if(thePortStr.empty() == false)
-		   request_stream << ":" << thePortStr;
-	   request_stream << "\r\n";
-	   request_stream << "Accept: */*\r\n";
-       request_stream << "Connection: close\r\n\r\n";
-
-       // Send the request.
-       boost::asio::write(socket, request);
-
-       // Read the response status line.
-       boost::asio::streambuf response;
-       boost::asio::read_until(socket, response, "\r\n");
-
-       // Check that response is OK.
-       std::istream response_stream(&response);
-       std::string http_version;
-       response_stream >> http_version;
-       unsigned int status_code;
-       response_stream >> status_code;
-       std::string status_message;
-       std::getline(response_stream, status_message);
-       if (!response_stream || http_version.substr(0, 5) != "HTTP/")
-           throw std::runtime_error("Invalid response");
-
-       // Read the response headers, which are terminated by a blank line.
-       boost::asio::read_until(socket, response, "\r\n\r\n");
-
-       // Process the response headers.
-       std::string header;
-       while (std::getline(response_stream, header) && header != "\r")
-           theHeaderStr += header + "\n";
-       theHeaderStr += "\n";
-
-       // Write whatever content we already have to output.
-       std::stringstream sstream;
-       if (response.size() > 0)
-           sstream << &response;
-
-       // Read until EOF, writing data to output as we go.
-       while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
-           sstream << &response;
-       theResponseStr += sstream.str();
-
-       if (status_code != 200)
+// 	   if (scheme == "https") //Joonas jatka t‰st‰
+// 	   {
+// 		   // Do the same as in else, but for ssl socket
+// 		   boost::asio::io_service io_service;
+// 	   }
+// 	   else
 	   {
-		   theErrorStr = "";
-		   theErrorStr.swap(theResponseStr);
-		   return false;
+		   boost::asio::io_service io_service;
+
+		   // Get a list of endpoints corresponding to the server name.
+		   tcp::resolver resolver(io_service);
+		   tcp::resolver::query query(theServerStr, thePortStr.empty() ? "http" : thePortStr);
+
+		   tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+		   tcp::resolver::iterator end;
+
+		   // Try each endpoint until we successfully establish a connection.
+		   tcp::socket socket(io_service);
+		   boost::system::error_code error = boost::asio::error::host_not_found;
+		   while (error && endpoint_iterator != end)
+		   {
+			   socket.close();
+			   socket.connect(*endpoint_iterator++, error);
+		   }
+		   if (error)
+			   throw boost::system::system_error(error);
+
+		   // Form the request. We specify the "Connection: close" header so that the
+		   // server will close the socket after transmitting the response. This will
+		   // allow us to treat all data up until the EOF as the content.
+		   boost::asio::streambuf request;
+		   std::ostream request_stream(&request);
+
+		   request_stream << (fDoGet ? "GET " : "POST ") << theParamStr << " HTTP/1.1\r\n";
+		   request_stream << "Host: " << theServerStr;
+		   if(thePortStr.empty() == false)
+			   request_stream << ":" << thePortStr;
+		   request_stream << "\r\n";
+		   request_stream << "Accept: */*\r\n";
+		   request_stream << "Connection: close\r\n\r\n";
+
+		   // Send the request.
+		   boost::asio::write(socket, request);
+
+		   // Read the response status line.
+		   boost::asio::streambuf response;
+		   boost::asio::read_until(socket, response, "\r\n");
+
+		   // Check that response is OK.
+		   std::istream response_stream(&response);
+		   std::string http_version;
+		   response_stream >> http_version;
+		   unsigned int status_code;
+		   response_stream >> status_code;
+		   std::string status_message;
+		   std::getline(response_stream, status_message);
+		   if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+			   throw std::runtime_error("Invalid response");
+
+		   // Read the response headers, which are terminated by a blank line.
+		   boost::asio::read_until(socket, response, "\r\n\r\n");
+
+		   // Process the response headers.
+		   std::string header;
+		   while (std::getline(response_stream, header) && header != "\r")
+			   theHeaderStr += header + "\n";
+		   theHeaderStr += "\n";
+
+		   // Write whatever content we already have to output.
+		   std::stringstream sstream;
+		   if (response.size() > 0)
+			   sstream << &response;
+
+		   // Read until EOF, writing data to output as we go.
+		   while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
+			   sstream << &response;
+		   theResponseStr += sstream.str();
+		   
+		   if (status_code != 200)
+		   {
+			   theErrorStr = "";
+			   theErrorStr.swap(theResponseStr);
+			   return false;
+		   }
+
+		   if (error != boost::asio::error::eof)
+			   throw boost::system::system_error(error);
 	   }
 
-       if (error != boost::asio::error::eof)
-           throw boost::system::system_error(error);
    }
    catch (std::exception& e)
    {
@@ -332,12 +345,16 @@ static void GetDataMatrixData(const std::string &theResponseStr, bool fUseBinary
 // and param part is "/q2?requestType=grid&paramId=4&validTime=NOW+6&producerId=230"
 // and port part is "8089"
 
-static bool SplitUrlStr(const std::string &theUrlStrIn, std::string &theServerAddressStrOut, std::string &theParamStrOut, std::string &thePortStrOut)
+static bool SplitUrlStr(const std::string &theUrlStrIn, std::string &theServerAddressStrOut, std::string &theParamStrOut, std::string &thePortStrOut, std::string& scheme = std::string())
 {
 	std::string tmpUrlStr = theUrlStrIn;
+
+	std::string::size_type pos3 = tmpUrlStr.find(":");
+	if (pos3 != std::string::npos)
+		scheme = std::string(theUrlStrIn.begin(), theUrlStrIn.begin() + pos3);
+
 	std::string::size_type currentPos = tmpUrlStr.find("//"); // etsit‰‰n, lˆytyykˆ tupla kenoa
 	if(currentPos != std::string::npos) // jos lˆytyi, poistetaan alku osa koodista 
-									// (HUOM! http -stringi pit‰isi ottaa myˆs irti, ett‰ sit‰ voitaisiin k‰ytt‰‰ protokollan m‰‰ritykseen!!)
 		tmpUrlStr = std::string(tmpUrlStr.begin()+currentPos+2, tmpUrlStr.end());
 
 	std::string::size_type pos1 = tmpUrlStr.find("/"); // etsit‰‰n, 1. keno
@@ -406,12 +423,13 @@ void NFmiQ2Client::MakeHTTPRequest(const std::string &theUrlStr, std::string &th
 	std::string serverAddressStr;
 	std::string paramsStr;
 	std::string portStr;
+	std::string scheme;
 
-	if(::SplitUrlStr(theUrlStr, serverAddressStr, paramsStr, portStr))
+	if(::SplitUrlStr(theUrlStr, serverAddressStr, paramsStr, portStr, scheme))
 	{
 		std::string headerStr;
 		std::string errorStr;
-		::MakeHttpCommand(serverAddressStr, portStr, paramsStr, headerStr, theResponseStrOut, errorStr, fDoGet);
+		::MakeHttpCommand(serverAddressStr, portStr, paramsStr, headerStr, theResponseStrOut, errorStr, fDoGet, scheme);
 	}
 	else
 		throw std::runtime_error(std::string("Error in NFmiQ2Client::MakeHTTPRequest: given url was illegal:\n") + theUrlStr);
