@@ -2,6 +2,7 @@
 #include "WmsQuery.h"
 #include "SetupParser.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
+#include "../../q2clientlib/include/NFmiQ2Client.h"
 
 #include <webclient/Client.h>
 
@@ -20,6 +21,18 @@ namespace Wms
             boost::property_tree::read_xml(std::stringstream{ xml }, pTree);
             return pTree;
         }
+
+		std::string getCapabilitiesXml(const WmsQuery& query)
+		{
+			auto baseUriStr = toBaseUri(query);
+			auto requestStr = toRequest(query);
+			auto scheme = query.scheme;
+			std::string url = baseUriStr + requestStr;
+
+			std::string theResultStr;
+			NFmiQ2Client::MakeHTTPRequest(url, theResultStr, true);
+			return theResultStr;
+		}
 
         std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging, bool doVerboseLogging)
         {
@@ -112,7 +125,8 @@ namespace Wms
                     {
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
 						auto xml = fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging);
-						
+						auto xml2 = getCapabilitiesXml(query);
+
 						// Doing logging only the first time
 						serverKV.second.logFetchCapabilitiesRequest = false;
 						changedLayers_.changedLayers.clear();
