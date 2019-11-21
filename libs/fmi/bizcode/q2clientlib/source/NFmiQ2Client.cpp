@@ -11,7 +11,6 @@
 #define _WIN32_WINNT 0x0600 // boost/asio.hpp include pyyt‰‰ ett‰ _WIN32_WINNT m‰‰ritett‰isiin, nyt minimi platformi on t‰ss‰ Windows Vista (600)
 
 #include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 
 #include <fstream>
 
@@ -85,12 +84,6 @@ static bool MakeHttpCommand(const std::string &theServerStr, const std::string &
  
    try
    {
-// 	   if (scheme == "https") //Joonas jatka t‰st‰
-// 	   {
-// 		   // Do the same as in else, but for ssl socket
-// 		   boost::asio::io_service io_service;
-// 	   }
-// 	   else
 	   {
 		   boost::asio::io_service io_service;
 
