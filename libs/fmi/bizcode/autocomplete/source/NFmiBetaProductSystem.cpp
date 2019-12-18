@@ -1841,7 +1841,9 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductPath", usedKey, "");
     mBetaProductTabControlIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductTabControlIndex", usedKey, 0);
 
-    mBetaProductSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\SaveInitialPath", usedKey, itsBetaProductionBaseCacheDirectory); // otetaan Beta-product base-directory oletus arvoksi tähän
+    mBetaProductSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductSaveInitialPath", usedKey, itsBetaProductionBaseCacheDirectory); // otetaan Beta-product base-directory oletus arvoksi tähän
+    mBetaAutomationSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationSaveInitialPath", usedKey, itsBetaProductionBaseCacheDirectory); // otetaan Beta-product base-directory oletus arvoksi tähän
+    mBetaAutomationListSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationListSaveInitialPath", usedKey, itsBetaProductionBaseCacheDirectory); // otetaan Beta-product base-directory oletus arvoksi tähän
 
     mTriggerModeIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\TriggerModeIndex", usedKey, 0);
     mFixedTimesString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\FixedTimes", usedKey, "");
@@ -2086,6 +2088,26 @@ std::string NFmiBetaProductionSystem::BetaProductSaveInitialPath()
 void NFmiBetaProductionSystem::BetaProductSaveInitialPath(const std::string &newValue)
 {
     *mBetaProductSaveInitialPath = newValue;
+}
+
+std::string NFmiBetaProductionSystem::BetaAutomationSaveInitialPath()
+{
+    return *mBetaAutomationSaveInitialPath;
+}
+
+void NFmiBetaProductionSystem::BetaAutomationSaveInitialPath(const std::string& newValue)
+{
+    *mBetaAutomationSaveInitialPath = newValue;
+}
+
+std::string NFmiBetaProductionSystem::BetaAutomationListSaveInitialPath()
+{
+    return *mBetaAutomationListSaveInitialPath;
+}
+
+void NFmiBetaProductionSystem::BetaAutomationListSaveInitialPath(const std::string& newValue)
+{
+    *mBetaAutomationListSaveInitialPath = newValue;
 }
 
 bool NFmiBetaProductionSystem::AutomationModeOn()

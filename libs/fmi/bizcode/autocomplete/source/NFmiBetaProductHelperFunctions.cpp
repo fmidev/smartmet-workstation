@@ -112,14 +112,6 @@ namespace BetaProduct
         return gLoggerFunction;
     }
 
-
-    std::string& InitialSavePath()
-    {
-        static std::string initialSavePath;
-
-        return initialSavePath;
-    }
-
     // theInitialFileName on siis vain polku/xxx.ext -tyyppisessa polussa xxx -osio.
     // Kun CFileDialog:ille annetaan alkuarvaus tiedoston nimestä täysine polkuineen, avataan dialogi aina halutussa kansiossa.
     bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, CWnd* parentView)
