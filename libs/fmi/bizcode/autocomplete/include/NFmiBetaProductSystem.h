@@ -408,6 +408,10 @@ public:
     // std::function -otuksilla annetaan tietyt get/set funktiot yleisille templaatti funktoille, jotka toimivat kaikille Beta-otuksille.
     std::string BetaProductSaveInitialPath();
     void BetaProductSaveInitialPath(const std::string &newValue);
+    std::string BetaAutomationSaveInitialPath();
+    void BetaAutomationSaveInitialPath(const std::string& newValue);
+    std::string BetaAutomationListSaveInitialPath();
+    void BetaAutomationListSaveInitialPath(const std::string& newValue);
 
     // Laitoin n‰ille BetaProductionBaseDirectory -set/get funktioille Set/Get -etuliitteet, jotta k‰‰nt‰j‰ erottaa 
     // ne, kun teen NFmiBetaProductAutomation -luokalle t‰h‰n liittyv‰‰ getter-funktion:ia.
@@ -504,7 +508,9 @@ private:
 
     // General Beta Product dialog options
     std::string mBaseRegistryPath; // Perus smartmet polku Windows rekistereiss‰ (t‰h‰n tulee SmartMetin konfiguraatio kohtainen polku)
-    boost::shared_ptr<CachedRegString> mBetaProductSaveInitialPath; // Beta product dialogi muistaa minne/mist‰ on talletettu/ladattu viimeksi Beta-producteihin liittyvi‰ tiedostoja
+    boost::shared_ptr<CachedRegString> mBetaProductSaveInitialPath; // Beta product dialogi muistaa minne/mist‰ on talletettu/ladattu viimeksi Beta-product tiedosto
+    boost::shared_ptr<CachedRegString> mBetaAutomationSaveInitialPath; // Beta product dialogi muistaa minne/mist‰ on talletettu/ladattu viimeksi Beta-automaatio tiedosto
+    boost::shared_ptr<CachedRegString> mBetaAutomationListSaveInitialPath; // Beta product dialogi muistaa minne/mist‰ on talletettu/ladattu viimeksi Beta-automaatiolist tiedosto
     boost::shared_ptr<CachedRegInt> mBetaProductTabControlIndex; // Mik‰ Beta-product dialogin tabi on aktiivinen
     boost::shared_ptr<CachedRegString> mUsedAutomationListPathString; // Polku smartMetin k‰ytt‰m‰‰n automaatiolistaan, joka ladataan k‰ynnistyess‰
     // Beta Product dialog tab control settings

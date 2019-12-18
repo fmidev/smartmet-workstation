@@ -69,8 +69,6 @@ BOOL CFmiBetaProductTabControlDialog::OnInitDialog()
     std::string errorBaseStr("Error in CFmiBetaProductTabControlDialog::OnInitDialog while reading dialog size (and position) values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, true, errorBaseStr, 0);
 
-    BetaProduct::InitialSavePath() = itsSmartMetDocumentInterface->BetaProductionSystem().BetaProductSaveInitialPath(); // Alustetaan tämä kerran kaikkia BetaProduct tabi-dialogeja varten
-
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -163,7 +161,6 @@ void CFmiBetaProductTabControlDialog::OnClose()
 void CFmiBetaProductTabControlDialog::DoWhenClosing(bool calledFromDestructor)
 {
     itsSmartMetDocumentInterface->BetaProductionSystem().BetaProductTabControlIndex(itsBetaProductControl.GetSSLActivePage());
-    itsSmartMetDocumentInterface->BetaProductionSystem().BetaProductSaveInitialPath(BetaProduct::InitialSavePath()); // Talletetaan tämä kerran kaikkiene BetaProduct tabi-dialogien puolesta
 
     if(!calledFromDestructor)
     {
