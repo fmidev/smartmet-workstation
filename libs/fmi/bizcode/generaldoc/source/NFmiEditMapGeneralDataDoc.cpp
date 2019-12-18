@@ -13425,6 +13425,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(ch != '\\' && ch != '/')
                 itsSpecialFileStoragePath += kFmiDirectorySeparator;
 
+            itsSpecialFileStoragePath = BetaProduct::SimplifyWindowsPath(itsSpecialFileStoragePath);
+
             // varmistetaan vielä että hakemisto on olemassa
             if(!NFmiFileSystem::CreateDirectory(itsSpecialFileStoragePath))
             {
@@ -13726,6 +13728,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         bool useLocals = ApplicationWinRegistry().UseLocalFixedDrawParams();
         std::string rootPath = useLocals ? "FixedDrawParams" : ApplicationWinRegistry().FixedDrawParamsPath();
         rootPath = PathUtils::getAbsoluteFilePath(rootPath, useLocals ? WorkingDirectory() : ControlDirectory());
+        rootPath = BetaProduct::SimplifyWindowsPath(rootPath);
         return rootPath;
     }
 
