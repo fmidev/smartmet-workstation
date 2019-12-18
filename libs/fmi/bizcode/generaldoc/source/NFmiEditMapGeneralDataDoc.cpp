@@ -8728,8 +8728,10 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::GeneralDoc &gDoc = theMacro.GetGeneralDoc();
 		ProjectionCurvatureInfo(gDoc.ProjectionCurvatureInfo());
-		CPManager(true)->Init(gDoc.CPLocationVector()); // viewMacron CP-pisteet asetetaan ensin 'old-school' CP-manageriin (CPManager(true))
-		itsCPManagerSet.UpdateViewMacroCPManager(CPManager(true)); // sitten laitetaan se vielä ns. viewmacro-CPManageriksi
+        if(itsCPManagerSet.UseOldSchoolStyle())
+    		CPManager(true)->Init(gDoc.CPLocationVector(), true);
+        else
+    		itsCPManagerSet.UpdateViewMacroCPManager(gDoc.CPLocationVector());
 	}
 
 	void AdjustDrawParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiViewSettingMacro::Param &theParam, bool fTreatAsViewMacro)
