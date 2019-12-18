@@ -49,7 +49,7 @@ public:
    NFmiEditorControlPointManager(void);
    ~NFmiEditorControlPointManager(void);
    bool Init(const NFmiTimeDescriptor& theTimes, const NFmiParamBag& theParams, const std::string& theCPFileName, bool fKeepOldValues, bool fKeepOldCPs, int theMaxAllowedTimeCount = 200);
-   bool Init(const checkedVector<NFmiPoint> &newCPs);
+   bool Init(const checkedVector<NFmiPoint> &newCPs, bool keepModificationsIfPossible);
    bool Init(const NFmiEditorControlPointManager &theOther);
    bool SetZoomedAreaStationsAsControlPoints(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea);
    bool SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea);
