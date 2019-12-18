@@ -677,7 +677,9 @@ static int StripExtraCarrigeReturns(CString &theString)
 //}
 
 const std::string g_SmarttoolFileExtension = "st";
+const std::string g_SmarttoolFileTotalExtension = "." + g_SmarttoolFileExtension;
 const std::string g_SmarttoolFileFilter = "Smarttool Files (*." + g_SmarttoolFileExtension + ")|*." + g_SmarttoolFileExtension + "|All Files (*.*)|*.*||";
+const std::string g_SmarttoolDefaultFileName = "smarttool1";
 
 void CFmiSmartToolDlg::OnButtonSmartToolSave()
 {
@@ -686,8 +688,11 @@ void CFmiSmartToolDlg::OnButtonSmartToolSave()
     const auto &smarttoolInfo = *itsSmartMetDocumentInterface->SmartToolInfo();
     std::string initialPath = smarttoolInfo.RootLoadDirectory() + smarttoolInfo.GetRelativeLoadPath();
     std::string initialFilename = smarttoolInfo.CurrentScriptName();
-    if(!initialFilename.empty())
-        initialFilename += "." + g_SmarttoolFileExtension;
+    if(initialFilename.empty())
+    {
+        initialFilename = g_SmarttoolDefaultFileName;
+    }
+    initialFilename += g_SmarttoolFileTotalExtension;
     std::string filePath;
     if(BetaProduct::GetFilePathFromUserTotal(g_SmarttoolFileFilter, initialPath, filePath, false, initialFilename, g_SmarttoolFileExtension, smarttoolInfo.RootLoadDirectory(), this))
     {
@@ -794,7 +799,9 @@ static bool IsInCurrentMacroParamDirectory(NFmiMacroParamSystem& mpSystem, const
 
 
 const std::string g_MacroParamFileExtension = "st";
+const std::string g_MacroParamFileTotalExtension = "." + g_MacroParamFileExtension;
 const std::string g_MacroParamFileFilter = "MacroParam Files (*." + g_MacroParamFileExtension + ")|*." + g_MacroParamFileExtension + "|All Files (*.*)|*.*||";
+const std::string g_MacroParamDefaultFileName = "macroparam1";
 
 static std::string GetRealMacroParamDrawParamFileName(const std::string& macroParamFormulaFileName)
 {
@@ -814,9 +821,13 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
     if(mpSystem.GetCurrentMacroParam())
     {
         initialFilename = mpSystem.GetCurrentMacroParam()->Name();
-        if(!initialFilename.empty())
-            initialFilename += "." + g_MacroParamFileExtension;
     }
+    if(initialFilename.empty())
+    {
+        initialFilename += g_MacroParamDefaultFileName;
+    }
+    initialFilename += g_MacroParamFileTotalExtension;
+
     std::string filePath;
     if(BetaProduct::GetFilePathFromUserTotal(g_MacroParamFileFilter, initialPath, filePath, false, initialFilename, g_MacroParamFileExtension, mpSystem.RootPath(), this))
     {

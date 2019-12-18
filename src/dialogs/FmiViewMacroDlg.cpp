@@ -293,7 +293,9 @@ static bool IsCr(char value)
 }
 
 const std::string g_ViewMacroFileExtension = "vmr";
+const std::string g_ViewMacroFileTotalExtension = "." + g_ViewMacroFileExtension;
 const std::string g_ViewMacroFileFilter = "View-macro Files (*." + g_ViewMacroFileExtension + ")|*." + g_ViewMacroFileExtension + "|All Files (*.*)|*.*||";
+const std::string g_ViewMacroDefaultFileName = "viewmacro1";
 
 
 void CFmiViewMacroDlg::OnBnClickedButtonStore()
@@ -302,8 +304,11 @@ void CFmiViewMacroDlg::OnBnClickedButtonStore()
 
     std::string initialPath = itsSmartMetDocumentInterface->RootViewMacroPath() + itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
     std::string initialFilename = itsSelectedMacroName;
-    if(!initialFilename.empty())
-        initialFilename += "." + g_ViewMacroFileExtension;
+    if(initialFilename.empty())
+    {
+        initialFilename = g_ViewMacroDefaultFileName;
+    }
+    initialFilename += "." + g_ViewMacroFileExtension;
     std::string filePath;
     if(BetaProduct::GetFilePathFromUserTotal(g_ViewMacroFileFilter, initialPath, filePath, false, initialFilename, g_ViewMacroFileExtension, itsSmartMetDocumentInterface->RootViewMacroPath(), this))
     {
