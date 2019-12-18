@@ -152,6 +152,7 @@
 #include "boost/unordered_map.hpp"
 #include "boost/math/special_functions/round.hpp"
 #include "boost/filesystem.hpp"
+#include "boost/algorithm/string.hpp"
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
@@ -9401,7 +9402,7 @@ bool IsRedoableViewMacro(void)
 		if(theDirectoryName == ".")
             return NFmiLightWeightViewSettingMacro();
 		// jos ollaan ns. root hakemistossa, ei up-hakemistoa laiteta
-		if(itsViewMacroPath == itsRootViewMacroPath && theDirectoryName == "..")
+		if(boost::iequals(itsViewMacroPath, itsRootViewMacroPath) && theDirectoryName == "..")
             return NFmiLightWeightViewSettingMacro();
         NFmiLightWeightViewSettingMacro viewMacroDescription;
 		viewMacroDescription.fIsViewMacroDirectory = true;
@@ -14120,7 +14121,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     std::string GetRelativeViewMacroPath()
     {
         std::string relativePath = itsViewMacroPath;
-        NFmiStringTools::ReplaceAll(relativePath, itsRootViewMacroPath, "");
+        boost::ireplace_first(relativePath, itsRootViewMacroPath, "");
         return relativePath;
     }
 
