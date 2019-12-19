@@ -646,7 +646,6 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mUseMultiProcessCpCalc()
 ,mAllowRightClickDisplaySelection()
 ,mFixedDrawParamsPath()
-,mUseLocalFixedDrawParams()
 ,mLocationFinderThreadTimeOutInMS()
 ,mShowHakeMessages()
 ,mShowKaHaMessages()
@@ -707,7 +706,6 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mUseMultiProcessCpCalc = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\UseMultiProcessCpCalc", usedKey, false);
     mAllowRightClickDisplaySelection = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\AllowRightClickDisplaySelection", usedKey, false);
     mFixedDrawParamsPath = NFmiSettings::Optional<std::string>("SmartMet::FixedDrawParamsPath", "FixedDrawParams");
-    mUseLocalFixedDrawParams = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\UseLocalFixedDrawParams", usedKey, false, "SmartMet::UseLocalFixedDrawParams");
     mLocationFinderThreadTimeOutInMS = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\LocationFinderThreadTimeOutInMS", usedKey, 1500, "SmartMet::LocationFinderThreadTimeOutInMS");
     mShowHakeMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowHakeMessages", usedKey, true);
     mShowKaHaMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowKaHaMessages", usedKey, false);
@@ -897,16 +895,6 @@ std::string NFmiApplicationWinRegistry::FixedDrawParamsPath()
 void NFmiApplicationWinRegistry::FixedDrawParamsPath(const std::string &newValue)
 {
     mFixedDrawParamsPath = newValue;
-}
-
-bool NFmiApplicationWinRegistry::UseLocalFixedDrawParams()
-{
-    return *mUseLocalFixedDrawParams;
-}
-
-void NFmiApplicationWinRegistry::UseLocalFixedDrawParams(bool newValue)
-{
-    *mUseLocalFixedDrawParams = newValue;
 }
 
 int NFmiApplicationWinRegistry::LocationFinderThreadTimeOutInMS()

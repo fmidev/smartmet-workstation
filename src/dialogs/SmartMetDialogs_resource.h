@@ -85,7 +85,6 @@
 #define IDC_RADIO_1_hirlam              1038
 #define IDC_CHECK_ALLOW_SYSTEM_INFO_SEND_TO_DB 1038
 #define IDC_RADIO_1_ECMWF               1039
-#define IDC_CHECK_USE_LOCAL_FIXED_DRAW_PARAMS 1039
 #define IDC_RADIO_2_own                 1040
 #define IDC_RADIO_2_official            1041
 #define IDC_RADIO_2_hirlam              1042

@@ -265,8 +265,6 @@ public:
     void AllowRightClickDisplaySelection(bool newValue);
     std::string FixedDrawParamsPath();
     void FixedDrawParamsPath(const std::string &newValue);
-    bool UseLocalFixedDrawParams();
-    void UseLocalFixedDrawParams(bool newValue);
     int LocationFinderThreadTimeOutInMS();
     void LocationFinderThreadTimeOutInMS(int newValue);
 
@@ -329,7 +327,6 @@ private:
     boost::shared_ptr<CachedRegBool> mUseMultiProcessCpCalc; // käytetäänkö kontrollipistetyökalun yhteydessä multi-process-worker -poolia vai ei
     boost::shared_ptr<CachedRegBool> mAllowRightClickDisplaySelection; // Sallitaanko käyttäjän valita hiiren oikealla napilla asemia kartalta vai ei.
     std::string mFixedDrawParamsPath; // Ns. tehdasasetus piirto-ominaisuus asetuksien polku (oli aiemmin Windows rekisterissä, mutta poistin sieltä, koska asetus pitää saada ehdottomasti konfiguraatioista)
-    boost::shared_ptr<CachedRegBool> mUseLocalFixedDrawParams; // Jos normaalisti fixedDrawParamit ovat esim. serverillä, mutta ei ole verkkoyhteyttä, tällöin voidaan siirtyä käyttämään lokaaleja tehdasasetuksia, jotka tulevat SmartMet asennuspaketin mukana.
     boost::shared_ptr<CachedRegInt> mLocationFinderThreadTimeOutInMS; // Kuinka kauan maksimissaan odotetaan että Location Finder (Autocomplete toiminto SmartMetissa, x näppäin karttanäytössä) haku valmistuu, ennenkuin lopetetaan (ettei jää jumiin pitkäksi aikaa)
 
     boost::shared_ptr<CachedRegBool> mShowHakeMessages; // Näytetäänkö Warnings dialogin kautta Hake sanomia? (Hälytys keskus)
