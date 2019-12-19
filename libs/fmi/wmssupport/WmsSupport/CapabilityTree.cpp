@@ -49,4 +49,5 @@ namespace Wms
             node.children.push_back(std::move(subTree));
         }
     }
+
 }
