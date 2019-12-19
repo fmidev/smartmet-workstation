@@ -107,12 +107,12 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_ACTION, OnButtonAction)
 	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_LOAD, OnButtonSmartToolLoad)
 	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER, OnButtonSmartToolLoadDbChecker)
-	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE, OnButtonSmartToolSave)
+	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE_AS, OnButtonSmartToolSaveAs)
 	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER, OnButtonSmartToolSaveDbChecker)
 	ON_BN_CLICKED(IDC_CHECK_MAKE_DB_CHECK_AT_SEND, OnCheckMakeDbCheckAtSend)
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, OnBnClickedCheckModifyOnlySelectedLocations)
-	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE, OnBnClickedButtonMacroParamSave)
+	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE_AS, OnBnClickedButtonMacroParamSaveAs)
 	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_REMOVE, OnBnClickedButtonMacroParamRemove)
 	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_PROPERTIES, OnBnClickedButtonMacroParamProperties)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TO_ROW_1, OnBnClickedButtonAddToRow1)
@@ -395,7 +395,7 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_RICHEDIT_MACRO_ERROR_TEXT, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE, ANCHOR_TOP | ANCHOR_RIGHT);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE_AS, ANCHOR_TOP | ANCHOR_RIGHT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_LOAD, ANCHOR_TOP | ANCHOR_RIGHT);
     ASSERT(bOk == TRUE);
@@ -409,7 +409,7 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PARAM_HOLDER, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_SAVE, ANCHOR_BOTTOM | ANCHOR_LEFT);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_SAVE_AS, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_REMOVE, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
@@ -681,7 +681,7 @@ const std::string g_SmarttoolFileTotalExtension = "." + g_SmarttoolFileExtension
 const std::string g_SmarttoolFileFilter = "Smarttool Files (*." + g_SmarttoolFileExtension + ")|*." + g_SmarttoolFileExtension + "|All Files (*.*)|*.*||";
 const std::string g_SmarttoolDefaultFileName = "smarttool1";
 
-void CFmiSmartToolDlg::OnButtonSmartToolSave()
+void CFmiSmartToolDlg::OnButtonSmartToolSaveAs()
 {
 	UpdateData(TRUE);
 
@@ -810,7 +810,7 @@ static std::string GetRealMacroParamDrawParamFileName(const std::string& macroPa
     return drawParamFilePath.string();
 }
 
-void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
+void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
 {
     UpdateData(TRUE);
 
@@ -1179,14 +1179,14 @@ void CFmiSmartToolDlg::InitDialogTexts(void)
 
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, "IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_ERROR_STR, "IDC_STATIC_MACRO_ERROR_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE, "IDC_BUTTON_SMART_TOOL_SAVE");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save as SmartT");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD, "IDC_BUTTON_SMART_TOOL_LOAD");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_REMOVE, "IDC_BUTTON_SMART_TOOL_REMOVE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_DB_CHECK_AT_SEND, "IDC_CHECK_MAKE_DB_CHECK_AT_SEND");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_PARAM_HOLDER, "IDC_STATIC_MACRO_PARAM_HOLDER");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_SAVE, "IDC_BUTTON_MACRO_PARAM_SAVE");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_SAVE_AS, "Save as MacroPar");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_REMOVE, "IDC_BUTTON_MACRO_PARAM_REMOVE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_PROPERTIES, "IDC_BUTTON_MACRO_PARAM_PROPERTIES");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_REFRESH_LIST, "IDC_BUTTON_MACRO_PARAM_REFRESH_LIST");

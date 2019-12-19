@@ -66,7 +66,7 @@ protected:
     afx_msg void OnButtonAction();
 	afx_msg void OnButtonSmartToolLoad();
 	afx_msg void OnButtonSmartToolLoadDbChecker();
-	afx_msg void OnButtonSmartToolSave();
+	afx_msg void OnButtonSmartToolSaveAs();
 	afx_msg void OnButtonSmartToolSaveDbChecker();
 	afx_msg void OnCheckMakeDbCheckAtSend();
     virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
@@ -131,7 +131,7 @@ protected:
 
 public:
 	afx_msg void OnBnClickedCheckModifyOnlySelectedLocations();
-	afx_msg void OnBnClickedButtonMacroParamSave();
+	afx_msg void OnBnClickedButtonMacroParamSaveAs();
     afx_msg void OnBnClickedButtonMacroParamRemove();
 	afx_msg void OnBnClickedButtonMacroParamProperties();
 	afx_msg void OnBnClickedButtonAddToRow1();
