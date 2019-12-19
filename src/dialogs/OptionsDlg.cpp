@@ -60,6 +60,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , fDroppedDataEditable(FALSE)
     , itsIsolineMinimumLengthFactor(1)
     , fGenerateTimeCombinationData(FALSE)
+    , fForceWdParameterToLinearInterpolation(FALSE)
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -131,6 +132,7 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR, itsIsolineMinimumLengthFactor);
     DDV_MinMaxDouble(pDX, itsIsolineMinimumLengthFactor, 0, 100);
     DDX_Check(pDX, IDC_CHECK_MAKE_COMBINATION_DATA, fGenerateTimeCombinationData);
+    DDX_Check(pDX, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, fForceWdParameterToLinearInterpolation);
 }
 
 
@@ -209,6 +211,7 @@ BOOL COptionsDlg::OnInitDialog()
     fDroppedDataEditable = applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable();
     itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
     fGenerateTimeCombinationData = applicationWinRegistry.GenerateTimeCombinationData();
+    fForceWdParameterToLinearInterpolation = applicationWinRegistry.ForceWdParameterToLinearInterpolation();
 
 	DisableControls();
 
@@ -342,6 +345,7 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable(fDroppedDataEditable == TRUE);
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
     applicationWinRegistry.GenerateTimeCombinationData(fGenerateTimeCombinationData == TRUE);
+    applicationWinRegistry.ForceWdParameterToLinearInterpolation(fForceWdParameterToLinearInterpolation == TRUE);
 
 	CDialog::OnOK();
 }
@@ -420,6 +424,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DROPPED_DATA_EDITABLE, "Dropped data editable (slower to drop)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT, "Isoline min length factor (0-100)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_COMBINATION_DATA, "Generate time combination data (unchecking might prevent crashes)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, "Forced linear WD (on=better, off=fast)");
 }
 
 void COptionsDlg::InitLogLevelComboBox()

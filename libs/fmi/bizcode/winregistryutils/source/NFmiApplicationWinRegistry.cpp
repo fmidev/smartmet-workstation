@@ -658,6 +658,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mVisualizationGriddingProperties()
 ,mSaveImageExtensionFilterIndex()
 ,mMapViewCacheMaxSizeInMB()
+,mForceWdParameterToLinearInterpolation()
 {
 }
 
@@ -720,6 +721,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mMapViewCacheMaxSizeInMB = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MapViewCacheMaxSizeInMB", usedKey, 2000);
     // En tiedä onko oikeasti väliä, jos luku olisi vahingossa esim. negatiivinen, joten laitetaan alustettu arvo varmuuden vuoksi setterin läpi, joka tekee tarkistuksia.
     MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
+    mForceWdParameterToLinearInterpolation = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ForceWdParameterToLinearInterpolation", usedKey, false);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -1039,4 +1041,14 @@ void NFmiApplicationWinRegistry::MapViewCacheMaxSizeInMB(double newValue)
     }
 
     *mMapViewCacheMaxSizeInMB = newValue;
+}
+
+bool NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation()
+{
+    return *mForceWdParameterToLinearInterpolation;
+}
+
+void NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation(bool newValue)
+{
+    *mForceWdParameterToLinearInterpolation = newValue;
 }
