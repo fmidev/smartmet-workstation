@@ -51,6 +51,8 @@ protected:
 	virtual void CreateZoomView(void);
 
 	NFmiEditorControlPointManager* itsCPManager; // ei omista
+public:
+    afx_msg void OnBnClickedButtonMacroParamSave();
 };
 
 /////////////////////////////////////////////////////////////////////////////
