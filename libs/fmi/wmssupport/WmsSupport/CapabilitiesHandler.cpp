@@ -1,12 +1,15 @@
 #include "CapabilitiesHandler.h"
 #include "WmsQuery.h"
 #include "SetupParser.h"
+#include "xmlliteutils/XmlHelperFunctions.h"
+#include "../../q2clientlib/include/NFmiQ2Client.h"
 
 #include <webclient/Client.h>
 
 #include <catlog/catlog.h>
 #include <cppback/background-manager.h>
 #include <boost/property_tree/xml_parser.hpp>
+
 
 namespace Wms
 {
@@ -18,6 +21,7 @@ namespace Wms
             boost::property_tree::read_xml(std::stringstream{ xml }, pTree);
             return pTree;
         }
+
         std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging, bool doVerboseLogging)
         {
             try
@@ -49,6 +53,7 @@ namespace Wms
                 return "";
             }
         }
+
     }
 
     CapabilitiesHandler::CapabilitiesHandler(
@@ -89,7 +94,7 @@ namespace Wms
         {
             while(true)
             {
-                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
+                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};			
 
                 for(auto& serverKV : servers_)
                 {
@@ -106,13 +111,23 @@ namespace Wms
 
                     try
                     {
-
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-                        auto capabilities = parseXmlToPropertyTree(fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging));
-                        // Doing logging only the first time
-                        serverKV.second.logFetchCapabilitiesRequest = false;
-                        changedLayers_.changedLayers.clear();
-                        children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
+						auto xml = fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging);
+
+						// Doing logging only the first time
+						serverKV.second.logFetchCapabilitiesRequest = false;
+						changedLayers_.changedLayers.clear();
+
+						// Two options on how to deal with wms capability xmls (parseXml/parseXmlToPropertyTree).
+						if (server.delimiter == "0") // Parser that is/should be used outside FMI
+						{				
+							children.push_back(capabilityTreeParser.parseXml(xml, hashes_, changedLayers_));
+						}
+						else // This second method suits FMI specific style
+						{
+							auto capabilities = parseXmlToPropertyTree(xml);
+							children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
+						}
                         if(!changedLayers_.changedLayers.empty())
                         {
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
@@ -130,4 +145,5 @@ namespace Wms
             }
         });
     }
+
 }
