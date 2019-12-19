@@ -998,6 +998,8 @@ void InitFixedDrawParamSystem(void)
     try
     {
         auto fixedDrawParamInitRootPath = MakeUsedFixedDrawParamsRootPath();
+        // Laitetaan 'siivottu' polku takaisin, sit‰ ei laiteta minnek‰‰n talteen, mutta se n‰ytet‰‰n Settings dialogissa
+        ApplicationWinRegistry().FixedDrawParamsPath(fixedDrawParamInitRootPath);
         CatLog::logMessage(std::string("Starting to initilize Fixed DrawParams from directory: ") + fixedDrawParamInitRootPath, CatLog::Severity::Debug, CatLog::Category::Configuration);
         itsFixedDrawParamSystem.Initialize(fixedDrawParamInitRootPath);
         CatLog::logMessage(std::string("Fixed DrawParams initialized with ") + std::to_string(itsFixedDrawParamSystem.FlatDrawParamList().size()) + " drawParams", CatLog::Severity::Debug, CatLog::Category::Configuration);
@@ -13727,9 +13729,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     std::string MakeUsedFixedDrawParamsRootPath()
     {
-        bool useLocals = ApplicationWinRegistry().UseLocalFixedDrawParams();
-        std::string rootPath = useLocals ? "FixedDrawParams" : ApplicationWinRegistry().FixedDrawParamsPath();
-        rootPath = PathUtils::getAbsoluteFilePath(rootPath, useLocals ? WorkingDirectory() : ControlDirectory());
+        std::string rootPath = ApplicationWinRegistry().FixedDrawParamsPath();
+        rootPath = PathUtils::getAbsoluteFilePath(rootPath, ControlDirectory());
         rootPath = BetaProduct::SimplifyWindowsPath(rootPath);
         return rootPath;
     }
