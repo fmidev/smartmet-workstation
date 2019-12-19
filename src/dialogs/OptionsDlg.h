@@ -94,6 +94,7 @@ private:
     BOOL fDroppedDataEditable;
     double itsIsolineMinimumLengthFactor;
     BOOL fGenerateTimeCombinationData;
+    BOOL fForceWdParameterToLinearInterpolation;
 };
 
 //{{AFX_INSERT_LOCATION}}

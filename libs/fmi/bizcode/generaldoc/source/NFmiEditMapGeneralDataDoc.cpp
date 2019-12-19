@@ -2850,8 +2850,11 @@ void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data)
         }
         else if(paramDescriptor.Param(kFmiWindDirection))
         {
-            // Teht‰v‰ #2: jos p‰‰tasolla on tuulensuunta parametri, varmista ett‰ sekin on lineaarisesti interpoloitu (muuten tulee ongelmia macroParamien kanssa)
-            parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam());
+            if(ApplicationWinRegistry().ForceWdParameterToLinearInterpolation())
+            {
+                // Teht‰v‰ #2: jos p‰‰tasolla on tuulensuunta parametri, varmista ett‰ sekin on lineaarisesti interpoloitu (muuten tulee ongelmia macroParamien kanssa)
+                parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam());
+            }
         }
 
         if(parameterModified)

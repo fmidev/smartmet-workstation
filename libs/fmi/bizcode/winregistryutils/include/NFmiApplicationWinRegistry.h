@@ -293,6 +293,8 @@ public:
     const std::string& GetCurrentSaveImageFileFilterExtension() const;
     double MapViewCacheMaxSizeInMB();
     void MapViewCacheMaxSizeInMB(double newValue);
+    bool ForceWdParameterToLinearInterpolation();
+    void ForceWdParameterToLinearInterpolation(bool newValue);
 
     static std::string MakeBaseRegistryPath(void);
     static std::string MakeGeneralSectionName(void);
@@ -380,6 +382,7 @@ private:
     // Näytön cachena käytettyjen bitmappien max koko megatavuina, tarkoittaa siis aina yhden näytön
     // cachea kerrallaan, eli kolme näyttöä ottaa mahdollisesti kaikkiaan 3x tämä koon.
     boost::shared_ptr<CachedRegDouble> mMapViewCacheMaxSizeInMB;
+    boost::shared_ptr<CachedRegBool> mForceWdParameterToLinearInterpolation;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 
