@@ -1379,7 +1379,8 @@ SmartMetViewId CSmartMetDoc::GetAndResetUpdatedViewsFlag()
 
 void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag)
 {
-    GetAndResetUpdatedViewsFlag(); // nollataan tämä varmuuden vuoksi
+    // Otetaan GetAndResetUpdatedViewsFlag:istä myös mahdollinen dirty-mask mukaan lopulliseen päivitykseen (ja nollataan se samalla)
+    updatedViewsFlag = updatedViewsFlag | GetAndResetUpdatedViewsFlag();
     if(UpdateAllViewsAndDialogsIsAllowed())
     {
         ::MakeGeneralUpdateTraceLogging(std::string("***** ") + __FUNCTION__ + "-v2 ***** {Reason: " + reasonForUpdate + "}");
