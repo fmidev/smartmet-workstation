@@ -163,7 +163,7 @@ BOOL COptionsDlg::OnInitDialog()
 	fShowToolTip = metEditorOptionsData.ShowToolTipsOnMapView();
     fUseSpacingOut = applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(0)->SpacingOutFactor() > 0;
     fAutoZoom = applicationWinRegistry.KeepMapAspectRatio();
-	NFmiValueString str2(metEditorOptionsData.ViewCacheMaxSizeInMB(), "%0.2f");
+	NFmiValueString str2(applicationWinRegistry.MapViewCacheMaxSizeInMB(), "%0.f");
     itsViewCacheSizeStrU_ = CA2T(str2);
 	NFmiValueString str3(metEditorOptionsData.UndoRedoDepth(), "%d");
     itsUndoRedoDepthStrU_ = CA2T(str3);
@@ -290,6 +290,7 @@ void COptionsDlg::OnOK()
 
     NFmiValueString cacheSizeStr = CT2A(itsViewCacheSizeStrU_);
 	float cacheSize = float(cacheSizeStr);
+    // Must call this SetMapViewCacheSize -function to store new setting AND also set actual map-view-cache-sizes
     itsSmartMetDocumentInterface->SetMapViewCacheSize(cacheSize);
 
     NFmiValueString animationDelayStr = CT2A(itsAnimationFrameDelayInMSecStrU_);

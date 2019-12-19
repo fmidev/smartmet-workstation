@@ -1473,8 +1473,9 @@ NFmiMapViewDescTop* CreateMapViewDescTop(const string &baseSettingStr, int mapVi
 {
 	string currentSettingStr = GetMapViewDescTopSettingString(baseSettingStr, mapViewIndex);
     NFmiMapViewDescTop *descTop = new NFmiMapViewDescTop(currentSettingStr, &itsMapConfigurationSystem, itsProjectionCurvatureInfo, itsBasicConfigurations.ControlPath());
-	descTop->MapViewCache().MaxSizeMB(MetEditorOptionsData().ViewCacheMaxSizeInMB());
-    descTop->Init(*ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex));
+    auto& applicationWinRegistry = ApplicationWinRegistry();
+	descTop->MapViewCache().MaxSizeMB(applicationWinRegistry.MapViewCacheMaxSizeInMB());
+    descTop->Init(*applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(mapViewIndex));
     return descTop;
 }
 
@@ -12726,7 +12727,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void SetMapViewCacheSize(double theNewSizeInMB)
 	{
-		MetEditorOptionsData().ViewCacheMaxSizeInMB(theNewSizeInMB);
+		ApplicationWinRegistry().MapViewCacheMaxSizeInMB(theNewSizeInMB);
 
 		for(size_t i=0; i<itsMapViewDescTopList.size(); i++)
 			itsMapViewDescTopList[i]->MapViewCache().MaxSizeMB(theNewSizeInMB);

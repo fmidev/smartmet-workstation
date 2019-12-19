@@ -658,6 +658,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mEditingToolsGriddingProperties()
 ,mVisualizationGriddingProperties()
 ,mSaveImageExtensionFilterIndex()
+,mMapViewCacheMaxSizeInMB()
 {
 }
 
@@ -718,6 +719,9 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mSaveImageExtensionFilterIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\SaveImageExtensionFilterIndex", usedKey, 1);
     // Pit‰‰ viel‰ varmistaa ett‰ rekisterist‰ luettu indeksi menee rajojen sis‰lle oikein, siksi kutsutaan viel‰ sen Set-metodia, joka tekee tarkasteluja.
     SetSaveImageExtensionFilterIndex(*mSaveImageExtensionFilterIndex);
+    mMapViewCacheMaxSizeInMB = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MapViewCacheMaxSizeInMB", usedKey, 2000);
+    // En tied‰ onko oikeasti v‰li‰, jos luku olisi vahingossa esim. negatiivinen, joten laitetaan alustettu arvo varmuuden vuoksi setterin l‰pi, joka tekee tarkistuksia.
+    MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! n‰m‰ vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -1032,4 +1036,19 @@ const std::string& NFmiApplicationWinRegistry::GetCurrentSaveImageFileFilterExte
         return mSaveImageFileFilterExtensions[usedVectorIndex];
     else
         return mSaveImageFileFilterExtensions[0];
+}
+
+double NFmiApplicationWinRegistry::MapViewCacheMaxSizeInMB()
+{
+    return *mMapViewCacheMaxSizeInMB;
+}
+
+void NFmiApplicationWinRegistry::MapViewCacheMaxSizeInMB(double newValue)
+{
+    if(newValue < 0)
+    {
+        newValue = 0;
+    }
+
+    *mMapViewCacheMaxSizeInMB = newValue;
 }

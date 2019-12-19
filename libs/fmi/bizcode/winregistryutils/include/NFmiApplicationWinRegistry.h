@@ -293,6 +293,8 @@ public:
     void SetSaveImageExtensionFilterIndex(int newValue);
     const std::vector<std::string>& SaveImageFileFilterExtensions() const;
     const std::string& GetCurrentSaveImageFileFilterExtension() const;
+    double MapViewCacheMaxSizeInMB();
+    void MapViewCacheMaxSizeInMB(double newValue);
 
     static std::string MakeBaseRegistryPath(void);
     static std::string MakeGeneralSectionName(void);
@@ -377,6 +379,10 @@ private:
     boost::shared_ptr<CachedRegInt> mSaveImageExtensionFilterIndex; 
     // mSaveImageFileFilterExtensions vektorin ja g_SaveImageFileFilter:in sisällöt pitää asettaa kohdilleen, jos meinaa muuttaa filtterien listaa tai niiden järjestystä!
     const std::vector<std::string> mSaveImageFileFilterExtensions = { "png", "jpg", "bmp", "tiff", "gif" };
+
+    // Näytön cachena käytettyjen bitmappien max koko megatavuina, tarkoittaa siis aina yhden näytön
+    // cachea kerrallaan, eli kolme näyttöä ottaa mahdollisesti kaikkiaan 3x tämä koon.
+    boost::shared_ptr<CachedRegDouble> mMapViewCacheMaxSizeInMB;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 
