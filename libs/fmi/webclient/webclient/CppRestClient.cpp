@@ -87,6 +87,7 @@ namespace Web
     web::http::client::http_client_config CppRestClient::createConfig(const std::string& domain) const
     {
         auto client_config = web::http::client::http_client_config{};
+		client_config.set_validate_certificates(false);
         if(needsProxy(domain))
         {
             client_config.set_proxy(web::web_proxy(to_string_t(proxyUrl_)));

@@ -31,7 +31,6 @@
 NFmiMetEditorOptionsData::NFmiMetEditorOptionsData(void)
 :fDataValidationEnabled(true)
 ,fShowToolTipsOnMapView(true)
-,itsViewCacheMaxSizeInMB(15)
 ,itsUndoRedoDepth(5)
 ,fMakeDataValiditationAtSendingToDB(false)
 ,fMakeDataValiditationAutomatic(true)
@@ -65,7 +64,6 @@ void NFmiMetEditorOptionsData::InitFromSettings(const std::string &theBaseNameSp
 	itsDataValiditation_SnowTemperatureLimit = NFmiSettings::Require<float>(std::string(itsBaseNameSpace + "::DataValiditation_SnowTemperatureLimit"));
 	itsDataValiditation_RainTemperatureLimit = NFmiSettings::Require<float>(std::string(itsBaseNameSpace + "::DataValiditation_RainTemperatureLimit"));
 	fDefaultPrecipitationTypeIsLargeScale = NFmiSettings::Require<bool>(std::string(itsBaseNameSpace + "::DefaultPrecipitationTypeIsLargeScale"));
-	itsViewCacheMaxSizeInMB = NFmiSettings::Require<float>(std::string(itsBaseNameSpace + "::ViewCacheMaxSizeInMB"));
 	itsUndoRedoDepth = NFmiSettings::Require<int>(std::string(itsBaseNameSpace + "::UndoRedoDepth"));
 	fUseAutoSave = NFmiSettings::Require<bool>(std::string(itsBaseNameSpace + "::UseAutoSave"));
 	itsAutoSaveFrequensInMinutes = NFmiSettings::Require<int>(std::string(itsBaseNameSpace + "::AutoSaveFrequensInMinutes"));
@@ -85,7 +83,6 @@ void NFmiMetEditorOptionsData::StoreToSettings(void)
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::DataValiditation_SnowTemperatureLimit"), NFmiStringTools::Convert(itsDataValiditation_SnowTemperatureLimit), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::DataValiditation_RainTemperatureLimit"), NFmiStringTools::Convert(itsDataValiditation_RainTemperatureLimit), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::DefaultPrecipitationTypeIsLargeScale"), NFmiStringTools::Convert(fDefaultPrecipitationTypeIsLargeScale), true);
-		NFmiSettings::Set(std::string(itsBaseNameSpace + "::ViewCacheMaxSizeInMB"), NFmiStringTools::Convert(itsViewCacheMaxSizeInMB), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::UndoRedoDepth"), NFmiStringTools::Convert(itsUndoRedoDepth), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::UseAutoSave"), NFmiStringTools::Convert(fUseAutoSave), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::AutoSaveFrequensInMinutes"), NFmiStringTools::Convert(itsAutoSaveFrequensInMinutes), true);
@@ -94,16 +91,6 @@ void NFmiMetEditorOptionsData::StoreToSettings(void)
 	}
 	else
 		throw std::runtime_error("Error in NFmiMetEditorOptionsData::StoreToSettings, unable to store setting.");
-}
-
-void NFmiMetEditorOptionsData::ViewCacheMaxSizeInMB(double newSize)
-{
-	if(newSize == 0.) // tällöin ei käytetä cache:a ollenkaan
-		itsViewCacheMaxSizeInMB = newSize;
-	else if(newSize >= MinViewCacheSizeInMB)
-		itsViewCacheMaxSizeInMB = newSize;
-	else
-		itsViewCacheMaxSizeInMB = MinViewCacheSizeInMB;
 }
 
 void NFmiMetEditorOptionsData::DefaultPrecipitationTypeIsLargeScale(bool newState)

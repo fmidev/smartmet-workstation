@@ -39,8 +39,6 @@ public:
 
 	bool ShowToolTipsOnMapView(void){return fShowToolTipsOnMapView;}
 	void ShowToolTipsOnMapView(bool newState){fShowToolTipsOnMapView = newState;}
-	double ViewCacheMaxSizeInMB(void){return itsViewCacheMaxSizeInMB;}
-	void ViewCacheMaxSizeInMB(double newSize);
 	int UndoRedoDepth(void){return itsUndoRedoDepth;}
 	void UndoRedoDepth(int newValue);
 
@@ -74,7 +72,6 @@ public:
 private:
 	bool fDataValidationEnabled; // tämä päättää onko datavalidaatio systeemi käytössä ja näkyvissä ollenkaan (tätä ei alusteta Init:issä, vaan NFmiGenDocissa se alustetaan settingseistä)
 	bool fShowToolTipsOnMapView; // näytetäänkö kartan päällä tooltippejä vai ei?
-	double itsViewCacheMaxSizeInMB; // näytön cachena käytettyjen bitmappien max koko megatavuina
 	int itsUndoRedoDepth; // moninkertainen undu/redo toiminto on (0 = ei ole toimintoa)
 
 // Tee oma luokka datan validoinnista

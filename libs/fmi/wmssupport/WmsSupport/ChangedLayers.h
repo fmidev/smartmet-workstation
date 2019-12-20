@@ -28,6 +28,7 @@ namespace Wms
     {
         std::map<long, std::map<long, std::string>> earlierDataValues_;
         long producerId_;
+
     public:
         std::set<LayerInfo> changedLayers;
 

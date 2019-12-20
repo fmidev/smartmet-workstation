@@ -534,7 +534,7 @@ void CFmiBetaProductDialog::MakeCommandLineExecution(const std::string &theDesti
         bool showErrorMessageBox = !justLogMessages;
         bool waitExecutionToStop = !justLogMessages;
         // Komento rivi ajetaan piilossa, eikä sen loppumista odoteta
-        CFmiProcessHelpers::ExecuteCommandInSeparateProcess(finalCmdLine, nullptr, showErrorMessageBox, SW_SHOW, waitExecutionToStop, NORMAL_PRIORITY_CLASS, &theDestinationDirectory);
+        CFmiProcessHelpers::ExecuteCommandInSeparateProcess(finalCmdLine, true, showErrorMessageBox, SW_SHOW, waitExecutionToStop, NORMAL_PRIORITY_CLASS, &theDestinationDirectory);
     }
 }
 
@@ -1400,14 +1400,20 @@ void CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct()
 {
     StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
 
-    BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", "Betaproduct1", false, &itsBetaProductFullFilePath, this);
+    auto initialSavePath = itsBetaProductionSystem->BetaProductSaveInitialPath();
+    if(BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, initialSavePath, NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", "Betaproduct1", false, &itsBetaProductFullFilePath, this))
+    {
+        itsBetaProductionSystem->BetaProductSaveInitialPath(initialSavePath);
+    }
     UpdateBetaProductName();
 }
 
 void CFmiBetaProductDialog::OnBnClickedButtonLoadBetaProduct()
 {
-    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, BetaProduct::InitialSavePath(), NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath, this))
+    auto initialSavePath = itsBetaProductionSystem->BetaProductSaveInitialPath();
+    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, initialSavePath, NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath, this))
     {
+        itsBetaProductionSystem->BetaProductSaveInitialPath(initialSavePath);
         itsBetaProduct->InitFromJsonRead(GetCurrentViewTime(*itsBetaProduct));
         UpdateBetaProductName();
         InitControlsFromLoadedBetaProduct();

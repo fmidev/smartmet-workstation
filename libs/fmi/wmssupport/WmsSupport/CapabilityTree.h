@@ -35,4 +35,5 @@ namespace Wms
     using CapabilityTree = cppext::Tree<Capability>;
 
     void insertLeaf(CapabilityNode& tree, const CapabilityLeaf& leaf, std::list<std::string>& path);
+
 }

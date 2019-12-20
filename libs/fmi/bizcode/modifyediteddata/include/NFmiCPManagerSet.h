@@ -28,7 +28,7 @@ public:
 	size_t CPSetSize(void) const;
 	int Find(const std::string &theName) const;
 	boost::shared_ptr<NFmiEditorControlPointManager> CPManagerFromSet(size_t theIndex);
-	void UpdateViewMacroCPManager(const boost::shared_ptr<NFmiEditorControlPointManager> &newCPManager);
+	void UpdateViewMacroCPManager(const checkedVector<NFmiPoint>& newCpLatlonPoints);
 private:
 	void DoOldSchoolStyleInit(void);
 	void DoMultiCPManagerInit();

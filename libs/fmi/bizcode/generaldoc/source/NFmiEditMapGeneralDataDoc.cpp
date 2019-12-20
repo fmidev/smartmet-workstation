@@ -152,6 +152,7 @@
 #include "boost/unordered_map.hpp"
 #include "boost/math/special_functions/round.hpp"
 #include "boost/filesystem.hpp"
+#include "boost/algorithm/string.hpp"
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
@@ -997,6 +998,8 @@ void InitFixedDrawParamSystem(void)
     try
     {
         auto fixedDrawParamInitRootPath = MakeUsedFixedDrawParamsRootPath();
+        // Laitetaan 'siivottu' polku takaisin, sitä ei laiteta minnekään talteen, mutta se näytetään Settings dialogissa
+        ApplicationWinRegistry().FixedDrawParamsPath(fixedDrawParamInitRootPath);
         CatLog::logMessage(std::string("Starting to initilize Fixed DrawParams from directory: ") + fixedDrawParamInitRootPath, CatLog::Severity::Debug, CatLog::Category::Configuration);
         itsFixedDrawParamSystem.Initialize(fixedDrawParamInitRootPath);
         CatLog::logMessage(std::string("Fixed DrawParams initialized with ") + std::to_string(itsFixedDrawParamSystem.FlatDrawParamList().size()) + " drawParams", CatLog::Severity::Debug, CatLog::Category::Configuration);
@@ -1472,8 +1475,9 @@ NFmiMapViewDescTop* CreateMapViewDescTop(const string &baseSettingStr, int mapVi
 {
 	string currentSettingStr = GetMapViewDescTopSettingString(baseSettingStr, mapViewIndex);
     NFmiMapViewDescTop *descTop = new NFmiMapViewDescTop(currentSettingStr, &itsMapConfigurationSystem, itsProjectionCurvatureInfo, itsBasicConfigurations.ControlPath());
-	descTop->MapViewCache().MaxSizeMB(MetEditorOptionsData().ViewCacheMaxSizeInMB());
-    descTop->Init(*ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex));
+    auto& applicationWinRegistry = ApplicationWinRegistry();
+	descTop->MapViewCache().MaxSizeMB(applicationWinRegistry.MapViewCacheMaxSizeInMB());
+    descTop->Init(*applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(mapViewIndex));
     return descTop;
 }
 
@@ -2846,8 +2850,11 @@ void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data)
         }
         else if(paramDescriptor.Param(kFmiWindDirection))
         {
-            // Tehtävä #2: jos päätasolla on tuulensuunta parametri, varmista että sekin on lineaarisesti interpoloitu (muuten tulee ongelmia macroParamien kanssa)
-            parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam());
+            if(ApplicationWinRegistry().ForceWdParameterToLinearInterpolation())
+            {
+                // Tehtävä #2: jos päätasolla on tuulensuunta parametri, varmista että sekin on lineaarisesti interpoloitu (muuten tulee ongelmia macroParamien kanssa)
+                parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam());
+            }
         }
 
         if(parameterModified)
@@ -6120,8 +6127,11 @@ void AddViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& theMe
 
 	SetDrawMacroSettings(theMenuItem, drawParam, theMacroParamInitFileName);
 
-	if(!ActiveDrawParamWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRealRowIndex))
+    if(!ActiveDrawParamWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRealRowIndex))
+    {
 		drawParam->Activate(true);
+        ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theMenuItem.MapViewDescTopIndex());
+    }
     drawParam->ViewMacroDrawParam(isViewMacroDrawParam); // asetetaan viewmacrodrawparam-flagin tila
 	boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, true);
     NFmiDrawParamList *drawParamList = DrawParamListWithRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRealRowIndex);
@@ -6288,7 +6298,8 @@ void RemoveView(const NFmiMenuItem& theMenuItem, int theRowIndex)
 			drawParamList->Current()->Activate(true);
 			break;
 		}
-	}
+        ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theMenuItem.MapViewDescTopIndex());
+    }
 }
 
 void RemoveAllViews(unsigned int theDescTopIndex, int theRowIndex)
@@ -6298,6 +6309,7 @@ void RemoveAllViews(unsigned int theDescTopIndex, int theRowIndex)
     {
         drawParamList->Clear();
         MakeViewRowDirtyActions(theDescTopIndex, GetRealRowNumber(theDescTopIndex, theRowIndex), drawParamList);
+        ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theDescTopIndex);
     }
 }
 
@@ -6331,7 +6343,14 @@ void RemoveAllViewsWithRealRowNumber(unsigned int theDescTopIndex, int theRealRo
     {
         drawParamList->Clear();
         MakeViewRowDirtyActions(theDescTopIndex, theRealRowIndex, drawParamList);
+        ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theDescTopIndex);
     }
+}
+
+void ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex)
+{
+    auto usedViewUpdateFlag = ::GetWantedMapViewIdFlag(mapViewDescTopIndex) | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::BrushToolDlg;
+    ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(usedViewUpdateFlag);
 }
 
 void ActivateView(const NFmiMenuItem& theMenuItem, int theRowIndex)
@@ -6353,6 +6372,7 @@ void ActivateView(const NFmiMenuItem& theMenuItem, int theRowIndex)
                 auto cacheRowIndex = GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex) - 1;
                 MapViewDescTop(theMenuItem.MapViewDescTopIndex())->MapViewCache().MakeRowDirty(cacheRowIndex);
             }
+            ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theMenuItem.MapViewDescTopIndex());
             MapViewDirty(theMenuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 		}
 	}
@@ -6614,6 +6634,7 @@ void SwapViewRows(const NFmiMenuItem& theMenuItem)
         // HUOM! tosi rivi numerosta pitää vähentää 1, kun manipuloidaan bitmap cache rivejä!!!
         MapViewDescTop(viewIndex)->MapViewCache().SwapRows(realRowNumber1 - 1, realRowNumber2 - 1);
         MacroParamDataCache().swapMacroParamCacheRows(viewIndex, realRowNumber1, realRowNumber2);
+        ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theMenuItem.MapViewDescTopIndex());
         MapViewDirty(viewIndex, false, false, true, false, false, true);
     }
 }
@@ -8728,8 +8749,10 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::GeneralDoc &gDoc = theMacro.GetGeneralDoc();
 		ProjectionCurvatureInfo(gDoc.ProjectionCurvatureInfo());
-		CPManager(true)->Init(gDoc.CPLocationVector()); // viewMacron CP-pisteet asetetaan ensin 'old-school' CP-manageriin (CPManager(true))
-		itsCPManagerSet.UpdateViewMacroCPManager(CPManager(true)); // sitten laitetaan se vielä ns. viewmacro-CPManageriksi
+        if(itsCPManagerSet.UseOldSchoolStyle())
+    		CPManager(true)->Init(gDoc.CPLocationVector(), true);
+        else
+    		itsCPManagerSet.UpdateViewMacroCPManager(gDoc.CPLocationVector());
 	}
 
 	void AdjustDrawParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiViewSettingMacro::Param &theParam, bool fTreatAsViewMacro)
@@ -8937,6 +8960,7 @@ bool InitCPManagerSet(void)
                     MakeViewRowDirtyActions(theDescTopIndex, rowIndex, drawParamList);
                 }
             }
+            ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theDescTopIndex);
         }
     }
 
@@ -9399,7 +9423,7 @@ bool IsRedoableViewMacro(void)
 		if(theDirectoryName == ".")
             return NFmiLightWeightViewSettingMacro();
 		// jos ollaan ns. root hakemistossa, ei up-hakemistoa laiteta
-		if(itsViewMacroPath == itsRootViewMacroPath && theDirectoryName == "..")
+		if(boost::iequals(itsViewMacroPath, itsRootViewMacroPath) && theDirectoryName == "..")
             return NFmiLightWeightViewSettingMacro();
         NFmiLightWeightViewSettingMacro viewMacroDescription;
 		viewMacroDescription.fIsViewMacroDirectory = true;
@@ -11603,7 +11627,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			else
 				drawParamList->CopyList(itsCopyPasteDrawParamList, false);
             MakeViewRowDirtyActions(theMenuItem.MapViewDescTopIndex(), GetRealRowNumber(theMenuItem.MapViewDescTopIndex(), theRowIndex), drawParamList);
-		}
+            ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theMenuItem.MapViewDescTopIndex());
+        }
 	}
 
 	void CopyDrawParamsFromMapViewRow(unsigned int theDescTopIndex)
@@ -11625,7 +11650,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			activeDrawParamList->CopyList(itsCopyPasteDrawParamList, false);
             auto realActiveRowIndex = GetRealRowNumber(theDescTopIndex, relativeActiveRowIndex);
             MakeViewRowDirtyActions(theDescTopIndex, realActiveRowIndex, activeDrawParamList);
-            CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
+            ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theDescTopIndex);
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste drawParams to map view row");
 		}
 	}
@@ -11655,6 +11680,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void SetLastActiveDescTopAndViewRow(unsigned int theDesktopIndex, int theActiveRowIndex)
     {
+        ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theDesktopIndex);
         ParameterSelectionSystem().LastActivatedDesktopIndex(theDesktopIndex);
         ParameterSelectionSystem().LastActivatedRowIndex(GetRealRowNumber(theDesktopIndex, theActiveRowIndex));
     }
@@ -11693,7 +11719,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			{
 				CopyDrawParamsList(itsCopyPasteDrawParamListVector, *copiedDrawParamsList);
                 MakeWholeDesctopDirtyActions(theDescTopIndex, copiedDrawParamsList);
-                CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
+                ActiveEditedParameterMayHaveChangedViewUpdateFlagSetting(theDescTopIndex);
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste all copyed parameters on this map view");
 			}
 		}
@@ -12723,7 +12749,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void SetMapViewCacheSize(double theNewSizeInMB)
 	{
-		MetEditorOptionsData().ViewCacheMaxSizeInMB(theNewSizeInMB);
+		ApplicationWinRegistry().MapViewCacheMaxSizeInMB(theNewSizeInMB);
 
 		for(size_t i=0; i<itsMapViewDescTopList.size(); i++)
 			itsMapViewDescTopList[i]->MapViewCache().MaxSizeMB(theNewSizeInMB);
@@ -13423,6 +13449,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(ch != '\\' && ch != '/')
                 itsSpecialFileStoragePath += kFmiDirectorySeparator;
 
+            itsSpecialFileStoragePath = BetaProduct::SimplifyWindowsPath(itsSpecialFileStoragePath);
+
             // varmistetaan vielä että hakemisto on olemassa
             if(!NFmiFileSystem::CreateDirectory(itsSpecialFileStoragePath))
             {
@@ -13721,9 +13749,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     std::string MakeUsedFixedDrawParamsRootPath()
     {
-        bool useLocals = ApplicationWinRegistry().UseLocalFixedDrawParams();
-        std::string rootPath = useLocals ? "FixedDrawParams" : ApplicationWinRegistry().FixedDrawParamsPath();
-        rootPath = PathUtils::getAbsoluteFilePath(rootPath, useLocals ? WorkingDirectory() : ControlDirectory());
+        std::string rootPath = ApplicationWinRegistry().FixedDrawParamsPath();
+        rootPath = PathUtils::getAbsoluteFilePath(rootPath, ControlDirectory());
+        rootPath = BetaProduct::SimplifyWindowsPath(rootPath);
         return rootPath;
     }
 
@@ -14115,7 +14143,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     std::string GetRelativeViewMacroPath()
     {
         std::string relativePath = itsViewMacroPath;
-        NFmiStringTools::ReplaceAll(relativePath, itsRootViewMacroPath, "");
+        boost::ireplace_first(relativePath, itsRootViewMacroPath, "");
         return relativePath;
     }
 
@@ -14317,7 +14345,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         for(auto menuItem : customMenuList)
         {
             if(menuItem == g_ObservationMenuName)
-                continue; // Observation-menu is skipped, because those needs to be added among existing observations.  //Joonas:tsekkaa nämä!
+                continue; // Observation-menu is skipped, because those needs to be added among existing observations.
             customMenus.push_back(menuItem);
         }
         return customMenus;

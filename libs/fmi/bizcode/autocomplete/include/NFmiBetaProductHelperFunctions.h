@@ -15,7 +15,6 @@ namespace BetaProduct
 
     using LogAndWarnFunctionType = std::function<void(const std::string &, const std::string&, CatLog::Severity , CatLog::Category , bool)>;
 
-    std::string& InitialSavePath();
     bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, CWnd *parentView);
     bool GetFilePathFromUserTotal(const std::string& theFileFilter, const std::string& theInitialDirectory, std::string& theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, const std::string& theFileExtension, const std::string& theRootDirectory, CWnd* parentView);
     std::string SimplifyWindowsPath(const std::string& pathstring);

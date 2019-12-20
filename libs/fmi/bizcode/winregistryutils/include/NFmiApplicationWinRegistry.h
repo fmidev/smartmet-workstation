@@ -265,8 +265,6 @@ public:
     void AllowRightClickDisplaySelection(bool newValue);
     std::string FixedDrawParamsPath();
     void FixedDrawParamsPath(const std::string &newValue);
-    bool UseLocalFixedDrawParams();
-    void UseLocalFixedDrawParams(bool newValue);
     int LocationFinderThreadTimeOutInMS();
     void LocationFinderThreadTimeOutInMS(int newValue);
 
@@ -293,6 +291,10 @@ public:
     void SetSaveImageExtensionFilterIndex(int newValue);
     const std::vector<std::string>& SaveImageFileFilterExtensions() const;
     const std::string& GetCurrentSaveImageFileFilterExtension() const;
+    double MapViewCacheMaxSizeInMB();
+    void MapViewCacheMaxSizeInMB(double newValue);
+    bool ForceWdParameterToLinearInterpolation();
+    void ForceWdParameterToLinearInterpolation(bool newValue);
 
     static std::string MakeBaseRegistryPath(void);
     static std::string MakeGeneralSectionName(void);
@@ -327,7 +329,6 @@ private:
     boost::shared_ptr<CachedRegBool> mUseMultiProcessCpCalc; // käytetäänkö kontrollipistetyökalun yhteydessä multi-process-worker -poolia vai ei
     boost::shared_ptr<CachedRegBool> mAllowRightClickDisplaySelection; // Sallitaanko käyttäjän valita hiiren oikealla napilla asemia kartalta vai ei.
     std::string mFixedDrawParamsPath; // Ns. tehdasasetus piirto-ominaisuus asetuksien polku (oli aiemmin Windows rekisterissä, mutta poistin sieltä, koska asetus pitää saada ehdottomasti konfiguraatioista)
-    boost::shared_ptr<CachedRegBool> mUseLocalFixedDrawParams; // Jos normaalisti fixedDrawParamit ovat esim. serverillä, mutta ei ole verkkoyhteyttä, tällöin voidaan siirtyä käyttämään lokaaleja tehdasasetuksia, jotka tulevat SmartMet asennuspaketin mukana.
     boost::shared_ptr<CachedRegInt> mLocationFinderThreadTimeOutInMS; // Kuinka kauan maksimissaan odotetaan että Location Finder (Autocomplete toiminto SmartMetissa, x näppäin karttanäytössä) haku valmistuu, ennenkuin lopetetaan (ettei jää jumiin pitkäksi aikaa)
 
     boost::shared_ptr<CachedRegBool> mShowHakeMessages; // Näytetäänkö Warnings dialogin kautta Hake sanomia? (Hälytys keskus)
@@ -377,6 +378,11 @@ private:
     boost::shared_ptr<CachedRegInt> mSaveImageExtensionFilterIndex; 
     // mSaveImageFileFilterExtensions vektorin ja g_SaveImageFileFilter:in sisällöt pitää asettaa kohdilleen, jos meinaa muuttaa filtterien listaa tai niiden järjestystä!
     const std::vector<std::string> mSaveImageFileFilterExtensions = { "png", "jpg", "bmp", "tiff", "gif" };
+
+    // Näytön cachena käytettyjen bitmappien max koko megatavuina, tarkoittaa siis aina yhden näytön
+    // cachea kerrallaan, eli kolme näyttöä ottaa mahdollisesti kaikkiaan 3x tämä koon.
+    boost::shared_ptr<CachedRegDouble> mMapViewCacheMaxSizeInMB;
+    boost::shared_ptr<CachedRegBool> mForceWdParameterToLinearInterpolation;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 

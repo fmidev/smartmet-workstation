@@ -263,8 +263,14 @@ bool NFmiEditorControlPointManager::Init(const NFmiTimeDescriptor& theTimes, con
 }
 
 // t‰ll‰ asetetaan uudet CP pisteet managerille ja nollataa muuten olion tila
-bool NFmiEditorControlPointManager::Init(const checkedVector<NFmiPoint> &newCPs)
+bool NFmiEditorControlPointManager::Init(const checkedVector<NFmiPoint> &newCPs, bool keepModificationsIfPossible)
 {
+    if(keepModificationsIfPossible)
+    {
+        if(itsCPLocationVector == newCPs)
+            return true; // uudet CP-pisteet olivat samoja kuin vanhat, ei tarvitse tehd‰ mit‰‰n
+    }
+
 	itsCPLocationVector = newCPs;
 	itsCPCount = static_cast<int>(itsCPLocationVector.size());
 	itsCPIndex = -1;
@@ -307,14 +313,14 @@ bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(checked
     {
         AddZoomedAreaStationsToCPVector(fastInfo, theArea, addedControlPoints);
     }
-    return Init(addedControlPoints);
+    return Init(addedControlPoints, false);
 }
 
 bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea)
 {
     checkedVector<NFmiPoint> addedControlPoints;
     AddZoomedAreaStationsToCPVector(theInfo, theArea, addedControlPoints);
-    return Init(addedControlPoints);
+    return Init(addedControlPoints, false);
 }
 
 void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut)

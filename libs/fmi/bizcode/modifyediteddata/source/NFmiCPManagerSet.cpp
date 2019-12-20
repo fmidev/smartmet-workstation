@@ -132,7 +132,7 @@ void NFmiCPManagerSet::MakeDefaultCPManagerSet()
 {
     checkedVector<NFmiPoint> newCPs;
     boost::shared_ptr<NFmiEditorControlPointManager> cpManager(new NFmiEditorControlPointManager());
-    if(cpManager->Init(newCPs))
+    if(cpManager->Init(newCPs, false))
     {
         std::string fileName = itsCPManagerDirectory + "\\default.dat";
         cpManager->FilePath(fileName);
@@ -224,36 +224,46 @@ void NFmiCPManagerSet::SetCPManager(boost::shared_ptr<NFmiEditorControlPointMana
 	}
 }
 
+static std::pair<bool, size_t> FindCpManagerByName(const std::vector<boost::shared_ptr<NFmiEditorControlPointManager>> &cPManagers, const std::string& managerName)
+{
+    for(size_t index = 0; index < cPManagers.size(); index++)
+    {
+        if(cPManagers[index]->Name() == managerName)
+            return std::make_pair(true, index);
+    }
+    return std::make_pair(false, -1);
+}
+
 // Jos ollaan mult-set -moodissa tehdään seuraavaa (old-school-moodissa ei mitään):
 // Jos löytyy "viewmacro" -niminen CPManager, laitetaan tämä sen arvoksi.
 // Jos ei löydy, lisätään tämä sen nimisenä siihen.
 // Laitetaan itsIndex osoittamaan tähän CPManager:iin.
-void NFmiCPManagerSet::UpdateViewMacroCPManager(const boost::shared_ptr<NFmiEditorControlPointManager> &newCPManager)
+void NFmiCPManagerSet::UpdateViewMacroCPManager(const checkedVector<NFmiPoint>& newCpLatlonPoints)
 {
-	static const std::string viewMacroName = "viewmacro";
-	if(newCPManager)
-	{
-		if(UseOldSchoolStyle() == false)
-		{
-			boost::shared_ptr<NFmiEditorControlPointManager> copyOfCPManager(new NFmiEditorControlPointManager(*newCPManager.get()));
-			std::string viewMacroFilePath = itsCPManagerDirectory + "\\" + viewMacroName + ".dat";
-			copyOfCPManager->FilePath(viewMacroFilePath);
-			copyOfCPManager->StoreCPs(); // laitetaan tämä heti talteen CPManager hakemistoon, että käyttäjä voi halutessaan tehdä kopion tästä CPManagerista eri tiedostoon
-			for(size_t i = 0; i < itsCPManagers.size(); i++)
-			{
-				if(itsCPManagers[i]->Name() == viewMacroName)
-				{
-					itsCPManagers[i] = copyOfCPManager;
-					itsIndex = i;
-					return ;
-				}
-			}
-			// ei löytynyt listasta, lisätään se loppuun
-			itsCPManagers.push_back(copyOfCPManager);
-			itsIndex = itsCPManagers.size() -1;
-			return ;
-		}
-	}
+    static const std::string viewMacroName = "viewmacro";
+    if(UseOldSchoolStyle() == false)
+    {
+        // 1. Katsotaan löytyykö viewmacro CP-manageria ensin
+        auto foundInfo = ::FindCpManagerByName(itsCPManagers, viewMacroName);
+        if(foundInfo.first)
+        {
+            itsIndex = foundInfo.second;
+            itsCPManagers[itsIndex]->Init(newCpLatlonPoints, true);
+            return;
+        }
+        else
+        {
+            // pitää luoda uusi viewmacro cp-manager
+            boost::shared_ptr<NFmiEditorControlPointManager> newViewmacroCPManager(new NFmiEditorControlPointManager());
+            std::string viewMacroFilePath = itsCPManagerDirectory + "\\" + viewMacroName + ".dat";
+            newViewmacroCPManager->FilePath(viewMacroFilePath);
+            // laitetaan tämä heti talteen CPManager hakemistoon, että käyttäjä voi halutessaan tehdä kopion tästä CPManagerista eri tiedostoon
+            newViewmacroCPManager->StoreCPs(); 
+            itsCPManagers.push_back(newViewmacroCPManager);
+            itsIndex = itsCPManagers.size() - 1;
+            return;
+        }
+    }
 }
 
 size_t NFmiCPManagerSet::CPSetSize(void) const
