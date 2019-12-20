@@ -505,9 +505,6 @@ void CFmiSmartToolDlg::Update(void)
         }
         DisableActionButtomIfInViewMode();
         EnableSaveButtons();
-#ifndef DISABLE_EXTREME_TOOLKITPRO
-        UpdateSyntaxEditControl();
-#endif // DISABLE_EXTREME_TOOLKITPRO
     }
 }
 
