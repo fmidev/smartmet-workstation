@@ -39,7 +39,7 @@ public:
         bool logDataRequest);
 
 	// Tekee http-rajapinnan läpi kutsun ja palauttaa vastauksen stringinä.
-	static void MakeHTTPRequest(const std::string &theUrlStr, std::string &theResponseStrOut, bool fDoGet);
+	static void MakeHTTPRequest(const std::string& theUrlStr, std::string& theResponseStrOut, bool fDoGet);
 
 private:
 };

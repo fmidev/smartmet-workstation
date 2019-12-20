@@ -646,7 +646,6 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mUseMultiProcessCpCalc()
 ,mAllowRightClickDisplaySelection()
 ,mFixedDrawParamsPath()
-,mUseLocalFixedDrawParams()
 ,mLocationFinderThreadTimeOutInMS()
 ,mShowHakeMessages()
 ,mShowKaHaMessages()
@@ -658,6 +657,8 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mEditingToolsGriddingProperties()
 ,mVisualizationGriddingProperties()
 ,mSaveImageExtensionFilterIndex()
+,mMapViewCacheMaxSizeInMB()
+,mForceWdParameterToLinearInterpolation()
 {
 }
 
@@ -706,7 +707,6 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mUseMultiProcessCpCalc = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\UseMultiProcessCpCalc", usedKey, false);
     mAllowRightClickDisplaySelection = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\AllowRightClickDisplaySelection", usedKey, false);
     mFixedDrawParamsPath = NFmiSettings::Optional<std::string>("SmartMet::FixedDrawParamsPath", "FixedDrawParams");
-    mUseLocalFixedDrawParams = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\UseLocalFixedDrawParams", usedKey, false, "SmartMet::UseLocalFixedDrawParams");
     mLocationFinderThreadTimeOutInMS = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\LocationFinderThreadTimeOutInMS", usedKey, 1500, "SmartMet::LocationFinderThreadTimeOutInMS");
     mShowHakeMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowHakeMessages", usedKey, true);
     mShowKaHaMessages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowKaHaMessages", usedKey, false);
@@ -718,6 +718,10 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mSaveImageExtensionFilterIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, sectionName, "\\SaveImageExtensionFilterIndex", usedKey, 1);
     // Pit‰‰ viel‰ varmistaa ett‰ rekisterist‰ luettu indeksi menee rajojen sis‰lle oikein, siksi kutsutaan viel‰ sen Set-metodia, joka tekee tarkasteluja.
     SetSaveImageExtensionFilterIndex(*mSaveImageExtensionFilterIndex);
+    mMapViewCacheMaxSizeInMB = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MapViewCacheMaxSizeInMB", usedKey, 2000);
+    // En tied‰ onko oikeasti v‰li‰, jos luku olisi vahingossa esim. negatiivinen, joten laitetaan alustettu arvo varmuuden vuoksi setterin l‰pi, joka tekee tarkistuksia.
+    MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
+    mForceWdParameterToLinearInterpolation = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ForceWdParameterToLinearInterpolation", usedKey, false);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! n‰m‰ vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -895,16 +899,6 @@ void NFmiApplicationWinRegistry::FixedDrawParamsPath(const std::string &newValue
     mFixedDrawParamsPath = newValue;
 }
 
-bool NFmiApplicationWinRegistry::UseLocalFixedDrawParams()
-{
-    return *mUseLocalFixedDrawParams;
-}
-
-void NFmiApplicationWinRegistry::UseLocalFixedDrawParams(bool newValue)
-{
-    *mUseLocalFixedDrawParams = newValue;
-}
-
 int NFmiApplicationWinRegistry::LocationFinderThreadTimeOutInMS()
 {
     return *mLocationFinderThreadTimeOutInMS;
@@ -1032,4 +1026,29 @@ const std::string& NFmiApplicationWinRegistry::GetCurrentSaveImageFileFilterExte
         return mSaveImageFileFilterExtensions[usedVectorIndex];
     else
         return mSaveImageFileFilterExtensions[0];
+}
+
+double NFmiApplicationWinRegistry::MapViewCacheMaxSizeInMB()
+{
+    return *mMapViewCacheMaxSizeInMB;
+}
+
+void NFmiApplicationWinRegistry::MapViewCacheMaxSizeInMB(double newValue)
+{
+    if(newValue < 0)
+    {
+        newValue = 0;
+    }
+
+    *mMapViewCacheMaxSizeInMB = newValue;
+}
+
+bool NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation()
+{
+    return *mForceWdParameterToLinearInterpolation;
+}
+
+void NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation(bool newValue)
+{
+    *mForceWdParameterToLinearInterpolation = newValue;
 }

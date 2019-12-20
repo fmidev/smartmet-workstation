@@ -53,7 +53,6 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
 	, fAllowSending(FALSE)
     , itsSysInfoDbUrlU_(_T(""))
     , fAutoLoadNewCacheData(TRUE)
-    , fUseLocalFixedDrawParams(FALSE)
     , itsLocationFinderTimeoutInSeconds(0)
     , fShowLastSendTimeOnMapView(FALSE)
     , itsFixedDrawParamPathSettingU_(_T(""))
@@ -61,6 +60,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , fDroppedDataEditable(FALSE)
     , itsIsolineMinimumLengthFactor(1)
     , fGenerateTimeCombinationData(FALSE)
+    , fForceWdParameterToLinearInterpolation(FALSE)
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -123,7 +123,6 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_ALLOW_SYSTEM_INFO_SEND_TO_DB, fAllowSending);
     DDX_Text(pDX, IDC_EDIT_FMI_SYS_INFO_DB_URL, itsSysInfoDbUrlU_);
     DDX_Check(pDX, IDC_CHECK_DO_AUTO_LOAD_NEW_CACHE_DATA, fAutoLoadNewCacheData);
-    DDX_Check(pDX, IDC_CHECK_USE_LOCAL_FIXED_DRAW_PARAMS, fUseLocalFixedDrawParams);
     DDX_Text(pDX, IDC_EDIT_OPTIONS_LOCATION_FINDER_TIMEOUT_IN_SECONDS, itsLocationFinderTimeoutInSeconds);
     DDX_Check(pDX, IDC_CHECK_SHOW_LAST_SEND_TIME_ON_MAP_VIEW, fShowLastSendTimeOnMapView);
     DDX_Text(pDX, IDC_STATIC_OPTIONS_FIXEX_DRAW_PARAM_PATH, itsFixedDrawParamPathSettingU_);
@@ -133,6 +132,7 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR, itsIsolineMinimumLengthFactor);
     DDV_MinMaxDouble(pDX, itsIsolineMinimumLengthFactor, 0, 100);
     DDX_Check(pDX, IDC_CHECK_MAKE_COMBINATION_DATA, fGenerateTimeCombinationData);
+    DDX_Check(pDX, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, fForceWdParameterToLinearInterpolation);
 }
 
 
@@ -163,7 +163,7 @@ BOOL COptionsDlg::OnInitDialog()
 	fShowToolTip = metEditorOptionsData.ShowToolTipsOnMapView();
     fUseSpacingOut = applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(0)->SpacingOutFactor() > 0;
     fAutoZoom = applicationWinRegistry.KeepMapAspectRatio();
-	NFmiValueString str2(metEditorOptionsData.ViewCacheMaxSizeInMB(), "%0.2f");
+	NFmiValueString str2(applicationWinRegistry.MapViewCacheMaxSizeInMB(), "%0.f");
     itsViewCacheSizeStrU_ = CA2T(str2);
 	NFmiValueString str3(metEditorOptionsData.UndoRedoDepth(), "%d");
     itsUndoRedoDepthStrU_ = CA2T(str3);
@@ -203,7 +203,6 @@ BOOL COptionsDlg::OnInitDialog()
 	fAllowSending = itsSmartMetDocumentInterface->ApplicationDataBase().UseDataSending();
     itsSysInfoDbUrlU_ = CA2T(itsSmartMetDocumentInterface->ApplicationDataBase().BaseUrlString().c_str());
     itsFixedDrawParamPathSettingU_ = CA2T(applicationWinRegistry.FixedDrawParamsPath().c_str());
-    fUseLocalFixedDrawParams = applicationWinRegistry.UseLocalFixedDrawParams();
     fAutoLoadNewCacheData = applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
     itsLocationFinderTimeoutInSeconds = applicationWinRegistry.LocationFinderThreadTimeOutInMS() / 1000.;
     fShowLastSendTimeOnMapView = applicationWinRegistry.ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView();
@@ -212,6 +211,7 @@ BOOL COptionsDlg::OnInitDialog()
     fDroppedDataEditable = applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable();
     itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
     fGenerateTimeCombinationData = applicationWinRegistry.GenerateTimeCombinationData();
+    fForceWdParameterToLinearInterpolation = applicationWinRegistry.ForceWdParameterToLinearInterpolation();
 
 	DisableControls();
 
@@ -290,6 +290,7 @@ void COptionsDlg::OnOK()
 
     NFmiValueString cacheSizeStr = CT2A(itsViewCacheSizeStrU_);
 	float cacheSize = float(cacheSizeStr);
+    // Must call this SetMapViewCacheSize -function to store new setting AND also set actual map-view-cache-sizes
     itsSmartMetDocumentInterface->SetMapViewCacheSize(cacheSize);
 
     NFmiValueString animationDelayStr = CT2A(itsAnimationFrameDelayInMSecStrU_);
@@ -336,13 +337,6 @@ void COptionsDlg::OnOK()
     tmpStr = CT2A(itsSysInfoDbUrlU_);
     itsSmartMetDocumentInterface->ApplicationDataBase().BaseUrlString(tmpStr);
 
-    // Jos fixed drawParams optio on muuttunut, pitää nykyiset käytössä olevat tyhjentää ja uudet asetuksien osoittamat lukea käyttöön
-    BOOL win32BOOLValueFor_UseLocalFixedDrawParams = applicationWinRegistry.UseLocalFixedDrawParams(); // Laitoin tämän BOOL tyyppiseen muuttujaan, jotta vertailu C++:n bool:in ja Win32:n BOOL:in välillä ei tee varoitusta (BOOL on integer ja se on luotu ennen kuin C++ esitteli bool -tyypin)
-    bool fixedDrawParamOptionsChanged = (fUseLocalFixedDrawParams != win32BOOLValueFor_UseLocalFixedDrawParams);
-    applicationWinRegistry.UseLocalFixedDrawParams(fUseLocalFixedDrawParams == TRUE);
-    if(fixedDrawParamOptionsChanged)
-        itsSmartMetDocumentInterface->ReloadFixedDrawParams();
-
     applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData(fAutoLoadNewCacheData == TRUE);
     applicationWinRegistry.LocationFinderThreadTimeOutInMS(boost::math::iround(itsLocationFinderTimeoutInSeconds * 1000.));
     applicationWinRegistry.ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView(fShowLastSendTimeOnMapView == TRUE);
@@ -351,6 +345,7 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable(fDroppedDataEditable == TRUE);
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
     applicationWinRegistry.GenerateTimeCombinationData(fGenerateTimeCombinationData == TRUE);
+    applicationWinRegistry.ForceWdParameterToLinearInterpolation(fForceWdParameterToLinearInterpolation == TRUE);
 
 	CDialog::OnOK();
 }
@@ -393,7 +388,6 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_TIME_STEP_STR, "IDC_STATIC_OPTIONS_TIME_STEP_STR");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DO_AUTO_LOAD_NEW_CACHE_DATA, "Auto load new cache data");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_FIXEDDRAWPARAMS_GROUP, "Fixed Draw Params Path");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_LOCAL_FIXED_DRAW_PARAMS, "Use 'factory' fixed draw params");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_LOCATION_FINDER_TIMEOUT_IN_SECONDS, "Location Finder (x key) Timeout [s]");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_LAST_SEND_TIME_ON_MAP_VIEW, "Show last send time on main map view");
     
@@ -430,6 +424,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DROPPED_DATA_EDITABLE, "Dropped data editable (slower to drop)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT, "Isoline min length factor (0-100)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_COMBINATION_DATA, "Generate time combination data (unchecking might prevent crashes)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, "Forced linear WD (on=better, off=fast)");
 }
 
 void COptionsDlg::InitLogLevelComboBox()

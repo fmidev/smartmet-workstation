@@ -128,6 +128,7 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
 	{
         itsHelpDataPath = NFmiSettings::Optional<std::string>("SmartMet::HelpDataPath", itsControlPath + "\\help_data");
         itsHelpDataPath = PathUtils::getAbsoluteFilePath(itsHelpDataPath, itsControlPath);
+        itsHelpDataPath = BetaProduct::SimplifyWindowsPath(itsHelpDataPath);
 
         HKEY usedKey = HKEY_CURRENT_USER;
         std::string sectionName = "\\General";
@@ -466,6 +467,9 @@ bool NFmiBasicSmartMetConfigurations::InitLogger(void)
 	try
 	{
         itsLogFileDirectory = NFmiSettings::Require<std::string>("SmartMet::Logger::LogFilePath");
+        itsLogFileDirectory = PathUtils::getAbsoluteFilePath(itsLogFileDirectory, itsControlPath);
+        itsLogFileDirectory = BetaProduct::SimplifyWindowsPath(itsLogFileDirectory);
+
         std::string logFilePath = itsLogFileDirectory;
         PathUtils::addDirectorySeparatorAtEnd(logFilePath);
         logFilePath += NFmiSettings::Require<std::string>("SmartMet::Logger::LogFileBaseName");

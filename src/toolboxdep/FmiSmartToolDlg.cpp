@@ -64,7 +64,7 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 ,fSearchOptionCaseSensitive(FALSE)
 ,fSearchOptionMatchAnywhere(TRUE)
 ,itsLoadedSmarttoolMacroPathU_()
-,itsLoadedMacroParamPathText(_T(""))
+,itsLoadedMacroParamPathTextU_(_T(""))
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 ,itsSyntaxEditControl()
 ,itsSyntaxEditControlAcceleratorTable(NULL)
@@ -98,7 +98,7 @@ void CFmiSmartToolDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Radio(pDX, IDC_RADIO_VIEWMACRO_SELECTED_MAP1, itsSelectedMapViewDescTopIndex);
     DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, itsSpeedSearchMacroControl);
     DDX_Text(pDX, IDC_STATIC_MACRO_PATH_TEXT, itsLoadedSmarttoolMacroPathU_);
-    DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_TEXT, itsLoadedMacroParamPathText);
+    DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_TEXT, itsLoadedMacroParamPathTextU_);
 }
 
 
@@ -107,12 +107,12 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_ACTION, OnButtonAction)
 	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_LOAD, OnButtonSmartToolLoad)
 	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER, OnButtonSmartToolLoadDbChecker)
-	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE, OnButtonSmartToolSave)
+	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE_AS, OnButtonSmartToolSaveAs)
 	ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER, OnButtonSmartToolSaveDbChecker)
 	ON_BN_CLICKED(IDC_CHECK_MAKE_DB_CHECK_AT_SEND, OnCheckMakeDbCheckAtSend)
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, OnBnClickedCheckModifyOnlySelectedLocations)
-	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE, OnBnClickedButtonMacroParamSave)
+	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE_AS, OnBnClickedButtonMacroParamSaveAs)
 	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_REMOVE, OnBnClickedButtonMacroParamRemove)
 	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_PROPERTIES, OnBnClickedButtonMacroParamProperties)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TO_ROW_1, OnBnClickedButtonAddToRow1)
@@ -145,6 +145,7 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
     ON_EN_CHANGE(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, &CFmiSmartToolDlg::OnEnChangeEditSpeedSearchViewMacro)
     ON_WM_SIZE()
     ON_WM_CTLCOLOR()
+    ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -179,6 +180,7 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
     InitSpeedSearchControl();
     ResetSearchResource();
     DisableActionButtomIfInViewMode();
+    EnableSaveButtons();
 
 	UpdateData(FALSE);
 
@@ -395,7 +397,7 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_RICHEDIT_MACRO_ERROR_TEXT, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE, ANCHOR_TOP | ANCHOR_RIGHT);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE_AS, ANCHOR_TOP | ANCHOR_RIGHT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_LOAD, ANCHOR_TOP | ANCHOR_RIGHT);
     ASSERT(bOk == TRUE);
@@ -410,6 +412,8 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PARAM_HOLDER, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_SAVE, ANCHOR_BOTTOM | ANCHOR_LEFT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_SAVE_AS, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_REMOVE, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
@@ -500,9 +504,7 @@ void CFmiSmartToolDlg::Update(void)
             UpdateMacroParamDisplayList(false);
         }
         DisableActionButtomIfInViewMode();
-#ifndef DISABLE_EXTREME_TOOLKITPRO
-        UpdateSyntaxEditControl();
-#endif // DISABLE_EXTREME_TOOLKITPRO
+        EnableSaveButtons();
     }
 }
 
@@ -520,13 +522,14 @@ bool CFmiSmartToolDlg::LoadSmarttoolFormula(const std::string &theFilePath, bool
     if(smarttoolCase)
     {
         UpdateLoadedSmarttoolMacroPathString();
-        itsLoadedMacroParamPathText.Empty();
+        itsLoadedMacroParamPathTextU_.Empty();
     }
     else
     {
         UpdateLoadedMacroParamPathString();
         itsLoadedSmarttoolMacroPathU_.Empty();
     }
+    EnableSaveButtons();
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     return LoadSmarttoolToSyntaxEditControl(theFilePath);
 #else
@@ -677,17 +680,22 @@ static int StripExtraCarrigeReturns(CString &theString)
 //}
 
 const std::string g_SmarttoolFileExtension = "st";
+const std::string g_SmarttoolFileTotalExtension = "." + g_SmarttoolFileExtension;
 const std::string g_SmarttoolFileFilter = "Smarttool Files (*." + g_SmarttoolFileExtension + ")|*." + g_SmarttoolFileExtension + "|All Files (*.*)|*.*||";
+const std::string g_SmarttoolDefaultFileName = "smarttool1";
 
-void CFmiSmartToolDlg::OnButtonSmartToolSave()
+void CFmiSmartToolDlg::OnButtonSmartToolSaveAs()
 {
 	UpdateData(TRUE);
 
     const auto &smarttoolInfo = *itsSmartMetDocumentInterface->SmartToolInfo();
     std::string initialPath = smarttoolInfo.RootLoadDirectory() + smarttoolInfo.GetRelativeLoadPath();
     std::string initialFilename = smarttoolInfo.CurrentScriptName();
-    if(!initialFilename.empty())
-        initialFilename += "." + g_SmarttoolFileExtension;
+    if(initialFilename.empty())
+    {
+        initialFilename = g_SmarttoolDefaultFileName;
+    }
+    initialFilename += g_SmarttoolFileTotalExtension;
     std::string filePath;
     if(BetaProduct::GetFilePathFromUserTotal(g_SmarttoolFileFilter, initialPath, filePath, false, initialFilename, g_SmarttoolFileExtension, smarttoolInfo.RootLoadDirectory(), this))
     {
@@ -794,7 +802,9 @@ static bool IsInCurrentMacroParamDirectory(NFmiMacroParamSystem& mpSystem, const
 
 
 const std::string g_MacroParamFileExtension = "st";
+const std::string g_MacroParamFileTotalExtension = "." + g_MacroParamFileExtension;
 const std::string g_MacroParamFileFilter = "MacroParam Files (*." + g_MacroParamFileExtension + ")|*." + g_MacroParamFileExtension + "|All Files (*.*)|*.*||";
+const std::string g_MacroParamDefaultFileName = "macroparam1";
 
 static std::string GetRealMacroParamDrawParamFileName(const std::string& macroParamFormulaFileName)
 {
@@ -803,7 +813,67 @@ static std::string GetRealMacroParamDrawParamFileName(const std::string& macroPa
     return drawParamFilePath.string();
 }
 
+void CFmiSmartToolDlg::EnableSaveButtons()
+{
+    // macroParam tapaus ensin
+    auto currentMacroParam = itsSmartMetDocumentInterface->MacroParamSystem().GetCurrentMacroParam();
+    bool enableSaveMacroParamButton = true;
+    if(itsLoadedMacroParamPathTextU_.IsEmpty())
+        enableSaveMacroParamButton = false;
+    else if(!currentMacroParam || currentMacroParam->IsMacroParamDirectory())
+        enableSaveMacroParamButton = false;
+    EnableDlgItem(IDC_BUTTON_MACRO_PARAM_SAVE, enableSaveMacroParamButton);
+}
+
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
+{
+    UpdateData(TRUE);
+
+    try
+    {
+        if(!itsLoadedMacroParamPathTextU_.IsEmpty())
+        {
+            auto& macroParamSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+            auto currentMacroParam = macroParamSystem.GetCurrentMacroParam();
+            if(currentMacroParam && currentMacroParam->IsMacroParamDirectory() == false)
+            {
+                std::string absoluteMacroParamDirectory = macroParamSystem.RootPath() + macroParamSystem.RelativePath();
+                PathUtils::addDirectorySeparatorAtEnd(absoluteMacroParamDirectory);
+
+                std::string finalMacroParamPath = absoluteMacroParamDirectory + currentMacroParam->Name() + g_MacroParamFileTotalExtension;
+                std::string messageBoxText = ::GetDictionaryString("Do you want to overwrite macroParam file:\n");
+                messageBoxText += finalMacroParamPath;
+                std::string messageBoxTitle = ::GetDictionaryString("File overwrite");
+                if(::MessageBox(this->GetSafeHwnd(), CA2T(messageBoxText.c_str()), CA2T(messageBoxTitle.c_str()), MB_OKCANCEL | MB_ICONWARNING) == IDCANCEL)
+                    return;
+                currentMacroParam->MacroText(GetSmarttoolFormulaText());
+                if(currentMacroParam->Store(absoluteMacroParamDirectory, currentMacroParam->Name()))
+                {
+                    auto realMacroParamDrawParamFileName = ::GetRealMacroParamDrawParamFileName(finalMacroParamPath);
+                    std::vector<std::string> modifiedMacroParamPaths{ realMacroParamDrawParamFileName };
+                    itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPaths);
+                    RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save", false, finalMacroParamPath); // päivitetään varmuuden vuoksi ruutuja, jos karttanäytöllä olleen macroparametrin macroa on muutettu
+                    return;
+                }
+                else
+                    itsSmartMetDocumentInterface->LogAndWarnUser("Failed to save macroParam, unknown reason", "MacroParam save failed", CatLog::Severity::Error, CatLog::Category::Macro, false, false, true);
+            }
+            else
+                itsSmartMetDocumentInterface->LogAndWarnUser("Failed to save macroParam, no macroParam was selected?", "MacroParam save failed", CatLog::Severity::Error, CatLog::Category::Macro, false, false, true);
+        }
+        else
+            itsSmartMetDocumentInterface->LogAndWarnUser("Failed to save macroParam, smarttool was loaded last?", "MacroParam save failed", CatLog::Severity::Error, CatLog::Category::Macro, false, false, true);
+    }
+    catch(std::exception & e)
+    {
+        std::string messageBoxText = ::GetDictionaryString("Unable to store macroParam file:\n");
+        messageBoxText += e.what();
+        std::string messageBoxTitle = ::GetDictionaryString("MacroParam save failed");
+        itsSmartMetDocumentInterface->LogAndWarnUser(messageBoxText, messageBoxTitle, CatLog::Severity::Error, CatLog::Category::Macro, false, false, true);
+    }
+}
+
+void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
 {
     UpdateData(TRUE);
 
@@ -814,9 +884,13 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
     if(mpSystem.GetCurrentMacroParam())
     {
         initialFilename = mpSystem.GetCurrentMacroParam()->Name();
-        if(!initialFilename.empty())
-            initialFilename += "." + g_MacroParamFileExtension;
     }
+    if(initialFilename.empty())
+    {
+        initialFilename += g_MacroParamDefaultFileName;
+    }
+    initialFilename += g_MacroParamFileTotalExtension;
+
     std::string filePath;
     if(BetaProduct::GetFilePathFromUserTotal(g_MacroParamFileFilter, initialPath, filePath, false, initialFilename, g_MacroParamFileExtension, mpSystem.RootPath(), this))
     {
@@ -883,7 +957,10 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
     int usedSelectionIndex = std::min(currentSelection, itsMacroParamList.GetCount() - 1);
 	itsMacroParamList.SetCurSel(usedSelectionIndex);
     if(mpSystem.FindMacroFromCurrentFolder(GetSelectedMacroParamName()))
-        LoadFormulaFromMacroParam();
+    {
+        // Ei päivitetä valitun macroParamin sisältöä, koska se 'resetoi' mahdolliset käyttäjän tekemät editoinnit
+////        LoadFormulaFromMacroParam();
+    }
 
     if(fForceThreadUpdate)
     {
@@ -1168,14 +1245,15 @@ void CFmiSmartToolDlg::InitDialogTexts(void)
 
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, "IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_ERROR_STR, "IDC_STATIC_MACRO_ERROR_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE, "IDC_BUTTON_SMART_TOOL_SAVE");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save as SmartT");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD, "IDC_BUTTON_SMART_TOOL_LOAD");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_REMOVE, "IDC_BUTTON_SMART_TOOL_REMOVE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_DB_CHECK_AT_SEND, "IDC_CHECK_MAKE_DB_CHECK_AT_SEND");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_PARAM_HOLDER, "IDC_STATIC_MACRO_PARAM_HOLDER");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_SAVE, "IDC_BUTTON_MACRO_PARAM_SAVE");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_SAVE, "Save MacroPar");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_SAVE_AS, "Save as MacroPar");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_REMOVE, "IDC_BUTTON_MACRO_PARAM_REMOVE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_PROPERTIES, "IDC_BUTTON_MACRO_PARAM_PROPERTIES");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_REFRESH_LIST, "IDC_BUTTON_MACRO_PARAM_REFRESH_LIST");
@@ -1253,7 +1331,7 @@ void CFmiSmartToolDlg::UpdateLoadedMacroParamPathString()
     {
         std::string usedLoadedMacroPath = "\\" + mpSystem.RelativePath();
         usedLoadedMacroPath += "\\" + mpSystem.GetCurrentMacroParam()->Name();
-        itsLoadedMacroParamPathText = CA2T(usedLoadedMacroPath.c_str());
+        itsLoadedMacroParamPathTextU_ = CA2T(usedLoadedMacroPath.c_str());
         UpdateData(FALSE);
     }
 }

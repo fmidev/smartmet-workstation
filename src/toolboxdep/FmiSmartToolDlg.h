@@ -66,7 +66,7 @@ protected:
     afx_msg void OnButtonAction();
 	afx_msg void OnButtonSmartToolLoad();
 	afx_msg void OnButtonSmartToolLoadDbChecker();
-	afx_msg void OnButtonSmartToolSave();
+	afx_msg void OnButtonSmartToolSaveAs();
 	afx_msg void OnButtonSmartToolSaveDbChecker();
 	afx_msg void OnCheckMakeDbCheckAtSend();
     virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
@@ -107,6 +107,7 @@ protected:
     std::string GetSelectedMacroParamName() const;
     void LoadFormulaFromSmarttool();
     void LoadFormulaFromMacroParam();
+    void EnableSaveButtons();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
@@ -122,7 +123,7 @@ protected:
     BOOL fSearchOptionCaseSensitive;
     BOOL fSearchOptionMatchAnywhere;
     CString itsLoadedSmarttoolMacroPathU_;
-    CString itsLoadedMacroParamPathText;
+    CString itsLoadedMacroParamPathTextU_;
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     std::unique_ptr<CXTPSyntaxEditCtrl>	itsSyntaxEditControl;
@@ -131,7 +132,7 @@ protected:
 
 public:
 	afx_msg void OnBnClickedCheckModifyOnlySelectedLocations();
-	afx_msg void OnBnClickedButtonMacroParamSave();
+	afx_msg void OnBnClickedButtonMacroParamSaveAs();
     afx_msg void OnBnClickedButtonMacroParamRemove();
 	afx_msg void OnBnClickedButtonMacroParamProperties();
 	afx_msg void OnBnClickedButtonAddToRow1();
@@ -164,6 +165,7 @@ public:
     afx_msg void OnEnChangeEditSpeedSearchViewMacro();
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+    afx_msg void OnBnClickedButtonMacroParamSave();
 };
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

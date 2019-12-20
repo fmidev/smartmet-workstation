@@ -86,7 +86,6 @@ private:
     CString itsSysInfoDbUrlU_;
     // Lataako Smartmet automaattisesti querydataa lokaaliincacheen ja siivoaa sitä
     BOOL fAutoLoadNewCacheData;
-    BOOL fUseLocalFixedDrawParams;
     double itsLocationFinderTimeoutInSeconds;
     BOOL fShowLastSendTimeOnMapView;
     CString itsFixedDrawParamPathSettingU_; // Huom! tämä on read-only kenttä
@@ -95,6 +94,7 @@ private:
     BOOL fDroppedDataEditable;
     double itsIsolineMinimumLengthFactor;
     BOOL fGenerateTimeCombinationData;
+    BOOL fForceWdParameterToLinearInterpolation;
 };
 
 //{{AFX_INSERT_LOCATION}}
