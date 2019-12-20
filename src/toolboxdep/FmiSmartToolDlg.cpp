@@ -957,7 +957,10 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
     int usedSelectionIndex = std::min(currentSelection, itsMacroParamList.GetCount() - 1);
 	itsMacroParamList.SetCurSel(usedSelectionIndex);
     if(mpSystem.FindMacroFromCurrentFolder(GetSelectedMacroParamName()))
-        LoadFormulaFromMacroParam();
+    {
+        // Ei päivitetä valitun macroParamin sisältöä, koska se 'resetoi' mahdolliset käyttäjän tekemät editoinnit
+////        LoadFormulaFromMacroParam();
+    }
 
     if(fForceThreadUpdate)
     {
