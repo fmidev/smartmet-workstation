@@ -4433,14 +4433,25 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
                     AddAllWmsProducersToParamSelectionPopup(theMenuSettings, theDataType, subMenuList, *child);
                 }
                 menuItem->AddSubMenu(subMenuList);
+                theMenuItemList->Add(std::move(menuItem));
             }
-            catch(const std::exception&)
+            catch(const std::exception &e)
             {
+                std::string errorMessage = "WMS popup menu section failed: ";
+                errorMessage += e.what();
+                LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
             }
-            theMenuItemList->Add(std::move(menuItem));
+        }
+        catch(const std::exception & e)
+        {
+            std::string errorMessage = "WMS popup menu section failed: ";
+            errorMessage += e.what();
+            LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
         }
         catch(...)
         {
+            std::string errorMessage = "Unknown errror when building WMS popup menu";
+            LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
         }
     }
 #endif // DISABLE_CPPRESTSDK
