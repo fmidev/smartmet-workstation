@@ -4328,7 +4328,7 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 // ********** lis‰t‰‰n havaintoparametri osa *************************
 
 // ********** WMS *************************
-    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
+//    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
 
 // ********** lis‰t‰‰n apudata-parametri osa *************************
 	menuString = ::GetDictionaryString("MapViewParamPopUpHelpData");
