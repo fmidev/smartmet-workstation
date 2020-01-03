@@ -161,6 +161,8 @@ static void EnsureCacheDirectoryForPartialData(const std::string &theTotalCacheF
 	}
 }
 
+// Katso miten haluttu komentorivi pitää rakentaa smartmet_workstation\src\unpackdatafilesexe\UnpackSmartMetDataFilesMain.cpp
+// tiedoston main -funktion alusta, kun virhetilanteessa laitetaan ohjeita cout:iin.
 static std::string MakeUnpackCommand(CachedDataFileInfo &theCachedDataFileInfo)
 {
     // HUOM! laitetaan kaikki käskyn osat lainausmerkkeihin, jos polut sattuisivat sisältämään spaceja
@@ -534,34 +536,12 @@ static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInf
 	CFmiCopyingStatus status = kFmiNoCopyNeeded;
     bool isSatelImageData = theDataInfo.DataType() == NFmiInfoData::kSatelData;
 
-    //if(CatLog::doTraceLevelLogging() && !isSatelImageData)
-    //{
-    //    std::string debugStr = theCacheLoaderData->itsThreadName;
-    //    debugStr += ": examining the file-filter: ";
-    //    debugStr += theDataInfo.UsedFileNameFilter(theHelpDataSystem);
-    //    CatLog::logMessage(debugStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-    //}
-
 	if(::IsDataCached(theDataInfo))
 	{
 		// 1. Mikä on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
         std::string fileFilter = theDataInfo.FileNameFilter();
         CachedDataFileInfo cachedDataFileInfo;
-        //if(CatLog::doTraceLevelLogging())
-        //{
-        //    std::string debugStr = theCacheLoaderData->itsThreadName;
-        //    debugStr += ": BEFORE GetNewestFileInfo-function: ";
-        //    debugStr += theDataInfo.UsedFileNameFilter(theHelpDataSystem);
-        //    CatLog::logMessage(debugStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-        //}
         ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
-        //if(CatLog::doTraceLevelLogging())
-        //{
-        //    std::string debugStr = theCacheLoaderData->itsThreadName;
-        //    debugStr += ": AFTER GetNewestFileInfo-function: ";
-        //    debugStr += theDataInfo.UsedFileNameFilter(theHelpDataSystem);
-        //    CatLog::logMessage(debugStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-        //}
 		size_t filtersSize = fileFiltersFailed.size();
         if(cachedDataFileInfo.itsTotalServerFileName.empty() && filtersSize <= 50)
         {
@@ -572,17 +552,6 @@ static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInf
             fileFiltersFailed.insert(fileFilter);
             if(filtersSize < fileFiltersFailed.size()) // raportoidaan vain siis jos on uusi filtteri, jolle ei löydy tiedostoa
                 CatLog::logMessage(std::string("Cannot find any file with filefilter: ") + fileFilter, CatLog::Severity::Debug, CatLog::Category::Data);
-        }
-
-        if(!cachedDataFileInfo.itsTotalServerFileName.empty())
-        {
-            //if(CatLog::doTraceLevelLogging())
-            //{
-            //    std::string debugStr = theCacheLoaderData->itsThreadName;
-            //    debugStr += ": data found from server: ";
-            //    debugStr += cachedDataFileInfo.itsTotalServerFileName;
-            //    CatLog::logMessage(debugStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-            //}
         }
 
 		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
