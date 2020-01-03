@@ -68,7 +68,7 @@ struct CachedDataFileInfo
     ,fFilePacked(false)
     ,itsTotalCacheFileName()
     ,itsTotalCacheTmpFileName()
-    ,itseTotalCacheTmpPackedFileName()
+    ,itsTotalCacheTmpPackedFileName()
     ,itsFileSizeInMB(0)
     {
     }
@@ -77,7 +77,7 @@ struct CachedDataFileInfo
     bool fFilePacked; // tieto onko serverill‰ oleva tiedosto pakattu vai ei
     std::string itsTotalCacheFileName; // t‰m‰ on datatiedoston lopullinen polku lokaali cachessa
     std::string itsTotalCacheTmpFileName; // t‰m‰ on tiedoston lokaali tmp hakemiston polku, mist‰ se rename:lla siirret‰‰n lopulliseen paikkaan nimeen
-    std::string itseTotalCacheTmpPackedFileName; // jos tiedosto oli pakattu, t‰m‰ on lokaali tmp hakemiston nimi pakatulle tiedostolle, joka sitten puretaan itsTotalCacheTmpFileName:ksi
+    std::string itsTotalCacheTmpPackedFileName; // jos tiedosto oli pakattu, t‰m‰ on lokaali tmp hakemiston nimi pakatulle tiedostolle, joka sitten puretaan itsTotalCacheTmpFileName:ksi
     double itsFileSizeInMB; // tiedoston koko levyll‰ serverill‰ [MB] (joko pakattu tai ei pakattu koko)
 };
 
@@ -170,7 +170,7 @@ static std::string MakeUnpackCommand(CachedDataFileInfo &theCachedDataFileInfo)
     commandStr += "\\UnpackSmartMetDataFilesExe\"";
     commandStr += " \"";
     // 2. pakattu tmp tiedosto
-    commandStr += theCachedDataFileInfo.itseTotalCacheTmpPackedFileName;
+    commandStr += theCachedDataFileInfo.itsTotalCacheTmpPackedFileName;
     commandStr += "\" \"";
     // 3. purettu tmp tiedosto
     commandStr += theCachedDataFileInfo.itsTotalCacheTmpFileName;
@@ -320,7 +320,7 @@ static CFmiCopyingStatus CopyFileEx_CopyRename(CachedDataFileInfo &theCachedData
     // totCacheTmpFileStr arvo riippuu onko kyse pakatusta tiedostosta vai ei
     CString totCacheTmpFileStrU_ = CA2T(theCachedDataFileInfo.itsTotalCacheTmpFileName.c_str());
     if(theCachedDataFileInfo.fFilePacked)
-        totCacheTmpFileStrU_ = CA2T(theCachedDataFileInfo.itseTotalCacheTmpPackedFileName.c_str());
+        totCacheTmpFileStrU_ = CA2T(theCachedDataFileInfo.itsTotalCacheTmpPackedFileName.c_str());
     std::string totalCacheTmpFileStdString = CT2A(totCacheTmpFileStrU_);
 
 	// 1. kopioi data tmp-tiedostoon
@@ -407,7 +407,7 @@ static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo &theCachedDataF
     }
 
     CFmiCopyingStatus tmpFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpFileName);
-    CFmiCopyingStatus tmpPackedFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itseTotalCacheTmpPackedFileName);
+    CFmiCopyingStatus tmpPackedFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpPackedFileName);
 
     if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
     {
@@ -517,7 +517,7 @@ static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOu
 {
     theCachedDataFileInfoInOut.itsTotalCacheFileName = ::MakeFinalTargetFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem);
     theCachedDataFileInfoInOut.itsTotalCacheTmpFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, false);
-    theCachedDataFileInfoInOut.itseTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
+    theCachedDataFileInfoInOut.itsTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
 }
 
 // Funktio tutkii annetun theDataInfo:n avulla onko kyseess‰ cacheen ladattava data
