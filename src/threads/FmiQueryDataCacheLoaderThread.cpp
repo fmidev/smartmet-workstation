@@ -522,6 +522,24 @@ static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOu
     theCachedDataFileInfoInOut.itsTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
 }
 
+static void DoReportIfFileFilterHasNoRelatedDataOnServer(const CachedDataFileInfo &cachedDataFileInfo, const std::string &fileFilter)
+{
+    static std::set<std::string> fileFiltersFailed;
+    static std::mutex fileFilterInsertMutex;;
+
+    size_t filtersSize = fileFiltersFailed.size();
+    if(cachedDataFileInfo.itsTotalServerFileName.empty() && filtersSize <= 50)
+    {
+        // Raportoidaan 50 ensimmäistä tapausta, kun dataa ei löydy. Tämä saattaa auttaa löytämään konffi ongelmia helpommin
+        // Tätä funktiota kutsutaan useasta eri threadeista, joten pakko käyttää lukkoa ennen kuin laitetaan yhteiseen containeriin tavaraa
+        std::lock_guard<std::mutex> lock(fileFilterInsertMutex);
+        filtersSize = fileFiltersFailed.size();
+        fileFiltersFailed.insert(fileFilter);
+        if(filtersSize < fileFiltersFailed.size()) // raportoidaan vain siis jos on uusi filtteri, jolle ei löydy tiedostoa
+            CatLog::logMessage(std::string("Cannot find any file with filefilter: ") + fileFilter, CatLog::Severity::Debug, CatLog::Category::Data);
+    }
+}
+
 // Funktio tutkii annetun theDataInfo:n avulla onko kyseessä cacheen ladattava data
 // ja onko levypalvelimella uudempaa tiedostoa kuin paikallisessa cachessa.
 // Paluu arvot:
@@ -531,8 +549,6 @@ static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOu
 //		toinen SmartMet on juuri kopioimassa sitä), tämä tulkitaan siten että ei ollut mitään luettavaa/kopioitavaa
 static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, CFmiCacheLoaderData *theCacheLoaderData)
 {
-	static std::set<std::string> fileFiltersFailed;
-    static std::mutex fileFilterInsertMutex;;
 	CFmiCopyingStatus status = kFmiNoCopyNeeded;
     bool isSatelImageData = theDataInfo.DataType() == NFmiInfoData::kSatelData;
 
@@ -542,17 +558,7 @@ static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInf
         std::string fileFilter = theDataInfo.FileNameFilter();
         CachedDataFileInfo cachedDataFileInfo;
         ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
-		size_t filtersSize = fileFiltersFailed.size();
-        if(cachedDataFileInfo.itsTotalServerFileName.empty() && filtersSize <= 50)
-        {
-            // Raportoidaan 50 ensimmäistä tapausta, kun dataa ei löydy. Tämä saattaa auttaa löytämään konffi ongelmia helpommin
-            // Tätä funktiota kutsutaan useasta eri threadista, pakko käyttää lukkoa ennen kuin laitetaan yhteiseen containeriin tavaraa
-            std::lock_guard<std::mutex> lock(fileFilterInsertMutex);
-            filtersSize = fileFiltersFailed.size();
-            fileFiltersFailed.insert(fileFilter);
-            if(filtersSize < fileFiltersFailed.size()) // raportoidaan vain siis jos on uusi filtteri, jolle ei löydy tiedostoa
-                CatLog::logMessage(std::string("Cannot find any file with filefilter: ") + fileFilter, CatLog::Severity::Debug, CatLog::Category::Data);
-        }
+        DoReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
 
 		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
         if(cachedDataFileInfo.itsTotalServerFileName.empty() == false)
