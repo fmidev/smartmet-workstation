@@ -394,18 +394,11 @@ static CFmiCopyingStatus CheckTmpFileStatus(const std::string &theTmpFileName)
     return kFmiGoOnWithCopying;
 }
 
-static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo &theCachedDataFileInfo, CFmiCacheLoaderData *theCacheLoaderData, const NFmiHelpDataInfo &theDataInfo)
+static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataFileInfo, CFmiCacheLoaderData* theCacheLoaderData, const NFmiHelpDataInfo& theDataInfo)
 {
     if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
     {
-        //if(CatLog::doTraceLevelLogging())
-        //{
-        //    std::string traceLoggingStr = theCacheLoaderData->itsThreadName;
-        //    traceLoggingStr += ": data all ready in local cache: ";
-        //    traceLoggingStr += theCachedDataFileInfo.itsTotalServerFileName;
-        //    CatLog::logMessage(traceLoggingStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-        //}
-		return kFmiNoCopyNeeded;
+        return kFmiNoCopyNeeded;
     }
 
     CFmiCopyingStatus tmpFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpFileName);
@@ -413,15 +406,8 @@ static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo &theCachedDataF
 
     if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
     {
-        if(::DoesThisThreadCopyFile(theCachedDataFileInfo, theCacheLoaderData))
-	    {
-            ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
-            return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
-	    }
-        else
-        {
-		    return kFmiNoCopyNeeded;
-        }
+        ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
+        return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
     }
     else
     {
@@ -432,10 +418,9 @@ static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo &theCachedDataF
             traceLoggingStr += theCachedDataFileInfo.itsTotalServerFileName;
             CatLog::logMessage(traceLoggingStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
         }
-		return kFmiNoCopyNeeded;
     }
 
-	return kFmiNoCopyNeeded;
+    return kFmiNoCopyNeeded;
 }
 
 static bool IsDataCached(const NFmiHelpDataInfo &theDataInfo)
@@ -549,7 +534,6 @@ static void DoReportIfFileFilterHasNoRelatedDataOnServer(const CachedDataFileInf
 //		toinen SmartMet on juuri kopioimassa sitä), tämä tulkitaan siten että ei ollut mitään luettavaa/kopioitavaa
 static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, CFmiCacheLoaderData *theCacheLoaderData)
 {
-	CFmiCopyingStatus status = kFmiNoCopyNeeded;
     bool isSatelImageData = theDataInfo.DataType() == NFmiInfoData::kSatelData;
 
 	if(::IsDataCached(theDataInfo))
@@ -563,12 +547,15 @@ static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInf
 		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
         if(!cachedDataFileInfo.itsTotalServerFileName.empty())
 		{
-            ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
-			// 2. onko sen nimistä tiedostoa jo cachessa
-			// 3. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
-			// 4. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
-			// 5. tee varsinainen tiedosto kopio cacheen
-            return ::CopyFileToLocalCache(cachedDataFileInfo, theCacheLoaderData, theDataInfo);
+            if(::DoesThisThreadCopyFile(cachedDataFileInfo, theCacheLoaderData))
+            {
+                ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
+                // 2. onko sen nimistä tiedostoa jo cachessa
+                // 3. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
+                // 4. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
+                // 5. tee varsinainen tiedosto kopio cacheen
+                return ::CopyFileToLocalCache(cachedDataFileInfo, theCacheLoaderData, theDataInfo);
+            }
 		}
 	}
     else
@@ -582,7 +569,7 @@ static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInf
         }
     }
 
-	return status;
+	return kFmiNoCopyNeeded;
 }
 
 static bool LetGoAfterFirstTimeDelaying(NFmiMilliSecondTimer &theTimer, bool theFirstTimeflag, int theDelayTimeInMS)
