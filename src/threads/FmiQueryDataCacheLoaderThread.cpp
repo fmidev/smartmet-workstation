@@ -561,7 +561,7 @@ static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInf
         DoReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
 
 		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-        if(cachedDataFileInfo.itsTotalServerFileName.empty() == false)
+        if(!cachedDataFileInfo.itsTotalServerFileName.empty())
 		{
             ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
 			// 2. onko sen nimistä tiedostoa jo cachessa
