@@ -876,11 +876,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
                             // En keksinyt tähän hätään muuta keinoa antaa winExelle erilaisia argumentteja yhdellä kertaa, joutuisin tekemään erillesen komentorivi 
                             // parserin, joka osaisi käsitellä erilaisia optioita (kuten SmartMetissa tehdään).
                             // '?' on erotin, koska sellaista kirjainta ei voi olla polussa kuin wild-card -merkkinä, ei varsinaisessa polussa tai tiedoston nimessä.
-            std::string zipCommandStr = "\""; // myös zip-commandin ympärille lainausmerkit
-            zipCommandStr += itsSmartMetDocumentInterface->WorkingDirectory();
-            zipCommandStr += "\\utils\\";
-            zipCommandStr += "7z.exe";
-            zipCommandStr += "\"";
+            std::string zipCommandStr = CFmiProcessHelpers::Make7zipExePath(itsSmartMetDocumentInterface->WorkingDirectory());
             commandStr += zipCommandStr;
         }
 
