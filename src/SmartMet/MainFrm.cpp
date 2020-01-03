@@ -485,7 +485,7 @@ void CMainFrame::StartQDataCacheThreads(void)
     // valitettavasti apppath-stringi on url-encodattu ja se pit‰‰ purkaa...
     std::string smartMetBinariesDirectory = NFmiStringTools::UrlDecode(itsDoc->ApplicationDataBase().apppath); 
 	// k‰ynnistet‰‰n qdata cache-loader threadi kerran, ja se pit‰‰ ensin initialisoida. T‰m‰ threadi k‰ynnistet‰‰n aina.
-	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours());
+	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), itsDoc->WorkingDirectory());
 	// K‰ynnistet‰‰n 3 eri tasoista cache-loader threadia 
 	// HUOM!!! Muista laittaa min ja max tiedostokoko rajat niin ettei mik‰‰n koko j‰‰ niiden ulkopuolelle.
 	// Eli laita 1. max 2. seuraavan min:iksi jne.
