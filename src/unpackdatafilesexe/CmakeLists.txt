@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(UnpackSmartMetDataFilesExe)
 
-set(CMAKE_MFC_FLAG 0)
+set(CMAKE_MFC_FLAG 2)
 
 link_directories(
     ${BOOST_LIB_DIR}
@@ -17,13 +17,15 @@ add_executable(
 target_link_libraries(
     ${PROJECT_NAME}
     Newbase
-    Bzip2Util
+    CatLog
+    Processes
     )
 
 target_include_directories( 
     ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}
-    PUBLIC ${Bzip2Util_INCLUDE_DIRS}
     PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${CatLog_INCLUDE_DIRS}
+    PUBLIC ${Processes_INCLUDE_DIRS}
     )
 
