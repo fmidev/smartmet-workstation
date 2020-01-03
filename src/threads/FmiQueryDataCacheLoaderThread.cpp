@@ -11,7 +11,6 @@
 #include "FmiCacheLoaderData.h"
 #include "FmiDataLoadingThread2.h"
 #include "FmiCombineDataThread.h"
-#include "bzip2util.h"
 #include "execute-command-in-separate-process.h"
 #include "NFmiSettings.h"
 #include "catlog/catlog.h"
@@ -31,7 +30,8 @@ namespace
 	BOOL gCopyFileExCancel; // t‰m‰n avulla CopyFileEx-funktio voidaan keskeytt‰‰.
 
 	NFmiHelpDataInfoSystem gWorkerHelpDataSystem; // T‰m‰n olion avulla working thread osaa lukea/kopioida haluttuja datoja
-    std::string gSmartMetBinDirectory; // SmartMetin bin‰‰ri-hakemistoa tarvitaan ainakin kun tehd‰‰n bzip2 tiedostojen purkua erillisess‰ prosessissa (purku ohjelma sijaitsee sen utils-hakemistossa)
+    std::string gSmartMetBinDirectory; // SmartMetin bin‰‰ri-hakemistoa tarvitaan ainakin kun tehd‰‰n tiedostojen purkua erillisess‰ prosessissa (purku ohjelma sijaitsee siell‰ miss‰ smartmetin exe)
+    std::string gSmartMetWorkingDirectory; // SmartMetin Working-hakemistoa tarvitaan kun rakennetaan polkua 7-zip ohjelmalle (purku ohjelma sijaitsee sen utils-hakemistossa)
 
 	CSemaphore gGetNextIndexSemaphore; // t‰m‰n avulla p‰ivitet‰‰n seuraavan tarkasteltavan datan indeksi‰
 	CSemaphore gSettingsChanged; // t‰m‰n avulla p‰ivitet‰‰n datan luku asetuksia thread safetysti
@@ -63,22 +63,14 @@ namespace
 
 struct CachedDataFileInfo
 {
-    CachedDataFileInfo(void)
-    :itsTotalServerFileName()
-    ,fFilePacked(false)
-    ,itsTotalCacheFileName()
-    ,itsTotalCacheTmpFileName()
-    ,itsTotalCacheTmpPackedFileName()
-    ,itsFileSizeInMB(0)
-    {
-    }
+    CachedDataFileInfo() = default;
 
     std::string itsTotalServerFileName; // t‰ss‰ on serverill‰ olevan tiedoston polku
-    bool fFilePacked; // tieto onko serverill‰ oleva tiedosto pakattu vai ei
+    bool fFilePacked = false; // tieto onko serverill‰ oleva tiedosto pakattu vai ei
     std::string itsTotalCacheFileName; // t‰m‰ on datatiedoston lopullinen polku lokaali cachessa
     std::string itsTotalCacheTmpFileName; // t‰m‰ on tiedoston lokaali tmp hakemiston polku, mist‰ se rename:lla siirret‰‰n lopulliseen paikkaan nimeen
     std::string itsTotalCacheTmpPackedFileName; // jos tiedosto oli pakattu, t‰m‰ on lokaali tmp hakemiston nimi pakatulle tiedostolle, joka sitten puretaan itsTotalCacheTmpFileName:ksi
-    double itsFileSizeInMB; // tiedoston koko levyll‰ serverill‰ [MB] (joko pakattu tai ei pakattu koko)
+    double itsFileSizeInMB = 0; // tiedoston koko levyll‰ serverill‰ [MB] (joko pakattu tai ei pakattu koko)
 };
 
 static void MakeCacheDirectories(void)
@@ -174,15 +166,14 @@ static std::string MakeUnpackCommand(CachedDataFileInfo &theCachedDataFileInfo)
     // 2. pakattu tmp tiedosto
     commandStr += theCachedDataFileInfo.itsTotalCacheTmpPackedFileName;
     commandStr += "\" \"";
-    // 3. purettu tmp tiedosto
-    commandStr += theCachedDataFileInfo.itsTotalCacheTmpFileName;
-    commandStr += "\" \"";
-    // 4. purettu tiedosto siirrettyn‰ lokaali cacheen
+    // 3. purettu tiedosto siirrettyn‰ lokaali cacheen
     commandStr += theCachedDataFileInfo.itsTotalCacheFileName;
-    // 5. pakattu tiedosto deletoidaan = 1
+    // 4. pakattu tiedosto deletoidaan = 1
     commandStr += "\" 1 ";
+    // 5. k‰ytetty 7-zip exe polku
+    commandStr += CFmiProcessHelpers::Make7zipExePath(gSmartMetWorkingDirectory);
     // 6. k‰ytetty lokitiedosto
-    commandStr += "\"";
+    commandStr += " \"";
     commandStr += CatLog::currentLogFilePath();
     commandStr += "\"";
 
@@ -453,9 +444,9 @@ static std::string MakeFinalTargetFileName(const CachedDataFileInfo &theCachedDa
 	return totalCacheFileName;
 }
 
-static std::string MakeFinalTmpFileName(const CachedDataFileInfo &theCachedDataFileInfoInOut, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, bool fGetPackedName)
+static std::string MakeFinalTmpFileName(const CachedDataFileInfo &theCachedDataFileInfo, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, bool fGetPackedName)
 {
-    NFmiFileString fileStr = fGetPackedName ? NFmiFileString(theCachedDataFileInfoInOut.itsTotalServerFileName) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfoInOut);
+    NFmiFileString fileStr = fGetPackedName ? NFmiFileString(theCachedDataFileInfo.itsTotalServerFileName) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
 	NFmiString fileNameStr = fileStr.FileName();
 	std::string totalCacheTmpFileName = theHelpDataSystem.CacheTmpDirectory();
 	totalCacheTmpFileName += theHelpDataSystem.CacheTmpFileNameFix() + "_"; // laitetaan tmp-nimi fixi tiedosto nimen alkuun ja loppuun
@@ -500,6 +491,11 @@ static std::pair<std::list<std::string>, bool> GetNewestFileInfoList(const std::
     }
 }
 
+// Sample results from MakeRestOfTheFileNames function:
+// Original data path: p:\\data\\in\\202001021141_gfs_scandinavia_pressure.sqd.bz2
+// itsTotalCacheFileName: D:\\smartmet\\wrk\\data\\local\\202001021141_gfs_scandinavia_pressure.sqd
+// itsTotalCacheTmpFileName: D:\\smartmet\\wrk\\data\\tmp\\TMP_202001021141_gfs_scandinavia_pressure.sqd_TMP
+// itsTotalCacheTmpPackedFileName: D:\\smartmet\\wrk\\data\\tmp\\TMP_202001021141_gfs_scandinavia_pressure.sqd.bz2_TMP
 static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOut, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem)
 {
     theCachedDataFileInfoInOut.itsTotalCacheFileName = ::MakeFinalTargetFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem);
@@ -853,10 +849,11 @@ UINT CFmiQueryDataCacheLoaderThread::DoThread(LPVOID pParam)
 }
 
 // T‰t‰ initialisointi funktiota pit‰‰ kutsua ennen kuin itse threadi k‰ynnistet‰‰n MainFramesta. 
-void CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::string &smartMetBinariesDirectory, double cacheCleaningIntervalInHours)
+void CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::string &smartMetBinariesDirectory, double cacheCleaningIntervalInHours, const std::string& smartMetWorkingDirectory)
 {
 	gWorkerHelpDataSystem = helpDataInfoSystem;
     gSmartMetBinDirectory = smartMetBinariesDirectory;
+    gSmartMetWorkingDirectory = smartMetWorkingDirectory;
 
 	gCopyFileExCancel = FALSE;
 	gSettingsHaveChanged = false; // t‰m‰ tarkoittaa sit‰ ett‰ asetukset ovat jo gWorkerHelpDataSystem-oliossa (ei mediator-oliossa)

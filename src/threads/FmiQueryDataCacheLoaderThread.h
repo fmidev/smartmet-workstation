@@ -14,7 +14,7 @@ class CFmiCacheLoaderData;
 namespace CFmiQueryDataCacheLoaderThread
 {
     // t‰m‰ pit‰‰ kutsua ennen kuin threadi (DoThread) k‰ynnistet‰‰n
-	void InitHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::string &smartMetBinariesDirectory, double cacheCleaningIntervalInHours); 
+	void InitHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::string &smartMetBinariesDirectory, double cacheCleaningIntervalInHours, const std::string & smartMetWorkingDirectory);
 	UINT DoThread(LPVOID pParam);
 	void CloseNow(void);
 	int WaitToClose(int theMilliSecondsToWait, CFmiCacheLoaderData *theCacheLoaderData);
