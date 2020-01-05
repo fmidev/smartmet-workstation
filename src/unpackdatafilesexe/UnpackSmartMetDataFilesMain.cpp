@@ -150,6 +150,8 @@ int main(int argc, const char* argv[])
 
             bool status = CFmiProcessHelpers::ExecuteCommandInSeparateProcess(_7zipUtilExecutionString, false, false, SW_HIDE, true, NORMAL_PRIORITY_CLASS, &workingDirectory);
             timer.StopTimer();
+            if(deletePackedFileAfter)
+                NFmiFileSystem::RemoveFile(packedFilePath);
             if(status)
             { 
                 ::ReportSuccessfullUnpacking(logger, packedFilePath, unpackedTmpFilePath, timer);
