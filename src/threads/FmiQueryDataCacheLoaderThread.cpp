@@ -422,8 +422,6 @@ static bool IsDataCached(const NFmiHelpDataInfo &theDataInfo)
 		return false;
 }
 
-static const std::string g_Bzip2FileExtension = ".bz2";
-
 static NFmiFileString MakeFileStringWithoutCompressionFileExtension(const CachedDataFileInfo &theCachedDataFileInfo)
 {
     NFmiFileString fileStr(theCachedDataFileInfo.itsTotalServerFileName);
@@ -449,11 +447,31 @@ static std::string MakeFinalTmpFileName(const CachedDataFileInfo &theCachedDataF
     NFmiFileString fileStr = fGetPackedName ? NFmiFileString(theCachedDataFileInfo.itsTotalServerFileName) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
 	NFmiString fileNameStr = fileStr.FileName();
 	std::string totalCacheTmpFileName = theHelpDataSystem.CacheTmpDirectory();
-	totalCacheTmpFileName += theHelpDataSystem.CacheTmpFileNameFix() + "_"; // laitetaan tmp-nimi fixi tiedosto nimen alkuun ja loppuun
+    if(!theCachedDataFileInfo.fFilePacked)
+    {
+        // Etu TMP-liite laitetaan vain ei pakattuihin datoihin.
+        // SYY: Jostain syystä bzip2 tyyppi puretaan niin että purettuun datatiedostoon tulee mukaan pakatun tiedoston etiliite, jos purkaus tehdään 7-zip ohjelmalla.
+        // Jos purku tehdään zip tai 7zip pakattuihin datoihin, etuliitettä ei tule purettuun tiedostoon (this behaviour really sucks!!!).
+    	totalCacheTmpFileName += theHelpDataSystem.CacheTmpFileNameFix() + "_"; // laitetaan tmp-nimi fixi tiedosto nimen alkuun ja loppuun
+    }
 	totalCacheTmpFileName += static_cast<char*>(fileNameStr);
 	totalCacheTmpFileName += "_";
 	totalCacheTmpFileName += theHelpDataSystem.CacheTmpFileNameFix();
 	return totalCacheTmpFileName;
+}
+
+static const std::vector<std::string> g_ZippedFileExtensions{ ".7z", ".zip", ".bz2" }; //, ".gz" , ".tar" , ".xz" , ".wim" };
+
+// Kokeillaan eri pakkaus päätteitä prioriteetti järjestyksessä, heti kun löytyy jotain jollain päätteellä, etsintä loppuu.
+static std::string TryToFindNewestPackedFileName(const std::string& theFileFilter)
+{
+    for(auto& zipExtension : g_ZippedFileExtensions)
+    {
+        auto totalPackedFileName = NFmiFileSystem::NewestPatternFileName(theFileFilter + zipExtension);
+        if(!totalPackedFileName.empty())
+            return totalPackedFileName;
+    }
+    return "";
 }
 
 // Etsii uusimman tiedoston, joka vastaa annettua fileFilteriä ja löytyy server puolelta 
@@ -463,8 +481,8 @@ static std::string MakeFinalTmpFileName(const CachedDataFileInfo &theCachedDataF
 // muuten se on false.
 static void GetNewestFileInfo(const std::string &theFileFilter, CachedDataFileInfo &theCachedDataFileInfoOut)
 {
-    std::string totalPackedFileName = NFmiFileSystem::NewestPatternFileName(theFileFilter + g_Bzip2FileExtension);
-    if(totalPackedFileName.empty() == false)
+    std::string totalPackedFileName = TryToFindNewestPackedFileName(theFileFilter);
+    if(!totalPackedFileName.empty())
     {
         theCachedDataFileInfoOut.itsTotalServerFileName = totalPackedFileName;
         theCachedDataFileInfoOut.fFilePacked = true;
@@ -477,11 +495,23 @@ static void GetNewestFileInfo(const std::string &theFileFilter, CachedDataFileIn
     }
 }
 
+// Kokeillaan eri pakkaus päätteitä prioriteetti järjestyksessä, heti kun löytyy jotain jollain päätteellä, etsintä loppuu.
+static std::list<std::string> TryToFindPackedFileNameListWithFileFilter(const std::string& theFileFilter)
+{
+    for(auto& zipExtension : g_ZippedFileExtensions)
+    {
+        auto packedFileNameList = NFmiFileSystem::PatternFiles(theFileFilter + zipExtension);
+        if(!packedFileNameList.empty())
+            return packedFileNameList;
+    }
+    return std::list<std::string>();
+}
+
 // Sama kuin edellä GetNewestFileInfo-funktiossa, mutta haetaan joko pakattujen tiedostojen listaa
 // tai ei pakattujen tiedostojen listaa.
 static std::pair<std::list<std::string>, bool> GetNewestFileInfoList(const std::string &theFileFilter)
 {
-    std::list<std::string> packedFileList = NFmiFileSystem::PatternFiles(theFileFilter + g_Bzip2FileExtension);
+    std::list<std::string> packedFileList = ::TryToFindPackedFileNameListWithFileFilter(theFileFilter);
     if(packedFileList.empty() == false)
         return std::make_pair(packedFileList, true);
     else
