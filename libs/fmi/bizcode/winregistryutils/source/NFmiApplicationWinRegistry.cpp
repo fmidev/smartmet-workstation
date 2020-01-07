@@ -492,12 +492,24 @@ bool NFmiConfigurationRelatedWinRegistry::Init(const std::string &baseConfigurat
     return true;
 }
 
+static boost::shared_ptr<NFmiMapViewWinRegistry> MakeNonMapViewWinRegistryObject()
+{
+    boost::shared_ptr<NFmiMapViewWinRegistry> dummyMapViewWinRegistry(new NFmiMapViewWinRegistry());
+    // 998:sta tulee oikeasti 999 Init metodin sisällä (999 on tässä selkeämmin spesiaali indeksi, joka tarkoittaa muita kuin oikeiden karttanäyttöjen indeksiä)
+    dummyMapViewWinRegistry->Init("Software\\Fmi\\SmartMet\\General", 998); 
+    return dummyMapViewWinRegistry;
+}
+
 boost::shared_ptr<NFmiMapViewWinRegistry> NFmiConfigurationRelatedWinRegistry::MapView(int mapIndex)
 {
     if(mapIndex >= 0 && mapIndex < static_cast<int>(mMapViewVector.size()))
         return mMapViewVector[mapIndex];
     else
-        return boost::shared_ptr<NFmiMapViewWinRegistry>();
+    {
+        // Palautetaan ei-oikeille karttanäytöille (aika-sarja, poikkileikkaus, jne.) dummy-olion asetukset, jotta ei tarvitse testailla kaikkialla nullptr juttuja
+        static boost::shared_ptr<NFmiMapViewWinRegistry> dummyMapViewWinRegistry = ::MakeNonMapViewWinRegistryObject();
+        return dummyMapViewWinRegistry;
+    }
 }
 
 std::string NFmiConfigurationRelatedWinRegistry::WindowRectStr(const std::string &keyString)
