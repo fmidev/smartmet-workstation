@@ -96,7 +96,7 @@ protected:
 public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedButtonLoad();
-	afx_msg void OnBnClickedButtonStore();
+	afx_msg void OnBnClickedButtonViewMacroSaveAs();
 	afx_msg void OnBnClickedButtonRemove();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 private:
@@ -122,6 +122,8 @@ private:
     void EnsureWantedRowVisibilityAfterDirectoryChange(const std::string &theDirectoryName, const std::string &theOldPath);
     int FindMacroNameRow(const std::string &theMacroName);
     void EnableColorCodedControls();
+    bool IsRealViewMacroFileSelected();
+    void UpdateRelativeMacroPath();
 
     NFmiViewMacroGridCtrl itsGridCtrl;
     std::vector<ViewMacroHeaderParInfo> itsHeaders;
@@ -130,6 +132,7 @@ private:
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     CString itsMacroDescriptionU_;
     std::string itsSelectedMacroName;
+    CString itsCurrentPathStringU_;
     BOOL fDisableWindowManipulations;
     CWndResizer m_resizer;
     CGUSIconEdit itsSpeedSearchViewMacroControl;
@@ -162,7 +165,7 @@ protected:
     virtual void OnOK();
     virtual void OnCancel();
 public:
-    CString itsCurrentPathStringU_;
     afx_msg void OnDestroy();
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+    afx_msg void OnBnClickedButtonViewMacroSave();
 };
