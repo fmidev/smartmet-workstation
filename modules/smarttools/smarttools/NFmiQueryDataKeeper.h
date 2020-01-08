@@ -10,7 +10,9 @@
 #include <mutex>
 
 class NFmiOwnerInfo;
+class NFmiQueryData;
 class NFmiFastQueryInfo;
+class NFmiProducer;
 
 // NFmiQueryDataKeeper on luokka joka pitää kirjanpitoa NFmiInfoOrganizer-luokassa
 // säilytettävistä queryDatoista.
@@ -103,6 +105,8 @@ class NFmiQueryDataSetKeeper
   bool ReadDataFileInUse(const std::string &theFileName);
   bool CheckKeepTime(ListType::iterator &it);
   bool OrigTimeDataExist(const NFmiMetTime &theOrigTime);
+  const NFmiProducer* GetLatestDataProducer() const;
+  void FixLocallyReadDataProducer(NFmiQueryData *locallyReadData);
 
   ListType itsQueryDatas;  // tässä on n kpl viimeisintä malliajoa tallessa (tai esim. havaintojen
                            // tapauksessa vain viimeisin data)
