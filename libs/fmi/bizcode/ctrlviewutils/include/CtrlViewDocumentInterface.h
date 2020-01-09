@@ -355,6 +355,7 @@ public:
     virtual float BrushToolLimitSettingValue(void) = 0;
     virtual void MustDrawCrossSectionView(bool newValue) = 0;
     virtual void MustDrawTempView(bool newValue) = 0;
+    virtual bool MustDrawTempView() = 0;
     virtual bool TimeSerialDataViewOn(void) = 0;
     virtual void MustDrawTimeSerialView(bool newValue) = 0;
     virtual bool ShowSelectedPointsOnMap(int theMapViewDescTopIndex) = 0;
