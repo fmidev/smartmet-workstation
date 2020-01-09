@@ -44,6 +44,7 @@
 #include "ApplicationInterface.h"
 #include "CtrlViewWin32Functions.h"
 #include "NFmiGdiPlusImageMapHandler.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 #include <Winspool.h>
 
@@ -759,27 +760,41 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 		Invalidate(FALSE);
 	else if(!(genData->MiddleMouseButtonDown() && genData->MouseCaptured())) // muuten ForceDrawOverBitmapThings, paitsi jos ollaan vetämässä kartan päälle zoomi laatikkoa, koska se peittyisi aina ForceDrawOverBitmapThings:n alle
 	{
+        bool doIncreaseCurrentUpdateId = false;
+
 		if(genData->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
 		{
-			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina
+            // Täältä ei haluta doIncreaseCurrentUpdateId asetusta, koska ei kiinnosta, jos kartalla päivitetään apukursoreita
+            ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina
 		}
 		if(genData->MustDrawTempView())
 		{
-			genData->MustDrawTempView(false);
-			GetDocument()->UpdateTempView();
-		}
+            if(genData->GetMTATempSystem().TempViewOn())
+                doIncreaseCurrentUpdateId = true;
+            GetDocument()->UpdateTempView();
+            // Tämä nollataan vasta piirron jälkeen, koska piirrossa kiinnostaa että mennäänkö sinne mouse-move operaatiosta vai mistä.
+            genData->MustDrawTempView(false); 
+        }
 		if(genData->MustDrawTimeSerialView())
 		{
-			genData->MustDrawTimeSerialView(false);
+            if(genData->TimeSerialDataViewOn())
+                doIncreaseCurrentUpdateId = true;
+            genData->MustDrawTimeSerialView(false);
 			GetDocument()->UpdateTimeSerialView();
 		}
 		if(genData->MustDrawCrossSectionView())
 		{
-			genData->MustDrawCrossSectionView(false);
+            if(genData->CrossSectionSystem()->CrossSectionViewOn())
+                doIncreaseCurrentUpdateId = true;
+            genData->MustDrawCrossSectionView(false);
 			GetDocument()->UpdateCrossSectionView();
 			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, false);
 		}
-	}
+
+        // Kasvatetaan ruutujenpäivityslaskuria, jos mouse-move operaatio on aiheuttanut muiden kuin karttanäytön päivityksiä (tosin jälkijättöisesti)
+        if(doIncreaseCurrentUpdateId)
+            CtrlViewUtils::CtrlViewTimeConsumptionReporter::increaseCurrentUpdateId();
+    }
 }
 
 static bool IsViewForceUpdated(unsigned int viewIndexToBeUpdated, unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
