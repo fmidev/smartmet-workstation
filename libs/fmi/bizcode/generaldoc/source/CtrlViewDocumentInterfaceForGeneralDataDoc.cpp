@@ -1184,6 +1184,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::MustDrawTempView(bool newValue)
     itsDoc->MustDrawTempView(newValue);
 }
 
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::MustDrawTempView()
+{
+    return itsDoc->MustDrawTempView();
+}
+
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::TimeSerialDataViewOn(void)
 {
     return itsDoc->TimeSerialDataViewOn();

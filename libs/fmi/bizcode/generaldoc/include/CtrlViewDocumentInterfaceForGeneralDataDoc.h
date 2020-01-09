@@ -248,6 +248,7 @@ public:
     float BrushToolLimitSettingValue(void) override;
     void MustDrawCrossSectionView(bool newValue) override;
     void MustDrawTempView(bool newValue) override;
+    bool MustDrawTempView() override;
     bool TimeSerialDataViewOn(void) override;
     void MustDrawTimeSerialView(bool newValue) override;
     bool ShowSelectedPointsOnMap(int theMapViewDescTopIndex) override;
