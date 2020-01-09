@@ -187,6 +187,16 @@ bool NFmiCtrlView::IsPrintedMapViewDesctop()
     return false;
 }
 
+bool NFmiCtrlView::IsPrinting() const
+{
+    if(itsToolBox)
+    {
+        return itsToolBox->GetDC()->IsPrinting() == TRUE;
+    }
+    else
+        return false;
+}
+
 // Näytetty rivi numero täällä (theRowIndex) ei ole aina sama kuin dokumentin
 // rivi, koska nykyään näyttörivejä voi selata myös pystysuunnassa.
 int NFmiCtrlView::CalcRealRowIndex(int theRowIndex, int theColumnIndex)
