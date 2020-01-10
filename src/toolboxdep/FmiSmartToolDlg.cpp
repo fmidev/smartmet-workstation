@@ -146,6 +146,7 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
     ON_WM_SIZE()
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave)
+    ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonSmartToolSave)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -396,6 +397,10 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_ERROR_STR, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_RICHEDIT_MACRO_ERROR_TEXT, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_STATIC_SMARTTOOL_HOLDER, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE, ANCHOR_TOP | ANCHOR_RIGHT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE_AS, ANCHOR_TOP | ANCHOR_RIGHT);
     ASSERT(bOk == TRUE);
@@ -719,6 +724,12 @@ void CFmiSmartToolDlg::OnButtonSmartToolSaveAs()
             ::MessageBox(this->GetSafeHwnd(), CA2T(errMsg.c_str()), CA2T(errMsgTitle.c_str()), MB_ICONINFORMATION | MB_OK);
         }
     }
+}
+
+
+void CFmiSmartToolDlg::OnBnClickedButtonSmartToolSave()
+{
+    // TODO: Add your control notification handler code here
 }
 
 void CFmiSmartToolDlg::OnButtonSmartToolSaveDbChecker()
@@ -1245,9 +1256,11 @@ void CFmiSmartToolDlg::InitDialogTexts(void)
 
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, "IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_ERROR_STR, "IDC_STATIC_MACRO_ERROR_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save as SmartT");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD, "IDC_BUTTON_SMART_TOOL_LOAD");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_REMOVE, "IDC_BUTTON_SMART_TOOL_REMOVE");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SMARTTOOL_HOLDER, "Smarttool section");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE, "Save");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save as");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD, "Load");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_REMOVE, "Remove");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_DB_CHECK_AT_SEND, "IDC_CHECK_MAKE_DB_CHECK_AT_SEND");
@@ -1312,8 +1325,8 @@ BOOL CFmiSmartToolDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRES
 void CFmiSmartToolDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
     // set the minimum tracking width and height of the window
-    lpMMI->ptMinTrackSize.x = 493;
-    lpMMI->ptMinTrackSize.y = 539;
+    lpMMI->ptMinTrackSize.x = 553;
+    lpMMI->ptMinTrackSize.y = 599;
 }
 
 void CFmiSmartToolDlg::UpdateLoadedSmarttoolMacroPathString()
@@ -1482,3 +1495,4 @@ HBRUSH CFmiSmartToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
     return hbr;
 }
+
