@@ -10,6 +10,7 @@
 #include "NFmiViewPosRegistryInfo.h"
 #include "GUSIconEdit.h"
 #include "NFmiInfoData.h"
+#include "PPToolTip.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CFmiSmartToolDlg dialog
@@ -108,6 +109,8 @@ protected:
     void LoadFormulaFromSmarttool();
     void LoadFormulaFromMacroParam();
     void EnableSaveButtons();
+    void InitTooltipControl();
+    void SetDialogControlTooltip(int controlId, const std::string& tooltipRawText);
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
@@ -124,6 +127,7 @@ protected:
     BOOL fSearchOptionMatchAnywhere;
     CString itsLoadedSmarttoolMacroPathU_;
     CString itsLoadedMacroParamPathTextU_;
+    CPPToolTip m_tooltip;
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     std::unique_ptr<CXTPSyntaxEditCtrl>	itsSyntaxEditControl;
@@ -167,6 +171,7 @@ public:
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg void OnBnClickedButtonMacroParamSave();
     afx_msg void OnBnClickedButtonSmartToolSave();
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
