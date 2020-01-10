@@ -166,6 +166,7 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg void OnBnClickedButtonMacroParamSave();
+    afx_msg void OnBnClickedButtonSmartToolSave();
 };
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
