@@ -73,6 +73,8 @@ namespace HakeMessage {
 
         bool IsFromXmlFormat() const;
         void IsFromXmlFormat(bool newValue);
+
+        std::string MakeTooltipMessageStr() const;
     };
 
     inline bool operator==(const HakeMsg& msg1, const HakeMsg& msg2)
