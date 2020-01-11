@@ -111,6 +111,8 @@ protected:
     void EnableSaveButtons();
     void InitTooltipControl();
     void SetDialogControlTooltip(int controlId, const std::string& tooltipRawText);
+    void MakeSmarttoolSaveError(const std::string& fullFilePath);
+    bool SmarttoolCanBeSaved() const;
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
