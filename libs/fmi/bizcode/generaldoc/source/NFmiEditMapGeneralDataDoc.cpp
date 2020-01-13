@@ -1497,7 +1497,7 @@ void InitMapViewDescTopList(void)
 	{
 		string errStr("InitMapViewDescTopList - Initialization error in configurations: \n");
 		errStr += e.what();
-        LogAndWarnUser(errStr, "Problems in InitMapViewDescTopList", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+        LogAndWarnUser(errStr, "Problems in InitMapViewDescTopList", CatLog::Severity::Error, CatLog::Category::Configuration, false, true, true);
 	}
 }
 
