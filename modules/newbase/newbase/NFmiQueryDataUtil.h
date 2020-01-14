@@ -515,19 +515,22 @@ class _FMI_DLL NFmiQueryDataUtil
       NFmiFastQueryInfo &theInfo, int theLeft, int theTop, int theRight, int theBottom);
 
   static std::string GetFileFilterDirectory(const std::string &theFileFilter);
+  using LoggingFunction = std::function<void(const std::string &)>;
   static NFmiQueryData *CombineQueryDatas(
       bool fDoRebuild,
       boost::shared_ptr<NFmiQueryData> &theBaseQData,
       std::vector<boost::shared_ptr<NFmiQueryData> > &theQDataVector,
       bool fDoTimeStepCombine,
       int theMaxTimeStepsInData = 0,
-      NFmiStopFunctor *theStopFunctor = 0);
+      NFmiStopFunctor *theStopFunctor = nullptr,
+      LoggingFunction *loggingFunction = nullptr);
   static NFmiQueryData *CombineQueryDatas(bool fDoRebuildCheck,
                                           const std::string &theBaseDataFileFilter,
                                           const std::string &theFileFilter,
                                           bool fDoTimeStepCombine,
                                           int theMaxTimeStepsInData = 0,
-                                          NFmiStopFunctor *theStopFunctor = 0);
+                                          NFmiStopFunctor *theStopFunctor = nullptr,
+                                          LoggingFunction *loggingFunction = nullptr);
   static int CalcOptimalThreadCount(int maxAvailableThreads, int separateTaskCount);
 
 };  // class NFmiQueryDataUtil

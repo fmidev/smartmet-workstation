@@ -19,6 +19,7 @@
 // querydata-otuksia.
 
 #include "NFmiQueryDataUtil.h"
+
 #include "NFmiAzimuthalArea.h"
 #include "NFmiCalculationCondition.h"
 #include "NFmiCalculator.h"
@@ -1379,7 +1380,7 @@ bool InterpolateSimilarDataToSmallerTimeResolution(NFmiFastQueryInfo *theDestina
     bool useLagrange = theInterpolationMethod == kLagrange;
     unsigned long lagrangeTimeIndex = 0;  // tähän laitetaan interpoloitavaa aikaa lähin edeltävän
                                           // ajan aikaindeksi, joka löytyy lähdedatasta
-    double lagrangeTimePosition = 0;      // tähän laitetaan interpoloitavan ajan paikka 0 - 1
+    double lagrangeTimePosition = 0;  // tähän laitetaan interpoloitavan ajan paikka 0 - 1
     // avaruudessa niiden kahden aikapisteen välissä, jotka ovat
     // lähinnä interpoloitavaa pistettä lähdedatassa.
     fullFill = true;
@@ -3830,7 +3831,9 @@ NFmiQueryData *DoTimeFilteringWithSmoother(NFmiQueryData *theSourceData,
     int sizeTimes = sourceInfo.SizeTimes();
     checkedVector<float> relTimeLocation(
         sizeTimes);  // x on aika eli eri aika-askelten suhteelliset sijainnit (0, 1, 2, 3, ...)
-                     //		std::accumulate(relTimeLocation.begin(), relTimeLocation.end(), 0); // 0
+                     //		std::accumulate(relTimeLocation.begin(), relTimeLocation.end(), 0);
+                     ////
+                     // 0
     // tarkoittaa
     // että
     // täytetään vektori luvuilla jotka alkavat 0:sta ja kasvavat aina yhdellä
@@ -4349,7 +4352,7 @@ struct less<NFmiDataIdent>
     return lhs.GetParamIdent() < rhs.GetParamIdent();
   }
 };
-}
+}  // namespace std
 
 static NFmiParamDescriptor MakeParamDesc(
     std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn)
@@ -4380,7 +4383,7 @@ struct less<NFmiLevel>
     return lhs.LevelValue() < rhs.LevelValue();
   }
 };
-}
+}  // namespace std
 
 static NFmiVPlaceDescriptor MakeVPlaceDesc(
     std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn)
@@ -4555,6 +4558,22 @@ static void CombineSliceDatas(NFmiQueryData &theData,
   }
 }
 
+static void DoMetaInfoLogging(NFmiQueryDataUtil::LoggingFunction *loggingFunction,
+                              const NFmiQueryInfo &metaInfo)
+{
+  if (loggingFunction)
+  {
+    std::string message = "Combined data total size: ";
+    auto sizeInGB = metaInfo.Size() * sizeof(float) / (1024 * 1024 * 1024.);
+    message += NFmiValueString::GetStringWithMaxDecimalsSmartWay(sizeInGB, 2);
+    message += " GB, params: " + std::to_string(metaInfo.SizeParams());
+    message += ", times: " + std::to_string(metaInfo.SizeTimes());
+    message += ", levels: " + std::to_string(metaInfo.SizeLevels());
+    message += ", points: " + std::to_string(metaInfo.SizeLocations());
+    (*loggingFunction)(message);
+  }
+}
+
 // fFirstInfoDefines määrää sekä rakennetaanko 'metaInfo' ensimmäisen infon avulla,
 // että miten lopullinen data täytetään.
 // Jos fDoTimeStepCombine on true, on tarkoitus liittää samanlaisista aika-askel-datoista
@@ -4567,7 +4586,8 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(
     std::vector<boost::shared_ptr<NFmiQueryData> > &theQDataVector,
     bool fDoTimeStepCombine,
     int theMaxTimeStepsInData,
-    NFmiStopFunctor *theStopFunctor)
+    NFmiStopFunctor *theStopFunctor,
+    LoggingFunction *loggingFunction)
 {
   std::vector<boost::shared_ptr<NFmiFastQueryInfo> > fInfoVector;
   ::MakeFastInfos(theQDataVector, fInfoVector);
@@ -4583,6 +4603,9 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(
     NFmiQueryInfo combinedDataMetaInfo =
         ::MakeCombinedDatasMetaInfo(fInfoVector, foundValidTimes, fDoTimeStepCombine);
     NFmiQueryDataUtil::CheckIfStopped(theStopFunctor);
+    // SmartMet kaatuu jossain tilanteissa tähän (CreateEmptyData:ssa luodaan dynaamisesti float
+    // taulukko new:lla), laitetaan lokitusta luotavasta datasta, jos funktio on annettu
+    ::DoMetaInfoLogging(loggingFunction, combinedDataMetaInfo);
     std::unique_ptr<NFmiQueryData> data(CreateEmptyData(combinedDataMetaInfo));
     if (data)
     {
@@ -4635,7 +4658,8 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(bool fDoRebuildCheck,
                                                     const std::string &theFileFilter,
                                                     bool fDoTimeStepCombine,
                                                     int theMaxTimeStepsInData,
-                                                    NFmiStopFunctor *theStopFunctor)
+                                                    NFmiStopFunctor *theStopFunctor,
+                                                    LoggingFunction *loggingFunction)
 {
   boost::shared_ptr<NFmiQueryData> baseQData;
   try
@@ -4668,7 +4692,8 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(bool fDoRebuildCheck,
                            qDataVector,
                            fDoTimeStepCombine,
                            theMaxTimeStepsInData,
-                           theStopFunctor);
+                           theStopFunctor,
+                           loggingFunction);
 }
 
 static void FillGridDataInThread(NFmiFastQueryInfo &theSourceInfo,
