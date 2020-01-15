@@ -378,6 +378,8 @@ lexClass:
 	token:tag	= 'resolution'
 	token:tag	= 'calculationpoint'
 	token:tag	= 'observationradius'
+	token:tag	= 'calculationtype'
+	token:tag	= 'index'
 	token:tag	= 'surface'
 	token:tag	= 'pressure'
 	token:tag	= 'hybrid'
@@ -665,6 +667,7 @@ lexClass:
 	
 	token:tag	= 'calculationpoint = producer'
 	token:tag	= 'calculationpoint = lat,lon'
+	token:tag	= 'calculationtype = index'
 	
 	token:tag	= 'observationradius = x // [km]'
 	
