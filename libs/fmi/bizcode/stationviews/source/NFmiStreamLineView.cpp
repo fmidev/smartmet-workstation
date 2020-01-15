@@ -1294,6 +1294,22 @@ static bool GetZoomedAreaIndexies(const NFmiDataMatrix<NFmiStartPointElimination
     return false;
 }
 
+template<typename Matrix>
+static size_t GetMatrixMidIndex(const Matrix& matrix, bool xDimension)
+{
+    size_t actualSize = xDimension ? matrix.NX() : matrix.NY();
+    
+    if(actualSize <= 1)
+        throw std::runtime_error("Streamline calculations had starting point matrix size smaller than 2 which would crash application if we continue calculations here");
+    else if(actualSize == 2)
+    {
+        // Jos matriisin koko on 2, pit‰‰ palauttaa 0:aa,muuten jatko laskut kaatavat ohjelman
+        return 0;
+    }
+    else
+        return actualSize / 2;
+}
+
 NFmiDataMatrix<NFmiStartPointEliminationData> NFmiStreamLineView::CalcStartingPointEliminationMatrix(const NFmiDataMatrix<NFmiPoint> &theStartingPointMatrix, boost::shared_ptr<NFmiArea> &theZoomedArea)
 {
     NFmiDataMatrix<NFmiPoint> relativeStartingPointMatrix = theStartingPointMatrix;
@@ -1305,8 +1321,8 @@ NFmiDataMatrix<NFmiStartPointEliminationData> NFmiStreamLineView::CalcStartingPo
         }
     }
 
-    size_t xInd = relativeStartingPointMatrix.NX()/2;
-    size_t yInd = relativeStartingPointMatrix.NY()/2;
+    size_t xInd = ::GetMatrixMidIndex(relativeStartingPointMatrix, true);
+    size_t yInd = ::GetMatrixMidIndex(relativeStartingPointMatrix, false);
     // eliminointi laatikon leveys on n. keskell‰ olevien aloituspisteiden et‰isyys kerrottuna jolloin keroimella joka on n. v‰lill‰ 0.3 - 1
     double width = (relativeStartingPointMatrix[xInd+1][yInd].X() - relativeStartingPointMatrix[xInd][yInd].X()) * 0.5;
     double height = (relativeStartingPointMatrix[xInd][yInd].Y() - relativeStartingPointMatrix[xInd][yInd+1].Y()) * 0.5;
@@ -1527,8 +1543,8 @@ void NFmiStreamLineView::DoSingleThreadCalculations(const StreamlineCalculationP
     // K‰ytet‰‰n aluksi aloitus pisteet aloitusPiste matriisin keski pysty ja vaaka janoilta, siten ett‰ 
     // aloitetaan kaskelta ja edet‰‰n reinoja kohden, n‰in toivottavasti saadaan aluksi edustavimmat polut, 
     // jotka sitten alkavat blokkaamaan muita aloitus pisteit‰.
-    size_t xMidInd = theStartingPointEliminatioMatrix.NX()/2;
-    size_t yMidInd = theStartingPointEliminatioMatrix.NY()/2;
+    size_t xMidInd = ::GetMatrixMidIndex(theStartingPointEliminatioMatrix, true);
+    size_t yMidInd = ::GetMatrixMidIndex(theStartingPointEliminatioMatrix, false);
 
     // Ensin keskipiste
     DoStartingPointCalcualtions(theCalcParams, theInfo, theLatlonPathsOut, timeStepInMinutes, theProximityLimit, theStartingPointEliminatioMatrix, xMidInd, yMidInd, theLengthLimitInKM);
