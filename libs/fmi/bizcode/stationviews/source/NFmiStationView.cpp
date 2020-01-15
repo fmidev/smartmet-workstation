@@ -1407,25 +1407,33 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
     }
 }
 
-float NFmiStationView::GetMacroParamTooltipValueFromCache()
+float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
     NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
     auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
-    if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
-    {
-        const auto &dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
-        NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
-        grid.Area()->SetXYArea(NFmiRect(0, 0, 1, 1));
-        auto gridPoint = grid.LatLonToGrid(latlon);
-        auto xIndex = boost::math::iround(gridPoint.X());
-        auto yIndex = boost::math::iround(gridPoint.Y());
-        if(xIndex >= 0 && xIndex < dataMatrix.NX() && yIndex >= 0 && yIndex < dataMatrix.NY())
-        {
-            return dataMatrix[xIndex][yIndex];
-        }
-    }
+	if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
+	{
+		const auto& dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
+		NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
+		grid.Area()->SetXYArea(NFmiRect(0, 0, 1, 1));
+		auto gridPoint = grid.LatLonToGrid(latlon);
+		if(extraMacroParamData.CalculationType() == MacroParamCalculationType::Index)
+		{
+			auto xIndex = boost::math::iround(gridPoint.X());
+			auto yIndex = boost::math::iround(gridPoint.Y());
+			if(xIndex >= 0 && xIndex < dataMatrix.NX() && yIndex >= 0 && yIndex < dataMatrix.NY())
+			{
+				return dataMatrix[xIndex][yIndex];
+			}
+		}
+		else
+		{
+			// normi reaaliluku interpolaatio lämpötila parametri on vain dummy arvo tavalliselle reaaliluvulle
+			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+		}
+	}
 
     return kFloatMissing;
 }
@@ -2734,7 +2742,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
     str += " (crude) ";
     str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
     str += ", ";
-    float cacheValue = GetMacroParamTooltipValueFromCache();
+    float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
     str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
     str += " (cache) ";
     str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());

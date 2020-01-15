@@ -368,16 +368,20 @@ bool NFmiSmartToolIntepreter::CheckoutPossibleNextCalculationBlock(
           boost::shared_ptr<NFmiSmartToolCalculationBlockInfoVector>(
               new NFmiSmartToolCalculationBlockInfoVector());
       CheckoutPossibleNextCalculationBlockVector(theBlock.itsIfCalculationBlockInfos);
-      ::DoConditionalBlockBracketChecks(
-          "IF clause", theBlock.itsIfAreaMaskSectionInfo, theBlock.itsIfCalculationBlockInfos, false);
+      ::DoConditionalBlockBracketChecks("IF clause",
+                                        theBlock.itsIfAreaMaskSectionInfo,
+                                        theBlock.itsIfCalculationBlockInfos,
+                                        false);
       if (CheckoutPossibleElseIfClauseSection(theBlock.itsElseIfAreaMaskSectionInfo))
       {
         theBlock.itsElseIfCalculationBlockInfos =
             boost::shared_ptr<NFmiSmartToolCalculationBlockInfoVector>(
                 new NFmiSmartToolCalculationBlockInfoVector());
         CheckoutPossibleNextCalculationBlockVector(theBlock.itsElseIfCalculationBlockInfos);
-        ::DoConditionalBlockBracketChecks(
-            "ELSEIF clause", theBlock.itsElseIfAreaMaskSectionInfo, theBlock.itsElseIfCalculationBlockInfos, false);
+        ::DoConditionalBlockBracketChecks("ELSEIF clause",
+                                          theBlock.itsElseIfAreaMaskSectionInfo,
+                                          theBlock.itsElseIfCalculationBlockInfos,
+                                          false);
       }
       if ((theBlock.fElseSectionExist = CheckoutPossibleElseClauseSection()) == true)
       {
@@ -387,7 +391,9 @@ bool NFmiSmartToolIntepreter::CheckoutPossibleNextCalculationBlock(
         CheckoutPossibleNextCalculationBlockVector(theBlock.itsElseCalculationBlockInfos);
         // Else tapauksessa annetaan vain joku AreaMaskSectionInfo (eli tässä elseif versio siitä)
         ::DoConditionalBlockBracketChecks("ELSE clause",
-                                          theBlock.itsElseIfAreaMaskSectionInfo,  theBlock.itsElseCalculationBlockInfos, true);
+                                          theBlock.itsElseIfAreaMaskSectionInfo,
+                                          theBlock.itsElseCalculationBlockInfos,
+                                          true);
       }
     }
     if (!fWasBlockMarksFound)  // jos 1. checkoutiss ei törmätty blokin alkumerkkiin '{' voidaan
@@ -3142,6 +3148,30 @@ bool NFmiSmartToolIntepreter::ExtractMacroParamDescription()
   throw std::runtime_error(errorStr);
 }
 
+bool NFmiSmartToolIntepreter::ExtractCalculationType()
+{
+  // Jos skriptistä on löytynyt esim. 'CalculationType = index'
+  GetToken();
+  std::string assignOperator = token;
+  if (assignOperator == string("="))
+  {
+    // Haetaan teksti rivin loppuun asti description:iksi
+    std::string calculationTypeText = std::string(exp_ptr, exp_end);
+    // otetään edessä ja mahdolliset perässä olevat spacet pois
+    NFmiStringTools::Trim(calculationTypeText);
+    if (boost::iequals(calculationTypeText, "index"))
+    {
+      itsExtraMacroParamData->CalculationType(MacroParamCalculationType::Index);
+      return true;
+    }
+  }
+
+  std::string errorStr =
+      "Given CalculationType -clause was illegal, try something like this:\n";
+  errorStr += "\"CalculationType = index\"";
+  throw std::runtime_error(errorStr);
+}
+
 bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theVariableText)
 {
   std::string aVariableText(theVariableText);
@@ -3159,6 +3189,8 @@ bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theV
       return ExtractSymbolTooltipFile();
     else if (it->second == NFmiAreaMask::MacroParamDescription)
       return ExtractMacroParamDescription();
+    else if (it->second == NFmiAreaMask::CalculationType)
+      return ExtractCalculationType();
   }
   return false;
 }
@@ -4232,6 +4264,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("observationradius"), NFmiAreaMask::ObservationRadius));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("symboltooltipfile"), NFmiAreaMask::SymbolTooltipFile));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("macroparamdescription"), NFmiAreaMask::MacroParamDescription));
+    itsExtraInfoCommands.insert(FunctionMap::value_type(string("calculationtype"), NFmiAreaMask::CalculationType));
 
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("surface"), kFmiMeanSeaLevel));
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("pressure"), kFmiPressureLevel));

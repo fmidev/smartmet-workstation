@@ -192,7 +192,7 @@ protected:
    void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2);
    float CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
    std::string GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile);
-   float GetMacroParamTooltipValueFromCache();
+   float GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData);
    std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
    void SetupPossibleWindMetaParamData();
    bool GetDataFromLocalInfo() const;
