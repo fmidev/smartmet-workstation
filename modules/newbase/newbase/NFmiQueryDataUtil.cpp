@@ -4559,17 +4559,32 @@ static void CombineSliceDatas(NFmiQueryData &theData,
 }
 
 static void DoMetaInfoLogging(NFmiQueryDataUtil::LoggingFunction *loggingFunction,
-                              NFmiQueryInfo &metaInfo)
+                              NFmiQueryInfo &metaInfo,
+                              const std::string *theFileFilterPtr)
 {
   if (loggingFunction)
   {
-    std::string message = "Combined data total size: ";
-    auto sizeInGB = metaInfo.Size() * sizeof(float) / (1024 * 1024 * 1024.);
+    std::string message = "Combined data ";
+    if (theFileFilterPtr)
+    {
+      message += "for '";
+      message += *theFileFilterPtr;
+      message += "' ";
+    }
+
+    message += "total size: ";
+    auto sizeInGB = metaInfo.Size() * sizeof(float) / (1024l * 1024 * 1024.);
     message += NFmiValueString::GetStringWithMaxDecimalsSmartWay(sizeInGB, 2);
     message += " GB, params: " + std::to_string(metaInfo.SizeParams());
     message += ", times: " + std::to_string(metaInfo.SizeTimes());
     message += ", levels: " + std::to_string(metaInfo.SizeLevels());
     message += ", points: " + std::to_string(metaInfo.SizeLocations());
+    if (metaInfo.IsGrid())
+    {
+      message += " (grid " + std::to_string(metaInfo.Grid()->XNumber()) + " x " +
+                 std::to_string(metaInfo.Grid()->YNumber()) + ")";
+    }
+
     (*loggingFunction)(message);
 
     std::string timeStepsStr;
@@ -4595,7 +4610,8 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(
     bool fDoTimeStepCombine,
     int theMaxTimeStepsInData,
     NFmiStopFunctor *theStopFunctor,
-    LoggingFunction *loggingFunction)
+    LoggingFunction *loggingFunction,
+    const std::string *theFileFilterPtr)
 {
   std::vector<boost::shared_ptr<NFmiFastQueryInfo> > fInfoVector;
   ::MakeFastInfos(theQDataVector, fInfoVector);
@@ -4613,7 +4629,7 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(
     NFmiQueryDataUtil::CheckIfStopped(theStopFunctor);
     // SmartMet kaatuu jossain tilanteissa tähän (CreateEmptyData:ssa luodaan dynaamisesti float
     // taulukko new:lla), laitetaan lokitusta luotavasta datasta, jos funktio on annettu
-    ::DoMetaInfoLogging(loggingFunction, combinedDataMetaInfo);
+    ::DoMetaInfoLogging(loggingFunction, combinedDataMetaInfo, theFileFilterPtr);
     std::unique_ptr<NFmiQueryData> data(CreateEmptyData(combinedDataMetaInfo));
     if (data)
     {
@@ -4701,7 +4717,8 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(bool fDoRebuildCheck,
                            fDoTimeStepCombine,
                            theMaxTimeStepsInData,
                            theStopFunctor,
-                           loggingFunction);
+                           loggingFunction,
+                           &theFileFilter);
 }
 
 static void FillGridDataInThread(NFmiFastQueryInfo &theSourceInfo,
