@@ -238,7 +238,7 @@ void CFmiSmartToolDlg::InitTooltipControl()
 {
     m_tooltip.Create(this);
     m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
-    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 500); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1500); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
 
     // Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
     SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_SAVE, "Save current Macro text to selected smarttool file\n(if any is selected)");
