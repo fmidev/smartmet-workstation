@@ -671,6 +671,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mSaveImageExtensionFilterIndex()
 ,mMapViewCacheMaxSizeInMB()
 ,mForceWdParameterToLinearInterpolation()
+,mShowTooltipOnSmarttoolDialog()
 {
 }
 
@@ -734,6 +735,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     // En tiedä onko oikeasti väliä, jos luku olisi vahingossa esim. negatiivinen, joten laitetaan alustettu arvo varmuuden vuoksi setterin läpi, joka tekee tarkistuksia.
     MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
     mForceWdParameterToLinearInterpolation = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ForceWdParameterToLinearInterpolation", usedKey, false);
+    mShowTooltipOnSmarttoolDialog = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowTooltipOnSmarttoolDialog", usedKey, true);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -1063,4 +1065,14 @@ bool NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation()
 void NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation(bool newValue)
 {
     *mForceWdParameterToLinearInterpolation = newValue;
+}
+
+bool NFmiApplicationWinRegistry::ShowTooltipOnSmarttoolDialog()
+{
+    return *mShowTooltipOnSmarttoolDialog;
+}
+
+void NFmiApplicationWinRegistry::ShowTooltipOnSmarttoolDialog(bool newValue)
+{
+    *mShowTooltipOnSmarttoolDialog = newValue;
 }
