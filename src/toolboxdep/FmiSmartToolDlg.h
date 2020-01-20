@@ -174,6 +174,8 @@ public:
     afx_msg void OnBnClickedButtonMacroParamSave();
     afx_msg void OnBnClickedButtonSmartToolSave();
     virtual BOOL PreTranslateMessage(MSG* pMsg);
+    BOOL fShowTooltipsOnSmarttoolDialog;
+    afx_msg void OnBnClickedCheckShowTooltipOnSmarttoolDialog();
 };
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

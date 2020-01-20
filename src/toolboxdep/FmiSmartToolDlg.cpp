@@ -68,6 +68,7 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 ,itsSyntaxEditControl()
 ,itsSyntaxEditControlAcceleratorTable(NULL)
+,fShowTooltipsOnSmarttoolDialog(FALSE)
 #endif // DISABLE_EXTREME_TOOLKITPRO
 {
 	assert(itsSmartToolInfo); // tässä pitää olla jotain, koska myöhemmin ei tarkistuksia!
@@ -99,6 +100,7 @@ void CFmiSmartToolDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, itsSpeedSearchMacroControl);
     DDX_Text(pDX, IDC_STATIC_LOADED_SMARTTOOL_PATH_TEXT, itsLoadedSmarttoolMacroPathU_);
     DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_TEXT, itsLoadedMacroParamPathTextU_);
+    DDX_Check(pDX, IDC_CHECK_SHOW_TOOLTIP_ON_SMARTTOOL_DIALOG, fShowTooltipsOnSmarttoolDialog);
 }
 
 
@@ -147,6 +149,7 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave)
     ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonSmartToolSave)
+    ON_BN_CLICKED(IDC_CHECK_SHOW_TOOLTIP_ON_SMARTTOOL_DIALOG, &CFmiSmartToolDlg::OnBnClickedCheckShowTooltipOnSmarttoolDialog)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -183,6 +186,7 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
     DisableActionButtomIfInViewMode();
     EnableSaveButtons();
     InitTooltipControl();
+    fShowTooltipsOnSmarttoolDialog = itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowTooltipOnSmarttoolDialog();
 
 	UpdateData(FALSE);
 
@@ -238,7 +242,7 @@ void CFmiSmartToolDlg::InitTooltipControl()
 {
     m_tooltip.Create(this);
     m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
-    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1500); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1200); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
 
     // Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
     SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_SAVE, "Save current Macro text to selected smarttool file\n(if any is selected)");
@@ -288,7 +292,8 @@ void CFmiSmartToolDlg::InitTooltipControl()
 
 BOOL CFmiSmartToolDlg::PreTranslateMessage(MSG* pMsg)
 {
-    m_tooltip.RelayEvent(pMsg);
+    if(fShowTooltipsOnSmarttoolDialog)
+        m_tooltip.RelayEvent(pMsg);
 
     return CDialog::PreTranslateMessage(pMsg);
 }
@@ -1629,4 +1634,11 @@ HBRUSH CFmiSmartToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
         CFmiWin32Helpers::SetErrorColorForTextControl(pDC, !fQ3Macro);
 
     return hbr;
+}
+
+
+void CFmiSmartToolDlg::OnBnClickedCheckShowTooltipOnSmarttoolDialog()
+{
+    UpdateData(TRUE);
+    itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowTooltipOnSmarttoolDialog(fShowTooltipsOnSmarttoolDialog == TRUE);
 }
