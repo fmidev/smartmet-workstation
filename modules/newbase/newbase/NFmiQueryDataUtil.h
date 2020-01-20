@@ -523,7 +523,8 @@ class _FMI_DLL NFmiQueryDataUtil
       bool fDoTimeStepCombine,
       int theMaxTimeStepsInData = 0,
       NFmiStopFunctor *theStopFunctor = nullptr,
-      LoggingFunction *loggingFunction = nullptr);
+      LoggingFunction *loggingFunction = nullptr,
+      const std::string *theFileFilterPtr = nullptr);
   static NFmiQueryData *CombineQueryDatas(bool fDoRebuildCheck,
                                           const std::string &theBaseDataFileFilter,
                                           const std::string &theFileFilter,
