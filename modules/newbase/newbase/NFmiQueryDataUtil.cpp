@@ -4559,7 +4559,7 @@ static void CombineSliceDatas(NFmiQueryData &theData,
 }
 
 static void DoMetaInfoLogging(NFmiQueryDataUtil::LoggingFunction *loggingFunction,
-                              const NFmiQueryInfo &metaInfo)
+                              NFmiQueryInfo &metaInfo)
 {
   if (loggingFunction)
   {
@@ -4571,6 +4571,14 @@ static void DoMetaInfoLogging(NFmiQueryDataUtil::LoggingFunction *loggingFunctio
     message += ", levels: " + std::to_string(metaInfo.SizeLevels());
     message += ", points: " + std::to_string(metaInfo.SizeLocations());
     (*loggingFunction)(message);
+
+    std::string timeStepsStr;
+    for (metaInfo.ResetTime(); metaInfo.NextTime();)
+    {
+      if (!timeStepsStr.empty()) timeStepsStr += ", ";
+      timeStepsStr += metaInfo.Time().ToStr("YYYY.MM.DD HH:mm", kEnglish);
+    }
+    (*loggingFunction)(std::string("Combined data times: ") + timeStepsStr);
   }
 }
 
