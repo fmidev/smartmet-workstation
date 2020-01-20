@@ -1183,11 +1183,11 @@ float NFmiStationView::CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQuery
         auto paramId = itsDrawParam->Param().GetParamIdent();
         if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
         {
-            return NFmiFastInfoUtils::GetMetaWindValue(itsInfo, itsTime, metaWindParamUsage, paramId);
+            return NFmiFastInfoUtils::GetMetaWindValue(itsInfo, theTime, metaWindParamUsage, paramId);
         }
         else
         {
-            float currentValue = theInfo->InterpolatedValue(itsTime, itsTimeInterpolationRangeInMinutes);
+            float currentValue = theInfo->InterpolatedValue(theTime, itsTimeInterpolationRangeInMinutes);
             if(currentValue == kFloatMissing && fAllowNearestTimeInterpolation)
             {
                 auto oldTimeIndex = theInfo->TimeIndex();
