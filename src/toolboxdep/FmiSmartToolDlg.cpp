@@ -1071,7 +1071,9 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
 
         UpdateMacroParamDisplayList(true);
         CString macroParamNameU = CA2T(fileString.Header());
+        mpSystem.FindMacroFromCurrentFolder(std::string(fileString.Header()));
         itsMacroParamList.SetCurSel(itsMacroParamList.FindString(-1, macroParamNameU)); // asettaa talletetun macroParamin aktiiviseksi
+        UpdateLoadedMacroParamPathString();
         if(updateViews)
         {
             std::vector<std::string> modifiedMacroParamPaths{ realMacroParamDrawParamFileName };
@@ -1296,7 +1298,8 @@ void CFmiSmartToolDlg::OnLbnDblclkListParamMacros()
 		{ // Jos hakemiston nimi, siirrytään sinne
             itsSmartMetDocumentInterface->MacroParamSystem().CurrentPath(macroParamName);
 			UpdateMacroParamDisplayList(false);
-		}
+            UpdateLoadedMacroParamPathString();
+        }
 	}
 }
 
