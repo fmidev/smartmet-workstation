@@ -25,10 +25,10 @@ static char THIS_FILE[] = __FILE__;
 
 static bool gUseDebugLog = false;
 
-static void DebugCombineDataThread(const std::string &theLogStr, CatLog::Severity severity)
+static void DebugCombineDataThread(const std::string &theLogStr, CatLog::Severity severity, bool flushLogger = false)
 {
 	if(gUseDebugLog || severity > CatLog::Severity::Debug) // eli jos t‰st‰ poikkeava, niin lokita
-        CatLog::logMessage(theLogStr, severity, CatLog::Category::Data);
+        CatLog::logMessage(theLogStr, severity, CatLog::Category::Data, flushLogger);
 }
 
 namespace
@@ -204,11 +204,15 @@ static void	DoCombinationWork(bool fDoRebuildCheck)
 //		if(NFmiFileSystem::NewestFileTime(combinedDataInfo.itsSourceDirectory) > NFmiFileSystem::NewestFileTime(combinedDataInfo.itsTargetDirectory))
 		if(fDoRebuildCheck || NFmiFileSystem::NewestPatternFileTime(combinedDataInfo.itsSourceFileFilter) > NFmiFileSystem::NewestPatternFileTime(combinedDataInfo.itsTargetFileFilter))
 		{
-            ::DebugCombineDataThread(std::string("Starting doing combine data from directory: ") + combinedDataInfo.itsSourceDirectory, CatLog::Severity::Debug);
+            ::DebugCombineDataThread(std::string("Starting doing combine data from directory: ") + combinedDataInfo.itsSourceDirectory, CatLog::Severity::Debug, true);
 	// 2. jos on, niin tee yhdistely 
 			try
 			{
-                std::unique_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CombineQueryDatas(fDoRebuildCheck, combinedDataInfo.itsTargetFileFilter, combinedDataInfo.itsSourceFileFilter, true, combinedDataInfo.itsMaximumTimeSteps, &gCombineDataStopFunctor)); // true = tehd‰‰n aika-askel yhdistelty‰ dataa
+				std::function<void(const std::string&)> loggingFunction = [](const std::string& message)
+				{
+					CatLog::logMessage(message, CatLog::Severity::Debug, CatLog::Category::Data, true);
+				};
+                std::unique_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CombineQueryDatas(fDoRebuildCheck, combinedDataInfo.itsTargetFileFilter, combinedDataInfo.itsSourceFileFilter, true, combinedDataInfo.itsMaximumTimeSteps, &gCombineDataStopFunctor, &loggingFunction)); // true = tehd‰‰n aika-askel yhdistelty‰ dataa
                 if(data)
                 {
                     // varmistetaan ett‰ kohda hakemisto on olemassa

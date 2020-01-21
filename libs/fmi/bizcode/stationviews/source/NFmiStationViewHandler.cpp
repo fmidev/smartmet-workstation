@@ -4846,69 +4846,9 @@ static std::string GetFinalXmlBaseHakeToolTipText(const HakeMessage::HakeMsg &ms
     return str;
 }
 
-static bool ContainsAnyAlphaNumerals(const std::string &str)
-{
-    auto it = std::find_if(str.begin(), str.end(), 
-        [](char c) {
-        return std::isalnum(c);
-    });
-
-    return it != str.end();
-}
-
-// Jos teksti sis‰lt‰‰ lopussa merkit [], palauta true.
-// Palauta myˆs true, jos lopussa on tyhj‰t hipsut eli ""
-static bool ContainsJsonEmptyArrayInEnd(const std::string &str)
-{
-    auto strSize = str.size();
-    if(strSize >= 2)
-    {
-        if(str[strSize - 1] == ']' && str[strSize - 2] == '[')
-            return true;
-        if(str[strSize - 1] == '"' && str[strSize - 2] == '"')
-            return true;
-    }
-    return false;
-}
-
-// Poistetaan viel‰ rivin lopusta mahdolliset seuraavat merkit: ensin mahdollinen ',' ja sitten '{', '}', '[', ']'
-static void RemoveJsonMarkersFromEnd(std::string &str)
-{
-    if(!str.empty())
-    {
-        const std::string jsonMarkers = "{}[]";
-        if(jsonMarkers.find(str.back()) != std::string::npos)
-        {
-            str.pop_back();
-        }
-    }
-}
-
-// Json pohjaisesta viestist‰ pit‰‰ poistaa turhat json krumeluurit eli
-// sellaiset rivit, jolla on vain json:in aloitus/lopetus merkkej‰ kuten '{', '}', '[', ']'
-// Jos niit‰ ei poista, paisuu tooltipin 'puhekupla' todella pitk‰ksi ja vaikea selkoiseksi.
 static std::string GetFinalJsonBaseHakeToolTipText(const HakeMessage::HakeMsg &msg)
 {
-    std::vector<std::string> messageLines = NFmiStringTools::Split(msg.TotalMessageStr(), "\n");
-    std::string str;
-    // poistetaan sellaiset rivit, joilla ei ole yht‰‰n alpha-numeraalia
-    for(auto lineStr : messageLines)
-    {
-        if(::ContainsAnyAlphaNumerals(lineStr))
-        {
-            // Poista pilkku rivin lopusta
-            if(lineStr.back() == ',')
-                lineStr.pop_back();
-
-            // Tyhj‰t taulukot (esim. "announcements":[] ) ja tyhj‰t arvot, miss‰ xxx : "", j‰tet‰‰n pois h‰iritsem‰st‰
-            if(!::ContainsJsonEmptyArrayInEnd(lineStr))
-            {
-                ::RemoveJsonMarkersFromEnd(lineStr);
-                str += lineStr;
-                str += "\n"; // rivinvaihto pit‰‰ lis‰t‰ rivien per‰‰n, koska se on poistettu splittauksen yhteydess‰ 
-            }
-        }
-    }
+    std::string str = msg.MakeTooltipMessageStr();
     return str;
 }
 
@@ -4920,19 +4860,32 @@ static std::string HakeToolTipText(const HakeMessage::HakeMsg &msg)
         return ::GetFinalJsonBaseHakeToolTipText(msg);
 }
 
+static std::string MakeMessageHeader(std::string&& typeName)
+{
+    std::string message = "L‰hin ";
+    message += typeName;
+    message += " sanoma:\n";
+    return message;
+}
+
 static std::string GetFinalWarningMessageForTooltip(double minDistHake, double minDistKaha, const HakeMessage::HakeMsg &hakeMessage, const HakeMessage::HakeMsg &kahaMessage)
 {
     //Treat Hake and KaHa messages differently
     if(!(hakeMessage == HakeMessage::HakeMsg::unInitialized) || !(kahaMessage == HakeMessage::HakeMsg::unInitialized))
     {
+        std::string message;
+        message += "<hr color=red>\n";
         if(minDistHake < minDistKaha)
         {
-            return ::HakeToolTipText(hakeMessage);
+            message += ::MakeMessageHeader("Hake");
+            message += ::HakeToolTipText(hakeMessage);
         }
         else
         {
-            return ::KahaToolTipText(kahaMessage);
+            message += ::MakeMessageHeader("KaHa");
+            message += ::KahaToolTipText(kahaMessage);
         }
+        return message;
     }
     return "";
 }

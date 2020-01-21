@@ -1,14 +1,20 @@
 #pragma once
 
-#include <newbase/NFmiProducer.h>
-#include <newbase/NFmiLevelType.h>
-#include <newbase/NFmiDataMatrix.h>
-
 #include "boost/shared_ptr.hpp"
+
+#include <newbase/NFmiDataMatrix.h>
+#include <newbase/NFmiLevelType.h>
+#include <newbase/NFmiProducer.h>
 
 class NFmiFastQueryInfo;
 class NFmiInfoOrganizer;
 class NFmiArea;
+
+enum class MacroParamCalculationType
+{
+    Normal = 0, // Normaalit reaaliluvut
+    Index = 1 // indeksi tyyppinen luku (usein kokonaisluku), jota ei saa interpoloida esim. tooltipiss‰
+};
 
 // Kun smarttool:ia tulkitaan, siin‰ saattaa olla osia, joita voi k‰ytt‰‰ vain macroParamien
 // yhteydess‰.
@@ -51,10 +57,12 @@ class NFmiExtraMacroParamData
   void ObservationRadiusInKm(float newValue) { itsObservationRadiusInKm = newValue; }
   float ObservationRadiusRelative() const { return itsObservationRadiusRelative; }
   void ObservationRadiusRelative(float newValue) { itsObservationRadiusRelative = newValue; }
-  const std::string& SymbolTooltipFile() const { return itsSymbolTooltipFile; }
+  const std::string &SymbolTooltipFile() const { return itsSymbolTooltipFile; }
   void SymbolTooltipFile(const std::string &filePath) { itsSymbolTooltipFile = filePath; }
-  const std::string& MacroParamDescription() const { return itsMacroParamDescription; }
+  const std::string &MacroParamDescription() const { return itsMacroParamDescription; }
   void MacroParamDescription(const std::string &newValue) { itsMacroParamDescription = newValue; }
+  MacroParamCalculationType CalculationType() const { return itsCalculationType; }
+  void CalculationType(MacroParamCalculationType newValue) { itsCalculationType = newValue; }
 
  private:
   void InitializeResolutionWithEditedData(NFmiInfoOrganizer &theInfoOrganizer);
@@ -103,8 +111,10 @@ class NFmiExtraMacroParamData
   // T‰h‰n lasketaan k‰ytetyn kartta-alueen mukainen relatiivinen et‰isyys (jota k‰ytet‰‰n itse
   // laskuissa)
   float itsObservationRadiusRelative;
-  // Joillekin macroParameilla lasketuille symboleille halutaan antaa arvoon perustuvia selitt‰vi‰ tekstej‰ tooltipiss‰
+  // Joillekin macroParameilla lasketuille symboleille halutaan antaa arvoon perustuvia selitt‰vi‰
+  // tekstej‰ tooltipiss‰
   std::string itsSymbolTooltipFile;
   // T‰h‰n voidaan sijoittaa macroParamiin liittyv‰ yleisselite, joka tulee tooltippiin
   std::string itsMacroParamDescription;
+  MacroParamCalculationType itsCalculationType = MacroParamCalculationType::Normal;
 };

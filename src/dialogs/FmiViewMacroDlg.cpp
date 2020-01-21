@@ -93,7 +93,7 @@ void CFmiViewMacroDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CFmiViewMacroDlg, CDialog)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD, OnBnClickedButtonLoad)
-	ON_BN_CLICKED(IDC_BUTTON_STORE, OnBnClickedButtonStore)
+	ON_BN_CLICKED(IDC_BUTTON_VIEW_MACRO_SAVE_AS, &CFmiViewMacroDlg::OnBnClickedButtonViewMacroSaveAs)
 	ON_BN_CLICKED(IDC_BUTTON_REMOVE, OnBnClickedButtonRemove)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_BUTTON_REFRESH_LIST, OnBnClickedButtonRefreshList)
@@ -110,6 +110,7 @@ BEGIN_MESSAGE_MAP(CFmiViewMacroDlg, CDialog)
     ON_EN_CHANGE(IDC_EDIT_SPEED_SEARCH_VIEW_MACRO, &CFmiViewMacroDlg::OnEnChangeEditSpeedSearchViewMacro)
     ON_WM_DESTROY()
     ON_WM_CTLCOLOR()
+    ON_BN_CLICKED(IDC_BUTTON_VIEW_MACRO_SAVE, &CFmiViewMacroDlg::OnBnClickedButtonViewMacroSave)
 END_MESSAGE_MAP()
 
 static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<ViewMacroHeaderParInfo> &theHeaders)
@@ -297,28 +298,93 @@ const std::string g_ViewMacroFileTotalExtension = "." + g_ViewMacroFileExtension
 const std::string g_ViewMacroFileFilter = "View-macro Files (*." + g_ViewMacroFileExtension + ")|*." + g_ViewMacroFileExtension + "|All Files (*.*)|*.*||";
 const std::string g_ViewMacroDefaultFileName = "viewmacro1";
 
-
-void CFmiViewMacroDlg::OnBnClickedButtonStore()
+static std::string GetViewMacroInitialPath(SmartMetDocumentInterface* smartMetDocumentInterface)
 {
-	UpdateData(TRUE);
+    return smartMetDocumentInterface->RootViewMacroPath() + smartMetDocumentInterface->GetRelativeViewMacroPath();
+}
 
-    std::string initialPath = itsSmartMetDocumentInterface->RootViewMacroPath() + itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
-    std::string initialFilename = itsSelectedMacroName;
-    if(initialFilename.empty())
+static bool IsSelectedNameActualViewMacro(const std::string& selectedMacroName)
+{
+    if(selectedMacroName.empty())
+        return false;
+
+    if(selectedMacroName[0] == '<')
+        return false;
+
+    return true;
+}
+
+static std::string GetInitialViewMacroFileName(const std::string & selectedMacroName)
+{
+    std::string initialFilename = selectedMacroName;
+    if(!IsSelectedNameActualViewMacro(initialFilename))
     {
         initialFilename = g_ViewMacroDefaultFileName;
     }
     initialFilename += "." + g_ViewMacroFileExtension;
+    return initialFilename;
+}
+
+bool CFmiViewMacroDlg::IsRealViewMacroFileSelected()
+{
+    int rowIndex = GetSelectedViewMacroRow(); // Tätä ei voi pyytää suoraan theSelectedCell:in row numerolla, koska pitää ottaa huomioon otsikko rivi
+    if(rowIndex == LB_ERR)
+        return false;
+
+    if(::IsSelectedNameActualViewMacro(itsSelectedMacroName))
+        return true;
+    else
+        return false;
+}
+
+static std::string MakeUsedViewMacroDescription(const CString& descriptionU_)
+{
+    std::string description = CT2A(descriptionU_);
+    description.erase(std::remove(description.begin(), description.end(), '\r'), description.end());
+    return description;
+}
+
+void CFmiViewMacroDlg::OnBnClickedButtonViewMacroSaveAs()
+{
+	UpdateData(TRUE);
+
+    std::string initialPath = ::GetViewMacroInitialPath(itsSmartMetDocumentInterface);
+    std::string initialFilename = ::GetInitialViewMacroFileName(itsSelectedMacroName);
+
     std::string filePath;
     if(BetaProduct::GetFilePathFromUserTotal(g_ViewMacroFileFilter, initialPath, filePath, false, initialFilename, g_ViewMacroFileExtension, itsSmartMetDocumentInterface->RootViewMacroPath(), this))
     {
-        std::string description = CT2A(itsMacroDescriptionU_);
-		description.erase(std::remove(description.begin(), description.end(), '\r'), description.end());
+        std::string description = ::MakeUsedViewMacroDescription(itsMacroDescriptionU_);
         itsSmartMetDocumentInterface->StoreViewMacro(filePath, description);
 		InitMacroListFromDoc();
 		SelectMacro(filePath);
         ResetSearchResource();
-	}
+        UpdateRelativeMacroPath();
+    }
+}
+
+void CFmiViewMacroDlg::OnBnClickedButtonViewMacroSave()
+{
+    UpdateData(TRUE);
+
+    if(IsRealViewMacroFileSelected())
+    {
+        std::string totalViewMacroPath = ::GetViewMacroInitialPath(itsSmartMetDocumentInterface);
+        totalViewMacroPath += ::GetInitialViewMacroFileName(itsSelectedMacroName);
+        std::string description = ::MakeUsedViewMacroDescription(itsMacroDescriptionU_);
+
+        std::string overWriteConformation = ::GetDictionaryString("Over write view-macro: '");
+        overWriteConformation += itsSelectedMacroName;
+        overWriteConformation += ::GetDictionaryString("' ?");
+        if(::MessageBox(this->GetSafeHwnd(), CA2T(overWriteConformation.c_str()), CA2T(::GetDictionaryString("Save over macro").c_str()), MB_ICONINFORMATION | MB_OKCANCEL) == IDOK)
+        {
+            itsSmartMetDocumentInterface->StoreViewMacro(totalViewMacroPath, description);
+        }
+    }
+    else
+    {
+        ::MessageBox(this->GetSafeHwnd(), CA2T(::GetDictionaryString("Invalid view-macro selection for Save operation").c_str()), CA2T(::GetDictionaryString("Can't Save selected macro").c_str()), MB_ICONINFORMATION | MB_OK);
+    }
 }
 
 void CFmiViewMacroDlg::SelectMacro(const std::string & theFilePath)
@@ -457,7 +523,9 @@ void CFmiViewMacroDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_BUTTON_STORE, ANCHOR_TOP | ANCHOR_LEFT);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_VIEW_MACRO_SAVE, ANCHOR_TOP | ANCHOR_LEFT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_VIEW_MACRO_SAVE_AS, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_REMOVE, ANCHOR_TOP | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
@@ -654,6 +722,14 @@ void CFmiViewMacroDlg::EnsureWantedRowVisibilityAfterDirectoryChange(const std::
     itsGridCtrl.EnsureVisible(wantedVisibleRow, 0);
 }
 
+void CFmiViewMacroDlg::UpdateRelativeMacroPath()
+{
+    std::string relativeViewMacroPath = "\\"; // polku alkaa aina \ -viivalla
+    relativeViewMacroPath += itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
+    itsCurrentPathStringU_ = CA2T(relativeViewMacroPath.c_str());
+    UpdateData(FALSE);
+}
+
 void CFmiViewMacroDlg::ChangeDirectory(const std::string &theDirectoryName, bool fDoSpeedSearchLoad)
 {
     bool useRootPathAsBase = fDoSpeedSearchLoad;
@@ -661,10 +737,7 @@ void CFmiViewMacroDlg::ChangeDirectory(const std::string &theDirectoryName, bool
 	InitMacroListFromDoc();
     DoTimedResetSearchResource();
     EnsureWantedRowVisibilityAfterDirectoryChange(theDirectoryName, std::string(CT2A(itsCurrentPathStringU_)));
-    std::string relativeViewMacroPath = "\\"; // polku alkaa aina \ -viivalla
-    relativeViewMacroPath += itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
-    itsCurrentPathStringU_ = CA2T(relativeViewMacroPath.c_str());
-    UpdateData(FALSE);
+    UpdateRelativeMacroPath();
     // I assume that there is some kind of optimization update bug in CGridCtrl -class
     // because it doesn't seem to update grid rows when you move from directory to
     // another where there is in both the same number of items. The texts are updated
@@ -689,7 +762,8 @@ void CFmiViewMacroDlg::InitDialogTexts(void)
 
 	CFmiWin32Helpers::SetDialogItemText(this, IDOK, "IDOK_VIEW_MACRO_DLG"); // oikeasti buttonin id on IDOK, mutta käytetään tekstiä taikasanalla IDOK_VIEW_MACRO_DLG
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD, "IDC_BUTTON_LOAD");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_STORE, "IDC_BUTTON_STORE");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_VIEW_MACRO_SAVE, "Save");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_VIEW_MACRO_SAVE_AS, "Save as");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REMOVE, "IDC_BUTTON_REMOVE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH_LIST, "IDC_BUTTON_REFRESH_LIST");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_DESCRIPTION, "IDC_STATIC_VIEW_MACRO_DESCRIPTION");
@@ -746,7 +820,7 @@ void CFmiViewMacroDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
     // set the minimum tracking width and height of the window
     lpMMI->ptMinTrackSize.x = 493;
-    lpMMI->ptMinTrackSize.y = 439;
+    lpMMI->ptMinTrackSize.y = 469;
 }
 
 void CFmiViewMacroDlg::InitSpeedSearchControl()
@@ -907,3 +981,4 @@ HBRUSH CFmiViewMacroDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
     return hbr;
 }
+

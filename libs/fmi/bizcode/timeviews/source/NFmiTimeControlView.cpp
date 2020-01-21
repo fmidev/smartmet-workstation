@@ -467,6 +467,11 @@ NFmiString NFmiTimeControlView::GetResolutionText(void)
 	}
 }
 
+static bool IsMainMapViewDesctopIndex(int mapViewDescTopIndex)
+{
+    return mapViewDescTopIndex == 0;
+}
+
 void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
 {
 	int usedTimeResolutionInMinutes = GetUsedTimeResolutionInMinutes();
@@ -520,6 +525,11 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
 	itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false);
 	itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+    if(::IsMainMapViewDesctopIndex(itsMapViewDescTopIndex))
+    {
+        // Pääkarttanäytön aika-stepin vaihto vaikuttaa myös warning ja sea-icing ikkunoiden tiloihin
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg);
+    }
 }
 
 // tällä piirretään tavara, joka tulee myös bitmapin päälle

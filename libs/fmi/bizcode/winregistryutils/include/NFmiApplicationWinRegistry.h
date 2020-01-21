@@ -295,6 +295,8 @@ public:
     void MapViewCacheMaxSizeInMB(double newValue);
     bool ForceWdParameterToLinearInterpolation();
     void ForceWdParameterToLinearInterpolation(bool newValue);
+    bool ShowTooltipOnSmarttoolDialog();
+    void ShowTooltipOnSmarttoolDialog(bool newValue);
 
     static std::string MakeBaseRegistryPath(void);
     static std::string MakeGeneralSectionName(void);
@@ -383,6 +385,7 @@ private:
     // cachea kerrallaan, eli kolme näyttöä ottaa mahdollisesti kaikkiaan 3x tämä koon.
     boost::shared_ptr<CachedRegDouble> mMapViewCacheMaxSizeInMB;
     boost::shared_ptr<CachedRegBool> mForceWdParameterToLinearInterpolation;
+    boost::shared_ptr<CachedRegBool> mShowTooltipOnSmarttoolDialog;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 

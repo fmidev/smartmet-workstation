@@ -1735,7 +1735,7 @@ bool NFmiBetaProductAutomationList::ReadInJsonFormat(NFmiBetaProductAutomationLi
 // ********************************************************************
 
 std::string NFmiBetaProductionSystem::itsRunTimeTitleString = ::GetDictionaryString("Run");
-std::string NFmiBetaProductionSystem::itsRunTimeFormatString = ::GetDictionaryString("DDMMYY-HHz");
+std::string NFmiBetaProductionSystem::itsRunTimeFormatString = ::GetDictionaryString("DDMMYY-HH");
 
 std::function<void(std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> &, const NFmiMetTime &)> NFmiBetaProductionSystem::itsGenerateBetaProductsCallback;
 

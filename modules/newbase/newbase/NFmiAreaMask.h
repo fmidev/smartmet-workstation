@@ -232,7 +232,8 @@ class _FMI_DLL NFmiAreaMask
     TimeDuration,  //!< Katso laskentahetkestä eteen/taaksepäin kuinka kauan simple-condition ehto pitää paikkaansa
     LocalExtremes,  //!< Etsi lokaalit (ja globaalit) minimit ja maksimit kentästä, mutta vain jos ne ovat tarpeeksi 'merkittäviä'
     SymbolTooltipFile, //!< Tällä määritetään mahdollinen tiedosto, josta haetaan tooltippiä varten aputekstejä eri symboleille
-    MacroParamDescription //!< Jos tooltippiin halutaan tälle macroParmille yleisselite, se annetaan tällä
+    MacroParamDescription, //!< Jos tooltippiin halutaan tälle macroParmille yleisselite, se annetaan tällä
+    CalculationType  //!< Tällä voi määritellä että onko joku laskenta esim. indeksi tyyppinen vai normi reaaliluku
   };
 
   //! Function direction, e.g. with 'met'-functions x- and/or y-direction

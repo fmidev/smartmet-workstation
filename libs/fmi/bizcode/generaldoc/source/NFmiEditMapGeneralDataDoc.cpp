@@ -1497,7 +1497,7 @@ void InitMapViewDescTopList(void)
 	{
 		string errStr("InitMapViewDescTopList - Initialization error in configurations: \n");
 		errStr += e.what();
-        LogAndWarnUser(errStr, "Problems in InitMapViewDescTopList", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+        LogAndWarnUser(errStr, "Problems in InitMapViewDescTopList", CatLog::Severity::Error, CatLog::Category::Configuration, false, true, true);
 	}
 }
 
@@ -11193,16 +11193,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiMapViewDescTop* MapViewDescTop(unsigned int theIndex)
 	{
-		if(theIndex >= itsMapViewDescTopList.size())
-		{
-			if(theIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
-			{
-				return itsMapViewDescTopList[0]; // palautetaan erikois näyttöjä varten pääkarttanaytön desctop
-			}
-			else
-				throw std::runtime_error("GeneralDataDoc::MapViewDescTop - Given mapViewDescTop index was out of bounds, error in program.");
-		}
-		return itsMapViewDescTopList[theIndex];
+		if(itsMapViewDescTopList.empty())
+			throw std::runtime_error("GeneralDataDoc::MapViewDescTop - itsMapViewDescTopList was empty, error in program.");
+
+		if(theIndex < itsMapViewDescTopList.size())
+			return itsMapViewDescTopList[theIndex];
+		else
+			return itsMapViewDescTopList[0]; // palautetaan erikoisnäyttöjä (aikasarja-, poikkileikkaus-, luotaus-, datanmuokkaus-dialogit, jne.) varten pääkarttanaytön desctop
 	}
 
 	std::vector<NFmiMapViewDescTop*>& MapViewDescTopList(void)

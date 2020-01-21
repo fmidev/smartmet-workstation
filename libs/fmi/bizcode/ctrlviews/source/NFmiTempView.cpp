@@ -32,7 +32,6 @@
 #include "catlog/catlog.h"
 #include "ModelDataServerConfiguration.h"
 
-#include <gdiplus.h>
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
 
@@ -144,7 +143,30 @@ static Gdiplus::Color NFmiColor2GdiplusColor(const NFmiColor &theColor)
     return Gdiplus::Color(static_cast<BYTE>(theColor.GetRed() * 255), static_cast<BYTE>(theColor.GetGreen() * 255), static_cast<BYTE>(theColor.GetBlue() * 255));
 }
 
-static void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<PointF> &thePoints, const NFmiTempLineInfo &theLineInfo, bool fPrinting)
+class GdiplusGraphicsSmoothModeRestorer
+{
+    Gdiplus::Graphics& graphics_;
+    Gdiplus::SmoothingMode oldMode_;
+public:
+    GdiplusGraphicsSmoothModeRestorer(Gdiplus::Graphics& graphics, Gdiplus::SmoothingMode wantedSmoothMode, bool printing, bool rectangularLine)
+        :graphics_(graphics)
+        ,oldMode_(graphics.GetSmoothingMode())
+    {
+        if(wantedSmoothMode == Gdiplus::SmoothingMode::SmoothingModeAntiAlias && !rectangularLine && !printing)
+            graphics_.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeAntiAlias);
+        else
+            graphics_.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighSpeed);
+    }
+
+    ~GdiplusGraphicsSmoothModeRestorer()
+    {
+        graphics_.SetSmoothingMode(oldMode_);
+    }
+
+
+};
+
+static void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<PointF> &thePoints, const NFmiTempLineInfo &theLineInfo, Gdiplus::SmoothingMode theWantedSmoothMode, bool fPrinting, bool fRectangularLine)
 {
     if(thePoints.size() > 0)
     {
@@ -184,9 +206,34 @@ static void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<PointF>
             }
         }
 
+        GdiplusGraphicsSmoothModeRestorer smoothModeHandler(theGraphics, theWantedSmoothMode, fPrinting, fRectangularLine);
         theGraphics.DrawLines(&pen, &thePoints[0], static_cast<INT>(thePoints.size()));
     }
 }
+
+Gdiplus::SmoothingMode NFmiTempView::GetUsedCurveDrawSmoothingMode() const
+{
+    // Jos MustDrawTempView on true, on p‰ivitys l‰htenyt karttan‰ytˆn mouse-move drag operaatiosta, ja se  halutaan piirt‰‰ vain nopeasti
+    if(itsCtrlViewDocumentInterface->MustDrawTempView())
+    {
+//        CatLog::logMessage("Mouse-move update, using high-speed curve mode", CatLog::Severity::Trace, CatLog::Category::Visualization);
+        return Gdiplus::SmoothingModeHighSpeed;
+    }
+    else
+    {
+//        CatLog::logMessage("Non-mouse-move update, using high-quality curve mode", CatLog::Severity::Trace, CatLog::Category::Visualization);
+        return itsCurveDrawSmoothingMode;
+    }
+}
+
+bool NFmiTempView::IsRectangularTemperatureHelperLines() const
+{
+    if(tdegree == 0 || tdegree == 90)
+        return true;
+    else
+        return false;
+}
+
 
 NFmiTempView::NFmiTempView(const NFmiRect& theRect
 						,NFmiToolBox* theToolBox)
@@ -482,7 +529,7 @@ void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameter
                 }
                 else // piirret‰‰n p‰tk‰ mik‰ on vektorissa tallessa
                 {
-                    ::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE);
+                    ::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), false);
                     points.clear();
                 }
             }
@@ -492,7 +539,7 @@ void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameter
             else
                 consecutiveMissingValues++;
         }
-        ::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE); // lopuksi viel‰ piirret‰‰n loputkin mit‰ on piirrett‰v‰‰
+        ::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), false); // lopuksi viel‰ piirret‰‰n loputkin mit‰ on piirrett‰v‰‰
     }
     itsGdiPlusGraphics->ResetClip();
 }
@@ -1128,7 +1175,7 @@ void NFmiTempView::DrawXAxel(void)
         points.push_back(PointF(static_cast<REAL>(x1*itsGdiplusScaleX), static_cast<REAL>(y1*itsGdiplusScaleY)));
         points.push_back(PointF(static_cast<REAL>(x2*itsGdiplusScaleX), static_cast<REAL>(y2*itsGdiplusScaleY)));
         ::AddLineLabelData(PointF(static_cast<REAL>(x1*itsGdiplusScaleX), static_cast<REAL>(y1*itsGdiplusScaleY)), moveLabelInPixels, t, lineLabels);
-        ::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE);
+        ::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), IsRectangularTemperatureHelperLines());
     }
 	itsGdiPlusGraphics->ResetClip();
 	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, itsDataRect), lineInfo.Color());
@@ -1168,7 +1215,7 @@ void NFmiTempView::DrawYAxel(void)
 		points.push_back(PointF(static_cast<REAL>(x1*itsGdiplusScaleX), static_cast<REAL>(y*itsGdiplusScaleY)));
 		points.push_back(PointF(static_cast<REAL>(x2*itsGdiplusScaleX), static_cast<REAL>(y*itsGdiplusScaleY)));
 		::AddLineLabelData(PointF(static_cast<REAL>(x1*itsGdiplusScaleX), static_cast<REAL>(y*itsGdiplusScaleY)), moveLabelInPixels, *it, lineLabels);
-		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE);
+		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), true);
 	}
 	itsGdiPlusGraphics->ResetClip();
     ::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, usedDataRect), lineInfo.Color());
@@ -1438,7 +1485,7 @@ void NFmiTempView::DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const 
 				::AddLineLabelData(PointF(static_cast<REAL>(x*itsGdiplusScaleX), static_cast<REAL>(y*itsGdiplusScaleY)), moveLabelInPixels, *it, lineLabels);
 		}
 		startP += deltaStartLevelP; // t‰m‰ on mielest‰ni turha
-		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE);
+		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), false);
 	}
 	itsGdiPlusGraphics->ResetClip();
 	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, theLabelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, itsDataRect), theLineInfo.Color());
@@ -1485,7 +1532,7 @@ void NFmiTempView::DrawDryAdiapaticks(void)
 			if(p == pmax) // piirret‰‰n label vain alku pisteeseen
 				::AddLineLabelData(PointF(static_cast<REAL>(x*itsGdiplusScaleX), static_cast<REAL>(y*itsGdiplusScaleY)), moveLabelInPixels, *it, lineLabels);
 		}
-		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE);
+		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), false);
 	}
 	itsGdiPlusGraphics->ResetClip();
 	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, itsDataRect), lineInfo.Color());
@@ -1532,7 +1579,7 @@ void NFmiTempView::DrawMoistAdiapaticks(void)
 			if(P0 == pmax) // piirret‰‰n label vain alku pisteeseen
 				::AddLineLabelData(PointF(static_cast<REAL>(x*itsGdiplusScaleX), static_cast<REAL>(y*itsGdiplusScaleY)), moveLabelInPixels, *it, lineLabels);
 		}
-		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE);
+		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), false);
 	}
 	itsGdiPlusGraphics->ResetClip();
 	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, itsDataRect), lineInfo.Color());
@@ -2727,7 +2774,7 @@ void NFmiTempView::DrawTemperatures(NFmiSoundingDataOpt1 &theData, FmiParameterN
 				}
 				else // piirret‰‰n p‰tk‰ mik‰ on vektorissa tallessa
 				{
-					::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE);
+					::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), false);
 					points.clear();
 				}
 			}
@@ -2737,7 +2784,7 @@ void NFmiTempView::DrawTemperatures(NFmiSoundingDataOpt1 &theData, FmiParameterN
 			else
 				consecutiveMissingValues++;
 		}
-		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, itsToolBox->GetDC()->IsPrinting() == TRUE); // lopuksi viel‰ piirret‰‰n loputkin mit‰ on piirrett‰v‰‰
+		::DrawGdiplusCurve(*itsGdiPlusGraphics, points, theLineInfo, GetUsedCurveDrawSmoothingMode(), IsPrinting(), false); // lopuksi viel‰ piirret‰‰n loputkin mit‰ on piirrett‰v‰‰
 	}
 	itsGdiPlusGraphics->ResetClip();
 }

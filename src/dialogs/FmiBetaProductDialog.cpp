@@ -336,7 +336,7 @@ void CFmiBetaProductDialog::InitDialogTexts()
 
 void CFmiBetaProductDialog::CheckForGenerateButtonActivation()
 {
-    if(!itsSmartMetDocumentInterface->BetaProductGenerationRunning() && itsBetaProduct->InputWasGood() && fFileNameTemplateContainsValidTime)
+    if(!itsSmartMetDocumentInterface->BetaProductGenerationRunning() && itsBetaProduct->InputWasGood() && IsFileNameTemplateStampsOk())
     {
         // Jos kaikki inputit olivat kunnossa, sallitaan Generate- ja Save -buttonien käyttö
         itsGenerateImagesButton.EnableWindow(TRUE); 

@@ -124,6 +124,7 @@ class NFmiCtrlView
    int GetUsedParamRowIndex(int theRowIndex, int theColumnIndex);
    int GetUsedParamRowIndex();
    bool IsPrintedMapViewDesctop();
+   bool IsPrinting() const;
 
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
    virtual NFmiPoint ViewPointToLatLon(const NFmiPoint & /* theViewPoint */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}

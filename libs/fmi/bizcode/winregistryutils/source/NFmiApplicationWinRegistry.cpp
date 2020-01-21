@@ -492,12 +492,24 @@ bool NFmiConfigurationRelatedWinRegistry::Init(const std::string &baseConfigurat
     return true;
 }
 
+static boost::shared_ptr<NFmiMapViewWinRegistry> MakeNonMapViewWinRegistryObject()
+{
+    boost::shared_ptr<NFmiMapViewWinRegistry> dummyMapViewWinRegistry(new NFmiMapViewWinRegistry());
+    // 998:sta tulee oikeasti 999 Init metodin sisällä (999 on tässä selkeämmin spesiaali indeksi, joka tarkoittaa muita kuin oikeiden karttanäyttöjen indeksiä)
+    dummyMapViewWinRegistry->Init("Software\\Fmi\\SmartMet\\General", 998); 
+    return dummyMapViewWinRegistry;
+}
+
 boost::shared_ptr<NFmiMapViewWinRegistry> NFmiConfigurationRelatedWinRegistry::MapView(int mapIndex)
 {
     if(mapIndex >= 0 && mapIndex < static_cast<int>(mMapViewVector.size()))
         return mMapViewVector[mapIndex];
     else
-        return boost::shared_ptr<NFmiMapViewWinRegistry>();
+    {
+        // Palautetaan ei-oikeille karttanäytöille (aika-sarja, poikkileikkaus, jne.) dummy-olion asetukset, jotta ei tarvitse testailla kaikkialla nullptr juttuja
+        static boost::shared_ptr<NFmiMapViewWinRegistry> dummyMapViewWinRegistry = ::MakeNonMapViewWinRegistryObject();
+        return dummyMapViewWinRegistry;
+    }
 }
 
 std::string NFmiConfigurationRelatedWinRegistry::WindowRectStr(const std::string &keyString)
@@ -659,6 +671,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mSaveImageExtensionFilterIndex()
 ,mMapViewCacheMaxSizeInMB()
 ,mForceWdParameterToLinearInterpolation()
+,mShowTooltipOnSmarttoolDialog()
 {
 }
 
@@ -722,6 +735,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     // En tiedä onko oikeasti väliä, jos luku olisi vahingossa esim. negatiivinen, joten laitetaan alustettu arvo varmuuden vuoksi setterin läpi, joka tekee tarkistuksia.
     MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
     mForceWdParameterToLinearInterpolation = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ForceWdParameterToLinearInterpolation", usedKey, false);
+    mShowTooltipOnSmarttoolDialog = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowTooltipOnSmarttoolDialog", usedKey, true);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -1051,4 +1065,14 @@ bool NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation()
 void NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation(bool newValue)
 {
     *mForceWdParameterToLinearInterpolation = newValue;
+}
+
+bool NFmiApplicationWinRegistry::ShowTooltipOnSmarttoolDialog()
+{
+    return *mShowTooltipOnSmarttoolDialog;
+}
+
+void NFmiApplicationWinRegistry::ShowTooltipOnSmarttoolDialog(bool newValue)
+{
+    *mShowTooltipOnSmarttoolDialog = newValue;
 }

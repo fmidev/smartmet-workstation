@@ -64,6 +64,8 @@ class NFmiSmartToolCalculationBlockInfoVector
   Iterator Begin(void) { return itsCalculationBlockInfos.begin(); };
   Iterator End(void) { return itsCalculationBlockInfos.end(); };
   bool Empty(void) const { return itsCalculationBlockInfos.empty(); }
+  bool BlockWasEnclosedInBrackets() const;
+
  private:
   // luokka ei omista vektorissa olevia otuksia, Clear pitää kutsua erikseen!!!
   checkedVector<boost::shared_ptr<NFmiSmartToolCalculationBlockInfo> > itsCalculationBlockInfos;
@@ -86,6 +88,9 @@ class NFmiSmartToolCalculationBlockInfo
   bool fElseSectionExist;
   boost::shared_ptr<NFmiSmartToolCalculationBlockInfoVector> itsElseCalculationBlockInfos;
   boost::shared_ptr<NFmiSmartToolCalculationSectionInfo> itsLastCalculationSectionInfo;
+  bool fStartingBracketFound = false;
+  bool fEndingBracketFound = false;
+  bool BlockWasEnclosedInBrackets() const { return fStartingBracketFound && fEndingBracketFound; }
 };
 
 class NFmiSmartToolIntepreter
@@ -321,6 +326,7 @@ class NFmiSmartToolIntepreter
   bool ExtractObservationRadiusInfo();
   bool ExtractSymbolTooltipFile();
   bool ExtractMacroParamDescription();
+  bool ExtractCalculationType();
   std::string GetWholeNumberFromTokens();
   void CheckMustHaveSimpleConditionFunctions(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo);
   void AddVariableToCalculation(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo, boost::shared_ptr<NFmiAreaMaskInfo> &theVariableInfo);

@@ -16,8 +16,8 @@ target_link_libraries(
     ${PROJECT_NAME}
     Newbase
     SmartTools
-	EditingDataUtils
-	CatLog
+    EditingDataUtils
+    CatLog
     )
 
 target_include_directories( 
@@ -27,7 +27,7 @@ target_include_directories(
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
-	PUBLIC ${CatLog_INCLUDE_DIRS}
+    PUBLIC ${CatLog_INCLUDE_DIRS}
     )
 
 set(
@@ -37,7 +37,7 @@ set(
     ${Newbase_INCLUDE_DIRS}
     ${SmartTools_INCLUDE_DIRS}
     ${EditingDataUtils_INCLUDE_DIRS}
-	${CatLog_INCLUDE_DIRS}
+    ${CatLog_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
 

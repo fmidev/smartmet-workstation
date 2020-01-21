@@ -4,6 +4,17 @@
 
 using namespace std;
 
+namespace
+{
+    std::string MakeLatlonString(const NFmiPoint& latlon)
+    {
+        std::stringstream out;
+        out.setf(std::ios::fixed);
+        out << std::setprecision(4) << latlon.X() << ", " << latlon.Y();
+        return out.str();
+    }
+}
+
 namespace HakeMessage
 {
     const HakeMsg HakeMsg::unInitialized = HakeMsg{};
@@ -167,4 +178,22 @@ namespace HakeMessage
     {
         fIsFromXmlFormat = newValue;
     }
+
+    // Json pohjaisesta viestistä otetaan vain seuraavat halutut kohdat: 
+    // creation time, coordinates, municipality, street address, code, description
+    std::string HakeMsg::MakeTooltipMessageStr() const
+    {
+        std::string messageString = "Alkuaika: " + itsStartTime.ToStr("YYYY-MM-DD HH:mm", kEnglish);
+        messageString += "\n";
+        messageString += "Koordinaatit: " + ::MakeLatlonString(itsLatlonPoint);
+        messageString += "\n";
+        messageString += "(" + itsCountyStr + ", " + itsAddress + ")";
+        messageString += "\n";
+        messageString += "Kategoria id: " + std::to_string(itsCategory);
+        messageString += "\n";
+        messageString += "Tyyppi: " + itsTypeStr;
+
+        return messageString;
+    }
+
 }
