@@ -133,7 +133,7 @@ class _FMI_DLL NFmiTimeDescriptor : public NFmiDataDescriptor
                                      int theStartTimeFunction = 0,
                                      int theEndTimeFunction = 0) const;
   NFmiTimeDescriptor GetIntersection(const NFmiMetTime &theStartLimit,
-                                     const NFmiMetTime &theEndLimit);
+                                     const NFmiMetTime &theEndLimit) const;
   void PruneTimes(int theMaxTimeCount, bool fFromEnd = true);
 
   virtual unsigned long ClassId(void) const;

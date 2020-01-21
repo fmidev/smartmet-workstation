@@ -4,6 +4,7 @@
 #include "NFmiParameterName.h"
 #include "NFmiMTATempSystem.h"
 #include "NFmiSoundingDataOpt1.h"
+#include <gdiplus.h>
 
 class NFmiFastQueryInfo;
 class NFmiProducer;
@@ -111,6 +112,8 @@ class NFmiTempView : public NFmiCtrlView
     double SecondaryDataFrameXoffset(double theValue);
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
     bool FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation);
+    Gdiplus::SmoothingMode GetUsedCurveDrawSmoothingMode() const;
+    bool IsRectangularTemperatureHelperLines() const;
 
 	double es(double t);
 	double ws(double t, double p);
@@ -173,6 +176,7 @@ class NFmiTempView : public NFmiCtrlView
     NFmiRect itsSecondaryDataFrame; 
     // Jotta luotauskäyrien tooltipit saadaan varmasti laskettua kaikissa tilanteissa, laitetaan kaikki piirretyt luotausdatat erilliseen cacheen talteen.
     SoundingDataCacheMap itsSoundingDataCacheForTooltips;
+    Gdiplus::SmoothingMode itsCurveDrawSmoothingMode = Gdiplus::SmoothingMode::SmoothingModeAntiAlias;
 };
 
 

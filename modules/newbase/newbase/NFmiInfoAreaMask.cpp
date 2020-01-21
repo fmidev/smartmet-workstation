@@ -577,9 +577,12 @@ bool NFmiInfoAreaMask::CalcTimeLoopIndexies(boost::shared_ptr<NFmiFastQueryInfo>
     unsigned long *theStartTimeIndexOut,
     unsigned long *theEndTimeIndexOut)
 {
-    // pitää ottaa kopio ajoista, koska GetIntersection -metodi ei ole const.
-    NFmiTimeDescriptor origTimes = theInfo->TimeDescriptor();
-    NFmiTimeDescriptor times = origTimes.GetIntersection(theStartTime, theEndTime);
+  NFmiMetTime usedStartTime =
+      NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theStartTime);
+  NFmiMetTime usedEndTime =
+      NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theEndTime);
+
+  NFmiTimeDescriptor times = theInfo->TimeDescriptor().GetIntersection(usedStartTime, usedEndTime);
     // Otetaan aikaindeksi talteen, jotta se voidaan lopuksi palauttaa takaisin
     unsigned long origTimeIndex = theInfo->TimeIndex();
     bool status = false;

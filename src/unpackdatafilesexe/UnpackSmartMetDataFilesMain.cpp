@@ -3,10 +3,12 @@
 // Ohjelma saa seuraavat argumentit:
 // 0. ohjelman nimi (ei v‰litet‰ t‰st‰)
 // 1. pakatun l‰hdetiedoston polku
-// 2. puretun kohdetiedoston polku
-// 3. kohdetiedoston lopullinen siirto polku
-// 4. deletoidaanko pakattu l‰hdetiedosto (1=deletoi, 0=ei deletoida)
-// 5. lokitiedoston nimi, jota NFmiLogger k‰ytt‰‰
+// 2. kohdetiedoston lopullinen siirto polku
+// 3. deletoidaanko pakattu l‰hdetiedosto (1=deletoi, 0=ei deletoida)
+// 4. 7-zip ohjelman polku, komento (a = pakkaa), optioita (-y silent yes), jos t‰ss‰ on arvoja, k‰ytet‰‰n purkuun 7-zip ohjelmaa
+// 5. Optionaalinen lokitiedoston nimi, jota NFmiLogger k‰ytt‰‰, jos argumentti on "" (kaksi lainausmerkki‰), on annettu polku tyhj‰, ja loggausta ei k‰ytet‰
+
+#include "stdafx.h"
 
 #include <vector>
 #include <memory>
@@ -14,9 +16,9 @@
 #include "NFmiFileString.h"
 #include "NFmiStringTools.h"
 #include "NFmiLogger.h"
-#include "bzip2util.h"
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiFileSystem.h"
+#include "execute-command-in-separate-process.h"
 
 static void LogMessage(std::shared_ptr<NFmiLogger> &theLogger, const std::string &theMessage, NFmiLogger::Level theLogLevel)
 {
@@ -91,41 +93,75 @@ static std::shared_ptr<NFmiLogger> MakeLogger(const std::string &theLogFilePath)
     return logger;
 }
 
+static std::string GetWorkingDirectory(const std::string &packedFilePath)
+{
+    NFmiFileString fileString = packedFilePath;
+    std::string workingDirectory = fileString.Device();
+    workingDirectory += fileString.Path();
+    return workingDirectory;
+}
+
+static std::string GetUnpackedTmpFilePath(const std::string& packedFilePath)
+{
+    auto lastDotPos = packedFilePath.find_last_of('.');
+    if(lastDotPos != std::string::npos)
+        return std::string(packedFilePath.begin(), packedFilePath.begin() + lastDotPos);
+    else
+    {
+        std::string errorMessage = "Error while trying to find packed file's last extension with file-path: ";
+        errorMessage += packedFilePath;
+        throw std::runtime_error(errorMessage);
+    }
+}
+
 int main(int argc, const char* argv[]) 
 {
     NFmiFileString exeFileNameStr(argv[0]);
     std::string exeName = exeFileNameStr.FileName();
-    if(argc < 6)
+    if(argc < 5)
     {
-        std::cout << "Error when executing " << exeName << ", not enough arguments, 4/5 required:" << std::endl;
-        std::cout << "1. packed-file-path, 2. unpacked-file-path, 3. unpacked-file-final-move-path" << std::endl;
-        std::cout << "4. delete-packed-file-after (1=delete, 0=no delete), 5. log-file-path (default no log)" << std::endl;
+        std::cout << "Error when executing " << exeName << ", not enough arguments, 6 required (1 optional):" << std::endl;
+        std::cout << "1. packed-file-path (e.g. TMP_timestamp_ecmwf_surface.sqd.7z_TMP)" << std::endl;
+        std::cout << "2. unpacked-file-final-move-path" << std::endl;
+        std::cout << "3. delete-packed-file-after (1=delete, 0=no delete)"  << std::endl;
+        std::cout << "4. 7-zip executable path, z-zip is used to unpack packed file" << std::endl;
+        std::cout << "5. log-file-path (optional, no need to give)" << std::endl;
     }
     else
     {
         std::string packedFilePath = argv[1];
-        std::string unPackedFilePath = argv[2];
-        std::string unPackedFinalFilePath = argv[3];
-        bool deletePackedFileAfter = NFmiStringTools::Convert<bool>(argv[4]);
-        std::string logFilePath = argv[5];
+        std::string unPackedFinalFilePath = argv[2];
+        bool deletePackedFileAfter = NFmiStringTools::Convert<bool>(argv[3]);
+        std::string _7zipUtilBaseString = argv[4];
+        std::string logFilePath;
+        if(argc > 5)
+            logFilePath = argv[5];
         std::shared_ptr<NFmiLogger> logger = ::MakeLogger(logFilePath);
 
         try
         {
             // puretaan ensin pakattutiedosto
        	    NFmiMilliSecondTimer timer;
-            bool status = CFmiBzip2Helpers::UnpackBzip2DataFile(packedFilePath, unPackedFilePath, deletePackedFileAfter);
+            // 7-zip arguments for unpacking (x is extraction command, -y is option for "silent yes" to all possible questions)
+            std::string _7zipUtilExecutionString = "\"" + _7zipUtilBaseString + "\" x -y " + packedFilePath;
+            // Pit‰‰ selvitt‰‰ working directory, jotta 7-zip osaa purkaa paketin sinne
+            std::string workingDirectory = ::GetWorkingDirectory(packedFilePath);
+            std::string unpackedTmpFilePath = ::GetUnpackedTmpFilePath(packedFilePath);
+
+            bool status = CFmiProcessHelpers::ExecuteCommandInSeparateProcess(_7zipUtilExecutionString, false, false, SW_HIDE, true, NORMAL_PRIORITY_CLASS, &workingDirectory);
             timer.StopTimer();
+            if(deletePackedFileAfter)
+                NFmiFileSystem::RemoveFile(packedFilePath);
             if(status)
             { 
-                ::ReportSuccessfullUnpacking(logger, packedFilePath, unPackedFilePath, timer);
+                ::ReportSuccessfullUnpacking(logger, packedFilePath, unpackedTmpFilePath, timer);
                 // siirret‰‰n purettu tiedosto viel‰ lopulliseen paikkaan
-                if(::MoveFileToFinalDestination(unPackedFilePath, unPackedFinalFilePath, logger))
+                if(::MoveFileToFinalDestination(unpackedTmpFilePath, unPackedFinalFilePath, logger))
                     return 0; // onnistunut ulostulo
             }
             else
             {
-                ::ReportUnsuccessfullUnpacking(logger, packedFilePath, unPackedFilePath);
+                ::ReportUnsuccessfullUnpacking(logger, packedFilePath, unpackedTmpFilePath);
             }
         }
         catch(std::exception &e)

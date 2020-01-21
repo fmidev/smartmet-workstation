@@ -68,6 +68,7 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 ,itsSyntaxEditControl()
 ,itsSyntaxEditControlAcceleratorTable(NULL)
+,fShowTooltipsOnSmarttoolDialog(FALSE)
 #endif // DISABLE_EXTREME_TOOLKITPRO
 {
 	assert(itsSmartToolInfo); // tässä pitää olla jotain, koska myöhemmin ei tarkistuksia!
@@ -97,8 +98,9 @@ void CFmiSmartToolDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_Q3_MACRO, fQ3Macro);
     DDX_Radio(pDX, IDC_RADIO_VIEWMACRO_SELECTED_MAP1, itsSelectedMapViewDescTopIndex);
     DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, itsSpeedSearchMacroControl);
-    DDX_Text(pDX, IDC_STATIC_MACRO_PATH_TEXT, itsLoadedSmarttoolMacroPathU_);
+    DDX_Text(pDX, IDC_STATIC_LOADED_SMARTTOOL_PATH_TEXT, itsLoadedSmarttoolMacroPathU_);
     DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_TEXT, itsLoadedMacroParamPathTextU_);
+    DDX_Check(pDX, IDC_CHECK_SHOW_TOOLTIP_ON_SMARTTOOL_DIALOG, fShowTooltipsOnSmarttoolDialog);
 }
 
 
@@ -146,6 +148,8 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
     ON_WM_SIZE()
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave)
+    ON_BN_CLICKED(IDC_BUTTON_SMART_TOOL_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonSmartToolSave)
+    ON_BN_CLICKED(IDC_CHECK_SHOW_TOOLTIP_ON_SMARTTOOL_DIALOG, &CFmiSmartToolDlg::OnBnClickedCheckShowTooltipOnSmarttoolDialog)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -181,6 +185,8 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
     ResetSearchResource();
     DisableActionButtomIfInViewMode();
     EnableSaveButtons();
+    InitTooltipControl();
+    fShowTooltipsOnSmarttoolDialog = itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowTooltipOnSmarttoolDialog();
 
 	UpdateData(FALSE);
 
@@ -188,11 +194,114 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
+void CFmiSmartToolDlg::SetDialogControlTooltip(int controlId, const std::string& tooltipRawText)
+{
+    CWnd* controlWnd = GetDlgItem(controlId);
+    if(controlWnd)
+    {
+        auto finalText = ::GetDictionaryString(tooltipRawText.c_str());
+        m_tooltip.AddTool(controlWnd, CA2T(finalText.c_str()));
+    }
+}
+
+static std::string MakeAddMacroParamTooltipString(int rowIndex)
+{
+    std::string str = "Add selected macro-param on row ";
+    str += std::to_string(rowIndex);
+    str += " on selected view";
+    return str;
+}
+
+static std::string MakeRemoveAllParametersFromRowString(int rowIndex)
+{
+    std::string str = "Remove <b>ALL</b> parameters from row ";
+    str += std::to_string(rowIndex);
+    str += " on selected view";
+    return str;
+}
+
+static std::string MakeSelectedViewString(int viewIndex)
+{
+    std::string str = "Set ";
+    if(viewIndex == 1)
+        str += "main-map-view";
+    else if(viewIndex == 4)
+        str += "cross-section-view";
+    else
+    {
+        str += "map-view ";
+        str += std::to_string(viewIndex);
+    }
+
+    str += " as 'activated' view.";
+    str += "\nAll add macro-param and clear view row actions are then done to this view.";
+    return str;
+}
+
+void CFmiSmartToolDlg::InitTooltipControl()
+{
+    m_tooltip.Create(this);
+    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
+    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1200); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+
+    // Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
+    SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_SAVE, "Save current Macro text to selected smarttool file\n(if any is selected)");
+    SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save current Macro text to wanted smarttool file\n(opens file browser)");
+    SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_LOAD, "Opens dialog to select smarttool to be loaded to Macro text");
+    SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_REMOVE, "Opens dialog to select smarttool to be removed");
+    SetDialogControlTooltip(IDC_BUTTON_ACTION, "Will execute current Macro text to edited data");
+    SetDialogControlTooltip(IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, "Modify only selected locations setting.\nIf checked, and current Macro text is executed on edited data,\nwill do modifications only on selected grid points.\nOtherwise all edited data grid points are modified.");
+    SetDialogControlTooltip(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, "Speed search smarttools");
+    SetDialogControlTooltip(IDC_STATIC_LOADED_SMARTTOOL_PATH_TEXT, "Last loaded or saved smarttool's path.\nThis will be cleared if any macro-params are loaded or saved in between.\n(Clearing is meant to help users with this dual-purpose dialog with mixed smarttool and macro-param handling)");
+
+    std::string dbCheckerString = "\nDBChecker means \"Send edited data to Database checker\"\nThis is smarttool script that can be set to be automatically do wanted checks before data is actually sent.";
+    SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER, std::string("Saves current Macro text as DBChecker.") + dbCheckerString);
+    SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER, std::string("Loads current DBChecker to Macro text.") + dbCheckerString);
+    SetDialogControlTooltip(IDC_CHECK_MAKE_DB_CHECK_AT_SEND, std::string("Use DBChecker to edited data before it's sent.") + dbCheckerString);
+
+    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_SAVE, "Save current Macro text to selected macro-param file\n(if any is selected)");
+    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_SAVE_AS, "Save current Macro text to wanted macro-param file\n(opens file browser)");
+    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_REMOVE, "Removes selected macro-param\n(if any is selected)");
+    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_PROPERTIES, "Opens selected macro-param's drawing options dialog\n(Not recomended though, has known to cause problems)");
+    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_REFRESH_LIST, "Updates shown macro-param list control\n(All macro-params, the whole directory tree, are reloaded from files)");
+    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_LATEST_ERROR_TEXT, "Show the latest known error caused by any smarttool or macro-param");
+    SetDialogControlTooltip(IDC_STATIC_LOADED_MACRO_PARAM_TEXT, "Last loaded or saved macro-param's path.\nThis will be cleared if any smarttools are loaded or saved in between.\n(Clearing is meant to help users with this dual-purpose dialog with mixed smarttool and macro-param handling)");
+
+    SetDialogControlTooltip(IDC_CHECK_Q3_MACRO, "If checked, show only q3 type macro-params on list control\notherwise show only 'normal' macro-params.\n(q3 is FMI only smartmet-server feature?)");
+    
+    SetDialogControlTooltip(IDC_EDIT_MACRO_PARAM_DATA_GRID_SIZE_X, "Used x-size of calculated macro-param grid");
+    SetDialogControlTooltip(IDC_EDIT_MACRO_PARAM_DATA_GRID_SIZE_Y, "Used y-size of calculated macro-param grid");
+    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_DATA_GRID_SIZE_USE, "Change the size of calculated macro-param data grid.\nMacro-params are calculated on pre-defined grids\nthat cover the used map-area on map-views.\n(You can by pass this size by using RESOLUTION=xxx in Macro text formula)");
+ 
+    SetDialogControlTooltip(IDC_BUTTON_ADD_TO_ROW_1, ::MakeAddMacroParamTooltipString(1));
+    SetDialogControlTooltip(IDC_BUTTON_ADD_TO_ROW_2, ::MakeAddMacroParamTooltipString(2));
+    SetDialogControlTooltip(IDC_BUTTON_ADD_TO_ROW_3, ::MakeAddMacroParamTooltipString(3));
+    SetDialogControlTooltip(IDC_BUTTON_ADD_TO_ROW_4, ::MakeAddMacroParamTooltipString(4));
+    SetDialogControlTooltip(IDC_BUTTON_ADD_TO_ROW_5, ::MakeAddMacroParamTooltipString(5));
+    SetDialogControlTooltip(IDC_BUTTON_REMOVE_ALL_FROM_ROW1, ::MakeRemoveAllParametersFromRowString(1));
+    SetDialogControlTooltip(IDC_BUTTON_REMOVE_ALL_FROM_ROW2, ::MakeRemoveAllParametersFromRowString(2));
+    SetDialogControlTooltip(IDC_BUTTON_REMOVE_ALL_FROM_ROW3, ::MakeRemoveAllParametersFromRowString(3));
+    SetDialogControlTooltip(IDC_BUTTON_REMOVE_ALL_FROM_ROW4, ::MakeRemoveAllParametersFromRowString(4));
+    SetDialogControlTooltip(IDC_BUTTON_REMOVE_ALL_FROM_ROW5, ::MakeRemoveAllParametersFromRowString(5));
+    SetDialogControlTooltip(IDC_RADIO_VIEWMACRO_SELECTED_MAP1, ::MakeSelectedViewString(1));
+    SetDialogControlTooltip(IDC_RADIO_VIEWMACRO_SELECTED_MAP2, ::MakeSelectedViewString(2));
+    SetDialogControlTooltip(IDC_RADIO_VIEWMACRO_SELECTED_MAP3, ::MakeSelectedViewString(3));
+    SetDialogControlTooltip(IDC_CHECK_MACRO_PARAM_CROSSSECTION_MODE, ::MakeSelectedViewString(4));
+
+}
+
+BOOL CFmiSmartToolDlg::PreTranslateMessage(MSG* pMsg)
+{
+    if(fShowTooltipsOnSmarttoolDialog)
+        m_tooltip.RelayEvent(pMsg);
+
+    return CDialog::PreTranslateMessage(pMsg);
+}
+
 void CFmiSmartToolDlg::EnableColorCodedControls()
 {
     CFmiWin32Helpers::EnableColorCodedControl(this, IDC_CHECK_Q3_MACRO);
 }
-
 
 void CFmiSmartToolDlg::WarnUserAboutNoEditingSmarttools()
 {
@@ -397,6 +506,10 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_RICHEDIT_MACRO_ERROR_TEXT, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_STATIC_SMARTTOOL_HOLDER, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE, ANCHOR_TOP | ANCHOR_RIGHT);
+    ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_SAVE_AS, ANCHOR_TOP | ANCHOR_RIGHT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_SMART_TOOL_LOAD, ANCHOR_TOP | ANCHOR_RIGHT);
@@ -469,7 +582,7 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PATH_TEXT, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+    bOk = m_resizer.SetAnchor(IDC_STATIC_LOADED_SMARTTOOL_PATH_TEXT, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_LOADED_MACRO_PARAM_TEXT, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
@@ -688,16 +801,15 @@ void CFmiSmartToolDlg::OnButtonSmartToolSaveAs()
 {
 	UpdateData(TRUE);
 
-    const auto &smarttoolInfo = *itsSmartMetDocumentInterface->SmartToolInfo();
-    std::string initialPath = smarttoolInfo.RootLoadDirectory() + smarttoolInfo.GetRelativeLoadPath();
-    std::string initialFilename = smarttoolInfo.CurrentScriptName();
+    std::string initialPath = itsSmartToolInfo->RootLoadDirectory() + itsSmartToolInfo->GetRelativeLoadPath();
+    std::string initialFilename = itsSmartToolInfo->CurrentScriptName();
     if(initialFilename.empty())
     {
         initialFilename = g_SmarttoolDefaultFileName;
     }
     initialFilename += g_SmarttoolFileTotalExtension;
     std::string filePath;
-    if(BetaProduct::GetFilePathFromUserTotal(g_SmarttoolFileFilter, initialPath, filePath, false, initialFilename, g_SmarttoolFileExtension, smarttoolInfo.RootLoadDirectory(), this))
+    if(BetaProduct::GetFilePathFromUserTotal(g_SmarttoolFileFilter, initialPath, filePath, false, initialFilename, g_SmarttoolFileExtension, itsSmartToolInfo->RootLoadDirectory(), this))
     {
 
         // pitää ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
@@ -710,13 +822,38 @@ void CFmiSmartToolDlg::OnButtonSmartToolSaveAs()
         }
         else
         {
-            std::string errMsgTitle("Cannot save smarttool skript");
-            std::string errMsg("Cannot save smarttool skript:\n");
-            std::string fullFileName(itsSmartToolInfo->GetFullScriptFileName(filePath));
-            errMsg += fullFileName;
-            errMsg += "\nCheck that the folder exists and you have write permissions there.";
+            MakeSmarttoolSaveError(filePath);
+        }
+    }
+}
 
-            ::MessageBox(this->GetSafeHwnd(), CA2T(errMsg.c_str()), CA2T(errMsgTitle.c_str()), MB_ICONINFORMATION | MB_OK);
+void CFmiSmartToolDlg::MakeSmarttoolSaveError(const std::string & fullFilePath)
+{
+    std::string errMsgTitle("Cannot save smarttool skript");
+    std::string errMsg("Cannot save smarttool skript:\n");
+    errMsg += fullFilePath;
+    errMsg += "\nCheck that the folder exists and you have write permissions there.";
+
+    ::MessageBox(this->GetSafeHwnd(), CA2T(errMsg.c_str()), CA2T(errMsgTitle.c_str()), MB_ICONERROR | MB_OK);
+}
+
+
+void CFmiSmartToolDlg::OnBnClickedButtonSmartToolSave()
+{
+    UpdateData(TRUE);
+
+    if(SmarttoolCanBeSaved())
+    {
+        // pitää ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
+        itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText());
+        auto totalSmarttoolFilePath = itsSmartToolInfo->GetFullScriptFileName(itsSmartToolInfo->CurrentScriptName());
+        if(itsSmartToolInfo->SaveScript(totalSmarttoolFilePath))
+        {
+            CatLog::logMessage(string("Saved smartTool: ") + string(totalSmarttoolFilePath), CatLog::Severity::Info, CatLog::Category::Macro);
+        }
+        else
+        {
+            MakeSmarttoolSaveError(totalSmarttoolFilePath);
         }
     }
 }
@@ -813,6 +950,16 @@ static std::string GetRealMacroParamDrawParamFileName(const std::string& macroPa
     return drawParamFilePath.string();
 }
 
+bool CFmiSmartToolDlg::SmarttoolCanBeSaved() const
+{
+    if(itsLoadedSmarttoolMacroPathU_.IsEmpty())
+        return false;
+    else if(!itsSmartToolInfo || itsSmartToolInfo->CurrentScript().empty())
+        return false;
+    else
+        return true;
+}
+
 void CFmiSmartToolDlg::EnableSaveButtons()
 {
     // macroParam tapaus ensin
@@ -823,6 +970,10 @@ void CFmiSmartToolDlg::EnableSaveButtons()
     else if(!currentMacroParam || currentMacroParam->IsMacroParamDirectory())
         enableSaveMacroParamButton = false;
     EnableDlgItem(IDC_BUTTON_MACRO_PARAM_SAVE, enableSaveMacroParamButton);
+
+    // smarttool tapaus sitten
+    bool enableSaveSmarttoolButton = SmarttoolCanBeSaved();
+    EnableDlgItem(IDC_BUTTON_SMART_TOOL_SAVE, enableSaveSmarttoolButton);
 }
 
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
@@ -920,7 +1071,9 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
 
         UpdateMacroParamDisplayList(true);
         CString macroParamNameU = CA2T(fileString.Header());
+        mpSystem.FindMacroFromCurrentFolder(std::string(fileString.Header()));
         itsMacroParamList.SetCurSel(itsMacroParamList.FindString(-1, macroParamNameU)); // asettaa talletetun macroParamin aktiiviseksi
+        UpdateLoadedMacroParamPathString();
         if(updateViews)
         {
             std::vector<std::string> modifiedMacroParamPaths{ realMacroParamDrawParamFileName };
@@ -1145,7 +1298,8 @@ void CFmiSmartToolDlg::OnLbnDblclkListParamMacros()
 		{ // Jos hakemiston nimi, siirrytään sinne
             itsSmartMetDocumentInterface->MacroParamSystem().CurrentPath(macroParamName);
 			UpdateMacroParamDisplayList(false);
-		}
+            UpdateLoadedMacroParamPathString();
+        }
 	}
 }
 
@@ -1245,9 +1399,11 @@ void CFmiSmartToolDlg::InitDialogTexts(void)
 
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, "IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_ERROR_STR, "IDC_STATIC_MACRO_ERROR_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save as SmartT");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD, "IDC_BUTTON_SMART_TOOL_LOAD");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_REMOVE, "IDC_BUTTON_SMART_TOOL_REMOVE");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SMARTTOOL_HOLDER, "Smarttool section");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE, "Save");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save as");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD, "Load");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_REMOVE, "Remove");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_SAVE_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER, "IDC_BUTTON_SMART_TOOL_LOAD_DB_CHECKER");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_DB_CHECK_AT_SEND, "IDC_CHECK_MAKE_DB_CHECK_AT_SEND");
@@ -1312,8 +1468,8 @@ BOOL CFmiSmartToolDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRES
 void CFmiSmartToolDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
     // set the minimum tracking width and height of the window
-    lpMMI->ptMinTrackSize.x = 493;
-    lpMMI->ptMinTrackSize.y = 539;
+    lpMMI->ptMinTrackSize.x = 553;
+    lpMMI->ptMinTrackSize.y = 599;
 }
 
 void CFmiSmartToolDlg::UpdateLoadedSmarttoolMacroPathString()
@@ -1481,4 +1637,11 @@ HBRUSH CFmiSmartToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
         CFmiWin32Helpers::SetErrorColorForTextControl(pDC, !fQ3Macro);
 
     return hbr;
+}
+
+
+void CFmiSmartToolDlg::OnBnClickedCheckShowTooltipOnSmarttoolDialog()
+{
+    UpdateData(TRUE);
+    itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowTooltipOnSmarttoolDialog(fShowTooltipsOnSmarttoolDialog == TRUE);
 }
