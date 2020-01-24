@@ -378,6 +378,8 @@ lexClass:
 	token:tag	= 'resolution'
 	token:tag	= 'calculationpoint'
 	token:tag	= 'observationradius'
+	token:tag	= 'symboltooltipfile'
+	token:tag	= 'macroparamdescription'
 	token:tag	= 'calculationtype'
 	token:tag	= 'index'
 	token:tag	= 'surface'
@@ -667,6 +669,8 @@ lexClass:
 	
 	token:tag	= 'calculationpoint = producer'
 	token:tag	= 'calculationpoint = lat,lon'
+	token:tag	= 'symboltooltipfile = filePath'
+	token:tag	= 'macroparamdescription = some description text'
 	token:tag	= 'calculationtype = index'
 	
 	token:tag	= 'observationradius = x // [km]'
