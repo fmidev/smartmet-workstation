@@ -6,9 +6,6 @@
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMacroParamfunctions.h"
 #include "CtrlViewFunctions.h"
-#include "boost/algorithm/string/replace.hpp"
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#include <experimental/filesystem>
 #include <afxdlgs.h>
 
 namespace BetaProduct
@@ -22,15 +19,10 @@ namespace BetaProduct
             boost::replace_all(aPath, "/", "\\");
         }
 
-        bool LastCharacterIsSeparator(const std::string& aPath)
-        {
-            return (aPath.back() == '\\' || aPath.back() == '/');
-        }
-
         void RemoveDirectorySeparatorFromEnd(std::string& aPath)
         {
             // aPath must be atleast 2 characters long before removing anything, otherwise "/" root directory won't work
-            if(aPath.size() > 1 && LastCharacterIsSeparator(aPath))
+            if(aPath.size() > 1 && PathUtils::lastCharacterIsSeparator(aPath))
             {
                 aPath.resize(aPath.size() - 1);
             }
@@ -49,55 +41,6 @@ namespace BetaProduct
             // T‰m‰ etsint‰ tyˆ pit‰‰ tehd‰ case-insensitiivisti, Koska Windows k‰sittelee polkuja siten.
             auto pos = MacroParam::ci_find_substr(absolutePath, absoluteDirectory); 
             return pos != MacroParam::ci_string_not_found;
-        }
-
-        std::vector<std::string> split(std::string path, char d)
-        {
-            std::vector<std::string> r;
-            int j = 0;
-            for(int i = 0; i < path.length(); i++)
-            {
-                if(path[i] == d)
-                {
-                    std::string cur = path.substr(j, i - j);
-                    if(cur.length())
-                    {
-                        r.push_back(cur);
-                    }
-                    j = i + 1; // start of next match
-                }
-            }
-            if(j < path.length())
-            {
-                r.push_back(path.substr(j));
-            }
-            return r;
-        }
-
-        std::string simplifyUnixPath(std::string path)
-        {
-            std::vector<std::string> ps = split(path, '/');
-            std::string p = "";
-            std::vector<std::string> st;
-            for(int i = 0; i < ps.size(); i++)
-            {
-                if(ps[i] == "..")
-                {
-                    if(st.size() > 0)
-                    {
-                        st.pop_back();
-                    }
-                }
-                else if(ps[i] != ".")
-                {
-                    st.push_back(ps[i]);
-                }
-            }
-            for(int i = 0; i < st.size(); i++)
-            {
-                p += "/" + st[i];
-            }
-            return p.length() ? p : "/";
         }
 
     }
@@ -119,7 +62,7 @@ namespace BetaProduct
         auto originalPathString = theInitialDirectory + theInitialFileName;
         // Esim. "D:\\smartmet\\Dropbox (FMI)\\SmartMet\\MetEditor_5_13_2_0\\..\\..\\Macros\\FMI\\ViewMacros\\"
         // => "D:\\smartmet\\Dropbox (FMI)\\Macros\\FMI\\ViewMacros\\", muuten CFileDialog ei toimi kuten pit‰‰.
-        std::string simplyfiedPathString = SimplifyWindowsPath(originalPathString);
+        std::string simplyfiedPathString = PathUtils::simplifyWindowsPath(originalPathString);
 
         CString initialFilePath = CA2T(simplyfiedPathString.c_str());
         CFileDialog dlg(fLoadFile, NULL, initialFilePath, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, CA2T(theFileFilter.c_str()), parentView);
@@ -137,7 +80,7 @@ namespace BetaProduct
         if(BetaProduct::GetFilePathFromUser(theFileFilter, theInitialDirectory, theFilePathOut, fLoadFile, theInitialFileName, parentView))
         {
             auto originalFilePath = theFilePathOut;
-            auto simplifiedRootDirectory = SimplifyWindowsPath(theRootDirectory);
+            auto simplifiedRootDirectory = PathUtils::simplifyWindowsPath(theRootDirectory);
             theFilePathOut = PathUtils::getTrueFilePath(theFilePathOut, theRootDirectory, theFileExtension);
 
             // If user gives path outside the given root-path, we must reject the path
@@ -170,20 +113,4 @@ namespace BetaProduct
         return false;
     }
 
-    std::string SimplifyWindowsPath(const std::string &pathstring)
-    {
-        std::experimental::filesystem::path originalPath(pathstring);
-        // K‰‰nnet‰‰n varmuuden vuoksi kaikki separaattorit ensin windows tyylisiksi
-        originalPath = originalPath.make_preferred();
-        // T‰h‰n tulee windowsissa esim. D:
-        auto rootNamePath = originalPath.root_name();
-        // T‰h‰n tulee absoluuttinen polku ilman driveria, esim. \xxx\yyy
-        std::string basicRootPathString = originalPath.root_directory().string() + originalPath.relative_path().string();
-        auto unixRootPathString = boost::replace_all_copy(basicRootPathString, "\\", "/");
-        auto simplifiedUnixRootPathString = simplifyUnixPath(unixRootPathString);
-        auto simplifiedWindowsRootPathString = rootNamePath.string() + boost::replace_all_copy(simplifiedUnixRootPathString, "/", "\\");
-        if(LastCharacterIsSeparator(pathstring))
-            PathUtils::addDirectorySeparatorAtEnd(simplifiedWindowsRootPathString);
-        return simplifiedWindowsRootPathString;
-    }
 }
