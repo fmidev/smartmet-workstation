@@ -13445,19 +13445,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         itsSpecialFileStoragePath = NFmiSettings::Optional<std::string>("SmartMet::SpecialFileStoragePath", ""); // oletus arvo on tyhj‰
         if(!itsSpecialFileStoragePath.empty())
         {
-            // pit‰‰ tehd‰ viel‰ absoluutti vs suhteellinen polku tarkasteluja
-            NFmiFileString fileString(itsSpecialFileStoragePath);
-            if(!fileString.IsAbsolutePath())
-            { // jos oli suhteellinen polku, lis‰t‰‰n se kontrollihakemistoon
-                itsSpecialFileStoragePath = itsBasicConfigurations.ControlPath() + "\\" + itsSpecialFileStoragePath;
-            }
-
-            // jos polussa ei ole lopussa kenoviivaa '\', lis‰t‰‰n se
-            char ch = itsSpecialFileStoragePath[itsSpecialFileStoragePath.size()-1];
-            if(ch != '\\' && ch != '/')
-                itsSpecialFileStoragePath += kFmiDirectorySeparator;
-
-            itsSpecialFileStoragePath = BetaProduct::SimplifyWindowsPath(itsSpecialFileStoragePath);
+			itsSpecialFileStoragePath = PathUtils::makeFixedAbsolutePath(itsSpecialFileStoragePath, itsBasicConfigurations.ControlPath(), true);
+			CatLog::logMessage(std::string("SpecialFileStoragePath = ") + itsSpecialFileStoragePath, CatLog::Severity::Info, CatLog::Category::Configuration);
 
             // varmistetaan viel‰ ett‰ hakemisto on olemassa
             if(!NFmiFileSystem::CreateDirectory(itsSpecialFileStoragePath))
@@ -13758,8 +13747,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     std::string MakeUsedFixedDrawParamsRootPath()
     {
         std::string rootPath = ApplicationWinRegistry().FixedDrawParamsPath();
-        rootPath = PathUtils::getAbsoluteFilePath(rootPath, ControlDirectory());
-        rootPath = BetaProduct::SimplifyWindowsPath(rootPath);
+        rootPath = PathUtils::makeFixedAbsolutePath(rootPath, ControlDirectory());
         return rootPath;
     }
 
