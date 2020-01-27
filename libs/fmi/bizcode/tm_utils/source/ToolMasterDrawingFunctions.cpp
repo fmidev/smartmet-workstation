@@ -1401,7 +1401,6 @@ static void BuildDownSizedData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineD
     theDownSizedIsoLineData.Init(downSizedGridData, theOrigIsoLineData.itsMaxAllowedIsoLineCount);
     // Alustetaan uuden isoline datan piirtoasetukset originaalista
     theDownSizedIsoLineData.InitDrawOptions(theOrigIsoLineData);
-    theDownSizedIsoLineData.itsIsolineMinLengthFactor = theOrigIsoLineData.itsIsolineMinLengthFactor;
 }
 
 static void DoTraceLogging(const std::string message)

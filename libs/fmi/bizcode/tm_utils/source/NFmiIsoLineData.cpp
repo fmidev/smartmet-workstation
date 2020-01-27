@@ -145,6 +145,7 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsDefRGBRowSize = theOther.itsDefRGBRowSize;
 	itsUsedColorsCube = theOther.itsUsedColorsCube;
     itsIsoLineBoxFillColorIndex = theOther.itsIsoLineBoxFillColorIndex;
+	itsIsolineMinLengthFactor = theOther.itsIsolineMinLengthFactor;
 }
 
 void IsoLineStatistics_::Init(void)
