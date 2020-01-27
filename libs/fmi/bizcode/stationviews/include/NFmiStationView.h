@@ -82,25 +82,6 @@ public:
    static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
    static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
 
-	template<typename T>
-	static void GetMinAndMaxValues(const NFmiDataMatrix<T> &theMatrix, T &theMin, T &theMax)
-	{
-		int nx = static_cast<int>(theMatrix.NX());
-		int ny = static_cast<int>(theMatrix.NY());
-		float tmp = 0;
-		for(int j=0; j<ny; j++)
-			for(int i=0; i<nx; i++)
-			{
-				tmp = theMatrix[i][j];
-				if(tmp == kFloatMissing)
-					continue;
-				if(tmp > theMax)
-					theMax = tmp;
-				if(tmp < theMin)
-					theMin = tmp;
-			}
-	}
-
 protected:
    bool IsSpecialMatrixDataDraw(void) const;
    std::string GetToolTipValueStr(float theValue, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
