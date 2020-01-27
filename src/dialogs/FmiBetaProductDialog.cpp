@@ -1401,7 +1401,7 @@ void CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct()
     StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
 
     auto initialSavePath = itsBetaProductionSystem->BetaProductSaveInitialPath();
-    if(BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, initialSavePath, NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", "Betaproduct1", false, &itsBetaProductFullFilePath, this))
+    if(BetaProduct::SaveObjectInJsonFormat(*itsBetaProduct, initialSavePath, NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(), "Beta-product", "Betaproduct1", false, &itsBetaProductFullFilePath, this))
     {
         itsBetaProductionSystem->BetaProductSaveInitialPath(initialSavePath);
     }
@@ -1411,7 +1411,7 @@ void CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct()
 void CFmiBetaProductDialog::OnBnClickedButtonLoadBetaProduct()
 {
     auto initialSavePath = itsBetaProductionSystem->BetaProductSaveInitialPath();
-    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, initialSavePath, NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), "Beta-product", false, &itsBetaProductFullFilePath, this))
+    if(BetaProduct::LoadObjectInJsonFormat(*itsBetaProduct, initialSavePath, NFmiBetaProductionSystem::BetaProductFileFilter(), NFmiBetaProductionSystem::BetaProductFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(), "Beta-product", false, &itsBetaProductFullFilePath, this))
     {
         itsBetaProductionSystem->BetaProductSaveInitialPath(initialSavePath);
         itsBetaProduct->InitFromJsonRead(GetCurrentViewTime(*itsBetaProduct));
@@ -1422,7 +1422,7 @@ void CFmiBetaProductDialog::OnBnClickedButtonLoadBetaProduct()
 
 void CFmiBetaProductDialog::UpdateBetaProductName()
 {
-    itsBetaProductNameU_ = CA2T(PathUtils::getRelativeStrippedFileName(itsBetaProductFullFilePath, itsBetaProductionSystem->GetBetaProductionBaseDirectory(true), NFmiBetaProductionSystem::BetaProductFileExtension()).c_str());
+    itsBetaProductNameU_ = CA2T(PathUtils::getRelativeStrippedFileName(itsBetaProductFullFilePath, itsBetaProductionSystem->GetBetaProductionBaseDirectory(), NFmiBetaProductionSystem::BetaProductFileExtension()).c_str());
     UpdateData(FALSE);
 }
 
