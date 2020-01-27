@@ -1018,10 +1018,7 @@ void InitBetaProductionSystem()
     try
     {
         BetaProduct::SetLoggerFunction(GetLogAndWarnFunction());
-        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), MacroPathSettings().LocalCacheBasePath());
-
-        if(itsBetaProductionSystem.DoCacheSyncronization())
-            FirstTimeMacroDirectoryCheck(itsBetaProductionSystem.GetBetaProductionBaseDirectory(false), itsBetaProductionSystem.GetBetaProductionBaseDirectory(true));
+        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), ControlDirectory());
     }
     catch(std::exception &e)
     {
@@ -7895,8 +7892,6 @@ void DoMacroDirectoriesSyncronization(void)
 		DoUnisonDirectorySync(itsMacroPathSettings.MacroParamPath(false), itsMacroPathSettings.MacroParamPath(true), preferRoot1, SW_HIDE, false, priorityClass);
 		DoUnisonDirectorySync(itsMacroPathSettings.SmartToolPath(false), itsMacroPathSettings.SmartToolPath(true), preferRoot1, SW_HIDE, false, priorityClass);
 		DoUnisonDirectorySync(itsMacroPathSettings.ViewMacroPath(false), itsMacroPathSettings.ViewMacroPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-        if(itsBetaProductionSystem.DoCacheSyncronization())
-            DoUnisonDirectorySync(itsBetaProductionSystem.GetBetaProductionBaseDirectory(false), itsBetaProductionSystem.GetBetaProductionBaseDirectory(true), preferRoot1, SW_HIDE, false, priorityClass);
 
 		// 4. kasvata synkronointi counteria
 		itsMacroDirectoriesSyncronizationCounter++;
