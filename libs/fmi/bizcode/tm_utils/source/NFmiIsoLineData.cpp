@@ -1,52 +1,99 @@
 
 #include "NFmiIsoLineData.h"
 
-void NFmiIsoLineData::Init(int xCount, int yCount, int theMaxAllowedIsoLineCount, int theParamFieldCount)
-{
-    // Flow-char piirrossa annetaan 2 tai useampia parametri kentti‰, joten itsVectorFloatGridData pit‰‰ alustaa tarpeeksi isoksi myˆs niit‰ tilanteita varten
-    itsVectorFloatGridData.resize(xCount * yCount * theParamFieldCount);
-	itsXNumber = xCount;
-	itsYNumber = yCount;
-	itsMaxAllowedIsoLineCount = theMaxAllowedIsoLineCount;
-	itsIsolineData = 0;
+// *********** NFmiUserGridData osio alkaa **************************
 
-	fUseIsoLines = 0;
-	fUseColorContours = 0;
-	itsTrueIsoLineCount = 0;
-	itsTrueColorContoursCount = 0;
-	fUseLabelBox = false;
-	fUseIsoLineFeathering = false;
+void NFmiUserGridData::Init(const NFmiDataMatrix<NFmiPoint>& coordinateMatrix)
+{
+	coordinateMatrix_ = coordinateMatrix;
+	auto totalSize = coordinateMatrix_.NX() * coordinateMatrix_.NY();
+	if(totalSize == 0)
+	{
+		std::string errorMessage = "Error in ";
+		errorMessage += __FUNCTION__;
+		errorMessage += ": zero size coordinateMatrix was given to do Toolmaster user-grid-draw";
+		throw std::runtime_error(errorMessage);
+	}
+	xCoordinates.resize(totalSize, kFloatMissing);
+	yCoordinates.resize(totalSize, kFloatMissing);
+
+	for(size_t yIndex = 0; yIndex < coordinateMatrix_.NY(); yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < coordinateMatrix_.NX(); xIndex++)
+		{
+			xCoordinates[0] = 0;
+		}
+	}
+}
+
+bool NFmiUserGridData::UseUserDraw() const
+{
+	return false;
+}
+
+// *********** NFmiUserGridData osio loppuu **************************
+
+
+// *********** NFmiIsoLineData osio alkaa **************************
+
+static bool IsValuematrixOk(const NFmiDataMatrix<float>& theValueMatrix)
+{
+	return (theValueMatrix.NX() * theValueMatrix.NY()) != 0;
+}
+
+bool NFmiIsoLineData::Init(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
+{
+	if(!::IsValuematrixOk(theValueMatrix))
+		return false;
+
+	BaseInitialization(theValueMatrix, 500);
+
+	for(size_t yIndex = 0; yIndex < itsYNumber; yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < itsXNumber; xIndex++)
+			itsVectorFloatGridData[yIndex * itsXNumber + xIndex] = itsIsolineData[xIndex][yIndex];
+	}
+
+	NFmiIsoLineData::GetMinAndMaxValues(itsIsolineData, itsMinValue, itsMaxValue);
+	itsIsoLineStatistics.itsMaxValue = itsMaxValue;
+	itsIsoLineStatistics.itsMinValue = itsMinValue;
+	return true;
+}
+
+void NFmiIsoLineData::GetMinAndMaxValues(const NFmiDataMatrix<float>& theMatrix, float& theMin, float& theMax)
+{
+	int nx = static_cast<int>(theMatrix.NX());
+	int ny = static_cast<int>(theMatrix.NY());
+	float tmp = 0;
+	for(int j = 0; j < ny; j++)
+	{
+		for(int i = 0; i < nx; i++)
+		{
+			tmp = theMatrix[i][j];
+			if(tmp == kFloatMissing)
+				continue;
+			if(tmp > theMax)
+				theMax = tmp;
+			if(tmp < theMin)
+				theMin = tmp;
+		}
+	}
+}
+
+void NFmiIsoLineData::BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
+{
+	*this = NFmiIsoLineData();
+	SetIsolineData(theValueMatrix);
+	itsMaxAllowedIsoLineCount = theMaxAllowedIsoLineCount;
 
 	itsIsoLineColor.resize(itsMaxAllowedIsoLineCount, 0);
 	itsIsoLineLabelColor.resize(itsMaxAllowedIsoLineCount, 0);
 	itsIsoLineStyle.resize(itsMaxAllowedIsoLineCount, 0);
 	itsIsoLineWidth.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsIsoLineAnnonationHeight.resize(itsMaxAllowedIsoLineCount, 0.f);
-	fUseCustomIsoLineClasses = false;
-	fUseCustomColorContoursClasses = false;
-	fUseSeparatorLinesBetweenColorContourClasses = false;
-	fUseIsoLineGabWithCustomContours = false;
-	itsColorIndexCount = 0;
-	itsIsoLineStep = 1.f;
-	itsColorContoursStep = 1.f;
 	itsCustomIsoLineClasses.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsCustomColorContours.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsCustomColorContoursColorIndexies.resize(itsMaxAllowedIsoLineCount, 0);
-
-	itsIsoLineSplineSmoothingFactor = 1;
-	itsIsoLineLabelDecimalsCount = 0;
-	itsIsoLineZeroClassValue = 0;
-	itsMinValue = kFloatMissing;
-	itsMaxValue = kFloatMissing;
-	fUseSingleColorsWithSimpleIsoLines = true; // yksiv‰riset 'simppelit' isoviivat
-
-	itsIsoLineStatistics.Init();
-	itsColorContoursStatistics.Init();
-	itsIsoLineDrawSettings.Init();
-	itsHatch1.Init();
-	itsHatch2.Init();
-
-	itsDefRGBRowSize = 0; // muuta t‰h‰n taulukkoon liitttyv‰‰ ei 'nollata'
 }
 
 // t‰ss‰ ei tehd‰ mit‰‰ itse datalle, vain eri piirto-optiot kopioidaan
@@ -164,3 +211,4 @@ void NFmiIsoLineData::ResizeDefRGBArray(size_t newRowSize)
 		itsDefRGBRowSize = s_DefRGBRowCapasity;
 }
 
+// *********** NFmiIsoLineData osio loppuu **************************
