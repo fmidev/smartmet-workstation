@@ -205,7 +205,7 @@ class NFmiIsoLineView : public NFmiStationView
     CRect GetTrueClientRect();
  private:
 	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
-	bool FillIsoLineGridData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData);
+	bool FillIsoLineGridDataForImagine(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData);
 	void DrawIsoLinesWithToolMaster(void);
 	void DrawIsoLines(void);
 
@@ -233,7 +233,6 @@ protected:
 	void AddLabelToSingleIsoLine(const Imagine::NFmiPathData &thePath, float theIsoLineValue, const NFmiRect &theRelativeRect, LabelBox &theLabelBox /*const LabelingInfo &theLabelInfo*/);
 	void ClearEmptyPathData(std::list<Imagine::NFmiPathData*> &thePathDataList);
 	void StoreLabel(LabelBox &theLabelBox /*, const std::string &theLabelString*/); //EL
-	void ParamGradientShade(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoords);
 
 
 	// label dataa

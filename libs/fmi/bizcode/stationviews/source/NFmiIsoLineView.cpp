@@ -1435,15 +1435,11 @@ static void DrawPolyLineList(NFmiToolBox *theGTB, list<NFmiPolyline*> &thePolyLi
 
 }
 
-bool NFmiIsoLineView::FillIsoLineGridData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData)
+bool NFmiIsoLineView::FillIsoLineGridDataForImagine(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData)
 {
-    float minValue = 3.4E+38f;
-    float maxValue = -3.4E+38f;
     if(CalcViewFloatValueMatrix(theValues, 0, 0, 0, 0) == false) // imaginella piirrolla ei ole vielä croppi optimointia
         return false;
-    NFmiStationView::GetMinAndMaxValues(theValues, minValue, maxValue);
-    theIsoLineData.itsIsoLineStatistics.itsMaxValue = maxValue;
-    theIsoLineData.itsIsoLineStatistics.itsMinValue = minValue;
+    theIsoLineData.Init(theValues);
     return true;
 }
 
@@ -1513,7 +1509,6 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
         xCount = itsInfo->Grid()->XNumber();
         yCount = itsInfo->Grid()->YNumber();
     }
-    isoLineData.Init(xCount, yCount, 500); // maksimissaan 500 eriarvoista isoviivaa suostutaan piirtämään (muuten rupeaa jo kestämäänkin liian kauan)
 
     isoLineData.itsInfo = itsInfo;
     isoLineData.itsParam = itsInfo->Param();
@@ -1523,7 +1518,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     {
         // Laitetaan tämä erilliseen blokkiin, jotta vanha maski arvo saadaan takaisin päälle niin kuin vanhallakin koodilla
         EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
-        if(FillIsoLineGridData(values, isoLineData) == false)
+        if(FillIsoLineGridDataForImagine(values, isoLineData) == false)
             return;
     }
 
@@ -2264,79 +2259,6 @@ void NFmiIsoLineView::StoreLabel(LabelBox &theLabelBox)
     itsExistingLabels.push_back(theLabelBox);
 }
 
-void NFmiIsoLineView::ParamGradientShade(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoords)
-{
-    // 15.9.04/EL
-    // KESKEN - EI TOIMI!
-    // TÄMÄ ON VAIN TESTIMETODI GRADIENTIN ESITTÄMISEKSI TOOLBOXIN KAUTTA (!)
-    // TODO: itse parametri pitäisi asettaa ...
-
-
-    NFmiDrawingEnvironment envi;
-
-    float scaler = 5;
-    int nx = static_cast<int>(theInfo->Grid()->XNumber());
-    int ny = static_cast<int>(theInfo->Grid()->YNumber());
-
-    float minVal = kMaxFloat;
-    float maxVal = kMinFloat;
-
-    NFmiStationView::GetMinAndMaxValues(theValues, minVal, maxVal);
-
-    float range = maxVal - minVal;
-
-    NFmiPoint xyPoint(kFloatMissing, kFloatMissing);
-
-    float yIncr = 1.f / (float)ny; // Pseudopixeleissä
-    float xIncr = 1.f / (float)nx; // Pseudopixeleissä
-
-    float xStart = xIncr;
-    float xEnd = 1.f - xIncr;
-
-    float yStart = yIncr;
-    float yEnd = 1.f - yIncr;
-
-    for(double y = yStart; y <= yEnd; y += yIncr)
-        for(double x = xStart; x <= xEnd; x += xIncr)
-        {
-            int xPos = boost::math::iround((x - xIncr / 2.) * nx);
-            int yPos = boost::math::iround((y - yIncr / 2.) * ny);
-
-            float dx = xIncr * nx;
-            float dy = yIncr * ny;
-
-            float unScaledX = (float)xPos / scaler;
-            float unScaledY = (float)yPos / scaler;
-
-            int unScaledI = boost::math::iround(unScaledX);
-            int unScaledJ = boost::math::iround(unScaledY);
-            float value = kFloatMissing;
-
-            value = theInfo->InterpolatedValue(itsArea->ToLatLon(theCoords[unScaledI][unScaledJ]));
-
-            // TODO: TÄHÄN GRADIENTIN LASKEMINEN NAAPUREISTA - NYT ON KÄYTÖSSÄ VAIN YKSI PISTE ...
-
-            if(value == kFloatMissing)
-                continue;
-
-            value = (value - minVal) / range;
-            NFmiColor color = NFmiColor(value, value, value);
-            envi.SetFillColor(color);
-
-            envi.SetFrameColor(NFmiColor(0, 0, 0));
-
-            xyPoint = NFmiPoint(xPos, yPos);
-            xyPoint.X(xyPoint.X() * itsToolBox->SX((long)scaler)); // 1: 1 pixel to xy point
-            xyPoint.Y(xyPoint.Y() * itsToolBox->SY((long)scaler)); // 1: 1 pixel to xy point
-
-            dx *= (float)itsToolBox->SX((long)scaler);
-            dy *= (float)itsToolBox->SY((long)scaler);
-
-            NFmiRectangle aRect(xyPoint, xyPoint + NFmiPoint(dx, dy), 0, &envi);
-            itsToolBox->Convert(&aRect);
-        }
-}
-
 void NFmiIsoLineView::DrawIsoLines(void)
 {
     auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
@@ -2522,23 +2444,5 @@ bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineDat
 
 bool NFmiIsoLineView::initializeIsoLineData(NFmiIsoLineData &theIsoLineData)
 {
-    int nx = static_cast<int>(itsIsolineValues.NX());
-    int ny = static_cast<int>(itsIsolineValues.NY());
-    if(nx == 0 || ny == 0)
-        return false;
-
-    theIsoLineData.Init(nx, ny, 500); // 500 on maksimi määrä mitä eri arvosia isoviivoja suostutaan piirtämään
-    for(int j = 0; j < ny; j++)
-    {
-        for(int i = 0; i < nx; i++)
-            theIsoLineData.itsVectorFloatGridData[j * nx + i] = itsIsolineValues[i][j];
-    }
-
-    float minValue = 3.4E+38f;
-    float maxValue = -3.4E+38f;
-    NFmiStationView::GetMinAndMaxValues(itsIsolineValues, minValue, maxValue);
-    theIsoLineData.itsIsoLineStatistics.itsMaxValue = maxValue;
-    theIsoLineData.itsIsoLineStatistics.itsMinValue = minValue;
-    theIsoLineData.SetIsolineData(itsIsolineValues);
-    return true;
+    return theIsoLineData.Init(itsIsolineValues);
 }
