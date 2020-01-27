@@ -1081,7 +1081,10 @@ bool NFmiCrossSectionView::DeleteTransparencyBitmap()
 void NFmiCrossSectionView::DrawCrossSection(void)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw layer");
-    itsIsolineValues = kFloatMissing; // tyhjennetään aina ensin data-setti ennen niiden laskua
+	if(fGetCurrentDataFromQ2Server)
+		return ; // ei vielä q2server tukea poikkileikkausnäytössä!!!!
+
+	itsIsolineValues = kFloatMissing; // tyhjennetään aina ensin data-setti ennen niiden laskua
 	fDoCrossSectionDifferenceData = false;
 	NFmiIsoLineData isoLineData;
 	isoLineData.itsInfo = this->itsInfo;
@@ -1100,21 +1103,6 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 
 	itsPressures = MakePressureVector(usedVerticalPointCount, oldVerticalPointCount);
 
-	int yCount = static_cast<int>(itsPressures.size());
-	bool obsForMode = crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor;
-	bool useMinorPointCount = (crossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kTime) && obsForMode == false;
-	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
-		useMinorPointCount = true;
-	int xCount = static_cast<int>(useMinorPointCount ? GetMinorPoints().size() : GetUsedTimeBagForDataCalculations().GetSize());
-    if(itsInfo->DataType() == NFmiInfoData::kCrossSectionMacroParam && crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kTime)
-        xCount = static_cast<int>(MakeMacroParamTimeModeTimeVector().size()); // Jouduin lisäämään tämä poikkeuksen tähän sekasotkuun (aika-moodi + macroParam => lasketaan aikamäärä erikseen)
-	if(xCount == 0 || yCount == 0)
-		return ;
-	isoLineData.Init(xCount, yCount, 500);
-
-	if(fGetCurrentDataFromQ2Server)
-		return ; // ei vielä q2server tukea poikkileikkausnäytössä!!!!
-
     EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
 	// Kun käytetään imagine piirtoa,ei dataa talleteta isolinedata-rakenteisiin
 	// kuten toolmaster-piirrossa, koska imagine käyttää erilaista data rakennetta (matriisia)
@@ -1130,9 +1118,9 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 		FillTimeCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
 	else
 		FillCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
-	isoLineData.SetIsolineData(itsIsolineValues);
+
+	isoLineData.Init(itsIsolineValues);
 	Imagine::NFmiDataHints helper(itsIsolineValues);
-	NFmiStationView::GetMinAndMaxValues(itsIsolineValues, isoLineData.itsIsoLineStatistics.itsMinValue, isoLineData.itsIsoLineStatistics.itsMaxValue);
 
 	// HUOM! TÄMÄ ON VIRITYS!!!! -alkaa
 	// Tuulensuunta-parametri on saatettu laittaa suuntanuoli asetukseen ja se toimiikiin hyvin karttanäytöllä. 
