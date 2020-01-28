@@ -1362,6 +1362,9 @@ static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
 
 static bool DataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactor)
 {
+    if(theOrigIsoLineData.UseUserDraw())
+        return false; // Epäsäännöllisen hilan piirrossa ei ainakaan vielä tueta harvennusta
+
     if(::IsIsolinesDrawn(theOrigIsoLineData))
     {
         const NFmiPoint zeroChangeFactor(1, 1);
@@ -1373,7 +1376,7 @@ static bool DataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, cons
     return false;
 }
 
-static void CalcDownSizedMatrix(NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, FmiParameterName theParamId)
+static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, FmiParameterName theParamId)
 {
     double xDiff = 1.0 / (theDownSizedData.NX() - 1.0);
     double yDiff = 1.0 / (theDownSizedData.NY() - 1.0);
