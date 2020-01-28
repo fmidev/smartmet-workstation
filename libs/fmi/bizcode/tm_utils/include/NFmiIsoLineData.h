@@ -89,8 +89,11 @@ public:
 	bool Init(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount = NFmiIsoLineData::DefaultMaxAllowedIsoLineCount);
 	void InitDrawOptions(const NFmiIsoLineData& theOther);
 	float InterpolatedValue(const NFmiPoint& thePoint);
+	void InitUserGridCoordinateData(const NFmiDataMatrix<NFmiPoint>& coordinateMatrix);
+	bool UseUserDraw() const;
+	static size_t Matrix2ToolmasterIndex(size_t gridSizeX, size_t yIndex, size_t xIndex);
 
-	static void GetMinAndMaxValues(const NFmiDataMatrix<float>& theMatrix, float& theMin, float& theMax);
+	void GetMinAndMaxValues(float& theMinOut, float& theMaxOut) const;
 	// Kuinka monta eriarvoista isoviivaa laitetaan laskuin oletuksena. 
 	// Mit‰ isompi luku, sit‰ kauemmin voi tietyiss‰ tilanteissa 'mustan mˆssˆn' piirto kest‰‰ visualisoinneissa.
 	// T‰ll‰ siis yritet‰‰n est‰‰ ett‰ v‰‰rin asetetuilla piirtoasetuksilla kone jumittaa mahdottoman kauan ja piirt‰‰ ruudulle tuhansittain isoviivoja vieriviereen.
@@ -137,8 +140,8 @@ public:
 	int itsIsoLineLabelDecimalsCount = 0; // kuinka monta desimaalia k‰ytet‰‰n
 	float itsIsoLineZeroClassValue = 0; // jos steppaavat isoviivat, mink‰ arvon kautta isoviivat menev‰t
 	float itsIsoLineStartClassValue = 0; // jos steppaavat isoviivat, t‰m‰ arvo pit‰‰ laskea, t‰st‰ arvosta alkaa steputus
-	float itsMinValue = 3.4E+38f;; // colorcontour alku arvo (kun k‰ytet‰‰n tasa steppi‰)
-	float itsMaxValue = -3.4E+38f;; // colorcontour loppu arvo (kun k‰ytet‰‰n tasa steppi‰)
+	float itsMinValue = 3.4E+38f; // colorcontour alku arvo (kun k‰ytet‰‰n tasa steppi‰)
+	float itsMaxValue = -3.4E+38f; // colorcontour loppu arvo (kun k‰ytet‰‰n tasa steppi‰)
 	double itsIsolineMinLengthFactor = 1;
 
 	NFmiIsoLineStatistics itsIsoLineStatistics;
@@ -153,6 +156,7 @@ public:
 	float itsDefRGB[s_DefRGBRowCapasity][s_DefRGBColumnCapasity];
 	size_t itsDefRGBRowSize = 0; // T‰ss‰ on todellinen v‰ri taulu lukum‰‰r‰
 	Matrix3D<std::pair<int, COLORREF> >* itsUsedColorsCube = nullptr; // ei omista, ei tuhoa
+	NFmiUserGridData itsUserGridCoordinateData;
 private:
 	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount);
 };

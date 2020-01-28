@@ -16,12 +16,16 @@ void NFmiUserGridData::Init(const NFmiDataMatrix<NFmiPoint>& coordinateMatrix)
 	}
 	xCoordinates.resize(totalSize, kFloatMissing);
 	yCoordinates.resize(totalSize, kFloatMissing);
+	auto gridSizeX = coordinateMatrix_.NX();
 
 	for(size_t yIndex = 0; yIndex < coordinateMatrix_.NY(); yIndex++)
 	{
-		for(size_t xIndex = 0; xIndex < coordinateMatrix_.NX(); xIndex++)
+		for(size_t xIndex = 0; xIndex < gridSizeX; xIndex++)
 		{
-			xCoordinates[0] = 0;
+			const auto &coordinate = coordinateMatrix_[xIndex][yIndex];
+			auto toolmasterIndex = NFmiIsoLineData::Matrix2ToolmasterIndex(gridSizeX, yIndex, xIndex);
+			xCoordinates[toolmasterIndex] = static_cast<float>(coordinate.X());
+			yCoordinates[toolmasterIndex] = static_cast<float>(coordinate.Y());
 		}
 	}
 }
@@ -41,6 +45,11 @@ static bool IsValuematrixOk(const NFmiDataMatrix<float>& theValueMatrix)
 	return (theValueMatrix.NX() * theValueMatrix.NY()) != 0;
 }
 
+size_t NFmiIsoLineData::Matrix2ToolmasterIndex(size_t gridSizeX, size_t yIndex, size_t xIndex)
+{
+	return ((yIndex * gridSizeX) + xIndex);
+}
+
 bool NFmiIsoLineData::Init(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
 {
 	if(!::IsValuematrixOk(theValueMatrix))
@@ -51,32 +60,27 @@ bool NFmiIsoLineData::Init(const NFmiDataMatrix<float>& theValueMatrix, int theM
 	for(size_t yIndex = 0; yIndex < itsYNumber; yIndex++)
 	{
 		for(size_t xIndex = 0; xIndex < itsXNumber; xIndex++)
-			itsVectorFloatGridData[yIndex * itsXNumber + xIndex] = itsIsolineData[xIndex][yIndex];
+			itsVectorFloatGridData[Matrix2ToolmasterIndex(itsXNumber, yIndex, xIndex)] = itsIsolineData[xIndex][yIndex];
 	}
 
-	NFmiIsoLineData::GetMinAndMaxValues(itsIsolineData, itsMinValue, itsMaxValue);
+	GetMinAndMaxValues(itsMinValue, itsMaxValue);
 	itsIsoLineStatistics.itsMaxValue = itsMaxValue;
 	itsIsoLineStatistics.itsMinValue = itsMinValue;
 	return true;
 }
 
-void NFmiIsoLineData::GetMinAndMaxValues(const NFmiDataMatrix<float>& theMatrix, float& theMin, float& theMax)
+void NFmiIsoLineData::GetMinAndMaxValues(float& theMinOut, float& theMaxOut) const
 {
-	int nx = static_cast<int>(theMatrix.NX());
-	int ny = static_cast<int>(theMatrix.NY());
-	float tmp = 0;
-	for(int j = 0; j < ny; j++)
+	theMinOut = 3.4E+38f;
+	theMaxOut = -3.4E+38f;
+	for(auto value : itsVectorFloatGridData)
 	{
-		for(int i = 0; i < nx; i++)
-		{
-			tmp = theMatrix[i][j];
-			if(tmp == kFloatMissing)
-				continue;
-			if(tmp > theMax)
-				theMax = tmp;
-			if(tmp < theMin)
-				theMin = tmp;
-		}
+		if(value == kFloatMissing)
+			continue;
+		if(value > theMaxOut)
+			theMaxOut = value;
+		if(value < theMinOut)
+			theMinOut = value;
 	}
 }
 
@@ -146,6 +150,16 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsUsedColorsCube = theOther.itsUsedColorsCube;
     itsIsoLineBoxFillColorIndex = theOther.itsIsoLineBoxFillColorIndex;
 	itsIsolineMinLengthFactor = theOther.itsIsolineMinLengthFactor;
+}
+
+void NFmiIsoLineData::InitUserGridCoordinateData(const NFmiDataMatrix<NFmiPoint>& coordinateMatrix)
+{
+	itsUserGridCoordinateData.Init(coordinateMatrix);
+}
+
+bool NFmiIsoLineData::UseUserDraw() const
+{
+	return itsUserGridCoordinateData.UseUserDraw();
 }
 
 void IsoLineStatistics_::Init(void)
