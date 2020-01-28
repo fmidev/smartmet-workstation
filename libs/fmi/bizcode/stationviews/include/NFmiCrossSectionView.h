@@ -132,8 +132,10 @@ private:
     bool FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId);
     void FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
     bool FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId);
-    void FillCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-    bool FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId);
+	void FillCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
+	void FillCrossSectionData2(NFmiIsoLineData &theIsoLineData);
+	NFmiDataMatrix<NFmiPoint> CalcRelativeCoordinatesFromPressureMatrix(const NFmiDataMatrix<float>& pressureValues) const;
+	bool FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId);
 	void FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDataMatrix<NFmiPoint> &theCoordinates, checkedVector<float> &thePressures);
 	void CalculateViewRects(void);
 	NFmiRect CalcDataViewRect(void);
@@ -163,8 +165,9 @@ private:
 	int CalcHorizontalPointCount(void);
 	double Column2x(int theColumn);
 
-	double p2y(double p);
-	double y2p(double y);
+	double p2y(double p) const;
+	double p2y(const NFmiRect &usedDataRect, double p) const;
+	double y2p(double y) const;
 
 	double itsLowerEndOfPressureAxis;
 	double itsUpperEndOfPressureAxis;
