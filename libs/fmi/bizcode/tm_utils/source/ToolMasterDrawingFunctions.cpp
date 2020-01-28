@@ -502,7 +502,10 @@ static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
             ::CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(aMin, aMax, classCount, defaultTableColorIndices, 5, 3, colorWidths, theIsoLineData);
         }
     }
-    if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
+
+    if(theIsoLineData.UseUserDraw())
+        XuContourUserDraw(theIsoLineData.itsUserGridCoordinateData.xCoordinates.data(), theIsoLineData.itsUserGridCoordinateData.yCoordinates.data(), theIsoLineData.itsVectorFloatGridData.data(), theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
+    else if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
         XuContourQuickDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
     else
         XuContourDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
