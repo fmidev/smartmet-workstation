@@ -296,6 +296,11 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
   float FastPressureLevelValue(double xInd, double yInd, double tInd, double pInd);
   float FastPressureLevelValue(double xInd, double yInd, double pInd);
   float FastPressureLevelValue(double xInd, double yInd);
+  // Täyttää annetun matriisin halutun ajan ja parametrin poikkileikkaus datalla.
+  // Matriisi on poikkileikkaus pisteiden kokoinen ja data täytetään joka leveliltä.
+  static NFmiDataMatrix<float> CalcCrossSectionLeveldata(NFmiFastQueryInfo &theInfo,
+                                                         const checkedVector<NFmiPoint> &thePoints,
+                                                         const NFmiMetTime &theTime);
 
   void CrossSectionValues(NFmiDataMatrix<float> &theValues,
                           const NFmiMetTime &theInterpolatedTime,

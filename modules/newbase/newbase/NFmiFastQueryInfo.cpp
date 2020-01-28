@@ -3889,7 +3889,8 @@ static float GetValueAtPressure(NFmiDataMatrix<float> &theParValues,
 
 // Täyttää annetun matriisin halutun ajan ja parametrin poikkileikkaus datalla.
 // Matriisi on poikkileikkaus pisteiden kokoinen ja data täytetään joka leveliltä.
-static NFmiDataMatrix<float> CalcCrossSectionLeveldata(NFmiFastQueryInfo &theInfo,
+NFmiDataMatrix<float> NFmiFastQueryInfo::CalcCrossSectionLeveldata(
+    NFmiFastQueryInfo &theInfo,
                                                        const checkedVector<NFmiPoint> &thePoints,
                                                        const NFmiMetTime &theTime)
 {
