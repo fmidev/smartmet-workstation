@@ -32,7 +32,7 @@ void NFmiUserGridData::Init(const NFmiDataMatrix<NFmiPoint>& coordinateMatrix)
 
 bool NFmiUserGridData::UseUserDraw() const
 {
-	return false;
+	return !xCoordinates.empty() && !yCoordinates.empty();
 }
 
 // *********** NFmiUserGridData osio loppuu **************************
@@ -86,7 +86,7 @@ void NFmiIsoLineData::GetMinAndMaxValues(float& theMinOut, float& theMaxOut) con
 
 void NFmiIsoLineData::BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
 {
-	*this = NFmiIsoLineData();
+	DoBaseInitializationReset();
 	SetIsolineData(theValueMatrix);
 	itsMaxAllowedIsoLineCount = theMaxAllowedIsoLineCount;
 
@@ -98,6 +98,17 @@ void NFmiIsoLineData::BaseInitialization(const NFmiDataMatrix<float>& theValueMa
 	itsCustomIsoLineClasses.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsCustomColorContours.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsCustomColorContoursColorIndexies.resize(itsMaxAllowedIsoLineCount, 0);
+}
+
+// T‰m‰ resetoi kaiken muun paitsi itsInfo, itsParam, itsTime, itsIsolineMinLengthFactor dataosat.
+void NFmiIsoLineData::DoBaseInitializationReset()
+{
+	NFmiIsoLineData tmpIsoLineData;
+	tmpIsoLineData.itsInfo = this->itsInfo;
+	tmpIsoLineData.itsTime = this->itsTime;
+	tmpIsoLineData.itsParam = this->itsParam;
+	tmpIsoLineData.itsIsolineMinLengthFactor = this->itsIsolineMinLengthFactor;
+	*this = tmpIsoLineData;
 }
 
 // t‰ss‰ ei tehd‰ mit‰‰ itse datalle, vain eri piirto-optiot kopioidaan

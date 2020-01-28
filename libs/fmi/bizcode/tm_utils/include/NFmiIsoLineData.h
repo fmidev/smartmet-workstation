@@ -159,5 +159,6 @@ public:
 	NFmiUserGridData itsUserGridCoordinateData;
 private:
 	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount);
+	void DoBaseInitializationReset();
 };
 
