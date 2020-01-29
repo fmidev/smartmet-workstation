@@ -1879,8 +1879,7 @@ void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues
         theIsoLineData.itsInfo->CrossSectionValuesLogP(theValues, theIsoLineData.itsTime, thePressures, points);
     }
 
-	if(IsContourDrawUsed(itsDrawParam))
-		FillCrossSectionData2(theIsoLineData);
+    FillCrossSectionUserDrawData(theIsoLineData);
 }
 
 // Tämä funktio laskee koordinaatit annetun paine-matriisin arvoista (y-akseli), ja matriisin sarakkeiden indekseistä x-koordinaatin.
@@ -1909,17 +1908,30 @@ NFmiDataMatrix<NFmiPoint> NFmiCrossSectionView::CalcRelativeCoordinatesFromPress
 	return coordinates;
 }
 
-void NFmiCrossSectionView::FillCrossSectionData2(NFmiIsoLineData& theIsoLineData)
+void NFmiCrossSectionView::FillCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData)
 {
-	const auto& latlonPoints = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
 	auto& usedInfo = *theIsoLineData.itsInfo;
-	auto values = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
-	theIsoLineData.Init(itsIsolineValues);
-	NFmiFastInfoUtils::QueryInfoParamStateRestorer queryInfoParamStateRestorer(usedInfo);
-	usedInfo.Param(kFmiPressure);
-	auto pressureValues = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
-	auto coordinates = CalcRelativeCoordinatesFromPressureMatrix(pressureValues);
-	theIsoLineData.InitContourUserDrawData(values, coordinates);
+	if(::IsContourDrawUsed(itsDrawParam) && usedInfo.PressureDataAvailable())
+	{
+		const auto& latlonPoints = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
+		auto values = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
+		theIsoLineData.Init(itsIsolineValues);
+		NFmiFastInfoUtils::QueryInfoParamStateRestorer queryInfoParamStateRestorer(usedInfo);
+		usedInfo.Param(kFmiPressure);
+		auto pressureValues = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
+		if(!usedInfo.PressureValueAvailable() && usedInfo.PressureLevelDataAvailable())
+		{
+			const auto &pressureLevelValues = usedInfo.PressureLevelDataPressures();
+			checkedVector<float> pressureLevelValuesBS(pressureLevelValues.begin(), pressureLevelValues.end());
+			for(size_t pressureColumnIndex = 0; pressureColumnIndex < pressureValues.NX(); pressureColumnIndex++)
+			{
+				auto &pressureColumn = pressureValues[pressureColumnIndex];
+				pressureColumn = pressureLevelValuesBS;
+			}
+		}
+		auto coordinates = CalcRelativeCoordinatesFromPressureMatrix(pressureValues);
+		theIsoLineData.InitContourUserDrawData(values, coordinates);
+	}
 }
 
 static bool DoTimeBagSpacingOut(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
