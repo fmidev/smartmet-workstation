@@ -536,6 +536,7 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
   float GetCurrentLevelPressure(void);
   float GetCurrentLevelPressure(const NFmiPoint &theLatlon);
   float GetCurrentLevelPressure(const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
+  const std::vector<float> &PressureLevelDataPressures() const  {    return itsPressureLevelDataPressures;  }
 
  protected:
   size_t Index(void) const;
