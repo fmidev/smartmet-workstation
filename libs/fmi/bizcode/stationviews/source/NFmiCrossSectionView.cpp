@@ -1853,11 +1853,14 @@ void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theVa
     }
 }
 
-bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId)
+bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData)
 {
     const auto &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
     const auto &info = theIsoLineData.itsInfo;
-    return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->CrossSectionValuesLogP(valuesOut, theIsoLineData.itsTime, thePressures, points); });
+	if(doUserDrawData)
+		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float>& valuesOut) { valuesOut = NFmiFastQueryInfo::CalcCrossSectionLeveldata(*info, points, theIsoLineData.itsTime); });
+	else
+		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->CrossSectionValuesLogP(valuesOut, theIsoLineData.itsTime, thePressures, points); });
 }
 
 static bool IsContourDrawUsed(const boost::shared_ptr<NFmiDrawParam> &drawParam)
@@ -1872,7 +1875,7 @@ void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues
     // matriisin y-akselin alapäässä
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
-        FillCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, wantedParamId);
+        FillCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, wantedParamId, false);
     else
     {
         const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
@@ -1914,8 +1917,15 @@ void NFmiCrossSectionView::FillCrossSectionUserDrawData(NFmiIsoLineData& theIsoL
 	if(::IsContourDrawUsed(itsDrawParam) && usedInfo.PressureDataAvailable())
 	{
 		const auto& latlonPoints = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
-		auto values = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
-		theIsoLineData.Init(itsIsolineValues);
+		NFmiDataMatrix<float> values;
+		auto wantedParamId = itsDrawParam->Param().GetParamIdent();
+		if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+		{
+			checkedVector<float> fakePressures;
+			FillCrossSectionDataForMetaWindParam(values, theIsoLineData, fakePressures, wantedParamId, true);
+		}
+		else
+			values = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
 		NFmiFastInfoUtils::QueryInfoParamStateRestorer queryInfoParamStateRestorer(usedInfo);
 		usedInfo.Param(kFmiPressure);
 		auto pressureValues = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
