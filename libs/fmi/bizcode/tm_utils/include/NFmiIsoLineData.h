@@ -12,28 +12,6 @@
 
 class NFmiFastQueryInfo;
 
-typedef struct IsoLineStatistics_
-{
-	void Init(void);
-
-	float itsMissingValue;
-	float itsMinValue;
-	float itsMinClassValue; // mik‰ on alin luokka arvo
-	float itsMaxValue;
-	float itsMaxClassValue; // mik‰ on ylin luokka arvo
-	float itsMeanValue; // tarvitaanko?
-}NFmiIsoLineStatistics;
-
-typedef struct IsoLineDrawingSettings_
-{
-	void Init(void);
-
-	float itsStartValue;
-	float itsEndValue;
-	float itsIsoLineStep;
-	int itsNumberOfIsoLines;
-}NFmiIsoLineDrawingSettings;
-
 class NFmiHatchingSettings
 {
 public:
@@ -61,19 +39,32 @@ public:
 const size_t s_DefRGBRowCapasity = 100;
 const size_t s_DefRGBColumnCapasity = 4;
 
-// T‰m‰ luokka pit‰‰ sis‰ll‰‰n matriisin koordinaateista (suhteelliset tms.), jotka eiv‰t ole normi 
-// suorakulmaisen hilan pisteet. Lis‰ksi x- ja y-koordinaateille on vektorit, joihin em. matriisi
-// on purettuna siten kuin Toolmaster x/y-koordinaatit haluaa XuContourUserDraw ja XuIsolineUserDraw funktioille.
-// Lis‰ksi on UseUserDraw -funktio, jolla voidaan kysy‰ ett‰ onko user-draw datat k‰ytˆss‰ vai ei.
-class NFmiUserGridData
+// NFmiContourUserDrawData luokka pit‰‰ sis‰ll‰‰n contour-user-draw piirron dataa:
+// 1. matriisin koordinaateista (suhteelliset tms.), jotka eiv‰t ole normi suorakulmaisen hilan pisteet. 
+// 2. Niihin liittyv‰t x- ja y-koordinaateille on vektorit, joihin em. matriisi on purettuna siten kuin Toolmaster x/y-koordinaatit haluaa XuContourUserDraw funktiolle.
+// 3. Em. koordinaatteihin liittyv‰ value matriisi, jota siis k‰ytet‰‰n vain contour piirrrossa. 
+// Jos k‰ytˆss‰ isoviiva+contour yhdistelm‰, pit‰‰ isoviivoille olla oma suorakulmainen matriisi NFmiIsoLineData luokassa.
+// Lis‰ksi on UseUserDraw -metodi, jolla voidaan kysy‰ ett‰ onko user-draw datat k‰ytˆss‰ vai ei.
+class NFmiContourUserDrawData
 {
 public:
-	void Init(const NFmiDataMatrix<NFmiPoint> &coordinateMatrix);
+	void Init(const NFmiDataMatrix<float>& valueMatrix, const NFmiDataMatrix<NFmiPoint> &coordinateMatrix);
 	bool UseUserDraw() const;
 
+	int itsXNumber = 0;
+	int itsYNumber = 0;
 	NFmiDataMatrix<NFmiPoint> coordinateMatrix_;
 	std::vector<float> xCoordinates;
 	std::vector<float> yCoordinates;
+
+	// value matriisi
+	NFmiDataMatrix<float> itsUserDrawValuesMatrix;
+	// Vektori johon on sijoitettu kaikki matriisin arvot siin‰ j‰rjestyksess‰ kuin toolmaster userDraw funktio ne haluaa
+	checkedVector<float> itsUserDrawValues; 
+
+	// UserDraw value matriisin min/max arvot
+	float itsDataMinValue = 3.4E+38f;
+	float itsDataMaxValue = -3.4E+38f;
 };
 
 class NFmiIsoLineData
@@ -89,11 +80,10 @@ public:
 	bool Init(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount = NFmiIsoLineData::DefaultMaxAllowedIsoLineCount);
 	void InitDrawOptions(const NFmiIsoLineData& theOther);
 	float InterpolatedValue(const NFmiPoint& thePoint);
-	void InitUserGridCoordinateData(const NFmiDataMatrix<NFmiPoint>& coordinateMatrix);
-	bool UseUserDraw() const;
-	static size_t Matrix2ToolmasterIndex(size_t gridSizeX, size_t yIndex, size_t xIndex);
+	void InitContourUserDrawData(const NFmiDataMatrix<float>& valueMatrix, const NFmiDataMatrix<NFmiPoint>& coordinateMatrix);
+	bool UseContourUserDraw() const;
+	bool UseContourDraw() const;
 
-	void GetMinAndMaxValues(float& theMinOut, float& theMaxOut) const;
 	// Kuinka monta eriarvoista isoviivaa laitetaan laskuin oletuksena. 
 	// Mit‰ isompi luku, sit‰ kauemmin voi tietyiss‰ tilanteissa 'mustan mˆssˆn' piirto kest‰‰ visualisoinneissa.
 	// T‰ll‰ siis yritet‰‰n est‰‰ ett‰ v‰‰rin asetetuilla piirtoasetuksilla kone jumittaa mahdottoman kauan ja piirt‰‰ ruudulle tuhansittain isoviivoja vieriviereen.
@@ -140,13 +130,13 @@ public:
 	int itsIsoLineLabelDecimalsCount = 0; // kuinka monta desimaalia k‰ytet‰‰n
 	float itsIsoLineZeroClassValue = 0; // jos steppaavat isoviivat, mink‰ arvon kautta isoviivat menev‰t
 	float itsIsoLineStartClassValue = 0; // jos steppaavat isoviivat, t‰m‰ arvo pit‰‰ laskea, t‰st‰ arvosta alkaa steputus
-	float itsMinValue = 3.4E+38f; // colorcontour alku arvo (kun k‰ytet‰‰n tasa steppi‰)
-	float itsMaxValue = -3.4E+38f; // colorcontour loppu arvo (kun k‰ytet‰‰n tasa steppi‰)
+	// itsIsolineData matriisin min/max arvot
+	float itsDataMinValue = 3.4E+38f;
+	float itsDataMaxValue = -3.4E+38f;
+	// itsIsolineData matriisin min/max arvot
+	float itsClassMinValue = 0;
+	float itsClassMaxValue = 0;
 	double itsIsolineMinLengthFactor = 1;
-
-	NFmiIsoLineStatistics itsIsoLineStatistics;
-	NFmiIsoLineStatistics itsColorContoursStatistics;
-	NFmiIsoLineDrawingSettings itsIsoLineDrawSettings;
 
 	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
 
@@ -156,7 +146,7 @@ public:
 	float itsDefRGB[s_DefRGBRowCapasity][s_DefRGBColumnCapasity];
 	size_t itsDefRGBRowSize = 0; // T‰ss‰ on todellinen v‰ri taulu lukum‰‰r‰
 	Matrix3D<std::pair<int, COLORREF> >* itsUsedColorsCube = nullptr; // ei omista, ei tuhoa
-	NFmiUserGridData itsUserGridCoordinateData;
+	NFmiContourUserDrawData itsContourUserDrawData;
 private:
 	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount);
 	void DoBaseInitializationReset();

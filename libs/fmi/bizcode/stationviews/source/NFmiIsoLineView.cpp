@@ -801,10 +801,10 @@ static float WindAngleToToolMasterAngle(float windAngle)
 static void SetColorContourLimits(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData)
 {
     // asetetaan ainakin toistaiseksi luokkien ala, keski ja yl‰rajat customcontourtauluun
-    theIsoLineData->itsMinValue = theIsoLineData->itsCustomColorContours[0] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeLowValue());
+    theIsoLineData->itsClassMinValue = theIsoLineData->itsCustomColorContours[0] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeLowValue());
     theIsoLineData->itsCustomColorContours[1] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeMidValue());
     theIsoLineData->itsCustomColorContours[2] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeHighValue());
-    theIsoLineData->itsMaxValue = theIsoLineData->itsCustomColorContours[3] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeHigh2Value()) + theIsoLineData->itsColorContoursStep;
+    theIsoLineData->itsClassMaxValue = theIsoLineData->itsCustomColorContours[3] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeHigh2Value()) + theIsoLineData->itsColorContoursStep;
 }
 
 bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
@@ -812,7 +812,7 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
     if(!(theDrawParam && theIsoLineData))
         return false;
 
-    if(theIsoLineData->itsIsoLineStatistics.itsMinValue == kFloatMissing || theIsoLineData->itsIsoLineStatistics.itsMaxValue == kFloatMissing)
+    if(theIsoLineData->itsDataMinValue == kFloatMissing || theIsoLineData->itsDataMaxValue == kFloatMissing)
         return false;
 
     auto viewType = theDrawParam->GetViewType(fStationData);
@@ -911,9 +911,9 @@ void NFmiIsoLineView::FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam
     if(theIsoLineData->fUseIsoLineGabWithCustomContours)
     {
         theIsoLineData->itsColorContoursStep = static_cast<float>(theDrawParam->ContourGab());
-        theIsoLineData->itsMinValue = theIsoLineData->itsCustomColorContours[0] - theIsoLineData->itsColorContoursStep;
-        theIsoLineData->itsMaxValue = theIsoLineData->itsCustomColorContours[(size > 1) ? size - 1 : 0] + theIsoLineData->itsColorContoursStep;
-        int colorContourCount = static_cast<int>(((theIsoLineData->itsMaxValue - theIsoLineData->itsMinValue) / theIsoLineData->itsColorContoursStep) - 1);
+        theIsoLineData->itsClassMinValue = theIsoLineData->itsCustomColorContours[0] - theIsoLineData->itsColorContoursStep;
+        theIsoLineData->itsClassMaxValue = theIsoLineData->itsCustomColorContours[(size > 1) ? size - 1 : 0] + theIsoLineData->itsColorContoursStep;
+        int colorContourCount = static_cast<int>(((theIsoLineData->itsClassMaxValue - theIsoLineData->itsClassMinValue) / theIsoLineData->itsColorContoursStep) - 1);
         theIsoLineData->itsTrueColorContoursCount = colorContourCount;
         theIsoLineData->itsTrueIsoLineCount = totalSize; // t‰ss‰ on tallessa originaali luokkien oikea lukum‰‰r‰ kun steppi contourit ja l‰pin‰kyvi‰ v‰rej‰ mukana
         if(::IsTransparencyColorUsed(colors, colorIndexiesSize, 2))
@@ -964,8 +964,8 @@ void NFmiIsoLineView::FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam
     int stepCount = 0;
     float startValue = 0;
     ::CountRealStepsAndStart(theIsoLineData->itsIsoLineZeroClassValue, theIsoLineData->itsColorContoursStep,
-        theIsoLineData->itsIsoLineStatistics.itsMinValue,
-        theIsoLineData->itsIsoLineStatistics.itsMaxValue,
+        theIsoLineData->itsDataMinValue,
+        theIsoLineData->itsDataMaxValue,
         theIsoLineData->itsMaxAllowedIsoLineCount, stepCount, startValue);
     theIsoLineData->itsIsoLineStartClassValue = startValue; // t‰ss‰ ei voi v‰hent‰‰ gToolMasterContourLimitChangeValue:ta, koska t‰llˆin 0:sta tulee -0!!!
 
@@ -999,8 +999,8 @@ void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &th
     theIsoLineData->fUseCustomIsoLineClasses = false;
     float zeroValue = theIsoLineData->itsIsoLineZeroClassValue = theDrawParam->SimpleIsoLineZeroValue();
     float step = theIsoLineData->itsIsoLineStep = static_cast<float>(theDrawParam->IsoLineGab());
-    float startValue = zeroValue + ((int(theIsoLineData->itsIsoLineStatistics.itsMinValue / step) - 0) * step);
-    float endValue = zeroValue + ((int(theIsoLineData->itsIsoLineStatistics.itsMaxValue / step) + 1) * step);
+    float startValue = zeroValue + ((int(theIsoLineData->itsDataMinValue / step) - 0) * step);
+    float endValue = zeroValue + ((int(theIsoLineData->itsDataMaxValue / step) + 1) * step);
     int stepCount = static_cast<int>(((endValue - startValue) / step) + 1);
     if(stepCount > theIsoLineData->itsMaxAllowedIsoLineCount) // rajoitetaan hieman isoviivojen m‰‰r‰‰
         stepCount = theIsoLineData->itsMaxAllowedIsoLineCount;
@@ -1680,7 +1680,7 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
     float currentIsoLineValue = theIsoLineData.itsIsoLineStartClassValue;
     int i = 0;
-    for(; currentIsoLineValue < theIsoLineData.itsIsoLineStatistics.itsMaxValue; currentIsoLineValue += theIsoLineData.itsIsoLineStep)
+    for(; currentIsoLineValue < theIsoLineData.itsDataMaxValue; currentIsoLineValue += theIsoLineData.itsIsoLineStep)
     {
         if(i >= theIsoLineData.itsMaxAllowedIsoLineCount) // ettei j‰‰ iki looppiin
             break;
