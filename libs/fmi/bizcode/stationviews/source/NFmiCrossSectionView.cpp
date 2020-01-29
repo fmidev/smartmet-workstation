@@ -1138,10 +1138,9 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kTime)
 		FillTimeCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
 	else
-		FillCrossSectionData2(isoLineData);
-//	FillCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
+        FillCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
 
-//	isoLineData.Init(itsIsolineValues);
+	isoLineData.Init(itsIsolineValues);
 	Imagine::NFmiDataHints helper(itsIsolineValues);
 
 	// HUOM! TÄMÄ ON VIRITYS!!!! -alkaa
@@ -1165,25 +1164,26 @@ void NFmiCrossSectionView::DrawCrossSection(void)
             if(IsToolMasterAvailable())
                 FillIsoLineDataForToolMaster(itsIsolineValues, isoLineData);
 
-            //NFmiDataMatrix<NFmiPoint> koordinaatit;
-            //FillXYMatrix(isoLineData, koordinaatit, itsPressures);
-            //FillMainPointXYInfo(koordinaatit);
+            NFmiDataMatrix<NFmiPoint> koordinaatit;
+            FillXYMatrix(isoLineData, koordinaatit, itsPressures);
+            FillMainPointXYInfo(koordinaatit);
 
-            //if(isoLineData.itsParam.GetParamIdent() == kFmiWindVectorMS)
-            //    DrawCrosssectionWindVectors(isoLineData, koordinaatit);
-            //else
-            //{
-            //    if(!IsToolMasterAvailable())
-            //        DrawCrosssectionWithImagine(isoLineData, itsIsolineValues, helper, koordinaatit);
-            //    else
+            if(isoLineData.itsParam.GetParamIdent() == kFmiWindVectorMS)
+                DrawCrosssectionWindVectors(isoLineData, koordinaatit);
+            else
+            {
+                if(!IsToolMasterAvailable())
+                    DrawCrosssectionWithImagine(isoLineData, itsIsolineValues, helper, koordinaatit);
+                else
                     DrawCrosssectionWithToolMaster(isoLineData);
-            //}
-            //RestoreUpDifferenceDrawing(itsDrawParam);
+            }
+			if(fDoCrossSectionDifferenceData)
+				RestoreUpDifferenceDrawing(itsDrawParam);
 
-            // nämä pitäisi siirtää ulos täältä, että ne voitaisiin piirtää koko roskan päälle yhden kerran
-            // HUOM! ei piirretä jos windVector ja monta parametria ruudulla, koska windvectorit piirretään hieman eri paikkoihin ja tulee sekamelska
-            //if(isoLineData.itsParam.GetParamIdent() != kFmiWindVectorMS || itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber)->NumberOfItems() == 1)
-            //    DrawGridPoints(koordinaatit);
+             // nämä pitäisi siirtää ulos täältä, että ne voitaisiin piirtää koko roskan päälle yhden kerran
+             // HUOM! ei piirretä jos windVector ja monta parametria ruudulla, koska windvectorit piirretään hieman eri paikkoihin ja tulee sekamelska
+            if(isoLineData.itsParam.GetParamIdent() != kFmiWindVectorMS || itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber)->NumberOfItems() == 1)
+                DrawGridPoints(koordinaatit);
             DrawActivatedMinorPointLine();
         }
     }
@@ -1860,6 +1860,12 @@ bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<f
     return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->CrossSectionValuesLogP(valuesOut, theIsoLineData.itsTime, thePressures, points); });
 }
 
+static bool IsContourDrawUsed(const boost::shared_ptr<NFmiDrawParam> &drawParam)
+{
+	auto drawStyle = drawParam->GridDataPresentationStyle();
+	return (drawStyle == NFmiMetEditorTypes::View::kFmiColorContourView) || (drawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView) || (drawStyle == NFmiMetEditorTypes::View::kFmiQuickColorContourView);
+}
+
 void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
 { 
 	// kerää dataa matriisiin siten, että alhaalla (pinnalla) olevat datat ovat
@@ -1872,6 +1878,9 @@ void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues
         const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
         theIsoLineData.itsInfo->CrossSectionValuesLogP(theValues, theIsoLineData.itsTime, thePressures, points);
     }
+
+	if(IsContourDrawUsed(itsDrawParam))
+		FillCrossSectionData2(theIsoLineData);
 }
 
 // Tämä funktio laskee koordinaatit annetun paine-matriisin arvoista (y-akseli), ja matriisin sarakkeiden indekseistä x-koordinaatin.
@@ -1904,13 +1913,13 @@ void NFmiCrossSectionView::FillCrossSectionData2(NFmiIsoLineData& theIsoLineData
 {
 	const auto& latlonPoints = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
 	auto& usedInfo = *theIsoLineData.itsInfo;
-	itsIsolineValues = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
+	auto values = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
 	theIsoLineData.Init(itsIsolineValues);
 	NFmiFastInfoUtils::QueryInfoParamStateRestorer queryInfoParamStateRestorer(usedInfo);
 	usedInfo.Param(kFmiPressure);
 	auto pressureValues = NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime);
 	auto coordinates = CalcRelativeCoordinatesFromPressureMatrix(pressureValues);
-	theIsoLineData.InitUserGridCoordinateData(coordinates);
+	theIsoLineData.InitContourUserDrawData(values, coordinates);
 }
 
 static bool DoTimeBagSpacingOut(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam)

@@ -191,8 +191,8 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
     // theIsoLineData->itsTrueColorContoursCount // tässä on laskettu oikea määrä lopullisia rajoja luokille
     checkedVector<float> &origContourClasses = theIsoLineData.itsCustomColorContours; // tässä on tallessa käytetyt luokat
 
-    float aMin = theIsoLineData.itsMinValue;
-    float aMax = theIsoLineData.itsMaxValue;
+    float aMin = theIsoLineData.itsClassMinValue;
+    float aMax = theIsoLineData.itsClassMaxValue;
     //int classCount = theIsoLineData->itsTrueColorContoursCount;
 
     checkedVector<NFmiColor> finalColorTable;
@@ -470,6 +470,11 @@ static void CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(flo
     XuShadingScale(shadingScaleIndex);
 }
 
+static void DoContourUserDraw(NFmiIsoLineData& theIsoLineData)
+{
+    XuContourUserDraw(theIsoLineData.itsContourUserDrawData.xCoordinates.data(), theIsoLineData.itsContourUserDrawData.yCoordinates.data(), theIsoLineData.itsContourUserDrawData.itsUserDrawValues.data(), theIsoLineData.itsContourUserDrawData.itsYNumber, theIsoLineData.itsContourUserDrawData.itsXNumber);
+}
+
 static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
 {
     int oldColorTable;
@@ -494,8 +499,8 @@ static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
             ::InitCustomColorTableWithTransparentColor(theIsoLineData, 6, 2);
         else
         {
-            float aMin = theIsoLineData.itsMinValue;
-            float aMax = theIsoLineData.itsMaxValue;
+            float aMin = theIsoLineData.itsClassMinValue;
+            float aMax = theIsoLineData.itsClassMaxValue;
             int classCount = theIsoLineData.itsTrueColorContoursCount;
             checkedVector<int> defaultTableColorIndices(theIsoLineData.itsCustomColorContoursColorIndexies.begin(), theIsoLineData.itsCustomColorContoursColorIndexies.begin() + theIsoLineData.itsColorIndexCount);
             checkedVector<float> colorWidths = ::CalcCustomColorWidths(theIsoLineData);
@@ -503,8 +508,8 @@ static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
         }
     }
 
-    if(theIsoLineData.UseUserDraw())
-        XuContourUserDraw(theIsoLineData.itsUserGridCoordinateData.xCoordinates.data(), theIsoLineData.itsUserGridCoordinateData.yCoordinates.data(), theIsoLineData.itsVectorFloatGridData.data(), theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
+    if(theIsoLineData.UseContourUserDraw())
+        ::DoContourUserDraw(theIsoLineData);
     else if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
         XuContourQuickDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
     else
@@ -516,8 +521,8 @@ static void DrawSimpleColorContours(NFmiIsoLineData &theIsoLineData)
 {
     int oldColorTable;
     XuColorTableActiveQuery(&oldColorTable);
-    float aMin = theIsoLineData.itsMinValue;
-    float aMax = theIsoLineData.itsMaxValue;
+    float aMin = theIsoLineData.itsClassMinValue;
+    float aMax = theIsoLineData.itsClassMaxValue;
     int classCount = theIsoLineData.itsTrueColorContoursCount;
     int colorIndices[s_rgbDefCount] = { theIsoLineData.itsCustomColorContoursColorIndexies[0]
                                         ,theIsoLineData.itsCustomColorContoursColorIndexies[1]
@@ -536,7 +541,9 @@ static void DrawSimpleColorContours(NFmiIsoLineData &theIsoLineData)
     XuIsolineWidths(&isolineWidth, 1);
     XuIsolineColors(isolineColorArr, 1);
 
-    if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
+    if(theIsoLineData.UseContourUserDraw())
+        ::DoContourUserDraw(theIsoLineData);
+    else if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
         XuContourQuickDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
     else
         XuContourDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
@@ -1185,7 +1192,6 @@ void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, in
     // en tiedä muuta tapaa muuttaa label-tekstin väriä
     XuTextColor(theIsoLineData.itsIsoLineLabelColor[0], theIsoLineData.itsIsoLineLabelColor[0]);
     XuIsolineDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
-
 }
 
 void DrawSimpleIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex, float scaleFactor)
@@ -1365,9 +1371,6 @@ static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
 
 static bool DataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactor)
 {
-    if(theOrigIsoLineData.UseUserDraw())
-        return false; // Epäsäännöllisen hilan piirrossa ei ainakaan vielä tueta harvennusta
-
     if(::IsIsolinesDrawn(theOrigIsoLineData))
     {
         const NFmiPoint zeroChangeFactor(1, 1);
