@@ -4342,7 +4342,7 @@ void NFmiFastQueryInfo::TimeCrossSectionValuesHybrid(NFmiDataMatrix<float> &theV
 
 // Täyttää annetun matriisin reitti poikkileikkaus datalla.
 // data täytetään joka leveliltä.
-static NFmiDataMatrix<float> CalcRouteCrossSectionLeveldata(
+NFmiDataMatrix<float> NFmiFastQueryInfo::CalcRouteCrossSectionLeveldata(
     NFmiFastQueryInfo &theInfo,
     const checkedVector<NFmiPoint> &theLatlonPoints,
     const checkedVector<NFmiMetTime> &thePointTimes)
