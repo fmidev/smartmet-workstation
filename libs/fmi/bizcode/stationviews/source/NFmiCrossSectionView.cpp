@@ -1722,7 +1722,7 @@ void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &
 	// lopuksi t‰ytet‰‰n loppu osa matriisista halutulla ennuste datalla
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
-        FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, firstForecastTimeIndex, wantedParamId);
+        FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, firstForecastTimeIndex, wantedParamId, false);
     else
     {
         theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times, firstForecastTimeIndex);
@@ -1811,12 +1811,15 @@ void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theV
     }
 }
 
-bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId)
+bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData)
 {
     auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. p‰‰piste aikapoikkileikkauksen kohteeksi
     const auto &info = theIsoLineData.itsInfo;
     NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pit‰‰ tehd‰ kopio
-    return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->TimeCrossSectionValuesLogP(valuesOut, thePressures, point, times, theStartTimeIndex); });
+	if(doUserDrawData)
+		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float>& valuesOut) { valuesOut = NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(*info, point, times); });
+	else
+		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->TimeCrossSectionValuesLogP(valuesOut, thePressures, point, times, theStartTimeIndex); });
 }
 
 void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
@@ -1824,7 +1827,7 @@ void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theVa
   // matriisin y-akselin alap‰‰ss‰.
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
-        FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, 0, wantedParamId);
+        FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, 0, wantedParamId, false);
     else
     {
         // x-akseli t‰ytet‰‰n timebagist‰ tulevilla ajoilla
@@ -1832,6 +1835,8 @@ void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theVa
         NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. p‰‰piste aikapoikkileikkauksen kohteeksi
         theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times);
     }
+
+	FillTimeCrossSectionUserDrawData(theIsoLineData);
 }
 
 bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData)
@@ -1916,6 +1921,30 @@ static NFmiDataMatrix<float> MakeCrossSectionUserDrawPressureData(NFmiIsoLineDat
 		return NFmiDataMatrix<float>();
 }
 
+static NFmiDataMatrix<float> MakeTimeCrossSectionUserDrawPressureData(NFmiIsoLineData& theIsoLineData, const NFmiPoint& latlon, NFmiTimeBag &times)
+{
+	auto& usedInfo = *theIsoLineData.itsInfo;
+	NFmiFastInfoUtils::QueryInfoParamStateRestorer queryInfoParamStateRestorer(usedInfo);
+	if(usedInfo.Param(kFmiPressure))
+	{
+		return NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(usedInfo, latlon, times);
+	}
+	else if(usedInfo.PressureLevelDataAvailable())
+	{
+		NFmiDataMatrix<float> pressureValues(times.GetSize(), usedInfo.SizeLevels(), kFloatMissing);
+		const auto& pressureLevelValues = usedInfo.PressureLevelDataPressures();
+		checkedVector<float> pressureLevelValuesBS(pressureLevelValues.begin(), pressureLevelValues.end());
+		for(size_t pressureColumnIndex = 0; pressureColumnIndex < pressureValues.NX(); pressureColumnIndex++)
+		{
+			auto& pressureColumn = pressureValues[pressureColumnIndex];
+			pressureColumn = pressureLevelValuesBS;
+		}
+		return pressureValues;
+	}
+	else
+		return NFmiDataMatrix<float>();
+}
+
 bool NFmiCrossSectionView::IsUserDrawDataNeeded(NFmiFastQueryInfo& usedInfo)
 {
 	return ::IsContourDrawUsed(itsDrawParam) && usedInfo.PressureDataAvailable();
@@ -1923,7 +1952,6 @@ bool NFmiCrossSectionView::IsUserDrawDataNeeded(NFmiFastQueryInfo& usedInfo)
 
 NFmiDataMatrix<float> NFmiCrossSectionView::MakeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData)
 {
-	const auto& latlonPoints = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
 	NFmiDataMatrix<float> values;
 	auto wantedParamId = itsDrawParam->Param().GetParamIdent();
 	if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
@@ -1933,10 +1961,30 @@ NFmiDataMatrix<float> NFmiCrossSectionView::MakeCrossSectionUserDrawValueData(NF
 	}
 	else
 	{
+		const auto& latlonPoints = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
 		values = NFmiFastQueryInfo::CalcCrossSectionLeveldata(*theIsoLineData.itsInfo, latlonPoints, theIsoLineData.itsTime);
 	}
 	return values;
 }
+
+NFmiDataMatrix<float> NFmiCrossSectionView::MakeTimeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData)
+{
+	NFmiDataMatrix<float> values;
+	auto wantedParamId = itsDrawParam->Param().GetParamIdent();
+	if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
+	{
+		checkedVector<float> fakePressures;
+		FillTimeCrossSectionDataForMetaWindParam(values, theIsoLineData, fakePressures, 0, wantedParamId, true);
+	}
+	else
+	{
+		auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. p‰‰piste aikapoikkileikkauksen kohteeksi
+		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pit‰‰ tehd‰ kopio
+		values = NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(*theIsoLineData.itsInfo, point, times);
+	}
+	return values;
+}
+
 
 void NFmiCrossSectionView::FillCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData)
 {
@@ -1945,6 +1993,19 @@ void NFmiCrossSectionView::FillCrossSectionUserDrawData(NFmiIsoLineData& theIsoL
 		auto values = MakeCrossSectionUserDrawValueData(theIsoLineData);
 		const auto& latlonPoints = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
 		auto pressureValues = ::MakeCrossSectionUserDrawPressureData(theIsoLineData, latlonPoints);
+		auto coordinates = CalcRelativeCoordinatesFromPressureMatrix(pressureValues);
+		theIsoLineData.InitContourUserDrawData(values, coordinates);
+	}
+}
+
+void NFmiCrossSectionView::FillTimeCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData)
+{
+	if(IsUserDrawDataNeeded(*theIsoLineData.itsInfo))
+	{
+		auto values = MakeTimeCrossSectionUserDrawValueData(theIsoLineData);
+		auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. p‰‰piste aikapoikkileikkauksen kohteeksi
+		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pit‰‰ tehd‰ kopio
+		auto pressureValues = ::MakeTimeCrossSectionUserDrawPressureData(theIsoLineData, point, times);
 		auto coordinates = CalcRelativeCoordinatesFromPressureMatrix(pressureValues);
 		theIsoLineData.InitContourUserDrawData(values, coordinates);
 	}
