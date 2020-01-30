@@ -302,7 +302,11 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
   static NFmiDataMatrix<float> CalcTimeCrossSectionLeveldata(NFmiFastQueryInfo &theInfo,
                                                              const NFmiPoint &thePoint,
                                                              NFmiTimeBag &theTimes);
-
+  static NFmiDataMatrix<float> CalcRouteCrossSectionLeveldata(
+      NFmiFastQueryInfo &theInfo,
+      const checkedVector<NFmiPoint> &theLatlonPoints,
+      const checkedVector<NFmiMetTime>
+          &thePointTimes);
   void CrossSectionValues(NFmiDataMatrix<float> &theValues,
                           const NFmiMetTime &theInterpolatedTime,
                           const checkedVector<float> &theHeights,
