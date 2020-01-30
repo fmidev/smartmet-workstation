@@ -4142,7 +4142,7 @@ void NFmiFastQueryInfo::CrossSectionValuesHybrid(NFmiDataMatrix<float> &theValue
 
 // Täyttää annetun matriisin halutun pisteen ja parametrin aika-poikkileikkaus datalla.
 // Matriisi on poikkileikkaus timebagin kokoinen ja data täytetään joka leveliltä.
-static NFmiDataMatrix<float> CalcTimeCrossSectionLeveldata(NFmiFastQueryInfo &theInfo,
+NFmiDataMatrix<float> NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(NFmiFastQueryInfo &theInfo,
                                                            const NFmiPoint &thePoint,
                                                            NFmiTimeBag &theTimes)
 {
