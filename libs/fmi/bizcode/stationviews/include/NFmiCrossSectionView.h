@@ -129,17 +129,26 @@ private:
 	void FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
 	void FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
 	int FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
-    void FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-    bool FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData);
+	void FillRouteCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
+	void FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
+    bool FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
     void FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
     bool FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData);
 	void FillCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
 	void FillCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData);
 	void FillTimeCrossSectionUserDrawData(NFmiIsoLineData &theIsoLineData);
-	void FillRouteCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData);
+	void FillRouteCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
 	NFmiDataMatrix<float> MakeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData);
 	NFmiDataMatrix<float> MakeTimeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData);
-	NFmiDataMatrix<float> MakeRouteCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData);
+	NFmiDataMatrix<float> MakeRouteCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
 	bool IsUserDrawDataNeeded(NFmiFastQueryInfo & usedInfo);
 	NFmiDataMatrix<NFmiPoint> CalcRelativeCoordinatesFromPressureMatrix(const NFmiDataMatrix<float>& pressureValues) const;
 	bool FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData);
