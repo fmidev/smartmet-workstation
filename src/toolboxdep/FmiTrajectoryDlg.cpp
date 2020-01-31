@@ -535,7 +535,10 @@ void CFmiTrajectoryDlg::RefreshViewsAndDialogs(const std::string &reasonForUpdat
 		if(mapViewDescTopList[i]->ShowTrajectorsOnMap())
 			mapViewDescTopList[i]->MapViewDirty(false, true, true, false);
 	}
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews | SmartMetViewId::TrajectoryView);
+	SmartMetViewId updatedViews = SmartMetViewId::AllMapViews | SmartMetViewId::TrajectoryView;
+	if(itsSmartMetDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
+	updatedViews = updatedViews | SmartMetViewId::CrossSectionView;
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, updatedViews);
 }
 
 void CFmiTrajectoryDlg::OnBnClickedButtonTrajectoryRecalculate()
