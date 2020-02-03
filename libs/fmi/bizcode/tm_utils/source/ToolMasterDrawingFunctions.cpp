@@ -1360,7 +1360,7 @@ static bool IsIsolinesDrawn(const NFmiIsoLineData &theOrigIsoLineData)
     return false;
 }
 
-static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
+double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
 {
     if(currentRatio)
     {
@@ -1376,6 +1376,14 @@ static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleD
     return gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiIsoLineView || gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
 }
 
+bool IsDownSizingNeeded(const NFmiPoint& theGrid2PixelRatio, double criticalGrid2PixelRatio, NFmiPoint& theDownSizeFactorOut)
+{
+    const NFmiPoint zeroChangeFactor(1, 1);
+    const double criticalGrid2PixelRatio = 3.0;
+    theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
+    theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
+    return theDownSizeFactorOut != zeroChangeFactor;
+}
 
 bool IsolineDataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
 {
@@ -1387,11 +1395,8 @@ bool IsolineDataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, cons
     else if(!::IsIsolinesDrawn(theOrigIsoLineData))
         return false;
 
-    const NFmiPoint zeroChangeFactor(1, 1);
     const double criticalGrid2PixelRatio = 3.0;
-    theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
-    theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
-    return theDownSizeFactorOut != zeroChangeFactor;
+    return IsDownSizingNeeded(theGrid2PixelRatio, criticalGrid2PixelRatio, theDownSizeFactorOut);
 }
 
 static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, FmiParameterName theParamId)
@@ -1432,15 +1437,19 @@ static void DoTraceLogging(const std::string message)
     }
 }
 
+double GetCriticalGrid2PixelRatioForContour()
+{
+    return 1.4;
+}
+
 static void DoPossibleQuickContourSetting(NFmiIsoLineData &theOrigIsoLineDataInOut, const NFmiPoint &theGrid2PixelRatio)
 {
     if(theOrigIsoLineDataInOut.fUseColorContours == 1) // jos käytössä tavallinen contouraus
     {
-        const double criticalGrid2PixelRatioX = 1.4;
-        const double criticalGrid2PixelRatioY = 1.4;
+        const double criticalGrid2PixelRatio = GetCriticalGrid2PixelRatioForContour();
         if(theGrid2PixelRatio.X() != 0 && theGrid2PixelRatio.Y() != 0)
         {
-            if(theGrid2PixelRatio.X() < criticalGrid2PixelRatioX || theGrid2PixelRatio.Y() < criticalGrid2PixelRatioY)
+            if(theGrid2PixelRatio.X() < criticalGrid2PixelRatio || theGrid2PixelRatio.Y() < criticalGrid2PixelRatio)
             { // jos hila koko on tarpeeksi lähellä näytön pikseli kokoa, laitetaan quickcontour päälle
                 theOrigIsoLineDataInOut.fUseColorContours = 2;
                 ::DoTraceLogging(std::string("Changing to quick-contour draw with ") + ::MakeDataIdentString(theOrigIsoLineDataInOut.itsParam));
