@@ -14,6 +14,7 @@
 #include "matrix3d.h"
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "NFmiDrawParam.h"
 
 #include <fstream>
 #include "boost/math/special_functions/round.hpp"
@@ -1369,17 +1370,28 @@ static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
     return 1.;
 }
 
-static bool DataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactor)
+static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
 {
-    if(::IsIsolinesDrawn(theOrigIsoLineData))
+    auto gridDataDrawStyle = thePossibleDrawParam->GridDataPresentationStyle();
+    return gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiIsoLineView || gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
+}
+
+
+bool IsolineDataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+{
+    if(thePossibleDrawParam)
     {
-        const NFmiPoint zeroChangeFactor(1, 1);
-        const double criticalGrid2PixelRatio = 3.0;
-        theDownSizeFactor.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
-        theDownSizeFactor.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
-        return theDownSizeFactor != zeroChangeFactor;
+        if(!::IsIsolinesDrawn(thePossibleDrawParam))
+            return false;
     }
-    return false;
+    else if(!::IsIsolinesDrawn(theOrigIsoLineData))
+        return false;
+
+    const NFmiPoint zeroChangeFactor(1, 1);
+    const double criticalGrid2PixelRatio = 3.0;
+    theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
+    theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
+    return theDownSizeFactorOut != zeroChangeFactor;
 }
 
 static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, FmiParameterName theParamId)
@@ -1452,7 +1464,7 @@ int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& th
     // Toolmaster piirto bugi ilmenee kun hila vs. pikseli suhde on n. 1 tai alle. Kierr‰n siten ongelman niin ett‰ kun t‰m‰
     // ratio on tarpeeksi pieni, lasken uuden hila koon, niin ett‰ sen suhdeluku on minimiss‰‰n 1.3 ja interpoloin t‰ll‰iseen
     // uuteen hilaan datan. T‰m‰n j‰lkeen piirto onnistuu ilman ongelmia, eik‰ asiakas huomaa juuri mit‰‰n.
-    bool doDownSize = ::DataDownSizingNeeded(*theIsoLineData, theGrid2PixelRatio, downSizeFactor);
+    bool doDownSize = IsolineDataDownSizingNeeded(*theIsoLineData, theGrid2PixelRatio, downSizeFactor, nullptr);
     if(doDownSize)
     {
         NFmiIsoLineData downSizedIsoLineData;
