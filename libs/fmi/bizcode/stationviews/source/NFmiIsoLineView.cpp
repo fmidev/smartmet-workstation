@@ -2376,6 +2376,10 @@ void NFmiIsoLineView::DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, N
             NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
             NFmiRect relRect(GetFrame());
             AdjustZoomedAreaRect(zoomedAreaRect);
+            if(itsDrawParam->IsMacroParamCase(true))
+            {
+                isoLineData.itsParam.GetParam()->SetName(itsDrawParam->ParameterAbbreviation());
+            }
             ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, grid2PixelRatio, -1);
         }
     }
