@@ -64,6 +64,8 @@
 #include "Utf8ConversionFunctions.h"
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiMacroParamfunctions.h"
+#include "NFmiIsoLineData.h"
+#include "ToolMasterDrawingFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1321,6 +1323,85 @@ bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
     return false;
 }
 
+static boost::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroParam(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+{
+	float value = kFloatMissing;
+	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
+	try // ensin tulkitaan macro
+	{
+		FmiModifyEditdData::InitializeSmartToolModifier(smartToolModifier, theAdapter, theDrawParam);
+		if(smartToolModifier.ExtraMacroParamData().UseSpecialResolution())
+			return smartToolModifier.UsedMacroParamData();
+	}
+	catch(...)
+	{
+	}
+	return nullptr;
+}
+
+bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut)
+{
+	if(itsDrawParam)
+	{
+		auto possibleMacroParamResolutionInfo = CalcPossibleResolutionInfoFromMacroParam(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam);
+		if(possibleMacroParamResolutionInfo)
+		{
+			NFmiIsoLineData isoLineData;
+			isoLineData.itsInfo = possibleMacroParamResolutionInfo;
+			isoLineData.itsXNumber = possibleMacroParamResolutionInfo->GridXNumber();
+			isoLineData.itsYNumber = possibleMacroParamResolutionInfo->GridYNumber();
+			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint downSizeFactor;
+			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, downSizeFactor, itsDrawParam))
+			{
+				// Tehdään tässä truncate, koska muuten myöhemmin saatetaan luulla että tarvitsee harventaa lisää
+				int newSizeX = boost::math::itrunc(isoLineData.itsXNumber / downSizeFactor.X());
+				int newSizeY = boost::math::itrunc(isoLineData.itsYNumber / downSizeFactor.Y());
+				newGridSizeOut = NFmiPoint(newSizeX, newSizeY);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// Lasketaan käytetyn datan hilan ja näytön pikseleiden suhdeluku x- ja y-suunnassa.
+// Jos kyse ei hiladatasta, tai esim. makrosta (smarttool/q3), lasketaan isolinedatan ja arean avulla kertoimet.
+// Jos x/y arvo on 0, jätetään tämä huomiotta.
+NFmiPoint NFmiStationView::CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData)
+{
+	NFmiPoint grid2PixelRatio(0, 0);
+	if(theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
+	{
+		NFmiFastQueryInfo& usedInfo = *(theIsoLineData.itsInfo);
+		usedInfo.FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
+
+		NFmiPoint latlon1(usedInfo.LatLon());
+		NFmiPoint latlon2(usedInfo.PeekLocationLatLon(1, 0));
+		NFmiPoint latlon3(usedInfo.PeekLocationLatLon(0, 1));
+		NFmiPoint p1(LatLonToViewPoint(latlon1));
+		NFmiPoint p2(LatLonToViewPoint(latlon2));
+		NFmiPoint p3(LatLonToViewPoint(latlon3));
+		// 3. Calc relative dist of two parallel neighbor grid point in x dir
+		double relGridPoinWidth = ::fabs(p1.X() - p2.X());
+		double onePixelWidth = itsToolBox->SX(1);
+		grid2PixelRatio.X(relGridPoinWidth / onePixelWidth);
+		// 4. Calc relative dist of two vertical neighbor grid point in y dir
+		double relGridPoinHeight = ::fabs(p1.Y() - p3.Y());
+		double onePixelHeigth = itsToolBox->SY(1);
+		grid2PixelRatio.Y(relGridPoinHeight / onePixelHeigth);
+	}
+	else
+	{
+		double relGridPoinWidth = itsArea->Width() / (theIsoLineData.itsXNumber - 1.0);
+		grid2PixelRatio.X(itsToolBox->HXs(relGridPoinWidth));
+		double relGridPoinHeight = itsArea->Height() / (theIsoLineData.itsYNumber - 1.0);
+		grid2PixelRatio.Y(itsToolBox->HYs(relGridPoinHeight));
+	}
+
+	return grid2PixelRatio;
+}
+
 // 'Probing' macroParam data on alueeltaan hieman pienempi kuin kartan alue, tällöin reunoille ei toivottavasti tule mitään erikoisia
 // arvoja kuten puuttuvaa tai 0:aa. Hilana on 3x3 eli yhdeksän testipistettä, jolla saadaan aavistus, kuinka monta numeroa on luku 
 // tekstissä keskimäärin. Sen avulla voidaan laskea lopullisen harvennetun datan symboli tiheys ruudulla.
@@ -1343,6 +1424,14 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::s
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
+boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParamData(const NFmiPoint &newGridSize)
+{
+	fUseAlReadySpacedOutData = true;
+	int gridSizeX = boost::math::iround(newGridSize.X());
+	int gridSizeY = boost::math::iround(newGridSize.Y());
+	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea);
+}
+
 boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
 {
     if(IsGridDataDrawnWithSpaceOutSymbols())
@@ -1353,12 +1442,13 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
             NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
             FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, probingData);
             auto gridsize = CalcSymbolDrawedMacroParamSpaceOutGridSize(itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex), probingMatrix);
-            fUseAlReadySpacedOutData = true;
-            int gridSizeX = boost::math::iround(gridsize.X());
-            int gridSizeY = boost::math::iround(gridsize.Y());
-            return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea);
+			return CreateNewResizedMacroParamData(gridsize);
         }
     }
+
+	NFmiPoint possibleNewGridSize;
+	if(IsMacroParamIsolineDataDownSized(possibleNewGridSize))
+		return CreateNewResizedMacroParamData(possibleNewGridSize);
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }

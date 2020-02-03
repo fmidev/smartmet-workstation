@@ -739,43 +739,6 @@ static bool IsDataInView(const boost::shared_ptr<NFmiArea> &theDataArea, const b
     return false;
 }
 
-// Lasketaan käytetyn datan hilan ja näytön pikseleiden suhdeluku x- ja y-suunnassa.
-// Jos kyse ei hiladatasta, tai esim. makrosta (smarttool/q3), lasketaan isolinedatan ja arean avulla kertoimet.
-// Jos x/y arvo on 0, jätetään tämä huomiotta.
-NFmiPoint NFmiIsoLineView::CalcGrid2PixelRatio(NFmiIsoLineData  &theIsoLineData)
-{
-    NFmiPoint grid2PixelRatio(0, 0);
-    if(theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
-    {
-        NFmiFastQueryInfo &usedInfo = *(theIsoLineData.itsInfo);
-        usedInfo.FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
-
-        NFmiPoint latlon1(usedInfo.LatLon());
-        NFmiPoint latlon2(usedInfo.PeekLocationLatLon(1, 0));
-        NFmiPoint latlon3(usedInfo.PeekLocationLatLon(0, 1));
-        NFmiPoint p1(LatLonToViewPoint(latlon1));
-        NFmiPoint p2(LatLonToViewPoint(latlon2));
-        NFmiPoint p3(LatLonToViewPoint(latlon3));
-        // 3. Calc relative dist of two parallel neighbor grid point in x dir
-        double relGridPoinWidth = ::fabs(p1.X() - p2.X());
-        double onePixelWidth = itsToolBox->SX(1);
-        grid2PixelRatio.X(relGridPoinWidth / onePixelWidth);
-        // 4. Calc relative dist of two vertical neighbor grid point in y dir
-        double relGridPoinHeight = ::fabs(p1.Y() - p3.Y());
-        double onePixelHeigth = itsToolBox->SY(1);
-        grid2PixelRatio.Y(relGridPoinHeight / onePixelHeigth);
-    }
-    else
-    {
-        double relGridPoinWidth = itsArea->Width() / (theIsoLineData.itsXNumber - 1.0);
-        grid2PixelRatio.X(itsToolBox->HX(relGridPoinWidth));
-        double relGridPoinHeight = itsArea->Height() / (theIsoLineData.itsYNumber - 1.0);
-        grid2PixelRatio.Y(itsToolBox->HY(relGridPoinHeight));
-    }
-
-    return grid2PixelRatio;
-}
-
 bool NFmiIsoLineView::DifferentWorldViews(const NFmiArea *area1, const NFmiArea * area2)
 {
     if(area1 && area2)
@@ -2444,5 +2407,8 @@ bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineDat
 
 bool NFmiIsoLineView::initializeIsoLineData(NFmiIsoLineData &theIsoLineData)
 {
+    // itsInfo on saattanut muuttua esim. macroParam tapauksessa, missä käytetty RESOLUTION = xxx asetuksia
+    theIsoLineData.itsInfo = itsInfo;
+
     return theIsoLineData.Init(itsIsolineValues);
 }
