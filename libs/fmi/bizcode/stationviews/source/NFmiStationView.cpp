@@ -1339,6 +1339,29 @@ static boost::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroP
 	return nullptr;
 }
 
+static std::string DownSizeGridString(const NFmiPoint& gridSize)
+{
+	std::string str = std::to_string(boost::math::iround(gridSize.X()));
+	str += "x";
+	str += std::to_string(boost::math::iround(gridSize.Y()));
+
+	return str;
+}
+
+static void DoDataDownSizeLogging(NFmiCtrlView* view, const std::string& operationName, const NFmiPoint& originalSize, const NFmiPoint& newSize)
+{
+	if(CatLog::doTraceLevelLogging())
+	{
+		std::string finalMessage = "Down sizing data grid when ";
+		finalMessage += operationName;
+		finalMessage += "': ";
+		finalMessage += ::DownSizeGridString(originalSize);
+		finalMessage += " => ";
+		finalMessage += ::DownSizeGridString(newSize);
+		CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(finalMessage, view);
+	}
+}
+
 bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut)
 {
 	if(itsDrawParam)
@@ -1354,10 +1377,11 @@ bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut
 			NFmiPoint downSizeFactor;
 			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, downSizeFactor, itsDrawParam))
 			{
-				// Tehdään tässä truncate, koska muuten myöhemmin saatetaan luulla että tarvitsee harventaa lisää
+				// Tehdään tässä truncate, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) saatetaan luulla että tarvitsee harventaa lisää
 				int newSizeX = boost::math::itrunc(isoLineData.itsXNumber / downSizeFactor.X());
 				int newSizeY = boost::math::itrunc(isoLineData.itsYNumber / downSizeFactor.Y());
 				newGridSizeOut = NFmiPoint(newSizeX, newSizeY);
+				::DoDataDownSizeLogging(this, "calculating macroParam isoline values", NFmiPoint(isoLineData.itsXNumber, isoLineData.itsYNumber), newGridSizeOut);
 				return true;
 			}
 		}
