@@ -1379,7 +1379,6 @@ static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleD
 bool IsDownSizingNeeded(const NFmiPoint& theGrid2PixelRatio, double criticalGrid2PixelRatio, NFmiPoint& theDownSizeFactorOut)
 {
     const NFmiPoint zeroChangeFactor(1, 1);
-    const double criticalGrid2PixelRatio = 3.0;
     theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
     theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
     return theDownSizeFactorOut != zeroChangeFactor;
