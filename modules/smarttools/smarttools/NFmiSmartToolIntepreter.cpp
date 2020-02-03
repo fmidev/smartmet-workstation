@@ -63,7 +63,7 @@ struct EndOfLineSearcher
   bool operator()(T theChar)
   {  // tarkistetaan myös blokin loppu merkki '}' koska blokki-koodi voi olla seuraavanlaista "{T =
      // T + 1}" eli blokin loppu merkki samalla rivillä
-    return (theChar == '\r' || theChar == '\n' || theChar == '}');
+    return (theChar == '\r' || theChar == '\n' || theChar == '}' || theChar == '{');
   }
 };
 
