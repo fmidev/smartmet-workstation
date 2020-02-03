@@ -1401,9 +1401,10 @@ bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<N
 {
 	if(itsDrawParam && possibleMacroParamResolutionInfo)
 	{
-		// Ainoastaan normi contour piirtoa tarvitsee tarkastella tässä, koska kFmiColorContourIsoLineView on jo tarkastettu 
-		// edella isoviiva tapauksien kanssa ja siellä on suuremmat harvennuskertoimet.
-		if(itsDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiColorContourView)
+		// Oikeastaan kFmiColorContourIsoLineView on jo tarkastettu edella isoviiva tapauksien kanssa ja 
+		// siellä on suuremmat harvennuskertoimet, mutta tehdään se vielä tässä varmuuden vuoksi.
+		auto style = itsDrawParam->GridDataPresentationStyle();
+		if(style == NFmiMetEditorTypes::View::kFmiColorContourView || style == NFmiMetEditorTypes::View::kFmiQuickColorContourView || style == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
 		{
 			NFmiIsoLineData isoLineData;
 			::SetupIsolineData(possibleMacroParamResolutionInfo, isoLineData);
