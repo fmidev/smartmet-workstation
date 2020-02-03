@@ -7687,10 +7687,10 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
 
 void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
 {
-    auto keepMapAspectRatio = ApplicationWinRegistry().KeepMapAspectRatio();
-    // Jos karttan‰yttˆ‰ venytet‰‰n ja keepMapAspectRatio on true, t‰llˆin tapahtuu automaattinen 
-    // alueen zoomaus ja silloin macroParamDataCache pit‰‰ tyhjent‰‰ t‰lle n‰ytˆlle.
-    MapViewDirty(mapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
+	// Nyky‰‰n jos kartan koko muuttuu, pit‰‰ macroParam cache tyhjent‰‰, koska sen koko saattaa muuttua.
+	// Laskentahilan koko lasketaan aina uudestaan, jolloin tehd‰‰n hila- vs pikseli-koko vertailuja.
+    auto cleanMacroParamCache = true;
+    MapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
     MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
     auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
     if(mapViewDesctop)
@@ -11063,7 +11063,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
         if(MapViewDescTop(theDescTopIndex)->SetMapViewGrid(newValue, mapViewWinRegistry.get()))
         {
-            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
+			MapViewDirty(theDescTopIndex, true, true, true, true, false, false);
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
             return true;
         }
         else
