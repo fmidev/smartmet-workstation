@@ -191,7 +191,8 @@ protected:
    bool DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime);
    void DoTimeInterpolationSettingChecks(boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
    boost::shared_ptr<NFmiFastQueryInfo> CreateNewResizedMacroParamData(const NFmiPoint& newGridSize);
-   bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut);
+   bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
+   bool IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
    NFmiPoint CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData);
 
    NFmiRect itsGeneralStationRect;

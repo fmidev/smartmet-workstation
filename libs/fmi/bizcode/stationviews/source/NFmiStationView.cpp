@@ -1362,26 +1362,60 @@ static void DoDataDownSizeLogging(NFmiCtrlView* view, const std::string& operati
 	}
 }
 
-bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut)
+static void SetupIsolineData(const boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiIsoLineData& theIsoLineDataOut)
+{
+	if(possibleMacroParamResolutionInfo)
+	{
+		theIsoLineDataOut.itsInfo = possibleMacroParamResolutionInfo;
+		theIsoLineDataOut.itsXNumber = possibleMacroParamResolutionInfo->GridXNumber();
+		theIsoLineDataOut.itsYNumber = possibleMacroParamResolutionInfo->GridYNumber();
+	}
+}
+
+bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut)
 {
 	if(itsDrawParam)
 	{
-		auto possibleMacroParamResolutionInfo = CalcPossibleResolutionInfoFromMacroParam(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam);
-		if(possibleMacroParamResolutionInfo)
+		possibleMacroParamResolutionInfoOut = CalcPossibleResolutionInfoFromMacroParam(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam);
+		if(possibleMacroParamResolutionInfoOut)
 		{
 			NFmiIsoLineData isoLineData;
-			isoLineData.itsInfo = possibleMacroParamResolutionInfo;
-			isoLineData.itsXNumber = possibleMacroParamResolutionInfo->GridXNumber();
-			isoLineData.itsYNumber = possibleMacroParamResolutionInfo->GridYNumber();
+			::SetupIsolineData(possibleMacroParamResolutionInfoOut, isoLineData);
 			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
 			NFmiPoint downSizeFactor;
 			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, downSizeFactor, itsDrawParam))
 			{
-				// Tehdään tässä truncate, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) saatetaan luulla että tarvitsee harventaa lisää
-				int newSizeX = boost::math::itrunc(isoLineData.itsXNumber / downSizeFactor.X());
-				int newSizeY = boost::math::itrunc(isoLineData.itsYNumber / downSizeFactor.Y());
+				// Tehdään tässä floor, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) saatetaan luulla että tarvitsee harventaa lisää
+				auto newSizeX = std::floor(isoLineData.itsXNumber / downSizeFactor.X());
+				auto newSizeY = std::floor(isoLineData.itsYNumber / downSizeFactor.Y());
 				newGridSizeOut = NFmiPoint(newSizeX, newSizeY);
 				::DoDataDownSizeLogging(this, "calculating macroParam isoline values", NFmiPoint(isoLineData.itsXNumber, isoLineData.itsYNumber), newGridSizeOut);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut)
+{
+	if(itsDrawParam && possibleMacroParamResolutionInfo)
+	{
+		// Ainoastaan normi contour piirtoa tarvitsee tarkastella tässä, koska kFmiColorContourIsoLineView on jo tarkastettu 
+		// edella isoviiva tapauksien kanssa ja siellä on suuremmat harvennuskertoimet.
+		if(itsDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiColorContourView)
+		{
+			NFmiIsoLineData isoLineData;
+			::SetupIsolineData(possibleMacroParamResolutionInfo, isoLineData);
+			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint downSizeFactor;
+			if(::IsDownSizingNeeded(grid2PixelRatio, GetCriticalGrid2PixelRatioForContour(), downSizeFactor))
+			{
+				// Tehdään tässä ceil, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) luullaan että ei tarvitse tarvitse laittaa quick-contour optiota päälle ollenkaan
+				auto newSizeX = std::ceil(isoLineData.itsXNumber / downSizeFactor.X());
+				auto newSizeY = std::ceil(isoLineData.itsYNumber / downSizeFactor.Y());
+				newGridSizeOut = NFmiPoint(newSizeX, newSizeY);
+				::DoDataDownSizeLogging(this, "calculating macroParam contour values", NFmiPoint(isoLineData.itsXNumber, isoLineData.itsYNumber), newGridSizeOut);
 				return true;
 			}
 		}
@@ -1471,7 +1505,11 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
     }
 
 	NFmiPoint possibleNewGridSize;
-	if(IsMacroParamIsolineDataDownSized(possibleNewGridSize))
+	boost::shared_ptr<NFmiFastQueryInfo> possibleMacroParamResolutionInfo;
+	if(IsMacroParamIsolineDataDownSized(possibleNewGridSize, possibleMacroParamResolutionInfo))
+		return CreateNewResizedMacroParamData(possibleNewGridSize);
+
+	if(IsMacroParamContourDataDownSized(possibleMacroParamResolutionInfo, possibleNewGridSize))
 		return CreateNewResizedMacroParamData(possibleNewGridSize);
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
