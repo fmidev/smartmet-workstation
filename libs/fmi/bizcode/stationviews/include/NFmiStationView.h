@@ -25,6 +25,7 @@ class NFmiGriddingHelperInterface;
 class NFmiHelpDataInfo;
 class NFmiGriddingProperties;
 class NFmiExtraMacroParamData;
+class NFmiIsoLineData;
 
 class CRect;
 class CDC;
@@ -81,25 +82,6 @@ public:
    static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties);
    static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
    static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
-
-	template<typename T>
-	static void GetMinAndMaxValues(const NFmiDataMatrix<T> &theMatrix, T &theMin, T &theMax)
-	{
-		int nx = static_cast<int>(theMatrix.NX());
-		int ny = static_cast<int>(theMatrix.NY());
-		float tmp = 0;
-		for(int j=0; j<ny; j++)
-			for(int i=0; i<nx; i++)
-			{
-				tmp = theMatrix[i][j];
-				if(tmp == kFloatMissing)
-					continue;
-				if(tmp > theMax)
-					theMax = tmp;
-				if(tmp < theMin)
-					theMin = tmp;
-			}
-	}
 
 protected:
    bool IsSpecialMatrixDataDraw(void) const;
@@ -207,6 +189,11 @@ protected:
    void FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2);
    void FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId);
    bool DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime);
+   void DoTimeInterpolationSettingChecks(boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
+   boost::shared_ptr<NFmiFastQueryInfo> CreateNewResizedMacroParamData(const NFmiPoint& newGridSize);
+   bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
+   bool IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
+   NFmiPoint CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData);
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;

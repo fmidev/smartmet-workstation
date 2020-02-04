@@ -14,4 +14,14 @@ namespace PathUtils
     std::string getTrueFilePath(const std::string &theOriginalFilePath, const std::string &theRootDirectory, const std::string &theFileExtension, bool *extensionAddedOut = nullptr);
     std::string getRelativeStrippedFileName(const std::string &theAbsoluteFilePath, const std::string &theBaseDirectory, const std::string &theStrippedFileExtension);
     std::string doDriveLetterFix(const NFmiFileString &filePathString, const NFmiFileString &baseDirectoryPathString);
-}
+    std::string simplifyWindowsPath(const std::string &pathstring);
+    bool lastCharacterIsSeparator(const std::string &aPath);
+    std::string getFixedAbsolutePathFromSettings(const std::string &theSettingsKey,
+                                                  const std::string &theAbsoluteWorkingPath,
+                                                  bool fEnsureEndDirectorySeparator = false);
+    std::string makeFixedAbsolutePath(const std::string &thePath,
+                                                 const std::string &theAbsoluteWorkingPath,
+                                                 bool fEnsureEndDirectorySeparator = false);
+
+
+}  // namespace PathUtils

@@ -53,47 +53,19 @@ const NFmiMacroPathSettings& NFmiMacroPathSettings::operator=(const NFmiMacroPat
 	return *this;
 }
 
-static std::string MakeFixedPath(const std::string &theDirectory, const std::string &theSmartMetWorkingDirectory)
-{
-	NFmiFileString fileString(theDirectory);
-    if(fileString.IsAbsolutePath())
-    {
-        return PathUtils::fixMissingDriveLetterToAbsolutePath(theDirectory, theSmartMetWorkingDirectory);
-    }
-	else // muuten pit‰‰ rakentaa absoluuttinen polku suhteessa editorin k‰ynnistys hakemistoon
-	{
-		std::string pathName(theSmartMetWorkingDirectory);
-		pathName += kFmiDirectorySeparator;
-		pathName += theDirectory;
-		return pathName;
-	}
-}
-
-static std::string GetPathFromSettings(const std::string &theSmartMetWorkingDirectory, const std::string &theKeyStr)
-{
-	std::string settingPath = NFmiSettings::Require<std::string>(theKeyStr);
-	return ::MakeFixedPath(settingPath, theSmartMetWorkingDirectory);
-}
-
 void NFmiMacroPathSettings::InitFromSettings(const std::string &theInitNameSpace, const std::string &theWorkingDirectory)
 {
 	itsSmartMetWorkingDirectory = theWorkingDirectory;
 	itsBaseNameSpace = theInitNameSpace;
 
-	itsLocalCacheBasePath = NFmiSettings::Require<std::string>(theInitNameSpace + "::LocalDirectory");
-	if(itsLocalCacheBasePath.empty() == false)
-	{
-		char lastChar = itsLocalCacheBasePath[itsLocalCacheBasePath.size() - 1];
-		if(lastChar != '\\' && lastChar != '/')
-			itsLocalCacheBasePath += kFmiDirectorySeparator; // varmistatetaan ett‰ base-polun lopussa on hakemisto-erotin
-	}
+	itsLocalCacheBasePath = PathUtils::getFixedAbsolutePathFromSettings(theInitNameSpace + "::LocalDirectory", itsSmartMetWorkingDirectory, true);
 	fUseLocalCache = NFmiSettings::Require<bool>(theInitNameSpace + "::UseLocalCache");
 	itsSyncIntervalInMinutes = NFmiSettings::Require<int>(theInitNameSpace + "::SyncIntervalInMinutes");
 
-	itsOrigSmartToolPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::SmartTools::LoadDirectory"));
-	itsOrigMacroParamPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::MacroParams::LoadDirectory"));
-	itsOrigDrawParamPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::DrawParams::LoadDirectory"));
-	itsOrigViewMacroPath = BetaProduct::SimplifyWindowsPath(::GetPathFromSettings(itsSmartMetWorkingDirectory, "MetEditor::ViewMacro::LoadDirectory"));
+	itsOrigSmartToolPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::SmartTools::LoadDirectory", itsSmartMetWorkingDirectory);
+	itsOrigMacroParamPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::MacroParams::LoadDirectory", itsSmartMetWorkingDirectory);
+	itsOrigDrawParamPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::DrawParams::LoadDirectory", itsSmartMetWorkingDirectory);
+	itsOrigViewMacroPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::ViewMacro::LoadDirectory", itsSmartMetWorkingDirectory);
     LogMacroPaths();
 }
 

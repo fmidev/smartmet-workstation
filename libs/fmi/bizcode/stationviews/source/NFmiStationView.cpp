@@ -64,6 +64,8 @@
 #include "Utf8ConversionFunctions.h"
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiMacroParamfunctions.h"
+#include "NFmiIsoLineData.h"
+#include "ToolMasterDrawingFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1321,6 +1323,144 @@ bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
     return false;
 }
 
+static boost::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroParam(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+{
+	float value = kFloatMissing;
+	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
+	try // ensin tulkitaan macro
+	{
+		FmiModifyEditdData::InitializeSmartToolModifier(smartToolModifier, theAdapter, theDrawParam);
+		if(smartToolModifier.ExtraMacroParamData().UseSpecialResolution())
+			return smartToolModifier.UsedMacroParamData();
+	}
+	catch(...)
+	{
+	}
+	return nullptr;
+}
+
+static std::string DownSizeGridString(const NFmiPoint& gridSize)
+{
+	std::string str = std::to_string(boost::math::iround(gridSize.X()));
+	str += "x";
+	str += std::to_string(boost::math::iround(gridSize.Y()));
+
+	return str;
+}
+
+static void DoDataDownSizeLogging(NFmiCtrlView* view, const std::string& operationName, const NFmiPoint& originalSize, const NFmiPoint& newSize)
+{
+	if(CatLog::doTraceLevelLogging())
+	{
+		std::string finalMessage = "Down sizing data grid when ";
+		finalMessage += operationName;
+		finalMessage += "': ";
+		finalMessage += ::DownSizeGridString(originalSize);
+		finalMessage += " => ";
+		finalMessage += ::DownSizeGridString(newSize);
+		CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(finalMessage, view);
+	}
+}
+
+static void SetupIsolineData(const boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiIsoLineData& theIsoLineDataOut)
+{
+	if(possibleMacroParamResolutionInfo)
+	{
+		theIsoLineDataOut.itsInfo = possibleMacroParamResolutionInfo;
+		theIsoLineDataOut.itsXNumber = possibleMacroParamResolutionInfo->GridXNumber();
+		theIsoLineDataOut.itsYNumber = possibleMacroParamResolutionInfo->GridYNumber();
+	}
+}
+
+bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut)
+{
+	if(itsDrawParam)
+	{
+		possibleMacroParamResolutionInfoOut = CalcPossibleResolutionInfoFromMacroParam(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam);
+		if(possibleMacroParamResolutionInfoOut)
+		{
+			NFmiIsoLineData isoLineData;
+			::SetupIsolineData(possibleMacroParamResolutionInfoOut, isoLineData);
+			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint downSizeFactor;
+			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, downSizeFactor, itsDrawParam))
+			{
+				// Tehdään tässä floor, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) saatetaan luulla että tarvitsee harventaa lisää
+				auto newSizeX = std::floor(isoLineData.itsXNumber / downSizeFactor.X());
+				auto newSizeY = std::floor(isoLineData.itsYNumber / downSizeFactor.Y());
+				newGridSizeOut = NFmiPoint(newSizeX, newSizeY);
+				::DoDataDownSizeLogging(this, "calculating macroParam isoline values", NFmiPoint(isoLineData.itsXNumber, isoLineData.itsYNumber), newGridSizeOut);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut)
+{
+	if(itsDrawParam && possibleMacroParamResolutionInfo)
+	{
+		// Oikeastaan kFmiColorContourIsoLineView on jo tarkastettu edella isoviiva tapauksien kanssa ja 
+		// siellä on suuremmat harvennuskertoimet, mutta tehdään se vielä tässä varmuuden vuoksi.
+		auto style = itsDrawParam->GridDataPresentationStyle();
+		if(style == NFmiMetEditorTypes::View::kFmiColorContourView || style == NFmiMetEditorTypes::View::kFmiQuickColorContourView || style == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
+		{
+			NFmiIsoLineData isoLineData;
+			::SetupIsolineData(possibleMacroParamResolutionInfo, isoLineData);
+			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint downSizeFactor;
+			if(::IsDownSizingNeeded(grid2PixelRatio, GetCriticalGrid2PixelRatioForContour(), downSizeFactor))
+			{
+				// Tehdään tässä ceil, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) luullaan että ei tarvitse tarvitse laittaa quick-contour optiota päälle ollenkaan
+				auto newSizeX = std::ceil(isoLineData.itsXNumber / downSizeFactor.X());
+				auto newSizeY = std::ceil(isoLineData.itsYNumber / downSizeFactor.Y());
+				newGridSizeOut = NFmiPoint(newSizeX, newSizeY);
+				::DoDataDownSizeLogging(this, "calculating macroParam contour values", NFmiPoint(isoLineData.itsXNumber, isoLineData.itsYNumber), newGridSizeOut);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// Lasketaan käytetyn datan hilan ja näytön pikseleiden suhdeluku x- ja y-suunnassa.
+// Jos kyse ei hiladatasta, tai esim. makrosta (smarttool/q3), lasketaan isolinedatan ja arean avulla kertoimet.
+// Jos x/y arvo on 0, jätetään tämä huomiotta.
+NFmiPoint NFmiStationView::CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData)
+{
+	NFmiPoint grid2PixelRatio(0, 0);
+	if(theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
+	{
+		NFmiFastQueryInfo& usedInfo = *(theIsoLineData.itsInfo);
+		usedInfo.FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
+
+		NFmiPoint latlon1(usedInfo.LatLon());
+		NFmiPoint latlon2(usedInfo.PeekLocationLatLon(1, 0));
+		NFmiPoint latlon3(usedInfo.PeekLocationLatLon(0, 1));
+		NFmiPoint p1(LatLonToViewPoint(latlon1));
+		NFmiPoint p2(LatLonToViewPoint(latlon2));
+		NFmiPoint p3(LatLonToViewPoint(latlon3));
+		// 3. Calc relative dist of two parallel neighbor grid point in x dir
+		double relGridPoinWidth = ::fabs(p1.X() - p2.X());
+		double onePixelWidth = itsToolBox->SX(1);
+		grid2PixelRatio.X(relGridPoinWidth / onePixelWidth);
+		// 4. Calc relative dist of two vertical neighbor grid point in y dir
+		double relGridPoinHeight = ::fabs(p1.Y() - p3.Y());
+		double onePixelHeigth = itsToolBox->SY(1);
+		grid2PixelRatio.Y(relGridPoinHeight / onePixelHeigth);
+	}
+	else
+	{
+		double relGridPoinWidth = itsArea->Width() / (theIsoLineData.itsXNumber - 1.0);
+		grid2PixelRatio.X(itsToolBox->HXs(relGridPoinWidth));
+		double relGridPoinHeight = itsArea->Height() / (theIsoLineData.itsYNumber - 1.0);
+		grid2PixelRatio.Y(itsToolBox->HYs(relGridPoinHeight));
+	}
+
+	return grid2PixelRatio;
+}
+
 // 'Probing' macroParam data on alueeltaan hieman pienempi kuin kartan alue, tällöin reunoille ei toivottavasti tule mitään erikoisia
 // arvoja kuten puuttuvaa tai 0:aa. Hilana on 3x3 eli yhdeksän testipistettä, jolla saadaan aavistus, kuinka monta numeroa on luku 
 // tekstissä keskimäärin. Sen avulla voidaan laskea lopullisen harvennetun datan symboli tiheys ruudulla.
@@ -1343,6 +1483,14 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::s
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
+boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParamData(const NFmiPoint &newGridSize)
+{
+	fUseAlReadySpacedOutData = true;
+	int gridSizeX = boost::math::iround(newGridSize.X());
+	int gridSizeY = boost::math::iround(newGridSize.Y());
+	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea);
+}
+
 boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
 {
     if(IsGridDataDrawnWithSpaceOutSymbols())
@@ -1353,12 +1501,17 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
             NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
             FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, probingData);
             auto gridsize = CalcSymbolDrawedMacroParamSpaceOutGridSize(itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex), probingMatrix);
-            fUseAlReadySpacedOutData = true;
-            int gridSizeX = boost::math::iround(gridsize.X());
-            int gridSizeY = boost::math::iround(gridsize.Y());
-            return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea);
+			return CreateNewResizedMacroParamData(gridsize);
         }
     }
+
+	NFmiPoint possibleNewGridSize;
+	boost::shared_ptr<NFmiFastQueryInfo> possibleMacroParamResolutionInfo;
+	if(IsMacroParamIsolineDataDownSized(possibleNewGridSize, possibleMacroParamResolutionInfo))
+		return CreateNewResizedMacroParamData(possibleNewGridSize);
+
+	if(IsMacroParamContourDataDownSized(possibleMacroParamResolutionInfo, possibleNewGridSize))
+		return CreateNewResizedMacroParamData(possibleNewGridSize);
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
@@ -2292,6 +2445,12 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 	return status;
 }
 
+void NFmiStationView::DoTimeInterpolationSettingChecks(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+{
+	itsTimeInterpolationRangeInMinutes = NFmiStationView::GetTimeInterpolationRangeInMinutes(GetHelpDataInfo(theInfo));
+	fAllowNearestTimeInterpolation = NFmiStationView::AllowNearestTimeInterpolation(itsTimeInterpolationRangeInMinutes);
+}
+
 // tämä asettaa tarvittavat jutut optimointia varten
 void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo)
 {
@@ -2307,8 +2466,7 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 		if(!itsInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())))
 			return ;
 
-    itsTimeInterpolationRangeInMinutes = NFmiStationView::GetTimeInterpolationRangeInMinutes(GetHelpDataInfo(itsInfo));
-    fAllowNearestTimeInterpolation = NFmiStationView::AllowNearestTimeInterpolation(itsTimeInterpolationRangeInMinutes);
+	DoTimeInterpolationSettingChecks(itsInfo);
 
 	{
 		//verrataan editdataa sittenkin vertailu dataan, jolloin voi ottaa 'valokuvia', ja vertailua voi suorittaa askel askeleelta

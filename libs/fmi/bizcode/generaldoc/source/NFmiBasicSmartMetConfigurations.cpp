@@ -127,8 +127,7 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
 	try
 	{
         itsHelpDataPath = NFmiSettings::Optional<std::string>("SmartMet::HelpDataPath", itsControlPath + "\\help_data");
-        itsHelpDataPath = PathUtils::getAbsoluteFilePath(itsHelpDataPath, itsControlPath);
-        itsHelpDataPath = BetaProduct::SimplifyWindowsPath(itsHelpDataPath);
+        itsHelpDataPath = PathUtils::makeFixedAbsolutePath(itsHelpDataPath, itsControlPath);
 
         HKEY usedKey = HKEY_CURRENT_USER;
         std::string sectionName = "\\General";
@@ -466,9 +465,7 @@ bool NFmiBasicSmartMetConfigurations::InitLogger(void)
 {
 	try
 	{
-        itsLogFileDirectory = NFmiSettings::Require<std::string>("SmartMet::Logger::LogFilePath");
-        itsLogFileDirectory = PathUtils::getAbsoluteFilePath(itsLogFileDirectory, itsControlPath);
-        itsLogFileDirectory = BetaProduct::SimplifyWindowsPath(itsLogFileDirectory);
+        itsLogFileDirectory = PathUtils::getFixedAbsolutePathFromSettings("SmartMet::Logger::LogFilePath", itsControlPath);
 
         std::string logFilePath = itsLogFileDirectory;
         PathUtils::addDirectorySeparatorAtEnd(logFilePath);
@@ -539,7 +536,7 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
 // Oletus, theControlPath on absoluuttinen polku joko tiedostoon tai hakemistoon.
 bool NFmiBasicSmartMetConfigurations::DoControlPathChecks(std::string theControlPath)
 {
-    theControlPath = BetaProduct::SimplifyWindowsPath(theControlPath);
+    theControlPath = PathUtils::simplifyWindowsPath(theControlPath);
     if(NFmiFileSystem::DirectoryExists(theControlPath))
     {
         itsControlPath = theControlPath;

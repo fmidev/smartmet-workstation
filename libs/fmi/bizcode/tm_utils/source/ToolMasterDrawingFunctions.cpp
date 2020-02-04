@@ -14,6 +14,7 @@
 #include "matrix3d.h"
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "NFmiDrawParam.h"
 
 #include <fstream>
 #include "boost/math/special_functions/round.hpp"
@@ -191,8 +192,8 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
     // theIsoLineData->itsTrueColorContoursCount // t‰ss‰ on laskettu oikea m‰‰r‰ lopullisia rajoja luokille
     checkedVector<float> &origContourClasses = theIsoLineData.itsCustomColorContours; // t‰ss‰ on tallessa k‰ytetyt luokat
 
-    float aMin = theIsoLineData.itsMinValue;
-    float aMax = theIsoLineData.itsMaxValue;
+    float aMin = theIsoLineData.itsClassMinValue;
+    float aMax = theIsoLineData.itsClassMaxValue;
     //int classCount = theIsoLineData->itsTrueColorContoursCount;
 
     checkedVector<NFmiColor> finalColorTable;
@@ -470,6 +471,11 @@ static void CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(flo
     XuShadingScale(shadingScaleIndex);
 }
 
+static void DoContourUserDraw(NFmiIsoLineData& theIsoLineData)
+{
+    XuContourUserDraw(theIsoLineData.itsContourUserDrawData.xCoordinates.data(), theIsoLineData.itsContourUserDrawData.yCoordinates.data(), theIsoLineData.itsContourUserDrawData.itsUserDrawValues.data(), theIsoLineData.itsContourUserDrawData.itsYNumber, theIsoLineData.itsContourUserDrawData.itsXNumber);
+}
+
 static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
 {
     int oldColorTable;
@@ -494,15 +500,18 @@ static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
             ::InitCustomColorTableWithTransparentColor(theIsoLineData, 6, 2);
         else
         {
-            float aMin = theIsoLineData.itsMinValue;
-            float aMax = theIsoLineData.itsMaxValue;
+            float aMin = theIsoLineData.itsClassMinValue;
+            float aMax = theIsoLineData.itsClassMaxValue;
             int classCount = theIsoLineData.itsTrueColorContoursCount;
             checkedVector<int> defaultTableColorIndices(theIsoLineData.itsCustomColorContoursColorIndexies.begin(), theIsoLineData.itsCustomColorContoursColorIndexies.begin() + theIsoLineData.itsColorIndexCount);
             checkedVector<float> colorWidths = ::CalcCustomColorWidths(theIsoLineData);
             ::CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(aMin, aMax, classCount, defaultTableColorIndices, 5, 3, colorWidths, theIsoLineData);
         }
     }
-    if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
+
+    if(theIsoLineData.UseContourUserDraw())
+        ::DoContourUserDraw(theIsoLineData);
+    else if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
         XuContourQuickDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
     else
         XuContourDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
@@ -513,8 +522,8 @@ static void DrawSimpleColorContours(NFmiIsoLineData &theIsoLineData)
 {
     int oldColorTable;
     XuColorTableActiveQuery(&oldColorTable);
-    float aMin = theIsoLineData.itsMinValue;
-    float aMax = theIsoLineData.itsMaxValue;
+    float aMin = theIsoLineData.itsClassMinValue;
+    float aMax = theIsoLineData.itsClassMaxValue;
     int classCount = theIsoLineData.itsTrueColorContoursCount;
     int colorIndices[s_rgbDefCount] = { theIsoLineData.itsCustomColorContoursColorIndexies[0]
                                         ,theIsoLineData.itsCustomColorContoursColorIndexies[1]
@@ -533,7 +542,9 @@ static void DrawSimpleColorContours(NFmiIsoLineData &theIsoLineData)
     XuIsolineWidths(&isolineWidth, 1);
     XuIsolineColors(isolineColorArr, 1);
 
-    if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
+    if(theIsoLineData.UseContourUserDraw())
+        ::DoContourUserDraw(theIsoLineData);
+    else if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
         XuContourQuickDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
     else
         XuContourDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
@@ -1182,7 +1193,6 @@ void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, in
     // en tied‰ muuta tapaa muuttaa label-tekstin v‰ri‰
     XuTextColor(theIsoLineData.itsIsoLineLabelColor[0], theIsoLineData.itsIsoLineLabelColor[0]);
     XuIsolineDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
-
 }
 
 void DrawSimpleIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex, float scaleFactor)
@@ -1249,116 +1259,6 @@ static void FillPartialGridData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLine
             thePartialIsoLineDataOut.itsVectorFloatGridData[j * nx + i] = thePartialIsoLineDataOut.itsIsolineData[i][j];
         }
     }
-}
-
-static bool IsSubGridOneSize(const IntPoint &theTotalSubGridSize)
-{
-    if(theTotalSubGridSize.x == 1 && theTotalSubGridSize.y == 1)
-        return true;
-    return false;
-}
-
-static void CalcSubGrid(const IntPoint &theTotalSubGridSize, const IntPoint &theWantedSubGridIndex, NFmiIsoLineData &theOrigIsoLineData, IntPoint &theSubGridSizeOut, IntPoint &theSubGridStartIndexiesOut)
-{
-    if(::IsSubGridOneSize(theTotalSubGridSize))
-    {
-        theSubGridSizeOut.x = theOrigIsoLineData.itsXNumber;
-        theSubGridSizeOut.y = theOrigIsoLineData.itsYNumber;
-        theSubGridStartIndexiesOut.x = 0;
-        theSubGridStartIndexiesOut.y = 0;
-    }
-    else
-    {
-        int xSize = (theOrigIsoLineData.itsXNumber / theTotalSubGridSize.x) + 1;
-        int ySize = (theOrigIsoLineData.itsYNumber / theTotalSubGridSize.y) + 1;
-        int startXInd = theWantedSubGridIndex.x == 1 ? 0 : ((theWantedSubGridIndex.x - 1) * xSize) - 1;
-        int startYInd = theWantedSubGridIndex.y == 1 ? 0 : ((theWantedSubGridIndex.y - 1) * ySize) - 1;
-        if(theWantedSubGridIndex.x == theTotalSubGridSize.x)
-            xSize = theOrigIsoLineData.itsXNumber - startXInd;
-        if(theWantedSubGridIndex.y == theTotalSubGridSize.y)
-            ySize = theOrigIsoLineData.itsYNumber - startYInd;
-
-        theSubGridSizeOut.x = xSize;
-        theSubGridSizeOut.y = ySize;
-        theSubGridStartIndexiesOut.x = startXInd;
-        theSubGridStartIndexiesOut.y = startYInd;
-    }
-}
-
-// Funktio laskee halutun ali-hilan sijainnin y-akselin suhteen originaali datan zoomi alueen koordinaateissa.
-// theY1Factor on ns. top arvo ja theY2Factor on bottom arvo (asteikon positiivinen suunta on top:ista bottomiin)
-static void CalcSubYFactors2(NFmiIsoLineData &theOrigIsoLineData, const NFmiRect &theOrigZoomedViewRect, NFmiIsoLineData &thePartialIsoLineData, const IntPoint &theStartIndex, double &theY1Factor, double &theY2Factor)
-{
-    double splitPoint1 = 1.0 - (theStartIndex.y / (theOrigIsoLineData.itsYNumber - 1.0));
-    theY1Factor = ((splitPoint1 - theOrigZoomedViewRect.Top()) / theOrigZoomedViewRect.Height());
-    double splitPoint2 = 1.0 - ((theStartIndex.y + thePartialIsoLineData.itsYNumber - 1.0) / (theOrigIsoLineData.itsYNumber - 1.0));
-    theY2Factor = ((splitPoint2 - theOrigZoomedViewRect.Top()) / theOrigZoomedViewRect.Height());
-}
-
-// Funktio laskee halutun ali-hilan sijainnin x-akselin suhteen originaali datan zoomi alueen koordinaateissa.
-// theX1Factor on ns. left arvo ja theX2Factor on right arvo (asteikon positiivinen suunta on left -> right)
-static void CalcSubXFactors2(NFmiIsoLineData &theOrigIsoLineData, const NFmiRect &theOrigZoomedViewRect, NFmiIsoLineData &thePartialIsoLineData, const IntPoint &theStartIndex, double &theX1Factor, double &theX2Factor)
-{
-    double splitPoint1 = theStartIndex.x / (theOrigIsoLineData.itsXNumber - 1.0);
-    theX1Factor = ((splitPoint1 - theOrigZoomedViewRect.Left()) / theOrigZoomedViewRect.Width());
-    double splitPoint2 = (theStartIndex.x + thePartialIsoLineData.itsXNumber - 1.0) / (theOrigIsoLineData.itsXNumber - 1.0);
-    theX2Factor = ((splitPoint2 - theOrigZoomedViewRect.Left()) / theOrigZoomedViewRect.Width());
-}
-
-// Partial grid rect on alue, jonka t‰m‰ osio peitt‰‰ origin hilan 0,0 - 1,1 maailmasta ja siten ett‰ originin top alkaa 0:sta. Siit‰ y-akselin k‰‰ntˆ.
-static NFmiRect CalcPartialGridRect2(const IntPoint &theStartIndex, const NFmiIsoLineData &theOrigIsoLineData, const NFmiIsoLineData &thePartialIsoLineData)
-{
-    double startX1 = theStartIndex.x / (theOrigIsoLineData.itsXNumber - 1.);
-    double startY1 = theStartIndex.y / (theOrigIsoLineData.itsYNumber - 1.);
-    double endX1 = (theStartIndex.x + thePartialIsoLineData.itsXNumber - 1.) / (theOrigIsoLineData.itsXNumber - 1.);
-    double endY1 = (theStartIndex.y + thePartialIsoLineData.itsYNumber - 1.) / (theOrigIsoLineData.itsYNumber - 1.);
-    NFmiRect gridPartialRect(startX1, startY1, endX1, endY1);
-    return gridPartialRect;
-}
-
-static void CalcSubRects(const NFmiRect &theOrigRelViewRect, const NFmiRect &theOrigZoomedViewRect, NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineData &thePartialIsoLineData, const IntPoint &theStartIndex, NFmiRect &theRelViewRectOut, NFmiRect &theZoomedViewRectOut, NFmiRect &theGridAreaOut)
-{
-    // zoomatun alueen ja hilajaon mukaan lasketaan uudet relatiivi ja zoomi alueet
-    double y1Factor, y2Factor = 0;
-    ::CalcSubYFactors2(theOrigIsoLineData, theOrigZoomedViewRect, thePartialIsoLineData, theStartIndex, y1Factor, y2Factor);
-    double x1Factor, x2Factor = 0;
-    ::CalcSubXFactors2(theOrigIsoLineData, theOrigZoomedViewRect, thePartialIsoLineData, theStartIndex, x1Factor, x2Factor);
-
-    theRelViewRectOut = NFmiRect(theOrigRelViewRect.Left() + theOrigRelViewRect.Width() * x1Factor
-        , theOrigRelViewRect.Top() + theOrigRelViewRect.Height() * y1Factor
-        , theOrigRelViewRect.Left() + theOrigRelViewRect.Width() * x2Factor
-        , theOrigRelViewRect.Top() + theOrigRelViewRect.Height() * y2Factor);
-    theZoomedViewRectOut = NFmiRect(theOrigZoomedViewRect.Left() + theOrigZoomedViewRect.Width() * x1Factor
-        , theOrigZoomedViewRect.Top() + theOrigZoomedViewRect.Height() * y1Factor
-        , theOrigZoomedViewRect.Left() + theOrigZoomedViewRect.Width() * x2Factor
-        , theOrigZoomedViewRect.Top() + theOrigZoomedViewRect.Height() * y2Factor);
-
-    theGridAreaOut = ::CalcPartialGridRect2(theStartIndex, theOrigIsoLineData, thePartialIsoLineData);
-}
-
-// T‰m‰ on funktio, joka jakaa datan tiettyyn hila osaan, ja laskee sille osa alueelle tarvittavat rectit ja datan.
-// Koko data jaetaan ruudukkoon, ja t‰ss‰ siis lasketaan aina yksi haluttu ruutu.
-// Funktio saa sis‰‰ns‰ originaali IsoLienDatan ja siihen kuuluvan relatiivisen, zoomatun ja gridi alueen.
-// theTotalSubGridSize kertoo kuinka moneen osaan x- ja y-suunnassa hila on tarkoitus jakaa.
-// theWantedSubGridIndex kertoo kulloisenkin laskettavan ali hilan indeksin alkaen 1, 1 :sta - theTotalSubGridSize.x, theTotalSubGridSize.y :hyn asti.
-static void SplitIsoLineData2Subgrid(const IntPoint &theTotalSubGridSize, const IntPoint &theWantedSubGridIndex, NFmiIsoLineData &theOrigIsoLineData, const NFmiRect &theOrigRelViewRect, const NFmiRect &theOrigZoomedViewRect, NFmiIsoLineData &thePartialIsoLineDataOut, NFmiRect &thePartialRelViewRectOut, NFmiRect &thePartialZoomedViewRectOut, NFmiRect &thePartialGridAreaOut)
-{
-    // 1. Lasketaan uusien data alueiden koot ja indeksit
-    IntPoint newSize;
-    IntPoint startIndex;
-    ::CalcSubGrid(theTotalSubGridSize, theWantedSubGridIndex, theOrigIsoLineData, newSize, startIndex);
-
-    // 2. alustetaan uusi isolinedata (tyhj‰n‰)
-    thePartialIsoLineDataOut.Init(newSize.x, newSize.y, theOrigIsoLineData.itsMaxAllowedIsoLineCount);
-
-    // 3. Alustetaan uuden isoline datan piirtoasetukset originaalista
-    thePartialIsoLineDataOut.InitDrawOptions(theOrigIsoLineData);
-
-    // 4. T‰ytet‰‰n uuden isolineDatan hila-arvot halutuille osaalueilleen.
-    ::FillPartialGridData(theOrigIsoLineData, thePartialIsoLineDataOut, startIndex);
-
-    // 5. Lasketaan uudet relatiivi ja zoomatut alueet
-    ::CalcSubRects(theOrigRelViewRect, theOrigZoomedViewRect, theOrigIsoLineData, thePartialIsoLineDataOut, startIndex, thePartialRelViewRectOut, thePartialZoomedViewRectOut, thePartialGridAreaOut);
 }
 
 static void RaportVisualizationMetrics(float theViewHeight)
@@ -1460,7 +1360,7 @@ static bool IsIsolinesDrawn(const NFmiIsoLineData &theOrigIsoLineData)
     return false;
 }
 
-static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
+double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
 {
     if(currentRatio)
     {
@@ -1470,39 +1370,35 @@ static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
     return 1.;
 }
 
-static bool DataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactor)
+static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
 {
-    if(::IsIsolinesDrawn(theOrigIsoLineData))
-    {
-        const NFmiPoint zeroChangeFactor(1, 1);
-        const double criticalGrid2PixelRatio = 3.0;
-        theDownSizeFactor.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
-        theDownSizeFactor.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
-        return theDownSizeFactor != zeroChangeFactor;
-    }
-    return false;
+    auto gridDataDrawStyle = thePossibleDrawParam->GridDataPresentationStyle();
+    return gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiIsoLineView || gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
 }
 
-// T‰ytet‰‰n isoline data annetulla matriisilla.
-static void FillPartialGridData(const NFmiDataMatrix<float> &theGridData, NFmiIsoLineData &theIsoLineData)
+bool IsDownSizingNeeded(const NFmiPoint& theGrid2PixelRatio, double criticalGrid2PixelRatio, NFmiPoint& theDownSizeFactorOut)
 {
-    // 1. t‰ytet‰‰n NFmiDataMatrix-osio
-    theIsoLineData.SetIsolineData(theGridData);
-
-    // 2. t‰ytet‰‰n sitten toolmasterin k‰ytt‰m‰ float-vektori -osio
-    int nx = static_cast<int>(theIsoLineData.itsIsolineData.NX());
-    int ny = static_cast<int>(theIsoLineData.itsIsolineData.NY());
-    theIsoLineData.itsVectorFloatGridData.resize(nx * ny);
-    for(int j = 0; j < ny; j++)
-    {
-        for(int i = 0; i < nx; i++)
-        {
-            theIsoLineData.itsVectorFloatGridData[j * nx + i] = theIsoLineData.itsIsolineData[i][j];
-        }
-    }
+    const NFmiPoint zeroChangeFactor(1, 1);
+    theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
+    theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
+    return theDownSizeFactorOut != zeroChangeFactor;
 }
 
-static void CalcDownSizedMatrix(NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, FmiParameterName theParamId)
+bool IsolineDataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+{
+    if(thePossibleDrawParam)
+    {
+        if(!::IsIsolinesDrawn(thePossibleDrawParam))
+            return false;
+    }
+    else if(!::IsIsolinesDrawn(theOrigIsoLineData))
+        return false;
+
+    const double criticalGrid2PixelRatio = 3.0;
+    return IsDownSizingNeeded(theGrid2PixelRatio, criticalGrid2PixelRatio, theDownSizeFactorOut);
+}
+
+static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, FmiParameterName theParamId)
 {
     double xDiff = 1.0 / (theDownSizedData.NX() - 1.0);
     double yDiff = 1.0 / (theDownSizedData.NY() - 1.0);
@@ -1522,16 +1418,14 @@ static void CalcDownSizedMatrix(NFmiDataMatrix<float> &theOrigData, NFmiDataMatr
 
 static void BuildDownSizedData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineData &theDownSizedIsoLineData, const NFmiPoint &theDownSizeFactor)
 {
-    int newSizeX = FmiRound(theOrigIsoLineData.itsXNumber / theDownSizeFactor.X());
-    int newSizeY = FmiRound(theOrigIsoLineData.itsYNumber / theDownSizeFactor.Y());
-    theDownSizedIsoLineData.Init(newSizeX, newSizeY, theOrigIsoLineData.itsMaxAllowedIsoLineCount);
-    // Alustetaan uuden isoline datan piirtoasetukset originaalista
-    theDownSizedIsoLineData.InitDrawOptions(theOrigIsoLineData);
-    theDownSizedIsoLineData.itsIsolineMinLengthFactor = theOrigIsoLineData.itsIsolineMinLengthFactor;
+    int newSizeX = boost::math::iround(theOrigIsoLineData.itsXNumber / theDownSizeFactor.X());
+    int newSizeY = boost::math::iround(theOrigIsoLineData.itsYNumber / theDownSizeFactor.Y());
     // T‰ytet‰‰n uuden isolineDatan hila-arvot halutuille osaalueilleen.
     NFmiDataMatrix<float> downSizedGridData(newSizeX, newSizeY, kFloatMissing);
     ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, static_cast<FmiParameterName>(theOrigIsoLineData.itsParam.GetParamIdent()));
-    ::FillPartialGridData(downSizedGridData, theDownSizedIsoLineData);
+    theDownSizedIsoLineData.Init(downSizedGridData, theOrigIsoLineData.itsMaxAllowedIsoLineCount);
+    // Alustetaan uuden isoline datan piirtoasetukset originaalista
+    theDownSizedIsoLineData.InitDrawOptions(theOrigIsoLineData);
 }
 
 static void DoTraceLogging(const std::string message)
@@ -1542,15 +1436,19 @@ static void DoTraceLogging(const std::string message)
     }
 }
 
+double GetCriticalGrid2PixelRatioForContour()
+{
+    return 1.4;
+}
+
 static void DoPossibleQuickContourSetting(NFmiIsoLineData &theOrigIsoLineDataInOut, const NFmiPoint &theGrid2PixelRatio)
 {
     if(theOrigIsoLineDataInOut.fUseColorContours == 1) // jos k‰ytˆss‰ tavallinen contouraus
     {
-        const double criticalGrid2PixelRatioX = 1.4;
-        const double criticalGrid2PixelRatioY = 1.4;
+        const double criticalGrid2PixelRatio = GetCriticalGrid2PixelRatioForContour();
         if(theGrid2PixelRatio.X() != 0 && theGrid2PixelRatio.Y() != 0)
         {
-            if(theGrid2PixelRatio.X() < criticalGrid2PixelRatioX || theGrid2PixelRatio.Y() < criticalGrid2PixelRatioY)
+            if(theGrid2PixelRatio.X() < criticalGrid2PixelRatio || theGrid2PixelRatio.Y() < criticalGrid2PixelRatio)
             { // jos hila koko on tarpeeksi l‰hell‰ n‰ytˆn pikseli kokoa, laitetaan quickcontour p‰‰lle
                 theOrigIsoLineDataInOut.fUseColorContours = 2;
                 ::DoTraceLogging(std::string("Changing to quick-contour draw with ") + ::MakeDataIdentString(theOrigIsoLineDataInOut.itsParam));
@@ -1574,7 +1472,7 @@ int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& th
     // Toolmaster piirto bugi ilmenee kun hila vs. pikseli suhde on n. 1 tai alle. Kierr‰n siten ongelman niin ett‰ kun t‰m‰
     // ratio on tarpeeksi pieni, lasken uuden hila koon, niin ett‰ sen suhdeluku on minimiss‰‰n 1.3 ja interpoloin t‰ll‰iseen
     // uuteen hilaan datan. T‰m‰n j‰lkeen piirto onnistuu ilman ongelmia, eik‰ asiakas huomaa juuri mit‰‰n.
-    bool doDownSize = ::DataDownSizingNeeded(*theIsoLineData, theGrid2PixelRatio, downSizeFactor);
+    bool doDownSize = IsolineDataDownSizingNeeded(*theIsoLineData, theGrid2PixelRatio, downSizeFactor, nullptr);
     if(doDownSize)
     {
         NFmiIsoLineData downSizedIsoLineData;

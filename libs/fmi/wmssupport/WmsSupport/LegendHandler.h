@@ -83,8 +83,7 @@ namespace Wms
         {
             try
             {
-                registeredLayers_.at(descTop).at(row).at(col);
-                return true;
+                return registeredLayers_.at(descTop).at(row).count(col) > 0;
             }
             catch(const std::exception&)
             {

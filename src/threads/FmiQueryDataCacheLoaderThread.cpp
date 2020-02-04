@@ -180,14 +180,14 @@ static std::string MakeUnpackCommand(CachedDataFileInfo &theCachedDataFileInfo)
     return commandStr;
 }
 
-static CFmiCopyingStatus DoBzip2Unpacking(CachedDataFileInfo &theCachedDataFileInfo)
+static CFmiCopyingStatus DoFileUnpacking(CachedDataFileInfo &theCachedDataFileInfo)
 {
     if(theCachedDataFileInfo.fFilePacked) // jos oli pakattu tiedosto
     {
-        // 1.1. Puretaan bzip2 pakattu tiedosto
+        // 1.1. Puretaan 7z, zip tai bz2 pakattu tiedosto
         try
         {
-            // Tehdään purku aina omassa erillisessä prosessissa (bzip2 purkua ei voi keskeyttää), koska joskus bzip2 purku voi kaataa ohjelman
+            // Tehdään purku aina omassa erillisessä prosessissa, koska siihen pitää käyttää erillista 7z.exe ohjelmaa ja purku voi kestaa minuutteja
             std::string unpackCommandStr = ::MakeUnpackCommand(theCachedDataFileInfo);
             bool status = CFmiProcessHelpers::ExecuteCommandInSeparateProcess(unpackCommandStr, true, false, SW_HIDE, false, NORMAL_PRIORITY_CLASS);
             if(status)
@@ -326,7 +326,7 @@ static CFmiCopyingStatus CopyFileEx_CopyRename(CachedDataFileInfo &theCachedData
 		timer.StopTimer();
         ::LogCopySuccess(theCachedDataFileInfo.itsTotalServerFileName, timer); // pitää laittaa lokiin tiedoston kopion lokaalilevylle kesto ennen mahdollista bzip2 purkua
 
-        CFmiCopyingStatus tmpFileStatus = ::DoBzip2Unpacking(theCachedDataFileInfo);
+        CFmiCopyingStatus tmpFileStatus = ::DoFileUnpacking(theCachedDataFileInfo);
         if(tmpFileStatus == kFmiGoOnWithCopying)
         {
     	    // 2. jos onnistui renamea data-tiedosto lopulliseen muotoon ja hakemistoon.
@@ -476,7 +476,7 @@ static std::string TryToFindNewestPackedFileName(const std::string& theFileFilte
 
 // Etsii uusimman tiedoston, joka vastaa annettua fileFilteriä ja löytyy server puolelta 
 // ja palauttaa sen koko nimen polkuineen.
-// Tutkii ensin löytyykö tiedostosta bz2-päätteistä versiota, koska pakatut tiedostot ovat 
+// Tutkii ensin löytyykö tiedostosta 7z, zip tai bz2-päätteistä versiota, koska pakatut tiedostot ovat 
 // prioriteetissa ensin. Jos oli pakattu tiedosto, asetetaan pair:in second-arvoon true, 
 // muuten se on false.
 static void GetNewestFileInfo(const std::string &theFileFilter, CachedDataFileInfo &theCachedDataFileInfoOut)
@@ -524,8 +524,8 @@ static std::pair<std::list<std::string>, bool> GetNewestFileInfoList(const std::
 // Sample results from MakeRestOfTheFileNames function:
 // Original data path: p:\\data\\in\\202001021141_gfs_scandinavia_pressure.sqd.bz2
 // itsTotalCacheFileName: D:\\smartmet\\wrk\\data\\local\\202001021141_gfs_scandinavia_pressure.sqd
-// itsTotalCacheTmpFileName: D:\\smartmet\\wrk\\data\\tmp\\TMP_202001021141_gfs_scandinavia_pressure.sqd_TMP
-// itsTotalCacheTmpPackedFileName: D:\\smartmet\\wrk\\data\\tmp\\TMP_202001021141_gfs_scandinavia_pressure.sqd.bz2_TMP
+// itsTotalCacheTmpFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd_TMP
+// itsTotalCacheTmpPackedFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd.bz2_TMP
 static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOut, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem)
 {
     theCachedDataFileInfoInOut.itsTotalCacheFileName = ::MakeFinalTargetFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem);
