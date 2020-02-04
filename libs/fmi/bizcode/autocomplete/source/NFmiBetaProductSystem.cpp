@@ -1115,9 +1115,9 @@ const std::string NFmiBetaProductAutomation::itsFirstRunTimeOfDayTitle = "First 
 const std::string NFmiBetaProductAutomation::itsRunTimeStepInHoursTitle = "Time step [h]";
 
 
-std::function<std::string(bool)> NFmiBetaProductAutomation::itsBetaProductionBaseDirectoryGetter;
+BaseDirectoryGetterFunctionType NFmiBetaProductAutomation::itsBetaProductionBaseDirectoryGetter;
 
-void NFmiBetaProductAutomation::SetBetaProductionBaseDirectoryGetter(std::function<std::string(bool)> &getterFunction)
+void NFmiBetaProductAutomation::SetBetaProductionBaseDirectoryGetter(BaseDirectoryGetterFunctionType &getterFunction)
 {
     NFmiBetaProductAutomation::itsBetaProductionBaseDirectoryGetter = getterFunction;
 }
@@ -1145,7 +1145,7 @@ void NFmiBetaProductAutomation::CheckBetaProductPath(const std::string &theBetaP
     itsOriginalBetaProductPath = theBetaProductPath;
 
     bool extensionAdded = false;
-    itsBetaProductPath = PathUtils::getTrueFilePath(theBetaProductPath, NFmiBetaProductAutomation::itsBetaProductionBaseDirectoryGetter(true), NFmiBetaProductionSystem::BetaProductFileExtension(), &extensionAdded);
+    itsBetaProductPath = PathUtils::getTrueFilePath(theBetaProductPath, NFmiBetaProductAutomation::itsBetaProductionBaseDirectoryGetter(), NFmiBetaProductionSystem::BetaProductFileExtension(), &extensionAdded);
 
     if(itsBetaProductPath.empty())
         itsBetaProductPathStatusString = ::GetDictionaryString("No Beta product in use");
@@ -1466,9 +1466,9 @@ void NFmiBetaProductAutomationListItem::ParseJsonPair(json_spirit::Pair &thePair
 // *******  NFmiBetaProductAutomationList osio alkaa  *****************
 // ********************************************************************
 
-std::function<std::string(bool)> NFmiBetaProductAutomationList::itsBetaProductionBaseDirectoryGetter;
+BaseDirectoryGetterFunctionType NFmiBetaProductAutomationList::itsBetaProductionBaseDirectoryGetter;
 
-void NFmiBetaProductAutomationList::SetBetaProductionBaseDirectoryGetter(std::function<std::string(bool)> &getterFunction)
+void NFmiBetaProductAutomationList::SetBetaProductionBaseDirectoryGetter(BaseDirectoryGetterFunctionType &getterFunction)
 {
     NFmiBetaProductAutomationList::itsBetaProductionBaseDirectoryGetter = getterFunction;
 }
@@ -1491,11 +1491,11 @@ bool NFmiBetaProductAutomationList::MakeListItemPathSettingsCheck(NFmiBetaProduc
     if(NFmiFileSystem::IsAbsolutePath(givenPath))
     {
         theListItem.itsBetaProductAutomationAbsolutePath = givenPath;
-        theListItem.itsBetaProductAutomationPath = PathUtils::getRelativePathIfPossible(givenPath, NFmiBetaProductAutomationList::itsBetaProductionBaseDirectoryGetter(true));
+        theListItem.itsBetaProductAutomationPath = PathUtils::getRelativePathIfPossible(givenPath, NFmiBetaProductAutomationList::itsBetaProductionBaseDirectoryGetter());
     }
     else
     {
-        theListItem.itsBetaProductAutomationAbsolutePath = PathUtils::getTrueFilePath(givenPath, NFmiBetaProductAutomationList::itsBetaProductionBaseDirectoryGetter(true), NFmiBetaProductionSystem::BetaAutomationFileExtension());
+        theListItem.itsBetaProductAutomationAbsolutePath = PathUtils::getTrueFilePath(givenPath, NFmiBetaProductAutomationList::itsBetaProductionBaseDirectoryGetter(), NFmiBetaProductionSystem::BetaAutomationFileExtension());
         theListItem.itsBetaProductAutomationPath = givenPath;
     }
     return NFmiFileSystem::FileExists(theListItem.itsBetaProductAutomationAbsolutePath);
@@ -1753,8 +1753,6 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 : fBetaProductGenerationRunning(false)
 , itsUsedAutomationList()
 , itsBetaProductionBaseDirectory()
-, itsBetaProductionBaseCacheDirectory()
-, fDoCacheSyncronization(false)
 , mBaseRegistryPath()
 , mBetaProductTimeStepInMinutes()
 , mBetaProductTimeLengthInHours()
@@ -1790,27 +1788,12 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 {
 }
 
-static std::string MakeBaseCacheDirectory(const std::string &theLocalCacheBaseDirectory, const std::string &theOriginalBaseDirectory)
-{
-    std::string path = theLocalCacheBaseDirectory;
-    NFmiStringTools::ReplaceAll(path, "/", "\\"); // Käännetään kenoviivat windows tyyliin '/' -> '\'
-    NFmiFileString fileStr(theOriginalBaseDirectory);
-    fileStr.NormalizeDelimiter();
-    path += fileStr.Path();
-    NFmiStringTools::ReplaceAll(path, "\\\\", "\\"); // Mahdolliset tupla kenoviivat pitää korvata yksöis kenoilla "\\" -> "\"
-    return path;
-}
-
-bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, const std::string &theLocalCacheBaseDirectory)
+bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteControlDirectory)
 {
     // Nämä alustetaan vain ja ainoastaan konffeista ainakin toistaiseksi
     itsBetaProductionBaseDirectory = NFmiSettings::Optional<std::string>("BetaProduction::BaseDirectory", "C:\\smartmet\\BetaProducts\\");
-    itsBetaProductionBaseDirectory = BetaProduct::SimplifyWindowsPath(itsBetaProductionBaseDirectory);
-    fDoCacheSyncronization = NFmiSettings::Optional<bool>("BetaProduction::DoCacheSyncronization", false);
-
-    itsBetaProductionBaseCacheDirectory = itsBetaProductionBaseDirectory;
-    if(fDoCacheSyncronization)
-        itsBetaProductionBaseCacheDirectory = ::MakeBaseCacheDirectory(theLocalCacheBaseDirectory, itsBetaProductionBaseDirectory);
+    itsBetaProductionBaseDirectory = PathUtils::makeFixedAbsolutePath(itsBetaProductionBaseDirectory, theAbsoluteControlDirectory);
+    CatLog::logMessage(std::string("BetaProduction::BaseDirectory = ") + itsBetaProductionBaseDirectory, CatLog::Severity::Info, CatLog::Category::Configuration);
 
     mBaseRegistryPath = theBaseRegistryPath;
     // HKEY_CURRENT_USER -keys
@@ -1841,9 +1824,10 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductPath", usedKey, "");
     mBetaProductTabControlIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductTabControlIndex", usedKey, 0);
 
-    mBetaProductSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductSaveInitialPath", usedKey, itsBetaProductionBaseCacheDirectory); // otetaan Beta-product base-directory oletus arvoksi tähän
-    mBetaAutomationSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationSaveInitialPath", usedKey, itsBetaProductionBaseCacheDirectory); // otetaan Beta-product base-directory oletus arvoksi tähän
-    mBetaAutomationListSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationListSaveInitialPath", usedKey, itsBetaProductionBaseCacheDirectory); // otetaan Beta-product base-directory oletus arvoksi tähän
+    // otetaan Beta-product base-directory oletus arvoksi näihin kolmeen polkuun
+    mBetaProductSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductSaveInitialPath", usedKey, itsBetaProductionBaseDirectory); 
+    mBetaAutomationSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationSaveInitialPath", usedKey, itsBetaProductionBaseDirectory);
+    mBetaAutomationListSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationListSaveInitialPath", usedKey, itsBetaProductionBaseDirectory);
 
     mTriggerModeIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\TriggerModeIndex", usedKey, 0);
     mFixedTimesString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\FixedTimes", usedKey, "");
@@ -1854,7 +1838,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mStartTimeClockOffsetInHoursString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\StartTimeClockOffsetInHours", usedKey, "");
     mEndTimeClockOffsetInHoursString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\EndTimeClockOffsetInHours", usedKey, "");
 
-    std::function<std::string(bool)> getterFunction = std::bind(&NFmiBetaProductionSystem::GetBetaProductionBaseDirectory, this, std::placeholders::_1);
+    std::function<std::string()> getterFunction = [this]() {return this->GetBetaProductionBaseDirectory(); };
     NFmiBetaProductAutomation::SetBetaProductionBaseDirectoryGetter(getterFunction);
     NFmiBetaProductAutomationList::SetBetaProductionBaseDirectoryGetter(getterFunction);
 
@@ -1890,7 +1874,7 @@ bool NFmiBetaProductionSystem::DoNeededBetaAutomation()
 bool NFmiBetaProductionSystem::LoadUsedAutomationList(const std::string &thePath)
 {
     UsedAutomationListPathString(thePath);
-    std::string fullPath = PathUtils::getTrueFilePath(thePath, GetBetaProductionBaseDirectory(true), NFmiBetaProductionSystem::BetaAutomationListFileExtension());
+    std::string fullPath = PathUtils::getTrueFilePath(thePath, GetBetaProductionBaseDirectory(), NFmiBetaProductionSystem::BetaAutomationListFileExtension());
     std::string errorString;
     itsUsedAutomationList = NFmiBetaProductAutomationList(); // Nollataan käytössä ollut lista ennen uuden lukua
     bool status = NFmiBetaProductAutomationList::ReadInJsonFormat(itsUsedAutomationList, fullPath, errorString);
@@ -2120,23 +2104,10 @@ void NFmiBetaProductionSystem::AutomationModeOn(bool newValue)
     *mAutomationModeOn = newValue;
 }
 
-// fGetUserPath = true tarkoittaa että halutaan polku mitä oikeasti käytetään 'työssä' eli 
-// se on lokaali cache-polku jos niin asetuksissa on määrätty. Jos lokaali cachea ei käytetä
-// palautetaan originaali(server)-polku.
-// fGetUserPath = false tarkoittaa että halutaan polku 'server' osoitteeseen, tämä voi 
-// siis olla vain 'originaali' polku.
-std::string NFmiBetaProductionSystem::GetBetaProductionBaseDirectory(bool fGetUserPath)
+std::string NFmiBetaProductionSystem::GetBetaProductionBaseDirectory() const
 {
-    if(fGetUserPath && fDoCacheSyncronization)
-        return itsBetaProductionBaseCacheDirectory;
-    else
-        return itsBetaProductionBaseDirectory;
+    return itsBetaProductionBaseDirectory;
 }
-
-//void NFmiBetaProductionSystem::SetBetaProductionBaseDirectory(const std::string &newValue)
-//{
-//    *mBetaProductionBaseDirectory = newValue;
-//}
 
 std::string NFmiBetaProductionSystem::UsedAutomationListPathString()
 {

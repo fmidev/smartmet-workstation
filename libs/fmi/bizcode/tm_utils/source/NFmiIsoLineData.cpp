@@ -1,52 +1,136 @@
 
 #include "NFmiIsoLineData.h"
 
-void NFmiIsoLineData::Init(int xCount, int yCount, int theMaxAllowedIsoLineCount, int theParamFieldCount)
+namespace
 {
-    // Flow-char piirrossa annetaan 2 tai useampia parametri kenttiä, joten itsVectorFloatGridData pitää alustaa tarpeeksi isoksi myös niitä tilanteita varten
-    itsVectorFloatGridData.resize(xCount * yCount * theParamFieldCount);
-	itsXNumber = xCount;
-	itsYNumber = yCount;
-	itsMaxAllowedIsoLineCount = theMaxAllowedIsoLineCount;
-	itsIsolineData = 0;
+	size_t Matrix2ToolmasterIndex(size_t gridSizeX, size_t yIndex, size_t xIndex)
+	{
+		return ((yIndex * gridSizeX) + xIndex);
+	}
 
-	fUseIsoLines = 0;
-	fUseColorContours = 0;
-	itsTrueIsoLineCount = 0;
-	itsTrueColorContoursCount = 0;
-	fUseLabelBox = false;
-	fUseIsoLineFeathering = false;
+	void GetMinAndMaxValues(const checkedVector<float>& values, float& minOut, float& maxOut)
+	{
+		minOut = 3.4E+38f;
+		maxOut = -3.4E+38f;
+		for(auto value : values)
+		{
+			if(value == kFloatMissing)
+				continue;
+			if(value > maxOut)
+				maxOut = value;
+			if(value < minOut)
+				minOut = value;
+		}
+	}
+
+	void DoMatrixDataInitialization(const NFmiDataMatrix<float>& valuesMatrix, checkedVector<float>& values, float& minOut, float& maxOut)
+	{
+		values.resize(valuesMatrix.NX()* valuesMatrix.NY());
+		auto gridSizeX = valuesMatrix.NX();
+		for(size_t yIndex = 0; yIndex < valuesMatrix.NY(); yIndex++)
+		{
+			for(size_t xIndex = 0; xIndex < gridSizeX; xIndex++)
+				values[::Matrix2ToolmasterIndex(gridSizeX, yIndex, xIndex)] = valuesMatrix[xIndex][yIndex];
+		}
+
+		::GetMinAndMaxValues(values, minOut, maxOut);
+	}
+}
+
+// *********** NFmiContourUserDrawData osio alkaa **************************
+
+void NFmiContourUserDrawData::Init(const NFmiDataMatrix<float>& valueMatrix, const NFmiDataMatrix<NFmiPoint>& coordinateMatrix)
+{
+	if(!(valueMatrix.NX() && valueMatrix.NY()))
+		throw std::runtime_error(std::string("Empty valueMatrix given as parameter in ") + __FUNCTION__);
+	if(!(coordinateMatrix.NX() && coordinateMatrix.NY()))
+		throw std::runtime_error(std::string("Empty coordinateMatrix given as parameter in ") + __FUNCTION__);
+	if(coordinateMatrix.NX() != valueMatrix.NX() || coordinateMatrix.NY() != valueMatrix.NY())
+		throw std::runtime_error(std::string("Different size matrices (coordinateMatrix and valueMatrix) given as parameter in ") + __FUNCTION__);
+
+	// Ensin alustetaan value datarakenteet
+	itsUserDrawValuesMatrix = valueMatrix;
+	itsXNumber = static_cast<int>(itsUserDrawValuesMatrix.NX());
+	itsYNumber = static_cast<int>(itsUserDrawValuesMatrix.NY());
+	::DoMatrixDataInitialization(itsUserDrawValuesMatrix, itsUserDrawValues, itsDataMinValue, itsDataMaxValue);
+
+	// Sitten alustetaan coordinate jutut
+	coordinateMatrix_ = coordinateMatrix;
+	auto totalSize = coordinateMatrix_.NX() * coordinateMatrix_.NY();
+	if(totalSize == 0)
+	{
+		std::string errorMessage = "Error in ";
+		errorMessage += __FUNCTION__;
+		errorMessage += ": zero size coordinateMatrix was given to do Toolmaster user-grid-draw";
+		throw std::runtime_error(errorMessage);
+	}
+	xCoordinates.resize(totalSize, kFloatMissing);
+	yCoordinates.resize(totalSize, kFloatMissing);
+	auto gridSizeX = coordinateMatrix_.NX();
+
+	for(size_t yIndex = 0; yIndex < coordinateMatrix_.NY(); yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < gridSizeX; xIndex++)
+		{
+			const auto &coordinate = coordinateMatrix_[xIndex][yIndex];
+			auto toolmasterIndex = ::Matrix2ToolmasterIndex(gridSizeX, yIndex, xIndex);
+			xCoordinates[toolmasterIndex] = static_cast<float>(coordinate.X());
+			yCoordinates[toolmasterIndex] = static_cast<float>(coordinate.Y());
+		}
+	}
+}
+
+bool NFmiContourUserDrawData::UseUserDraw() const
+{
+	return !xCoordinates.empty() && !yCoordinates.empty();
+}
+
+// *********** NFmiContourUserDrawData osio loppuu **************************
+
+
+// *********** NFmiIsoLineData osio alkaa **************************
+
+static bool IsValuematrixOk(const NFmiDataMatrix<float>& theValueMatrix)
+{
+	return (theValueMatrix.NX() * theValueMatrix.NY()) != 0;
+}
+
+bool NFmiIsoLineData::Init(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
+{
+	if(!::IsValuematrixOk(theValueMatrix))
+		return false;
+
+	BaseInitialization(theValueMatrix, 500);
+	::DoMatrixDataInitialization(itsIsolineData, itsVectorFloatGridData, itsDataMinValue, itsDataMaxValue);
+	return true;
+}
+
+void NFmiIsoLineData::BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
+{
+	DoBaseInitializationReset();
+	SetIsolineData(theValueMatrix);
+	itsMaxAllowedIsoLineCount = theMaxAllowedIsoLineCount;
 
 	itsIsoLineColor.resize(itsMaxAllowedIsoLineCount, 0);
 	itsIsoLineLabelColor.resize(itsMaxAllowedIsoLineCount, 0);
 	itsIsoLineStyle.resize(itsMaxAllowedIsoLineCount, 0);
 	itsIsoLineWidth.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsIsoLineAnnonationHeight.resize(itsMaxAllowedIsoLineCount, 0.f);
-	fUseCustomIsoLineClasses = false;
-	fUseCustomColorContoursClasses = false;
-	fUseSeparatorLinesBetweenColorContourClasses = false;
-	fUseIsoLineGabWithCustomContours = false;
-	itsColorIndexCount = 0;
-	itsIsoLineStep = 1.f;
-	itsColorContoursStep = 1.f;
 	itsCustomIsoLineClasses.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsCustomColorContours.resize(itsMaxAllowedIsoLineCount, 0.f);
 	itsCustomColorContoursColorIndexies.resize(itsMaxAllowedIsoLineCount, 0);
+}
 
-	itsIsoLineSplineSmoothingFactor = 1;
-	itsIsoLineLabelDecimalsCount = 0;
-	itsIsoLineZeroClassValue = 0;
-	itsMinValue = kFloatMissing;
-	itsMaxValue = kFloatMissing;
-	fUseSingleColorsWithSimpleIsoLines = true; // yksiväriset 'simppelit' isoviivat
-
-	itsIsoLineStatistics.Init();
-	itsColorContoursStatistics.Init();
-	itsIsoLineDrawSettings.Init();
-	itsHatch1.Init();
-	itsHatch2.Init();
-
-	itsDefRGBRowSize = 0; // muuta tähän taulukkoon liitttyvää ei 'nollata'
+// Tämä resetoi kaiken muun paitsi itsInfo, itsParam, itsTime, itsIsolineMinLengthFactor ja itsContourUserDrawData dataosat.
+void NFmiIsoLineData::DoBaseInitializationReset()
+{
+	NFmiIsoLineData tmpIsoLineData;
+	tmpIsoLineData.itsInfo = this->itsInfo;
+	tmpIsoLineData.itsTime = this->itsTime;
+	tmpIsoLineData.itsParam = this->itsParam;
+	tmpIsoLineData.itsIsolineMinLengthFactor = this->itsIsolineMinLengthFactor;
+	tmpIsoLineData.itsContourUserDrawData = std::move(this->itsContourUserDrawData);
+	*this = tmpIsoLineData;
 }
 
 // tässä ei tehdä mitää itse datalle, vain eri piirto-optiot kopioidaan
@@ -83,12 +167,8 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsIsoLineLabelDecimalsCount = theOther.itsIsoLineLabelDecimalsCount;
 	itsIsoLineZeroClassValue = theOther.itsIsoLineZeroClassValue;
 	itsIsoLineStartClassValue = theOther.itsIsoLineStartClassValue;
-	itsMinValue = theOther.itsMinValue;
-	itsMaxValue = theOther.itsMaxValue;
-
-	itsIsoLineStatistics = theOther.itsIsoLineStatistics;
-	itsColorContoursStatistics = theOther.itsColorContoursStatistics;
-	itsIsoLineDrawSettings = theOther.itsIsoLineDrawSettings;
+	itsDataMinValue = theOther.itsDataMinValue;
+	itsDataMaxValue = theOther.itsDataMaxValue;
 
 	itsInfo = theOther.itsInfo;
 
@@ -98,24 +178,22 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsDefRGBRowSize = theOther.itsDefRGBRowSize;
 	itsUsedColorsCube = theOther.itsUsedColorsCube;
     itsIsoLineBoxFillColorIndex = theOther.itsIsoLineBoxFillColorIndex;
+	itsIsolineMinLengthFactor = theOther.itsIsolineMinLengthFactor;
 }
 
-void IsoLineStatistics_::Init(void)
+bool NFmiIsoLineData::UseContourDraw() const
 {
-	itsMissingValue = 0.f;
-	itsMinValue = 0.f;
-	itsMinClassValue = 0.f;
-	itsMaxValue = 0.f;
-	itsMaxClassValue = 0.f;
-	itsMeanValue = 0.f;
+	return fUseColorContours != 0;
 }
 
-void IsoLineDrawingSettings_::Init(void)
+void NFmiIsoLineData::InitContourUserDrawData(const NFmiDataMatrix<float>& valueMatrix, const NFmiDataMatrix<NFmiPoint>& coordinateMatrix)
 {
-	itsStartValue = 0.f;
-	itsEndValue = 1.f;
-	itsIsoLineStep = 1.f;
-	itsNumberOfIsoLines = 0;
+	itsContourUserDrawData.Init(valueMatrix, coordinateMatrix);
+}
+
+bool NFmiIsoLineData::UseContourUserDraw() const
+{
+	return itsContourUserDrawData.UseUserDraw();
 }
 
 // Tämä funktio laskee interpoloidun arvon itsCrossSectionData-datasta.
@@ -164,3 +242,4 @@ void NFmiIsoLineData::ResizeDefRGBArray(size_t newRowSize)
 		itsDefRGBRowSize = s_DefRGBRowCapasity;
 }
 
+// *********** NFmiIsoLineData osio loppuu **************************

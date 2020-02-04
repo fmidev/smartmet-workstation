@@ -2663,17 +2663,22 @@ static bool GetGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, Gri
     return false;
 }
 
+void FmiModifyEditdData::InitializeSmartToolModifier(NFmiSmartToolModifier &theSmartToolModifier, TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+{
+	theSmartToolModifier.SetGriddingHelper(theAdapter.GetGriddingHelper());
+	theSmartToolModifier.IncludeDirectory(theAdapter.MacroParamSystem().RootPath());
+
+	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
+	theSmartToolModifier.InitSmartTool(macroParamStr, true);
+}
+
 static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
 	try // ensin tulkitaan macro
 	{
-		smartToolModifier.SetGriddingHelper(theAdapter.GetGriddingHelper());
-        smartToolModifier.IncludeDirectory(theAdapter.MacroParamSystem().RootPath());
-
-		std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
-		smartToolModifier.InitSmartTool(macroParamStr, true);
+		FmiModifyEditdData::InitializeSmartToolModifier(smartToolModifier, theAdapter, theDrawParam);
 	}
 	catch(std::exception &e)
 	{

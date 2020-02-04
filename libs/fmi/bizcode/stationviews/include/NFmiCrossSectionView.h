@@ -128,12 +128,30 @@ private:
 	void FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData = nullptr);
 	void FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
 	void FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-	void FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-    bool FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId);
+	int FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
+	void FillRouteCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
+	void FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
+    bool FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
     void FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-    bool FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId);
-    void FillCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-    bool FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId);
+    bool FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData);
+	void FillCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
+	void FillCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData);
+	void FillTimeCrossSectionUserDrawData(NFmiIsoLineData &theIsoLineData);
+	void FillRouteCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
+	NFmiDataMatrix<float> MakeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData);
+	NFmiDataMatrix<float> MakeTimeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData);
+	NFmiDataMatrix<float> MakeRouteCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData,
+		const checkedVector<NFmiPoint>& theLatlonPoints,
+		const checkedVector<NFmiMetTime>& thePointTimes);
+	bool IsUserDrawDataNeeded(NFmiFastQueryInfo & usedInfo);
+	NFmiDataMatrix<NFmiPoint> CalcRelativeCoordinatesFromPressureMatrix(const NFmiDataMatrix<float>& pressureValues) const;
+	bool FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData);
 	void FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDataMatrix<NFmiPoint> &theCoordinates, checkedVector<float> &thePressures);
 	void CalculateViewRects(void);
 	NFmiRect CalcDataViewRect(void);
@@ -163,8 +181,9 @@ private:
 	int CalcHorizontalPointCount(void);
 	double Column2x(int theColumn);
 
-	double p2y(double p);
-	double y2p(double y);
+	double p2y(double p) const;
+	double p2y(const NFmiRect &usedDataRect, double p) const;
+	double y2p(double y) const;
 
 	double itsLowerEndOfPressureAxis;
 	double itsUpperEndOfPressureAxis;

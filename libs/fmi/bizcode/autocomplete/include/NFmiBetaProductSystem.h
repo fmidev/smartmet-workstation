@@ -7,6 +7,8 @@
 
 #include <set>
 
+using BaseDirectoryGetterFunctionType = std::function<std::string()>;
+
 enum BetaProductViewIndex
 {
     kMainMapView = 0,
@@ -271,7 +273,7 @@ public:
     static bool StoreInJsonFormat(const NFmiBetaProductAutomation &betaProductAutomation, const std::string &theFilePath, std::string &theErrorStringOut);
     static bool ReadInJsonFormat(NFmiBetaProductAutomation &betaProductAutomation, const std::string &theFilePath, std::string &theErrorStringOut);
 
-    static void SetBetaProductionBaseDirectoryGetter(std::function<std::string(bool)> &getterFunction);
+    static void SetBetaProductionBaseDirectoryGetter(BaseDirectoryGetterFunctionType &getterFunction);
     static const std::string& FirstRunTimeOfDayTitle() { return itsFirstRunTimeOfDayTitle; }
     static const std::string& RunTimeStepInHoursTitle() { return itsRunTimeStepInHoursTitle; }
 
@@ -290,7 +292,7 @@ private:
     NFmiTimeModeInfo itsEndTimeModeInfo; // Miten m‰‰r‰t‰‰n t‰m‰n tuotteen pituus
     std::shared_ptr<NFmiBetaProduct> itsBetaProduct; // T‰h‰n luetaan tarvittaessa itsBetaProductPath:in osoittaman tiedoston Beta-product -olio
     std::string itsLoadedBetaProductAbsolutePath; // T‰h‰n talletetaan luetun Beta-productin polku, jos t‰m‰ poikkeaa itsBetaProductPath:in arvosta, pit‰‰ GetBetaProduct -metodissa lukea uusi olio uudesta tiedostosta
-    static std::function<std::string(bool)> itsBetaProductionBaseDirectoryGetter; // T‰m‰ tieto lˆytyy NFmiBetaProductionSystem -luokasta. Annan siis n‰ille luokille k‰yttˆˆn kyseisen luokan metodin, jolta polku tarvittaessa pyydet‰‰n (n‰in luokien ei tarvitse tiet‰‰ toisistaan mit‰‰n)
+    static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; // T‰m‰ tieto lˆytyy NFmiBetaProductionSystem -luokasta. Annan siis n‰ille luokille k‰yttˆˆn kyseisen luokan metodin, jolta polku tarvittaessa pyydet‰‰n (n‰in luokien ei tarvitse tiet‰‰ toisistaan mit‰‰n)
 };
 
 class NFmiBetaProductAutomationListItem
@@ -353,7 +355,7 @@ public:
     static bool StoreInJsonFormat(const NFmiBetaProductAutomationList &theBetaProductAutomationList, const std::string &theFilePath, std::string &theErrorStringOut);
     static bool ReadInJsonFormat(NFmiBetaProductAutomationList &theBetaProductAutomationList, const std::string &theFilePath, std::string &theErrorStringOut);
 
-    static void SetBetaProductionBaseDirectoryGetter(std::function<std::string(bool)> &getterFunction);
+    static void SetBetaProductionBaseDirectoryGetter(BaseDirectoryGetterFunctionType &getterFunction);
 
 private:
     bool MakeListItemPathSettings(NFmiBetaProductAutomationListItem &theListItem);
@@ -364,7 +366,7 @@ private:
 
     AutomationContainer itsAutomationVector;
 
-    static std::function<std::string(bool)> itsBetaProductionBaseDirectoryGetter; // T‰m‰ tieto lˆytyy NFmiBetaProductionSystem -luokasta. Annan siis n‰ille luokille k‰yttˆˆn kyseisen luokan metodin, jolta polku tarvittaessa pyydet‰‰n (n‰in luokien ei tarvitse tiet‰‰ toisistaan mit‰‰n)
+    static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; // T‰m‰ tieto lˆytyy NFmiBetaProductionSystem -luokasta. Annan siis n‰ille luokille k‰yttˆˆn kyseisen luokan metodin, jolta polku tarvittaessa pyydet‰‰n (n‰in luokien ei tarvitse tiet‰‰ toisistaan mit‰‰n)
 };
 
 
@@ -374,7 +376,7 @@ class NFmiBetaProductionSystem
 public:
 
     NFmiBetaProductionSystem();
-    bool Init(const std::string &theBaseRegistryPath, const std::string &theLocalCacheBaseDirectory);
+    bool Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteControlDirectory);
     bool DoNeededBetaAutomation();
 
     bool BetaProductGenerationRunning() const { return fBetaProductGenerationRunning; }
@@ -413,10 +415,9 @@ public:
     std::string BetaAutomationListSaveInitialPath();
     void BetaAutomationListSaveInitialPath(const std::string& newValue);
 
-    // Laitoin n‰ille BetaProductionBaseDirectory -set/get funktioille Set/Get -etuliitteet, jotta k‰‰nt‰j‰ erottaa 
-    // ne, kun teen NFmiBetaProductAutomation -luokalle t‰h‰n liittyv‰‰ getter-funktion:ia.
-    std::string GetBetaProductionBaseDirectory(bool fGetUserPath);
-//    void SetBetaProductionBaseDirectory(const std::string &newValue);
+    // Laitoin t‰lle BetaProductionBaseDirectory get-funktioille Get -etuliitteen, jotta k‰‰nt‰j‰ erottaa 
+    // sen, kun teen NFmiBetaProductAutomation -luokalle t‰h‰n liittyv‰‰ getter-funktion:ia.
+    std::string GetBetaProductionBaseDirectory() const;
     std::string UsedAutomationListPathString();
     void UsedAutomationListPathString(const std::string &newValue);
 
@@ -479,8 +480,6 @@ public:
     void StartTimeClockOffsetInHoursString(const std::string &newValue);
     std::string EndTimeClockOffsetInHoursString();
     void EndTimeClockOffsetInHoursString(const std::string &newValue);
-    bool DoCacheSyncronization(void) const { return fDoCacheSyncronization; }
-
 
 private:
     bool fBetaProductGenerationRunning; // Onko SmartMet juuri tekem‰ss‰ kuvia Beta product systeemill‰ (vaikuttaa mm. joihinkin piirtoihin)
@@ -501,10 +500,8 @@ private:
     static const std::string itsFileNameTemplateValidTimeStamp;
     static const std::string itsFileNameTemplateStationIdStamp;
 
-
-    std::string itsBetaProductionBaseDirectory; // Perushakemisto, jonne talletetaan Beta-produt:eja ja automaatioita ja automaatiolistoja. T‰m‰ voi olla jaetulla verkkolevyll‰, joka on synkattu lokaali cacheen.
-    std::string itsBetaProductionBaseCacheDirectory; // Jos synkronointi on laitettu p‰‰lle, t‰nne kopsataan ja synkronoidaan beta-tuotteet verkosta
-    bool fDoCacheSyncronization;
+    // Perushakemisto, jonne talletetaan Beta-produt:eja ja automaatioita ja automaatiolistoja. T‰m‰ voi olla jaetulla verkkolevyll‰.
+    std::string itsBetaProductionBaseDirectory;
 
     // General Beta Product dialog options
     std::string mBaseRegistryPath; // Perus smartmet polku Windows rekistereiss‰ (t‰h‰n tulee SmartMetin konfiguraatio kohtainen polku)

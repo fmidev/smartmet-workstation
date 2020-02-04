@@ -1018,10 +1018,7 @@ void InitBetaProductionSystem()
     try
     {
         BetaProduct::SetLoggerFunction(GetLogAndWarnFunction());
-        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), MacroPathSettings().LocalCacheBasePath());
-
-        if(itsBetaProductionSystem.DoCacheSyncronization())
-            FirstTimeMacroDirectoryCheck(itsBetaProductionSystem.GetBetaProductionBaseDirectory(false), itsBetaProductionSystem.GetBetaProductionBaseDirectory(true));
+        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), ControlDirectory());
     }
     catch(std::exception &e)
     {
@@ -7690,10 +7687,10 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
 
 void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
 {
-    auto keepMapAspectRatio = ApplicationWinRegistry().KeepMapAspectRatio();
-    // Jos karttan‰yttˆ‰ venytet‰‰n ja keepMapAspectRatio on true, t‰llˆin tapahtuu automaattinen 
-    // alueen zoomaus ja silloin macroParamDataCache pit‰‰ tyhjent‰‰ t‰lle n‰ytˆlle.
-    MapViewDirty(mapViewDescTopIndex, true, true, true, keepMapAspectRatio, false, false);
+	// Nyky‰‰n jos kartan koko muuttuu, pit‰‰ macroParam cache tyhjent‰‰, koska sen koko saattaa muuttua.
+	// Laskentahilan koko lasketaan aina uudestaan, jolloin tehd‰‰n hila- vs pikseli-koko vertailuja.
+    auto cleanMacroParamCache = true;
+    MapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
     MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
     auto mapViewDesctop = MapViewDescTop(mapViewDescTopIndex);
     if(mapViewDesctop)
@@ -7895,8 +7892,6 @@ void DoMacroDirectoriesSyncronization(void)
 		DoUnisonDirectorySync(itsMacroPathSettings.MacroParamPath(false), itsMacroPathSettings.MacroParamPath(true), preferRoot1, SW_HIDE, false, priorityClass);
 		DoUnisonDirectorySync(itsMacroPathSettings.SmartToolPath(false), itsMacroPathSettings.SmartToolPath(true), preferRoot1, SW_HIDE, false, priorityClass);
 		DoUnisonDirectorySync(itsMacroPathSettings.ViewMacroPath(false), itsMacroPathSettings.ViewMacroPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-        if(itsBetaProductionSystem.DoCacheSyncronization())
-            DoUnisonDirectorySync(itsBetaProductionSystem.GetBetaProductionBaseDirectory(false), itsBetaProductionSystem.GetBetaProductionBaseDirectory(true), preferRoot1, SW_HIDE, false, priorityClass);
 
 		// 4. kasvata synkronointi counteria
 		itsMacroDirectoriesSyncronizationCounter++;
@@ -11068,7 +11063,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
         if(MapViewDescTop(theDescTopIndex)->SetMapViewGrid(newValue, mapViewWinRegistry.get()))
         {
-            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
+			MapViewDirty(theDescTopIndex, true, true, true, true, false, false);
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(theDescTopIndex));
             return true;
         }
         else
@@ -13445,19 +13441,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         itsSpecialFileStoragePath = NFmiSettings::Optional<std::string>("SmartMet::SpecialFileStoragePath", ""); // oletus arvo on tyhj‰
         if(!itsSpecialFileStoragePath.empty())
         {
-            // pit‰‰ tehd‰ viel‰ absoluutti vs suhteellinen polku tarkasteluja
-            NFmiFileString fileString(itsSpecialFileStoragePath);
-            if(!fileString.IsAbsolutePath())
-            { // jos oli suhteellinen polku, lis‰t‰‰n se kontrollihakemistoon
-                itsSpecialFileStoragePath = itsBasicConfigurations.ControlPath() + "\\" + itsSpecialFileStoragePath;
-            }
-
-            // jos polussa ei ole lopussa kenoviivaa '\', lis‰t‰‰n se
-            char ch = itsSpecialFileStoragePath[itsSpecialFileStoragePath.size()-1];
-            if(ch != '\\' && ch != '/')
-                itsSpecialFileStoragePath += kFmiDirectorySeparator;
-
-            itsSpecialFileStoragePath = BetaProduct::SimplifyWindowsPath(itsSpecialFileStoragePath);
+			itsSpecialFileStoragePath = PathUtils::makeFixedAbsolutePath(itsSpecialFileStoragePath, itsBasicConfigurations.ControlPath(), true);
+			CatLog::logMessage(std::string("SpecialFileStoragePath = ") + itsSpecialFileStoragePath, CatLog::Severity::Info, CatLog::Category::Configuration);
 
             // varmistetaan viel‰ ett‰ hakemisto on olemassa
             if(!NFmiFileSystem::CreateDirectory(itsSpecialFileStoragePath))
@@ -13758,8 +13743,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     std::string MakeUsedFixedDrawParamsRootPath()
     {
         std::string rootPath = ApplicationWinRegistry().FixedDrawParamsPath();
-        rootPath = PathUtils::getAbsoluteFilePath(rootPath, ControlDirectory());
-        rootPath = BetaProduct::SimplifyWindowsPath(rootPath);
+        rootPath = PathUtils::makeFixedAbsolutePath(rootPath, ControlDirectory());
         return rootPath;
     }
 
