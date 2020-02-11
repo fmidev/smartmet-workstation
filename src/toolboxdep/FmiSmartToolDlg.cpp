@@ -28,6 +28,7 @@
 #include "ApplicationInterface.h"
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiFileString.h"
+#include <boost/math/special_functions.hpp>
 #include <fstream>
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
@@ -418,6 +419,16 @@ void CFmiSmartToolDlg::InitializeSyntaxEditControl()
     LoadSmarttoolToSyntaxEditControl(GetSmarttoolFilePath());
 
     itsSyntaxEditControlAcceleratorTable = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR_SYNTAX_EDIT_CONTROL));
+
+    auto autoCompleteWindow = itsSyntaxEditControl->GetAutoCompleteWnd();
+    if(autoCompleteWindow)
+    {
+        CString maxAutoCompliteText = _T("occurrence_betweeneq(par, radius_km, time_offset1, time_offset2, limit1, limit2)");
+        auto textSizeInPixels = autoCompleteWindow->GetDC()->GetTextExtent(maxAutoCompliteText);
+        // Jostain syystä laskettu maksimi tekstin pituu on aivan liian pitkä, lyhennetään sitä hieman
+        int usedWidthInPixels = boost::math::iround(textSizeInPixels.cx * 0.85);
+        autoCompleteWindow->SetWndWidth(usedWidthInPixels);
+    }
 }
 
 std::string CFmiSmartToolDlg::MakeSyntaxEditConfigFilePath()
