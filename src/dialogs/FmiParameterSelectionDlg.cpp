@@ -625,7 +625,6 @@ BEGIN_MESSAGE_MAP(CFmiParameterSelectionDlg, CDialogEx)
     ON_WM_SIZE()
     ON_WM_TIMER()
     ON_WM_ERASEBKGND()
-    ON_EN_CHANGE(IDC_EDIT_TEXT, &CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText)
     ON_WM_PAINT()
 END_MESSAGE_MAP()
 
@@ -1224,7 +1223,7 @@ BOOL CFmiParameterSelectionDlg::OnEraseBkgnd(CDC* pDC)
     //return CDialogEx::OnEraseBkgnd(pDC);
 }
 
-void CFmiParameterSelectionDlg::OnEnChangeEditParameterSelectionSearchText()
+void CFmiParameterSelectionDlg::UpdateAfterSearchText()
 {
     UpdateData(TRUE);
     Update();
@@ -1250,4 +1249,23 @@ void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 	SetWindowText(CA2T(MakeTitleText().c_str()));
 	itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
 	Update();
+}
+
+
+BOOL CFmiParameterSelectionDlg::PreTranslateMessage(MSG* pMsg)
+{
+    // Erikoisk‰sittely, jos kyse RETURN napin painalluksesta (alas/ylˆs)
+    auto messageType = pMsg->message;
+    if((WM_KEYDOWN == messageType || WM_KEYUP == messageType) && VK_RETURN == pMsg->wParam)
+    {
+        // Toimitaan lopulta vain silloin kun RETURN nappi p‰‰tet‰‰n ylˆs
+        if(WM_KEYUP == messageType)
+        {
+            std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+            UpdateAfterSearchText();
+        }
+        return TRUE; // Palautetaan true, jotta t‰t‰ messagea ei k‰sitell‰ en‰‰ muualla
+    }
+
+    return CDialogEx::PreTranslateMessage(pMsg);
 }
