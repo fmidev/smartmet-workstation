@@ -135,6 +135,7 @@ private:
 	std::string MakeTitleText();
     bool UpdateSearchIfNeeded();
     void CollapseAllButCategories();
+    void UpdateAfterSearchText();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
@@ -161,7 +162,7 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-    afx_msg void OnEnChangeEditParameterSelectionSearchText();
     afx_msg void OnPaint();
 	void SetIndexes(unsigned int theDescTopIndex);
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
