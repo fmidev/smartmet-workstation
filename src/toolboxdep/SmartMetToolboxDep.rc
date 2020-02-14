@@ -868,9 +868,6 @@ BEGIN
     GROUPBOX        "Makro Parametrit",IDC_STATIC_MACRO_PARAM_HOLDER,7,226,307,108
 END
 
-// MARKO Huomio! Outo MFC juttu: GROUPBOX:ien pit‰‰ olla dialogissa viimeisin‰, muuten static -tyyppiset kontrollit eiv‰t saa
-// CPPToolTip luokan tooltippi‰ toimimaan. Tuo j‰rjestys t‰ss‰ viittaa tab-orderiin ja sit‰ ei siis saa j‰rjest‰‰ 'oikein' groupboxien kanssa.
-
 IDD_DIALOG_SMART_TOOL_LOADING DIALOGEX 0, 0, 257, 191
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "SmartTools"
@@ -971,7 +968,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFR
 CAPTION "Log viewer"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "Search text",IDC_STATIC_LOG_VIEWER_SEARCH_TEXT,5,2,57,8
+    LTEXT           "Search text",IDC_STATIC_LOG_VIEWER_SEARCH_TEXT,5,2,113,8
     LTEXT           "Log category",IDC_STATIC_LOG_VIEWER_CATEGORY_TEXT,126,2,57,8
     LTEXT           "Min severity",IDC_STATIC_LOG_VIEWER_SEVERITY_TEXT,195,2,57,8
     EDITTEXT        IDC_EDIT_LOG_VIEWER_SEARCH_TEXT,5,13,117,14,ES_AUTOHSCROLL
