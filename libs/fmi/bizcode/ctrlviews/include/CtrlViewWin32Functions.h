@@ -28,4 +28,23 @@ namespace CtrlView
     void SetToolsDCs(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect, bool fToolMasterAvailable); // t‰m‰ asettaa kaikki kerralla
     void SetToolBoxsDC(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect);
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect);
+
+    template<typename SearchFunction>
+    BOOL DoReturnKeyOperation(MSG* pMsg, SearchFunction& searchFunction)
+    {
+        // Erikoisk‰sittely, jos kyse RETURN napin painalluksesta (alas/ylˆs)
+        auto messageType = pMsg->message;
+        if((WM_KEYDOWN == messageType || WM_KEYUP == messageType) && VK_RETURN == pMsg->wParam)
+        {
+            // Toimitaan lopulta vain silloin kun RETURN nappi p‰‰tet‰‰n ylˆs
+            if(WM_KEYUP == messageType)
+            {
+                std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ShowWaitCursorWhileDrawingView());
+                searchFunction();
+            }
+            return TRUE; // Palautetaan true, jotta t‰t‰ messagea ei k‰sitell‰ en‰‰ muualla
+        }
+        return FALSE; // Palautetaan false, ett‰ message k‰sitell‰‰n virallisia teit‰ pitkin
+    }
+
 }

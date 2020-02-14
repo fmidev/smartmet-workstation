@@ -1251,21 +1251,11 @@ void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 	Update();
 }
 
-
 BOOL CFmiParameterSelectionDlg::PreTranslateMessage(MSG* pMsg)
 {
     // Erikoisk‰sittely, jos kyse RETURN napin painalluksesta (alas/ylˆs)
-    auto messageType = pMsg->message;
-    if((WM_KEYDOWN == messageType || WM_KEYUP == messageType) && VK_RETURN == pMsg->wParam)
-    {
-        // Toimitaan lopulta vain silloin kun RETURN nappi p‰‰tet‰‰n ylˆs
-        if(WM_KEYUP == messageType)
-        {
-            std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
-            UpdateAfterSearchText();
-        }
+    if(CtrlView::DoReturnKeyOperation(pMsg, [this](){this->UpdateAfterSearchText(); }))
         return TRUE; // Palautetaan true, jotta t‰t‰ messagea ei k‰sitell‰ en‰‰ muualla
-    }
 
     return CDialogEx::PreTranslateMessage(pMsg);
 }
