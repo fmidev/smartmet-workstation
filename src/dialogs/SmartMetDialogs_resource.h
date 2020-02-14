@@ -613,6 +613,7 @@
 #define IDC_BUTTON_DEFAULT_VALUES2      8108
 #define IDC_BUTTON_APPLY_CHANGES        8108
 #define IDC_STATIC_TEXT                 8108
+#define IDC_STATIC_TEXT_SEARCH          8108
 #define IDC_EDIT_SEARCH_STR             8109
 #define IDC_CHECK_ZIP_DATA              8110
 
