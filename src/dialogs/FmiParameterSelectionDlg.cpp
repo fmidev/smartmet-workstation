@@ -693,7 +693,7 @@ void CFmiParameterSelectionDlg::DoWhenClosing(void)
 
 void CFmiParameterSelectionDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
-    lpMMI->ptMinTrackSize.x = 250;
+    lpMMI->ptMinTrackSize.x = 350;
     lpMMI->ptMinTrackSize.y = 250;
 
     CDialogEx::OnGetMinMaxInfo(lpMMI);
@@ -1093,6 +1093,7 @@ bool CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
 void CFmiParameterSelectionDlg::InitDialogTexts(void)
 {
     SetWindowText(CA2T(g_TitleStr.c_str()));
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_TEXT_SEARCH, "Search text\n(Press Enter!)");
 }
 
 void CFmiParameterSelectionDlg::HandleGridCtrlsLButtonDblClk()
