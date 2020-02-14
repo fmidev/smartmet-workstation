@@ -850,7 +850,8 @@ void CFmiParameterSelectionDlg::SetTreeNodeInformationBackToDialogRowData()
     int rowIndex = itsGridCtrl.GetFixedRowCount();
     for(auto &rowItem : rowData)
     {
-        rowItem.dialogTreeNodeCollapsed(::IsTreeNodeCollapsed(itsTreeColumn, rowIndex++));
+        auto isCollapsed = ::IsTreeNodeCollapsed(itsTreeColumn, rowIndex++);
+        rowItem.dialogTreeNodeCollapsed(isCollapsed);
     }
 }
 
@@ -1038,17 +1039,50 @@ void CFmiParameterSelectionDlg::MakeTreeNodeCollapseSettings()
     itsTreeColumn.TreeRefreshRows();
 }
 
+static bool IsCategoryMainLevelData(const AddParams::SingleRowItem& currentRowData, const AddParams::SingleRowItem* previousRowData)
+{
+    if(previousRowData)
+    {
+        if(currentRowData.rowType() == AddParams::RowType::kDataType)
+        {
+            if(previousRowData->rowType() == AddParams::RowType::kCategoryType)
+            {
+                // jos kategorian j‰lkeen tulee heti data tason rivi, on se kategoria tason data
+                return true;
+            }
+            else if(previousRowData->rowType() == AddParams::RowType::kDataType && currentRowData.itemId() != previousRowData->itemId())
+            {
+                // jos data-tyypin j‰lkeen tulee heti data tason rivi, ja niill‰ on eri id:t (eri tuottajat), on se kategoria tason data
+                return true;
+            }
+            else if(previousRowData->rowType() < AddParams::RowType::kDataType && currentRowData.itemId() != previousRowData->parentItemId())
+            {
+                // jos param/level/subparam -tyypin j‰lkeen tulee heti data tason rivi, ja niill‰ on eri id:t (eri tuottajat), on se kategoria tason data, previous pit‰‰ katsoa parentId:sta!
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void CFmiParameterSelectionDlg::CollapseAllButCategories()
 {
     int currentRowCount = itsGridCtrl.GetFixedRowCount();
+    const AddParams::SingleRowItem* previousRowData = nullptr;
     // Collapse producers' sub levels
-    for(auto &rowItem : itsParameterSelectionSystem->dialogRowData())
+    for(const auto &rowItem : itsParameterSelectionSystem->dialogRowData())
     {
         if(rowItem.rowType() == AddParams::RowType::kProducerType)
         {
             itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);       
         }
+        else if(::IsCategoryMainLevelData(rowItem, previousRowData))
+        { 
+            // erikoistapaukset pit‰‰ hoitaa n‰in, on olemassa p‰‰tason datoja, joilla ei ole producer tasoa
+            itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
+        }
         currentRowCount++;
+        previousRowData = &rowItem;
     }
     SetTreeNodeInformationBackToDialogRowData();
     itsTreeColumn.TreeRefreshRows();
