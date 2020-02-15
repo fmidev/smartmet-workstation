@@ -175,32 +175,26 @@ std::string gridSizeInKm(const NFmiGrid *grid)
         return "-";
 }
 
-std::string timeSteps(boost::shared_ptr<NFmiFastQueryInfo> info)
+std::string timeSteps(const boost::shared_ptr<NFmiFastQueryInfo> &info)
 {
-    NFmiTimeList* timeList;
-    NFmiTimeBag* timeBag;
-    int timeSteps;
-    std::string resolution;
+    int timeSteps = 0;
 
     if(info->TimeDescriptor().ValidTimeList() != nullptr)
     {
-        timeList = info->TimeDescriptor().ValidTimeList();
+        auto timeList = info->TimeDescriptor().ValidTimeList();
         timeSteps = timeList->NumberOfItems();
-        resolution = "varies";
     }
     else
     {
-        timeBag = info->TimeDescriptor().ValidTimeBag();
+        auto timeBag = info->TimeDescriptor().ValidTimeBag();
         timeSteps = timeBag->GetSize();
-        resolution = std::to_string(timeBag->Resolution()) + " min";
     }
 
     return std::to_string(timeSteps);
 }
 
-std::string timeResolution(boost::shared_ptr<NFmiFastQueryInfo> info)
+std::string timeResolution(const boost::shared_ptr<NFmiFastQueryInfo> &info)
 {
-    NFmiTimeBag* timeBag;
     std::string resolution;
 
     if(info->TimeDescriptor().ValidTimeList() != nullptr)
@@ -209,7 +203,7 @@ std::string timeResolution(boost::shared_ptr<NFmiFastQueryInfo> info)
     }
     else
     {
-        timeBag = info->TimeDescriptor().ValidTimeBag();
+        auto timeBag = info->TimeDescriptor().ValidTimeBag();
         resolution = std::to_string(timeBag->Resolution()) + " min";
     }
 
@@ -221,7 +215,7 @@ unsigned long long fileSizeInMB(const std::string &totalFilePath)
     return  NFmiFileSystem::FileSize(totalFilePath);
 }
 
-unsigned long long fileSizeInMB(AddParams::SingleRowItem &singleRowItem)
+unsigned long long fileSizeInMB(const AddParams::SingleRowItem &singleRowItem)
 {   
     return fileSizeInMB(singleRowItem.totalFilePath());
 }
@@ -249,7 +243,7 @@ std::string GetParameterInterpolationMethodString(FmiInterpolationMethod method)
     }
 }
 
-const std::string NFmiParameterSelectionGridCtrl::DataTypeString(NFmiInfoData::Type dataType)
+std::string NFmiParameterSelectionGridCtrl::DataTypeString(NFmiInfoData::Type dataType)
 {
     switch(dataType)
     {
@@ -316,7 +310,7 @@ const std::string NFmiParameterSelectionGridCtrl::DataTypeString(NFmiInfoData::T
     }
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::SingleRowItem singleRowItem)
+std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(const AddParams::SingleRowItem &singleRowItem)
 {
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
     NFmiHelpDataInfo *helpDataInfo;
@@ -377,7 +371,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(AddParams::Single
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo)
+std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo)
 {
     std::string shortName = (producerInfo.ShortNameCount() == 0) ? "" : producerInfo.ShortName();
 
@@ -419,7 +413,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(AddParams::Si
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber)
 {
     int numberOfProducers = 0;
     int numberOfDataFiles = 0;
@@ -427,7 +421,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType(AddParams::Si
     int depth = singleRowItem.treeDepth();
     std::vector<AddParams::SingleRowItem> subvector((singleRowItemVector.begin() + rowNumber), singleRowItemVector.end());
 
-    for(auto item : subvector)
+    for(const auto &item : subvector)
     {
         if(item.rowType() == AddParams::RowType::kProducerType)
             numberOfProducers++;
@@ -470,13 +464,13 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForCategoryType()
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber)
+std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber)
 {
     int numberOfParams = 0;
     int depth = singleRowItem.treeDepth();
     std::vector<AddParams::SingleRowItem> subvector((singleRowItemVector.begin() + rowNumber), singleRowItemVector.end());
 
-    for(auto item : subvector)
+    for(const auto &item : subvector)
     {
         if(item.leafNode())
             numberOfParams++;
@@ -495,7 +489,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(Add
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(AddParams::SingleRowItem &rowItem)
+std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(const AddParams::SingleRowItem &rowItem)
 {
     FmiInterpolationMethod interpolation = kNoneInterpolation;   
     NFmiParamBag params = itsSmartMetDocumentInterface->InfoOrganizer()->GetParams(rowItem.parentItemId()); 
@@ -541,7 +535,7 @@ bool IsParameterType(AddParams::RowType rowType)
     return false;
 }
 
-std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(CPoint point)
+std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(const CPoint &point)
 {
     CCellID idCurrentCell = GetCellFromPt(point);
     if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount() 

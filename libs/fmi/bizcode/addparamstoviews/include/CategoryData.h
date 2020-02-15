@@ -40,8 +40,8 @@ namespace AddParams
         ~CategoryData();
 
         bool updateData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, 
-            std::vector<int> helpDataIDs = {}, bool customCategory = false);
-        bool updateNormalData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, std::vector<int> helpDataIDs);
+            const std::vector<int> &helpDataIDs = {}, bool customCategory = false);
+        bool updateNormalData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, const std::vector<int> &helpDataIDs);
         bool updateCustomCategoryData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool updateOperationalData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
         bool updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree, NFmiInfoData::Type dataCategory);
@@ -50,12 +50,12 @@ namespace AddParams
         const std::vector<std::unique_ptr<ProducerData>>& producerDataVector() const { return producerDataVector_; }
         bool empty() const { return producerDataVector_.empty(); }
         std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const;
-        NFmiInfoData::Type getDataType(NFmiInfoOrganizer &infoOrganizer, NFmiProducer &producer);
+        NFmiInfoData::Type getDataType(NFmiInfoOrganizer &infoOrganizer, const NFmiProducer &producer);
         std::vector<SingleRowItem> customObservationData(NFmiInfoOrganizer &infoOrganizer) const;
         void setSoungindLevels(const NFmiLevelBag& soundingLevels);
     private:
         void addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
-        bool addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
+        bool addNewOrUpdateData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         bool skipCustomProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);
 		bool addStaticData(NFmiInfoOrganizer& infoOrganizer, NFmiHelpDataInfoSystem& helpDataInfoSystem, NFmiInfoData::Type dataCategory);
 	};

@@ -19,7 +19,7 @@ namespace
         return false;
     }
 
-    bool isThereNewFileAvailable(const NFmiHelpDataInfo *helpDataInfo, std::string latestDataFilePath)
+    bool isThereNewFileAvailable(const NFmiHelpDataInfo *helpDataInfo, const std::string &latestDataFilePath)
     {
         if(helpDataInfo->LatestFileName().empty())
             return true;
@@ -254,8 +254,7 @@ namespace AddParams
             dataTime = latestMetaData_->TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
         }
 
-        std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
-        return !origTime.empty() ? origTime : "";
+        return std::string(dataTime.ToStr("YYYY.MM.DD HH:mm"));
     }   
 
 }

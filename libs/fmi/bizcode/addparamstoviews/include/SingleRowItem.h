@@ -50,8 +50,8 @@ namespace AddParams
         SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId,
             bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType,
             unsigned long parentItemId = 0, const std::string &parentItemName = "", const bool leafNode = false,
-            const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth = 0, std::string &displayName = std::string(), 
-            std::string &origTime = std::string(), std::string &totalFilePath = std::string());
+            const std::shared_ptr<NFmiLevel>& level = nullptr, const int treeDepth = 0, const std::string &displayName = std::string(), 
+            const std::string &origTime = std::string(), const std::string &totalFilePath = std::string());
         ~SingleRowItem();
 
         RowType rowType() const { return rowType_; }
@@ -72,7 +72,7 @@ namespace AddParams
         bool leafNode() const { return leafNode_; }
 		bool crossSectionLeafNode() const { return crossSectionLeafNode_; }
 		void crossSectionLeafNode(bool newValue) { crossSectionLeafNode_ = newValue; }
-        std::shared_ptr<NFmiLevel> level() const { return level_; }
+        const std::shared_ptr<NFmiLevel>& level() const { return level_; }
         void level(const std::shared_ptr<NFmiLevel>& level) {level_ = level; }
         int treeDepth() const { return treeDepth_; }
         int getTreeDepth(AddParams::RowType rowType);
@@ -80,7 +80,7 @@ namespace AddParams
         void origTime(const std::string &origTime) { origTime_ = origTime; }
         const std::string& totalFilePath() const { return totalFilePath_; }
         void totalFilePath(const std::string &totalFilePath) { totalFilePath_ = totalFilePath; }
-        std::string& searchWords() { return searchWords_; }
+        const std::string& searchWords() const { return searchWords_; }
 
     private:
         void createSearchWords();

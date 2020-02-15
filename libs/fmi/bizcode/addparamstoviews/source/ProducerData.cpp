@@ -133,13 +133,13 @@ namespace AddParams
 
         for(int i = 0; i < helpDataInfoSystem.DynamicCount(); i++)
         {
-            NFmiHelpDataInfo &helpDataInfo = helpDataInfoSystem.DynamicHelpDataInfo(i);
+            const auto &helpDataInfo = helpDataInfoSystem.DynamicHelpDataInfo(i);
             if(helpDataInfo.IsEnabled() && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
             {
                 int prodId = static_cast<int>(producer_.GetIdent());
                 if(prodId > 0 && prodId == helpDataInfo.FakeProducerId()) //Checks that this actually is correct helpdata
                 {
-                    auto fileFilter = helpDataInfo.FileNameFilter();
+                    const auto &fileFilter = helpDataInfo.FileNameFilter();
                     satelliteDataVector_.push_back(::makeSatelliteRowItem(producer_, helpDataInfo.ImageDataIdent().GetParamIdent(), std::string(helpDataInfo.ImageDataIdent().GetParamName()), fileFilter, dataCategory_));
                 }
             }
@@ -150,7 +150,7 @@ namespace AddParams
     bool ProducerData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
         bool dataStructuresChanged = false;
-        auto fileFilter = info->DataFilePattern();
+        const auto &fileFilter = info->DataFilePattern();
         if(!dataVector_.empty() && info->DataType() == NFmiInfoData::kEditable) //Comparison for editable data
         {
             if(dataVector_.front()->uniqueDataId() == info->DataFileName())
@@ -212,11 +212,11 @@ namespace AddParams
 
 	std::vector<std::unique_ptr<SingleRowItem>> ProducerData::createWmsDataVector(const cppext::Node<Wms::Capability>& wmsLayerTree, int treeDepth)
 	{
-#ifndef DISABLE_CPPRESTSDK
 		std::vector<std::unique_ptr<SingleRowItem>> wmsVector;
+#ifndef DISABLE_CPPRESTSDK
 		wmsDataToVector(wmsVector, wmsLayerTree, treeDepth);
-		return wmsVector;
 #endif
+		return wmsVector;
 	}
 
     int ProducerData::macroParamsToVector(std::vector<std::unique_ptr<SingleRowItem>> &macroParamVector, const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth)
@@ -226,7 +226,7 @@ namespace AddParams
         {
             const NFmiMacroParamItem &macroParamItem = macroParamRow;
 
-            auto param = macroParamItem.itsMacroParam;
+            const auto &param = macroParamItem.itsMacroParam;
             bool isDirectory = param->IsMacroParamDirectory();
             bool leafNode = !isDirectory;
 
@@ -286,8 +286,8 @@ namespace AddParams
 			{
 			}
 		}
-		return treeDepth;
 #endif
+		return treeDepth;
 	}
 
     void ProducerData::addNewSingleData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
