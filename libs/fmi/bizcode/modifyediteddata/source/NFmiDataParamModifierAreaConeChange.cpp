@@ -42,7 +42,7 @@ NFmiDataParamModifierAreaConeChange::NFmiDataParamModifierAreaConeChange(boost::
 																	,NFmiMetEditorTypes::Mask theAreaMask
 																	,int theLimitingOption
 																	,float theLimitngValue)
-:NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask, NFmiRect())
+:NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask)
 ,itsModifyingCenter(theLatLon)
 ,itsModificationRange(theRadius)
 ,itsModifyFactor(theFactor)

@@ -45,10 +45,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CTimeEditValuesDlg)
 	enum { IDD = IDD_DIALOG_TIME_EDIT_VALUES };
-	CSliderCtrl	itsSmootherSlider;
 	BOOL	fUseMaskInTimeSerialViews;
 	BOOL	fUseZoomedAreaCP;
-    CString	itsSmootherValueStrU_;
     CString	itsCPManagerStrU_;
 	BOOL	fUseAnalyzeTool;
 	BOOL	fUseControlPointObservationsBlending;
@@ -76,7 +74,6 @@ protected:
 	afx_msg void OnButtonRedo();
 	afx_msg void OnButtonUndo();
 	afx_msg void OnClose();
-	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnCheckUseMasksInTimeSerialViews();
 	afx_msg void OnCheckUseZoomedAreaCP();
 	afx_msg void OnButtonClearAllCpValues();
@@ -93,7 +90,6 @@ private:
 	bool EnableDlgItem(int theDlgId, bool fEnable, bool fShow = true);
 	void UpdateControlsAfterAnalyzeMode(void);
 	void UpdateControlsAfterMPCPMode(void);
-	void UpdateSmootherString(void);
 	void UpdateCPManagerString(void);
 	CRect CalcClientArea(void);
 	void InitDialogTexts(void);

@@ -61,7 +61,6 @@ CTimeEditValuesDlg::CTimeEditValuesDlg(SmartMetDocumentInterface *smartMetDocume
 	//{{AFX_DATA_INIT(CTimeEditValuesDlg)
 	fUseMaskInTimeSerialViews = itsSmartMetDocumentInterface->IsMasksUsedInTimeSerialViews();
 	fUseZoomedAreaCP = itsSmartMetDocumentInterface->UseCPGridCrop();
-	itsSmootherValueStrU_ = _T("");
     itsCPManagerStrU_ = _T("");
 	fUseAnalyzeTool = FALSE;
 	fUseControlPointObservationsBlending = FALSE;
@@ -76,11 +75,9 @@ void CTimeEditValuesDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialog::DoDataExchange(pDX);
     //{{AFX_DATA_MAP(CTimeEditValuesDlg)
-    DDX_Control(pDX, IDC_SLIDER_SMOOTHER_VALUE, itsSmootherSlider);
     DDX_Check(pDX, IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, fUseMaskInTimeSerialViews);
     DDX_Check(pDX, IDC_CHECK_USE_ZOOMED_AREA_CP, fUseZoomedAreaCP);
 
-    DDX_Text(pDX, IDC_STATIC_SMOOTHER_VALUE_STR, itsSmootherValueStrU_);
     DDX_Text(pDX, IDC_STATIC_CP_MANAGER_NAME_STR, itsCPManagerStrU_);
 
     DDX_Check(pDX, IDC_CHECK_USE_ANALYZE_TOOL, fUseAnalyzeTool);
@@ -103,7 +100,6 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_REDO, OnButtonRedo)
 	ON_BN_CLICKED(IDC_BUTTON_UNDO, OnButtonUndo)
 	ON_WM_CLOSE()
-	ON_WM_HSCROLL()
 	ON_BN_CLICKED(IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, OnCheckUseMasksInTimeSerialViews)
 	ON_BN_CLICKED(IDC_CHECK_USE_ZOOMED_AREA_CP, OnCheckUseZoomedAreaCP)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR_ALL_CP_VALUES, OnButtonClearAllCpValues)
@@ -158,10 +154,6 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
 	fUseMaskInTimeSerialViews = itsSmartMetDocumentInterface->IsMasksUsedInTimeSerialViews();
 	fUseZoomedAreaCP = itsSmartMetDocumentInterface->UseCPGridCrop();
 
-	itsSmootherSlider.SetRange(0, itsSmartMetDocumentInterface->TimeEditSmootherMaxValue());
-	itsSmootherSlider.SetPos(itsSmartMetDocumentInterface->TimeEditSmootherValue());
-	UpdateSmootherString();
-
 	UpdateCPManagerString();
 	SetParameterSelectionIcon();
 	InitDialogTexts();
@@ -185,16 +177,6 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
-}
-
-void CTimeEditValuesDlg::UpdateSmootherString(void)
-{
-	UpdateData(TRUE);
-	int value = itsSmootherSlider.GetPos();
-	NFmiValueString valuStr(value, "%d");
-	itsSmootherValueStrU_ = CA2T(valuStr);
-    itsSmartMetDocumentInterface->TimeEditSmootherValue(value);
-	UpdateData(FALSE);
 }
 
 void CTimeEditValuesDlg::UpdateCPManagerString(void)
@@ -364,10 +346,7 @@ void CTimeEditValuesDlg::SeViewModeButtonsSetup(void)
     bool enableEditingControls = itsSmartMetDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal;
     // Riippuen ollaanko ns. view-moodissa vai ei, disabloidaan/enabloidaan editoinnissa käytettyjä nappuloita
     EnableDlgItem(IDC_CHECK_USE_CP_OBS_BLENDING, enableEditingControls);
-    EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, enableEditingControls);
     EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, enableEditingControls);
-    EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, enableEditingControls);
-    EnableDlgItem(IDC_STATIC_SMOOTH_STR, enableEditingControls);
     EnableDlgItem(IDC_BUTTON_TOIMINTO, enableEditingControls);
     EnableDlgItem(IDC_BUTTON_CLEAR_ALL_CP_VALUES, enableEditingControls);
     EnableDlgItem(IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, enableEditingControls);
@@ -420,14 +399,6 @@ void CTimeEditValuesDlg::Update(void)
                 UpdateControlsAfterAnalyzeMode();
         }
     }
-}
-
-void CTimeEditValuesDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
-{
-	// TODO: Add your message handler code here and/or call default
-	UpdateData(TRUE);
-	UpdateSmootherString();
-	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
 void CTimeEditValuesDlg::OnCheckUseMasksInTimeSerialViews() 
@@ -540,10 +511,7 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
         status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER1, true, true);
         status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, false, false);
 
-        status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, false);
         status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
-        status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
-        status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
     }
     else if(fUseAnalyzeTool)
 	{
@@ -553,10 +521,7 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER1, true, true);
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, true, true);
 
-		status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, false);
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
-		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
-		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
 	}
 	else
 	{
@@ -565,10 +530,7 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER1, false, false);
 		status = EnableDlgItem(IDC_COMBO_ANALYZE_PRODUCER2, false, false);
 
-		status = EnableDlgItem(IDC_STATIC_SMOOTHER_VALUE_STR, true);
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, true);
-		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, true);
-		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, true);
 	}
 	UpdateAnalyseActionControl();
 }
@@ -642,7 +604,6 @@ void CTimeEditValuesDlg::InitDialogTexts(void)
 {
 	SetWindowText(CA2T(::GetDictionaryString("TimeSerialViewDlgTitle").c_str()));
 
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SMOOTH_STR, "IDC_STATIC_SMOOTH_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_TOIMINTO, "IDC_BUTTON_TOIMINTO");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_ANALYZE_TOOL, "IDC_CHECK_USE_ANALYZE_TOOL");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_CP_OBS_BLENDING, "CP obs blending");

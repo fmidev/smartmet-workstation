@@ -68,7 +68,6 @@ public:
     virtual boost::shared_ptr<NFmiDrawParam> GetUsedDrawParam(const NFmiDataIdent &theDataIdent, NFmiInfoData::Type theDataType) = 0;
     virtual NFmiMetEditorOptionsData& MetEditorOptionsData(void) = 0;
     virtual boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) = 0;
-    virtual int TimeEditSmootherValue(void) = 0;
     virtual CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void) = 0;
     virtual void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) = 0;
     virtual int FilteringParameterUsageState(void) = 0;
