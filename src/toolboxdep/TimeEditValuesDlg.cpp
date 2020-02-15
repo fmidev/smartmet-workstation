@@ -59,7 +59,6 @@ CTimeEditValuesDlg::CTimeEditValuesDlg(SmartMetDocumentInterface *smartMetDocume
 , fAllowRightClickSelection(FALSE)
 {
 	//{{AFX_DATA_INIT(CTimeEditValuesDlg)
-	itsModifyMode = itsSmartMetDocumentInterface->TimeEditMode();
 	fUseMaskInTimeSerialViews = itsSmartMetDocumentInterface->IsMasksUsedInTimeSerialViews();
 	fUseZoomedAreaCP = itsSmartMetDocumentInterface->UseCPGridCrop();
 	itsSmootherValueStrU_ = _T("");
@@ -309,14 +308,6 @@ void CTimeEditValuesDlg::OnCancel()
 {
 	DoWhenClosing();
 	ShowWindow(SW_HIDE); // suljettaessa vain piilotetaan, tuhoaminen tehdään ulkoakäsin
-}
-
-void CTimeEditValuesDlg::EditModeUpdate(void)
-{
-	UpdateData(TRUE);
-    itsSmartMetDocumentInterface->TimeEditMode(itsModifyMode);
-    itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
-	Invalidate(FALSE);
 }
 
 void CTimeEditValuesDlg::OnSize(UINT nType, int cx, int cy) 

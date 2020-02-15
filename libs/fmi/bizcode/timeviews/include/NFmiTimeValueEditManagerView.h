@@ -26,7 +26,6 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	void Draw (NFmiToolBox* theToolBox);
 	virtual void DrawData (void);
 	virtual void DrawBase (void);
-	void EditingMode (const int & newMode);
 	void MaxStationShowed (const unsigned int & newCount);
 	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
 	bool LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey);

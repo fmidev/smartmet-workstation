@@ -909,16 +909,6 @@ std::vector<NFmiMapViewDescTop*>& SmartMetDocumentInterfaceForGeneralDataDoc::Ma
     return itsDoc->MapViewDescTopList();
 }
 
-FmiTimeEditMode SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditMode() const
-{
-    return itsDoc->TimeEditMode();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditMode(const int& newMode)
-{
-    return itsDoc->TimeEditMode(newMode);
-}
-
 bool SmartMetDocumentInterfaceForGeneralDataDoc::IsMasksUsedInTimeSerialViews()
 {
     return itsDoc->IsMasksUsedInTimeSerialViews();

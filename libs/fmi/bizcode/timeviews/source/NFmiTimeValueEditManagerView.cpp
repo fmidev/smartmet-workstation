@@ -49,7 +49,6 @@ NFmiTimeValueEditManagerView::~NFmiTimeValueEditManagerView(void)
 void NFmiTimeValueEditManagerView::Draw(NFmiToolBox* theToolBox)
 {
    CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": time-serial-view drawing starts");
-   EditingMode(itsCtrlViewDocumentInterface->TimeEditMode());
    DrawBackground();
    if(itsCtrlViewDocumentInterface->UseTimeSerialAxisAutoAdjust()) // jos auto asteikko säätö optio on päällä, säädetään ne tässä yhteisesti enen piirtoa
 	   AutoAdjustValueScales(false);
@@ -84,17 +83,7 @@ void NFmiTimeValueEditManagerView::DrawBase (void)
 {
    return;
 }
-//--------------------------------------------------------
-// EditingMode
-//--------------------------------------------------------
-// PITÄISIKÖ TÄMÄ POISTAA JA SILLOIN ERI NÄYTÖILLÄ VOISI OLLA OMAT EDITINGMODET
-void NFmiTimeValueEditManagerView::EditingMode (const int & newMode)
-{
-	for(itsViewList->Reset(); itsViewList->Next(); )
-	{
-		((NFmiTimeSerialView*)itsViewList->Current())->EditingMode(newMode);
-	}
-}
+
 //--------------------------------------------------------
 // MaxStationShowed
 //--------------------------------------------------------

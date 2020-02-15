@@ -2299,71 +2299,8 @@ void NFmiTimeSerialView::DrawModifyFactorPoints(void)
 				itsModificationFactorCurvePoints = modFacVec;
 			}
 
-			switch (itsEditingMode)
-			{
-			case kFmiTimeEditSinCurve:
-				DrawModifyFactorPointsSin();
-				break;
-			case kFmiTimeEditLinear:
-				DrawModifyFactorPointsLinear();
-				break;
-			case kFmiTimeEditManual:
-				DrawModifyFactorPointsManual();
-				break;
-			default:
-				break;
-			}
+			DrawModifyFactorPointsManual();
 		}
-	}
-}
-
-//--------------------------------------------------------
-// DrawModifyFactorPointsSin
-//--------------------------------------------------------
-void NFmiTimeSerialView::DrawModifyFactorPointsSin(void)
-{
-	NFmiDrawingEnvironment envi;
-	envi.DisableFill();
-	envi.SetFrameColor(NFmiColor(0.f,0.f,0.f));
-	NFmiPoint point1,point2;
-	NFmiTimeDescriptor timeDescriptor = EditedDataTimeDescriptor();
-	timeDescriptor.Reset();
-	timeDescriptor.Next();
-	NFmiMetTime time = timeDescriptor.Time();
-	point1 = CalcRelativeModifyFactorPosition(time,itsModificationFactorCurvePoints[0]);
-	for(unsigned long i=1; i < itsModificationFactorCurvePoints.size(); i++) // HUOM! ei piirr‰ jos vain yksi data.
-	{
-		timeDescriptor.Next();
-		time = timeDescriptor.Time();
-		point2 = CalcRelativeModifyFactorPosition(time, itsModificationFactorCurvePoints[i]);
-		// tehd‰‰n pointeista kopiot, koska ne voivat muuttua
-		NFmiPoint p1(point1);
-		NFmiPoint p2(point2);
-		DrawLineInDataRect(p1, p2, envi);
-		point1 = point2;
-	}
-}
-
-//--------------------------------------------------------
-// DrawModifyFactorPointsLinear
-//--------------------------------------------------------
-void NFmiTimeSerialView::DrawModifyFactorPointsLinear(void)
-{
-	if(itsModificationFactorCurvePoints.size() > 0)
-	{
-		NFmiDrawingEnvironment envi;
-		envi.SetFillColor(NFmiColor(1.f,0.f,0.f));
-		envi.SetFrameColor(NFmiColor(0.f,0.f,0.f));
-		envi.EnableFill();
-		NFmiPoint pointSize(5.,5.);
-
-		NFmiTimeBag timeBag = EditedDataTimeBag();
-		NFmiPoint point1 = CalcRelativeModifyFactorPosition(timeBag.FirstTime(),itsModificationFactorCurvePoints[0]);
-		NFmiPoint point2 = CalcRelativeModifyFactorPosition(timeBag.LastTime(), itsModificationFactorCurvePoints[itsModificationFactorCurvePoints.size()-1]);
-
-		DrawLineInDataRect(point1,point2, envi);
-		DrawPointInDataRect(envi, point1, pointSize);
-		DrawPointInDataRect(envi, point2, pointSize);
 	}
 }
 
@@ -2604,7 +2541,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 			    if(!IsEditedData(itsInfo))
 				    return false;
 
-			    double proximityFactor = CalcMouseClickProximityFactor();//0.02;
+			    double proximityFactor = CalcMouseClickProximityFactor();
 			    if(IsAnalyzeRelatedToolUsed())
 			    {
 				    NFmiMetTime analyzeEndTime(Value2Time(thePlace));
@@ -2613,34 +2550,21 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 			    }
 			    else
 			    {
-				    if(itsEditingMode == kFmiTimeEditLinear)
-					    proximityFactor = 0.2;
 				    int index;
 				    if(FindTimeIndex(thePlace.X(), proximityFactor, index))
 				    {
 					    double value = kFloatMissing;
-					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() && itsEditingMode == kFmiTimeEditManual)
-					    { // 13.11.2002/Marko Muutos CP-tyˆkalun k‰ytˆkseen siten, ett‰ piirret‰‰n lopullista arvok‰yr‰‰ haluttuun pisteeseen.
+					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
+					    { 
+							// 13.11.2002/Marko Muutos CP-tyˆkalun k‰ytˆkseen siten, ett‰ piirret‰‰n lopullista arvok‰yr‰‰ haluttuun pisteeseen.
 						    value = Position2Value(thePlace);
 					    }
 					    else
 					    {
 						    value = Position2ModifyFactor(thePlace);
-					    FixModifyFactorValue(value);
+						    FixModifyFactorValue(value);
 					    }
-					    bool status = false;
-					    switch (itsEditingMode)
-					    {
-					    case kFmiTimeEditSinCurve:
-						    status = ModifyFactorPointsSin(value, index, thePlace);
-						    break;
-					    case kFmiTimeEditLinear:
-						    status = ModifyFactorPointsLinear(value, index);
-						    break;
-					    case kFmiTimeEditManual:
-						    status = ModifyFactorPointsManual(value, index);
-						    break;
-					    }
+					    bool status = ModifyFactorPointsManual(value, index);
 
 					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 					    {
@@ -2874,7 +2798,7 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
             {
                 // kuinka l‰helt‰ pit‰‰ aikaakselia klikata ennenkuin ohjelma suostuu 'lˆyt‰m‰‰n'
 	            // klikkauksen paikan (nyt lineaariselle laitetaan isommat 'reunat' hakua varten)
-			    double proximityFactor = CalcMouseClickProximityFactor();//0.02;
+			    double proximityFactor = CalcMouseClickProximityFactor();
 			    if(IsAnalyzeRelatedToolUsed())
 			    {
 				    NFmiMetTime analyzeEndTime(Value2Time(thePlace));
@@ -2883,13 +2807,11 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
 			    }
 			    else
 			    {
-				    if(itsEditingMode == kFmiTimeEditLinear)
-					    proximityFactor = 0.2;
-				    int index;
+				    int index = 0;
 				    if(FindTimeIndex(thePlace.X(), proximityFactor, index))
 				    {
 					    double value = kFloatMissing;
-					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() && itsEditingMode == kFmiTimeEditManual)
+					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 					    { // 13.11.2002/Marko Muutos CP-tyˆkalun k‰ytˆkseen siten, ett‰ piirret‰‰n lopullista arvok‰yr‰‰ haluttuun pisteeseen.
 						    value = Position2Value(thePlace);
 					    }
@@ -2899,19 +2821,7 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
 					    FixModifyFactorValue(value);
 					    }
 
-					    bool status = false;
-					    switch (itsEditingMode)
-					    {
-					    case kFmiTimeEditSinCurve:
-						    status = ModifyFactorPointsSin(value, index, thePlace);
-						    break;
-					    case kFmiTimeEditLinear:
-						    status = ModifyFactorPointsLinear(value, index);
-						    break;
-					    case kFmiTimeEditManual:
-						    status = ModifyFactorPointsManual(value, index);
-						    break;
-					    }
+					    bool status = ModifyFactorPointsManual(value, index);
 
 					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 					    {
@@ -3002,38 +2912,6 @@ bool NFmiTimeSerialView::RightButtonUp(const NFmiPoint &thePlace
 }
 
 //--------------------------------------------------------
-// ModifyFactorPointsSin
-//--------------------------------------------------------
-bool NFmiTimeSerialView::ModifyFactorPointsSin(double theValue, int /* theIndex */, const NFmiPoint&  thePlace)
-{
-	itsSinAmplitude = theValue;
-	NFmiMetTime time2 = Value2Time(thePlace);
-	itsPhase = time2.GetHour()-6; // 6 tarkoittaa vaihesiirtoa, mik‰ tarvitaan, ett‰ klikattu kohta saadaan maksimiksi (vahinko, ettei voi piirt‰‰ kuvaa t‰h‰n)
-	CalcSinModifyFactorPoints();
-	return true;
-}
-
-//--------------------------------------------------------
-// ModifyFactorPointsLinear
-//--------------------------------------------------------
-bool NFmiTimeSerialView::ModifyFactorPointsLinear(double theValue, int theIndex)
-{
-	if(theIndex == 0 || theIndex == itsModificationFactorCurvePoints.size()-1)
-	{
-		itsModificationFactorCurvePoints[theIndex] = theValue;
-		CalcLinearModifyFactorPoints();
-		return true;
-	}
-
-	if(theIndex < static_cast<int>(itsModificationFactorCurvePoints.size() - theIndex))
-		itsModificationFactorCurvePoints[0] = theValue;
-	else
-		itsModificationFactorCurvePoints[itsModificationFactorCurvePoints.size()-1] = theValue;
-	CalcLinearModifyFactorPoints();
-	return true;
-}
-
-//--------------------------------------------------------
 // ModifyFactorPointsManual
 //--------------------------------------------------------
 bool NFmiTimeSerialView::ModifyFactorPointsManual(double theValue, int theIndex)
@@ -3065,59 +2943,6 @@ void NFmiTimeSerialView::FixModifyFactorValue(double& theValue)
 		theValue = -limit;
 	if(theValue > limit)
 		theValue = limit;
-}
-
-//--------------------------------------------------------
-// CalcLinearModifyFactorPoints
-//--------------------------------------------------------
-void NFmiTimeSerialView::CalcLinearModifyFactorPoints(void)
-{
-	double low = itsModificationFactorCurvePoints[0];
-	double high = itsModificationFactorCurvePoints[itsModificationFactorCurvePoints.size()-1];
-	for(int i = 1; i < static_cast<int>(itsModificationFactorCurvePoints.size())-1; i++)
-		itsModificationFactorCurvePoints[i] = (high - low) * i/float(itsModificationFactorCurvePoints.size()) + low;
-}
-
-//--------------------------------------------------------
-// CalcSinModifyFactorPoints
-//--------------------------------------------------------
-void NFmiTimeSerialView::CalcSinModifyFactorPoints(void)
-{
-	int i = 0;
-	for(itsEditedDataTimeDescriptor.Reset(); itsEditedDataTimeDescriptor.Next(); i++)
-	{
-		double hour = itsEditedDataTimeDescriptor.Time().GetHour();
-		double temp = ((hour - itsPhase)/24*2*kPii);
-		itsModificationFactorCurvePoints[i] = sin(temp)*itsSinAmplitude;
-	}
-}
-
-//--------------------------------------------------------
-// CalcModifyFactorPoints
-//--------------------------------------------------------
-void NFmiTimeSerialView::CalcModifyFactorPoints(void)
-{
-		switch (itsEditingMode)
-		{
-		case kFmiTimeEditLinear:
-			CalcLinearModifyFactorPoints();
-			break;
-		case kFmiTimeEditSinCurve: // not implemented yet
-			CalcSinModifyFactorPoints();
-			break;
-		case kFmiTimeEditManual: // nothing to do here
-		default:
-			break;
-		}
-}
-
-//--------------------------------------------------------
-// EditingMode
-//--------------------------------------------------------
-void NFmiTimeSerialView::EditingMode(int newMode)
-{
-	itsEditingMode = FmiTimeEditMode(newMode);
-	CalcModifyFactorPoints();
 }
 
 //--------------------------------------------------------

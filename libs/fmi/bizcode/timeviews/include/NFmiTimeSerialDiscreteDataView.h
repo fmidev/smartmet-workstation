@@ -47,7 +47,6 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
    using NFmiTimeSerialView::DrawDataLine;
    virtual void DrawDataLine (const NFmiMetTime& theTime1,  const NFmiMetTime& theTime2, double value1, double value2, NFmiDrawingEnvironment & envi);
    virtual void EvaluateValue (double& theValue);
-   void EditingMode (int newMode) override;
    void ChangeTimeSeriesValues(void) override;
 
  protected:

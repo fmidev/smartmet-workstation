@@ -58,7 +58,6 @@ NFmiTimeSerialDiscreteDataView::NFmiTimeSerialDiscreteDataView (const NFmiRect &
 ,itsValueAxisNumberArray(0)
 ,fCalculateLine(false)
 {
-	itsEditingMode = kFmiTimeEditManual;
 }
 
 NFmiTimeSerialDiscreteDataView::~NFmiTimeSerialDiscreteDataView (void)
@@ -86,11 +85,8 @@ bool NFmiTimeSerialDiscreteDataView::LeftButtonUp (const NFmiPoint & thePlace, u
 			return true;
 		}
 		{
-	// kuinka läheltä pitää aikaakselia klikata ennenkuin ohjelma suostuu 'löytämään' 
-	// klikkauksen paikan (nyt lineaariselle laitetaan isommat 'reunat' hakua varten)
-			double proximityFactor = 0.02; 
-			if(itsEditingMode == kFmiTimeEditLinear)
-				proximityFactor = 0.2;
+			// kuinka läheltä pitää aikaakselia klikata ennenkuin ohjelma suostuu 'löytämään' klikkauksen paikan
+			const double proximityFactor = 0.2; 
 			int index;
 			if(FindTimeIndex(thePlace.X(), proximityFactor, index))
 			{
@@ -227,15 +223,6 @@ void NFmiTimeSerialDiscreteDataView::DrawModifyFactorPoints(void)
 	return;
 }
 
-
-//--------------------------------------------------------
-// EditingMode 
-//--------------------------------------------------------
-// Vakio tässä luokassa.
-void NFmiTimeSerialDiscreteDataView::EditingMode (int newMode)
-{
-	return;
-}
 
 //--------------------------------------------------------
 // ChangeTimeSeriesValues 
