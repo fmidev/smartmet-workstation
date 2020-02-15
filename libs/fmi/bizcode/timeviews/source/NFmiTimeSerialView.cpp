@@ -98,8 +98,7 @@ NFmiTimeSerialView::NFmiTimeSerialView(const NFmiRect &theRect
 						 ,NFmiToolBox *theToolBox
 						 ,NFmiDrawingEnvironment * theDrawingEnvi
 						 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-						 ,int theRowIndex
-						 ,double theManualModifierLength)
+						 ,int theRowIndex)
 :NFmiTimeView(0, theRect
 			 ,theToolBox
 			 ,theDrawingEnvi
@@ -114,7 +113,6 @@ NFmiTimeSerialView::NFmiTimeSerialView(const NFmiRect &theRect
 ,itsModifyFactorView(0)
 ,itsValueAxis(0)
 ,itsModifyFactorAxis(0)
-,itsManualModifierLength(theManualModifierLength)
 ,itsMaxStationShowed(5)
 ,itsSinAmplitude(0)
 ,itsPhase(6)
@@ -3040,34 +3038,19 @@ bool NFmiTimeSerialView::ModifyFactorPointsLinear(double theValue, int theIndex)
 //--------------------------------------------------------
 bool NFmiTimeSerialView::ModifyFactorPointsManual(double theValue, int theIndex)
 {
-    const double toPowerFactor = 2.3; // tämän avulla säädetään hiiren klikkauksen muokkaus vaikutusalueen 'kärjen' terävyyteen aikasarjaikkunassa editoitaessa (suurempi arvo -> laakeampi muutoskäyrä klikatun kohdan ympärillä)
-    double manualModifierFactor = pow(itsManualModifierLength, 0.2); // tässä säädetään vaikutusalueen leveyttä ensin toisella kertoimella (pienempi arvo -> leveämpi vaikutus)
     if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
-	{ // 13.11.2002/Marko Muutos CP-työkalun käytökseen siten, että piirretään lopullista arvokäyrää haluttuun pisteeseen.
+	{ 
+		// 13.11.2002/Marko Muutos CP-työkalun käytökseen siten, että piirretään lopullista arvokäyrää haluttuun pisteeseen.
 		NFmiPoint latlon(itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon());
 		Info()->TimeIndex(theIndex);
-		float value = kFloatMissing;
-		for(int i = 0; i < static_cast<int>(itsModificationFactorCurvePoints.size()); i++)
-		{
-			Info()->TimeIndex(i);
-			value = Info()->InterpolatedValue(latlon);
-			double timeFactor = FmiMax(0., FmiMin(1., double(::abs(i - theIndex)) * (1-manualModifierFactor)));
-            timeFactor = 1. - fabs(pow(timeFactor, toPowerFactor));
-			itsModificationFactorCurvePoints[i] =
-					(theValue - value) * timeFactor +
-					itsModificationFactorCurvePoints[i]  * (1 - timeFactor);
-		}
+		float value = Info()->InterpolatedValue(latlon);
+		if(theValue != kFloatMissing && value != kFloatMissing)
+			itsModificationFactorCurvePoints[theIndex] = (theValue - value);
 	}
 	else
 	{
-		for(int i = 0; i < static_cast<int>(itsModificationFactorCurvePoints.size()); i++)
-		{
-			double timeFactor = FmiMax(0., FmiMin(1., double(abs(i - theIndex)) * (1-manualModifierFactor)));
-            timeFactor = 1. - fabs(pow(timeFactor, toPowerFactor));
-			itsModificationFactorCurvePoints[i] =
-				(theValue - itsModificationFactorCurvePoints[i]) * timeFactor +
-				itsModificationFactorCurvePoints[i] ;
-		}
+		if(theValue != kFloatMissing)
+			itsModificationFactorCurvePoints[theIndex] = theValue;
 	}
 	return true;
 }
@@ -3143,11 +3126,6 @@ void NFmiTimeSerialView::EditingMode(int newMode)
 void NFmiTimeSerialView::MaxStationShowed(unsigned int newCount)
 {
 	itsMaxStationShowed = newCount;
-}
-
-void NFmiTimeSerialView::ManualModifierLength(double newValue)
-{
-	itsManualModifierLength = newValue;
 }
 
 //--------------------------------------------------------

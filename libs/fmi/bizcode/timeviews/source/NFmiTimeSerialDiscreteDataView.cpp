@@ -48,14 +48,12 @@ NFmiTimeSerialDiscreteDataView::NFmiTimeSerialDiscreteDataView (const NFmiRect &
 															   ,NFmiToolBox * theToolBox
 															   ,NFmiDrawingEnvironment * theDrawingEnvi
 															   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-															   ,int theIndex
-															   ,double theManualModifierLength)//Persa 190041999
+															   ,int theIndex)
 :NFmiTimeSerialView(theRect
 				  ,theToolBox
 				  ,theDrawingEnvi
 				  ,theDrawParam
-				  ,theIndex
-				  ,theManualModifierLength)
+				  ,theIndex)
 ,itsValueAxisTextArray(0)
 ,itsValueAxisNumberArray(0)
 ,fCalculateLine(false)

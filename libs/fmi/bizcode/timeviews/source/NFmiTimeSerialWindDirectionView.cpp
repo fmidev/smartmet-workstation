@@ -30,14 +30,12 @@ NFmiTimeSerialWindDirectionView::NFmiTimeSerialWindDirectionView (const NFmiRect
 															     ,NFmiToolBox * theToolBox
 															     ,NFmiDrawingEnvironment * theDrawingEnvi
 															     ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-																 ,int theIndex
-																 ,double theManualModifierLength)
+																 ,int theIndex)
 :NFmiTimeSerialView(theRect
 				  ,theToolBox
 				  ,theDrawingEnvi
 				  ,theDrawParam
-				  ,theIndex
-				  ,theManualModifierLength)
+				  ,theIndex)
 {
 }
 NFmiTimeSerialWindDirectionView::~NFmiTimeSerialWindDirectionView (void)

@@ -33,7 +33,6 @@ NFmiTimeValueEditManagerView::NFmiTimeValueEditManagerView
 ,itsSymbolViewCount(0) //laura lisäsi
 ,itsTimeAxis(0)
 ,itsUpperTimeView(0)
-,itsManualModifierLength(0)
 ,fTimeScaleUpdated(false)
 {
 }
@@ -105,15 +104,6 @@ void NFmiTimeValueEditManagerView::MaxStationShowed (const unsigned int & newCou
 	for(itsViewList->Reset(); itsViewList->Next(); )
 	{
 		((NFmiTimeSerialView*)itsViewList->Current())->MaxStationShowed(newCount);
-	}
-}
-
-void NFmiTimeValueEditManagerView::ManualModifierLength(double newValue) //laura 22041999
-{
-	itsManualModifierLength = newValue;
-	for(itsViewList->Reset(); itsViewList->Next(); )
-	{
-		((NFmiTimeSerialView*)itsViewList->Current())->ManualModifierLength(newValue);
 	}
 }
 
@@ -390,40 +380,35 @@ NFmiTimeSerialView* NFmiTimeValueEditManagerView::CreateTimeSerialView(boost::sh
 															   ,itsToolBox
 															   ,itsDrawingEnvironment
 															   ,theDrawParam
-															   ,index
-															   ,itsManualModifierLength);
+															   ,index);
 				break;
 			case kFmiPrecipitationType:
 				view = new NFmiTimeSerialPrecipitationTypeView(rect
 															   ,itsToolBox
 															   ,itsDrawingEnvironment
 															   ,theDrawParam
-															   ,index
-															   ,itsManualModifierLength);
+															   ,index);
 				break;
 			case kFmiFogIntensity:
 				view = new NFmiTimeSerialFogIntensityView(rect
 														   ,itsToolBox
 														   ,itsDrawingEnvironment
 														   ,theDrawParam
-														   ,index
-														   ,itsManualModifierLength);
+														   ,index);
 				break;
 			case kFmiWeatherSymbol3:
 				view = new NFmiTimeSerialSymbolView(rect
 												   ,itsToolBox
 												   ,itsDrawingEnvironment
 												   ,theDrawParam
-												   ,index
-												   ,itsManualModifierLength);
+												   ,index);
 				break;
 			default:
 				view = new NFmiTimeSerialView(rect
 											 ,itsToolBox
 											 ,itsDrawingEnvironment
 											 ,theDrawParam
-											 ,index
-											 ,itsManualModifierLength);
+											 ,index);
 				break;
 			}
 		}

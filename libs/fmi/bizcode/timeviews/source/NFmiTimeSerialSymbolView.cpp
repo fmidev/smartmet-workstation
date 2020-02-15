@@ -23,14 +23,12 @@ NFmiTimeSerialSymbolView::NFmiTimeSerialSymbolView(const NFmiRect & theRect
 												  ,NFmiToolBox * theToolBox
 												  ,NFmiDrawingEnvironment * theDrawingEnvi
 												  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-												  ,int theIndex
-												  ,double theManualModifierLength)//Persa 190041999
+												  ,int theIndex)
 :NFmiTimeSerialView(theRect
 				  ,theToolBox
 				  ,theDrawingEnvi
 				  ,theDrawParam
-				  ,theIndex
-				  ,theManualModifierLength)
+				  ,theIndex)
 {
 
 }

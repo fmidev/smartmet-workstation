@@ -18,8 +18,7 @@ public:
 						    ,NFmiToolBox * theToolBox
 						    ,NFmiDrawingEnvironment * theDrawingEnvi
 						    ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-						    ,int theIndex
-						    ,double theManualModifierLength);
+						    ,int theIndex);
 	virtual ~NFmiTimeSerialSymbolView();
 
 	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override {return false;}
