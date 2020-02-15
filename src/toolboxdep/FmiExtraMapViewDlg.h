@@ -139,4 +139,12 @@ public:
     afx_msg void OnAcceleratorMoveManyMapRowsDown();
     afx_msg void OnAcceleratorLockRowToMainMap();
     afx_msg void OnAcceleratorExtraMapLocationFinderTool();
+	afx_msg void OnAcceleratorChangeTimeByStep1Forward();
+	afx_msg void OnAcceleratorChangeTimeByStep1Backward();
+	afx_msg void OnAcceleratorChangeTimeByStep2Forward();
+	afx_msg void OnAcceleratorChangeTimeByStep2Backward();
+	afx_msg void OnAcceleratorChangeTimeByStep3Forward();
+	afx_msg void OnAcceleratorChangeTimeByStep3Backward();
+	afx_msg void OnAcceleratorChangeTimeByStep4Forward();
+	afx_msg void OnAcceleratorChangeTimeByStep4Backward();
 };
