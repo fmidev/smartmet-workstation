@@ -80,10 +80,10 @@ namespace AddParams
         ParameterSelectionSystem();
         ~ParameterSelectionSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
-            NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories);
-        void addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName = std::string());
+            NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::vector<int> &idVector, const std::vector<std::string> &customCategories);
+        void addHelpData(const NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, const std::string &displayName = std::string());
 		void updateData();
-        void updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
+        void updateData(const std::string &catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         int updateWaitTimeoutInSeconds() const { return updateWaitTimeoutInSeconds_; }
         bool updatePending() const { return updatePending_; }
         void updatePending(bool newValue) { updatePending_ = newValue; }
@@ -100,24 +100,24 @@ namespace AddParams
 		void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem& ()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
 		void setWmsCallback(std::function<Wms::WmsSupport& ()> wmsCallBack) { getWmsCallback_ = wmsCallBack; }
 		void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
-        void searchItemsThatMatchToSearchWords(std::string words); 
+        void searchItemsThatMatchToSearchWords(const std::string &words); 
 
 	private:
         void addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
         void updateDialogRowData();
 		void otherHelpDataTodialog();
 		void updateDialogTreePatternData();
-        void updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory);
-        void updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory);
+        void updateOperationalData(const std::string &categoryName, NFmiInfoData::Type dataCategory);
+        void updateMacroParamData(const std::string &categoryName, NFmiInfoData::Type dataCategory);
         void updateCustomCategories();
-		void updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory);
+		void updateWmsData(const std::string &categoryName, NFmiInfoData::Type dataCategory);
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
 		void trimDialogRowDataDependingOnActiveView();
 		std::vector<SingleRowItem> crossSectionData();
 		std::vector<SingleRowItem> timeSeriesData();
-		bool isObservationsData(SingleRowItem& row, int index);
-		std::vector<SingleRowItem> addSubmenu(SingleRowItem& row, int index);
-		std::vector<SingleRowItem> addAllChildNodes(SingleRowItem& row, int index);
+		bool isObservationsData(const SingleRowItem& row, int index);
+		std::vector<SingleRowItem> addSubmenu(const SingleRowItem& row, int index);
+		std::vector<SingleRowItem> addAllChildNodes(const SingleRowItem& row, int index);
 	};
 }

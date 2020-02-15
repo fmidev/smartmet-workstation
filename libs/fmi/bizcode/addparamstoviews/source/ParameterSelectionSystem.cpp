@@ -54,7 +54,7 @@ namespace AddParams
     ParameterSelectionSystem::~ParameterSelectionSystem() = default;
 
     void ParameterSelectionSystem::initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem, 
-        NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, std::vector<int> idVector, std::vector<std::string> customCategories)
+        NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::vector<int> &idVector, const std::vector<std::string> &customCategories)
     {
         modelProducerSystem_ = &modelProducerSystem;
         obsProducerSystem_ = &obsProducerSystem;
@@ -65,7 +65,7 @@ namespace AddParams
         customCategories_ = customCategories;
     } 
 
-    void ParameterSelectionSystem::addHelpData(NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, std::string &displayName) //Add at the end of help data list
+    void ParameterSelectionSystem::addHelpData(const NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, const std::string &displayName) //Add at the end of help data list
     {
         std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
         SingleRowItem item = SingleRowItem(kParamType, menuString, producer.GetIdent(), true, uniqueDataId, dataType, 0, "", true, nullptr, 2, displayName);
@@ -86,7 +86,7 @@ namespace AddParams
 		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kStationary);
     }
 
-    void ParameterSelectionSystem::updateData(std::string catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
+    void ParameterSelectionSystem::updateData(const std::string &catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         std::string categoryName = ::GetDictionaryString(catName.c_str());
         auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
@@ -102,7 +102,7 @@ namespace AddParams
         updatePending(false);
     }
 
-    void ParameterSelectionSystem::updateOperationalData(std::string categoryName, NFmiInfoData::Type dataCategory)
+    void ParameterSelectionSystem::updateOperationalData(const std::string &categoryName, NFmiInfoData::Type dataCategory)
     {
         auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
         if(iter != categoryDataVector_.end())
@@ -118,7 +118,7 @@ namespace AddParams
         }
     }
 
-    void ParameterSelectionSystem::updateMacroParamData(std::string categoryName, NFmiInfoData::Type dataCategory)
+    void ParameterSelectionSystem::updateMacroParamData(const std::string &categoryName, NFmiInfoData::Type dataCategory)
     {
         if(getMacroParamSystemCallback_)
         {
@@ -143,7 +143,7 @@ namespace AddParams
         }
     }
 
-	void ParameterSelectionSystem::updateWmsData(std::string categoryName, NFmiInfoData::Type dataCategory)
+	void ParameterSelectionSystem::updateWmsData(const std::string &categoryName, NFmiInfoData::Type dataCategory)
 	{
 	#ifndef DISABLE_CPPRESTSDK
 
@@ -179,7 +179,7 @@ namespace AddParams
 
     void ParameterSelectionSystem::updateCustomCategories()
     {
-        for(auto customCat : customCategories_)
+        for(const auto &customCat : customCategories_)
         {
             updateData(customCat, *modelProducerSystem_, NFmiInfoData::kViewable, true);
             updateData(customCat, *obsProducerSystem_, NFmiInfoData::kObservations, true);
@@ -269,7 +269,7 @@ namespace AddParams
 		int index = 0;
 		bool suitableCategory = true;
 
-		for (auto& row : dialogRowData_)
+		for (const auto& row : dialogRowData_)
 		{
 			if (row.rowType() == AddParams::RowType::kCategoryType)
 				suitableCategory = (row.displayName() == ModellDataStr || row.displayName() == MacroParametersStr) ? true : false;
@@ -291,7 +291,7 @@ namespace AddParams
 			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
 			if (!infoVector.empty())
 			{
-				auto info = infoVector.at(0);
+				const auto &info = infoVector.at(0);
 				if (info->SizeLevels() > 1 && info->IsGrid())
 				{
 					trimmedRowData.push_back(row);
@@ -344,7 +344,7 @@ namespace AddParams
 		return trimmedRowData;
 	}
 
-	bool ParameterSelectionSystem::isObservationsData(SingleRowItem& row, int index)
+	bool ParameterSelectionSystem::isObservationsData(const SingleRowItem& row, int index)
 	{
 		if (row.rowType() == AddParams::RowType::kDataType)
 		{
@@ -353,7 +353,7 @@ namespace AddParams
 		return false;
 	}
 
-	std::vector<SingleRowItem> ParameterSelectionSystem::addSubmenu(SingleRowItem& row, int index)
+	std::vector<SingleRowItem> ParameterSelectionSystem::addSubmenu(const SingleRowItem& row, int index)
 	{
 		//Add all sub items
 		std::vector<AddParams::SingleRowItem> rowData;
@@ -374,7 +374,7 @@ namespace AddParams
 		return rowData;
 	}
 
-	std::vector<SingleRowItem> ParameterSelectionSystem::addAllChildNodes(SingleRowItem& row, int index)
+	std::vector<SingleRowItem> ParameterSelectionSystem::addAllChildNodes(const SingleRowItem& row, int index)
 	{
 		//Add all child items
 		std::vector<AddParams::SingleRowItem> rowData;
@@ -399,7 +399,7 @@ namespace AddParams
             dialogTreePatternArray_.push_back(rowItem.treeDepth());
     }
 
-    void ParameterSelectionSystem::searchItemsThatMatchToSearchWords(std::string words)
+    void ParameterSelectionSystem::searchItemsThatMatchToSearchWords(const std::string &words)
     {
         // Needs to fill dialogRowData before new search
         updateDialogRowData();
@@ -413,7 +413,7 @@ namespace AddParams
              
         std::vector<SingleRowItem> resultRowData;
         auto searchedWords = CatLogUtils::getSearchedWords(words);
-        for(auto row : dialogRowData_)
+        for(const auto &row : dialogRowData_)
         {
             if(!row.leafNode()) { resultRowData.push_back(row); }
             else if(CatLogUtils::containsAllSearchedWordsCaseInsensitive(row.searchWords(), searchedWords))
@@ -435,7 +435,7 @@ namespace AddParams
         int index = 0;
 
         //Remove nodes with no childs
-        for(auto row : resultRowData)
+        for(const auto &row : resultRowData)
         {
             if(row.leafNode() || (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView && row.crossSectionLeafNode())) 
 			{ 
@@ -455,7 +455,7 @@ namespace AddParams
 
         //Then remove nodes with no leaf node as a child
         index = 0;
-        for(auto row : resultRowData)
+        for(const auto &row : resultRowData)
         {
             if(row.treeDepth() == 1) { rowData.push_back(row); }
             else if(hasLeafNodeAsAChild(index, resultRowData))

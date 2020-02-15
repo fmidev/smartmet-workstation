@@ -78,7 +78,7 @@ namespace
             }
             std::sort(paramsVector.begin(), paramsVector.end(), ([](const auto &a, const auto &b) { return boost::algorithm::ilexicographical_compare(std::string(a.GetParamName()), std::string(b.GetParamName())); }));
 
-            for(auto dataIdent : paramsVector)
+            for(const auto &dataIdent : paramsVector)
             {
                 std::string menuString = dataIdent.GetParamName();
                 std::string uniqueDataId = "Temp - " + menuString;
@@ -125,7 +125,7 @@ namespace AddParams
 
     // Returns true, if new producer is added or if some new producer data is added or data's param or level structure is changed
     bool CategoryData::updateData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, 
-        NFmiInfoData::Type dataCategory, std::vector<int> helpDataIDs, bool customCategory)
+        NFmiInfoData::Type dataCategory, const std::vector<int> &helpDataIDs, bool customCategory)
     {
         bool dataStructuresChanged = false;
 
@@ -148,13 +148,13 @@ namespace AddParams
     }
 
     bool CategoryData::updateNormalData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem,
-        NFmiInfoData::Type dataCategory, std::vector<int> helpDataIDs)
+        NFmiInfoData::Type dataCategory, const std::vector<int> &helpDataIDs)
     {
         bool dataStructuresChanged = false;
 
         for(const auto &producerInfo : categoryProducerSystem.Producers())
         {
-            if(producerInfo.ProducerId() == NFmiProducer(kFmiTEMP).GetIdent())
+            if(producerInfo.ProducerId() == kFmiTEMP)
                 continue;
             NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
             bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
@@ -217,7 +217,7 @@ namespace AddParams
     {
         bool dataStructuresChanged = false;
         auto infos = operationalProducers(infoOrganizer);
-        for(auto info : infos)
+        for(const auto &info : infos)
         {
             if(!info.second)
                 continue;
@@ -282,7 +282,7 @@ namespace AddParams
 #endif
 	}
 
-    bool CategoryData::addNewOrUpdateData(NFmiProducer producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
+    bool CategoryData::addNewOrUpdateData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         bool dataStruckturesChanged = false;
         // Add only when handling custom category
@@ -310,7 +310,7 @@ namespace AddParams
 		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(NFmiInfoData::kStationary);
 		if (!info) return false;
 
-		NFmiProducer producer = *info->Producer();
+		const auto &producer = *info->Producer();
 		dataStructuresChanged = addNewOrUpdateData(producer, infoOrganizer, helpDataInfoSystem, dataCategory);
 		if (dataStructuresChanged) staticDataAdded_ = true;
 
@@ -368,7 +368,7 @@ namespace AddParams
         return dialogRowData;
     }
 
-    NFmiInfoData::Type CategoryData::getDataType(NFmiInfoOrganizer &infoOrganizer, NFmiProducer &producer)
+    NFmiInfoData::Type CategoryData::getDataType(NFmiInfoOrganizer &infoOrganizer, const NFmiProducer &producer)
     {
         auto fastQueryInfoVector = infoOrganizer.GetInfos(producer.GetIdent());
         auto dataType = !fastQueryInfoVector.empty() ? fastQueryInfoVector.at(0)->DataType() : NFmiInfoData::kNoDataType;
