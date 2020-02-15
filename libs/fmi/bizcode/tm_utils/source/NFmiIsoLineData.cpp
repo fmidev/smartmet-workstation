@@ -156,6 +156,7 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	fUseCustomColorContoursClasses = theOther.fUseCustomColorContoursClasses;
 	fUseSeparatorLinesBetweenColorContourClasses = theOther.fUseSeparatorLinesBetweenColorContourClasses;
 	fUseIsoLineGabWithCustomContours = theOther.fUseIsoLineGabWithCustomContours;
+	fDrawLabelsOverContours = theOther.fDrawLabelsOverContours;
 	itsColorIndexCount = theOther.itsColorIndexCount;
 	itsIsoLineStep = theOther.itsIsoLineStep;
 	itsColorContoursStep = theOther.itsColorContoursStep;
@@ -169,6 +170,8 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsIsoLineStartClassValue = theOther.itsIsoLineStartClassValue;
 	itsDataMinValue = theOther.itsDataMinValue;
 	itsDataMaxValue = theOther.itsDataMaxValue;
+	itsClassMinValue = theOther.itsClassMinValue;
+	itsClassMaxValue = theOther.itsClassMaxValue;
 
 	itsInfo = theOther.itsInfo;
 
