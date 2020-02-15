@@ -78,7 +78,6 @@ void CTimeEditValuesDlg::DoDataExchange(CDataExchange* pDX)
     CDialog::DoDataExchange(pDX);
     //{{AFX_DATA_MAP(CTimeEditValuesDlg)
     DDX_Control(pDX, IDC_SLIDER_SMOOTHER_VALUE, itsSmootherSlider);
-    DDX_Control(pDX, IDC_SLIDER_MODIFIERLENGTH, itsManualModifierLength);
     DDX_Check(pDX, IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, fUseMaskInTimeSerialViews);
     DDX_Check(pDX, IDC_CHECK_USE_ZOOMED_AREA_CP, fUseZoomedAreaCP);
 
@@ -159,10 +158,6 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
 
 	fUseMaskInTimeSerialViews = itsSmartMetDocumentInterface->IsMasksUsedInTimeSerialViews();
 	fUseZoomedAreaCP = itsSmartMetDocumentInterface->UseCPGridCrop();
-
-	UpdateSlider();
-	itsManualModifierLength.SetPos(0); //alkuarvo
-    itsTimeEditValuesView->ManualModifierLength(CalcRelativeSliderValue());
 
 	itsSmootherSlider.SetRange(0, itsSmartMetDocumentInterface->TimeEditSmootherMaxValue());
 	itsSmootherSlider.SetPos(itsSmartMetDocumentInterface->TimeEditSmootherValue());
@@ -382,8 +377,6 @@ void CTimeEditValuesDlg::SeViewModeButtonsSetup(void)
     EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, enableEditingControls);
     EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, enableEditingControls);
     EnableDlgItem(IDC_STATIC_SMOOTH_STR, enableEditingControls);
-    EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, enableEditingControls);
-    EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, enableEditingControls);
     EnableDlgItem(IDC_BUTTON_TOIMINTO, enableEditingControls);
     EnableDlgItem(IDC_BUTTON_CLEAR_ALL_CP_VALUES, enableEditingControls);
     EnableDlgItem(IDC_CHECK_USE_MASKS_IN_TIME_SERIAL_VIEWS, enableEditingControls);
@@ -422,7 +415,6 @@ void CTimeEditValuesDlg::Update(void)
 {
     if(IsWindowVisible() && !IsIconic()) // Näyttöä päivitetään vain jos se on näkyvissä ja se ei ole minimized tilassa
     {
-        UpdateSlider();
         UpdateCPManagerString();
 
         if(itsTimeEditValuesView)
@@ -439,33 +431,12 @@ void CTimeEditValuesDlg::Update(void)
     }
 }
 
-double CTimeEditValuesDlg::CalcRelativeSliderValue()
-{
-	int left;
-	int right;
-	itsManualModifierLength.GetRange(left,right);
-	return double(itsManualModifierLength.GetPos())/double(right-left);
-}
-
 void CTimeEditValuesDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
 	// TODO: Add your message handler code here and/or call default
 	UpdateData(TRUE);
-    itsTimeEditValuesView->ManualModifierLength(CalcRelativeSliderValue());
 	UpdateSmootherString();
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
-}
-
-// asettaa sen 'valittu muokkaus vaikutusalue'-säätimen koon (askelten määrän) dynaamisesti 
-// riippuen datassa olevista aikojen lukumäärästä
-void CTimeEditValuesDlg::UpdateSlider(void)
-{
-	if(itsSmartMetDocumentInterface && itsSmartMetDocumentInterface->EditedSmartInfo())
-	{
-		int timeCount = itsSmartMetDocumentInterface->EditedDataTimeBag().GetSize();
-		itsManualModifierLength.SetRange(0, timeCount-1);
-		UpdateData(FALSE);
-	}
 }
 
 void CTimeEditValuesDlg::OnCheckUseMasksInTimeSerialViews() 
@@ -582,8 +553,6 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
         status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
         status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
         status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
-        status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, false);
-        status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, false);
     }
     else if(fUseAnalyzeTool)
 	{
@@ -597,8 +566,6 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, false);
 		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, false);
 		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, false);
-		status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, false);
-		status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, false);
 	}
 	else
 	{
@@ -611,8 +578,6 @@ void CTimeEditValuesDlg::UpdateControlsAfterAnalyzeMode(void)
 		status = EnableDlgItem(IDC_STATIC_CP_MANAGER_NAME_STR, true);
 		status = EnableDlgItem(IDC_SLIDER_SMOOTHER_VALUE, true);
 		status = EnableDlgItem(IDC_STATIC_SMOOTH_STR, true);
-		status = EnableDlgItem(IDC_SLIDER_MODIFIERLENGTH, true);
-		status = EnableDlgItem(IDC_STATIC_VAIKUTUSALUE_STR, true);
 	}
 	UpdateAnalyseActionControl();
 }
@@ -686,7 +651,6 @@ void CTimeEditValuesDlg::InitDialogTexts(void)
 {
 	SetWindowText(CA2T(::GetDictionaryString("TimeSerialViewDlgTitle").c_str()));
 
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VAIKUTUSALUE_STR, "IDC_STATIC_VAIKUTUSALUE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SMOOTH_STR, "IDC_STATIC_SMOOTH_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_TOIMINTO, "IDC_BUTTON_TOIMINTO");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_ANALYZE_TOOL, "IDC_CHECK_USE_ANALYZE_TOOL");

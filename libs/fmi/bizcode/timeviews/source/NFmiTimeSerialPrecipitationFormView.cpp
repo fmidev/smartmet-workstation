@@ -37,14 +37,12 @@ NFmiTimeSerialPrecipitationFormView::NFmiTimeSerialPrecipitationFormView
 															   ,NFmiToolBox * theToolBox
 															   ,NFmiDrawingEnvironment * theDrawingEnvi
 															   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-															   ,int theIndex
-															   ,double theManualModifierLength)
+															   ,int theIndex)
 :NFmiTimeSerialDiscreteDataView(theRect
 							   ,theToolBox
 							   ,theDrawingEnvi
 							   ,theDrawParam
-							   ,theIndex
-							   ,theManualModifierLength)
+							   ,theIndex)
 {
 	ResetModifyFactorValues();
 }

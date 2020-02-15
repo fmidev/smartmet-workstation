@@ -35,8 +35,7 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
 								   ,NFmiToolBox * theToolBox
 								   ,NFmiDrawingEnvironment * theDrawingEnvi
 								   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-								   ,int theIndex
-								   ,double theManualModifierLength /* = 1. */);
+								   ,int theIndex);
    virtual  ~NFmiTimeSerialDiscreteDataView (void);
 
    bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;

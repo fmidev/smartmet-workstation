@@ -35,8 +35,7 @@ class NFmiTimeSerialPrecipitationTypeView : public NFmiTimeSerialDiscreteDataVie
 										,NFmiToolBox * theToolBox
 										,NFmiDrawingEnvironment * theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-									    ,int theIndex
-										,double theManualModifierLength /* = 1. */);
+									    ,int theIndex);
 	virtual  ~NFmiTimeSerialPrecipitationTypeView (void);
 	virtual void EvaluateValue (double& theValue);
 

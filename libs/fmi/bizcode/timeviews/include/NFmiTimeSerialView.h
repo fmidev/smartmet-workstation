@@ -77,14 +77,12 @@ class NFmiTimeSerialView : public NFmiTimeView
 					   ,NFmiToolBox * theToolBox
 					   ,NFmiDrawingEnvironment * theDrawingEnvi
 					   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-					   ,int theRowIndex
-					   ,double theManualModifierLength);
+					   ,int theRowIndex);
 	virtual  ~NFmiTimeSerialView (void);
 	void Draw (NFmiToolBox * theToolBox);
 	virtual void ChangeTimeSeriesValues(void);
 	virtual void EditingMode (int newMode);
 	void MaxStationShowed (unsigned int newCount);
-	void ManualModifierLength(double newValue);
 	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
 	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
 	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
@@ -313,7 +311,6 @@ class NFmiTimeSerialView : public NFmiTimeView
 
 private:
 
-	double itsManualModifierLength;
 	unsigned long itsMaxStationShowed;
 	double itsSinAmplitude;
 	int itsPhase;
