@@ -123,6 +123,14 @@ ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_MANY_MAP_ROWS_UP, &CFmiExtraMapViewDlg:
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_MANY_MAP_ROWS_DOWN, &CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsDown)
 ON_COMMAND(ID_ACCELERATOR_LOCK_ROW_TO_MAIN_MAP, &CFmiExtraMapViewDlg::OnAcceleratorLockRowToMainMap)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_LOCATION_FINDER_TOOL, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapLocationFinderTool)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP1_FORWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep1Forward)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP1_BACKWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep1Backward)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP2_FORWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep2Forward)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP2_BACKWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep2Backward)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP3_FORWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep3Forward)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP3_BACKWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep3Backward)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_FORWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Forward)
+ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_BACKWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Backward)
 END_MESSAGE_MAP()
 
 
@@ -793,4 +801,44 @@ void CFmiExtraMapViewDlg::OnAcceleratorMoveManyMapRowsDown()
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapLocationFinderTool()
 {
     ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLocationFinderDialog(this);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep1Forward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(1, kForward, 1, itsMapViewDescTopIndex, 1);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep1Backward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(1, kBackward, 1, itsMapViewDescTopIndex, 1);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep2Forward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(2, kForward, 1, itsMapViewDescTopIndex, 1);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep2Backward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(2, kBackward, 1, itsMapViewDescTopIndex, 1);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep3Forward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(3, kForward, 1, itsMapViewDescTopIndex, 1);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep3Backward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(3, kBackward, 1, itsMapViewDescTopIndex, 1);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Forward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(4, kForward, 1, itsMapViewDescTopIndex, 1);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Backward()
+{
+	itsSmartMetDocumentInterface->ChangeTime(4, kBackward, 1, itsMapViewDescTopIndex, 1);
 }

@@ -1398,6 +1398,11 @@ NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHa
     return itsDoc->MapViewDescTop(mapViewDescTopIndex)->MapHandler();
 }
 
+bool SmartMetDocumentInterfaceForGeneralDataDoc::ChangeTime(int theTypeOfChange, FmiDirection theDirection, int theViewType, unsigned long theMapViewIndex, double theAmountOfChange)
+{
+    return itsDoc->ChangeTime(theTypeOfChange, theDirection, theViewType, theMapViewIndex, theAmountOfChange);
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 
