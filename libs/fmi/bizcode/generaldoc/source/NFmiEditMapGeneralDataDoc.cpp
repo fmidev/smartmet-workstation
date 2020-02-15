@@ -436,7 +436,6 @@ public:
 
 GeneralDocImpl(unsigned long thePopupMenuStartId)
 :itsListHandler(0)
-,itsTimeEditingMode(kFmiTimeEditManual)
 ,itsSmartInfoOrganizer(0)
 ,fOpenPopup(false)
 ,itsPopupMenu(0)
@@ -14730,7 +14729,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiMapConfigurationSystem itsMapConfigurationSystem;
 
-	FmiTimeEditMode itsTimeEditingMode;
 	bool fOpenPopup;
 	NFmiMenuItemList* itsPopupMenu;
 	unsigned long itsPopupMenuStartId;
@@ -15137,16 +15135,6 @@ NFmiEditMapDataListHandler* NFmiEditMapGeneralDataDoc::DataLists(void)
 NFmiDrawParamList* NFmiEditMapGeneralDataDoc::TimeSerialViewDrawParamList(void)
 {
 	return pimpl->itsTimeSerialViewDrawParamList;
-}
-
-FmiTimeEditMode NFmiEditMapGeneralDataDoc::TimeEditMode(void)const
-{
-	return pimpl->itsTimeEditingMode;
-}
-
-void NFmiEditMapGeneralDataDoc::TimeEditMode(const int& newMode)
-{
-	pimpl->itsTimeEditingMode = (FmiTimeEditMode) newMode;
 }
 
 bool NFmiEditMapGeneralDataDoc::OpenPopupMenu(void)

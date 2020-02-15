@@ -553,11 +553,6 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateModifiedDrawParamMarko(bo
     itsDoc->UpdateModifiedDrawParamMarko(theDrawParam);
 }
 
-FmiTimeEditMode CtrlViewDocumentInterfaceForGeneralDataDoc::TimeEditMode(void) const
-{
-    return itsDoc->TimeEditMode();
-}
-
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseTimeSerialAxisAutoAdjust(void)
 {
     return itsDoc->UseTimeSerialAxisAutoAdjust();

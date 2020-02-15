@@ -5,7 +5,6 @@
 #include "NFmiDataMatrix.h"
 #include "FmiEditorModifyToolMode.h"
 #include "FmiSmartMetEditingMode.h"
-#include "NFmiTimeEditMode.h"
 #include "ControlPointAcceleratorActions.h"
 #include "SmartMetViewId.h"
 
@@ -264,8 +263,6 @@ public:
     virtual bool MouseCapturedInTimeWindow() = 0;
     virtual void MouseCapturedInTimeWindow(bool newValue) = 0;
     virtual std::vector<NFmiMapViewDescTop*>& MapViewDescTopList() = 0;
-    virtual FmiTimeEditMode TimeEditMode() const = 0;
-    virtual void TimeEditMode(const int& newMode) = 0;
     virtual bool IsMasksUsedInTimeSerialViews() = 0;
     virtual void UseMasksInTimeSerialViews(bool newValue) = 0;
     virtual bool UseCPGridCrop() = 0;

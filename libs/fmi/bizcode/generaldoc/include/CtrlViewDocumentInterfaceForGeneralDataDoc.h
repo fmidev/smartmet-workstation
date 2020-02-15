@@ -119,7 +119,6 @@ public:
     bool CreateTimeSerialDialogOnViewPopup(int index) override;
     bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) override;
     void UpdateModifiedDrawParamMarko(boost::shared_ptr<NFmiDrawParam> &theDrawParam) override;
-    FmiTimeEditMode TimeEditMode(void) const override;
     bool UseTimeSerialAxisAutoAdjust(void) override;
     bool UseQ2Server(void) override;
     bool Registry_ShowLastSendTimeOnMapView() override;

@@ -192,8 +192,6 @@ public:
     bool MouseCapturedInTimeWindow() override;
     void MouseCapturedInTimeWindow(bool newValue) override;
     std::vector<NFmiMapViewDescTop*>& MapViewDescTopList() override;
-    FmiTimeEditMode TimeEditMode() const override;
-    void TimeEditMode(const int& newMode) override;
     bool IsMasksUsedInTimeSerialViews() override;
     void UseMasksInTimeSerialViews(bool newValue) override;
     bool UseCPGridCrop() override;

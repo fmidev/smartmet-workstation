@@ -46,7 +46,6 @@ public:
 	//{{AFX_DATA(CTimeEditValuesDlg)
 	enum { IDD = IDD_DIALOG_TIME_EDIT_VALUES };
 	CSliderCtrl	itsSmootherSlider;
-	int		itsModifyMode;
 	BOOL	fUseMaskInTimeSerialViews;
 	BOOL	fUseZoomedAreaCP;
     CString	itsSmootherValueStrU_;
@@ -97,7 +96,6 @@ private:
 	void UpdateSmootherString(void);
 	void UpdateCPManagerString(void);
 	CRect CalcClientArea(void);
-	void EditModeUpdate(void);
 	void InitDialogTexts(void);
 	void SetParameterSelectionIcon();
 	void UpdateAnalyseActionControl(void);
