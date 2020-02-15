@@ -493,8 +493,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,fCPDataBackupUsed(false)
 ,itsBrushToolLimitSetting(0)
 ,itsBrushToolLimitSettingValue(0)
-,itsTimeEditSmootherValue(0)
-,itsTimeEditSmootherMaxValue(6)
 ,itsShowHelperDataInTimeSerialView(1) // 1= näytä apu dataa aikasarjassa
 ,fShowHelperData3InTimeSerialView(false)
 ,fShowHelperData4InTimeSerialView(false)
@@ -8405,22 +8403,6 @@ void RemoveAllParamsFromMapViewRow(unsigned int theDescTopIndex, int theRowIndex
 	RemoveAllViewsWithRealRowNumber(theDescTopIndex, theRowIndex);
 }
 
-int TimeEditSmootherValue(void)
-{
-	return itsTimeEditSmootherValue;
-}
-void TimeEditSmootherValue(int newValue)
-{
-	itsTimeEditSmootherValue = newValue;
-}
-int TimeEditSmootherMaxValue(void)
-{
-	return itsTimeEditSmootherMaxValue;
-}
-void TimeEditSmootherMaxValue(int newValue)
-{
-	itsTimeEditSmootherMaxValue = newValue;
-}
 int BrushToolLimitSetting(void)
 {
 	return itsBrushToolLimitSetting;
@@ -14699,8 +14681,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	int itsBrushToolLimitSetting; // 0=ei rajoitusta, 1=ei alle, 2= ei yli ja 3= arvon abs. asetus (rajoittaa miten siveltimellä voi rajoittaa arvoja)
 	float itsBrushToolLimitSettingValue;
-	int itsTimeEditSmootherValue;
-	int itsTimeEditSmootherMaxValue;
 
 	bool fCPDataBackupUsed; // Tarkistus bitti sille onko jostain syystä pitänyt lukea kÿnnistyksen yhteydessä CP-datan backup. Tiedon avulla ei tarvitse lukea uudestaan Init vaiheessa CP-pisteitä (ja tuhota muutos käyriä).
 
@@ -15370,22 +15350,6 @@ bool NFmiEditMapGeneralDataDoc::StoreAllCPDataToFiles(void)
 	return pimpl->StoreAllCPDataToFiles();
 }
 
-int NFmiEditMapGeneralDataDoc::TimeEditSmootherValue(void)
-{
-	return pimpl->TimeEditSmootherValue();
-}
-void NFmiEditMapGeneralDataDoc::TimeEditSmootherValue(int newValue)
-{
-	pimpl->TimeEditSmootherValue(newValue);
-}
-int NFmiEditMapGeneralDataDoc::TimeEditSmootherMaxValue(void)
-{
-	return pimpl->TimeEditSmootherMaxValue();
-}
-void NFmiEditMapGeneralDataDoc::TimeEditSmootherMaxValue(int newValue)
-{
-	pimpl->TimeEditSmootherMaxValue(newValue);
-}
 int NFmiEditMapGeneralDataDoc::BrushToolLimitSetting(void)
 {
 	return pimpl->BrushToolLimitSetting();

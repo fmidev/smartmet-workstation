@@ -535,10 +535,6 @@ public:
 	void BrushToolLimitSetting(int newValue);
 	float BrushToolLimitSettingValue(void);
 	void BrushToolLimitSettingValue(float newValue);
-	int TimeEditSmootherValue(void);
-	void TimeEditSmootherValue(int newValue);
-	int TimeEditSmootherMaxValue(void);
-	void TimeEditSmootherMaxValue(int newValue);
 	bool StoreAllCPDataToFiles(void);
 	bool StoreDataToDataBase(const std::string &theForecasterId); // tallettaa datan tietokantaan
 	void RemoveAllParamsFromMapViewRow(unsigned int theDescTopIndex, int theRowIndex);

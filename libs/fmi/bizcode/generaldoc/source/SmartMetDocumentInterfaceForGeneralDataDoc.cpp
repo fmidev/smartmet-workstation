@@ -929,26 +929,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::UseCPGridCrop(bool newValue)
     return itsDoc->UseCPGridCrop(newValue);
 }
 
-int SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherMaxValue()
-{
-    return itsDoc->TimeEditSmootherMaxValue();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherMaxValue(int newValue)
-{
-    return itsDoc->TimeEditSmootherMaxValue(newValue);
-}
-
-int SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherValue()
-{
-    return itsDoc->TimeEditSmootherValue();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherValue(int newValue)
-{
-    return itsDoc->TimeEditSmootherValue(newValue);
-}
-
 const NFmiPoint& SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewSizeInPixels() const
 {
     return itsDoc->TimeSerialViewSizeInPixels();

@@ -267,10 +267,6 @@ public:
     virtual void UseMasksInTimeSerialViews(bool newValue) = 0;
     virtual bool UseCPGridCrop() = 0;
     virtual void UseCPGridCrop(bool newValue) = 0;
-    virtual int TimeEditSmootherMaxValue() = 0;
-    virtual void TimeEditSmootherMaxValue(int newValue) = 0;
-    virtual int TimeEditSmootherValue() = 0;
-    virtual void TimeEditSmootherValue(int newValue) = 0;
     virtual const NFmiPoint& TimeSerialViewSizeInPixels() const = 0;
     virtual void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust() = 0;

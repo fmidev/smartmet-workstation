@@ -59,13 +59,11 @@
 //--------------------------------------------------------
 NFmiDataParamModifier::NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam,
 												boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
-												unsigned long theAreaMask,
-												const NFmiRect& theSelectedSearchAreaRect)
+												unsigned long theAreaMask)
 :itsInfo(theInfo)
 ,itsDrawParam(theDrawParam)
 ,itsParamMaskList(theMaskList)
 ,itsMaskType(theAreaMask)
-,itsSelectedSearchAreaRect(theSelectedSearchAreaRect)
 {
 }
 
@@ -161,9 +159,6 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
     EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, itsMaskType);
 	itsParamMaskList->CheckIfMaskUsed();
 
-	double searchRectSize = (itsSelectedSearchAreaRect.Width()+1) * (itsSelectedSearchAreaRect.Height()+1);
-	bool doAreaSearchForSelectedPoints = searchRectSize > 1 ? true : false;
-
 	for(theActiveTimes.Reset(); theActiveTimes.Next();)
 	{
 		if(itsInfo->Time(theActiveTimes.Time()))
@@ -177,13 +172,6 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 			maskFactor = 1; //itsParamMaskList->MaskValue(itsInfo->LatLon());
 			if(itsParamMaskList->UseMask())
 				maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
-			if(doAreaSearchForSelectedPoints)
-			{
-				int count = dynamic_cast<NFmiSmartInfo*>(itsInfo.get())->MaskedCount(NFmiMetEditorTypes::kFmiSelectionMask, itsInfo->LocationIndex(), itsSelectedSearchAreaRect);
-				double selectedFactor = count / searchRectSize;
-				selectedFactor = selectedFactor*selectedFactor;
-				maskFactor *= selectedFactor;
-			}
 			itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), theModifyFactorTable[modifyFactorIndex], maskFactor)));
 		}
 		modifyFactorIndex++;
@@ -277,7 +265,7 @@ NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shar
 																	,bool theUseGridCrop
 																	,const NFmiPoint &theCropMarginSize
                                                                     , const NFmiGriddingProperties &griddingProperties)
-:NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask, NFmiRect())
+:NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask)
 ,itsGridData()
 ,itsCPGridCropRect(theCPGridCropRect)
 ,fUseGridCrop(theUseGridCrop)
