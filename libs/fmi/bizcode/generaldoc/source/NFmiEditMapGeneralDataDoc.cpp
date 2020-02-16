@@ -13142,6 +13142,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// CSmartMetDoc:in CaseStudyLoadingActions myös likaa cachet ja päivittää lopuksi kaikki näytöt!!, joten se pitää tehdä viimeisenä...
                     ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyLoadingActions(itsLoadedCaseStudySystem.Time(), "Going into case study mode"); // itsCaseStudyHelpDataInfoSystem -pitää olla ladattuna ja fCaseStudyModeOn pitää olla asetettuna true:ksi ennen tämän kutsua
 
+					ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
+					PrepareForParamAddSystemUpdate();
 					return true;
 				}
 			}
@@ -13185,9 +13187,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         SetAllSystemsToCaseStudyModeChangeTime(itsLoadedCaseStudySystem.Time(), NFmiMetTime(), true);
 		InfoOrganizer()->ClearDynamicHelpData(); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
         InitializeSatelImageCacheForCaseStudy();
-        // Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
+		// Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
         CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
         ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyToNormalModeActions();
+		ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
+		PrepareForParamAddSystemUpdate();
 	}
 
 	std::string MakeCaseStudyMemoryFilename(void)
