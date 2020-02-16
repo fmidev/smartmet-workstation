@@ -18,7 +18,6 @@
 
 using namespace std;
 
-const long kTimeInterpolationRangeDefaultValueInMinutes = 6 * 60;
 // ----------------------------------------------------------------------
 /*!
  *  syö spacet pois streamista ja palauttaa true:n jos ei olla lopussa
@@ -27,37 +26,6 @@ const long kTimeInterpolationRangeDefaultValueInMinutes = 6 * 60;
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
-
-NFmiHelpDataInfo::NFmiHelpDataInfo(void)
-    : itsName(),
-      itsFileNameFilter(),
-      itsPartialDataCacheFileNameFilter(),
-      fForceFileFilterName(false),
-      itsLatestFileName(),
-      itsLatestErroneousFileName(),
-      itsDataType(NFmiInfoData::kNoDataType),
-      itsLatestFileTimeStamp(0),
-      itsFakeProducerId(0),
-      itsImageProjectionString(),
-      itsImageDataIdent(),
-      itsImageArea(),
-      fNotifyOnLoad(false),
-      itsNotificationLabel(),
-      itsCustomMenuFolder(),
-      itsReportNewDataTimeStepInMinutes(0),
-      itsReportNewDataLabel(),
-      itsCombineDataPathAndFileName(),
-      itsCombineDataMaxTimeSteps(0),
-      fMakeSoundingIndexData(false),
-      itsRequiredGroundDataFileFilterForSoundingIndexCalculations(),
-      itsBaseNameSpace(),
-      itsAdditionalArchiveFileCount(0),
-      fEnable(true),
-      fNonFixedTimeGab(false),
-      itsModelRunTimeGapInHours(0),
-      itsTimeInterpolationRangeInMinutes(kTimeInterpolationRangeDefaultValueInMinutes)
-{
-}
 
 NFmiHelpDataInfo::NFmiHelpDataInfo(const NFmiHelpDataInfo &theOther)
     : itsName(theOther.itsName),
