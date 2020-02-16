@@ -81,6 +81,8 @@ namespace AddParams
         ~ParameterSelectionSystem();
         void initialize(NFmiProducerSystem &modelProducerSystem, NFmiProducerSystem &obsProducerSystem, NFmiProducerSystem &satelImageProducerSystem,
             NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::vector<int> &idVector, const std::vector<std::string> &customCategories);
+        void reInitialize(NFmiProducerSystem& modelProducerSystem, NFmiProducerSystem& obsProducerSystem,
+            NFmiProducerSystem& satelImageProducerSystem, NFmiHelpDataInfoSystem& helpDataInfoSystem);
         void addHelpData(const NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, const std::string &displayName = std::string());
 		void updateData();
         void updateData(const std::string &catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory = false);
@@ -119,5 +121,6 @@ namespace AddParams
 		bool isObservationsData(const SingleRowItem& row, int index);
 		std::vector<SingleRowItem> addSubmenu(const SingleRowItem& row, int index);
 		std::vector<SingleRowItem> addAllChildNodes(const SingleRowItem& row, int index);
+        void clearData();
 	};
 }

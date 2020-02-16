@@ -65,6 +65,27 @@ namespace AddParams
         customCategories_ = customCategories;
     } 
 
+    // Kun esim. luetaan Case-study dataa, pitää koko systeemi alustaa uusiksi
+    void ParameterSelectionSystem::reInitialize(NFmiProducerSystem& modelProducerSystem, NFmiProducerSystem& obsProducerSystem, 
+        NFmiProducerSystem& satelImageProducerSystem, NFmiHelpDataInfoSystem& helpDataInfoSystem)
+    {
+        modelProducerSystem_ = &modelProducerSystem;
+        obsProducerSystem_ = &obsProducerSystem;
+        satelImageProducerSystem_ = &satelImageProducerSystem;
+        helpDataInfoSystem_ = &helpDataInfoSystem;
+        clearData();
+    }
+
+    void ParameterSelectionSystem::clearData()
+    {
+        categoryDataVector_.clear();
+        // Laitetaan tämä false:ksi, jotta varmistetaan dialogin update toiminto myöhemmin
+        updatePending_ = false; 
+        dialogRowData_.clear();
+        dialogTreePatternArray_.clear();
+        dialogDataNeedsUpdate_ = true;
+    }
+
     void ParameterSelectionSystem::addHelpData(const NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, const std::string &displayName) //Add at the end of help data list
     {
         std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
