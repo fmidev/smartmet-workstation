@@ -54,7 +54,8 @@ NFmiHelpDataInfo::NFmiHelpDataInfo(const NFmiHelpDataInfo &theOther)
       fEnable(theOther.fEnable),
       fNonFixedTimeGab(theOther.fNonFixedTimeGab),
       itsModelRunTimeGapInHours(theOther.itsModelRunTimeGapInHours),
-      itsTimeInterpolationRangeInMinutes(theOther.itsTimeInterpolationRangeInMinutes)
+      itsTimeInterpolationRangeInMinutes(theOther.itsTimeInterpolationRangeInMinutes),
+      fReloadCaseStudyData(theOther.fReloadCaseStudyData)
 {
 }
 
@@ -62,7 +63,6 @@ NFmiHelpDataInfo &NFmiHelpDataInfo::operator=(const NFmiHelpDataInfo &theOther)
 {
   if (this != &theOther)
   {
-    Clear();  // lähinnä area-otuksen tuhoamista varten kutsutaan
     itsName = theOther.itsName;
     itsFileNameFilter = theOther.itsFileNameFilter;
     itsPartialDataCacheFileNameFilter = theOther.itsPartialDataCacheFileNameFilter;
@@ -90,41 +90,11 @@ NFmiHelpDataInfo &NFmiHelpDataInfo::operator=(const NFmiHelpDataInfo &theOther)
     fNonFixedTimeGab = theOther.fNonFixedTimeGab;
     itsModelRunTimeGapInHours = theOther.itsModelRunTimeGapInHours;
     itsTimeInterpolationRangeInMinutes = theOther.itsTimeInterpolationRangeInMinutes;
+    fReloadCaseStudyData = theOther.fReloadCaseStudyData;
 
     itsBaseNameSpace = theOther.itsBaseNameSpace;
   }
   return *this;
-}
-
-void NFmiHelpDataInfo::Clear(void)
-{
-  itsName = "";
-  itsFileNameFilter = "";
-  itsPartialDataCacheFileNameFilter = "";
-  fForceFileFilterName = false;
-  itsLatestFileName = "";
-  itsLatestErroneousFileName = "";
-  itsDataType = NFmiInfoData::kNoDataType;
-  itsLatestFileTimeStamp = 0;
-  itsFakeProducerId = 0;
-  itsImageProjectionString = "";
-  itsImageDataIdent = NFmiDataIdent();
-  itsImageArea.reset();
-  fNotifyOnLoad = false;
-  itsNotificationLabel = "";
-  itsCustomMenuFolder = "";
-  itsBaseNameSpace = "";
-  itsReportNewDataTimeStepInMinutes = 0;
-  itsReportNewDataLabel = "";
-  itsCombineDataPathAndFileName = "";
-  itsCombineDataMaxTimeSteps = 0;
-  fMakeSoundingIndexData = false;
-  itsRequiredGroundDataFileFilterForSoundingIndexCalculations = "";
-  itsAdditionalArchiveFileCount = 0;
-  fEnable = true;
-  fNonFixedTimeGab = false;
-  itsModelRunTimeGapInHours = 0;
-  itsTimeInterpolationRangeInMinutes = kTimeInterpolationRangeDefaultValueInMinutes;
 }
 
 static void FixPathEndWithSeparator(std::string &theFixedPathStr)
@@ -230,6 +200,7 @@ void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
         NFmiSettings::Optional<float>(itsBaseNameSpace + "::ModelRunTimeGapInHours", 0);
     itsTimeInterpolationRangeInMinutes =
         NFmiSettings::Optional<long>(itsBaseNameSpace + "::TimeInterpolationRangeInMinutes", ::GetDefaultTimeInterpolationRangeInMinutes(itsDataType));
+    fReloadCaseStudyData = NFmiSettings::Optional<bool>(itsBaseNameSpace + "::ReloadCaseStudyData", true);
 
     if (IsCombineData())
       ::MakeCombinedDataFilePattern(*this, theHelpDataSystem);

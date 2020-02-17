@@ -77,21 +77,28 @@ bool NFmiInfoOrganizer::AddData(NFmiQueryData *theData,
                                 int theUndoLevel,
                                 int theMaxLatestDataCount,
                                 int theModelRunTimeGap,
-                                bool &fDataWasDeletedOut)
+                                bool &fDataWasDeletedOut,
+                                bool reloadCaseStudyData)
 {
   bool status = false;
   fDataWasDeletedOut = false;
   if (theData)
   {
     if (theDataType == NFmiInfoData::kEditable)
+    {
       status = AddEditedData(
           new NFmiSmartInfo(theData, theDataType, theDataFileName, theDataFilePattern),
           theUndoLevel);
+    }
     else
+    {
+      // muun tyyppiset datat kuin editoitavat menevät mappiin
       status = Add(new NFmiOwnerInfo(theData, theDataType, theDataFileName, theDataFilePattern),
                    theMaxLatestDataCount,
                    theModelRunTimeGap,
-                   fDataWasDeletedOut);  // muun tyyppiset datat kuin editoitavat menevät mappiin
+                   fDataWasDeletedOut,
+                   reloadCaseStudyData);  
+    }
   }
   return status;
 }
@@ -150,7 +157,8 @@ void NFmiInfoOrganizer::UpdateEditedDataCopy(void)
 bool NFmiInfoOrganizer::Add(NFmiOwnerInfo *theInfo,
                             int theMaxLatestDataCount,
                             int theModelRunTimeGap,
-                            bool &fDataWasDeletedOut)
+                            bool &fDataWasDeletedOut,
+                            bool reloadCaseStudyData)
 {
   fDataWasDeletedOut = false;
   if (theInfo)
@@ -166,11 +174,15 @@ bool NFmiInfoOrganizer::Add(NFmiOwnerInfo *theInfo,
       pos->second->AddData(dataPtr, false, fDataWasDeletedOut);
     }
     else
-    {  // lisätään kyseinen data keeper-set listaan
+    {  
+    // lisätään kyseinen data keeper-set listaan
       itsDataMap.insert(
           std::make_pair(theInfo->DataFilePattern(),
-                         boost::shared_ptr<NFmiQueryDataSetKeeper>(new NFmiQueryDataSetKeeper(
-                             dataPtr, theMaxLatestDataCount, theModelRunTimeGap))));
+                         boost::shared_ptr<NFmiQueryDataSetKeeper>(new NFmiQueryDataSetKeeper(dataPtr,
+                                                      theMaxLatestDataCount,
+                                                      theModelRunTimeGap,
+                                                      kQueryDataKeepInMemoryTimeInMinutes,
+                                                      reloadCaseStudyData))));
     }
     return true;
   }
@@ -1309,20 +1321,34 @@ void NFmiInfoOrganizer::ClearThisKindOfData(NFmiQueryInfo *theInfo,
   }
 }
 
-void NFmiInfoOrganizer::ClearDynamicHelpData()
+static bool DeleteDynamicHelpData(const std::vector<NFmiInfoData::Type> &ignoreTypesVector,
+                                bool caseStudyEvent,
+                                NFmiInfoOrganizer::MapType::iterator &dataIterator)
 {
+  if (std::find(ignoreTypesVector.begin(),
+                ignoreTypesVector.end(),
+                dataIterator->second->GetDataKeeper()->GetIter()->DataType()) != ignoreTypesVector.end())
+                return false;
+  if (caseStudyEvent && !dataIterator->second->ReloadCaseStudyData()) 
+    return false;
+
+  return true;
+}
+
+void NFmiInfoOrganizer::ClearDynamicHelpData(bool caseStudyEvent)
+{
+  if (itsEditedDataKeeper)
+    itsEditedDataKeeper.reset();
+  if (itsCopyOfEditedDataKeeper) itsCopyOfEditedDataKeeper.reset();
+
   std::vector<NFmiInfoData::Type> ignoreTypesVector;
-  ignoreTypesVector.push_back(NFmiInfoData::kStationary);  // stationaariset eli esim. topografia
-                                                           // data ei kuulu poistettaviin datoihin
-  ignoreTypesVector.push_back(NFmiInfoData::kClimatologyData);  // klimatologiset datat luetaan vain
-                                                                // kerran ohjelman käynnistyessä
+  // Stationaariset eli esim. topografia data ei kuulu poistettaviin datoihin
+  ignoreTypesVector.push_back(NFmiInfoData::kStationary);  
 
   // käydään lista läpi ja tuhotaan dynaamiset help datat
   for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end();)
   {
-    if (std::find(ignoreTypesVector.begin(),
-                  ignoreTypesVector.end(),
-                  iter->second->GetDataKeeper()->GetIter()->DataType()) == ignoreTypesVector.end())
+    if (::DeleteDynamicHelpData(ignoreTypesVector, caseStudyEvent, iter))
     {
 #ifdef UNIX
       // RHEL5 and RHEL6 bug?

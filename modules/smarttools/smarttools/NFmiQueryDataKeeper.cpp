@@ -76,57 +76,24 @@ int NFmiQueryDataKeeper::LastUsedInMS(void) const
 
 // ************* NFmiQueryDataSetKeeper-class **********************
 
-NFmiQueryDataSetKeeper::NFmiQueryDataSetKeeper(void)
-    : itsQueryDatas(),
-      itsMaxLatestDataCount(0),
-      itsModelRunTimeGap(0),
-      itsFilePattern(),
-      itsLatestOriginTime(),
-      itsDataType(NFmiInfoData::kNoDataType),
-      itsKeepInMemoryTime(5)
-{
-}
-
 NFmiQueryDataSetKeeper::NFmiQueryDataSetKeeper(boost::shared_ptr<NFmiOwnerInfo> &theData,
                                                int theMaxLatestDataCount,
                                                int theModelRunTimeGap,
-                                               int theKeepInMemoryTime)
+                                               int theKeepInMemoryTime,
+                                               bool reloadCaseStudyData)
     : itsQueryDatas(),
       itsMaxLatestDataCount(theMaxLatestDataCount),
       itsModelRunTimeGap(theModelRunTimeGap),
       itsFilePattern(),
       itsLatestOriginTime(),
-      itsKeepInMemoryTime(theKeepInMemoryTime)
+      itsKeepInMemoryTime(theKeepInMemoryTime),
+      fReloadCaseStudyData(reloadCaseStudyData)
 {
   // Kutsutaan vielä erikseen tämä setter, joka tekee tarpeellisia säätöjä annettuun arvoon
   MaxLatestDataCount(theMaxLatestDataCount);
   bool dataWasDeleted = false;
   AddData(theData, true, dataWasDeleted);  // true tarkoittaa että kyse on 1. lisättävästä datasta
 }
-
-NFmiQueryDataSetKeeper::~NFmiQueryDataSetKeeper(void) {}
-/*
-static void QDataListDestroyer(NFmiQueryDataSetKeeper::ListType *theQDataListToBeDestroyed)
-{
-        if(theQDataListToBeDestroyed)
-        {
-                theQDataListToBeDestroyed->clear();
-                delete theQDataListToBeDestroyed;
-        }
-}
-
-static void DestroyQDatasInSeparateThread(NFmiQueryDataSetKeeper::ListType
-&theQDataListToBeDestroyed)
-{
-        NFmiQueryDataSetKeeper::ListType *swapList = new NFmiQueryDataSetKeeper::ListType;
-        theQDataListToBeDestroyed.swap(*swapList); // siirretään tuhottava lista toiseen
-lista-olioon
-        // Käynnistetään uusi threadi, joka hoitaa lopullisen tuhoamisen
-        boost::thread wrk_thread(::QDataListDestroyer, swapList);
-
-        // ei jäädä odottamaan lopetusta
-}
-*/
 
 // Lisätätään annettu data keeper-settiin.
 // Jos	itsMaxLatestDataCount on 0, tyhjennnetään olemassa olevat listat ja datat ja laitetaan

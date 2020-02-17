@@ -79,7 +79,8 @@ class NFmiInfoOrganizer
                int theUndoLevel,
                int theMaxLatestDataCount,
                int theModelRunTimeGap,
-               bool &fDataWasDeletedOut);
+               bool &fDataWasDeletedOut,
+               bool reloadCaseStudyData);
   int CleanUnusedDataFromMemory(void);
   static boost::shared_ptr<NFmiFastQueryInfo> DoDynamicShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
@@ -179,7 +180,7 @@ class NFmiInfoOrganizer
                            NFmiInfoData::Type theDataType,
                            const std::string &theFileNamePattern,
                            NFmiTimeDescriptor &theRemovedDatasTimesOut);
-  void ClearDynamicHelpData();
+  void ClearDynamicHelpData(bool caseStudyEvent);
 
   const std::string &WorkingDirectory(void) const { return itsWorkingDirectory; };
   void WorkingDirectory(const std::string &newValue) { itsWorkingDirectory = newValue; };
@@ -217,7 +218,8 @@ class NFmiInfoOrganizer
   bool Add(NFmiOwnerInfo *theInfo,
            int theMaxLatestDataCount,
            int theModelRunTimeGap,
-           bool &fDataWasDeletedOut);
+           bool &fDataWasDeletedOut,
+           bool reloadCaseStudyData);
 
   boost::shared_ptr<NFmiFastQueryInfo> Info(boost::shared_ptr<NFmiDrawParam> &theDrawParam,
                                             bool fCrossSectionInfoWanted);
