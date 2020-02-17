@@ -34,7 +34,6 @@ class NFmiHelpDataInfo
   // void StoreToSettings(void);  // HUOM! ei toteuteta ainakaan vielä talletusta
 
   NFmiHelpDataInfo &operator=(const NFmiHelpDataInfo &theOther);
-  void Clear(void);
 
   bool IsCombineData(void) const { return itsCombineDataPathAndFileName.empty() == false; }
   const std::string &Name(void) const { return itsName; }
@@ -98,6 +97,9 @@ class NFmiHelpDataInfo
   void ModelRunTimeGapInHours(float newValue) { itsModelRunTimeGapInHours = newValue; }
   long TimeInterpolationRangeInMinutes() const { return itsTimeInterpolationRangeInMinutes; }
   void TimeInterpolationRangeInMinutes(long newValue) { itsTimeInterpolationRangeInMinutes = newValue; }
+  bool ReloadCaseStudyData() const { return fReloadCaseStudyData; }
+  void ReloadCaseStudyData(bool newValue) { fReloadCaseStudyData = newValue; }
+
   const std::string &PartialDataCacheFileNameFilter(void) const
   {
     return itsPartialDataCacheFileNameFilter;
@@ -189,6 +191,9 @@ class NFmiHelpDataInfo
   // Tämän arvo on optionaalinen ja sen oletuspituus on 6 tuntia.
   // SmartMet käyttää hila muotoisille havaintodatoille arvoa 1 tunti, jos tätä ei ole määritelty.
   long itsTimeInterpolationRangeInMinutes = kTimeInterpolationRangeDefaultValueInMinutes;
+  // Joitakin datoja ei haluta poistaa ja uudelleen ladata case-study tapauksissa, 
+  // niille datoilla tämä pitää laittaa false:ksi konfiguraatioista. Esim. ERA-data, observed-climatology.
+  bool fReloadCaseStudyData = true;
 };
 
 class NFmiHelpDataInfoSystem
