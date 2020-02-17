@@ -26,9 +26,7 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	void Draw (NFmiToolBox* theToolBox);
 	virtual void DrawData (void);
 	virtual void DrawBase (void);
-	void EditingMode (const int & newMode);
 	void MaxStationShowed (const unsigned int & newCount);
-	void ManualModifierLength(double newValue);
 	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
 	bool LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey);
 	bool RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey);
@@ -68,7 +66,6 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	NFmiStepTimeScale *itsTimeAxis;
 	NFmiTimeControlView *itsUpperTimeView;
 
-	double itsManualModifierLength;
 	bool fTimeScaleUpdated; // tämän avulla voidaan pakottaa tietyissä tapauksissa karttanäyttö päivittymään, kun ollaan säädetty aikakontrolli ikkunaa
 };
 

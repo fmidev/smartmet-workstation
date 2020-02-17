@@ -6,7 +6,6 @@
 #include "NFmiLevel.h"
 #include "FmiSmartMetEditingMode.h"
 #include "NFmiMetEditorTypes.h"
-#include "NFmiTimeEditMode.h"
 #include "FmiEditorModifyToolMode.h"
 #include "NFmiProducer.h"
 #include "NFmiInfoData.h"
@@ -226,7 +225,6 @@ public:
     virtual bool CreateTimeSerialDialogOnViewPopup(int index) = 0;
     virtual bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
     virtual void UpdateModifiedDrawParamMarko(boost::shared_ptr<NFmiDrawParam> &theDrawParam) = 0;
-    virtual FmiTimeEditMode TimeEditMode(void) const = 0;
     virtual bool UseTimeSerialAxisAutoAdjust(void) = 0;
     virtual bool UseQ2Server(void) = 0;
     virtual bool Registry_ShowLastSendTimeOnMapView() = 0;

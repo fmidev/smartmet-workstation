@@ -94,6 +94,7 @@ private:
     void InitLogLevelComboBox();
     void InitCategoryComboBox();
     void FitLastColumnOnVisibleArea();
+    void UpdateAfterSearchText();
 
     NFmiApplicationWinRegistry &itsApplicationWinRegistry; // Tätä tarvitaan että näytön paikka saadaan talteen Windows rekisteriin
 
@@ -109,7 +110,6 @@ private:
 
 	DECLARE_MESSAGE_MAP()
 public:
-    afx_msg void OnEnChangeEditLogViewerSearchText();
     afx_msg void OnCbnSelchangeComboLogViewerCategory();
     afx_msg void OnCbnSelchangeComboLogViewerSeverity();
     virtual BOOL OnInitDialog();
@@ -122,4 +122,5 @@ public:
     afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
     afx_msg void OnBnClickedCheckFollowLatest();
     afx_msg void OnSize(UINT nType, int cx, int cy);
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };

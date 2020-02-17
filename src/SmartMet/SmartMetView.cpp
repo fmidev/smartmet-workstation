@@ -89,14 +89,14 @@ BEGIN_MESSAGE_MAP(CSmartMetView, CView)
 	ON_COMMAND(ID_ACCELERATOR_PASTE_ALL_MAP_VIEW_PARAMS, &CSmartMetView::OnAcceleratorPasteAllMapViewParams)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_ANIMATION_VIEW, &CSmartMetView::OnAcceleratorToggleAnimationView)
 	ON_COMMAND(ID_ACCELERATOR_SET_HOME_TIME, &CSmartMetView::OnAcceleratorSetHomeTime)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_DAY_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByDayForward)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_DAY_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByDayBackward)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_WEEK_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByWeekForward)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_WEEK_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByWeekBackward)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_MONTH_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByMonthForward)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_MONTH_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByMonthBackward)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_YEAR_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByYearForward)
-	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_YEAR_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByYearBackward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP1_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep1Forward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP1_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep1Backward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP2_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep2Forward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP2_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep2Backward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP3_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep3Forward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP3_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep3Backward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_FORWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep4Forward)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_BACKWARD, &CSmartMetView::OnAcceleratorChangeTimeByStep4Backward)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_DATA_TO_DATABASE, &CSmartMetView::OnUpdateButtonDataToDatabase)
     ON_COMMAND(ID_ACCELERATOR_MAP_ZOOM_IN, &CSmartMetView::OnAcceleratorMapZoomIn)
     ON_COMMAND(ID_ACCELERATOR_MAP_ZOOM_OUT, &CSmartMetView::OnAcceleratorMapZoomOut)
@@ -1341,42 +1341,42 @@ void CSmartMetView::SetMacroErrorText(const std::string &theErrorStr)
 	GetDocument()->SetMacroErrorText(theErrorStr);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByDayForward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep1Forward()
 {
 	GetGeneralDoc()->ChangeTime(1, kForward, 1, itsMapViewDescTopIndex, 1);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByDayBackward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep1Backward()
 {
 	GetGeneralDoc()->ChangeTime(1, kBackward, 1, itsMapViewDescTopIndex, 1);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByWeekForward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep2Forward()
 {
 	GetGeneralDoc()->ChangeTime(2, kForward, 1, itsMapViewDescTopIndex, 1);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByWeekBackward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep2Backward()
 {
 	GetGeneralDoc()->ChangeTime(2, kBackward, 1, itsMapViewDescTopIndex, 1);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByMonthForward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep3Forward()
 {
 	GetGeneralDoc()->ChangeTime(3, kForward, 1, itsMapViewDescTopIndex, 1);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByMonthBackward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep3Backward()
 {
 	GetGeneralDoc()->ChangeTime(3, kBackward, 1, itsMapViewDescTopIndex, 1);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByYearForward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep4Forward()
 {
 	GetGeneralDoc()->ChangeTime(4, kForward, 1, itsMapViewDescTopIndex, 1);
 }
 
-void CSmartMetView::OnAcceleratorChangeTimeByYearBackward()
+void CSmartMetView::OnAcceleratorChangeTimeByStep4Backward()
 {
 	GetGeneralDoc()->ChangeTime(4, kBackward, 1, itsMapViewDescTopIndex, 1);
 }

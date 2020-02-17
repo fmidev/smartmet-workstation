@@ -15,24 +15,15 @@ class NFmiFastQueryInfo;
 class NFmiHatchingSettings
 {
 public:
-	void Init(void)
-	{
-		fUseHatch = false;
-		fDrawHatchBorders = false;
-		itsHatchPattern = 0;
-		itsHatchColorIndex = 0;
-		itsHatchColorRef = 0;
-		itsHatchLowerLimit = 0;
-		itsHatchUpperLimit = 1;
-	}
+	NFmiHatchingSettings() = default;
 
-	bool fUseHatch;
-	bool fDrawHatchBorders;
-	int itsHatchPattern;
-	int itsHatchColorIndex;
-	COLORREF itsHatchColorRef;
-	float itsHatchLowerLimit;
-	float itsHatchUpperLimit;
+	bool fUseHatch = false;
+	bool fDrawHatchBorders = false;
+	int itsHatchPattern = 0;
+	int itsHatchColorIndex = 0;
+	COLORREF itsHatchColorRef = 0;
+	float itsHatchLowerLimit = 0;
+	float itsHatchUpperLimit = 1;
 
 };
 

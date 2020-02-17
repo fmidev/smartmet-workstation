@@ -68,7 +68,6 @@ void CFmiLogViewer::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CFmiLogViewer, CDialogEx)
-    ON_EN_CHANGE(IDC_EDIT_LOG_VIEWER_SEARCH_TEXT, &CFmiLogViewer::OnEnChangeEditLogViewerSearchText)
     ON_CBN_SELCHANGE(IDC_COMBO_LOG_VIEWER_CATEGORY, &CFmiLogViewer::OnCbnSelchangeComboLogViewerCategory)
     ON_CBN_SELCHANGE(IDC_COMBO_LOG_VIEWER_SEVERITY, &CFmiLogViewer::OnCbnSelchangeComboLogViewerSeverity)
     ON_WM_CLOSE()
@@ -87,7 +86,7 @@ void CFmiLogViewer::SetDefaultValues(void)
     Persist2::WriteWindowRectToWinRegistry(itsApplicationWinRegistry, MakeUsedWinRegistryKeyStr(0), this);
 }
 
-void CFmiLogViewer::OnEnChangeEditLogViewerSearchText()
+void CFmiLogViewer::UpdateAfterSearchText()
 {
     // TODO:  If this is a RICHEDIT control, the control will not
     // send this notification unless you override the CDialog::OnInitDialog()
@@ -234,7 +233,7 @@ void CFmiLogViewer::DoWhenClosing()
 void CFmiLogViewer::InitDialogTexts()
 {
     SetWindowText(CA2T(::GetDictionaryString("Log viewer").c_str()));
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOG_VIEWER_SEARCH_TEXT, "Search text");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOG_VIEWER_SEARCH_TEXT, "Search text (Press Enter!)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOG_VIEWER_CATEGORY_TEXT, "Log category");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOG_VIEWER_SEVERITY_TEXT, "Min severity");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FOLLOW_LATEST, "Follow latest");
@@ -516,4 +515,14 @@ void CFmiLogViewer::FitLastColumnOnVisibleArea()
     static bool firstTime = true;
 
     CFmiWin32Helpers::FitLastColumnOnVisibleArea(this, itsGridCtrl, firstTime, 220);
+}
+
+
+BOOL CFmiLogViewer::PreTranslateMessage(MSG* pMsg)
+{
+    // Erikoisk‰sittely, jos kyse RETURN napin painalluksesta (alas/ylˆs)
+    if(CtrlView::DoReturnKeyOperation(pMsg, [this]() {this->UpdateAfterSearchText(); }))
+        return TRUE; // Palautetaan true, jotta t‰t‰ messagea ei k‰sitell‰ en‰‰ muualla
+
+    return CDialogEx::PreTranslateMessage(pMsg);
 }

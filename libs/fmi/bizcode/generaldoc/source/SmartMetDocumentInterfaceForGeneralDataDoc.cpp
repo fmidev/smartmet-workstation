@@ -909,16 +909,6 @@ std::vector<NFmiMapViewDescTop*>& SmartMetDocumentInterfaceForGeneralDataDoc::Ma
     return itsDoc->MapViewDescTopList();
 }
 
-FmiTimeEditMode SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditMode() const
-{
-    return itsDoc->TimeEditMode();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditMode(const int& newMode)
-{
-    return itsDoc->TimeEditMode(newMode);
-}
-
 bool SmartMetDocumentInterfaceForGeneralDataDoc::IsMasksUsedInTimeSerialViews()
 {
     return itsDoc->IsMasksUsedInTimeSerialViews();
@@ -937,26 +927,6 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::UseCPGridCrop()
 void SmartMetDocumentInterfaceForGeneralDataDoc::UseCPGridCrop(bool newValue)
 {
     return itsDoc->UseCPGridCrop(newValue);
-}
-
-int SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherMaxValue()
-{
-    return itsDoc->TimeEditSmootherMaxValue();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherMaxValue(int newValue)
-{
-    return itsDoc->TimeEditSmootherMaxValue(newValue);
-}
-
-int SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherValue()
-{
-    return itsDoc->TimeEditSmootherValue();
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::TimeEditSmootherValue(int newValue)
-{
-    return itsDoc->TimeEditSmootherValue(newValue);
 }
 
 const NFmiPoint& SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewSizeInPixels() const
@@ -1426,6 +1396,11 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDesc
 NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int mapViewDescTopIndex)
 {
     return itsDoc->MapViewDescTop(mapViewDescTopIndex)->MapHandler();
+}
+
+bool SmartMetDocumentInterfaceForGeneralDataDoc::ChangeTime(int theTypeOfChange, FmiDirection theDirection, int theViewType, unsigned long theMapViewIndex, double theAmountOfChange)
+{
+    return itsDoc->ChangeTime(theTypeOfChange, theDirection, theViewType, theMapViewIndex, theAmountOfChange);
 }
 
 #ifndef DISABLE_CPPRESTSDK

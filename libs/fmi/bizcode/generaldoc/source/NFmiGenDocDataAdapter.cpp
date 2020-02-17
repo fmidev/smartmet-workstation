@@ -94,11 +94,6 @@ boost::shared_ptr<NFmiEditorControlPointManager> NFmiGenDocDataAdapter::CPManage
 	return itsDoc->CPManager(getOldSchoolCPManager);
 }
 
-int NFmiGenDocDataAdapter::TimeEditSmootherValue(void)
-{
-	return itsDoc->TimeEditSmootherValue();
-}
-
 CtrlViewUtils::FmiSmartMetEditingMode NFmiGenDocDataAdapter::SmartMetEditingMode(void)
 {
 	return static_cast<CtrlViewUtils::FmiSmartMetEditingMode>(itsDoc->SmartMetEditingMode());

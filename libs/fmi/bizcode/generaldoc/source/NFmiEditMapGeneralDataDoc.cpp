@@ -436,7 +436,6 @@ public:
 
 GeneralDocImpl(unsigned long thePopupMenuStartId)
 :itsListHandler(0)
-,itsTimeEditingMode(kFmiTimeEditManual)
 ,itsSmartInfoOrganizer(0)
 ,fOpenPopup(false)
 ,itsPopupMenu(0)
@@ -494,8 +493,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,fCPDataBackupUsed(false)
 ,itsBrushToolLimitSetting(0)
 ,itsBrushToolLimitSettingValue(0)
-,itsTimeEditSmootherValue(0)
-,itsTimeEditSmootherMaxValue(6)
 ,itsShowHelperDataInTimeSerialView(1) // 1= näytä apu dataa aikasarjassa
 ,fShowHelperData3InTimeSerialView(false)
 ,fShowHelperData4InTimeSerialView(false)
@@ -2859,6 +2856,15 @@ void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data)
     }
 }
 
+bool IsDataReloadedInCaseStudyEvent(const std::string& theDataFilePattern)
+{
+  const auto helpData = HelpDataInfoSystem()->FindHelpDataInfo(theDataFilePattern);
+  if(helpData)
+	return helpData->ReloadCaseStudyData();
+  else
+	return true;
+}
+
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
 			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false)
 {
@@ -2888,8 +2894,9 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			int theMaxLatestDataCount = GetMaxLatestDataCount(theType, theDataFilePattern);
 			NFmiQueryInfo *aInfo = theData ? theData->Info() : 0;
 			int theModelRunTimeGap = NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(aInfo, theType, HelpDataInfoSystem()->FindHelpDataInfo(theDataFilePattern));
+			auto reloadCaseStudyData = IsDataReloadedInCaseStudyEvent(theDataFilePattern);
 			bool dataWasDeleted = false;
-			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap, dataWasDeleted);
+			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap, dataWasDeleted, reloadCaseStudyData);
 			if(dataWasDeleted)
 			{ // data on deletoitu, näin voi käydä jos esim. annetun datan origin aika on pielessä esim. 1900.0.0 jne (kuten on ollut mtl_ecmwf_aalto-datan kanssa joskus)
 				// tehdään raportti lokiin ja ei jatketa funktiota eteenpäin...
@@ -2979,10 +2986,13 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = true;
 		}
 
-		if(EditedInfo() == nullptr && CaseStudyModeOn()) // jos on ladattu caseStudy, eikä ollut pohjilla mitään dataan, laitetaan 1. ladattu data 'editoitavaksi dataksi'
+		if(EditedInfo() == nullptr && CaseStudyModeOn() || fChangingCaseStudyToNormalMode) // jos on ladattu caseStudy, eikä ollut pohjilla mitään dataan, laitetaan 1. ladattu data 'editoitavaksi dataksi'
 		{
 			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska mahdollinen mallipintadata on niin jumalattoman iso
+			{
+				fChangingCaseStudyToNormalMode = false;
 				AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "");
+			}
 		}
         PrepareForParamAddSystemUpdate();
 	}
@@ -6324,7 +6334,7 @@ void RemoveAllViews(unsigned int theDescTopIndex, int theRowIndex)
 void ReloadAllDynamicHelpData()
 {
     LogMessage("Reloading all the dynamic data.", CatLog::Severity::Info, CatLog::Category::Data);
-    InfoOrganizer()->ClearDynamicHelpData(); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
+    InfoOrganizer()->ClearDynamicHelpData(false); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
 	HelpDataInfoSystem()->ResetAllDynamicDataTimeStamps(); // merkitään kaikkien dynaamisten help datojen aikaleimaksi -1, eli ei ole luettu ollenkaan
     SatelliteImageCacheSystem().ResetImages();
     MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan kaikki kartta näytöt likaiseksi
@@ -8406,22 +8416,6 @@ void RemoveAllParamsFromMapViewRow(unsigned int theDescTopIndex, int theRowIndex
 	RemoveAllViewsWithRealRowNumber(theDescTopIndex, theRowIndex);
 }
 
-int TimeEditSmootherValue(void)
-{
-	return itsTimeEditSmootherValue;
-}
-void TimeEditSmootherValue(int newValue)
-{
-	itsTimeEditSmootherValue = newValue;
-}
-int TimeEditSmootherMaxValue(void)
-{
-	return itsTimeEditSmootherMaxValue;
-}
-void TimeEditSmootherMaxValue(int newValue)
-{
-	itsTimeEditSmootherMaxValue = newValue;
-}
 int BrushToolLimitSetting(void)
 {
 	return itsBrushToolLimitSetting;
@@ -13151,7 +13145,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 					itsLoadedCaseStudySystem.SetUpDataLoadinInfoForCaseStudy(itsDataLoadingInfoCaseStudy, caseStudyBasePath);
 
 			// 6. Heitä kaikki dynaaminen data roskiin
-					InfoOrganizer()->ClearDynamicHelpData(); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
+					InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
                     InitializeSatelImageCacheForCaseStudy();
 
                     // Lopetetaan cache datojen lataus ja siivous
@@ -13161,6 +13155,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// CSmartMetDoc:in CaseStudyLoadingActions myös likaa cachet ja päivittää lopuksi kaikki näytöt!!, joten se pitää tehdä viimeisenä...
                     ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyLoadingActions(itsLoadedCaseStudySystem.Time(), "Going into case study mode"); // itsCaseStudyHelpDataInfoSystem -pitää olla ladattuna ja fCaseStudyModeOn pitää olla asetettuna true:ksi ennen tämän kutsua
 
+					ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
+					PrepareForParamAddSystemUpdate();
 					return true;
 				}
 			}
@@ -13201,12 +13197,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		// 3.1. Laita CaseStudy-moodi päälle
 		fCaseStudyModeOn = false;
+		fChangingCaseStudyToNormalMode = true;
         SetAllSystemsToCaseStudyModeChangeTime(itsLoadedCaseStudySystem.Time(), NFmiMetTime(), true);
-		InfoOrganizer()->ClearDynamicHelpData(); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
+		InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
         InitializeSatelImageCacheForCaseStudy();
-        // Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
+		// Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
         CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
         ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyToNormalModeActions();
+		ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
+		PrepareForParamAddSystemUpdate();
 	}
 
 	std::string MakeCaseStudyMemoryFilename(void)
@@ -14476,6 +14475,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return itsColorContourLegendSettings;
     }
 
+	bool fChangingCaseStudyToNormalMode = false;
     NFmiColorContourLegendSettings itsColorContourLegendSettings;
     TimeSerialParameters itsTimeSerialParameters;
     NFmiMacroParamDataCache itsMacroParamDataCache;
@@ -14700,8 +14700,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	int itsBrushToolLimitSetting; // 0=ei rajoitusta, 1=ei alle, 2= ei yli ja 3= arvon abs. asetus (rajoittaa miten siveltimellä voi rajoittaa arvoja)
 	float itsBrushToolLimitSettingValue;
-	int itsTimeEditSmootherValue;
-	int itsTimeEditSmootherMaxValue;
 
 	bool fCPDataBackupUsed; // Tarkistus bitti sille onko jostain syystä pitänyt lukea kÿnnistyksen yhteydessä CP-datan backup. Tiedon avulla ei tarvitse lukea uudestaan Init vaiheessa CP-pisteitä (ja tuhota muutos käyriä).
 
@@ -14730,7 +14728,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiMapConfigurationSystem itsMapConfigurationSystem;
 
-	FmiTimeEditMode itsTimeEditingMode;
 	bool fOpenPopup;
 	NFmiMenuItemList* itsPopupMenu;
 	unsigned long itsPopupMenuStartId;
@@ -15139,16 +15136,6 @@ NFmiDrawParamList* NFmiEditMapGeneralDataDoc::TimeSerialViewDrawParamList(void)
 	return pimpl->itsTimeSerialViewDrawParamList;
 }
 
-FmiTimeEditMode NFmiEditMapGeneralDataDoc::TimeEditMode(void)const
-{
-	return pimpl->itsTimeEditingMode;
-}
-
-void NFmiEditMapGeneralDataDoc::TimeEditMode(const int& newMode)
-{
-	pimpl->itsTimeEditingMode = (FmiTimeEditMode) newMode;
-}
-
 bool NFmiEditMapGeneralDataDoc::OpenPopupMenu(void)
 {
 	return pimpl->fOpenPopup;
@@ -15382,22 +15369,6 @@ bool NFmiEditMapGeneralDataDoc::StoreAllCPDataToFiles(void)
 	return pimpl->StoreAllCPDataToFiles();
 }
 
-int NFmiEditMapGeneralDataDoc::TimeEditSmootherValue(void)
-{
-	return pimpl->TimeEditSmootherValue();
-}
-void NFmiEditMapGeneralDataDoc::TimeEditSmootherValue(int newValue)
-{
-	pimpl->TimeEditSmootherValue(newValue);
-}
-int NFmiEditMapGeneralDataDoc::TimeEditSmootherMaxValue(void)
-{
-	return pimpl->TimeEditSmootherMaxValue();
-}
-void NFmiEditMapGeneralDataDoc::TimeEditSmootherMaxValue(int newValue)
-{
-	pimpl->TimeEditSmootherMaxValue(newValue);
-}
 int NFmiEditMapGeneralDataDoc::BrushToolLimitSetting(void)
 {
 	return pimpl->BrushToolLimitSetting();

@@ -5,7 +5,6 @@
 #include "NFmiDataMatrix.h"
 #include "FmiEditorModifyToolMode.h"
 #include "FmiSmartMetEditingMode.h"
-#include "NFmiTimeEditMode.h"
 #include "ControlPointAcceleratorActions.h"
 #include "SmartMetViewId.h"
 
@@ -264,16 +263,10 @@ public:
     virtual bool MouseCapturedInTimeWindow() = 0;
     virtual void MouseCapturedInTimeWindow(bool newValue) = 0;
     virtual std::vector<NFmiMapViewDescTop*>& MapViewDescTopList() = 0;
-    virtual FmiTimeEditMode TimeEditMode() const = 0;
-    virtual void TimeEditMode(const int& newMode) = 0;
     virtual bool IsMasksUsedInTimeSerialViews() = 0;
     virtual void UseMasksInTimeSerialViews(bool newValue) = 0;
     virtual bool UseCPGridCrop() = 0;
     virtual void UseCPGridCrop(bool newValue) = 0;
-    virtual int TimeEditSmootherMaxValue() = 0;
-    virtual void TimeEditSmootherMaxValue(int newValue) = 0;
-    virtual int TimeEditSmootherValue() = 0;
-    virtual void TimeEditSmootherValue(int newValue) = 0;
     virtual const NFmiPoint& TimeSerialViewSizeInPixels() const = 0;
     virtual void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust() = 0;
@@ -369,6 +362,7 @@ public:
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
     virtual void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) = 0;
     virtual NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) = 0;
+    virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, int theViewType, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

@@ -64,16 +64,16 @@ public:
     void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface) { itsSmartMetDocumentInterface = smartMetDocumentInterface; };
 
 private:
-    std::string ComposeToolTipText(CPoint point);
+    std::string ComposeToolTipText(const CPoint &point);
     CPPToolTip m_tooltip;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
-    std::string TooltipForCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
+    std::string TooltipForCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
     std::string TooltipForCategoryType();
-    std::string TooltipForMacroParamCategoryType(AddParams::SingleRowItem singleRowItem, std::vector<AddParams::SingleRowItem> singleRowItemVector, int rowNumber);
-    std::string TooltipForParameterType(AddParams::SingleRowItem &rowItem);
-    std::string TooltipForDataType(AddParams::SingleRowItem singleRowItem);
-    std::string TooltipForProducerType(AddParams::SingleRowItem singleRowItem, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector, NFmiProducerInfo producerInfo);
-    const std::string DataTypeString(NFmiInfoData::Type dataType);
+    std::string TooltipForMacroParamCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
+    std::string TooltipForParameterType(const AddParams::SingleRowItem &rowItem);
+    std::string TooltipForDataType(const AddParams::SingleRowItem &singleRowItem);
+    std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);
+    std::string DataTypeString(NFmiInfoData::Type dataType);
 public:
     DECLARE_MESSAGE_MAP()
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
@@ -135,6 +135,7 @@ private:
 	std::string MakeTitleText();
     bool UpdateSearchIfNeeded();
     void CollapseAllButCategories();
+    void UpdateAfterSearchText();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
@@ -161,7 +162,7 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-    afx_msg void OnEnChangeEditParameterSelectionSearchText();
     afx_msg void OnPaint();
 	void SetIndexes(unsigned int theDescTopIndex);
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };

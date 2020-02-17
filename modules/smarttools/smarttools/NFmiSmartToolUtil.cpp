@@ -183,7 +183,8 @@ bool NFmiSmartToolUtil::InitDataBase(NFmiInfoOrganizer *theDataBase,
                          0,
                          0,
                          0,
-                         dataWasDeleted);  // 0=undolevel
+                         dataWasDeleted,
+                         true);
     if (theHelperDataFileNames && theHelperDataFileNames->size())
       InitDataBaseHelperData(*theDataBase, *theHelperDataFileNames, fMakeStaticIfOneTimeStepData);
     return true;
@@ -218,7 +219,8 @@ bool NFmiSmartToolUtil::InitDataBaseHelperData(
                         0,
                         0,
                         0,
-                        dataWasDeleted);  // 0=undolevel
+                        dataWasDeleted,
+                        true);
   }
   return true;
 }

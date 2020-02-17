@@ -291,4 +291,11 @@ std::string makeFixedAbsolutePath(const std::string &thePath,
   return fixedPath;
 }
 
+std::string getFilename(const std::string& filePath) 
+{
+  std::experimental::filesystem::path originalPath(filePath);
+  return originalPath.stem().string();
+}
+
+
 }  // namespace PathUtils

@@ -192,16 +192,10 @@ public:
     bool MouseCapturedInTimeWindow() override;
     void MouseCapturedInTimeWindow(bool newValue) override;
     std::vector<NFmiMapViewDescTop*>& MapViewDescTopList() override;
-    FmiTimeEditMode TimeEditMode() const override;
-    void TimeEditMode(const int& newMode) override;
     bool IsMasksUsedInTimeSerialViews() override;
     void UseMasksInTimeSerialViews(bool newValue) override;
     bool UseCPGridCrop() override;
     void UseCPGridCrop(bool newValue) override;
-    int TimeEditSmootherMaxValue() override;
-    void TimeEditSmootherMaxValue(int newValue) override;
-    int TimeEditSmootherValue() override;
-    void TimeEditSmootherValue(int newValue) override;
     const NFmiPoint& TimeSerialViewSizeInPixels() const override;
     void TimeSerialViewSizeInPixels(const NFmiPoint &newValue) override;
     bool UseTimeSerialAxisAutoAdjust() override;
@@ -297,6 +291,7 @@ public:
     NFmiMacroParamDataCache& MacroParamDataCache() override;
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) override;
     NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) override;
+    bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, int theViewType, unsigned long theMapViewIndex, double theAmountOfChange) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;
