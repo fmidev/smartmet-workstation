@@ -22,6 +22,7 @@ namespace PathUtils
     std::string makeFixedAbsolutePath(const std::string &thePath,
                                                  const std::string &theAbsoluteWorkingPath,
                                                  bool fEnsureEndDirectorySeparator = false);
+    std::string getFilename(const std::string &filePath);
 
 
 }  // namespace PathUtils
