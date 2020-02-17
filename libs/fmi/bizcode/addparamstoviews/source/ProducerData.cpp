@@ -7,6 +7,7 @@
 #include "NFmiMacroParamSystem.h"
 #include "NFmiMacroParam.h"
 #include "NFmiDrawParam.h"
+#include "NFmiPathUtils.h"
 #ifndef DISABLE_CPPRESTSDK
 #include "CapabilityTree.h"
 #endif // DISABLE_CPPRESTSDK
@@ -32,6 +33,14 @@ namespace
         return false;
     }
 
+    void FixMissingDataItemName(AddParams::SingleRowItem& rowItem)
+    {
+        if(rowItem.itemName().empty())
+        {
+            rowItem.itemName(PathUtils::getFilename(rowItem.totalFilePath()));
+        }
+    }
+
     AddParams::SingleRowItem makeRowItem(const AddParams::SingleData &data, const std::string &uniqueId, const AddParams::SingleRowItem *rowItemMemory)
     {
         // If there is memory for this data's rowItem, use it, otherwise put row in collapsed mode
@@ -40,6 +49,7 @@ namespace
         auto singleRowItem = AddParams::SingleRowItem(AddParams::kDataType, data.dataName(), data.producerId(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
         singleRowItem.origTime(data.OrigOrLastTime());
         singleRowItem.totalFilePath(data.totalLocalPath());
+        FixMissingDataItemName(singleRowItem);
         return singleRowItem;
     }
 
