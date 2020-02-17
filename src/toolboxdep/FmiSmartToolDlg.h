@@ -12,6 +12,9 @@
 #include "NFmiInfoData.h"
 #include "PPToolTip.h"
 
+// MARKO Huomio! Outo MFC juttu: GROUPBOX:ien pit‰‰ olla dialogissa viimeisin‰, muuten static -tyyppiset kontrollit eiv‰t saa
+// CPPToolTip luokan tooltippi‰ toimimaan. Tuo j‰rjestys t‰ss‰ viittaa tab-orderiin ja sit‰ ei siis saa j‰rjest‰‰ 'oikein' groupboxien kanssa.
+
 /////////////////////////////////////////////////////////////////////////////
 // CFmiSmartToolDlg dialog
 class SmartMetDocumentInterface;

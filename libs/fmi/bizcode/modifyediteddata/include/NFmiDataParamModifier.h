@@ -44,7 +44,7 @@ class NFmiDataParamModifier
 {
  public:
 	NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
-							unsigned long theAreaMask, const NFmiRect& theSelectedSearchAreaRect);
+							unsigned long theAreaMask);
 	virtual ~NFmiDataParamModifier(void){};
 	bool ModifyData (void);
 	bool ModifyData2(void); // 1999.11.17/Marko viritetty ympyrä muokkauksille
@@ -67,12 +67,6 @@ class NFmiDataParamModifier
 // private:
 
 	unsigned long itsMaskType;
-	NFmiRect itsSelectedSearchAreaRect; // alue valinta pehmennys tehdään tämän avulla. Kun editoidaan aíkasarjalla
-										// dataa, haetaan joka pisteeseen lähialueiden valitut pisteet. Riippuen paljon
-										// ympärillä olevissa pisteissä on valittuja pisteitä, sitä voimakkaampi
-										// muokkaus on. Vähän niin kuin maskien kanssa. Keskellä valinta aluetta muutos
-										// on voimakas ja reunoilla heikompi.
-
 };
 
 // ****************************************************************************************************

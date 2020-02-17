@@ -29,7 +29,6 @@ public:
 	boost::shared_ptr<NFmiDrawParam> GetUsedDrawParam(const NFmiDataIdent &theDataIdent, NFmiInfoData::Type theDataType) override;
 	NFmiMetEditorOptionsData& MetEditorOptionsData(void) override;
 	boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) override;
-	int TimeEditSmootherValue(void) override;
 	CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void) override;
 	void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) override;
 	int FilteringParameterUsageState(void) override;

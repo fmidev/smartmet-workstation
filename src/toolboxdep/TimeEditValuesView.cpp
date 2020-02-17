@@ -384,12 +384,6 @@ void CTimeEditValuesView::ResetAllModifyFactorValues(void)
 		itsManagerView->ResetAllModifyFactorValues();
 }
 
-void CTimeEditValuesView::ManualModifierLength(double newValue)
-{
-	if(itsManagerView)
-		itsManagerView->ManualModifierLength(newValue);
-}
-
 void CTimeEditValuesView::OnSize(UINT nType, int cx, int cy)
 {
 	CView::OnSize(nType, cx, cy);

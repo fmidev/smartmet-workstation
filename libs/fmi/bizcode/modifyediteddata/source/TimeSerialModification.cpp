@@ -828,16 +828,8 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 				}
 				else
 				{
-					int smootherFactor = theAdapter.TimeEditSmootherValue();
-					NFmiRect searchRect;
-					if(smootherFactor >= 1)
-					{
-						searchRect = NFmiRect(-smootherFactor, -smootherFactor, smootherFactor, smootherFactor);
-                        ::LogMessage(theAdapter, TimeSeriesModifiedParamForLog(theModifiedDrawParam) + " - modified with Time Serial tool (smoothed edges).", CatLog::Severity::Info, CatLog::Category::Editing);
-					}
-					else
-                        ::LogMessage(theAdapter, TimeSeriesModifiedParamForLog(theModifiedDrawParam) + " - modified with Time Serial tool.", CatLog::Severity::Info, CatLog::Category::Editing);
-					NFmiDataParamModifier dataModifier(info, theModifiedDrawParam, maskList, fUsedMask, searchRect);
+                    ::LogMessage(theAdapter, TimeSeriesModifiedParamForLog(theModifiedDrawParam) + " - modified with Time Serial tool.", CatLog::Severity::Info, CatLog::Category::Editing);
+					NFmiDataParamModifier dataModifier(info, theModifiedDrawParam, maskList, fUsedMask);
 					if(fUseSetForDiscreteData)
 						dataModifier.SetTimeSeriesData(theTimeDescriptor, &theModificationFactorCurvePoints[0], theUnchangedValue);
 					else

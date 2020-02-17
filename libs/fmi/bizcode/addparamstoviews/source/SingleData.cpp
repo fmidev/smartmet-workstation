@@ -19,7 +19,7 @@ namespace
         return false;
     }
 
-    bool isThereNewFileAvailable(const NFmiHelpDataInfo *helpDataInfo, std::string latestDataFilePath)
+    bool isThereNewFileAvailable(const NFmiHelpDataInfo *helpDataInfo, const std::string &latestDataFilePath)
     {
         if(helpDataInfo->LatestFileName().empty())
             return true;
@@ -32,24 +32,28 @@ namespace
     // collapsed mode because otherwise dialog's update codes will open it always.
     // Here is used the SingleRowItem's parentItemId to store producerId
     
-    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode = false, bool treeNodeCollapsed = true)
+    AddParams::SingleRowItem makeRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, bool leafNode, bool treeNodeCollapsed, const std::string& uniqueIdForBaseData)
     {
-        auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), treeNodeCollapsed, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode);
+        auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), treeNodeCollapsed, "", 
+                            dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode,
+                            nullptr, 0, "", "", uniqueIdForBaseData);
         return rowItem;
     }
 
-    AddParams::SingleRowItem makeLevelRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, const std::shared_ptr<NFmiLevel>& level)
+    AddParams::SingleRowItem makeLevelRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, const std::shared_ptr<NFmiLevel>& level, const std::string& uniqueIdForBaseData)
     {
         std::string name = dataIdent.GetParamName() + " " + std::to_string(int(level->LevelValue()));
-        return AddParams::SingleRowItem(rowType, name, dataIdent.GetParamIdent(), true, "", dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), true, level);
+        return AddParams::SingleRowItem(rowType, name, dataIdent.GetParamIdent(), true, "", 
+                        dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), true, 
+                        level, 0, "", "", uniqueIdForBaseData);
     }
 
-    void addLevelRowItems(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo)
+    void addLevelRowItems(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo, const std::string& uniqueIdForBaseData)
     {
         for(queryInfo.ResetLevel(); queryInfo.NextLevel(); )
         {
             const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(*queryInfo.Level());
-            dialogRowData.push_back(::makeLevelRowItem(dataIdent, dataType, rowType, level));
+            dialogRowData.push_back(::makeLevelRowItem(dataIdent, dataType, rowType, level, uniqueIdForBaseData));
         }
     }
 
@@ -87,12 +91,12 @@ namespace
                     if(hasLevelData) //Level wind data
                     {
                         bool treeNodeCollapsed = ::isThisParameterTreeNodeCollapsed(dialogRowDataMemory, uniqueIdForBaseData, subParam.GetParamIdent());
-                        dialogRowData.push_back(::makeRowItem(subParam, dataType, AddParams::RowType::kLevelType, false, treeNodeCollapsed)); //Parameter name as "header"
-                        ::addLevelRowItems(dialogRowData, subParam, dataType, AddParams::RowType::kSubParamLevelType, queryInfo); //Actual level data
+                        dialogRowData.push_back(::makeRowItem(subParam, dataType, AddParams::RowType::kLevelType, false, treeNodeCollapsed, uniqueIdForBaseData)); //Parameter name as "header"
+                        ::addLevelRowItems(dialogRowData, subParam, dataType, AddParams::RowType::kSubParamLevelType, queryInfo, uniqueIdForBaseData); //Actual level data
                     }
                     else //Surface wind data
                     {
-                        dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType, true));
+                        dialogRowData.push_back(::makeRowItem(subParam, dataType, rowType, true, true, uniqueIdForBaseData));
                     }
                 }
             }
@@ -127,18 +131,18 @@ namespace
 
             if(hasLevelData) //Level data
             {
-                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false, treeNodeCollapsed)); //Parameter name as "header", not actual data
-                ::addLevelRowItems(dialogRowData, dataIdent, dataType, AddParams::RowType::kLevelType, queryInfo); //Actual level data
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false, treeNodeCollapsed, uniqueIdForBaseData)); //Parameter name as "header", not actual data
+                ::addLevelRowItems(dialogRowData, dataIdent, dataType, AddParams::RowType::kLevelType, queryInfo, uniqueIdForBaseData); //Actual level data
             } 
             else //Surface data
             {
-                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true, treeNodeCollapsed));
+                dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, true, treeNodeCollapsed, uniqueIdForBaseData));
             }
         }
         else //Wind sub menu
         {
             rowType = AddParams::RowType::kParamType;
-            dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false, treeNodeCollapsed));
+            dialogRowData.push_back(::makeRowItem(dataIdent, dataType, rowType, false, treeNodeCollapsed, uniqueIdForBaseData));
             rowType = AddParams::RowType::kSubParamType; 
             ::addPossibleSubParameters(dialogRowData, dataIdent, dataType, rowType, queryInfo, dialogRowDataMemory, uniqueIdForBaseData);
         }
@@ -254,8 +258,7 @@ namespace AddParams
             dataTime = latestMetaData_->TimeDescriptor().LastTime(); // If observation or analyze data, use data's last time.
         }
 
-        std::string origTime = dataTime.ToStr("YYYY.MM.DD HH:mm");
-        return !origTime.empty() ? origTime : "";
+        return std::string(dataTime.ToStr("YYYY.MM.DD HH:mm"));
     }   
 
 }

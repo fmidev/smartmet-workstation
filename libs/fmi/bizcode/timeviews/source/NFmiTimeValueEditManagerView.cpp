@@ -33,7 +33,6 @@ NFmiTimeValueEditManagerView::NFmiTimeValueEditManagerView
 ,itsSymbolViewCount(0) //laura lisäsi
 ,itsTimeAxis(0)
 ,itsUpperTimeView(0)
-,itsManualModifierLength(0)
 ,fTimeScaleUpdated(false)
 {
 }
@@ -50,7 +49,6 @@ NFmiTimeValueEditManagerView::~NFmiTimeValueEditManagerView(void)
 void NFmiTimeValueEditManagerView::Draw(NFmiToolBox* theToolBox)
 {
    CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": time-serial-view drawing starts");
-   EditingMode(itsCtrlViewDocumentInterface->TimeEditMode());
    DrawBackground();
    if(itsCtrlViewDocumentInterface->UseTimeSerialAxisAutoAdjust()) // jos auto asteikko säätö optio on päällä, säädetään ne tässä yhteisesti enen piirtoa
 	   AutoAdjustValueScales(false);
@@ -85,17 +83,7 @@ void NFmiTimeValueEditManagerView::DrawBase (void)
 {
    return;
 }
-//--------------------------------------------------------
-// EditingMode
-//--------------------------------------------------------
-// PITÄISIKÖ TÄMÄ POISTAA JA SILLOIN ERI NÄYTÖILLÄ VOISI OLLA OMAT EDITINGMODET
-void NFmiTimeValueEditManagerView::EditingMode (const int & newMode)
-{
-	for(itsViewList->Reset(); itsViewList->Next(); )
-	{
-		((NFmiTimeSerialView*)itsViewList->Current())->EditingMode(newMode);
-	}
-}
+
 //--------------------------------------------------------
 // MaxStationShowed
 //--------------------------------------------------------
@@ -105,15 +93,6 @@ void NFmiTimeValueEditManagerView::MaxStationShowed (const unsigned int & newCou
 	for(itsViewList->Reset(); itsViewList->Next(); )
 	{
 		((NFmiTimeSerialView*)itsViewList->Current())->MaxStationShowed(newCount);
-	}
-}
-
-void NFmiTimeValueEditManagerView::ManualModifierLength(double newValue) //laura 22041999
-{
-	itsManualModifierLength = newValue;
-	for(itsViewList->Reset(); itsViewList->Next(); )
-	{
-		((NFmiTimeSerialView*)itsViewList->Current())->ManualModifierLength(newValue);
 	}
 }
 
@@ -390,40 +369,35 @@ NFmiTimeSerialView* NFmiTimeValueEditManagerView::CreateTimeSerialView(boost::sh
 															   ,itsToolBox
 															   ,itsDrawingEnvironment
 															   ,theDrawParam
-															   ,index
-															   ,itsManualModifierLength);
+															   ,index);
 				break;
 			case kFmiPrecipitationType:
 				view = new NFmiTimeSerialPrecipitationTypeView(rect
 															   ,itsToolBox
 															   ,itsDrawingEnvironment
 															   ,theDrawParam
-															   ,index
-															   ,itsManualModifierLength);
+															   ,index);
 				break;
 			case kFmiFogIntensity:
 				view = new NFmiTimeSerialFogIntensityView(rect
 														   ,itsToolBox
 														   ,itsDrawingEnvironment
 														   ,theDrawParam
-														   ,index
-														   ,itsManualModifierLength);
+														   ,index);
 				break;
 			case kFmiWeatherSymbol3:
 				view = new NFmiTimeSerialSymbolView(rect
 												   ,itsToolBox
 												   ,itsDrawingEnvironment
 												   ,theDrawParam
-												   ,index
-												   ,itsManualModifierLength);
+												   ,index);
 				break;
 			default:
 				view = new NFmiTimeSerialView(rect
 											 ,itsToolBox
 											 ,itsDrawingEnvironment
 											 ,theDrawParam
-											 ,index
-											 ,itsManualModifierLength);
+											 ,index);
 				break;
 			}
 		}

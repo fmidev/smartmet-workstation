@@ -25,8 +25,8 @@ namespace AddParams
     SingleRowItem::SingleRowItem(RowType rowType, const std::string &itemName, unsigned long itemId, 
         bool dialogTreeNodeCollapsed, const std::string& uniqueDataId, NFmiInfoData::Type dataType, 
         unsigned long parentItemId, const std::string &parentItemName, const bool leafNode, 
-        const std::shared_ptr<NFmiLevel> &level, const int treeDepth, std::string &displayName
-        , std::string &origTime, std::string &totalFilePath)
+        const std::shared_ptr<NFmiLevel> &level, const int treeDepth, const std::string &displayName
+        , const std::string &origTime, const std::string &totalFilePath)
         : rowType_(rowType)
         , itemName_(itemName)
         , itemId_(itemId)

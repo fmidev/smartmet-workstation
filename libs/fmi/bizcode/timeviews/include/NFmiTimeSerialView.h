@@ -26,7 +26,6 @@
 #pragma once
 
 #include "NFmiTimeView.h"
-#include "NFmiTimeEditMode.h"
 #include "NFmiDrawingEnvironment.h"
 #include "NFmiDataMatrix.h"
 #include "NFmiInfoData.h"
@@ -77,14 +76,11 @@ class NFmiTimeSerialView : public NFmiTimeView
 					   ,NFmiToolBox * theToolBox
 					   ,NFmiDrawingEnvironment * theDrawingEnvi
 					   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-					   ,int theRowIndex
-					   ,double theManualModifierLength);
+					   ,int theRowIndex);
 	virtual  ~NFmiTimeSerialView (void);
 	void Draw (NFmiToolBox * theToolBox);
 	virtual void ChangeTimeSeriesValues(void);
-	virtual void EditingMode (int newMode);
 	void MaxStationShowed (unsigned int newCount);
-	void ManualModifierLength(double newValue);
 	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
 	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
 	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
@@ -224,8 +220,6 @@ class NFmiTimeSerialView : public NFmiTimeView
 	virtual void DrawModifyingUnit(void);
 	void DrawBackground (void);
 	virtual void DrawModifyFactorAxis (void);
-	void DrawModifyFactorPointsSin (void);
-	void DrawModifyFactorPointsLinear (void);
 	void DrawModifyFactorPointsManual (void);
 	bool IsModifiedValueLineDrawn (long theEndPointIndex);
 	bool ValueInsideValueAxis (double theValue);
@@ -244,13 +238,8 @@ class NFmiTimeSerialView : public NFmiTimeView
 	virtual void CreateModifyFactorScaleView(bool fSetScalesDirectlyWithLimits = false, double theValue = kFloatMissing);
 	double CalcModifiedValue (double theRealValue, long theIndexconst, double theMaskFactor);
 	NFmiPoint CalcModifiedValuePoint (double theRealValue, long theIndex, double theMaskFactor);
-	bool ModifyFactorPointsSin (double theValue, int theIndex, const NFmiPoint & thePlace);
-	bool ModifyFactorPointsLinear (double theValue, int theIndex);
 	bool ModifyFactorPointsManual (double theValue, int theIndex);
 	virtual void FixModifyFactorValue (double & theValue);
-	void CalcLinearModifyFactorPoints (void);
-	void CalcSinModifyFactorPoints (void);
-	void CalcModifyFactorPoints (void);
 	void CalcSuitableLowAndHighLimits (double & low, double & high, double step);
 	double LowerScaleValueRound (double value, double step);
 	double HigherScaleValueRound (double value, double step);
@@ -292,7 +281,6 @@ class NFmiTimeSerialView : public NFmiTimeView
 
 	NFmiAxisView * itsValueView;
 	NFmiAxisView * itsModifyFactorView;
-	FmiTimeEditMode itsEditingMode;
 	checkedVector<double> itsModificationFactorCurvePoints;
 	NFmiAxis * itsValueAxis;
 	NFmiAxis * itsModifyFactorAxis;
@@ -313,7 +301,6 @@ class NFmiTimeSerialView : public NFmiTimeView
 
 private:
 
-	double itsManualModifierLength;
 	unsigned long itsMaxStationShowed;
 	double itsSinAmplitude;
 	int itsPhase;

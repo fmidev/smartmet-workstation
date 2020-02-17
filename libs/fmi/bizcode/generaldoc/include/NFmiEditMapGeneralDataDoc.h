@@ -3,7 +3,6 @@
 #include <stdafx.h>
 #include <WinDef.h>
 
-#include "NFmiTimeEditMode.h"
 #include "NFmiDataMatrix.h"
 #include "NFmiMetTime.h"
 #include "NFmiParameterName.h"
@@ -536,10 +535,6 @@ public:
 	void BrushToolLimitSetting(int newValue);
 	float BrushToolLimitSettingValue(void);
 	void BrushToolLimitSettingValue(float newValue);
-	int TimeEditSmootherValue(void);
-	void TimeEditSmootherValue(int newValue);
-	int TimeEditSmootherMaxValue(void);
-	void TimeEditSmootherMaxValue(int newValue);
 	bool StoreAllCPDataToFiles(void);
 	bool StoreDataToDataBase(const std::string &theForecasterId); // tallettaa datan tietokantaan
 	void RemoveAllParamsFromMapViewRow(unsigned int theDescTopIndex, int theRowIndex);
@@ -575,8 +570,6 @@ public:
 	NFmiDrawParamList* DrawParamList(int theDescTopIndex, int theIndex);
     NFmiDrawParamList* DrawParamListWithRealRowNumber(unsigned int theDescTopIndex, int theRealRowIndex);
     NFmiDrawParamList* TimeSerialViewDrawParamList(void);
-	FmiTimeEditMode TimeEditMode(void)const;
-	void TimeEditMode(const int& newMode);
 	void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, int theType, const std::string& theNotificationStr, bool loadFromFileState=false);
 
 	bool OpenPopupMenu(void);

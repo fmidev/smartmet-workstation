@@ -30,7 +30,6 @@ public:
 					   , SmartMetDocumentInterface *smartMetDocumentInterface);
 	bool ChangeTimeSeriesValues(void);
 	void ResetAllModifyFactorValues(void);
-	void ManualModifierLength(double newValue);
 // Operations
 	void Update(void); // en saa nyt windows messageja menem‰‰n esim. Invalidate:lla, joten tein erillisen Update funktion
 	void DoPrint(void);

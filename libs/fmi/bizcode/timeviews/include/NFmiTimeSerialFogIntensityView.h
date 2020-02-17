@@ -17,8 +17,7 @@ class NFmiTimeSerialFogIntensityView : public NFmiTimeSerialDiscreteDataView
 										,NFmiToolBox * theToolBox
 										,NFmiDrawingEnvironment * theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-									    ,int theIndex
-										,double theManualModifierLength = 1.);
+									    ,int theIndex);
 	virtual  ~NFmiTimeSerialFogIntensityView (void);
 	virtual void EvaluateValue (double& theValue);
 
