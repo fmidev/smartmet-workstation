@@ -6552,6 +6552,8 @@ void CopyDrawParamOptions(const NFmiMenuItem& theMenuItem, int theRowIndex, bool
 	if(drawParamList->Index(theMenuItem.IndexInViewRow()))
 	{
 		itsCopyPasteDrawParam.Init(drawParamList->Current(), true);
+		// Pastettavan drawParamin pit‰‰ aina olla n‰kyv‰, muuten tulee h‰mmennyst‰ k‰ytt‰jiss‰!
+		itsCopyPasteDrawParam.HideParam(false);
 		fCopyPasteDrawParamAvailableYet = true;
 	}
 }
