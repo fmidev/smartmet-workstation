@@ -24,6 +24,7 @@ target_link_libraries(
     MfcUtils
     Processes
     CaseStudyLib
+    ${FMT_TARGET_LINK_LIBRARIES}
     )
 
 target_include_directories( 

@@ -19,13 +19,12 @@ add_library(spdlog ${SOURCE_FILES})
 
 target_link_libraries(
     ${PROJECT_NAME}
-    fmt
     )
 
 target_include_directories( 
     ${PROJECT_NAME}
 	PUBLIC ${PROJECT_SOURCE_DIR}/include
-    PUBLIC ${fmt_INCLUDE_DIRS}
+    PUBLIC ${FMT_INCLUDE_DIR}
     )
 
 option(SPDLOG_BUILD_EXAMPLES "Build examples" OFF)
@@ -43,6 +42,6 @@ endif()
 
 set(
     ${PROJECT_NAME}_INCLUDE_DIRS
-    ${fmt_INCLUDE_DIRS}
+    ${FMT_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
