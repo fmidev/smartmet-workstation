@@ -79,12 +79,6 @@ include(cmake/DownloadProject.cmake)
 # ${UPDATE_DISCONNECTED_IF_AVAILABLE}
 # )
 
-download_project(PROJ                fmt
-    GIT_REPOSITORY      https://github.com/fmtlib/fmt.git
-    GIT_TAG             4.1.0
-    ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-    )
-
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 # set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -93,11 +87,6 @@ download_project(PROJ                fmt
 # ${googletest_SOURCE_DIR}
 # ${googletest_BINARY_DIR}
 # )
-
-add_subdirectory(
-    ${fmt_SOURCE_DIR}
-    ${fmt_BINARY_DIR}
-    )
 
 add_subdirectory(
     modules/cppext

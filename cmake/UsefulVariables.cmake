@@ -22,6 +22,7 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
+# **** Boost library section ****
 set(
     BOOST_VERSION
     1_70_0
@@ -46,6 +47,7 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
+# **** ToolkitPro library section ****
 set(
     TOOLKITPRO_VERSION
     17_1_0
@@ -70,6 +72,7 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
+# **** Uniras library section ****
 set(
     UNIRAS_VERSION
     7v5
@@ -100,6 +103,7 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
+# **** CrashRpt library section ****
 set(
     CRASHRPT_VERSION
     1_4_2_r1609
@@ -126,11 +130,54 @@ set(
 
 set(
     CRASHRPT_LIB
-    ${CRASHRPT_BASE_DIR}/lib/Release/CrashRpt1402.lib
+    ${CRASHRPT_LIB_DIR}/Release/CrashRpt1402.lib
     CACHE INTERNAL "" FORCE
     )
 
+# **** Fmt library section ****
+set(
+    FMT_VERSION
+    4_1_0
+    CACHE INTERNAL "" FORCE
+    )
 
+set(
+    FMT_BASE_DIR
+    ${LIBS_3RD}/fmt_${FMT_VERSION}
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    FMT_INCLUDE_DIR
+    ${FMT_BASE_DIR}/inc
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    FMT_LIB_DIR
+    ${FMT_BASE_DIR}/lib
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    FMT_LIB_DEBUG
+    ${FMT_LIB_DIR}/fmtd.lib
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    FMT_LIB_RELEASE
+    ${FMT_LIB_DIR}/fmt.lib
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    FMT_TARGET_LINK_LIBRARIES
+    debug ${FMT_LIB_DEBUG}
+    optimized ${FMT_LIB_RELEASE}
+    )
+
+# **** CppRestSdk library section ****
 if(NOT DISABLE_CPPRESTSDK)	
 set(
     CPPRESTSDK_BASE_DIR
