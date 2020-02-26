@@ -49,7 +49,7 @@ namespace Wms
 
     void WmsClient::initializeDynamic(const DynamicServerSetup& serverSetup, const std::string& proxyUrl)
     {
-        qb_ = std::make_unique<QueryBuilder>(serverSetup.generic.stereo00, serverSetup.generic.stereo10, serverSetup.generic.stereo20);
+        qb_ = std::make_unique<QueryBuilder>(serverSetup.generic.stereo00, serverSetup.generic.stereo10, serverSetup.generic.stereo20, serverSetup.generic.useCrs);
         qb_
             ->setScheme(serverSetup.generic.scheme)
             .setHost(serverSetup.generic.host)
@@ -66,7 +66,7 @@ namespace Wms
     {
         for(const auto& parsedSetup : serverSetup.parsedServers)
         {
-            auto qb = QueryBuilder{ parsedSetup.stereo00, parsedSetup.stereo10, parsedSetup.stereo20 };
+            auto qb = QueryBuilder{ parsedSetup.stereo00, parsedSetup.stereo10, parsedSetup.stereo20, parsedSetup.useCrs };
             qb
                 .setScheme(parsedSetup.scheme)
                 .setHost(parsedSetup.host)

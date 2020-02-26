@@ -21,6 +21,8 @@ namespace Wms
         std::string stereo20;
         std::string token;
         std::vector<std::string> layerGroup;
+        // Vanhemmissa servereiss‰ saatetaan k‰ytt‰‰ sRS=EPSG:1120 (versio 1.0.0?) tyyli‰ ja uudemmissa CRS=EPSG:1120
+        bool useCrs = true;
     };
 
     class UserUrlServerSetup
