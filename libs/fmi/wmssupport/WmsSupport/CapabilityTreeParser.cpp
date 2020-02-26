@@ -5,6 +5,7 @@
 
 #include <regex>
 #include <algorithm>
+#include <codecvt>
 
 using namespace boost::property_tree;
 
@@ -55,12 +56,20 @@ namespace Wms
 			return domainRequest;
 		}
 
+		std::string wstring2string(const std::wstring& wstr)
+		{
+			using convert_typeX = std::codecvt_utf8<wchar_t>;
+			std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+			return converterX.to_bytes(wstr);
+		}
+
 		std::pair<std::string, std::string> parseLegendUrl(const LPXNode& legendNode)
 		{
 			auto legendUrlNode = legendNode->GetChild(_TEXT("OnlineResource"));
 			auto legendUrl = legendUrlNode->GetAttrValue(_TEXT("xlink:href"));
 			std::wstring ws(legendUrl);
-			std::string legendUrlString(ws.begin(), ws.end());
+			std::string legendUrlString(wstring2string(ws));
 
 			auto domainRequest = std::pair<std::string, std::string>{};
 
