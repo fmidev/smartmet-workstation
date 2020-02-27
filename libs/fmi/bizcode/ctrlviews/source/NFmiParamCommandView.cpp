@@ -82,12 +82,13 @@ void NFmiParamCommandView::DrawBackground(void)
 	}
 }
 
-// indeksit alkavat 1:st‰ eli 1. rivi on indeksill‰ 1 jne.
+// Piirrett‰viin parametreihin liittyv‰ lineIndex alkaa 1:st‰ eli 1. parametririvi on indeksill‰ 1 jne.
+// Mutta koska rivill‰ 0 on manipuloimaton map-layer, pit‰‰ se ottaa laskettaessa rivin laatikkoa.
 NFmiRect NFmiParamCommandView::CheckBoxRect(int lineIndex, bool drawedRect)
 {
 	NFmiPoint p = GetFrame().TopLeft();
 	p += itsFirstLinePlace;
-	p.Y(p.Y() + (lineIndex-1) * itsLineHeight);
+	p.Y(p.Y() + lineIndex * itsLineHeight);
 	NFmiRect rect;
 	rect.Place(p);
 	if(drawedRect) // piirrett‰v‰‰ boxia pit‰‰ siirt‰‰ hieman vertikaali suunnassa alas. Ik‰v‰‰ koodia, mutta voi voi
@@ -95,7 +96,7 @@ NFmiRect NFmiParamCommandView::CheckBoxRect(int lineIndex, bool drawedRect)
 	rect.Size(itsCheckBoxSize);
 	return rect;
 }
-// indeksit alkavat 1:st‰ eli 1. rivi on indeksill‰ 1 jne.
+
 NFmiPoint NFmiParamCommandView::LineTextPlace(int lineIndex, bool checkBoxMove)
 {
 	// tekstin alku paikka lasketaan checkboxin avulla
@@ -150,15 +151,20 @@ void NFmiParamCommandView::CalcTextData(void)
 	itsPixelSize.Y(itsToolBox->SY(1));
 }
 
+// Oikeat parametri rivit alkavat 1:st‰. 
+// Rivi 0 on map-layer rivi, jota ei voi manipuloida mitenk‰‰n.
 int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace)
 {
-	for(int counter = 1; counter < 100 ; counter++) // < 100 hatusta (= sata rivi‰ teksti‰!!!)
-	{
-		NFmiPoint place = LineTextPlace(counter+1, false); // joku feelu tuli refactorointi laskuissa, mutta t‰ss‰ pit‰‰ lis‰t‰ yhdell‰ counteria
-		if(place.Y() >= thePlace.Y())
-			return counter;
-	}
-	return 0; // 
+	auto cursorHeight = thePlace.Y() - GetFrame().Top();
+	auto zeroBasedLineIndex = static_cast<int>(cursorHeight / itsLineHeight);
+	return zeroBasedLineIndex;
+	//for(int counter = 0; counter < 100 ; counter++) // < 100 hatusta (= sata rivi‰ teksti‰!!!)
+	//{
+	//	NFmiPoint place = LineTextPlace(counter, false);
+	//	if(place.Y() >= thePlace.Y())
+	//		return counter;
+	//}
+	//return 0;
 }
 
 bool NFmiParamCommandView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)

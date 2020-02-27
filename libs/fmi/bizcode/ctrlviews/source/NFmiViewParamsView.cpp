@@ -105,6 +105,15 @@ void NFmiViewParamsView::DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam>
     }
 }
 
+void NFmiViewParamsView::DrawBackgroundMapLayer()
+{
+	itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
+	NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCurrentMapLayerText(itsMapViewDescTopIndex, true);
+	// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
+	NFmiText text(LineTextPlace(0, false), mapLayerText, 0, itsDrawingEnvironment);
+	itsToolBox->Convert(&text);
+}
+
 void NFmiViewParamsView::DrawData(void)
 {
 	try
@@ -119,6 +128,7 @@ void NFmiViewParamsView::DrawData(void)
 		{
 			itsDrawingEnvironment->SetFontSize(itsFontSize);
 			itsDrawingEnvironment->SetFontType(kArial);
+			DrawBackgroundMapLayer();
 			int counter = 1;
 			for(paramList->Reset(); paramList->Next(); counter++)
 			{
@@ -126,7 +136,7 @@ void NFmiViewParamsView::DrawData(void)
 				if(drawParam)
 				{
                     DrawActiveParamMarkers(drawParam, counter);
-					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam, itsCtrlViewDocumentInterface));
+					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData(), itsCtrlViewDocumentInterface));
 
 					NFmiString paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), crossSectionView, false, false, 0, false));
 					NFmiText text(LineTextPlace(counter, true), paramNameStr, 0, itsDrawingEnvironment);
@@ -281,7 +291,7 @@ NFmiRect NFmiViewParamsView::CalcSize(void)
 	int lineCount = 1; // minimi
     NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
     if(drawParamList && drawParamList->NumberOfItems())
-        lineCount = drawParamList->NumberOfItems();
+        lineCount = drawParamList->NumberOfItems() + 1; // +1 tulee map-layerist‰
 
 // ruudun korkeus on rivien m‰‰r‰*rivinkorkeus + viidesosa rivin korkeudesta (v‰h‰n tilaa pohjalle)
 	double heigth = lineCount * itsLineHeight + 0.5 * itsLineHeight;
@@ -343,18 +353,6 @@ bool NFmiViewParamsView::ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDraw
     return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(), 1); // 1=viewtype ei m‰‰r‰tty viel‰
 }
 
-// CalcIndex-metodi ei mielest‰ni oikein toimi kunnolla, siksi virittelin t‰h‰n
-// uuden rivin lasku funktion.
-static int CalcBetterIndex(const NFmiPoint &thePlace, const NFmiRect &theFrame, int theParamCount)
-{
-	if(theParamCount == 0)
-		theParamCount = 1;
-	double lineHeight = theFrame.Height()/theParamCount;
-
-	double linePos = (thePlace.Y() - theFrame.Top()) / lineHeight;
-	return static_cast<int>(linePos)+1; // t‰m‰ sama kuin ceil-funktio eli 'katto'
-}
-
 int NFmiViewParamsView::GetParamCount(void)
 {
 	NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
@@ -372,17 +370,20 @@ bool NFmiViewParamsView::MouseWheel(const NFmiPoint &thePlace, unsigned long the
 	{
 		int realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber); // itsDoc->MapViewDescTop(itsMapViewDescTopIndex)->MapRowStartingIndex() + itsRowIndex - 1;
 		bool useCrossSectionParams = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
-        int paramIndex = ::CalcBetterIndex(thePlace, GetFrame(), GetParamCount());
-        if(theKey & kShiftKey)
-        {
-            return itsCtrlViewDocumentInterface->ChangeParamSettingsToNextFixedDrawParam(itsMapViewDescTopIndex, realRowIndex, paramIndex, theDelta > 0 ? true : false, useCrossSectionParams);
-        }
-        else if(theKey & kCtrlKey)
+        int paramIndex = CalcIndex(thePlace);
+		if(paramIndex)
 		{
-			return itsCtrlViewDocumentInterface->ChangeActiveMapViewParam(itsMapViewDescTopIndex, realRowIndex, paramIndex, theDelta > 0 ? true : false, useCrossSectionParams);
+			if(theKey & kShiftKey)
+			{
+				return itsCtrlViewDocumentInterface->ChangeParamSettingsToNextFixedDrawParam(itsMapViewDescTopIndex, realRowIndex, paramIndex, theDelta > 0 ? true : false, useCrossSectionParams);
+			}
+			else if(theKey & kCtrlKey)
+			{
+				return itsCtrlViewDocumentInterface->ChangeActiveMapViewParam(itsMapViewDescTopIndex, realRowIndex, paramIndex, theDelta > 0 ? true : false, useCrossSectionParams);
+			}
+			else
+				return itsCtrlViewDocumentInterface->MoveActiveMapViewParamInDrawingOrderList(itsMapViewDescTopIndex, realRowIndex, theDelta > 0 ? true : false, useCrossSectionParams);
 		}
-		else
-			return itsCtrlViewDocumentInterface->MoveActiveMapViewParamInDrawingOrderList(itsMapViewDescTopIndex, realRowIndex, theDelta > 0 ? true : false, useCrossSectionParams);
 	}
 	return false;
 }
