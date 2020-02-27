@@ -1359,6 +1359,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ResetPrintedDescTopIndex()
     itsDoc->ResetPrintedDescTopIndex();
 }
 
+std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
+{
+    return itsDoc->GetCurrentMapLayerText(mapViewDescTopIndex, backgroundMap);
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

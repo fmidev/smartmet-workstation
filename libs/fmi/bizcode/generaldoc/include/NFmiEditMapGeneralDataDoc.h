@@ -149,6 +149,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+    std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap);
     void SetPrintedDescTopIndex(int nowPrintedDescTopIndex);
     int GetPrintedDescTopIndex();
     void ResetPrintedDescTopIndex();

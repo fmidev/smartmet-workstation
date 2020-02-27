@@ -14477,6 +14477,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return itsColorContourLegendSettings;
     }
 
+	std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
+	{
+		return "map-layer-text";
+	}
+
 	bool fChangingCaseStudyToNormalMode = false;
     NFmiColorContourLegendSettings itsColorContourLegendSettings;
     TimeSerialParameters itsTimeSerialParameters;
@@ -17164,4 +17169,9 @@ int NFmiEditMapGeneralDataDoc::GetPrintedDescTopIndex()
 void NFmiEditMapGeneralDataDoc::ResetPrintedDescTopIndex() 
 { 
     pimpl->ResetPrintedDescTopIndex();
+}
+
+std::string NFmiEditMapGeneralDataDoc::GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
+{
+	return pimpl->GetCurrentMapLayerText(mapViewDescTopIndex, backgroundMap);
 }
