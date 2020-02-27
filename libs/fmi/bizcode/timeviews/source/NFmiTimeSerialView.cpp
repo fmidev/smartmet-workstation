@@ -1573,7 +1573,7 @@ void NFmiTimeSerialView::DrawParamName(void)
 	itsToolBox->UseClipping(false);
 	if(itsDrawParam)
 	{
-		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam, itsCtrlViewDocumentInterface));
+		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData(), itsCtrlViewDocumentInterface));
 
 		itsDrawingEnvironment->SetFontSize(CalcFontSize());
 
