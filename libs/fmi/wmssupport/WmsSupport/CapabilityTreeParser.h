@@ -1,7 +1,7 @@
 #pragma once
 
-#include "CapabilityTree.h"
-#include "ChangedLayers.h"
+#include "wmssupport/CapabilityTree.h"
+#include "wmssupport/ChangedLayers.h"
 #include "NFmiProducer.h"
 #include "xmlliteutils/XMLite.h"
 

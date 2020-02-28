@@ -1,6 +1,6 @@
-#include "CapabilitiesHandler.h"
-#include "WmsQuery.h"
-#include "SetupParser.h"
+#include "wmssupport/CapabilitiesHandler.h"
+#include "wmssupport/WmsQuery.h"
+#include "wmssupport/SetupParser.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include "../../q2clientlib/include/NFmiQ2Client.h"
 

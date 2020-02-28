@@ -1,7 +1,7 @@
 #pragma once
 
-#include "WmsQuery.h"
-#include "EpsgParser.h"
+#include "wmssupport/WmsQuery.h"
+#include "wmssupport/EpsgParser.h"
 
 #include <NFmiArea.h>
 #include <NFmiRect.h>

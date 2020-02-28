@@ -1,5 +1,5 @@
-#include "CapabilityTreeParser.h"
-#include "QueryBuilder.h"
+#include "wmssupport/CapabilityTreeParser.h"
+#include "wmssupport/QueryBuilder.h"
 #include "NFmiParameterName.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 
@@ -140,7 +140,7 @@ namespace Wms
 			{
 				try
 				{
-					const auto& childNode = layerNode->GetChild(i);
+					const auto& childNode = layerNode->GetChild(static_cast<int>(i));
 					if (childNode->name == "Style")
 					{
 						styles.insert(parseStyle(childNode));
@@ -355,7 +355,7 @@ namespace Wms
 				auto aNode = nodes[i];
 				for (size_t i = 0; i < aNode->GetChilds().size(); i++)
 				{
-					const auto childNode = aNode->GetChild(i);
+					const auto childNode = aNode->GetChild(static_cast<int>(i));
 					parseNodes(subTree, childNode, path, hashes, changedLayers);
 				}
 			}
@@ -422,7 +422,7 @@ namespace Wms
 		{
 			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
 			{
-				const auto childNode = layerNode->GetChild(i);
+				const auto childNode = layerNode->GetChild(static_cast<int>(i));
 				parseNodes(subTree, childNode, layerPath, hashes, changedLayers);
 			}			
 		}
