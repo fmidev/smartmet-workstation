@@ -38,8 +38,8 @@ void NFmiViewParamsView::ModelSelectorButtonImageHolder::Initialize(void)
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
-:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, true)
+NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
+:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, hasMapLayer)
 ,itsButtonSizeInMM_x(3)
 ,itsButtonSizeInMM_y(3)
 ,itsButtonOffSetFromEdgeFactor(0.05)
@@ -107,11 +107,14 @@ void NFmiViewParamsView::DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam>
 
 void NFmiViewParamsView::DrawBackgroundMapLayer()
 {
-	itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
-	NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCurrentMapLayerText(itsMapViewDescTopIndex, true);
-	// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
-	NFmiText text(LineTextPlace(0, false), mapLayerText, 0, itsDrawingEnvironment);
-	itsToolBox->Convert(&text);
+	if(fHasMapLayer)
+	{
+		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
+		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCurrentMapLayerText(itsMapViewDescTopIndex, true);
+		// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
+		NFmiText text(LineTextPlace(0, false), mapLayerText, 0, itsDrawingEnvironment);
+		itsToolBox->Convert(&text);
+	}
 }
 
 void NFmiViewParamsView::DrawData(void)
@@ -290,8 +293,13 @@ NFmiRect NFmiViewParamsView::CalcSize(void)
 	NFmiRect returnRect(GetFrame());
 	int lineCount = 1; // minimi
     NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
-    if(drawParamList && drawParamList->NumberOfItems())
-        lineCount = drawParamList->NumberOfItems() + 1; // +1 tulee map-layerist‰
+	if(drawParamList && drawParamList->NumberOfItems())
+	{
+		if(fHasMapLayer)
+	        lineCount = drawParamList->NumberOfItems() + 1; // +1 tulee map-layerist‰
+		else
+			lineCount = drawParamList->NumberOfItems();
+	}
 
 // ruudun korkeus on rivien m‰‰r‰*rivinkorkeus + viidesosa rivin korkeudesta (v‰h‰n tilaa pohjalle)
 	double heigth = lineCount * itsLineHeight + 0.5 * itsLineHeight;

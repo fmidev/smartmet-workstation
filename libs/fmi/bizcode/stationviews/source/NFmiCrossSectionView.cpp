@@ -176,7 +176,8 @@ void NFmiCrossSectionView::InitParamHandlerView(void)
 												  ,itsDrawParam
 												  ,itsViewGridRowNumber
 												  ,1
-												  ,false); // false = ei näytetä mask-osiota
+												  ,false // false = ei näytetä mask-osiota
+												  ,false); // false = ei ole map-layer:ia käytössä
 	itsParamHandlerView->Init();
 	itsParamHandlerView->Update(itsParamHandlerViewRect,itsToolBox);
 }
