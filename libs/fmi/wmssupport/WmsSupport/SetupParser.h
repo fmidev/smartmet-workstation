@@ -1,5 +1,5 @@
 #pragma once
-#include "Setup.h"
+#include "wmssupport/Setup.h"
 
 #include "NFmiSettings.h"
 

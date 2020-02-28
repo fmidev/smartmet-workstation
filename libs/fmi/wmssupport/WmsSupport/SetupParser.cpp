@@ -1,4 +1,4 @@
-#include "SetupParser.h"
+#include "wmssupport/SetupParser.h"
 
 namespace Wms
 {

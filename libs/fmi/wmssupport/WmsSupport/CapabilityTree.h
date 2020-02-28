@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WmsQuery.h"
+#include "wmssupport/WmsQuery.h"
 
 #include "NFmiProducer.h"
 
