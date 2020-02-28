@@ -31,9 +31,10 @@
 //--------------------------------------------------------
 // ParamCommandView 
 //--------------------------------------------------------
-NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
+NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
 :NFmiCtrlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex)
 ,fShowView(true)
+,fHasMapLayer(hasMapLayer)
 {
 }
 //--------------------------------------------------------
@@ -86,6 +87,8 @@ void NFmiParamCommandView::DrawBackground(void)
 // Mutta koska rivill‰ 0 on manipuloimaton map-layer, pit‰‰ se ottaa laskettaessa rivin laatikkoa.
 NFmiRect NFmiParamCommandView::CheckBoxRect(int lineIndex, bool drawedRect)
 {
+	if(!fHasMapLayer)
+		lineIndex--;
 	NFmiPoint p = GetFrame().TopLeft();
 	p += itsFirstLinePlace;
 	p.Y(p.Y() + lineIndex * itsLineHeight);
@@ -157,26 +160,13 @@ int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace)
 {
 	auto cursorHeight = thePlace.Y() - GetFrame().Top();
 	auto zeroBasedLineIndex = static_cast<int>(cursorHeight / itsLineHeight);
-	return zeroBasedLineIndex;
-	//for(int counter = 0; counter < 100 ; counter++) // < 100 hatusta (= sata rivi‰ teksti‰!!!)
-	//{
-	//	NFmiPoint place = LineTextPlace(counter, false);
-	//	if(place.Y() >= thePlace.Y())
-	//		return counter;
-	//}
-	//return 0;
+	if(fHasMapLayer)
+		return zeroBasedLineIndex;
+	else
+		return zeroBasedLineIndex + 1;
 }
 
 bool NFmiParamCommandView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
 {
-/*
-	if(IsIn(thePlace))
-	{
-		if(theDelta < 0)
-			return itsDoc->ScrollViewRow(itsMapViewDescTopIndex, 1);
-		else
-			return itsDoc->ScrollViewRow(itsMapViewDescTopIndex, -1);
-	}
-*/
 	return false;
 }
