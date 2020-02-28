@@ -62,7 +62,7 @@ class NFmiViewParamsView : public NFmiParamCommandView
 	};
 
 
-	NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex);
+	NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
     bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
     bool LeftButtonUp(const NFmiPoint &, unsigned long);
 	bool RightButtonUp(const NFmiPoint &, unsigned long);

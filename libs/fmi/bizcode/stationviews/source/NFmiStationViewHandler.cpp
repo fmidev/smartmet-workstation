@@ -3098,7 +3098,8 @@ void NFmiStationViewHandler::InitParamHandlerView(void)
 												  ,itsDrawParam
 												  , itsViewGridRowNumber
 												  , itsViewGridColumnNumber
-												  ,true); // true = näytetään mask-osio (mutta vain 1. rivillä)
+												  ,true // true = näytetään mask-osio (mutta vain 1. rivillä)
+												  ,true); // true = map-layer osio on käytössä karttanäytössä
 	itsParamHandlerView->Init();
 	itsParamHandlerView->Update(itsParamHandlerViewRect,itsToolBox);
 }

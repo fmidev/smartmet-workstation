@@ -34,7 +34,7 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiParamHandlerView::NFmiParamHandlerView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool theShowMaskSection)
+NFmiParamHandlerView::NFmiParamHandlerView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool theShowMaskSection, bool viewParamsViewHasMapLayer)
 :NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, false)
 ,itsViewList(new NFmiCtrlViewList)
 ,itsViewParamCommandView(0)
@@ -43,6 +43,7 @@ NFmiParamHandlerView::NFmiParamHandlerView(int theMapViewDescTopIndex, const NFm
 ,itsMaskParamsView(0)
 ,fMouseCaptured(false)
 ,fShowMaskSection(theShowMaskSection)
+,fViewParamsViewHasMapLayer(viewParamsViewHasMapLayer)
 {
 }
 
@@ -142,7 +143,7 @@ bool NFmiParamHandlerView::Init()
 	NFmiRect viewParamsViewRect(rect);
 	viewParamsViewRect.Bottom(rect.Top()+rect.Height()/3.);
 	viewParamsViewRect.Left(viewParamCommandViewRect.Right());
-	itsViewParamsView = new NFmiViewParamsView(itsMapViewDescTopIndex, viewParamsViewRect, itsToolBox, itsDrawingEnvironment, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber);
+	itsViewParamsView = new NFmiViewParamsView(itsMapViewDescTopIndex, viewParamsViewRect, itsToolBox, itsDrawingEnvironment, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber, fViewParamsViewHasMapLayer);
 	itsViewList->Add(itsViewParamsView, false);
 
 	NFmiRect maskParamCommandViewRect(rect);
