@@ -147,6 +147,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	std::string ComposeWarningMessageToolTipText(void);
 	std::string ComposeSeaIcingWarningMessageToolTipText(void);
 	std::string ComposeSilamLocationsToolTipText(void);
+	std::string ComposeMapLayerToolTipText();
 	void DrawMouseCursorHelperCrossHair(void);
 	void DrawSelectedSynopFromGridView(void);
 	bool ChangeHybridDataLevel(NFmiStationView* theView, short theDelta);
