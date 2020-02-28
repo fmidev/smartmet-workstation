@@ -39,7 +39,7 @@ void NFmiViewParamsView::ModelSelectorButtonImageHolder::Initialize(void)
 // Constructor/Destructor
 //--------------------------------------------------------
 NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
-:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex)
+:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, true)
 ,itsButtonSizeInMM_x(3)
 ,itsButtonSizeInMM_y(3)
 ,itsButtonOffSetFromEdgeFactor(0.05)
