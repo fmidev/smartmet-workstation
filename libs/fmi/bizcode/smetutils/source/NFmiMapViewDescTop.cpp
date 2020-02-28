@@ -1151,6 +1151,14 @@ void NFmiMapViewDescTop::SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap)
     itsLandBorderMapBitmap = newBitmap;
 }
 
+std::string NFmiMapViewDescTop::GetCurrentMapLayerText(bool backgroundMap)
+{
+	if(backgroundMap)
+		return MapHandler()->GetBitmapFileName();
+	else
+		return MapHandler()->GetOverMapBitmapFileName();
+}
+
 
 // Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
 // 1. Nimi muuttui toivottavasti kuvaavammaksi eli RedrawMapView, eli se tarkoittaa

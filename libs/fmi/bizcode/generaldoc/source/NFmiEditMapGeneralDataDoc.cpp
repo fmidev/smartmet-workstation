@@ -14477,9 +14477,30 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return itsColorContourLegendSettings;
     }
 
+	std::string GetCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap, bool combinedMapMode)
+	{
+		if(combinedMapMode)
+		{
+			return "Wms-map-layer-name (server-name)";
+		}
+		else
+		{
+			auto mapLayerName = MapViewDescTop(mapViewDescTopIndex)->GetCurrentMapLayerText(backgroundMap);
+			return PathUtils::getFilename(mapLayerName);
+		}
+	}
+
 	std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
 	{
-		return "map-layer-text";
+		auto combinedMapMode = ApplicationWinRegistry().UseWmsMaps();
+		std::string mapLayerText = combinedMapMode ? "+" : "-";
+		mapLayerText += ::GetDictionaryString("Map");
+		mapLayerText += combinedMapMode ? "[W]" : "[L]";
+		mapLayerText += ": ";
+		auto mapLayerName = GetCurrentMapLayerName(mapViewDescTopIndex, backgroundMap, combinedMapMode);
+		mapLayerText += mapLayerName;
+
+		return mapLayerText;
 	}
 
 	bool fChangingCaseStudyToNormalMode = false;
