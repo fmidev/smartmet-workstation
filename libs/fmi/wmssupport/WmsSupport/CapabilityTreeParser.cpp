@@ -66,15 +66,17 @@ namespace Wms
 
 		std::pair<std::string, std::string> parseLegendUrl(const LPXNode& legendNode)
 		{
-			auto legendUrlNode = legendNode->GetChild(_TEXT("OnlineResource"));
-			auto legendUrl = legendUrlNode->GetAttrValue(_TEXT("xlink:href"));
-			std::wstring ws(legendUrl);
-			std::string legendUrlString(wstring2string(ws));
-
 			auto domainRequest = std::pair<std::string, std::string>{};
+			auto legendUrlNode = legendNode->GetChild(_TEXT("OnlineResource"));
+			if(legendUrlNode)
+			{
+				auto legendUrl = legendUrlNode->GetAttrValue(_TEXT("xlink:href"));
+				std::wstring ws(legendUrl);
+				std::string legendUrlString(wstring2string(ws));
 
-			domainRequest.first = parseDomain(legendUrlString);
-			domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
+				domainRequest.first = parseDomain(legendUrlString);
+				domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
+			}
 
 			return domainRequest;
 		}
