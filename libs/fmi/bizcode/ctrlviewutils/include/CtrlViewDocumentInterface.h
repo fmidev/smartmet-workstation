@@ -390,6 +390,7 @@ public:
     virtual int GetPrintedDescTopIndex() = 0;
     virtual void ResetPrintedDescTopIndex() = 0;
     virtual std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) = 0;
+    virtual unsigned int SelectedMapIndex(int mapViewDescTopIndex) = 0;
 
 
 #ifndef DISABLE_CPPRESTSDK

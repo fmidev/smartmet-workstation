@@ -161,9 +161,9 @@
 #include "execute-command-in-separate-process.h"
 
 #ifndef DISABLE_CPPRESTSDK
-#include "WmsSupport.h"
-#include "CapabilitiesHandler.h"
-#include "CapabilityTree.h"
+#include "wmssupport/WmsSupport.h"
+#include "wmssupport/CapabilitiesHandler.h"
+#include "wmssupport/CapabilityTree.h"
 #endif // DISABLE_CPPRESTSDK
 
 #include <functional>
@@ -836,7 +836,9 @@ void InitWmsSupport()
 #ifndef DISABLE_CPPRESTSDK
     try
     {
-        wmsSupport.initialSetUp(BasicSmartMetConfigurations().Verbose());
+		auto mapViewCount = static_cast<unsigned int>(itsMapViewDescTopList.size());
+		auto mapAreaCount = static_cast<unsigned int>(MapViewDescTop(0)->GdiPlusImageMapHandlerList().size());
+        wmsSupport.initialSetUp(mapViewCount, mapAreaCount, BasicSmartMetConfigurations().Verbose());
         if(!wmsSupport.isConfigured())
         {
             UseWmsMaps(false);
@@ -7539,10 +7541,11 @@ void SetActiveParamMissingValues(double theValue)
 void ChangeWmsMapType(unsigned int theDescTopIndex, bool fForward)
 {
 #ifndef DISABLE_CPPRESTSDK
+	auto mapAreaIndex = MapViewDescTop(theDescTopIndex)->SelectedMapIndex();
     if(fForward)
-        WmsSupport().nextBackground();
+        WmsSupport().nextBackground(theDescTopIndex, mapAreaIndex);
     else
-        WmsSupport().previousBackground();
+        WmsSupport().previousBackground(theDescTopIndex, mapAreaIndex);
 
     MapViewDirty(theDescTopIndex, true, true, true, false, false, false);
 #endif // DISABLE_CPPRESTSDK
@@ -11267,10 +11270,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     void ChangeWmsOverlayMapType(unsigned int theDescTopIndex, bool fForward)
     {
 #ifndef DISABLE_CPPRESTSDK
-        if(fForward)
-            WmsSupport().nextOverlay();
+		auto mapAreaIndex = MapViewDescTop(theDescTopIndex)->SelectedMapIndex();
+		if(fForward)
+            WmsSupport().nextOverlay(theDescTopIndex, mapAreaIndex);
         else
-            WmsSupport().previousOverlay();
+            WmsSupport().previousOverlay(theDescTopIndex, mapAreaIndex);
 #endif // DISABLE_CPPRESTSDK
     }
 
