@@ -1364,6 +1364,11 @@ std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetCurrentMapLayerText(i
     return itsDoc->GetCurrentMapLayerText(mapViewDescTopIndex, backgroundMap);
 }
 
+unsigned int CtrlViewDocumentInterfaceForGeneralDataDoc::SelectedMapIndex(int mapViewDescTopIndex)
+{
+    return itsDoc->MapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

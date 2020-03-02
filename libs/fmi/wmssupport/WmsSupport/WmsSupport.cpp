@@ -13,11 +13,17 @@
 
 namespace Wms
 {
+    StaticMapClientState::StaticMapClientState() = default;
+    StaticMapClientState::StaticMapClientState(StaticMapClientState&&) = default;
+
+
     WmsSupport::WmsSupport()
     {
         bManager_ = std::make_shared<cppback::BackgroundManager>();
         legendHandler_ = std::make_unique<LegendHandler>();
     }
+
+    WmsSupport::~WmsSupport() = default;
 
     bool WmsSupport::isConfigured() const
     {
@@ -120,10 +126,13 @@ namespace Wms
         return legendHandler_->getRegisteredLayers(row, col, descTop);
     }
 
-    NFmiImageHolder WmsSupport::getBackground(const NFmiArea& area, int resolutionX, int resolutionY)
+    NFmiImageHolder WmsSupport::getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY)
     {
-        auto query = backgroundClient_->getUserUrlQB(state_->getCurrentBackgroundIndex())
-            .setLayers(setup_->background.parsedServers[state_->getCurrentBackgroundIndex()].layerGroup)
+        auto &staticMapClientState = getStaticMapClientState(mapViewIndex, mapAreaIndex);
+        auto& bkClient = staticMapClientState.backgroundClient_;
+        auto& state = staticMapClientState.state_;
+        auto query = bkClient->getUserUrlQB(state->getCurrentBackgroundIndex())
+            .setLayers(setup_->background.parsedServers[state->getCurrentBackgroundIndex()].layerGroup)
             .setWidth(resolutionX)
             .setHeight(resolutionY)
             .setCrsAndBbox(area)
@@ -131,48 +140,55 @@ namespace Wms
             .setStyles("")
             .build();
 
-        return backgroundClient_->getImage(query);
+        return bkClient->getImage(query);
     }
 
-    NFmiImageHolder WmsSupport::getOverlay(const NFmiArea& area, int resolutionX, int resolutionY)
+    NFmiImageHolder WmsSupport::getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY)
     {
-        if(state_->getCurrentOverlayIndex() == -1)
+        auto& staticMapClientState = getStaticMapClientState(mapViewIndex, mapAreaIndex);
+        auto& ovClient = staticMapClientState.overlayClient_;
+        auto& state = staticMapClientState.state_;
+        if(state->getCurrentOverlayIndex() == -1)
         {
             return nullptr;
         }
-        auto query = overlayClient_->getUserUrlQB(state_->getCurrentOverlayIndex())
+        auto query = ovClient->getUserUrlQB(state->getCurrentOverlayIndex())
             .setWidth(resolutionX)
             .setHeight(resolutionY)
-            .setLayers(setup_->overlay.parsedServers[state_->getCurrentOverlayIndex()].layerGroup)
+            .setLayers(setup_->overlay.parsedServers[state->getCurrentOverlayIndex()].layerGroup)
             .setCrsAndBbox(area)
             .setRequest("GetMap")
             .setStyles("")
             .build();
 
-        return overlayClient_->getImage(query);
+        return ovClient->getImage(query);
     }
 
-    void WmsSupport::nextBackground()
+    void WmsSupport::nextBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex)
     {
-        state_->setBackgroundIndex(state_->getCurrentBackgroundIndex() + 1);
+        auto& state = getStaticMapClientState(mapViewIndex, mapAreaIndex).state_;
+        state->setBackgroundIndex(state->getCurrentBackgroundIndex() + 1);
     }
 
-    void WmsSupport::nextOverlay()
+    void WmsSupport::nextOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex)
     {
-        state_->setOverlayIndex(state_->getCurrentOverlayIndex() + 1);
+        auto& state = getStaticMapClientState(mapViewIndex, mapAreaIndex).state_;
+        state->setOverlayIndex(state->getCurrentOverlayIndex() + 1);
     }
 
-    void WmsSupport::previousBackground()
+    void WmsSupport::previousBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex)
     {
-        state_->setBackgroundIndex(state_->getCurrentBackgroundIndex() - 1);
+        auto& state = getStaticMapClientState(mapViewIndex, mapAreaIndex).state_;
+        state->setBackgroundIndex(state->getCurrentBackgroundIndex() - 1);
     }
 
-    void WmsSupport::previousOverlay()
+    void WmsSupport::previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex)
     {
-        state_->setOverlayIndex(state_->getCurrentOverlayIndex() - 1);
+        auto& state = getStaticMapClientState(mapViewIndex, mapAreaIndex).state_;
+        state->setOverlayIndex(state->getCurrentOverlayIndex() - 1);
     }
 
-    void WmsSupport::initialSetUp(bool doVerboseLogging)
+    void WmsSupport::initialSetUp(unsigned int mapViewCount, unsigned int mapAreaCount, bool doVerboseLogging)
     {
         try
         {
@@ -210,34 +226,53 @@ namespace Wms
             }
             );
 
-        state_ = std::make_unique<WmsSupportState>(*setup_);
-        backgroundFetcher_ = std::make_unique<BackgroundFetcher>(bManager_, setup_->backgroundBackwardAmount, setup_->backgroundForwardAmount);
-
-        backgroundClient_ = std::make_unique<WmsClient>(
-            std::make_unique<GdiplusBitmapCache>(
-                setup_->numberOfCaches, setup_->numberOfLayersPerCache
-                ),
-            std::make_unique<BitmapHandler::GdiplusBitmapParser>(),
-            std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
-            bManager_,
-            std::make_unique<QueryBuilder>()
-            );
-        backgroundClient_->initializeUserUrl(setup_->background, setup_->proxyUrl);
-
-        overlayClient_ = std::make_unique<WmsClient>(
-            std::make_unique<GdiplusBitmapCache>(
-                setup_->numberOfCaches, setup_->numberOfLayersPerCache
-                ),
-            std::make_unique<BitmapHandler::GdiplusBitmapParser>(),
-            std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
-            bManager_,
-            std::make_unique<QueryBuilder>()
-            );
-        overlayClient_->initializeUserUrl(setup_->overlay, setup_->proxyUrl);
+        for(auto index = 0u; index < mapViewCount; index++)
+            totalMapViewStaticMapClientState_.emplace(index, createMapViewStaticMapClientState(mapAreaCount));
 
         fillDynamicClients(setup_->dynamics, setup_->proxyUrl);
 
         capabilitiesHandler_->startFetchingCapabilitiesInBackground();
+    }
+
+    StaticMapClientState WmsSupport::createStaticMapClientState()
+    {
+        StaticMapClientState mapClientState;
+        mapClientState.state_ = std::make_unique<WmsSupportState>(*setup_);
+        backgroundFetcher_ = std::make_unique<BackgroundFetcher>(bManager_, setup_->backgroundBackwardAmount, setup_->backgroundForwardAmount);
+
+        mapClientState.backgroundClient_ = std::make_unique<WmsClient>(
+            std::make_unique<GdiplusBitmapCache>(
+                setup_->numberOfCaches, setup_->numberOfLayersPerCache
+                ),
+            std::make_unique<BitmapHandler::GdiplusBitmapParser>(),
+            std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
+            bManager_,
+            std::make_unique<QueryBuilder>()
+            );
+        mapClientState.backgroundClient_->initializeUserUrl(setup_->background, setup_->proxyUrl);
+
+        mapClientState.overlayClient_ = std::make_unique<WmsClient>(
+            std::make_unique<GdiplusBitmapCache>(
+                setup_->numberOfCaches, setup_->numberOfLayersPerCache
+                ),
+            std::make_unique<BitmapHandler::GdiplusBitmapParser>(),
+            std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
+            bManager_,
+            std::make_unique<QueryBuilder>()
+            );
+        mapClientState.overlayClient_->initializeUserUrl(setup_->overlay, setup_->proxyUrl);
+
+
+        return mapClientState;
+    }
+
+    WmsSupport::MapViewStaticMapClientState WmsSupport::createMapViewStaticMapClientState(unsigned int mapAreaCount)
+    {
+        MapViewStaticMapClientState mapViewStaticMapClientState;
+        for(auto index = 0u; index < mapAreaCount; index++)
+            mapViewStaticMapClientState.emplace(index, createStaticMapClientState());
+
+        return std::move(mapViewStaticMapClientState);
     }
 
     void WmsSupport::fillDynamicClients(const std::unordered_map<int, DynamicServerSetup> &serverSetups, const std::string& proxyUrl)
@@ -270,6 +305,11 @@ namespace Wms
             );
         wmsClient->initializeDynamic(setup, proxyUrl);
         return std::move(wmsClient);
+    }
+
+    StaticMapClientState& WmsSupport::getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex)
+    {
+        return totalMapViewStaticMapClientState_.at(mapViewIndex).at(mapAreaIndex);
     }
 }
 

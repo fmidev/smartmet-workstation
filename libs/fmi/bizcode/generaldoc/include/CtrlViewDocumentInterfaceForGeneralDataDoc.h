@@ -284,6 +284,7 @@ public:
     int GetPrintedDescTopIndex() override;
     void ResetPrintedDescTopIndex() override;
     std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) override;
+    unsigned int SelectedMapIndex(int mapViewDescTopIndex) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;
