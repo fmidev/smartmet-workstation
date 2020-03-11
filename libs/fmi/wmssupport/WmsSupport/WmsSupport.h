@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WmsSupportInterface.h"
 #include "NFmiSatelliteImageCacheHelpers.h"
 #include "wmssupport/LegendHandler.h"
 #include "wmssupport/CapabilityTree.h"
@@ -41,7 +42,7 @@ namespace Wms
         StaticMapClientState& operator=(const StaticMapClientState &) = delete;
     };
 
-    class WmsSupport
+    class WmsSupport : public WmsSupportInterface
     {
         // Tähän talletetaan yhden karttanäytön kartta-alueiden 1-4 kokonaistilat
         using MapViewStaticMapClientState = std::map<unsigned int, StaticMapClientState>;
@@ -62,23 +63,26 @@ namespace Wms
         WmsSupport();
         ~WmsSupport();
 
-        bool isConfigured() const;
-        void kill();
-        bool isDead(std::chrono::milliseconds wait) const;
-        const CapabilityTree& peekCapabilityTree() const;
-        std::string getFullLayerName(long producerId, long paramId) const;
-        NFmiImageHolder getDynamicImage(long producerId, long paramId, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes);
-        std::vector<NFmiImageHolder> getLegends(int row, int col, int descTop);
-        void registerDynamicLayer(int row, int col, int descTop, const NFmiDataIdent &dataIdent);
-        void unregisterDynamicLayer(int row, int col, int descTop, const NFmiDataIdent &dataIdent);
-        const LegendIdentSet& getRegisteredLayers(int row, int col, int descTop);
-        NFmiImageHolder getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY);
-        NFmiImageHolder getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY);
-        void nextBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex);
-        void nextOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex);
-        void previousBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex);
-        void previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex);
-        void initialSetUp(unsigned int mapViewCount, unsigned int mapAreaCount, bool doVerboseLogging);
+        // Interface's override methods
+        bool isConfigured() const override;
+        void initialSetUp(unsigned int mapViewCount, unsigned int mapAreaCount, bool doVerboseLogging) override;
+        void nextBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
+        void nextOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
+        void previousBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
+        void previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
+        const Wms::CapabilityTree& peekCapabilityTree() const override;
+        NFmiImageHolder getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
+        NFmiImageHolder getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
+        const LegendIdentSet& getRegisteredLayers(int row, int col, int descTop) override;
+        std::vector<NFmiImageHolder> getLegends(int row, int col, int descTop) override;
+        void registerDynamicLayer(int row, int col, int descTop, const NFmiDataIdent &dataIdent) override;
+        void unregisterDynamicLayer(int row, int col, int descTop, const NFmiDataIdent &dataIdent) override;
+        std::string getFullLayerName(long producerId, long paramId) const override;
+        NFmiImageHolder getDynamicImage(long producerId, long paramId, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) override;
+        void kill() override;
+        bool isDead(std::chrono::milliseconds wait) const override;
+
+
         void fillDynamicClients(const std::unordered_map<int, DynamicServerSetup> &serverSetups, const std::string& proxyUrl);
         std::unique_ptr<WmsClient> createClient(const DynamicServerSetup &setup, const std::string& proxyUrl);
         StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex);
