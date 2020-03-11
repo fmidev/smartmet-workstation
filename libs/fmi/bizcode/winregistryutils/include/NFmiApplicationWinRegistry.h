@@ -195,6 +195,8 @@ public:
     void LogViewerCategory(int newValue);
     bool DroppedDataEditable();
     void DroppedDataEditable(bool newValue);
+    bool UseCombinedMapMode();
+    void UseCombinedMapMode(bool newValue);
     const NFmiViewPositionsWinRegistry::WindowRectStringMap& GetWindowRectStringMap() const { return mMapViewPositionsWinRegistry.GetWindowRectStringMap(); }
 private:
     bool mInitialized; // ei sallita tupla initialisointia
@@ -220,6 +222,7 @@ private:
     boost::shared_ptr<CachedRegInt> mLogViewerLogLevel; // CFmiLogViever dialogissa näytetty Severity taso
     boost::shared_ptr<CachedRegInt> mLogViewerCategory; // CFmiLogViever dialogissa näytetty categoria
     boost::shared_ptr<CachedRegBool> mDroppedDataEditable; // Pääkarttanäytölle pudotettua sqd tiedostoa voidaan editoida, tällöin tiedostot on hidas tiputtaa, koska data luetaan muistiin ja siitä tehdään monia kopioita
+    boost::shared_ptr<CachedRegBool> mUseCombinedMapMode; // Käytetäänkö karttojen kanssa lokaaleja bitmappeja ja WMS palveluja yhdessä.
 };
 
 
@@ -248,8 +251,6 @@ public:
     void SoundingTimeLockWithMapView(bool newValue);
     bool KeepMapAspectRatio();
     void KeepMapAspectRatio(bool newValue);
-    bool UseWmsMaps();
-    void UseWmsMaps(bool newValue);
 
 	bool FitToPagePrint();
 	void FitToPagePrint(bool newValue);
@@ -326,7 +327,6 @@ private:
     boost::shared_ptr<CachedRegBool> mSoundingTextUpward; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)
     boost::shared_ptr<CachedRegBool> mSoundingTimeLockWithMapView; // Luotausnäytössä voi olla nyt aikalukko päällä, jolloin luotausten ajat sidotaan pääkarttanäyttöön, eli niitä säädetään jos karttanäytöllä vaihdetaan aikaa
     boost::shared_ptr<CachedRegBool> mKeepMapAspectRatio; // Pitääkö smartmet karttanäytöissä aspect-ratio -lukkoa päälä vai ei
-    boost::shared_ptr<CachedRegBool> mUseWmsMaps; // käytetäänkö WMS palveluja hakemaan karttakuvia (jos niitä on käytössä)
 
     boost::shared_ptr<CachedRegBool> mUseMultiProcessCpCalc; // käytetäänkö kontrollipistetyökalun yhteydessä multi-process-worker -poolia vai ei
     boost::shared_ptr<CachedRegBool> mAllowRightClickDisplaySelection; // Sallitaanko käyttäjän valita hiiren oikealla napilla asemia kartalta vai ei.
