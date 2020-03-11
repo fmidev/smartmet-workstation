@@ -1,17 +1,12 @@
 #pragma once
 
+#include "WmsSupportDefines.h"
 #include "NFmiDataIdent.h"
 #include <map>
 #include <set>
 
 namespace Wms
 {
-    struct CustomIdentCompare {
-        bool operator() (const NFmiDataIdent& el1, const NFmiDataIdent& el2) const;
-    };
-
-    using LegendIdentSet = std::set<NFmiDataIdent, CustomIdentCompare>;
-
     class LegendHandler
     {
         std::map<int, std::map<int, std::map<int, LegendIdentSet>>> registeredLayers_;
