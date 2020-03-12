@@ -34,7 +34,7 @@ namespace
 #ifndef DISABLE_CPPRESTSDK
         auto mapAreaIndex = docInterface->SelectedMapIndex(theDescTopIndex);
         auto mapPtr = docInterface->GetMapHandlerInterface(theDescTopIndex)->Area();
-        auto holder = docInterface->WmsSupport().getBackground(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
+        auto holder = docInterface->GetWmsSupport().getBackground(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
         if(holder)
         {
             NFmiRect srcRect(0, 0, int(bitmapSize.X()), int(bitmapSize.Y()));
@@ -51,7 +51,7 @@ namespace
         auto mapPtr = docInterface->GetMapHandlerInterface(theDescTopIndex)->Area();
         try
         {
-            auto holder = docInterface->WmsSupport().getOverlay(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
+            auto holder = docInterface->GetWmsSupport().getOverlay(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
             if(holder)
             {
                 NFmiRect srcRect(0, 0, int(bitmapSize.X()), int(bitmapSize.Y()));
@@ -119,7 +119,7 @@ namespace MapDraw
 
     bool drawOverlay(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, int wantedDrawOverMapMode)
     {
-        if(docInterface->UseWmsMaps())
+        if(docInterface->UseWmsMapDrawForThisDescTop(theDescTopIndex))
             return (docInterface->DrawOverMapMode(theDescTopIndex) == wantedDrawOverMapMode);
         else
             return docInterface->GetMapHandlerInterface(theDescTopIndex)->ShowOverMap()
@@ -130,7 +130,7 @@ namespace MapDraw
     {
         if(drawOverlay(docInterface, theDescTopIndex, wantedDrawOverMapMode))
         {
-            if(docInterface->UseWmsMaps())
+            if(docInterface->UseWmsMapDrawForThisDescTop(theDescTopIndex))
             {
                 wmsOverlayDraw(docInterface, theDescTopIndex, theUsedCDC, destRect, bitmapSize);
             }
@@ -176,7 +176,7 @@ namespace MapDraw
         CreateBitmapUsedForMapDrawing(theUsedBitmap, theUsedCDC, theCompatibilityCDC, bitmapSize);
         theUsedCDC->SelectObject(theUsedBitmap);
 
-        if(docInterface->UseWmsMaps())
+        if(docInterface->UseWmsMapDrawForThisDescTop(theDescTopIndex))
         {
             wmsDraw(docInterface, theDescTopIndex, theUsedCDC, destRect, bitmapSize);
         }
