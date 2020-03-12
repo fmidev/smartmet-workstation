@@ -1922,7 +1922,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
     }
     itsToolBox = theGTB;
 
-    auto registeredLayers = itsCtrlViewDocumentInterface->WmsSupport()
+    auto registeredLayers = itsCtrlViewDocumentInterface->GetWmsSupport()
         .getRegisteredLayers(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 
@@ -1930,17 +1930,17 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
     {
         if(!drawParamList->Find(registered, nullptr, NFmiInfoData::kWmsData))
         {
-            itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+            itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
         else
         {
             // Vielä jos piirto-optioissa ei ole legendan piirto päällä, poistetaan rekisteröidyistä (en ymmärrä logiikkaa, miten sen saa taas päälle)
             if(!drawParamList->Current()->ShowColorLegend())
-                itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+                itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
     }
 
-    auto legends = itsCtrlViewDocumentInterface->WmsSupport().getLegends(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
+    auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
     if(legends.empty())
     {
         return;
