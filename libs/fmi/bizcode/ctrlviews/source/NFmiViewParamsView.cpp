@@ -376,14 +376,14 @@ bool NFmiViewParamsView::MouseWheel(const NFmiPoint &thePlace, unsigned long the
 {
 	if(IsIn(thePlace))
 	{
-		int realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber); // itsDoc->MapViewDescTop(itsMapViewDescTopIndex)->MapRowStartingIndex() + itsRowIndex - 1;
+		int realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
 		bool useCrossSectionParams = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
         int paramIndex = CalcIndex(thePlace);
 		if(paramIndex)
 		{
 			if(theKey & kShiftKey)
 			{
-				return itsCtrlViewDocumentInterface->ChangeParamSettingsToNextFixedDrawParam(itsMapViewDescTopIndex, realRowIndex, paramIndex, theDelta > 0 ? true : false, useCrossSectionParams);
+				return itsCtrlViewDocumentInterface->ChangeParamSettingsToNextFixedDrawParam(itsMapViewDescTopIndex, realRowIndex, paramIndex, theDelta > 0 ? true : false);
 			}
 			else if(theKey & kCtrlKey)
 			{
