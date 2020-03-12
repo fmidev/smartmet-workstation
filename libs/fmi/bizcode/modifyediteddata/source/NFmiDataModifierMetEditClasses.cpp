@@ -914,53 +914,6 @@ void NFmiDataModelDataCombiner::InitLatlonCache(void)
 //************** NFmiDataModelDataCombiner ************************
 
 
-//************** NFmiDataModifierPasteData ************************
-NFmiDataModifierPasteData::NFmiDataModifierPasteData(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
-													,NFmiDataModifier *theDataModifier
-													,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
-													,NFmiGrid* thePasteData)
-:NFmiDataModifierWithModifierWithMasks(theQueryInfoCopy
-										,theDataModifier
-										,theMaskList
-										,0,0,0,0)
-,itsGridData(thePasteData)
-{
-}
-
-NFmiDataModifierPasteData::NFmiDataModifierPasteData(const NFmiDataModifierPasteData &theOther)
-:NFmiDataModifierWithModifierWithMasks(theOther)
-,itsGridData(theOther.itsGridData ? new NFmiGrid(*theOther.itsGridData) : 0)
-{
-}
-
-NFmiDataModifier* NFmiDataModifierPasteData::Clone(void) const
-{
-	return new NFmiDataModifierPasteData(*this);
-}
-
-float NFmiDataModifierPasteData::FloatOperation(float theValue)
-{
-	int timeIndex = itsQueryInfoCopy->TimeIndex();
-	if(itsLastTimeIndex != timeIndex) // tämä on optimointia, ei päivitetä rangeja joka kierroksella, eikä käytetä turhaan rect:in funktio kutsuja
-								   // ja säästetään koodin kirjoitusta!
-	{
-		itsLastTimeIndex = timeIndex;
-		itsMaskList->SyncronizeMaskTime(itsQueryInfoCopy->Time());
-	}
-
-	if(itsMaskList->IsMasked(itsQueryInfoCopy->LatLon()))
-	{
-		double value = kFloatMissing;
-		itsGridData->InterpolateToLatLonPoint(itsQueryInfoCopy->LatLon(), value);
-
-		if(value != kFloatMissing)
-			return float(value);
-	}
-	return theValue;
-}
-//************** NFmiDataModifierPasteData ************************
-
-
 //************** NFmiDataModifierValidateData_PrForm_T ************************
 
 NFmiDataModifierValidateData_PrForm_T::NFmiDataModifierValidateData_PrForm_T(boost::shared_ptr<NFmiFastQueryInfo> theTemperatureInfo, float theSnowTemperatureLimit, float theRainTemperatureLimit)
