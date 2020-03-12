@@ -7,6 +7,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "TimeSerialModification.h"
 #include "ApplicationInterface.h"
+#include "CombinedMapHandlerInterface.h"
 
 CtrlViewDocumentInterfaceForGeneralDataDoc::CtrlViewDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -15,22 +16,22 @@ CtrlViewDocumentInterfaceForGeneralDataDoc::CtrlViewDocumentInterfaceForGeneralD
 
 CtrlViewUtils::MapViewMode CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewDisplayMode(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->MapViewDisplayMode();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapViewDisplayMode();
 }
 
 const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::ViewGridSize(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->ViewGridSize();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ViewGridSize();
 }
 
 int CtrlViewDocumentInterfaceForGeneralDataDoc::MapRowStartingIndex(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->MapRowStartingIndex();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapRowStartingIndex();
 }
 
 CtrlViewUtils::GraphicalInfo& CtrlViewDocumentInterfaceForGeneralDataDoc::GetGraphicalInfo(int theMapViewDescTopIndex)
 {
-    return itsDoc->GetGraphicalInfo(theMapViewDescTopIndex);
+    return itsDoc->GetCombinedMapHandler()->getGraphicalInfo(theMapViewDescTopIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateMaskSelectionPopup(int theRowIndex)
@@ -60,7 +61,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ActivateParamSelectionDlgAfterL
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 {
-    return itsDoc->ScrollViewRow(theDescTopIndex, theCount);
+    return itsDoc->GetCombinedMapHandler()->scrollViewRow(theDescTopIndex, theCount);
 }
 
 const std::string& CtrlViewDocumentInterfaceForGeneralDataDoc::HelpDataPath(void) const
@@ -90,12 +91,12 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsToolMasterAvailable(void)
 
 NFmiDrawParamList* CtrlViewDocumentInterfaceForGeneralDataDoc::DrawParamList(int theDescTopIndex, int theIndex)
 {
-    return itsDoc->DrawParamList(theDescTopIndex, theIndex);
+    return itsDoc->GetCombinedMapHandler()->getDrawParamList(theDescTopIndex, theIndex);
 }
 
 NFmiDrawParamList* CtrlViewDocumentInterfaceForGeneralDataDoc::TimeSerialViewDrawParamList(void)
 {
-    return itsDoc->TimeSerialViewDrawParamList();
+    return &itsDoc->GetCombinedMapHandler()->getTimeSerialViewDrawParamList();
 }
 
 const NFmiColor& CtrlViewDocumentInterfaceForGeneralDataDoc::HelpColor(void) const
@@ -125,7 +126,7 @@ const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::CrossSectionViewSiz
 
 const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewSizeInPixels(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->MapViewSizeInPixels();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapViewSizeInPixels();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::Printing()
@@ -153,24 +154,24 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ExecuteCommand(const NFmiMenuIt
     return itsDoc->ExecuteCommand(theMenuItem, theViewIndex, theViewTypeId);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext)
 {
-    return itsDoc->ChangeParamSettingsToNextFixedDrawParam(theDescTopIndex, theMapRow, theParamIndex, fNext, fUseCrossSectionParams);
+    return itsDoc->GetCombinedMapHandler()->changeParamSettingsToNextFixedDrawParam(theDescTopIndex, theMapRow, theParamIndex, fNext);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams)
 {
-    return itsDoc->ChangeActiveMapViewParam(theDescTopIndex, theMapRow, theParamIndex, fNext, fUseCrossSectionParams);
+    return itsDoc->GetCombinedMapHandler()->changeActiveMapViewParam(theDescTopIndex, theMapRow, theParamIndex, fNext, fUseCrossSectionParams);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::MoveActiveMapViewParamInDrawingOrderList(unsigned int theDescTopIndex, int theMapRow, bool fRaise, bool fUseCrossSectionParams)
 {
-    return itsDoc->MoveActiveMapViewParamInDrawingOrderList(theDescTopIndex, theMapRow, fRaise, fUseCrossSectionParams);
+    return itsDoc->GetCombinedMapHandler()->moveActiveMapViewParamInDrawingOrderList(theDescTopIndex, theMapRow, fRaise, fUseCrossSectionParams);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::CheckAnimationLockedModeTimeBags(unsigned int theDescTopIndex, bool ignoreSatelImages)
 {
-    itsDoc->CheckAnimationLockedModeTimeBags(theDescTopIndex, ignoreSatelImages);
+    itsDoc->GetCombinedMapHandler()->checkAnimationLockedModeTimeBags(theDescTopIndex, ignoreSatelImages);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::MouseCaptured(void)
@@ -195,12 +196,12 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetNearestBeforeModelOrigTimeRu
 
 const NFmiMetTime& CtrlViewDocumentInterfaceForGeneralDataDoc::CurrentTime(unsigned int theDescTopIndex)
 {
-    return itsDoc->CurrentTime(theDescTopIndex);
+    return itsDoc->GetCombinedMapHandler()->currentTime(theDescTopIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes)
 {
-    return itsDoc->CurrentTime(theDescTopIndex, newCurrentTime, fStayInsideAnimationTimes);
+    return itsDoc->GetCombinedMapHandler()->currentTime(theDescTopIndex, newCurrentTime, fStayInsideAnimationTimes);
 }
 
 boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::DefaultEditedDrawParam(void)
@@ -210,7 +211,7 @@ boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::Def
 
 NFmiAnimationData& CtrlViewDocumentInterfaceForGeneralDataDoc::AnimationData(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->AnimationDataRef();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->AnimationDataRef();
 }
 
 NFmiTrajectorySystem* CtrlViewDocumentInterfaceForGeneralDataDoc::TrajectorySystem(void)
@@ -225,12 +226,12 @@ const NFmiColor& CtrlViewDocumentInterfaceForGeneralDataDoc::GeneralColor(int th
 
 const NFmiMetTime& CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveMapTime(void)
 {
-    return itsDoc->ActiveMapTime();
+    return itsDoc->GetCombinedMapHandler()->activeMapTime();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
 {
-    itsDoc->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
+    itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
 
 NFmiMetTime CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelOrigTime(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex)
@@ -255,7 +256,7 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::SoundingViewWindBarbSpaceOutFact
 
 std::unique_ptr<MapHandlerInterface> CtrlViewDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int theMapViewDescTopIndex)
 {
-    return std::make_unique<GdiPlusMapHandlerInterface>(itsDoc->MapViewDescTop(theMapViewDescTopIndex)->MapHandler());
+    return std::make_unique<GdiPlusMapHandlerInterface>(itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler());
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::KeepMapAspectRatio()
@@ -265,7 +266,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::KeepMapAspectRatio()
 
 double CtrlViewDocumentInterfaceForGeneralDataDoc::ClientViewXperYRatio(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->ClientViewXperYRatio();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ClientViewXperYRatio();
 }
 
 const NFmiRect& CtrlViewDocumentInterfaceForGeneralDataDoc::AreaFilterRangeLimits(void)
@@ -335,12 +336,12 @@ NFmiMilliSecondTimer& CtrlViewDocumentInterfaceForGeneralDataDoc::EditedDataNeed
 
 const NFmiTimeDescriptor& CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlViewTimes(unsigned int theDescTopIndex)
 {
-    return itsDoc->TimeControlViewTimes(theDescTopIndex);
+    return itsDoc->GetCombinedMapHandler()->timeControlViewTimes(theDescTopIndex);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlViewTimes(unsigned int theDescTopIndex, const NFmiTimeDescriptor &newTimeDescriptor)
 {
-    itsDoc->TimeControlViewTimes(theDescTopIndex, newTimeDescriptor);
+    itsDoc->GetCombinedMapHandler()->timeControlViewTimes(theDescTopIndex, newTimeDescriptor);
 }
 
 const NFmiMetTime& CtrlViewDocumentInterfaceForGeneralDataDoc::TimeFilterStartTime(void)
@@ -365,32 +366,32 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetTimeFilterEndTime(const NFmi
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours)
 {
-    itsDoc->TimeControlTimeStep(theMapViewDescTopIndex, timeStepInHours);
+    itsDoc->GetCombinedMapHandler()->timeControlTimeStep(theMapViewDescTopIndex, timeStepInHours);
 }
 
 float CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlTimeStep(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->TimeControlTimeStep();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->TimeControlTimeStep();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-    itsDoc->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
+    itsDoc->GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex)
 {
-    itsDoc->ForceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
+    itsDoc->GetCombinedMapHandler()->forceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes)
 {
-    return itsDoc->SetDataToNextTime(theDescTopIndex, fStayInsideAnimationTimes);
+    return itsDoc->GetCombinedMapHandler()->setDataToNextTime(theDescTopIndex, fStayInsideAnimationTimes);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes)
 {
-    return itsDoc->SetDataToPreviousTime(theDescTopIndex, fStayInsideAnimationTimes);
+    return itsDoc->GetCombinedMapHandler()->setDataToPreviousTime(theDescTopIndex, fStayInsideAnimationTimes);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::TimeSerialViewTimeBag(const NFmiTimeBag &theTimeBag)
@@ -525,12 +526,12 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsPreciseTimeSerialLatlonPointU
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::TimeSerialViewDirty(void)
 {
-    return itsDoc->TimeSerialViewDirty();
+    return itsDoc->GetCombinedMapHandler()->timeSerialViewDirty();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::TimeSerialViewDirty(bool newValue)
 {
-    itsDoc->TimeSerialViewDirty(newValue);
+    itsDoc->GetCombinedMapHandler()->timeSerialViewDirty(newValue);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateTimeSerialDialogPopup(int index)
@@ -548,9 +549,9 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::DoTimeSeriesValuesModifying(boo
     return itsDoc->DoTimeSeriesValuesModifying(theModifiedDrawParam, theUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateModifiedDrawParamMarko(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex)
 {
-    itsDoc->UpdateModifiedDrawParamMarko(theDrawParam);
+    itsDoc->GetCombinedMapHandler()->updateToModifiedDrawParam(mapViewDescTopIndex, drawParam, viewRowIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseTimeSerialAxisAutoAdjust(void)
@@ -595,12 +596,12 @@ NFmiIgnoreStationsData& CtrlViewDocumentInterfaceForGeneralDataDoc::IgnoreStatio
 
 const NFmiColor& CtrlViewDocumentInterfaceForGeneralDataDoc::StationPointColor(int theMapViewDescTopIndex) const
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->StationPointColor();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->StationPointColor();
 }
 
 const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::StationPointSize(int theMapViewDescTopIndex) const
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->StationPointSize();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->StationPointSize();
 }
 
 NFmiMacroParamSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamSystem(void)
@@ -714,7 +715,7 @@ NFmiEditMapDataListHandler* CtrlViewDocumentInterfaceForGeneralDataDoc::DataList
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowObsComparisonOnMap(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->ShowObsComparisonOnMap();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowObsComparisonOnMap();
 }
 
 checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> CtrlViewDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
@@ -724,17 +725,12 @@ checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> CtrlViewDocumentInterfaceFor
 
 int CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
 {
-    return itsDoc->ActiveViewRow(theDescTopIndex);
+    return itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
 {
-    itsDoc->ActiveViewRow(theDescTopIndex, theActiveRowIndex);
-}
-
-int CtrlViewDocumentInterfaceForGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
-{
-	return itsDoc->GetFirstRowNumber(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex, theActiveRowIndex);
 }
 
 NFmiSynopPlotSettings* CtrlViewDocumentInterfaceForGeneralDataDoc::SynopPlotSettings(void)
@@ -794,7 +790,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::MiddleMouseButtonDown(bool newS
 
 NFmiDrawParamList* CtrlViewDocumentInterfaceForGeneralDataDoc::CrossSectionViewDrawParamList(int theRowIndex)
 {
-    return itsDoc->CrossSectionViewDrawParamList(theRowIndex);
+    return itsDoc->GetCombinedMapHandler()->getCrossSectionViewDrawParamList(theRowIndex);
 }
 
 NFmiPoint CtrlViewDocumentInterfaceForGeneralDataDoc::ActualCrossSectionBitmapSizeInPixels(void)
@@ -824,7 +820,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::CrossSectionDataViewFrame(const
 
 const NFmiRect& CtrlViewDocumentInterfaceForGeneralDataDoc::RelativeMapRect(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->RelativeMapRect();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->RelativeMapRect();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::BetaProductGenerationRunning()
@@ -849,7 +845,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::DataModificationInProgress(void
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveMapDescTopIndex(unsigned int newValue)
 {
-    itsDoc->ActiveMapDescTopIndex(newValue);
+    itsDoc->GetCombinedMapHandler()->activeMapDescTopIndex(newValue);
 }
 
 const NFmiRect& CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateRect(void)
@@ -874,7 +870,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipRowIndex(int newIndex)
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DoAutoZoom(unsigned int theDescTopIndex)
 {
-    itsDoc->DoAutoZoom(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->doAutoZoom(theDescTopIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::MapMouseDragPanMode(void)
@@ -889,7 +885,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::MapMouseDragPanMode(bool newSta
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewBitmapDirty(int theDescTopIndex, bool dirtyFlag)
 {
-    itsDoc->MapViewDescTop(theDescTopIndex)->MapViewBitmapDirty(dirtyFlag);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapViewBitmapDirty(dirtyFlag);
 }
 
 NFmiSatelliteImageCacheSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::SatelliteImageCacheSystem()
@@ -904,17 +900,17 @@ CWnd* CtrlViewDocumentInterfaceForGeneralDataDoc::TransparencyContourDrawView(vo
 
 NFmiGridPointCache& CtrlViewDocumentInterfaceForGeneralDataDoc::GridPointCache(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->GridPointCache();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->GridPointCache();
 }
 
 NFmiMapViewCache& CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewCache(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->MapViewCache();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapViewCache();
 }
 
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::CopyCDC(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->CopyCDC();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->CopyCDC();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsCPGridCropInAction(void)
@@ -924,17 +920,17 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsCPGridCropInAction(void)
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowSoundingMarkersOnMap(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->ShowSoundingMarkersOnMap();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowSoundingMarkersOnMap();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowCrossSectionMarkersOnMap(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->ShowCrossSectionMarkersOnMap();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowCrossSectionMarkersOnMap();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowTrajectorsOnMap(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->ShowTrajectorsOnMap();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowTrajectorsOnMap();
 }
 
 std::vector<NFmiProducer>& CtrlViewDocumentInterfaceForGeneralDataDoc::ExtraSoundingProducerList(void)
@@ -944,12 +940,12 @@ std::vector<NFmiProducer>& CtrlViewDocumentInterfaceForGeneralDataDoc::ExtraSoun
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowWarningMarkersOnMap(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->ShowWarningMarkersOnMap();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowWarningMarkersOnMap();
 }
 
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::MapBlitDC(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->MapBlitDC();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapBlitDC();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipColumnIndex(int newIndex)
@@ -1004,68 +1000,68 @@ NFmiSeaIcingWarningSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::SeaIcingW
 
 NFmiProjectionCurvatureInfo* CtrlViewDocumentInterfaceForGeneralDataDoc::ProjectionCurvatureInfo(void)
 {
-    return itsDoc->ProjectionCurvatureInfo();
+    return itsDoc->GetCombinedMapHandler()->projectionCurvatureInfo();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::DrawLandBorders(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->DrawLandBorders();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawLandBorders();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawDirty(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->BorderDrawDirty();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawDirty();
 }
 
 const NFmiColor& CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderColor(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->LandBorderColor();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderColor();
 }
 
 const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPenSize(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->LandBorderPenSize();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderPenSize();
 }
 
 boost::shared_ptr<Imagine::NFmiPath> CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPath(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->LandBorderPath();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderPath();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList)
 {
-    itsDoc->MapViewDescTop(theDescTopIndex)->DrawBorderPolyLineList(polyLineList);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineList(polyLineList);
 }
 
 const std::list<std::vector<NFmiPoint>>& CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue)
 {
-    itsDoc->MapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(newValue);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(newValue);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue)
 {
-    itsDoc->MapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(newValue);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(newValue);
 }
 
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawDirty(int theDescTopIndex, bool dirtyFlag)
 {
-    itsDoc->MapViewDescTop(theDescTopIndex)->BorderDrawDirty(dirtyFlag);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawDirty(dirtyFlag);
 }
 
 std::list<NFmiPolyline*>& CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineList(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->DrawBorderPolyLineList();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineList();
 }
 
 int CtrlViewDocumentInterfaceForGeneralDataDoc::DrawOverMapMode(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->DrawOverMapMode();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawOverMapMode();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::SnapShotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
@@ -1106,7 +1102,7 @@ const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::GetSynopHighlightLa
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowTimeString(int theDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theDescTopIndex)->ShowTimeString();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowTimeString();
 }
 
 NFmiMapViewTimeLabelInfo& CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewTimeLabelInfo()
@@ -1131,7 +1127,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewTime(const NFmiMetTim
 
 boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex)
 {
-    return itsDoc->ActiveDrawParam(theDescTopIndex, theRowIndex);
+    return itsDoc->GetCombinedMapHandler()->activeDrawParam(theDescTopIndex, theRowIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ViewBrushed(void)
@@ -1144,9 +1140,9 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ViewBrushed(bool newState)
     itsDoc->ViewBrushed(newState);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fPasteAction)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam)
 {
-    return itsDoc->CheckAndValidateAfterModifications(theModifyingTool, fMakeDataSnapshotAction, theLocationMask, theParam, fPasteAction);
+    return itsDoc->CheckAndValidateAfterModifications(theModifyingTool, fMakeDataSnapshotAction, theLocationMask, theParam);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor)
@@ -1196,12 +1192,12 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::MustDrawTimeSerialView(bool new
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowSelectedPointsOnMap(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->ShowSelectedPointsOnMap();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ShowSelectedPointsOnMap();
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowControlPointsOnMap(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->ShowControlPointsOnMap();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ShowControlPointsOnMap();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapWithRelativeRect(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect)
@@ -1211,7 +1207,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapWithRelativeRect(int the
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowParamWindowView(int theMapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(theMapViewDescTopIndex)->ShowParamWindowView();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ShowParamWindowView();
 }
 
 NFmiHelpDataInfoSystem* CtrlViewDocumentInterfaceForGeneralDataDoc::HelpDataInfoSystem(void)
@@ -1269,14 +1265,19 @@ boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc:
     return itsDoc->GetMosTemperatureMinAndMaxData();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMaps()
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsCombinedMapModeUsed() const
 {
-    return itsDoc->UseWmsMaps();
+    return itsDoc->GetCombinedMapHandler()->isCombinedMapModeUsed();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMaps(bool newValue)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleCombinedMapMode()
 {
-    itsDoc->UseWmsMaps(newValue);
+    itsDoc->GetCombinedMapHandler()->toggleCombinedMapMode();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::UseCombinedMapMode(bool newValue)
+{
+    itsDoc->GetCombinedMapHandler()->useCombinedMapMode(newValue);
 }
 
 NFmiBetaProductionSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::BetaProductionSystem()
@@ -1306,12 +1307,12 @@ Warnings::CapDataSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::GetCapDataS
 
 Gdiplus::Bitmap* CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderMapBitmap(unsigned int theDescTopIndex)
 { 
-    return itsDoc->MapViewDescTop(theDescTopIndex)->LandBorderMapBitmap(); 
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderMapBitmap();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap)
 {
-    itsDoc->MapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap);
 }
 
 int CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
@@ -1361,12 +1362,42 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ResetPrintedDescTopIndex()
 
 std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
 {
-    return itsDoc->GetCurrentMapLayerText(mapViewDescTopIndex, backgroundMap);
+    return itsDoc->GetCombinedMapHandler()->getCurrentMapLayerText(mapViewDescTopIndex, backgroundMap);
 }
 
 unsigned int CtrlViewDocumentInterfaceForGeneralDataDoc::SelectedMapIndex(int mapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex)
+{
+    itsDoc->SetCPCropGridSettings(newArea, mapViewDescTopIndex);
+}
+
+NFmiFixedDrawParamSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::FixedDrawParamSystem()
+{
+    return itsDoc->FixedDrawParamSystem();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam)
+{
+    itsDoc->GetCombinedMapHandler()->applyFixeDrawParam(theMenuItem, theRowIndex, theFixedDrawParam);
+}
+
+NFmiMacroPathSettings& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroPathSettings()
+{
+    return itsDoc->MacroPathSettings();
+}
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::CurrentCrossSectionRowIndex()
+{
+    return itsDoc->CurrentCrossSectionRowIndex();
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
+{
+    return itsDoc->GetCombinedMapHandler()->useWmsMapDrawForThisDescTop(mapViewDescTopIndex);
 }
 
 #ifndef DISABLE_CPPRESTSDK
@@ -1377,9 +1408,9 @@ HakeMessage::Main& CtrlViewDocumentInterfaceForGeneralDataDoc::WarningCenterSyst
     return itsDoc->WarningCenterSystem();
 }
 
-Wms::WmsSupport& CtrlViewDocumentInterfaceForGeneralDataDoc::WmsSupport()
+WmsSupportInterface& CtrlViewDocumentInterfaceForGeneralDataDoc::GetWmsSupport()
 {
-    return itsDoc->WmsSupport();
+    return itsDoc->GetCombinedMapHandler()->getWmsSupport();
 }
 
 #endif // DISABLE_CPPRESTSDK
