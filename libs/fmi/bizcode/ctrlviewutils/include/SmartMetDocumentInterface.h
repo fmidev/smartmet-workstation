@@ -7,6 +7,7 @@
 #include "FmiSmartMetEditingMode.h"
 #include "ControlPointAcceleratorActions.h"
 #include "SmartMetViewId.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include "boost/shared_ptr.hpp"
 
@@ -122,7 +123,6 @@ public:
     virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) = 0;
     virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
-	virtual int GetFirstRowNumber(unsigned int theDescTopIndex) = 0;
     virtual double BrushSpecialParamValue() = 0;
     virtual void BrushSpecialParamValue(double newValue) = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() = 0;
@@ -231,7 +231,7 @@ public:
     virtual const NFmiTimeBag& EditedDataTimeBag() = 0;
     virtual int FilterDialogUpdateStatus() = 0;
     virtual void FilterDialogUpdateStatus(int newState) = 0;
-    virtual bool DoAreaFiltering(bool fPasteClipBoardData = false) = 0;
+    virtual bool DoAreaFiltering() = 0;
     virtual bool DoTimeFiltering() = 0;
     virtual int FilterFunction() = 0;
     virtual void FilterFunction(int newFilter) = 0;
@@ -262,7 +262,7 @@ public:
     virtual void DrawOverBitmapThings(NFmiToolBox * theGTB) = 0;
     virtual bool MouseCapturedInTimeWindow() = 0;
     virtual void MouseCapturedInTimeWindow(bool newValue) = 0;
-    virtual std::vector<NFmiMapViewDescTop*>& MapViewDescTopList() = 0;
+    virtual CombinedMapHandlerInterface::MapViewDescTopVector& MapViewDescTopList() = 0;
     virtual bool IsMasksUsedInTimeSerialViews() = 0;
     virtual void UseMasksInTimeSerialViews(bool newValue) = 0;
     virtual bool UseCPGridCrop() = 0;
@@ -362,7 +362,7 @@ public:
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
     virtual void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) = 0;
     virtual NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) = 0;
-    virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, int theViewType, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
+    virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;
