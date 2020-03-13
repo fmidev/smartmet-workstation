@@ -187,6 +187,7 @@ public:
     virtual boost::shared_ptr<NFmiDrawParam> getDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
     virtual bool wmsSupportAvailable() const = 0;
+    virtual bool localOnlyMapModeUsed() const = 0;
 
 
     // Staattiset perushelper-funktiot
