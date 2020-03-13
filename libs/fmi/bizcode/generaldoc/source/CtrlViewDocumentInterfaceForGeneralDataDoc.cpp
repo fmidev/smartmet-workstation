@@ -1265,14 +1265,9 @@ boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc:
     return itsDoc->GetMosTemperatureMinAndMaxData();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsCombinedMapModeUsed() const
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseCombinedMapMode() const
 {
-    return itsDoc->GetCombinedMapHandler()->isCombinedMapModeUsed();
-}
-
-void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleCombinedMapMode()
-{
-    itsDoc->GetCombinedMapHandler()->toggleCombinedMapMode();
+    return itsDoc->GetCombinedMapHandler()->useCombinedMapMode();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::UseCombinedMapMode(bool newValue)

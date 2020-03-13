@@ -164,8 +164,7 @@ public:
     virtual boost::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) = 0;
     virtual std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap, bool combinedMapMode) = 0;
     virtual std::string getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) = 0;
-    virtual bool isCombinedMapModeUsed() const = 0;
-    virtual void toggleCombinedMapMode() = 0;
+    virtual bool useCombinedMapMode() const = 0;
     virtual void useCombinedMapMode(bool newValue) = 0;
     virtual const NFmiMetTime& activeMapTime() = 0;
     virtual bool changeParamSettingsToNextFixedDrawParam(unsigned int mapViewDescTopIndex, int realRowIndex, int paramIndex, bool gotoNext) = 0;

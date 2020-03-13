@@ -264,8 +264,7 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() override;
     boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() override;
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() override;
-    bool IsCombinedMapModeUsed() const override;
-    void ToggleCombinedMapMode() override;
+    bool UseCombinedMapMode() const override;
     void UseCombinedMapMode(bool newValue) override;
     NFmiBetaProductionSystem& BetaProductionSystem() override;
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;

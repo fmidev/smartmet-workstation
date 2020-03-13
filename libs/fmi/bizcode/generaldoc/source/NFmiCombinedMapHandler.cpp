@@ -3676,17 +3676,9 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerText(int mapViewDescTopInd
 	return mapLayerText;
 }
 
-bool NFmiCombinedMapHandler::isCombinedMapModeUsed() const
+bool NFmiCombinedMapHandler::useCombinedMapMode() const
 {
 	return ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
-}
-
-void NFmiCombinedMapHandler::toggleCombinedMapMode()
-{
-	::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode(!isCombinedMapModeUsed());
-	// Varmuuden vuoksi kaikki kartta piirrot uusiksi (voi optimoida myöhemmin, koska on tapauksia, missä ei mitkään asiat muutu)
-	mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
-	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 }
 
 void NFmiCombinedMapHandler::useCombinedMapMode(bool newValue)
