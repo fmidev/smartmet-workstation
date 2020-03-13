@@ -206,7 +206,7 @@ BOOL COptionsDlg::OnInitDialog()
     fAutoLoadNewCacheData = applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
     itsLocationFinderTimeoutInSeconds = applicationWinRegistry.LocationFinderThreadTimeOutInMS() / 1000.;
     fShowLastSendTimeOnMapView = applicationWinRegistry.ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView();
-    fWmsMapMode = applicationWinRegistry.UseWmsMaps();
+    fWmsMapMode = applicationWinRegistry.ConfigurationRelatedWinRegistry().UseCombinedMapMode();
     InitLogLevelComboBox();
     fDroppedDataEditable = applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable();
     itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
@@ -340,7 +340,7 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData(fAutoLoadNewCacheData == TRUE);
     applicationWinRegistry.LocationFinderThreadTimeOutInMS(boost::math::iround(itsLocationFinderTimeoutInSeconds * 1000.));
     applicationWinRegistry.ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView(fShowLastSendTimeOnMapView == TRUE);
-    applicationWinRegistry.UseWmsMaps(fWmsMapMode == TRUE);
+    applicationWinRegistry.ConfigurationRelatedWinRegistry().UseCombinedMapMode(fWmsMapMode == TRUE);
     SetLogLevelOnOk();
     applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable(fDroppedDataEditable == TRUE);
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);

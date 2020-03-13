@@ -35,7 +35,7 @@ class NFmiParamHandlerView : public NFmiParamCommandView
 {
 
  public:
-   NFmiParamHandlerView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool theShowMaskSection);
+   NFmiParamHandlerView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool theShowMaskSection, bool viewParamsViewHasMapLayer);
    inline virtual ~NFmiParamHandlerView (void); 
    using NFmiParamCommandView::Update;
    void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0);
@@ -70,5 +70,6 @@ class NFmiParamHandlerView : public NFmiParamCommandView
  private:
    bool fMouseCaptured;
    bool fShowMaskSection;
+   bool fViewParamsViewHasMapLayer;
 };
 

@@ -979,8 +979,9 @@ void CMainFrame::OnClose()
             // HUOM! Jos WmsSupport:in alustus on ep‰onnistunut, ei saa tehd‰ tappok‰sky‰ ja odottelua
             // koska mystisest‰ syyst‰ t‰llˆin CFmiDataLoadingThread2:en lopetus ep‰onnistuu DEBUG moodissa (ei release).
 #ifndef DISABLE_CPPRESTSDK
-            if(itsDoc->WmsSupport().isConfigured())
-                itsDoc->WmsSupport().kill();
+			auto& combinedMapHandler = *itsDoc->GetCombinedMapHandler();
+            if(combinedMapHandler.wmsSupportAvailable())
+				combinedMapHandler.getWmsSupport().kill();
 #endif // DISABLE_CPPRESTSDK
 			CFmiCombineDataThread::CloseNow(); // sama t‰ss‰ combineData-threadille
 			CFmiSoundingIndexDataThread::CloseNow(); // sama t‰ss‰ soundingIndexData-threadille
@@ -1031,9 +1032,9 @@ void CMainFrame::OnClose()
             else
                 itsDoc->LogMessage("Hake message -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 
-            if(itsDoc->WmsSupport().isConfigured())
+            if(combinedMapHandler.wmsSupportAvailable())
             {
-                if(itsDoc->WmsSupport().isDead(std::chrono::milliseconds(1 * 1000)))
+                if(combinedMapHandler.getWmsSupport().isDead(std::chrono::milliseconds(1 * 1000)))
                     itsDoc->LogMessage("WmsSupport -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
                 else
                     itsDoc->LogMessage("WmsSupport -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
@@ -1099,7 +1100,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 	{
 		case kFmiCheckAnimationLockedModeTimeBagsTimer:
 		{
-			cdoc->GetData()->CheckAnimationLockedModeTimeBags(CtrlViewUtils::kDoAllMapViewDescTopIndex, false);
+			cdoc->GetData()->GetCombinedMapHandler()->checkAnimationLockedModeTimeBags(CtrlViewUtils::kDoAllMapViewDescTopIndex, false);
 			return;
 		}
 		case kFmiCheckForNewSatelDataTimer:
@@ -1108,7 +1109,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 			int checkFrequenceInMinutes = cdoc->GetData()->SatelDataRefreshTimerInMinutes();
 			if(checkFrequenceInMinutes > 0)
 			{
-                cdoc->GetData()->CheckForNewConceptualModelData();
+                cdoc->GetData()->GetCombinedMapHandler()->checkForNewConceptualModelData();
 			}
 			else
 				checkFrequenceInMinutes = 1; // k‰ynnistet‰‰n t‰m‰ timeri kuitenkin ainakin kerran minuutissa, jos joku muuttaa asetuksia, t‰llˆin ei tarvitse erikseen k‰ynnist‰‰ timeria uudestaan
@@ -1458,7 +1459,7 @@ void CMainFrame::DoMacroParamUpdate(void)
 			{ // Kun 1. kerran on luettu macroParamit sis‰‰n, pit‰‰ varmistaa kaikkien ruutujen p‰ivitys. Koska jos joku on jo ladannut vieMakron, jossa
 				// on makroParameita, ne pit‰‰ piirt‰‰ nyt uudestaan.
 				firstTime = false;
-				itsDoc->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true);
+				itsDoc->GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true);
 			}
             ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::SmartToolDlg);
             itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)

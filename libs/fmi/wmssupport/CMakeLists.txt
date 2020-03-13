@@ -26,6 +26,7 @@ target_link_libraries(
     cppback
     CatLog
 	XmlLiteUtils
+	CtrlViewUtils
     )
 
 target_include_directories( 
@@ -39,6 +40,7 @@ target_include_directories(
     PUBLIC ${cppback_INCLUDE_DIRS}
     PUBLIC ${CatLog_INCLUDE_DIRS}
 	PUBLIC ${XmlLiteUtils_INCLUDE_DIRS}
+	PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
     )
 
 source_group( 
@@ -57,5 +59,6 @@ set(
     ${cppback_INCLUDE_DIRS}
     ${CatLog_INCLUDE_DIRS}
 	${XmlLiteUtils_INCLUDE_DIRS}
+	${CtrlViewUtils_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

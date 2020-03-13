@@ -1,6 +1,6 @@
 #pragma once
-#include "WmsClient.h"
-#include "QueryBuilder.h"
+#include "wmssupport/WmsClient.h"
+#include "wmssupport/QueryBuilder.h"
 
 #include "NFmiMetTime.h"
 
@@ -21,49 +21,12 @@ namespace Wms
     public:
         BackgroundFetcher(std::shared_ptr<cppback::BackgroundManager> bManager, int howManyBackward, int howManyForward);
 
-        void fetch(WmsClient& client, QueryBuilder qb, const NFmiMetTime& time, int editorTimeStepInMinutes)
-        {
-            if(shouldNotDoBackgroundFetching(client, qb))
-            {
-                return;
-            }
-            update(qb, time, editorTimeStepInMinutes);
-            fetchQueriesInTheBackground(client, forwardQueries_);
-            fetchQueriesInTheBackground(client, backwardQueries_);
-        }
+        void fetch(WmsClient& client, QueryBuilder qb, const NFmiMetTime& time, int editorTimeStepInMinutes);
 
     private:
-        void fetchQueriesInTheBackground(WmsClient& client, std::vector<WmsQuery> queries)
-        {
-            for(const auto& query : queries)
-            {
-                bManager_->addTask([&client, query, &running = running_]
-                {
-                    ++running;
-                    client.getImage(query);
-                    --running;
-                });
-            }
-        }
-
-        void update(const QueryBuilder& qb, const NFmiMetTime& time, int timeStepInMinutes)
-        {
-            createQueries(qb, time, timeStepInMinutes, forwardQueries_);
-            createQueries(qb, time, -timeStepInMinutes, backwardQueries_);
-        }
-
-        void createQueries(QueryBuilder qb, NFmiMetTime time, int timeStepInMinutes, std::vector<WmsQuery>& queries)
-        {
-            for(auto& query : queries)
-            {
-                time.ChangeByMinutes(timeStepInMinutes);
-                query = qb.setTime(time).build();
-            }
-        }
-
-        bool shouldNotDoBackgroundFetching(const WmsClient& client, const QueryBuilder& qb) const
-        {
-            return running_ > 0 || client.isCached(qb.build());
-        }
+        void fetchQueriesInTheBackground(WmsClient& client, std::vector<WmsQuery> queries);
+        void update(const QueryBuilder& qb, const NFmiMetTime& time, int timeStepInMinutes);
+        void createQueries(QueryBuilder qb, NFmiMetTime time, int timeStepInMinutes, std::vector<WmsQuery>& queries);
+        bool shouldNotDoBackgroundFetching(const WmsClient& client, const QueryBuilder& qb) const;
     };
 }

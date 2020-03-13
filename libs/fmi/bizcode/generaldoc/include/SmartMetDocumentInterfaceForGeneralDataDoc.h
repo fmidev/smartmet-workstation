@@ -51,7 +51,6 @@ public:
     boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) override;
     int ActiveViewRow(unsigned int theDescTopIndex) override;
     void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
-	int GetFirstRowNumber(unsigned int theDescTopIndex) override;
 	double BrushSpecialParamValue() override;
     void BrushSpecialParamValue(double newValue) override;
     boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() override;
@@ -160,7 +159,7 @@ public:
     const NFmiTimeBag& EditedDataTimeBag() override;
     int FilterDialogUpdateStatus() override;
     void FilterDialogUpdateStatus(int newState) override;
-    bool DoAreaFiltering(bool fPasteClipBoardData = false) override;
+    bool DoAreaFiltering() override;
     bool DoTimeFiltering() override;
     int FilterFunction() override;
     void FilterFunction(int newFilter) override;
@@ -191,7 +190,7 @@ public:
     void DrawOverBitmapThings(NFmiToolBox * theGTB) override;
     bool MouseCapturedInTimeWindow() override;
     void MouseCapturedInTimeWindow(bool newValue) override;
-    std::vector<NFmiMapViewDescTop*>& MapViewDescTopList() override;
+    CombinedMapHandlerInterface::MapViewDescTopVector& MapViewDescTopList() override;
     bool IsMasksUsedInTimeSerialViews() override;
     void UseMasksInTimeSerialViews(bool newValue) override;
     bool UseCPGridCrop() override;
@@ -291,7 +290,7 @@ public:
     NFmiMacroParamDataCache& MacroParamDataCache() override;
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) override;
     NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) override;
-    bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, int theViewType, unsigned long theMapViewIndex, double theAmountOfChange) override;
+    bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

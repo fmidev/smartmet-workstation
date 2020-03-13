@@ -343,34 +343,45 @@ namespace CtrlViewUtils
         return str;
     }
 
-    NFmiColor GetParamTextColor(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
+    NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData, CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
     {
-        //	bool soundingParam = theDrawParam->DataType() >= NFmiInfoData::kSoundingParameterData;
-        NFmiInfoData::Type dataType = theDrawParam->DataType();
-        if(dataType == NFmiInfoData::kSatelData)
-            return NFmiColor(0.f, 0.45f, 0.9f);
-        else if(theDrawParam->UseArchiveModelData())
+        if(useArchiveModelData)
             return NFmiColor(0.016f, 0.64f, 0.68f);
-        else if(dataType == NFmiInfoData::kViewable || dataType == NFmiInfoData::kModelHelpData || dataType == NFmiInfoData::kHybridData || dataType == NFmiInfoData::kTrajectoryHistoryData)
-            return NFmiColor(0.f, 0.5f, 0.f);
-        else if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kFlashData || dataType == NFmiInfoData::kSingleStationRadarData)
-            return NFmiColor(0.f, 0.f, 1.f);
-        else if(dataType == NFmiInfoData::kAnalyzeData)
-            return NFmiColor(0.94f, 0.139f, 0.126f);
-        else if(dataType == NFmiInfoData::kKepaData)
-            return NFmiColor(0.78f, 0.082f, 0.52f);
-        else if(NFmiDrawParam::IsMacroParamCase(dataType))
+
+        if(NFmiDrawParam::IsMacroParamCase(dataType))
             return NFmiColor(0.5f, 0.f, 0.5f);
-        else if(dataType == NFmiInfoData::kConceptualModelData || dataType == NFmiInfoData::kCapData)
-            return NFmiColor(1.f, 0.f, 0.5f);
-        else if(theDrawParam->DataType() == NFmiInfoData::kEditingHelpData)
-            return theCtrlViewDocumentInterface->HelpColor();
-        else if(dataType == NFmiInfoData::kClimatologyData)
+
+        switch(dataType)
+        {
+        case NFmiInfoData::kSatelData:
+            return NFmiColor(0.f, 0.45f, 0.9f);
+        case NFmiInfoData::kViewable:
+        case NFmiInfoData::kModelHelpData:
+        case NFmiInfoData::kHybridData:
+        case NFmiInfoData::kTrajectoryHistoryData:
             return NFmiColor(0.f, 0.5f, 0.f);
-        else if(dataType == NFmiInfoData::kWmsData)
+        case NFmiInfoData::kObservations:
+        case NFmiInfoData::kFlashData:
+        case NFmiInfoData::kSingleStationRadarData:
+            return NFmiColor(0.f, 0.f, 1.f);
+        case NFmiInfoData::kAnalyzeData:
+            return NFmiColor(0.94f, 0.139f, 0.126f);
+        case NFmiInfoData::kKepaData:
+            return NFmiColor(0.78f, 0.082f, 0.52f);
+        case NFmiInfoData::kConceptualModelData:
+        case NFmiInfoData::kCapData:
+            return NFmiColor(1.f, 0.f, 0.5f);
+        case NFmiInfoData::kEditingHelpData:
+            return theCtrlViewDocumentInterface->HelpColor();
+        case NFmiInfoData::kClimatologyData:
+            return NFmiColor(0.f, 0.5f, 0.f);
+        case NFmiInfoData::kWmsData:
             return NFmiColor(0.67f, 0.3f, 0.07f);
-        else
+        case NFmiInfoData::kMapLayer:
+            return NFmiColor(0.8f, 0.22f, 0.f);
+        default:
             return NFmiColor(0.f, 0.f, 0.f);
+        }
     }
 
     std::string GetEditingDataString(const std::string &theNameStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat)

@@ -307,25 +307,6 @@ class NFmiDataModelDataCombiner : public NFmiDataModifierWithModifierWithMasksAn
 //************** NFmiDataModelDataCombiner ************************
 
 
-//************** NFmiDataModifierPasteData ************************
-class NFmiDataModifierPasteData : public NFmiDataModifierWithModifierWithMasks
-{ 
- public:
-	NFmiDataModifierPasteData(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
-							,NFmiDataModifier *theDataModifier
-							,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
-							,NFmiGrid* thePasteData);
-	NFmiDataModifierPasteData(const NFmiDataModifierPasteData &theOther);
-	NFmiDataModifier* Clone(void) const;
-
-	virtual ~NFmiDataModifierPasteData(void){};
-	virtual float FloatOperation(float theValue);
-
- protected:
-	 NFmiGrid* itsGridData; // ei omista
-};
-//************** NFmiDataModifierPasteData ************************
-
 //************** NFmiDataModifierValidateData_PrForm_T ************************
 // muuttaa Sateen olomuotoa lämpötilan mukaan
 class NFmiDataModifierValidateData_PrForm_T : public NFmiDataModifier

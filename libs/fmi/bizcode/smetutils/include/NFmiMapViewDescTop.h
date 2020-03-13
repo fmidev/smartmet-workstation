@@ -179,6 +179,7 @@ public:
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
     Gdiplus::Bitmap* LandBorderMapBitmap() { return itsLandBorderMapBitmap; }
     void SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap);
+	std::string GetCurrentMapLayerText(bool backgroundMap);
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;

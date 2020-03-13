@@ -1,3 +1,4 @@
+// Original code by PJ Naughter, minor technical tweaks by Fmi and Marko Pietarinen (marko.pietarinen@fmi.fi)
 #pragma once
 
 #include <vector>

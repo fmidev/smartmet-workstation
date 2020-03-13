@@ -117,9 +117,12 @@ NFmiProjectionCurvatureInfo& NFmiProjectionCurvatureInfo::operator=(const NFmiPr
 		itsSecondaryLineLabelEnvi = theInfo.itsSecondaryLineLabelEnvi ? new NFmiDrawingEnvironment(*theInfo.itsSecondaryLineLabelEnvi) : 0;
 		fUseSecondaryLineLabel = theInfo.fUseSecondaryLineLabel;
 		itsSecondaryLineLabelPosition = theInfo.itsSecondaryLineLabelPosition;
-        itsCalculatedProjectionLines.Clear(); // HUOM! ei saa kopioida, pit‰‰ olla tyhj‰ lista sijoituksen j‰lkeen (luultavasti koska pointer-listalle ei ole sijoitus operaattoria)
-        itsCalculatedProjectionLineLabels.clear();  // HUOM! ei saa kopioida, pit‰‰ olla tyhj‰ lista sijoituksen j‰lkeen (luultavasti koska itsCalculatedProjectionLines -pointerListalle ei ole sijoitus operaattoria)
-		itsBaseNameSpace = theInfo.itsBaseNameSpace;
+		// HUOM! ei saa kopioida viivoja eik‰ labeleita, pit‰‰ olla tyhj‰ lista sijoituksen j‰lkeen, ett‰ ne lasketaan uudestaan
+        itsCalculatedProjectionLines.Clear(); 
+        itsCalculatedProjectionLineLabels.clear();
+		// itsBaseNameSpace pit‰‰ tarkistaa, jos kopioitavan objektin data on tyhj‰, s‰ilytet‰‰n nykyarvo (n‰yttˆmakrosta ladattuna se on tyhj‰)
+		if(!theInfo.itsBaseNameSpace.empty())
+			itsBaseNameSpace = theInfo.itsBaseNameSpace;
 	}
 	return *this;
 }
