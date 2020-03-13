@@ -56,7 +56,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , itsLocationFinderTimeoutInSeconds(0)
     , fShowLastSendTimeOnMapView(FALSE)
     , itsFixedDrawParamPathSettingU_(_T(""))
-    , fWmsMapMode(FALSE)
+    , fUseCombinedMapMode(FALSE)
     , fDroppedDataEditable(FALSE)
     , itsIsolineMinimumLengthFactor(1)
     , fGenerateTimeCombinationData(FALSE)
@@ -126,7 +126,7 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_OPTIONS_LOCATION_FINDER_TIMEOUT_IN_SECONDS, itsLocationFinderTimeoutInSeconds);
     DDX_Check(pDX, IDC_CHECK_SHOW_LAST_SEND_TIME_ON_MAP_VIEW, fShowLastSendTimeOnMapView);
     DDX_Text(pDX, IDC_STATIC_OPTIONS_FIXEX_DRAW_PARAM_PATH, itsFixedDrawParamPathSettingU_);
-    DDX_Check(pDX, IDC_CHECK_WMS_MAP_MODE, fWmsMapMode);
+    DDX_Check(pDX, IDC_CHECK_USE_COMBINED_MAP_MODE, fUseCombinedMapMode);
     DDX_Control(pDX, IDC_COMBO_OPTIONS_LOG_LEVEL, itsLogLevelComboBox);
     DDX_Check(pDX, IDC_CHECK_DROPPED_DATA_EDITABLE, fDroppedDataEditable);
     DDX_Text(pDX, IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR, itsIsolineMinimumLengthFactor);
@@ -206,7 +206,7 @@ BOOL COptionsDlg::OnInitDialog()
     fAutoLoadNewCacheData = applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
     itsLocationFinderTimeoutInSeconds = applicationWinRegistry.LocationFinderThreadTimeOutInMS() / 1000.;
     fShowLastSendTimeOnMapView = applicationWinRegistry.ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView();
-    fWmsMapMode = applicationWinRegistry.ConfigurationRelatedWinRegistry().UseCombinedMapMode();
+    fUseCombinedMapMode = applicationWinRegistry.ConfigurationRelatedWinRegistry().UseCombinedMapMode();
     InitLogLevelComboBox();
     fDroppedDataEditable = applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable();
     itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
@@ -274,17 +274,19 @@ void COptionsDlg::OnOK()
 {
 	UpdateData(TRUE);
     auto &applicationWinRegistry = itsSmartMetDocumentInterface->ApplicationWinRegistry();
-    applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(0)->ShowStationPlot(fStationPlot == TRUE);
+    auto& configurationRelatedWinRegistry = applicationWinRegistry.ConfigurationRelatedWinRegistry();
+    configurationRelatedWinRegistry.MapView(0)->ShowStationPlot(fStationPlot == TRUE);
     NFmiValueString valueStr = CT2A(itsTimeStepStrU_);
+    auto* mainMapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(0);
 	float stepValue = float(valueStr);
 	if(stepValue <= 0.0001f) // 0.0001-raja hatusta tarkoittaisi alle sekunnin aika-askelta valuestring palauttaa roskalle ep‰m‰‰r‰isen arvon, joka on alle t‰m‰n rajan
-        itsSmartMetDocumentInterface->MapViewDescTop(0)->TimeControlTimeStep(1.f);
+        mainMapViewDescTop->TimeControlTimeStep(1.f);
 	else
-        itsSmartMetDocumentInterface->MapViewDescTop(0)->TimeControlTimeStep(stepValue);
+        mainMapViewDescTop->TimeControlTimeStep(stepValue);
 
     auto &metEditorOptionsData = itsSmartMetDocumentInterface->MetEditorOptionsData();
     metEditorOptionsData.ShowToolTipsOnMapView(fShowToolTip == TRUE);
-    applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(0)->SpacingOutFactor(fUseSpacingOut == TRUE ? 1 : 0); // nyt vain on/off s‰‰tˆ
+    configurationRelatedWinRegistry.MapView(0)->SpacingOutFactor(fUseSpacingOut == TRUE ? 1 : 0); // nyt vain on/off s‰‰tˆ
     applicationWinRegistry.KeepMapAspectRatio(fAutoZoom == TRUE);
     itsSmartMetDocumentInterface->SmartMetEditingMode(fUseViewMode ? CtrlViewUtils::kFmiEditingModeViewOnly : CtrlViewUtils::kFmiEditingModeNormal, true);
 
@@ -296,8 +298,10 @@ void COptionsDlg::OnOK()
     NFmiValueString animationDelayStr = CT2A(itsAnimationFrameDelayInMSecStrU_);
 	float animationDelay = float(animationDelayStr);
 
-	if(itsSmartMetDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. edit-moodissa, tehd‰‰n undo/redo syvyys ja autosave asetuksia
-	{								   // Muuten on vaara, ett‰ OnInit:iss‰ nollattuja arvoja laitetaan takaisin oikeisiin asetuksiin
+	if(itsSmartMetDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) 
+	{	
+        // Jos ollaan ns. edit-moodissa, tehd‰‰n undo/redo syvyys ja autosave asetuksia
+        // Muuten on vaara, ett‰ OnInit:iss‰ nollattuja arvoja laitetaan takaisin oikeisiin asetuksiin
         NFmiValueString autoSaveFreqStr = CT2A(itsAutoSaveFrequensInMinutesStrU_);
 		float autoSaveFreq = float(autoSaveFreqStr);
         metEditorOptionsData.AutoSaveFrequensInMinutes(static_cast<int>(autoSaveFreq));
@@ -328,21 +332,22 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.LowMemoryPrint(fLowMemoryPrint == TRUE);
     applicationWinRegistry.MaxRangeInPrint(itsMaxRangeInPrint);
 
-    itsSmartMetDocumentInterface->HelpDataInfoSystem()->UseQueryDataCache(fUseLocalCache == TRUE);
-    itsSmartMetDocumentInterface->HelpDataInfoSystem()->DoCleanCache(fDoCleanLocalCache == TRUE);
-    itsSmartMetDocumentInterface->HelpDataInfoSystem()->CacheFileKeepMaxDays(static_cast<float>(itsCacheKeepFilesMaxDays));
-    itsSmartMetDocumentInterface->HelpDataInfoSystem()->CacheMaxFilesPerPattern(boost::math::iround(itsCacheKeepFilesMax));
+    auto* helpDataInfoSystem = itsSmartMetDocumentInterface->HelpDataInfoSystem();
+    helpDataInfoSystem->UseQueryDataCache(fUseLocalCache == TRUE);
+    helpDataInfoSystem->DoCleanCache(fDoCleanLocalCache == TRUE);
+    helpDataInfoSystem->CacheFileKeepMaxDays(static_cast<float>(itsCacheKeepFilesMaxDays));
+    helpDataInfoSystem->CacheMaxFilesPerPattern(boost::math::iround(itsCacheKeepFilesMax));
     itsSmartMetDocumentInterface->SatelDataRefreshTimerInMinutes(itsSatelDataUpdateFrequenceInMinutes);
     itsSmartMetDocumentInterface->ApplicationDataBase().UseDataSending(fAllowSending == TRUE);
     tmpStr = CT2A(itsSysInfoDbUrlU_);
     itsSmartMetDocumentInterface->ApplicationDataBase().BaseUrlString(tmpStr);
 
-    applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData(fAutoLoadNewCacheData == TRUE);
+    configurationRelatedWinRegistry.AutoLoadNewCacheData(fAutoLoadNewCacheData == TRUE);
     applicationWinRegistry.LocationFinderThreadTimeOutInMS(boost::math::iround(itsLocationFinderTimeoutInSeconds * 1000.));
-    applicationWinRegistry.ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView(fShowLastSendTimeOnMapView == TRUE);
-    applicationWinRegistry.ConfigurationRelatedWinRegistry().UseCombinedMapMode(fWmsMapMode == TRUE);
+    configurationRelatedWinRegistry.ShowLastSendTimeOnMapView(fShowLastSendTimeOnMapView == TRUE);
+    configurationRelatedWinRegistry.UseCombinedMapMode(fUseCombinedMapMode == TRUE);
     SetLogLevelOnOk();
-    applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable(fDroppedDataEditable == TRUE);
+    configurationRelatedWinRegistry.DroppedDataEditable(fDroppedDataEditable == TRUE);
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
     applicationWinRegistry.GenerateTimeCombinationData(fGenerateTimeCombinationData == TRUE);
     applicationWinRegistry.ForceWdParameterToLinearInterpolation(fForceWdParameterToLinearInterpolation == TRUE);
@@ -425,6 +430,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT, "Isoline min length factor (0-100)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_COMBINATION_DATA, "Generate time combination data (unchecking might prevent crashes)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, "Forced linear WD (on=better, off=fast)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COMBINED_MAP_MODE, "Use combined map mode(local + wms)");
 }
 
 void COptionsDlg::InitLogLevelComboBox()
