@@ -47,7 +47,7 @@ void NFmiWmsView::Draw(NFmiToolBox *theGTB)
     itsToolBox = theGTB;
 
     auto dataIdent = itsDrawParam->Param();
-    decltype(auto) wmsSupport = itsCtrlViewDocumentInterface->WmsSupport();
+    decltype(auto) wmsSupport = itsCtrlViewDocumentInterface->GetWmsSupport();
 
     if(!IsParamDrawn())
     {
@@ -91,7 +91,7 @@ std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
 {
     if (itsLatestParam != -1 && itsLatestProducer != -1)
     {
-        return  itsCtrlViewDocumentInterface->WmsSupport().getFullLayerName(itsLatestProducer, itsLatestParam);
+        return  itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsLatestProducer, itsLatestParam);
     }
     return "";
 }
