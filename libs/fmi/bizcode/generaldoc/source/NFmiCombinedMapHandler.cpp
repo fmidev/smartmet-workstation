@@ -676,6 +676,7 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 			mapViewDescTops_.emplace_back(createMapViewDescTop(baseSettingStr, mapViewIndex));
 
 		initLandBorderDrawingSystem();
+		initWmsSupport();
 	}
 	catch(std::exception & e)
 	{
@@ -853,7 +854,7 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystem()
 #endif
 		boost::shared_ptr<Imagine::NFmiGeoShape> landBorderGeoShape(new Imagine::NFmiGeoShape());
 		logMessage(std::string("Reading country border shape file: ") + landBorderShapeFile_, CatLog::Severity::Debug, CatLog::Category::Configuration);
-		landBorderShapeFile_ = PathUtils::getAbsoluteFilePath(landBorderShapeFile_, absoluteControlPath_);
+		landBorderShapeFile_ = PathUtils::makeFixedAbsolutePath(landBorderShapeFile_, absoluteControlPath_);
 		landBorderGeoShape->Read(landBorderShapeFile_, Imagine::kFmiGeoShapeEsri, "");
 
 		boost::shared_ptr<Imagine::NFmiPath> landBorderPath(new Imagine::NFmiPath(landBorderGeoShape->Path()));
