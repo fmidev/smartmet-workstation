@@ -1271,7 +1271,6 @@ void CFmiParameterSelectionDlg::OnPaint()
 
 void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 {
-// 	auto row = itsSmartMetDocumentInterface->GetFirstRowNumber(theDesktopIndex);
 	auto row = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
 	itsParameterSelectionSystem->LastActivatedDesktopIndex(theDesktopIndex);
 	itsParameterSelectionSystem->LastActivatedRowIndex(row);
