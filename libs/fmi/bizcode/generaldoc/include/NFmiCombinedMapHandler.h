@@ -226,6 +226,7 @@ public:
     boost::shared_ptr<NFmiDrawParam> getDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
     bool wmsSupportAvailable() const override;
+    bool localOnlyMapModeUsed() const override;
 
 private:
     std::unique_ptr<NFmiMapViewDescTop> createMapViewDescTop(const std::string& baseSettingStr, int mapViewIndex);
@@ -270,4 +271,5 @@ private:
     void initCrossSectionDrawParamListVector();
     void changeWmsMapType(unsigned int mapViewDescTopIndex, bool goForward);
     void changeFileBitmapMapType(unsigned int mapViewDescTopIndex, bool goForward);
+    void changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward);
 };
