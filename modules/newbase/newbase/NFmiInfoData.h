@@ -57,6 +57,7 @@ enum Type
                        // T_HIR makrolla laskettu
   kCapData = 26,  // Kun editorilla halutaan katsoa CAP/Varoke II dataa
   kWmsData = 27,
+  kMapLayer = 28, // Erilaiset karttaaineista datat ovat tämän tyyppisiä (background map, overlay-map, land borders, wms-map-layer, etc)
   kSoundingParameterData =
       1000  // HUOM! tästä on tarkoitus päästä eroon, mukana nyt siksi että on olemassa
             // näyttömakroja, joissa on käytetty tätä.

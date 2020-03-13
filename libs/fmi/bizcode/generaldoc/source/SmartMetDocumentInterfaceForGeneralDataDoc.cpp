@@ -2,6 +2,7 @@
 #include "NFmiEditMapGeneralDataDoc.h"
 #include "NFmiMapViewDescTop.h"
 #include "ApplicationInterface.h"
+#include "CombinedMapHandlerInterface.h"
 
 SmartMetDocumentInterfaceForGeneralDataDoc::SmartMetDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -40,7 +41,7 @@ const std::string& SmartMetDocumentInterfaceForGeneralDataDoc::RootViewMacroPath
 
 const NFmiMetTime& SmartMetDocumentInterfaceForGeneralDataDoc::CurrentTime(unsigned int theDescTopIndex)
 {
-    return itsDoc->CurrentTime(theDescTopIndex);
+    return itsDoc->GetCombinedMapHandler()->currentTime(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::LoadViewMacroInfo(NFmiViewSettingMacro &theViewMacro, bool fTreatAsViewMacro)
@@ -71,12 +72,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialo
 
 NFmiMapViewDescTop* SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDescTop(unsigned int theIndex)
 {
-    return itsDoc->MapViewDescTop(theIndex);
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theIndex);
 }
 
 NFmiDrawParamList* SmartMetDocumentInterfaceForGeneralDataDoc::DrawParamListWithRealRowNumber(unsigned int theDescTopIndex, int theRealRowIndex)
 {
-    return itsDoc->DrawParamListWithRealRowNumber(theDescTopIndex, theRealRowIndex);
+    return itsDoc->GetCombinedMapHandler()->getDrawParamListWithRealRowNumber(theDescTopIndex, theRealRowIndex);
 }
 
 NFmiInfoOrganizer* SmartMetDocumentInterfaceForGeneralDataDoc::InfoOrganizer()
@@ -96,7 +97,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SetCurrentGeneratedBetaProduct(
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes)
 {
-    return itsDoc->CurrentTime(theDescTopIndex, newCurrentTime, fStayInsideAnimationTimes);
+    return itsDoc->GetCombinedMapHandler()->currentTime(theDescTopIndex, newCurrentTime, fStayInsideAnimationTimes);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex)
@@ -116,7 +117,7 @@ NFmiSatelliteImageCacheSystem& SmartMetDocumentInterfaceForGeneralDataDoc::Satel
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
 {
-    itsDoc->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
+    itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
 
 NFmiApplicationWinRegistry& SmartMetDocumentInterfaceForGeneralDataDoc::ApplicationWinRegistry()
@@ -191,22 +192,17 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ModifyToolMode(CtrlViewUtils::F
 
 boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex)
 {
-    return itsDoc->ActiveDrawParam(theDescTopIndex, theRowIndex);
+    return itsDoc->GetCombinedMapHandler()->activeDrawParam(theDescTopIndex, theRowIndex);
 }
 
 int SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
 {
-	return itsDoc->ActiveViewRow(theDescTopIndex);
-}
-
-int SmartMetDocumentInterfaceForGeneralDataDoc::GetFirstRowNumber(unsigned int theDescTopIndex)
-{
-	return itsDoc->GetFirstRowNumber(theDescTopIndex);
+	return itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
 {
-    itsDoc->ActiveViewRow(theDescTopIndex, theActiveRowIndex);
+    itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex, theActiveRowIndex);
 }
 
 double SmartMetDocumentInterfaceForGeneralDataDoc::BrushSpecialParamValue()
@@ -356,12 +352,12 @@ boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::Def
 
 double SmartMetDocumentInterfaceForGeneralDataDoc::DrawObjectScaleFactor()
 {
-    return itsDoc->DrawObjectScaleFactor();
+    return itsDoc->GetCombinedMapHandler()->drawObjectScaleFactor();
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::DrawObjectScaleFactor(double newValue)
 {
-    itsDoc->DrawObjectScaleFactor(newValue);
+    itsDoc->GetCombinedMapHandler()->drawObjectScaleFactor(newValue);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::TransparencyContourDrawView(CWnd *theView)
@@ -436,12 +432,12 @@ NFmiMenuItemList* SmartMetDocumentInterfaceForGeneralDataDoc::PopupMenu()
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-    itsDoc->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
+    itsDoc->GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex)
 {
-    itsDoc->ForceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
+    itsDoc->GetCombinedMapHandler()->forceStationViewRowUpdate(theDescTopIndex, theRealRowIndex);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
@@ -561,62 +557,62 @@ NFmiMetEditorOptionsData& SmartMetDocumentInterfaceForGeneralDataDoc::MetEditorO
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::SetSelectedMapHandler(unsigned int theDescTopIndex, unsigned int newMapIndex)
 {
-    itsDoc->SetSelectedMapHandler(theDescTopIndex, newMapIndex);
+    itsDoc->GetCombinedMapHandler()->setSelectedMapHandler(theDescTopIndex, newMapIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnButtonDataArea(unsigned int theDescTopIndex)
 {
-    itsDoc->OnButtonDataArea(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onButtonDataArea(theDescTopIndex);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::SetMapViewGrid(unsigned int theDescTopIndex, const NFmiPoint &newValue)
 {
-    return itsDoc->SetMapViewGrid(theDescTopIndex, newValue);
+    return itsDoc->GetCombinedMapHandler()->setMapViewGrid(theDescTopIndex, newValue);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnShowTimeString(unsigned int theDescTopIndex)
 {
-    itsDoc->OnShowTimeString(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onShowTimeString(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnHideParamWindow(unsigned int theDescTopIndex)
 {
-    itsDoc->OnHideParamWindow(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onHideParamWindow(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnShowGridPoints(unsigned int theMapViewIndex)
 {
-    itsDoc->OnShowGridPoints(theMapViewIndex);
+    itsDoc->GetCombinedMapHandler()->onShowGridPoints(theMapViewIndex);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes)
 {
-    return itsDoc->SetDataToNextTime(theDescTopIndex, fStayInsideAnimationTimes);
+    return itsDoc->GetCombinedMapHandler()->setDataToNextTime(theDescTopIndex, fStayInsideAnimationTimes);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes)
 {
-    return itsDoc->SetDataToPreviousTime(theDescTopIndex, fStayInsideAnimationTimes);
+    return itsDoc->GetCombinedMapHandler()->setDataToPreviousTime(theDescTopIndex, fStayInsideAnimationTimes);
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ScrollViewRow(unsigned int theDescTopIndex, int theCount)
 {
-    return itsDoc->ScrollViewRow(theDescTopIndex, theCount);
+    return itsDoc->GetCombinedMapHandler()->scrollViewRow(theDescTopIndex, theCount);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnToggleGridPointColor(unsigned int theDescTopIndex)
 {
-    itsDoc->OnToggleGridPointColor(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onToggleGridPointColor(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnToggleGridPointSize(unsigned int theDescTopIndex)
 {
-    itsDoc->OnToggleGridPointSize(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onToggleGridPointSize(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnEditSpaceOut(unsigned int theDescTopIndex)
 {
-    itsDoc->OnEditSpaceOut(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onEditSpaceOut(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnButtonRefresh()
@@ -636,7 +632,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::OnShowMasksOnMap(unsigned int t
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnToggleShowNamesOnMap(unsigned int theDescTopIndex, bool fForward)
 {
-    itsDoc->OnToggleShowNamesOnMap(theDescTopIndex, fForward);
+    itsDoc->GetCombinedMapHandler()->onToggleShowNamesOnMap(theDescTopIndex, fForward);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
@@ -646,32 +642,32 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::OnChangeMapType(unsigned int th
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnToggleLandBorderPenSize(unsigned int theDescTopIndex)
 {
-    itsDoc->OnToggleLandBorderPenSize(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onToggleLandBorderPenSize(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnToggleLandBorderDrawColor(unsigned int theDescTopIndex)
 {
-    itsDoc->OnToggleLandBorderDrawColor(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onToggleLandBorderDrawColor(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnAcceleratorBorrowParams(unsigned int theDescTopIndex, int row)
 {
-    itsDoc->OnAcceleratorBorrowParams(theDescTopIndex, row);
+    itsDoc->GetCombinedMapHandler()->onAcceleratorBorrowParams(theDescTopIndex, row);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnAcceleratorMapRow(unsigned int theDescTopIndex, int theStartingRow)
 {
-    itsDoc->OnAcceleratorMapRow(theDescTopIndex, theStartingRow);
+    itsDoc->GetCombinedMapHandler()->onAcceleratorMapRow(theDescTopIndex, theStartingRow);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnAcceleratorToggleKeepMapRatio()
 {
-    itsDoc->OnAcceleratorToggleKeepMapRatio();
+    itsDoc->GetCombinedMapHandler()->onAcceleratorToggleKeepMapRatio();
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnToggleOverMapBackForeGround(unsigned int theDescTopIndex)
 {
-    itsDoc->OnToggleOverMapBackForeGround(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->onToggleOverMapBackForeGround(theDescTopIndex);
 }
 
 std::string SmartMetDocumentInterfaceForGeneralDataDoc::GetToolTipString(unsigned int commandID, std::string &theMagickWord)
@@ -686,32 +682,32 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ActivateZoomDialog(int theWante
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::MakeSwapBaseArea(unsigned int theDescTopIndex)
 {
-    itsDoc->MakeSwapBaseArea(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->makeSwapBaseArea(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::SwapArea(unsigned int theDescTopIndex)
 {
-    itsDoc->SwapArea(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->swapArea(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::CopyMapViewDescTopParams(unsigned int theDescTopIndex)
 {
-    itsDoc->CopyMapViewDescTopParams(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->copyMapViewDescTopParams(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::PasteMapViewDescTopParams(unsigned int theDescTopIndex)
 {
-    itsDoc->PasteMapViewDescTopParams(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->pasteMapViewDescTopParams(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::CopyDrawParamsFromMapViewRow(unsigned int theDescTopIndex)
 {
-    itsDoc->CopyDrawParamsFromMapViewRow(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->copyDrawParamsFromMapViewRow(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::PasteDrawParamsToMapViewRow(unsigned int theDescTopIndex)
 {
-    itsDoc->PasteDrawParamsToMapViewRow(theDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->pasteDrawParamsToMapViewRow(theDescTopIndex);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::ToggleTimeControlAnimationView(unsigned int theDescTopIndex)
@@ -749,9 +745,9 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::FilterDialogUpdateStatus(int ne
     itsDoc->FilterDialogUpdateStatus(newState);
 }
 
-bool SmartMetDocumentInterfaceForGeneralDataDoc::DoAreaFiltering(bool fPasteClipBoardData)
+bool SmartMetDocumentInterfaceForGeneralDataDoc::DoAreaFiltering()
 {
-    return itsDoc->DoAreaFiltering(fPasteClipBoardData);
+    return itsDoc->DoAreaFiltering();
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::DoTimeFiltering()
@@ -881,12 +877,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ClearTEMPData()
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewDirty()
 {
-    return itsDoc->TimeSerialViewDirty();
+    return itsDoc->GetCombinedMapHandler()->timeSerialViewDirty();
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewDirty(bool newValue)
 {
-    itsDoc->TimeSerialViewDirty(newValue);
+    itsDoc->GetCombinedMapHandler()->timeSerialViewDirty(newValue);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::DrawOverBitmapThings(NFmiToolBox * theGTB)
@@ -904,9 +900,9 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::MouseCapturedInTimeWindow(bool 
     itsDoc->MouseCapturedInTimeWindow(newValue);
 }
 
-std::vector<NFmiMapViewDescTop*>& SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDescTopList()
+CombinedMapHandlerInterface::MapViewDescTopVector& SmartMetDocumentInterfaceForGeneralDataDoc::MapViewDescTopList()
 {
-    return itsDoc->MapViewDescTopList();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTops();
 }
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::IsMasksUsedInTimeSerialViews()
@@ -1021,17 +1017,17 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ToggleShowHelperDatasInTimeView
 
 NFmiDrawParamList* SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewDrawParamList()
 {
-    return itsDoc->TimeSerialViewDrawParamList();
+    return &itsDoc->GetCombinedMapHandler()->getTimeSerialViewDrawParamList();
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> &newArea)
 {
-    itsDoc->SetMapArea(theDescTopIndex, newArea);
+    itsDoc->GetCombinedMapHandler()->setMapArea(theDescTopIndex, newArea);
 }
 
 const NFmiMetTime& SmartMetDocumentInterfaceForGeneralDataDoc::ActiveMapTime()
 {
-    return itsDoc->ActiveMapTime();
+    return itsDoc->GetCombinedMapHandler()->activeMapTime();
 }
 
 const std::string& SmartMetDocumentInterfaceForGeneralDataDoc::FileDialogDirectoryMemory()
@@ -1051,7 +1047,7 @@ NFmiFixedDrawParamSystem& SmartMetDocumentInterfaceForGeneralDataDoc::FixedDrawP
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros)
 {
-    return itsDoc->TakeDrawParamInUseEveryWhere(theDrawParam, useInMap, useInTimeSerial, useInCrossSection, useWithViewMacros);
+    return itsDoc->GetCombinedMapHandler()->takeDrawParamInUseEveryWhere(theDrawParam, useInMap, useInTimeSerial, useInCrossSection, useWithViewMacros);
 }
 
 NFmiSmartToolInfo* SmartMetDocumentInterfaceForGeneralDataDoc::SmartToolInfo()
@@ -1131,7 +1127,7 @@ NFmiSeaIcingWarningSystem& SmartMetDocumentInterfaceForGeneralDataDoc::SeaIcingW
 
 CtrlViewUtils::GraphicalInfo& SmartMetDocumentInterfaceForGeneralDataDoc::GetGraphicalInfo(int theMapViewDescTopIndex)
 {
-    return itsDoc->GetGraphicalInfo(theMapViewDescTopIndex);
+    return itsDoc->GetCombinedMapHandler()->getGraphicalInfo(theMapViewDescTopIndex);
 }
 
 AddParams::ParameterSelectionSystem& SmartMetDocumentInterfaceForGeneralDataDoc::ParameterSelectionSystem()
@@ -1201,7 +1197,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::DoAutoLoadDataAtStartUp(bool ne
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::SetMapViewCacheSize(double theNewSizeInMB)
 {
-    itsDoc->SetMapViewCacheSize(theNewSizeInMB);
+    itsDoc->GetCombinedMapHandler()->setMapViewCacheSize(theNewSizeInMB);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::ReloadFixedDrawParams()
@@ -1370,7 +1366,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int th
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex)
 {
-    itsDoc->UpdateRowInLockedDescTops(theOrigDescTopIndex);
+    itsDoc->GetCombinedMapHandler()->updateRowInLockedDescTops(theOrigDescTopIndex);
 }
 
 int SmartMetDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
@@ -1395,12 +1391,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDesc
 
 NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int mapViewDescTopIndex)
 {
-    return itsDoc->MapViewDescTop(mapViewDescTopIndex)->MapHandler();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex)->MapHandler();
 }
 
-bool SmartMetDocumentInterfaceForGeneralDataDoc::ChangeTime(int theTypeOfChange, FmiDirection theDirection, int theViewType, unsigned long theMapViewIndex, double theAmountOfChange)
+bool SmartMetDocumentInterfaceForGeneralDataDoc::ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange)
 {
-    return itsDoc->ChangeTime(theTypeOfChange, theDirection, theViewType, theMapViewIndex, theAmountOfChange);
+    return itsDoc->GetCombinedMapHandler()->changeTime(theTypeOfChange, theDirection, theMapViewIndex, theAmountOfChange);
 }
 
 #ifndef DISABLE_CPPRESTSDK

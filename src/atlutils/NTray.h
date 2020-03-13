@@ -1,3 +1,4 @@
+// Original code by PJ Naughter, minor technical tweaks by Fmi and Marko Pietarinen (marko.pietarinen@fmi.fi)
 /*
 Module : NTray.h
 Purpose: Interface for a MFC class to encapsulate Shell_NotifyIcon

@@ -1922,7 +1922,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
     }
     itsToolBox = theGTB;
 
-    auto registeredLayers = itsCtrlViewDocumentInterface->WmsSupport()
+    auto registeredLayers = itsCtrlViewDocumentInterface->GetWmsSupport()
         .getRegisteredLayers(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 
@@ -1930,17 +1930,17 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
     {
         if(!drawParamList->Find(registered, nullptr, NFmiInfoData::kWmsData))
         {
-            itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+            itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
         else
         {
             // Vielä jos piirto-optioissa ei ole legendan piirto päällä, poistetaan rekisteröidyistä (en ymmärrä logiikkaa, miten sen saa taas päälle)
             if(!drawParamList->Current()->ShowColorLegend())
-                itsCtrlViewDocumentInterface->WmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+                itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
     }
 
-    auto legends = itsCtrlViewDocumentInterface->WmsSupport().getLegends(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
+    auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
     if(legends.empty())
     {
         return;
@@ -3098,7 +3098,8 @@ void NFmiStationViewHandler::InitParamHandlerView(void)
 												  ,itsDrawParam
 												  , itsViewGridRowNumber
 												  , itsViewGridColumnNumber
-												  ,true); // true = näytetään mask-osio (mutta vain 1. rivillä)
+												  ,true // true = näytetään mask-osio (mutta vain 1. rivillä)
+												  ,true); // true = map-layer osio on käytössä karttanäytössä
 	itsParamHandlerView->Init();
 	itsParamHandlerView->Update(itsParamHandlerViewRect,itsToolBox);
 }
@@ -4660,36 +4661,51 @@ void NFmiStationViewHandler::DrawSelectedSynopFromGridView(void)
 		}
 }
 
+std::string NFmiStationViewHandler::ComposeMapLayerToolTipText()
+{
+	std::string str;
+	str += "<b><font color=";
+	str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
+	str += ">";
+	str += itsCtrlViewDocumentInterface->GetCurrentMapLayerText(itsMapViewDescTopIndex, true);
+	str += "</font></b>\n";
+	return str;
+}
+
 std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
 	std::string str;
-    // Parametri laatikon päältä ei tehdä tooltippiä, koska jotkut tooltipien laskut ovat super hitaita ja saattavat häiritä parametrin valinta popupin avautumista.
-    // Tehdään param-boxille oma tooltip jos tarvis...
-    if(IsMouseCursorOverParameterBox(theRelativePoint))
-        return str;
+	// Parametri laatikon päältä ei tehdä tooltippiä, koska jotkut tooltipien laskut ovat super hitaita ja saattavat häiritä parametrin valinta popupin avautumista.
+	// Tehdään param-boxille oma tooltip jos tarvis...
+	if(IsMouseCursorOverParameterBox(theRelativePoint))
+		return str;
 	if(itsViewList)
 	{
-		int count = itsViewList->NumberOfItems();
-		if(count > 0)
+		NFmiString timeStr = itsTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat"), itsCtrlViewDocumentInterface->Language());
+		timeStr += " [UTC]";
+		str += static_cast<char*>(timeStr);
+		str += "\n";
+		NFmiPoint latlon(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
+		str += "Lat: ";
+		str += CtrlViewUtils::GetLatitudeMinuteStr(latlon.Y(), 1);
+		str += " Lon: ";
+		str += CtrlViewUtils::GetLongitudeMinuteStr(latlon.X(), 1);
+		str += "\n";
+		str += ComposeMapLayerToolTipText();
+		str += "<hr color=red>";
+		str += "\n";
+
+		if(!itsViewList->NumberOfItems())
 		{
-			NFmiString timeStr = itsTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat"), itsCtrlViewDocumentInterface->Language());
-			timeStr += " [UTC]";
-			str += static_cast<char*>(timeStr);
-			str += "\n";
-			NFmiPoint latlon(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-			str += "Lat: ";
-			str += CtrlViewUtils::GetLatitudeMinuteStr(latlon.Y(), 1);
-			str += " Lon: ";
-			str += CtrlViewUtils::GetLongitudeMinuteStr(latlon.X(), 1);
-			str += "\n";
-			str += "<hr color=red>";
-			str += "\n";
+
 		}
-		int i=1;
-		for(itsViewList->Reset(); itsViewList->Next(); i++)
+		else
 		{
-			str += itsViewList->Current()->ComposeToolTipText(theRelativePoint);
-			str += "\n";
+			for(itsViewList->Reset(); itsViewList->Next(); )
+			{
+				str += itsViewList->Current()->ComposeToolTipText(theRelativePoint);
+				str += "\n";
+			}
 		}
 		str += ComposeWarningMessageToolTipText();
 		str += ComposeSeaIcingWarningMessageToolTipText();

@@ -14,12 +14,12 @@
 // k‰ytet‰‰n avuksi least-squeare-metodin yhteydess‰
 struct MultiplyFunctor
 {
-	MultiplyFunctor(double theFactor):itsFactor(theFactor){}
-	double operator()(double theValue)
+	MultiplyFunctor(float theFactor):itsFactor(theFactor){}
+	float operator()(float theValue)
 	{
 		return theValue*itsFactor;
 	}
-	double itsFactor;
+	float itsFactor;
 };
 
 namespace toolmaster_tools

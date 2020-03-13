@@ -1,3 +1,4 @@
+// Original code by PJ Naughter, minor technical tweaks by Fmi and Marko Pietarinen (marko.pietarinen@fmi.fi)
 /*
 Module : SPLASHER.CPP
 Purpose: A splash screen component for MFC 4.x which uses a DIB bitmap

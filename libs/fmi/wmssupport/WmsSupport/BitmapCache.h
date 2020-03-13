@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WmsQuery.h"
+#include "wmssupport/WmsQuery.h"
 
 #include "NFmiSatelliteImageCacheHelpers.h"
 
@@ -15,33 +15,8 @@ namespace Wms
 
 namespace Wms
 {
-    inline
-        std::string toKey1(const WmsQuery& query)
-    {
-        return query.query.at("LAYERS");
-    }
-
-    inline
-        std::string toKey2(const WmsQuery& query)
-    {
-        auto key = query.query.at("BBOX");
-
-        auto resCrs = query.query.find("CRS");
-        if(resCrs != query.query.cend())
-        {
-            key += resCrs->second;
-        }
-        else
-            key += query.query.at("sRS");
-
-        key += query.query.at("STYLES") + query.query.at("WIDTH") + query.query.at("HEIGHT");
-        auto res = query.query.find("TIME");
-        if(res != query.query.cend())
-        {
-            key += res->second;
-        }
-        return key;
-    }
+    std::string toKey1(const WmsQuery& query);
+    std::string toKey2(const WmsQuery& query);
 
     class BitmapCache
     {

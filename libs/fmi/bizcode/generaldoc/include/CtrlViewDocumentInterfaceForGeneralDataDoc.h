@@ -39,7 +39,7 @@ public:
     void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) override;
     void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1) override;
     bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) override;
-    bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) override;
+    bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext) override;
     bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) override;
     bool MoveActiveMapViewParamInDrawingOrderList(unsigned int theDescTopIndex, int theMapRow, bool fRaise, bool fUseCrossSectionParams) override;
     void CheckAnimationLockedModeTimeBags(unsigned int theDescTopIndex, bool ignoreSatelImages) override;
@@ -118,7 +118,7 @@ public:
     bool CreateTimeSerialDialogPopup(int index) override;
     bool CreateTimeSerialDialogOnViewPopup(int index) override;
     bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) override;
-    void UpdateModifiedDrawParamMarko(boost::shared_ptr<NFmiDrawParam> &theDrawParam) override;
+    void UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) override;
     bool UseTimeSerialAxisAutoAdjust(void) override;
     bool UseQ2Server(void) override;
     bool Registry_ShowLastSendTimeOnMapView() override;
@@ -157,7 +157,6 @@ public:
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
     int ActiveViewRow(unsigned int theDescTopIndex) override;
     void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
-	int GetFirstRowNumber(unsigned int theDescTopIndex) override;
 	NFmiSynopPlotSettings* SynopPlotSettings(void) override;
     NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) override;
     NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) override;
@@ -240,7 +239,7 @@ public:
     boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) override;
     bool ViewBrushed(void) override;
     void ViewBrushed(bool newState) override;
-    bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam = kFmiLastParameter, bool fPasteAction = false) override;
+    bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam = kFmiLastParameter) override;
     void ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) override;
     bool UseMaskWithBrush(void) override;
     int BrushToolLimitSetting(void) override;
@@ -265,8 +264,9 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() override;
     boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() override;
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() override;
-    bool UseWmsMaps() override;
-    void UseWmsMaps(bool newValue) override;
+    bool IsCombinedMapModeUsed() const override;
+    void ToggleCombinedMapMode() override;
+    void UseCombinedMapMode(bool newValue) override;
     NFmiBetaProductionSystem& BetaProductionSystem() override;
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
@@ -283,9 +283,17 @@ public:
     void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) override;
     int GetPrintedDescTopIndex() override;
     void ResetPrintedDescTopIndex() override;
+    std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) override;
+    unsigned int SelectedMapIndex(int mapViewDescTopIndex) override;
+    void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) override;
+    NFmiFixedDrawParamSystem& FixedDrawParamSystem() override;
+    void ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam) override;
+    NFmiMacroPathSettings& MacroPathSettings() override;
+    int CurrentCrossSectionRowIndex() override;
+    bool UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;
-    Wms::WmsSupport& WmsSupport() override;
+    WmsSupportInterface& GetWmsSupport()  override;
 #endif // DISABLE_CPPRESTSDK
 };
