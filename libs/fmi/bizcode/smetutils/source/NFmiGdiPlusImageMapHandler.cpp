@@ -15,6 +15,7 @@
 #include "NFmiPolyline.h"
 #include "NFmiFileString.h"
 #include "NFmiQueryDataUtil.h"
+#include "NFmiPathUtils.h"
 
 using namespace std;
 
@@ -69,26 +70,15 @@ void NFmiGdiPlusImageMapHandler::Clear(void)
 
 bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
 {
-	itsAreaFileName = theAreaFileName;
+	itsAreaFileName = PathUtils::makeFixedAbsolutePath(theAreaFileName, itsControlPath);
 
-    NFmiFileString fileString(itsAreaFileName);
-	string finalAreaFileName;
-    if(fileString.IsAbsolutePath())
-    {
-        finalAreaFileName = itsAreaFileName;
-    }
-    else
-    {
-        finalAreaFileName = ControlPath();
-        finalAreaFileName += kFmiDirectorySeparator;
-        finalAreaFileName += itsAreaFileName;
-    }
-
-	itsOriginalArea = ReadArea(finalAreaFileName);
+	itsOriginalArea = ReadArea(itsAreaFileName);
 	if(!itsOriginalArea)
 	{
 		string errMsg("NFmiGdiPlusImageMapHandler::Init - ei saanut luettua area-tiedostoa: \n");
-		errMsg += finalAreaFileName;
+		errMsg += itsAreaFileName;
+		errMsg += ", originally gives as: ";
+		errMsg += theAreaFileName;
 		throw runtime_error(errMsg);
 	}
 
@@ -107,9 +97,9 @@ bool NFmiGdiPlusImageMapHandler::Init(const checkedVector<std::string> &theMapFi
 	int i=0;
 	// pit‰‰ alustaa 0-pointtereilla image taulukko.
 	for(i=0; i < static_cast<int>(itsMapFileNames.size()); i++)
-		itsMapBitmaps.push_back(static_cast<Gdiplus::Bitmap*>(0));
+		itsMapBitmaps.push_back(nullptr);
 	for(i=0; i < static_cast<int>(itsOverMapBitmapFileNames.size()); i++)
-		itsOverMapBitmaps.push_back(static_cast<Gdiplus::Bitmap*>(0));
+		itsOverMapBitmaps.push_back(nullptr);
 
 	if(itsMapFileNames.size() > 0) // pakko lukea 1. image muistiin, ett‰ saadaan koko talteen
 	{
