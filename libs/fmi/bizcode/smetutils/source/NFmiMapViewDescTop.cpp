@@ -412,7 +412,7 @@ NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::CreateGdiPlusImageMapHandler(con
 	NFmiGdiPlusImageMapHandler* mHandler = new NFmiGdiPlusImageMapHandler;
 	mHandler->UsedMapIndex(0);
     mHandler->ControlPath(std::string(itsControlPath));
-	if(theMapConfiguration.ProjectionFileName() == "")
+	if(theMapConfiguration.ProjectionFileName().empty())
 	{
 		mHandler->OriginalArea(theMapConfiguration.Projection());
 		mHandler->Init(theMapConfiguration.MapFileNames(), theMapConfiguration.MapDrawingStyles(), theMapConfiguration.OverMapDibFileNames(), theMapConfiguration.OverMapDibDrawingStyles());
