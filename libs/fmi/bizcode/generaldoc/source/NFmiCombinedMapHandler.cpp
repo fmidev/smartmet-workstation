@@ -3105,12 +3105,29 @@ void NFmiCombinedMapHandler::changeFileBitmapMapType(unsigned int mapViewDescTop
 	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
 }
 
+void NFmiCombinedMapHandler::changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward)
+{
+//	changeFileBitmapMapType(mapViewDescTopIndex, goForward);
+}
+
 void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, bool goForward)
 {
-	//if(UseWmsMaps())
-	//	changeWmsMapType(mapViewDescTopIndex, goForward);
-	//else
+	if(localOnlyMapModeUsed())
 		changeFileBitmapMapType(mapViewDescTopIndex, goForward);
+	else
+		changeMapTypeInCombinedMode(mapViewDescTopIndex, goForward);
+}
+
+void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward)
+{
+	//if(UseWmsMaps())
+	//	ChangeWmsOverlayMapType(mapViewDescTopIndex, goForward);
+	//else
+	changeFileBitmapOverlayMapType(mapViewDescTopIndex, goForward);
+
+	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
+	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
 }
 
 // scrollaa näyttöriveja halutun määrän (negatiivinen skrollaa ylös ja positiivinen count alas)
@@ -3515,18 +3532,6 @@ void NFmiCombinedMapHandler::changeFileBitmapOverlayMapType(unsigned int mapView
 	}
 }
 
-void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward)
-{
-	//if(UseWmsMaps())
-	//	ChangeWmsOverlayMapType(mapViewDescTopIndex, goForward);
-	//else
-		changeFileBitmapOverlayMapType(mapViewDescTopIndex, goForward);
-
-	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
-	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
-	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
-}
-
 void NFmiCombinedMapHandler::onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex)
 {
 	getMapViewDescTop(mapViewDescTopIndex)->ToggleLandBorderColor();
@@ -3693,4 +3698,13 @@ bool NFmiCombinedMapHandler::useWmsMapDrawForThisDescTop(unsigned int mapViewDes
 {
 	// Toistaiseksi kaikki piirto tapahtuu käyttämällä lokaaleja valmiita karttakuvia
 	return false;
+}
+
+bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
+{
+	if(wmsSupportAvailable())
+	{
+		return !::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
+	}
+	return true;
 }
