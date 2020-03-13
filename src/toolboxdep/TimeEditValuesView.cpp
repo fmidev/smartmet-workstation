@@ -636,7 +636,7 @@ BOOL CTimeEditValuesView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 void CTimeEditValuesView::MakeAllMapViewsUpdated(bool newValue)
 {
     auto &mapViewDescTopList = itsSmartMetDocumentInterface->MapViewDescTopList();
-    for(auto mapViewDescTop : mapViewDescTopList)
+    for(auto &mapViewDescTop : mapViewDescTopList)
         mapViewDescTop->SetRedrawMapView(newValue); // tämä on pika viritys optimointi, että joka klikkauksella aikasarjaikkunassa ei piirrettäisi karttanäyttöä
 }
 
