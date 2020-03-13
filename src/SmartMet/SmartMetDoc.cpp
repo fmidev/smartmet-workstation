@@ -3825,7 +3825,8 @@ void CSmartMetDoc::OnAcceleratorApplyStartupViewMacro()
 
 void CSmartMetDoc::OnAcceleratorToggleWmsMapMode()
 {
-	itsData->GetCombinedMapHandler()->toggleCombinedMapMode();
+	auto& combinedMapHandler = *itsData->GetCombinedMapHandler();
+	combinedMapHandler.useCombinedMapMode(!combinedMapHandler.useCombinedMapMode());
     UpdateAllViewsAndDialogs("Toggle combined local and WMS map mode");
 }
 

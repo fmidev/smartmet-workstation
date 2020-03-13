@@ -369,8 +369,7 @@ public:
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
-    virtual bool IsCombinedMapModeUsed() const = 0;
-    virtual void ToggleCombinedMapMode() = 0;
+    virtual bool UseCombinedMapMode() const = 0;
     virtual void UseCombinedMapMode(bool newValue) = 0;
     virtual NFmiBetaProductionSystem& BetaProductionSystem() = 0;
     virtual void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
