@@ -3365,7 +3365,8 @@ bool NFmiTimeSerialView::ChangeModifyFactorView(double theChangeDirectionFactor)
 			{
 				double changeValue = step * theChangeDirectionFactor;
 				itsDrawParam->TimeSerialModifyingLimit(itsDrawParam->TimeSerialModifyingLimit() + changeValue);
-                itsCtrlViewDocumentInterface->UpdateModifiedDrawParamMarko(itsDrawParam);
+				// HUOM! tässä on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
+                itsCtrlViewDocumentInterface->UpdateToModifiedDrawParam(CtrlViewUtils::kFmiTimeSerialView, itsDrawParam, CtrlViewUtils::kFmiTimeSerialView);
 			}
 			else
 				return false;
@@ -3470,7 +3471,8 @@ bool NFmiTimeSerialView::ChangeValueView(double theChangeDirectionFactor, bool f
 		CreateValueScaleView();
 		if(ruunanPaa != itsValueAxis->StartValue() || ruunanHanta != itsValueAxis->EndValue())
 		{
-			itsCtrlViewDocumentInterface->UpdateModifiedDrawParamMarko(itsDrawParam);
+			// HUOM! tässä on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
+			itsCtrlViewDocumentInterface->UpdateToModifiedDrawParam(CtrlViewUtils::kFmiTimeSerialView, itsDrawParam, CtrlViewUtils::kFmiTimeSerialView);
 		   return true;
 		}
 	}
