@@ -3052,6 +3052,8 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 // ********** lis‰t‰‰n havaintoparametri osa *************************
 
 // ********** WMS *************************
+// HUOM!!! ƒl‰ lis‰‰ Wms parametreja popup-valikkoon, niit‰ on niin paljon, ett‰ Windows:in popup-menu sekoaa ja sen systeemit
+// menee yli rajojen. Olen joskus testannut ett‰ popupit alkavat sekoamaan, kun niiss‰ on yli n. satatuhatta menu-item:ia.
 //    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
 
 // ********** lis‰t‰‰n apudata-parametri osa *************************
