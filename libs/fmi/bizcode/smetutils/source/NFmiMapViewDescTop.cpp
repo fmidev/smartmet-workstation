@@ -21,6 +21,9 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewFunctions.h"
 #include "CtrlViewWin32Functions.h"
+#include "CtrlViewDocumentInterface.h"
+#include "CombinedMapHandlerInterface.h"
+#include "NFmiCombinedMapModeState.h"
 
 #include <algorithm>
 #include "stdafx.h"
@@ -78,6 +81,11 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+
+	// 'double' muotoisten lisädatojen lisäys
+	extraData.Add(itsUsedCombinedModeMapIndex); // talletetaan 1. extra-datana käytetty combined-mode karttaindeksi
+	extraData.Add(itsUsedCombinedModeOverMapDibIndex); // talletetaan 2. extra-datana käytetty combined-mode overlay-karttaindeksi
+
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -101,6 +109,14 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 	is >> extraData;
 	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
 	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+
+	// 'double' muotoisten lisädatojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
+	itsUsedCombinedModeMapIndex = itsUsedMapIndex; // oletuksena normi karttaindeksi
+	itsUsedCombinedModeOverMapDibIndex = itsUsedOverMapDibIndex; // oletuksena normi karttaindeksi
+	if(extraData.itsDoubleValues.size() >= 1)
+		itsUsedCombinedModeMapIndex = static_cast<int>(extraData.itsDoubleValues[0]); // luetaan 1. extra-datana combined-mode karttaindeksi
+	if(extraData.itsDoubleValues.size() >= 2)
+		itsUsedCombinedModeOverMapDibIndex = static_cast<int>(extraData.itsDoubleValues[1]); // luetaan 2. extra-datana combined-mode overlay karttaindeksi
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Read failed");
@@ -167,8 +183,9 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(void)
 }
 
 
-NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, NFmiMapConfigurationSystem *theMapConfigurationSystem, NFmiProjectionCurvatureInfo* theProjectionCurvatureInfo, const std::string &theControlPath)
+NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, NFmiMapConfigurationSystem *theMapConfigurationSystem, NFmiProjectionCurvatureInfo* theProjectionCurvatureInfo, const std::string &theControlPath, int theMapViewDescTopIndex)
 :itsSettingsBaseName(theSettingsBaseName + "::")
+,itsMapViewDescTopIndex(theMapViewDescTopIndex)
 ,itsMapConfigurationSystem(theMapConfigurationSystem)
 ,itsProjectionCurvatureInfo(theProjectionCurvatureInfo)
 ,itsControlPath(theControlPath)
@@ -1022,12 +1039,14 @@ std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetVi
 	std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> helperList;
 
 	NFmiMapViewDescTop::ViewMacroDipMapHelper tmpData;
-	size_t ssize = itsGdiPlusImageMapHandlerList.size();
-	for(size_t i = 0; i < ssize; i++)
+	for(unsigned int mapAreaIndex = 0; mapAreaIndex < itsGdiPlusImageMapHandlerList.size(); mapAreaIndex++)
 	{
-		NFmiGdiPlusImageMapHandler &mapHandler = *(itsGdiPlusImageMapHandlerList[i]);
+		NFmiGdiPlusImageMapHandler &mapHandler = *(itsGdiPlusImageMapHandlerList[mapAreaIndex]);
 		tmpData.itsUsedMapIndex = mapHandler.UsedMapIndex();
 		tmpData.itsUsedOverMapDibIndex = mapHandler.OverMapBitmapIndex();
+		auto& combinedMapHandler = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetCombinedMapHandlerInterface();
+		tmpData.itsUsedCombinedModeMapIndex = combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
+		tmpData.itsUsedCombinedModeOverMapDibIndex = combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
 		tmpData.itsZoomedAreaStr = mapHandler.Area() ? mapHandler.Area()->AreaStr() : "";
 		helperList.push_back(tmpData);
 	}
@@ -1037,16 +1056,24 @@ std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetVi
 
 void NFmiMapViewDescTop::SetViewMacroDipMapHelperList(const std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> &theData)
 {
-	size_t ssize1 = itsGdiPlusImageMapHandlerList.size();
-	size_t ssize2 = theData.size();
-	size_t usedSize = FmiMin(ssize1, ssize2);
-	for(size_t i = 0; i < usedSize; i++)
+#ifdef min
+#undef min
+#endif
+
+	auto ssize1 = static_cast<unsigned int>(itsGdiPlusImageMapHandlerList.size());
+	auto ssize2 = static_cast<unsigned int>(theData.size());
+	unsigned int usedSize = std::min(ssize1, ssize2);
+	for(unsigned int mapAreaIndex = 0; mapAreaIndex < usedSize; mapAreaIndex++)
 	{
-		const NFmiMapViewDescTop::ViewMacroDipMapHelper &tmpData = theData[i];
-		NFmiGdiPlusImageMapHandler &mapHandler = *(itsGdiPlusImageMapHandlerList[i]);
+		const NFmiMapViewDescTop::ViewMacroDipMapHelper &tmpData = theData[mapAreaIndex];
+		NFmiGdiPlusImageMapHandler &mapHandler = *(itsGdiPlusImageMapHandlerList[mapAreaIndex]);
 
 		mapHandler.UsedMapIndex(tmpData.itsUsedMapIndex);
 		mapHandler.OverMapBitmapIndex(tmpData.itsUsedOverMapDibIndex);
+
+		auto& combinedMapHandler = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetCombinedMapHandlerInterface();
+		combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeMapIndex);
+		combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeOverMapDibIndex);
 
 		mapHandler.Area(NFmiAreaFactory::Create(static_cast<char*>(tmpData.itsZoomedAreaStr)));
 	}
