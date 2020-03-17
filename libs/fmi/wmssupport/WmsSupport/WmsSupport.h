@@ -47,10 +47,10 @@ namespace Wms
         // Tähän talletetaan yhden karttanäytön kartta-alueiden 1-4 kokonaistilat
         using MapViewStaticMapClientState = std::map<unsigned int, StaticMapClientState>;
         // Tähän talletetaan kaikkien karttanäyttöjen (1-3) kaikkien kartta-alueiden tilat
-        using TotlalMapViewStaticMapClientState = std::map<unsigned int, MapViewStaticMapClientState>;
+        using TotalMapViewStaticMapClientState = std::map<unsigned int, MapViewStaticMapClientState>;
 
         // Tee jokaiselle map-view:lle (1-3) oma client ratkaisu ja tee oma jokaiselle kartta-alueelle (suomi, skand, euro, maailma) ,eli yht. 12 kpl.
-        TotlalMapViewStaticMapClientState totalMapViewStaticMapClientState_;
+        TotalMapViewStaticMapClientState totalMapViewStaticMapClientState_;
 
         std::map<int, std::unique_ptr<WmsClient>> dynamicClients_;
         std::unique_ptr<CapabilitiesHandler> capabilitiesHandler_;
@@ -81,11 +81,10 @@ namespace Wms
         NFmiImageHolder getDynamicImage(long producerId, long paramId, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) override;
         void kill() override;
         bool isDead(std::chrono::milliseconds wait) const override;
-
+        StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
 
         void fillDynamicClients(const std::unordered_map<int, DynamicServerSetup> &serverSetups, const std::string& proxyUrl);
         std::unique_ptr<WmsClient> createClient(const DynamicServerSetup &setup, const std::string& proxyUrl);
-        StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex);
     private:
         StaticMapClientState createStaticMapClientState();
         MapViewStaticMapClientState createMapViewStaticMapClientState(unsigned int mapAreaCount);
