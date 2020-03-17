@@ -59,12 +59,14 @@ public:
 		// dipmaphandler osio pit‰‰ ottaa t‰h‰n erikois k‰sittelyyn
 		int itsUsedMapIndex;
 		int itsUsedOverMapDibIndex;
+		int itsUsedCombinedModeMapIndex;
+		int itsUsedCombinedModeOverMapDibIndex;
 		NFmiString itsZoomedAreaStr;
 	};
 
 
 	NFmiMapViewDescTop(void);
-	NFmiMapViewDescTop(const std::string &theSettingsBaseName, NFmiMapConfigurationSystem *theMapConfigurationSystem, NFmiProjectionCurvatureInfo* theProjectionCurvatureInfo, const std::string &theControlPath);
+	NFmiMapViewDescTop(const std::string &theSettingsBaseName, NFmiMapConfigurationSystem *theMapConfigurationSystem, NFmiProjectionCurvatureInfo* theProjectionCurvatureInfo, const std::string &theControlPath, int theMapViewDescTopIndex);
 	~NFmiMapViewDescTop(void);
 
 	void Init(NFmiMapViewWinRegistry &theMapViewWinRegistry);
@@ -205,6 +207,7 @@ private:
     void UpdateOneMapViewSize();
 
 	std::string itsSettingsBaseName; // t‰ll‰ aloitus pohjalla luetaan conffi fileist‰ tarvittavat alustukset (esim. "MapViewDescTop::map1")
+	int itsMapViewDescTopIndex; // Joskus luokan pit‰‰ tiet‰‰ mik‰ descTop itse on
 	NFmiMapConfigurationSystem *itsMapConfigurationSystem; // t‰m‰ on dokumentin omistuksessa
 	NFmiProjectionCurvatureInfo* itsProjectionCurvatureInfo; // t‰m‰ on dokumentin omistuksessa
 
