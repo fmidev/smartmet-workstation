@@ -7,6 +7,11 @@
 
 class NFmiArea;
 
+namespace Wms
+{
+    class StaticMapClientState;
+}
+
 // Interface that is meant to be used instead actual Wms::WmsSupport implementation class.
 class WmsSupportInterface
 {
@@ -33,6 +38,7 @@ public:
     virtual NFmiImageHolder getDynamicImage(long producerId, long paramId, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) = 0;
     virtual void kill() = 0;
     virtual bool isDead(std::chrono::milliseconds wait) const = 0;
+    virtual Wms::StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual const Wms::CapabilityTree& peekCapabilityTree() const = 0;
