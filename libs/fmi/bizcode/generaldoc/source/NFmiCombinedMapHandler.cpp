@@ -37,6 +37,7 @@
 #include "FmiModifyDrawParamDlg.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiMacroPathSettings.h"
+#include "wmssupport/WmsSupportState.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -677,6 +678,7 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 
 		initLandBorderDrawingSystem();
 		initWmsSupport();
+		initCombinedMapStates();
 	}
 	catch(std::exception & e)
 	{
@@ -684,6 +686,41 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 		errStr += " - Initialization error in configurations: \n";
 		errStr += e.what();
 		logAndWarnUser(errStr, "Problems with map view settings", CatLog::Severity::Error, CatLog::Category::Configuration, true);
+	}
+}
+
+std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFmiCombinedMapHandler::makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedMapLayerCount, bool doBackgroundCase)
+{
+	MapViewCombinedMapModeState mapViewState;
+
+	auto* mainMapViewDescTop = getMapViewDescTop(0);
+	auto& mapHandlerVector = mainMapViewDescTop->GdiPlusImageMapHandlerList();
+	auto mapAreaCount = static_cast<unsigned int>(mapHandlerVector.size());
+	for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+	{
+		NFmiCombinedMapModeState mapAreaState;
+		auto& mapHandler = mapHandlerVector[mapAreaIndex];
+		auto localLayerCount = doBackgroundCase ? mapHandler->MapSize() : mapHandler->OverMapSize();
+		mapAreaState.initialize(mapHandler->MapSize(), usedMapLayerCount);
+		// Otetaan valittu indeksi näin aluksi suoraan lokaali kartta asetuksesta
+		mapAreaState.combinedModeMapIndex(mapHandler->UsedMapIndex());
+		mapViewState.emplace(mapAreaIndex, mapAreaState);
+	}
+
+	return std::make_pair(mapViewIndex, mapViewState);
+}
+
+void NFmiCombinedMapHandler::initCombinedMapStates()
+{
+	auto* mainMapViewDescTop = getMapViewDescTop(0);
+	auto mapViewCount = static_cast<unsigned int>(mapViewDescTops_.size());
+	auto wmsBackgroundMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getBackgroundsLength());
+	auto wmsOverlayMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getOverlaysLenght());
+
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		combinedBackgroundMapModeStates_.emplace(makeTotalMapViewCombinedMapModeState(mapViewIndex, wmsBackgroundMapLayerCount, true));
+		combinedOverlayMapModeStates_.emplace(makeTotalMapViewCombinedMapModeState(mapViewIndex, wmsOverlayMapLayerCount, false));
 	}
 }
 
@@ -711,7 +748,7 @@ std::unique_ptr<NFmiMapViewDescTop> NFmiCombinedMapHandler::createMapViewDescTop
 {
 	doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	std::string currentSettingStr = getMapViewDescTopSettingString(baseSettingStr, mapViewIndex);
-	auto descTop = std::make_unique<NFmiMapViewDescTop>(currentSettingStr, mapConfigurationSystem_.get(), projectionCurvatureInfo_.get(), absoluteControlPath_);
+	auto descTop = std::make_unique<NFmiMapViewDescTop>(currentSettingStr, mapConfigurationSystem_.get(), projectionCurvatureInfo_.get(), absoluteControlPath_, mapViewIndex);
 	auto& applicationWinRegistry = ::getApplicationWinRegistry();
 	descTop->MapViewCache().MaxSizeMB(applicationWinRegistry.MapViewCacheMaxSizeInMB());
 	descTop->Init(*applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(mapViewIndex));
@@ -3107,6 +3144,11 @@ void NFmiCombinedMapHandler::changeFileBitmapMapType(unsigned int mapViewDescTop
 
 void NFmiCombinedMapHandler::changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward)
 {
+	// 1. Ollaanko nyt lokaali vain Wms puolella?
+	// Onko käytössä joku total indeksi vai bool tyyppinen local/wms?
+	// 2. Mille puolelle menee seuraava/edellinen?
+	// Laske uusi indeksi ja tee hypyt molempiin suuntiin
+
 //	changeFileBitmapMapType(mapViewDescTopIndex, goForward);
 }
 
@@ -3707,4 +3749,14 @@ bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
 		return !::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
 	}
 	return true;
+}
+
+NFmiCombinedMapModeState& NFmiCombinedMapHandler::getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex)
+{
+	return combinedBackgroundMapModeStates_.at(mapViewDescTopIndex).at(mapAreaIndex);
+}
+
+NFmiCombinedMapModeState& NFmiCombinedMapHandler::getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex)
+{
+	return combinedOverlayMapModeStates_.at(mapViewDescTopIndex).at(mapAreaIndex);
 }

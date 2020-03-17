@@ -4,6 +4,7 @@
 #include "catlog/catlog.h"
 #include "NFmiDataMatrix.h"
 #include "NFmiPtrList.h"
+#include "NFmiCombinedMapModeState.h"
 
 #include <boost/shared_ptr.hpp>
 #include <vector>
@@ -32,6 +33,11 @@ namespace Imagine
 // This has local bitmaps and interface to wms-server clients as well.
 class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
 {
+    // Tähän talletetaan yhden karttanäytön kartta-alueiden 1-4 combined-mode tilat
+    using MapViewCombinedMapModeState = std::map<unsigned int, NFmiCombinedMapModeState>;
+    // Tähän talletetaan kaikkien karttanäyttöjen (1-3) kaikkien kartta-alueiden combined-mode tilat
+    using TotalMapViewCombinedMapModeState = std::map<unsigned int, MapViewCombinedMapModeState>;
+
     std::string absoluteControlPath_;
     // Tähän tulee kaikkien eri mapview (1-3) desctoppien tiedot
     MapViewDescTopVector mapViewDescTops_;
@@ -74,6 +80,10 @@ class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
     std::unique_ptr<NFmiPtrList<NFmiDrawParamList>> copyPasteDrawParamListVector_;
     // Onko yhtään copy komentoa tehty vielä, vaikuttaa siihen ilmestyykö pop-up valikkoon paste
     bool copyPasteDrawParamListVectorUsedYet_ = false;
+
+    // ******* Itse combined map moodiin liittyviä muuttujia *****************
+    TotalMapViewCombinedMapModeState combinedBackgroundMapModeStates_;
+    TotalMapViewCombinedMapModeState combinedOverlayMapModeStates_;
 
 public:
     ~NFmiCombinedMapHandler();
@@ -227,6 +237,8 @@ public:
     bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
     bool wmsSupportAvailable() const override;
     bool localOnlyMapModeUsed() const override;
+    NFmiCombinedMapModeState& getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
+    NFmiCombinedMapModeState& getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
 
 private:
     std::unique_ptr<NFmiMapViewDescTop> createMapViewDescTop(const std::string& baseSettingStr, int mapViewIndex);
@@ -236,6 +248,8 @@ private:
     void initMapConfigurationSystem();
     void initProjectionCurvatureInfo();
     void initLandBorderDrawingSystem();
+    std::pair<unsigned int, MapViewCombinedMapModeState> makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedMapLayerCount, bool doBackgroundCase);
+    void initCombinedMapStates();
     void doCutBorderDrawInitialization();
     void makeNeededDirtyOperationsWhenDataAdded(unsigned int mapViewDescTopIndex, NFmiFastQueryInfo& fastInfo, NFmiInfoData::Type dataType, const NFmiTimeBag& dirtyViewTimes, const std::string& fileName);
     void logMessage(const std::string &logMessage, CatLog::Severity severity, CatLog::Category category);
