@@ -76,6 +76,7 @@ class NFmiColorContourLegendSettings;
 class NFmiFixedDrawParamSystem;
 class NFmiMacroPathSettings;
 class WmsSupportInterface;
+class CombinedMapHandlerInterface;
 
 namespace Imagine
 {
@@ -395,6 +396,7 @@ public:
     virtual NFmiMacroPathSettings& MacroPathSettings() = 0;
     virtual int CurrentCrossSectionRowIndex() = 0;
     virtual bool UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
+    virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
 
 
 #ifndef DISABLE_CPPRESTSDK

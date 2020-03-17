@@ -290,6 +290,7 @@ public:
     NFmiMacroPathSettings& MacroPathSettings() override;
     int CurrentCrossSectionRowIndex() override;
     bool UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
+    CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

@@ -1395,6 +1395,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMapDrawForThisDescTop(uns
     return itsDoc->GetCombinedMapHandler()->useWmsMapDrawForThisDescTop(mapViewDescTopIndex);
 }
 
+CombinedMapHandlerInterface& CtrlViewDocumentInterfaceForGeneralDataDoc::GetCombinedMapHandlerInterface()
+{
+    return *itsDoc->GetCombinedMapHandler();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 
