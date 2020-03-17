@@ -3054,6 +3054,7 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 // ********** WMS *************************
 // HUOM!!! Älä lisää Wms parametreja popup-valikkoon, niitä on niin paljon, että Windows:in popup-menu sekoaa ja sen systeemit
 // menee yli rajojen. Olen joskus testannut että popupit alkavat sekoamaan, kun niissä on yli n. satatuhatta menu-item:ia.
+// Katso jos jostain löytyisi parempi popup-valikoiden teko mekanismi.
 //    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
 
 // ********** lisätään apudata-parametri osa *************************
