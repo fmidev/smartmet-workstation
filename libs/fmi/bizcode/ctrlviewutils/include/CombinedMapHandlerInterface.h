@@ -25,6 +25,7 @@ class NFmiDataIdent;
 class NFmiLevel;
 class NFmiProjectionCurvatureInfo;
 class WmsSupportInterface;
+class NFmiCombinedMapModeState;
 
 namespace CtrlViewUtils
 {
@@ -188,6 +189,8 @@ public:
     virtual bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
     virtual bool wmsSupportAvailable() const = 0;
     virtual bool localOnlyMapModeUsed() const = 0;
+    virtual NFmiCombinedMapModeState& getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
+    virtual NFmiCombinedMapModeState& getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
 
 
     // Staattiset perushelper-funktiot
