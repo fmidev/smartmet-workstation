@@ -154,9 +154,6 @@ NFmiMapViewWinRegistry::NFmiMapViewWinRegistry(void)
 ,mBaseRegistryPath()
 ,mSectionName()
 ,mMapIndex(-1)
-,mShowMasksOnMap()
-,mShowStationPlot()
-,mViewGridSizeStr()
 {
 }
 
@@ -180,6 +177,8 @@ bool NFmiMapViewWinRegistry::Init(const std::string &baseRegistryPath, int mapIn
     mSelectedMapIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\SelectedMapIndex", usedKey, 1, std::string(mapViewBaseSettingsKey + "SelectedMap").c_str());
     mShowStationPlot = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionName, "\\ShowStationPlot", usedKey, false, std::string(mapViewBaseSettingsKey + "ShowStationPlot").c_str());
     mViewGridSizeStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\ViewGridSize", usedKey, "1,1", std::string(mapViewBaseSettingsKey + "ViewGridSize").c_str());
+    mCombinedMapModeSelectedBackgroundIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedBackgroundIndices", usedKey, "4:0,0,0,0");
+    mCombinedMapModeSelectedOverlayIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedOverlayIndices", usedKey, "4:0,0,0,0");
 
     return true;
 }
@@ -241,6 +240,26 @@ std::string NFmiMapViewWinRegistry::ViewGridSizeStr() const
 void NFmiMapViewWinRegistry::ViewGridSizeStr(const std::string &newValue)
 {
     *mViewGridSizeStr = newValue;
+}
+
+std::string NFmiMapViewWinRegistry::CombinedMapModeSelectedBackgroundIndices() const
+{
+    return *mCombinedMapModeSelectedBackgroundIndicesStr;
+}
+
+void NFmiMapViewWinRegistry::CombinedMapModeSelectedBackgroundIndices(const std::string& newValue)
+{
+    *mCombinedMapModeSelectedBackgroundIndicesStr = newValue;
+}
+
+std::string NFmiMapViewWinRegistry::CombinedMapModeSelectedOverlayIndices() const
+{
+    return *mCombinedMapModeSelectedOverlayIndicesStr;
+}
+
+void NFmiMapViewWinRegistry::CombinedMapModeSelectedOverlayIndices(const std::string& newValue)
+{
+    *mCombinedMapModeSelectedOverlayIndicesStr = newValue;
 }
 
 // ******************************************************
