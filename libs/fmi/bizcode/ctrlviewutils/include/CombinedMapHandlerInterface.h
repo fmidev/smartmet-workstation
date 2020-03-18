@@ -58,7 +58,7 @@ public:
     virtual void timeSerialViewDirty(bool newValue) = 0;
     virtual MapViewDescTopVector& getMapViewDescTops() = 0;
     virtual SmartMetViewId getUpdatedViewIdMaskForChangingTime() = 0;
-    virtual NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) = 0;
+    virtual NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) const = 0;
     virtual void setMapArea(unsigned int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& newArea) = 0;
     virtual void storeMapViewSettingsToWinRegistry() = 0;
     virtual void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) = 0;
