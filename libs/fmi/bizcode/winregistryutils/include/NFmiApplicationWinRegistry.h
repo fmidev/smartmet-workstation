@@ -76,6 +76,10 @@ public:
 	void ShowStationPlot(bool newValue);
 	std::string ViewGridSizeStr() const;
 	void ViewGridSizeStr(const std::string &newValue);
+    std::string CombinedMapModeSelectedBackgroundIndices() const;
+    void CombinedMapModeSelectedBackgroundIndices(const std::string &newValue);
+    std::string CombinedMapModeSelectedOverlayIndices() const;
+    void CombinedMapModeSelectedOverlayIndices(const std::string& newValue);
 
 private:
     bool mInitialized; // ei sallita tupla initialisointia
@@ -86,10 +90,20 @@ private:
     // HKEY_CURRENT_USER -keys
 
     boost::shared_ptr<CachedRegBool> mShowMasksOnMap;
-    boost::shared_ptr<CachedRegInt> mSpacingOutFactor; // 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmän
-    boost::shared_ptr<CachedRegInt> mSelectedMapIndex; // 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
-	boost::shared_ptr<CachedRegBool> mShowStationPlot; // näytetäänkö se typerä asema piste vai ei?
-	boost::shared_ptr<CachedRegString> mViewGridSizeStr; // karttanäyttöruudukon koko (esim. 3 riviä, joissa 5 aikaa == NFmiPoint(5,3))
+    // 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmän
+    boost::shared_ptr<CachedRegInt> mSpacingOutFactor; 
+    // 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
+    boost::shared_ptr<CachedRegInt> mSelectedMapIndex; 
+    // näytetäänkö se typerä asema piste vai ei?
+	boost::shared_ptr<CachedRegBool> mShowStationPlot; 
+    // karttanäyttöruudukon koko (esim. 3 riviä, joissa 5 aikaa == NFmiPoint(5,3))
+    boost::shared_ptr<CachedRegString> mViewGridSizeStr; 
+    // Lokaali+wms karttojen yhdistelmä moodiin liittyvät valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
+    // Teksti on seuraavaa muotoa (tämä luokka ei tosin parseroi tai tee muuta kuin säilyttää stringin): 
+    // mapAreaCount:area1Index,area1Index,area1Index,area1Index     (esim. 4:2,1,4,3)
+    boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedBackgroundIndicesStr; 
+    // Vastaava teksti overlay kartta-alueiden indekseille
+    boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedOverlayIndicesStr;
 };
 
 // Poikkileikkausnäyttöjen asetuksia Windows rekisterissä, SmartMet konffi kohtaisia
