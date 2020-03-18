@@ -43,6 +43,8 @@
 #include "wmssupport/WmsSupport.h"
 #endif // DISABLE_CPPRESTSDK
 
+#include <boost/algorithm/string.hpp>
+
 namespace
 {
 	// Laitetaan tämä piiloon cpp tiedostoon, koska haluan tehdä Wms::WmsSupport -luokan objektin käyttöön tänne,
@@ -643,6 +645,42 @@ namespace
 			::initializeWantedDrawParams((*iter.CurrentPtr()), drawParam, useWithViewMacros);
 	}
 
+	// Lokaali+wms karttojen yhdistelmä moodiin liittyvät valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
+	// Teksti on seuraavaa muotoa (tämä luokka ei tosin parseroi tai tee muuta kuin säilyttää stringin): 
+	// mapAreaCount:area1Index,area1Index,area1Index,area1Index     (esim. 4:2,1,4,3)
+	std::vector<int> parseSelectedMapIndices(const std::string& indicesString)
+	{
+		std::vector<std::string> parts;
+		boost::split(parts, indicesString, boost::is_any_of(":"));
+		if(parts.size() != 2)
+		{
+			std::string errorMessage = std::string("Error in ") + __FUNCTION__ + ": splitting indicesString with ':' character resulted illegal number of parts with string'";
+			errorMessage += indicesString + "'";
+			throw std::runtime_error(errorMessage);
+		}
+		else
+		{
+			auto mapAreaCount = boost::lexical_cast<int>(parts[0]);
+			std::vector<std::string> indexParts;
+			boost::split(indexParts, parts[1], boost::is_any_of(","));
+			if(indexParts.size() != mapAreaCount)
+			{
+				std::string errorMessage = std::string("Error in ") + __FUNCTION__ + ": splitting indicesString with ',' character resulted illegal number of parts with string'";
+				errorMessage += indicesString + "'";
+				throw std::runtime_error(errorMessage);
+			}
+			else
+			{
+				std::vector<int> indices;
+				for(const auto& indexString : indexParts)
+				{
+					indices.push_back(boost::lexical_cast<int>(indexString));
+				}
+				return indices;
+			}
+		}
+	}
+
 } // nameless namespace ends
 
 
@@ -693,17 +731,14 @@ std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFm
 {
 	MapViewCombinedMapModeState mapViewState;
 
-	auto* mainMapViewDescTop = getMapViewDescTop(0);
-	auto& mapHandlerVector = mainMapViewDescTop->GdiPlusImageMapHandlerList();
-	auto mapAreaCount = static_cast<unsigned int>(mapHandlerVector.size());
+	auto& mapHandlerVector = getMapViewDescTop(mapViewIndex)->GdiPlusImageMapHandlerList();
+	auto mapAreaCount = getMapAreaCount();
 	for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
 	{
 		NFmiCombinedMapModeState mapAreaState;
 		auto& mapHandler = mapHandlerVector[mapAreaIndex];
 		auto localLayerCount = doBackgroundCase ? mapHandler->MapSize() : mapHandler->OverMapSize();
 		mapAreaState.initialize(mapHandler->MapSize(), usedMapLayerCount);
-		// Otetaan valittu indeksi näin aluksi suoraan lokaali kartta asetuksesta
-		mapAreaState.combinedModeMapIndex(mapHandler->UsedMapIndex());
 		mapViewState.emplace(mapAreaIndex, mapAreaState);
 	}
 
@@ -712,8 +747,7 @@ std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFm
 
 void NFmiCombinedMapHandler::initCombinedMapStates()
 {
-	auto* mainMapViewDescTop = getMapViewDescTop(0);
-	auto mapViewCount = static_cast<unsigned int>(mapViewDescTops_.size());
+	auto mapViewCount = getMapViewCount();
 	auto wmsBackgroundMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getBackgroundsLength());
 	auto wmsOverlayMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getOverlaysLenght());
 
@@ -722,6 +756,107 @@ void NFmiCombinedMapHandler::initCombinedMapStates()
 		combinedBackgroundMapModeStates_.emplace(makeTotalMapViewCombinedMapModeState(mapViewIndex, wmsBackgroundMapLayerCount, true));
 		combinedOverlayMapModeStates_.emplace(makeTotalMapViewCombinedMapModeState(mapViewIndex, wmsOverlayMapLayerCount, false));
 	}
+	initCombinedMapSelectionIndices();
+	initWmsSupportSelectionIndices();
+}
+
+static std::string makeSelectedMapIndicesString(const std::vector<int>& indices)
+{
+	std::string indicesString;
+	indicesString += std::to_string(indices.size());
+	indicesString += ":";
+	for(auto index : indices)
+	{
+		indicesString += std::to_string(index);
+		indicesString += ",";
+	}
+	// Poistetaan viimeisen numeron jälkeinen pilkku, pilkku tulee loopissa jokaisen indeksin perään, ja näin poppaamalla koodi on yksinkertaisempaa.
+	indicesString.pop_back(); 
+	return indicesString;
+}
+
+void NFmiCombinedMapHandler::storeCombinedMapStates()
+{
+	auto mapViewCount = getMapViewCount();
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex);
+		std::vector<int> backgroundIndices;
+		std::vector<int> overlayIndices;
+		auto mapAreaCount = getMapAreaCount();
+		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+		{
+			backgroundIndices.push_back(getCombinedMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex());
+			overlayIndices.push_back(getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex());
+		}
+		auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex);
+		mapViewWinRegistry->CombinedMapModeSelectedBackgroundIndices(::makeSelectedMapIndicesString(backgroundIndices));
+		mapViewWinRegistry->CombinedMapModeSelectedOverlayIndices(::makeSelectedMapIndicesString(overlayIndices));
+	}
+}
+
+std::vector<int> NFmiCombinedMapHandler::getCombinedModeSelectedMapIndicesFromWinRegistry(unsigned int mapViewDescTopIndex, bool doBackgroundMaps)
+{
+	auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex);
+	auto selectedMapIndicesStr = doBackgroundMaps ? mapViewWinRegistry->CombinedMapModeSelectedBackgroundIndices() : mapViewWinRegistry->CombinedMapModeSelectedOverlayIndices();
+	return ::parseSelectedMapIndices(selectedMapIndicesStr);
+}
+
+void NFmiCombinedMapHandler::initCombinedMapSelectionIndices()
+{
+	auto mapViewCount = getMapViewCount();
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex);
+		auto backgroundIndices = getCombinedModeSelectedMapIndicesFromWinRegistry(mapViewIndex, true);
+		auto overlayIndices = getCombinedModeSelectedMapIndicesFromWinRegistry(mapViewIndex, false);
+		auto mapAreaCount = getMapAreaCount();
+		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+		{
+			if(mapAreaIndex < backgroundIndices.size())
+				getCombinedMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex(backgroundIndices[mapAreaIndex]);
+			if(mapAreaIndex < overlayIndices.size())
+				getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex(overlayIndices[mapAreaIndex]);
+		}
+	}
+}
+
+
+void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
+{
+	auto &wmsSupport = getWmsSupport();
+	auto mapViewCount = getMapViewCount();
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		auto mapAreaCount = getMapAreaCount();
+		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+		{
+			auto &staticMapClientState = wmsSupport.getStaticMapClientState(mapViewIndex, mapAreaIndex);
+			// Tehdään ensin background map indeksin asetus
+			auto& combinedMapModeState = getCombinedMapModeState(mapViewIndex, mapAreaIndex);
+			int usedBackgroundIndex = 0; // Asetetaan oletuksena 0 indeksi päälle valituksi wms layeriksi
+			if(!combinedMapModeState.isLocalMapInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
+				usedBackgroundIndex = combinedMapModeState.currentMapSectionIndex(); // asetetaan wms lohkoon laskettu indeksi valituksi
+			staticMapClientState.state_->setBackgroundIndex(usedBackgroundIndex);
+
+			// Tehdään sitten overlay map indeksin asetus
+			auto& combinedOverlayMapModeState = getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex);
+			int usedOverlayIndex = 0; // Asetetaan oletuksena 0 indeksi päälle valituksi wms layeriksi
+			if(!combinedOverlayMapModeState.isLocalMapInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
+				usedOverlayIndex = combinedOverlayMapModeState.currentMapSectionIndex(); // asetetaan wms lohkoon laskettu indeksi valituksi
+			staticMapClientState.state_->setOverlayIndex(usedOverlayIndex);
+		}
+	}
+}
+
+unsigned int NFmiCombinedMapHandler::getMapViewCount() const
+{
+	return static_cast<unsigned int>(mapViewDescTops_.size());
+}
+
+unsigned int NFmiCombinedMapHandler::getMapAreaCount() const
+{
+	return static_cast<unsigned int>(getMapViewDescTop(0)->GdiPlusImageMapHandlerList().size());
 }
 
 void NFmiCombinedMapHandler::initCrossSectionDrawParamListVector()
@@ -734,6 +869,8 @@ void NFmiCombinedMapHandler::storeMapViewDescTopToSettings()
 {
 	for(const auto& mapViewDescTop : mapViewDescTops_)
 		mapViewDescTop->StoreMapViewDescTopToSettings();
+
+	storeCombinedMapStates();
 }
 
 bool NFmiCombinedMapHandler::wmsSupportAvailable() const
@@ -1082,7 +1219,7 @@ void NFmiCombinedMapHandler::checkAnimationLockedModeTimeBags(unsigned int mapVi
 	}
 }
 
-NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapViewDescTopIndex)
+NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapViewDescTopIndex) const
 {
 	if(mapViewDescTops_.empty())
 		throw std::runtime_error(std::string(__FUNCTION__) + " - itsMapViewDescTopList was empty, error in program.");
