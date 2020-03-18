@@ -243,6 +243,7 @@ public:
 private:
     unsigned int getMapViewCount() const;
     unsigned int getMapAreaCount() const;
+    unsigned int getCurrentMapAreaIndex(unsigned int mapViewDescTopIndex) const;
     std::unique_ptr<NFmiMapViewDescTop> createMapViewDescTop(const std::string& baseSettingStr, int mapViewIndex);
     std::string getMapViewDescTopSettingString(const std::string& baseStr, int mapViewDescTopIndex);
     void initWmsSupport();
