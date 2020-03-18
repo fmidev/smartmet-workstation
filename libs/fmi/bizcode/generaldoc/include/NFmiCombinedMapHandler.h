@@ -106,7 +106,7 @@ public:
     void timeSerialViewDirty(bool newValue) override;
     MapViewDescTopVector& getMapViewDescTops() override;
     SmartMetViewId getUpdatedViewIdMaskForChangingTime() override;
-    NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) override;
+    NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) const override;
     void setMapArea(unsigned int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& newArea) override;
     void storeMapViewSettingsToWinRegistry() override;
     void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) override;
@@ -241,6 +241,8 @@ public:
     NFmiCombinedMapModeState& getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
 
 private:
+    unsigned int getMapViewCount() const;
+    unsigned int getMapAreaCount() const;
     std::unique_ptr<NFmiMapViewDescTop> createMapViewDescTop(const std::string& baseSettingStr, int mapViewIndex);
     std::string getMapViewDescTopSettingString(const std::string& baseStr, int mapViewDescTopIndex);
     void initWmsSupport();
@@ -250,6 +252,10 @@ private:
     void initLandBorderDrawingSystem();
     std::pair<unsigned int, MapViewCombinedMapModeState> makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedMapLayerCount, bool doBackgroundCase);
     void initCombinedMapStates();
+    void storeCombinedMapStates();
+    void initCombinedMapSelectionIndices();
+    void initWmsSupportSelectionIndices();
+    std::vector<int> getCombinedModeSelectedMapIndicesFromWinRegistry(unsigned int mapViewDescTopIndex, bool doBackgroundMaps);
     void doCutBorderDrawInitialization();
     void makeNeededDirtyOperationsWhenDataAdded(unsigned int mapViewDescTopIndex, NFmiFastQueryInfo& fastInfo, NFmiInfoData::Type dataType, const NFmiTimeBag& dirtyViewTimes, const std::string& fileName);
     void logMessage(const std::string &logMessage, CatLog::Severity severity, CatLog::Category category);
