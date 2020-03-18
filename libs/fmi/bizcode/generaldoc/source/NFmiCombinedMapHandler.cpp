@@ -731,6 +731,7 @@ std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFm
 {
 	MapViewCombinedMapModeState mapViewState;
 
+	std::function<bool()> localOnlyMapModeUsedFunction = [this]() {return this->localOnlyMapModeUsed(); };
 	auto& mapHandlerVector = getMapViewDescTop(mapViewIndex)->GdiPlusImageMapHandlerList();
 	auto mapAreaCount = getMapAreaCount();
 	for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
@@ -738,7 +739,7 @@ std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFm
 		NFmiCombinedMapModeState mapAreaState;
 		auto& mapHandler = mapHandlerVector[mapAreaIndex];
 		auto localLayerCount = doBackgroundCase ? mapHandler->MapSize() : mapHandler->OverMapSize();
-		mapAreaState.initialize(mapHandler->MapSize(), usedMapLayerCount);
+		mapAreaState.initialize(mapHandler->MapSize(), usedMapLayerCount, localOnlyMapModeUsedFunction);
 		mapViewState.emplace(mapAreaIndex, mapAreaState);
 	}
 
@@ -780,7 +781,6 @@ void NFmiCombinedMapHandler::storeCombinedMapStates()
 	auto mapViewCount = getMapViewCount();
 	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
 	{
-		auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex);
 		std::vector<int> backgroundIndices;
 		std::vector<int> overlayIndices;
 		auto mapAreaCount = getMapAreaCount();
@@ -835,14 +835,14 @@ void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 			// Tehdään ensin background map indeksin asetus
 			auto& combinedMapModeState = getCombinedMapModeState(mapViewIndex, mapAreaIndex);
 			int usedBackgroundIndex = 0; // Asetetaan oletuksena 0 indeksi päälle valituksi wms layeriksi
-			if(!combinedMapModeState.isLocalMapInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
+			if(!combinedMapModeState.isLocalMapCurrentlyInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
 				usedBackgroundIndex = combinedMapModeState.currentMapSectionIndex(); // asetetaan wms lohkoon laskettu indeksi valituksi
 			staticMapClientState.state_->setBackgroundIndex(usedBackgroundIndex);
 
 			// Tehdään sitten overlay map indeksin asetus
 			auto& combinedOverlayMapModeState = getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex);
 			int usedOverlayIndex = 0; // Asetetaan oletuksena 0 indeksi päälle valituksi wms layeriksi
-			if(!combinedOverlayMapModeState.isLocalMapInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
+			if(!combinedOverlayMapModeState.isLocalMapCurrentlyInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
 				usedOverlayIndex = combinedOverlayMapModeState.currentMapSectionIndex(); // asetetaan wms lohkoon laskettu indeksi valituksi
 			staticMapClientState.state_->setOverlayIndex(usedOverlayIndex);
 		}
@@ -3291,10 +3291,27 @@ void NFmiCombinedMapHandler::changeMapTypeInCombinedMode(unsigned int mapViewDes
 
 void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, bool goForward)
 {
-	if(localOnlyMapModeUsed())
-		changeFileBitmapMapType(mapViewDescTopIndex, goForward);
+	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	auto& combinedMapModeState = getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex);
+	if(goForward)
+		combinedMapModeState.next();
 	else
-		changeMapTypeInCombinedMode(mapViewDescTopIndex, goForward);
+		combinedMapModeState.previous();
+
+	if(combinedMapModeState.isLocalMapCurrentlyInUse())
+		getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
+	else
+		wmsSupport_->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
+
+	//if(localOnlyMapModeUsed())
+	//	changeFileBitmapMapType(mapViewDescTopIndex, goForward);
+	//else
+	//	changeMapTypeInCombinedMode(mapViewDescTopIndex, goForward);
+}
+
+unsigned int NFmiCombinedMapHandler::getCurrentMapAreaIndex(unsigned int mapViewDescTopIndex) const
+{
+	return getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
 }
 
 void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward)
