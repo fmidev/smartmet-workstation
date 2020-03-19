@@ -38,6 +38,8 @@
 #include "SmartMetDocumentInterface.h"
 #include "NFmiMacroPathSettings.h"
 #include "wmssupport/WmsSupportState.h"
+#include "wmssupport/WmsClient.h"
+#include "wmssupport/Setup.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -3853,10 +3855,25 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedDrawParamForEdit
 		return ::getInfoOrganizer().CreateDrawParam(dataIdent, 0, NFmiInfoData::kEditable);
 }
 
-std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap, bool combinedMapMode)
+std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap)
 {
-	if(combinedMapMode)
+	if(useWmsMapDrawForThisDescTop(mapViewDescTopIndex))
 	{
+		auto &staticMapClientState = getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex));
+		if(backgroundMap)
+		{
+			auto mapLayerIndex = getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
+			auto& backgroundSetup = getWmsSupport().getSetup()->background;
+			if(mapLayerIndex >= backgroundSetup.parsedServers.size())
+				throw std::runtime_error("error on iso");
+			auto& usedLayerParsedServer = backgroundSetup.parsedServers[mapLayerIndex];
+			std::string layerName;
+			std::for_each(usedLayerParsedServer.layerGroup.begin(), usedLayerParsedServer.layerGroup.end(),
+				[&layerName](const auto& groupItem) {layerName += groupItem + ","; });
+
+			layerName.pop_back(); // poistetaan viimeinen pilkku
+			return layerName;
+		}
 		return "Wms-map-layer-name (server-name)";
 	}
 	else
@@ -3868,12 +3885,11 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopInd
 
 std::string NFmiCombinedMapHandler::getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
 {
-	auto combinedMapMode = ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
-	std::string mapLayerText = combinedMapMode ? "+" : "-";
+	std::string mapLayerText = localOnlyMapModeUsed() ? "-" : "+";
 	mapLayerText += ::GetDictionaryString("Map");
-	mapLayerText += combinedMapMode ? "[W]" : "[L]";
+	mapLayerText += useWmsMapDrawForThisDescTop(mapViewDescTopIndex) ? "[W]" : "[L]";
 	mapLayerText += ": ";
-	auto mapLayerName = getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap, combinedMapMode);
+	auto mapLayerName = getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap);
 	mapLayerText += mapLayerName;
 
 	return mapLayerText;
@@ -3894,8 +3910,7 @@ void NFmiCombinedMapHandler::useCombinedMapMode(bool newValue)
 
 bool NFmiCombinedMapHandler::useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
 {
-	// Toistaiseksi kaikki piirto tapahtuu käyttämällä lokaaleja valmiita karttakuvia
-	return false;
+	return getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
 }
 
 bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
