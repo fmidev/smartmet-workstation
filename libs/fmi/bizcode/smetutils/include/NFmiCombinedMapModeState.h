@@ -30,6 +30,7 @@ public:
 
     void next();
     void previous();
+    void changeLayer(bool goForward);
     int combinedModeMapIndex() const;
     void combinedModeMapIndex(int index);
     bool isLocalMapCurrentlyInUse() const;
