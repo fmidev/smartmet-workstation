@@ -2,12 +2,13 @@
 
 NFmiCombinedMapModeState::NFmiCombinedMapModeState() = default;
 
-void NFmiCombinedMapModeState::initialize(int localMapSize, int wmsMapSize, LocalOnlyMapModeUsedFunction & localOnlyMapModeUsedFunction)
+void NFmiCombinedMapModeState::initialize(int localMapSize, int wmsMapSize, LocalOnlyMapModeUsedFunction & localOnlyMapModeUsedFunction, bool backgroundCase)
 {
     localMapSize_ = localMapSize;
     wmsMapSize_ = wmsMapSize;
     totalMapSize_ = localMapSize_ + wmsMapSize_;
     localOnlyMapModeUsedFunction_ = localOnlyMapModeUsedFunction;
+    backgroundCase_ = backgroundCase;
 }
 
 void NFmiCombinedMapModeState::next()
@@ -85,7 +86,7 @@ int NFmiCombinedMapModeState::currentMapSectionIndex() const
 
 void NFmiCombinedMapModeState::checkIndexUnderFlow()
 {
-    if(combinedModeMapIndex_ < 0)
+    if(combinedModeMapIndex_ < getMinimumIndex())
     {
         if(isLocalOnlyMapModeInUse())
             combinedModeMapIndex_ = localMapSize_ - 1; // jos meni alle, mennään lokaali karttojen loppuun
@@ -100,10 +101,10 @@ void NFmiCombinedMapModeState::checkIndexOverFlow()
     if(isLocalOnlyMapModeInUse())
     {
         if(combinedModeMapIndex_ >= localMapSize_)
-            combinedModeMapIndex_ = 0; // jos meni yli, palataan alkuun
+            combinedModeMapIndex_ = getMinimumIndex(); // jos meni yli, palataan alkuun
     }
     else if(combinedModeMapIndex_ >= totalMapSize_)
-        combinedModeMapIndex_ = 0; // jos meni yli, palataan alkuun
+        combinedModeMapIndex_ = getMinimumIndex(); // jos meni yli, palataan alkuun
     updateLastUsedLocalModeMapIndex();
 }
 
@@ -111,4 +112,12 @@ void NFmiCombinedMapModeState::updateLastUsedLocalModeMapIndex()
 {
     if(isMapIndexInLocalSection())
         lastUsedLocalModeMapIndex_ = combinedModeMapIndex_;
+}
+
+int NFmiCombinedMapModeState::getMinimumIndex() const
+{
+    if(backgroundCase_)
+        return 0;
+    else
+        return -1;
 }
