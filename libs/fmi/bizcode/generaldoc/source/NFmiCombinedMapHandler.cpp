@@ -681,6 +681,17 @@ namespace
 		}
 	}
 
+	int calcInitialWmsLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState)
+	{
+		int usedWmsLayerIndex = 0; // Asetetaan oletuksena 0 valituksi wms layerin indeksiksi
+		if(!combinedMapModeState.isLocalMapCurrentlyInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
+		{
+			// asetetaan wms lohkoon laskettu indeksi valituksi
+			usedWmsLayerIndex = combinedMapModeState.currentMapSectionIndex();
+		}
+		return usedWmsLayerIndex;
+	}
+
 } // nameless namespace ends
 
 
@@ -821,7 +832,6 @@ void NFmiCombinedMapHandler::initCombinedMapSelectionIndices()
 	}
 }
 
-
 void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 {
 	auto &wmsSupport = getWmsSupport();
@@ -833,18 +843,10 @@ void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 		{
 			auto &staticMapClientState = wmsSupport.getStaticMapClientState(mapViewIndex, mapAreaIndex);
 			// Tehdään ensin background map indeksin asetus
-			auto& combinedMapModeState = getCombinedMapModeState(mapViewIndex, mapAreaIndex);
-			int usedBackgroundIndex = 0; // Asetetaan oletuksena 0 indeksi päälle valituksi wms layeriksi
-			if(!combinedMapModeState.isLocalMapCurrentlyInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
-				usedBackgroundIndex = combinedMapModeState.currentMapSectionIndex(); // asetetaan wms lohkoon laskettu indeksi valituksi
-			staticMapClientState.state_->setBackgroundIndex(usedBackgroundIndex);
+			staticMapClientState.state_->setBackgroundIndex(::calcInitialWmsLayerIndex(getCombinedMapModeState(mapViewIndex, mapAreaIndex)));
 
 			// Tehdään sitten overlay map indeksin asetus
-			auto& combinedOverlayMapModeState = getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex);
-			int usedOverlayIndex = 0; // Asetetaan oletuksena 0 indeksi päälle valituksi wms layeriksi
-			if(!combinedOverlayMapModeState.isLocalMapCurrentlyInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
-				usedOverlayIndex = combinedOverlayMapModeState.currentMapSectionIndex(); // asetetaan wms lohkoon laskettu indeksi valituksi
-			staticMapClientState.state_->setOverlayIndex(usedOverlayIndex);
+			staticMapClientState.state_->setOverlayIndex(::calcInitialWmsLayerIndex(getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex)));
 		}
 	}
 }
@@ -3303,10 +3305,9 @@ void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, boo
 	else
 		wmsSupport_->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
 
-	//if(localOnlyMapModeUsed())
-	//	changeFileBitmapMapType(mapViewDescTopIndex, goForward);
-	//else
-	//	changeMapTypeInCombinedMode(mapViewDescTopIndex, goForward);
+	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1) + "background map style changed";
+	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(refreshMessage);
 }
 
 unsigned int NFmiCombinedMapHandler::getCurrentMapAreaIndex(unsigned int mapViewDescTopIndex) const
