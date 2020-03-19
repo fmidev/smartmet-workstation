@@ -8204,8 +8204,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
 	{
 		GetCombinedMapHandler()->changeMapType(theDescTopIndex, fForward);
-        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's background map style changed");
 	}
 
     // Tämä asettaa maskOnMap -asetuksen kahteen paikkaan, windows rekistereihin ja 
