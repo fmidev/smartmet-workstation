@@ -235,6 +235,7 @@ public:
     void makeWholeDesctopDirtyActions(unsigned int mapViewDescTopIndex, NFmiPtrList<NFmiDrawParamList>* drawParamListVector) override;
     boost::shared_ptr<NFmiDrawParam> getDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
+    bool useWmsOverlayMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
     bool wmsSupportAvailable() const override;
     bool localOnlyMapModeUsed() const override;
     NFmiCombinedMapModeState& getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
@@ -293,4 +294,6 @@ private:
     void changeWmsMapType(unsigned int mapViewDescTopIndex, bool goForward);
     void changeFileBitmapMapType(unsigned int mapViewDescTopIndex, bool goForward);
     void changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward);
+    void setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase);
+    void mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string& refreshMessage);
 };
