@@ -86,13 +86,23 @@ int NFmiCombinedMapModeState::currentMapSectionIndex() const
 void NFmiCombinedMapModeState::checkIndexUnderFlow()
 {
     if(combinedModeMapIndex_ < 0)
-        combinedModeMapIndex_ = totalMapSize_ - 1; // jos meni alle, mennään loppuun
+    {
+        if(isLocalOnlyMapModeInUse())
+            combinedModeMapIndex_ = localMapSize_ - 1; // jos meni alle, mennään lokaali karttojen loppuun
+        else
+            combinedModeMapIndex_ = totalMapSize_ - 1; // jos meni alle, mennään totaali karttojen loppuun
+    }
     updateLastUsedLocalModeMapIndex();
 }
 
 void NFmiCombinedMapModeState::checkIndexOverFlow()
 {
-    if(combinedModeMapIndex_ >= totalMapSize_)
+    if(isLocalOnlyMapModeInUse())
+    {
+        if(combinedModeMapIndex_ >= localMapSize_)
+            combinedModeMapIndex_ = 0; // jos meni yli, palataan alkuun
+    }
+    else if(combinedModeMapIndex_ >= totalMapSize_)
         combinedModeMapIndex_ = 0; // jos meni yli, palataan alkuun
     updateLastUsedLocalModeMapIndex();
 }
