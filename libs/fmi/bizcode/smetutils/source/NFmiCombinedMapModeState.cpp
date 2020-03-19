@@ -25,6 +25,14 @@ void NFmiCombinedMapModeState::previous()
     checkIndexUnderFlow();
 }
 
+void NFmiCombinedMapModeState::changeLayer(bool goForward)
+{
+    if(goForward)
+        next();
+    else
+        previous();
+}
+
 int NFmiCombinedMapModeState::combinedModeMapIndex() const
 {
     return combinedModeMapIndex_;
