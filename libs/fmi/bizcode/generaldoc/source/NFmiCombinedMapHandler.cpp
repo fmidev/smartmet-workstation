@@ -752,7 +752,7 @@ std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFm
 		NFmiCombinedMapModeState mapAreaState;
 		auto& mapHandler = mapHandlerVector[mapAreaIndex];
 		auto localLayerCount = doBackgroundCase ? mapHandler->MapSize() : mapHandler->OverMapSize();
-		mapAreaState.initialize(mapHandler->MapSize(), usedMapLayerCount, localOnlyMapModeUsedFunction);
+		mapAreaState.initialize(mapHandler->MapSize(), usedMapLayerCount, localOnlyMapModeUsedFunction, doBackgroundCase);
 		mapViewState.emplace(mapAreaIndex, mapAreaState);
 	}
 

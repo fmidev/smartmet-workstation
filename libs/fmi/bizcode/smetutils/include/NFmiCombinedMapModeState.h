@@ -22,9 +22,11 @@ class NFmiCombinedMapModeState
     int lastUsedLocalModeMapIndex_ = 0;
     // Tämän avulla kysytään ollaanko lokaali vai combined-map moodissa.
     LocalOnlyMapModeUsedFunction localOnlyMapModeUsedFunction_;
+    // Ollaanko background vai overlay tilassa. Overlay tilassa on myös indeksi -1, jolloin ei piirretä mitään.
+    bool backgroundCase_ = true;
 public:
     NFmiCombinedMapModeState();
-    void initialize(int localMapSize, int wmsMapSize, LocalOnlyMapModeUsedFunction &localOnlyMapModeUsedFunction);
+    void initialize(int localMapSize, int wmsMapSize, LocalOnlyMapModeUsedFunction &localOnlyMapModeUsedFunction, bool backgroundCase);
 
     void next();
     void previous();
@@ -40,4 +42,5 @@ private:
     void mapIndexIsAboutToChangeChecks();
     bool isMapIndexInLocalSection() const;
     void updateLastUsedLocalModeMapIndex();
+    int getMinimumIndex() const;
 };
