@@ -3910,7 +3910,7 @@ void NFmiCombinedMapHandler::useCombinedMapMode(bool newValue)
 
 bool NFmiCombinedMapHandler::useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
 {
-	return getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
+	return !getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
 }
 
 bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
