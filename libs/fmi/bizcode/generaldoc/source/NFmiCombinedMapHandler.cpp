@@ -3297,19 +3297,35 @@ void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, boo
 {
 	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
 	auto& combinedMapModeState = getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex);
-	if(goForward)
-		combinedMapModeState.next();
-	else
-		combinedMapModeState.previous();
+	combinedMapModeState.changeLayer(goForward);
+	setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, true);
+	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1) + "background map layer changed";
+	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
+}
 
-	if(combinedMapModeState.isLocalMapCurrentlyInUse())
-		getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
+void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase)
+{
+	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	if(backgroundCase)
+	{
+		if(combinedMapModeState.isLocalMapCurrentlyInUse())
+			getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
+		else
+			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
+	}
 	else
-		wmsSupport_->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
+	{
+		if(combinedMapModeState.isLocalMapCurrentlyInUse())
+			getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->OverMapBitmapIndex(combinedMapModeState.currentMapSectionIndex());
+		else
+			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
+	}
+}
 
+void NFmiCombinedMapHandler::mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string &refreshMessage)
+{
 	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
-	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1) + "background map style changed";
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(refreshMessage);
 }
 
@@ -3320,14 +3336,12 @@ unsigned int NFmiCombinedMapHandler::getCurrentMapAreaIndex(unsigned int mapView
 
 void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward)
 {
-	//if(UseWmsMaps())
-	//	ChangeWmsOverlayMapType(mapViewDescTopIndex, goForward);
-	//else
-	changeFileBitmapOverlayMapType(mapViewDescTopIndex, goForward);
-
-	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
-	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
-	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
+	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	auto& combinedMapModeState = getCombinedOverlayMapModeState(mapViewDescTopIndex, mapAreaIndex);
+	combinedMapModeState.changeLayer(goForward);
+	setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, false);
+	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1) + "overlay map layer changed";
+	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
 }
 
 // scrollaa näyttöriveja halutun määrän (negatiivinen skrollaa ylös ja positiivinen count alas)
@@ -3911,6 +3925,11 @@ void NFmiCombinedMapHandler::useCombinedMapMode(bool newValue)
 bool NFmiCombinedMapHandler::useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
 {
 	return !getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
+}
+
+bool NFmiCombinedMapHandler::useWmsOverlayMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
+{
+	return !getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
 }
 
 bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
