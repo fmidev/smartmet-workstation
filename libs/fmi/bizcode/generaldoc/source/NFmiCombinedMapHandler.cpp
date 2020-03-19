@@ -3305,6 +3305,7 @@ void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, boo
 	else
 		wmsSupport_->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
 
+	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1) + "background map style changed";
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(refreshMessage);
