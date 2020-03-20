@@ -282,7 +282,6 @@ public:
     void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) override;
     int GetPrintedDescTopIndex() override;
     void ResetPrintedDescTopIndex() override;
-    std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) override;
     unsigned int SelectedMapIndex(int mapViewDescTopIndex) override;
     void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) override;
     NFmiFixedDrawParamSystem& FixedDrawParamSystem() override;
