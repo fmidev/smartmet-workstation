@@ -192,6 +192,10 @@ public:
     virtual bool localOnlyMapModeUsed() const = 0;
     virtual NFmiCombinedMapModeState& getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
     virtual NFmiCombinedMapModeState& getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
+    // wantedDrawOverMapMode parametri tarkoittaa ett‰ miss‰ tilassa piirtokoodia kysely tehd‰‰n (SmartMetissa moodi vaihtuu SHIFT + B:ll‰):
+    // Jos arvo on 0, oltaisiin piirt‰m‰ss‰ overlay layeria heti pohjakartan p‰‰lle.
+    // Jos arvo on 1, oltaisiin piirt‰m‰ss‰ overlay layeria data visualisointien p‰‰lle.
+    virtual bool isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode) = 0;
 
 
     // Staattiset perushelper-funktiot
