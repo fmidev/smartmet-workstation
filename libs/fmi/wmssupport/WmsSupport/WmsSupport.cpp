@@ -311,5 +311,10 @@ namespace Wms
     {
         return totalMapViewStaticMapClientState_.at(mapViewIndex).at(mapAreaIndex);
     }
+
+    const std::unique_ptr<Setup>& WmsSupport::getSetup() const
+    {
+        return setup_;
+    }
 }
 

@@ -76,6 +76,7 @@ class NFmiColorContourLegendSettings;
 class NFmiFixedDrawParamSystem;
 class NFmiMacroPathSettings;
 class WmsSupportInterface;
+class CombinedMapHandlerInterface;
 
 namespace Imagine
 {
@@ -369,8 +370,7 @@ public:
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
-    virtual bool IsCombinedMapModeUsed() const = 0;
-    virtual void ToggleCombinedMapMode() = 0;
+    virtual bool UseCombinedMapMode() const = 0;
     virtual void UseCombinedMapMode(bool newValue) = 0;
     virtual NFmiBetaProductionSystem& BetaProductionSystem() = 0;
     virtual void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
@@ -388,14 +388,13 @@ public:
     virtual void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) = 0;
     virtual int GetPrintedDescTopIndex() = 0;
     virtual void ResetPrintedDescTopIndex() = 0;
-    virtual std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) = 0;
     virtual unsigned int SelectedMapIndex(int mapViewDescTopIndex) = 0;
     virtual void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) = 0;
     virtual NFmiFixedDrawParamSystem& FixedDrawParamSystem() = 0;
     virtual void ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam) = 0;
     virtual NFmiMacroPathSettings& MacroPathSettings() = 0;
     virtual int CurrentCrossSectionRowIndex() = 0;
-    virtual bool UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
+    virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
 
 
 #ifndef DISABLE_CPPRESTSDK

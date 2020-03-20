@@ -4,6 +4,7 @@
 #include "catlog/catlog.h"
 #include "NFmiDataMatrix.h"
 #include "NFmiPtrList.h"
+#include "NFmiCombinedMapModeState.h"
 
 #include <boost/shared_ptr.hpp>
 #include <vector>
@@ -32,6 +33,11 @@ namespace Imagine
 // This has local bitmaps and interface to wms-server clients as well.
 class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
 {
+    // Tähän talletetaan yhden karttanäytön kartta-alueiden 1-4 combined-mode tilat
+    using MapViewCombinedMapModeState = std::map<unsigned int, NFmiCombinedMapModeState>;
+    // Tähän talletetaan kaikkien karttanäyttöjen (1-3) kaikkien kartta-alueiden combined-mode tilat
+    using TotalMapViewCombinedMapModeState = std::map<unsigned int, MapViewCombinedMapModeState>;
+
     std::string absoluteControlPath_;
     // Tähän tulee kaikkien eri mapview (1-3) desctoppien tiedot
     MapViewDescTopVector mapViewDescTops_;
@@ -75,6 +81,10 @@ class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
     // Onko yhtään copy komentoa tehty vielä, vaikuttaa siihen ilmestyykö pop-up valikkoon paste
     bool copyPasteDrawParamListVectorUsedYet_ = false;
 
+    // ******* Itse combined map moodiin liittyviä muuttujia *****************
+    TotalMapViewCombinedMapModeState combinedBackgroundMapModeStates_;
+    TotalMapViewCombinedMapModeState combinedOverlayMapModeStates_;
+
 public:
     ~NFmiCombinedMapHandler();
 
@@ -96,7 +106,7 @@ public:
     void timeSerialViewDirty(bool newValue) override;
     MapViewDescTopVector& getMapViewDescTops() override;
     SmartMetViewId getUpdatedViewIdMaskForChangingTime() override;
-    NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) override;
+    NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) const override;
     void setMapArea(unsigned int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& newArea) override;
     void storeMapViewSettingsToWinRegistry() override;
     void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) override;
@@ -201,10 +211,9 @@ public:
     double drawObjectScaleFactor() override;
     void drawObjectScaleFactor(double newValue) override;
     boost::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) override;
-    std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap, bool combinedMapMode) override;
+    std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap) override;
     std::string getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) override;
-    bool isCombinedMapModeUsed() const override;
-    void toggleCombinedMapMode() override;
+    bool useCombinedMapMode() const override;
     void useCombinedMapMode(bool newValue) override;
     const NFmiMetTime& activeMapTime() override;
     bool changeParamSettingsToNextFixedDrawParam(unsigned int mapViewDescTopIndex, int realRowIndex, int paramIndex, bool gotoNext) override;
@@ -226,9 +235,17 @@ public:
     void makeWholeDesctopDirtyActions(unsigned int mapViewDescTopIndex, NFmiPtrList<NFmiDrawParamList>* drawParamListVector) override;
     boost::shared_ptr<NFmiDrawParam> getDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
+    bool useWmsOverlayMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
     bool wmsSupportAvailable() const override;
+    bool localOnlyMapModeUsed() const override;
+    NFmiCombinedMapModeState& getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
+    NFmiCombinedMapModeState& getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
+    bool isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode) override;
 
 private:
+    unsigned int getMapViewCount() const;
+    unsigned int getMapAreaCount() const;
+    unsigned int getCurrentMapAreaIndex(unsigned int mapViewDescTopIndex) const;
     std::unique_ptr<NFmiMapViewDescTop> createMapViewDescTop(const std::string& baseSettingStr, int mapViewIndex);
     std::string getMapViewDescTopSettingString(const std::string& baseStr, int mapViewDescTopIndex);
     void initWmsSupport();
@@ -236,6 +253,12 @@ private:
     void initMapConfigurationSystem();
     void initProjectionCurvatureInfo();
     void initLandBorderDrawingSystem();
+    std::pair<unsigned int, MapViewCombinedMapModeState> makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedWmsMapLayerCount, bool doBackgroundCase);
+    void initCombinedMapStates();
+    void storeCombinedMapStates();
+    void initCombinedMapSelectionIndices();
+    void initWmsSupportSelectionIndices();
+    std::vector<int> getCombinedModeSelectedMapIndicesFromWinRegistry(unsigned int mapViewDescTopIndex, bool doBackgroundMaps);
     void doCutBorderDrawInitialization();
     void makeNeededDirtyOperationsWhenDataAdded(unsigned int mapViewDescTopIndex, NFmiFastQueryInfo& fastInfo, NFmiInfoData::Type dataType, const NFmiTimeBag& dirtyViewTimes, const std::string& fileName);
     void logMessage(const std::string &logMessage, CatLog::Severity severity, CatLog::Category category);
@@ -271,4 +294,7 @@ private:
     void initCrossSectionDrawParamListVector();
     void changeWmsMapType(unsigned int mapViewDescTopIndex, bool goForward);
     void changeFileBitmapMapType(unsigned int mapViewDescTopIndex, bool goForward);
+    void changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward);
+    void setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase);
+    void mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string& refreshMessage);
 };

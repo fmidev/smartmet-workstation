@@ -1265,14 +1265,9 @@ boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc:
     return itsDoc->GetMosTemperatureMinAndMaxData();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsCombinedMapModeUsed() const
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseCombinedMapMode() const
 {
-    return itsDoc->GetCombinedMapHandler()->isCombinedMapModeUsed();
-}
-
-void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleCombinedMapMode()
-{
-    itsDoc->GetCombinedMapHandler()->toggleCombinedMapMode();
+    return itsDoc->GetCombinedMapHandler()->useCombinedMapMode();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::UseCombinedMapMode(bool newValue)
@@ -1360,11 +1355,6 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ResetPrintedDescTopIndex()
     itsDoc->ResetPrintedDescTopIndex();
 }
 
-std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
-{
-    return itsDoc->GetCombinedMapHandler()->getCurrentMapLayerText(mapViewDescTopIndex, backgroundMap);
-}
-
 unsigned int CtrlViewDocumentInterfaceForGeneralDataDoc::SelectedMapIndex(int mapViewDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
@@ -1395,9 +1385,9 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::CurrentCrossSectionRowIndex()
     return itsDoc->CurrentCrossSectionRowIndex();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
+CombinedMapHandlerInterface& CtrlViewDocumentInterfaceForGeneralDataDoc::GetCombinedMapHandlerInterface()
 {
-    return itsDoc->GetCombinedMapHandler()->useWmsMapDrawForThisDescTop(mapViewDescTopIndex);
+    return *itsDoc->GetCombinedMapHandler();
 }
 
 #ifndef DISABLE_CPPRESTSDK

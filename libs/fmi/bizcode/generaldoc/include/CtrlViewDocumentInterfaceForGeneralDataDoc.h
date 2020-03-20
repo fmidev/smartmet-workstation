@@ -264,8 +264,7 @@ public:
     boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() override;
     boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() override;
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() override;
-    bool IsCombinedMapModeUsed() const override;
-    void ToggleCombinedMapMode() override;
+    bool UseCombinedMapMode() const override;
     void UseCombinedMapMode(bool newValue) override;
     NFmiBetaProductionSystem& BetaProductionSystem() override;
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
@@ -283,14 +282,13 @@ public:
     void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) override;
     int GetPrintedDescTopIndex() override;
     void ResetPrintedDescTopIndex() override;
-    std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) override;
     unsigned int SelectedMapIndex(int mapViewDescTopIndex) override;
     void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) override;
     NFmiFixedDrawParamSystem& FixedDrawParamSystem() override;
     void ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam) override;
     NFmiMacroPathSettings& MacroPathSettings() override;
     int CurrentCrossSectionRowIndex() override;
-    bool UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
+    CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

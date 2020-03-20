@@ -25,6 +25,7 @@ class NFmiDataIdent;
 class NFmiLevel;
 class NFmiProjectionCurvatureInfo;
 class WmsSupportInterface;
+class NFmiCombinedMapModeState;
 
 namespace CtrlViewUtils
 {
@@ -57,7 +58,7 @@ public:
     virtual void timeSerialViewDirty(bool newValue) = 0;
     virtual MapViewDescTopVector& getMapViewDescTops() = 0;
     virtual SmartMetViewId getUpdatedViewIdMaskForChangingTime() = 0;
-    virtual NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) = 0;
+    virtual NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) const = 0;
     virtual void setMapArea(unsigned int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& newArea) = 0;
     virtual void storeMapViewSettingsToWinRegistry() = 0;
     virtual void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) = 0;
@@ -162,10 +163,9 @@ public:
     virtual double drawObjectScaleFactor() = 0;
     virtual void drawObjectScaleFactor(double newValue) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) = 0;
-    virtual std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap, bool combinedMapMode) = 0;
+    virtual std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap) = 0;
     virtual std::string getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) = 0;
-    virtual bool isCombinedMapModeUsed() const = 0;
-    virtual void toggleCombinedMapMode() = 0;
+    virtual bool useCombinedMapMode() const = 0;
     virtual void useCombinedMapMode(bool newValue) = 0;
     virtual const NFmiMetTime& activeMapTime() = 0;
     virtual bool changeParamSettingsToNextFixedDrawParam(unsigned int mapViewDescTopIndex, int realRowIndex, int paramIndex, bool gotoNext) = 0;
@@ -187,7 +187,15 @@ public:
     virtual void makeWholeDesctopDirtyActions(unsigned int mapViewDescTopIndex, NFmiPtrList<NFmiDrawParamList>* drawParamListVector) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> getDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
+    virtual bool useWmsOverlayMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
     virtual bool wmsSupportAvailable() const = 0;
+    virtual bool localOnlyMapModeUsed() const = 0;
+    virtual NFmiCombinedMapModeState& getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
+    virtual NFmiCombinedMapModeState& getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
+    // wantedDrawOverMapMode parametri tarkoittaa ett‰ miss‰ tilassa piirtokoodia kysely tehd‰‰n (SmartMetissa moodi vaihtuu SHIFT + B:ll‰):
+    // Jos arvo on 0, oltaisiin piirt‰m‰ss‰ overlay layeria heti pohjakartan p‰‰lle.
+    // Jos arvo on 1, oltaisiin piirt‰m‰ss‰ overlay layeria data visualisointien p‰‰lle.
+    virtual bool isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode) = 0;
 
 
     // Staattiset perushelper-funktiot

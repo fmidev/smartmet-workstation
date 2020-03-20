@@ -106,6 +106,7 @@
 #include "NFmiColorContourLegendValues.h"
 #include "ToolMasterDrawingFunctions.h"
 #include "CtrlViewColorContourLegendDrawingFunctions.h"
+#include "CombinedMapHandlerInterface.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -4661,14 +4662,34 @@ void NFmiStationViewHandler::DrawSelectedSynopFromGridView(void)
 		}
 }
 
-std::string NFmiStationViewHandler::ComposeMapLayerToolTipText()
+// 1. Jos beforeDataCase == true, tehd‰‰n aina background kartta-layerille teksti, 
+// mutta tarkistetaan myˆs tehd‰‰nkˆ overlay-layerille teksti, jos se piirret‰‰n heti kartan p‰‰lle.
+// 2. Jos beforeDataCase == false, ei tehd‰ ollenkaan background tapausta, vaan katsotaan ainoastaan tehd‰‰nkˆ 
+// overlay-layerille teksti, jos se piirret‰‰n datan p‰‰lle.
+std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIsDrawnCase)
 {
+	auto& combinedMapHandlerInterface = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface();
+	auto addBackgroundText = beforeDataIsDrawnCase;
+	auto overlayDrawMode = beforeDataIsDrawnCase ? 0 : 1;
+	auto addOverlayText = combinedMapHandlerInterface.isOverlayMapDrawnForThisDescTop(itsMapViewDescTopIndex, overlayDrawMode);
 	std::string str;
-	str += "<b><font color=";
-	str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
-	str += ">";
-	str += itsCtrlViewDocumentInterface->GetCurrentMapLayerText(itsMapViewDescTopIndex, true);
-	str += "</font></b>\n";
+	if(addBackgroundText || addOverlayText)
+	{
+		if(!beforeDataIsDrawnCase)
+			str += "\n<hr color=red>";
+		str += "\n<b><font color=";
+		str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
+		str += ">";
+		if(addBackgroundText)
+			str += combinedMapHandlerInterface.getCurrentMapLayerText(itsMapViewDescTopIndex, true);
+		if(addOverlayText)
+		{
+			if(addBackgroundText)
+				str += "\n";
+			str += combinedMapHandlerInterface.getCurrentMapLayerText(itsMapViewDescTopIndex, false);
+		}
+		str += "</font></b>\n";
+	}
 	return str;
 }
 
@@ -4690,8 +4711,7 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 		str += CtrlViewUtils::GetLatitudeMinuteStr(latlon.Y(), 1);
 		str += " Lon: ";
 		str += CtrlViewUtils::GetLongitudeMinuteStr(latlon.X(), 1);
-		str += "\n";
-		str += ComposeMapLayerToolTipText();
+		str += ComposeMapLayerToolTipText(true);
 		str += "<hr color=red>";
 		str += "\n";
 
@@ -4706,10 +4726,14 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 				str += itsViewList->Current()->ComposeToolTipText(theRelativePoint);
 				str += "\n";
 			}
+			// Otetaan viimeisin rivinvaihto pois, tulevat tekstinlis‰ys funktiot lis‰‰v‰t tavittaessa alkuun rivinvaihdon
+			str.pop_back();
 		}
 		str += ComposeWarningMessageToolTipText();
 		str += ComposeSeaIcingWarningMessageToolTipText();
 		str += ComposeSilamLocationsToolTipText();
+		// Lopuksi viel‰ mahdollinen kartta overlay layer teksti
+		str += ComposeMapLayerToolTipText(false);
 	}
 	return str;
 }
@@ -4890,7 +4914,7 @@ static std::string GetFinalWarningMessageForTooltip(double minDistHake, double m
     if(!(hakeMessage == HakeMessage::HakeMsg::unInitialized) || !(kahaMessage == HakeMessage::HakeMsg::unInitialized))
     {
         std::string message;
-        message += "<hr color=red>\n";
+        message += "\n<hr color=red>\n";
         if(minDistHake < minDistKaha)
         {
             message += ::MakeMessageHeader("Hake");
@@ -4954,6 +4978,7 @@ std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(voi
 		}
 		if(minIter != endIt)
 		{
+			str += "\n";
 			str += (*minIter)->TotalMessageStr();
 			// Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
 			::ConvertXML2PlainCode(str);
@@ -4984,7 +5009,7 @@ static NFmiSilamStationList::Station GetClosestSilamStation(NFmiSilamStationList
 static std::string MakeSilamStationToolTipText(NFmiSilamStationList::Station &theStation, const std::string &theStationTypeStr)
 {
 	std::string str;
-	str += "<hr color=red>\n";
+	str += "\n<hr color=red>\n";
 	str += theStationTypeStr;
 	str += "\nInfo: ";
 	str += theStation.itsInfo;
@@ -5001,7 +5026,6 @@ static std::string MakeSilamStationToolTipText(NFmiSilamStationList::Station &th
 
 std::string NFmiStationViewHandler::ComposeSilamLocationsToolTipText(void)
 {
-	std::string str;
 	if(itsCtrlViewDocumentInterface->TrajectorySystem()->TrajectoryViewOn())
 	{
 		double maxAllowedDistanceInMeters = 200*1000;
@@ -5021,7 +5045,7 @@ std::string NFmiStationViewHandler::ComposeSilamLocationsToolTipText(void)
 				return ::MakeSilamStationToolTipText(stat2, "Non-nuclear place");
 		}
 	}
-	return str;
+	return "";
 }
 
 NFmiCtrlView* NFmiStationViewHandler::GetView(const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly)

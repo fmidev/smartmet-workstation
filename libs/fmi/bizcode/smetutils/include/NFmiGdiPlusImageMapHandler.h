@@ -65,9 +65,11 @@ public:
     void ClearUpdateMapViewDrawingLayers();
 
 	int UsedMapIndex(void){return itsUsedMapIndex;};
+	void UsedMapIndex(int theIndex);
+	int MapSize() const { return static_cast<int>(itsMapBitmaps.size()); }
 	int OverMapBitmapIndex(void) const {return itsUsedOverMapBitmapIndex;}
 	void OverMapBitmapIndex(int newValue);
-	void UsedMapIndex(int theIndex);
+	int OverMapSize() const { return static_cast<int>(itsOverMapBitmaps.size()); }
 	bool ShowOverMap(void);
 	void NextMap(void);
 	void PreviousMap(void);
