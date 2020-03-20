@@ -19,6 +19,7 @@
 #include "catlog/catlog.h"
 #include "ToolBoxStateRestorer.h"
 #include "NFmiMacroParamDataCache.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -110,7 +111,7 @@ void NFmiViewParamsView::DrawBackgroundMapLayer()
 	if(fHasMapLayer)
 	{
 		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
-		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCurrentMapLayerText(itsMapViewDescTopIndex, true);
+		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getCurrentMapLayerText(itsMapViewDescTopIndex, true);
 		// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
 		NFmiText text(LineTextPlace(0, false), mapLayerText, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
