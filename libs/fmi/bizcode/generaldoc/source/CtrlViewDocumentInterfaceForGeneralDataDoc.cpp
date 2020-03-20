@@ -1355,11 +1355,6 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ResetPrintedDescTopIndex()
     itsDoc->ResetPrintedDescTopIndex();
 }
 
-std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
-{
-    return itsDoc->GetCombinedMapHandler()->getCurrentMapLayerText(mapViewDescTopIndex, backgroundMap);
-}
-
 unsigned int CtrlViewDocumentInterfaceForGeneralDataDoc::SelectedMapIndex(int mapViewDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();

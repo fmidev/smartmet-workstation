@@ -388,7 +388,6 @@ public:
     virtual void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) = 0;
     virtual int GetPrintedDescTopIndex() = 0;
     virtual void ResetPrintedDescTopIndex() = 0;
-    virtual std::string GetCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) = 0;
     virtual unsigned int SelectedMapIndex(int mapViewDescTopIndex) = 0;
     virtual void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) = 0;
     virtual NFmiFixedDrawParamSystem& FixedDrawParamSystem() = 0;
