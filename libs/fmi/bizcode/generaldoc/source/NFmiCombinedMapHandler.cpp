@@ -46,6 +46,7 @@
 #endif // DISABLE_CPPRESTSDK
 
 #include <boost/algorithm/string.hpp>
+#include <boost/math/special_functions.hpp>
 
 namespace
 {
