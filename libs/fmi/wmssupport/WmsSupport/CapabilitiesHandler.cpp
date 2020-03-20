@@ -133,6 +133,14 @@ namespace Wms
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
                         }
                     }
+                    catch(std::exception &e)
+                    {
+                        std::string errorMessage = "Error with dynamic Wms server '";
+                        errorMessage += serverKV.second.producer.GetName();
+                        errorMessage += "', while parsing getCapabilities response: ";
+                        errorMessage += e.what();
+                        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                    }
                     catch(...)
                     {
                         // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa

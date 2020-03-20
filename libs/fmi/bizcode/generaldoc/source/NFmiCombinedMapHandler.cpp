@@ -37,10 +37,15 @@
 #include "FmiModifyDrawParamDlg.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiMacroPathSettings.h"
+#include "wmssupport/WmsSupportState.h"
+#include "wmssupport/WmsClient.h"
+#include "wmssupport/Setup.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
 #endif // DISABLE_CPPRESTSDK
+
+#include <boost/algorithm/string.hpp>
 
 namespace
 {
@@ -642,6 +647,85 @@ namespace
 			::initializeWantedDrawParams((*iter.CurrentPtr()), drawParam, useWithViewMacros);
 	}
 
+	// Lokaali+wms karttojen yhdistelm‰ moodiin liittyv‰t valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
+	// Teksti on seuraavaa muotoa (t‰m‰ luokka ei tosin parseroi tai tee muuta kuin s‰ilytt‰‰ stringin): 
+	// mapAreaCount:area1Index,area1Index,area1Index,area1Index     (esim. 4:2,1,4,3)
+	std::vector<int> parseSelectedMapIndices(const std::string& indicesString)
+	{
+		std::vector<std::string> parts;
+		boost::split(parts, indicesString, boost::is_any_of(":"));
+		if(parts.size() != 2)
+		{
+			std::string errorMessage = std::string("Error in ") + __FUNCTION__ + ": splitting indicesString with ':' character resulted illegal number of parts with string'";
+			errorMessage += indicesString + "'";
+			throw std::runtime_error(errorMessage);
+		}
+		else
+		{
+			auto mapAreaCount = boost::lexical_cast<int>(parts[0]);
+			std::vector<std::string> indexParts;
+			boost::split(indexParts, parts[1], boost::is_any_of(","));
+			if(indexParts.size() != mapAreaCount)
+			{
+				std::string errorMessage = std::string("Error in ") + __FUNCTION__ + ": splitting indicesString with ',' character resulted illegal number of parts with string'";
+				errorMessage += indicesString + "'";
+				throw std::runtime_error(errorMessage);
+			}
+			else
+			{
+				std::vector<int> indices;
+				for(const auto& indexString : indexParts)
+				{
+					indices.push_back(boost::lexical_cast<int>(indexString));
+				}
+				return indices;
+			}
+		}
+	}
+
+	int calcInitialWmsLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState)
+	{
+		int usedWmsLayerIndex = 0; // Asetetaan oletuksena 0 valituksi wms layerin indeksiksi
+		if(!combinedMapModeState.isLocalMapCurrentlyInUse()) // Jos combined-mode indeksi osoittaa wms 'lohkoon'
+		{
+			// asetetaan wms lohkoon laskettu indeksi valituksi
+			usedWmsLayerIndex = combinedMapModeState.currentMapSectionIndex();
+		}
+		return usedWmsLayerIndex;
+	}
+
+	std::string getWmsMapLayerName(int mapLayerIndex, Wms::UserUrlServerSetup& userUrlServerSetup)
+	{
+		if(mapLayerIndex >= userUrlServerSetup.parsedServers.size())
+			throw std::runtime_error(std::string("Logical error - Illegal mapLayerIndex with Wms parsedServers in function: ") + __FUNCTION__);
+		auto& usedLayerParsedServer = userUrlServerSetup.parsedServers[mapLayerIndex];
+		std::string layerName;
+		std::for_each(usedLayerParsedServer.layerGroup.begin(), usedLayerParsedServer.layerGroup.end(),
+			[&layerName](const auto& groupItem) {layerName += groupItem + ","; });
+
+		layerName.pop_back(); // poistetaan viimeinen pilkku
+		// Lis‰t‰‰n host:in osoite sulkuihin per‰‰n
+		layerName += " (";
+		layerName += usedLayerParsedServer.host;
+		layerName += ")";
+		return layerName;
+	}
+
+	static std::string makeSelectedMapIndicesString(const std::vector<int>& indices)
+	{
+		std::string indicesString;
+		indicesString += std::to_string(indices.size());
+		indicesString += ":";
+		for(auto index : indices)
+		{
+			indicesString += std::to_string(index);
+			indicesString += ",";
+		}
+		// Poistetaan viimeisen numeron j‰lkeinen pilkku, pilkku tulee loopissa jokaisen indeksin per‰‰n, ja n‰in poppaamalla koodi on yksinkertaisempaa.
+		indicesString.pop_back();
+		return indicesString;
+	}
+
 } // nameless namespace ends
 
 
@@ -676,6 +760,8 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 			mapViewDescTops_.emplace_back(createMapViewDescTop(baseSettingStr, mapViewIndex));
 
 		initLandBorderDrawingSystem();
+		initWmsSupport();
+		initCombinedMapStates();
 	}
 	catch(std::exception & e)
 	{
@@ -684,6 +770,113 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 		errStr += e.what();
 		logAndWarnUser(errStr, "Problems with map view settings", CatLog::Severity::Error, CatLog::Category::Configuration, true);
 	}
+}
+
+std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFmiCombinedMapHandler::makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedWmsMapLayerCount, bool doBackgroundCase)
+{
+	MapViewCombinedMapModeState mapViewState;
+
+	std::function<bool()> localOnlyMapModeUsedFunction = [this]() {return this->localOnlyMapModeUsed(); };
+	auto& mapHandlerVector = getMapViewDescTop(mapViewIndex)->GdiPlusImageMapHandlerList();
+	for(auto mapAreaIndex = 0u; mapAreaIndex < mapHandlerVector.size(); mapAreaIndex++)
+	{
+		NFmiCombinedMapModeState mapAreaState;
+		auto& mapHandler = mapHandlerVector[mapAreaIndex];
+		auto localLayerCount = doBackgroundCase ? mapHandler->MapSize() : mapHandler->OverMapSize();
+		mapAreaState.initialize(localLayerCount, usedWmsMapLayerCount, localOnlyMapModeUsedFunction, doBackgroundCase);
+		mapViewState.emplace(mapAreaIndex, mapAreaState);
+	}
+
+	return std::make_pair(mapViewIndex, mapViewState);
+}
+
+void NFmiCombinedMapHandler::initCombinedMapStates()
+{
+	auto mapViewCount = getMapViewCount();
+	auto wmsBackgroundMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getBackgroundsLength());
+	auto wmsOverlayMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getOverlaysLenght());
+
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		combinedBackgroundMapModeStates_.emplace(makeTotalMapViewCombinedMapModeState(mapViewIndex, wmsBackgroundMapLayerCount, true));
+		combinedOverlayMapModeStates_.emplace(makeTotalMapViewCombinedMapModeState(mapViewIndex, wmsOverlayMapLayerCount, false));
+	}
+	initCombinedMapSelectionIndices();
+	initWmsSupportSelectionIndices();
+}
+
+void NFmiCombinedMapHandler::storeCombinedMapStates()
+{
+	auto mapViewCount = getMapViewCount();
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		std::vector<int> backgroundIndices;
+		std::vector<int> overlayIndices;
+		auto mapAreaCount = getMapAreaCount();
+		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+		{
+			backgroundIndices.push_back(getCombinedMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex());
+			overlayIndices.push_back(getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex());
+		}
+		auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex);
+		mapViewWinRegistry->CombinedMapModeSelectedBackgroundIndices(::makeSelectedMapIndicesString(backgroundIndices));
+		mapViewWinRegistry->CombinedMapModeSelectedOverlayIndices(::makeSelectedMapIndicesString(overlayIndices));
+	}
+}
+
+std::vector<int> NFmiCombinedMapHandler::getCombinedModeSelectedMapIndicesFromWinRegistry(unsigned int mapViewDescTopIndex, bool doBackgroundMaps)
+{
+	auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex);
+	auto selectedMapIndicesStr = doBackgroundMaps ? mapViewWinRegistry->CombinedMapModeSelectedBackgroundIndices() : mapViewWinRegistry->CombinedMapModeSelectedOverlayIndices();
+	return ::parseSelectedMapIndices(selectedMapIndicesStr);
+}
+
+void NFmiCombinedMapHandler::initCombinedMapSelectionIndices()
+{
+	auto mapViewCount = getMapViewCount();
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewIndex);
+		auto backgroundIndices = getCombinedModeSelectedMapIndicesFromWinRegistry(mapViewIndex, true);
+		auto overlayIndices = getCombinedModeSelectedMapIndicesFromWinRegistry(mapViewIndex, false);
+		auto mapAreaCount = getMapAreaCount();
+		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+		{
+			if(mapAreaIndex < backgroundIndices.size())
+				getCombinedMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex(backgroundIndices[mapAreaIndex]);
+			if(mapAreaIndex < overlayIndices.size())
+				getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex).combinedModeMapIndex(overlayIndices[mapAreaIndex]);
+		}
+	}
+}
+
+void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
+{
+	auto &wmsSupport = getWmsSupport();
+	auto mapViewCount = getMapViewCount();
+	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
+	{
+		auto mapAreaCount = getMapAreaCount();
+		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+		{
+			auto &staticMapClientState = wmsSupport.getStaticMapClientState(mapViewIndex, mapAreaIndex);
+			// Tehd‰‰n ensin background map indeksin asetus
+			staticMapClientState.state_->setBackgroundIndex(::calcInitialWmsLayerIndex(getCombinedMapModeState(mapViewIndex, mapAreaIndex)));
+
+			// Tehd‰‰n sitten overlay map indeksin asetus
+			staticMapClientState.state_->setOverlayIndex(::calcInitialWmsLayerIndex(getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex)));
+		}
+	}
+}
+
+unsigned int NFmiCombinedMapHandler::getMapViewCount() const
+{
+	return static_cast<unsigned int>(mapViewDescTops_.size());
+}
+
+unsigned int NFmiCombinedMapHandler::getMapAreaCount() const
+{
+	return static_cast<unsigned int>(getMapViewDescTop(0)->GdiPlusImageMapHandlerList().size());
 }
 
 void NFmiCombinedMapHandler::initCrossSectionDrawParamListVector()
@@ -696,6 +889,8 @@ void NFmiCombinedMapHandler::storeMapViewDescTopToSettings()
 {
 	for(const auto& mapViewDescTop : mapViewDescTops_)
 		mapViewDescTop->StoreMapViewDescTopToSettings();
+
+	storeCombinedMapStates();
 }
 
 bool NFmiCombinedMapHandler::wmsSupportAvailable() const
@@ -710,7 +905,7 @@ std::unique_ptr<NFmiMapViewDescTop> NFmiCombinedMapHandler::createMapViewDescTop
 {
 	doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	std::string currentSettingStr = getMapViewDescTopSettingString(baseSettingStr, mapViewIndex);
-	auto descTop = std::make_unique<NFmiMapViewDescTop>(currentSettingStr, mapConfigurationSystem_.get(), projectionCurvatureInfo_.get(), absoluteControlPath_);
+	auto descTop = std::make_unique<NFmiMapViewDescTop>(currentSettingStr, mapConfigurationSystem_.get(), projectionCurvatureInfo_.get(), absoluteControlPath_, mapViewIndex);
 	auto& applicationWinRegistry = ::getApplicationWinRegistry();
 	descTop->MapViewCache().MaxSizeMB(applicationWinRegistry.MapViewCacheMaxSizeInMB());
 	descTop->Init(*applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(mapViewIndex));
@@ -853,7 +1048,7 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystem()
 #endif
 		boost::shared_ptr<Imagine::NFmiGeoShape> landBorderGeoShape(new Imagine::NFmiGeoShape());
 		logMessage(std::string("Reading country border shape file: ") + landBorderShapeFile_, CatLog::Severity::Debug, CatLog::Category::Configuration);
-		landBorderShapeFile_ = PathUtils::getAbsoluteFilePath(landBorderShapeFile_, absoluteControlPath_);
+		landBorderShapeFile_ = PathUtils::makeFixedAbsolutePath(landBorderShapeFile_, absoluteControlPath_);
 		landBorderGeoShape->Read(landBorderShapeFile_, Imagine::kFmiGeoShapeEsri, "");
 
 		boost::shared_ptr<Imagine::NFmiPath> landBorderPath(new Imagine::NFmiPath(landBorderGeoShape->Path()));
@@ -1044,7 +1239,7 @@ void NFmiCombinedMapHandler::checkAnimationLockedModeTimeBags(unsigned int mapVi
 	}
 }
 
-NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapViewDescTopIndex)
+NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapViewDescTopIndex) const
 {
 	if(mapViewDescTops_.empty())
 		throw std::runtime_error(std::string(__FUNCTION__) + " - itsMapViewDescTopList was empty, error in program.");
@@ -3104,12 +3299,65 @@ void NFmiCombinedMapHandler::changeFileBitmapMapType(unsigned int mapViewDescTop
 	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
 }
 
+void NFmiCombinedMapHandler::changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward)
+{
+	// 1. Ollaanko nyt lokaali vain Wms puolella?
+	// Onko k‰ytˆss‰ joku total indeksi vai bool tyyppinen local/wms?
+	// 2. Mille puolelle menee seuraava/edellinen?
+	// Laske uusi indeksi ja tee hypyt molempiin suuntiin
+
+//	changeFileBitmapMapType(mapViewDescTopIndex, goForward);
+}
+
 void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, bool goForward)
 {
-	//if(UseWmsMaps())
-	//	changeWmsMapType(mapViewDescTopIndex, goForward);
-	//else
-		changeFileBitmapMapType(mapViewDescTopIndex, goForward);
+	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	auto& combinedMapModeState = getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex);
+	combinedMapModeState.changeLayer(goForward);
+	setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, true);
+	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1) + "background map layer changed";
+	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
+}
+
+void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase)
+{
+	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	if(backgroundCase)
+	{
+		if(combinedMapModeState.isLocalMapCurrentlyInUse())
+			getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
+		else
+			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
+	}
+	else
+	{
+		if(combinedMapModeState.isLocalMapCurrentlyInUse())
+			getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->OverMapBitmapIndex(combinedMapModeState.currentMapSectionIndex());
+		else
+			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
+	}
+}
+
+void NFmiCombinedMapHandler::mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string &refreshMessage)
+{
+	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
+	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(refreshMessage);
+}
+
+unsigned int NFmiCombinedMapHandler::getCurrentMapAreaIndex(unsigned int mapViewDescTopIndex) const
+{
+	return getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
+}
+
+void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward)
+{
+	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	auto& combinedMapModeState = getCombinedOverlayMapModeState(mapViewDescTopIndex, mapAreaIndex);
+	combinedMapModeState.changeLayer(goForward);
+	setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, false);
+	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1) + "overlay map layer changed";
+	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
 }
 
 // scrollaa n‰yttˆriveja halutun m‰‰r‰n (negatiivinen skrollaa ylˆs ja positiivinen count alas)
@@ -3514,18 +3762,6 @@ void NFmiCombinedMapHandler::changeFileBitmapOverlayMapType(unsigned int mapView
 	}
 }
 
-void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward)
-{
-	//if(UseWmsMaps())
-	//	ChangeWmsOverlayMapType(mapViewDescTopIndex, goForward);
-	//else
-		changeFileBitmapOverlayMapType(mapViewDescTopIndex, goForward);
-
-	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
-	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
-	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's overlay map style changed");
-}
-
 void NFmiCombinedMapHandler::onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex)
 {
 	getMapViewDescTop(mapViewDescTopIndex)->ToggleLandBorderColor();
@@ -3649,11 +3885,21 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedDrawParamForEdit
 		return ::getInfoOrganizer().CreateDrawParam(dataIdent, 0, NFmiInfoData::kEditable);
 }
 
-std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap, bool combinedMapMode)
+std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap)
 {
-	if(combinedMapMode)
+	auto useWmsMapLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
+	if(useWmsMapLayer)
 	{
-		return "Wms-map-layer-name (server-name)";
+		if(backgroundMap)
+		{
+			auto mapLayerIndex = getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
+			return ::getWmsMapLayerName(mapLayerIndex, getWmsSupport().getSetup()->background);
+		}
+		else
+		{
+			auto mapLayerIndex = getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
+			return ::getWmsMapLayerName(mapLayerIndex, getWmsSupport().getSetup()->overlay);
+		}
 	}
 	else
 	{
@@ -3664,28 +3910,20 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopInd
 
 std::string NFmiCombinedMapHandler::getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
 {
-	auto combinedMapMode = ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
-	std::string mapLayerText = combinedMapMode ? "+" : "-";
-	mapLayerText += ::GetDictionaryString("Map");
-	mapLayerText += combinedMapMode ? "[W]" : "[L]";
+	std::string mapLayerText = localOnlyMapModeUsed() ? "-" : "+";
+	mapLayerText += backgroundMap ? ::GetDictionaryString("Map") : ::GetDictionaryString("Olay");
+	auto isWmsLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
+	mapLayerText += isWmsLayer ? "[W]" : "[L]";
 	mapLayerText += ": ";
-	auto mapLayerName = getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap, combinedMapMode);
+	auto mapLayerName = getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap);
 	mapLayerText += mapLayerName;
 
 	return mapLayerText;
 }
 
-bool NFmiCombinedMapHandler::isCombinedMapModeUsed() const
+bool NFmiCombinedMapHandler::useCombinedMapMode() const
 {
 	return ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
-}
-
-void NFmiCombinedMapHandler::toggleCombinedMapMode()
-{
-	::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode(!isCombinedMapModeUsed());
-	// Varmuuden vuoksi kaikki kartta piirrot uusiksi (voi optimoida myˆhemmin, koska on tapauksia, miss‰ ei mitk‰‰n asiat muutu)
-	mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
-	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 }
 
 void NFmiCombinedMapHandler::useCombinedMapMode(bool newValue)
@@ -3698,6 +3936,40 @@ void NFmiCombinedMapHandler::useCombinedMapMode(bool newValue)
 
 bool NFmiCombinedMapHandler::useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
 {
-	// Toistaiseksi kaikki piirto tapahtuu k‰ytt‰m‰ll‰ lokaaleja valmiita karttakuvia
+	return !getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
+}
+
+bool NFmiCombinedMapHandler::useWmsOverlayMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
+{
+	return !getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
+}
+
+bool NFmiCombinedMapHandler::isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode)
+{
+	// Onko piirtokoodi oikeassa kohassa ,ett‰ voitaisiin piirt‰‰ overlay kerros?
+	if(getMapViewDescTop(mapViewDescTopIndex)->DrawOverMapMode() == wantedDrawOverMapMode)
+	{
+		// Onko joku overlay kerros valittuna (indeksi ei saa olla -1, jolloin ei ole tarkoitus piirt‰‰ mit‰‰n)?
+		return getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).combinedModeMapIndex() >= 0;
+	}
 	return false;
+}
+
+bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
+{
+	if(wmsSupportAvailable())
+	{
+		return !::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
+	}
+	return true;
+}
+
+NFmiCombinedMapModeState& NFmiCombinedMapHandler::getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex)
+{
+	return combinedBackgroundMapModeStates_.at(mapViewDescTopIndex).at(mapAreaIndex);
+}
+
+NFmiCombinedMapModeState& NFmiCombinedMapHandler::getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex)
+{
+	return combinedOverlayMapModeStates_.at(mapViewDescTopIndex).at(mapAreaIndex);
 }

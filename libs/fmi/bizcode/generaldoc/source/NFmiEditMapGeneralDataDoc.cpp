@@ -3052,6 +3052,9 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 // ********** lisätään havaintoparametri osa *************************
 
 // ********** WMS *************************
+// HUOM!!! Älä lisää Wms parametreja popup-valikkoon, niitä on niin paljon, että Windows:in popup-menu sekoaa ja sen systeemit
+// menee yli rajojen. Olen joskus testannut että popupit alkavat sekoamaan, kun niissä on yli n. satatuhatta menu-item:ia.
+// Katso jos jostain löytyisi parempi popup-valikoiden teko mekanismi.
 //    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
 
 // ********** lisätään apudata-parametri osa *************************
@@ -8201,8 +8204,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
 	{
 		GetCombinedMapHandler()->changeMapType(theDescTopIndex, fForward);
-        CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view's background map style changed");
 	}
 
     // Tämä asettaa maskOnMap -asetuksen kahteen paikkaan, windows rekistereihin ja 
