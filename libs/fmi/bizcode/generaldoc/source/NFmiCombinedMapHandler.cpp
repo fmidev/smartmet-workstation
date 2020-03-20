@@ -740,19 +740,18 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 	}
 }
 
-std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFmiCombinedMapHandler::makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedMapLayerCount, bool doBackgroundCase)
+std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFmiCombinedMapHandler::makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedWmsMapLayerCount, bool doBackgroundCase)
 {
 	MapViewCombinedMapModeState mapViewState;
 
 	std::function<bool()> localOnlyMapModeUsedFunction = [this]() {return this->localOnlyMapModeUsed(); };
 	auto& mapHandlerVector = getMapViewDescTop(mapViewIndex)->GdiPlusImageMapHandlerList();
-	auto mapAreaCount = getMapAreaCount();
-	for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
+	for(auto mapAreaIndex = 0u; mapAreaIndex < mapHandlerVector.size(); mapAreaIndex++)
 	{
 		NFmiCombinedMapModeState mapAreaState;
 		auto& mapHandler = mapHandlerVector[mapAreaIndex];
 		auto localLayerCount = doBackgroundCase ? mapHandler->MapSize() : mapHandler->OverMapSize();
-		mapAreaState.initialize(mapHandler->MapSize(), usedMapLayerCount, localOnlyMapModeUsedFunction, doBackgroundCase);
+		mapAreaState.initialize(localLayerCount, usedWmsMapLayerCount, localOnlyMapModeUsedFunction, doBackgroundCase);
 		mapViewState.emplace(mapAreaIndex, mapAreaState);
 	}
 
@@ -3930,6 +3929,17 @@ bool NFmiCombinedMapHandler::useWmsMapDrawForThisDescTop(unsigned int mapViewDes
 bool NFmiCombinedMapHandler::useWmsOverlayMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
 {
 	return !getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).isLocalMapCurrentlyInUse();
+}
+
+bool NFmiCombinedMapHandler::isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode)
+{
+	// Onko piirtokoodi oikeassa kohassa ,että voitaisiin piirtää overlay kerros?
+	if(getMapViewDescTop(mapViewDescTopIndex)->DrawOverMapMode() == wantedDrawOverMapMode)
+	{
+		// Onko joku overlay kerros valittuna (indeksi ei saa olla -1, jolloin ei ole tarkoitus piirtää mitään)?
+		return getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).combinedModeMapIndex() >= 0;
+	}
+	return false;
 }
 
 bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
