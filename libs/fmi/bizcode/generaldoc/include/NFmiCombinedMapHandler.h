@@ -240,6 +240,7 @@ public:
     bool localOnlyMapModeUsed() const override;
     NFmiCombinedMapModeState& getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
     NFmiCombinedMapModeState& getCombinedOverlayMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
+    bool isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode) override;
 
 private:
     unsigned int getMapViewCount() const;
@@ -252,7 +253,7 @@ private:
     void initMapConfigurationSystem();
     void initProjectionCurvatureInfo();
     void initLandBorderDrawingSystem();
-    std::pair<unsigned int, MapViewCombinedMapModeState> makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedMapLayerCount, bool doBackgroundCase);
+    std::pair<unsigned int, MapViewCombinedMapModeState> makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedWmsMapLayerCount, bool doBackgroundCase);
     void initCombinedMapStates();
     void storeCombinedMapStates();
     void initCombinedMapSelectionIndices();
