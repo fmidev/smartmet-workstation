@@ -694,6 +694,38 @@ namespace
 		return usedWmsLayerIndex;
 	}
 
+	std::string getWmsMapLayerName(int mapLayerIndex, Wms::UserUrlServerSetup& userUrlServerSetup)
+	{
+		if(mapLayerIndex >= userUrlServerSetup.parsedServers.size())
+			throw std::runtime_error(std::string("Logical error - Illegal mapLayerIndex with Wms parsedServers in function: ") + __FUNCTION__);
+		auto& usedLayerParsedServer = userUrlServerSetup.parsedServers[mapLayerIndex];
+		std::string layerName;
+		std::for_each(usedLayerParsedServer.layerGroup.begin(), usedLayerParsedServer.layerGroup.end(),
+			[&layerName](const auto& groupItem) {layerName += groupItem + ","; });
+
+		layerName.pop_back(); // poistetaan viimeinen pilkku
+		// Lis‰t‰‰n host:in osoite sulkuihin per‰‰n
+		layerName += " (";
+		layerName += usedLayerParsedServer.host;
+		layerName += ")";
+		return layerName;
+	}
+
+	static std::string makeSelectedMapIndicesString(const std::vector<int>& indices)
+	{
+		std::string indicesString;
+		indicesString += std::to_string(indices.size());
+		indicesString += ":";
+		for(auto index : indices)
+		{
+			indicesString += std::to_string(index);
+			indicesString += ",";
+		}
+		// Poistetaan viimeisen numeron j‰lkeinen pilkku, pilkku tulee loopissa jokaisen indeksin per‰‰n, ja n‰in poppaamalla koodi on yksinkertaisempaa.
+		indicesString.pop_back();
+		return indicesString;
+	}
+
 } // nameless namespace ends
 
 
@@ -771,21 +803,6 @@ void NFmiCombinedMapHandler::initCombinedMapStates()
 	}
 	initCombinedMapSelectionIndices();
 	initWmsSupportSelectionIndices();
-}
-
-static std::string makeSelectedMapIndicesString(const std::vector<int>& indices)
-{
-	std::string indicesString;
-	indicesString += std::to_string(indices.size());
-	indicesString += ":";
-	for(auto index : indices)
-	{
-		indicesString += std::to_string(index);
-		indicesString += ",";
-	}
-	// Poistetaan viimeisen numeron j‰lkeinen pilkku, pilkku tulee loopissa jokaisen indeksin per‰‰n, ja n‰in poppaamalla koodi on yksinkertaisempaa.
-	indicesString.pop_back(); 
-	return indicesString;
 }
 
 void NFmiCombinedMapHandler::storeCombinedMapStates()
@@ -3870,28 +3887,19 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedDrawParamForEdit
 
 std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap)
 {
-	if(useWmsMapDrawForThisDescTop(mapViewDescTopIndex))
+	auto useWmsMapLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
+	if(useWmsMapLayer)
 	{
-		auto &staticMapClientState = getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex));
 		if(backgroundMap)
 		{
 			auto mapLayerIndex = getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
-			auto& backgroundSetup = getWmsSupport().getSetup()->background;
-			if(mapLayerIndex >= backgroundSetup.parsedServers.size())
-				throw std::runtime_error("error on iso");
-			auto& usedLayerParsedServer = backgroundSetup.parsedServers[mapLayerIndex];
-			std::string layerName;
-			std::for_each(usedLayerParsedServer.layerGroup.begin(), usedLayerParsedServer.layerGroup.end(),
-				[&layerName](const auto& groupItem) {layerName += groupItem + ","; });
-
-			layerName.pop_back(); // poistetaan viimeinen pilkku
-			// Lis‰t‰‰n host:in osoite sulkuihin per‰‰n
-			layerName += " (";
-			layerName += usedLayerParsedServer.host;
-			layerName += ")";
-			return layerName;
+			return ::getWmsMapLayerName(mapLayerIndex, getWmsSupport().getSetup()->background);
 		}
-		return "Wms-map-layer-name (server-name)";
+		else
+		{
+			auto mapLayerIndex = getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
+			return ::getWmsMapLayerName(mapLayerIndex, getWmsSupport().getSetup()->overlay);
+		}
 	}
 	else
 	{
@@ -3903,8 +3911,9 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopInd
 std::string NFmiCombinedMapHandler::getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
 {
 	std::string mapLayerText = localOnlyMapModeUsed() ? "-" : "+";
-	mapLayerText += ::GetDictionaryString("Map");
-	mapLayerText += useWmsMapDrawForThisDescTop(mapViewDescTopIndex) ? "[W]" : "[L]";
+	mapLayerText += backgroundMap ? ::GetDictionaryString("Map") : ::GetDictionaryString("Olay");
+	auto isWmsLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
+	mapLayerText += isWmsLayer ? "[W]" : "[L]";
 	mapLayerText += ": ";
 	auto mapLayerName = getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap);
 	mapLayerText += mapLayerName;
