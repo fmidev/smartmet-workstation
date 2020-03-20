@@ -395,7 +395,6 @@ public:
     virtual void ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam) = 0;
     virtual NFmiMacroPathSettings& MacroPathSettings() = 0;
     virtual int CurrentCrossSectionRowIndex() = 0;
-    virtual bool UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
     virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
 
 

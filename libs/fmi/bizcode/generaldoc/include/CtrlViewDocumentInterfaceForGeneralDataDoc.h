@@ -289,7 +289,6 @@ public:
     void ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam) override;
     NFmiMacroPathSettings& MacroPathSettings() override;
     int CurrentCrossSectionRowIndex() override;
-    bool UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) override;
     CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
 
 #ifndef DISABLE_CPPRESTSDK
