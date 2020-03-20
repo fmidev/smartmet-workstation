@@ -1390,11 +1390,6 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::CurrentCrossSectionRowIndex()
     return itsDoc->CurrentCrossSectionRowIndex();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
-{
-    return itsDoc->GetCombinedMapHandler()->useWmsMapDrawForThisDescTop(mapViewDescTopIndex);
-}
-
 CombinedMapHandlerInterface& CtrlViewDocumentInterfaceForGeneralDataDoc::GetCombinedMapHandlerInterface()
 {
     return *itsDoc->GetCombinedMapHandler();
