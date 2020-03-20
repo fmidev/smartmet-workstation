@@ -3885,6 +3885,10 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopInd
 				[&layerName](const auto& groupItem) {layerName += groupItem + ","; });
 
 			layerName.pop_back(); // poistetaan viimeinen pilkku
+			// Lis‰t‰‰n host:in osoite sulkuihin per‰‰n
+			layerName += " (";
+			layerName += usedLayerParsedServer.host;
+			layerName += ")";
 			return layerName;
 		}
 		return "Wms-map-layer-name (server-name)";
