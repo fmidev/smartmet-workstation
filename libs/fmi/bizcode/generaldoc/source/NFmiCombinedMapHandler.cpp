@@ -3916,8 +3916,7 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerText(int mapViewDescTopInd
 	auto isWmsLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
 	mapLayerText += isWmsLayer ? "[W]" : "[L]";
 	mapLayerText += ": ";
-	auto mapLayerName = getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap);
-	mapLayerText += mapLayerName;
+	mapLayerText += getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap);
 
 	return mapLayerText;
 }
@@ -3951,7 +3950,7 @@ bool NFmiCombinedMapHandler::isOverlayMapDrawnForThisDescTop(unsigned int mapVie
 	if(getMapViewDescTop(mapViewDescTopIndex)->DrawOverMapMode() == wantedDrawOverMapMode)
 	{
 		// Onko joku overlay kerros valittuna (indeksi ei saa olla -1, jolloin ei ole tarkoitus piirtää mitään)?
-		return getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).combinedModeMapIndex() >= 0;
+		return getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex() >= 0;
 	}
 	return false;
 }
