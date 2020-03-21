@@ -91,7 +91,7 @@ class NFmiViewParamsView : public NFmiParamCommandView
     NFmiDrawParamList* GetDrawParamList();
     void DrawMouseDraggingAction();
     void DrawMouseDraggingBackground();
-	void DrawBackgroundMapLayer();
+	void DrawBackgroundMapLayerText();
 private:
    double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreissä x-suunnassa
    double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreissä y-suunnassa

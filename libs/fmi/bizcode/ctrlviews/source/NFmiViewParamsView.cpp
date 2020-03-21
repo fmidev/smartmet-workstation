@@ -106,7 +106,7 @@ void NFmiViewParamsView::DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam>
     }
 }
 
-void NFmiViewParamsView::DrawBackgroundMapLayer()
+void NFmiViewParamsView::DrawBackgroundMapLayerText()
 {
 	if(fHasMapLayer)
 	{
@@ -132,7 +132,7 @@ void NFmiViewParamsView::DrawData(void)
 		{
 			itsDrawingEnvironment->SetFontSize(itsFontSize);
 			itsDrawingEnvironment->SetFontType(kArial);
-			DrawBackgroundMapLayer();
+			DrawBackgroundMapLayerText();
 			int counter = 1;
 			for(paramList->Reset(); paramList->Next(); counter++)
 			{
