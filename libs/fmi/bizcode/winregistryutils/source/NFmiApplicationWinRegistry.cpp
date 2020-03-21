@@ -160,7 +160,7 @@ NFmiMapViewWinRegistry::NFmiMapViewWinRegistry(void)
 bool NFmiMapViewWinRegistry::Init(const std::string &baseRegistryPath, int mapIndex)
 {
     if(mInitialized)
-        std::runtime_error("NFmiMapViewWinRegistry::Init: all ready initialized.");
+        throw std::runtime_error("NFmiMapViewWinRegistry::Init: all ready initialized.");
 
     mInitialized = true;
     mBaseRegistryPath = baseRegistryPath;
