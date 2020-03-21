@@ -197,8 +197,6 @@ public:
     void onHideParamWindow(unsigned int mapViewDescTopIndex) override;
     void onShowTimeString(unsigned int mapViewDescTopIndex) override;
     WmsSupportInterface& getWmsSupport() override;
-    void changeWmsOverlayMapType(unsigned int mapViewDescTopIndex, bool goForward) override;
-    void changeFileBitmapOverlayMapType(unsigned int mapViewDescTopIndex, bool goForward) override;
     void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) override;
     void onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex) override;
     void onToggleLandBorderPenSize(unsigned int mapViewDescTopIndex) override;
@@ -292,9 +290,6 @@ private:
     void drawParamSettingsChangedDirtyActions(unsigned int mapViewDescTopIndex, int realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam);
     NFmiDrawParamList* getWantedDrawParamList(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams);
     void initCrossSectionDrawParamListVector();
-    void changeWmsMapType(unsigned int mapViewDescTopIndex, bool goForward);
-    void changeFileBitmapMapType(unsigned int mapViewDescTopIndex, bool goForward);
-    void changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward);
     void setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase);
     void mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string& refreshMessage);
 };

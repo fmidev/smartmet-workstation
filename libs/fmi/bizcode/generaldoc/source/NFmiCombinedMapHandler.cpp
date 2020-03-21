@@ -3287,38 +3287,6 @@ unsigned long& NFmiCombinedMapHandler::getTimeSerialViewIndexReference()
 	return timeSerialViewIndex_;
 }
 
-void NFmiCombinedMapHandler::changeWmsMapType(unsigned int mapViewDescTopIndex, bool goForward)
-{
-#ifndef DISABLE_CPPRESTSDK
-	auto mapAreaIndex = getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
-	if(goForward)
-		wmsSupport_->nextBackground(mapViewDescTopIndex, mapAreaIndex);
-	else
-		wmsSupport_->previousBackground(mapViewDescTopIndex, mapAreaIndex);
-
-	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
-#endif // DISABLE_CPPRESTSDK
-}
-
-void NFmiCombinedMapHandler::changeFileBitmapMapType(unsigned int mapViewDescTopIndex, bool goForward)
-{
-	if(goForward)
-		getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->NextMap();
-	else
-		getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->PreviousMap();
-	mapViewDirty(mapViewDescTopIndex, true, true, true, false, false, false);
-}
-
-void NFmiCombinedMapHandler::changeMapTypeInCombinedMode(unsigned int mapViewDescTopIndex, bool goForward)
-{
-	// 1. Ollaanko nyt lokaali vain Wms puolella?
-	// Onko käytössä joku total indeksi vai bool tyyppinen local/wms?
-	// 2. Mille puolelle menee seuraava/edellinen?
-	// Laske uusi indeksi ja tee hypyt molempiin suuntiin
-
-//	changeFileBitmapMapType(mapViewDescTopIndex, goForward);
-}
-
 void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, bool goForward)
 {
 	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
@@ -3747,29 +3715,6 @@ void NFmiCombinedMapHandler::onShowTimeString(unsigned int mapViewDescTopIndex)
 WmsSupportInterface& NFmiCombinedMapHandler::getWmsSupport()
 {
 	return *wmsSupport_;
-}
-
-void NFmiCombinedMapHandler::changeWmsOverlayMapType(unsigned int mapViewDescTopIndex, bool goForward)
-{
-#ifndef DISABLE_CPPRESTSDK
-	auto mapAreaIndex = getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
-	if(goForward)
-		getWmsSupport().nextOverlay(mapViewDescTopIndex, mapAreaIndex);
-	else
-		getWmsSupport().previousOverlay(mapViewDescTopIndex, mapAreaIndex);
-#endif // DISABLE_CPPRESTSDK
-}
-
-void NFmiCombinedMapHandler::changeFileBitmapOverlayMapType(unsigned int mapViewDescTopIndex, bool goForward)
-{
-	auto *mapHandler = getMapViewDescTop(mapViewDescTopIndex)->MapHandler();
-	if(mapHandler)
-	{
-		if(goForward)
-			mapHandler->NextOverMap();
-		else
-			mapHandler->PreviousOverMap();
-	}
 }
 
 void NFmiCombinedMapHandler::onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex)
