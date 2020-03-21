@@ -524,11 +524,11 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
 
-    CString possibleWarningTextU_; // = _TEXT("Remember to install new dll's with new vcredist_x64.exe");
+    CString possibleWarningTextU_ = _TEXT("Paljon muutoksia mm. näyttöjen päivityskoodeihin!!");
     if(possibleWarningTextU_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 370), true));
 
-    CString possibleWarningText2U_; // = _TEXT("(Dropbox (FMI)\\SmartMet\\MetEditor_5_13_0_0_beta\\bin_x64)");
+    CString possibleWarningText2U_ = _TEXT("Raportoi tähän versioon liittyvistä ongelmista pikaisesti!");
     if(possibleWarningText2U_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningText2U_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 395), true));
 }
