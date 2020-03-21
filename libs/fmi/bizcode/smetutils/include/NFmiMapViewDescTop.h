@@ -46,8 +46,7 @@ public:
 	class ViewMacroDipMapHelper
 	{
 	public:
-		ViewMacroDipMapHelper(void){}
-		~ViewMacroDipMapHelper(void){}
+		ViewMacroDipMapHelper();
 
 		// HUOM!! T‰m‰ laittaa kommentteja mukaan!
 		void Write(std::ostream& os) const;
@@ -57,10 +56,10 @@ public:
 		void Read(std::istream& is);
 
 		// dipmaphandler osio pit‰‰ ottaa t‰h‰n erikois k‰sittelyyn
-		int itsUsedMapIndex;
-		int itsUsedOverMapDibIndex;
-		int itsUsedCombinedModeMapIndex;
-		int itsUsedCombinedModeOverMapDibIndex;
+		int itsUsedMapIndex = 0;
+		int itsUsedOverMapDibIndex = -1;
+		int itsUsedCombinedModeMapIndex = 0;
+		int itsUsedCombinedModeOverMapDibIndex = -1;
 		NFmiString itsZoomedAreaStr;
 	};
 

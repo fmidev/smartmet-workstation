@@ -63,6 +63,9 @@ static NFmiPoint String2Point(const std::string &str)
     return NFmiPoint(x, y);
 }
 
+NFmiMapViewDescTop::ViewMacroDipMapHelper::ViewMacroDipMapHelper() = default;
+
+
 // ************************************************************************
 // ******* NFmiMapViewDescTop::ViewMacroDipMapHelper -luokka **************
 // ************************************************************************
@@ -282,7 +285,8 @@ void NFmiMapViewDescTop::InitFromMapViewWinRegistry(NFmiMapViewWinRegistry &theM
 {
     fShowMasksOnMapVM = theMapViewWinRegistry.ShowMasksOnMap();
     itsSpacingOutFactorVM = theMapViewWinRegistry.SpacingOutFactor();
-    SelectedMapIndex(theMapViewWinRegistry.SelectedMapIndex()); // pit‰‰ tehd‰ j‰rkevyys tarkastelut
+	// SelectedMapIndex:ille pit‰‰ tehd‰ j‰rkevyys tarkastelut
+    SelectedMapIndex(theMapViewWinRegistry.SelectedMapIndex());
 	fShowStationPlotVM = theMapViewWinRegistry.ShowStationPlot();
     // stringi pit‰‰ muuttaa point-otukseksi ja lopuksi pit‰‰ tehd‰ j‰rkevyys tarkastelut
     ViewGridSize(::String2Point(theMapViewWinRegistry.ViewGridSizeStr()), nullptr);
