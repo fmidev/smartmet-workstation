@@ -19,13 +19,34 @@
 
 using namespace std;
 
-//template<typename T>
-struct PointerDestroyer
+namespace
 {
-	template<typename T>
-	void operator()(T* thePtr)
-	{delete thePtr;}
-};
+	//template<typename T>
+	struct PointerDestroyer
+	{
+		template<typename T>
+		void operator()(T* thePtr)
+		{
+			delete thePtr;
+		}
+	};
+
+	// Deletoi ja laittaa 0-pointterit vektoriin
+	void emptyBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
+	{
+		for(unsigned int i = 0; i < theBitmaps.size(); i++)
+		{
+			delete theBitmaps[i];
+			theBitmaps[i] = 0;
+		}
+	}
+
+	void clearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
+	{
+		::emptyBitmapVector(theBitmaps);
+		theBitmaps.clear();
+	}
+}
 
 NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(void)
 :itsUsedMapIndex(0)
@@ -58,8 +79,8 @@ NFmiGdiPlusImageMapHandler::~NFmiGdiPlusImageMapHandler(void)
 
 void NFmiGdiPlusImageMapHandler::Clear(void)
 {
-	ClearBitmapVector(itsMapBitmaps);
-	ClearBitmapVector(itsOverMapBitmaps);
+	::clearBitmapVector(itsMapBitmaps);
+	::clearBitmapVector(itsOverMapBitmaps);
 
 	itsMapFileNames.clear();
 	itsMapDrawStyles.clear();
@@ -274,7 +295,7 @@ void NFmiGdiPlusImageMapHandler::NextOverMap(void)
 	if(itsUsedOverMapBitmapIndex >= static_cast<long>(itsOverMapBitmaps.size()))
 		itsUsedOverMapBitmapIndex = -1;
 	if(oldIndex != itsUsedOverMapBitmapIndex)
-		EmptyBitmapVector(itsOverMapBitmaps);
+		::emptyBitmapVector(itsOverMapBitmaps);
 }
 
 void NFmiGdiPlusImageMapHandler::PreviousOverMap(void)
@@ -284,13 +305,7 @@ void NFmiGdiPlusImageMapHandler::PreviousOverMap(void)
 	if(itsUsedOverMapBitmapIndex < -1)
 		itsUsedOverMapBitmapIndex = static_cast<long>(itsOverMapBitmaps.size()-1);
 	if(oldIndex != itsUsedOverMapBitmapIndex)
-		EmptyBitmapVector(itsOverMapBitmaps);
-}
-
-void NFmiGdiPlusImageMapHandler::ClearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
-{
-	EmptyBitmapVector(theBitmaps);
-	theBitmaps.clear();
+		::emptyBitmapVector(itsOverMapBitmaps);
 }
 
 const NFmiRect& NFmiGdiPlusImageMapHandler::Position(void)
@@ -305,7 +320,7 @@ void NFmiGdiPlusImageMapHandler::NextMap(void)
 	if(itsUsedMapIndex >= static_cast<long>(itsMapBitmaps.size()))
 		itsUsedMapIndex = 0;
 	if(oldIndex != itsUsedMapIndex)
-		EmptyBitmapVector(itsMapBitmaps);
+		::emptyBitmapVector(itsMapBitmaps);
 }
 
 void NFmiGdiPlusImageMapHandler::PreviousMap(void)
@@ -315,17 +330,7 @@ void NFmiGdiPlusImageMapHandler::PreviousMap(void)
 	if(itsUsedMapIndex < 0)
 		itsUsedMapIndex = static_cast<long>(itsMapBitmaps.size()-1);
 	if(oldIndex != itsUsedMapIndex)
-		EmptyBitmapVector(itsMapBitmaps);
-}
-
-// deletoi ja laittaa 0-pointterit vektoriin
-void NFmiGdiPlusImageMapHandler::EmptyBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
-{
-	for(unsigned int i=0; i < theBitmaps.size(); i++)
-	{
-		delete theBitmaps[i];
-		theBitmaps[i] = 0;
-	}
+		::emptyBitmapVector(itsMapBitmaps);
 }
 
 void NFmiGdiPlusImageMapHandler::UsedMapIndex(int theIndex)
@@ -337,18 +342,8 @@ void NFmiGdiPlusImageMapHandler::UsedMapIndex(int theIndex)
 			itsUsedMapIndex = 0;
 		else if(itsUsedMapIndex >= static_cast<int>(itsMapBitmaps.size()))
 			itsUsedMapIndex = static_cast<int>(itsMapBitmaps.size()-1);
-		EmptyBitmapVector(itsMapBitmaps);
+		::emptyBitmapVector(itsMapBitmaps);
 	}
-}
-
-static BOOL IsImageGDIPLUSValid(CString filePathU_)
-{
-    Gdiplus::Bitmap image(filePathU_.AllocSysString());
-
-	if( image.GetFlags() == Gdiplus::ImageFlagsNone )
-		return FALSE;
-	else
-		return TRUE;
 }
 
 Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::CreateBitmapFromFile(const std::string &theFileName)
@@ -435,7 +430,7 @@ void NFmiGdiPlusImageMapHandler::OverMapBitmapIndex(int newValue)
 			itsUsedOverMapBitmapIndex = -1;
 		else if(itsUsedOverMapBitmapIndex >= static_cast<int>(itsOverMapBitmaps.size()))
 			itsUsedOverMapBitmapIndex = static_cast<int>(itsOverMapBitmaps.size()-1);
-		EmptyBitmapVector(itsOverMapBitmaps);
+		::emptyBitmapVector(itsOverMapBitmaps);
 	}
 }
 

@@ -90,8 +90,6 @@ public:
     void LandBorderPath(boost::shared_ptr<Imagine::NFmiPath> &thePath) {itsLandBorderPath = thePath;}
 
 private:
-	void EmptyBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps); // deletoi ja laittaa 0-pointterit vektoriin
-	void ClearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps);
 	Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &theFileName);
 	boost::shared_ptr<NFmiArea> ReadArea(const std::string& theAreaFileName);
 	void CalcZoomedAreaPosition(void);
