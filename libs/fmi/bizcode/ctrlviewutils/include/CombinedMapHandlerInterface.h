@@ -149,8 +149,6 @@ public:
     virtual void onHideParamWindow(unsigned int mapViewDescTopIndex) = 0;
     virtual void onShowTimeString(unsigned int mapViewDescTopIndex) = 0;
     virtual WmsSupportInterface& getWmsSupport() = 0;
-    virtual void changeWmsOverlayMapType(unsigned int mapViewDescTopIndex, bool goForward) = 0;
-    virtual void changeFileBitmapOverlayMapType(unsigned int mapViewDescTopIndex, bool goForward) = 0;
     virtual void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) = 0;
     virtual void onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex) = 0;
     virtual void onToggleLandBorderPenSize(unsigned int mapViewDescTopIndex) = 0;
