@@ -308,9 +308,17 @@ void NFmiGdiPlusImageMapHandler::PreviousOverMap(void)
 		::emptyBitmapVector(itsOverMapBitmaps);
 }
 
-const NFmiRect& NFmiGdiPlusImageMapHandler::Position(void)
+void NFmiGdiPlusImageMapHandler::OverMapBitmapIndex(int newValue)
 {
-	return itsZoomedAreaPosition;
+	if(itsUsedOverMapBitmapIndex != newValue && itsOverMapBitmaps.size() > 0)
+	{
+		itsUsedOverMapBitmapIndex = newValue;
+		if(itsUsedOverMapBitmapIndex < 0)
+			itsUsedOverMapBitmapIndex = -1;
+		else if(itsUsedOverMapBitmapIndex >= static_cast<int>(itsOverMapBitmaps.size()))
+			itsUsedOverMapBitmapIndex = static_cast<int>(itsOverMapBitmaps.size() - 1);
+		::emptyBitmapVector(itsOverMapBitmaps);
+	}
 }
 
 void NFmiGdiPlusImageMapHandler::NextMap(void)
@@ -344,6 +352,11 @@ void NFmiGdiPlusImageMapHandler::UsedMapIndex(int theIndex)
 			itsUsedMapIndex = static_cast<int>(itsMapBitmaps.size()-1);
 		::emptyBitmapVector(itsMapBitmaps);
 	}
+}
+
+const NFmiRect& NFmiGdiPlusImageMapHandler::Position(void)
+{
+	return itsZoomedAreaPosition;
 }
 
 Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::CreateBitmapFromFile(const std::string &theFileName)
@@ -419,19 +432,6 @@ const std::string NFmiGdiPlusImageMapHandler::GetBitmapAbsoluteFileName(void)
 const std::string NFmiGdiPlusImageMapHandler::GetOverMapBitmapAbsoluteFileName(void)
 {
 	return ::MakeAbsoluteFileName(GetOverMapBitmapFileName(), ControlPath());
-}
-
-void NFmiGdiPlusImageMapHandler::OverMapBitmapIndex(int newValue)
-{
-	if(itsUsedOverMapBitmapIndex != newValue && itsOverMapBitmaps.size() > 0)
-	{
-		itsUsedOverMapBitmapIndex = newValue;
-		if(itsUsedOverMapBitmapIndex < 0)
-			itsUsedOverMapBitmapIndex = -1;
-		else if(itsUsedOverMapBitmapIndex >= static_cast<int>(itsOverMapBitmaps.size()))
-			itsUsedOverMapBitmapIndex = static_cast<int>(itsOverMapBitmaps.size()-1);
-		::emptyBitmapVector(itsOverMapBitmaps);
-	}
 }
 
 static NFmiRect CalcTotalAbsolutRect(Gdiplus::Bitmap *theBitmap)
