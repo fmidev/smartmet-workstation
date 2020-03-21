@@ -794,8 +794,14 @@ std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFm
 void NFmiCombinedMapHandler::initCombinedMapStates()
 {
 	auto mapViewCount = getMapViewCount();
-	auto wmsBackgroundMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getBackgroundsLength());
-	auto wmsOverlayMapLayerCount = static_cast<unsigned int>(getWmsSupport().getStaticMapClientState(0, 0).state_->getOverlaysLenght());
+	auto wmsBackgroundMapLayerCount = 0;
+	auto wmsOverlayMapLayerCount = 0;
+	if(wmsSupportAvailable())
+	{
+		auto& staticMapClientState = getWmsSupport().getStaticMapClientState(0, 0).state_;
+		wmsBackgroundMapLayerCount = static_cast<unsigned int>(staticMapClientState->getBackgroundsLength());
+		wmsOverlayMapLayerCount = static_cast<unsigned int>(staticMapClientState->getOverlaysLenght());
+	}
 
 	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
 	{
@@ -853,6 +859,9 @@ void NFmiCombinedMapHandler::initCombinedMapSelectionIndices()
 
 void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 {
+	if(!wmsSupportAvailable())
+		return;
+
 	auto &wmsSupport = getWmsSupport();
 	auto mapViewCount = getMapViewCount();
 	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
