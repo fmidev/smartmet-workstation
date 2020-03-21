@@ -31,19 +31,12 @@ namespace
 		}
 	};
 
-	// Deletoi ja laittaa 0-pointterit vektoriin
-	void emptyBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
-	{
-		for(unsigned int i = 0; i < theBitmaps.size(); i++)
-		{
-			delete theBitmaps[i];
-			theBitmaps[i] = 0;
-		}
-	}
-
 	void clearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
 	{
-		::emptyBitmapVector(theBitmaps);
+		for(auto *bitmapPointer : theBitmaps)
+		{
+			delete bitmapPointer;
+		}
 		theBitmaps.clear();
 	}
 }
@@ -294,8 +287,6 @@ void NFmiGdiPlusImageMapHandler::NextOverMap(void)
 	itsUsedOverMapBitmapIndex++;
 	if(itsUsedOverMapBitmapIndex >= static_cast<long>(itsOverMapBitmaps.size()))
 		itsUsedOverMapBitmapIndex = -1;
-	if(oldIndex != itsUsedOverMapBitmapIndex)
-		::emptyBitmapVector(itsOverMapBitmaps);
 }
 
 void NFmiGdiPlusImageMapHandler::PreviousOverMap(void)
@@ -304,8 +295,6 @@ void NFmiGdiPlusImageMapHandler::PreviousOverMap(void)
 	itsUsedOverMapBitmapIndex--;
 	if(itsUsedOverMapBitmapIndex < -1)
 		itsUsedOverMapBitmapIndex = static_cast<long>(itsOverMapBitmaps.size()-1);
-	if(oldIndex != itsUsedOverMapBitmapIndex)
-		::emptyBitmapVector(itsOverMapBitmaps);
 }
 
 void NFmiGdiPlusImageMapHandler::OverMapBitmapIndex(int newValue)
@@ -317,7 +306,6 @@ void NFmiGdiPlusImageMapHandler::OverMapBitmapIndex(int newValue)
 			itsUsedOverMapBitmapIndex = -1;
 		else if(itsUsedOverMapBitmapIndex >= static_cast<int>(itsOverMapBitmaps.size()))
 			itsUsedOverMapBitmapIndex = static_cast<int>(itsOverMapBitmaps.size() - 1);
-		::emptyBitmapVector(itsOverMapBitmaps);
 	}
 }
 
@@ -327,8 +315,6 @@ void NFmiGdiPlusImageMapHandler::NextMap(void)
 	itsUsedMapIndex++;
 	if(itsUsedMapIndex >= static_cast<long>(itsMapBitmaps.size()))
 		itsUsedMapIndex = 0;
-	if(oldIndex != itsUsedMapIndex)
-		::emptyBitmapVector(itsMapBitmaps);
 }
 
 void NFmiGdiPlusImageMapHandler::PreviousMap(void)
@@ -337,8 +323,6 @@ void NFmiGdiPlusImageMapHandler::PreviousMap(void)
 	itsUsedMapIndex--;
 	if(itsUsedMapIndex < 0)
 		itsUsedMapIndex = static_cast<long>(itsMapBitmaps.size()-1);
-	if(oldIndex != itsUsedMapIndex)
-		::emptyBitmapVector(itsMapBitmaps);
 }
 
 void NFmiGdiPlusImageMapHandler::UsedMapIndex(int theIndex)
@@ -350,7 +334,6 @@ void NFmiGdiPlusImageMapHandler::UsedMapIndex(int theIndex)
 			itsUsedMapIndex = 0;
 		else if(itsUsedMapIndex >= static_cast<int>(itsMapBitmaps.size()))
 			itsUsedMapIndex = static_cast<int>(itsMapBitmaps.size()-1);
-		::emptyBitmapVector(itsMapBitmaps);
 	}
 }
 
