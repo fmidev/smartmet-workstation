@@ -125,15 +125,23 @@ void CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(const st
 }
 
 // Jos layer löytyy, palauta sen indeksi. Jos ei ole listassa, palauta -1 puuttumisen merkiksi.
-int CombinedMapHandlerInterface::getBorderLayerIndex(NFmiDrawParamList& drawParamList)
+int CombinedMapHandlerInterface::getBorderLayerIndex(NFmiDrawParamList* drawParamList)
 {
-	int layerIndex = 1; // NFmiDrawParamList:in indeksit alkavat 1:stä.
-	for(drawParamList.Reset(); drawParamList.Next(); layerIndex++)
+	if(drawParamList)
 	{
-		if(drawParamList.Current()->DataType() == NFmiInfoData::kMapLayer)
+		int layerIndex = 1; // NFmiDrawParamList:in indeksit alkavat 1:stä.
+		for(drawParamList->Reset(); drawParamList->Next(); layerIndex++)
 		{
-			return layerIndex;
+			if(drawParamList->Current()->DataType() == NFmiInfoData::kMapLayer)
+			{
+				return layerIndex;
+			}
 		}
 	}
 	return -1;
+}
+
+bool CombinedMapHandlerInterface::hasSeparateBorderLayer(NFmiDrawParamList* drawParamList)
+{
+	return getBorderLayerIndex(drawParamList) != -1;
 }
