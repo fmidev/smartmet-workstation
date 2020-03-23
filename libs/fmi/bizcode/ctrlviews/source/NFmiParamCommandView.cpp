@@ -163,6 +163,10 @@ int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace, double* indexReal
 	if(!fHasMapLayer)
 		zeroBasedLineIndexRealValue += 1;
 
+	// T‰m‰n pirun parametri boxin laskukoodit pit‰isi tehd‰ uudestaan, nyt minun kuitenkin pit‰‰ vain v‰hent‰‰ 
+	// lasketusta indeksist‰ joku vakio desimaaliosio, jotta indeksin ja klikattu paikka ovat mahd. oikean tuntuisia.
+	zeroBasedLineIndexRealValue -= 0.25;
+
 	if(indexRealValueOut)
 		*indexRealValueOut = zeroBasedLineIndexRealValue;
 	return static_cast<int>(zeroBasedLineIndexRealValue);
