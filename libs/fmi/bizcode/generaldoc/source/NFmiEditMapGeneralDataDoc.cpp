@@ -4115,7 +4115,7 @@ void AddFixedDrawParamsToMenu(const NFmiFixedDrawParamFolder &theFixedDrawParamF
     }
 }
 
-bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int index)
+bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
 	itsCurrentViewRowIndex = theRowIndex;
 	delete itsPopupMenu;
@@ -4124,7 +4124,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 	NFmiDrawParamList* rowDrawParamList = GetCombinedMapHandler()->getDrawParamList(theDescTopIndex, theRowIndex);
 	if(itsSmartInfoOrganizer && rowDrawParamList)
 	{
-		if(rowDrawParamList->Index(index))
+		if(rowDrawParamList->Index(layerIndex))
 		{
 			bool crossSectionPopup = theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 			bool mapViewSectionPopup = theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
@@ -4142,70 +4142,70 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 			if(crossSectionPopup == false)
 			{ // poikkileikkaus-näyttö ei tue tekstimuotoista piirtoa
 				menuString = ::GetDictionaryString("MapViewParamOptionPopUpText");
-				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiTextView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiTextView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 				itsPopupMenu->Add(std::move(menuItem));
 			}
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpIsoline");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpContour");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiColorContourView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiColorContourView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpContourIsoline");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiColorContourIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiColorContourIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpQuickContour");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiQuickColorContourView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiQuickColorContourView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpRemove");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiRemoveView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiRemoveView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 
             if(drawParam->ShowColorLegend())
                 menuString = ::GetDictionaryString("Hide legend");
             else
                 menuString = ::GetDictionaryString("Show legend");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowLegendState, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowLegendState, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
             itsPopupMenu->Add(std::move(menuItem));
 
             menuString = ::GetDictionaryString("MapViewParamOptionPopUpHide");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiHideView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiHideView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpShow");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiShowView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiShowView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpActivate");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiActivateView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiActivateView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			menuItem->ExtraParam(0); // kun parametria aktivoidaan (tai tulevaisuudessa tehdään mitä vain), käytetään extraParamia kertomaan missä parametri on, 0=karttanäyttö, 1=poikkileikkaus ja 2=aikasarja
 			itsPopupMenu->Add(std::move(menuItem));
             menuString = ::GetDictionaryString("Save DrawParam");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiStoreDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiStoreDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
             itsPopupMenu->Add(std::move(menuItem));
             
             menuString = ::GetDictionaryString("Reload DrawParam");
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiReloadDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiReloadDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
             itsPopupMenu->Add(std::move(menuItem));
 
             // FixedDrawParam valikko tähän väliin
-            AddFixedDrawParamsToMenu(itsFixedDrawParamSystem.RootFolder(), ::GetDictionaryString("FixedDrawParams"), *itsPopupMenu, theDescTopIndex, theRowIndex, index, param, level, dataType, drawParam);
+            AddFixedDrawParamsToMenu(itsFixedDrawParamSystem.RootFolder(), ::GetDictionaryString("FixedDrawParams"), *itsPopupMenu, theDescTopIndex, theRowIndex, layerIndex, param, level, dataType, drawParam);
 
 			// copy/paste komennot tähän
 			menuString = "Copy draw options";
-            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiCopyDrawParamOptions, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+            menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiCopyDrawParamOptions, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 			if(GetCombinedMapHandler()->copyPasteDrawParamAvailableYet())
 			{
 				menuString = "Paste draw options";
-                menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiPasteDrawParamOptions, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+                menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiPasteDrawParamOptions, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 				itsPopupMenu->Add(std::move(menuItem));
 			}
 
 			if(!macroParamInCase)
 			{
 				menuString = "Previous model run"; //::GetDictionaryString("MapViewParamOptionPopUpActivate");
-				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModelRunOffsetPrevious, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModelRunOffsetPrevious, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 				itsPopupMenu->Add(std::move(menuItem));
 
 				if(crossSectionPopup == false)
@@ -4213,18 +4213,21 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 					if(drawParam && drawParam->ShowDifferenceToOriginalData())
 					{
 						menuString = ::GetDictionaryString("MapViewParamOptionPopUpOrigDiffOff");
-						menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+						menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 					}
 					else
 					{
 						menuString = ::GetDictionaryString("MapViewParamOptionPopUpOrigDiffOn");
-						menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+						menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiToggleShowDifferenceToOriginalData, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 					}
 					itsPopupMenu->Add(std::move(menuItem));
 				}
 			}
+
+			AddBorderLayerActionToPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue, itsPopupMenu);
+
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpProperties");
-			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, index, drawParam->ViewMacroDrawParam()));
+			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 
 			if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
@@ -4235,6 +4238,34 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int in
 	}
 	return false;
 }
+
+void AddBorderLayerActionToPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue, NFmiMenuItemList* theMenuList)
+{
+	if(theDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
+		return; // Jos kyse muusta kuin karttanäytöstä, ei tehdä mitään...
+
+	auto *drawParamList = GetCombinedMapHandler()->getDrawParamList(theDescTopIndex, theRowIndex);
+	if(drawParamList)
+	{
+		auto layerIndex = CombinedMapHandlerInterface::getBorderLayerIndex(*drawParamList);
+		FmiMenuCommandType commandType = kFmiAddBorderLineLayer;
+		std::string commandText = ::GetDictionaryString("Add country border layer here");
+		auto borderLayerWasPresent = (layerIndex != -1);
+		if(borderLayerWasPresent)
+		{
+			commandType = kFmiMoveBorderLineLayer;
+			commandText = ::GetDictionaryString("Move country border layer here");
+		}
+		// Todellinen käyttäjän haluama layer-indeksi (mihin uusi layer lisätään tai siirretään) on pyöristys layerIndexRealValue:sta.
+		int wantedLayerIndex = boost::math::iround(layerIndexRealValue);
+		if(layerIndexRealValue < 0)
+			layerIndex = 1;
+
+		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, commandText, NFmiDataIdent(), commandType, g_DefaultParamView, nullptr, NFmiInfoData::kMapLayer, wantedLayerIndex);
+		theMenuList->Add(std::move(menuItem));
+	}
+}
+
 
 bool CreateMaskParamsPopup(int theRowIndex, int index)
 {
@@ -4522,6 +4553,12 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiModelRunOffsetPrevious:
 		case kFmiModelRunOffsetNext:
 			GetCombinedMapHandler()->setModelRunOffset(*menuItem, itsCurrentViewRowIndex);
+			break;
+		case kFmiAddBorderLineLayer:
+			GetCombinedMapHandler()->addBorderLineLayer(*menuItem, itsCurrentViewRowIndex);
+			break;
+		case kFmiMoveBorderLineLayer:
+			GetCombinedMapHandler()->moveBorderLineLayer(*menuItem, itsCurrentViewRowIndex);
 			break;
 
 		default:
@@ -11036,9 +11073,9 @@ bool NFmiEditMapGeneralDataDoc::CreateParamSelectionPopup(unsigned int theDescTo
 	return pimpl->CreateParamSelectionPopup(theDescTopIndex);
 }
 
-bool NFmiEditMapGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int index)
+bool NFmiEditMapGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
-	return pimpl->CreateViewParamsPopup(theDescTopIndex, theRowIndex, index);
+	return pimpl->CreateViewParamsPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue);
 }
 
 bool NFmiEditMapGeneralDataDoc::CreateMaskSelectionPopup(int theRowIndex)
