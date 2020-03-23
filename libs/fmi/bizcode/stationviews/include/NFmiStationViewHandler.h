@@ -109,7 +109,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
 	NFmiCtrlView* GetView(const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
 	void DrawParamView(NFmiToolBox * theGTB);
-    boost::shared_ptr<NFmiArea> MapArea(void) const {return itsMapArea;}
+	boost::shared_ptr<NFmiArea> GetArea() const override;
+	void SetArea(const boost::shared_ptr<NFmiArea>& theArea) override;
 
  private:
 	void DoTotalLocationSelection(const NFmiPoint & thePlace, const NFmiPoint &theLatlon, unsigned long theKey, bool fDrawSelectionOnThisView);
