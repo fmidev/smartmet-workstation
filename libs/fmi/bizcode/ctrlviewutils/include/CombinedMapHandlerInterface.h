@@ -194,6 +194,8 @@ public:
     // Jos arvo on 0, oltaisiin piirt‰m‰ss‰ overlay layeria heti pohjakartan p‰‰lle.
     // Jos arvo on 1, oltaisiin piirt‰m‰ss‰ overlay layeria data visualisointien p‰‰lle.
     virtual bool isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode) = 0;
+    virtual void addBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual void moveBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
 
 
     // Staattiset perushelper-funktiot
@@ -205,4 +207,5 @@ public:
     static void verboseLogging(bool newValue);
     static bool verboseLogging();
     static void doVerboseFunctionStartingLogReporting(const std::string& functionName);
+    static int getBorderLayerIndex(NFmiDrawParamList& drawParamList);
 };
