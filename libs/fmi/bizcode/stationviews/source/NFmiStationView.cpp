@@ -66,6 +66,7 @@
 #include "NFmiMacroParamfunctions.h"
 #include "NFmiIsoLineData.h"
 #include "ToolMasterDrawingFunctions.h"
+#include "NFmiCountryBorderDrawUtils.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -325,6 +326,14 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 		return ;
 
 	itsToolBox = theGTB;
+
+	if(itsDrawParam->DataType() == NFmiInfoData::kMapLayer)
+	{
+		// Rajaviivat piirretään tässä kartan piirtopinoon, jos kyse on erillisestä "country border" -layeristä
+		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, theGTB);
+		return;
+	}
+
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
     
 	SetupUsedDrawParam();
