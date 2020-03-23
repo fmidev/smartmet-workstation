@@ -2089,7 +2089,11 @@ void NFmiStationViewHandler::DrawData(NFmiToolBox* theGTB)
     if(itsCtrlViewDocumentInterface->ProjectionCurvatureInfo()->GetDrawingMode() == NFmiProjectionCurvatureInfo::kOverEverything)
         DrawProjetionLines(theGTB);
 
-	NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, theGTB);
+	if(!HasSeparateCountryBorderLayer())
+	{
+		// Rajaviivat piirret‰‰n kartalle t‰‰ll‰ vain jos niit‰ ei piirret‰ erillisess‰ kerroksessa.
+		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, theGTB);
+	}
 }
 
 bool NFmiStationViewHandler::DrawTimeTextInThisMapViewTile(void)
@@ -3418,6 +3422,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		FmiParameterName param = FmiParameterName(theDrawParam->Param().GetParam()->GetIdent());
         bool isGridData = info ? (info->IsGrid() == true) : false;
         bool useTextView = theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiTextView;
+		auto dataType = theDrawParam->DataType();
 
         if(param == NFmiInfoData::kFmiSpSynoPlot || param == NFmiInfoData::kFmiSpSoundingPlot || param == NFmiInfoData::kFmiSpMinMaxPlot || param == NFmiInfoData::kFmiSpMetarPlot) // jos synop plottia halutaan tai sounding-plottia tai min/max plottia (9996)
 		{
@@ -3429,7 +3434,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 											 ,itsViewGridRowNumber
                                              ,itsViewGridColumnNumber);
 		}
-		else if(theDrawParam->DataType() == NFmiInfoData::kSatelData) // param >= kFmiSatelCh1 && param <= kFmiSatelCh345)
+		else if(dataType == NFmiInfoData::kSatelData) // param >= kFmiSatelCh1 && param <= kFmiSatelCh345)
 		{
 			stationView = new NFmiSatelView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -3439,7 +3444,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                              ,itsViewGridRowNumber
                                              ,itsViewGridColumnNumber);
         }
-		else if(theDrawParam->DataType() == NFmiInfoData::kConceptualModelData) // rintaman piirto
+		else if(dataType == NFmiInfoData::kConceptualModelData) // rintaman piirto
 		{
 			stationView = new NFmiConceptualDataView(itsMapViewDescTopIndex, itsMapArea
 													,itsToolBox
@@ -3449,7 +3454,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridRowNumber
                                                     , itsViewGridColumnNumber);
         }
-        else if(theDrawParam->DataType() == NFmiInfoData::kCapData) // Capin piirto
+        else if(dataType == NFmiInfoData::kCapData) // Capin piirto
         {
             stationView = new NFmiCapView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
@@ -3459,7 +3464,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridRowNumber
                 , itsViewGridColumnNumber);
         }
-        else if(theDrawParam->DataType() == NFmiInfoData::kWmsData) // WMS:n piirto
+        else if(dataType == NFmiInfoData::kWmsData) // WMS:n piirto
         {
 #ifndef DISABLE_CPPRESTSDK
             stationView = new NFmiWmsView(itsMapViewDescTopIndex, itsMapArea
@@ -3471,7 +3476,19 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridColumnNumber);
 #endif // DISABLE_CPPRESTSDK
         }
-		else if(theDrawParam->DataType() == NFmiInfoData::kFlashData || (theDrawParam->Param().GetProducer()->GetIdent() == kFmiFlashObs && theDrawParam->Param().GetParamIdent() == kFmiFlashStrength ))
+		else if(dataType == NFmiInfoData::kMapLayer) // country border viivojen piirto tavallisessa NFmiStationView -oliossa
+		{
+			stationView = new NFmiStationView(itsMapViewDescTopIndex, itsMapArea
+				, itsToolBox
+				, itsDrawingEnvironment
+				, theDrawParam
+				, param
+				, dataOffSet
+				, dataSize
+				, itsViewGridRowNumber
+				, itsViewGridColumnNumber);
+		}
+		else if(dataType == NFmiInfoData::kFlashData || (theDrawParam->Param().GetProducer()->GetIdent() == kFmiFlashObs && theDrawParam->Param().GetParamIdent() == kFmiFlashStrength ))
 		{
 			stationView = new NFmiFlashDataView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -4754,4 +4771,14 @@ boost::shared_ptr<NFmiArea> NFmiStationViewHandler::GetArea() const
 void NFmiStationViewHandler::SetArea(const boost::shared_ptr<NFmiArea>& theArea)
 {
 	throw std::runtime_error(std::string("Don't use this ") + __FUNCTION__ + " -function before real implementation is made...");
+}
+
+bool NFmiStationViewHandler::HasSeparateCountryBorderLayer() const
+{
+	if(itsCtrlViewDocumentInterface)
+	{
+		NFmiDrawParamList* drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
+		return CombinedMapHandlerInterface::hasSeparateBorderLayer(drawParamList);
+	}
+	return false;
 }
