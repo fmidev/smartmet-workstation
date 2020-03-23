@@ -43,10 +43,10 @@ class NFmiAreaView : public NFmiCtrlView
                  , int viewGridColumnNumber);
 
 	NFmiAreaView (const NFmiAreaView & theView);
-	NFmiAreaView (void){};
-	virtual  ~NFmiAreaView (void);
-	inline virtual boost::shared_ptr<NFmiArea> Area (){ return itsArea; } ; 
-	virtual void Area (const boost::shared_ptr<NFmiArea> &theArea);
+	NFmiAreaView ();
+	~NFmiAreaView ();
+	boost::shared_ptr<NFmiArea> GetArea () const override; 
+	void SetArea(const boost::shared_ptr<NFmiArea> &theArea) override;
 
  protected:
 	boost::shared_ptr<NFmiArea> itsArea;
