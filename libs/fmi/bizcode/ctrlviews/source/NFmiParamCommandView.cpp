@@ -156,14 +156,16 @@ void NFmiParamCommandView::CalcTextData(void)
 
 // Oikeat parametri rivit alkavat 1:st‰. 
 // Rivi 0 on map-layer rivi, jota ei voi manipuloida mitenk‰‰n.
-int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace)
+int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace, double* indexRealValueOut)
 {
 	auto cursorHeight = thePlace.Y() - GetFrame().Top();
-	auto zeroBasedLineIndex = static_cast<int>(cursorHeight / itsLineHeight);
-	if(fHasMapLayer)
-		return zeroBasedLineIndex;
-	else
-		return zeroBasedLineIndex + 1;
+	auto zeroBasedLineIndexRealValue = cursorHeight / itsLineHeight;
+	if(!fHasMapLayer)
+		zeroBasedLineIndexRealValue += 1;
+
+	if(indexRealValueOut)
+		*indexRealValueOut = zeroBasedLineIndexRealValue;
+	return static_cast<int>(zeroBasedLineIndexRealValue);
 }
 
 bool NFmiParamCommandView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)

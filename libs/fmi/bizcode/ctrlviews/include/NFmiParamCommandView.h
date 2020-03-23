@@ -42,7 +42,7 @@ class NFmiParamCommandView : public NFmiCtrlView
    bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
 
  protected:
-   int CalcIndex(const NFmiPoint& thePlace);
+   int CalcIndex(const NFmiPoint& thePlace, double *indexRealValueOut = nullptr);
    virtual void DrawBackground(void);
    virtual void DrawData(void){};
    NFmiRect CheckBoxRect(int lineIndex, bool drawedRect);
