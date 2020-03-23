@@ -354,7 +354,7 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 
 void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
-	itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, Area());
+	itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, GetArea());
 }
 
 void NFmiStationView::MakeDrawedInfoVector(void)
@@ -839,7 +839,7 @@ void NFmiStationView::DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix
 {
 	// K‰ytet‰‰n hiladatan piirrossa isolineView-luokkaa
 	NFmiDrawingEnvironment envi;
-	NFmiIsoLineView isolineView(itsMapViewDescTopIndex, Area(), itsToolBox, &envi, theDrawParam, static_cast<FmiParameterName>(NFmiInfoData::kFmiSpMatrixDataDraw), itsObjectOffSet, itsObjectSize, itsViewGridRowNumber, itsViewGridColumnNumber);
+	NFmiIsoLineView isolineView(itsMapViewDescTopIndex, GetArea(), itsToolBox, &envi, theDrawParam, static_cast<FmiParameterName>(NFmiInfoData::kFmiSpMatrixDataDraw), itsObjectOffSet, itsObjectSize, itsViewGridRowNumber, itsViewGridColumnNumber);
 	isolineView.Time(itsTime);
 	isolineView.SpecialMatrixData(theMatrix);
 	isolineView.Draw(itsToolBox);
@@ -1698,7 +1698,7 @@ void NFmiStationView::GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, 
     else
     {
         CtrlViewDocumentInterfaceGridding ctrlViewGriddingInterface(itsCtrlViewDocumentInterface);
-        NFmiStationView::GridStationData(&ctrlViewGriddingInterface, Area(), itsDrawParam, theValues, theTime, ctrlViewGriddingInterface.GriddingProperties(false));
+        NFmiStationView::GridStationData(&ctrlViewGriddingInterface, GetArea(), itsDrawParam, theValues, theTime, ctrlViewGriddingInterface.GriddingProperties(false));
     }
 }
 

@@ -691,7 +691,7 @@ bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &th
                 if(newZoomedArea)
                 {
                     newZoomedArea->SetXYArea(NFmiRect(0, 0, 1, 1));
-                    theWantedNewZoomedAreaRect = newZoomedArea->XYArea(Area().get());
+                    theWantedNewZoomedAreaRect = newZoomedArea->XYArea(GetArea().get());
                     delete newZoomedArea;
                     return true;
                 }
@@ -1452,7 +1452,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     {
         // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
         boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
-        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, Area()) == false)
+        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, GetArea()) == false)
             return; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
     }
 
@@ -2278,11 +2278,12 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
     int x2 = 0;
     int y2 = 0;
     isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
+    boost::shared_ptr<NFmiArea> mapArea = GetArea();
     if(itsInfo->IsGrid())
     {
         // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
         boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
-        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, Area()) == false)
+        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, mapArea) == false)
             return false; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
     }
 
@@ -2298,10 +2299,10 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
             itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, itsTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
             fillGridDataStatus = initializeIsoLineData(isoLineData);
-            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(Area().get());
+            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(mapArea.get());
         }
     }
-    else if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, Area(), zoomedAreaRect, x1, y1, x2, y2))
+    else if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, mapArea, zoomedAreaRect, x1, y1, x2, y2))
     {
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": zoomed grid used (faster)", this);
         isoLineData.itsInfo = itsInfo;
@@ -2324,7 +2325,6 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         else if(itsInfo->IsGrid())
         {
             const NFmiArea *origDataArea = itsInfo->Area();
-            boost::shared_ptr<NFmiArea> mapArea = Area();
             if(DifferentWorldViews(origDataArea, mapArea.get()))
             { // tehdään dataArea, joka on karttapohjan maailmassa
                 boost::shared_ptr<NFmiArea> origDataAreaClone(origDataArea->Clone());
@@ -2343,7 +2343,7 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
                 zoomedAreaRect = newArea->XYArea(mapArea.get());
             }
             else
-                zoomedAreaRect = itsInfo->Area()->XYArea(Area().get());
+                zoomedAreaRect = itsInfo->Area()->XYArea(mapArea.get());
         }
         else
         {
