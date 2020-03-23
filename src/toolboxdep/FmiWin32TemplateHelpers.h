@@ -261,7 +261,7 @@ namespace CFmiWin32TemplateHelpers
         NFmiStationViewHandler *mapView = theView->GetMapViewHandler(1, 1);
         if(mapView)
         {
-            boost::shared_ptr<NFmiArea> mapArea = mapView->MapArea();
+            boost::shared_ptr<NFmiArea> mapArea = mapView->GetArea();
             NFmiPoint mapViewCenter = mapArea->XYArea().Center();
             NFmiPoint movePoint(mapArea->XYArea().Width() * thePanDragMoveFactor.X(), mapArea->XYArea().Height() * thePanDragMoveFactor.Y());
             NFmiPoint zoomDragUpPoint(mapViewCenter + movePoint);
@@ -277,8 +277,9 @@ namespace CFmiWin32TemplateHelpers
         NFmiStationViewHandler *mapView = theView->GetMapViewHandler(1, 1);
         if(mapView)
         {
-            NFmiPoint mapViewCenter = mapView->MapArea()->XYArea().Center();
-            smartMetDocumentInterface->ZoomMapInOrOut(theView->MapViewDescTopIndex(), mapView->MapArea(), mapViewCenter, theZoomFactor);
+            boost::shared_ptr<NFmiArea> mapArea = mapView->GetArea();
+            NFmiPoint mapViewCenter = mapArea->XYArea().Center();
+            smartMetDocumentInterface->ZoomMapInOrOut(theView->MapViewDescTopIndex(), mapArea, mapViewCenter, theZoomFactor);
             smartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Zoom map with arrow keys");
         }
     }
