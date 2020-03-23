@@ -4247,20 +4247,16 @@ void AddBorderLayerActionToPopup(unsigned int theDescTopIndex, int theRowIndex, 
 	auto *drawParamList = GetCombinedMapHandler()->getDrawParamList(theDescTopIndex, theRowIndex);
 	if(drawParamList)
 	{
-		auto layerIndex = CombinedMapHandlerInterface::getBorderLayerIndex(*drawParamList);
 		FmiMenuCommandType commandType = kFmiAddBorderLineLayer;
 		std::string commandText = ::GetDictionaryString("Add country border layer here");
-		auto borderLayerWasPresent = (layerIndex != -1);
-		if(borderLayerWasPresent)
+		auto borderLayerExist = CombinedMapHandlerInterface::hasSeparateBorderLayer(drawParamList);
+		if(borderLayerExist)
 		{
 			commandType = kFmiMoveBorderLineLayer;
 			commandText = ::GetDictionaryString("Move country border layer here");
 		}
 		// Todellinen käyttäjän haluama layer-indeksi (mihin uusi layer lisätään tai siirretään) on pyöristys layerIndexRealValue:sta.
 		int wantedLayerIndex = boost::math::iround(layerIndexRealValue);
-		if(layerIndexRealValue < 0)
-			layerIndex = 1;
-
 		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, commandText, NFmiDataIdent(), commandType, g_DefaultParamView, nullptr, NFmiInfoData::kMapLayer, wantedLayerIndex);
 		theMenuList->Add(std::move(menuItem));
 	}
