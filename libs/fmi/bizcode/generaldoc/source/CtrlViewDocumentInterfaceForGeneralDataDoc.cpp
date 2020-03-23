@@ -134,9 +134,9 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::Printing()
     return itsDoc->Printing();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int index)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
-    return itsDoc->CreateViewParamsPopup(theDescTopIndex, theRowIndex, index);
+    return itsDoc->CreateViewParamsPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty, bool fClearCache, int theWantedMapViewDescTop)
