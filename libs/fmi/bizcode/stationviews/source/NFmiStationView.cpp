@@ -2913,6 +2913,16 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
     return str;
 }
 
+static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
+{
+	std::string str = "<b><font color=";
+	str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
+	str += ">";
+	str += drawParam->ParameterAbbreviation();
+	str += "</font></b>";
+	return str;
+}
+
 std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
 	itsToolTipDiffValue1 = kFloatMissing;
@@ -2921,8 +2931,11 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 	string str;
 	if(itsDrawParam)
 	{
+		auto drawParamDataType = itsDrawParam->DataType();
+		if(drawParamDataType == NFmiInfoData::kMapLayer)
+			return ::MakeMapLayerTooltipText(itsCtrlViewDocumentInterface, itsDrawParam);
         bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
-        bool macroParamCase = itsDrawParam->DataType() == NFmiInfoData::kMacroParam;
+        bool macroParamCase = (drawParamDataType == NFmiInfoData::kMacroParam);
         str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), false, showExtraInfo, true, 0, false);
 		str += tabStr;
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
@@ -2930,7 +2943,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
 		if(info) // satelliitti kuvilla ei ole infoa
 		{
-            if(fGetCurrentDataFromQ2Server || itsDrawParam->DataType() == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
+            if(fGetCurrentDataFromQ2Server || drawParamDataType == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
             {
                 fDoTimeInterpolation = false;
                 if(info->DataType() != NFmiInfoData::kStationary) // stationaari datalle ei tarvitse ajan osua, koska data on joka ajalle aina sama
