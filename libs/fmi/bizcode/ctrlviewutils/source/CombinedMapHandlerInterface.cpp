@@ -1,5 +1,6 @@
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiDrawParam.h"
+#include "NFmiDrawParamList.h"
 #include "NFmiFastQueryInfo.h"
 #include "ApplicationInterface.h"
 #include "catlog/catlog.h"
@@ -121,4 +122,18 @@ bool CombinedMapHandlerInterface::verboseLogging()
 void CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(const std::string& functionName)
 {
 	::doVerboseLogReporting(std::string("Starting ") + functionName + " -function");
+}
+
+// Jos layer löytyy, palauta sen indeksi. Jos ei ole listassa, palauta -1 puuttumisen merkiksi.
+int CombinedMapHandlerInterface::getBorderLayerIndex(NFmiDrawParamList& drawParamList)
+{
+	int layerIndex = 1; // NFmiDrawParamList:in indeksit alkavat 1:stä.
+	for(drawParamList.Reset(); drawParamList.Next(); layerIndex++)
+	{
+		if(drawParamList.Current()->DataType() == NFmiInfoData::kMapLayer)
+		{
+			return layerIndex;
+		}
+	}
+	return -1;
 }

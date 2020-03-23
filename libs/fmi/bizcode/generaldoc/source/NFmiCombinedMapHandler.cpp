@@ -3927,3 +3927,34 @@ NFmiCombinedMapModeState& NFmiCombinedMapHandler::getCombinedOverlayMapModeState
 {
 	return combinedOverlayMapModeStates_.at(mapViewDescTopIndex).at(mapAreaIndex);
 }
+
+void NFmiCombinedMapHandler::addBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex)
+{
+	auto dataType = menuItem.DataType();
+	boost::shared_ptr<NFmiDrawParam> drawParam = ::getInfoOrganizer().CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), dataType);
+	if(drawParam)
+	{
+		drawParam->DataType(dataType);
+		drawParam->ParameterAbbreviation(::GetDictionaryString("Country border layer"));
+		auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
+		auto* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
+		if(drawParamList && drawParamList->Add(drawParam, menuItem.IndexInViewRow()))
+		{
+			makeMapViewRowDirty(mapViewDescTopIndex, viewRowIndex);
+		}
+	}
+}
+
+void NFmiCombinedMapHandler::moveBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex)
+{
+	auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
+	auto* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
+	if(drawParamList)
+	{
+		auto layerIndex = CombinedMapHandlerInterface::getBorderLayerIndex(*drawParamList);
+		if(drawParamList->MoveParam(layerIndex, menuItem.IndexInViewRow()))
+		{
+			makeMapViewRowDirty(mapViewDescTopIndex, viewRowIndex);
+		}
+	}
+}
