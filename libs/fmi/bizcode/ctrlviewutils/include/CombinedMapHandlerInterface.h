@@ -207,5 +207,6 @@ public:
     static void verboseLogging(bool newValue);
     static bool verboseLogging();
     static void doVerboseFunctionStartingLogReporting(const std::string& functionName);
-    static int getBorderLayerIndex(NFmiDrawParamList& drawParamList);
+    static int getBorderLayerIndex(NFmiDrawParamList* drawParamList);
+    static bool hasSeparateBorderLayer(NFmiDrawParamList* drawParamList);
 };
