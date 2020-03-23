@@ -124,8 +124,8 @@ class NFmiCtrlView
    void ViewGridColumnNumber(int columnNumber) { itsViewGridColumnNumber = columnNumber; }
    int ViewRowLayerNumber() const { return itsViewRowLayerNumber; }
    void ViewRowLayerNumber(int viewRowLayerNumber) { itsViewRowLayerNumber = viewRowLayerNumber; }
-   int GetUsedParamRowIndex(int theRowIndex, int theColumnIndex);
-   int GetUsedParamRowIndex();
+   int GetUsedParamRowIndex(int theRowIndex, int theColumnIndex) const;
+   int GetUsedParamRowIndex() const;
    bool IsPrintedMapViewDesctop();
    bool IsPrinting() const;
 
