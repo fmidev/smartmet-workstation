@@ -3951,7 +3951,7 @@ void NFmiCombinedMapHandler::moveBorderLineLayer(const NFmiMenuItem& menuItem, i
 	auto* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
 	if(drawParamList)
 	{
-		auto layerIndex = CombinedMapHandlerInterface::getBorderLayerIndex(*drawParamList);
+		auto layerIndex = CombinedMapHandlerInterface::getBorderLayerIndex(drawParamList);
 		if(drawParamList->MoveParam(layerIndex, menuItem.IndexInViewRow()))
 		{
 			makeMapViewRowDirty(mapViewDescTopIndex, viewRowIndex);
