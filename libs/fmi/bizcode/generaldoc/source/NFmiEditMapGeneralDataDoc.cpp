@@ -4249,7 +4249,10 @@ void AddBorderLayerActionToPopup(unsigned int theDescTopIndex, int theRowIndex, 
 	{
 		FmiMenuCommandType commandType = kFmiAddBorderLineLayer;
 		std::string commandText = ::GetDictionaryString("Add country border layer here");
-		auto borderLayerExist = CombinedMapHandlerInterface::hasSeparateBorderLayer(drawParamList);
+		auto existingBorderLayerIndex = CombinedMapHandlerInterface::getBorderLayerIndex(drawParamList);
+		if(layerIndex == existingBorderLayerIndex)
+			return; // Ei tarvitse tehd‰ mit‰‰n, jos hiirell‰ osoitetaan jo suoraan border-layeria
+		auto borderLayerExist = (existingBorderLayerIndex != -1);
 		if(borderLayerExist)
 		{
 			commandType = kFmiMoveBorderLineLayer;
