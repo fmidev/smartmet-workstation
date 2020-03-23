@@ -4224,7 +4224,8 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 				}
 			}
 
-			AddBorderLayerActionToPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue, itsPopupMenu);
+			if(!crossSectionPopup)
+				AddBorderLayerActionToPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue, itsPopupMenu);
 
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpProperties");
 			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
