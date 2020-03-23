@@ -280,8 +280,9 @@ bool NFmiViewParamsView::RightButtonUp(const NFmiPoint& thePlace, unsigned long 
 {
 	if(IsIn(thePlace))
 	{
-		int index = CalcIndex(thePlace);
-		return itsCtrlViewDocumentInterface->CreateViewParamsPopup(itsMapViewDescTopIndex, GetUsedParamRowIndex(), index) == true;
+		double layerIndexRealValue = 0;
+		int layerIndex = CalcIndex(thePlace, &layerIndexRealValue);
+		return itsCtrlViewDocumentInterface->CreateViewParamsPopup(itsMapViewDescTopIndex, GetUsedParamRowIndex(), layerIndex, layerIndexRealValue) == true;
 	}
 	return false;
 }
