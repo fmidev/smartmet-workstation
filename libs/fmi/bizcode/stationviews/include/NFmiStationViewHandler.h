@@ -212,6 +212,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     bool DrawContourLegendOnThisMapRow();
+	bool HasSeparateCountryBorderLayer() const;
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
