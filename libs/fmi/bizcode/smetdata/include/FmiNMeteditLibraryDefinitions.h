@@ -115,7 +115,8 @@ typedef enum
     kFmiToggleShowLegendState = 87,
 	kFmiSwapViewRows = 88,
 	kFmiAddBorderLineLayer = 89,
-	kFmiMoveBorderLineLayer = 90
+	kFmiMoveBorderLineLayer = 90,
+	kFmiInsertParamLayer = 91
 }FmiMenuCommandType;
 
 // s‰‰ koodi annetaan t‰nne. Jos se on AWS wawa koodia (arvo 100-199), konvertoidaan se WW-koodiksi, muuten
