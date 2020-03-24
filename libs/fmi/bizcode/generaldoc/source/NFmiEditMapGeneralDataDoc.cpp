@@ -4115,6 +4115,27 @@ void AddFixedDrawParamsToMenu(const NFmiFixedDrawParamFolder &theFixedDrawParamF
     }
 }
 
+void SetLayerIndexForWantedMenucommandItems(NFmiMenuItemList& thePopupMenu, FmiMenuCommandType wantedMenucommand, int layerIndex)
+{
+	for(const auto &menuItem : thePopupMenu)
+	{
+		if(menuItem->CommandType() == wantedMenucommand)
+			menuItem->IndexInViewRow(layerIndex);
+		auto* subMenuList = menuItem->SubMenu();
+		if(subMenuList)
+			SetLayerIndexForWantedMenucommandItems(*subMenuList, wantedMenucommand, layerIndex);
+	}
+}
+
+void AddInsertParamLayerSectionIntoPopupMenu(NFmiMenuItemList *thePopupMenu, unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
+{
+	MenuCreationSettings menuSettings;
+	menuSettings.SetMapViewSettings(theDescTopIndex, kFmiInsertParamLayer);
+	CreateParamSelectionBasePopup(menuSettings, thePopupMenu, "Insert new parameter in here");
+	int wantedLayerIndex = boost::math::iround(layerIndexRealValue);
+	SetLayerIndexForWantedMenucommandItems(*thePopupMenu, kFmiInsertParamLayer, wantedLayerIndex);
+}
+
 bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
 	itsCurrentViewRowIndex = theRowIndex;
@@ -4139,6 +4160,9 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			itsPopupMenu = new NFmiMenuItemList;
 			std::string menuString;
 			std::unique_ptr<NFmiMenuItem> menuItem;
+
+			AddInsertParamLayerSectionIntoPopupMenu(itsPopupMenu, theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue);
+
 			if(crossSectionPopup == false)
 			{ // poikkileikkaus-näyttö ei tue tekstimuotoista piirtoa
 				menuString = ::GetDictionaryString("MapViewParamOptionPopUpText");
@@ -4559,6 +4583,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			break;
 		case kFmiMoveBorderLineLayer:
 			GetCombinedMapHandler()->moveBorderLineLayer(*menuItem, itsCurrentViewRowIndex);
+			break;
+		case kFmiInsertParamLayer:
+			GetCombinedMapHandler()->insertParamLayer(*menuItem, itsCurrentViewRowIndex);
 			break;
 
 		default:

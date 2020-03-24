@@ -196,6 +196,7 @@ public:
     virtual bool isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode) = 0;
     virtual void addBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void moveBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
 
 
     // Staattiset perushelper-funktiot

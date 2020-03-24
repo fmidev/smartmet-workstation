@@ -3958,3 +3958,20 @@ void NFmiCombinedMapHandler::moveBorderLineLayer(const NFmiMenuItem& menuItem, i
 		}
 	}
 }
+
+void NFmiCombinedMapHandler::insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex)
+{
+	auto dataType = menuItem.DataType();
+	boost::shared_ptr<NFmiDrawParam> drawParam = ::getInfoOrganizer().CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), dataType);
+	if(drawParam)
+	{
+		drawParam->DataType(dataType);
+		auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
+		auto* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
+		if(drawParamList && drawParamList->Add(drawParam, menuItem.IndexInViewRow()))
+		{
+			makeMapViewRowDirty(mapViewDescTopIndex, viewRowIndex);
+		}
+	}
+}
+
