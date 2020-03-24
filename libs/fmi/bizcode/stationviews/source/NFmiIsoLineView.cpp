@@ -2294,9 +2294,11 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         {
             isoLineData.itsInfo = itsInfo;
             isoLineData.itsParam = itsInfo->Param();
-            isoLineData.itsTime = this->itsTime;
+            isoLineData.itsTime = this->itsTime; // Tähän pistetään kartalla oleva aika
+            // Mutta pitää varmistaa että data interpoloidaan oikealta ajalta myös klimatologisilta datoilta (kuten Era-5, tms.)
+            auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
 
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, itsTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
             fillGridDataStatus = initializeIsoLineData(isoLineData);
             zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(mapArea.get());
