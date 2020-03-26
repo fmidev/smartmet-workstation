@@ -145,3 +145,28 @@ bool CombinedMapHandlerInterface::hasSeparateBorderLayer(NFmiDrawParamList* draw
 {
 	return getBorderLayerIndex(drawParamList) != -1;
 }
+
+void CombinedMapHandlerInterface::copyDrawParamsList(NFmiPtrList<NFmiDrawParamList>* copyFromList, NFmiPtrList<NFmiDrawParamList>* copyToList)
+{
+	if(copyFromList && copyToList)
+	{
+		copyToList->Clear(true); // tuhotaan ensin vanhan listan sisältö
+		NFmiPtrList<NFmiDrawParamList>::Iterator iter = copyFromList->Start();
+		for(; iter.Next(); )
+		{
+			NFmiDrawParamList* tmpList = new NFmiDrawParamList;
+			tmpList->CopyList(iter.Current(), false);
+			copyToList->AddEnd(tmpList);
+		}
+	}
+}
+
+bool CombinedMapHandlerInterface::IsBorderLayerDrawn(const NFmiDrawParam* separateBorderLayerDrawOptions)
+{
+	if(!separateBorderLayerDrawOptions->IsParamHidden())
+	{
+		if(separateBorderLayerDrawOptions->SimpleIsoLineWidth() >= 0.5f)
+			return true; // Jos viivan paksuus on >= 0.5, se pyöristyy vähintäin 1:een pikseliin ja borderit piirretään
+	}
+	return false;
+}

@@ -26,6 +26,7 @@ class NFmiLevel;
 class NFmiProjectionCurvatureInfo;
 class WmsSupportInterface;
 class NFmiCombinedMapModeState;
+class NFmiColor;
 
 namespace CtrlViewUtils
 {
@@ -210,4 +211,6 @@ public:
     static void doVerboseFunctionStartingLogReporting(const std::string& functionName);
     static int getBorderLayerIndex(NFmiDrawParamList* drawParamList);
     static bool hasSeparateBorderLayer(NFmiDrawParamList* drawParamList);
+    static void copyDrawParamsList(NFmiPtrList<NFmiDrawParamList>* copyFromList, NFmiPtrList<NFmiDrawParamList>* copyToList);
+    static bool IsBorderLayerDrawn(const NFmiDrawParam* separateBorderLayerDrawOptions);
 };
