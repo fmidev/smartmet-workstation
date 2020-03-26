@@ -38,6 +38,38 @@ using namespace std;
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#ifdef max
+#undef min
+#undef max
+#endif
+
+namespace
+{
+	// Muuttaa suhteellisen v‰ri kanava arvon (arvov‰li 0-1) 8-bit arvoksi (arvov‰li 0-255)
+	int colorRelativeTo8bit(double colorValue)
+	{
+		int eightBitColor = boost::math::iround(colorValue * 255.);
+		eightBitColor = std::min(255, std::max(0, eightBitColor));
+		return eightBitColor;
+	}
+
+	std::string colorToHex(int red, int green, int blue)
+	{
+		std::stringstream stream;
+		stream << std::setfill('0') << std::setw(2) << std::hex << red << green << blue;
+		return stream.str();
+	}
+	std::string colorToHexaString(const NFmiColor& color)
+	{
+		int redColor = ::colorRelativeTo8bit(color.GetRed());
+		int greenColor = ::colorRelativeTo8bit(color.GetGreen());
+		int blueColor = ::colorRelativeTo8bit(color.GetBlue());
+		return colorToHex(redColor, greenColor, blueColor);
+	}
+
+}
+
+
 //template<typename T>
 struct PointerDestroyer
 {
@@ -130,19 +162,18 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 // ******* NFmiMapViewDescTop -luokka *************************************
 // ************************************************************************
 
-NFmiMapViewDescTop::NFmiMapViewDescTop(void)
+NFmiMapViewDescTop::NFmiMapViewDescTop()
 :itsSettingsBaseName()
-,itsMapConfigurationSystem(0)
-,itsProjectionCurvatureInfo(0)
+,itsMapViewDescTopIndex(0)
+,itsMapConfigurationSystem(nullptr)
+,itsProjectionCurvatureInfo(nullptr)
 ,itsControlPath()
-,itsSelectedMapIndexVM(1)
 ,itsGdiPlusImageMapHandlerList()
 ,itsMapViewCache(CtrlViewUtils::MaxViewGridYSize)
 ,fRedrawMapView(true)
 ,itsLandBorderColors()
 ,itsLandBorderColorIndex(0)
 ,itsLandBorderPenSize(1,1)
-,fBorderDrawDirty(true)
 ,itsTimeControlViewTimes()
 ,itsClientViewXperYRatio(1.)
 ,itsRelativeMapRect(0.,0.,1.,0.9) // t‰m‰n suhteellisen osan n‰ytˆst‰ valtaa kartasto, loput menee aikakontrolli ikkunalle
@@ -156,19 +187,15 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(void)
 ,itsShowTimeOnMapMode(0)
 ,fShowTimeString(true)
 ,itsCurrentTime()
-,itsViewGridSizeVM(1,1)
 ,itsViewGridSizeMax(CtrlViewUtils::MaxViewGridXSize, CtrlViewUtils::MaxViewGridYSize)
-,fShowStationPlotVM(false)
 ,itsStationPointColorIndex(0)
 ,itsStationPointSize(1, 1)
-,fShowMasksOnMapVM(false)
 ,itsTimeControlTimeStep(1)
-,itsSpacingOutFactorVM(0)
 ,itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
 ,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
-,itsMapView(0)
+,itsMapView(nullptr)
 ,itsGraphicalInfo()
 ,itsGridPointCache()
 ,itsAnimationData()
@@ -181,7 +208,13 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(void)
 ,fShowControlPointsOnMap(true)
 ,fShowObsComparisonOnMap(true)
 ,fShowWarningMarkersOnMap(true)
+,fShowMasksOnMapVM(false)
+,itsSpacingOutFactorVM(0)
+,itsSelectedMapIndexVM(1)
+,fShowStationPlotVM(false)
+,itsViewGridSizeVM(1,1)
 ,itsLandBorderMapBitmap(nullptr)
+,itsCountryBorderBitmapCache()
 {
 }
 
@@ -192,40 +225,34 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsMapConfigurationSystem(theMapConfigurationSystem)
 ,itsProjectionCurvatureInfo(theProjectionCurvatureInfo)
 ,itsControlPath(theControlPath)
-,itsSelectedMapIndexVM(1)
 ,itsGdiPlusImageMapHandlerList()
 ,itsMapViewCache(CtrlViewUtils::MaxViewGridXSize * CtrlViewUtils::MaxViewGridYSize)
 ,fRedrawMapView(true)
 ,itsLandBorderColors()
 ,itsLandBorderColorIndex(0)
 ,itsLandBorderPenSize(1,1)
-,fBorderDrawDirty(true)
 ,itsTimeControlViewTimes()
 ,itsClientViewXperYRatio(1.)
 ,itsRelativeMapRect(0.,0.,1.,0.9) // t‰m‰n suhteellisen osan n‰ytˆst‰ valtaa kartasto, loput menee aikakontrolli ikkunalle
 ,itsMapViewSizeInPixels(10, 10)
 ,fShowParamWindowView(true)
 ,itsDrawParamListVector(0)
-,itsMapBlitDC(0)
+,itsMapBlitDC(nullptr)
 ,itsDrawOverMapMode(0)
 ,itsMapRowStartingIndex(1)
-,itsCopyCDC(0)
+,itsCopyCDC(nullptr)
 ,itsShowTimeOnMapMode(0)
 ,fShowTimeString(true)
 ,itsCurrentTime()
-,itsViewGridSizeVM(1,1)
 ,itsViewGridSizeMax(CtrlViewUtils::MaxViewGridXSize, CtrlViewUtils::MaxViewGridYSize)
-,fShowStationPlotVM(false)
 ,itsStationPointColorIndex(0)
 ,itsStationPointSize(1, 1)
-,fShowMasksOnMapVM(false)
 ,itsTimeControlTimeStep(1)
-,itsSpacingOutFactorVM(0)
 ,itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
 ,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
-,itsMapView(0)
+,itsMapView(nullptr)
 ,itsGraphicalInfo()
 ,itsGridPointCache()
 ,itsAnimationData()
@@ -238,11 +265,148 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,fShowControlPointsOnMap(true)
 ,fShowObsComparisonOnMap(true)
 ,fShowWarningMarkersOnMap(true)
+,fShowMasksOnMapVM(false)
+,itsSpacingOutFactorVM(0)
+,itsSelectedMapIndexVM(1)
+,fShowStationPlotVM(false)
+,itsViewGridSizeVM(1,1)
 ,itsLandBorderMapBitmap(nullptr)
+,itsCountryBorderBitmapCache()
 {
 }
 
-NFmiMapViewDescTop::~NFmiMapViewDescTop(void)
+static std::vector<NFmiGdiPlusImageMapHandler*> CopyMapHandlerVector(const std::vector<NFmiGdiPlusImageMapHandler*>& mapHandlerVector)
+{
+	std::vector<NFmiGdiPlusImageMapHandler*> copiedVector;
+	for(const auto* mapHandler : mapHandlerVector)
+	{
+		copiedVector.emplace_back(new NFmiGdiPlusImageMapHandler(*mapHandler));
+	}
+	return copiedVector;
+}
+
+// Huomioitavaa ett‰ copy-constructor ei tee t‰ydellist‰ kopioita.
+// Varsinaiseen kopiointiin k‰ytet‰‰n sijoitus operatoria.
+NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
+	:itsSettingsBaseName()
+	, itsMapViewDescTopIndex(0)
+	, itsMapConfigurationSystem(nullptr)
+	, itsProjectionCurvatureInfo(nullptr)
+	, itsControlPath()
+	, itsGdiPlusImageMapHandlerList()
+	, itsMapViewCache(CtrlViewUtils::MaxViewGridXSize* CtrlViewUtils::MaxViewGridYSize)
+	, fRedrawMapView(true)
+	, itsLandBorderColors()
+	, itsLandBorderColorIndex(0)
+	, itsLandBorderPenSize()
+	, itsTimeControlViewTimes()
+	, itsClientViewXperYRatio(1)
+	, itsRelativeMapRect()
+	, itsMapViewSizeInPixels()
+	, fShowParamWindowView(true)
+	, itsDrawParamListVector(new NFmiPtrList<NFmiDrawParamList>()) // Tehd‰‰n lopullinen kopiointi metodin rungossa
+	, itsMapBlitDC(nullptr)
+	, itsDrawOverMapMode(0)
+	, itsMapRowStartingIndex(0)
+	, itsCopyCDC(nullptr)
+	, itsShowTimeOnMapMode(0)
+	, fShowTimeString(true)
+	, itsCurrentTime()
+	, itsViewGridSizeMax()
+	, itsStationPointColorIndex(0)
+	, itsStationPointSize()
+	, itsTimeControlTimeStep(1)
+	, itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
+	, itsActiveViewRow(1)
+	, fDescTopOn(true)
+	, fMapViewBitmapDirty(true)
+	, itsMapView(other.itsMapView) // MapView pointteri pit‰‰ kopioida t‰ss‰, se ei muutu ajon aikana
+	, itsGraphicalInfo()
+	, itsGridPointCache()
+	, itsAnimationData()
+	, fLockToMainMapViewTime(false)
+	, fLockToMainMapViewRow(false)
+	, fShowTrajectorsOnMap(false)
+	, fShowSoundingMarkersOnMap(false)
+	, fShowCrossSectionMarkersOnMap(false)
+	, fShowSelectedPointsOnMap(false)
+	, fShowControlPointsOnMap(false)
+	, fShowObsComparisonOnMap(false)
+	, fShowWarningMarkersOnMap(false)
+	, fShowMasksOnMapVM(false)
+	, itsSpacingOutFactorVM(0)
+	, itsSelectedMapIndexVM(0)
+	, fShowStationPlotVM(false)
+	, itsViewGridSizeVM()
+	, itsLandBorderMapBitmap(nullptr)
+	, itsCountryBorderBitmapCache()
+{
+	*this = other;
+}
+
+// Huomioitavaa ett‰ sijoitus operator ei tee t‰ydellist‰ kopioita.
+// Kaikkea ei voi eik‰ saa kopioida, kommentit erikoistapauksista ja syist‰ erikseen.
+NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& other)
+{
+	if(this != &other)
+	{
+		itsSettingsBaseName = other.itsSettingsBaseName;
+		itsMapViewDescTopIndex = other.itsMapViewDescTopIndex;
+		itsMapConfigurationSystem = other.itsMapConfigurationSystem; // pointteri kopioidaan, ei omistusta kummallakaan
+		itsProjectionCurvatureInfo = other.itsProjectionCurvatureInfo; // pointteri kopioidaan, ei omistusta kummallakaan
+		itsControlPath = other.itsControlPath;
+		itsGdiPlusImageMapHandlerList = std::move(::CopyMapHandlerVector(other.itsGdiPlusImageMapHandlerList));
+		itsMapViewCache.MakeDirty(); // T‰m‰ bitmap cache pit‰‰ vain tyhjent‰‰
+		fRedrawMapView = true; // Kopion j‰lkeen kaikki piirret‰‰n uusiksi
+		itsLandBorderColors = other.itsLandBorderColors;
+		itsLandBorderColorIndex = other.itsLandBorderColorIndex;
+		itsLandBorderPenSize = other.itsLandBorderPenSize;
+		itsTimeControlViewTimes = other.itsTimeControlViewTimes;
+		itsClientViewXperYRatio = other.itsClientViewXperYRatio;
+		itsRelativeMapRect = other.itsRelativeMapRect;
+		itsMapViewSizeInPixels = other.itsMapViewSizeInPixels;
+		fShowParamWindowView = other.fShowParamWindowView;
+		CombinedMapHandlerInterface::copyDrawParamsList(other.itsDrawParamListVector, itsDrawParamListVector);
+		itsMapBlitDC = nullptr; // T‰ll‰isiin MFC pointtereihin vain nullptr:‰‰
+		itsDrawOverMapMode = other.itsDrawOverMapMode;
+		itsMapRowStartingIndex = other.itsMapRowStartingIndex;
+		itsCopyCDC = nullptr; // T‰ll‰isiin MFC pointtereihin vain nullptr:‰‰
+		itsShowTimeOnMapMode = other.itsShowTimeOnMapMode;
+		fShowTimeString = other.fShowTimeString;
+		itsCurrentTime = other.itsCurrentTime;
+		itsViewGridSizeMax = other.itsViewGridSizeMax;
+		itsStationPointColorIndex = other.itsStationPointColorIndex;
+		itsStationPointSize = other.itsStationPointSize;
+		itsTimeControlTimeStep = other.itsTimeControlTimeStep;
+		itsMapViewDisplayMode = other.itsMapViewDisplayMode;
+		itsActiveViewRow = other.itsActiveViewRow;
+		fDescTopOn = other.fDescTopOn;
+		fMapViewBitmapDirty = true; // Kopioinnin j‰lkeen kaikki on 'likaista'
+		itsMapView = other.itsMapView; // MapView pointteri pit‰‰ kopioida t‰ss‰, se ei muutu ajon aikana
+		itsGraphicalInfo = other.itsGraphicalInfo;
+		itsGridPointCache.Clear(); // Nollataan t‰m‰kin cache
+		itsAnimationData = other.itsAnimationData;
+		fLockToMainMapViewTime = other.fLockToMainMapViewTime;
+		fLockToMainMapViewRow = other.fLockToMainMapViewRow;
+		fShowTrajectorsOnMap = other.fShowTrajectorsOnMap;
+		fShowSoundingMarkersOnMap = other.fShowSoundingMarkersOnMap;
+		fShowCrossSectionMarkersOnMap = other.fShowCrossSectionMarkersOnMap;
+		fShowSelectedPointsOnMap = other.fShowSelectedPointsOnMap;
+		fShowControlPointsOnMap = other.fShowControlPointsOnMap;
+		fShowObsComparisonOnMap = other.fShowObsComparisonOnMap;
+		fShowWarningMarkersOnMap = other.fShowWarningMarkersOnMap;
+		fShowMasksOnMapVM = other.fShowMasksOnMapVM;
+		itsSpacingOutFactorVM = other.itsSpacingOutFactorVM;
+		itsSelectedMapIndexVM = other.itsSelectedMapIndexVM;
+		fShowStationPlotVM = other.fShowStationPlotVM;
+		itsViewGridSizeVM = other.itsViewGridSizeVM;
+		itsLandBorderMapBitmap = nullptr; // T‰ll‰isiin MFC pointtereihin vain nullptr:‰‰
+		itsCountryBorderBitmapCache.clearCache(); // Nollataan t‰m‰kin cache
+	}
+	return *this;
+}
+
+NFmiMapViewDescTop::~NFmiMapViewDescTop()
 {
 	Clear();
 }
@@ -454,7 +618,7 @@ void NFmiMapViewDescTop::SelectedMapIndex(unsigned int newValue)
 		itsSelectedMapIndexVM = static_cast<int>(itsGdiPlusImageMapHandlerList.size() - 1);
 }
 
-NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(void)
+NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(void) const
 {
 	if(itsSelectedMapIndexVM < itsGdiPlusImageMapHandlerList.size())
 		return itsGdiPlusImageMapHandlerList[itsSelectedMapIndexVM];
@@ -665,12 +829,6 @@ void NFmiMapViewDescTop::TimeControlTimeStep(float newValue)
 	itsAnimationData.TimeStepInMinutes(boost::math::iround(itsTimeControlTimeStep*60.f));
 }
 
-const NFmiColor& NFmiMapViewDescTop::LandBorderColor(void)
-{
-	if(itsLandBorderColorIndex >= 0 && itsLandBorderColorIndex < static_cast<int>(itsLandBorderColors.size()))
-		return itsLandBorderColors[itsLandBorderColorIndex];
-	return itsLandBorderColors[0]; // virhetilanteessa palautetaan 1. v‰ri
-}
 void NFmiMapViewDescTop::ToggleLandBorderColor(void)
 {
 	itsLandBorderColorIndex++;
@@ -679,12 +837,101 @@ void NFmiMapViewDescTop::ToggleLandBorderColor(void)
 	BorderDrawDirty(true);
 }
 
-bool NFmiMapViewDescTop::DrawLandBorders(void)
+// N‰m‰ border layer piirtoon liittyv‰t metodit jotka ottavat separateBorderLayerDrawOptions parametrin
+// toimivat seuraavalla periaatteella:
+// Jos k‰ytt‰j‰ haluaa tietoja yleisest‰ border-draw asetuksista, on em. parametri nullptr.
+// Jos se on nullptr:st‰ poikkeava, kyse on erillinen border-layer, jonka tiedot haetaan erikseen.
+// *************************************************************************************************
+const NFmiColor& NFmiMapViewDescTop::LandBorderColor(NFmiDrawParam* separateBorderLayerDrawOptions)
 {
+	if(separateBorderLayerDrawOptions)
+		return separateBorderLayerDrawOptions->FrameColor();
+
+	if(itsLandBorderColorIndex >= 0 && itsLandBorderColorIndex < static_cast<int>(itsLandBorderColors.size()))
+		return itsLandBorderColors[itsLandBorderColorIndex];
+	return itsLandBorderColors[0]; // virhetilanteessa palautetaan 1. v‰ri
+}
+
+bool NFmiMapViewDescTop::DrawLandBorders(NFmiDrawParam* separateBorderLayerDrawOptions)
+{
+	if(separateBorderLayerDrawOptions)
+		return CombinedMapHandlerInterface::IsBorderLayerDrawn(separateBorderLayerDrawOptions);
+
 	if(itsLandBorderColorIndex < 0)
 		return false;
 	return true;
 }
+
+int NFmiMapViewDescTop::LandBorderPenSize(NFmiDrawParam* separateBorderLayerDrawOptions) 
+{ 
+	if(separateBorderLayerDrawOptions)
+		return NFmiMapViewDescTop::GetSeparateBorderLayerLineWidthInPixels(*separateBorderLayerDrawOptions);
+		
+	return static_cast<int>(itsLandBorderPenSize.X());
+}
+
+bool NFmiMapViewDescTop::BorderDrawDirty(NFmiDrawParam* separateBorderLayerDrawOptions)
+{ 
+	if(separateBorderLayerDrawOptions)
+	{
+		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
+		const auto* bitmap = itsCountryBorderBitmapCache.getCacheBitmap(cacheKey);
+		return (bitmap == nullptr); // Jos ei lˆydy erillis-layer-cachesta kuvaa, on se 'likainen'
+	}
+	else
+		return MapHandler()->BorderDrawDirty();
+}
+
+Gdiplus::Bitmap* NFmiMapViewDescTop::LandBorderMapBitmap(NFmiDrawParam* separateBorderLayerDrawOptions) const
+{ 
+	if(separateBorderLayerDrawOptions)
+	{
+		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
+		return itsCountryBorderBitmapCache.getCacheBitmap(cacheKey);
+	}
+	else
+		return itsLandBorderMapBitmap; 
+}
+
+void NFmiMapViewDescTop::SetLandBorderMapBitmap(Gdiplus::Bitmap* newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions)
+{
+	if(separateBorderLayerDrawOptions)
+	{
+		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
+		// Annettu newBitmap otetaan t‰ss‰ omistukseen unique_ptr:iin
+		itsCountryBorderBitmapCache.insertCacheBitmap(cacheKey, std::unique_ptr<Gdiplus::Bitmap>(newBitmap));
+	}
+	else
+	{
+		delete itsLandBorderMapBitmap;
+		itsLandBorderMapBitmap = newBitmap;
+	}
+}
+
+// *************************************************************************************************
+
+std::string NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(const NFmiDrawParam& borderLayerDrawOptions)
+{
+	int usedLineWidthInPixels = GetSeparateBorderLayerLineWidthInPixels(borderLayerDrawOptions);
+	auto usedBorderDrawColor = borderLayerDrawOptions.FrameColor();
+	return NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(usedLineWidthInPixels, usedBorderDrawColor);
+}
+
+int NFmiMapViewDescTop::GetSeparateBorderLayerLineWidthInPixels(const NFmiDrawParam& borderLayerDrawOptions)
+{
+	int usedLineWidthInPixels = boost::math::iround(borderLayerDrawOptions.SimpleIsoLineWidth());
+	usedLineWidthInPixels = std::min(3, std::max(0, usedLineWidthInPixels));
+	return usedLineWidthInPixels;
+}
+
+std::string NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(int lineWidthInPixels, const NFmiColor& color)
+{
+	std::string keyString = std::to_string(lineWidthInPixels);
+	keyString += "_";
+	keyString += ::colorToHexaString(color);
+	return keyString;
+}
+
 
 void NFmiMapViewDescTop::ToggleLandBorderPenSize(void)
 {
@@ -1060,10 +1307,6 @@ std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetVi
 
 void NFmiMapViewDescTop::SetViewMacroDipMapHelperList(const std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> &theData)
 {
-#ifdef min
-#undef min
-#endif
-
 	auto ssize1 = static_cast<unsigned int>(itsGdiPlusImageMapHandlerList.size());
 	auto ssize2 = static_cast<unsigned int>(theData.size());
 	unsigned int usedSize = std::min(ssize1, ssize2);
@@ -1176,10 +1419,24 @@ void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFm
     MapHandler()->DrawBorderPolyLineListGdiplus(newValue);
 }
 
-void NFmiMapViewDescTop::SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap)
+void NFmiMapViewDescTop::BorderDrawDirty(bool newState)
+{ 
+	MapHandler()->BorderDrawDirty(newState);
+	if(newState)
+	{
+		// Aina kun border-draw menee likaiseksi, nollataan n‰m‰ erilliset cachet.
+		itsCountryBorderBitmapCache.clearCache();
+	}
+}
+
+const Gdiplus::Bitmap* NFmiMapViewDescTop::GetSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString)
 {
-    delete itsLandBorderMapBitmap;
-    itsLandBorderMapBitmap = newBitmap;
+	return itsCountryBorderBitmapCache.getCacheBitmap(cacheKeyString);
+}
+
+void NFmiMapViewDescTop::InsertSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap)
+{
+	itsCountryBorderBitmapCache.insertCacheBitmap(cacheKeyString, std::move(cacheBitmap));
 }
 
 std::string NFmiMapViewDescTop::GetCurrentMapLayerText(bool backgroundMap)
