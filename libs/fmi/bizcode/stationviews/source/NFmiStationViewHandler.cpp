@@ -2092,7 +2092,8 @@ void NFmiStationViewHandler::DrawData(NFmiToolBox* theGTB)
 	if(!HasSeparateCountryBorderLayer())
 	{
 		// Rajaviivat piirret‰‰n kartalle t‰‰ll‰ vain jos niit‰ ei piirret‰ erillisess‰ kerroksessa.
-		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, theGTB);
+		// nullptr -parametri tarkoittaa ett‰ k‰ytet‰‰n yleist‰ rajaviiva piirtoa.
+		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, theGTB, nullptr);
 	}
 }
 
