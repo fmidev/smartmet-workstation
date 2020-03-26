@@ -571,18 +571,6 @@ namespace
 		return finalDataType;
 	}
 
-	void copyDrawParamsList(NFmiPtrList<NFmiDrawParamList>& copyFromList, NFmiPtrList<NFmiDrawParamList>& copyToList)
-	{
-		copyToList.Clear(true); // tuhotaan ensin vanhan listan sisältö
-		NFmiPtrList<NFmiDrawParamList>::Iterator iter = copyFromList.Start();
-		for(; iter.Next(); )
-		{
-			NFmiDrawParamList* tmpList = new NFmiDrawParamList;
-			tmpList->CopyList(iter.Current(), false);
-			copyToList.AddEnd(tmpList);
-		}
-	}
-
 	// Perus-oliolle (list-list) on jo varattu muistia, tässä alustetaan vain tyhjät listat kokonaislistaan.
 	std::unique_ptr<NFmiPtrList<NFmiDrawParamList>> createDrawParamListVector(int wantedSize)
 	{
@@ -2879,7 +2867,7 @@ void NFmiCombinedMapHandler::copyMapViewDescTopParams(unsigned int mapViewDescTo
 	if(copiedDrawParamsList)
 	{
 		copyPasteDrawParamListVectorUsedYet_ = true;
-		::copyDrawParamsList(*copiedDrawParamsList, *copyPasteDrawParamListVector_);
+		CombinedMapHandlerInterface::copyDrawParamsList(copiedDrawParamsList, copyPasteDrawParamListVector_.get());
 	}
 }
 
@@ -2888,7 +2876,7 @@ void NFmiCombinedMapHandler::pasteMapViewDescTopParams(unsigned int mapViewDescT
 	NFmiPtrList<NFmiDrawParamList>* copiedDrawParamsList = getMapViewDescTop(mapViewDescTopIndex)->DrawParamListVector();
 	if(copiedDrawParamsList)
 	{
-		::copyDrawParamsList(*copyPasteDrawParamListVector_, *copiedDrawParamsList);
+		CombinedMapHandlerInterface::copyDrawParamsList(copyPasteDrawParamListVector_.get(), copiedDrawParamsList);
 		makeWholeDesctopDirtyActions(mapViewDescTopIndex, copiedDrawParamsList);
 		activeEditedParameterMayHaveChangedViewUpdateFlagSetting(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste all copyed parameters on this map view");
