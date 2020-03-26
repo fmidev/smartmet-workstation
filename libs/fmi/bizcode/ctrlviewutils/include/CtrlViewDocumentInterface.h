@@ -317,10 +317,12 @@ public:
     virtual NFmiWindTableSystem& WindTableSystem(void) = 0;
     virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) = 0;
     virtual NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) = 0;
-    virtual bool DrawLandBorders(int theDescTopIndex) = 0;
-    virtual bool BorderDrawDirty(int theDescTopIndex) = 0;
-    virtual const NFmiColor& LandBorderColor(int theDescTopIndex) = 0;
-    virtual const NFmiPoint& LandBorderPenSize(int theDescTopIndex) = 0;
+    virtual bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+    virtual bool BorderDrawDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+    virtual const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+    virtual int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+    virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
+    virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) = 0;
     virtual void BorderDrawDirty(int theDescTopIndex, bool dirtyFlag) = 0;
@@ -377,8 +379,6 @@ public:
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
     virtual Q2ServerInfo& GetQ2ServerInfo() = 0;
     virtual Warnings::CapDataSystem& GetCapDataSystem() = 0;
-    virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) = 0;
-    virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
     virtual bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) = 0;

@@ -1003,24 +1003,34 @@ NFmiProjectionCurvatureInfo* CtrlViewDocumentInterfaceForGeneralDataDoc::Project
     return itsDoc->GetCombinedMapHandler()->projectionCurvatureInfo();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::DrawLandBorders(int theDescTopIndex)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions)
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawLandBorders();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawLandBorders(separateBorderLayerDrawOptions);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawDirty(int theDescTopIndex)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions)
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawDirty();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawDirty(separateBorderLayerDrawOptions);
 }
 
-const NFmiColor& CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderColor(int theDescTopIndex)
+const NFmiColor& CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions)
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderColor();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderColor(separateBorderLayerDrawOptions);
 }
 
-const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPenSize(int theDescTopIndex)
+int CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions)
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderPenSize();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderPenSize(separateBorderLayerDrawOptions);
+}
+
+Gdiplus::Bitmap* CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const
+{ 
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderMapBitmap(separateBorderLayerDrawOptions);
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions)
+{
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap, separateBorderLayerDrawOptions);
 }
 
 boost::shared_ptr<Imagine::NFmiPath> CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPath(int theDescTopIndex)
@@ -1298,16 +1308,6 @@ Q2ServerInfo& CtrlViewDocumentInterfaceForGeneralDataDoc::GetQ2ServerInfo()
 Warnings::CapDataSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::GetCapDataSystem()
 {
     return itsDoc->GetCapDataSystem();
-}
-
-Gdiplus::Bitmap* CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderMapBitmap(unsigned int theDescTopIndex)
-{ 
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderMapBitmap();
-}
-
-void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap)
-{
-    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap);
 }
 
 int CtrlViewDocumentInterfaceForGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
