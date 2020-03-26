@@ -41,13 +41,14 @@ namespace
 	}
 }
 
-NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(void)
+NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler()
 :itsUsedMapIndex(0)
 ,itsUsedOverMapBitmapIndex(-1)
 ,itsMapBitmaps()
 ,itsOverMapBitmaps()
 ,itsOriginalArea()
 ,itsZoomedArea()
+,itsZoomedAreaPosition()
 ,fMakeNewBackgroundBitmap(true)
 ,fUpdateMapViewDrawingLayers(true)
 ,fMapReallyChanged(true)
@@ -60,26 +61,100 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(void)
 ,itsSwapBaseArea()
 ,itsSwapBackArea()
 ,itsSwapMode(0)
+,fBorderDrawDirty(true)
 ,itsDrawBorderPolyLineList()
 ,itsDrawBorderPolyLineListGdiplus()
+,itsLandBorderPath()
 {
 }
 
-NFmiGdiPlusImageMapHandler::~NFmiGdiPlusImageMapHandler(void)
+static NFmiArea* MakeNewAreaClone(const boost::shared_ptr<NFmiArea>& areaPtr)
+{
+	if(areaPtr)
+		return areaPtr->Clone();
+	else
+		return nullptr;
+}
+
+// Huomioitavaa ett‰ copy-constructor ei tee t‰ydellist‰ kopioita.
+// Kopiointiin k‰ytet‰‰n sijoitus operaattoria.
+NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMapHandler& other)
+	:itsUsedMapIndex(0)
+	, itsUsedOverMapBitmapIndex(0)
+	, itsMapBitmaps()
+	, itsOverMapBitmaps()
+	, itsOriginalArea(nullptr)
+	, itsZoomedArea(nullptr)
+	, itsZoomedAreaPosition()
+	, fMakeNewBackgroundBitmap(true)
+	, fUpdateMapViewDrawingLayers(true)
+	, fMapReallyChanged(true)
+	, itsAreaFileName()
+	, itsMapFileNames()
+	, itsMapDrawStyles()
+	, itsOverMapBitmapFileNames()
+	, itsOverMapBitmapDrawStyles()
+	, itsControlPath()
+	, itsSwapBaseArea(nullptr)
+	, itsSwapBackArea(nullptr)
+	, itsSwapMode(0)
+	, fBorderDrawDirty(true)
+	, itsDrawBorderPolyLineList()
+	, itsDrawBorderPolyLineListGdiplus()
+	, itsLandBorderPath()
+{
+	*this = other;
+}
+
+// Huomioitavaa ett‰ sijoitus operator ei tee t‰ydellist‰ kopioita.
+// Kaikkea ei voi eik‰ saa kopioida, kommentit erikoistapauksista ja syist‰ erikseen.
+NFmiGdiPlusImageMapHandler& NFmiGdiPlusImageMapHandler::operator=(const NFmiGdiPlusImageMapHandler& other)
+{
+	if(this != &other)
+	{
+		itsUsedMapIndex = other.itsUsedMapIndex;
+		itsUsedOverMapBitmapIndex = other.itsUsedOverMapBitmapIndex;
+		//itsMapBitmaps // bitmap:eja ei voi kopioida, t‰m‰n alustus metodin lopussa
+		//itsOverMapBitmaps // bitmap:eja ei voi kopioida, t‰m‰n alustus metodin lopussa
+		itsOriginalArea.reset(::MakeNewAreaClone(other.itsOriginalArea));
+		itsZoomedArea.reset(::MakeNewAreaClone(other.itsZoomedArea));
+		itsZoomedAreaPosition = other.itsZoomedAreaPosition;
+		fMakeNewBackgroundBitmap = true; // Kopion j‰lkeen pakotetaan tekem‰‰n uusi karttapohja
+		fUpdateMapViewDrawingLayers = true; // Kopion j‰lkeen pakotetaan tekem‰‰n piirtopintojen p‰ivitykset
+		fMapReallyChanged = true; // Kopion j‰lkeen tehd‰‰n asiat niin kuin kartta-alue olisi todellakin muuttunut
+		itsAreaFileName = other.itsAreaFileName;
+		itsMapFileNames = other.itsMapFileNames;
+		itsMapDrawStyles = other.itsMapDrawStyles;
+		itsOverMapBitmapFileNames = other.itsOverMapBitmapFileNames;
+		itsOverMapBitmapDrawStyles = other.itsOverMapBitmapDrawStyles;
+		itsControlPath = other.itsControlPath;
+		itsSwapBaseArea.reset(::MakeNewAreaClone(other.itsSwapBaseArea));
+		itsSwapBackArea.reset(::MakeNewAreaClone(other.itsSwapBackArea));
+		itsSwapMode = other.itsSwapMode;
+		fBorderDrawDirty = true; // Kopion j‰lkeen maiden rajaviivan piirrot ovat 'likaisia'
+		ClearDrawBorderPolyLineList(); // kopiossa n‰m‰ vain nollataan
+		itsDrawBorderPolyLineListGdiplus.clear(); // kopiossa n‰m‰ vain nollataan
+		itsLandBorderPath = other.itsLandBorderPath;
+		InitializeBitmapVectors();
+	}
+	return *this;
+}
+
+NFmiGdiPlusImageMapHandler::~NFmiGdiPlusImageMapHandler()
 {
 	Clear();
 }
 
-void NFmiGdiPlusImageMapHandler::Clear(void)
+void NFmiGdiPlusImageMapHandler::Clear()
 {
 	::clearBitmapVector(itsMapBitmaps);
 	::clearBitmapVector(itsOverMapBitmaps);
-
+	fBorderDrawDirty = true;
 	itsMapFileNames.clear();
 	itsMapDrawStyles.clear();
 	itsOverMapBitmapFileNames.clear();
 	itsOverMapBitmapDrawStyles.clear();
-	std::for_each(itsDrawBorderPolyLineList.begin(), itsDrawBorderPolyLineList.end(), PointerDestroyer());
+	ClearDrawBorderPolyLineList();
 }
 
 bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
@@ -108,12 +183,7 @@ bool NFmiGdiPlusImageMapHandler::Init(const checkedVector<std::string> &theMapFi
 
 	itsZoomedArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
 	itsSwapBaseArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
-	int i=0;
-	// pit‰‰ alustaa 0-pointtereilla image taulukko.
-	for(i=0; i < static_cast<int>(itsMapFileNames.size()); i++)
-		itsMapBitmaps.push_back(nullptr);
-	for(i=0; i < static_cast<int>(itsOverMapBitmapFileNames.size()); i++)
-		itsOverMapBitmaps.push_back(nullptr);
+	InitializeBitmapVectors();
 
 	if(itsMapFileNames.size() > 0) // pakko lukea 1. image muistiin, ett‰ saadaan koko talteen
 	{
@@ -130,6 +200,15 @@ bool NFmiGdiPlusImageMapHandler::Init(const checkedVector<std::string> &theMapFi
 	return true;
 }
 
+void NFmiGdiPlusImageMapHandler::InitializeBitmapVectors()
+{
+	// pit‰‰ alustaa 0-pointtereilla image taulukko.
+	for(auto mapIndex = 0ul; mapIndex < static_cast<int>(itsMapFileNames.size()); mapIndex++)
+		itsMapBitmaps.push_back(nullptr);
+	for(auto mapIndex = 0ul; mapIndex < static_cast<int>(itsOverMapBitmapFileNames.size()); mapIndex++)
+		itsOverMapBitmaps.push_back(nullptr);
+}
+
 boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::ReadArea(const string& theAreaFileName)
 {
 	if(NFmiFileSystem::FileExists(theAreaFileName) == false)
@@ -139,7 +218,7 @@ boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::ReadArea(const string& t
 	return NFmiAreaFactory::Create(areaStr);
 }
 
-Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetBitmap(void)
+Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetBitmap()
 {
 	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapBitmaps.size()))
 	{
@@ -222,7 +301,7 @@ static NFmiRect CalcZoomedAbsolutRect(Gdiplus::Bitmap *theCurrentBitmap, const b
 }
 
 
-void NFmiGdiPlusImageMapHandler::CalcZoomedAreaPosition(void)
+void NFmiGdiPlusImageMapHandler::CalcZoomedAreaPosition()
 {
 	if(itsOriginalArea && itsZoomedArea)
 	{
@@ -231,13 +310,13 @@ void NFmiGdiPlusImageMapHandler::CalcZoomedAreaPosition(void)
 	}
 }
 
-boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::TotalArea(void)
+boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::TotalArea()
 {return itsOriginalArea;}
 
-boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::Area(void)
+boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::Area()
 {return itsZoomedArea;}
 
-bool NFmiGdiPlusImageMapHandler::SetMaxArea(void)
+bool NFmiGdiPlusImageMapHandler::SetMaxArea()
 {
 	itsZoomedArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
 	CalcZoomedAreaPosition();
@@ -246,7 +325,7 @@ bool NFmiGdiPlusImageMapHandler::SetMaxArea(void)
 }
 
 // asettaa zoomin puoleksi koko alueesta ja keskelle
-bool NFmiGdiPlusImageMapHandler::SetHalfArea(void)
+bool NFmiGdiPlusImageMapHandler::SetHalfArea()
 {
 	NFmiRect halfRect(0,0,0.5,0.5);
 	halfRect.Center(NFmiPoint(0.5,0.5));
@@ -262,7 +341,7 @@ bool NFmiGdiPlusImageMapHandler::SetHalfArea(void)
 	}
 }
 
-Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetOverMapBitmap(void)
+Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetOverMapBitmap()
 {
 	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(itsOverMapBitmaps.size()))
 	{
@@ -273,7 +352,7 @@ Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetOverMapBitmap(void)
 	return 0;
 }
 
-bool NFmiGdiPlusImageMapHandler::ShowOverMap(void)
+bool NFmiGdiPlusImageMapHandler::ShowOverMap()
 {
 	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(itsOverMapBitmaps.size()))
 		return true;
@@ -281,7 +360,7 @@ bool NFmiGdiPlusImageMapHandler::ShowOverMap(void)
 		return false;
 }
 
-void NFmiGdiPlusImageMapHandler::NextOverMap(void)
+void NFmiGdiPlusImageMapHandler::NextOverMap()
 {
 	int oldIndex = itsUsedOverMapBitmapIndex;
 	itsUsedOverMapBitmapIndex++;
@@ -289,7 +368,7 @@ void NFmiGdiPlusImageMapHandler::NextOverMap(void)
 		itsUsedOverMapBitmapIndex = -1;
 }
 
-void NFmiGdiPlusImageMapHandler::PreviousOverMap(void)
+void NFmiGdiPlusImageMapHandler::PreviousOverMap()
 {
 	int oldIndex = itsUsedOverMapBitmapIndex;
 	itsUsedOverMapBitmapIndex--;
@@ -309,7 +388,7 @@ void NFmiGdiPlusImageMapHandler::OverMapBitmapIndex(int newValue)
 	}
 }
 
-void NFmiGdiPlusImageMapHandler::NextMap(void)
+void NFmiGdiPlusImageMapHandler::NextMap()
 {
 	int oldIndex = itsUsedMapIndex;
 	itsUsedMapIndex++;
@@ -317,7 +396,7 @@ void NFmiGdiPlusImageMapHandler::NextMap(void)
 		itsUsedMapIndex = 0;
 }
 
-void NFmiGdiPlusImageMapHandler::PreviousMap(void)
+void NFmiGdiPlusImageMapHandler::PreviousMap()
 {
 	int oldIndex = itsUsedMapIndex;
 	itsUsedMapIndex--;
@@ -337,7 +416,7 @@ void NFmiGdiPlusImageMapHandler::UsedMapIndex(int theIndex)
 	}
 }
 
-const NFmiRect& NFmiGdiPlusImageMapHandler::Position(void)
+const NFmiRect& NFmiGdiPlusImageMapHandler::Position()
 {
 	return itsZoomedAreaPosition;
 }
@@ -347,7 +426,7 @@ Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::CreateBitmapFromFile(const std::str
 	return CtrlView::CreateBitmapFromFile(itsControlPath, theFileName);
 }
 
-int NFmiGdiPlusImageMapHandler::GetDrawStyle(void)
+int NFmiGdiPlusImageMapHandler::GetDrawStyle()
 {
 	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapDrawStyles.size()))
 	{
@@ -356,7 +435,7 @@ int NFmiGdiPlusImageMapHandler::GetDrawStyle(void)
 	return 0;
 }
 
-int NFmiGdiPlusImageMapHandler::GetOverMapDrawStyle(void)
+int NFmiGdiPlusImageMapHandler::GetOverMapDrawStyle()
 {
 	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(itsOverMapBitmapDrawStyles.size()))
 	{
@@ -365,7 +444,7 @@ int NFmiGdiPlusImageMapHandler::GetOverMapDrawStyle(void)
 	return 0;
 }
 
-const std::string& NFmiGdiPlusImageMapHandler::GetBitmapFileName(void)
+const std::string& NFmiGdiPlusImageMapHandler::GetBitmapFileName()
 {
 	static const std::string dummy;
 	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapDrawStyles.size()))
@@ -375,7 +454,7 @@ const std::string& NFmiGdiPlusImageMapHandler::GetBitmapFileName(void)
 	return dummy;
 }
 
-const std::string& NFmiGdiPlusImageMapHandler::GetOverMapBitmapFileName(void)
+const std::string& NFmiGdiPlusImageMapHandler::GetOverMapBitmapFileName()
 {
 	static const std::string dummy;
 	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(itsOverMapBitmapDrawStyles.size()))
@@ -407,12 +486,12 @@ static std::string MakeAbsoluteFileName(const std::string &theFileName, const st
 	return finalFileName;
 }
 
-const std::string NFmiGdiPlusImageMapHandler::GetBitmapAbsoluteFileName(void)
+const std::string NFmiGdiPlusImageMapHandler::GetBitmapAbsoluteFileName()
 {
 	return ::MakeAbsoluteFileName(GetBitmapFileName(), ControlPath());
 }
 
-const std::string NFmiGdiPlusImageMapHandler::GetOverMapBitmapAbsoluteFileName(void)
+const std::string NFmiGdiPlusImageMapHandler::GetOverMapBitmapAbsoluteFileName()
 {
 	return ::MakeAbsoluteFileName(GetOverMapBitmapFileName(), ControlPath());
 }
@@ -431,22 +510,22 @@ static NFmiRect CalcTotalAbsolutRect(Gdiplus::Bitmap *theBitmap)
 	}
 }
 
-NFmiRect NFmiGdiPlusImageMapHandler::TotalAbsolutRect(void)
+NFmiRect NFmiGdiPlusImageMapHandler::TotalAbsolutRect()
 {
     return ::CalcTotalAbsolutRect(GetBitmap());
 }
 
-NFmiRect NFmiGdiPlusImageMapHandler::TotalAbsolutRectOverMap(void)
+NFmiRect NFmiGdiPlusImageMapHandler::TotalAbsolutRectOverMap()
 {
     return ::CalcTotalAbsolutRect(GetOverMapBitmap());
 }
 
-NFmiRect NFmiGdiPlusImageMapHandler::ZoomedAbsolutRect(void)
+NFmiRect NFmiGdiPlusImageMapHandler::ZoomedAbsolutRect()
 {
     return ::CalcZoomedAbsolutRect(GetBitmap(), itsOriginalArea, itsZoomedArea);
 }
 
-NFmiRect NFmiGdiPlusImageMapHandler::ZoomedAbsolutRectOverMap(void)
+NFmiRect NFmiGdiPlusImageMapHandler::ZoomedAbsolutRectOverMap()
 {
     return ::CalcZoomedAbsolutRect(GetOverMapBitmap(), itsOriginalArea, itsZoomedArea);
 }
@@ -462,23 +541,23 @@ static double CalcBitmapAspectRatio(Gdiplus::Bitmap *theBitmap)
 	}
 }
 
-double NFmiGdiPlusImageMapHandler::BitmapAspectRatio(void)
+double NFmiGdiPlusImageMapHandler::BitmapAspectRatio()
 {
 	return ::CalcBitmapAspectRatio(GetBitmap());
 }
 
-double NFmiGdiPlusImageMapHandler::BitmapAspectRatioOverMap(void)
+double NFmiGdiPlusImageMapHandler::BitmapAspectRatioOverMap()
 {
     return ::CalcBitmapAspectRatio(GetOverMapBitmap());
 }
 
-void NFmiGdiPlusImageMapHandler::MakeSwapBaseArea(void)
+void NFmiGdiPlusImageMapHandler::MakeSwapBaseArea()
 {
 	itsSwapBaseArea = boost::shared_ptr<NFmiArea>(itsZoomedArea->Clone());
 	itsSwapMode = 0;
 }
 
-void NFmiGdiPlusImageMapHandler::SwapArea(void)
+void NFmiGdiPlusImageMapHandler::SwapArea()
 {
 	if(itsSwapMode == 0)
 	{
@@ -540,4 +619,26 @@ void NFmiGdiPlusImageMapHandler::SetUpdateMapViewDrawingLayers(bool newState)
 void NFmiGdiPlusImageMapHandler::ClearUpdateMapViewDrawingLayers()
 {
     fUpdateMapViewDrawingLayers = false;
+}
+
+bool NFmiGdiPlusImageMapHandler::BorderDrawDirty() const
+{
+	return fBorderDrawDirty;
+}
+
+void NFmiGdiPlusImageMapHandler::BorderDrawDirty(bool newState)
+{
+	fBorderDrawDirty = newState;
+	if(newState)
+	{
+		// Aina kun border-draw menee likaiseksi, nollataan n‰m‰ erilliset cachet.
+		ClearDrawBorderPolyLineList();
+		itsDrawBorderPolyLineListGdiplus.clear();
+	}
+}
+
+void NFmiGdiPlusImageMapHandler::ClearDrawBorderPolyLineList()
+{
+	std::for_each(itsDrawBorderPolyLineList.begin(), itsDrawBorderPolyLineList.end(), PointerDestroyer());
+	itsDrawBorderPolyLineList.clear();
 }
