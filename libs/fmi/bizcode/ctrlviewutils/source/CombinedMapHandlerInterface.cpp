@@ -163,7 +163,7 @@ void CombinedMapHandlerInterface::copyDrawParamsList(NFmiPtrList<NFmiDrawParamLi
 
 bool CombinedMapHandlerInterface::IsBorderLayerDrawn(const NFmiDrawParam* separateBorderLayerDrawOptions)
 {
-	if(!separateBorderLayerDrawOptions->IsParamHidden())
+	if(separateBorderLayerDrawOptions && !separateBorderLayerDrawOptions->IsParamHidden())
 	{
 		if(separateBorderLayerDrawOptions->SimpleIsoLineWidth() >= 0.5f)
 			return true; // Jos viivan paksuus on >= 0.5, se pyöristyy vähintäin 1:een pikseliin ja borderit piirretään
