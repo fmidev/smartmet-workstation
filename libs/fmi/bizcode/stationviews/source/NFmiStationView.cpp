@@ -67,6 +67,7 @@
 #include "NFmiIsoLineData.h"
 #include "ToolMasterDrawingFunctions.h"
 #include "NFmiCountryBorderDrawUtils.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -330,8 +331,8 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 	if(itsDrawParam->DataType() == NFmiInfoData::kMapLayer)
 	{
 		// Rajaviivat piirretään tässä kartan piirtopinoon, jos kyse on erillisestä "country border" -layeristä
-		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, theGTB);
-		return;
+		DrawCountryBordersToMapView();
+		return; // Muuta ei saakaan sitten tehdä
 	}
 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
@@ -359,6 +360,12 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 			itsInfo = boost::shared_ptr<NFmiFastQueryInfo>(); // nollataan lopuksi itsInfo-pointteri
 		}
 	}
+}
+
+void NFmiStationView::DrawCountryBordersToMapView()
+{
+	if(CombinedMapHandlerInterface::IsBorderLayerDrawn(itsDrawParam.get()))
+		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, itsToolBox, itsDrawParam.get());
 }
 
 void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)

@@ -194,6 +194,7 @@ protected:
    bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
    bool IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
    NFmiPoint CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData);
+   void DrawCountryBordersToMapView();
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
