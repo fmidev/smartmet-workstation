@@ -6782,7 +6782,7 @@ void SnapshotViewMacro(bool fClearRedoList)
 	NFmiViewSettingMacro currentSnapShot;
 	FillViewMacroInfo(currentSnapShot, itsLastLoadedViewMacroName, "snapshot description");
 	// 3. talleta se undoredoListaan per‰‰n
-	itsUndoRedoViewMacroList.push_back(currentSnapShot);
+	itsUndoRedoViewMacroList.emplace_back(std::move(currentSnapShot));
 
 	AdjustViewMacroUndoListSize(50); // pidet‰‰n undoredo listan koko max 50:ss‰
 }
