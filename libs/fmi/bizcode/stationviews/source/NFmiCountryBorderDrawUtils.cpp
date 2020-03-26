@@ -12,6 +12,8 @@
 #include "ToolBoxStateRestorer.h"
 #include "ApplicationInterface.h"
 #include "CtrlViewWin32Functions.h"
+#include "CombinedMapHandlerInterface.h"
+#include "NFmiDrawParam.h"
 
 #include <list>
 
@@ -178,14 +180,14 @@ namespace
         return relativePolyLineList;
     }
 
-    void drawLandBordersWithGdiplus(NFmiCtrlView* mapView, NFmiToolBox* toolbox)
+    void drawLandBordersWithGdiplus(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam *separateBorderLayerDrawOptions)
     {
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
         int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto mapArea = mapView->GetArea();
-        if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex))
+        if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
         {
-            if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex))
+            if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, separateBorderLayerDrawOptions))
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
                 boost::shared_ptr<Imagine::NFmiPath> usedPath = ctrlViewDocumentInterface->LandBorderPath(mapViewDescTopIndex);
@@ -206,8 +208,8 @@ namespace
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
                 NFmiPoint offSet(mapArea->TopLeft());
-                int penSize = static_cast<int>(ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex).X());
-                auto lineColor = ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex);
+                int penSize = ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex, separateBorderLayerDrawOptions);
+                auto lineColor = ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions);
                 // Pitää luoda rajaviiva piirrossa käytössä olevan toolboxin avulla uusi Gdiplus-graphics olio, ei saa käyttää mapView:in vastaavaa oliota!
                 std::unique_ptr<Gdiplus::Graphics> gdigraphicsPtr(NFmiCtrlView::CreateGdiplusGraphics(toolbox, &mapArea->XYArea()));
                 if(gdigraphicsPtr)
@@ -220,32 +222,32 @@ namespace
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + " no land border drawing here", mapView);
     }
 
-    void drawLandBorders(NFmiCtrlView* mapView, NFmiToolBox* toolbox)
+    void drawLandBorders(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
     {
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
         int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto mapArea = mapView->GetArea();
 
-        const auto& penSize = ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex);
+        auto penSize = ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex, separateBorderLayerDrawOptions);
         //// Vanha rajaviiva piirto on nopeaa, kun piirto tehdään 1 paksuisella viivalla.
         //// Jos piirto tehdään 2 tai 3 pikselin kynällä vanha piirto hidastui merkittävästi:
         //// Alue piirrot: suomi n. 25-40x (piirtoaika), skandi n. 45-75x, euro n. 15-30 ja maailma n. 6-10x
         //// Tein uuden piirto koodin, joka on hitaampi 1 pikselin piirrolle, mutta nopeampi 2-3 pikselille:
         //// Uusi vs vanha piirtonopeus: suomi n. 3-5x (nopeampi), skandi n. 7-11x, euro n. 2.5-4.5x ja maailma n. 1.5-3x
         //// Siksi jos piirto paksuus on 1, käytetään vanhaa piirtoa j muuten käytetään uutta.
-        bool usedGdiPlus = penSize.X() > 1.;
+        bool usedGdiPlus = (penSize > 1);
         if(usedGdiPlus)
-            ::drawLandBordersWithGdiplus(mapView, toolbox);
+            ::drawLandBordersWithGdiplus(mapView, toolbox, separateBorderLayerDrawOptions);
         else
         {
-            if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex))
+            if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
             {
-                if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex))
+                if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, separateBorderLayerDrawOptions))
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
                     NFmiDrawingEnvironment envi;
-                    envi.SetFrameColor(ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex));
-                    envi.SetPenSize(penSize);
+                    envi.SetFrameColor(ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions));
+                    envi.SetPenSize(NFmiPoint(penSize, penSize));
                     boost::shared_ptr<Imagine::NFmiPath> usedPath = ctrlViewDocumentInterface->LandBorderPath(mapViewDescTopIndex);
                     if(usedPath)
                     {
@@ -282,7 +284,7 @@ namespace
         theUsedCDC->SelectObject(oldBrush);
     }
 
-    void drawLandBordersToCacheBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox)
+    void drawLandBordersToCacheBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
     {
         int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto mfcMapView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
@@ -297,22 +299,22 @@ namespace
             auto oldBitmap = usedDc->SelectObject(landBorderMapBitmap);
             CRect drawRect(0, 0, static_cast<int>(bitmapSize.X()), static_cast<int>(bitmapSize.Y()));
             ::fillMapWithTransparentColor(usedDc, drawRect);
-            ::drawLandBorders(mapView, toolbox);
+            ::drawLandBorders(mapView, toolbox, separateBorderLayerDrawOptions);
             landBorderMapBitmap = toolbox->GetDC()->SelectObject(oldBitmap);
             Gdiplus::Bitmap* gdiplusBitmap = new Gdiplus::Bitmap(HBITMAP(*landBorderMapBitmap), NULL);
-            ctrlViewDocumentInterface->SetLandBorderMapBitmap(mapViewDescTopIndex, gdiplusBitmap);
+            ctrlViewDocumentInterface->SetLandBorderMapBitmap(mapViewDescTopIndex, gdiplusBitmap, separateBorderLayerDrawOptions);
             //landBorderMapBitmap->DeleteObject();
             delete landBorderMapBitmap;
         }
     }
 
-    void drawLandBordersFromCacheBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox)
+    void drawLandBordersFromCacheBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
     {
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(__FUNCTION__, mapView);
         int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
         auto usedDc = toolbox->GetDC();
-        auto landBorderMapBitmap = ctrlViewDocumentInterface->LandBorderMapBitmap(mapViewDescTopIndex);
+        auto *landBorderMapBitmap = ctrlViewDocumentInterface->LandBorderMapBitmap(mapViewDescTopIndex, separateBorderLayerDrawOptions);
         NFmiRect sourcePixels(0, 0, landBorderMapBitmap->GetWidth(), landBorderMapBitmap->GetHeight());
         auto destPixels = CtrlView::Relative2GdiplusRectF(toolbox, mapView->GetArea()->XYArea());
         // Edellä laskettu piito alueen koko saattaa heittää yhdellä pikselillä, ja se tekee viiva piirrosta hämäävän, 
@@ -322,26 +324,26 @@ namespace
         CtrlView::DrawBitmapToDC(usedDc, *landBorderMapBitmap, sourcePixels, destPixels, g_transparentColorGdiplus, false);
     }
 
-    void drawLandBordersWithBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox)
+    void drawLandBordersWithBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
     {
         CtrlViewUtils::CtrlViewTimeConsumptionReporter traceLogging(mapView, __FUNCTION__);
         int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
-        if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex))
+        if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
         {
-            if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex))
-                ::drawLandBordersToCacheBitmap(mapView, toolbox);
-            ::drawLandBordersFromCacheBitmap(mapView, toolbox);
+            if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, separateBorderLayerDrawOptions))
+                ::drawLandBordersToCacheBitmap(mapView, toolbox, separateBorderLayerDrawOptions);
+            ::drawLandBordersFromCacheBitmap(mapView, toolbox, separateBorderLayerDrawOptions);
         }
     }
 
-}
+} // nameless namespace ends
 
-void NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(NFmiCtrlView* mapView, NFmiToolBox* toolbox)
+void NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
 {
     // Printatessa ei sitten voinutkaan käyttää uutta nopeampaa bitmap optimoitua piirtoa.
     if(mapView->GetCtrlViewDocumentInterface()->Printing())
-        ::drawLandBorders(mapView, toolbox);
+        ::drawLandBorders(mapView, toolbox, separateBorderLayerDrawOptions);
     else
-        ::drawLandBordersWithBitmap(mapView, toolbox);
+        ::drawLandBordersWithBitmap(mapView, toolbox, separateBorderLayerDrawOptions);
 }
