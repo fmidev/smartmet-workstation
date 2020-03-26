@@ -211,10 +211,12 @@ public:
     NFmiWindTableSystem& WindTableSystem(void) override;
     NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) override;
     NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) override;
-    bool DrawLandBorders(int theDescTopIndex) override;
-    bool BorderDrawDirty(int theDescTopIndex) override;
-    const NFmiColor& LandBorderColor(int theDescTopIndex) override;
-    const NFmiPoint& LandBorderPenSize(int theDescTopIndex) override;
+    bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
+    bool BorderDrawDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
+    const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
+    int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
+    Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const override;
+    void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(int theDescTopIndex) override;
     void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) override;
     const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) override;
@@ -271,8 +273,6 @@ public:
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
     Q2ServerInfo& GetQ2ServerInfo() override;
     Warnings::CapDataSystem& GetCapDataSystem() override;
-    Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) override;
-    void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) override;
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     NFmiMacroParamDataCache& MacroParamDataCache() override;
     bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) override;
