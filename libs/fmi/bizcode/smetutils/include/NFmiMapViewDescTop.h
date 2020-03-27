@@ -22,6 +22,7 @@
 #include "GraphicalInfo.h"
 #include "NFmiAnimationData.h"
 #include "NFmiCountryBorderBitmapCache.h"
+#include "CombinedMapHandlerInterface.h"
 
 class CDC;
 class NFmiPolyline;
@@ -135,7 +136,9 @@ public:
 	const NFmiColor& LandBorderColor(NFmiDrawParam* separateBorderLayerDrawOptions);
 	bool DrawLandBorders(NFmiDrawParam* separateBorderLayerDrawOptions);
 	int LandBorderPenSize(NFmiDrawParam* separateBorderLayerDrawOptions);
-	bool BorderDrawDirty(NFmiDrawParam* separateBorderLayerDrawOptions);
+	bool BorderDrawBitmapDirty(NFmiDrawParam* separateBorderLayerDrawOptions) const;
+	bool BorderDrawPolylinesDirty() const;
+	bool BorderDrawPolylinesGdiplusDirty() const;
 	Gdiplus::Bitmap* LandBorderMapBitmap(NFmiDrawParam* separateBorderLayerDrawOptions) const;
     void SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions);
 
@@ -150,7 +153,7 @@ public:
     const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
     void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>> &newValue);
     void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>> &&newValue);
-	void BorderDrawDirty(bool newState);
+	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState);
 	int LandBorderColorIndex(void) const {return itsLandBorderColorIndex;}
 	void LandBorderColorIndex(int newValue) {itsLandBorderColorIndex = newValue;}
 	bool DescTopOn(void) {return fDescTopOn;}
@@ -219,6 +222,7 @@ private:
     void UpdateOneMapViewSize();
 	const Gdiplus::Bitmap* GetSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString);
 	void InsertSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap);
+	void ClearBaseLandBorderMapBitmap();
 
 	// tällä aloitus pohjalla luetaan conffi fileistä tarvittavat alustukset (esim. "MapViewDescTop::map1")
 	std::string itsSettingsBaseName; 

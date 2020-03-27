@@ -421,12 +421,8 @@ void NFmiMapViewDescTop::Clear(void)
 		delete itsDrawParamListVector;
 		itsDrawParamListVector = nullptr;
 	}
-
-    if(itsLandBorderMapBitmap)
-    {
-        delete itsLandBorderMapBitmap;
-        itsLandBorderMapBitmap = nullptr;
-    }
+	ClearBaseLandBorderMapBitmap();
+	itsCountryBorderBitmapCache.clearCache();
 }
 
 boost::shared_ptr<Imagine::NFmiPath> NFmiMapViewDescTop::LandBorderPath(void)
@@ -809,7 +805,7 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 	}
 	MapViewDirty(mapAreaDirty, true, true, false);
 	if(mapAreaDirty)
-		BorderDrawDirty(true); // ikkunan koko muuttuu tietyissä tapauksissa, joten rajaviivat on laskettava uudestaan
+		SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry); // ikkunan koko muuttuu tietyissä tapauksissa, joten rajaviivat on laskettava uudestaan
 	return itsShowTimeOnMapMode;
 }
 
@@ -834,7 +830,7 @@ void NFmiMapViewDescTop::ToggleLandBorderColor(void)
 	itsLandBorderColorIndex++;
 	if(itsLandBorderColorIndex >= static_cast<int>(itsLandBorderColors.size()))
 		itsLandBorderColorIndex = -1; // kun menee ympäri, laitetaan 'tyhjä' väri päälle
-	BorderDrawDirty(true);
+	SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Cosmetic);
 }
 
 // Nämä border layer piirtoon liittyvät metodit jotka ottavat separateBorderLayerDrawOptions parametrin
@@ -845,7 +841,7 @@ void NFmiMapViewDescTop::ToggleLandBorderColor(void)
 const NFmiColor& NFmiMapViewDescTop::LandBorderColor(NFmiDrawParam* separateBorderLayerDrawOptions)
 {
 	if(separateBorderLayerDrawOptions)
-		return separateBorderLayerDrawOptions->FrameColor();
+		return separateBorderLayerDrawOptions->IsolineColor();
 
 	if(itsLandBorderColorIndex >= 0 && itsLandBorderColorIndex < static_cast<int>(itsLandBorderColors.size()))
 		return itsLandBorderColors[itsLandBorderColorIndex];
@@ -870,7 +866,7 @@ int NFmiMapViewDescTop::LandBorderPenSize(NFmiDrawParam* separateBorderLayerDraw
 	return static_cast<int>(itsLandBorderPenSize.X());
 }
 
-bool NFmiMapViewDescTop::BorderDrawDirty(NFmiDrawParam* separateBorderLayerDrawOptions)
+bool NFmiMapViewDescTop::BorderDrawBitmapDirty(NFmiDrawParam* separateBorderLayerDrawOptions) const
 { 
 	if(separateBorderLayerDrawOptions)
 	{
@@ -879,7 +875,17 @@ bool NFmiMapViewDescTop::BorderDrawDirty(NFmiDrawParam* separateBorderLayerDrawO
 		return (bitmap == nullptr); // Jos ei löydy erillis-layer-cachesta kuvaa, on se 'likainen'
 	}
 	else
-		return MapHandler()->BorderDrawDirty();
+		return (itsLandBorderMapBitmap == nullptr);
+}
+
+bool NFmiMapViewDescTop::BorderDrawPolylinesDirty() const
+{
+	return MapHandler()->BorderDrawPolylinesDirty();
+}
+
+bool NFmiMapViewDescTop::BorderDrawPolylinesGdiplusDirty() const
+{
+	return MapHandler()->BorderDrawPolylinesGdiplusDirty();
 }
 
 Gdiplus::Bitmap* NFmiMapViewDescTop::LandBorderMapBitmap(NFmiDrawParam* separateBorderLayerDrawOptions) const
@@ -946,7 +952,7 @@ void NFmiMapViewDescTop::ToggleLandBorderPenSize(void)
 	else
 		itsLandBorderPenSize.Y(itsLandBorderPenSize.Y() + 1);
 
-	BorderDrawDirty(true);
+	SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Cosmetic);
 }
 
 const NFmiColor& NFmiMapViewDescTop::StationPointColor(void) const
@@ -1003,7 +1009,7 @@ bool NFmiMapViewDescTop::SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWi
         UpdateOneMapViewSize();
 
 		MapViewDirty(true, true, true, false);
-		BorderDrawDirty(true);
+		SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 		return true;
 	}
 	return false;
@@ -1419,14 +1425,21 @@ void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFm
     MapHandler()->DrawBorderPolyLineListGdiplus(newValue);
 }
 
-void NFmiMapViewDescTop::BorderDrawDirty(bool newState)
+void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState)
 { 
-	MapHandler()->BorderDrawDirty(newState);
-	if(newState)
+	MapHandler()->SetBorderDrawDirtyState(newState);
+	if(newState != CountryBorderDrawDirtyState::None)
 	{
-		// Aina kun border-draw menee likaiseksi, nollataan nämä erilliset cachet.
+		// Aina kun border-draw menee likaiseksi, nollataan nämä erilliset kuva-cachet.
+		ClearBaseLandBorderMapBitmap();
 		itsCountryBorderBitmapCache.clearCache();
 	}
+}
+
+void NFmiMapViewDescTop::ClearBaseLandBorderMapBitmap()
+{
+	delete itsLandBorderMapBitmap;
+	itsLandBorderMapBitmap = nullptr;
 }
 
 const Gdiplus::Bitmap* NFmiMapViewDescTop::GetSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString)
