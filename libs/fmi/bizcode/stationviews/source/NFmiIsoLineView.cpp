@@ -1099,14 +1099,14 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
     theIsoLineData->fUseIsoLineFeathering = theDrawParam->UseIsoLineFeathering();
 }
 
-NFmiPolyline* NFmiIsoLineView::CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi)
+NFmiPolyline* NFmiIsoLineView::CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi)
 {
-    return new NFmiPolyline(theRect, 0, &theEnvi
+    return new NFmiPolyline(theRect, 0, theEnvi
         , 1 // 1 = opaque
         , -1);  // -1 tarkoittaa, ettei käytetä hatchia
 }
 
-void NFmiIsoLineView::ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi)
+void NFmiIsoLineView::ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi)
 {
     using namespace Imagine;
 
@@ -1622,7 +1622,7 @@ void NFmiIsoLineView::DrawHatchesWithImagine(NFmiIsoLineData& theIsoLineData, co
 
         SetHatchEnvi(theIsoLineData, envi, theHatchSettings);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
         itsToolBox->DrawMultiPolygon(polyLineList, &envi, theOffSet);
@@ -1654,7 +1654,7 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
         labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), &envi);
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
         DrawPolyLineList(itsToolBox, polyLineList, theOffSet);
@@ -1704,7 +1704,7 @@ void NFmiIsoLineView::DrawCustomIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
         labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
@@ -1758,7 +1758,7 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
         if(drawLabels)
             labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
@@ -1829,7 +1829,7 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
         if(drawLabels)
             labelBox.Init(fontSize, lowerLimit, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
