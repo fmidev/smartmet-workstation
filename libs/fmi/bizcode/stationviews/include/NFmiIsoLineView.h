@@ -170,8 +170,8 @@ class NFmiIsoLineView : public NFmiStationView
    bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
    bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
 
-   static NFmiPolyline* CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi);
-   static void ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi);
+   static NFmiPolyline* CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi);
+   static void ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi);
    static bool DifferentWorldViews(const NFmiArea *area1, const NFmiArea * area2);
 
  protected:
