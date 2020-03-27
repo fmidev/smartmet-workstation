@@ -61,7 +61,6 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler()
 ,itsSwapBaseArea()
 ,itsSwapBackArea()
 ,itsSwapMode(0)
-,fBorderDrawDirty(true)
 ,itsDrawBorderPolyLineList()
 ,itsDrawBorderPolyLineListGdiplus()
 ,itsLandBorderPath()
@@ -98,7 +97,6 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMap
 	, itsSwapBaseArea(nullptr)
 	, itsSwapBackArea(nullptr)
 	, itsSwapMode(0)
-	, fBorderDrawDirty(true)
 	, itsDrawBorderPolyLineList()
 	, itsDrawBorderPolyLineListGdiplus()
 	, itsLandBorderPath()
@@ -131,9 +129,10 @@ NFmiGdiPlusImageMapHandler& NFmiGdiPlusImageMapHandler::operator=(const NFmiGdiP
 		itsSwapBaseArea.reset(::MakeNewAreaClone(other.itsSwapBaseArea));
 		itsSwapBackArea.reset(::MakeNewAreaClone(other.itsSwapBackArea));
 		itsSwapMode = other.itsSwapMode;
-		fBorderDrawDirty = true; // Kopion jälkeen maiden rajaviivan piirrot ovat 'likaisia'
 		ClearDrawBorderPolyLineList(); // kopiossa nämä vain nollataan
+		fDrawBorderPolyLineListDirty = true;
 		itsDrawBorderPolyLineListGdiplus.clear(); // kopiossa nämä vain nollataan
+		fDrawBorderPolyLineListGdiplusDirty = true;
 		itsLandBorderPath = other.itsLandBorderPath;
 		InitializeBitmapVectors();
 	}
@@ -149,12 +148,13 @@ void NFmiGdiPlusImageMapHandler::Clear()
 {
 	::clearBitmapVector(itsMapBitmaps);
 	::clearBitmapVector(itsOverMapBitmaps);
-	fBorderDrawDirty = true;
 	itsMapFileNames.clear();
 	itsMapDrawStyles.clear();
 	itsOverMapBitmapFileNames.clear();
 	itsOverMapBitmapDrawStyles.clear();
 	ClearDrawBorderPolyLineList();
+	fDrawBorderPolyLineListDirty = true;
+	fDrawBorderPolyLineListGdiplusDirty = true;
 }
 
 bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
@@ -575,10 +575,23 @@ void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineList(std::list<NFmiPolyline*>
 {
 	// tuhotaan ensin vanhan listan sisältö
 	std::for_each(itsDrawBorderPolyLineList.begin(), itsDrawBorderPolyLineList.end(), PointerDestroyer());
-	// kopioidaan uuden listan sisältö
-	itsDrawBorderPolyLineList = newValue;
-	// tyhjennetään parametrina annettu lista Mutta ei tuhota polylinejä sen sisällä, koska ne jäävät dokumenttiin talteen
-	newValue.clear();
+	itsDrawBorderPolyLineList.clear();
+	// otetaan uuden listan sisältö omistukseen swap:illa
+	itsDrawBorderPolyLineList.swap(newValue);
+	// Merkitään polyline lista taas 'puhtaaksi' eli käyttövalmiiksi
+	fDrawBorderPolyLineListDirty = false;
+}
+
+void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue) 
+{ 
+	itsDrawBorderPolyLineListGdiplus = newValue; 
+	fDrawBorderPolyLineListGdiplusDirty = false;
+}
+
+void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue) 
+{ 
+	itsDrawBorderPolyLineListGdiplus = newValue; 
+	fDrawBorderPolyLineListGdiplusDirty = false;
 }
 
 // Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
@@ -621,19 +634,15 @@ void NFmiGdiPlusImageMapHandler::ClearUpdateMapViewDrawingLayers()
     fUpdateMapViewDrawingLayers = false;
 }
 
-bool NFmiGdiPlusImageMapHandler::BorderDrawDirty() const
+// Uusi border-draw-dirty systeemi ei laita lippuja päälle, vaan tyhjentää tarvittavat cachet
+// jotta seuraavalla piirto kerralla on pakko tehdä töitä.
+void NFmiGdiPlusImageMapHandler::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState)
 {
-	return fBorderDrawDirty;
-}
-
-void NFmiGdiPlusImageMapHandler::BorderDrawDirty(bool newState)
-{
-	fBorderDrawDirty = newState;
-	if(newState)
+	if(newState == CountryBorderDrawDirtyState::Geometry)
 	{
-		// Aina kun border-draw menee likaiseksi, nollataan nämä erilliset cachet.
+		// Kosmeettiset muutokset eivät laita polylineja uusiksi, mutta kaikki geometriset muutokset kyllä
 		ClearDrawBorderPolyLineList();
-		itsDrawBorderPolyLineListGdiplus.clear();
+		ClearDrawBorderPolyLineListGdiplus();
 	}
 }
 
@@ -641,4 +650,21 @@ void NFmiGdiPlusImageMapHandler::ClearDrawBorderPolyLineList()
 {
 	std::for_each(itsDrawBorderPolyLineList.begin(), itsDrawBorderPolyLineList.end(), PointerDestroyer());
 	itsDrawBorderPolyLineList.clear();
+	fDrawBorderPolyLineListDirty = true;
+}
+
+void NFmiGdiPlusImageMapHandler::ClearDrawBorderPolyLineListGdiplus()
+{
+	itsDrawBorderPolyLineListGdiplus.clear();
+	fDrawBorderPolyLineListGdiplusDirty = true;
+}
+
+bool NFmiGdiPlusImageMapHandler::BorderDrawPolylinesDirty() const
+{
+	return fDrawBorderPolyLineListDirty;
+}
+
+bool NFmiGdiPlusImageMapHandler::BorderDrawPolylinesGdiplusDirty() const
+{
+	return fDrawBorderPolyLineListGdiplusDirty;
 }
