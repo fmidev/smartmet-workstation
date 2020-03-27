@@ -212,7 +212,6 @@ public:
     NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) override;
     NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) override;
     bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
-    bool BorderDrawDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const override;
@@ -222,7 +221,6 @@ public:
     const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) override;
     void DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue) override;
     void DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue) override;
-    void BorderDrawDirty(int theDescTopIndex, bool dirtyFlag) override;
     std::list<NFmiPolyline*>& DrawBorderPolyLineList(int theDescTopIndex) override;
     int DrawOverMapMode(int theDescTopIndex) override;
     void SnapShotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
@@ -289,6 +287,10 @@ public:
     NFmiMacroPathSettings& MacroPathSettings() override;
     int CurrentCrossSectionRowIndex() override;
     CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
+    bool BorderDrawBitmapDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const override;
+    bool BorderDrawPolylinesDirty(int theDescTopIndex) const override;
+    bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const override;
+    void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

@@ -10,6 +10,7 @@
 #include "NFmiProducer.h"
 #include "NFmiInfoData.h"
 #include "SmartMetViewId.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include <functional>
 #include <list>
@@ -318,14 +319,12 @@ public:
     virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) = 0;
     virtual NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) = 0;
     virtual bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
-    virtual bool BorderDrawDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) = 0;
-    virtual void BorderDrawDirty(int theDescTopIndex, bool dirtyFlag) = 0;
     virtual std::list<NFmiPolyline*>& DrawBorderPolyLineList(int theDescTopIndex) = 0;
     virtual const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue) = 0;
@@ -395,6 +394,10 @@ public:
     virtual NFmiMacroPathSettings& MacroPathSettings() = 0;
     virtual int CurrentCrossSectionRowIndex() = 0;
     virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
+    virtual bool BorderDrawBitmapDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
+    virtual bool BorderDrawPolylinesDirty(int theDescTopIndex) const = 0;
+    virtual bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const = 0;
+    virtual void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) = 0;
 
 
 #ifndef DISABLE_CPPRESTSDK
