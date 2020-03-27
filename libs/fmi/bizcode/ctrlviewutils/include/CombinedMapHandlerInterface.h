@@ -33,6 +33,13 @@ namespace CtrlViewUtils
     struct GraphicalInfo;
 }
 
+enum class CountryBorderDrawDirtyState
+{
+    None = 0, // Mit‰‰n ei liata
+    Cosmetic = 1, // Vain viivan v‰ri tai paksuus on muuttunut, voidaan piirt‰‰ samoilla path-olioilla
+    Geometry = 2 // Karttaa on zoomattu tai kartta ruudun kokoa on muutettu, kaikki piirto ja laskenta uusiksi
+};
+
 // Interface that is meant to be used to handle all kinds of background map and overlay map stuff handling.
 class CombinedMapHandlerInterface
 {
