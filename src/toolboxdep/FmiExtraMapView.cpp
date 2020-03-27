@@ -755,7 +755,7 @@ void CFmiExtraMapView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 // t‰t‰ kutsutaan yleisess‰ printtaus funktiossa
 void CFmiExtraMapView::OldWayPrintUpdate(void)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->BorderDrawDirty(true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 	itsEditMapView->Update(); // t‰m‰ pit‰‰ tehd‰ ett‰ prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
 }
 

@@ -5295,7 +5295,7 @@ void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, c
     {
         mapViewDesctop->CalcClientViewXperYRatio(totalPixelSize);
         mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
-        mapViewDesctop->BorderDrawDirty(true);
+        mapViewDesctop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
     }
 }
 
@@ -9673,7 +9673,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	    {
 		    newZoomedArea->SetXYArea(NFmiRect(0,0,1,1)); // Tämä on hämärä juttu, muttu jos xy-areaa ei laiteta 0,0 - 1,1:ksi, macroParam-systeemi ei toimi jos ollaan usean kartan ruudukossa
 		    GetCombinedMapHandler()->mapViewDirty(theMapViewDescTopIndex, true, true, true, true, false, false);
-			GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->BorderDrawDirty(true);
+			GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 			GetCombinedMapHandler()->setMapArea(theMapViewDescTopIndex, newZoomedArea);
             // Laitetaan tähän "Ohitetaan normi päivitä kaikki näytöt ja päivitä vain muuttunutta karttanäyttöä" -toiminto optimoinnin takia.
             // HUOM! Optimoinnin voi laittaa tänne, koska esim. viewMacrojen latauksissa ei käytetä tätä metodia (jolloin tarvitsee päivittää kaikkia näyttöjä)

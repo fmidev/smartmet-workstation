@@ -295,7 +295,7 @@ void CSmartMetView::OnFilePrint()
 // t‰t‰ kutsutaan yleisess‰ printtaus funktiossa
 void CSmartMetView::OldWayPrintUpdate(void)
 {
-	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->BorderDrawDirty(true);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 	itsEditMapView->Update(); // t‰m‰ pit‰‰ tehd‰ ett‰ prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
 }
 
