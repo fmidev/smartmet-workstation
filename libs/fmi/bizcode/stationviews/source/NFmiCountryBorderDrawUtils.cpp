@@ -34,8 +34,10 @@ namespace
         }
     }
 
-    void drawPolyLineList(NFmiToolBox* theGTB, std::list<NFmiPolyline*>& thePolyLineList, const NFmiPoint& theOffSet, NFmiCtrlView* ctrlView)
+    void drawPolyLineList(NFmiToolBox* theGTB, std::list<NFmiPolyline*>& thePolyLineList, const NFmiPoint& theOffSet, NFmiCtrlView* ctrlView, NFmiDrawingEnvironment &drawingEnvironment)
     {
+        // Maiden rajat piirretään aina samalla värillä ja viivapaksuudella ja se asetetaan tässä ennen polylinejen piirtoa.
+        theGTB->ConvertEnvironment(&drawingEnvironment);
         NFmiPoint scale;
         size_t totalLinePointCount = 0;
         for(auto polyLine : thePolyLineList)
@@ -187,7 +189,7 @@ namespace
         auto mapArea = mapView->GetArea();
         if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
         {
-            if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, separateBorderLayerDrawOptions))
+            if(ctrlViewDocumentInterface->BorderDrawPolylinesGdiplusDirty(mapViewDescTopIndex))
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
                 boost::shared_ptr<Imagine::NFmiPath> usedPath = ctrlViewDocumentInterface->LandBorderPath(mapViewDescTopIndex);
@@ -195,9 +197,8 @@ namespace
                 {
                     Imagine::NFmiPath path(*usedPath.get());
                     path.Project(mapArea.get());
-                    // laitetaan piirtovalmis polylinelista talteen dokumenttiin
+                    // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa listaan liittyvän likaisuus lipun pois eli käyttövalmiiksi
                     ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex, ::convertPath2RelativePolyLineListGdiplus(path, false, true));
-                    ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, false);
                 }
                 else
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Didn't find any borders to draw", mapView);
@@ -242,21 +243,20 @@ namespace
         {
             if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
             {
-                if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, separateBorderLayerDrawOptions))
+                if(ctrlViewDocumentInterface->BorderDrawPolylinesDirty(mapViewDescTopIndex))
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
-                    NFmiDrawingEnvironment envi;
-                    envi.SetFrameColor(ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions));
-                    envi.SetPenSize(NFmiPoint(penSize, penSize));
                     boost::shared_ptr<Imagine::NFmiPath> usedPath = ctrlViewDocumentInterface->LandBorderPath(mapViewDescTopIndex);
                     if(usedPath)
                     {
                         Imagine::NFmiPath path(*usedPath.get());
                         path.Project(mapArea.get());
                         std::list<NFmiPolyline*> polyLineList;
-                        NFmiIsoLineView::ConvertPath2PolyLineList(path, polyLineList, false, true, mapArea->XYArea(), envi);
-                        ctrlViewDocumentInterface->DrawBorderPolyLineList(mapViewDescTopIndex, polyLineList); // laitetaan piirtovalmis polylinelista talteen dokumenttiin
-                        ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, false);
+                        // NFmiIsoLineView::ConvertPath2PolyLineList funktiolle annetaan viimeisena nullptr parametri, koska ei haluta antaa jokaiselle
+                        // erilliselle polylinelle omaa piirto-ominaisuus oliota. Maiden rajat piirretään aina samalla värillä ja viivapaksuudella.
+                        NFmiIsoLineView::ConvertPath2PolyLineList(path, polyLineList, false, true, mapArea->XYArea(), nullptr);
+                        // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa polyline-listaan liittyvän dirty-flagin pois päältä
+                        ctrlViewDocumentInterface->DrawBorderPolyLineList(mapViewDescTopIndex, polyLineList);
                     }
                     else
                         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Didn't find any borders to draw", mapView);
@@ -267,8 +267,11 @@ namespace
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
                     NFmiPoint offSet(mapArea->TopLeft());
+                    NFmiDrawingEnvironment envi;
+                    envi.SetFrameColor(ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions));
+                    envi.SetPenSize(NFmiPoint(penSize, penSize));
                     ToolBoxStateRestorer toolBoxStateRestorer(*toolbox, toolbox->GetTextAlignment(), true, &mapArea->XYArea());
-                    ::drawPolyLineList(toolbox, borderPolyLineList, offSet, mapView);
+                    ::drawPolyLineList(toolbox, borderPolyLineList, offSet, mapView, envi);
                 }
             }
             else
@@ -315,6 +318,9 @@ namespace
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
         auto usedDc = toolbox->GetDC();
         auto *landBorderMapBitmap = ctrlViewDocumentInterface->LandBorderMapBitmap(mapViewDescTopIndex, separateBorderLayerDrawOptions);
+        if(!landBorderMapBitmap)
+            throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": landBorderMapBitmap was empty, error in application logic?");
+
         NFmiRect sourcePixels(0, 0, landBorderMapBitmap->GetWidth(), landBorderMapBitmap->GetHeight());
         auto destPixels = CtrlView::Relative2GdiplusRectF(toolbox, mapView->GetArea()->XYArea());
         // Edellä laskettu piito alueen koko saattaa heittää yhdellä pikselillä, ja se tekee viiva piirrosta hämäävän, 
@@ -331,7 +337,7 @@ namespace
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
         if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
         {
-            if(ctrlViewDocumentInterface->BorderDrawDirty(mapViewDescTopIndex, separateBorderLayerDrawOptions))
+            if(ctrlViewDocumentInterface->BorderDrawBitmapDirty(mapViewDescTopIndex, separateBorderLayerDrawOptions))
                 ::drawLandBordersToCacheBitmap(mapView, toolbox, separateBorderLayerDrawOptions);
             ::drawLandBordersFromCacheBitmap(mapView, toolbox, separateBorderLayerDrawOptions);
         }
