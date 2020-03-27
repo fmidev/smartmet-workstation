@@ -621,7 +621,7 @@ void CFmiExtraMapViewDlg::OnButtonMapViewSettings()
 		// viewGridsize pitää laskea uudestaan, koska displayType on saattanut muuttua ja aloitus rivi pitää ehkä vaihtaa
         mapViewDescTop->ViewGridSize(mapViewDescTop->ViewGridSize(), mapViewWinRegistry);
         mapViewDescTop->MapViewDirty(true, true, true, false);
-        mapViewDescTop->BorderDrawDirty(true);
+        mapViewDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
         itsSmartMetDocumentInterface->UpdateRowInLockedDescTops(itsMapViewDescTopIndex);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Extra map view settings changed");
 	}
