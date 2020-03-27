@@ -1891,7 +1891,7 @@ void NFmiCombinedMapHandler::setMapArea(unsigned int mapViewDescTopIndex, const 
 			mapDescTop->MapHandler()->Area(correctTypeArea);
 			::SetCPCropGridSettings(correctTypeArea, mapViewDescTopIndex);
 		}
-		mapDescTop->BorderDrawDirty(true);
+		mapDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 		// laitetaan viela kaikki ajat likaisiksi cachesta
 		mapViewDirty(mapViewDescTopIndex, true, true, true, true, false, false);
 		mapDescTop->GridPointCache().Clear();
@@ -2589,6 +2589,15 @@ void NFmiCombinedMapHandler::activateView(const NFmiMenuItem& menuItem, int rowI
 	}
 }
 
+static void DoSpecialDataInitializations(boost::shared_ptr<NFmiDrawParam>& drawParam, bool normalParameterAdd, const NFmiMenuItem& menuItem)
+{
+	// Näyttömakron latauksessa (normalParameterAdd = false) ei satelImagen alphaa saa enää laiteta  default 80%:iin, koska joku on saattanut säätää sen muuksi.
+	if(menuItem.DataType() == NFmiInfoData::kSatelData && normalParameterAdd)
+	{
+		drawParam->Alpha(80.f); // laitetaan satelliitti/kuva tyyppiselle datalle defaulttina 80% opaque eli pikkuisen läpinäkyvä
+	}
+}
+
 // Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
 // 'virtuaali' karttanäyttöriveistä.
 // Karttarivi indeksit alkavat 1:stä. 1. rivi on 1 ja 2. rivi on kaksi jne.
@@ -2603,9 +2612,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	if(!drawParam)
 		return; // HUOM!! Ei saisi mennä tähän!!!!!!!
 
-	if(menuItem.DataType() == NFmiInfoData::kSatelData && normalParameterAdd) // näyttö makroissa ei satelImagen alphaa enää laiteta default 80%:iin
-		drawParam->Alpha(80.f); // laitetaan satelliitti/kuva tyyppiselle datalle defaulttina 80% opaque eli pikkuisen läpinäkyvä
-
+	DoSpecialDataInitializations(drawParam, normalParameterAdd, menuItem);
 	::setDrawMacroSettings(menuItem, drawParam, macroParamInitFileName);
 
 	if(!activeDrawParamWithRealRowNumber(menuItem.MapViewDescTopIndex(), realRowIndex))
@@ -3473,7 +3480,7 @@ void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions()
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 	{
 		getMapViewDescTop(mapViewDescTopIndex)->MapViewBitmapDirty(true);
-		getMapViewDescTop(mapViewDescTopIndex)->BorderDrawDirty(true);
+		getMapViewDescTop(mapViewDescTopIndex)->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 	}
 	::getMacroParamDataCache().clearAllLayers();
 }
@@ -3490,7 +3497,7 @@ void NFmiCombinedMapHandler::swapArea(unsigned int mapViewDescTopIndex)
 	mapDescTop->MapHandler()->SwapArea();
 
 	// sitten vielä tarvittävät likaukset ja päivitykset
-	mapDescTop->BorderDrawDirty(true);
+	mapDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 	mapViewDirty(mapViewDescTopIndex, true, true, true, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	mapDescTop->GridPointCache().Clear();
@@ -3924,6 +3931,11 @@ void NFmiCombinedMapHandler::addBorderLineLayer(const NFmiMenuItem& menuItem, in
 	{
 		drawParam->DataType(dataType);
 		drawParam->ParameterAbbreviation(::GetDictionaryString("Country border layer"));
+		// Laitetaan viivan paksuudeksi 1 pikseli (border-layer tapauksessa yksikkö on siis pikseli)
+		drawParam->SimpleIsoLineWidth(1);
+		// Oletus väri on musta (mikä on luultavasti muutenkin IsolineColor:in oletusväri, mutta asetus varmuuden vuoksi)
+		drawParam->IsolineColor(NFmiColor(0, 0, 0));
+
 		auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
 		auto* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
 		if(drawParamList && drawParamList->Add(drawParam, menuItem.IndexInViewRow()))
