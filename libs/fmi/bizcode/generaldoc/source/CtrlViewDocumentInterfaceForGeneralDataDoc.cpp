@@ -1008,11 +1008,6 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::DrawLandBorders(int theDescTopI
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawLandBorders(separateBorderLayerDrawOptions);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions)
-{
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawDirty(separateBorderLayerDrawOptions);
-}
-
 const NFmiColor& CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderColor(separateBorderLayerDrawOptions);
@@ -1056,12 +1051,6 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(i
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue)
 {
     itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(newValue);
-}
-
-
-void CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawDirty(int theDescTopIndex, bool dirtyFlag)
-{
-    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawDirty(dirtyFlag);
 }
 
 std::list<NFmiPolyline*>& CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineList(int theDescTopIndex)
@@ -1389,6 +1378,27 @@ CombinedMapHandlerInterface& CtrlViewDocumentInterfaceForGeneralDataDoc::GetComb
 {
     return *itsDoc->GetCombinedMapHandler();
 }
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawBitmapDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const
+{
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawBitmapDirty(separateBorderLayerDrawOptions);
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawPolylinesDirty(int theDescTopIndex) const
+{
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawPolylinesDirty();
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const
+{
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawPolylinesGdiplusDirty();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState)
+{
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetBorderDrawDirtyState(newState);
+}
+
 
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
