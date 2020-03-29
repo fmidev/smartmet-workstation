@@ -1,21 +1,27 @@
 #include "stdafx.h"
 #include "NFmiCountryBorderBitmapCache.h"
-#include "NFmiColor.h"
-
-#include "boost/math/special_functions.hpp"
 
 #include <gdiplus.h>
 
-#ifdef max
-#undef min // pit‰‰ undeffata typer‰t win32 min/max macrot
-#undef max
-#endif
 
-namespace
-{
-} // nameless namespace ends
- 
+// ************* NFmiCountryBorderBitmapCache ***********************
+
 NFmiCountryBorderBitmapCache::NFmiCountryBorderBitmapCache() = default;
+
+NFmiCountryBorderBitmapCache::NFmiCountryBorderBitmapCache(const NFmiCountryBorderBitmapCache& other)
+{
+    *this = other;
+}
+
+NFmiCountryBorderBitmapCache& NFmiCountryBorderBitmapCache::operator=(const NFmiCountryBorderBitmapCache& other)
+{
+    if(this != &other)
+    {
+        // cachea ei saa kopioida, se pit‰‰ vain tyhjent‰‰
+        bitmapCacheMap_.clear();
+    }
+    return *this;
+}
 
 NFmiCountryBorderBitmapCache::~NFmiCountryBorderBitmapCache() = default;
 
