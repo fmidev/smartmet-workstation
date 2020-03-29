@@ -4683,17 +4683,6 @@ void DoControlPointCommand(FmiMenuCommandType command)
     }
 }
 
-void ReloadAllDynamicHelpData()
-{
-    LogMessage("Reloading all the dynamic data.", CatLog::Severity::Info, CatLog::Category::Data);
-    InfoOrganizer()->ClearDynamicHelpData(false); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eik‰ staattisia helpdatoja kuten topografia ja fraktiilit)
-	HelpDataInfoSystem()->ResetAllDynamicDataTimeStamps(); // merkit‰‰n kaikkien dynaamisten help datojen aikaleimaksi -1, eli ei ole luettu ollenkaan
-    SatelliteImageCacheSystem().ResetImages();
-	GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan kaikki kartta n‰ytˆt likaiseksi
-    MacroParamDataCache().clearAllLayers();
-	// T‰m‰n j‰lkeen pit‰‰ laittaa datan luku threadi heti p‰‰lle ylemm‰ll‰ tasolla eli CSmartMetDoc-luokassa, mist‰ t‰t‰ metodia on kutsuttukkin.
-}
-
 NFmiAreaMask* CreateMask(const NFmiMenuItem& theMenuItem)
 {
 	NFmiAreaMask* mask = 0;
@@ -8256,13 +8245,31 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return info;
 	}
 
+	void DoSmartMetRefreshActions(const std::string& message)
+	{
+		LogMessage(message, CatLog::Severity::Info, CatLog::Category::Visualization);
+		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
+		MacroParamDataCache().clearAllLayers();
+		WindTableSystem().MustaUpdateTable(true);
+		// Laitetaan nyt h‰t‰tilassa vain p‰‰ikkunan rajaviivat likaisiksi TƒHƒN TULEE KORJAUS!!!!
+		for(auto &mapViewDescTop : GetCombinedMapHandler()->getMapViewDescTops())
+			mapViewDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
+	}
+
 	void OnButtonRefresh(void)
 	{
-		LogMessage("Refreshing all views.", CatLog::Severity::Info, CatLog::Category::Visualization);
-		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true); // laitetaan kartta likaiseksi
-        MacroParamDataCache().clearAllLayers();
-        WindTableSystem().MustaUpdateTable(true);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Refreshing all views (F5)");
+		DoSmartMetRefreshActions("Refreshing all views (F5)");
+	}
+
+	void ReloadAllDynamicHelpData()
+	{
+		InfoOrganizer()->ClearDynamicHelpData(false); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eik‰ staattisia helpdatoja kuten topografia ja fraktiilit)
+		HelpDataInfoSystem()->ResetAllDynamicDataTimeStamps(); // merkit‰‰n kaikkien dynaamisten help datojen aikaleimaksi -1, eli ei ole luettu ollenkaan
+		SatelliteImageCacheSystem().ResetImages();
+		// T‰nne pit‰isi lis‰t‰ muidenkin datojen uudelleen lataus, kuten kaikki Wms jutut, CAP, Hake, KaHa, muita?
+		DoSmartMetRefreshActions("Reloading all the dynamic data (CTRL+SHIFT+F5)");
+		// T‰m‰n j‰lkeen pit‰‰ laittaa datan luku threadi heti p‰‰lle ylemm‰ll‰ tasolla eli CSmartMetDoc-luokassa, mist‰ t‰t‰ metodia on kutsuttukkin.
 	}
 
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
