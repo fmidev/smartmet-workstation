@@ -21,16 +21,6 @@ using namespace std;
 
 namespace
 {
-	//template<typename T>
-	struct PointerDestroyer
-	{
-		template<typename T>
-		void operator()(T* thePtr)
-		{
-			delete thePtr;
-		}
-	};
-
 	void clearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
 	{
 		for(auto *bitmapPointer : theBitmaps)
@@ -61,8 +51,7 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler()
 ,itsSwapBaseArea()
 ,itsSwapBackArea()
 ,itsSwapMode(0)
-,itsDrawBorderPolyLineList()
-,itsDrawBorderPolyLineListGdiplus()
+,itsCountryBorderPolylineCache()
 ,itsLandBorderPath()
 {
 }
@@ -97,8 +86,7 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMap
 	, itsSwapBaseArea(nullptr)
 	, itsSwapBackArea(nullptr)
 	, itsSwapMode(0)
-	, itsDrawBorderPolyLineList()
-	, itsDrawBorderPolyLineListGdiplus()
+	, itsCountryBorderPolylineCache()
 	, itsLandBorderPath()
 {
 	*this = other;
@@ -129,10 +117,7 @@ NFmiGdiPlusImageMapHandler& NFmiGdiPlusImageMapHandler::operator=(const NFmiGdiP
 		itsSwapBaseArea.reset(::MakeNewAreaClone(other.itsSwapBaseArea));
 		itsSwapBackArea.reset(::MakeNewAreaClone(other.itsSwapBackArea));
 		itsSwapMode = other.itsSwapMode;
-		ClearDrawBorderPolyLineList(); // kopiossa nämä vain nollataan
-		fDrawBorderPolyLineListDirty = true;
-		itsDrawBorderPolyLineListGdiplus.clear(); // kopiossa nämä vain nollataan
-		fDrawBorderPolyLineListGdiplusDirty = true;
+		itsCountryBorderPolylineCache = other.itsCountryBorderPolylineCache;
 		itsLandBorderPath = other.itsLandBorderPath;
 		InitializeBitmapVectors();
 	}
@@ -152,9 +137,7 @@ void NFmiGdiPlusImageMapHandler::Clear()
 	itsMapDrawStyles.clear();
 	itsOverMapBitmapFileNames.clear();
 	itsOverMapBitmapDrawStyles.clear();
-	ClearDrawBorderPolyLineList();
-	fDrawBorderPolyLineListDirty = true;
-	fDrawBorderPolyLineListGdiplusDirty = true;
+	itsCountryBorderPolylineCache.clearCache();
 }
 
 bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
@@ -573,25 +556,17 @@ void NFmiGdiPlusImageMapHandler::SwapArea()
 
 void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue)
 {
-	// tuhotaan ensin vanhan listan sisältö
-	std::for_each(itsDrawBorderPolyLineList.begin(), itsDrawBorderPolyLineList.end(), PointerDestroyer());
-	itsDrawBorderPolyLineList.clear();
-	// otetaan uuden listan sisältö omistukseen swap:illa
-	itsDrawBorderPolyLineList.swap(newValue);
-	// Merkitään polyline lista taas 'puhtaaksi' eli käyttövalmiiksi
-	fDrawBorderPolyLineListDirty = false;
+	itsCountryBorderPolylineCache.drawBorderPolyLineList(newValue);
 }
 
-void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue) 
+void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue)
 { 
-	itsDrawBorderPolyLineListGdiplus = newValue; 
-	fDrawBorderPolyLineListGdiplusDirty = false;
+	itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus(newValue);
 }
 
-void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue) 
+void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue)
 { 
-	itsDrawBorderPolyLineListGdiplus = newValue; 
-	fDrawBorderPolyLineListGdiplusDirty = false;
+	itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus(std::move(newValue));
 }
 
 // Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
@@ -638,33 +613,35 @@ void NFmiGdiPlusImageMapHandler::ClearUpdateMapViewDrawingLayers()
 // jotta seuraavalla piirto kerralla on pakko tehdä töitä.
 void NFmiGdiPlusImageMapHandler::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState)
 {
-	if(newState == CountryBorderDrawDirtyState::Geometry)
-	{
-		// Kosmeettiset muutokset eivät laita polylineja uusiksi, mutta kaikki geometriset muutokset kyllä
-		ClearDrawBorderPolyLineList();
-		ClearDrawBorderPolyLineListGdiplus();
-	}
-}
-
-void NFmiGdiPlusImageMapHandler::ClearDrawBorderPolyLineList()
-{
-	std::for_each(itsDrawBorderPolyLineList.begin(), itsDrawBorderPolyLineList.end(), PointerDestroyer());
-	itsDrawBorderPolyLineList.clear();
-	fDrawBorderPolyLineListDirty = true;
-}
-
-void NFmiGdiPlusImageMapHandler::ClearDrawBorderPolyLineListGdiplus()
-{
-	itsDrawBorderPolyLineListGdiplus.clear();
-	fDrawBorderPolyLineListGdiplusDirty = true;
+	itsCountryBorderPolylineCache.setBorderDrawDirtyState(newState);
 }
 
 bool NFmiGdiPlusImageMapHandler::BorderDrawPolylinesDirty() const
 {
-	return fDrawBorderPolyLineListDirty;
+	return itsCountryBorderPolylineCache.borderDrawPolylinesDirty();
 }
 
 bool NFmiGdiPlusImageMapHandler::BorderDrawPolylinesGdiplusDirty() const
 {
-	return fDrawBorderPolyLineListGdiplusDirty;
+	return itsCountryBorderPolylineCache.borderDrawPolylinesGdiplusDirty();
+}
+
+std::list<NFmiPolyline*>& NFmiGdiPlusImageMapHandler::DrawBorderPolyLineList()
+{
+	return itsCountryBorderPolylineCache.drawBorderPolyLineList();
+}
+
+const std::list<std::vector<NFmiPoint>>& NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus()
+{
+	return itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus();
+}
+
+boost::shared_ptr<Imagine::NFmiPath> NFmiGdiPlusImageMapHandler::LandBorderPath()
+{
+	return itsLandBorderPath;
+}
+
+void NFmiGdiPlusImageMapHandler::LandBorderPath(boost::shared_ptr<Imagine::NFmiPath>& thePath)
+{
+	itsLandBorderPath = thePath;
 }
