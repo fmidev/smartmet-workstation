@@ -13,6 +13,7 @@
 #include "NFmiRect.h"
 #include "NFmiDataMatrix.h"
 #include "CombinedMapHandlerInterface.h"
+#include "NFmiCountryBorderPolylineCache.h"
 
 class NFmiArea;
 class NFmiPolyline;
@@ -84,13 +85,13 @@ public:
 	void SwapArea();
 	bool MapReallyChanged() const {return fMapReallyChanged;}
 	void MapReallyChanged(bool newValue) {fMapReallyChanged = newValue;}
-	std::list<NFmiPolyline*>& DrawBorderPolyLineList() {return itsDrawBorderPolyLineList;}
+	std::list<NFmiPolyline*>& DrawBorderPolyLineList();
 	void DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue);
-    const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus() { return itsDrawBorderPolyLineListGdiplus; }
+	const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
 	void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue);
 	void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue);
-    boost::shared_ptr<Imagine::NFmiPath> LandBorderPath() {return itsLandBorderPath;}
-    void LandBorderPath(boost::shared_ptr<Imagine::NFmiPath> &thePath) {itsLandBorderPath = thePath;}
+	boost::shared_ptr<Imagine::NFmiPath> LandBorderPath();
+	void LandBorderPath(boost::shared_ptr<Imagine::NFmiPath>& thePath);
 	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState);
 	bool BorderDrawPolylinesDirty() const;
 	bool BorderDrawPolylinesGdiplusDirty() const;
@@ -99,8 +100,6 @@ private:
 	Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &theFileName);
 	boost::shared_ptr<NFmiArea> ReadArea(const std::string& theAreaFileName);
 	void CalcZoomedAreaPosition();
-	void ClearDrawBorderPolyLineList();
-	void ClearDrawBorderPolyLineListGdiplus();
 	void InitializeBitmapVectors();
 
 	int itsUsedMapIndex;
@@ -145,16 +144,8 @@ private:
 	// Aina kun tehd‰‰n mit‰ tahansa muita zoomeja, nollataan swapMode.
 	int itsSwapMode;
 
-	// Optimointia: kun stationviewhandler on tehnyt piirtolistan valmiiksi, se talletetaan dokumenttiin ja sen piirto on nopeaa kun kaikki konversiot on valmikksi tehty	
-    std::list<NFmiPolyline*> itsDrawBorderPolyLineList;
-	// Kun kysyt‰‰n ett‰ BorderDrawPolylinesDirty(), tarkistetaan onko itsDrawBorderPolyLineList tyhj‰ vai ei.
-	// Mutta jos laskettu polyline onkin tyhj‰, pit‰‰ olla mekanismi, jolla voidaan tarkistaa ett‰ vaikka polyline-lista onkin tyhj‰,
-	// mutta silti listaa ei tarvitse laskea uudestaan t‰m‰ lipun avulla.
-	bool fDrawBorderPolyLineListDirty = true; 
-    std::list<std::vector<NFmiPoint>> itsDrawBorderPolyLineListGdiplus;
-	// Sama selitys kuin fDrawBorderPolyLineListSet:in kanssa edell‰, mutta koskien itsDrawBorderPolyLineListGdiplus -listan likaisuutta.
-	bool fDrawBorderPolyLineListGdiplusDirty = true;
+	NFmiCountryBorderPolylineCache itsCountryBorderPolylineCache;
 	// t‰h‰n lasketaan itsOriginalArea:n sis‰‰n menev‰ path kerran (GenDocissa)
-    boost::shared_ptr<Imagine::NFmiPath> itsLandBorderPath; 
+	boost::shared_ptr<Imagine::NFmiPath> itsLandBorderPath;
 };
 
