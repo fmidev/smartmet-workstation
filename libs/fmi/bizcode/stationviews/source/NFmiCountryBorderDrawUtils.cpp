@@ -43,7 +43,7 @@ namespace
         for(auto polyLine : thePolyLineList)
         {
             theGTB->DrawPolyline(polyLine, theOffSet, scale);
-            totalLinePointCount += polyLine->GetPoints()->NumberOfItems();
+            totalLinePointCount += polyLine->GetPoints().size();
         }
         ::traceLogLandBorderLineCounts(thePolyLineList.size(), totalLinePointCount, ctrlView);
     }
@@ -182,6 +182,14 @@ namespace
         return relativePolyLineList;
     }
 
+    std::unique_ptr<NFmiArea> CreateFixedToOrigoMapArea(const boost::shared_ptr<NFmiArea>& mapArea)
+    {
+        std::unique_ptr<NFmiArea> fixedToOrigoMapArea(mapArea.get()->Clone());
+        fixedToOrigoMapArea->Place(NFmiPoint(0, 0));
+        return std::move(fixedToOrigoMapArea);
+    }
+
+
     void drawLandBordersWithGdiplus(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam *separateBorderLayerDrawOptions)
     {
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
@@ -189,6 +197,9 @@ namespace
         auto mapArea = mapView->GetArea();
         if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
         {
+            // Border viivojen piirto erilliseen cache bitmap:iin pitää tapahtua aina kiinni origossa.
+            // Siksi pitää luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
+            auto fixedToOrigoMapArea = ::CreateFixedToOrigoMapArea(mapArea);
             if(ctrlViewDocumentInterface->BorderDrawPolylinesGdiplusDirty(mapViewDescTopIndex))
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
@@ -196,7 +207,7 @@ namespace
                 if(usedPath)
                 {
                     Imagine::NFmiPath path(*usedPath.get());
-                    path.Project(mapArea.get());
+                    path.Project(fixedToOrigoMapArea.get());
                     // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa listaan liittyvän likaisuus lipun pois eli käyttövalmiiksi
                     ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex, ::convertPath2RelativePolyLineListGdiplus(path, false, true));
                 }
@@ -208,11 +219,11 @@ namespace
             if(borderPolyLineList.empty() == false)
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
-                NFmiPoint offSet(mapArea->TopLeft());
+                NFmiPoint offSet(fixedToOrigoMapArea->TopLeft());
                 int penSize = ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex, separateBorderLayerDrawOptions);
                 auto lineColor = ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions);
                 // Pitää luoda rajaviiva piirrossa käytössä olevan toolboxin avulla uusi Gdiplus-graphics olio, ei saa käyttää mapView:in vastaavaa oliota!
-                std::unique_ptr<Gdiplus::Graphics> gdigraphicsPtr(NFmiCtrlView::CreateGdiplusGraphics(toolbox, &mapArea->XYArea()));
+                std::unique_ptr<Gdiplus::Graphics> gdigraphicsPtr(NFmiCtrlView::CreateGdiplusGraphics(toolbox, &fixedToOrigoMapArea->XYArea()));
                 if(gdigraphicsPtr)
                     ::drawPolyLineListGdiplus(*gdigraphicsPtr, toolbox, borderPolyLineList, offSet, mapView, lineColor, penSize);
                 else
@@ -243,6 +254,9 @@ namespace
         {
             if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
             {
+                // Border viivojen piirto erilliseen cache bitmap:iin pitää tapahtua aina kiinni origossa.
+                // Siksi pitää luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
+                auto fixedToOrigoMapArea = ::CreateFixedToOrigoMapArea(mapArea);
                 if(ctrlViewDocumentInterface->BorderDrawPolylinesDirty(mapViewDescTopIndex))
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
@@ -250,11 +264,12 @@ namespace
                     if(usedPath)
                     {
                         Imagine::NFmiPath path(*usedPath.get());
-                        path.Project(mapArea.get());
+                        path.Project(fixedToOrigoMapArea.get());
                         std::list<NFmiPolyline*> polyLineList;
                         // NFmiIsoLineView::ConvertPath2PolyLineList funktiolle annetaan viimeisena nullptr parametri, koska ei haluta antaa jokaiselle
-                        // erilliselle polylinelle omaa piirto-ominaisuus oliota. Maiden rajat piirretään aina samalla värillä ja viivapaksuudella.
-                        NFmiIsoLineView::ConvertPath2PolyLineList(path, polyLineList, false, true, mapArea->XYArea(), nullptr);
+                        // erilliselle polylinelle omaa piirto-ominaisuus oliota. Kun maiden rajaviivat piirretään yhteen karttaruutuun, piirretään ne 
+                        // aina samalla värillä ja viivapaksuudella, joten ei ole tarvetta laitta jokaiselle viivanpätkälle erillisiä asetuksia.
+                        NFmiIsoLineView::ConvertPath2PolyLineList(path, polyLineList, false, true, fixedToOrigoMapArea->XYArea(), nullptr);
                         // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa polyline-listaan liittyvän dirty-flagin pois päältä
                         ctrlViewDocumentInterface->DrawBorderPolyLineList(mapViewDescTopIndex, polyLineList);
                     }
@@ -266,11 +281,11 @@ namespace
                 if(borderPolyLineList.empty() == false)
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
-                    NFmiPoint offSet(mapArea->TopLeft());
+                    NFmiPoint offSet(fixedToOrigoMapArea->TopLeft());
                     NFmiDrawingEnvironment envi;
                     envi.SetFrameColor(ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions));
                     envi.SetPenSize(NFmiPoint(penSize, penSize));
-                    ToolBoxStateRestorer toolBoxStateRestorer(*toolbox, toolbox->GetTextAlignment(), true, &mapArea->XYArea());
+                    ToolBoxStateRestorer toolBoxStateRestorer(*toolbox, toolbox->GetTextAlignment(), true, &fixedToOrigoMapArea->XYArea());
                     ::drawPolyLineList(toolbox, borderPolyLineList, offSet, mapView, envi);
                 }
             }
