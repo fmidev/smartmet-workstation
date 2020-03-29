@@ -585,7 +585,7 @@ void NFmiProjectionCurvatureInfo::MakeLatitudeLines(const NFmiArea* theArea, dou
             }
             lastPoint = currentPoint;
         }
-        if(polyLine && polyLine->GetPoints()->NumberOfItems())
+        if(polyLine && polyLine->GetPoints().size())
         {
             theCalculatedLines.PolyAdd(polyLine);
             polyLine = 0;
