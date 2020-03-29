@@ -1,38 +1,15 @@
-
-
-#ifdef _MSC_VER
-#pragma warning (disable:4996) // poistaa widen- ja narrow ctype-metodien varoitukset
-#endif
-
-
-
 #include "stdafx.h"
 #include "FmiGdiPlusHelpers.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiFileString.h"
 #include "NFmiRect.h"
-#include "NFmiToolBox.h"
-#include "NFmiFileSystem.h"
-#include "NFmiStationView.h"
-#include "NFmiMapViewdescTop.h"
-#include "xmlliteutils/UtfConverter.h"
-#include "FmiWin32Helpers.h"
-#include "NFmiColorSpaces.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiApplicationWinRegistry.h"
+#include <afxdlgs.h>
+
 #include "boost/math/special_functions/round.hpp"
 
-std::string CFmiGdiPlusHelpers::StrToUtf8(const std::string &theString)
-{
-    std::wstring wStr = CtrlView::StringToWString(theString);
-    std::string utf8Str = UtfConverter::ToUtf8(wStr);
-    size_t endPos = strlen(&utf8Str[0]);
-    if(endPos < utf8Str.size())
-        utf8Str.resize(endPos); // pitää tehdä resize, koska muuten loppuun jää paljon 0:aa
-    return utf8Str;
-}
-
-static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
+int CFmiGdiPlusHelpers::GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 {
 	UINT  num = 0;          // number of image encoders
 	UINT  size = 0;         // size of the image encoder array in bytes
@@ -294,7 +271,6 @@ bool CFmiGdiPlusHelpers::SafelySaveMfcBitmapToFile(const std::string &theCalling
     if(CFmiGdiPlusHelpers::SaveMfcBitmapToFile(theCallingFunctionName, bm, temporaryFileName, theRelativeOutputArea, throwError))
     {
         MoveFileEx(CA2T(temporaryFileName.c_str()), CA2T(theFileName.c_str()), MOVEFILE_REPLACE_EXISTING);
-//        return NFmiFileSystem::RenameFile(temporaryFileName, theFileName); // Tämä funktio ottaa jostain syystä vanhasta (korvattavasta) tiedostosta aikaleimat ja laittaa ne uuteen, paitsi jos käy koodia step-by-step:illa läpi
     }
     return false;
 }
