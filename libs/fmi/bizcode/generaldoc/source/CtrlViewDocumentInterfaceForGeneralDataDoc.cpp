@@ -1050,7 +1050,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(i
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue)
 {
-    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(newValue);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(std::move(newValue));
 }
 
 std::list<NFmiPolyline*>& CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineList(int theDescTopIndex)
