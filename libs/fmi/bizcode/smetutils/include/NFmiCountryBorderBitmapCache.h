@@ -4,7 +4,6 @@
 #include <string>
 #include <memory>
 
-class NFmiColor;
 namespace Gdiplus
 {
     class Bitmap;
@@ -26,6 +25,8 @@ class NFmiCountryBorderBitmapCache
     std::map<std::string, std::unique_ptr<Gdiplus::Bitmap>> bitmapCacheMap_;
 public:
     NFmiCountryBorderBitmapCache();
+    NFmiCountryBorderBitmapCache(const NFmiCountryBorderBitmapCache& other);
+    NFmiCountryBorderBitmapCache& operator=(const NFmiCountryBorderBitmapCache& other);
     ~NFmiCountryBorderBitmapCache();
 
     Gdiplus::Bitmap* getCacheBitmap(const std::string& keyString) const;
