@@ -53,12 +53,21 @@ namespace
 		return eightBitColor;
 	}
 
+	void colorChannelToHex(std::ostream &out, int channelValue)
+	{
+		out << std::setfill('0') << std::setw(2) << std::hex << channelValue;
+	}
+
 	std::string colorToHex(int red, int green, int blue)
 	{
 		std::stringstream stream;
-		stream << std::setfill('0') << std::setw(2) << std::hex << red << green << blue;
+		// Nämä stream manipulaattorit ovat voimassa vain yhden arvon tulostuksen ajan, joten jokaiselle värikanavalle piti tehdä oma tulostusrivi
+		::colorChannelToHex(stream, red);
+		::colorChannelToHex(stream, green);
+		::colorChannelToHex(stream, blue);
 		return stream.str();
 	}
+
 	std::string colorToHexaString(const NFmiColor& color)
 	{
 		int redColor = ::colorRelativeTo8bit(color.GetRed());
@@ -214,7 +223,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
 ,itsLandBorderMapBitmap(nullptr)
-,itsCountryBorderBitmapCache()
+,itsSeparateCountryBorderBitmapCache()
 {
 }
 
@@ -271,7 +280,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
 ,itsLandBorderMapBitmap(nullptr)
-,itsCountryBorderBitmapCache()
+, itsSeparateCountryBorderBitmapCache()
 {
 }
 
@@ -339,7 +348,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, fShowStationPlotVM(false)
 	, itsViewGridSizeVM()
 	, itsLandBorderMapBitmap(nullptr)
-	, itsCountryBorderBitmapCache()
+	, itsSeparateCountryBorderBitmapCache()
 {
 	*this = other;
 }
@@ -400,8 +409,8 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsSelectedMapIndexVM = other.itsSelectedMapIndexVM;
 		fShowStationPlotVM = other.fShowStationPlotVM;
 		itsViewGridSizeVM = other.itsViewGridSizeVM;
-		itsLandBorderMapBitmap = nullptr; // Tälläisiin MFC pointtereihin vain nullptr:ää
-		itsCountryBorderBitmapCache.clearCache(); // Nollataan tämäkin cache
+		ClearBaseLandBorderMapBitmap(); // deletoi ja nollaa itsLandBorderMapBitmap:in
+		itsSeparateCountryBorderBitmapCache = other.itsSeparateCountryBorderBitmapCache;
 	}
 	return *this;
 }
@@ -422,7 +431,7 @@ void NFmiMapViewDescTop::Clear(void)
 		itsDrawParamListVector = nullptr;
 	}
 	ClearBaseLandBorderMapBitmap();
-	itsCountryBorderBitmapCache.clearCache();
+	itsSeparateCountryBorderBitmapCache.clearCache();
 }
 
 boost::shared_ptr<Imagine::NFmiPath> NFmiMapViewDescTop::LandBorderPath(void)
@@ -871,7 +880,7 @@ bool NFmiMapViewDescTop::BorderDrawBitmapDirty(NFmiDrawParam* separateBorderLaye
 	if(separateBorderLayerDrawOptions)
 	{
 		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
-		const auto* bitmap = itsCountryBorderBitmapCache.getCacheBitmap(cacheKey);
+		const auto* bitmap = itsSeparateCountryBorderBitmapCache.getCacheBitmap(cacheKey);
 		return (bitmap == nullptr); // Jos ei löydy erillis-layer-cachesta kuvaa, on se 'likainen'
 	}
 	else
@@ -893,7 +902,7 @@ Gdiplus::Bitmap* NFmiMapViewDescTop::LandBorderMapBitmap(NFmiDrawParam* separate
 	if(separateBorderLayerDrawOptions)
 	{
 		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
-		return itsCountryBorderBitmapCache.getCacheBitmap(cacheKey);
+		return itsSeparateCountryBorderBitmapCache.getCacheBitmap(cacheKey);
 	}
 	else
 		return itsLandBorderMapBitmap; 
@@ -905,7 +914,7 @@ void NFmiMapViewDescTop::SetLandBorderMapBitmap(Gdiplus::Bitmap* newBitmap, NFmi
 	{
 		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
 		// Annettu newBitmap otetaan tässä omistukseen unique_ptr:iin
-		itsCountryBorderBitmapCache.insertCacheBitmap(cacheKey, std::unique_ptr<Gdiplus::Bitmap>(newBitmap));
+		itsSeparateCountryBorderBitmapCache.insertCacheBitmap(cacheKey, std::unique_ptr<Gdiplus::Bitmap>(newBitmap));
 	}
 	else
 	{
@@ -1402,40 +1411,40 @@ void NFmiMapViewDescTop::SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime)
 	itsCurrentTime = theCaseStudyTime;
 }
 
-std::list<NFmiPolyline*>& NFmiMapViewDescTop::DrawBorderPolyLineList(void)
+std::list<NFmiPolyline*>& NFmiMapViewDescTop::DrawBorderPolyLineList()
 {
-    return MapHandler()->DrawBorderPolyLineList();
+	return MapHandler()->DrawBorderPolyLineList();
 }
 
-void NFmiMapViewDescTop::DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue)
+void NFmiMapViewDescTop::DrawBorderPolyLineList(std::list<NFmiPolyline*>& newPolyline)
 {
-    MapHandler()->DrawBorderPolyLineList(newValue);
+	MapHandler()->DrawBorderPolyLineList(newPolyline);
 }
 
 const std::list<std::vector<NFmiPoint>>& NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus()
-{ 
-    return MapHandler()->DrawBorderPolyLineListGdiplus();
+{
+	return MapHandler()->DrawBorderPolyLineListGdiplus();
 }
-void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>> &newValue)
-{ 
-    MapHandler()->DrawBorderPolyLineListGdiplus(newValue);
+
+void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newPolylines)
+{
+	MapHandler()->DrawBorderPolyLineListGdiplus(newPolylines);
 }
-void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>> &&newValue)
-{ 
-    MapHandler()->DrawBorderPolyLineListGdiplus(newValue);
+
+void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newPolylines)
+{
+	MapHandler()->DrawBorderPolyLineListGdiplus(newPolylines);
 }
 
 void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState)
-{ 
+{
 	MapHandler()->SetBorderDrawDirtyState(newState);
 	if(newState != CountryBorderDrawDirtyState::None)
 	{
-		// Aina kun border-draw menee likaiseksi, nollataan nämä erilliset kuva-cachet.
 		ClearBaseLandBorderMapBitmap();
-		itsCountryBorderBitmapCache.clearCache();
+		itsSeparateCountryBorderBitmapCache.clearCache();
 	}
 }
-
 void NFmiMapViewDescTop::ClearBaseLandBorderMapBitmap()
 {
 	delete itsLandBorderMapBitmap;
@@ -1444,12 +1453,12 @@ void NFmiMapViewDescTop::ClearBaseLandBorderMapBitmap()
 
 const Gdiplus::Bitmap* NFmiMapViewDescTop::GetSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString)
 {
-	return itsCountryBorderBitmapCache.getCacheBitmap(cacheKeyString);
+	return itsSeparateCountryBorderBitmapCache.getCacheBitmap(cacheKeyString);
 }
 
 void NFmiMapViewDescTop::InsertSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap)
 {
-	itsCountryBorderBitmapCache.insertCacheBitmap(cacheKeyString, std::move(cacheBitmap));
+	itsSeparateCountryBorderBitmapCache.insertCacheBitmap(cacheKeyString, std::move(cacheBitmap));
 }
 
 std::string NFmiMapViewDescTop::GetCurrentMapLayerText(bool backgroundMap)
