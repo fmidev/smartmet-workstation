@@ -148,7 +148,7 @@ public:
 
 	void LandBorderPenSize(const NFmiPoint &newValue){itsLandBorderPenSize = newValue;}
 	void ToggleLandBorderPenSize(void);
-	std::list<NFmiPolyline*>& DrawBorderPolyLineList(void);
+	std::list<NFmiPolyline*>& DrawBorderPolyLineList();
 	void DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue);
     const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
     void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>> &newValue);
@@ -327,9 +327,9 @@ private:
     // Tähän tehdään yksi maiden rajat kartalla bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä.
     // Huom! pakko tehdä gdiplus bitmap, jotta saadaan mukaan läpinäkyvä väri
     Gdiplus::Bitmap *itsLandBorderMapBitmap;
-	// Tässä on erillisinä piirtolayereina olevien maiden rajaviivojen bitmap cache kuvia.
+	// Tässä on erillisinä piirtolayereina olevien maiden rajaviivojen bitmap ja polyline datat.
 	// Uudet erillismääritellyt border-layerit voivat olla eri piirtosäädöillä ja niitä voi olla jokaisella karttarivillä omansa.
-	NFmiCountryBorderBitmapCache itsCountryBorderBitmapCache;
+	NFmiCountryBorderBitmapCache itsSeparateCountryBorderBitmapCache;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMapViewDescTop& item){item.Write(os); return os;}
