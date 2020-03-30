@@ -242,6 +242,8 @@ public:
     void addBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void moveBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) override;
+    void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) override;
+
 private:
     unsigned int getMapViewCount() const;
     unsigned int getMapAreaCount() const;
