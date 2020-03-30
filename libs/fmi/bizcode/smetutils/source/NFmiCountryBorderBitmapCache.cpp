@@ -44,3 +44,16 @@ void NFmiCountryBorderBitmapCache::clearCache()
 {
     bitmapCacheMap_.clear();
 }
+
+// S‰‰dett‰v‰ cachen likaus funktio: 
+// 1. Jos newState = Geometry, kaikki cachet menee sile‰ksi.
+// 2. Jos cosmetic, pit‰‰ keyString pointterissa olla jokin arvo, ja sill‰ avaimella oleva kuva pyyhit‰‰n pois.
+void NFmiCountryBorderBitmapCache::setBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string& keyString)
+{
+    if(newState == CountryBorderDrawDirtyState::Geometry)
+        clearCache();
+    else if(newState == CountryBorderDrawDirtyState::Cosmetic && !keyString.empty())
+    {
+        bitmapCacheMap_.erase(keyString);
+    }
+}
