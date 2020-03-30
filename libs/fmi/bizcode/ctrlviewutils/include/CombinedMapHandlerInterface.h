@@ -205,6 +205,7 @@ public:
     virtual void addBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void moveBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) = 0;
 
 
     // Staattiset perushelper-funktiot
