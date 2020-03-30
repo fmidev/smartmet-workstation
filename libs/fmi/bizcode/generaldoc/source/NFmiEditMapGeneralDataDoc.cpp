@@ -4248,7 +4248,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 				}
 			}
 
-			if(!crossSectionPopup)
+			if(mapViewSectionPopup)
 				AddBorderLayerActionToPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue, itsPopupMenu);
 
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpProperties");
@@ -8251,9 +8251,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
 		MacroParamDataCache().clearAllLayers();
 		WindTableSystem().MustaUpdateTable(true);
-		// Laitetaan nyt hätätilassa vain pääikkunan rajaviivat likaisiksi TÄHÄN TULEE KORJAUS!!!!
-		for(auto &mapViewDescTop : GetCombinedMapHandler()->getMapViewDescTops())
-			mapViewDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+		GetCombinedMapHandler()->setBorderDrawDirtyState(CtrlViewUtils::kDoAllMapViewDescTopIndex, CountryBorderDrawDirtyState::Geometry);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
 	}
 
