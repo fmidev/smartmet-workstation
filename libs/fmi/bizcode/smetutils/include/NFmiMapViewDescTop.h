@@ -153,7 +153,8 @@ public:
     const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
     void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>> &newValue);
     void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>> &&newValue);
-	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState);
+	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr);
+	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string &cacheKey);
 	int LandBorderColorIndex(void) const {return itsLandBorderColorIndex;}
 	void LandBorderColorIndex(int newValue) {itsLandBorderColorIndex = newValue;}
 	bool DescTopOn(void) {return fDescTopOn;}

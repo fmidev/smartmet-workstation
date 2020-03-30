@@ -1436,15 +1436,21 @@ void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFm
 	MapHandler()->DrawBorderPolyLineListGdiplus(newPolylines);
 }
 
-void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState)
+void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions)
+{
+	std::string cacheKey = separateBorderLayerDrawOptions ? MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions) : "";
+	SetBorderDrawDirtyState(newState, cacheKey);
+}
+
+void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string& cacheKey)
 {
 	MapHandler()->SetBorderDrawDirtyState(newState);
 	if(newState != CountryBorderDrawDirtyState::None)
-	{
 		ClearBaseLandBorderMapBitmap();
-		itsSeparateCountryBorderBitmapCache.clearCache();
-	}
+
+	itsSeparateCountryBorderBitmapCache.setBorderDrawDirtyState(newState, cacheKey);
 }
+
 void NFmiMapViewDescTop::ClearBaseLandBorderMapBitmap()
 {
 	delete itsLandBorderMapBitmap;
