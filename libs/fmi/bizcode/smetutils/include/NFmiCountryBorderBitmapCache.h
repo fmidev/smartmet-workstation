@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CombinedMapHandlerInterface.h"
+
 #include <map>
 #include <string>
 #include <memory>
@@ -32,5 +34,5 @@ public:
     Gdiplus::Bitmap* getCacheBitmap(const std::string& keyString) const;
     void insertCacheBitmap(const std::string& keyString, std::unique_ptr<Gdiplus::Bitmap> &&cacheBitmap);
     void clearCache();
-
+    void setBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string& keyString = "");
 };
