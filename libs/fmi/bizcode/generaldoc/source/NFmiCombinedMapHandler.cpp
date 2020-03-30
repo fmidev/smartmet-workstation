@@ -1291,6 +1291,27 @@ void NFmiCombinedMapHandler::mapViewDirtyForAllDescTops(bool makeNewBackgroundBi
 	}
 }
 
+void NFmiCombinedMapHandler::setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions)
+{
+	if(mapViewDescTopIndex == CtrlViewUtils::kDoAllMapViewDescTopIndex)
+	{
+		for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
+		{
+			getMapViewDescTop(mapViewDescTopIndex)->SetBorderDrawDirtyState(newState, separateBorderLayerDrawOptions);
+		}
+	}
+	else
+	{
+		try
+		{
+			getMapViewDescTop(mapViewDescTopIndex)->SetBorderDrawDirtyState(newState, separateBorderLayerDrawOptions);
+		}
+		catch(...)
+		{
+		} // Jos tätä kutsutaan esim. poikkileikkaus näytölle, lentää poikkeus, mikä on täysin ok
+	}
+}
+
 void NFmiCombinedMapHandler::clearMacroParamDataCache(unsigned int mapViewDescTopIndex, bool doClearMacroParamDataCache, bool clearEditedDataDependentCaches)
 {
 	if(doClearMacroParamDataCache)
@@ -3202,20 +3223,21 @@ void NFmiCombinedMapHandler::showCrossSectionDrawParam(const NFmiMenuItem& menuI
 
 bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
+	auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
 	// TÄHÄN aluksi pika viritys macroParam asetukselle
 	if(NFmiDrawParam::IsMacroParamCase(menuItem.DataType()) && menuItem.ViewMacroDrawParam() == false)
-		return modifyMacroDrawParam(menuItem, viewRowIndex, menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView);
+		return modifyMacroDrawParam(menuItem, viewRowIndex, mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView);
 	else
 	{
 		bool updateStatus = false;
 		boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
 		if(modifiedDrawParam)
 		{
-			CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(menuItem.MapViewDescTopIndex());
-			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(true), true, false, menuItem.MapViewDescTopIndex(), parentView);
+			CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
+			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(true), true, false, mapViewDescTopIndex, parentView);
 			if(dlg.DoModal() == IDOK)
 			{
-				updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), modifiedDrawParam, viewRowIndex);
+				updateToModifiedDrawParam(mapViewDescTopIndex, modifiedDrawParam, viewRowIndex);
 				updateStatus = true;
 			}
 			else
@@ -3223,7 +3245,14 @@ bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int v
 		}
 
 		if(updateStatus)
-			drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), modifiedDrawParam);
+		{
+			drawParamSettingsChangedDirtyActions(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, viewRowIndex), modifiedDrawParam);
+
+			// Huom! Jos on muutettu border-layer piirtoa niin että se muuttuisi kyseisellä näyttörivillä, niin älä kuitenkaan
+			// tyhjennä kuvaa cachesta. Jollain muulla parametri rivillä voi olla samat asetukset ja se voi niitä vielä käyttää.
+			// Kuvat eivät vie paljoa muistia nyky koneiden RAM määrillä ja aina kun kartta/alue/kuvan geometria muuttuu, ladataan 
+			// näyttömakro, menee kaikki nämä cachet uusiksi kuitenkin.
+		}
 		return updateStatus;
 	}
 }
@@ -3479,8 +3508,9 @@ void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions()
 	mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 	{
-		getMapViewDescTop(mapViewDescTopIndex)->MapViewBitmapDirty(true);
-		getMapViewDescTop(mapViewDescTopIndex)->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+		NFmiMapViewDescTop* mapDescTop = getMapViewDescTop(mapViewDescTopIndex);
+		mapDescTop->MapViewBitmapDirty(true);
+		mapDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 	}
 	::getMacroParamDataCache().clearAllLayers();
 }
