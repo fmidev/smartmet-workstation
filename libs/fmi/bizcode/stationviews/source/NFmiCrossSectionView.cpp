@@ -715,6 +715,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					if(info == 0)
 						continue; // tämä on virhe tilanne oikeasti!!!!
 					DoTimeInterpolationSettingChecks(info);
+					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
 
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
 
@@ -726,7 +727,16 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
                         tooltipData.times[0] = aTime;
                         tooltipData.pressures[0] = p;
                         FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, &tooltipData);
-                        value = tooltipData.values[0][0];
+						if(!tooltipData.macroParamErrorMessage.empty())
+						{
+							str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true, 0, false);
+							str += ": ";
+							str += MakeMacroParamErrorTooltipText(tooltipData.macroParamErrorMessage);
+							str += "\n";
+							continue;
+						}
+						else
+	                        value = tooltipData.values[0][0];
                     }
 					else if(crossMode == NFmiCrossSectionSystem::kObsAndFor)
 					{
@@ -739,7 +749,6 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 
 					if(itsDrawParam->IsParamHidden())
 						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
-					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
 					str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true, 0, false);
 					if(itsDrawParam->IsParamHidden())
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
@@ -1392,6 +1401,22 @@ void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> 
 	FillRouteCrossSectionData(theValues, theIsoLineData, thePressures, points, times);
 }
 
+static void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocumentInterface& ctrlViewDocumentInterface, CrossSectionTooltipData* possibleTooltipData)
+{
+	// Lokitetaan virheviesti
+	CatLog::logMessage(errorText, CatLog::Severity::Error, CatLog::Category::Macro, true);
+	// Jos kyse toolpit laskuista, laitetaan viesti talteen ExtraMacroParamData:an, jotta viesti voidaan laittaa tooltippiin
+	if(possibleTooltipData)
+		possibleTooltipData->macroParamErrorMessage = errorText;
+
+	// talletetaan virheteksti aikaleimalla, että käyttäjä voi tarkastella sitä sitten smarttool dialogissa
+	NFmiTime aTime;
+	std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
+	auto dialogErrorString = timeString + errorText;
+	ctrlViewDocumentInterface.SetLatestMacroParamErrorText(dialogErrorString);
+	ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
+}
+
 void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData)
 {
     if(!possibleTooltipData)
@@ -1421,13 +1446,9 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     }
 	catch(exception &e)
 	{
-		string errorText;
-		NFmiTime aTime;
-		errorText += aTime.ToStr("YYYY.MM.DD klo HH:mm:SS");
-		errorText += "\n";
-		errorText += "Error: MacroParam intepretion failed:\n";
+		string errorText = "Error: MacroParam intepretion failed:\n";
 		errorText += e.what();
-		itsCtrlViewDocumentInterface->SetLatestMacroParamErrorText(errorText); // talletetaan virheteksti, että käyttäjä voi tarkastella sitä sitten
+		::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData);
 	}
 
 	try // suoritetaan macro sitten
@@ -1445,13 +1466,9 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 	}
 	catch(exception &e)
 	{
-		string errorText;
-		NFmiTime aTime;
-		errorText += aTime.ToStr("YYYY.MM.DD klo HH:mm:SS");
-		errorText += "\n";
-		errorText += "Error: MacroParam calculation failed:\n";
+		string errorText = "Error: MacroParam calculation failed:\n";
 		errorText += e.what();
-        itsCtrlViewDocumentInterface->SetLatestMacroParamErrorText(errorText); // talletetaan virheteksti, että käyttäjä voi tarkastella sitä sitten
+		::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData);
 	}
 }
 
