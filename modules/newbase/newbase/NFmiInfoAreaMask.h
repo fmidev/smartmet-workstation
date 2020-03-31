@@ -577,6 +577,8 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
   float DoGetFunction(const NFmiLocationCache &theLocationCache,
                       const NFmiCalculationParams &theCalculationParams,
                       float theLevelValue);
+  float DoPeekZFunction(const NFmiCalculationParams &theCalculationParams,
+                      float theDeltaZ);
   float DoVerticalGrad(const NFmiLocationCache &theLocationCache,
                        const NFmiCalculationParams &theCalculationParams);
   float DoFindFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
