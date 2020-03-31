@@ -2642,6 +2642,22 @@ void FmiModifyEditdData::InitializeSmartToolModifier(NFmiSmartToolModifier &theS
 	theSmartToolModifier.InitSmartTool(macroParamStr, true);
 }
 
+static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSerialModificationDataInterface& theAdapter, NFmiExtraMacroParamData* possibleExtraMacroParamData)
+{
+	// Lokitetaan virheviesti
+	::LogMessage(theAdapter, theErrorText, CatLog::Severity::Error, CatLog::Category::Macro);
+	// Jos kyse toolpit laskuista, laitetaan viesti talteen ExtraMacroParamData:an, jotta viesti voidaan laittaa tooltippiin
+	if(possibleExtraMacroParamData)
+		possibleExtraMacroParamData->MacroParamErrorMessage(theErrorText);
+
+	// talletetaan virheteksti aikaleimalla, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten smarttool dialogissa
+	NFmiTime aTime;
+	std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
+	auto dialogErrorString = timeString + theErrorText;
+	theAdapter.SetLatestMacroParamErrorText(dialogErrorString);
+	theAdapter.SetMacroErrorText(dialogErrorString);
+}
+
 static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
 	float value = kFloatMissing;
@@ -2653,18 +2669,12 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	catch(std::exception &e)
 	{
 		std::string errorText;
-		NFmiTime aTime;
 		errorText += "Error: Macro Parameter intepretion failed: \n";
 		errorText += e.what();
         errorText += ", in '";
         errorText += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), theAdapter.MacroParamSystem().RootPath(), "dpa");
         errorText += "'";
-        ::LogMessage(theAdapter, errorText, CatLog::Severity::Error, CatLog::Category::Macro);
-
-        std::string timeString = aTime.ToStr("YYYY.MM.DD klo HH:mm:SS - ");
-        auto finalErrorString = timeString + errorText;
-        theAdapter.SetLatestMacroParamErrorText(finalErrorString); // talletetaan virheteksti, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten
-		theAdapter.SetMacroErrorText(finalErrorString);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 		return value;
 	}
 
@@ -2701,26 +2711,14 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	}
 	catch(std::exception &e)
 	{
-		std::string errorText;
-		NFmiTime aTime;
-		errorText += aTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat"), theAdapter.Language()); // k‰ytet‰‰n luotaus aikaleimaa kun en jaksanut lis‰t‰ uutta fraasia sanakirjaan
-		errorText += "\n";
-		errorText += "Error: Macro Parameter calculation failed:\n";
+		std::string errorText = "Error: Macro Parameter calculation failed:\n";
 		errorText += e.what();
-        ::LogMessage(theAdapter, errorText, CatLog::Severity::Error, CatLog::Category::Macro);
-        theAdapter.SetLatestMacroParamErrorText(errorText); // talletetaan virheteksti, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten
-		theAdapter.SetMacroErrorText(errorText);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	catch(...)
 	{
-		std::string errorText;
-		NFmiTime aTime;
-		errorText += aTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat"), theAdapter.Language()); // k‰ytet‰‰n luotaus aikaleimaa kun en jaksanut lis‰t‰ uutta fraasia sanakirjaan
-		errorText += "\n";
-		errorText += "Error: Macro Parameter calculation failed: Unknown error!";
-        ::LogMessage(theAdapter, errorText, CatLog::Severity::Error, CatLog::Category::Macro);
-        theAdapter.SetLatestMacroParamErrorText(errorText); // talletetaan virheteksti, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten
-		theAdapter.SetMacroErrorText(errorText);
+		std::string errorText = "Error: Macro Parameter calculation failed: Unknown error!";
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	return value;
 }
