@@ -3891,7 +3891,7 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopInd
 std::string NFmiCombinedMapHandler::getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
 {
 	std::string mapLayerText = localOnlyMapModeUsed() ? "-" : "+";
-	mapLayerText += backgroundMap ? ::GetDictionaryString("Map") : ::GetDictionaryString("Olay");
+	mapLayerText += backgroundMap ? ::GetDictionaryString("Map") : ::GetDictionaryString("Overlay");
 	auto isWmsLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
 	mapLayerText += isWmsLayer ? "[W]" : "[L]";
 	mapLayerText += ": ";
