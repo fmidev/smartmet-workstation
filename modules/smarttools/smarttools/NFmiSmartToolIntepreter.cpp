@@ -4049,6 +4049,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_grad"), VertFunctionMapValue(NFmiAreaMask::Grad, NFmiAreaMask::VertFL, 3, string("vertfl_grad(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_findh_cond"), VertFunctionMapValue(NFmiAreaMask::FindHeightCond, NFmiAreaMask::VertFL, 4, string("vertfl_findh_cond(par, fl1, fl2, nth, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_findc_cond"), VertFunctionMapValue(NFmiAreaMask::FindCountCond, NFmiAreaMask::VertFL, 3, string("vertfl_findc_cond(par, fl1, fl2, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_peek"),VertFunctionMapValue(NFmiAreaMask::PeekZ, NFmiAreaMask::VertFL, 2, string("vertp_peek(par, dp)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
 
     // vertz-funktiot eli näitä operoidaan aina metrisillä korkeuksilla [m]
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_max"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::VertZ, 3, string("vertz_max(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4064,6 +4065,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_grad"), VertFunctionMapValue(NFmiAreaMask::Grad, NFmiAreaMask::VertZ, 3, string("vertz_grad(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_findh_cond"), VertFunctionMapValue(NFmiAreaMask::FindHeightCond, NFmiAreaMask::VertZ, 4, string("vertz_findh_cond(par, z1, z2, nth, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_findc_cond"), VertFunctionMapValue(NFmiAreaMask::FindCountCond, NFmiAreaMask::VertZ, 3, string("vertz_findc_cond(par, z1, z2, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_peek"),VertFunctionMapValue(NFmiAreaMask::PeekZ, NFmiAreaMask::VertZ, 2, string("vertp_peek(par, dp)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
 
     // vertlev-funktiot eli näitä operoidaan aina mallipintadatan hybrid-level arvoilla esim. hirlamissa arvot ovat 60 - 1
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_max"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::VertHyb, 3, string("vertlev_max(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
