@@ -4033,6 +4033,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_grad"),VertFunctionMapValue(NFmiAreaMask::Grad, NFmiAreaMask::VertP, 3, string("vertp_grad(par, p1, p2)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_findh_cond"), VertFunctionMapValue(NFmiAreaMask::FindHeightCond, NFmiAreaMask::VertP, 4, string("vertp_findh_cond(par, p1, p2, nth, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_findc_cond"), VertFunctionMapValue(NFmiAreaMask::FindCountCond, NFmiAreaMask::VertP, 3, string("vertp_findc_cond(par, p1, p2, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_peek"),VertFunctionMapValue(NFmiAreaMask::PeekZ, NFmiAreaMask::VertP, 2, string("vertp_peek(par, dp)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
 
     // vertfl-funktiot eli näitä operoidaan aina lentopinnoilla flight-level [hft]
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_max"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::VertFL, 3, string("vertfl_max(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
