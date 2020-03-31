@@ -2909,7 +2909,7 @@ std::string NFmiStationView::GetLocationTooltipString()
 std::string NFmiStationView::MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage)
 {
 	std::string str = "\"";
-	str += "<font color = crimson>";
+	str += "<font color = firebrick>";
 	str += macroParamErrorMessage;
 	str += "</font>";
 	str += "\"";
