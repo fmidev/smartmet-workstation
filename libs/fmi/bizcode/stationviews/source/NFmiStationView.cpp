@@ -2906,27 +2906,42 @@ std::string NFmiStationView::GetLocationTooltipString()
     return CtrlViewUtils::XmlEncode(locationStr);
 }
 
+std::string NFmiStationView::MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage)
+{
+	std::string str = "\"";
+	str += "<font color = crimson>";
+	str += macroParamErrorMessage;
+	str += "</font>";
+	str += "\"";
+	return str;
+}
+
 std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
 {
     NFmiExtraMacroParamData extraMacroParamData;
     itsInfo = usedInfo;
     float value = CalcMacroParamTooltipValue(extraMacroParamData);
-    usedInfo = itsInfo;
-    std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
-    str += " (crude) ";
-    str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
-    str += ", ";
-    float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
-    str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
-    str += " (cache) ";
-    str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
-    if(!extraMacroParamData.MacroParamDescription().empty())
-    {
-        str += "<font color = magenta> (";
-        str += extraMacroParamData.MacroParamDescription();
-        str += ")</font>";
-    }
-    return str;
+	if(!extraMacroParamData.MacroParamErrorMessage().empty())
+		return MakeMacroParamErrorTooltipText(extraMacroParamData.MacroParamErrorMessage());
+	else
+	{
+		usedInfo = itsInfo;
+		std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+		str += " (crude) ";
+		str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+		str += ", ";
+		float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
+		str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+		str += " (cache) ";
+		str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+		if(!extraMacroParamData.MacroParamDescription().empty())
+		{
+			str += "<font color = magenta> (";
+			str += extraMacroParamData.MacroParamDescription();
+			str += ")</font>";
+		}
+		return str;
+	}
 }
 
 static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
