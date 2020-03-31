@@ -2085,6 +2085,8 @@ float NFmiInfoAreaMaskVertFunc::CalculateUsedPeekZPressureLevel(float currentPre
 float NFmiInfoAreaMaskVertFunc::DoPeekZFunction(const NFmiCalculationParams &theCalculationParams,
                                                 float theDeltaZ)
 {
+  if (!theCalculationParams.fCrossSectionCase)
+    throw std::runtime_error("Don't use peekZ functions for non cross-section calculations");
   if (theCalculationParams.itsPressureHeight != kFloatMissing && theDeltaZ != kFloatMissing)
   {
     auto usedPressureLevelValue =
