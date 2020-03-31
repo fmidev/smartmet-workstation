@@ -2053,29 +2053,46 @@ float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocati
   }
 }
 
+// Oletus: annetut currentPressureLevel ja usedDeltaZ ovat jo tarkistettu, että eivät ole missing.
+float NFmiInfoAreaMaskVertFunc::CalculateUsedPeekZPressureLevel(float currentPressureLevel,
+                                                                float usedDeltaZ)
+{
+  switch (itsSecondaryFunc)
+  {
+    case NFmiAreaMask::VertP:
+    {
+      return currentPressureLevel + usedDeltaZ;
+    }
+    case NFmiAreaMask::VertFL:
+    {
+      // Muutetaan ensin perus painepinta flight-leveliksi
+      auto usedFLlevel = ::CalcPressureFlightLevel(currentPressureLevel);
+      usedFLlevel += usedDeltaZ;
+      // Lopuksi muutetaan yhteis flight-level takaisin paineeksi
+      return static_cast<float>(::CalcFlightLevelPressure(usedFLlevel*100));
+    }
+    case NFmiAreaMask::VertZ:
+    {
+      auto usedHeightlevel = ::CalcHeightAtPressure(currentPressureLevel) * 1000;
+      usedHeightlevel += usedDeltaZ;
+      return static_cast<float>(::CalcPressureAtHeight(usedHeightlevel / 1000.));
+    }
+    default:
+      return kFloatMissing;
+  }
+}
+
 float NFmiInfoAreaMaskVertFunc::DoPeekZFunction(const NFmiCalculationParams &theCalculationParams,
                                                 float theDeltaZ)
 {
-  float currentLevelPressure = theCalculationParams.itsPressureHeight;
-  if (currentLevelPressure != kFloatMissing && theDeltaZ != kFloatMissing)
+  if (theCalculationParams.itsPressureHeight != kFloatMissing && theDeltaZ != kFloatMissing)
   {
-    if (itsSecondaryFunc == NFmiAreaMask::VertZ)
-    {
-      NFmiLocationCache locationCache = CalcLocationCache(theCalculationParams.itsLatlon);
-      float currentLevelHeight = GetLevelHeightValue(locationCache);
-      if (currentLevelHeight != kFloatMissing)
-      {
-        float usedHeightValue = currentLevelHeight + theDeltaZ;
-        return static_cast<float>(HeightValue(usedHeightValue, theCalculationParams));
-      }
-    }
-    else if (itsSecondaryFunc == NFmiAreaMask::VertP || itsSecondaryFunc == NFmiAreaMask::VertFL)
-    {
-        float usedPressureValue = currentLevelPressure + theDeltaZ;
-        float value = static_cast<float>(PressureValue(usedPressureValue, theCalculationParams));
-        return ::DoLowestLevelPressureValueClamp(
-            value, itsInfo, theCalculationParams, usedPressureValue);
-    }
+    auto usedPressureLevelValue =
+        CalculateUsedPeekZPressureLevel(theCalculationParams.itsPressureHeight, theDeltaZ);
+
+    float value = static_cast<float>(PressureValue(usedPressureLevelValue, theCalculationParams));
+    return ::DoLowestLevelPressureValueClamp(
+        value, itsInfo, theCalculationParams, usedPressureLevelValue);
   }
   return kFloatMissing;
 }
@@ -2292,10 +2309,10 @@ float NFmiInfoAreaMaskVertFunc::DoVerticalGrad(const NFmiLocationCache &theLocat
 double NFmiInfoAreaMaskVertFunc::Value(const NFmiCalculationParams &theCalculationParams,
                                        bool /* fUseTimeInterpolationAlways */)
 {
-    // Pikaviritys poikkileikkausnäytön peek-z funktiolle (pitäisi tehdä oma luokka hanskaamaan)
-  if (itsPrimaryFunc == NFmiAreaMask::PeekZ) 
-      return DoPeekZFunction(theCalculationParams, itsArgumentVector[0]);
-  
+  // Pikaviritys poikkileikkausnäytön peek-z funktiolle (pitäisi tehdä oma luokka hanskaamaan)
+  if (itsPrimaryFunc == NFmiAreaMask::PeekZ)
+    return DoPeekZFunction(theCalculationParams, itsArgumentVector[0]);
+
   SetLevelValues();
   if (itsStartLevelValue == kFloatMissing)
     return kFloatMissing;  // jos jo alku level arvo on puuttuvaa, ei voi tehdä mitään järkevää
