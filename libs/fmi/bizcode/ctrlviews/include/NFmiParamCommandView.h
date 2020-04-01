@@ -33,7 +33,7 @@ class NFmiParamCommandView : public NFmiCtrlView
 {
 
  public:
-   NFmiParamCommandView (int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex);
+   NFmiParamCommandView (int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
    void Draw(NFmiToolBox* theGTB);
    virtual NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pit‰‰ voida kysy‰ oliolta
    void UpdateTextData(const NFmiPoint& theFontSize, const NFmiPoint& theFirstLinePlace, double theLineHeight, const NFmiPoint &theCheckBoxSize, const NFmiPoint &thePixelSize);
@@ -42,7 +42,7 @@ class NFmiParamCommandView : public NFmiCtrlView
    bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
 
  protected:
-   int CalcIndex(const NFmiPoint& thePlace);
+   int CalcIndex(const NFmiPoint& thePlace, double *indexRealValueOut = nullptr);
    virtual void DrawBackground(void);
    virtual void DrawData(void){};
    NFmiRect CheckBoxRect(int lineIndex, bool drawedRect);
@@ -57,5 +57,6 @@ class NFmiParamCommandView : public NFmiCtrlView
    NFmiPoint itsFirstLinePlace;
    double itsLineHeight; // itsFontSize.Y()+jokin v‰li
    bool fShowView; // 1999.12.10/Marko
+   bool fHasMapLayer;
 };
 

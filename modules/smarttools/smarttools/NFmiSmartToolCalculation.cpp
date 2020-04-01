@@ -97,7 +97,7 @@ void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalcula
   if (theMacroParamValue.fDoCrossSectionCalculations)
   {
     fUsePressureLevelCalculation = true;
-    itsPressureHeightValue = theMacroParamValue.itsPressureHeight;
+    itsPressureHeightValue = theCalculationParams.itsPressureHeight = theMacroParamValue.itsPressureHeight;
   }
   double value = eval_exp(theCalculationParams);
 

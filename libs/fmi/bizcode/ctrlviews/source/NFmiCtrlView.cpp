@@ -152,7 +152,7 @@ void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment * theEnvi, const NFmiRect& t
 	itsToolBox->Convert(&rect);
 }
 
-int NFmiCtrlView::GetUsedParamRowIndex(int theRowIndex, int theColumnIndex)
+int NFmiCtrlView::GetUsedParamRowIndex(int theRowIndex, int theColumnIndex) const
 {
 	if(itsMapViewDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
 		return theRowIndex; // tämä on muut kuin karttanäytöt
@@ -175,7 +175,7 @@ int NFmiCtrlView::GetUsedParamRowIndex(int theRowIndex, int theColumnIndex)
 		return theRowIndex; // normaali moodissa (tai muissa tapauksissa) palautetaan normaali rivi indeksi
 }
 
-int NFmiCtrlView::GetUsedParamRowIndex()
+int NFmiCtrlView::GetUsedParamRowIndex() const
 {
     return GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
 }
@@ -262,4 +262,3 @@ NFmiRect NFmiCtrlView::CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &th
 	NFmiRect rect(0, 0, distX, distY);
 	return rect;
 }
-

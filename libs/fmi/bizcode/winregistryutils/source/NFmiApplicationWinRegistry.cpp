@@ -154,16 +154,13 @@ NFmiMapViewWinRegistry::NFmiMapViewWinRegistry(void)
 ,mBaseRegistryPath()
 ,mSectionName()
 ,mMapIndex(-1)
-,mShowMasksOnMap()
-,mShowStationPlot()
-,mViewGridSizeStr()
 {
 }
 
 bool NFmiMapViewWinRegistry::Init(const std::string &baseRegistryPath, int mapIndex)
 {
     if(mInitialized)
-        std::runtime_error("NFmiMapViewWinRegistry::Init: all ready initialized.");
+        throw std::runtime_error("NFmiMapViewWinRegistry::Init: all ready initialized.");
 
     mInitialized = true;
     mBaseRegistryPath = baseRegistryPath;
@@ -180,6 +177,8 @@ bool NFmiMapViewWinRegistry::Init(const std::string &baseRegistryPath, int mapIn
     mSelectedMapIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\SelectedMapIndex", usedKey, 1, std::string(mapViewBaseSettingsKey + "SelectedMap").c_str());
     mShowStationPlot = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionName, "\\ShowStationPlot", usedKey, false, std::string(mapViewBaseSettingsKey + "ShowStationPlot").c_str());
     mViewGridSizeStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\ViewGridSize", usedKey, "1,1", std::string(mapViewBaseSettingsKey + "ViewGridSize").c_str());
+    mCombinedMapModeSelectedBackgroundIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedBackgroundIndices", usedKey, "4:0,0,0,0");
+    mCombinedMapModeSelectedOverlayIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedOverlayIndices", usedKey, "4:0,0,0,0");
 
     return true;
 }
@@ -241,6 +240,26 @@ std::string NFmiMapViewWinRegistry::ViewGridSizeStr() const
 void NFmiMapViewWinRegistry::ViewGridSizeStr(const std::string &newValue)
 {
     *mViewGridSizeStr = newValue;
+}
+
+std::string NFmiMapViewWinRegistry::CombinedMapModeSelectedBackgroundIndices() const
+{
+    return *mCombinedMapModeSelectedBackgroundIndicesStr;
+}
+
+void NFmiMapViewWinRegistry::CombinedMapModeSelectedBackgroundIndices(const std::string& newValue)
+{
+    *mCombinedMapModeSelectedBackgroundIndicesStr = newValue;
+}
+
+std::string NFmiMapViewWinRegistry::CombinedMapModeSelectedOverlayIndices() const
+{
+    return *mCombinedMapModeSelectedOverlayIndicesStr;
+}
+
+void NFmiMapViewWinRegistry::CombinedMapModeSelectedOverlayIndices(const std::string& newValue)
+{
+    *mCombinedMapModeSelectedOverlayIndicesStr = newValue;
 }
 
 // ******************************************************
@@ -449,6 +468,7 @@ NFmiConfigurationRelatedWinRegistry::NFmiConfigurationRelatedWinRegistry(void)
 ,mLogViewerLogLevel()
 ,mLogViewerCategory()
 ,mDroppedDataEditable()
+,mUseCombinedMapMode()
 {
 }
 
@@ -488,6 +508,7 @@ bool NFmiConfigurationRelatedWinRegistry::Init(const std::string &baseConfigurat
     mLogViewerLogLevel = ::CreateRegValue<CachedRegInt>(mBaseConfigurationRegistryPath, sectionName, "\\LogViewerLogLevel", usedKey, static_cast<int>(CatLog::Severity::Debug));
     mLogViewerCategory = ::CreateRegValue<CachedRegInt>(mBaseConfigurationRegistryPath, sectionName, "\\LogViewerCategory", usedKey, static_cast<int>(CatLog::Category::NoCategory));
     mDroppedDataEditable = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\DroppedDataEditable", usedKey, false);
+    mUseCombinedMapMode = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\UseCombinedMapMode", usedKey, false);
 
     return true;
 }
@@ -624,6 +645,16 @@ void NFmiConfigurationRelatedWinRegistry::DroppedDataEditable(bool newValue)
     *mDroppedDataEditable = newValue;
 }
 
+bool NFmiConfigurationRelatedWinRegistry::UseCombinedMapMode()
+{
+    return *mUseCombinedMapMode;
+}
+
+void NFmiConfigurationRelatedWinRegistry::UseCombinedMapMode(bool newValue)
+{
+    *mUseCombinedMapMode = newValue;
+}
+
 // ************************************************
 // *******   NFmiApplicationWinRegistry ***********
 // ************************************************
@@ -711,7 +742,6 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mSoundingTextUpward = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\SoundingTextUpward", usedKey, true);
     mSoundingTimeLockWithMapView = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\SoundingTimeLockWithMapView", usedKey, false);
     mKeepMapAspectRatio = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\KeepMapAspectRatio", usedKey, false, "SmartMet::GeneralOptions::KeepMapAspectRatio");
-    mUseWmsMaps = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\UseWmsMaps", usedKey, false);
 
     mFitToPagePrint = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\FitToPagePrint", usedKey, true, "MetEditor::FitToPagePrint");
     mSmartOrientationPrint = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\SmartOrientationPrint", usedKey, true, "MetEditor::SmartOrientationPrint");
@@ -831,16 +861,6 @@ bool NFmiApplicationWinRegistry::KeepMapAspectRatio()
 void NFmiApplicationWinRegistry::KeepMapAspectRatio(bool newValue)
 {
     *mKeepMapAspectRatio = newValue;
-}
-
-bool NFmiApplicationWinRegistry::UseWmsMaps()
-{
-    return *mUseWmsMaps;
-}
-
-void NFmiApplicationWinRegistry::UseWmsMaps(bool newValue)
-{
-    *mUseWmsMaps = newValue;
 }
 
 bool NFmiApplicationWinRegistry::FitToPagePrint()

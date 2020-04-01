@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Setup.h"
-#include "BitmapCache.h"
-#include "QueryBuilder.h"
-#include "CapabilityTree.h"
-#include "CapabilityTreeParser.h"
-#include "ChangedLayers.h"
+#include "wmssupport/Setup.h"
+#include "wmssupport/BitmapCache.h"
+#include "wmssupport/QueryBuilder.h"
+#include "wmssupport/CapabilityTree.h"
+#include "wmssupport/CapabilityTreeParser.h"
+#include "wmssupport/ChangedLayers.h"
 
 #include <webclient/Client.h>
 

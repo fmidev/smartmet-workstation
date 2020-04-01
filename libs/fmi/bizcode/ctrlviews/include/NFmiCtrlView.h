@@ -49,6 +49,7 @@ class NFmiDataIdent;
 class NFmiLevel;
 class NFmiFastQueryInfo;
 class MapHandlerInterface;
+class NFmiArea;
 
 namespace Gdiplus
 {
@@ -101,6 +102,8 @@ class NFmiCtrlView
    inline virtual bool RightDoubleClick(const NFmiPoint &, unsigned long){ return false; };
    inline virtual bool IsMouseDraggingOn(void){ return false; };
    boost::shared_ptr<NFmiDrawParam> DrawParam(void){return itsDrawParam;};
+   virtual boost::shared_ptr<NFmiArea> GetArea() const { return nullptr; };
+   virtual void SetArea(const boost::shared_ptr<NFmiArea>& theArea) { /* Ei tehd‰ emoluokassa mit‰‰n */ };
 
    bool operator==(const NFmiCtrlView& theCtrlView) const;
    bool operator< (const NFmiCtrlView& theCtrlView) const;
@@ -121,8 +124,8 @@ class NFmiCtrlView
    void ViewGridColumnNumber(int columnNumber) { itsViewGridColumnNumber = columnNumber; }
    int ViewRowLayerNumber() const { return itsViewRowLayerNumber; }
    void ViewRowLayerNumber(int viewRowLayerNumber) { itsViewRowLayerNumber = viewRowLayerNumber; }
-   int GetUsedParamRowIndex(int theRowIndex, int theColumnIndex);
-   int GetUsedParamRowIndex();
+   int GetUsedParamRowIndex(int theRowIndex, int theColumnIndex) const;
+   int GetUsedParamRowIndex() const;
    bool IsPrintedMapViewDesctop();
    bool IsPrinting() const;
 

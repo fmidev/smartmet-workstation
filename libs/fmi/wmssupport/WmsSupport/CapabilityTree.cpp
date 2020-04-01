@@ -1,4 +1,4 @@
-#include "CapabilityTree.h"
+#include "wmssupport/CapabilityTree.h"
 
 #include "NFmiParameterName.h"
 

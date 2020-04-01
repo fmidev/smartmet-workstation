@@ -19,7 +19,7 @@ NFmiPolyline::NFmiPolyline (const NFmiPoint& theTopLeftCorner
 			,theEnclosure
 			,theEnvironment
 			,kPolylineShape)
-,itsPoints(new NFmiVoidPtrList)
+,itsPoints()
 ,itsBackGroundMode(theBackGroundMode)
 ,itsHatchMode(theHatchMode)
 {
@@ -36,7 +36,7 @@ NFmiPolyline::NFmiPolyline(const NFmiRect& theRect
 			,theEnclosure
 			,theEnvironment
 			,kPolylineShape)
-,itsPoints(new NFmiVoidPtrList)
+,itsPoints()
 ,itsBackGroundMode(theBackGroundMode)
 ,itsHatchMode(theHatchMode)
 {
@@ -44,19 +44,10 @@ NFmiPolyline::NFmiPolyline(const NFmiRect& theRect
 		itsHatchMode = theEnvironment->GetHatchPattern();
 }
 
-//---------------------------------------------------------------------- AddPoint
-NFmiPolyline::~NFmiPolyline (void)
-{
-	NFmiVoidPtrIterator kissa(itsPoints);
-	void *vPtr;
-	while(kissa.Next(vPtr))
-	{
-		delete (static_cast<NFmiPoint *>(vPtr));
-	}
-	delete itsPoints;
-}
+NFmiPolyline::~NFmiPolyline() = default;
+
 //---------------------------------------------------------------------- AddPoint
 void NFmiPolyline::AddPoint (const NFmiPoint &newPoint)
 {
-   itsPoints->Add(static_cast<void *>(new NFmiPoint(newPoint)));
+   itsPoints.push_back(newPoint);
 }

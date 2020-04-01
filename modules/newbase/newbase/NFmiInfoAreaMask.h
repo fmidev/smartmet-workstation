@@ -577,6 +577,8 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
   float DoGetFunction(const NFmiLocationCache &theLocationCache,
                       const NFmiCalculationParams &theCalculationParams,
                       float theLevelValue);
+  float DoPeekZFunction(const NFmiCalculationParams &theCalculationParams,
+                      float theDeltaZ);
   float DoVerticalGrad(const NFmiLocationCache &theLocationCache,
                        const NFmiCalculationParams &theCalculationParams);
   float DoFindFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
@@ -585,6 +587,7 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
   unsigned long GetNonMissingStartLevelIndex(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
   float GetLevelHeightValue(const NFmiLocationCache &theLocationCache);
   float DoNormalFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
+  float CalculateUsedPeekZPressureLevel(float currentPressureLevel, float usedDeltaZ);
 
   // Vertikaali levelien läpikäynti oikeassa järjestyksessä. Tehty template funktioksi
   // jotta sitä voidaan käyttää erilaisten lambda funktioiden avulla eri paikoissa.

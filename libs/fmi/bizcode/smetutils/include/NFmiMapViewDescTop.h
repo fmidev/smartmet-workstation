@@ -21,6 +21,8 @@
 #include "MapViewMode.h"
 #include "GraphicalInfo.h"
 #include "NFmiAnimationData.h"
+#include "NFmiCountryBorderBitmapCache.h"
+#include "CombinedMapHandlerInterface.h"
 
 class CDC;
 class NFmiPolyline;
@@ -46,8 +48,7 @@ public:
 	class ViewMacroDipMapHelper
 	{
 	public:
-		ViewMacroDipMapHelper(void){}
-		~ViewMacroDipMapHelper(void){}
+		ViewMacroDipMapHelper();
 
 		// HUOM!! Tämä laittaa kommentteja mukaan!
 		void Write(std::ostream& os) const;
@@ -57,15 +58,19 @@ public:
 		void Read(std::istream& is);
 
 		// dipmaphandler osio pitää ottaa tähän erikois käsittelyyn
-		int itsUsedMapIndex;
-		int itsUsedOverMapDibIndex;
+		int itsUsedMapIndex = 0;
+		int itsUsedOverMapDibIndex = -1;
+		int itsUsedCombinedModeMapIndex = 0;
+		int itsUsedCombinedModeOverMapDibIndex = -1;
 		NFmiString itsZoomedAreaStr;
 	};
 
 
-	NFmiMapViewDescTop(void);
-	NFmiMapViewDescTop(const std::string &theSettingsBaseName, NFmiMapConfigurationSystem *theMapConfigurationSystem, NFmiProjectionCurvatureInfo* theProjectionCurvatureInfo, const std::string &theControlPath);
-	~NFmiMapViewDescTop(void);
+	NFmiMapViewDescTop();
+	NFmiMapViewDescTop(const std::string &theSettingsBaseName, NFmiMapConfigurationSystem *theMapConfigurationSystem, NFmiProjectionCurvatureInfo* theProjectionCurvatureInfo, const std::string &theControlPath, int theMapViewDescTopIndex);
+	NFmiMapViewDescTop(const NFmiMapViewDescTop& other);
+	NFmiMapViewDescTop& operator=(const NFmiMapViewDescTop& other);
+	~NFmiMapViewDescTop();
 
 	void Init(NFmiMapViewWinRegistry &theMapViewWinRegistry);
 	void StoreMapViewDescTopToSettings(void);
@@ -77,7 +82,7 @@ public:
 	NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) {return itsProjectionCurvatureInfo;}
 	void SelectedMapIndex(unsigned int newValue);
     unsigned int SelectedMapIndex(void) const {return itsSelectedMapIndexVM;}
-	NFmiGdiPlusImageMapHandler* MapHandler(void);
+	NFmiGdiPlusImageMapHandler* MapHandler(void) const;
     std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
 
 	NFmiMapViewCache& MapViewCache(void) {return itsMapViewCache;}
@@ -122,19 +127,34 @@ public:
 	bool ShowParamWindowView(void){return fShowParamWindowView;};
 	void ShowParamWindowView(bool newState){fShowParamWindowView = newState;};
     boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(void);
-	const NFmiColor& LandBorderColor(void);
 	void ToggleLandBorderColor(void);
-	bool DrawLandBorders(void);
-	const NFmiPoint& LandBorderPenSize(void){return itsLandBorderPenSize;}
+
+	// Nämä border layer piirtoon liittyvät metodit jotka ottavat separateBorderLayerDrawOptions parametrin
+	// toimivat seuraavalla periaatteella:
+	// Jos käyttäjä haluaa tietoja yleisestä border-draw asetuksista, on em. parametri nullptr.
+	// Jos se on nullptr:stä poikkeava, kyse on erillinen border-layer, jonka tiedot haetaan erikseen.
+	const NFmiColor& LandBorderColor(NFmiDrawParam* separateBorderLayerDrawOptions);
+	bool DrawLandBorders(NFmiDrawParam* separateBorderLayerDrawOptions);
+	int LandBorderPenSize(NFmiDrawParam* separateBorderLayerDrawOptions);
+	bool BorderDrawBitmapDirty(NFmiDrawParam* separateBorderLayerDrawOptions) const;
+	bool BorderDrawPolylinesDirty() const;
+	bool BorderDrawPolylinesGdiplusDirty() const;
+	Gdiplus::Bitmap* LandBorderMapBitmap(NFmiDrawParam* separateBorderLayerDrawOptions) const;
+    void SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions);
+
+	static std::string MakeSeparateBorderLayerCacheKey(const NFmiDrawParam& borderLayerDrawOptions);
+	static int GetSeparateBorderLayerLineWidthInPixels(const NFmiDrawParam& borderLayerDrawOptions);
+	static std::string MakeSeparateBorderLayerCacheKey(int lineWidthInPixels, const NFmiColor& color);
+
 	void LandBorderPenSize(const NFmiPoint &newValue){itsLandBorderPenSize = newValue;}
 	void ToggleLandBorderPenSize(void);
-	std::list<NFmiPolyline*>& DrawBorderPolyLineList(void);
+	std::list<NFmiPolyline*>& DrawBorderPolyLineList();
 	void DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue);
     const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
     void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>> &newValue);
     void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>> &&newValue);
-    bool BorderDrawDirty(void){return fBorderDrawDirty;}
-	void BorderDrawDirty(bool newValue){fBorderDrawDirty = newValue;}
+	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr);
+	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string &cacheKey);
 	int LandBorderColorIndex(void) const {return itsLandBorderColorIndex;}
 	void LandBorderColorIndex(int newValue) {itsLandBorderColorIndex = newValue;}
 	bool DescTopOn(void) {return fDescTopOn;}
@@ -177,8 +197,7 @@ public:
     NFmiAnimationData& AnimationDataRef(void) {return itsAnimationData;}
 	int CalcPrintingPageShiftInMinutes(void);
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
-    Gdiplus::Bitmap* LandBorderMapBitmap() { return itsLandBorderMapBitmap; }
-    void SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap);
+	std::string GetCurrentMapLayerText(bool backgroundMap);
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
@@ -202,55 +221,76 @@ private:
     int CalcMaxRowStartingIndex() const;
 	void StoreHandlerSelectedMapsToSettings(void);
     void UpdateOneMapViewSize();
+	const Gdiplus::Bitmap* GetSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString);
+	void InsertSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap);
+	void ClearBaseLandBorderMapBitmap();
 
-	std::string itsSettingsBaseName; // tällä aloitus pohjalla luetaan conffi fileistä tarvittavat alustukset (esim. "MapViewDescTop::map1")
-	NFmiMapConfigurationSystem *itsMapConfigurationSystem; // tämä on dokumentin omistuksessa
-	NFmiProjectionCurvatureInfo* itsProjectionCurvatureInfo; // tämä on dokumentin omistuksessa
-
-	std::string itsControlPath; // SmartMetin kontrollipolku (annetaan -p optiolla), tämän avulla luetaan kartta kuvia ja area-tietoja.
-                                // OLI aiemmin editorin työhakemisto, mutta se ei toiminut oikein, varsinkin kun kyseessä 
-                                // oli PV-projekti jossa dropbox-konffit ja sitä käytettiin VC++ debuggerista.
-	std::vector<NFmiGdiPlusImageMapHandler*> itsGdiPlusImageMapHandlerList; // jokaisella desctopilla pitää olla oma 'map-serverinsä'
-	NFmiMapViewCache itsMapViewCache; // luokka joka pitaa huolta karttanayton cachesta
+	// tällä aloitus pohjalla luetaan conffi fileistä tarvittavat alustukset (esim. "MapViewDescTop::map1")
+	std::string itsSettingsBaseName; 
+	// Joskus luokan pitää tietää mikä descTop itse on
+	int itsMapViewDescTopIndex; 
+	// tämä on dokumentin omistuksessa
+	NFmiMapConfigurationSystem *itsMapConfigurationSystem; 
+	// tämä on dokumentin omistuksessa
+	NFmiProjectionCurvatureInfo* itsProjectionCurvatureInfo; 
+	// SmartMetin kontrollipolku (annetaan -p optiolla), tämän avulla luetaan kartta kuvia ja area-tietoja.
+	// OLI aiemmin editorin työhakemisto, mutta se ei toiminut oikein, varsinkin kun kyseessä 
+	// oli PV-projekti jossa dropbox-konffit ja sitä käytettiin VC++ debuggerista.
+	std::string itsControlPath; 
+	// jokaisella desctopilla pitää olla oma 'map-serverinsä'
+	std::vector<NFmiGdiPlusImageMapHandler*> itsGdiPlusImageMapHandlerList; 
+	// luokka joka pitaa huolta karttanayton cachesta
+	NFmiMapViewCache itsMapViewCache; 
 	bool fRedrawMapView;
-
-	checkedVector<NFmiColor> itsLandBorderColors; // tähän talletetaan raja viivan piirron väri vaihtoehdot
-	int itsLandBorderColorIndex; // valitunb värin indeksi on tallessa tässä, jos indeksi on negatiivinen, ei piirretä rajaviivoja
+	// tähän talletetaan raja viivan piirron väri vaihtoehdot
+	checkedVector<NFmiColor> itsLandBorderColors; 
+	// valitun värin indeksi on tallessa tässä, jos indeksi on negatiivinen, ei piirretä rajaviivoja
+	int itsLandBorderColorIndex; 
 	NFmiPoint itsLandBorderPenSize;
-	bool fBorderDrawDirty; // tarviiko tehdä piirtolistaa, vai voiko currentin piirtää sellaisenaan? Menee likaisksi, kun:
-							// zoomataan, vaihdetaan karttapohjaa, muutetaan polyline väri/paksuus
 	NFmiTimeDescriptor itsTimeControlViewTimes;
-
-	double itsClientViewXperYRatio;	// tätä käytetään mm. zoomausdialogin rajoittimena(käytetyn karttanäytön x/y suhde, riippuu käytetystä ruudukosta ja ikkunan 'fyysisestä' koosta)
-	NFmiRect itsRelativeMapRect; // minkä suhteellisen osan ottaa 'kartasto' clientnäytölle varatusta osasta
-	NFmiPoint itsMapViewSizeInPixels; // päivitetään CView:in OnSize()-metodissa, käytetään datan harvennus laskuissa.
+	// tätä käytetään mm. zoomausdialogin rajoittimena(käytetyn karttanäytön x/y suhde, riippuu käytetystä ruudukosta ja ikkunan 'fyysisestä' koosta)
+	double itsClientViewXperYRatio;	
+	// minkä suhteellisen osan ottaa 'kartasto' clientnäytölle varatusta osasta
+	NFmiRect itsRelativeMapRect; 
+	// päivitetään CView:in OnSize()-metodissa, käytetään datan harvennus laskuissa.
+	NFmiPoint itsMapViewSizeInPixels; 
 	bool fShowParamWindowView;
-	NFmiPtrList<NFmiDrawParamList> *itsDrawParamListVector; // lista drawparam-listoja (näyttöruudukossa eri rivit laitetaan
-															// omaan drawparamlist:iin, jotka sijoitetaan tähän listojen listaan)
-	CDC* itsMapBlitDC;	// tähän talletetaan CView:ssa tehty DC, johon on talletettu
-						// bitmap, mikä sitten blitataan jokaiseen näyttöruudun kohtaan
-						// erikseen (toivottavasti vain väliaikainen viritys)
-	int itsDrawOverMapMode; // jos 0, piirretään läpinäkyvä kartta ns. background karttaan, jos 1, piirretään se ns. foreground karttaan eli datan päälle
-							// jos siis yleensä piirretään tätä osaa kartasta
-
-	int itsMapRowStartingIndex; // näytön rivejä voi skrollata ylös ja alas ja tässä on sen rivin indeksi, mikä näytetään editorin 1. rivillä (alkaa 1:stä)
-	CDC *itsCopyCDC; // tämä annetaan CView: OnDraw:ssa ja tätä käytetään NFmiStationViewHandler:in Draw:ssa tekemään näytöstä bitmap kopioita
-
-	int itsShowTimeOnMapMode; // neljä tilaa: 0 = näytä aikakontrolliikkuna+teksti 1=vain aik.kont.ikkuna, 2=älä näytä kumpaakaan ja 3= näytä vain teksti
+	// lista drawparam-listoja (näyttöruudukossa eri rivit laitetaan
+	// omaan drawparamlist:iin, jotka sijoitetaan tähän listojen listaan)
+	NFmiPtrList<NFmiDrawParamList> *itsDrawParamListVector; 
+	// tähän talletetaan CView:ssa tehty DC, johon on talletettu bitmap, mikä sitten 
+	// blitataan jokaiseen näyttöruudun kohtaan erikseen (toivottavasti vain väliaikainen viritys)
+	CDC* itsMapBlitDC;	
+	// jos 0, piirretään läpinäkyvä kartta ns. background karttaan, jos 1, piirretään se ns. foreground karttaan 
+	// eli datan päälle jos siis yleensä piirretään tätä osaa kartasta
+	int itsDrawOverMapMode; 
+	// näytön rivejä voi skrollata ylös ja alas ja tässä on sen rivin indeksi, mikä näytetään editorin 1. rivillä (alkaa 1:stä)
+	int itsMapRowStartingIndex; 
+	// tämä annetaan CView: OnDraw:ssa ja tätä käytetään NFmiStationViewHandler:in Draw:ssa tekemään näytöstä bitmap kopioita
+	CDC *itsCopyCDC; 
+	// neljä tilaa: 0 = näytä aikakontrolliikkuna+teksti 1=vain aik.kont.ikkuna, 2=älä näytä kumpaakaan ja 3= näytä vain teksti
+	int itsShowTimeOnMapMode; 
 	bool fShowTimeString;
-	NFmiMetTime itsCurrentTime; // ensimmäisen sarakkeen aika
-
-	NFmiPoint itsViewGridSizeMax; // karttanäyttöruudukon koko maksimissaan (pitää olla 5 x 10(?) eli ainakin 5 riviä on must)
-	int itsStationPointColorIndex; // valitun värin indeksi on tallessa tässä
+	// ensimmäisen sarakkeen aika
+	NFmiMetTime itsCurrentTime; 
+	// karttanäyttöruudukon koko maksimissaan (pitää olla 5 x 10(?) eli ainakin 5 riviä on must)
+	NFmiPoint itsViewGridSizeMax; 
+	// valitun värin indeksi on tallessa tässä
+	int itsStationPointColorIndex; 
 	NFmiPoint itsStationPointSize;
-	float itsTimeControlTimeStep; // kertoo, kuinka paljon aikaa siirretään kun klikataan hiirellä aikakontrolli ikkunaa
-								  // kokonaisosa tunteja varten ja desimaalit minuutteja (0.5 = 30 minuuttia jne.)
+	// kertoo, kuinka paljon aikaa siirretään kun klikataan hiirellä aikakontrolli ikkunaa
+	// kokonaisosa tunteja varten ja desimaalit minuutteja (0.5 = 30 minuuttia jne.)
+	float itsTimeControlTimeStep; 
     CtrlViewUtils::MapViewMode itsMapViewDisplayMode;
-	int itsActiveViewRow;// kun näyttöruudukkoa klikataan hiirellä, yksi ruuduista muuttuu aktiiviseksi, sen ruudun rivinumero talletetaan tähän
-						// HUOM! tämä on suhteellinen rivinumero eli pitää ottaa huomioon monesko rivi on ensimmäisenä näkyvissä karttanäyttö ruudukossa
-	bool fDescTopOn; // onko tämä desctop näkyvissä vai ei
-	bool fMapViewBitmapDirty; // Piiretäänkö karttanäytölle vain bitmap uudestaan (tällä saadaan pyyhittyä piirretty tooltippi pois)
-	CWnd *itsMapView; // tässä on karttanäytön pointteri
+	// kun näyttöruudukkoa klikataan hiirellä, yksi ruuduista muuttuu aktiiviseksi, sen ruudun rivinumero talletetaan tähän
+	// HUOM! tämä on suhteellinen rivinumero eli pitää ottaa huomioon monesko rivi on ensimmäisenä näkyvissä karttanäyttö ruudukossa
+	int itsActiveViewRow;
+	// onko tämä desctop näyttö näkyvissä vai ei
+	bool fDescTopOn; 
+	// Piiretäänkö karttanäytölle vain bitmap uudestaan (tällä saadaan pyyhittyä piirretty tooltippi pois)
+	bool fMapViewBitmapDirty; 
+	// tässä on karttanäytön pointteri
+	CWnd *itsMapView; 
     CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
 	NFmiGridPointCache itsGridPointCache;
     NFmiAnimationData itsAnimationData;
@@ -268,11 +308,16 @@ private:
     // Näitä asetuksia käytetään enää vain viewMakroja tehtäessä tai luettaessa, näiden todelliset 
     // asetukset tehdään nykyään Windows rekistereihin NFmiMapViewWinRegistry-luokan kautta.
     // VM nimen lopussa viittaa ViewMacroon.
-	bool fShowMasksOnMapVM; // näytetäänkö aktiivisen rivin kartoilla maski väreinä?
-	int itsSpacingOutFactorVM; // 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmän
-	unsigned int itsSelectedMapIndexVM; // 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
-                                        // HUOM! tälle pitää olla erillinen asetus funktio, koska tätä käytetään luokan sisällä, eli muutokset päivitetään sekä tänne että Win-rekistereihin
-    bool fShowStationPlotVM; // näytetäänkö se typerä asema piste vai ei?
+
+	// näytetäänkö aktiivisen rivin kartoilla maski väreinä?
+	bool fShowMasksOnMapVM; 
+	// 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmän
+	int itsSpacingOutFactorVM; 
+	// 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
+	// HUOM! tälle pitää olla erillinen asetus funktio, koska tätä käytetään luokan sisällä, eli muutokset päivitetään sekä tänne että Win-rekistereihin
+	unsigned int itsSelectedMapIndexVM; 
+	// näytetäänkö se typerä asema piste vai ei?
+    bool fShowStationPlotVM; 
 
     // karttanäyttöruudukon koko (esim. 3 riviä, joissa 5 aikaa == NFmiPoint(5,3))
     // HUOM! tälle pitää olla asetus ja palautus funktiot, koska win-rekisterissä talletetaan tämä pointti stringinä
@@ -283,6 +328,9 @@ private:
     // Tähän tehdään yksi maiden rajat kartalla bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä.
     // Huom! pakko tehdä gdiplus bitmap, jotta saadaan mukaan läpinäkyvä väri
     Gdiplus::Bitmap *itsLandBorderMapBitmap;
+	// Tässä on erillisinä piirtolayereina olevien maiden rajaviivojen bitmap ja polyline datat.
+	// Uudet erillismääritellyt border-layerit voivat olla eri piirtosäädöillä ja niitä voi olla jokaisella karttarivillä omansa.
+	NFmiCountryBorderBitmapCache itsSeparateCountryBorderBitmapCache;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMapViewDescTop& item){item.Write(os); return os;}

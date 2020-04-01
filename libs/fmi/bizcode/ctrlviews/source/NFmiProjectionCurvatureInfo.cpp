@@ -117,9 +117,12 @@ NFmiProjectionCurvatureInfo& NFmiProjectionCurvatureInfo::operator=(const NFmiPr
 		itsSecondaryLineLabelEnvi = theInfo.itsSecondaryLineLabelEnvi ? new NFmiDrawingEnvironment(*theInfo.itsSecondaryLineLabelEnvi) : 0;
 		fUseSecondaryLineLabel = theInfo.fUseSecondaryLineLabel;
 		itsSecondaryLineLabelPosition = theInfo.itsSecondaryLineLabelPosition;
-        itsCalculatedProjectionLines.Clear(); // HUOM! ei saa kopioida, pitää olla tyhjä lista sijoituksen jälkeen (luultavasti koska pointer-listalle ei ole sijoitus operaattoria)
-        itsCalculatedProjectionLineLabels.clear();  // HUOM! ei saa kopioida, pitää olla tyhjä lista sijoituksen jälkeen (luultavasti koska itsCalculatedProjectionLines -pointerListalle ei ole sijoitus operaattoria)
-		itsBaseNameSpace = theInfo.itsBaseNameSpace;
+		// HUOM! ei saa kopioida viivoja eikä labeleita, pitää olla tyhjä lista sijoituksen jälkeen, että ne lasketaan uudestaan
+        itsCalculatedProjectionLines.Clear(); 
+        itsCalculatedProjectionLineLabels.clear();
+		// itsBaseNameSpace pitää tarkistaa, jos kopioitavan objektin data on tyhjä, säilytetään nykyarvo (näyttömakrosta ladattuna se on tyhjä)
+		if(!theInfo.itsBaseNameSpace.empty())
+			itsBaseNameSpace = theInfo.itsBaseNameSpace;
 	}
 	return *this;
 }
@@ -582,7 +585,7 @@ void NFmiProjectionCurvatureInfo::MakeLatitudeLines(const NFmiArea* theArea, dou
             }
             lastPoint = currentPoint;
         }
-        if(polyLine && polyLine->GetPoints()->NumberOfItems())
+        if(polyLine && polyLine->GetPoints().size())
         {
             theCalculatedLines.PolyAdd(polyLine);
             polyLine = 0;

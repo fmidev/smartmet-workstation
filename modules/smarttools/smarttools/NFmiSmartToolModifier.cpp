@@ -9,12 +9,14 @@
 #endif
 
 #include "NFmiSmartToolModifier.h"
+
 #include "NFmiAreaMaskInfo.h"
 #include "NFmiAreaMaskSectionInfo.h"
 #include "NFmiCalculationConstantValue.h"
 #include "NFmiDictionaryFunction.h"
 #include "NFmiDrawParam.h"
 #include "NFmiExtraMacroParamData.h"
+#include "NFmiInfoAreaMaskOccurrance.h"
 #include "NFmiInfoAreaMaskSoundingIndex.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiLocalAreaMinMaxMask.h"
@@ -27,7 +29,7 @@
 #include "NFmiSmartToolCalculationSectionInfo.h"
 #include "NFmiSmartToolIntepreter.h"
 
-#include "NFmiInfoAreaMaskOccurrance.h"
+#include <boost/math/special_functions/round.hpp>
 #include <newbase/NFmiBitMask.h>
 #include <newbase/NFmiCalculatedAreaMask.h>
 #include <newbase/NFmiDataModifierClasses.h>
@@ -39,7 +41,6 @@
 #include <newbase/NFmiRelativeTimeIntegrationIterator.h>
 #include <newbase/NFmiSimpleCondition.h>
 
-#include <boost/math/special_functions/round.hpp>
 #include <stdexcept>
 
 #ifdef _MSC_VER
@@ -47,6 +48,7 @@
     disable : 4244 4267 4512)  // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
 #endif
 #include "NFmiStation2GridMask.h"
+
 #include <boost/thread.hpp>
 
 #ifdef _MSC_VER
@@ -2759,11 +2761,12 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::CreateInfo(
   }
   else
   {
-    if (fUseLevelData && theAreaMaskInfo.GetLevel() != 0)  // jos pitää käyttää level dataa (SumZ ja
-                                                           // MinH funktiot), ei saa antaa level
-                                                           // infoa parametrin yhteydessä
-      throw runtime_error(::GetDictionaryString("SmartToolModifierErrorParamNoLevel") + "\n" +
+    // Jos pitää käyttää level dataa (SumZ ja MinH funktiot), ei saa antaa level infoa parametrin
+    // yhteydessä
+    if (fUseLevelData && theAreaMaskInfo.GetLevel() != nullptr)
+        throw runtime_error(::GetDictionaryString("SmartToolModifierErrorParamNoLevel") + "\n" +
                           theAreaMaskInfo.GetMaskText());
+
     if (fUseLevelData || fDoCrossSectionCalculation)  // jos leveldata-flagi päällä, yritetään
                                                       // ensin, löytyykö hybridi dataa
       info = GetWantedAreaMaskData(theAreaMaskInfo, false, NFmiInfoData::kHybridData);

@@ -66,6 +66,8 @@
 #include "NFmiMacroParamfunctions.h"
 #include "NFmiIsoLineData.h"
 #include "ToolMasterDrawingFunctions.h"
+#include "NFmiCountryBorderDrawUtils.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -325,6 +327,14 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 		return ;
 
 	itsToolBox = theGTB;
+
+	if(itsDrawParam->DataType() == NFmiInfoData::kMapLayer)
+	{
+		// Rajaviivat piirret‰‰n t‰ss‰ kartan piirtopinoon, jos kyse on erillisest‰ "country border" -layerist‰
+		DrawCountryBordersToMapView();
+		return; // Muuta ei saakaan sitten tehd‰
+	}
+
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
     
 	SetupUsedDrawParam();
@@ -352,9 +362,15 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 	}
 }
 
+void NFmiStationView::DrawCountryBordersToMapView()
+{
+	if(CombinedMapHandlerInterface::IsBorderLayerDrawn(itsDrawParam.get()))
+		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, itsToolBox, itsDrawParam.get());
+}
+
 void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
-	itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, Area());
+	itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, GetArea());
 }
 
 void NFmiStationView::MakeDrawedInfoVector(void)
@@ -839,7 +855,7 @@ void NFmiStationView::DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix
 {
 	// K‰ytet‰‰n hiladatan piirrossa isolineView-luokkaa
 	NFmiDrawingEnvironment envi;
-	NFmiIsoLineView isolineView(itsMapViewDescTopIndex, Area(), itsToolBox, &envi, theDrawParam, static_cast<FmiParameterName>(NFmiInfoData::kFmiSpMatrixDataDraw), itsObjectOffSet, itsObjectSize, itsViewGridRowNumber, itsViewGridColumnNumber);
+	NFmiIsoLineView isolineView(itsMapViewDescTopIndex, GetArea(), itsToolBox, &envi, theDrawParam, static_cast<FmiParameterName>(NFmiInfoData::kFmiSpMatrixDataDraw), itsObjectOffSet, itsObjectSize, itsViewGridRowNumber, itsViewGridColumnNumber);
 	isolineView.Time(itsTime);
 	isolineView.SpecialMatrixData(theMatrix);
 	isolineView.Draw(itsToolBox);
@@ -1698,7 +1714,7 @@ void NFmiStationView::GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, 
     else
     {
         CtrlViewDocumentInterfaceGridding ctrlViewGriddingInterface(itsCtrlViewDocumentInterface);
-        NFmiStationView::GridStationData(&ctrlViewGriddingInterface, Area(), itsDrawParam, theValues, theTime, ctrlViewGriddingInterface.GriddingProperties(false));
+        NFmiStationView::GridStationData(&ctrlViewGriddingInterface, GetArea(), itsDrawParam, theValues, theTime, ctrlViewGriddingInterface.GriddingProperties(false));
     }
 }
 
@@ -2890,27 +2906,52 @@ std::string NFmiStationView::GetLocationTooltipString()
     return CtrlViewUtils::XmlEncode(locationStr);
 }
 
+std::string NFmiStationView::MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage)
+{
+	std::string str = "\"";
+	str += "<font color = firebrick>";
+	str += macroParamErrorMessage;
+	str += "</font>";
+	str += "\"";
+	return str;
+}
+
 std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
 {
     NFmiExtraMacroParamData extraMacroParamData;
     itsInfo = usedInfo;
     float value = CalcMacroParamTooltipValue(extraMacroParamData);
-    usedInfo = itsInfo;
-    std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
-    str += " (crude) ";
-    str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
-    str += ", ";
-    float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
-    str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
-    str += " (cache) ";
-    str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
-    if(!extraMacroParamData.MacroParamDescription().empty())
-    {
-        str += "<font color = magenta> (";
-        str += extraMacroParamData.MacroParamDescription();
-        str += ")</font>";
-    }
-    return str;
+	if(!extraMacroParamData.MacroParamErrorMessage().empty())
+		return MakeMacroParamErrorTooltipText(extraMacroParamData.MacroParamErrorMessage());
+	else
+	{
+		usedInfo = itsInfo;
+		std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+		str += " (crude) ";
+		str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+		str += ", ";
+		float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
+		str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+		str += " (cache) ";
+		str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+		if(!extraMacroParamData.MacroParamDescription().empty())
+		{
+			str += "<font color = magenta> (";
+			str += extraMacroParamData.MacroParamDescription();
+			str += ")</font>";
+		}
+		return str;
+	}
+}
+
+static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
+{
+	std::string str = "<b><font color=";
+	str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
+	str += ">";
+	str += drawParam->ParameterAbbreviation();
+	str += "</font></b>";
+	return str;
 }
 
 std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
@@ -2921,8 +2962,11 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 	string str;
 	if(itsDrawParam)
 	{
+		auto drawParamDataType = itsDrawParam->DataType();
+		if(drawParamDataType == NFmiInfoData::kMapLayer)
+			return ::MakeMapLayerTooltipText(itsCtrlViewDocumentInterface, itsDrawParam);
         bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-n‰pp‰in on pohjassa, laitetaan lis‰‰ infoa n‰kyville
-        bool macroParamCase = itsDrawParam->DataType() == NFmiInfoData::kMacroParam;
+        bool macroParamCase = (drawParamDataType == NFmiInfoData::kMacroParam);
         str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), false, showExtraInfo, true, 0, false);
 		str += tabStr;
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
@@ -2930,7 +2974,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
 		if(info) // satelliitti kuvilla ei ole infoa
 		{
-            if(fGetCurrentDataFromQ2Server || itsDrawParam->DataType() == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
+            if(fGetCurrentDataFromQ2Server || drawParamDataType == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
             {
                 fDoTimeInterpolation = false;
                 if(info->DataType() != NFmiInfoData::kStationary) // stationaari datalle ei tarvitse ajan osua, koska data on joka ajalle aina sama

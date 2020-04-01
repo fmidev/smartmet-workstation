@@ -1,7 +1,7 @@
 #pragma once
 
-#include "WmsQuery.h"
-#include "EpsgParser.h"
+#include "wmssupport/WmsQuery.h"
+#include "wmssupport/EpsgParser.h"
 
 #include <NFmiArea.h>
 #include <NFmiRect.h>
@@ -16,12 +16,14 @@ namespace Wms
     {
         WmsQuery query_;
         EpsgParser epsgParser_;
+        bool useCrs_ = true;
     public:
         QueryBuilder();
-        QueryBuilder(const std::string& stereo00, const std::string& stereo10, const std::string& stereo20);
+        QueryBuilder(const std::string& stereo00, const std::string& stereo10, const std::string& stereo20, bool useCrs);
 
         WmsQuery build() const;
         QueryBuilder& clear();
+        bool useCrs() const {return useCrs_;}
 
         QueryBuilder& setScheme(const std::string& scheme);
         QueryBuilder& setHost(const std::string& host);

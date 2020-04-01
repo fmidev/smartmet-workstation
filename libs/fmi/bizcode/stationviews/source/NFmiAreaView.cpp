@@ -38,15 +38,20 @@ NFmiAreaView :: NFmiAreaView(const NFmiAreaView &theView )
 }
 //----------------------------------------------------------------------
 
-NFmiAreaView :: ~NFmiAreaView( void )
-{
-} 
+NFmiAreaView::NFmiAreaView() = default;
 
-void NFmiAreaView::Area(const boost::shared_ptr<NFmiArea> &theArea)
+NFmiAreaView::~NFmiAreaView() = default;
+
+boost::shared_ptr<NFmiArea> NFmiAreaView::GetArea() const
+{
+	return itsArea;
+}
+
+void NFmiAreaView::SetArea(const boost::shared_ptr<NFmiArea> &theArea)
 {
 	if(theArea)
 	{
 		itsArea = theArea;
-		itsRect = theArea->XYArea(); // pitääkö tämä tehdä 1999.09.10/Marko
+		itsRect = theArea->XYArea();
 	}
 }

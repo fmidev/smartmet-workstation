@@ -12,6 +12,8 @@
 
 #include "NFmiRect.h"
 #include "NFmiDataMatrix.h"
+#include "CombinedMapHandlerInterface.h"
+#include "NFmiCountryBorderPolylineCache.h"
 
 class NFmiArea;
 class NFmiPolyline;
@@ -29,34 +31,36 @@ class NFmiGdiPlusImageMapHandler
 {
 public:
 
-	NFmiGdiPlusImageMapHandler(void);
-	virtual ~NFmiGdiPlusImageMapHandler(void);
-	Gdiplus::Bitmap* GetBitmap(void);
-	int GetDrawStyle(void);
-	const std::string& GetBitmapFileName(void);
-	const std::string GetBitmapAbsoluteFileName(void);
-	Gdiplus::Bitmap* GetOverMapBitmap(void);
-	int GetOverMapDrawStyle(void);
-	const std::string& GetOverMapBitmapFileName(void);
-	const std::string GetOverMapBitmapAbsoluteFileName(void);
+	NFmiGdiPlusImageMapHandler();
+	NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMapHandler& other);
+	NFmiGdiPlusImageMapHandler& operator=(const NFmiGdiPlusImageMapHandler &other);
+	virtual ~NFmiGdiPlusImageMapHandler();
+	Gdiplus::Bitmap* GetBitmap();
+	int GetDrawStyle();
+	const std::string& GetBitmapFileName();
+	const std::string GetBitmapAbsoluteFileName();
+	Gdiplus::Bitmap* GetOverMapBitmap();
+	int GetOverMapDrawStyle();
+	const std::string& GetOverMapBitmapFileName();
+	const std::string GetOverMapBitmapAbsoluteFileName();
 	bool Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles);
 	bool Init(const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles);
-	void Clear(void);
+	void Clear();
 
 	void OriginalArea(const std::string& theArea);
 	void Area(const boost::shared_ptr<NFmiArea> &newArea);
-	NFmiRect ZoomedAbsolutRect(void);
-	NFmiRect ZoomedAbsolutRectOverMap(void);
-	NFmiRect TotalAbsolutRect(void);
-	NFmiRect TotalAbsolutRectOverMap(void);
-	boost::shared_ptr<NFmiArea> TotalArea(void);
-	boost::shared_ptr<NFmiArea> Area(void);
-	bool SetMaxArea(void);
-	bool SetHalfArea(void); // asettaa zoomin puoleksi koko alueesta ja keskelle
+	NFmiRect ZoomedAbsolutRect();
+	NFmiRect ZoomedAbsolutRectOverMap();
+	NFmiRect TotalAbsolutRect();
+	NFmiRect TotalAbsolutRectOverMap();
+	boost::shared_ptr<NFmiArea> TotalArea();
+	boost::shared_ptr<NFmiArea> Area();
+	bool SetMaxArea();
+	bool SetHalfArea(); // asettaa zoomin puoleksi koko alueesta ja keskelle
 	// aspectratio muodossa x/y
-	double BitmapAspectRatio(void);
-	double BitmapAspectRatioOverMap(void);
-	const NFmiRect& Position(void);
+	double BitmapAspectRatio();
+	double BitmapAspectRatioOverMap();
+	const NFmiRect& Position();
     bool MakeNewBackgroundBitmap() const;
     void SetMakeNewBackgroundBitmap(bool newState);
     void ClearMakeNewBackgroundBitmap();
@@ -64,41 +68,48 @@ public:
     void SetUpdateMapViewDrawingLayers(bool newState);
     void ClearUpdateMapViewDrawingLayers();
 
-	int UsedMapIndex(void){return itsUsedMapIndex;};
-	int OverMapBitmapIndex(void) const {return itsUsedOverMapBitmapIndex;}
-	void OverMapBitmapIndex(int newValue);
+	int UsedMapIndex(){return itsUsedMapIndex;};
 	void UsedMapIndex(int theIndex);
-	bool ShowOverMap(void);
-	void NextMap(void);
-	void PreviousMap(void);
-	void NextOverMap(void);
-	void PreviousOverMap(void);
-	const std::string& ControlPath(void) const {return itsControlPath;}
+	int MapSize() const { return static_cast<int>(itsMapBitmaps.size()); }
+	int OverMapBitmapIndex() const {return itsUsedOverMapBitmapIndex;}
+	void OverMapBitmapIndex(int newValue);
+	int OverMapSize() const { return static_cast<int>(itsOverMapBitmaps.size()); }
+	bool ShowOverMap();
+	void NextMap();
+	void PreviousMap();
+	void NextOverMap();
+	void PreviousOverMap();
+	const std::string& ControlPath() const {return itsControlPath;}
 	void ControlPath(const std::string& newValue) {itsControlPath = newValue;}
-	void MakeSwapBaseArea(void);
-	void SwapArea(void);
-	bool MapReallyChanged(void) const {return fMapReallyChanged;}
+	void MakeSwapBaseArea();
+	void SwapArea();
+	bool MapReallyChanged() const {return fMapReallyChanged;}
 	void MapReallyChanged(bool newValue) {fMapReallyChanged = newValue;}
-	std::list<NFmiPolyline*>& DrawBorderPolyLineList(void) {return itsDrawBorderPolyLineList;}
+	std::list<NFmiPolyline*>& DrawBorderPolyLineList();
 	void DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue);
-    const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus() { return itsDrawBorderPolyLineListGdiplus; }
-    void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>> &newValue) { itsDrawBorderPolyLineListGdiplus = newValue; }
-    void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>> &&newValue) { itsDrawBorderPolyLineListGdiplus = newValue; }
-    boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(void) {return itsLandBorderPath;}
-    void LandBorderPath(boost::shared_ptr<Imagine::NFmiPath> &thePath) {itsLandBorderPath = thePath;}
+	const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
+	void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue);
+	void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue);
+	boost::shared_ptr<Imagine::NFmiPath> LandBorderPath();
+	void LandBorderPath(boost::shared_ptr<Imagine::NFmiPath>& thePath);
+	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState);
+	bool BorderDrawPolylinesDirty() const;
+	bool BorderDrawPolylinesGdiplusDirty() const;
 
 private:
-	void EmptyBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps); // deletoi ja laittaa 0-pointterit vektoriin
-	void ClearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps);
 	Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &theFileName);
 	boost::shared_ptr<NFmiArea> ReadArea(const std::string& theAreaFileName);
-	void CalcZoomedAreaPosition(void);
+	void CalcZoomedAreaPosition();
+	void InitializeBitmapVectors();
 
 	int itsUsedMapIndex;
-	int itsUsedOverMapBitmapIndex; // mit‰ nimi karttaa k‰ytet‰‰n (-1 = ei mit‰‰n, 0=1. vektorissa olevaa jne.)
-	checkedVector<Gdiplus::Bitmap*> itsMapBitmaps;// t‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
-	checkedVector<Gdiplus::Bitmap*> itsOverMapBitmaps;// t‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
-									// T‰m‰ Bitmap on tarkoitus haluttaessa piirt‰‰ oikean kartan p‰‰lle.
+	// Mit‰ nimi karttaa k‰ytet‰‰n (-1 = ei mit‰‰n, 0=1. vektorissa olevaa jne.)
+	int itsUsedOverMapBitmapIndex; 
+	// T‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
+	checkedVector<Gdiplus::Bitmap*> itsMapBitmaps;
+	// T‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
+	// T‰m‰ Bitmap on tarkoitus haluttaessa piirt‰‰ oikean kartan p‰‰lle.
+	checkedVector<Gdiplus::Bitmap*> itsOverMapBitmaps;
 	boost::shared_ptr<NFmiArea> itsOriginalArea;
 	boost::shared_ptr<NFmiArea> itsZoomedArea;
 	NFmiRect itsZoomedAreaPosition;
@@ -133,9 +144,8 @@ private:
 	// Aina kun tehd‰‰n mit‰ tahansa muita zoomeja, nollataan swapMode.
 	int itsSwapMode;
 
-    // Optimointia: kun stationviewhandler on tehnyt piirtolistan valmiiksi, se talletetaan dokumenttiin ja sen piirto on nopeaa kun kaikki konversiot on valmikksi tehty	
-    std::list<NFmiPolyline*> itsDrawBorderPolyLineList;
-    std::list<std::vector<NFmiPoint>> itsDrawBorderPolyLineListGdiplus;
-    boost::shared_ptr<Imagine::NFmiPath> itsLandBorderPath; // t‰h‰n lasketaan itsOriginalArea:n sis‰‰n menev‰ path kerran (GenDocissa)
+	NFmiCountryBorderPolylineCache itsCountryBorderPolylineCache;
+	// t‰h‰n lasketaan itsOriginalArea:n sis‰‰n menev‰ path kerran (GenDocissa)
+	boost::shared_ptr<Imagine::NFmiPath> itsLandBorderPath;
 };
 

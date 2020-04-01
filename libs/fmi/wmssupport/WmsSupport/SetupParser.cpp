@@ -1,4 +1,4 @@
-#include "SetupParser.h"
+#include "wmssupport/SetupParser.h"
 
 namespace Wms
 {
@@ -16,6 +16,7 @@ namespace Wms
             serverSetup.stereo10 = NFmiSettings::Optional(path + "::Stereo10", std::string(""));
             serverSetup.stereo20 = NFmiSettings::Optional(path + "::Stereo20", std::string(""));
             serverSetup.token = NFmiSettings::Optional(path + "::Token", std::string(""));
+            serverSetup.useCrs = NFmiSettings::Optional(path + "::UseCrs", true);
             return serverSetup;
         }
 
@@ -108,6 +109,7 @@ namespace Wms
                     server.stereo00 = res->second.stereo00;
                     server.stereo10 = res->second.stereo10;
                     server.stereo20 = res->second.stereo20;
+                    server.useCrs = res->second.useCrs;
                 }
                 setupBase.parsedServers.push_back(server);
             }

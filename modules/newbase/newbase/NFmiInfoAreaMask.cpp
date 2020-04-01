@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiInfoAreaMask.h"
+
 #include "NFmiArea.h"
 #include "NFmiDataModifierClasses.h"
 #include "NFmiFastInfoUtils.h"
@@ -20,8 +21,8 @@
 #include "NFmiMetMath.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiSimpleCondition.h"
-
 #include "boost/math/special_functions/round.hpp"
+
 #include <cassert>
 
 // HUOM!!! Jostain syystä kun käytin täällä boost::math::iround -funktiota, se ei mennyt parissa
@@ -31,20 +32,21 @@
 // Kyseiset projektit menivät läpi vielä aiemmin, mutta kun lisäsin boostin iround -kutsut, ei enää.
 // SIKSI joudun käyttämään FmiRound -funktioita.
 
-
-void MetaParamDataHolder::initialize(const boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned long possibleMetaParamId)
+void MetaParamDataHolder::initialize(const boost::shared_ptr<NFmiFastQueryInfo> &info,
+                                     unsigned long possibleMetaParamId)
 {
-    possibleMetaParamId_ = possibleMetaParamId;
-    metaWindParamUsage_ = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
-    checkMetaParamCalculation_ = metaWindParamUsage_.ParamNeedsMetaCalculations(possibleMetaParamId_);
+  possibleMetaParamId_ = possibleMetaParamId;
+  metaWindParamUsage_ = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
+  checkMetaParamCalculation_ = metaWindParamUsage_.ParamNeedsMetaCalculations(possibleMetaParamId_);
 }
 
 bool MetaParamDataHolder::isMetaParameterCalculationNeeded() const
 {
-    if(checkMetaParamCalculation_ && metaWindParamUsage_.ParamNeedsMetaCalculations(possibleMetaParamId_))
-        return true;
-    else
-        return false;
+  if (checkMetaParamCalculation_ &&
+      metaWindParamUsage_.ParamNeedsMetaCalculations(possibleMetaParamId_))
+    return true;
+  else
+    return false;
 }
 
 static bool IsFindFunction(NFmiAreaMask::FunctionType theFunction)
@@ -57,10 +59,10 @@ static bool IsFindFunction(NFmiAreaMask::FunctionType theFunction)
 
 static bool IsSimpleConditionFindFunction(NFmiAreaMask::FunctionType theFunction)
 {
-    if(theFunction == NFmiAreaMask::FindCountCond || theFunction == NFmiAreaMask::FindHeightCond)
-        return true;
-    else
-        return false;
+  if (theFunction == NFmiAreaMask::FindCountCond || theFunction == NFmiAreaMask::FindHeightCond)
+    return true;
+  else
+    return false;
 }
 
 static bool IsFindConditionalFunction(NFmiAreaMask::FunctionType theFunction)
@@ -123,7 +125,7 @@ NFmiInfoAreaMask::NFmiInfoAreaMask()
       itsUsedPressureLevelValue(kFloatMissing),
       metaParamDataHolder()
 {
-    DoConstructorInitializations(kFmiBadParameter);
+  DoConstructorInitializations(kFmiBadParameter);
 }
 
 // ----------------------------------------------------------------------
@@ -144,8 +146,8 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiCalculationCondition &theOperation,
                                    Type theMaskType,
                                    NFmiInfoData::Type theDataType,
                                    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                    unsigned long thePossibleMetaParamId,
-                                    BinaryOperator thePostBinaryOperator)
+                                   unsigned long thePossibleMetaParamId,
+                                   BinaryOperator thePostBinaryOperator)
     : NFmiAreaMaskImpl(theOperation, theMaskType, theDataType, thePostBinaryOperator),
       itsInfo(theInfo),
       itsDataIdent(theInfo ? theInfo->Param() : NFmiDataIdent()),
@@ -155,7 +157,7 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiCalculationCondition &theOperation,
       itsUsedPressureLevelValue(kFloatMissing),
       metaParamDataHolder()
 {
-    DoConstructorInitializations(thePossibleMetaParamId);
+  DoConstructorInitializations(thePossibleMetaParamId);
 }
 
 // ----------------------------------------------------------------------
@@ -170,8 +172,8 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiCalculationCondition &theOperation,
 // ----------------------------------------------------------------------
 
 NFmiInfoAreaMask::NFmiInfoAreaMask(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                    unsigned long thePossibleMetaParamId,
-                                    BinaryOperator thePostBinaryOperator)
+                                   unsigned long thePossibleMetaParamId,
+                                   BinaryOperator thePostBinaryOperator)
     : NFmiAreaMaskImpl(
           NFmiCalculationCondition(), kInfo, NFmiInfoData::kEditable, thePostBinaryOperator),
       itsInfo(theInfo),
@@ -182,7 +184,7 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const boost::shared_ptr<NFmiFastQueryInfo> &t
       itsUsedPressureLevelValue(kFloatMissing),
       metaParamDataHolder()
 {
-    DoConstructorInitializations(thePossibleMetaParamId);
+  DoConstructorInitializations(thePossibleMetaParamId);
 }
 
 NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
@@ -199,12 +201,11 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
 
 void NFmiInfoAreaMask::DoConstructorInitializations(unsigned long thePossibleMetaParamId)
 {
-    if(itsInfo)
-    {
-        metaParamDataHolder.initialize(itsInfo, thePossibleMetaParamId);
-        if(itsInfo->Level())
-            itsLevel = *itsInfo->Level();
-    }
+  if (itsInfo)
+  {
+    metaParamDataHolder.initialize(itsInfo, thePossibleMetaParamId);
+    if (itsInfo->Level()) itsLevel = *itsInfo->Level();
+  }
 }
 
 NFmiAreaMask *NFmiInfoAreaMask::Clone() const { return new NFmiInfoAreaMask(*this); }
@@ -223,8 +224,9 @@ bool NFmiInfoAreaMask::Time(const NFmiMetTime &theTime)
   {
     itsTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, theTime);
     bool status = itsInfo->Time(theTime);
-    // Jos tämän jälkeen käytetään samaa aikaa Value-metodissa, ei aikainterpolointia tarvitse tehdä, jos aika löytyi.
-    fIsTimeIntepolationNeededInValue = !status;  
+    // Jos tämän jälkeen käytetään samaa aikaa Value-metodissa, ei aikainterpolointia tarvitse
+    // tehdä, jos aika löytyi.
+    fIsTimeIntepolationNeededInValue = !status;
     return status;
   }
   return false;
@@ -303,11 +305,11 @@ double NFmiInfoAreaMask::CalcValueFromLocation(const NFmiPoint &theLatLon) const
 
 bool NFmiInfoAreaMask::IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlways) const
 {
-    if((fUseTimeInterpolationAlways || fIsTimeIntepolationNeededInValue) &&
-        !NFmiFastInfoUtils::IsModelClimatologyData(itsInfo))
-        return true;
-    else
-        return false;
+  if ((fUseTimeInterpolationAlways || fIsTimeIntepolationNeededInValue) &&
+      !NFmiFastInfoUtils::IsModelClimatologyData(itsInfo))
+    return true;
+  else
+    return false;
 }
 
 // ----------------------------------------------------------------------
@@ -324,8 +326,8 @@ bool NFmiInfoAreaMask::IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlway
 double NFmiInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams,
                                bool fUseTimeInterpolationAlways)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamValue(theCalculationParams);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamValue(theCalculationParams);
 
   double result = kFloatMissing;
   if (UsePressureLevelInterpolation())
@@ -362,94 +364,117 @@ double NFmiInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams
 
 float NFmiInfoAreaMask::CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams)
 {
-    if(UsePressureLevelInterpolation())
+  if (UsePressureLevelInterpolation())
+  {
+    if (Level()->LevelType() == kFmiFlightLevel)
     {
-        if(Level()->LevelType() == kFmiFlightLevel)
-        {
-            double P = ::CalcFlightLevelPressure(UsedPressureLevelValue() * 100);
-            return CalcMetaParamPressureValue(P, theCalculationParams);
-        }
-        else if(Level()->LevelType() == kFmiHeight)
-        {
-            return CalcMetaParamHeightValue(UsedPressureLevelValue(), theCalculationParams);
-        }
-        else
-            return CalcMetaParamPressureValue(UsedPressureLevelValue(), theCalculationParams);
+      double P = ::CalcFlightLevelPressure(UsedPressureLevelValue() * 100);
+      return CalcMetaParamPressureValue(P, theCalculationParams);
+    }
+    else if (Level()->LevelType() == kFmiHeight)
+    {
+      return CalcMetaParamHeightValue(UsedPressureLevelValue(), theCalculationParams);
     }
     else
-    {
-        return CalcMetaParamValueWithFunction([&]() {return itsInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime); });
-    }
+      return CalcMetaParamPressureValue(UsedPressureLevelValue(), theCalculationParams);
+  }
+  else
+  {
+    return CalcMetaParamValueWithFunction([&]() {
+      return itsInfo->InterpolatedValue(theCalculationParams.itsLatlon,
+                                        theCalculationParams.itsTime);
+    });
+  }
 }
 
-float NFmiInfoAreaMask::CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams)
+float NFmiInfoAreaMask::CalcMetaParamHeightValue(double theHeight,
+                                                 const NFmiCalculationParams &theCalculationParams)
 {
-    return CalcMetaParamValueWithFunction([&]() {return itsInfo->HeightValue(static_cast<float>(theHeight), theCalculationParams.itsLatlon, theCalculationParams.itsTime); });
+  return CalcMetaParamValueWithFunction([&]() {
+    return itsInfo->HeightValue(static_cast<float>(theHeight),
+                                theCalculationParams.itsLatlon,
+                                theCalculationParams.itsTime);
+  });
 }
 
-float NFmiInfoAreaMask::CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams)
+float NFmiInfoAreaMask::CalcMetaParamPressureValue(
+    double thePressure, const NFmiCalculationParams &theCalculationParams)
 {
-    return CalcMetaParamValueWithFunction([&]() {return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
-        theCalculationParams.itsLatlon,
-        theCalculationParams.itsTime); });
+  return CalcMetaParamValueWithFunction([&]() {
+    return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
+                                       theCalculationParams.itsLatlon,
+                                       theCalculationParams.itsTime);
+  });
 }
 
-float NFmiInfoAreaMask::CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache)
+float NFmiInfoAreaMask::CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo,
+                                                const NFmiLocationCache &theLocationCache,
+                                                const NFmiTimeCache *theTimeCache)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamCachedInterpolation(theUsedInfo, theLocationCache, theTimeCache);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamCachedInterpolation(theUsedInfo, theLocationCache, theTimeCache);
+  else
+  {
+    if (theTimeCache)
+      return theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache);
     else
-    {
-        if(theTimeCache)
-            return theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache);
-        else
-            return theUsedInfo->CachedInterpolation(theLocationCache);
-    }
+      return theUsedInfo->CachedInterpolation(theLocationCache);
+  }
 }
 
-float NFmiInfoAreaMask::CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache)
+float NFmiInfoAreaMask::CalcMetaParamCachedInterpolation(
+    boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo,
+    const NFmiLocationCache &theLocationCache,
+    const NFmiTimeCache *theTimeCache)
 {
-    return CalcMetaParamValueWithFunction([&]() {return theTimeCache ? theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache): theUsedInfo->CachedInterpolation(theLocationCache); });
+  return CalcMetaParamValueWithFunction([&]() {
+    return theTimeCache ? theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache)
+                        : theUsedInfo->CachedInterpolation(theLocationCache);
+  });
 }
 
 double NFmiInfoAreaMask::HeightValue(double theHeight,
                                      const NFmiCalculationParams &theCalculationParams)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamHeightValue(theHeight, theCalculationParams);
-    else
-        return itsInfo->HeightValue(static_cast<float>(theHeight), theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamHeightValue(theHeight, theCalculationParams);
+  else
+    return itsInfo->HeightValue(static_cast<float>(theHeight),
+                                theCalculationParams.itsLatlon,
+                                theCalculationParams.itsTime);
 }
 
 double NFmiInfoAreaMask::HeightValueStatic(double theHeight,
                                            const NFmiCalculationParams &theCalculationParams)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamHeightValue(theHeight, theCalculationParams);
-    else
-        return itsInfo->HeightValue(static_cast<float>(theHeight), theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamHeightValue(theHeight, theCalculationParams);
+  else
+    return itsInfo->HeightValue(static_cast<float>(theHeight),
+                                theCalculationParams.itsLatlon,
+                                theCalculationParams.itsTime);
 }
 
 double NFmiInfoAreaMask::PressureValue(double thePressure,
                                        const NFmiCalculationParams &theCalculationParams)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamPressureValue(thePressure, theCalculationParams);
-    else
-        return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
-                                     theCalculationParams.itsLatlon,
-                                     theCalculationParams.itsTime);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamPressureValue(thePressure, theCalculationParams);
+  else
+    return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
+                                       theCalculationParams.itsLatlon,
+                                       theCalculationParams.itsTime);
 }
 
 double NFmiInfoAreaMask::PressureValueStatic(double thePressure,
                                              const NFmiCalculationParams &theCalculationParams)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamPressureValue(thePressure, theCalculationParams);
-    else
-        return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
-                                     theCalculationParams.itsLatlon,
-                                     theCalculationParams.itsTime);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamPressureValue(thePressure, theCalculationParams);
+  else
+    return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
+                                       theCalculationParams.itsLatlon,
+                                       theCalculationParams.itsTime);
 }
 
 // ----------------------------------------------------------------------
@@ -501,81 +526,87 @@ void NFmiInfoAreaMask::UpdateInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
   }
 }
 
-boost::shared_ptr<NFmiDataModifier> NFmiInfoAreaMask::CreateIntegrationFuction(NFmiAreaMask::FunctionType func)
+boost::shared_ptr<NFmiDataModifier> NFmiInfoAreaMask::CreateIntegrationFuction(
+    NFmiAreaMask::FunctionType func)
 {
-    boost::shared_ptr<NFmiDataModifier> modifier;
-    // vertCondFunc tapauksia on paljon ja niille ei tehdä integraatiota, joten tein ehdon vähentämään
-    // case -tapauksia
-    if(!::IsFindConditionalFunction(func))
+  boost::shared_ptr<NFmiDataModifier> modifier;
+  // vertCondFunc tapauksia on paljon ja niille ei tehdä integraatiota, joten tein ehdon vähentämään
+  // case -tapauksia
+  if (!::IsFindConditionalFunction(func))
+  {
+    switch (func)
     {
-        switch(func)
-        {
-        case NFmiAreaMask::Avg:
-            modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierAvg());
-            break;
-        case NFmiAreaMask::Min:
-            modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierMin());
-            break;
-        case NFmiAreaMask::Max:
-            modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierMax());
-            break;
-        case NFmiAreaMask::Sum:
-            modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierSum());
-            break;
-        case NFmiAreaMask::Med:
-            modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierMedian());
-            break;
-        case NFmiAreaMask::Get:
-        case NFmiAreaMask::FindH:
-        case NFmiAreaMask::FindC:
-        case NFmiAreaMask::MinH:
-        case NFmiAreaMask::MaxH:
-        case NFmiAreaMask::Grad:
-        case NFmiAreaMask::FindHeightCond:
-        case NFmiAreaMask::FindCountCond:
-            modifier = boost::shared_ptr<NFmiDataModifier>();  // get- ja find -tapauksissa palautetaan
-                                                               // tyhjä-olio, koska niille ei tarvita
-                                                               // erillistä integraattoria
-            break;
-            // HUOM!!!! Tee WAvg-modifier myös, joka on peritty Avg-modifieristä ja tee joku kerroin juttu
-            // painotukseen.
-        default:
-            throw std::runtime_error(
-                "Internal SmartMet error: Smarttool function has unknown integration function,\ncan't "
-                "execute the calculations.");
-        }
+      case NFmiAreaMask::Avg:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierAvg());
+        break;
+      case NFmiAreaMask::Min:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierMin());
+        break;
+      case NFmiAreaMask::Max:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierMax());
+        break;
+      case NFmiAreaMask::Sum:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierSum());
+        break;
+      case NFmiAreaMask::Med:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierMedian());
+        break;
+      case NFmiAreaMask::Get:
+      case NFmiAreaMask::FindH:
+      case NFmiAreaMask::FindC:
+      case NFmiAreaMask::MinH:
+      case NFmiAreaMask::MaxH:
+      case NFmiAreaMask::Grad:
+      case NFmiAreaMask::FindHeightCond:
+      case NFmiAreaMask::FindCountCond:
+      case NFmiAreaMask::PeekZ:
+        modifier = boost::shared_ptr<NFmiDataModifier>();  // get- ja find -tapauksissa palautetaan
+                                                           // tyhjä-olio, koska niille ei tarvita
+                                                           // erillistä integraattoria
+        break;
+        // HUOM!!!! Tee WAvg-modifier myös, joka on peritty Avg-modifieristä ja tee joku kerroin
+        // juttu painotukseen.
+      default:
+        throw std::runtime_error(
+            "Internal SmartMet error: Smarttool function has unknown integration function,\ncan't "
+            "execute the calculations.");
     }
-    return modifier;
+  }
+  return modifier;
 }
 
 // Etsii halutun aika loopituksen alku- ja loppuaika indeksejä annetusta infosta.
 // Jos startOffset ja endOffsetit ovat samoja, käytetään kyseistä aikaa aikainterpolaatiossa.
 bool NFmiInfoAreaMask::CalcTimeLoopIndexies(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    const NFmiCalculationParams &theCalculationParams,
-    double theStartTimeOffsetInHours,
-    double theEndTimeOffsetInHours,
-    unsigned long *theStartTimeIndexOut,
-    unsigned long *theEndTimeIndexOut)
+                                            const NFmiCalculationParams &theCalculationParams,
+                                            double theStartTimeOffsetInHours,
+                                            double theEndTimeOffsetInHours,
+                                            unsigned long *theStartTimeIndexOut,
+                                            unsigned long *theEndTimeIndexOut)
 {
-    if(theInfo)
-    {
-
-        NFmiMetTime startTime = theCalculationParams.itsTime;
-        startTime.ChangeByMinutes(FmiRound(theStartTimeOffsetInHours * 60));
-        NFmiMetTime endTime = theCalculationParams.itsTime;
-        endTime.ChangeByMinutes(FmiRound(theEndTimeOffsetInHours * 60));
-        return NFmiInfoAreaMask::CalcTimeLoopIndexies(theInfo, theCalculationParams, startTime, endTime, theStartTimeIndexOut, theEndTimeIndexOut);
-    }
-    else
-        return false;
+  if (theInfo)
+  {
+    NFmiMetTime startTime = theCalculationParams.itsTime;
+    startTime.ChangeByMinutes(FmiRound(theStartTimeOffsetInHours * 60));
+    NFmiMetTime endTime = theCalculationParams.itsTime;
+    endTime.ChangeByMinutes(FmiRound(theEndTimeOffsetInHours * 60));
+    return NFmiInfoAreaMask::CalcTimeLoopIndexies(theInfo,
+                                                  theCalculationParams,
+                                                  startTime,
+                                                  endTime,
+                                                  theStartTimeIndexOut,
+                                                  theEndTimeIndexOut);
+  }
+  else
+    return false;
 }
 
 bool NFmiInfoAreaMask::CalcTimeLoopIndexies(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    const NFmiCalculationParams &theCalculationParams,
-    const NFmiMetTime &theStartTime,
-    const NFmiMetTime &theEndTime,
-    unsigned long *theStartTimeIndexOut,
-    unsigned long *theEndTimeIndexOut)
+                                            const NFmiCalculationParams &theCalculationParams,
+                                            const NFmiMetTime &theStartTime,
+                                            const NFmiMetTime &theEndTime,
+                                            unsigned long *theStartTimeIndexOut,
+                                            unsigned long *theEndTimeIndexOut)
 {
   NFmiMetTime usedStartTime =
       NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theStartTime);
@@ -583,121 +614,127 @@ bool NFmiInfoAreaMask::CalcTimeLoopIndexies(boost::shared_ptr<NFmiFastQueryInfo>
       NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theEndTime);
 
   NFmiTimeDescriptor times = theInfo->TimeDescriptor().GetIntersection(usedStartTime, usedEndTime);
-    // Otetaan aikaindeksi talteen, jotta se voidaan lopuksi palauttaa takaisin
-    unsigned long origTimeIndex = theInfo->TimeIndex();
-    bool status = false;
-    if(times.IsEmpty())
-    {
-        *theStartTimeIndexOut = *theEndTimeIndexOut = gMissingIndex;
-        status = false;
-    }
-    else if(times.Size() == 1)
-    {
-        theInfo->Time(times.FirstTime());
-        *theStartTimeIndexOut = *theEndTimeIndexOut = theInfo->TimeIndex();
-        status = true;
-    }
-    else
-    {
-        theInfo->Time(times.FirstTime());
-        *theStartTimeIndexOut = theInfo->TimeIndex();
-        theInfo->Time(times.LastTime());
-        *theEndTimeIndexOut = theInfo->TimeIndex();
-        status = true;
-    }
-    theInfo->TimeIndex(origTimeIndex);
-    return status;
+  // Otetaan aikaindeksi talteen, jotta se voidaan lopuksi palauttaa takaisin
+  unsigned long origTimeIndex = theInfo->TimeIndex();
+  bool status = false;
+  if (times.IsEmpty())
+  {
+    *theStartTimeIndexOut = *theEndTimeIndexOut = gMissingIndex;
+    status = false;
+  }
+  else if (times.Size() == 1)
+  {
+    theInfo->Time(times.FirstTime());
+    *theStartTimeIndexOut = *theEndTimeIndexOut = theInfo->TimeIndex();
+    status = true;
+  }
+  else
+  {
+    theInfo->Time(times.FirstTime());
+    *theStartTimeIndexOut = theInfo->TimeIndex();
+    theInfo->Time(times.LastTime());
+    *theEndTimeIndexOut = theInfo->TimeIndex();
+    status = true;
+  }
+  theInfo->TimeIndex(origTimeIndex);
+  return status;
 }
 
 // min ja max funktioille voidaan laskuissa ottaa interpoloidun arvon sijasta kaikki interpolaatio
 // pistettä ympäröivät arvot sellaisenaan. Interpolaatio kun muuttaa min/max arvoja ikävästi
 // neljästä luvusta lasketuksi painotetuksi keskiarvoksi.
 void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
-    const NFmiLocationCache &theLocationCache)
+                                        boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
+                                        const NFmiLocationCache &theLocationCache)
 {
-    if(!theLocationCache.NoValue())
+  if (!theLocationCache.NoValue())
+  {
+    if (metaParamDataHolder.isMetaParameterCalculationNeeded())
     {
-        if(metaParamDataHolder.isMetaParameterCalculationNeeded())
+      if (metaParamDataHolder.metaWindParamUsage().HasWsAndWd())
+      {
+        theInfo->Param(kFmiWindSpeedMS);
+        std::vector<float> wsValues(4, kFloatMissing);
+        theInfo->GetCachedValues(theLocationCache, wsValues);
+        theInfo->Param(kFmiWindDirection);
+        std::vector<float> wdValues(4, kFloatMissing);
+        theInfo->GetCachedValues(theLocationCache, wdValues);
+        for (auto index = 0; index < wsValues.size(); index++)
         {
-            if(metaParamDataHolder.metaWindParamUsage().HasWsAndWd())
-            {
-                theInfo->Param(kFmiWindSpeedMS);
-                std::vector<float> wsValues(4, kFloatMissing);
-                theInfo->GetCachedValues(theLocationCache, wsValues);
-                theInfo->Param(kFmiWindDirection);
-                std::vector<float> wdValues(4, kFloatMissing);
-                theInfo->GetCachedValues(theLocationCache, wdValues);
-                for(auto index = 0; index < wsValues.size(); index++)
-                {
-                    switch(metaParamDataHolder.possibleMetaParamId())
-                    {
-                    case kFmiWindUMS:
-                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcU(wsValues[index], wdValues[index]));
-                        break;
-                    case kFmiWindVMS:
-                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcV(wsValues[index], wdValues[index]));
-                        break;
-                    case kFmiWindVectorMS:
-                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(wsValues[index], wdValues[index]));
-                        break;
-                    }
-                }
-            }
-            else if(metaParamDataHolder.metaWindParamUsage().HasWindComponents())
-            {
-                theInfo->Param(kFmiWindUMS);
-                std::vector<float> uValues(4, kFloatMissing);
-                theInfo->GetCachedValues(theLocationCache, uValues);
-                theInfo->Param(kFmiWindVMS);
-                std::vector<float> vValues(4, kFloatMissing);
-                theInfo->GetCachedValues(theLocationCache, vValues);
-                for(auto index = 0; index < uValues.size(); index++)
-                {
-                    switch(metaParamDataHolder.possibleMetaParamId())
-                    {
-                    case kFmiWindSpeedMS:
-                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWS(uValues[index], vValues[index]));
-                        break;
-                    case kFmiWindDirection:
-                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWD(uValues[index], vValues[index]));
-                        break;
-                    case kFmiWindVectorMS:
-                        theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromWindComponents(uValues[index], vValues[index]));
-                        break;
-                    }
-                }
-            }
+          switch (metaParamDataHolder.possibleMetaParamId())
+          {
+            case kFmiWindUMS:
+              theFunctionModifier->Calculate(
+                  NFmiFastInfoUtils::CalcU(wsValues[index], wdValues[index]));
+              break;
+            case kFmiWindVMS:
+              theFunctionModifier->Calculate(
+                  NFmiFastInfoUtils::CalcV(wsValues[index], wdValues[index]));
+              break;
+            case kFmiWindVectorMS:
+              theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(
+                  wsValues[index], wdValues[index]));
+              break;
+          }
         }
-        else
+      }
+      else if (metaParamDataHolder.metaWindParamUsage().HasWindComponents())
+      {
+        theInfo->Param(kFmiWindUMS);
+        std::vector<float> uValues(4, kFloatMissing);
+        theInfo->GetCachedValues(theLocationCache, uValues);
+        theInfo->Param(kFmiWindVMS);
+        std::vector<float> vValues(4, kFloatMissing);
+        theInfo->GetCachedValues(theLocationCache, vValues);
+        for (auto index = 0; index < uValues.size(); index++)
         {
-            std::vector<float> values(4, kFloatMissing);
-            theInfo->GetCachedValues(theLocationCache, values);
-            for(float value : values)
-                theFunctionModifier->Calculate(value);
+          switch (metaParamDataHolder.possibleMetaParamId())
+          {
+            case kFmiWindSpeedMS:
+              theFunctionModifier->Calculate(
+                  NFmiFastInfoUtils::CalcWS(uValues[index], vValues[index]));
+              break;
+            case kFmiWindDirection:
+              theFunctionModifier->Calculate(
+                  NFmiFastInfoUtils::CalcWD(uValues[index], vValues[index]));
+              break;
+            case kFmiWindVectorMS:
+              theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromWindComponents(
+                  uValues[index], vValues[index]));
+              break;
+          }
         }
+      }
     }
+    else
+    {
+      std::vector<float> values(4, kFloatMissing);
+      theInfo->GetCachedValues(theLocationCache, values);
+      for (float value : values)
+        theFunctionModifier->Calculate(value);
+    }
+  }
 }
 
-// Method adds values to function modifier. In case of min/max we use 
+// Method adds values to function modifier. In case of min/max we use
 // AddExtremeValues in order to reach real minimum and maximum values from data.
-// If values are just interpolated to a point, it will be sort of 4 values average 
+// If values are just interpolated to a point, it will be sort of 4 values average
 // that is used in there.
-void NFmiInfoAreaMask::AddValuesToFunctionModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+void NFmiInfoAreaMask::AddValuesToFunctionModifier(
+    boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
     const NFmiLocationCache &theLocationCache,
     NFmiAreaMask::FunctionType integrationFunction)
 {
-    if(integrationFunction == NFmiAreaMask::Max || integrationFunction == NFmiAreaMask::Min)
-        AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
-    else
-        theFunctionModifier->Calculate(CalcCachedInterpolation(theInfo, theLocationCache, nullptr));
+  if (integrationFunction == NFmiAreaMask::Max || integrationFunction == NFmiAreaMask::Min)
+    AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
+  else
+    theFunctionModifier->Calculate(CalcCachedInterpolation(theInfo, theLocationCache, nullptr));
 }
 
 // ======================================================================
 // ****** NFmiInfoAreaMask **********************************************
 // ======================================================================
-
 
 // ======================================================================
 // ****** NFmiInfoAreaMaskPeekXY ****************************************
@@ -720,9 +757,14 @@ NFmiInfoAreaMaskPeekXY::NFmiInfoAreaMaskPeekXY(const NFmiCalculationCondition &t
                                                const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                                int theXOffset,
                                                int theYOffset,
-                                                unsigned long thePossibleMetaParamId,
-                                                BinaryOperator thePostBinaryOperator)
-    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, thePostBinaryOperator),
+                                               unsigned long thePossibleMetaParamId,
+                                               BinaryOperator thePostBinaryOperator)
+    : NFmiInfoAreaMask(theOperation,
+                       theMaskType,
+                       theDataType,
+                       theInfo,
+                       thePossibleMetaParamId,
+                       thePostBinaryOperator),
       itsXOffset(theXOffset),
       itsYOffset(theYOffset),
       itsGridXDiff(1)  // dummy arvo, en laita 0, että ei tule joskus 0:lla jakoa vahingossa
@@ -735,8 +777,8 @@ NFmiInfoAreaMaskPeekXY::NFmiInfoAreaMaskPeekXY(const NFmiCalculationCondition &t
 NFmiInfoAreaMaskPeekXY::NFmiInfoAreaMaskPeekXY(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                                int theXOffset,
                                                int theYOffset,
-                                                unsigned long thePossibleMetaParamId,
-                                                BinaryOperator thePostBinaryOperator)
+                                               unsigned long thePossibleMetaParamId,
+                                               BinaryOperator thePostBinaryOperator)
     : NFmiInfoAreaMask(theInfo, thePossibleMetaParamId, thePostBinaryOperator),
       itsXOffset(theXOffset),
       itsYOffset(theYOffset),
@@ -814,7 +856,12 @@ NFmiInfoAreaMaskPeekXY2::NFmiInfoAreaMaskPeekXY2(
     int theYOffset,
     unsigned long thePossibleMetaParamId,
     BinaryOperator thePostBinaryOperator)
-    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, thePostBinaryOperator),
+    : NFmiInfoAreaMask(theOperation,
+                       theMaskType,
+                       theDataType,
+                       theInfo,
+                       thePossibleMetaParamId,
+                       thePostBinaryOperator),
       itsXOffset(theXOffset),
       itsYOffset(theYOffset),
       itsEditedInfo(theEditedInfo)
@@ -823,8 +870,8 @@ NFmiInfoAreaMaskPeekXY2::NFmiInfoAreaMaskPeekXY2(
 
 NFmiInfoAreaMaskPeekXY2::NFmiInfoAreaMaskPeekXY2(const NFmiInfoAreaMaskPeekXY2 &theOther)
     : NFmiInfoAreaMask(theOther),
-    itsXOffset(theOther.itsXOffset),
-    itsYOffset(theOther.itsYOffset),
+      itsXOffset(theOther.itsXOffset),
+      itsYOffset(theOther.itsYOffset),
       itsEditedInfo(NFmiAreaMask::DoShallowCopy(theOther.itsEditedInfo))
 {
 }
@@ -834,22 +881,22 @@ NFmiAreaMask *NFmiInfoAreaMaskPeekXY2::Clone() const { return new NFmiInfoAreaMa
 NFmiCalculationParams NFmiInfoAreaMaskPeekXY2::MakeModifiedCalculationParams(
     const NFmiCalculationParams &theCalculationParams)
 {
-    NFmiCalculationParams modifiedCalculationParams(theCalculationParams);
-    auto area = itsEditedInfo->Area();
-    if(area)
-    {
-        // worldXy on annettu latlon piste kartta-alueen metrisessä maailmassa
-        NFmiPoint worldXyPoint = area->LatLonToWorldXY(modifiedCalculationParams.itsLatlon);
-        // offsetit on annettu kilometreissa, joten ne pitää kertoa 1000:lla
-        worldXyPoint.X(worldXyPoint.X() + itsXOffset * 1000.);
-        worldXyPoint.Y(worldXyPoint.Y() + itsYOffset * 1000.);
-        modifiedCalculationParams.itsLatlon = area->WorldXYToLatLon(worldXyPoint);
-    }
-    else
-    {
-        modifiedCalculationParams.itsLatlon = NFmiPoint::gMissingLatlon;
-    }
-    return modifiedCalculationParams;
+  NFmiCalculationParams modifiedCalculationParams(theCalculationParams);
+  auto area = itsEditedInfo->Area();
+  if (area)
+  {
+    // worldXy on annettu latlon piste kartta-alueen metrisessä maailmassa
+    NFmiPoint worldXyPoint = area->LatLonToWorldXY(modifiedCalculationParams.itsLatlon);
+    // offsetit on annettu kilometreissa, joten ne pitää kertoa 1000:lla
+    worldXyPoint.X(worldXyPoint.X() + itsXOffset * 1000.);
+    worldXyPoint.Y(worldXyPoint.Y() + itsYOffset * 1000.);
+    modifiedCalculationParams.itsLatlon = area->WorldXYToLatLon(worldXyPoint);
+  }
+  else
+  {
+    modifiedCalculationParams.itsLatlon = NFmiPoint::gMissingLatlon;
+  }
+  return modifiedCalculationParams;
 }
 
 // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -891,7 +938,12 @@ NFmiInfoAreaMaskPeekXY3::NFmiInfoAreaMaskPeekXY3(
     double theYOffsetInKM,
     unsigned long thePossibleMetaParamId,
     BinaryOperator thePostBinaryOperator)
-    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, thePostBinaryOperator),
+    : NFmiInfoAreaMask(theOperation,
+                       theMaskType,
+                       theDataType,
+                       theInfo,
+                       thePossibleMetaParamId,
+                       thePostBinaryOperator),
       itsXOffsetInKM(theXOffsetInKM),
       itsYOffsetInKM(theYOffsetInKM),
       itsEditedInfo(theEditedInfo)
@@ -983,7 +1035,12 @@ NFmiInfoAreaMaskMetFuncBase::NFmiInfoAreaMaskMetFuncBase(
     MetFunctionDirection theMetFuncDirection,
     unsigned long thePossibleMetaParamId,
     BinaryOperator thePostBinaryOperator)
-    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, thePostBinaryOperator),
+    : NFmiInfoAreaMask(theOperation,
+                       theMaskType,
+                       theDataType,
+                       theInfo,
+                       thePossibleMetaParamId,
+                       thePostBinaryOperator),
       itsTimeCache(),
       itsGridSizeX(0),
       itsGridSizeY(0),
@@ -1009,8 +1066,7 @@ void NFmiInfoAreaMaskMetFuncBase::Initialize()
 {
   NFmiInfoAreaMask::Initialize();
   SetGridSizeVariables();
-  if (itsInfo->Param().GetParamIdent() == kFmiTotalWindMS) 
-      fTotalWindParam = true;
+  if (itsInfo->Param().GetParamIdent() == kFmiTotalWindMS) fTotalWindParam = true;
 }
 
 bool NFmiInfoAreaMaskMetFuncBase::Time(const NFmiMetTime &theTime)
@@ -1086,24 +1142,28 @@ float NFmiInfoAreaMaskMetFuncBase::Peek(const NFmiLocationCache &theLocationCach
       value = CalcCachedPressureLevelValue(static_cast<float>(P), peekPoint, itsTimeCache);
     }
     else
-      value = CalcCachedPressureLevelValue(static_cast<float>(UsedPressureLevelValue()), peekPoint, itsTimeCache);
+      value = CalcCachedPressureLevelValue(
+          static_cast<float>(UsedPressureLevelValue()), peekPoint, itsTimeCache);
   }
   else
     value = CalcCachedInterpolation(itsInfo, peekPoint, &itsTimeCache);
   return value;
 }
 
-float NFmiInfoAreaMaskMetFuncBase::CalcCachedPressureLevelValue(float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache)
+float NFmiInfoAreaMaskMetFuncBase::CalcCachedPressureLevelValue(
+    float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamCachedPressureLevelValue(P, theLocationCache, theTimeCache);
-    else
-        return itsInfo->CachedPressureLevelValue(P, theLocationCache, theTimeCache);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamCachedPressureLevelValue(P, theLocationCache, theTimeCache);
+  else
+    return itsInfo->CachedPressureLevelValue(P, theLocationCache, theTimeCache);
 }
 
-float NFmiInfoAreaMaskMetFuncBase::CalcMetaParamCachedPressureLevelValue(float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache)
+float NFmiInfoAreaMaskMetFuncBase::CalcMetaParamCachedPressureLevelValue(
+    float P, const NFmiLocationCache &theLocationCache, const NFmiTimeCache &theTimeCache)
 {
-    return CalcMetaParamValueWithFunction([&]() {return itsInfo->CachedPressureLevelValue(P, theLocationCache, theTimeCache); });
+  return CalcMetaParamValueWithFunction(
+      [&]() { return itsInfo->CachedPressureLevelValue(P, theLocationCache, theTimeCache); });
 }
 
 float NFmiInfoAreaMaskMetFuncBase::CalcMetFuncWithFactors(
@@ -1610,7 +1670,14 @@ NFmiInfoAreaMaskVertFunc::NFmiInfoAreaMaskVertFunc(
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     unsigned long thePossibleMetaParamId)
-    : NFmiInfoAreaMaskMetFuncBase(theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId, kNoValue),
+    : NFmiInfoAreaMaskMetFuncBase(theOperation,
+                                  theMaskType,
+                                  theDataType,
+                                  theInfo,
+                                  false,
+                                  NoDirection,
+                                  thePossibleMetaParamId,
+                                  kNoValue),
       itsPrimaryFunc(thePrimaryFunc),
       itsSecondaryFunc(theSecondaryFunc),
       itsArgumentVector(),
@@ -1861,116 +1928,121 @@ void NFmiInfoAreaMaskVertFunc::FindCalculatedLeves(const NFmiLocationCache &theL
   }
 }
 
-// Jos theValue arvo on puuttuvaa, tutkitaan meneekö theHeightValue korkeus alle datan maanpinnan läheisen kerroksen.
-// Jos menee, palautetaan arvo suoraan maanpinnan läheisestä levelistä
-static float DoLowestLevelHeightValueClamp(float theValue, boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    const NFmiCalculationParams &theCalculationParams,
-    float theHeightValue)
+// Jos theValue arvo on puuttuvaa, tutkitaan meneekö theHeightValue korkeus alle datan maanpinnan
+// läheisen kerroksen. Jos menee, palautetaan arvo suoraan maanpinnan läheisestä levelistä
+static float DoLowestLevelHeightValueClamp(float theValue,
+                                           boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                           const NFmiCalculationParams &theCalculationParams,
+                                           float theHeightValue)
 {
-    // Jos theValue:lla oli jo arvo, palautetaan se
-    if(theValue != kFloatMissing)
-        return theValue;
+  // Jos theValue:lla oli jo arvo, palautetaan se
+  if (theValue != kFloatMissing) return theValue;
 
-    auto wantedParamIndex = theInfo->ParamIndex();
-    bool useSubParam = theInfo->IsSubParamUsed();
-    theInfo->ParamIndex(theInfo->HeightParamIndex());
+  auto wantedParamIndex = theInfo->ParamIndex();
+  bool useSubParam = theInfo->IsSubParamUsed();
+  theInfo->ParamIndex(theInfo->HeightParamIndex());
+  theInfo->FirstLevel();
+  float heigth1 =
+      theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  theInfo->LastLevel();
+  float heigth2 =
+      theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  theInfo->ParamIndex(wantedParamIndex);  // palauta originaali parametri
+  theInfo->SetIsSubParamUsed(useSubParam);
+
+  // Jos alimman tai ylimmän kerroksen korkeusarvo on puuttuvaa ei kannata jatkaa
+  if (heigth1 == kFloatMissing || heigth2 == kFloatMissing) return theValue;
+
+  // Vaikka oletus on todettu että interpolaatio haluttuun korkeuteen epäonnistui, koska korkeus oli
+  // alle datan maanpinnan läheimmän korkeuden, se ei pidä paikkaansa kun korkeuksia lasketaan
+  // toisella tapaa. Eli pitää antaa anteeksi vaikka täällä laskettu heigth1/2 olisikin himpun
+  // verran korkeammalla kuin haluttu korkeus. Ongelma on että aiemmin lasketun QueryInfon
+  // HeightValue -metodilla lasketussa arvossa pari neljästä bilinear interpolaatio pisteessä haettu
+  // korkeus menee alle datan, mutta interpolated value metodin kanssa ei ole samaa ongelmaa.
+  const float heightEpsBS = 0.15f;
+  // Jos halutun korkeuden arvo ei ole matalampi kuin alimman ja ylimmän kerroksen korkeusarvo , ei
+  // kannata jatkaa
+  if (theHeightValue - heightEpsBS >= heigth1 || theHeightValue - heightEpsBS >= heigth2)
+    return theValue;
+
+  if (theInfo->HeightParamIsRising())
+  {
+    // 1. level on maanpinnan läheinen
     theInfo->FirstLevel();
-    float heigth1 = theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  }
+  else
+  {
+    // viimeinen level on maanpinnan läheinen
     theInfo->LastLevel();
-    float heigth2 = theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-    theInfo->ParamIndex(wantedParamIndex); // palauta originaali parametri
-    theInfo->SetIsSubParamUsed(useSubParam);
-
-    // Jos alimman tai ylimmän kerroksen korkeusarvo on puuttuvaa ei kannata jatkaa
-    if(heigth1 == kFloatMissing || heigth2 == kFloatMissing)
-        return theValue;
-
-    // Vaikka oletus on todettu että interpolaatio haluttuun korkeuteen epäonnistui, koska korkeus oli alle
-    // datan maanpinnan läheimmän korkeuden, se ei pidä paikkaansa kun korkeuksia lasketaan toisella tapaa.
-    // Eli pitää antaa anteeksi vaikka täällä laskettu heigth1/2 olisikin himpun verran korkeammalla kuin haluttu korkeus.
-    // Ongelma on että aiemmin lasketun QueryInfon HeightValue -metodilla lasketussa arvossa pari neljästä bilinear 
-    // interpolaatio pisteessä haettu korkeus menee alle datan, mutta interpolated value metodin kanssa ei ole samaa ongelmaa.
-    const float heightEpsBS = 0.15f;
-    // Jos halutun korkeuden arvo ei ole matalampi kuin alimman ja ylimmän kerroksen korkeusarvo , ei kannata jatkaa
-    if(theHeightValue - heightEpsBS >= heigth1 || theHeightValue - heightEpsBS >= heigth2)
-        return theValue;
-
-    if(theInfo->HeightParamIsRising())
-    {
-        // 1. level on maanpinnan läheinen
-        theInfo->FirstLevel();
-        return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-    }
-    else
-    {
-        // viimeinen level on maanpinnan läheinen
-        theInfo->LastLevel();
-        return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-    }
-
+    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  }
 }
 
-// Jos theValue arvo on puuttuvaa, tutkitaan meneekö theHeightValue korkeus alle datan maanpinnan läheisen kerroksen.
-// Jos menee, palautetaan arvo suoraan maanpinnan läheisestä levelistä
-static float DoLowestLevelPressureValueClamp(float theValue, boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    const NFmiCalculationParams &theCalculationParams,
-    float thePressureValue)
+// Jos theValue arvo on puuttuvaa, tutkitaan meneekö theHeightValue korkeus alle datan maanpinnan
+// läheisen kerroksen. Jos menee, palautetaan arvo suoraan maanpinnan läheisestä levelistä
+static float DoLowestLevelPressureValueClamp(float theValue,
+                                             boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                             const NFmiCalculationParams &theCalculationParams,
+                                             float thePressureValue)
 {
-    // Jos theValue:lla oli jo arvo, palautetaan se
-    if(theValue != kFloatMissing)
-        return theValue;
+  // Jos theValue:lla oli jo arvo, palautetaan se
+  if (theValue != kFloatMissing) return theValue;
 
-    theInfo->FirstLevel();
-    float pressure1 = theInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  theInfo->FirstLevel();
+  float pressure1 = theInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon,
+                                                     theCalculationParams.itsTime);
+  theInfo->LastLevel();
+  float pressure2 = theInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon,
+                                                     theCalculationParams.itsTime);
+
+  // Jos alimman tai ylimmän kerroksen korkeusarvo on puuttuvaa ei kannata jatkaa
+  if (pressure1 == kFloatMissing || pressure2 == kFloatMissing) return theValue;
+
+  // Vaikka oletus on todettu että interpolaatio haluttuun korkeuteen epäonnistui, koska korkeus oli
+  // alle datan maanpinnan läheimmän korkeuden, se ei pidä paikkaansa kun korkeuksia lasketaan
+  // toisella tapaa. Eli pitää antaa anteeksi vaikka täällä laskettu pressure1/2 olisikin himpun
+  // verran korkeammalla kuin haluttu korkeus. Ongelma on että aiemmin lasketun QueryInfon
+  // PressureValue -metodilla lasketussa arvossa pari neljästä bilinear interpolaatio pisteessä
+  // haettu paine menee alle datan, mutta interpolated value metodin kanssa ei ole samaa ongelmaa.
+  // Paine parametrin kanssa on isompi epsilon kuin korkeus haun kanssa johtuen pintapaineen
+  // suurista vaihteluista johtuen suurista topografian korkeus eroista ja interpolaatioista.
+  const float pressureEpsBS = 2.5f;
+  // Jos halutun paineen arvo ei ole korkeampi kuin alimman ja ylimmän kerroksen paineen arvo , ei
+  // kannata jatkaa
+  if (thePressureValue + pressureEpsBS <= pressure1 ||
+      thePressureValue + pressureEpsBS <= pressure2)
+    return theValue;
+
+  // Jos painearvot nousevat leveleiden mukaan, on maanpinta silloin viimeisellä levelillä
+  if (theInfo->PressureParamIsRising())
+  {
+    // viimeinen level on maanpinnan läheinen
     theInfo->LastLevel();
-    float pressure2 = theInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-
-    // Jos alimman tai ylimmän kerroksen korkeusarvo on puuttuvaa ei kannata jatkaa
-    if(pressure1 == kFloatMissing || pressure2 == kFloatMissing)
-        return theValue;
-
-    // Vaikka oletus on todettu että interpolaatio haluttuun korkeuteen epäonnistui, koska korkeus oli alle
-    // datan maanpinnan läheimmän korkeuden, se ei pidä paikkaansa kun korkeuksia lasketaan toisella tapaa.
-    // Eli pitää antaa anteeksi vaikka täällä laskettu pressure1/2 olisikin himpun verran korkeammalla kuin haluttu korkeus.
-    // Ongelma on että aiemmin lasketun QueryInfon PressureValue -metodilla lasketussa arvossa pari neljästä bilinear 
-    // interpolaatio pisteessä haettu paine menee alle datan, mutta interpolated value metodin kanssa ei ole samaa ongelmaa.
-    // Paine parametrin kanssa on isompi epsilon kuin korkeus haun kanssa johtuen pintapaineen suurista vaihteluista
-    // johtuen suurista topografian korkeus eroista ja interpolaatioista.
-    const float pressureEpsBS = 2.5f;
-    // Jos halutun paineen arvo ei ole korkeampi kuin alimman ja ylimmän kerroksen paineen arvo , ei kannata jatkaa
-    if(thePressureValue + pressureEpsBS <= pressure1 || thePressureValue + pressureEpsBS <= pressure2)
-        return theValue;
-
-    // Jos painearvot nousevat leveleiden mukaan, on maanpinta silloin viimeisellä levelillä
-    if(theInfo->PressureParamIsRising())
-    {
-        // viimeinen level on maanpinnan läheinen
-        theInfo->LastLevel();
-        return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-    }
-    else
-    {
-        // 1. level on maanpinnan läheinen
-        theInfo->FirstLevel();
-        return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-    }
-
+    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  }
+  else
+  {
+    // 1. level on maanpinnan läheinen
+    theInfo->FirstLevel();
+    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
+  }
 }
 
 float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocationCache,
                                               const NFmiCalculationParams &theCalculationParams,
                                               float theLevelValue)
 {
-    if(itsSecondaryFunc == NFmiAreaMask::VertZ)
-    {
-        float value = static_cast<float>(HeightValue(theLevelValue, theCalculationParams));
-        return ::DoLowestLevelHeightValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
-    }
-    else if(itsSecondaryFunc == NFmiAreaMask::VertP || itsSecondaryFunc == NFmiAreaMask::VertFL)
-    {
-        float value = static_cast<float>(PressureValue(theLevelValue, theCalculationParams));
-        return ::DoLowestLevelPressureValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
-    }
+  if (itsSecondaryFunc == NFmiAreaMask::VertZ)
+  {
+    float value = static_cast<float>(HeightValue(theLevelValue, theCalculationParams));
+    return ::DoLowestLevelHeightValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
+  }
+  else if (itsSecondaryFunc == NFmiAreaMask::VertP || itsSecondaryFunc == NFmiAreaMask::VertFL)
+  {
+    float value = static_cast<float>(PressureValue(theLevelValue, theCalculationParams));
+    return ::DoLowestLevelPressureValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
+  }
   else
   {  // else hybrid arvo suoraan
     itsInfo->FirstLevel();
@@ -1979,6 +2051,52 @@ float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocati
     itsInfo->Level(aLevel);
     return CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
   }
+}
+
+// Oletus: annetut currentPressureLevel ja usedDeltaZ ovat jo tarkistettu, että eivät ole missing.
+float NFmiInfoAreaMaskVertFunc::CalculateUsedPeekZPressureLevel(float currentPressureLevel,
+                                                                float usedDeltaZ)
+{
+  switch (itsSecondaryFunc)
+  {
+    case NFmiAreaMask::VertP:
+    {
+      return currentPressureLevel + usedDeltaZ;
+    }
+    case NFmiAreaMask::VertFL:
+    {
+      // Muutetaan ensin perus painepinta flight-leveliksi
+      auto usedFLlevel = ::CalcPressureFlightLevel(currentPressureLevel);
+      usedFLlevel += usedDeltaZ;
+      // Lopuksi muutetaan yhteis flight-level takaisin paineeksi
+      return static_cast<float>(::CalcFlightLevelPressure(usedFLlevel*100));
+    }
+    case NFmiAreaMask::VertZ:
+    {
+      auto usedHeightlevel = ::CalcHeightAtPressure(currentPressureLevel) * 1000;
+      usedHeightlevel += usedDeltaZ;
+      return static_cast<float>(::CalcPressureAtHeight(usedHeightlevel / 1000.));
+    }
+    default:
+      return kFloatMissing;
+  }
+}
+
+float NFmiInfoAreaMaskVertFunc::DoPeekZFunction(const NFmiCalculationParams &theCalculationParams,
+                                                float theDeltaZ)
+{
+  if (!theCalculationParams.fCrossSectionCase)
+    throw std::runtime_error("Don't use peekZ functions for non cross-section calculations");
+  if (theCalculationParams.itsPressureHeight != kFloatMissing && theDeltaZ != kFloatMissing)
+  {
+    auto usedPressureLevelValue =
+        CalculateUsedPeekZPressureLevel(theCalculationParams.itsPressureHeight, theDeltaZ);
+
+    float value = static_cast<float>(PressureValue(usedPressureLevelValue, theCalculationParams));
+    return ::DoLowestLevelPressureValueClamp(
+        value, itsInfo, theCalculationParams, usedPressureLevelValue);
+  }
+  return kFloatMissing;
 }
 
 static bool IsUnder(float theSearchedValue, float theCurrentValue)
@@ -1990,19 +2108,21 @@ static bool IsUnder(float theSearchedValue, float theCurrentValue)
 unsigned long NFmiInfoAreaMaskVertFunc::GetNonMissingStartLevelIndex(
     const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams)
 {
-    VerticalIterationBreakingData iterationBreakingData(true);
-    // Lambda funktio joka annetaan iterointi metodille
-    auto findLevelFunction = [&]()
+  VerticalIterationBreakingData iterationBreakingData(true);
+  // Lambda funktio joka annetaan iterointi metodille
+  auto findLevelFunction = [&]() {
+    float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
+    if (value != kFloatMissing)
     {
-        float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
-        if(value != kFloatMissing)
-        {
-            iterationBreakingData.index = itsInfo->LevelIndex();
-            iterationBreakingData.stopIteration = true;
-        }
-    };
-    IterateLevelsFromGroundUpward(findLevelFunction, iterationBreakingData, static_cast<int>(itsStartLevelIndex), theCalculationParams);
-    return iterationBreakingData.index;
+      iterationBreakingData.index = itsInfo->LevelIndex();
+      iterationBreakingData.stopIteration = true;
+    }
+  };
+  IterateLevelsFromGroundUpward(findLevelFunction,
+                                iterationBreakingData,
+                                static_cast<int>(itsStartLevelIndex),
+                                theCalculationParams);
+  return iterationBreakingData.index;
 }
 
 // Laskee logaritmisessa asteikossa interpoloidun arvon.
@@ -2044,126 +2164,133 @@ float NFmiInfoAreaMaskVertFunc::GetLevelHeightValue(const NFmiLocationCache &the
     return itsInfo->GetLevelHeightValue(itsUsedHeightParId, theLocationCache, itsTimeCache);
 }
 
-// Etsitään ne kohdat missä simple-condition menee päälle. 
-// Eli ne kohdat missä edellisen kerroksen simple-condition arvo oli false ja nykyisen levelin arvo on true.
-// Jos 1. kerroksen simple-condition on heti päällä, lasketaan se 1. kohdaksi.
-float NFmiInfoAreaMaskVertFunc::FindHeightForSimpleCondition(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams)
+// Etsitään ne kohdat missä simple-condition menee päälle.
+// Eli ne kohdat missä edellisen kerroksen simple-condition arvo oli false ja nykyisen levelin arvo
+// on true. Jos 1. kerroksen simple-condition on heti päällä, lasketaan se 1. kohdaksi.
+float NFmiInfoAreaMaskVertFunc::FindHeightForSimpleCondition(
+    const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams)
 {
-    bool findHeight = itsPrimaryFunc == NFmiAreaMask::FindHeightCond;
-    // kuinka mones osuma haetaan, 1 on 1. 2 on 2. jne. 0 (tai <0) on viimeinen
-    int search_nth_value = findHeight ? static_cast<int>(::round(itsArgumentVector[2])) : 0;
-    bool previousLevelCondition = false;
-    bool currentLevelCondition = false;
-    float previousLevelHeigth = kFloatMissing;
-    float currentLevelHeigth = kFloatMissing;
-    float foundHeight = kFloatMissing;
-    int foundCount = 0;
-    unsigned long realStartLevelIndex = GetNonMissingStartLevelIndex(theLocationCache, theCalculationParams);
-    if(realStartLevelIndex != gMissingIndex)
+  bool findHeight = itsPrimaryFunc == NFmiAreaMask::FindHeightCond;
+  // kuinka mones osuma haetaan, 1 on 1. 2 on 2. jne. 0 (tai <0) on viimeinen
+  int search_nth_value = findHeight ? static_cast<int>(::round(itsArgumentVector[2])) : 0;
+  bool previousLevelCondition = false;
+  bool currentLevelCondition = false;
+  float previousLevelHeigth = kFloatMissing;
+  float currentLevelHeigth = kFloatMissing;
+  float foundHeight = kFloatMissing;
+  int foundCount = 0;
+  unsigned long realStartLevelIndex =
+      GetNonMissingStartLevelIndex(theLocationCache, theCalculationParams);
+  if (realStartLevelIndex != gMissingIndex)
+  {
+    // Otetaan 1. levelin arvot previous-muuttujiin, jotta loopitus voidaan alkaa toisesta ilman
+    // kikkailuja
+    itsInfo->LevelIndex(realStartLevelIndex);
+    previousLevelCondition = VertFuncSimpleconditionCheck(theCalculationParams);
+    previousLevelHeigth = GetLevelHeightValue(theLocationCache);
+    // Jos 1. levelin kohdalla on tilanne jo päällä, laitetaan sen tiedot talteen ja kasvatetaan
+    // löytölaskuria
+    if (previousLevelCondition && previousLevelHeigth != kFloatMissing)
     {
-        // Otetaan 1. levelin arvot previous-muuttujiin, jotta loopitus voidaan alkaa toisesta ilman kikkailuja
-        itsInfo->LevelIndex(realStartLevelIndex);
-        previousLevelCondition = VertFuncSimpleconditionCheck(theCalculationParams);
-        previousLevelHeigth = GetLevelHeightValue(theLocationCache);
-        // Jos 1. levelin kohdalla on tilanne jo päällä, laitetaan sen tiedot talteen ja kasvatetaan löytölaskuria
-        if(previousLevelCondition && previousLevelHeigth != kFloatMissing)
-        {
-            foundCount++;
-            foundHeight = previousLevelHeigth;
-        }
-
-        VerticalIterationBreakingData iterationBreaking(true);
-        // Lambda funktio joka annetaan iterointi metodille
-        auto findValueFunction = [&]()
-        {
-            currentLevelCondition = VertFuncSimpleconditionCheck(theCalculationParams);
-            currentLevelHeigth = GetLevelHeightValue(theLocationCache);
-            // simple-condition tila muuttunut niin tilanne on mennyt päälle ja otetaan tilanne talteen
-            if(currentLevelHeigth != kFloatMissing)
-            {
-                if(previousLevelCondition == false && currentLevelCondition == true)
-                {
-                    foundCount++;
-                    // Laitetaan löytökorkeudeksi sen levelin arvo missä simple-condition oli päällä
-                    foundHeight = currentLevelCondition ? currentLevelHeigth : previousLevelHeigth;
-                    // Jos etsitään tiettyä esim. 3. löytöä ja foundCount pääsee 3:een, palautetaan välittömästi arvo
-                    if(search_nth_value > 0 && search_nth_value <= foundCount)
-                        iterationBreaking.stopIteration = true;
-                }
-                previousLevelCondition = currentLevelCondition;
-                previousLevelHeigth = currentLevelHeigth;
-            }
-        };
-        IterateLevelsFromGroundUpward(findValueFunction, iterationBreaking, static_cast<int>(realStartLevelIndex + itsLevelIncrement), theCalculationParams);
+      foundCount++;
+      foundHeight = previousLevelHeigth;
     }
-    // Palautetaan viimeisin löytynyt arvo (tai missing, jos ei löytynyt yhtään)
-    if(findHeight)
-        return foundHeight;
-    else
-        return static_cast<float>(foundCount);
+
+    VerticalIterationBreakingData iterationBreaking(true);
+    // Lambda funktio joka annetaan iterointi metodille
+    auto findValueFunction = [&]() {
+      currentLevelCondition = VertFuncSimpleconditionCheck(theCalculationParams);
+      currentLevelHeigth = GetLevelHeightValue(theLocationCache);
+      // simple-condition tila muuttunut niin tilanne on mennyt päälle ja otetaan tilanne talteen
+      if (currentLevelHeigth != kFloatMissing)
+      {
+        if (previousLevelCondition == false && currentLevelCondition == true)
+        {
+          foundCount++;
+          // Laitetaan löytökorkeudeksi sen levelin arvo missä simple-condition oli päällä
+          foundHeight = currentLevelCondition ? currentLevelHeigth : previousLevelHeigth;
+          // Jos etsitään tiettyä esim. 3. löytöä ja foundCount pääsee 3:een, palautetaan
+          // välittömästi arvo
+          if (search_nth_value > 0 && search_nth_value <= foundCount)
+            iterationBreaking.stopIteration = true;
+        }
+        previousLevelCondition = currentLevelCondition;
+        previousLevelHeigth = currentLevelHeigth;
+      }
+    };
+    IterateLevelsFromGroundUpward(findValueFunction,
+                                  iterationBreaking,
+                                  static_cast<int>(realStartLevelIndex + itsLevelIncrement),
+                                  theCalculationParams);
+  }
+  // Palautetaan viimeisin löytynyt arvo (tai missing, jos ei löytynyt yhtään)
+  if (findHeight)
+    return foundHeight;
+  else
+    return static_cast<float>(foundCount);
 }
 
-float NFmiInfoAreaMaskVertFunc::DoFindFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams)
+float NFmiInfoAreaMaskVertFunc::DoFindFunction(const NFmiLocationCache &theLocationCache,
+                                               const NFmiCalculationParams &theCalculationParams)
 {
-    bool findHeight = itsPrimaryFunc == NFmiAreaMask::FindH;
-    if(itsArgumentVector.size() < 3) return kFloatMissing;
-    float searchedValue = itsArgumentVector[2];
-    if(searchedValue == kFloatMissing) return kFloatMissing;
-    if(findHeight && itsArgumentVector.size() < 4) return kFloatMissing;
-    // kuinka mones osuma haetaan, 1 on 1. 2 on 2. jne. 0 (tai <0) on viimeinen
-    int search_nth_value = findHeight ? static_cast<int>(::round(itsArgumentVector[3])) : 0;
+  bool findHeight = itsPrimaryFunc == NFmiAreaMask::FindH;
+  if (itsArgumentVector.size() < 3) return kFloatMissing;
+  float searchedValue = itsArgumentVector[2];
+  if (searchedValue == kFloatMissing) return kFloatMissing;
+  if (findHeight && itsArgumentVector.size() < 4) return kFloatMissing;
+  // kuinka mones osuma haetaan, 1 on 1. 2 on 2. jne. 0 (tai <0) on viimeinen
+  int search_nth_value = findHeight ? static_cast<int>(::round(itsArgumentVector[3])) : 0;
 
-    float value1 = kFloatMissing;  // tässä on tallessa viimeistä edellinen kunnollinen arvo
-    float value2 = kFloatMissing;  // tässä on tallessa viimeisin kunnollinen arvo
-    float height1 = kFloatMissing;  // tässä on tallessa viimeistä edellisen kunnollisen arvon korkeus
-    float height2 = kFloatMissing;  // tässä on tallessa viimeisimmän kunnollisen arvon korkeus
-    float foundHeight = kFloatMissing;
-    int foundCount = 0;
-    unsigned long realStartLevelIndex = GetNonMissingStartLevelIndex(theLocationCache, theCalculationParams);
-    if(realStartLevelIndex != gMissingIndex)
-    {
-        itsInfo->LevelIndex(realStartLevelIndex);
-        value1 = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
-        height1 = GetLevelHeightValue(theLocationCache);
+  float value1 = kFloatMissing;  // tässä on tallessa viimeistä edellinen kunnollinen arvo
+  float value2 = kFloatMissing;  // tässä on tallessa viimeisin kunnollinen arvo
+  float height1 = kFloatMissing;  // tässä on tallessa viimeistä edellisen kunnollisen arvon korkeus
+  float height2 = kFloatMissing;  // tässä on tallessa viimeisimmän kunnollisen arvon korkeus
+  float foundHeight = kFloatMissing;
+  int foundCount = 0;
+  unsigned long realStartLevelIndex =
+      GetNonMissingStartLevelIndex(theLocationCache, theCalculationParams);
+  if (realStartLevelIndex != gMissingIndex)
+  {
+    itsInfo->LevelIndex(realStartLevelIndex);
+    value1 = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
+    height1 = GetLevelHeightValue(theLocationCache);
 
-        bool isUnder = ::IsUnder(searchedValue, value1);
+    bool isUnder = ::IsUnder(searchedValue, value1);
 
-        VerticalIterationBreakingData iterationBreaking(true);
-        // Lambda funktio joka annetaan iterointi metodille
-        auto findValueFunction = [&]()
+    VerticalIterationBreakingData iterationBreaking(true);
+    // Lambda funktio joka annetaan iterointi metodille
+    auto findValueFunction = [&]() {
+      value2 = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
+      if (value2 != kFloatMissing)
+      {
+        height2 = GetLevelHeightValue(theLocationCache);
+        bool isUnder2 = ::IsUnder(searchedValue, value2);
+        if (isUnder != isUnder2)
         {
-            value2 = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
-            if(value2 != kFloatMissing)
-            {
-                height2 = GetLevelHeightValue(theLocationCache);
-                bool isUnder2 = ::IsUnder(searchedValue, value2);
-                if(isUnder != isUnder2)
-                {
-                    foundCount++;
-                    // löytyi etsittävä arvo, lasketaan korkeudelle arvio
-                    foundHeight = static_cast<float>(
-                        NFmiInterpolation::Linear(searchedValue,
-                            value1,
-                            value2,
-                            height1,
-                            height2));
-                    // Jos etsitään tiettyä esim. 3. löytöä ja foundCount
-                    // pääsee 3:een, palautetaan välittömästi arvo
-                    if(search_nth_value > 0 && search_nth_value <= foundCount)
-                        iterationBreaking.stopIteration = true;
-                }
-                value1 = value2;    // huom! vain ei puuttuvia arvoja saa siirtää!
-                height1 = height2;  // huom! vain ei puuttuvia arvoja saa siirtää!
-                isUnder = isUnder2;
-            }
-        };
-        IterateLevelsFromGroundUpward(findValueFunction, iterationBreaking, static_cast<int>(realStartLevelIndex + itsLevelIncrement), theCalculationParams);
-    }
-    // Palautetaan viimeisin löytynyt arvo (tai missing, jos ei löytynyt yhtään)
-    if(findHeight)
-        return foundHeight;
-    else
-        return static_cast<float>(foundCount);
+          foundCount++;
+          // löytyi etsittävä arvo, lasketaan korkeudelle arvio
+          foundHeight = static_cast<float>(
+              NFmiInterpolation::Linear(searchedValue, value1, value2, height1, height2));
+          // Jos etsitään tiettyä esim. 3. löytöä ja foundCount
+          // pääsee 3:een, palautetaan välittömästi arvo
+          if (search_nth_value > 0 && search_nth_value <= foundCount)
+            iterationBreaking.stopIteration = true;
+        }
+        value1 = value2;    // huom! vain ei puuttuvia arvoja saa siirtää!
+        height1 = height2;  // huom! vain ei puuttuvia arvoja saa siirtää!
+        isUnder = isUnder2;
+      }
+    };
+    IterateLevelsFromGroundUpward(findValueFunction,
+                                  iterationBreaking,
+                                  static_cast<int>(realStartLevelIndex + itsLevelIncrement),
+                                  theCalculationParams);
+  }
+  // Palautetaan viimeisin löytynyt arvo (tai missing, jos ei löytynyt yhtään)
+  if (findHeight)
+    return foundHeight;
+  else
+    return static_cast<float>(foundCount);
 }
 
 float NFmiInfoAreaMaskVertFunc::DoVerticalGrad(const NFmiLocationCache &theLocationCache,
@@ -2184,10 +2311,15 @@ float NFmiInfoAreaMaskVertFunc::DoVerticalGrad(const NFmiLocationCache &theLocat
 double NFmiInfoAreaMaskVertFunc::Value(const NFmiCalculationParams &theCalculationParams,
                                        bool /* fUseTimeInterpolationAlways */)
 {
+  // Pikaviritys poikkileikkausnäytön peek-z funktiolle (pitäisi tehdä oma luokka hanskaamaan)
+  if (itsPrimaryFunc == NFmiAreaMask::PeekZ)
+    return DoPeekZFunction(theCalculationParams, itsArgumentVector[0]);
+
   SetLevelValues();
   if (itsStartLevelValue == kFloatMissing)
     return kFloatMissing;  // jos jo alku level arvo on puuttuvaa, ei voi tehdä mitään järkevää
-  if (itsEndLevelValue == kFloatMissing && itsPrimaryFunc != NFmiAreaMask::Get)
+  if (itsEndLevelValue == kFloatMissing &&
+      (itsPrimaryFunc != NFmiAreaMask::Get && itsPrimaryFunc != NFmiAreaMask::PeekZ))
     return kFloatMissing;  // jos jo loppu level arvo on puuttuvaa, eikä kyse ollut get-funktiosta,
                            // ei voi tehdä mitään järkevää
 
@@ -2208,7 +2340,7 @@ double NFmiInfoAreaMaskVertFunc::Value(const NFmiCalculationParams &theCalculati
   float value = kFloatMissing;
   if (::IsFindFunction(itsPrimaryFunc))
     value = DoFindFunction(locationCache, theCalculationParams);
-  else if(::IsSimpleConditionFindFunction(itsPrimaryFunc))
+  else if (::IsSimpleConditionFindFunction(itsPrimaryFunc))
     value = FindHeightForSimpleCondition(locationCache, theCalculationParams);
   else
     value = DoNormalFunction(locationCache, theCalculationParams);
@@ -2264,49 +2396,57 @@ class DoubleValueSearcher
                                    // (esim. jonkin parametrin max-arvon korkeutta)
 };
 
-float NFmiInfoAreaMaskVertFunc::DoNormalFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams)
+float NFmiInfoAreaMaskVertFunc::DoNormalFunction(const NFmiLocationCache &theLocationCache,
+                                                 const NFmiCalculationParams &theCalculationParams)
 {
   if (fReturnHeightValue)
   {
     DoubleValueSearcher valueSearcher(itsPrimaryFunc == NFmiAreaMask::MaxH);
     // Lambda funktio joka annetaan iterointi metodille
-    auto heightSeekerFunction = [&]()
-    {
-        float primaryValue = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
-        float heightValue = GetLevelHeightValue(theLocationCache);
-        valueSearcher.Values(primaryValue, heightValue);
+    auto heightSeekerFunction = [&]() {
+      float primaryValue = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
+      float heightValue = GetLevelHeightValue(theLocationCache);
+      valueSearcher.Values(primaryValue, heightValue);
     };
     VerticalIterationBreakingData noIterationBreaking;
-    IterateLevelsFromGroundUpward(heightSeekerFunction, noIterationBreaking, static_cast<int>(itsStartLevelIndex), theCalculationParams);
+    IterateLevelsFromGroundUpward(heightSeekerFunction,
+                                  noIterationBreaking,
+                                  static_cast<int>(itsStartLevelIndex),
+                                  theCalculationParams);
     return valueSearcher.ExtremeSecondaryValue();
   }
   else
   {
     itsFunctionModifier->Clear();
     // Lambda funktio joka annetaan iterointi metodille
-    auto valueFunction = [&]()
-    {
-        itsFunctionModifier->Calculate(CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache));
+    auto valueFunction = [&]() {
+      itsFunctionModifier->Calculate(
+          CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache));
     };
     VerticalIterationBreakingData noIterationBreaking;
-    IterateLevelsFromGroundUpward(valueFunction, noIterationBreaking, static_cast<int>(itsStartLevelIndex), theCalculationParams);
+    IterateLevelsFromGroundUpward(valueFunction,
+                                  noIterationBreaking,
+                                  static_cast<int>(itsStartLevelIndex),
+                                  theCalculationParams);
     return itsFunctionModifier->CalculationResult();
   }
 }
 
-bool NFmiInfoAreaMaskVertFunc::VertFuncSimpleconditionCheck(const NFmiCalculationParams &theCalculationParams)
+bool NFmiInfoAreaMaskVertFunc::VertFuncSimpleconditionCheck(
+    const NFmiCalculationParams &theCalculationParams)
 {
-    if(itsSimpleCondition)
-    {
-        float pressure = itsInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-        return itsSimpleCondition->CheckPressureCondition(pressure, theCalculationParams);
-    }
-    return true;
+  if (itsSimpleCondition)
+  {
+    float pressure = itsInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon,
+                                                      theCalculationParams.itsTime);
+    return itsSimpleCondition->CheckPressureCondition(pressure, theCalculationParams);
+  }
+  return true;
 }
 
 bool NFmiInfoAreaMaskVertFunc::IgnoreSimpleConditionWhileIteratingLevels() const
 {
-    return IsSimpleConditionFindFunction(itsPrimaryFunc);
+  return IsSimpleConditionFindFunction(itsPrimaryFunc);
 }
 
 // **********************************************************
@@ -2402,19 +2542,21 @@ float NFmiInfoAreaMaskVertConditionalFunc::DoFindConditionalFunction(
 {
   if (fReturnHeightValue)
   {
-      VerticalIterationBreakingData iterationBreakingData(true);
-      // Lambda funktio joka annetaan iterointi metodille
-      auto findValueHeightFunction = [&]()
+    VerticalIterationBreakingData iterationBreakingData(true);
+    // Lambda funktio joka annetaan iterointi metodille
+    auto findValueHeightFunction = [&]() {
+      float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
+      if (CheckProbabilityCondition(value))
       {
-          float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
-          if(CheckProbabilityCondition(value))
-          {
-              iterationBreakingData.value = GetLevelHeightValue(theLocationCache);
-              iterationBreakingData.stopIteration = true;
-          }
-      };
-      IterateLevelsFromGroundUpward(findValueHeightFunction, iterationBreakingData, static_cast<int>(itsStartLevelIndex), theCalculationParams);
-      return iterationBreakingData.value;
+        iterationBreakingData.value = GetLevelHeightValue(theLocationCache);
+        iterationBreakingData.stopIteration = true;
+      }
+    };
+    IterateLevelsFromGroundUpward(findValueHeightFunction,
+                                  iterationBreakingData,
+                                  static_cast<int>(itsStartLevelIndex),
+                                  theCalculationParams);
+    return iterationBreakingData.value;
   }
 
   throw std::runtime_error(
@@ -2506,25 +2648,27 @@ double NFmiInfoAreaMaskTimeVertFunc::Value(const NFmiCalculationParams &theCalcu
   unsigned long startTimeIndex = origTimeIndex;
   unsigned long endTimeIndex = origTimeIndex;
   if (NFmiInfoAreaMask::CalcTimeLoopIndexies(itsInfo,
-                             theCalculationParams,
-                             itsStartTimeOffsetInHours,
-                             itsEndTimeOffsetInHours,
-                             &startTimeIndex,
-                             &endTimeIndex))
+                                             theCalculationParams,
+                                             itsStartTimeOffsetInHours,
+                                             itsEndTimeOffsetInHours,
+                                             &startTimeIndex,
+                                             &endTimeIndex))
   {
     NFmiCalculationParams usedCalculationParams(theCalculationParams);
     for (unsigned long timeIndex = startTimeIndex; timeIndex <= endTimeIndex; timeIndex++)
     {
       itsInfo->TimeIndex(timeIndex);
-      if(itsSimpleCondition)
-          usedCalculationParams.itsTime = itsInfo->Time();
+      if (itsSimpleCondition) usedCalculationParams.itsTime = itsInfo->Time();
       // Lambda funktio joka annetaan iterointi metodille
-      auto modifierFunction = [&]()
-      {
-          NFmiInfoAreaMask::AddValuesToFunctionModifier(itsInfo, itsFunctionModifier, locationCache, itsPrimaryFunc);
+      auto modifierFunction = [&]() {
+        NFmiInfoAreaMask::AddValuesToFunctionModifier(
+            itsInfo, itsFunctionModifier, locationCache, itsPrimaryFunc);
       };
       VerticalIterationBreakingData noIterationBreaking;
-      NFmiInfoAreaMaskVertFunc::IterateLevelsFromGroundUpward(modifierFunction, noIterationBreaking, static_cast<int>(itsStartLevelIndex), usedCalculationParams);
+      NFmiInfoAreaMaskVertFunc::IterateLevelsFromGroundUpward(modifierFunction,
+                                                              noIterationBreaking,
+                                                              static_cast<int>(itsStartLevelIndex),
+                                                              usedCalculationParams);
     }
     itsInfo->TimeIndex(origTimeIndex);
   }
@@ -2550,7 +2694,8 @@ NFmiInfoAreaMaskProbFunc::NFmiInfoAreaMaskProbFunc(
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     unsigned long thePossibleMetaParamId)
-    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, kNoValue),
+    : NFmiInfoAreaMask(
+          theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, kNoValue),
       itsPrimaryFunc(thePrimaryFunc),
       itsSecondaryFunc(theSecondaryFunc),
       itsArgumentVector(),
@@ -2584,13 +2729,11 @@ void NFmiInfoAreaMaskProbFunc::InitializeFromArguments()
   itsEndTimeOffsetInHours = itsArgumentVector[2];
   // Limit1/2 membereitä ei alusteta, jos kyse area-integraatio funktioista lapsiluokissa
   itsLimit1 = kFloatMissing;
-  if(itsArgumentVector.size() > 3)
-      itsLimit1 = itsArgumentVector[3];
+  if (itsArgumentVector.size() > 3) itsLimit1 = itsArgumentVector[3];
   // Huom! tämä voi olla puuttuva, jos kyse on simppelistä
   // get-funktiosta (esim. vertp_get(WS_Hir, pressure))
-  itsLimit2 = kFloatMissing;  
-  if (itsArgumentVector.size() > 4) 
-      itsLimit2 = itsArgumentVector[4];
+  itsLimit2 = kFloatMissing;
+  if (itsArgumentVector.size() > 4) itsLimit2 = itsArgumentVector[4];
 
   itsGridPointRectSizeX = 0;
   itsGridPointRectSizeY = 0;
@@ -2717,157 +2860,195 @@ NFmiMetTime NFmiInfoAreaMaskProbFunc::CalcTimeLoopLimits(
   return interpolationTime;
 }
 
-static void SetSimpleConditionCalculationTime(NFmiCalculationParams &simpleConditionCalculationPointParams, bool useInterpolatedTime, const NFmiMetTime &interpolationTime, boost::shared_ptr<NFmiFastQueryInfo> &info)
+static void SetSimpleConditionCalculationTime(
+    NFmiCalculationParams &simpleConditionCalculationPointParams,
+    bool useInterpolatedTime,
+    const NFmiMetTime &interpolationTime,
+    boost::shared_ptr<NFmiFastQueryInfo> &info)
 {
-    // Jos tarvitaan simple-condition laskuja, pitää niitä varten olla aika tallessa
-    if(useInterpolatedTime)
-        simpleConditionCalculationPointParams.itsTime = interpolationTime;
-    else
-        simpleConditionCalculationPointParams.itsTime = info->Time();
+  // Jos tarvitaan simple-condition laskuja, pitää niitä varten olla aika tallessa
+  if (useInterpolatedTime)
+    simpleConditionCalculationPointParams.itsTime = interpolationTime;
+  else
+    simpleConditionCalculationPointParams.itsTime = info->Time();
 }
 
 // tätä kaytetaan smarttool-modifierin yhteydessä
 double NFmiInfoAreaMaskProbFunc::Value(const NFmiCalculationParams &theCalculationParams,
-    bool /* fUseTimeInterpolationAlways */)
+                                       bool /* fUseTimeInterpolationAlways */)
 {
-    InitializeFromArguments();
-    if(itsGridPointRectSizeX && itsGridPointRectSizeY)
+  InitializeFromArguments();
+  if (itsGridPointRectSizeX && itsGridPointRectSizeY)
+  {
+    NFmiLocationCache locCache = itsInfo->CalcLocationCache(theCalculationParams.itsLatlon);
+    if (!locCache.NoValue())
     {
-        NFmiLocationCache locCache = itsInfo->CalcLocationCache(theCalculationParams.itsLatlon);
-        if(!locCache.NoValue())
-        {
-            InitializeIntegrationValues();
-            NFmiLocation location(theCalculationParams.itsLatlon);
+      InitializeIntegrationValues();
+      NFmiLocation location(theCalculationParams.itsLatlon);
 
-            // Lasketaan laatikon loopitus rajat, x1 on mistä x-suuntainen peek-indeksi
-            // alkaa ja x2 mihin se loppuu (esim. -2 ja 2, jos laatkion x-koko on 5).
-            // Sama periaate y1 ja y2:lla.
-            int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-            ::CalcPeekLoopLimits(itsGridPointRectSizeX, locCache.itsGridPoint.X(), x1, x2);
-            ::CalcPeekLoopLimits(itsGridPointRectSizeY, locCache.itsGridPoint.Y(), y1, y2);
+      // Lasketaan laatikon loopitus rajat, x1 on mistä x-suuntainen peek-indeksi
+      // alkaa ja x2 mihin se loppuu (esim. -2 ja 2, jos laatkion x-koko on 5).
+      // Sama periaate y1 ja y2:lla.
+      int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+      ::CalcPeekLoopLimits(itsGridPointRectSizeX, locCache.itsGridPoint.X(), x1, x2);
+      ::CalcPeekLoopLimits(itsGridPointRectSizeY, locCache.itsGridPoint.Y(), y1, y2);
 
-            // Lasketaan aikaloopitus rajat
-            unsigned long origTimeIndex = itsInfo->TimeIndex();  // Otetaan aikaindeksi talteen, jotta se
-                                                                 // voidaan lopuksi palauttaa takaisin
-            unsigned long startTimeIndex = origTimeIndex;
-            unsigned long endTimeIndex = origTimeIndex;
-            bool doSpecialCalculation = false;
-            NFmiMetTime interpolationTime =
-                NFmiInfoAreaMaskProbFunc::CalcTimeLoopLimits(itsInfo,
-                    theCalculationParams,
-                    itsStartTimeOffsetInHours,
-                    itsEndTimeOffsetInHours,
-                    &startTimeIndex,
-                    &endTimeIndex,
-                    &doSpecialCalculation,
-                    true);
-            NFmiCalculationParams simpleConditionCalculationPointParams(theCalculationParams);
+      // Lasketaan aikaloopitus rajat
+      unsigned long origTimeIndex = itsInfo->TimeIndex();  // Otetaan aikaindeksi talteen, jotta se
+                                                           // voidaan lopuksi palauttaa takaisin
+      unsigned long startTimeIndex = origTimeIndex;
+      unsigned long endTimeIndex = origTimeIndex;
+      bool doSpecialCalculation = false;
+      NFmiMetTime interpolationTime =
+          NFmiInfoAreaMaskProbFunc::CalcTimeLoopLimits(itsInfo,
+                                                       theCalculationParams,
+                                                       itsStartTimeOffsetInHours,
+                                                       itsEndTimeOffsetInHours,
+                                                       &startTimeIndex,
+                                                       &endTimeIndex,
+                                                       &doSpecialCalculation,
+                                                       true);
+      NFmiCalculationParams simpleConditionCalculationPointParams(theCalculationParams);
 
-            for(unsigned long timeIndex = startTimeIndex; timeIndex <= endTimeIndex; timeIndex++)
-            {
-                itsInfo->TimeIndex(timeIndex);
-                // Jos käydään läpi yhtä ajan hetkeä, tehdään interpolaatio, ja käytetään originaali laskenta aikaa.
-                // Jos käydään läpi aikajakso datan originaali aikaresoluutiossa, käytetään infoon asetettua aikaa
-                bool useInterpolatedTime = (startTimeIndex == endTimeIndex);
-                if(doSpecialCalculation)
-                    useInterpolatedTime = false;
-                ::SetSimpleConditionCalculationTime(simpleConditionCalculationPointParams, useInterpolatedTime, interpolationTime, itsInfo);
-                DoSubgridCalculations(location, x1, x2, y1, y2, interpolationTime, useInterpolatedTime, simpleConditionCalculationPointParams);
-                if(NFmiInfoAreaMaskProbFunc::CheckTimeIndicesForLoopBreak(startTimeIndex, endTimeIndex))
-                    break;
-            }
-            itsInfo->TimeIndex(origTimeIndex);
-            if(itsTotalCalculatedGridPoints)
-            {
-                // Kerrotaan 100:lla, jotta saadaan prosentteja. 
-                // Em. luku on double, jotta jakolaskusta ei tulisi integer jakoa.
-                return (100. * itsConditionFullfilledGridPointCount) / itsTotalCalculatedGridPoints;
-            }
-        }
+      for (unsigned long timeIndex = startTimeIndex; timeIndex <= endTimeIndex; timeIndex++)
+      {
+        itsInfo->TimeIndex(timeIndex);
+        // Jos käydään läpi yhtä ajan hetkeä, tehdään interpolaatio, ja käytetään originaali
+        // laskenta aikaa. Jos käydään läpi aikajakso datan originaali aikaresoluutiossa, käytetään
+        // infoon asetettua aikaa
+        bool useInterpolatedTime = (startTimeIndex == endTimeIndex);
+        if (doSpecialCalculation) useInterpolatedTime = false;
+        ::SetSimpleConditionCalculationTime(
+            simpleConditionCalculationPointParams, useInterpolatedTime, interpolationTime, itsInfo);
+        DoSubgridCalculations(location,
+                              x1,
+                              x2,
+                              y1,
+                              y2,
+                              interpolationTime,
+                              useInterpolatedTime,
+                              simpleConditionCalculationPointParams);
+        if (NFmiInfoAreaMaskProbFunc::CheckTimeIndicesForLoopBreak(startTimeIndex, endTimeIndex))
+          break;
+      }
+      itsInfo->TimeIndex(origTimeIndex);
+      if (itsTotalCalculatedGridPoints)
+      {
+        // Kerrotaan 100:lla, jotta saadaan prosentteja.
+        // Em. luku on double, jotta jakolaskusta ei tulisi integer jakoa.
+        return (100. * itsConditionFullfilledGridPointCount) / itsTotalCalculatedGridPoints;
+      }
     }
-    // Jos hilamuotoisia laskuja ei voida suorittaa, laitetaan osumien arvoksi missing
-    itsConditionFullfilledGridPointCount = static_cast<int>(kFloatMissing);  
-    return kFloatMissing;
+  }
+  // Jos hilamuotoisia laskuja ei voida suorittaa, laitetaan osumien arvoksi missing
+  itsConditionFullfilledGridPointCount = static_cast<int>(kFloatMissing);
+  return kFloatMissing;
 }
 
-void NFmiInfoAreaMaskProbFunc::DoSubgridCalculations(const NFmiLocation &theCalculationPointLocation, int leftSubGridOffset, int rightSubGridOffset, int bottomSubGridOffset, int topSubGridOffset, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime, NFmiCalculationParams &theSimpleConditionCalculationPointParams)
+void NFmiInfoAreaMaskProbFunc::DoSubgridCalculations(
+    const NFmiLocation &theCalculationPointLocation,
+    int leftSubGridOffset,
+    int rightSubGridOffset,
+    int bottomSubGridOffset,
+    int topSubGridOffset,
+    const NFmiMetTime &theInterpolationTime,
+    bool useInterpolatedTime,
+    NFmiCalculationParams &theSimpleConditionCalculationPointParams)
 {
-    for(int offsetY = bottomSubGridOffset; offsetY <= topSubGridOffset; offsetY++)
+  for (int offsetY = bottomSubGridOffset; offsetY <= topSubGridOffset; offsetY++)
+  {
+    for (int offsetX = leftSubGridOffset; offsetX <= rightSubGridOffset; offsetX++)
     {
-        for(int offsetX = leftSubGridOffset; offsetX <= rightSubGridOffset; offsetX++)
-        {
-            if(!IsCalculationPointInsideCircle(theCalculationPointLocation, offsetX, offsetY))
-            {
-                continue;  // kyseinen piste oli ympyrän ulkopuolella
-            }
-            // Jos tarvitaan simple-condition laskuja, pitää niitä varten olla paikka tallessa
-            theSimpleConditionCalculationPointParams.itsLatlon = itsInfo->PeekLocationLatLon(offsetX, offsetY);
-            if(theSimpleConditionCalculationPointParams.itsLatlon != NFmiPoint::gMissingLatlon)
-            {
-                float value = CalculationPointValue(offsetX, offsetY, theInterpolationTime, useInterpolatedTime);
-                if(SimpleConditionCheck(theSimpleConditionCalculationPointParams))
-                    DoIntegrationCalculations(value);
-            }
-        }
+      if (!IsCalculationPointInsideCircle(theCalculationPointLocation, offsetX, offsetY))
+      {
+        continue;  // kyseinen piste oli ympyrän ulkopuolella
+      }
+      // Jos tarvitaan simple-condition laskuja, pitää niitä varten olla paikka tallessa
+      theSimpleConditionCalculationPointParams.itsLatlon =
+          itsInfo->PeekLocationLatLon(offsetX, offsetY);
+      if (theSimpleConditionCalculationPointParams.itsLatlon != NFmiPoint::gMissingLatlon)
+      {
+        float value =
+            CalculationPointValue(offsetX, offsetY, theInterpolationTime, useInterpolatedTime);
+        if (SimpleConditionCheck(theSimpleConditionCalculationPointParams))
+          DoIntegrationCalculations(value);
+      }
     }
+  }
 }
 
 // Time-looppi voi mennä gMissingIndex => gMissingIndex, jolloin ++-operaatio
 // veisi luvun takaisin 0:aan, siksi tämä ehto ja loopin breikki.
-bool NFmiInfoAreaMaskProbFunc::CheckTimeIndicesForLoopBreak(unsigned long theStartTimeIndex, unsigned long theEndTimeIndex)
+bool NFmiInfoAreaMaskProbFunc::CheckTimeIndicesForLoopBreak(unsigned long theStartTimeIndex,
+                                                            unsigned long theEndTimeIndex)
 {
-    return (theStartTimeIndex == gMissingIndex || theEndTimeIndex == gMissingIndex || theStartTimeIndex > theEndTimeIndex);
+  return (theStartTimeIndex == gMissingIndex || theEndTimeIndex == gMissingIndex ||
+          theStartTimeIndex > theEndTimeIndex);
 }
 
-bool NFmiInfoAreaMaskProbFunc::IsCalculationPointInsideCircle(const NFmiLocation &theCalculationPointLocation, int theOffsetX, int theOffsetY)
+bool NFmiInfoAreaMaskProbFunc::IsCalculationPointInsideCircle(
+    const NFmiLocation &theCalculationPointLocation, int theOffsetX, int theOffsetY)
 {
-    if(itsSecondaryFunc == NFmiAreaMask::AreaCircle)
-    {  
-        // ympyrä tapauksessa tarkastetaan jokainen piste erikseen, onko se halutun säteisen ympyrän sisällä
-        double distanceInKM = theCalculationPointLocation.Distance(itsInfo->PeekLocationLatLon(theOffsetX, theOffsetY)) * 0.001;
-        return distanceInKM < itsSearchRangeInKM;
-    }
+  if (itsSecondaryFunc == NFmiAreaMask::AreaCircle)
+  {
+    // ympyrä tapauksessa tarkastetaan jokainen piste erikseen, onko se halutun säteisen ympyrän
+    // sisällä
+    double distanceInKM =
+        theCalculationPointLocation.Distance(itsInfo->PeekLocationLatLon(theOffsetX, theOffsetY)) *
+        0.001;
+    return distanceInKM < itsSearchRangeInKM;
+  }
 
-    // Rect-laskuilla ollaan aina laatikon sisällä
-    return true;
+  // Rect-laskuilla ollaan aina laatikon sisällä
+  return true;
 }
 
-float NFmiInfoAreaMaskProbFunc::CalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime)
+float NFmiInfoAreaMaskProbFunc::CalculationPointValue(int theOffsetX,
+                                                      int theOffsetY,
+                                                      const NFmiMetTime &theInterpolationTime,
+                                                      bool useInterpolatedTime)
 {
-    if(metaParamDataHolder.isMetaParameterCalculationNeeded())
-        return CalcMetaParamCalculationPointValue(theOffsetX, theOffsetY, theInterpolationTime, useInterpolatedTime);
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+    return CalcMetaParamCalculationPointValue(
+        theOffsetX, theOffsetY, theInterpolationTime, useInterpolatedTime);
 
-    if(useInterpolatedTime)
-        return itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime);
-    else
-        return itsInfo->PeekLocationValue(theOffsetX, theOffsetY);
+  if (useInterpolatedTime)
+    return itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime);
+  else
+    return itsInfo->PeekLocationValue(theOffsetX, theOffsetY);
 }
 
-float NFmiInfoAreaMaskProbFunc::CalcMetaParamCalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime)
+float NFmiInfoAreaMaskProbFunc::CalcMetaParamCalculationPointValue(
+    int theOffsetX,
+    int theOffsetY,
+    const NFmiMetTime &theInterpolationTime,
+    bool useInterpolatedTime)
 {
-    return CalcMetaParamValueWithFunction([&]() {return useInterpolatedTime ? itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime) : itsInfo->PeekLocationValue(theOffsetX, theOffsetY); });
+  return CalcMetaParamValueWithFunction([&]() {
+    return useInterpolatedTime
+               ? itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime)
+               : itsInfo->PeekLocationValue(theOffsetX, theOffsetY);
+  });
 }
 
 void NFmiInfoAreaMaskProbFunc::DoIntegrationCalculations(float value)
 {
-    if(value != kFloatMissing)
-    {
-        itsTotalCalculatedGridPoints++;
-        if(CheckProbabilityCondition(value))
-            itsConditionFullfilledGridPointCount++;
-    }
+  if (value != kFloatMissing)
+  {
+    itsTotalCalculatedGridPoints++;
+    if (CheckProbabilityCondition(value)) itsConditionFullfilledGridPointCount++;
+  }
 }
 
 void NFmiInfoAreaMaskProbFunc::InitializeIntegrationValues()
 {
-    itsTotalCalculatedGridPoints = 0;
-    itsConditionFullfilledGridPointCount = 0;
+  itsTotalCalculatedGridPoints = 0;
+  itsConditionFullfilledGridPointCount = 0;
 }
 
 // **********************************************************
 // *****    NFmiInfoAreaMaskProbFunc   **********************
 // **********************************************************
-
 
 // **********************************************************
 // *****    NFmiInfoTimeIntegrator   ************************
@@ -2882,8 +3063,14 @@ NFmiInfoTimeIntegrator::NFmiInfoTimeIntegrator(const NFmiCalculationCondition &t
                                                int theStartTimeOffset,
                                                int theEndTimeOffset,
                                                unsigned long thePossibleMetaParamId)
-    : NFmiInfoAreaMaskMetFuncBase(
-          theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId, kNoValue),
+    : NFmiInfoAreaMaskMetFuncBase(theOperation,
+                                  theMaskType,
+                                  theDataType,
+                                  theInfo,
+                                  false,
+                                  NoDirection,
+                                  thePossibleMetaParamId,
+                                  kNoValue),
       itsIntegrationFunc(theIntegrationFunc),
       itsFunctionModifier(),
       itsStartTimeOffset(theStartTimeOffset),
@@ -2954,8 +3141,14 @@ NFmiInfoRectAreaIntegrator::NFmiInfoRectAreaIntegrator(
     int theStartYOffset,
     int theEndYOffset,
     unsigned long thePossibleMetaParamId)
-    : NFmiInfoAreaMaskMetFuncBase(
-          theOperation, theMaskType, theDataType, theInfo, false, NoDirection, thePossibleMetaParamId, kNoValue),
+    : NFmiInfoAreaMaskMetFuncBase(theOperation,
+                                  theMaskType,
+                                  theDataType,
+                                  theInfo,
+                                  false,
+                                  NoDirection,
+                                  thePossibleMetaParamId,
+                                  kNoValue),
       itsIntegrationFunc(theIntegrationFunc),
       itsFunctionModifier(),
       itsStartXOffset(theStartXOffset),
@@ -3016,7 +3209,8 @@ double NFmiInfoRectAreaIntegrator::Value(const NFmiCalculationParams &theCalcula
 
 NFmiInfoAreaIntegrationFunc::~NFmiInfoAreaIntegrationFunc(void) = default;
 
-NFmiInfoAreaIntegrationFunc::NFmiInfoAreaIntegrationFunc(const NFmiCalculationCondition &theOperation,
+NFmiInfoAreaIntegrationFunc::NFmiInfoAreaIntegrationFunc(
+    const NFmiCalculationCondition &theOperation,
     Type theMaskType,
     NFmiInfoData::Type theDataType,
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
@@ -3024,55 +3218,61 @@ NFmiInfoAreaIntegrationFunc::NFmiInfoAreaIntegrationFunc(const NFmiCalculationCo
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     unsigned long thePossibleMetaParamId)
-    :NFmiInfoAreaMaskProbFunc(theOperation,
-        theMaskType,
-        theDataType,
-        theInfo,
-        thePrimaryFunc,
-        theSecondaryFunc,
-        theArgumentCount,
-        thePossibleMetaParamId)
-    ,itsIntegrationFunc(thePrimaryFunc)
-    ,itsFunctionModifier()
+    : NFmiInfoAreaMaskProbFunc(theOperation,
+                               theMaskType,
+                               theDataType,
+                               theInfo,
+                               thePrimaryFunc,
+                               theSecondaryFunc,
+                               theArgumentCount,
+                               thePossibleMetaParamId),
+      itsIntegrationFunc(thePrimaryFunc),
+      itsFunctionModifier()
 {
-    itsFunctionModifier = NFmiInfoAreaMask::CreateIntegrationFuction(itsIntegrationFunc);
+  itsFunctionModifier = NFmiInfoAreaMask::CreateIntegrationFuction(itsIntegrationFunc);
 }
 
-NFmiInfoAreaIntegrationFunc::NFmiInfoAreaIntegrationFunc(const NFmiInfoAreaIntegrationFunc &theOther)
-    :NFmiInfoAreaMaskProbFunc(theOther)
-    , itsIntegrationFunc(theOther.itsIntegrationFunc)
-    , itsFunctionModifier(theOther.itsFunctionModifier ? theOther.itsFunctionModifier->Clone() : nullptr)
+NFmiInfoAreaIntegrationFunc::NFmiInfoAreaIntegrationFunc(
+    const NFmiInfoAreaIntegrationFunc &theOther)
+    : NFmiInfoAreaMaskProbFunc(theOther),
+      itsIntegrationFunc(theOther.itsIntegrationFunc),
+      itsFunctionModifier(theOther.itsFunctionModifier ? theOther.itsFunctionModifier->Clone()
+                                                       : nullptr)
 {
 }
 
-NFmiAreaMask* NFmiInfoAreaIntegrationFunc::Clone(void) const
+NFmiAreaMask *NFmiInfoAreaIntegrationFunc::Clone(void) const
 {
-    return new NFmiInfoAreaIntegrationFunc(*this);
+  return new NFmiInfoAreaIntegrationFunc(*this);
 }
 
 // tätä kaytetaan smarttool-modifierin yhteydessä
-double NFmiInfoAreaIntegrationFunc::Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
+double NFmiInfoAreaIntegrationFunc::Value(const NFmiCalculationParams &theCalculationParams,
+                                          bool fUseTimeInterpolationAlways)
 {
-    // This makes all the integration calculations over time range and wanted area
-    NFmiInfoAreaMaskProbFunc::Value(theCalculationParams, fUseTimeInterpolationAlways);
+  // This makes all the integration calculations over time range and wanted area
+  NFmiInfoAreaMaskProbFunc::Value(theCalculationParams, fUseTimeInterpolationAlways);
 
-    // Oletus: itsFunctionModifier:in olemassaolo on jo tarkastettu InitializeIntegrationValues metodissa.
-    return itsFunctionModifier->CalculationResult();
+  // Oletus: itsFunctionModifier:in olemassaolo on jo tarkastettu InitializeIntegrationValues
+  // metodissa.
+  return itsFunctionModifier->CalculationResult();
 }
 
-// Oletus: itsFunctionModifier:in olemassaolo on jo tarkastettu InitializeIntegrationValues metodissa.
+// Oletus: itsFunctionModifier:in olemassaolo on jo tarkastettu InitializeIntegrationValues
+// metodissa.
 void NFmiInfoAreaIntegrationFunc::DoIntegrationCalculations(float value)
 {
-    itsFunctionModifier->Calculate(value);
+  itsFunctionModifier->Calculate(value);
 }
 
 void NFmiInfoAreaIntegrationFunc::InitializeIntegrationValues()
 {
-    NFmiInfoAreaMaskProbFunc::InitializeIntegrationValues();
-    if(itsFunctionModifier)
-        itsFunctionModifier->Clear();
-    else
-        throw std::runtime_error(std::string("Internal error in ") + __FUNCTION__ + ", integration modifier was nullptr");
+  NFmiInfoAreaMaskProbFunc::InitializeIntegrationValues();
+  if (itsFunctionModifier)
+    itsFunctionModifier->Clear();
+  else
+    throw std::runtime_error(std::string("Internal error in ") + __FUNCTION__ +
+                             ", integration modifier was nullptr");
 }
 
 // **********************************************************
@@ -3085,7 +3285,8 @@ void NFmiInfoAreaIntegrationFunc::InitializeIntegrationValues()
 
 NFmiInfoAreaMaskAreaProbFunc::~NFmiInfoAreaMaskAreaProbFunc(void) = default;
 
-NFmiInfoAreaMaskAreaProbFunc::NFmiInfoAreaMaskAreaProbFunc(const NFmiCalculationCondition &theOperation,
+NFmiInfoAreaMaskAreaProbFunc::NFmiInfoAreaMaskAreaProbFunc(
+    const NFmiCalculationCondition &theOperation,
     Type theMaskType,
     NFmiInfoData::Type theDataType,
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
@@ -3093,41 +3294,46 @@ NFmiInfoAreaMaskAreaProbFunc::NFmiInfoAreaMaskAreaProbFunc(const NFmiCalculation
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     unsigned long thePossibleMetaParamId)
-    :NFmiInfoAreaMaskProbFunc(theOperation,
-        theMaskType,
-        theDataType,
-        theInfo,
-        thePrimaryFunc,
-        theSecondaryFunc,
-        theArgumentCount,
-        thePossibleMetaParamId)
+    : NFmiInfoAreaMaskProbFunc(theOperation,
+                               theMaskType,
+                               theDataType,
+                               theInfo,
+                               thePrimaryFunc,
+                               theSecondaryFunc,
+                               theArgumentCount,
+                               thePossibleMetaParamId)
 {
 }
 
-NFmiInfoAreaMaskAreaProbFunc::NFmiInfoAreaMaskAreaProbFunc(const NFmiInfoAreaIntegrationFunc &theOther)
-    :NFmiInfoAreaMaskProbFunc(theOther)
+NFmiInfoAreaMaskAreaProbFunc::NFmiInfoAreaMaskAreaProbFunc(
+    const NFmiInfoAreaIntegrationFunc &theOther)
+    : NFmiInfoAreaMaskProbFunc(theOther)
 {
 }
 
-NFmiAreaMask* NFmiInfoAreaMaskAreaProbFunc::Clone(void) const
+NFmiAreaMask *NFmiInfoAreaMaskAreaProbFunc::Clone(void) const
 {
-    return new NFmiInfoAreaMaskAreaProbFunc(*this);
+  return new NFmiInfoAreaMaskAreaProbFunc(*this);
 }
 
-float NFmiInfoAreaMaskAreaProbFunc::CalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime)
+float NFmiInfoAreaMaskAreaProbFunc::CalculationPointValue(int theOffsetX,
+                                                          int theOffsetY,
+                                                          const NFmiMetTime &theInterpolationTime,
+                                                          bool useInterpolatedTime)
 {
-    // Jos päästään tänne asti kasvatetaan itsTotalCalculatedGridPoints -laskuri.
-    // Tänne pääsy tarkoittaa että laskenta piste on datan alueen sisällä ja laskenta ympyrän alueella
-    itsTotalCalculatedGridPoints++;
-    return NFmiInfoAreaMaskProbFunc::CalculationPointValue(theOffsetX, theOffsetY, theInterpolationTime, useInterpolatedTime);
+  // Jos päästään tänne asti kasvatetaan itsTotalCalculatedGridPoints -laskuri.
+  // Tänne pääsy tarkoittaa että laskenta piste on datan alueen sisällä ja laskenta ympyrän alueella
+  itsTotalCalculatedGridPoints++;
+  return NFmiInfoAreaMaskProbFunc::CalculationPointValue(
+      theOffsetX, theOffsetY, theInterpolationTime, useInterpolatedTime);
 }
 
 void NFmiInfoAreaMaskAreaProbFunc::DoIntegrationCalculations(float value)
 {
-    // Jos päästään tänne asti kasvatetaan vain itsConditionFullfilledGridPointCount -laskuria, tänne
-    // pääsy tarkoittaa että laskenta piste on datan alueen ja laskenta alihilan alueella ja lisäksi
-    // simple-condition on päästänyt läpi (joiden osumia tässä etsitäänkin).
-    itsConditionFullfilledGridPointCount++;
+  // Jos päästään tänne asti kasvatetaan vain itsConditionFullfilledGridPointCount -laskuria, tänne
+  // pääsy tarkoittaa että laskenta piste on datan alueen ja laskenta alihilan alueella ja lisäksi
+  // simple-condition on päästänyt läpi (joiden osumia tässä etsitäänkin).
+  itsConditionFullfilledGridPointCount++;
 }
 
 // **********************************************************
@@ -3141,75 +3347,83 @@ void NFmiInfoAreaMaskAreaProbFunc::DoIntegrationCalculations(float value)
 NFmiTimeShiftedInfoAreaMask::~NFmiTimeShiftedInfoAreaMask(void) = default;
 
 NFmiTimeShiftedInfoAreaMask::NFmiTimeShiftedInfoAreaMask(void)
-:NFmiInfoAreaMask()
-,itsTimeOffsetInHours(0)
-,itsChangeByMinutesValue(0)
-{}
+    : NFmiInfoAreaMask(), itsTimeOffsetInHours(0), itsChangeByMinutesValue(0)
+{
+}
 
-NFmiTimeShiftedInfoAreaMask::NFmiTimeShiftedInfoAreaMask(const NFmiCalculationCondition &theOperation,
-        Type theMaskType,
-        NFmiInfoData::Type theDataType,
-        const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-        float theTimeOffsetInHours,
-        unsigned long thePossibleMetaParamId,
-        BinaryOperator thePostBinaryOperator)
+NFmiTimeShiftedInfoAreaMask::NFmiTimeShiftedInfoAreaMask(
+    const NFmiCalculationCondition &theOperation,
+    Type theMaskType,
+    NFmiInfoData::Type theDataType,
+    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    float theTimeOffsetInHours,
+    unsigned long thePossibleMetaParamId,
+    BinaryOperator thePostBinaryOperator)
     : NFmiInfoAreaMask(theOperation,
-        theMaskType,
-        theDataType,
-        theInfo,
-        thePossibleMetaParamId,
-        thePostBinaryOperator)
-    , itsTimeOffsetInHours(theTimeOffsetInHours)
-    , itsChangeByMinutesValue(boost::math::lround(theTimeOffsetInHours*60.f))
+                       theMaskType,
+                       theDataType,
+                       theInfo,
+                       thePossibleMetaParamId,
+                       thePostBinaryOperator),
+      itsTimeOffsetInHours(theTimeOffsetInHours),
+      itsChangeByMinutesValue(boost::math::lround(theTimeOffsetInHours * 60.f))
 {
 }
 
-NFmiTimeShiftedInfoAreaMask::NFmiTimeShiftedInfoAreaMask(const NFmiTimeShiftedInfoAreaMask &theOther)
-    :NFmiInfoAreaMask(theOther)
-    , itsTimeOffsetInHours(theOther.itsTimeOffsetInHours)
-    , itsChangeByMinutesValue(theOther.itsChangeByMinutesValue)
-{}
-
-NFmiAreaMask* NFmiTimeShiftedInfoAreaMask::Clone(void) const
+NFmiTimeShiftedInfoAreaMask::NFmiTimeShiftedInfoAreaMask(
+    const NFmiTimeShiftedInfoAreaMask &theOther)
+    : NFmiInfoAreaMask(theOther),
+      itsTimeOffsetInHours(theOther.itsTimeOffsetInHours),
+      itsChangeByMinutesValue(theOther.itsChangeByMinutesValue)
 {
-    return new NFmiTimeShiftedInfoAreaMask(*this);
 }
 
-double NFmiTimeShiftedInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
+NFmiAreaMask *NFmiTimeShiftedInfoAreaMask::Clone(void) const
 {
-    if(IsTimeInterpolationNeeded(fUseTimeInterpolationAlways))
-    {
-        return NFmiInfoAreaMask::Value(GetUsedCalculationParams(theCalculationParams), fUseTimeInterpolationAlways);
-    }
-    else
-    {
-        // Data on jo asetettu haluttuun offset aikaan, kutsutaan vain emon metodia
-        return NFmiInfoAreaMask::Value(theCalculationParams, fUseTimeInterpolationAlways);
-    }
+  return new NFmiTimeShiftedInfoAreaMask(*this);
 }
 
-double NFmiTimeShiftedInfoAreaMask::HeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams)
+double NFmiTimeShiftedInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams,
+                                          bool fUseTimeInterpolationAlways)
 {
-    return NFmiInfoAreaMask::HeightValue(theHeight, GetUsedCalculationParams(theCalculationParams));
+  if (IsTimeInterpolationNeeded(fUseTimeInterpolationAlways))
+  {
+    return NFmiInfoAreaMask::Value(GetUsedCalculationParams(theCalculationParams),
+                                   fUseTimeInterpolationAlways);
+  }
+  else
+  {
+    // Data on jo asetettu haluttuun offset aikaan, kutsutaan vain emon metodia
+    return NFmiInfoAreaMask::Value(theCalculationParams, fUseTimeInterpolationAlways);
+  }
 }
 
-double NFmiTimeShiftedInfoAreaMask::PressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams)
+double NFmiTimeShiftedInfoAreaMask::HeightValue(double theHeight,
+                                                const NFmiCalculationParams &theCalculationParams)
 {
-    return NFmiInfoAreaMask::PressureValue(thePressure, GetUsedCalculationParams(theCalculationParams));
+  return NFmiInfoAreaMask::HeightValue(theHeight, GetUsedCalculationParams(theCalculationParams));
+}
+
+double NFmiTimeShiftedInfoAreaMask::PressureValue(double thePressure,
+                                                  const NFmiCalculationParams &theCalculationParams)
+{
+  return NFmiInfoAreaMask::PressureValue(thePressure,
+                                         GetUsedCalculationParams(theCalculationParams));
 }
 
 bool NFmiTimeShiftedInfoAreaMask::Time(const NFmiMetTime &theTime)
 {
-    auto usedTime = theTime;
-    usedTime.ChangeByMinutes(itsChangeByMinutesValue);
-    return NFmiInfoAreaMask::Time(usedTime);
+  auto usedTime = theTime;
+  usedTime.ChangeByMinutes(itsChangeByMinutesValue);
+  return NFmiInfoAreaMask::Time(usedTime);
 }
 
-NFmiCalculationParams NFmiTimeShiftedInfoAreaMask::GetUsedCalculationParams(const NFmiCalculationParams &theCalculationParams)
+NFmiCalculationParams NFmiTimeShiftedInfoAreaMask::GetUsedCalculationParams(
+    const NFmiCalculationParams &theCalculationParams)
 {
-    NFmiCalculationParams usedCalculationParams = theCalculationParams;
-    usedCalculationParams.itsTime.ChangeByMinutes(itsChangeByMinutesValue);
-    return usedCalculationParams;
+  NFmiCalculationParams usedCalculationParams = theCalculationParams;
+  usedCalculationParams.itsTime.ChangeByMinutes(itsChangeByMinutesValue);
+  return usedCalculationParams;
 }
 
 // **********************************************************

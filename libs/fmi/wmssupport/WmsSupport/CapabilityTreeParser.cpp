@@ -1,10 +1,11 @@
-#include "CapabilityTreeParser.h"
-#include "QueryBuilder.h"
+#include "wmssupport/CapabilityTreeParser.h"
+#include "wmssupport/QueryBuilder.h"
 #include "NFmiParameterName.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 
 #include <regex>
 #include <algorithm>
+#include <codecvt>
 
 using namespace boost::property_tree;
 
@@ -55,17 +56,27 @@ namespace Wms
 			return domainRequest;
 		}
 
+		std::string wstring2string(const std::wstring& wstr)
+		{
+			using convert_typeX = std::codecvt_utf8<wchar_t>;
+			std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+			return converterX.to_bytes(wstr);
+		}
+
 		std::pair<std::string, std::string> parseLegendUrl(const LPXNode& legendNode)
 		{
-			auto legendUrlNode = legendNode->GetChild(_TEXT("OnlineResource"));
-			auto legendUrl = legendUrlNode->GetAttrValue(_TEXT("xlink:href"));
-			std::wstring ws(legendUrl);
-			std::string legendUrlString(ws.begin(), ws.end());
-
 			auto domainRequest = std::pair<std::string, std::string>{};
+			auto legendUrlNode = legendNode->GetChild(_TEXT("OnlineResource"));
+			if(legendUrlNode)
+			{
+				auto legendUrl = legendUrlNode->GetAttrValue(_TEXT("xlink:href"));
+				std::wstring ws(legendUrl);
+				std::string legendUrlString(wstring2string(ws));
 
-			domainRequest.first = parseDomain(legendUrlString);
-			domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
+				domainRequest.first = parseDomain(legendUrlString);
+				domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
+			}
 
 			return domainRequest;
 		}
@@ -131,7 +142,7 @@ namespace Wms
 			{
 				try
 				{
-					const auto& childNode = layerNode->GetChild(i);
+					const auto& childNode = layerNode->GetChild(static_cast<int>(i));
 					if (childNode->name == "Style")
 					{
 						styles.insert(parseStyle(childNode));
@@ -346,7 +357,7 @@ namespace Wms
 				auto aNode = nodes[i];
 				for (size_t i = 0; i < aNode->GetChilds().size(); i++)
 				{
-					const auto childNode = aNode->GetChild(i);
+					const auto childNode = aNode->GetChild(static_cast<int>(i));
 					parseNodes(subTree, childNode, path, hashes, changedLayers);
 				}
 			}
@@ -413,7 +424,7 @@ namespace Wms
 		{
 			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
 			{
-				const auto childNode = layerNode->GetChild(i);
+				const auto childNode = layerNode->GetChild(static_cast<int>(i));
 				parseNodes(subTree, childNode, layerPath, hashes, changedLayers);
 			}			
 		}

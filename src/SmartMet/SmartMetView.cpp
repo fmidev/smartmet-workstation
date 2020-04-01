@@ -45,6 +45,7 @@
 #include "CtrlViewWin32Functions.h"
 #include "NFmiGdiPlusImageMapHandler.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include <Winspool.h>
 
@@ -294,7 +295,7 @@ void CSmartMetView::OnFilePrint()
 // tätä kutsutaan yleisessä printtaus funktiossa
 void CSmartMetView::OldWayPrintUpdate(void)
 {
-	GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->BorderDrawDirty(true);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 	itsEditMapView->Update(); // tämä pitää tehdä että prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
 }
 
@@ -361,7 +362,7 @@ void CSmartMetView::OnInitialUpdate()
 	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
 	if(data)
 	{
-		data->MapViewDescTop(itsMapViewDescTopIndex)->MapView(this);
+		data->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapView(this);
 	}
 
 	if(itsToolBox)
@@ -624,10 +625,11 @@ std::string CSmartMetView::MakeActiveDataLocationIndexString(const NFmiPoint &th
 	std::string str;
 	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
 	int cursorRowIndex = genData->ToolTipRowIndex();
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam = genData->ActiveDrawParam(itsMapViewDescTopIndex, cursorRowIndex);
+	boost::shared_ptr<NFmiDrawParam> activeDrawParam = genData->GetCombinedMapHandler()->activeDrawParam(itsMapViewDescTopIndex, cursorRowIndex);
 	if(activeDrawParam)
-	{ // jos kursorilla osoitetulta karttariviltä löytyy aktiivinen data, jolla on info, laitetaan näkyviin myös
-	  // datassa olevan lähimmän hilapisteen tarkka sijainti
+	{ 
+		// jos kursorilla osoitetulta karttariviltä löytyy aktiivinen data, jolla on info, laitetaan näkyviin myös
+	    // datassa olevan lähimmän hilapisteen tarkka sijainti
 		boost::shared_ptr<NFmiFastQueryInfo> info = genData->InfoOrganizer()->Info(activeDrawParam, false, true);
 		if(info)
 		{
@@ -635,16 +637,6 @@ std::string CSmartMetView::MakeActiveDataLocationIndexString(const NFmiPoint &th
 			if(info->NearestLocation(loc))
 			{
 				str += " (data-pt: ";
-/*
-				NFmiPoint activeDataPointLatlon = info->LatLon();
-				str += "  (Nearest act. data pt.: ";
-				str += "Lon: ";
-				NFmiValueString lonStr2((float)activeDataPointLatlon.X(), "%0.4f");
-				str += lonStr2;
-				str += "   Lat: ";
-				NFmiValueString latStr2((float)activeDataPointLatlon.Y(), "%0.4f");
-				str += latStr2;
-*/
 				if(info->Grid())
 				{ // laitetaan hila datan tapauksessa vielä hila indeksit näkyviin
 					NFmiPoint activeGridPoint = info->Grid()->GridPoint(info->LocationIndex());
@@ -694,7 +686,8 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	CDC dcMem;
 	dcMem.CreateCompatibleDC(&dc);
 	CBitmap* oldBitmap2 = dcMem.SelectObject(itsMapBitmap);
-	genData->MapViewDescTop(itsMapViewDescTopIndex)->MapBlitDC(&dcMem);
+	auto *mapViewDescTop = genData->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex);
+	mapViewDescTop->MapBlitDC(&dcMem);
 
 	NFmiPoint viewPoint(itsToolBox->ToViewPoint(point.x, point.y));
 
@@ -711,7 +704,7 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	genData->TransparencyContourDrawView(0); // lopuksi se asetetaan taas 0-pointteriksi...
 
 	ReleaseDC(theDC);
-	genData->MapViewDescTop(itsMapViewDescTopIndex)->MapBlitDC(0);
+	mapViewDescTop->MapBlitDC(0);
 	dcMem.SelectObject(oldBitmap2);
 	dcMem.DeleteDC();
 
@@ -721,7 +714,7 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 		NFmiPoint cursorLatlon(genData->ToolTipLatLonPoint());
 		std::string str = CtrlViewUtils::GetTotalMapViewStatusBarStr(&genData->GetCtrlViewDocumentInterface(), cursorLatlon);
         // Laitetaan kartta osion pikseli koko tähän perään sulkuihin
-        str += CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(genData->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), false);
+        str += CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(mapViewDescTop->ActualMapBitmapSizeInPixels(), false);
 
 		// Jos CTRL-nappi on pohjassa, lisätään vielä osoitetun karttaruudun aktiivisen datan joko hilapiste indeksit tai havaintoaseman location id.
         if(CtrlView::IsKeyboardKeyDown(VK_CONTROL))
@@ -756,7 +749,7 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		GetDocument()->UpdateAllViewsAndDialogs("Main map view: mouse cursor moved while dragging it");
 	}
-	else if(genData && genData->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty())
+	else if(mapViewDescTop->MapViewBitmapDirty())
 		Invalidate(FALSE);
 	else if(!(genData->MiddleMouseButtonDown() && genData->MouseCaptured())) // muuten ForceDrawOverBitmapThings, paitsi jos ollaan vetämässä kartan päälle zoomi laatikkoa, koska se peittyisi aina ForceDrawOverBitmapThings:n alle
 	{
@@ -811,14 +804,14 @@ static bool IsViewForceUpdated(unsigned int viewIndexToBeUpdated, unsigned int t
 void CSmartMetView::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
 	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
-	std::vector<NFmiMapViewDescTop *> &mapViewDescTopList = genData->MapViewDescTopList();
+	auto &mapViewDescTops = genData->GetCombinedMapHandler()->getMapViewDescTops();
 	// tässä käydään vain 1:stä eteenpäin desctoppeja, koska tuossa aluksi käytiin jo läpi 1..
 	// tämä siksi että 1:stä eteenpäin desctopin mapview on aina samaa tyyppiä
-	for(size_t i = 1; i < mapViewDescTopList.size(); i++)
+	for(unsigned int mapViewDescTopIndex = 1; mapViewDescTopIndex < mapViewDescTops.size(); mapViewDescTopIndex++)
 	{
-		if(::IsViewForceUpdated(static_cast<unsigned int>(i), theOriginalCallerDescTopIndex, doOriginalView, doAllOtherMapViews))
+		if(::IsViewForceUpdated(mapViewDescTopIndex, theOriginalCallerDescTopIndex, doOriginalView, doAllOtherMapViews))
 		{
-			CFmiExtraMapView *view = dynamic_cast<CFmiExtraMapView*>(mapViewDescTopList[i]->MapView());
+			CFmiExtraMapView *view = dynamic_cast<CFmiExtraMapView*>(mapViewDescTops[mapViewDescTopIndex]->MapView());
 			if(view)
 				view->ForceDrawOverBitmapThingsThisExtraMapView();
 		}
@@ -845,29 +838,25 @@ boost::shared_ptr<NFmiFastQueryInfo> CSmartMetView::GetWantedInfo(int theProduce
 // ja sitten päälle piirretään nopeasti DrawOverBitmapThings
 void CSmartMetView::ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
 {
-    bool originalCallerIsMainMapview = (originalCallerDescTopIndex == itsMapViewDescTopIndex);
-    bool doMainMapView = (originalCallerIsMainMapview && doOriginalView) || (!originalCallerIsMainMapview && doAllOtherMapViews);
-    if(doMainMapView)
-    {
-        NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
-        if(data)
-        {
-            data->MapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(true);
-            Invalidate(FALSE);
-        }
-    }
+	bool originalCallerIsMainMapview = (originalCallerDescTopIndex == itsMapViewDescTopIndex);
+	bool doMainMapView = (originalCallerIsMainMapview && doOriginalView) || (!originalCallerIsMainMapview && doAllOtherMapViews);
+	if(doMainMapView)
+	{
+		GetDocument()->GetData()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewBitmapDirty(true);
+		Invalidate(FALSE);
+	}
 
-    ForceOtherMapViewsDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
+	ForceOtherMapViewsDrawOverBitmapThings(originalCallerDescTopIndex, doOriginalView, doAllOtherMapViews);
 }
 
 void CSmartMetView::CurrentPrintTime(const NFmiMetTime &theTime)
 {
-	GetGeneralDoc()->CurrentTime(itsMapViewDescTopIndex, theTime);
+	GetGeneralDoc()->GetCombinedMapHandler()->currentTime(itsMapViewDescTopIndex, theTime, false);
 }
 
 const NFmiRect* CSmartMetView::RelativePrintRect(void)
 {
-	return &(GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect());
+	return &(GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect());
 }
 
 CSize CSmartMetView::GetPrintedAreaOnScreenSizeInPixels(void)
@@ -878,12 +867,12 @@ CSize CSmartMetView::GetPrintedAreaOnScreenSizeInPixels(void)
 
 NFmiPoint CSmartMetView::PrintViewSizeInPixels(void)
 {
-	return GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels();
+	return GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels();
 }
 
 CtrlViewUtils::GraphicalInfo& CSmartMetView::GetGraphicalInfo(void)
 {
-	return GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->GetGraphicalInfo();
+	return GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->GetGraphicalInfo();
 }
 
 void CSmartMetView::OnSize(UINT nType, int cx, int cy)
@@ -902,11 +891,11 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 	if(data)
 	{
 		CDC *pDC = GetDC();
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), data->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), data->GetCombinedMapHandler()->drawObjectScaleFactor(), true); // true pakottaa initialisoinnin
         data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
 
         if(counter > 2)
-            PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
+            PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
         // Vain tämä näyttö itse ja zoomaus dialogi pitää päivittää
 		pDoc->UpdateAllViewsAndDialogs("Main map view resized", SmartMetViewId::MainMapView | SmartMetViewId::ZoomDlg);
@@ -931,9 +920,9 @@ void CSmartMetView::RefreshApplicationViewsAndDialogs(const std::string &reasonF
 	if(redrawMapView)
 	{
 		if(theWantedMapViewDescTop == -1)
-			GetDocument()->GetData()->MapViewDirty(itsMapViewDescTopIndex, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
+			GetDocument()->GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
 		else
-			GetDocument()->GetData()->MapViewDirty(theWantedMapViewDescTop, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
+			GetDocument()->GetData()->GetCombinedMapHandler()->mapViewDirty(theWantedMapViewDescTop, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
 	}
 
 	GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate);
@@ -944,9 +933,9 @@ void CSmartMetView::RefreshApplicationViewsAndDialogs(const std::string &reasonF
     if(redrawMapView)
     {
         if(theWantedMapViewDescTop == -1)
-            GetDocument()->GetData()->MapViewDirty(itsMapViewDescTopIndex, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
+            GetDocument()->GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
         else
-            GetDocument()->GetData()->MapViewDirty(theWantedMapViewDescTop, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
+            GetDocument()->GetData()->GetCombinedMapHandler()->mapViewDirty(theWantedMapViewDescTop, false, clearMapViewBitmapCacheRows, redrawMapView, false, false, false);
     }
 
     GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate, updatedViewsFlag);
@@ -999,19 +988,19 @@ void CSmartMetView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	switch(nChar)
 	{
 	case VK_LEFT:
-		if(!ctrlOrShiftKeyDown && doc->SetDataToPreviousTime(itsMapViewDescTopIndex))
+		if(!ctrlOrShiftKeyDown && doc->GetCombinedMapHandler()->setDataToPreviousTime(itsMapViewDescTopIndex, false))
 			GetDocument()->UpdateAllViewsAndDialogs("Main map view: left cursor key pressed");
 		return;
 	case VK_RIGHT:
-		if(!ctrlOrShiftKeyDown && doc->SetDataToNextTime(itsMapViewDescTopIndex))
+		if(!ctrlOrShiftKeyDown && doc->GetCombinedMapHandler()->setDataToNextTime(itsMapViewDescTopIndex, false))
 			GetDocument()->UpdateAllViewsAndDialogs("Main map view: right cursor key pressed");
 		return;
 	case VK_UP:
-		if(!ctrlOrShiftKeyDown && doc->ScrollViewRow(itsMapViewDescTopIndex, -1))
+		if(!ctrlOrShiftKeyDown && doc->GetCombinedMapHandler()->scrollViewRow(itsMapViewDescTopIndex, -1))
 			GetDocument()->UpdateAllViewsAndDialogs("Main map view: up cursor key pressed");
 		return;
 	case VK_DOWN:
-		if(!ctrlOrShiftKeyDown && doc->ScrollViewRow(itsMapViewDescTopIndex, 1))
+		if(!ctrlOrShiftKeyDown && doc->GetCombinedMapHandler()->scrollViewRow(itsMapViewDescTopIndex, 1))
 			GetDocument()->UpdateAllViewsAndDialogs("Main map view: down cursor key pressed");
 		return;
 	}
@@ -1160,12 +1149,13 @@ void CSmartMetView::OnMenuitemViewGridSelectionDlg()
 
 void CSmartMetView::UpdateMapView(unsigned int theDescTopIndex)
 {
-	CSmartMetView *view1 = dynamic_cast<CSmartMetView *>(GetDocument()->GetData()->MapViewDescTop(theDescTopIndex)->MapView());
+	// Tämän voisi tehdä paljon hienostuneemminkin!!!
+	CSmartMetView *view1 = dynamic_cast<CSmartMetView *>(GetDocument()->GetData()->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapView());
 	if(view1)
 		view1->Update();
 	else
 	{
-		CFmiExtraMapView *view2 = dynamic_cast<CFmiExtraMapView *>(GetDocument()->GetData()->MapViewDescTop(theDescTopIndex)->MapView());
+		CFmiExtraMapView *view2 = dynamic_cast<CFmiExtraMapView *>(GetDocument()->GetData()->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapView());
 		if(view2)
 		{
 			view2->UpdateMap();
@@ -1180,7 +1170,7 @@ void CSmartMetView::SetMapViewGridSize(const NFmiPoint &newSize)
 	ASSERT_VALID(pDoc);
 	if(pDoc)
 	{
-		if(pDoc->GetData()->SetMapViewGrid(itsMapViewDescTopIndex, newSize))
+		if(pDoc->GetData()->GetCombinedMapHandler()->setMapViewGrid(itsMapViewDescTopIndex, newSize))
 			pDoc->UpdateAllViewsAndDialogs("Main map view: view's grid size changed");
 	}
 }
@@ -1260,33 +1250,33 @@ void CSmartMetView::DrawSynopPlotImage(bool fDrawSoundingPlot, bool fDrawMinMaxP
 
 void CSmartMetView::OnAcceleratorSwapArea()
 {
-	GetDocument()->GetData()->SwapArea(itsMapViewDescTopIndex);
+	GetDocument()->GetData()->GetCombinedMapHandler()->swapArea(itsMapViewDescTopIndex);
 	GetDocument()->UpdateAllViewsAndDialogs("Main map view: used map area swapped");
 }
 
 void CSmartMetView::OnAcceleratorMakeSwapBaseArea()
 {
-	GetDocument()->GetData()->MakeSwapBaseArea(itsMapViewDescTopIndex);
+	GetDocument()->GetData()->GetCombinedMapHandler()->makeSwapBaseArea(itsMapViewDescTopIndex);
 }
 
 void CSmartMetView::OnEditCopy()
 {
-	GetDocument()->GetData()->CopyDrawParamsFromMapViewRow(itsMapViewDescTopIndex);
+	GetDocument()->GetData()->GetCombinedMapHandler()->copyDrawParamsFromMapViewRow(itsMapViewDescTopIndex);
 }
 
 void CSmartMetView::OnEditPaste()
 {
-	GetDocument()->GetData()->PasteDrawParamsToMapViewRow(itsMapViewDescTopIndex);
+	GetDocument()->GetData()->GetCombinedMapHandler()->pasteDrawParamsToMapViewRow(itsMapViewDescTopIndex);
 }
 
 void CSmartMetView::OnAcceleratorCopyAllMapViewParams()
 {
-	GetDocument()->GetData()->CopyMapViewDescTopParams(itsMapViewDescTopIndex);
+	GetDocument()->GetData()->GetCombinedMapHandler()->copyMapViewDescTopParams(itsMapViewDescTopIndex);
 }
 
 void CSmartMetView::OnAcceleratorPasteAllMapViewParams()
 {
-	GetDocument()->GetData()->PasteMapViewDescTopParams(itsMapViewDescTopIndex);
+	GetDocument()->GetData()->GetCombinedMapHandler()->pasteMapViewDescTopParams(itsMapViewDescTopIndex);
 }
 
 void CSmartMetView::OnAcceleratorToggleAnimationView()
@@ -1301,32 +1291,32 @@ void CSmartMetView::OnAcceleratorSetHomeTime()
 
 void CSmartMetView::RelativePrintRect(const NFmiRect &theRect)
 {
-	GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect(theRect);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect(theRect);
 }
 
 void CSmartMetView::PrintViewSizeInPixels(const NFmiPoint &theSize)
 {
-	GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, true);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, true);
 }
 
 void CSmartMetView::SetPrintCopyCDC(CDC* pDC)
 {
-	GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->CopyCDC(pDC);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->CopyCDC(pDC);
 }
 
 void CSmartMetView::MakePrintViewDirty(bool fViewDirty, bool fCacheDirty)
 {
-	GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true, false);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewDirty(fViewDirty, fCacheDirty, true, false);
 }
 
 int CSmartMetView::CalcPrintingPageShiftInMinutes(void)
 {
-	return GetGeneralDoc()->MapViewDescTop(itsMapViewDescTopIndex)->CalcPrintingPageShiftInMinutes();
+	return GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->CalcPrintingPageShiftInMinutes();
 }
 
 NFmiMetTime CSmartMetView::CalcPrintingStartTime(void)
 {
-	return GetGeneralDoc()->CurrentTime(itsMapViewDescTopIndex);
+	return GetGeneralDoc()->GetCombinedMapHandler()->currentTime(itsMapViewDescTopIndex);
 }
 
 void CSmartMetView::SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound)
@@ -1343,42 +1333,42 @@ void CSmartMetView::SetMacroErrorText(const std::string &theErrorStr)
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep1Forward()
 {
-	GetGeneralDoc()->ChangeTime(1, kForward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(1, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep1Backward()
 {
-	GetGeneralDoc()->ChangeTime(1, kBackward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(1, kBackward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep2Forward()
 {
-	GetGeneralDoc()->ChangeTime(2, kForward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(2, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep2Backward()
 {
-	GetGeneralDoc()->ChangeTime(2, kBackward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(2, kBackward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep3Forward()
 {
-	GetGeneralDoc()->ChangeTime(3, kForward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(3, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep3Backward()
 {
-	GetGeneralDoc()->ChangeTime(3, kBackward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(3, kBackward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep4Forward()
 {
-	GetGeneralDoc()->ChangeTime(4, kForward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(4, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep4Backward()
 {
-	GetGeneralDoc()->ChangeTime(4, kBackward, 1, itsMapViewDescTopIndex, 1);
+	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(4, kBackward, itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetView::PutWarningFlagTimerOn(void)
