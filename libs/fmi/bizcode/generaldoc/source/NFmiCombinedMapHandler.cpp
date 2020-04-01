@@ -2635,6 +2635,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 
 	DoSpecialDataInitializations(drawParam, normalParameterAdd, menuItem);
 	::setDrawMacroSettings(menuItem, drawParam, macroParamInitFileName);
+	bool insertParamCase = (menuItem.CommandType() == kFmiInsertParamLayer);
 
 	if(!activeDrawParamWithRealRowNumber(menuItem.MapViewDescTopIndex(), realRowIndex))
 	{
@@ -2646,7 +2647,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	NFmiDrawParamList* drawParamList = getDrawParamListWithRealRowNumber(menuItem.MapViewDescTopIndex(), realRowIndex);
 	if(drawParamList)
 	{
-		std::string logStr("Added to map view ");
+		std::string logStr(insertParamCase ? "Insert to specific point into map view " : "Added to map view ");
 		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
 		{
 			logStr += "macro parameter '";
@@ -2659,10 +2660,15 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 			logStr += menuItem.DataIdent().GetParamName();
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
 
-		if(!normalParameterAdd) // jos n‰yttˆ macrosta kyse, pit‰‰ parametri laittaa tarkalleen siihen mik‰ rivi oli
-								// kyseess‰ (eli listan per‰‰n j‰rjestyksess‰). T‰m‰ sen takia ett‰ satel-kanavat heitet‰‰n aina pohjalle ja
-								// n‰yttˆmakroissa kaksi satelliitti kuvaa samalla rivill‰ aiheutti ongelmia.
+		if(insertParamCase)
+			drawParamList->Add(drawParam, menuItem.IndexInViewRow());
+		else if(!normalParameterAdd)
+		{
+			// jos n‰yttˆ macrosta kyse, pit‰‰ parametri laittaa tarkalleen siihen mik‰ rivi oli
+			// kyseess‰ (eli listan per‰‰n j‰rjestyksess‰). T‰m‰ sen takia ett‰ satel-kanavat heitet‰‰n aina pohjalle ja
+			// n‰yttˆmakroissa kaksi satelliitti kuvaa samalla rivill‰ aiheutti ongelmia.
 			drawParamList->Add(drawParam, drawParamList->NumberOfItems() + 1);
+		}
 		else
 			drawParamList->Add(drawParam); // laittaa parametrit listan per‰‰n, paitsi satel-kuvat laitetaan keulille (n‰in satelkuva ei peit‰ mahdollisia muita parametreja alleen)
 	}
@@ -3991,17 +3997,6 @@ void NFmiCombinedMapHandler::moveBorderLineLayer(const NFmiMenuItem& menuItem, i
 
 void NFmiCombinedMapHandler::insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	auto dataType = menuItem.DataType();
-	boost::shared_ptr<NFmiDrawParam> drawParam = ::getInfoOrganizer().CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), dataType);
-	if(drawParam)
-	{
-		drawParam->DataType(dataType);
-		auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
-		auto* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
-		if(drawParamList && drawParamList->Add(drawParam, menuItem.IndexInViewRow()))
-		{
-			makeMapViewRowDirty(mapViewDescTopIndex, viewRowIndex);
-		}
-	}
+	addView(menuItem, viewRowIndex);
 }
 
