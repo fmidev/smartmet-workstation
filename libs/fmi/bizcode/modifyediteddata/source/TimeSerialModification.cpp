@@ -2658,22 +2658,32 @@ static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSeria
 	theAdapter.SetMacroErrorText(dialogErrorString);
 }
 
+std::string FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath)
+{
+	std::string errorMessage = baseMessage;
+	if(exceptionPtr)
+	{
+		errorMessage += ": \n";
+		errorMessage += exceptionPtr->what();
+	}
+	errorMessage += ", \nin '";
+	errorMessage += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), macroParamSystemRootPath, "dpa");
+	errorMessage += "'";
+	return errorMessage;
+}
+
 static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
+	const auto& macroParamRootPath = theAdapter.MacroParamSystem().RootPath();
 	try // ensin tulkitaan macro
 	{
 		FmiModifyEditdData::InitializeSmartToolModifier(smartToolModifier, theAdapter, theDrawParam);
 	}
 	catch(std::exception &e)
 	{
-		std::string errorText;
-		errorText += "Error: Macro Parameter intepretion failed: \n";
-		errorText += e.what();
-        errorText += ", in '";
-        errorText += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), theAdapter.MacroParamSystem().RootPath(), "dpa");
-        errorText += "'";
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, theDrawParam, macroParamRootPath);
 		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 		return value;
 	}
@@ -2711,13 +2721,12 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	}
 	catch(std::exception &e)
 	{
-		std::string errorText = "Error: Macro Parameter calculation failed:\n";
-		errorText += e.what();
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed", &e, theDrawParam, macroParamRootPath);
 		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	catch(...)
 	{
-		std::string errorText = "Error: Macro Parameter calculation failed: Unknown error!";
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed: Unknown error!", nullptr, theDrawParam, macroParamRootPath);
 		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	return value;
