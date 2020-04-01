@@ -44,6 +44,8 @@
 #include "NFmiColorContourLegendValues.h"
 #include "catlog/catlog.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "NFmiPathUtils.h"
+#include "TimeSerialModification.h"
 
 #include <stdexcept>
 #include "boost/math/special_functions/round.hpp"
@@ -1430,12 +1432,12 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
         theIsoLineData.itsInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, että saadaan puhdas kenttä laskuihin
     }
 
+	NFmiMacroParamSystem& mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
 	NFmiSmartToolModifier smartToolModifier(itsCtrlViewDocumentInterface->InfoOrganizer());
     try // ensin tulkitaan macro
     {
         smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
 
-        NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
         auto macroParamPtr = mpSystem.GetWantedMacro(itsDrawParam->InitFileName());
         if(macroParamPtr)
         {
@@ -1446,8 +1448,7 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     }
 	catch(exception &e)
 	{
-		string errorText = "Error: MacroParam intepretion failed:\n";
-		errorText += e.what();
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, itsDrawParam, mpSystem.RootPath());
 		::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData);
 	}
 
@@ -1466,8 +1467,7 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 	}
 	catch(exception &e)
 	{
-		string errorText = "Error: MacroParam calculation failed:\n";
-		errorText += e.what();
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, itsDrawParam, mpSystem.RootPath());
 		::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData);
 	}
 }
