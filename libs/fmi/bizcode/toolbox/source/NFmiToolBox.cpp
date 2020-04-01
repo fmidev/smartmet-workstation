@@ -559,10 +559,10 @@ bool NFmiToolBox::BuildRectangle (const NFmiRectangle *fmiShape)
 
 // Piti tehdä optimointia varten viritys, jossa voidaan piirtää sama polyline mahdollisesti siirrettynä ja skaalattuna.
 // Jos theOffSet on 0,0 ei tehdä mitään siirtoa ja jos theScale on 0,0, ei skaalausta tehdä
-bool NFmiToolBox::DrawPolyline(NFmiPolyline * fmiShape, const NFmiPoint &theOffSet, const NFmiPoint &theScale, double rotationAlfa)
+bool NFmiToolBox::DrawPolyline(NFmiPolyline * polyline, const NFmiPoint &theOffSet, const NFmiPoint &theScale, double rotationAlfa)
 {
 	SetUpClipping();
-	SelectEnvironment(fmiShape);
+	SelectEnvironment(polyline);
 
 	std::vector<CPoint> pMFCPoints;
 
@@ -572,8 +572,9 @@ bool NFmiToolBox::DrawPolyline(NFmiPolyline * fmiShape, const NFmiPoint &theOffS
 	double xScale = theScale.X();
 //	double yScale = itsYDirection * theScale.Y() * mClientRect.Height();
 	double yScale = theScale.Y();
-	ConvertPointList(fmiShape->GetPoints(), pMFCPoints, mfcOffSet, xScale, yScale, rotationAlfa);
-    if(pMFCPoints.size() > 1)
+	ConvertPointList(polyline->GetPoints(), pMFCPoints, mfcOffSet, xScale, yScale, rotationAlfa);
+	
+	if(pMFCPoints.size() > 1)
     {
         if(fFilled)
         {
@@ -584,11 +585,11 @@ bool NFmiToolBox::DrawPolyline(NFmiPolyline * fmiShape, const NFmiPoint &theOffS
                 status = pItsFillPattern->CreateHatchBrush(itsHatchPattern, itsFillColor) != 0; // pDC->GetNearestColor
             if(!status)
             {
-                DeSelectEnvironment(fmiShape);
+                DeSelectEnvironment(polyline);
                 EndClipping();
                 return false;
             }
-            pDC->SetBkMode(fmiShape->BackGroundMode());
+            pDC->SetBkMode(polyline->BackGroundMode());
             CBrush* pOldBrush = pDC->SelectObject(pItsFillPattern);
 
             pDC->Polygon(pMFCPoints.data(), static_cast<int>(pMFCPoints.size()));
@@ -600,7 +601,7 @@ bool NFmiToolBox::DrawPolyline(NFmiPolyline * fmiShape, const NFmiPoint &theOffS
         {
             if(!pItsPen->CreatePen(itsPenStyle, itsPenSize.cx, itsFrameColor)) //061196/LW oli itsFillColor
             {
-                DeSelectEnvironment(fmiShape);
+                DeSelectEnvironment(polyline);
                 EndClipping();
                 return false;
             }
@@ -616,7 +617,7 @@ bool NFmiToolBox::DrawPolyline(NFmiPolyline * fmiShape, const NFmiPoint &theOffS
         pDC->MoveTo(pMFCPoints[pMFCPoints.size() - 1].x, pMFCPoints[pMFCPoints.size() - 1].y);
     }
 
-	DeSelectEnvironment(fmiShape);
+	DeSelectEnvironment(polyline);
 	EndClipping();
 	return true;
 }
@@ -882,117 +883,80 @@ COLORREF NFmiToolBox::ConvertColor (const FmiRGBColor &fromFmiColor)
   RGB(fromFmiColor.red*255,fromFmiColor.green*255,fromFmiColor.blue*255 );
 }
 //--------------------------------------------------------ConvertPointList
-void NFmiToolBox::ConvertPointList(NFmiVoidPtrList * fmiPointList, std::vector<CPoint> &theMFCPoints)
+void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint> &theMFCPoints)
 {
 	theMFCPoints.clear();
-	if(!fmiPointList)
+	if(fmiPoints.empty())
 		return ;
 
-	theMFCPoints.resize(fmiPointList->NumberOfItems());
-
-	NFmiVoidPtrIterator fmiPoints(fmiPointList);
-	void *VPtr = 0;
-	int i = 0;
-
-	while(fmiPoints.Next(VPtr))
+	theMFCPoints.resize(fmiPoints.size());
+	for(size_t index = 0; index < fmiPoints.size(); index++)
 	{
-		ConvertPoint(*((NFmiPoint *)VPtr), theMFCPoints[i]);
-		i++;
+		ConvertPoint(fmiPoints[index], theMFCPoints[index]);
 	}
 }
 
-/*
-unsigned short NFmiToolBox::ConvertPointList (NFmiVoidPtrList *fmiPointList
-                                             ,CPoint **MFCPoints)
+void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint>& theMFCPoints,
+	CPoint& MFCOffSet, double xScale, double yScale, double rotationAlfa)
 {
-  if(!fmiPointList)
-  {
-    MFCPoints = 0;
-	return 0;
-  }
-//  *macPoints = new Point[fmiPointList->NumberOfItems()];
-  CPoint *tmpPoints = new CPoint[fmiPointList->NumberOfItems()];
+	theMFCPoints.clear();
+	if(fmiPoints.empty())
+		return;
 
-  NFmiVoidPtrIterator fmiPoints(fmiPointList);
-  void *VPtr;
-  int i = 0;
+	theMFCPoints.resize(fmiPoints.size());
 
-  while(fmiPoints.Next(VPtr))
-  {
-    ConvertPoint(*((NFmiPoint *)VPtr), tmpPoints[i]);
-    i++;
-  }
-  *MFCPoints = tmpPoints;
-  return fmiPointList->NumberOfItems();
-}
-*/
+	bool useOffSet = (MFCOffSet != CPoint(0, 0)) == TRUE;
+	bool useScale = xScale && yScale;
 
-void NFmiToolBox::ConvertPointList(NFmiVoidPtrList * fmiPointList, std::vector<CPoint> &theMFCPoints,
-											 CPoint &MFCOffSet, double xScale, double yScale, double rotationAlfa)
-{
-  if(!fmiPointList)
-	return ;
-
-  theMFCPoints.resize(fmiPointList->NumberOfItems());
-
-  NFmiVoidPtrIterator fmiPoints(fmiPointList);
-  void *VPtr;
-  int i = 0;
-  bool useOffSet = (MFCOffSet != CPoint(0,0)) == TRUE;
-  bool useScale = xScale && yScale;
-
-  if(useOffSet && useScale)
-  {
-	  if(rotationAlfa == 0)
-	  { // jos ei rotaatiota
-		while(fmiPoints.Next(VPtr))
+	if(useOffSet && useScale)
+	{
+		if(rotationAlfa == 0)
 		{
-			ConvertPoint(*((NFmiPoint *)VPtr), theMFCPoints[i]);
-			theMFCPoints[i].x = static_cast<LONG>(theMFCPoints[i].x * xScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
-			theMFCPoints[i].y = static_cast<LONG>(theMFCPoints[i].y * yScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
-			theMFCPoints[i].Offset(MFCOffSet);
-			i++;
+			// jos ei rotaatiota
+			for(size_t index = 0; index < fmiPoints.size(); index++)
+			{
+				ConvertPoint(fmiPoints[index], theMFCPoints[index]);
+				theMFCPoints[index].x = static_cast<LONG>(theMFCPoints[index].x * xScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
+				theMFCPoints[index].y = static_cast<LONG>(theMFCPoints[index].y * yScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
+				theMFCPoints[index].Offset(MFCOffSet);
+			}
 		}
-	  }
-	  else
-	  { // muuten pyöräytetään kappaletta samalla
-		while(fmiPoints.Next(VPtr))
+		else
+		{ 
+			// muuten pyöräytetään kappaletta samalla
+			for(size_t index = 0; index < fmiPoints.size(); index++)
+			{
+				ConvertPoint(::RotatePoint(fmiPoints[index], rotationAlfa), theMFCPoints[index]); // rotaatio pitää tehdä ennen muita muunnoksia, eli kappaletta pyöritetään itsensä suhteen ympäri
+				theMFCPoints[index].x = static_cast<LONG>(theMFCPoints[index].x * xScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
+				theMFCPoints[index].y = static_cast<LONG>(theMFCPoints[index].y * yScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
+				theMFCPoints[index].Offset(MFCOffSet);
+			}
+		}
+	}
+	else if(useOffSet)
+	{
+		for(size_t index = 0; index < fmiPoints.size(); index++)
 		{
-			ConvertPoint(::RotatePoint(*((NFmiPoint *)VPtr), rotationAlfa), theMFCPoints[i]); // rotaatio pitää tehdä ennen muita muunnoksia, eli kappaletta pyöritetään itsensä suhteen ympäri
-			theMFCPoints[i].x = static_cast<LONG>(theMFCPoints[i].x * xScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
-			theMFCPoints[i].y = static_cast<LONG>(theMFCPoints[i].y * yScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
-			theMFCPoints[i].Offset(MFCOffSet);
-			i++;
+			ConvertPoint(fmiPoints[index], theMFCPoints[index]);
+			theMFCPoints[index].Offset(MFCOffSet);
 		}
-	  }
-  }
-  else if(useOffSet)
-  {
-	while(fmiPoints.Next(VPtr))
-	{
-		ConvertPoint(*((NFmiPoint *)VPtr), theMFCPoints[i]);
-		theMFCPoints[i].Offset(MFCOffSet);
-		i++;
 	}
-  }
-  else if(useScale)
-  {
-	while(fmiPoints.Next(VPtr))
+	else if(useScale)
 	{
-		ConvertPoint(*((NFmiPoint *)VPtr), theMFCPoints[i]);
-		theMFCPoints[i].x = static_cast<LONG>(theMFCPoints[i].x * xScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
-		theMFCPoints[i].y = static_cast<LONG>(theMFCPoints[i].y * yScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
-		i++;
+		for(size_t index = 0; index < fmiPoints.size(); index++)
+		{
+			ConvertPoint(fmiPoints[index], theMFCPoints[index]);
+			theMFCPoints[index].x = static_cast<LONG>(theMFCPoints[index].x * xScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
+			theMFCPoints[index].y = static_cast<LONG>(theMFCPoints[index].y * yScale); // en ole testannut tätä skaalausta ollenkaan, en tiedä mitä se oikeasti tekee (Marko)
+		}
 	}
-  }
-  else
-  {
-	while(fmiPoints.Next(VPtr))
+	else
 	{
-		ConvertPoint(*((NFmiPoint *)VPtr), theMFCPoints[i]);
-		i++;
+		for(size_t index = 0; index < fmiPoints.size(); index++)
+		{
+			ConvertPoint(fmiPoints[index], theMFCPoints[index]);
+		}
 	}
-  }
 }
 
 //--------------------------------------------------------ConvertShapeList
@@ -1459,28 +1423,19 @@ void NFmiToolBox::FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineLis
 	thePolygonCount = static_cast<int>(thePolyLineList.size());
 	list<NFmiPolyline*>::iterator it = thePolyLineList.begin();
 	list<NFmiPolyline*>::iterator endIt = thePolyLineList.end();
-	CPoint tmpPoint;
-	NFmiPoint tmpPoint2;
+	CPoint mfcPoint;
 	CPoint mfcOffSet;
 	ConvertPoint(theOffSet, mfcOffSet);
-	int counter = 0;
 	for(; it != endIt; ++it)
-	{ // ikävää voiptr-koodia, pitäisi muuttaa NFmiPolyline-luokan rakenteita!
-		counter++;
-		NFmiVoidPtrList *fmiPointList = (*it)->GetPoints();
-		NFmiVoidPtrIterator fmiPoints(fmiPointList);
-		void *VPtr;
-		int pLineSize = fmiPointList->NumberOfItems();
-		thePolygonPointCounts.push_back(pLineSize);
-		while(fmiPoints.Next(VPtr))
+	{ 
+		const auto &fmiPoints = (*it)->GetPoints();
+		thePolygonPointCounts.push_back(static_cast<int>(fmiPoints.size()));
+		for(size_t index = 0; index < fmiPoints.size(); index++)
 		{
-			tmpPoint2 = *((NFmiPoint *)VPtr);
-			ConvertPoint(tmpPoint2, tmpPoint);
-			tmpPoint.Offset(mfcOffSet);
-			thePoints.push_back(tmpPoint);
+			ConvertPoint(fmiPoints[index], mfcPoint);
+			mfcPoint.Offset(mfcOffSet);
+			thePoints.push_back(mfcPoint);
 		}
-	//	if(counter > 1)
-	//		break;
 	}
 }
 
@@ -1601,14 +1556,13 @@ void NFmiToolBox::GetPrintInfo(CPrintInfo* pPrintInfo)
 	}
 }
 
-void NFmiToolBox::SetUpClipping(void)
+void NFmiToolBox::SetUpClipping()
 {
-	CRect mfcClipRect;
 	if(fUseClipping)
 	{
+		CRect mfcClipRect;
 		ConvertRect(itsRelativeClipRect, mfcClipRect);
-		CRect rectClip(mfcClipRect);
-		itsClipRegion.CreateRectRgn(rectClip.left,rectClip.top, rectClip.right,rectClip.bottom);
+		itsClipRegion.CreateRectRgn(mfcClipRect.left , mfcClipRect.top, mfcClipRect.right, mfcClipRect.bottom);
 		pDC->SelectClipRgn(&itsClipRegion);
 	}
 }

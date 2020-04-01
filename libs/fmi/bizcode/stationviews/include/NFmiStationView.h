@@ -176,6 +176,7 @@ protected:
    std::string GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile);
    float GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData);
    std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
+   std::string MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage);
    void SetupPossibleWindMetaParamData();
    bool GetDataFromLocalInfo() const;
    float GetSynopDataValueFromq2();
@@ -194,6 +195,7 @@ protected:
    bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
    bool IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
    NFmiPoint CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData);
+   void DrawCountryBordersToMapView();
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;

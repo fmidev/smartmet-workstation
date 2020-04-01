@@ -89,7 +89,7 @@ private:
     double itsLocationFinderTimeoutInSeconds;
     BOOL fShowLastSendTimeOnMapView;
     CString itsFixedDrawParamPathSettingU_; // Huom! tämä on read-only kenttä
-    BOOL fWmsMapMode;
+    BOOL fUseCombinedMapMode;
     CComboBox itsLogLevelComboBox;
     BOOL fDroppedDataEditable;
     double itsIsolineMinimumLengthFactor;

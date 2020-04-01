@@ -10,6 +10,7 @@
 #include "NFmiAreaMask.h"
 #include "NFmiCalculationCondition.h"
 #include "NFmiInfoData.h"
+#include "NFmiAreaMaskHelperStructures.h"
 
 class NFmAreaMaskList;
 

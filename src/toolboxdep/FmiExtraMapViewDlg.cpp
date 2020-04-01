@@ -621,7 +621,7 @@ void CFmiExtraMapViewDlg::OnButtonMapViewSettings()
 		// viewGridsize pitää laskea uudestaan, koska displayType on saattanut muuttua ja aloitus rivi pitää ehkä vaihtaa
         mapViewDescTop->ViewGridSize(mapViewDescTop->ViewGridSize(), mapViewWinRegistry);
         mapViewDescTop->MapViewDirty(true, true, true, false);
-        mapViewDescTop->BorderDrawDirty(true);
+        mapViewDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
         itsSmartMetDocumentInterface->UpdateRowInLockedDescTops(itsMapViewDescTopIndex);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Extra map view settings changed");
 	}
@@ -805,40 +805,40 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapLocationFinderTool()
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep1Forward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(1, kForward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(1, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep1Backward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(1, kBackward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(1, kBackward, itsMapViewDescTopIndex, 1);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep2Forward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(2, kForward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(2, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep2Backward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(2, kBackward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(2, kBackward, itsMapViewDescTopIndex, 1);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep3Forward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(3, kForward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(3, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep3Backward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(3, kBackward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(3, kBackward, itsMapViewDescTopIndex, 1);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Forward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(4, kForward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(4, kForward, itsMapViewDescTopIndex, 1);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Backward()
 {
-	itsSmartMetDocumentInterface->ChangeTime(4, kBackward, 1, itsMapViewDescTopIndex, 1);
+	itsSmartMetDocumentInterface->ChangeTime(4, kBackward, itsMapViewDescTopIndex, 1);
 }

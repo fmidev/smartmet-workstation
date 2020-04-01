@@ -529,7 +529,7 @@ void CFmiTrajectoryDlg::SetDefaultValues(void)
 
 void CFmiTrajectoryDlg::RefreshViewsAndDialogs(const std::string &reasonForUpdate)
 {
-	std::vector<NFmiMapViewDescTop*> &mapViewDescTopList = itsSmartMetDocumentInterface->MapViewDescTopList();
+	auto &mapViewDescTopList = itsSmartMetDocumentInterface->MapViewDescTopList();
 	for(size_t i = 0; i < mapViewDescTopList.size(); i++)
 	{
 		if(mapViewDescTopList[i]->ShowTrajectorsOnMap())

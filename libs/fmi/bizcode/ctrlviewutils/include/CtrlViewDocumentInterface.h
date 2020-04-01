@@ -10,6 +10,7 @@
 #include "NFmiProducer.h"
 #include "NFmiInfoData.h"
 #include "SmartMetViewId.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include <functional>
 #include <list>
@@ -73,11 +74,10 @@ class NFmiMacroParamDataCache;
 class NFmiParam;
 class TimeSerialParameters;
 class NFmiColorContourLegendSettings;
-
-namespace Wms
-{
-    class WmsSupport;
-}
+class NFmiFixedDrawParamSystem;
+class NFmiMacroPathSettings;
+class WmsSupportInterface;
+class CombinedMapHandlerInterface;
 
 namespace Imagine
 {
@@ -106,6 +106,7 @@ namespace Warnings
 {
     class CapDataSystem;
 }
+
 
 // Interface that is meant to be used by non-MFC views in libraries under bizcode part of code base.
 class CtrlViewDocumentInterface
@@ -141,11 +142,11 @@ public:
     virtual const NFmiPoint& CrossSectionViewSizeInPixels(void) = 0;
     virtual const NFmiPoint& MapViewSizeInPixels(int theMapViewDescTopIndex) = 0;
     virtual bool Printing() = 0;
-    virtual bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int index) = 0;
+    virtual bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1) = 0;
     virtual bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theViewIndex, int theViewTypeId) = 0;
-    virtual bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) = 0;
+    virtual bool ChangeParamSettingsToNextFixedDrawParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext) = 0;
     virtual bool ChangeActiveMapViewParam(unsigned int theDescTopIndex, int theMapRow, int theParamIndex, bool fNext, bool fUseCrossSectionParams) = 0;
     virtual bool MoveActiveMapViewParamInDrawingOrderList(unsigned int theDescTopIndex, int theMapRow, bool fRaise, bool fUseCrossSectionParams) = 0;
     virtual void CheckAnimationLockedModeTimeBags(unsigned int theDescTopIndex, bool ignoreSatelImages) = 0;
@@ -224,7 +225,7 @@ public:
     virtual bool CreateTimeSerialDialogPopup(int index) = 0;
     virtual bool CreateTimeSerialDialogOnViewPopup(int index) = 0;
     virtual bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
-    virtual void UpdateModifiedDrawParamMarko(boost::shared_ptr<NFmiDrawParam> &theDrawParam) = 0;
+    virtual void UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust(void) = 0;
     virtual bool UseQ2Server(void) = 0;
     virtual bool Registry_ShowLastSendTimeOnMapView() = 0;
@@ -263,7 +264,6 @@ public:
     virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
     virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
-	virtual int GetFirstRowNumber(unsigned int theDescTopIndex) = 0;
     virtual NFmiSynopPlotSettings* SynopPlotSettings(void) = 0;
     virtual NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) = 0;
     virtual NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) = 0;
@@ -318,13 +318,13 @@ public:
     virtual NFmiWindTableSystem& WindTableSystem(void) = 0;
     virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) = 0;
     virtual NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) = 0;
-    virtual bool DrawLandBorders(int theDescTopIndex) = 0;
-    virtual bool BorderDrawDirty(int theDescTopIndex) = 0;
-    virtual const NFmiColor& LandBorderColor(int theDescTopIndex) = 0;
-    virtual const NFmiPoint& LandBorderPenSize(int theDescTopIndex) = 0;
+    virtual bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+    virtual const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+    virtual int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+    virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
+    virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) = 0;
-    virtual void BorderDrawDirty(int theDescTopIndex, bool dirtyFlag) = 0;
     virtual std::list<NFmiPolyline*>& DrawBorderPolyLineList(int theDescTopIndex) = 0;
     virtual const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue) = 0;
@@ -346,7 +346,7 @@ public:
     virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) = 0;
     virtual bool ViewBrushed(void) = 0;
     virtual void ViewBrushed(bool newState) = 0;
-    virtual bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam = kFmiLastParameter, bool fPasteAction = false) = 0;
+    virtual bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam = kFmiLastParameter) = 0;
     virtual void ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) = 0;
     virtual bool UseMaskWithBrush(void) = 0;
     virtual int BrushToolLimitSetting(void) = 0;
@@ -371,15 +371,13 @@ public:
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
-    virtual bool UseWmsMaps() = 0;
-    virtual void UseWmsMaps(bool newValue) = 0;
+    virtual bool UseCombinedMapMode() const = 0;
+    virtual void UseCombinedMapMode(bool newValue) = 0;
     virtual NFmiBetaProductionSystem& BetaProductionSystem() = 0;
     virtual void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
     virtual Q2ServerInfo& GetQ2ServerInfo() = 0;
     virtual Warnings::CapDataSystem& GetCapDataSystem() = 0;
-    virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex) = 0;
-    virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap) = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
     virtual bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) = 0;
@@ -389,10 +387,21 @@ public:
     virtual void SetPrintedDescTopIndex(int nowPrintedDescTopIndex) = 0;
     virtual int GetPrintedDescTopIndex() = 0;
     virtual void ResetPrintedDescTopIndex() = 0;
+    virtual unsigned int SelectedMapIndex(int mapViewDescTopIndex) = 0;
+    virtual void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) = 0;
+    virtual NFmiFixedDrawParamSystem& FixedDrawParamSystem() = 0;
+    virtual void ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam) = 0;
+    virtual NFmiMacroPathSettings& MacroPathSettings() = 0;
+    virtual int CurrentCrossSectionRowIndex() = 0;
+    virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
+    virtual bool BorderDrawBitmapDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
+    virtual bool BorderDrawPolylinesDirty(int theDescTopIndex) const = 0;
+    virtual bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const = 0;
+    virtual void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) = 0;
 
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
-    virtual Wms::WmsSupport& WmsSupport() = 0;
+    virtual WmsSupportInterface& GetWmsSupport() = 0;
 #endif // DISABLE_CPPRESTSDK
 };

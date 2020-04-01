@@ -24,6 +24,7 @@
 #include "ApplicationInterfaceForSmartMet.h"
 #include "ToolMasterColorCube.h"
 #include "ToolMasterHelperFunctions.h"
+#include "CombinedMapHandlerInterface.h"
 
 #include "boost/format.hpp"
 
@@ -433,7 +434,7 @@ void CSmartMetApp::DoFirstTimeOnIdleInitializations()
 
         if(itsGeneralData->ApplicationWinRegistry().KeepMapAspectRatio())
         {
-            itsGeneralData->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
+            itsGeneralData->GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
             CSmartMetView *mapView = ApplicationInterface::GetSmartMetView();
             if(mapView)
                 mapView->GetDocument()->UpdateAllViewsAndDialogs(__FUNCTION__);

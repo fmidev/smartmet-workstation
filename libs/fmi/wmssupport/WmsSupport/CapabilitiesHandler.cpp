@@ -1,6 +1,6 @@
-#include "CapabilitiesHandler.h"
-#include "WmsQuery.h"
-#include "SetupParser.h"
+#include "wmssupport/CapabilitiesHandler.h"
+#include "wmssupport/WmsQuery.h"
+#include "wmssupport/SetupParser.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include "../../q2clientlib/include/NFmiQ2Client.h"
 
@@ -132,6 +132,14 @@ namespace Wms
                         {
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
                         }
+                    }
+                    catch(std::exception &e)
+                    {
+                        std::string errorMessage = "Error with dynamic Wms server '";
+                        errorMessage += serverKV.second.producer.GetName();
+                        errorMessage += "', while parsing getCapabilities response: ";
+                        errorMessage += e.what();
+                        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
                     }
                     catch(...)
                     {

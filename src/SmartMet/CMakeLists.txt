@@ -73,6 +73,7 @@ set(TARGET_LINK_LIBRARIES_LIST
     Processes
     AutoComplete
     optimized ${CRASHRPT_LIB}
+    ${FMT_TARGET_LINK_LIBRARIES}
     )
 
 if(NOT DISABLE_UNIRAS_TOOLMASTER)

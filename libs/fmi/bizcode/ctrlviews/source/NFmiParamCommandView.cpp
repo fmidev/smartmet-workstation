@@ -31,9 +31,10 @@
 //--------------------------------------------------------
 // ParamCommandView 
 //--------------------------------------------------------
-NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
+NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
 :NFmiCtrlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex)
 ,fShowView(true)
+,fHasMapLayer(hasMapLayer)
 {
 }
 //--------------------------------------------------------
@@ -82,12 +83,15 @@ void NFmiParamCommandView::DrawBackground(void)
 	}
 }
 
-// indeksit alkavat 1:st‰ eli 1. rivi on indeksill‰ 1 jne.
+// Piirrett‰viin parametreihin liittyv‰ lineIndex alkaa 1:st‰ eli 1. parametririvi on indeksill‰ 1 jne.
+// Mutta koska rivill‰ 0 on manipuloimaton map-layer, pit‰‰ se ottaa laskettaessa rivin laatikkoa.
 NFmiRect NFmiParamCommandView::CheckBoxRect(int lineIndex, bool drawedRect)
 {
+	if(!fHasMapLayer)
+		lineIndex--;
 	NFmiPoint p = GetFrame().TopLeft();
 	p += itsFirstLinePlace;
-	p.Y(p.Y() + (lineIndex-1) * itsLineHeight);
+	p.Y(p.Y() + lineIndex * itsLineHeight);
 	NFmiRect rect;
 	rect.Place(p);
 	if(drawedRect) // piirrett‰v‰‰ boxia pit‰‰ siirt‰‰ hieman vertikaali suunnassa alas. Ik‰v‰‰ koodia, mutta voi voi
@@ -95,7 +99,7 @@ NFmiRect NFmiParamCommandView::CheckBoxRect(int lineIndex, bool drawedRect)
 	rect.Size(itsCheckBoxSize);
 	return rect;
 }
-// indeksit alkavat 1:st‰ eli 1. rivi on indeksill‰ 1 jne.
+
 NFmiPoint NFmiParamCommandView::LineTextPlace(int lineIndex, bool checkBoxMove)
 {
 	// tekstin alku paikka lasketaan checkboxin avulla
@@ -150,27 +154,25 @@ void NFmiParamCommandView::CalcTextData(void)
 	itsPixelSize.Y(itsToolBox->SY(1));
 }
 
-int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace)
+// Oikeat parametri rivit alkavat 1:st‰. 
+// Rivi 0 on map-layer rivi, jota ei voi manipuloida mitenk‰‰n.
+int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace, double* indexRealValueOut)
 {
-	for(int counter = 1; counter < 100 ; counter++) // < 100 hatusta (= sata rivi‰ teksti‰!!!)
-	{
-		NFmiPoint place = LineTextPlace(counter+1, false); // joku feelu tuli refactorointi laskuissa, mutta t‰ss‰ pit‰‰ lis‰t‰ yhdell‰ counteria
-		if(place.Y() >= thePlace.Y())
-			return counter;
-	}
-	return 0; // 
+	auto cursorHeight = thePlace.Y() - GetFrame().Top();
+	auto zeroBasedLineIndexRealValue = cursorHeight / itsLineHeight;
+	if(!fHasMapLayer)
+		zeroBasedLineIndexRealValue += 1;
+
+	// T‰m‰n pirun parametri boxin laskukoodit pit‰isi tehd‰ uudestaan, nyt minun kuitenkin pit‰‰ vain v‰hent‰‰ 
+	// lasketusta indeksist‰ joku vakio desimaaliosio, jotta indeksin ja klikattu paikka ovat mahd. oikean tuntuisia.
+	zeroBasedLineIndexRealValue -= 0.25;
+
+	if(indexRealValueOut)
+		*indexRealValueOut = zeroBasedLineIndexRealValue;
+	return static_cast<int>(zeroBasedLineIndexRealValue);
 }
 
 bool NFmiParamCommandView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
 {
-/*
-	if(IsIn(thePlace))
-	{
-		if(theDelta < 0)
-			return itsDoc->ScrollViewRow(itsMapViewDescTopIndex, 1);
-		else
-			return itsDoc->ScrollViewRow(itsMapViewDescTopIndex, -1);
-	}
-*/
 	return false;
 }

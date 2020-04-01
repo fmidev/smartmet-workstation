@@ -691,7 +691,7 @@ bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &th
                 if(newZoomedArea)
                 {
                     newZoomedArea->SetXYArea(NFmiRect(0, 0, 1, 1));
-                    theWantedNewZoomedAreaRect = newZoomedArea->XYArea(Area().get());
+                    theWantedNewZoomedAreaRect = newZoomedArea->XYArea(GetArea().get());
                     delete newZoomedArea;
                     return true;
                 }
@@ -1099,14 +1099,14 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
     theIsoLineData->fUseIsoLineFeathering = theDrawParam->UseIsoLineFeathering();
 }
 
-NFmiPolyline* NFmiIsoLineView::CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi)
+NFmiPolyline* NFmiIsoLineView::CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi)
 {
-    return new NFmiPolyline(theRect, 0, &theEnvi
+    return new NFmiPolyline(theRect, 0, theEnvi
         , 1 // 1 = opaque
         , -1);  // -1 tarkoittaa, ettei käytetä hatchia
 }
 
-void NFmiIsoLineView::ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi)
+void NFmiIsoLineView::ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi)
 {
     using namespace Imagine;
 
@@ -1452,7 +1452,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     {
         // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
         boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
-        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, Area()) == false)
+        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, GetArea()) == false)
             return; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
     }
 
@@ -1622,7 +1622,7 @@ void NFmiIsoLineView::DrawHatchesWithImagine(NFmiIsoLineData& theIsoLineData, co
 
         SetHatchEnvi(theIsoLineData, envi, theHatchSettings);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
         itsToolBox->DrawMultiPolygon(polyLineList, &envi, theOffSet);
@@ -1654,7 +1654,7 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
         labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), &envi);
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
         DrawPolyLineList(itsToolBox, polyLineList, theOffSet);
@@ -1704,7 +1704,7 @@ void NFmiIsoLineView::DrawCustomIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
         labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, true, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
@@ -1758,7 +1758,7 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
         if(drawLabels)
             labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
@@ -1829,7 +1829,7 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
         if(drawLabels)
             labelBox.Init(fontSize, lowerLimit, itsDrawParam, itsToolBox, envi);
 
-        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), envi);
+        ConvertPath2PolyLineList(path, polyLineList, false, false, itsArea->XYArea(), &envi);
 
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
@@ -2278,11 +2278,12 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
     int x2 = 0;
     int y2 = 0;
     isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
+    boost::shared_ptr<NFmiArea> mapArea = GetArea();
     if(itsInfo->IsGrid())
     {
         // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
         boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
-        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, Area()) == false)
+        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, mapArea) == false)
             return false; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
     }
 
@@ -2293,15 +2294,17 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         {
             isoLineData.itsInfo = itsInfo;
             isoLineData.itsParam = itsInfo->Param();
-            isoLineData.itsTime = this->itsTime;
+            isoLineData.itsTime = this->itsTime; // Tähän pistetään kartalla oleva aika
+            // Mutta pitää varmistaa että data interpoloidaan oikealta ajalta myös klimatologisilta datoilta (kuten Era-5, tms.)
+            auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
 
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, itsTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
             fillGridDataStatus = initializeIsoLineData(isoLineData);
-            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(Area().get());
+            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(mapArea.get());
         }
     }
-    else if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, Area(), zoomedAreaRect, x1, y1, x2, y2))
+    else if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, mapArea, zoomedAreaRect, x1, y1, x2, y2))
     {
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": zoomed grid used (faster)", this);
         isoLineData.itsInfo = itsInfo;
@@ -2324,7 +2327,6 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         else if(itsInfo->IsGrid())
         {
             const NFmiArea *origDataArea = itsInfo->Area();
-            boost::shared_ptr<NFmiArea> mapArea = Area();
             if(DifferentWorldViews(origDataArea, mapArea.get()))
             { // tehdään dataArea, joka on karttapohjan maailmassa
                 boost::shared_ptr<NFmiArea> origDataAreaClone(origDataArea->Clone());
@@ -2343,7 +2345,7 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
                 zoomedAreaRect = newArea->XYArea(mapArea.get());
             }
             else
-                zoomedAreaRect = itsInfo->Area()->XYArea(Area().get());
+                zoomedAreaRect = itsInfo->Area()->XYArea(mapArea.get());
         }
         else
         {

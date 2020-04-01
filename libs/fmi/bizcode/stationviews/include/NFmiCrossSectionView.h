@@ -51,6 +51,7 @@ public:
     checkedVector<float> pressures;
     checkedVector<NFmiPoint> latlons;
     checkedVector<NFmiMetTime> times;
+	std::string macroParamErrorMessage;
 };
 
 class NFmiCrossSectionView : public NFmiIsoLineView

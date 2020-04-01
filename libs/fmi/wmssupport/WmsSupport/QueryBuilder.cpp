@@ -1,5 +1,5 @@
-#include "QueryBuilder.h"
-#include "EpsgParser.h"
+#include "wmssupport/QueryBuilder.h"
+#include "wmssupport/EpsgParser.h"
 
 #include <cpprest/asyncrt_utils.h>
 #undef U // This fixes cpprest's U -macro clash with boost library move code (really dangerous to give macro name like U !!!!)
@@ -56,8 +56,9 @@ namespace Wms
         :epsgParser_{"","",""}
     {}
 
-    QueryBuilder::QueryBuilder(const std::string& stereo00, const std::string& stereo10, const std::string& stereo20)
+    QueryBuilder::QueryBuilder(const std::string& stereo00, const std::string& stereo10, const std::string& stereo20, bool useCrs)
         : epsgParser_{stereo00, stereo10, stereo20}
+        ,useCrs_(useCrs)
     {
     }
 
@@ -146,7 +147,10 @@ namespace Wms
 
     QueryBuilder& QueryBuilder::setCrsAndBbox(const NFmiArea& area)
     {
-        query_.query["CRS"] = epsgParser_.parse(area);
+        if(useCrs_)
+            query_.query["CRS"] = epsgParser_.parse(area);
+        else
+            query_.query["sRS"] = epsgParser_.parse(area);
 
         auto bbox = std::string{};
         if(area.ClassId() == kNFmiLatLonArea)

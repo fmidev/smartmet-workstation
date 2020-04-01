@@ -76,6 +76,10 @@ public:
 	void ShowStationPlot(bool newValue);
 	std::string ViewGridSizeStr() const;
 	void ViewGridSizeStr(const std::string &newValue);
+    std::string CombinedMapModeSelectedBackgroundIndices() const;
+    void CombinedMapModeSelectedBackgroundIndices(const std::string &newValue);
+    std::string CombinedMapModeSelectedOverlayIndices() const;
+    void CombinedMapModeSelectedOverlayIndices(const std::string& newValue);
 
 private:
     bool mInitialized; // ei sallita tupla initialisointia
@@ -86,10 +90,20 @@ private:
     // HKEY_CURRENT_USER -keys
 
     boost::shared_ptr<CachedRegBool> mShowMasksOnMap;
-    boost::shared_ptr<CachedRegInt> mSpacingOutFactor; // 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmän
-    boost::shared_ptr<CachedRegInt> mSelectedMapIndex; // 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
-	boost::shared_ptr<CachedRegBool> mShowStationPlot; // näytetäänkö se typerä asema piste vai ei?
-	boost::shared_ptr<CachedRegString> mViewGridSizeStr; // karttanäyttöruudukon koko (esim. 3 riviä, joissa 5 aikaa == NFmiPoint(5,3))
+    // 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmän
+    boost::shared_ptr<CachedRegInt> mSpacingOutFactor; 
+    // 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
+    boost::shared_ptr<CachedRegInt> mSelectedMapIndex; 
+    // näytetäänkö se typerä asema piste vai ei?
+	boost::shared_ptr<CachedRegBool> mShowStationPlot; 
+    // karttanäyttöruudukon koko (esim. 3 riviä, joissa 5 aikaa == NFmiPoint(5,3))
+    boost::shared_ptr<CachedRegString> mViewGridSizeStr; 
+    // Lokaali+wms karttojen yhdistelmä moodiin liittyvät valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
+    // Teksti on seuraavaa muotoa (tämä luokka ei tosin parseroi tai tee muuta kuin säilyttää stringin): 
+    // mapAreaCount:area1Index,area1Index,area1Index,area1Index     (esim. 4:2,1,4,3)
+    boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedBackgroundIndicesStr; 
+    // Vastaava teksti overlay kartta-alueiden indekseille
+    boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedOverlayIndicesStr;
 };
 
 // Poikkileikkausnäyttöjen asetuksia Windows rekisterissä, SmartMet konffi kohtaisia
@@ -195,6 +209,8 @@ public:
     void LogViewerCategory(int newValue);
     bool DroppedDataEditable();
     void DroppedDataEditable(bool newValue);
+    bool UseCombinedMapMode();
+    void UseCombinedMapMode(bool newValue);
     const NFmiViewPositionsWinRegistry::WindowRectStringMap& GetWindowRectStringMap() const { return mMapViewPositionsWinRegistry.GetWindowRectStringMap(); }
 private:
     bool mInitialized; // ei sallita tupla initialisointia
@@ -220,6 +236,7 @@ private:
     boost::shared_ptr<CachedRegInt> mLogViewerLogLevel; // CFmiLogViever dialogissa näytetty Severity taso
     boost::shared_ptr<CachedRegInt> mLogViewerCategory; // CFmiLogViever dialogissa näytetty categoria
     boost::shared_ptr<CachedRegBool> mDroppedDataEditable; // Pääkarttanäytölle pudotettua sqd tiedostoa voidaan editoida, tällöin tiedostot on hidas tiputtaa, koska data luetaan muistiin ja siitä tehdään monia kopioita
+    boost::shared_ptr<CachedRegBool> mUseCombinedMapMode; // Käytetäänkö karttojen kanssa lokaaleja bitmappeja ja WMS palveluja yhdessä.
 };
 
 
@@ -248,8 +265,6 @@ public:
     void SoundingTimeLockWithMapView(bool newValue);
     bool KeepMapAspectRatio();
     void KeepMapAspectRatio(bool newValue);
-    bool UseWmsMaps();
-    void UseWmsMaps(bool newValue);
 
 	bool FitToPagePrint();
 	void FitToPagePrint(bool newValue);
@@ -326,7 +341,6 @@ private:
     boost::shared_ptr<CachedRegBool> mSoundingTextUpward; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)
     boost::shared_ptr<CachedRegBool> mSoundingTimeLockWithMapView; // Luotausnäytössä voi olla nyt aikalukko päällä, jolloin luotausten ajat sidotaan pääkarttanäyttöön, eli niitä säädetään jos karttanäytöllä vaihdetaan aikaa
     boost::shared_ptr<CachedRegBool> mKeepMapAspectRatio; // Pitääkö smartmet karttanäytöissä aspect-ratio -lukkoa päälä vai ei
-    boost::shared_ptr<CachedRegBool> mUseWmsMaps; // käytetäänkö WMS palveluja hakemaan karttakuvia (jos niitä on käytössä)
 
     boost::shared_ptr<CachedRegBool> mUseMultiProcessCpCalc; // käytetäänkö kontrollipistetyökalun yhteydessä multi-process-worker -poolia vai ei
     boost::shared_ptr<CachedRegBool> mAllowRightClickDisplaySelection; // Sallitaanko käyttäjän valita hiiren oikealla napilla asemia kartalta vai ei.

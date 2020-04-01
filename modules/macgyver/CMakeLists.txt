@@ -25,7 +25,6 @@ add_library(
 
 target_link_libraries( 
     ${PROJECT_NAME}
-    fmt
     )
 
 target_include_directories( 
@@ -33,6 +32,7 @@ target_include_directories(
     PUBLIC ${PROJECT_SOURCE_DIR}/macgyver
     PUBLIC ${PROJECT_SOURCE_DIR}
     PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${FMT_INCLUDE_DIR}
     )
 
 set(
@@ -40,5 +40,6 @@ set(
     ${PROJECT_SOURCE_DIR}/macgyver
     ${PROJECT_SOURCE_DIR}
     ${BOOST_INCLUDE_DIR}
+    ${FMT_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

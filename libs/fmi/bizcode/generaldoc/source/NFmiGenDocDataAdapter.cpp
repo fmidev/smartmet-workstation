@@ -9,6 +9,7 @@
 #include "NFmiEditorControlPointManager.h"
 #include "FmiSmartMetEditingMode.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "CombinedMapHandlerInterface.h"
 
 NFmiGenDocDataAdapter::NFmiGenDocDataAdapter(NFmiEditMapGeneralDataDoc *theDoc)
 :itsDoc(theDoc)
@@ -64,14 +65,9 @@ int NFmiGenDocDataAdapter::DoMessageBox(const std::string &theMessage, const std
 	return itsDoc->DoMessageBox(theMessage, theTitle, theMessageBoxType);
 }
 
-void NFmiGenDocDataAdapter::AllMapViewDescTopsTimeDirty(const NFmiMetTime &theTime)
-{
-	itsDoc->AllMapViewDescTopsTimeDirty(theTime);
-}
-
 void NFmiGenDocDataAdapter::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
-    itsDoc->MapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
+    itsDoc->GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
 }
 
 void NFmiGenDocDataAdapter::WindTableSystemMustaUpdateTable(bool newState)
@@ -79,9 +75,9 @@ void NFmiGenDocDataAdapter::WindTableSystemMustaUpdateTable(bool newState)
 	itsDoc->WindTableSystem().MustaUpdateTable(newState);
 }
 
-boost::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::GetUsedDrawParam(const NFmiDataIdent &theDataIdent, NFmiInfoData::Type theDataType)
+boost::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent)
 {
-	return itsDoc->GetUsedDrawParam(theDataIdent, theDataType);
+	return itsDoc->GetCombinedMapHandler()->getUsedDrawParamForEditedData(theDataIdent);
 }
 
 NFmiMetEditorOptionsData& NFmiGenDocDataAdapter::MetEditorOptionsData(void)
@@ -116,12 +112,12 @@ void NFmiGenDocDataAdapter::FilteringParameterUsageState(int newValue)
 
 boost::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex)
 {
-	return itsDoc->ActiveDrawParam(theDescTopIndex, theRowIndex);
+	return itsDoc->GetCombinedMapHandler()->activeDrawParam(theDescTopIndex, theRowIndex);
 }
 
 int NFmiGenDocDataAdapter::ActiveViewRow(unsigned int theDescTopIndex)
 {
-	return itsDoc->ActiveViewRow(theDescTopIndex);
+	return itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex);
 }
 
 NFmiParamBag& NFmiGenDocDataAdapter::FilteringParamBag(void)
@@ -146,20 +142,10 @@ void NFmiGenDocDataAdapter::RefreshMasks(void)
 }
 */
 
-boost::shared_ptr<NFmiTimeDescriptor> NFmiGenDocDataAdapter::CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, bool fPasteClipBoardData)
+boost::shared_ptr<NFmiTimeDescriptor> NFmiGenDocDataAdapter::CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& theEditedData)
 {
-	boost::shared_ptr<NFmiTimeDescriptor> timeDesc;
-	if(fPasteClipBoardData)
-	{
-		NFmiTimeBag timeBag(ActiveViewTime(), ActiveViewTime(), theEditedData->TimeResolution());
-		timeDesc = boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(theEditedData->OriginTime(), timeBag));
-	}
-	else
-	{
-		NFmiTimeDescriptor tmpTimeDesc(theEditedData->TimeDescriptor());
-		timeDesc = boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(tmpTimeDesc.GetIntersection(TimeFilterStartTime(), TimeFilterEndTime())));
-	}
-	return timeDesc;
+	NFmiTimeDescriptor tmpTimeDesc(theEditedData->TimeDescriptor());
+	return boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(tmpTimeDesc.GetIntersection(TimeFilterStartTime(), TimeFilterEndTime())));
 }
 
 NFmiSmartToolInfo* NFmiGenDocDataAdapter::SmartToolInfo(void)
@@ -182,7 +168,7 @@ public:
 
     void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
     {
-        itsDoc->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
+        itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
     NFmiIgnoreStationsData& IgnoreStationsData() override
     {
@@ -389,10 +375,11 @@ void NFmiGenDocDataAdapter::SetMacroErrorText(const std::string &theErrorStr)
 
 boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool fGetZoomedArea)
 {
+	auto* mapHandler = itsDoc->GetCombinedMapHandler()->getMapViewDescTop(0)->MapHandler();
 	if(fGetZoomedArea)
-		return itsDoc->MapViewDescTop(0)->MapHandler()->Area();
+		return mapHandler->Area();
 	else
-		return itsDoc->MapViewDescTop(0)->MapHandler()->TotalArea();
+		return mapHandler->TotalArea();
 }
 
 FmiLanguage NFmiGenDocDataAdapter::Language(void)

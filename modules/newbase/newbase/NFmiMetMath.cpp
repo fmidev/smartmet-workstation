@@ -213,7 +213,8 @@ float FmiSnowUpperLimit(float prec)
  * \return the calculated pressure value [hPa] or missing value.
  */
 // ----------------------------------------------------------------------
-
+// HUOM! PALT parametri on FL jalkoina, siis eri yksikkö kuin käänteisfunktion
+// CalcPressureFlightLevel -funktion paluu arvo [FL hehtojalkoina].
 double CalcFlightLevelPressure(double PALT)
 {
   if (PALT <= 36089)
@@ -240,7 +241,8 @@ double CalcFlightLevelPressure(double PALT)
  *         WMO-no 958. World Meteorological Organization, Geneva, 84 pp
  */
 // ----------------------------------------------------------------------
-
+// HUOM! Palauttaa lasketun FL:n hehtojalkoina, siis eri yksikkö kuin käänteisfunktion
+// CalcFlightLevelPressure PALT parametri.
 double CalcPressureFlightLevel(double hPa)
 {
   if (hPa == kFloatMissing) return kFloatMissing;
@@ -253,7 +255,7 @@ double CalcPressureFlightLevel(double hPa)
 /*!
  * \brief Calculate pressure at given height in standard atmosphere
  *
- * Laskee annetun kilometri korkeuden vastaavan painepinnan
+ * Laskee z2 parametrina annetun kilometri korkeuden vastaavan painepinnan
  * standardi ilmakehässä, käyttäen Hypsometric Equationia
  * http://hurri.kean.edu/~yoh/calculations/hydrostatic/home.html
  * p2 = p1*exp(-g/RT*(z2-z1))
@@ -352,10 +354,10 @@ float FmiSummerSimmerIndex(float rh, float t)
 
   const float rh_ref = 50.0 / 100.0;
 
-  const float r = rh / 100.0;
+  const float r = rh / 100.0f;
 
-  return (1.8 * t - 0.55 * (1 - r) * (1.8 * t - 26) - 0.55 * (1 - rh_ref) * 26) /
-         (1.8 * (1 - 0.55 * (1 - rh_ref)));
+  return (1.8f * t - 0.55f * (1 - r) * (1.8f * t - 26) - 0.55f * (1 - rh_ref) * 26) /
+         (1.8f * (1 - 0.55f * (1 - rh_ref)));
 }
 
 // ----------------------------------------------------------------------
@@ -427,7 +429,7 @@ float FmiFeelsLikeTemperature(float wind, float rh, float temp, float rad)
   float a = 15.0;   // using this the two wind chills are good match at T=0
   float t0 = 37.0;  // wind chill is horizontal at this T
 
-  float chill = a + (1 - a / t0) * temp + a / t0 * std::pow(wind + 1, 0.16) * (temp - t0);
+  float chill = a + (1 - a / t0) * temp + a / t0 * std::pow(wind + 1, 0.16f) * (temp - t0);
 
   // Heat index
 
@@ -445,9 +447,9 @@ float FmiFeelsLikeTemperature(float wind, float rh, float temp, float rad)
   {
     // Chosen so that at wind=0 and rad=800 the effect is 4 degrees
     // At rad=50 the effect is then zero degrees
-    float absorption = 0.07;
+    float absorption = 0.07f;
 
-    feels += 0.7 * absorption * rad / (wind + 10) - 0.25;
+    feels += 0.7f * absorption * rad / (wind + 10) - 0.25f;
   }
 
   return feels;

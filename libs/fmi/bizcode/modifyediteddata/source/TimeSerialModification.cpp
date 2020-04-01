@@ -270,7 +270,7 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
         return false; // Tehd‰‰n vain lineaarisille parametreille muokkaus, en osaa muille laskea muutoksia oikein
 
 	NFmiDataIdent dataIdent(theParam);
-	boost::shared_ptr<NFmiDrawParam> drawParamForLimits = theAdapter.GetUsedDrawParam(dataIdent, NFmiInfoData::kEditable);
+	boost::shared_ptr<NFmiDrawParam> drawParamForLimits = theAdapter.GetUsedDrawParamForEditedData(dataIdent);
 
 	if(drawParamForLimits)
 	{
@@ -388,7 +388,7 @@ static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface 
 
 static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
 {
-    auto drawParam = theAdapter.GetUsedDrawParam(editedInfo->Param(), dataType);
+    auto drawParam = theAdapter.GetUsedDrawParamForEditedData(editedInfo->Param());
     NFmiControlPointObservationBlender dataModifier(editedInfo, drawParam, maskList, fUsedMask,
         theAdapter.CPManager(), theAdapter.CPGridCropRect(),
         theAdapter.UseCPGridCrop(), theAdapter.CPGridCropMargin(), observationInfos, actualFirstTime, theAdapter.GetGriddingHelper()->GriddingProperties(true));
@@ -695,7 +695,7 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 // t‰t‰ metodia voidaan k‰ytt‰‰ aina kaikkialla kun tehd‰‰n muokkauksia dataan
 // theModifyingTool 1 = muokkausdialogi, 2 = pensseli ja 3 = aikasarjaeditori
 // kun tyˆkalu on 2 tai 3, annetaan mukana myˆs editoitava parametri
-static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterface &theAdapter, NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fDoMultiThread, bool fPasteAction, NFmiParamBag *theModifiedParamBag = 0)
+static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterface &theAdapter, NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fDoMultiThread, NFmiParamBag *theModifiedParamBag = 0)
 {
 	if(theAdapter.CheckValidationFromSettings() == false)
 		return false;
@@ -753,10 +753,7 @@ static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterfa
 				switch (theModifyingTool)
 				{
                 case NFmiMetEditorTypes::kFmiDataModificationTool:
-					if(fPasteAction)
-						timeDesc = boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(theAdapter.EditedDataTimeDescriptor().OriginTime(), NFmiTimeBag(theAdapter.ActiveViewTime(), theAdapter.ActiveViewTime(), editedInfo->TimeResolution())));
-					else
-						timeDesc = theAdapter.CreateDataFilteringTimeDescriptor(editedInfo);
+					timeDesc = theAdapter.CreateDataFilteringTimeDescriptor(editedInfo);
 					break;
                 case NFmiMetEditorTypes::kFmiBrush:
 					timeDesc = boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(theAdapter.EditedDataTimeDescriptor().OriginTime(), NFmiTimeBag(theAdapter.ActiveViewTime(), theAdapter.ActiveViewTime(), editedInfo->TimeResolution())));
@@ -938,7 +935,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 		if(fDoDataValidations)
 		{
 			// tehd‰‰n j‰rkevyystarkastelu operaatio kaikille parametreille
-            ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiSmarttool, false, fSelectedLocationsOnly ? NFmiMetEditorTypes::kFmiSelectionMask : NFmiMetEditorTypes::kFmiNoMask, kFmiLastParameter, fDoMultiThread, false, &modifiedParams);
+            ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiSmarttool, false, fSelectedLocationsOnly ? NFmiMetEditorTypes::kFmiSelectionMask : NFmiMetEditorTypes::kFmiNoMask, kFmiLastParameter, fDoMultiThread, &modifiedParams);
 		}
 
         LogSmartToolModifications(theAdapter, modifiedParams, theLogMessage, showLoadedSmartTool);
@@ -1048,16 +1045,6 @@ static boost::shared_ptr<NFmiAreaMaskList> CreateFilteringMaskList(TimeSerialMod
 	return maskList;
 }
 
-static boost::shared_ptr<NFmiDataModifier> CreatePasteModifier(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
-{
-	boost::shared_ptr<NFmiDataModifier> modifier;
-	if(theAdapter.ClipBoardData())
-	{
-		modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierPasteData(theCopyOfEditedData, 0, theMaskList, theAdapter.ClipBoardData()));
-	}
-	return modifier;
-}
-
 static NFmiDataModifier* CreateFilteringHelperModifier(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
 {
 	NFmiDataModifier *helpModifier = 0;
@@ -1149,7 +1136,7 @@ static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSeria
 	return areaModifier;
 }
 
-static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fPasteClipBoardData, bool fDoMultiThread)
+static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
 {
 	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0)); // n‰m‰ moukkaustyˆkalulla (filtteri tyˆkalu) tehdyt muokkaukset tehd‰‰n aina p‰‰karttaikkunan aktiiviselle datalle
 	if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(drawParam->Param())))
@@ -1160,11 +1147,7 @@ static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, 
 			if(!theCopyOfEditedData->Param(drawParam->Param()))
 				return false;
 
-		boost::shared_ptr<NFmiDataModifier> areaModifier;
-		if(fPasteClipBoardData)
-			areaModifier = ::CreatePasteModifier(theAdapter, theMaskList, theCopyOfEditedData);
-		else
-			areaModifier = CreateAreaFilteringModifier(theAdapter, theMaskList, theCopyOfEditedData);
+		boost::shared_ptr<NFmiDataModifier> areaModifier = CreateAreaFilteringModifier(theAdapter, theMaskList, theCopyOfEditedData);
 		bool status = false;
 		if(areaModifier)
 		{
@@ -1189,7 +1172,7 @@ static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theA
 			{
 				if(theCopyOfEditedData->Param(theEditedData->Param()))
 				{
-					::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, false, fDoMultiThread);
+					::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 				}
 			}
 			else // k‰yd‰‰n aliparametritkin l‰pi
@@ -1203,7 +1186,7 @@ static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theA
 						{
 							if(theCopyOfEditedData->Param(*subParamBag.Current()))
 							{
-								::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, false, fDoMultiThread);
+								::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 							}
 						}
 					}
@@ -1231,7 +1214,7 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 					{
 						if(theCopyOfEditedData->Param(theEditedData->Param()))
 						{
-							::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, false, fDoMultiThread);
+							::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 						}
 					}
 				}
@@ -1249,7 +1232,7 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 							{
 								if(theCopyOfEditedData->Param(*subParamBag.Current()))
 								{
-									::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, false, fDoMultiThread);
+									::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 								}
 							}
 						}
@@ -1262,18 +1245,13 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 	return false;
 }
 
-static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, bool fPasteClipBoardData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
-	if(fPasteClipBoardData)
-	{
-		return ::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, true, fPasteClipBoardData, fDoMultiThread);
-	}
-
 	switch(theAdapter.FilteringParameterUsageState())
 	{
 	case 0: // 0=tehd‰‰n operaatio vain aktiiviselle parametrille
 		{
-			return ::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, true, fPasteClipBoardData, fDoMultiThread);
+			return ::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, true, fDoMultiThread);
 		}
 	case 1: // 1=tehd‰‰n operaatio kaikille parametreille
 		{
@@ -1334,14 +1312,14 @@ void LogDataFilterToolsModifications(TimeSerialModificationDataInterface &theAda
     ::LogMessage(theAdapter, FmiModifyEditdData::DataFilterToolsParamsForLog(theAdapter) + ModifiedTimesForLog(theAdapter) + toolText, CatLog::Severity::Info, CatLog::Category::Editing);
 }
 
-static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, bool fPasteClipBoardData, bool fDoMultiThread)
+static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
         NFmiMetTime time = editedData->Time();
 		{
-			boost::shared_ptr<NFmiTimeDescriptor> times = theAdapter.CreateDataFilteringTimeDescriptor(editedData, fPasteClipBoardData);
+			boost::shared_ptr<NFmiTimeDescriptor> times = theAdapter.CreateDataFilteringTimeDescriptor(editedData);
 			try
 			{
 				::SnapShotData(theAdapter, editedData, editedData->Param(), "Area modifications", times->FirstTime(), times->LastTime());
@@ -1360,12 +1338,12 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 			{
 				boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
 				copyOfEditedData->MaskType(usedMaskType);
-				status = ::DoAreaFiltering(theAdapter, maskList, editedData, copyOfEditedData, fPasteClipBoardData, times, fDoMultiThread);
+				status = ::DoAreaFiltering(theAdapter, maskList, editedData, copyOfEditedData, times, fDoMultiThread);
 				if(!status)
 					::UndoData(theAdapter);
 				else
 				{
-					::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread, fPasteClipBoardData);
+					::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataModificationTool, false, theAdapter.TestFilterUsedMask(), kFmiLastParameter, fDoMultiThread);
                     ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
                 }
 			}
@@ -2664,29 +2642,49 @@ void FmiModifyEditdData::InitializeSmartToolModifier(NFmiSmartToolModifier &theS
 	theSmartToolModifier.InitSmartTool(macroParamStr, true);
 }
 
+static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSerialModificationDataInterface& theAdapter, NFmiExtraMacroParamData* possibleExtraMacroParamData)
+{
+	// Lokitetaan virheviesti
+	::LogMessage(theAdapter, theErrorText, CatLog::Severity::Error, CatLog::Category::Macro);
+	// Jos kyse toolpit laskuista, laitetaan viesti talteen ExtraMacroParamData:an, jotta viesti voidaan laittaa tooltippiin
+	if(possibleExtraMacroParamData)
+		possibleExtraMacroParamData->MacroParamErrorMessage(theErrorText);
+
+	// talletetaan virheteksti aikaleimalla, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten smarttool dialogissa
+	NFmiTime aTime;
+	std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
+	auto dialogErrorString = timeString + theErrorText;
+	theAdapter.SetLatestMacroParamErrorText(dialogErrorString);
+	theAdapter.SetMacroErrorText(dialogErrorString);
+}
+
+std::string FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath)
+{
+	std::string errorMessage = baseMessage;
+	if(exceptionPtr)
+	{
+		errorMessage += ": \n";
+		errorMessage += exceptionPtr->what();
+	}
+	errorMessage += ", \nin '";
+	errorMessage += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), macroParamSystemRootPath, "dpa");
+	errorMessage += "'";
+	return errorMessage;
+}
+
 static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
+	const auto& macroParamRootPath = theAdapter.MacroParamSystem().RootPath();
 	try // ensin tulkitaan macro
 	{
 		FmiModifyEditdData::InitializeSmartToolModifier(smartToolModifier, theAdapter, theDrawParam);
 	}
 	catch(std::exception &e)
 	{
-		std::string errorText;
-		NFmiTime aTime;
-		errorText += "Error: Macro Parameter intepretion failed: \n";
-		errorText += e.what();
-        errorText += ", in '";
-        errorText += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), theAdapter.MacroParamSystem().RootPath(), "dpa");
-        errorText += "'";
-        ::LogMessage(theAdapter, errorText, CatLog::Severity::Error, CatLog::Category::Macro);
-
-        std::string timeString = aTime.ToStr("YYYY.MM.DD klo HH:mm:SS - ");
-        auto finalErrorString = timeString + errorText;
-        theAdapter.SetLatestMacroParamErrorText(finalErrorString); // talletetaan virheteksti, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten
-		theAdapter.SetMacroErrorText(finalErrorString);
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, theDrawParam, macroParamRootPath);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 		return value;
 	}
 
@@ -2723,26 +2721,13 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	}
 	catch(std::exception &e)
 	{
-		std::string errorText;
-		NFmiTime aTime;
-		errorText += aTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat"), theAdapter.Language()); // k‰ytet‰‰n luotaus aikaleimaa kun en jaksanut lis‰t‰ uutta fraasia sanakirjaan
-		errorText += "\n";
-		errorText += "Error: Macro Parameter calculation failed:\n";
-		errorText += e.what();
-        ::LogMessage(theAdapter, errorText, CatLog::Severity::Error, CatLog::Category::Macro);
-        theAdapter.SetLatestMacroParamErrorText(errorText); // talletetaan virheteksti, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten
-		theAdapter.SetMacroErrorText(errorText);
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed", &e, theDrawParam, macroParamRootPath);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	catch(...)
 	{
-		std::string errorText;
-		NFmiTime aTime;
-		errorText += aTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat"), theAdapter.Language()); // k‰ytet‰‰n luotaus aikaleimaa kun en jaksanut lis‰t‰ uutta fraasia sanakirjaan
-		errorText += "\n";
-		errorText += "Error: Macro Parameter calculation failed: Unknown error!";
-        ::LogMessage(theAdapter, errorText, CatLog::Severity::Error, CatLog::Category::Macro);
-        theAdapter.SetLatestMacroParamErrorText(errorText); // talletetaan virheteksti, ett‰ k‰ytt‰j‰ voi tarkastella sit‰ sitten
-		theAdapter.SetMacroErrorText(errorText);
+		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed: Unknown error!", nullptr, theDrawParam, macroParamRootPath);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	return value;
 }
@@ -2921,12 +2906,12 @@ void FmiModifyEditdData::DoSmartToolEditing2(ModifyFunctionParamHolder &theModif
 	::ReportError_InfiniteValueCheck(theModifyFunctionParamHolder.itsAdapter, std::string(__FUNCTION__) + " - canceled");
 }
 
-bool FmiModifyEditdData::DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, bool fPasteClipBoardData, bool fDoMultiThread)
+bool FmiModifyEditdData::DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)
 {
 	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
 		return false;
 	::SetForInfiniteValueCheck(theAdapter);
-	bool status = ::DoAreaFiltering(theAdapter, fPasteClipBoardData, fDoMultiThread);
+	bool status = ::DoAreaFiltering(theAdapter, fDoMultiThread);
 	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
 	return status;
 }
@@ -2981,12 +2966,12 @@ bool FmiModifyEditdData::TryAutoStartUpLoad(TimeSerialModificationDataInterface 
 	return status;
 }
 
-bool FmiModifyEditdData::CheckAndValidateAfterModifications(TimeSerialModificationDataInterface &theAdapter, NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fDoMultiThread, bool fPasteAction)
+bool FmiModifyEditdData::CheckAndValidateAfterModifications(TimeSerialModificationDataInterface &theAdapter, NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fDoMultiThread)
 {
 	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
 		return false;
 	::SetForInfiniteValueCheck(theAdapter);
-	bool status = ::CheckAndValidateAfterModifications(theAdapter, theModifyingTool, fMakeDataSnapshotAction, theLocationMask, theParam, fDoMultiThread, fPasteAction);
+	bool status = ::CheckAndValidateAfterModifications(theAdapter, theModifyingTool, fMakeDataSnapshotAction, theLocationMask, theParam, fDoMultiThread);
 	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
 	return status;
 }

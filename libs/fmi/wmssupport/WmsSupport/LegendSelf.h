@@ -1,9 +1,8 @@
 #pragma once
 
-#include "LegendBuffer.h"
+#include "wmssupport/LegendBuffer.h"
 
 #include <vector>
-#include <algorithm>
 
 namespace Wms
 {
@@ -14,43 +13,15 @@ namespace Wms
             unsigned int remaining_;
             unsigned int height_ = 0;
         public:
-            Row(unsigned int maxSelfLength)
-                : remaining_{ maxSelfLength }
-            {
-            }
+            Row(unsigned int maxSelfLength);
 
             std::vector<LegendBuffer> legends;
 
-            void addLegend(LegendBuffer legend)
-            {
-                auto legendH = legend.legendHeightRelativeToOrientation();
-                auto legendW = legend.legendWidthRelativeToOrientation();
-                remaining_ = (std::max)((int)remaining_ - (int)legendW, 0);
-                height_ = (std::max)(height_, legendH);
-                legends.push_back(legend);
-            }
+            void addLegend(LegendBuffer legend);
 
-            unsigned int getRemainingRoom() const
-            {
-                return remaining_;
-            }
-
-            unsigned int getHeight() const
-            {
-                return height_;
-            }
-
-            void updateHeight()
-            {
-                decltype(auto) maxLegend = std::max_element(legends.cbegin(), legends.cend(), [](const auto& el1, const auto& el2)
-                {
-                    return el1.legendHeightRelativeToOrientation() < el2.legendHeightRelativeToOrientation();
-                });
-                if(maxLegend != legends.cend())
-                    height_ = maxLegend->height;
-                else
-                    height_ = 0;
-            }
+            unsigned int getRemainingRoom() const;
+            unsigned int getHeight() const;
+            void updateHeight();
         };
 
         unsigned int maxSelfLength;
@@ -62,131 +33,19 @@ namespace Wms
         double horizontalShift = 0;
         double verticalShift = 0;
 
-        LegendSelf(unsigned int maxSelfLength_, unsigned int maxSelfHeight_, Orientation orientation_)
-            : maxSelfLength{ maxSelfLength_ }
-            , maxSelfHeight{ maxSelfHeight_ }
-            , orientation{ orientation_ }
-        {
-            addEmptySelf();
-        }
+        LegendSelf(unsigned int maxSelfLength_, unsigned int maxSelfHeight_, Orientation orientation_);
 
-        void insert(std::vector<LegendBuffer>& legends)
-        {
-            for(auto& legend : legends)
-            {
-                legend.orientation = orientation;
-                scaleLegendDownIfTooBigForEmptySelf(legend);
-
-                Row* bestSelf = lookForBestSelfToPutLegend(legend);
-                if(!bestSelf)
-                {
-                    addEmptySelf();
-                    bestSelf = &selves.back();
-                }
-
-                bestSelf->addLegend(legend);
-            }
-            updateTotalHeight();
-        }
-
-        bool shouldCompress()
-        {
-            return totalHeight > maxSelfHeight;
-        }
-
-        void compress()
-        {
-            while(totalHeight > maxSelfHeight)
-            {
-                compress(0.9);
-                auto legends = getLegends();
-                clear();
-                insert(legends);
-            }
-        }
+        void insert(std::vector<LegendBuffer>& legends);
+        bool shouldCompress();
+        void compress();
 
     private:
-        void updateTotalHeight()
-        {
-            for(const auto& self : selves)
-            {
-                totalHeight += self.getHeight();
-            }
-        }
-
-        Row* lookForBestSelfToPutLegend(const LegendBuffer& legend)
-        {
-            auto legendW = legend.legendWidthRelativeToOrientation();
-            Row* bestSelf = nullptr;
-            auto remainingAfterLegend = (std::numeric_limits<unsigned int>::max)();
-            for(auto& self : selves)
-            {
-                if(self.getRemainingRoom() > legendW)
-                {
-                    if(self.getRemainingRoom() - legendW < remainingAfterLegend)
-                    {
-                        bestSelf = &self;
-                        remainingAfterLegend = self.getRemainingRoom() - legendW;
-                    }
-                }
-            }
-            return bestSelf;
-        }
-
-        void addEmptySelf()
-        {
-            auto self = Row{ maxSelfLength };
-            selves.push_back(self);
-        }
-
-        void scaleLegendDownIfTooBigForEmptySelf(LegendBuffer& legend)
-        {
-            auto legendW = legend.legendWidthRelativeToOrientation();
-            if(legendW > maxSelfLength)
-            {
-                auto factor = ((double)maxSelfLength) / (double)legendW;
-                legend.height = static_cast<int>(std::floor(factor * legend.height));
-                legend.width = static_cast<int>(std::floor(factor * legend.width));
-            }
-        }
-
-        void clear()
-        {
-            selves.clear();
-            totalHeight = 0;
-            addEmptySelf();
-        }
-
-        std::vector<LegendBuffer> getLegends()
-        {
-            auto legends = std::vector<LegendBuffer>{};
-
-            for(auto& self : selves)
-            {
-                std::copy(self.legends.begin(), self.legends.end(), std::back_inserter(legends));
-            }
-            return legends;
-        }
-
-        void compress(double factor)
-        {
-            if(totalHeight <= maxSelfHeight)
-            {
-                return;
-            }
-            for(auto& self : selves)
-            {
-                auto heightLimit = static_cast<unsigned int>(std::floor(self.getHeight() * factor));
-                for(auto& legend : self.legends)
-                {
-                    if(legend.legendHeightRelativeToOrientation() > heightLimit)
-                    {
-                        legend.height = static_cast<unsigned int>(std::floor(factor * legend.height));
-                        legend.width = static_cast<unsigned int>(std::floor(factor * legend.width));
-                    }
-                }
-                self.updateHeight();
-            }
-        }
+        void updateTotalHeight();
+        Row* lookForBestSelfToPutLegend(const LegendBuffer& legend);
+        void addEmptySelf();
+        void scaleLegendDownIfTooBigForEmptySelf(LegendBuffer& legend);
+        void clear();
+        std::vector<LegendBuffer> getLegends();
+        void compress(double factor);
     };
 }

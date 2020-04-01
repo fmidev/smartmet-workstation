@@ -63,6 +63,8 @@ class NFmiExtraMacroParamData
   void MacroParamDescription(const std::string &newValue) { itsMacroParamDescription = newValue; }
   MacroParamCalculationType CalculationType() const { return itsCalculationType; }
   void CalculationType(MacroParamCalculationType newValue) { itsCalculationType = newValue; }
+  const std::string &MacroParamErrorMessage() const { return itsMacroParamErrorMessage; }
+  void MacroParamErrorMessage(const std::string &message) { itsMacroParamErrorMessage = message; }
 
  private:
   void InitializeResolutionWithEditedData(NFmiInfoOrganizer &theInfoOrganizer);
@@ -117,4 +119,9 @@ class NFmiExtraMacroParamData
   // T‰h‰n voidaan sijoittaa macroParamiin liittyv‰ yleisselite, joka tulee tooltippiin
   std::string itsMacroParamDescription;
   MacroParamCalculationType itsCalculationType = MacroParamCalculationType::Normal;
+
+  // T‰m‰ ei kuuluvarsinaisesti n‰ihin macroParam extra datoihin, mutta tarvitsen kuljettaa
+  // mahdolliset smarttool kielen k‰‰nt‰j‰/ajoaika virheilmoitukset takaisin k‰ytt‰j‰lle, 
+  // mm. tooltip tekstiin.
+  std::string itsMacroParamErrorMessage;
 };

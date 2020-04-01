@@ -23,10 +23,9 @@ public:
 	bool EditedDataNotInPreferredState(void) override;
 	void EditedDataNotInPreferredState(bool newValue) override;
 	int DoMessageBox(const std::string & theMessage, const std::string &theTitle, unsigned int theMessageBoxType) override;
-	void AllMapViewDescTopsTimeDirty(const NFmiMetTime &theTime) override;
     void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
     void WindTableSystemMustaUpdateTable(bool newState) override;
-	boost::shared_ptr<NFmiDrawParam> GetUsedDrawParam(const NFmiDataIdent &theDataIdent, NFmiInfoData::Type theDataType) override;
+	boost::shared_ptr<NFmiDrawParam> GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent) override;
 	NFmiMetEditorOptionsData& MetEditorOptionsData(void) override;
 	boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) override;
 	CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void) override;
@@ -38,7 +37,7 @@ public:
 	NFmiParamBag& FilteringParamBag(void) override;
 	const NFmiTimeDescriptor& EditedDataTimeDescriptor(void) override;
 	const NFmiMetTime& ActiveViewTime(void) override;
-	boost::shared_ptr<NFmiTimeDescriptor> CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, bool fPasteClipBoardData = false) override;
+	boost::shared_ptr<NFmiTimeDescriptor> CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo> &theEditedData) override;
 	NFmiSmartToolInfo* SmartToolInfo(void) override;
 	std::string& SmartToolEditingErrorText(void) override;
     NFmiGriddingHelperInterface* GetGriddingHelper(void) override;

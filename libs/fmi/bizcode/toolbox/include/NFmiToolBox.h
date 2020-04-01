@@ -80,8 +80,8 @@ public:
 
   void  ConvertEnvironment(const NFmiDrawingEnvironment * fmiEnvironment);
   COLORREF ConvertColor(const FmiRGBColor & fromFmiColor);
-  void ConvertPointList(NFmiVoidPtrList * fmiPointList, std::vector<CPoint> &theMFCPoints);
-  void ConvertPointList(NFmiVoidPtrList * fmiPointList, std::vector<CPoint> &theMFCPoints, CPoint &MFCOffSet, double xScale, double yScale, double rotationAlfa);
+  void ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint> &theMFCPoints);
+  void ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint> &theMFCPoints, CPoint &MFCOffSet, double xScale, double yScale, double rotationAlfa);
 
   // muutos pikseli-maailmasta toolboxin suhteelliseen maailmaan
   NFmiPoint ToViewPoint(long xPix, long yPix);
@@ -157,7 +157,7 @@ protected:
   void SelectEnvironment (const NFmiDrawingItem * fromFmiDrawingItem);
   void DeSelectEnvironment (const NFmiDrawingItem * fromFmiDrawingItem);
 
-  void SetUpClipping(void);
+  void SetUpClipping();
   void EndClipping(void);
   void FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineList, checkedVector<CPoint> &thePoints, checkedVector<int> &thePolygonPointCounts, int &thePolygonCount, const NFmiPoint &theOffSet);
 

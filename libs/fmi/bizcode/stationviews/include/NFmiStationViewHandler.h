@@ -109,7 +109,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
 	NFmiCtrlView* GetView(const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
 	void DrawParamView(NFmiToolBox * theGTB);
-    boost::shared_ptr<NFmiArea> MapArea(void) const {return itsMapArea;}
+	boost::shared_ptr<NFmiArea> GetArea() const override;
+	void SetArea(const boost::shared_ptr<NFmiArea>& theArea) override;
 
  private:
 	void DoTotalLocationSelection(const NFmiPoint & thePlace, const NFmiPoint &theLatlon, unsigned long theKey, bool fDrawSelectionOnThisView);
@@ -147,6 +148,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	std::string ComposeWarningMessageToolTipText(void);
 	std::string ComposeSeaIcingWarningMessageToolTipText(void);
 	std::string ComposeSilamLocationsToolTipText(void);
+	std::string ComposeMapLayerToolTipText(bool beforeDataIsDrawnCase);
 	void DrawMouseCursorHelperCrossHair(void);
 	void DrawSelectedSynopFromGridView(void);
 	bool ChangeHybridDataLevel(NFmiStationView* theView, short theDelta);
@@ -210,6 +212,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     bool LeftButtonUpCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     bool DrawContourLegendOnThisMapRow();
+	bool HasSeparateCountryBorderLayer() const;
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
