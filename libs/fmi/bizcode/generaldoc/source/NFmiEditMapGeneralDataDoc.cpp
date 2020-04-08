@@ -3052,10 +3052,7 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 // ********** lisätään havaintoparametri osa *************************
 
 // ********** WMS *************************
-// HUOM!!! Älä lisää Wms parametreja popup-valikkoon, niitä on niin paljon, että Windows:in popup-menu sekoaa ja sen systeemit
-// menee yli rajojen. Olen joskus testannut että popupit alkavat sekoamaan, kun niissä on yli n. satatuhatta menu-item:ia.
-// Katso jos jostain löytyisi parempi popup-valikoiden teko mekanismi.
-//    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
+    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
 
 // ********** lisätään apudata-parametri osa *************************
 	menuString = ::GetDictionaryString("MapViewParamPopUpHelpData");
@@ -3243,9 +3240,6 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 		MenuCreationSettings menuSettings;
 		menuSettings.SetMapViewSettings(theDescTopIndex, kFmiAddView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAdd");
-
-		menuSettings.SetMapViewSettings(theDescTopIndex, kFmiAddAsOnlyView);
-		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAddAsOnly");
 
         AddSwapViewRowsToPopup(theDescTopIndex, itsPopupMenu);
 
@@ -3902,9 +3896,6 @@ bool CreateMaskSelectionPopup(void)
 		MenuCreationSettings menuSettings;
 		menuSettings.SetMaskSettings(kFmiAddMask);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewMaskSelectionPopUpAdd");
-
-		menuSettings.SetMaskSettings(kFmiAddAsOnlyMask);
-		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewMaskSelectionPopUpAddAsOnly");
 
 		std::string menuString = ::GetDictionaryString("MapViewMaskSelectionPopUpRemoveAll");
         auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiRemoveAllMasks, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
@@ -7380,9 +7371,6 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		MenuCreationSettings menuSettings;
 		menuSettings.SetCrossSectionSettings(kFmiAddParamCrossSectionView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "NormalWordCapitalAdd");
-
-		menuSettings.SetCrossSectionSettings(kFmiAddAsOnlyParamCrossSectionView);
-		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "CrossSectionViewSelectionPopUpAddAsOnly");
 
         AddSwapViewRowsToPopup(CtrlViewUtils::kFmiCrossSectionView, itsPopupMenu);
 
