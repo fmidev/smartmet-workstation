@@ -274,7 +274,8 @@ bool NFmiMenuItemList::InitializeCommandIDs(unsigned long theFirstCommandID)
 // 1. Laske kuinka monta itemia on menu-puussa.
 // 2. Jos lukema on liian iso, karsi puun lopusta ali puita kunnes p‰‰st‰‰n alle kriittisen rajan.
 // 3. Lis‰‰ karsimistapauksessa p‰‰tasolle loppuun menu-item, jonka teksti varoittaa ett‰ puuta on karsittu.
-void NFmiMenuItemList::FixOverSizedMenuTree()
+// Palauttaa stringin, jossa on listattu poistetut rakenteet (lokia varten).
+std::string NFmiMenuItemList::FixOverSizedMenuTree()
 {
 	const size_t criticalMaxMenuItemCount = 100000;
 	auto totalMenuItemCount = TotalNumberOfMenuItems();
@@ -282,7 +283,9 @@ void NFmiMenuItemList::FixOverSizedMenuTree()
 	{
 		auto removedSubTreenames = PruneMenuTreeFromEnd(totalMenuItemCount - criticalMaxMenuItemCount);
 		AddPruneWarningAsMainLevelMenuItem(removedSubTreenames);
+		return removedSubTreenames;
 	}
+	return "";
 }
 
 // Deletoi menu-puun lopusta haluttu m‰‰r‰ (pruneCount) menu-itemeja.

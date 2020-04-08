@@ -73,7 +73,7 @@ class NFmiMenuItemList
 	void CalcMinAndMaxId(void);
 	unsigned int MinId(void);
 	unsigned int MaxId(void);
-	void FixOverSizedMenuTree();
+	std::string FixOverSizedMenuTree();
 
  private:
      void SortParamsInAlphabeticalOrder();
