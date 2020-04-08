@@ -267,6 +267,83 @@ bool NFmiMenuItemList::InitializeCommandIDs(unsigned long theFirstCommandID)
 	return true;
 }
 
+// Kun tämän luokan oliosta rakennetaan lopullista MFC:n CMenu oliota, pitää varmistaa ettei
+// puurakenne ole liian iso. Olen huomannut, että jos rakenteessa on yli 100000 itemia,
+// lakkaa popup menu toimimasta totaalisesti ja se ei tule edes näkyviin.
+// FixOverSizedMenuTree metodi tekee siis seuraavaa:
+// 1. Laske kuinka monta itemia on menu-puussa.
+// 2. Jos lukema on liian iso, karsi puun lopusta ali puita kunnes päästään alle kriittisen rajan.
+// 3. Lisää karsimistapauksessa päätasolle loppuun menu-item, jonka teksti varoittaa että puuta on karsittu.
+void NFmiMenuItemList::FixOverSizedMenuTree()
+{
+	const size_t criticalMaxMenuItemCount = 100000;
+	auto totalMenuItemCount = TotalNumberOfMenuItems();
+	if(totalMenuItemCount > criticalMaxMenuItemCount)
+	{
+		auto removedSubTreenames = PruneMenuTreeFromEnd(totalMenuItemCount - criticalMaxMenuItemCount);
+		AddPruneWarningAsMainLevelMenuItem(removedSubTreenames);
+	}
+}
+
+// Deletoi menu-puun lopusta haluttu määrä (pruneCount) menu-itemeja.
+// Tarkemmin sanottuna siivoa sitä päätason menu-puun oksaa, jossa
+// on eniten itemeja (Esim. parametrin lisäyksessä Add -alimenu)
+// ja sen alipuun lopusta alkaen.
+// Jos poistetaan joku/joitain oks(i)a puusta, palauttaa kuvausen että:
+// REMOVED from 'menu-item-name': sub-tree1, sub-tree2, ...
+std::string NFmiMenuItemList::PruneMenuTreeFromEnd(size_t pruneCount)
+{
+	std::string removedSubTreeNames;
+	auto biggestSubMenuInfo = GetBiggestSubMenuTree();
+	if(biggestSubMenuInfo.second != nullptr)
+	{
+		removedSubTreeNames += "REMOVED from '" + biggestSubMenuInfo.first + "': ";
+		size_t removedMenuItemCount = 0;
+		auto& subMenuList = biggestSubMenuInfo.second->itsMenuItemList;
+		for(auto reverseIter = std::rbegin(subMenuList); reverseIter != std::rend(subMenuList); )
+		{
+			if(!removedSubTreeNames.empty())
+				removedSubTreeNames += ", ";
+			removedSubTreeNames += (*reverseIter)->MenuText();
+			removedMenuItemCount += (*reverseIter)->TotalNumberOfMenuItems();
+			// Listasta poistaminen reverse iteraattoreita käyttäen on astetta vaikeampaa hommaa, kun ollaan vielä for-loopissa.
+			// https://stackoverflow.com/questions/37005449/how-to-call-erase-with-a-reverse-iterator-using-a-for-loop
+			reverseIter = decltype(reverseIter){ subMenuList.erase(std::next(reverseIter).base()) };
+
+			if(removedMenuItemCount >= pruneCount)
+				break;
+		}
+	}
+	return removedSubTreeNames;
+}
+
+// Palauttaa parin, missä on isoimman alimenun nimi ja sen osoittama lista.
+std::pair<std::string, NFmiMenuItemList*> NFmiMenuItemList::GetBiggestSubMenuTree()
+{
+	std::pair<std::string, NFmiMenuItemList*> biggestSubMenuTreeInfo{"", nullptr};
+	size_t biggestSubMenuTreeSize = 0;
+	for(auto& menuItem : itsMenuItemList)
+	{
+		auto* subMenu = menuItem->SubMenu();
+		if(subMenu)
+		{
+			auto subMenuSize = subMenu->TotalNumberOfMenuItems();
+			if(subMenuSize > biggestSubMenuTreeSize)
+			{
+				biggestSubMenuTreeSize = subMenuSize;
+				biggestSubMenuTreeInfo.first = menuItem->MenuText();
+				biggestSubMenuTreeInfo.second = subMenu;
+			}
+		}
+	}
+	return biggestSubMenuTreeInfo;
+}
+
+void NFmiMenuItemList::AddPruneWarningAsMainLevelMenuItem(const std::string& removedSubTreenames)
+{
+	Add(std::make_unique<NFmiMenuItem>(0, removedSubTreenames, kFmiBadParameter, kFmiNoCommand, NFmiMetEditorTypes::View::kFmiTextView, nullptr, NFmiInfoData::kNoDataType));
+}
+
 bool NFmiMenuItemList::Add(MenuItem &&theMenuItem)
 {
 	itsMenuItemList.push_back(std::move(theMenuItem));
@@ -312,7 +389,7 @@ int NFmiMenuItemList::NumberOfSubMenus(int theNumberOfSubmenus)
 {
     for(auto &menuItem : itsMenuItemList)
     {
-		if(menuItem && menuItem->SubMenu())
+		if(menuItem->SubMenu())
 		{
 			theNumberOfSubmenus = menuItem->SubMenu()->NumberOfSubMenus(theNumberOfSubmenus);
 			theNumberOfSubmenus++;
@@ -324,6 +401,16 @@ int NFmiMenuItemList::NumberOfSubMenus(int theNumberOfSubmenus)
 size_t NFmiMenuItemList::NumberOfMenuItems(void)
 {
 	return itsMenuItemList.size();
+}
+
+size_t NFmiMenuItemList::TotalNumberOfMenuItems() const
+{
+	size_t totalMenuItemCount = 0;
+	for(auto& menuItem : itsMenuItemList)
+	{
+		totalMenuItemCount += menuItem->TotalNumberOfMenuItems();
+	}
+	return totalMenuItemCount;
 }
 
 void NFmiMenuItemList::CalcMinAndMaxId(void)
