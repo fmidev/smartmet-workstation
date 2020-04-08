@@ -312,7 +312,6 @@ public:
     afx_msg void OnAcceleratorMapRow9();
     afx_msg void OnAcceleratorMapRow10();
     afx_msg void OnButtonShowSynopPlotSettings();
-	afx_msg void OnMuokkaaMakropolkuasetukset();
 	afx_msg void OnAcceleratorObsComparisonChangeSymbol();
 	afx_msg void OnAcceleratorObsComparisonChangeSymbolSize();
 	afx_msg void OnAcceleratorObsComparisonToggleBorderDraw();

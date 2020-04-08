@@ -250,7 +250,6 @@ BEGIN
         MENUITEM "Projection line settings",    ID_MENUITEM_PROJECTION_LINE_SETUP
         MENUITEM "View grid setting...",        ID_MENUITEM_VIEW_GRID_SELECTION_DLG2
         MENUITEM "CP gridding options",         ID_MENUITEM_GRIDDING_OPTIONS
-        MENUITEM "Macro path settings...",      ID_MUOKKAA_MAKROPOLKUASETUKSET
         MENUITEM "Help edit mode settings...",  ID_MENUITEM_HELP_EDITOR_SETTINGS
         MENUITEM "Language...",                 ID_MENUITEM_MUOKKAA_KIELI
         MENUITEM "Sounding data from server settings...", ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS
@@ -831,8 +830,6 @@ END
 STRINGTABLE
 BEGIN
     ID_MENUITEM_GRIDDING_OPTIONS "CP gridding options\nCP gridding options"
-    ID_MUOKKAA_MAKROPOLKUASETUKSET 
-                            "Macro path settings...\nMacro path settings..."
     ID_MENUITEM_HELP_EDITOR_SETTINGS 
                             "Help edit mode settings...\nHelp edit mode settings..."
     ID_MENUITEM_MUOKKAA_KIELI "Language...\nLanguage..."
