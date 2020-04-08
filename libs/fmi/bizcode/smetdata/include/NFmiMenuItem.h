@@ -89,7 +89,8 @@ class NFmiMenuItem
 	void MapViewDescTopIndex(int newValue) {itsMapViewDescTopIndex = newValue;}
 	double ExtraParam(void) const {return itsExtraParam;}
 	void ExtraParam(double newValue) {itsExtraParam = newValue;}
- private:
+	size_t TotalNumberOfMenuItems() const;
+private:
    NFmiDataIdent itsDataIdent;
    FmiMenuCommandType itsCommandType;
 
