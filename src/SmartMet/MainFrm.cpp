@@ -136,7 +136,6 @@ const int gDisableCombineDataThread = 32;
 const int gDisableSoundingIndexDataThread = 64;
 const int gDisableWarningMessageThread = 128;
 const int gDisableDataLoaderThread = 256;
-const int gDisableMacroDirectorySyncThread = 512;
 
 static int GetDisabledThreads(void)
 {
@@ -151,7 +150,6 @@ static int GetDisabledThreads(void)
 //	disableThreads |= gDisableSoundingIndexDataThread;
 //	disableThreads |= gDisableWarningMessageThread;
 //	disableThreads |= gDisableDataLoaderThread;
-//	disableThreads |= gDisableMacroDirectorySyncThread;
 
 	return disableThreads;
 }
