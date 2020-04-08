@@ -263,7 +263,6 @@ public:
     NFmiLocationSelectionTool* LocationSelectionTool2() override;
     NFmiParamBag& AllStaticParams() override;
     bool SelectNewParamForSelectionTool(int theParamId) override;
-    void ChangeDriveLetterInSettings(const std::string &newLetter) override;
     NFmiSynopPlotSettings* SynopPlotSettings() override;
     NFmiSynopStationPrioritySystem* SynopStationPrioritySystem() override;
     std::vector<NFmiLightWeightViewSettingMacro>& ViewMacroDescriptionList() override;

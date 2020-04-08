@@ -27,11 +27,6 @@ public:
 	bool UseLocalCache(void) const {return fUseLocalCache;}
 	int SyncIntervalInMinutes(void) const {return itsSyncIntervalInMinutes;}
 
-	void SetOrigSmartToolPath(const std::string &newValue) {itsOrigSmartToolPath = newValue;}
-	void SetOrigViewMacroPath(const std::string &newValue) {itsOrigViewMacroPath = newValue;}
-	void SetOrigMacroParamPath(const std::string &newValue) {itsOrigMacroParamPath = newValue;}
-	void SetOrigDrawParamPath(const std::string &newValue) {itsOrigDrawParamPath = newValue;}
-
 private:
     void LogMacroPaths();
 

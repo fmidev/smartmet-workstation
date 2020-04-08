@@ -487,12 +487,6 @@ bool NFmiBasicSmartMetConfigurations::InitLogger(void)
 	}
 }
 
-void NFmiBasicSmartMetConfigurations::StoreLoggerConfigurations(void)
-{
-    // This is only thing that can be changed in Logger settings by SmartMet's UI
-    NFmiSettings::Set("SmartMet::Logger::LogFilePath", itsLogFileDirectory);
-}
-
 void NFmiBasicSmartMetConfigurations::SetEditorVersionStr(void)
 {
 	std::string appNameStr = CT2A(AfxGetApp()->m_pszExeName);

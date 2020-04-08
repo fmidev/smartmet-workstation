@@ -312,7 +312,6 @@ public:
 	bool IsRedoableViewMacro(void);
 	std::string GetModelOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0);
 	NFmiMetTime GetModelOrigTime(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0);
-	void ChangeDriveLetterInSettings(const std::string &newLetter);
 	bool UseTimeSerialAxisAutoAdjust(void);
 	void UseTimeSerialAxisAutoAdjust(bool newValue);
 	NFmiDataNotificationSettingsWinRegistry& DataNotificationSettings(void);
@@ -432,7 +431,6 @@ public:
 	NFmiObsComparisonInfo& ObsComparisonInfo(void);
 	void SetApplicationTitle(const std::string &theTitle);
 	std::string GetApplicationTitle(void);
-	bool MakeMacroPathConfigurations(void);
 	bool MapMouseDragPanMode(void);
 	void MapMouseDragPanMode(bool newState);
 	NFmiSynopPlotSettings* SynopPlotSettings(void);

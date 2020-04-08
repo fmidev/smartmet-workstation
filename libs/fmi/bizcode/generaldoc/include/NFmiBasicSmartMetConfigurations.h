@@ -43,8 +43,6 @@ public:
     const std::string& HelpDataPath() const { return itsHelpDataPath; }
     const std::string& LogFileDirectory() const { return itsLogFileDirectory; }
     const std::string& BaseConfigurationFilePath() const { return itsBaseConfigurationFilePath; }
-    void LogFileDirectory(const std::string &newValue) { itsLogFileDirectory = newValue; }
-    void StoreLoggerConfigurations(void);
 
     void LogMessage(const std::string& message, CatLog::Severity severity, CatLog::Category category, bool flushLogger = false);
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false, bool flushLogger = false);
