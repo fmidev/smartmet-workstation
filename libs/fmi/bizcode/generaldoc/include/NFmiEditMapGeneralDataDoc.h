@@ -271,8 +271,6 @@ public:
 	bool CaseStudyModeOn(void);
 	bool LoadCaseStudyData(const std::string &theCaseStudyMetaFile);
 	NFmiCaseStudySystem& CaseStudySystem(void);
-	void DoMacroDirectoriesSyncronization(void);
-	void DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRoot2, bool preferRoot1, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags);
 	NFmiApplicationDataBase& ApplicationDataBase(void);
 	int RunningTimeInSeconds(void);
 	bool EditedDataNotInPreferredState(void);

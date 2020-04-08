@@ -272,7 +272,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetDataQualityCheckerDlgPlaceToDefault)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_DATA_QUALITY_CHECKER, &CSmartMetDoc::OnUpdateButtonDataQualityChecker)
 	ON_COMMAND(ID_ACCELERATOR_IGNORE_STATIONS_DLG, &CSmartMetDoc::OnAcceleratorIgnoreStationsDlg)
-	ON_COMMAND(ID_ACCELERATOR_DO_MACRO_DIRECTORIES_SYNCRONIZATION, &CSmartMetDoc::OnAcceleratorDoMacroDirectoriesSyncronization)
 	ON_COMMAND(ID_VIEW_CASE_STUDY_DIALOG, &CSmartMetDoc::OnViewCaseStudyDialog)
     ON_COMMAND(ID_ACCELERATOR_AREA_INFO_TO_CLIPBOARD, &CSmartMetDoc::OnAcceleratorAreaInfoToClipboard)
     ON_COMMAND(ID_VIEW_SET_SMARTTOOL_VIEW_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSmarttoolViewPlaceToDefault)
@@ -3312,12 +3311,6 @@ void CSmartMetDoc::OnButtonWarningCenterDlg()
         UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
 	}
 #endif // DISABLE_CPPRESTSDK
-}
-
-void CSmartMetDoc::OnAcceleratorDoMacroDirectoriesSyncronization()
-{
-	CWaitCursor cursor;
-	GetData()->DoMacroDirectoriesSyncronization();
 }
 
 void CSmartMetDoc::OnViewCaseStudyDialog()
