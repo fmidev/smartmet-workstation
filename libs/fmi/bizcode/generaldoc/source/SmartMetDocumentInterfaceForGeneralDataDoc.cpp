@@ -1265,11 +1265,6 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::SelectNewParamForSelectionTool(
     return itsDoc->SelectNewParamForSelectionTool(theParamId);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ChangeDriveLetterInSettings(const std::string &newLetter)
-{
-    itsDoc->ChangeDriveLetterInSettings(newLetter);
-}
-
 NFmiSynopPlotSettings* SmartMetDocumentInterfaceForGeneralDataDoc::SynopPlotSettings()
 {
     return itsDoc->SynopPlotSettings();

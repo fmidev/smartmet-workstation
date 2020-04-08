@@ -335,7 +335,6 @@ public:
     virtual NFmiLocationSelectionTool* LocationSelectionTool2() = 0;
     virtual NFmiParamBag& AllStaticParams() = 0;
     virtual bool SelectNewParamForSelectionTool(int theParamId) = 0;
-    virtual void ChangeDriveLetterInSettings(const std::string &newLetter) = 0;
     virtual NFmiSynopPlotSettings* SynopPlotSettings() = 0;
     virtual NFmiSynopStationPrioritySystem* SynopStationPrioritySystem() = 0;
     virtual std::vector<NFmiLightWeightViewSettingMacro>& ViewMacroDescriptionList() = 0;
