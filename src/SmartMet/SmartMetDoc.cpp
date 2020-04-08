@@ -223,7 +223,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_MAP_ROW_9, OnAcceleratorMapRow9)
     ON_COMMAND(ID_ACCELERATOR_MAP_ROW_10, OnAcceleratorMapRow10)
     ON_COMMAND(ID_BUTTON_SHOW_SYNOP_PLOT_SETTINGS, OnButtonShowSynopPlotSettings)
-    ON_COMMAND(ID_MUOKKAA_MAKROPOLKUASETUKSET, OnMuokkaaMakropolkuasetukset)
 	ON_COMMAND(ID_BUTTON_OBSERVATION_COMPARISON_MODE, OnButtonObservationComparisonMode)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_OBSERVATION_COMPARISON_MODE, OnUpdateButtonObservationComparisonMode)
 	ON_COMMAND(ID_BUTTON_SYNOP_DATA_GRID_VIEW, OnButtonSynopDataGridView)
@@ -2814,20 +2813,6 @@ void CSmartMetDoc::OnAcceleratorMapRow9()
 void CSmartMetDoc::OnAcceleratorMapRow10()
 {
     GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 10);
-}
-
-void CSmartMetDoc::OnMuokkaaMakropolkuasetukset()
-{
-	if(GetData()->MakeMacroPathConfigurations())
-	{
-		// en laita näitä muutamia dialogi päivityksiä UpdateAllViewsAndDialogs-metodiin, koska ne ovat muuten turhia kun tendään näytön päivityksiä
-		if(itsViewMacroDlg)
-			itsViewMacroDlg->InitMacroListFromDoc();
-		if(itsSmartToolDlg)
-			itsSmartToolDlg->UpdateMacroParamDisplayList(true);
-
-		UpdateAllViewsAndDialogs("Updated macro path settings");
-	}
 }
 
 static const int g_missingViewIndex = -9999;
