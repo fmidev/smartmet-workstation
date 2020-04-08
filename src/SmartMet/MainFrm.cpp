@@ -404,8 +404,6 @@ void CMainFrame::StartSmartMetTimers()
     if(updateInterValInHours > 0)
         itsDataToDBUpdateTimer = static_cast<UINT>(SetTimer(kFmiDataToDBUpdateTimer, static_cast<UINT>(updateInterValInHours * 60 * 60 * 1000), NULL)); // kerran vuorokaudessa l‰hetys
     itsCleanOldDataFromMemoryTimer = static_cast<UINT>(SetTimer(kFmiCleanOldDataFromMemoryTimer, 5 * 60 * 1000, NULL)); // siivotaan queryDatoja muistissa aina 5 minuutin v‰lein
-    if(itsDoc->MacroPathSettings().UseLocalCache())
-        itsMacroDirectoriesSyncronization = static_cast<UINT>(SetTimer(kFmiMacroDirectoriesSyncronization, 3 * 60 * 1000, NULL)); // tehd‰‰n 1. synkronointi vaikka 3 minuutin kuluttua
     itsStoreViewPosToWinRegistryTimer = static_cast<UINT>(SetTimer(kFmiStoreViewPosToWinRegistryTimer, 117 * 1000, NULL)); // tehd‰‰n ikkunoiden koko+sijainti talletuksia rekisteriin n. parin minuutin v‰lein (117 sekuntia)
     itsStoreCrashBackupViewMacroTimer = static_cast<UINT>(SetTimer(kFmiStoreCrashBackupViewMacroTimer, 87 * 1000, NULL)); // tehd‰‰n crash backup viewmacro talletuksia n. 1.5 minuutin v‰lein (87 sekuntia)
     itsGenerateBetaProductsTimer = static_cast<UINT>(SetTimer(kFmiGenerateBetaProductsTimer, 60 * 1000, NULL)); // Tarkastellaan minuutin v‰lein, ett‰ pit‰‰kˆ beta-producteja tehd‰ 
@@ -1200,17 +1198,6 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		{
 			cdoc->GetData()->CleanUnusedDataFromMemory();
 			return;
-		}
-
-		case kFmiMacroDirectoriesSyncronization:
-		{
-			KillTimer(itsMacroDirectoriesSyncronization);
-			if(itsDoc->MacroPathSettings().UseLocalCache())
-			{
-				cdoc->GetData()->DoMacroDirectoriesSyncronization();
-				itsMacroDirectoriesSyncronization = static_cast<UINT>(SetTimer(kFmiMacroDirectoriesSyncronization, itsDoc->MacroPathSettings().SyncIntervalInMinutes() * 60 * 1000, NULL));
-				return;
-			}
 		}
 
         case kFmiStoreViewPosToWinRegistryTimer:

@@ -398,7 +398,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsEditedDataNeedsToBeLoadedTimer()
 ,fEditedDataNotInPreferredState(false)
 ,itsMacroPathSettings()
-,itsMacroDirectoriesSyncronizationCounter(1)
 ,itsCaseStudySystem()
 ,itsCaseStudySystemOrig()
 ,itsLoadedCaseStudySystem()
@@ -922,72 +921,12 @@ void InitStationIgnoreList(void)
 	}
 }
 
-void FixDirectoryName(std::string &theDir, bool fNoSlashAtEnd)
-{
-    const char backSlash = '\\';
-	NFmiStringTools::ReplaceChars(theDir, '/', backSlash); // kenoviivojen suunta pit‰‰ laittaa winkkari tyyliin '/' -> '\'
-    NFmiStringTools::ReplaceAll(theDir, "\\\\", "\\"); // mahdolliset kaksois kenoviivat pit‰‰ korvata yksˆis kenoviivoilla "\\" -> "\"
-    if(fNoSlashAtEnd)
-		NFmiStringTools::TrimR(theDir, backSlash);
-	else
-	{
-		if(theDir[theDir.size()-1] != backSlash)
-			theDir.push_back(backSlash);
-	}
-}
-
-void RecursiveDirectoryCopy(const std::string &theSrcDirX, const std::string &theDestDirX, CatLog::Category logCategory)
-{
-	std::string srcDir = theSrcDirX;
-	std::string destDir = theDestDirX;
-	FixDirectoryName(srcDir, true); // HUOM! lopusta pit‰‰ ottaa mahdollinen kenoviiva pois!!!
-	FixDirectoryName(destDir, true); // HUOM! lopusta pit‰‰ ottaa mahdollinen kenoviiva pois!!!
-
-	NFmiFileSystem::CreateDirectory(destDir); // HUOM! XP:ss‰ pit‰‰ luoda kohde hakemisto, muuten ei toimi!!!!
-	std::string logStr("Copying dir: \"");
-	logStr += srcDir;
-	logStr += "\"\nto: \""; 
-	logStr += destDir;
-	logStr += "\""; 
-	LogMessage(logStr, CatLog::Severity::Debug, logCategory);
-    CString strFolderSrcU_ = CA2T(srcDir.c_str());
-    CString strFolderDestU_ = CA2T(destDir.c_str());
-    if(CFmiWin32DirectoryUtils::BruteDirCopy(strFolderSrcU_, strFolderDestU_)) // 0 paluu arvo on ok, muut virheit‰
-		LogMessage("Directory copy failed", CatLog::Severity::Error, logCategory);
-}
-
-void FirstTimeMacroDirectoryCheck(const std::string &theServerDir, const std::string &theLocalDir)
-{
-	if(NFmiFileSystem::DirectoryExists(theLocalDir) == false)
-	{
-		RecursiveDirectoryCopy(theServerDir, theLocalDir, CatLog::Category::Macro);
-		if(itsMacroDirectoriesSyncronizationCounter <= 1)
-			itsMacroDirectoriesSyncronizationCounter = 2; // jos on kopsattu makrohakemistot suoraan serverilta, voidaan jatkossa synkronoinnissa menn‰ lokaali-prefer -tilaan
-	}
-}
-
-void DoMacroFileInitializations(void)
-{
-    // HUOM! T‰‰lll‰ pit‰‰ hanskata samat kansiot kuin DoMacroDirectoriesSyncronization -metodissa.
-
-    // 1. Jos lokaali makro cache ei ole k‰ytˆss‰ ei tehd‰ mit‰‰n.
-	if(itsMacroPathSettings.UseLocalCache() == false)
-		return ;
-	// 2. Tarkistetaan vuorotellen jokainen makro-hakemisto, onko se jo olemassa vai ei.
-	// Jos on ei tehd‰ mit‰‰n, jos ei , kopioidaan se t‰ss‰ sitten.
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.SmartToolPath(false), itsMacroPathSettings.SmartToolPath(true));
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.DrawParamPath(false), itsMacroPathSettings.DrawParamPath(true));
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.ViewMacroPath(false), itsMacroPathSettings.ViewMacroPath(true));
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.MacroParamPath(false), itsMacroPathSettings.MacroParamPath(true));
-}
-
 void InitMacroPathSettings(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
 		itsMacroPathSettings.InitFromSettings("SmartMet::MacroPathSettings", itsBasicConfigurations.WorkingDirectory());
-        DoMacroFileInitializations();
     }
 	catch(std::exception &e)
 	{
@@ -5424,105 +5363,6 @@ bool StoreDataToDataBase(const std::string &theForecasterId)
     return status;
 }
 
-void DoMacroDirectoriesSyncronization(void)
-{
-    // HUOM! T‰‰lll‰ pit‰‰ hanskata samat kansiot kuin DoMacroFileInitializations -metodissa.
-    try
-	{
-		if(itsMacroPathSettings.UseLocalCache() == false)
-			return ; // ei tehd‰ mit‰‰n jos lokaali makro cachetys ei ole k‰ytˆss‰
-
-		// 1. Tarkista ettei ole yht‰‰n unison-ohjelmaa k‰ytˆss‰, jos on, oletetaan ett‰ joku toinen SmartMet on juuri tekem‰ss‰ synkronointia ja t‰m‰n
-		// instanssin ei tarvitse tehd‰ sit‰.
-		NFmiApplicationDataBase::AppSpyData appData(std::make_pair(GetUnisonApplicationName(), false)); // false tarkoittaa ett‰ aplikaatiolta ei pyydet‰ versionumeroa
-		std::string appVersionsStrOutDummy; // t‰m‰ pit‰‰ antaa NFmiApplicationDataBase::CountProcessCount-funktiolle, mutta sit‰ ei k‰ytet‰
-		int unisonProcessCount = NFmiApplicationDataBase::CountProcessCount(appData, appVersionsStrOutDummy);
-		if(unisonProcessCount > 0)
-			return ;
-
-		// 2. Tarkista monesko synkronointi on menossa, jos on 1., prefer-suunta on server->local (konflikteissa)
-		// jos on 2-n:s synkronointi, prefer-suunta on local->server
-		bool preferRoot1 = (itsMacroDirectoriesSyncronizationCounter <= 1);
-
-		// 3. K‰ynnist‰ tarvittava m‰‰r‰ synkronointeja, ne ajetaan omissa processeissaan omalla ajallaan loppuun, SmartMet ei odota niiden valmistumista.
-		DWORD priorityClass = BELOW_NORMAL_PRIORITY_CLASS;
-        if(itsMachineThreadCount >= 8) 
-            priorityClass = NORMAL_PRIORITY_CLASS;
-		DoUnisonDirectorySync(itsMacroPathSettings.DrawParamPath(false), itsMacroPathSettings.DrawParamPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-		DoUnisonDirectorySync(itsMacroPathSettings.MacroParamPath(false), itsMacroPathSettings.MacroParamPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-		DoUnisonDirectorySync(itsMacroPathSettings.SmartToolPath(false), itsMacroPathSettings.SmartToolPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-		DoUnisonDirectorySync(itsMacroPathSettings.ViewMacroPath(false), itsMacroPathSettings.ViewMacroPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-
-		// 4. kasvata synkronointi counteria
-		itsMacroDirectoriesSyncronizationCounter++;
-	}
-	catch(...)
-	{
-	}
-}
-
-
-#undef CreateDirectory // pit‰‰ poistaa winkkarin tekemi‰ definej‰
-
-bool CheckThatParentDirectoryExists(const std::string &theDir)
-{
-	if(theDir.empty())
-		return false;
-	std::string dirStr = theDir;
-	NFmiStringTools::ReplaceAll(dirStr, "\\", "/"); // korvataan kaikki mahdolliset windows-kenot linux-kenoilla (toimii sitten molemmisssa systeemeiss‰)
-	NFmiStringTools::TrimR(dirStr, '/'); // poistetaan mahdollinen viimeinen keno
-	std::string::size_type pos = dirStr.rfind('/'); // etsit‰‰n viimeisen kenon paikka
-	if(pos != std::string::npos)
-	{
-		std::string parentDir(dirStr.begin(), dirStr.begin()+pos);
-		if(NFmiFileSystem::DirectoryExists(parentDir) == false)
-		{
-			if(NFmiFileSystem::CreateDirectory(parentDir) == false)
-				return false;
-		}
-		return true;
-	}
-	else
-		return false;
-}
-
-std::string GetUnisonApplicationName(void)
-{
-	return std::string("unison_smartmet.exe");
-}
-
-// theRoot1 on serverill‰ oleva hakemisto (t‰rke‰mpi)
-// theRoot2 on lokaalilla kovalevyll‰ oleva hakemisto
-void DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRoot2, bool preferRoot1, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags)
-{
-	if(CheckThatParentDirectoryExists(theRoot2) == false) // lokaali hakemistosta pit‰‰ olla emo-hakemisto olemassa ennen ei synkronointi onnistu
-	{
-		std::string errStr = "Local macro folder:\n'";
-		errStr += theRoot2;
-		errStr += ",\ncannot be created.";
-		LogAndWarnUser(errStr, "Error when creating local macro folder", CatLog::Severity::Error, CatLog::Category::Operational, false);
-		return ;
-	}
-
-	std::string commandStr = WorkingDirectory();
-	commandStr += "\\utils\\";
-	commandStr += GetUnisonApplicationName();
-	commandStr += " ";
-	commandStr += theRoot1;
-	commandStr += " ";
-	commandStr += theRoot2;
-
-	// lis‰t‰‰n unison optioita loppuun
-	commandStr += " -batch";
-	commandStr += " -prefer " + (preferRoot1 ? theRoot1 : theRoot2);
-	commandStr += " -retry 3";
-	bool ignoreArchives = (NFmiFileSystem::DirectoryExists(theRoot1) == false) || (NFmiFileSystem::DirectoryExists(theRoot2) == false);
-	if(ignoreArchives)
-		commandStr += " -ignorearchives"; // jos jompi kumpi hakemistoista oli poistettu, ignoorataan arkistot (n‰in ei p‰‰se tapahtumaan isoja tuhoja aikaan)
-
-    CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, false, theShowWindow, waitExecutionToStop, dwCreationFlags);
-}
-
 std::string CreateHelpEditorFileNameWithPath(void)
 {
 	std::string fileName(itsHelpEditorSystem.DataPath());
@@ -5888,7 +5728,6 @@ void StoreSupplementaryData(void)
 		StoreDataQualityChecker();
 		IgnoreStationsData().StoreToSettings();
 		StoreOptionsData(); // t‰m‰ tekee myˆs asetuksien talletuksen konfiguraatio tiedostoihin! T‰m‰ pit‰‰ siis kutsua viimeisen‰.
-		DoMacroDirectoriesSyncronization(); // laitetaan makrojen synkronointi viel‰ lopuksi k‰yntiin, ett‰ mahdolliset muutokset menev‰t serverille
 
 		CheckRunningStatusAtClosing(SpecialFileStoragePath());
 		StoreAllCPDataToFiles();
@@ -10712,8 +10551,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiCaseStudySystem itsCaseStudySystemOrig; // Lopussa kun SmartMetia suljetaan, tarkistetaan onko tehty muutoksia suhteessa originaali olioon ja vasta sitten tehd‰‰n talletukset asetuksiin
 	NFmiCaseStudySystem itsLoadedCaseStudySystem; // t‰h‰n ladataan olemassa oleva CaseStudy-data k‰yttˆˆn
 
-	int itsMacroDirectoriesSyncronizationCounter; // kuinka monta kertaa makro-hakemistojen synkronointi on tehty, alku arvo on 1, jos luku on 1, on serverill‰ prefer-status, muuten lokaali on prefer-tilassa
-
 	bool fEditedDataNotInPreferredState; // Jos pika lataus on tehty, editoitu data tarkastetaan sen rakenteen ja alkuajan ja sein‰kellon suhteen. Jos data ei ole 'ihanteellinen', yritet‰‰n ladata jo ladatun tilalle vimeisint‰ virallista dataa, kunnes t‰rpp‰‰ tai tulee joku aika raja vastaan.
 	NFmiMilliSecondTimer itsEditedDataNeedsToBeLoadedTimer; // kun todetaan ett‰ editoitua dataa pit‰‰ alkaa kytt‰‰m‰‰n, k‰ynnistet‰‰n t‰m‰ timeri, ett‰ tiedet‰‰n kuinka kauan ollaan odotettu. 
 															// Jotta k‰ytt‰j‰‰ voidaan informoida asiasta ja lis‰ksi ehk‰ tietyn ajan yritt‰misen j‰lkeen voidaan lopettaa homma toivottomana.
@@ -12354,16 +12191,6 @@ int NFmiEditMapGeneralDataDoc::CleanUnusedDataFromMemory(void)
 NFmiMacroPathSettings& NFmiEditMapGeneralDataDoc::MacroPathSettings(void)
 {
 	return pimpl->MacroPathSettings();
-}
-
-void NFmiEditMapGeneralDataDoc::DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRoot2, bool preferRoot1, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags)
-{
-	pimpl->DoUnisonDirectorySync(theRoot1, theRoot2, preferRoot1, theShowWindow, waitExecutionToStop, dwCreationFlags);
-}
-
-void NFmiEditMapGeneralDataDoc::DoMacroDirectoriesSyncronization(void)
-{
-	pimpl->DoMacroDirectoriesSyncronization();
 }
 
 NFmiCaseStudySystem& NFmiEditMapGeneralDataDoc::CaseStudySystem(void)
