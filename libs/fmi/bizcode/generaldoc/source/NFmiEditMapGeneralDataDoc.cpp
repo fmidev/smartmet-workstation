@@ -522,8 +522,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitDataLoadingInfo();
     InitMetEditorModeDataWCTR();
 
-	itsLocationSelectionTool2 = new NFmiLocationSelectionTool;
-	SelectNewParamForSelectionTool(kFmiTopoGraf);
+	InitLocationSelectionTool();
 
 	InitEditedDataParamDescriptor(); // pit‰‰ olla itsDataLoadingInfoManager -otuksen luomisen j‰lkeen
 	InitWarningCenterSystem(); // t‰m‰n initialisointi pit‰‰ olla itsDataLoadingInfoManager-olion initialisoinnin per‰ss‰
@@ -2862,26 +2861,11 @@ bool DataLoadingOK(bool noError)
 	return true;
 }
 
-
-// HUOM!!!! theParamIndex on oikeasti FmiParameter tyyppi‰, muuta!
-bool SelectNewParamForSelectionTool(int theParamId)
+bool InitLocationSelectionTool()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	if(itsLocationSelectionTool2)
-	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kStationary);
-		if(info)
-		{
-			boost::shared_ptr<NFmiFastQueryInfo> infoCopy = boost::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(info->Clone())); // pit‰‰ tehd‰ kopio
-			if(infoCopy)
-			{
-				infoCopy->Param(static_cast<FmiParameterName>(theParamId));
-				itsLocationSelectionTool2->Info(infoCopy);
-				return true;
-			}
-		}
-	}
-	return false;
+	itsLocationSelectionTool2 = new NFmiLocationSelectionTool;
+	return true;
 }
 
 struct MenuCreationSettings
@@ -10584,11 +10568,6 @@ bool NFmiEditMapGeneralDataDoc::LoadData(bool fRemoveThundersOnLoad)
 bool NFmiEditMapGeneralDataDoc::StoreOptionsData(void)
 {
 	return pimpl->StoreOptionsData();
-}
-
-bool NFmiEditMapGeneralDataDoc::SelectNewParamForSelectionTool(int theParamId)
-{
-	return pimpl->SelectNewParamForSelectionTool(theParamId);
 }
 
 NFmiParamBag& NFmiEditMapGeneralDataDoc::AllStaticParams(void)

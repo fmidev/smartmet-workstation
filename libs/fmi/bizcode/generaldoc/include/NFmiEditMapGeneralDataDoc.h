@@ -540,7 +540,6 @@ public:
 	void ToolTipTime(const NFmiMetTime& theTime);
 	const NFmiMetTime& ToolTipTime(void);
 	NFmiParamBag& AllStaticParams(void);
-	bool SelectNewParamForSelectionTool(int theParamId);
 	boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam(void);
 	NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex); // laskee näyttöruudukon yhden ruudun koon pikseleissä
 	boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo(void);
