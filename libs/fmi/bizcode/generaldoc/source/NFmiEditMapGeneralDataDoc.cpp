@@ -1541,7 +1541,7 @@ void InitMacroParamSystem(bool haveAbortOption)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsMacroParamSystem.RootPath(itsMacroPathSettings.MacroParamPath(true));
+		itsMacroParamSystem.RootPath(itsMacroPathSettings.MacroParamPath());
 		NFmiFileSystem::CreateDirectory(itsMacroParamSystem.RootPath()); // luodaan varmuuden vuoksi hakemisto, jos ei ole jo
 
 	}
@@ -1556,7 +1556,7 @@ void InitViewMacroSystem(bool haveAbortOption)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsViewMacroPath = itsMacroPathSettings.ViewMacroPath(true);
+		itsViewMacroPath = itsMacroPathSettings.ViewMacroPath();
 		if(itsViewMacroPath[itsViewMacroPath.size()-1] == '/')
 			itsViewMacroPath[itsViewMacroPath.size()-1] = kFmiDirectorySeparator;
 		else if(itsViewMacroPath[itsViewMacroPath.size()-1] != '\\')
@@ -2050,7 +2050,7 @@ bool InitInfoOrganizer(void)
 	itsSmartInfoOrganizer->WorkingDirectory(WorkingDirectory());
 	int undoredoDepth = (SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) ? itsMetEditorOptionsData.UndoRedoDepth() : 0; // ns. viewmodessa undo/redo syvyydeksi 0!
 	bool makeCopyOfEditedData = undoredoDepth > 0;
-	itsSmartInfoOrganizer->Init(itsMacroPathSettings.DrawParamPath(true), false, makeCopyOfEditedData, fUseOnePressureLevelDrawParam); // 2. parametri (false) tarkoittaa että jos drawparam-tiedostoja ei ole, ei niitä luoda automaattisesti
+	itsSmartInfoOrganizer->Init(itsMacroPathSettings.DrawParamPath(), false, makeCopyOfEditedData, fUseOnePressureLevelDrawParam); // 2. parametri (false) tarkoittaa että jos drawparam-tiedostoja ei ole, ei niitä luoda automaattisesti
 	NFmiFileSystem::CreateDirectory(itsSmartInfoOrganizer->GetDrawParamPath());
 
 	return true;
@@ -5892,7 +5892,7 @@ bool InitCPManagerSet(void)
 	bool InitSmartToolInfo(void)
 	{
 		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-		bool status = itsSmartToolInfo.Init(itsMacroPathSettings.SmartToolPath(true));
+		bool status = itsSmartToolInfo.Init(itsMacroPathSettings.SmartToolPath());
 		NFmiFileSystem::CreateDirectory(itsSmartToolInfo.LoadDirectory());
 		if(!status)
 		{

@@ -11,10 +11,7 @@
 #include "NFmiBetaProductHelperFunctions.h"
 
 NFmiMacroPathSettings::NFmiMacroPathSettings(void)
-:fUseLocalCache(false)
-,itsLocalCacheBasePath()
-,itsSyncIntervalInMinutes(0)
-,itsSmartMetWorkingDirectory()
+:itsSmartMetWorkingDirectory()
 ,itsOrigSmartToolPath()
 ,itsOrigViewMacroPath()
 ,itsOrigMacroParamPath()
@@ -25,10 +22,7 @@ NFmiMacroPathSettings::NFmiMacroPathSettings(void)
 }
 
 NFmiMacroPathSettings::NFmiMacroPathSettings(const NFmiMacroPathSettings &theOther)
-:fUseLocalCache(theOther.fUseLocalCache)
-,itsLocalCacheBasePath(theOther.itsLocalCacheBasePath)
-,itsSyncIntervalInMinutes(theOther.itsSyncIntervalInMinutes)
-,itsSmartMetWorkingDirectory(theOther.itsSmartMetWorkingDirectory)
+:itsSmartMetWorkingDirectory(theOther.itsSmartMetWorkingDirectory)
 ,itsOrigSmartToolPath(theOther.itsOrigSmartToolPath)
 ,itsOrigViewMacroPath(theOther.itsOrigViewMacroPath)
 ,itsOrigMacroParamPath(theOther.itsOrigMacroParamPath)
@@ -40,16 +34,16 @@ NFmiMacroPathSettings::NFmiMacroPathSettings(const NFmiMacroPathSettings &theOth
 
 const NFmiMacroPathSettings& NFmiMacroPathSettings::operator=(const NFmiMacroPathSettings &theOther)
 {
-	fUseLocalCache = theOther.fUseLocalCache;
-	itsLocalCacheBasePath = theOther.itsLocalCacheBasePath;
-	itsSyncIntervalInMinutes = theOther.itsSyncIntervalInMinutes;
-	itsSmartMetWorkingDirectory = theOther.itsSmartMetWorkingDirectory;
-	itsOrigSmartToolPath = theOther.itsOrigSmartToolPath;
-	itsOrigViewMacroPath = theOther.itsOrigViewMacroPath;
-	itsOrigMacroParamPath = theOther.itsOrigMacroParamPath;
-	itsOrigDrawParamPath = theOther.itsOrigDrawParamPath;
+	if(this != &theOther)
+	{
+		itsSmartMetWorkingDirectory = theOther.itsSmartMetWorkingDirectory;
+		itsOrigSmartToolPath = theOther.itsOrigSmartToolPath;
+		itsOrigViewMacroPath = theOther.itsOrigViewMacroPath;
+		itsOrigMacroParamPath = theOther.itsOrigMacroParamPath;
+		itsOrigDrawParamPath = theOther.itsOrigDrawParamPath;
 
-	itsBaseNameSpace = theOther.itsBaseNameSpace;
+		itsBaseNameSpace = theOther.itsBaseNameSpace;
+	}
 	return *this;
 }
 
@@ -57,10 +51,6 @@ void NFmiMacroPathSettings::InitFromSettings(const std::string &theInitNameSpace
 {
 	itsSmartMetWorkingDirectory = theWorkingDirectory;
 	itsBaseNameSpace = theInitNameSpace;
-
-	itsLocalCacheBasePath = PathUtils::getFixedAbsolutePathFromSettings(theInitNameSpace + "::LocalDirectory", itsSmartMetWorkingDirectory, true);
-	fUseLocalCache = NFmiSettings::Require<bool>(theInitNameSpace + "::UseLocalCache");
-	itsSyncIntervalInMinutes = NFmiSettings::Require<int>(theInitNameSpace + "::SyncIntervalInMinutes");
 
 	itsOrigSmartToolPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::SmartTools::LoadDirectory", itsSmartMetWorkingDirectory);
 	itsOrigMacroParamPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::MacroParams::LoadDirectory", itsSmartMetWorkingDirectory);
@@ -71,9 +61,6 @@ void NFmiMacroPathSettings::InitFromSettings(const std::string &theInitNameSpace
 
 void NFmiMacroPathSettings::LogMacroPaths()
 {
-    CatLog::logMessage(std::string("MacroPathSettings::UseLocalCache = ") + (fUseLocalCache ? "true" : "false"), CatLog::Severity::Info, CatLog::Category::Configuration, true);
-    if(fUseLocalCache)
-        CatLog::logMessage(std::string("MacroPathSettings::LocalCacheBasePath = ") + itsLocalCacheBasePath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
     CatLog::logMessage(std::string("MacroPathSettings::SmartMetWorkingDirectory = ") + itsSmartMetWorkingDirectory, CatLog::Severity::Info, CatLog::Category::Configuration, true);
     CatLog::logMessage(std::string("MacroPathSettings::SmartToolPath = ") + itsOrigSmartToolPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
     CatLog::logMessage(std::string("MacroPathSettings::ViewMacroPath = ") + itsOrigViewMacroPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
@@ -81,80 +68,23 @@ void NFmiMacroPathSettings::LogMacroPaths()
     CatLog::logMessage(std::string("MacroPathSettings::DrawParamPath = ") + itsOrigDrawParamPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
 }
 
-
-void NFmiMacroPathSettings::StoreToSettings(void)
+std::string NFmiMacroPathSettings::SmartToolPath()
 {
-	if(itsBaseNameSpace.empty() == false)
-	{
-		// HUOM! tässä on toistaiseksi vain cacheen liittyvien muutosten talletukset
-		NFmiSettings::Set(std::string(itsBaseNameSpace + "::LocalDirectory"), itsLocalCacheBasePath, true);
-		NFmiSettings::Set(itsBaseNameSpace + "::UseLocalCache", NFmiStringTools::Convert(fUseLocalCache), true);
-		NFmiSettings::Set(itsBaseNameSpace + "::SyncIntervalInMinutes", NFmiStringTools::Convert(itsSyncIntervalInMinutes), true);
-	}
-	else
-		throw std::runtime_error("Error in NFmiMacroPathSettings::StoreToSettings, unable to store setting.");
+	return itsOrigSmartToolPath;
 }
 
-// Palauttaa puhtaan hakemisto osan originaali polusta (siis ilman drive-letteriä).
-// Esim. P:\settings\kepa\DrawParam3 -> settings\kepa\DrawParam3
-static std::string GetDirectoryPart(const std::string &thePath)
+std::string NFmiMacroPathSettings::ViewMacroPath()
 {
-	if(thePath.empty())
-		return thePath;
-	NFmiFileString pathStr = thePath;
-	pathStr.NormalizeDelimiter();
-	if(pathStr[pathStr.GetLen()] == kFmiDirectorySeparator)
-		pathStr.TrimR(kFmiDirectorySeparator); // jos lopussa oli polku-erotin kenoviiva, poistetaan se
-	std::string tmpPath = pathStr;
-	size_t pos = tmpPath.find(kFmiDirectorySeparator);
-	if(pos != std::string::npos)
-	{
-		return std::string(tmpPath.begin() + pos + 1, tmpPath.end());
-	}
-	return std::string();
+	return itsOrigViewMacroPath;
 }
 
-static std::string MakeWantedPath(const std::string &theBasePath, const std::string &theFinalPathDir)
+std::string NFmiMacroPathSettings::MacroParamPath()
 {
-	std::string wantedPath = theBasePath;
-	wantedPath += theFinalPathDir;
-	return wantedPath;
+	return itsOrigMacroParamPath;
 }
 
-// fGetUserPath = true tarkoittaa että halutaan polku mitä oikeasti käytetään 'työssä' eli 
-// se on lokaali cache-polku jos niin asetuksissa on määrätty. Jos lokaali cachea ei käytetä
-// palautetaan originaali(server)-polku.
-// fGetUserPath = false tarkoittaa että halutaan polku 'server' osoitteeseen, tämä voi 
-// siis olla vain 'originaali' polku.
-std::string NFmiMacroPathSettings::SmartToolPath(bool fGetUserPath)
+std::string NFmiMacroPathSettings::DrawParamPath()
 {
-	if(fGetUserPath && fUseLocalCache)
-		return ::MakeWantedPath(itsLocalCacheBasePath, ::GetDirectoryPart(itsOrigSmartToolPath));
-	else
-		return itsOrigSmartToolPath;
-}
-
-std::string NFmiMacroPathSettings::ViewMacroPath(bool fGetUserPath)
-{
-	if(fGetUserPath && fUseLocalCache)
-		return ::MakeWantedPath(itsLocalCacheBasePath, ::GetDirectoryPart(itsOrigViewMacroPath));
-	else
-		return itsOrigViewMacroPath;
-}
-
-std::string NFmiMacroPathSettings::MacroParamPath(bool fGetUserPath)
-{
-	if(fGetUserPath && fUseLocalCache)
-		return ::MakeWantedPath(itsLocalCacheBasePath, ::GetDirectoryPart(itsOrigMacroParamPath));
-	else
-		return itsOrigMacroParamPath;
-}
-
-std::string NFmiMacroPathSettings::DrawParamPath(bool fGetUserPath)
-{
-	if(fGetUserPath && fUseLocalCache)
-		return ::MakeWantedPath(itsLocalCacheBasePath, ::GetDirectoryPart(itsOrigDrawParamPath));
-	else
-		return itsOrigDrawParamPath;
+	return itsOrigDrawParamPath;
 }
 
