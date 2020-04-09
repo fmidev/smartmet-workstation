@@ -2694,7 +2694,7 @@ void NFmiCombinedMapHandler::toggleShowDifferenceToOriginalData(const NFmiMenuIt
 void NFmiCombinedMapHandler::addView(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
 	// lasketaan todellinen rivinumero (johtuu karttan‰ytˆn virtuaali riveist‰)
-	addViewWithRealRowNumber(true, menuItem, viewRowIndex + getMapViewDescTop(menuItem.MapViewDescTopIndex())->MapRowStartingIndex() - 1, false, nullptr); 
+	addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false, nullptr); 
 
 	// lis‰‰n t‰m‰n CheckAnimationLockedModeTimeBags -kutsun vain perus AddView-metodin yhteyteen, mutta en esim.
 	// AddViewWithRealRowNumber -metodin yhteyteen, ett‰ homma ei mene pelk‰ksi tarkasteluksi.
