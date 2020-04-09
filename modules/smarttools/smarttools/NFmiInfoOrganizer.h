@@ -186,7 +186,6 @@ class NFmiInfoOrganizer
   void WorkingDirectory(const std::string &newValue) { itsWorkingDirectory = newValue; };
   void UpdateEditedDataCopy(void);  // 28.09.1999/Marko
 
-  void SetDrawParamPath(const std::string &theDrawParamPath);
   const std::string GetDrawParamPath(void);
   void SetMacroParamDataGridSize(int x, int y);
   void SetMacroParamDataMinGridSize(int x, int y);
