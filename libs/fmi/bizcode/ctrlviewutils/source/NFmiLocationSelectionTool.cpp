@@ -43,11 +43,8 @@
 //--------------------------------------------------------
 NFmiLocationSelectionTool::NFmiLocationSelectionTool (void)
 :NFmiInfoAreaMask()
-,itsSelectedTool(kFmiSingleLocationSelection)
+,itsSelectedTool(FmiLocationSearchTool::SingleLocationSelection)
 ,itsSearchRange(.1f)
-,fUseValueFromLocation(false)
-,fSearchOnlyNeibhors(false)
-,fLimitSearchWithRange(false)
 {
 }
 //--------------------------------------------------------
@@ -86,14 +83,14 @@ bool NFmiLocationSelectionTool::SelectLocations(boost::shared_ptr<NFmiFastQueryI
 		{
 			switch(itsSelectedTool)
 			{
-			case kFmiSingleLocationSelection:
+			case FmiLocationSearchTool::SingleLocationSelection:
 				SingleSelection(theInfo, theLatLon, theArea, theFunction, theMask);
 				break;
-			case kFmiCircleLocationSelection:
+			case FmiLocationSearchTool::CircleLocationSelection:
 				CircleSelection(theInfo, theLatLon, theArea, theFunction, theMask, theViewGridSize);
 				break;
-			case kFmiParamMaskLocationSelection:
-				ParamSelection(theInfo, theLatLon, theArea, theFunction, theMask);
+			case FmiLocationSearchTool::SelectAll:
+				SetAllPoints(theInfo, theMask);
 				break;
 			}
 		}
@@ -133,7 +130,7 @@ void NFmiLocationSelectionTool::SingleSelection(boost::shared_ptr<NFmiFastQueryI
 	{
 		NFmiPoint cursorViewPosition(theArea->ToXY(theLatLon));
 		NFmiPoint currentLocationViewPosition(theArea->ToXY(theInfo->LatLon()));
-		if(!LimitSearchWithRange() || cursorViewPosition.Distance(currentLocationViewPosition) <= itsSearchRange/2.)
+		if(cursorViewPosition.Distance(currentLocationViewPosition) <= itsSearchRange/2.)
 		{
 			if(theFunction == kFmiSelectionCombineRemove)
 				::DoMaskLocation(theInfo, false, theMask);
@@ -167,44 +164,14 @@ void NFmiLocationSelectionTool::CircleSelection(boost::shared_ptr<NFmiFastQueryI
 		}
 	}
 }
-//--------------------------------------------------------
-// ParamSelection 
-//--------------------------------------------------------
-void NFmiLocationSelectionTool::ParamSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
-											   ,const NFmiPoint& theLatLon
-											   ,const boost::shared_ptr<NFmiArea> &theArea
-											   ,FmiSelectionCombineFunction theFunction
-											   ,unsigned long theMask)
-{
-	if(theInfo && theArea)
-	{
-        EditedInfoMaskHandler editedInfoMaskHandler(theInfo, NFmiMetEditorTypes::kFmiNoMask);
-        if(UseValueFromLocation())
-		{
-			double value = Info()->InterpolatedValue(theLatLon);
-			LowerLimit(value); // laitetaan klikatun kohdan arvo lowerlimitiksi
-		}
 
-		if(!LimitSearchWithRange())
-		{
-			for(theInfo->ResetLocation(); theInfo->NextLocation(); )
-			{
-				if(theArea->IsInside(theInfo->LatLon()))
-					::DoMaskLocation(theInfo, true, theMask);
-			}
-		}
-		else
-		{
-			NFmiPoint cursorViewPosition(theArea->ToXY(theLatLon));
-			for(theInfo->ResetLocation(); theInfo->NextLocation(); )
-			{
-				NFmiPoint currentLocationViewPosition(theArea->ToXY(theInfo->LatLon()));
-				if(cursorViewPosition.Distance(currentLocationViewPosition) <= itsSearchRange/2.)
-				{
-					if(theArea->IsInside(theInfo->LatLon()))
-						::DoMaskLocation(theInfo, true, theMask);
-				}
-			}
-		}
+void NFmiLocationSelectionTool::SetAllPoints(boost::shared_ptr<NFmiFastQueryInfo>& theInfo
+	, unsigned long theMask)
+{
+	static bool staticSetAllPointsState = false;
+	if(theInfo)
+	{
+		dynamic_cast<NFmiSmartInfo*>(theInfo.get())->MaskAllLocations(staticSetAllPointsState, theMask);
+		staticSetAllPointsState = !staticSetAllPointsState; // vaihdetaan seuraavalle hiiren klikkaukselle asetus moodi
 	}
 }
