@@ -199,7 +199,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
-,itsMapView(nullptr)
 ,itsGraphicalInfo()
 ,itsGridPointCache()
 ,itsAnimationData()
@@ -217,7 +216,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,itsSelectedMapIndexVM(1)
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
-,itsLandBorderMapBitmap(nullptr)
 ,itsSeparateCountryBorderBitmapCache()
 {
 }
@@ -253,7 +251,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
-,itsMapView(nullptr)
 ,itsGraphicalInfo()
 ,itsGridPointCache()
 ,itsAnimationData()
@@ -271,7 +268,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsSelectedMapIndexVM(1)
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
-,itsLandBorderMapBitmap(nullptr)
 , itsSeparateCountryBorderBitmapCache()
 {
 }
@@ -335,7 +331,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, itsSelectedMapIndexVM(0)
 	, fShowStationPlotVM(false)
 	, itsViewGridSizeVM()
-	, itsLandBorderMapBitmap(nullptr)
 	, itsSeparateCountryBorderBitmapCache()
 {
 	*this = other;
