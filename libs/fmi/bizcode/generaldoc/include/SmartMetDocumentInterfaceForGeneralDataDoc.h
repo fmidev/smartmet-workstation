@@ -262,7 +262,6 @@ public:
     void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;
     NFmiLocationSelectionTool* LocationSelectionTool2() override;
     NFmiParamBag& AllStaticParams() override;
-    bool SelectNewParamForSelectionTool(int theParamId) override;
     NFmiSynopPlotSettings* SynopPlotSettings() override;
     NFmiSynopStationPrioritySystem* SynopStationPrioritySystem() override;
     std::vector<NFmiLightWeightViewSettingMacro>& ViewMacroDescriptionList() override;
