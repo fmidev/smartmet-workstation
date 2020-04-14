@@ -47,4 +47,29 @@ namespace CtrlView
         return FALSE; // Palautetaan false, ett‰ message k‰sitell‰‰n virallisia teit‰ pitkin
     }
 
+    // DeviceContextHandler luokka tekee ik‰v‰st‰ CDC handlauksesta siedett‰v‰mp‰‰...
+    template<typename SetToolsDCsView>
+    class DeviceContextHandler
+    {
+        SetToolsDCsView* window_ = nullptr;
+        CDC* dcPtr_ = nullptr;
+    public:
+        DeviceContextHandler(SetToolsDCsView* window)
+        : window_(window)
+        {
+            if(window_)
+            {
+                dcPtr_ = window_->GetDC();
+                window->SetToolsDCs(dcPtr_);
+            }
+        }
+
+        ~DeviceContextHandler()
+        {
+            if(window_ && dcPtr_)
+                window_->ReleaseDC(dcPtr_);
+        }
+
+        CDC* GetDcFromHandler() { return dcPtr_; }
+    };
 }

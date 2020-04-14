@@ -135,4 +135,5 @@ namespace CtrlView
     {
         Toolmaster::SetToolMastersDC(theDC, theClientRect);
     }
+
 }
