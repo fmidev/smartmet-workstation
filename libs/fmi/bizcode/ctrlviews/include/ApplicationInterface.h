@@ -68,4 +68,5 @@ public:
     virtual void OpenLocationFinderDialog(CWnd *parentView) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
     virtual void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) = 0;
+    virtual std::pair<HICON, HICON> GetUsedIcons() = 0;
 };
