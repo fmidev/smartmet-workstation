@@ -13,6 +13,7 @@
 #include "fmiGetDirectoryNameDlg.h"
 #include <direct.h>
 #include "CloneBitmap.h"
+#include "FmiWin32Helpers.h"
 
 using namespace std;
 // CFmiSmartToolLoadingDlg dialog
@@ -113,9 +114,7 @@ BOOL CFmiSmartToolLoadingDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	UpdateScriptNameList();
     itsScriptNameList.SetCurSel(CFmiSmartToolLoadingDlg::itsLastLoadedMacroIndex); // Laitetaan muistista dialogi osoittamaan viimeksi ladattua makroa
 

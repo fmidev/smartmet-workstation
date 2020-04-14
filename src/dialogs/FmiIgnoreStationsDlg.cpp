@@ -15,7 +15,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "CtrlViewFunctions.h"
 #include "ApplicationInterface.h"
-
+#include "FmiWin32Helpers.h"
 // CFmiIgnoreStationsDlg dialog
 
 IMPLEMENT_DYNAMIC(CFmiIgnoreStationsDlg, CDialogEx)
@@ -60,11 +60,8 @@ BOOL CFmiIgnoreStationsDlg::OnInitDialog()
 
     std::string titleStr = ::GetDictionaryString("Ignore stations settings");
     SetWindowText(CA2T(titleStr.c_str()));
-
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
-    auto &ignoreStationsData = itsSmartMetDocumentInterface->IgnoreStationsData();
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+	auto &ignoreStationsData = itsSmartMetDocumentInterface->IgnoreStationsData();
 	fUseWithContourDraw = ignoreStationsData.UseListWithContourDraw();
 	fUseWithSymbolDraw = ignoreStationsData.UseListWithSymbolDraw();
 	UpdateStationList();

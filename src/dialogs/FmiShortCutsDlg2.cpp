@@ -5,6 +5,7 @@
 #include "FmiShortCutsDlg2.h"
 #include "NFmiDictionaryFunction.h"
 #include "CloneBitmap.h"
+#include "FmiWin32Helpers.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,10 +49,8 @@ BOOL CFmiShortCutsDlg2::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
-	InitDialogTexts();
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+    InitDialogTexts();
 
 	UpdateData(FALSE);
 

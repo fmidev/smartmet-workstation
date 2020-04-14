@@ -101,10 +101,8 @@ BOOL CFmiTempCodeInsertDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
-    itsTempCodeInputStrU_ = CA2T(itsSmartMetDocumentInterface->LastTEMPDataStr().c_str());
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+	itsTempCodeInputStrU_ = CA2T(itsSmartMetDocumentInterface->LastTEMPDataStr().c_str());
 	InitDialogTexts();
 
 	UpdateData(FALSE);
