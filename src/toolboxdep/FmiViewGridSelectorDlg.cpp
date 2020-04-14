@@ -53,9 +53,7 @@ BOOL CFmiViewGridSelectorDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 // ************ apu-ikkunan luonti ***************************
 	CRect rect;
 	CWnd* staticWnd = GetDlgItem(IDC_STATIC_VIEW_BASE);

@@ -17,6 +17,7 @@
 #include "NFmiGdiPlusImageMapHandler.h"
 #include "persist2.h"
 #include "ApplicationInterface.h"
+#include "FmiWin32Helpers.h"
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 
@@ -119,11 +120,8 @@ END_MESSAGE_MAP()
 BOOL CFmiSeaIcingWarningsDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
-    std::string titleStr = ::GetDictionaryString("SeaIcingWarningsDlgTitle").c_str();
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+	std::string titleStr = ::GetDictionaryString("SeaIcingWarningsDlgTitle").c_str();
     SetWindowText(CA2T(titleStr.c_str()));
 
 	std::string errorBaseStr("Error in CFmiSeaIcingWarningsDlg::OnInitDialog while reading dialog size and position values");

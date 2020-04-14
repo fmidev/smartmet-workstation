@@ -632,10 +632,7 @@ BOOL CFmiParameterSelectionDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
     fDialogInitialized = true;
-
-    HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-    this->SetIcon(hIcon, FALSE);
-
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
     // Call InitHeaders before CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry !!
     InitDialogTexts();
     InitHeaders();

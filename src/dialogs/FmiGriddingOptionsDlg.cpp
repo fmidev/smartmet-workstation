@@ -69,10 +69,8 @@ BOOL CFmiGriddingOptionsDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 	
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
-	InitDialogTexts();
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+    InitDialogTexts();
     InitLocalFitMethodSelector();
     InitControlValuesFromGriddingPropertiesObject();
 	UpdateData(FALSE);

@@ -140,10 +140,7 @@ BOOL CFmiLogViewer::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
     DoResizerHooking(); // T‰t‰ pit‰‰ kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisterist‰
-
-    HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-    SetIcon(hIcon, FALSE);
-
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
     std::string errorBaseStr("Error in CFmiLogViewer::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsApplicationWinRegistry, this, false, errorBaseStr, 0);
     InitDialogTexts();

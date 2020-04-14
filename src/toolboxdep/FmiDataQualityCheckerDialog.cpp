@@ -148,9 +148,7 @@ BOOL CFmiDataQualityCheckerDialog::OnInitDialog()
 	CWnd *doCheckButton = GetDlgItem(IDC_BUTTON_DO_QUALITY_CHECK);
 	if(doCheckButton)
 		m_tooltip.AddTool(doCheckButton, _TEXT("Do quality check for the edited data."));
-
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 
 	// Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
 	std::string errorBaseStr("Error in CFmiDataQualityCheckerDialog::OnInitDialog while reading dialog size and position values");

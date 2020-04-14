@@ -163,9 +163,7 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
 
 	std::string errorBaseStr("Error in CFmiSmartToolDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
-
-    HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     InitializeSyntaxEditControl();
