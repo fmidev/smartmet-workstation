@@ -5,7 +5,7 @@
 #include "FmiSmarttoolsTabControlDlg.h"
 #include "CloneBitmap.h"
 #include "NFmiDictionaryFunction.h"
-
+#include "FmiWin32Helpers.h"
 
 // CFmiSmarttoolsTabControlDlg dialog
 
@@ -15,10 +15,8 @@ CFmiSmarttoolsTabControlDlg::CFmiSmarttoolsTabControlDlg(SmartMetDocumentInterfa
 : CDialog(CFmiSmarttoolsTabControlDlg::IDD, pParent)
 , itsSmarttoolsTab(smartMetDocumentInterface, pParent)
 , itsMacroParamTab(smartMetDocumentInterface, pParent)
-, itsIcon()
 , itsSmartMetDocumentInterface(smartMetDocumentInterface)
 {
-    itsIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
 }
 
 CFmiSmarttoolsTabControlDlg::~CFmiSmarttoolsTabControlDlg()
@@ -46,9 +44,7 @@ BOOL CFmiSmarttoolsTabControlDlg::OnInitDialog()
 {
     CDialog::OnInitDialog();
     DoResizerHooking(); // T‰t‰ pit‰‰ kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisterist‰
-
-    SetIcon(itsIcon, FALSE);
-
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
     // Setup the tab control
     int nPageID = 0;
     itsSmarttoolsTab.Create(CFmiSmarttoolTabDlg::IDD, this);
@@ -83,7 +79,7 @@ void CFmiSmarttoolsTabControlDlg::OnPaint()
         int y = (rect.Height() - cyIcon + 1) / 2;
 
         // Draw the icon
-        dc.DrawIcon(x, y, itsIcon);
+        dc.DrawIcon(x, y, GetIcon(FALSE));
     }
     else {
         CDialog::OnPaint();
@@ -93,7 +89,7 @@ void CFmiSmarttoolsTabControlDlg::OnPaint()
 
 HCURSOR CFmiSmarttoolsTabControlDlg::OnQueryDragIcon()
 {
-    return (HCURSOR)itsIcon;
+    return (HCURSOR)GetIcon(FALSE);
 }
 
 void CFmiSmarttoolsTabControlDlg::Update()

@@ -30,7 +30,6 @@ private:
 
     CFmiSmarttoolTabDlg itsSmarttoolsTab;
     CFmiMacroParamTabDlg itsMacroParamTab;
-    HICON itsIcon;
     CTabCtrlSSL itsTabControl;
     CWndResizer m_resizer;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
