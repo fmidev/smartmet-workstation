@@ -83,7 +83,8 @@ namespace CFmiWin32Helpers
 
 	bool StopMouseEventWhenPrinting(NFmiToolBox *theUsedToolBox);
 
-	void SetWindowIconDynamically(CWnd *theWindow, HICON theSmallIcon, HICON theBigIcon);
+	void SetWindowIconDynamically(CWnd* theWindow, const std::pair<HICON, HICON>& theIconPair);
+	void SetUsedWindowIconDynamically(CWnd *theWindow);
 
     inline std::string CT2std(const CString &theStr)    { return std::string(CT2A(theStr)); }
     void SetErrorColorForTextControl(CDC* pDC, bool statusOk, bool isControlUsed = true);
