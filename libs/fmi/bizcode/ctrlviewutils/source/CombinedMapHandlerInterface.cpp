@@ -2,7 +2,6 @@
 #include "NFmiDrawParam.h"
 #include "NFmiDrawParamList.h"
 #include "NFmiFastQueryInfo.h"
-#include "ApplicationInterface.h"
 #include "catlog/catlog.h"
 
 namespace
@@ -58,12 +57,6 @@ bool CombinedMapHandlerInterface::isDrawParamObservation(boost::shared_ptr<NFmiD
 		}
 	}
 	return false;
-}
-
-void CombinedMapHandlerInterface::activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex)
-{
-	auto usedViewUpdateFlag = ::GetWantedMapViewIdFlag(mapViewDescTopIndex) | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::BrushToolDlg;
-	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(usedViewUpdateFlag);
 }
 
 std::string CombinedMapHandlerInterface::getSelectedParamInfoString(const NFmiDataIdent* dataIdent, const NFmiLevel* level)
