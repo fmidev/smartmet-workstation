@@ -248,9 +248,7 @@ BOOL CFmiLoadDataDialog::OnInitDialog()
 	if(!itsDataLoadingInfo)
 		return FALSE;
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	InitDialogTexts();
 	SetupTitle(*itsDataLoadingInfo);
 	SetupProducerButtons(*itsDataLoadingInfo);
@@ -261,10 +259,10 @@ BOOL CFmiLoadDataDialog::OnInitDialog()
 	DoFullModelProducerIndexViewUpdate();
 	InitializeModelBlenderControl();
 	InitCaseStudyDateTimeControls();
-
-	itsGdiPlusGraphics = Gdiplus::Graphics::FromHDC(this->GetDC()->GetSafeHdc());
+	auto pDC = GetDC();
+	itsGdiPlusGraphics = Gdiplus::Graphics::FromHDC(pDC->GetSafeHdc());
 	itsGdiPlusGraphics->SetClip(CtrlView::CRect2GdiplusRect(itsModelBlendCtrlRect));
-
+	ReleaseDC(pDC);
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
