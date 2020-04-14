@@ -10,6 +10,7 @@
 #include "SmartMetDocumentInterface.h"
 #include "NFmiMapViewDescTop.h"
 #include "NFmiViewSettingMacro.h"
+#include "ApplicationInterface.h"
 
 #include <fstream>
 
@@ -596,13 +597,18 @@ bool CFmiWin32Helpers::StopMouseEventWhenPrinting(NFmiToolBox *theUsedToolBox)
 		return false;
 }
 
-void CFmiWin32Helpers::SetWindowIconDynamically(CWnd *theWindow, HICON theSmallIcon, HICON theBigIcon)
+void CFmiWin32Helpers::SetWindowIconDynamically(CWnd *theWindow, const std::pair<HICON, HICON>& theIconPair)
 {
 	if(theWindow)
 	{
-		theWindow->SetIcon(theBigIcon, TRUE);
-		theWindow->SetIcon(theSmallIcon, FALSE);
+		theWindow->SetIcon(theIconPair.second, TRUE);
+		theWindow->SetIcon(theIconPair.first, FALSE);
 	}
+}
+
+void CFmiWin32Helpers::SetUsedWindowIconDynamically(CWnd* theWindow)
+{
+    SetWindowIconDynamically(theWindow, ApplicationInterface::GetApplicationInterfaceImplementation()->GetUsedIcons());
 }
 
 // V‰rj‰t‰‰n annetun kontrollin tekstin v‰ritys seuraavasti:
