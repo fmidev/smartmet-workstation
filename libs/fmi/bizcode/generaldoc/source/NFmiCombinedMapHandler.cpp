@@ -4000,3 +4000,8 @@ void NFmiCombinedMapHandler::insertParamLayer(const NFmiMenuItem& menuItem, int 
 	addView(menuItem, viewRowIndex);
 }
 
+void NFmiCombinedMapHandler::activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex)
+{
+	auto usedViewUpdateFlag = ::GetWantedMapViewIdFlag(mapViewDescTopIndex) | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::BrushToolDlg;
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(usedViewUpdateFlag);
+}
