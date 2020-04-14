@@ -243,6 +243,7 @@ public:
     void moveBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) override;
+    void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex) override;
 
 private:
     unsigned int getMapViewCount() const;
