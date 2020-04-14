@@ -69,6 +69,8 @@ CTimeEditValuesDlg::CTimeEditValuesDlg(SmartMetDocumentInterface *smartMetDocume
 
 CTimeEditValuesDlg::~CTimeEditValuesDlg(void)
 {
+	if(itsParameterSelectionButtonBitmap)
+		DeleteObject(itsParameterSelectionButtonBitmap);
 }
 
 void CTimeEditValuesDlg::DoDataExchange(CDataExchange* pDX)
@@ -147,10 +149,7 @@ BOOL CTimeEditValuesDlg::OnInitDialog()
     itsTimeEditValuesView = new CTimeEditValuesView(this, itsDrawParam, itsSmartMetDocumentInterface);
     itsTimeEditValuesView->Create(NULL,NULL, WS_VISIBLE | WS_CHILD, rect, this, NULL);
     itsTimeEditValuesView->OnInitialUpdate(); // pitää kutsua erikseen, koska formvieta ei ole sidottu dokumenttiin
-
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	fUseMaskInTimeSerialViews = itsSmartMetDocumentInterface->IsMasksUsedInTimeSerialViews();
 	fUseZoomedAreaCP = itsSmartMetDocumentInterface->UseCPGridCrop();
 
@@ -623,7 +622,7 @@ void CTimeEditValuesDlg::SetParameterSelectionIcon()
 
 	pButton->ModifyStyle(0, BS_BITMAP);
 
-	HBITMAP bitmap = (HBITMAP)LoadImage(
+	itsParameterSelectionButtonBitmap = (HBITMAP)LoadImage(
 		AfxGetApp()->m_hInstance,
 		MAKEINTRESOURCE(IDB_BITMAP_PLUS),
 		IMAGE_BITMAP,
@@ -631,7 +630,7 @@ void CTimeEditValuesDlg::SetParameterSelectionIcon()
 		LR_DEFAULTCOLOR
 	);
 
-	pButton->SetBitmap(bitmap);
+	pButton->SetBitmap(itsParameterSelectionButtonBitmap);
 }
 
 BOOL CTimeEditValuesDlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
