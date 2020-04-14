@@ -207,13 +207,8 @@ void CSmartMetView::DrawOverBitmapThings(NFmiToolBox * theGTB)
 		itsEditMapView->DrawOverBitmapThings(theGTB, false, 0, 0.f, 0);
 	else
 	{
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		SetToolsDCs(theDC) ;
+		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
 		itsEditMapView->DrawOverBitmapThings(itsToolBox, false, 0, 0.f, 0);
-
-		ReleaseDC(theDC);
 	}
 }
 
@@ -391,16 +386,11 @@ void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	try // try-catch -blokilla varmistetaan ett‰ lopuksi ReleaseCapture todellakin kutsutaan
 	{
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		SetToolsDCs(theDC);
-
+		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
 		CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 		bool needsUpdate = itsEditMapView ? itsEditMapView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 			,itsToolBox->ConvertCtrlKey(nFlags)) : false;	// M.K. 29.4.99 Lis‰sin "parametrivalintalaatikon" piirt‰mist‰ varten.
-		ReleaseDC(theDC);
 		Invalidate(FALSE);
 		if(needsUpdate)
 		{
@@ -421,16 +411,11 @@ void CSmartMetView::OnMButtonUp(UINT nFlags, CPoint point)
 {
     try
     {
-        CDC* theDC = GetDC();
-        if(!theDC)
-            return;
-        SetToolsDCs(theDC);
-
-        CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+		CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
         bool needsUpdate = itsEditMapView ? itsEditMapView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
             , itsToolBox->ConvertCtrlKey(nFlags)) : false;
-        ReleaseDC(theDC);
         Invalidate(FALSE);
         if(needsUpdate)
         {
@@ -447,16 +432,11 @@ void CSmartMetView::OnMButtonUp(UINT nFlags, CPoint point)
 
 void CSmartMetView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsEditMapView ? itsEditMapView->LeftDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		CSmartMetDoc* pDoc = GetDocument();
@@ -477,16 +457,11 @@ void CSmartMetView::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 void CSmartMetView::OnRButtonDblClk(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsEditMapView ? itsEditMapView->RightDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		Invalidate(FALSE);
@@ -497,21 +472,11 @@ void CSmartMetView::OnRButtonDblClk(UINT nFlags, CPoint point)
 
 void CSmartMetView::OnRButtonUp(UINT nFlags, CPoint point)
 {
-/*
-	ClientToScreen(&point);
-	OnContextMenu(this, point);
-*/
-
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsEditMapView ? itsEditMapView->RightButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 
 	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
 	Invalidate(FALSE);
@@ -573,14 +538,9 @@ BOOL CSmartMetView::OnCommand(WPARAM wParam, LPARAM lParam)
 
 void CSmartMetView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
 	bool needsUpdate = itsEditMapView ? itsEditMapView->LeftButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 
 	if(needsUpdate)
 	{
@@ -674,12 +634,8 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
     NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
     if(genData->Printing())
         return;
-    CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 // laitetaan myˆs karttabitmap valmiiksi osittaisia p‰ivityksi‰ varten
 	CClientDC dc(this);
@@ -703,7 +659,6 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	}
 	genData->TransparencyContourDrawView(0); // lopuksi se asetetaan taas 0-pointteriksi...
 
-	ReleaseDC(theDC);
 	mapViewDescTop->MapBlitDC(0);
 	dcMem.SelectObject(oldBitmap2);
 	dcMem.DeleteDC();
@@ -890,8 +845,8 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 	NFmiEditMapGeneralDataDoc *data = pDoc->GetData();
 	if(data)
 	{
-		CDC *pDC = GetDC();
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), data->GetCombinedMapHandler()->drawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), data->GetCombinedMapHandler()->drawObjectScaleFactor(), true); // true pakottaa initialisoinnin
         data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
 
         if(counter > 2)
@@ -906,12 +861,8 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 
 void CSmartMetView::Update(void)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
 	itsEditMapView->Update();
-	ReleaseDC(theDC);
     Invalidate(FALSE);
 }
 
@@ -948,14 +899,9 @@ void CSmartMetView::ActivateFilterDlg(void)
 
 void CSmartMetView::OnRButtonDown(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
 	bool needsUpdate = itsEditMapView ? itsEditMapView->RightButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 
 	if(needsUpdate)
 	{
@@ -1076,40 +1022,30 @@ void CSmartMetView::LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMa
 
 BOOL CSmartMetView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	CDC *theDC = GetDC();
-	if(theDC)
-	{
-        CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
-		SetToolsDCs(theDC);
-		// Jostain syyst‰ MouseWheel systeemi antaa hiiren kursorin paikan
-		// absoluuttisen pikseli sijainnin desctopissa. Nyt pit‰‰ tehd‰ muunnos
-		// kursorin paikka ikkunan omassa sijainnissa.
-		CRect zview;
-		GetWindowRect(zview);
-		CPoint viewPoint(pt - zview.TopLeft());
-		bool needsUpdate = itsEditMapView ? itsEditMapView->MouseWheel(itsToolBox->ToViewPoint(viewPoint.x, viewPoint.y)
-			,itsToolBox->ConvertCtrlKey(nFlags), zDelta) : false;
-		ReleaseDC(theDC);
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	// Jostain syyst‰ MouseWheel systeemi antaa hiiren kursorin paikan
+	// absoluuttisen pikseli sijainnin desctopissa. Nyt pit‰‰ tehd‰ muunnos
+	// kursorin paikka ikkunan omassa sijainnissa.
+	CRect zview;
+	GetWindowRect(zview);
+	CPoint viewPoint(pt - zview.TopLeft());
+	bool needsUpdate = itsEditMapView ? itsEditMapView->MouseWheel(itsToolBox->ToViewPoint(viewPoint.x, viewPoint.y)
+		, itsToolBox->ConvertCtrlKey(nFlags), zDelta) : false;
 
-		if(needsUpdate)
-		{
-			GetDocument()->UpdateAllViewsAndDialogs("Main map view: mouse wheel action");
-		}
+	if(needsUpdate)
+	{
+		GetDocument()->UpdateAllViewsAndDialogs("Main map view: mouse wheel action");
 	}
 	return TRUE;
-//	return CView::OnMouseWheel(nFlags, zDelta, pt);
+	//	return CView::OnMouseWheel(nFlags, zDelta, pt);
 }
 
 void CSmartMetView::OnMButtonDown(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	SetToolsDCs(theDC);
-
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
 	bool needsUpdate = itsEditMapView ? itsEditMapView->MiddleButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 
 	if(needsUpdate)
 	{

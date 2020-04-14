@@ -181,17 +181,19 @@ void CFmiCrossSectionView::OnInitialUpdate()
 	CView::OnInitialUpdate(); // ‰l‰ kutsu l‰hint‰ emoa!!!
 
 	itsToolBox = new NFmiToolBox(this); // t‰m‰ on l‰himm‰ss‰ emossa ja luotava t‰ss‰!!
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
 	NFmiRect rect(0.,0.,1.,1.); // 0,0 - 1,1 rect I hope?
 	itsView = new NFmiCrossSectionManagerView(rect, itsToolBox, &envi);
-	ReleaseDC(theDC);
 	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CROSSSECTIOVIEW_TOOLTIP_ID);
 	CRect winRec;
 	GetWindowRect(winRec);
 	OnSize(SW_RESTORE, winRec.Width(), winRec.Height()); // jostain syyst‰ on pakko tehd‰ onsize, ett‰ tooltip toimii varmasti koko ikkunan alueella?!?!?
+}
+
+void CFmiCrossSectionView::SetToolsDCs(CDC* theDC)
+{
+	if(itsToolBox)	
+		itsToolBox->SetDC(theDC);
 }
 
 void CFmiCrossSectionView::Update(bool fMakeDirty)
@@ -201,12 +203,8 @@ void CFmiCrossSectionView::Update(bool fMakeDirty)
         return ;
 	if(itsView)
 	{
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		itsToolBox->SetDC(theDC);
+		CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
 		itsView->Update();
-		ReleaseDC(theDC);
 	}
 }
 
@@ -268,15 +266,11 @@ void CFmiCrossSectionView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	try
 	{
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		itsToolBox->SetDC(theDC);
+		CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
 		CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 		bool needsUpdate = itsView ? itsView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 			,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-		ReleaseDC(theDC);
 		if(needsUpdate)
 		{
 			fViewDirty = true;
@@ -294,16 +288,11 @@ void CFmiCrossSectionView::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
 	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsView ? itsView->LeftDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		if(itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
@@ -320,15 +309,11 @@ void CFmiCrossSectionView::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 void CFmiCrossSectionView::OnMButtonUp(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsView ? itsView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -341,15 +326,11 @@ void CFmiCrossSectionView::OnMButtonUp(UINT nFlags, CPoint point)
 
 void CFmiCrossSectionView::OnRButtonUp(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsView ? itsView->RightButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 
@@ -376,15 +357,11 @@ void CFmiCrossSectionView::OnRButtonUp(UINT nFlags, CPoint point)
 
 void CFmiCrossSectionView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsView ? itsView->LeftButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -399,15 +376,11 @@ void CFmiCrossSectionView::OnMouseMove(UINT nFlags, CPoint point)
         return;
 	isCurrentMousePoint = point;
 
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	bool needsUpdate = itsView ? itsView->MouseMove(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -424,19 +397,16 @@ void CFmiCrossSectionView::OnSize(UINT nType, int cx, int cy)
 	GetClientRect(rect);
 	m_tooltip.SetToolRect(this, CROSSSECTIOVIEW_TOOLTIP_ID, rect);
     itsSmartMetDocumentInterface->CrossSectionViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
-	CDC *theDC = GetDC();
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), theDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
+	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
 
 	Update(true);
 }
 
 BOOL CFmiCrossSectionView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return FALSE;
-	itsToolBox->SetDC(theDC);
-    CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // t‰m‰ vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi j‰‰d‰ pohjaan, jos kyseinen n‰pp‰in vapautetaan, ennen kuin kartta ruudun piirto on valmis)
 
 	// Poiketen "button clik" -metodeista, piste tulee t‰nne absoluuttisena paikkana
 	// ja joudun muuttamaan sen suhteelliseksi t‰h‰n ikkunaan ensin.
@@ -448,7 +418,6 @@ BOOL CFmiCrossSectionView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 	bool needsUpdate = itsView ? itsView->MouseWheel(itsToolBox->ToViewPoint(windowPoint.x, windowPoint.y)
 		,itsToolBox->ConvertCtrlKey(nFlags), zDelta) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		Update(true);
@@ -509,12 +478,8 @@ void CFmiCrossSectionView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result
 
 		try
 		{
-			CDC *theDC = GetDC();
-			if(!theDC)
-				return;
-			itsToolBox->SetDC(theDC);
+			CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
 			NFmiPoint relativePoint(itsToolBox->ToViewPoint(pt.x, pt.y));
-			ReleaseDC(theDC);
 			strU_ = CA2T(itsView->ComposeToolTipText(relativePoint).c_str());
 		}
 		catch(std::exception &e)
