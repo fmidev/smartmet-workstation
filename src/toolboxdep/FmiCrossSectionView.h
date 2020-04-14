@@ -56,6 +56,7 @@ public:
     void SetToolMastersDC(CDC* theDC);
     virtual void OnInitialUpdate();
     virtual void OnPrepareDC(CDC* pDC, CPrintInfo* pInfo = NULL);
+	void SetToolsDCs(CDC* theDC);
 
 protected:
 	CFmiCrossSectionView();           // protected constructor used by dynamic creation

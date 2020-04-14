@@ -198,18 +198,19 @@ void CTimeEditValuesView::OnInitialUpdate()
 	OnSize(SW_RESTORE, winRec.Width(), winRec.Height()); // jostain syystä on pakko tehdä onsize, että tooltip toimii varmasti koko ikkunan alueella?!?!?
 }
 
+void CTimeEditValuesView::SetToolsDCs(CDC* theDC)
+{
+	if(itsToolBox)
+		itsToolBox->SetDC(theDC);
+}
+
 void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	try
 	{
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		itsToolBox->SetDC(theDC);
-
+		CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 		bool needsUpdate = itsManagerView ? itsManagerView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 			,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-		ReleaseDC(theDC);
 
 		itsManagerView->MapViewDescTopIndex(CtrlViewUtils::kFmiTimeSerialView);
 
@@ -241,14 +242,9 @@ void CTimeEditValuesView::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CTimeEditValuesView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
-	CDC* theDC = GetDC();
-	if (!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 	bool needsUpdate = itsManagerView ? itsManagerView->LeftDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
 		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if (needsUpdate)
 	{
 		if (itsSmartMetDocumentInterface->ActivateParamSelectionDlgAfterLeftDoubleClick())
@@ -264,24 +260,19 @@ void CTimeEditValuesView::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 void CTimeEditValuesView::OnMButtonUp(UINT nFlags, CPoint point)
 {
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		itsToolBox->SetDC(theDC);
-
-		bool needsUpdate = itsManagerView ? itsManagerView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
-			,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-		ReleaseDC(theDC);
-		if(needsUpdate)
-		{
-			Invalidate(FALSE);
-			if(itsSmartMetDocumentInterface->TimeSerialViewDirty())
-                itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Middle mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
-		}
-		else
-		{
+	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
+	bool needsUpdate = itsManagerView ? itsManagerView->MiddleButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+	if(needsUpdate)
+	{
+		Invalidate(FALSE);
+		if(itsSmartMetDocumentInterface->TimeSerialViewDirty())
+			itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("TimeSerialView: Middle mouse button up action", SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+	}
+	else
+	{
 		//	CZoomView::OnMButtonUp(nFlags, point);
-		}
+	}
 }
 
 void CTimeEditValuesView::OnMouseMove(UINT nFlags, CPoint point)
@@ -290,14 +281,9 @@ void CTimeEditValuesView::OnMouseMove(UINT nFlags, CPoint point)
         return;
     if(!itsSmartMetDocumentInterface->MouseCapturedInTimeWindow())
 		return;
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 	bool needsUpdate = itsManagerView ? itsManagerView->MouseMove(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		Invalidate(FALSE);
@@ -312,14 +298,9 @@ void CTimeEditValuesView::OnMouseMove(UINT nFlags, CPoint point)
 
 void CTimeEditValuesView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 	bool needsUpdate = itsManagerView ? itsManagerView->LeftButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		Invalidate(FALSE);
@@ -333,14 +314,9 @@ void CTimeEditValuesView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CTimeEditValuesView::OnRButtonUp(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 	bool needsUpdate = itsManagerView ? itsManagerView->RightButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		if(itsSmartMetDocumentInterface && itsSmartMetDocumentInterface->OpenPopupMenu())
@@ -390,13 +366,9 @@ void CTimeEditValuesView::OnSize(UINT nType, int cx, int cy)
     itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
 	if(itsToolBox && itsManagerView)
 	{
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		itsToolBox->SetDC(theDC);
+		CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 		NFmiRect rect(0.,0.,1.,1.); // 0,0 - 1,1 rect I hope?
 		itsManagerView->Update(rect,itsToolBox);
-		ReleaseDC(theDC);
 	}
 	CRect rect;
 	GetClientRect(rect);
@@ -602,11 +574,7 @@ BOOL CTimeEditValuesView::OnEraseBkgnd(CDC* pDC)
 
 BOOL CTimeEditValuesView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return FALSE;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 	// Poiketen "button clik" -metodeista, piste tulee tänne absoluuttisena paikkana
 	// ja joudun muuttamaan sen suhteelliseksi tähän ikkunaan ensin.
 	CRect screenRect;
@@ -617,7 +585,6 @@ BOOL CTimeEditValuesView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 	bool needsUpdate = itsManagerView ? itsManagerView->MouseWheel(itsToolBox->ToViewPoint(windowPoint.x, windowPoint.y)
 		,itsToolBox->ConvertCtrlKey(nFlags), zDelta) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		Invalidate(FALSE);
@@ -665,12 +632,8 @@ void CTimeEditValuesView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 
 		try
 		{
-			CDC *theDC = GetDC();
-			if(!theDC)
-				return;
-			itsToolBox->SetDC(theDC);
+			CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 			NFmiPoint relativePoint(itsToolBox->ToViewPoint(pt.x, pt.y));
-			ReleaseDC(theDC);
             strU_ = CA2T(itsManagerView->ComposeToolTipText(relativePoint).c_str());
 		}
 		catch(std::exception &e)
@@ -700,10 +663,7 @@ void CTimeEditValuesView::HideToolTip(void)
 
 void CTimeEditValuesView::AutoAdjustValueScales(bool fJustActive)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
+	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
 	if(itsManagerView->AutoAdjustValueScales(fJustActive))
 		Invalidate(FALSE);
 }
