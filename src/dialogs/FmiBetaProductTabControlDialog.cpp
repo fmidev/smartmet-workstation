@@ -11,6 +11,7 @@
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiDictionaryFunction.h"
 #include "persist2.h"
+#include "FmiWin32Helpers.h"
 
 
 // CFmiBetaProductTabControlDialog dialog
@@ -23,11 +24,9 @@ CFmiBetaProductTabControlDialog::CFmiBetaProductTabControlDialog(SmartMetDocumen
 : CDialogEx(CFmiBetaProductTabControlDialog::IDD, pParent)
 , itsBetaProductDialogTab(smartMetDocumentInterface)
 , itsBetaProductAutomationDialogTab(smartMetDocumentInterface)
-, itsIcon()
 , itsBetaProductControl()
 , itsSmartMetDocumentInterface(smartMetDocumentInterface)
 {
-    itsIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
 }
 
 CFmiBetaProductTabControlDialog::~CFmiBetaProductTabControlDialog()
@@ -56,7 +55,7 @@ BOOL CFmiBetaProductTabControlDialog::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
-    SetIcon(itsIcon, FALSE);
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 
     // Setup the tab control
     int nPageID = 0;
@@ -109,7 +108,7 @@ void CFmiBetaProductTabControlDialog::OnPaint()
         int y = (rect.Height() - cyIcon + 1) / 2;
 
         // Draw the icon
-        dc.DrawIcon(x, y, itsIcon);
+        dc.DrawIcon(x, y, GetIcon(FALSE));
     }
     else {
         CDialog::OnPaint();
@@ -119,7 +118,7 @@ void CFmiBetaProductTabControlDialog::OnPaint()
 
 HCURSOR CFmiBetaProductTabControlDialog::OnQueryDragIcon()
 {
-    return (HCURSOR)itsIcon;
+    return (HCURSOR)GetIcon(FALSE);
 }
 
 void CFmiBetaProductTabControlDialog::Update()
