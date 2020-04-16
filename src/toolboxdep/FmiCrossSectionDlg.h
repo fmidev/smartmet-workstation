@@ -63,7 +63,7 @@ private:
     BOOL fShowHybridLevels;
     BOOL fShowTrajectories;
     BOOL fUseObsAndForCrossSection;
-
+	HBITMAP itsParameterSelectionButtonBitmap = nullptr;
 public:
 	afx_msg void OnBnClickedButtonPrint();
 	virtual BOOL OnInitDialog();

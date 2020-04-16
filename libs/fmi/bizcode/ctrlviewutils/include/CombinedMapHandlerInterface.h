@@ -206,12 +206,12 @@ public:
     virtual void moveBorderLineLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) = 0;
+    virtual void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex) = 0;
 
 
     // Staattiset perushelper-funktiot
     static bool isDrawParamForecast(boost::shared_ptr<NFmiDrawParam>& drawParam);
     static bool isDrawParamObservation(boost::shared_ptr<NFmiDrawParam>& drawParam);
-    static void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex);
     static std::string getSelectedParamInfoString(const NFmiDataIdent* dataIdent, const NFmiLevel* level);
     static std::string getSelectedParamInfoString(boost::shared_ptr<NFmiFastQueryInfo>& fastInfo, bool ignoreLevel);
     static void verboseLogging(bool newValue);

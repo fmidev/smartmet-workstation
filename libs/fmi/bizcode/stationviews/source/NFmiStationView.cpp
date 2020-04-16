@@ -2996,8 +2996,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 
             if(!macroParamCase)
             {
-                FmiParamType parType = (FmiParamType)itsDrawParam->Param().Type();
-                auto paramType = info->Param().Type();
+                auto paramType = static_cast<FmiParamType>(info->Param().Type());
                 if(info->IsLocation())
                 {
                     str += GetLocationTooltipString();
@@ -3011,7 +3010,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
                         auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
                         float interpValue = InterpolatedToolTipValue(usedTime, latlon, info);
                         str += " (intp: ";
-                        str += Value2ToolTipString(interpValue, itsDrawParam->IsoLineLabelDigitCount(), itsDrawParam->Param().GetParam()->InterpolationMethod(), parType);
+                        str += Value2ToolTipString(interpValue, itsDrawParam->IsoLineLabelDigitCount(), itsDrawParam->Param().GetParam()->InterpolationMethod(), paramType);
                         str += ")";
                     }
                 }

@@ -166,14 +166,9 @@ void CFmiTempView::OnInitialUpdate()
 
 void CFmiTempView::OnLButtonUp(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 	bool needsUpdate = itsView ? itsView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -183,14 +178,9 @@ void CFmiTempView::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CFmiTempView::OnRButtonUp(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 	bool needsUpdate = itsView ? itsView->RightButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -267,11 +257,17 @@ void CFmiTempView::OnSize(UINT nType, int cx, int cy)
 	fViewDirty = true;
 	CZoomView::OnSize(nType, cx, cy);
 
-	CDC *theDC = GetDC();
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), theDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
+	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
 	CRect rect;
 	GetClientRect(rect);
 	m_tooltip.SetToolRect(this, TEMPVIEW_TOOLTIP_ID, rect);
+}
+
+void CFmiTempView::SetToolsDCs(CDC* theDC)
+{
+	if(itsToolBox)
+		itsToolBox->SetDC(theDC);
 }
 
 void CFmiTempView::Update(bool fMakeDirty)
@@ -281,12 +277,8 @@ void CFmiTempView::Update(bool fMakeDirty)
         return ;
 	if(itsView)
 	{
-		CDC *theDC = GetDC();
-		if(!theDC)
-			return;
-		itsToolBox->SetDC(theDC);
+		CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 		itsView->Update();
-		ReleaseDC(theDC);
 	}
 }
 
@@ -298,10 +290,7 @@ void CFmiTempView::ResetScales(void)
 
 BOOL CFmiTempView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return FALSE;
-	itsToolBox->SetDC(theDC);
+	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 
 	// Poiketen "button clik" -metodeista, piste tulee tänne absoluuttisena paikkana
 	// ja joudun muuttamaan sen suhteelliseksi tähän ikkunaan ensin.
@@ -313,7 +302,6 @@ BOOL CFmiTempView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 	bool needsUpdate = itsView ? itsView->MouseWheel(itsToolBox->ToViewPoint(windowPoint.x, windowPoint.y)
 		,itsToolBox->ConvertCtrlKey(nFlags), zDelta) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -327,14 +315,9 @@ void CFmiTempView::OnMouseMove(UINT nFlags, CPoint point)
     if(itsSmartMetDocumentInterface->Printing())
         return;
     isCurrentMousePoint = point;
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 	bool needsUpdate = itsView ? itsView->MouseMove(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -362,14 +345,9 @@ void CFmiTempView::ResetSoundingData(void)
 
 void CFmiTempView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 	bool needsUpdate = itsView ? itsView->LeftButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -379,14 +357,9 @@ void CFmiTempView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CFmiTempView::OnRButtonDown(UINT nFlags, CPoint point)
 {
-	CDC *theDC = GetDC();
-	if(!theDC)
-		return;
-	itsToolBox->SetDC(theDC);
-
+	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 	bool needsUpdate = itsView ? itsView->RightButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
 		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	ReleaseDC(theDC);
 	if(needsUpdate)
 	{
 		fViewDirty = true;
@@ -499,12 +472,8 @@ void CFmiTempView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 
 		try
 		{
-			CDC *theDC = GetDC();
-			if(!theDC)
-				return;
-			itsToolBox->SetDC(theDC);
+			CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
 			NFmiPoint relativePoint(itsToolBox->ToViewPoint(pt.x, pt.y));
-			ReleaseDC(theDC);
             strU_ = CA2T(itsView->ComposeToolTipText(relativePoint).c_str());
 		}
 		catch(std::exception &e)

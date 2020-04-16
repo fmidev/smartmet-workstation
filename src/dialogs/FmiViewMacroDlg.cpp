@@ -479,11 +479,8 @@ BOOL CFmiViewMacroDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
     DoResizerHooking(); // Tätä pitää kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristä
-
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
-	std::string errorBaseStr("Error in CFmiViewMacroDlg::OnInitDialog while reading dialog size and position values");
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+    std::string errorBaseStr("Error in CFmiViewMacroDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
 
     itsGridCtrl.SetLeftClickUpCallback(std::bind(&CFmiViewMacroDlg::LeftClickedGridCell, this, std::placeholders::_1));

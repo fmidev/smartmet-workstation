@@ -527,10 +527,8 @@ BOOL CFmiWindTableDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
-    std::string titleStr = ::GetDictionaryString("Wind table dialog");
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+	std::string titleStr = ::GetDictionaryString("Wind table dialog");
     SetWindowText(CA2T(titleStr.c_str()));
 
 	std::string errorBaseStr("Error in CFmiWindTableDlg::OnInitDialog while reading dialog size and position values");

@@ -38,7 +38,6 @@ private:
 
     CFmiBetaProductDialog itsBetaProductDialogTab;
     CFmiBetaProductAutomationDialog itsBetaProductAutomationDialogTab;
-    HICON itsIcon;
     CTabCtrlSSL itsBetaProductControl;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 public:

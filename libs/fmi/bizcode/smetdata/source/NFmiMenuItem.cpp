@@ -183,3 +183,14 @@ const NFmiLevel* NFmiMenuItem::Level(void) const
 { 
     return itsLevel.get(); 
 }
+
+size_t NFmiMenuItem::TotalNumberOfMenuItems() const
+{
+	// this olio on jo 1 item
+	size_t totalNumberOfMenuItems = 1; 
+	if(itsSubMenu)
+	{
+		totalNumberOfMenuItems += itsSubMenu->TotalNumberOfMenuItems();
+	}
+	return totalNumberOfMenuItems;
+}

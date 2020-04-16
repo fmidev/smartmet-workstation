@@ -99,9 +99,7 @@ BOOL CFmiSynopPlotSettingsDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	itsFontSizeSlider.SetRange(10, 100); // 1-10 mm, jaetaan kymmenellä
 	itsPlotSpacingSlider.SetRange(0, 20); // arvot 0 - 2, jaetaan kymmenellä
 

@@ -1,11 +1,62 @@
+#include "stdafx.h"
 #include "ApplicationInterfaceForSmartMet.h"
 #include "SmartMet.h"
 #include "SmartMetDoc.h"
 #include "SmartMetView.h"
 #include "MainFrm.h"
+#include "CloneBitmap.h"
+#include "NFmiEditMapGeneralDataDoc.h"
+#include "NFmiBetaProductSystem.h"
 
 namespace
 {
+    class IconHandler
+    {
+        HICON normalSmallIcon_ = nullptr;
+        HICON normalBigIcon_ = nullptr;
+        HICON betaProductSmallIcon_ = nullptr;
+        HICON betaProductBigIcon_ = nullptr;
+        HICON caseStudySmallIcon_ = nullptr;
+        HICON caseStudyBigIcon_ = nullptr;
+    public:
+        IconHandler()
+        {
+            normalSmallIcon_ = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+            normalBigIcon_ = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON), 0);
+            betaProductSmallIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE, ColorPOD(160, 160, 164));
+            betaProductBigIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE, ColorPOD(160, 160, 164));
+            caseStudySmallIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_CASE_STUDY, ColorPOD(160, 160, 164));
+            caseStudyBigIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_CASE_STUDY, ColorPOD(160, 160, 164));
+        }
+
+        ~IconHandler()
+        {
+            DestroyIcon(normalSmallIcon_);
+            DestroyIcon(normalBigIcon_);
+            DestroyIcon(betaProductSmallIcon_);
+            DestroyIcon(betaProductBigIcon_);
+            DestroyIcon(caseStudySmallIcon_);
+            DestroyIcon(caseStudyBigIcon_);
+        }
+
+        std::pair<HICON, HICON> getUsedIcons(bool betaProductAutomationOn, bool caseStudyModeOn)
+        {
+            if(betaProductAutomationOn)
+            {
+                return std::make_pair(betaProductSmallIcon_, betaProductBigIcon_);
+            }
+            else if(caseStudyModeOn)
+            {
+                return std::make_pair(caseStudySmallIcon_, caseStudyBigIcon_);
+            }
+            else
+            {
+                return std::make_pair(normalSmallIcon_, normalBigIcon_);
+            }
+        }
+    };
+
+
     CMainFrame* GetMainFrame()
     {
         return (CMainFrame*)AfxGetMainWnd();
@@ -14,6 +65,13 @@ namespace
     CSmartMetApp* GetApplication()
     {
         return (CSmartMetApp*)AfxGetApp();
+    }
+
+    std::pair<HICON, HICON> GetUsedIcons(NFmiEditMapGeneralDataDoc& generalDataDocument)
+    {
+        static IconHandler iconHandler;
+
+        return iconHandler.getUsedIcons(generalDataDocument.BetaProductionSystem().AutomationModeOn(), generalDataDocument.CaseStudyModeOn());
     }
 }
 
@@ -246,4 +304,13 @@ NFmiApplicationWinRegistry& ApplicationInterfaceForSmartMet::ApplicationWinRegis
 void ApplicationInterfaceForSmartMet::ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag)
 {
     GetDocument()->ApplyUpdatedViewsFlag(updatedViewsFlag);
+}
+
+std::pair<HICON, HICON> ApplicationInterfaceForSmartMet::GetUsedIcons()
+{
+    auto *generalDataDocument = GetApplication()->GeneralDocData();
+    if(generalDataDocument)
+        return ::GetUsedIcons(*generalDataDocument);
+    else
+        return std::pair<HICON, HICON>();
 }

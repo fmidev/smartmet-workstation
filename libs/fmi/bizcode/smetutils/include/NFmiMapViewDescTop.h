@@ -230,9 +230,9 @@ private:
 	// Joskus luokan pitää tietää mikä descTop itse on
 	int itsMapViewDescTopIndex; 
 	// tämä on dokumentin omistuksessa
-	NFmiMapConfigurationSystem *itsMapConfigurationSystem; 
+	NFmiMapConfigurationSystem *itsMapConfigurationSystem = nullptr; 
 	// tämä on dokumentin omistuksessa
-	NFmiProjectionCurvatureInfo* itsProjectionCurvatureInfo; 
+	NFmiProjectionCurvatureInfo* itsProjectionCurvatureInfo = nullptr;
 	// SmartMetin kontrollipolku (annetaan -p optiolla), tämän avulla luetaan kartta kuvia ja area-tietoja.
 	// OLI aiemmin editorin työhakemisto, mutta se ei toiminut oikein, varsinkin kun kyseessä 
 	// oli PV-projekti jossa dropbox-konffit ja sitä käytettiin VC++ debuggerista.
@@ -257,17 +257,17 @@ private:
 	bool fShowParamWindowView;
 	// lista drawparam-listoja (näyttöruudukossa eri rivit laitetaan
 	// omaan drawparamlist:iin, jotka sijoitetaan tähän listojen listaan)
-	NFmiPtrList<NFmiDrawParamList> *itsDrawParamListVector; 
+	NFmiPtrList<NFmiDrawParamList> *itsDrawParamListVector = nullptr;
 	// tähän talletetaan CView:ssa tehty DC, johon on talletettu bitmap, mikä sitten 
 	// blitataan jokaiseen näyttöruudun kohtaan erikseen (toivottavasti vain väliaikainen viritys)
-	CDC* itsMapBlitDC;	
+	CDC* itsMapBlitDC = nullptr;
 	// jos 0, piirretään läpinäkyvä kartta ns. background karttaan, jos 1, piirretään se ns. foreground karttaan 
 	// eli datan päälle jos siis yleensä piirretään tätä osaa kartasta
 	int itsDrawOverMapMode; 
 	// näytön rivejä voi skrollata ylös ja alas ja tässä on sen rivin indeksi, mikä näytetään editorin 1. rivillä (alkaa 1:stä)
 	int itsMapRowStartingIndex; 
 	// tämä annetaan CView: OnDraw:ssa ja tätä käytetään NFmiStationViewHandler:in Draw:ssa tekemään näytöstä bitmap kopioita
-	CDC *itsCopyCDC; 
+	CDC *itsCopyCDC = nullptr;
 	// neljä tilaa: 0 = näytä aikakontrolliikkuna+teksti 1=vain aik.kont.ikkuna, 2=älä näytä kumpaakaan ja 3= näytä vain teksti
 	int itsShowTimeOnMapMode; 
 	bool fShowTimeString;
@@ -290,7 +290,7 @@ private:
 	// Piiretäänkö karttanäytölle vain bitmap uudestaan (tällä saadaan pyyhittyä piirretty tooltippi pois)
 	bool fMapViewBitmapDirty; 
 	// tässä on karttanäytön pointteri
-	CWnd *itsMapView; 
+	CWnd *itsMapView = nullptr;
     CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
 	NFmiGridPointCache itsGridPointCache;
     NFmiAnimationData itsAnimationData;
@@ -327,7 +327,7 @@ private:
 
     // Tähän tehdään yksi maiden rajat kartalla bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä.
     // Huom! pakko tehdä gdiplus bitmap, jotta saadaan mukaan läpinäkyvä väri
-    Gdiplus::Bitmap *itsLandBorderMapBitmap;
+    Gdiplus::Bitmap *itsLandBorderMapBitmap = nullptr;
 	// Tässä on erillisinä piirtolayereina olevien maiden rajaviivojen bitmap ja polyline datat.
 	// Uudet erillismääritellyt border-layerit voivat olla eri piirtosäädöillä ja niitä voi olla jokaisella karttarivillä omansa.
 	NFmiCountryBorderBitmapCache itsSeparateCountryBorderBitmapCache;

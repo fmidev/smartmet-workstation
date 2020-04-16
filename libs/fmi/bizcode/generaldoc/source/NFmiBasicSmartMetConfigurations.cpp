@@ -487,12 +487,6 @@ bool NFmiBasicSmartMetConfigurations::InitLogger(void)
 	}
 }
 
-void NFmiBasicSmartMetConfigurations::StoreLoggerConfigurations(void)
-{
-    // This is only thing that can be changed in Logger settings by SmartMet's UI
-    NFmiSettings::Set("SmartMet::Logger::LogFilePath", itsLogFileDirectory);
-}
-
 void NFmiBasicSmartMetConfigurations::SetEditorVersionStr(void)
 {
 	std::string appNameStr = CT2A(AfxGetApp()->m_pszExeName);
@@ -524,11 +518,11 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
 
-    CString possibleWarningTextU_ = _TEXT("Paljon muutoksia mm. näyttöjen päivityskoodeihin!!");
+    CString possibleWarningTextU_; // = _TEXT("Paljon muutoksia mm. näyttöjen päivityskoodeihin!!");
     if(possibleWarningTextU_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 370), true));
 
-    CString possibleWarningText2U_ = _TEXT("Raportoi tähän versioon liittyvistä ongelmista pikaisesti!");
+    CString possibleWarningText2U_; // = _TEXT("Raportoi tähän versioon liittyvistä ongelmista pikaisesti!");
     if(possibleWarningText2U_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningText2U_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(22, 395), true));
 }

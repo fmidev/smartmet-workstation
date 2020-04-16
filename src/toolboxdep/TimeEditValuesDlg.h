@@ -107,6 +107,7 @@ private:
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	HACCEL m_hAccel;
+	HBITMAP itsParameterSelectionButtonBitmap = nullptr;
 public:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnAcceleratorTimeViewToggleHelpData2();

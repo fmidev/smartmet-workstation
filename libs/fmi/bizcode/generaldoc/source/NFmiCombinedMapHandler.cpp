@@ -2694,7 +2694,7 @@ void NFmiCombinedMapHandler::toggleShowDifferenceToOriginalData(const NFmiMenuIt
 void NFmiCombinedMapHandler::addView(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
 	// lasketaan todellinen rivinumero (johtuu karttanäytön virtuaali riveistä)
-	addViewWithRealRowNumber(true, menuItem, viewRowIndex + getMapViewDescTop(menuItem.MapViewDescTopIndex())->MapRowStartingIndex() - 1, false, nullptr); 
+	addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false, nullptr); 
 
 	// lisään tämän CheckAnimationLockedModeTimeBags -kutsun vain perus AddView-metodin yhteyteen, mutta en esim.
 	// AddViewWithRealRowNumber -metodin yhteyteen, että homma ei mene pelkäksi tarkasteluksi.
@@ -2964,7 +2964,7 @@ bool NFmiCombinedMapHandler::modifyMacroDrawParam(const NFmiMenuItem& menuItem, 
 	if(usedDrawParam)
 	{
 		CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(menuItem.MapViewDescTopIndex());
-		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), usedDrawParam, ::getMacroPathSettings().DrawParamPath(true), true, false, menuItem.MapViewDescTopIndex(), parentView);
+		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), usedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, menuItem.MapViewDescTopIndex(), parentView);
 		if(dlg.DoModal() == IDOK)
 		{
 			updateMacroDrawParam(menuItem, viewRowIndex, crossSectionCase, usedDrawParam);
@@ -2985,7 +2985,7 @@ void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& men
 		if(modifiedDrawParam)
 		{
 			CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(menuItem.MapViewDescTopIndex());
-			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(true), false, true, menuItem.MapViewDescTopIndex(), parentView);
+			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), false, true, menuItem.MapViewDescTopIndex(), parentView);
 			if(dlg.DoModal() == IDOK)
 			{
 				drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), modifiedDrawParam);
@@ -3240,7 +3240,7 @@ bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int v
 		if(modifiedDrawParam)
 		{
 			CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
-			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(true), true, false, mapViewDescTopIndex, parentView);
+			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, mapViewDescTopIndex, parentView);
 			if(dlg.DoModal() == IDOK)
 			{
 				updateToModifiedDrawParam(mapViewDescTopIndex, modifiedDrawParam, viewRowIndex);
@@ -4000,3 +4000,8 @@ void NFmiCombinedMapHandler::insertParamLayer(const NFmiMenuItem& menuItem, int 
 	addView(menuItem, viewRowIndex);
 }
 
+void NFmiCombinedMapHandler::activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex)
+{
+	auto usedViewUpdateFlag = ::GetWantedMapViewIdFlag(mapViewDescTopIndex) | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::BrushToolDlg;
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(usedViewUpdateFlag);
+}

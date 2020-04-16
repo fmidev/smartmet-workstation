@@ -964,9 +964,7 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
     CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, COLOR_INDEX_VIEW_TOOLTIP_ID);
     InitializeColorRects();
 	SetWindowText(CA2T(itsTitleStr.c_str()));

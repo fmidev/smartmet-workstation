@@ -7,6 +7,7 @@
 #include "CloneBitmap.h"
 #include "XFolderDialog.h"
 #include "NFmiDictionaryFunction.h"
+#include "FmiWin32Helpers.h"
 
 // CFmiHelpEditorSettingsDlg dialog
 
@@ -46,9 +47,7 @@ BOOL CFmiHelpEditorSettingsDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	fUseSystem = itsHelpEditorSystem.Use();
 	fHelpModeOn = itsHelpEditorSystem.HelpEditor();
     itsHelpDataPathStrU_ = CA2T(itsHelpEditorSystem.DataPath().c_str());

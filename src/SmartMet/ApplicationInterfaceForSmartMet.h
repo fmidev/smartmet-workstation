@@ -51,4 +51,5 @@ public:
     void OpenLocationFinderDialog(CWnd *parentView) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
     void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) override;
+    std::pair<HICON, HICON> GetUsedIcons() override;
 };

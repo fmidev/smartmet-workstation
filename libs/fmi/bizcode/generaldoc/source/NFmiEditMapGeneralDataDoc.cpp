@@ -57,7 +57,6 @@
 #include "NFmiCrossSectionSystem.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiSynopStationPrioritySystem.h"
-#include "FmiMacroPathSettings.h"
 #include "NFmiObsComparisonInfo.h"
 #include "NFmiMetEditorOptionsData.h"
 #include "NFmiMTATempSystem.h"
@@ -398,7 +397,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsEditedDataNeedsToBeLoadedTimer()
 ,fEditedDataNotInPreferredState(false)
 ,itsMacroPathSettings()
-,itsMacroDirectoriesSyncronizationCounter(1)
 ,itsCaseStudySystem()
 ,itsCaseStudySystemOrig()
 ,itsLoadedCaseStudySystem()
@@ -524,8 +522,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitDataLoadingInfo();
     InitMetEditorModeDataWCTR();
 
-	itsLocationSelectionTool2 = new NFmiLocationSelectionTool;
-	SelectNewParamForSelectionTool(kFmiTopoGraf);
+	InitLocationSelectionTool();
 
 	InitEditedDataParamDescriptor(); // pit‰‰ olla itsDataLoadingInfoManager -otuksen luomisen j‰lkeen
 	InitWarningCenterSystem(); // t‰m‰n initialisointi pit‰‰ olla itsDataLoadingInfoManager-olion initialisoinnin per‰ss‰
@@ -922,72 +919,12 @@ void InitStationIgnoreList(void)
 	}
 }
 
-void FixDirectoryName(std::string &theDir, bool fNoSlashAtEnd)
-{
-    const char backSlash = '\\';
-	NFmiStringTools::ReplaceChars(theDir, '/', backSlash); // kenoviivojen suunta pit‰‰ laittaa winkkari tyyliin '/' -> '\'
-    NFmiStringTools::ReplaceAll(theDir, "\\\\", "\\"); // mahdolliset kaksois kenoviivat pit‰‰ korvata yksˆis kenoviivoilla "\\" -> "\"
-    if(fNoSlashAtEnd)
-		NFmiStringTools::TrimR(theDir, backSlash);
-	else
-	{
-		if(theDir[theDir.size()-1] != backSlash)
-			theDir.push_back(backSlash);
-	}
-}
-
-void RecursiveDirectoryCopy(const std::string &theSrcDirX, const std::string &theDestDirX, CatLog::Category logCategory)
-{
-	std::string srcDir = theSrcDirX;
-	std::string destDir = theDestDirX;
-	FixDirectoryName(srcDir, true); // HUOM! lopusta pit‰‰ ottaa mahdollinen kenoviiva pois!!!
-	FixDirectoryName(destDir, true); // HUOM! lopusta pit‰‰ ottaa mahdollinen kenoviiva pois!!!
-
-	NFmiFileSystem::CreateDirectory(destDir); // HUOM! XP:ss‰ pit‰‰ luoda kohde hakemisto, muuten ei toimi!!!!
-	std::string logStr("Copying dir: \"");
-	logStr += srcDir;
-	logStr += "\"\nto: \""; 
-	logStr += destDir;
-	logStr += "\""; 
-	LogMessage(logStr, CatLog::Severity::Debug, logCategory);
-    CString strFolderSrcU_ = CA2T(srcDir.c_str());
-    CString strFolderDestU_ = CA2T(destDir.c_str());
-    if(CFmiWin32DirectoryUtils::BruteDirCopy(strFolderSrcU_, strFolderDestU_)) // 0 paluu arvo on ok, muut virheit‰
-		LogMessage("Directory copy failed", CatLog::Severity::Error, logCategory);
-}
-
-void FirstTimeMacroDirectoryCheck(const std::string &theServerDir, const std::string &theLocalDir)
-{
-	if(NFmiFileSystem::DirectoryExists(theLocalDir) == false)
-	{
-		RecursiveDirectoryCopy(theServerDir, theLocalDir, CatLog::Category::Macro);
-		if(itsMacroDirectoriesSyncronizationCounter <= 1)
-			itsMacroDirectoriesSyncronizationCounter = 2; // jos on kopsattu makrohakemistot suoraan serverilta, voidaan jatkossa synkronoinnissa menn‰ lokaali-prefer -tilaan
-	}
-}
-
-void DoMacroFileInitializations(void)
-{
-    // HUOM! T‰‰lll‰ pit‰‰ hanskata samat kansiot kuin DoMacroDirectoriesSyncronization -metodissa.
-
-    // 1. Jos lokaali makro cache ei ole k‰ytˆss‰ ei tehd‰ mit‰‰n.
-	if(itsMacroPathSettings.UseLocalCache() == false)
-		return ;
-	// 2. Tarkistetaan vuorotellen jokainen makro-hakemisto, onko se jo olemassa vai ei.
-	// Jos on ei tehd‰ mit‰‰n, jos ei , kopioidaan se t‰ss‰ sitten.
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.SmartToolPath(false), itsMacroPathSettings.SmartToolPath(true));
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.DrawParamPath(false), itsMacroPathSettings.DrawParamPath(true));
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.ViewMacroPath(false), itsMacroPathSettings.ViewMacroPath(true));
-	FirstTimeMacroDirectoryCheck(itsMacroPathSettings.MacroParamPath(false), itsMacroPathSettings.MacroParamPath(true));
-}
-
 void InitMacroPathSettings(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
 		itsMacroPathSettings.InitFromSettings("SmartMet::MacroPathSettings", itsBasicConfigurations.WorkingDirectory());
-        DoMacroFileInitializations();
     }
 	catch(std::exception &e)
 	{
@@ -1604,7 +1541,7 @@ void InitMacroParamSystem(bool haveAbortOption)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsMacroParamSystem.RootPath(itsMacroPathSettings.MacroParamPath(true));
+		itsMacroParamSystem.RootPath(itsMacroPathSettings.MacroParamPath());
 		NFmiFileSystem::CreateDirectory(itsMacroParamSystem.RootPath()); // luodaan varmuuden vuoksi hakemisto, jos ei ole jo
 
 	}
@@ -1619,7 +1556,7 @@ void InitViewMacroSystem(bool haveAbortOption)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsViewMacroPath = itsMacroPathSettings.ViewMacroPath(true);
+		itsViewMacroPath = itsMacroPathSettings.ViewMacroPath();
 		if(itsViewMacroPath[itsViewMacroPath.size()-1] == '/')
 			itsViewMacroPath[itsViewMacroPath.size()-1] = kFmiDirectorySeparator;
 		else if(itsViewMacroPath[itsViewMacroPath.size()-1] != '\\')
@@ -2113,7 +2050,7 @@ bool InitInfoOrganizer(void)
 	itsSmartInfoOrganizer->WorkingDirectory(WorkingDirectory());
 	int undoredoDepth = (SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) ? itsMetEditorOptionsData.UndoRedoDepth() : 0; // ns. viewmodessa undo/redo syvyydeksi 0!
 	bool makeCopyOfEditedData = undoredoDepth > 0;
-	itsSmartInfoOrganizer->Init(itsMacroPathSettings.DrawParamPath(true), false, makeCopyOfEditedData, fUseOnePressureLevelDrawParam); // 2. parametri (false) tarkoittaa ett‰ jos drawparam-tiedostoja ei ole, ei niit‰ luoda automaattisesti
+	itsSmartInfoOrganizer->Init(itsMacroPathSettings.DrawParamPath(), false, makeCopyOfEditedData, fUseOnePressureLevelDrawParam); // 2. parametri (false) tarkoittaa ett‰ jos drawparam-tiedostoja ei ole, ei niit‰ luoda automaattisesti
 	NFmiFileSystem::CreateDirectory(itsSmartInfoOrganizer->GetDrawParamPath());
 
 	return true;
@@ -2924,26 +2861,11 @@ bool DataLoadingOK(bool noError)
 	return true;
 }
 
-
-// HUOM!!!! theParamIndex on oikeasti FmiParameter tyyppi‰, muuta!
-bool SelectNewParamForSelectionTool(int theParamId)
+bool InitLocationSelectionTool()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	if(itsLocationSelectionTool2)
-	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kStationary);
-		if(info)
-		{
-			boost::shared_ptr<NFmiFastQueryInfo> infoCopy = boost::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(info->Clone())); // pit‰‰ tehd‰ kopio
-			if(infoCopy)
-			{
-				infoCopy->Param(static_cast<FmiParameterName>(theParamId));
-				itsLocationSelectionTool2->Info(infoCopy);
-				return true;
-			}
-		}
-	}
-	return false;
+	itsLocationSelectionTool2 = new NFmiLocationSelectionTool;
+	return true;
 }
 
 struct MenuCreationSettings
@@ -3052,10 +2974,7 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 // ********** lis‰t‰‰n havaintoparametri osa *************************
 
 // ********** WMS *************************
-// HUOM!!! ƒl‰ lis‰‰ Wms parametreja popup-valikkoon, niit‰ on niin paljon, ett‰ Windows:in popup-menu sekoaa ja sen systeemit
-// menee yli rajojen. Olen joskus testannut ett‰ popupit alkavat sekoamaan, kun niiss‰ on yli n. satatuhatta menu-item:ia.
-// Katso jos jostain lˆytyisi parempi popup-valikoiden teko mekanismi.
-//    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
+    AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
 
 // ********** lis‰t‰‰n apudata-parametri osa *************************
 	menuString = ::GetDictionaryString("MapViewParamPopUpHelpData");
@@ -3243,9 +3162,6 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 		MenuCreationSettings menuSettings;
 		menuSettings.SetMapViewSettings(theDescTopIndex, kFmiAddView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAdd");
-
-		menuSettings.SetMapViewSettings(theDescTopIndex, kFmiAddAsOnlyView);
-		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAddAsOnly");
 
         AddSwapViewRowsToPopup(theDescTopIndex, itsPopupMenu);
 
@@ -3902,9 +3818,6 @@ bool CreateMaskSelectionPopup(void)
 		MenuCreationSettings menuSettings;
 		menuSettings.SetMaskSettings(kFmiAddMask);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewMaskSelectionPopUpAdd");
-
-		menuSettings.SetMaskSettings(kFmiAddAsOnlyMask);
-		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewMaskSelectionPopUpAddAsOnly");
 
 		std::string menuString = ::GetDictionaryString("MapViewMaskSelectionPopUpRemoveAll");
         auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, NFmiDataIdent(), kFmiRemoveAllMasks, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
@@ -5433,105 +5346,6 @@ bool StoreDataToDataBase(const std::string &theForecasterId)
     return status;
 }
 
-void DoMacroDirectoriesSyncronization(void)
-{
-    // HUOM! T‰‰lll‰ pit‰‰ hanskata samat kansiot kuin DoMacroFileInitializations -metodissa.
-    try
-	{
-		if(itsMacroPathSettings.UseLocalCache() == false)
-			return ; // ei tehd‰ mit‰‰n jos lokaali makro cachetys ei ole k‰ytˆss‰
-
-		// 1. Tarkista ettei ole yht‰‰n unison-ohjelmaa k‰ytˆss‰, jos on, oletetaan ett‰ joku toinen SmartMet on juuri tekem‰ss‰ synkronointia ja t‰m‰n
-		// instanssin ei tarvitse tehd‰ sit‰.
-		NFmiApplicationDataBase::AppSpyData appData(std::make_pair(GetUnisonApplicationName(), false)); // false tarkoittaa ett‰ aplikaatiolta ei pyydet‰ versionumeroa
-		std::string appVersionsStrOutDummy; // t‰m‰ pit‰‰ antaa NFmiApplicationDataBase::CountProcessCount-funktiolle, mutta sit‰ ei k‰ytet‰
-		int unisonProcessCount = NFmiApplicationDataBase::CountProcessCount(appData, appVersionsStrOutDummy);
-		if(unisonProcessCount > 0)
-			return ;
-
-		// 2. Tarkista monesko synkronointi on menossa, jos on 1., prefer-suunta on server->local (konflikteissa)
-		// jos on 2-n:s synkronointi, prefer-suunta on local->server
-		bool preferRoot1 = (itsMacroDirectoriesSyncronizationCounter <= 1);
-
-		// 3. K‰ynnist‰ tarvittava m‰‰r‰ synkronointeja, ne ajetaan omissa processeissaan omalla ajallaan loppuun, SmartMet ei odota niiden valmistumista.
-		DWORD priorityClass = BELOW_NORMAL_PRIORITY_CLASS;
-        if(itsMachineThreadCount >= 8) 
-            priorityClass = NORMAL_PRIORITY_CLASS;
-		DoUnisonDirectorySync(itsMacroPathSettings.DrawParamPath(false), itsMacroPathSettings.DrawParamPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-		DoUnisonDirectorySync(itsMacroPathSettings.MacroParamPath(false), itsMacroPathSettings.MacroParamPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-		DoUnisonDirectorySync(itsMacroPathSettings.SmartToolPath(false), itsMacroPathSettings.SmartToolPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-		DoUnisonDirectorySync(itsMacroPathSettings.ViewMacroPath(false), itsMacroPathSettings.ViewMacroPath(true), preferRoot1, SW_HIDE, false, priorityClass);
-
-		// 4. kasvata synkronointi counteria
-		itsMacroDirectoriesSyncronizationCounter++;
-	}
-	catch(...)
-	{
-	}
-}
-
-
-#undef CreateDirectory // pit‰‰ poistaa winkkarin tekemi‰ definej‰
-
-bool CheckThatParentDirectoryExists(const std::string &theDir)
-{
-	if(theDir.empty())
-		return false;
-	std::string dirStr = theDir;
-	NFmiStringTools::ReplaceAll(dirStr, "\\", "/"); // korvataan kaikki mahdolliset windows-kenot linux-kenoilla (toimii sitten molemmisssa systeemeiss‰)
-	NFmiStringTools::TrimR(dirStr, '/'); // poistetaan mahdollinen viimeinen keno
-	std::string::size_type pos = dirStr.rfind('/'); // etsit‰‰n viimeisen kenon paikka
-	if(pos != std::string::npos)
-	{
-		std::string parentDir(dirStr.begin(), dirStr.begin()+pos);
-		if(NFmiFileSystem::DirectoryExists(parentDir) == false)
-		{
-			if(NFmiFileSystem::CreateDirectory(parentDir) == false)
-				return false;
-		}
-		return true;
-	}
-	else
-		return false;
-}
-
-std::string GetUnisonApplicationName(void)
-{
-	return std::string("unison_smartmet.exe");
-}
-
-// theRoot1 on serverill‰ oleva hakemisto (t‰rke‰mpi)
-// theRoot2 on lokaalilla kovalevyll‰ oleva hakemisto
-void DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRoot2, bool preferRoot1, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags)
-{
-	if(CheckThatParentDirectoryExists(theRoot2) == false) // lokaali hakemistosta pit‰‰ olla emo-hakemisto olemassa ennen ei synkronointi onnistu
-	{
-		std::string errStr = "Local macro folder:\n'";
-		errStr += theRoot2;
-		errStr += ",\ncannot be created.";
-		LogAndWarnUser(errStr, "Error when creating local macro folder", CatLog::Severity::Error, CatLog::Category::Operational, false);
-		return ;
-	}
-
-	std::string commandStr = WorkingDirectory();
-	commandStr += "\\utils\\";
-	commandStr += GetUnisonApplicationName();
-	commandStr += " ";
-	commandStr += theRoot1;
-	commandStr += " ";
-	commandStr += theRoot2;
-
-	// lis‰t‰‰n unison optioita loppuun
-	commandStr += " -batch";
-	commandStr += " -prefer " + (preferRoot1 ? theRoot1 : theRoot2);
-	commandStr += " -retry 3";
-	bool ignoreArchives = (NFmiFileSystem::DirectoryExists(theRoot1) == false) || (NFmiFileSystem::DirectoryExists(theRoot2) == false);
-	if(ignoreArchives)
-		commandStr += " -ignorearchives"; // jos jompi kumpi hakemistoista oli poistettu, ignoorataan arkistot (n‰in ei p‰‰se tapahtumaan isoja tuhoja aikaan)
-
-    CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, false, theShowWindow, waitExecutionToStop, dwCreationFlags);
-}
-
 std::string CreateHelpEditorFileNameWithPath(void)
 {
 	std::string fileName(itsHelpEditorSystem.DataPath());
@@ -5897,7 +5711,6 @@ void StoreSupplementaryData(void)
 		StoreDataQualityChecker();
 		IgnoreStationsData().StoreToSettings();
 		StoreOptionsData(); // t‰m‰ tekee myˆs asetuksien talletuksen konfiguraatio tiedostoihin! T‰m‰ pit‰‰ siis kutsua viimeisen‰.
-		DoMacroDirectoriesSyncronization(); // laitetaan makrojen synkronointi viel‰ lopuksi k‰yntiin, ett‰ mahdolliset muutokset menev‰t serverille
 
 		CheckRunningStatusAtClosing(SpecialFileStoragePath());
 		StoreAllCPDataToFiles();
@@ -6079,7 +5892,7 @@ bool InitCPManagerSet(void)
 	bool InitSmartToolInfo(void)
 	{
 		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-		bool status = itsSmartToolInfo.Init(itsMacroPathSettings.SmartToolPath(true));
+		bool status = itsSmartToolInfo.Init(itsMacroPathSettings.SmartToolPath());
 		NFmiFileSystem::CreateDirectory(itsSmartToolInfo.LoadDirectory());
 		if(!status)
 		{
@@ -7190,165 +7003,6 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		fMapMouseDragPanMode = newState;
 	}
 
-	bool ChangeLoggerPath(const string &theNewLoggerPath)
-	{
-		if(theNewLoggerPath != itsBasicConfigurations.LogFileDirectory())
-		{
-			if(WarnUserAboutNotExistingPath(theNewLoggerPath))
-			{
-				itsBasicConfigurations.LogFileDirectory(theNewLoggerPath);
-				try
-				{
-					itsBasicConfigurations.StoreLoggerConfigurations();
-				}
-				catch(...)
-				{
-					// varoita k‰ytt‰j‰‰ ?!?!?!? 
-				}
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool ChangeSmartToolPath(const std::string &theNewDirectory)
-	{ 
-		// SmartTool -polku muutetaan jos on tarpeen. Jos polkua ei ole varoitus ja mahd. sen luonti.
-		// Palauttaa true jos muutos otettiin k‰yttˆˆn ja false jos ei tehd‰ mit‰‰n.
-		if(theNewDirectory != itsMacroPathSettings.SmartToolPath(false))
-		{
-			if(WarnUserAboutNotExistingPath(theNewDirectory))
-			{
-				NFmiSettings::Set(string("MetEditor::SmartTools::LoadDirectory"), theNewDirectory, true);
-				itsMacroPathSettings.SetOrigSmartToolPath(theNewDirectory);
-				itsSmartToolInfo.LoadDirectory(itsMacroPathSettings.SmartToolPath(true), true);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool ChangeViewMacroPath(const std::string &theNewDirectory)
-	{ 
-		// ViewMacro -polku muutetaan jos on tarpeen. Jos polkua ei ole varoitus ja mahd. sen luonti.
-		// Palauttaa true jos muutos otettiin k‰yttˆˆn ja false jos ei tehd‰ mit‰‰n.
-		if(theNewDirectory != itsMacroPathSettings.ViewMacroPath(false))
-		{
-			if(WarnUserAboutNotExistingPath(theNewDirectory))
-			{
-				NFmiSettings::Set(string("MetEditor::ViewMacro::LoadDirectory"), theNewDirectory, true);
-				itsMacroPathSettings.SetOrigViewMacroPath(theNewDirectory);
-				InitViewMacroSystem(false);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool ChangeMacroParamPath(const std::string &theNewDirectory)
-	{ 
-		// ViewMacro -polku muutetaan jos on tarpeen. Jos polkua ei ole varoitus ja mahd. sen luonti.
-		// Palauttaa true jos muutos otettiin k‰yttˆˆn ja false jos ei tehd‰ mit‰‰n.
-		if(theNewDirectory != itsMacroPathSettings.MacroParamPath(false))
-		{
-			if(WarnUserAboutNotExistingPath(theNewDirectory))
-			{
-				NFmiSettings::Set(string("MetEditor::MacroParams::LoadDirectory"), theNewDirectory, true);
-				itsMacroPathSettings.SetOrigMacroParamPath(theNewDirectory);
-				InitMacroParamSystem(false);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool ChangeDrawParamPath(const std::string &theNewDirectory)
-	{ 
-		// ViewMacro -polku muutetaan jos on tarpeen. Jos polkua ei ole varoitus ja mahd. sen luonti.
-		// Palauttaa true jos muutos otettiin k‰yttˆˆn ja false jos ei tehd‰ mit‰‰n.
-		if(theNewDirectory != itsMacroPathSettings.DrawParamPath(false))
-		{
-			if(WarnUserAboutNotExistingPath(theNewDirectory))
-			{
-				NFmiSettings::Set(string("MetEditor::DrawParams::LoadDirectory"), theNewDirectory, true);
-				itsMacroPathSettings.SetOrigDrawParamPath(theNewDirectory);
-				itsSmartInfoOrganizer->SetDrawParamPath(itsMacroPathSettings.DrawParamPath(true));
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool MakeMacroPathConfigurations(void)
-	{
-		string oldSmartToolPath(itsMacroPathSettings.SmartToolPath(false));
-		string oldViewMacroPath(itsMacroPathSettings.ViewMacroPath(false));
-		string oldMacroParamPath(itsMacroPathSettings.MacroParamPath(false));
-		string oldDrawParamPath(itsMacroPathSettings.DrawParamPath(false));
-		string oldLoggerPath(itsBasicConfigurations.LogFileDirectory());
-		CFmiMacroPathSettings dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(),
-								oldSmartToolPath,
-								oldViewMacroPath,
-								oldMacroParamPath,
-								oldDrawParamPath,
-								oldLoggerPath
-								);
-		if(dlg.DoModal() == IDOK)
-		{
-			string newSmartToolPath = CT2A(dlg.SmartToolPathStr());
-            string newViewMacroPath = CT2A(dlg.ViewMacroPathStr());
-            string newMacroParamPath = CT2A(dlg.MacroParamPathStr());
-            string newDrawParamPath = CT2A(dlg.DrawParamPathStr());
-            string newLoggerPath = CT2A(dlg.LoggerPathStr());
-			bool updateStatus = false;
-
-			if(ChangeSmartToolPath(newSmartToolPath))
-				updateStatus = true;
-
-			if(ChangeViewMacroPath(newViewMacroPath))
-				updateStatus = true;
-
-			if(ChangeMacroParamPath(newMacroParamPath))
-				updateStatus = true;
-
-			if(ChangeDrawParamPath(newDrawParamPath))
-				updateStatus = true;
-
-			updateStatus = ChangeLoggerPath(newLoggerPath);
-
-			if(updateStatus)
-				LogMessage("Macro path settings changed.", CatLog::Severity::Info, CatLog::Category::Configuration);
-
-			return updateStatus;
-		}
-		return false;
-	}
-
-	bool WarnUserAboutNotExistingPath(const string &thePath)
-	{
-		string absolutePath = PathUtils::getAbsoluteFilePath(thePath, itsBasicConfigurations.ControlPath());
-		if(!NFmiFileSystem::DirectoryExists(absolutePath))
-		{
-			string errStr("Path '");
-			errStr += absolutePath;
-			errStr += "'\ndoes not exist.\nDo you want to create it?";
-			if(::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(errStr.c_str()), _TEXT("Path doesn't exist."), MB_YESNO) == IDYES)
-			{
-				if(!NFmiFileSystem::CreateDirectory(absolutePath))
-				{
-					string errStr2("Path '");
-					errStr2 += absolutePath;
-					errStr2 += "'\ncouldn't be created, path change is ignored.";
-					::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(errStr2.c_str()), _TEXT("Cannot create path"), IDOK);
-					return false;
-				}
-				return true;
-			}
-			else
-				return false;
-		}
-		return true;
-	}
 	void SetApplicationTitle(const std::string &theTitle)
 	{
 		itsBasicConfigurations.SetApplicationTitle(theTitle);
@@ -7380,9 +7034,6 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		MenuCreationSettings menuSettings;
 		menuSettings.SetCrossSectionSettings(kFmiAddParamCrossSectionView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "NormalWordCapitalAdd");
-
-		menuSettings.SetCrossSectionSettings(kFmiAddAsOnlyParamCrossSectionView);
-		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "CrossSectionViewSelectionPopUpAddAsOnly");
 
         AddSwapViewRowsToPopup(CtrlViewUtils::kFmiCrossSectionView, itsPopupMenu);
 
@@ -8716,174 +8367,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void UseTimeSerialAxisAutoAdjust(bool newValue)
 	{
 		itsApplicationWinRegistry.UseTimeSerialAxisAutoAdjust(newValue);
-	}
-
-	// On olemassa seuraavat asetukset (loki hakemisto, editoinnin tyˆhakemisto ja tietyt cleaner asetukset):
-	// Lis‰ksi uutena on combineData cache-polku (dataPath4), joka on m‰‰ritelty data_conf\datapaths_*.conf -tiedostoissa
-	// ---------------------------------
-	// MetEditor::FileCleanerSystem::DirectoryInfoPath_2 = d:\smartmet\wrk\data\omat
-	// MetEditor::FileCleanerSystem::PatternInfo_1 = c:\weto\wrk\data\in\*_havy_suomi_synop_10min.sqd
-	// MetEditor::DataLoadingInfo::WorkingPath = d:/smartmet/wrk/data/omat/
-	// SmartMet::Logger::LogFilePath = d:\smartmet\log
-	// dataPath4 = d:\smartmet\wrk\data\cache
-	// ---------------------------------
-	// Joita pit‰‰ voida s‰‰t‰‰ helposti, ettei tarvitse tehd‰ omia konfiguraatioita, kun
-	// SmartMet asennetaankin C-asemalle D-aseman sijasta. N‰m‰ ovat ainoat joita tarvitsee t‰llˆin s‰‰t‰‰.
-	void ChangeDriveLetterInSettings(const std::string &theNewLetter)
-	{
-		std::string warningStr = "Are you sure you want to change the drive letter?\n\nThis will change drive letter of couple of SmartMet settings paths.\nThis includes logger's log-file path and working files path.\nChanges will be made when you press the button and confirm the change.\nDon't press Yes-button if you don't know what you are doing!";
-		if(::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(warningStr.c_str()), _TEXT("Confirm the drive letter change"), MB_YESNO|MB_ICONWARNING) == IDYES)
-		{
-			std::string newLetter(theNewLetter);
-			NFmiStringTools::UpperCase(newLetter);
-			// 1. katso mik‰ oli vanha drive-letter loki hakemistossa
-			NFmiFileString logPathStr(itsBasicConfigurations.LogFileDirectory());
-			std::string oldLetter1 = logPathStr.Device();
-			NFmiStringTools::UpperCase(oldLetter1);
-			// 1.1 mik‰ oli tyˆhakemiston vanha drive-letter
-			NFmiFileString workingFilePathStr = itsDataLoadingInfoNormal.WorkingPath();
-			std::string oldLetter2 = workingFilePathStr.Device();
-			NFmiStringTools::UpperCase(oldLetter2);
-			// 1.2 mik‰ oli combined-data cachen vanha drive-letter
-			NFmiFileString cacheFilePathStr = NFmiSettings::Optional<std::string>("dataPath4", "");
-			std::string oldLetter3 = cacheFilePathStr.Device();
-			NFmiStringTools::UpperCase(oldLetter3);
-
-			// 1.3 mik‰ oli qdata cache-hakemiston vanha drive-letter
-			NFmiFileString qdataCacheFilePathStr = HelpDataInfoSystem()->CacheDirectory();
-			std::string oldLetter4 = qdataCacheFilePathStr.Device();
-			NFmiStringTools::UpperCase(oldLetter4);
-
-			// 1.4 mik‰ oli local makro cache-hakemiston vanha drive-letter
-			NFmiFileString localMacroCacheFilePathStr = MacroPathSettings().LocalCacheBasePath();
-			std::string oldLetter5 = localMacroCacheFilePathStr.Device();
-			NFmiStringTools::UpperCase(oldLetter5);
-
-			// 2. tarvitseeko vaihtaa kirjainta?
-			if(newLetter != oldLetter1 || newLetter != oldLetter2 || newLetter != oldLetter3 || newLetter != oldLetter4 || newLetter != oldLetter5)
-			{
-				// 3. vaihda loggerin asema kirjain
-				logPathStr.NormalizeDelimiter();
-				logPathStr.Device(newLetter);
-				ChangeLoggerPath(static_cast<char*>(logPathStr));
-
-				// 4. vaihda tyˆhakemiston asema kirjain
-				workingFilePathStr.NormalizeDelimiter();
-				workingFilePathStr.Device(newLetter);
-				WarnUserAboutNotExistingPath(static_cast<char*>(workingFilePathStr));
-				NFmiSettings::Set("MetEditor::DataLoadingInfo::WorkingPath", static_cast<char*>(workingFilePathStr), true); // pit‰‰ myˆs tallettaa asetuksiin pysyv‰sti
-
-				// 5. Lis‰‰ uusi working path fileCleanereiden listaan
-				AddWorkingDataPathToCleaner();
-
-				// 6. vaihda combine data cache polun asema kirjain
-				cacheFilePathStr.NormalizeDelimiter();
-				cacheFilePathStr.Device(newLetter);
-				NFmiSettings::Set("dataPath4", static_cast<char*>(cacheFilePathStr), true);
-
-				// 7. vaihda querydata cache polun asema kirjain
-				qdataCacheFilePathStr.NormalizeDelimiter();
-				qdataCacheFilePathStr.Device(newLetter);
-				ChangeQuyeryDataCachePaths(newLetter);
-
-				// 7.1 vaihda local makro cache polun asema kirjain
-				localMacroCacheFilePathStr.NormalizeDelimiter();
-				localMacroCacheFilePathStr.Device(newLetter);
-				MacroPathSettings().LocalCacheBasePath(static_cast<char*>(localMacroCacheFilePathStr));
-				MacroPathSettings().StoreToSettings();
-
-				// 8. vaihda myˆs asetus-tiedostojen polut, jos tarvis
-				ChangeSettingsPathDriveLetters(newLetter, oldLetter1);
-			}
-		}
-	}
-
-	// HUOM! t‰t‰ saa vain kutsua, jos perus-drive-letteri‰ on muutettu (theNewLetter != theOldLetter1)
-	void ChangeSettingsPathDriveLetters(const std::string &theNewLetter, const std::string &theOldLetter)
-	{
-		if(itsMacroPathSettings.UseLocalCache())
-		{ // s‰‰det‰‰n lokaali polkuja ja niiden johdannaisia
-			NFmiFileString pathStr = itsMacroPathSettings.LocalCacheBasePath();
-			std::string pathDrive = pathStr.Device();
-			NFmiStringTools::UpperCase(pathDrive);
-			if(pathDrive == theOldLetter)
-			{ // jos vanha drive-letter oli sama kuin mit‰ on lokaali makro cachella k‰ytˆss‰, pit‰‰ se muuttaa uuteen asemaan
-				pathStr.Device(theNewLetter);
-				itsMacroPathSettings.LocalCacheBasePath(pathStr.CharPtr());
-				// Asetetaan sitten eri makro-systeemit k‰ytt‰m‰‰n uusia lokaali polkuja
-				InfoOrganizer()->SetDrawParamPath(itsMacroPathSettings.DrawParamPath(true));
-				itsViewMacroPath = itsMacroPathSettings.ViewMacroPath(true);
-				MacroParamSystem().RootPath(itsMacroPathSettings.MacroParamPath(true));
-				SmartToolInfo()->LoadDirectory(itsMacroPathSettings.SmartToolPath(true), true);
-			}
-		}
-		else
-		{ // Ei ole lokaali makro-hakemistoja k‰ytˆss‰, tehd‰‰n s‰‰dˆt vanhalla tavalla
-			// 1. tarkista ja vaihda (jos tarpeen) drawParam-polku
-			NFmiFileString drawParamPath = InfoOrganizer()->GetDrawParamPath();
-			std::string drawParamPathDrive = drawParamPath.Device();
-			NFmiStringTools::UpperCase(drawParamPathDrive);
-			if(drawParamPathDrive == theOldLetter)
-			{ // jos vanha drive-letter oli sama kuin mit‰ on drawParameilla k‰ytˆss‰, pit‰‰ se muuttaa uuteen asemaan
-				drawParamPath.Device(theNewLetter);
-				ChangeDrawParamPath(drawParamPath.CharPtr());
-			}
-
-			// 2. tarkista ja vaihda (jos tarpeen) viewMacro-polku
-			NFmiFileString viewMacroPath = itsViewMacroPath;
-			std::string viewMacroPathDrive = viewMacroPath.Device();
-			NFmiStringTools::UpperCase(viewMacroPathDrive);
-			if(viewMacroPathDrive == theOldLetter)
-			{ // jos vanha drive-letter oli sama kuin mit‰ on viewMacroille k‰ytˆss‰, pit‰‰ se muuttaa uuteen asemaan
-				viewMacroPath.Device(theNewLetter);
-				ChangeViewMacroPath(viewMacroPath.CharPtr());
-			}
-
-			// 3. tarkista ja vaihda (jos tarpeen) macroParam-polku
-			NFmiFileString macroParamPath = MacroParamSystem().RootPath();
-			std::string macroParamPathDrive = macroParamPath.Device();
-			NFmiStringTools::UpperCase(macroParamPathDrive);
-			if(macroParamPathDrive == theOldLetter)
-			{ // jos vanha drive-letter oli sama kuin mit‰ on macroParameilla k‰ytˆss‰, pit‰‰ se muuttaa uuteen asemaan
-				macroParamPath.Device(theNewLetter);
-				ChangeMacroParamPath(macroParamPath.CharPtr());
-			}
-
-			// 4. tarkista ja vaihda (jos tarpeen) smartTool-polku
-			NFmiFileString smartToolPath = SmartToolInfo()->LoadDirectory();
-			std::string smartToolPathDrive = smartToolPath.Device();
-			NFmiStringTools::UpperCase(smartToolPathDrive);
-			if(smartToolPathDrive == theOldLetter)
-			{ // jos vanha drive-letter oli sama kuin mit‰ on smartTooleilla k‰ytˆss‰, pit‰‰ se muuttaa uuteen asemaan
-				smartToolPath.Device(theNewLetter);
-				ChangeSmartToolPath(smartToolPath.CharPtr());
-			}
-		}
-	}
-
-	void ChangeQuyeryDataCachePaths(std::string newDriveLetter)
-	{
-		// 1. muutetaan cache-hakemiston asema
-		NFmiFileString cacheFilePathStr = HelpDataInfoSystem()->CacheDirectory();
-		cacheFilePathStr.NormalizeDelimiter();
-		cacheFilePathStr.Device(newDriveLetter);
-		HelpDataInfoSystem()->CacheDirectory(static_cast<char*>(cacheFilePathStr));
-		// 2. muutetaan cache-tmp -hakemiston asema
-		NFmiFileString cacheTmpFilePathStr = HelpDataInfoSystem()->CacheTmpDirectory();
-		cacheTmpFilePathStr.NormalizeDelimiter();
-		cacheTmpFilePathStr.Device(newDriveLetter);
-		HelpDataInfoSystem()->CacheTmpDirectory(static_cast<char*>(cacheTmpFilePathStr));
-		// 3. muutetaan partial-data cache-hakemiston asema
-		NFmiFileString cachePartialDataFilePathStr = HelpDataInfoSystem()->CachePartialDataDirectory();
-		cachePartialDataFilePathStr.NormalizeDelimiter();
-		cachePartialDataFilePathStr.Device(newDriveLetter);
-		HelpDataInfoSystem()->CachePartialDataDirectory(static_cast<char*>(cachePartialDataFilePathStr));
-
-		HelpDataInfoSystem()->StoreToSettings();
-		CFmiQueryDataCacheLoaderThread::UpdateSettings(*HelpDataInfoSystem());
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RestartHistoryDataCacheThread();
-		 // kun cache asetukset (cache-drive -letter) muuttuvat, pit‰‰ yhdistelm‰ data asetuksia p‰vitt‰‰
-		CFmiCombineDataThread::InitCombineDataInfos(*HelpDataInfoSystem());
 	}
 
 	NFmiMetTime GetNewerOriginTimeFromInfos(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theCurrentLatestTime)
@@ -10724,8 +10207,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiCaseStudySystem itsCaseStudySystemOrig; // Lopussa kun SmartMetia suljetaan, tarkistetaan onko tehty muutoksia suhteessa originaali olioon ja vasta sitten tehd‰‰n talletukset asetuksiin
 	NFmiCaseStudySystem itsLoadedCaseStudySystem; // t‰h‰n ladataan olemassa oleva CaseStudy-data k‰yttˆˆn
 
-	int itsMacroDirectoriesSyncronizationCounter; // kuinka monta kertaa makro-hakemistojen synkronointi on tehty, alku arvo on 1, jos luku on 1, on serverill‰ prefer-status, muuten lokaali on prefer-tilassa
-
 	bool fEditedDataNotInPreferredState; // Jos pika lataus on tehty, editoitu data tarkastetaan sen rakenteen ja alkuajan ja sein‰kellon suhteen. Jos data ei ole 'ihanteellinen', yritet‰‰n ladata jo ladatun tilalle vimeisint‰ virallista dataa, kunnes t‰rpp‰‰ tai tulee joku aika raja vastaan.
 	NFmiMilliSecondTimer itsEditedDataNeedsToBeLoadedTimer; // kun todetaan ett‰ editoitua dataa pit‰‰ alkaa kytt‰‰m‰‰n, k‰ynnistet‰‰n t‰m‰ timeri, ett‰ tiedet‰‰n kuinka kauan ollaan odotettu. 
 															// Jotta k‰ytt‰j‰‰ voidaan informoida asiasta ja lis‰ksi ehk‰ tietyn ajan yritt‰misen j‰lkeen voidaan lopettaa homma toivottomana.
@@ -11087,11 +10568,6 @@ bool NFmiEditMapGeneralDataDoc::LoadData(bool fRemoveThundersOnLoad)
 bool NFmiEditMapGeneralDataDoc::StoreOptionsData(void)
 {
 	return pimpl->StoreOptionsData();
-}
-
-bool NFmiEditMapGeneralDataDoc::SelectNewParamForSelectionTool(int theParamId)
-{
-	return pimpl->SelectNewParamForSelectionTool(theParamId);
 }
 
 NFmiParamBag& NFmiEditMapGeneralDataDoc::AllStaticParams(void)
@@ -11632,11 +11108,6 @@ void NFmiEditMapGeneralDataDoc::MapMouseDragPanMode(bool newState)
 	pimpl->MapMouseDragPanMode(newState);
 }
 
-bool NFmiEditMapGeneralDataDoc::MakeMacroPathConfigurations(void)
-{
-	return pimpl->MakeMacroPathConfigurations();
-}
-
 void NFmiEditMapGeneralDataDoc::SetApplicationTitle(const std::string &theTitle)
 {
 	pimpl->SetApplicationTitle(theTitle);
@@ -12162,11 +11633,6 @@ void NFmiEditMapGeneralDataDoc::UseTimeSerialAxisAutoAdjust(bool newValue)
 	pimpl->UseTimeSerialAxisAutoAdjust(newValue);
 }
 
-void NFmiEditMapGeneralDataDoc::ChangeDriveLetterInSettings(const std::string &newLetter)
-{
-	pimpl->ChangeDriveLetterInSettings(newLetter);
-}
-
 std::string NFmiEditMapGeneralDataDoc::GetModelOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex)
 {
 	return pimpl->GetModelOrigTimeString(theDrawParam, theIndex);
@@ -12366,16 +11832,6 @@ int NFmiEditMapGeneralDataDoc::CleanUnusedDataFromMemory(void)
 NFmiMacroPathSettings& NFmiEditMapGeneralDataDoc::MacroPathSettings(void)
 {
 	return pimpl->MacroPathSettings();
-}
-
-void NFmiEditMapGeneralDataDoc::DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRoot2, bool preferRoot1, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags)
-{
-	pimpl->DoUnisonDirectorySync(theRoot1, theRoot2, preferRoot1, theShowWindow, waitExecutionToStop, dwCreationFlags);
-}
-
-void NFmiEditMapGeneralDataDoc::DoMacroDirectoriesSyncronization(void)
-{
-	pimpl->DoMacroDirectoriesSyncronization();
 }
 
 NFmiCaseStudySystem& NFmiEditMapGeneralDataDoc::CaseStudySystem(void)
