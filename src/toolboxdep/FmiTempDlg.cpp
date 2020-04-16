@@ -141,10 +141,7 @@ BOOL CFmiTempDlg::OnInitDialog()
 	itsView = new CFmiTempView(this, itsSmartMetDocumentInterface);
 	itsView->Create(NULL,NULL, WS_VISIBLE | WS_CHILD, rect, this, NULL);
 	itsView->OnInitialUpdate(); // pitää kutsua erikseen, koska formvieta ei ole sidottu dokumenttiin
-
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	SetWindowPos(&wndBottom, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);	 // not possible, thus child stays still upon its parent
 
 	itsModelRunSpinner.SetRange(0, 10);

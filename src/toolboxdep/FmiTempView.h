@@ -58,6 +58,7 @@ public:
 	bool DoAllwaysLowMemoryPrint(void) const {return false;} // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
 	// ********************************************************************************************
     void SetToolMastersDC(CDC * /* theDC */ ) {};
+	void SetToolsDCs(CDC* theDC);
 
 protected:
 	CFmiTempView();           // protected constructor used by dynamic creation

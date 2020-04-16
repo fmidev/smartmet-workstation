@@ -171,6 +171,7 @@ BOOL CSmartMetApp::InitInstance()
 	InitGdiplus();
     if(!InitGeneralDataDoc())
         return FALSE;
+    InitApplicationInterface(); // Kutsuttava ennen kuin doc-view systeemi luodaan
 
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views
@@ -239,7 +240,6 @@ BOOL CSmartMetApp::InitInstance()
 	if (!ProcessShellCommand(cmdInfo))
 		return FALSE;
 
-    InitApplicationInterface();
     DoToolMasterInitialization(); // m_pMainWnd luodaan vasta ProcessShellCommand -metodissa, joten sen jälkeen voidaan ToolMaster initialisoida
 
 	LoadFileAtStartUp(&cmdInfo);

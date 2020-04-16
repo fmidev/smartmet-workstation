@@ -151,7 +151,7 @@ BOOL CFmiBetaProductDialog::OnInitDialog()
 {
     CTabPageSSL::OnInitDialog();
 
-    SetIcon(CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164)), FALSE);
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
     itsImageGenerationProgressControl.ShowWindow(SW_HIDE);
     itsImageGenerationProgressControl.SetStep(1);
     itsImageGenerationProgressControl.SetShowPercent(TRUE);

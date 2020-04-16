@@ -136,10 +136,8 @@ BOOL CFmiTrajectoryDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-    HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-    this->SetIcon(hIcon, FALSE);
-
-    std::string errorBaseStr("Error in CFmiTrajectoryDlg::OnInitDialog while reading dialog size and position values");
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+	std::string errorBaseStr("Error in CFmiTrajectoryDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
 
     CRect rect(CalcClientArea());

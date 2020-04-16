@@ -223,7 +223,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_MAP_ROW_9, OnAcceleratorMapRow9)
     ON_COMMAND(ID_ACCELERATOR_MAP_ROW_10, OnAcceleratorMapRow10)
     ON_COMMAND(ID_BUTTON_SHOW_SYNOP_PLOT_SETTINGS, OnButtonShowSynopPlotSettings)
-    ON_COMMAND(ID_MUOKKAA_MAKROPOLKUASETUKSET, OnMuokkaaMakropolkuasetukset)
 	ON_COMMAND(ID_BUTTON_OBSERVATION_COMPARISON_MODE, OnButtonObservationComparisonMode)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_OBSERVATION_COMPARISON_MODE, OnUpdateButtonObservationComparisonMode)
 	ON_COMMAND(ID_BUTTON_SYNOP_DATA_GRID_VIEW, OnButtonSynopDataGridView)
@@ -272,7 +271,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetDataQualityCheckerDlgPlaceToDefault)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_DATA_QUALITY_CHECKER, &CSmartMetDoc::OnUpdateButtonDataQualityChecker)
 	ON_COMMAND(ID_ACCELERATOR_IGNORE_STATIONS_DLG, &CSmartMetDoc::OnAcceleratorIgnoreStationsDlg)
-	ON_COMMAND(ID_ACCELERATOR_DO_MACRO_DIRECTORIES_SYNCRONIZATION, &CSmartMetDoc::OnAcceleratorDoMacroDirectoriesSyncronization)
 	ON_COMMAND(ID_VIEW_CASE_STUDY_DIALOG, &CSmartMetDoc::OnViewCaseStudyDialog)
     ON_COMMAND(ID_ACCELERATOR_AREA_INFO_TO_CLIPBOARD, &CSmartMetDoc::OnAcceleratorAreaInfoToClipboard)
     ON_COMMAND(ID_VIEW_SET_SMARTTOOL_VIEW_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSmarttoolViewPlaceToDefault)
@@ -1803,51 +1801,34 @@ void CSmartMetDoc::CaseStudyToNormalModeActions(void)
 
 void CSmartMetDoc::SetAllViewIconsDynamically(void)
 {
-	HICON usedSmallIcon = 0;
-	HICON usedBigIcon = 0;
-    if(itsData->BetaProductionSystem().AutomationModeOn())
-    {
-        usedSmallIcon = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE, ColorPOD(160, 160, 164));
-        usedBigIcon = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE, ColorPOD(160, 160, 164));
-    }
-    else if(itsData->CaseStudyModeOn())
-	{
-		usedSmallIcon = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_CASE_STUDY, ColorPOD(160, 160, 164));
-		usedBigIcon = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_CASE_STUDY, ColorPOD(160, 160, 164));
-	}
-	else
-	{
-		usedSmallIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
-		usedBigIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON), 0);
-	}
+	auto usedIcons = ApplicationInterface::GetApplicationInterfaceImplementation()->GetUsedIcons();
+	CFmiWin32Helpers::SetWindowIconDynamically(AfxGetMainWnd(), usedIcons);
 
-	CFmiWin32Helpers::SetWindowIconDynamically(AfxGetMainWnd(), usedSmallIcon, usedBigIcon);
-
-	CFmiWin32Helpers::SetWindowIconDynamically(itsTimeSerialDataEditorDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsLocationSelectionToolDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsZoomDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsFilterDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsBrushToolDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsLocationFinderDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsSmartToolDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsTempDialog, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsShortCutsDialog, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsViewMacroDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsCrossSectionDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsSynopPlotSettingsDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsTrajectoryDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsWarningCenterDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg1, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg2, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsSeaIcingWarningsDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsWindTableDlg, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsDataQualityCheckerDialog, usedSmallIcon, usedBigIcon);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsIgnoreStationsDlg, usedSmallIcon, usedBigIcon);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsCaseStudyDlg, usedSmallIcon, usedBigIcon);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsBetaProductDialog, usedSmallIcon, usedBigIcon);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsLogViewer, usedSmallIcon, usedBigIcon);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsSoundingDataServerConfigurationsDlg, usedSmallIcon, usedBigIcon);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsParameterSelectionDlg, usedSmallIcon, usedBigIcon);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsTimeSerialDataEditorDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsLocationSelectionToolDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsZoomDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsFilterDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsBrushToolDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsLocationFinderDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsSmartToolDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsTempDialog, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsShortCutsDialog, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsViewMacroDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsCrossSectionDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsSynopPlotSettingsDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsTrajectoryDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsWarningCenterDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg1, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg2, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsSeaIcingWarningsDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsWindTableDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsDataQualityCheckerDialog, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsIgnoreStationsDlg, usedIcons);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsCaseStudyDlg, usedIcons);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsBetaProductDialog, usedIcons);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsLogViewer, usedIcons);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsSoundingDataServerConfigurationsDlg, usedIcons);
+    CFmiWin32Helpers::SetWindowIconDynamically(itsParameterSelectionDlg, usedIcons);
 }
 
 // piti tehdä uuden karttaruudukon valinnan lisäksi paikka mistä
@@ -2817,20 +2798,6 @@ void CSmartMetDoc::OnAcceleratorMapRow10()
     GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 10);
 }
 
-void CSmartMetDoc::OnMuokkaaMakropolkuasetukset()
-{
-	if(GetData()->MakeMacroPathConfigurations())
-	{
-		// en laita näitä muutamia dialogi päivityksiä UpdateAllViewsAndDialogs-metodiin, koska ne ovat muuten turhia kun tendään näytön päivityksiä
-		if(itsViewMacroDlg)
-			itsViewMacroDlg->InitMacroListFromDoc();
-		if(itsSmartToolDlg)
-			itsSmartToolDlg->UpdateMacroParamDisplayList(true);
-
-		UpdateAllViewsAndDialogs("Updated macro path settings");
-	}
-}
-
 static const int g_missingViewIndex = -9999;
 
 template<typename View>
@@ -3312,12 +3279,6 @@ void CSmartMetDoc::OnButtonWarningCenterDlg()
         UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
 	}
 #endif // DISABLE_CPPRESTSDK
-}
-
-void CSmartMetDoc::OnAcceleratorDoMacroDirectoriesSyncronization()
-{
-	CWaitCursor cursor;
-	GetData()->DoMacroDirectoriesSyncronization();
 }
 
 void CSmartMetDoc::OnViewCaseStudyDialog()
@@ -3877,3 +3838,5 @@ void CSmartMetDoc::OnAcceleratorDoVisualizationProfiling()
 {
 	GetData()->StartProfiling();
 }
+
+

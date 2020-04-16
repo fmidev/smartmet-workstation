@@ -8,6 +8,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CloneBitmap.h"
 #include "CtrlViewFunctions.h"
+#include "FmiWin32Helpers.h"
 
 
 // CFmiMapViewSettingsDlg dialog
@@ -72,9 +73,7 @@ BOOL CFmiMapViewSettingsDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	fDrawCountryBorders = itsMapViewdescTop.LandBorderColorIndex() >= 0;
     fSpaceOutSymbolicGridData = itsMapViewWinRegistry.SpacingOutFactor() > 0;
     fLockToMainMapViewTime = itsMapViewdescTop.LockToMainMapViewTime();

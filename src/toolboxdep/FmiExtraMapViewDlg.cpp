@@ -177,8 +177,7 @@ BOOL CFmiExtraMapViewDlg::OnInitDialog()
 		itsView->OnInitialUpdate(); // pitää kutsua erikseen, koska formvieta ei ole sidottu dokumenttiin
 	}
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 
 	UINT indicators[] = {
 							ID_SEPARATOR,

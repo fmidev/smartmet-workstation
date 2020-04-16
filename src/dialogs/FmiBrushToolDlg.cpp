@@ -116,9 +116,7 @@ BOOL CFmiBrushToolDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	itsFogIntensityValueList = new NFmiStringList(*itsSmartMetDocumentInterface->DataLists()->ParamValueList(kFmiFogIntensity));  
 #ifdef USE_POTENTIAL_VALUES_IN_EDITING
     itsPrecipitationTypeValueList = new NFmiStringList(*itsSmartMetDocumentInterface->DataLists()->ParamValueList(kFmiPotentialPrecipitationType));

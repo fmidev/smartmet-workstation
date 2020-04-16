@@ -67,15 +67,19 @@ class NFmiMenuItemList
     MenuItemList::iterator begin();
     MenuItemList::iterator end();
 	int NumberOfSubMenus(int theNumberOfSubmenus = 0);
+	// Palauttaa vain p‰‰tason menu-itemien lukum‰‰r‰n
 	size_t NumberOfMenuItems(void);
+	size_t TotalNumberOfMenuItems() const;
 	void CalcMinAndMaxId(void);
 	unsigned int MinId(void);
 	unsigned int MaxId(void);
-
-
+	std::string FixOverSizedMenuTree();
 
  private:
      void SortParamsInAlphabeticalOrder();
+	 std::string PruneMenuTreeFromEnd(size_t pruneCount);
+	 void AddPruneWarningAsMainLevelMenuItem(const std::string &removedSubTreenames);
+	 std::pair<std::string, NFmiMenuItemList*> GetBiggestSubMenuTree();
 
      MenuItemList itsMenuItemList;
 	 NFmiMenuItem* itsRecursivelyFoundMenuItem = nullptr;

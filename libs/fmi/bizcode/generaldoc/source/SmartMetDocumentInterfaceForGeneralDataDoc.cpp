@@ -1260,16 +1260,6 @@ NFmiParamBag& SmartMetDocumentInterfaceForGeneralDataDoc::AllStaticParams()
     return itsDoc->AllStaticParams();
 }
 
-bool SmartMetDocumentInterfaceForGeneralDataDoc::SelectNewParamForSelectionTool(int theParamId)
-{
-    return itsDoc->SelectNewParamForSelectionTool(theParamId);
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::ChangeDriveLetterInSettings(const std::string &newLetter)
-{
-    itsDoc->ChangeDriveLetterInSettings(newLetter);
-}
-
 NFmiSynopPlotSettings* SmartMetDocumentInterfaceForGeneralDataDoc::SynopPlotSettings()
 {
     return itsDoc->SynopPlotSettings();

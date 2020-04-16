@@ -312,7 +312,6 @@ public:
     afx_msg void OnAcceleratorMapRow9();
     afx_msg void OnAcceleratorMapRow10();
     afx_msg void OnButtonShowSynopPlotSettings();
-	afx_msg void OnMuokkaaMakropolkuasetukset();
 	afx_msg void OnAcceleratorObsComparisonChangeSymbol();
 	afx_msg void OnAcceleratorObsComparisonChangeSymbolSize();
 	afx_msg void OnAcceleratorObsComparisonToggleBorderDraw();
@@ -361,7 +360,6 @@ public:
 	afx_msg void OnViewSetDataQualityCheckerDlgPlaceToDefault();
 	afx_msg void OnUpdateButtonDataQualityChecker(CCmdUI *pCmdUI);
 	afx_msg void OnAcceleratorIgnoreStationsDlg();
-	afx_msg void OnAcceleratorDoMacroDirectoriesSyncronization();
 	afx_msg void OnViewCaseStudyDialog();
     afx_msg void OnAcceleratorAreaInfoToClipboard();
     afx_msg void OnViewSetSmarttoolViewPlaceToDefault();

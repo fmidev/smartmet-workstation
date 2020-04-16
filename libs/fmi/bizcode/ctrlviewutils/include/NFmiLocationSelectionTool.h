@@ -39,12 +39,12 @@
 
 class NFmiFastQueryInfo;
 
-typedef enum
+enum class FmiLocationSearchTool
 {
-	kFmiSingleLocationSelection = 0, // valitaan asema/hila kerrallaa
-	kFmiCircleLocationSelection = 1, // valitaan asemia/hiloja tietyn ympyrän sisältä
-	kFmiParamMaskLocationSelection = 2 // valitaan asemia/hiloja käyttäen parametri maskia
-} FmiLocationSearchTool;
+	SingleLocationSelection = 0, // valitaan asema/hila kerrallaa
+	CircleLocationSelection = 1, // valitaan asemia/hiloja tietyn ympyrän sisältä
+	SelectAll = 2, // Laitetaan kaikille pisteille on/off tila, riippuen viimeisestä asetuksesta
+};
 
 typedef enum
 {
@@ -74,12 +74,6 @@ class NFmiLocationSelectionTool : public NFmiInfoAreaMask
    inline void SelectedTool(FmiLocationSearchTool theTool){itsSelectedTool = theTool;};
    inline float SearchRange(void){return itsSearchRange;};
    inline void SearchRange(float newValue){itsSearchRange = newValue;};
-   inline bool UseValueFromLocation(void){return fUseValueFromLocation;};
-   inline void UseValueFromLocation(bool newValue){fUseValueFromLocation = newValue;};
-   inline bool SearchOnlyNeibhors(void){return fSearchOnlyNeibhors;};
-   inline void SearchOnlyNeibhors(bool newValue){fSearchOnlyNeibhors = newValue;};
-   inline bool LimitSearchWithRange(void){return fLimitSearchWithRange;};
-   inline void LimitSearchWithRange(bool newValue){fLimitSearchWithRange = newValue;};
 
  private:
    void ClearLocationSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theMask);
@@ -91,15 +85,11 @@ class NFmiLocationSelectionTool : public NFmiInfoAreaMask
 	                   ,FmiSelectionCombineFunction theFunction
 					   ,unsigned long theMask
 					   ,const NFmiPoint& theViewGridSize);
-   void ParamSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
-					  ,const boost::shared_ptr<NFmiArea> &theArea, FmiSelectionCombineFunction theFunction
-					  ,unsigned long theMask);
+   void SetAllPoints(boost::shared_ptr<NFmiFastQueryInfo>& theInfo
+	   , unsigned long theMask);
 
    FmiLocationSearchTool itsSelectedTool;
    float itsSearchRange; // suhteellinen arvo ikkunaan suhteutettuna, arvot välillä 0-1 (=0-100%)
-   bool fUseValueFromLocation;
-   bool fSearchOnlyNeibhors;
-   bool fLimitSearchWithRange;
 
 };
 

@@ -35,7 +35,6 @@ const int kFmiAutoStartUpLoadTimer = 11;
 const int kFmiToggleFlagButtonTimer = 12;
 const int kFmiDataToDBUpdateTimer = 13;
 const int kFmiCleanOldDataFromMemoryTimer = 14;
-const int kFmiMacroDirectoriesSyncronization = 15;
 const int kFmiStoreViewPosToWinRegistryTimer = 16;
 const int kFmiStoreCrashBackupViewMacroTimer = 17;
 const int kFmiGenerateBetaProductsTimer = 18;
@@ -115,7 +114,6 @@ protected:  // control bar embedded members
 	UINT itsToggleFlagButtonTimer;
 	UINT itsDataToDBUpdateTimer;
 	UINT itsCleanOldDataFromMemoryTimer;
-	UINT itsMacroDirectoriesSyncronization;
     UINT itsStoreViewPosToWinRegistryTimer;
     UINT itsStoreCrashBackupViewMacroTimer;
     UINT itsGenerateBetaProductsTimer;

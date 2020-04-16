@@ -299,9 +299,7 @@ BOOL CFmiModifyDrawParamDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	InitDialogFromDrawParam();
 
     if(NFmiDrawParam::IsMacroParamCase(itsDrawParam->DataType())) // jos macroParam kyseessä, ei lyhennettä voi antaa editoida, koska se on tunniste Metkun editorille

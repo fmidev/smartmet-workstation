@@ -271,8 +271,6 @@ public:
 	bool CaseStudyModeOn(void);
 	bool LoadCaseStudyData(const std::string &theCaseStudyMetaFile);
 	NFmiCaseStudySystem& CaseStudySystem(void);
-	void DoMacroDirectoriesSyncronization(void);
-	void DoUnisonDirectorySync(const std::string &theRoot1, const std::string &theRoot2, bool preferRoot1, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags);
 	NFmiApplicationDataBase& ApplicationDataBase(void);
 	int RunningTimeInSeconds(void);
 	bool EditedDataNotInPreferredState(void);
@@ -314,7 +312,6 @@ public:
 	bool IsRedoableViewMacro(void);
 	std::string GetModelOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0);
 	NFmiMetTime GetModelOrigTime(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0);
-	void ChangeDriveLetterInSettings(const std::string &newLetter);
 	bool UseTimeSerialAxisAutoAdjust(void);
 	void UseTimeSerialAxisAutoAdjust(bool newValue);
 	NFmiDataNotificationSettingsWinRegistry& DataNotificationSettings(void);
@@ -434,7 +431,6 @@ public:
 	NFmiObsComparisonInfo& ObsComparisonInfo(void);
 	void SetApplicationTitle(const std::string &theTitle);
 	std::string GetApplicationTitle(void);
-	bool MakeMacroPathConfigurations(void);
 	bool MapMouseDragPanMode(void);
 	void MapMouseDragPanMode(bool newState);
 	NFmiSynopPlotSettings* SynopPlotSettings(void);
@@ -544,7 +540,6 @@ public:
 	void ToolTipTime(const NFmiMetTime& theTime);
 	const NFmiMetTime& ToolTipTime(void);
 	NFmiParamBag& AllStaticParams(void);
-	bool SelectNewParamForSelectionTool(int theParamId);
 	boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam(void);
 	NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex); // laskee näyttöruudukon yhden ruudun koon pikseleissä
 	boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo(void);

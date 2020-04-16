@@ -127,10 +127,7 @@ BOOL CFmiSoundingDataServerConfigurationsDlg::OnInitDialog()
     CDialogEx::OnInitDialog();
     fDialogInitialized = true;
     DoResizerHooking(); // Tätä pitää kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristä
-
-	HICON hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_2, ColorPOD(160, 160, 164));
-	this->SetIcon(hIcon, FALSE);
-
+    CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
     // Call InitHeaders before CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry !!
     InitHeaders();
     // Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
