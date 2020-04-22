@@ -125,6 +125,14 @@ enum class PolygonsBottomEdgeTouching
     FirstNotTouching
 };
 
+enum class CoordinateYStatus
+{
+    NoValue = 0,
+    BottomRowValue,
+    BottomRowInToolmasterMarginCase,
+    NotBottomRowValue
+};
+
 // Luokalle syˆtet‰‰n seuraavia tietoja:
 // 1. Polygonin kaikki x- ja y-koordinaatit
 // 2. Polygoniin liittyv‰n hiladatan pohjarivin y-koordinaatti.
@@ -291,6 +299,7 @@ public:
         // 5. Tee p‰‰telm‰, pit‰‰kˆ polygonin hatch piirt‰‰ vai ei
         return isHatchPolygonDrawn(bottomRowPointsInsidePolygon, bottomRowPointValuesInsideHatchLimits);
     }
+
 
     bool isInsideHatchLimits(float value)
     {
@@ -460,15 +469,209 @@ private:
         return ((value >= range.first) && (value <= range.second));
     }
 
+    const float g_normallyUsedCoordinateEpsilon = std::numeric_limits<float>::epsilon() * 4;
+    const float g_toolmasterRelatedBigEpsilon = 0.00138f;
+
+    bool doOnlyOneYPointOnBottomRowCheck(const std::vector<float>& polygonsCoordinatesY, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY)
+    {
+        auto coordinateOnBottomRowCount = std::count_if(polygonsCoordinatesY.begin(), polygonsCoordinatesY.end(),
+            [=](auto value) {return CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon); });
+        if(coordinateOnBottomRowCount == 1)
+            return true;
+        // Jos vain 1. ja viimeinen ovat pohjalla (polygoneilla on aina sama piste monistettu johonkin kohtaa vektoria)
+        if(coordinateOnBottomRowCount == 2)
+        {
+            auto firstCoordinateY = polygonsCoordinatesY.front();
+            if(CtrlViewUtils::IsEqualEnough(firstCoordinateY, bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon) && firstCoordinateY == polygonsCoordinatesY.back() && polygonsCoordinatesX.front() == polygonsCoordinatesX.back())
+                return true;
+        }
+        return false;
+    }
+
+    std::pair<float, float> calculateTotalValueRange(const std::vector<float>& polygonsCoordinates)
+    {
+        auto minMaxIters = std::minmax_element(polygonsCoordinates.begin(), polygonsCoordinates.end());
+        return std::make_pair(*minMaxIters.first, *minMaxIters.second);
+    }
+
+    template<typename T>
+    std::pair<T, size_t> getPreviousValue(size_t index, const std::vector<T>& values)
+    {
+        size_t previousIndex = index - 1;
+        // Jos ollaan alussa, kurkataan arvo reunan yli lopusta
+        if(index == 0)
+            previousIndex = values.size() - 1;
+
+        return std::make_pair(values[previousIndex], previousIndex);
+    }
+
+    template<typename T>
+    std::pair<T, size_t> getNextValue(size_t index, const std::vector<T>& values)
+    {
+        size_t nextIndex = index + 1;
+        // Jos ollaan lopussa, kurkataan arvo reunan yli alusta
+        if(index == values.size() - 1)
+            nextIndex = 0;
+
+        return std::make_pair(values[nextIndex], nextIndex);
+    }
+
+    // Tutkii onko annetun coordinateIndex:in kohdalla oleva y-koordinaatti kiinni bottomRowCoordinateY 
+    // osoittamassa pohjariviss‰ (tiukan epsilonin rajoissa).
+    // Mutta niin ett‰ kumpikaan naapuri indeksi ei ole (tiukan epsilonin rajoissa).
+    // Mutta niin ett‰ toinen naapuri on (joka on l‰hemp‰n‰ pohjarivi‰), on tarpeeksi l‰hell‰ isomman epsilonin rajoissa.
+    // Jos totta, palauttaa true:n ja sen korjattavan koordinaatin indeksin std::pair:issa.
+    std::pair<bool, size_t> isSingleBottomRowTouchingCase(size_t coordinateIndex, const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY)
+    {
+        auto currentValue = polygonsCoordinatesY[coordinateIndex];
+        if(CtrlViewUtils::IsEqualEnough(currentValue, bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon))
+        {
+            auto previousValuePair = getPreviousValue(coordinateIndex, polygonsCoordinatesY);
+            auto nextValuePair = getNextValue(coordinateIndex, polygonsCoordinatesY);
+            auto diffToPrevious = std::abs(currentValue - previousValuePair.first);
+            auto diffToNext = std::abs(currentValue - nextValuePair.first);
+            if(diffToPrevious < diffToNext)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+        return std::make_pair(false, 0); // false tapauksessa indeksill‰ ei ole v‰li‰, joten laitetaan se vain 0:ksi
+    }
+
+    CoordinateYStatus calculateCoordinateYStatus(float value, float bottomRowCoordinateY)
+    {
+        if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon))
+            return CoordinateYStatus::BottomRowValue;
+        if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, g_toolmasterRelatedBigEpsilon))
+            return CoordinateYStatus::BottomRowInToolmasterMarginCase;
+
+        return CoordinateYStatus::NotBottomRowValue;
+    }
+
+    std::vector<CoordinateYStatus> calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY)
+    {
+        std::vector<CoordinateYStatus> statusVector;
+        for(auto coordinateY : polygonsCoordinatesY)
+        {
+            statusVector.push_back(calculateCoordinateYStatus(coordinateY, bottomRowCoordinateY));
+        }
+        return statusVector;
+    }
+
+    bool areTwoPointsExcatlySame(size_t pointIndex1, size_t pointIndex2, const std::vector<float>& polygonsCoordinatesX, const std::vector<float>& polygonsCoordinatesY)
+    {
+        auto xCoordinatesAreSame = polygonsCoordinatesX[pointIndex1] == polygonsCoordinatesX[pointIndex2];
+        auto yCoordinatesAreSame = polygonsCoordinatesY[pointIndex1] == polygonsCoordinatesY[pointIndex2];
+        return xCoordinatesAreSame && yCoordinatesAreSame;
+    }
+
+    // Toolmasterin laskemissa polygoneissa on joskus pieni vertikaalisuunnassa tapahtuva vika. T‰m‰ funktio etsii seuraavanlaisia merkkeja:
+    // 1. polygonsCoordinatesY parametrista lˆytyy yksitt‰inen arvo joka on tarpeeksi l‰hell‰ (normi epsilon tarkastelu) bottomRowCoordinateY arvoa
+    // 2. T‰ll‰isi‰ yksitt‰isi‰ kohtia voi olla yhdess‰ polygonissa useita ja ne kaikki pit‰‰ hoitaa.
+    // 3. Jos t‰m‰ yksitt‰isen arvon vierest‰ lˆytyy toinen arvo joka on l‰hell‰ bottomRowCoordinateY arvoa, mutta huomattavasti isommalla epsilonilla etsittyn‰, 
+    //    pit‰‰ t‰t‰ vieress‰ olevaa y-koordinaattia korjata niin ett‰ se on pohjarivin korkeudella.
+    // 4. Jos n‰iden kahden vierekk‰isen pisteen x-koordinaateissa on iso ero (polygoni on leve‰ ja pohjalta l‰hes horisontaali), on kyse mit‰ luultavimmin Toolmaster vika joka pit‰‰ korjata.
+    // Funktio palauttaa vektorin jossa on tehty korjaukset, jos mit‰‰n korjauksia on tehty, muuten palautetaan tyhj‰ vektori.
+    std::vector<float> doYPointCoordinateFixes(const std::vector<float>& polygonsCoordinatesY, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY)
+    {
+        auto xCoordinateRange = calculateTotalValueRange(polygonsCoordinatesX);
+        auto polygonsWidth = xCoordinateRange.second - xCoordinateRange.first;
+        auto yCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY, bottomRowCoordinateY);
+        auto correctedCoordinates = polygonsCoordinatesY;
+        bool hasAnyCorrectionsBeenMade = false;
+        for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
+        {
+            auto currentStatus = yCoordinateStatusVector[coordinateIndex];
+            if(currentStatus == CoordinateYStatus::BottomRowValue)
+            {
+                // Asetetaan ainakin pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
+                if(correctedCoordinates[coordinateIndex] != bottomRowCoordinateY)
+                {
+                    hasAnyCorrectionsBeenMade = true;
+                    correctedCoordinates[coordinateIndex] = bottomRowCoordinateY;
+                }
+                auto previousStatusPair = getPreviousValue(coordinateIndex, yCoordinateStatusVector);
+                auto nextStatusPair = getNextValue(coordinateIndex, yCoordinateStatusVector);
+                // Jotta teht‰isiin mit‰‰n muita korjauksia, ei kumpikaan vierekk‰isist‰ pisteist‰ kuulua suoraan pohjariviin
+                // Paitsi jos vierekk‰ist pisteet ovat t‰ysin samoja, koska polygonit yhdistet‰‰n laittamalla kaksi samaa pistett‰ 
+                // johonkin kohtaan polygonia, joka ei v‰ltt‰m‰tt‰ ole esim. lopussa.
+                auto samePointAsPrevious = areTwoPointsExcatlySame(coordinateIndex, previousStatusPair.second, polygonsCoordinatesX, polygonsCoordinatesY);
+                auto samePointAsNext = areTwoPointsExcatlySame(coordinateIndex, nextStatusPair.second, polygonsCoordinatesX, polygonsCoordinatesY);
+                auto samePointPresent = samePointAsPrevious || samePointAsNext;
+                if(samePointPresent || (previousStatusPair.first != CoordinateYStatus::BottomRowValue && nextStatusPair.first != CoordinateYStatus::BottomRowValue))
+                {
+                    // Sitten ainakin jomman kumman pik‰‰ kuulua toolmaster limittien sis‰ll‰ pohjariviin
+                    if(previousStatusPair.first == CoordinateYStatus::BottomRowInToolmasterMarginCase || nextStatusPair.first == CoordinateYStatus::BottomRowInToolmasterMarginCase)
+                    {
+                        hasAnyCorrectionsBeenMade = true;
+                        // Saman pisteen k‰sittely koodi alkuun
+                        if(samePointPresent)
+                        {
+                            if(samePointAsPrevious)
+                                correctedCoordinates[nextStatusPair.second] = bottomRowCoordinateY;
+                            else
+                                correctedCoordinates[previousStatusPair.second] = bottomRowCoordinateY;
+                            continue;
+                        }
+
+                        const float missingDiffValue = 99999.f;
+                        // Muutos halutaan tehd‰ joko selke‰sti x-suunnassa pidemp‰‰n polygonin reunaviivaan
+                        auto currentCoordinateX = polygonsCoordinatesX[coordinateIndex];
+                        auto previousCoordinateX = polygonsCoordinatesX[previousStatusPair.second];
+                        auto nextCoordinateX = polygonsCoordinatesX[nextStatusPair.second];
+                        auto edgeToPreviousLength = std::abs(currentCoordinateX - previousCoordinateX);
+                        auto edgeToNextLength = std::abs(currentCoordinateX - nextCoordinateX);
+                        auto previousToNextLengthRatio = edgeToPreviousLength / edgeToNextLength;
+                        auto nextToPreviousLengthRatio = edgeToNextLength / edgeToPreviousLength;
+                        if(previousToNextLengthRatio >= 3)
+                        {
+                            correctedCoordinates[previousStatusPair.second] = bottomRowCoordinateY;
+                        }
+                        else if(nextToPreviousLengthRatio >= 3)
+                        {
+                            correctedCoordinates[nextStatusPair.second] = bottomRowCoordinateY;
+                        }
+                        else
+                        {
+                            // Tai sitten siihen pisteeseen joka on l‰hemp‰n‰ pohjarivin koordinaattia
+                            auto currentCoordinateY = polygonsCoordinatesY[coordinateIndex];
+                            auto previousCoordinateY = polygonsCoordinatesY[previousStatusPair.second];
+                            auto nextCoordinateY = polygonsCoordinatesY[nextStatusPair.second];
+                            auto yDiffToPrevious = std::abs(currentCoordinateY - previousCoordinateY);
+                            auto yDiffToNext = std::abs(currentCoordinateY - nextCoordinateY);
+                            if(yDiffToPrevious < yDiffToNext)
+                            {
+                                correctedCoordinates[previousStatusPair.second] = bottomRowCoordinateY;
+                            }
+                            else
+                            {
+                                correctedCoordinates[nextStatusPair.second] = bottomRowCoordinateY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if(hasAnyCorrectionsBeenMade)
+            return correctedCoordinates;
+        else
+            return std::vector<float>();
+    }
+
     std::vector<std::pair<float, float>> getBottomRowXRanges(int currentPolygonIndex, int currentCoordinateDataTotalIndex, float bottomRowCoordinateY)
     {
-        const float usedCoordinateEpsilon = 0.0013;// std::numeric_limits<float>::epsilon() * 5;
         std::vector<std::pair<float, float>> bottomRowXRanges;
         auto polygonCoordinateSize = polygonSizeNumbers_[currentPolygonIndex];
         auto startIterX = polygonCoordinateX_.begin() + currentCoordinateDataTotalIndex;
         std::vector<float> thisPolygonsCoordinatesX(startIterX, startIterX + polygonCoordinateSize);
         auto startIterY = polygonCoordinateY_.begin() + currentCoordinateDataTotalIndex;
         std::vector<float> thisPolygonsCoordinatesY(startIterY, startIterY + polygonCoordinateSize);
+        auto doBigEpsilon = doOnlyOneYPointOnBottomRowCheck(thisPolygonsCoordinatesY, thisPolygonsCoordinatesX, bottomRowCoordinateY);
+        const float usedCoordinateEpsilon = doBigEpsilon ? 0.0013f : g_normallyUsedCoordinateEpsilon;
         if(thisPolygonsCoordinatesX.size())
         {
             auto previousValueX = thisPolygonsCoordinatesX.front();
@@ -497,8 +700,37 @@ private:
     void initializeRowInformation()
     {
         initializeGridRowCoordinateYValues();
+        doCoordinateYFixes();
         initializePolygonConnectionToBottomGridRow();
         initializePolygonBottomEdgeRelations();
+    }
+
+    // Toolmasteri laskemien polygonien hienoisista  ainakin pohjatasoon y-koordinaatti ongelmista johtuen
+    // yritet‰‰n korjata kaikkien polygonien y-koordinaatteja tarpeen mukaan.
+    void doCoordinateYFixes()
+    {
+        size_t currentPolygonCoordinateCounter = 0;
+        size_t currentIntDataCounter = 0;
+        for(size_t polygonIndex = 0; polygonIndex < polygonSizeNumbers_.size(); polygonIndex++)
+        {
+            int polygonCoordinateSize = polygonSizeNumbers_[polygonIndex];
+            int intDataSize = polygonDataIntNumberArray_[polygonIndex];
+            size_t polygonsToolmasterGridRowIndex = polygonDataIntArray_[currentIntDataCounter + 1]; // +1:ll‰ saadaan rivi koordinaatti
+            float polygonsBottomCoordinateY = gridRowCoordinateY_[polygonsToolmasterGridRowIndex - 1]; // Toolmaster rivit alkavat 1:st‰, joten hakuindeksi‰ pit‰‰ v‰hent‰‰ 1:ll‰.
+
+            auto startIterX = polygonCoordinateX_.begin() + currentPolygonCoordinateCounter;
+            std::vector<float> currentPolygonsCoordinatesX(startIterX, startIterX + polygonCoordinateSize);
+            auto startIterY = polygonCoordinateY_.begin() + currentPolygonCoordinateCounter;
+            std::vector<float> currentPolygonsCoordinatesY(startIterY, startIterY + polygonCoordinateSize);
+            auto correctedCoordinateYVector = doYPointCoordinateFixes(currentPolygonsCoordinatesY, currentPolygonsCoordinatesX, polygonsBottomCoordinateY);
+            if(!correctedCoordinateYVector.empty())
+            {
+                std::copy(correctedCoordinateYVector.begin(), correctedCoordinateYVector.end(), startIterY);
+            }
+
+            currentPolygonCoordinateCounter += polygonCoordinateSize;
+            currentIntDataCounter += intDataSize;
+        }
     }
 
     // Etsi jokaisen hila rivin suhteellinen y-koordinaatti
@@ -1079,6 +1311,8 @@ static void FillHatchedPolygonData(const std::vector<int> &polyPointsXInPixels, 
 
 static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPolygonData, CDC *pDC, const CRect& theMfcClipRect)
 {
+    static int wantedPolygonIndex = 916;
+
     if(theToolmasterHatchPolygonData.polygonSizeNumbers_.size())
     {
         TMWorldLimits worldLimits;
@@ -1100,7 +1334,7 @@ static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPo
             int polygonPointsCount = polygonSizeNumbers[polygonIndex];
             int polygonFloatDataCount = theToolmasterHatchPolygonData.polygonDataFloatNumberArray_[polygonIndex];
             int polygonIntDataCount = theToolmasterHatchPolygonData.polygonDataIntNumberArray_[polygonIndex];
-//            if(polygonIndex == 0)
+//            if(polygonIndex == wantedPolygonIndex)
             {
                 if(theToolmasterHatchPolygonData.isHatchPolygonDrawn(polygonIndex, currentPolygonFloatDataTotalIndex, currentPolygonIntDataTotalIndex, polygonPointTotalCount))
                 {
