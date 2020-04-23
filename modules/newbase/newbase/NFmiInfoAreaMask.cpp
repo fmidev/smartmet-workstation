@@ -1979,56 +1979,6 @@ static float DoLowestLevelHeightValueClamp(float theValue,
   }
 }
 
-// Jos theValue arvo on puuttuvaa, tutkitaan meneekö theHeightValue korkeus alle datan maanpinnan
-// läheisen kerroksen. Jos menee, palautetaan arvo suoraan maanpinnan läheisestä levelistä
-static float DoLowestLevelPressureValueClamp(float theValue,
-                                             boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                             const NFmiCalculationParams &theCalculationParams,
-                                             float thePressureValue)
-{
-  // Jos theValue:lla oli jo arvo, palautetaan se
-  if (theValue != kFloatMissing) return theValue;
-
-  theInfo->FirstLevel();
-  float pressure1 = theInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon,
-                                                     theCalculationParams.itsTime);
-  theInfo->LastLevel();
-  float pressure2 = theInfo->GetCurrentLevelPressure(theCalculationParams.itsLatlon,
-                                                     theCalculationParams.itsTime);
-
-  // Jos alimman tai ylimmän kerroksen korkeusarvo on puuttuvaa ei kannata jatkaa
-  if (pressure1 == kFloatMissing || pressure2 == kFloatMissing) return theValue;
-
-  // Vaikka oletus on todettu että interpolaatio haluttuun korkeuteen epäonnistui, koska korkeus oli
-  // alle datan maanpinnan läheimmän korkeuden, se ei pidä paikkaansa kun korkeuksia lasketaan
-  // toisella tapaa. Eli pitää antaa anteeksi vaikka täällä laskettu pressure1/2 olisikin himpun
-  // verran korkeammalla kuin haluttu korkeus. Ongelma on että aiemmin lasketun QueryInfon
-  // PressureValue -metodilla lasketussa arvossa pari neljästä bilinear interpolaatio pisteessä
-  // haettu paine menee alle datan, mutta interpolated value metodin kanssa ei ole samaa ongelmaa.
-  // Paine parametrin kanssa on isompi epsilon kuin korkeus haun kanssa johtuen pintapaineen
-  // suurista vaihteluista johtuen suurista topografian korkeus eroista ja interpolaatioista.
-  const float pressureEpsBS = 2.5f;
-  // Jos halutun paineen arvo ei ole korkeampi kuin alimman ja ylimmän kerroksen paineen arvo , ei
-  // kannata jatkaa
-  if (thePressureValue + pressureEpsBS <= pressure1 ||
-      thePressureValue + pressureEpsBS <= pressure2)
-    return theValue;
-
-  // Jos painearvot nousevat leveleiden mukaan, on maanpinta silloin viimeisellä levelillä
-  if (theInfo->PressureParamIsRising())
-  {
-    // viimeinen level on maanpinnan läheinen
-    theInfo->LastLevel();
-    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-  }
-  else
-  {
-    // 1. level on maanpinnan läheinen
-    theInfo->FirstLevel();
-    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-  }
-}
-
 float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocationCache,
                                               const NFmiCalculationParams &theCalculationParams,
                                               float theLevelValue)
@@ -2040,8 +1990,7 @@ float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocati
   }
   else if (itsSecondaryFunc == NFmiAreaMask::VertP || itsSecondaryFunc == NFmiAreaMask::VertFL)
   {
-    float value = static_cast<float>(PressureValue(theLevelValue, theCalculationParams));
-    return ::DoLowestLevelPressureValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
+    return static_cast<float>(PressureValue(theLevelValue, theCalculationParams));
   }
   else
   {  // else hybrid arvo suoraan
@@ -2092,9 +2041,7 @@ float NFmiInfoAreaMaskVertFunc::DoPeekZFunction(const NFmiCalculationParams &the
     auto usedPressureLevelValue =
         CalculateUsedPeekZPressureLevel(theCalculationParams.itsPressureHeight, theDeltaZ);
 
-    float value = static_cast<float>(PressureValue(usedPressureLevelValue, theCalculationParams));
-    return ::DoLowestLevelPressureValueClamp(
-        value, itsInfo, theCalculationParams, usedPressureLevelValue);
+    return static_cast<float>(PressureValue(usedPressureLevelValue, theCalculationParams));
   }
   return kFloatMissing;
 }
