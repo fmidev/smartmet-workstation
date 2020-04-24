@@ -3390,13 +3390,6 @@ float NFmiFastQueryInfo::PressureLevelValue(float P)
 // TODO kFmiWindDirection tapaus pitää koodata käyttämään NFmiInterpolation::WindInterpolator:ia
 float NFmiFastQueryInfo::PressureLevelValue(float P, const NFmiPoint &theLatlon)
 {
-  FmiInterpolationMethod interp = Param().GetParam()->InterpolationMethod();
-  if (interp != kLinearly || !IsGrid())
-  {
-    Location(theLatlon);  // search for nearest location (if any)
-    return PressureLevelValue(P);
-  }
-
   if (!PressureDataAvailable())  // Tarkistetaan että datassa on P parametri tai painepintadataa
     return kFloatMissing;
 
