@@ -1,0 +1,99 @@
+#include "NFmiIsoLineData.h"
+#include "ToolmasterHatchingUtils.h"
+
+#ifndef DISABLE_UNIRAS_TOOLMASTER
+
+class ToolmasterHatchPolygonData
+{
+public:
+    ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings);
+
+    void setWorldLimits(const TMWorldLimits& worldLimits);
+    bool isHatchPolygonDrawn(int currentPolygonIndex, int currentPolygonFloatDataTotalIndex, int currentPolygonIntDataTotalIndex, int currentCoordinateDataTotalIndex);
+    bool isInsideHatchLimits(float value);
+
+    NFmiHatchingSettings hatchSettings_;
+    std::vector<float> hatchClassValues_;
+    int polygonCount_ = 0;
+    int polygonElementCount_ = 0;
+    int polygonIntDataCount_ = 0;
+    int polygonFloatDataCount_ = 0;
+    std::vector<int> polygonSizeNumbers_;
+    std::vector<float> polygonCoordinateX_;
+    std::vector<float> polygonCoordinateY_;
+    // Kuinka monta arvoa kuhunkin polygonin float dataan kuuluu
+    std::vector<int> polygonDataFloatNumberArray_;
+    // Polygonin float data kertoo kunkin polygonin pisteen arvon visualisoitavassa datassa, 
+    // sen avulla voidaan päätellä pitääkö hatch piirtää tähän polygoniin vai ei.
+    std::vector<float> polygonDataFloatArray_;
+    // Kuinka monta arvoa kunkin polygonin int dataan kuuluu
+    std::vector<int> polygonDataIntNumberArray_;
+    // Polygonin int data kertoo kunkin polygonin pisteen x- ja y- hilapisteen arvot (indeksit alkavat 1:stä), 
+    // sen avulla voidaan päätellä millä rivillä polygon on ja että pitääkö hatch piirtää tähän polygoniin vai ei.
+    std::vector<int> polygonDataIntArray_;
+    // Tämä asetetaan true:ksi, jos polygonien laskut menevät oikein
+    bool continueHatchDraw_ = false;
+    // Tähän talletetaan jokaisen visualisoinneissa käytetyn hilarivin y-koordinaatti.
+    // Dataosassa polygonDataIntArray_ on ToolMasterin polygoniin kohdistama rivi numero,
+    // joka alkaa 1:stä ylöspäin. Näytön alaosassa oleva hilarivi on tuo 1. rivi.
+    std::vector<float> gridRowCoordinateY_;
+    // Jos arvo on 0, ei polygoni ole yhteydessä alahilariviin ja muuten on.
+    // Käytetään boolean tyypin sijasta char:ia, jotta debuggaaminen on mahdollista
+    std::vector<char> polygonConnectedToBottomRow_;
+    std::vector<PolygonsBottomEdgeRelation> polygonsFloatDataBottomEdgeRelations_;
+    // Miten polygoni on kiinni pohjahilarivissä (kokonaan, nousevasti, laskevasti, ei ollenkaan)
+    std::vector<PolygonsBottomEdgeTouching> polygonsBottomEdgeTouchings_;
+    int dataGridSizeX_ = 0;
+    int dataGridSizeY_ = 0;
+    TMWorldLimits worldLimits_;
+private:
+
+    bool isHatchPolygonDrawn(const std::vector<int>& bottomRowPointsInsidePolygon, const std::vector<int>& bottomRowPointValuesInsideHatchLimits);
+    std::vector<int> areBottomRowPointValuesInsideHatchLimits(int currentPolygonIndex, int currentPolygonFloatDataTotalIndex);
+    std::vector<IntPoint> getToolMasterBottomRowPoints(int currentPolygonIndex, int currentPolygonIntDataTotalIndex);
+    std::vector<FloatPoint> toolmasterPointsToRelative(const std::vector<IntPoint>& toolMasterBottomRowPoints);
+    FloatPoint toolmasterPointToRelative(const IntPoint& toolMasterPoint);
+    std::vector<int> areBottomRowPointsInsidePolygon(const std::vector<FloatPoint>& relativeBottomRowPoints, int currentPolygonIndex, int currentCoordinateDataTotalIndex);
+    std::vector<int> checkIfBottomRowPointsAreInsideXRanges(const std::vector<FloatPoint>& relativeBottomRowPoints, const std::vector<std::pair<float, float>>& botttomRowXRanges);
+    bool isPointInsideXRanges(const FloatPoint& point, const std::vector<std::pair<float, float>>& botttomRowXRanges);
+    bool isValueInsideRange(float value, const std::pair<float, float>& range);
+    std::pair<float, float> calculateTotalValueRange(const std::vector<float>& polygonsCoordinates);
+
+    template<typename T>
+    std::pair<T, size_t> getPreviousValue(size_t index, const std::vector<T>& values)
+    {
+        size_t previousIndex = index - 1;
+        // Jos ollaan alussa, kurkataan arvo reunan yli lopusta
+        if(index == 0)
+            previousIndex = values.size() - 1;
+
+        return std::make_pair(values[previousIndex], previousIndex);
+    }
+
+    template<typename T>
+    std::pair<T, size_t> getNextValue(size_t index, const std::vector<T>& values)
+    {
+        size_t nextIndex = index + 1;
+        // Jos ollaan lopussa, kurkataan arvo reunan yli alusta
+        if(index == values.size() - 1)
+            nextIndex = 0;
+
+        return std::make_pair(values[nextIndex], nextIndex);
+    }
+
+    std::pair<bool, size_t> isSingleBottomRowTouchingCase(size_t coordinateIndex, const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY);
+    CoordinateYStatus calculateCoordinateYStatus(float value, float bottomRowCoordinateY);
+    std::vector<CoordinateYStatus> calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY);
+    bool areTwoPointsExcatlySame(size_t pointIndex1, size_t pointIndex2, const std::vector<float>& polygonsCoordinatesX, const std::vector<float>& polygonsCoordinatesY);
+    std::vector<float> doYPointCoordinateFixes(const std::vector<float>& polygonsCoordinatesY, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY);
+    std::vector<std::pair<float, float>> getBottomRowXRanges(int currentPolygonIndex, int currentCoordinateDataTotalIndex, float bottomRowCoordinateY);
+    void initializeRowInformation();
+    void doCoordinateYFixes();
+    void initializeGridRowCoordinateYValues();
+    void initializePolygonConnectionToBottomGridRow();
+    void calculatePolygonBottomEdgeTouchings(size_t currentPolygonCoordinateCounter, size_t polygonCoordinateSize, float polygonsBottomCoordinateY);
+    void initializePolygonBottomEdgeRelations();
+    PolygonsBottomEdgeRelation calcPolygonsBottomEdgeRelation(bool startsInsideLimits, bool changesFromStart);
+};
+
+#endif // DISABLE_UNIRAS_TOOLMASTER

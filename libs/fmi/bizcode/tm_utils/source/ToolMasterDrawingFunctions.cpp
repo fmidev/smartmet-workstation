@@ -15,103 +15,19 @@
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "NFmiDrawParam.h"
+#include "NFmiDataModifierAvg.h"
+#include "CtrlViewFunctions.h"
+#include "ToolmasterHatchingUtils.h"
+#include "ToolmasterHatchPolygonData.h"
 
 #include <fstream>
 #include "boost/math/special_functions/round.hpp"
 
-class FloatPoint
-{
-public:
-    FloatPoint(void)
-        :x(0)
-        , y(0)
-    {
-    }
-
-    float x;
-    float y;
-};
-
-class IntPoint
-{
-public:
-    IntPoint(void)
-        :x(0)
-        , y(0)
-    {
-    }
-
-    int x;
-    int y;
-};
-
-class BoundingBox
-{
-public:
-    BoundingBox(void)
-        :top(0)
-        , bottom(0)
-        , left(0)
-        , right(0)
-    {
-    }
-
-    float top;
-    float bottom;
-    float left;
-    float right;
-};
-
-class TMWorldLimits
-{
-public:
-    TMWorldLimits(void)
-        :x_min(0)
-        , x_max(1)
-        , y_min(0)
-        , y_max(1)
-        , z_min(0)
-        , z_max(0)
-    {
-    }
-
-    float x_min;
-    float x_max;
-    float y_min;
-    float y_max;
-    float z_min;
-    float z_max;
-};
-
-class PolygonLineInfo
-{
-public:
-    PolygonLineInfo(void)
-        :itsSideStatus(kNoDirection)
-        , itsSecondPointIndex(0)
-        , itsLineLength(0)
-    {
-    }
-
-    FmiDirection itsSideStatus;
-    size_t itsSecondPointIndex; // indeksi polygon taulukkoon, 1. piste on siis (itsSecondPointIndex - 1)
-    float itsLineLength;
-};
-
-bool IsLineLonger(const PolygonLineInfo &pi1, const PolygonLineInfo &pi2)
-{
-    return pi1.itsLineLength > pi2.itsLineLength;
-}
-
-static float CalcLineLen(const FloatPoint &p1, const FloatPoint &p2)
-{
-    return ::sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y));
-}
-
-// kerroin 1 = ruudun koko m‰‰r‰‰ suoraan symbolien jne. koot
-// kerroin <1 loiventaa muutosta eli pieniin ruutuihin tulee hieman isommat symbolit (kuin kertoimella 1)
-// ja isoihin ruutuihin hieman pienemm‰t symbolit (kuin kertoimella 1)
-//static float gDefaultNormalViewHeightInMMFactor = 0.7;
+// Win32 makrot s‰hl‰‰v‰t std-min ja max:ien k‰ytˆn, ne pit‰‰ 'undefinoida'
+#ifdef min 
+#undef min
+#undef max
+#endif
 
 float CalcMMSizeFactor(float theViewHeightInMM, float theMaxFactor)
 {
@@ -121,13 +37,6 @@ float CalcMMSizeFactor(float theViewHeightInMM, float theMaxFactor)
 }
 
 using namespace std;
-
-// Huom! Oletus on ett‰ missing arvot on tarkastettu ennen t‰t‰.
-// Vai pit‰isikˆ missing tapuksessa heitt‰‰ poikkeus?
-static bool IsInsideLimits(float low, float high, float value)
-{
-    return (value >= low) && (value <= high);
-}
 
 // muista theColorIndexies-vektorin koko ei ole k‰ytett‰viss‰ t‰ss‰, koska se on asetettu joksikin maksimi kooksi
 static bool IsTransparencyColorUsed(const checkedVector<int>& theColorIndexies, int theRealColorIndexCount, int theTransparencyColorIndex)
@@ -559,481 +468,85 @@ static void FixWorldLimitsWithViewPortSettings(TMWorldLimits &theWorldLimits)
     theWorldLimits.y_max = 1;
 }
 
-static void MakeTotalPolygonPointConversion(checkedVector<float>& thePolyPointsX, checkedVector<float>& thePolyPointsY, checkedVector<int>& thePolyPointsXInPixels, checkedVector<int>& thePolyPointsYInPixels)
+static void MakeTotalPolygonPointConversion(ToolmasterHatchPolygonData &theToolmasterHatchPolygonData, std::vector<int>& thePolyPointsXInPixels, std::vector<int>& thePolyPointsYInPixels)
 {
-    size_t totalPolyPointSize = thePolyPointsX.size();
-    if(thePolyPointsXInPixels.size() < totalPolyPointSize)
-    {
-        thePolyPointsXInPixels.resize(totalPolyPointSize);
-        thePolyPointsYInPixels.resize(totalPolyPointSize);
-    }
-    XuViewWorldToPixel(&thePolyPointsX[0], &thePolyPointsY[0], static_cast<int>(totalPolyPointSize), &thePolyPointsXInPixels[0], &thePolyPointsYInPixels[0]);
+    size_t totalPolyPointSize = theToolmasterHatchPolygonData.polygonCoordinateX_.size();
+    thePolyPointsXInPixels.resize(totalPolyPointSize);
+    thePolyPointsYInPixels.resize(totalPolyPointSize);
+    XuViewWorldToPixel(theToolmasterHatchPolygonData.polygonCoordinateX_.data(), theToolmasterHatchPolygonData.polygonCoordinateY_.data(), static_cast<int>(totalPolyPointSize), &thePolyPointsXInPixels[0], &thePolyPointsYInPixels[0]);
 }
 
-static BoundingBox GetRowBoundingBox(int theRowNumber, int theGridYSize, const TMWorldLimits &theWorldLimits)
+static void FillHatchedPolygonData(const std::vector<int> &polyPointsXInPixels, const std::vector<int>& polyPointsYInPixels, int theTotalPolyPointCounter, int thePolyPointCount, std::vector<CPoint> & thePolygonCPoints)
 {
-    float yDiff = (theWorldLimits.y_max - theWorldLimits.y_min) / static_cast<float>(theGridYSize - 1);
-    BoundingBox bBox;
-    bBox.bottom = yDiff * (theRowNumber - 1) + theWorldLimits.y_min;
-    bBox.top = yDiff + bBox.bottom;
-    bBox.left = theWorldLimits.x_min;
-    bBox.right = theWorldLimits.x_max;
-
-    return bBox;
-}
-
-static bool IsEqual(float value1, float value2, float epsilon)
-{
-    return (::fabs(value1 - value2) <= epsilon);
-}
-
-// Annettua pistett‰ verrataan annettuun bounding-boxiin. Jos joku piste osuu johonkin kulmaan, annetaan sit‰ vastaava arvo.
-// Jos piste ei ole kulmassa, palautetaan kNoDirection.
-// En viel‰ tied‰ tarvitaanko tarkastelussa float tarkkuudesta johtuvaa virheraja tarkastelua.
-static FmiDirection IsCornerPoint(const BoundingBox &theBoundings, const FloatPoint &thePoint, float fUsedEpsilon)
-{
-    if(::IsEqual(thePoint.x, theBoundings.left, fUsedEpsilon) && ::IsEqual(thePoint.y, theBoundings.top, fUsedEpsilon))
-        return kTopLeft;
-    if(::IsEqual(thePoint.x, theBoundings.left, fUsedEpsilon) && ::IsEqual(thePoint.y, theBoundings.bottom, fUsedEpsilon))
-        return kBottomLeft;
-    if(::IsEqual(thePoint.x, theBoundings.right, fUsedEpsilon) && ::IsEqual(thePoint.y, theBoundings.top, fUsedEpsilon))
-        return kTopRight;
-    if(::IsEqual(thePoint.x, theBoundings.right, fUsedEpsilon) && ::IsEqual(thePoint.y, theBoundings.bottom, fUsedEpsilon))
-        return kBottomRight;
-
-    return kNoDirection;
-}
-
-static float gHatchLimitCheckEpsilon = 0;
-
-class PointOnHatchLimitException
-{
-public:
-    PointOnHatchLimitException(void)
-    {
-    }
-};
-
-static bool IsIndexedVaueInHatchLimits(int theXIndex, int theYIndex, NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings &theHatchSettings)
-{
-    if(theXIndex >= 0 && theYIndex >= 0 && theXIndex < theIsoLineData.itsXNumber && theYIndex < theIsoLineData.itsYNumber)
-    {
-        float value = theIsoLineData.itsIsolineData[theXIndex][theYIndex];
-        if(::IsEqual(value, theHatchSettings.itsHatchLowerLimit, gHatchLimitCheckEpsilon) || ::IsEqual(value, theHatchSettings.itsHatchUpperLimit, gHatchLimitCheckEpsilon) || value == kFloatMissing)
-            throw PointOnHatchLimitException();
-        return ::IsInsideLimits(theHatchSettings.itsHatchLowerLimit, theHatchSettings.itsHatchUpperLimit, value);
-    }
-    else
-        return false;
-}
-
-static const float gUsedEpsilon = 0.00002f;
-
-// Tutkii onko annetut pisteet bounding-boxin yl‰ tai ala reunalla. Jos on, palautetaan vastaava arvo (kTop tai kBottom).
-// Jos ei palautetaan kNoDirection.
-// Jossain tapauksissa etsint‰ haarukkaa pit‰‰ laventaa yhden pikselin verran (toolmaster feature), sit‰ varten
-// parametri theOnePixelOffset, johon tavallisesti annetaan arvo 0.
-// HUOM! Jos pisteet ovat samalla janalla, pit‰‰ niiden toinen dimension erota tarpeeksi paljon, t‰t‰ kontrolloidaan theSecondDimensionMinDiff -parametrilla.
-static FmiDirection ArePointsOnSameSide(const BoundingBox &theBoundingBox, const FloatPoint &thePoint1, const FloatPoint &thePoint2, float theOnePixelOffset, float theSecondDimensionMinDiff)
-{
-    float usedEpsilon = gUsedEpsilon + theOnePixelOffset;
-
-    if(::IsEqual(thePoint1.x, theBoundingBox.left, usedEpsilon) && ::IsEqual(thePoint2.x, theBoundingBox.left, usedEpsilon))
-    {
-        if(::IsEqual(thePoint1.y, thePoint2.y, theSecondDimensionMinDiff) == false) // huom! pisteet eiv‰t saa olla samoja tai liian l‰hell‰ toisiaan toisessa suunnassa (4 merkitt‰v‰n pisteen joukossa on luultavasti 1. ja viimeinen piste samoja)
-            return kLeft;
-    }
-    if(::IsEqual(thePoint1.x, theBoundingBox.right, usedEpsilon) && ::IsEqual(thePoint2.x, theBoundingBox.right, usedEpsilon))
-    {
-        if(::IsEqual(thePoint1.y, thePoint2.y, theSecondDimensionMinDiff) == false) // huom! pisteet eiv‰t saa olla samoja tai liian l‰hell‰ toisiaan toisessa suunnassa (4 merkitt‰v‰n pisteen joukossa on luultavasti 1. ja viimeinen piste samoja)
-            return kRight;
-    }
-
-    if(::IsEqual(thePoint1.y, theBoundingBox.top, usedEpsilon) && ::IsEqual(thePoint2.y, theBoundingBox.top, usedEpsilon))
-    {
-        if(::IsEqual(thePoint1.x, thePoint2.x, theSecondDimensionMinDiff) == false) // huom! pisteet eiv‰t saa olla samoja tai liian l‰hell‰ toisiaan toisessa suunnassa (4 merkitt‰v‰n pisteen joukossa on luultavasti 1. ja viimeinen piste samoja)
-            return kTop;
-    }
-    if(::IsEqual(thePoint1.y, theBoundingBox.bottom, usedEpsilon) && ::IsEqual(thePoint2.y, theBoundingBox.bottom, usedEpsilon))
-    {
-        if(::IsEqual(thePoint1.x, thePoint2.x, theSecondDimensionMinDiff) == false) // huom! pisteet eiv‰t saa olla samoja tai liian l‰hell‰ toisiaan toisessa suunnassa (4 merkitt‰v‰n pisteen joukossa on luultavasti 1. ja viimeinen piste samoja)
-            return kBottom;
-    }
-
-    return kNoDirection;
-}
-
-static bool MajorityCheck(const std::vector<NFmiPoint> &thePoints, NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings &theHatchSettings, const NFmiRect &theRelativeRect)
-{
-    size_t trueCounter = 0;
-    size_t missingCounter = 0;
-    for(size_t i = 0; i < thePoints.size(); i++)
-    {
-        float value = theIsoLineData.itsIsolineData.InterpolatedValue(thePoints[i], theRelativeRect, static_cast<FmiParameterName>(theIsoLineData.itsParam.GetParamIdent()), true); // true lopussa tarkoittaa ett‰ y-akselia ei k‰‰nnet‰ (en ymm‰rr‰ miksi muuallla t‰ytyy mutta t‰ss‰ ei?!?!?)
-        if(::IsEqual(value, theHatchSettings.itsHatchLowerLimit, gHatchLimitCheckEpsilon) || ::IsEqual(value, theHatchSettings.itsHatchUpperLimit, gHatchLimitCheckEpsilon) || value == kFloatMissing)
-            missingCounter++;
-        else if(::IsInsideLimits(theHatchSettings.itsHatchLowerLimit, theHatchSettings.itsHatchUpperLimit, value))
-            trueCounter++;
-    }
-    if(missingCounter == 0)
-        return (static_cast<double>(trueCounter) / thePoints.size()) > 0.5;
-    else if(missingCounter < thePoints.size())
-        return (static_cast<double>(trueCounter) / (thePoints.size() - missingCounter)) > 0.5;
-    else
-        return false;
-}
-
-// Etsit‰‰n tarkasteluna olleen polygonin theMinXCoordinate:sta seuraava hila indeksi ja katsotaan onko se hatch-rajojen sis‰ll‰.
-static bool IsSidePolygonDrawn(FmiDirection theSideStatus, NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings &theHatchSettings, const FloatPoint &thePoint1, const FloatPoint &thePoint2, const TMWorldLimits &theWorldLimits, float theOnePixelOffset)
-{
-    bool verticalLine = (theSideStatus == kLeft) || (theSideStatus == kRight);
-
-    NFmiRect relativeRect(theWorldLimits.x_min, theWorldLimits.y_min, theWorldLimits.x_max, theWorldLimits.y_max);
-    float gWorldLimitEpsilon = theOnePixelOffset / 300.f; // maailman rajoja pit‰‰ v‰h‰n laajentaa, koska muuten interpolointi reuna pisteille saattaa palauttaa missing arvon, johtuen laskennan ep‰tarkkuudesta.
-    if(theSideStatus == kTop && ::IsEqual(thePoint1.y, theWorldLimits.y_max, gWorldLimitEpsilon * 2))
-        relativeRect = NFmiRect(theWorldLimits.x_min - gWorldLimitEpsilon, theWorldLimits.y_min - gWorldLimitEpsilon, theWorldLimits.x_max + gWorldLimitEpsilon, theWorldLimits.y_max + gWorldLimitEpsilon);
-
-    // etsit‰‰n kolmen pisteen avulla enemmistˆ p‰‰tˆs piirrolle
-    std::vector<NFmiPoint> points;
-    if(verticalLine)
-    {
-        NFmiPoint point(thePoint1.x, (thePoint1.y + thePoint2.y) / 2.);
-        points.push_back(point);
-        double yDiff = (thePoint1.y - thePoint2.y) / 3.;
-        point.Y(point.Y() - yDiff); // t‰m‰ 1/3 polygonin sis‰lt‰
-        points.push_back(point);
-        point.Y(point.Y() + 2 * yDiff); // t‰m‰ on 2/3 polygonin sis‰lt‰
-        points.push_back(point);
-    }
-    else
-    {
-        NFmiPoint point((thePoint1.x + thePoint2.x) / 2., thePoint1.y);
-        points.push_back(point);
-        double xDiff = (thePoint1.x - thePoint2.x) / 3.;
-        point.X(point.X() - xDiff); // t‰m‰ 1/3 polygonin sis‰lt‰
-        points.push_back(point);
-        point.X(point.X() + 2 * xDiff); // t‰m‰ on 2/3 polygonin sis‰lt‰
-        points.push_back(point);
-    }
-    return ::MajorityCheck(points, theIsoLineData, theHatchSettings, relativeRect);
-}
-
-// Etsii annetun pistejoukon l‰pi ja tutkii sit‰ annettua bounding boxia vasten.
-// Tiedot kulmapisteist‰ talletetaan vektoriin jossa tieto kunkin pisteen asemasta tai ett‰ kyse ei ole kulmapisteest‰.
-// Palauttaa true, jos lˆytyi yksikin kulmapiste ja false jos ei lˆytynyt yht‰‰n.
-static bool FindCornerPoints(const BoundingBox &theBoundings, int thePolygonPointTotalOffset, int thePolygonPointSize, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY, checkedVector<FmiDirection> &thePointInfoOut, float fUsedEpsilon)
-{
-    thePointInfoOut.resize(thePolygonPointSize); // varmistetaan ett‰ tulos vektorissa on sama koko
-    bool status = false;
-    for(size_t i = 0; i < thePolygonPointSize; i++)
-    {
-        FloatPoint pt;
-        pt.x = thePolyPointsX[thePolygonPointTotalOffset + i];
-        pt.y = thePolyPointsY[thePolygonPointTotalOffset + i];
-        FmiDirection result = ::IsCornerPoint(theBoundings, pt, fUsedEpsilon);
-        thePointInfoOut[i] = result;
-        if(result != kNoDirection)
-            status = true;
-    }
-
-    return status;
-}
-
-// Jos lˆytyi kulma piste, voimme p‰‰tell‰ sen indeksin hilassa ja vertailla kyseisess‰ kulmapisteess‰ olevaa arvoa
-// suhteessa hatch-rajoihin. Jos se on rajojen sis‰ll‰, polygoni piirret‰‰n.
-static bool IsCornerPolygonDrawn(int theTmRowNumber, NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings &theHatchSettings, const checkedVector<FmiDirection> &thePointsInfo)
-{
-    for(size_t i = 0; i < thePointsInfo.size(); i++)
-    {
-        FmiDirection cornerStatus = thePointsInfo[i];
-        if(cornerStatus != kNoDirection)
-        {
-            int xIndex = -1;
-            int yIndex = -1;
-            if(cornerStatus == kTopLeft)
-            {
-                xIndex = 0;
-                yIndex = theTmRowNumber;
-            }
-            else if(cornerStatus == kBottomLeft)
-            {
-                xIndex = 0;
-                yIndex = theTmRowNumber - 1;
-            }
-            else if(cornerStatus == kTopRight)
-            {
-                xIndex = theIsoLineData.itsXNumber - 1;
-                yIndex = theTmRowNumber;
-            }
-            else if(cornerStatus == kBottomRight)
-            {
-                xIndex = theIsoLineData.itsXNumber - 1;
-                yIndex = theTmRowNumber - 1;
-            }
-
-            try
-            {
-                return ::IsIndexedVaueInHatchLimits(xIndex, yIndex, theIsoLineData, theHatchSettings);
-            }
-            catch(PointOnHatchLimitException & /* excep */)
-            {
-            }
-        }
-    }
-    throw PointOnHatchLimitException();
-}
-
-static const float gCornerSeekEpsilonFactor = 15000.f;
-
-static bool IsPolygonDrawnSlowCheck(NFmiIsoLineData &theIsoLineData, int theRowNumber, int thePolygonPointTotalOffset, int thePolygonPointSize, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY, const NFmiHatchingSettings &theHatchSettings, const TMWorldLimits &theWorldLimits, float theOnePixelOffset, const BoundingBox &theBoundingBox)
-{
-    // K‰yd‰‰n pisteet l‰pi ja etsit‰‰n ensin edustavia kulmapisteit‰
-    try
-    {
-        float cornerSeekEpsilon = theOnePixelOffset / gCornerSeekEpsilonFactor;
-        checkedVector<FmiDirection> pointInfo;
-        if(::FindCornerPoints(theBoundingBox, thePolygonPointTotalOffset, thePolygonPointSize, thePolyPointsX, thePolyPointsY, pointInfo, cornerSeekEpsilon))
-            return ::IsCornerPolygonDrawn(theRowNumber, theIsoLineData, theHatchSettings, pointInfo);
-    }
-    catch(PointOnHatchLimitException & /* excep */)
-    {
-    }
-
-    // k‰yd‰‰n l‰pi pisteet ja etsit‰‰n edustavia reuna janoja otetaan tietoja talteen (1. pisteen indeksi, reunatieto, pituus)
-    // Jos jana on tarpeeksi pitk‰, sit‰ testataan heti. Lopuksi janat laitetaan pituus j‰rjestykseen ja kokeillaan siin‰ j‰rjestyksess‰.
-    std::vector<PolygonLineInfo> polygonLineInfos;
-    FloatPoint p1;
-    p1.x = thePolyPointsX[thePolygonPointTotalOffset];
-    p1.y = thePolyPointsY[thePolygonPointTotalOffset];
-    FloatPoint p2;
-    float minSecondDimensionDiff = theOnePixelOffset * 4; // t‰ss‰ minimi pituus, mink‰ viivan pit‰‰ olla
-    float criticalLineLen = minSecondDimensionDiff * 8;
-    for(size_t i = thePolygonPointTotalOffset + 1; i < thePolygonPointTotalOffset + thePolygonPointSize; i++)
-    {
-        p2.x = thePolyPointsX[i];
-        p2.y = thePolyPointsY[i];
-        try
-        {
-            // sitten tarkastellaan onko pisteet samalla reuna janalla pienell‰-toleranssilla
-            FmiDirection sideStatus = ::ArePointsOnSameSide(theBoundingBox, p1, p2, 0, minSecondDimensionDiff);
-            float lineLen = ::CalcLineLen(p1, p2);
-            if(lineLen >= criticalLineLen && sideStatus == kNoDirection) // tarpeeksi pitkille piste v‰leille kokeillaan heti isompaa toleranssia, jos viivaa ei tulkittu janaksi
-                sideStatus = ::ArePointsOnSameSide(theBoundingBox, p1, p2, theOnePixelOffset, minSecondDimensionDiff);
-
-            PolygonLineInfo lineInfo;
-            lineInfo.itsSideStatus = sideStatus;
-            lineInfo.itsSecondPointIndex = i;
-            lineInfo.itsLineLength = lineLen;
-            polygonLineInfos.push_back(lineInfo);
-        }
-        catch(PointOnHatchLimitException & /* excep */)
-        {
-        }
-        p1 = p2;
-    }
-
-    // nyt on kriittisen pituuden omaavat viivat tarkasteltu, lopuksi tutkitaan loputkin viivat pituus j‰rjestyksess‰
-    std::sort(polygonLineInfos.begin(), polygonLineInfos.end(), IsLineLonger);
-    for(size_t j = 0; j < polygonLineInfos.size(); j++)
-    {
-        p1.x = thePolyPointsX[polygonLineInfos[j].itsSecondPointIndex - 1];
-        p1.y = thePolyPointsY[polygonLineInfos[j].itsSecondPointIndex - 1];
-        p2.x = thePolyPointsX[polygonLineInfos[j].itsSecondPointIndex];
-        p2.y = thePolyPointsY[polygonLineInfos[j].itsSecondPointIndex];
-        try
-        {
-            if(polygonLineInfos[j].itsSideStatus == kNoDirection)
-            {
-                FmiDirection sideStatus = ::ArePointsOnSameSide(theBoundingBox, p1, p2, theOnePixelOffset, minSecondDimensionDiff); // jos ei oltu tulkittu janaksi, tarkastellaan viel‰ pienell‰ toleranssilla
-                if(sideStatus != kNoDirection)
-                {
-                    return ::IsSidePolygonDrawn(sideStatus, theIsoLineData, theHatchSettings, p1, p2, theWorldLimits, theOnePixelOffset);
-                }
-            }
-            else
-            {
-                return ::IsSidePolygonDrawn(polygonLineInfos[j].itsSideStatus, theIsoLineData, theHatchSettings, p1, p2, theWorldLimits, theOnePixelOffset);
-            }
-        }
-        catch(PointOnHatchLimitException & /* excep */)
-        {
-        }
-    }
-
-    return false; // koko polygoni k‰ytiin l‰pi eik‰ ratkaisua lˆytynyt, ei piirret‰ TODO viel‰ lˆytyy tarkasteluja
-}
-
-static bool IsPolygonDrawn(NFmiIsoLineData &theIsoLineData, int theRowNumber, int thePolygonPointTotalOffset, int thePolygonPointSize, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY, const NFmiHatchingSettings &theHatchSettings, const TMWorldLimits &theWorldLimits, float theOnePixelOffset)
-{
-    BoundingBox boundingBox = ::GetRowBoundingBox(theRowNumber, theIsoLineData.itsYNumber, theWorldLimits);
-    // Nyt k‰yd‰‰n koko polygoni l‰pi piste kerrallaan ja katsotaan piirret‰‰nkˆ se.
-    return ::IsPolygonDrawnSlowCheck(theIsoLineData, theRowNumber, thePolygonPointTotalOffset, thePolygonPointSize, thePolyPointsX, thePolyPointsY, theHatchSettings, theWorldLimits, theOnePixelOffset, boundingBox);
-}
-
-#ifdef min // win32 makrot s‰hl‰‰v‰t std-min ja max:ien k‰ytˆn, ne pit‰‰ 'undefinoida'
-#undef min
-#endif
-#ifdef max // win32 makrot s‰hl‰‰v‰t std-min ja max:ien k‰ytˆn, ne pit‰‰ 'undefinoida'
-#undef max
-#endif
-
-// jos annetut ovat -99999 arvoisia, ignoorataan min ja max y-pixel arvojen k‰sittely
-static const int gIgnoreMinMaxPixelHandling = -99999;
-
-static void FillHatchedPolygonData(checkedVector<int>& thePolyPointsXInPixels, checkedVector<int>& thePolyPointsYInPixels, int theTotalPolyPointCounter, int thePolyPointCount, checkedVector<CPoint> & thePolygonCPoints, int &theMinRowYPixelValue, int &theMaxRowYPixelValue)
-{
-    bool doPolygonNarrowFix = (theMinRowYPixelValue != gIgnoreMinMaxPixelHandling) && (theMaxRowYPixelValue != gIgnoreMinMaxPixelHandling);
-
-    if(doPolygonNarrowFix)
-    {
-        checkedVector<int>::iterator startIt = (thePolyPointsYInPixels.begin() + theTotalPolyPointCounter);
-        checkedVector<int>::iterator endIt = (startIt + thePolyPointCount);
-        checkedVector<int>::iterator itMin(std::min_element(startIt, endIt));
-        int minYpolygonValue = *itMin;
-        theMinRowYPixelValue = std::min(theMinRowYPixelValue, minYpolygonValue);
-        checkedVector<int>::iterator itMax(std::max_element(startIt, endIt));
-        int maxYpolygonValue = *itMax;
-        theMaxRowYPixelValue = std::max(theMaxRowYPixelValue, maxYpolygonValue);
-    }
-    bool doPolygonWideFix = (theMaxRowYPixelValue - theMinRowYPixelValue) >= 3;
-    doPolygonNarrowFix = (theMaxRowYPixelValue - theMinRowYPixelValue) >= 2;
     thePolygonCPoints.resize(thePolyPointCount);
-    int suggestedFixPointIndex = -1;
-    int maxXPixelLen = -9999; // t‰h‰n haetaan l‰hell‰ pohjareunaa olevien pisteiden et‰isyytt‰ eteen tai taaksep‰in
     for(int i = 0; i < thePolyPointCount; i++)
     {
-        thePolygonCPoints[i].x = thePolyPointsXInPixels[theTotalPolyPointCounter + i];
-        int yValue = thePolyPointsYInPixels[theTotalPolyPointCounter + i];
-        thePolygonCPoints[i].y = yValue;
-
-        if(doPolygonNarrowFix)
-        {
-            if(yValue == theMinRowYPixelValue + 1) // Toolmasterin piirre, joskus polygonien alaosa ei ole samalla tasolla ja j‰‰ hatchiin rako, ei jos ollaan boundingboxin alaosassa, lis‰t‰‰n polygonin siihen reunaan, joke on yhden pikselin koholla yksi pikseli, ett‰ saataisiin mahd. 1 pikselin raot umpeen
-            {
-                if(i < thePolyPointCount - 1)
-                { // tarkastellaan x-et‰isyys seuraavaan pisteeseen
-                    int currentXLen = ::abs(thePolygonCPoints[i].x - thePolyPointsXInPixels[theTotalPolyPointCounter + i + 1]);
-                    int nextPointY = thePolyPointsYInPixels[theTotalPolyPointCounter + i + 1];
-                    if(currentXLen > maxXPixelLen && nextPointY == theMinRowYPixelValue)
-                    {
-                        maxXPixelLen = currentXLen;
-                        suggestedFixPointIndex = i;
-                    }
-                }
-                if(i > 0)
-                { // tarkastellaan x-et‰isyys edelliseen pisteeseen
-                    int currentXLen = ::abs(thePolygonCPoints[i].x - thePolyPointsXInPixels[theTotalPolyPointCounter + i - 1]);
-                    int prevPointY = thePolyPointsYInPixels[theTotalPolyPointCounter + i - 1];
-                    if(currentXLen > maxXPixelLen && prevPointY == theMinRowYPixelValue)
-                    {
-                        maxXPixelLen = currentXLen;
-                        suggestedFixPointIndex = i;
-                    }
-                }
-            }
-        }
-
-        if(doPolygonWideFix)
-        {
-            if(yValue == theMinRowYPixelValue + 2) // Toolmasterin piirre, joskus polygonien alaosa ei ole samalla tasolla ja j‰‰ hatchiin rako, ei jos ollaan boundingboxin alaosassa, lis‰t‰‰n polygonin siihen reunaan, joke on yhden pikselin koholla yksi pikseli, ett‰ saataisiin mahd. 1 pikselin raot umpeen
-            {
-                if(i < thePolyPointCount - 1)
-                { // tarkastellaan x-et‰isyys seuraavaan pisteeseen
-                    int currentXLen = ::abs(thePolygonCPoints[i].x - thePolyPointsXInPixels[theTotalPolyPointCounter + i + 1]);
-                    int nextPointY = thePolyPointsYInPixels[theTotalPolyPointCounter + i + 1];
-                    if(currentXLen > maxXPixelLen && nextPointY == theMinRowYPixelValue)
-                    {
-                        maxXPixelLen = currentXLen;
-                        suggestedFixPointIndex = i;
-                    }
-                }
-                if(i > 0)
-                { // tarkastellaan x-et‰isyys edelliseen pisteeseen
-                    int currentXLen = ::abs(thePolygonCPoints[i].x - thePolyPointsXInPixels[theTotalPolyPointCounter + i - 1]);
-                    int prevPointY = thePolyPointsYInPixels[theTotalPolyPointCounter + i - 1];
-                    if(currentXLen > maxXPixelLen && prevPointY == theMinRowYPixelValue)
-                    {
-                        maxXPixelLen = currentXLen;
-                        suggestedFixPointIndex = i;
-                    }
-                }
-            }
-        }
+        thePolygonCPoints[i].x = polyPointsXInPixels[theTotalPolyPointCounter + i];
+        thePolygonCPoints[i].y = polyPointsYInPixels[theTotalPolyPointCounter + i];
     }
-    if(suggestedFixPointIndex >= 0)
-        thePolygonCPoints[suggestedFixPointIndex].y = theMinRowYPixelValue; // siirret‰‰n pistett‰, joka on ollut kahden pikselin p‰‰ss‰ pohjasta, jos pohja pisteit‰ ei ole lˆytynyt kuin yksi
 }
 
-static void DrawShadedPolygons4(NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings &theHatchSettings, CDC *pDC, checkedVector<int> &thePolyNumbers, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY, checkedVector<int>& thePolyNumIntValues, checkedVector<int>& thePolyIntValues, const CRect& theMfcClipRect)
+static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPolygonData, CDC *pDC, const CRect& theMfcClipRect)
 {
-    if(thePolyNumbers.size())
-    {
-        checkedVector<int> polyPointsXInPixels, polyPointsYInPixels;
-        checkedVector<CPoint> polygonCPoints;
+    static int wantedPolygonIndex = 916;
 
+    if(theToolmasterHatchPolygonData.polygonSizeNumbers_.size())
+    {
         TMWorldLimits worldLimits;
         XuViewWorldLimitsQuery(&worldLimits.x_min, &worldLimits.x_max, &worldLimits.y_min, &worldLimits.y_max, &worldLimits.z_min, &worldLimits.z_max);
         float xoff, yoff, xsize, ysize;
         XuViewportQuery(&xoff, &yoff, &xsize, &ysize);
         ::FixWorldLimitsWithViewPortSettings(worldLimits);
-        float onePixelOffsetY = 1.5f * (worldLimits.y_max - worldLimits.y_min) / theMfcClipRect.Height(); // t‰t‰ kerroint‰ k‰ytet‰‰n mm. erilaisten virhe-epsilonien laskuissa
+        theToolmasterHatchPolygonData.setWorldLimits(worldLimits);
 
-        MakeTotalPolygonPointConversion(thePolyPointsX, thePolyPointsY, polyPointsXInPixels, polyPointsYInPixels);
+        std::vector<int> polyPointsXInPixels, polyPointsYInPixels;
+        std::vector<CPoint> polygonCPoints;
+        MakeTotalPolygonPointConversion(theToolmasterHatchPolygonData, polyPointsXInPixels, polyPointsYInPixels);
         int polygonPointTotalCount = 0;
-        int polygonRefIntTotalCount = 0;
-
-        int minRowYPixelValue = 99999999; // t‰h‰n haetaan aina joka rivilt‰ minimi y-arvo, ett‰ voidaan hakea yhden tai kahden pikselin heittoja pois, mitk‰ toolmaster pistee joskus laskemiinsa polygoneihin
-        int maxRowYPixelValue = -99999999;
-        int lastRowNumber = -999;
-
-        for(size_t i = 0; i < thePolyNumbers.size(); i++)
+        int currentPolygonFloatDataTotalIndex = 0;
+        int currentPolygonIntDataTotalIndex = 0;
+        const auto& polygonSizeNumbers = theToolmasterHatchPolygonData.polygonSizeNumbers_;
+        for(int polygonIndex = 0; polygonIndex < polygonSizeNumbers.size(); polygonIndex++)
         {
-            int polPoinsCount = thePolyNumbers[i];
-            int refIntValuesCount = thePolyNumIntValues[i];
-
-            int currentRowNumber = thePolyIntValues[polygonRefIntTotalCount + 1]; // otetaan toolmasterin nime‰m‰ hila-rivinumero talteen (alkaa 1:st‰ ja esim. 1:n kertoo ett‰ ollaan kosketuksissa riveihin 0 ja 1, jolloin 0 on ala- ja 1 on yl‰reuna)
-            if(currentRowNumber != lastRowNumber)
+            int polygonPointsCount = polygonSizeNumbers[polygonIndex];
+            int polygonFloatDataCount = theToolmasterHatchPolygonData.polygonDataFloatNumberArray_[polygonIndex];
+            int polygonIntDataCount = theToolmasterHatchPolygonData.polygonDataIntNumberArray_[polygonIndex];
+//            if(polygonIndex == wantedPolygonIndex)
             {
-                if(lastRowNumber >= 0) // 1. kerralla (kun lastRow on -999) ei anneta max-arvoa min-arvolle
+                if(theToolmasterHatchPolygonData.isHatchPolygonDrawn(polygonIndex, currentPolygonFloatDataTotalIndex, currentPolygonIntDataTotalIndex, polygonPointTotalCount))
                 {
-                    minRowYPixelValue = maxRowYPixelValue; // kun polygoni rivi vaihtuu, pit‰‰ vaihtaa min-pixel y arvo vanhaan max arvoon, vanha x-arvo pysyy samana
-                    maxRowYPixelValue = -99999999; // laitetaan max aina 'resettiin' kun rivi vaihtuu
+                    FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polygonPointsCount, polygonCPoints);
+                    pDC->Polygon(polygonCPoints.data(), polygonPointsCount);
                 }
             }
-
-            if(::IsPolygonDrawn(theIsoLineData, currentRowNumber, polygonPointTotalCount, polPoinsCount, thePolyPointsX, thePolyPointsY, theHatchSettings, worldLimits, onePixelOffsetY))
-            {
-                FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polPoinsCount, polygonCPoints, minRowYPixelValue, maxRowYPixelValue);
-                pDC->Polygon(&polygonCPoints[0], polPoinsCount);
-            }
-
-            polygonPointTotalCount += polPoinsCount;
-            polygonRefIntTotalCount += refIntValuesCount;
-            lastRowNumber = currentRowNumber;
+            polygonPointTotalCount += polygonPointsCount;
+            currentPolygonFloatDataTotalIndex += polygonFloatDataCount;
+            currentPolygonIntDataTotalIndex += polygonIntDataCount;
         }
     }
 }
 
-static void SetupMFCAndDrawShadedPolygons3(NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings& theHatchSettings, CDC* pDC, checkedVector<int>& thePolyNumbers, checkedVector<float>& thePolyPointsX, checkedVector<float>& thePolyPointsY, checkedVector<int>& thePolyNumIntValues, checkedVector<int>& thePolyIntValues, const CRect& theMfcClipRect)
+static void SetupMFCAndDrawShadedPolygons3(ToolmasterHatchPolygonData &theToolmasterHatchPolygonData, CDC* pDC, const CRect& theMfcClipRect)
 {
     int oldBkMode = pDC->SetBkMode(TRANSPARENT);
     CBrush brush;
-    COLORREF crColor = theHatchSettings.itsHatchColorRef;
-    if(theHatchSettings.itsHatchPattern == -1) // jos hatch-pattern on -1, tehd‰‰nkin t‰ysin peitt‰v‰ sivelline ilman hatchi‰
+    const auto& hatchSettings = theToolmasterHatchPolygonData.hatchSettings_;
+    COLORREF crColor = hatchSettings.itsHatchColorRef;
+    if(hatchSettings.itsHatchPattern == -1) // jos hatch-pattern on -1, tehd‰‰nkin t‰ysin peitt‰v‰ sivelline ilman hatchi‰
         brush.CreateSolidBrush(crColor);
     else
-        brush.CreateHatchBrush(theHatchSettings.itsHatchPattern, crColor);
+        brush.CreateHatchBrush(hatchSettings.itsHatchPattern, crColor);
     CBrush *oldBrush = pDC->SelectObject(&brush);
 
     int penStyle = PS_NULL;
-    int penWidth = theHatchSettings.fDrawHatchBorders ? 1 : 0;
+    int penWidth = hatchSettings.fDrawHatchBorders ? 1 : 0;
     COLORREF penColor1 = 0x00000000;
     if(penWidth > 0)
         penColor1 = crColor;
     CPen myPen(penStyle, penWidth, penColor1);
     CPen *oldPen = pDC->SelectObject(&myPen);
 
-    ::DrawShadedPolygons4(theIsoLineData, theHatchSettings, pDC, thePolyNumbers, thePolyPointsX, thePolyPointsY, thePolyNumIntValues, thePolyIntValues, theMfcClipRect);
+    ::DrawShadedPolygons4(theToolmasterHatchPolygonData, pDC, theMfcClipRect);
 
     pDC->SelectObject(oldBrush);
     brush.DeleteObject();
@@ -1049,55 +562,11 @@ bool gDrawTest = false; // Laita t‰m‰n arvoksi true, jos haluat n‰hd‰ tietyn pii
 
 static void GetReadyAndDoTheHatch(NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings& theHatchSettings, CDC* pDC, const CRect& theMfcClipRect, int hatchIndex)
 {
-    static checkedVector<int> polyNumbers;
-    static checkedVector<float> polyPointsX;
-    static checkedVector<float> polyPointsY;
-    static checkedVector<int> polyNumIntValues;
-    static checkedVector<int> polyIntValues;
-    static checkedVector<float> hatchClassValues(2);
-
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, std::string("Drawing hatch ") + std::to_string(hatchIndex) + " for " + ::MakeDataIdentString(theIsoLineData.itsParam));
-    XuViewWorld();
 
-    XuIsolineSplineSmoothing(1);
-
-    hatchClassValues[0] = theHatchSettings.itsHatchLowerLimit;
-    hatchClassValues[1] = theHatchSettings.itsHatchUpperLimit;
-    XuClasses(&hatchClassValues[0], 2);
-
-    // onko t‰m‰ turha????
-    XuShadingColorIndices(&theIsoLineData.itsCustomColorContoursColorIndexies[0], 3);
-
-    float lineWidth = 0.f;
-    XuIsolineWidths(&lineWidth, 1); // ei piirret‰ isoviivoja sheidauksen yhteydess‰
-    XuMapDrawOptions(XuPROBE); // piirret‰‰n polygonit erikseen toisella ohjelmalla, ett‰ saadaan hatch kuviot mukaan
-    XuContourDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
-
-    int mapComponent = Xu2D_CONTOUR;//Xu2D_ISOLINE;//CONTOUR;
-    int polNumber = 0;
-    int polSize = 0;
-    XuMapPolygonsNumberSize(mapComponent, &polNumber, &polSize);
-
-    if(polNumber == 0 || polSize == 0)
-        return; // ei jatketa, jos ei polygoneja lˆytynyt
-
-    polyNumbers.resize(polNumber);
-    polyPointsX.resize(polSize);
-    polyPointsY.resize(polSize);
-
-    XuMapPolygonsQuery(mapComponent, &polyNumbers[0], &polyPointsX[0], &polyPointsY[0]);
-
-    int polNumber2 = 0;
-    int polIntegerDataSize = 0;
-    int polFloatDataSize = 0;
-    XuMapPolygonsDataSize(mapComponent, &polNumber2, &polIntegerDataSize, &polFloatDataSize);
-
-    if(polNumber2 == 0)
-        return; // ei jatketa, jos ei polygoneja lˆytynyt
-
-    polyNumIntValues.resize(polNumber2);
-    polyIntValues.resize(polIntegerDataSize);
-    XuMapPolygonsDataIntQuery(mapComponent, &polyNumIntValues[0], &polyIntValues[0]);
+    ToolmasterHatchPolygonData toolmasterHatchPolygonData(theIsoLineData, theHatchSettings);
+    if(!toolmasterHatchPolygonData.continueHatchDraw_)
+        return;
 
     CRgn rgn;
     CRect rectClip(theMfcClipRect);
@@ -1107,10 +576,9 @@ static void GetReadyAndDoTheHatch(NFmiIsoLineData &theIsoLineData, const NFmiHat
 
     try
     {
-        gHatchLimitCheckEpsilon = ::fabs((theHatchSettings.itsHatchLowerLimit + theHatchSettings.itsHatchUpperLimit) / (2.f * 100000.f));
-        ::SetupMFCAndDrawShadedPolygons3(theIsoLineData, theHatchSettings, pDC, polyNumbers, polyPointsX, polyPointsY, polyNumIntValues, polyIntValues, theMfcClipRect);
-        if(gDrawTest)
-            DrawShadedPolygonsTest(pDC, polyNumbers, polyPointsX, polyPointsY);
+        ::SetupMFCAndDrawShadedPolygons3(toolmasterHatchPolygonData, pDC, theMfcClipRect);
+        //if(gDrawTest)
+        //    DrawShadedPolygonsTest(pDC, polyNumbers, polyPointsX, polyPointsY);
     }
     catch(...)
     {
@@ -1234,31 +702,6 @@ void DrawSimpleIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, in
     // en tied‰ muuta tapaa muuttaa label-tekstin v‰ri‰
     XuTextColor(theIsoLineData.itsIsoLineLabelColor[0], theIsoLineData.itsIsoLineLabelColor[0]);
     XuIsolineDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
-}
-
-// T‰ytet‰‰n osittainen hila data originaali datasta annettujen alkuindeksien ja tulos hilan koon avulla.
-static void FillPartialGridData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineData &thePartialIsoLineDataOut, const IntPoint &theStartIndex)
-{
-    // 1. t‰ytet‰‰n NFmiDataMatrix-osio
-    thePartialIsoLineDataOut.itsIsolineData.Resize(thePartialIsoLineDataOut.itsXNumber, thePartialIsoLineDataOut.itsYNumber, kFloatMissing);
-    int nx = static_cast<int>(thePartialIsoLineDataOut.itsIsolineData.NX());
-    int ny = static_cast<int>(thePartialIsoLineDataOut.itsIsolineData.NY());
-    for(int j = 0; j < ny; j++)
-    {
-        for(int i = 0; i < nx; i++)
-        {
-            thePartialIsoLineDataOut.itsIsolineData[i][j] = theOrigIsoLineData.itsIsolineData[theStartIndex.x + i][theStartIndex.y + j];
-        }
-    }
-
-    // 2. t‰ytet‰‰n sitten toolmasterin k‰ytt‰m‰ float-vektori -osio
-    for(int j = 0; j < ny; j++)
-    {
-        for(int i = 0; i < nx; i++)
-        {
-            thePartialIsoLineDataOut.itsVectorFloatGridData[j * nx + i] = thePartialIsoLineDataOut.itsIsolineData[i][j];
-        }
-    }
 }
 
 static void RaportVisualizationMetrics(float theViewHeight)
@@ -1575,105 +1018,105 @@ static CPoint CalcPolygonCenter(const checkedVector<CPoint> &thePolygonCPoints)
         return gMissingCPoint;
 }
 
-static int gDesignatedPolygon = -1; // Laita t‰h‰n 0 tai positiivinen luku jos haluat jonkun tietyn polygonin n‰kyv‰n (kun gDrawTest on true), laita t‰h‰n arvo -1, jos haluat juoksuttaa korostettua polygonia.
-
-static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY)
-{
-    if(thePolyNumbers.size())
-    {
-        static int polygonCounter = 0;
-
-        std::vector<COLORREF> colorVec;
-        colorVec.push_back(RGB(255, 0, 0));
-        colorVec.push_back(RGB(0, 255, 0));
-        colorVec.push_back(RGB(0, 0, 255));
-        colorVec.push_back(RGB(128, 128, 0));
-        colorVec.push_back(RGB(0, 128, 128));
-
-        // Luo joukko erilaisia siveltimi‰
-        std::vector<CBrush*> brushVec;
-        for(size_t i = 0; i < colorVec.size(); i++)
-        {
-            brushVec.push_back(new CBrush());
-            brushVec[i]->CreateHatchBrush(static_cast<int>(i), colorVec[i]);
-        }
-
-        int penStyle = PS_SOLID;
-        int penWidth = 1;
-        int penWidth2 = 2;
-        COLORREF penColor1 = 0x00000000;
-        COLORREF penColor2 = 0x000000FF;
-        CPen myPen1(penStyle, penWidth, penColor1);
-        CPen myPen2(penStyle, penWidth2, penColor2);
-
-        int oldBkMode = pDC->SetBkMode(TRANSPARENT);
-        int oldTextAlign = pDC->SetTextAlign(TA_CENTER);
-        CBrush *oldBrush = pDC->SelectObject(brushVec[0]);
-        CPen *oldPen = pDC->SelectObject(&myPen1);
-
-        int minRowYPixelValue = gIgnoreMinMaxPixelHandling; // t‰m‰ arvo on puuttuva arvo, jolloin testi piirrossa n‰iden k‰sittely ignoorataan
-        int maxRowYPixelValue = gIgnoreMinMaxPixelHandling;
-        checkedVector<int> polyPointsXInPixels, polyPointsYInPixels;
-        checkedVector<CPoint> polygonCPoints;
-        int polygonPointTotalCount = 0;
-        MakeTotalPolygonPointConversion(thePolyPointsX, thePolyPointsY, polyPointsXInPixels, polyPointsYInPixels);
-        for(size_t i = 0; i < thePolyNumbers.size(); i++)
-        {
-            bool drawHelperPolygon = (gDesignatedPolygon >= 0 && gDesignatedPolygon == static_cast<int>(i)) || (gDesignatedPolygon < 0 && (i == polygonCounter));
-            pDC->SelectObject(&myPen1);
-            pDC->SelectObject(brushVec[i % 5]);
-            int polPoinsCount = thePolyNumbers[i];
-            FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polPoinsCount, polygonCPoints, minRowYPixelValue, maxRowYPixelValue);
-            //			pDC->Polygon(&polygonCPoints[0], polPoinsCount);
-            int circleSize = 3;
-            for(size_t j = 0; j < polygonCPoints.size(); j++)
-            { // piirret‰‰n polygonin pisteet n‰kyviin
-                if(drawHelperPolygon)
-                {
-                    if(j < 3 || j >= polygonCPoints.size() - 3)
-                    {
-                        pDC->SelectObject(&myPen2); // ensimm‰inen ja viiimeinen ympyr‰ piirret‰‰n eriv‰rill‰
-                        circleSize = 5;
-                    }
-                    else
-                    {
-                        pDC->SelectObject(&myPen1); // kaksi ensimm‰ist‰ ympyr‰‰ piirret‰‰n eriv‰rill‰
-                        circleSize = 3;
-                    }
-
-                    pDC->Ellipse(polygonCPoints[j].x - circleSize, polygonCPoints[j].y - circleSize, polygonCPoints[j].x + circleSize, polygonCPoints[j].y + circleSize);
-                }
-            }
-            pDC->SelectObject(&myPen1);
-            circleSize = 3;
-            // piirret‰‰n polygonin keskipisteeseen juokseva indeksi
-            if(drawHelperPolygon)
-            {
-                CPoint centerPoint = ::CalcPolygonCenter(polygonCPoints);
-                CString indexStrU_;
-                int tmpCounter = static_cast<int>(i);
-                indexStrU_.Format(_TEXT("%d"), tmpCounter);
-                pDC->TextOut(centerPoint.x, centerPoint.y, indexStrU_);
-                pDC->Ellipse(centerPoint.x - circleSize, centerPoint.y - circleSize, centerPoint.x + circleSize, centerPoint.y + circleSize);
-            }
-            polygonPointTotalCount += polPoinsCount;
-        }
-        polygonCounter++;
-        if(polygonCounter >= thePolyNumbers.size())
-            polygonCounter = 0;
-
-        pDC->SelectObject(oldPen);
-        pDC->SelectObject(oldBrush);
-        pDC->SetTextAlign(oldTextAlign);
-        pDC->SetBkMode(oldBkMode);
-
-        // Tuhoa siveltimet
-        for(size_t i = 0; i < brushVec.size(); i++)
-        {
-            brushVec[i]->DeleteObject();
-            delete brushVec[i];
-        }
-    }
-}
+//static int gDesignatedPolygon = -1; // Laita t‰h‰n 0 tai positiivinen luku jos haluat jonkun tietyn polygonin n‰kyv‰n (kun gDrawTest on true), laita t‰h‰n arvo -1, jos haluat juoksuttaa korostettua polygonia.
+//
+//static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY)
+//{
+//    if(thePolyNumbers.size())
+//    {
+//        static int polygonCounter = 0;
+//
+//        std::vector<COLORREF> colorVec;
+//        colorVec.push_back(RGB(255, 0, 0));
+//        colorVec.push_back(RGB(0, 255, 0));
+//        colorVec.push_back(RGB(0, 0, 255));
+//        colorVec.push_back(RGB(128, 128, 0));
+//        colorVec.push_back(RGB(0, 128, 128));
+//
+//        // Luo joukko erilaisia siveltimi‰
+//        std::vector<CBrush*> brushVec;
+//        for(size_t i = 0; i < colorVec.size(); i++)
+//        {
+//            brushVec.push_back(new CBrush());
+//            brushVec[i]->CreateHatchBrush(static_cast<int>(i), colorVec[i]);
+//        }
+//
+//        int penStyle = PS_SOLID;
+//        int penWidth = 1;
+//        int penWidth2 = 2;
+//        COLORREF penColor1 = 0x00000000;
+//        COLORREF penColor2 = 0x000000FF;
+//        CPen myPen1(penStyle, penWidth, penColor1);
+//        CPen myPen2(penStyle, penWidth2, penColor2);
+//
+//        int oldBkMode = pDC->SetBkMode(TRANSPARENT);
+//        int oldTextAlign = pDC->SetTextAlign(TA_CENTER);
+//        CBrush *oldBrush = pDC->SelectObject(brushVec[0]);
+//        CPen *oldPen = pDC->SelectObject(&myPen1);
+//
+//        int minRowYPixelValue = gIgnoreMinMaxPixelHandling; // t‰m‰ arvo on puuttuva arvo, jolloin testi piirrossa n‰iden k‰sittely ignoorataan
+//        int maxRowYPixelValue = gIgnoreMinMaxPixelHandling;
+//        checkedVector<int> polyPointsXInPixels, polyPointsYInPixels;
+//        checkedVector<CPoint> polygonCPoints;
+//        int polygonPointTotalCount = 0;
+//        MakeTotalPolygonPointConversion(thePolyPointsX, thePolyPointsY, polyPointsXInPixels, polyPointsYInPixels);
+//        for(size_t i = 0; i < thePolyNumbers.size(); i++)
+//        {
+//            bool drawHelperPolygon = (gDesignatedPolygon >= 0 && gDesignatedPolygon == static_cast<int>(i)) || (gDesignatedPolygon < 0 && (i == polygonCounter));
+//            pDC->SelectObject(&myPen1);
+//            pDC->SelectObject(brushVec[i % 5]);
+//            int polPoinsCount = thePolyNumbers[i];
+//            FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polPoinsCount, polygonCPoints, minRowYPixelValue, maxRowYPixelValue);
+//            //			pDC->Polygon(&polygonCPoints[0], polPoinsCount);
+//            int circleSize = 3;
+//            for(size_t j = 0; j < polygonCPoints.size(); j++)
+//            { // piirret‰‰n polygonin pisteet n‰kyviin
+//                if(drawHelperPolygon)
+//                {
+//                    if(j < 3 || j >= polygonCPoints.size() - 3)
+//                    {
+//                        pDC->SelectObject(&myPen2); // ensimm‰inen ja viiimeinen ympyr‰ piirret‰‰n eriv‰rill‰
+//                        circleSize = 5;
+//                    }
+//                    else
+//                    {
+//                        pDC->SelectObject(&myPen1); // kaksi ensimm‰ist‰ ympyr‰‰ piirret‰‰n eriv‰rill‰
+//                        circleSize = 3;
+//                    }
+//
+//                    pDC->Ellipse(polygonCPoints[j].x - circleSize, polygonCPoints[j].y - circleSize, polygonCPoints[j].x + circleSize, polygonCPoints[j].y + circleSize);
+//                }
+//            }
+//            pDC->SelectObject(&myPen1);
+//            circleSize = 3;
+//            // piirret‰‰n polygonin keskipisteeseen juokseva indeksi
+//            if(drawHelperPolygon)
+//            {
+//                CPoint centerPoint = ::CalcPolygonCenter(polygonCPoints);
+//                CString indexStrU_;
+//                int tmpCounter = static_cast<int>(i);
+//                indexStrU_.Format(_TEXT("%d"), tmpCounter);
+//                pDC->TextOut(centerPoint.x, centerPoint.y, indexStrU_);
+//                pDC->Ellipse(centerPoint.x - circleSize, centerPoint.y - circleSize, centerPoint.x + circleSize, centerPoint.y + circleSize);
+//            }
+//            polygonPointTotalCount += polPoinsCount;
+//        }
+//        polygonCounter++;
+//        if(polygonCounter >= thePolyNumbers.size())
+//            polygonCounter = 0;
+//
+//        pDC->SelectObject(oldPen);
+//        pDC->SelectObject(oldBrush);
+//        pDC->SetTextAlign(oldTextAlign);
+//        pDC->SetBkMode(oldBkMode);
+//
+//        // Tuhoa siveltimet
+//        for(size_t i = 0; i < brushVec.size(); i++)
+//        {
+//            brushVec[i]->DeleteObject();
+//            delete brushVec[i];
+//        }
+//    }
+//}
 
 #endif // DISABLE_UNIRAS_TOOLMASTER
