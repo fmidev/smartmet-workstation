@@ -2141,6 +2141,8 @@ float NFmiInfoAreaMaskVertFunc::FindHeightForSimpleCondition(
     {
       foundCount++;
       foundHeight = previousLevelHeigth;
+      if (findHeight && search_nth_value == 1) 
+          return foundHeight;
     }
 
     VerticalIterationBreakingData iterationBreaking(true);
