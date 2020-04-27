@@ -9,6 +9,9 @@
 #include <agX/agx.h>
 
 
+float ToolmasterHatchPolygonData::normallyUsedCoordinateEpsilon_ = std::numeric_limits<float>::epsilon() * 4;
+float ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilon_ = 0.00138f;
+
 ToolmasterHatchPolygonData::ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings)
     :hatchSettings_(theHatchSettings),
     hatchClassValues_(2, 0)
@@ -213,9 +216,6 @@ bool ToolmasterHatchPolygonData::isValueInsideRange(float value, const std::pair
     return ((value >= range.first) && (value <= range.second));
 }
 
-const float g_normallyUsedCoordinateEpsilon = std::numeric_limits<float>::epsilon() * 4;
-const float g_toolmasterRelatedBigEpsilon = 0.00138f;
-
 std::pair<float, float> ToolmasterHatchPolygonData::calculateTotalValueRange(const std::vector<float>& polygonsCoordinates)
 {
     auto minMaxIters = std::minmax_element(polygonsCoordinates.begin(), polygonsCoordinates.end());
@@ -230,7 +230,7 @@ std::pair<float, float> ToolmasterHatchPolygonData::calculateTotalValueRange(con
 std::pair<bool, size_t> ToolmasterHatchPolygonData::isSingleBottomRowTouchingCase(size_t coordinateIndex, const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY)
 {
     auto currentValue = polygonsCoordinatesY[coordinateIndex];
-    if(CtrlViewUtils::IsEqualEnough(currentValue, bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon))
+    if(CtrlViewUtils::IsEqualEnough(currentValue, bottomRowCoordinateY, normallyUsedCoordinateEpsilon_))
     {
         auto previousValuePair = getPreviousValue(coordinateIndex, polygonsCoordinatesY);
         auto nextValuePair = getNextValue(coordinateIndex, polygonsCoordinatesY);
@@ -250,9 +250,9 @@ std::pair<bool, size_t> ToolmasterHatchPolygonData::isSingleBottomRowTouchingCas
 
 CoordinateYStatus ToolmasterHatchPolygonData::calculateCoordinateYStatus(float value, float bottomRowCoordinateY)
 {
-    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon))
+    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, normallyUsedCoordinateEpsilon_))
         return CoordinateYStatus::BottomRowValue;
-    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, g_toolmasterRelatedBigEpsilon))
+    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, toolmasterRelatedBigEpsilon_))
         return CoordinateYStatus::BottomRowInToolmasterMarginCase;
 
     return CoordinateYStatus::NotBottomRowValue;
@@ -386,7 +386,7 @@ std::vector<std::pair<float, float>> ToolmasterHatchPolygonData::getBottomRowXRa
         {
             currentValueX = thisPolygonsCoordinatesX[coordinateIndex];
             currentValueY = thisPolygonsCoordinatesY[coordinateIndex];
-            if(CtrlViewUtils::IsEqualEnough(currentValueY, bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon) && CtrlViewUtils::IsEqualEnough(previousValueY,  bottomRowCoordinateY, g_normallyUsedCoordinateEpsilon))
+            if(CtrlViewUtils::IsEqualEnough(currentValueY, bottomRowCoordinateY, normallyUsedCoordinateEpsilon_) && CtrlViewUtils::IsEqualEnough(previousValueY,  bottomRowCoordinateY, normallyUsedCoordinateEpsilon_))
             {
                 // Varmistetaan että luvut menevat rangeen nousevassa järjestyksessä
                 if(previousValueX < currentValueX)

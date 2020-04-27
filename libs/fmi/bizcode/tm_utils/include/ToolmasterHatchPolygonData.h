@@ -46,6 +46,10 @@ public:
     int dataGridSizeX_ = 0;
     int dataGridSizeY_ = 0;
     TMWorldLimits worldLimits_;
+
+    static float normallyUsedCoordinateEpsilon_;
+    static float toolmasterRelatedBigEpsilon_;
+
 private:
 
     bool isHatchPolygonDrawn(const std::vector<int>& bottomRowPointsInsidePolygon, const std::vector<int>& bottomRowPointValuesInsideHatchLimits);
