@@ -88,13 +88,13 @@ private:
     BOOL fAutoLoadNewCacheData;
     double itsLocationFinderTimeoutInSeconds;
     BOOL fShowLastSendTimeOnMapView;
-    CString itsFixedDrawParamPathSettingU_; // Huom! tämä on read-only kenttä
     BOOL fUseCombinedMapMode;
     CComboBox itsLogLevelComboBox;
     BOOL fDroppedDataEditable;
     double itsIsolineMinimumLengthFactor;
     BOOL fGenerateTimeCombinationData;
     BOOL fForceWdParameterToLinearInterpolation;
+	float itsHatchingToolmasterEpsilonFactor;
 };
 
 //{{AFX_INSERT_LOCATION}}
