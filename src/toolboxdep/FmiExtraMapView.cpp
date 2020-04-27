@@ -194,8 +194,7 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
 	CtrlView::DeviceContextHandler<CFmiExtraMapView> deviceContextHandler(this);
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
-    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
+    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(rect.Width(), rect.Height()), deviceContextHandler.GetDcFromHandler());
     PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
     Invalidate(FALSE);

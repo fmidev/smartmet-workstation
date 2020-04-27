@@ -846,8 +846,7 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 	if(data)
 	{
 		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), data->GetCombinedMapHandler()->drawObjectScaleFactor(), true); // true pakottaa initialisoinnin
-        data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
+        data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(rect.Width(), rect.Height()), deviceContextHandler.GetDcFromHandler());
 
         if(counter > 2)
             PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
