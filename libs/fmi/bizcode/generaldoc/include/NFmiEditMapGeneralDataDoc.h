@@ -158,7 +158,7 @@ public:
     void ResetPrintedDescTopIndex();
     NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
-	void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& totalPixelSize, const NFmiPoint& clientPixelSize);
+	void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC);
     NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);

@@ -1079,6 +1079,9 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         // 3 = 3 eri karttanäyttöä, ei vieläkään missään asetusta tälle, koska pääkarttanäyttö poikkeaa kahdesta apukarttanäytöstä
         itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem());
 
+		// Vähän nurinkurisesti tässä asetetaan rekisteristä yksi arvo edelleen pariin paikkaan (mm. takaisin itseensä, mutta modulaarisuus vaatii tämän)
+		ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(itsApplicationWinRegistry.HatchingToolmasterEpsilonFactor());
+
         // We have to set log level here, now that used log level is read from registry
         CatLog::logLevel(static_cast<CatLog::Severity>(itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LogLevel()));
 	}
@@ -5185,20 +5188,22 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
     }
 }
 
-void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
-	// Nykyään jos kartan koko muuttuu, pitää macroParam cache tyhjentää, koska sen koko saattaa muuttua.
-	// Laskentahilan koko lasketaan aina uudestaan, jolloin tehdään hila- vs pikseli-koko vertailuja.
-    auto cleanMacroParamCache = true;
-	GetCombinedMapHandler()->mapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
-    MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
-    auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex);
-    if(mapViewDesctop)
-    {
-        mapViewDesctop->CalcClientViewXperYRatio(totalPixelSize);
-        mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
-        mapViewDesctop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
-    }
+	auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex);
+	if(mapViewDesctop)
+	{
+		// MapViewSizeInPixels(clientPixelSize) -kutsu pitää olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
+		mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, ApplicationWinRegistry().DrawObjectScaleFactor(), true);
+
+		// Nykyään jos kartan koko muuttuu, pitää macroParam cache tyhjentää, koska sen koko saattaa muuttua.
+		// Laskentahilan koko lasketaan aina uudestaan, jolloin tehdään hila- vs pikseli-koko vertailuja.
+		auto cleanMacroParamCache = true;
+		GetCombinedMapHandler()->mapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
+		MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
+		mapViewDesctop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+	}
 }
 
 NFmiTimeBag AdjustTimeBagToGivenTimeBag(const NFmiTimeBag& theRestrictingTimebag, const NFmiTimeBag& wantedTimebag)
@@ -12379,9 +12384,9 @@ NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
     return pimpl->MacroParamDataCache();
 }
 
-void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
 {
-    pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+    pimpl->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
 }
 
 TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()
