@@ -312,6 +312,8 @@ public:
     void ForceWdParameterToLinearInterpolation(bool newValue);
     bool ShowTooltipOnSmarttoolDialog();
     void ShowTooltipOnSmarttoolDialog(bool newValue);
+    void HatchingToolmasterEpsilonFactor(float newEpsilon);
+    float HatchingToolmasterEpsilonFactor() const;
 
     static std::string MakeBaseRegistryPath(void);
     static std::string MakeGeneralSectionName(void);
@@ -400,6 +402,8 @@ private:
     boost::shared_ptr<CachedRegDouble> mMapViewCacheMaxSizeInMB;
     boost::shared_ptr<CachedRegBool> mForceWdParameterToLinearInterpolation;
     boost::shared_ptr<CachedRegBool> mShowTooltipOnSmarttoolDialog;
+
+    boost::shared_ptr<CachedRegDouble> mHatchingToolmasterEpsilonFactor;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 
