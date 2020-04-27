@@ -48,31 +48,27 @@ void CFmiWin32Helpers::CPrintingDialog::OnCancel()
 	CDialog::OnCancel();
 }
 
-void CFmiWin32Helpers::SetDescTopGraphicalInfo(CtrlViewUtils::GraphicalInfo &theGraphicalInfo, CDC* pDC, const NFmiPoint &theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization)
+void CFmiWin32Helpers::SetDescTopGraphicalInfo(CtrlViewUtils::GraphicalInfo& theGraphicalInfo, CDC* pDC, const NFmiPoint& theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization)
 {
-	if(forceInitialization || theGraphicalInfo.fInitialized == false)
-	{
-		int logpixX = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSX);
-		int logpixY = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSY);
+    if(forceInitialization || theGraphicalInfo.fInitialized == false)
+    {
+        int logpixX = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSX);
+        int logpixY = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSY);
 
-		theGraphicalInfo.itsScreenWidthInMM = GetDeviceCaps(pDC->GetSafeHdc(), HORZSIZE);
-		theGraphicalInfo.itsScreenHeightInMM = GetDeviceCaps(pDC->GetSafeHdc(), VERTSIZE);
-		theGraphicalInfo.itsScreenWidthInPixels = GetDeviceCaps(pDC->GetSafeHdc(), HORZRES);
-		theGraphicalInfo.itsScreenHeightInPixels = GetDeviceCaps(pDC->GetSafeHdc(), VERTRES);
-		if(theScaleRatio == 0)
-		{ // jos oletus arvossa 0, k‰ytet‰‰n koneen antamia arvoja laskettaessa pixel/mm
-			theGraphicalInfo.itsPixelsPerMM_x = static_cast<double>(theGraphicalInfo.itsScreenWidthInPixels) / static_cast<double>(theGraphicalInfo.itsScreenWidthInMM);
-			theGraphicalInfo.itsPixelsPerMM_y = static_cast<double>(theGraphicalInfo.itsScreenHeightInPixels) / static_cast<double>(theGraphicalInfo.itsScreenHeightInMM);
-		}
-		else
-		{ // jos skaalan arvo on asetettu, k‰ytet‰‰n koneen antamia dpi arvoja ja k‰ytet‰‰n viel‰ annettua skaalaa muutettaessa dpi (dots per inch) -> dpmm (dots per millimeter)
-			theGraphicalInfo.itsPixelsPerMM_x = logpixX/25.2 * theScaleRatio; // muutos dpi-maailmasta (dots-per-inch) dpmm (dots-per-mm) + konekohtainen skaalauskerroin
-			theGraphicalInfo.itsPixelsPerMM_y = logpixY/25.2 * theScaleRatio;
-		}
-		theGraphicalInfo.itsViewWidthInMM = theViewGridSizeInPixels.X() / theGraphicalInfo.itsPixelsPerMM_x;
-		theGraphicalInfo.itsViewHeightInMM = theViewGridSizeInPixels.Y() / theGraphicalInfo.itsPixelsPerMM_y;
-		theGraphicalInfo.fInitialized = true;
-	}
+        theGraphicalInfo.itsScreenWidthInMM = GetDeviceCaps(pDC->GetSafeHdc(), HORZSIZE);
+        theGraphicalInfo.itsScreenHeightInMM = GetDeviceCaps(pDC->GetSafeHdc(), VERTSIZE);
+        theGraphicalInfo.itsScreenWidthInPixels = GetDeviceCaps(pDC->GetSafeHdc(), HORZRES);
+        theGraphicalInfo.itsScreenHeightInPixels = GetDeviceCaps(pDC->GetSafeHdc(), VERTRES);
+        // Jostain syyst‰ pixels-per-millimeter arvo lasketaan device-contextin loogisista yksikˆist‰ eik‰ esim. todellisist‰ mitoista.
+        // En uskalla muuttaa t‰t‰, koska n‰in on p‰‰dytty tekem‰‰n pari vuosikymment‰ sitten...
+        double inchToMillimeterConversion = 25.4;
+        theGraphicalInfo.itsPixelsPerMM_x = (logpixX / inchToMillimeterConversion) * theScaleRatio; // muutos dpi-maailmasta (dots-per-inch) dpmm (dots-per-mm) + konekohtainen skaalauskerroin
+        theGraphicalInfo.itsPixelsPerMM_y = (logpixY / inchToMillimeterConversion) * theScaleRatio;
+
+        theGraphicalInfo.itsViewWidthInMM = theViewGridSizeInPixels.X() / theGraphicalInfo.itsPixelsPerMM_x;
+        theGraphicalInfo.itsViewHeightInMM = theViewGridSizeInPixels.Y() / theGraphicalInfo.itsPixelsPerMM_y;
+        theGraphicalInfo.fInitialized = true;
+    }
 }
 
 // ***************************************************************
