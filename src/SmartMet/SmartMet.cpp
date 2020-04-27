@@ -169,9 +169,9 @@ BOOL CSmartMetApp::InitInstance()
 
 	// Initialize GDI+, pit‰‰ initialisoida ennen itsGeneralData-olion luomista!
 	InitGdiplus();
+    InitApplicationInterface(); // Kutsuttava ennen kuin doc-view systeemi ja generalDataDoc luodaan
     if(!InitGeneralDataDoc())
         return FALSE;
-    InitApplicationInterface(); // Kutsuttava ennen kuin doc-view systeemi luodaan
 
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views
