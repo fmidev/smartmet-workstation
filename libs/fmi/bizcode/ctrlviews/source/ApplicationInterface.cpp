@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ApplicationInterface.h"
+#include "ToolmasterHatchPolygonData.h"
 
 CSmartMetView* ApplicationInterface::itsSmartMetView = nullptr;
 CView* ApplicationInterface::itsSmartMetViewAsCView = nullptr;
@@ -23,4 +24,9 @@ CSmartMetView* ApplicationInterface::GetSmartMetView()
 CView* ApplicationInterface::GetSmartMetViewAsCView()
 {
     return ApplicationInterface::itsSmartMetViewAsCView;
+}
+
+void ApplicationInterface::SetHatchingToolmasterEpsilonFactor(float newEpsilon)
+{
+    ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilon_ = newEpsilon;
 }
