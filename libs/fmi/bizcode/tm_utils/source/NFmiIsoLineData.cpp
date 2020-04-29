@@ -177,6 +177,7 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 
 	itsHatch1 = theOther.itsHatch1;
 	itsHatch2 = theOther.itsHatch2;
+	itsSingleSubMapViewHeightInMillimeters = theOther.itsSingleSubMapViewHeightInMillimeters;
 
 	itsDefRGBRowSize = theOther.itsDefRGBRowSize;
 	itsUsedColorsCube = theOther.itsUsedColorsCube;
