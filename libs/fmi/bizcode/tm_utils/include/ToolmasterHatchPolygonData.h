@@ -46,9 +46,14 @@ public:
     int dataGridSizeX_ = 0;
     int dataGridSizeY_ = 0;
     TMWorldLimits worldLimits_;
+    float usedToolmasterRelatedBigEpsilon_ = 0.002f;
 
     static float normallyUsedCoordinateEpsilon_;
-    static float toolmasterRelatedBigEpsilon_;
+    // T‰ll‰ kertoimella muokataan karttaruudun korkeuteen liittyv‰‰ epsilon laskentaa.
+    // Arvo on siis normaalisti 1, mutta laskettua kertointa voidaan kasvattaa tai pienent‰‰ haluttaessa t‰ll‰.
+    static float toolmasterRelatedBigEpsilonFactor_;
+    // T‰t‰ indeksi‰ k‰ytet‰‰n kun mets‰stet‰‰n ongelma polygoneja debuggerilla
+    static int debugHelperWantedPolygonIndex_;
 
 private:
 
@@ -98,6 +103,7 @@ private:
     void calculatePolygonBottomEdgeTouchings(size_t currentPolygonCoordinateCounter, size_t polygonCoordinateSize, float polygonsBottomCoordinateY);
     void initializePolygonBottomEdgeRelations();
     PolygonsBottomEdgeRelation calcPolygonsBottomEdgeRelation(bool startsInsideLimits, bool changesFromStart);
+    float calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters);
 };
 
 #endif // DISABLE_UNIRAS_TOOLMASTER
