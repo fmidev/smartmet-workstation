@@ -10,12 +10,14 @@
 
 
 float ToolmasterHatchPolygonData::normallyUsedCoordinateEpsilon_ = std::numeric_limits<float>::epsilon() * 4;
-float ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilon_ = 0.00138f;
+float ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilonFactor_ = 1.f;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_ = 10;
 
 ToolmasterHatchPolygonData::ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings)
     :hatchSettings_(theHatchSettings),
     hatchClassValues_(2, 0)
 {
+    usedToolmasterRelatedBigEpsilon_ = calculateUsedToolmasterEpsilon(static_cast<float>(theIsoLineData.itsSingleSubMapViewHeightInMillimeters));
     XuViewWorld();
     XuIsolineSplineSmoothing(1);
 
@@ -252,7 +254,7 @@ CoordinateYStatus ToolmasterHatchPolygonData::calculateCoordinateYStatus(float v
 {
     if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, normallyUsedCoordinateEpsilon_))
         return CoordinateYStatus::BottomRowValue;
-    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, toolmasterRelatedBigEpsilon_))
+    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, usedToolmasterRelatedBigEpsilon_))
         return CoordinateYStatus::BottomRowInToolmasterMarginCase;
 
     return CoordinateYStatus::NotBottomRowValue;
@@ -292,73 +294,13 @@ std::vector<float> ToolmasterHatchPolygonData::doYPointCoordinateFixes(const std
     for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
     {
         auto currentStatus = yCoordinateStatusVector[coordinateIndex];
-        if(currentStatus == CoordinateYStatus::BottomRowValue)
+        if(currentStatus != CoordinateYStatus::NotBottomRowValue)
         {
             // Asetetaan ainakin pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
             if(correctedCoordinates[coordinateIndex] != bottomRowCoordinateY)
             {
                 hasAnyCorrectionsBeenMade = true;
                 correctedCoordinates[coordinateIndex] = bottomRowCoordinateY;
-            }
-            auto previousStatusPair = getPreviousValue(coordinateIndex, yCoordinateStatusVector);
-            auto nextStatusPair = getNextValue(coordinateIndex, yCoordinateStatusVector);
-            // Jotta tehtäisiin mitään muita korjauksia, ei kumpikaan vierekkäisistä pisteistä kuulua suoraan pohjariviin
-            // Paitsi jos vierekkäist pisteet ovat täysin samoja, koska polygonit yhdistetään laittamalla kaksi samaa pistettä 
-            // johonkin kohtaan polygonia, joka ei välttämättä ole esim. lopussa.
-            auto samePointAsPrevious = areTwoPointsExcatlySame(coordinateIndex, previousStatusPair.second, polygonsCoordinatesX, polygonsCoordinatesY);
-            auto samePointAsNext = areTwoPointsExcatlySame(coordinateIndex, nextStatusPair.second, polygonsCoordinatesX, polygonsCoordinatesY);
-            auto samePointPresent = samePointAsPrevious || samePointAsNext;
-            if(samePointPresent || (previousStatusPair.first != CoordinateYStatus::BottomRowValue && nextStatusPair.first != CoordinateYStatus::BottomRowValue))
-            {
-                // Sitten ainakin jomman kumman pikää kuulua toolmaster limittien sisällä pohjariviin
-                if(previousStatusPair.first == CoordinateYStatus::BottomRowInToolmasterMarginCase || nextStatusPair.first == CoordinateYStatus::BottomRowInToolmasterMarginCase)
-                {
-                    hasAnyCorrectionsBeenMade = true;
-                    // Saman pisteen käsittely koodi alkuun
-                    if(samePointPresent)
-                    {
-                        if(samePointAsPrevious)
-                            correctedCoordinates[nextStatusPair.second] = bottomRowCoordinateY;
-                        else
-                            correctedCoordinates[previousStatusPair.second] = bottomRowCoordinateY;
-                        continue;
-                    }
-
-                    const float missingDiffValue = 99999.f;
-                    // Muutos halutaan tehdä joko selkeästi x-suunnassa pidempään polygonin reunaviivaan
-                    auto currentCoordinateX = polygonsCoordinatesX[coordinateIndex];
-                    auto previousCoordinateX = polygonsCoordinatesX[previousStatusPair.second];
-                    auto nextCoordinateX = polygonsCoordinatesX[nextStatusPair.second];
-                    auto edgeToPreviousLength = std::abs(currentCoordinateX - previousCoordinateX);
-                    auto edgeToNextLength = std::abs(currentCoordinateX - nextCoordinateX);
-                    auto previousToNextLengthRatio = edgeToPreviousLength / edgeToNextLength;
-                    auto nextToPreviousLengthRatio = edgeToNextLength / edgeToPreviousLength;
-                    if(previousToNextLengthRatio >= 3)
-                    {
-                        correctedCoordinates[previousStatusPair.second] = bottomRowCoordinateY;
-                    }
-                    else if(nextToPreviousLengthRatio >= 3)
-                    {
-                        correctedCoordinates[nextStatusPair.second] = bottomRowCoordinateY;
-                    }
-                    else
-                    {
-                        // Tai sitten siihen pisteeseen joka on lähempänä pohjarivin koordinaattia
-                        auto currentCoordinateY = polygonsCoordinatesY[coordinateIndex];
-                        auto previousCoordinateY = polygonsCoordinatesY[previousStatusPair.second];
-                        auto nextCoordinateY = polygonsCoordinatesY[nextStatusPair.second];
-                        auto yDiffToPrevious = std::abs(currentCoordinateY - previousCoordinateY);
-                        auto yDiffToNext = std::abs(currentCoordinateY - nextCoordinateY);
-                        if(yDiffToPrevious < yDiffToNext)
-                        {
-                            correctedCoordinates[previousStatusPair.second] = bottomRowCoordinateY;
-                        }
-                        else
-                        {
-                            correctedCoordinates[nextStatusPair.second] = bottomRowCoordinateY;
-                        }
-                    }
-                }
             }
         }
     }
@@ -553,6 +495,22 @@ PolygonsBottomEdgeRelation ToolmasterHatchPolygonData::calcPolygonsBottomEdgeRel
         else
             return PolygonsBottomEdgeRelation::AlwaysOutside;
     }
+}
+
+// Kokeellisesti haettu kolme pistettä, jossa hatch laskut toimivat hyvin kolmelle eri kokoiselle karttaruudulle.
+// 1. karttaruudun korkeus 23.8 cm => toolmaster-epsilon = 0.002
+// 2. karttaruudun korkeus 13.5 cm => toolmaster-epsilon = 0.005
+// 3. karttaruudun korkeus 7.9 cm => toolmaster-epsilon = 0.007
+// Näiden pisteiden avulla laskettu 2. asteen yhtälö, jonka avulla voidaan laskea sopiva kerroin jokaiselle 
+// karttanäytön korkeudelle.
+// Laskentaan lisätty vielä kerroin ~1, jolla voidaan manipuloida käytettyä kerrointa pinemmäksi tai isommaksi,
+// kyseistä kerrointa voidaan säätää SmartMetin Settings dialogista.
+float ToolmasterHatchPolygonData::calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters)
+{
+    // Kaava on siis laskettu cm korkeuksien kautta, joten parametrina satu korkeus (kaavassa helppouden vuoksi x) pitää muuttaa mm -> cm
+    float x = singleMapSubViewHeightInMillimeters / 10.f;
+    float usedEpsilon = 0.0102633266165965f - 0.000445812507087464f * x + 0.000004143441586197f * x * x;
+    return usedEpsilon * toolmasterRelatedBigEpsilonFactor_;
 }
 
 #endif // DISABLE_UNIRAS_TOOLMASTER
