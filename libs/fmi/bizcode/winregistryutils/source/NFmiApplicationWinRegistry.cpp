@@ -767,7 +767,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
     mForceWdParameterToLinearInterpolation = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ForceWdParameterToLinearInterpolation", usedKey, false);
     mShowTooltipOnSmarttoolDialog = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowTooltipOnSmarttoolDialog", usedKey, true);
-    mHatchingToolmasterEpsilonFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\HatchingToolmasterEpsilonFactor", usedKey, 0.00138);
+    mHatchingToolmasterEpsilonFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\HatchingToolmasterEpsilonFactor", usedKey, 1.);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
