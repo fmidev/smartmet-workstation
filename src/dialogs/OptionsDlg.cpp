@@ -60,7 +60,6 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , itsIsolineMinimumLengthFactor(1)
     , fGenerateTimeCombinationData(FALSE)
     , fForceWdParameterToLinearInterpolation(FALSE)
-    , itsHatchingToolmasterEpsilonFactor(0)
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -430,7 +429,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_COMBINATION_DATA, "Generate time combination data (unchecking might prevent crashes)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, "Forced linear WD (on=better, off=fast)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COMBINED_MAP_MODE, "Use combined map mode(local + wms)");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_HATCHING_EPSILON_FACTOR_TEXT, "Hatching Toolmaster epsilon factor (<0.01)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_HATCHING_EPSILON_FACTOR_TEXT, "Hatching calculation epsilon factor (~1)");
 }
 
 void COptionsDlg::InitLogLevelComboBox()
