@@ -291,6 +291,7 @@ public:
     bool BorderDrawPolylinesDirty(int theDescTopIndex) const override;
     bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const override;
     void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) override;
+    double CalculateSubMapViewHeightInMilliMeters(int theDescTopIndex) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;
