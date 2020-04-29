@@ -3655,12 +3655,21 @@ void NFmiCombinedMapHandler::borrowParams(unsigned int mapViewDescTopIndex, int 
 {
 	NFmiDrawParamList* drawParamListFrom = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, realViewRowIndex);
 	NFmiDrawParamList* drawParamListTo = getDrawParamList(mapViewDescTopIndex, activeViewRow(mapViewDescTopIndex)); // itsActiveViewRow on suhteutettuna näkyvään rivistöön
-	if(drawParamListFrom && drawParamListTo && (drawParamListFrom != drawParamListTo))
+	bool doDebugging = false;
+	if(doDebugging || (drawParamListFrom && drawParamListTo && (drawParamListFrom != drawParamListTo)))
 	{
-		if(drawParamListTo->HasBorrowedParams())
-			drawParamListTo->ClearBorrowedParams();
+		if(doDebugging)
+		{
+			// Joskus tehdään hatching testejä ja silloi muutetaan testattavan polygonin indeksiä
+			ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingDebuggingPolygonIndex(realViewRowIndex);
+		}
 		else
-			drawParamListTo->BorrowParams(*drawParamListFrom);
+		{
+			if(drawParamListTo->HasBorrowedParams())
+				drawParamListTo->ClearBorrowedParams();
+			else
+				drawParamListTo->BorrowParams(*drawParamListFrom);
+		}
 
 		mapViewDirty(mapViewDescTopIndex, false, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		::getMacroParamDataCache().update(mapViewDescTopIndex, realViewRowIndex, *drawParamListTo);
