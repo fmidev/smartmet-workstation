@@ -1399,6 +1399,10 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetBorderDrawDirtyState(int the
     itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetBorderDrawDirtyState(newState);
 }
 
+double CtrlViewDocumentInterfaceForGeneralDataDoc::CalculateSubMapViewHeightInMilliMeters(int theDescTopIndex)
+{
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->CalculateSubMapViewHeightInMilliMeters();
+}
 
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
