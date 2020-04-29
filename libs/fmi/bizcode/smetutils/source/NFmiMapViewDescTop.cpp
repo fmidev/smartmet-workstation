@@ -1481,3 +1481,8 @@ void NFmiMapViewDescTop::ClearRedrawMapView()
 { 
     fRedrawMapView = false; 
 }
+
+double NFmiMapViewDescTop::CalculateSubMapViewHeightInMilliMeters()
+{
+	return GetGraphicalInfo().itsViewHeightInMM / itsViewGridSizeVM.Y();
+}
