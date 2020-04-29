@@ -277,24 +277,20 @@ bool ToolmasterHatchPolygonData::areTwoPointsExcatlySame(size_t pointIndex1, siz
     return xCoordinatesAreSame && yCoordinatesAreSame;
 }
 
-// Toolmasterin laskemissa polygoneissa on joskus pieni vertikaalisuunnassa tapahtuva vika. T‰m‰ funktio etsii seuraavanlaisia merkkeja:
-// 1. polygonsCoordinatesY parametrista lˆytyy yksitt‰inen arvo joka on tarpeeksi l‰hell‰ (normi epsilon tarkastelu) bottomRowCoordinateY arvoa
-// 2. T‰ll‰isi‰ yksitt‰isi‰ kohtia voi olla yhdess‰ polygonissa useita ja ne kaikki pit‰‰ hoitaa.
-// 3. Jos t‰m‰ yksitt‰isen arvon vierest‰ lˆytyy toinen arvo joka on l‰hell‰ bottomRowCoordinateY arvoa, mutta huomattavasti isommalla epsilonilla etsittyn‰, 
-//    pit‰‰ t‰t‰ vieress‰ olevaa y-koordinaattia korjata niin ett‰ se on pohjarivin korkeudella.
-// 4. Jos n‰iden kahden vierekk‰isen pisteen x-koordinaateissa on iso ero (polygoni on leve‰ ja pohjalta l‰hes horisontaali), on kyse mit‰ luultavimmin Toolmaster vika joka pit‰‰ korjata.
-// Funktio palauttaa vektorin jossa on tehty korjaukset, jos mit‰‰n korjauksia on tehty, muuten palautetaan tyhj‰ vektori.
+// Toolmasterin laskemissa polygoneissa on joskus pieni vertikaalisuunnassa tapahtuva vika. 
+// T‰m‰ funktio tekee seuraavaa:
+// 1. Tutkii jokaisen polygonin pisteen ja pohjarivin l‰heisyyden (normi epsilon tai isompi erikseen laskettu Toolmaster epsilon)
+// 2. Jos on t‰ll‰isi‰ pisteit‰, asetetaan niiden y-koordinaatti suoraan pohjarivin tasolle.
+// Funktio palauttaa vektorin jossa on tehty korjaukset, jos on tehty mit‰‰n korjauksia, muuten palautetaan vain tyhj‰ vektori.
 std::vector<float> ToolmasterHatchPolygonData::doYPointCoordinateFixes(const std::vector<float>& polygonsCoordinatesY, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY)
 {
-    auto xCoordinateRange = calculateTotalValueRange(polygonsCoordinatesX);
-    auto polygonsWidth = xCoordinateRange.second - xCoordinateRange.first;
     auto yCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY, bottomRowCoordinateY);
     auto correctedCoordinates = polygonsCoordinatesY;
     bool hasAnyCorrectionsBeenMade = false;
     for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
     {
         auto currentStatus = yCoordinateStatusVector[coordinateIndex];
-        if(currentStatus != CoordinateYStatus::NotBottomRowValue)
+        if(currentStatus == CoordinateYStatus::BottomRowValue || currentStatus == CoordinateYStatus::BottomRowInToolmasterMarginCase)
         {
             // Asetetaan ainakin pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
             if(correctedCoordinates[coordinateIndex] != bottomRowCoordinateY)
