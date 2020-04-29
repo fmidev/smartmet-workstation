@@ -486,6 +486,38 @@ static void FillHatchedPolygonData(const std::vector<int> &polyPointsXInPixels, 
     }
 }
 
+static void DrawPolygonIndexText(int polygonIndex, int wantedPolygonIndex, CDC *pDC, int xPixelCoordinate, int yPixelCoordinate)
+{
+    if(polygonIndex == wantedPolygonIndex)
+    {
+        CString polygonIndexText;
+        polygonIndexText.Format(_T("Ind: %d"), wantedPolygonIndex);
+        pDC->TextOut(xPixelCoordinate, yPixelCoordinate, polygonIndexText);
+    }
+}
+
+static void UpdateMinCoordinateY(const std::vector<CPoint> &polygonCPoints, int &currentRowMinCoordinateY_inOut)
+{
+    auto minElement = std::min_element(polygonCPoints.begin(), polygonCPoints.end(),
+        [](const auto& point1, const auto& point2) {return point1.y < point2.y; });
+    if(currentRowMinCoordinateY_inOut > minElement->y)
+        currentRowMinCoordinateY_inOut = minElement->y;
+}
+
+// Pieni overlap fiksaus polygoneihin. En tiedä johtuuko ongelma toolmasterin polygoneista vai
+// GDI piirron ominaisuuksista, mutta tämä korjaa yhden pikselin satunnaiset välit hatcheistä.
+// Eli lasketaan koko ajan, mikä oli edellisen polygoni rivin ylimmän pikselin arvo (monitorilla ylin
+// on siis pienin arvo, kun 0,0 piste on näytön top-left). Jos läpikäytävä piste on juuri siinä, siirretään 
+// se yhden pikselin verran alaspäin (overlap).
+static void FixOnePixelGapFromPolygon(int lastRowMinCoordinateY, std::vector<CPoint>& polygonCPoints_inOut)
+{
+    for(auto& point : polygonCPoints_inOut)
+    {
+        if(lastRowMinCoordinateY == point.y)
+            point.y++;
+    }
+}
+
 static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPolygonData, CDC *pDC, const CRect& theMfcClipRect)
 {
     if(theToolmasterHatchPolygonData.polygonSizeNumbers_.size())
@@ -503,22 +535,35 @@ static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPo
         int polygonPointTotalCount = 0;
         int currentPolygonFloatDataTotalIndex = 0;
         int currentPolygonIntDataTotalIndex = 0;
+        int lastRowMinCoordinateY = std::numeric_limits<int>::max();
+        int currentRowMinCoordinateY = std::numeric_limits<int>::max();
+        int currentRowToolmasterIndexY = -1;
         const auto& polygonSizeNumbers = theToolmasterHatchPolygonData.polygonSizeNumbers_;
         for(int polygonIndex = 0; polygonIndex < polygonSizeNumbers.size(); polygonIndex++)
         {
             int polygonPointsCount = polygonSizeNumbers[polygonIndex];
             int polygonFloatDataCount = theToolmasterHatchPolygonData.polygonDataFloatNumberArray_[polygonIndex];
             int polygonIntDataCount = theToolmasterHatchPolygonData.polygonDataIntNumberArray_[polygonIndex];
+            int polygonRowToolmasterIndexY = theToolmasterHatchPolygonData.polygonDataIntArray_[currentPolygonIntDataTotalIndex + 1];
 
-            //int wantedPolygonIndex = 27;// theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex_;
-            //if(polygonIndex == wantedPolygonIndex)
+            if(currentRowToolmasterIndexY != polygonRowToolmasterIndexY)
             {
-                //CString polygonIndexText;
-                //polygonIndexText.Format(_T("Ind: %d"), wantedPolygonIndex);
-                //pDC->TextOut(polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount], polygonIndexText);
+                currentRowToolmasterIndexY = polygonRowToolmasterIndexY;
+                lastRowMinCoordinateY = currentRowMinCoordinateY;
+            }
+
+            //int wantedPolygonIndex1 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex1_;
+            //int wantedPolygonIndex2 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex2_;
+            //if(polygonIndex == wantedPolygonIndex1 || polygonIndex == wantedPolygonIndex2)
+            {
+                //::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex1, pDC, polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount]);
+                //::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex2, pDC, polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount]);
                 if(theToolmasterHatchPolygonData.isHatchPolygonDrawn(polygonIndex, currentPolygonFloatDataTotalIndex, currentPolygonIntDataTotalIndex, polygonPointTotalCount))
                 {
                     FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polygonPointsCount, polygonCPoints);
+                    ::UpdateMinCoordinateY(polygonCPoints, currentRowMinCoordinateY);
+                    ::FixOnePixelGapFromPolygon(lastRowMinCoordinateY, polygonCPoints);
+
                     pDC->Polygon(polygonCPoints.data(), polygonPointsCount);
                 }
             }
