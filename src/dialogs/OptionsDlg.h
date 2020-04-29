@@ -94,7 +94,7 @@ private:
     double itsIsolineMinimumLengthFactor;
     BOOL fGenerateTimeCombinationData;
     BOOL fForceWdParameterToLinearInterpolation;
-	float itsHatchingToolmasterEpsilonFactor;
+	float itsHatchingToolmasterEpsilonFactor = 1.f;
 };
 
 //{{AFX_INSERT_LOCATION}}
