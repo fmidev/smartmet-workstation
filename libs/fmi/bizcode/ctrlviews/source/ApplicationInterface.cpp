@@ -33,10 +33,27 @@ void ApplicationInterface::SetHatchingToolmasterEpsilonFactor(float newEpsilonFa
 
 void ApplicationInterface::SetHatchingDebuggingPolygonIndex(int action)
 {
-    if(action == 1)
-        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_--;
-    else if(action == 2)
-        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_++;
-    else
-        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_  = 10;
+    switch(action)
+    {
+    case 1:
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_--;
+        break;
+    case 2:
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_++;
+        break;
+    case 3:
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 10;
+        break;
+    case 4:
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_--;
+        break;
+    case 5:
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_++;
+        break;
+    case 6:
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 12;
+        break;
+    default:
+        break;
+    }
 }
