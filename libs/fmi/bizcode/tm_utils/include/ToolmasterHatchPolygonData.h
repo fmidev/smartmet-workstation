@@ -53,7 +53,8 @@ public:
     // Arvo on siis normaalisti 1, mutta laskettua kertointa voidaan kasvattaa tai pienent‰‰ haluttaessa t‰ll‰.
     static float toolmasterRelatedBigEpsilonFactor_;
     // T‰t‰ indeksi‰ k‰ytet‰‰n kun mets‰stet‰‰n ongelma polygoneja debuggerilla
-    static int debugHelperWantedPolygonIndex_;
+    static int debugHelperWantedPolygonIndex1_;
+    static int debugHelperWantedPolygonIndex2_;
 
 private:
 

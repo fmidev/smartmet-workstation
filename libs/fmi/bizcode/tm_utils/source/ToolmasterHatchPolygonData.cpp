@@ -11,7 +11,8 @@
 
 float ToolmasterHatchPolygonData::normallyUsedCoordinateEpsilon_ = std::numeric_limits<float>::epsilon() * 4;
 float ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilonFactor_ = 1.f;
-int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_ = 10;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 10;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 12;
 
 ToolmasterHatchPolygonData::ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings)
     :hatchSettings_(theHatchSettings),
