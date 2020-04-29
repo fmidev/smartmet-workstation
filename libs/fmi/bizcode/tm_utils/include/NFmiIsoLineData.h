@@ -138,6 +138,8 @@ public:
 	size_t itsDefRGBRowSize = 0; // T‰ss‰ on todellinen v‰ri taulu lukum‰‰r‰
 	Matrix3D<std::pair<int, COLORREF> >* itsUsedColorsCube = nullptr; // ei omista, ei tuhoa
 	NFmiContourUserDrawData itsContourUserDrawData;
+	// Yhden karttaruudun korkeus millimetreiss‰, tarvitaan hatch laskuissa
+	double itsSingleSubMapViewHeightInMillimeters = 100.;
 private:
 	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount);
 	void DoBaseInitializationReset();
