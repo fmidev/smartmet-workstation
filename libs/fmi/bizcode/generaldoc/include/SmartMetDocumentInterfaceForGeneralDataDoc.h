@@ -289,7 +289,7 @@ public:
     void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC) override;
     NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) override;
     bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) override;
-    void SetHatchingToolmasterEpsilonFactor(float newEpsilon) override;
+    void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

@@ -362,7 +362,7 @@ public:
     virtual void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC) = 0;
     virtual NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) = 0;
     virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
-    virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilon) = 0;
+    virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

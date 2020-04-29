@@ -1390,11 +1390,11 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::ChangeTime(int theTypeOfChange,
     return itsDoc->GetCombinedMapHandler()->changeTime(theTypeOfChange, theDirection, theMapViewIndex, theAmountOfChange);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::SetHatchingToolmasterEpsilonFactor(float newEpsilon)
+void SmartMetDocumentInterfaceForGeneralDataDoc::SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor)
 {
-    ApplicationWinRegistry().HatchingToolmasterEpsilonFactor(newEpsilon);
+    ApplicationWinRegistry().HatchingToolmasterEpsilonFactor(newEpsilonFactor);
     if(ApplicationInterface::GetApplicationInterfaceImplementation)
-        ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(newEpsilon);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(newEpsilonFactor);
 }
 
 #ifndef DISABLE_CPPRESTSDK
