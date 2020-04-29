@@ -488,8 +488,6 @@ static void FillHatchedPolygonData(const std::vector<int> &polyPointsXInPixels, 
 
 static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPolygonData, CDC *pDC, const CRect& theMfcClipRect)
 {
-    static int wantedPolygonIndex = 916;
-
     if(theToolmasterHatchPolygonData.polygonSizeNumbers_.size())
     {
         TMWorldLimits worldLimits;
@@ -511,8 +509,13 @@ static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPo
             int polygonPointsCount = polygonSizeNumbers[polygonIndex];
             int polygonFloatDataCount = theToolmasterHatchPolygonData.polygonDataFloatNumberArray_[polygonIndex];
             int polygonIntDataCount = theToolmasterHatchPolygonData.polygonDataIntNumberArray_[polygonIndex];
-//            if(polygonIndex == wantedPolygonIndex)
+
+            //int wantedPolygonIndex = 27;// theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex_;
+            //if(polygonIndex == wantedPolygonIndex)
             {
+                //CString polygonIndexText;
+                //polygonIndexText.Format(_T("Ind: %d"), wantedPolygonIndex);
+                //pDC->TextOut(polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount], polygonIndexText);
                 if(theToolmasterHatchPolygonData.isHatchPolygonDrawn(polygonIndex, currentPolygonFloatDataTotalIndex, currentPolygonIntDataTotalIndex, polygonPointTotalCount))
                 {
                     FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polygonPointsCount, polygonCPoints);
