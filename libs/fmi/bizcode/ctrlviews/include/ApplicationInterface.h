@@ -69,5 +69,6 @@ public:
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
     virtual void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) = 0;
     virtual std::pair<HICON, HICON> GetUsedIcons() = 0;
-    virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilon);
+    virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor);
+    virtual void SetHatchingDebuggingPolygonIndex(int action);
 };

@@ -26,7 +26,17 @@ CView* ApplicationInterface::GetSmartMetViewAsCView()
     return ApplicationInterface::itsSmartMetViewAsCView;
 }
 
-void ApplicationInterface::SetHatchingToolmasterEpsilonFactor(float newEpsilon)
+void ApplicationInterface::SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor)
 {
-    ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilon_ = newEpsilon;
+    ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilonFactor_ = newEpsilonFactor;
+}
+
+void ApplicationInterface::SetHatchingDebuggingPolygonIndex(int action)
+{
+    if(action == 1)
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_--;
+    else if(action == 2)
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_++;
+    else
+        ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex_  = 10;
 }
