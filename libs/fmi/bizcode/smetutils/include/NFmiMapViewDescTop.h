@@ -198,7 +198,7 @@ public:
 	int CalcPrintingPageShiftInMinutes(void);
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
 	std::string GetCurrentMapLayerText(bool backgroundMap);
-	double CalculateSubMapViewHeightInMilliMeters();
+	double SingleMapViewHeightInMilliMeters() const;
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
