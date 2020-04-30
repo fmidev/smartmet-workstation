@@ -586,7 +586,7 @@ static void SetupMFCAndDrawShadedPolygons3(ToolmasterHatchPolygonData &theToolma
         brush.CreateHatchBrush(hatchSettings.itsHatchPattern, crColor);
     CBrush *oldBrush = pDC->SelectObject(&brush);
 
-    int penStyle = PS_NULL;
+    int penStyle = PS_NULL; // PS_SOLID
     int penWidth = hatchSettings.fDrawHatchBorders ? 1 : 0;
     COLORREF penColor1 = 0x00000000;
     if(penWidth > 0)
