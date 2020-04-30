@@ -398,7 +398,7 @@ public:
     virtual bool BorderDrawPolylinesDirty(int theDescTopIndex) const = 0;
     virtual bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const = 0;
     virtual void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) = 0;
-    virtual double CalculateSubMapViewHeightInMilliMeters(int theDescTopIndex) = 0;
+    virtual double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const = 0;
 
 
 #ifndef DISABLE_CPPRESTSDK
