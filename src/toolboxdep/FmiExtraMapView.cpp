@@ -172,7 +172,7 @@ void CFmiExtraMapView::RelativePrintRect(const NFmiRect &theRect)
 
 void CFmiExtraMapView::PrintViewSizeInPixels(const NFmiPoint &theSize)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, itsToolBox->GetDC(), true);
 }
 
 void CFmiExtraMapView::SetPrintCopyCDC(CDC* pDC)
@@ -203,6 +203,11 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
 CtrlViewUtils::GraphicalInfo& CFmiExtraMapView::GetGraphicalInfo(void)
 {
 	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->GetGraphicalInfo();
+}
+
+TrueMapViewSizeInfo& CFmiExtraMapView::GetTrueMapViewSizeInfo()
+{
+	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->GetTrueMapViewSizeInfo();
 }
 
 int CFmiExtraMapView::CalcPrintingPageShiftInMinutes(void)
