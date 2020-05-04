@@ -512,9 +512,14 @@ int CFmiCrossSectionView::CalcPrintingPageShiftInMinutes(void)
 	return FmiRound(itsSmartMetDocumentInterface->MapViewDescTop(0)->TimeControlTimeStep() * 60.);
 }
 
-CtrlViewUtils::GraphicalInfo& CFmiCrossSectionView::GetGraphicalInfo(void)
+CtrlViewUtils::GraphicalInfo& CFmiCrossSectionView::GetGraphicalInfo()
 {
 	return itsSmartMetDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
+}
+
+TrueMapViewSizeInfo& CFmiCrossSectionView::GetTrueMapViewSizeInfo()
+{
+	return itsSmartMetDocumentInterface->CrossSectionSystem()->GetTrueMapViewSizeInfo();
 }
 
 void CFmiCrossSectionView::CurrentPrintTime(const NFmiMetTime & /* theTime */ )
