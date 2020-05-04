@@ -12,6 +12,7 @@
 #include "NFmiDataStoringHelpers.h"
 #include "SettingsFunctions.h"
 #include "CtrlViewDocumentInterface.h"
+#include "SpecialDesctopIndex.h"
 #include "boost\math\special_functions\round.hpp"
 
 double NFmiCrossSectionSystem::itsLatestVersionNumber = 1.0;
@@ -59,6 +60,7 @@ NFmiCrossSectionSystem::NFmiCrossSectionSystem(int theMaxViewRowSize)
 ,itsAxisValuesSpecialWinReg(1005, 1025)
 ,fShowParamWindowView(true)
 ,fShowTooltipOnCrossSectionView(true)
+,itsTrueMapViewSizeInfo(CtrlViewUtils::kFmiCrossSectionView)
 {
 }
 
