@@ -10,6 +10,7 @@
 class NFmiSoundingView;
 class NFmiTempView;
 class NFmiRect;
+class TrueMapViewSizeInfo;
 namespace CtrlViewUtils
 {
     struct GraphicalInfo;
@@ -44,7 +45,8 @@ public:
 	void PrintingPageShiftInMinutes(int newValue) {itsPrintingPageShiftInMinutes = newValue;}
 	int CalcPrintingPageShiftInMinutes(void);
 	NFmiToolBox* ToolBox(void) {return itsToolBox;}
-	CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void);
+	CtrlViewUtils::GraphicalInfo& GetGraphicalInfo();
+	TrueMapViewSizeInfo& GetTrueMapViewSizeInfo();
 	void CurrentPrintTime(const NFmiMetTime &theTime);
 	const NFmiRect* RelativePrintRect(void); 
 	void RelativePrintRect(const NFmiRect &theRect); 
