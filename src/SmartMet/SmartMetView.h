@@ -15,6 +15,7 @@ class CSmartMetDoc;
 class NFmiFastQueryInfo;
 class NFmiEditMapGeneralDataDoc;
 class SmartMetDocumentInterface;
+class TrueMapViewSizeInfo;
 namespace CtrlViewUtils
 {
     struct GraphicalInfo;
@@ -62,7 +63,8 @@ public:
 	int PrintingPageShiftInMinutes(void) {return itsPrintingPageShiftInMinutes;}
 	void PrintingPageShiftInMinutes(int newValue) {itsPrintingPageShiftInMinutes = newValue;}
 	NFmiToolBox* ToolBox(void) {return itsToolBox;}
-    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void);
+    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo();
+	TrueMapViewSizeInfo& GetTrueMapViewSizeInfo();
 	void CurrentPrintTime(const NFmiMetTime &theTime);
 	const NFmiRect* RelativePrintRect(void);
 	void RelativePrintRect(const NFmiRect &theRect);

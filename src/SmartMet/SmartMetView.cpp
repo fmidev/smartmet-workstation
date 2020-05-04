@@ -830,6 +830,11 @@ CtrlViewUtils::GraphicalInfo& CSmartMetView::GetGraphicalInfo(void)
 	return GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->GetGraphicalInfo();
 }
 
+TrueMapViewSizeInfo& CSmartMetView::GetTrueMapViewSizeInfo()
+{
+	return GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->GetTrueMapViewSizeInfo();
+}
+
 void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 {
     static size_t counter = 0; // Nämä viritykset on tosi ärsyttäviä mutta jos en laske kuinka mones kerta ollaan täällä, tekstin laittaminen statusbar:iin kaataa SmarrtMetin, koska se valmistuu vasta myöhemmin ja en tiedä miten sitä voisi tarkastella että onko se jo valmis
@@ -1231,7 +1236,7 @@ void CSmartMetView::RelativePrintRect(const NFmiRect &theRect)
 
 void CSmartMetView::PrintViewSizeInPixels(const NFmiPoint &theSize)
 {
-	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, true);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, itsToolBox->GetDC(), true);
 }
 
 void CSmartMetView::SetPrintCopyCDC(CDC* pDC)
