@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ApplicationInterface.h"
 #include "ToolmasterHatchPolygonData.h"
+#include "NFmiApplicationWinRegistry.h"
 
 CSmartMetView* ApplicationInterface::itsSmartMetView = nullptr;
 CView* ApplicationInterface::itsSmartMetViewAsCView = nullptr;
@@ -53,7 +54,23 @@ void ApplicationInterface::SetHatchingDebuggingPolygonIndex(int action)
     case 6:
         ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 12;
         break;
+    case 7:
+        AddToHatchingToolmasterEpsilonFactor(-0.05f);
+        break;
+    case 8:
+        AddToHatchingToolmasterEpsilonFactor(0.05f);
+        break;
     default:
         break;
     }
 }
+
+void ApplicationInterface::AddToHatchingToolmasterEpsilonFactor(float addedValue)
+{
+    auto& winRegistry = ApplicationWinRegistry();
+    auto factor = winRegistry.HatchingToolmasterEpsilonFactor();
+    factor -= addedValue;
+    winRegistry.HatchingToolmasterEpsilonFactor(factor);
+    SetHatchingToolmasterEpsilonFactor(factor);
+}
+
