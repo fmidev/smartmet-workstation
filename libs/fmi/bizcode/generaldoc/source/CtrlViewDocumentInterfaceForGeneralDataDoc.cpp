@@ -1404,6 +1404,11 @@ double CtrlViewDocumentInterfaceForGeneralDataDoc::SingleMapViewHeightInMilliMet
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SingleMapViewHeightInMilliMeters();
 }
 
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsTimeControlViewVisible(int theDescTopIndex) const
+{
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->IsTimeControlViewVisible();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 
