@@ -16,6 +16,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     Newbase
     SmartTools
+    CtrlViewUtils
 	CatLog
     )
 
@@ -24,6 +25,7 @@ target_include_directories(
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
 	PUBLIC ${CatLog_INCLUDE_DIRS}
     )
 
@@ -32,6 +34,7 @@ set(
     ${PROJECT_SOURCE_DIR}/include
     ${Newbase_INCLUDE_DIRS}
     ${SmartTools_INCLUDE_DIRS}
+    ${CtrlViewUtils_INCLUDE_DIRS}
 	${CatLog_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
