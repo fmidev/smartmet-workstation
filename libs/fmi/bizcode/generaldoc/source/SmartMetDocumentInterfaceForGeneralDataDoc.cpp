@@ -1375,9 +1375,9 @@ NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamD
     return itsDoc->MacroParamDataCache();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
+bool SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
 {
-    itsDoc->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
+    return itsDoc->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
 }
 
 NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int mapViewDescTopIndex)
