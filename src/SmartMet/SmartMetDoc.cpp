@@ -197,6 +197,11 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_3, OnAcceleratorBorrowParams3)
 	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_4, OnAcceleratorBorrowParams4)
 	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_5, OnAcceleratorBorrowParams5)
+	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_6, OnAcceleratorBorrowParams6)
+	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_7, OnAcceleratorBorrowParams7)
+	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_8, OnAcceleratorBorrowParams8)
+	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_9, OnAcceleratorBorrowParams9)
+	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_10, OnAcceleratorBorrowParams10)
 
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_DATA_TO_DATABASE, OnUpdateButtonDataToDatabase)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_STORE_DATA, OnUpdateButtonStoreData)
@@ -2400,6 +2405,26 @@ void CSmartMetDoc::OnAcceleratorBorrowParams4()
 void CSmartMetDoc::OnAcceleratorBorrowParams5()
 {
 	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 5);
+}
+void CSmartMetDoc::OnAcceleratorBorrowParams6()
+{
+	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 6);
+}
+void CSmartMetDoc::OnAcceleratorBorrowParams7()
+{
+	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 7);
+}
+void CSmartMetDoc::OnAcceleratorBorrowParams8()
+{
+	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 8);
+}
+void CSmartMetDoc::OnAcceleratorBorrowParams9()
+{
+	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 9);
+}
+void CSmartMetDoc::OnAcceleratorBorrowParams10()
+{
+	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 10);
 }
 
 static CRect NFmiRect2CRect(const NFmiRect &theRect)
