@@ -352,6 +352,8 @@ bool NFmiCrossSectionSystem::RowCount(int newValue)
 	// jos rivien määrä vaikuttaa nyt alku rivin indeksiin, se tarkistetaan tässä
 	if(itsStartRowIndex > itsMaxViewRowSize - itsRowCount + 1)
 		itsStartRowIndex = itsMaxViewRowSize - itsRowCount + 1;
+
+	itsTrueMapViewSizeInfo.onViewGridSizeChange(NFmiPoint(1, itsRowCount), true);
 	return (oldCount != itsRowCount) || (oldIndex != itsStartRowIndex);
 }
 
