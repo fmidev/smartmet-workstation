@@ -11,6 +11,29 @@
 
 namespace CFmiWin32TemplateHelpers
 {
+    template<class Tview>
+    class GraphicalInfoRestorer
+    {
+        Tview& view_;
+        TrueMapViewSizeInfo originalTrueMapViewSizeInfo_;
+        CtrlViewUtils::GraphicalInfo originalGraphicalInfo_;
+    public:
+        GraphicalInfoRestorer(Tview& theView)
+            :view_(theView)
+            ,originalTrueMapViewSizeInfo_(theView.GetTrueMapViewSizeInfo())
+            ,originalGraphicalInfo_(theView.GetGraphicalInfo())
+        {
+        }
+
+        ~GraphicalInfoRestorer()
+        {
+            view_.GetTrueMapViewSizeInfo() = originalTrueMapViewSizeInfo_;
+            originalGraphicalInfo_.fInitialized = false;
+            view_.GetGraphicalInfo() = originalGraphicalInfo_;
+        }
+    };
+
+
 	template<class Tview>
 	void PrintMapViewWithFullResolution(Tview *theView, CDC* pDC, CPrintInfo* pInfo)
 	{
@@ -19,6 +42,7 @@ namespace CFmiWin32TemplateHelpers
 		if(smartMetDocumentInterface == 0 || toolBox == 0)
 			return ; // pit‰isi heitt‰‰ poikkeus
 
+        GraphicalInfoRestorer<Tview> graphicalInfoRestorer(*theView);
 		// HUOM!! printtauksen yhteydess‰ kutsu ensin DC:n asetus ja sitten printinfon!!!
 		toolBox->SetDC(pDC);
 		toolBox->GetPrintInfo(pInfo); // ensin pit‰‰ laittaa CDC ja sitten printInfo!!!
@@ -62,8 +86,12 @@ namespace CFmiWin32TemplateHelpers
 		pInfo->m_rectDraw = newDestRect; // toimiiko t‰m‰ uuden koon asetus?
 		toolBox->GetPrintInfo(pInfo); // otetaan printinfosta rect uudestaan!!!
 
-		theView->PrintViewSizeInPixels(NFmiPoint(pInfo->m_rectDraw.right  - pInfo->m_rectDraw.left, pInfo->m_rectDraw.bottom - pInfo->m_rectDraw.top));
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+        NFmiPoint viewSizeInPixels(pInfo->m_rectDraw.right - pInfo->m_rectDraw.left, pInfo->m_rectDraw.bottom - pInfo->m_rectDraw.top);
+		theView->PrintViewSizeInPixels(viewSizeInPixels);
+        if(!smartMetDocumentInterface->DoMapViewOnSize(theView->MapViewDescTopIndex(), viewSizeInPixels, pDC))
+        {
+    		CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+        }
 		theView->SetPrintCopyCDC(pDC);
 
         if(smartMetDocumentInterface->IsToolMasterAvailable())
