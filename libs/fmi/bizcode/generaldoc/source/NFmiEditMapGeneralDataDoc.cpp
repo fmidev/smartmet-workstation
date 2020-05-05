@@ -5188,13 +5188,13 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
     }
 }
 
-void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
+bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
-	auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex);
+	auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex, true);
 	if(mapViewDesctop)
 	{
 		// MapViewSizeInPixels(clientPixelSize) -kutsu pitää olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
-		mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
+		mapViewDesctop->MapViewSizeInPixels(clientPixelSize, pDC);
 		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, ApplicationWinRegistry().DrawObjectScaleFactor(), true);
 
 		// Nykyään jos kartan koko muuttuu, pitää macroParam cache tyhjentää, koska sen koko saattaa muuttua.
@@ -5203,7 +5203,18 @@ void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, 
 		GetCombinedMapHandler()->mapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
 		MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
 		mapViewDesctop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+		return true; // Jos kyse oli karttanäytön asetuksesta, palautetaan true
 	}
+	else if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+	{
+		auto &crossSectionSystem = *CrossSectionSystem();
+		auto& trueMapViewSizeInfo = crossSectionSystem.GetTrueMapViewSizeInfo();
+		NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
+		trueMapViewSizeInfo.onSize(clientPixelSize, pDC, crossSectionViewGridSize,  true);
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(crossSectionSystem.GetGraphicalInfo(), pDC, clientPixelSize, ApplicationWinRegistry().DrawObjectScaleFactor(), true);
+		return true; // Jos kyse oli poikkileikkausnäytön asetuksesta, palautetaan true
+	}
+	return false; // Jos kyse oli jostain muusta kuin karttanäytöstä, palautetaan false sen merkiksi että mitään ei tehty
 }
 
 NFmiTimeBag AdjustTimeBagToGivenTimeBag(const NFmiTimeBag& theRestrictingTimebag, const NFmiTimeBag& wantedTimebag)
@@ -12384,9 +12395,9 @@ NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
     return pimpl->MacroParamDataCache();
 }
 
-void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
+bool NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
 {
-    pimpl->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
+    return pimpl->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
 }
 
 TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()
