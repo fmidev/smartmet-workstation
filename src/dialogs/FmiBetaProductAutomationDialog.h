@@ -179,4 +179,7 @@ public:
     afx_msg void OnBnClickedButtonSaveAsAutomationList();
     afx_msg void OnBnClickedButtonAddEditedBetaAutomationToList();
     afx_msg void OnBnClickedCheckAutomatiionModeOn();
+    afx_msg void OnBnClickedButtonRunSelectedAutomation();
+    afx_msg void OnBnClickedButtonRunAllAutomations();
+    afx_msg void OnBnClickedButtonRunEnabledAutomations();
 };
