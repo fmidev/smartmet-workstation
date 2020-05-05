@@ -23,6 +23,7 @@
 #include "NFmiAnimationData.h"
 #include "NFmiCountryBorderBitmapCache.h"
 #include "CombinedMapHandlerInterface.h"
+#include "TrueMapViewSizeInfo.h"
 
 class CDC;
 class NFmiPolyline;
@@ -45,6 +46,8 @@ namespace Gdiplus
 class NFmiMapViewDescTop
 {
 public:
+
+
 	class ViewMacroDipMapHelper
 	{
 	public:
@@ -114,9 +117,10 @@ public:
 	double ClientViewXperYRatio(void){return itsClientViewXperYRatio;};
 	void ClientViewXperYRatio(double theClientViewXperYRatio){itsClientViewXperYRatio = theClientViewXperYRatio;};
 	const NFmiPoint& MapViewSizeInPixels(void){return itsMapViewSizeInPixels;};
-	void MapViewSizeInPixels(const NFmiPoint& newSize, bool fHideTimeControlView = false);
+	void MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, bool fHideTimeControlView = false);
 	int ToggleShowTimeOnMapMode(void);
 	int ShowTimeOnMapMode(void) const {return itsShowTimeOnMapMode;}
+	bool IsTimeControlViewVisible() const;
 	void ShowTimeOnMapMode(int newValue);
 	CDC* CopyCDC(void){return itsCopyCDC;};
 	void CopyCDC(CDC *theCDC){itsCopyCDC = theCDC;};
@@ -168,7 +172,8 @@ public:
 	bool SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWinRegistry *theMapViewWinRegistry);
 	CWnd* MapView(void) {return itsMapView;}
 	void MapView(CWnd *theMapView) {itsMapView = theMapView;}
-	CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void){return itsGraphicalInfo;}
+	CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(){return itsGraphicalInfo;}
+	TrueMapViewSizeInfo& GetTrueMapViewSizeInfo() { return itsTrueMapViewSizeInfo; }
 	NFmiGridPointCache& GridPointCache(void){return itsGridPointCache;}
 	bool LockToMainMapViewTime(void) const {return fLockToMainMapViewTime;}
 	void LockToMainMapViewTime(bool newValue) {fLockToMainMapViewTime = newValue;}
@@ -332,6 +337,7 @@ private:
 	// Tässä on erillisinä piirtolayereina olevien maiden rajaviivojen bitmap ja polyline datat.
 	// Uudet erillismääritellyt border-layerit voivat olla eri piirtosäädöillä ja niitä voi olla jokaisella karttarivillä omansa.
 	NFmiCountryBorderBitmapCache itsSeparateCountryBorderBitmapCache;
+	TrueMapViewSizeInfo itsTrueMapViewSizeInfo;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMapViewDescTop& item){item.Write(os); return os;}

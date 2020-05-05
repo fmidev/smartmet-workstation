@@ -24,6 +24,7 @@
 #include "CtrlViewDocumentInterface.h"
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiCombinedMapModeState.h"
+#include "catlog/catlog.h"
 
 #include <algorithm>
 #include "stdafx.h"
@@ -76,33 +77,83 @@ namespace
 		return colorToHex(redColor, greenColor, blueColor);
 	}
 
-}
+	struct PointerDestroyer
+	{
+		template<typename T>
+		void operator()(T* thePtr)
+		{
+			delete thePtr;
+		}
+	};
 
+	std::string Point2String(const NFmiPoint& p)
+	{
+		std::stringstream out;
+		out << p.X() << "," << p.Y(); // tein oman tavan kirjoittaa NFmiPoint, koska en halunnut rivinvaihtoa loppuun
+		return out.str();
+	}
 
-//template<typename T>
-struct PointerDestroyer
-{
+	NFmiPoint String2Point(const std::string& str)
+	{
+		std::stringstream in(str);
+		double x = 0;
+		double y = 0;
+		char ch = 0; // pilkku pit‰‰ lukea v‰list‰
+		in >> x >> ch >> y;
+		return NFmiPoint(x, y);
+	}
+
+	std::vector<NFmiGdiPlusImageMapHandler*> CopyMapHandlerVector(const std::vector<NFmiGdiPlusImageMapHandler*>& mapHandlerVector)
+	{
+		std::vector<NFmiGdiPlusImageMapHandler*> copiedVector;
+		for(const auto* mapHandler : mapHandlerVector)
+		{
+			copiedVector.emplace_back(new NFmiGdiPlusImageMapHandler(*mapHandler));
+		}
+		return copiedVector;
+	}
+
+	void SetGridSize(const string& theKey, const NFmiPoint& theGridSize)
+	{
+		string gridStr;
+		gridStr += NFmiStringTools::Convert<int>(static_cast<int>(theGridSize.X()));
+		gridStr += ",";
+		gridStr += NFmiStringTools::Convert<int>(static_cast<int>(theGridSize.Y()));
+		NFmiSettings::Set(theKey, gridStr, true);
+	}
+
 	template<typename T>
-	void operator()(T* thePtr)
-	{delete thePtr;}
-};
+	T ReadValueFromSettings(const string& theBaseStr, const string& theKeyWord)
+	{
+		string settingStr = theBaseStr;
+		settingStr += theKeyWord;
+		return NFmiSettings::Require<T>(settingStr.c_str());
+	}
 
-static std::string Point2String(const NFmiPoint &p)
-{
-    std::stringstream out;
-    out << p.X() << "," << p.Y(); // tein oman tavan kirjoittaa NFmiPoint, koska en halunnut rivinvaihtoa loppuun
-    return out.str();
+	template<typename T>
+	void StoreValueToSettings(const string& theBaseStr, const string& theKeyWord, T theValue)
+	{
+		string settingStr(theBaseStr);
+		settingStr += theKeyWord;
+		NFmiSettings::Set(settingStr.c_str(), NFmiStringTools::Convert<T>(theValue), true);
+	}
+
+	void InitDrawParamListVector(NFmiPtrList<NFmiDrawParamList>** theList, int theSize)
+	{
+		if((*theList))
+		{
+			(*theList)->Clear(true);
+			delete (*theList);
+		}
+		(*theList) = new NFmiPtrList<NFmiDrawParamList>;
+		for(int i = 0; i < theSize; i++)
+			(*theList)->AddEnd(new NFmiDrawParamList());
+	}
+
 }
 
-static NFmiPoint String2Point(const std::string &str)
-{
-    std::stringstream in(str);
-    double x = 0;
-    double y = 0;
-    char ch = 0; // pilkku pit‰‰ lukea v‰list‰
-    in >> x >> ch >> y;
-    return NFmiPoint(x, y);
-}
+// ************* ViewMacroDipMapHelper  -luokka *******************************************
+
 
 NFmiMapViewDescTop::ViewMacroDipMapHelper::ViewMacroDipMapHelper() = default;
 
@@ -217,6 +268,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
 ,itsSeparateCountryBorderBitmapCache()
+,itsTrueMapViewSizeInfo(0)
 {
 }
 
@@ -268,18 +320,9 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsSelectedMapIndexVM(1)
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
-, itsSeparateCountryBorderBitmapCache()
+,itsSeparateCountryBorderBitmapCache()
+,itsTrueMapViewSizeInfo(theMapViewDescTopIndex)
 {
-}
-
-static std::vector<NFmiGdiPlusImageMapHandler*> CopyMapHandlerVector(const std::vector<NFmiGdiPlusImageMapHandler*>& mapHandlerVector)
-{
-	std::vector<NFmiGdiPlusImageMapHandler*> copiedVector;
-	for(const auto* mapHandler : mapHandlerVector)
-	{
-		copiedVector.emplace_back(new NFmiGdiPlusImageMapHandler(*mapHandler));
-	}
-	return copiedVector;
 }
 
 // Huomioitavaa ett‰ copy-constructor ei tee t‰ydellist‰ kopioita.
@@ -332,6 +375,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, fShowStationPlotVM(false)
 	, itsViewGridSizeVM()
 	, itsSeparateCountryBorderBitmapCache()
+	, itsTrueMapViewSizeInfo(0)
 {
 	*this = other;
 }
@@ -394,6 +438,7 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsViewGridSizeVM = other.itsViewGridSizeVM;
 		ClearBaseLandBorderMapBitmap(); // deletoi ja nollaa itsLandBorderMapBitmap:in
 		itsSeparateCountryBorderBitmapCache = other.itsSeparateCountryBorderBitmapCache;
+		itsTrueMapViewSizeInfo = other.itsTrueMapViewSizeInfo;
 	}
 	return *this;
 }
@@ -456,22 +501,6 @@ void NFmiMapViewDescTop::StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMa
     theMapViewWinRegistry.ViewGridSizeStr(::Point2String(itsViewGridSizeVM));
 }
 
-static void SetGridSize(const string &theKey, const NFmiPoint &theGridSize)
-{
-	string gridStr;
-	gridStr += NFmiStringTools::Convert<int>(static_cast<int>(theGridSize.X()));
-	gridStr += ",";
-	gridStr += NFmiStringTools::Convert<int>(static_cast<int>(theGridSize.Y()));
-	NFmiSettings::Set(theKey, gridStr, true);
-}
-
-template<typename T>
-static T ReadValueFromSettings(const string &theBaseStr, const string &theKeyWord)
-{
-	string settingStr = theBaseStr;
-	settingStr += theKeyWord;
-	return NFmiSettings::Require<T>(settingStr.c_str());
-}
 
 void NFmiMapViewDescTop::InitMapViewDescTopFromSettings(void)
 {
@@ -503,14 +532,6 @@ void NFmiMapViewDescTop::InitMapViewDescTopFromSettings(void)
 	fShowWarningMarkersOnMap = ReadValueFromSettings<bool>(itsSettingsBaseName, "ShowWarningMessageMarkersOnMap");
 }
 
-template<typename T>
-static void StoreValueToSettings(const string &theBaseStr, const string &theKeyWord, T theValue)
-{
-	string settingStr(theBaseStr);
-	settingStr += theKeyWord;
-	NFmiSettings::Set(settingStr.c_str(), NFmiStringTools::Convert<T>(theValue), true);
-}
-
 void NFmiMapViewDescTop::StoreMapViewDescTopToSettings(void)
 {
 	StoreHandlerSelectedMapsToSettings();
@@ -534,18 +555,6 @@ void NFmiMapViewDescTop::StoreMapViewDescTopToSettings(void)
 	StoreValueToSettings<bool>(itsSettingsBaseName, "ShowControlPointsOnMap", fShowControlPointsOnMap);
 	StoreValueToSettings<bool>(itsSettingsBaseName, "ShowObsComparisonOnMap", fShowObsComparisonOnMap);
 	StoreValueToSettings<bool>(itsSettingsBaseName, "ShowWarningMessageMarkersOnMap", fShowWarningMarkersOnMap);
-}
-
-static void InitDrawParamListVector(NFmiPtrList<NFmiDrawParamList> **theList, int theSize)
-{
-	if((*theList))
-	{
-		(*theList)->Clear(true);
-		delete (*theList);
-	}
-	(*theList) = new NFmiPtrList<NFmiDrawParamList>;
-	for(int i = 0; i < theSize; i++)
-		(*theList)->AddEnd(new NFmiDrawParamList());
 }
 
 void NFmiMapViewDescTop::InitMapViewDrawParamListVector(void)
@@ -669,6 +678,7 @@ void NFmiMapViewDescTop::ViewGridSize(const NFmiPoint& newSize, NFmiMapViewWinRe
 	// lasketaan sitten mik‰ on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
 	itsMapRowStartingIndex = FmiMin(maxStartIndex, itsMapRowStartingIndex);
+	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisible());
 }
 
 void NFmiMapViewDescTop::MapRowStartingIndex(int newIndex)
@@ -732,20 +742,16 @@ void NFmiMapViewDescTop::CalcClientViewXperYRatio(const NFmiPoint& theViewSize)
 							  (RelativeMapRect().Height() * theViewSize.Y() / itsViewGridSizeVM.Y());
 }
 
-static double CalcTimeControlViewHeightInPixels(double thePixelsPerMMinX)
-{
-    NFmiPoint fontSizeInPixels = CtrlViewUtils::CalcTimeScaleFontSizeInPixels(thePixelsPerMMinX);
-    return fontSizeInPixels.X() * 3.5; // kerrotaan n. tekstirivien lukum‰‰r‰ll‰
-}
-
-void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, bool fHideTimeControlView)
+void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, bool fHideTimeControlView)
 {
     itsMapViewSizeInPixels = newSize;
+	auto timeControlViewIsHidden = fHideTimeControlView || !IsTimeControlViewVisible();
 
-    // S‰‰det‰‰n smalla suhteellista osiota, mink‰ karttan‰yttˆ ottaa ja j‰tt‰‰ loput aikakontrolli-ikkunalle.
-    int wantedTimeControlHeightInPixels = FmiRound(::CalcTimeControlViewHeightInPixels(GetGraphicalInfo().itsPixelsPerMM_x));
-    if(fHideTimeControlView)
-        wantedTimeControlHeightInPixels = 1; // laitetaan mm. printtauksen yhteydess‰, karttan‰yttˆjen tapauksessa, t‰h‰n korkeudeksi 1, jotta aikakontrolli-ikkuna olisi piilossa, mutta ei kuitenkaan 0:aa, josko siit‰ seuraisi jokin 0:lla jako tms.
+	itsTrueMapViewSizeInfo.onSize(newSize, pDC, itsViewGridSizeVM, !timeControlViewIsHidden);
+	// S‰‰det‰‰n smalla suhteellista osiota, mink‰ karttan‰yttˆ ottaa ja j‰tt‰‰ loput aikakontrolli-ikkunalle.
+    int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.pixelsPerMilliMeter().X()));
+    if(timeControlViewIsHidden)
+        wantedTimeControlHeightInPixels = 0;
     double mapVerticalPortion = (newSize.Y() - wantedTimeControlHeightInPixels) / newSize.Y();
     itsRelativeMapRect.Height(mapVerticalPortion);
 
@@ -757,13 +763,18 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, bool fHid
 
 const NFmiRect& NFmiMapViewDescTop::RelativeMapRect(void)
 { 
-    if(itsShowTimeOnMapMode < 2)
+    if(IsTimeControlViewVisible())
         return itsRelativeMapRect; 
     else
     {
 		static const NFmiRect totalRelativeRect(0.,0.,1.,1.);
         return totalRelativeRect;
     }
+}
+
+bool NFmiMapViewDescTop::IsTimeControlViewVisible() const
+{
+	return itsShowTimeOnMapMode < 2;
 }
 
 // nelj‰ tilaa:
@@ -797,7 +808,11 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 	}
 	MapViewDirty(mapAreaDirty, true, true, false);
 	if(mapAreaDirty)
+	{
 		SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry); // ikkunan koko muuttuu tietyiss‰ tapauksissa, joten rajaviivat on laskettava uudestaan
+	}
+	// Kartta-alueen koot pit‰‰ myˆs p‰ivitt‰‰, jos aikakontrolli-ikkuna menee pois n‰kyvist‰ tai tulee taas n‰kyviin
+	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisible());
 	return itsShowTimeOnMapMode;
 }
 
@@ -1484,5 +1499,5 @@ void NFmiMapViewDescTop::ClearRedrawMapView()
 
 double NFmiMapViewDescTop::SingleMapViewHeightInMilliMeters() const
 {
-	return itsGraphicalInfo.itsViewHeightInMM;
+	return itsTrueMapViewSizeInfo.singleMapSizeInMM().Y();
 }
