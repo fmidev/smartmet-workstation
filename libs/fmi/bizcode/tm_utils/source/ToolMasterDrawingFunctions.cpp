@@ -280,7 +280,7 @@ static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, checkedVector<floa
 // Parametrit theGridNodesX/Y: Näihin vektoreihin lasketaan käytetyn hilan x- ja y-pisteiden paikat theGridArea:n maailmassa.
 // Parametri theMfcClipRect: Tähän lasketaan piirtoalueen laatikko pikseleissä. Sitä käytetään ei ToolMaster piirroissa.
 // Parametri theTotViewSizeOut: Tähän lasketaan piirtoalueen koko pikseleissä, tietoa käytetään isoviiva labeloinnin harvennukseen.
-void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut)
+void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut, double & dataGridToViewHeightRatioOut)
 {
     float xsi, ysi; // koko CWnd ikkunan piirtoalueen koko [mm]
     int   xpic, ypic; // koko CWnd ikkunan piirtoalueen koko pikseleissä
@@ -311,6 +311,7 @@ void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewR
     double zxmax = zr;
     double zymin = 1. - zb;
     double zymax = 1. - zt;
+    dataGridToViewHeightRatioOut = 1. / (zymax - zymin);
     // Asetetaan kartalla näkyvän alueen koko ja paikka suhteellisessa maailmassa
     XuViewWorldLimits(zxmin, zxmax, zymin, zymax, 0, 0);
     // Asetetaan eri akseleiden suhteita, tärkein on kai tuo x/y suhdeluku
@@ -603,9 +604,6 @@ static void SetupMFCAndDrawShadedPolygons3(ToolmasterHatchPolygonData &theToolma
     pDC->SelectObject(oldPen);
 }
 
-// Tämän testi funktion toteutus on tiedoston lopussa.
-static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY);
-
 bool gDrawTest = false; // Laita tämän arvoksi true, jos haluat nähdä tietyn piirrettän polygonin high-lightauksen.
 
 static void GetReadyAndDoTheHatch(NFmiIsoLineData &theIsoLineData, const NFmiHatchingSettings& theHatchSettings, CDC* pDC, const CRect& theMfcClipRect, int hatchIndex)
@@ -782,8 +780,9 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
 
     CRect mfcClipRect;
     NFmiPoint totalViewSize;
+    auto& dataGridToViewHeightRatio = theIsoLineData.itsDataGridToViewHeightRatio;
 
-    SetupViewWorld(theIsoLineData, theRelViewRect, theZoomedViewRect, theGridArea, gridNodesX, gridNodesY, &mfcClipRect, totalViewSize);
+    SetupViewWorld(theIsoLineData, theRelViewRect, theZoomedViewRect, theGridArea, gridNodesX, gridNodesY, &mfcClipRect, totalViewSize, dataGridToViewHeightRatio);
     XuTextFont(XuSWIM, XuBEST_FIT); // vaikuttaa isoviiva label tekstin fonttiin
 
     // Once a crash report suggested that gridNodesX and gridNodesY were empty even though theIsoLineData had specific values for x- and y-grid dimensions
