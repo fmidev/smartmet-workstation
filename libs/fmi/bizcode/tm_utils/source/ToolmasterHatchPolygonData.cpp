@@ -2,6 +2,7 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiDataModifierMin.h"
 #include "PolygonRelationsToBottomGridRowCalculator.h"
+#include "catlog/catlog.h"
 
 #ifndef DISABLE_UNIRAS_TOOLMASTER
 
@@ -11,14 +12,14 @@
 
 float ToolmasterHatchPolygonData::normallyUsedCoordinateEpsilon_ = std::numeric_limits<float>::epsilon() * 4;
 float ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilonFactor_ = 1.f;
-int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 10;
-int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 12;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 1372;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 1377;
 
 ToolmasterHatchPolygonData::ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings)
     :hatchSettings_(theHatchSettings),
     hatchClassValues_(2, 0)
 {
-    usedToolmasterRelatedBigEpsilon_ = calculateUsedToolmasterEpsilon(static_cast<float>(theIsoLineData.itsSingleSubMapViewHeightInMillimeters));
+    usedToolmasterRelatedBigEpsilon_ = calculateUsedToolmasterEpsilon(static_cast<float>(theIsoLineData.itsSingleSubMapViewHeightInMillimeters), static_cast<float>(theIsoLineData.itsDataGridToViewHeightRatio));
     XuViewWorld();
     XuIsolineSplineSmoothing(1);
 
@@ -278,33 +279,43 @@ bool ToolmasterHatchPolygonData::areTwoPointsExcatlySame(size_t pointIndex1, siz
     return xCoordinatesAreSame && yCoordinatesAreSame;
 }
 
+static bool DoYCoordinateFix(size_t currentCoordinateIndex, const std::vector<CoordinateYStatus> &yCoordinateStatusVector, float wantedRowCoordinateY, std::vector<float>& polygonsCoordinatesY_inOut)
+{
+    if(wantedRowCoordinateY != kFloatMissing)
+    {
+        auto currentStatus = yCoordinateStatusVector[currentCoordinateIndex];
+        if(currentStatus == CoordinateYStatus::BottomRowValue || currentStatus == CoordinateYStatus::BottomRowInToolmasterMarginCase)
+        {
+            // Asetetaan ainakin pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
+            if(polygonsCoordinatesY_inOut[currentCoordinateIndex] != wantedRowCoordinateY)
+            {
+                polygonsCoordinatesY_inOut[currentCoordinateIndex] = wantedRowCoordinateY;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // Toolmasterin laskemissa polygoneissa on joskus pieni vertikaalisuunnassa tapahtuva vika. 
 // T‰m‰ funktio tekee seuraavaa:
 // 1. Tutkii jokaisen polygonin pisteen ja pohjarivin l‰heisyyden (normi epsilon tai isompi erikseen laskettu Toolmaster epsilon)
 // 2. Jos on t‰ll‰isi‰ pisteit‰, asetetaan niiden y-koordinaatti suoraan pohjarivin tasolle.
-// Funktio palauttaa vektorin jossa on tehty korjaukset, jos on tehty mit‰‰n korjauksia, muuten palautetaan vain tyhj‰ vektori.
-std::vector<float> ToolmasterHatchPolygonData::doYPointCoordinateFixes(const std::vector<float>& polygonsCoordinatesY, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY)
+// 3. Sama toiminto myˆs yl‰riville eli sen l‰hell‰ olevat arvot pakotetaan v‰kisin yl‰rivin koordinaatteihin.
+// Funktio palauttaa true:n jossa on tehty yht‰‰n korjauksia, muuten palautetaan vain false.
+bool ToolmasterHatchPolygonData::doYPointCoordinateFixes(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY)
 {
-    auto yCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY, bottomRowCoordinateY);
-    auto correctedCoordinates = polygonsCoordinatesY;
     bool hasAnyCorrectionsBeenMade = false;
-    for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
+
+    auto bottomYCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, bottomRowCoordinateY);
+    auto topYCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, topRowCoordinateY);
+    for(size_t coordinateIndex = 0; coordinateIndex < bottomYCoordinateStatusVector.size(); coordinateIndex++)
     {
-        auto currentStatus = yCoordinateStatusVector[coordinateIndex];
-        if(currentStatus == CoordinateYStatus::BottomRowValue || currentStatus == CoordinateYStatus::BottomRowInToolmasterMarginCase)
-        {
-            // Asetetaan ainakin pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
-            if(correctedCoordinates[coordinateIndex] != bottomRowCoordinateY)
-            {
-                hasAnyCorrectionsBeenMade = true;
-                correctedCoordinates[coordinateIndex] = bottomRowCoordinateY;
-            }
-        }
+        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix(coordinateIndex, bottomYCoordinateStatusVector, bottomRowCoordinateY, polygonsCoordinatesY_inOut);
+        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix(coordinateIndex, topYCoordinateStatusVector, topRowCoordinateY, polygonsCoordinatesY_inOut);
     }
-    if(hasAnyCorrectionsBeenMade)
-        return correctedCoordinates;
-    else
-        return std::vector<float>();
+
+    return hasAnyCorrectionsBeenMade;
 }
 
 std::vector<std::pair<float, float>> ToolmasterHatchPolygonData::getBottomRowXRanges(int currentPolygonIndex, int currentCoordinateDataTotalIndex, float bottomRowCoordinateY)
@@ -358,17 +369,21 @@ void ToolmasterHatchPolygonData::doCoordinateYFixes()
     {
         int polygonCoordinateSize = polygonSizeNumbers_[polygonIndex];
         int intDataSize = polygonDataIntNumberArray_[polygonIndex];
-        size_t polygonsToolmasterGridRowIndex = polygonDataIntArray_[currentIntDataCounter + 1]; // +1:ll‰ saadaan rivi koordinaatti
-        float polygonsBottomCoordinateY = gridRowCoordinateY_[polygonsToolmasterGridRowIndex - 1]; // Toolmaster rivit alkavat 1:st‰, joten hakuindeksi‰ pit‰‰ v‰hent‰‰ 1:ll‰.
+        // +1:ll‰ saadaan rivi koordinaatti
+        size_t polygonsToolmasterGridRowIndex = polygonDataIntArray_[currentIntDataCounter + 1];
+        // Toolmaster rivit alkavat 1:st‰, joten hakuindeksi‰ pit‰‰ v‰hent‰‰ 1:ll‰.
+        float polygonsBottomCoordinateY = gridRowCoordinateY_[polygonsToolmasterGridRowIndex - 1];
+        // Toolmaster rivit alkavat 1:st‰, joten toprivin hakuindeksi‰ bottomRowIndex + 1,
+        // mutta j‰tet‰‰n viimeinen rivi v‰liin
+        float polygonsTopCoordinateY = (polygonsToolmasterGridRowIndex < gridRowCoordinateY_.size()) ? gridRowCoordinateY_[polygonsToolmasterGridRowIndex] : kFloatMissing;
 
         auto startIterX = polygonCoordinateX_.begin() + currentPolygonCoordinateCounter;
         std::vector<float> currentPolygonsCoordinatesX(startIterX, startIterX + polygonCoordinateSize);
         auto startIterY = polygonCoordinateY_.begin() + currentPolygonCoordinateCounter;
         std::vector<float> currentPolygonsCoordinatesY(startIterY, startIterY + polygonCoordinateSize);
-        auto correctedCoordinateYVector = doYPointCoordinateFixes(currentPolygonsCoordinatesY, currentPolygonsCoordinatesX, polygonsBottomCoordinateY);
-        if(!correctedCoordinateYVector.empty())
+        if(doYPointCoordinateFixes(currentPolygonsCoordinatesY, currentPolygonsCoordinatesX, polygonsBottomCoordinateY, polygonsTopCoordinateY))
         {
-            std::copy(correctedCoordinateYVector.begin(), correctedCoordinateYVector.end(), startIterY);
+            std::copy(currentPolygonsCoordinatesY.begin(), currentPolygonsCoordinatesY.end(), startIterY);
         }
 
         currentPolygonCoordinateCounter += polygonCoordinateSize;
@@ -502,12 +517,31 @@ PolygonsBottomEdgeRelation ToolmasterHatchPolygonData::calcPolygonsBottomEdgeRel
 // karttan‰ytˆn korkeudelle.
 // Laskentaan lis‰tty viel‰ kerroin ~1, jolla voidaan manipuloida k‰ytetty‰ kerrointa pinemm‰ksi tai isommaksi,
 // kyseist‰ kerrointa voidaan s‰‰t‰‰ SmartMetin Settings dialogista.
-float ToolmasterHatchPolygonData::calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters)
+float ToolmasterHatchPolygonData::calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters, float dataGridToViewHeightRatio)
 {
     // Kaava on siis laskettu cm korkeuksien kautta, joten parametrina satu korkeus (kaavassa helppouden vuoksi x) pit‰‰ muuttaa mm -> cm
-    float x = singleMapSubViewHeightInMillimeters / 10.f;
-    float usedEpsilon = 0.0102633266165965f - 0.000445812507087464f * x + 0.000004143441586197f * x * x;
-    return usedEpsilon * toolmasterRelatedBigEpsilonFactor_;
+//    float x = (singleMapSubViewHeightInMillimeters * dataGridToViewHeightRatio) / 10.f;
+    // T‰m‰ 1. k‰yr‰ on laskettu kun korkaus oli senttimetrej‰
+//    float usedEpsilon = 0.0102633266165965f - 0.000445812507087464f * x + 0.000004143441586197f * x * x;
+    // T‰m‰ 2. k‰yr‰ on laskettu kun korkaus oli millimetrej‰
+    float x = singleMapSubViewHeightInMillimeters * dataGridToViewHeightRatio;
+//    float usedEpsilon = 0.00954475617363761f - (0.0000605051919599857f * x) + (1.09066572312224e-7f * x * x);
+//    float usedEpsilon = 0.00891144132782511f - 0.000053303290172688f * x + 9.79755940731012e-8f * x * x;
+    float usedEpsilon = 0.00647139762019399f - 0.0000371336919312162f * x + 6.68745551018985e-8f * x * x;
+
+    float finalEpsilon = usedEpsilon * toolmasterRelatedBigEpsilonFactor_;
+    if(CatLog::doTraceLevelLogging())
+    {
+        std::string logMessage = "Hatching epsilon calc: map-view height [mm] = ";
+        logMessage += std::to_string(singleMapSubViewHeightInMillimeters);
+        logMessage += ", epsilon from formula = ";
+        logMessage += std::to_string(usedEpsilon);
+        logMessage += ", final epsilon from factor = ";
+        logMessage += std::to_string(finalEpsilon);
+        CatLog::logMessage(logMessage, CatLog::Severity::Trace, CatLog::Category::Visualization, true);
+    }
+
+    return finalEpsilon;
 }
 
 #endif // DISABLE_UNIRAS_TOOLMASTER

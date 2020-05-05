@@ -95,7 +95,7 @@ private:
     CoordinateYStatus calculateCoordinateYStatus(float value, float bottomRowCoordinateY);
     std::vector<CoordinateYStatus> calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY);
     bool areTwoPointsExcatlySame(size_t pointIndex1, size_t pointIndex2, const std::vector<float>& polygonsCoordinatesX, const std::vector<float>& polygonsCoordinatesY);
-    std::vector<float> doYPointCoordinateFixes(const std::vector<float>& polygonsCoordinatesY, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY);
+    bool doYPointCoordinateFixes(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY);
     std::vector<std::pair<float, float>> getBottomRowXRanges(int currentPolygonIndex, int currentCoordinateDataTotalIndex, float bottomRowCoordinateY);
     void initializeRowInformation();
     void doCoordinateYFixes();
@@ -104,7 +104,7 @@ private:
     void calculatePolygonBottomEdgeTouchings(size_t currentPolygonCoordinateCounter, size_t polygonCoordinateSize, float polygonsBottomCoordinateY);
     void initializePolygonBottomEdgeRelations();
     PolygonsBottomEdgeRelation calcPolygonsBottomEdgeRelation(bool startsInsideLimits, bool changesFromStart);
-    float calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters);
+    float calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters, float dataGridToViewHeightRatio);
 };
 
 #endif // DISABLE_UNIRAS_TOOLMASTER
