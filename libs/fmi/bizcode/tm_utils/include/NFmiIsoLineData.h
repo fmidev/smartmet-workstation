@@ -140,6 +140,7 @@ public:
 	NFmiContourUserDrawData itsContourUserDrawData;
 	// Yhden karttaruudun korkeus millimetreissä, tarvitaan hatch laskuissa
 	double itsSingleSubMapViewHeightInMillimeters = 100.;
+	double itsDataGridToViewHeightRatio = 1.;
 private:
 	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount);
 	void DoBaseInitializationReset();
