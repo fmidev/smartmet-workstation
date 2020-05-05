@@ -7686,23 +7686,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		itsCrossSectionViewSizeInPixels = newSize;
 	}
 
-	// laskee poikkileikkausnäyttöruudukon yhden ruudun koon pikseleissä
-	NFmiPoint ActualCrossSectionBitmapSizeInPixels(void)
-	{
-		return NFmiPoint(itsCrossSectionViewSizeInPixels.X() * itsCrossSectionDataViewFrame.Width()
-							,itsCrossSectionViewSizeInPixels.Y() * itsCrossSectionDataViewFrame.Height());
-	}
-
-	void CrossSectionDataViewFrame(const NFmiRect &theRect)
-	{
-		itsCrossSectionDataViewFrame = theRect;
-	}
-
-	const NFmiRect& CrossSectionDataViewFrame(void)
-	{
-		return itsCrossSectionDataViewFrame;
-	}
-
 	void MustDrawTimeSerialView(bool newValue)
 	{
 		fMustDrawTimeSerialView = newValue;
@@ -10282,7 +10265,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool fRawTempRoundSynopTimes;
 	NFmiPoint itsRawTempUnknownStartLonLat;
 	bool fWarnIfCantSaveWorkingFile; // kaikilla konfiguraatioilla ei voi tallettaa työtiedostoa, eikä siitä tarvitse varoittaa, tämä luetaan settingseistä
-	NFmiRect itsCrossSectionDataViewFrame; // tämän avulla voidaan laskea yhden poikkileikkaus dataikkunan koko pikseleissä
 	NFmiPoint itsCrossSectionViewSizeInPixels; // poikkileikkausnäyttö ikkunan clientti osan koko pikseleissä
 	NFmiHelpEditorSystem itsHelpEditorSystem;
 
@@ -11349,21 +11331,6 @@ const NFmiPoint& NFmiEditMapGeneralDataDoc::CrossSectionViewSizeInPixels(void)
 void NFmiEditMapGeneralDataDoc::CrossSectionViewSizeInPixels(const NFmiPoint& newSize)
 {
 	pimpl->CrossSectionViewSizeInPixels(newSize);
-}
-
-NFmiPoint NFmiEditMapGeneralDataDoc::ActualCrossSectionBitmapSizeInPixels(void)
-{
-	return pimpl->ActualCrossSectionBitmapSizeInPixels();
-}
-
-void NFmiEditMapGeneralDataDoc::CrossSectionDataViewFrame(const NFmiRect &theRect)
-{
-	pimpl->CrossSectionDataViewFrame(theRect);
-}
-
-const NFmiRect& NFmiEditMapGeneralDataDoc::CrossSectionDataViewFrame(void)
-{
-	return pimpl->CrossSectionDataViewFrame();
 }
 
 void NFmiEditMapGeneralDataDoc::MustDrawTimeSerialView(bool newValue)
