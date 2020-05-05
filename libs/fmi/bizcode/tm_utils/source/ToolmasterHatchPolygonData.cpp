@@ -510,24 +510,24 @@ PolygonsBottomEdgeRelation ToolmasterHatchPolygonData::calcPolygonsBottomEdgeRel
 }
 
 // Kokeellisesti haettu kolme pistettä, jossa hatch laskut toimivat hyvin kolmelle eri kokoiselle karttaruudulle.
-// 1. karttaruudun korkeus 23.8 cm => toolmaster-epsilon = 0.002
-// 2. karttaruudun korkeus 13.5 cm => toolmaster-epsilon = 0.005
-// 3. karttaruudun korkeus 7.9 cm => toolmaster-epsilon = 0.007
+// 1. karttaruudun korkeus 300 mm => toolmaster-epsilon = 0.00135
+// 2. karttaruudun korkeus 166 mm => toolmaster-epsilon = 0.00215
+// 3. karttaruudun korkeus  83 mm => toolmaster-epsilon = 0.00385
 // Näiden pisteiden avulla laskettu 2. asteen yhtälö, jonka avulla voidaan laskea sopiva kerroin jokaiselle 
 // karttanäytön korkeudelle.
+// Koska en ole voinut testata 300 mm isommilla näytöillä, ja oletettavasti kerroin isommilla koilla pysyy pienenä tai samana,
+// niin laitetaan ehto että jos x >= 300, niin käytetään usedEpsilon:ina aina 0.00135.
 // Laskentaan lisätty vielä kerroin ~1, jolla voidaan manipuloida käytettyä kerrointa pinemmäksi tai isommaksi,
 // kyseistä kerrointa voidaan säätää SmartMetin Settings dialogista.
 float ToolmasterHatchPolygonData::calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters, float dataGridToViewHeightRatio)
 {
-    // Kaava on siis laskettu cm korkeuksien kautta, joten parametrina satu korkeus (kaavassa helppouden vuoksi x) pitää muuttaa mm -> cm
-//    float x = (singleMapSubViewHeightInMillimeters * dataGridToViewHeightRatio) / 10.f;
-    // Tämä 1. käyrä on laskettu kun korkaus oli senttimetrejä
-//    float usedEpsilon = 0.0102633266165965f - 0.000445812507087464f * x + 0.000004143441586197f * x * x;
-    // Tämä 2. käyrä on laskettu kun korkaus oli millimetrejä
+    const float maximumTestedViewHeight = 300;
+    const float maximumTestedViewHeightEpsilon = 0.00135f;
+
     float x = singleMapSubViewHeightInMillimeters * dataGridToViewHeightRatio;
-//    float usedEpsilon = 0.00954475617363761f - (0.0000605051919599857f * x) + (1.09066572312224e-7f * x * x);
-//    float usedEpsilon = 0.00891144132782511f - 0.000053303290172688f * x + 9.79755940731012e-8f * x * x;
-    float usedEpsilon = 0.00647139762019399f - 0.0000371336919312162f * x + 6.68745551018985e-8f * x * x;
+    float usedEpsilon = maximumTestedViewHeightEpsilon;
+    if(x < maximumTestedViewHeight)
+        usedEpsilon = 0.00647139762019399f - 0.0000371336919312162f * x + 6.68745551018985e-8f * x * x;
 
     float finalEpsilon = usedEpsilon * toolmasterRelatedBigEpsilonFactor_;
     if(CatLog::doTraceLevelLogging())
