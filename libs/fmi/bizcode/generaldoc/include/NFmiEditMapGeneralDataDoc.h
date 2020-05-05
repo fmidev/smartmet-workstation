@@ -378,9 +378,6 @@ public:
 	bool MustDrawCrossSectionView(void);
 	void MustDrawTempView(bool newValue);
 	bool MustDrawTempView(void);
-	void CrossSectionDataViewFrame(const NFmiRect &theRect);
-	const NFmiRect& CrossSectionDataViewFrame(void);
-	NFmiPoint ActualCrossSectionBitmapSizeInPixels(void);
 	const NFmiPoint& CrossSectionViewSizeInPixels(void);
 	void CrossSectionViewSizeInPixels(const NFmiPoint& newSize);
 	NFmiHelpEditorSystem& HelpEditorSystem(void);

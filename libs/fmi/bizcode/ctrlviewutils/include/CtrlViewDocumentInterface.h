@@ -276,11 +276,9 @@ public:
     virtual bool MiddleMouseButtonDown(void) = 0;
     virtual void MiddleMouseButtonDown(bool newState) = 0;
     virtual NFmiDrawParamList* CrossSectionViewDrawParamList(int theRowIndex) = 0;
-    virtual NFmiPoint ActualCrossSectionBitmapSizeInPixels(void) = 0;
     virtual NFmiSmartToolInfo* SmartToolInfo(void) = 0;
     virtual void SetLatestMacroParamErrorText(const std::string& theErrorText) = 0;
     virtual bool CreateCrossSectionViewPopup(int theRowIndex) = 0;
-    virtual void CrossSectionDataViewFrame(const NFmiRect &theRect) = 0;
     virtual const NFmiRect& RelativeMapRect(int theDescTopIndex) = 0;
     virtual bool BetaProductGenerationRunning() = 0;
     virtual const NFmiMetTime& LastEditedDataSendTime() = 0;
