@@ -117,7 +117,7 @@ public:
 	double ClientViewXperYRatio(void){return itsClientViewXperYRatio;};
 	void ClientViewXperYRatio(double theClientViewXperYRatio){itsClientViewXperYRatio = theClientViewXperYRatio;};
 	const NFmiPoint& MapViewSizeInPixels(void){return itsMapViewSizeInPixels;};
-	void MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, bool fHideTimeControlView = false);
+	void MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, double theDrawObjectScaleFactor, bool fHideTimeControlView);
 	int ToggleShowTimeOnMapMode(void);
 	int ShowTimeOnMapMode(void) const {return itsShowTimeOnMapMode;}
 	bool IsTimeControlViewVisible() const;

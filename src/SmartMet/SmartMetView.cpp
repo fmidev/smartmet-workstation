@@ -1236,7 +1236,7 @@ void CSmartMetView::RelativePrintRect(const NFmiRect &theRect)
 
 void CSmartMetView::PrintViewSizeInPixels(const NFmiPoint &theSize)
 {
-	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, itsToolBox->GetDC(), true);
+	GetGeneralDoc()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, itsToolBox->GetDC(), GetGeneralDoc()->ApplicationWinRegistry().DrawObjectScaleFactor(), true);
 }
 
 void CSmartMetView::SetPrintCopyCDC(CDC* pDC)

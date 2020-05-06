@@ -742,14 +742,14 @@ void NFmiMapViewDescTop::CalcClientViewXperYRatio(const NFmiPoint& theViewSize)
 							  (RelativeMapRect().Height() * theViewSize.Y() / itsViewGridSizeVM.Y());
 }
 
-void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, bool fHideTimeControlView)
+void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, double theDrawObjectScaleFactor, bool fHideTimeControlView)
 {
     itsMapViewSizeInPixels = newSize;
 	auto timeControlViewIsHidden = fHideTimeControlView || !IsTimeControlViewVisible();
 
-	itsTrueMapViewSizeInfo.onSize(newSize, pDC, itsViewGridSizeVM, !timeControlViewIsHidden);
+	itsTrueMapViewSizeInfo.onSize(newSize, pDC, itsViewGridSizeVM, !timeControlViewIsHidden, theDrawObjectScaleFactor);
 	// S‰‰det‰‰n smalla suhteellista osiota, mink‰ karttan‰yttˆ ottaa ja j‰tt‰‰ loput aikakontrolli-ikkunalle.
-    int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.pixelsPerMilliMeter().X()));
+    int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.logicalPixelsPerMilliMeter().X()));
     if(timeControlViewIsHidden)
         wantedTimeControlHeightInPixels = 0;
     double mapVerticalPortion = (newSize.Y() - wantedTimeControlHeightInPixels) / newSize.Y();
