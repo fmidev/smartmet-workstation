@@ -5190,12 +5190,13 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
 
 bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
+	auto drawObjectScaleFactor = ApplicationWinRegistry().DrawObjectScaleFactor();
 	auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex, true);
 	if(mapViewDesctop)
 	{
 		// MapViewSizeInPixels(clientPixelSize) -kutsu pit‰‰ olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
-		mapViewDesctop->MapViewSizeInPixels(clientPixelSize, pDC);
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, ApplicationWinRegistry().DrawObjectScaleFactor(), true);
+		mapViewDesctop->MapViewSizeInPixels(clientPixelSize, pDC, drawObjectScaleFactor, !mapViewDesctop->IsTimeControlViewVisible());
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
 
 		// Nyky‰‰n jos kartan koko muuttuu, pit‰‰ macroParam cache tyhjent‰‰, koska sen koko saattaa muuttua.
 		// Laskentahilan koko lasketaan aina uudestaan, jolloin tehd‰‰n hila- vs pikseli-koko vertailuja.
@@ -5210,8 +5211,8 @@ bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, 
 		auto &crossSectionSystem = *CrossSectionSystem();
 		auto& trueMapViewSizeInfo = crossSectionSystem.GetTrueMapViewSizeInfo();
 		NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
-		trueMapViewSizeInfo.onSize(clientPixelSize, pDC, crossSectionViewGridSize,  true);
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(crossSectionSystem.GetGraphicalInfo(), pDC, clientPixelSize, ApplicationWinRegistry().DrawObjectScaleFactor(), true);
+		trueMapViewSizeInfo.onSize(clientPixelSize, pDC, crossSectionViewGridSize,  true, drawObjectScaleFactor);
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(crossSectionSystem.GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
 		return true; // Jos kyse oli poikkileikkausn‰ytˆn asetuksesta, palautetaan true
 	}
 	return false; // Jos kyse oli jostain muusta kuin karttan‰ytˆst‰, palautetaan false sen merkiksi ett‰ mit‰‰n ei tehty

@@ -20,10 +20,10 @@ TrueMapViewSizeInfo::TrueMapViewSizeInfo(const TrueMapViewSizeInfo&) = default;
 TrueMapViewSizeInfo& TrueMapViewSizeInfo::operator=(const TrueMapViewSizeInfo&) = default;
 
 
-void TrueMapViewSizeInfo::onSize(const NFmiPoint& clientPixelSize, CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible)
+void TrueMapViewSizeInfo::onSize(const NFmiPoint& clientPixelSize, CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible, double drawObjectScaleFactor)
 {
 	clientAreaSizeInPixels_ = clientPixelSize;
-	calculateViewSizeInfo(pDC, viewGridSize, isTimeControlViewVisible);
+	calculateViewSizeInfo(pDC, viewGridSize, isTimeControlViewVisible, drawObjectScaleFactor);
 	if(CatLog::doTraceLevelLogging())
 	{
 		std::string message = __FUNCTION__;
@@ -43,7 +43,7 @@ void TrueMapViewSizeInfo::onViewGridSizeChange(const NFmiPoint& viewGridSize, bo
 	}
 }
 
-void TrueMapViewSizeInfo::calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible)
+void TrueMapViewSizeInfo::calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible, double drawObjectScaleFactor)
 {
 	// Päivitetään nämäkin perusarvot joka, jos joku on mennyt säätämään vaikka monitorin asetuksia, 
 	// tai ollaan vaikka eri monitorilla.
@@ -51,7 +51,7 @@ void TrueMapViewSizeInfo::calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewG
 	monitorSizeInMilliMeters_.Y(GetDeviceCaps(pDC->GetSafeHdc(), VERTSIZE));
 	monitorSizeInPixels_.X(GetDeviceCaps(pDC->GetSafeHdc(), HORZRES));
 	monitorSizeInPixels_.Y(GetDeviceCaps(pDC->GetSafeHdc(), VERTRES));
-	updatePixelsPerMilliMeterValues();
+	updatePixelsPerMilliMeterValues(pDC, drawObjectScaleFactor);
 	updateMapSizes(viewGridSize, isTimeControlViewVisible);
 }
 
@@ -69,10 +69,18 @@ void TrueMapViewSizeInfo::updateMapSizes(const NFmiPoint &viewGridSize, bool isT
 }
 
 
-void TrueMapViewSizeInfo::updatePixelsPerMilliMeterValues()
+void TrueMapViewSizeInfo::updatePixelsPerMilliMeterValues(CDC* pDC, double drawObjectScaleFactor)
 {
 	pixelsPerMilliMeter_.X(monitorSizeInPixels_.X() / monitorSizeInMilliMeters_.X());
 	pixelsPerMilliMeter_.Y(monitorSizeInPixels_.Y() / monitorSizeInMilliMeters_.Y());
+
+
+	int logpixX = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSX);
+	int logpixY = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSY);
+	double inchToMillimeterConversion = 25.4;
+	// muutos dpi-maailmasta (dots-per-inch) dpmm (dots-per-mm) + konekohtainen skaalauskerroin
+	logicalPixelsPerMilliMeter_.X((logpixX / inchToMillimeterConversion) * drawObjectScaleFactor);
+	logicalPixelsPerMilliMeter_.Y((logpixY / inchToMillimeterConversion) * drawObjectScaleFactor);
 }
 
 double TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(double thePixelsPerMilliMeterX)

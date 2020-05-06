@@ -172,7 +172,7 @@ void CFmiExtraMapView::RelativePrintRect(const NFmiRect &theRect)
 
 void CFmiExtraMapView::PrintViewSizeInPixels(const NFmiPoint &theSize)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, itsToolBox->GetDC(), true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, itsToolBox->GetDC(), itsSmartMetDocumentInterface->ApplicationWinRegistry().DrawObjectScaleFactor(), true);
 }
 
 void CFmiExtraMapView::SetPrintCopyCDC(CDC* pDC)
