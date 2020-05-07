@@ -12,8 +12,8 @@
 
 float ToolmasterHatchPolygonData::normallyUsedCoordinateEpsilon_ = std::numeric_limits<float>::epsilon() * 4;
 float ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilonFactor_ = 1.f;
-int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 1372;
-int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 1377;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 195;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 73;
 
 ToolmasterHatchPolygonData::ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings)
     :hatchSettings_(theHatchSettings),
@@ -252,22 +252,31 @@ std::pair<bool, size_t> ToolmasterHatchPolygonData::isSingleBottomRowTouchingCas
     return std::make_pair(false, 0); // false tapauksessa indeksillä ei ole väliä, joten laitetaan se vain 0:ksi
 }
 
-CoordinateYStatus ToolmasterHatchPolygonData::calculateCoordinateYStatus(float value, float bottomRowCoordinateY)
+CoordinateYStatus ToolmasterHatchPolygonData::calculateCoordinateYStatus(float value, float bottomRowCoordinateY, float topRowCoordinateY)
 {
-    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, normallyUsedCoordinateEpsilon_))
-        return CoordinateYStatus::BottomRowValue;
-    if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, usedToolmasterRelatedBigEpsilon_))
-        return CoordinateYStatus::BottomRowInToolmasterMarginCase;
-
-    return CoordinateYStatus::NotBottomRowValue;
+    if(std::abs(value - bottomRowCoordinateY) < std::abs(value - topRowCoordinateY))
+    {
+        if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, normallyUsedCoordinateEpsilon_))
+            return CoordinateYStatus::BottomRowValue;
+        if(CtrlViewUtils::IsEqualEnough(value, bottomRowCoordinateY, usedToolmasterRelatedBigEpsilon_))
+            return CoordinateYStatus::BottomRowInToolmasterMarginCase;
+    }
+    else
+    {
+        if(CtrlViewUtils::IsEqualEnough(value, topRowCoordinateY, normallyUsedCoordinateEpsilon_))
+            return CoordinateYStatus::TopRowValue;
+        if(CtrlViewUtils::IsEqualEnough(value, topRowCoordinateY, usedToolmasterRelatedBigEpsilon_))
+            return CoordinateYStatus::TopRowInToolmasterMarginCase;
+    }
+    return CoordinateYStatus::ClearMiddleValue;
 }
 
-std::vector<CoordinateYStatus> ToolmasterHatchPolygonData::calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY)
+std::vector<CoordinateYStatus> ToolmasterHatchPolygonData::calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY, float topRowCoordinateY)
 {
     std::vector<CoordinateYStatus> statusVector;
     for(auto coordinateY : polygonsCoordinatesY)
     {
-        statusVector.push_back(calculateCoordinateYStatus(coordinateY, bottomRowCoordinateY));
+        statusVector.push_back(calculateCoordinateYStatus(coordinateY, bottomRowCoordinateY, topRowCoordinateY));
     }
     return statusVector;
 }
@@ -279,17 +288,31 @@ bool ToolmasterHatchPolygonData::areTwoPointsExcatlySame(size_t pointIndex1, siz
     return xCoordinatesAreSame && yCoordinatesAreSame;
 }
 
-static bool DoYCoordinateFix(size_t currentCoordinateIndex, const std::vector<CoordinateYStatus> &yCoordinateStatusVector, float wantedRowCoordinateY, std::vector<float>& polygonsCoordinatesY_inOut)
+static bool DoYCoordinateFix(size_t currentCoordinateIndex, const std::vector<CoordinateYStatus> &yCoordinateStatusVector, float wantedBottomRowCoordinateY, float wantedTopRowCoordinateY, std::vector<float>& polygonsCoordinatesY_inOut)
 {
-    if(wantedRowCoordinateY != kFloatMissing)
+    auto &modifiedCoordinateY = polygonsCoordinatesY_inOut[currentCoordinateIndex];
+    auto relativeOffsetLimit = std::abs(wantedTopRowCoordinateY - wantedBottomRowCoordinateY) / 3.f;
+    auto currentStatus = yCoordinateStatusVector[currentCoordinateIndex];
+    if(wantedBottomRowCoordinateY != kFloatMissing && (currentStatus == CoordinateYStatus::BottomRowValue || currentStatus == CoordinateYStatus::BottomRowInToolmasterMarginCase))
     {
-        auto currentStatus = yCoordinateStatusVector[currentCoordinateIndex];
-        if(currentStatus == CoordinateYStatus::BottomRowValue || currentStatus == CoordinateYStatus::BottomRowInToolmasterMarginCase)
+        if(std::abs(modifiedCoordinateY - wantedBottomRowCoordinateY) <= relativeOffsetLimit)
         {
-            // Asetetaan ainakin pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
-            if(polygonsCoordinatesY_inOut[currentCoordinateIndex] != wantedRowCoordinateY)
+            // Asetetaan pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
+            if(polygonsCoordinatesY_inOut[currentCoordinateIndex] != wantedBottomRowCoordinateY)
             {
-                polygonsCoordinatesY_inOut[currentCoordinateIndex] = wantedRowCoordinateY;
+                polygonsCoordinatesY_inOut[currentCoordinateIndex] = wantedBottomRowCoordinateY;
+                return true;
+            }
+        }
+    }
+    else if(wantedTopRowCoordinateY != kFloatMissing && (currentStatus == CoordinateYStatus::TopRowValue || currentStatus == CoordinateYStatus::TopRowInToolmasterMarginCase))
+    {
+        if(std::abs(modifiedCoordinateY - wantedTopRowCoordinateY) <= relativeOffsetLimit)
+        {
+            // Asetetaan pohjariviin liitetty y-koordinaatti tarkalleen pohjarivin
+            if(polygonsCoordinatesY_inOut[currentCoordinateIndex] != wantedTopRowCoordinateY)
+            {
+                polygonsCoordinatesY_inOut[currentCoordinateIndex] = wantedTopRowCoordinateY;
                 return true;
             }
         }
@@ -307,12 +330,10 @@ bool ToolmasterHatchPolygonData::doYPointCoordinateFixes(std::vector<float>& pol
 {
     bool hasAnyCorrectionsBeenMade = false;
 
-    auto bottomYCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, bottomRowCoordinateY);
-    auto topYCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, topRowCoordinateY);
-    for(size_t coordinateIndex = 0; coordinateIndex < bottomYCoordinateStatusVector.size(); coordinateIndex++)
+    auto yCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, bottomRowCoordinateY, topRowCoordinateY);
+    for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
     {
-        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix(coordinateIndex, bottomYCoordinateStatusVector, bottomRowCoordinateY, polygonsCoordinatesY_inOut);
-        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix(coordinateIndex, topYCoordinateStatusVector, topRowCoordinateY, polygonsCoordinatesY_inOut);
+        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix(coordinateIndex, yCoordinateStatusVector, bottomRowCoordinateY, topRowCoordinateY, polygonsCoordinatesY_inOut);
     }
 
     return hasAnyCorrectionsBeenMade;
