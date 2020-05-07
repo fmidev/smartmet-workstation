@@ -74,5 +74,7 @@ enum class CoordinateYStatus
     NoValue = 0,
     BottomRowValue,
     BottomRowInToolmasterMarginCase,
-    NotBottomRowValue
+    TopRowValue,
+    TopRowInToolmasterMarginCase,
+    ClearMiddleValue
 };
