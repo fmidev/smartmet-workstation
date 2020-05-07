@@ -68,7 +68,10 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   NFmiInfoAreaMask &operator=(const NFmiInfoAreaMask &theMask) = delete;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
+  double ValueFinal(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways);
   double HeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams) override;
   double PressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams) override;
 
@@ -145,6 +148,7 @@ protected:
   // jos fUsePressureLevelInterpolation on true, käytetään laskuissa tätä painepintaa
   double itsUsedPressureLevelValue;  
   MetaParamDataHolder metaParamDataHolder;
+  bool fIsModelClimatologyData = false;
 
   template<typename GetFunction>
   float CalcMetaParamValueWithFunction(GetFunction getFunction)

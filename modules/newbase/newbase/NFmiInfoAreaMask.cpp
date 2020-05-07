@@ -195,7 +195,8 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
       fIsTimeIntepolationNeededInValue(theOther.fIsTimeIntepolationNeededInValue),
       fUsePressureLevelInterpolation(theOther.fUsePressureLevelInterpolation),
       itsUsedPressureLevelValue(theOther.itsUsedPressureLevelValue),
-      metaParamDataHolder(theOther.metaParamDataHolder)
+      metaParamDataHolder(theOther.metaParamDataHolder),
+      fIsModelClimatologyData(theOther.fIsModelClimatologyData)
 {
 }
 
@@ -205,6 +206,7 @@ void NFmiInfoAreaMask::DoConstructorInitializations(unsigned long thePossibleMet
   {
     metaParamDataHolder.initialize(itsInfo, thePossibleMetaParamId);
     if (itsInfo->Level()) itsLevel = *itsInfo->Level();
+    fIsModelClimatologyData = NFmiFastInfoUtils::IsModelClimatologyData(itsInfo);
   }
 }
 
@@ -223,7 +225,7 @@ bool NFmiInfoAreaMask::Time(const NFmiMetTime &theTime)
   if (itsInfo)
   {
     itsTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, theTime);
-    bool status = itsInfo->Time(theTime);
+    bool status = itsInfo->Time(itsTime);
     // Jos tämän jälkeen käytetään samaa aikaa Value-metodissa, ei aikainterpolointia tarvitse
     // tehdä, jos aika löytyi.
     fIsTimeIntepolationNeededInValue = !status;
@@ -325,6 +327,22 @@ bool NFmiInfoAreaMask::IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlway
 
 double NFmiInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams,
                                bool fUseTimeInterpolationAlways)
+{
+  if (fIsModelClimatologyData)
+  {
+    NFmiCalculationParams usedCalculationParams(theCalculationParams);
+    usedCalculationParams.itsTime =
+        NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, theCalculationParams.itsTime);
+    return ValueFinal(usedCalculationParams, fUseTimeInterpolationAlways);
+  }
+  else
+  {
+    return ValueFinal(theCalculationParams, fUseTimeInterpolationAlways);
+  }
+}
+
+double NFmiInfoAreaMask::ValueFinal(const NFmiCalculationParams &theCalculationParams,
+                  bool fUseTimeInterpolationAlways)
 {
   if (metaParamDataHolder.isMetaParameterCalculationNeeded())
     return CalcMetaParamValue(theCalculationParams);
@@ -1928,65 +1946,13 @@ void NFmiInfoAreaMaskVertFunc::FindCalculatedLeves(const NFmiLocationCache &theL
   }
 }
 
-// Jos theValue arvo on puuttuvaa, tutkitaan meneekö theHeightValue korkeus alle datan maanpinnan
-// läheisen kerroksen. Jos menee, palautetaan arvo suoraan maanpinnan läheisestä levelistä
-static float DoLowestLevelHeightValueClamp(float theValue,
-                                           boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                           const NFmiCalculationParams &theCalculationParams,
-                                           float theHeightValue)
-{
-  // Jos theValue:lla oli jo arvo, palautetaan se
-  if (theValue != kFloatMissing) return theValue;
-
-  auto wantedParamIndex = theInfo->ParamIndex();
-  bool useSubParam = theInfo->IsSubParamUsed();
-  theInfo->ParamIndex(theInfo->HeightParamIndex());
-  theInfo->FirstLevel();
-  float heigth1 =
-      theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-  theInfo->LastLevel();
-  float heigth2 =
-      theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-  theInfo->ParamIndex(wantedParamIndex);  // palauta originaali parametri
-  theInfo->SetIsSubParamUsed(useSubParam);
-
-  // Jos alimman tai ylimmän kerroksen korkeusarvo on puuttuvaa ei kannata jatkaa
-  if (heigth1 == kFloatMissing || heigth2 == kFloatMissing) return theValue;
-
-  // Vaikka oletus on todettu että interpolaatio haluttuun korkeuteen epäonnistui, koska korkeus oli
-  // alle datan maanpinnan läheimmän korkeuden, se ei pidä paikkaansa kun korkeuksia lasketaan
-  // toisella tapaa. Eli pitää antaa anteeksi vaikka täällä laskettu heigth1/2 olisikin himpun
-  // verran korkeammalla kuin haluttu korkeus. Ongelma on että aiemmin lasketun QueryInfon
-  // HeightValue -metodilla lasketussa arvossa pari neljästä bilinear interpolaatio pisteessä haettu
-  // korkeus menee alle datan, mutta interpolated value metodin kanssa ei ole samaa ongelmaa.
-  const float heightEpsBS = 0.15f;
-  // Jos halutun korkeuden arvo ei ole matalampi kuin alimman ja ylimmän kerroksen korkeusarvo , ei
-  // kannata jatkaa
-  if (theHeightValue - heightEpsBS >= heigth1 || theHeightValue - heightEpsBS >= heigth2)
-    return theValue;
-
-  if (theInfo->HeightParamIsRising())
-  {
-    // 1. level on maanpinnan läheinen
-    theInfo->FirstLevel();
-    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-  }
-  else
-  {
-    // viimeinen level on maanpinnan läheinen
-    theInfo->LastLevel();
-    return theInfo->InterpolatedValue(theCalculationParams.itsLatlon, theCalculationParams.itsTime);
-  }
-}
-
 float NFmiInfoAreaMaskVertFunc::DoGetFunction(const NFmiLocationCache &theLocationCache,
                                               const NFmiCalculationParams &theCalculationParams,
                                               float theLevelValue)
 {
   if (itsSecondaryFunc == NFmiAreaMask::VertZ)
   {
-    float value = static_cast<float>(HeightValue(theLevelValue, theCalculationParams));
-    return ::DoLowestLevelHeightValueClamp(value, itsInfo, theCalculationParams, theLevelValue);
+    return static_cast<float>(HeightValue(theLevelValue, theCalculationParams));
   }
   else if (itsSecondaryFunc == NFmiAreaMask::VertP || itsSecondaryFunc == NFmiAreaMask::VertFL)
   {
