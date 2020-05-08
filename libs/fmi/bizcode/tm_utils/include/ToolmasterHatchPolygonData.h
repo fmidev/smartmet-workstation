@@ -56,6 +56,31 @@ public:
     static int debugHelperWantedPolygonIndex1_;
     static int debugHelperWantedPolygonIndex2_;
 
+
+    template<typename T>
+    static std::pair<T, size_t> getPreviousValue(size_t index, const std::vector<T>& values)
+    {
+        size_t previousIndex = index - 1;
+        // Jos ollaan alussa, kurkataan arvo reunan yli lopusta
+        if(index == 0)
+            previousIndex = values.size() - 1;
+
+        return std::make_pair(values[previousIndex], previousIndex);
+    }
+
+    template<typename T>
+    static std::pair<T, size_t> getNextValue(size_t index, const std::vector<T>& values)
+    {
+        size_t nextIndex = index + 1;
+        // Jos ollaan lopussa, kurkataan arvo reunan yli alusta
+        if(index == values.size() - 1)
+            nextIndex = 0;
+
+        return std::make_pair(values[nextIndex], nextIndex);
+    }
+
+    static bool areTwoPointsExcatlySame(size_t pointIndex1, size_t pointIndex2, const std::vector<float>& polygonsCoordinatesX, const std::vector<float>& polygonsCoordinatesY);
+
 private:
 
     bool isHatchPolygonDrawn(const std::vector<int>& bottomRowPointsInsidePolygon, const std::vector<int>& bottomRowPointValuesInsideHatchLimits);
@@ -68,33 +93,9 @@ private:
     bool isPointInsideXRanges(const FloatPoint& point, const std::vector<std::pair<float, float>>& botttomRowXRanges);
     bool isValueInsideRange(float value, const std::pair<float, float>& range);
     std::pair<float, float> calculateTotalValueRange(const std::vector<float>& polygonsCoordinates);
-
-    template<typename T>
-    std::pair<T, size_t> getPreviousValue(size_t index, const std::vector<T>& values)
-    {
-        size_t previousIndex = index - 1;
-        // Jos ollaan alussa, kurkataan arvo reunan yli lopusta
-        if(index == 0)
-            previousIndex = values.size() - 1;
-
-        return std::make_pair(values[previousIndex], previousIndex);
-    }
-
-    template<typename T>
-    std::pair<T, size_t> getNextValue(size_t index, const std::vector<T>& values)
-    {
-        size_t nextIndex = index + 1;
-        // Jos ollaan lopussa, kurkataan arvo reunan yli alusta
-        if(index == values.size() - 1)
-            nextIndex = 0;
-
-        return std::make_pair(values[nextIndex], nextIndex);
-    }
-
     std::pair<bool, size_t> isSingleBottomRowTouchingCase(size_t coordinateIndex, const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY);
     CoordinateYStatus calculateCoordinateYStatus(float value, float bottomRowCoordinateY, float topRowCoordinateY);
     std::vector<CoordinateYStatus> calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY, float topRowCoordinateY);
-    bool areTwoPointsExcatlySame(size_t pointIndex1, size_t pointIndex2, const std::vector<float>& polygonsCoordinatesX, const std::vector<float>& polygonsCoordinatesY);
     bool doYPointCoordinateFixes(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY);
     std::vector<std::pair<float, float>> getBottomRowXRanges(int currentPolygonIndex, int currentCoordinateDataTotalIndex, float bottomRowCoordinateY);
     void initializeRowInformation();
