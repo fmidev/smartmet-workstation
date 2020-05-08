@@ -76,5 +76,22 @@ enum class CoordinateYStatus
     BottomRowInToolmasterMarginCase,
     TopRowValue,
     TopRowInToolmasterMarginCase,
+    BothRowsInToolmasterMarginCase, // virhemarginaali on niin suuri ett‰ piste ylt‰‰ molempiin riveihin sen puitteissa
     ClearMiddleValue
+};
+
+enum class PolygonPointFixStatus
+{
+    NoValue = 0,
+    NoFixNeeded,
+    // Jos piste on normi epsilonin virhemarginaaleissa, varmistetaan etta se saa tarkan pohjarivi arvon
+    AccuracyBottomFixNeeded,
+    // Ollaan ison virhemarginaalin sisalla pohjarivista ja korjaus tarvitaan
+    BottomFixNeeded,
+    // Jos piste on normi epsilonin virhemarginaaleissa, varmistetaan etta se saa tarkan ylarivi arvon
+    AccuracyTopFixNeeded,
+    // Ollaan ison virhemarginaalin sisalla ylarivista ja korjaus tarvitaan
+    TopFixNeeded,
+    // Virhemarginaali on niin iso etta voidaan yhdistaa molempiin riveihin, jatko tarkasteluja vaaditaan.
+    BothFixesPossible
 };
