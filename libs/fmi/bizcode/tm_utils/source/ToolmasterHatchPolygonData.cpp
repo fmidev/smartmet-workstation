@@ -12,8 +12,11 @@
 
 float ToolmasterHatchPolygonData::normallyUsedCoordinateEpsilon_ = std::numeric_limits<float>::epsilon() * 4;
 float ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilonFactor_ = 1.f;
-int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 1970;
+int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex1_ = 757;
 int ToolmasterHatchPolygonData::debugHelperWantedPolygonIndex2_ = 0;
+
+const float g_minimumEdgeWidthLength = 0.2f;
+
 
 ToolmasterHatchPolygonData::ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings)
     :hatchSettings_(theHatchSettings),
@@ -410,11 +413,10 @@ public:
 // edgeWidth on etaisyys siihen viereiseen pisteeseen, joka on kauempana.
 static PolygonPointFixStatus calculateMarginCaseFixStatus(float edgeWidth, CoordinateYStatus currentCoordinateYStatus, CoordinateYStatus neighborCoordinateYStatus, MarginFixCalculator & marginFixCalculator_inOut)
 {
-    const float minimumEdgeWidthLength = 0.35f;
     PolygonPointFixStatus usedFixStatus = PolygonPointFixStatus::NoFixNeeded;
     if(currentCoordinateYStatus == CoordinateYStatus::BottomRowInToolmasterMarginCase)
     {
-        if(neighborCoordinateYStatus == CoordinateYStatus::BottomRowValue && edgeWidth >= minimumEdgeWidthLength)
+        if(neighborCoordinateYStatus == CoordinateYStatus::BottomRowValue && edgeWidth >= g_minimumEdgeWidthLength)
         {
             usedFixStatus = PolygonPointFixStatus::BottomFixNeeded;
             marginFixCalculator_inOut.addFix(usedFixStatus, edgeWidth);
@@ -422,7 +424,7 @@ static PolygonPointFixStatus calculateMarginCaseFixStatus(float edgeWidth, Coord
     }
     else if(currentCoordinateYStatus == CoordinateYStatus::TopRowInToolmasterMarginCase)
     {
-        if(neighborCoordinateYStatus == CoordinateYStatus::TopRowValue && edgeWidth >= minimumEdgeWidthLength)
+        if(neighborCoordinateYStatus == CoordinateYStatus::TopRowValue && edgeWidth >= g_minimumEdgeWidthLength)
         {
             usedFixStatus = PolygonPointFixStatus::TopFixNeeded;
             marginFixCalculator_inOut.addFix(usedFixStatus, edgeWidth);
@@ -473,6 +475,16 @@ static void doFinalFixVectorForOneRowOnly(bool bottomRowCase, std::vector<Polygo
     }
 }
 
+// Tee uusiksi seuraavasti :
+// 1. Tee looppi, missa kaydaan lapi fixStatusVector_inOut
+// 2. Jos both - case
+// 3. Tarkista onko jo tehty korjauksi yla / alariviin
+// 4. Katso onko korjaus mahdollista tehda molempiin riveihin oikeasti
+// 5. Jos vain toiseen, yrita tehda niin
+// 6. Jos molempiin, kqtso onko parempaa ehdokasriviin jo tehty korjauksia
+// 7. Jos ei tee korjaus parempaan
+// 8. Jos oli tee korjaus huonompaan
+// 9. Onko 2 korjausta per polygoni maksimi, vai sallitaanko 2 n. 0.4 pituista korjausta per puoli ?
 static void doFinalFixVectorForGeneralCase(std::vector<PolygonPointFixStatus>& fixStatusVector_inOut, std::vector<CoordinateYStatus>& coordinateYStatusVector_inOut, const std::vector<float>& polygonEdgeRelativeWidths, MarginFixCalculator& marginFixCalculator_inOut)
 {
     for(auto pointIndex = 0ull; pointIndex < fixStatusVector_inOut.size(); pointIndex++)
@@ -521,6 +533,48 @@ static void doFinalFixVectorForGeneralCase(std::vector<PolygonPointFixStatus>& f
     }
 }
 
+static void doForceFixCheckForRectangularPolygonCase(std::vector<PolygonPointFixStatus>& fixStatusVector_inOut, std::vector<CoordinateYStatus>& coordinateYStatusVector_inOut, const std::vector<float>& polygonEdgeRelativeWidths, MarginFixCalculator& marginFixCalculator_inOut)
+{
+    if(fixStatusVector_inOut.size() == 5)
+    {
+        auto bottomRowCount = std::count(coordinateYStatusVector_inOut.begin(), coordinateYStatusVector_inOut.end(), CoordinateYStatus::BottomRowValue);
+        auto topRowCount = std::count(coordinateYStatusVector_inOut.begin(), coordinateYStatusVector_inOut.end(), CoordinateYStatus::TopRowValue);
+        auto clearMiddleCount = std::count(coordinateYStatusVector_inOut.begin(), coordinateYStatusVector_inOut.end(), CoordinateYStatus::ClearMiddleValue);
+        auto samePointCoordinateYStatus = coordinateYStatusVector_inOut[0];
+        if(samePointCoordinateYStatus == CoordinateYStatus::BottomRowValue)
+            bottomRowCount--;
+        else if(samePointCoordinateYStatus == CoordinateYStatus::TopRowValue)
+            topRowCount--;
+        else if(samePointCoordinateYStatus == CoordinateYStatus::ClearMiddleValue)
+            clearMiddleCount--;
+        if(clearMiddleCount == 1 && (bottomRowCount + topRowCount == 3))
+        {
+            auto reallyLongEdgeCount = std::count_if(polygonEdgeRelativeWidths.begin(), polygonEdgeRelativeWidths.end(), 
+                [](auto lengthValue) {return lengthValue >= 0.9f; });
+            if(reallyLongEdgeCount == 2)
+            {
+                auto nonEdgePointIter = std::find(coordinateYStatusVector_inOut.begin(), coordinateYStatusVector_inOut.end(), CoordinateYStatus::ClearMiddleValue);
+                if(nonEdgePointIter != coordinateYStatusVector_inOut.end())
+                {
+                    auto fixedIndex = nonEdgePointIter - coordinateYStatusVector_inOut.begin();
+                    if(bottomRowCount == 2)
+                    {
+                        coordinateYStatusVector_inOut[fixedIndex] = CoordinateYStatus::TopRowInToolmasterMarginCase;
+                        fixStatusVector_inOut[fixedIndex] = PolygonPointFixStatus::TopFixNeeded;
+                        marginFixCalculator_inOut.addFix(PolygonPointFixStatus::TopFixNeeded, polygonEdgeRelativeWidths[fixedIndex]);
+                    }
+                    else if(topRowCount == 2)
+                    {
+                        coordinateYStatusVector_inOut[fixedIndex] = CoordinateYStatus::BottomRowInToolmasterMarginCase;
+                        fixStatusVector_inOut[fixedIndex] = PolygonPointFixStatus::BottomFixNeeded;
+                        marginFixCalculator_inOut.addFix(PolygonPointFixStatus::BottomFixNeeded, polygonEdgeRelativeWidths[fixedIndex]);
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Jos fixStatusVector_inOut:issa on BothFixesPossible arvoja, pitaa ne viela tarkastella erikseen:
 // 1. Tarkista yhtään BothFixesPossible arvoa.
 // 2. Jos löytyy laske kuinka monta uniikkia tarkkaa bottom-row pistetta on
@@ -528,11 +582,12 @@ static void doFinalFixVectorForGeneralCase(std::vector<PolygonPointFixStatus>& f
 // 4. Jos jompi kumpi lukema on 0, tee tarkastelu toiseen riviin (pitaa tehda viela mm. edgen pituus tarkasteluja)
 // 5. Jos jompi kumpi lukema on 1 ja toisessa on enemman kuin 1, tee tarkastelut sen rivin kanssa, jossa lukema oli 1
 // 6. Jos molempien rivien lukemia enemman kuin 1, tee tarkastelut lahempaan reunaan
-static void doFinalFixVectorChecks(std::vector<PolygonPointFixStatus>& fixStatusVector_inOut, std::vector<CoordinateYStatus>& coordinateYStatusVector_inOut, const std::vector<float>& polygonEdgeRelativeWidths, size_t samePointIndex, MarginFixCalculator& marginFixCalculator_inOut)
+static void doFinalFixVectorChecks(std::vector<PolygonPointFixStatus>& fixStatusVector_inOut, std::vector<CoordinateYStatus>& coordinateYStatusVector_inOut, const std::vector<float>& polygonEdgeRelativeWidths, MarginFixCalculator& marginFixCalculator_inOut)
 {
     auto bothFixesPossibleCount = std::count(fixStatusVector_inOut.begin(), fixStatusVector_inOut.end(), PolygonPointFixStatus::BothFixesPossible);
     if(bothFixesPossibleCount)
     {
+        const size_t samePointIndex = 0; // polygonin 1. ja viimeinen piste ovat aina identtisia
         auto samePointCoordinateYStatus = coordinateYStatusVector_inOut[samePointIndex];
         auto bottomRowCount = std::count(coordinateYStatusVector_inOut.begin(), coordinateYStatusVector_inOut.end(), CoordinateYStatus::BottomRowValue);
         if(samePointCoordinateYStatus == CoordinateYStatus::BottomRowValue)
@@ -543,28 +598,21 @@ static void doFinalFixVectorChecks(std::vector<PolygonPointFixStatus>& fixStatus
         if(bottomRowCount == 0 && topRowCount == 0)
             return;
         if(bottomRowCount == 0)
-            doFinalFixVectorForOneRowOnly(false, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
+            ::doFinalFixVectorForOneRowOnly(false, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
         else if(topRowCount == 0)
-            doFinalFixVectorForOneRowOnly(true, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
+            ::doFinalFixVectorForOneRowOnly(true, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
         else
         {
-            if(marginFixCalculator_inOut.hasBottomFix())
-                doFinalFixVectorForOneRowOnly(false, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
-            else if(marginFixCalculator_inOut.hasTopFix())
-                doFinalFixVectorForOneRowOnly(true, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
-            else if(bottomRowCount == 1 && topRowCount > 1)
-                doFinalFixVectorForOneRowOnly(true, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
-            else if(topRowCount == 1 && bottomRowCount > 1)
-                doFinalFixVectorForOneRowOnly(false, fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
-            else
-            {
-                doFinalFixVectorForGeneralCase(fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
-            }
+            ::doFinalFixVectorForGeneralCase(fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
         }
+    }
+    else
+    {
+        ::doForceFixCheckForRectangularPolygonCase(fixStatusVector_inOut, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator_inOut);
     }
 }
 
-static std::vector<PolygonPointFixStatus> calculatePolygonPointFixStatusVector(std::vector<CoordinateYStatus> & coordinateYStatusVector_inOut, const std::vector<float>& polygonEdgeRelativeWidths, size_t samePointIndex)
+static std::vector<PolygonPointFixStatus> calculatePolygonPointFixStatusVector(std::vector<CoordinateYStatus> & coordinateYStatusVector_inOut, const std::vector<float>& polygonEdgeRelativeWidths)
 {
     MarginFixCalculator marginFixCalculator;
     std::vector<PolygonPointFixStatus> fixStatusVector;
@@ -593,28 +641,9 @@ static std::vector<PolygonPointFixStatus> calculatePolygonPointFixStatusVector(s
         }
     }
 
-    ::doFinalFixVectorChecks(fixStatusVector, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, samePointIndex, marginFixCalculator);
+    ::doFinalFixVectorChecks(fixStatusVector, coordinateYStatusVector_inOut, polygonEdgeRelativeWidths, marginFixCalculator);
 
     return fixStatusVector;
-}
-
-static size_t calculateSamePointIndex(const std::vector<float>& polygonsCoordinatesX, const std::vector<float>& polygonsCoordinatesY)
-{
-    for(auto pointIndex = 0ull; pointIndex < polygonsCoordinatesX.size(); pointIndex++)
-    {
-        if(pointIndex < polygonsCoordinatesX.size() - 1)
-        {
-            if(ToolmasterHatchPolygonData::areTwoPointsExcatlySame(pointIndex, pointIndex + 1, polygonsCoordinatesX, polygonsCoordinatesY))
-                return pointIndex;
-        }
-        else
-        {
-            // kurkataan lopun yli alkuun eli 0-indeksiin
-            if(ToolmasterHatchPolygonData::areTwoPointsExcatlySame(pointIndex, 0, polygonsCoordinatesX, polygonsCoordinatesY))
-                return 0;
-        }
-    }
-    return 0; // en tieda mita pitaisi palauttaa jos ei loydy samaa, aina pitaisi olla kaksi samaa pistetta
 }
 
 bool ToolmasterHatchPolygonData::doYPointCoordinateFixes(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY)
@@ -623,8 +652,7 @@ bool ToolmasterHatchPolygonData::doYPointCoordinateFixes(std::vector<float>& pol
 
     auto yCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, bottomRowCoordinateY, topRowCoordinateY);
     auto edgeRelativeWidths = ::calculatePolygonEdgeRelativeWidths(polygonsCoordinatesX);
-    auto samePointIndex = ::calculateSamePointIndex(polygonsCoordinatesX, polygonsCoordinatesY_inOut);
-    auto polygonPointFixStatusVector = ::calculatePolygonPointFixStatusVector(yCoordinateStatusVector, edgeRelativeWidths, samePointIndex);
+    auto polygonPointFixStatusVector = ::calculatePolygonPointFixStatusVector(yCoordinateStatusVector, edgeRelativeWidths);
     for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
     {
         hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix_ver2(coordinateIndex, polygonPointFixStatusVector, bottomRowCoordinateY, topRowCoordinateY, polygonsCoordinatesY_inOut);
@@ -632,6 +660,154 @@ bool ToolmasterHatchPolygonData::doYPointCoordinateFixes(std::vector<float>& pol
 
     return hasAnyCorrectionsBeenMade;
 }
+
+class FixedPointCandidateData
+{
+public:
+    FixedPointCandidateData() = default;
+    FixedPointCandidateData(size_t fixedPointIndex, size_t fixedEdgePointIndex, CoordinateYStatus fixedEdgePointYStatus, float edgeLength)
+        :fixedPointIndex_(fixedPointIndex)
+        , fixedEdgePointIndex_(fixedEdgePointIndex)
+        , fixedEdgePointYStatus_(fixedEdgePointYStatus)
+        , edgeLength_(edgeLength)
+    {}
+
+    size_t fixedPointIndex_ = 0;
+    size_t fixedEdgePointIndex_ = 0;
+    CoordinateYStatus fixedEdgePointYStatus_ = CoordinateYStatus::NoValue;
+    float edgeLength_ = 0;
+
+};
+
+static std::vector<FixedPointCandidateData> calculateFixedPointCandidates(const std::vector<CoordinateYStatus>& coordinateYStatusVector, const std::vector<float>& polygonEdgeRelativeWidths)
+{
+    std::vector<FixedPointCandidateData> fixedPointCandidates;
+    // Ei tarkasteluja, jos polygonivektori on liian lyhyt (3:n ja 4:n pituisia on olemassa)
+    if(coordinateYStatusVector.size() >= 5)
+    {
+        // Huom! vektorin 1. ja viimeinen piste ovat samoja, siita seuraa loopituksessa seuraavia asioita:
+        // Ensimmaiset previous arvot otetaan vektorien toiseksi viimeisesta pisteesta.
+        // Itse looppi mennaan 1. pisteesta toiseksi viimeisimpaan.
+        // Toiseksi viimeisimman pisteen next-arvot voidaan ottaa vektorin viimeisesta pisteesta.
+        auto firstPreviousIndex = polygonEdgeRelativeWidths.size() - 2;
+        auto previousEdgeWidth = polygonEdgeRelativeWidths[firstPreviousIndex];
+        auto previousCoordinateYStatus = coordinateYStatusVector[firstPreviousIndex];
+        for(auto pointIndex = 0ull; pointIndex < polygonEdgeRelativeWidths.size() - 1; pointIndex++)
+        {
+            auto currentEdgeWidth = polygonEdgeRelativeWidths[pointIndex];
+            auto currentCoordinateYStatus = coordinateYStatusVector[pointIndex];
+            if(currentCoordinateYStatus != CoordinateYStatus::BottomRowValue && currentCoordinateYStatus != CoordinateYStatus::TopRowValue)
+            {
+                if(currentEdgeWidth >= g_minimumEdgeWidthLength)
+                {
+                    auto nextCoordinateYStatus = coordinateYStatusVector[pointIndex + 1];
+                    if(nextCoordinateYStatus == CoordinateYStatus::BottomRowValue || nextCoordinateYStatus == CoordinateYStatus::TopRowValue)
+                    {
+                        fixedPointCandidates.push_back(FixedPointCandidateData(pointIndex, pointIndex + 1, nextCoordinateYStatus, currentEdgeWidth));
+                    }
+                }
+
+                if(previousEdgeWidth >= g_minimumEdgeWidthLength)
+                {
+                    if(previousCoordinateYStatus == CoordinateYStatus::BottomRowValue || previousCoordinateYStatus == CoordinateYStatus::TopRowValue)
+                    {
+                        auto previousPointIndex = (pointIndex > 0) ? pointIndex - 1 : firstPreviousIndex;
+                        fixedPointCandidates.push_back(FixedPointCandidateData(pointIndex, previousPointIndex, previousCoordinateYStatus, previousEdgeWidth));
+                    }
+                }
+            }
+            previousEdgeWidth = currentEdgeWidth;
+            previousCoordinateYStatus = currentCoordinateYStatus;
+        }
+    }
+    return fixedPointCandidates;
+}
+
+static bool isForcedYCoordinateFixNeeded(float edgeLength, float pointCoordinateY, float rowCoordinateY, float usedEpsilon)
+{
+    // Lopullinen epsilon laketaan polygonin reunan pituuden avulla, jos reunan pituus on maksimi eli 1, sallitaan kaksinkertainen virhe.
+    // Lyhyemmille reunoille (< 0.5) kuitenkin minimi on originaali usedEpsilon arvo.
+    auto finalEpsilon = usedEpsilon * (2 * edgeLength);
+    if(finalEpsilon < usedEpsilon)
+        finalEpsilon = usedEpsilon;
+    auto yDifference = std::abs(pointCoordinateY - rowCoordinateY);
+    return finalEpsilon >= yDifference;
+}
+
+static std::vector<PolygonPointFixStatus> calculatePolygonPointFixStatusVector_ver3(const std::vector<CoordinateYStatus>& coordinateYStatusVector, const std::vector<FixedPointCandidateData> & fixedPointCandidates, const std::vector<float>& polygonsCoordinatesY, float usedEpsilon, float bottomRowCoordinateY, float topRowCoordinateY)
+{
+    std::vector<PolygonPointFixStatus> fixStatusVector;
+    for(auto pointIndex = 0ull; pointIndex < coordinateYStatusVector.size(); pointIndex++)
+    {
+        auto coordinateYStatus = coordinateYStatusVector[pointIndex];
+        switch(coordinateYStatus)
+        {
+        case CoordinateYStatus::BottomRowValue:
+            fixStatusVector.push_back(PolygonPointFixStatus::AccuracyBottomFixNeeded);
+            break;
+        case CoordinateYStatus::TopRowValue:
+            fixStatusVector.push_back(PolygonPointFixStatus::AccuracyTopFixNeeded);
+            break;
+        default:
+            fixStatusVector.push_back(PolygonPointFixStatus::NoFixNeeded);
+            break;
+        }
+    }
+
+    if(fixedPointCandidates.size())
+    {
+        for(const auto& fixedPointCandidate : fixedPointCandidates)
+        {
+            if(fixedPointCandidate.fixedEdgePointYStatus_ == CoordinateYStatus::BottomRowValue)
+            {
+                if(::isForcedYCoordinateFixNeeded(fixedPointCandidate.edgeLength_, polygonsCoordinatesY[fixedPointCandidate.fixedPointIndex_], bottomRowCoordinateY, usedEpsilon))
+                {
+                    fixStatusVector[fixedPointCandidate.fixedPointIndex_] = PolygonPointFixStatus::BottomFixNeeded;
+                }
+            }
+            else if(fixedPointCandidate.fixedEdgePointYStatus_ == CoordinateYStatus::TopRowValue)
+            {
+                if(::isForcedYCoordinateFixNeeded(fixedPointCandidate.edgeLength_, polygonsCoordinatesY[fixedPointCandidate.fixedPointIndex_], topRowCoordinateY, usedEpsilon))
+                {
+                    fixStatusVector[fixedPointCandidate.fixedPointIndex_] = PolygonPointFixStatus::TopFixNeeded;
+                }
+            }
+        }
+    }
+
+    return fixStatusVector;
+}
+
+// Uusi algoritmi polygonien korjaukseen :
+// 1. Laske polygonin edge pituudet x - suunnassa
+// 2. Laske pisteiden CoordinateYStatukset
+// 3. Tee lista ehdokaspisteistä, jotka pitää korjata :
+//   a) Etsi edget, joiden pituus ylittää rajan(~0.35)
+//   b) Pitkään edgeen pitää kuulua bottom / top - row piste ja ei - bottom / top - row piste
+//   c) Ota talteen :
+//     -Korjattavan pisteen indeksi
+//     - Siihen liittyvän top / bottom - row pisteen indeksi
+//     - Siihen liittyvän top / bottom - row pisteen CoordinateYStatus
+//     - Edgen pituus
+// 4. Käy läpi ehdokaslistaa :
+//   a) Edgen pituus vaikuttaa käytettyyn epsiloniin positiivisella korrelaatiolla
+//   b) Jos boostattu epsilon ja etäisyys haluttuun riviin riittävät, tehdään korjaus
+bool ToolmasterHatchPolygonData::doYPointCoordinateFixes_ver3(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY)
+{
+    bool hasAnyCorrectionsBeenMade = false;
+
+    auto yCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, bottomRowCoordinateY, topRowCoordinateY);
+    auto edgeRelativeWidths = ::calculatePolygonEdgeRelativeWidths(polygonsCoordinatesX);
+    auto fixedPointCandidates = ::calculateFixedPointCandidates(yCoordinateStatusVector, edgeRelativeWidths);
+    auto polygonPointFixStatusVector = ::calculatePolygonPointFixStatusVector_ver3(yCoordinateStatusVector, fixedPointCandidates, polygonsCoordinatesY_inOut, usedToolmasterRelatedBigEpsilon_, bottomRowCoordinateY, topRowCoordinateY);
+    for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
+    {
+        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix_ver2(coordinateIndex, polygonPointFixStatusVector, bottomRowCoordinateY, topRowCoordinateY, polygonsCoordinatesY_inOut);
+    }
+
+    return hasAnyCorrectionsBeenMade;
+}
+
 
 
 // Toolmasterin laskemissa polygoneissa on joskus pieni vertikaalisuunnassa tapahtuva vika. 
@@ -716,7 +892,7 @@ void ToolmasterHatchPolygonData::doCoordinateYFixes()
         std::vector<float> currentPolygonsCoordinatesX(startIterX, startIterX + polygonCoordinateSize);
         auto startIterY = polygonCoordinateY_.begin() + currentPolygonCoordinateCounter;
         std::vector<float> currentPolygonsCoordinatesY(startIterY, startIterY + polygonCoordinateSize);
-        if(doYPointCoordinateFixes(currentPolygonsCoordinatesY, currentPolygonsCoordinatesX, polygonsBottomCoordinateY, polygonsTopCoordinateY))
+        if(doYPointCoordinateFixes_ver3(currentPolygonsCoordinatesY, currentPolygonsCoordinatesX, polygonsBottomCoordinateY, polygonsTopCoordinateY))
         {
             std::copy(currentPolygonsCoordinatesY.begin(), currentPolygonsCoordinatesY.end(), startIterY);
         }
