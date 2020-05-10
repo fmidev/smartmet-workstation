@@ -267,7 +267,7 @@ std::vector<CoordinateYStatus> ToolmasterHatchPolygonData::calculateCoordinateYS
     return statusVector;
 }
 
-static bool DoYCoordinateFix_ver2(size_t currentCoordinateIndex, const std::vector<PolygonPointFixStatus>& polygonPointFixStatusVector, float wantedBottomRowCoordinateY, float wantedTopRowCoordinateY, std::vector<float>& polygonsCoordinatesY_inOut)
+static bool DoYCoordinateFix(size_t currentCoordinateIndex, const std::vector<PolygonPointFixStatus>& polygonPointFixStatusVector, float wantedBottomRowCoordinateY, float wantedTopRowCoordinateY, std::vector<float>& polygonsCoordinatesY_inOut)
 {
     auto fixStatus = polygonPointFixStatusVector[currentCoordinateIndex];
     switch(fixStatus)
@@ -381,7 +381,7 @@ static bool isForcedYCoordinateFixNeeded(float edgeLength, float pointCoordinate
     return finalEpsilon >= yDifference;
 }
 
-static std::vector<PolygonPointFixStatus> calculatePolygonPointFixStatusVector_ver3(const std::vector<CoordinateYStatus>& coordinateYStatusVector, const std::vector<FixedPointCandidateData> & fixedPointCandidates, const std::vector<float>& polygonsCoordinatesY, float usedEpsilon, float bottomRowCoordinateY, float topRowCoordinateY)
+static std::vector<PolygonPointFixStatus> calculatePolygonPointFixStatusVector(const std::vector<CoordinateYStatus>& coordinateYStatusVector, const std::vector<FixedPointCandidateData> & fixedPointCandidates, const std::vector<float>& polygonsCoordinatesY, float usedEpsilon, float bottomRowCoordinateY, float topRowCoordinateY)
 {
     std::vector<PolygonPointFixStatus> fixStatusVector;
     for(auto pointIndex = 0ull; pointIndex < coordinateYStatusVector.size(); pointIndex++)
@@ -439,17 +439,17 @@ static std::vector<PolygonPointFixStatus> calculatePolygonPointFixStatusVector_v
 // 4. K‰y l‰pi ehdokaslistaa :
 //   a) Edgen pituus vaikuttaa k‰ytettyyn epsiloniin positiivisella korrelaatiolla
 //   b) Jos boostattu epsilon ja et‰isyys haluttuun riviin riitt‰v‰t, tehd‰‰n korjaus
-bool ToolmasterHatchPolygonData::doYPointCoordinateFixes_ver3(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY)
+bool ToolmasterHatchPolygonData::doYPointCoordinateFixes(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY)
 {
     bool hasAnyCorrectionsBeenMade = false;
 
     auto yCoordinateStatusVector = calculateCoordinateYStatusVector(polygonsCoordinatesY_inOut, bottomRowCoordinateY, topRowCoordinateY);
     auto edgeRelativeWidths = ::calculatePolygonEdgeRelativeWidths(polygonsCoordinatesX);
     auto fixedPointCandidates = ::calculateFixedPointCandidates(yCoordinateStatusVector, edgeRelativeWidths);
-    auto polygonPointFixStatusVector = ::calculatePolygonPointFixStatusVector_ver3(yCoordinateStatusVector, fixedPointCandidates, polygonsCoordinatesY_inOut, usedToolmasterRelatedBigEpsilon_, bottomRowCoordinateY, topRowCoordinateY);
+    auto polygonPointFixStatusVector = ::calculatePolygonPointFixStatusVector(yCoordinateStatusVector, fixedPointCandidates, polygonsCoordinatesY_inOut, usedToolmasterRelatedBigEpsilon_, bottomRowCoordinateY, topRowCoordinateY);
     for(size_t coordinateIndex = 0; coordinateIndex < yCoordinateStatusVector.size(); coordinateIndex++)
     {
-        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix_ver2(coordinateIndex, polygonPointFixStatusVector, bottomRowCoordinateY, topRowCoordinateY, polygonsCoordinatesY_inOut);
+        hasAnyCorrectionsBeenMade |= ::DoYCoordinateFix(coordinateIndex, polygonPointFixStatusVector, bottomRowCoordinateY, topRowCoordinateY, polygonsCoordinatesY_inOut);
     }
 
     return hasAnyCorrectionsBeenMade;
@@ -518,7 +518,7 @@ void ToolmasterHatchPolygonData::doCoordinateYFixes()
         std::vector<float> currentPolygonsCoordinatesX(startIterX, startIterX + polygonCoordinateSize);
         auto startIterY = polygonCoordinateY_.begin() + currentPolygonCoordinateCounter;
         std::vector<float> currentPolygonsCoordinatesY(startIterY, startIterY + polygonCoordinateSize);
-        if(doYPointCoordinateFixes_ver3(currentPolygonsCoordinatesY, currentPolygonsCoordinatesX, polygonsBottomCoordinateY, polygonsTopCoordinateY))
+        if(doYPointCoordinateFixes(currentPolygonsCoordinatesY, currentPolygonsCoordinatesX, polygonsBottomCoordinateY, polygonsTopCoordinateY))
         {
             std::copy(currentPolygonsCoordinatesY.begin(), currentPolygonsCoordinatesY.end(), startIterY);
         }

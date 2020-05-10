@@ -92,7 +92,7 @@ private:
     bool isValueInsideRange(float value, const std::pair<float, float>& range);
     CoordinateYStatus calculateCoordinateYStatus(float value, float bottomRowCoordinateY, float topRowCoordinateY);
     std::vector<CoordinateYStatus> calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY, float topRowCoordinateY);
-    bool doYPointCoordinateFixes_ver3(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY);
+    bool doYPointCoordinateFixes(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY);
     std::vector<std::pair<float, float>> getBottomRowXRanges(int currentPolygonIndex, int currentCoordinateDataTotalIndex, float bottomRowCoordinateY);
     void initializeRowInformation();
     void doCoordinateYFixes();
