@@ -553,6 +553,9 @@ static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPo
                 lastRowMinCoordinateY = currentRowMinCoordinateY;
             }
 
+            // **** HUOM! Pida seuraavia 5 koodi rivia tallessa kommenteissa, niiden ***********
+            // **** avulla voidaan metsastaa ongelma polygoneja hatching yhteydessa  ***********
+            // ---------------------------------------------------------------------------------
             //int wantedPolygonIndex1 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex1_;
             //int wantedPolygonIndex2 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex2_;
             //if(polygonIndex == wantedPolygonIndex1 || polygonIndex == wantedPolygonIndex2)
@@ -581,7 +584,7 @@ static void SetupMFCAndDrawShadedPolygons3(ToolmasterHatchPolygonData &theToolma
     CBrush brush;
     const auto& hatchSettings = theToolmasterHatchPolygonData.hatchSettings_;
     COLORREF crColor = hatchSettings.itsHatchColorRef;
-    if(hatchSettings.itsHatchPattern == -1) // jos hatch-pattern on -1, tehd‰‰nkin t‰ysin peitt‰v‰ sivelline ilman hatchi‰
+    if(hatchSettings.itsHatchPattern == -1) // jos hatch-pattern on -1, tehd‰‰nkin t‰ysin peitt‰v‰ sivellin ilman hatchi‰
         brush.CreateSolidBrush(crColor);
     else
         brush.CreateHatchBrush(hatchSettings.itsHatchPattern, crColor);
@@ -623,8 +626,6 @@ static void GetReadyAndDoTheHatch(NFmiIsoLineData &theIsoLineData, const NFmiHat
     try
     {
         ::SetupMFCAndDrawShadedPolygons3(toolmasterHatchPolygonData, pDC, theMfcClipRect);
-        //if(gDrawTest)
-        //    DrawShadedPolygonsTest(pDC, polyNumbers, polyPointsX, polyPointsY);
     }
     catch(...)
     {
@@ -832,17 +833,6 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
     XuVariableGridNodesOption(XuGRID_DELETE);
 }
 
-static IntPoint CalcNeededSubGridSize(const NFmiIsoLineData &theOrigIsoLineData)
-{
-    const double criticalXSize = 220;
-    const double criticalYSize = 220;
-
-    IntPoint neededSize;
-    neededSize.x = static_cast<int>(std::ceil(theOrigIsoLineData.itsXNumber / criticalXSize));
-    neededSize.y = static_cast<int>(std::ceil(theOrigIsoLineData.itsYNumber / criticalYSize));
-    return neededSize;
-}
-
 static bool IsIsolinesDrawn(const NFmiIsoLineData &theOrigIsoLineData)
 {
     if(theOrigIsoLineData.fUseIsoLines)
@@ -918,7 +908,7 @@ static void BuildDownSizedData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineD
     theDownSizedIsoLineData.InitDrawOptions(theOrigIsoLineData);
 }
 
-static void DoTraceLogging(const std::string message)
+static void DoTraceLogging(const std::string &message)
 {
     if(CatLog::doTraceLevelLogging())
     {
@@ -1035,135 +1025,5 @@ void CreateClassesAndColorTableAndColorShade(float aMin, float aMax, int classCo
     XuShadingScale(shadingScaleIndex);
 }
 
-
-// ***************************************************************************************************************
-// **** T‰ss‰ on hieman testaus koodia, jos joskus tulee ongelmia hatchin tai muun polygoni piirron kanssa *******
-// **** Globaali muuttuja gDrawTest pit‰‰ muuttaa arvoon true, ja halutun polygonin high-lighttauksen saa  *******
-// **** p‰‰lle kun laittaa gDesignatedPolygon globaali muuttujan arvoksi halutun polygonin indeksin. Jos   *******
-// **** sen arvo on -1, piirt‰‰ se high-lightin aina juoksu j‰rjestyksess‰ seuraava polygonin kohdallle.   *******
-// **** T‰llˆin SMartMetilla voidaan etsi‰ ongelma polygoni refreshaamalla n‰yttˆ‰ F5:lla.                 *******
-// ***************************************************************************************************************
-
-const int gMissingValue = -9999;
-static const CPoint gMissingCPoint = CPoint(gMissingValue, gMissingValue);
-
-static CPoint CalcPolygonCenter(const checkedVector<CPoint> &thePolygonCPoints)
-{
-    if(thePolygonCPoints.size())
-    {
-        double sumX = 0;
-        double sumY = 0;
-        for(size_t i = 0; i < thePolygonCPoints.size(); i++)
-        {
-            sumX += thePolygonCPoints[i].x;
-            sumY += thePolygonCPoints[i].y;
-        }
-        CPoint centerPoint(boost::math::iround(sumX / thePolygonCPoints.size()), boost::math::iround(sumY / thePolygonCPoints.size()));
-        return centerPoint;
-    }
-    else
-        return gMissingCPoint;
-}
-
-//static int gDesignatedPolygon = -1; // Laita t‰h‰n 0 tai positiivinen luku jos haluat jonkun tietyn polygonin n‰kyv‰n (kun gDrawTest on true), laita t‰h‰n arvo -1, jos haluat juoksuttaa korostettua polygonia.
-//
-//static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY)
-//{
-//    if(thePolyNumbers.size())
-//    {
-//        static int polygonCounter = 0;
-//
-//        std::vector<COLORREF> colorVec;
-//        colorVec.push_back(RGB(255, 0, 0));
-//        colorVec.push_back(RGB(0, 255, 0));
-//        colorVec.push_back(RGB(0, 0, 255));
-//        colorVec.push_back(RGB(128, 128, 0));
-//        colorVec.push_back(RGB(0, 128, 128));
-//
-//        // Luo joukko erilaisia siveltimi‰
-//        std::vector<CBrush*> brushVec;
-//        for(size_t i = 0; i < colorVec.size(); i++)
-//        {
-//            brushVec.push_back(new CBrush());
-//            brushVec[i]->CreateHatchBrush(static_cast<int>(i), colorVec[i]);
-//        }
-//
-//        int penStyle = PS_SOLID;
-//        int penWidth = 1;
-//        int penWidth2 = 2;
-//        COLORREF penColor1 = 0x00000000;
-//        COLORREF penColor2 = 0x000000FF;
-//        CPen myPen1(penStyle, penWidth, penColor1);
-//        CPen myPen2(penStyle, penWidth2, penColor2);
-//
-//        int oldBkMode = pDC->SetBkMode(TRANSPARENT);
-//        int oldTextAlign = pDC->SetTextAlign(TA_CENTER);
-//        CBrush *oldBrush = pDC->SelectObject(brushVec[0]);
-//        CPen *oldPen = pDC->SelectObject(&myPen1);
-//
-//        int minRowYPixelValue = gIgnoreMinMaxPixelHandling; // t‰m‰ arvo on puuttuva arvo, jolloin testi piirrossa n‰iden k‰sittely ignoorataan
-//        int maxRowYPixelValue = gIgnoreMinMaxPixelHandling;
-//        checkedVector<int> polyPointsXInPixels, polyPointsYInPixels;
-//        checkedVector<CPoint> polygonCPoints;
-//        int polygonPointTotalCount = 0;
-//        MakeTotalPolygonPointConversion(thePolyPointsX, thePolyPointsY, polyPointsXInPixels, polyPointsYInPixels);
-//        for(size_t i = 0; i < thePolyNumbers.size(); i++)
-//        {
-//            bool drawHelperPolygon = (gDesignatedPolygon >= 0 && gDesignatedPolygon == static_cast<int>(i)) || (gDesignatedPolygon < 0 && (i == polygonCounter));
-//            pDC->SelectObject(&myPen1);
-//            pDC->SelectObject(brushVec[i % 5]);
-//            int polPoinsCount = thePolyNumbers[i];
-//            FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polPoinsCount, polygonCPoints, minRowYPixelValue, maxRowYPixelValue);
-//            //			pDC->Polygon(&polygonCPoints[0], polPoinsCount);
-//            int circleSize = 3;
-//            for(size_t j = 0; j < polygonCPoints.size(); j++)
-//            { // piirret‰‰n polygonin pisteet n‰kyviin
-//                if(drawHelperPolygon)
-//                {
-//                    if(j < 3 || j >= polygonCPoints.size() - 3)
-//                    {
-//                        pDC->SelectObject(&myPen2); // ensimm‰inen ja viiimeinen ympyr‰ piirret‰‰n eriv‰rill‰
-//                        circleSize = 5;
-//                    }
-//                    else
-//                    {
-//                        pDC->SelectObject(&myPen1); // kaksi ensimm‰ist‰ ympyr‰‰ piirret‰‰n eriv‰rill‰
-//                        circleSize = 3;
-//                    }
-//
-//                    pDC->Ellipse(polygonCPoints[j].x - circleSize, polygonCPoints[j].y - circleSize, polygonCPoints[j].x + circleSize, polygonCPoints[j].y + circleSize);
-//                }
-//            }
-//            pDC->SelectObject(&myPen1);
-//            circleSize = 3;
-//            // piirret‰‰n polygonin keskipisteeseen juokseva indeksi
-//            if(drawHelperPolygon)
-//            {
-//                CPoint centerPoint = ::CalcPolygonCenter(polygonCPoints);
-//                CString indexStrU_;
-//                int tmpCounter = static_cast<int>(i);
-//                indexStrU_.Format(_TEXT("%d"), tmpCounter);
-//                pDC->TextOut(centerPoint.x, centerPoint.y, indexStrU_);
-//                pDC->Ellipse(centerPoint.x - circleSize, centerPoint.y - circleSize, centerPoint.x + circleSize, centerPoint.y + circleSize);
-//            }
-//            polygonPointTotalCount += polPoinsCount;
-//        }
-//        polygonCounter++;
-//        if(polygonCounter >= thePolyNumbers.size())
-//            polygonCounter = 0;
-//
-//        pDC->SelectObject(oldPen);
-//        pDC->SelectObject(oldBrush);
-//        pDC->SetTextAlign(oldTextAlign);
-//        pDC->SetBkMode(oldBkMode);
-//
-//        // Tuhoa siveltimet
-//        for(size_t i = 0; i < brushVec.size(); i++)
-//        {
-//            brushVec[i]->DeleteObject();
-//            delete brushVec[i];
-//        }
-//    }
-//}
 
 #endif // DISABLE_UNIRAS_TOOLMASTER
