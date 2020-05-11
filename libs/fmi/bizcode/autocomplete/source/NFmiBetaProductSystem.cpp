@@ -1715,6 +1715,42 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
     return dueAutomations;
 }
 
+// K‰ytt‰j‰ll‰ on nyky‰‰n kolme on-demand -nappia, joista voi k‰ynnist‰‰ halutun setin automaatioita tyˆstett‰v‰ksi:
+// 1. Jos selectedAutomationIndex:iss‰ on positiivinen numero, ajetaan vain sen osoittama automaatio.
+// 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
+// 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
+// selectedAutomationIndex -parametri on 1:st‰ alkava indeksi ja -1 tarkoitti siis ett‰ k‰yd‰‰n koko listaa l‰pi.
+std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
+{
+    std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> onDemandAutomations;
+    if(selectedAutomationIndex > 0)
+    {
+        auto actualIndex = selectedAutomationIndex - 1;
+        if(actualIndex < itsAutomationVector.size())
+        {
+            const auto &automationItem = itsAutomationVector[actualIndex];
+            // Automaation pit‰‰ kuitenkin olla ilman virheit‰, ett‰ se kelpuutetaan ajettavaksi
+            if(automationItem->GetErrorStatus() == NFmiBetaProductAutomationListItem::kFmiListItemOk)
+                onDemandAutomations.push_back(automationItem);
+        }
+    }
+    else
+    {
+        for(const auto& listItem : itsAutomationVector)
+        {
+            // Automaation pit‰‰ kuitenkin olla ilman virheit‰, ett‰ se kelpuutetaan ajettavaksi
+            if(listItem->GetErrorStatus() == NFmiBetaProductAutomationListItem::kFmiListItemOk)
+            {
+                if(!doOnlyEnabled || listItem->fEnable)
+                    onDemandAutomations.push_back(listItem);
+            }
+        }
+    }
+
+    return onDemandAutomations;
+}
+
+
 static const std::string gBetaAutomationListName = "Beta-automation list";
 
 bool NFmiBetaProductAutomationList::StoreInJsonFormat(const NFmiBetaProductAutomationList &theBetaProductAutomationList, const std::string &theFilePath, std::string &theErrorStringOut)
@@ -1863,6 +1899,27 @@ bool NFmiBetaProductionSystem::DoNeededBetaAutomation()
                 itsGenerateBetaProductsCallback(dueAutomations, currentTime);
                 return true;
             }
+        }
+    }
+    return false;
+}
+
+// K‰ytt‰j‰ll‰ on nyky‰‰n kolme on-demand -nappia, joista voi k‰ynnist‰‰ halutun setin automaatioita tyˆstett‰v‰ksi:
+// 1. Jos selectedAutomationIndex:iss‰ on positiivinen numero, ajetaan vain sen osoittama automaatio.
+// 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
+// 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
+// selectedAutomationIndex -parametri on 1:st‰ alkava indeksi ja -1 tarkoitti siis ett‰ k‰yd‰‰n koko listaa l‰pi.
+bool NFmiBetaProductionSystem::DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
+{
+    NFmiMetTime currentTime(1); // Otetaan talteen nyky UTC hetki minuutin tarkkuudella
+    std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> onDemandAutomations = itsUsedAutomationList.GetOnDemandAutomations(selectedAutomationIndex, doOnlyEnabled);
+    if(!onDemandAutomations.empty())
+    {
+        // Joku callback funktio kutsu CFmiBetaProductDialog-luokalle
+        if(itsGenerateBetaProductsCallback)
+        {
+            itsGenerateBetaProductsCallback(onDemandAutomations, currentTime);
+            return true;
         }
     }
     return false;

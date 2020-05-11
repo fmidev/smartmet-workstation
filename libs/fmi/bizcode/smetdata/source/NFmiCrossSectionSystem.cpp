@@ -12,6 +12,7 @@
 #include "NFmiDataStoringHelpers.h"
 #include "SettingsFunctions.h"
 #include "CtrlViewDocumentInterface.h"
+#include "SpecialDesctopIndex.h"
 #include "boost\math\special_functions\round.hpp"
 
 double NFmiCrossSectionSystem::itsLatestVersionNumber = 1.0;
@@ -59,6 +60,7 @@ NFmiCrossSectionSystem::NFmiCrossSectionSystem(int theMaxViewRowSize)
 ,itsAxisValuesSpecialWinReg(1005, 1025)
 ,fShowParamWindowView(true)
 ,fShowTooltipOnCrossSectionView(true)
+,itsTrueMapViewSizeInfo(CtrlViewUtils::kFmiCrossSectionView)
 {
 }
 
@@ -350,6 +352,8 @@ bool NFmiCrossSectionSystem::RowCount(int newValue)
 	// jos rivien määrä vaikuttaa nyt alku rivin indeksiin, se tarkistetaan tässä
 	if(itsStartRowIndex > itsMaxViewRowSize - itsRowCount + 1)
 		itsStartRowIndex = itsMaxViewRowSize - itsRowCount + 1;
+
+	itsTrueMapViewSizeInfo.onViewGridSizeChange(NFmiPoint(1, itsRowCount), true);
 	return (oldCount != itsRowCount) || (oldIndex != itsStartRowIndex);
 }
 

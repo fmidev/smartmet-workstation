@@ -15,6 +15,7 @@
 #include "NFmiLocation.h"
 #include "GraphicalInfo.h"
 #include "NFmiColor.h"
+#include "TrueMapViewSizeInfo.h"
 
 class NFmiArea;
 class NFmiQueryData;
@@ -163,7 +164,9 @@ class NFmiCrossSectionSystem
 	void ObsForModeLocation(const NFmiLocation &newLocation) {itsObsForModeLocation = newLocation;}
 	const checkedVector<ExtraRowInfo>& ExtraRowInfos(void) const {return itsExtraRowInfos;}
 	ExtraRowInfo& GetRowInfo(int theRowIndex); // t‰m‰ on muokkausta varten
-    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void){return itsGraphicalInfo;}
+    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(){return itsGraphicalInfo;}
+	TrueMapViewSizeInfo& GetTrueMapViewSizeInfo() { return itsTrueMapViewSizeInfo; }
+
 	const NFmiColor& StartPointFillColor(void) const {return itsStartPointFillColor;}
 	void StartPointFillColor(const NFmiColor &newValue) {itsStartPointFillColor = newValue;}
 	const NFmiColor& EndPointFillColor(void) const {return itsEndPointFillColor;}
@@ -230,6 +233,7 @@ class NFmiCrossSectionSystem
 	bool fDragWholeCrossSection; // jos tehty tietynlainen mouse drag kartalla, liikutetaan koko poikkileikkausjanaa kerrallaan
 	checkedVector<ExtraRowInfo> itsExtraRowInfos; // t‰h‰ talletetaan ylim‰‰r‰iset poikkileikkausrivi kohtaiset tiedot
 	CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
+	TrueMapViewSizeInfo itsTrueMapViewSizeInfo;
 	NFmiColor itsStartPointFillColor;
 	NFmiColor itsEndPointFillColor;
 	NFmiColor itsMiddlePointFillColor;

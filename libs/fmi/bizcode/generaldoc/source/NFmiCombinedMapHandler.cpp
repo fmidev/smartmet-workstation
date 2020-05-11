@@ -1237,7 +1237,7 @@ void NFmiCombinedMapHandler::checkAnimationLockedModeTimeBags(unsigned int mapVi
 	}
 }
 
-NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapViewDescTopIndex) const
+NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapViewDescTopIndex, bool allowNullptrReturn) const
 {
 	if(mapViewDescTops_.empty())
 		throw std::runtime_error(std::string(__FUNCTION__) + " - itsMapViewDescTopList was empty, error in program.");
@@ -1246,8 +1246,16 @@ NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapVi
 		return mapViewDescTops_[mapViewDescTopIndex].get();
 	else
 	{
-		// Palautetaan erikoisnäyttöjä (aikasarja-, poikkileikkaus-, luotaus-, datanmuokkaus-dialogit, jne.) varten pääkarttanaytön desctop
-		return mapViewDescTops_[0].get();
+		if(allowNullptrReturn)
+		{
+			// Eli ei palauteta defaultti arvoa eli pääikkunan mapViewDescToppia, jos kyse oli ei-karttanäytön indeksistä
+			return nullptr;
+		}
+		else
+		{
+			// Palautetaan erikoisnäyttöjä (aikasarja-, poikkileikkaus-, luotaus-, datanmuokkaus-dialogit, jne.) varten pääkarttanaytön desctop
+			return mapViewDescTops_[0].get();
+		}
 	}
 }
 
@@ -3655,12 +3663,21 @@ void NFmiCombinedMapHandler::borrowParams(unsigned int mapViewDescTopIndex, int 
 {
 	NFmiDrawParamList* drawParamListFrom = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, realViewRowIndex);
 	NFmiDrawParamList* drawParamListTo = getDrawParamList(mapViewDescTopIndex, activeViewRow(mapViewDescTopIndex)); // itsActiveViewRow on suhteutettuna näkyvään rivistöön
-	if(drawParamListFrom && drawParamListTo && (drawParamListFrom != drawParamListTo))
+	bool doDebugging = false;
+	if(doDebugging || (drawParamListFrom && drawParamListTo && (drawParamListFrom != drawParamListTo)))
 	{
-		if(drawParamListTo->HasBorrowedParams())
-			drawParamListTo->ClearBorrowedParams();
+		if(doDebugging)
+		{
+			// Joskus tehdään hatching testejä ja silloi muutetaan testattavan polygonin indeksiä
+			ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingDebuggingPolygonIndex(realViewRowIndex);
+		}
 		else
-			drawParamListTo->BorrowParams(*drawParamListFrom);
+		{
+			if(drawParamListTo->HasBorrowedParams())
+				drawParamListTo->ClearBorrowedParams();
+			else
+				drawParamListTo->BorrowParams(*drawParamListFrom);
+		}
 
 		mapViewDirty(mapViewDescTopIndex, false, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		::getMacroParamDataCache().update(mapViewDescTopIndex, realViewRowIndex, *drawParamListTo);

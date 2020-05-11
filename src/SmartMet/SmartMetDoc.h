@@ -351,6 +351,11 @@ public:
 	afx_msg void OnAcceleratorBorrowParams3();
 	afx_msg void OnAcceleratorBorrowParams4();
 	afx_msg void OnAcceleratorBorrowParams5();
+	afx_msg void OnAcceleratorBorrowParams6();
+	afx_msg void OnAcceleratorBorrowParams7();
+	afx_msg void OnAcceleratorBorrowParams8();
+	afx_msg void OnAcceleratorBorrowParams9();
+	afx_msg void OnAcceleratorBorrowParams10();
 	afx_msg void OnButtonWindTableDlg();
 	afx_msg void OnViewSetWindTableDlgPlaceToDefault();
 	afx_msg void OnChangePreviousMapType();

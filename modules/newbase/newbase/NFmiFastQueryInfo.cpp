@@ -3496,7 +3496,7 @@ float NFmiFastQueryInfo::PressureLevelValue(float P,
                                             const NFmiPoint &theLatlon,
                                             const NFmiMetTime &theTime)
 {
-  return PressureLevelValue(P, theLatlon, theTime, 0);
+  return PressureLevelValue(P, theLatlon, theTime, 360);
 }
 
 // TODO kFmiWindDirection tapaus pitää koodata käyttämään NFmiInterpolation::WindInterpolator:ia

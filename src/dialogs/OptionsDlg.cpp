@@ -55,7 +55,6 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , fAutoLoadNewCacheData(TRUE)
     , itsLocationFinderTimeoutInSeconds(0)
     , fShowLastSendTimeOnMapView(FALSE)
-    , itsFixedDrawParamPathSettingU_(_T(""))
     , fUseCombinedMapMode(FALSE)
     , fDroppedDataEditable(FALSE)
     , itsIsolineMinimumLengthFactor(1)
@@ -125,7 +124,6 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_DO_AUTO_LOAD_NEW_CACHE_DATA, fAutoLoadNewCacheData);
     DDX_Text(pDX, IDC_EDIT_OPTIONS_LOCATION_FINDER_TIMEOUT_IN_SECONDS, itsLocationFinderTimeoutInSeconds);
     DDX_Check(pDX, IDC_CHECK_SHOW_LAST_SEND_TIME_ON_MAP_VIEW, fShowLastSendTimeOnMapView);
-    DDX_Text(pDX, IDC_STATIC_OPTIONS_FIXEX_DRAW_PARAM_PATH, itsFixedDrawParamPathSettingU_);
     DDX_Check(pDX, IDC_CHECK_USE_COMBINED_MAP_MODE, fUseCombinedMapMode);
     DDX_Control(pDX, IDC_COMBO_OPTIONS_LOG_LEVEL, itsLogLevelComboBox);
     DDX_Check(pDX, IDC_CHECK_DROPPED_DATA_EDITABLE, fDroppedDataEditable);
@@ -133,6 +131,7 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDV_MinMaxDouble(pDX, itsIsolineMinimumLengthFactor, 0, 100);
     DDX_Check(pDX, IDC_CHECK_MAKE_COMBINATION_DATA, fGenerateTimeCombinationData);
     DDX_Check(pDX, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, fForceWdParameterToLinearInterpolation);
+    DDX_Text(pDX, IDC_EDIT_HATCHING_EPSILON_FACTOR, itsHatchingToolmasterEpsilonFactor);
 }
 
 
@@ -200,7 +199,6 @@ BOOL COptionsDlg::OnInitDialog()
 	itsCacheKeepFilesMax = itsSmartMetDocumentInterface->HelpDataInfoSystem()->CacheMaxFilesPerPattern();
 	fAllowSending = itsSmartMetDocumentInterface->ApplicationDataBase().UseDataSending();
     itsSysInfoDbUrlU_ = CA2T(itsSmartMetDocumentInterface->ApplicationDataBase().BaseUrlString().c_str());
-    itsFixedDrawParamPathSettingU_ = CA2T(applicationWinRegistry.FixedDrawParamsPath().c_str());
     fAutoLoadNewCacheData = applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
     itsLocationFinderTimeoutInSeconds = applicationWinRegistry.LocationFinderThreadTimeOutInMS() / 1000.;
     fShowLastSendTimeOnMapView = applicationWinRegistry.ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView();
@@ -210,6 +208,7 @@ BOOL COptionsDlg::OnInitDialog()
     itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
     fGenerateTimeCombinationData = applicationWinRegistry.GenerateTimeCombinationData();
     fForceWdParameterToLinearInterpolation = applicationWinRegistry.ForceWdParameterToLinearInterpolation();
+    itsHatchingToolmasterEpsilonFactor = applicationWinRegistry.HatchingToolmasterEpsilonFactor();
 
 	DisableControls();
 
@@ -349,6 +348,8 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
     applicationWinRegistry.GenerateTimeCombinationData(fGenerateTimeCombinationData == TRUE);
     applicationWinRegistry.ForceWdParameterToLinearInterpolation(fForceWdParameterToLinearInterpolation == TRUE);
+    // HatchingToolmasterEpsilonFactor:in asetus pitää tehdä näin, koska arvo asetetaan tässä useampaan paikkaan.
+    itsSmartMetDocumentInterface->SetHatchingToolmasterEpsilonFactor(itsHatchingToolmasterEpsilonFactor);
 
 	CDialog::OnOK();
 }
@@ -390,7 +391,6 @@ void COptionsDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_ANIMATION_DELAY_STR, "IDC_STATIC_OPTIONS_ANIMATION_DELAY_STR");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_TIME_STEP_STR, "IDC_STATIC_OPTIONS_TIME_STEP_STR");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DO_AUTO_LOAD_NEW_CACHE_DATA, "Auto load new cache data");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_FIXEDDRAWPARAMS_GROUP, "Fixed Draw Params Path");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_LOCATION_FINDER_TIMEOUT_IN_SECONDS, "Location Finder (x key) Timeout [s]");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_LAST_SEND_TIME_ON_MAP_VIEW, "Show last send time on main map view");
     
@@ -429,6 +429,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_COMBINATION_DATA, "Generate time combination data (unchecking might prevent crashes)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, "Forced linear WD (on=better, off=fast)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COMBINED_MAP_MODE, "Use combined map mode(local + wms)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_HATCHING_EPSILON_FACTOR_TEXT, "Hatching calculation epsilon factor (~1)");
 }
 
 void COptionsDlg::InitLogLevelComboBox()

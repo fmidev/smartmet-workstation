@@ -61,6 +61,7 @@ class NFmiLightWeightViewSettingMacro;
 class NFmiWindTableSystem;
 class NFmiMacroParamDataCache;
 class NFmiGdiPlusImageMapHandler;
+class CDC;
 namespace HakeMessage
 {
     class Main;
@@ -358,9 +359,10 @@ public:
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
-    virtual void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) = 0;
+    virtual bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC) = 0;
     virtual NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) = 0;
     virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
+    virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

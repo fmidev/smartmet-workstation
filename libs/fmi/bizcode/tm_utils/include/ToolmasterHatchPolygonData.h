@@ -46,6 +46,39 @@ public:
     int dataGridSizeX_ = 0;
     int dataGridSizeY_ = 0;
     TMWorldLimits worldLimits_;
+    float usedToolmasterRelatedBigEpsilon_ = 0.002f;
+
+    static float normallyUsedCoordinateEpsilon_;
+    // T‰ll‰ kertoimella muokataan karttaruudun korkeuteen liittyv‰‰ epsilon laskentaa.
+    // Arvo on siis normaalisti 1, mutta laskettua kertointa voidaan kasvattaa tai pienent‰‰ haluttaessa t‰ll‰.
+    static float toolmasterRelatedBigEpsilonFactor_;
+    // T‰t‰ indeksi‰ k‰ytet‰‰n kun mets‰stet‰‰n ongelma polygoneja debuggerilla
+    static int debugHelperWantedPolygonIndex1_;
+    static int debugHelperWantedPolygonIndex2_;
+
+
+    template<typename T>
+    static std::pair<T, size_t> getPreviousValue(size_t index, const std::vector<T>& values)
+    {
+        size_t previousIndex = index - 1;
+        // Jos ollaan alussa, kurkataan arvo reunan yli lopusta
+        if(index == 0)
+            previousIndex = values.size() - 1;
+
+        return std::make_pair(values[previousIndex], previousIndex);
+    }
+
+    template<typename T>
+    static std::pair<T, size_t> getNextValue(size_t index, const std::vector<T>& values)
+    {
+        size_t nextIndex = index + 1;
+        // Jos ollaan lopussa, kurkataan arvo reunan yli alusta
+        if(index == values.size() - 1)
+            nextIndex = 0;
+
+        return std::make_pair(values[nextIndex], nextIndex);
+    }
+
 private:
 
     bool isHatchPolygonDrawn(const std::vector<int>& bottomRowPointsInsidePolygon, const std::vector<int>& bottomRowPointValuesInsideHatchLimits);
@@ -57,35 +90,9 @@ private:
     std::vector<int> checkIfBottomRowPointsAreInsideXRanges(const std::vector<FloatPoint>& relativeBottomRowPoints, const std::vector<std::pair<float, float>>& botttomRowXRanges);
     bool isPointInsideXRanges(const FloatPoint& point, const std::vector<std::pair<float, float>>& botttomRowXRanges);
     bool isValueInsideRange(float value, const std::pair<float, float>& range);
-    std::pair<float, float> calculateTotalValueRange(const std::vector<float>& polygonsCoordinates);
-
-    template<typename T>
-    std::pair<T, size_t> getPreviousValue(size_t index, const std::vector<T>& values)
-    {
-        size_t previousIndex = index - 1;
-        // Jos ollaan alussa, kurkataan arvo reunan yli lopusta
-        if(index == 0)
-            previousIndex = values.size() - 1;
-
-        return std::make_pair(values[previousIndex], previousIndex);
-    }
-
-    template<typename T>
-    std::pair<T, size_t> getNextValue(size_t index, const std::vector<T>& values)
-    {
-        size_t nextIndex = index + 1;
-        // Jos ollaan lopussa, kurkataan arvo reunan yli alusta
-        if(index == values.size() - 1)
-            nextIndex = 0;
-
-        return std::make_pair(values[nextIndex], nextIndex);
-    }
-
-    std::pair<bool, size_t> isSingleBottomRowTouchingCase(size_t coordinateIndex, const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY);
-    CoordinateYStatus calculateCoordinateYStatus(float value, float bottomRowCoordinateY);
-    std::vector<CoordinateYStatus> calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY);
-    bool areTwoPointsExcatlySame(size_t pointIndex1, size_t pointIndex2, const std::vector<float>& polygonsCoordinatesX, const std::vector<float>& polygonsCoordinatesY);
-    std::vector<float> doYPointCoordinateFixes(const std::vector<float>& polygonsCoordinatesY, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY);
+    CoordinateYStatus calculateCoordinateYStatus(float value, float bottomRowCoordinateY, float topRowCoordinateY);
+    std::vector<CoordinateYStatus> calculateCoordinateYStatusVector(const std::vector<float>& polygonsCoordinatesY, float bottomRowCoordinateY, float topRowCoordinateY);
+    bool doYPointCoordinateFixes(std::vector<float>& polygonsCoordinatesY_inOut, const std::vector<float>& polygonsCoordinatesX, float bottomRowCoordinateY, float topRowCoordinateY);
     std::vector<std::pair<float, float>> getBottomRowXRanges(int currentPolygonIndex, int currentCoordinateDataTotalIndex, float bottomRowCoordinateY);
     void initializeRowInformation();
     void doCoordinateYFixes();
@@ -94,6 +101,7 @@ private:
     void calculatePolygonBottomEdgeTouchings(size_t currentPolygonCoordinateCounter, size_t polygonCoordinateSize, float polygonsBottomCoordinateY);
     void initializePolygonBottomEdgeRelations();
     PolygonsBottomEdgeRelation calcPolygonsBottomEdgeRelation(bool startsInsideLimits, bool changesFromStart);
+    float calculateUsedToolmasterEpsilon(float singleMapSubViewHeightInMillimeters, float dataGridToViewHeightRatio);
 };
 
 #endif // DISABLE_UNIRAS_TOOLMASTER

@@ -17,7 +17,7 @@ namespace CtrlViewUtils
 class NFmiRect;
 class SmartMetDocumentInterface;
 class NFmiStationViewHandler;
-
+class TrueMapViewSizeInfo;
 
 struct BitmapDeleter 
 {
@@ -64,7 +64,8 @@ public:
 	void PrintingPageShiftInMinutes(int newValue) {itsPrintingPageShiftInMinutes = newValue;}
 	int CalcPrintingPageShiftInMinutes(void);
 	NFmiToolBox* ToolBox(void) {return itsToolBox;}
-    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void);
+    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo();
+	TrueMapViewSizeInfo& GetTrueMapViewSizeInfo();
 	void CurrentPrintTime(const NFmiMetTime &theTime);
 	const NFmiRect* RelativePrintRect(void); 
 	void RelativePrintRect(const NFmiRect &theRect); 
