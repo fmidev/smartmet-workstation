@@ -348,6 +348,8 @@ public:
     bool ContainsAutomationMoreThanOnce() const;
     bool HasAutomationAlready(const std::string &theFullFilePath) const;
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetDueAutomations(const NFmiMetTime &theCurrentTime);
+    std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
+
     void RefreshAutomationList();
 
     static json_spirit::Object MakeJsonObject(const NFmiBetaProductAutomationList &theBetaProductAutomationList);
@@ -378,6 +380,7 @@ public:
     NFmiBetaProductionSystem();
     bool Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteControlDirectory);
     bool DoNeededBetaAutomation();
+    bool DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
 
     bool BetaProductGenerationRunning() const { return fBetaProductGenerationRunning; }
     void BetaProductGenerationRunning(bool newValue) { fBetaProductGenerationRunning = newValue; }

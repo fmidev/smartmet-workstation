@@ -172,7 +172,7 @@ void CFmiExtraMapView::RelativePrintRect(const NFmiRect &theRect)
 
 void CFmiExtraMapView::PrintViewSizeInPixels(const NFmiPoint &theSize)
 {
-    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, true);
+    itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapViewSizeInPixels(theSize, itsToolBox->GetDC(), itsSmartMetDocumentInterface->ApplicationWinRegistry().DrawObjectScaleFactor(), true);
 }
 
 void CFmiExtraMapView::SetPrintCopyCDC(CDC* pDC)
@@ -194,8 +194,7 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
     m_tooltip.SetToolRect(this, EXTRAMAPVIEW_TOOLTIP_ID, rect);
 
 	CtrlView::DeviceContextHandler<CFmiExtraMapView> deviceContextHandler(this);
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
-    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(cx, cy), NFmiPoint(rect.Width(), rect.Height()));
+    itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(rect.Width(), rect.Height()), deviceContextHandler.GetDcFromHandler());
     PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
     Invalidate(FALSE);
@@ -204,6 +203,11 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
 CtrlViewUtils::GraphicalInfo& CFmiExtraMapView::GetGraphicalInfo(void)
 {
 	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->GetGraphicalInfo();
+}
+
+TrueMapViewSizeInfo& CFmiExtraMapView::GetTrueMapViewSizeInfo()
+{
+	return itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->GetTrueMapViewSizeInfo();
 }
 
 int CFmiExtraMapView::CalcPrintingPageShiftInMinutes(void)

@@ -141,6 +141,9 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductAutomationDialog, CTabPageSSL)
     ON_BN_CLICKED(IDC_BUTTON_SAVE_AS_AUTOMATION_LIST, &CFmiBetaProductAutomationDialog::OnBnClickedButtonSaveAsAutomationList)
     ON_BN_CLICKED(IDC_BUTTON_ADD_EDITED_BETA_AUTOMATION_TO_LIST, &CFmiBetaProductAutomationDialog::OnBnClickedButtonAddEditedBetaAutomationToList)
     ON_BN_CLICKED(IDC_CHECK_AUTOMATIION_MODE_ON, &CFmiBetaProductAutomationDialog::OnBnClickedCheckAutomatiionModeOn)
+    ON_BN_CLICKED(IDC_BUTTON_RUN_SELECTED_AUTOMATION, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunSelectedAutomation)
+    ON_BN_CLICKED(IDC_BUTTON_RUN_ALL_AUTOMATIONS, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunAllAutomations)
+    ON_BN_CLICKED(IDC_BUTTON_RUN_ENABLED_AUTOMATIONS, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunEnabledAutomations)
 END_MESSAGE_MAP()
 
 
@@ -233,6 +236,9 @@ void CFmiBetaProductAutomationDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SAVE_AS_AUTOMATION_LIST, "Save as list");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_AUTOMATION_LIST, "Load list");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_AUTOMATION_NAME_TEXT, "Name:");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_SELECTED_AUTOMATION, "Run selected");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ENABLED_AUTOMATIONS, "Run all enabled");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ALL_AUTOMATIONS, "Run all");
 }
 
 void CFmiBetaProductAutomationDialog::InitControlsFromDocument()
@@ -892,4 +898,40 @@ void CFmiBetaProductAutomationDialog::OnBnClickedCheckAutomatiionModeOn()
     itsBetaProductionSystem->UsedAutomationList().DoFullChecks(itsBetaProductionSystem->AutomationModeOn());
     UpdateAutomationList();
     itsSmartMetDocumentInterface->SetAllViewIconsDynamically();
+}
+
+
+void CFmiBetaProductAutomationDialog::OnBnClickedButtonRunSelectedAutomation()
+{
+    UpdateData(TRUE);
+    auto selectedCellRange = itsGridCtrl.GetSelectedCellRange();
+    if(selectedCellRange.IsValid())
+    {
+        if(!itsBetaProductionSystem->DoOnDemandBetaAutomations(selectedCellRange.GetMinRow(), true))
+        {
+            CatLog::logMessage("No valid selection for on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+        }
+    }
+    else
+        CatLog::logMessage("Nothing was selected for on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+}
+
+
+void CFmiBetaProductAutomationDialog::OnBnClickedButtonRunAllAutomations()
+{
+    UpdateData(TRUE);
+    if(!itsBetaProductionSystem->DoOnDemandBetaAutomations(-1, false))
+    {
+        CatLog::logMessage("Nothing was found for \"Run all\" on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+    }
+}
+
+
+void CFmiBetaProductAutomationDialog::OnBnClickedButtonRunEnabledAutomations()
+{
+    UpdateData(TRUE);
+    if(!itsBetaProductionSystem->DoOnDemandBetaAutomations(-1, true))
+    {
+        CatLog::logMessage("Nothing was found for \"Run enabled\" on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+    }
 }

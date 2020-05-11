@@ -106,7 +106,7 @@ public:
     void timeSerialViewDirty(bool newValue) override;
     MapViewDescTopVector& getMapViewDescTops() override;
     SmartMetViewId getUpdatedViewIdMaskForChangingTime() override;
-    NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex) const override;
+    NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex, bool allowNullptrReturn = false) const override;
     void setMapArea(unsigned int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& newArea) override;
     void storeMapViewSettingsToWinRegistry() override;
     void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) override;

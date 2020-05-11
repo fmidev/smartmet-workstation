@@ -80,6 +80,11 @@ ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_2, OnAcceleratorBorrowParams2)
 ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_3, OnAcceleratorBorrowParams3)
 ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_4, OnAcceleratorBorrowParams4)
 ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_5, OnAcceleratorBorrowParams5)
+ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_6, OnAcceleratorBorrowParams6)
+ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_7, OnAcceleratorBorrowParams7)
+ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_8, OnAcceleratorBorrowParams8)
+ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_9, OnAcceleratorBorrowParams9)
+ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_10, OnAcceleratorBorrowParams10)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_ROW_1, OnAcceleratorMapRow1)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_ROW_2, OnAcceleratorMapRow2)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_ROW_3, OnAcceleratorMapRow3)
@@ -514,6 +519,31 @@ void CFmiExtraMapViewDlg::OnAcceleratorBorrowParams4()
 void CFmiExtraMapViewDlg::OnAcceleratorBorrowParams5()
 {
     itsSmartMetDocumentInterface->OnAcceleratorBorrowParams(itsMapViewDescTopIndex, 5);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorBorrowParams6()
+{
+	itsSmartMetDocumentInterface->OnAcceleratorBorrowParams(itsMapViewDescTopIndex, 6);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorBorrowParams7()
+{
+	itsSmartMetDocumentInterface->OnAcceleratorBorrowParams(itsMapViewDescTopIndex, 7);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorBorrowParams8()
+{
+	itsSmartMetDocumentInterface->OnAcceleratorBorrowParams(itsMapViewDescTopIndex, 8);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorBorrowParams9()
+{
+	itsSmartMetDocumentInterface->OnAcceleratorBorrowParams(itsMapViewDescTopIndex, 9);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorBorrowParams10()
+{
+	itsSmartMetDocumentInterface->OnAcceleratorBorrowParams(itsMapViewDescTopIndex, 10);
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorMapRow1()

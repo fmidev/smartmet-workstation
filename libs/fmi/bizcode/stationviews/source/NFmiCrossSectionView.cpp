@@ -1236,9 +1236,6 @@ void NFmiCrossSectionView::DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLi
 {
 	const NFmiPoint dummyOffSet; // pitää tehdä tyhjä offset, koska emoluokassa käytetään offsetteja, muuta ei täällä
     auto &graphicalInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
-    auto bitmapSizeInPixels = itsCtrlViewDocumentInterface->ActualCrossSectionBitmapSizeInPixels();
-	itsViewWidthInMM = bitmapSizeInPixels.X() / graphicalInfo.itsPixelsPerMM_x;
-	itsViewHeightInMM = bitmapSizeInPixels.Y() / graphicalInfo.itsPixelsPerMM_y;
 
 	if(theIsoLineData.itsHatch1.fUseHatch)
 		DrawHatchesWithImagine(theIsoLineData, theIsoLineData.itsHatch1, theValues, theCoordinates, theHelper, dummyOffSet);
@@ -2248,8 +2245,6 @@ void NFmiCrossSectionView::CalculateViewRects(void)
 {
 	itsPressureScaleFrame = CalcPressureScaleRect();
 	itsDataViewFrame = CalcDataViewRect();
-	if(itsDataViewFrame.Height() > 0 && itsDataViewFrame.Width() > 0)
-		itsCtrlViewDocumentInterface->CrossSectionDataViewFrame(itsDataViewFrame); // talletetaan ei 0-kokoisen poikkileikkaus ikkunan dataikkunan suhteellinen recti dokumenttiin
 }
 
 NFmiRect NFmiCrossSectionView::CalcPressureScaleRect(void)

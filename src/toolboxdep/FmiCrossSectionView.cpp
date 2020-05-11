@@ -396,9 +396,10 @@ void CFmiCrossSectionView::OnSize(UINT nType, int cx, int cy)
 	CRect rect;
 	GetClientRect(rect);
 	m_tooltip.SetToolRect(this, CROSSSECTIOVIEW_TOOLTIP_ID, rect);
-    itsSmartMetDocumentInterface->CrossSectionViewSizeInPixels(NFmiPoint(rect.Width(), rect.Height()));
+	NFmiPoint clientSizeInPixels(rect.Width(), rect.Height());
+    itsSmartMetDocumentInterface->CrossSectionViewSizeInPixels(clientSizeInPixels);
 	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+	itsSmartMetDocumentInterface->DoMapViewOnSize(MapViewDescTopIndex(), clientSizeInPixels, deviceContextHandler.GetDcFromHandler());
 
 	Update(true);
 }
@@ -512,9 +513,14 @@ int CFmiCrossSectionView::CalcPrintingPageShiftInMinutes(void)
 	return FmiRound(itsSmartMetDocumentInterface->MapViewDescTop(0)->TimeControlTimeStep() * 60.);
 }
 
-CtrlViewUtils::GraphicalInfo& CFmiCrossSectionView::GetGraphicalInfo(void)
+CtrlViewUtils::GraphicalInfo& CFmiCrossSectionView::GetGraphicalInfo()
 {
 	return itsSmartMetDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
+}
+
+TrueMapViewSizeInfo& CFmiCrossSectionView::GetTrueMapViewSizeInfo()
+{
+	return itsSmartMetDocumentInterface->CrossSectionSystem()->GetTrueMapViewSizeInfo();
 }
 
 void CFmiCrossSectionView::CurrentPrintTime(const NFmiMetTime & /* theTime */ )

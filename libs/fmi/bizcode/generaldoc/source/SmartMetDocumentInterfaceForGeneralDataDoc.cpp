@@ -3,6 +3,7 @@
 #include "NFmiMapViewDescTop.h"
 #include "ApplicationInterface.h"
 #include "CombinedMapHandlerInterface.h"
+#include "NFmiApplicationWinRegistry.h"
 
 SmartMetDocumentInterfaceForGeneralDataDoc::SmartMetDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -1374,9 +1375,9 @@ NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamD
     return itsDoc->MacroParamDataCache();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+bool SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
 {
-    itsDoc->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+    return itsDoc->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
 }
 
 NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int mapViewDescTopIndex)
@@ -1387,6 +1388,13 @@ NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHa
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange)
 {
     return itsDoc->GetCombinedMapHandler()->changeTime(theTypeOfChange, theDirection, theMapViewIndex, theAmountOfChange);
+}
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor)
+{
+    ApplicationWinRegistry().HatchingToolmasterEpsilonFactor(newEpsilonFactor);
+    if(ApplicationInterface::GetApplicationInterfaceImplementation)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(newEpsilonFactor);
 }
 
 #ifndef DISABLE_CPPRESTSDK

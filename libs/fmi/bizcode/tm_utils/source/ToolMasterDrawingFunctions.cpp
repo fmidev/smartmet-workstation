@@ -280,7 +280,7 @@ static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, checkedVector<floa
 // Parametrit theGridNodesX/Y: Näihin vektoreihin lasketaan käytetyn hilan x- ja y-pisteiden paikat theGridArea:n maailmassa.
 // Parametri theMfcClipRect: Tähän lasketaan piirtoalueen laatikko pikseleissä. Sitä käytetään ei ToolMaster piirroissa.
 // Parametri theTotViewSizeOut: Tähän lasketaan piirtoalueen koko pikseleissä, tietoa käytetään isoviiva labeloinnin harvennukseen.
-void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut)
+void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut, double & dataGridToViewHeightRatioOut)
 {
     float xsi, ysi; // koko CWnd ikkunan piirtoalueen koko [mm]
     int   xpic, ypic; // koko CWnd ikkunan piirtoalueen koko pikseleissä
@@ -311,6 +311,7 @@ void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewR
     double zxmax = zr;
     double zymin = 1. - zb;
     double zymax = 1. - zt;
+    dataGridToViewHeightRatioOut = 1. / (zymax - zymin);
     // Asetetaan kartalla näkyvän alueen koko ja paikka suhteellisessa maailmassa
     XuViewWorldLimits(zxmin, zxmax, zymin, zymax, 0, 0);
     // Asetetaan eri akseleiden suhteita, tärkein on kai tuo x/y suhdeluku
@@ -486,10 +487,40 @@ static void FillHatchedPolygonData(const std::vector<int> &polyPointsXInPixels, 
     }
 }
 
+static void DrawPolygonIndexText(int polygonIndex, int wantedPolygonIndex, CDC *pDC, int xPixelCoordinate, int yPixelCoordinate)
+{
+    if(polygonIndex == wantedPolygonIndex)
+    {
+        CString polygonIndexText;
+        polygonIndexText.Format(_T("Ind: %d"), wantedPolygonIndex);
+        pDC->TextOut(xPixelCoordinate, yPixelCoordinate, polygonIndexText);
+    }
+}
+
+static void UpdateMinCoordinateY(const std::vector<CPoint> &polygonCPoints, int &currentRowMinCoordinateY_inOut)
+{
+    auto minElement = std::min_element(polygonCPoints.begin(), polygonCPoints.end(),
+        [](const auto& point1, const auto& point2) {return point1.y < point2.y; });
+    if(currentRowMinCoordinateY_inOut > minElement->y)
+        currentRowMinCoordinateY_inOut = minElement->y;
+}
+
+// Pieni overlap fiksaus polygoneihin. En tiedä johtuuko ongelma toolmasterin polygoneista vai
+// GDI piirron ominaisuuksista, mutta tämä korjaa yhden pikselin satunnaiset välit hatcheistä.
+// Eli lasketaan koko ajan, mikä oli edellisen polygoni rivin ylimmän pikselin arvo (monitorilla ylin
+// on siis pienin arvo, kun 0,0 piste on näytön top-left). Jos läpikäytävä piste on juuri siinä, siirretään 
+// se yhden pikselin verran alaspäin (overlap).
+static void FixOnePixelGapFromPolygon(int lastRowMinCoordinateY, std::vector<CPoint>& polygonCPoints_inOut)
+{
+    for(auto& point : polygonCPoints_inOut)
+    {
+        if(lastRowMinCoordinateY == point.y)
+            point.y++;
+    }
+}
+
 static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPolygonData, CDC *pDC, const CRect& theMfcClipRect)
 {
-    static int wantedPolygonIndex = 916;
-
     if(theToolmasterHatchPolygonData.polygonSizeNumbers_.size())
     {
         TMWorldLimits worldLimits;
@@ -505,17 +536,38 @@ static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPo
         int polygonPointTotalCount = 0;
         int currentPolygonFloatDataTotalIndex = 0;
         int currentPolygonIntDataTotalIndex = 0;
+        int lastRowMinCoordinateY = std::numeric_limits<int>::max();
+        int currentRowMinCoordinateY = std::numeric_limits<int>::max();
+        int currentRowToolmasterIndexY = -1;
         const auto& polygonSizeNumbers = theToolmasterHatchPolygonData.polygonSizeNumbers_;
         for(int polygonIndex = 0; polygonIndex < polygonSizeNumbers.size(); polygonIndex++)
         {
             int polygonPointsCount = polygonSizeNumbers[polygonIndex];
             int polygonFloatDataCount = theToolmasterHatchPolygonData.polygonDataFloatNumberArray_[polygonIndex];
             int polygonIntDataCount = theToolmasterHatchPolygonData.polygonDataIntNumberArray_[polygonIndex];
-//            if(polygonIndex == wantedPolygonIndex)
+            int polygonRowToolmasterIndexY = theToolmasterHatchPolygonData.polygonDataIntArray_[currentPolygonIntDataTotalIndex + 1];
+
+            if(currentRowToolmasterIndexY != polygonRowToolmasterIndexY)
             {
+                currentRowToolmasterIndexY = polygonRowToolmasterIndexY;
+                lastRowMinCoordinateY = currentRowMinCoordinateY;
+            }
+
+            // **** HUOM! Pida seuraavia 5 koodi rivia tallessa kommenteissa, niiden ***********
+            // **** avulla voidaan metsastaa ongelma polygoneja hatching yhteydessa  ***********
+            // ---------------------------------------------------------------------------------
+            //int wantedPolygonIndex1 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex1_;
+            //int wantedPolygonIndex2 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex2_;
+            //if(polygonIndex == wantedPolygonIndex1 || polygonIndex == wantedPolygonIndex2)
+            {
+                //::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex1, pDC, polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount]);
+                //::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex2, pDC, polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount]);
                 if(theToolmasterHatchPolygonData.isHatchPolygonDrawn(polygonIndex, currentPolygonFloatDataTotalIndex, currentPolygonIntDataTotalIndex, polygonPointTotalCount))
                 {
                     FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polygonPointsCount, polygonCPoints);
+                    ::UpdateMinCoordinateY(polygonCPoints, currentRowMinCoordinateY);
+                    ::FixOnePixelGapFromPolygon(lastRowMinCoordinateY, polygonCPoints);
+
                     pDC->Polygon(polygonCPoints.data(), polygonPointsCount);
                 }
             }
@@ -532,13 +584,13 @@ static void SetupMFCAndDrawShadedPolygons3(ToolmasterHatchPolygonData &theToolma
     CBrush brush;
     const auto& hatchSettings = theToolmasterHatchPolygonData.hatchSettings_;
     COLORREF crColor = hatchSettings.itsHatchColorRef;
-    if(hatchSettings.itsHatchPattern == -1) // jos hatch-pattern on -1, tehdäänkin täysin peittävä sivelline ilman hatchiä
+    if(hatchSettings.itsHatchPattern == -1) // jos hatch-pattern on -1, tehdäänkin täysin peittävä sivellin ilman hatchiä
         brush.CreateSolidBrush(crColor);
     else
         brush.CreateHatchBrush(hatchSettings.itsHatchPattern, crColor);
     CBrush *oldBrush = pDC->SelectObject(&brush);
 
-    int penStyle = PS_NULL;
+    int penStyle = PS_NULL; // PS_SOLID
     int penWidth = hatchSettings.fDrawHatchBorders ? 1 : 0;
     COLORREF penColor1 = 0x00000000;
     if(penWidth > 0)
@@ -554,9 +606,6 @@ static void SetupMFCAndDrawShadedPolygons3(ToolmasterHatchPolygonData &theToolma
 
     pDC->SelectObject(oldPen);
 }
-
-// Tämän testi funktion toteutus on tiedoston lopussa.
-static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY);
 
 bool gDrawTest = false; // Laita tämän arvoksi true, jos haluat nähdä tietyn piirrettän polygonin high-lightauksen.
 
@@ -577,8 +626,6 @@ static void GetReadyAndDoTheHatch(NFmiIsoLineData &theIsoLineData, const NFmiHat
     try
     {
         ::SetupMFCAndDrawShadedPolygons3(toolmasterHatchPolygonData, pDC, theMfcClipRect);
-        //if(gDrawTest)
-        //    DrawShadedPolygonsTest(pDC, polyNumbers, polyPointsX, polyPointsY);
     }
     catch(...)
     {
@@ -734,8 +781,9 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
 
     CRect mfcClipRect;
     NFmiPoint totalViewSize;
+    auto& dataGridToViewHeightRatio = theIsoLineData.itsDataGridToViewHeightRatio;
 
-    SetupViewWorld(theIsoLineData, theRelViewRect, theZoomedViewRect, theGridArea, gridNodesX, gridNodesY, &mfcClipRect, totalViewSize);
+    SetupViewWorld(theIsoLineData, theRelViewRect, theZoomedViewRect, theGridArea, gridNodesX, gridNodesY, &mfcClipRect, totalViewSize, dataGridToViewHeightRatio);
     XuTextFont(XuSWIM, XuBEST_FIT); // vaikuttaa isoviiva label tekstin fonttiin
 
     // Once a crash report suggested that gridNodesX and gridNodesY were empty even though theIsoLineData had specific values for x- and y-grid dimensions
@@ -783,17 +831,6 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
 
     XuClip(XuOFF);
     XuVariableGridNodesOption(XuGRID_DELETE);
-}
-
-static IntPoint CalcNeededSubGridSize(const NFmiIsoLineData &theOrigIsoLineData)
-{
-    const double criticalXSize = 220;
-    const double criticalYSize = 220;
-
-    IntPoint neededSize;
-    neededSize.x = static_cast<int>(std::ceil(theOrigIsoLineData.itsXNumber / criticalXSize));
-    neededSize.y = static_cast<int>(std::ceil(theOrigIsoLineData.itsYNumber / criticalYSize));
-    return neededSize;
 }
 
 static bool IsIsolinesDrawn(const NFmiIsoLineData &theOrigIsoLineData)
@@ -871,7 +908,7 @@ static void BuildDownSizedData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineD
     theDownSizedIsoLineData.InitDrawOptions(theOrigIsoLineData);
 }
 
-static void DoTraceLogging(const std::string message)
+static void DoTraceLogging(const std::string &message)
 {
     if(CatLog::doTraceLevelLogging())
     {
@@ -988,135 +1025,5 @@ void CreateClassesAndColorTableAndColorShade(float aMin, float aMax, int classCo
     XuShadingScale(shadingScaleIndex);
 }
 
-
-// ***************************************************************************************************************
-// **** Tässä on hieman testaus koodia, jos joskus tulee ongelmia hatchin tai muun polygoni piirron kanssa *******
-// **** Globaali muuttuja gDrawTest pitää muuttaa arvoon true, ja halutun polygonin high-lighttauksen saa  *******
-// **** päälle kun laittaa gDesignatedPolygon globaali muuttujan arvoksi halutun polygonin indeksin. Jos   *******
-// **** sen arvo on -1, piirtää se high-lightin aina juoksu järjestyksessä seuraava polygonin kohdallle.   *******
-// **** Tällöin SMartMetilla voidaan etsiä ongelma polygoni refreshaamalla näyttöä F5:lla.                 *******
-// ***************************************************************************************************************
-
-const int gMissingValue = -9999;
-static const CPoint gMissingCPoint = CPoint(gMissingValue, gMissingValue);
-
-static CPoint CalcPolygonCenter(const checkedVector<CPoint> &thePolygonCPoints)
-{
-    if(thePolygonCPoints.size())
-    {
-        double sumX = 0;
-        double sumY = 0;
-        for(size_t i = 0; i < thePolygonCPoints.size(); i++)
-        {
-            sumX += thePolygonCPoints[i].x;
-            sumY += thePolygonCPoints[i].y;
-        }
-        CPoint centerPoint(boost::math::iround(sumX / thePolygonCPoints.size()), boost::math::iround(sumY / thePolygonCPoints.size()));
-        return centerPoint;
-    }
-    else
-        return gMissingCPoint;
-}
-
-//static int gDesignatedPolygon = -1; // Laita tähän 0 tai positiivinen luku jos haluat jonkun tietyn polygonin näkyvän (kun gDrawTest on true), laita tähän arvo -1, jos haluat juoksuttaa korostettua polygonia.
-//
-//static void DrawShadedPolygonsTest(CDC *pDC, checkedVector<int> & thePolyNumbers, checkedVector<float> &thePolyPointsX, checkedVector<float> &thePolyPointsY)
-//{
-//    if(thePolyNumbers.size())
-//    {
-//        static int polygonCounter = 0;
-//
-//        std::vector<COLORREF> colorVec;
-//        colorVec.push_back(RGB(255, 0, 0));
-//        colorVec.push_back(RGB(0, 255, 0));
-//        colorVec.push_back(RGB(0, 0, 255));
-//        colorVec.push_back(RGB(128, 128, 0));
-//        colorVec.push_back(RGB(0, 128, 128));
-//
-//        // Luo joukko erilaisia siveltimiä
-//        std::vector<CBrush*> brushVec;
-//        for(size_t i = 0; i < colorVec.size(); i++)
-//        {
-//            brushVec.push_back(new CBrush());
-//            brushVec[i]->CreateHatchBrush(static_cast<int>(i), colorVec[i]);
-//        }
-//
-//        int penStyle = PS_SOLID;
-//        int penWidth = 1;
-//        int penWidth2 = 2;
-//        COLORREF penColor1 = 0x00000000;
-//        COLORREF penColor2 = 0x000000FF;
-//        CPen myPen1(penStyle, penWidth, penColor1);
-//        CPen myPen2(penStyle, penWidth2, penColor2);
-//
-//        int oldBkMode = pDC->SetBkMode(TRANSPARENT);
-//        int oldTextAlign = pDC->SetTextAlign(TA_CENTER);
-//        CBrush *oldBrush = pDC->SelectObject(brushVec[0]);
-//        CPen *oldPen = pDC->SelectObject(&myPen1);
-//
-//        int minRowYPixelValue = gIgnoreMinMaxPixelHandling; // tämä arvo on puuttuva arvo, jolloin testi piirrossa näiden käsittely ignoorataan
-//        int maxRowYPixelValue = gIgnoreMinMaxPixelHandling;
-//        checkedVector<int> polyPointsXInPixels, polyPointsYInPixels;
-//        checkedVector<CPoint> polygonCPoints;
-//        int polygonPointTotalCount = 0;
-//        MakeTotalPolygonPointConversion(thePolyPointsX, thePolyPointsY, polyPointsXInPixels, polyPointsYInPixels);
-//        for(size_t i = 0; i < thePolyNumbers.size(); i++)
-//        {
-//            bool drawHelperPolygon = (gDesignatedPolygon >= 0 && gDesignatedPolygon == static_cast<int>(i)) || (gDesignatedPolygon < 0 && (i == polygonCounter));
-//            pDC->SelectObject(&myPen1);
-//            pDC->SelectObject(brushVec[i % 5]);
-//            int polPoinsCount = thePolyNumbers[i];
-//            FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polPoinsCount, polygonCPoints, minRowYPixelValue, maxRowYPixelValue);
-//            //			pDC->Polygon(&polygonCPoints[0], polPoinsCount);
-//            int circleSize = 3;
-//            for(size_t j = 0; j < polygonCPoints.size(); j++)
-//            { // piirretään polygonin pisteet näkyviin
-//                if(drawHelperPolygon)
-//                {
-//                    if(j < 3 || j >= polygonCPoints.size() - 3)
-//                    {
-//                        pDC->SelectObject(&myPen2); // ensimmäinen ja viiimeinen ympyrä piirretään erivärillä
-//                        circleSize = 5;
-//                    }
-//                    else
-//                    {
-//                        pDC->SelectObject(&myPen1); // kaksi ensimmäistä ympyrää piirretään erivärillä
-//                        circleSize = 3;
-//                    }
-//
-//                    pDC->Ellipse(polygonCPoints[j].x - circleSize, polygonCPoints[j].y - circleSize, polygonCPoints[j].x + circleSize, polygonCPoints[j].y + circleSize);
-//                }
-//            }
-//            pDC->SelectObject(&myPen1);
-//            circleSize = 3;
-//            // piirretään polygonin keskipisteeseen juokseva indeksi
-//            if(drawHelperPolygon)
-//            {
-//                CPoint centerPoint = ::CalcPolygonCenter(polygonCPoints);
-//                CString indexStrU_;
-//                int tmpCounter = static_cast<int>(i);
-//                indexStrU_.Format(_TEXT("%d"), tmpCounter);
-//                pDC->TextOut(centerPoint.x, centerPoint.y, indexStrU_);
-//                pDC->Ellipse(centerPoint.x - circleSize, centerPoint.y - circleSize, centerPoint.x + circleSize, centerPoint.y + circleSize);
-//            }
-//            polygonPointTotalCount += polPoinsCount;
-//        }
-//        polygonCounter++;
-//        if(polygonCounter >= thePolyNumbers.size())
-//            polygonCounter = 0;
-//
-//        pDC->SelectObject(oldPen);
-//        pDC->SelectObject(oldBrush);
-//        pDC->SetTextAlign(oldTextAlign);
-//        pDC->SetBkMode(oldBkMode);
-//
-//        // Tuhoa siveltimet
-//        for(size_t i = 0; i < brushVec.size(); i++)
-//        {
-//            brushVec[i]->DeleteObject();
-//            delete brushVec[i];
-//        }
-//    }
-//}
 
 #endif // DISABLE_UNIRAS_TOOLMASTER

@@ -1079,6 +1079,9 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         // 3 = 3 eri karttanäyttöä, ei vieläkään missään asetusta tälle, koska pääkarttanäyttö poikkeaa kahdesta apukarttanäytöstä
         itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem());
 
+		// Vähän nurinkurisesti tässä asetetaan rekisteristä yksi arvo edelleen pariin paikkaan (mm. takaisin itseensä, mutta modulaarisuus vaatii tämän)
+		ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(itsApplicationWinRegistry.HatchingToolmasterEpsilonFactor());
+
         // We have to set log level here, now that used log level is read from registry
         CatLog::logLevel(static_cast<CatLog::Severity>(itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LogLevel()));
 	}
@@ -5185,20 +5188,34 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
     }
 }
 
-void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
-	// Nykyään jos kartan koko muuttuu, pitää macroParam cache tyhjentää, koska sen koko saattaa muuttua.
-	// Laskentahilan koko lasketaan aina uudestaan, jolloin tehdään hila- vs pikseli-koko vertailuja.
-    auto cleanMacroParamCache = true;
-	GetCombinedMapHandler()->mapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
-    MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
-    auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex);
-    if(mapViewDesctop)
-    {
-        mapViewDesctop->CalcClientViewXperYRatio(totalPixelSize);
-        mapViewDesctop->MapViewSizeInPixels(clientPixelSize);
-        mapViewDesctop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
-    }
+	auto drawObjectScaleFactor = ApplicationWinRegistry().DrawObjectScaleFactor();
+	auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex, true);
+	if(mapViewDesctop)
+	{
+		// MapViewSizeInPixels(clientPixelSize) -kutsu pitää olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
+		mapViewDesctop->MapViewSizeInPixels(clientPixelSize, pDC, drawObjectScaleFactor, !mapViewDesctop->IsTimeControlViewVisible());
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
+
+		// Nykyään jos kartan koko muuttuu, pitää macroParam cache tyhjentää, koska sen koko saattaa muuttua.
+		// Laskentahilan koko lasketaan aina uudestaan, jolloin tehdään hila- vs pikseli-koko vertailuja.
+		auto cleanMacroParamCache = true;
+		GetCombinedMapHandler()->mapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
+		MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
+		mapViewDesctop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+		return true; // Jos kyse oli karttanäytön asetuksesta, palautetaan true
+	}
+	else if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+	{
+		auto &crossSectionSystem = *CrossSectionSystem();
+		auto& trueMapViewSizeInfo = crossSectionSystem.GetTrueMapViewSizeInfo();
+		NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
+		trueMapViewSizeInfo.onSize(clientPixelSize, pDC, crossSectionViewGridSize,  true, drawObjectScaleFactor);
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(crossSectionSystem.GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
+		return true; // Jos kyse oli poikkileikkausnäytön asetuksesta, palautetaan true
+	}
+	return false; // Jos kyse oli jostain muusta kuin karttanäytöstä, palautetaan false sen merkiksi että mitään ei tehty
 }
 
 NFmiTimeBag AdjustTimeBagToGivenTimeBag(const NFmiTimeBag& theRestrictingTimebag, const NFmiTimeBag& wantedTimebag)
@@ -7668,23 +7685,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void CrossSectionViewSizeInPixels(const NFmiPoint& newSize)
 	{
 		itsCrossSectionViewSizeInPixels = newSize;
-	}
-
-	// laskee poikkileikkausnäyttöruudukon yhden ruudun koon pikseleissä
-	NFmiPoint ActualCrossSectionBitmapSizeInPixels(void)
-	{
-		return NFmiPoint(itsCrossSectionViewSizeInPixels.X() * itsCrossSectionDataViewFrame.Width()
-							,itsCrossSectionViewSizeInPixels.Y() * itsCrossSectionDataViewFrame.Height());
-	}
-
-	void CrossSectionDataViewFrame(const NFmiRect &theRect)
-	{
-		itsCrossSectionDataViewFrame = theRect;
-	}
-
-	const NFmiRect& CrossSectionDataViewFrame(void)
-	{
-		return itsCrossSectionDataViewFrame;
 	}
 
 	void MustDrawTimeSerialView(bool newValue)
@@ -10266,7 +10266,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool fRawTempRoundSynopTimes;
 	NFmiPoint itsRawTempUnknownStartLonLat;
 	bool fWarnIfCantSaveWorkingFile; // kaikilla konfiguraatioilla ei voi tallettaa työtiedostoa, eikä siitä tarvitse varoittaa, tämä luetaan settingseistä
-	NFmiRect itsCrossSectionDataViewFrame; // tämän avulla voidaan laskea yhden poikkileikkaus dataikkunan koko pikseleissä
 	NFmiPoint itsCrossSectionViewSizeInPixels; // poikkileikkausnäyttö ikkunan clientti osan koko pikseleissä
 	NFmiHelpEditorSystem itsHelpEditorSystem;
 
@@ -11335,21 +11334,6 @@ void NFmiEditMapGeneralDataDoc::CrossSectionViewSizeInPixels(const NFmiPoint& ne
 	pimpl->CrossSectionViewSizeInPixels(newSize);
 }
 
-NFmiPoint NFmiEditMapGeneralDataDoc::ActualCrossSectionBitmapSizeInPixels(void)
-{
-	return pimpl->ActualCrossSectionBitmapSizeInPixels();
-}
-
-void NFmiEditMapGeneralDataDoc::CrossSectionDataViewFrame(const NFmiRect &theRect)
-{
-	pimpl->CrossSectionDataViewFrame(theRect);
-}
-
-const NFmiRect& NFmiEditMapGeneralDataDoc::CrossSectionDataViewFrame(void)
-{
-	return pimpl->CrossSectionDataViewFrame();
-}
-
 void NFmiEditMapGeneralDataDoc::MustDrawTimeSerialView(bool newValue)
 {
 	pimpl->MustDrawTimeSerialView(newValue);
@@ -12379,9 +12363,9 @@ NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
     return pimpl->MacroParamDataCache();
 }
 
-void NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize)
+bool NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
 {
-    pimpl->DoMapViewOnSize(mapViewDescTopIndex, totalPixelSize, clientPixelSize);
+    return pimpl->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
 }
 
 TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()

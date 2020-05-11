@@ -169,11 +169,9 @@ public:
     bool MiddleMouseButtonDown(void) override;
     void MiddleMouseButtonDown(bool newState) override;
     NFmiDrawParamList* CrossSectionViewDrawParamList(int theRowIndex) override;
-    NFmiPoint ActualCrossSectionBitmapSizeInPixels(void) override;
     NFmiSmartToolInfo* SmartToolInfo(void) override;
     void SetLatestMacroParamErrorText(const std::string& theErrorText) override;
     bool CreateCrossSectionViewPopup(int theRowIndex) override;
-    void CrossSectionDataViewFrame(const NFmiRect &theRect) override;
     const NFmiRect& RelativeMapRect(int theDescTopIndex) override;
     bool BetaProductGenerationRunning() override;
     const NFmiMetTime& LastEditedDataSendTime() override;
@@ -291,6 +289,8 @@ public:
     bool BorderDrawPolylinesDirty(int theDescTopIndex) const override;
     bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const override;
     void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) override;
+    double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const override;
+    bool IsTimeControlViewVisible(int theDescTopIndex) const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

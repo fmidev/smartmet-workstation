@@ -546,10 +546,16 @@ void CTimeEditValuesView::RelativePrintRect(const NFmiRect & /* theRect */ )
 {
 }
 
-CtrlViewUtils::GraphicalInfo& CTimeEditValuesView::GetGraphicalInfo(void)
+CtrlViewUtils::GraphicalInfo& CTimeEditValuesView::GetGraphicalInfo()
 {
 	static CtrlViewUtils::GraphicalInfo graphicalInfoDummy;
 	return graphicalInfoDummy;
+}
+
+TrueMapViewSizeInfo& CTimeEditValuesView::GetTrueMapViewSizeInfo()
+{
+	static TrueMapViewSizeInfo trueMapViewSizeInfoDummy(MapViewDescTopIndex());
+	return trueMapViewSizeInfoDummy;;
 }
 
 void CTimeEditValuesView::SetPrintCopyCDC(CDC* /* pDC */ )

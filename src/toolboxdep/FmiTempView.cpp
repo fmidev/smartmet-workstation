@@ -432,9 +432,15 @@ CSize CFmiTempView::GetPrintedAreaOnScreenSizeInPixels(void)
 		return CSize(0, 0);
 }
 
-CtrlViewUtils::GraphicalInfo& CFmiTempView::GetGraphicalInfo(void)
+CtrlViewUtils::GraphicalInfo& CFmiTempView::GetGraphicalInfo()
 {
 	return itsSmartMetDocumentInterface->GetMTATempSystem().GetGraphicalInfo();
+}
+
+TrueMapViewSizeInfo& CFmiTempView::GetTrueMapViewSizeInfo()
+{
+	static TrueMapViewSizeInfo trueMapViewSizeInfoDummy(MapViewDescTopIndex());
+	return trueMapViewSizeInfoDummy;;
 }
 
 NFmiMetTime CFmiTempView::CalcPrintingStartTime(void)

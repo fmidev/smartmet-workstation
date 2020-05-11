@@ -8,6 +8,8 @@
 #include "TimeSerialModification.h"
 #include "ApplicationInterface.h"
 #include "CombinedMapHandlerInterface.h"
+#include "SpecialDesctopIndex.h"
+#include "NFmiCrossSectionSystem.h"
 
 CtrlViewDocumentInterfaceForGeneralDataDoc::CtrlViewDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -793,11 +795,6 @@ NFmiDrawParamList* CtrlViewDocumentInterfaceForGeneralDataDoc::CrossSectionViewD
     return itsDoc->GetCombinedMapHandler()->getCrossSectionViewDrawParamList(theRowIndex);
 }
 
-NFmiPoint CtrlViewDocumentInterfaceForGeneralDataDoc::ActualCrossSectionBitmapSizeInPixels(void)
-{
-    return itsDoc->ActualCrossSectionBitmapSizeInPixels();
-}
-
 NFmiSmartToolInfo* CtrlViewDocumentInterfaceForGeneralDataDoc::SmartToolInfo(void)
 {
     return itsDoc->SmartToolInfo();
@@ -811,11 +808,6 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLatestMacroParamErrorText(co
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateCrossSectionViewPopup(int theRowIndex)
 {
     return itsDoc->CreateCrossSectionViewPopup(theRowIndex);
-}
-
-void CtrlViewDocumentInterfaceForGeneralDataDoc::CrossSectionDataViewFrame(const NFmiRect &theRect)
-{
-    itsDoc->CrossSectionDataViewFrame(theRect);
 }
 
 const NFmiRect& CtrlViewDocumentInterfaceForGeneralDataDoc::RelativeMapRect(int theDescTopIndex)
@@ -1399,6 +1391,18 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetBorderDrawDirtyState(int the
     itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetBorderDrawDirtyState(newState);
 }
 
+double CtrlViewDocumentInterfaceForGeneralDataDoc::SingleMapViewHeightInMilliMeters(int theDescTopIndex) const
+{
+    if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+        return itsDoc->CrossSectionSystem()->GetTrueMapViewSizeInfo().singleMapSizeInMM().Y();
+    else
+        return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SingleMapViewHeightInMilliMeters();
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsTimeControlViewVisible(int theDescTopIndex) const
+{
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->IsTimeControlViewVisible();
+}
 
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================

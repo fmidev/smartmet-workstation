@@ -801,6 +801,8 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
 void NFmiIsoLineView::FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData)
 {
+    // Yhden karttaruudun korkeutta tarvitaan hatching laskuissa
+    theIsoLineData->itsSingleSubMapViewHeightInMillimeters = itsCtrlViewDocumentInterface->SingleMapViewHeightInMilliMeters(itsMapViewDescTopIndex);
     if(theDrawParam->UseWithIsoLineHatch1())
     {
         theIsoLineData->itsHatch1.fUseHatch = true;

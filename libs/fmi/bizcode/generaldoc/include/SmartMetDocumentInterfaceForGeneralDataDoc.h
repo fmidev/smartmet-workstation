@@ -286,9 +286,10 @@ public:
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
     NFmiMacroParamDataCache& MacroParamDataCache() override;
-    void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &totalPixelSize, const NFmiPoint &clientPixelSize) override;
+    bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC) override;
     NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) override;
     bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) override;
+    void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

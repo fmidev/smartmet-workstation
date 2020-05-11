@@ -158,7 +158,7 @@ public:
     void ResetPrintedDescTopIndex();
     NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
-	void DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& totalPixelSize, const NFmiPoint& clientPixelSize);
+	bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC);
     NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
@@ -378,9 +378,6 @@ public:
 	bool MustDrawCrossSectionView(void);
 	void MustDrawTempView(bool newValue);
 	bool MustDrawTempView(void);
-	void CrossSectionDataViewFrame(const NFmiRect &theRect);
-	const NFmiRect& CrossSectionDataViewFrame(void);
-	NFmiPoint ActualCrossSectionBitmapSizeInPixels(void);
 	const NFmiPoint& CrossSectionViewSizeInPixels(void);
 	void CrossSectionViewSizeInPixels(const NFmiPoint& newSize);
 	NFmiHelpEditorSystem& HelpEditorSystem(void);
