@@ -146,7 +146,7 @@ static std::string GetDirectory(const std::string &theFileFilter)
 static void MakeCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem, std::vector<DataCombineInfo> &theDataCombineInfos)
 {
 	theDataCombineInfos.clear();
-	const checkedVector<NFmiHelpDataInfo> &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
+	const std::vector<NFmiHelpDataInfo> &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
 	for(size_t i = 0; i < helpDataInfoVector.size(); i++)
 	{
 		const NFmiHelpDataInfo &helpDataInfo = helpDataInfoVector[i];
@@ -359,8 +359,8 @@ void CFmiSoundingIndexDataThread::InitSoundingIndexDataInfos(NFmiHelpDataInfoSys
 	cacheBaseDir += kFmiDirectorySeparator;
 	std::string extraName = "_soundingIndex"; // tämä lisätään cache hakemiston ja tiedoston nimeen.
 
-	const checkedVector<NFmiHelpDataInfo> &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
-	checkedVector<NFmiHelpDataInfo> newHelpDataInfos; // tähän lisätään uudet datat, jotka pitää rekisteröidä
+	const std::vector<NFmiHelpDataInfo> &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
+	std::vector<NFmiHelpDataInfo> newHelpDataInfos; // tähän lisätään uudet datat, jotka pitää rekisteröidä
 	for(size_t i = 0; i < helpDataInfoVector.size(); i++)
 	{
 		const NFmiHelpDataInfo &helpDataInfo = helpDataInfoVector[i];

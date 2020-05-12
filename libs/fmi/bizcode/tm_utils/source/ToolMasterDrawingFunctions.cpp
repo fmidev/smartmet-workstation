@@ -39,7 +39,7 @@ float CalcMMSizeFactor(float theViewHeightInMM, float theMaxFactor)
 using namespace std;
 
 // muista theColorIndexies-vektorin koko ei ole käytettävissä tässä, koska se on asetettu joksikin maksimi kooksi
-static bool IsTransparencyColorUsed(const checkedVector<int>& theColorIndexies, int theRealColorIndexCount, int theTransparencyColorIndex)
+static bool IsTransparencyColorUsed(const std::vector<int>& theColorIndexies, int theRealColorIndexCount, int theTransparencyColorIndex)
 {
     for(int i = 0; i < theRealColorIndexCount; i++)
         if(theColorIndexies[i] == theTransparencyColorIndex)
@@ -63,7 +63,7 @@ static std::string MakeDataIdentString(const NFmiDataIdent &dataIdent)
     return str;
 }
 
-static void AddColorValuesToTables(checkedVector<NFmiColor> &colors, checkedVector<float> &classes, checkedVector<int> &colInds, const NFmiColor &aColor, float classValue, int colInd, bool lastValue)
+static void AddColorValuesToTables(std::vector<NFmiColor> &colors, std::vector<float> &classes, std::vector<int> &colInds, const NFmiColor &aColor, float classValue, int colInd, bool lastValue)
 {
     colors.push_back(aColor);
     if(lastValue == false) // viimeisellä rajalla ei laiteta luokkaa sisään, luokkia PITÄÄ olla yksi vähemmän kuin värejä color contourauksessa
@@ -86,7 +86,7 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
 
     float colorRGB[3], dummy[5];
 
-    checkedVector<NFmiColor> usedColorVector;
+    std::vector<NFmiColor> usedColorVector;
     for(size_t i = 0; i < origColorIndexTableSize; i++)
     {
         if(theIsoLineData.itsCustomColorContoursColorIndexies[i] == theTransparencyColorIndex)
@@ -99,15 +99,15 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
     }
 
     // theIsoLineData->itsTrueColorContoursCount // tässä on laskettu oikea määrä lopullisia rajoja luokille
-    checkedVector<float> &origContourClasses = theIsoLineData.itsCustomColorContours; // tässä on tallessa käytetyt luokat
+    std::vector<float> &origContourClasses = theIsoLineData.itsCustomColorContours; // tässä on tallessa käytetyt luokat
 
     float aMin = theIsoLineData.itsClassMinValue;
     float aMax = theIsoLineData.itsClassMaxValue;
     //int classCount = theIsoLineData->itsTrueColorContoursCount;
 
-    checkedVector<NFmiColor> finalColorTable;
-    checkedVector<float> finalClassesTable;
-    checkedVector<int> finalColorIndexTable; // tämä ratkaisee muidenkin taulukoiden koon, ei talleteta duplikaatteja tauluun
+    std::vector<NFmiColor> finalColorTable;
+    std::vector<float> finalClassesTable;
+    std::vector<int> finalColorIndexTable; // tämä ratkaisee muidenkin taulukoiden koon, ei talleteta duplikaatteja tauluun
 
     // täytetään 1. data osio eli värit ennen 1. rajaa
     float firstOrigClass = origContourClasses[0];
@@ -255,7 +255,7 @@ static int RgbToColorIndex(Matrix3D<std::pair<int, COLORREF> > &theColorsCube, c
 
 // täyttää gridnode datan (kutsutaan kun zoomataan)
 // oletus alue on yksikkö laatikon sisällä (0,0, 1,1)
-static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, const NFmiRect &theGridArea)
+static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, std::vector<float>& theGridNodesX, std::vector<float>& theGridNodesY, const NFmiRect &theGridArea)
 {
     // Tämän pitää saada ottamaan huomioon myös partial hila-rect
 
@@ -280,7 +280,7 @@ static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, checkedVector<floa
 // Parametrit theGridNodesX/Y: Näihin vektoreihin lasketaan käytetyn hilan x- ja y-pisteiden paikat theGridArea:n maailmassa.
 // Parametri theMfcClipRect: Tähän lasketaan piirtoalueen laatikko pikseleissä. Sitä käytetään ei ToolMaster piirroissa.
 // Parametri theTotViewSizeOut: Tähän lasketaan piirtoalueen koko pikseleissä, tietoa käytetään isoviiva labeloinnin harvennukseen.
-void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut, double & dataGridToViewHeightRatioOut)
+void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, std::vector<float>& theGridNodesX, std::vector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut, double & dataGridToViewHeightRatioOut)
 {
     float xsi, ysi; // koko CWnd ikkunan piirtoalueen koko [mm]
     int   xpic, ypic; // koko CWnd ikkunan piirtoalueen koko pikseleissä
@@ -329,10 +329,10 @@ void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewR
 }
 
 // tätä käytetään kun lasketaan custom color contour jossa käytetty askellusta ja ei transparentteja värejä
-static checkedVector<float> CalcCustomColorWidths(NFmiIsoLineData &theIsoLineData)
+static std::vector<float> CalcCustomColorWidths(NFmiIsoLineData &theIsoLineData)
 {
     int origClassCount = theIsoLineData.itsColorIndexCount;
-    checkedVector<float> widths(origClassCount, 1.f);
+    std::vector<float> widths(origClassCount, 1.f);
     if(origClassCount > 1)
     {
         for(int i = 0; i < origClassCount; i++)
@@ -349,7 +349,7 @@ static checkedVector<float> CalcCustomColorWidths(NFmiIsoLineData &theIsoLineDat
     return widths;
 }
 
-static void CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(float aMin, float aMax, int classCount, checkedVector<int> defaultTableColorIndices, int shadingScaleIndex, int colorTableIndex, checkedVector<float> colorWidths, NFmiIsoLineData &theIsolineData)
+static void CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(float aMin, float aMax, int classCount, std::vector<int> defaultTableColorIndices, int shadingScaleIndex, int colorTableIndex, std::vector<float> colorWidths, NFmiIsoLineData &theIsolineData)
 {
     float colorRGB[3], hatch[5];
 
@@ -372,7 +372,7 @@ static void CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(flo
     XuColorTableCreate(colorTableIndex, classCount, XuLOOKUP, XuRGB, max_level);
     XuColorTableActivate(colorTableIndex);
     XuShadingScaleLoad(shadingScaleIndex, colorTableIndex, 0, classCount + 0);
-    checkedVector<int> colorIndices(classCount);
+    std::vector<int> colorIndices(classCount);
     for(int i = 0; i < classCount; i++)
         colorIndices[i] = i;
 
@@ -413,8 +413,8 @@ static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
             float aMin = theIsoLineData.itsClassMinValue;
             float aMax = theIsoLineData.itsClassMaxValue;
             int classCount = theIsoLineData.itsTrueColorContoursCount;
-            checkedVector<int> defaultTableColorIndices(theIsoLineData.itsCustomColorContoursColorIndexies.begin(), theIsoLineData.itsCustomColorContoursColorIndexies.begin() + theIsoLineData.itsColorIndexCount);
-            checkedVector<float> colorWidths = ::CalcCustomColorWidths(theIsoLineData);
+            std::vector<int> defaultTableColorIndices(theIsoLineData.itsCustomColorContoursColorIndexies.begin(), theIsoLineData.itsCustomColorContoursColorIndexies.begin() + theIsoLineData.itsColorIndexCount);
+            std::vector<float> colorWidths = ::CalcCustomColorWidths(theIsoLineData);
             ::CreateClassesAndColorTableAndColorShadeForCustomContourWithSteps(aMin, aMax, classCount, defaultTableColorIndices, 5, 3, colorWidths, theIsoLineData);
         }
     }
@@ -776,8 +776,8 @@ static void SetIsolineMinLength(double currentViewSizeInMM, double usedIsolineMi
 
 static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, int theCrossSectionIsoLineDrawIndex)
 {
-    static checkedVector<float> gridNodesX;
-    static checkedVector<float> gridNodesY;
+    static std::vector<float> gridNodesX;
+    static std::vector<float> gridNodesY;
 
     CRect mfcClipRect;
     NFmiPoint totalViewSize;
@@ -1018,7 +1018,7 @@ void CreateClassesAndColorTableAndColorShade(float aMin, float aMax, int classCo
     XuColorTableCreate(colorTableIndex, classCount, XuLOOKUP, XuRGB, max_level);
     XuColorTableActivate(colorTableIndex);
     XuShadingScaleLoad(shadingScaleIndex, colorTableIndex, 0, classCount + 1);
-    checkedVector<int> colorIndices(classCount);
+    std::vector<int> colorIndices(classCount);
     for(int i = 0; i < classCount; i++)
         colorIndices[i] = i;
     XuShadingColorIndices(&colorIndices[0], classCount);

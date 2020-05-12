@@ -95,7 +95,7 @@ public:
 private:
 	void UpdateProducerList(void);
 	BOOL fCalcTempBalloonTrajectories;
-	checkedVector<NFmiProducerHelperInfo> itsProducerList;
+	std::vector<NFmiProducerHelperInfo> itsProducerList;
 	CComboBox itsProducerSelector;
 	bool fProducerSelectorUsedYet;
 public:

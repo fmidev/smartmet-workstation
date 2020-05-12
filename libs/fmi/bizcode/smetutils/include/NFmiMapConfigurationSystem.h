@@ -19,10 +19,10 @@ public:
 //	std::ostream & Write(std::ostream & file) const;
 	std::istream & Read(std::istream & file);
 	//@}
-	const checkedVector<std::string>& MapFileNames(void) const {return itsMapFileNames;}
-	const checkedVector<int>& MapDrawingStyles(void) const {return itsMapDrawingStyles;}
-	const checkedVector<std::string>& OverMapDibFileNames(void) const {return itsOverMapDibFileNames;}
-	const checkedVector<int>& OverMapDibDrawingStyles(void) const {return itsOverMapDibDrawingStyles;}
+	const std::vector<std::string>& MapFileNames(void) const {return itsMapFileNames;}
+	const std::vector<int>& MapDrawingStyles(void) const {return itsMapDrawingStyles;}
+	const std::vector<std::string>& OverMapDibFileNames(void) const {return itsOverMapDibFileNames;}
+	const std::vector<int>& OverMapDibDrawingStyles(void) const {return itsOverMapDibDrawingStyles;}
 	const std::string& ProjectionFileName(void) const {return itsProjectionFileName;}
 	const std::string& Projection(void) const{ return itsProjection; }
 	/**
@@ -59,13 +59,13 @@ public:
 	}
 
 private:
-	void ReadFileNamesAndDrawStyles(std::istream & file, checkedVector<std::string> &theFileNames, checkedVector<int> &theDrawingStyles);
+	void ReadFileNamesAndDrawStyles(std::istream & file, std::vector<std::string> &theFileNames, std::vector<int> &theDrawingStyles);
 	void ReadProjectionFileName(std::istream & file, std::string &theFileName);
 
-	checkedVector<std::string> itsMapFileNames;
-	checkedVector<int> itsMapDrawingStyles;
-	checkedVector<std::string> itsOverMapDibFileNames;
-	checkedVector<int> itsOverMapDibDrawingStyles;
+	std::vector<std::string> itsMapFileNames;
+	std::vector<int> itsMapDrawingStyles;
+	std::vector<std::string> itsOverMapDibFileNames;
+	std::vector<int> itsOverMapDibDrawingStyles;
 	std::string itsProjectionFileName;
 	std::string itsProjection;
 };
@@ -82,7 +82,7 @@ public:
 
 	const NFmiMapConfiguration& GetMapConfiguration(int theIndex);
 
-	checkedVector<NFmiMapConfiguration>::size_type Size() 
+	std::vector<NFmiMapConfiguration>::size_type Size() 
 	{
 		return itsMapConfigurations.size();
 	}
@@ -101,7 +101,7 @@ public:
 	std::istream & Read(std::istream & file);
 	//@}
 private:
-	checkedVector<NFmiMapConfiguration> itsMapConfigurations;
+	std::vector<NFmiMapConfiguration> itsMapConfigurations;
 };
 
 //inline std::ostream & operator<<(std::ostream & os, const NFmiMapConfigurationSystem & item)

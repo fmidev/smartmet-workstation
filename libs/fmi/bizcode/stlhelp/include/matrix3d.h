@@ -6,10 +6,10 @@
 
 /* 3D matrix as vector of 2D matrices*/
 template<class T>
-class Matrix3D : public checkedVector<Matrix<T> >
+class Matrix3D : public std::vector<Matrix<T> >
 {
 #ifdef _MSC_VER
-     typedef typename checkedVector< checkedVector< T > >::size_type size_type;
+     typedef typename std::vector< std::vector< T > >::size_type size_type;
 #endif
   protected:
     size_type rows,
@@ -19,12 +19,12 @@ class Matrix3D : public checkedVector<Matrix<T> >
   public:
     Matrix3D(size_type x = 0, size_type y = 0,
              size_type z = 0)
-    : checkedVector<Matrix<T> >(x, Matrix<T>(y,z)),
+    : std::vector<Matrix<T> >(x, Matrix<T>(y,z)),
       rows(x), columns(y), zDim(z)
     {}
 
     /* The constructor initializes the base class subobject, a
-       checkedVector of length c, whose elements are matrices. Each
+       std::vector of length c, whose elements are matrices. Each
        element of this vector is initialized with a (y,z) matrix. */
 
     size_type Rows() const { return rows;}

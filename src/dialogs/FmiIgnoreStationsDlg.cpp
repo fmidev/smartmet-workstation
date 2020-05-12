@@ -96,7 +96,7 @@ void CFmiIgnoreStationsDlg::OnBnClickedButtonAdd()
 		else
 		{
 			// 1. etsi asema id:n perusteellä asemaa havainto datoista
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations);
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations);
 			for(size_t i = 0; i < infos.size(); i++)
 			{
 				if(infos[i]->IsGrid() == false)

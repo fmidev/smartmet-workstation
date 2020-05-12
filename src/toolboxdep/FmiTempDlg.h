@@ -76,7 +76,7 @@ private:
     BOOL fShowIndexies;
     BOOL fShowHodograf;
     // lista luotaus tuottajista, joilta löytyi dataa, tällä täytetään yllä oleva combolista.
-    checkedVector<NFmiProducer> itsProducerListWithData; 
+    std::vector<NFmiProducer> itsProducerListWithData; 
     // Tämä on lippu, jolla teemme dialogista käyttäjä ystävällisen eli jos kukaan ei ole vielä käynyt säätämässä tuottaja listaa, voidaan
     // listan oletus arvo laittaa osoittamaan havaittuja luotauksia jos niitä löytyy, muuten laitetaan se osoittamaan 1. tuottajaa. 
     // Muista että tämä lista elää kun dataa ladataan koko ajan sisään.

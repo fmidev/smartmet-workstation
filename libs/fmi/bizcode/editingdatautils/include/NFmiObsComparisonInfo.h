@@ -133,7 +133,7 @@ private:
 
 	NFmiColor itsFrameColor;
 
-	checkedVector<NFmiObsComparisonInfo::Param> itsParams;
+	std::vector<NFmiObsComparisonInfo::Param> itsParams;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiObsComparisonInfo& item){item.Write(os); return os;}

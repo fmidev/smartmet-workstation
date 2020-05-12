@@ -69,7 +69,7 @@ public:
 	{}
 
 	void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface){itsSmartMetDocumentInterface = smartMetDocumentInterface;};
-	void SetUsedHeaders(checkedVector<WindTableHeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;};
+	void SetUsedHeaders(std::vector<WindTableHeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;};
 
 	void LastDataTime(const NFmiMetTime &theTime)
 	{ itsLastDataTime = theTime;}
@@ -91,7 +91,7 @@ private:
 	bool fLastSortedExist; // onko edes tehty mit‰‰n sorttausta
 
 	NFmiMetTime itsLastDataTime; // k‰ytet‰‰n printtauksessa otsikossa
-	checkedVector<WindTableHeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
+	std::vector<WindTableHeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
 	int itsLastMessageCount; // kuinka monta sanomaa/asemaa on taulukossa
 public:
 	DECLARE_MESSAGE_MAP()
@@ -140,8 +140,8 @@ private:
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	bool fGridCtrlInitialized;
 	int itsMapViewDescTopIndex;
-	checkedVector<WindTableHeaderParInfo> itsHeaders;
-	checkedVector<NFmiProducerHelperInfo> itsProducerList;
+	std::vector<WindTableHeaderParInfo> itsHeaders;
+	std::vector<NFmiProducerHelperInfo> itsProducerList;
 	NFmiMetTime itsLastStartTime; // jos Update-metodissa t‰m‰ ei ole vaihtunut, ei p‰ivitet‰ n‰yttˆ‰ (t‰m‰ on optimointia)
 protected:
 	virtual void OnOK();

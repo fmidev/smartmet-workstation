@@ -235,7 +235,7 @@ protected:
 
 
 	// label dataa
-/*/EL*/	checkedVector<LabelBox> itsExistingLabels; // laitetaan kaikki käytetyt label paikat talteen tarkistuksia varten (taas globaali pikaviritys)
+/*/EL*/	std::vector<LabelBox> itsExistingLabels; // laitetaan kaikki käytetyt label paikat talteen tarkistuksia varten (taas globaali pikaviritys)
 
 };
 

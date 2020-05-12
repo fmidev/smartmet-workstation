@@ -547,7 +547,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 
 void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
 {
-	checkedVector<float> specialIsoLineValues = itsDrawParam->SpecialIsoLineValues();
+	std::vector<float> specialIsoLineValues = itsDrawParam->SpecialIsoLineValues();
 	size_t ssize = specialIsoLineValues.size();
 	itsSpecialClassCount = static_cast<int>(specialIsoLineValues.size());
 	NFmiString str;
@@ -562,7 +562,7 @@ void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
 	}
     itsSpecialClassValuesStrU_ = CA2T(str);
 
-	checkedVector<int> specialClassColorIndices = itsDrawParam->SpecialIsoLineColorIndexies();
+	std::vector<int> specialClassColorIndices = itsDrawParam->SpecialIsoLineColorIndexies();
 	ssize = specialClassColorIndices.size();
 	str = "";
 	if(ssize > 0)
@@ -578,7 +578,7 @@ void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
     itsSpecialClassColorIndicesStrU_ = CA2T(str);
 
 
-	checkedVector<int> specialClassLineStyles = itsDrawParam->SpecialIsoLineStyle();
+	std::vector<int> specialClassLineStyles = itsDrawParam->SpecialIsoLineStyle();
 	ssize = specialClassLineStyles.size();
 	str = "";
 	if(ssize > 0)
@@ -594,7 +594,7 @@ void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
     itsSpecialClassLineStylesStrU_ = CA2T(str);
 
 
-	checkedVector<float> specialClassLineWidth = itsDrawParam->SpecialIsoLineWidth();
+	std::vector<float> specialClassLineWidth = itsDrawParam->SpecialIsoLineWidth();
 	ssize = specialClassLineWidth.size();
 	str = "";
 	if(ssize > 0)
@@ -609,7 +609,7 @@ void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
     itsSpecialClassLineWidthStrU_ = CA2T(str);
 
 	// itsSpecialClassLabelColorIndicesStr:i‰ k‰ytet‰‰n v‰liaikaisesti label korkeuden kanssa!!!!!!!!!!!!!!!!!!!!!!!!!!
-	checkedVector<float> specialIsoLineLabelHeight = itsDrawParam->SpecialIsoLineLabelHeight();
+	std::vector<float> specialIsoLineLabelHeight = itsDrawParam->SpecialIsoLineLabelHeight();
 	ssize = specialIsoLineLabelHeight.size();
 	str = "";
 	if(ssize > 0)
@@ -693,24 +693,24 @@ void CFmiModifyDrawParamDlg::ReadSpecialClassesData(void)
 		{
 			problemVariableStr = "Problem with SpecialClassValues string\n";
 			currentValueStr = CT2A(itsSpecialClassValuesStrU_);
-			itsDrawParam->SetSpecialIsoLineValues(NFmiStringTools::Split<checkedVector<float> >(currentValueStr, ","));
+			itsDrawParam->SetSpecialIsoLineValues(NFmiStringTools::Split<std::vector<float> >(currentValueStr, ","));
 
 			problemVariableStr = "Problem with SpecialClassColorIndices string\n";
             currentValueStr = CT2A(itsSpecialClassColorIndicesStrU_);
-			itsDrawParam->SetSpecialIsoLineColorIndexies(NFmiStringTools::Split<checkedVector<int> >(currentValueStr, ","));
+			itsDrawParam->SetSpecialIsoLineColorIndexies(NFmiStringTools::Split<std::vector<int> >(currentValueStr, ","));
 		}
 
 		problemVariableStr = "Problem with SpecialClassLineStyles string\n";
         currentValueStr = CT2A(itsSpecialClassLineStylesStrU_);
-		itsDrawParam->SetSpecialIsoLineStyle(NFmiStringTools::Split<checkedVector<int> >(currentValueStr, ","));
+		itsDrawParam->SetSpecialIsoLineStyle(NFmiStringTools::Split<std::vector<int> >(currentValueStr, ","));
 
 		problemVariableStr = "Problem with SpecialClassLineWidth string\n";
         currentValueStr = CT2A(itsSpecialClassLineWidthStrU_);
-		itsDrawParam->SetSpecialIsoLineWidth(NFmiStringTools::Split<checkedVector<float> >(currentValueStr, ","));
+		itsDrawParam->SetSpecialIsoLineWidth(NFmiStringTools::Split<std::vector<float> >(currentValueStr, ","));
 
 		problemVariableStr = "Problem with SpecialIsoLineLabelHeight string\n";
         currentValueStr = CT2A(itsSpecialClassLabelColorIndicesStrU_);
-		itsDrawParam->SetSpecialIsoLineLabelHeight(NFmiStringTools::Split<checkedVector<float> >(currentValueStr, ","));
+		itsDrawParam->SetSpecialIsoLineLabelHeight(NFmiStringTools::Split<std::vector<float> >(currentValueStr, ","));
 	}
 	catch(std::exception &e)
 	{
@@ -1340,7 +1340,7 @@ void CFmiModifyDrawParamDlg::OnEnChangeSpecialClassesValues()
 	try
 	{
 		std::string tmp = CT2A(itsSpecialClassValuesStrU_);
-		checkedVector<float> classValues = NFmiStringTools::Split<checkedVector<float> >(tmp, ",");
+		std::vector<float> classValues = NFmiStringTools::Split<std::vector<float> >(tmp, ",");
 		if(CtrlViewUtils::AreVectorValuesInRisingOrder(classValues) == false)
 			throw std::runtime_error("xxx");
 	}

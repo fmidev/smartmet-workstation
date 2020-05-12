@@ -26,7 +26,7 @@ struct PathFinderFunctor
 // lis‰t‰‰n kaikki alihakemistot mukaan,
 // jos niit‰ on ja niit‰ ei ole jo lis‰tty,
 // mutta ei initialisoida niit‰, eli ei ladata niiden alihakemistoja tai macroparameja
-static void InsertAllSubdirectories(checkedVector<boost::shared_ptr<NFmiMacroParamFolder> > &theMacroParamFolders, const std::string &thePath, const std::string &theRootPath, NFmiStopFunctor *theStopFunctor)
+static void InsertAllSubdirectories(std::vector<boost::shared_ptr<NFmiMacroParamFolder> > &theMacroParamFolders, const std::string &thePath, const std::string &theRootPath, NFmiStopFunctor *theStopFunctor)
 {
 	std::list<std::string> directories = NFmiFileSystem::Directories(thePath);
 	std::list<std::string>::iterator itDir = directories.begin();
@@ -44,7 +44,7 @@ static void InsertAllSubdirectories(checkedVector<boost::shared_ptr<NFmiMacroPar
 		std::string totalPath(thePath);
 		totalPath += *itDir;
 		totalPath = MacroParam::ConvertPathToOneUsedFormat(totalPath);
-		checkedVector<boost::shared_ptr<NFmiMacroParamFolder> >::iterator it = std::find_if(theMacroParamFolders.begin(), theMacroParamFolders.end(), PathFinderFunctor(totalPath));
+		std::vector<boost::shared_ptr<NFmiMacroParamFolder> >::iterator it = std::find_if(theMacroParamFolders.begin(), theMacroParamFolders.end(), PathFinderFunctor(totalPath));
 		if(it == theMacroParamFolders.end())
 		{ // jos hakista ei ollut aiemmin, voidaan se lis‰t‰
 			boost::shared_ptr<NFmiMacroParamFolder> tmp(new NFmiMacroParamFolder(totalPath, theRootPath));
@@ -320,7 +320,7 @@ void NFmiMacroParamSystem::MakeMacroParamItemTree(NFmiStopFunctor *theStopFuncto
 	if(itsMacroParamFolders.size() > 0)
 	{ // HUOM! kaikki tasot on laitettu itsMacroParamFolders-vektoriin vain per‰kk‰in, 1. kohdassa on root taso
 		// joten t‰yt‰mme vain root tason, ja etsimme siell‰ oleviin hakemistoihin niiden omat macroparam-listat
-		const checkedVector<boost::shared_ptr<NFmiMacroParam> >& macroParams = itsMacroParamFolders[0]->MacroParams(); // 0 eli root-taso
+		const std::vector<boost::shared_ptr<NFmiMacroParam> >& macroParams = itsMacroParamFolders[0]->MacroParams(); // 0 eli root-taso
 		AddToMacroParamItemTree(itsMacroItemTree, macroParams, theStopFunctor);
 	}
 }
@@ -330,7 +330,7 @@ bool MacroParamLessThan(const NFmiMacroParamItem &item1, const NFmiMacroParamIte
     return boost::algorithm::lexicographical_compare(item1.itsMacroParam->Name(), item2.itsMacroParam->Name(), boost::algorithm::is_iless());
 }
 
-void NFmiMacroParamSystem::AddToMacroParamItemTree(std::vector<NFmiMacroParamItem> &theMacroItemList, const checkedVector<boost::shared_ptr<NFmiMacroParam> >& theMacroParams, NFmiStopFunctor *theStopFunctor)
+void NFmiMacroParamSystem::AddToMacroParamItemTree(std::vector<NFmiMacroParamItem> &theMacroItemList, const std::vector<boost::shared_ptr<NFmiMacroParam> >& theMacroParams, NFmiStopFunctor *theStopFunctor)
 {
 	int mpSize = static_cast<int>(theMacroParams.size());
 	for(int j=0 ; j<mpSize; j++)

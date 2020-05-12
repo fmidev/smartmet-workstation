@@ -51,7 +51,7 @@ static boost::shared_ptr<NFmiAreaMaskList> classesEmptyParamMaskList(new NFmiAre
 static int itsModifyingUnit; // ainakin v‰liaikaisesti staattisena t‰‰ll‰ (optimointia change valueta laskettaessa)
 
 bool fCPHelpColorsInitialized = false;
-checkedVector<NFmiColor> gCPHelpColors; // kun piirret‰‰n muita kuin aktiivista CP:t‰, k‰ytet‰‰n n‰it‰ v‰rej‰
+std::vector<NFmiColor> gCPHelpColors; // kun piirret‰‰n muita kuin aktiivista CP:t‰, k‰ytet‰‰n n‰it‰ v‰rej‰
 const int gMaxHelpCPDrawed = 20;
 
 const double gDontDrawLineValue = -99999.9; // funktio DrawSimpleDataVectorInTimeSerial ei piirr‰ kyseisell‰ arvolla viivaa
@@ -675,7 +675,7 @@ void NFmiTimeSerialView::DrawKepaDataLocationInTime(NFmiDrawingEnvironment &envi
 	}
 }
 
-static pair<int, double> FindClosestLocationWithData(checkedVector<pair<int, double> > &theNearestLocations, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag& theCheckedTimes)
+static pair<int, double> FindClosestLocationWithData(std::vector<pair<int, double> > &theNearestLocations, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag& theCheckedTimes)
 {
 	int size = static_cast<int>(theNearestLocations.size());
 	for(int i=0; i<size; i++)
@@ -729,7 +729,7 @@ bool NFmiTimeSerialView::GetDrawedTimes(boost::shared_ptr<NFmiFastQueryInfo> &th
 bool NFmiTimeSerialView::SetObsDataToNearestLocationWhereIsData(boost::shared_ptr<NFmiFastQueryInfo> &theObsInfo, const NFmiPoint &theLatlon, std::pair<int, double> &theLocationWithDataOut)
 {
     NFmiTimeBag checkedTimes(GetViewLimitingTimes()); // kiinnostaa vain n‰kyv‰n aika-alueen datat
-	checkedVector<pair<int, double> > nearestLocations = theObsInfo->NearestLocations(theLatlon, 5);
+	std::vector<pair<int, double> > nearestLocations = theObsInfo->NearestLocations(theLatlon, 5);
 	theLocationWithDataOut = FindClosestLocationWithData(nearestLocations, theObsInfo, checkedTimes);
 	bool drawJustLegend = theLocationWithDataOut.first == -1; // jos ei lˆytynyt asemaa, jolle on dataa, otetaan vain l‰hin asema ja piirret‰‰n sen nimi
 	if(drawJustLegend)
@@ -760,7 +760,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetNonSynopObservation(
     excludedProducerIds.insert(kFmiSHIP);
     excludedProducerIds.insert(kFmiBUOY);
 
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > obsInfos = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations);
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > obsInfos = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations);
     for(size_t i= 0; i < obsInfos.size(); i++)
     {
         boost::shared_ptr<NFmiFastQueryInfo> &currentInfo = obsInfos[i];
@@ -2295,7 +2295,7 @@ void NFmiTimeSerialView::DrawModifyFactorPoints(void)
 			DrawModifyFactorPointGrids();
 			if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 			{
-				checkedVector<double>& modFacVec = itsCtrlViewDocumentInterface->CPManager()->ActiveCPChangeValues();
+				std::vector<double>& modFacVec = itsCtrlViewDocumentInterface->CPManager()->ActiveCPChangeValues();
 				itsModificationFactorCurvePoints = modFacVec;
 			}
 
@@ -2315,7 +2315,7 @@ void NFmiTimeSerialView::DrawModifyFactorPointsManual(void)
 	envi.EnableFill();
 	envi.SetFillColor(NFmiColor(1.f,0.f,0.f));
 	envi.SetFrameColor(NFmiColor(0.f,0.f,0.f));
-	checkedVector<NFmiMetTime> times;
+	std::vector<NFmiMetTime> times;
 	FillTimeSerialTimesFromInfo(*Info(), times);
 	PlotTimeSerialData(itsModificationFactorCurvePoints, times, envi, pointSize, pointSize, false);
 }
@@ -2569,7 +2569,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 					    {
                             itsCtrlViewDocumentInterface->CPManager()->Param(itsDrawParam->Param());
-						    checkedVector<double>& modFacVec = itsCtrlViewDocumentInterface->CPManager()->ActiveCPChangeValues();
+						    std::vector<double>& modFacVec = itsCtrlViewDocumentInterface->CPManager()->ActiveCPChangeValues();
 						    modFacVec = itsModificationFactorCurvePoints; // laitetaan kyseisen parametrin ja kyseisen CP:n muutokset talteen
 					    }
 					    return status;
@@ -2614,9 +2614,9 @@ bool NFmiTimeSerialView::ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQu
 	return false;
 }
 
-checkedVector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
+std::vector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
 {
-	checkedVector<NFmiPoint> latlons;
+	std::vector<NFmiPoint> latlons;
 	int counter = 1;
 
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
@@ -2826,7 +2826,7 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
 					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 					    {
                             itsCtrlViewDocumentInterface->CPManager()->Param(itsDrawParam->Param());
-						    checkedVector<double>& modFacVec = itsCtrlViewDocumentInterface->CPManager()->ActiveCPChangeValues();
+						    std::vector<double>& modFacVec = itsCtrlViewDocumentInterface->CPManager()->ActiveCPChangeValues();
 						    modFacVec = itsModificationFactorCurvePoints; // laitetaan kyseisen parametrin ja kyseisen CP:n muutokset talteen
 					    }
 					    return status;
@@ -3638,7 +3638,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservati
                 NFmiDrawingEnvironment envi2(ChangeStationDataCurveEnvironment());
                 envi2.SetFrameColor(NFmiColor(0.98f, 0.134f, 0.14f));
                 envi2.SetPenSize(NFmiPoint(2, 2));
-                checkedVector<pair<double, NFmiMetTime> > dataVector;
+                std::vector<pair<double, NFmiMetTime> > dataVector;
                 auto maskHelpText = "Starting mask factor: "s;
                 for(times.Reset(); times.Next(); timeIndex++)
                 {
@@ -3735,9 +3735,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetAnalyzeToolData()
     return itsCtrlViewDocumentInterface->InfoOrganizer()->Info(NFmiDataIdent(*(itsDrawParam->Param().GetParam()), itsCtrlViewDocumentInterface->AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
 }
 
-static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVectorIn, FmiParameterName wantedParamId)
+static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVectorIn, FmiParameterName wantedParamId)
 {
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVectorResult;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVectorResult;
     std::copy_if(infoVectorIn.begin(), infoVectorIn.end(), std::back_inserter(infoVectorResult),
         [wantedParamId](const auto &info)
     {
@@ -3751,7 +3751,7 @@ static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedPar
     return infoVectorResult;
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiTimeSerialView::GetObsBlenderDataVector()
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiTimeSerialView::GetObsBlenderDataVector()
 {
     auto selectedProducerId = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer().GetIdent();
     auto infoVector = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations, true, selectedProducerId);
@@ -3783,7 +3783,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theL
 	}
 }
 
-void NFmiTimeSerialView::DrawSimpleDataVectorInTimeSerial(checkedVector<pair<double, NFmiMetTime> > &theDataVector, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePenSize, const NFmiPoint& theSinglePointSize)
+void NFmiTimeSerialView::DrawSimpleDataVectorInTimeSerial(std::vector<pair<double, NFmiMetTime> > &theDataVector, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePenSize, const NFmiPoint& theSinglePointSize)
 {
 	itsToolBox->UseClipping(true);
 	int size = static_cast<int>(theDataVector.size());
@@ -3813,7 +3813,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::Info(void) const
 }
 
 // funktio piirt‰‰ annetun arvojoukon annettuina aikoina n‰yttˆˆn halutuilla piirtooptioilla
-void NFmiTimeSerialView::PlotTimeSerialData(const checkedVector<double> &theValues, const checkedVector<NFmiMetTime> &theTimes, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines)
+void NFmiTimeSerialView::PlotTimeSerialData(const std::vector<double> &theValues, const std::vector<NFmiMetTime> &theTimes, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines)
 {
 	int valuesSize = static_cast<int>(theValues.size());
 	int timesSize = static_cast<int>(theTimes.size());
@@ -3828,7 +3828,7 @@ void NFmiTimeSerialView::PlotTimeSerialData(const checkedVector<double> &theValu
 		int lastNonMissingIndex = -1;
 		double realValue1 = kFloatMissing; // t‰m‰ on indeksill‰ i-1 saatava arvo
 		double realValue2 = kFloatMissing; // t‰m‰ on indeksill‰ i saatava arvo
-		for(int i=1; (i < valuesSize) && (i < timesSize); i++) // i < timesSize est‰‰ kaatumisen jos values ja times vectorit erikokoisia, esim. jos deletoidaan CP-piste, palautetaan default checkedVector, jonka koko on 200!!!
+		for(int i=1; (i < valuesSize) && (i < timesSize); i++) // i < timesSize est‰‰ kaatumisen jos values ja times vectorit erikokoisia, esim. jos deletoidaan CP-piste, palautetaan default std::vector, jonka koko on 200!!!
 		{
 			realValue1 = theValues[i-1];
 			realValue2 = theValues[i];
@@ -3848,7 +3848,7 @@ void NFmiTimeSerialView::PlotTimeSerialData(const checkedVector<double> &theValu
 
 // t‰m‰ funktio on timebag optimoitu!
 // funktio piirt‰‰ annetun arvojoukon annettuina aikoina n‰yttˆˆn halutuilla piirtooptioilla
-void NFmiTimeSerialView::PlotTimeSerialDataOpt(const checkedVector<double> &theValues, double xPosStart, double xStep, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines)
+void NFmiTimeSerialView::PlotTimeSerialDataOpt(const std::vector<double> &theValues, double xPosStart, double xStep, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines)
 {
 	int valuesSize = static_cast<int>(theValues.size());
 	if(valuesSize == 1)
@@ -3892,7 +3892,7 @@ NFmiTimeBag NFmiTimeSerialView::GetViewLimitingTimes(void)
 	return itsCtrlViewDocumentInterface->TimeSerialViewTimeBag();
 }
 
-void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, checkedVector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
+void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, std::vector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
 	// Onko t‰m‰ oikein????, linitingtimesit otetaan sourceInfosta ja niill‰ rajoitetaan FillTimeSerialDataFromInfo-metodissa
 	// taas sourceInfosta haettavia aikoja.
@@ -3901,7 +3901,7 @@ void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQu
 }
 
 // HUOM! yritt‰‰ ottaa myˆs yhdet ajat ja arvot aikareunojen yli
-void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, const NFmiTimeBag &theLimitTimes, checkedVector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
+void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, const NFmiTimeBag &theLimitTimes, std::vector<double> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
 	if(theSourceInfo->TimeToNearestStep(theLimitTimes.FirstTime(), kBackward))
 	{
@@ -3922,13 +3922,13 @@ void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQu
 	}
 }
 
-void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourceInfo, checkedVector<NFmiMetTime> &theTimes)
+void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourceInfo, std::vector<NFmiMetTime> &theTimes)
 {
 	NFmiTimeBag limitingTimes(theSourceInfo.TimeDescriptor().FirstTime(), theSourceInfo.TimeDescriptor().LastTime(), 60); // resoluutiolla ei ole merkityst‰, 60 vain heitet‰‰n siihen
 	FillTimeSerialTimesFromInfo(theSourceInfo, limitingTimes, theTimes);
 }
 
-void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiTimeBag &theLimitTimes, checkedVector<NFmiMetTime> &theTimes)
+void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourceInfo, const NFmiTimeBag &theLimitTimes, std::vector<NFmiMetTime> &theTimes)
 {
 	if(theSourceInfo.TimeToNearestStep(theLimitTimes.FirstTime(), kBackward))
 	{
@@ -3945,7 +3945,7 @@ void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourc
 }
 
 // t‰ytt‰‰ haluttuihin aikoihin maskien arvot (jos k‰ytet‰‰n maskeja).
-void NFmiTimeSerialView::FillTimeSerialMaskValues(const checkedVector<NFmiMetTime> &theTimes, const NFmiPoint &theLatLonPoint, checkedVector<double> &theMaskValues)
+void NFmiTimeSerialView::FillTimeSerialMaskValues(const std::vector<NFmiMetTime> &theTimes, const NFmiPoint &theLatLonPoint, std::vector<double> &theMaskValues)
 {
 	boost::shared_ptr<NFmiAreaMaskList> paramMaskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
 	if(paramMaskList)
@@ -3966,7 +3966,7 @@ void NFmiTimeSerialView::FillTimeSerialMaskValues(const checkedVector<NFmiMetTim
 }
 
 // t‰ytt‰‰ haluttuihin aikoihin muutos arvot, joilla piirret‰‰n muutos k‰yr‰.
-void NFmiTimeSerialView::FillTimeSerialChangedValues(const checkedVector<double> &theValues, const checkedVector<double> &theMaskValues, checkedVector<double> &theChangedValues)
+void NFmiTimeSerialView::FillTimeSerialChangedValues(const std::vector<double> &theValues, const std::vector<double> &theMaskValues, std::vector<double> &theChangedValues)
 {
 	int timeSize = static_cast<int>(theValues.size());
 	int maskSize = static_cast<int>(theMaskValues.size());
@@ -3996,7 +3996,7 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 				double brightningFactor = CtrlView::CalcBrightningFactor(theDrawParam->ModelRunIndex(), wantedModelRunCount, i); // mit‰ isompi luku, sit‰ enemm‰n vaalenee (0-100), vanhemmat malliajot vaaleammalla
 				NFmiColor modelRunColor = NFmiColorSpaces::GetBrighterColor(origColor, brightningFactor);
 				usedEnvi.SetFrameColor(modelRunColor);
-				checkedVector<double> values;
+				std::vector<double> values;
 				itsDrawParam->ModelRunIndex(i);
 				boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
 				if(info)
@@ -4011,7 +4011,7 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 					else
 					{
 						FillTimeSerialDataFromInfo(info, theLatLonPoint, values, metaWindParamUsage, paramId);
-						checkedVector<NFmiMetTime> times;
+						std::vector<NFmiMetTime> times;
 						FillTimeSerialTimesFromInfo(*info, times);
 
 						PlotTimeSerialData(values, times, usedEnvi, pointNormal, pointSingle, true, true);
@@ -4074,38 +4074,38 @@ bool NFmiTimeSerialView::IsModificationLineDrawn() const
 NFmiPoint g_PointNormal(1., 1.);
 NFmiPoint g_PointSingle(4., 4.);
 
-void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLineOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, const checkedVector<double> &values)
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLineOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const std::vector<NFmiMetTime> &theTimes, const std::vector<double> &values)
 {
     if(IsModificationLineDrawn())
     {
         double xStartPos = 0;
         double xStep = 0.1;
         CalcOptimizedDrawingValues(*(Info()->TimeDescriptor().ValidTimeBag()), xStartPos, xStep);
-        checkedVector<double> maskValues;
+        std::vector<double> maskValues;
         FillTimeSerialMaskValues(theTimes, theLatLonPoint, maskValues);
-        checkedVector<double> changeValues;
+        std::vector<double> changeValues;
         FillTimeSerialChangedValues(values, maskValues, changeValues);
         PlotTimeSerialDataOpt(changeValues, xStartPos, xStep, theModifiedDataLineStyle, g_PointNormal, g_PointSingle, true);
     }
 }
 
-void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLine(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, const checkedVector<double> &values)
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_ModificationLine(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theModifiedDataLineStyle, const std::vector<NFmiMetTime> &theTimes, const std::vector<double> &values)
 {
     if(IsModificationLineDrawn())
     {
-        checkedVector<double> maskValues;
+        std::vector<double> maskValues;
         FillTimeSerialMaskValues(theTimes, theLatLonPoint, maskValues);
-        checkedVector<double> changeValues;
+        std::vector<double> changeValues;
         FillTimeSerialChangedValues(values, maskValues, changeValues);
         PlotTimeSerialData(changeValues, theTimes, theModifiedDataLineStyle, g_PointNormal, g_PointSingle, true);
     }
 }
 
-void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines)
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const std::vector<NFmiMetTime> &theTimes, bool drawModificationLines)
 {
     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
     auto paramId = itsDrawParam->Param().GetParamIdent();
-    checkedVector<double> values;
+    std::vector<double> values;
     FillTimeSerialDataFromInfo(Info(), theLatLonPoint, values, metaWindParamUsage, paramId);
 
     // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
@@ -4117,11 +4117,11 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime_TimebagOptimized(const NFm
     PlotTimeSerialDataOpt(values, xStartPos, xStep, theCurrentDataLineStyle, g_PointNormal, g_PointSingle, true, true);
 }
 
-void NFmiTimeSerialView::DrawEditedDataLocationInTime_Timelist(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const checkedVector<NFmiMetTime> &theTimes, bool drawModificationLines)
+void NFmiTimeSerialView::DrawEditedDataLocationInTime_Timelist(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, const std::vector<NFmiMetTime> &theTimes, bool drawModificationLines)
 {
     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
     auto paramId = itsDrawParam->Param().GetParamIdent();
-    checkedVector<double> values;
+    std::vector<double> values;
     FillTimeSerialDataFromInfo(Info(), theLatLonPoint, values, metaWindParamUsage, paramId);
     if(drawModificationLines)
         DrawEditedDataLocationInTime_ModificationLine(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
@@ -4132,7 +4132,7 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLon
 {
     if(DrawEditedDataLocationInTime_PreliminaryActions(theLatLonPoint, theCurrentDataLineStyle))
     {
-        checkedVector<NFmiMetTime> times;
+        std::vector<NFmiMetTime> times;
         FillTimeSerialTimesFromInfo(*Info(), times);
 
         // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia

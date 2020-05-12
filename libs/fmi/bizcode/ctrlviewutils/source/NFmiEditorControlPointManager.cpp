@@ -86,7 +86,7 @@ std::ostream& NFmiEditorControlPointManager::Write(ostream& file) const
 
 // apufunktio, joka kirjoittaa ensin lukum‰‰r‰n tiedostoon kirjoittaa otukset jonoon erottimena space.
 template<typename T>
-static bool WriteVectorToFile(checkedVector<T>& theVector, ostream& file)
+static bool WriteVectorToFile(std::vector<T>& theVector, ostream& file)
 {
 	file << theVector.size() << endl;
 	std::copy(theVector.begin(), theVector.end(), ostream_iterator<T>(file, " "));
@@ -97,7 +97,7 @@ static bool WriteVectorToFile(checkedVector<T>& theVector, ostream& file)
 // apufunktio, joka lukee ensin tiedostosta lukum‰‰r‰n ja sitten niin monta otusta ja tallettaa ne vectoriin.
 // vectorin koko muutetaan lukum‰‰r‰n suuruiseksi.
 template<typename T>
-static bool ReadVectorFromFile(checkedVector<T>& theVector, istream& file)
+static bool ReadVectorFromFile(std::vector<T>& theVector, istream& file)
 {
 	int size = 0;
 	file >> size;
@@ -231,7 +231,7 @@ bool NFmiEditorControlPointManager::Init(const NFmiTimeDescriptor& theTimes, con
 		{
 			itsCPCount = 0;
 			itsCPIndex = -1;
-			itsCPLocationVector = checkedVector<NFmiPoint>();
+			itsCPLocationVector = std::vector<NFmiPoint>();
 		}
 	}
 
@@ -263,7 +263,7 @@ bool NFmiEditorControlPointManager::Init(const NFmiTimeDescriptor& theTimes, con
 }
 
 // t‰ll‰ asetetaan uudet CP pisteet managerille ja nollataa muuten olion tila
-bool NFmiEditorControlPointManager::Init(const checkedVector<NFmiPoint> &newCPs, bool keepModificationsIfPossible)
+bool NFmiEditorControlPointManager::Init(const std::vector<NFmiPoint> &newCPs, bool keepModificationsIfPossible)
 {
     if(keepModificationsIfPossible)
     {
@@ -306,9 +306,9 @@ bool NFmiEditorControlPointManager::Init(const NFmiEditorControlPointManager &th
 	return Init(theOther.TimeDescriptor(), theOther.ParamBag(), "", true, true);
 }
 
-bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea)
+bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea)
 {
-    checkedVector<NFmiPoint> addedControlPoints;
+    std::vector<NFmiPoint> addedControlPoints;
     for(auto &fastInfo : theInfos)
     {
         AddZoomedAreaStationsToCPVector(fastInfo, theArea, addedControlPoints);
@@ -318,12 +318,12 @@ bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(checked
 
 bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea)
 {
-    checkedVector<NFmiPoint> addedControlPoints;
+    std::vector<NFmiPoint> addedControlPoints;
     AddZoomedAreaStationsToCPVector(theInfo, theArea, addedControlPoints);
     return Init(addedControlPoints, false);
 }
 
-void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut)
+void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut)
 {
     if(!theInfo->IsGrid())
     {
@@ -786,7 +786,7 @@ bool NFmiEditorControlPointManager::ChangeValues (std::vector<float>& xValues, s
 }
 
 // palauttaa 1. aktiivisen CP muutos arvot currentille parametrille
-checkedVector<double>& NFmiEditorControlPointManager::ActiveCPChangeValues(void)
+std::vector<double>& NFmiEditorControlPointManager::ActiveCPChangeValues(void)
 {
 	for(int i = 0; i < itsCPCount; i++)
 		if(itsCPActivityVector[i])
@@ -811,7 +811,7 @@ NFmiEditorControlPoint& NFmiEditorControlPointManager::GetControlPoint(int thePa
 }
 
 // currentin CP:n muutos arvot
-checkedVector<double>& NFmiEditorControlPointManager::CPChangeValues(void)
+std::vector<double>& NFmiEditorControlPointManager::CPChangeValues(void)
 {
 	return GetControlPoint(itsParamIndex, itsCPIndex).ChangeValues();
 }
@@ -1187,7 +1187,7 @@ void NFmiEditorControlPointManager::CPMovingInTime(bool newState, int theIndex)
 // sis‰‰n annetaan relatiiviset pisteet, pit‰‰ laske latlon pisteet itse!
 // jos annettu indeksi on -1, k‰ytt‰‰ itsCPIndex:i‰
 // P‰ivitt‰‰ samalla latlon-taulukon?
-void NFmiEditorControlPointManager::SetInTimeMovingCPRelativeLocations(const checkedVector<NFmiPoint>& theRelativeVector, int theIndex)
+void NFmiEditorControlPointManager::SetInTimeMovingCPRelativeLocations(const std::vector<NFmiPoint>& theRelativeVector, int theIndex)
 {
 	int timeSize = itsTimeDescriptor.Size();
 	if(theIndex == -1)
@@ -1215,7 +1215,7 @@ void NFmiEditorControlPointManager::SetInTimeMovingCPRelativeLocations(const che
 }
 
 // jos annettu indeksi on -1, k‰ytt‰‰ itsCPIndex:i‰
-const checkedVector<NFmiPoint>& NFmiEditorControlPointManager::GetInTimeMovingCPRelativeLocations(int theIndex) const
+const std::vector<NFmiPoint>& NFmiEditorControlPointManager::GetInTimeMovingCPRelativeLocations(int theIndex) const
 {
 	if(theIndex == -1)
 	{
@@ -1228,7 +1228,7 @@ const checkedVector<NFmiPoint>& NFmiEditorControlPointManager::GetInTimeMovingCP
 			return itsCPChangeInTimeRelativeLocationMatrix[theIndex];
 	}
 
-	static const checkedVector<NFmiPoint> dummyPoints;
+	static const std::vector<NFmiPoint> dummyPoints;
 	return dummyPoints;
 }
 

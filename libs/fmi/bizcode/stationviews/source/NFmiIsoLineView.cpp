@@ -837,7 +837,7 @@ void NFmiIsoLineView::FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawPar
 }
 
 // muista theColorIndexies-vektorin koko ei ole k‰ytett‰viss‰ t‰ss‰, koska se on asetettu joksikin maksimi kooksi
-static bool IsTransparencyColorUsed(const checkedVector<int>& theColorIndexies, int theRealColorIndexCount, int theTransparencyColorIndex)
+static bool IsTransparencyColorUsed(const std::vector<int>& theColorIndexies, int theRealColorIndexCount, int theTransparencyColorIndex)
 {
     for(int i = 0; i < theRealColorIndexCount; i++)
         if(theColorIndexies[i] == theTransparencyColorIndex)
@@ -863,14 +863,14 @@ void NFmiIsoLineView::FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam
     if(viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
         theIsoLineData->fDrawLabelsOverContours = true;
 
-    const checkedVector<float>& values = theDrawParam->SpecialContourValues();
+    const std::vector<float>& values = theDrawParam->SpecialContourValues();
     int totalSize = theIsoLineData->itsTrueColorContoursCount = static_cast<int>(values.size());
     int size = totalSize;
     int i = 0;
     for(i = 0; i < size; i++)
         theIsoLineData->itsCustomColorContours[i] = ::GetToolMasterContourLimitChangeValue(values[i]);
 
-    const checkedVector<int>& colors = theDrawParam->SpecialContourColorIndexies();
+    const std::vector<int>& colors = theDrawParam->SpecialContourColorIndexies();
     int colorIndexiesSize = static_cast<int>(colors.size());
 
     if(theIsoLineData->fUseIsoLineGabWithCustomContours)
@@ -1021,14 +1021,14 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
     theIsoLineData->fUseIsoLines = 1;
     theIsoLineData->fUseCustomIsoLineClasses = true;
 
-    const checkedVector<float>& values = theDrawParam->SpecialIsoLineValues();
+    const std::vector<float>& values = theDrawParam->SpecialIsoLineValues();
     int totalSize = theIsoLineData->itsTrueIsoLineCount = static_cast<int>(values.size());
     int size = totalSize;
     int i = 0;
     for(i = 0; i < size; i++)
         theIsoLineData->itsCustomIsoLineClasses[i] = ::GetToolMasterContourLimitChangeValue(values[i]);
 
-    const checkedVector<float>& labelHeights = theDrawParam->SpecialIsoLineLabelHeight();
+    const std::vector<float>& labelHeights = theDrawParam->SpecialIsoLineLabelHeight();
     size = static_cast<int>(labelHeights.size());
     theIsoLineData->itsIsoLineAnnonationHeight[0] = 3.f; // oletus arvo, jos puuttuu
     for(i = 0; i < size; i++)
@@ -1042,7 +1042,7 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
         theIsoLineData->itsIsoLineAnnonationHeight[j] = theIsoLineData->itsIsoLineAnnonationHeight[i - 1]; // t‰ytet‰‰n viimeisell‰ arvolla jos puuttuu arvoja!!
 
 
-    const checkedVector<float>& widths = theDrawParam->SpecialIsoLineWidth();
+    const std::vector<float>& widths = theDrawParam->SpecialIsoLineWidth();
     size = static_cast<int>(widths.size());
     theIsoLineData->itsIsoLineWidth[0] = 0.3f; // oletus arvo, jos puuttuu
     for(i = 0; i < size; i++)
@@ -1057,7 +1057,7 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
     theIsoLineData->fUseLabelBox = theDrawParam->ShowSimpleIsoLineLabelBox();
     theIsoLineData->itsIsoLineBoxFillColorIndex = ::GetLabelBoxFillColorIndex(theDrawParam->IsolineLabelBoxFillColor(), theDrawParam->UseTransparentFillColor());
 
-    const checkedVector<int>& lineColors = theDrawParam->SpecialIsoLineColorIndexies();
+    const std::vector<int>& lineColors = theDrawParam->SpecialIsoLineColorIndexies();
     auto viewType = theDrawParam->GetViewType(fStationData);
     bool colorContourAndIsolines = viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
     size = static_cast<int>(lineColors.size());
@@ -1084,7 +1084,7 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
     int colorIndex = ToolMasterColorCube::RgbToColorIndex(theDrawParam->IsolineTextColor());
     theIsoLineData->itsIsoLineLabelColor[0] = colorIndex;
 
-    const checkedVector<int>& lineStyles = theDrawParam->SpecialIsoLineStyle();
+    const std::vector<int>& lineStyles = theDrawParam->SpecialIsoLineStyle();
     size = static_cast<int>(lineStyles.size());
     theIsoLineData->itsIsoLineStyle[0] = 0; // oletus arvo, jos puuttuu
     for(i = 0; i < size; i++)

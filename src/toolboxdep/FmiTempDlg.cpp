@@ -471,7 +471,7 @@ void CFmiTempDlg::OnBnClickedButtonResetSoundingData()
 void CFmiTempDlg::SetSelectedProducer(void)
 {
 	std::vector<bool> selVec = itsMultiProducerSelector.GetSelectionVector();
-	checkedVector<NFmiProducer> selProducers;
+	std::vector<NFmiProducer> selProducers;
 	for(size_t i = 0; i<selVec.size(); i++)
 	{
 		if(selVec[i])
@@ -485,11 +485,11 @@ void CFmiTempDlg::SetSelectedProducersFromViewMacro(void)
 {
 	itsMultiProducerSelector.SelectAll(false);
 	const auto &selectedProducers = itsSmartMetDocumentInterface->GetMTATempSystem().SoundingComparisonProducers();
-	checkedVector<NFmiProducer>::size_type ssize = selectedProducers.size();
-	checkedVector<NFmiProducer>::size_type xsize = itsProducerListWithData.size();
-	for(checkedVector<NFmiProducer>::size_type i=0; i<ssize; i++)
+	std::vector<NFmiProducer>::size_type ssize = selectedProducers.size();
+	std::vector<NFmiProducer>::size_type xsize = itsProducerListWithData.size();
+	for(std::vector<NFmiProducer>::size_type i=0; i<ssize; i++)
 	{
-		for(checkedVector<NFmiProducer>::size_type j=0; j<xsize; j++)
+		for(std::vector<NFmiProducer>::size_type j=0; j<xsize; j++)
 		{
 			if(selectedProducers[i] == itsProducerListWithData[j])
 				itsMultiProducerSelector.SetCheck(static_cast<int>(j), true);
@@ -527,7 +527,7 @@ static bool FindProducer(const std::vector<std::pair<int, CString> > &theSelecti
 }
 
 // Normaali NFmiProducer yhtäsuuruus testi vertaa vain tuottaja id:t, nyt server datan kanssa tarvitaan myös nimi vertailu
-static bool ProducerVectorsAreEqual(const checkedVector<NFmiProducer> &producers1, const checkedVector<NFmiProducer> &producers2)
+static bool ProducerVectorsAreEqual(const std::vector<NFmiProducer> &producers1, const std::vector<NFmiProducer> &producers2)
 {
     if(producers1.size() != producers2.size())
         return false;
@@ -544,7 +544,7 @@ void CFmiTempDlg::UpdateProducerList(void)
 {
 	std::vector<std::pair<int, CString> > selectionVec = itsMultiProducerSelector.GetSelectedWithStr();
 
-	checkedVector<NFmiProducer> tmpProducerListWithData;
+	std::vector<NFmiProducer> tmpProducerListWithData;
 	// 1. kysy täysi tuottajalista MTASystemiltä
 	const auto &possibleProdList = itsSmartMetDocumentInterface->GetMTATempSystem().PossibleProducerList();
 	// 2. käy lista läpi ja katso mille tuottajalle löytyy dataa

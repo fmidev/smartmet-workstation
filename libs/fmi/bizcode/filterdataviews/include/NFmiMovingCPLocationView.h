@@ -25,7 +25,7 @@ public:
 					 ,int theIndex
 					 ,NFmiEditorControlPointManager* theCPManager);
 	virtual  ~NFmiMovingCPLocationView();
-	checkedVector<NFmiPoint> GetRelativeLocationVector(int xDataCount, int yDataCount);
+	std::vector<NFmiPoint> GetRelativeLocationVector(int xDataCount, int yDataCount);
 
 	const NFmiPoint& SplineStart(void);
 	const NFmiPoint& SplineMiddle(void);
@@ -39,6 +39,6 @@ protected:
 	NFmiPoint itsSplineStart;
 	NFmiPoint itsSplineMiddle;
 	NFmiPoint itsSplineEnd;
-	checkedVector<NFmiPoint> itsLocationVector;
+	std::vector<NFmiPoint> itsLocationVector;
 };
 

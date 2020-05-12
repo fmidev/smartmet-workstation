@@ -443,7 +443,7 @@ namespace CtrlViewUtils
             else
             {
                 boost::shared_ptr<NFmiArea> dummyArea;
-                checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infos;
+                std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos;
                 theCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(infos, theDrawParam, dummyArea);
                 if(infos.size())
                 {

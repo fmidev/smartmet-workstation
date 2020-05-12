@@ -48,7 +48,7 @@ class CMatrix : public MatrixSuperClass<ValueType, IndexType>
        calculated in the where() method. Checking of index limits in
        the vector container is only possible to a limited extent,
        because the check could only be carried out against the entire
-       length (Rows times Columns). Therefore, a checkedVector is not
+       length (Rows times Columns). Therefore, a std::vector is not
        sufficient, and the index check is carried out directly inside
        the where() method. */
 

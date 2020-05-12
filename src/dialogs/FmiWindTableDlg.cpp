@@ -159,7 +159,7 @@ void CFmiWindTableDlg::SetDefaultValues(void)
     Persist2::WriteWindowRectToWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), MakeUsedWinRegistryKeyStr(0), this);
 }
 
-static void SetHeaders(NFmiWindTableGridCtrl &theGridCtrl, const checkedVector<WindTableHeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
+static void SetHeaders(NFmiWindTableGridCtrl &theGridCtrl, const std::vector<WindTableHeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
 {
 	int columnCount = static_cast<int>(theHeaders.size());
 	theGridCtrl.SetRowCount(rowCount);
@@ -314,7 +314,7 @@ std::vector<FmiParameterName> gWantedSurfaceParams{kFmiWindDirection, kFmiWindSp
 static boost::shared_ptr<NFmiFastQueryInfo> GetSelectedData(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned long producerId, NFmiInfoData::Type dataType, bool groundData)
 {
     // Eri malleilla voi olla lukuisia pintadatoja. Etsit‰‰n niist‰ se, miss‰ on eniten kiinnostavia parametreja
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos = smartMetDocumentInterface->InfoOrganizer()->GetInfos(dataType, groundData, producerId);
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos = smartMetDocumentInterface->InfoOrganizer()->GetInfos(dataType, groundData, producerId);
     return NFmiInfoOrganizer::GetInfoWithMostWantedParams(infos, gWantedSurfaceParams);
 }
 
@@ -336,7 +336,7 @@ static std::string GetSelectedProducerName(const CComboBox &theProducerSelector)
 	return selectedNameStr;
 }
 
-static const NFmiProducerHelperInfo* GetProducerInfoByName(const checkedVector<NFmiProducerHelperInfo> &theProducerList, const std::string &theProdName)
+static const NFmiProducerHelperInfo* GetProducerInfoByName(const std::vector<NFmiProducerHelperInfo> &theProducerList, const std::string &theProdName)
 {
 	for(size_t i = 0; i < theProducerList.size(); i++)
 	{
@@ -378,7 +378,7 @@ static void FillEmptyLine(NFmiWindTableGridCtrl &theGridCtrl, int theRowNumber, 
 void CFmiWindTableDlg::FillGridWithValues(bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
 {
     auto &windTableSystem = itsSmartMetDocumentInterface->WindTableSystem();
-    checkedVector<NFmiWindTableSystem::AreaMaskData>& areaMaskDataList = windTableSystem.AreaMaskDataList();
+    std::vector<NFmiWindTableSystem::AreaMaskData>& areaMaskDataList = windTableSystem.AreaMaskDataList();
 	// T‰m‰ row count pit‰‰ laskea jotenkin paremmin, nyt simppeli kaava t‰ss‰
 	int dataRowCount = static_cast<int>(gDataBlockCount * (areaMaskDataList.size() + 1 + 1)); // + 1 on time legenda +1 on tyhj‰ rivi
 	int maxRowCount = static_cast<int>(theFixedRowCount + dataRowCount);

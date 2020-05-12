@@ -166,7 +166,7 @@ public:
         :itsDoc(theDoc)
     {}
 
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
+    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
     {
         itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
@@ -308,7 +308,7 @@ NFmiParamDescriptor& NFmiGenDocDataAdapter::EditedDataParamDescriptor(void)
 	return itsDoc->EditedDataParamDescriptor();
 }
 
-checkedVector<int>& NFmiGenDocDataAdapter::DataLoadingProducerIndexVector(void) 
+std::vector<int>& NFmiGenDocDataAdapter::DataLoadingProducerIndexVector(void) 
 {
 	return itsDoc->DataLoadingProducerIndexVector();
 }

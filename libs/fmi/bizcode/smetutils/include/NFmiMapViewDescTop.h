@@ -249,7 +249,7 @@ private:
 	NFmiMapViewCache itsMapViewCache; 
 	bool fRedrawMapView;
 	// tähän talletetaan raja viivan piirron väri vaihtoehdot
-	checkedVector<NFmiColor> itsLandBorderColors; 
+	std::vector<NFmiColor> itsLandBorderColors; 
 	// valitun värin indeksi on tallessa tässä, jos indeksi on negatiivinen, ei piirretä rajaviivoja
 	int itsLandBorderColorIndex; 
 	NFmiPoint itsLandBorderPenSize;

@@ -441,7 +441,7 @@ static std::string GetSelectedProducerName(const CComboBox &theProducerSelector)
 	return selectedNameStr;
 }
 
-static const NFmiProducerHelperInfo* GetProducerInfoByName(const checkedVector<NFmiProducerHelperInfo> &theProducerList, const std::string &theProdName)
+static const NFmiProducerHelperInfo* GetProducerInfoByName(const std::vector<NFmiProducerHelperInfo> &theProducerList, const std::string &theProdName)
 {
 	for(size_t i = 0; i < theProducerList.size(); i++)
 	{

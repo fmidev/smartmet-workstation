@@ -51,7 +51,7 @@ public:
 	// value matriisi
 	NFmiDataMatrix<float> itsUserDrawValuesMatrix;
 	// Vektori johon on sijoitettu kaikki matriisin arvot siin‰ j‰rjestyksess‰ kuin toolmaster userDraw funktio ne haluaa
-	checkedVector<float> itsUserDrawValues; 
+	std::vector<float> itsUserDrawValues; 
 
 	// UserDraw value matriisin min/max arvot
 	float itsDataMinValue = 3.4E+38f;
@@ -82,7 +82,7 @@ public:
 
 	// Data osiot on laitettu t‰‰ll‰ julkisiksi
 	// ========================================
-	checkedVector<float> itsVectorFloatGridData; // itsYNumber * itsXNumber float gridded data
+	std::vector<float> itsVectorFloatGridData; // itsYNumber * itsXNumber float gridded data
 	int itsXNumber = 0;
 	int itsYNumber = 0;
 	int itsMaxAllowedIsoLineCount = 0; // n‰in paljon varataan tilaa eri arvoisille isoviivoille (siis v‰ritys ja muut attribuutit)
@@ -96,11 +96,11 @@ public:
 	int itsTrueIsoLineCount = 0; // pit‰‰ olla pienempi tai yht‰suuri kuin kFmiIsoLineMaxNumber
 	int itsTrueColorContoursCount = 0; // pit‰‰ olla pienempi tai yht‰suuri kuin kFmiIsoLineMaxNumber
 
-	checkedVector<int> itsIsoLineColor; // indeksi agX coloriin
-	checkedVector<int> itsIsoLineLabelColor; // indeksi agX coloriin
-	checkedVector<int> itsIsoLineStyle; // indeksi viiva tyyliin,0=yht.viiva,1=tihe‰ pisteviiva,jne.
-	checkedVector<float> itsIsoLineWidth; // t‰m‰ on suhteellinen paksuus riippuu ruudun koosta
-	checkedVector<float> itsIsoLineAnnonationHeight; // miten isolla piirret‰‰n isoviivan arvo (0:lla ei piirret‰), suhteellinen ruudun kokoon
+	std::vector<int> itsIsoLineColor; // indeksi agX coloriin
+	std::vector<int> itsIsoLineLabelColor; // indeksi agX coloriin
+	std::vector<int> itsIsoLineStyle; // indeksi viiva tyyliin,0=yht.viiva,1=tihe‰ pisteviiva,jne.
+	std::vector<float> itsIsoLineWidth; // t‰m‰ on suhteellinen paksuus riippuu ruudun koosta
+	std::vector<float> itsIsoLineAnnonationHeight; // miten isolla piirret‰‰n isoviivan arvo (0:lla ei piirret‰), suhteellinen ruudun kokoon
 	bool fUseLabelBox = false;
 	int itsIsoLineBoxFillColorIndex = 0;
 	bool fUseSingleColorsWithSimpleIsoLines = true; // jos true, yksiv‰riset 'simppelit' isoviivat, muuten k‰ytet‰‰n luokka kohtaisia v‰rej‰
@@ -113,9 +113,9 @@ public:
 	int itsColorIndexCount = 0; // k‰ytet‰‰n fUseIsoLineGabWithCustomContours-option kanssa
 	float itsIsoLineStep = 0; // k‰ytet‰‰n t‰t‰, jos fUseCustomIsolineClasses == 0
 	float itsColorContoursStep = 0; // k‰ytet‰‰n t‰t‰, jos fUseCustomIsolineClasses == 0
-	checkedVector<float> itsCustomIsoLineClasses; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
-	checkedVector<float> itsCustomColorContours; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
-	checkedVector<int> itsCustomColorContoursColorIndexies; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
+	std::vector<float> itsCustomIsoLineClasses; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
+	std::vector<float> itsCustomColorContours; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
+	std::vector<int> itsCustomColorContoursColorIndexies; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
 
 	float itsIsoLineSplineSmoothingFactor = 0; // 0=ei pyˆristyst‰, 10 maksimi (ei kannata k‰ytt‰‰ jos piirret‰‰n samaal colorcontoureja, koska contoureja ei pyˆristet‰)
 	int itsIsoLineLabelDecimalsCount = 0; // kuinka monta desimaalia k‰ytet‰‰n

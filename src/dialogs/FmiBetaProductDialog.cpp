@@ -995,10 +995,10 @@ static bool SatelImageExist(SmartMetDocumentInterface *smartMetDocumentInterface
         return false;
 }
 
-static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> MakeDrawedInfoVector(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, unsigned int theUsedMapViewDesktopIndex)
+static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> MakeDrawedInfoVector(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, unsigned int theUsedMapViewDesktopIndex)
 {
     boost::shared_ptr<NFmiArea> mapArea = smartMetDocumentInterface->MapViewDescTop(theUsedMapViewDesktopIndex)->MapHandler()->Area();
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
     smartMetDocumentInterface->MakeDrawedInfoVectorForMapView(infoVector, theDrawParam, mapArea);
     return infoVector;
 }
@@ -1016,7 +1016,7 @@ static bool HasObservations(SmartMetDocumentInterface *smartMetDocumentInterface
             {
                 if(::IsObservationQdDataType(drawParam->DataType()))
                 {
-                    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = ::MakeDrawedInfoVector(smartMetDocumentInterface, drawParam, theDescTopIndex);
+                    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = ::MakeDrawedInfoVector(smartMetDocumentInterface, drawParam, theDescTopIndex);
                     for(const auto & info : infoVector)
                         if(info->Time(theValidTime))
                             return true;

@@ -65,7 +65,7 @@ public:
 	{}
 
 	void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface){itsSmartMetDocumentInterface = smartMetDocumentInterface;}
-	void SetUsedHeaders(checkedVector<SeaIcingWarningsHeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;}
+	void SetUsedHeaders(std::vector<SeaIcingWarningsHeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;}
 
 	void LastDataTime(const NFmiMetTime &theTime)
 	{ itsLastDataTime = theTime;}
@@ -85,7 +85,7 @@ private:
 	bool fLastSortedExist; // onko edes tehty mit‰‰n sorttausta
 
 	NFmiMetTime itsLastDataTime; // k‰ytet‰‰n printtauksessa otsikossa
-	checkedVector<SeaIcingWarningsHeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
+	std::vector<SeaIcingWarningsHeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
 	int itsLastMessageCount; // kuinka monta sanomaa/asemaa on taulukossa
 public:
 	DECLARE_MESSAGE_MAP()
@@ -155,5 +155,5 @@ private:
 	CFont itsTimeAndStationTextFont;
 	int itsMapViewDescTopIndex;
 
-	checkedVector<SeaIcingWarningsHeaderParInfo> itsHeaders;
+	std::vector<SeaIcingWarningsHeaderParInfo> itsHeaders;
 };

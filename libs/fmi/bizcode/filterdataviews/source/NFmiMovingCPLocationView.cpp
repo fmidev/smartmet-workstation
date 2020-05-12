@@ -144,12 +144,12 @@ void NFmiMovingCPLocationView::DrawSplineData(void)
 // lasketaan 0,0 - 1,1 avaruudessa datan hilapisteiden ja itsGridXSize:n
 // ja itsGridYSize avulla
 
-checkedVector<NFmiPoint> NFmiMovingCPLocationView::GetRelativeLocationVector(int xDataCount, int yDataCount)
+std::vector<NFmiPoint> NFmiMovingCPLocationView::GetRelativeLocationVector(int xDataCount, int yDataCount)
 {
 	size_t size = itsLocationVector.size();
 	if(size <= 0)
-		return checkedVector<NFmiPoint>();
-	checkedVector<NFmiPoint> relativeLocationVector(size);
+		return std::vector<NFmiPoint>();
+	std::vector<NFmiPoint> relativeLocationVector(size);
 	NFmiPoint startingRelativePoint(itsCPManager->StartingRelativeLocation());
 	relativeLocationVector[0] = startingRelativePoint;
 	for(size_t i = 1; i < size; i++)

@@ -369,7 +369,7 @@ void NFmiDataQualityChecker::InitCheckMatrix(NFmiFastQueryInfo &theInfo)
 	size_t paramSize = itsDataParamCheckingInfos.size();
 	itsValueCheckMatrix.Resize(paramSize, timeSize); // tässä matriisi alustetaan 'puuttuvilla' arvoilla eli default kontruktorin muodostamilla olioilla
 
-	itsCombinedParamChecks = checkedVector<NFmiGridValuesCheck>(); // tämä tekee totaali tyhjennyksen vektoriin
+	itsCombinedParamChecks = std::vector<NFmiGridValuesCheck>(); // tämä tekee totaali tyhjennyksen vektoriin
 	itsCombinedParamChecks.resize(paramSize);
 }
 

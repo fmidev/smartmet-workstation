@@ -1201,13 +1201,13 @@ void NFmiTempView::DrawYAxel(void)
 	labelInfo.StartPointPixelOffSet(ScaleOffsetPoint(labelInfo.StartPointPixelOffSet()));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X()), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y()));
 
-	checkedVector<double> &values = mtaTempSystem.PressureValues();
-	checkedVector<double>::const_iterator endIt = values.end();
+	std::vector<double> &values = mtaTempSystem.PressureValues();
+	std::vector<double>::const_iterator endIt = values.end();
     double x1 = usedDataRect.Left();
     double x2 = usedDataRect.Right();
 	// # Y-axel
 	std::vector<LineLabelDrawData> lineLabels;
-	for(checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for(std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		double y = p2y(*it);
@@ -1420,7 +1420,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 		lineInfo.LineType(FMI_SOLID);
 		lineInfo.Color(NFmiColor(0.99f, 0.5f, 0.f));
 		lineInfo.Thickness(FmiRound(2 * itsDrawSizeFactorX));
-		checkedVector<double> values;
+		std::vector<double> values;
 		values.push_back(0.11);
 		values.push_back(0.135);
 		values.push_back(0.17);
@@ -1436,17 +1436,17 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 		envi.SetFontSize(NFmiPoint(labelInfo.FontSize(), labelInfo.FontSize()));
 		envi.BoldFont(true);
 		labelInfo.StartPointPixelOffSet(NFmiPoint(-5*itsDrawSizeFactorX, 0*itsDrawSizeFactorY));
-		checkedVector<double> probValues;
+		std::vector<double> probValues;
 		probValues.push_back(0);
 		probValues.push_back(40);
 		probValues.push_back(70);
 		probValues.push_back(100);
 
 		NFmiPoint moveLabelRelatively(CalcReltiveMoveFromPixels(itsToolBox, labelInfo.StartPointPixelOffSet()));
-		checkedVector<double>::const_iterator itProb = probValues.begin();
-		checkedVector<double>::const_iterator endIt = values.end();
+		std::vector<double>::const_iterator itProb = probValues.begin();
+		std::vector<double>::const_iterator endIt = values.end();
 		double P = startP;
-		for (checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it, ++itProb)
+		for (std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it, ++itProb)
 		{
 			double T = NFmiSoundingFunctions::TMR(*it, P);
 			double X = pt2x(P, T);
@@ -1460,7 +1460,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 
 // Tänne annetut labelInfo ja lineInfo on jo skaalattu niin että printtaus kertoimia ei tarvise käyttää täällä.
 void NFmiTempView::DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo,
-								   const checkedVector<double> &theValues, double startP, double endP, double deltaStartLevelP,
+								   const std::vector<double> &theValues, double startP, double endP, double deltaStartLevelP,
 								   NFmiDrawingEnvironment * /* theEnvi */ )
 {
 	if(theLineInfo.DrawLine() == false)
@@ -1469,10 +1469,10 @@ void NFmiTempView::DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const 
 	itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, itsDataRect));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(theLabelInfo.StartPointPixelOffSet().X()), static_cast<REAL>(theLabelInfo.StartPointPixelOffSet().Y()));
 
-	checkedVector<double>::const_iterator endIt = theValues.end();
+	std::vector<double>::const_iterator endIt = theValues.end();
 	double deltap = 50;
 	std::vector<LineLabelDrawData> lineLabels;
-	for (checkedVector<double>::const_iterator it = theValues.begin(); it != endIt;  ++it)
+	for (std::vector<double>::const_iterator it = theValues.begin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		for (double p = startP; p >= endP; p-=deltap)
@@ -1517,11 +1517,11 @@ void NFmiTempView::DrawDryAdiapaticks(void)
     NFmiTempLabelInfo labelInfo = mtaTempSystem.DryAdiabaticLabelInfo();
 	labelInfo.FontSize(FmiRound(labelInfo.FontSize() * itsDrawSizeFactorY));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X() * itsDrawSizeFactorX), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y() * itsDrawSizeFactorY));
-	checkedVector<double> &values = mtaTempSystem.DryAdiabaticValues();
-	checkedVector<double>::const_iterator endIt = values.end();
+	std::vector<double> &values = mtaTempSystem.DryAdiabaticValues();
+	std::vector<double>::const_iterator endIt = values.end();
 	double deltap = 50;
 	std::vector<LineLabelDrawData> lineLabels;
-	for (checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for (std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		for (double p = pmax; p > 100; p-=deltap)
@@ -1553,10 +1553,10 @@ void NFmiTempView::DrawMoistAdiapaticks(void)
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X() * itsDrawSizeFactorX), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y() * itsDrawSizeFactorY));
 
 	std::vector<LineLabelDrawData> lineLabels;
-	checkedVector<double> &values = mtaTempSystem.MoistAdiabaticValues();
-	checkedVector<double>::const_iterator endIt = values.end();
+	std::vector<double> &values = mtaTempSystem.MoistAdiabaticValues();
+	std::vector<double>::const_iterator endIt = values.end();
 	double deltap = 50;
-	for (checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for (std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		double P   = pmax;
@@ -1741,7 +1741,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(boost::shared_
         theInfo->FirstLevel();
         if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
         { // jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
-            checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = theInfoOrganizer.GetInfos(theDataType, true, theProducer.GetIdent());
+            std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = theInfoOrganizer.GetInfos(theDataType, true, theProducer.GetIdent());
             if(infoVec.size())
             {
                 for(size_t i = 0; i < infoVec.size(); i++)

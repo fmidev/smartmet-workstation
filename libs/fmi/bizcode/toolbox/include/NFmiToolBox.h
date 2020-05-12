@@ -159,7 +159,7 @@ protected:
 
   void SetUpClipping();
   void EndClipping(void);
-  void FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineList, checkedVector<CPoint> &thePoints, checkedVector<int> &thePolygonPointCounts, int &thePolygonCount, const NFmiPoint &theOffSet);
+  void FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineList, std::vector<CPoint> &thePoints, std::vector<int> &thePolygonPointCounts, int &thePolygonCount, const NFmiPoint &theOffSet);
 
 private:
 

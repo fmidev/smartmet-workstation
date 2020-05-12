@@ -95,11 +95,11 @@ class NFmiMTATempSystem
     };
 
     // voidaan helposti siirty‰ k‰ytt‰m‰‰n tavallista vector-luokkaa jos haluaa halutaan
-	using Container = checkedVector<TempInfo>; 
+	using Container = std::vector<TempInfo>; 
     // SoundingProducer:in bool osa tarkoittaa sit‰ ett‰ haetaanko itse luotausdata lokaali queryDatasta (false) vai serverilt‰ (true)
     using SoundingProducer = ServerProducer;
-    using SelectedProducerContainer = checkedVector<SoundingProducer>;
-    using SelectedProducerLegacyContainer = checkedVector<NFmiProducer>;
+    using SelectedProducerContainer = std::vector<SoundingProducer>;
+    using SelectedProducerLegacyContainer = std::vector<NFmiProducer>;
 
 	NFmiMTATempSystem(void);
 	virtual ~NFmiMTATempSystem(void);
@@ -146,22 +146,22 @@ class NFmiMTATempSystem
 	void PAxisStart(double newValue);
 	double PAxisEnd(void) const {return itsPAxisEnd;}
 	void PAxisEnd(double newValue);
-	checkedVector<double>& PressureValues(void) {return itsPressureValues;}
+	std::vector<double>& PressureValues(void) {return itsPressureValues;}
     NFmiTempLineInfo& PressureLineInfo(void) {return itsPressureLineInfo;}
 	void PressureLineInfo(const NFmiTempLineInfo &newValue) {itsPressureLineInfo = newValue;}
     NFmiTempLabelInfo& PressureLabelInfo(void) {return itsPressureLabelInfo;}
 	void PressureLabelInfo(const NFmiTempLabelInfo &newValue) {itsPressureLabelInfo = newValue;}
-	checkedVector<double>& MixingRatioValues(void) {return itsMixingRatioValues;}
+	std::vector<double>& MixingRatioValues(void) {return itsMixingRatioValues;}
     NFmiTempLineInfo& MixingRatioLineInfo(void) {return itsMixingRatioLineInfo;}
 	void MixingRatioLineInfo(const NFmiTempLineInfo &newValue) {itsMixingRatioLineInfo = newValue;}
     NFmiTempLabelInfo& MixingRatioLabelInfo(void) {return itsMixingRatioLabelInfo;}
 	void MixingRatioLabelInfo(const NFmiTempLabelInfo &newValue) {itsMixingRatioLabelInfo = newValue;}
-	checkedVector<double>& MoistAdiabaticValues(void) {return itsMoistAdiabaticValues;}
+	std::vector<double>& MoistAdiabaticValues(void) {return itsMoistAdiabaticValues;}
     NFmiTempLineInfo& MoistAdiabaticLineInfo(void) {return itsMoistAdiabaticLineInfo;}
 	void MoistAdiabaticLineInfo(const NFmiTempLineInfo &newValue) {itsMoistAdiabaticLineInfo = newValue;}
     NFmiTempLabelInfo& MoistAdiabaticLabelInfo(void) {return itsMoistAdiabaticLabelInfo;}
 	void MoistAdiabaticLabelInfo(const NFmiTempLabelInfo &newValue) {itsMoistAdiabaticLabelInfo = newValue;}
-	checkedVector<double>& DryAdiabaticValues(void) {return itsDryAdiabaticValues;}
+	std::vector<double>& DryAdiabaticValues(void) {return itsDryAdiabaticValues;}
     NFmiTempLineInfo& DryAdiabaticLineInfo(void) {return itsDryAdiabaticLineInfo;}
 	void DryAdiabaticLineInfo(const NFmiTempLineInfo &newValue) {itsDryAdiabaticLineInfo = newValue;}
     NFmiTempLabelInfo& DryAdiabaticLabelInfo(void) {return itsDryAdiabaticLabelInfo;}
@@ -289,7 +289,7 @@ private:
 	bool fTempViewOn; // onko luotaus ikkuna auki vai kiinni
 	double itsSkewTDegree; // tuetaan ainakin 0 ja 45 astetta
 
-	checkedVector<NFmiColor> itsSoundingColors; // eri luotaukset piirret‰‰n eri v‰reill‰, t‰h‰n on ne v‰rit talletettu
+	std::vector<NFmiColor> itsSoundingColors; // eri luotaukset piirret‰‰n eri v‰reill‰, t‰h‰n on ne v‰rit talletettu
 
 	// t‰h‰n tulee kaikenlaisia s‰‰tˆj‰ luotaus n‰ytˆst‰.
 	// mm. akselien s‰‰dˆt, eri viivojen v‰rit, viivatyypit ja paksuudet on/off tila ja
@@ -310,16 +310,16 @@ private:
 
 	double itsPAxisStart; // paineasteikon alku (maanpinta eli iso arvo)
 	double itsPAxisEnd; // paineasteikon loppu
-	checkedVector<double> itsPressureValues; // n‰m‰ paine pinnat piirret‰‰n ja niihin laitetaan label
+	std::vector<double> itsPressureValues; // n‰m‰ paine pinnat piirret‰‰n ja niihin laitetaan label
     NFmiTempLineInfo itsPressureLineInfo; // paine apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsPressureLabelInfo; // paine apuviivojen label tekstin piirto-ominaisuudet
-	checkedVector<double> itsMixingRatioValues; // n‰m‰ mixing ratio arvot piirret‰‰n ja niihin laitetaan label
+	std::vector<double> itsMixingRatioValues; // n‰m‰ mixing ratio arvot piirret‰‰n ja niihin laitetaan label
     NFmiTempLineInfo itsMixingRatioLineInfo; // MixingRatio apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsMixingRatioLabelInfo; // MixingRatio apuviivojen label tekstin piirto-ominaisuudet
-	checkedVector<double> itsMoistAdiabaticValues; // n‰m‰ kostea adiabaatti arvot piirret‰‰n ja niihin laitetaan label
+	std::vector<double> itsMoistAdiabaticValues; // n‰m‰ kostea adiabaatti arvot piirret‰‰n ja niihin laitetaan label
     NFmiTempLineInfo itsMoistAdiabaticLineInfo; // MoistAdiabatic apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsMoistAdiabaticLabelInfo; // MoistAdiabatic apuviivojen label tekstin piirto-ominaisuudet
-	checkedVector<double> itsDryAdiabaticValues; // n‰m‰ kuiva adiabaatti arvot piirret‰‰n ja niihin laitetaan label
+	std::vector<double> itsDryAdiabaticValues; // n‰m‰ kuiva adiabaatti arvot piirret‰‰n ja niihin laitetaan label
     NFmiTempLineInfo itsDryAdiabaticLineInfo; // DryAdiabatic apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsDryAdiabaticLabelInfo; // DryAdiabatic apuviivojen label tekstin piirto-ominaisuudet
 

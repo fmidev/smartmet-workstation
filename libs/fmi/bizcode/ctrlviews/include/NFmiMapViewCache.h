@@ -8,7 +8,7 @@
 #pragma once
 
 #include "NFmiMetTime.h"
-#include "NFmiDataMatrix.h" // t‰‰lt‰ tulee checkedVector
+#include "NFmiDataMatrix.h" // t‰‰lt‰ tulee std::vector
 
 #include <list>
 
@@ -77,8 +77,8 @@ private:
 	double MakeRoomFromUsedRows(double theMinCleareSizeMB);
     bool IsCacheRowIndexOk(int theRowIndex);
 
-	checkedVector<CacheRow> itsCacheRows;
-	checkedVector<int> itsUsedRowIndexies; // mitka rivit ovat editorin kartalla nakyvissa
+	std::vector<CacheRow> itsCacheRows;
+	std::vector<int> itsUsedRowIndexies; // mitka rivit ovat editorin kartalla nakyvissa
 	double itsMaxSizeMB; // kuinka suuri cachen kokonais koko saa olla maksimissaan eli jos koko ylittaa taman, pitaa alkaa vapauttamaan tilaa
 };
 

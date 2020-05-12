@@ -8,7 +8,7 @@
 #include <functional>
 #include "NFmiViewPosRegistryInfo.h"
 #include "PPTooltip.h"
-#include "NFmiDataMatrix.h" // t‰‰lt‰ tulee checkedVector-luokka
+#include "NFmiDataMatrix.h" // t‰‰lt‰ tulee std::vector-luokka
 #include "NFmiProducerSystem.h"
 
 class SmartMetDocumentInterface;
@@ -72,7 +72,7 @@ private:
     std::string TooltipForMacroParamCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
     std::string TooltipForParameterType(const AddParams::SingleRowItem &rowItem);
     std::string TooltipForDataType(const AddParams::SingleRowItem &singleRowItem);
-    std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);
+    std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);
     std::string DataTypeString(NFmiInfoData::Type dataType);
 public:
     DECLARE_MESSAGE_MAP()

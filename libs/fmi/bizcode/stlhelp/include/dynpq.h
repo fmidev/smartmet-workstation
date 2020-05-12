@@ -40,8 +40,8 @@ class  dynamic_priority_queue
     size_type size() const { return csize;}
 
   private:
-    checkedVector<index_type> Indices;  // auxiliary vector
-    checkedVector<key_type*> c;         // heap of pointers
+    std::vector<index_type> Indices;  // auxiliary vector
+    std::vector<key_type*> c;         // heap of pointers
     key_type* first;                    // beginning of the external vector
     PtrGreater<key_type*> comp;         // comparison object
     index_type csize;                    // current heap size

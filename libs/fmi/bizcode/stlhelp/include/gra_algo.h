@@ -87,7 +87,7 @@ bool topoSort(
        distributed vertices. The counter ResCounter is the position in
        Result where the next entry belongs. */
 
-    checkedVector<int> PredecessorCount(G.size(), 0);
+    std::vector<int> PredecessorCount(G.size(), 0);
     int VerticesWithoutSuccessor = 0;
 
     /* For each vertex, the vector PredecessorCount counts how many

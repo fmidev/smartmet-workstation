@@ -106,7 +106,7 @@ double NFmiEditorControlPoint::ChangeValue(void)
 		return 0;
 }
 
-checkedVector<double>& NFmiEditorControlPoint::ChangeValues(void)
+std::vector<double>& NFmiEditorControlPoint::ChangeValues(void)
 {
    return itsChangeValueVector;
 }
