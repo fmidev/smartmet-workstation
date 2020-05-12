@@ -17,3 +17,6 @@ log.txt
 # Project specific ignores
 /scripts/cmake
 /scripts/git
+
+# In this directory Fmi github modules are dealt with specific scripts that are in scripts/git -directory 
+/github_modules
