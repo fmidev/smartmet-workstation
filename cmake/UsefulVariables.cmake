@@ -177,6 +177,44 @@ set(
     optimized ${FMT_LIB_RELEASE}
     )
 
+# **** Gdal library section ****
+set(
+    GDAL_VERSION
+    3_0_2
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GDAL_BASE_DIR
+    ${LIBS_3RD}/gdal-${GDAL_VERSION}
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GDAL_INCLUDE_DIR
+    ${GDAL_BASE_DIR}/gdal
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GDAL_LIB_DIR
+    ${GDAL_BASE_DIR}/lib
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GDAL_BIN_DIR
+    ${GDAL_BASE_DIR}/bin
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GDAL_LIBS
+    gdal_i.lib proj.lib
+    CACHE INTERNAL "" FORCE
+    )
+
+
 # **** CppRestSdk library section ****
 if(NOT DISABLE_CPPRESTSDK)	
 set(
