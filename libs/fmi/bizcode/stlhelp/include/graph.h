@@ -27,7 +27,7 @@ class Graph
     // public type interface
     typedef map<int, EdgeType > Successor;
     typedef pair<VertexType, Successor> vertex;
-    typedef checkedVector<vertex> GraphType;
+    typedef std::vector<vertex> GraphType;
     typedef GraphType::iterator iterator;
     typedef GraphType::const_iterator const_iterator;
 
@@ -55,7 +55,7 @@ class Graph
     // access to vertex i}
     vertex& operator[](int i)
     {
-       // the access is safe, because C is a checkedVector
+       // the access is safe, because C is a std::vector
        return C[i];
     }
 

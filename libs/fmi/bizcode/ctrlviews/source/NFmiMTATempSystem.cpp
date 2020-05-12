@@ -217,7 +217,7 @@ void NFmiMTATempSystem::ClearTemps(void)
 	itsTempInfos.clear();
 }
 
-static std::string MakeValueStr(const checkedVector<double> &theValues)
+static std::string MakeValueStr(const std::vector<double> &theValues)
 {
 	std::string str;
 	int ssize = static_cast<int>(theValues.size());
@@ -311,22 +311,22 @@ void NFmiMTATempSystem::InitializeSoundingColors(void)
 	itsPAxisStart = NFmiSettings::Require<double>("MetEditor::TempView::PAxis::Start");
 	itsPAxisEnd = NFmiSettings::Require<double>("MetEditor::TempView::PAxis::End");
 	std::string valuesStr = NFmiSettings::Require<std::string>("MetEditor::TempView::HelpLine::Pressure::Values");
-	itsPressureValues = NFmiStringTools::Split<checkedVector<double> >(valuesStr);
+	itsPressureValues = NFmiStringTools::Split<std::vector<double> >(valuesStr);
 	GetHelpLineInfoSettings("MetEditor::TempView::HelpLine::Pressure::Line", itsPressureLineInfo);
 	GetHelpLabelInfoSettings("MetEditor::TempView::HelpLine::Pressure::Label", itsPressureLabelInfo);
 
 	valuesStr = NFmiSettings::Require<std::string>("MetEditor::TempView::HelpLine::MixingRatio::Values");
-	itsMixingRatioValues = NFmiStringTools::Split<checkedVector<double> >(valuesStr);
+	itsMixingRatioValues = NFmiStringTools::Split<std::vector<double> >(valuesStr);
 	GetHelpLineInfoSettings("MetEditor::TempView::HelpLine::MixingRatio::Line", itsMixingRatioLineInfo);
 	GetHelpLabelInfoSettings("MetEditor::TempView::HelpLine::MixingRatio::Label", itsMixingRatioLabelInfo);
 
 	valuesStr = NFmiSettings::Require<std::string>("MetEditor::TempView::HelpLine::MoistAdiabatic::Values");
-	itsMoistAdiabaticValues = NFmiStringTools::Split<checkedVector<double> >(valuesStr);
+	itsMoistAdiabaticValues = NFmiStringTools::Split<std::vector<double> >(valuesStr);
 	GetHelpLineInfoSettings("MetEditor::TempView::HelpLine::MoistAdiabatic::Line", itsMoistAdiabaticLineInfo);
 	GetHelpLabelInfoSettings("MetEditor::TempView::HelpLine::MoistAdiabatic::Label", itsMoistAdiabaticLabelInfo);
 
 	valuesStr = NFmiSettings::Require<std::string>("MetEditor::TempView::HelpLine::DryAdiabatic::Values");
-	itsDryAdiabaticValues = NFmiStringTools::Split<checkedVector<double> >(valuesStr);
+	itsDryAdiabaticValues = NFmiStringTools::Split<std::vector<double> >(valuesStr);
 	GetHelpLineInfoSettings("MetEditor::TempView::HelpLine::DryAdiabatic::Line", itsDryAdiabaticLineInfo);
 	GetHelpLabelInfoSettings("MetEditor::TempView::HelpLine::DryAdiabatic::Label", itsDryAdiabaticLabelInfo);
 
@@ -720,9 +720,9 @@ void NFmiMTATempSystem::ChangeWindBarbSpaceOutFactor(void)
 	WindBarbSpaceOutFactor(WindBarbSpaceOutFactor()+1);
 }
 
-static checkedVector<NFmiProducer> MakeLegacyProducerContainer(const NFmiMTATempSystem::SelectedProducerContainer &producerContainer)
+static std::vector<NFmiProducer> MakeLegacyProducerContainer(const NFmiMTATempSystem::SelectedProducerContainer &producerContainer)
 {
-    checkedVector<NFmiProducer> legacyContainer;
+    std::vector<NFmiProducer> legacyContainer;
     for(const auto &producer : producerContainer)
     {
         legacyContainer.push_back(producer);
@@ -744,7 +744,7 @@ static std::string MakeProducerContainerServerUsageString(const NFmiMTATempSyste
     return serverUsageString;
 }
 
-static const NFmiMTATempSystem::SelectedProducerContainer MakeSoundingComparisonProducersFromLegacyData(const checkedVector<NFmiProducer> &legacyProducerContainer, const std::string &serverDataUsageString)
+static const NFmiMTATempSystem::SelectedProducerContainer MakeSoundingComparisonProducersFromLegacyData(const std::vector<NFmiProducer> &legacyProducerContainer, const std::string &serverDataUsageString)
 {
     std::istringstream in(serverDataUsageString);
     NFmiMTATempSystem::SelectedProducerContainer finalComparisonProducers;
@@ -775,13 +775,13 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	os << "// MaxTempsShowed" << std::endl;
 	os << itsMaxTempsShowed << std::endl;
 
-	os << "// Selected producers checkedVector<NFmiProducer>" << std::endl;
+	os << "// Selected producers std::vector<NFmiProducer>" << std::endl;
 	NFmiDataStoringHelpers::WriteContainer(::MakeLegacyProducerContainer(itsSoundingComparisonProducers), os, std::string("\n"));
 
 	os << "// SelectedProducer index + tempViewOn + SkewTDegree" << std::endl;
 	os << itsSelectedProducer << " " << fTempViewOn << " " << itsSkewTDegree << std::endl;
 
-	os << "// SoundingColors checkedVector<NFmiColor>" << std::endl;
+	os << "// SoundingColors std::vector<NFmiColor>" << std::endl;
 	NFmiDataStoringHelpers::WriteContainer(itsSoundingColors, os, std::string("\n"));
 
 	os << "// TAxisStart0Degree + TAxisEnd0Degree + TAxisStart45Degree + TAxisEnd45Degree + TAxisStartNegDegree + TAxisEndNegDegree" << std::endl;
@@ -928,7 +928,7 @@ void NFmiMTATempSystem::Read(std::istream& is)
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
-    checkedVector<NFmiProducer> legacySoundingComparisonProducers;
+    std::vector<NFmiProducer> legacySoundingComparisonProducers;
 	NFmiDataStoringHelpers::ReadContainer(legacySoundingComparisonProducers, is);
 
 	is >> itsSelectedProducer >> fTempViewOn >> itsSkewTDegree;

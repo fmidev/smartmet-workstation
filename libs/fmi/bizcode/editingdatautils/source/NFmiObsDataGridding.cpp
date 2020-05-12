@@ -58,7 +58,7 @@ void NFmiObsDataGridding::DoGridding (std::vector<float> &x, std::vector<float> 
 			float deltaX = static_cast<float>(itsAreaLimits.Width()/(gridData.NX()-1));
 			for(unsigned int i = 0; i < gridData.NX(); i++)
 			{
-				checkedVector<DistIndex> resultVector;
+				std::vector<DistIndex> resultVector;
 				(void) FindClosestPoints(xGridPoint, yGridPoint, itsSearchRange, 4, resultVector);
 				gridData[i][j] = CalcValue(resultVector);
 				xGridPoint += deltaX;
@@ -109,7 +109,7 @@ void NFmiObsDataGridding::DoOneValueGridding (float fillValue, NFmiDataMatrix<fl
 //--------------------------------------------------------
 // FindClosestPoints 
 //--------------------------------------------------------
-bool NFmiObsDataGridding::FindClosestPoints (float xGridPoint, float yGridPoint, float /* searchRange */ , int wantedPointCount, checkedVector<DistIndex>& theResultVector)
+bool NFmiObsDataGridding::FindClosestPoints (float xGridPoint, float yGridPoint, float /* searchRange */ , int wantedPointCount, std::vector<DistIndex>& theResultVector)
 {
 	for(int i = 0; i < itsArraySize; i++)
 	{
@@ -142,7 +142,7 @@ float NFmiObsDataGridding::CalcWeight (float distance, float theMaxDist) const
 //--------------------------------------------------------
 // Laskee FindClosestPoints:issa annetun pisteen arvon annetun etäisyys 
 // vektorin ja indeksien kautta z-taulukon arvojen avulla.
-float NFmiObsDataGridding::CalcValue (checkedVector<DistIndex>& theClosestPointsResultVector)
+float NFmiObsDataGridding::CalcValue (std::vector<DistIndex>& theClosestPointsResultVector)
 {
 	float returnVal = 0.0;
 	float weight = 0;

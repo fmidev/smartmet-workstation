@@ -131,8 +131,8 @@ void CFmiSmartToolLoadingDlg::UpdateScriptNameList(void)
 {
 	static const std::string cvsDirectoryName("<CVS>");
 	itsScriptNameList.ResetContent();
-	checkedVector<std::string> stringVector(itsSmartToolInfo->GetScriptNames());
-	checkedVector<std::string>::iterator it = stringVector.begin();
+	std::vector<std::string> stringVector(itsSmartToolInfo->GetScriptNames());
+	std::vector<std::string>::iterator it = stringVector.begin();
 	for( ; it != stringVector.end(); ++it)
 	{
 		// ignoorataan CVS hakemisto

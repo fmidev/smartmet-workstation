@@ -106,7 +106,7 @@ public:
     virtual void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) = 0;
     virtual void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) = 0;
     virtual NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() = 0;
-    virtual void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) = 0;
+    virtual void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
     virtual const NFmiPoint& BrushSize() = 0;
     virtual void BrushSize(const NFmiPoint& theSize) = 0;
@@ -149,7 +149,7 @@ public:
     virtual NFmiModelDataBlender& ModelDataBlender() = 0;
     virtual CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode() = 0;
     virtual void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) = 0;
-    virtual void SetDataLoadingProducerIndexVector(const checkedVector<int>& theIndexVector) = 0;
+    virtual void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector) = 0;
     virtual bool Printing() = 0;
     virtual void Printing(bool newStatus) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() = 0;
@@ -331,7 +331,7 @@ public:
     virtual void SetHighlightedSynopStation(const NFmiPoint &theLatlon, int theWmoId, bool fShowHighlight) = 0;
     virtual bool SynopDataGridViewOn() = 0;
     virtual void SynopDataGridViewOn(bool newState) = 0;
-    virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
+    virtual std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
     virtual void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) = 0;
     virtual NFmiLocationSelectionTool* LocationSelectionTool2() = 0;
     virtual NFmiParamBag& AllStaticParams() = 0;

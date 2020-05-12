@@ -292,7 +292,7 @@ struct FindParam
 const NFmiObsComparisonInfo::Param& NFmiObsComparisonInfo::GetParam(int theParId)
 {
 	static NFmiObsComparisonInfo::Param dummy;
-	checkedVector<NFmiObsComparisonInfo::Param>::iterator it = std::find_if(itsParams.begin(), itsParams.end(), FindParam(theParId));
+	std::vector<NFmiObsComparisonInfo::Param>::iterator it = std::find_if(itsParams.begin(), itsParams.end(), FindParam(theParId));
 	if(it != itsParams.end())
 		return *it;
 	return dummy;

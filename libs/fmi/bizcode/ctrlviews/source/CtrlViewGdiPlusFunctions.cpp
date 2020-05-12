@@ -66,8 +66,8 @@ namespace CtrlView
             newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->SimpleIsoLineColorShadeHigh2ValueColor(), theBrightningFactor);
             theDrawParam->SimpleIsoLineColorShadeHigh2ValueColor(newColor);
 
-            checkedVector<int> colIndexies = theDrawParam->SpecialIsoLineColorIndexies();
-            checkedVector<int> newColIndexies;
+            std::vector<int> colIndexies = theDrawParam->SpecialIsoLineColorIndexies();
+            std::vector<int> newColIndexies;
             for(size_t i = 0; i < colIndexies.size(); i++)
                 newColIndexies.push_back(GetBrighterTMColorIndex(theUsedColorsCube, colIndexies[i], theBrightningFactor, theSpecialColorEndIndex));
             theDrawParam->SetSpecialIsoLineColorIndexies(newColIndexies); // HUOM! tämä aettaa myös SpecialContourColorIndexies samalla, joten vielä ei sää tehdä mitään myöhemmin contour osiossa niille.
@@ -86,8 +86,8 @@ namespace CtrlView
 
             // HUOM! Nämä asetetaan isoline kohdassa samalla kuin custom isoline väri indeksit, joten ei saa vaalentaa näitä toistaiseksi uudestaan.
             /*
-            checkedVector<int> colIndexies = theDrawParam->SpecialContourColorIndexies();
-            checkedVector<int> newColIndexies;
+            std::vector<int> colIndexies = theDrawParam->SpecialContourColorIndexies();
+            std::vector<int> newColIndexies;
             for(size_t i = 0; i < colIndexies.size(); i++)
             newColIndexies.push_back(::GetBrighterTMColorIndex(theUsedColorsCube, colIndexies[i], theBrightningFactor, theSpecialColorEndIndex));
             theDrawParam->SetSpecialContourColorIndexies(newColIndexies);

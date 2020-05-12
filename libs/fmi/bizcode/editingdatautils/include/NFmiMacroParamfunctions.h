@@ -41,9 +41,9 @@ namespace MacroParam
     // pit‰‰ tehd‰ oma rutiini vertaamaan vektoreiden samanarvoisuutta, jos on k‰ytetty boost::shared_ptr:eita apuna.
     // T‰m‰ siksi ett‰ shared_ptr tekee vertailun suoraan pointtereilla eik‰ niiden referensseill‰.
     template<typename T>
-    static bool CheckSharedPtrContainerEquality(const checkedVector<boost::shared_ptr<T> > &items1, const checkedVector<boost::shared_ptr<T> > &items2)
+    static bool CheckSharedPtrContainerEquality(const std::vector<boost::shared_ptr<T> > &items1, const std::vector<boost::shared_ptr<T> > &items2)
     {
-        typedef checkedVector<boost::shared_ptr<T> >::const_iterator Iter;
+        typedef std::vector<boost::shared_ptr<T> >::const_iterator Iter;
         if(items1.size() == items2.size())
         {
             Iter it1 = items1.begin();

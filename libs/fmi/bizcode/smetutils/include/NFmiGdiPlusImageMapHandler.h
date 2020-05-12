@@ -43,8 +43,8 @@ public:
 	int GetOverMapDrawStyle();
 	const std::string& GetOverMapBitmapFileName();
 	const std::string GetOverMapBitmapAbsoluteFileName();
-	bool Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles);
-	bool Init(const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles);
+	bool Init(const std::string& theAreaFileName, const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles);
+	bool Init(const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles);
 	void Clear();
 
 	void OriginalArea(const std::string& theArea);
@@ -106,10 +106,10 @@ private:
 	// Mit‰ nimi karttaa k‰ytet‰‰n (-1 = ei mit‰‰n, 0=1. vektorissa olevaa jne.)
 	int itsUsedOverMapBitmapIndex; 
 	// T‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
-	checkedVector<Gdiplus::Bitmap*> itsMapBitmaps;
+	std::vector<Gdiplus::Bitmap*> itsMapBitmaps;
 	// T‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
 	// T‰m‰ Bitmap on tarkoitus haluttaessa piirt‰‰ oikean kartan p‰‰lle.
-	checkedVector<Gdiplus::Bitmap*> itsOverMapBitmaps;
+	std::vector<Gdiplus::Bitmap*> itsOverMapBitmaps;
 	boost::shared_ptr<NFmiArea> itsOriginalArea;
 	boost::shared_ptr<NFmiArea> itsZoomedArea;
 	NFmiRect itsZoomedAreaPosition;
@@ -120,10 +120,10 @@ private:
     // T‰m‰n avulla tiedet‰‰n onko karttaa oikeasti zoomattu, edell‰ olevaa fMakeNewBackgroundBitmap:‰ voidaan k‰ytt‰‰ muissakin tapauksissa
 	bool fMapReallyChanged; 
 	std::string itsAreaFileName;
-	checkedVector<std::string> itsMapFileNames;
-	checkedVector<int> itsMapDrawStyles;
-	checkedVector<std::string> itsOverMapBitmapFileNames;
-	checkedVector<int> itsOverMapBitmapDrawStyles;
+	std::vector<std::string> itsMapFileNames;
+	std::vector<int> itsMapDrawStyles;
+	std::vector<std::string> itsOverMapBitmapFileNames;
+	std::vector<int> itsOverMapBitmapDrawStyles;
     // Smartmetin kontrollipolku (-p optio) pit‰‰ laittaa talteen, koska muuten ohjelma ei aina
     // osaa lukea karttoja suhteellisesta polusta alkaen (t‰st‰ seurasi mustat ruudut)
     // T‰ss‰ oli aiemmin WorkingDirectory, mutta se ei toiminut varsinkaan kun k‰ytˆss‰ oli 

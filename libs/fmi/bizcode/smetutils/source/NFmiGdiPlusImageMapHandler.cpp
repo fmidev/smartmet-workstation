@@ -21,7 +21,7 @@ using namespace std;
 
 namespace
 {
-	void clearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
+	void clearBitmapVector(std::vector<Gdiplus::Bitmap*>& theBitmaps)
 	{
 		for(auto *bitmapPointer : theBitmaps)
 		{
@@ -140,7 +140,7 @@ void NFmiGdiPlusImageMapHandler::Clear()
 	itsCountryBorderPolylineCache.clearCache();
 }
 
-bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
+bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles)
 {
 	itsAreaFileName = PathUtils::makeFixedAbsolutePath(theAreaFileName, itsControlPath);
 
@@ -157,7 +157,7 @@ bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const 
 	return Init(theMapFileNames, theMapDrawStyles, theOverMapBitmapFileNames, theOverMapBitmapDrawStyles);
 }
 
-bool NFmiGdiPlusImageMapHandler::Init(const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
+bool NFmiGdiPlusImageMapHandler::Init(const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles)
 {
 	itsMapFileNames = theMapFileNames;
 	itsMapDrawStyles = theMapDrawStyles;

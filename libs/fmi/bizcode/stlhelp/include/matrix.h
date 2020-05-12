@@ -20,11 +20,11 @@
 
 /* matrix as vector of vectors*/
 template<class T>
-class Matrix : public checkedVector<checkedVector<T> >
+class Matrix : public std::vector<std::vector<T> >
 {
 #ifdef _MSC_VER
 public:
-     typedef typename checkedVector< checkedVector< T > >::size_type size_type;
+     typedef typename std::vector< std::vector< T > >::size_type size_type;
 #endif
 
    protected:
@@ -33,21 +33,21 @@ public:
 
    public:
      Matrix(size_type x = 0, size_type y = 0)
-     : checkedVector<checkedVector<T> >(x,
-             checkedVector<T>(y)), rows(x), columns(y)
+     : std::vector<std::vector<T> >(x,
+             std::vector<T>(y)), rows(x), columns(y)
      {}
 
-    /* Thus, the Matrix class inherits from the checkedVector class,
+    /* Thus, the Matrix class inherits from the std::vector class,
        with the data type of the vector elements now being described
-       by a checkedVector<T> template. With this, the matrix is a
+       by a std::vector<T> template. With this, the matrix is a
        nested container that exploits the combination of templates
        with inheritance. The constructor initializes the implicit
-       subobject of the base class type (checkedVector<
-       checkedVector<T> >) with the correct size x. Exactly as with
+       subobject of the base class type (std::vector<
+       std::vector<T> >) with the correct size x. Exactly as with
        the standard vector container, the second parameter of the
        constructor specifies with which value each vector element is
        to be initialized. Here, the value is nothing else but a vector
-       of type checkedVector<T> and length y.*/
+       of type std::vector<T> and length y.*/
 
      size_type Rows() const {return rows; }
 
@@ -87,9 +87,9 @@ public:
      }
 
     /* The index operator operator[]() is inherited from
-       checkedVector. Applied to i, it supplies a reference to the ith
+       std::vector. Applied to i, it supplies a reference to the ith
        element of the (base class subobject) vector. This element is
-       itself a vector of type checkedVector<T>. It is again applied
+       itself a vector of type std::vector<T>. It is again applied
        to the index operator, this time with the value j, which
        returns a reference to an object of type T, which is then
        assigned the value. */

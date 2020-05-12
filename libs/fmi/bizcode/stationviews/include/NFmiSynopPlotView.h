@@ -40,7 +40,7 @@ private:
 	bool DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect);
 	bool PrintParameterValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theSynopRect, const NFmiPoint &theRelLocation, FmiParameterName theWantedParameter, bool fDoMetarPlotString = false);
 	bool DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool fWindDrawed);
-	void DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, checkedVector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker);
+	void DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, std::vector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker);
 	NFmiRect CalcBaseEmptySoundingMarker(void);
 	void DrawEmptySoundingMarker(const NFmiRect &theEmptySoundingMarkerRect);
 	bool DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theDrawRect);
@@ -72,13 +72,13 @@ private:
 	NFmiString GetPrecipitationAmountStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	NFmiString Get12or24HourRainAmountStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter);
 
-	checkedVector<NFmiRect> itsExistingSynopPlots; // laitetaan kaikki laatikot, joihin on synop havainto plotattu talteen t‰nne, ett‰ ei tule piirretty‰ niit‰ p‰‰llekk‰in
+	std::vector<NFmiRect> itsExistingSynopPlots; // laitetaan kaikki laatikot, joihin on synop havainto plotattu talteen t‰nne, ett‰ ei tule piirretty‰ niit‰ p‰‰llekk‰in
 	int itsFontSizeX;
 	int itsFontSizeY;
 	bool fSoundingPlotDraw; // onko kyseess‰ luotau-synop-plot menossa?
 	bool fMinMaxPlotDraw; // onko kyseess‰ luotau-synop-plot menossa?
 	bool fMetarPlotDraw; // onko kyseess‰ metar-plot menossa?
 
-	checkedVector<FmiParameterName> itsQ2WantedParamVector; // jos dataa haetaan q2-serverilt‰, haetaan n‰m‰ parametrit
+	std::vector<FmiParameterName> itsQ2WantedParamVector; // jos dataa haetaan q2-serverilt‰, haetaan n‰m‰ parametrit
 };
 

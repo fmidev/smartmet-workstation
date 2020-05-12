@@ -1417,7 +1417,7 @@ bool NFmiToolBox::DrawValueLineList(NFmiValueLineList* theLineList, NFmiDrawingE
 	return true;
 }
 
-void NFmiToolBox::FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineList, checkedVector<CPoint> &thePoints, checkedVector<int> &thePolygonPointCounts, int &thePolygonCount, const NFmiPoint &theOffSet)
+void NFmiToolBox::FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineList, std::vector<CPoint> &thePoints, std::vector<int> &thePolygonPointCounts, int &thePolygonCount, const NFmiPoint &theOffSet)
 {
 	using namespace std;
 	thePolygonCount = static_cast<int>(thePolyLineList.size());
@@ -1479,8 +1479,8 @@ bool NFmiToolBox::DrawMultiPolygon(std::list<NFmiPolyline*> &thePolyLineList, NF
 			pDC->SetBkMode((*it)->BackGroundMode());
 			CBrush* pOldBrush = pDC->SelectObject(pItsFillPattern);
 
-			checkedVector<CPoint> points;
-			checkedVector<int> polCounts;
+			std::vector<CPoint> points;
+			std::vector<int> polCounts;
 			int polCount = 0;
 			FillPolyPolygonPoints(thePolyLineList, points, polCounts, polCount, theOffSet);
 			pDC->PolyPolygon(&points[0], &polCounts[0], polCount);

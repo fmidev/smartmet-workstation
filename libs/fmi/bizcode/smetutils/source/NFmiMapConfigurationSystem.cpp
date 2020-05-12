@@ -63,7 +63,7 @@ std::istream & NFmiMapConfiguration::Read(std::istream & file)
 	return file;
 }
 
-void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, checkedVector<std::string> &theFileNames, checkedVector<int> &theDrawingStyles)
+void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, std::vector<std::string> &theFileNames, std::vector<int> &theDrawingStyles)
 {
 	const int maxBufferSize = 512; // kuinka pitkä tiedoston nimi voi olla polkuineen maksimissaan
 	int mapCount = 0;

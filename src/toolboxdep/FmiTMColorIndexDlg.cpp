@@ -975,7 +975,7 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_COUNT_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_COUNT_STR");
 
 	// Lis‰t‰‰n jo valitut v‰rit
-	checkedVector<int> specialClassColorIndices = itsDrawParam->SpecialIsoLineColorIndexies();
+	std::vector<int> specialClassColorIndices = itsDrawParam->SpecialIsoLineColorIndexies();
 	for(size_t i=0; i<specialClassColorIndices.size(); i++)
 	{
 		std::vector<ColorRectInfo>::iterator it = ::FindColorRectWithColorIndex(itsColorRectVector, specialClassColorIndices[i]);
@@ -1210,15 +1210,15 @@ void CFmiTMColorIndexDlg::OnPaint()
 void CFmiTMColorIndexDlg::MakeColorUpdatesTodrawParam(void)
 {
 	// Lis‰t‰‰n valitut v‰rit takaisin drawParamiin
-	checkedVector<int> specialClassColorIndices;
+	std::vector<int> specialClassColorIndices;
 	for(size_t i=0; i<itsSelectedColorsRectVector.size(); i++)
 		specialClassColorIndices.push_back(itsSelectedColorsRectVector[i].itsColorIndex);
 
 	itsDrawParam->SetSpecialIsoLineColorIndexies(specialClassColorIndices);
 
 	// tehd‰‰n muutkin tarvittavat p‰ivitykset drawParamiin
-	checkedVector<float> tmpValue(itsLatestAcceptedSpecialClasses.begin(), itsLatestAcceptedSpecialClasses.end());
-	itsDrawParam->SetSpecialIsoLineValues(tmpValue); // tehtiin checkedVector-tmpValue, koska SetSpecialColorContouringValues-metodi haluaa sit‰
+	std::vector<float> tmpValue(itsLatestAcceptedSpecialClasses.begin(), itsLatestAcceptedSpecialClasses.end());
+	itsDrawParam->SetSpecialIsoLineValues(tmpValue); // tehtiin std::vector-tmpValue, koska SetSpecialColorContouringValues-metodi haluaa sit‰
 	itsDrawParam->ContourGab(itsLatestAcceptedContourGap);
 	itsDrawParam->UseIsoLineGabWithCustomContours(fUseSteps == TRUE);
 
@@ -1455,7 +1455,7 @@ void CFmiTMColorIndexDlg::OnEnChangeSpecialClassesValues()
 	try
 	{
         std::string tmp = CT2A(itsSpecialClassesValuesStrU_);
-		checkedVector<float> classValues = NFmiStringTools::Split<checkedVector<float> >(tmp, ",");
+		std::vector<float> classValues = NFmiStringTools::Split<std::vector<float> >(tmp, ",");
 		if(CtrlViewUtils::AreVectorValuesInRisingOrder(classValues) == false)
 			throw std::runtime_error("xxx");
 		else

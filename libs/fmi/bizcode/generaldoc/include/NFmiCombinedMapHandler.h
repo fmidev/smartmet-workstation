@@ -178,7 +178,7 @@ public:
     void projectionCurvatureInfo(const NFmiProjectionCurvatureInfo& newValue) override;
     NFmiPtrList<NFmiDrawParamList>* getDrawParamListVector(unsigned int mapViewDescTopIndex) override;
     void clearDesctopsAllParams(unsigned int mapViewDescTopIndex) override;
-    void makeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area) override;
+    void makeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area) override;
     void makeApplyViewMacroDirtyActions() override;
     void makeSwapBaseArea(unsigned int mapViewDescTopIndex) override;
     void swapArea(unsigned int mapViewDescTopIndex) override;

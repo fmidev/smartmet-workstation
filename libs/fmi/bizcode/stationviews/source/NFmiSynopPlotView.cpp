@@ -101,7 +101,7 @@ static bool AreRectsOverLapping(const NFmiRect &first, const NFmiRect &second, d
 	}
 }
 
-static bool IsRectOverLapping(const NFmiRect &theRect, checkedVector<NFmiRect> &theExistingRects, double thePlotSpacing)
+static bool IsRectOverLapping(const NFmiRect &theRect, std::vector<NFmiRect> &theExistingRects, double thePlotSpacing)
 {
 	int count = static_cast<int>(theExistingRects.size());
 	for(int i=0; i < count; i++)
@@ -182,7 +182,7 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 	itsDrawingEnvironment->SetFrameColor(itsDrawParam->FrameColor());
 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
-	checkedVector<NFmiRect> synopRects;
+	std::vector<NFmiRect> synopRects;
 	MakeDrawedInfoVector();
 	itsInfoVectorIter = itsInfoVector.begin();
 	if(itsInfoVectorIter == itsInfoVector.end())
@@ -245,7 +245,7 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 	}
 }
 
-void NFmiSynopPlotView::DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, checkedVector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker)
+void NFmiSynopPlotView::DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, std::vector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker)
 {
 	if(itsArea->IsInside(CurrentLatLon()))
 	{

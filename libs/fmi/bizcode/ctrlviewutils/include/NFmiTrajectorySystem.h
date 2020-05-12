@@ -48,7 +48,7 @@ class NFmiTrajectorySystem
 	void SelectedProducer(const NFmiProducer &newValue) {itsSelectedProducer = newValue;}
 	int SelectedDataType(void) const {return itsSelectedDataType;}
 	void SelectedDataType(int newValue) {itsSelectedDataType = newValue;}
-	const checkedVector<boost::shared_ptr<NFmiTrajectory> >& Trajectories(void) const {return itsTrajectories;}
+	const std::vector<boost::shared_ptr<NFmiTrajectory> >& Trajectories(void) const {return itsTrajectories;}
 	const NFmiTrajectory& Trajectory(int theIndex) const;
 	void AddTrajectory(bool fCalculateData);
 	int SelectedTimeStepInMinutes(void) const {return itsSelectedTimeStepInMinutes;}
@@ -116,7 +116,7 @@ private:
 	NFmiProducerSystem *itsProducerSystem;
 	NFmiSilamStationList itsNuclearPlants;
 	NFmiSilamStationList itsOtherPlaces;
-	checkedVector<boost::shared_ptr<NFmiTrajectory> > itsTrajectories;
+	std::vector<boost::shared_ptr<NFmiTrajectory> > itsTrajectories;
 	NFmiPoint itsSelectedLatLon;
 	NFmiMetTime itsSelectedTime;
 	NFmiProducer itsSelectedProducer;

@@ -33,7 +33,7 @@ public:
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) override;
     void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) override;
     NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() override;
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
+    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
     const NFmiPoint& BrushSize() override;
     void BrushSize(const NFmiPoint& theSize) override;
@@ -76,7 +76,7 @@ public:
     NFmiModelDataBlender& ModelDataBlender() override;
     CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode() override;
     void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) override;
-    void SetDataLoadingProducerIndexVector(const checkedVector<int>& theIndexVector) override;
+    void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector) override;
     bool Printing() override;
     void Printing(bool newStatus) override;
     boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() override;
@@ -258,7 +258,7 @@ public:
     void SetHighlightedSynopStation(const NFmiPoint &theLatlon, int theWmoId, bool fShowHighlight) override;
     bool SynopDataGridViewOn() override;
     void SynopDataGridViewOn(bool newState) override;
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
     void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;
     NFmiLocationSelectionTool* LocationSelectionTool2() override;
     NFmiParamBag& AllStaticParams() override;

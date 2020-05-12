@@ -304,7 +304,7 @@ static std::string GetTimeAndStationString(SmartMetDocumentInterface *smartMetDo
 	return str;
 }
 
-static void SetHeaders(NFmiSeaIcingWarningsGridCtrl &theGridCtrl, const checkedVector<SeaIcingWarningsHeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
+static void SetHeaders(NFmiSeaIcingWarningsGridCtrl &theGridCtrl, const std::vector<SeaIcingWarningsHeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
 {
     int columnCount = static_cast<int>(theHeaders.size());
 	theGridCtrl.SetRowCount(rowCount);

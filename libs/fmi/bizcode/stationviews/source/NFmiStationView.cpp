@@ -110,7 +110,7 @@ static bool NearestShipLocation(NFmiFastQueryInfo &theInfo, const NFmiLocation &
 	return theInfo.LocationIndex(minLocInd);
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, const NFmiPoint& theWantedLatLon)
+static boost::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, const NFmiPoint& theWantedLatLon)
 {
 	NFmiLocation wantedLocation(theWantedLatLon);
 	if(theInfoVector.empty() == false)
@@ -368,7 +368,7 @@ void NFmiStationView::DrawCountryBordersToMapView()
 		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, itsToolBox, itsDrawParam.get());
 }
 
-void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+void NFmiStationView::MakeDrawedInfoVector(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, GetArea());
 }
@@ -393,13 +393,13 @@ static int GetGridDataIndex(int xSize, int xInd, int yInd)
 	return (xSize * yInd) + xInd;
 }
 
-static checkedVector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::vector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo->IsGrid())
 	{ // hiladatalle palautetaan seuraavat paikkaindeksit
 		int xSize = theInfo->Grid()->XNumber();
 		int ySize = theInfo->Grid()->YNumber();
-		checkedVector<unsigned long> locationIndexies;
+		std::vector<unsigned long> locationIndexies;
 		if(xSize > 0 && ySize > 0)
 		{
 			locationIndexies.push_back(GetGridDataIndex(xSize, xSize/2, ySize/2)); // laitetaan ensimm‰iseksi hilan puoliv‰li, koska reunoista puuttuu helposti dataa
@@ -439,7 +439,7 @@ static checkedVector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiF
 		}
 		return locationIndexies;
 	}
-	return checkedVector<unsigned long>();
+	return std::vector<unsigned long>();
 }
 
 // k‰y l‰pi muutaman pisteen datassa ja etsii sielt‰ edustavimman teksti pituuden
@@ -483,7 +483,7 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
 std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
 {
     unsigned long oldLocationIndex = itsInfo->LocationIndex();
-    checkedVector<unsigned long> locationIndexies(FillLocationIndexies(itsInfo));
+    std::vector<unsigned long> locationIndexies(FillLocationIndexies(itsInfo));
     std::vector<float> values;
     for(auto locationIndex : locationIndexies)
     {
@@ -1616,12 +1616,12 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extra
     return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, nullptr, &extraMacroParamData);
 }
 
-static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     theGriddingHelper->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
 
-static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiArea &theArea, float theValue, checkedVector<float> &theXValues, checkedVector<float> &theYValues, checkedVector<float> &theZValues)
+static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiArea &theArea, float theValue, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues)
 {
 	if(theValue != kFloatMissing)
 	{
@@ -1636,7 +1636,7 @@ static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, co
 	}
 }
 
-static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<float> &theXValues, checkedVector<float> &theYValues, checkedVector<float> &theZValues, NFmiDataMatrix<float> &theValues)
+static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues, NFmiDataMatrix<float> &theValues)
 {
     auto stationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(griddingProperties.rangeLimitInKm(), theArea.get()));
     auto_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
@@ -1645,13 +1645,13 @@ static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, co
 
 void NFmiStationView::GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties)
 {
-	checkedVector<float> xValues;
-	checkedVector<float> yValues;
-	checkedVector<float> zValues;
+	std::vector<float> xValues;
+	std::vector<float> yValues;
+	std::vector<float> zValues;
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 	::MakeDrawedInfoVector(theGriddingHelper, theArea, infoVector, theDrawParam);
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
 	if(iter != infoVector.end())
 	{
 		NFmiIgnoreStationsData &ignorestationdata = theGriddingHelper->IgnoreStationsData();
@@ -1691,7 +1691,7 @@ public:
         :itsCtrlViewDocumentInterface(theCtrlViewDocumentInterface)
     {}
 
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
+    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
     {
         itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
@@ -1720,13 +1720,13 @@ void NFmiStationView::GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, 
 
 void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime)
 {
-	checkedVector<float> xValues;
-	checkedVector<float> yValues;
-	checkedVector<float> zValues;
+	std::vector<float> xValues;
+	std::vector<float> yValues;
+	std::vector<float> zValues;
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 	MakeDrawedInfoVector(infoVector, itsDrawParam);
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
 	if(iter != infoVector.end())
 	{
 		NFmiIgnoreStationsData &ignorestationdata = itsCtrlViewDocumentInterface->IgnoreStationsData();
@@ -1789,7 +1789,7 @@ static string GetQ2ParamString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 	return str;
 }
 
-static string GetQ2ParamString(checkedVector<FmiParameterName> &theWantedParamVector) 	
+static string GetQ2ParamString(std::vector<FmiParameterName> &theWantedParamVector) 	
 {
 	string str("paramId=");
 	for(size_t i = 0; i < theWantedParamVector.size(); i++)
@@ -1913,7 +1913,7 @@ static void GetSynopStationIds(const std::string &theExtraInfoStr, NFmiStationVi
 	}
 }
 
-static void SetSynopParamIds(NFmiStationView::ParamIdSeekContainer &theSynopPlotParamIndexies, checkedVector<FmiParameterName> &theWantedParamVector)
+static void SetSynopParamIds(NFmiStationView::ParamIdSeekContainer &theSynopPlotParamIndexies, std::vector<FmiParameterName> &theWantedParamVector)
 {
 	theSynopPlotParamIndexies.clear();
 	for(size_t i = 0; i < theWantedParamVector.size(); i++)
@@ -1925,7 +1925,7 @@ static void SetSynopParamIds(NFmiStationView::ParamIdSeekContainer &theSynopPlot
 // http://brainstormgw.fmi.fi/q2?requestType=stationData&paramId=4,1&producerId=1001&dataType=5&validTime=TODAY+3&projection=stereographic,25:21,62,27,66&maxDecimals=1
 // Lis‰ksi tooltippi‰ varten pit‰‰ tehd‰ haku (tehd‰‰n jos theStationId on eri kuin 0):
 // http://brainstormgw.fmi.fi/q2?requestType=stationData&paramId=4,1&producerId=1001&dataType=5&validTime=TODAY-12&stationId=2978,2929&maxDecimals=1
-bool NFmiStationView::GetQ2SynopData(unsigned long theStationId, checkedVector<FmiParameterName> theWantedParamVector)
+bool NFmiStationView::GetQ2SynopData(unsigned long theStationId, std::vector<FmiParameterName> theWantedParamVector)
 {
     auto &q2ServerInfo = itsCtrlViewDocumentInterface->GetQ2ServerInfo();
 	string urlStr = q2ServerInfo.Q2ServerURLStr();
@@ -2675,7 +2675,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::GetNearestQ2SynopStation(c
 		MakeDrawedInfoVector(); // joskus pit‰‰ varmistaa, ett‰ info vektor on rakennettu
 
 	// haetaan vain 2 ensimm‰isest‰ datasta tooltip arvoja eli euro ja maailma datoista
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > tempInfoVec;
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > tempInfoVec;
 	if(itsInfoVector.size() >= 1)
 		tempInfoVec.push_back(*itsInfoVector.begin());
 	if(itsInfoVector.size() >= 2)
@@ -3234,7 +3234,7 @@ void NFmiStationView::SetupUsedDrawParam(void)
 // viimeiset n kpl ei-puuttuvia arvoja aikoineen. Jos arvoja ei saada
 // kokoon ennen kuin theMaxTimeStepsBackWard lukema tulee vastaan, lopetetaan
 // ja palautetaan false. Jos onnistuu, palautetaan true.
-static bool GetValuesAndTimesFromBack(NFmiFastQueryInfo & theInfo, checkedVector<double> &theValues, checkedVector<NFmiMetTime> &theTimes, int theMaxTimeStepsBackWard, int theWantedValues)
+static bool GetValuesAndTimesFromBack(NFmiFastQueryInfo & theInfo, std::vector<double> &theValues, std::vector<NFmiMetTime> &theTimes, int theMaxTimeStepsBackWard, int theWantedValues)
 {
 	unsigned int oldTimeIndex = theInfo.TimeIndex();
 	theInfo.LastTime();
@@ -3270,7 +3270,7 @@ static bool GetValuesAndTimesFromBack(NFmiFastQueryInfo & theInfo, checkedVector
 
 // muuttaa kaikki ajat sopiviksi et‰isyys kertoimiksi Lagrange funktiota varten.
 // theTimes-vektorin 1. aika on 0, theMapTime on 1, loput ajat lasketaan n‰iden suhteen
-static void ConvertTimesToDistanceFactors(checkedVector<NFmiMetTime> &theTimes, checkedVector<double> &theDistanceFactors, const NFmiMetTime &theMapTime, double &theMapTimeDistanceFactor)
+static void ConvertTimesToDistanceFactors(std::vector<NFmiMetTime> &theTimes, std::vector<double> &theDistanceFactors, const NFmiMetTime &theMapTime, double &theMapTimeDistanceFactor)
 {
 	theDistanceFactors[0] = 0.;
 	theMapTimeDistanceFactor = 1.;
@@ -3299,15 +3299,15 @@ static float GetObsComparisonValue(NFmiFastQueryInfo & theObsInfo, const NFmiObs
 		double maxMinutesBackWard = 12 * 60; // kuinka kauas kurkataan maksimissaan taaksep‰in
 		double timeStepInMinutes = theObsInfo.TimeResolution();
         int maxTimeStepsBackWard = boost::math::iround(maxMinutesBackWard / timeStepInMinutes); // huom! oletus ett‰ havainnot tasav‰lein esim. 1h resoluutio
-		checkedVector<double> values(kWantedValuesCount);
-		checkedVector<NFmiMetTime> times(kWantedValuesCount);
+		std::vector<double> values(kWantedValuesCount);
+		std::vector<NFmiMetTime> times(kWantedValuesCount);
 		try
 		{
 			if(GetValuesAndTimesFromBack(theObsInfo, values, times, maxTimeStepsBackWard, kWantedValuesCount))
 			{
 				if(theMapTime.DifferenceInHours(times[kWantedValuesCount-1]) <= 6) // tuoreimman lˆydetyn havainnon pit‰‰ olla v‰hint‰‰n 6h et‰isyydell‰ extrapoloitavasta ajasta
 				{
-					checkedVector<double> distanceFactors(kWantedValuesCount);
+					std::vector<double> distanceFactors(kWantedValuesCount);
 					double mapTimeDistanceFactor = 0;
 					ConvertTimesToDistanceFactors(times, distanceFactors, theMapTime, mapTimeDistanceFactor);
 
@@ -3377,7 +3377,7 @@ void NFmiStationView::DrawObsComparison(void)
 		const NFmiObsComparisonInfo::Param& tmpParam = obsComparisonInfo.GetParam(param);
 		if(tmpParam.itsId != kFmiBadParameter)
 		{
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsCtrlViewDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsCtrlViewDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
 			for(size_t i = 0; i<infoVector.size(); i++)
 			{
 				boost::shared_ptr<NFmiFastQueryInfo> &obsInfo = infoVector[i];

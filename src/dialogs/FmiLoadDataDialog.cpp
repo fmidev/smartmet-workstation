@@ -405,14 +405,14 @@ void CFmiLoadDataDialog::UpdateQueryInfoVector(void)
 {
 	itsQueryInfoVector.clear();
 	itsQueryInfoVector.resize(ksgMaxProducers);
-	checkedVector<string> names(GetSelectedFileNames());
+	std::vector<string> names(GetSelectedFileNames());
 	for(int i = 0; i < ksgMaxProducers; i++)
 		itsQueryInfoVector[i] = ReadInfoFromFile(names[i]);
 }
 
-checkedVector<string> CFmiLoadDataDialog::GetSelectedFileNames(void)
+std::vector<string> CFmiLoadDataDialog::GetSelectedFileNames(void)
 {
-	checkedVector<string> names;
+	std::vector<string> names;
 	string tmp;
 	if(itsDataLoadingInfo)
 	{

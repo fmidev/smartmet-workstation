@@ -29,7 +29,7 @@
 #pragma once
 
 #include "NFmiTimeBag.h"
-#include "NFmiDataMatrix.h" // täältä tulee myös checkedVector
+#include "NFmiDataMatrix.h" // täältä tulee myös std::vector
 #include <iosfwd>
 
 class NFmiTimeDescriptor;
@@ -102,14 +102,14 @@ public:
 private:
    bool CreateTimeListSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime);
    bool CreateTimeBagSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime);
-   checkedVector<NFmiMetTime> CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime);
+   std::vector<NFmiMetTime> CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime);
    bool MakeMaximalCoverageTimeBag(void);
 
    Mode itsEditorMode;
 
    NFmiTimeDescriptor *itsTimeDescriptor; // tämä rakennetaan editoria varten ladattaessa vaihtuvan aikaresoluution dataa 
    NFmiTimeBag itsMaximalCoverageTimeBag; // tämä timebagi on rakennettu kattamaan vaihtuvan aikaresoluution kaikki ajat (eli minimi aikaresoluutio alusta loppuun)
-   checkedVector<TimeSectionData> itsTimeSections;
+   std::vector<TimeSectionData> itsTimeSections;
 
    int itsWantedDataLengthInHours; // ohjaustiedostossa oli ehdotettu tätä pituutta
    int itsRealDataLengthInHours;   // tämä on ladatun datan todellinen pituus
