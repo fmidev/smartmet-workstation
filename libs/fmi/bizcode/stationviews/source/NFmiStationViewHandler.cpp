@@ -1884,7 +1884,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
                 NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
                 if(DrawContourLegendOnThisMapRow() && colorContourLegendValues.useLegend())
                 {
-                    CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
+                    CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor, GetFrame());
                 }
             }
         }
