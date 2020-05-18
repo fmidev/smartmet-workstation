@@ -48,7 +48,7 @@ void CFmiWin32Helpers::CPrintingDialog::OnCancel()
 	CDialog::OnCancel();
 }
 
-void CFmiWin32Helpers::SetDescTopGraphicalInfo(CtrlViewUtils::GraphicalInfo& theGraphicalInfo, CDC* pDC, const NFmiPoint& theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization)
+void CFmiWin32Helpers::SetDescTopGraphicalInfo(CtrlViewUtils::GraphicalInfo& theGraphicalInfo, CDC* pDC, const NFmiPoint& theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization, const NFmiPoint* theActualSingleViewSizeInMilliMeters)
 {
     if(forceInitialization || theGraphicalInfo.fInitialized == false)
     {
@@ -65,8 +65,18 @@ void CFmiWin32Helpers::SetDescTopGraphicalInfo(CtrlViewUtils::GraphicalInfo& the
         theGraphicalInfo.itsPixelsPerMM_x = (logpixX / inchToMillimeterConversion) * theScaleRatio; // muutos dpi-maailmasta (dots-per-inch) dpmm (dots-per-mm) + konekohtainen skaalauskerroin
         theGraphicalInfo.itsPixelsPerMM_y = (logpixY / inchToMillimeterConversion) * theScaleRatio;
 
-        theGraphicalInfo.itsViewWidthInMM = theViewGridSizeInPixels.X() / theGraphicalInfo.itsPixelsPerMM_x;
-        theGraphicalInfo.itsViewHeightInMM = theViewGridSizeInPixels.Y() / theGraphicalInfo.itsPixelsPerMM_y;
+        if(theActualSingleViewSizeInMilliMeters)
+        {
+            // Tässä yritetään korjata vanhaa virheellistä laskentaa tuloksilla, jotka saadaan toista kautta ja
+            // annetaan optionaalisena mukaan tähän funktiokutsuun.
+            theGraphicalInfo.itsViewWidthInMM = theActualSingleViewSizeInMilliMeters->X();
+            theGraphicalInfo.itsViewHeightInMM = theActualSingleViewSizeInMilliMeters->Y();
+        }
+        else
+        {
+            theGraphicalInfo.itsViewWidthInMM = theViewGridSizeInPixels.X() / theGraphicalInfo.itsPixelsPerMM_x;
+            theGraphicalInfo.itsViewHeightInMM = theViewGridSizeInPixels.Y() / theGraphicalInfo.itsPixelsPerMM_y;
+        }
         theGraphicalInfo.fInitialized = true;
     }
 }
