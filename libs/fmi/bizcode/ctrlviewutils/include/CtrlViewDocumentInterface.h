@@ -11,6 +11,7 @@
 #include "NFmiInfoData.h"
 #include "SmartMetViewId.h"
 #include "CombinedMapHandlerInterface.h"
+#include "NFmiParameterName.h"
 
 #include <functional>
 #include <list>
@@ -78,6 +79,7 @@ class NFmiFixedDrawParamSystem;
 class NFmiMacroPathSettings;
 class WmsSupportInterface;
 class CombinedMapHandlerInterface;
+class NFmiRect;
 
 namespace Imagine
 {
