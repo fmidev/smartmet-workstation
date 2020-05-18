@@ -366,7 +366,7 @@ public:
     virtual double BrushSpecialParamValue(void) = 0;
     virtual const NFmiVPlaceDescriptor& SoundingPlotLevels(void) = 0;
     virtual double BrushValue(void) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() = 0;
+    virtual boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel) = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
     virtual bool UseCombinedMapMode() const = 0;
