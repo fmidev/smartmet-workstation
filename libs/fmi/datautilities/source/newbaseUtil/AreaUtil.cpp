@@ -6,7 +6,6 @@
 #include "NFmiArea.h"
 #include "NFmiPoint.h"
 #include "NFmiRect.h"
-#include "NFmiAzimuthalArea.h"
 
 #include <memory>
 #include <utility>
