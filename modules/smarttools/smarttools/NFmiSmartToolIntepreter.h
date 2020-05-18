@@ -96,7 +96,9 @@ class NFmiSmartToolCalculationBlockInfo
 class NFmiSmartToolIntepreter
 {
  public:
-  typedef std::map<std::string, FmiProducerName> ProducerMap;
+  typedef std::pair<FmiProducerName, NFmiInfoData::Type> ProducerIdTypePair;
+  typedef std::pair<NFmiProducer, NFmiInfoData::Type> ProducerTypePair;
+  typedef std::map<std::string, ProducerIdTypePair> ProducerMap;
   typedef std::map<std::string, double> ConstantMap;  // esim. MISS 32700 tai PI 3.14159
   typedef std::map<std::string, FmiParameterName> ParamMap;
   // Vert(ikaali)Funktioihin talletetaan:
@@ -155,7 +157,7 @@ class NFmiSmartToolIntepreter
                                             int theBlockIndex = -1);
   std::string HandlePossibleUnaryMarkers(const std::string &theCurrentString);
   static NFmiLevel GetPossibleLevelInfo(const std::string &theLevelText, NFmiInfoData::Type theDataType);
-  static NFmiProducer GetPossibleProducerInfo(const std::string &theProducerText);
+  static ProducerTypePair GetPossibleProducerInfo(const std::string &theProducerText);
   static bool IsProducerOrig(std::string &theProducerText);
   static bool FindParamAndLevelAndSetMaskInfo(const std::string &theVariableText,
                                        const std::string &theLevelText,
@@ -350,9 +352,10 @@ class NFmiSmartToolIntepreter
 
   static void InitTokens(NFmiProducerSystem *theProducerSystem,
                          NFmiProducerSystem *theObservationProducerSystem);
-  static void InitProducerTokens(NFmiProducerSystem *theProducerSystem);
+  static void InitProducerTokens(NFmiProducerSystem *theProducerSystem, NFmiInfoData::Type theDefaultDataType);
   static bool fTokensInitialized;
   static ParamMap itsTokenParameterNamesAndIds;
+  // Tietyt tuottajat laitetaan tanne nimen, tuottaja-id:n ja oletus datatyypin kanssa.
   static ProducerMap itsTokenProducerNamesAndIds;
   static ConstantMap itsTokenConstants;
   static checkedVector<std::string> itsTokenConditionalCommands;
