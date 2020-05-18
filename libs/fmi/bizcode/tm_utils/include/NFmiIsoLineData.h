@@ -8,6 +8,7 @@
 #include "NFmiInterpolation.h"
 #include "matrix3d.h"
 #include "NFmiDataMatrix.h"
+#include "NFmiPoint.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiFastQueryInfo;

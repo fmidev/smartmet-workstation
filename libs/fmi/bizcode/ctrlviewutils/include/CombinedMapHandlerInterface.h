@@ -27,6 +27,7 @@ class NFmiProjectionCurvatureInfo;
 class WmsSupportInterface;
 class NFmiCombinedMapModeState;
 class NFmiColor;
+class NFmiPoint;
 
 namespace CtrlViewUtils
 {
