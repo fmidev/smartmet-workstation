@@ -126,12 +126,12 @@ static NFmiMetTime CalcRandStartTime(const NFmiMetTime &theStartTime, double the
 	return aTime;
 }
 
-static NFmiPoint CalcRandStartPoint(const NFmiPoint &theStartPoint, double theStartLocationRangeInKM, bool usePacificView)
+static NFmiPoint CalcRandStartPoint(const NFmiPoint &theStartPoint, double theStartLocationRangeInKM)
 {
 	double rangeRandValue = theStartLocationRangeInKM * 1000. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku v‰lill‰ 0 - 1
 	double dirRandValue = 360. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku v‰lill‰ 0 - 1
 	NFmiLocation loc(theStartPoint);
-	loc.SetLocation(dirRandValue, rangeRandValue, usePacificView);
+	loc.SetLocation(dirRandValue, rangeRandValue);
 	return loc.GetLocation();
 }
 
@@ -144,17 +144,6 @@ static double CalcRandStartPressureLevel(double theStartPressureLevel, double th
 	if(value > theMaxPressureLevel) // ei leikata max-rajaan, vaan 'pompautetaan' takaisin hieman
 		value = value + (theMaxPressureLevel - value);
 	return value;
-}
-
-static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
-{
-    if(theInfo)
-    {
-        if(theInfo->Grid()) // trajektori datojen pit‰isi olla hiladatoja
-            return theInfo->Grid()->Area()->PacificView();
-    }
-
-    return false;
 }
 
 void NFmiTrajectorySystem::MakeSureThatTrajectoriesAreCalculated(void)
@@ -180,7 +169,6 @@ void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory>
 	{
         if((theInfo->Param(kFmiWindSpeedMS) && theInfo->Param(kFmiWindDirection)) || (theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS)))
         {
-            bool pacificView = ::IsPacificViewData(theInfo);
             theInfo->First();
             theTrajectory->Clear(); // nollataan trajektori varmuuden vuoksi
             theTrajectory->Calculated(true); // merkit‰‰n trajektori lasketuksi
@@ -205,7 +193,7 @@ void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory>
                 for(int i = 0; i < trajCount; i++)
                 {
                     if(theTrajectory->StartLocationRangeInKM())
-                        usedPoint = ::CalcRandStartPoint(startPoint, theTrajectory->StartLocationRangeInKM(), pacificView);
+                        usedPoint = ::CalcRandStartPoint(startPoint, theTrajectory->StartLocationRangeInKM());
                     if(theTrajectory->StartTimeRangeInMinutes())
                         usedTime = ::CalcRandStartTime(startTime, theTrajectory->StartTimeRangeInMinutes(), 10);
                     if(theTrajectory->StartPressureLevelRange())
@@ -412,11 +400,11 @@ static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, b
 	return true;
 }
 
-static NFmiLocation CalcNewLocation(const NFmiLocation &theCurrentLocation, double WS, double WD, int theTimeStepInMinutes, bool isForwardDir, bool pacificView)
+static NFmiLocation CalcNewLocation(const NFmiLocation &theCurrentLocation, double WS, double WD, int theTimeStepInMinutes, bool isForwardDir)
 {
 		double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metrein‰
 		double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pit‰‰ k‰‰nt‰‰ virtaus suunta 180 asteella
-		return theCurrentLocation.GetLocation(dir, dist, pacificView);
+		return theCurrentLocation.GetLocation(dir, dist);
 }
 
 // Konversio w [mm/s] -> VER eli paineen muutokseksi [Pa/s]
@@ -697,7 +685,6 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 	double pInd = 0;
 	NFmiPoint currentLatLon;
 	theTempBalloonTrajectorSettings.Reset();
-    bool pacificView = ::IsPacificViewData(theInfo);
     NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
 
 	for( ; forwardDir ? (currentTime < endTime) : (currentTime > endTime) ;  )
@@ -737,7 +724,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 		if(!::MakeGroundAdjustment(WS, WD, w, currentPressure, theInfo, metaWindParamUsage, xInd, yInd, tInd, groundLevelIndex, hybridData, usedWParam))
 			break;
 		NFmiTrajectorySystem::Make3DRandomizing(WS, WD, w, theRandStep, index, theRandFactor, theTrajector);
-        nextLoc = ::CalcNewLocation(currentLoc, WS, WD, theTimeStepInMinutes, forwardDir, pacificView);
+        nextLoc = ::CalcNewLocation(currentLoc, WS, WD, theTimeStepInMinutes, forwardDir);
 
 		(forwardDir) ? currentTime.NextMetTime() : currentTime.PreviousMetTime(); // isentrooppi laskuja varten pit‰‰ laskea seuraava aika
 		if(fIsentropic)
