@@ -259,7 +259,7 @@ public:
     double BrushSpecialParamValue(void) override;
     const NFmiVPlaceDescriptor& SoundingPlotLevels(void) override;
     double BrushValue(void) override;
-    boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData() override;
+    boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel) override;
     boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() override;
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() override;
     bool UseCombinedMapMode() const override;
