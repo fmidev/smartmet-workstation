@@ -1241,9 +1241,9 @@ double CtrlViewDocumentInterfaceForGeneralDataDoc::BrushValue(void)
     return itsDoc->BrushValue();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelClimatologyData()
+boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelClimatologyData(const NFmiLevel& theLevel)
 {
-    return itsDoc->GetModelClimatologyData();
+    return itsDoc->GetModelClimatologyData(theLevel);
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetFavoriteSurfaceModelFractileData()

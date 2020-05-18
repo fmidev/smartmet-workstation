@@ -2264,19 +2264,14 @@ bool NFmiSmartToolIntepreter::FindParamAndProducerAndSetMaskInfo(
     int theModelRunIndex,
     float theTimeOffsetInHours)
 {
-  NFmiProducer producer(NFmiSmartToolIntepreter::GetPossibleProducerInfo(theProducerText));
-  if (producer.GetIdent() == gMesanProdId)
-    theDataType = NFmiInfoData::kAnalyzeData;  // ikävää koodia, mutta analyysi data tyyppi pitää
-                                               // asettaa jos ANAL-tuottajaa käytetty
-  else if (producer.GetIdent() == NFmiProducerSystem::gHelpEditorDataProdId)
-    theDataType = NFmiInfoData::kEditingHelpData;  // ikävää koodia, editor help datalle pitää saada
-                                                   // oma tuottaja id
+  auto producerDataTypePair = NFmiSmartToolIntepreter::GetPossibleProducerInfo(theProducerText);
+  theDataType = producerDataTypePair.second;
   if (NFmiSmartToolIntepreter::FindParamAndSetMaskInfo(theVariableText,
                                                        itsTokenParameterNamesAndIds,
                                                        theOperType,
                                                        theDataType,
                                                        theMaskInfo,
-                                                       producer,
+                                                       producerDataTypePair.first,
                                                        theModelRunIndex,
                                                        theTimeOffsetInHours))
     return true;
@@ -2293,16 +2288,14 @@ bool NFmiSmartToolIntepreter::FindParamAndLevelAndProducerAndSetMaskInfo(
     int theModelRunIndex,
     float theTimeOffsetInHours)
 {
-  NFmiProducer producer(NFmiSmartToolIntepreter::GetPossibleProducerInfo(theProducerText));
-  if (producer.GetIdent() == gMesanProdId)
-    theDataType = NFmiInfoData::kAnalyzeData;  // ikävää koodia, mutta analyysi data tyyppi pitää
-                                               // asettaa jos ANA-tuottajaa käytetty
+  auto producerDataTypePair = NFmiSmartToolIntepreter::GetPossibleProducerInfo(theProducerText);
+  theDataType = producerDataTypePair.second;
   if (NFmiSmartToolIntepreter::FindParamAndSetMaskInfo(theVariableText,
                                                        itsTokenParameterNamesAndIds,
                                                        theOperType,
                                                        theDataType,
                                                        theMaskInfo,
-                                                       producer,
+                                                       producerDataTypePair.first,
                                                        theModelRunIndex,
                                                        theTimeOffsetInHours))
   {
@@ -2341,21 +2334,22 @@ NFmiLevel NFmiSmartToolIntepreter::GetPossibleLevelInfo(const std::string &theLe
 }
 
 // Tuottaja tekstin (Ec, Hir jne.) luodaan NFmiProducer-otus.
-NFmiProducer NFmiSmartToolIntepreter::GetPossibleProducerInfo(const std::string &theProducerText)
+NFmiSmartToolIntepreter::ProducerTypePair NFmiSmartToolIntepreter::GetPossibleProducerInfo(
+    const std::string &theProducerText)
 {
   NFmiProducer producer;
   std::string lowerCaseProdName(theProducerText);
   NFmiStringTools::LowerCase(lowerCaseProdName);
-  ProducerMap::iterator it = itsTokenProducerNamesAndIds.find(lowerCaseProdName);
+  auto it = itsTokenProducerNamesAndIds.find(lowerCaseProdName);
   if (it != itsTokenProducerNamesAndIds.end())
   {
-    producer = NFmiProducer((*it).second, (*it).first);
-    return producer;
+    producer = NFmiProducer(it->second.first, it->first);
+    return std::make_pair(producer, it->second.second);
   }
   else if (!NFmiSmartToolIntepreter::GetProducerFromVariableById(theProducerText, producer))
     throw runtime_error(::GetDictionaryString("SmartToolErrorProducerInfoFailed") + ":\n" +
                         theProducerText);
-  return producer;
+  return std::make_pair(producer, NFmiInfoData::kViewable);
 }
 
 bool NFmiSmartToolIntepreter::IsInterpretedSkriptMacroParam(void)
@@ -2960,7 +2954,7 @@ bool NFmiSmartToolIntepreter::ExtractResolutionInfo()
     else if (resolutionParts.size() == 2)
     {
       itsExtraMacroParamData->Producer(
-          NFmiSmartToolIntepreter::GetPossibleProducerInfo(resolutionParts[0]));
+          NFmiSmartToolIntepreter::GetPossibleProducerInfo(resolutionParts[0]).first);
       auto iter = itsResolutionLevelTypes.find(resolutionParts[1]);
       if (iter != itsResolutionLevelTypes.end())
       {
@@ -3023,7 +3017,7 @@ bool NFmiSmartToolIntepreter::ExtractCalculationPointInfo()
     try
     {
       itsExtraMacroParamData->CalculationPointProducer(
-          NFmiSmartToolIntepreter::GetPossibleProducerInfo(latitudeStr));
+          NFmiSmartToolIntepreter::GetPossibleProducerInfo(latitudeStr).first);
       if (itsExtraMacroParamData->CalculationPointProducer().GetIdent())
       {
         return true;
@@ -3328,7 +3322,8 @@ void NFmiSmartToolIntepreter::Clear(void)
     itsSmartToolCalculationBlocks[i].Clear();
 }
 
-void NFmiSmartToolIntepreter::InitProducerTokens(NFmiProducerSystem *theProducerSystem)
+void NFmiSmartToolIntepreter::InitProducerTokens(NFmiProducerSystem *theProducerSystem,
+                                                 NFmiInfoData::Type theDefaultDataType)
 {
   if (theProducerSystem)
   {
@@ -3342,7 +3337,7 @@ void NFmiSmartToolIntepreter::InitProducerTokens(NFmiProducerSystem *theProducer
         std::string prodName(prodInfo.ShortName(j));
         NFmiStringTools::LowerCase(prodName);  // pitää muuttaa lower case:en!!!
         itsTokenProducerNamesAndIds.insert(
-            ProducerMap::value_type(prodName, static_cast<FmiProducerName>(prodInfo.ProducerId())));
+            std::make_pair(prodName, std::make_pair(static_cast<FmiProducerName>(prodInfo.ProducerId()), theDefaultDataType)));
       }
     }
   }
@@ -3686,6 +3681,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
 #ifdef USE_POTENTIAL_VALUES_IN_EDITING
     itsTokenParameterNamesAndIds.insert(ParamMap::value_type(string("pref"), kFmiPotentialPrecipitationForm));
     itsTokenParameterNamesAndIds.insert(ParamMap::value_type(string("pret"), kFmiPotentialPrecipitationType));
+    // Viittaukset vanhoihin parametreihin, jotka saattavat olla käytössä mm. ulkomailla
+    itsTokenParameterNamesAndIds.insert(ParamMap::value_type(string("pref2"), kFmiPrecipitationForm));
+    itsTokenParameterNamesAndIds.insert(ParamMap::value_type(string("pret2"), kFmiPrecipitationType));
 #else
     itsTokenParameterNamesAndIds.insert(ParamMap::value_type(string("pref"), kFmiPrecipitationForm));
     itsTokenParameterNamesAndIds.insert(ParamMap::value_type(string("pret"), kFmiPrecipitationType));
@@ -3871,29 +3869,29 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
 
     // Alustetaan ensin tuottaja listaan muut tarvittavat tuottajat, Huom! nimi pienellä, koska
     // tehdään case insensitiivejä tarkasteluja!!
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("met"), static_cast<FmiProducerName>(999)));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("orig"), kFmiMETEOR));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("anal"), static_cast<FmiProducerName>(gMesanProdId)));  // analyysi mesan tuottaja
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ana"), static_cast<FmiProducerName>(gMesanProdId)));  // analyysi mesan tuottaja
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("help"), static_cast<FmiProducerName>(NFmiProducerSystem::gHelpEditorDataProdId)));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ec3vrk"), static_cast<FmiProducerName>(NFmiInfoData::kFmiSpEcmwf3Vrk)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("met"), std::make_pair(static_cast<FmiProducerName>(999), NFmiInfoData::kKepaData)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("orig"), std::make_pair(kFmiMETEOR, NFmiInfoData::kCopyOfEdited)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("anal"), std::make_pair(static_cast<FmiProducerName>(gMesanProdId), NFmiInfoData::kAnalyzeData)));  // analyysi mesan tuottaja
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ana"), std::make_pair(static_cast<FmiProducerName>(gMesanProdId), NFmiInfoData::kAnalyzeData)));  // analyysi mesan tuottaja
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("help"), std::make_pair(static_cast<FmiProducerName>(NFmiProducerSystem::gHelpEditorDataProdId), NFmiInfoData::kEditingHelpData)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ec3vrk"), std::make_pair(static_cast<FmiProducerName>(NFmiInfoData::kFmiSpEcmwf3Vrk), NFmiInfoData::kModelHelpData)));
 
     // havainto datoja
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("synop"), kFmiSYNOP));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("synopx"), static_cast<FmiProducerName>(NFmiInfoData::kFmiSpSynoXProducer)));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("metar"), kFmiMETAR));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("wxt"), kFmiTestBed));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("road"), static_cast<FmiProducerName>(20013))); // kFmiRoadObs));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("temp"), kFmiTEMP));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("temp"), kFmiBufrTEMP));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("nrd"), kFmiRADARNRD));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("hake"), kFmiHakeMessages));
-    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("kaha"), kFmiKaHaMessages));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("synop"), std::make_pair(kFmiSYNOP, NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("synopx"), std::make_pair(static_cast<FmiProducerName>(NFmiInfoData::kFmiSpSynoXProducer), NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("metar"), std::make_pair(kFmiMETAR, NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("wxt"), std::make_pair(kFmiTestBed, NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("road"), std::make_pair(static_cast<FmiProducerName>(20013), NFmiInfoData::kObservations))); // kFmiRoadObs));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("temp"), std::make_pair(kFmiTEMP, NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("temp"), std::make_pair(kFmiBufrTEMP, NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("nrd"), std::make_pair(kFmiRADARNRD, NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("hake"), std::make_pair(kFmiHakeMessages, NFmiInfoData::kObservations)));
+    itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("kaha"), std::make_pair(kFmiKaHaMessages, NFmiInfoData::kObservations)));
 
     if(theProducerSystem)
     {
-        NFmiSmartToolIntepreter::InitProducerTokens(theProducerSystem);
-        NFmiSmartToolIntepreter::InitProducerTokens(theObservationProducerSystem);
+        NFmiSmartToolIntepreter::InitProducerTokens(theProducerSystem, NFmiInfoData::kViewable);
+        NFmiSmartToolIntepreter::InitProducerTokens(theObservationProducerSystem, NFmiInfoData::kObservations);
     }
     else
     {
@@ -3903,10 +3901,10 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
         // not initialized correctly, ProducerSystem missing, error in program, report it!");
 
         // joten pakko alustaa tämä tässä tapauksessa sitten jollain hardcode tuottajilla
-        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("hir"), kFmiMTAHIRLAM));
-        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ec"), kFmiMTAECMWF));
-        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("mbe"), kFmiMTAHIRMESO));
-        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ala"), static_cast<FmiProducerName>(555)));  // aladdinille laitetaan pikaviritys 555
+        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("hir"), std::make_pair(kFmiMTAHIRLAM, NFmiInfoData::kViewable)));
+        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ec"), std::make_pair(kFmiMTAECMWF, NFmiInfoData::kViewable)));
+        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("mbe"), std::make_pair(kFmiMTAHIRMESO, NFmiInfoData::kViewable)));
+        itsTokenProducerNamesAndIds.insert(ProducerMap::value_type(string("ala"), std::make_pair(static_cast<FmiProducerName>(555), NFmiInfoData::kViewable)));  // aladdinille laitetaan pikaviritys 555
     }
 
     itsTokenConstants.insert(ConstantMap::value_type(string("miss"), kFloatMissing));
