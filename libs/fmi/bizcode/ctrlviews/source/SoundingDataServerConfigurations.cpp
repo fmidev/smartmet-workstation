@@ -1,7 +1,7 @@
 #include "SoundingDataServerConfigurations.h"
 #include "NFmiSettings.h"
 #include "NFmiEnumConverter.h"
-#include "NFmiSoundingDataOpt1.h"
+#include "NFmiSoundingData.h"
 #include "catlog/catlog.h"
 #include "SettingsFunctions.h"
 #include "ModelDataServerConfiguration.h"
@@ -45,7 +45,7 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     // Huom. 1. kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
     // Huom. 2. OriginTimeParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
     wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover
-		, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingDataOpt1::OriginTimeParameterId, NFmiSoundingDataOpt1::LevelParameterId
+		, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingData::OriginTimeParameterId, NFmiSoundingData::LevelParameterId
 		, kFmiWindUMS, kFmiWindVMS, kFmiGeopHeight };
     wantedParametersString_ = makeWantedParametersString();
     initBaseUrlVector();
@@ -130,9 +130,9 @@ std::string SoundingDataServerConfigurations::makeWantedParametersString() const
     {
         if(!str.empty())
             str += ",";
-        if(paramId == NFmiSoundingDataOpt1::OriginTimeParameterId)
+        if(paramId == NFmiSoundingData::OriginTimeParameterId)
             str += "origintime";
-        else if(paramId == NFmiSoundingDataOpt1::LevelParameterId)
+        else if(paramId == NFmiSoundingData::LevelParameterId)
             str += "level";
         else
             str += enumConverter.ToString(paramId);
