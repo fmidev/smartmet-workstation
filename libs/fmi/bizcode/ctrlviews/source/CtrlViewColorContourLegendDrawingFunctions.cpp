@@ -65,7 +65,7 @@ namespace
         return legendDrawingMeasures;
     }
 
-    void DrawNormalColorContourLegendBackground(const NFmiColorContourLegendSettings& colorContourLegendSettings, LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, Gdiplus::Graphics& gdiPlusGraphics)
+    void DrawNormalColorContourLegendBackground(const NFmiColorContourLegendSettings& colorContourLegendSettings, LegendDrawingMeasures& legendDrawingMeasures, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, Gdiplus::Graphics& gdiPlusGraphics, const Gdiplus::Rect& clipRect)
     {
         // Laatikko pit‰‰ viel‰ 'k‰‰nt‰‰' y-akselin suhteen
         auto yLocationInPixels = lastLegendBottomRightCornerInPixels.Y - legendDrawingMeasures.backgroundRectSizeInPixels.Y;
@@ -73,6 +73,7 @@ namespace
         Gdiplus::Size sizeInPixels(legendDrawingMeasures.backgroundRectSizeInPixels.X, legendDrawingMeasures.backgroundRectSizeInPixels.Y);
         legendDrawingMeasures.backgroundRectInPixels = Gdiplus::Rect(locationInPixels, sizeInPixels);
 
+        gdiPlusGraphics.SetClip(clipRect);
         CtrlView::DrawRect(gdiPlusGraphics,
             legendDrawingMeasures.backgroundRectInPixels,
             colorContourLegendSettings.backgroundRectSettings().frameLineColor(),
@@ -80,10 +81,12 @@ namespace
             true, true, true,
             static_cast<float>(colorContourLegendSettings.backgroundRectSettings().frameLineWidthInMM()),
             static_cast<Gdiplus::DashStyle>(colorContourLegendSettings.backgroundRectSettings().frameLineType()));
+        gdiPlusGraphics.ResetClip();
     }
 
-    void DrawNormalColorContourLegendClassValueTexts(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, NFmiToolBox* toolbox, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
+    void DrawNormalColorContourLegendClassValueTexts(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, NFmiToolBox* toolbox, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics, const Gdiplus::Rect & finalClipRectInPixels)
     {
+        gdiPlusGraphics.SetClip(finalClipRectInPixels);
         const auto& textColor = colorContourLegendSettings.backgroundRectSettings().frameLineColor();
         auto pixelsPerMM = graphicalInfo.itsPixelsPerMM_y;
         const auto& fontName = CtrlView::StringToWString(colorContourLegendSettings.fontName());
@@ -111,7 +114,6 @@ namespace
         currentTextPosYInPixels -= boost::math::iround(heigthInPixels * startPositionAdjustFactor);
         auto textLocationInPixels = Gdiplus::Point(currentTextPosXInPixels, currentTextPosYInPixels);
         auto relativeTextPosition = CtrlView::GdiplusPoint2Relative(toolbox, textLocationInPixels);
-        gdiPlusGraphics.SetClip(legendDrawingMeasures.backgroundRectInPixels);
         CtrlView::DrawTextToRelativeLocation(gdiPlusGraphics, textColor, legendDrawingMeasures.usedFontSizeInMM, colorContourLegendValues.name(), relativeTextPosition, pixelsPerMM, toolbox, fontName, kLeft, Gdiplus::FontStyleRegular);
         gdiPlusGraphics.ResetClip();
     }
@@ -129,8 +131,9 @@ namespace
             static_cast<Gdiplus::DashStyle>(drawSettings.frameLineType()));
     }
 
-    void DrawNormalColorContourLegendClassColors(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
+    void DrawNormalColorContourLegendClassColors(const NFmiColorContourLegendSettings& colorContourLegendSettings, const LegendDrawingMeasures& legendDrawingMeasures, const NFmiColorContourLegendValues& colorContourLegendValues, const Gdiplus::Point& lastLegendBottomRightCornerInPixels, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics, const Gdiplus::Rect& finalClipRectInPixels)
     {
+        gdiPlusGraphics.SetClip(finalClipRectInPixels);
         const auto& classColors = colorContourLegendValues.classColors();
         auto paddingInPixels = legendDrawingMeasures.paddingLengthInPixels;
         int currentRectTopInPixels = lastLegendBottomRightCornerInPixels.Y - paddingInPixels;
@@ -153,6 +156,7 @@ namespace
                 DrawNormalColorContourLegendClassColorRect(colorContourLegendSettings.backgroundRectSettings(), colorRectInPixels, color, false, graphicalInfo, gdiPlusGraphics);
             }
         }
+        gdiPlusGraphics.ResetClip();
     }
 
     Gdiplus::Point ConvertRealPointToIntPoint(const Gdiplus::PointF& realPoint)
@@ -163,18 +167,22 @@ namespace
 
 namespace CtrlView
 {
-    void DrawNormalColorContourLegend(const NFmiColorContourLegendSettings & colorContourLegendSettings, const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut, NFmiToolBox *toolbox, const CtrlViewUtils::GraphicalInfo &graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics, float sizeFactor)
+    void DrawNormalColorContourLegend(const NFmiColorContourLegendSettings & colorContourLegendSettings, const NFmiColorContourLegendValues& colorContourLegendValues, NFmiPoint& lastLegendRelativeBottomRightCornerInOut, NFmiToolBox *toolbox, const CtrlViewUtils::GraphicalInfo &graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics, float sizeFactor, const NFmiRect& relativeDataRect)
     {
         auto legendDrawingMeasures = CalculateLegendDrawingMeasures(colorContourLegendSettings, colorContourLegendValues, sizeFactor, graphicalInfo, gdiPlusGraphics);
         auto lastLegendBottomRightCornerInPixels = ConvertRealPointToIntPoint(CtrlView::Relative2GdiplusPoint(toolbox, lastLegendRelativeBottomRightCornerInOut));
         lastLegendBottomRightCornerInPixels.X += legendDrawingMeasures.paddingLengthInPixels;
         // 2. Piirr‰ pohja laatikko
-        DrawNormalColorContourLegendBackground(colorContourLegendSettings, legendDrawingMeasures, lastLegendBottomRightCornerInPixels, gdiPlusGraphics);
+        DrawNormalColorContourLegendBackground(colorContourLegendSettings, legendDrawingMeasures, lastLegendBottomRightCornerInPixels, gdiPlusGraphics, CtrlView::Relative2GdiplusRect(toolbox, relativeDataRect));
+        auto relativeBackgroundRect = CtrlView::GdiplusRect2Relative(toolbox, legendDrawingMeasures.backgroundRectInPixels);
+        // Lopullinen clippaus laatikko on data-laatikon ja background-rectin leikkaus
+        auto finalRelativeClipRect = relativeDataRect.Intersection(relativeBackgroundRect);
+        auto finalClipRectInPixels = CtrlView::Relative2GdiplusRect(toolbox, finalRelativeClipRect);
         // 3. Piirr‰ value tekstit loopissa
-        DrawNormalColorContourLegendClassValueTexts(colorContourLegendSettings, legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels, toolbox, graphicalInfo, gdiPlusGraphics);
+        DrawNormalColorContourLegendClassValueTexts(colorContourLegendSettings, legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels, toolbox, graphicalInfo, gdiPlusGraphics, finalClipRectInPixels);
         // 4. Piirr‰ v‰ri laatikot loopissa
         // 5. Piirr‰ otsikko teksti
-        DrawNormalColorContourLegendClassColors(colorContourLegendSettings, legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels, graphicalInfo, gdiPlusGraphics);
+        DrawNormalColorContourLegendClassColors(colorContourLegendSettings, legendDrawingMeasures, colorContourLegendValues, lastLegendBottomRightCornerInPixels, graphicalInfo, gdiPlusGraphics, finalClipRectInPixels);
         // 6. Move last legend BR corner
         auto relativeLegendRect = CtrlView::GdiplusRect2Relative(toolbox, legendDrawingMeasures.backgroundRectInPixels);
         lastLegendRelativeBottomRightCornerInOut = relativeLegendRect.BottomRight();
