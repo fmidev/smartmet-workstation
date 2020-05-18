@@ -4,12 +4,13 @@
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include "NFmiMetTime.h"
 #include "NFmiPoint.h"
-#include "NFmiYKJArea.h"
 #include "NFmiStringTools.h"
 #include "NFmiQ2Client.h"
 #include "catlog/catlog.h"
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiValueString.h"
+#include "NFmiArea.h"
+#include "NFmiAreaTools.h"
 
 #include <memory>
 #include <iostream>
@@ -25,6 +26,11 @@
 #ifdef _MSC_VER
 #pragma warning( disable : 4503 ) // t‰m‰ est‰‰ varoituksen joka tulee VC++ k‰‰nt‰j‰ll‰, kun jonkun boost-luokan nimi merkkein‰ ylitt‰‰ jonkun rajan
 #endif
+
+namespace
+{
+    std::unique_ptr<NFmiArea> g_areaPtr(NFmiAreaTools::CreateLegacyYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
+}
 
 BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian)
 
@@ -269,14 +275,6 @@ namespace Warnings
 
     std::vector<NFmiPoint> CapData::parseCoordinatesFromString(const std::string &coordinateString)
     {
-        static std::auto_ptr<NFmiArea> areaPtr;
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            areaPtr.reset(new NFmiYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
-        }
-
         std::stringstream sStream(coordinateString);
         std::vector<NFmiPoint> latLonPoints;
 
@@ -288,7 +286,7 @@ namespace Warnings
             if(sStream)
             {
                 longitude += 3000000; //Fix difference between coordinate systems
-                latLonPoints.push_back(areaPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude)));
+                latLonPoints.push_back(g_areaPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude)));
             }
             else
                 break;

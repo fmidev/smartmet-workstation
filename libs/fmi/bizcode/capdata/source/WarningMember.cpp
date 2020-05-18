@@ -1,12 +1,18 @@
 #include "WarningMember.h"
-#include "NFmiYKJArea.h"
 #include "NFmiStringTools.h"
+#include "NFmiArea.h"
+#include "NFmiAreaTools.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include <vector>
 #include <memory>
 #include <string>
 
 using namespace std;
+
+namespace
+{
+    std::unique_ptr<NFmiArea> g_areaPtr(NFmiAreaTools::CreateLegacyYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
+}
 
 namespace Warnings
 {
@@ -73,10 +79,8 @@ namespace Warnings
             double longitude = _wtof(x->GetText());
             double latitude = _wtof(y->GetText());
 
-            static std::auto_ptr<NFmiArea> areaPtr;
-            areaPtr.reset(new NFmiYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
             longitude += 3000000; //Fix difference between coordinate systems
-            NFmiPoint point = areaPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude));
+            NFmiPoint point = g_areaPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude));
 
             this->center_ = point;
         }
