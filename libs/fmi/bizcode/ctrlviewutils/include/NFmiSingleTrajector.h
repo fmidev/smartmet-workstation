@@ -2,6 +2,7 @@
 
 #include "NFmiDataMatrix.h"
 #include "NFmiMetTime.h"
+#include "NFmiPoint.h"
 
 class NFmiProducer;
 
