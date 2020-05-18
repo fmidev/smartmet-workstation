@@ -282,7 +282,7 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 		itsTotalFileSize = EvaluateTotalDataSize();
 		itsLevelCount = 1;
 		if(theDataInfo.ImageArea())
-			itsImageAreaStr = theDataInfo.ImageArea()->AreaStr();
+			itsImageAreaStr = theDataInfo.LegacyAreaString();
 		itsImageParam = NFmiParam(*(theDataInfo.ImageDataIdent().GetParam()));
 
 		return true;
