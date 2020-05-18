@@ -29,6 +29,7 @@
 #include "NFmiVoidPtrList.h"
 #include "NFmiSettings.h"
 #include "SettingsFunctions.h"
+#include "CtrlViewFunctions.h"
 #include <fstream>
 
 
@@ -388,14 +389,15 @@ static bool IsGlobalArea(const NFmiArea* theArea)
 {
 	if(theArea->ClassId() == kNFmiLatLonArea)
 	{
-		if(theArea->PacificView())
+		// Pacific tapaus
 		{
 			const NFmiPoint globalBL(0, -90);
 			const NFmiPoint globalTR(360, 90);
 			if(theArea->BottomLeftLatLon() == globalBL && theArea->TopRightLatLon() == globalTR)
 				return true;
 		}
-		else
+
+		// Atlantic tapaus
 		{
 			const NFmiPoint globalBL(-180, -90);
 			const NFmiPoint globalTR(180, 90);
@@ -597,10 +599,9 @@ void NFmiProjectionCurvatureInfo::CreateLineLabel2List(double theLabelValue, Fmi
 {
     double moveUnit = itsUsedFontSizeInRelativeUnit;
     // Pitää fiksata label stringiin arvo, jos kyseessä longitude ja ollaan välillä 180 > x <= 360
-    if(fLatitudeLabelUsed == false && NFmiArea::IsPacificLongitude(theLabelValue))
+    if(fLatitudeLabelUsed == false && CtrlViewUtils::IsPacificLongitude(theLabelValue))
     {
-        NFmiLongitude lon(theLabelValue, false);
-        theLabelValue = lon.Value();
+        theLabelValue = CtrlViewUtils::GetAtlanticLongitude(theLabelValue);
     }
     NFmiString str(NFmiValueString::GetStringWithMaxDecimalsSmartWay(theLabelValue, 2));
     str += "°";

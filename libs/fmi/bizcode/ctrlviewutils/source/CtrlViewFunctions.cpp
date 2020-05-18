@@ -73,19 +73,33 @@ namespace CtrlViewUtils
         return retStr;
     }
 
-    static double FixLongitudeToEuropeCenteredValue(double lon)
+    bool IsPacificLongitude(double theLongitude)
     {
-        if(lon > 180 && lon <= 360)
-        { // fiksataan longitudet, jos ollaan PacificView maailmassa ja ollaan yli 180 asteen takaisin -180 - 180 maailmaan
-            NFmiLongitude longitude(lon, false);
-            lon = longitude.Value();
-        }
-        return lon;
+        if(theLongitude > 180 && theLongitude <= 360)
+            return true;
+        else
+            return false;
+    }
+
+    // fiksataan longitudet, jos ollaan PacificView maailmassa ja ollaan yli 180 asteen takaisin -180 - 180 maailmaan
+    double GetAtlanticLongitude(double theLongitude)
+    {
+        double value = theLongitude;
+        if(::fabs(theLongitude - 180.) < 0.0000001)
+            value = 180.;
+        else if(::fabs(theLongitude + 180.) < 0.0000001)
+            value = -180.;
+        else if(theLongitude > 180)
+            value = GetAtlanticLongitude(theLongitude - 360);
+        else if(theLongitude < -180)
+            value = GetAtlanticLongitude(theLongitude + 360);
+
+        return value;
     }
 
     std::string GetLongitudeMinuteStr(double lon, int decimals)
     {
-        lon = FixLongitudeToEuropeCenteredValue(lon);
+        lon = GetAtlanticLongitude(lon);
         bool eastSide = (lon >= 0. && lon <= 180.);
         lon = ::fabs(lon);
         std::string retStr;
@@ -403,7 +417,7 @@ namespace CtrlViewUtils
         str += GetLatitudeMinuteStr(lat, 1);
         str += " ";
         double lon = theLatlon.X();
-        lon = FixLongitudeToEuropeCenteredValue(lon);
+        lon = GetAtlanticLongitude(lon);
         str += GetLongitudeMinuteStr(lon, 1);
         str += " [";
 
