@@ -33,6 +33,7 @@ NFmiScale :: NFmiScale (const NFmiScale& anOtherScale)
   , itsEpsilon (anOtherScale.itsEpsilon)
   , itsDataOk(anOtherScale.itsDataOk)
   , itsLimitCheck(anOtherScale.itsLimitCheck)
+  , fIsTimeRelatedScale(anOtherScale.fIsTimeRelatedScale)
 {
 }
 //______________________________________________________________________________
@@ -49,6 +50,7 @@ NFmiScale& NFmiScale :: operator= (const NFmiScale& anOtherScale)
 	itsDataOk = anOtherScale.itsDataOk;
 	itsLimitCheck = anOtherScale.itsLimitCheck;
 	itsEpsilon = anOtherScale.itsEpsilon;
+	fIsTimeRelatedScale = anOtherScale.fIsTimeRelatedScale;
 
 	return *this;
 }
@@ -195,11 +197,15 @@ bool NFmiScale :: Inside (float theValue) const
 float NFmiScale :: RelLocation (float theValue) const
 {
   float value = kFloatMissing;
-  if (itsDataOk && theValue != kFloatMissing)
+  // Huom! Aika-asteikolla theValue voi olla 32700 eli se on se minuuteissa, mikä on tarkalleen 545 tuntia ja 
+  // ja sen missing käsittely on aiheuttanut tietyissä tilanteissa ongelmia (kun aika-asteikko on pidempi kuin tuo 545 h eli n. 22.7 d)
+  if(itsDataOk && (fIsTimeRelatedScale || theValue != kFloatMissing))
+  {
 	  if(Difference() > 0.f)   // 120397
-		  value = (theValue-itsStartValue)/Difference();
-      else
-		  value = (theValue-itsStartValue)/(24.f*60.f); // tulee ongelmia, jos alku ja loppuaika samoja, teen silloin pakollisen 24h erotuksen
+		  value = (theValue - itsStartValue) / Difference();
+	  else
+		  value = (theValue - itsStartValue) / (24.f * 60.f); // tulee ongelmia, jos alku ja loppuaika samoja, teen silloin pakollisen 24h erotuksen
+  }
 
   return  value == kFloatMissing || !Inside(theValue) && itsLimitCheck
 			? kFloatMissing : value;
