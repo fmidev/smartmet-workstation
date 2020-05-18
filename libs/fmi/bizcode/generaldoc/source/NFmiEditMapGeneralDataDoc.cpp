@@ -3913,7 +3913,8 @@ void AddShowHelperData2OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInf
 void AddShowHelperData3OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInfoData::Type infoDataType)
 {
     std::string acceleratorHelpStr(" (CTRL + SHIFT + F)");
-    if(GetModelClimatologyData())
+	NFmiLevel defaultSurfaceLevel;
+    if(GetModelClimatologyData(defaultSurfaceLevel))
     {
         if(!ShowHelperData3InTimeSerialView())
             AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "Show help data 3", kFmiShowHelperData3OnTimeSerialView, acceleratorHelpStr);
@@ -5196,7 +5197,7 @@ bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, 
 	{
 		// MapViewSizeInPixels(clientPixelSize) -kutsu pit‰‰ olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
 		mapViewDesctop->MapViewSizeInPixels(clientPixelSize, pDC, drawObjectScaleFactor, !mapViewDesctop->IsTimeControlViewVisible());
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true, &mapViewDesctop->GetTrueMapViewSizeInfo().singleMapSizeInMM());
 
 		// Nyky‰‰n jos kartan koko muuttuu, pit‰‰ macroParam cache tyhjent‰‰, koska sen koko saattaa muuttua.
 		// Laskentahilan koko lasketaan aina uudestaan, jolloin tehd‰‰n hila- vs pikseli-koko vertailuja.
@@ -9871,14 +9872,26 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     }
 
     // Return data that is in grid format (model data) and has one year of data (one-year climatology data)
-    boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData()
+    boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel &theLevel)
     {
         auto infoVector = itsSmartInfoOrganizer->GetInfos(NFmiInfoData::kClimatologyData);
         for(auto &info : infoVector)
         {
             if(NFmiFastInfoUtils::IsModelClimatologyData(info))
             {
-                return info; // returns the first suitable data
+				if(theLevel.GetIdent() != 0)
+				{
+					// Jos level ei ole ns. default level (id = 0)
+					if(info->Level(theLevel))
+						return info; // returns the first suitable data with suitable level
+					else
+						info->FirstLevel(); // Jos kyse oli pintadatasta, josta ei lˆydy haluttua leveli‰, pit‰‰ info laittaa osoittamaan taas pinta-leveliin
+				}
+				else
+				{
+					if(info->SizeLevels() == 1)
+		                return info; // returns the first suitable surface (level count 1) data
+				}
             }
         }
         return boost::shared_ptr<NFmiFastQueryInfo>();
@@ -12283,9 +12296,9 @@ bool NFmiEditMapGeneralDataDoc::IsWorkingDataSaved()
     return pimpl->IsWorkingDataSaved();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetModelClimatologyData()
+boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetModelClimatologyData(const NFmiLevel& theLevel)
 {
-    return pimpl->GetModelClimatologyData();
+    return pimpl->GetModelClimatologyData(theLevel);
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetFavoriteSurfaceModelFractileData()
