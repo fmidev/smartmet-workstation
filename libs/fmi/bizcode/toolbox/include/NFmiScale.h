@@ -71,6 +71,7 @@ class NFmiScale
 		float itsEpsilon;
  bool itsDataOk;
  bool itsLimitCheck;
+ bool fIsTimeRelatedScale = false;
 
 private:
 
