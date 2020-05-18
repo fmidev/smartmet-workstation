@@ -43,6 +43,7 @@
 #include "NFmiFastInfoUtils.h"
 #include "catlog/catlog.h"
 #include "TimeSerialParameters.h"
+#include "NFmiFastInfoUtils.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -89,6 +90,19 @@ static bool IsMosDataUsed(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo)
         return true;
     else
         return false;
+}
+
+static bool HasModelClimatologyDataAnyOfGivenParameters(boost::shared_ptr<NFmiFastQueryInfo>& modelClimatologyInfo, const ModelClimatology::ParamIds& paramIds)
+{
+	if(modelClimatologyInfo)
+	{
+		for(auto paramId : paramIds)
+		{
+			if(modelClimatologyInfo->Param(paramId))
+				return true;
+		}
+	}
+	return false;
 }
 
 //--------------------------------------------------------
@@ -273,7 +287,7 @@ void NFmiTimeSerialView::DrawHelperData3LocationInTime(const NFmiPoint &theLatlo
 {
     if(itsCtrlViewDocumentInterface->ShowHelperData3InTimeSerialView())
     {
-        DrawAnnualModelFractileDataLocationInTime(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), itsCtrlViewDocumentInterface->GetModelClimatologyData(), theLatlon);
+        DrawAnnualModelFractileDataLocationInTime(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level()), theLatlon);
     }
 }
 
@@ -415,12 +429,18 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(FmiParameterN
         auto paramMapIter = ModelClimatology::eraParamMap.find(mainParameter);
         if(paramMapIter != ModelClimatology::eraParamMap.end())
         {
-            DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramMapIter->second.second);
+			const auto& paramIds = paramMapIter->second.second;
+			if(::HasModelClimatologyDataAnyOfGivenParameters(climateInfo, paramIds))
+			{
+				// T‰ss‰ annetaan overrideEnvi -parametrille nullptr, koska haluamme piirt‰‰ tietyill‰ tyylill‰ (ominaisuudet 
+				// tulevat erilllisest‰ taulukosta) eri fraktiili parametrit.
+				DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, nullptr);
+			}
         }
     }
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, NFmiDrawingEnvironment* overrideEnvi)
 {
     // Seek start and end time to be drawn so that year doesn't matter. climate data doesn't care about years.
     // There may be two separate time ranges that has to be handled. This happens when time range goes from one year 
@@ -447,38 +467,44 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared
             if(startYearDiff != endYearDiff)
             {
                 // Let's split time range in two and draw them separate
-                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, startClimatologyDataTime, climateInfo->TimeDescriptor().LastTime(), startYearDiff);
-                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), endClimatologyDataTime, endYearDiff);
+                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, startClimatologyDataTime, climateInfo->TimeDescriptor().LastTime(), startYearDiff, overrideEnvi);
+                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), endClimatologyDataTime, endYearDiff, overrideEnvi);
                 // Also draw possible full years between start and end year
                 for(auto yearIndex = startYearDiff + 1; yearIndex < endYearDiff; yearIndex++)
-                    DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), climateInfo->TimeDescriptor().LastTime(), yearIndex);
+                    DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), climateInfo->TimeDescriptor().LastTime(), yearIndex, overrideEnvi);
             }
             else
             {
-                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, startClimatologyDataTime, endClimatologyDataTime, startYearDiff);
+                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, startClimatologyDataTime, endClimatologyDataTime, startYearDiff, overrideEnvi);
             }
         }
     }
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi)
 {
     NFmiTimeBag drawedTimes(startTime, endTime, 60); // resoluutiolla ei merkityst‰
     int timeWhenDrawedInMinutes = climateDataYearDifference * 365 * 24 * 60;
-    DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, drawedTimes, timeWhenDrawedInMinutes);
+    DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, drawedTimes, timeWhenDrawedInMinutes, overrideEnvi);
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeWhenDrawedInMinutes)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeWhenDrawedInMinutes, NFmiDrawingEnvironment* overrideEnvi)
 {
-    NFmiDrawingEnvironment envi;
-    envi.SetFillPattern(FMI_DOT);
-    envi.SetPenSize(NFmiPoint(1, 1));
+    NFmiDrawingEnvironment localEnvi;
+	localEnvi.SetFillPattern(FMI_DOT);
+	localEnvi.SetPenSize(NFmiPoint(1, 1));
+	auto useOverrideEnvi = (overrideEnvi != nullptr);
+	NFmiDrawingEnvironment& usedEnvi = useOverrideEnvi ? *overrideEnvi : localEnvi;
     for(size_t i = 0; i < paramIds.size(); i++)
     {
         if(climateInfo->Param(paramIds[i]))
         {
-            envi.SetFrameColor(ModelClimatology::eraColorsForFractiles[i]);
-            DrawSimpleDataInTimeSerial(theDrawedTimes, climateInfo, envi, theLatlon, theTimeWhenDrawedInMinutes, NFmiPoint(6, 6), true);
+			if(!useOverrideEnvi)
+			{
+				// piirto-ominaisuuksia muutetllaan loopissa vain jos ei oltu annettu vakio optioita overrideEnvi parametrin mukana
+	            usedEnvi.SetFrameColor(ModelClimatology::eraColorsForFractiles[i]);
+			}
+            DrawSimpleDataInTimeSerial(theDrawedTimes, climateInfo, usedEnvi, theLatlon, theTimeWhenDrawedInMinutes, NFmiPoint(6, 6), true);
         }
     }
 }
@@ -1257,22 +1283,23 @@ static double GetTimeSerialValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, 
 // 3. MetaWindParamUsage pit‰‰ tarkistaa, jos kyseess‰ on tuulen meta-parametri tapaus
 static float GetTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, unsigned long wantedParamId)
 {
+	auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theTime);
     bool doInterpolation = theInfo->IsGrid();
     NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
     {
         if(doInterpolation)
-            return NFmiFastInfoUtils::GetMetaWindValue(theInfo, theTime, theLatlon, metaWindParamUsage, wantedParamId);
+            return NFmiFastInfoUtils::GetMetaWindValue(theInfo, usedTime, theLatlon, metaWindParamUsage, wantedParamId);
         else
             return NFmiFastInfoUtils::GetMetaWindValue(theInfo, metaWindParamUsage, wantedParamId);
     }
     else
     {
         if(doInterpolation)
-            return theInfo->InterpolatedValue(theLatlon, theTime);
+            return theInfo->InterpolatedValue(theLatlon, usedTime);
         else
         {
-            theInfo->Time(theTime);
+            theInfo->Time(usedTime);
             return theInfo->FloatValue();
         }
     }
@@ -4132,18 +4159,27 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLon
 {
     if(DrawEditedDataLocationInTime_PreliminaryActions(theLatLonPoint, theCurrentDataLineStyle))
     {
-        std::vector<NFmiMetTime> times;
-        FillTimeSerialTimesFromInfo(*Info(), times);
-
-        // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
-        if(Info()->TimeDescriptor().ValidTimeBag())
-        {
-            DrawEditedDataLocationInTime_TimebagOptimized(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times, drawModificationLines);
-        }
-        else
-        {
-            DrawEditedDataLocationInTime_Timelist(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times, drawModificationLines);
-        }
+		auto info = Info();
+		if(NFmiFastInfoUtils::IsModelClimatologyData(info))
+		{
+			ModelClimatology::ParamIds drawedParamVector{static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())};
+			DrawAnnualModelFractileDataLocationInTime(info, theLatLonPoint, drawedParamVector, &theCurrentDataLineStyle);
+		}
+		else
+		{
+	        std::vector<NFmiMetTime> times;
+	        FillTimeSerialTimesFromInfo(*Info(), times);
+	
+	        // timebagin tapauksessa (tasa askel aina) voidaan k‰ytt‰‰ optimoitua koodia
+	        if(Info()->TimeDescriptor().ValidTimeBag())
+	        {
+	            DrawEditedDataLocationInTime_TimebagOptimized(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times, drawModificationLines);
+	        }
+	        else
+	        {
+	            DrawEditedDataLocationInTime_Timelist(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, times, drawModificationLines);
+	        }
+	    }
     }
 }
 
@@ -4393,8 +4429,8 @@ std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(long theStartParam
 std::string NFmiTimeSerialView::GetModelClimatologyParamToolTipText(const ModelClimatology::ParamMapItem &paramItem, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
-    boost::shared_ptr<NFmiFastQueryInfo> modelClimatologyInfo = itsCtrlViewDocumentInterface->GetModelClimatologyData();
-    if(modelClimatologyInfo)
+    boost::shared_ptr<NFmiFastQueryInfo> modelClimatologyInfo = itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level());
+    if(::HasModelClimatologyDataAnyOfGivenParameters(modelClimatologyInfo, paramItem.second))
     {
         str += "<br><hr color=red><br>";
         str += modelClimatologyInfo->Producer()->GetName() + " " + paramItem.first + "\n";
@@ -4544,7 +4580,7 @@ std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr
 
 std::string NFmiTimeSerialView::GetModelClimatologyDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
-    if(theViewedInfo->SizeLevels() == 1 && itsCtrlViewDocumentInterface->GetModelClimatologyData() && itsCtrlViewDocumentInterface->ShowHelperData3InTimeSerialView())
+    if(itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level()) && itsCtrlViewDocumentInterface->ShowHelperData3InTimeSerialView())
     {
         auto paramMapIter = ModelClimatology::eraParamMap.find(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()));
         if(paramMapIter != ModelClimatology::eraParamMap.end())
