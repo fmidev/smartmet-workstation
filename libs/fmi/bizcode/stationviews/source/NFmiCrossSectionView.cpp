@@ -426,7 +426,7 @@ void NFmiCrossSectionView::DrawLegends()
             NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
             if(colorContourLegendValues.useLegend())
             {
-                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor);
+                CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor, itsDataViewFrame);
             }
         }
     }
