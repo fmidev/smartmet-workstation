@@ -21,6 +21,7 @@ NFmiTimeScale :: NFmiTimeScale (void)
 					: NFmiScale()
 					, itsStartTime(NFmiTime(1996,1,1,12))
 {
+    fIsTimeRelatedScale = true;
 }
 //______________________________________________________________________________
 //inline
@@ -30,7 +31,8 @@ NFmiTimeScale :: NFmiTimeScale (const NFmiTime& theStartTime
 					: NFmiScale (0.f, kFloatMissing)  // missing ylikirjoitetaan alla
 					, itsStartTime(theStartTime)
 {
-	long tempShort = static_cast<long>(theExpansionInMinutes); // 11.1.2001/MArko Muutin short:in longiksi
+    fIsTimeRelatedScale = true;
+    long tempShort = static_cast<long>(theExpansionInMinutes); // 11.1.2001/MArko Muutin short:in longiksi
 	itsStartTime.ChangeByMinutes(-tempShort);
 	itsEndValue = RelTime(theEndTime) + theExpansionInMinutes;
 	Check();
