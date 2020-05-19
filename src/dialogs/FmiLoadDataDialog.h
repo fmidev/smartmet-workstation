@@ -7,6 +7,7 @@
 #include "NFmiTimeBag.h"
 #include "NFmiColor.h"
 #include "NFmiDataMatrix.h"
+#include "NFmiRect.h"
 
 #include "boost/shared_ptr.hpp"
 #include <map>
