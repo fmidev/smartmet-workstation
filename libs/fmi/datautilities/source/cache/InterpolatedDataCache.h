@@ -4,6 +4,7 @@
 #include "source/cache/Cache.h"
 #include "source/cache/LruCache.h"
 #include "source/newbaseUtil/GridUtil.h"
+#include "source/newbaseUtil/AreaUtil.h"
 
 class NFmiArea;
 
@@ -35,7 +36,7 @@ namespace SmartMetDataUtilities
     template<typename Key1, typename Key2>
     InterpolatedDataCache::Keys InterpolatedDataCache::createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const NFmiGrid& originalGrid)
     {
-        auto areaStr = area.AreaStr();
+        auto areaStr = AreaUtil::makeAreaString(area);
         auto originalGridResolution = GridUtil::resolutionOf(originalGrid);
         return Keys(std::forward<Key1>(key1), std::forward<Key2>(key2), areaStr + ":" + originalGridResolution);
     }
@@ -43,7 +44,7 @@ namespace SmartMetDataUtilities
     template<typename Key1, typename Key2>
     InterpolatedDataCache::Keys InterpolatedDataCache::createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const std::string& originalGridResolution = "default")
     {
-        auto areaStr = area.AreaStr();
+        auto areaStr = AreaUtil::makeAreaString(area);
         return Keys(std::forward<Key1>(key1), std::forward<Key2>(key2), areaStr + ":" + originalGridResolution);
     }
 }
