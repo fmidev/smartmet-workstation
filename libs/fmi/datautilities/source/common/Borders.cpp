@@ -46,7 +46,7 @@ namespace SmartMetDataUtilities
 
     bool Borders::isPacific(const Borders& latLonBorders)
     {
-        return NFmiArea::IsPacificView(latLonBorders.bottomLeft(), latLonBorders.topRight());
+        return NFmiArea::IsPacificView_legacy(latLonBorders.bottomLeft(), latLonBorders.topRight());
     }
 
     void Borders::convertToPacific()
