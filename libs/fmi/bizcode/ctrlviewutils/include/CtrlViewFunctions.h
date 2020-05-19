@@ -29,7 +29,7 @@ namespace CtrlViewUtils
    std::string MakeMapPortionPixelSizeStringForStatusbar(const NFmiPoint &theSize, bool longVersion);
 
    bool IsPacificLongitude(double theLongitude);
-   double GetAtlanticLongitude(double theLongitude);
+   double GetWantedLongitude(double theLongitude, bool fPacificView);
 
    template<class T>
    static void RemoveNthElementFromVector(T &theVector, int theRemovedItemIndex)

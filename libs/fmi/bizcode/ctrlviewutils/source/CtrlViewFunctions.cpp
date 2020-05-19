@@ -81,25 +81,42 @@ namespace CtrlViewUtils
             return false;
     }
 
-    // fiksataan longitudet, jos ollaan PacificView maailmassa ja ollaan yli 180 asteen takaisin -180 - 180 maailmaan
-    double GetAtlanticLongitude(double theLongitude)
+    double GetWantedLongitude(double theLongitude, bool fPacificView)
     {
         double value = theLongitude;
-        if(::fabs(theLongitude - 180.) < 0.0000001)
-            value = 180.;
-        else if(::fabs(theLongitude + 180.) < 0.0000001)
-            value = -180.;
-        else if(theLongitude > 180)
-            value = GetAtlanticLongitude(theLongitude - 360);
-        else if(theLongitude < -180)
-            value = GetAtlanticLongitude(theLongitude + 360);
-
+        if(fPacificView)
+        {
+            if(::fabs(theLongitude - 360.) < 0.0000001)
+                value = 360.;
+            else if(::fabs(theLongitude + 360.) < 0.0000001)
+                value = 0.;
+            else if(theLongitude > 360)
+                GetWantedLongitude(theLongitude - 360, fPacificView);
+            else if(theLongitude < 0)
+                GetWantedLongitude(theLongitude + 360, fPacificView);
+            else
+                value = theLongitude;
+        }
+        else
+        {
+            if(::fabs(theLongitude - 180.) < 0.0000001)
+                value = 180.;
+            else if(::fabs(theLongitude + 180.) < 0.0000001)
+                value = -180.;
+            else if(theLongitude > 180)
+                GetWantedLongitude(theLongitude - 360, fPacificView);
+            else if(theLongitude < -180)
+                GetWantedLongitude(theLongitude + 360, fPacificView);
+            else
+                value = theLongitude;
+        }
         return value;
     }
 
+
     std::string GetLongitudeMinuteStr(double lon, int decimals)
     {
-        lon = GetAtlanticLongitude(lon);
+        lon = GetWantedLongitude(lon, false);
         bool eastSide = (lon >= 0. && lon <= 180.);
         lon = ::fabs(lon);
         std::string retStr;
@@ -417,7 +434,7 @@ namespace CtrlViewUtils
         str += GetLatitudeMinuteStr(lat, 1);
         str += " ";
         double lon = theLatlon.X();
-        lon = GetAtlanticLongitude(lon);
+        lon = GetWantedLongitude(lon, false);
         str += GetLongitudeMinuteStr(lon, 1);
         str += " [";
 
