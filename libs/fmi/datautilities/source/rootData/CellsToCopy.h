@@ -78,8 +78,8 @@ namespace SmartMetDataUtilities
 
         void fixRowsAndColumnsSoThatTheyAreInsideRootMatrix()
         {
-            auto lastColumn = rootData_.getMatrix()->NX() - 1;
-            auto lastRow = rootData_.getMatrix()->NY() - 1;
+            auto lastColumn = static_cast<int>(rootData_.getMatrix()->NX() - 1);
+            auto lastRow = static_cast<int>(rootData_.getMatrix()->NY() - 1);
             firstColumnToCopy_ = (firstColumnToCopy_ < 0) ? 0 : firstColumnToCopy_;
             lastColumnToCopy_ = (lastColumnToCopy_ > lastColumn) ? lastColumn : lastColumnToCopy_;
             firstRowToCopy_ = (firstRowToCopy_ < 0) ? 0 : firstRowToCopy_;
