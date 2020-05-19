@@ -389,15 +389,14 @@ static bool IsGlobalArea(const NFmiArea* theArea)
 {
 	if(theArea->ClassId() == kNFmiLatLonArea)
 	{
-		// Pacific tapaus
+		if(theArea->PacificView_legacy())
 		{
 			const NFmiPoint globalBL(0, -90);
 			const NFmiPoint globalTR(360, 90);
 			if(theArea->BottomLeftLatLon() == globalBL && theArea->TopRightLatLon() == globalTR)
 				return true;
 		}
-
-		// Atlantic tapaus
+		else
 		{
 			const NFmiPoint globalBL(-180, -90);
 			const NFmiPoint globalTR(180, 90);
@@ -599,7 +598,7 @@ void NFmiProjectionCurvatureInfo::CreateLineLabel2List(double theLabelValue, Fmi
 {
     double moveUnit = itsUsedFontSizeInRelativeUnit;
     // Pitää fiksata label stringiin arvo, jos kyseessä longitude ja ollaan välillä 180 > x <= 360
-    if(fLatitudeLabelUsed == false && CtrlViewUtils::IsPacificLongitude(theLabelValue))
+    if(fLatitudeLabelUsed == false && NFmiArea::IsPacificLongitude_legacy(theLabelValue))
     {
         theLabelValue = CtrlViewUtils::GetAtlanticLongitude(theLabelValue);
     }
