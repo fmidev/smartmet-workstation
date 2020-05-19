@@ -36,7 +36,7 @@ namespace SmartMetDataUtilities
     template<typename Key1, typename Key2>
     InterpolatedDataCache::Keys InterpolatedDataCache::createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const NFmiGrid& originalGrid)
     {
-        auto areaStr = AreaUtil::makeAreaString(area);
+        auto areaStr = area.AreaFactoryStr();
         auto originalGridResolution = GridUtil::resolutionOf(originalGrid);
         return Keys(std::forward<Key1>(key1), std::forward<Key2>(key2), areaStr + ":" + originalGridResolution);
     }
@@ -44,7 +44,7 @@ namespace SmartMetDataUtilities
     template<typename Key1, typename Key2>
     InterpolatedDataCache::Keys InterpolatedDataCache::createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const std::string& originalGridResolution = "default")
     {
-        auto areaStr = AreaUtil::makeAreaString(area);
+        auto areaStr = area.AreaFactoryStr();
         return Keys(std::forward<Key1>(key1), std::forward<Key2>(key2), areaStr + ":" + originalGridResolution);
     }
 }

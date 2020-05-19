@@ -22,7 +22,6 @@ namespace SmartMetDataUtilities
         std::unique_ptr<NFmiArea> createCopyOf(const NFmiArea& area);
         bool isPacific(const NFmiArea& area);
         bool areasIntersect(const NFmiArea& area1, const NFmiArea& area2, size_t resolution = 100);
-        std::string makeAreaString(const NFmiArea& area);
 
         double MaxLongitude(const NFmiArea& area, size_t resolution = 100);
         double MaxLatitude(const NFmiArea& area, size_t resolution = 100);
