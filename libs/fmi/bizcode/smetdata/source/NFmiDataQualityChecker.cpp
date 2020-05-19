@@ -319,9 +319,9 @@ void NFmiDataQualityChecker::CheckData(NFmiThreadCallBacks *theThreadCallBacks)
 					::DoStepIt(theThreadCallBacks);
 					fInfo.TimeIndex(static_cast<unsigned long>(j));
                     fInfo.Param(kFmiTemperature);
-					fInfo.Values(values);
+					values = fInfo.Values();
                     fInfo.Param(kFmiDewPoint);
-					fInfo.Values(values2);
+					values2 = fInfo.Values();
                     values -= values2;
 					itsValueCheckMatrix[i][j].CheckGrid(values, fInfo.Time(), *(fInfo.Param().GetParam()), fInfo);
 				}
@@ -333,7 +333,7 @@ void NFmiDataQualityChecker::CheckData(NFmiThreadCallBacks *theThreadCallBacks)
 					::CheckIfStopped(theThreadCallBacks);
 					::DoStepIt(theThreadCallBacks);
 					fInfo.TimeIndex(static_cast<unsigned long>(j));
-					fInfo.Values(values);
+					values = fInfo.Values();
 					itsValueCheckMatrix[i][j].CheckGrid(values, fInfo.Time(), *(fInfo.Param().GetParam()), fInfo);
 				}
 			}
