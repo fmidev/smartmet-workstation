@@ -159,25 +159,6 @@ namespace SmartMetDataUtilities {
             return area2ContainsAtleastOnePointFromArea1Borders(area1, area2, resolution);
         }
 
-        string makeAreaString(const NFmiArea& area)
-        {
-            // Newbase with wgs84 support doesn't support old style area strings anymore, 
-            // we build here substitute string with PROJ library's Proj-string and area's corner points.
-            auto areaStr = area.ProjStr();
-            areaStr += ":";
-            auto bottomLeftLatlon = area.BottomLeftLatLon();
-            areaStr += to_string(bottomLeftLatlon.X());
-            areaStr += ",";
-            areaStr += to_string(bottomLeftLatlon.Y());
-            auto topRightLatlon = area.TopRightLatLon();
-            areaStr += ",";
-            areaStr += to_string(topRightLatlon.X());
-            areaStr += ",";
-            areaStr += to_string(topRightLatlon.Y());
-
-            return areaStr;
-        }
-
         double MaxLongitude(const NFmiArea& area, size_t resolution)
         {
             auto minMaxLongitude = MinMaxForLongitude(area, resolution);
