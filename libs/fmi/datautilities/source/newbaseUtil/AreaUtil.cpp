@@ -145,16 +145,9 @@ namespace SmartMetDataUtilities {
             return unique_ptr<NFmiArea>(area.CreateNewArea(area.BottomLeftLatLon(), area.TopRightLatLon()));
         }
 
-        string firstPartOfAreaStrFor(const NFmiArea& area)
-        {
-            auto areaStr = area.AreaStr();
-            auto split = NFmiStringTools::Split(areaStr, ":");
-            return split.front();
-        }
-
         bool isPacific(const NFmiArea& area)
         {
-            return NFmiArea::IsPacificView(area.BottomLeftLatLon(), area.TopRightLatLon());
+            return NFmiArea::IsPacificView_legacy(area.BottomLeftLatLon(), area.TopRightLatLon());
         }
 
         bool areasIntersect(const NFmiArea& area1, const NFmiArea& area2, size_t resolution)
@@ -166,21 +159,23 @@ namespace SmartMetDataUtilities {
             return area2ContainsAtleastOnePointFromArea1Borders(area1, area2, resolution);
         }
 
-        bool areAreasEqual(NFmiArea* area1, NFmiArea* area2, double epsilon)
+        string makeAreaString(const NFmiArea& area)
         {
-            if(area1->ClassId() == area2->ClassId())
-            {
-                if(PointsUtil::pointsAreEqual(area1->BottomLeftLatLon(), area2->BottomLeftLatLon(), epsilon)
-                    && PointsUtil::pointsAreEqual(area1->TopRightLatLon(), area2->TopRightLatLon(), epsilon))
-                {
-                    if(area1->ClassId() == kNFmiStereographicArea || area1->ClassId() == kNFmiEquiDistArea || area1->ClassId() == kNFmiGnomonicArea)
-                    {
-                        if(static_cast<const NFmiAzimuthalArea*>(area1)->Orientation() == static_cast<const NFmiAzimuthalArea*>(area2)->Orientation())
-                            return true;
-                    }
-                }
-            }
-            return false;
+            // Newbase with wgs84 support doesn't support old style area strings anymore, 
+            // we build here substitute string with PROJ library's Proj-string and area's corner points.
+            auto areaStr = area.ProjStr();
+            areaStr += ":";
+            auto bottomLeftLatlon = area.BottomLeftLatLon();
+            areaStr += to_string(bottomLeftLatlon.X());
+            areaStr += ",";
+            areaStr += to_string(bottomLeftLatlon.Y());
+            auto topRightLatlon = area.TopRightLatLon();
+            areaStr += ",";
+            areaStr += to_string(topRightLatlon.X());
+            areaStr += ",";
+            areaStr += to_string(topRightLatlon.Y());
+
+            return areaStr;
         }
 
         double MaxLongitude(const NFmiArea& area, size_t resolution)
