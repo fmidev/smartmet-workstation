@@ -11,6 +11,7 @@
 #include "NFmiDataMatrix.h"
 #include "NFmiMetTime.h"
 #include "NFmiParam.h"
+#include "NFmiPoint.h"
 
 class NFmiQueryData;
 class NFmiFastQueryInfo;
