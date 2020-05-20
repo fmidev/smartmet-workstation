@@ -1,22 +1,21 @@
 #include "wmssupport/EpsgParser.h"
 
 #include <NFmiArea.h>
-#include <NFmiAzimuthalArea.h>
-
+#include <NFmiSaveBaseFactory.h>
+#include <boost/math/special_functions/round.hpp>
 #include <cpprest/asyncrt_utils.h>
 #undef U // This fixes cpprest's U -macro clash with boost library move code (really dangerous to give macro name like U !!!!)
 
 #include <string>
 
-using AreaWithOrientation = NFmiAzimuthalArea;
-
 namespace Wms
 {
     namespace
     {
-        int getOrientationOf(const AreaWithOrientation& area)
+        int getOrientationOf(const NFmiArea& area)
         {
-            return static_cast<int>(area.Orientation());
+            auto optional_lon_0 = area.Proj().GetDouble("lon_0");
+            return boost::math::iround(optional_lon_0.value());
         }
     }
 
@@ -48,8 +47,7 @@ namespace Wms
 
     std::string EpsgParser::stereographicToEpsg(const NFmiArea& area) const
     {
-        decltype(auto) areaWithOrientation = static_cast<const AreaWithOrientation&>(area);
-        auto orientation = getOrientationOf(areaWithOrientation);
+        auto orientation = getOrientationOf(area);
         auto epsg = std::string{};
         if(orientation == 0)
         {
