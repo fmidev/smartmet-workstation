@@ -4,7 +4,7 @@
 #include "source/dataUtil/MapViewId.h"
 
 #include "NFmiArea.h"
-#include "NFmiDataMatrix.h"
+#include "CoordinateMatrix.h"
 #include "NFmiPoint.h"
 
 #include <memory>
@@ -20,7 +20,7 @@ namespace SmartMetDataUtilities
         MapViewId keys_;
 
         std::shared_ptr<NFmiArea> croppedArea_ = nullptr;
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> interpolatedMatrix_ = nullptr;
+        std::shared_ptr<Fmi::CoordinateMatrix> interpolatedMatrix_ = nullptr;
     public:
         InterpolationHandler(NFmiGrid& grid, const NFmiArea& mapArea, RootDataCache& rootCache, InterpolatedDataCache& interpolatedCache, MapViewId keys);
         InterpolationHandler() = default;
@@ -28,7 +28,7 @@ namespace SmartMetDataUtilities
 
         void interpolate();
         std::shared_ptr<NFmiArea> getCroppedArea();
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> getInterpolatedMatrix();
+        std::shared_ptr<Fmi::CoordinateMatrix> getInterpolatedMatrix();
     private:
         void storeInterpolationResult();
     };

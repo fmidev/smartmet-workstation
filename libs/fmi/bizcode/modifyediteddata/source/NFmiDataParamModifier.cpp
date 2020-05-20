@@ -41,6 +41,7 @@
 #include "ToolMasterHelperFunctions.h"
 #include "EditedInfoMaskHandler.h"
 #include "NFmiGriddingProperties.h"
+#include "NFmiDataMatrixUtils.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include <fstream>
@@ -677,7 +678,7 @@ static void InterpolateMatrix(const NFmiDataMatrix<float> &source, NFmiDataMatri
 		for(size_t i=0; i < dest.NX(); i++)
 		{
 			NFmiPoint location(i/destSizeX, j/destSizeY);
-			dest[i][j] = source.InterpolatedValue(location, kFmiTemperature, true);
+			dest[i][j] = DataMatrixUtils::InterpolatedValue(source, location, kFmiTemperature, true);
 		}
 	}
 }

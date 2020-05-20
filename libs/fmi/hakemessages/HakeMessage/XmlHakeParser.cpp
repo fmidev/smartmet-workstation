@@ -4,7 +4,8 @@
 #include "NFmiMetTime.h"
 #include "NFmiPoint.h"
 #include "NFmiStringTools.h"
-#include "NFmiYKJArea.h"
+#include "NFmiArea.h"
+#include "NFmiAreaTools.h"
 
 #include "xmlliteutils/XMLite.h"
 #include <memory>
@@ -15,7 +16,9 @@ namespace HakeMessage
 {
     namespace
     {
-        NFmiMetTime GetTimeFromXmlMessageString(const std::string &timeStr)
+        std::unique_ptr<NFmiArea> g_areaPtr(NFmiAreaTools::CreateLegacyYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
+
+        NFmiMetTime GetTimeFromXmlMessageString(const std::string& timeStr)
         {
             std::string tmpStr(timeStr);
             NFmiStringTools::Trim(tmpStr);
@@ -42,7 +45,7 @@ namespace HakeMessage
             return NFmiMetTime(saTime.UTCTime(), 1);
         }
 
-        std::string GetXMLChildNodeString(XNode &xml, const std::string &theChildNodeName, const std::string &theXMLMessageStr)
+        std::string GetXMLChildNodeString(XNode& xml, const std::string& theChildNodeName, const std::string& theXMLMessageStr)
         {
             LPXNode node = xml.Find(CA2T(theChildNodeName.c_str()));
             if(node == 0)
@@ -51,7 +54,7 @@ namespace HakeMessage
             return tmp;
         }
 
-        int GetMessageLevel(const std::string &theStr)
+        int GetMessageLevel(const std::string& theStr)
         {
             static bool firstTime = true;
             static std::map<std::string, int> possibleLevels;
@@ -74,13 +77,6 @@ namespace HakeMessage
     {
         auto xmlMessage = HakeMsg{};
         xmlMessage.IsFromXmlFormat(true);
-        static std::auto_ptr<NFmiArea> areaPtr;
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            areaPtr.reset(new NFmiYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
-        }
 
         CString sxmlU_(CA2T(xmlString.c_str()));
         XNode xml;
@@ -174,7 +170,7 @@ namespace HakeMessage
             childNodeStr = GetXMLChildNodeString(xml, "KoordY", xmlString);
             double worldY = NFmiStringTools::Convert<double>(childNodeStr);
             // PITÄÄ TEHDÄ world xy muunnos YKJ-arean avulla latlon koordinaatistoon
-            xmlMessage.LatlonPoint(areaPtr->WorldXYToLatLon(NFmiPoint(worldX, worldY)));
+            xmlMessage.LatlonPoint(g_areaPtr->WorldXYToLatLon(NFmiPoint(worldX, worldY)));
         }
         catch(const exception &)
         {

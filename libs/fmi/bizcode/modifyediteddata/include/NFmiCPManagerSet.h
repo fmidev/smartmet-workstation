@@ -4,7 +4,8 @@
 #include <vector>
 #include <list>
 #include <boost/shared_ptr.hpp>
-#include "NFmiDataMatrix.h" // täältä tulee myös std::vector
+#include "NFmiDataMatrix.h"
+#include "NFmiPoint.h"
 
 class NFmiEditorControlPointManager;
 

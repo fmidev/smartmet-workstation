@@ -9,15 +9,15 @@ namespace SmartMetDataUtilities
         const RootData& rootData_;
         CellsToCopy cellsToCopy_;
         std::unique_ptr<NFmiArea> croppedRootArea_;
-        std::unique_ptr<NFmiDataMatrix<NFmiPoint>> croppedRootData_;
+        std::unique_ptr<Fmi::CoordinateMatrix> croppedRootData_;
     public:
         RootDataCropper(const NFmiArea& area, const RootData& rootData);
 
-        std::unique_ptr<NFmiDataMatrix<NFmiPoint>> getCroppedRootMatrix();
+        std::unique_ptr<Fmi::CoordinateMatrix> getCroppedRootMatrix();
         std::unique_ptr<NFmiArea> getCroppedRootArea();
     private:
         void calculate();
-        std::unique_ptr<NFmiDataMatrix<NFmiPoint>> cropRootMatrix() const;
+        std::unique_ptr<Fmi::CoordinateMatrix> cropRootMatrix() const;
         std::unique_ptr<NFmiArea> cropRootArea() const;
     };
 }

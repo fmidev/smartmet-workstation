@@ -600,7 +600,7 @@ void NFmiProjectionCurvatureInfo::CreateLineLabel2List(double theLabelValue, Fmi
     // Pitää fiksata label stringiin arvo, jos kyseessä longitude ja ollaan välillä 180 > x <= 360
     if(fLatitudeLabelUsed == false && NFmiArea::IsPacificLongitude_legacy(theLabelValue))
     {
-        theLabelValue = CtrlViewUtils::GetAtlanticLongitude(theLabelValue);
+        theLabelValue = CtrlViewUtils::GetWantedLongitude(theLabelValue, true);
     }
     NFmiString str(NFmiValueString::GetStringWithMaxDecimalsSmartWay(theLabelValue, 2));
     str += "°";

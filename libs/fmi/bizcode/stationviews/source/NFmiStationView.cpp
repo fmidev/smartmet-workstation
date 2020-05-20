@@ -24,7 +24,6 @@
 #include "NFmiGrid.h"
 #include "NFmiValueString.h"
 #include "NFmiInfoOrganizer.h"
-#include "NFmiLatlonArea.h"
 
 #include "NFmiEditMapDataListHandler.h"
 #include "NFmiStringList.h"
@@ -68,6 +67,8 @@
 #include "ToolMasterDrawingFunctions.h"
 #include "NFmiCountryBorderDrawUtils.h"
 #include "CombinedMapHandlerInterface.h"
+#include "NFmiDataMatrixUtils.h"
+#include "NFmiAreaTools.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1286,7 +1287,7 @@ float NFmiStationView::ViewFloatValue(void)
     }
     else if(fGetCurrentDataFromQ2Server)
     {
-        return itsQ2ServerDataValues.InterpolatedValue(LatLonToViewPoint(itsInfo->LatLon()), itsArea->XYArea(), itsParamId);
+        return DataMatrixUtils::InterpolatedValue(itsQ2ServerDataValues, LatLonToViewPoint(itsInfo->LatLon()), itsArea->XYArea(), itsParamId);
     }
     else if(fUseMacroParamSpecialCalculations)
     {
@@ -1600,7 +1601,7 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 		else
 		{
 			// normi reaaliluku interpolaatio lämpötila parametri on vain dummy arvo tavalliselle reaaliluvulle
-			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+			return DataMatrixUtils::InterpolatedValue(dataMatrix, LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
 		}
 	}
 
@@ -1842,7 +1843,7 @@ static std::unique_ptr<NFmiArea> GetQ2ToolTipArea(CtrlViewDocumentInterface *the
 {
 	NFmiPoint bl(theCtrlViewDocumentInterface->ToolTipLatLonPoint());
 	NFmiPoint tr(bl.X() + 0.001, bl.Y() + 0.001);
-	return std::make_unique<NFmiLatLonArea>(bl, tr);
+	return std::unique_ptr<NFmiArea>(NFmiAreaTools::CreateLegacyLatLonArea(bl, tr));
 }
 
 static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiArea> &theArea, bool doToolTipCalculation)
@@ -1864,7 +1865,7 @@ static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocum
 static string GetQ2ProjectionString(const boost::shared_ptr<NFmiArea> &theFinalArea)
 {
 	string str("&projection=");
-	str += theFinalArea->AreaStr();
+	str += theFinalArea->AreaFactoryStr();
 	return str;
 }
 
@@ -2068,7 +2069,7 @@ static string MakeQ3ArchiveModelDataCodeStr(CtrlViewDocumentInterface *theCtrlVi
     codeStr += theValidTime.ToStr(kYYYYMMDDHHMMSS);
 
     codeStr += " projection=\"";
-    codeStr += theUsedGrid.Area()->AreaStr();
+    codeStr += theUsedGrid.Area()->AreaFactoryStr();
     codeStr += "\" ";
 
     codeStr += ::MakeQ3GridSizeStr(theUsedGrid);
@@ -2159,7 +2160,7 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
         baseParStr += NFmiStringTools::UrlEncode(macroParamStr);
 
         string projectionStr("&projection=");
-        projectionStr += itsArea->AreaStr();
+        projectionStr += itsArea->AreaFactoryStr();
         baseParStr += projectionStr;
 
         string gridsizeStr("&gridsize=");
@@ -2224,9 +2225,9 @@ NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQue
 void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2)
 {
     if(useCropping)
-        theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+		theValues = theInfo->CroppedValues(usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
     else
-        theInfo->Values(theValues, usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+		theValues = theInfo->Values(usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
 }
 
 // Kannattaako yrittää piirtää annetun datan annettua aikaa karttanäyttöön?
@@ -2443,9 +2444,9 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 				{
                     // Staattisille datoille (terrain datat jms.) ei tarvitse tehdä meta parametri tarkasteluja
 					if(useCropping)
-						itsInfo->CroppedValues(theValues, x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
+						theValues = itsInfo->CroppedValues(x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
 					else
-						itsInfo->Values(theValues); // stat data on jo ajallisesti kohdallaan
+						theValues = itsInfo->Values(); // stat data on jo ajallisesti kohdallaan
 				}
 			}
 

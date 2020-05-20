@@ -25,6 +25,7 @@
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "NFmiFastInfoUtils.h"
+#include "NFmiDataMatrixUtils.h"
 
 #include <gdiplus.h>
 
@@ -699,18 +700,18 @@ void NFmiStreamLineView::DrawStreamLineData(void)
         if(itsInfo->Param(kFmiWindUMS) && itsInfo->Param(kFmiWindVMS))
         {
             itsInfo->Param(kFmiWindUMS);
-            itsInfo->Values(itsWindUComponent, itsTime);
+            itsWindUComponent = itsInfo->Values(itsTime);
             itsInfo->Param(kFmiWindVMS);
-            itsInfo->Values(itsWindVComponent, itsTime);
+            itsWindVComponent = itsInfo->Values(itsTime);
         }
         else if(itsInfo->Param(kFmiWindSpeedMS) && itsInfo->Param(kFmiWindDirection))
         {
             itsInfo->Param(kFmiWindSpeedMS);
             NFmiDataMatrix<float> ws;
-            itsInfo->Values(ws, itsTime);
+            ws = itsInfo->Values(itsTime);
             itsInfo->Param(kFmiWindDirection);
             NFmiDataMatrix<float> wd;
-            itsInfo->Values(wd, itsTime);
+            wd = itsInfo->Values(itsTime);
             NFmiFastInfoUtils::CalcMatrixWindComponentsFromSpeedAndDirection(ws, wd, itsWindUComponent, itsWindVComponent);
         }
         else
@@ -753,7 +754,7 @@ static void UVcomponents2SpeedDir(float u, float v, float &WS, float &WD)
 static float InterpolateValueFromMatrix(const NFmiDataMatrix<float> &theMatrix, const NFmiPoint &theLatlonPoint, const NFmiArea *theDataArea)
 {
     NFmiPoint p = theDataArea->LatLonToWorldXY(theLatlonPoint);
-    return theMatrix.InterpolatedValue(p, theDataArea->WorldRect(), kFmiWindUMS, true);
+    return DataMatrixUtils::InterpolatedValue(theMatrix, p, theDataArea->WorldRect(), kFmiWindUMS, true);
 }
 
 void NFmiStreamLineView::CalcWindValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, float &WS, float &WD)
@@ -776,7 +777,7 @@ static NFmiLocation CalcNewLocation(const NFmiLocation &theCurrentLocation, doub
 {
 	double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metrein‰
 	double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pit‰‰ k‰‰nt‰‰ virtaus suunta 180 asteella
-	return theCurrentLocation.GetLocation(dir, dist, pacificView);
+	return CtrlViewUtils::GetPacificFixedLocation(theCurrentLocation.GetLocation(dir, dist), pacificView);
 }
 
 // HHilaruudukossa suhteellisen matkan kulkeva partikkeli, kuljettava matka annetaan suoraan parametrina.
@@ -784,7 +785,7 @@ static NFmiLocation CalcNewLocation2(const NFmiLocation &theCurrentLocation, con
 {
     double usedDistInMeters = (distInMeters.X() + distInMeters.Y()) / 2.; // t‰ss‰ pit‰isi laskea k‰ytetyn kulman mukaan pituudet x- ja y-suunnassa, nyt lasketaan vain keskiarvo
 	double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pit‰‰ k‰‰nt‰‰ virtaus suunta 180 asteella
-	return theCurrentLocation.GetLocation(dir, usedDistInMeters, pacificView);
+	return CtrlViewUtils::GetPacificFixedLocation(theCurrentLocation.GetLocation(dir, usedDistInMeters), pacificView);
 }
 
 // path:iin ollaan lis‰‰m‰ss‰ uutta pistett‰ (newPoint), jos se ei leikkaa polun kanssa.
@@ -1126,7 +1127,7 @@ std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const Streamli
     const double usedAreaLimit = theAreaLimit / 2.; // t‰‰ll‰ k‰ytet‰‰n hienompaa areaa kuin ulkopuolella
     const int maxAllowedPathSize = 500;
     const int maxAllowedIndex = 5000;
-    bool pacificView = itsArea->PacificView();
+    bool pacificView = itsArea->PacificView_legacy();
     std::vector<NFmiPoint> path;
     NFmiLocation currentLocation(theStartLatlonPoint);
     path.push_back(currentLocation.GetLocation());
@@ -1759,7 +1760,7 @@ static std::list<std::vector<NFmiPoint> > SplitPathsAtEdgeOfWorld(const std::vec
 
 void NFmiStreamLineView::DrawOneWayPath(const StreamlineCalculationParameters &theCalcParams, const std::vector<NFmiPoint> &theOneWayPath, const GdiPlusLineInfo &theLineInfo, bool forwardDirection, float theLineWidthInMM)
 {
-    std::list<std::vector<NFmiPoint> > possibleSplittedPaths = SplitPathsAtEdgeOfWorld(theOneWayPath, itsArea->PacificView());
+    std::list<std::vector<NFmiPoint> > possibleSplittedPaths = SplitPathsAtEdgeOfWorld(theOneWayPath, itsArea->PacificView_legacy());
     if(possibleSplittedPaths.size())
     {
         std::list<std::vector<NFmiPoint> >::iterator iter = possibleSplittedPaths.begin();

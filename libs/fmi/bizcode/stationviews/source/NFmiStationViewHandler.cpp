@@ -1026,7 +1026,7 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 		for(theSoundingInfo->ResetLocation() ; theSoundingInfo->NextLocation(); )
 		{
 			NFmiPoint viewPoint(LatLonToViewPoint(theSoundingInfo->LatLon())); // tämä on offset
-			if(NFmiSoundingData::HasRealSoundingData(*theSoundingInfo))
+			if(NFmiSoundingData::HasRealSoundingData(theSoundingInfo))
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(0.551f, 0.9f, 0.21f)); // löytyy dataa, vihreä kolmio
 			else
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(1.f, 0.35f, 0.f)); // ei dataa, oranssi kolmio
@@ -4285,7 +4285,7 @@ static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theEditedInf
     if(theEditedInfo)
     {
         if(theEditedInfo->Grid()) // editoidun datan pitäisi olla hiladata
-            return theEditedInfo->Grid()->Area()->PacificView();
+            return theEditedInfo->Grid()->Area()->PacificView_legacy();
     }
 
     return false;

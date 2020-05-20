@@ -1,6 +1,6 @@
 #pragma once
 #include "NFmiGrid.h"
-#include "NFmiDataMatrix.h"
+#include "CoordinateMatrix.h"
 
 #include <memory>
 
@@ -9,9 +9,9 @@ namespace SmartMetDataUtilities
     class InterpolatedData
     {
         std::shared_ptr<NFmiArea> area_;
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> matrix_;
+        std::shared_ptr<Fmi::CoordinateMatrix> matrix_;
     public:
-        InterpolatedData(std::shared_ptr<NFmiDataMatrix<NFmiPoint>> matrix, std::shared_ptr<NFmiArea> area)
+        InterpolatedData(std::shared_ptr<Fmi::CoordinateMatrix> matrix, std::shared_ptr<NFmiArea> area)
             :area_(area)
             , matrix_(matrix) {}
 
@@ -23,15 +23,15 @@ namespace SmartMetDataUtilities
             return area_;
         }
 
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> getMatrix() const
+        std::shared_ptr<Fmi::CoordinateMatrix> getMatrix() const
         {
             return matrix_;
         }
 
-        static bool matrixIsNotEmpty(const NFmiDataMatrix<NFmiPoint>& matrix)
+        static bool matrixIsNotEmpty(const Fmi::CoordinateMatrix& matrix)
         {
-            return matrix.NX() > 0
-                && matrix.NY() > 0;
+            return matrix.width() > 0
+                && matrix.height() > 0;
         }
     };
 }

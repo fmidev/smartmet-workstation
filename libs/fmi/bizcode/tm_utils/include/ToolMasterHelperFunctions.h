@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NFmiDataMatrix.h"
+#include "NFmiRect.h"
 #include "boost/shared_ptr.hpp"
 
 class CDC;

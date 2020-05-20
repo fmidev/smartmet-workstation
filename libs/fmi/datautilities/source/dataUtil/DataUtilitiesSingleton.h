@@ -4,7 +4,7 @@
 #include "source/cache/InterpolatedDataCache.h"
 #include "source/cache/RootDataCache.h"
 
-#include "NFmiDataMatrix.h"
+#include "CoordinateMatrix.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiGrid.h"
 #include "NFmiArea.h"
@@ -24,7 +24,7 @@ namespace SmartMetDataUtilities
         bool isThereAnythingToDraw_ = false;
         std::string originalDataResolution_;
         std::shared_ptr<NFmiArea> croppedArea_ = nullptr;
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> interpolatedMatrix_ = nullptr;
+        std::shared_ptr<Fmi::CoordinateMatrix> interpolatedMatrix_ = nullptr;
         mutable RootDataCache rootDataCache_;
         mutable InterpolatedDataCache interpolatedDataCache_;
     public:
@@ -37,7 +37,7 @@ namespace SmartMetDataUtilities
         bool isModifiedDataDrawingPossible(const MapViewId& keys) const;
         bool isThereAnythingToDraw(const MapViewId& keys) const;
         std::shared_ptr<NFmiArea> getCroppedArea() const;
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> getInterpolatedData() const;
+        std::shared_ptr<Fmi::CoordinateMatrix> getInterpolatedData() const;
         // only for testing purposes
         std::shared_ptr<NFmiGrid> getRootGrid(const MapViewId& keys) const;
         void clear();

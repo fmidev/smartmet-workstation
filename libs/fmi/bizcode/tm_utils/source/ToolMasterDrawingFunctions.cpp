@@ -19,6 +19,7 @@
 #include "CtrlViewFunctions.h"
 #include "ToolmasterHatchingUtils.h"
 #include "ToolmasterHatchPolygonData.h"
+#include "NFmiDataMatrixUtils.h"
 
 #include <fstream>
 #include "boost/math/special_functions/round.hpp"
@@ -891,7 +892,7 @@ static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDa
                 pt.X(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
             if(pt.Y() > 1.)
                 pt.Y(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
-            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, theParamId, true);
+            theDownSizedData[i][j] = DataMatrixUtils::InterpolatedValue(theOrigData, pt, theParamId, true);
         }
     }
 }

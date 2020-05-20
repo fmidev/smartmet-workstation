@@ -127,20 +127,13 @@ static NFmiMetTime CalcRandStartTime(const NFmiMetTime &theStartTime, double the
 	return aTime;
 }
 
-static NFmiLocation GetPacificFixedLocation(const NFmiLocation& theLocation, bool usePacificView)
-{
-	NFmiLocation loc(theLocation);
-	loc.SetLongitude(CtrlViewUtils::GetWantedLongitude(loc.GetLongitude(), usePacificView));
-	return loc;
-}
-
 static NFmiPoint CalcRandStartPoint(const NFmiPoint &theStartPoint, double theStartLocationRangeInKM, bool usePacificView)
 {
 	double rangeRandValue = theStartLocationRangeInKM * 1000. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku välillä 0 - 1
 	double dirRandValue = 360. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku välillä 0 - 1
 	NFmiLocation loc(theStartPoint);
 	loc.SetLocation(dirRandValue, rangeRandValue);
-	loc = ::GetPacificFixedLocation(loc, usePacificView);
+	loc = CtrlViewUtils::GetPacificFixedLocation(loc, usePacificView);
 	return loc.GetLocation();
 }
 
@@ -426,7 +419,7 @@ static NFmiLocation CalcNewLocation(const NFmiLocation &theCurrentLocation, doub
 		double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metreinä
 		double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pitää kääntää virtaus suunta 180 asteella
 		NFmiLocation newLocation(theCurrentLocation.GetLocation(dir, dist));
-		return ::GetPacificFixedLocation(newLocation, pacificView);
+		return CtrlViewUtils::GetPacificFixedLocation(newLocation, pacificView);
 }
 
 // Konversio w [mm/s] -> VER eli paineen muutokseksi [Pa/s]

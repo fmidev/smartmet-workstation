@@ -113,6 +113,12 @@ namespace CtrlViewUtils
         return value;
     }
 
+    NFmiLocation GetPacificFixedLocation(const NFmiLocation& theLocation, bool usePacificView)
+    {
+        NFmiLocation loc(theLocation);
+        loc.SetLongitude(GetWantedLongitude(loc.GetLongitude(), usePacificView));
+        return loc;
+    }
 
     std::string GetLongitudeMinuteStr(double lon, int decimals)
     {

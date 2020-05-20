@@ -17,7 +17,6 @@
 #include "GdiPlusLineInfo.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiFileSystem.h"
-#include "NFmiYKJArea.h"
 #include "CapDataSystem.h"
 #include "CapData.h"
 #include "WarningMember.h"
