@@ -338,7 +338,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(const AddParams::
     std::string gridArea;
     std::string levels;
 
-    gridArea = info->IsGrid() ? info->Area()->AreaStr() : "-";
+    gridArea = info->IsGrid() ? info->Area()->AreaFactoryStr() : "-";
     levels = (info->SizeLevels() == 1) ? "surface data" : std::to_string(info->SizeLevels());
 
     std::string str;
