@@ -171,7 +171,7 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 	os << itsUsedMapIndex << " " << itsUsedOverMapDibIndex << std::endl;
 
 	os << "// itsZoomedAreaStr" << std::endl;
-	os << itsZoomedAreaStr << std::endl;
+	os << itsAreaFactoryStr << std::endl;
 
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
@@ -180,6 +180,9 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 	// 'double' muotoisten lisädatojen lisäys
 	extraData.Add(itsUsedCombinedModeMapIndex); // talletetaan 1. extra-datana käytetty combined-mode karttaindeksi
 	extraData.Add(itsUsedCombinedModeOverMapDibIndex); // talletetaan 2. extra-datana käytetty combined-mode overlay-karttaindeksi
+
+	// 'string' muotoisten extradatojen lisäys
+	extraData.Add(itsAreaFactoryProjStr);
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -195,7 +198,7 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 {
 	is >> itsUsedMapIndex >> itsUsedOverMapDibIndex;
 
-	is >> itsZoomedAreaStr;
+	is >> itsAreaFactoryStr;
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Read failed");
@@ -212,6 +215,11 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 		itsUsedCombinedModeMapIndex = static_cast<int>(extraData.itsDoubleValues[0]); // luetaan 1. extra-datana combined-mode karttaindeksi
 	if(extraData.itsDoubleValues.size() >= 2)
 		itsUsedCombinedModeOverMapDibIndex = static_cast<int>(extraData.itsDoubleValues[1]); // luetaan 2. extra-datana combined-mode overlay karttaindeksi
+
+	// 'string' muotoisten lisädatojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
+	itsAreaFactoryProjStr = "";
+	if(extraData.itsStringValues.size() >= 1)
+		itsAreaFactoryProjStr = extraData.itsStringValues[0]; // luetaan 1. string extra-datana uusi Proj kirjasto pohjainen projektio+area stringi
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Read failed");
@@ -1311,7 +1319,8 @@ std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetVi
 		auto& combinedMapHandler = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetCombinedMapHandlerInterface();
 		tmpData.itsUsedCombinedModeMapIndex = combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
 		tmpData.itsUsedCombinedModeOverMapDibIndex = combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
-		tmpData.itsZoomedAreaStr = mapHandler.Area() ? mapHandler.Area()->AreaStr() : "";
+		tmpData.itsAreaFactoryStr = mapHandler.Area() ? mapHandler.Area()->AreaFactoryStr() : "";
+		tmpData.itsAreaFactoryProjStr = mapHandler.Area() ? mapHandler.Area()->AreaFactoryProjStr() : "";
 		helperList.push_back(tmpData);
 	}
 
@@ -1335,7 +1344,10 @@ void NFmiMapViewDescTop::SetViewMacroDipMapHelperList(const std::vector<NFmiMapV
 		combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeMapIndex);
 		combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeOverMapDibIndex);
 
-		mapHandler.Area(NFmiAreaFactory::Create(static_cast<char*>(tmpData.itsZoomedAreaStr)));
+		// Käytä uuden tyyppistä Proj-pohjaist area-stringiä, jos sellainen löytyi näyttömakrosta 
+		// (riippuu siitä millä smartmet versiolla makro on kirjoitettu)
+		auto usedAreaFactoryStr = tmpData.itsAreaFactoryProjStr.empty() ? std::string(tmpData.itsAreaFactoryStr) : tmpData.itsAreaFactoryProjStr;
+		mapHandler.Area(NFmiAreaFactory::Create(usedAreaFactoryStr));
 	}
 }
 
