@@ -4,7 +4,7 @@
 #include "source/rootData/RootDataCropper.h"
 #include "source/cache/CacheUtil.h"
 #include "source/newbaseUtil/AreaUtil.h"
-#include "NFmiDataMatrix.h"
+#include "CoordinateMatrix.h"
 #include "NFmiGrid.h"
 #include "NFmiArea.h"
 #include "NFmiPoint.h"
@@ -17,7 +17,7 @@ namespace SmartMetDataUtilities
         RootDataCache& rootCache_;
         MapViewId keys_;
         std::shared_ptr<NFmiArea> croppedArea_ = nullptr;
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> interpolatedMatrix_ = nullptr;
+        std::shared_ptr<Fmi::CoordinateMatrix> interpolatedMatrix_ = nullptr;
     public:
         CroppedInterpolation(NFmiGrid& grid, const NFmiArea& mapArea, RootDataCache& rootCache, MapViewId keys)
             :grid_(grid)
@@ -50,7 +50,7 @@ namespace SmartMetDataUtilities
         {
             return croppedArea_;
         }
-        virtual std::shared_ptr<NFmiDataMatrix<NFmiPoint>> getMatrix() override
+        virtual std::shared_ptr<Fmi::CoordinateMatrix> getMatrix() override
         {
             return interpolatedMatrix_;
         }

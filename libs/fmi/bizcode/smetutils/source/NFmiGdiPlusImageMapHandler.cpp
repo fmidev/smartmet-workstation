@@ -234,25 +234,10 @@ void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea
 			itsZoomedArea = boost::shared_ptr<NFmiArea>(newArea->Clone());
 		}
 		else
-		{ // pitää luoda newArea kulmia käyttäen uusi zoomattu alue original areaa käyttäen (näin smartmetin karttanäyttö ei mene sekaisin ja piirto mahdollisesti hidastu jos on käytetty skandi näyttömakroa euro smartmetissa)
-			string origAreaStr = itsOriginalArea->AreaStr();
-			string newAreaStr = newArea->AreaStr();
-			string::size_type pos1 = origAreaStr.find(":");
-			string::size_type pos2 = newAreaStr.find(":");
-			if(pos1 != string::npos && pos2 != string::npos)
-			{
-				string newZoomedAreaStr(origAreaStr.begin(), origAreaStr.begin()+pos1); // otetaan alkuosio (area-tyyppi) originaali areasta
-				newZoomedAreaStr += string(newAreaStr.begin()+pos2, newAreaStr.end()); // otetaan kulmapisteet uudesta alueesta
-				boost::shared_ptr<NFmiArea> tmpArea = NFmiAreaFactory::Create(newZoomedAreaStr);
-				if(tmpArea.get() == 0)
-					return ; // jokin meni pieleen, ei tehdä mitään
-				else
-				{
-					itsZoomedArea = tmpArea;
-				}
-			}
-			else
-				return ; // jokin meni pieleen, ei tehdä mitään
+		{ 
+			// pitää luoda newArea kulmia käyttäen uusi zoomattu alue original areaa käyttäen, 
+			// näin smartmetin karttanäyttö ei mene sekaisin ja piirto mahdollisesti hidastu jos on käytetty skandi näyttömakroa euro smartmetissa.
+			itsZoomedArea.reset(itsOriginalArea->CreateNewArea(newArea->BottomLeftLatLon(), newArea->TopRightLatLon()));
 		}
 		CalcZoomedAreaPosition();
         SetMakeNewBackgroundBitmap(true);

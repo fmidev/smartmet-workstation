@@ -6,7 +6,6 @@
 #include "source/cache/RootDataCache.h"
 #include "source//newbaseUtil/AreaUtil.h"
 
-#include "NFmiDataMatrix.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiAreaFactory.h"
@@ -109,7 +108,7 @@ namespace SmartMetDataUtilities
         throw ToolmasterNotAvailable("Check if modified data drawing is possible before calling getInterpolatedData.");
     }
 
-    shared_ptr<NFmiDataMatrix<NFmiPoint>> DataUtilitiesSingleton::getInterpolatedData() const
+    shared_ptr<Fmi::CoordinateMatrix> DataUtilitiesSingleton::getInterpolatedData() const
     {
         if(modifiedDataDrawingPossible_)
         {

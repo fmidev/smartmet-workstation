@@ -95,7 +95,6 @@
 #include "FmiOperationProgressDlg.h"
 #include "SmartMetToolboxDep_resource.h"
 #include "NFmiBasicSmartMetConfigurations.h"
-#include "NFmiLatLonArea.h"
 #include "NFmiCPManagerSet.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiConceptualDataView.h"
@@ -138,6 +137,7 @@
 #include "NFmiColorContourLegendSettings.h"
 #include "NFmiCombinedMapHandler.h"
 #include "NFmiFastDrawParamList.h"
+#include "NFmiAreaTools.h"
 
 #include "AnimationProfiler.h"
 
@@ -2130,7 +2130,6 @@ void NormalizeGridDataArea(NFmiQueryData* theData)
 		if(theData->Info()->Grid()->Area()->Width() != 1 || theData->Info()->Grid()->Area()->Height() != 1)
 		{ // tehdään kuitenkin säädöt vain jos leveys/korkeus poikkeaa 1:stä (varmuuden vuoksi)
 			theData->Info()->Grid()->Area()->Size(NFmiPoint(1,1));
-			theData->Info()->Grid()->Area()->Init();
 		}
 	}
 }
@@ -4851,9 +4850,9 @@ bool MakeGridFile(const NFmiString& theFileName)
 		{
 			NFmiDataMatrix<float> dMatrix;
 			if(info->DataType() == NFmiInfoData::kStationary)
-				info->Values(dMatrix);
+				dMatrix = info->Values();
 			else
-				info->Values(dMatrix, itsActiveViewTime);
+				dMatrix = info->Values(itsActiveViewTime);
 			NFmiString fileName(itsBasicConfigurations.WorkingDirectory());
 			fileName += "\\";
 			fileName += theFileName;
@@ -6818,7 +6817,7 @@ boost::shared_ptr<NFmiArea> MakeCPCropArea(boost::shared_ptr<NFmiFastQueryInfo> 
 	unsigned long topRightLocationIndex = FmiRound((y2 - (shrinkY * theShrinkFactor)) * gridSizeX + (x2 - (shrinkX * theShrinkFactor)));
 	theInfo->LocationIndex(topRightLocationIndex);
 	NFmiPoint topRightLatlon = theInfo->LatLon();
-	return boost::shared_ptr<NFmiArea>(new NFmiLatLonArea(bottomLeftLatlon, topRightLatlon));
+	return boost::shared_ptr<NFmiArea>(NFmiAreaTools::CreateLegacyLatLonArea(bottomLeftLatlon, topRightLatlon));
 }
 
 void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned int theDescTopIndex)
@@ -7645,19 +7644,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// report here
 			int dataCount = itsSmartInfoOrganizer->CountData();
 			double dataSize = itsSmartInfoOrganizer->CountDataSize();
-			int qDataConstructors = NFmiQueryData::itsConstructorCalls;
-			int qDatadestructors = NFmiQueryData::itsDestructorCalls;
 			std::string logStr("SmartMet has ");
 			logStr += NFmiStringTools::Convert(dataCount);
 			logStr += " queryData objects, size ";
 			logStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(dataSize/(1024.*1024.), 1);
-			logStr += " MB. (constr. ";
-			logStr += NFmiStringTools::Convert(qDataConstructors);
-			logStr += " - destr. ";
-			logStr += NFmiStringTools::Convert(qDatadestructors);
-			logStr += " = ";
-			logStr += NFmiStringTools::Convert(qDataConstructors - qDatadestructors);
-			logStr += ") + mod-drawp count ";
+			logStr += " MB. Modified drawparam count ";
 			logStr += NFmiStringTools::Convert(GetCombinedMapHandler()->getModifiedPropertiesDrawParamList()->Size());
 			logStr += ")";
 			LogMessage(logStr, CatLog::Severity::Info, CatLog::Category::Operational);

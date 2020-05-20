@@ -30,6 +30,7 @@ namespace CtrlViewUtils
 
    bool IsPacificLongitude(double theLongitude);
    double GetWantedLongitude(double theLongitude, bool fPacificView);
+   NFmiLocation GetPacificFixedLocation(const NFmiLocation& theLocation, bool usePacificView);
 
    template<class T>
    static void RemoveNthElementFromVector(T &theVector, int theRemovedItemIndex)

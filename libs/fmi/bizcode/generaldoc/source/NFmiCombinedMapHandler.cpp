@@ -97,7 +97,7 @@ namespace
 		{
 			if(area->ClassId() == kNFmiLatLonArea)
 			{
-				if(area->PacificView())
+				if(area->PacificView_legacy())
 				{
 					if(area->BottomLeftLatLon() == NFmiPoint(0, -90) && area->TopRightLatLon() == NFmiPoint(360, 90))
 						return true;
@@ -1078,7 +1078,7 @@ void NFmiCombinedMapHandler::doCutBorderDrawInitialization()
 			boost::shared_ptr<Imagine::NFmiPath> cutPath;
 			boost::shared_ptr<NFmiArea> totalMapArea = mapHandler->TotalArea();
 			bool totalWorldArea = ::isTotalWorld(totalMapArea);
-			if(totalMapArea->PacificView())
+			if(totalMapArea->PacificView_legacy())
 			{
 				if(totalWorldArea)
 					cutPath = pacificLandBorderPath_;

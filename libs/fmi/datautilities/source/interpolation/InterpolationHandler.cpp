@@ -41,7 +41,7 @@ namespace SmartMetDataUtilities
         return croppedArea_;
     }
 
-    shared_ptr<NFmiDataMatrix<NFmiPoint>> InterpolationHandler::getInterpolatedMatrix()
+    shared_ptr<Fmi::CoordinateMatrix> InterpolationHandler::getInterpolatedMatrix()
     {
         return interpolatedMatrix_;
     }

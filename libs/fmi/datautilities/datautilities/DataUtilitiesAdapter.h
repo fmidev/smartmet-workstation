@@ -14,8 +14,10 @@ class NFmiArea;
 class NFmiFastQueryInfo;
 class NFmiPoint;
 class NFmiGrid;
-template <typename A>
-class NFmiDataMatrix;
+namespace Fmi
+{
+    class CoordinateMatrix;
+}
 
 namespace SmartMetDataUtilities
 {
@@ -37,7 +39,7 @@ namespace SmartMetDataUtilities
         bool isModifiedDataDrawingPossible();
         bool isThereAnythingToDraw();
         std::shared_ptr<NFmiArea> getCroppedArea();
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> getInterpolatedData();
+        std::shared_ptr<Fmi::CoordinateMatrix> getInterpolatedData();
 
         // only for testing
         inline std::shared_ptr<NFmiGrid> getRootGrid() const;
@@ -102,7 +104,7 @@ namespace SmartMetDataUtilities
     }
 
     template<typename InterpolatorType>
-    std::shared_ptr<NFmiDataMatrix<NFmiPoint>> DataUtilitiesAdapter<InterpolatorType>::getInterpolatedData()
+    std::shared_ptr<Fmi::CoordinateMatrix> DataUtilitiesAdapter<InterpolatorType>::getInterpolatedData()
     {
         if(toolmasterAvailable())
         {

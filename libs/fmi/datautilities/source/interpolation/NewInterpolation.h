@@ -6,7 +6,7 @@
 #include "source/cache/RootDataCache.h"
 #include "source/error/Error.h"
 #include "source/cache/CacheUtil.h"
-#include "NFmiDataMatrix.h"
+#include "CoordinateMatrix.h"
 #include "NFmiGrid.h"
 #include "NFmiArea.h"
 #include "NFmiPoint.h"
@@ -17,14 +17,14 @@ namespace SmartMetDataUtilities
 {
     namespace
     {
-        void populateMatrixFromGrid(std::shared_ptr<NFmiDataMatrix<NFmiPoint>> matrixToPopulate, std::shared_ptr<NFmiGrid> interpolatedGrid)
+        void populateMatrixFromGrid(std::shared_ptr<Fmi::CoordinateMatrix> matrixToPopulate, std::shared_ptr<NFmiGrid> interpolatedGrid)
         {
             interpolatedGrid->First();
             for(size_t j = 0; j != interpolatedGrid->YNumber(); ++j)
             {
                 for(size_t i = 0; i != interpolatedGrid->XNumber(); ++i)
                 {
-                    (*matrixToPopulate)[i][j] = interpolatedGrid->LatLon();
+                    matrixToPopulate->set(i, j, interpolatedGrid->LatLon());
                     interpolatedGrid->Next();
                 }
             }
@@ -38,7 +38,7 @@ namespace SmartMetDataUtilities
         RootDataCache& rootCache_;
         MapViewId keys_;
         std::shared_ptr<NFmiArea> croppedArea_ = nullptr;
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> interpolatedMatrix_ = nullptr;
+        std::shared_ptr<Fmi::CoordinateMatrix> interpolatedMatrix_ = nullptr;
     public:
         NewInterpolation(NFmiGrid& grid, const NFmiArea& mapArea, RootDataCache& rootCache, MapViewId keys)
             :grid_(grid)
@@ -58,24 +58,24 @@ namespace SmartMetDataUtilities
         {
             return croppedArea_;
         }
-        virtual std::shared_ptr<NFmiDataMatrix<NFmiPoint>> getMatrix() override
+        virtual std::shared_ptr<Fmi::CoordinateMatrix> getMatrix() override
         {
             return interpolatedMatrix_;
         }
     private:
-        std::shared_ptr<NFmiDataMatrix<NFmiPoint>> calculateInterpolatedMatrix()
+        std::shared_ptr<Fmi::CoordinateMatrix> calculateInterpolatedMatrix()
         {
             InterpolationOptimalDimensions optimalDimensions(grid_, *croppedArea_);
             auto optimalWidth = optimalDimensions.getWidth();
             auto optimalHeight = optimalDimensions.getHeight();
-            auto matrixToPopulate = std::make_shared<NFmiDataMatrix<NFmiPoint>>(optimalWidth, optimalHeight);
+            auto matrixToPopulate = std::make_shared<Fmi::CoordinateMatrix>(optimalWidth, optimalHeight);
             auto interpolatedGrid = std::make_shared<NFmiGrid>(croppedArea_.get(), optimalWidth, optimalHeight);
             populateMatrixFromGrid(matrixToPopulate, interpolatedGrid);
             replaceOldRootDataIfNewDataSpansLargerArea(matrixToPopulate, interpolatedGrid);
             return matrixToPopulate;
         }
 
-        void replaceOldRootDataIfNewDataSpansLargerArea(std::shared_ptr<NFmiDataMatrix<NFmiPoint>> matrix, std::shared_ptr<NFmiGrid> grid)
+        void replaceOldRootDataIfNewDataSpansLargerArea(std::shared_ptr<Fmi::CoordinateMatrix> matrix, std::shared_ptr<NFmiGrid> grid)
         {
             auto keys = CacheUtil::createKeys<RootDataCache>(keys_, *croppedArea_, grid_);
             auto originalMapArea = std::shared_ptr<NFmiArea>(AreaUtil::createCopyOf(mapArea_));

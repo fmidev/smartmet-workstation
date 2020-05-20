@@ -48,7 +48,6 @@
 #include "NFmiDataHints.h"
 #include "NFmiContourTree.h"
 #include "NFmiPolyline.h"
-#include "NFmiStereographicArea.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiGridPointCache.h"
 #include "NFmiMilliSecondTimer.h"
@@ -64,6 +63,7 @@
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
 #include "SpecialDesctopIndex.h"
+#include "CtrlViewFunctions.h"
 
 #include "datautilities\DataUtilitiesAdapter.h"
 #include "NFmiApplicationWinRegistry.h"
@@ -742,7 +742,7 @@ static bool IsDataInView(const boost::shared_ptr<NFmiArea> &theDataArea, const b
 bool NFmiIsoLineView::DifferentWorldViews(const NFmiArea *area1, const NFmiArea * area2)
 {
     if(area1 && area2)
-        return area1->PacificView() ^ area2->PacificView();
+        return area1->PacificView_legacy() ^ area2->PacificView_legacy();
     else
         return false;
 }
@@ -1418,27 +1418,55 @@ struct PointerDestroyer
     }
 };
 
-static void CalcLocationsXYMatrix(NFmiDataMatrix<NFmiPoint> & theMatrix, const NFmiArea & theArea, int nx, int ny)
+static unsigned long CalculateGridIndex(size_t xIndex, size_t yIndex, size_t xSize)
 {
-    theMatrix.Resize(nx, ny, NFmiPoint(kFloatMissing, kFloatMissing));
-    NFmiGrid aGrid(&theArea, nx, ny);
-
-    for(int j = 0; j < ny; j++)
-        for(int i = 0; i < nx; i++)
-            theMatrix[i][j] = theArea.ToXY(aGrid.LatLon(j*nx + i));
+    return static_cast<unsigned long>(yIndex * xSize + xIndex);
 }
 
-static void LocationsXYForArchiveData(NFmiDataMatrix<NFmiPoint> & theMatrix, const NFmiArea & theArea, size_t xnum, size_t ynum)
+static Fmi::CoordinateMatrix CalcLocationsXYMatrix(const NFmiArea & theArea, size_t xnum, size_t ynum)
 {
     NFmiGrid grid(&theArea, static_cast<unsigned long>(xnum), static_cast<unsigned long>(ynum));
-
-    theMatrix.Resize(xnum, ynum, NFmiPoint(kFloatMissing, kFloatMissing));
+    Fmi::CoordinateMatrix coordinateMatrix(xnum, ynum);
 
     for(size_t j = 0; j < ynum; j++)
+    {
         for(size_t i = 0; i < xnum; i++)
-            theMatrix[i][j] = theArea.ToXY(grid.LatLon(static_cast<unsigned long>(j*xnum + i)));
+        {
+            coordinateMatrix.set(i, j, theArea.ToXY(grid.LatLon(::CalculateGridIndex(i, j, xnum))));
+        }
+    }
+    return coordinateMatrix;
 }
 
+static Fmi::CoordinateMatrix LocationsXYForArchiveData(const NFmiArea & theArea, size_t xnum, size_t ynum)
+{
+    NFmiGrid grid(&theArea, static_cast<unsigned long>(xnum), static_cast<unsigned long>(ynum));
+    Fmi::CoordinateMatrix coordinateMatrix(xnum, ynum);
+
+    for(size_t j = 0; j < ynum; j++)
+    {
+        for(size_t i = 0; i < xnum; i++)
+        {
+            coordinateMatrix.set(i, j, grid.LatLon(::CalculateGridIndex(i, j, xnum)));
+        }
+    }
+    return coordinateMatrix;
+}
+
+static NFmiDataMatrix<NFmiPoint> ConvertCoordinateMatrixToDataMatrixPoint(const Fmi::CoordinateMatrix& coordinateMatrix)
+{
+    auto xnum = coordinateMatrix.width();
+    auto ynum = coordinateMatrix.height();
+    NFmiDataMatrix<NFmiPoint> dataMatrix(xnum, ynum);
+    for(auto j = 0ull; j < ynum; j++)
+    {
+        for(auto i = 0ull; i < xnum; i++)
+        {
+            dataMatrix[i][j] = NFmiPoint(coordinateMatrix.x(i, j), coordinateMatrix.y(i, j));
+        }
+    }
+    return dataMatrix;
+}
 
 void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
 {
@@ -1495,7 +1523,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     NFmiGridPointCache::Data coordData;
 
     coordData.itsOffSet = itsArea->TopLeft();
-    NFmiDataMatrix<NFmiPoint> *usedCoordinatesPtr = 0;
+    Fmi::CoordinateMatrix *usedCoordinatesPtr = 0;
     NFmiPoint usedOffset; // pit‰‰ laskea mik‰ on k‰ytetty offsetti, kun contoureja aletaan piirt‰m‰‰n
     string gridCacheStr = itsInfo->Grid() ? NFmiGridPointCache::MakeGridCacheStr(*itsInfo->Grid()) : "";
     if(fGetCurrentDataFromQ2Server)
@@ -1510,9 +1538,9 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     else if(itsInfo->Grid())
     { // jos ei lˆytynyt, lasketaan koordinaatit ja laitetaan ne cacheen talteen
         if(fGetCurrentDataFromQ2Server == false)
-            itsInfo->LocationsXY(coordData.itsPoints, *itsArea); // otetaan koordinaatit t‰m‰n ruudun arealla, jossa on XYRect kohdallaan
+            coordData.itsPoints = itsInfo->LocationsXY(*itsArea); // otetaan koordinaatit t‰m‰n ruudun arealla, jossa on XYRect kohdallaan
         else
-            ::LocationsXYForArchiveData(coordData.itsPoints, *itsArea, values.NX(), values.NY());
+            coordData.itsPoints = ::LocationsXYForArchiveData(*itsArea, values.NX(), values.NY());
 
         gridPointCache.Add(gridCacheStr, coordData);
         usedCoordinatesPtr = &coordData.itsPoints;
@@ -1520,29 +1548,30 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     }
     else // asema datasta lasketaan hilattua dataa
     { // pit‰‰ laskea hila viel‰ t‰ss‰
-        ::CalcLocationsXYMatrix(coordData.itsPoints, *itsArea, static_cast<int>(values.NX()), static_cast<int>(values.NY())); // otetaan koordinaatit t‰m‰n ruudun arealla, jossa on XYRect kohdallaan
+        coordData.itsPoints = ::CalcLocationsXYMatrix(*itsArea, static_cast<int>(values.NX()), static_cast<int>(values.NY())); // otetaan koordinaatit t‰m‰n ruudun arealla, jossa on XYRect kohdallaan
         usedCoordinatesPtr = &coordData.itsPoints;
         usedOffset = NFmiPoint(0, 0); // kun kyse on 'originaali' hila pisteist‰, offset on (0, 0)
     }
 
+    auto coordinatesInDataMatrix = ::ConvertCoordinateMatrixToDataMatrixPoint(*usedCoordinatesPtr);
     if(isoLineData.itsHatch1.fUseHatch)
-        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch1, values, *usedCoordinatesPtr, helper, usedOffset);
+        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch1, values, coordinatesInDataMatrix, helper, usedOffset);
     if(isoLineData.itsHatch2.fUseHatch)
-        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch2, values, *usedCoordinatesPtr, helper, usedOffset);
+        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch2, values, coordinatesInDataMatrix, helper, usedOffset);
 
     if(isoLineData.fUseIsoLines)
     {
         if(!isoLineData.fUseCustomIsoLineClasses) // piirret‰‰n tasa v‰liset isoviivat
-            DrawSimpleIsoLinesWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawSimpleIsoLinesWithImagine(isoLineData, values, coordinatesInDataMatrix, helper, usedOffset);
         else
-            DrawCustomIsoLinesWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawCustomIsoLinesWithImagine(isoLineData, values, coordinatesInDataMatrix, helper, usedOffset);
     }
     else
     {
         if(isoLineData.fUseCustomColorContoursClasses) // piirret‰‰n tasa v‰liset isoviivat
-            DrawCustomColorContourWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawCustomColorContourWithImagine(isoLineData, values, coordinatesInDataMatrix, helper, usedOffset);
         else
-            DrawSimpleColorContourWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawSimpleColorContourWithImagine(isoLineData, values, coordinatesInDataMatrix, helper, usedOffset);
     }
 
     RestoreUpDifferenceDrawing(itsDrawParam);
@@ -1577,7 +1606,7 @@ static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiI
         NFmiDataMatrix<NFmiPoint> *usedLatlonMatrix = nullptr;
         size_t xSize = theIsoLineData.itsInfo->GridXNumber();
         size_t ySize = theIsoLineData.itsInfo->GridYNumber();
-        std::string latlonMatrixKey = theIsoLineData.itsInfo->Area()->AreaStr() + "-" + NFmiStringTools::Convert(xSize) + "x" + NFmiStringTools::Convert(ySize);
+        std::string latlonMatrixKey = theIsoLineData.itsInfo->Area()->AreaFactoryStr() + "-" + NFmiStringTools::Convert(xSize) + "x" + NFmiStringTools::Convert(ySize);
         auto latlonCacheIter = g_LatlonMatrixCache.find(latlonMatrixKey);
         if(latlonCacheIter == g_LatlonMatrixCache.end())
         {
@@ -1596,7 +1625,7 @@ static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiI
         {
             tree.Contour(*usedLatlonMatrix, theValues, theHelper, Imagine::NFmiContourTree::kFmiContourLinear);
             Imagine::NFmiPath path = tree.Path();
-            Imagine::NFmiPath path2 = path.PacificView(theMapArea->PacificView());
+            Imagine::NFmiPath path2 = path.PacificView(theMapArea->PacificView_legacy());
             path2.Project(theMapArea.get());
             return path2;
         }
@@ -2299,8 +2328,7 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
             isoLineData.itsTime = this->itsTime; // T‰h‰n pistet‰‰n kartalla oleva aika
             // Mutta pit‰‰ varmistaa ett‰ data interpoloidaan oikealta ajalta myˆs klimatologisilta datoilta (kuten Era-5, tms.)
             auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
-
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+            isoLineData.itsIsolineData = itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
             fillGridDataStatus = initializeIsoLineData(isoLineData);
             zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(mapArea.get());
@@ -2335,14 +2363,11 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
                 NFmiPoint blLatlon = origDataAreaClone->BottomLeftLatLon();
                 NFmiPoint trLatlon = origDataAreaClone->TopRightLatLon();
                 double origLongitudeDifference = trLatlon.X() - blLatlon.X();
-                NFmiLongitude lonFixer(blLatlon.X(), mapArea->PacificView());
-                blLatlon.X(lonFixer.Value());
-                lonFixer.SetValue(trLatlon.X());
-                trLatlon.X(lonFixer.Value());
+                blLatlon.X(CtrlViewUtils::GetWantedLongitude(blLatlon.X(), mapArea->PacificView_legacy()));
+                trLatlon.X(CtrlViewUtils::GetWantedLongitude(trLatlon.X(), mapArea->PacificView_legacy()));
                 double newLongitudeDifference = trLatlon.X() - blLatlon.X();
                 if(newLongitudeDifference < 0 || ::fabs(origLongitudeDifference - newLongitudeDifference) > 0.1)
                     trLatlon.X(blLatlon.X() + origLongitudeDifference);
-                origDataAreaClone->PacificView(mapArea->PacificView());
                 boost::shared_ptr<NFmiArea> newArea(origDataAreaClone->NewArea(blLatlon, trLatlon));
                 zoomedAreaRect = newArea->XYArea(mapArea.get());
             }

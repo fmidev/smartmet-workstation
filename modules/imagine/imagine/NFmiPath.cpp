@@ -462,7 +462,7 @@ void NFmiPath::Project(const NFmiArea *const theArea)
   if (!theArea) return;
 
   bool path_is_pacific = IsPacificView();
-  bool area_is_pacific = theArea->PacificView();
+  bool area_is_pacific = theArea->PacificView_legacy();
 
   if (path_is_pacific && !area_is_pacific)
   {

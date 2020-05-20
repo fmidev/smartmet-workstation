@@ -156,9 +156,9 @@ NFmiDataMatrix<float> NFmiControlPointObservationBlender::CalcChangeField(const 
 {
     NFmiDataMatrix<float> changeField;
     if(fUseGridCrop)
-        itsInfo->CroppedValues(changeField, boost::math::iround(itsCPGridCropRect.Left()), boost::math::iround(itsCPGridCropRect.Top()), boost::math::iround(itsCPGridCropRect.Right()), boost::math::iround(itsCPGridCropRect.Bottom()));
+        changeField = itsInfo->CroppedValues(boost::math::iround(itsCPGridCropRect.Left()), boost::math::iround(itsCPGridCropRect.Top()), boost::math::iround(itsCPGridCropRect.Right()), boost::math::iround(itsCPGridCropRect.Bottom()));
     else
-        itsInfo->Values(changeField); // otetaan originaali kentt‰ changeField:iin
+        changeField = itsInfo->Values(); // otetaan originaali kentt‰ changeField:iin
     changeField -= analysisField; // matriisi laskuoperaatiot ottavat huomioon puuttuvat arvot
 
     // Zoomed crop tapauksessa pit‰‰ muutos liu'uttaa nolliin kohti zoomatubn alueen reunoja

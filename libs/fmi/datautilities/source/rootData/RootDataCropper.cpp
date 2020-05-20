@@ -1,6 +1,6 @@
 #include "source/rootData/RootDataCropper.h"
 
-#include "NFmiDataMatrix.h"
+#include "CoordinateMatrix.h"
 #include "NFmiPoint.h"
 #include "NFmiArea.h"
 
@@ -15,7 +15,7 @@ namespace SmartMetDataUtilities
     {
     }
 
-    unique_ptr<NFmiDataMatrix<NFmiPoint>> RootDataCropper::getCroppedRootMatrix()
+    unique_ptr<Fmi::CoordinateMatrix> RootDataCropper::getCroppedRootMatrix()
     {
         if(!croppedRootData_)
         {
@@ -40,16 +40,16 @@ namespace SmartMetDataUtilities
         croppedRootArea_ = cropRootArea();
     }
 
-    unique_ptr<NFmiDataMatrix<NFmiPoint>> RootDataCropper::cropRootMatrix() const
+    unique_ptr<Fmi::CoordinateMatrix> RootDataCropper::cropRootMatrix() const
     {
         auto rootMatrix = rootData_.getMatrix();
-        auto matrixToPopulate = make_unique<NFmiDataMatrix<NFmiPoint>>(cellsToCopy_.width(), cellsToCopy_.height());
+        auto matrixToPopulate = make_unique<Fmi::CoordinateMatrix>(cellsToCopy_.width(), cellsToCopy_.height());
 
         for(size_t j = cellsToCopy_.getFirstRow(), j1 = 0; j <= cellsToCopy_.getLastRow(); ++j, ++j1)
         {
             for(size_t i = cellsToCopy_.getFirstColumn(), i1 = 0; i <= cellsToCopy_.getLastColumn(); ++i, ++i1)
             {
-                (*matrixToPopulate)[i1][j1] = (*rootMatrix)[i][j];
+                matrixToPopulate->set(i1, j1, (*rootMatrix)(i1, j1));
             }
         }
         return matrixToPopulate;
@@ -57,10 +57,10 @@ namespace SmartMetDataUtilities
 
     unique_ptr<NFmiArea> RootDataCropper::cropRootArea() const
     {
-        auto lastRow = croppedRootData_->NY() - 1;
-        auto lastColumn = croppedRootData_->NX() - 1;
-        auto bottomLeftLatLon = (*croppedRootData_)[0][0];
-        auto topRightLatLon = (*croppedRootData_)[lastColumn][lastRow];
+        auto lastRow = croppedRootData_->height() - 1;
+        auto lastColumn = croppedRootData_->width() - 1;
+        auto bottomLeftLatLon = (*croppedRootData_)(0, 0);
+        auto topRightLatLon = (*croppedRootData_)(lastColumn, lastRow);
         return  unique_ptr<NFmiArea>(mapArea_.CreateNewArea(bottomLeftLatLon, topRightLatLon));
     }
 }

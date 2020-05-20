@@ -33,7 +33,6 @@
 #include "NFmiMacroParamSystem.h"
 #include "NFmiMacroParam.h"
 #include "NFmiTimeList.h"
-#include "NFmiLatLonArea.h"
 #include "MultiProcessClientData.h"
 #include "NFmiExtraMacroParamData.h"
 #include "CtrlViewFunctions.h"
@@ -2711,7 +2710,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
             ::LogMessage(theAdapter, smartToolModifier.LastExceptionMessageFromThreads(), CatLog::Severity::Error, CatLog::Category::Editing);
 
 		theUsedMacroInfoOut->First(); // asetetaan varmuuden vuoksi First:iin
-		theUsedMacroInfoOut->Values(theValues);
+		theValues = theUsedMacroInfoOut->Values();
         if(!smartToolModifier.CalculationPoints().empty())
             theUseCalculationPoints = true;
         if(possibleExtraMacroParamData)

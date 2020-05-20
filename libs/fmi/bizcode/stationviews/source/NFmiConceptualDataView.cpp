@@ -26,6 +26,7 @@
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiValueString.h"
 #include "NFmiMacroParamfunctions.h"
+#include "NFmiInterpolation.h"
 #include "catlog/catlog.h"
 
 #include <gdiplus.h>
