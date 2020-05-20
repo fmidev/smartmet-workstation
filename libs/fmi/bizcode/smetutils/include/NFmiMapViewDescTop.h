@@ -65,7 +65,13 @@ public:
 		int itsUsedOverMapDibIndex = -1;
 		int itsUsedCombinedModeMapIndex = 0;
 		int itsUsedCombinedModeOverMapDibIndex = -1;
-		NFmiString itsZoomedAreaStr;
+		// Tähän luetaan vanhoista näyttömakroista pre-wgs84 newbase:n NFmiArea::AreaStr metodin arvo (esim. stereographic,20,90,60:6,51.3,49,70.2).
+		// Uudessa newbasessa tähän käytetään uutta NFmiArea::AreaFactoryStr metodia.
+		NFmiString itsAreaFactoryStr;
+		// Tähän talletetaan uusi Proj-kirjaston pohjainen projektio+area string, joka tehdään NFmiArea::AreaFactoryProjStr metodilla.
+		// Tämä arvo talletetaan NFmiExtraDataStorage:n listoihin. Vanhat SmartMetit ignooraavat siis tämän, mutta jos tähän löytyy arvo,
+		// sitä käytetään uudessa uuden NFmiArea olion luontiin, mutta jos tämä tyhjä, käytetään itsAreaFactoryStr:ia sitten.
+		std::string itsAreaFactoryProjStr;
 	};
 
 
