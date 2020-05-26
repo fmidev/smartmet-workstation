@@ -3431,7 +3431,7 @@ std::string MapAreaInfo(NFmiMapViewDescTop *mapViewDecsTop)
         if(zoomedArea)
         {
             const std::string usedEndLineStr = "\r\n";
-            std::string areaInfoStr = zoomedArea->AreaStr();
+            std::string areaInfoStr = zoomedArea->AreaFactoryStr();
 
             areaInfoStr += usedEndLineStr + "Original map's total area size in pixels:";
             NFmiRect totalAreaInPixels = mapViewDecsTop->MapHandler()->TotalAbsolutRect();
