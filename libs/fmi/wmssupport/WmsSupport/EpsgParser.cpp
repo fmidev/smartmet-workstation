@@ -2,6 +2,7 @@
 
 #include <NFmiArea.h>
 #include <NFmiSaveBaseFactory.h>
+#include <gis/ProjInfo.h>
 #include <boost/math/special_functions/round.hpp>
 #include <cpprest/asyncrt_utils.h>
 #undef U // This fixes cpprest's U -macro clash with boost library move code (really dangerous to give macro name like U !!!!)
@@ -14,7 +15,7 @@ namespace Wms
     {
         int getOrientationOf(const NFmiArea& area)
         {
-            auto optional_lon_0 = area.Proj().GetDouble("lon_0");
+            auto optional_lon_0 = area.ProjInfo().getDouble("lon_0");
             return boost::math::iround(optional_lon_0.value());
         }
     }
