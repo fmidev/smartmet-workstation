@@ -210,7 +210,7 @@ set(
 
 set(
     GDAL_LIBS
-    gdal_i.lib proj.lib
+    gdal_i.lib proj.lib geos.lib
     CACHE INTERNAL "" FORCE
     )
 
