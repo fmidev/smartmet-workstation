@@ -152,3 +152,25 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     ${CRASHRPT_BASE_DIR}/bin/crashrpt_lang.ini
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)
     )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${GDAL_BIN_DIR}/expat.dll
+    ${GDAL_BIN_DIR}/freexl.dll
+    ${GDAL_BIN_DIR}/gdal300.dll
+    ${GDAL_BIN_DIR}/geos.dll
+    ${GDAL_BIN_DIR}/geos_c.dll
+    ${GDAL_BIN_DIR}/iconv.dll
+    ${GDAL_BIN_DIR}/libcurl.dll
+    ${GDAL_BIN_DIR}/libmysql.dll
+    ${GDAL_BIN_DIR}/libpq.dll
+    ${GDAL_BIN_DIR}/libxml2.dll
+    ${GDAL_BIN_DIR}/openjp2.dll
+    ${GDAL_BIN_DIR}/proj.dll
+    ${GDAL_BIN_DIR}/proj_6_1.dll
+    ${GDAL_BIN_DIR}/spatialite.dll
+    ${GDAL_BIN_DIR}/sqlite3.dll
+    ${GDAL_BIN_DIR}/xerces-c_3_2.dll
+    ${GDAL_BIN_DIR}/zlib1.dll
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)
+    )
