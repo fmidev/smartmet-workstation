@@ -36,7 +36,6 @@
 #include "WindStoryTools.h"
 
 #include <newbase/NFmiCombinedParam.h>
-#include <newbase/NFmiMercatorArea.h>
 
 #include <macgyver/StringConversion.h>
 #include <boost/lexical_cast.hpp>
