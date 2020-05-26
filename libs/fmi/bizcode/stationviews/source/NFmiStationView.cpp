@@ -312,20 +312,20 @@ bool NFmiStationView::IsParamDrawn()
         return true;
 }
 
-void NFmiStationView::Draw(NFmiToolBox *theGTB)
+void NFmiStationView::Draw(NFmiToolBox* theGTB)
 {
-    if(!IsParamDrawn())
-    {
-        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("NFmiStationView doesn't draw anything, param was hidden", this);
-        return;
-    }
+	if(!IsParamDrawn())
+	{
+		CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("NFmiStationView doesn't draw anything, param was hidden", this);
+		return;
+	}
 
-    CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
-    fUseMacroParamSpecialCalculations = false;
+	fUseMacroParamSpecialCalculations = false;
 	fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehdään kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan päälle
 	if(!theGTB)
-		return ;
+		return;
 
 	itsToolBox = theGTB;
 
@@ -336,30 +336,26 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 		return; // Muuta ei saakaan sitten tehdä
 	}
 
-    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
-    
+	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
+
 	SetupUsedDrawParam();
 
 	MakeDrawedInfoVector();
-	itsInfoVectorIter = itsInfoVector.begin();
-	if(itsInfoVectorIter != itsInfoVector.end())
+	for(auto &fastInfo : itsInfoVector)
 	{
-		for( ; itsInfoVectorIter != itsInfoVector.end(); ++itsInfoVectorIter)
-		{
-			SetMapViewSettings(*itsInfoVectorIter);
-			CalculateGeneralStationRect();
-			FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
+		SetMapViewSettings(fastInfo);
+		CalculateGeneralStationRect();
+		FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
 
-			ModifyTextEnvironment();
-            if(!PrepareForStationDraw())
-                continue;
-            DrawSymbols();
-            DrawObsComparison(); // vertailut havaintoihin piirretään vaikka data on piilossa
+		ModifyTextEnvironment();
+		if(!PrepareForStationDraw())
+			continue;
+		DrawSymbols();
+		DrawObsComparison(); // vertailut havaintoihin piirretään vaikka data on piilossa
 
-			itsDrawingEnvironment->SetFontType(oldFont);
-			fDoTimeInterpolation = false;
-			itsInfo = boost::shared_ptr<NFmiFastQueryInfo>(); // nollataan lopuksi itsInfo-pointteri
-		}
+		itsDrawingEnvironment->SetFontType(oldFont);
+		fDoTimeInterpolation = false;
+		itsInfo = boost::shared_ptr<NFmiFastQueryInfo>(); // nollataan lopuksi itsInfo-pointteri
 	}
 }
 
@@ -2474,6 +2470,8 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 	itsInfo = theUsedInfo;
 	if(itsInfo == 0)
 		return ;
+	// Varmistetaan että osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
+	itsInfo->FirstLocation();
 	FmiProducerName prod = static_cast<FmiProducerName>(itsInfo->Producer()->GetIdent());
 	if(itsInfo->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY))
 		fDoShipDataLocations = true;
