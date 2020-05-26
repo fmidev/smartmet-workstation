@@ -9,14 +9,14 @@ master=$(cat ./branches/master_branch)
 
 # First gis
 cd ../../github_modules/smartmet-library-gis
-git checkout $dev && git merge --no-edit --no-ff origin $master
+git checkout $master && git pull && git checkout $dev && git merge --no-edit --no-ff $master
 
 # Second newbase
 cd ../../github_modules/smartmet-library-newbase
-git checkout $dev && git merge --no-edit --no-ff origin $master
+git checkout $master && git pull && git checkout $dev && git merge --no-edit --no-ff $master
 
 # Third smarttools
 cd ../../github_modules/smartmet-library-smarttools
-git checkout $dev && git merge --no-edit --no-ff origin $master
+git checkout $master && git pull && git checkout $dev && git merge --no-edit --no-ff $master
 
 read -p "Press [Enter] key to continue..."
