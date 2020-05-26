@@ -5,6 +5,7 @@ set(CMAKE_MFC_FLAG 2)
 
 link_directories(
     ${BOOST_LIB_DIR}
+    ${GDAL_LIB_DIR}
     )
 
 file(GLOB CPP_FILES *.cpp)
@@ -20,15 +21,19 @@ add_executable(
 
 target_link_libraries(
     ${PROJECT_NAME}
+    Gis
     Newbase
     MultiProcessTools
     MultiProcessToolsMFC
 	version
+    ${FMT_TARGET_LINK_LIBRARIES}
+    ${GDAL_LIBS}
     )
 	
 target_include_directories(
     ${PROJECT_NAME}
     PUBLIC ${BOOST_INCLUDE_DIR}
+    PUBLIC ${Gis_INCLUDE_DIRS}
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${MultiProcessTools_INCLUDE_DIRS}
     PUBLIC ${MultiProcessToolsMFC_INCLUDE_DIRS}
