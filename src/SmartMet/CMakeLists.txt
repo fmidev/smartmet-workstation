@@ -16,6 +16,7 @@ add_definitions(
 
 set(LINK_DIRECTORIES_LIST 
     ${BOOST_LIB_DIR}
+    ${GDAL_LIB_DIR}
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
 
@@ -61,6 +62,7 @@ set(TARGET_LINK_LIBRARIES_LIST
     SmartTools
     ModifyEditedData
     SmetUtils
+    Gis
     Newbase
     Threads
     HakeMessage
@@ -74,6 +76,7 @@ set(TARGET_LINK_LIBRARIES_LIST
     AutoComplete
     optimized ${CRASHRPT_LIB}
     ${FMT_TARGET_LINK_LIBRARIES}
+    ${GDAL_LIBS}
     )
 
 if(NOT DISABLE_UNIRAS_TOOLMASTER)
@@ -92,6 +95,7 @@ target_include_directories(
     PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${ModifyEditedData_INCLUDE_DIRS}
     PUBLIC ${SmetUtils_INCLUDE_DIRS}
+    PUBLIC ${Gis_INCLUDE_DIRS}
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${Threads_INCLUDE_DIRS}
     PUBLIC ${HakeMessage_INCLUDE_DIRS}
