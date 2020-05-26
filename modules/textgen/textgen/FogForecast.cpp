@@ -34,7 +34,7 @@
 #include "FogForecast.h"
 
 #include <newbase/NFmiCombinedParam.h>
-#include <newbase/NFmiMercatorArea.h>
+#include <newbase/NFmiAreaTools.h>
 
 #include <boost/lexical_cast.hpp>
 #include <vector>
@@ -976,9 +976,10 @@ Sentence FogForecast::areaSpecificSentence(const WeatherPeriod& thePeriod) const
                                                                          false);
 
     Rect areaRect(theParameters.theArea);
-    NFmiMercatorArea mercatorArea(areaRect.getBottomLeft(), areaRect.getTopRight());
+    std::unique_ptr<NFmiArea> mercatorAreaPtr(
+        NFmiAreaTools::CreateLegacyMercatorArea(areaRect.getBottomLeft(), areaRect.getTopRight()));
     float areaHeightWidthRatio =
-        mercatorArea.WorldRect().Height() / mercatorArea.WorldRect().Width();
+        mercatorAreaPtr->WorldRect().Height() / mercatorAreaPtr->WorldRect().Width();
 
     Sentence areaSpecificSentence;
     areaSpecificSentence << area_specific_sentence(north,

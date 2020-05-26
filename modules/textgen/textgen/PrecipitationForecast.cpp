@@ -35,7 +35,7 @@
 #include "ThunderForecast.h"
 #include "DebugTextFormatter.h"
 
-#include <newbase/NFmiMercatorArea.h>
+#include <newbase/NFmiAreaTools.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -4199,8 +4199,9 @@ Sentence PrecipitationForecast::areaSpecificSentence(const WeatherPeriod& thePer
       north, south, east, west, northEast, southEast, southWest, northWest);
 
   Rect areaRect(theParameters.theArea);
-  NFmiMercatorArea mercatorArea(areaRect.getBottomLeft(), areaRect.getTopRight());
-  float areaHeightWidthRatio = mercatorArea.WorldRect().Height() / mercatorArea.WorldRect().Width();
+  std::unique_ptr<NFmiArea> mercatorAreaPtr(
+      NFmiAreaTools::CreateLegacyMercatorArea(areaRect.getBottomLeft(), areaRect.getTopRight()));
+  float areaHeightWidthRatio = mercatorAreaPtr->WorldRect().Height() / mercatorAreaPtr->WorldRect().Width();
 
   Sentence areaSpecificSentence;
   areaSpecificSentence << area_specific_sentence(
