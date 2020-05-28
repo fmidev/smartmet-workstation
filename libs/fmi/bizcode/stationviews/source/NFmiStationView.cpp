@@ -343,6 +343,8 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 	MakeDrawedInfoVector();
 	for(auto &fastInfo : itsInfoVector)
 	{
+		// Varmistetaan että osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
+		fastInfo->FirstLocation();
 		SetMapViewSettings(fastInfo);
 		CalculateGeneralStationRect();
 		FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
@@ -2470,8 +2472,6 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 	itsInfo = theUsedInfo;
 	if(itsInfo == 0)
 		return ;
-	// Varmistetaan että osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
-	itsInfo->FirstLocation();
 	FmiProducerName prod = static_cast<FmiProducerName>(itsInfo->Producer()->GetIdent());
 	if(itsInfo->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY))
 		fDoShipDataLocations = true;
