@@ -931,6 +931,15 @@ void NFmiCombinedMapHandler::initMapConfigurationSystemMain()
 	}
 }
 
+static std::pair<std::string, int> GetFilePathAndDrawingStyleFromSettings(char *key1, char* key2, const std::string & absoluteControlPath)
+{
+	std::pair<std::string, int> filenameAndDrawingStylePair;
+	auto usedAbsoluteBitmapFilePath = NFmiSettings::Require<std::string>(key1);
+	filenameAndDrawingStylePair.first = PathUtils::getAbsoluteFilePath(usedAbsoluteBitmapFilePath, absoluteControlPath);
+	filenameAndDrawingStylePair.second = NFmiSettings::Optional<int>(key2, 0);
+	return filenameAndDrawingStylePair;
+}
+
 void NFmiCombinedMapHandler::initMapConfigurationSystem()
 {
 	mapConfigurationSystem_ = std::make_unique<NFmiMapConfigurationSystem>();
@@ -974,7 +983,8 @@ void NFmiCombinedMapHandler::initMapConfigurationSystem()
 			sprintf(key2, CONFIG_MAPSYSTEM_MAP_DRAWINGSTYLE, mapsystem.c_str(), map.c_str());
 			if(NFmiSettings::IsSet(key1) && NFmiSettings::IsSet(key2))
 			{
-				mc.AddMap(NFmiSettings::Require<std::string>(key1), NFmiSettings::Optional<int>(key2, 0));
+				auto filePathAndDrawingStylePair = ::GetFilePathAndDrawingStyleFromSettings(key1, key2, absoluteControlPath_);
+				mc.AddMap(filePathAndDrawingStylePair.first, filePathAndDrawingStylePair.second);
 			}
 
 			mapiter++;
@@ -991,7 +1001,8 @@ void NFmiCombinedMapHandler::initMapConfigurationSystem()
 			sprintf(key2, CONFIG_MAPSYSTEM_LAYER_DRAWINGSTYLE, mapsystem.c_str(), layer.c_str());
 			if(NFmiSettings::IsSet(key1) && NFmiSettings::IsSet(key2))
 			{
-				mc.AddOverMapDib(NFmiSettings::Require<std::string>(key1), NFmiSettings::Optional<int>(key2, 0));
+				auto filePathAndDrawingStylePair = ::GetFilePathAndDrawingStyleFromSettings(key1, key2, absoluteControlPath_);
+				mc.AddOverMapDib(filePathAndDrawingStylePair.first, filePathAndDrawingStylePair.second);
 			}
 
 			layeriter++;
