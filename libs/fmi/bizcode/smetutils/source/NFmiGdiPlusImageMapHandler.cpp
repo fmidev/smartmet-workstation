@@ -16,6 +16,7 @@
 #include "NFmiFileString.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiPathUtils.h"
+#include "catlog/catlog.h"
 
 using namespace std;
 
@@ -203,13 +204,20 @@ boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::ReadArea(const string& t
 
 Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetBitmap()
 {
-	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapBitmaps.size()))
+	try
 	{
-		if(!itsMapBitmaps[itsUsedMapIndex])
-			itsMapBitmaps[itsUsedMapIndex] = CreateBitmapFromFile(itsMapFileNames[itsUsedMapIndex]);
-		return itsMapBitmaps[itsUsedMapIndex];
+		if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapBitmaps.size()))
+		{
+			if(!itsMapBitmaps[itsUsedMapIndex])
+				itsMapBitmaps[itsUsedMapIndex] = CreateBitmapFromFile(itsMapFileNames[itsUsedMapIndex]);
+			return itsMapBitmaps[itsUsedMapIndex];
+		}
 	}
-	return 0;
+	catch(std::exception& e)
+	{
+		CatLog::logMessage(e.what(), CatLog::Severity::Error, CatLog::Category::Configuration, true);
+	}
+	return nullptr;
 }
 
 void NFmiGdiPlusImageMapHandler::OriginalArea(const std::string& theArea)
