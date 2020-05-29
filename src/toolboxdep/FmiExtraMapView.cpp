@@ -247,9 +247,17 @@ void CFmiExtraMapView::DoDraw(void)
     itsSmartMetDocumentInterface->TransparencyContourDrawView(0); // lopuksi pitää nollata läpinäkyvyys-näyttö pointteri
 }
 
-bool CFmiExtraMapView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
+bool CFmiExtraMapView::GenerateMapBitmap(CBitmap* theUsedBitmap, CDC* theUsedCDC, CDC* theCompatibilityCDC)
 {
-	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
+	try
+	{
+		return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
+	}
+	catch(std::exception& e)
+	{
+		CatLog::logMessage(e.what(), CatLog::Severity::Error, CatLog::Category::Configuration, true);
+		return false;
+	}
 }
 
 // asettaa toolmasterin ja toolboxin DC:t
