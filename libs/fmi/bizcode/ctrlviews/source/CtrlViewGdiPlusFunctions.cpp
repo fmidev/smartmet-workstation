@@ -356,7 +356,7 @@ namespace CtrlView
         }
         if(NFmiFileSystem::FileExists(thePathAndFileName) == false)
         {
-            std::string errMsg(std::string("CreateBitmapFromFile - given image file name doesn't exist:\n") + thePathAndFileName);
+            std::string errMsg(std::string("CreateBitmapFromFile - given image file name doesn't exist: \n") + thePathAndFileName);
             throw std::runtime_error(errMsg);
         }
 
