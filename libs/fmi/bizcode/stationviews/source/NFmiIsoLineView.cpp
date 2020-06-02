@@ -619,6 +619,31 @@ void CalcXYCropPoints(const MRect &theDataRect, const MRect &theViewRect, NFmiPo
     theTRXYCropPoint.Y(tmp);
 }
 
+static void CheckXYRectAndReportImpossibleValues(const NFmiRect & zoomedViewRect, const NFmiArea & croppedGridDataArea, const NFmiArea& mapViewArea)
+{
+    if(zoomedViewRect.Left() < 0 || zoomedViewRect.Bottom() < 0 || zoomedViewRect.Width() > 1 || zoomedViewRect.Height() > 1)
+    {
+        const std::string warningWord = "OVER-EXPANSION";
+        std::string zoomedViewRectMessage = warningWord;
+        zoomedViewRectMessage += " zoomedViewRect place: ";
+        const auto &place = zoomedViewRect.Place();
+        zoomedViewRectMessage += std::to_string(place.X());
+        zoomedViewRectMessage += ", ";
+        zoomedViewRectMessage += std::to_string(place.Y());
+        zoomedViewRectMessage += " , size: ";
+        const auto& size = zoomedViewRect.Size();
+        zoomedViewRectMessage += std::to_string(size.X());
+        zoomedViewRectMessage += ", ";
+        zoomedViewRectMessage += std::to_string(size.Y());
+        CatLog::logMessage(zoomedViewRectMessage, CatLog::Severity::Trace, CatLog::Category::Visualization, true);
+        std::string areaInformationMessage = warningWord;
+        areaInformationMessage += " croppedGridDataArea: ";
+        areaInformationMessage += croppedGridDataArea.AreaFactoryStr();
+        areaInformationMessage += " , mapViewArea: ";
+        areaInformationMessage += mapViewArea.AreaFactoryStr();
+        CatLog::logMessage(areaInformationMessage, CatLog::Severity::Trace, CatLog::Category::Visualization, true);
+    }
+}
 
 // Tämä funktio palauttaa true, jos pelkän zoomatun alueen datan käyttö ja piirto on mahdollista.
 // Jos mahdollista palauttaa myös uuden zoomed-area-rectin ja zoomatun alueen hilan 'boundingbox' indeksit.
@@ -685,14 +710,16 @@ bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &th
               // Esim. jos zoomatun alueen hilapisteet vastaavat 90% datan kokonais hilapisteistä, kannattaa optimointi
 
                 // zoomatun alueen (sen mikä tuli hila pisteiden suurennoksessa) recti pitää vielä laskea
-                NFmiPoint zoomedBottomLeftLatlon(theInfo->Grid()->GridToLatLon(NFmiPoint(x1, y1)));
-                NFmiPoint zoomedTopRightLatlon(theInfo->Grid()->GridToLatLon(NFmiPoint(x2, y2)));
-                NFmiArea *newZoomedArea = const_cast<NFmiArea*>(theInfo->Area())->NewArea(zoomedBottomLeftLatlon, zoomedTopRightLatlon);
-                if(newZoomedArea)
+                NFmiPoint zoomedBottomLeftWorldXY(theInfo->Grid()->GridToWorldXY(NFmiPoint(x1, y1)));
+                NFmiPoint zoomedTopRightWorldXY(theInfo->Grid()->GridToWorldXY(NFmiPoint(x2, y2)));
+                NFmiArea *croppedGridDataArea = theInfo->Area()->NewArea(zoomedBottomLeftWorldXY, zoomedTopRightWorldXY);
+                if(croppedGridDataArea)
                 {
-                    newZoomedArea->SetXYArea(NFmiRect(0, 0, 1, 1));
-                    theWantedNewZoomedAreaRect = newZoomedArea->XYArea(GetArea().get());
-                    delete newZoomedArea;
+                    croppedGridDataArea->SetXYArea(NFmiRect(0, 0, 1, 1));
+                    auto mapViewArea = GetArea();
+                    theWantedNewZoomedAreaRect = croppedGridDataArea->XYArea(mapViewArea.get());
+                    CheckXYRectAndReportImpossibleValues(theWantedNewZoomedAreaRect, *croppedGridDataArea, *mapViewArea);
+                    delete croppedGridDataArea;
                     return true;
                 }
             }
