@@ -61,8 +61,10 @@ namespace SmartMetDataUtilities
         void calculateRowsAndColumsToCopy()
         {
             auto& rootGrid = rootData_.getGrid();
-            auto gridBottomLeft = rootGrid->LatLonToGrid(mapArea_.BottomLeftLatLon());
-            auto gridTopRight = rootGrid->LatLonToGrid(mapArea_.TopRightLatLon());
+            auto worldXYRect = mapArea_.WorldRect();
+            // Gridin hilapisteiden ja worldXY-rectien top/bottom käsitteet menevät ristiin
+            auto gridBottomLeft = rootGrid->WorldXYToGrid(worldXYRect.TopLeft());
+            auto gridTopRight = rootGrid->WorldXYToGrid(worldXYRect.BottomRight());
             lastColumnToCopy_ = static_cast<int>(ceil(gridTopRight.X()));
             firstColumnToCopy_ = static_cast<int>(floor(gridBottomLeft.X()));
             firstRowToCopy_ = static_cast<int>(floor(gridBottomLeft.Y()));
