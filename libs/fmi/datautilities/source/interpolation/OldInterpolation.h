@@ -15,7 +15,7 @@ namespace SmartMetDataUtilities
         std::shared_ptr<NFmiArea> croppedArea_ = nullptr;
         std::shared_ptr<Fmi::CoordinateMatrix> interpolatedMatrix_ = nullptr;
     public:
-        OldInterpolation(NFmiGrid& grid, const NFmiArea& mapArea, InterpolatedDataCache& interpolatedCache, MapViewId keys)
+        OldInterpolation(NFmiGrid& grid, const NFmiArea& mapArea, InterpolatedDataCache& interpolatedCache, const MapViewId &keys)
             :grid_(grid)
             , mapArea_(mapArea)
             , interpolatedCache_(interpolatedCache)

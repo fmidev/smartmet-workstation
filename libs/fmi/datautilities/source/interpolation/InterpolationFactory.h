@@ -12,7 +12,7 @@ namespace SmartMetDataUtilities
     {
         namespace
         {
-            bool rootDataCanBeUsed(const NFmiArea& mapArea, const NFmiGrid& originalGrid, RootDataCache& rootCache, MapViewId keys)
+            bool rootDataCanBeUsed(const NFmiArea& mapArea, const NFmiGrid& originalGrid, RootDataCache& rootCache, const MapViewId &keys)
             {
                 try
                 {
@@ -28,14 +28,14 @@ namespace SmartMetDataUtilities
                 }
             }
 
-            bool interpolatedDataCanBeUsed(const NFmiArea& mapArea, const NFmiGrid& originalGrid, InterpolatedDataCache& interpolatedCache, MapViewId keys)
+            bool interpolatedDataCanBeUsed(const NFmiArea& mapArea, const NFmiGrid& originalGrid, InterpolatedDataCache& interpolatedCache, const MapViewId &keys)
             {
                 auto cacheSpecificKeys = CacheUtil::createKeys<InterpolatedDataCache>(keys, mapArea, originalGrid);
                 return interpolatedCache.exists(cacheSpecificKeys);
             }
         }
 
-        std::unique_ptr<Interpolation> create(NFmiGrid& grid, const NFmiArea& mapArea, InterpolatedDataCache& interpolatedCache, RootDataCache& rootCache, MapViewId keys)
+        std::unique_ptr<Interpolation> create(NFmiGrid& grid, const NFmiArea& mapArea, InterpolatedDataCache& interpolatedCache, RootDataCache& rootCache, const MapViewId &keys)
         {
             if(interpolatedDataCanBeUsed(mapArea, grid, interpolatedCache, keys))
             {

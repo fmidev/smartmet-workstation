@@ -22,7 +22,7 @@ namespace SmartMetDataUtilities
         std::shared_ptr<NFmiArea> croppedArea_ = nullptr;
         std::shared_ptr<Fmi::CoordinateMatrix> interpolatedMatrix_ = nullptr;
     public:
-        InterpolationHandler(NFmiGrid& grid, const NFmiArea& mapArea, RootDataCache& rootCache, InterpolatedDataCache& interpolatedCache, MapViewId keys);
+        InterpolationHandler(NFmiGrid& grid, const NFmiArea& mapArea, RootDataCache& rootCache, InterpolatedDataCache& interpolatedCache, const MapViewId &keys);
         InterpolationHandler() = default;
         ~InterpolationHandler() = default;
 
