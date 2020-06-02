@@ -49,7 +49,7 @@ namespace SmartMetDataUtilities
         {
             for(size_t i = cellsToCopy_.getFirstColumn(), i1 = 0; i <= cellsToCopy_.getLastColumn(); ++i, ++i1)
             {
-                matrixToPopulate->set(i1, j1, (*rootMatrix)(i1, j1));
+                matrixToPopulate->set(i1, j1, (*rootMatrix)(i, j));
             }
         }
         return matrixToPopulate;
