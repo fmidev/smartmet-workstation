@@ -9,7 +9,7 @@ using namespace std;
 
 namespace SmartMetDataUtilities
 {
-    InterpolationHandler::InterpolationHandler(NFmiGrid& grid, const NFmiArea& mapArea, RootDataCache& rootCache, InterpolatedDataCache& interpolatedCache, MapViewId keys)
+    InterpolationHandler::InterpolationHandler(NFmiGrid& grid, const NFmiArea& mapArea, RootDataCache& rootCache, InterpolatedDataCache& interpolatedCache, const MapViewId &keys)
         :grid_(grid)
         , mapArea_(mapArea)
         , rootCache_(rootCache)
