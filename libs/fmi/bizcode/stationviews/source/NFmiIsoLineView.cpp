@@ -712,7 +712,8 @@ bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &th
                 // zoomatun alueen (sen mikä tuli hila pisteiden suurennoksessa) recti pitää vielä laskea
                 NFmiPoint zoomedBottomLeftWorldXY(theInfo->Grid()->GridToWorldXY(NFmiPoint(x1, y1)));
                 NFmiPoint zoomedTopRightWorldXY(theInfo->Grid()->GridToWorldXY(NFmiPoint(x2, y2)));
-                NFmiArea *croppedGridDataArea = theInfo->Area()->NewArea(zoomedBottomLeftWorldXY, zoomedTopRightWorldXY);
+                NFmiRect zoomedWorldXyRect(zoomedBottomLeftWorldXY, zoomedTopRightWorldXY);
+                NFmiArea *croppedGridDataArea = theInfo->Area()->CreateNewAreaByWorldRect(zoomedWorldXyRect);
                 if(croppedGridDataArea)
                 {
                     croppedGridDataArea->SetXYArea(NFmiRect(0, 0, 1, 1));
