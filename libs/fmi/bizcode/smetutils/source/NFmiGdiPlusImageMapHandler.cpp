@@ -16,6 +16,7 @@
 #include "NFmiFileString.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiPathUtils.h"
+#include "SpatialReference.h"
 #include "catlog/catlog.h"
 
 using namespace std;
@@ -154,6 +155,19 @@ bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const 
 		errMsg += theAreaFileName;
 		throw runtime_error(errMsg);
 	}
+
+	std::string logStr = "Area: ";
+	logStr += itsOriginalArea->AreaFactoryProjStr();
+	logStr += ", worldXY rect: ";
+	auto worldXyRect = itsOriginalArea->WorldRect();
+	logStr += std::to_string(worldXyRect.Left());
+	logStr += ",";
+	logStr += std::to_string(worldXyRect.Top());
+	logStr += ",";
+	logStr += std::to_string(worldXyRect.Right());
+	logStr += ",";
+	logStr += std::to_string(worldXyRect.Bottom());
+	CatLog::logMessage(logStr, CatLog::Severity::Trace, CatLog::Category::Configuration, true);
 
 	return Init(theMapFileNames, theMapDrawStyles, theOverMapBitmapFileNames, theOverMapBitmapDrawStyles);
 }
