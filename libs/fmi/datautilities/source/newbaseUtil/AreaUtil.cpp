@@ -147,7 +147,7 @@ namespace SmartMetDataUtilities {
 
         bool isPacific(const NFmiArea& area)
         {
-            return NFmiArea::IsPacificView_legacy(area.BottomLeftLatLon(), area.TopRightLatLon());
+            return NFmiArea::IsPacificView(area.BottomLeftLatLon(), area.TopRightLatLon());
         }
 
         bool areasIntersect(const NFmiArea& area1, const NFmiArea& area2, size_t resolution)
