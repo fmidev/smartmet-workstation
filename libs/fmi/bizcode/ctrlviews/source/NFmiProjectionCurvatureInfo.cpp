@@ -598,7 +598,7 @@ void NFmiProjectionCurvatureInfo::CreateLineLabel2List(double theLabelValue, Fmi
 {
     double moveUnit = itsUsedFontSizeInRelativeUnit;
     // Pitää fiksata label stringiin arvo, jos kyseessä longitude ja ollaan välillä 180 > x <= 360
-    if(fLatitudeLabelUsed == false && NFmiArea::IsPacificLongitude_legacy(theLabelValue))
+    if(fLatitudeLabelUsed == false && NFmiArea::IsPacificLongitude(theLabelValue))
     {
         theLabelValue = CtrlViewUtils::GetWantedLongitude(theLabelValue, true);
     }
