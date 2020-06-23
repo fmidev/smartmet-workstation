@@ -1055,17 +1055,14 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystem()
 #else // debug versio
 		landBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFileDebug");
 #endif
-		boost::shared_ptr<Imagine::NFmiGeoShape> landBorderGeoShape(new Imagine::NFmiGeoShape());
+		landBorderGeoShape_ = boost::shared_ptr<Imagine::NFmiGeoShape>(new Imagine::NFmiGeoShape());
 		logMessage(std::string("Reading country border shape file: ") + landBorderShapeFile_, CatLog::Severity::Debug, CatLog::Category::Configuration);
 		landBorderShapeFile_ = PathUtils::makeFixedAbsolutePath(landBorderShapeFile_, absoluteControlPath_);
-		landBorderGeoShape->Read(landBorderShapeFile_, Imagine::kFmiGeoShapeEsri, "");
+		landBorderGeoShape_->Read(landBorderShapeFile_, Imagine::kFmiGeoShapeEsri, "");
 
-		boost::shared_ptr<Imagine::NFmiPath> landBorderPath(new Imagine::NFmiPath(landBorderGeoShape->Path()));
-		boost::shared_ptr<Imagine::NFmiPath> pacificLandBorderPath(new Imagine::NFmiPath(landBorderPath->PacificView(true)));
+		landBorderPath_ = boost::shared_ptr<Imagine::NFmiPath>(new Imagine::NFmiPath(landBorderGeoShape_->Path()));
+		pacificLandBorderPath_ = boost::shared_ptr<Imagine::NFmiPath>(new Imagine::NFmiPath(landBorderPath_->PacificView(true)));
 
-		landBorderGeoShape_ = landBorderGeoShape;
-		landBorderPath_ = landBorderPath;
-		pacificLandBorderPath_ = pacificLandBorderPath;
 		doCutBorderDrawInitialization();
 	}
 	catch(std::exception & e)
