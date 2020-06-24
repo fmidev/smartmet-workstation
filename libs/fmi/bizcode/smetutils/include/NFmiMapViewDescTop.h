@@ -33,6 +33,7 @@ class NFmiMapConfiguration;
 class NFmiGdiPlusImageMapHandler;
 class CWnd;
 class NFmiMapViewWinRegistry;
+class OGRGeometry;
 
 namespace Imagine
 {
@@ -136,7 +137,7 @@ public:
 	void MapBlitDC(CDC* theDC){itsMapBlitDC=theDC;};
 	bool ShowParamWindowView(void){return fShowParamWindowView;};
 	void ShowParamWindowView(bool newState){fShowParamWindowView = newState;};
-    boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(void);
+	std::shared_ptr<OGRGeometry> CountryBorderGeometry();
 	void ToggleLandBorderColor(void);
 
 	// Nämä border layer piirtoon liittyvät metodit jotka ottavat separateBorderLayerDrawOptions parametrin

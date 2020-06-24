@@ -4,7 +4,6 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiMapConfigurationSystem.h"
 #include "NFmiProjectionCurvatureInfo.h"
-#include "NFmiGeoShape.h"
 #include "NFmiPathUtils.h"
 #include "NFmiGdiPlusImageMapHandler.h"
 #include "NFmiQueryData.h"
@@ -748,7 +747,7 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 		for(int mapViewIndex = 0; mapViewIndex < mapViewCount; mapViewIndex++)
 			mapViewDescTops_.emplace_back(createMapViewDescTop(baseSettingStr, mapViewIndex));
 
-		initLandBorderDrawingSystem();
+		initLandBorderDrawingSystemWithGdal();
 		initWmsSupport();
 		initCombinedMapStates();
 	}
@@ -1042,7 +1041,56 @@ void NFmiCombinedMapHandler::initProjectionCurvatureInfo()
 	}
 }
 
-void NFmiCombinedMapHandler::initLandBorderDrawingSystem()
+#ifdef _MSC_VER
+#pragma warning(disable : 4273) // "inconsistent dll linkage" warning gdalista pois päältä
+#endif
+
+#include "OGR.h"
+#include "ogrsf_frmts.h"
+#include "ogr_geometry.h"
+#include "CoordinateTransformation.h"
+#include "Box.h"
+
+//void AddShapeStuffToMultiPolyLine(OGRGeometry* geom, const Box& box)
+//{
+//	OGRwkbGeometryType id = geom->getGeometryType();
+//	switch(id)
+//	{
+//	case wkbPoint:
+//		return tr(dynamic_cast<OGRPoint*>(geom), box);
+//	case wkbLineString:
+//		return tr(dynamic_cast<OGRLineString*>(geom), box);
+//	case wkbLinearRing:
+//		return tr(dynamic_cast<OGRLinearRing*>(geom), box);
+//	case wkbPolygon:
+//		return tr(dynamic_cast<OGRPolygon*>(geom), box);
+//	case wkbMultiPoint:
+//		return tr(dynamic_cast<OGRMultiPoint*>(geom), box);
+//	case wkbMultiLineString:
+//		return tr(dynamic_cast<OGRMultiLineString*>(geom), box);
+//	case wkbMultiPolygon:
+//		return tr(dynamic_cast<OGRMultiPolygon*>(geom), box);
+//	case wkbGeometryCollection:
+//		return tr(dynamic_cast<OGRGeometryCollection*>(geom), box);
+//	default:
+//		throw std::runtime_error(
+//			"Encountered an unknown geometry component in OGRGeometry transform call");
+//	}
+//}
+
+static void SetupSpatialReferenceFromLayer(OGRLayer* layer, std::unique_ptr<OGRGeometryCollection>& geometry)
+{
+	if(layer->GetSpatialRef() == nullptr)
+	{
+		auto* wgs84 = new OGRSpatialReference();
+		wgs84->SetFromUserInput("WGS84");
+		geometry->assignSpatialReference(wgs84);
+	}
+	else
+		geometry->assignSpatialReference(layer->GetSpatialRef());
+}
+
+void NFmiCombinedMapHandler::initLandBorderDrawingSystemWithGdal()
 {
 	doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
@@ -1051,66 +1099,82 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystem()
 		// debug versio on tolkuttoman hidas laskiessaan koordinaatteja ja siksi
 		// on parempi käyttää harvempaa dataa debug versiolle.
 #ifdef NDEBUG 
-		landBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFile");
+		countryBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFile");
 #else // debug versio
-		landBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFileDebug");
+		countryBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFileDebug");
 #endif
-		landBorderGeoShape_ = boost::shared_ptr<Imagine::NFmiGeoShape>(new Imagine::NFmiGeoShape());
-		logMessage(std::string("Reading country border shape file: ") + landBorderShapeFile_, CatLog::Severity::Debug, CatLog::Category::Configuration);
-		landBorderShapeFile_ = PathUtils::makeFixedAbsolutePath(landBorderShapeFile_, absoluteControlPath_);
-		landBorderGeoShape_->Read(landBorderShapeFile_, Imagine::kFmiGeoShapeEsri, "");
+		GDALAllRegister();
+		countryBorderShapeFile_ += ".shp";
+		GDALDatasetUniquePtr poDS(GDALDataset::Open(countryBorderShapeFile_.c_str(), GDAL_OF_VECTOR));
+		if(!poDS)
+			throw std::runtime_error("Unable to open shape file with GDALDataset::Open function");
 
-		landBorderPath_ = boost::shared_ptr<Imagine::NFmiPath>(new Imagine::NFmiPath(landBorderGeoShape_->Path()));
-		pacificLandBorderPath_ = boost::shared_ptr<Imagine::NFmiPath>(new Imagine::NFmiPath(landBorderPath_->PacificView(true)));
+		auto firstLayer = poDS->GetLayer(0);
+		if(!firstLayer)
+			throw std::runtime_error("Couldn't find 1st layer from shape data");
 
-		doCutBorderDrawInitialization();
+		globalBaseCountryBorderGeometry_ = std::make_unique<OGRGeometryCollection>();
+		::SetupSpatialReferenceFromLayer(firstLayer, globalBaseCountryBorderGeometry_);
+		Fmi::CoordinateTransformation coordinateTransformation(*globalBaseCountryBorderGeometry_->getSpatialReference(), *OGRSpatialReference::GetWGS84SRS());
+		for(auto layer : poDS->GetLayers())
+		{
+			layer->GetSpatialRef()->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+			for(const auto& feature : *layer)
+			{
+				globalBaseCountryBorderGeometry_->addGeometryDirectly(feature->GetGeometryRef());
+			}
+		}
 	}
-	catch(std::exception & e)
+	catch(std::exception& e)
 	{
 		std::string errStr = "Error while reading country border shape file: ";
-		errStr += landBorderShapeFile_ + "\n";
+		errStr += countryBorderShapeFile_ + "\n";
 		errStr += e.what();
 		logAndWarnUser(errStr, "Error while reading country border shape file", CatLog::Severity::Error, CatLog::Category::Configuration, true);
 	}
 }
 
-void NFmiCombinedMapHandler::doCutBorderDrawInitialization()
+void NFmiCombinedMapHandler::generateClippedCountryBorderGeometrysWithGdal()
 {
-	{ 
-		// tehdään omassa blokissa!!
-		cutLandBorderPaths_.clear();
-		auto &mapHandlerList = mapViewDescTops_[0]->GdiPlusImageMapHandlerList(); // otetaan pääkarttanäytön mapHandlerList
-		// Ensin lasketaan eri karttapohjille leikatut rajaviivat
-		for(auto *mapHandler : mapHandlerList)
+	// Tehdään omassa blokissa saman nimisen mapHandlerList muuttujan takia!
+	clippedCountryBorderGeometrys_.clear();
+	auto& mapHandlerList = mapViewDescTops_[0]->GdiPlusImageMapHandlerList(); // otetaan pääkarttanäytön mapHandlerList
+	// Ensin lasketaan eri karttapohjille leikatut rajaviivat
+	for(auto* mapHandler : mapHandlerList)
+	{
+		std::shared_ptr<OGRGeometry> clippedGeometry;
+		boost::shared_ptr<NFmiArea> totalMapArea = mapHandler->TotalArea();
+		bool totalWorldArea = ::isTotalWorld(totalMapArea);
+		Fmi::CoordinateTransformation coordinateTransformation(*globalBaseCountryBorderGeometry_->getSpatialReference(), totalMapArea->SpatialReference());
+
+		if(totalWorldArea)
 		{
-			boost::shared_ptr<Imagine::NFmiPath> cutPath;
-			boost::shared_ptr<NFmiArea> totalMapArea = mapHandler->TotalArea();
-			bool totalWorldArea = ::isTotalWorld(totalMapArea);
-			if(totalMapArea->PacificView_legacy())
-			{
-				if(totalWorldArea)
-					cutPath = pacificLandBorderPath_;
-				else
-					cutPath = boost::shared_ptr<Imagine::NFmiPath>(new Imagine::NFmiPath(pacificLandBorderPath_->Clip(totalMapArea.get())));
-			}
-			else
-			{
-				if(totalWorldArea)
-					cutPath = landBorderPath_;
-				else
-					cutPath = boost::shared_ptr<Imagine::NFmiPath>(new Imagine::NFmiPath(landBorderPath_->Clip(totalMapArea.get())));
-			}
-			cutLandBorderPaths_.push_back(cutPath);
+			clippedGeometry.reset(coordinateTransformation.transformGeometry(*globalBaseCountryBorderGeometry_));
 		}
+		else
+		{
+			auto transformedGeometry = coordinateTransformation.transformGeometry(*globalBaseCountryBorderGeometry_);
+			auto worldXyRect = totalMapArea->WorldRect();
+			Fmi::Box clipBox(worldXyRect.Left(), worldXyRect.Bottom(), worldXyRect.Right(), worldXyRect.Top(), 100, 100);
+			clippedGeometry.reset(Fmi::OGR::lineclip(*transformedGeometry, clipBox.identity()));
+		}
+
+		clippedCountryBorderGeometrys_.push_back(clippedGeometry);
 	}
+}
+
+void NFmiCombinedMapHandler::doCutBorderDrawInitializationWithGdal()
+{
+	generateClippedCountryBorderGeometrysWithGdal();
 
 	// Sitten asetetaan kaikkien karttanäyttöjen kaikille karttapohjille leikatut rajaviivat
-	for(const auto & mapViewDescTop : mapViewDescTops_)
+	for(const auto& mapViewDescTop : mapViewDescTops_)
 	{
 		std::vector<NFmiGdiPlusImageMapHandler*>& mapHandlerList = mapViewDescTop->GdiPlusImageMapHandlerList();
 		for(size_t mapHandlerIndex = 0; mapHandlerIndex < mapHandlerList.size(); mapHandlerIndex++)
 		{
-			mapHandlerList[mapHandlerIndex]->LandBorderPath(cutLandBorderPaths_[mapHandlerIndex]);
+			mapHandlerList[mapHandlerIndex]->CountryBorderGeometry(clippedCountryBorderGeometrys_[mapHandlerIndex]);
 		}
 	}
 }

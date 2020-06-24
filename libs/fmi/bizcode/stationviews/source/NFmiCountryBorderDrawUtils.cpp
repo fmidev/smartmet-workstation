@@ -14,6 +14,8 @@
 #include "CtrlViewWin32Functions.h"
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiDrawParam.h"
+#include "OGR.h"
+#include "Box.h"
 
 #include <list>
 
@@ -182,13 +184,36 @@ namespace
         return relativePolyLineList;
     }
 
-    std::unique_ptr<NFmiArea> CreateFixedToOrigoMapArea(const boost::shared_ptr<NFmiArea>& mapArea)
+    std::unique_ptr<NFmiArea> createFixedToOrigoMapArea(const boost::shared_ptr<NFmiArea>& mapArea)
     {
         std::unique_ptr<NFmiArea> fixedToOrigoMapArea(mapArea.get()->Clone());
         fixedToOrigoMapArea->Place(NFmiPoint(0, 0));
         return std::move(fixedToOrigoMapArea);
     }
 
+    Fmi::Box calculateZoomedAreaWorldXyClipRect(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex, const std::unique_ptr<NFmiArea>& fixedToOrigoZoomedMapArea)
+    {
+        auto singleMapViewSizeInPixels = ctrlViewDocumentInterface->MapViewSizeInPixels(mapViewDescTopIndex);
+        auto worldXyRect = fixedToOrigoZoomedMapArea->WorldRect();
+        return Fmi::Box(worldXyRect.Left(), worldXyRect.Top(), worldXyRect.Right(), worldXyRect.Bottom(), boost::math::iround(singleMapViewSizeInPixels.X()), boost::math::iround(singleMapViewSizeInPixels.Y()));
+    }
+
+    void recalculateCountryBorderGeometry(NFmiCtrlView* mapView, const std::unique_ptr<NFmiArea> & fixedToOrigoZoomedMapArea)
+    {
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
+        auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
+        int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
+        auto baseAreaCountryBorderGeometry = ctrlViewDocumentInterface->CountryBorderGeometry(mapViewDescTopIndex);
+        if(baseAreaCountryBorderGeometry)
+        {
+            Fmi::Box zoomedClipBox = ::calculateZoomedAreaWorldXyClipRect(ctrlViewDocumentInterface, mapViewDescTopIndex, fixedToOrigoZoomedMapArea);
+            auto zoomedAreaGeometryInPixelCoordinates = Fmi::OGR::lineclip(*baseAreaCountryBorderGeometry, zoomedClipBox);
+            // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa listaan liittyvän likaisuus lipun pois eli käyttövalmiiksi
+            ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex, ::convertPath2RelativePolyLineListGdiplus(path, false, true));
+        }
+        else
+            CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Didn't find any borders to draw", mapView);
+    }
 
     void drawLandBordersWithGdiplus(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam *separateBorderLayerDrawOptions)
     {
@@ -199,31 +224,19 @@ namespace
         {
             // Border viivojen piirto erilliseen cache bitmap:iin pitää tapahtua aina kiinni origossa.
             // Siksi pitää luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
-            auto fixedToOrigoMapArea = ::CreateFixedToOrigoMapArea(mapArea);
+            auto fixedToOrigoZoomedMapArea = ::createFixedToOrigoMapArea(mapArea);
             if(ctrlViewDocumentInterface->BorderDrawPolylinesGdiplusDirty(mapViewDescTopIndex))
-            {
-                CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
-                boost::shared_ptr<Imagine::NFmiPath> usedPath = ctrlViewDocumentInterface->LandBorderPath(mapViewDescTopIndex);
-                if(usedPath)
-                {
-                    Imagine::NFmiPath path(*usedPath.get());
-                    path.Project(fixedToOrigoMapArea.get());
-                    // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa listaan liittyvän likaisuus lipun pois eli käyttövalmiiksi
-                    ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex, ::convertPath2RelativePolyLineListGdiplus(path, false, true));
-                }
-                else
-                    CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Didn't find any borders to draw", mapView);
-            }
+                ::recalculateCountryBorderGeometry(mapView, fixedToOrigoZoomedMapArea);
 
             auto& borderPolyLineList = ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex);
             if(borderPolyLineList.empty() == false)
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
-                NFmiPoint offSet(fixedToOrigoMapArea->TopLeft());
+                NFmiPoint offSet(fixedToOrigoZoomedMapArea->TopLeft());
                 int penSize = ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex, separateBorderLayerDrawOptions);
                 auto lineColor = ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions);
                 // Pitää luoda rajaviiva piirrossa käytössä olevan toolboxin avulla uusi Gdiplus-graphics olio, ei saa käyttää mapView:in vastaavaa oliota!
-                std::unique_ptr<Gdiplus::Graphics> gdigraphicsPtr(NFmiCtrlView::CreateGdiplusGraphics(toolbox, &fixedToOrigoMapArea->XYArea()));
+                std::unique_ptr<Gdiplus::Graphics> gdigraphicsPtr(NFmiCtrlView::CreateGdiplusGraphics(toolbox, &fixedToOrigoZoomedMapArea->XYArea()));
                 if(gdigraphicsPtr)
                     ::drawPolyLineListGdiplus(*gdigraphicsPtr, toolbox, borderPolyLineList, offSet, mapView, lineColor, penSize);
                 else

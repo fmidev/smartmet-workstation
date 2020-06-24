@@ -470,9 +470,9 @@ void NFmiMapViewDescTop::Clear(void)
 	itsSeparateCountryBorderBitmapCache.clearCache();
 }
 
-boost::shared_ptr<Imagine::NFmiPath> NFmiMapViewDescTop::LandBorderPath(void)
+std::shared_ptr<OGRGeometry> NFmiMapViewDescTop::CountryBorderGeometry()
 {
-    return MapHandler()->LandBorderPath();
+    return MapHandler()->CountryBorderGeometry();
 }
 
 void NFmiMapViewDescTop::Init(NFmiMapViewWinRegistry &theMapViewWinRegistry)

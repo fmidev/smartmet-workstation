@@ -1020,9 +1020,9 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLandBorderMapBitmap(unsigned
     itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap, separateBorderLayerDrawOptions);
 }
 
-boost::shared_ptr<Imagine::NFmiPath> CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPath(int theDescTopIndex)
+ std::shared_ptr<OGRGeometry> CtrlViewDocumentInterfaceForGeneralDataDoc::CountryBorderGeometry(int theDescTopIndex)
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderPath();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->CountryBorderGeometry();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList)

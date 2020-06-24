@@ -80,11 +80,8 @@ class NFmiMacroPathSettings;
 class WmsSupportInterface;
 class CombinedMapHandlerInterface;
 class NFmiRect;
+class OGRGeometry;
 
-namespace Imagine
-{
-    class NFmiPath;
-}
 namespace HakeMessage
 {
     class Main;
@@ -323,7 +320,7 @@ public:
     virtual int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
-    virtual boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(int theDescTopIndex) = 0;
+    virtual std::shared_ptr<OGRGeometry> CountryBorderGeometry(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) = 0;
     virtual std::list<NFmiPolyline*>& DrawBorderPolyLineList(int theDescTopIndex) = 0;
     virtual const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) = 0;
