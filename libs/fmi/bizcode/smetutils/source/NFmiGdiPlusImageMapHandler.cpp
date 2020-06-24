@@ -54,7 +54,7 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler()
 ,itsSwapBackArea()
 ,itsSwapMode(0)
 ,itsCountryBorderPolylineCache()
-,itsLandBorderPath()
+,itsCountryBorderGeometry()
 {
 }
 
@@ -89,7 +89,7 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMap
 	, itsSwapBackArea(nullptr)
 	, itsSwapMode(0)
 	, itsCountryBorderPolylineCache()
-	, itsLandBorderPath()
+	, itsCountryBorderGeometry()
 {
 	*this = other;
 }
@@ -120,7 +120,7 @@ NFmiGdiPlusImageMapHandler& NFmiGdiPlusImageMapHandler::operator=(const NFmiGdiP
 		itsSwapBackArea.reset(::MakeNewAreaClone(other.itsSwapBackArea));
 		itsSwapMode = other.itsSwapMode;
 		itsCountryBorderPolylineCache = other.itsCountryBorderPolylineCache;
-		itsLandBorderPath = other.itsLandBorderPath;
+		itsCountryBorderGeometry = other.itsCountryBorderGeometry;
 		InitializeBitmapVectors();
 	}
 	return *this;
@@ -643,12 +643,12 @@ const std::list<std::vector<NFmiPoint>>& NFmiGdiPlusImageMapHandler::DrawBorderP
 	return itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus();
 }
 
-boost::shared_ptr<Imagine::NFmiPath> NFmiGdiPlusImageMapHandler::LandBorderPath()
+std::shared_ptr<OGRGeometry> NFmiGdiPlusImageMapHandler::CountryBorderGeometry()
 {
-	return itsLandBorderPath;
+	return itsCountryBorderGeometry;
 }
 
-void NFmiGdiPlusImageMapHandler::LandBorderPath(boost::shared_ptr<Imagine::NFmiPath>& thePath)
+void NFmiGdiPlusImageMapHandler::CountryBorderGeometry(std::shared_ptr<OGRGeometry>& theGeometry)
 {
-	itsLandBorderPath = thePath;
+	itsCountryBorderGeometry = theGeometry;
 }

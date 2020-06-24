@@ -17,14 +17,10 @@
 
 class NFmiArea;
 class NFmiPolyline;
+class OGRGeometry;
 namespace Gdiplus
 {
 	class Bitmap;
-}
-
-namespace Imagine
-{
-    class NFmiPath;
 }
 
 class NFmiGdiPlusImageMapHandler
@@ -90,11 +86,11 @@ public:
 	const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
 	void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue);
 	void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue);
-	boost::shared_ptr<Imagine::NFmiPath> LandBorderPath();
-	void LandBorderPath(boost::shared_ptr<Imagine::NFmiPath>& thePath);
 	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState);
 	bool BorderDrawPolylinesDirty() const;
 	bool BorderDrawPolylinesGdiplusDirty() const;
+	std::shared_ptr<OGRGeometry> CountryBorderGeometry();
+	void CountryBorderGeometry(std::shared_ptr<OGRGeometry> &theGeometry);
 
 private:
 	Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &theFileName);
@@ -145,7 +141,7 @@ private:
 	int itsSwapMode;
 
 	NFmiCountryBorderPolylineCache itsCountryBorderPolylineCache;
-	// t‰h‰n lasketaan itsOriginalArea:n sis‰‰n menev‰ path kerran (GenDocissa)
-	boost::shared_ptr<Imagine::NFmiPath> itsLandBorderPath;
+	// T‰h‰n lasketaan itsOriginalArea:n sis‰‰n menev‰ maiden rajapolut shape datasta kerran
+	std::shared_ptr<OGRGeometry> itsCountryBorderGeometry;
 };
 

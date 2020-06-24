@@ -22,12 +22,8 @@ struct MacroParamDataInfo;
 class NFmiDrawParamList;
 class NFmiFastDrawParamList;
 class NFmiMenuItem;
-
-namespace Imagine
-{
-    class NFmiGeoShape;
-    class NFmiPath;
-}
+class OGRGeometryCollection;
+class OGRGeometry;
 
 // All kinds of background map and overlay map stuff handling is here.
 // This has local bitmaps and interface to wms-server clients as well.
@@ -56,12 +52,12 @@ class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
     // Hiiren oikean klikkauksen rivinumero talletetaan t‰h‰n
     unsigned long timeSerialViewIndex_ = 0; 
 
-    // ********** Country border draw path related data *****************
-    std::string landBorderShapeFile_; // mist‰ filest‰ shape luetaan
-    boost::shared_ptr<Imagine::NFmiGeoShape> landBorderGeoShape_; // t‰h‰n luetaan alkuper‰inen shape-file, josta sitten tehd‰‰n sopivia path-olioita
-    boost::shared_ptr<Imagine::NFmiPath> landBorderPath_; // t‰h‰n lasketaan normaali maailman path kerran
-    boost::shared_ptr<Imagine::NFmiPath> pacificLandBorderPath_; // t‰h‰n lasketaan pacific maailman path kerran
-    std::vector<boost::shared_ptr<Imagine::NFmiPath> > cutLandBorderPaths_; // t‰h‰n lasketaan jokaiseen eri karttapohjaan (kartat 1-4) leikatut rajaviivat. N‰ill‰ voidaan optimoida zoomaukseen k‰ytettyj‰ rajaviiva laskuja.
+    // **************** Uudet country border datat, joita tyˆtet‰‰n Gdal:in avulla **********************
+    std::string countryBorderShapeFile_;
+    // T‰ss‰ on 'raaka' wgs84 datumissa oleva latlon koordinaatistossa oleva rajaviiva shape data
+    std::unique_ptr<OGRGeometryCollection> globalBaseCountryBorderGeometry_;
+    // T‰h‰n lasketaan jokaiseen eri karttapohjaan (kartat 1-4) leikatut rajaviivat. N‰ill‰ voidaan optimoida zoomaukseen k‰ytettyj‰ rajaviiva laskuja.
+    std::vector<std::shared_ptr<OGRGeometry>> clippedCountryBorderGeometrys_;
 
     // ******** Piirto-ominaisuuksien copy-paste toimintoihin liittyv‰t datat ****************
     // T‰t‰ k‰ytet‰‰n yhden parametrin piirto-ominaisuuksien copy/paste komennon talletuspaikkana
@@ -255,14 +251,15 @@ private:
     void initMapConfigurationSystemMain();
     void initMapConfigurationSystem();
     void initProjectionCurvatureInfo();
-    void initLandBorderDrawingSystem();
+    void initLandBorderDrawingSystemWithGdal();
     std::pair<unsigned int, MapViewCombinedMapModeState> makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedWmsMapLayerCount, bool doBackgroundCase);
     void initCombinedMapStates();
     void storeCombinedMapStates();
     void initCombinedMapSelectionIndices();
     void initWmsSupportSelectionIndices();
     std::vector<int> getCombinedModeSelectedMapIndicesFromWinRegistry(unsigned int mapViewDescTopIndex, bool doBackgroundMaps);
-    void doCutBorderDrawInitialization();
+    void doCutBorderDrawInitializationWithGdal();
+    void generateClippedCountryBorderGeometrysWithGdal();
     void makeNeededDirtyOperationsWhenDataAdded(unsigned int mapViewDescTopIndex, NFmiFastQueryInfo& fastInfo, NFmiInfoData::Type dataType, const NFmiTimeBag& dirtyViewTimes, const std::string& fileName);
     void logMessage(const std::string &logMessage, CatLog::Severity severity, CatLog::Category category);
     void logAndWarnUser(const std::string& logMessage, const std::string& titleString, CatLog::Severity severity, CatLog::Category category, bool addAbortOption);
