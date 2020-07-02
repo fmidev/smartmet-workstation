@@ -216,9 +216,9 @@ public:
     void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     std::shared_ptr<OGRGeometry> CountryBorderGeometry(int theDescTopIndex) override;
     void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) override;
-    const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) override;
-    void DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue) override;
-    void DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue) override;
+    const std::list<std::vector<Gdiplus::PointF>>& PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex) override;
+    void PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex, const std::list<std::vector<Gdiplus::PointF>>& newValue) override;
+    void PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex, std::list<std::vector<Gdiplus::PointF>>&& newValue) override;
     std::list<NFmiPolyline*>& DrawBorderPolyLineList(int theDescTopIndex) override;
     int DrawOverMapMode(int theDescTopIndex) override;
     void SnapShotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
@@ -287,7 +287,7 @@ public:
     CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
     bool BorderDrawBitmapDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const override;
     bool BorderDrawPolylinesDirty(int theDescTopIndex) const override;
-    bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const override;
+    bool PolyLineListGdiplusInPixelCoordinatesDirty(int theDescTopIndex) const override;
     void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) override;
     double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const override;
     bool IsTimeControlViewVisible(int theDescTopIndex) const override;

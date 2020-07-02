@@ -1030,19 +1030,19 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineList(int theD
     itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineList(polyLineList);
 }
 
-const std::list<std::vector<NFmiPoint>>& CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex)
+const std::list<std::vector<Gdiplus::PointF>>& CtrlViewDocumentInterfaceForGeneralDataDoc::PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex)
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->PolyLineListGdiplusInPixelCoordinates();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex, const std::list<std::vector<Gdiplus::PointF>>& newValue)
 {
-    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(newValue);
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->PolyLineListGdiplusInPixelCoordinates(newValue);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex, std::list<std::vector<Gdiplus::PointF>>&& newValue)
 {
-    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawBorderPolyLineListGdiplus(std::move(newValue));
+    itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->PolyLineListGdiplusInPixelCoordinates(std::move(newValue));
 }
 
 std::list<NFmiPolyline*>& CtrlViewDocumentInterfaceForGeneralDataDoc::DrawBorderPolyLineList(int theDescTopIndex)
@@ -1381,9 +1381,9 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawPolylinesDirty(int th
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawPolylinesDirty();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::PolyLineListGdiplusInPixelCoordinatesDirty(int theDescTopIndex) const
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->BorderDrawPolylinesGdiplusDirty();
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->PolyLineListGdiplusInPixelCoordinatesDirty();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState)
