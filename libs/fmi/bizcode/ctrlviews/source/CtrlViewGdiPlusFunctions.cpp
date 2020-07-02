@@ -547,17 +547,16 @@ namespace CtrlView
     // 2. Ei mink‰‰nlaista polygon fill tukea, eik‰ muita viiva tyyppej‰ kuin normaali yhten‰inen viiva (ei tarvitse kikkailla mm. printtauksien kanssa).
     // 3. Ei alpha optiota.
     // Palauttaa kaikkien piirrettyjen pisteiden lukum‰‰r‰n (ainoastaan debug tietona asiakkaalle)
-    size_t DrawGdiplusSimpleMultiPolyLine(Gdiplus::Graphics &theGraphics, NFmiToolBox *theToolBox, const std::list<std::vector<NFmiPoint>> &theMultiPolyLine, const NFmiColor &theLineColor, int theLineThickness, const NFmiPoint &theRelativeOffSet)
+    size_t DrawGdiplusSimpleMultiPolyLineInPixelCoordinates(Gdiplus::Graphics& theGraphics, NFmiToolBox* theToolBox, const std::list<std::vector<Gdiplus::PointF>>& theMultiPolyLineInPixelCoordinates, const NFmiColor& theLineColor, int theLineThickness)
     {
         size_t totalDrawedPointCount = 0;
         Gdiplus::Color lineColor = NFmiColor2GdiplusColor(theLineColor);
         Gdiplus::Pen pen(lineColor, static_cast<Gdiplus::REAL>(theLineThickness));
         pen.SetLineJoin(Gdiplus::LineJoinRound);
-        for(const auto &polyLine : theMultiPolyLine)
+        for(const auto& polyLineInPixelCoordinates : theMultiPolyLineInPixelCoordinates)
         {
-            totalDrawedPointCount += polyLine.size();
-            auto gdiplusPolyLine = Relative2GdiplusPolyLine(theToolBox, polyLine, theRelativeOffSet);
-            theGraphics.DrawCurve(&pen, &gdiplusPolyLine[0], static_cast<INT>(gdiplusPolyLine.size()), 0.f);
+            totalDrawedPointCount += polyLineInPixelCoordinates.size();
+            theGraphics.DrawCurve(&pen, polyLineInPixelCoordinates.data(), static_cast<INT>(polyLineInPixelCoordinates.size()), 0.f);
         }
         return totalDrawedPointCount;
     }
