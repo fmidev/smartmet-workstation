@@ -138,6 +138,7 @@
 #include "NFmiCombinedMapHandler.h"
 #include "NFmiFastDrawParamList.h"
 #include "NFmiAreaTools.h"
+#include "ogr_geometry.h"
 
 #include "AnimationProfiler.h"
 
