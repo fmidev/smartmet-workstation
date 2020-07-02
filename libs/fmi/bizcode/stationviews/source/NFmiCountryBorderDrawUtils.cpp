@@ -16,6 +16,7 @@
 #include "NFmiDrawParam.h"
 #include "OGR.h"
 #include "Box.h"
+#include "ogr_geometry.h"
 
 #include <list>
 
@@ -50,10 +51,10 @@ namespace
         ::traceLogLandBorderLineCounts(thePolyLineList.size(), totalLinePointCount, ctrlView);
     }
 
-    void drawPolyLineListGdiplus(Gdiplus::Graphics& gdiplusGraphics, NFmiToolBox* toolbox, const std::list<std::vector<NFmiPoint>>& polyLineListGdiplus, const NFmiPoint& relativeOffSet, NFmiCtrlView* ctrlView, const NFmiColor& lineColor, int lineThickness)
+    void drawPolyLineListGdiplus(Gdiplus::Graphics& gdiplusGraphics, NFmiToolBox* toolbox, const std::list<std::vector<Gdiplus::PointF>>& polyLineListGdiplusInPixelCoordinates, NFmiCtrlView* ctrlView, const NFmiColor& lineColor, int lineThickness)
     {
-        size_t totalLinePointCount = CtrlView::DrawGdiplusSimpleMultiPolyLine(gdiplusGraphics, toolbox, polyLineListGdiplus, lineColor, lineThickness, relativeOffSet);
-        ::traceLogLandBorderLineCounts(polyLineListGdiplus.size(), totalLinePointCount, ctrlView);
+        size_t totalLinePointCount = CtrlView::DrawGdiplusSimpleMultiPolyLineInPixelCoordinates(gdiplusGraphics, toolbox, polyLineListGdiplusInPixelCoordinates, lineColor, lineThickness);
+        ::traceLogLandBorderLineCounts(polyLineListGdiplusInPixelCoordinates.size(), totalLinePointCount, ctrlView);
     }
 
     void pushOldPolyLineAndStartNew(std::list<std::vector<NFmiPoint>>& relativePolyLineList, std::vector<NFmiPoint>& currentPolyLine, const NFmiPoint& newPoint)
@@ -184,6 +185,53 @@ namespace
         return relativePolyLineList;
     }
 
+    std::vector<Gdiplus::PointF> convertLineStringGeometryToGdiplusPolygon(OGRLineString* lineStringGeometry, const Fmi::Box& box)
+    {
+        if(lineStringGeometry)
+        {
+            const int numberOfPoints = lineStringGeometry->getNumPoints();
+            std::vector<Gdiplus::PointF> gdiplusPolygon(numberOfPoints);
+
+            for(int i = 0; i < numberOfPoints; ++i)
+            {
+                double x = lineStringGeometry->getX(i);
+                double y = lineStringGeometry->getY(i);
+
+                box.transform(x, y);
+                gdiplusPolygon[i] = Gdiplus::PointF(static_cast<Gdiplus::REAL>(x), static_cast<Gdiplus::REAL>(y));
+            }
+            return gdiplusPolygon;
+        }
+        return {};
+    }
+
+    std::list<std::vector<Gdiplus::PointF>> convertMultiLineStringGeometryToGdiplusMultiPolygon(OGRMultiLineString* multiLineStringGeometry, const Fmi::Box& box)
+    {
+        std::list<std::vector<Gdiplus::PointF>> gdiplusMultiPolygon;
+        if(multiLineStringGeometry)
+        {
+            for(int i = 0, n = multiLineStringGeometry->getNumGeometries(); i < n; ++i)
+            {
+                gdiplusMultiPolygon.emplace_back(::convertLineStringGeometryToGdiplusPolygon(dynamic_cast<OGRLineString*>(multiLineStringGeometry->getGeometryRef(i)), box));
+                if(gdiplusMultiPolygon.back().empty())
+                    gdiplusMultiPolygon.pop_back();
+            }
+        }
+        return gdiplusMultiPolygon;
+    }
+
+    std::list<std::vector<Gdiplus::PointF>> convertGeometryToGdiplusMultiPolygon(OGRGeometry* geometry, const Fmi::Box& box)
+    {
+        OGRwkbGeometryType id = geometry->getGeometryType();
+        switch(id)
+        {
+        case wkbMultiLineString:
+            return ::convertMultiLineStringGeometryToGdiplusMultiPolygon(dynamic_cast<OGRMultiLineString*>(geometry), box);
+        default:
+            return {};
+        }
+    }
+
     std::unique_ptr<NFmiArea> createFixedToOrigoMapArea(const boost::shared_ptr<NFmiArea>& mapArea)
     {
         std::unique_ptr<NFmiArea> fixedToOrigoMapArea(mapArea.get()->Clone());
@@ -209,7 +257,7 @@ namespace
             Fmi::Box zoomedClipBox = ::calculateZoomedAreaWorldXyClipRect(ctrlViewDocumentInterface, mapViewDescTopIndex, fixedToOrigoZoomedMapArea);
             auto zoomedAreaGeometryInPixelCoordinates = Fmi::OGR::lineclip(*baseAreaCountryBorderGeometry, zoomedClipBox);
             // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa listaan liittyvän likaisuus lipun pois eli käyttövalmiiksi
-            ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex, ::convertPath2RelativePolyLineListGdiplus(path, false, true));
+            ctrlViewDocumentInterface->PolyLineListGdiplusInPixelCoordinates(mapViewDescTopIndex, ::convertGeometryToGdiplusMultiPolygon(zoomedAreaGeometryInPixelCoordinates, zoomedClipBox));
         }
         else
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Didn't find any borders to draw", mapView);
@@ -225,11 +273,11 @@ namespace
             // Border viivojen piirto erilliseen cache bitmap:iin pitää tapahtua aina kiinni origossa.
             // Siksi pitää luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
             auto fixedToOrigoZoomedMapArea = ::createFixedToOrigoMapArea(mapArea);
-            if(ctrlViewDocumentInterface->BorderDrawPolylinesGdiplusDirty(mapViewDescTopIndex))
+            if(ctrlViewDocumentInterface->PolyLineListGdiplusInPixelCoordinatesDirty(mapViewDescTopIndex))
                 ::recalculateCountryBorderGeometry(mapView, fixedToOrigoZoomedMapArea);
 
-            auto& borderPolyLineList = ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex);
-            if(borderPolyLineList.empty() == false)
+            auto& polyLineListGdiplusInPixelCoordinates = ctrlViewDocumentInterface->PolyLineListGdiplusInPixelCoordinates(mapViewDescTopIndex);
+            if(polyLineListGdiplusInPixelCoordinates.empty() == false)
             {
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
                 NFmiPoint offSet(fixedToOrigoZoomedMapArea->TopLeft());
@@ -238,7 +286,7 @@ namespace
                 // Pitää luoda rajaviiva piirrossa käytössä olevan toolboxin avulla uusi Gdiplus-graphics olio, ei saa käyttää mapView:in vastaavaa oliota!
                 std::unique_ptr<Gdiplus::Graphics> gdigraphicsPtr(NFmiCtrlView::CreateGdiplusGraphics(toolbox, &fixedToOrigoZoomedMapArea->XYArea()));
                 if(gdigraphicsPtr)
-                    ::drawPolyLineListGdiplus(*gdigraphicsPtr, toolbox, borderPolyLineList, offSet, mapView, lineColor, penSize);
+                    ::drawPolyLineListGdiplus(*gdigraphicsPtr, toolbox, polyLineListGdiplusInPixelCoordinates, mapView, lineColor, penSize);
                 else
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + " couldn't create gdiplus graphics object from given toolbox", mapView);
             }
@@ -259,8 +307,8 @@ namespace
         //// Alue piirrot: suomi n. 25-40x (piirtoaika), skandi n. 45-75x, euro n. 15-30 ja maailma n. 6-10x
         //// Tein uuden piirto koodin, joka on hitaampi 1 pikselin piirrolle, mutta nopeampi 2-3 pikselille:
         //// Uusi vs vanha piirtonopeus: suomi n. 3-5x (nopeampi), skandi n. 7-11x, euro n. 2.5-4.5x ja maailma n. 1.5-3x
-        //// Siksi jos piirto paksuus on 1, käytetään vanhaa piirtoa j muuten käytetään uutta.
-        bool usedGdiPlus = (penSize > 1);
+        //// Siksi jos piirto paksuus on 1, käytetään vanhaa piirtoa ja muuten käytetään uutta.
+        bool usedGdiPlus = true;// (penSize > 1);
         if(usedGdiPlus)
             ::drawLandBordersWithGdiplus(mapView, toolbox, separateBorderLayerDrawOptions);
         else
@@ -269,25 +317,25 @@ namespace
             {
                 // Border viivojen piirto erilliseen cache bitmap:iin pitää tapahtua aina kiinni origossa.
                 // Siksi pitää luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
-                auto fixedToOrigoMapArea = ::CreateFixedToOrigoMapArea(mapArea);
+                auto fixedToOrigoMapArea = ::createFixedToOrigoMapArea(mapArea);
                 if(ctrlViewDocumentInterface->BorderDrawPolylinesDirty(mapViewDescTopIndex))
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " borders were 'dirty', recalculating them");
-                    boost::shared_ptr<Imagine::NFmiPath> usedPath = ctrlViewDocumentInterface->LandBorderPath(mapViewDescTopIndex);
-                    if(usedPath)
-                    {
-                        Imagine::NFmiPath path(*usedPath.get());
-                        path.Project(fixedToOrigoMapArea.get());
-                        std::list<NFmiPolyline*> polyLineList;
-                        // NFmiIsoLineView::ConvertPath2PolyLineList funktiolle annetaan viimeisena nullptr parametri, koska ei haluta antaa jokaiselle
-                        // erilliselle polylinelle omaa piirto-ominaisuus oliota. Kun maiden rajaviivat piirretään yhteen karttaruutuun, piirretään ne 
-                        // aina samalla värillä ja viivapaksuudella, joten ei ole tarvetta laitta jokaiselle viivanpätkälle erillisiä asetuksia.
-                        NFmiIsoLineView::ConvertPath2PolyLineList(path, polyLineList, false, true, fixedToOrigoMapArea->XYArea(), nullptr);
-                        // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa polyline-listaan liittyvän dirty-flagin pois päältä
-                        ctrlViewDocumentInterface->DrawBorderPolyLineList(mapViewDescTopIndex, polyLineList);
-                    }
-                    else
-                        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Didn't find any borders to draw", mapView);
+                    //boost::shared_ptr<Imagine::NFmiPath> usedPath = ctrlViewDocumentInterface->LandBorderPath(mapViewDescTopIndex);
+                    //if(usedPath)
+                    //{
+                    //    Imagine::NFmiPath path(*usedPath.get());
+                    //    path.Project(fixedToOrigoMapArea.get());
+                    //    std::list<NFmiPolyline*> polyLineList;
+                    //    // NFmiIsoLineView::ConvertPath2PolyLineList funktiolle annetaan viimeisena nullptr parametri, koska ei haluta antaa jokaiselle
+                    //    // erilliselle polylinelle omaa piirto-ominaisuus oliota. Kun maiden rajaviivat piirretään yhteen karttaruutuun, piirretään ne 
+                    //    // aina samalla värillä ja viivapaksuudella, joten ei ole tarvetta laitta jokaiselle viivanpätkälle erillisiä asetuksia.
+                    //    NFmiIsoLineView::ConvertPath2PolyLineList(path, polyLineList, false, true, fixedToOrigoMapArea->XYArea(), nullptr);
+                    //    // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa polyline-listaan liittyvän dirty-flagin pois päältä
+                    //    ctrlViewDocumentInterface->DrawBorderPolyLineList(mapViewDescTopIndex, polyLineList);
+                    //}
+                    //else
+                    //    CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging("Didn't find any borders to draw", mapView);
                 }
 
                 auto& borderPolyLineList = ctrlViewDocumentInterface->DrawBorderPolyLineList(mapViewDescTopIndex);
