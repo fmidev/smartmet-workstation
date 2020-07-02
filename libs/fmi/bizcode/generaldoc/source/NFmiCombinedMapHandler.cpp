@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "NFmiCombinedMapHandler.h"
 #include "NFmiMapViewDescTop.h"
 #include "WmsSupportInterface.h"
@@ -1088,6 +1089,8 @@ static void SetupSpatialReferenceFromLayer(OGRLayer* layer, std::unique_ptr<OGRG
 	}
 	else
 		geometry->assignSpatialReference(layer->GetSpatialRef());
+
+	geometry->getSpatialReference()->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 }
 
 void NFmiCombinedMapHandler::initLandBorderDrawingSystemWithGdal()
@@ -1103,6 +1106,7 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystemWithGdal()
 #else // debug versio
 		countryBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFileDebug");
 #endif
+		countryBorderShapeFile_ = PathUtils::makeFixedAbsolutePath(countryBorderShapeFile_, absoluteControlPath_);
 		GDALAllRegister();
 		countryBorderShapeFile_ += ".shp";
 		GDALDatasetUniquePtr poDS(GDALDataset::Open(countryBorderShapeFile_.c_str(), GDAL_OF_VECTOR));
@@ -1118,13 +1122,13 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystemWithGdal()
 		Fmi::CoordinateTransformation coordinateTransformation(*globalBaseCountryBorderGeometry_->getSpatialReference(), *OGRSpatialReference::GetWGS84SRS());
 		for(auto layer : poDS->GetLayers())
 		{
-			layer->GetSpatialRef()->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-
 			for(const auto& feature : *layer)
 			{
-				globalBaseCountryBorderGeometry_->addGeometryDirectly(feature->GetGeometryRef());
+				globalBaseCountryBorderGeometry_->addGeometry(feature->GetGeometryRef());
 			}
 		}
+
+		doCutBorderDrawInitializationWithGdal();
 	}
 	catch(std::exception& e)
 	{
@@ -1156,8 +1160,8 @@ void NFmiCombinedMapHandler::generateClippedCountryBorderGeometrysWithGdal()
 		{
 			auto transformedGeometry = coordinateTransformation.transformGeometry(*globalBaseCountryBorderGeometry_);
 			auto worldXyRect = totalMapArea->WorldRect();
-			Fmi::Box clipBox(worldXyRect.Left(), worldXyRect.Bottom(), worldXyRect.Right(), worldXyRect.Top(), 100, 100);
-			clippedGeometry.reset(Fmi::OGR::lineclip(*transformedGeometry, clipBox.identity()));
+			Fmi::Box clipBox(worldXyRect.Left(), worldXyRect.Top(), worldXyRect.Right(), worldXyRect.Bottom());
+			clippedGeometry.reset(Fmi::OGR::lineclip(*transformedGeometry, clipBox));
 		}
 
 		clippedCountryBorderGeometrys_.push_back(clippedGeometry);
