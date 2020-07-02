@@ -24,6 +24,7 @@
 #include "NFmiCountryBorderBitmapCache.h"
 #include "CombinedMapHandlerInterface.h"
 #include "TrueMapViewSizeInfo.h"
+#include <gdiplus.h>
 
 class CDC;
 class NFmiPolyline;
@@ -38,10 +39,6 @@ class OGRGeometry;
 namespace Imagine
 {
     class NFmiPath;
-}
-namespace Gdiplus
-{
-    class Bitmap;
 }
 
 class NFmiMapViewDescTop
@@ -149,7 +146,7 @@ public:
 	int LandBorderPenSize(NFmiDrawParam* separateBorderLayerDrawOptions);
 	bool BorderDrawBitmapDirty(NFmiDrawParam* separateBorderLayerDrawOptions) const;
 	bool BorderDrawPolylinesDirty() const;
-	bool BorderDrawPolylinesGdiplusDirty() const;
+	bool PolyLineListGdiplusInPixelCoordinatesDirty() const;
 	Gdiplus::Bitmap* LandBorderMapBitmap(NFmiDrawParam* separateBorderLayerDrawOptions) const;
     void SetLandBorderMapBitmap(Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions);
 
@@ -161,9 +158,9 @@ public:
 	void ToggleLandBorderPenSize(void);
 	std::list<NFmiPolyline*>& DrawBorderPolyLineList();
 	void DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue);
-    const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
-    void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>> &newValue);
-    void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>> &&newValue);
+    const std::list<std::vector<Gdiplus::PointF>>& PolyLineListGdiplusInPixelCoordinates();
+    void PolyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>> &newValue);
+    void PolyLineListGdiplusInPixelCoordinates(std::list<std::vector<Gdiplus::PointF>> &&newValue);
 	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr);
 	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string &cacheKey);
 	int LandBorderColorIndex(void) const {return itsLandBorderColorIndex;}

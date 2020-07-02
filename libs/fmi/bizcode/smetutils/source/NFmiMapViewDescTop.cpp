@@ -10,6 +10,7 @@
 #pragma warning( push )
 #pragma warning( disable : 4458 ) // mm. gdiplusheaders.h tekee läjän meille täysin turhia "declaration hides class member" varoituksia
 
+#include "stdafx.h"
 #include "NFmiMapViewDescTop.h"
 #include "NFmiMapConfigurationSystem.h"
 #include "NFmiGdiPlusImageMapHandler.h"
@@ -27,7 +28,6 @@
 #include "catlog/catlog.h"
 
 #include <algorithm>
-#include "stdafx.h"
 
 #pragma warning( push )
 
@@ -898,9 +898,9 @@ bool NFmiMapViewDescTop::BorderDrawPolylinesDirty() const
 	return MapHandler()->BorderDrawPolylinesDirty();
 }
 
-bool NFmiMapViewDescTop::BorderDrawPolylinesGdiplusDirty() const
+bool NFmiMapViewDescTop::PolyLineListGdiplusInPixelCoordinatesDirty() const
 {
-	return MapHandler()->BorderDrawPolylinesGdiplusDirty();
+	return MapHandler()->PolyLineListGdiplusInPixelCoordinatesDirty();
 }
 
 Gdiplus::Bitmap* NFmiMapViewDescTop::LandBorderMapBitmap(NFmiDrawParam* separateBorderLayerDrawOptions) const
@@ -1431,19 +1431,19 @@ void NFmiMapViewDescTop::DrawBorderPolyLineList(std::list<NFmiPolyline*>& newPol
 	MapHandler()->DrawBorderPolyLineList(newPolyline);
 }
 
-const std::list<std::vector<NFmiPoint>>& NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus()
+const std::list<std::vector<Gdiplus::PointF>>& NFmiMapViewDescTop::PolyLineListGdiplusInPixelCoordinates()
 {
-	return MapHandler()->DrawBorderPolyLineListGdiplus();
+	return MapHandler()->PolyLineListGdiplusInPixelCoordinates();
 }
 
-void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newPolylines)
+void NFmiMapViewDescTop::PolyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>>& newPolylines)
 {
-	MapHandler()->DrawBorderPolyLineListGdiplus(newPolylines);
+	MapHandler()->PolyLineListGdiplusInPixelCoordinates(newPolylines);
 }
 
-void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newPolylines)
+void NFmiMapViewDescTop::PolyLineListGdiplusInPixelCoordinates(std::list<std::vector<Gdiplus::PointF>>&& newPolylines)
 {
-	MapHandler()->DrawBorderPolyLineListGdiplus(newPolylines);
+	MapHandler()->PolyLineListGdiplusInPixelCoordinates(newPolylines);
 }
 
 void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions)
