@@ -2,6 +2,7 @@
 
 #include "NFmiPoint.h"
 #include "CombinedMapHandlerInterface.h"
+#include <gdiplus.h>
 
 #include <list>
 
@@ -19,9 +20,9 @@ class NFmiCountryBorderPolylineCache
     // Mutta jos laskettu polyline onkin tyhj‰, pit‰‰ olla mekanismi, jolla voidaan tarkistaa ett‰ vaikka polyline-lista onkin tyhj‰,
     // mutta silti listaa ei tarvitse laskea uudestaan t‰m‰ lipun avulla.
     bool drawBorderPolyLineListDirty_ = true;
-    std::list<std::vector<NFmiPoint>> drawBorderPolyLineListGdiplus_;
-    // Sama selitys kuin fDrawBorderPolyLineListSet:in kanssa edell‰, mutta koskien itsDrawBorderPolyLineListGdiplus -listan likaisuutta.
-    bool drawBorderPolyLineListGdiplusDirty_ = true;
+    std::list<std::vector<Gdiplus::PointF>> polyLineListGdiplusInPixelCoordinates_;
+    // Sama selitys kuin drawBorderPolyLineListDirty_:in kanssa edell‰, mutta koskien polyLineListGdiplusInPixelCoordinates_ -listan likaisuutta.
+    bool polyLineListGdiplusInPixelCoordinatesDirty_ = true;
 public:
     NFmiCountryBorderPolylineCache();
     NFmiCountryBorderPolylineCache(const NFmiCountryBorderPolylineCache& other);
@@ -30,16 +31,16 @@ public:
 
     void clearCache();
     void drawBorderPolyLineList(std::list<NFmiPolyline*>& newPolyLineList);
-    void drawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newPolyLineList);
-    void drawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newPolyLineList);
+    void polyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>> &polyLineList);
+    void polyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>> &&polyLineList);
     void setBorderDrawDirtyState(CountryBorderDrawDirtyState newState);
     bool borderDrawPolylinesDirty() const;
-    bool borderDrawPolylinesGdiplusDirty() const;
+    bool polyLineListGdiplusInPixelCoordinatesDirty() const;
     std::list<NFmiPolyline*>& drawBorderPolyLineList();
     const NFmiPoint& relativeDrawingOffset() const { return relativeDrawingOffset_; }
-    const std::list<std::vector<NFmiPoint>>& drawBorderPolyLineListGdiplus();
+    const std::list<std::vector<Gdiplus::PointF>>& polyLineListGdiplusInPixelCoordinates();
 
 private:
     void clearDrawBorderPolyLineList();
-    void clearDrawBorderPolyLineListGdiplus();
+    void clearPolyLineListGdiplusInPixelCoordinates();
 };

@@ -44,7 +44,7 @@ NFmiCountryBorderPolylineCache::~NFmiCountryBorderPolylineCache()
 void NFmiCountryBorderPolylineCache::clearCache()
 {
     clearDrawBorderPolyLineList();
-    clearDrawBorderPolyLineListGdiplus();
+    clearPolyLineListGdiplusInPixelCoordinates();
 }
 
 void NFmiCountryBorderPolylineCache::clearDrawBorderPolyLineList()
@@ -65,16 +65,16 @@ void NFmiCountryBorderPolylineCache::drawBorderPolyLineList(std::list<NFmiPolyli
     drawBorderPolyLineListDirty_ = false;
 }
 
-void NFmiCountryBorderPolylineCache::drawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newPolyLineList)
+void NFmiCountryBorderPolylineCache::polyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>>& polyLineList)
 {
-    drawBorderPolyLineListGdiplus_ = newPolyLineList;
-    drawBorderPolyLineListGdiplusDirty_ = false;
+    polyLineListGdiplusInPixelCoordinates_ = polyLineList;
+    polyLineListGdiplusInPixelCoordinatesDirty_ = false;
 }
 
-void NFmiCountryBorderPolylineCache::drawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newPolyLineList)
+void NFmiCountryBorderPolylineCache::polyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>> && polyLineList)
 {
-    drawBorderPolyLineListGdiplus_ = std::move(newPolyLineList);
-    drawBorderPolyLineListGdiplusDirty_ = false;
+    polyLineListGdiplusInPixelCoordinates_ = std::move(polyLineList);
+    polyLineListGdiplusInPixelCoordinatesDirty_ = false;
 }
 
 // Uusi border-draw-dirty systeemi ei laita lippuja p‰‰lle, vaan tyhjent‰‰ tarvittavat cachet
@@ -85,14 +85,14 @@ void NFmiCountryBorderPolylineCache::setBorderDrawDirtyState(CountryBorderDrawDi
     {
         // Kosmeettiset muutokset eiv‰t laita polylineja uusiksi, mutta kaikki geometriset muutokset kyll‰
         clearDrawBorderPolyLineList();
-        clearDrawBorderPolyLineListGdiplus();
+        clearPolyLineListGdiplusInPixelCoordinates();
     }
 }
 
-void NFmiCountryBorderPolylineCache::clearDrawBorderPolyLineListGdiplus()
+void NFmiCountryBorderPolylineCache::clearPolyLineListGdiplusInPixelCoordinates()
 {
-    drawBorderPolyLineListGdiplus_.clear();
-    drawBorderPolyLineListGdiplusDirty_ = true;
+    polyLineListGdiplusInPixelCoordinates_.clear();
+    polyLineListGdiplusInPixelCoordinatesDirty_ = true;
 }
 
 bool NFmiCountryBorderPolylineCache::borderDrawPolylinesDirty() const
@@ -100,9 +100,9 @@ bool NFmiCountryBorderPolylineCache::borderDrawPolylinesDirty() const
     return drawBorderPolyLineListDirty_;
 }
 
-bool NFmiCountryBorderPolylineCache::borderDrawPolylinesGdiplusDirty() const
+bool NFmiCountryBorderPolylineCache::polyLineListGdiplusInPixelCoordinatesDirty() const
 {
-    return drawBorderPolyLineListGdiplusDirty_;
+    return polyLineListGdiplusInPixelCoordinatesDirty_;
 }
 
 std::list<NFmiPolyline*>& NFmiCountryBorderPolylineCache::drawBorderPolyLineList()
@@ -110,7 +110,7 @@ std::list<NFmiPolyline*>& NFmiCountryBorderPolylineCache::drawBorderPolyLineList
     return drawBorderPolyLineList_;
 }
 
-const std::list<std::vector<NFmiPoint>>& NFmiCountryBorderPolylineCache::drawBorderPolyLineListGdiplus()
+const std::list<std::vector<Gdiplus::PointF>>& NFmiCountryBorderPolylineCache::polyLineListGdiplusInPixelCoordinates()
 { 
-    return drawBorderPolyLineListGdiplus_;
+    return polyLineListGdiplusInPixelCoordinates_;
 }

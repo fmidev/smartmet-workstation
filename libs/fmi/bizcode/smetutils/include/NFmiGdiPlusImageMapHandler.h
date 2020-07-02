@@ -83,12 +83,12 @@ public:
 	void MapReallyChanged(bool newValue) {fMapReallyChanged = newValue;}
 	std::list<NFmiPolyline*>& DrawBorderPolyLineList();
 	void DrawBorderPolyLineList(std::list<NFmiPolyline*> &newValue);
-	const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus();
-	void DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue);
-	void DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue);
+	const std::list<std::vector<Gdiplus::PointF>>& PolyLineListGdiplusInPixelCoordinates();
+	void PolyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>>& newValue);
+	void PolyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>>&& newValue);
 	void SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState);
 	bool BorderDrawPolylinesDirty() const;
-	bool BorderDrawPolylinesGdiplusDirty() const;
+	bool PolyLineListGdiplusInPixelCoordinatesDirty() const;
 	std::shared_ptr<OGRGeometry> CountryBorderGeometry();
 	void CountryBorderGeometry(std::shared_ptr<OGRGeometry> &theGeometry);
 
