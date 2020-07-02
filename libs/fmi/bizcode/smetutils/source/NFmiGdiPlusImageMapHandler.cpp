@@ -566,14 +566,14 @@ void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineList(std::list<NFmiPolyline*>
 	itsCountryBorderPolylineCache.drawBorderPolyLineList(newValue);
 }
 
-void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& newValue)
+void NFmiGdiPlusImageMapHandler::PolyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>>& newValue)
 { 
-	itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus(newValue);
+	itsCountryBorderPolylineCache.polyLineListGdiplusInPixelCoordinates(newValue);
 }
 
-void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& newValue)
+void NFmiGdiPlusImageMapHandler::PolyLineListGdiplusInPixelCoordinates(const std::list<std::vector<Gdiplus::PointF>>&& newValue)
 { 
-	itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus(std::move(newValue));
+	itsCountryBorderPolylineCache.polyLineListGdiplusInPixelCoordinates(std::move(newValue));
 }
 
 // Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
@@ -628,9 +628,9 @@ bool NFmiGdiPlusImageMapHandler::BorderDrawPolylinesDirty() const
 	return itsCountryBorderPolylineCache.borderDrawPolylinesDirty();
 }
 
-bool NFmiGdiPlusImageMapHandler::BorderDrawPolylinesGdiplusDirty() const
+bool NFmiGdiPlusImageMapHandler::PolyLineListGdiplusInPixelCoordinatesDirty() const
 {
-	return itsCountryBorderPolylineCache.borderDrawPolylinesGdiplusDirty();
+	return itsCountryBorderPolylineCache.polyLineListGdiplusInPixelCoordinatesDirty();
 }
 
 std::list<NFmiPolyline*>& NFmiGdiPlusImageMapHandler::DrawBorderPolyLineList()
@@ -638,9 +638,9 @@ std::list<NFmiPolyline*>& NFmiGdiPlusImageMapHandler::DrawBorderPolyLineList()
 	return itsCountryBorderPolylineCache.drawBorderPolyLineList();
 }
 
-const std::list<std::vector<NFmiPoint>>& NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus()
+const std::list<std::vector<Gdiplus::PointF>>& NFmiGdiPlusImageMapHandler::PolyLineListGdiplusInPixelCoordinates()
 {
-	return itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus();
+	return itsCountryBorderPolylineCache.polyLineListGdiplusInPixelCoordinates();
 }
 
 std::shared_ptr<OGRGeometry> NFmiGdiPlusImageMapHandler::CountryBorderGeometry()
