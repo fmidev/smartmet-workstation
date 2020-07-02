@@ -89,6 +89,7 @@ namespace HakeMessage
 namespace Gdiplus
 {
     class Bitmap;
+    class PointF;
 }
 namespace CtrlViewUtils
 {
@@ -106,6 +107,16 @@ namespace Warnings
     class CapDataSystem;
 }
 
+// Trying to forward declare std::list<std::vector<Gdiplus::PointF>> to be used as method reference parameter.
+// This is interface class that tries to have as little dependencies as possible and with class Gdiplus::PointF, 
+// MFC + Gdiplus would be HUGE dependency.
+// This might work or not, depending compiler implementation. There migth not be any warnings if this wouldn't work with this compiler.
+namespace std
+{
+    template < typename > class allocator;
+    template < typename, typename > class vector;
+    template < typename, typename > class list;
+}
 
 // Interface that is meant to be used by non-MFC views in libraries under bizcode part of code base.
 class CtrlViewDocumentInterface
@@ -323,9 +334,9 @@ public:
     virtual std::shared_ptr<OGRGeometry> CountryBorderGeometry(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) = 0;
     virtual std::list<NFmiPolyline*>& DrawBorderPolyLineList(int theDescTopIndex) = 0;
-    virtual const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) = 0;
-    virtual void DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue) = 0;
-    virtual void DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue) = 0;
+    virtual const std::list<std::vector<Gdiplus::PointF>>& PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex) = 0;
+    virtual void PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex, const std::list<std::vector<Gdiplus::PointF>> &newValue) = 0;
+    virtual void PolyLineListGdiplusInPixelCoordinates(int theDescTopIndex, std::list<std::vector<Gdiplus::PointF>> &&newValue) = 0;
     virtual int DrawOverMapMode(int theDescTopIndex) = 0;
     virtual void SnapShotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
         , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime) = 0;
@@ -393,7 +404,7 @@ public:
     virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
     virtual bool BorderDrawBitmapDirty(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
     virtual bool BorderDrawPolylinesDirty(int theDescTopIndex) const = 0;
-    virtual bool BorderDrawPolylinesGdiplusDirty(int theDescTopIndex) const = 0;
+    virtual bool PolyLineListGdiplusInPixelCoordinatesDirty(int theDescTopIndex) const = 0;
     virtual void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) = 0;
     virtual double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const = 0;
     virtual bool IsTimeControlViewVisible(int theDescTopIndex) const = 0;
