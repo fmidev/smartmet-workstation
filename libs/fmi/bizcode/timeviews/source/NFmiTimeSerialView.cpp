@@ -4148,9 +4148,10 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime_Timelist(const NFmiPoint &
 {
     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
     auto paramId = itsDrawParam->Param().GetParamIdent();
+	auto drawedInfo = Info();
     std::vector<double> values;
-    FillTimeSerialDataFromInfo(Info(), theLatLonPoint, values, metaWindParamUsage, paramId);
-    if(drawModificationLines)
+    FillTimeSerialDataFromInfo(drawedInfo, theLatLonPoint, values, metaWindParamUsage, paramId);
+    if(drawModificationLines && drawedInfo->DataType() == NFmiInfoData::kEditable)
         DrawEditedDataLocationInTime_ModificationLine(theLatLonPoint, theModifiedDataLineStyle, theTimes, values);
     PlotTimeSerialData(values, theTimes, theCurrentDataLineStyle, g_PointNormal, g_PointSingle, true, true);
 }
