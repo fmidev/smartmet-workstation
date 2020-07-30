@@ -23,4 +23,8 @@ newbase_dir="smartmet-library-newbase"
 smarttools_dir="smartmet-library-smarttools"
 [ ! -d "$smarttools_dir" ] && git clone git@github.com:fmidev/"$smarttools_dir".git && cd "$smarttools_dir" && git checkout $dev && git pull --no-edit origin $dev && cd ..
 
+# 4th macgyver
+smarttools_dir="smartmet-library-macgyver"
+[ ! -d "$macgyver_dir" ] && git clone git@github.com:fmidev/"$macgyver_dir".git && cd "$macgyver_dir" && git checkout $dev && git pull --no-edit origin $dev && cd ..
+
 read -p "Press [Enter] key to continue..."

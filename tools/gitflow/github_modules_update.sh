@@ -17,4 +17,8 @@ git checkout $dev && git pull --no-edit origin $dev && git push --tags origin $d
 cd ../../github_modules/smartmet-library-smarttools
 git checkout $dev && git pull --no-edit origin $dev && git push --tags origin $dev
 
+# 4th macgyver
+cd ../../github_modules/smartmet-library-macgyver
+git checkout $dev && git pull --no-edit origin $dev && git push --tags origin $dev
+
 read -p "Press [Enter] key to continue..."

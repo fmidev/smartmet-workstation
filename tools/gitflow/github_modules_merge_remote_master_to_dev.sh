@@ -19,4 +19,8 @@ git checkout $master && git pull && git checkout $dev && git merge --no-edit --n
 cd ../../github_modules/smartmet-library-smarttools
 git checkout $master && git pull && git checkout $dev && git merge --no-edit --no-ff $master
 
+# 4th macgyver
+cd ../../github_modules/smartmet-library-macgyver
+git checkout $master && git pull && git checkout $dev && git merge --no-edit --no-ff $master
+
 read -p "Press [Enter] key to continue..."
