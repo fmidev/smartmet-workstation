@@ -16,4 +16,8 @@ newbase_dir="smartmet-library-newbase"
 smarttools_dir="smartmet-library-smarttools"
 [ -d "$smarttools_dir" ] && "$clang_format_exe_path" -i -style=file -verbose "$smarttools_dir"/smarttools/*.cpp "$smarttools_dir"/smarttools/*.h
 
+# 4th macgyver
+macgyver_dir="smartmet-library-macgyver"
+[ -d "$macgyver_dir" ] && "$clang_format_exe_path" -i -style=file -verbose "$macgyver_dir"/macgyver/*.cpp "$macgyver_dir"/macgyver/*.h
+
 read -p "Press [Enter] key to continue..."
