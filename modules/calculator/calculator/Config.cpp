@@ -6,6 +6,7 @@
 //#include <boost/thread.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <functional>
 
