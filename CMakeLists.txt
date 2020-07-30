@@ -138,6 +138,10 @@ add_subdirectory(
     )
 
 add_subdirectory(
+    github_modules/smartmet-library-macgyver
+    )
+
+add_subdirectory(
     src/applicationdatabase
     )
 
@@ -187,10 +191,6 @@ add_subdirectory(
 
 add_subdirectory(
     modules/imagine
-    )
-
-add_subdirectory(
-    modules/macgyver
     )
 
 add_subdirectory(
