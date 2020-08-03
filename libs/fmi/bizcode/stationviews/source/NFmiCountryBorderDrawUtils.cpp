@@ -234,14 +234,13 @@ namespace
 
     std::unique_ptr<NFmiArea> createFixedToOrigoMapArea(const boost::shared_ptr<NFmiArea>& mapArea)
     {
-        std::unique_ptr<NFmiArea> fixedToOrigoMapArea(mapArea.get()->Clone());
-        fixedToOrigoMapArea->Place(NFmiPoint(0, 0));
+        std::unique_ptr<NFmiArea> fixedToOrigoMapArea(mapArea->CreateNewArea(mapArea->XYArea()));
         return std::move(fixedToOrigoMapArea);
     }
 
     Fmi::Box calculateZoomedAreaWorldXyClipRect(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex, const std::unique_ptr<NFmiArea>& fixedToOrigoZoomedMapArea)
     {
-        auto singleMapViewSizeInPixels = ctrlViewDocumentInterface->MapViewSizeInPixels(mapViewDescTopIndex);
+        auto singleMapViewSizeInPixels = ctrlViewDocumentInterface->ActualMapBitmapSizeInPixels(mapViewDescTopIndex);
         auto worldXyRect = fixedToOrigoZoomedMapArea->WorldRect();
         return Fmi::Box(worldXyRect.Left(), worldXyRect.Top(), worldXyRect.Right(), worldXyRect.Bottom(), boost::math::iround(singleMapViewSizeInPixels.X()), boost::math::iround(singleMapViewSizeInPixels.Y()));
     }
