@@ -557,6 +557,46 @@ bool NFmiToolBox::BuildRectangle (const NFmiRectangle *fmiShape)
 	return true;
 }
 
+bool NFmiToolBox::DrawPolylineListInPixelCoordinates(const std::list<std::vector<CPoint>>& polylineListInPixelCoordinates, NFmiDrawingEnvironment& drawingEnvironment)
+{
+	SetUpClipping();
+	ConvertEnvironment(&drawingEnvironment);
+	bool brushStatus = false;
+	if(itsHatchPattern == -1)
+		brushStatus = pItsFillPattern->CreateSolidBrush(itsFillColor) != 0;
+	else
+		brushStatus = pItsFillPattern->CreateHatchBrush(itsHatchPattern, itsFillColor) != 0;
+
+	bool penStatus = pItsPen->CreatePen(itsPenStyle, itsPenSize.cx, itsFrameColor);
+	if(brushStatus && penStatus)
+	{
+		CBrush* pOldBrush = pDC->SelectObject(pItsFillPattern);
+		CPen* pOldPen = pDC->SelectObject(pItsPen);
+
+		for(const auto& polylineInPixelCoordinates : polylineListInPixelCoordinates)
+		{
+			if(fFilled)
+			{
+				pDC->SetBkMode(1); //  1 = opaque
+				pDC->SelectObject(pItsFillPattern);
+				pDC->Polygon(polylineInPixelCoordinates.data(), static_cast<int>(polylineInPixelCoordinates.size()));
+			}
+			if(fFramed)
+			{
+				pDC->SelectObject(pItsPen);
+				pDC->Polyline(polylineInPixelCoordinates.data(), static_cast<int>(polylineInPixelCoordinates.size()));
+			}
+		}
+
+		pDC->SelectObject(pOldPen);
+		pItsFillPattern->DeleteObject();
+		pItsPen->DeleteObject();
+	}
+	ConvertEnvironment(itsBaseEnvironment);
+	EndClipping();
+	return true;
+}
+
 // Piti tehd‰ optimointia varten viritys, jossa voidaan piirt‰‰ sama polyline mahdollisesti siirrettyn‰ ja skaalattuna.
 // Jos theOffSet on 0,0 ei tehd‰ mit‰‰n siirtoa ja jos theScale on 0,0, ei skaalausta tehd‰
 bool NFmiToolBox::DrawPolyline(NFmiPolyline * polyline, const NFmiPoint &theOffSet, const NFmiPoint &theScale, double rotationAlfa)
