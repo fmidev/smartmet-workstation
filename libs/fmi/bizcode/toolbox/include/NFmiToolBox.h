@@ -134,7 +134,8 @@ public:
   void DrawEllipse(const NFmiRect & theRelativeSize, NFmiDrawingEnvironment * theEnvi);
   bool DrawValueLineList(NFmiValueLineList * theLineList, NFmiDrawingEnvironment * theEnvi, const NFmiRect & theRelativeSize);
   bool DrawMultiPolygon(std::list<NFmiPolyline*> &thePolyLineList, NFmiDrawingEnvironment * theEnvi, const NFmiPoint &theOffSet);
-  bool DrawPolyline(NFmiPolyline * fmiShape, const NFmiPoint &theOffSet, const NFmiPoint &theScale, double rotationAlfa = 0);
+  bool DrawPolyline(NFmiPolyline* fmiShape, const NFmiPoint& theOffSet, const NFmiPoint& theScale, double rotationAlfa = 0);
+  bool DrawPolylineListInPixelCoordinates(const std::list<std::vector<CPoint>> &polylineListInPixelCoordinates, NFmiDrawingEnvironment& drawingEnvironment);
 
   const NFmiRect& RelativeClipRect(void) const {return itsRelativeClipRect;}
   void RelativeClipRect(const NFmiRect& theRect, bool newState = true) {itsRelativeClipRect=theRect; fUseClipping = newState;}
