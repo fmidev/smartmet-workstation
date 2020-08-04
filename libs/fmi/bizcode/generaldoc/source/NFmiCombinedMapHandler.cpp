@@ -1107,7 +1107,6 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystemWithGdal()
 		countryBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFileDebug");
 #endif
 		countryBorderShapeFile_ = PathUtils::makeFixedAbsolutePath(countryBorderShapeFile_, absoluteControlPath_);
-		GDALAllRegister();
 		countryBorderShapeFile_ += ".shp";
 		GDALDatasetUniquePtr poDS(GDALDataset::Open(countryBorderShapeFile_.c_str(), GDAL_OF_VECTOR));
 		if(!poDS)
