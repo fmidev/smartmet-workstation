@@ -3,6 +3,12 @@ project(SmartMet)
 
 set(CMAKE_MFC_FLAG 2)
 
+# Disable locally VC++ warnings about 'inconsistent dll linkage’, when 2 different function declaration are with different dll settings.
+# After adding gdal support and it’s initialization 'GDALOpenEx' function generated these, and you can't do anything about it, except silence them.
+add_compile_options(
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4273>
+    )
+
 # Configure the template file
 SET(USER_FILE ${PROJECT_NAME}.vcxproj.user)
 SET(OUTPUT_PATH ${PROJECT_BINARY_DIR}/${USER_FILE})
