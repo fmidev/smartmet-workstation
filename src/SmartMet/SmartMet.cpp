@@ -27,6 +27,8 @@
 #include "CombinedMapHandlerInterface.h"
 
 #include "boost/format.hpp"
+#include "ogrsf_frmts.h"
+#include "OGRSpatialReferenceFactory.h"
 
 namespace
 {
@@ -167,9 +169,11 @@ BOOL CSmartMetApp::InitInstance()
 
 	CrashRptInstall(); // tämä on tarkoitus kutsua ennen InitGeneralDataDoc-kutsua, mutta tätä ei voinut laittaa suoraan applikaation konstruktoriin (kaatuu).
 
+    InitGdal();
 	// Initialize GDI+, pitää initialisoida ennen itsGeneralData-olion luomista!
 	InitGdiplus();
     InitApplicationInterface(); // Kutsuttava ennen kuin doc-view systeemi ja generalDataDoc luodaan
+
     if(!InitGeneralDataDoc())
         return FALSE;
 
@@ -257,6 +261,29 @@ BOOL CSmartMetApp::InitInstance()
     itsGeneralData->FillStartupViewMacro(); // Otetaan SmartMetista 'alkukuva' näyttömakroon kaikkien alustuksien jälkeen
 
 	return TRUE;
+}
+
+void CSmartMetApp::InitGdal()
+{
+    // Default cache size 10 ei riitä alkuunkaan spatial reference käytössä
+    Fmi::OGRSpatialReferenceFactory::SetCacheSize(2000);
+
+    // Proj kirjaston data polku pitää antaa OSRSetPROJSearchPaths funktion avulla, muuten tuhansia osgeo::proj::io::FactoryException
+    // poikkeuksia jatkuvallla syötöllä.
+    const char* searchPath = "D:\\projekti\\ver200_SmartMet_release_5_14\\smartmet-workstation\\libs\\3rd\\gdal-3_0_2\\bin\\proj6\\share\\";
+    const char* const apszPaths[2] = { searchPath, NULL };
+    OSRSetPROJSearchPaths(apszPaths);
+
+    // HUOM! Polun voisi antaa myös windows ympäristömuuttujalla PROJ_LIB, mutta se olisi hankalaa, koska se pitäisi asettaa joka koneeseen.
+    // HUOM2! Em. PROJ_LIB ympäristö muuttujaa EI VOI asettaa ohjelmallisesti esim. putenv -funktiolla tai SetEnvironmentVariable win32 
+    // funktiolla, koska Proj-kirjasto ottaa kyseisen asetuksen käyttöön jo luultavasti globaalien/staattisten muuttujien asetuksissa, jotka 
+    // tapahtuvat jo ennen kuin Win-applikaatiota päästetään alustamaan tänne.
+
+    // Gdal alustus (ei ole tiedosssa että tarvitsisi jotenkin sulkea lopuksi)
+    GDALAllRegister();
+
+    // Mikan suosittelema gdal/proj6 asetus
+    CPLSetConfigOption("OGR_ENABLE_PARTIAL_REPROJECTION", "YES");
 }
 
 static ApplicationInterface& GetApplicationInterface()
@@ -493,7 +520,6 @@ int CSmartMetApp::ExitInstance()
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
 	ControlBarCleanUp();
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
-
 	return CWinApp::ExitInstance();
 }
 

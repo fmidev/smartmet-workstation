@@ -68,6 +68,7 @@ private:
 	bool DoToolMasterInitialization(void);
 	bool InitGdiplus(void);
 	void TermGdiplus(void);
+	void InitGdal();
 //	void CreateMenuDynamically(void);
 	bool TakeControlPathInfo(void);
     void CloseToolMaster();
