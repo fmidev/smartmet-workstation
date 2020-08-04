@@ -25,6 +25,7 @@
 #include "ToolMasterColorCube.h"
 #include "ToolMasterHelperFunctions.h"
 #include "CombinedMapHandlerInterface.h"
+#include "NFmiPathUtils.h"
 
 #include "boost/format.hpp"
 #include "ogrsf_frmts.h"
@@ -270,9 +271,33 @@ void CSmartMetApp::InitGdal()
 
     // Proj kirjaston data polku pitää antaa OSRSetPROJSearchPaths funktion avulla, muuten tuhansia osgeo::proj::io::FactoryException
     // poikkeuksia jatkuvallla syötöllä.
-    const char* searchPath = "D:\\projekti\\ver200_SmartMet_release_5_14\\smartmet-workstation\\libs\\3rd\\gdal-3_0_2\\bin\\proj6\\share\\";
-    const char* const apszPaths[2] = { searchPath, NULL };
-    OSRSetPROJSearchPaths(apszPaths);
+    std::string proj6DataFileDirectorySettingKeyName = "SmartMet::Proj6::DataFileDirectory";
+    const auto proj6DataFileDirectory = NFmiSettings::Optional<std::string>(proj6DataFileDirectorySettingKeyName, "");
+    if(proj6DataFileDirectory.empty())
+    {
+        std::string warningMessage = "Setting '";
+        warningMessage += proj6DataFileDirectorySettingKeyName;
+        warningMessage += "' was not given in configurations, this will SLOW SmartMet's overall performance significantly!";
+        CatLog::logMessage(warningMessage, CatLog::Severity::Warning, CatLog::Category::Configuration, true);
+    }
+    else
+    {
+        const auto fixedProj6DataFileDirectory = PathUtils::makeFixedAbsolutePath(proj6DataFileDirectory, gBasicSmartMetConfigurations.ControlPath());
+        const char* const apszPaths[2] = { fixedProj6DataFileDirectory.c_str(), NULL };
+        OSRSetPROJSearchPaths(apszPaths);
+
+        std::string logMessage = "Setting '";
+        logMessage += proj6DataFileDirectorySettingKeyName;
+        logMessage += "' had value '";
+        logMessage += proj6DataFileDirectory;
+        logMessage += "'";
+        CatLog::logMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Configuration);
+
+        std::string logMessage2 = "Proj6 absolute data file directory is '";
+        logMessage2 += fixedProj6DataFileDirectory;
+        logMessage2 += "'";
+        CatLog::logMessage(logMessage2, CatLog::Severity::Info, CatLog::Category::Configuration);
+    }
 
     // HUOM! Polun voisi antaa myös windows ympäristömuuttujalla PROJ_LIB, mutta se olisi hankalaa, koska se pitäisi asettaa joka koneeseen.
     // HUOM2! Em. PROJ_LIB ympäristö muuttujaa EI VOI asettaa ohjelmallisesti esim. putenv -funktiolla tai SetEnvironmentVariable win32 
