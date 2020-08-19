@@ -25,6 +25,7 @@
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiCombinedMapModeState.h"
 #include "catlog/catlog.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 #include <algorithm>
 #include "stdafx.h"
@@ -573,6 +574,8 @@ void NFmiMapViewDescTop::InitLandBorderDrawingSystem(void)
 
 void NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem(void)
 {
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
+
 	if(itsMapConfigurationSystem)
 	{
 		int ssize = static_cast<int>(itsMapConfigurationSystem->Size());
