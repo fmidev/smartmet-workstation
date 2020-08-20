@@ -740,7 +740,7 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
             itsDrawingEnvironment->SetFontSize(NFmiPoint(18 * itsDrawSizeFactorX, 18 * itsDrawSizeFactorY));
             itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactorX, 1 * itsDrawSizeFactorY));
 			// Resetoidaan itsFirstSoundingData, muuten tulee ongelmia viimeisen 'hyvän' 1. datan piirrossa tekstimuotoisiin ikkunoihin, jos tässä piirrossa ei löydy dataa ollenkaan (esim. ollaan 1. datan aikaikkunan ulkopuolella)
-			itsFirstSoundingData = NFmiSoundingDataOpt1(); 
+			itsFirstSoundingData = NFmiSoundingData(); 
 			DrawSoundingsInMTAMode();
 
             // siivotaan piirto ominaisuudet takaisin
