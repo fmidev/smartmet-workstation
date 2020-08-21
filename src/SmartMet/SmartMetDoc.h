@@ -402,6 +402,9 @@ public:
     afx_msg void OnViewSetSoundingsFromServerSettingsPlaceToDefault();
     afx_msg void OnButtonBetaProductDialog();
     afx_msg void OnAcceleratorDoVisualizationProfiling();
+	afx_msg void OnViewSetLogViewerDlgPlaceToDefault();
+	afx_msg void OnViewSetCaseStudyDlgPlaceToDefault();
+	afx_msg void OnViewSetBetaProductionDlgPlaceToDefault();
 };
 
 

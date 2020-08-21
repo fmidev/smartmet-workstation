@@ -329,6 +329,9 @@ BEGIN
             MENUITEM "Wind table view position",    ID_VIEW_SET_WIND_TABLE_DLG_PLACE_TO_DEFAULT
             MENUITEM "Data quality checker position", ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT
             MENUITEM "Soundings from server settings position", ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT
+            MENUITEM "Log Viewer position",         ID_VIEW_SET_LOG_VIEWER_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Case study dialog position",  ID_VIEW_SET_CASE_STUDY_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Beta production dialog position", ID_VIEW_SET_BETA_PRODUCTION_DLG_PLACE_TO_DEFAULT
         END
         MENUITEM SEPARATOR
         POPUP "Notification settings"
