@@ -764,7 +764,7 @@ void CFmiViewMacroDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REMOVE, "IDC_BUTTON_REMOVE");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH_LIST, "IDC_BUTTON_REFRESH_LIST");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_DESCRIPTION, "IDC_STATIC_VIEW_MACRO_DESCRIPTION");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DISABLE_WINDOW_MANIPULATION, "No SmartMet wiew manipulations");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DISABLE_WINDOW_MANIPULATION, "No SmartMet view manipulations");
 }
 
 void CFmiViewMacroDlg::OnOK()
