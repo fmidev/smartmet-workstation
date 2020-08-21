@@ -79,6 +79,8 @@ public:
 	void AdjustDialogControls(void); // jos dialogin kokoa muutetaan, t‰ll‰ s‰‰det‰‰n kontrollien koko ja sijainti sopiviksi
 	void GetBasicInfoFromDialog(void);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
+	// Update metodia tarvitaan (piti luoda tyhj‰ sellainen) kun kyseinen toiminto toteutetaan CSmartmetDoc luokassa SetViewPlaceToDefault -template yleisfunktiolla
+	void Update(){}
 
 // Dialog Data
 	enum { IDD = IDD_DIALOG_CASE_STUDY_STORE_DLG };
