@@ -28,6 +28,9 @@
 #include "CtrlViewDocumentInterface.h"
 #include "GraphicalInfo.h"
 
+double NFmiParamCommandView::itsParameterRowVerticalMarginInMM = 0.6;
+double NFmiParamCommandView::itsParameterRowHorizontalMarginInMM = 0.5;
+
 //--------------------------------------------------------
 // ParamCommandView 
 //--------------------------------------------------------
@@ -83,31 +86,46 @@ void NFmiParamCommandView::DrawBackground(void)
 	}
 }
 
-// Piirrett‰viin parametreihin liittyv‰ lineIndex alkaa 1:st‰ eli 1. parametririvi on indeksill‰ 1 jne.
-// Mutta koska rivill‰ 0 on manipuloimaton map-layer, pit‰‰ se ottaa laskettaessa rivin laatikkoa.
-NFmiRect NFmiParamCommandView::CheckBoxRect(int lineIndex, bool drawedRect)
+double NFmiParamCommandView::ConvertMilliMeterToRelative(double lengthInMilliMeter, bool isDirectionX) const
 {
-	if(!fHasMapLayer)
-		lineIndex--;
-	NFmiPoint p = GetFrame().TopLeft();
-	p += itsFirstLinePlace;
-	p.Y(p.Y() + lineIndex * itsLineHeight);
-	NFmiRect rect;
-	rect.Place(p);
-	if(drawedRect) // piirrett‰v‰‰ boxia pit‰‰ siirt‰‰ hieman vertikaali suunnassa alas. Ik‰v‰‰ koodia, mutta voi voi
-		rect.Top(rect.Top()+itsCheckBoxSize.Y()/3.);
-	rect.Size(itsCheckBoxSize);
-	return rect;
+	const auto & graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	if(isDirectionX)
+	{
+		double pixels = graphicalInfo.itsPixelsPerMM_x * lengthInMilliMeter;
+		return itsToolBox->SXs(pixels);
+	}
+	else
+	{
+		double pixels = graphicalInfo.itsPixelsPerMM_y * lengthInMilliMeter;
+		return itsToolBox->SYs(pixels);
+	}
 }
 
-NFmiPoint NFmiParamCommandView::LineTextPlace(int lineIndex, bool checkBoxMove)
+NFmiRect NFmiParamCommandView::CheckBoxRect(const NFmiRect& parameterRowRect)
 {
-	// tekstin alku paikka lasketaan checkboxin avulla
-	NFmiRect checkBoxRect(CheckBoxRect(lineIndex, false));
-	NFmiPoint p = checkBoxRect.TopLeft();
-	if(checkBoxMove)
-		p.X(checkBoxRect.Right() + itsPixelSize.X() * 2); // + kaksi pikseli‰ eli laitetaan v‰h‰n v‰li‰ tekstin ja checkboxin v‰liin
-	return p;
+	NFmiRect checkBoxRect(parameterRowRect);
+	// Siirret‰‰n laatikkoa pikkuisen oikealle ja alas
+	auto leftMargin = ConvertMilliMeterToRelative(itsParameterRowHorizontalMarginInMM + 0.1, true);
+	checkBoxRect.Place(NFmiPoint(parameterRowRect.Left() + leftMargin, parameterRowRect.Top() + (itsCheckBoxSize.Y() / 15.)));
+	checkBoxRect.Size(itsCheckBoxSize);
+	checkBoxRect.Center(NFmiPoint(checkBoxRect.Center().X(), parameterRowRect.Center().Y()));
+	return checkBoxRect;
+}
+
+NFmiPoint NFmiParamCommandView::LineTextPlace(int zeroBasedRowIndex, const NFmiRect& parameterRowRect, bool checkBoxMove)
+{
+	NFmiPoint textPlace = parameterRowRect.TopLeft();
+	// Siirret‰‰n tekstin paikka v‰h‰n oikealle, jotta se ei olisi kiinni parametri laatikon left reunassa
+	auto leftMargin = ConvertMilliMeterToRelative(itsParameterRowHorizontalMarginInMM, true);
+	textPlace.X(textPlace.X() + leftMargin);
+	auto rowHasCheckBox = (checkBoxMove || !(fHasMapLayer && zeroBasedRowIndex == 0));
+	if(rowHasCheckBox)
+	{
+		// Jos rivill‰ on checkbox, laitetaan teksti sen oikeaan laitaan + margin
+		auto checkboxRect = CheckBoxRect(parameterRowRect);
+		textPlace.X(checkboxRect.Right() + leftMargin);
+	}
+	return textPlace;
 }
 
 void NFmiParamCommandView::DrawCheckBox(const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi, bool fDrawCheck)
@@ -132,10 +150,9 @@ void NFmiParamCommandView::DrawCheckBox(const NFmiRect &theRect, NFmiDrawingEnvi
 	}
 }
 
-void NFmiParamCommandView::UpdateTextData(const NFmiPoint& theFontSize, const NFmiPoint& theFirstLinePlace, double theLineHeight, const NFmiPoint &theCheckBoxSize, const NFmiPoint &thePixelSize)
+void NFmiParamCommandView::UpdateTextData(const NFmiPoint& theFontSize, double theLineHeight, const NFmiPoint &theCheckBoxSize, const NFmiPoint &thePixelSize)
 {
    itsFontSize = theFontSize;
-   itsFirstLinePlace = theFirstLinePlace;
    itsLineHeight = theLineHeight;
    itsCheckBoxSize = theCheckBoxSize;
    itsPixelSize = thePixelSize;
@@ -145,34 +162,57 @@ void NFmiParamCommandView::CalcTextData(void)
 {
 	CalcFontSize();
 	itsLineHeight = this->itsToolBox->SY(static_cast<long>(itsFontSize.Y())) * .80;
+	auto rowMarginY = ConvertMilliMeterToRelative(itsParameterRowVerticalMarginInMM, false);
+	itsLineHeight += rowMarginY; // venytet‰‰n hieman rivin korkeutta
 	double xSize = this->itsToolBox->SX(static_cast<long>(itsFontSize.Y())) * .80;
 	double x = itsLineHeight/10.;
-	itsFirstLinePlace.Set(2*x,x);
 	double factor = 0.8;
 	itsCheckBoxSize.Set(xSize * factor, itsLineHeight * factor);
 	itsPixelSize.X(itsToolBox->SX(1));
 	itsPixelSize.Y(itsToolBox->SY(1));
 }
 
-// Oikeat parametri rivit alkavat 1:st‰. 
-// Rivi 0 on map-layer rivi, jota ei voi manipuloida mitenk‰‰n.
-int NFmiParamCommandView::CalcIndex(const NFmiPoint& thePlace, double* indexRealValueOut)
+// Parametri rivit alkavat 1:st‰, paitsi jos fHasMapLayer = true, eli kyse on NFmiViewParamsView luokan oliosta
+// jolloin indeksit alkavat 0:sta (0 on aina tuo map layer, jota ei voi manipuloida mitenk‰‰n).
+int NFmiParamCommandView::CalcParameterRowIndex(const NFmiPoint& pointedPlace, double* indexRealValueOut) const
 {
-	auto cursorHeight = thePlace.Y() - GetFrame().Top();
-	auto zeroBasedLineIndexRealValue = cursorHeight / itsLineHeight;
-	if(!fHasMapLayer)
-		zeroBasedLineIndexRealValue += 1;
+	auto startMargin = ConvertMilliMeterToRelative(itsParameterRowVerticalMarginInMM, false);
+	auto cursorHeight = pointedPlace.Y() - (GetFrame().Top() + startMargin);
+	auto lineIndexRealValue = cursorHeight / itsLineHeight;
 
-	// T‰m‰n pirun parametri boxin laskukoodit pit‰isi tehd‰ uudestaan, nyt minun kuitenkin pit‰‰ vain v‰hent‰‰ 
-	// lasketusta indeksist‰ joku vakio desimaaliosio, jotta indeksin ja klikattu paikka ovat mahd. oikean tuntuisia.
-	zeroBasedLineIndexRealValue -= 0.25;
+	if(!fHasMapLayer)
+		lineIndexRealValue += 1.0;
 
 	if(indexRealValueOut)
-		*indexRealValueOut = zeroBasedLineIndexRealValue;
-	return static_cast<int>(zeroBasedLineIndexRealValue);
+		*indexRealValueOut = lineIndexRealValue;
+	return static_cast<int>(lineIndexRealValue);
 }
 
 bool NFmiParamCommandView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
 {
 	return false;
+}
+
+NFmiRect NFmiParamCommandView::CalcParameterRowRect(int zeroBasedRowIndex) const
+{
+	NFmiRect rowRect = GetFrame();
+	auto startMargin = ConvertMilliMeterToRelative(itsParameterRowVerticalMarginInMM, false);
+	rowRect.Top(rowRect.Top() + startMargin + (zeroBasedRowIndex * itsLineHeight));
+	rowRect.Height(itsLineHeight);
+	return rowRect;
+}
+
+void NFmiParamCommandView::DrawCheckBox(const NFmiRect& parameterRowRect, bool isChecked)
+{
+	static NFmiDrawingEnvironment envi;
+	static bool enviInitialized = false;
+	if(enviInitialized == false)
+	{
+		enviInitialized = true;
+		envi.SetFrameColor(NFmiColor(0, 0, 0));
+		envi.SetFillColor(NFmiColor(1, 1, 1));
+		envi.EnableFill();
+	}
+	NFmiRect rect(CheckBoxRect(parameterRowRect));
+	DrawCheckBox(rect, envi, isChecked);
 }
