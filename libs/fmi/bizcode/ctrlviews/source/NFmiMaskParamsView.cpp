@@ -39,21 +39,6 @@ NFmiMaskParamsView::NFmiMaskParamsView(int theMapViewDescTopIndex, const NFmiRec
 {
 }
 
-void NFmiMaskParamsView::DrawMaskCheckBox(int theLineIndex, NFmiAreaMask &theMask)
-{
-	static NFmiDrawingEnvironment envi;
-	static bool enviInitialized = false;
-	if(enviInitialized == false)
-	{
-		enviInitialized = true;
-		envi.SetFrameColor(NFmiColor(0,0,0));
-		envi.SetFillColor(NFmiColor(1,1,1));
-		envi.EnableFill();
-	}
-	NFmiRect rect(CheckBoxRect(theLineIndex, true));
-	DrawCheckBox(rect, envi, theMask.IsEnabled());
-}
-
 //--------------------------------------------------------
 // Draw 
 //--------------------------------------------------------
@@ -65,9 +50,10 @@ void NFmiMaskParamsView::DrawData(void)
     if(maskList)
     {
         itsDrawingEnvironment->SetFontSize(itsFontSize);
-        int counter = 1;
-        for(maskList->Reset(); maskList->Next(); counter++)
+		int zeroBasedRowIndex = 0;
+		for(maskList->Reset(); maskList->Next(); zeroBasedRowIndex++)
         {
+            auto parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
             boost::shared_ptr<NFmiAreaMask> mask = maskList->Current();
             NFmiInfoData::Type dataType = mask->GetDataType();
             if(dataType == NFmiInfoData::kViewable || dataType == NFmiInfoData::kStationary)
@@ -75,9 +61,9 @@ void NFmiMaskParamsView::DrawData(void)
             else
                 itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
             NFmiString str = mask->MaskString();
-            NFmiText text(LineTextPlace(counter, true), str, 0, itsDrawingEnvironment);
+            NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), str, 0, itsDrawingEnvironment);
             itsToolBox->Convert(&text);
-            DrawMaskCheckBox(counter, *mask);
+            DrawCheckBox(parameterRowRect, mask->IsEnabled());
         }
     }
 }
@@ -89,7 +75,7 @@ bool NFmiMaskParamsView::RightButtonUp(const NFmiPoint& thePlace, unsigned long 
 {
 	if(IsIn(thePlace))
 	{
-		int index = CalcIndex(thePlace);
+		int index = CalcParameterRowIndex(thePlace);
 		return itsCtrlViewDocumentInterface->CreateMaskParamsPopup(itsViewGridRowNumber, index) == true;
 	}
 	return false;
@@ -99,7 +85,7 @@ bool NFmiMaskParamsView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long t
 {
 	if(IsIn(thePlace))
 	{
-		int index = CalcIndex(thePlace);
+        int index = CalcParameterRowIndex(thePlace);
 		boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
 		if(maskList->Index(index))
 		{

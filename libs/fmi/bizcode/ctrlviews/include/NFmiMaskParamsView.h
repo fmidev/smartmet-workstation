@@ -40,7 +40,6 @@ class NFmiMaskParamsView : public NFmiParamCommandView
 
  protected:
    void DrawData(void);
-   void DrawMaskCheckBox(int theLineIndex, NFmiAreaMask &theMask);
 
 };
 

@@ -183,7 +183,7 @@ void NFmiParamHandlerView::UpdateTextData(void)
 	if(itsViewList)
 	{
 		for(itsViewList->Reset(); itsViewList->Next(); )
-			(static_cast<NFmiParamCommandView*>(itsViewList->Current())->UpdateTextData(itsFontSize, itsFirstLinePlace, itsLineHeight, itsCheckBoxSize, itsPixelSize));
+			(static_cast<NFmiParamCommandView*>(itsViewList->Current())->UpdateTextData(itsFontSize, itsLineHeight, itsCheckBoxSize, itsPixelSize));
 	}
 }
 //--------------------------------------------------------
