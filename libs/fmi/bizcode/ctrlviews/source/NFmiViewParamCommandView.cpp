@@ -28,6 +28,7 @@
 #include "NFmiValueString.h"
 #include "NFmiText.h"
 #include "CtrlViewDocumentInterface.h"
+#include "ToolBoxStateRestorer.h"
 
 //--------------------------------------------------------
 // Constructor/Destructor
@@ -45,7 +46,10 @@ void NFmiViewParamCommandView::DrawData(void)
 	NFmiString str(valuStr);
 	str += ".";
 	itsDrawingEnvironment->SetFontSize(itsFontSize);
-	NFmiText text(LineTextPlace(1, false), str, 0, itsDrawingEnvironment);
+	int zeroBasedRowIndex = 0;
+	auto parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
+	NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, false), str, 0, itsDrawingEnvironment);
+	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kCenter, false);
 	itsToolBox->Convert(&text);
 }
 

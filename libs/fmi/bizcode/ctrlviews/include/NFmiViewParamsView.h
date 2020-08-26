@@ -75,27 +75,24 @@ class NFmiViewParamsView : public NFmiParamCommandView
 
  protected:
     int GetParamCount(void);
-	bool LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex);
+	bool LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex);
 	static ModelSelectorButtonImageHolder statModelSelectorButtonImages; // tämä on staattinen dataosa, koska näitä timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien käyttöön
 	void DrawData(void);
-	void DrawParamCheckBox(int lineIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
-	void DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex);
+	void DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect);
 	NFmiPoint CalcModelSelectorButtonRelativeSize(Gdiplus::Bitmap *theImage);
-	NFmiRect CalcModelSelectorButtonRect(int theRowIndex, int theButtonIndex);
+	NFmiRect CalcModelSelectorButtonRect(const NFmiRect& parameterRowRect, int theButtonIndex);
 	NFmiPoint GetViewSizeInPixels(void);
-	NFmiPoint CalcModelSelectorButtonRelativeEdgeOffset(const NFmiPoint &theButtonRelaviteSize);
     bool DoAfterParamModeModifications(NFmiDrawParamList *theParamList);
     bool ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex);
     void DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamLineIndex);
-    NFmiRect CalcParamRect(int theParamLineIndex, bool fExcludeCheckBox, int leftMargin, int topMargin, int rightMargin, int bottomMargin);
+    NFmiRect CalcParameterDragRect(int theParamLineIndex, int leftMargin, int topMargin, int rightMargin, int bottomMargin);
     NFmiDrawParamList* GetDrawParamList();
     void DrawMouseDraggingAction();
     void DrawMouseDraggingBackground();
-	void DrawBackgroundMapLayerText();
+	void DrawBackgroundMapLayerText(int &zeroBasedRowIndexInOut, const NFmiRect &parameterRowRect);
 private:
    double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreissä x-suunnassa
    double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreissä y-suunnassa
-   double itsButtonOffSetFromEdgeFactor; // kuinka kaukana paino nappula on reunoista irti suhteessa napulan kokoon
 
    // Hiirellä raahaamis piirtojärjestyksen vaihtoon liittyvät muuttujat
    bool fMouseCaptured; // Tämä asetetaan päälle heti LeftButtonDown:issa
