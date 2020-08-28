@@ -2871,43 +2871,36 @@ bool InitLocationSelectionTool()
 	return true;
 }
 
-struct MenuCreationSettings
+class MenuCreationSettings
 {
-	MenuCreationSettings(void)
-	:itsDescTopIndex(static_cast<unsigned int>(-1))
-	,itsMenuCommand(kFmiNoCommand)
-	,fLevelDataOnly(false)
-	,fGridDataOnly(false)
-	,fDoMapMenu(false)
-	,fAcceptMacroParams(false)
-	,fAcceptCalculateParams(false)
-	,fMakeCustomMenu(false)
-	{}
+public:
+	unsigned int itsDescTopIndex = static_cast<unsigned int>(-1);
+	// mikä komento on nyt kyseessä
+	FmiMenuCommandType itsMenuCommand = kFmiNoCommand;
+	// vain vertikaali data kelpaa
+	bool fLevelDataOnly = false;
+	// vain hiladata kelpaa
+	bool fGridDataOnly = false;
+	// tietyt parametri saa lisätä vain karttanäyttöön
+	bool fDoMapMenu = false;
+	// näitä ei sallita toistaiseksi kuin karttanäytölle ja poikkileikkaukseen
+	bool fAcceptMacroParams = false;
+	// nämä (lat, lon ja elevation angle) hyväksytään vain maskeiksi
+	bool fAcceptCalculateParams = false;
+	// tämä pitää asettaa erikseen päälle kun rakennetaan custom-menuja
+	bool fMakeCustomMenu = false;
 
-	void SetMapViewSettings(unsigned int theDescTopIndex, FmiMenuCommandType theMenuCommand)
+	MenuCreationSettings() = default;
+
+	// Tätä käytetään kartta- poikkileikkausnäytöille
+	void SetIsolineViewSettings(unsigned int theDescTopIndex, FmiMenuCommandType theMenuCommand)
 	{
-		itsDescTopIndex = theDescTopIndex;
-		itsMenuCommand = theMenuCommand;
-
-		fLevelDataOnly = false;
-		fGridDataOnly = false;
-		fDoMapMenu = true;
-		fAcceptMacroParams = true;
-		fAcceptCalculateParams = false;
-		fMakeCustomMenu = false;
+		if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+			SetCrossSectionSettings(theDescTopIndex, theMenuCommand);
+		else
+			SetMapViewSettings(theDescTopIndex, theMenuCommand);
 	}
-	void SetCrossSectionSettings(FmiMenuCommandType theMenuCommand)
-	{
-		itsDescTopIndex = static_cast<unsigned int>(-1);
-		itsMenuCommand = theMenuCommand;
 
-		fLevelDataOnly = true;
-		fGridDataOnly = true;
-		fDoMapMenu = false;
-		fAcceptMacroParams = true;
-		fAcceptCalculateParams = false;
-		fMakeCustomMenu = false;
-	}
 	void SetMaskSettings(FmiMenuCommandType theMenuCommand)
 	{
 		itsDescTopIndex = static_cast<unsigned int>(-1);
@@ -2933,14 +2926,31 @@ struct MenuCreationSettings
 		fMakeCustomMenu = false;
 	}
 
-	unsigned int itsDescTopIndex;
-	FmiMenuCommandType itsMenuCommand; // mikä komento on nyt kyseessä
-	bool fLevelDataOnly; // vain vertikaali data kelpaa
-	bool fGridDataOnly; // vain hiladata kelpaa
-	bool fDoMapMenu; // tietyt parametri saa lisätä vain karttanäyttöön
-	bool fAcceptMacroParams; // näitä ei sallita toistaiseksi kuin karttanäytölle ja poikkileikkaukseen
-	bool fAcceptCalculateParams; // nämä (lat, lon ja elevation angle) hyväksytään vain maskeiksi
-	bool fMakeCustomMenu; // tämä pitää asettaa erikseen päälle kun rakennetaan custom-menuja
+private:
+	void SetMapViewSettings(unsigned int theDescTopIndex, FmiMenuCommandType theMenuCommand)
+	{
+		itsDescTopIndex = theDescTopIndex;
+		itsMenuCommand = theMenuCommand;
+
+		fLevelDataOnly = false;
+		fGridDataOnly = false;
+		fDoMapMenu = true;
+		fAcceptMacroParams = true;
+		fAcceptCalculateParams = false;
+		fMakeCustomMenu = false;
+	}
+	void SetCrossSectionSettings(unsigned int theDescTopIndex, FmiMenuCommandType theMenuCommand)
+	{
+		itsDescTopIndex = theDescTopIndex;
+		itsMenuCommand = theMenuCommand;
+
+		fLevelDataOnly = true;
+		fGridDataOnly = true;
+		fDoMapMenu = false;
+		fAcceptMacroParams = true;
+		fAcceptCalculateParams = false;
+		fMakeCustomMenu = false;
+	}
 };
 
 void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *thePopupMenu, const std::string &theMenuItemDictionaryStr)
@@ -3163,7 +3173,7 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 		itsPopupMenu = new NFmiMenuItemList;
 
 		MenuCreationSettings menuSettings;
-		menuSettings.SetMapViewSettings(theDescTopIndex, kFmiAddView);
+		menuSettings.SetIsolineViewSettings(theDescTopIndex, kFmiAddView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "MapViewParamPopUpAdd");
 
         AddSwapViewRowsToPopup(theDescTopIndex, itsPopupMenu);
@@ -4047,7 +4057,7 @@ void SetLayerIndexForWantedMenucommandItems(NFmiMenuItemList& thePopupMenu, FmiM
 void AddInsertParamLayerSectionIntoPopupMenu(NFmiMenuItemList *thePopupMenu, unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
 	MenuCreationSettings menuSettings;
-	menuSettings.SetMapViewSettings(theDescTopIndex, kFmiInsertParamLayer);
+	menuSettings.SetIsolineViewSettings(theDescTopIndex, kFmiInsertParamLayer);
 	CreateParamSelectionBasePopup(menuSettings, thePopupMenu, "Insert new parameter in here");
 	int wantedLayerIndex = boost::math::iround(layerIndexRealValue);
 	SetLayerIndexForWantedMenucommandItems(*thePopupMenu, kFmiInsertParamLayer, wantedLayerIndex);
@@ -4145,10 +4155,6 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 
 			if(!macroParamInCase)
 			{
-				menuString = "Previous model run"; //::GetDictionaryString("MapViewParamOptionPopUpActivate");
-				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModelRunOffsetPrevious, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
-				itsPopupMenu->Add(std::move(menuItem));
-
 				if(crossSectionPopup == false)
 				{
 					if(drawParam && drawParam->ShowDifferenceToOriginalData())
@@ -4490,11 +4496,6 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiShowAllMapViewForecasts:
 			GetCombinedMapHandler()->hideShowAllMapViewParams(menuItem->MapViewDescTopIndex(), false, false, false, true);
 			break;
-
-		case kFmiModelRunOffsetPrevious:
-		case kFmiModelRunOffsetNext:
-			GetCombinedMapHandler()->setModelRunOffset(*menuItem, itsCurrentViewRowIndex);
-			break;
 		case kFmiAddBorderLineLayer:
 			GetCombinedMapHandler()->addBorderLineLayer(*menuItem, itsCurrentViewRowIndex);
 			break;
@@ -4502,7 +4503,7 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			GetCombinedMapHandler()->moveBorderLineLayer(*menuItem, itsCurrentViewRowIndex);
 			break;
 		case kFmiInsertParamLayer:
-			GetCombinedMapHandler()->insertParamLayer(*menuItem, itsCurrentViewRowIndex);
+			InsertWantedParamLayer(*menuItem, itsCurrentViewRowIndex);
 			break;
 
 		default:
@@ -4510,6 +4511,11 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		}
 	}
 	return true;
+}
+
+void InsertWantedParamLayer(NFmiMenuItem& theMenuItem, int theSelectedViewRowIndex)
+{
+	GetCombinedMapHandler()->insertParamLayer(theMenuItem, theSelectedViewRowIndex);
 }
 
 // Nyt on voitu lisätä/poistaa/muuttaa eri näytöillä olevien parametrien ja siten myös riveillä 
@@ -7050,7 +7056,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		itsPopupMenu = new NFmiMenuItemList;
 
 		MenuCreationSettings menuSettings;
-		menuSettings.SetCrossSectionSettings(kFmiAddParamCrossSectionView);
+		menuSettings.SetIsolineViewSettings(CtrlViewUtils::kFmiCrossSectionView, kFmiAddParamCrossSectionView);
 		CreateParamSelectionBasePopup(menuSettings, itsPopupMenu, "NormalWordCapitalAdd");
 
         AddSwapViewRowsToPopup(CtrlViewUtils::kFmiCrossSectionView, itsPopupMenu);
