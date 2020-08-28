@@ -507,6 +507,11 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 // tätä tietoa tarvitaan kun pitää puhdistaa muutoksen takia karttarivi cachesta.
 bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex)
 {
+	// Jos ollaan näytössä, jossa fHasMapLayer = false (esim. poikkileikkausnäyttö),
+	// Pitää indeksiä säätää, jotta raahaus visualisoinnit menevät oikein.
+	if(!fHasMapLayer)
+		theParameterRowIndex--;
+
 	auto parameterRowRect = CalcParameterRowRect(theParameterRowIndex);
     auto usedRowIndex = GetUsedParamRowIndex();
     if(CalcModelSelectorButtonRect(parameterRowRect, 2).IsInside(thePlace)) // tässä tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
