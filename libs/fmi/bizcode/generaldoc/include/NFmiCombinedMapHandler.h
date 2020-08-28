@@ -190,7 +190,7 @@ public:
     void onToggleGridPointColor(unsigned int mapViewDescTopIndex) override;
     void onToggleGridPointSize(unsigned int mapViewDescTopIndex) override;
     void onEditSpaceOut(unsigned int mapViewDescTopIndex) override;
-    void onHideParamWindow(unsigned int mapViewDescTopIndex) override;
+    void onChangeParamWindowPosition(unsigned int mapViewDescTopIndex, bool forward) override;
     void onShowTimeString(unsigned int mapViewDescTopIndex) override;
     WmsSupportInterface& getWmsSupport() override;
     void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) override;

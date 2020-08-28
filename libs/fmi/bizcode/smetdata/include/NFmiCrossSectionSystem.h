@@ -174,9 +174,9 @@ class NFmiCrossSectionSystem
 	const NFmiColor& MiddlePointFillColor(void) const {return itsMiddlePointFillColor;}
 	void MiddlePointFillColor(const NFmiColor &newValue) {itsMiddlePointFillColor = newValue;}
 	void GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, NFmiMetTime &theEndTimeOut, const NFmiMetTime &theCurrentTime, bool fShowTrajectories) const;
-	bool ShowParamWindowView(void){return fShowParamWindowView;};
-	void ShowParamWindowView(bool newState){fShowParamWindowView = newState;};
-    bool ShowTooltipOnCrossSectionView(void) const {return fShowTooltipOnCrossSectionView;}
+	void ParamWindowViewPositionChange(bool forward);
+	FmiDirection ParamWindowViewPosition() const { return itsParamWindowViewPosition; }
+	bool ShowTooltipOnCrossSectionView(void) const {return fShowTooltipOnCrossSectionView;}
     void ShowTooltipOnCrossSectionView(bool newValue) {fShowTooltipOnCrossSectionView = newValue;}
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
 	void SetCrossSectionDefaultAxisToFirstVisibleView(void);
@@ -237,7 +237,7 @@ class NFmiCrossSectionSystem
 	NFmiColor itsStartPointFillColor;
 	NFmiColor itsEndPointFillColor;
 	NFmiColor itsMiddlePointFillColor;
-	bool fShowParamWindowView;
+	FmiDirection itsParamWindowViewPosition;
 	bool fShowTooltipOnCrossSectionView; // Erottelin poikkileikkaus tooltip on/off asetuksen pois karttanäyttöjen asetuksesta, 
                                          // tätä ei talletetan mihinkään (ei näyttö makroon eikä rekistereihin eikä konffeihin), 
                                          // oletuksena arvo on true.

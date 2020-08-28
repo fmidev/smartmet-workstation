@@ -12,6 +12,7 @@
 #include "NFmiDataStoringHelpers.h"
 #include "SettingsFunctions.h"
 #include "CtrlViewDocumentInterface.h"
+#include "CtrlViewFunctions.h"
 #include "SpecialDesctopIndex.h"
 #include "boost\math\special_functions\round.hpp"
 
@@ -58,7 +59,7 @@ NFmiCrossSectionSystem::NFmiCrossSectionSystem(int theMaxViewRowSize)
 ,itsMiddlePointFillColor(0.5f,0.9f,0.2f)
 ,itsAxisValuesDefaultWinReg(150, 1015)
 ,itsAxisValuesSpecialWinReg(1005, 1025)
-,fShowParamWindowView(true)
+,itsParamWindowViewPosition(kTopLeft)
 ,fShowTooltipOnCrossSectionView(true)
 ,itsTrueMapViewSizeInfo(CtrlViewUtils::kFmiCrossSectionView)
 {
@@ -561,6 +562,9 @@ void NFmiCrossSectionSystem::Write(std::ostream& os) const
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
 
+	// 'double' muotoisten lisädatojen lisäys
+	extraData.Add(static_cast<double>(itsParamWindowViewPosition)); // talletetaan 1. double extra-datana parametri-laatikon sijainti
+
 	// *** 1. uusi tallennus itsCrossSectionTimeBag talletetaan aikasiirtoina ja siitä tehdään yksi aika-stringi ***
 	std::string crossSectionTimeBagOffSetStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, CrossSectionTimeControlTimeBag());
 	extraData.Add(crossSectionTimeBagOffSetStr);
@@ -622,6 +626,11 @@ void NFmiCrossSectionSystem::Read(std::istream& is)
 	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
 	// eli jos uusia muutujia tai arvoja, käsittele tässä.
 
+	// Luetaan 1. double extra-datana parametri parametri-laatikon sijainti, oletusarvona itsParamWindowViewPosition:ille on top-left.
+	itsParamWindowViewPosition = kTopLeft;
+	if(extraData.itsDoubleValues.size() >= 1)
+		itsParamWindowViewPosition = static_cast<FmiDirection>(extraData.itsDoubleValues[0]);
+
 	// *** 1. uusi tallennus itsCrossSectionTimeBag talletetaan aikasiirtoina ja siitä tehdään yksi aika-stringi ***
 	if(extraData.itsStringValues.size() >= 1)
 	{
@@ -644,15 +653,16 @@ void NFmiCrossSectionSystem::Init(const NFmiCrossSectionSystem &theData)
     itsStartPointWinReg = theData.itsStartPointWinReg;
     itsMiddlePointWinReg = theData.itsMiddlePointWinReg;
     itsEndPointWinReg = theData.itsEndPointWinReg;
-	itsActivatedMinorPointIndex = theData.itsActivatedMinorPointIndex;
 	itsWantedMinorPointCountWinReg = theData.itsWantedMinorPointCountWinReg;
 	itsVerticalPointCountWinReg = theData.itsVerticalPointCountWinReg;
+	itsActivatedMinorPointIndex = theData.itsActivatedMinorPointIndex;
 	fCrossSectionSystemActive = theData.fCrossSectionSystemActive;
 	fCrossSectionViewNeedsUpdate = true;
 	fUseTimeCrossSection = theData.fUseTimeCrossSection;
 	fUseRouteCrossSection = theData.fUseRouteCrossSection;
 	fUseObsAndForCrossSection = theData.fUseObsAndForCrossSection;
 	fTimeCrossSectionDirty = true;
+
 	fCrossSectionViewOn = theData.fCrossSectionViewOn;
 	fShowHybridLevels = theData.fShowHybridLevels;
 	if(theData.itsCrossSectionTimeControlTimeBag.GetSize() > 1) // vanhoissa makroissa timebagin koko voi olla 1, sitä ei sijoiteta käyttöön
@@ -671,6 +681,8 @@ void NFmiCrossSectionSystem::Init(const NFmiCrossSectionSystem &theData)
 	itsObsForModeLocation = theData.itsObsForModeLocation;
 	fDragWholeCrossSection = false;
 	itsExtraRowInfos = theData.itsExtraRowInfos;
+	itsParamWindowViewPosition = theData.itsParamWindowViewPosition;
+	fShowTooltipOnCrossSectionView = theData.fShowTooltipOnCrossSectionView;
 }
 
 void NFmiCrossSectionSystem::GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, NFmiMetTime &theEndTimeOut, const NFmiMetTime &theCurrentTime, bool fShowTrajectories) const
@@ -756,4 +768,9 @@ void NFmiCrossSectionSystem::SaveCrossSectionSpecialAxisValues(void)
 {
 	// itsStartRowIndex - 1, koska itsStartRowIndex alkaa 1:stä ja vektorin indeksit 0:sta
 	itsAxisValuesSpecialWinReg = itsExtraRowInfos[itsStartRowIndex - 1];
+}
+
+void NFmiCrossSectionSystem::ParamWindowViewPositionChange(bool forward)
+{
+	itsParamWindowViewPosition = CtrlViewUtils::CalcFollowingParamWindowViewPosition(itsParamWindowViewPosition, forward);
 }

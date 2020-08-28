@@ -66,7 +66,8 @@ ON_COMMAND(ID_ACCELERATOR_SHOW_GRID_POINTS_EXTRA_MAP, OnShowGridPoints)
 ON_COMMAND(ID_ACCELERATOR_GRID_POINT_COLOR_EXTRA_MAP, OnToggleGridPointColor)
 ON_COMMAND(ID_ACCELERATOR_GRID_POINT_SIZE_EXTRA_MAP, OnToggleGridPointSize)
 ON_COMMAND(ID_ACCELERATOR_SPACE_OUT_TEMP_WINDS, OnEditSpaceOut)
-ON_COMMAND(ID_ACCELERATOR_HIDE_PARAM_WINDOW_EXTRA_MAP, OnHideParamWindow)
+ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_FORWARD_EXTRA_MAP, OnChangeParamWindowPositionForward)
+ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_BACKWARD_EXTRA_MAP, OnChangeParamWindowPositionBackward)
 ON_COMMAND(ID_ACCELERATOR_SHOW_TIME_STRING_EXTRA_MAP, OnShowTimeString)
 ON_COMMAND(ID_ACCELERATOR_REFRESH_EXTRA_MAP, OnButtonRefresh)
 ON_COMMAND(ID_ACCELERATOR_CHANGE_MAP_TYPE_EXTRA_MAP, OnChangeMapType)
@@ -450,9 +451,14 @@ void CFmiExtraMapViewDlg::OnEditSpaceOut()
     itsSmartMetDocumentInterface->OnEditSpaceOut(itsMapViewDescTopIndex);
 }
 
-void CFmiExtraMapViewDlg::OnHideParamWindow()
+void CFmiExtraMapViewDlg::OnChangeParamWindowPositionForward()
 {
-    itsSmartMetDocumentInterface->OnHideParamWindow(itsMapViewDescTopIndex);
+	itsSmartMetDocumentInterface->OnChangeParamWindowPosition(itsMapViewDescTopIndex, true);
+}
+
+void CFmiExtraMapViewDlg::OnChangeParamWindowPositionBackward()
+{
+	itsSmartMetDocumentInterface->OnChangeParamWindowPosition(itsMapViewDescTopIndex, false);
 }
 
 void CFmiExtraMapViewDlg::OnShowTimeString()

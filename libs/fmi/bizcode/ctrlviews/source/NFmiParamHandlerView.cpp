@@ -54,13 +54,12 @@ NFmiParamHandlerView::~NFmiParamHandlerView(void)
 //--------------------------------------------------------
 // Update 
 //--------------------------------------------------------
-void NFmiParamHandlerView::Update(const NFmiRect & theRect , NFmiToolBox * theToolBox)
+void NFmiParamHandlerView::Update(const NFmiRect & theRect , NFmiToolBox * theToolBox, FmiDirection theViewPlacement, bool doIterativeFinalCalculations)
 {
 	const double frameDivader = 7.; // missä suhteessä 'näytä' ja param ikkuna jaetaan leveys suunnassa
 	itsToolBox = theToolBox;
 	// aluksi pitää säätää annettu leveys, korkeus lasketaan täällä
-	itsRect.Width(theRect.Width());
-	itsRect.Place(theRect.TopLeft()); // pidetään topleft-kulma siinä, missä on annettussa thRect-parametrissa
+	itsRect = theRect;
 
 	UpdateTextData();
 	if(itsViewParamCommandView && itsViewParamsView)
@@ -102,6 +101,7 @@ void NFmiParamHandlerView::Update(const NFmiRect & theRect , NFmiToolBox * theTo
 		{
 			NFmiRect rect31 = itsMaskParamCommandView->CalcSize();
 			rect31.Width(GetFrame().Width()/frameDivader);
+			rect31.Left(GetFrame().Left());
 			NFmiRect rect32 = itsMaskParamsView->CalcSize();
 			rect32.Left(rect31.Right());
 			rect32.Width(GetFrame().Width() - GetFrame().Width()/frameDivader); // annetaan 'loput' leveydestä rinnakkais ikkunalle
@@ -125,7 +125,20 @@ void NFmiParamHandlerView::Update(const NFmiRect & theRect , NFmiToolBox * theTo
 			NFmiParamCommandView::Update(rect, itsToolBox);
 		}
 	}
+
+	if(!doIterativeFinalCalculations)
+		AdjustFinalViewPositions(theRect, theViewPlacement);
 }
+
+void NFmiParamHandlerView::AdjustFinalViewPositions(const NFmiRect& theOriginalViewPositionFromParent, FmiDirection theViewPlacement)
+{
+	auto correctMasterRect = itsRect = NFmiCtrlView::CalcWantedDirectionalPosition(theOriginalViewPositionFromParent, itsRect, theViewPlacement);
+	// Pitää tehdä iteratiivisesti Update kaksi kertaa.
+	// 1. kierroksella saadaan periaatteessa selville correctMasterRect, 
+	// jota sitten käytetään tässä 2. kierroksella, näin saadaan kaikille alinäytöille myös oikeat sijainnit.
+	Update(correctMasterRect, itsToolBox, theViewPlacement, true);
+}
+
 //--------------------------------------------------------
 // Init 
 //--------------------------------------------------------

@@ -198,7 +198,7 @@ public:
     virtual void OnButtonDataArea(unsigned int theDescTopIndex) = 0;
     virtual bool SetMapViewGrid(unsigned int theDescTopIndex, const NFmiPoint &newValue) = 0;
     virtual void OnShowTimeString(unsigned int theDescTopIndex) = 0;
-    virtual void OnHideParamWindow(unsigned int theDescTopIndex) = 0;
+    virtual void OnChangeParamWindowPosition(unsigned int mapViewDescTopIndex, bool forward) = 0;
     virtual void OnShowGridPoints(unsigned int theMapViewIndex) = 0;
     virtual bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) = 0;
     virtual bool SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) = 0;

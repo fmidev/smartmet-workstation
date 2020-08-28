@@ -250,7 +250,8 @@ public:
     bool ShowSelectedPointsOnMap(int theMapViewDescTopIndex) override;
     bool ShowControlPointsOnMap(int theMapViewDescTopIndex) override;
     void ZoomMapWithRelativeRect(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect) override;
-    bool ShowParamWindowView(int theMapViewDescTopIndex) override;
+    FmiDirection ParamWindowViewPosition(int theMapViewDescTopIndex) override;
+    bool IsParamWindowViewVisible(int theMapViewDescTopIndex) override;
     NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) override;
     bool CreateCPPopup() override;
     void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) override;

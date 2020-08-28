@@ -323,10 +323,7 @@ namespace StationViews
             g_BetaProductForParamboxDraw.ParamBoxLocation(kTopLeft);
         }
 
-        if(ctrlViewDocumentInterface.ShowParamWindowView(viewDesctopIndex))
-            g_BetaProductForParamboxDraw.ParamBoxLocation(kTopLeft);
-        else
-            g_BetaProductForParamboxDraw.ParamBoxLocation(kNoDirection);
+        g_BetaProductForParamboxDraw.ParamBoxLocation(ctrlViewDocumentInterface.ParamWindowViewPosition(viewDesctopIndex));
 
         return g_BetaProductForParamboxDraw;
     }
