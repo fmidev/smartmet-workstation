@@ -83,7 +83,8 @@ public:
 	afx_msg void OnToggleGridPointColor();
 	afx_msg void OnToggleGridPointSize();
 	afx_msg void OnEditSpaceOut();
-	afx_msg void OnHideParamWindow();
+	afx_msg void OnChangeParamWindowPositionForward();
+	afx_msg void OnChangeParamWindowPositionBackward();
 	afx_msg void OnShowTimeString();
 	afx_msg void OnButtonRefresh();
 	afx_msg void OnChangeMapType();

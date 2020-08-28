@@ -125,7 +125,7 @@ public:
     void OnButtonDataArea(unsigned int theDescTopIndex) override;
     bool SetMapViewGrid(unsigned int theDescTopIndex, const NFmiPoint &newValue) override;
     void OnShowTimeString(unsigned int theDescTopIndex) override;
-    void OnHideParamWindow(unsigned int theDescTopIndex) override;
+    void OnChangeParamWindowPosition(unsigned int theDescTopIndex, bool forward) override;
     void OnShowGridPoints(unsigned int theMapViewIndex) override;
     bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;
     bool SetDataToPreviousTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;

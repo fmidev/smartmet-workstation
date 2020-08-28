@@ -75,7 +75,8 @@ ON_BN_CLICKED(IDC_CHECK_CROSSSECTION_SHOW_HYBRID_LEVELS, OnBnClickedCheckCrossse
 ON_BN_CLICKED(IDC_CHECK_CROSSSECTION_SHOW_TRAJECTORIES, OnBnClickedCheckCrosssectionShowTrajectories)
 ON_COMMAND(ID_ACCELERATOR_TOGGLE_TEMP_VIEW_TOOLTIP, OnAcceleratorToggleTooltip)
 ON_BN_CLICKED(IDC_CHECK_USE_OBSANDFOR_CROSS_SECTION, OnBnClickedCheckUseObsandforCrossSection)
-ON_COMMAND(ID_ACCELERATOR_HIDE_PARAM_WINDOW_EXTRA_MAP, &CFmiCrossSectionDlg::OnAcceleratorHideParamWindowExtraMap)
+ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_FORWARD_EXTRA_MAP, CFmiCrossSectionDlg::OnChangeParamWindowPositionForward)
+ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_BACKWARD_EXTRA_MAP, CFmiCrossSectionDlg::OnChangeParamWindowPositionBackward)
 ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_SPECIAL_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSetCrossSectionSpecialAxis)
 ON_COMMAND(ID_ACCELERATOR_SPACE_OUT_TEMP_WINDS, &CFmiCrossSectionDlg::OnAcceleratorSetCrossSectionDefaultAxis)
 ON_COMMAND(ID_ACCELERATOR_SET_CROSS_SECTION_DEFAULT_AXIS_ALL, &CFmiCrossSectionDlg::OnAcceleratorSetCrossSectionDefaultAxisAll)
@@ -452,14 +453,19 @@ BOOL CFmiCrossSectionDlg::PreTranslateMessage(MSG* pMsg)
     return CDialog::PreTranslateMessage(pMsg);
 }
 
-
-void CFmiCrossSectionDlg::OnAcceleratorHideParamWindowExtraMap()
+void CFmiCrossSectionDlg::OnChangeParamWindowPositionForward()
 {
-    itsSmartMetDocumentInterface->CrossSectionSystem()->ShowParamWindowView(!itsSmartMetDocumentInterface->CrossSectionSystem()->ShowParamWindowView());
+	itsSmartMetDocumentInterface->OnChangeParamWindowPosition(itsView->MapViewDescTopIndex(), true);
 	itsView->Update(true);
 	Invalidate(FALSE);
 }
 
+void CFmiCrossSectionDlg::OnChangeParamWindowPositionBackward()
+{
+	itsSmartMetDocumentInterface->OnChangeParamWindowPosition(itsView->MapViewDescTopIndex(), false);
+	itsView->Update(true);
+	Invalidate(FALSE);
+}
 
 void CFmiCrossSectionDlg::OnAcceleratorSetCrossSectionSpecialAxis()
 {

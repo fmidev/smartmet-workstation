@@ -1196,9 +1196,23 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapWithRelativeRect(int the
     itsDoc->ZoomMapWithRelativeRect(theMapViewDescTopIndex, theMapArea, theZoomedRect);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowParamWindowView(int theMapViewDescTopIndex)
+FmiDirection CtrlViewDocumentInterfaceForGeneralDataDoc::ParamWindowViewPosition(int theMapViewDescTopIndex)
 {
-    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ShowParamWindowView();
+    if(theMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+        return itsDoc->CrossSectionSystem()->ParamWindowViewPosition();
+    else
+        return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ParamWindowViewPosition();
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsParamWindowViewVisible(int theMapViewDescTopIndex)
+{
+    auto paramWindowViewPosition = kNoDirection;
+    if(theMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+        paramWindowViewPosition = itsDoc->CrossSectionSystem()->ParamWindowViewPosition();
+    else
+        paramWindowViewPosition = itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ParamWindowViewPosition();
+
+    return paramWindowViewPosition != kNoDirection;
 }
 
 NFmiHelpDataInfoSystem* CtrlViewDocumentInterfaceForGeneralDataDoc::HelpDataInfoSystem(void)

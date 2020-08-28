@@ -160,7 +160,8 @@ protected:
 	afx_msg void OnDataLoadFromFile();
 	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
-	afx_msg void OnHideParamWindow();
+	afx_msg void OnChangeParamWindowPositionForward();
+	afx_msg void OnChangeParamWindowPositionBackward();
 	afx_msg void OnMakeGridFile();
 	afx_msg void OnButtonMakeEditedDataCopy();
 	afx_msg void OnButtonFilterDialog();
