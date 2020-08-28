@@ -114,6 +114,7 @@ class NFmiCtrlView
    virtual void Time(const NFmiMetTime& theTime){itsTime = theTime;};
    void DrawFrame(NFmiDrawingEnvironment * theEnvi);
    void DrawFrame(NFmiDrawingEnvironment * theEnvi, const NFmiRect& theFrame);
+   NFmiDrawingEnvironment* GetDrawingEnvironment() { return itsDrawingEnvironment; }
 
    virtual std::string ComposeToolTipText(const NFmiPoint& /* theRelativePoint */ ){return std::string();};
    int MapViewDescTopIndex(void) const {return itsMapViewDescTopIndex;}
@@ -139,6 +140,7 @@ class NFmiCtrlView
    Gdiplus::Graphics* GdiPlusGraphics() { return itsGdiPlusGraphics; }
    // T‰t‰ k‰ytt‰‰ mm. InitializeGdiplus, mutta piti tiettyj‰ tapauksia varten tehd‰ irrallinen funktio, jolla luonti voidaan tehd‰ mista tahansa toolbox oliosta.
    static Gdiplus::Graphics* CreateGdiplusGraphics(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect);
+   static NFmiRect CalcWantedDirectionalPosition(const NFmiRect& positionalRect, const NFmiRect& movedRect, FmiDirection wantedPosition);
 
 	// suoran kaksi pistett‰ on annettu ja x:n arvo, laske y:n arvo
 	static double InterpolateWithTwoPoints(double x, double x1, double x2, double y1, double y2, double minY = kFloatMissing, double maxY = kFloatMissing)

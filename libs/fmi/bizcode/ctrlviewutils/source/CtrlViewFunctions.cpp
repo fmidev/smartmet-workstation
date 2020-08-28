@@ -555,5 +555,52 @@ namespace CtrlViewUtils
         return dst.str();
     }
 
+    FmiDirection CalcFollowingParamWindowViewPosition(FmiDirection currentPosition, bool forward)
+    {
+        if(forward)
+        {
+            // kTopLeft -> kTopRight -> kBottomRight -> kBottomLeft -> kNoDirection (piilossa) -> kTopLeft...
+            switch(currentPosition)
+            {
+            case kTopLeft:
+                return kTopRight;
+                break;
+            case kTopRight:
+                return kBottomRight;
+                break;
+            case kBottomRight:
+                return kBottomLeft;
+                break;
+            case kBottomLeft:
+                return kNoDirection;
+                break;
+            default:
+                return kTopLeft;
+                break;
+            }
+        }
+        else
+        {
+            // kTopLeft -> kNoDirection (piilossa) -> kBottomLeft -> kBottomRight -> kTopRight -> kTopLeft...
+            switch(currentPosition)
+            {
+            case kNoDirection:
+                return kBottomLeft;
+                break;
+            case kTopLeft:
+                return kNoDirection;
+                break;
+            case kBottomRight:
+                return kTopRight;
+                break;
+            case kBottomLeft:
+                return kBottomRight;
+                break;
+            default:
+                return kTopLeft;
+                break;
+            }
+        }
+    }
 
 } // namespace CtrlViewUtils

@@ -47,6 +47,7 @@
 #include "NFmiPathUtils.h"
 #include "TimeSerialModification.h"
 #include "NFmiDataMatrixUtils.h"
+#include "ParamHandlerViewFunctions.h"
 
 #include <stdexcept>
 #include "boost/math/special_functions/round.hpp"
@@ -150,7 +151,7 @@ NFmiCrossSectionView::NFmiCrossSectionView(NFmiToolBox * theToolBox
 ,itsRoutePointsDistToEndPoint()
 ,itsHeaderParamString()
 ,itsPressureScaleFontSize(16, 16)
-,itsParamHandlerView(0)
+,itsParamHandlerView()
 ,itsParamHandlerViewRect()
 ,itsDrawSizeFactorX(1)
 ,itsDrawSizeFactorY(1)
@@ -162,46 +163,34 @@ NFmiCrossSectionView::NFmiCrossSectionView(NFmiToolBox * theToolBox
 	CalculateViewRects();
 	StorePressureScaleLimits();
 
-	itsParamHandlerViewRect = NFmiRect(0.,0.,0.25,0.05);
-	itsParamHandlerViewRect.Place(GetFrame().TopLeft());
 	InitParamHandlerView();
 }
 
 void NFmiCrossSectionView::InitParamHandlerView(void)
 {
-	if(itsParamHandlerView)
-		delete itsParamHandlerView;
-	itsParamHandlerViewRect = CalcParamHandlerViewRect();
-	itsParamHandlerView = new NFmiParamHandlerView(itsMapViewDescTopIndex
-												  ,itsParamHandlerViewRect
-												  ,itsToolBox
-												  ,itsDrawingEnvironment
-												  ,itsDrawParam
-												  ,itsViewGridRowNumber
-												  ,1
-												  ,false // false = ei näytetä mask-osiota
-												  ,false); // false = ei ole map-layer:ia käytössä
-	itsParamHandlerView->Init();
-	itsParamHandlerView->Update(itsParamHandlerViewRect,itsToolBox);
+	CtrlView::GeneralInitParamHandlerView(this, itsParamHandlerView, false, false);
+}
+
+void NFmiCrossSectionView::UpdateParamHandlerView(void)
+{
+	CtrlView::GeneralUpdateParamHandlerView(this, itsParamHandlerView);
 }
 
 NFmiRect NFmiCrossSectionView::CalcParamHandlerViewRect(void)
 {
-	static NFmiRect defaultParamHandlerViewRect(0.,0.,0.25,0.05);
-	NFmiRect frame(GetFrame());
-	double widthInMM = 50.;
-	int pixelSize = static_cast<int>(widthInMM * itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo().itsPixelsPerMM_x);
-	double width = itsToolBox->SX(pixelSize);
-	NFmiRect newRect(0, 0, width, defaultParamHandlerViewRect.Height());
-	newRect.Place(itsDataViewFrame.TopLeft());
-	return newRect;
+	return CtrlView::GeneralCalcParamHandlerViewRect(this, itsDataViewFrame);
+}
+
+void NFmiCrossSectionView::SetParamHandlerViewRect(const NFmiRect& newRect)
+{
+	itsParamHandlerViewRect = newRect;
 }
 
 bool NFmiCrossSectionView::ShowParamHandlerView(void)
 {
 	if(itsParamHandlerView)
 	{
-		if(itsCtrlViewDocumentInterface->CrossSectionSystem()->ShowParamWindowView())
+		if(itsCtrlViewDocumentInterface->IsParamWindowViewVisible(itsMapViewDescTopIndex))
 			return true;
 	}
 	return false;
@@ -221,26 +210,14 @@ void NFmiCrossSectionView::DrawParamView(NFmiToolBox * theGTB)
     {
         if(ShowParamHandlerView())
         {
-            UpdateParamHandler();
+            UpdateParamHandlerView();
             itsParamHandlerView->Draw(theGTB);
         }
     }
 }
 
-void NFmiCrossSectionView::UpdateParamHandler(void)
-{
-	if(itsParamHandlerView)
-	{
-		itsParamHandlerViewRect = CalcParamHandlerViewRect();
-
-		itsParamHandlerView->Update(itsParamHandlerViewRect, itsToolBox);
-		itsParamHandlerViewRect = itsParamHandlerView->GetFrame(); // rect:i saattaa muuttua Update:n yhteydessä
-	}
-}
-
 NFmiCrossSectionView::~NFmiCrossSectionView(void)
 {
-	delete itsParamHandlerView;
 }
 
 void NFmiCrossSectionView::StorePressureScaleLimits(void)

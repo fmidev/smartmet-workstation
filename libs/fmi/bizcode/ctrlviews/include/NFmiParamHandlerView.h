@@ -38,7 +38,7 @@ class NFmiParamHandlerView : public NFmiParamCommandView
    NFmiParamHandlerView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool theShowMaskSection, bool viewParamsViewHasMapLayer);
    inline virtual ~NFmiParamHandlerView (void); 
    using NFmiParamCommandView::Update;
-   void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0);
+   void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox, FmiDirection theViewPlacement, bool doIterativeFinalCalculations = false);
    void Draw (NFmiToolBox * theGTB);
    bool LeftButtonDown (const NFmiPoint& thePlace, unsigned long theKey);
    bool LeftButtonUp (const NFmiPoint& thePlace, unsigned long theKey);
@@ -54,6 +54,7 @@ class NFmiParamHandlerView : public NFmiParamCommandView
  protected:
    void UpdateTextData(void);
    void DrawBackground(void);
+   void AdjustFinalViewPositions(const NFmiRect& theOriginalViewPositionFromParent, FmiDirection theViewPlacement);
 
 //  Nämä Näyttöluokat ovat sekä NFmiCtrlViewList:assa, että erillisinä pareina koska
 //  jossain tapauksissa näitä luokkia pitää käsitellä pareina, esim. Update()-metodissa,

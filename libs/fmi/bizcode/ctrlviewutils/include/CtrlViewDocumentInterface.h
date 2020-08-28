@@ -367,7 +367,8 @@ public:
     virtual bool ShowSelectedPointsOnMap(int theMapViewDescTopIndex) = 0;
     virtual bool ShowControlPointsOnMap(int theMapViewDescTopIndex) = 0;
     virtual void ZoomMapWithRelativeRect(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect) = 0;
-    virtual bool ShowParamWindowView(int theMapViewDescTopIndex) = 0;
+    virtual FmiDirection ParamWindowViewPosition(int theMapViewDescTopIndex) = 0;
+    virtual bool IsParamWindowViewVisible(int theMapViewDescTopIndex) = 0;
     virtual NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) = 0;
     virtual bool CreateCPPopup() = 0;
     virtual void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) = 0;
