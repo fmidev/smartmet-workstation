@@ -2638,6 +2638,8 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 {
 	auto& infoOrganizer = ::getInfoOrganizer();
 	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
+	if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView)
+		drawParam = infoOrganizer.CreateCrossSectionDrawParam(menuItem.DataIdent(), menuItem.DataType());
 	if(!drawParam)
 		return; // HUOM!! Ei saisi mennä tähän!!!!!!!
 
