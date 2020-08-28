@@ -3744,10 +3744,10 @@ void NFmiCombinedMapHandler::onEditSpaceOut(unsigned int mapViewDescTopIndex)
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle spacing out factor");
 }
 
-void NFmiCombinedMapHandler::onHideParamWindow(unsigned int mapViewDescTopIndex)
+void NFmiCombinedMapHandler::onChangeParamWindowPosition(unsigned int mapViewDescTopIndex, bool forward)
 {
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
-	mapViewDescTop->ShowParamWindowView(!mapViewDescTop->ShowParamWindowView());
+	mapViewDescTop->ParamWindowViewPositionChange(forward);
 	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/Hide param-view");

@@ -141,7 +141,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_DATA_LOAD_FROM_FILE, OnDataLoadFromFile)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
-	ON_COMMAND(ID_HIDE_PARAM_WINDOW, OnHideParamWindow)
+	ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_FORWARD, OnChangeParamWindowPositionForward)
+	ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_BACKWARD, OnChangeParamWindowPositionBackward)
 	ON_COMMAND(ID_MAKE_GRID_FILE, OnMakeGridFile)
 	ON_COMMAND(ID_BUTTON_MAKE_EDITED_DATA_COPY, OnButtonMakeEditedDataCopy)
 	ON_COMMAND(ID_BUTTON_FILTER_DIALOG, OnButtonFilterDialog)
@@ -1497,9 +1498,14 @@ void CSmartMetDoc::OnUpdateEditRedo(CCmdUI* pCmdUI)
 		pCmdUI->Enable(FALSE);
 }
 
-void CSmartMetDoc::OnHideParamWindow()
+void CSmartMetDoc::OnChangeParamWindowPositionForward()
 {
-	GetData()->GetCombinedMapHandler()->onHideParamWindow(itsMapViewDescTopIndex);
+	GetData()->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, true);
+}
+
+void CSmartMetDoc::OnChangeParamWindowPositionBackward()
+{
+	GetData()->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, false);
 }
 
 void CSmartMetDoc::OnMakeGridFile()

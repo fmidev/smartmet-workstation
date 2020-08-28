@@ -111,6 +111,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawParamView(NFmiToolBox * theGTB);
 	boost::shared_ptr<NFmiArea> GetArea() const override;
 	void SetArea(const boost::shared_ptr<NFmiArea>& theArea) override;
+	NFmiRect CalcParamHandlerViewRect();
+	void SetParamHandlerViewRect(const NFmiRect &newRect);
 
  private:
 	void DoTotalLocationSelection(const NFmiPoint & thePlace, const NFmiPoint &theLatlon, unsigned long theKey, bool fDrawSelectionOnThisView);
@@ -137,9 +139,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawWindTableAreas(void);
 	void DrawSilamStationMarkers(NFmiSilamStationList &theStationList, NFmiDrawingEnvironment &theEnvi, const NFmiString &theSynopStr, double symbolXShift, double symbolYShift, NFmiRect &thePlaceRect);
 	bool ShowParamHandlerView(void);
-    NFmiRect CalcParamHandlerViewRect(void);
 	void InitParamHandlerView(void);
-	void UpdateParamHandler(void);
+	void UpdateParamHandlerView(void);
 	bool DrawTimeTextInThisMapViewTile(void);
 	bool MouseMoveControlPointAction(const NFmiPoint &thePlace);
 	bool MouseMoveBrushAction(const NFmiPoint &thePlace);
@@ -235,7 +236,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	NFmiRect itsOldZoomRect; // t‰ll‰ piirret‰‰n vanha laatikko pois (k‰‰nteis v‰ri kikka)
 	NFmiPoint itsLastMouseDownRelPlace; //yrit‰n t‰ll‰ selvitt‰‰ miksi mouse klick tekee joskus kaksikin turhaa mousemovea
 
-	NFmiParamHandlerView* itsParamHandlerView;
+	std::unique_ptr<NFmiParamHandlerView> itsParamHandlerView;
 	NFmiRect itsParamHandlerViewRect;
 	bool fWholeCrossSectionReallyMoved; 
     // T‰h‰n talletet‰‰n autocompletionissa piirrettyjen nimi laatikkojen ja piste makkerien laatikot. 
