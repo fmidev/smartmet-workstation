@@ -1158,8 +1158,20 @@ CRect CFmiTMColorIndexDlg::CalcRealFinalDialogSize()
     CRect rect;
     GetWindowRect(&rect);
     CRect lastRect(itsColorRectVector[itsColorRectVector.size() - 1].itsColorRect); // oletetaan että viimeinen listalla oleva laatikko on myös oikeassa reunassa
-    rect.right = rect.left + lastRect.right + 25;
-    rect.bottom = rect.top + lastRect.bottom + 62;
+    auto colorRectBasedRightCoordinate = rect.left + lastRect.right + 25;
+    auto dialogControlBasedRightCoordinate = 0;
+    auto *bottomRightMostPressButton = GetDlgItem(ID_BUTTOM_REMOVE_COLOR);
+    if(bottomRightMostPressButton)
+    {
+        CRect controlRect;
+        bottomRightMostPressButton->GetWindowRect(&controlRect);
+        dialogControlBasedRightCoordinate = controlRect.right + 15;
+    }
+    if(colorRectBasedRightCoordinate > dialogControlBasedRightCoordinate)
+        rect.right = colorRectBasedRightCoordinate;
+    else
+        rect.right = dialogControlBasedRightCoordinate;
+    rect.bottom = rect.top + lastRect.bottom + 70;
     return rect;
 }
 
