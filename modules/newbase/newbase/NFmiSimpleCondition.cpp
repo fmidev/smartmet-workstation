@@ -57,7 +57,11 @@ namespace
     }
 }
 
-NFmiSimpleConditionPart::~NFmiSimpleConditionPart(void) = default;
+// *****************************************************************
+// **************   NFmiSimpleConditionPart   **********************
+// *****************************************************************
+
+    NFmiSimpleConditionPart::~NFmiSimpleConditionPart(void) = default;
 
 NFmiSimpleConditionPart::NFmiSimpleConditionPart(boost::shared_ptr<NFmiAreaMask> &mask1,
     NFmiAreaMask::CalculationOperator calculationOperator,
@@ -132,6 +136,12 @@ double NFmiSimpleConditionPart::PreviousValue(double newPreviousValue)
   return returnValue;
 }
 
+void NFmiSimpleConditionPart::ResetPreviousValue() { itsPreviousValue = kFloatMissing; }
+
+
+// *****************************************************************
+// ****************   NFmiSingleCondition   ************************
+// *****************************************************************
 
 NFmiSingleCondition::~NFmiSingleCondition(void) = default;
 
@@ -295,6 +305,16 @@ bool NFmiSingleCondition::CheckHeightCondition(double theHeight, const NFmiCalcu
     }
 }
 
+void NFmiSingleCondition::ResetPreviousValue() 
+{
+  if (part1) part1->ResetPreviousValue();
+  if (part2) part2->ResetPreviousValue();
+  if (part3) part3->ResetPreviousValue();
+}
+
+// *****************************************************************
+// ****************   NFmiSimpleCondition   ************************
+// *****************************************************************
 
 NFmiSimpleCondition::~NFmiSimpleCondition(void) = default;
 
@@ -385,3 +405,8 @@ bool NFmiSimpleCondition::CheckHeightCondition(double theHeight, const NFmiCalcu
     }
 }
 
+void NFmiSimpleCondition::ResetPreviousValue()
+{
+  if (condition1) condition1->ResetPreviousValue();
+  if (condition2) condition2->ResetPreviousValue();
+}
