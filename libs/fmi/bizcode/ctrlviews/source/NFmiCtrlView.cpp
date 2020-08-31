@@ -262,3 +262,41 @@ NFmiRect NFmiCtrlView::CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &th
 	NFmiRect rect(0, 0, distX, distY);
 	return rect;
 }
+
+// Lyhyesti: movedRect halutaan siirt‰‰ paikkaan, jonka positionalRect:in jonkun kulmapisteen sijainti sanelee.
+NFmiRect NFmiCtrlView::CalcWantedDirectionalPosition(const NFmiRect& positionalRect, const NFmiRect& movedRect, FmiDirection wantedPosition)
+{
+	NFmiRect finalRect(movedRect);
+	auto originalPlace = movedRect.Place();
+	auto placeX = originalPlace.X();
+	auto placeY = originalPlace.Y();
+	switch(wantedPosition)
+	{
+	case kTopLeft:
+	{
+		// top-left on helppo, koska ollaan jo halutussa Place:ssa
+		break;
+	}
+	case kTopRight:
+	{
+		placeX = positionalRect.Right() - finalRect.Width();
+		break;
+	}
+	case kBottomRight:
+	{
+		placeX = positionalRect.Right() - finalRect.Width();
+		placeY = positionalRect.Bottom() - finalRect.Height();
+		break;
+	}
+	case kBottomLeft:
+	{
+		placeY = positionalRect.Bottom() - finalRect.Height();
+		break;
+	}
+	default:
+		break;
+	}
+
+	finalRect.Place(NFmiPoint(placeX, placeY));
+	return finalRect;
+}

@@ -708,10 +708,9 @@ bool NFmiSoundingDataOpt1::FillParamData(
     if (paramFound)
     {
       if (theSoungingLevels)
-        FillParamDataFromSignificantLevels(theInfo, data, theSoungingLevels);
+        return FillParamDataFromSignificantLevels(theInfo, data, theSoungingLevels);
       else
-        FillParamDataNormally(theInfo, data);
-      return true;
+        return FillParamDataNormally(theInfo, data);
     }
   }
   catch (std::exception & /* e */)
@@ -720,28 +719,42 @@ bool NFmiSoundingDataOpt1::FillParamData(
   return false;
 }
 
-void NFmiSoundingDataOpt1::FillParamDataNormally(
-    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::deque<float> &data)
+// Palauttaa true:n, jos löytyi yksikin non-missing arvo datasta.
+bool NFmiSoundingDataOpt1::FillParamDataNormally(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                             std::deque<float> &data)
 {
-  int i = 0;
-  for (theInfo->ResetLevel(); theInfo->NextLevel(); i++)
-    data[i] = theInfo->FloatValue();
+  bool foundNonMissingValue = false;
+  int containerLevelIndex = 0;
+  for (theInfo->ResetLevel(); theInfo->NextLevel(); containerLevelIndex++)
+  {
+    auto value = theInfo->FloatValue();
+    data[containerLevelIndex] = value;
+    if (value != kFloatMissing) foundNonMissingValue = true;
+  }
+  return foundNonMissingValue;
 }
 
-void NFmiSoundingDataOpt1::FillParamDataFromSignificantLevels(
+// Palauttaa true:n, jos löytyi yksikin non-missing arvo datasta.
+bool NFmiSoundingDataOpt1::FillParamDataFromSignificantLevels(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     std::deque<float> &data,
     NFmiQueryDataUtil::SignificantSoundingLevels &significantLevels)
 {
-  int i = 0;
-  for (auto levelIndex : *significantLevels)
+  bool foundNonMissingValue = false;
+  int containerLevelIndex = 0;
+  for (auto significantLevelIndex : *significantLevels)
   {
-    if (theInfo->LevelIndex(levelIndex))
+    if (theInfo->LevelIndex(significantLevelIndex))
     {
-      data[i++] = theInfo->FloatValue();
+      auto value = theInfo->FloatValue();
+      data[containerLevelIndex] = value;
+      if (value != kFloatMissing) foundNonMissingValue = true;
+      containerLevelIndex++;
     }
   }
+  return foundNonMissingValue;
 }
+
 
 std::deque<float> &NFmiSoundingDataOpt1::GetResizedParamData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
@@ -777,45 +790,39 @@ bool NFmiSoundingDataOpt1::FastFillParamData(const boost::shared_ptr<NFmiFastQue
   data.resize(theInfo->SizeLevels(), kFloatMissing);  // alustetaan vektori puuttuvalla
   if (theInfo->Param(theId))
   {
-    int i = 0;
-    for (theInfo->ResetLevel(); theInfo->NextLevel(); i++)
-      data[i] = theInfo->FloatValue();
-    status = true;
-  }
-  else if (theId == kFmiDewPoint && theInfo->Param(kFmiHumidity))
-  {
-    unsigned int RHindex = theInfo->ParamIndex();
-    if (!theInfo->Param(kFmiTemperature)) return false;
-    unsigned int Tindex = theInfo->ParamIndex();
-    float T = 0;
-    float RH = 0;
-    int i = 0;
-    for (theInfo->ResetLevel(); theInfo->NextLevel(); i++)
+    int levelIndex = 0;
+    for (theInfo->ResetLevel(); theInfo->NextLevel(); levelIndex++)
     {
-      theInfo->ParamIndex(Tindex);
-      T = theInfo->FloatValue();
-      theInfo->ParamIndex(RHindex);
-      RH = theInfo->FloatValue();  // varmuuden vuoksi kaikki interpoloinnit päälle, se funktio
-                                   // tarkistaa tarvitseeko sitä tehdä
-      data[i] = static_cast<float>(NFmiSoundingFunctions::CalcDP(T, RH));
-    }
-    status = true;
-  }
-  else if (theId == kFmiPressure)
-  {  // jos halutaan paine dataa ja parametria ei ollut datassa, oliko kyseessa painepinta data,
-     // jolloin paine pitää irroittaa level-tiedosta
-    if (theInfo->FirstLevel())
-    {
-      if (theInfo->Level()->LevelType() == kFmiPressureLevel)
-      {
-        int i = 0;
-        for (theInfo->ResetLevel(); theInfo->NextLevel(); i++)
-          data[i] = static_cast<float>(theInfo->Level()->LevelValue());
-        status = true;
-      }
+      auto value = theInfo->FloatValue();
+      data[levelIndex] = value;
+      if (value != kFloatMissing) status = true;
     }
   }
 
+  return status;
+}
+
+  bool NFmiSoundingDataOpt1::FillPressureDataFromLevels(
+    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+{
+  // jos halutaan paine dataa ja parametria ei ollut datassa, oliko kyseessa painepinta data,
+  // jolloin paine pitää irroittaa level-tiedosta
+  bool status = false;
+  std::deque<float> &data = GetParamData(kFmiPressure);
+  data.resize(theInfo->SizeLevels(), kFloatMissing);  // alustetaan vektori puuttuvalla
+
+  if (theInfo->FirstLevel())
+  {
+    if (theInfo->Level()->LevelType() == kFmiPressureLevel)
+    {
+      int levelIndex = 0;
+      for (theInfo->ResetLevel(); theInfo->NextLevel(); levelIndex++)
+      {
+        data[levelIndex] = static_cast<float>(theInfo->Level()->LevelValue());
+      }
+      status = true;
+    }
+  }
   return status;
 }
 
@@ -839,6 +846,7 @@ bool NFmiSoundingDataOpt1::FillHeightDataFromLevels(
   return status;
 }
 
+// Palauttaa true:n, jos löytyi yksikin non-missing arvo datasta.
 bool NFmiSoundingDataOpt1::FillParamData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                          FmiParameterName theId,
                                          const NFmiMetTime &theTime,
@@ -851,46 +859,11 @@ bool NFmiSoundingDataOpt1::FillParamData(const boost::shared_ptr<NFmiFastQueryIn
   {
     int i = 0;
     for (theInfo->ResetLevel(); theInfo->NextLevel(); i++)
-      data[i] = theInfo->InterpolatedValue(theLatlon, theTime);  // varmuuden vuoksi kaikki
-                                                                 // interpoloinnit päälle, se
-                                                                 // funktio tarkistaa tarvitseeko
-                                                                 // sitä tehdä
-    status = true;
-  }
-  else if (theId == kFmiDewPoint && theInfo->Param(kFmiHumidity))
-  {
-    unsigned int RHindex = theInfo->ParamIndex();
-    if (!theInfo->Param(kFmiTemperature)) return false;
-    unsigned int Tindex = theInfo->ParamIndex();
-    float T = 0;
-    float RH = 0;
-    int i = 0;
-    for (theInfo->ResetLevel(); theInfo->NextLevel(); i++)
     {
-      theInfo->ParamIndex(Tindex);
-      T = theInfo->InterpolatedValue(theLatlon, theTime);  // varmuuden vuoksi kaikki interpoloinnit
-                                                           // päälle, se funktio tarkistaa
-                                                           // tarvitseeko sitä tehdä
-      theInfo->ParamIndex(RHindex);
-      RH = theInfo->InterpolatedValue(theLatlon, theTime);  // varmuuden vuoksi kaikki
-                                                            // interpoloinnit päälle, se funktio
-                                                            // tarkistaa tarvitseeko sitä tehdä
-      data[i] = static_cast<float>(NFmiSoundingFunctions::CalcDP(T, RH));
-    }
-    status = true;
-  }
-  else if (theId == kFmiPressure)
-  {  // jos halutaan paine dataa ja parametria ei ollut datassa, oliko kyseessa painepinta data,
-     // jolloin paine pitää irroittaa level-tiedosta
-    if (theInfo->FirstLevel())
-    {
-      if (theInfo->Level()->LevelType() == kFmiPressureLevel)
-      {
-        int i = 0;
-        for (theInfo->ResetLevel(); theInfo->NextLevel(); i++)
-          data[i] = static_cast<float>(theInfo->Level()->LevelValue());
-        status = true;
-      }
+      // varmuuden vuoksi kaikki interpoloinnit päälle, se funktio tarkistaa tarvitseeko sitä tehdä
+      auto value = theInfo->InterpolatedValue(theLatlon, theTime);
+      data[i] = value;
+      if (value != kFloatMissing) status = true;
     }
   }
 
@@ -1014,8 +987,10 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const boost::shared_ptr<NFmiFastQuer
             NFmiQueryDataUtil::GetSignificantSoundingLevelIndices(*theInfo);
 
         FillParamData(theInfo, kFmiTemperature, significantLevelIndices);
-        FillParamData(theInfo, kFmiDewPoint, significantLevelIndices);
-        FillParamData(theInfo, kFmiPressure, significantLevelIndices);
+        fDewPointHadValuesFromData = FillParamData(theInfo, kFmiDewPoint, significantLevelIndices);
+        fHumidityHadValuesFromData = FillParamData(theInfo, kFmiHumidity, significantLevelIndices);
+        if(!FillParamData(theInfo, kFmiPressure, significantLevelIndices))
+            FillPressureDataFromLevels(theInfo);
         if (!FillParamData(theInfo, kFmiGeomHeight, significantLevelIndices))
         {
           if (!FillParamData(theInfo, kFmiGeopHeight, significantLevelIndices))
@@ -1056,8 +1031,9 @@ bool NFmiSoundingDataOpt1::FillSoundingData(
     if (useFastFill)
     {
       FastFillParamData(theInfo, kFmiTemperature);
-      FastFillParamData(theInfo, kFmiDewPoint);
-      FastFillParamData(theInfo, kFmiPressure);
+      fDewPointHadValuesFromData = FastFillParamData(theInfo, kFmiDewPoint);
+      fHumidityHadValuesFromData = FastFillParamData(theInfo, kFmiHumidity);
+      if (!FastFillParamData(theInfo, kFmiPressure)) FillPressureDataFromLevels(theInfo);
       if (!FastFillParamData(theInfo, kFmiGeomHeight))
       {
         // eri datoissa on geom ja geop heightia, kokeillaan molempia tarvittaessa
@@ -1070,8 +1046,10 @@ bool NFmiSoundingDataOpt1::FillSoundingData(
     {
       const auto &latlon = itsLocation.GetLocation();
       FillParamData(theInfo, kFmiTemperature, theTime, latlon);
-      FillParamData(theInfo, kFmiDewPoint, theTime, latlon);
-      FillParamData(theInfo, kFmiPressure, theTime, latlon);
+      fDewPointHadValuesFromData = FillParamData(theInfo, kFmiDewPoint, theTime, latlon);
+      fHumidityHadValuesFromData = FillParamData(theInfo, kFmiHumidity, theTime, latlon);
+      if (!FillParamData(theInfo, kFmiPressure, theTime, latlon))
+        FillPressureDataFromLevels(theInfo);
       if (!FillParamData(theInfo, kFmiGeomHeight, theTime, latlon))
       {
         // eri datoissa on geom ja geop heightia, kokeillaan molempia tarvittaessa
@@ -1288,7 +1266,8 @@ void NFmiSoundingDataOpt1::FixPressureDataSoundingWithGroundData(
   }
 }
 
-// laskee jo laskettujen T ja Td avulla RH
+// laskee jo laskettujen T ja Td avulla RH 
+// tai sitten T:n ja RH:n avulla Td:n.
 void NFmiSoundingDataOpt1::CalculateHumidityData(void)
 {
   auto &temperatureData = GetParamData(kFmiTemperature);
@@ -1296,14 +1275,27 @@ void NFmiSoundingDataOpt1::CalculateHumidityData(void)
   auto &humidityData = GetParamData(kFmiHumidity);
 
   size_t tVectorSize = temperatureData.size();
-  if (tVectorSize > 0 && dewPointData.size() == tVectorSize)
+  if (tVectorSize > 0)
   {
-    humidityData.resize(tVectorSize, kFloatMissing);
-    for (size_t i = 0; i < tVectorSize; i++)
+    if (fDewPointHadValuesFromData && !fHumidityHadValuesFromData)
     {
-      if (temperatureData[i] != kFloatMissing && dewPointData[i] != kFloatMissing)
-        humidityData[i] =
-            static_cast<float>(NFmiSoundingFunctions::CalcRH(temperatureData[i], dewPointData[i]));
+      humidityData.resize(tVectorSize, kFloatMissing);
+      for (size_t i = 0; i < tVectorSize; i++)
+      {
+        if (temperatureData[i] != kFloatMissing && dewPointData[i] != kFloatMissing)
+          humidityData[i] = static_cast<float>(
+              NFmiSoundingFunctions::CalcRH(temperatureData[i], dewPointData[i]));
+      }
+    }
+    else if (!fDewPointHadValuesFromData && fHumidityHadValuesFromData)
+    {
+      dewPointData.resize(tVectorSize, kFloatMissing);
+      for (size_t i = 0; i < tVectorSize; i++)
+      {
+        if (temperatureData[i] != kFloatMissing && humidityData[i] != kFloatMissing)
+          dewPointData[i] = static_cast<float>(
+              NFmiSoundingFunctions::CalcDP(temperatureData[i], humidityData[i]));
+      }
     }
   }
 }

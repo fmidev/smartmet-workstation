@@ -25,6 +25,7 @@
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiCombinedMapModeState.h"
 #include "catlog/catlog.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 #include <algorithm>
 #include "stdafx.h"
@@ -236,7 +237,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,itsClientViewXperYRatio(1.)
 ,itsRelativeMapRect(0.,0.,1.,0.9) // tämän suhteellisen osan näytöstä valtaa kartasto, loput menee aikakontrolli ikkunalle
 ,itsMapViewSizeInPixels(10, 10)
-,fShowParamWindowView(true)
+,itsParamWindowViewPosition(kTopLeft)
 ,itsDrawOverMapMode(0)
 ,itsMapRowStartingIndex(1)
 ,itsShowTimeOnMapMode(0)
@@ -289,7 +290,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsClientViewXperYRatio(1.)
 ,itsRelativeMapRect(0.,0.,1.,0.9) // tämän suhteellisen osan näytöstä valtaa kartasto, loput menee aikakontrolli ikkunalle
 ,itsMapViewSizeInPixels(10, 10)
-,fShowParamWindowView(true)
+,itsParamWindowViewPosition(kTopLeft)
 ,itsDrawOverMapMode(0)
 ,itsMapRowStartingIndex(1)
 ,itsShowTimeOnMapMode(0)
@@ -341,7 +342,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, itsClientViewXperYRatio(1)
 	, itsRelativeMapRect()
 	, itsMapViewSizeInPixels()
-	, fShowParamWindowView(true)
+	, itsParamWindowViewPosition(kTopLeft)
 	, itsDrawParamListVector(new NFmiPtrList<NFmiDrawParamList>()) // Tehdään lopullinen kopiointi metodin rungossa
 	, itsDrawOverMapMode(0)
 	, itsMapRowStartingIndex(0)
@@ -401,7 +402,7 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsClientViewXperYRatio = other.itsClientViewXperYRatio;
 		itsRelativeMapRect = other.itsRelativeMapRect;
 		itsMapViewSizeInPixels = other.itsMapViewSizeInPixels;
-		fShowParamWindowView = other.fShowParamWindowView;
+		itsParamWindowViewPosition = other.itsParamWindowViewPosition;
 		CombinedMapHandlerInterface::copyDrawParamsList(other.itsDrawParamListVector, itsDrawParamListVector);
 		itsMapBlitDC = nullptr; // Tälläisiin MFC pointtereihin vain nullptr:ää
 		itsDrawOverMapMode = other.itsDrawOverMapMode;
@@ -573,6 +574,8 @@ void NFmiMapViewDescTop::InitLandBorderDrawingSystem(void)
 
 void NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem(void)
 {
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
+
 	if(itsMapConfigurationSystem)
 	{
 		int ssize = static_cast<int>(itsMapConfigurationSystem->Size());
@@ -1102,7 +1105,7 @@ void NFmiMapViewDescTop::ToggleMapViewDisplayMode(void)
 void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool getFromRegisty)
 {
 	itsLandBorderColorIndex = theOther.itsLandBorderColorIndex;
-	fShowParamWindowView = theOther.fShowParamWindowView;
+	itsParamWindowViewPosition = theOther.itsParamWindowViewPosition;
 
 	itsLandBorderPenSize = theOther.itsLandBorderPenSize;
 
@@ -1169,7 +1172,8 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
 	os << itsSelectedMapIndexVM << std::endl;
 
 	os << "// LandBorderColorIndex + ShowParamWindowView" << std::endl;
-	os << itsLandBorderColorIndex << " " << fShowParamWindowView << std::endl;
+	auto showParamWindowView = (itsParamWindowViewPosition != kNoDirection);
+	os << itsLandBorderColorIndex << " " << showParamWindowView << std::endl;
 
 	os << "// LandBorderPenSize" << std::endl;
 	os << itsLandBorderPenSize;
@@ -1212,7 +1216,8 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
 
     // 'double' muotoisten lisädatojen lisäys
-    extraData.Add(static_cast<double>(fLockToMainMapViewRow)); // talletetaan 1. extra-datana parametri rivin lukitus
+	extraData.Add(static_cast<double>(fLockToMainMapViewRow)); // talletetaan 1. extra-datana parametri rivin lukitus
+	extraData.Add(static_cast<double>(itsParamWindowViewPosition)); // talletetaan 2. extra-datana parametri-laatikon sijainti
 
     // string muotoisten lisädatojen lisäys
     std::stringstream extraDataStream;
@@ -1235,7 +1240,8 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 {
 	is >> itsSelectedMapIndexVM;
 
-	is >> itsLandBorderColorIndex >> fShowParamWindowView;
+	bool showParamWindowView = true;
+	is >> itsLandBorderColorIndex >> showParamWindowView;
 
 	is >> itsLandBorderPenSize;
 
@@ -1274,8 +1280,17 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	// eli jos uusia muutujia tai arvoja, käsittele tässä.
 
     // 'double' muotoisten lisädatojen poiminta
+
+	// Luetaan 1. extra-datana parametri rivin lukitus, oletusarvona fLockToMainMapViewRow:ille on false
+	fLockToMainMapViewRow = false;
     if(extraData.itsDoubleValues.size() >= 1)
-        fLockToMainMapViewRow = extraData.itsDoubleValues[0] != 0; // luetaan 1. extra-datana parametri rivin lukitus (HUOM! ei voi static_cast:ata bool:iksi, koska VC++ tekee ystävällisen varoituksen hitaudesta)
+        fLockToMainMapViewRow = extraData.itsDoubleValues[0] != 0; // (HUOM! ei voi static_cast:ata bool:iksi, koska VC++ tekee ystävällisen varoituksen hitaudesta)
+
+	// Luetaan 2. extra-datana parametri parametri-laatikon sijainti, oletusarvona itsParamWindowViewPosition:ille riippuu potentiaalisesti 
+	// vanhalla versiolla tehdyn näyttömakron showParamWindowView muuttujaan luetusta originaali asetuksesta.
+	itsParamWindowViewPosition = showParamWindowView ? kTopLeft : kNoDirection;
+	if(extraData.itsDoubleValues.size() >= 2)
+		itsParamWindowViewPosition = static_cast<FmiDirection>(extraData.itsDoubleValues[1]);
 
     // string muotoisten lisädatojen poiminta
     if(extraData.itsStringValues.size() >= 1)
@@ -1500,4 +1515,9 @@ void NFmiMapViewDescTop::ClearRedrawMapView()
 double NFmiMapViewDescTop::SingleMapViewHeightInMilliMeters() const
 {
 	return itsTrueMapViewSizeInfo.singleMapSizeInMM().Y();
+}
+
+void NFmiMapViewDescTop::ParamWindowViewPositionChange(bool forward)
+{
+	itsParamWindowViewPosition = CtrlViewUtils::CalcFollowingParamWindowViewPosition(itsParamWindowViewPosition, forward);
 }

@@ -85,6 +85,8 @@ class NFmiCrossSectionView : public NFmiIsoLineView
 	}
 	double CalcDataRectPressureScaleRatio(void);
 	NFmiRect CalcPressureScaleRect(void);
+	NFmiRect CalcParamHandlerViewRect(void);
+	void SetParamHandlerViewRect(const NFmiRect& newRect);
 
  protected:
    bool IsToolMasterAvailable(void) override;
@@ -96,10 +98,9 @@ class NFmiCrossSectionView : public NFmiIsoLineView
    void DrawLegends();
 private:
 	const NFmiMetTime& CurrentTime(void);
-	void UpdateParamHandler(void);
+	void UpdateParamHandlerView(void);
 	bool ShowParamHandlerView(void);
 	void DrawParamView(NFmiToolBox *theGTB);
-	NFmiRect CalcParamHandlerViewRect(void);
 	void InitParamHandlerView(void);
 	NFmiTimeBag CalcHelperLineTimeBag(void);
 	NFmiRect CalcHeaderRect(void);
@@ -217,7 +218,7 @@ private:
 	double itsDrawSizeFactorX; // ruutu piirrossa 1, lasketaan printatessa tälle erillinen arvo
 	double itsDrawSizeFactorY;
 
-	NFmiParamHandlerView* itsParamHandlerView;
+	std::unique_ptr<NFmiParamHandlerView> itsParamHandlerView;
 	NFmiRect itsParamHandlerViewRect;
 	bool fDoCrossSectionDifferenceData;
 };

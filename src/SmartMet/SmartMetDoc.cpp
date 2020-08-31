@@ -141,7 +141,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_DATA_LOAD_FROM_FILE, OnDataLoadFromFile)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
-	ON_COMMAND(ID_HIDE_PARAM_WINDOW, OnHideParamWindow)
+	ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_FORWARD, OnChangeParamWindowPositionForward)
+	ON_COMMAND(ID_CHANGE_PARAM_WINDOW_POSITION_BACKWARD, OnChangeParamWindowPositionBackward)
 	ON_COMMAND(ID_MAKE_GRID_FILE, OnMakeGridFile)
 	ON_COMMAND(ID_BUTTON_MAKE_EDITED_DATA_COPY, OnButtonMakeEditedDataCopy)
 	ON_COMMAND(ID_BUTTON_FILTER_DIALOG, OnButtonFilterDialog)
@@ -301,19 +302,21 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_ACCELERATOR_APPLY_STARTUP_VIEW_MACRO, &CSmartMetDoc::OnAcceleratorApplyStartupViewMacro)
     ON_COMMAND(ID_ACCELERATOR_TOGGLE_WMS_MAP_MODE, &CSmartMetDoc::OnAcceleratorToggleWmsMapMode)
     ON_COMMAND(ID_VIEW_SET_PARAM_SELECTION_VIEW_PLACE_TO_DEFAULT, OnSetParameterSelectionDlgPlaceToDefault)
-        ON_COMMAND(ID_HELP_EXCEPTIONTEST, &CSmartMetDoc::OnHelpExceptiontest)
-        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_NEXT, &CSmartMetDoc::OnAcceleratorCpSelectNext)
-        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_PREVIOUS, &CSmartMetDoc::OnAcceleratorCpSelectPrevious)
-        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_LEFT, &CSmartMetDoc::OnAcceleratorCpSelectLeft)
-        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_RIGHT, &CSmartMetDoc::OnAcceleratorCpSelectRight)
-        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_UP, &CSmartMetDoc::OnAcceleratorCpSelectUp)
-        ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
-        ON_COMMAND(ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS, &CSmartMetDoc::OnEditSoundingDataFromServerSettings)
-        ON_COMMAND(ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault)
-        ON_COMMAND(ID_BUTTON_BETA_PRODUCT_DIALOG, &CSmartMetDoc::OnButtonBetaProductDialog)
-
-        ON_COMMAND(ID_ACCELERATOR_DO_VISUALIZATION_PROFILING, &CSmartMetDoc::OnAcceleratorDoVisualizationProfiling)
-        END_MESSAGE_MAP()
+    ON_COMMAND(ID_HELP_EXCEPTIONTEST, &CSmartMetDoc::OnHelpExceptiontest)
+    ON_COMMAND(ID_ACCELERATOR_CP_SELECT_NEXT, &CSmartMetDoc::OnAcceleratorCpSelectNext)
+    ON_COMMAND(ID_ACCELERATOR_CP_SELECT_PREVIOUS, &CSmartMetDoc::OnAcceleratorCpSelectPrevious)
+    ON_COMMAND(ID_ACCELERATOR_CP_SELECT_LEFT, &CSmartMetDoc::OnAcceleratorCpSelectLeft)
+    ON_COMMAND(ID_ACCELERATOR_CP_SELECT_RIGHT, &CSmartMetDoc::OnAcceleratorCpSelectRight)
+    ON_COMMAND(ID_ACCELERATOR_CP_SELECT_UP, &CSmartMetDoc::OnAcceleratorCpSelectUp)
+    ON_COMMAND(ID_ACCELERATOR_CP_SELECT_DOWN, &CSmartMetDoc::OnAcceleratorCpSelectDown)
+    ON_COMMAND(ID_EDIT_SOUNDING_DATA_FROM_SERVER_SETTINGS, &CSmartMetDoc::OnEditSoundingDataFromServerSettings)
+    ON_COMMAND(ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault)
+    ON_COMMAND(ID_BUTTON_BETA_PRODUCT_DIALOG, &CSmartMetDoc::OnButtonBetaProductDialog)
+    ON_COMMAND(ID_ACCELERATOR_DO_VISUALIZATION_PROFILING, &CSmartMetDoc::OnAcceleratorDoVisualizationProfiling)
+    ON_COMMAND(ID_VIEW_SET_LOG_VIEWER_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetLogViewerDlgPlaceToDefault)
+	ON_COMMAND(ID_VIEW_SET_CASE_STUDY_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetCaseStudyDlgPlaceToDefault)
+	ON_COMMAND(ID_VIEW_SET_BETA_PRODUCTION_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetBetaProductionDlgPlaceToDefault)
+	END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
 END_DISPATCH_MAP()
@@ -1495,9 +1498,14 @@ void CSmartMetDoc::OnUpdateEditRedo(CCmdUI* pCmdUI)
 		pCmdUI->Enable(FALSE);
 }
 
-void CSmartMetDoc::OnHideParamWindow()
+void CSmartMetDoc::OnChangeParamWindowPositionForward()
 {
-	GetData()->GetCombinedMapHandler()->onHideParamWindow(itsMapViewDescTopIndex);
+	GetData()->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, true);
+}
+
+void CSmartMetDoc::OnChangeParamWindowPositionBackward()
+{
+	GetData()->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, false);
 }
 
 void CSmartMetDoc::OnMakeGridFile()
@@ -2010,6 +2018,23 @@ void CSmartMetDoc::OnViewSetDataQualityCheckerDlgPlaceToDefault()
 void CSmartMetDoc::OnViewSetSoundingsFromServerSettingsPlaceToDefault()
 {
     ::SetViewPlaceToDefault(this, itsSoundingDataServerConfigurationsDlg, "Sounding data from server settings dialog set to default size and position");
+}
+
+void CSmartMetDoc::OnViewSetLogViewerDlgPlaceToDefault()
+{
+	::SetViewPlaceToDefault(this, itsLogViewer, "Log viewer dialog set to default size and position");
+}
+
+
+void CSmartMetDoc::OnViewSetCaseStudyDlgPlaceToDefault()
+{
+	::SetViewPlaceToDefault(this, itsCaseStudyDlg, "Case study dialog set to default size and position");
+}
+
+
+void CSmartMetDoc::OnViewSetBetaProductionDlgPlaceToDefault()
+{
+	::SetViewPlaceToDefault(this, itsBetaProductDialog, "Beta production dialog set to default size and position");
 }
 
 void CSmartMetDoc::OnFileOpen()
@@ -3863,5 +3888,3 @@ void CSmartMetDoc::OnAcceleratorDoVisualizationProfiling()
 {
 	GetData()->StartProfiling();
 }
-
-

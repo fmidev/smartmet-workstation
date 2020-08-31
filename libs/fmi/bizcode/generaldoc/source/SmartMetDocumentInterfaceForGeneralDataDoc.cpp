@@ -4,6 +4,8 @@
 #include "ApplicationInterface.h"
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "SpecialDesctopIndex.h"
+#include "NFmiCrossSectionSystem.h"
 
 SmartMetDocumentInterfaceForGeneralDataDoc::SmartMetDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -576,9 +578,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::OnShowTimeString(unsigned int t
     itsDoc->GetCombinedMapHandler()->onShowTimeString(theDescTopIndex);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::OnHideParamWindow(unsigned int theDescTopIndex)
+void SmartMetDocumentInterfaceForGeneralDataDoc::OnChangeParamWindowPosition(unsigned int theDescTopIndex, bool forward)
 {
-    itsDoc->GetCombinedMapHandler()->onHideParamWindow(theDescTopIndex);
+    if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+        itsDoc->CrossSectionSystem()->ParamWindowViewPositionChange(forward);
+    else
+        itsDoc->GetCombinedMapHandler()->onChangeParamWindowPosition(theDescTopIndex, forward);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnShowGridPoints(unsigned int theMapViewIndex)

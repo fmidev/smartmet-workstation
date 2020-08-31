@@ -3092,7 +3092,7 @@ private:
             try
             {
                 float value = std::stof(lineParts[0]);
-                symbolTextMap_.insert(std::make_pair(value, fromUtf8toLocaleString(lineParts[1])));
+                symbolTextMap_.insert(std::make_pair(value, lineParts[1]));
             }
             catch(...)
             { }

@@ -107,6 +107,7 @@
 #include "ToolMasterDrawingFunctions.h"
 #include "CtrlViewColorContourLegendDrawingFunctions.h"
 #include "CombinedMapHandlerInterface.h"
+#include "ParamHandlerViewFunctions.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -124,6 +125,7 @@
 #include "boost\math\special_functions\round.hpp"
 
 using namespace std;
+
 
 //--------------------------------------------------------
 // Constructor/Destructor
@@ -147,7 +149,7 @@ NFmiStationViewHandler::NFmiStationViewHandler(int theMapViewDescTopIndex, boost
 ,itsZoomDragDownPoint()
 ,itsZoomDragUpPoint()
 ,itsOldZoomRect()
-,itsParamHandlerView(0)
+,itsParamHandlerView()
 ,itsParamHandlerViewRect()
 ,fWholeCrossSectionReallyMoved(false)
 {
@@ -160,15 +162,12 @@ NFmiStationViewHandler::NFmiStationViewHandler(int theMapViewDescTopIndex, boost
 	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // tehdään tämä alustus vain 1. rivin ensimmäiseen ruudun luonnin yhteydessä
 		itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcMinorPoints(itsMapArea); // tämä pitää tehdä ainakin kerran
 
-	itsParamHandlerViewRect = NFmiRect(0.,0.,0.25,0.05);
-	itsParamHandlerViewRect.Place(GetFrame().TopLeft());
 	InitParamHandlerView();
 }
 
 NFmiStationViewHandler::~NFmiStationViewHandler()
 {
 	delete itsViewList;
-	delete itsParamHandlerView;
 }
 
 static void DoBitBlt(CDC *sourceDc, CDC *destinationDc, CBitmap *usedBitmap, const CSize &sourceOffset)
@@ -2320,8 +2319,6 @@ void NFmiStationViewHandler::Update(void)
 			itsViewList->Time(itsTime); // pitää asettaa myös aika oikein, koska joskus näyttöjen synkkaus menee pieleen ja luultavasti currentti aika joka on jäänyt tässä updatessa, joutuu mouseMove:ssa taas luotauksen ajaksi jos käyttäjä vääntää hiiri pohjassa karttanäytössä
 			SetViewListArea();
 		}
-		itsParamHandlerViewRect.Top(GetFrame().TopLeft().Y());
-		UpdateParamHandler();
 	}
 }
 
@@ -2773,27 +2770,29 @@ void NFmiStationViewHandler::MakeParamLevelChangeDirtyOperations(bool changesHap
 
 void NFmiStationViewHandler::InitParamHandlerView(void)
 {
-	if(itsParamHandlerView)
-		delete itsParamHandlerView;
-	itsParamHandlerViewRect = CalcParamHandlerViewRect();
-	itsParamHandlerView = new NFmiParamHandlerView(itsMapViewDescTopIndex
-												  ,itsParamHandlerViewRect
-												  ,itsToolBox
-												  ,itsDrawingEnvironment
-												  ,itsDrawParam
-												  , itsViewGridRowNumber
-												  , itsViewGridColumnNumber
-												  ,true // true = näytetään mask-osio (mutta vain 1. rivillä)
-												  ,true); // true = map-layer osio on käytössä karttanäytössä
-	itsParamHandlerView->Init();
-	itsParamHandlerView->Update(itsParamHandlerViewRect,itsToolBox);
+	CtrlView::GeneralInitParamHandlerView(this, itsParamHandlerView, true, true);
+}
+
+void NFmiStationViewHandler::UpdateParamHandlerView(void)
+{
+	CtrlView::GeneralUpdateParamHandlerView(this, itsParamHandlerView);
+}
+
+NFmiRect NFmiStationViewHandler::CalcParamHandlerViewRect()
+{
+	return CtrlView::GeneralCalcParamHandlerViewRect(this, GetFrame());
+}
+
+void NFmiStationViewHandler::SetParamHandlerViewRect(const NFmiRect& newRect)
+{
+	itsParamHandlerViewRect = newRect;
 }
 
 bool NFmiStationViewHandler::ShowParamHandlerView(void)
 {
 	if(itsParamHandlerView)
 	{
-		if(itsCtrlViewDocumentInterface->ShowParamWindowView(itsMapViewDescTopIndex))
+		if(itsCtrlViewDocumentInterface->IsParamWindowViewVisible(itsMapViewDescTopIndex))
 		{
             CtrlViewUtils::MapViewMode displayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
 			if(displayMode == CtrlViewUtils::MapViewMode::kOneTime)
@@ -2827,33 +2826,10 @@ void NFmiStationViewHandler::DrawParamView(NFmiToolBox * theGTB)
     {
         if(ShowParamHandlerView())
         {
-            UpdateParamHandler();
+            UpdateParamHandlerView();
             itsParamHandlerView->Draw(theGTB);
         }
     }
-}
-
-void NFmiStationViewHandler::UpdateParamHandler(void)
-{
-	if(itsParamHandlerView)
-	{
-		itsParamHandlerViewRect = CalcParamHandlerViewRect();
-
-		itsParamHandlerView->Update(itsParamHandlerViewRect, itsToolBox);
-		itsParamHandlerViewRect = itsParamHandlerView->GetFrame(); // rect:i saattaa muuttua Update:n yhteydessä
-	}
-}
-
-NFmiRect NFmiStationViewHandler::CalcParamHandlerViewRect(void)
-{
-	static NFmiRect defaultParamHandlerViewRect(0.,0.,0.25,0.05);
-	NFmiRect frame(GetFrame());
-	double widthInMM = 50.;
-	int pixelSize = static_cast<int>(widthInMM * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x);
-	double width = itsToolBox->SX(pixelSize);
-	NFmiRect newRect(0, 0, width, defaultParamHandlerViewRect.Height());
-	newRect.Place(GetFrame().TopLeft());
-	return newRect;
 }
 
 bool NFmiStationViewHandler::ChangeSatelDataChannel(NFmiStationView* theView, short theDelta)
