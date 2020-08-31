@@ -11,11 +11,16 @@ class NFmiCalculationParams;
 class NFmiSimpleConditionPart
 {
     boost::shared_ptr<NFmiAreaMask> itsMask1;
-    bool isMask1StationaryData = false; // Jos stationaarista, ei saa tehdä aikainterpolaatiota
+  // Jos stationaarista, ei saa tehdä aikainterpolaatiota
+    bool isMask1StationaryData = false; 
     NFmiAreaMask::CalculationOperator itsCalculationOperator = NFmiAreaMask::NotOperation;
     boost::shared_ptr<NFmiAreaMask> itsMask2;
-    bool isMask2StationaryData = false; // Jos stationaarista, ei saa tehdä aikainterpolaatiota
-public:
+    // Jos stationaarista, ei saa tehdä aikainterpolaatiota
+    bool isMask2StationaryData = false; 
+    // Tätä käytetään hyväksi -> vertailuoperaattorin kanssa eli ns. continuous-equal laskuissa
+    double itsPreviousValue = kFloatMissing; 
+
+   public:
     ~NFmiSimpleConditionPart(void);
     NFmiSimpleConditionPart(boost::shared_ptr<NFmiAreaMask> &mask1,
         NFmiAreaMask::CalculationOperator calculationOperator,
@@ -33,6 +38,9 @@ public:
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
     double PressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
     double HeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
+
+    double PreviousValue(double newPreviousValue);
+    void ResetPreviousValue();
 };
 
 
@@ -60,6 +68,8 @@ class NFmiSingleCondition
   bool CheckCondition(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
   bool CheckPressureCondition(double thePressure, const NFmiCalculationParams &theCalculationParams);
   bool CheckHeightCondition(double theHeight, const NFmiCalculationParams &theCalculationParams);
+
+  void ResetPreviousValue();
 
  protected:
   // part1 and part2 are always present, because they form basic simple condition:
@@ -97,7 +107,9 @@ public:
     bool CheckPressureCondition(double thePressure, const NFmiCalculationParams &theCalculationParams);
     bool CheckHeightCondition(double theHeight, const NFmiCalculationParams &theCalculationParams);
 
-protected:
+    void ResetPreviousValue();
+
+   protected:
     // condition1 on aina mukana (esim. T_ec > 0)
     boost::shared_ptr<NFmiSingleCondition> condition1;
     // conditionOperator ja condition2 mukana tietyissä tapauksissa 

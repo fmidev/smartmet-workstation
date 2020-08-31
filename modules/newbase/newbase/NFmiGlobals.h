@@ -105,32 +105,31 @@ enum FmiDirection
 enum FmiMaskOperation
 {
   kFmiNoMaskOperation = 0,
-  kFmiMaskEqual = 1,                         // ==
-  kFmiMaskGreaterThan = 2,                   // >
-  kFmiMaskLessThan = 3,                      // <
-  kFmiMaskGreaterOrEqualThan = 4,            // >=
-  kFmiMaskLessOrEqualThan = 5,               // <=
-  kFmiMaskGreaterThanAndLessThan = 6,        // > && <
-  kFmiMaskGreaterOrEqualAndLessOrEqual = 7,  // >= && <=
-  kFmiMaskGreaterOrEqualAndLessThan = 8,     // >= && <
-  kFmiMaskGreaterThanAndLessOrEqual = 9,     // > && <=
-  kFmiMaskLessThanOrGreaterThan = 10,        // < || >
-  kFmiMaskLessOrEqualOrGreaterOrEqual = 11,  // <= || >=
-  kFmiMaskLessOrEqualOrGreaterThan = 12,     // <= || >
-  kFmiMaskLessThanOrGreaterOrEqual = 13,     // < || >=
-  kFmiMaskEqualOrEqual = 14,                 // = || =
+  kFmiMaskEqual,                         // ==
+  kFmiMaskGreaterThan,                   // >
+  kFmiMaskLessThan,                      // <
+  kFmiMaskGreaterOrEqualThan,            // >=
+  kFmiMaskLessOrEqualThan,               // <=
+  kFmiMaskContinuousEqual,               // ->    (simple condition where two consecutive values have wanted value in between them)
+  kFmiMaskGreaterThanAndLessThan,        // > && <
+  kFmiMaskGreaterOrEqualAndLessOrEqual,  // >= && <=
+  kFmiMaskGreaterOrEqualAndLessThan,     // >= && <
+  kFmiMaskGreaterThanAndLessOrEqual,     // > && <=
+  kFmiMaskLessThanOrGreaterThan,         // < || >
+  kFmiMaskLessOrEqualOrGreaterOrEqual,   // <= || >=
+  kFmiMaskLessOrEqualOrGreaterThan,      // <= || >
+  kFmiMaskLessThanOrGreaterOrEqual,      // < || >=
+  kFmiMaskEqualOrEqual,                  // = || =
 
   // näiden 'ramppimaskien' avulla voidaan laskea tarvittaessa liukuvia maskeja
 
-  kFmiMaskRisingRamp = 15,  // kerroin 0, kun arvo alle alarajan, 1, kun yli ylärajan, 0-1
+  kFmiMaskRisingRamp,  // kerroin 0, kun arvo alle alarajan, 1, kun yli ylärajan, 0-1
                             // (lasketaan lineaarisesti), kun siinä välillä
-  kFmiMaskLoweringRamp =
-      16,  // kerroin 1, kun arvo alle alarajan, 0, kun yli ylärajan, 1-0, kun siinä välillä
-  kFmiMaskDoubleRamp =
-      17,  // kerroin -1, kun arvo alle alarajan, 1, kun yli ylärajan, -1 - 1, kun siinä välillä
+  kFmiMaskLoweringRamp,  // kerroin 1, kun arvo alle alarajan, 0, kun yli ylärajan, 1-0, kun siinä välillä
+  kFmiMaskDoubleRamp,  // kerroin -1, kun arvo alle alarajan, 1, kun yli ylärajan, -1 - 1, kun siinä välillä
 
-  kFmiMaskAll = 18,
-  kFmiMaskNotEqual = 19  // != tai <> miten sitä milläkin kielellä esitetään
+  kFmiMaskAll,
+  kFmiMaskNotEqual  // != tai <> miten sitä milläkin kielellä esitetään
 
 };
 

@@ -57,7 +57,11 @@ namespace
     }
 }
 
-NFmiSimpleConditionPart::~NFmiSimpleConditionPart(void) = default;
+// *****************************************************************
+// **************   NFmiSimpleConditionPart   **********************
+// *****************************************************************
+
+    NFmiSimpleConditionPart::~NFmiSimpleConditionPart(void) = default;
 
 NFmiSimpleConditionPart::NFmiSimpleConditionPart(boost::shared_ptr<NFmiAreaMask> &mask1,
     NFmiAreaMask::CalculationOperator calculationOperator,
@@ -74,6 +78,7 @@ NFmiSimpleConditionPart::NFmiSimpleConditionPart(const NFmiSimpleConditionPart &
     , itsCalculationOperator(theOther.itsCalculationOperator)
     , itsMask2(theOther.itsMask2 ? theOther.itsMask2->Clone() : nullptr)
     , isMask2StationaryData(theOther.isMask2StationaryData)
+    , itsPreviousValue(theOther.itsPreviousValue)
 {
 }
 
@@ -124,6 +129,19 @@ double NFmiSimpleConditionPart::HeightValue(double theHeight, const NFmiCalculat
     }
 }
 
+double NFmiSimpleConditionPart::PreviousValue(double newPreviousValue) 
+{
+  auto returnValue = itsPreviousValue;
+  itsPreviousValue = newPreviousValue;
+  return returnValue;
+}
+
+void NFmiSimpleConditionPart::ResetPreviousValue() { itsPreviousValue = kFloatMissing; }
+
+
+// *****************************************************************
+// ****************   NFmiSingleCondition   ************************
+// *****************************************************************
 
 NFmiSingleCondition::~NFmiSingleCondition(void) = default;
 
@@ -217,11 +235,28 @@ static bool EvaluateRangeCondition(double value1, FmiMaskOperation operand1, dou
     }
 }
 
+// value2:n pitää olla jotenkin value1:n ja previousValue1:n välissä
+static bool EvaluateContinuousEqualCase(double value1,
+                                          double value2,
+                                          double previousValue1) 
+{
+  if (value1 != kFloatMissing && value2 != kFloatMissing && previousValue1 != kFloatMissing) 
+  {
+    if (value1 >= value2 && previousValue1 <= value2) return true;
+    if (previousValue1 >= value2 && value1 <= value2) return true;
+  }
+  return false;
+}
+
 bool NFmiSingleCondition::CheckCondition(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
 {
     double value1 = part1->Value(theCalculationParams, fUseTimeInterpolationAlways);
     double value2 = part2->Value(theCalculationParams, fUseTimeInterpolationAlways);
-    if(!part3)
+    if (conditionOperand1 == kFmiMaskContinuousEqual)
+    {
+      return ::EvaluateContinuousEqualCase(value1, value2, part1->PreviousValue(value1));
+    }
+    else if(!part3)
     { 
         return ::EvaluateCondition(value1, conditionOperand1, value2);
     }
@@ -236,7 +271,11 @@ bool NFmiSingleCondition::CheckPressureCondition(double thePressure, const NFmiC
 {
     double value1 = part1->PressureValue(thePressure, theCalculationParams);
     double value2 = part2->PressureValue(thePressure, theCalculationParams);
-    if(!part3)
+    if (conditionOperand1 == kFmiMaskContinuousEqual)
+    {
+      return ::EvaluateContinuousEqualCase(value1, value2, part1->PreviousValue(value1));
+    }
+    else if (!part3)
     {
         return ::EvaluateCondition(value1, conditionOperand1, value2);
     }
@@ -251,7 +290,11 @@ bool NFmiSingleCondition::CheckHeightCondition(double theHeight, const NFmiCalcu
 {
     double value1 = part1->HeightValue(theHeight, theCalculationParams);
     double value2 = part2->HeightValue(theHeight, theCalculationParams);
-    if(!part3)
+    if (conditionOperand1 == kFmiMaskContinuousEqual)
+    {
+      return ::EvaluateContinuousEqualCase(value1, value2, part1->PreviousValue(value1));
+    }
+    else if (!part3)
     {
         return ::EvaluateCondition(value1, conditionOperand1, value2);
     }
@@ -262,6 +305,16 @@ bool NFmiSingleCondition::CheckHeightCondition(double theHeight, const NFmiCalcu
     }
 }
 
+void NFmiSingleCondition::ResetPreviousValue() 
+{
+  if (part1) part1->ResetPreviousValue();
+  if (part2) part2->ResetPreviousValue();
+  if (part3) part3->ResetPreviousValue();
+}
+
+// *****************************************************************
+// ****************   NFmiSimpleCondition   ************************
+// *****************************************************************
 
 NFmiSimpleCondition::~NFmiSimpleCondition(void) = default;
 
@@ -352,3 +405,8 @@ bool NFmiSimpleCondition::CheckHeightCondition(double theHeight, const NFmiCalcu
     }
 }
 
+void NFmiSimpleCondition::ResetPreviousValue()
+{
+  if (condition1) condition1->ResetPreviousValue();
+  if (condition2) condition2->ResetPreviousValue();
+}

@@ -36,27 +36,33 @@ class NFmiParamCommandView : public NFmiCtrlView
    NFmiParamCommandView (int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
    void Draw(NFmiToolBox* theGTB);
    virtual NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pit‰‰ voida kysy‰ oliolta
-   void UpdateTextData(const NFmiPoint& theFontSize, const NFmiPoint& theFirstLinePlace, double theLineHeight, const NFmiPoint &theCheckBoxSize, const NFmiPoint &thePixelSize);
+   void UpdateTextData(const NFmiPoint& theFontSize, double theLineHeight, const NFmiPoint &theCheckBoxSize, const NFmiPoint &thePixelSize);
    bool ShowView(void){return fShowView;};
    void ShowView(bool newStatus){fShowView = newStatus;};
    bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
 
  protected:
-   int CalcIndex(const NFmiPoint& thePlace, double *indexRealValueOut = nullptr);
    virtual void DrawBackground(void);
    virtual void DrawData(void){};
-   NFmiRect CheckBoxRect(int lineIndex, bool drawedRect);
-   NFmiPoint LineTextPlace(int lineIndex, bool checkBoxMove);
+   NFmiRect CheckBoxRect(const NFmiRect& parameterRowRect);
+   NFmiPoint LineTextPlace(int zeroBasedRowIndex, const NFmiRect& parameterRowRect, bool checkBoxMove);
    void DrawCheckBox(const NFmiRect &theRect, NFmiDrawingEnvironment &theEnvi, bool fDrawCheck);
+   NFmiRect CalcParameterRowRect(int zeroBasedRowIndex) const;
+   int CalcParameterRowIndex(const NFmiPoint& pointedPlace, double* indexRealValueOut = nullptr) const;
+   void DrawCheckBox(const NFmiRect& parameterRowRect, bool isChecked);
+   double ConvertMilliMeterToRelative(double lengthInMilliMeter, bool isDirectionX) const;
 
    void CalcTextData(void); // t‰m‰ tehd‰‰n aina kun ruudun kokoa muutetaan (Update) NFmiParamhandler:issa joka jakaa tiedon listassaan oleville view:lle
    void CalcFontSize(void);
    NFmiPoint itsFontSize;
    NFmiPoint itsCheckBoxSize;
    NFmiPoint itsPixelSize; // pikselin koko relatiivisessa yksikˆss‰
-   NFmiPoint itsFirstLinePlace;
    double itsLineHeight; // itsFontSize.Y()+jokin v‰li
    bool fShowView; // 1999.12.10/Marko
-   bool fHasMapLayer;
+   bool fHasMapLayer = false;
+   // Jokaiselle riville lis‰t‰‰n t‰ll‰inen tuomaan hieman v‰ljyytt‰ tekstiriveille
+   static double itsParameterRowVerticalMarginInMM;
+   // K‰ytet‰‰n jotain v‰li‰ reunojen ja eri piirto olioiden v‰lill‰ (reuna - checkbox - teksti)
+   static double itsParameterRowHorizontalMarginInMM;
 };
 

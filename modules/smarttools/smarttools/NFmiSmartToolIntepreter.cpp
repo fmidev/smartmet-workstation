@@ -39,7 +39,7 @@
 
 static const unsigned int gMesanProdId = 160;
 static const std::vector<std::string> g_SimpleConditionCombinationWords{
-    ">=", "<=", "!=", "==", "<>", "&&", "||"};
+    ">=", "<=", "!=", "==", "<>", "&&", "||", "->"};
 static const std::map<std::string, NFmiAreaMask::CalculationOperator>
     g_SimpleConditionCalculationOperatorMap{{"+", NFmiAreaMask::Add},
                                             {"-", NFmiAreaMask::Sub},
@@ -1548,6 +1548,8 @@ static FmiMaskOperation GetMaskOperation(const std::string &operandString)
     return kFmiMaskLessOrEqualThan;
   else if (operandString == "!=" || operandString == "<>")
     return kFmiMaskNotEqual;
+  else if (operandString == "->")
+    return kFmiMaskContinuousEqual;
   else
     return kFmiNoMaskOperation;
 }

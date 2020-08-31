@@ -477,7 +477,9 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
 	int usedTimeResolutionInMinutes = GetUsedTimeResolutionInMinutes();
 	if(fLeftClicked) // pienennet‰‰n resoluutiota
 	{
-		if(usedTimeResolutionInMinutes <= 10)
+		if(usedTimeResolutionInMinutes <= 5)
+			usedTimeResolutionInMinutes = 1;
+		else if(usedTimeResolutionInMinutes <= 10)
 			usedTimeResolutionInMinutes = 5;
 		else if(usedTimeResolutionInMinutes <= 15)
 			usedTimeResolutionInMinutes = 10;
@@ -500,7 +502,9 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
 	}
 	else
 	{
-		if(usedTimeResolutionInMinutes < 10)
+		if(usedTimeResolutionInMinutes < 5)
+			usedTimeResolutionInMinutes = 5;
+		else if(usedTimeResolutionInMinutes < 10)
 			usedTimeResolutionInMinutes = 10;
 		else if(usedTimeResolutionInMinutes < 15)
 			usedTimeResolutionInMinutes = 15;

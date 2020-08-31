@@ -83,7 +83,8 @@ public:
 	afx_msg void OnAcceleratorToggleTooltip();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnBnClickedCheckUseObsandforCrossSection();
-	afx_msg void OnAcceleratorHideParamWindowExtraMap();
+	afx_msg void OnChangeParamWindowPositionForward();
+	afx_msg void OnChangeParamWindowPositionBackward();
 	afx_msg void OnAcceleratorSetCrossSectionSpecialAxis();
 	afx_msg void OnAcceleratorSetCrossSectionDefaultAxis();
 	afx_msg void OnAcceleratorSetCrossSectionDefaultAxisAll();

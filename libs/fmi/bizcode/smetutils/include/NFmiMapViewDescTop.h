@@ -128,8 +128,9 @@ public:
 	void DrawOverMapMode(int newValue) {itsDrawOverMapMode = newValue;}
 	CDC* MapBlitDC(void){return itsMapBlitDC;};
 	void MapBlitDC(CDC* theDC){itsMapBlitDC=theDC;};
-	bool ShowParamWindowView(void){return fShowParamWindowView;};
-	void ShowParamWindowView(bool newState){fShowParamWindowView = newState;};
+	void ParamWindowViewPositionChange(bool forward);
+	FmiDirection ParamWindowViewPosition() const { return itsParamWindowViewPosition; }
+
     boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(void);
 	void ToggleLandBorderColor(void);
 
@@ -260,7 +261,9 @@ private:
 	NFmiRect itsRelativeMapRect; 
 	// päivitetään CView:in OnSize()-metodissa, käytetään datan harvennus laskuissa.
 	NFmiPoint itsMapViewSizeInPixels; 
-	bool fShowParamWindowView;
+	// Parametrilaatikon paikkaa halutaan vaihdella. Se voi nyt saada seuraavat arvot:
+	// 1. kTopLeft, 2. kTopRight, 3. kBottomRight, 4. kBottomLeft, 5. kNoDirection (piilossa)
+	FmiDirection itsParamWindowViewPosition;
 	// lista drawparam-listoja (näyttöruudukossa eri rivit laitetaan
 	// omaan drawparamlist:iin, jotka sijoitetaan tähän listojen listaan)
 	NFmiPtrList<NFmiDrawParamList> *itsDrawParamListVector = nullptr;
