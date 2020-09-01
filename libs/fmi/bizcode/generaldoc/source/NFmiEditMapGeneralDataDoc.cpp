@@ -7875,7 +7875,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                     auto doShipDataLocations = (info->IsGrid() == false && (info->HasLatlonInfoInData()));
 					if(doShipDataLocations ? NearestShipLocation(*info, theLocation) : info->NearestLocation(theLocation))
 					{
-						double currentDistance = theLocation.Distance(doShipDataLocations ? info->GetLatlonFromData() : info->LatLonFast());
+						double currentDistance = theLocation.Distance(doShipDataLocations ? info->GetLatlonFromData() : info->LatLon());
 						if(currentDistance < minDist && currentDistance < maxDistanceInMeters)
 						{
 							minDist = currentDistance;

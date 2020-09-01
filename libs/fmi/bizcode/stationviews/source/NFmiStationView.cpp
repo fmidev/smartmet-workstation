@@ -769,7 +769,7 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
             PrepareForStationDraw();
             for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
             {
-                if(itsArea->IsInside(itsInfo->LatLonFast()))
+                if(itsArea->IsInside(itsInfo->LatLon()))
                     DrawStation(stationPointEnvi);
             }
         }

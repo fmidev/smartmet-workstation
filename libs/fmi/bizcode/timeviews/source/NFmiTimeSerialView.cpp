@@ -735,7 +735,7 @@ const NFmiPoint& NFmiTimeSerialView::GetUsedLatlon(void)
 	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 		return itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
 	else
-		return Info()->LatLonFast();
+		return Info()->LatLon();
 }
 
 bool NFmiTimeSerialView::GetDrawedTimes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag &theTimesOut)
@@ -3677,7 +3677,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservati
                         if(useMask)
                         {
                             maskList->SyncronizeMaskTime(editedInfo->Time());
-                            maskFactor = static_cast<float>(maskList->MaskValue(editedInfo->LatLonFast()));
+                            maskFactor = static_cast<float>(maskList->MaskValue(editedInfo->LatLon()));
                         }
                     }
                     if(timeIndex == 0)

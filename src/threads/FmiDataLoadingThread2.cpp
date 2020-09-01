@@ -162,7 +162,6 @@ static int ReadData(NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem 
 			std::unique_ptr<NFmiQueryData> data = QueryDataReading::ReadLatestDataWithFileFilterAfterTimeStamp(fileFilter, latestTimeStamp, latestFileName, timeStamp);
             if(data)
             {
-                data->LatLonCache(); // Tämä alustaa latlon cachen worker threadissa, jotta se olisi sitten käytössä SmartMetissa multi-thread koodeissa
                 if(theDataInfo.FakeProducerId() != 0)
                 {
                     data->Info()->First();

@@ -1639,9 +1639,8 @@ static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiI
         if(latlonCacheIter == g_LatlonMatrixCache.end())
         {
             NFmiDataMatrix<NFmiPoint> latlonMatrix(xSize, ySize);
-            auto latlonCacheVector = theIsoLineData.itsInfo->RefQueryData()->LatLonCache();
-            for(size_t i = 0; i < latlonCacheVector->size(); i++)
-                latlonMatrix[i % xSize][i / xSize] = latlonCacheVector->at(i);
+            for(auto i = 0ul; i < theIsoLineData.itsInfo->SizeLocations(); i++)
+                latlonMatrix[i % xSize][i / xSize] = theIsoLineData.itsInfo->LatLon(i);
             auto insertIter = g_LatlonMatrixCache.insert(std::make_pair(latlonMatrixKey, latlonMatrix));
             if(insertIter.second)
                 usedLatlonMatrix = &insertIter.first->second;
