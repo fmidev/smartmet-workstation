@@ -195,7 +195,7 @@ bool NFmiControlPointObservationBlender::SeekClosestObsBlenderData(const NFmiLoc
             {
                 if(info->NearestLocation(cpLocation, NFmiControlPointObservationBlendingData::MaxAllowedDistanceToStationInKm() * 1000))
                 {
-                    auto distanceInKm = cpLocation.Distance(info->LatLonFast()) / 1000.;
+                    auto distanceInKm = cpLocation.Distance(info->LatLon()) / 1000.;
                     // Jos on löytynyt uusi lähin asema, pitää ensin muutos arvo nollata mahdollisesta edellisen datan lähipisteen arvosta
                     if(distanceInKm < cpDistanceToStationInKm)
                     {

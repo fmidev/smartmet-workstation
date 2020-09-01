@@ -344,7 +344,7 @@ static bool CheckForExistingObservationsOnUsedArea(boost::shared_ptr<NFmiFastQue
     auto nonMissingObservationsOnAreaCount = 0.f;
     for(info->ResetLocation(); info->NextLocation(); )
     {
-        if(checkedObservationArea->IsInside(info->LatLonFast()))
+        if(checkedObservationArea->IsInside(info->LatLon()))
         {
             stationsOnAreaCount++;
             if(info->FloatValue() != kFloatMissing)

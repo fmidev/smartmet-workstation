@@ -985,7 +985,6 @@ static NFmiDataMatrix<NFmiPoint> MakeFinalStartingPointMatrix(boost::shared_ptr<
 
         if(startMatrixHelperX.SizeFound() && startMatrixHelperY.SizeFound())
         {
-            auto origDataGridPoints = theInfo->RefQueryData()->LatLonCache();
             startingPoints.Resize(startMatrixHelperX.itsFoundGoodSize, startMatrixHelperY.itsFoundGoodSize, NFmiPoint::gMissingLatlon);
             for(int y = 0; y < startMatrixHelperY.itsFoundGoodSize; y++)
             {
@@ -994,7 +993,7 @@ static NFmiDataMatrix<NFmiPoint> MakeFinalStartingPointMatrix(boost::shared_ptr<
                     int cacheIndexX = startMatrixHelperX.itsFoundGoodStartIndex + x * startMatrixHelperX.itsFoundGoodStep;
                     int cacheIndexY = startMatrixHelperY.itsFoundGoodStartIndex + y * startMatrixHelperY.itsFoundGoodStep;
                     int cacheIndex = cacheIndexY * theInfo->GridXNumber() + cacheIndexX;
-                    startingPoints[x][y] = origDataGridPoints->at(cacheIndex);
+                    startingPoints[x][y] = theInfo->LatLon(cacheIndex);
                 }
             }
         }

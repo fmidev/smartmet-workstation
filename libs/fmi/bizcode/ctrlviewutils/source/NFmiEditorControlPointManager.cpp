@@ -329,7 +329,7 @@ void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::share
     {
         for(theInfo->ResetLocation(); theInfo->NextLocation(); )
         {
-            const auto &latlon = theInfo->LatLonFast();
+            auto latlon = theInfo->LatLon();
             if(theArea->IsInside(latlon))
             {
                 theAddedControlPointsInOut.push_back(latlon);
