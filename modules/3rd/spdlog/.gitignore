@@ -1,4 +1,5 @@
 # Auto generated files
+build/*
 *.slo
 *.lo
 *.o
@@ -33,6 +34,9 @@
 # Codelite
 .codelite
 
+# KDevelop
+*.kdev4
+
 # .orig files
 *.orig
 
@@ -45,6 +49,7 @@ example/*
 !example/example.sln
 !example/example.vcxproj
 !example/CMakeLists.txt
+!example/meson.build
 !example/multisink.cpp
 !example/jni
 
@@ -61,4 +66,18 @@ install_manifest.txt
 /tests/tests.VC.VC.opendb
 /tests/tests.VC.db
 /tests/tests
-/tests/logs/file_helper_test.txt
+/tests/logs/*
+
+# idea
+.idea/
+cmake-build-*/
+*.db
+*.ipch
+*.filters
+*.db-wal
+*.opendb
+*.db-shm
+*.vcxproj
+*.tcl
+*.user
+*.sln
