@@ -1,6 +1,7 @@
 #include "catlog/catlog.h"
 #include "catlog/catlogutils.h"
 #include "spdlog/spdlog.h"
+#include "spdlog/sinks/daily_file_sink.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/reversed.hpp>
