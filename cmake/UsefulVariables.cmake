@@ -137,7 +137,7 @@ set(
 # **** Fmt library section ****
 set(
     FMT_VERSION
-    4_1_0
+    7_0_3
     CACHE INTERNAL "" FORCE
     )
 
