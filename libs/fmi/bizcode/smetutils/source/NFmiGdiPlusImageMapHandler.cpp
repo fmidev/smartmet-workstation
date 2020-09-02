@@ -16,6 +16,7 @@
 #include "NFmiFileString.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiPathUtils.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 using namespace std;
 
@@ -142,6 +143,8 @@ void NFmiGdiPlusImageMapHandler::Clear()
 
 bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
 {
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
+
 	itsAreaFileName = PathUtils::makeFixedAbsolutePath(theAreaFileName, itsControlPath);
 
 	itsOriginalArea = ReadArea(itsAreaFileName);
