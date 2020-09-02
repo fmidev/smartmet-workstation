@@ -18,6 +18,7 @@
 #include "NFmiPathUtils.h"
 #include "SpatialReference.h"
 #include "catlog/catlog.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 using namespace std;
 
@@ -144,6 +145,8 @@ void NFmiGdiPlusImageMapHandler::Clear()
 
 bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles)
 {
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
+
 	itsAreaFileName = PathUtils::makeFixedAbsolutePath(theAreaFileName, itsControlPath);
 
 	itsOriginalArea = ReadArea(itsAreaFileName);

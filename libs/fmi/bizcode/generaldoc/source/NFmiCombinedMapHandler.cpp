@@ -40,6 +40,7 @@
 #include "wmssupport/WmsSupportState.h"
 #include "wmssupport/WmsClient.h"
 #include "wmssupport/Setup.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -700,7 +701,7 @@ namespace
 		return layerName;
 	}
 
-	static std::string makeSelectedMapIndicesString(const std::vector<int>& indices)
+	std::string makeSelectedMapIndicesString(const std::vector<int>& indices)
 	{
 		std::string indicesString;
 		indicesString += std::to_string(indices.size());
@@ -713,6 +714,14 @@ namespace
 		// Poistetaan viimeisen numeron j‰lkeinen pilkku, pilkku tulee loopissa jokaisen indeksin per‰‰n, ja n‰in poppaamalla koodi on yksinkertaisempaa.
 		indicesString.pop_back();
 		return indicesString;
+	}
+
+	std::string makeFunctionAndAreaDescription(std::string functionName, const boost::shared_ptr<NFmiArea> &mapArea)
+	{
+		std::string functionAndAreaDescription = functionName;
+		functionAndAreaDescription += " with area: ";
+		functionAndAreaDescription += mapArea->AreaFactoryStr();
+		return functionAndAreaDescription;
 	}
 
 } // nameless namespace ends
@@ -1148,6 +1157,7 @@ void NFmiCombinedMapHandler::generateClippedCountryBorderGeometrysWithGdal()
 	{
 		std::shared_ptr<OGRGeometry> clippedGeometry;
 		boost::shared_ptr<NFmiArea> totalMapArea = mapHandler->TotalArea();
+		CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, ::makeFunctionAndAreaDescription(__FUNCTION__, totalMapArea));
 		bool totalWorldArea = ::isTotalWorld(totalMapArea);
 		Fmi::CoordinateTransformation coordinateTransformation(*globalBaseCountryBorderGeometry_->getSpatialReference(), totalMapArea->SpatialReference());
 
