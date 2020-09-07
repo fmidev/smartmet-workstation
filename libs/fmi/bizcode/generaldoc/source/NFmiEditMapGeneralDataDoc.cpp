@@ -8210,9 +8210,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		NFmiMapViewDescTop& mainMapViewDescTop = *GetCombinedMapHandler()->getMapViewDescTop(mainMapViewDescTopIndex);
 		NFmiAnimationData& animationData = mainMapViewDescTop.AnimationDataRef();
 
-		animationData.CurrentTime(mainMapViewDescTop.CurrentTime()); // currentti aika pitää ottaa desctopista ja antaa animaattorille
 		int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), mainMapViewDescTop.MapViewDisplayMode(), static_cast<int>(mainMapViewDescTop.ViewGridSize().X()));
-		int status = animationData.Animate(reducedAnimationTimeSteps);
+		if(profiler.tickCount() == 0)
+			animationData.CurrentTime(animationData.Times().FirstTime()); // 1. kierroksella asetetaan aika alkuun
+		else
+			animationData.Animate(reducedAnimationTimeSteps); // Muilla kierroksilla juoksutetaan aikaa normaalisti
 
 		if(profiler.dataCount() > 0	&& mainMapViewDescTop.CurrentTime() == animationData.Times().FirstTime())
 		{
@@ -8221,7 +8223,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 		else 
 		{
-			profiler.Tick(mainMapViewDescTop.CurrentTime());
+			profiler.Tick(animationData.CurrentTime());
 		}
 
 		mainMapViewDescTop.CurrentTime(animationData.CurrentTime());
@@ -8277,13 +8279,16 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			NFmiAnimationData& animationData = mapViewDescTop->AnimationDataRef();
 			animationData = profiler.getSettings()[mapViewDescTopIndex];
 			animationData.Times(times);
-			animationData.ShowTimesOnTimeControl(true);
+			// Hide the blue animation time-box on time-control views
+			animationData.ShowTimesOnTimeControl(false);
+			mapViewDescTop->MapViewDirty(false, false, true, false);
 			mapViewDescTopIndex++;
 		}
 
 		profiler.Report();
 		profiler.Reset();
 		profiling = false;
+		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Stopping profiling view updates");
 	}
 
 	// tarkasta CView-näyttöluokissa, onko mahdollisesti animaatiota käynnissä. Jos on, älä laita odota-cursoria näkyviin, koska se vilkuttaa ikävästi
