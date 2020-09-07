@@ -1127,7 +1127,6 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystemWithGdal()
 
 		globalBaseCountryBorderGeometry_ = std::make_unique<OGRGeometryCollection>();
 		::SetupSpatialReferenceFromLayer(firstLayer, globalBaseCountryBorderGeometry_);
-		Fmi::CoordinateTransformation coordinateTransformation(*globalBaseCountryBorderGeometry_->getSpatialReference(), *OGRSpatialReference::GetWGS84SRS());
 		for(auto layer : poDS->GetLayers())
 		{
 			for(const auto& feature : *layer)
