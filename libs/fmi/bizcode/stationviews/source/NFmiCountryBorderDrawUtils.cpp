@@ -96,6 +96,37 @@ namespace
         return {};
     }
 
+    void clearLastEmptyVector(std::list<std::vector<Gdiplus::PointF>>& gdiplusPolygon)
+    {
+        if(!gdiplusPolygon.empty())
+        {
+            if(gdiplusPolygon.back().empty())
+                gdiplusPolygon.pop_back();
+        }
+    }
+
+    void doPolygonAdding(std::list<std::vector<Gdiplus::PointF>>& gdiplusPolygonList, std::vector<Gdiplus::PointF>&& gdiplusPolygon)
+    {
+        gdiplusPolygonList.emplace_back(std::move(gdiplusPolygon));
+        ::clearLastEmptyVector(gdiplusPolygonList);
+    }
+
+    std::list<std::vector<Gdiplus::PointF>> convertPolygonGeometryToGdiplusPolygon(OGRPolygon* polygonGeometry, const Fmi::Box& box)
+    {
+        std::list<std::vector<Gdiplus::PointF>> polygonList;
+        if(polygonGeometry)
+        {
+            ::doPolygonAdding(polygonList, ::convertLineStringGeometryToGdiplusPolygon(polygonGeometry->getExteriorRing(), box));
+
+            const int numberOfInteriorRings = polygonGeometry->getNumInteriorRings();
+            for(int interiorRingIndex = 0; interiorRingIndex < numberOfInteriorRings; interiorRingIndex++)
+            {
+                ::doPolygonAdding(polygonList, ::convertLineStringGeometryToGdiplusPolygon(polygonGeometry->getInteriorRing(interiorRingIndex), box));
+            }
+        }
+        return polygonList;
+    }
+
     std::list<std::vector<Gdiplus::PointF>> convertMultiLineStringGeometryToGdiplusMultiPolygon(OGRMultiLineString* multiLineStringGeometry, const Fmi::Box& box)
     {
         std::list<std::vector<Gdiplus::PointF>> gdiplusMultiPolygon;
@@ -103,9 +134,44 @@ namespace
         {
             for(int i = 0, n = multiLineStringGeometry->getNumGeometries(); i < n; ++i)
             {
-                gdiplusMultiPolygon.emplace_back(::convertLineStringGeometryToGdiplusPolygon(dynamic_cast<OGRLineString*>(multiLineStringGeometry->getGeometryRef(i)), box));
-                if(gdiplusMultiPolygon.back().empty())
-                    gdiplusMultiPolygon.pop_back();
+                ::doPolygonAdding(gdiplusMultiPolygon, ::convertLineStringGeometryToGdiplusPolygon(dynamic_cast<OGRLineString*>(multiLineStringGeometry->getGeometryRef(i)), box));
+            }
+        }
+        return gdiplusMultiPolygon;
+    }
+
+    void insertMultiPolygonToMultiPolygon(std::list<std::vector<Gdiplus::PointF>>& mainMultiPolygon, std::list<std::vector<Gdiplus::PointF>>& addedMultiPolygon)
+    {
+        if(!addedMultiPolygon.empty())
+        {
+            mainMultiPolygon.insert(mainMultiPolygon.end(), addedMultiPolygon.begin(), addedMultiPolygon.end());
+        }
+    }
+    
+    std::list<std::vector<Gdiplus::PointF>> convertMultiPolygonGeometryToGdiplusMultiPolygon(OGRMultiPolygon* multiPolygonGeometry, const Fmi::Box& box)
+    {
+        std::list<std::vector<Gdiplus::PointF>> gdiplusMultiPolygon;
+        if(multiPolygonGeometry)
+        {
+            for(int i = 0, n = multiPolygonGeometry->getNumGeometries(); i < n; ++i)
+            {
+                ::insertMultiPolygonToMultiPolygon(gdiplusMultiPolygon, ::convertPolygonGeometryToGdiplusPolygon(dynamic_cast<OGRPolygon*>(multiPolygonGeometry->getGeometryRef(i)), box));
+            }
+        }
+        return gdiplusMultiPolygon;
+    }
+
+    // Must forward declare convertGeometryToGdiplusMultiPolygon function
+    std::list<std::vector<Gdiplus::PointF>> convertGeometryToGdiplusMultiPolygon(OGRGeometry* geometry, const Fmi::Box& box);
+
+    std::list<std::vector<Gdiplus::PointF>> convertGeometryCollectionGeometryToGdiplusMultiPolygon(OGRGeometryCollection* geometryCollection, const Fmi::Box& box)
+    {
+        std::list<std::vector<Gdiplus::PointF>> gdiplusMultiPolygon;
+        if(geometryCollection)
+        {
+            for(int i = 0, n = geometryCollection->getNumGeometries(); i < n; ++i)
+            {
+                ::insertMultiPolygonToMultiPolygon(gdiplusMultiPolygon, ::convertGeometryToGdiplusMultiPolygon(geometryCollection->getGeometryRef(i), box));
             }
         }
         return gdiplusMultiPolygon;
@@ -118,6 +184,10 @@ namespace
         {
         case wkbMultiLineString:
             return ::convertMultiLineStringGeometryToGdiplusMultiPolygon(dynamic_cast<OGRMultiLineString*>(geometry), box);
+        case wkbMultiPolygon:
+            return ::convertMultiPolygonGeometryToGdiplusMultiPolygon(dynamic_cast<OGRMultiPolygon*>(geometry), box);
+        case wkbGeometryCollection:
+            return ::convertGeometryCollectionGeometryToGdiplusMultiPolygon(dynamic_cast<OGRGeometryCollection*>(geometry), box);
         default:
             return {};
         }
