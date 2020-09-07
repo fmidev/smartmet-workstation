@@ -39,6 +39,10 @@ public:
 		return data.size();
 	}
 
+	size_t tickCount() {
+		return dataTimes.size();
+	}
+
 	void Tick(const NFmiMetTime&tb) {
 
 		auto currTime = std::chrono::high_resolution_clock::now();
@@ -112,7 +116,7 @@ public:
 			});
 
 		size_t pos = 1;
-		constexpr int lineLen = 8;
+		constexpr int lineLen = 5;
 
 		std::stringstream dataLine;
 		CatLog::logMessage("Profiling: measures how long each timestep takes to visualize.", CatLog::Severity::Info, CatLog::Category::Visualization);
