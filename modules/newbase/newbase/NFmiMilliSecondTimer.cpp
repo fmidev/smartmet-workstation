@@ -6,6 +6,64 @@
 
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiValueString.h"
+#include <iomanip>
+
+namespace
+{
+int calculateSignificantDigitPrecision(double value, int wantedPrecision)
+{
+  int usedPrecision = 0; 
+  if (value < 0.000000001)
+    usedPrecision = 9 + wantedPrecision;
+  else if (value < 0.00000001)
+    usedPrecision = 8 + wantedPrecision;
+  else if (value < 0.0000001)
+    usedPrecision = 7 + wantedPrecision;
+  else if (value < 0.000001)
+    usedPrecision = 6 + wantedPrecision;
+  else if (value < 0.00001)
+    usedPrecision = 5 + wantedPrecision;
+  else if (value < 0.0001)
+    usedPrecision = 4 + wantedPrecision;
+  else if (value < 0.001)
+    usedPrecision = 3 + wantedPrecision;
+  else if (value < 0.01)
+    usedPrecision = 2 + wantedPrecision;
+  else if (value < 0.1)
+    usedPrecision = 1 + wantedPrecision;
+  else if (value < 1)
+    usedPrecision = 0 + wantedPrecision;
+  else
+    usedPrecision = 1;
+
+  if (usedPrecision <= 1) usedPrecision = 1;
+
+  return usedPrecision;
+}
+
+}  // namespace
+
+NFmiNanoSecondTimer::NFmiNanoSecondTimer() : startTime_(std::chrono::steady_clock::now()) {}
+
+void NFmiNanoSecondTimer::restart() { startTime_ = std::chrono::steady_clock::now(); }
+
+double NFmiNanoSecondTimer::elapsedTimeInSeconds() const 
+{
+  std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
+  double elapsedSeconds =
+      std::chrono::duration_cast<std::chrono::duration<double> >(endTime - startTime_).count();
+  return elapsedSeconds;
+} 
+
+std::string NFmiNanoSecondTimer::elapsedTimeInSecondsString(int precision) const
+{
+  double elapsedSeconds = elapsedTimeInSeconds();
+  std::stringstream out;
+  out << std::fixed << std::setprecision(::calculateSignificantDigitPrecision(elapsedSeconds, precision)) << elapsedSeconds
+      << " s";
+  return out.str();
+}
+
 
 // ----------------------------------------------------------------------
 /*!
