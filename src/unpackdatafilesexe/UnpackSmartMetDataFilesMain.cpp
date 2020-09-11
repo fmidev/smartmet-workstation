@@ -175,3 +175,69 @@ int main(int argc, const char* argv[])
     }
     return 1; // virheellinen ulostulo
 } 
+
+/*
+#include "NFmiArea.h"
+#include "NFmiAreaFactory.h"
+#include "NFmiMilliSecondTimer.h"
+#include "NFmiHelpDataInfo.h"
+#include "NFmiSettings.h"
+
+int main(int argc, const char* argv[])
+{
+    // Testi 1: luodaan samoja area olioita per‰kk‰in. 
+    // 1. olion luonti NFmiAreaFactory::Create funktiolla ja Clone kest‰‰ n. 0.05 s (n. 1000x hitaampaan kuin vanhalla versiolla).
+    // Sen j‰lkeen luonti + Clone kest‰‰ 'vain' n. 0.002 s (silti n. 100x hitaampaan kuin vanhalla versiolla).
+
+    std::string legacyAreaString = "stereographic, 20, 90, 60:6, 51.3, 49, 70.2";
+    int totalSameAreaCreationCount = 33;
+    for(int index = 0; index < totalSameAreaCreationCount; index++)
+    {
+        NFmiNanoSecondTimer timer;
+        boost::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create(legacyAreaString);
+        if(area)
+        {
+            boost::shared_ptr<NFmiArea> areaClone(area->Clone());
+        }
+        std::cout << timer.elapsedTimeInSecondsString() << std::endl;
+    }
+
+    // Testi 2: Luodaan monia samoja area olioita per‰kk‰in monimutkaisemmassa ymp‰ristˆss‰. 
+    // T‰ss‰ k‰ytet‰‰n smarttools kirjaston NFmiHelpDataInfoSystem luokkaa.
+    // Esim. kun luodaan cinesat:iin liittyvi‰ olioita, niill‰ on kaikilla sama area, mutta niiden 
+    // luonti kest‰‰ aina n. 0.02 sekuntia ja jos niist‰ teht‰isiin kopio Clone:lla (nyt ei tehd‰),
+    // kest‰isi sekin aina n. 0.02 s. Eli jostain syyst‰ t‰ll‰isell‰ asetelmalla toiminnot ovat 
+    // aina n. 1000x hitaampia kuin vanhalla newbase:lla.
+
+    // Testiin liittyy 9 konffia, jotka laitetaan /editorConfs hakemistoon.
+    // Aikaa voi mitata lis‰‰m‰ll‰ joku ajan mittaus ja cout -tulostus NFmiHelpDataInfo::InitFromSettings 
+    // metodiin NFmiAreaFactory::Create funktio kutsun ymp‰rille (ks. NFmiNanoSecondTimer:in k‰yttˆ‰ yll‰).
+
+    std::string baseControlPath = "/editorConfs/";
+    NFmiSettings::Read(baseControlPath + "data_scand.conf");
+    NFmiSettings::Read(baseControlPath + "paths_dev.conf");
+    NFmiSettings::Read(baseControlPath + "local_cache_settings_scand.conf");
+    NFmiSettings::Read(baseControlPath + "static_settings.conf");
+    NFmiSettings::Read(baseControlPath + "cinesat_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "meteosat8_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "noaa_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "seviri_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "satel_image_paths_fmi.conf");
+
+    NFmiHelpDataInfoSystem helpDataInfoSystem;
+
+    try
+    {
+        helpDataInfoSystem.InitFromSettings("MetEditor::HelpData",
+            baseControlPath,
+            "/editorConfs/*_help_pal_data.sqd",
+            "help_pal_data");
+    }
+    catch(std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+
+    return 0;
+}
+*/
