@@ -8,6 +8,7 @@ project(SmartMet)
 
 set(CMAKE_PREFIX_PATH ${LIBS_3RD}/cmakefinds )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/runtime_output")
+set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo" CACHE STRING "" FORCE)
 
 add_definitions(
     -D_WIN64
