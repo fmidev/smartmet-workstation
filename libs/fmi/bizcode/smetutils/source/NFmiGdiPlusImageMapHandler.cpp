@@ -158,6 +158,10 @@ bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const 
 		errMsg += theAreaFileName;
 		throw runtime_error(errMsg);
 	}
+	else
+	{
+		itsOriginalArea->SetGridSize(150, 150);
+	}
 
 	std::string logStr = "Area: ";
 	logStr += itsOriginalArea->AreaFactoryProjStr();
