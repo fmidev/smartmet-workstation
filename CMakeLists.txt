@@ -8,6 +8,7 @@ project(SmartMet)
 
 set(CMAKE_PREFIX_PATH ${LIBS_3RD}/cmakefinds )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/runtime_output")
+set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo" CACHE STRING "" FORCE)
 
 add_definitions(
     -D_WIN64
@@ -47,9 +48,18 @@ if(DISABLE_UNIRAS_TOOLMASTER)
 add_definitions(-DDISABLE_UNIRAS_TOOLMASTER)
 endif()	
 	
+# Enable Visual Studio parallel compilation option
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
     )
+
+# Enable Visual Studio “Edit And Continue” compilation option for debug build only
+if(WIN32)
+add_compile_options(
+    $<$<CONFIG:DEBUG>:/ZI>
+    )
+endif()	
+
 # Disable globally VC++ warning about class's name truncated for being too long	(over 4096 characters long)
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/wd4503>
