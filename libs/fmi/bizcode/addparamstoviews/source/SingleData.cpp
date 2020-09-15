@@ -37,6 +37,7 @@ namespace
         auto rowItem = AddParams::SingleRowItem(rowType, std::string(dataIdent.GetParamName()), dataIdent.GetParamIdent(), treeNodeCollapsed, "", 
                             dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), leafNode,
                             nullptr, 0, "", "", uniqueIdForBaseData);
+        rowItem.interpolationType(dataIdent.GetParam()->InterpolationMethod());
         return rowItem;
     }
 
