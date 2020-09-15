@@ -177,6 +177,7 @@ protected:
    float GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData);
    std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
    std::string MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage);
+   std::string MakeMacroParamDescriptionTooltipText(const NFmiExtraMacroParamData& extraMacroParamData);
    void SetupPossibleWindMetaParamData();
    bool GetDataFromLocalInfo() const;
    float GetSynopDataValueFromq2();

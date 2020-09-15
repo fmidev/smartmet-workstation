@@ -2916,6 +2916,18 @@ std::string NFmiStationView::MakeMacroParamErrorTooltipText(const std::string& m
 	return str;
 }
 
+std::string NFmiStationView::MakeMacroParamDescriptionTooltipText(const NFmiExtraMacroParamData &extraMacroParamData)
+{
+	std::string str;
+	if(!extraMacroParamData.MacroParamDescription().empty())
+	{
+		str += "<font color = magenta> (";
+		str += extraMacroParamData.MacroParamDescription();
+		str += ")</font>";
+	}
+	return str;
+}
+
 std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
 {
     NFmiExtraMacroParamData extraMacroParamData;
@@ -2934,12 +2946,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 		str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
 		str += " (cache) ";
 		str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
-		if(!extraMacroParamData.MacroParamDescription().empty())
-		{
-			str += "<font color = magenta> (";
-			str += extraMacroParamData.MacroParamDescription();
-			str += ")</font>";
-		}
+		str += MakeMacroParamDescriptionTooltipText(extraMacroParamData);
 		return str;
 	}
 }
