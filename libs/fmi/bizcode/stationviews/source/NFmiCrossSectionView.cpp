@@ -698,6 +698,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
 
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
+					NFmiExtraMacroParamData extraMacroParamData;
 
                     if(info->DataType() == NFmiInfoData::kCrossSectionMacroParam)
                     {
@@ -706,7 +707,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
                         tooltipData.latlons[0] = latlon;
                         tooltipData.times[0] = aTime;
                         tooltipData.pressures[0] = p;
-                        FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, &tooltipData);
+                        FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, &tooltipData, &extraMacroParamData);
 						if(!tooltipData.macroParamErrorMessage.empty())
 						{
 							str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true, 0, false);
@@ -739,6 +740,8 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					else
 						str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2));
 					str += "</font></b>";
+					str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+					str += MakeMacroParamDescriptionTooltipText(extraMacroParamData);
 					str += CtrlViewUtils::GetArchiveOrigTimeString(itsDrawParam, itsCtrlViewDocumentInterface, info, fGetCurrentDataFromQ2Server, "TempViewLegendTimeFormat");
 					str += "\n";
 				}
@@ -1394,7 +1397,7 @@ static void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocu
 	ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
 }
 
-void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData)
+void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
 {
     if(!possibleTooltipData)
     {
@@ -1439,6 +1442,11 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
             std::vector<NFmiMetTime> times = MakeTimeVector();
             smartToolModifier.CalcCrossSectionSmartToolValues(theValues, thePressures, latlons, times);
         }
+
+		if(possibleExtraMacroParamData)
+		{
+			*possibleExtraMacroParamData = smartToolModifier.ExtraMacroParamData();
+		}
 	}
 	catch(exception &e)
 	{
