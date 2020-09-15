@@ -29,7 +29,8 @@ struct ParameterSelectionHeaderParInfo
         kRowNumber = 0,
         kItemName,
         kOrigOrLastTime,
-        kItemId
+        kItemId,
+        kInterpolationType
     };
 
     ParameterSelectionHeaderParInfo(void)
