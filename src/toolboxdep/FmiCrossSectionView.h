@@ -50,7 +50,8 @@ public:
 	void SetPrintCopyCDC(CDC* pDC);
 	void MakePrintViewDirty(bool fViewDirty, bool fCacheDirty);
 	void OldWayPrintUpdate(void); // tätä kutsutaan yleisessä printtaus funktiossa
-	bool DoAllwaysLowMemoryPrint(void) const {return false;} // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
+	bool DoAllwaysLowMemoryPrint(void) const { return false; } // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
+	bool IsMapView() const {return false;} // ks. esim. CFmiWin32TemplateHelpers::PrintMapViewWithFullResolution -funktiota.
 	// ********************************************************************************************
 	void DoDraw(void);
 	void DrawOverBitmapThings(NFmiToolBox *theToolBox);
