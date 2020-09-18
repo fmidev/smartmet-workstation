@@ -39,4 +39,9 @@ class NFmiCalculationParams
   // Silloin (poikkileikkauslaskuissa) käytetään tätä painepintaa laskentapisteenä
   // Tein siitä mutablen, jotta ei tarvitse muuttaa niin monissa kohtaa const parametria ei const:iksi.
   mutable float itsPressureHeight = kFloatMissing;
+  // Jos laskuissa on käytetty CalculationPoint = synop tyyliin laskenta pisteitä, tähän talletetaan sen originaali 
+  // latlon pisteen pointteri, jota sitten voidaan käyttää tarkemmissa etäisyyslaskuissa, sen sijaan että käytettäisiin
+  // laskentahilan lähimmän pisteen koordinaatteja. Tämä estää tulosten satunnaisen oloisen vaihtelun, kun laskenta hila 
+  // muuttaa ja etäisyys perusteiset laskennan tulokset muuttuvat (esim. etäisyydet occurance laskentojen hakusäteen suhteen).
+  const NFmiPoint *itsActualCalculationPoint = nullptr;
 };

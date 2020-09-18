@@ -174,7 +174,8 @@ double NFmiInfoAreaMaskOccurrance::Value(const NFmiCalculationParams &theCalcula
     // Mutta esiintymislukumäärä on ihan ok laskea (mm. salamadatasta salamoiden esiintymiset jne.)
 
     InitializeFromArguments();
-    NFmiLocation location(theCalculationParams.itsLatlon);
+    // Jos käytössä on CalculationPoint, käytetään suoraan sitä, muuten itsLatlon arvoa, joka on laskentahilan laskettava piste
+    NFmiLocation location(theCalculationParams.itsActualCalculationPoint ? *theCalculationParams.itsActualCalculationPoint : theCalculationParams.itsLatlon);
     int occurranceCount = 0;
 
     if (fUseMultiSourceData && itsMultiSourceDataGetter)
