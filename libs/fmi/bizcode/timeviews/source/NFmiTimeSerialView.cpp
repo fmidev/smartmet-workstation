@@ -4874,5 +4874,9 @@ NFmiPoint NFmiTimeSerialView::GetFirstSelectedLatlonFromEditedData() const
         }
     }
     // If all else fails return possible out-of-edited-area point (or missing point)
-    return itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint();
+    auto outOfEditedAreaTimeSerialPoint = itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint();
+	if(outOfEditedAreaTimeSerialPoint != NFmiPoint::gMissingLatlon)
+		return outOfEditedAreaTimeSerialPoint;
+	else
+		return itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
 }
