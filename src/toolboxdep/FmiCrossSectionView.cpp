@@ -74,7 +74,7 @@ void CFmiCrossSectionView::OnDraw(CDC* pDC)
 	if(itsSmartMetDocumentInterface->Printing())
 		return ; // printatessa ei saa mennä OnDraw-metodiin, koska tällöin systeemit kaatuu
 
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+	CFmiWin32Helpers::SetDescTopGraphicalInfo(IsMapView(), GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
 
 	CClientDC dc(this);
 	CDC dcMem;
