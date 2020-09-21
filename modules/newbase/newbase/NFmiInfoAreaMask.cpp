@@ -21,6 +21,7 @@
 #include "NFmiMetMath.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiSimpleCondition.h"
+#include "NFmiFastInfoUtils.h"
 #include "boost/math/special_functions/round.hpp"
 
 #include <cassert>
@@ -342,7 +343,7 @@ double NFmiInfoAreaMask::Value(const NFmiCalculationParams &theCalculationParams
 }
 
 double NFmiInfoAreaMask::ValueFinal(const NFmiCalculationParams &theCalculationParams,
-                  bool fUseTimeInterpolationAlways)
+                                    bool fUseTimeInterpolationAlways)
 {
   if (metaParamDataHolder.isMetaParameterCalculationNeeded())
     return CalcMetaParamValue(theCalculationParams);
@@ -369,7 +370,17 @@ double NFmiInfoAreaMask::ValueFinal(const NFmiCalculationParams &theCalculationP
   }
   else
   {
-    if (IsTimeInterpolationNeeded(fUseTimeInterpolationAlways))
+    auto currentMultiInfoData = theCalculationParams.itsCurrentMultiInfoData;
+    if (currentMultiInfoData)
+    {
+      NFmiFastInfoUtils::QueryInfoTotalStateRestorer queryInfoTotalStateRestorer(
+          *currentMultiInfoData);
+      currentMultiInfoData->Param(*itsInfo->Param().GetParam());
+      result = currentMultiInfoData->InterpolatedValue(theCalculationParams.itsLatlon,
+                                                       theCalculationParams.itsTime,
+                                                       360);  // interpoloidaan ajassa ja paikassa
+    }
+    else if (IsTimeInterpolationNeeded(fUseTimeInterpolationAlways))
       result = itsInfo->InterpolatedValue(theCalculationParams.itsLatlon,
                                           theCalculationParams.itsTime,
                                           360);  // interpoloidaan ajassa ja paikassa

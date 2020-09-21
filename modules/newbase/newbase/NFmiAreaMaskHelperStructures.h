@@ -3,6 +3,8 @@
 #include "NFmiPoint.h"
 #include "NFmiMetTime.h"
 
+class NFmiFastQueryInfo;
+
 class NFmiMacroParamValue
 {
  public:
@@ -44,4 +46,7 @@ class NFmiCalculationParams
   // laskentahilan lähimmän pisteen koordinaatteja. Tämä estää tulosten satunnaisen oloisen vaihtelun, kun laskenta hila 
   // muuttaa ja etäisyys perusteiset laskennan tulokset muuttuvat (esim. etäisyydet occurance laskentojen hakusäteen suhteen).
   const NFmiPoint *itsActualCalculationPoint = nullptr;
+  // Synop datoilla voi olla monia eri datoja (esim. Suomessa suomi+euro+maailma datat).
+  // Ainakin SimpleCondition laskuihin näitä olisi muuten vaikea saada käyttöön, joten tässä on 'kuljetus' laskenta paikalle.
+  NFmiFastQueryInfo *itsCurrentMultiInfoData = nullptr;
 };

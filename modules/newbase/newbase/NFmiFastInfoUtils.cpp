@@ -357,18 +357,30 @@ bool FindMovingSoundingDataTime(const boost::shared_ptr<NFmiFastQueryInfo> &theI
 }
 
 QueryInfoParamStateRestorer::QueryInfoParamStateRestorer(NFmiQueryInfo &info)
-:info_(info)
-,paramIndex_(info.ParamIndex())
-,paramId_(info.Param().GetParamIdent())
+    : info_(info),
+      paramId_(info.ParamIndex() != gMissingIndex ? static_cast<FmiParameterName>(info.Param().GetParamIdent()) : kFmiBadParameter)
 {
 }
 
 QueryInfoParamStateRestorer::~QueryInfoParamStateRestorer()
 {
-    if(paramIndex_ != gMissingIndex)
-        info_.Param(static_cast<FmiParameterName>(paramId_));
-    else
-        info_.ParamIndex(paramIndex_);
+    // Parametrin asetuksella nollataan/asetetaan mahd. combinedParam jutut
+  info_.Param(paramId_);
+}
+
+QueryInfoTotalStateRestorer::QueryInfoTotalStateRestorer(NFmiQueryInfo &info)
+    : QueryInfoParamStateRestorer(info),
+      locationIndex_(info.LocationIndex()),
+      timeIndex_(info.TimeIndex()),
+      levelIndex_(info.LevelIndex())
+{
+}
+
+QueryInfoTotalStateRestorer::~QueryInfoTotalStateRestorer()
+{
+  info_.LocationIndex(locationIndex_);
+  info_.TimeIndex(timeIndex_);
+  info_.LevelIndex(levelIndex_);
 }
 
 bool MetaWindParamUsage::ParamNeedsMetaCalculations(unsigned long paramId) const

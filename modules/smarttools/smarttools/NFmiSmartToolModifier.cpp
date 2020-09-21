@@ -2192,6 +2192,7 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
       static const std::vector<NFmiAreaMask::FunctionType> functionsThatAllowObservations{
           NFmiAreaMask::ClosestObsValue,
           NFmiAreaMask::Occurrence,
+          NFmiAreaMask::Occurrence2,
           NFmiAreaMask::PeekT,
           NFmiAreaMask::TimeRange,
           NFmiAreaMask::LatestValue,
@@ -2201,41 +2202,46 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
       auto allowedIter = std::find(functionsThatAllowObservations.begin(),
                                    functionsThatAllowObservations.end(),
                                    functionType);
+      auto isCalculationPointsUsed = !CalculationPoints().empty();
+      auto keepStationDataForm = isCalculationPointsUsed ||
+                                 itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing;
       if (allowedIter != functionsThatAllowObservations.end())
       {  // tämä on ok, ei tarvitse tehdä mitään
       }
       else if (maskType == NFmiAreaMask::InfoVariable)
       {
-        if (itsWorkingGrid->itsArea)
+        if (!keepStationDataForm)
         {
-          boost::shared_ptr<NFmiFastQueryInfo> info = areaMask->Info();
-          NFmiStation2GridMask *station2GridMask = nullptr;
-          if (theAreaMaskInfo.TimeOffsetInHours())
-            station2GridMask =
-                new NFmiStation2GridTimeShiftMask(areaMask->MaskType(),
-                                                  areaMask->GetDataType(),
-                                                  info,
-                                                  theAreaMaskInfo.TimeOffsetInHours(),
-                                                  theAreaMaskInfo.GetDataIdent().GetParamIdent());
-          else
-            station2GridMask =
-                new NFmiStation2GridMask(areaMask->MaskType(),
-                                         areaMask->GetDataType(),
-                                         info,
-                                         theAreaMaskInfo.GetDataIdent().GetParamIdent());
+          if (itsWorkingGrid->itsArea)
+          {
+            boost::shared_ptr<NFmiFastQueryInfo> info = areaMask->Info();
+            NFmiStation2GridMask *station2GridMask = nullptr;
+            if (theAreaMaskInfo.TimeOffsetInHours())
+              station2GridMask =
+                  new NFmiStation2GridTimeShiftMask(areaMask->MaskType(),
+                                                    areaMask->GetDataType(),
+                                                    info,
+                                                    theAreaMaskInfo.TimeOffsetInHours(),
+                                                    theAreaMaskInfo.GetDataIdent().GetParamIdent());
+            else
+              station2GridMask =
+                  new NFmiStation2GridMask(areaMask->MaskType(),
+                                           areaMask->GetDataType(),
+                                           info,
+                                           theAreaMaskInfo.GetDataIdent().GetParamIdent());
 
-          auto isCalculationPointsUsed = !CalculationPoints().empty();
-          station2GridMask->SetGriddingHelpers(
-              itsWorkingGrid->itsArea,
-              itsGriddingHelper,
-              NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
-              itsExtraMacroParamData->ObservationRadiusInKm(),
-              isCalculationPointsUsed);
-          areaMask = boost::shared_ptr<NFmiAreaMask>(station2GridMask);
-          MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
+            station2GridMask->SetGriddingHelpers(
+                itsWorkingGrid->itsArea,
+                itsGriddingHelper,
+                NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
+                itsExtraMacroParamData->ObservationRadiusInKm(),
+                isCalculationPointsUsed);
+            areaMask = boost::shared_ptr<NFmiAreaMask>(station2GridMask);
+            MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
+          }
+          else
+            ::MakeMissingWorkingGridAreaError(__FUNCTION__, std::string(areaMask->MaskString()));
         }
-        else
-          ::MakeMissingWorkingGridAreaError(__FUNCTION__, std::string(areaMask->MaskString()));
       }
       else
       {
