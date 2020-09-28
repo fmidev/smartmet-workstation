@@ -4841,37 +4841,69 @@ NFmiEditMapDataListHandler* DataLists(void)
 {
 	return itsListHandler;
 }
+
+bool StoreMatrixToGridfile(const NFmiDataMatrix<float> &dataMatrix, const NFmiString& theFileName)
+{
+	NFmiString fileName(itsBasicConfigurations.WorkingDirectory());
+	fileName += "\\";
+	fileName += theFileName;
+	std::ofstream out(fileName, std::ios::binary);
+	if(out)
+	{
+		out << dataMatrix;
+		out.close();
+		return true;
+	}
+	return false;
+}
+
+bool MakeGridFileForMacroParam(unsigned long usedMapViewIndex, int activeViewRow, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiString& theFileName)
+{
+	auto drawParamList = GetCombinedMapHandler()->getDrawParamList(usedMapViewIndex, activeViewRow);
+	if(drawParamList)
+	{
+		auto activeParamLayerIndex = drawParamList->FindActive();
+		NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
+		if(MacroParamDataCache().getCache(usedMapViewIndex, activeViewRow, activeParamLayerIndex, itsActiveViewTime, drawParam->InitFileName(), macroParamLayerCacheDataType))
+		{
+			const auto& dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
+			return StoreMatrixToGridfile(dataMatrix, theFileName);
+		}
+	}
+	return false;
+}
+
 // tallettaa aktiivisen näyttörivin aktiivisen parametrin currentin ajan gridin tiedostoon,
 // jonka nimi annetaan parametrina, mutta se talletetaan työhakemistoon
 bool MakeGridFile(const NFmiString& theFileName)
 {
-	boost::shared_ptr<NFmiDrawParam> drawParam = GetCombinedMapHandler()->activeDrawParam(0, GetCombinedMapHandler()->activeViewRow(0)); // tehdään vain pääkarttaikkunasta näitä talletuksia
+	// tehdään vain pääkarttaikkunasta näitä talletuksia
+	auto usedMapViewIndex = 0ul;
+	auto activeViewRow = GetCombinedMapHandler()->activeViewRow(usedMapViewIndex);
+	boost::shared_ptr<NFmiDrawParam> drawParam = GetCombinedMapHandler()->activeDrawParam(usedMapViewIndex, activeViewRow);
 	bool status = false;
 	if(drawParam)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, false);
-		if(info == 0)
-			return false;
-		NFmiMetTime oldTime = info->Time();
-		if(info->DataType() == NFmiInfoData::kStationary || info->TimeDescriptor().IsInside(itsActiveViewTime))
+		if(drawParam->IsMacroParamCase(true))
+			return MakeGridFileForMacroParam(usedMapViewIndex, activeViewRow, drawParam, theFileName);
+		else
 		{
-			NFmiDataMatrix<float> dMatrix;
-			if(info->DataType() == NFmiInfoData::kStationary)
-				dMatrix = info->Values();
-			else
-				dMatrix = info->Values(itsActiveViewTime);
-			NFmiString fileName(itsBasicConfigurations.WorkingDirectory());
-			fileName += "\\";
-			fileName += theFileName;
-			std::ofstream out(fileName, std::ios::binary);
-			if(out)
+			boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, false);
+			if(info == 0)
+				return false;
+			NFmiMetTime oldTime = info->Time();
+			if(info->DataType() == NFmiInfoData::kStationary || info->TimeDescriptor().IsInside(itsActiveViewTime))
 			{
-				out << dMatrix;
-				out.close();
-				status = true;
+				NFmiDataMatrix<float> dataMatrix;
+				if(info->DataType() == NFmiInfoData::kStationary)
+					info->Values(dataMatrix);
+				else
+					info->Values(dataMatrix, itsActiveViewTime);
+
+				status = StoreMatrixToGridfile(dataMatrix, theFileName);
 			}
+			info->Time(oldTime);
 		}
-		info->Time(oldTime);
 	}
 	return status;
 }
