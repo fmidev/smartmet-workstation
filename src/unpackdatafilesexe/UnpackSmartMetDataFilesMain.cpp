@@ -1,5 +1,3 @@
-#pragma once
-
 // Ohjelma saa seuraavat argumentit:
 // 0. ohjelman nimi (ei välitetä tästä)
 // 1. pakatun lähdetiedoston polku
@@ -239,5 +237,69 @@ int main(int argc, const char* argv[])
     }
 
     return 0;
+}
+*/
+/*
+#include "NFmiCmdLine.h"
+#include "NFmiQueryData.h"
+#include "NFmiWindFix.h"
+
+using namespace std;
+
+string getUsageString()
+{
+    string usageString = "Usage: recalculatewindparameters input output";
+    usageString += "\n\nPurpose: recalculate wind related parameters with WD and WS,";
+    usageString += "\npossible recalculated parameters are: u, v and wind-vector";
+    return usageString;
+}
+
+void usage()
+{
+    cerr << getUsageString() << endl;
+}
+
+int run(int argc, const char* argv[])
+{
+    NFmiCmdLine cmdline(argc, argv, "");
+
+    // Tarkistetaan optioiden oikeus:
+    if(cmdline.Status().IsError())
+    {
+        string errorString = "Invalid command line:\n";
+        errorString += cmdline.Status().ErrorLog().CharPtr();
+        errorString += "\n";
+        errorString += getUsageString();
+        throw runtime_error(errorString);
+    }
+
+    if(cmdline.NumberofParameters() != 2)
+    {
+        string errorString = "Invalid number of command line arguments (2 needed):\n";
+        errorString += getUsageString();
+        throw runtime_error(errorString);
+    }
+
+    string inputfile = cmdline.Parameter(1);
+    string outputfile = cmdline.Parameter(2);
+    // Tässä queryData halutaan lukea ilman memory-mappausta (joka olisi read-only), koska dataan tehdään 
+    // muutoksia ja se talletetaan lopuksi eri tiedostoon.
+    NFmiQueryData qd(inputfile, false);
+    if(NFmiWindFix::FixWinds(qd))
+        qd.Write(outputfile);
+    return 0;
+}
+
+int main(int argc, const char* argv[])
+{
+    try
+    {
+        return run(argc, argv);
+    }
+    catch(exception& e)
+    {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
 }
 */
