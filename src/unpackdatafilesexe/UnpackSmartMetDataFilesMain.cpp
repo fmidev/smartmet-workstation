@@ -174,6 +174,7 @@ int main(int argc, const char* argv[])
     return 1; // virheellinen ulostulo
 } 
 
+
 /*
 #include "NFmiArea.h"
 #include "NFmiAreaFactory.h"
@@ -183,21 +184,22 @@ int main(int argc, const char* argv[])
 
 int main(int argc, const char* argv[])
 {
+    NFmiNanoSecondTimer timer;
     // Testi 1: luodaan samoja area olioita per‰kk‰in. 
     // 1. olion luonti NFmiAreaFactory::Create funktiolla ja Clone kest‰‰ n. 0.05 s (n. 1000x hitaampaan kuin vanhalla versiolla).
     // Sen j‰lkeen luonti + Clone kest‰‰ 'vain' n. 0.002 s (silti n. 100x hitaampaan kuin vanhalla versiolla).
 
-    std::string legacyAreaString = "stereographic, 20, 90, 60:6, 51.3, 49, 70.2";
+    std::string legacyAreaString = "stereographic,20,90,60:6,51.3,49,70.2";
     int totalSameAreaCreationCount = 33;
     for(int index = 0; index < totalSameAreaCreationCount; index++)
     {
-        NFmiNanoSecondTimer timer;
         boost::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create(legacyAreaString);
         if(area)
         {
             boost::shared_ptr<NFmiArea> areaClone(area->Clone());
         }
-        std::cout << timer.elapsedTimeInSecondsString() << std::endl;
+        std::cerr << "Area #" << index << ": " << timer.elapsedTimeInSecondsString() << std::endl;
+        timer.restart();
     }
 
     // Testi 2: Luodaan monia samoja area olioita per‰kk‰in monimutkaisemmassa ymp‰ristˆss‰. 
@@ -235,6 +237,8 @@ int main(int argc, const char* argv[])
     {
         std::cout << e.what() << std::endl;
     }
+    std::cerr << "After helpDataInfoSystem.InitFromSettings: " << timer.elapsedTimeInSecondsString() << std::endl;
+    timer.restart();
 
     return 0;
 }
