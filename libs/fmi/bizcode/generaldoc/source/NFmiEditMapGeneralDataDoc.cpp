@@ -4896,9 +4896,9 @@ bool MakeGridFile(const NFmiString& theFileName)
 			{
 				NFmiDataMatrix<float> dataMatrix;
 				if(info->DataType() == NFmiInfoData::kStationary)
-					info->Values(dataMatrix);
+					dataMatrix = info->Values();
 				else
-					info->Values(dataMatrix, itsActiveViewTime);
+					dataMatrix = info->Values(itsActiveViewTime);
 
 				status = StoreMatrixToGridfile(dataMatrix, theFileName);
 			}
