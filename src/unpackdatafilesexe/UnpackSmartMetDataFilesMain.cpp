@@ -1,5 +1,3 @@
-#pragma once
-
 // Ohjelma saa seuraavat argumentit:
 // 0. ohjelman nimi (ei välitetä tästä)
 // 1. pakatun lähdetiedoston polku
@@ -187,28 +185,31 @@ int main(int argc, const char* argv[])
 
 int main(int argc, const char* argv[])
 {
+    NFmiNanoSecondTimer timer;
 #ifdef WIN32
     // Winkkarissa pakko esitellä proj-kirjaston data hakemisto jotenkin näin
     const std::string fixedProj6DataFileDirectory = "D:\\projekti\\ver200_SmartMet_release_5_14\\smartmet-workstation\\libs\\3rd\\gdal-3_0_2\\bin\\proj6\\share";
     const char* const apszPaths[2] = { fixedProj6DataFileDirectory.c_str(), NULL };
     OSRSetPROJSearchPaths(apszPaths);
 #endif
+    std::cerr << "Initial gdal setup: " << timer.elapsedTimeInSecondsString() << std::endl;
+    timer.restart();
 
     // Testi 1: luodaan samoja area olioita peräkkäin. 
     // 1. olion luonti NFmiAreaFactory::Create funktiolla ja Clone kestää n. 0.05 s (n. 1000x hitaampaan kuin vanhalla versiolla).
     // Sen jälkeen luonti + Clone kestää 'vain' n. 0.002 s (silti n. 100x hitaampaan kuin vanhalla versiolla).
 
-    std::string legacyAreaString = "stereographic, 20, 90, 60:6, 51.3, 49, 70.2";
+    std::string legacyAreaString = "stereographic,20,90,60:6,51.3,49,70.2";
     int totalSameAreaCreationCount = 33;
     for(int index = 0; index < totalSameAreaCreationCount; index++)
     {
-        NFmiNanoSecondTimer timer;
         boost::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create(legacyAreaString);
         if(area)
         {
             boost::shared_ptr<NFmiArea> areaClone(area->Clone());
         }
-        std::cout << timer.elapsedTimeInSecondsString() << std::endl;
+        std::cerr << "Area #" << index << ": " << timer.elapsedTimeInSecondsString() << std::endl;
+        timer.restart();
     }
 
     // Testi 2: Luodaan monia samoja area olioita peräkkäin monimutkaisemmassa ympäristössä. 
@@ -246,6 +247,8 @@ int main(int argc, const char* argv[])
     {
         std::cout << e.what() << std::endl;
     }
+    std::cerr << "After helpDataInfoSystem.InitFromSettings: " << timer.elapsedTimeInSecondsString() << std::endl;
+    timer.restart();
 
     return 0;
 }
