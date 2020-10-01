@@ -4842,12 +4842,9 @@ NFmiEditMapDataListHandler* DataLists(void)
 	return itsListHandler;
 }
 
-bool StoreMatrixToGridfile(const NFmiDataMatrix<float> &dataMatrix, const NFmiString& theFileName)
+bool StoreMatrixToGridFileFinal(const NFmiDataMatrix<float>& dataMatrix, const std::string& fullFilePath)
 {
-	NFmiString fileName(itsBasicConfigurations.WorkingDirectory());
-	fileName += "\\";
-	fileName += theFileName;
-	std::ofstream out(fileName, std::ios::binary);
+	std::ofstream out(fullFilePath, std::ios::binary);
 	if(out)
 	{
 		out << dataMatrix;
@@ -4855,6 +4852,19 @@ bool StoreMatrixToGridfile(const NFmiDataMatrix<float> &dataMatrix, const NFmiSt
 		return true;
 	}
 	return false;
+}
+
+bool StoreMatrixToGridfile(const NFmiDataMatrix<float> &dataMatrix, const NFmiString& theFileName)
+{
+	// Yritet‰‰n ensin D-aseman juureen talletusta
+	std::string fileName1 = "D:\\" + theFileName;
+	if(!StoreMatrixToGridFileFinal(dataMatrix, fileName1))
+	{
+		// Yritet‰‰n sitten C-aseman juureen talletusta
+		std::string fileName1 = "C:\\" + theFileName;
+		return StoreMatrixToGridFileFinal(dataMatrix, fileName1);
+	}
+	return true;
 }
 
 bool MakeGridFileForMacroParam(unsigned long usedMapViewIndex, int activeViewRow, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiString& theFileName)
