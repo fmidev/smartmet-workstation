@@ -34,10 +34,21 @@ IMPLEMENT_DYNCREATE(NFmiParameterSelectionGridCtrl, CGridCtrl)
 
 // CFmiParameterSelectionDlg message handlers
 BEGIN_MESSAGE_MAP(NFmiParameterSelectionGridCtrl, CGridCtrl)
+    ON_WM_RBUTTONUP()
     ON_WM_LBUTTONDBLCLK()
     ON_WM_SIZE()
     ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
+
+void NFmiParameterSelectionGridCtrl::OnRButtonUp(UINT nFlags, CPoint point)
+{
+    CGridCtrl::OnRButtonUp(nFlags, point);
+
+    // Deselect all with right mouse click
+    SetSelectedRange(-1, -1, -1, -1, TRUE, TRUE);
+    CCellID emptyCellId;
+    SetFocusCell(emptyCellId);
+}
 
 void NFmiParameterSelectionGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
@@ -642,8 +653,6 @@ BOOL CFmiParameterSelectionDlg::OnInitDialog()
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
     itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
 
-    // Do not allow selection, it would look bad for one row being all blue
-    itsGridCtrl.EnableSelection(FALSE);
     UpdateGridControlValues();
     auto LButtonDblClkCallback = [this]() {this->HandleGridCtrlsLButtonDblClk(); };
     itsGridCtrl.itsLButtonDblClkCallback = LButtonDblClkCallback;
