@@ -36,5 +36,6 @@ namespace AddParams
         const std::string& totalLocalPath() const { return totalLocalPath_; }
         const std::string& totalServerPath() const { return totalServerPath_; }
         const std::string& latestDataFilePath() const { return latestDataFilePath_; }
+        static void initializeMaxLevelCountInMakingDialogRowData();
     };
 }
