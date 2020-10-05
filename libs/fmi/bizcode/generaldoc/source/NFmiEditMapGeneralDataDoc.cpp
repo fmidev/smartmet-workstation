@@ -9369,6 +9369,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     // 3. Polut on annettu suhteellisina, jolloin lopullinen polku rakennetaan SmartMet bin‰‰rihakemiston suhteen
     std::string MakeMpcpProcessPath(const std::string &absoluteSmartMetAppPath, const std::string &processSettingsKey, const std::string &defaultProcessName)
     {
+		std::string finalMpcpProcessPath;
         std::string configuredMasterProcessPath = NFmiSettings::Optional<std::string>(processSettingsKey, "");
         if(configuredMasterProcessPath.empty())
         {
@@ -9376,20 +9377,21 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             std::string usedAppPath = absoluteSmartMetAppPath;
             usedAppPath += "\\";
             usedAppPath += defaultProcessName;
-            return usedAppPath;
+			finalMpcpProcessPath = usedAppPath;
         }
         else
         {
-            
             if(NFmiFileSystem::IsAbsolutePath(configuredMasterProcessPath))
             {
-                return configuredMasterProcessPath;
+				finalMpcpProcessPath = configuredMasterProcessPath;
             }
             else
             {
-                return PathUtils::getAbsoluteFilePath(configuredMasterProcessPath, absoluteSmartMetAppPath);
+				finalMpcpProcessPath = PathUtils::getAbsoluteFilePath(configuredMasterProcessPath, absoluteSmartMetAppPath);
             }
         }
+		finalMpcpProcessPath = PathUtils::simplifyWindowsPath(finalMpcpProcessPath);
+		return finalMpcpProcessPath;
     }
 
     bool MakeSureToolMasterPoolIsRunning2()
