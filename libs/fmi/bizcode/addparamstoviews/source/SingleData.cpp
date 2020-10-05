@@ -3,11 +3,18 @@
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFastInfoUtils.h"
 #include "ParameterSelectionUtils.h"
+#include "NFmiSettings.h"
 
 #include <boost/algorithm/string.hpp>
 
 namespace
 {
+    // 80 on perusoletus maksimi, mutta käyttäjä voi ohittää sen konfiguraatiolla (SmartMet::ParameterSelection::MaxLevelCountInMakingDialogRowData).
+    // Tämä siis rajoittaa kun tehdään level-datasta jokaiselle parametrille jokaiselle levelille omaa riviä dialogiin.
+    // Dialogi voisi jumitellä todella pahasti, jos tulee data, missä olisi vaikka 8000 leveliä ja muutama (esim. 8) parametria
+    // tällöin ilman rajoituksia datalle tulisi aina rakennettua 8x8000 64000 riviä turhaa riviä, jota kukaan ei koskaa oikeasti käyttäisi.
+    int g_maxLevelCountInMakingDialogRowData = 80;
+
     bool isDataStructuresChanged(const boost::shared_ptr<NFmiFastQueryInfo>& newInfo, const std::unique_ptr<NFmiQueryInfo> &latestMetaData)
     {
         if(latestMetaData == nullptr)
@@ -51,8 +58,11 @@ namespace
 
     void addLevelRowItems(std::vector<AddParams::SingleRowItem> &dialogRowData, const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, NFmiQueryInfo &queryInfo, const std::string& uniqueIdForBaseData)
     {
-        for(queryInfo.ResetLevel(); queryInfo.NextLevel(); )
+        int levelCounter = 0;
+        for(queryInfo.ResetLevel(); queryInfo.NextLevel(); levelCounter++)
         {
+            if(levelCounter >= g_maxLevelCountInMakingDialogRowData)
+                break;
             const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(*queryInfo.Level());
             dialogRowData.push_back(::makeLevelRowItem(dataIdent, dataType, rowType, level, uniqueIdForBaseData));
         }
@@ -261,5 +271,10 @@ namespace AddParams
 
         return std::string(dataTime.ToStr("YYYY.MM.DD HH:mm"));
     }   
+
+     void SingleData::initializeMaxLevelCountInMakingDialogRowData()
+     {
+         g_maxLevelCountInMakingDialogRowData = NFmiSettings::Optional<int>("SmartMet::ParameterSelection::MaxLevelCountInMakingDialogRowData", g_maxLevelCountInMakingDialogRowData);
+     }
 
 }
