@@ -16,6 +16,7 @@
 #include "json_spirit_reader.h"
 
 #include <fstream>
+#include <algorithm>
 #include "boost/math/special_functions/round.hpp"
 #include "json_spirit_writer_options.h"
 
@@ -133,6 +134,118 @@ bool ReadObjectInJsonFormat(T &objectOut, const std::string &theFilePath, const 
     }
 
     return false;
+}
+
+// **************************************************************
+// ***********  FixedRunTime osio alkaa  ************************
+// **************************************************************
+
+FixedRunTime::FixedRunTime() = default;
+
+FixedRunTime::FixedRunTime(short hour, short minute)
+    :itsHour(hour),
+    itsMinute(minute)
+{}
+
+bool FixedRunTime::operator==(const FixedRunTime& other) const
+{
+    return (itsHour == other.itsHour) && (itsMinute == other.itsMinute);
+}
+
+// Jos annetun NFmiMetTime olion tunti + minuutti lukema on isompi kuin this olion, palauta true.
+bool FixedRunTime::operator<(const NFmiMetTime& metTime) const
+{
+    if(itsHour < metTime.GetHour())
+        return true;
+    if(itsHour > metTime.GetHour())
+        return false;
+
+    return itsMinute < metTime.GetMin();
+}
+
+bool FixedRunTime::operator>(const NFmiMetTime& metTime) const
+{
+    if(itsHour > metTime.GetHour())
+        return true;
+    if(itsHour < metTime.GetHour())
+        return false;
+
+    return itsMinute > metTime.GetMin();
+}
+
+bool FixedRunTime::IsValid() const
+{
+    if(itsHour >= 0 && itsHour < 24 && itsMinute >= 0 && itsMinute < 60)
+        return true;
+    else
+        return false;
+}
+
+NFmiMetTime FixedRunTime::MakeMetTime() const
+{
+    NFmiMetTime aTime(1);
+    aTime.SetHour(itsHour);
+    aTime.SetMin(itsMinute);
+    return aTime;
+}
+
+// fixedRunTimeString pit‰‰ olla muotoa HH:mm esim. 4:15 tai 04:15
+// Oletus: fixedRunTimeString on jo trimmattu whitespace:n suhteen.
+FixedRunTime FixedRunTime::ParseFixedRunTimeString(const std::string& fixedRunTimeString, std::string& possibleErrorString)
+{
+    std::vector<std::string> parts;
+    boost::split(parts, fixedRunTimeString, boost::is_any_of(":"));
+    try
+    {
+        if(parts.size() == 2)
+        {
+            short hour = boost::lexical_cast<short>(parts[0]);
+            short minute = boost::lexical_cast<short>(parts[1]);
+            FixedRunTime fixedRunTime(hour, minute);
+            if(fixedRunTime.IsValid())
+                return fixedRunTime;
+            else
+            {
+                possibleErrorString = ::GetDictionaryString("Invalid Fixed time hour or minute") + ": ";
+                possibleErrorString += fixedRunTimeString;
+                return FixedRunTime();
+            }
+        }
+    }
+    catch(...)
+    {
+    }
+
+    possibleErrorString = ::GetDictionaryString("Invalid Fixed time") + ": ";
+    possibleErrorString += fixedRunTimeString;
+    return FixedRunTime();
+}
+
+std::vector<FixedRunTime> FixedRunTime::ParseFixedRunTimesString(const std::string& fixedRunTimesString, std::string& possibleErrorString)
+{
+    // Need to clear possible white space from string first
+    std::string usedStr = fixedRunTimesString;
+    usedStr.erase(std::remove_if(usedStr.begin(), usedStr.end(), ::isspace), usedStr.end());
+    if(usedStr.empty())
+    {
+        possibleErrorString = ::GetDictionaryString("Fixed run times were empty");
+        return std::vector<FixedRunTime>(); // virhetilanteessa palkautetaan tyhj‰ vector
+    }
+
+    std::vector<std::string> fixedRunTimeParts;
+    boost::split(fixedRunTimeParts, usedStr, boost::is_any_of(","));
+
+    std::vector<FixedRunTime> fixedRunTimes;
+    for(const auto& fixedRunTimePart : fixedRunTimeParts)
+    {
+        auto fixedRunTime = ParseFixedRunTimeString(fixedRunTimePart, possibleErrorString);
+        if(fixedRunTime.IsValid())
+            fixedRunTimes.push_back(fixedRunTime);
+        else
+            return std::vector<FixedRunTime>(); // virhetilanteessa palkautetaan tyhj‰ vector
+    }
+
+    return fixedRunTimes;
 }
 
 
@@ -911,7 +1024,22 @@ void NFmiBetaProductAutomation::NFmiTriggerModeInfo::CheckTriggerModeInfo(int th
 
 void NFmiBetaProductAutomation::NFmiTriggerModeInfo::CheckFixedRunTimes()
 {
-    itsTriggerModeInfoStatusString = ::GetDictionaryString("Fixed time list is not implemented yet");
+    std::string possibleErrorMessage;
+    itsFixedRunTimes = FixedRunTime::ParseFixedRunTimesString(itsFixedRunTimesString, possibleErrorMessage);
+    if(itsFixedRunTimes.empty())
+    {
+        fTriggerModeInfoStatus = false;
+        if(!possibleErrorMessage.empty())
+            itsTriggerModeInfoStatusString = possibleErrorMessage;
+        else
+            itsTriggerModeInfoStatusString = ::GetDictionaryString("Fixed time list was empty");
+    }
+    else
+    {
+        fTriggerModeInfoStatus = true;
+        itsTriggerModeInfoStatusString = ::GetDictionaryString("Fixed time list used with");
+        itsTriggerModeInfoStatusString += " " + std::to_string(itsFixedRunTimes.size()) + " " + ::GetDictionaryString("times");
+    }
 }
 
 static std::string MakeDoubleCheckErrorString(const std::string &theValueName, const std::string &theValueString, const std::string &theExplanationString)
@@ -1010,31 +1138,71 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::MakeFirstRunTimeOfGi
     return aTime;
 }
 
-// Lasketaan milloin automaatio pit‰‰ suorittaa seuraavan kerrran, kun tiedet‰‰n milloin se 
-// on viimeksi ajettu ja mik‰ on nykyhetki
-NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(const NFmiMetTime &theLastRunTime) const
+NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTimeWithFixedTimes(const NFmiMetTime& theLastRunTime) const
 {
-    if(itsTriggerMode == kFmiTimeStep)
+    // Etsit‰‰n fixed listasta seuraava theLastRunTime:ia suurempi aika (HH:mm tasolla suurempi)
+    auto iter = std::find_if(itsFixedRunTimes.begin(), itsFixedRunTimes.end(), [&](const auto& fixedTime) {return fixedTime > theLastRunTime; });
+    if(iter != itsFixedRunTimes.end())
     {
-        NFmiMetTime aTime = MakeFirstRunTimeOfGivenDay(theLastRunTime);
-        for(;; aTime.ChangeByMinutes(boost::math::iround(itsRunTimeStepInHours * 60)))
+        return iter->MakeMetTime();
+    }
+    else
+    {
+        // Jos ei lˆydy t‰lle p‰iv‰lle en‰‰ aikoja, tehd‰‰n listan 1. ajasta seuraavan p‰iv‰n aika
+        auto firstIter = itsFixedRunTimes.begin();
+        if(firstIter != itsFixedRunTimes.end())
         {
-            if(aTime > theLastRunTime)
-            {
-                if(aTime.GetDay() != theLastRunTime.GetDay())
-                    aTime = MakeFirstRunTimeOfGivenDay(aTime); // jos ollaan menty jo toiseen p‰iv‰‰n, pit‰‰ sille laskea uusi alkuaika!
-                return aTime;
-            }
-
-            // Loput tarkastelut ovat ns sanity checkej‰, jos on v‰‰ri‰ l‰htˆarvoja datassta, ja niit‰ ei ole tarkasteltu kunnolla, jotta koodi ei j‰‰ ikilooppiin.
-            if(aTime.GetDay() != theLastRunTime.GetDay())
-                break;
-            if(itsRunTimeStepInHours <= 0)
-                break;
+            auto firstNextDayTime = firstIter->MakeMetTime();
+            firstNextDayTime.ChangeByDays(1);
+            return firstNextDayTime;
         }
     }
 
-    return NFmiMetTime::gMissingTime; // virhetilanne, palautetaan puutt1uva aika
+    return NFmiMetTime::gMissingTime; // Mahdollinen virhetilanne ja jos aikalista oli tyhj‰, palautetaan puuttuva aika
+}
+
+NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTimeWithTimeSteps(const NFmiMetTime& theLastRunTime) const
+{
+    NFmiMetTime aTime = MakeFirstRunTimeOfGivenDay(theLastRunTime);
+    for(;; aTime.ChangeByMinutes(boost::math::iround(itsRunTimeStepInHours * 60)))
+    {
+        if(aTime > theLastRunTime)
+        {
+            if(aTime.GetDay() != theLastRunTime.GetDay())
+                aTime = MakeFirstRunTimeOfGivenDay(aTime); // jos ollaan menty jo toiseen p‰iv‰‰n, pit‰‰ sille laskea uusi alkuaika!
+            return aTime;
+        }
+
+        // Loput tarkastelut ovat ns sanity checkej‰, jos on v‰‰ri‰ l‰htˆarvoja datassta, ja niit‰ ei ole tarkasteltu kunnolla, jotta koodi ei j‰‰ ikilooppiin.
+        if(aTime.GetDay() != theLastRunTime.GetDay())
+            break;
+        if(itsRunTimeStepInHours <= 0)
+            break;
+    }
+
+    // Jos ei lˆytynyt en‰‰ t‰lle p‰iv‰lle aikoja, tehd‰‰n seuraavan p‰iv‰n 1. aika t‰ss‰
+    NFmiMetTime firstNextDayTime = MakeFirstRunTimeOfGivenDay(theLastRunTime);
+    firstNextDayTime.ChangeByDays(1);
+    return firstNextDayTime;
+}
+
+// Lasketaan milloin automaatio pit‰‰ suorittaa seuraavan kerrran, kun tiedet‰‰n milloin se 
+// on viimeksi ajettu ja mik‰ on nykyhetki
+NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(const NFmiMetTime &theLastRunTime, bool automationModeOn) const
+{
+    if(automationModeOn)
+    {
+        if(itsTriggerMode == kFmiFixedTimes)
+        {
+            return CalcNextDueTimeWithFixedTimes(theLastRunTime);
+        }
+        else if(itsTriggerMode == kFmiTimeStep)
+        {
+            return CalcNextDueTimeWithTimeSteps(theLastRunTime);
+        }
+    }
+
+    return NFmiMetTime::gMissingTime; // virhetilanne, palautetaan puuttuva aika
 }
 
 static const std::string gJsonName_TriggerMode = "TriggerMode";
@@ -1361,7 +1529,7 @@ NFmiBetaProductAutomationListItem::NFmiBetaProductAutomationListItem(const std::
 }
 
 // T‰t‰ kutsutaan kun esim. luetaan data tiedostosta ja tehd‰‰n t‰ysi tarkistus kaikille osille
-void NFmiBetaProductAutomationListItem::DoFullChecks(bool fAutomationModeOn)
+void NFmiBetaProductAutomationListItem::DoFullChecks(bool automationModeOn)
 {
     itsStatus = kFmiListItemOk;
     if(itsBetaProductAutomation)
@@ -1369,10 +1537,7 @@ void NFmiBetaProductAutomationListItem::DoFullChecks(bool fAutomationModeOn)
         itsBetaProductAutomation->DoFullChecks();
         if(GetErrorStatus() == kFmiListItemOk) // Jos automaatio tuote on ok, lasketaan aina seuraava ajoaika valmiiksi
         {
-            if(fAutomationModeOn)
-                itsNextRunTime = itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(itsLastRunTime);
-            else
-                itsNextRunTime = NFmiMetTime::gMissingTime;
+            itsNextRunTime = itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(itsLastRunTime, automationModeOn);
         }
     }
     else
@@ -1525,7 +1690,8 @@ bool NFmiBetaProductAutomationList::Add(const std::string &theBetaAutomationPath
     if(PrepareListItemAfterJsonRead(*listItem)) // Voidaan k‰ytt‰‰ t‰t‰ metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
     {
         listItem->fEnable = true;
-        listItem->itsNextRunTime = listItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1));
+        // Lis‰tt‰ess‰ listaan laitetaan CalcNextDueTime funktiolla true optio p‰‰lle.
+        listItem->itsNextRunTime = listItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1), true);
         itsAutomationVector.push_back(listItem);
         return true;
     }
@@ -1661,7 +1827,7 @@ void NFmiBetaProductAutomationList::RefreshAutomationIfNeeded(std::shared_ptr<NF
         // Jos luku meni hyvin, sijoitetaan annettu beta-automaatio p‰ivitett‰v‰‰n otukseen
         automationListItem->itsBetaProductAutomation.swap(listItemFromFile->itsBetaProductAutomation);
         // p‰ivitet‰‰n viel‰ seuraava ajoaika
-        automationListItem->itsNextRunTime = automationListItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1));
+        automationListItem->itsNextRunTime = automationListItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1), true);
     }
 }
 
@@ -1696,7 +1862,7 @@ bool NFmiBetaProductAutomationList::HasAutomationAlready(const std::string &theF
     return pos != uniqueFilePaths.end();
 }
 
-std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetDueAutomations(const NFmiMetTime &theCurrentTime)
+std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetDueAutomations(const NFmiMetTime &theCurrentTime, bool automationModeOn)
 {
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations;
     for(auto &listItem : itsAutomationVector)
@@ -1705,7 +1871,7 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
         {
             if(listItem->GetErrorStatus() == NFmiBetaProductAutomationListItem::kFmiListItemOk)
             {
-                NFmiMetTime nextRuntime = listItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(listItem->itsLastRunTime);
+                NFmiMetTime nextRuntime = listItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(listItem->itsLastRunTime, automationModeOn);
                 if(nextRuntime > listItem->itsLastRunTime && nextRuntime <= theCurrentTime)
                     dueAutomations.push_back(listItem);
             }
@@ -1821,6 +1987,7 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 , mEndTimeModeIndex()
 , mStartTimeClockOffsetInHoursString()
 , mEndTimeClockOffsetInHoursString()
+, mAutomationPath()
 {
 }
 
@@ -1873,6 +2040,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mEndTimeModeIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\EndTimeModeIndex", usedKey, 0);
     mStartTimeClockOffsetInHoursString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\StartTimeClockOffsetInHours", usedKey, "");
     mEndTimeClockOffsetInHoursString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\EndTimeClockOffsetInHours", usedKey, "");
+    mAutomationPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\AutomationPath", usedKey, "");
 
     std::function<std::string()> getterFunction = [this]() {return this->GetBetaProductionBaseDirectory(); };
     NFmiBetaProductAutomation::SetBetaProductionBaseDirectoryGetter(getterFunction);
@@ -1888,9 +2056,10 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
 bool NFmiBetaProductionSystem::DoNeededBetaAutomation()
 {
     NFmiMetTime currentTime(1); // Otetaan talteen nyky UTC hetki minuutin tarkkuudella
-    if(AutomationModeOn())
+    bool automationModeOn = AutomationModeOn();
+    if(automationModeOn)
     {
-        std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations = itsUsedAutomationList.GetDueAutomations(currentTime);
+        std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations = itsUsedAutomationList.GetDueAutomations(currentTime, automationModeOn);
         if(!dueAutomations.empty())
         {
             // Joku callback funktio kutsu CFmiBetaProductDialog-luokalle
@@ -2274,4 +2443,14 @@ std::string NFmiBetaProductionSystem::EndTimeClockOffsetInHoursString()
 void NFmiBetaProductionSystem::EndTimeClockOffsetInHoursString(const std::string &newValue)
 {
     *mEndTimeClockOffsetInHoursString = newValue;
+}
+
+std::string NFmiBetaProductionSystem::AutomationPath()
+{
+    return *mAutomationPath;
+}
+
+void NFmiBetaProductionSystem::AutomationPath(const std::string& newValue)
+{
+    *mAutomationPath = newValue;
 }

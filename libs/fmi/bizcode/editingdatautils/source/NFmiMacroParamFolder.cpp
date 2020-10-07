@@ -10,7 +10,7 @@ using namespace std;
 struct MacroParamFinder
 {
     MacroParamFinder(const string& theName) :itsName(theName) {};
-    bool operator()(boost::shared_ptr<NFmiMacroParam> theItem)
+    bool operator()(boost::shared_ptr<NFmiMacroParam> &theItem)
     {
         return theItem->Name() == itsName;
     }
