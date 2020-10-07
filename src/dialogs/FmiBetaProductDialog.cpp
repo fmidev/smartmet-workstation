@@ -1141,13 +1141,13 @@ void CFmiBetaProductDialog::DoBetaProductGenerations(std::vector<std::shared_ptr
     itsDueAutomations = nullptr;
 }
 
-static void UpdateAutomationAfterProduction(std::shared_ptr<NFmiBetaProductAutomationListItem> &theAutomationListItem, const NFmiMetTime &theMakeTime)
+static void UpdateAutomationAfterProduction(std::shared_ptr<NFmiBetaProductAutomationListItem> &theAutomationListItem, const NFmiMetTime &theMakeTime, bool automationModeOn)
 {
     if(theAutomationListItem)
     {
         theAutomationListItem->itsLastRunTime = theMakeTime;
         theAutomationListItem->fProductsHaveBeenGenerated = true;
-        theAutomationListItem->itsNextRunTime = theAutomationListItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(theMakeTime);
+        theAutomationListItem->itsNextRunTime = theAutomationListItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(theMakeTime, automationModeOn);
     }
 }
 
@@ -1174,9 +1174,10 @@ void CFmiBetaProductDialog::DoBetaProductGenerationsFinal(const NFmiMetTime &the
             }
             else
             {
+                auto automationModeOn = itsBetaProductionSystem->AutomationModeOn();
                 if(!RunViewMacro(*betaProduct, true))
                 {
-                    ::UpdateAutomationAfterProduction(automationListItem, theMakeTime); // Tämä pitää päivittää vaikka menikin pieleen
+                    ::UpdateAutomationAfterProduction(automationListItem, theMakeTime, automationModeOn); // Tämä pitää päivittää vaikka menikin pieleen
                     continue;
                 }
 
@@ -1186,7 +1187,7 @@ void CFmiBetaProductDialog::DoBetaProductGenerationsFinal(const NFmiMetTime &the
                 bool useModelStartingTime = automationListItem->itsBetaProductAutomation->StartTimeModeInfo().itsTimeMode == NFmiBetaProductAutomation::kFmiFirstModelDataTime;
                 bool useModelEndingTime = automationListItem->itsBetaProductAutomation->EndTimeModeInfo().itsTimeMode == NFmiBetaProductAutomation::kFmiFirstModelDataTime;
                 MakeVisualizationImages(*betaProduct, startingTime, useModelStartingTime, endingTime, useModelEndingTime, theMakeTime, true);
-                ::UpdateAutomationAfterProduction(automationListItem, theMakeTime);
+                ::UpdateAutomationAfterProduction(automationListItem, theMakeTime, automationModeOn);
             }
         }
     }

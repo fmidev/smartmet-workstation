@@ -19,6 +19,32 @@ enum BetaProductViewIndex
     kCrossSectionView = 5
 };
 
+// Luokka tiet‰‰ halutusta ajoajasta vain tunnin ja minuutin [Utc aika]. Sit‰ ei ole sidottu muuten mitenk‰‰n kalenteriin.
+// Luokka osaa parsia listan ajoaikoja string:ist‰.
+// Luokka k‰sittelee aikoja aina lokaali moodissa, eli annetut NFmiMetTime oliot muutetaan ennen vertailuja lokaaleiksi.
+class FixedRunTime
+{
+    short itsHour = -1;
+    short itsMinute = -1;
+public:
+    FixedRunTime();
+    FixedRunTime(short hour, short minute);
+
+    short Hour() const { return itsHour; }
+    short Minute() const { return itsMinute; }
+
+    bool operator==(const FixedRunTime& other) const;
+    bool operator<(const NFmiMetTime& metTime) const;
+    bool operator>(const NFmiMetTime& metTime) const;
+    bool IsValid() const;
+    NFmiMetTime MakeMetTime() const;
+
+    // fixedRunTimeString pit‰‰ olla muotoa HH:mm esim. 4:15 tai 04:15
+    // Oletus: fixedRunTimeString on jo trimmattu whitespace:n suhteen.
+    static FixedRunTime ParseFixedRunTimeString(const std::string& fixedRunTimeString, std::string& possibleErrorString);
+    static std::vector<FixedRunTime> ParseFixedRunTimesString(const std::string& fixedRunTimesString, std::string& possibleErrorString);
+};
+
 // NFmiBetaProduct -luokka pit‰‰ sis‰ll‰‰n yhden beta-tuotteen tiedot.
 // Tuotteessa on mm. seuraavia tietoja: k‰ytetty viewMacro, aika-askel ja pituus. 
 // Piirretyt v‰lilehdet (= n‰yttˆ rivit), eli tuottteessa voi olla esim. 1-50 kpl animaatio sarjoja.
@@ -199,7 +225,9 @@ public:
         void CheckFixedRunTimes();
         void CheckTimeStep();
         void CheckTriggerData();
-        NFmiMetTime CalcNextDueTime(const NFmiMetTime &theLastRunTime) const;
+        NFmiMetTime CalcNextDueTimeWithFixedTimes(const NFmiMetTime& theLastRunTime) const;
+        NFmiMetTime CalcNextDueTimeWithTimeSteps(const NFmiMetTime& theLastRunTime) const;
+        NFmiMetTime CalcNextDueTime(const NFmiMetTime &theLastRunTime, bool automationModeOn) const;
         NFmiMetTime MakeFirstRunTimeOfGivenDay(const NFmiMetTime &theTime) const;
         bool operator==(const NFmiTriggerModeInfo &other) const;
         bool operator!=(const NFmiTriggerModeInfo &other) const;
@@ -209,7 +237,7 @@ public:
 
         TriggerMode itsTriggerMode;
         std::string itsFixedRunTimesString; // formaatti on muotoa: hh:mm[,hh:mm,...] eli listattuna on vuorokauden kaikki ajoajat
-        std::vector<std::pair<int, int>> itsFixedRunTimes; // vektorissa on tunti, minuutti parit
+        std::vector<FixedRunTime> itsFixedRunTimes;
         std::string itsRunTimeStepInHoursString;
         double itsRunTimeStepInHours;
         std::string itsFirstRunTimeOfDayString;
@@ -218,7 +246,6 @@ public:
         std::vector<std::string> itsTriggerData;
         bool fTriggerModeInfoStatus;
         std::string itsTriggerModeInfoStatusString;
-
     };
 
     class NFmiTimeModeInfo
@@ -309,7 +336,7 @@ public:
     NFmiBetaProductAutomationListItem();
     NFmiBetaProductAutomationListItem(const std::string &theBetaAutomationPath);
 
-    void DoFullChecks(bool fAutomationModeOn); // T‰t‰ kutsutaan kun esim. luetaan data tiedostosta ja tehd‰‰n t‰ysi tarkistus kaikille osille
+    void DoFullChecks(bool automationModeOn); // T‰t‰ kutsutaan kun esim. luetaan data tiedostosta ja tehd‰‰n t‰ysi tarkistus kaikille osille
     bool IsEmpty() const;
     std::string AutomationName() const;
     std::string ShortStatusText() const;
@@ -347,7 +374,7 @@ public:
     bool IsEmpty() const { return itsAutomationVector.empty(); }
     bool ContainsAutomationMoreThanOnce() const;
     bool HasAutomationAlready(const std::string &theFullFilePath) const;
-    std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetDueAutomations(const NFmiMetTime &theCurrentTime);
+    std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetDueAutomations(const NFmiMetTime &theCurrentTime, bool automationModeOn);
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
 
     void RefreshAutomationList();
@@ -483,7 +510,8 @@ public:
     void StartTimeClockOffsetInHoursString(const std::string &newValue);
     std::string EndTimeClockOffsetInHoursString();
     void EndTimeClockOffsetInHoursString(const std::string &newValue);
-
+    std::string AutomationPath();
+    void AutomationPath(const std::string &newValue);
 private:
     bool fBetaProductGenerationRunning; // Onko SmartMet juuri tekem‰ss‰ kuvia Beta product systeemill‰ (vaikuttaa mm. joihinkin piirtoihin)
     NFmiMetTime itsBetaProductRuntime; // Mill‰ hetkell‰ on kuvatuotantoa alettu tekem‰‰n (k‰ytet‰‰n jos display runtime info k‰ytˆss‰)
@@ -543,5 +571,6 @@ private:
     boost::shared_ptr<CachedRegInt> mEndTimeModeIndex;
     boost::shared_ptr<CachedRegString> mStartTimeClockOffsetInHoursString;
     boost::shared_ptr<CachedRegString> mEndTimeClockOffsetInHoursString;
+    boost::shared_ptr<CachedRegString> mAutomationPath; // Polku mist‰ viimeksi ladattu Automation luetaan
 
 };
