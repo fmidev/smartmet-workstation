@@ -2008,6 +2008,14 @@ void NFmiCombinedMapHandler::setMapArea(unsigned int mapViewDescTopIndex, const 
 		// laitetaan viela kaikki ajat likaisiksi cachesta
 		mapViewDirty(mapViewDescTopIndex, true, true, true, true, false, false);
 		mapDescTop->GridPointCache().Clear();
+		if(mapDescTop->MapHandler()->MapReallyChanged() && CatLog::doTraceLevelLogging())
+		{
+			std::string areaChangedString = "Map view ";
+			areaChangedString += std::to_string(mapViewDescTopIndex + 1);
+			areaChangedString += " area changed to ";
+			areaChangedString += mapDescTop->MapHandler()->Area()->AreaStr();
+			CatLog::logMessage(areaChangedString, CatLog::Severity::Trace, CatLog::Category::Operational);
+		}
 	}
 }
 
