@@ -2013,7 +2013,7 @@ void NFmiCombinedMapHandler::setMapArea(unsigned int mapViewDescTopIndex, const 
 			std::string areaChangedString = "Map view ";
 			areaChangedString += std::to_string(mapViewDescTopIndex + 1);
 			areaChangedString += " area changed to ";
-			areaChangedString += mapDescTop->MapHandler()->Area()->AreaStr();
+			areaChangedString += mapDescTop->MapHandler()->Area()->AreaFactoryStr();
 			CatLog::logMessage(areaChangedString, CatLog::Severity::Trace, CatLog::Category::Operational);
 		}
 	}
