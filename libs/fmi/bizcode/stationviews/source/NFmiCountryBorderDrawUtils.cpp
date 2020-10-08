@@ -182,6 +182,18 @@ namespace
         OGRwkbGeometryType id = geometry->getGeometryType();
         switch(id)
         {
+        case wkbLineString:
+        {
+            auto lineStringObject = ::convertLineStringGeometryToGdiplusPolygon(dynamic_cast<OGRLineString*>(geometry), box);
+            if(!lineStringObject.empty())
+            {
+                std::list<std::vector<Gdiplus::PointF>> gdiplusMultiPolygon;
+                gdiplusMultiPolygon.push_back(lineStringObject);
+                return gdiplusMultiPolygon;
+            }
+        }
+        case wkbPolygon:
+            return ::convertPolygonGeometryToGdiplusPolygon(dynamic_cast<OGRPolygon*>(geometry), box);
         case wkbMultiLineString:
             return ::convertMultiLineStringGeometryToGdiplusMultiPolygon(dynamic_cast<OGRMultiLineString*>(geometry), box);
         case wkbMultiPolygon:
@@ -189,8 +201,9 @@ namespace
         case wkbGeometryCollection:
             return ::convertGeometryCollectionGeometryToGdiplusMultiPolygon(dynamic_cast<OGRGeometryCollection*>(geometry), box);
         default:
-            return {};
+            break;
         }
+        return {};
     }
 
     Fmi::Box calculateZoomedAreaWorldXyClipRect(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& mapArea)
