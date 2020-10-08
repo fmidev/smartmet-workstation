@@ -9,10 +9,12 @@ link_directories(
     )
 
 file( GLOB CPP_FILES *.cpp )
+file( GLOB H_FILES *.h )
 
 add_executable( 
     ${PROJECT_NAME}
     ${CPP_FILES} 
+    ${H_FILES} 
     )
 
 target_link_libraries(
