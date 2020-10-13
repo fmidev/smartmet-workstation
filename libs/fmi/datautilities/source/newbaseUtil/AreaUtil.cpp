@@ -87,11 +87,53 @@ namespace SmartMetDataUtilities {
                 return TopLeftAndBottomRight(topLeft, bottomRight);
             }
 
+            bool isWorldAreaGrid(NFmiGrid& grid)
+            {
+                auto area = grid.Area();
+                if(area && area->ClassId() == kNFmiLatLonArea)
+                {
+                    const auto atlanticWorldBottomLeft = NFmiPoint(-180, -90);
+                    const auto atlanticWorldTopRight = NFmiPoint(180, 90);
+                    const auto pacificWorldBottomLeft = NFmiPoint(0, -90);
+                    const auto pacificWorldTopRight = NFmiPoint(360, 90);
+                    auto bl = area->BottomLeftLatLon();
+                    auto tr = area->TopRightLatLon();
+                    auto oneGridPointWidth = (tr.X() - bl.X()) / (grid.OriginalXNumber() - 1);
+                    oneGridPointWidth *= 1.01; // make it little wider so that comparison wont have problems with double accuracy
+                    if(bl == atlanticWorldBottomLeft)
+                    {
+                        if(tr == atlanticWorldTopRight)
+                            return true;
+                        auto missingRightSideWidth = atlanticWorldTopRight.X() - tr.X();
+                        if(oneGridPointWidth > missingRightSideWidth)
+                            return true;
+                    }
+
+                    if(bl == pacificWorldBottomLeft)
+                    {
+                        if(tr == pacificWorldTopRight)
+                            return true;
+                        auto missingRightSideWidth = pacificWorldTopRight.X() - tr.X();
+                        if(oneGridPointWidth > missingRightSideWidth)
+                            return true;
+                    }
+                }
+                return false;
+            }
+
             unique_ptr<NFmiArea> cropAreaToGrid(const NFmiArea &area, NFmiGrid &grid)
             {
-                TopLeftAndBottomRight xy = findPointsRelativeToAreaFromGridThatDefineRectangleAroundArea(area, grid);
-                TopLeftAndBottomRight latLon = xyPairToLatLonPair(area, xy);
-                return unique_ptr<NFmiArea>(area.CreateNewArea(latLon.first, latLon.second));
+                if(isWorldAreaGrid(grid))
+                {
+                    // If world area data, original map-area is always good
+                    return unique_ptr<NFmiArea>(area.Clone());
+                }
+                else
+                {
+                    TopLeftAndBottomRight xy = findPointsRelativeToAreaFromGridThatDefineRectangleAroundArea(area, grid);
+                    TopLeftAndBottomRight latLon = xyPairToLatLonPair(area, xy);
+                    return unique_ptr<NFmiArea>(area.CreateNewArea(latLon.first, latLon.second));
+                }
             }
 
             bool area2ContainsAtleastOnePointFromArea1Borders(const NFmiArea& area1, const NFmiArea& area2, size_t resolution)
