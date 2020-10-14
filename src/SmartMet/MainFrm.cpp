@@ -1317,8 +1317,10 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
 #ifndef DISABLE_CPPRESTSDK
                 if(itsDoc->WarningCenterSystem().isThereAnyWorkToDo())
                 {
+					// Hake sanomat luetaan nykyisin Dropboxista lokaali levyltä, joten voidaan aikaistaa tätä käynnistystä esim. 10 sekuntiin
+					int hakeWarningThreadDelayInMS = 10 * 1000;
                     itsDoc->WarningCenterSystem().setUpdateApplicationCallback(&CFmiHakeWarningMessages::UpdateApplicationAfterChanges);
-                    itsDoc->WarningCenterSystem().goToWorkAfter(std::chrono::milliseconds(seaIcingThreadDelayInMS)); // Käytetään SeaIcing viivettä
+                    itsDoc->WarningCenterSystem().goToWorkAfter(std::chrono::milliseconds(hakeWarningThreadDelayInMS));
                 }
 #endif // DISABLE_CPPRESTSDK
 

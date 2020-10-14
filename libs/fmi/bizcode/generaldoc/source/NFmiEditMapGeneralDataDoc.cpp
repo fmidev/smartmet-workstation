@@ -1173,7 +1173,7 @@ void InitWarningCenterSystem(void)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-        itsWarningCenterSystem.initialize();
+        itsWarningCenterSystem.initialize(itsBasicConfigurations.ControlPath());
 	}
 	catch(std::exception &e)
 	{
