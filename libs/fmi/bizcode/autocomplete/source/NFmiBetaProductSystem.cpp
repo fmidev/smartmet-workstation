@@ -827,8 +827,9 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
 
 void NFmiBetaProduct::InitFromJsonRead(const NFmiMetTime &theStartingTime)
 {
-    bool timeStatus = CheckTimeRelatedInputs(theStartingTime, itsTimeLengthInHoursString, itsTimeStepInMinutesString, fUseUtcTimesInTimeBox, itsTimeBoxLocation);
-    bool rowStatus = CheckRowRelatedInputs(itsRowIndexListString, itsRowSubdirectoryTemplate, itsFileNameTemplate, fUseAutoFileNames, itsParamBoxLocation);
+    auto timeStatus = CheckTimeRelatedInputs(theStartingTime, itsTimeLengthInHoursString, itsTimeStepInMinutesString, fUseUtcTimesInTimeBox, itsTimeBoxLocation);
+    auto rowStatus = CheckRowRelatedInputs(itsRowIndexListString, itsRowSubdirectoryTemplate, itsFileNameTemplate, fUseAutoFileNames, itsParamBoxLocation);
+    auto  stationIdStatus = CheckSynopStationIdListRelatedInputs(itsSynopStationIdListString);
     MakeViewMacroInfoText(itsViewMacroPath);
 }
 
