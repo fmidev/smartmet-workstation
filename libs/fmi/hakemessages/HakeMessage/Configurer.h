@@ -17,7 +17,7 @@ namespace HakeMessage
         std::chrono::milliseconds killCheckDelay;
         unsigned int maxNumberOfMessagesReadAtOnce = 100;
 
-        void configure();
+        void configure(const std::string& usedAbsoluteBaseDirectory);
         void storeConfigures() const;
     };
 }

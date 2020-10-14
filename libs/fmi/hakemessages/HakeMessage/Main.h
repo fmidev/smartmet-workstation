@@ -42,7 +42,7 @@ namespace HakeMessage
     public:
         Main();
         
-        void initialize();
+        void initialize(const std::string& usedAbsoluteBaseDirectory);
         void goToWorkAfter(std::chrono::milliseconds delay);
         bool isThereAnyWorkToDo() const;
 
