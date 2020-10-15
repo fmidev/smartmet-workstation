@@ -109,9 +109,9 @@ namespace HakeMessage
         kahaData_ = nullptr;
     }
 
-    void Main::initialize()
+    void Main::initialize(const std::string& usedAbsoluteBaseDirectory)
     {
-        configurer_->configure();
+        configurer_->configure(usedAbsoluteBaseDirectory);
         legacyData_->InitializeFromSettings(configurer_->baseConfigurationNamespace);
         // Legacydataan pitää myös asettaa sanomien lukutiheys minuuteissa
         legacyData_->UpdateTimeStepInMinutes(milliSecondsToMinutes(configurer_->checkForNewMessagesDelay));

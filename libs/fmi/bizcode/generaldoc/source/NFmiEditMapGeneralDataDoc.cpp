@@ -1173,7 +1173,7 @@ void InitWarningCenterSystem(void)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-        itsWarningCenterSystem.initialize();
+        itsWarningCenterSystem.initialize(itsBasicConfigurations.ControlPath());
 	}
 	catch(std::exception &e)
 	{
@@ -4841,37 +4841,79 @@ NFmiEditMapDataListHandler* DataLists(void)
 {
 	return itsListHandler;
 }
+
+bool StoreMatrixToGridFileFinal(const NFmiDataMatrix<float>& dataMatrix, const std::string& fullFilePath)
+{
+	std::ofstream out(fullFilePath, std::ios::binary);
+	if(out)
+	{
+		out << dataMatrix;
+		out.close();
+		return true;
+	}
+	return false;
+}
+
+bool StoreMatrixToGridfile(const NFmiDataMatrix<float> &dataMatrix, const NFmiString& theFileName)
+{
+	// Yritetään ensin D-aseman juureen talletusta
+	std::string fileName1 = "D:\\" + theFileName;
+	if(!StoreMatrixToGridFileFinal(dataMatrix, fileName1))
+	{
+		// Yritetään sitten C-aseman juureen talletusta
+		std::string fileName1 = "C:\\" + theFileName;
+		return StoreMatrixToGridFileFinal(dataMatrix, fileName1);
+	}
+	return true;
+}
+
+bool MakeGridFileForMacroParam(unsigned long usedMapViewIndex, int activeViewRow, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiString& theFileName)
+{
+	auto drawParamList = GetCombinedMapHandler()->getDrawParamList(usedMapViewIndex, activeViewRow);
+	if(drawParamList)
+	{
+		auto activeParamLayerIndex = drawParamList->FindActive();
+		NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
+		if(MacroParamDataCache().getCache(usedMapViewIndex, activeViewRow, activeParamLayerIndex, itsActiveViewTime, drawParam->InitFileName(), macroParamLayerCacheDataType))
+		{
+			const auto& dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
+			return StoreMatrixToGridfile(dataMatrix, theFileName);
+		}
+	}
+	return false;
+}
+
 // tallettaa aktiivisen näyttörivin aktiivisen parametrin currentin ajan gridin tiedostoon,
 // jonka nimi annetaan parametrina, mutta se talletetaan työhakemistoon
 bool MakeGridFile(const NFmiString& theFileName)
 {
-	boost::shared_ptr<NFmiDrawParam> drawParam = GetCombinedMapHandler()->activeDrawParam(0, GetCombinedMapHandler()->activeViewRow(0)); // tehdään vain pääkarttaikkunasta näitä talletuksia
+	// tehdään vain pääkarttaikkunasta näitä talletuksia
+	auto usedMapViewIndex = 0ul;
+	auto activeViewRow = GetCombinedMapHandler()->activeViewRow(usedMapViewIndex);
+	boost::shared_ptr<NFmiDrawParam> drawParam = GetCombinedMapHandler()->activeDrawParam(usedMapViewIndex, activeViewRow);
 	bool status = false;
 	if(drawParam)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, false);
-		if(info == 0)
-			return false;
-		NFmiMetTime oldTime = info->Time();
-		if(info->DataType() == NFmiInfoData::kStationary || info->TimeDescriptor().IsInside(itsActiveViewTime))
+		if(drawParam->IsMacroParamCase(true))
+			return MakeGridFileForMacroParam(usedMapViewIndex, activeViewRow, drawParam, theFileName);
+		else
 		{
-			NFmiDataMatrix<float> dMatrix;
-			if(info->DataType() == NFmiInfoData::kStationary)
-				info->Values(dMatrix);
-			else
-				info->Values(dMatrix, itsActiveViewTime);
-			NFmiString fileName(itsBasicConfigurations.WorkingDirectory());
-			fileName += "\\";
-			fileName += theFileName;
-			std::ofstream out(fileName, std::ios::binary);
-			if(out)
+			boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, false);
+			if(info == 0)
+				return false;
+			NFmiMetTime oldTime = info->Time();
+			if(info->DataType() == NFmiInfoData::kStationary || info->TimeDescriptor().IsInside(itsActiveViewTime))
 			{
-				out << dMatrix;
-				out.close();
-				status = true;
+				NFmiDataMatrix<float> dataMatrix;
+				if(info->DataType() == NFmiInfoData::kStationary)
+					info->Values(dataMatrix);
+				else
+					info->Values(dataMatrix, itsActiveViewTime);
+
+				status = StoreMatrixToGridfile(dataMatrix, theFileName);
 			}
+			info->Time(oldTime);
 		}
-		info->Time(oldTime);
 	}
 	return status;
 }
@@ -5197,13 +5239,14 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
 
 bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
+	auto isMapView = mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
 	auto drawObjectScaleFactor = ApplicationWinRegistry().DrawObjectScaleFactor();
 	auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex, true);
 	if(mapViewDesctop)
 	{
 		// MapViewSizeInPixels(clientPixelSize) -kutsu pitää olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
 		mapViewDesctop->MapViewSizeInPixels(clientPixelSize, pDC, drawObjectScaleFactor, !mapViewDesctop->IsTimeControlViewVisible());
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true, &mapViewDesctop->GetTrueMapViewSizeInfo().singleMapSizeInMM());
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(isMapView, mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true, &mapViewDesctop->GetTrueMapViewSizeInfo().singleMapSizeInMM());
 
 		// Nykyään jos kartan koko muuttuu, pitää macroParam cache tyhjentää, koska sen koko saattaa muuttua.
 		// Laskentahilan koko lasketaan aina uudestaan, jolloin tehdään hila- vs pikseli-koko vertailuja.
@@ -5219,7 +5262,7 @@ bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, 
 		auto& trueMapViewSizeInfo = crossSectionSystem.GetTrueMapViewSizeInfo();
 		NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
 		trueMapViewSizeInfo.onSize(clientPixelSize, pDC, crossSectionViewGridSize,  true, drawObjectScaleFactor);
-		CFmiWin32Helpers::SetDescTopGraphicalInfo(crossSectionSystem.GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
+		CFmiWin32Helpers::SetDescTopGraphicalInfo(isMapView, crossSectionSystem.GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
 		return true; // Jos kyse oli poikkileikkausnäytön asetuksesta, palautetaan true
 	}
 	return false; // Jos kyse oli jostain muusta kuin karttanäytöstä, palautetaan false sen merkiksi että mitään ei tehty
@@ -8218,9 +8261,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		NFmiMapViewDescTop& mainMapViewDescTop = *GetCombinedMapHandler()->getMapViewDescTop(mainMapViewDescTopIndex);
 		NFmiAnimationData& animationData = mainMapViewDescTop.AnimationDataRef();
 
-		animationData.CurrentTime(mainMapViewDescTop.CurrentTime()); // currentti aika pitää ottaa desctopista ja antaa animaattorille
 		int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), mainMapViewDescTop.MapViewDisplayMode(), static_cast<int>(mainMapViewDescTop.ViewGridSize().X()));
-		int status = animationData.Animate(reducedAnimationTimeSteps);
+		if(profiler.tickCount() == 0)
+			animationData.CurrentTime(animationData.Times().FirstTime()); // 1. kierroksella asetetaan aika alkuun
+		else
+			animationData.Animate(reducedAnimationTimeSteps); // Muilla kierroksilla juoksutetaan aikaa normaalisti
 
 		if(profiler.dataCount() > 0	&& mainMapViewDescTop.CurrentTime() == animationData.Times().FirstTime())
 		{
@@ -8229,7 +8274,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 		else 
 		{
-			profiler.Tick(mainMapViewDescTop.CurrentTime());
+			profiler.Tick(animationData.CurrentTime());
 		}
 
 		mainMapViewDescTop.CurrentTime(animationData.CurrentTime());
@@ -8285,13 +8330,16 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			NFmiAnimationData& animationData = mapViewDescTop->AnimationDataRef();
 			animationData = profiler.getSettings()[mapViewDescTopIndex];
 			animationData.Times(times);
-			animationData.ShowTimesOnTimeControl(true);
+			// Hide the blue animation time-box on time-control views
+			animationData.ShowTimesOnTimeControl(false);
+			mapViewDescTop->MapViewDirty(false, false, true, false);
 			mapViewDescTopIndex++;
 		}
 
 		profiler.Report();
 		profiler.Reset();
 		profiling = false;
+		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Stopping profiling view updates");
 	}
 
 	// tarkasta CView-näyttöluokissa, onko mahdollisesti animaatiota käynnissä. Jos on, älä laita odota-cursoria näkyviin, koska se vilkuttaa ikävästi
@@ -9329,6 +9377,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     // 3. Polut on annettu suhteellisina, jolloin lopullinen polku rakennetaan SmartMet binäärihakemiston suhteen
     std::string MakeMpcpProcessPath(const std::string &absoluteSmartMetAppPath, const std::string &processSettingsKey, const std::string &defaultProcessName)
     {
+		std::string finalMpcpProcessPath;
         std::string configuredMasterProcessPath = NFmiSettings::Optional<std::string>(processSettingsKey, "");
         if(configuredMasterProcessPath.empty())
         {
@@ -9336,20 +9385,21 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             std::string usedAppPath = absoluteSmartMetAppPath;
             usedAppPath += "\\";
             usedAppPath += defaultProcessName;
-            return usedAppPath;
+			finalMpcpProcessPath = usedAppPath;
         }
         else
         {
-            
             if(NFmiFileSystem::IsAbsolutePath(configuredMasterProcessPath))
             {
-                return configuredMasterProcessPath;
+				finalMpcpProcessPath = configuredMasterProcessPath;
             }
             else
             {
-                return PathUtils::getAbsoluteFilePath(configuredMasterProcessPath, absoluteSmartMetAppPath);
+				finalMpcpProcessPath = PathUtils::getAbsoluteFilePath(configuredMasterProcessPath, absoluteSmartMetAppPath);
             }
         }
+		finalMpcpProcessPath = PathUtils::simplifyWindowsPath(finalMpcpProcessPath);
+		return finalMpcpProcessPath;
     }
 
     bool MakeSureToolMasterPoolIsRunning2()

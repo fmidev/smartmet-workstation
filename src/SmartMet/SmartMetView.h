@@ -80,7 +80,8 @@ public:
 	NFmiMetTime CalcPrintingStartTime(void);
 	void SetMacroErrorText(const std::string &theErrorStr);
 	bool DoAllwaysLowMemoryPrint(void) const {return false;} // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
-    int MapViewDescTopIndex(void) { return itsMapViewDescTopIndex; }
+	bool IsMapView() const { return true; } // ks. esim. CFmiWin32TemplateHelpers::PrintMapViewWithFullResolution -funktiota.
+	int MapViewDescTopIndex(void) { return itsMapViewDescTopIndex; }
     void SetToolMastersDC(CDC* theDC); // toolmasterin DC:n
     bool GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC);
     // ************************************

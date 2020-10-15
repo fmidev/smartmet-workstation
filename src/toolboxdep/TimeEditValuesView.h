@@ -60,6 +60,7 @@ public:
 	void OldWayPrintUpdate(void); // tätä kutsutaan yleisessä printtaus funktiossa
 	bool DoAllwaysLowMemoryPrint(void) const {return true;} // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia. 
 															// Aikasarjan printttaus kunnolla vaatii paljon koodia, joka osaisi laskea mm. erilaisia symboli kokoja jms.
+	bool IsMapView() const { return false; } // ks. esim. CFmiWin32TemplateHelpers::PrintMapViewWithFullResolution -funktiota.
 	// ************************************
     void SetToolMastersDC(CDC * /* theDC */) {};
     void DoDraw(void);

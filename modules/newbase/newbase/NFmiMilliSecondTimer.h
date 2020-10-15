@@ -22,6 +22,19 @@ extern "C" {
 #include <sys/timeb.h>
 }
 
+#include <chrono>
+
+class NFmiNanoSecondTimer
+{
+  std::chrono::time_point<std::chrono::steady_clock> startTime_;
+ public:
+  NFmiNanoSecondTimer();
+
+  void restart();
+  double elapsedTimeInSeconds() const;
+  std::string elapsedTimeInSecondsString(int precision = 3) const;
+};
+
 //! Luokka koodin nopeusmittauksia varten
 
 class _FMI_DLL NFmiMilliSecondTimer

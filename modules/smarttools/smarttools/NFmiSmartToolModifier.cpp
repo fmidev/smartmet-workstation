@@ -631,7 +631,7 @@ void NFmiSmartToolModifier::ModifyData(NFmiTimeDescriptor *theModifiedTimes,
 // Make mask vector if there is CalculationPoint's used in the smarttool script.
 // This mask is used to skip points not needed in final result.
 // If calculationPoints is empty, return empty pointer.
-std::unique_ptr<std::vector<bool>> NFmiSmartToolModifier::MakePossibleCalculationPointMask(
+std::unique_ptr<CalculationPointMaskData> NFmiSmartToolModifier::MakePossibleCalculationPointMask(
     checkedVector<NFmiSmartToolCalculationBlockInfo> &calculationBlockInfoVector,
     const std::vector<NFmiPoint> &calculationPoints)
 {
@@ -641,13 +641,13 @@ std::unique_ptr<std::vector<bool>> NFmiSmartToolModifier::MakePossibleCalculatio
     auto editedInfo = calculationBlock->FirstVariableInfo();
     if (editedInfo)
     {
-      std::unique_ptr<std::vector<bool>> calculationPointMask(
-          new std::vector<bool>(editedInfo->SizeLocations(), false));
+      std::unique_ptr<CalculationPointMaskData> calculationPointMask(
+          new CalculationPointMaskData(editedInfo->SizeLocations(), nullptr));
       for (auto &latlon : calculationPoints)
       {
         if (editedInfo->NearestPoint(latlon))
         {
-          (*calculationPointMask)[editedInfo->LocationIndex()] = true;
+          (*calculationPointMask)[editedInfo->LocationIndex()] = &latlon;
         }
       }
 
@@ -655,7 +655,7 @@ std::unique_ptr<std::vector<bool>> NFmiSmartToolModifier::MakePossibleCalculatio
     }
   }
 
-  return std::unique_ptr<std::vector<bool>>();
+  return std::unique_ptr<CalculationPointMaskData>();
 }
 
 void NFmiSmartToolModifier::ModifyData_ver2(
@@ -731,7 +731,7 @@ void NFmiSmartToolModifier::ModifyBlockData(
 void NFmiSmartToolModifier::ModifyBlockData_ver2(
     const boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
     NFmiThreadCallBacks *theThreadCallBacks,
-    std::vector<bool> *calculationPointMask,
+    CalculationPointMaskData *calculationPointMask,
     std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection)
 {
   // HUOM!! Koska jostain syystä alku ja loppu CalculationSection:it lasketaan erikseen, pitää
@@ -872,7 +872,7 @@ static void DoPartialGridCalculationBlockInThread(
     boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
     NFmiCalculationParams &theCalculationParams,
     const NFmiBitMask *theUsedBitmask,
-    const std::vector<bool> *calculationPointMask)
+    const CalculationPointMaskData *calculationPointMask)
 {
   try
   {
@@ -960,7 +960,7 @@ static void DoPartialGridCalculationInThread(
     boost::shared_ptr<NFmiSmartToolCalculation> &theCalculation,
     NFmiCalculationParams &theCalculationParams,
     const NFmiBitMask *theUsedBitmask,
-    const std::vector<bool> *calculationPointMask)
+    const CalculationPointMaskData *calculationPointMask)
 {
   try
   {
@@ -972,12 +972,14 @@ static void DoPartialGridCalculationInThread(
       {
         if (theUsedBitmask == nullptr || theUsedBitmask->IsMasked(i))
         {
-          if (calculationPointMask == nullptr || (*calculationPointMask)[i])
+          if (calculationPointMask == nullptr || (*calculationPointMask)[i] != nullptr)
           {
             if (theInfo->LocationIndex(i))
             {
               theCalculationParams.itsLatlon = theInfo->LatLon();
               theCalculationParams.itsLocationIndex = theInfo->LocationIndex();
+              if (calculationPointMask)
+                theCalculationParams.itsActualCalculationPoint = (*calculationPointMask)[i];
               // TUON LOCATIONINDEX jutun voisi kai poistaa, kun kyseistä optimointi juttua ei kai
               // enää käytetä
               theCalculation->Calculate_ver2(theCalculationParams);
@@ -1064,7 +1066,7 @@ const unsigned long g_UsedMultiThreadChunkSize = 6;
 void NFmiSmartToolModifier::ModifyConditionalData_ver2(
     const boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
     NFmiThreadCallBacks *theThreadCallBacks,
-    std::vector<bool> *calculationPointMask,
+    CalculationPointMaskData *calculationPointMask,
     std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection)
 {
   if (theCalculationBlock->itsIfAreaMaskSection && theCalculationBlock->itsIfCalculationBlocks)
@@ -1137,7 +1139,7 @@ void NFmiSmartToolModifier::DoMultiThreadConditionalBlockCalculations(
     std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> &calculationBlockVector,
     NFmiCalculationParams &calculationParams,
     const NFmiBitMask *usedBitmask,
-    std::vector<bool> *calculationPointMask)
+    CalculationPointMaskData *calculationPointMask)
 {
   NFmiLocationIndexRangeCalculator locationIndexRangeCalculator(infoVector[0]->SizeLocations(),
                                                                 g_UsedMultiThreadChunkSize);
@@ -1289,7 +1291,7 @@ static std::vector<boost::shared_ptr<NFmiSmartToolCalculation>> MakeCalculationV
 void NFmiSmartToolModifier::ModifyData2_ver2(
     boost::shared_ptr<NFmiSmartToolCalculationSection> &theCalculationSection,
     NFmiThreadCallBacks *theThreadCallBacks,
-    std::vector<bool> *calculationPointMask,
+    CalculationPointMaskData *calculationPointMask,
     std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection)
 {
   if (theCalculationSection && theCalculationSection->FirstVariableInfo())
@@ -1375,7 +1377,7 @@ void NFmiSmartToolModifier::DoMultiThreadCalculations(
     std::vector<boost::shared_ptr<NFmiSmartToolCalculation>> &calculationVector,
     NFmiCalculationParams &calculationParams,
     const NFmiBitMask *usedBitmask,
-    std::vector<bool> *calculationPointMask)
+    CalculationPointMaskData *calculationPointMask)
 {
   std::vector<NFmiCalculationParams> calculationParamsVector(threadCount, calculationParams);
   NFmiLocationIndexRangeCalculator locationIndexRangeCalculator(infoVector[0]->SizeLocations(),
@@ -2190,6 +2192,7 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
       static const std::vector<NFmiAreaMask::FunctionType> functionsThatAllowObservations{
           NFmiAreaMask::ClosestObsValue,
           NFmiAreaMask::Occurrence,
+          NFmiAreaMask::Occurrence2,
           NFmiAreaMask::PeekT,
           NFmiAreaMask::TimeRange,
           NFmiAreaMask::LatestValue,
@@ -2199,41 +2202,46 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
       auto allowedIter = std::find(functionsThatAllowObservations.begin(),
                                    functionsThatAllowObservations.end(),
                                    functionType);
+      auto isCalculationPointsUsed = !CalculationPoints().empty();
+      auto keepStationDataForm = isCalculationPointsUsed ||
+                                 itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing;
       if (allowedIter != functionsThatAllowObservations.end())
       {  // tämä on ok, ei tarvitse tehdä mitään
       }
       else if (maskType == NFmiAreaMask::InfoVariable)
       {
-        if (itsWorkingGrid->itsArea)
+        if (!keepStationDataForm)
         {
-          boost::shared_ptr<NFmiFastQueryInfo> info = areaMask->Info();
-          NFmiStation2GridMask *station2GridMask = nullptr;
-          if (theAreaMaskInfo.TimeOffsetInHours())
-            station2GridMask =
-                new NFmiStation2GridTimeShiftMask(areaMask->MaskType(),
-                                                  areaMask->GetDataType(),
-                                                  info,
-                                                  theAreaMaskInfo.TimeOffsetInHours(),
-                                                  theAreaMaskInfo.GetDataIdent().GetParamIdent());
-          else
-            station2GridMask =
-                new NFmiStation2GridMask(areaMask->MaskType(),
-                                         areaMask->GetDataType(),
-                                         info,
-                                         theAreaMaskInfo.GetDataIdent().GetParamIdent());
+          if (itsWorkingGrid->itsArea)
+          {
+            boost::shared_ptr<NFmiFastQueryInfo> info = areaMask->Info();
+            NFmiStation2GridMask *station2GridMask = nullptr;
+            if (theAreaMaskInfo.TimeOffsetInHours())
+              station2GridMask =
+                  new NFmiStation2GridTimeShiftMask(areaMask->MaskType(),
+                                                    areaMask->GetDataType(),
+                                                    info,
+                                                    theAreaMaskInfo.TimeOffsetInHours(),
+                                                    theAreaMaskInfo.GetDataIdent().GetParamIdent());
+            else
+              station2GridMask =
+                  new NFmiStation2GridMask(areaMask->MaskType(),
+                                           areaMask->GetDataType(),
+                                           info,
+                                           theAreaMaskInfo.GetDataIdent().GetParamIdent());
 
-          auto isCalculationPointsUsed = !CalculationPoints().empty();
-          station2GridMask->SetGriddingHelpers(
-              itsWorkingGrid->itsArea,
-              itsGriddingHelper,
-              NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
-              itsExtraMacroParamData->ObservationRadiusInKm(),
-              isCalculationPointsUsed);
-          areaMask = boost::shared_ptr<NFmiAreaMask>(station2GridMask);
-          MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
+            station2GridMask->SetGriddingHelpers(
+                itsWorkingGrid->itsArea,
+                itsGriddingHelper,
+                NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
+                itsExtraMacroParamData->ObservationRadiusInKm(),
+                isCalculationPointsUsed);
+            areaMask = boost::shared_ptr<NFmiAreaMask>(station2GridMask);
+            MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
+          }
+          else
+            ::MakeMissingWorkingGridAreaError(__FUNCTION__, std::string(areaMask->MaskString()));
         }
-        else
-          ::MakeMissingWorkingGridAreaError(__FUNCTION__, std::string(areaMask->MaskString()));
       }
       else
       {

@@ -58,6 +58,10 @@ class NFmiSimpleConditionPart;
 class NFmiSingleCondition;
 class NFmiSingleConditionInfo;
 
+// CalculationPoint dataan liittyy originaali laskentapisteen pointteri ja 
+// jos se on nullptr, niin silloin ei kuulu.
+using CalculationPointMaskData = std::vector<const NFmiPoint*>;
+
 class NFmiSmartToolCalculationBlockVector
 {
  public:
@@ -161,11 +165,13 @@ class NFmiSmartToolModifier
       NFmiThreadCallBacks *theThreadCallBacks);
   void ModifyConditionalData_ver2(
       const boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
-      NFmiThreadCallBacks *theThreadCallBacks, std::vector<bool> *calculationPointMask, 
+      NFmiThreadCallBacks *theThreadCallBacks,
+      CalculationPointMaskData *calculationPointMask, 
       std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection = nullptr);
   void DoMultiThreadConditionalBlockCalculations(size_t threadCount, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &infoVector,
       std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> &calculationBlockVector, NFmiCalculationParams &calculationParams,
-      const NFmiBitMask *usedBitmask, std::vector<bool> *calculationPointMask);
+      const NFmiBitMask *usedBitmask,
+      CalculationPointMaskData *calculationPointMask);
   void DoMultiThreadConditionalBlockCalculationsForCrossSection(size_t threadCount, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &infoVector,
       std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> &calculationBlockVector, std::vector<NFmiMacroParamValue> &macroParamValuesVector);
   void ModifyBlockData(const boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
@@ -173,7 +179,8 @@ class NFmiSmartToolModifier
                        NFmiThreadCallBacks *theThreadCallBacks);
   void ModifyBlockData_ver2(
       const boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
-      NFmiThreadCallBacks *theThreadCallBacks, std::vector<bool> *calculationPointMask, 
+      NFmiThreadCallBacks *theThreadCallBacks,
+      CalculationPointMaskData *calculationPointMask, 
       std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection = nullptr);
   boost::shared_ptr<NFmiSmartToolCalculationBlockVector> CreateCalculationBlockVector(
       const boost::shared_ptr<NFmiSmartToolCalculationBlockInfoVector> &theBlockInfoVector);
@@ -195,10 +202,13 @@ class NFmiSmartToolModifier
                    NFmiMacroParamValue &theMacroParamValue,
                    NFmiThreadCallBacks *theThreadCallBacks);
   void ModifyData2_ver2(boost::shared_ptr<NFmiSmartToolCalculationSection> &theCalculationSection,
-      NFmiThreadCallBacks *theThreadCallBacks, std::vector<bool> *calculationPointMask,
+      NFmiThreadCallBacks *theThreadCallBacks,
+      CalculationPointMaskData *calculationPointMask,
       std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection = nullptr);
   void DoMultiThreadCalculations(size_t threadCount, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &infoVector, std::vector<boost::shared_ptr<NFmiSmartToolCalculation>> &calculationVector,
-      NFmiCalculationParams &calculationParams, const NFmiBitMask *usedBitmask, std::vector<bool> *calculationPointMask);
+      NFmiCalculationParams &calculationParams,
+      const NFmiBitMask *usedBitmask,
+      CalculationPointMaskData *calculationPointMask);
   void DoMultiThreadCalculationsForCrossSection(size_t threadCount, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &infoVector, std::vector<boost::shared_ptr<NFmiSmartToolCalculation>> &calculationVector,
       std::vector<NFmiMacroParamValue> &macroParamValuesVector);
   boost::shared_ptr<NFmiAreaMask> CreateAreaMask(const NFmiAreaMaskInfo &theInfo);
@@ -277,7 +287,9 @@ class NFmiSmartToolModifier
                                                      bool &mustUsePressureInterpolation);
   boost::shared_ptr<NFmiAreaMask> CreateVertConditionalMask(const NFmiAreaMaskInfo &theAreaMaskInfo,
                                                             bool &mustUsePressureInterpolation);
-  std::unique_ptr<std::vector<bool>> MakePossibleCalculationPointMask(checkedVector<NFmiSmartToolCalculationBlockInfo> &calculationBlockInfoVector, const std::vector<NFmiPoint> &calculationPoints);
+  std::unique_ptr<CalculationPointMaskData> MakePossibleCalculationPointMask(
+      checkedVector<NFmiSmartToolCalculationBlockInfo> &calculationBlockInfoVector,
+      const std::vector<NFmiPoint> &calculationPoints);
   void DoSimpleConditionInitialization(boost::shared_ptr<NFmiAreaMask> &areaMask, const NFmiAreaMaskInfo &theAreaMaskInfo);
   boost::shared_ptr<NFmiSimpleCondition> CreateSimpleCondition(boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo, bool usesVerticalData);
   boost::shared_ptr<NFmiSingleCondition> CreateSingleCondition(boost::shared_ptr<NFmiSingleConditionInfo> &theSingleConditionInfo, bool usesVerticalData);

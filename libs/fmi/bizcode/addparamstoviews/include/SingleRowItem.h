@@ -44,6 +44,7 @@ namespace AddParams
         std::string origTime_;
         std::string totalFilePath_;
         std::string searchWords_;
+        FmiInterpolationMethod interpolationType_ = kNoneInterpolation;
 
     public:
         SingleRowItem();
@@ -81,6 +82,8 @@ namespace AddParams
         const std::string& totalFilePath() const { return totalFilePath_; }
         void totalFilePath(const std::string &totalFilePath) { totalFilePath_ = totalFilePath; }
         const std::string& searchWords() const { return searchWords_; }
+        FmiInterpolationMethod interpolationType() const { return interpolationType_; }
+        void interpolationType(FmiInterpolationMethod interpolationType) { interpolationType_ = interpolationType; }
 
     private:
         void createSearchWords();

@@ -1,5 +1,3 @@
-#pragma once
-
 // Ohjelma saa seuraavat argumentit:
 // 0. ohjelman nimi (ei v‰litet‰ t‰st‰)
 // 1. pakatun l‰hdetiedoston polku
@@ -175,3 +173,137 @@ int main(int argc, const char* argv[])
     }
     return 1; // virheellinen ulostulo
 } 
+
+
+/*
+#include "NFmiArea.h"
+#include "NFmiAreaFactory.h"
+#include "NFmiMilliSecondTimer.h"
+#include "NFmiHelpDataInfo.h"
+#include "NFmiSettings.h"
+
+int main(int argc, const char* argv[])
+{
+    NFmiNanoSecondTimer timer;
+    // Testi 1: luodaan samoja area olioita per‰kk‰in. 
+    // 1. olion luonti NFmiAreaFactory::Create funktiolla ja Clone kest‰‰ n. 0.05 s (n. 1000x hitaampaan kuin vanhalla versiolla).
+    // Sen j‰lkeen luonti + Clone kest‰‰ 'vain' n. 0.002 s (silti n. 100x hitaampaan kuin vanhalla versiolla).
+
+    std::string legacyAreaString = "stereographic,20,90,60:6,51.3,49,70.2";
+    int totalSameAreaCreationCount = 33;
+    for(int index = 0; index < totalSameAreaCreationCount; index++)
+    {
+        boost::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create(legacyAreaString);
+        if(area)
+        {
+            boost::shared_ptr<NFmiArea> areaClone(area->Clone());
+        }
+        std::cerr << "Area #" << index << ": " << timer.elapsedTimeInSecondsString() << std::endl;
+        timer.restart();
+    }
+
+    // Testi 2: Luodaan monia samoja area olioita per‰kk‰in monimutkaisemmassa ymp‰ristˆss‰. 
+    // T‰ss‰ k‰ytet‰‰n smarttools kirjaston NFmiHelpDataInfoSystem luokkaa.
+    // Esim. kun luodaan cinesat:iin liittyvi‰ olioita, niill‰ on kaikilla sama area, mutta niiden 
+    // luonti kest‰‰ aina n. 0.02 sekuntia ja jos niist‰ teht‰isiin kopio Clone:lla (nyt ei tehd‰),
+    // kest‰isi sekin aina n. 0.02 s. Eli jostain syyst‰ t‰ll‰isell‰ asetelmalla toiminnot ovat 
+    // aina n. 1000x hitaampia kuin vanhalla newbase:lla.
+
+    // Testiin liittyy 9 konffia, jotka laitetaan /editorConfs hakemistoon.
+    // Aikaa voi mitata lis‰‰m‰ll‰ joku ajan mittaus ja cout -tulostus NFmiHelpDataInfo::InitFromSettings 
+    // metodiin NFmiAreaFactory::Create funktio kutsun ymp‰rille (ks. NFmiNanoSecondTimer:in k‰yttˆ‰ yll‰).
+
+    std::string baseControlPath = "/editorConfs/";
+    NFmiSettings::Read(baseControlPath + "data_scand.conf");
+    NFmiSettings::Read(baseControlPath + "paths_dev.conf");
+    NFmiSettings::Read(baseControlPath + "local_cache_settings_scand.conf");
+    NFmiSettings::Read(baseControlPath + "static_settings.conf");
+    NFmiSettings::Read(baseControlPath + "cinesat_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "meteosat8_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "noaa_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "seviri_scand_satel_image.conf");
+    NFmiSettings::Read(baseControlPath + "satel_image_paths_fmi.conf");
+
+    NFmiHelpDataInfoSystem helpDataInfoSystem;
+
+    try
+    {
+        helpDataInfoSystem.InitFromSettings("MetEditor::HelpData",
+            baseControlPath,
+            "/editorConfs/*_help_pal_data.sqd",
+            "help_pal_data");
+    }
+    catch(std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+    std::cerr << "After helpDataInfoSystem.InitFromSettings: " << timer.elapsedTimeInSecondsString() << std::endl;
+    timer.restart();
+
+    return 0;
+}
+*/
+/*
+#include "NFmiCmdLine.h"
+#include "NFmiQueryData.h"
+#include "NFmiWindFix.h"
+
+using namespace std;
+
+string getUsageString()
+{
+    string usageString = "Usage: recalculatewindparameters input output";
+    usageString += "\n\nPurpose: recalculate wind related parameters with WD and WS,";
+    usageString += "\npossible recalculated parameters are: u, v and wind-vector";
+    return usageString;
+}
+
+void usage()
+{
+    cerr << getUsageString() << endl;
+}
+
+int run(int argc, const char* argv[])
+{
+    NFmiCmdLine cmdline(argc, argv, "");
+
+    // Tarkistetaan optioiden oikeus:
+    if(cmdline.Status().IsError())
+    {
+        string errorString = "Invalid command line:\n";
+        errorString += cmdline.Status().ErrorLog().CharPtr();
+        errorString += "\n";
+        errorString += getUsageString();
+        throw runtime_error(errorString);
+    }
+
+    if(cmdline.NumberofParameters() != 2)
+    {
+        string errorString = "Invalid number of command line arguments (2 needed):\n";
+        errorString += getUsageString();
+        throw runtime_error(errorString);
+    }
+
+    string inputfile = cmdline.Parameter(1);
+    string outputfile = cmdline.Parameter(2);
+    // T‰ss‰ queryData halutaan lukea ilman memory-mappausta (joka olisi read-only), koska dataan tehd‰‰n 
+    // muutoksia ja se talletetaan lopuksi eri tiedostoon.
+    NFmiQueryData qd(inputfile, false);
+    if(NFmiWindFix::FixWinds(qd))
+        qd.Write(outputfile);
+    return 0;
+}
+
+int main(int argc, const char* argv[])
+{
+    try
+    {
+        return run(argc, argv);
+    }
+    catch(exception& e)
+    {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
+}
+*/

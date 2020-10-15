@@ -16,6 +16,7 @@
 #include "NFmiFileString.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiPathUtils.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 using namespace std;
 
@@ -142,12 +143,14 @@ void NFmiGdiPlusImageMapHandler::Clear()
 
 bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const checkedVector<std::string> &theMapFileNames, const checkedVector<int> &theMapDrawStyles, const checkedVector<std::string> &theOverMapBitmapFileNames, const checkedVector<int> &theOverMapBitmapDrawStyles)
 {
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
+
 	itsAreaFileName = PathUtils::makeFixedAbsolutePath(theAreaFileName, itsControlPath);
 
 	itsOriginalArea = ReadArea(itsAreaFileName);
 	if(!itsOriginalArea)
 	{
-		string errMsg("NFmiGdiPlusImageMapHandler::Init - ei saanut luettua area-tiedostoa: \n");
+		string errMsg("NFmiGdiPlusImageMapHandler::Init - unable to read the area file: \n");
 		errMsg += itsAreaFileName;
 		errMsg += ", originally gives as: ";
 		errMsg += theAreaFileName;
@@ -173,7 +176,7 @@ bool NFmiGdiPlusImageMapHandler::Init(const checkedVector<std::string> &theMapFi
 		itsMapBitmaps[0] = CreateBitmapFromFile(itsMapFileNames[0]);
 		if(itsMapBitmaps[0] == 0)
 		{
-			string errMsg("NFmiGdiPlusImageMapHandler::Init - ei saanut luettua kuva-tiedostoa: \n");
+			string errMsg("NFmiGdiPlusImageMapHandler::Init - unable to read the image file: \n");
 			errMsg += itsMapFileNames[0];
 			throw runtime_error(errMsg);
 		}

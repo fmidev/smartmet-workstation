@@ -48,7 +48,7 @@ void CFmiWin32Helpers::CPrintingDialog::OnCancel()
 	CDialog::OnCancel();
 }
 
-void CFmiWin32Helpers::SetDescTopGraphicalInfo(CtrlViewUtils::GraphicalInfo& theGraphicalInfo, CDC* pDC, const NFmiPoint& theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization, const NFmiPoint* theActualSingleViewSizeInMilliMeters)
+void CFmiWin32Helpers::SetDescTopGraphicalInfo(bool mapViewCase, CtrlViewUtils::GraphicalInfo& theGraphicalInfo, CDC* pDC, const NFmiPoint& theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization, const NFmiPoint* theActualSingleViewSizeInMilliMeters)
 {
     if(forceInitialization || theGraphicalInfo.fInitialized == false)
     {
@@ -72,8 +72,9 @@ void CFmiWin32Helpers::SetDescTopGraphicalInfo(CtrlViewUtils::GraphicalInfo& the
             theGraphicalInfo.itsViewWidthInMM = theActualSingleViewSizeInMilliMeters->X();
             theGraphicalInfo.itsViewHeightInMM = theActualSingleViewSizeInMilliMeters->Y();
         }
-        else
+        else if(!mapViewCase)
         {
+            // Karttanäytöille ei saa käyttää tätä osiota missään vaiheessa, mutta esim. poikkileikkausnäytölle pitää
             theGraphicalInfo.itsViewWidthInMM = theViewGridSizeInPixels.X() / theGraphicalInfo.itsPixelsPerMM_x;
             theGraphicalInfo.itsViewHeightInMM = theViewGridSizeInPixels.Y() / theGraphicalInfo.itsPixelsPerMM_y;
         }
