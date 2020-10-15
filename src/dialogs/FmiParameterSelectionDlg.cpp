@@ -34,10 +34,21 @@ IMPLEMENT_DYNCREATE(NFmiParameterSelectionGridCtrl, CGridCtrl)
 
 // CFmiParameterSelectionDlg message handlers
 BEGIN_MESSAGE_MAP(NFmiParameterSelectionGridCtrl, CGridCtrl)
+    ON_WM_RBUTTONUP()
     ON_WM_LBUTTONDBLCLK()
     ON_WM_SIZE()
     ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
+
+void NFmiParameterSelectionGridCtrl::OnRButtonUp(UINT nFlags, CPoint point)
+{
+    CGridCtrl::OnRButtonUp(nFlags, point);
+
+    // Deselect all with right mouse click
+    SetSelectedRange(-1, -1, -1, -1, TRUE, TRUE);
+    CCellID emptyCellId;
+    SetFocusCell(emptyCellId);
+}
 
 void NFmiParameterSelectionGridCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
@@ -642,8 +653,6 @@ BOOL CFmiParameterSelectionDlg::OnInitDialog()
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
     itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
 
-    // Do not allow selection, it would look bad for one row being all blue
-    itsGridCtrl.EnableSelection(FALSE);
     UpdateGridControlValues();
     auto LButtonDblClkCallback = [this]() {this->HandleGridCtrlsLButtonDblClk(); };
     itsGridCtrl.itsLButtonDblClkCallback = LButtonDblClkCallback;
@@ -763,13 +772,17 @@ void CFmiParameterSelectionDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
 {
     if(itsGridCtrl.GetColumnCount())
     {
-        CRect cellRect;
-        itsGridCtrl.GetCellRect(0, 0, cellRect);
-        int otherColumnsCombinedWidth = cellRect.Width();
-        itsGridCtrl.GetCellRect(0, 2, cellRect);
-        otherColumnsCombinedWidth += cellRect.Width();
-        itsGridCtrl.GetCellRect(0, 3, cellRect);
-        otherColumnsCombinedWidth += cellRect.Width();
+        int otherColumnsCombinedWidth = 0;
+        for(auto columnIndex = 0; columnIndex <= itsGridCtrl.GetColumnCount(); columnIndex++)
+        {
+            // Skipataan Name column, jonka indeksi on siis 1
+            if(columnIndex != 1)
+            {
+                CRect cellRect;
+                itsGridCtrl.GetCellRect(0, columnIndex, cellRect);
+                otherColumnsCombinedWidth += cellRect.Width();
+            }
+        }
 
         // Calculate new width for name column so that it will fill the client area
         // Total width (gridCtrlWidth) - otherColumnsCombinedWidth - some value (32) that represents the width of the vertical scroll control
@@ -786,9 +799,10 @@ void CFmiParameterSelectionDlg::InitHeaders(void)
     int basicColumnWidthUnit = 18;
     itsHeaders.clear();
     itsHeaders.push_back(ParameterSelectionHeaderParInfo("Row", ParameterSelectionHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 3.5)));
-    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Name", ParameterSelectionHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 20.0)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Name", ParameterSelectionHeaderParInfo::kItemName, boost::math::iround(basicColumnWidthUnit * 16.0)));
     itsHeaders.push_back(ParameterSelectionHeaderParInfo("Time", ParameterSelectionHeaderParInfo::kOrigOrLastTime, boost::math::iround(basicColumnWidthUnit * 6.5)));
     itsHeaders.push_back(ParameterSelectionHeaderParInfo("Id", ParameterSelectionHeaderParInfo::kItemId, boost::math::iround(basicColumnWidthUnit * 4.0)));
+    itsHeaders.push_back(ParameterSelectionHeaderParInfo("Interp.", ParameterSelectionHeaderParInfo::kInterpolationType, boost::math::iround(basicColumnWidthUnit * 4.0)));
 }
 
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
@@ -889,6 +903,33 @@ static COLORREF getUsedBackgroundColor(const AddParams::SingleRowItem &theRowIte
 	}
 }
 
+static std::string GetInterpolationText(FmiInterpolationMethod interpolationMethod)
+{
+    switch(interpolationMethod)
+    {
+    case kNearestPoint:
+        return ::GetDictionaryString("Nearest");
+    case kLinearly:
+        return ::GetDictionaryString("Linear");
+    case kByCombinedParam:
+        return ::GetDictionaryString("Combined");
+    case kLinearlyFast:
+        return ::GetDictionaryString("LinearFast");
+    case kLagrange:
+        return ::GetDictionaryString("Lagrange");
+    case kNoneInterpolation:
+        return ""; // None on default sellaisille riveille, joilla ei ole interpolaatiota (esim. data/producer/category)
+    default:
+    {
+        std::string interpolationString = std::to_string(interpolationMethod);
+        interpolationString += " (?) ";
+        interpolationString += ::GetDictionaryString("interpolation");
+        return interpolationString;
+    }
+    }
+}
+
+
 static std::string GetColumnText(int theRow, int theColumn, const AddParams::SingleRowItem &theRowItem)
 {
     switch(theColumn)
@@ -905,6 +946,10 @@ static std::string GetColumnText(int theRow, int theColumn, const AddParams::Sin
             return std::to_string(theRowItem.itemId());
         else
             return ""; // 0 is value for non interesting id (like for category id)
+    }
+    case ParameterSelectionHeaderParInfo::kInterpolationType:
+    {
+        return ::GetInterpolationText(theRowItem.interpolationType());
     }
     default:
         return "";

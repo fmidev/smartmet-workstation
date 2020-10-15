@@ -16,12 +16,23 @@ namespace NFmiFastInfoUtils
     // Tila otetaan konstruktorissa ja palautetaan destruktorissa.
     class QueryInfoParamStateRestorer
     {
+     protected:
         NFmiQueryInfo &info_;
-        unsigned long paramIndex_;
-        unsigned long paramId_;
+        FmiParameterName paramId_;
     public:
         QueryInfoParamStateRestorer(NFmiQueryInfo &info);
-        ~QueryInfoParamStateRestorer();
+        virtual ~QueryInfoParamStateRestorer();
+    };
+
+    class QueryInfoTotalStateRestorer : public QueryInfoParamStateRestorer
+    {
+      unsigned long locationIndex_;
+      unsigned long timeIndex_;
+      unsigned long levelIndex_;
+
+     public:
+      QueryInfoTotalStateRestorer(NFmiQueryInfo &info);
+      ~QueryInfoTotalStateRestorer();
     };
 
     class MetaWindParamUsage
@@ -40,6 +51,8 @@ namespace NFmiFastInfoUtils
         bool MakeMetaWindVectorParam() const;
         bool MakeMetaWsAndWdParams() const;
         bool MakeMetaWindComponents() const;
+        bool HasTotalWind() const { return fHasTotalWind; }
+        bool HasWindVectorParam() const { return fHasWindVectorParam; }
         bool HasWsAndWd() const { return fHasWsAndWd; }
         bool HasWindComponents() const { return fHasWindComponents; }
         bool IsStreamlinePossible() const;

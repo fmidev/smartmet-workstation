@@ -1,63 +1,93 @@
 #include <NFmiSimpleCondition.h>
+#include <NFmiFastQueryInfo.h>
 
 namespace
 {
-    bool CheckForStationaryData(const boost::shared_ptr<NFmiAreaMask> &mask)
-    {
-        if(mask)
-        {
-            if(mask->GetDataType() == NFmiInfoData::kStationary)
-                return true;
-        }
-        return false;
-    }
-
-    static bool UseTimeInterpolation(bool maskIsStationaryData, bool normalInterpolationCondition)
-    {
-        if(maskIsStationaryData)
-            return false;
-        else
-            return normalInterpolationCondition;
-    }
-
-    double CalculateValue(double value1, double value2, NFmiAreaMask::CalculationOperator calculationOperator)
-    {
-        if(value1 == kFloatMissing || value2 == kFloatMissing)
-            return kFloatMissing;
-        else
-        {
-            switch(calculationOperator)
-            {
-            case NFmiAreaMask::Add:
-                return value1 + value2;
-            case NFmiAreaMask::Sub:
-                return value1 - value2;
-            case NFmiAreaMask::Mul:
-                return value1 * value2;
-            case NFmiAreaMask::Div:
-            {
-                if(value2 == 0)
-                    return kFloatMissing;
-                else
-                    return value1 / value2;
-            }
-            case NFmiAreaMask::Mod:
-            {
-                if(value2 == 0)
-                    return kFloatMissing;
-                else
-                    return std::fmod(value1, value2);
-            }
-            case NFmiAreaMask::Pow:
-                return std::pow(value1, value2);
-            default:
-                throw std::runtime_error("Internal program error with SimpleCondition's calculation operator - unknown operator");
-            }
-        }
-    }
+bool CheckForStationaryData(const boost::shared_ptr<NFmiAreaMask> &mask)
+{
+  if (mask)
+  {
+    if (mask->GetDataType() == NFmiInfoData::kStationary) return true;
+  }
+  return false;
 }
 
-// *****************************************************************
+bool UseTimeInterpolation(bool maskIsStationaryData, bool normalInterpolationCondition)
+{
+  if (maskIsStationaryData)
+    return false;
+  else
+    return normalInterpolationCondition;
+}
+
+double CalculateValue(double value1,
+                      double value2,
+                      NFmiAreaMask::CalculationOperator calculationOperator)
+{
+  if (value1 == kFloatMissing || value2 == kFloatMissing)
+    return kFloatMissing;
+  else
+  {
+    switch (calculationOperator)
+    {
+      case NFmiAreaMask::Add:
+        return value1 + value2;
+      case NFmiAreaMask::Sub:
+        return value1 - value2;
+      case NFmiAreaMask::Mul:
+        return value1 * value2;
+      case NFmiAreaMask::Div:
+      {
+        if (value2 == 0)
+          return kFloatMissing;
+        else
+          return value1 / value2;
+      }
+      case NFmiAreaMask::Mod:
+      {
+        if (value2 == 0)
+          return kFloatMissing;
+        else
+          return std::fmod(value1, value2);
+      }
+      case NFmiAreaMask::Pow:
+        return std::pow(value1, value2);
+      default:
+        throw std::runtime_error(
+            "Internal program error with SimpleCondition's calculation operator - unknown "
+            "operator");
+    }
+  }
+}
+
+double GetPressureValue(boost::shared_ptr<NFmiAreaMask> &mask, double pressure, const NFmiCalculationParams &calculationParams, bool useTimeInterpolation)
+{
+  if (mask && mask->Info() && mask->Info()->SizeLevels() <= 1)
+  {
+    // jos käytössä on 1 levelinen pintadata, pyydetään vain pinta-arvoa
+    return mask->Value(calculationParams, useTimeInterpolation);
+  }
+  else
+      return mask->PressureValue(pressure, calculationParams);
+}
+
+double GetHeightValue(boost::shared_ptr<NFmiAreaMask> &mask,
+                      double height,
+                      const NFmiCalculationParams &calculationParams,
+                      bool useTimeInterpolation)
+{
+  if (mask && mask->Info() && mask->Info()->SizeLevels() <= 1)
+  {
+    // jos käytössä on 1 levelinen pintadata, pyydetään vain pinta-arvoa
+    return mask->Value(calculationParams, useTimeInterpolation);
+  }
+  else
+    return mask->HeightValue(height, calculationParams);
+}
+
+}
+// namespace
+   // *****************************************************************
 // **************   NFmiSimpleConditionPart   **********************
 // *****************************************************************
 
@@ -105,28 +135,32 @@ double NFmiSimpleConditionPart::Value(const NFmiCalculationParams &theCalculatio
     }
 }
 
-double NFmiSimpleConditionPart::PressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams)
+double NFmiSimpleConditionPart::PressureValue(double thePressure,
+                                              const NFmiCalculationParams &theCalculationParams)
 {
-    double value1 = itsMask1->PressureValue(thePressure, theCalculationParams);
-    if(!itsMask2)
-        return value1;
-    else
-    {
-        double value2 = itsMask2->PressureValue(thePressure, theCalculationParams);
-        return ::CalculateValue(value1, value2, itsCalculationOperator);
-    }
+  auto doTimeInterp = ::UseTimeInterpolation(isMask1StationaryData, true);
+  double value1 = ::GetPressureValue(itsMask1, thePressure, theCalculationParams, doTimeInterp);
+  if (!itsMask2)
+    return value1;
+  else
+  {
+    double value2 = ::GetPressureValue(itsMask2, thePressure, theCalculationParams, doTimeInterp);
+    return ::CalculateValue(value1, value2, itsCalculationOperator);
+  }
 }
 
-double NFmiSimpleConditionPart::HeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams)
+double NFmiSimpleConditionPart::HeightValue(double theHeight,
+                                            const NFmiCalculationParams &theCalculationParams)
 {
-    double value1 = itsMask1->HeightValue(theHeight, theCalculationParams);
-    if(!itsMask2)
-        return value1;
-    else
-    {
-        double value2 = itsMask2->HeightValue(theHeight, theCalculationParams);
-        return ::CalculateValue(value1, value2, itsCalculationOperator);
-    }
+  auto doTimeInterp = ::UseTimeInterpolation(isMask1StationaryData, true);
+  double value1 = ::GetHeightValue(itsMask1, theHeight, theCalculationParams, doTimeInterp);
+  if (!itsMask2)
+    return value1;
+  else
+  {
+    double value2 = ::GetHeightValue(itsMask2, theHeight, theCalculationParams, doTimeInterp);
+    return ::CalculateValue(value1, value2, itsCalculationOperator);
+  }
 }
 
 double NFmiSimpleConditionPart::PreviousValue(double newPreviousValue) 

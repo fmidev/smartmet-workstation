@@ -379,6 +379,8 @@ void CFmiViewMacroDlg::OnBnClickedButtonViewMacroSave()
         if(::MessageBox(this->GetSafeHwnd(), CA2T(overWriteConformation.c_str()), CA2T(::GetDictionaryString("Save over macro").c_str()), MB_ICONINFORMATION | MB_OKCANCEL) == IDOK)
         {
             itsSmartMetDocumentInterface->StoreViewMacro(totalViewMacroPath, description);
+            // Let's initialize visible list so that saved viewMacro's new time-stamp will be updated to the grid-view
+            InitMacroListFromDoc();
         }
     }
     else

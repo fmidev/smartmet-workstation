@@ -29,7 +29,8 @@ struct ParameterSelectionHeaderParInfo
         kRowNumber = 0,
         kItemName,
         kOrigOrLastTime,
-        kItemId
+        kItemId,
+        kInterpolationType
     };
 
     ParameterSelectionHeaderParInfo(void)
@@ -76,6 +77,7 @@ private:
     std::string DataTypeString(NFmiInfoData::Type dataType);
 public:
     DECLARE_MESSAGE_MAP()
+    afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result);

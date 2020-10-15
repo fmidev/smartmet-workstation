@@ -522,7 +522,7 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 
 //		while(theScale->Next(cursor)) // theScale -> next -looppi antaa cursor:ille arvot: 0, stepInMinutes, 2*stepInMinutes, 3*stepInMinutes, jne.
 		float usedStepInMinutes = FmiMin(theScale->StepValue(), static_cast<float>(minorStepInMinutes));
-		for(cursor = theScale->StartValue(); cursor < endOfCursor; cursor += usedStepInMinutes, aTime.ChangeByMinutes(static_cast<long>(usedStepInMinutes)))
+		for(cursor = theScale->StartValue(); cursor <= endOfCursor; cursor += usedStepInMinutes, aTime.ChangeByMinutes(static_cast<long>(usedStepInMinutes)))
 		{
 			if(cursor == 0 && theScale->StepValue() == 0)
 				break; // t‰ss‰ on timebagi ollut tyhj‰, ja j‰‰ iki looppiin, ellei poikkaista

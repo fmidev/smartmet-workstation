@@ -110,6 +110,7 @@ private:
     void EnableButtonRemoveAutomationFromList();
     void MakeAutomationComparisonObject();
     bool HasAutomationChanged();
+    void DoNextRuntimeUpdates();
 
     NFmiBetaAutomationGridCtrl itsGridCtrl;
     std::vector<BetaAutomationHeaderParInfo> itsHeaders;

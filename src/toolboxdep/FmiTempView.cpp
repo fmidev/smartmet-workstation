@@ -69,7 +69,7 @@ void CFmiTempView::OnDraw(CDC* pDC)
 	if(itsSmartMetDocumentInterface->Printing())
 		return ; // printatessa ei saa mennä OnDraw-metodiin, koska tällöin systeemit kaatuu
 
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor());
+	CFmiWin32Helpers::SetDescTopGraphicalInfo(IsMapView(), GetGraphicalInfo(), pDC, PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor());
 
     CFmiWin32Helpers::MemoryBitmapHelper bitmapHelper(this, itsMemoryBitmap);
 	if(fViewDirty)
@@ -258,7 +258,7 @@ void CFmiTempView::OnSize(UINT nType, int cx, int cy)
 	CZoomView::OnSize(nType, cx, cy);
 
 	CtrlView::DeviceContextHandler<CFmiTempView> deviceContextHandler(this);
-	CFmiWin32Helpers::SetDescTopGraphicalInfo(GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+	CFmiWin32Helpers::SetDescTopGraphicalInfo(IsMapView(), GetGraphicalInfo(), deviceContextHandler.GetDcFromHandler(), PrintViewSizeInPixels(), itsSmartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
 	CRect rect;
 	GetClientRect(rect);
 	m_tooltip.SetToolRect(this, TEMPVIEW_TOOLTIP_ID, rect);

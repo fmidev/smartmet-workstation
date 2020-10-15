@@ -174,7 +174,8 @@ double NFmiInfoAreaMaskOccurrance::Value(const NFmiCalculationParams &theCalcula
     // Mutta esiintymislukumäärä on ihan ok laskea (mm. salamadatasta salamoiden esiintymiset jne.)
 
     InitializeFromArguments();
-    NFmiLocation location(theCalculationParams.itsLatlon);
+    // Jos käytössä on CalculationPoint, käytetään suoraan sitä, muuten itsLatlon arvoa, joka on laskentahilan laskettava piste
+    NFmiLocation location(theCalculationParams.itsActualCalculationPoint ? *theCalculationParams.itsActualCalculationPoint : theCalculationParams.itsLatlon);
     int occurranceCount = 0;
 
     if (fUseMultiSourceData && itsMultiSourceDataGetter)
@@ -333,12 +334,12 @@ double NFmiInfoAreaMaskOccurranceSimpleCondition::Value(const NFmiCalculationPar
     bool fUseTimeInterpolationAlways)
 {
     // Nämä occurance tetit tehdään erilailla riippuen onko kyse hila vai asema datasta
-    if(IsGridData())
-    {
+//    if(IsGridData())
+//    {
         return NFmiInfoAreaMaskOccurrance::Value(theCalculationParams, fUseTimeInterpolationAlways);
-    }
-    else
-        throw std::runtime_error("Internal error in program: observation data given to occurance with simple-condition calculations");
+//    }
+//    else
+//        throw std::runtime_error("Internal error in program: observation data given to occurance with simple-condition calculations");
 }
 
 float NFmiInfoAreaMaskOccurranceSimpleCondition::CalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime)
@@ -373,6 +374,7 @@ void NFmiInfoAreaMaskOccurranceSimpleCondition::DoCalculateCurrentLocation(
 
     float value = theInfo->FloatValue();
     NFmiCalculationParams calculationParams(theInfo->LatLon(), theInfo->LocationIndex(), theInfo->Time(), theInfo->TimeIndex());
+    if (itsInfoVector.size() > 1) calculationParams.itsCurrentMultiInfoData = theInfo.get();
     if(SimpleConditionCheck(calculationParams))
         theOccurranceCountInOut++;
 }

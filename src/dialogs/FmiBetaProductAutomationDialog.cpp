@@ -213,7 +213,7 @@ void CFmiBetaProductAutomationDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BETA_PRODUCT_PATH_BROWSE, "Browse B-prod");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_USED_TRIGGER_MODE_GROUP, "Trigger mode information");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_RADIO_TRIGGER_MODE_FIXED_TIMES, "Fixed time list");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_TIMES_SAMPLE_TEXT, "HH:mm[,...]");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_TIMES_SAMPLE_TEXT, "HH:mm[,HH:mm,...]\n(in Utc)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_RADIO_TRIGGER_MODE_TIMES_STEP, "Time step");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_AUTOMATION_TIME_STEP_HEADER, NFmiBetaProductAutomation::RunTimeStepInHoursTitle().c_str());
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_AUTOMATION_FIRST_RUN_OF_DAY_HEADER, NFmiBetaProductAutomation::FirstRunTimeOfDayTitle().c_str());
@@ -253,6 +253,12 @@ void CFmiBetaProductAutomationDialog::InitControlsFromDocument()
     itsBetaAutomationEndTimeModeIndex = itsBetaProductionSystem->EndTimeModeIndex();
     itsBetaAutomationStartTimeClockOffsetValueU_ = CA2T(itsBetaProductionSystem->StartTimeClockOffsetInHoursString().c_str());
     itsBetaAutomationEndTimeClockOffsetValueU_ = CA2T(itsBetaProductionSystem->EndTimeClockOffsetInHoursString().c_str());
+    itsAutomationNameU_ = CA2T(itsBetaProductionSystem->AutomationPath().c_str());
+    if(!itsAutomationNameU_.IsEmpty())
+    {
+        itsSelectedAutomationFullFilePath = CT2A(itsAutomationNameU_);
+        itsSelectedAutomationFullFilePath += "." + NFmiBetaProductionSystem::BetaAutomationFileExtension();
+    }
 
     // Laitetaan demo mielessä jotain puppua comboon
     itsMultiDataSelector.AddString(_TEXT("EC-sfc-scand"));
@@ -320,6 +326,7 @@ void CFmiBetaProductAutomationDialog::StoreControlValuesToDocument()
     itsBetaProductionSystem->EndTimeModeIndex(itsBetaAutomationEndTimeModeIndex);
     itsBetaProductionSystem->StartTimeClockOffsetInHoursString(CFmiWin32Helpers::CT2std(itsBetaAutomationStartTimeClockOffsetValueU_));
     itsBetaProductionSystem->EndTimeClockOffsetInHoursString(CFmiWin32Helpers::CT2std(itsBetaAutomationEndTimeClockOffsetValueU_));
+    itsBetaProductionSystem->AutomationPath(CFmiWin32Helpers::CT2std(itsAutomationNameU_));
 }
 
 void CFmiBetaProductAutomationDialog::DoWhenClosing(void)
@@ -335,9 +342,9 @@ void CFmiBetaProductAutomationDialog::InitHeaders(void)
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Row"), BetaAutomationHeaderParInfo::kRowNumber, basicColumnWidthUnit * 2));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Name"), BetaAutomationHeaderParInfo::kAutomationName, basicColumnWidthUnit * 9));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Enable"), BetaAutomationHeaderParInfo::kEnable, basicColumnWidthUnit * 3));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Next"), BetaAutomationHeaderParInfo::kNextRuntime, boost::math::iround(basicColumnWidthUnit * 2.7)));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Next"), BetaAutomationHeaderParInfo::kNextRuntime, boost::math::iround(basicColumnWidthUnit * 3.2)));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Last"), BetaAutomationHeaderParInfo::kLastRuntime, boost::math::iround(basicColumnWidthUnit * 3.2)));
-    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Status"), BetaAutomationHeaderParInfo::kAutomationStatus, boost::math::iround(basicColumnWidthUnit * 8.5)));
+    itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Status"), BetaAutomationHeaderParInfo::kAutomationStatus, boost::math::iround(basicColumnWidthUnit * 8.)));
     itsHeaders.push_back(BetaAutomationHeaderParInfo(::GetDictionaryString("Path"), BetaAutomationHeaderParInfo::kAutomationPath, boost::math::iround(basicColumnWidthUnit * 30.)));
 }
 
@@ -507,6 +514,8 @@ void CFmiBetaProductAutomationDialog::CheckForSaveButtonEnablations()
         itsAddEditedAutomationToListButton.EnableWindow(FALSE);
         itsRemoveAutomationFromListButton.EnableWindow(FALSE);
     }
+
+    UpdateData(FALSE);
 }
 
 void CFmiBetaProductAutomationDialog::OnBnClickedRadioTriggerModeFixedTimes()
@@ -599,6 +608,11 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonBetaAutomationSave()
 
     BetaProduct::SaveObjectToKnownFileInJsonFormat(*itsBetaProductAutomation, itsSelectedAutomationFullFilePath, "Beta-automation", false);
     MakeAutomationComparisonObject();
+    DoNextRuntimeUpdates();
+}
+
+void CFmiBetaProductAutomationDialog::DoNextRuntimeUpdates()
+{
     // Päivitetään automaatiolistan beta-automaatiot, jos niihin olisi tullut muutoksia
     itsBetaProductionSystem->UsedAutomationList().RefreshAutomationList();
     itsBetaProductionSystem->UsedAutomationList().DoFullChecks(itsBetaProductionSystem->AutomationModeOn());
@@ -710,9 +724,14 @@ static std::string GetTimeTextHHmm(const NFmiMetTime &theTime, bool fJustStarted
     if(theTime == NFmiMetTime::gMissingTime)
         return "--:--";
 
+    NFmiMetTime aTime(1);
+    bool nextDay = aTime.GetDay() < theTime.GetDay();
+
     std::string str;
     if(fJustStarted)
         str = "S ";
+    else if(nextDay)
+        str = "N ";
     str += theTime.ToStr("HH:mm", kEnglish);
     return str;
 }
@@ -914,6 +933,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonRunSelectedAutomation()
     }
     else
         CatLog::logMessage("Nothing was selected for on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+    UpdateAutomationList();
 }
 
 
@@ -924,6 +944,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonRunAllAutomations()
     {
         CatLog::logMessage("Nothing was found for \"Run all\" on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
     }
+    UpdateAutomationList();
 }
 
 
@@ -934,4 +955,5 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonRunEnabledAutomations()
     {
         CatLog::logMessage("Nothing was found for \"Run enabled\" on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
     }
+    UpdateAutomationList();
 }

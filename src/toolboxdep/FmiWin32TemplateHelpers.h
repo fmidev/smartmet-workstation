@@ -90,7 +90,7 @@ namespace CFmiWin32TemplateHelpers
 		theView->PrintViewSizeInPixels(viewSizeInPixels);
         if(!smartMetDocumentInterface->DoMapViewOnSize(theView->MapViewDescTopIndex(), viewSizeInPixels, pDC))
         {
-    		CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+    		CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->IsMapView(), theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
         }
 		theView->SetPrintCopyCDC(pDC);
 
@@ -513,7 +513,7 @@ namespace CFmiWin32TemplateHelpers
 
         auto mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto &gInfo = smartMetDocumentInterface->GetGraphicalInfo(mapViewDescTopIndex);
-        CFmiWin32Helpers::SetDescTopGraphicalInfo(gInfo, pDC, mapView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor());
+        CFmiWin32Helpers::SetDescTopGraphicalInfo(mapView->IsMapView(), gInfo, pDC, mapView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor());
         CFmiWin32Helpers::DoGraphReportOnDraw(gInfo, smartMetDocumentInterface->DrawObjectScaleFactor());
 
         if(MapDraw::stopDrawingTooSmallMapview(mapView, mapViewDescTopIndex))
