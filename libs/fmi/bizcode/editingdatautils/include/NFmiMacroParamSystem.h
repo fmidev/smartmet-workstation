@@ -43,7 +43,7 @@ public:
 	const std::string& RootPath(void) const {return itsRootPath;}
 
     boost::shared_ptr<NFmiMacroParam> GetCurrentMacroParam(void) { return itsFoundMacroParam; }; // tällä saa edellä etsityn macroparamin
-    boost::shared_ptr<NFmiMacroParamFolder> GetCurrentFolder(void); // tällä voi säädellä Find:illa etsityn folder-otuksen arvoja ja asetuksia
+    boost::shared_ptr<NFmiMacroParamFolder> GetCurrentFolder(); // tällä voi säädellä Find:illa etsityn folder-otuksen arvoja ja asetuksia
     boost::shared_ptr<NFmiMacroParamFolder> GetFolder(int index) const;
 	bool SetCurrentToWantedMacroPath(const std::string &theTotalFileName); // tietyn nimistä tiedosto nimeä
 	bool FindMacroFromCurrentFolder(const std::string &theMacroName);
@@ -59,6 +59,7 @@ public:
 	void SwapMacroData(NFmiMacroParamSystem &theOther);
 	bool UpdateMacroParamListView(void) {return fUpdateMacroParamListView;}
 	void UpdateMacroParamListView(bool newValue) {fUpdateMacroParamListView = newValue;}
+	void EnsureRootFolderInitialized();
 private:
 
 	void AddToMacroParamItemTree(std::vector<NFmiMacroParamItem> &theMacroItemList, const std::vector<boost::shared_ptr<NFmiMacroParam> >& theMacroParams, NFmiStopFunctor *theStopFunctor);
@@ -69,6 +70,7 @@ private:
 	void MakeMacroParamItemTree(NFmiStopFunctor *theStopFunctor);
     void SetWantedPath(const std::string& wantedPath);
     CurrentMacroPointerData FindCurrentMacroPointerData(const std::string& theTotalFileName) const;
+	void InitializeRootFolder();
 
 	std::string itsCurrentPath; // mihin paikkaan on macroparamit talletettu
 	std::string itsRootPath; // tämän avulla saadaan kansio systeemille root kansio, josta ylöspäin ei voi mennä ..-hakiksen kautta
