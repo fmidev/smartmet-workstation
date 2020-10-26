@@ -90,16 +90,32 @@ void NFmiMacroParamSystem::SwapMacroData(NFmiMacroParamSystem &theOther)
 	}
 }
 
+void NFmiMacroParamSystem::InitializeRootFolder()
+{
+	boost::shared_ptr<NFmiMacroParamFolder> tmp(new NFmiMacroParamFolder(itsCurrentPath, itsRootPath));
+	tmp->RefreshMacroParams();
+	itsMacroParamFolders.push_back(tmp);
+	itsCurrentFolderIndex = 0;
+}
+
+void NFmiMacroParamSystem::EnsureRootFolderInitialized()
+{
+	if(itsMacroParamFolders.empty())
+	{
+		InitializeRootFolder();
+	}
+	else if(itsCurrentFolderIndex < 0)
+	{
+		itsCurrentFolderIndex = 0;
+	}
+}
+
 // Rakennetaan kaikki macroParamit ja polut uudestaan
 void NFmiMacroParamSystem::Rebuild(NFmiStopFunctor *theStopFunctor)
 {
 	ClearMacros();
 	NFmiQueryDataUtil::CheckIfStopped(theStopFunctor);
-
-	boost::shared_ptr<NFmiMacroParamFolder> tmp(new NFmiMacroParamFolder(itsCurrentPath, itsRootPath));
-	tmp->RefreshMacroParams();
-	itsMacroParamFolders.push_back(tmp);
-    itsCurrentFolderIndex = 0;
+	InitializeRootFolder();
 	NFmiQueryDataUtil::CheckIfStopped(theStopFunctor);
 	InsertAllSubdirectories(itsMacroParamFolders, itsCurrentPath, itsRootPath, theStopFunctor);
 	NFmiQueryDataUtil::CheckIfStopped(theStopFunctor);
@@ -144,7 +160,7 @@ int NFmiMacroParamSystem::FindPath(const std::string &thePathName) const
 }
 
 // t‰ll‰ voi s‰‰dell‰ Find:illa etsityn folder-otuksen arvoja ja asetuksia
-boost::shared_ptr<NFmiMacroParamFolder> NFmiMacroParamSystem::GetCurrentFolder(void)
+boost::shared_ptr<NFmiMacroParamFolder> NFmiMacroParamSystem::GetCurrentFolder()
 {
     return GetFolder(itsCurrentFolderIndex);
 }
