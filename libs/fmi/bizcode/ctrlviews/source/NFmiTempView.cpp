@@ -255,10 +255,7 @@ NFmiTempView::NFmiTempView(const NFmiRect& theRect
 ,xpix(1)
 ,ypix(1)
 ,itsFirstSoundingData()
-,itsHodografRect()
 ,fHodografInitialized(false)
-,itsHodografScaleMaxValue(50)
-,itsHodografRelativiHeightFactor(0.35)
 ,fMustResetFirstSoundingData(false)
 ,itsGdiplusScaleX(1)
 ,itsGdiplusScaleY(1)
@@ -568,7 +565,8 @@ void NFmiTempView::InitializeHodografRect(void)
 {
 	if(!itsCtrlViewDocumentInterface->GetMTATempSystem().ShowHodograf())
 		return ;
-	double relativeHeight = itsDataRect.Height()*itsHodografRelativiHeightFactor;
+	auto& hodografViewData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetHodografViewData();
+	double relativeHeight = itsDataRect.Height() * hodografViewData.RelativiHeightFactor();
 	long pixelHeight = itsToolBox->HY(relativeHeight);
 	long pixelWidth = pixelHeight;
 	double relativeWidth = itsToolBox->SX(pixelWidth);
@@ -576,22 +574,23 @@ void NFmiTempView::InitializeHodografRect(void)
 	long blPixelOffsetY = FmiRound(5 * itsDrawSizeFactorX);
 	double blRelativeOffsetX = itsToolBox->SX(blPixelOffsetX);
 	double blRelativeOffsetY = itsToolBox->SY(blPixelOffsetY);
-	NFmiPoint centePoint(itsHodografRect.Center());
+	NFmiRect hodografRect = hodografViewData.Rect();
+	NFmiPoint centePoint(hodografRect.Center());
 	if(fHodografInitialized == false) // 1, kerralla pit‰‰ laskea laatikon koko ja sijainti
 	{
 		NFmiPoint blOffsetPoint(blRelativeOffsetX, -blRelativeOffsetY);
 		NFmiPoint blPoint(itsDataRect.BottomLeft());
 		blPoint += blOffsetPoint;
-		NFmiRect hodoRect(blPoint.X(), blPoint.Y()-relativeHeight, blPoint.X()+relativeWidth, blPoint.Y());
-		itsHodografRect = hodoRect;
+		hodografRect = NFmiRect(blPoint.X(), blPoint.Y()-relativeHeight, blPoint.X()+relativeWidth, blPoint.Y());
 		fHodografInitialized = true;
 	}
 	else
 	{ // lopuksi lasketaan vain laatikon kokoa, suhteellinen keskipisteen sijainti otetaan vanhasta laatikosta
-		itsHodografRect.Width(relativeWidth);
-		itsHodografRect.Height(relativeHeight);
-		itsHodografRect.Center(centePoint);
+		hodografRect.Width(relativeWidth);
+		hodografRect.Height(relativeHeight);
+		hodografRect.Center(centePoint);
 	}
+	hodografViewData.Rect(hodografRect);
 }
 
 struct LineLabelDrawData
@@ -1854,39 +1853,29 @@ static NFmiPoint GetRelativePointFromWindSpeedSpace(double u, double v, double m
 
 NFmiPoint NFmiTempView::GetRelativePointFromHodograf(double u, double v)
 {
-	return ::GetRelativePointFromWindSpeedSpace(u, v, -itsHodografScaleMaxValue, itsHodografScaleMaxValue, -itsHodografScaleMaxValue, itsHodografScaleMaxValue, itsHodografRect);
+	auto& hodografViewData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetHodografViewData();
+	auto hodografScaleMaxValue = hodografViewData.ScaleMaxValue();
+	return ::GetRelativePointFromWindSpeedSpace(u, v, -hodografScaleMaxValue, hodografScaleMaxValue, -hodografScaleMaxValue, hodografScaleMaxValue, hodografViewData.Rect());
 }
 
 bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    if(itsHodografRect.IsInside(thePlace))
+	auto& hodografViewData = mtaTempSystem.GetHodografViewData();
+	if(hodografViewData.Rect().IsInside(thePlace))
 	{
 		if(mtaTempSystem.ShowHodograf())
-		{ // hodografin pit‰‰ viel‰ n‰ky‰
+		{ 
+			// hodografin pit‰‰ viel‰ n‰ky‰
 			if(theKey & kCtrlKey)
-			{ // s‰‰det‰‰n kokoa
-				if(theDelta > 0)
-					itsHodografRelativiHeightFactor -=0.05;
-				else
-					itsHodografRelativiHeightFactor +=0.05;
-
-				if(itsHodografRelativiHeightFactor < 0.2)
-					itsHodografRelativiHeightFactor = 0.2;
-				if(itsHodografRelativiHeightFactor > 0.6)
-					itsHodografRelativiHeightFactor = 0.6;
+			{ 
+				// s‰‰det‰‰n suhteellista kokoa
+				hodografViewData.AdjustRelativiHeightFactor(theDelta);
 			}
 			else
-			{ // s‰‰det‰‰n arvoalueen kokoa
-				if(theDelta > 0)
-					itsHodografScaleMaxValue -= 10;
-				else
-					itsHodografScaleMaxValue += 10;
-
-				if(itsHodografScaleMaxValue < 10)
-					itsHodografScaleMaxValue = 10;
-				if(itsHodografScaleMaxValue > 150)
-					itsHodografScaleMaxValue = 150;
+			{ 
+				// s‰‰det‰‰n arvoalueen kokoa
+				hodografViewData.AdjustScaleMaxValue(theDelta);
 			}
 			return true;
 		}
@@ -2003,7 +1992,7 @@ void NFmiTempView::DrawHodograf(NFmiSoundingData& theData, int theIndex)
 		return ;
 
 	NFmiRect oldRect(itsToolBox->RelativeClipRect());
-	itsToolBox->RelativeClipRect(itsHodografRect, true);
+	itsToolBox->RelativeClipRect(mtaTempSystem.GetHodografViewData().Rect(), true);
 	NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
 
 	DrawHodografBase(theIndex);
@@ -2179,19 +2168,22 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 
 	if(theIndex == 0)
 	{
-		NFmiRectangle rec(itsHodografRect, 0, itsDrawingEnvironment);
+		auto& hodografViewData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetHodografViewData();
+		const auto& hodografRect = hodografViewData.Rect();
+		NFmiRectangle rec(hodografRect, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&rec);
 
 		// kirjoita hodografi teksti yl‰ nurkkaan
 		itsToolBox->SetTextAlignment(kLeft);
 		NFmiString titleStr(::GetDictionaryString("TempViewHodographTitle"));
-		NFmiText titleTxt(itsHodografRect.TopLeft(), titleStr, 0, itsDrawingEnvironment);
+		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&titleTxt);
 
 		// piirr‰ apu ympyr‰t haalealla v‰rill‰
 		itsDrawingEnvironment->SetFrameColor(NFmiColor(0.85f, 0.85f, 0.85f));
 		itsDrawingEnvironment->DisableFill();
-		for(double x=10; x<=itsHodografScaleMaxValue; x+=10)
+		auto hodografScaleMaxValue = hodografViewData.ScaleMaxValue();
+		for(double x = 10; x <= hodografScaleMaxValue; x += 10)
 		{
 			NFmiPoint relP1(GetRelativePointFromHodograf(-x, -x));
 			NFmiPoint relP2(GetRelativePointFromHodograf(x, x));
@@ -2200,10 +2192,10 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 
 		itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
 		// piirr‰ asteikot
-		NFmiPoint leftCenter(itsHodografRect.Left(), itsHodografRect.Center().Y());
-		NFmiPoint rightCenter(itsHodografRect.Right(), itsHodografRect.Center().Y());
-		NFmiPoint centerTop(itsHodografRect.Center().X(), itsHodografRect.Top());
-		NFmiPoint centerBottom(itsHodografRect.Center().X(), itsHodografRect.Bottom());
+		NFmiPoint leftCenter(hodografRect.Left(), hodografRect.Center().Y());
+		NFmiPoint rightCenter(hodografRect.Right(), hodografRect.Center().Y());
+		NFmiPoint centerTop(hodografRect.Center().X(), hodografRect.Top());
+		NFmiPoint centerBottom(hodografRect.Center().X(), hodografRect.Bottom());
 
 		NFmiLine line1(leftCenter, rightCenter, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&line1);
@@ -2214,7 +2206,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 		double tickWidthRel = itsToolBox->SX(FmiRound(3 * itsDrawSizeFactorX));
 
 		itsToolBox->SetTextAlignment(kCenter);
-		for(double x = -itsHodografScaleMaxValue; x <= itsHodografScaleMaxValue; x+=10)
+		for(double x = -hodografScaleMaxValue; x <= hodografScaleMaxValue; x += 10)
 		{ // piirret‰‰n u-akselin sakarat
 			NFmiPoint relP(GetRelativePointFromHodograf(x, 0));
 			NFmiPoint uP1(relP.X(), relP.Y()-tickHeightRel);
@@ -2227,7 +2219,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 		}
 		itsToolBox->SetTextAlignment(kLeft);
 		double yShift = itsToolBox->SY(fontSize/2);
-		for(double y = -itsHodografScaleMaxValue; y <= itsHodografScaleMaxValue; y+=10)
+		for(double y = -hodografScaleMaxValue; y <= hodografScaleMaxValue; y += 10)
 		{ // piirret‰‰n v-akselin sakarat
 			NFmiPoint relP(GetRelativePointFromHodograf(0, y));
 			NFmiPoint vP1(relP.X()-tickWidthRel, relP.Y());
@@ -2244,7 +2236,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 		}
 
 		// pit‰‰ viel‰ piirt‰‰ laatikon reunat, koska ne ovat saattaneet sotkeentua
-		NFmiRectangle rec2(itsHodografRect, 0, itsDrawingEnvironment);
+		NFmiRectangle rec2(hodografRect, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&rec2);
 	}
 }
@@ -2819,8 +2811,9 @@ bool NFmiTempView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey)
 	else if(itsDataRect.IsInside(thePlace))
 	{
 		if(mtaTempSystem.ShowHodograf())
-		{ // s‰‰det‰‰n hodografin center pistett‰
-			itsHodografRect.Center(thePlace);
+		{ 
+			// s‰‰det‰‰n hodografin center pistett‰
+			mtaTempSystem.GetHodografViewData().SetCenter(thePlace);
 			return true;
 		}
 		else

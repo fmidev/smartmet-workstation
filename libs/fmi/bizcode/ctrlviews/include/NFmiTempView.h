@@ -151,10 +151,7 @@ class NFmiTempView : public NFmiCtrlView
 	// first-dataa k‰ytet‰‰n myˆs luotausten muokkauksessa!!!!
 	NFmiSoundingData itsFirstSoundingData; // t‰h‰n talletetaan 1. piirrett‰v‰n luotauksen datat, ett‰ niit‰ k‰ytet‰‰n indeksi osio laskuissa
 	bool fMustResetFirstSoundingData; // joskus k‰ytt‰j‰ haluaa resetoida muokattua luotausta
-	NFmiRect itsHodografRect; // t‰h‰n piirret‰‰n hodograafi (relatiivinen laatikko)
 	bool fHodografInitialized; // kun ikkuna piirret‰‰n 1. kerran, pit‰‰ laskea alkuarvaus, muutoin ei
-	double itsHodografScaleMaxValue; // t‰m‰n avulla s‰‰det‰‰n hodografin arvoalueen suuruutta
-	double itsHodografRelativiHeightFactor; // t‰m‰n avulla s‰‰det‰‰n hodografin ikkunan suhteellista kokoa
 	double itsFirstSoundinWindBarbXPos;
 	std::string itsSoundingIndexStr; // t‰h‰n talletetaan ain piirretty stabiilisuus indeksi teksti rimpsu / luotaus numeroina, riippuen mik‰ moodi on valittuna
 

@@ -19,9 +19,68 @@ static char THIS_FILE[] = __FILE__;
 
 double NFmiMTATempSystem::itsLatestVersionNumber = 1.0;
 
-// ****************************************************
+// ************************************************************
+// ** Tästä alkaa NFmiMTATempSystem::HodografViewData osio ****
+// ************************************************************
+
+void NFmiMTATempSystem::HodografViewData::AdjustScaleMaxValue(short theDelta)
+{
+	// säädetään arvoalueen kokoa riippuen annetusta hiiren rullan suunnasta (theDelta)
+	if(theDelta > 0)
+		itsScaleMaxValue -= 10;
+	else
+		itsScaleMaxValue += 10;
+
+	// Rajataan muuttujan koko 10 ja 150 välille
+	if(itsScaleMaxValue < 10)
+		itsScaleMaxValue = 10;
+	if(itsScaleMaxValue > 150)
+		itsScaleMaxValue = 150;
+}
+
+void NFmiMTATempSystem::HodografViewData::AdjustRelativiHeightFactor(short theDelta)
+{
+	// säädetään suhteellista kokoa riippuen annetusta hiiren rullan suunnasta (theDelta)
+	if(theDelta > 0)
+		itsRelativiHeightFactor -= 0.05;
+	else
+		itsRelativiHeightFactor += 0.05;
+
+	// Rajataan muuttujan koko 0.2 ja 0.6 välille
+	if(itsRelativiHeightFactor < 0.2)
+		itsRelativiHeightFactor = 0.2;
+	if(itsRelativiHeightFactor > 0.6)
+		itsRelativiHeightFactor = 0.6;
+}
+
+void NFmiMTATempSystem::HodografViewData::SetCenter(const NFmiPoint& thePlace)
+{
+	itsRect.Center(thePlace);
+}
+
+std::string NFmiMTATempSystem::HodografViewData::GenerateSettingsString() const
+{
+	std::stringstream out;
+	out << itsRect << itsScaleMaxValue << " " << itsRelativiHeightFactor << std::endl;
+
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	out << extraData;
+
+	return out.str();
+}
+
+void NFmiMTATempSystem::HodografViewData::InitializeFromSettingsString(const std::string& settingsString)
+{
+	std::stringstream in(settingsString);
+	in >> itsRect >> itsScaleMaxValue >> itsRelativiHeightFactor;
+
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	in >> extraData;
+}
+
+// **********************************************************
 // ** Tästä alkaa NFmiMTATempSystem::ServerProducer osio ****
-// ****************************************************
+// **********************************************************
 
 NFmiMTATempSystem::ServerProducer::ServerProducer()
 {}
@@ -888,6 +947,7 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 
     extraData.Add(MakeSecondaryDataLineInfoString()); // WS + N + RH lineInfor yhtenä stringinä on 1. uusi string arvo extroissa
     extraData.Add(::MakeProducerContainerServerUsageString(itsSoundingComparisonProducers)); // 2. uusi string arvo extroissa on valittujen tuottajien server/local data käyttötila tyyliin "0 1 0 0"
+	extraData.Add(itsHodografViewData.GenerateSettingsString()); // 3. uusi string arvo extroissa on hodografi säädöt
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -1036,10 +1096,13 @@ void NFmiMTATempSystem::Read(std::istream& is)
     if(extraData.itsStringValues.size() > 0)
         ReadSecondaryDataLineInfoFromString(extraData.itsStringValues[0]);
     std::string producerContainerServerUsageString;
-    if(extraData.itsStringValues.size() > 1)
-        producerContainerServerUsageString = extraData.itsStringValues[1];
-
+	if(extraData.itsStringValues.size() > 1)
+	{
+		producerContainerServerUsageString = extraData.itsStringValues[1];
+	}
     itsSoundingComparisonProducers = ::MakeSoundingComparisonProducersFromLegacyData(legacySoundingComparisonProducers, producerContainerServerUsageString);
+	if(extraData.itsStringValues.size() > 2)
+		itsHodografViewData.InitializeFromSettingsString(extraData.itsStringValues[2]);
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
@@ -1123,6 +1186,9 @@ void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther)
     itsRHLineInfo = theOther.itsRHLineInfo;
     fSoundingTextUpwardWinReg = theOther.fSoundingTextUpwardWinReg;
     fSoundingTimeLockWithMapViewWinReg = theOther.fSoundingTimeLockWithMapViewWinReg;
+	// Pitäisikö myös itsSoundingDataServerConfigurations asetukset kopioida tässä???
+//	itsSoundingDataServerConfigurations = theOther.itsSoundingDataServerConfigurations;
+	itsHodografViewData = theOther.itsHodografViewData;
 }
 
 // Säädetään kaikki aikaa liittyvät jutut parametrina annettuun aikaan, että SmartMet säätyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
