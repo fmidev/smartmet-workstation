@@ -27,6 +27,31 @@ class NFmiMTATempSystem
 	static double itsLatestVersionNumber;
 	mutable double itsCurrentVersionNumber;
 
+	class HodografViewData
+	{
+		// Tähän piirretään hodograafi (relatiivinen laatikko)
+		NFmiRect itsRect; 
+		// Tämän avulla säädetään hodografin arvoalueen suuruutta
+		double itsScaleMaxValue = 50.;
+		// Tämän avulla säädetään hodografin ikkunan suhteellista kokoa
+		double itsRelativiHeightFactor = 0.35;
+	public:
+
+		const NFmiRect& Rect() const { return itsRect; }
+		void Rect(const NFmiRect& hodografRect) { itsRect = hodografRect; }
+		double ScaleMaxValue() const { return itsScaleMaxValue; }
+		void ScaleMaxValue(double newValue) { itsScaleMaxValue = newValue; }
+		double RelativiHeightFactor() const { return itsRelativiHeightFactor; }
+		void RelativiHeightFactor(double newValue) { itsRelativiHeightFactor = newValue; }
+
+		void AdjustScaleMaxValue(short theDelta);
+		void AdjustRelativiHeightFactor(short theDelta);
+		void SetCenter(const NFmiPoint& thePlace);
+
+		std::string GenerateSettingsString() const;
+		void InitializeFromSettingsString(const std::string &settingsString);
+	};
+
     // ServerProducer luokalla on tieto, käyttääkö se data lähteenään lokaali queryDataa vai serveriä.
     class ServerProducer : public NFmiProducer
     {
@@ -265,6 +290,7 @@ class NFmiMTATempSystem
     bool SoundingTimeLockWithMapView() const { return fSoundingTimeLockWithMapViewWinReg; }
     void SoundingTimeLockWithMapView(bool newValue) { fSoundingTimeLockWithMapViewWinReg = newValue; }
     SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() { return itsSoundingDataServerConfigurations; }
+	HodografViewData& GetHodografViewData() { return itsHodografViewData; }
 
 	void Write(std::ostream& os) const;
 	void Read(std::istream& is);
@@ -385,6 +411,7 @@ private:
     bool fSoundingTextUpwardWinReg; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)
     bool fSoundingTimeLockWithMapViewWinReg; // Luotausnäytössä voi olla nyt aikalukko päällä, jolloin luotausten ajat sidotaan pääkarttanäyttöön, eli niitä säädetään jos karttanäytöllä vaihdetaan aikaa
     SoundingDataServerConfigurations itsSoundingDataServerConfigurations;
+	HodografViewData itsHodografViewData;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMTATempSystem::TempInfo& item){item.Write(os); return os;}
