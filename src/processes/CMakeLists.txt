@@ -17,6 +17,7 @@ target_include_directories(
     ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}
     PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
 	PUBLIC ${CatLog_INCLUDE_DIRS}
     )
 
@@ -24,8 +25,8 @@ set(
     ${PROJECT_NAME}_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}
     ${Newbase_INCLUDE_DIRS}
+    ${SmartTools_INCLUDE_DIRS}
 	${CatLog_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
-
 
