@@ -3,6 +3,52 @@
 
 #include "execute-command-in-separate-process.h"
 #include "catlog/catlog.h"
+#include "NFmiSettings.h"
+#include "NFmiPathUtils.h"
+
+namespace
+{
+    // Laitetaan tahan kerran rakennettu polku jatkokayttoa varten
+    std::string g_cached7zipExePath;
+
+    std::string GetOptional7zipExePath()
+    {
+        return NFmiSettings::Optional<std::string>("SmartMet::Optional7zipExePath", "");
+    }
+
+    std::string MakeOptional7zipExePath(const std::string& workingDirectory)
+    {
+        auto optionalPath = ::GetOptional7zipExePath();
+        if(optionalPath.empty())
+            return "";
+        else
+        {
+            return PathUtils::getAbsoluteFilePath(optionalPath, workingDirectory);
+        }
+    }
+
+    std::string MakeHardCoded7zipExePath(const std::string& workingDirectory)
+    {
+        std::string zipCommandStr = "\""; // myös zip-commandin ympärille lainausmerkit
+        zipCommandStr += workingDirectory;
+        zipCommandStr += "\\utils\\";
+        zipCommandStr += "7z.exe";
+        zipCommandStr += "\"";
+        return zipCommandStr;
+    }
+
+    // Oletus funktiota kutsutaan vain kerran, eli ennen kutsua, tarkistetaan etta g_cached7zipExePath ei ole tyhja.
+    std::string Construct7zipExePath(const std::string& workingDirectory)
+    {
+        auto used7zipExePath = MakeOptional7zipExePath(workingDirectory);
+        if(used7zipExePath.empty())
+        {
+            used7zipExePath = MakeHardCoded7zipExePath(workingDirectory);
+        }
+        used7zipExePath = PathUtils::simplifyWindowsPath(used7zipExePath);
+        return used7zipExePath;
+    }
+}
 
 namespace CFmiProcessHelpers
 {
@@ -80,12 +126,13 @@ namespace CFmiProcessHelpers
 
     std::string Make7zipExePath(const std::string& workingDirectory)
     {
-        std::string zipCommandStr = "\""; // myös zip-commandin ympärille lainausmerkit
-        zipCommandStr += workingDirectory;
-        zipCommandStr += "\\utils\\";
-        zipCommandStr += "7z.exe";
-        zipCommandStr += "\"";
-        return zipCommandStr;
+        if(g_cached7zipExePath.empty())
+        {
+            g_cached7zipExePath = ::Construct7zipExePath(workingDirectory);
+            CatLog::logMessage(std::string("Used 7z.exe path is: ") + g_cached7zipExePath, CatLog::Severity::Info, CatLog::Category::Configuration);
+        }
+
+        return g_cached7zipExePath;
     }
 
 } // CFmiProcessHelpers namespace
