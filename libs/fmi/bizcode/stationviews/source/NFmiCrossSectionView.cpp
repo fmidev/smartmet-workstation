@@ -1931,6 +1931,45 @@ static NFmiDataMatrix<float> MakePressureLevelBasedPressureMatrix(size_t xSize, 
 	return pressureValues;
 }
 
+
+static std::vector<float> MakeHeightLevelBasedVector(NFmiFastQueryInfo& usedInfo)
+{
+	std::vector<float> heights;
+	for(usedInfo.ResetLevel(); usedInfo.NextLevel(); )
+	{
+		heights.push_back(usedInfo.Level()->LevelValue());
+	}
+	if(!usedInfo.HeightParamIsRising())
+		std::reverse(heights.begin(), heights.end());
+	return heights;
+}
+
+static NFmiDataMatrix<float> ConvertMetricHeightsToPressureValues(const NFmiDataMatrix<float>& heightValues)
+{
+	NFmiDataMatrix<float> pressureValues = heightValues;
+	for(size_t yIndex = 0; yIndex < pressureValues.NY(); yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < pressureValues.NX(); xIndex++)
+		{
+			// Annetut metri arvot pitää muuttaa kilometreiksi ennen konversiota
+			pressureValues[xIndex][yIndex] = static_cast<float>(CalcPressureAtHeight(heightValues[xIndex][yIndex] / 1000.));
+		}
+	}
+	return pressureValues;
+}
+
+static NFmiDataMatrix<float> MakeHeightLevelBasedPressureMatrix(size_t xSize, NFmiFastQueryInfo& usedInfo)
+{
+	NFmiDataMatrix<float> heightValues(xSize, usedInfo.SizeLevels(), kFloatMissing);
+	auto heightLevelValues = ::MakeHeightLevelBasedVector(usedInfo);
+	for(size_t heightColumnIndex = 0; heightColumnIndex < heightValues.NX(); heightColumnIndex++)
+	{
+		auto& heightColumn = heightValues[heightColumnIndex];
+		heightColumn = heightLevelValues;
+	}
+	return ::ConvertMetricHeightsToPressureValues(heightValues);
+}
+
 static NFmiDataMatrix<float> MakeCrossSectionUserDrawPressureData(NFmiIsoLineData& theIsoLineData, const std::vector<NFmiPoint> & latlonPoints)
 {
 	auto& usedInfo = *theIsoLineData.itsInfo;
@@ -1942,6 +1981,14 @@ static NFmiDataMatrix<float> MakeCrossSectionUserDrawPressureData(NFmiIsoLineDat
 	else if(usedInfo.PressureLevelDataAvailable())
 	{
 		return ::MakePressureLevelBasedPressureMatrix(latlonPoints.size(), usedInfo);
+	}
+	else if(usedInfo.Param(kFmiGeopHeight) || usedInfo.Param(kFmiGeomHeight))
+	{
+		return ::ConvertMetricHeightsToPressureValues(NFmiFastQueryInfo::CalcCrossSectionLeveldata(usedInfo, latlonPoints, theIsoLineData.itsTime));
+	}
+	else if(usedInfo.HeightLevelDataAvailable())
+	{
+		return ::MakeHeightLevelBasedPressureMatrix(latlonPoints.size(), usedInfo);
 	}
 	else
 		return NFmiDataMatrix<float>();
@@ -1959,6 +2006,14 @@ static NFmiDataMatrix<float> MakeTimeCrossSectionUserDrawPressureData(NFmiIsoLin
 	{
 		return ::MakePressureLevelBasedPressureMatrix(times.GetSize(), usedInfo);
 	}
+	else if(usedInfo.Param(kFmiGeopHeight) || usedInfo.Param(kFmiGeomHeight))
+	{
+		return ::ConvertMetricHeightsToPressureValues(NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(usedInfo, latlon, times));
+	}
+	else if(usedInfo.HeightLevelDataAvailable())
+	{
+		return ::MakeHeightLevelBasedPressureMatrix(times.GetSize(), usedInfo);
+	}
 	else
 		return NFmiDataMatrix<float>();
 }
@@ -1975,13 +2030,21 @@ static NFmiDataMatrix<float> MakeRouteCrossSectionUserDrawPressureData(NFmiIsoLi
 	{
 		return ::MakePressureLevelBasedPressureMatrix(times.size(), usedInfo);
 	}
+	else if(usedInfo.Param(kFmiGeopHeight) || usedInfo.Param(kFmiGeomHeight))
+	{
+		return ::ConvertMetricHeightsToPressureValues(NFmiFastQueryInfo::CalcRouteCrossSectionLeveldata(usedInfo, latlons, times));
+	}
+	else if(usedInfo.HeightLevelDataAvailable())
+	{
+		return ::MakeHeightLevelBasedPressureMatrix(times.size(), usedInfo);
+	}
 	else
 		return NFmiDataMatrix<float>();
 }
 
 bool NFmiCrossSectionView::IsUserDrawDataNeeded(NFmiFastQueryInfo& usedInfo)
 {
-	return ::IsContourDrawUsed(itsDrawParam) && usedInfo.PressureDataAvailable();
+	return ::IsContourDrawUsed(itsDrawParam) && (usedInfo.PressureDataAvailable() || usedInfo.HeightDataAvailable());
 }
 
 NFmiDataMatrix<float> NFmiCrossSectionView::MakeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData)
