@@ -84,7 +84,8 @@ class NFmiCtrlView
                 ,int viewGridColumnNumber = -1);
    NFmiCtrlView (const NFmiCtrlView& theView);
    inline virtual  ~NFmiCtrlView (void){};
-   inline const NFmiRect& GetFrame(void) const { return itsRect; } ;
+   inline const NFmiRect& GetFrame(void) const { return itsRect; };
+   inline virtual const NFmiRect& GetFrameForParamBox(void) const { return itsRect; } ;
    inline void SetFrame (const NFmiRect &theRect) {itsRect = theRect; } ;
    virtual void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0);
    virtual void Update (void){};
