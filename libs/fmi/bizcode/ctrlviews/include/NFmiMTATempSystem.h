@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "NFmiPoint.h"
+#include "NFmiRect.h"
 #include "NFmiMetTime.h"
 #include "NFmiProducer.h"
 #include "NFmiDataMatrix.h"

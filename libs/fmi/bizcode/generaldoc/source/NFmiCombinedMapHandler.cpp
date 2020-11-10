@@ -995,7 +995,7 @@ void NFmiCombinedMapHandler::initMapConfigurationSystem()
 			if(NFmiSettings::IsSet(key1) && NFmiSettings::IsSet(key2))
 			{
 				auto filePathAndDrawingStylePair = ::GetFilePathAndDrawingStyleFromSettings(key1, key2, absoluteControlPath_);
-				mc.AddMap(filePathAndDrawingStylePair.first, filePathAndDrawingStylePair.second);
+				mapConfiguration->AddMap(filePathAndDrawingStylePair.first, filePathAndDrawingStylePair.second);
 			}
 			std::string mapSettingLayerDescriptiveNameKey = baseMapSettingLayerKey + "DescriptiveName";
 			mapConfiguration->AddBackgroundMapDescriptiveName(NFmiSettings::Optional<std::string>(mapSettingLayerDescriptiveNameKey, ""));
@@ -1018,7 +1018,7 @@ void NFmiCombinedMapHandler::initMapConfigurationSystem()
 			if(NFmiSettings::IsSet(key1) && NFmiSettings::IsSet(key2))
 			{
 				auto filePathAndDrawingStylePair = ::GetFilePathAndDrawingStyleFromSettings(key1, key2, absoluteControlPath_);
-				mc.AddOverMapDib(filePathAndDrawingStylePair.first, filePathAndDrawingStylePair.second);
+				mapConfiguration->AddOverMapDib(filePathAndDrawingStylePair.first, filePathAndDrawingStylePair.second);
 			}
 			std::string mapSettingLayerDescriptiveNameKey = baseMapSettingLayerKey + "DescriptiveName";
 			mapConfiguration->AddOverlayMapDescriptiveNames(NFmiSettings::Optional<std::string>(mapSettingLayerDescriptiveNameKey, ""));

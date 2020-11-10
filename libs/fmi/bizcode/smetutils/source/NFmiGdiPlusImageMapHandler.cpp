@@ -223,7 +223,7 @@ Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetBitmap()
 		if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapBitmaps.size()))
 		{
 			if(!itsMapBitmaps[itsUsedMapIndex])
-				itsMapBitmaps[itsUsedMapIndex] = CreateBitmapFromFile(itsMapFileNames[itsUsedMapIndex]);
+				itsMapBitmaps[itsUsedMapIndex] = CreateBitmapFromFile(itsMapConfiguration->MapFileNames()[itsUsedMapIndex]);
 			return itsMapBitmaps[itsUsedMapIndex];
 		}
 	}
