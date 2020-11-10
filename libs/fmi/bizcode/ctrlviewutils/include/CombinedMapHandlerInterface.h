@@ -169,8 +169,8 @@ public:
     virtual double drawObjectScaleFactor() = 0;
     virtual void drawObjectScaleFactor(double newValue) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) = 0;
-    virtual std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap) = 0;
-    virtual std::string getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) = 0;
+    virtual std::string getCurrentMapLayerGuiName(int mapViewDescTopIndex, bool backgroundMap) = 0;
+    virtual std::string getCurrentMapLayerGuiText(int mapViewDescTopIndex, bool backgroundMap) = 0;
     virtual bool useCombinedMapMode() const = 0;
     virtual void useCombinedMapMode(bool newValue) = 0;
     virtual const NFmiMetTime& activeMapTime() = 0;
