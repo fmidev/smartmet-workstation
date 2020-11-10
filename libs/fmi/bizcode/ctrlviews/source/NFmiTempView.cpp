@@ -1069,8 +1069,9 @@ void NFmiTempView::DrawStabilityIndexData(void)
 
 void NFmiTempView::DrawOneLevelStringData(NFmiText &text, NFmiPoint &p, int levelIndex, std::deque<float> &pVec, std::deque<float> &tVec, std::deque<float> &tdVec, std::deque<float> &zVec, std::deque<float> &wsVec, std::deque<float> &wdVec)
 {
-	if(pVec[levelIndex] == kFloatMissing && zVec[levelIndex] == kFloatMissing) // paine tai korkeus parametrin pitää löytyä
-		return; // voi tulla puuttuvia arvoja, skipataan ne!!!
+	// Jos luotauksesta löytyy mikä tahansa arvo jostain leveliltä, piirretään sen rivin tiedot
+	if(pVec[levelIndex] == kFloatMissing && tVec[levelIndex] == kFloatMissing && zVec[levelIndex] == kFloatMissing && wsVec[levelIndex] == kFloatMissing && wdVec[levelIndex] == kFloatMissing)
+		return; // Luotausdataan voi tulla täysin puuttuvia leveleitä, skipataan ne!!!
 	std::string str = "";
 	str += GetStrValue(pVec[levelIndex], 0, 4);
 	str += " ";
