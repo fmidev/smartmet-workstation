@@ -104,7 +104,7 @@ void NFmiViewParamsView::DrawBackgroundMapLayerText(int& zeroBasedRowIndexInOut,
 	if(fHasMapLayer)
 	{
 		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
-		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getCurrentMapLayerText(itsMapViewDescTopIndex, true);
+		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);
 		// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
 		NFmiText text(LineTextPlace(zeroBasedRowIndexInOut, parameterRowRect, false), mapLayerText, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text);

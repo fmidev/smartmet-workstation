@@ -19,6 +19,7 @@
 #include "SpatialReference.h"
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "NFmiMapConfigurationSystem.h"
 
 using namespace std;
 
@@ -45,17 +46,13 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler()
 ,fMakeNewBackgroundBitmap(true)
 ,fUpdateMapViewDrawingLayers(true)
 ,fMapReallyChanged(true)
-,itsAreaFileName()
-,itsMapFileNames()
-,itsMapDrawStyles()
-,itsOverMapBitmapFileNames()
-,itsOverMapBitmapDrawStyles()
 ,itsControlPath()
 ,itsSwapBaseArea()
 ,itsSwapBackArea()
 ,itsSwapMode(0)
 ,itsCountryBorderPolylineCache()
 ,itsCountryBorderGeometry()
+,itsMapConfiguration()
 {
 }
 
@@ -80,17 +77,13 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMap
 	, fMakeNewBackgroundBitmap(true)
 	, fUpdateMapViewDrawingLayers(true)
 	, fMapReallyChanged(true)
-	, itsAreaFileName()
-	, itsMapFileNames()
-	, itsMapDrawStyles()
-	, itsOverMapBitmapFileNames()
-	, itsOverMapBitmapDrawStyles()
 	, itsControlPath()
 	, itsSwapBaseArea(nullptr)
 	, itsSwapBackArea(nullptr)
 	, itsSwapMode(0)
 	, itsCountryBorderPolylineCache()
 	, itsCountryBorderGeometry()
+	, itsMapConfiguration()
 {
 	*this = other;
 }
@@ -111,17 +104,13 @@ NFmiGdiPlusImageMapHandler& NFmiGdiPlusImageMapHandler::operator=(const NFmiGdiP
 		fMakeNewBackgroundBitmap = true; // Kopion j‰lkeen pakotetaan tekem‰‰n uusi karttapohja
 		fUpdateMapViewDrawingLayers = true; // Kopion j‰lkeen pakotetaan tekem‰‰n piirtopintojen p‰ivitykset
 		fMapReallyChanged = true; // Kopion j‰lkeen tehd‰‰n asiat niin kuin kartta-alue olisi todellakin muuttunut
-		itsAreaFileName = other.itsAreaFileName;
-		itsMapFileNames = other.itsMapFileNames;
-		itsMapDrawStyles = other.itsMapDrawStyles;
-		itsOverMapBitmapFileNames = other.itsOverMapBitmapFileNames;
-		itsOverMapBitmapDrawStyles = other.itsOverMapBitmapDrawStyles;
 		itsControlPath = other.itsControlPath;
 		itsSwapBaseArea.reset(::MakeNewAreaClone(other.itsSwapBaseArea));
 		itsSwapBackArea.reset(::MakeNewAreaClone(other.itsSwapBackArea));
 		itsSwapMode = other.itsSwapMode;
 		itsCountryBorderPolylineCache = other.itsCountryBorderPolylineCache;
 		itsCountryBorderGeometry = other.itsCountryBorderGeometry;
+		itsMapConfiguration = other.itsMapConfiguration;
 		InitializeBitmapVectors();
 	}
 	return *this;
@@ -129,34 +118,24 @@ NFmiGdiPlusImageMapHandler& NFmiGdiPlusImageMapHandler::operator=(const NFmiGdiP
 
 NFmiGdiPlusImageMapHandler::~NFmiGdiPlusImageMapHandler()
 {
-	Clear();
-}
-
-void NFmiGdiPlusImageMapHandler::Clear()
-{
 	::clearBitmapVector(itsMapBitmaps);
 	::clearBitmapVector(itsOverMapBitmaps);
-	itsMapFileNames.clear();
-	itsMapDrawStyles.clear();
-	itsOverMapBitmapFileNames.clear();
-	itsOverMapBitmapDrawStyles.clear();
-	itsCountryBorderPolylineCache.clearCache();
 }
 
-bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles)
+void NFmiGdiPlusImageMapHandler::CreateMapAreaFromConfiguration()
 {
-	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
-
-	itsAreaFileName = PathUtils::makeFixedAbsolutePath(theAreaFileName, itsControlPath);
-
-	itsOriginalArea = ReadArea(itsAreaFileName);
-	if(!itsOriginalArea)
+	const auto& projectionFileName = itsMapConfiguration->ProjectionFileName();
+	if(projectionFileName.empty())
 	{
-		string errMsg("NFmiGdiPlusImageMapHandler::Init - unable to read the area file: \n");
-		errMsg += itsAreaFileName;
-		errMsg += ", originally gives as: ";
-		errMsg += theAreaFileName;
-		throw runtime_error(errMsg);
+		const auto& projectionString = itsMapConfiguration->Projection();
+		CreateOriginalArea(projectionString);
+
+		if(!itsOriginalArea)
+		{
+			string errMsg("NFmiGdiPlusImageMapHandler::CreateMapAreaFromConfiguration - unable to create the map area from settings with area string: ");
+			errMsg += projectionString;
+			throw runtime_error(errMsg);
+		}
 	}
 	else
 	{
@@ -176,27 +155,38 @@ bool NFmiGdiPlusImageMapHandler::Init(const std::string& theAreaFileName, const 
 	logStr += std::to_string(worldXyRect.Bottom());
 	CatLog::logMessage(logStr, CatLog::Severity::Trace, CatLog::Category::Configuration, true);
 
-	return Init(theMapFileNames, theMapDrawStyles, theOverMapBitmapFileNames, theOverMapBitmapDrawStyles);
+	const auto& usedTotalAreaFilePath = PathUtils::makeFixedAbsolutePath(projectionFileName, itsControlPath);
+	itsOriginalArea = ReadArea(usedTotalAreaFilePath);
+
+	if(!itsOriginalArea)
+	{
+		string errMsg("NFmiGdiPlusImageMapHandler::CreateMapAreaFromConfiguration - unable to read the area file: ");
+		errMsg += usedTotalAreaFilePath;
+		errMsg += ", originally gives as: ";
+		errMsg += projectionFileName;
+		throw runtime_error(errMsg);
+	}
 }
 
-bool NFmiGdiPlusImageMapHandler::Init(const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles)
+bool NFmiGdiPlusImageMapHandler::Init(std::shared_ptr<NFmiMapConfiguration>& mapConfiguration)
 {
-	itsMapFileNames = theMapFileNames;
-	itsMapDrawStyles = theMapDrawStyles;
-	itsOverMapBitmapFileNames = theOverMapBitmapFileNames;
-	itsOverMapBitmapDrawStyles = theOverMapBitmapDrawStyles;
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
+
+	itsMapConfiguration = mapConfiguration;
+	CreateMapAreaFromConfiguration();
 
 	itsZoomedArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
 	itsSwapBaseArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
 	InitializeBitmapVectors();
 
-	if(itsMapFileNames.size() > 0) // pakko lukea 1. image muistiin, ett‰ saadaan koko talteen
+	const auto& mapFileNames = itsMapConfiguration->MapFileNames();
+	if(mapFileNames.size() > 0) // pakko lukea 1. image muistiin, ett‰ saadaan koko talteen
 	{
-		itsMapBitmaps[0] = CreateBitmapFromFile(itsMapFileNames[0]);
+		itsMapBitmaps[0] = CreateBitmapFromFile(mapFileNames[0]);
 		if(itsMapBitmaps[0] == 0)
 		{
 			string errMsg("NFmiGdiPlusImageMapHandler::Init - unable to read the image file: \n");
-			errMsg += itsMapFileNames[0];
+			errMsg += mapFileNames[0];
 			throw runtime_error(errMsg);
 		}
 		CalcZoomedAreaPosition();
@@ -208,9 +198,12 @@ bool NFmiGdiPlusImageMapHandler::Init(const std::vector<std::string> &theMapFile
 void NFmiGdiPlusImageMapHandler::InitializeBitmapVectors()
 {
 	// pit‰‰ alustaa 0-pointtereilla image taulukko.
-	for(auto mapIndex = 0ul; mapIndex < static_cast<int>(itsMapFileNames.size()); mapIndex++)
+	const auto& mapFileNames = itsMapConfiguration->MapFileNames();
+	for(auto mapIndex = 0ul; mapIndex < static_cast<int>(mapFileNames.size()); mapIndex++)
 		itsMapBitmaps.push_back(nullptr);
-	for(auto mapIndex = 0ul; mapIndex < static_cast<int>(itsOverMapBitmapFileNames.size()); mapIndex++)
+
+	const auto& overMapDibFileNames = itsMapConfiguration->OverMapDibFileNames();
+	for(auto mapIndex = 0ul; mapIndex < static_cast<int>(overMapDibFileNames.size()); mapIndex++)
 		itsOverMapBitmaps.push_back(nullptr);
 }
 
@@ -241,7 +234,7 @@ Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetBitmap()
 	return nullptr;
 }
 
-void NFmiGdiPlusImageMapHandler::OriginalArea(const std::string& theArea)
+void NFmiGdiPlusImageMapHandler::CreateOriginalArea(const std::string& theArea)
 {
 	itsOriginalArea = NFmiAreaFactory::Create(theArea);
 }
@@ -343,7 +336,7 @@ Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::GetOverMapBitmap()
 	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(itsOverMapBitmaps.size()))
 	{
 		if(!itsOverMapBitmaps[itsUsedOverMapBitmapIndex])
-			itsOverMapBitmaps[itsUsedOverMapBitmapIndex] = CreateBitmapFromFile(itsOverMapBitmapFileNames[itsUsedOverMapBitmapIndex]);
+			itsOverMapBitmaps[itsUsedOverMapBitmapIndex] = CreateBitmapFromFile(itsMapConfiguration->OverMapDibFileNames()[itsUsedOverMapBitmapIndex]);
 		return itsOverMapBitmaps[itsUsedOverMapBitmapIndex];
 	}
 	return 0;
@@ -425,40 +418,50 @@ Gdiplus::Bitmap* NFmiGdiPlusImageMapHandler::CreateBitmapFromFile(const std::str
 
 int NFmiGdiPlusImageMapHandler::GetDrawStyle()
 {
-	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapDrawStyles.size()))
+	const auto& mapDrawingStyles = itsMapConfiguration->MapDrawingStyles();
+	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(mapDrawingStyles.size()))
 	{
-		return itsMapDrawStyles[itsUsedMapIndex];
+		return mapDrawingStyles[itsUsedMapIndex];
 	}
 	return 0;
 }
 
 int NFmiGdiPlusImageMapHandler::GetOverMapDrawStyle()
 {
-	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(itsOverMapBitmapDrawStyles.size()))
+	const auto& overMapBitmapDrawStyles = itsMapConfiguration->OverMapDibDrawingStyles();
+	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(overMapBitmapDrawStyles.size()))
 	{
-		return itsOverMapBitmapDrawStyles[itsUsedOverMapBitmapIndex];
+		return overMapBitmapDrawStyles[itsUsedOverMapBitmapIndex];
 	}
 	return 0;
 }
 
 const std::string& NFmiGdiPlusImageMapHandler::GetBitmapFileName()
 {
-	static const std::string dummy;
-	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(itsMapDrawStyles.size()))
+	const auto& mapFileNames = itsMapConfiguration->MapFileNames();
+	if(itsUsedMapIndex >= 0 && itsUsedMapIndex < static_cast<int>(mapFileNames.size()))
 	{
-		return itsMapFileNames[itsUsedMapIndex];
+		return mapFileNames[itsUsedMapIndex];
 	}
-	return dummy;
+	else
+	{
+		static const std::string dummy;
+		return dummy;
+	}
 }
 
 const std::string& NFmiGdiPlusImageMapHandler::GetOverMapBitmapFileName()
 {
-	static const std::string dummy;
-	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(itsOverMapBitmapDrawStyles.size()))
+	const auto& overMapDibFileNames = itsMapConfiguration->OverMapDibFileNames();
+	if(itsUsedOverMapBitmapIndex >= 0 && itsUsedOverMapBitmapIndex < static_cast<int>(overMapDibFileNames.size()))
 	{
-		return itsOverMapBitmapFileNames[itsUsedOverMapBitmapIndex];
+		return overMapDibFileNames[itsUsedOverMapBitmapIndex];
 	}
-	return dummy;
+	else
+	{
+		static const std::string dummy;
+		return dummy;
+	}
 }
 
 static std::string MakeAbsoluteFileName(const std::string &theFileName, const std::string &thePath)
@@ -659,3 +662,136 @@ void NFmiGdiPlusImageMapHandler::CountryBorderGeometry(std::shared_ptr<OGRGeomet
 {
 	itsCountryBorderGeometry = theGeometry;
 }
+
+static int FindMapLayerTextFromVector(const std::string& layerName, const std::vector<std::string>& layerNames)
+{
+	auto iter = std::find(layerNames.begin(), layerNames.end(), layerName);
+	if(iter == layerNames.end())
+		return -1;
+	else
+	{
+		return static_cast<int>(std::distance(layerNames.begin(), iter));
+	}
+}
+
+// xxxFromViewMacro metodien hakujen priorisointi:
+// 1. Jos annettu referenceName lˆytyy xxxMacroReferenceNames vektorista, k‰ytet‰‰n sen indeksi‰
+// 2. Muuten k‰ytet‰‰n suoraan annettua mapLayerIndex:ia
+void NFmiGdiPlusImageMapHandler::SelectBackgroundMapFromViewMacro(const std::string& referenceName, int mapLayerIndex)
+{
+	auto referenceNameIndex = ::FindMapLayerTextFromVector(referenceName, itsMapConfiguration->BackgroundMapMacroReferenceNames());
+	if(referenceNameIndex >= 0)
+		UsedMapIndex(referenceNameIndex);
+	else
+		UsedMapIndex(mapLayerIndex);
+}
+
+void NFmiGdiPlusImageMapHandler::SelectOverlayMapFromViewMacro(const std::string& referenceName, int mapLayerIndex)
+{
+	auto referenceNameIndex = ::FindMapLayerTextFromVector(referenceName, itsMapConfiguration->OverlayMapMacroReferenceNames());
+	if(referenceNameIndex >= 0)
+		OverMapBitmapIndex(referenceNameIndex);
+	else
+		OverMapBitmapIndex(mapLayerIndex);
+}
+
+// xxxFromGui metodien hakujen priorisointi:
+// 1. Etsit‰‰n lˆytyykˆ name:a xxxMapDescriptiveNames vektorista
+// 2. Etsit‰‰n lˆytyykˆ name:a xxxMapMacroReferenceNames vektorista
+// 3. Etsit‰‰n lˆytyykˆ name:a xxxMapFileNameBasedReferenceNames vektorista
+bool NFmiGdiPlusImageMapHandler::SelectBackgroundMapFromGui(const std::string& name)
+{
+	auto foundMapLayerIndex = ::FindMapLayerTextFromVector(name, itsMapConfiguration->BackgroundMapDescriptiveNames());
+	if(foundMapLayerIndex < 0)
+		foundMapLayerIndex = ::FindMapLayerTextFromVector(name, itsMapConfiguration->BackgroundMapMacroReferenceNames());
+	if(foundMapLayerIndex < 0)
+		foundMapLayerIndex = ::FindMapLayerTextFromVector(name, itsMapConfiguration->BackgroundMapFileNameBasedGuiNames());
+
+	if(foundMapLayerIndex < 0)
+		return false;
+	else
+	{
+		UsedMapIndex(foundMapLayerIndex);
+		return true;
+	}
+}
+
+bool NFmiGdiPlusImageMapHandler::SelectOverlayMapFromGui(const std::string& name)
+{
+	auto foundOverlayMapLayerIndex = ::FindMapLayerTextFromVector(name, itsMapConfiguration->OverlayMapDescriptiveNames());
+	if(foundOverlayMapLayerIndex < 0)
+		foundOverlayMapLayerIndex = ::FindMapLayerTextFromVector(name, itsMapConfiguration->OverlayMapMacroReferenceNames());
+	if(foundOverlayMapLayerIndex < 0)
+		foundOverlayMapLayerIndex = ::FindMapLayerTextFromVector(name, itsMapConfiguration->OverlayMapFileNameBasedGuiNames());
+
+	if(foundOverlayMapLayerIndex < 0)
+		return false;
+	else
+	{
+		OverMapBitmapIndex(foundOverlayMapLayerIndex);
+		return true;
+	}
+}
+
+static const std::string& GetLayerTextFromVector(int layerIndex, const std::vector<std::string>& layerNames)
+{
+	if(layerIndex >= 0 && layerIndex < layerNames.size())
+		return layerNames[layerIndex];
+	else
+	{
+		static const std::string emptyString;
+		return emptyString;
+	}
+}
+
+static std::string GetBestDescriptiveMapLayerText(int layerIndex, const std::vector<std::string>& descriptiveNames, const std::vector<std::string>& macroReferenceNames, const std::string& layerFileName)
+{
+	// 1. Jos lˆytyy ei-puuttuva descriptiveName, k‰ytet‰‰n sit‰.
+	std::string descriptiveMapLayerText = ::GetLayerTextFromVector(layerIndex, descriptiveNames);
+	if(descriptiveMapLayerText.empty())
+	{
+		// 2. Jos lˆytyy ei-puuttuva macroReferenceName, k‰ytet‰‰n sit‰.
+		descriptiveMapLayerText = ::GetLayerTextFromVector(layerIndex, macroReferenceNames);
+		if(descriptiveMapLayerText.empty())
+		{
+			// 3. Muutoin tehd‰‰n nimi kuvan tiedostonimest‰
+			descriptiveMapLayerText = PathUtils::getFilename(layerFileName);
+		}
+	}
+	return descriptiveMapLayerText;
+}
+
+std::string NFmiGdiPlusImageMapHandler::GetCurrentGuiMapLayerText(bool backgroundMap)
+{
+	return GetWantedGuiMapLayerText(backgroundMap, backgroundMap ? itsUsedMapIndex : itsUsedOverMapBitmapIndex);
+}
+
+// Priorisointi kun tehd‰‰n map-layer nimej‰ Gui:lle:
+// 1. Descriptive name
+// 2. Macro-reference name
+// 3. V‰‰nnet‰‰n sopiva nimi bitmapin tiedosto nimest‰
+std::string NFmiGdiPlusImageMapHandler::GetWantedGuiMapLayerText(bool backgroundMap, int wantedLayerIndex)
+{
+	// Jos ei ole valittuna overlay kerrosta, on indeksi negatiivinen ja silloin palautetaan tyhj‰‰
+	if(wantedLayerIndex < 0)
+		return "";
+
+	if(backgroundMap)
+		return ::GetBestDescriptiveMapLayerText(wantedLayerIndex, itsMapConfiguration->BackgroundMapDescriptiveNames(), itsMapConfiguration->BackgroundMapMacroReferenceNames(), GetBitmapFileName());
+	else
+		return ::GetBestDescriptiveMapLayerText(wantedLayerIndex, itsMapConfiguration->OverlayMapDescriptiveNames(), itsMapConfiguration->OverlayMapMacroReferenceNames(), GetOverMapBitmapFileName());
+}
+
+std::string NFmiGdiPlusImageMapHandler::GetCurrentMacroReferenceName(bool backgroundMap)
+{
+	return GetWantedMacroReferenceName(backgroundMap, backgroundMap ? itsUsedMapIndex : itsUsedOverMapBitmapIndex);
+}
+
+std::string NFmiGdiPlusImageMapHandler::GetWantedMacroReferenceName(bool backgroundMap, int wantedLayerIndex)
+{
+	if(backgroundMap)
+		return ::GetLayerTextFromVector(wantedLayerIndex, itsMapConfiguration->BackgroundMapMacroReferenceNames());
+	else
+		return ::GetLayerTextFromVector(wantedLayerIndex, itsMapConfiguration->OverlayMapMacroReferenceNames());
+}
+

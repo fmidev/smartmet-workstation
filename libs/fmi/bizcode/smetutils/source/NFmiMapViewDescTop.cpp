@@ -600,21 +600,12 @@ void NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem(void)
 		throw std::runtime_error("ERROR in NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem - MapConfigurationSystem was null pointer.");
 }
 
-NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::CreateGdiPlusImageMapHandler(const NFmiMapConfiguration &theMapConfiguration)
+NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::CreateGdiPlusImageMapHandler(std::shared_ptr<NFmiMapConfiguration> &theMapConfiguration)
 {
 	NFmiGdiPlusImageMapHandler* mHandler = new NFmiGdiPlusImageMapHandler;
 	mHandler->UsedMapIndex(0);
     mHandler->ControlPath(std::string(itsControlPath));
-	if(theMapConfiguration.ProjectionFileName().empty())
-	{
-		mHandler->OriginalArea(theMapConfiguration.Projection());
-		mHandler->Init(theMapConfiguration.MapFileNames(), theMapConfiguration.MapDrawingStyles(), theMapConfiguration.OverMapDibFileNames(), theMapConfiguration.OverMapDibDrawingStyles());
-	}
-	else
-	{
-		mHandler->Init(theMapConfiguration.ProjectionFileName(), theMapConfiguration.MapFileNames(), theMapConfiguration.MapDrawingStyles(), theMapConfiguration.OverMapDibFileNames(), theMapConfiguration.OverMapDibDrawingStyles());
-	}
-
+	mHandler->Init(theMapConfiguration);
 	return mHandler;
 }
 
@@ -1492,12 +1483,9 @@ void NFmiMapViewDescTop::InsertSeparateBorderLayerCacheBitmap(const std::string&
 	itsSeparateCountryBorderBitmapCache.insertCacheBitmap(cacheKeyString, std::move(cacheBitmap));
 }
 
-std::string NFmiMapViewDescTop::GetCurrentMapLayerText(bool backgroundMap)
+std::string NFmiMapViewDescTop::GetCurrentGuiMapLayerText(bool backgroundMap)
 {
-	if(backgroundMap)
-		return MapHandler()->GetBitmapFileName();
-	else
-		return MapHandler()->GetOverMapBitmapFileName();
+	return MapHandler()->GetCurrentGuiMapLayerText(backgroundMap);
 }
 
 

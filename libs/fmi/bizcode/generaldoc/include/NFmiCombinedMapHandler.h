@@ -205,8 +205,8 @@ public:
     double drawObjectScaleFactor() override;
     void drawObjectScaleFactor(double newValue) override;
     boost::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) override;
-    std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap) override;
-    std::string getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) override;
+    std::string getCurrentMapLayerGuiName(int mapViewDescTopIndex, bool backgroundMap) override;
+    std::string getCurrentMapLayerGuiText(int mapViewDescTopIndex, bool backgroundMap) override;
     bool useCombinedMapMode() const override;
     void useCombinedMapMode(bool newValue) override;
     const NFmiMetTime& activeMapTime() override;

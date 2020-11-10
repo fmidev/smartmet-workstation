@@ -18,6 +18,7 @@
 class NFmiArea;
 class NFmiPolyline;
 class OGRGeometry;
+class NFmiMapConfiguration;
 namespace Gdiplus
 {
 	class Bitmap;
@@ -39,11 +40,8 @@ public:
 	int GetOverMapDrawStyle();
 	const std::string& GetOverMapBitmapFileName();
 	const std::string GetOverMapBitmapAbsoluteFileName();
-	bool Init(const std::string& theAreaFileName, const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles);
-	bool Init(const std::vector<std::string> &theMapFileNames, const std::vector<int> &theMapDrawStyles, const std::vector<std::string> &theOverMapBitmapFileNames, const std::vector<int> &theOverMapBitmapDrawStyles);
-	void Clear();
+	bool Init(std::shared_ptr<NFmiMapConfiguration>& mapConfiguration);
 
-	void OriginalArea(const std::string& theArea);
 	void Area(const boost::shared_ptr<NFmiArea> &newArea);
 	NFmiRect ZoomedAbsolutRect();
 	NFmiRect ZoomedAbsolutRectOverMap();
@@ -97,6 +95,8 @@ private:
 	boost::shared_ptr<NFmiArea> ReadArea(const std::string& theAreaFileName);
 	void CalcZoomedAreaPosition();
 	void InitializeBitmapVectors();
+	void CreateOriginalArea(const std::string& theArea);
+	void CreateMapAreaFromConfiguration();
 
 	int itsUsedMapIndex;
 	// Mit‰ nimi karttaa k‰ytet‰‰n (-1 = ei mit‰‰n, 0=1. vektorissa olevaa jne.)
@@ -115,11 +115,6 @@ private:
     bool fUpdateMapViewDrawingLayers;
     // T‰m‰n avulla tiedet‰‰n onko karttaa oikeasti zoomattu, edell‰ olevaa fMakeNewBackgroundBitmap:‰ voidaan k‰ytt‰‰ muissakin tapauksissa
 	bool fMapReallyChanged; 
-	std::string itsAreaFileName;
-	std::vector<std::string> itsMapFileNames;
-	std::vector<int> itsMapDrawStyles;
-	std::vector<std::string> itsOverMapBitmapFileNames;
-	std::vector<int> itsOverMapBitmapDrawStyles;
     // Smartmetin kontrollipolku (-p optio) pit‰‰ laittaa talteen, koska muuten ohjelma ei aina
     // osaa lukea karttoja suhteellisesta polusta alkaen (t‰st‰ seurasi mustat ruudut)
     // T‰ss‰ oli aiemmin WorkingDirectory, mutta se ei toiminut varsinkaan kun k‰ytˆss‰ oli 
@@ -143,5 +138,18 @@ private:
 	NFmiCountryBorderPolylineCache itsCountryBorderPolylineCache;
 	// T‰h‰n lasketaan itsOriginalArea:n sis‰‰n menev‰ maiden rajapolut shape datasta kerran
 	std::shared_ptr<OGRGeometry> itsCountryBorderGeometry;
+	std::shared_ptr<NFmiMapConfiguration> itsMapConfiguration;
+
+public:
+	void SelectBackgroundMapFromViewMacro(const std::string& referenceName, int mapLayerIndex);
+	void SelectOverlayMapFromViewMacro(const std::string& referenceName, int mapLayerIndex);
+	bool SelectBackgroundMapFromGui(const std::string& name);
+	bool SelectOverlayMapFromGui(const std::string& name);
+	std::string GetCurrentGuiMapLayerText(bool backgroundMap);
+	std::string GetWantedGuiMapLayerText(bool backgroundMap, int wantedLayerIndex);
+	std::string GetCurrentMacroReferenceName(bool backgroundMap);
+	std::string GetWantedMacroReferenceName(bool backgroundMap, int wantedLayerIndex);
+	std::shared_ptr<NFmiMapConfiguration>& GetMapConfiguration() { return itsMapConfiguration; }
+	const std::shared_ptr<NFmiMapConfiguration>& GetMapConfiguration() const { return itsMapConfiguration; }
 };
 

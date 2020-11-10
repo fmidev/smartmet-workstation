@@ -4354,12 +4354,12 @@ std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIs
 		str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
 		str += ">";
 		if(addBackgroundText)
-			str += combinedMapHandlerInterface.getCurrentMapLayerText(itsMapViewDescTopIndex, true);
+			str += combinedMapHandlerInterface.getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);
 		if(addOverlayText)
 		{
 			if(addBackgroundText)
 				str += "\n";
-			str += combinedMapHandlerInterface.getCurrentMapLayerText(itsMapViewDescTopIndex, false);
+			str += combinedMapHandlerInterface.getCurrentMapLayerGuiText(itsMapViewDescTopIndex, false);
 		}
 		str += "</font></b>\n";
 	}

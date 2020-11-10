@@ -7,6 +7,7 @@
 // ======================================================================
 
 #include "NFmiMapConfigurationSystem.h"
+#include "NFmiPathUtils.h"
 
 #include <iostream>
 
@@ -37,31 +38,8 @@ static bool EatWhiteSpaces(std::istream & theInput)
 // ******************* NFmiMapConfiguration ***********************************
 // ************************************************************************
 
-NFmiMapConfiguration::NFmiMapConfiguration(void)
-:itsMapFileNames()
-,itsMapDrawingStyles()
-,itsOverMapDibFileNames()
-,itsOverMapDibDrawingStyles()
-,itsProjectionFileName()
-{}
-
-void NFmiMapConfiguration::Clear(void)
-{
-	itsMapFileNames.clear();
-	itsMapDrawingStyles.clear();
-	itsOverMapDibFileNames.clear();
-	itsOverMapDibDrawingStyles.clear();
-	itsProjectionFileName = "";
-}
-
-std::istream & NFmiMapConfiguration::Read(std::istream & file)
-{
-	Clear();
-	ReadFileNamesAndDrawStyles(file, itsMapFileNames, itsMapDrawingStyles);
-	ReadFileNamesAndDrawStyles(file, itsOverMapDibFileNames, itsOverMapDibDrawingStyles);
-	ReadProjectionFileName(file, itsProjectionFileName);
-	return file;
-}
+NFmiMapConfiguration::NFmiMapConfiguration() = default;
+NFmiMapConfiguration::~NFmiMapConfiguration() = default;
 
 void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, std::vector<std::string> &theFileNames, std::vector<int> &theDrawingStyles)
 {
@@ -92,6 +70,18 @@ void NFmiMapConfiguration::ReadProjectionFileName(std::istream & file, std::stri
 	theFileName = buffer;
 }
 
+static void InitializeFileNameBasedGuiNameVector(const std::vector<std::string>& fileNames, std::vector<std::string>& guiNamesOut)
+{
+	guiNamesOut.clear();
+	for(const auto& fileName : fileNames)
+		guiNamesOut.push_back(PathUtils::getFilename(fileName));
+}
+
+void NFmiMapConfiguration::InitializeFileNameBasedGuiNameVectors()
+{
+	::InitializeFileNameBasedGuiNameVector(itsMapFileNames, itsBackgroundMapFileNameBasedGuiNames);
+	::InitializeFileNameBasedGuiNameVector(itsOverMapDibFileNames, itsOverlayMapFileNameBasedGuiNames);
+}
 
 // ************************************************************************
 // ******************* NFmiMapConfigurationSystem *****************************
@@ -101,25 +91,13 @@ NFmiMapConfigurationSystem::NFmiMapConfigurationSystem(void)
 :itsMapConfigurations()
 {}
 
-const NFmiMapConfiguration& NFmiMapConfigurationSystem::GetMapConfiguration(int theIndex)
+std::shared_ptr<NFmiMapConfiguration>& NFmiMapConfigurationSystem::GetMapConfiguration(int theIndex)
 {
-	static NFmiMapConfiguration dummy;
 	if(!itsMapConfigurations.empty() && theIndex >= 0 && theIndex < static_cast<int>(itsMapConfigurations.size()))
 		return itsMapConfigurations[theIndex];
-	return dummy;
-}
-
-std::istream & NFmiMapConfigurationSystem::Read(std::istream & file)
-{
-	itsMapConfigurations.clear();
-	int configurationCount = 0;
-	file >> configurationCount;
-	NFmiMapConfiguration confi;
-	for(int i=0; i<configurationCount; i++)
+	else
 	{
-		file >> confi;
-		itsMapConfigurations.push_back(confi);
+		static std::shared_ptr<NFmiMapConfiguration> dummy = std::make_shared<NFmiMapConfiguration>();
+		return dummy;
 	}
-	return file;
 }
-
