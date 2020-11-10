@@ -174,6 +174,64 @@ int main(int argc, const char* argv[])
     return 1; // virheellinen ulostulo
 } 
 
+/*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiValueString.h"
+#include <fstream>
+
+int main(int argc, const char* argv[])
+{
+    std::string dataFileName = argv[1];
+    NFmiQueryData data(dataFileName);
+    NFmiFastQueryInfo fastInfo(&data);
+
+    std::string outputTxtFileName = argv[2];
+    std::ofstream output(outputTxtFileName.c_str(), std::ios::binary);
+    if(output)
+    {
+        const size_t usedWitdth = 10;
+        output.fill(' ');
+        output << "Print out separate amdar sounding from given '" << dataFileName << "' querydata file\n";
+        int amdarsWithHeightData = 0;
+        // Amdar datan luotauskohtainen (aikakohtainen) tulostus
+        // Location:ia ei tarvitse juoksuttaa, koska jokainen erillinen aika on erillinen luotaus
+        for(fastInfo.ResetTime(); fastInfo.NextTime(); )
+        {
+            output << "\n" << std::to_string(fastInfo.TimeIndex() + 1) << ". amdar sounding from time " << fastInfo.Time().ToStr("YYYYMMDDHHmmSS").CharPtr() << std::endl;
+            output << "      ";
+            for(fastInfo.ResetParam(); fastInfo.NextParam(); )
+            {
+                // Tulostetaan jokaiselle amdarille oma parametri otsikko rivi
+                std::string usedName = fastInfo.Param().GetParamName().CharPtr();
+                if(usedName.size() > usedWitdth)
+                    usedName.resize(usedWitdth);
+                output << std::setw(10) << usedName << "|";
+            }
+            output << std::endl;
+
+            for(fastInfo.ResetLevel(); fastInfo.NextLevel(); )
+            {
+                output << "L-" << std::to_string(fastInfo.LevelIndex()) << ": ";
+                if(fastInfo.LevelIndex() < 10)
+                    output << " ";
+                for(fastInfo.ResetParam(); fastInfo.NextParam(); )
+                {
+                    auto value = fastInfo.FloatValue();
+                    if(value == kFloatMissing)
+                        output << std::setw(10) << "-" << " ";
+                    else
+                        output << std::setw(10) << NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, 1).CharPtr() << " ";
+                }
+                output << std::endl;
+            }
+        }
+        return 0;
+    }
+
+    return 1;
+}
+*/
 
 /*
 #include "NFmiArea.h"
