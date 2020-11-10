@@ -948,7 +948,7 @@ void NFmiCombinedMapHandler::initMapConfigurationSystem()
 	::tokenize(NFmiSettings::Require<std::string>(CONFIG_MAPSYSTEMS), mapsystems, ",");
 
 	std::vector<std::string>::iterator msiter = mapsystems.begin();
-	char key1[1024], key2[1024];
+	char key1[1024]="", key2[1024] = "";
 	while(msiter != mapsystems.end())
 	{
 		std::string mapsystem(*msiter);
@@ -962,52 +962,63 @@ void NFmiCombinedMapHandler::initMapConfigurationSystem()
 		}
 
 		// First read the projection information
-		NFmiMapConfiguration mc;
+		auto mapConfiguration = std::make_shared<NFmiMapConfiguration>();
 		if(NFmiSettings::IsSet(key1))
 		{
-			mc.ProjectionFileName(NFmiSettings::Require<std::string>(key1));
+			mapConfiguration->ProjectionFileName(NFmiSettings::Require<std::string>(key1));
 		}
 		else
 		{
-			mc.Projection(NFmiSettings::Require<std::string>(key2));
+			mapConfiguration->Projection(NFmiSettings::Require<std::string>(key2));
 		}
 
 		// Then add the map ..
 		sprintf(key1, CONFIG_MAPSYSTEM_MAP, mapsystem.c_str());
+		std::string baseMapSettingKey = key1;
 		std::vector<std::string> maps = NFmiSettings::ListChildren(key1);
 		std::vector<std::string>::iterator mapiter = maps.begin();
 		while(mapiter != maps.end())
 		{
 			std::string map(*mapiter);
+			std::string baseMapSettingLayerKey = baseMapSettingKey + "::" + map + "::";
 			sprintf(key1, CONFIG_MAPSYSTEM_MAP_FILENAME, mapsystem.c_str(), map.c_str());
 			sprintf(key2, CONFIG_MAPSYSTEM_MAP_DRAWINGSTYLE, mapsystem.c_str(), map.c_str());
 			if(NFmiSettings::IsSet(key1) && NFmiSettings::IsSet(key2))
 			{
-				mc.AddMap(NFmiSettings::Require<std::string>(key1), NFmiSettings::Optional<int>(key2, 0));
+				mapConfiguration->AddMap(NFmiSettings::Require<std::string>(key1), NFmiSettings::Optional<int>(key2, 0));
 			}
-
+			std::string mapSettingLayerDescriptiveNameKey = baseMapSettingLayerKey + "DescriptiveName";
+			mapConfiguration->AddBackgroundMapDescriptiveName(NFmiSettings::Optional<std::string>(mapSettingLayerDescriptiveNameKey, ""));
+			std::string mapSettingLayerMacroReferenceKey = baseMapSettingLayerKey + "MacroReference";
+			mapConfiguration->AddBackgroundMapMacroReferenceNames(NFmiSettings::Optional<std::string>(mapSettingLayerMacroReferenceKey, ""));
 			mapiter++;
 		}
 
 		// .. and layer configurations
 		sprintf(key1, CONFIG_MAPSYSTEM_LAYER, mapsystem.c_str());
+		baseMapSettingKey = key1;
 		std::vector<std::string> layers = NFmiSettings::ListChildren(key1);
 		std::vector<std::string>::iterator layeriter = layers.begin();
 		while(layeriter != layers.end())
 		{
 			std::string layer(*layeriter);
+			std::string baseMapSettingLayerKey = baseMapSettingKey + "::" + layer + "::";
 			sprintf(key1, CONFIG_MAPSYSTEM_LAYER_FILENAME, mapsystem.c_str(), layer.c_str());
 			sprintf(key2, CONFIG_MAPSYSTEM_LAYER_DRAWINGSTYLE, mapsystem.c_str(), layer.c_str());
 			if(NFmiSettings::IsSet(key1) && NFmiSettings::IsSet(key2))
 			{
-				mc.AddOverMapDib(NFmiSettings::Require<std::string>(key1), NFmiSettings::Optional<int>(key2, 0));
+				mapConfiguration->AddOverMapDib(NFmiSettings::Require<std::string>(key1), NFmiSettings::Optional<int>(key2, 0));
 			}
-
+			std::string mapSettingLayerDescriptiveNameKey = baseMapSettingLayerKey + "DescriptiveName";
+			mapConfiguration->AddOverlayMapDescriptiveNames(NFmiSettings::Optional<std::string>(mapSettingLayerDescriptiveNameKey, ""));
+			std::string mapSettingLayerMacroReferenceKey = baseMapSettingLayerKey + "MacroReference";
+			mapConfiguration->AddOverlayMapMacroReferenceNames(NFmiSettings::Optional<std::string>(mapSettingLayerMacroReferenceKey, ""));
 			layeriter++;
 		}
 
+		mapConfiguration->InitializeFileNameBasedGuiNameVectors();
 		// The map configuration is ready, add it to the mc system
-		mapConfigurationSystem_->AddMapConfiguration(mc);
+		mapConfigurationSystem_->AddMapConfiguration(mapConfiguration);
 
 		msiter++;
 	}
@@ -3909,7 +3920,7 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedDrawParamForEdit
 		return ::getInfoOrganizer().CreateDrawParam(dataIdent, 0, NFmiInfoData::kEditable);
 }
 
-std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap)
+std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiName(int mapViewDescTopIndex, bool backgroundMap)
 {
 	auto useWmsMapLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
 	if(useWmsMapLayer)
@@ -3927,19 +3938,18 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerName(int mapViewDescTopInd
 	}
 	else
 	{
-		auto mapLayerName = getMapViewDescTop(mapViewDescTopIndex)->GetCurrentMapLayerText(backgroundMap);
-		return PathUtils::getFilename(mapLayerName);
+		return getMapViewDescTop(mapViewDescTopIndex)->GetCurrentGuiMapLayerText(backgroundMap);
 	}
 }
 
-std::string NFmiCombinedMapHandler::getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap)
+std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiText(int mapViewDescTopIndex, bool backgroundMap)
 {
 	std::string mapLayerText = localOnlyMapModeUsed() ? "-" : "+";
 	mapLayerText += backgroundMap ? ::GetDictionaryString("Map") : ::GetDictionaryString("Overlay");
 	auto isWmsLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
 	mapLayerText += isWmsLayer ? "[W]" : "[L]";
 	mapLayerText += ": ";
-	mapLayerText += getCurrentMapLayerName(mapViewDescTopIndex, backgroundMap);
+	mapLayerText += getCurrentMapLayerGuiName(mapViewDescTopIndex, backgroundMap);
 
 	return mapLayerText;
 }

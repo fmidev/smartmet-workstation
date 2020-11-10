@@ -203,7 +203,7 @@ public:
     NFmiAnimationData& AnimationDataRef(void) {return itsAnimationData;}
 	int CalcPrintingPageShiftInMinutes(void);
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
-	std::string GetCurrentMapLayerText(bool backgroundMap);
+	std::string GetCurrentGuiMapLayerText(bool backgroundMap);
 	double SingleMapViewHeightInMilliMeters() const;
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
@@ -217,7 +217,7 @@ private:
 	void InitStationPointDrawingSystem(void);
 	void InitMapViewDescTopFromSettings(void);
 	void InitGdiPlusImageMapHandlerSystem(void);
-	NFmiGdiPlusImageMapHandler* CreateGdiPlusImageMapHandler(const NFmiMapConfiguration &theMapConfiguration);
+	NFmiGdiPlusImageMapHandler* CreateGdiPlusImageMapHandler(std::shared_ptr<NFmiMapConfiguration> &theMapConfiguration);
 	void SetGdiPlusImageMapHandlerSelectedMaps(NFmiGdiPlusImageMapHandler &theGdiPlusImageMapHandler, int mapHandlerIndex);
 	void StoreHandlerSelectedMapsToSettings(NFmiGdiPlusImageMapHandler &theGdiPlusImageMapHandler, int mapHandlerIndex);
 	void InitLandBorderDrawingSystem(void);
