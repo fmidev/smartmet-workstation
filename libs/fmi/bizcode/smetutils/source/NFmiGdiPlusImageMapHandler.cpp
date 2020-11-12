@@ -733,65 +733,7 @@ bool NFmiGdiPlusImageMapHandler::SelectOverlayMapFromGui(const std::string& name
 	}
 }
 
-static const std::string& GetLayerTextFromVector(int layerIndex, const std::vector<std::string>& layerNames)
-{
-	if(layerIndex >= 0 && layerIndex < layerNames.size())
-		return layerNames[layerIndex];
-	else
-	{
-		static const std::string emptyString;
-		return emptyString;
-	}
-}
-
-static std::string GetBestDescriptiveMapLayerText(int layerIndex, const std::vector<std::string>& descriptiveNames, const std::vector<std::string>& macroReferenceNames, const std::string& layerFileName)
-{
-	// 1. Jos lˆytyy ei-puuttuva descriptiveName, k‰ytet‰‰n sit‰.
-	std::string descriptiveMapLayerText = ::GetLayerTextFromVector(layerIndex, descriptiveNames);
-	if(descriptiveMapLayerText.empty())
-	{
-		// 2. Jos lˆytyy ei-puuttuva macroReferenceName, k‰ytet‰‰n sit‰.
-		descriptiveMapLayerText = ::GetLayerTextFromVector(layerIndex, macroReferenceNames);
-		if(descriptiveMapLayerText.empty())
-		{
-			// 3. Muutoin tehd‰‰n nimi kuvan tiedostonimest‰
-			descriptiveMapLayerText = PathUtils::getFilename(layerFileName);
-		}
-	}
-	return descriptiveMapLayerText;
-}
-
 std::string NFmiGdiPlusImageMapHandler::GetCurrentGuiMapLayerText(bool backgroundMap)
 {
-	return GetWantedGuiMapLayerText(backgroundMap, backgroundMap ? itsUsedMapIndex : itsUsedOverMapBitmapIndex);
+	return itsMapConfiguration->GetBestGuiUsedMapLayerName(static_cast<size_t>(itsUsedMapIndex), backgroundMap);
 }
-
-// Priorisointi kun tehd‰‰n map-layer nimej‰ Gui:lle:
-// 1. Descriptive name
-// 2. Macro-reference name
-// 3. V‰‰nnet‰‰n sopiva nimi bitmapin tiedosto nimest‰
-std::string NFmiGdiPlusImageMapHandler::GetWantedGuiMapLayerText(bool backgroundMap, int wantedLayerIndex)
-{
-	// Jos ei ole valittuna overlay kerrosta, on indeksi negatiivinen ja silloin palautetaan tyhj‰‰
-	if(wantedLayerIndex < 0)
-		return "";
-
-	if(backgroundMap)
-		return ::GetBestDescriptiveMapLayerText(wantedLayerIndex, itsMapConfiguration->BackgroundMapDescriptiveNames(), itsMapConfiguration->BackgroundMapMacroReferenceNames(), GetBitmapFileName());
-	else
-		return ::GetBestDescriptiveMapLayerText(wantedLayerIndex, itsMapConfiguration->OverlayMapDescriptiveNames(), itsMapConfiguration->OverlayMapMacroReferenceNames(), GetOverMapBitmapFileName());
-}
-
-std::string NFmiGdiPlusImageMapHandler::GetCurrentMacroReferenceName(bool backgroundMap)
-{
-	return GetWantedMacroReferenceName(backgroundMap, backgroundMap ? itsUsedMapIndex : itsUsedOverMapBitmapIndex);
-}
-
-std::string NFmiGdiPlusImageMapHandler::GetWantedMacroReferenceName(bool backgroundMap, int wantedLayerIndex)
-{
-	if(backgroundMap)
-		return ::GetLayerTextFromVector(wantedLayerIndex, itsMapConfiguration->BackgroundMapMacroReferenceNames());
-	else
-		return ::GetLayerTextFromVector(wantedLayerIndex, itsMapConfiguration->OverlayMapMacroReferenceNames());
-}
-

@@ -41,6 +41,17 @@ enum class CountryBorderDrawDirtyState
     Geometry = 2 // Karttaa on zoomattu tai kartta ruudun kokoa on muutettu, kaikki piirto ja laskenta uusiksi
 };
 
+// N‰it‰ NFmiMapLayerGuiRelatedInfo tietoja k‰ytet‰‰n mm. kun rakennetaan kartta layerien vaihtoon liittyvi‰ popup valikoita.
+class NFmiMapLayerGuiRelatedInfo
+{
+public:
+    std::string name_;
+    size_t layerIndexTotal_ = 0;
+    bool isWmsLayer_ = false;
+};
+// MapAreaMapLayerGuiRelatedInfo on yhden kartta-alueen (esim. skandinavia) kaikki layerit.
+using MapAreaMapLayerGuiRelatedInfo = std::vector<NFmiMapLayerGuiRelatedInfo>;
+
 // Interface that is meant to be used to handle all kinds of background map and overlay map stuff handling.
 class CombinedMapHandlerInterface
 {
@@ -208,6 +219,8 @@ public:
     virtual void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) = 0;
     virtual void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex) = 0;
+    virtual const MapAreaMapLayerGuiRelatedInfo& getCurrentMapLayerGuiInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase) = 0;
+    virtual void selectMapLayer(unsigned int mapViewDescTopIndex, const std::string &mapLayerName, bool backgroundMapCase, bool wmsCase) = 0;
 
 
     // Staattiset perushelper-funktiot
@@ -222,4 +235,5 @@ public:
     static bool hasSeparateBorderLayer(NFmiDrawParamList* drawParamList);
     static void copyDrawParamsList(NFmiPtrList<NFmiDrawParamList>* copyFromList, NFmiPtrList<NFmiDrawParamList>* copyToList);
     static bool IsBorderLayerDrawn(const NFmiDrawParam* separateBorderLayerDrawOptions);
+    static std::string getNoneOverlayName();
 };

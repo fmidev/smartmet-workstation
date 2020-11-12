@@ -83,6 +83,48 @@ void NFmiMapConfiguration::InitializeFileNameBasedGuiNameVectors()
 	::InitializeFileNameBasedGuiNameVector(itsOverMapDibFileNames, itsOverlayMapFileNameBasedGuiNames);
 }
 
+size_t NFmiMapConfiguration::MapLayersCount() const
+{
+	return itsMapFileNames.size();
+}
+
+size_t NFmiMapConfiguration::MapOverlaysCount() const
+{
+	return itsOverMapDibFileNames.size();
+}
+
+static const std::string& GetLayerTextFromVector(size_t layerIndex, const std::vector<std::string>& layerNames)
+{
+	if(layerIndex < layerNames.size())
+		return layerNames[layerIndex];
+	else
+	{
+		static const std::string emptyString;
+		return emptyString;
+	}
+}
+
+// Priorisointi kun tehdään map-layer nimejä Gui:lle:
+// 1. Descriptive name
+// 2. Macro-reference name
+// 3. Väännetään sopiva nimi bitmapin tiedosto nimestä
+std::string NFmiMapConfiguration::GetBestGuiUsedMapLayerName(size_t layerIndex, bool backgroundMapCase) const
+{
+	// 1. Jos löytyy ei-puuttuva descriptiveName, käytetään sitä.
+	std::string bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapDescriptiveNames : itsOverlayMapDescriptiveNames);
+	if(bestGuiUsedname.empty())
+	{
+		// 2. Jos löytyy ei-puuttuva macroReferenceName, käytetään sitä.
+		bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapMacroReferenceNames : itsOverlayMapMacroReferenceNames);
+		if(bestGuiUsedname.empty())
+		{
+			// 3. Muutoin tehdään nimi kuvan tiedostonimestä
+			bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapFileNameBasedGuiNames : itsOverlayMapFileNameBasedGuiNames);
+		}
+	}
+	return bestGuiUsedname;
+}
+
 // ************************************************************************
 // ******************* NFmiMapConfigurationSystem *****************************
 // ************************************************************************
@@ -91,9 +133,9 @@ NFmiMapConfigurationSystem::NFmiMapConfigurationSystem(void)
 :itsMapConfigurations()
 {}
 
-std::shared_ptr<NFmiMapConfiguration>& NFmiMapConfigurationSystem::GetMapConfiguration(int theIndex)
+std::shared_ptr<NFmiMapConfiguration>& NFmiMapConfigurationSystem::GetMapConfiguration(size_t theIndex)
 {
-	if(!itsMapConfigurations.empty() && theIndex >= 0 && theIndex < static_cast<int>(itsMapConfigurations.size()))
+	if(!itsMapConfigurations.empty() && theIndex < itsMapConfigurations.size())
 		return itsMapConfigurations[theIndex];
 	else
 	{

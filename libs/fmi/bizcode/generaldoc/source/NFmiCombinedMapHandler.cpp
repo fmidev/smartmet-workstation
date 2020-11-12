@@ -724,6 +724,27 @@ namespace
 		return functionAndAreaDescription;
 	}
 
+	void initializeGuiRelatedWmsMapLayerInfos(MapAreaMapLayerGuiRelatedInfo& mapLayerGuiInfos, Wms::UserUrlServerSetup& wmsMapLayerSetup)
+	{
+		mapLayerGuiInfos.clear();
+		for(size_t mapLayerIndex = 0; mapLayerIndex < wmsMapLayerSetup.parsedServers.size(); mapLayerIndex++)
+		{
+			auto guiMapLayerName = ::getWmsMapLayerName(static_cast<int>(mapLayerIndex), wmsMapLayerSetup);
+			NFmiMapLayerGuiRelatedInfo mapLayerGuiRelatedInfo{ guiMapLayerName, mapLayerIndex, true };
+			mapLayerGuiInfos.push_back(mapLayerGuiRelatedInfo);
+		}
+	}
+
+	int calcWantedMapLayerIndex(const MapAreaMapLayerGuiRelatedInfo& mapAreaMapLayerGuiInfos, const std::string& mapLayerName)
+	{
+		auto iter = std::find_if(mapAreaMapLayerGuiInfos.begin(), mapAreaMapLayerGuiInfos.end(),
+			[&mapLayerName](const auto& mapLayerGuiInfo) {return mapLayerGuiInfo.name_ == mapLayerName; });
+		if(iter != mapAreaMapLayerGuiInfos.end())
+			return static_cast<int>(std::distance(mapAreaMapLayerGuiInfos.begin(), iter));
+		else
+			return 0; // T‰m‰ on virhetilanne, palautetaan kuitenkin vain 0 indeksi (ei poikkeusta, vaikka pit‰isi)
+	}
+
 } // nameless namespace ends
 
 
@@ -760,6 +781,7 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 		initLandBorderDrawingSystemWithGdal();
 		initWmsSupport();
 		initCombinedMapStates();
+		initializeGuiRelatedMapLayerInfos();
 	}
 	catch(std::exception & e)
 	{
@@ -3440,6 +3462,54 @@ void NFmiCombinedMapHandler::changeMapType(unsigned int mapViewDescTopIndex, boo
 	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
 }
 
+void NFmiCombinedMapHandler::selectMapLayer(unsigned int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase)
+{
+	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	auto& combinedMapModeState = backgroundMapCase ? getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex) : getCombinedOverlayMapModeState(mapViewDescTopIndex, mapAreaIndex);
+	int newcombinedMapModeIndex = getSelectedCombinedModeMapIndex(mapViewDescTopIndex, mapLayerName, backgroundMapCase, wmsCase);
+	combinedMapModeState.combinedModeMapIndex(newcombinedMapModeIndex);
+	setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, backgroundMapCase);
+	std::string refreshMessage = std::string("Map view ") + std::to_string(mapViewDescTopIndex + 1);
+	refreshMessage += backgroundMapCase ? "background" : "overlay"; 
+	refreshMessage += " map layer changed to: " + mapLayerName;
+	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
+}
+
+int NFmiCombinedMapHandler::getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase)
+{
+	const auto& mapAreaMapLayerGuiInfos = getCurrentMapLayerGuiInfos(mapViewDescTopIndex, backgroundMapCase, wmsCase);
+	if(backgroundMapCase)
+	{
+		if(wmsCase)
+		{
+			auto localWmsMapLayerIndex = ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
+			const auto& staticMapAreaMapLayerGuiInfos = getCurrentMapLayerGuiInfos(mapViewDescTopIndex, backgroundMapCase, false);
+			return static_cast<int>(localWmsMapLayerIndex + staticMapAreaMapLayerGuiInfos.size());
+		}
+		else
+		{
+			return ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
+		}
+	}
+	else
+	{
+		auto noneSelectionMenuString = CombinedMapHandlerInterface::getNoneOverlayName();
+		if(mapLayerName == noneSelectionMenuString)
+			return -1;
+
+		if(wmsCase)
+		{
+			auto localWmsMapLayerIndex = ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
+			const auto& staticMapAreaMapLayerGuiInfos = getCurrentMapLayerGuiInfos(mapViewDescTopIndex, backgroundMapCase, false);
+			return static_cast<int>(localWmsMapLayerIndex + staticMapAreaMapLayerGuiInfos.size());
+		}
+		else
+		{
+			return ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
+		}
+	}
+}
+
 void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase)
 {
 	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
@@ -4125,4 +4195,62 @@ void NFmiCombinedMapHandler::activeEditedParameterMayHaveChangedViewUpdateFlagSe
 {
 	auto usedViewUpdateFlag = ::GetWantedMapViewIdFlag(mapViewDescTopIndex) | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::BrushToolDlg;
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(usedViewUpdateFlag);
+}
+
+void NFmiCombinedMapHandler::initializeGuiRelatedMapLayerInfos()
+{
+	initializeGuiRelatedStaticMapLayerInfos(staticBackgroundMapLayerGuiInfos_, true);
+	initializeGuiRelatedStaticMapLayerInfos(staticOverlayMapLayerGuiInfos_, false);
+	initializeGuiRelatedWmsMapLayerInfos();
+}
+
+void NFmiCombinedMapHandler::initializeGuiRelatedStaticMapLayerInfos(std::vector<MapAreaMapLayerGuiRelatedInfo>& mapLayerGuiInfos, bool backgroundMapCase)
+{
+	mapLayerGuiInfos.clear();
+	for(size_t mapAreaIndex = 0; mapAreaIndex < mapConfigurationSystem_->Size(); mapAreaIndex++)
+	{
+		const auto &mapConfiguration = mapConfigurationSystem_->GetMapConfiguration(mapAreaIndex);
+		MapAreaMapLayerGuiRelatedInfo mapAreaMapLayerGuiRelatedInfos;
+		auto mapLayerCount = backgroundMapCase ? mapConfiguration->MapLayersCount() : mapConfiguration->MapOverlaysCount();
+		for(size_t mapLayerIndex = 0; mapLayerIndex < mapLayerCount; mapLayerIndex++)
+		{
+			auto bestGuiMapLayerName = mapConfiguration->GetBestGuiUsedMapLayerName(mapLayerIndex, backgroundMapCase);
+			NFmiMapLayerGuiRelatedInfo mapLayerGuiRelatedInfo{ bestGuiMapLayerName, mapLayerIndex, false };
+			mapAreaMapLayerGuiRelatedInfos.push_back(mapLayerGuiRelatedInfo);
+		}
+
+		mapLayerGuiInfos.push_back(mapAreaMapLayerGuiRelatedInfos);
+	}
+}
+
+void NFmiCombinedMapHandler::initializeGuiRelatedWmsMapLayerInfos()
+{
+	if(getWmsSupport().isConfigured())
+	{
+		::initializeGuiRelatedWmsMapLayerInfos(wmsBackgroundMapLayerGuiInfos_, getWmsSupport().getSetup()->background);
+		::initializeGuiRelatedWmsMapLayerInfos(wmsOverlayMapLayerGuiInfos_, getWmsSupport().getSetup()->overlay);
+	}
+}
+
+const MapAreaMapLayerGuiRelatedInfo& NFmiCombinedMapHandler::getCurrentMapLayerGuiInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase)
+{
+	if(wmsCase)
+	{
+		if(backgroundMapCase)
+			return wmsBackgroundMapLayerGuiInfos_;
+		else
+			return wmsOverlayMapLayerGuiInfos_;
+	}
+	else
+	{
+		auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+		if(backgroundMapCase)
+			return staticBackgroundMapLayerGuiInfos_[mapAreaIndex];
+		else
+			return staticOverlayMapLayerGuiInfos_[mapAreaIndex];
+	}
+
+	// Virhetilanteissa tai jos wms:‰‰ ei ole ollenkaan edes initialisoitu, palautetaan tyhj‰‰
+	const static MapAreaMapLayerGuiRelatedInfo emptyDummy;
+	return emptyDummy;
 }

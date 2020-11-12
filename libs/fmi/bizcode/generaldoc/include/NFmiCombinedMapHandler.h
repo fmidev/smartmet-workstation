@@ -81,6 +81,16 @@ class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
     TotalMapViewCombinedMapModeState combinedBackgroundMapModeStates_;
     TotalMapViewCombinedMapModeState combinedOverlayMapModeStates_;
 
+    // Gui:hin liittyv‰‰ map-layer tietoa (n‰iden avulla tehd‰‰n ainakin select-map-layer popup valikot).
+    // staticxxx viittaa siihen ett‰ kyse on staattisista bitmapeista tiedostoissa, niit‰
+    // voi olla erilaiset setit jokaiselle erilaiselle kartta-alueelle.
+    std::vector<MapAreaMapLayerGuiRelatedInfo> staticBackgroundMapLayerGuiInfos_;
+    std::vector<MapAreaMapLayerGuiRelatedInfo> staticOverlayMapLayerGuiInfos_;
+    // wmsxxx viittaa dynaamisiin Wms server layereihin, niit‰ on sama setti kaikille 
+    // kartta-alueille, siksi niille yksinkertainen vector rakenne.
+    MapAreaMapLayerGuiRelatedInfo wmsBackgroundMapLayerGuiInfos_;
+    MapAreaMapLayerGuiRelatedInfo wmsOverlayMapLayerGuiInfos_;
+
 public:
     ~NFmiCombinedMapHandler();
 
@@ -240,6 +250,8 @@ public:
     void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) override;
     void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex) override;
+    const MapAreaMapLayerGuiRelatedInfo& getCurrentMapLayerGuiInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase) override;
+    void selectMapLayer(unsigned int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase) override;
 
 private:
     unsigned int getMapViewCount() const;
@@ -294,4 +306,8 @@ private:
     void initCrossSectionDrawParamListVector();
     void setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase);
     void mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string& refreshMessage);
+    void initializeGuiRelatedMapLayerInfos();
+    void initializeGuiRelatedStaticMapLayerInfos(std::vector<MapAreaMapLayerGuiRelatedInfo> &mapLayerGuiInfos, bool backgroundMapCase);
+    void initializeGuiRelatedWmsMapLayerInfos();
+    int getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase);
 };
