@@ -68,7 +68,7 @@ class NFmiExtraMacroParamData
 
  private:
   void InitializeResolutionWithEditedData(NFmiInfoOrganizer &theInfoOrganizer);
-  void InitializeResolutionData(NFmiInfoOrganizer &theInfoOrganizer, float usedResolutionInKm);
+  void InitializeResolutionData(NFmiInfoOrganizer &theInfoOrganizer, const NFmiPoint &usedResolutionInKm);
   void InitializeDataBasedResolutionData(NFmiInfoOrganizer &theInfoOrganizer,
                                          const NFmiProducer &theProducer,
                                          FmiLevelType theLevelType);
@@ -93,7 +93,7 @@ class NFmiExtraMacroParamData
   // yhden
   // hilan kokoista dataa  (yksi aika,param ja level, editoitavan datan hplaceDesc). Tähän
   // dataan on laskettu haluttu resoluutio tämän macroParamin laskujen ajaksi.
-  float itsDataBasedResolutionInKm;
+  NFmiPoint itsDataBasedResolutionInKm;
   boost::shared_ptr<NFmiFastQueryInfo> itsResolutionMacroParamData;
 
   // CalculationPoint listassa on pisteet jos niitä on annettu "CalculationPoint = lat,lon"
