@@ -9,7 +9,7 @@ NFmiExtraMacroParamData::NFmiExtraMacroParamData()
       itsGivenResolutionInKm(kFloatMissing),
       itsProducer(),
       itsLevelType(kFmiNoLevelType),
-      itsDataBasedResolutionInKm(kFloatMissing),
+      itsDataBasedResolutionInKm(kFloatMissing, kFloatMissing),
       itsResolutionMacroParamData(),
       itsCalculationPoints(),
       itsCalculationPointProducer(),
@@ -28,7 +28,7 @@ void NFmiExtraMacroParamData::FinalizeData(NFmiInfoOrganizer &theInfoOrganizer)
   }
   else if (itsGivenResolutionInKm != kFloatMissing)
   {
-    InitializeResolutionData(theInfoOrganizer, itsGivenResolutionInKm);
+    InitializeResolutionData(theInfoOrganizer, NFmiPoint(itsGivenResolutionInKm, itsGivenResolutionInKm));
   }
   else if (itsProducer.GetIdent() != 0)
   {
@@ -72,17 +72,17 @@ void NFmiExtraMacroParamData::SetUsedAreaForData(boost::shared_ptr<NFmiFastQuery
 static void CalcUsedGridSize(const NFmiArea *usedArea,
                              int &gridSizeX,
                              int &gridSizeY,
-                             float usedResolutionInKm)
+                             const NFmiPoint &usedResolutionInKm)
 {
   if (usedArea)
   {
-    gridSizeX = boost::math::iround(usedArea->WorldXYWidth() / (usedResolutionInKm * 1000.));
-    gridSizeY = boost::math::iround(usedArea->WorldXYHeight() / (usedResolutionInKm * 1000.));
+    gridSizeX = boost::math::iround(usedArea->WorldXYWidth() / (usedResolutionInKm.X() * 1000.));
+    gridSizeY = boost::math::iround(usedArea->WorldXYHeight() / (usedResolutionInKm.Y() * 1000.));
   }
 }
 
 void NFmiExtraMacroParamData::InitializeResolutionData(NFmiInfoOrganizer &theInfoOrganizer,
-                                                       float usedResolutionInKm)
+                                                       const NFmiPoint &usedResolutionInKm)
 {
   int gridSizeX = 0;
   int gridSizeY = 0;
@@ -201,12 +201,12 @@ static std::string GetProducerInfoForResolutionError(const NFmiProducer &theProd
 }
 
 // Oletus theInfo on hilamuotoista dataa, eli siltä löytyy area.
-// Lasketaan hilan x- ja y-resoluutioiden keskiarvo kilometreissa.
-static float CalcDataBasedResolutionInKm(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+// Lasketaan hilan x- ja y-resoluutioiden arvot kilometreissa.
+static NFmiPoint CalcDataBasedResolutionInKm(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
   double resolutionX = theInfo->Area()->WorldXYWidth() / theInfo->GridXNumber();
   double resolutionY = theInfo->Area()->WorldXYHeight() / theInfo->GridYNumber();
-  return static_cast<float>((resolutionX + resolutionY) / (2. * 1000.));
+  return NFmiPoint(resolutionX / 1000., resolutionY / 1000.);
 }
 
 void NFmiExtraMacroParamData::InitializeResolutionWithEditedData(
