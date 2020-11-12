@@ -150,9 +150,6 @@ public:
 	bool SelectBackgroundMapFromGui(const std::string& name);
 	bool SelectOverlayMapFromGui(const std::string& name);
 	std::string GetCurrentGuiMapLayerText(bool backgroundMap);
-	std::string GetWantedGuiMapLayerText(bool backgroundMap, int wantedLayerIndex);
-	std::string GetCurrentMacroReferenceName(bool backgroundMap);
-	std::string GetWantedMacroReferenceName(bool backgroundMap, int wantedLayerIndex);
 	std::shared_ptr<NFmiMapConfiguration>& GetMapConfiguration() { return itsMapConfiguration; }
 	const std::shared_ptr<NFmiMapConfiguration>& GetMapConfiguration() const { return itsMapConfiguration; }
 };
