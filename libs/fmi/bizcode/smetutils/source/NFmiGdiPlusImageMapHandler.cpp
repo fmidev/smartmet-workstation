@@ -139,8 +139,21 @@ void NFmiGdiPlusImageMapHandler::CreateMapAreaFromConfiguration()
 	}
 	else
 	{
-		itsOriginalArea->SetGridSize(150, 150);
+		const auto& usedTotalAreaFilePath = PathUtils::makeFixedAbsolutePath(projectionFileName, itsControlPath);
+		itsOriginalArea = ReadArea(usedTotalAreaFilePath);
+
+		if(!itsOriginalArea)
+		{
+			string errMsg("NFmiGdiPlusImageMapHandler::CreateMapAreaFromConfiguration - unable to read the area file: ");
+			errMsg += usedTotalAreaFilePath;
+			errMsg += ", originally gives as: ";
+			errMsg += projectionFileName;
+			throw runtime_error(errMsg);
+		}
 	}
+
+	// Hard koodattu latlon optimointihilan koon asetus
+	itsOriginalArea->SetGridSize(150, 150);
 
 	std::string logStr = "Area: ";
 	logStr += itsOriginalArea->AreaFactoryProjStr();
@@ -154,18 +167,6 @@ void NFmiGdiPlusImageMapHandler::CreateMapAreaFromConfiguration()
 	logStr += ",";
 	logStr += std::to_string(worldXyRect.Bottom());
 	CatLog::logMessage(logStr, CatLog::Severity::Trace, CatLog::Category::Configuration, true);
-
-	const auto& usedTotalAreaFilePath = PathUtils::makeFixedAbsolutePath(projectionFileName, itsControlPath);
-	itsOriginalArea = ReadArea(usedTotalAreaFilePath);
-
-	if(!itsOriginalArea)
-	{
-		string errMsg("NFmiGdiPlusImageMapHandler::CreateMapAreaFromConfiguration - unable to read the area file: ");
-		errMsg += usedTotalAreaFilePath;
-		errMsg += ", originally gives as: ";
-		errMsg += projectionFileName;
-		throw runtime_error(errMsg);
-	}
 }
 
 bool NFmiGdiPlusImageMapHandler::Init(std::shared_ptr<NFmiMapConfiguration>& mapConfiguration)
