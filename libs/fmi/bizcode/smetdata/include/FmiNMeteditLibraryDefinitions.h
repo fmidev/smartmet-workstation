@@ -116,7 +116,9 @@ typedef enum
 	kFmiSwapViewRows = 88,
 	kFmiAddBorderLineLayer = 89,
 	kFmiMoveBorderLineLayer = 90,
-	kFmiInsertParamLayer = 91
+	kFmiInsertParamLayer = 91,
+	kFmiSelectBackgroundMapLayer = 92,
+	kFmiSelectOverlayMapLayer = 93
 }FmiMenuCommandType;
 
 // s‰‰ koodi annetaan t‰nne. Jos se on AWS wawa koodia (arvo 100-199), konvertoidaan se WW-koodiksi, muuten

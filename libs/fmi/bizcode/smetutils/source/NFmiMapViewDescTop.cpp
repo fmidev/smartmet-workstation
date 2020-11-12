@@ -578,10 +578,9 @@ void NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem(void)
 
 	if(itsMapConfigurationSystem)
 	{
-		int ssize = static_cast<int>(itsMapConfigurationSystem->Size());
-		for(int i=0; i<ssize; i++)
+		for(size_t mapAreaIndex = 0; mapAreaIndex < itsMapConfigurationSystem->Size(); mapAreaIndex++)
 		{
-			NFmiGdiPlusImageMapHandler* mHandler = CreateGdiPlusImageMapHandler(itsMapConfigurationSystem->GetMapConfiguration(i));
+			NFmiGdiPlusImageMapHandler* mHandler = CreateGdiPlusImageMapHandler(itsMapConfigurationSystem->GetMapConfiguration(mapAreaIndex));
 			if(mHandler)
 				itsGdiPlusImageMapHandlerList.push_back(mHandler);
 			else

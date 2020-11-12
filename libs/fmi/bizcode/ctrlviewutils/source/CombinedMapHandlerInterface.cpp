@@ -3,6 +3,7 @@
 #include "NFmiDrawParamList.h"
 #include "NFmiFastQueryInfo.h"
 #include "catlog/catlog.h"
+#include "NFmiDictionaryFunction.h"
 
 namespace
 {
@@ -162,4 +163,9 @@ bool CombinedMapHandlerInterface::IsBorderLayerDrawn(const NFmiDrawParam* separa
 			return true; // Jos viivan paksuus on >= 0.5, se pyöristyy vähintäin 1:een pikseliin ja borderit piirretään
 	}
 	return false;
+}
+
+std::string CombinedMapHandlerInterface::getNoneOverlayName()
+{
+	return ::GetDictionaryString("none");
 }

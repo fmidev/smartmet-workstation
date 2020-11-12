@@ -48,6 +48,9 @@ public:
 	void AddOverlayMapDescriptiveNames(const std::string& name) { itsOverlayMapDescriptiveNames.push_back(name); }
 	void AddBackgroundMapMacroReferenceNames(const std::string& name) { itsBackgroundMapMacroReferenceNames.push_back(name); }
 	void AddOverlayMapMacroReferenceNames(const std::string& name) { itsOverlayMapMacroReferenceNames.push_back(name); }
+	size_t MapLayersCount() const;
+	size_t MapOverlaysCount() const;
+	std::string GetBestGuiUsedMapLayerName(size_t layerIndex, bool backgroundMapCase) const;
 
 	// T‰t‰ pit‰‰ kutsua, kun NFmiMapConfiguration olio on muuten alustettu!
 	void InitializeFileNameBasedGuiNameVectors();
@@ -81,7 +84,7 @@ class NFmiMapConfigurationSystem
 public:
 	NFmiMapConfigurationSystem(void);
 
-	std::shared_ptr<NFmiMapConfiguration>& GetMapConfiguration(int theIndex);
+	std::shared_ptr<NFmiMapConfiguration>& GetMapConfiguration(size_t theIndex);
 
 	std::vector<NFmiMapConfiguration>::size_type Size()
 	{
