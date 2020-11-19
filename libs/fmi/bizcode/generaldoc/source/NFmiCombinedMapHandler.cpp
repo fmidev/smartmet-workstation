@@ -684,20 +684,30 @@ namespace
 		return usedWmsLayerIndex;
 	}
 
-	std::string getWmsMapLayerName(int mapLayerIndex, Wms::UserUrlServerSetup& userUrlServerSetup)
+	std::string getWmsMapLayerGuiName(int mapLayerIndex, Wms::UserUrlServerSetup& userUrlServerSetup, bool addServerName)
 	{
 		if(mapLayerIndex >= userUrlServerSetup.parsedServers.size())
 			throw std::runtime_error(std::string("Logical error - Illegal mapLayerIndex with Wms parsedServers in function: ") + __FUNCTION__);
 		auto& usedLayerParsedServer = userUrlServerSetup.parsedServers[mapLayerIndex];
 		std::string layerName;
-		std::for_each(usedLayerParsedServer.layerGroup.begin(), usedLayerParsedServer.layerGroup.end(),
-			[&layerName](const auto& groupItem) {layerName += groupItem + ","; });
+		if(!usedLayerParsedServer.descriptiveName.empty())
+			layerName = usedLayerParsedServer.descriptiveName;
+		else if(!usedLayerParsedServer.macroReference.empty())
+			layerName = usedLayerParsedServer.macroReference;
+		else
+		{
+			std::for_each(usedLayerParsedServer.layerGroup.begin(), usedLayerParsedServer.layerGroup.end(),
+				[&layerName](const auto& groupItem) {layerName += groupItem + ","; });
+			layerName.pop_back(); // poistetaan viimeinen pilkku
+		}
 
-		layerName.pop_back(); // poistetaan viimeinen pilkku
-		// Lis‰t‰‰n host:in osoite sulkuihin per‰‰n
-		layerName += " (";
-		layerName += usedLayerParsedServer.host;
-		layerName += ")";
+		if(addServerName)
+		{
+			// Lis‰t‰‰n host:in osoite sulkuihin per‰‰n
+			layerName += " (";
+			layerName += usedLayerParsedServer.host;
+			layerName += ")";
+		}
 		return layerName;
 	}
 
@@ -724,25 +734,107 @@ namespace
 		return functionAndAreaDescription;
 	}
 
-	void initializeGuiRelatedWmsMapLayerInfos(MapAreaMapLayerGuiRelatedInfo& mapLayerGuiInfos, Wms::UserUrlServerSetup& wmsMapLayerSetup)
+	void initializeWmsMapLayerInfos(MapAreaMapLayerRelatedInfo& mapLayerRelatedInfos, Wms::UserUrlServerSetup& wmsMapLayerSetup)
 	{
-		mapLayerGuiInfos.clear();
+		mapLayerRelatedInfos.clear();
 		for(size_t mapLayerIndex = 0; mapLayerIndex < wmsMapLayerSetup.parsedServers.size(); mapLayerIndex++)
 		{
-			auto guiMapLayerName = ::getWmsMapLayerName(static_cast<int>(mapLayerIndex), wmsMapLayerSetup);
-			NFmiMapLayerGuiRelatedInfo mapLayerGuiRelatedInfo{ guiMapLayerName, mapLayerIndex, true };
-			mapLayerGuiInfos.push_back(mapLayerGuiRelatedInfo);
+			// Lis‰t‰‰n t‰h‰n listaan serverin nimi per‰‰n (viimeinen parametri true)
+			auto guiMapLayerName = ::getWmsMapLayerGuiName(static_cast<int>(mapLayerIndex), wmsMapLayerSetup, true);
+			auto& usedLayerParsedServer = wmsMapLayerSetup.parsedServers[mapLayerIndex];
+			NFmiMapLayerRelatedInfo mapLayerRelatedInfo{ guiMapLayerName, usedLayerParsedServer.macroReference, true };
+			mapLayerRelatedInfos.push_back(mapLayerRelatedInfo);
 		}
 	}
 
-	int calcWantedMapLayerIndex(const MapAreaMapLayerGuiRelatedInfo& mapAreaMapLayerGuiInfos, const std::string& mapLayerName)
+	int calcWantedMapLayerIndex(const MapAreaMapLayerRelatedInfo& mapLayerRelatedInfos, const std::string& mapLayerName)
 	{
-		auto iter = std::find_if(mapAreaMapLayerGuiInfos.begin(), mapAreaMapLayerGuiInfos.end(),
-			[&mapLayerName](const auto& mapLayerGuiInfo) {return mapLayerGuiInfo.name_ == mapLayerName; });
-		if(iter != mapAreaMapLayerGuiInfos.end())
-			return static_cast<int>(std::distance(mapAreaMapLayerGuiInfos.begin(), iter));
+		auto iter = std::find_if(mapLayerRelatedInfos.begin(), mapLayerRelatedInfos.end(),
+			[&mapLayerName](const auto& mapLayerRelatedInfo) {return mapLayerRelatedInfo.guiName_ == mapLayerName; });
+		if(iter != mapLayerRelatedInfos.end())
+			return static_cast<int>(std::distance(mapLayerRelatedInfos.begin(), iter));
 		else
 			return 0; // T‰m‰ on virhetilanne, palautetaan kuitenkin vain 0 indeksi (ei poikkeusta, vaikka pit‰isi)
+	}
+
+	std::string getMacroReferenceNameForViewMacro(const NFmiCombinedMapModeState& mapModeState, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos)
+	{
+		std::string name;
+		auto mapLayerSectionIndex = mapModeState.currentMapSectionIndex();
+		// Overlay tapauksessa mapLayerSectionIndex voi olla -1 jolloin MacroReference:lla ei ole arvoa
+		if(mapLayerSectionIndex >= 0)
+		{
+			if(mapModeState.isLocalMapCurrentlyInUse())
+			{
+				if(mapLayerSectionIndex >= 0 && mapLayerSectionIndex < staticMapLayerRelatedInfos.size())
+					name = staticMapLayerRelatedInfos[mapLayerSectionIndex].macroReference_;
+			}
+			else
+			{
+				if(mapLayerSectionIndex >= 0 && mapLayerSectionIndex < wmsMapLayerRelatedInfos.size())
+				{
+					name = wmsMapLayerRelatedInfos[mapLayerSectionIndex].prefixedMacroReference_;
+				}
+			}
+		}
+		return name;
+	}
+
+	// Kun tutkitaan lˆytyykˆ macro-referencen perusteella vastinetta, tehd‰‰n tarkastelu varmuuden vuoksi case-insensitiivisesti.
+	int getMacroReferenceMapLayerIndex(const std::string& nonPrefixMacroReferenceName, const MapAreaMapLayerRelatedInfo& mapLayerRelatedInfos)
+	{
+		auto layerIter = std::find_if(mapLayerRelatedInfos.begin(), mapLayerRelatedInfos.end(),
+			[&nonPrefixMacroReferenceName](const auto& mapLayerRelatedInfo) {return boost::iequals(nonPrefixMacroReferenceName, mapLayerRelatedInfo.macroReference_); });
+		int layerIndex = (layerIter != mapLayerRelatedInfos.end()) ? static_cast<int>(std::distance(mapLayerRelatedInfos.begin(), layerIter)) : -1;
+		return layerIndex;
+	}
+
+	// T‰ss‰ haetaan macro-referenssi‰ seuraavin keinoin ja prioriteetein:
+	// 1. macroReferenceName ei saa olla tyhj‰
+	// 2. Tarkistetaan sis‰lsikˆ macroReferenceName wms prefixin "[wms]"
+	// 3. Riippuen siit‰ onko originaali ollut wms pohjainen layer, tehd‰‰n seuraavaa:
+	// 3.1. Jos wms pohjaisista lˆytyy vastaava macroReference nimi, palautetaan sen ja static layereiden yhteisindeksi
+	// 3.2. Jos lˆytyy vain staattisista layereista vastaava macroReference nimi, palautetaan sen indeksi
+	// 4. Jos originaali ei ollut wms pohjainen layer, tehd‰‰n seuraavaa:
+	// 4.1. Jos lˆytyy staattisista layereista macroReference nimi, palautetaan sen indeksi
+	// 4.2. Jos lˆytyy vain wms pohjaisista vastaava macroReference nimi, palautetaan sen ja static layereiden yhteisindeksi
+	int getCombinedMapModeIndexByMacroReferenceName(const std::string& macroReferenceName, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos, bool localOnlyMapModeInUse)
+	{
+		if(!macroReferenceName.empty())
+		{
+			bool macroReferenceWasWmsLayer = NFmiMapLayerRelatedInfo::hasWmsMacroReferencePrefix(macroReferenceName);
+			auto nonPrefixMacroReferenceName = NFmiMapLayerRelatedInfo::stripWmsMacroReferencePrefix(macroReferenceName);
+			int staticLayerIndex = ::getMacroReferenceMapLayerIndex(nonPrefixMacroReferenceName, staticMapLayerRelatedInfos);
+			int wmsLayerIndex = ::getMacroReferenceMapLayerIndex(nonPrefixMacroReferenceName, wmsMapLayerRelatedInfos);
+			if(macroReferenceWasWmsLayer)
+			{
+				if(!localOnlyMapModeInUse && wmsLayerIndex >= 0)
+					return static_cast<int>(staticMapLayerRelatedInfos.size()) + wmsLayerIndex;
+				else if(staticLayerIndex >= 0)
+					return staticLayerIndex;
+			}
+			else
+			{
+				if(staticLayerIndex >= 0)
+					return staticLayerIndex;
+				else if(!localOnlyMapModeInUse && wmsLayerIndex >= 0)
+					return static_cast<int>(staticMapLayerRelatedInfos.size()) + wmsLayerIndex;
+			}
+		}
+		// Ei lˆytynyt mit‰‰n annetun macroReferenceName:n avulla, -1 on merkki siit‰, ett‰ mit‰‰n ei tehd‰.
+		return -1;
+	}
+
+	bool selectMapLayerByMacroReferenceNameFromViewMacro(NFmiCombinedMapModeState& combinedMapModeState, const std::string& macroReferenceName, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos)
+	{
+		auto localOnlyMapModeInUse = combinedMapModeState.isLocalOnlyMapModeInUse();
+		auto usedCombinedModeMapIndex = getCombinedMapModeIndexByMacroReferenceName(macroReferenceName, staticMapLayerRelatedInfos, wmsMapLayerRelatedInfos, localOnlyMapModeInUse);
+		if(usedCombinedModeMapIndex >= 0)
+		{
+			combinedMapModeState.combinedModeMapIndex(usedCombinedModeMapIndex);
+			return true;
+		}
+		return false;
 	}
 
 } // nameless namespace ends
@@ -781,7 +873,7 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 		initLandBorderDrawingSystem();
 		initWmsSupport();
 		initCombinedMapStates();
-		initializeGuiRelatedMapLayerInfos();
+		initializeMapLayerInfos();
 	}
 	catch(std::exception & e)
 	{
@@ -3402,20 +3494,56 @@ void NFmiCombinedMapHandler::selectMapLayer(unsigned int mapViewDescTopIndex, co
 	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
 }
 
+// Palauttaa pair:issa 1. background nimen ja 2. overlay nimen, jos sellaiset on m‰‰ritetty
+std::pair<std::string, std::string> NFmiCombinedMapHandler::getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex)
+{
+	std::pair<std::string, std::string> macroReferenceNamePair;
+	macroReferenceNamePair.first = ::getMacroReferenceNameForViewMacro(getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex), staticBackgroundMapLayerRelatedInfos_[mapAreaIndex], wmsBackgroundMapLayerRelatedInfos_);
+	macroReferenceNamePair.second = ::getMacroReferenceNameForViewMacro(getCombinedOverlayMapModeState(mapViewDescTopIndex, mapAreaIndex), staticOverlayMapLayerRelatedInfos_[mapAreaIndex], wmsOverlayMapLayerRelatedInfos_);
+	return macroReferenceNamePair;
+}
+
+// T‰m‰ siis tekee vain tarvittavat background ja overlay indeksien asetukset, mutta ei mit‰‰n likauksia tai muita juttuja.
+// T‰t‰ on tarkoitus k‰ytt‰‰ vain kun n‰yttˆmakroa ladataan, jolloin kaikki tarvittava liataan jo muutenkin.
+void NFmiCombinedMapHandler::selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName)
+{
+	selectMapLayerByMacroReferenceNameFromViewMacro(true, mapViewDescTopIndex, mapAreaIndex, getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex), backgroundMacroReferenceName, staticBackgroundMapLayerRelatedInfos_[mapAreaIndex], wmsBackgroundMapLayerRelatedInfos_);
+	selectMapLayerByMacroReferenceNameFromViewMacro(false, mapViewDescTopIndex, mapAreaIndex, getCombinedOverlayMapModeState(mapViewDescTopIndex, mapAreaIndex), overlayMacroReferenceName, staticOverlayMapLayerRelatedInfos_[mapAreaIndex], wmsOverlayMapLayerRelatedInfos_);
+}
+
+void NFmiCombinedMapHandler::selectMapLayerByMacroReferenceNameFromViewMacro(bool backgroundMapCase, unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, NFmiCombinedMapModeState& combinedMapModeState, const std::string& macroReferenceName, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos)
+{
+	if(::selectMapLayerByMacroReferenceNameFromViewMacro(combinedMapModeState, macroReferenceName, staticMapLayerRelatedInfos, wmsMapLayerRelatedInfos))
+	{
+		setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, mapAreaIndex, backgroundMapCase);
+	}
+}
+
+void NFmiCombinedMapHandler::selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex)
+{
+	auto& combinedBackgroundMapModeState = getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex);
+	combinedBackgroundMapModeState.combinedModeMapIndex(usedCombinedModeMapIndex);
+	setWantedLayerIndex(combinedBackgroundMapModeState, mapViewDescTopIndex, mapAreaIndex, true);
+
+	auto& combinedOverlayMapModeState = getCombinedOverlayMapModeState(mapViewDescTopIndex, mapAreaIndex);
+	combinedOverlayMapModeState.combinedModeMapIndex(usedCombinedModeOverlayMapIndex);
+	setWantedLayerIndex(combinedOverlayMapModeState, mapViewDescTopIndex, mapAreaIndex, false);
+}
+
 int NFmiCombinedMapHandler::getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase)
 {
-	const auto& mapAreaMapLayerGuiInfos = getCurrentMapLayerGuiInfos(mapViewDescTopIndex, backgroundMapCase, wmsCase);
+	const auto& mapLayerRelatedInfos = getCurrentMapLayerRelatedInfos(mapViewDescTopIndex, backgroundMapCase, wmsCase);
 	if(backgroundMapCase)
 	{
 		if(wmsCase)
 		{
-			auto localWmsMapLayerIndex = ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
-			const auto& staticMapAreaMapLayerGuiInfos = getCurrentMapLayerGuiInfos(mapViewDescTopIndex, backgroundMapCase, false);
-			return static_cast<int>(localWmsMapLayerIndex + staticMapAreaMapLayerGuiInfos.size());
+			auto localWmsMapLayerIndex = ::calcWantedMapLayerIndex(mapLayerRelatedInfos, mapLayerName);
+			const auto& staticMapLayerRelatedInfos = getCurrentMapLayerRelatedInfos(mapViewDescTopIndex, backgroundMapCase, false);
+			return static_cast<int>(localWmsMapLayerIndex + staticMapLayerRelatedInfos.size());
 		}
 		else
 		{
-			return ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
+			return ::calcWantedMapLayerIndex(mapLayerRelatedInfos, mapLayerName);
 		}
 	}
 	else
@@ -3426,31 +3554,35 @@ int NFmiCombinedMapHandler::getSelectedCombinedModeMapIndex(int mapViewDescTopIn
 
 		if(wmsCase)
 		{
-			auto localWmsMapLayerIndex = ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
-			const auto& staticMapAreaMapLayerGuiInfos = getCurrentMapLayerGuiInfos(mapViewDescTopIndex, backgroundMapCase, false);
-			return static_cast<int>(localWmsMapLayerIndex + staticMapAreaMapLayerGuiInfos.size());
+			auto localWmsMapLayerIndex = ::calcWantedMapLayerIndex(mapLayerRelatedInfos, mapLayerName);
+			const auto& staticMapLayerRelatedInfos = getCurrentMapLayerRelatedInfos(mapViewDescTopIndex, backgroundMapCase, false);
+			return static_cast<int>(localWmsMapLayerIndex + staticMapLayerRelatedInfos.size());
 		}
 		else
 		{
-			return ::calcWantedMapLayerIndex(mapAreaMapLayerGuiInfos, mapLayerName);
+			return ::calcWantedMapLayerIndex(mapLayerRelatedInfos, mapLayerName);
 		}
 	}
 }
 
 void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase)
 {
-	auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
+	setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex), backgroundCase);
+}
+
+void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, bool backgroundCase)
+{
 	if(backgroundCase)
 	{
 		if(combinedMapModeState.isLocalMapCurrentlyInUse())
-			getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
+			getMapViewDescTop(mapViewDescTopIndex)->MapHandler(mapAreaIndex)->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
 		else
 			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
 	}
 	else
 	{
 		if(combinedMapModeState.isLocalMapCurrentlyInUse())
-			getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->OverMapBitmapIndex(combinedMapModeState.currentMapSectionIndex());
+			getMapViewDescTop(mapViewDescTopIndex)->MapHandler(mapAreaIndex)->OverMapBitmapIndex(combinedMapModeState.currentMapSectionIndex());
 		else
 			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
 	}
@@ -3998,12 +4130,12 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiName(int mapViewDescTop
 		if(backgroundMap)
 		{
 			auto mapLayerIndex = getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
-			return ::getWmsMapLayerName(mapLayerIndex, getWmsSupport().getSetup()->background);
+			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport().getSetup()->background, false);
 		}
 		else
 		{
 			auto mapLayerIndex = getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
-			return ::getWmsMapLayerName(mapLayerIndex, getWmsSupport().getSetup()->overlay);
+			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport().getSetup()->overlay, false);
 		}
 	}
 	else
@@ -4124,60 +4256,61 @@ void NFmiCombinedMapHandler::activeEditedParameterMayHaveChangedViewUpdateFlagSe
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(usedViewUpdateFlag);
 }
 
-void NFmiCombinedMapHandler::initializeGuiRelatedMapLayerInfos()
+void NFmiCombinedMapHandler::initializeMapLayerInfos()
 {
-	initializeGuiRelatedStaticMapLayerInfos(staticBackgroundMapLayerGuiInfos_, true);
-	initializeGuiRelatedStaticMapLayerInfos(staticOverlayMapLayerGuiInfos_, false);
-	initializeGuiRelatedWmsMapLayerInfos();
+	initializeStaticMapLayerInfos(staticBackgroundMapLayerRelatedInfos_, true);
+	initializeStaticMapLayerInfos(staticOverlayMapLayerRelatedInfos_, false);
+	initializeWmsMapLayerInfos();
 }
 
-void NFmiCombinedMapHandler::initializeGuiRelatedStaticMapLayerInfos(std::vector<MapAreaMapLayerGuiRelatedInfo>& mapLayerGuiInfos, bool backgroundMapCase)
+void NFmiCombinedMapHandler::initializeStaticMapLayerInfos(std::vector<MapAreaMapLayerRelatedInfo>& mapLayerRelatedInfos, bool backgroundMapCase)
 {
-	mapLayerGuiInfos.clear();
+	mapLayerRelatedInfos.clear();
 	for(size_t mapAreaIndex = 0; mapAreaIndex < mapConfigurationSystem_->Size(); mapAreaIndex++)
 	{
 		const auto &mapConfiguration = mapConfigurationSystem_->GetMapConfiguration(mapAreaIndex);
-		MapAreaMapLayerGuiRelatedInfo mapAreaMapLayerGuiRelatedInfos;
+		MapAreaMapLayerRelatedInfo mapAreaMapLayerRelatedInfos;
 		auto mapLayerCount = backgroundMapCase ? mapConfiguration->MapLayersCount() : mapConfiguration->MapOverlaysCount();
 		for(size_t mapLayerIndex = 0; mapLayerIndex < mapLayerCount; mapLayerIndex++)
 		{
 			auto bestGuiMapLayerName = mapConfiguration->GetBestGuiUsedMapLayerName(mapLayerIndex, backgroundMapCase);
-			NFmiMapLayerGuiRelatedInfo mapLayerGuiRelatedInfo{ bestGuiMapLayerName, mapLayerIndex, false };
-			mapAreaMapLayerGuiRelatedInfos.push_back(mapLayerGuiRelatedInfo);
+			auto macroReferenceName = mapConfiguration->GetMacroReferenceName(mapLayerIndex, backgroundMapCase);
+			NFmiMapLayerRelatedInfo mapLayerRelatedInfo(bestGuiMapLayerName, macroReferenceName, false);
+			mapAreaMapLayerRelatedInfos.push_back(mapLayerRelatedInfo);
 		}
 
-		mapLayerGuiInfos.push_back(mapAreaMapLayerGuiRelatedInfos);
+		mapLayerRelatedInfos.push_back(mapAreaMapLayerRelatedInfos);
 	}
 }
 
-void NFmiCombinedMapHandler::initializeGuiRelatedWmsMapLayerInfos()
+void NFmiCombinedMapHandler::initializeWmsMapLayerInfos()
 {
 	if(getWmsSupport().isConfigured())
 	{
-		::initializeGuiRelatedWmsMapLayerInfos(wmsBackgroundMapLayerGuiInfos_, getWmsSupport().getSetup()->background);
-		::initializeGuiRelatedWmsMapLayerInfos(wmsOverlayMapLayerGuiInfos_, getWmsSupport().getSetup()->overlay);
+		::initializeWmsMapLayerInfos(wmsBackgroundMapLayerRelatedInfos_, getWmsSupport().getSetup()->background);
+		::initializeWmsMapLayerInfos(wmsOverlayMapLayerRelatedInfos_, getWmsSupport().getSetup()->overlay);
 	}
 }
 
-const MapAreaMapLayerGuiRelatedInfo& NFmiCombinedMapHandler::getCurrentMapLayerGuiInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase)
+const MapAreaMapLayerRelatedInfo& NFmiCombinedMapHandler::getCurrentMapLayerRelatedInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase)
 {
 	if(wmsCase)
 	{
 		if(backgroundMapCase)
-			return wmsBackgroundMapLayerGuiInfos_;
+			return wmsBackgroundMapLayerRelatedInfos_;
 		else
-			return wmsOverlayMapLayerGuiInfos_;
+			return wmsOverlayMapLayerRelatedInfos_;
 	}
 	else
 	{
 		auto mapAreaIndex = getCurrentMapAreaIndex(mapViewDescTopIndex);
 		if(backgroundMapCase)
-			return staticBackgroundMapLayerGuiInfos_[mapAreaIndex];
+			return staticBackgroundMapLayerRelatedInfos_[mapAreaIndex];
 		else
-			return staticOverlayMapLayerGuiInfos_[mapAreaIndex];
+			return staticOverlayMapLayerRelatedInfos_[mapAreaIndex];
 	}
 
 	// Virhetilanteissa tai jos wms:‰‰ ei ole ollenkaan edes initialisoitu, palautetaan tyhj‰‰
-	const static MapAreaMapLayerGuiRelatedInfo emptyDummy;
+	const static MapAreaMapLayerRelatedInfo emptyDummy;
 	return emptyDummy;
 }

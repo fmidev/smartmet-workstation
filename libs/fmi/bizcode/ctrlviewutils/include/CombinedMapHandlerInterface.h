@@ -41,15 +41,25 @@ enum class CountryBorderDrawDirtyState
 };
 
 // N‰it‰ NFmiMapLayerGuiRelatedInfo tietoja k‰ytet‰‰n mm. kun rakennetaan kartta layerien vaihtoon liittyvi‰ popup valikoita.
-class NFmiMapLayerGuiRelatedInfo
+// Samoin viewMacrojen reference nimien kanssa.
+class NFmiMapLayerRelatedInfo
 {
 public:
-    std::string name_;
-    size_t layerIndexTotal_ = 0;
+    NFmiMapLayerRelatedInfo() = default;
+    NFmiMapLayerRelatedInfo(const std::string& guiName, const std::string& macroReference, bool isWmsLayer);
+
+    static const std::string& getWmsMacroReferencePrefix();
+    static std::string addWmsMacroReferencePrefix(std::string macroReference);
+    static bool hasWmsMacroReferencePrefix(const std::string& macroReference);
+    static std::string stripWmsMacroReferencePrefix(std::string macroReference);
+
+    std::string guiName_;
+    std::string macroReference_;
+    std::string prefixedMacroReference_;
     bool isWmsLayer_ = false;
 };
-// MapAreaMapLayerGuiRelatedInfo on yhden kartta-alueen (esim. skandinavia) kaikki layerit.
-using MapAreaMapLayerGuiRelatedInfo = std::vector<NFmiMapLayerGuiRelatedInfo>;
+// MapAreaMapLayerRelatedInfo on yhden kartta-alueen (esim. skandinavia) kaikki layerit.
+using MapAreaMapLayerRelatedInfo = std::vector<NFmiMapLayerRelatedInfo>;
 
 // Interface that is meant to be used to handle all kinds of background map and overlay map stuff handling.
 class CombinedMapHandlerInterface
@@ -218,8 +228,11 @@ public:
     virtual void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) = 0;
     virtual void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex) = 0;
-    virtual const MapAreaMapLayerGuiRelatedInfo& getCurrentMapLayerGuiInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase) = 0;
-    virtual void selectMapLayer(unsigned int mapViewDescTopIndex, const std::string &mapLayerName, bool backgroundMapCase, bool wmsCase) = 0;
+    virtual const MapAreaMapLayerRelatedInfo& getCurrentMapLayerRelatedInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase) = 0;
+    virtual void selectMapLayer(unsigned int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase) = 0;
+    virtual std::pair<std::string, std::string> getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
+    virtual void selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName) = 0;
+    virtual void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) = 0;
 
 
     // Staattiset perushelper-funktiot

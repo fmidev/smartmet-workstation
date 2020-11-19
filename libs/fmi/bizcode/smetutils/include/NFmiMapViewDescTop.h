@@ -66,6 +66,8 @@ public:
 		int itsUsedCombinedModeMapIndex = 0;
 		int itsUsedCombinedModeOverMapDibIndex = -1;
 		NFmiString itsZoomedAreaStr;
+		std::string itsBackgroundMacroReference;
+		std::string itsOverlayMacroReference;
 	};
 
 
@@ -86,7 +88,8 @@ public:
 	void SelectedMapIndex(unsigned int newValue);
     unsigned int SelectedMapIndex(void) const {return itsSelectedMapIndexVM;}
 	NFmiGdiPlusImageMapHandler* MapHandler(void) const;
-    std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
+	NFmiGdiPlusImageMapHandler* MapHandler(unsigned int mapAreaIndex) const;
+	std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
 
 	NFmiMapViewCache& MapViewCache(void) {return itsMapViewCache;}
     bool RedrawMapView(void) const;
