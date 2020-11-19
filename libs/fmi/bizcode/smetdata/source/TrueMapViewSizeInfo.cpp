@@ -47,10 +47,13 @@ void TrueMapViewSizeInfo::calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewG
 {
 	// Päivitetään nämäkin perusarvot joka, jos joku on mennyt säätämään vaikka monitorin asetuksia, 
 	// tai ollaan vaikka eri monitorilla.
-	monitorSizeInMilliMeters_.X(GetDeviceCaps(pDC->GetSafeHdc(), HORZSIZE));
-	monitorSizeInMilliMeters_.Y(GetDeviceCaps(pDC->GetSafeHdc(), VERTSIZE));
-	monitorSizeInPixels_.X(GetDeviceCaps(pDC->GetSafeHdc(), HORZRES));
-	monitorSizeInPixels_.Y(GetDeviceCaps(pDC->GetSafeHdc(), VERTRES));
+	if(pDC)
+	{
+		monitorSizeInMilliMeters_.X(GetDeviceCaps(pDC->GetSafeHdc(), HORZSIZE));
+		monitorSizeInMilliMeters_.Y(GetDeviceCaps(pDC->GetSafeHdc(), VERTSIZE));
+		monitorSizeInPixels_.X(GetDeviceCaps(pDC->GetSafeHdc(), HORZRES));
+		monitorSizeInPixels_.Y(GetDeviceCaps(pDC->GetSafeHdc(), VERTRES));
+	}
 	updatePixelsPerMilliMeterValues(pDC, drawObjectScaleFactor);
 	updateMapSizes(viewGridSize, isTimeControlViewVisible);
 }
@@ -74,13 +77,15 @@ void TrueMapViewSizeInfo::updatePixelsPerMilliMeterValues(CDC* pDC, double drawO
 	pixelsPerMilliMeter_.X(monitorSizeInPixels_.X() / monitorSizeInMilliMeters_.X());
 	pixelsPerMilliMeter_.Y(monitorSizeInPixels_.Y() / monitorSizeInMilliMeters_.Y());
 
-
-	int logpixX = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSX);
-	int logpixY = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSY);
-	double inchToMillimeterConversion = 25.4;
-	// muutos dpi-maailmasta (dots-per-inch) dpmm (dots-per-mm) + konekohtainen skaalauskerroin
-	logicalPixelsPerMilliMeter_.X((logpixX / inchToMillimeterConversion) * drawObjectScaleFactor);
-	logicalPixelsPerMilliMeter_.Y((logpixY / inchToMillimeterConversion) * drawObjectScaleFactor);
+	if(pDC)
+	{
+		int logpixX = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSX);
+		int logpixY = GetDeviceCaps(pDC->GetSafeHdc(), LOGPIXELSY);
+		double inchToMillimeterConversion = 25.4;
+		// muutos dpi-maailmasta (dots-per-inch) dpmm (dots-per-mm) + konekohtainen skaalauskerroin
+		logicalPixelsPerMilliMeter_.X((logpixX / inchToMillimeterConversion) * drawObjectScaleFactor);
+		logicalPixelsPerMilliMeter_.Y((logpixY / inchToMillimeterConversion) * drawObjectScaleFactor);
+	}
 }
 
 double TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(double thePixelsPerMilliMeterX)
