@@ -79,6 +79,7 @@ public:
     void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector) override;
     bool Printing() override;
     void Printing(bool newStatus) override;
+    void Printing(unsigned int theMapViewDescTopIndex, bool newStatus) override;
     boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() override;
     double DrawObjectScaleFactor() override;
     void DrawObjectScaleFactor(double newValue) override;

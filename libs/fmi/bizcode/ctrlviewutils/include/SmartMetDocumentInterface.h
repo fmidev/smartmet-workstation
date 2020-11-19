@@ -152,6 +152,7 @@ public:
     virtual void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector) = 0;
     virtual bool Printing() = 0;
     virtual void Printing(bool newStatus) = 0;
+    virtual void Printing(unsigned int theMapViewDescTopIndex, bool newStatus) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() = 0;
     virtual double DrawObjectScaleFactor() = 0;
     virtual void DrawObjectScaleFactor(double newValue) = 0;
