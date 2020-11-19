@@ -726,18 +726,6 @@ static pair<int, double> FindClosestLocationWithData(checkedVector<pair<int, dou
 	return make_pair(-1, kFloatMissing);
 }
 
-// kun piirretään havaintoja aikasarjaan editoidun datan lisäksi, halutaan etsiä
-// Kiinnostavaa pistettä lähin havainto. 'Kiinnostava' piste on normaalisti editoidusta
-// datasta valittu piste. Mutta Controllipiste työkalun ollessa käynnissä se onkin
-// aktiivinen CP-piste.
-const NFmiPoint& NFmiTimeSerialView::GetUsedLatlon(void)
-{
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
-		return itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
-	else
-		return Info()->LatLonFast();
-}
-
 bool NFmiTimeSerialView::GetDrawedTimes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag &theTimesOut)
 {
 	NFmiMetTime lastTime(theInfo->TimeDescriptor().LastTime());
