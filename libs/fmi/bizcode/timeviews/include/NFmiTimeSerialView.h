@@ -150,7 +150,6 @@ class NFmiTimeSerialView : public NFmiTimeView
     std::string GetMosTemperatureMinAndMaxDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
     checkedVector<NFmiPoint> GetViewedLatlonPoints(void);
 	NFmiTimeBag GetViewLimitingTimes(void);
-	const NFmiPoint& GetUsedLatlon(void);
     void DrawHelperData2LocationInTime(const NFmiPoint &theLatlon);
     void DrawHelperData3LocationInTime(const NFmiPoint &theLatlon);
     void DrawHelperData4LocationInTime(const NFmiPoint &theLatlon);
