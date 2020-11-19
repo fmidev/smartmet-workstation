@@ -47,6 +47,8 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
+	const NFmiRect g_TotalRelativeMapRect(0., 0., 1., 1.);
+
 	// Muuttaa suhteellisen väri kanava arvon (arvoväli 0-1) 8-bit arvoksi (arvoväli 0-255)
 	int colorRelativeTo8bit(double colorValue)
 	{
@@ -412,7 +414,7 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsLandBorderPenSize = other.itsLandBorderPenSize;
 		itsTimeControlViewTimes = other.itsTimeControlViewTimes;
 		itsClientViewXperYRatio = other.itsClientViewXperYRatio;
-		itsRelativeMapRect = other.itsRelativeMapRect;
+		RelativeMapRect(other.itsRelativeMapRect);
 		itsMapViewSizeInPixels = other.itsMapViewSizeInPixels;
 		itsParamWindowViewPosition = other.itsParamWindowViewPosition;
 		CombinedMapHandlerInterface::copyDrawParamsList(other.itsDrawParamListVector, itsDrawParamListVector);
@@ -760,12 +762,18 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC,
 	auto timeControlViewIsHidden = fHideTimeControlView || !IsTimeControlViewVisible();
 
 	itsTrueMapViewSizeInfo.onSize(newSize, pDC, itsViewGridSizeVM, !timeControlViewIsHidden, theDrawObjectScaleFactor);
-	// Säädetään smalla suhteellista osiota, minkä karttanäyttö ottaa ja jättää loput aikakontrolli-ikkunalle.
-    int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.logicalPixelsPerMilliMeter().X()));
-    if(timeControlViewIsHidden)
-        wantedTimeControlHeightInPixels = 0;
-    double mapVerticalPortion = (newSize.Y() - wantedTimeControlHeightInPixels) / newSize.Y();
-    itsRelativeMapRect.Height(mapVerticalPortion);
+	// Ei saa tehdä itsRelativeMapRect jos timeControlViewIsHidden on true, 
+	// koska siitä tulee max-area laatikko eli (0,0-1,1). Tämä on erikoistapaus ja ne hoidetaan
+	// RelativeMapRect -metodeissa omalla tavalla. itsRelativeMapRect:in arvoksi ei saa tulla sitä!
+    if(!timeControlViewIsHidden)
+	{
+		// Säädetään samalla suhteellista osiota, minkä karttanäyttö ottaa ja jättää loput aikakontrolli-ikkunalle.
+		int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.logicalPixelsPerMilliMeter().X()));
+	    double mapVerticalPortion = (newSize.Y() - wantedTimeControlHeightInPixels) / newSize.Y();
+		auto modifiedRelativeMapRect = itsRelativeMapRect;
+		modifiedRelativeMapRect.Height(mapVerticalPortion);
+		RelativeMapRect(modifiedRelativeMapRect);
+	}
 
     // lopuksi pitää vielä päivittää x-y suhde
     CalcClientViewXperYRatio(newSize);
@@ -773,15 +781,27 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC,
     UpdateOneMapViewSize();
 }
 
+void NFmiMapViewDescTop::RecalculateMapViewSizeInPixels(double theDrawObjectScaleFactor)
+{
+	auto timeControlViewIsHidden = fPrintingModeOn || !IsTimeControlViewVisible();
+	MapViewSizeInPixels(itsMapViewSizeInPixels, nullptr, theDrawObjectScaleFactor, timeControlViewIsHidden);
+}
+
 const NFmiRect& NFmiMapViewDescTop::RelativeMapRect(void)
 { 
-    if(IsTimeControlViewVisible())
+    if(!fPrintingModeOn && IsTimeControlViewVisible())
         return itsRelativeMapRect; 
     else
     {
-		static const NFmiRect totalRelativeRect(0.,0.,1.,1.);
-        return totalRelativeRect;
+        return g_TotalRelativeMapRect;
     }
+}
+
+void NFmiMapViewDescTop::RelativeMapRect(const NFmiRect& theMapRect) 
+{ 
+	// Ei sallita (0,0 - 1,1) rectin asetusta, joka on erikoistapaus
+	if(theMapRect != g_TotalRelativeMapRect)
+		itsRelativeMapRect = theMapRect; 
 }
 
 bool NFmiMapViewDescTop::IsTimeControlViewVisible() const
@@ -799,6 +819,9 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 {
 	itsShowTimeOnMapMode++;
 	if(itsShowTimeOnMapMode > 3)
+		itsShowTimeOnMapMode = 0;
+	// Jos vaikka on luettu joku negatiivinen luku näyttömakrosta, se pitää korjata
+	if(itsShowTimeOnMapMode < 0)
 		itsShowTimeOnMapMode = 0;
 	bool mapAreaDirty = false;
 	switch(itsShowTimeOnMapMode)
@@ -824,7 +847,7 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 		SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry); // ikkunan koko muuttuu tietyissä tapauksissa, joten rajaviivat on laskettava uudestaan
 	}
 	// Kartta-alueen koot pitää myös päivittää, jos aikakontrolli-ikkuna menee pois näkyvistä tai tulee taas näkyviin
-	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisible());
+	RecalculateMapViewSizeInPixels(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->ApplicationWinRegistry().DrawObjectScaleFactor());
 	return itsShowTimeOnMapMode;
 }
 
@@ -1118,7 +1141,7 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NF
 
 	itsLandBorderPenSize = theOther.itsLandBorderPenSize;
 
-	itsRelativeMapRect = theOther.itsRelativeMapRect;
+	RelativeMapRect(theOther.itsRelativeMapRect);
 
 	// drawparamlistoje ei initialisoida tässä!!!!
 //	itsDrawParamListVector = theOther.itsDrawParamListVector;
@@ -1253,8 +1276,9 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	is >> itsLandBorderColorIndex >> showParamWindowView;
 
 	is >> itsLandBorderPenSize;
-
-	is >> itsRelativeMapRect;
+	NFmiRect tmpMapRect;
+	is >> tmpMapRect;
+	RelativeMapRect(tmpMapRect);
 
 	// itsDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa
 	// itsExtraDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa

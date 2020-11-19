@@ -348,6 +348,16 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::Printing(bool newStatus)
     itsDoc->Printing(newStatus);
 }
 
+void SmartMetDocumentInterfaceForGeneralDataDoc::Printing(unsigned int theMapViewDescTopIndex, bool newStatus)
+{
+    Printing(newStatus);
+    auto mapViewDescTop = MapViewDescTop(theMapViewDescTopIndex);
+    if(mapViewDescTop)
+    {
+        mapViewDescTop->PrintingModeOn(newStatus);
+    }
+}
+
 boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::DefaultEditedDrawParam()
 {
     return itsDoc->DefaultEditedDrawParam();

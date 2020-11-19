@@ -115,12 +115,13 @@ public:
 	bool ShowTimeString(void){return fShowTimeString;}
 	void ShowTimeString(bool newState){fShowTimeString = newState;}
 	const NFmiRect& RelativeMapRect(void);
-	void RelativeMapRect(const NFmiRect& theMapRect){itsRelativeMapRect = theMapRect;};
+	void RelativeMapRect(const NFmiRect& theMapRect);
 	void CalcClientViewXperYRatio(const NFmiPoint& theViewSize);
 	double ClientViewXperYRatio(void){return itsClientViewXperYRatio;};
 	void ClientViewXperYRatio(double theClientViewXperYRatio){itsClientViewXperYRatio = theClientViewXperYRatio;};
 	const NFmiPoint& MapViewSizeInPixels(void){return itsMapViewSizeInPixels;};
 	void MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, double theDrawObjectScaleFactor, bool fHideTimeControlView);
+	void RecalculateMapViewSizeInPixels(double theDrawObjectScaleFactor);
 	int ToggleShowTimeOnMapMode(void);
 	int ShowTimeOnMapMode(void) const {return itsShowTimeOnMapMode;}
 	bool IsTimeControlViewVisible() const;
@@ -208,6 +209,8 @@ public:
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
 	std::string GetCurrentGuiMapLayerText(bool backgroundMap);
 	double SingleMapViewHeightInMilliMeters() const;
+	bool PrintingModeOn() const { return fPrintingModeOn; }
+	void PrintingModeOn(bool newState) { fPrintingModeOn = newState; }
 
 	// HUOM!! T‰m‰ laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
@@ -344,6 +347,10 @@ private:
 	// Uudet erillism‰‰ritellyt border-layerit voivat olla eri piirtos‰‰dˆill‰ ja niit‰ voi olla jokaisella karttarivill‰ omansa.
 	NFmiCountryBorderBitmapCache itsSeparateCountryBorderBitmapCache;
 	TrueMapViewSizeInfo itsTrueMapViewSizeInfo;
+	// Kun karttan‰yttˆ‰ printataan, laitetaan t‰m‰ p‰‰lle, jotta kartta-alue saadaan aina maksimiksi eli (0,0-1,1).
+	// Kun tullaan pois printtauksesta, pit‰‰ t‰m‰ taas laittaa false:ksi!
+	// T‰t‰ ei talleteta minnek‰‰n, eik‰ arvoa kopioida mitenk‰‰n.
+	bool fPrintingModeOn = false;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMapViewDescTop& item){item.Write(os); return os;}

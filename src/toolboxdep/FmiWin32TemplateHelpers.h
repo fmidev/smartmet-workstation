@@ -47,16 +47,14 @@ namespace CFmiWin32TemplateHelpers
 		toolBox->SetDC(pDC);
 		toolBox->GetPrintInfo(pInfo); // ensin pitää laittaa CDC ja sitten printInfo!!!
 
-        smartMetDocumentInterface->Printing(true);
+        auto mapViewDescTopIndex = theView->MapViewDescTopIndex();
+        smartMetDocumentInterface->Printing(mapViewDescTopIndex, true);
 		NFmiPoint oldSize = theView->PrintViewSizeInPixels();
 		// lasketaan sovitus printtaus alueeseen, niin että kuva ei vääristy ja se sopii paperille
 		// Lisäksi karttanäyttö piirretään aina ilman aikakontrolli-ikkunaa, joten lasketaan uusi alue pelkän karttanäyttöosion mukaan
 		// kuitenkin niin että suhteet eivät muutu.
 		CSize destSize = pInfo->m_rectDraw.Size();
 		CSize screenArea = theView->GetPrintedAreaOnScreenSizeInPixels();
-//		NFmiRect oldRelativeMapRect = smartMetDocumentInterface->MapViewDescTop(mapViewDescTopIndex)->RelativeMapRect();
-		NFmiRect oldRelativeMapRect = theView->RelativePrintRect() ? *(theView->RelativePrintRect()) : NFmiRect(0,0,1,1);
-		theView->RelativePrintRect(NFmiRect(0,0,1,1)); // annetaan printtaukseen koko suhteellinen alue käyttöön karttaosiolle
 
 		double widthFactor = destSize.cx / static_cast<double>(screenArea.cx);
 		double heightFactor = destSize.cy / static_cast<double>(screenArea.cy);
@@ -88,7 +86,7 @@ namespace CFmiWin32TemplateHelpers
 
         NFmiPoint viewSizeInPixels(pInfo->m_rectDraw.right - pInfo->m_rectDraw.left, pInfo->m_rectDraw.bottom - pInfo->m_rectDraw.top);
 		theView->PrintViewSizeInPixels(viewSizeInPixels);
-        if(!smartMetDocumentInterface->DoMapViewOnSize(theView->MapViewDescTopIndex(), viewSizeInPixels, pDC))
+        if(!smartMetDocumentInterface->DoMapViewOnSize(mapViewDescTopIndex, viewSizeInPixels, pDC))
         {
     		CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->IsMapView(), theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
         }
@@ -105,13 +103,13 @@ namespace CFmiWin32TemplateHelpers
 		theView->DrawOverBitmapThings(toolBox); //en tiedä voiko tämän sijoittaa DoDraw:in?
 
 		theView->GetGraphicalInfo().fInitialized = false; // printtauksen jälkeen tämä pitää taas laittaa falseksi että piirto osaa initialisoida sen uudestaan
-		theView->SetPrintCopyCDC(0);
+        smartMetDocumentInterface->Printing(mapViewDescTopIndex, false);
+        theView->SetPrintCopyCDC(0);
 		theView->PrintViewSizeInPixels(oldSize);
-		theView->RelativePrintRect(oldRelativeMapRect);
 		CatLog::logMessage("Map view printed", CatLog::Severity::Info, CatLog::Category::Visualization);
-        smartMetDocumentInterface->Printing(false);
 		theView->MakePrintViewDirty(true, true);
 		theView->OldWayPrintUpdate(); // tämä pitää tehdä että prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
+        theView->Invalidate(FALSE);
 	}
 
 	template<class Tview>
