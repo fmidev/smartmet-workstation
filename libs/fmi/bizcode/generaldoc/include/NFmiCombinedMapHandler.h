@@ -84,12 +84,12 @@ class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
     // Gui:hin liittyv‰‰ map-layer tietoa (n‰iden avulla tehd‰‰n ainakin select-map-layer popup valikot).
     // staticxxx viittaa siihen ett‰ kyse on staattisista bitmapeista tiedostoissa, niit‰
     // voi olla erilaiset setit jokaiselle erilaiselle kartta-alueelle.
-    std::vector<MapAreaMapLayerGuiRelatedInfo> staticBackgroundMapLayerGuiInfos_;
-    std::vector<MapAreaMapLayerGuiRelatedInfo> staticOverlayMapLayerGuiInfos_;
+    std::vector<MapAreaMapLayerRelatedInfo> staticBackgroundMapLayerRelatedInfos_;
+    std::vector<MapAreaMapLayerRelatedInfo> staticOverlayMapLayerRelatedInfos_;
     // wmsxxx viittaa dynaamisiin Wms server layereihin, niit‰ on sama setti kaikille 
     // kartta-alueille, siksi niille yksinkertainen vector rakenne.
-    MapAreaMapLayerGuiRelatedInfo wmsBackgroundMapLayerGuiInfos_;
-    MapAreaMapLayerGuiRelatedInfo wmsOverlayMapLayerGuiInfos_;
+    MapAreaMapLayerRelatedInfo wmsBackgroundMapLayerRelatedInfos_;
+    MapAreaMapLayerRelatedInfo wmsOverlayMapLayerRelatedInfos_;
 
 public:
     ~NFmiCombinedMapHandler();
@@ -250,8 +250,11 @@ public:
     void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) override;
     void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex) override;
-    const MapAreaMapLayerGuiRelatedInfo& getCurrentMapLayerGuiInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase) override;
+    const MapAreaMapLayerRelatedInfo& getCurrentMapLayerRelatedInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase) override;
     void selectMapLayer(unsigned int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase) override;
+    std::pair<std::string, std::string> getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
+    void selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName) override;
+    void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) override;
 
 private:
     unsigned int getMapViewCount() const;
@@ -305,9 +308,11 @@ private:
     NFmiDrawParamList* getWantedDrawParamList(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams);
     void initCrossSectionDrawParamListVector();
     void setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase);
+    void setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, bool backgroundCase);
     void mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string& refreshMessage);
-    void initializeGuiRelatedMapLayerInfos();
-    void initializeGuiRelatedStaticMapLayerInfos(std::vector<MapAreaMapLayerGuiRelatedInfo> &mapLayerGuiInfos, bool backgroundMapCase);
-    void initializeGuiRelatedWmsMapLayerInfos();
+    void initializeMapLayerInfos();
+    void initializeStaticMapLayerInfos(std::vector<MapAreaMapLayerRelatedInfo> &mapLayerRelatedInfos, bool backgroundMapCase);
+    void initializeWmsMapLayerInfos();
     int getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase);
+    void selectMapLayerByMacroReferenceNameFromViewMacro(bool backgroundMapCase, unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, NFmiCombinedMapModeState& combinedMapModeState, const std::string& macroReferenceName, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos);
 };

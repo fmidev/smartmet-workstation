@@ -182,8 +182,10 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 	extraData.Add(itsUsedCombinedModeMapIndex); // talletetaan 1. extra-datana käytetty combined-mode karttaindeksi
 	extraData.Add(itsUsedCombinedModeOverMapDibIndex); // talletetaan 2. extra-datana käytetty combined-mode overlay-karttaindeksi
 
-	// 'string' muotoisten extradatojen lisäys
-	extraData.Add(itsAreaFactoryProjStr);
+	// 'string' muotoisten lisädatojen lisäys
+	extraData.Add(itsBackgroundMacroReference); // talletetaan 1. extra-datana mahdollinen taustakartan macro-referenssi nimi
+	extraData.Add(itsOverlayMacroReference); // talletetaan 2. extra-datana mahdollinen overlay-kartan macro-referenssi nimi
+	extraData.Add(itsAreaFactoryProjStr); // talletetaan 3. extra-datana uuden tyyppinen Proj-kirjasto pohjainen area-factory string
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -218,9 +220,15 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 		itsUsedCombinedModeOverMapDibIndex = static_cast<int>(extraData.itsDoubleValues[1]); // luetaan 2. extra-datana combined-mode overlay karttaindeksi
 
 	// 'string' muotoisten lisädatojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
-	itsAreaFactoryProjStr = "";
+	itsBackgroundMacroReference.clear();
 	if(extraData.itsStringValues.size() >= 1)
-		itsAreaFactoryProjStr = extraData.itsStringValues[0]; // luetaan 1. string extra-datana uusi Proj kirjasto pohjainen projektio+area stringi
+		itsBackgroundMacroReference = extraData.itsStringValues[0]; // luetaan 1. extra-datana taustakartan macro-referenssi nimi
+	itsOverlayMacroReference.clear();
+	if(extraData.itsStringValues.size() >= 2)
+		itsOverlayMacroReference = extraData.itsStringValues[1]; // luetaan 2. extra-datana overlay-kartan macro-referenssi nimi
+	itsAreaFactoryProjStr = "";
+	if(extraData.itsStringValues.size() >= 3)
+		itsAreaFactoryProjStr = extraData.itsStringValues[2]; // luetaan 3. string extra-datana uusi Proj kirjasto pohjainen projektio+area stringi
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Read failed");
@@ -621,6 +629,13 @@ NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(void) const
 	if(itsSelectedMapIndexVM < itsGdiPlusImageMapHandlerList.size())
 		return itsGdiPlusImageMapHandlerList[itsSelectedMapIndexVM];
 	throw std::runtime_error("ERROR in NFmiMapViewDescTop::GdiPlusImageMapHandler - SelectedMapIndex was out of bounds, error in program or configurations.");
+}
+
+NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(unsigned int mapAreaIndex) const
+{
+	if(mapAreaIndex < itsGdiPlusImageMapHandlerList.size())
+		return itsGdiPlusImageMapHandlerList[mapAreaIndex];
+	throw std::runtime_error("ERROR in NFmiMapViewDescTop::GdiPlusImageMapHandler - given MapIndex was out of bounds, error in program or configurations.");
 }
 
 int NFmiMapViewDescTop::CalcVisibleRowCount() const
@@ -1326,6 +1341,9 @@ std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetVi
 		tmpData.itsUsedCombinedModeOverMapDibIndex = combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
 		tmpData.itsAreaFactoryStr = mapHandler.Area() ? mapHandler.Area()->AreaFactoryStr() : "";
 		tmpData.itsAreaFactoryProjStr = mapHandler.Area() ? mapHandler.Area()->AreaFactoryProjStr() : "";
+		auto macroReferenceNamePair = combinedMapHandler.getMacroReferenceNamesForViewMacro(itsMapViewDescTopIndex, mapAreaIndex);
+		tmpData.itsBackgroundMacroReference = macroReferenceNamePair.first;
+		tmpData.itsOverlayMacroReference = macroReferenceNamePair.second;
 		helperList.push_back(tmpData);
 	}
 
@@ -1346,8 +1364,8 @@ void NFmiMapViewDescTop::SetViewMacroDipMapHelperList(const std::vector<NFmiMapV
 		mapHandler.OverMapBitmapIndex(tmpData.itsUsedOverMapDibIndex);
 
 		auto& combinedMapHandler = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetCombinedMapHandlerInterface();
-		combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeMapIndex);
-		combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeOverMapDibIndex);
+		combinedMapHandler.selectCombinedMapModeIndices(itsMapViewDescTopIndex, mapAreaIndex, tmpData.itsUsedCombinedModeMapIndex, tmpData.itsUsedCombinedModeOverMapDibIndex);
+		combinedMapHandler.selectMapLayersByMacroReferenceNamesFromViewMacro(itsMapViewDescTopIndex, mapAreaIndex, tmpData.itsBackgroundMacroReference, tmpData.itsOverlayMacroReference);
 
 		// Käytä uuden tyyppistä Proj-pohjaist area-stringiä, jos sellainen löytyi näyttömakrosta 
 		// (riippuu siitä millä smartmet versiolla makro on kirjoitettu)

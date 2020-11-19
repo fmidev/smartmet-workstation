@@ -3162,17 +3162,17 @@ void AddCustomFoldersToMenu(const MenuCreationSettings &theMenuSettings, NFmiMen
 	}
 }
 
-void AddMapLayerGuiInfosToMapLayerSelectionPopup(unsigned int theDescTopIndex, const std::string& finalMenuString, FmiMenuCommandType menuCommand, const MapAreaMapLayerGuiRelatedInfo & mapAreaMapLayerGuiRelatedInfos, NFmiMenuItemList& theMenuItemList)
+void AddMapLayerRelatedInfosToMapLayerSelectionPopup(unsigned int theDescTopIndex, const std::string& finalMenuString, FmiMenuCommandType menuCommand, const MapAreaMapLayerRelatedInfo & mapAreaMapLayerRelatedInfos, NFmiMenuItemList& theMenuItemList)
 {
-	if(!mapAreaMapLayerGuiRelatedInfos.empty())
+	if(!mapAreaMapLayerRelatedInfos.empty())
 	{
 		auto mainMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		auto menuItemList = std::make_unique<NFmiMenuItemList>();
-		for(const auto& guiRelatedInfo : mapAreaMapLayerGuiRelatedInfos)
+		for(const auto& mapLayerRelatedInfo : mapAreaMapLayerRelatedInfos)
 		{
-			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, guiRelatedInfo.name_, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, mapLayerRelatedInfo.guiName_, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 			// Laitetaan näin menu-itemiin tieto siitä että oliko kyse tiedosto vai Wms pohjaisesta kartta layerista
-			menuItem->ExtraParam(guiRelatedInfo.isWmsLayer_ ? g_mapLayerSelectionIsWmsBased : g_mapLayerSelectionIsFileBased);
+			menuItem->ExtraParam(mapLayerRelatedInfo.isWmsLayer_ ? g_mapLayerSelectionIsWmsBased : g_mapLayerSelectionIsFileBased);
 			menuItemList->Add(std::move(menuItem));
 		}
 
@@ -3198,13 +3198,13 @@ void AddToMapLayerSelectionPopup(unsigned int theDescTopIndex, const std::string
 
 	auto subMenuItemList = std::make_unique<NFmiMenuItemList>();
 	std::string finalStaticMenuString = ::GetDictionaryString("Static maps");
-	auto fileBasedMapLayerGuiInfos = itsCombinedMapHandler.getCurrentMapLayerGuiInfos(theDescTopIndex, backgroundMapCase, false);
-	AddMapLayerGuiInfosToMapLayerSelectionPopup(theDescTopIndex, finalStaticMenuString, menuCommand, fileBasedMapLayerGuiInfos, *subMenuItemList);
+	auto fileBasedMapLayerRelatedInfos = itsCombinedMapHandler.getCurrentMapLayerRelatedInfos(theDescTopIndex, backgroundMapCase, false);
+	AddMapLayerRelatedInfosToMapLayerSelectionPopup(theDescTopIndex, finalStaticMenuString, menuCommand, fileBasedMapLayerRelatedInfos, *subMenuItemList);
 	if(!itsCombinedMapHandler.localOnlyMapModeUsed())
 	{
 		std::string finalDynamicMenuString = ::GetDictionaryString("Dynamic maps");
-		auto wmsMapLayerGuiInfos = itsCombinedMapHandler.getCurrentMapLayerGuiInfos(theDescTopIndex, backgroundMapCase, true);
-		AddMapLayerGuiInfosToMapLayerSelectionPopup(theDescTopIndex, finalDynamicMenuString, menuCommand, wmsMapLayerGuiInfos, *subMenuItemList);
+		auto wmsMapLayerRelatedInfos = itsCombinedMapHandler.getCurrentMapLayerRelatedInfos(theDescTopIndex, backgroundMapCase, true);
+		AddMapLayerRelatedInfosToMapLayerSelectionPopup(theDescTopIndex, finalDynamicMenuString, menuCommand, wmsMapLayerRelatedInfos, *subMenuItemList);
 	}
 
 	if(subMenuItemList->NumberOfMenuItems() > 0)

@@ -70,6 +70,9 @@ public:
 		// Tämä arvo talletetaan NFmiExtraDataStorage:n listoihin. Vanhat SmartMetit ignooraavat siis tämän, mutta jos tähän löytyy arvo,
 		// sitä käytetään uudessa uuden NFmiArea olion luontiin, mutta jos tämä tyhjä, käytetään itsAreaFactoryStr:ia sitten.
 		std::string itsAreaFactoryProjStr;
+
+		std::string itsBackgroundMacroReference;
+		std::string itsOverlayMacroReference;
 	};
 
 
@@ -90,7 +93,8 @@ public:
 	void SelectedMapIndex(unsigned int newValue);
     unsigned int SelectedMapIndex(void) const {return itsSelectedMapIndexVM;}
 	NFmiGdiPlusImageMapHandler* MapHandler(void) const;
-    std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
+	NFmiGdiPlusImageMapHandler* MapHandler(unsigned int mapAreaIndex) const;
+	std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
 
 	NFmiMapViewCache& MapViewCache(void) {return itsMapViewCache;}
     bool RedrawMapView(void) const;

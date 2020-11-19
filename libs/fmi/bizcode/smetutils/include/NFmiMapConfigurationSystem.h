@@ -51,6 +51,7 @@ public:
 	size_t MapLayersCount() const;
 	size_t MapOverlaysCount() const;
 	std::string GetBestGuiUsedMapLayerName(size_t layerIndex, bool backgroundMapCase) const;
+	const std::string& GetMacroReferenceName(size_t layerIndex, bool backgroundMapCase) const;
 
 	// T‰t‰ pit‰‰ kutsua, kun NFmiMapConfiguration olio on muuten alustettu!
 	void InitializeFileNameBasedGuiNameVectors();
