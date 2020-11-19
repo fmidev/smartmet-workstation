@@ -47,11 +47,8 @@ class NFmiExtraMacroParamData
   void AddCalculationPoint(const NFmiPoint &latlon) { itsCalculationPoints.push_back(latlon); }
   const std::vector<NFmiPoint> &CalculationPoints() const { return itsCalculationPoints; }
   bool UseCalculationPoints() const { return !itsCalculationPoints.empty(); }
-  const NFmiProducer &CalculationPointProducer() const { return itsCalculationPointProducer; }
-  void CalculationPointProducer(const NFmiProducer &theProducer)
-  {
-    itsCalculationPointProducer = theProducer;
-  }
+  const std::vector<NFmiProducer> &CalculationPointProducers() const { return itsCalculationPointProducers; }
+  bool AddCalculationPointProducer(const NFmiProducer &theProducer);
 
   float ObservationRadiusInKm() const { return itsObservationRadiusInKm; }
   void ObservationRadiusInKm(float newValue) { itsObservationRadiusInKm = newValue; }
@@ -76,7 +73,7 @@ class NFmiExtraMacroParamData
                                         boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   void InitializeRelativeObservationRange(NFmiInfoOrganizer &theInfoOrganizer, float usedRangeInKm);
   void AddCalculationPointsFromData(NFmiInfoOrganizer &theInfoOrganizer,
-                                    const NFmiProducer &theProducer);
+                                    const std::vector<NFmiProducer> &theProducers);
 
   // Jos skriptiss‰ on resolution = edited, k‰ytet‰‰n editoitua dataa resoluutio laskuissa.
   bool fUseEditedDataForResolution;
@@ -105,7 +102,7 @@ class NFmiExtraMacroParamData
   // Jos skriptiss‰ on annettu CalculationPoint on muodossa "CalculationPoint = synop",
   // talletetaan lausekkeen tuottaja t‰nne ja kyseisen datan asemat lis‰t‰‰n itsCalculationPoints
   // -listaan.
-  NFmiProducer itsCalculationPointProducer;  // puuttuva arvo on kun id = 0
+  std::vector<NFmiProducer> itsCalculationPointProducers;
 
   // Jos halutaan ett‰ havaintojen k‰yttˆ‰ laskuissa rajoitetaan laskentas‰teell‰, annetaan se
   // t‰h‰n kilometreiss‰. Jos t‰m‰ on kFloatMissing, k‰ytet‰‰n laskuissa havaintoja rajattomasti.

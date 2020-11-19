@@ -147,6 +147,7 @@ class NFmiSmartToolIntepreter
   static bool InterpretVariableForChecking(const std::string &theVariableText, boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo);
   static VertFunctionMap& GetTokenVertFunctions() { return NFmiSmartToolIntepreter::itsTokenVertFunctions; }
   static FunctionMap& GetTokenThreeArgumentFunctions() { return itsTokenThreeArgumentFunctions; }
+  static bool IsWantedStart(const std::string &theText, const std::string &theWantedStart);
 
  private:
 
@@ -231,7 +232,6 @@ class NFmiSmartToolIntepreter
   static bool GetLevelFromVariableById(const std::string &theVariableText,
                                 NFmiLevel &theLevel,
                                 NFmiInfoData::Type theDataType);
-  static bool IsWantedStart(const std::string &theText, const std::string &theWantedStart);
   static bool GetParamFromVariable(const std::string &theVariableText,
                             ParamMap &theParamMap,
                             NFmiParam &theParam,
