@@ -125,6 +125,12 @@ std::string NFmiMapConfiguration::GetBestGuiUsedMapLayerName(size_t layerIndex, 
 	return bestGuiUsedname;
 }
 
+const std::string& NFmiMapConfiguration::GetMacroReferenceName(size_t layerIndex, bool backgroundMapCase) const
+{
+	return ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapMacroReferenceNames : itsOverlayMapMacroReferenceNames);
+}
+
+
 // ************************************************************************
 // ******************* NFmiMapConfigurationSystem *****************************
 // ************************************************************************

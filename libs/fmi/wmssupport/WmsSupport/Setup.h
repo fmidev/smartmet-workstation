@@ -23,6 +23,13 @@ namespace Wms
         std::vector<std::string> layerGroup;
         // Vanhemmissa servereissä saatetaan käyttää sRS=EPSG:1120 (versio 1.0.0?) tyyliä ja uudemmissa CRS=EPSG:1120
         bool useCrs = true;
+        // Optionaalinen nimi karttalayereille ja overlay kuville, jota on tarkoitus käyttää ainakin käyttöliittymien kanssa, 
+        // kun käyttäjä esim. vaihtaa karttapohjaa suoraan (nimet menee popup valikkoon tai tooltippiin).
+        std::string descriptiveName;
+        // Optionaalinen makro referenssi nimi karttalayereille ja overlay kuville, jota käytetään viittäämään
+        // käytettyyn karttakuvaan näyttömakrojen yhteydessä. Tällöin näyttömakron säätö on joustavampaa kuin suoraan kuvan 
+        // indeksiin (vektorissa) viittaaminen, jos esim. vaihdetaan kuvien järjestystä tai lisätään/poistetaan kuvia listoilta.
+        std::string macroReference;
     };
 
     class UserUrlServerSetup

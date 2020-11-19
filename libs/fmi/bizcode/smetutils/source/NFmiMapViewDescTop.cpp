@@ -182,6 +182,10 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 	extraData.Add(itsUsedCombinedModeMapIndex); // talletetaan 1. extra-datana käytetty combined-mode karttaindeksi
 	extraData.Add(itsUsedCombinedModeOverMapDibIndex); // talletetaan 2. extra-datana käytetty combined-mode overlay-karttaindeksi
 
+	// 'string' muotoisten lisädatojen lisäys
+	extraData.Add(itsBackgroundMacroReference); // talletetaan 1. extra-datana mahdollinen taustakartan macro-referenssi nimi
+	extraData.Add(itsOverlayMacroReference); // talletetaan 2. extra-datana mahdollinen overlay-kartan macro-referenssi nimi
+
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -213,6 +217,14 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 		itsUsedCombinedModeMapIndex = static_cast<int>(extraData.itsDoubleValues[0]); // luetaan 1. extra-datana combined-mode karttaindeksi
 	if(extraData.itsDoubleValues.size() >= 2)
 		itsUsedCombinedModeOverMapDibIndex = static_cast<int>(extraData.itsDoubleValues[1]); // luetaan 2. extra-datana combined-mode overlay karttaindeksi
+
+	// 'string' muotoisten lisädatojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
+	itsBackgroundMacroReference.clear();
+	if(extraData.itsStringValues.size() >= 1)
+		itsBackgroundMacroReference = extraData.itsStringValues[0]; // luetaan 1. extra-datana taustakartan macro-referenssi nimi
+	itsOverlayMacroReference.clear();
+	if(extraData.itsStringValues.size() >= 2)
+		itsOverlayMacroReference = extraData.itsStringValues[1]; // luetaan 2. extra-datana overlay-kartan macro-referenssi nimi
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Read failed");
@@ -613,6 +625,13 @@ NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(void) const
 	if(itsSelectedMapIndexVM < itsGdiPlusImageMapHandlerList.size())
 		return itsGdiPlusImageMapHandlerList[itsSelectedMapIndexVM];
 	throw std::runtime_error("ERROR in NFmiMapViewDescTop::GdiPlusImageMapHandler - SelectedMapIndex was out of bounds, error in program or configurations.");
+}
+
+NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(unsigned int mapAreaIndex) const
+{
+	if(mapAreaIndex < itsGdiPlusImageMapHandlerList.size())
+		return itsGdiPlusImageMapHandlerList[mapAreaIndex];
+	throw std::runtime_error("ERROR in NFmiMapViewDescTop::GdiPlusImageMapHandler - given MapIndex was out of bounds, error in program or configurations.");
 }
 
 int NFmiMapViewDescTop::CalcVisibleRowCount() const
@@ -1317,6 +1336,9 @@ std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetVi
 		tmpData.itsUsedCombinedModeMapIndex = combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
 		tmpData.itsUsedCombinedModeOverMapDibIndex = combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
 		tmpData.itsZoomedAreaStr = mapHandler.Area() ? mapHandler.Area()->AreaStr() : "";
+		auto macroReferenceNamePair = combinedMapHandler.getMacroReferenceNamesForViewMacro(itsMapViewDescTopIndex, mapAreaIndex);
+		tmpData.itsBackgroundMacroReference = macroReferenceNamePair.first;
+		tmpData.itsOverlayMacroReference = macroReferenceNamePair.second;
 		helperList.push_back(tmpData);
 	}
 
@@ -1337,8 +1359,8 @@ void NFmiMapViewDescTop::SetViewMacroDipMapHelperList(const std::vector<NFmiMapV
 		mapHandler.OverMapBitmapIndex(tmpData.itsUsedOverMapDibIndex);
 
 		auto& combinedMapHandler = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetCombinedMapHandlerInterface();
-		combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeMapIndex);
-		combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeOverMapDibIndex);
+		combinedMapHandler.selectCombinedMapModeIndices(itsMapViewDescTopIndex, mapAreaIndex, tmpData.itsUsedCombinedModeMapIndex, tmpData.itsUsedCombinedModeOverMapDibIndex);
+		combinedMapHandler.selectMapLayersByMacroReferenceNamesFromViewMacro(itsMapViewDescTopIndex, mapAreaIndex, tmpData.itsBackgroundMacroReference, tmpData.itsOverlayMacroReference);
 
 		mapHandler.Area(NFmiAreaFactory::Create(static_cast<char*>(tmpData.itsZoomedAreaStr)));
 	}
