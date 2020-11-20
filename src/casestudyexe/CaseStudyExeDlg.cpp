@@ -257,18 +257,19 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
             commandStr += " -xr!*.7z"; // excluudataan *.7z tiedostot (jos tekee uuden tallennuksen samaan paikkaa samalla nimell‰, menee edellisell‰ kerralla luotu zip-tiedosto muuten mukaan)
             commandStr += " -y";  // ohita kaikki kysymykset yes-vastauksella
             commandStr += " -r";  // tee rekursiivinen tiedosto tallennus
-            // Oletus tallennus formaatti on LZMA2 joka on nopea, joten k‰ytet‰‰n sit‰ ja unohdetaan hidas zip jupina
-//            commandStr += " -tzip";  // tee tallennus zip-formaatissa
+            // K‰ytet‰‰n tallennus formaattina LZMA2 joka on nopein, joten k‰ytet‰‰n sit‰ ja unohdetaan hidas zip jupina
+            commandStr += " -m0=lzma2";
             commandStr += ::GetNumberOfCpuThreadsFor7zipOption();  // multi-core pakkaus, n. 1/3 coreista otetaan k‰yttˆˆn esim. -mmt3
-            commandStr += " -mx3";  // tallennuksen pakkaus taso
+            commandStr += " -mx1";  // tallennuksen pakkaus taso
                                     // 0 = ei pakkausta
-                                    // 1 = low
+                                    // 1 = fastest
                                     // 3 = fast
                                     // 5 = normaali
                                     // 7 = max
                                     // 9 = ultra
             commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
             commandStr += pathStr + itsCaseStudySystem.Name();
+            // K‰ytet‰‰n 7z:an omaa formaattia (.7z extensio pakatulle tiedostolle), joka on nopein
             commandStr += ".7z";
             commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
             commandStr += pathStr + itsCaseStudySystem.Name();
