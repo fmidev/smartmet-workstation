@@ -155,8 +155,8 @@ public:
     NFmiEditMapDataListHandler* DataLists(void) override;
     bool ShowObsComparisonOnMap(int theDescTopIndex) override;
     checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
-    int ActiveViewRow(unsigned int theDescTopIndex) override;
-    void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
+    int AbsoluteActiveViewRow(unsigned int theDescTopIndex) override;
+    void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) override;
 	NFmiSynopPlotSettings* SynopPlotSettings(void) override;
     NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) override;
     NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) override;
@@ -180,8 +180,8 @@ public:
     void ActiveMapDescTopIndex(unsigned int newValue) override;
     const NFmiRect& UpdateRect(void) override;
     void UpdateRect(const NFmiRect& theRect) override;
-    int ToolTipRowIndex(void) override;
-    void ToolTipRowIndex(int newIndex) override;
+    int ToolTipRealRowIndex(void) override;
+    void ToolTipRealRowIndex(int newRealRowIndex) override;
     void DoAutoZoom(unsigned int theDescTopIndex) override;
     bool MapMouseDragPanMode(void) override;
     void MapMouseDragPanMode(bool newState) override;
@@ -201,7 +201,7 @@ public:
     void ToolTipColumnIndex(int newIndex) override;
     bool HasActiveViewChanged(void) override;
     void LastBrushedViewTime(const NFmiMetTime& newTime) override;
-    void LastBrushedViewRow(int newRow) override;
+    void LastBrushedViewRealRowIndex(int newRealRowIndex) override;
     const NFmiTimeBag& EditedDataTimeBag(void) override;
     const boost::shared_ptr<NFmiArea> CPGridCropLatlonArea(void) override;
     bool IsCPGridCropNotPlausible(void) override;
@@ -234,7 +234,7 @@ public:
     const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() override;
     const NFmiMetTime& ActiveViewTime(void) override;
     void ActiveViewTime(const NFmiMetTime& theTime) override;
-    boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) override;
+    boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
     bool ViewBrushed(void) override;
     void ViewBrushed(bool newState) override;
     bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam = kFmiLastParameter) override;

@@ -262,7 +262,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,itsStationPointSize(1, 1)
 ,itsTimeControlTimeStep(1)
 ,itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
-,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
 ,itsGraphicalInfo()
@@ -315,7 +314,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsStationPointSize(1, 1)
 ,itsTimeControlTimeStep(1)
 ,itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
-,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
 ,itsGraphicalInfo()
@@ -368,7 +366,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, itsStationPointSize()
 	, itsTimeControlTimeStep(1)
 	, itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
-	, itsActiveViewRow(1)
 	, fDescTopOn(true)
 	, fMapViewBitmapDirty(true)
 	, itsMapView(other.itsMapView) // MapView pointteri pit‰‰ kopioida t‰ss‰, se ei muutu ajon aikana
@@ -430,7 +427,7 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsStationPointSize = other.itsStationPointSize;
 		itsTimeControlTimeStep = other.itsTimeControlTimeStep;
 		itsMapViewDisplayMode = other.itsMapViewDisplayMode;
-		itsActiveViewRow = other.itsActiveViewRow;
+		itsAbsoluteActiveViewRow = other.itsAbsoluteActiveViewRow;
 		fDescTopOn = other.fDescTopOn;
 		fMapViewBitmapDirty = true; // Kopioinnin j‰lkeen kaikki on 'likaista'
 		itsMapView = other.itsMapView; // MapView pointteri pit‰‰ kopioida t‰ss‰, se ei muutu ajon aikana
@@ -647,7 +644,7 @@ int NFmiMapViewDescTop::CalcVisibleRowCount() const
 }
 
 // scrollaa n‰yttˆriveja halutun m‰‰r‰n (negatiivinen skrollaa ylˆs ja positiivinen count alas)
-bool NFmiMapViewDescTop::ScrollViewRow(int theCount, int &theActiveViewRow)
+bool NFmiMapViewDescTop::ScrollViewRow(int theCount)
 {
     int oldValue = itsMapRowStartingIndex;
     itsMapRowStartingIndex += theCount;
@@ -663,10 +660,7 @@ bool NFmiMapViewDescTop::ScrollViewRow(int theCount, int &theActiveViewRow)
     if(oldValue == itsMapRowStartingIndex)
         return false;
     else
-    {
-        theActiveViewRow = theActiveViewRow + (oldValue - itsMapRowStartingIndex);
         return true;
-    }
 }
 
 int NFmiMapViewDescTop::CalcMaxRowStartingIndex() const
@@ -1176,7 +1170,7 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NF
     }
 	itsTimeControlTimeStep = theOther.itsTimeControlTimeStep;
 	itsMapViewDisplayMode = theOther.itsMapViewDisplayMode;
-	itsActiveViewRow = theOther.itsActiveViewRow;
+	itsAbsoluteActiveViewRow = theOther.itsAbsoluteActiveViewRow;
 
 	fDescTopOn = theOther.fDescTopOn;
     fLockToMainMapViewTime = theOther.fLockToMainMapViewTime;
@@ -1450,7 +1444,7 @@ void NFmiMapViewDescTop::MapViewDisplayMode(CtrlViewUtils::MapViewMode newValue)
 	// kuin ne voivat kulloisessakin moodissa olla. Esim. Jos ollaan ensin yksi-aika-moodissa rivill‰ 35
 	// ja siirryt‰‰n yksi-aika-per-sarake eli normaali moodiiin, silloin ei voida olla rivill‰ 35, vaan 
 	// aloitus rivi‰ pit‰‰ s‰‰t‰‰, niin ett‰ se mahtuu 5 ensimm‰iseen riviin riippuen ruudukon koosta.
-	ScrollViewRow(0, itsActiveViewRow);
+	ScrollViewRow(0);
 }
 
 // S‰‰det‰‰n kaikki aikaa liittyv‰t jutut parametrina annettuun aikaan, ett‰ SmartMet s‰‰tyy ladattuun CaseStudy-dataan mahdollisimman hyvin.

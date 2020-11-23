@@ -193,19 +193,19 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ModifyToolMode(CtrlViewUtils::F
     itsDoc->ModifyToolMode(newState);
 }
 
-boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex)
+boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
 {
-    return itsDoc->GetCombinedMapHandler()->activeDrawParam(theDescTopIndex, theRowIndex);
+    return itsDoc->GetCombinedMapHandler()->activeDrawParamFromActiveRow(theDescTopIndex);
 }
 
-int SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
+int SmartMetDocumentInterfaceForGeneralDataDoc::AbsoluteActiveViewRow(unsigned int theDescTopIndex)
 {
-	return itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex);
+	return itsDoc->GetCombinedMapHandler()->absoluteActiveViewRow(theDescTopIndex);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
+void SmartMetDocumentInterfaceForGeneralDataDoc::AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex)
 {
-    itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex, theActiveRowIndex);
+    itsDoc->GetCombinedMapHandler()->absoluteActiveViewRow(theDescTopIndex, theAbsoluteActiveRowIndex);
 }
 
 double SmartMetDocumentInterfaceForGeneralDataDoc::BrushSpecialParamValue()
@@ -1410,6 +1410,11 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SetHatchingToolmasterEpsilonFac
     ApplicationWinRegistry().HatchingToolmasterEpsilonFactor(newEpsilonFactor);
     if(ApplicationInterface::GetApplicationInterfaceImplementation)
         ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(newEpsilonFactor);
+}
+
+CombinedMapHandlerInterface& SmartMetDocumentInterfaceForGeneralDataDoc::GetCombinedMapHandlerInterface()
+{
+    return *itsDoc->GetCombinedMapHandler();
 }
 
 #ifndef DISABLE_CPPRESTSDK

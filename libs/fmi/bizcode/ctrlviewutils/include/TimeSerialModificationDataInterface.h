@@ -71,8 +71,8 @@ public:
     virtual void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) = 0;
     virtual int FilteringParameterUsageState(void) = 0;
     virtual void FilteringParameterUsageState(int newValue) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) = 0;
-    virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual int AbsoluteActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual NFmiParamBag& FilteringParamBag(void) = 0;
     virtual const NFmiTimeDescriptor& EditedDataTimeDescriptor(void) = 0;
     virtual const NFmiMetTime& ActiveViewTime(void) = 0;
@@ -80,7 +80,7 @@ public:
     virtual NFmiSmartToolInfo* SmartToolInfo(void) = 0;
     virtual std::string& SmartToolEditingErrorText(void) = 0;
     virtual NFmiGriddingHelperInterface* GetGriddingHelper(void) = 0;
-    virtual void LastBrushedViewRow(int newRow) = 0;
+    virtual void LastBrushedViewRealRowIndex(int newRealRowIndex) = 0;
     virtual bool UseMasksWithFilterTool(void) = 0;
     virtual int TestFilterUsedMask(void) = 0;
     virtual NFmiGrid* ClipBoardData(void) = 0;

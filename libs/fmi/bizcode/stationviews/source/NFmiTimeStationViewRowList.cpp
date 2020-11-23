@@ -219,8 +219,16 @@ bool NFmiTimeStationViewRowList::MouseMove(const NFmiPoint& thePlace, unsigned l
 	{
         if(itsViewList->IsMouseDraggingOn())
             return itsViewList->MouseMove(thePlace, theKey);
-        else if(itsViewList->Index(itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex)))
-			return itsViewList->Current()->MouseMove(thePlace, theKey);
+		else
+		{
+			for(itsViewList->Reset(); itsViewList->Next(); )
+			{
+				auto* currentView = itsViewList->Current();
+				auto* currentViewRow = dynamic_cast<NFmiTimeStationViewRow*>(currentView);
+				if(currentViewRow && currentViewRow->HasActiveRowView())
+					return currentViewRow->MouseMove(thePlace, theKey);
+			}
+		}
 	}
 	return false;
 }
@@ -350,22 +358,23 @@ std::string NFmiTimeStationViewRowList::ComposeToolTipText(const NFmiPoint& theR
 	return std::string();
 }
 
-NFmiCtrlView* NFmiTimeStationViewRowList::GetView(int theRowIndex, const NFmiMetTime &theTime, const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly)
+NFmiCtrlView* NFmiTimeStationViewRowList::GetViewWithRealRowIndex(int theRealRowIndex, const NFmiMetTime& theTime, const NFmiDataIdent& theDataIdent, bool fUseParamIdOnly)
 {
 	if(itsViewList)
 	{
 		int counter = 1; // indeksit alkavat 1:stä
 		for(itsViewList->Reset(); itsViewList->Next(); counter++)
 		{
-			if(counter == theRowIndex)
+			NFmiTimeStationViewRow* rowView = dynamic_cast<NFmiTimeStationViewRow*>(itsViewList->Current());
+			if(rowView)
 			{
-				NFmiTimeStationViewRow *rowView = dynamic_cast<NFmiTimeStationViewRow *>(itsViewList->Current());
-				if(rowView)
-					return rowView->GetView(theTime, theDataIdent, fUseParamIdOnly);
+				auto *ctrlView = rowView->GetViewWithRealRowIndex(theRealRowIndex, theTime, theDataIdent, fUseParamIdOnly);
+				if(ctrlView)
+					return ctrlView;
 			}
 		}
 	}
-	return 0;
+	return nullptr;
 }
 
 NFmiStationViewHandler* NFmiTimeStationViewRowList::GetMapView(int theRowIndex, int theIndex)

@@ -207,7 +207,7 @@ void CFmiBrushToolDlg::Update(void)
 
 void CFmiBrushToolDlg::FillSpecialValueCombo(void)
 {
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam = itsSmartMetDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsSmartMetDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex));
+	boost::shared_ptr<NFmiDrawParam> activeDrawParam = GetActiveDrawParam();
 	if(activeDrawParam)
 	{
 		FmiParameterName paramId = FmiParameterName(activeDrawParam->Param().GetParam()->GetIdent());
@@ -294,9 +294,14 @@ void CFmiBrushToolDlg::OnSelchangeComboDiscreteValueSelectio()
 	UpdateData(FALSE);
 }
 
+boost::shared_ptr<NFmiDrawParam> CFmiBrushToolDlg::GetActiveDrawParam()
+{
+	return itsSmartMetDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
+}
+
 void CFmiBrushToolDlg::UpdateParamUnitString(void)
 {
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam = itsSmartMetDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsSmartMetDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex));
+	boost::shared_ptr<NFmiDrawParam> activeDrawParam = GetActiveDrawParam();
 	if(activeDrawParam)
 	{
 		NFmiString str(activeDrawParam->ParameterAbbreviation());

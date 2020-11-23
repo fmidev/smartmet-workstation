@@ -44,7 +44,6 @@ namespace AddParams
     ,infoOrganizer_(nullptr)
     ,helpDataInfoSystem_(nullptr)
     ,itsLastActivatedDesktopIndex(0)
-    ,itsLastActivatedRowIndex(1)
     ,helpDataIDs_()
     ,customCategories_()
 	,soundingLevels_(nullptr)
@@ -504,6 +503,34 @@ namespace AddParams
             }
         }
         return false;
+    }
+
+    int ParameterSelectionSystem::LastActivatedRowIndex() const
+    {
+        return GetLastActivatedRowIndexFromWantedDesktop(itsLastActivatedDesktopIndex);
+    }
+
+    void ParameterSelectionSystem::SetLastActiveIndexes(unsigned int desktopIndex, int rowIndex)
+    {
+        itsLastActivatedDesktopIndex = desktopIndex;
+        if(itsLastActivatedDesktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+            itsLastActivatedMapRowIndex = rowIndex;
+        else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
+            itsLastActivatedCrossSectionRowIndex = rowIndex;
+        else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
+            itsLastActivatedTimeSerialRowIndex = rowIndex;
+    }
+
+    int ParameterSelectionSystem::GetLastActivatedRowIndexFromWantedDesktop(unsigned int desktopIndex) const
+    {
+        if(desktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+            return itsLastActivatedMapRowIndex;
+        else if(desktopIndex == CtrlViewUtils::kFmiCrossSectionView)
+            return itsLastActivatedCrossSectionRowIndex;
+        else if(desktopIndex == CtrlViewUtils::kFmiTimeSerialView)
+            return itsLastActivatedTimeSerialRowIndex;
+        else
+            return 1; // virhe, pitäisi oikeasti kai heittää poikkeus
     }
 
 }
