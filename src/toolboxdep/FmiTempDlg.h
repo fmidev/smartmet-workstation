@@ -125,6 +125,7 @@ public:
 	afx_msg void OnAcceleratorTempProducer7();
 	afx_msg void OnAcceleratorTempProducer8();
 	afx_msg void OnAcceleratorTempProducer9();
+	afx_msg void OnAcceleratorTempProducer10();
 	afx_msg void OnEditSpaceOut();
 	afx_msg void OnBnClickedCheckShowSideView();
 	afx_msg void OnAcceleratorSwapArea();
