@@ -48,9 +48,9 @@ public:
     void BrushToolLimitSetting(int newValue) override;
     CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode() override;
     void ModifyToolMode(CtrlViewUtils::FmiEditorModifyToolMode newState) override;
-    boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) override;
-    int ActiveViewRow(unsigned int theDescTopIndex) override;
-    void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) override;
+    boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
+    int AbsoluteActiveViewRow(unsigned int theDescTopIndex) override;
+    void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) override;
 	double BrushSpecialParamValue() override;
     void BrushSpecialParamValue(double newValue) override;
     boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() override;
@@ -291,6 +291,7 @@ public:
     NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) override;
     bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) override;
     void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) override;
+    CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

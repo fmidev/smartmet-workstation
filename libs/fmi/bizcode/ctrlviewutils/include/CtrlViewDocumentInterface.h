@@ -272,8 +272,8 @@ public:
     virtual NFmiEditMapDataListHandler* DataLists(void) = 0;
     virtual bool ShowObsComparisonOnMap(int theDescTopIndex) = 0;
     virtual std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
-    virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
-    virtual void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
+    virtual int AbsoluteActiveViewRow(unsigned int theDescTopIndex) = 0;
+    virtual void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) = 0;
     virtual NFmiSynopPlotSettings* SynopPlotSettings(void) = 0;
     virtual NFmiSynopStationPrioritySystem* SynopStationPrioritySystem(void) = 0;
     virtual NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex) = 0;
@@ -297,8 +297,8 @@ public:
     virtual void ActiveMapDescTopIndex(unsigned int newValue) = 0;
     virtual const NFmiRect& UpdateRect(void) = 0;
     virtual void UpdateRect(const NFmiRect& theRect) = 0;
-    virtual int ToolTipRowIndex(void) = 0;
-    virtual void ToolTipRowIndex(int newIndex) = 0;
+    virtual int ToolTipRealRowIndex(void) = 0;
+    virtual void ToolTipRealRowIndex(int newRealRowIndex) = 0;
     virtual void DoAutoZoom(unsigned int theDescTopIndex) = 0;
     virtual bool MapMouseDragPanMode(void) = 0;
     virtual void MapMouseDragPanMode(bool newState) = 0;
@@ -318,7 +318,7 @@ public:
     virtual void ToolTipColumnIndex(int newIndex) = 0;
     virtual bool HasActiveViewChanged(void) = 0;
     virtual void LastBrushedViewTime(const NFmiMetTime& newTime) = 0;
-    virtual void LastBrushedViewRow(int newRow) = 0;
+    virtual void LastBrushedViewRealRowIndex(int newRealRowIndex) = 0;
     virtual const NFmiTimeBag& EditedDataTimeBag(void) = 0;
     virtual const boost::shared_ptr<NFmiArea> CPGridCropLatlonArea(void) = 0;
     virtual bool IsCPGridCropNotPlausible(void) = 0;
@@ -351,7 +351,7 @@ public:
     virtual const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() = 0;
     virtual const NFmiMetTime& ActiveViewTime(void) = 0;
     virtual void ActiveViewTime(const NFmiMetTime& theTime) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
     virtual bool ViewBrushed(void) = 0;
     virtual void ViewBrushed(bool newState) = 0;
     virtual bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam = kFmiLastParameter) = 0;

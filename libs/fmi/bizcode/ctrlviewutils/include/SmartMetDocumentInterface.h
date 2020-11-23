@@ -121,9 +121,9 @@ public:
     virtual void BrushToolLimitSetting(int newValue) = 0;
     virtual CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode() = 0;
     virtual void ModifyToolMode(CtrlViewUtils::FmiEditorModifyToolMode newState) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) = 0;
-    virtual int ActiveViewRow(unsigned int theDescTopIndex) = 0;
-    virtual void ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual int AbsoluteActiveViewRow(unsigned int theDescTopIndex) = 0;
+    virtual void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) = 0;
     virtual double BrushSpecialParamValue() = 0;
     virtual void BrushSpecialParamValue(double newValue) = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() = 0;
@@ -364,6 +364,7 @@ public:
     virtual NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) = 0;
     virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
     virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) = 0;
+    virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

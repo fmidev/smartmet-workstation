@@ -528,8 +528,8 @@ public:
 	void UseMasksInTimeSerialViews(bool newValue);
 	bool StoreOptionsData(void);
 
-	int ToolTipRowIndex(void);
-	void ToolTipRowIndex(int newIndex);
+	int ToolTipRealRowIndex(void);
+	void ToolTipRealRowIndex(int newRealRowIndex);
 	int ToolTipColumnIndex(void);
 	void ToolTipColumnIndex(int newIndex);
 	const NFmiPoint& ToolTipLatLonPoint(void) const;
@@ -592,8 +592,8 @@ public:
 	void MiddleMouseButtonDown(bool newState);
 	const NFmiMetTime& LastBrushedViewTime(void);
 	void LastBrushedViewTime(const NFmiMetTime& newTime);
-	int LastBrushedViewRow(void);
-	void LastBrushedViewRow(int newRow);
+	int LastBrushedViewRealRowIndex(void);
+	void LastBrushedViewRealRowIndex(int newRealRowIndex);
 	bool HasActiveViewChanged(void);
 	const NFmiMetTime& TimeFilterStartTime(void);
 	const NFmiMetTime& TimeFilterEndTime(void);

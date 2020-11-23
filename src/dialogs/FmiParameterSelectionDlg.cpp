@@ -1311,11 +1311,22 @@ void CFmiParameterSelectionDlg::OnPaint()
     dc.FillRect(&clientRect, &brush);
 }
 
+// Kun dialogi avataan '+' -napista, kutsutaan tätä tehdään kyseisen näytön asetukset kuntoon,
+// jotta parametrit lisätään sen näytön aktiiviseen riviin.
 void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 {
-	auto row = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
-	itsParameterSelectionSystem->LastActivatedDesktopIndex(theDesktopIndex);
-	itsParameterSelectionSystem->LastActivatedRowIndex(row);
+    int absoluteActiveRow = 1;
+    if(theDesktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+    {
+        // Karttanäytöillä on omat aktiivisten rivien muistit, joten käytetään niitä
+        absoluteActiveRow = itsSmartMetDocumentInterface->MapViewDescTop(theDesktopIndex)->AbsoluteActiveViewRow();
+    }
+    else
+    {
+        //  Muille näytöille ParameterSelectionSystem saa toimia aktiivisten rivien muistina
+        absoluteActiveRow = itsParameterSelectionSystem->GetLastActivatedRowIndexFromWantedDesktop(theDesktopIndex);
+    }
+    itsParameterSelectionSystem->SetLastActiveIndexes(theDesktopIndex, absoluteActiveRow);
 	SetWindowText(CA2T(MakeTitleText().c_str()));
 	itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
 	Update();

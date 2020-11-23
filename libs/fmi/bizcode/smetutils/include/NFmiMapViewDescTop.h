@@ -101,7 +101,7 @@ public:
     void SetRedrawMapView(bool newValue);
     void ClearRedrawMapView();
 	NFmiPtrList<NFmiDrawParamList>* DrawParamListVector(void) {return itsDrawParamListVector;}
-	bool ScrollViewRow(int theCount, int &theActiveViewRow);
+	bool ScrollViewRow(int theCount);
     const NFmiPoint& ViewGridSize(void) const {return itsViewGridSizeVM;}
 	void ViewGridSize(const NFmiPoint& newSize, NFmiMapViewWinRegistry *theMapViewWinRegistry);
 	void ViewGridSizeMax(const NFmiPoint& newSize){itsViewGridSizeMax = newSize;};
@@ -207,8 +207,8 @@ public:
 	NFmiPoint ActualMapBitmapSizeInPixels(void);
 	const NFmiTimeDescriptor& TimeControlViewTimes(void) const {return itsTimeControlViewTimes;}
 	void TimeControlViewTimes(const NFmiTimeDescriptor &newTimeDescriptor);
-	int ActiveViewRow(void) const {return itsActiveViewRow;}
-	void ActiveViewRow(int newValue) {itsActiveViewRow = newValue;}
+	int AbsoluteActiveViewRow(void) const {return itsAbsoluteActiveViewRow;}
+	void AbsoluteActiveViewRow(int newValue) { itsAbsoluteActiveViewRow = newValue;}
     NFmiAnimationData& AnimationDataRef(void) {return itsAnimationData;}
 	int CalcPrintingPageShiftInMinutes(void);
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
@@ -302,9 +302,9 @@ private:
 	// kokonaisosa tunteja varten ja desimaalit minuutteja (0.5 = 30 minuuttia jne.)
 	float itsTimeControlTimeStep; 
     CtrlViewUtils::MapViewMode itsMapViewDisplayMode;
-	// kun näyttöruudukkoa klikataan hiirellä, yksi ruuduista muuttuu aktiiviseksi, sen ruudun rivinumero talletetaan tähän
-	// HUOM! tämä on suhteellinen rivinumero eli pitää ottaa huomioon monesko rivi on ensimmäisenä näkyvissä karttanäyttö ruudukossa
-	int itsActiveViewRow;
+	// Kun näyttöruudukkoa klikataan hiirellä, yksi ruuduista muuttuu aktiiviseksi. 
+	// Sen ruudun absoluuttinen rivinumero (1-50) talletetaan tähän (eli ei suhteellinen näkyvissä olevista riveistä).
+	int itsAbsoluteActiveViewRow = 1;
 	// onko tämä desctop näyttö näkyvissä vai ei
 	bool fDescTopOn; 
 	// Piiretäänkö karttanäytölle vain bitmap uudestaan (tällä saadaan pyyhittyä piirretty tooltippi pois)

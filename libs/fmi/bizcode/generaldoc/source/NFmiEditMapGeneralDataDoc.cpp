@@ -276,7 +276,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsDataLoadingInfoNormal()
 ,itsDataLoadingInfoCaseStudy()
 ,fUseMasksInTimeSerialViews(true)
-,itsToolTipRowIndex(-1)
+,itsToolTipRealRowIndex(-1)
 ,itsToolTipColumnIndex(-1)
 ,itsToolTipTime()
 ,itsDefaultEditedDrawParam()
@@ -308,7 +308,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,fRightMouseButtonDown(false)
 ,fMiddleMouseButtonDown(false)
 ,itsLastBrushedViewTime()
-,itsLastBrushedViewRow(0)
+,itsLastBrushedViewRealRowIndex(0)
 ,fUseTimeInterpolation(false)
 ,itsMetEditorOptionsData()
 ,itsCPManagerSet()
@@ -2346,7 +2346,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		if(theType == NFmiInfoData::kEditable) // 1999.08.30/Marko
 		{
 			FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pit‰‰ p‰ivitt‰‰
-			itsLastBrushedViewRow = -1; // sivellint‰ varten pit‰‰ 'nollata' t‰m‰
+			itsLastBrushedViewRealRowIndex = -1; // sivellint‰ varten pit‰‰ 'nollata' t‰m‰
 			boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
 			if(editedInfo)
 			{
@@ -4954,14 +4954,15 @@ bool StoreMatrixToGridfile(const NFmiDataMatrix<float> &dataMatrix, const NFmiSt
 	return true;
 }
 
-bool MakeGridFileForMacroParam(unsigned long usedMapViewIndex, int activeViewRow, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiString& theFileName)
+bool MakeGridFileForMacroParam(unsigned long usedMapViewIndex, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiString& theFileName)
 {
-	auto drawParamList = GetCombinedMapHandler()->getDrawParamList(usedMapViewIndex, activeViewRow);
+	auto absoluteActiveViewRow = GetCombinedMapHandler()->absoluteActiveViewRow(usedMapViewIndex);
+	auto drawParamList = GetCombinedMapHandler()->getDrawParamListWithRealRowNumber(usedMapViewIndex, absoluteActiveViewRow);
 	if(drawParamList)
 	{
 		auto activeParamLayerIndex = drawParamList->FindActive();
 		NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
-		if(MacroParamDataCache().getCache(usedMapViewIndex, activeViewRow, activeParamLayerIndex, itsActiveViewTime, drawParam->InitFileName(), macroParamLayerCacheDataType))
+		if(MacroParamDataCache().getCache(usedMapViewIndex, absoluteActiveViewRow, activeParamLayerIndex, itsActiveViewTime, drawParam->InitFileName(), macroParamLayerCacheDataType))
 		{
 			const auto& dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
 			return StoreMatrixToGridfile(dataMatrix, theFileName);
@@ -4976,13 +4977,12 @@ bool MakeGridFile(const NFmiString& theFileName)
 {
 	// tehd‰‰n vain p‰‰karttaikkunasta n‰it‰ talletuksia
 	auto usedMapViewIndex = 0ul;
-	auto activeViewRow = GetCombinedMapHandler()->activeViewRow(usedMapViewIndex);
-	boost::shared_ptr<NFmiDrawParam> drawParam = GetCombinedMapHandler()->activeDrawParam(usedMapViewIndex, activeViewRow);
+	boost::shared_ptr<NFmiDrawParam> drawParam = GetCombinedMapHandler()->activeDrawParamFromActiveRow(usedMapViewIndex);
 	bool status = false;
 	if(drawParam)
 	{
 		if(drawParam->IsMacroParamCase(true))
-			return MakeGridFileForMacroParam(usedMapViewIndex, activeViewRow, drawParam, theFileName);
+			return MakeGridFileForMacroParam(usedMapViewIndex, drawParam, theFileName);
 		else
 		{
 			boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, false, false);
@@ -5161,7 +5161,7 @@ bool DoTimeFiltering(void)
 
 bool HasActiveViewChanged(void)
 {
-	if(itsLastBrushedViewRow != GetCombinedMapHandler()->activeViewRow(0))
+	if(itsLastBrushedViewRealRowIndex != GetCombinedMapHandler()->absoluteActiveViewRow(ParameterSelectionSystem().LastActivatedDesktopIndex()))
 		return true;
 	if(itsLastBrushedViewTime != itsActiveViewTime)
 		return true;
@@ -8238,8 +8238,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     void SetLastActiveDescTopAndViewRow(unsigned int theDesktopIndex, int theActiveRowIndex)
     {
 		GetCombinedMapHandler()->activeEditedParameterMayHaveChangedViewUpdateFlagSetting(theDesktopIndex);
-        ParameterSelectionSystem().LastActivatedDesktopIndex(theDesktopIndex);
-        ParameterSelectionSystem().LastActivatedRowIndex(GetCombinedMapHandler()->getRealRowNumber(theDesktopIndex, theActiveRowIndex));
+		auto finalActiveRowIndex = GetCombinedMapHandler()->getRealRowNumber(theDesktopIndex, theActiveRowIndex);
+		ParameterSelectionSystem().SetLastActiveIndexes(theDesktopIndex, finalActiveRowIndex);
     }
 
     // Kun animaatio on p‰‰ll‰, aina ei haluta menn‰ animaation loppuun asti kokonaan.
@@ -10516,7 +10516,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	bool fUseMasksInTimeSerialViews;
 
-	int itsToolTipRowIndex; // hiiren kursorin lepopaikan n‰yttˆrivi tooltippi‰ varten
+	int itsToolTipRealRowIndex; // hiiren kursorin lepopaikan n‰yttˆrivi tooltippi‰ varten
 	int itsToolTipColumnIndex; // hiiren kursorin lepopaikan n‰yttˆrivin sarake numero tooltippi‰ varten
 	NFmiPoint itsToolTipLatLonPoint; // hiiren kursorin lepopaikka tooltippi‰ varten (kartan koordinaatistossa latlon-piste)
 	NFmiMetTime itsToolTipTime; // tooltipill‰ voi olla mik‰ tahansa ruudukon aika, ja se talletetaan t‰h‰n
@@ -10570,7 +10570,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool fRightMouseButtonDown;
 	bool fMiddleMouseButtonDown;
 	NFmiMetTime itsLastBrushedViewTime;
-	int itsLastBrushedViewRow;
+	int itsLastBrushedViewRealRowIndex;
 
 	NFmiMetTime itsTimeFilterStartTime;
 	NFmiMetTime itsTimeFilterEndTime;
@@ -10892,14 +10892,14 @@ void NFmiEditMapGeneralDataDoc::UseMasksInTimeSerialViews(bool newValue)
 {
 	pimpl->fUseMasksInTimeSerialViews = newValue;
 }
-int NFmiEditMapGeneralDataDoc::ToolTipRowIndex(void)
+int NFmiEditMapGeneralDataDoc::ToolTipRealRowIndex(void)
 {
-	return pimpl->itsToolTipRowIndex;
+	return pimpl->itsToolTipRealRowIndex;
 }
 
-void NFmiEditMapGeneralDataDoc::ToolTipRowIndex(int newIndex)
+void NFmiEditMapGeneralDataDoc::ToolTipRealRowIndex(int newRealRowIndex)
 {
-	pimpl->itsToolTipRowIndex = newIndex;
+	pimpl->itsToolTipRealRowIndex = newRealRowIndex;
 }
 
 int NFmiEditMapGeneralDataDoc::ToolTipColumnIndex(void)
@@ -10965,8 +10965,8 @@ void NFmiEditMapGeneralDataDoc::MiddleMouseButtonDown(bool newState)
 {pimpl->MiddleMouseButtonDown(newState);}
 const NFmiMetTime& NFmiEditMapGeneralDataDoc::LastBrushedViewTime(void){return pimpl->itsLastBrushedViewTime;};
 void NFmiEditMapGeneralDataDoc::LastBrushedViewTime(const NFmiMetTime& newTime){pimpl->itsLastBrushedViewTime = newTime;};
-int NFmiEditMapGeneralDataDoc::LastBrushedViewRow(void){return pimpl->itsLastBrushedViewRow;};
-void NFmiEditMapGeneralDataDoc::LastBrushedViewRow(int newRow){pimpl->itsLastBrushedViewRow = newRow;};
+int NFmiEditMapGeneralDataDoc::LastBrushedViewRealRowIndex(void){return pimpl->itsLastBrushedViewRealRowIndex;};
+void NFmiEditMapGeneralDataDoc::LastBrushedViewRealRowIndex(int newRealRowIndex){pimpl->itsLastBrushedViewRealRowIndex = newRealRowIndex;};
 const NFmiMetTime& NFmiEditMapGeneralDataDoc::TimeFilterStartTime(void){return pimpl->itsTimeFilterStartTime;};
 const NFmiMetTime& NFmiEditMapGeneralDataDoc::TimeFilterEndTime(void){return pimpl->itsTimeFilterEndTime;};
 int NFmiEditMapGeneralDataDoc::FilterDialogUpdateStatus(void){return pimpl->FilterDialogUpdateStatus();};

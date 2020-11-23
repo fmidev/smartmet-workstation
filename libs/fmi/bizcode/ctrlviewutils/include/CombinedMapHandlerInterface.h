@@ -94,6 +94,7 @@ public:
     virtual void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) = 0;
     virtual const std::unique_ptr<NFmiFastDrawParamList>& getModifiedPropertiesDrawParamList() const = 0;
     virtual unsigned int getRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex) = 0;
+    virtual unsigned int getRelativeRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual void hideShowAllMapViewParams(unsigned int mapViewDescTopIndex, bool hideAllObservations, bool showAllObservations, bool hideAllForecasts, bool showAllForecasts) = 0;
     virtual void setModelRunOffset(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void activateView(const NFmiMenuItem& menuItem, int rowIndex) = 0;
@@ -144,7 +145,8 @@ public:
     virtual void removeTimeSerialView(const NFmiMenuItem& menuItem) = 0;
     virtual void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual unsigned long& getTimeSerialViewIndexReference() = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParam(unsigned int mapViewDescTopIndex, int rowIndex) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual void changeMapType(unsigned int mapViewDescTopIndex, bool goForward) = 0;
     virtual bool scrollViewRow(unsigned int mapViewDescTopIndex, int scrollCount) = 0;
     virtual void timeControlTimeStep(unsigned int mapViewDescTopIndex, float timeStepInMinutes) = 0;
@@ -153,8 +155,8 @@ public:
     virtual void pasteDrawParamsToViewRow(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams) = 0;
     virtual void copyDrawParamsFromMapViewRow(unsigned int mapViewDescTopIndex) = 0;
     virtual void pasteDrawParamsToMapViewRow(unsigned int mapViewDescTopIndex) = 0;
-    virtual int activeViewRow(unsigned int mapViewDescTopIndex) = 0;
-    virtual void activeViewRow(unsigned int mapViewDescTopIndex, int theActiveRowIndex) = 0;
+    virtual int absoluteActiveViewRow(unsigned int mapViewDescTopIndex) = 0;
+    virtual void absoluteActiveViewRow(unsigned int mapViewDescTopIndex, int theAbsoluteActiveRowIndex) = 0;
     virtual void removeAllViewsWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual NFmiProjectionCurvatureInfo* projectionCurvatureInfo() = 0;
     virtual void projectionCurvatureInfo(const NFmiProjectionCurvatureInfo& newValue) = 0;

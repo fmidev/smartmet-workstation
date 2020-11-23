@@ -2239,6 +2239,9 @@ bool NFmiCrossSectionView::RightButtonUp(const NFmiPoint& thePlace, unsigned lon
 	if(!itsRect.IsInside(thePlace))
 		return false;
 
+	itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex,
+		GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+
 	// ensin pitää handlata parametrin lisäys param boxista jos hiiren oikea klikattu
 	if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
 		return itsParamHandlerView->RightButtonUp(thePlace, theKey);
@@ -3300,7 +3303,9 @@ bool NFmiCrossSectionView::LeftButtonDown(const NFmiPoint & thePlace, unsigned l
 {
     if(itsRect.IsInside(thePlace))
     {
-        if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
+		itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex,
+			GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+		if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
         {
             return itsParamHandlerView->LeftButtonDown(thePlace, theKey);
         }

@@ -725,14 +725,14 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo>> CtrlViewDocumentInterfaceForGe
     return itsDoc->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }
 
-int CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex)
+int CtrlViewDocumentInterfaceForGeneralDataDoc::AbsoluteActiveViewRow(unsigned int theDescTopIndex)
 {
-    return itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex);
+    return itsDoc->GetCombinedMapHandler()->absoluteActiveViewRow(theDescTopIndex);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewRow(unsigned int theDescTopIndex, int theActiveRowIndex)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex)
 {
-    itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex, theActiveRowIndex);
+    itsDoc->GetCombinedMapHandler()->absoluteActiveViewRow(theDescTopIndex, theAbsoluteActiveRowIndex);
 }
 
 NFmiSynopPlotSettings* CtrlViewDocumentInterfaceForGeneralDataDoc::SynopPlotSettings(void)
@@ -850,14 +850,14 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateRect(const NFmiRect& theR
     itsDoc->UpdateRect(theRect);
 }
 
-int CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipRowIndex(void)
+int CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipRealRowIndex(void)
 {
-    return itsDoc->ToolTipRowIndex();
+    return itsDoc->ToolTipRealRowIndex();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipRowIndex(int newIndex)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipRealRowIndex(int newRealRowIndex)
 {
-    itsDoc->ToolTipRowIndex(newIndex);
+    itsDoc->ToolTipRealRowIndex(newRealRowIndex);
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::DoAutoZoom(unsigned int theDescTopIndex)
@@ -955,9 +955,9 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::LastBrushedViewTime(const NFmiM
     itsDoc->LastBrushedViewTime(newTime);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::LastBrushedViewRow(int newRow)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::LastBrushedViewRealRowIndex(int newRealRowIndex)
 {
-    itsDoc->LastBrushedViewRow(newRow);
+    itsDoc->LastBrushedViewRealRowIndex(newRealRowIndex);
 }
 
 const NFmiTimeBag& CtrlViewDocumentInterfaceForGeneralDataDoc::EditedDataTimeBag(void)
@@ -1116,9 +1116,9 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewTime(const NFmiMetTim
     itsDoc->ActiveViewTime(theTime);
 }
 
-boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex)
+boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
 {
-    return itsDoc->GetCombinedMapHandler()->activeDrawParam(theDescTopIndex, theRowIndex);
+    return itsDoc->GetCombinedMapHandler()->activeDrawParamFromActiveRow(theDescTopIndex);
 }
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::ViewBrushed(void)

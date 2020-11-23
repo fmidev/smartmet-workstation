@@ -837,6 +837,11 @@ namespace
 		return false;
 	}
 
+	bool isGroundDataType(boost::shared_ptr<NFmiDrawParam>& drawParam)
+	{
+		return drawParam->Level().GetIdent() == 0;
+	}
+
 } // nameless namespace ends
 
 
@@ -2436,24 +2441,17 @@ NFmiDrawParamList* NFmiCombinedMapHandler::getDrawParamListWithRealRowNumber(uns
 		return 0;
 }
 
-boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::activeDrawParam(unsigned int mapViewDescTopIndex, int rowIndex)
+boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::activeDrawParamFromActiveRow(unsigned int mapViewDescTopIndex)
 {
-	NFmiDrawParamList* drawParamList = getDrawParamList(mapViewDescTopIndex, rowIndex);
-	if(drawParamList)
-	{
-		for(drawParamList->Reset(); drawParamList->Next(); )
-			if(drawParamList->Current()->IsActive())
-				return drawParamList->Current();
-	}
-	return boost::shared_ptr<NFmiDrawParam>();
+	return activeDrawParamWithRealRowNumber(mapViewDescTopIndex, absoluteActiveViewRow(mapViewDescTopIndex));
 }
 
 // T‰m‰ on otettu k‰yttˆˆn ,ett‰ voisi unohtaa tuon kamalan indeksi jupinan, mik‰ johtuu
 // 'virtuaali' karttan‰yttˆriveist‰.
 // Karttarivi indeksit alkavat 1:st‰. 1. rivi on 1 ja 2. rivi on kaksi jne.
-boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex)
+boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex)
 {
-	NFmiDrawParamList* drawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, rowIndex);
+	NFmiDrawParamList* drawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, realRowIndex);
 	if(drawParamList)
 	{
 		for(drawParamList->Reset(); drawParamList->Next(); )
@@ -2698,10 +2696,7 @@ void NFmiCombinedMapHandler::updateToModifiedDrawParam(unsigned int mapViewDescT
 		if(!drawParam->ViewMacroDrawParam()) // jos kyseess‰ oli viewmacro-drawparam, ei p‰ivitet‰ modified-listalla olevaa drawparamia!
 		{
 			boost::shared_ptr<NFmiFastQueryInfo> info = ::getInfoOrganizer().Info(drawParam, false, true);
-			bool groundData = true;
-			if(info)
-				groundData = info->SizeLevels() <= 1;
-
+			bool groundData = ::isGroundDataType(drawParam);
 			if(modifiedPropertiesDrawParamList_->Find(drawParam, groundData))
 				modifiedPropertiesDrawParamList_->Current()->Init(drawParam);
 		}
@@ -2900,9 +2895,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 			drawParamList->Add(drawParam); // laittaa parametrit listan per‰‰n, paitsi satel-kuvat laitetaan keulille (n‰in satelkuva ei peit‰ mahdollisia muita parametreja alleen)
 	}
 
-	bool groundData = true;
-	if(info)
-		groundData = info->SizeLevels() <= 1;
+	bool groundData = ::isGroundDataType(drawParam);
 	updateFromModifiedDrawParam(drawParam, groundData);
 	drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), realRowIndex, drawParam);
 }
@@ -2973,7 +2966,8 @@ void NFmiCombinedMapHandler::addAsOnlyView(const NFmiMenuItem& menuItem, int vie
 
 void NFmiCombinedMapHandler::removeView(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	NFmiDrawParamList* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
+	auto mapViewDesctopIndex = menuItem.MapViewDescTopIndex();
+	NFmiDrawParamList* drawParamList = getDrawParamList(mapViewDesctopIndex, viewRowIndex);
 	if(drawParamList)
 	{
 		if(drawParamList->Index(menuItem.IndexInViewRow()))
@@ -2981,11 +2975,11 @@ void NFmiCombinedMapHandler::removeView(const NFmiMenuItem& menuItem, int viewRo
 			NFmiInfoData::Type dataType = drawParamList->Current()->DataType();
 			drawParamList->Remove();
 			if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(dataType))
-				checkAnimationLockedModeTimeBags(menuItem.MapViewDescTopIndex(), false); // kun parametrin n‰kyvyytt‰ vaihdetaan, pit‰‰ tehd‰ mahdollisesti animaatio moodin datan tarkistus
+				checkAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin n‰kyvyytt‰ vaihdetaan, pit‰‰ tehd‰ mahdollisesti animaatio moodin datan tarkistus
 
-			drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), boost::shared_ptr<NFmiDrawParam>());
+			drawParamSettingsChangedDirtyActions(mapViewDesctopIndex, getRealRowNumber(mapViewDesctopIndex, viewRowIndex), boost::shared_ptr<NFmiDrawParam>());
 		}
-		if(drawParamList->NumberOfItems() && (!activeDrawParam(menuItem.MapViewDescTopIndex(), viewRowIndex)))
+		if(drawParamList->NumberOfItems() && (!activeDrawParamWithRealRowNumber(mapViewDesctopIndex, getRealRowNumber(mapViewDesctopIndex, viewRowIndex))))
 		{
 			// Aktiivinen parametri poistettiin, asetetaan 1. listasta aktiiviseksi
 			for(drawParamList->Reset(); drawParamList->Next(); )
@@ -2993,7 +2987,7 @@ void NFmiCombinedMapHandler::removeView(const NFmiMenuItem& menuItem, int viewRo
 				drawParamList->Current()->Activate(true);
 				break;
 			}
-			activeEditedParameterMayHaveChangedViewUpdateFlagSetting(menuItem.MapViewDescTopIndex());
+			activeEditedParameterMayHaveChangedViewUpdateFlagSetting(mapViewDesctopIndex);
 		}
 	}
 }
@@ -3048,7 +3042,7 @@ void NFmiCombinedMapHandler::changeAllProducersInMapRow(const NFmiMenuItem& menu
 			auto dataType = drawParam->DataType();
 			if(dataType != NFmiInfoData::kSatelData && dataType != NFmiInfoData::kMacroParam && dataType != NFmiInfoData::kQ3MacroParam)
 			{
-				bool groundData = (drawParam->Level().GetIdent() == 0);
+				bool groundData = ::isGroundDataType(drawParam);
 				NFmiInfoData::Type finalDataType = ::getFinalDataType(drawParam, givenProducer, useCrossSectionParams, groundData); // pit‰‰ p‰‰tt‰‰ viel‰ muutentun tuottajan datatyyppi
 				// pit‰‰ hakea FindInfo:lla tuottajan mukaan dataa, josta saadaan oikea tuottaja (nimineen kaikkineen)
 				boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(finalDataType, givenProducer, groundData);
@@ -3509,9 +3503,7 @@ void NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, boo
 
 		timeSerialViewDrawParamList_->Add(drawParam, timeSerialViewIndex_);
 
-		bool groundData = true;
-		if(info)
-			groundData = info->SizeLevels() <= 1;
+		bool groundData = ::isGroundDataType(drawParam);
 		updateFromModifiedDrawParam(drawParam, groundData);
 	}
 }
@@ -3686,10 +3678,8 @@ void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopI
 // scrollaa n‰yttˆriveja halutun m‰‰r‰n (negatiivinen skrollaa ylˆs ja positiivinen count alas)
 bool NFmiCombinedMapHandler::scrollViewRow(unsigned int mapViewDescTopIndex, int scrollCount)
 {
-	int newActiveViewRow = activeViewRow(mapViewDescTopIndex);
-	if(getMapViewDescTop(mapViewDescTopIndex)->ScrollViewRow(scrollCount, newActiveViewRow))
+	if(getMapViewDescTop(mapViewDescTopIndex)->ScrollViewRow(scrollCount))
 	{
-		activeViewRow(mapViewDescTopIndex, newActiveViewRow); // asetetaan uusi suhteellinen aktiivinen rivi takaisin desctopiin
 		updateRowInLockedDescTops(mapViewDescTopIndex);
 		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, true);
 		return true;
@@ -3759,7 +3749,7 @@ void NFmiCombinedMapHandler::pasteDrawParamsToViewRow(const NFmiMenuItem& menuIt
 
 void NFmiCombinedMapHandler::copyDrawParamsFromMapViewRow(unsigned int mapViewDescTopIndex)
 {
-	NFmiDrawParamList* activeDrawParamList = getDrawParamList(mapViewDescTopIndex, activeViewRow(mapViewDescTopIndex));
+	NFmiDrawParamList* activeDrawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, absoluteActiveViewRow(mapViewDescTopIndex));
 	if(activeDrawParamList)
 	{
 		copyPasteDrawParamListUsedYet_ = true;
@@ -3769,29 +3759,28 @@ void NFmiCombinedMapHandler::copyDrawParamsFromMapViewRow(unsigned int mapViewDe
 
 void NFmiCombinedMapHandler::pasteDrawParamsToMapViewRow(unsigned int mapViewDescTopIndex)
 {
-	auto relativeActiveRowIndex = activeViewRow(mapViewDescTopIndex);
-	NFmiDrawParamList* activeDrawParamList = getDrawParamList(mapViewDescTopIndex, relativeActiveRowIndex);
+	auto realActiveRowIndex = absoluteActiveViewRow(mapViewDescTopIndex);
+	NFmiDrawParamList* activeDrawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, realActiveRowIndex);
 	if(activeDrawParamList)
 	{
 		activeDrawParamList->CopyList(*copyPasteDrawParamList_, false);
-		auto realActiveRowIndex = getRealRowNumber(mapViewDescTopIndex, relativeActiveRowIndex);
 		makeViewRowDirtyActions(mapViewDescTopIndex, realActiveRowIndex, activeDrawParamList);
 		activeEditedParameterMayHaveChangedViewUpdateFlagSetting(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Paste drawParams to map view row");
 	}
 }
 
-int NFmiCombinedMapHandler::activeViewRow(unsigned int mapViewDescTopIndex)
+int NFmiCombinedMapHandler::absoluteActiveViewRow(unsigned int mapViewDescTopIndex)
 {
 	if(mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
-		return getMapViewDescTop(mapViewDescTopIndex)->ActiveViewRow();
+		return getMapViewDescTop(mapViewDescTopIndex)->AbsoluteActiveViewRow();
 	else
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->CurrentCrossSectionRowIndex();
 }
 
-void NFmiCombinedMapHandler::activeViewRow(unsigned int mapViewDescTopIndex, int theActiveRowIndex)
+void NFmiCombinedMapHandler::absoluteActiveViewRow(unsigned int mapViewDescTopIndex, int theAbsoluteActiveRowIndex)
 {
-	getMapViewDescTop(mapViewDescTopIndex)->ActiveViewRow(theActiveRowIndex);
+	getMapViewDescTop(mapViewDescTopIndex)->AbsoluteActiveViewRow(theAbsoluteActiveRowIndex);
 }
 
 NFmiPtrList<NFmiDrawParamList>* NFmiCombinedMapHandler::getDrawParamListVector(unsigned int mapViewDescTopIndex)
@@ -3969,7 +3958,7 @@ void NFmiCombinedMapHandler::takeDrawParamInUseEveryWhere(boost::shared_ptr<NFmi
 void NFmiCombinedMapHandler::borrowParams(unsigned int mapViewDescTopIndex, int realViewRowIndex)
 {
 	NFmiDrawParamList* drawParamListFrom = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, realViewRowIndex);
-	NFmiDrawParamList* drawParamListTo = getDrawParamList(mapViewDescTopIndex, activeViewRow(mapViewDescTopIndex)); // itsActiveViewRow on suhteutettuna n‰kyv‰‰n rivistˆˆn
+	NFmiDrawParamList* drawParamListTo = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, absoluteActiveViewRow(mapViewDescTopIndex));
 	bool doDebugging = false;
 	if(doDebugging || (drawParamListFrom && drawParamListTo && (drawParamListFrom != drawParamListTo)))
 	{

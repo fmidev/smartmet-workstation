@@ -3729,7 +3729,7 @@ static std::string CalculationPointInfo(NFmiMapViewDescTop *mapViewDecsTop, NFmi
 {
     if(mapViewDecsTop)
     {
-        auto iter = mapViewDecsTop->DrawParamListVector()->Index(mapViewDecsTop->ActiveViewRow() + mapViewDecsTop->MapRowStartingIndex() - 1);
+        auto iter = mapViewDecsTop->DrawParamListVector()->Index(mapViewDecsTop->AbsoluteActiveViewRow());
         NFmiDrawParamList *aList = iter.CurrentPtr();
         if(aList)
         {
@@ -3777,7 +3777,7 @@ static std::string ActiveRowDataFilePaths(NFmiMapViewDescTop *mapViewDecsTop, NF
 {
     if(mapViewDecsTop)
     {
-        auto iter = mapViewDecsTop->DrawParamListVector()->Index(mapViewDecsTop->ActiveViewRow() + mapViewDecsTop->MapRowStartingIndex() - 1);
+        auto iter = mapViewDecsTop->DrawParamListVector()->Index(mapViewDecsTop->AbsoluteActiveViewRow());
         NFmiDrawParamList *aList = iter.CurrentPtr();
         if(aList)
         {
