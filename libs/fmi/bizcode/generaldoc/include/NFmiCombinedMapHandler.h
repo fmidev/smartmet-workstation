@@ -122,6 +122,7 @@ public:
     void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) override;
     const std::unique_ptr<NFmiFastDrawParamList>& getModifiedPropertiesDrawParamList() const override;
     unsigned int getRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex) override;
+    unsigned int getRelativeRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) override;
     void hideShowAllMapViewParams(unsigned int mapViewDescTopIndex, bool hideAllObservations, bool showAllObservations, bool hideAllForecasts, bool showAllForecasts) override;
     void setModelRunOffset(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void activateView(const NFmiMenuItem& menuItem, int rowIndex) override;
@@ -172,7 +173,8 @@ public:
     void removeTimeSerialView(const NFmiMenuItem& menuItem) override;
     void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     unsigned long& getTimeSerialViewIndexReference() override;
-    boost::shared_ptr<NFmiDrawParam> activeDrawParam(unsigned int mapViewDescTopIndex, int rowIndex) override;
+    boost::shared_ptr<NFmiDrawParam> activeDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
+    boost::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) override;
     void changeMapType(unsigned int mapViewDescTopIndex, bool goForward) override;
     bool scrollViewRow(unsigned int mapViewDescTopIndex, int scrollCount) override;
     void timeControlTimeStep(unsigned int mapViewDescTopIndex, float timeStepInMinutes) override;
@@ -181,8 +183,8 @@ public:
     void pasteDrawParamsToViewRow(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams) override;
     void copyDrawParamsFromMapViewRow(unsigned int mapViewDescTopIndex) override;
     void pasteDrawParamsToMapViewRow(unsigned int mapViewDescTopIndex) override;
-    int activeViewRow(unsigned int mapViewDescTopIndex) override;
-    void activeViewRow(unsigned int mapViewDescTopIndex, int theActiveRowIndex) override;
+    int absoluteActiveViewRow(unsigned int mapViewDescTopIndex) override;
+    void absoluteActiveViewRow(unsigned int mapViewDescTopIndex, int theAbsoluteActiveRowIndex) override;
     void removeAllViewsWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) override;
     NFmiProjectionCurvatureInfo* projectionCurvatureInfo() override;
     void projectionCurvatureInfo(const NFmiProjectionCurvatureInfo& newValue) override;
@@ -304,8 +306,6 @@ private:
     void setAnimationBoxToVisibleIfNecessary(unsigned int mapViewDescTopIndex, bool stayInsideAnimationTimes);
     bool setDataToNextTimeForAllDescTops(bool stayInsideAnimationTimes);
     bool setDataToPreviousTimeForAllDescTops(bool stayInsideAnimationTimes);
-    unsigned int getRelativeRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex);
-    boost::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex);
     void makeViewRowDirtyActions(unsigned int mapViewDescTopIndex, int realRowIndex, NFmiDrawParamList* drawParamList);
     void drawParamSettingsChangedDirtyActions(unsigned int mapViewDescTopIndex, int realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam);
     NFmiDrawParamList* getWantedDrawParamList(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams);

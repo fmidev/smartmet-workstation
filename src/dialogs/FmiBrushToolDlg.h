@@ -3,10 +3,12 @@
 //
 #include "SmartMetDialogs_resource.h"
 #include "NFmiParameterName.h"
+#include "boost/shared_ptr.hpp"
 /////////////////////////////////////////////////////////////////////////////
 // CFmiBrushToolDlg dialog
 class SmartMetDocumentInterface;
 class NFmiStringList;
+class NFmiDrawParam;
 
 class CFmiBrushToolDlg : public CDialog
 {
@@ -69,6 +71,7 @@ protected:
 	bool EnableDlgItem(int theDlgId, bool fEnable);
 	void DoWhenClosing(void);
 	void InitDialogTexts(void);
+	boost::shared_ptr<NFmiDrawParam> GetActiveDrawParam();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	int itsMapViewDescTopIndex;

@@ -110,14 +110,14 @@ void NFmiGenDocDataAdapter::FilteringParameterUsageState(int newValue)
 	itsDoc->FilteringParameterUsageState(newValue);
 }
 
-boost::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex)
+boost::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
 {
-	return itsDoc->GetCombinedMapHandler()->activeDrawParam(theDescTopIndex, theRowIndex);
+	return itsDoc->GetCombinedMapHandler()->activeDrawParamFromActiveRow(theDescTopIndex);
 }
 
-int NFmiGenDocDataAdapter::ActiveViewRow(unsigned int theDescTopIndex)
+int NFmiGenDocDataAdapter::AbsoluteActiveViewRow(unsigned int theDescTopIndex)
 {
-	return itsDoc->GetCombinedMapHandler()->activeViewRow(theDescTopIndex);
+	return itsDoc->GetCombinedMapHandler()->absoluteActiveViewRow(theDescTopIndex);
 }
 
 NFmiParamBag& NFmiGenDocDataAdapter::FilteringParamBag(void)
@@ -188,9 +188,9 @@ NFmiGriddingHelperInterface* NFmiGenDocDataAdapter::GetGriddingHelper(void)
     return &generalDataDocGridding;
 }
 
-void NFmiGenDocDataAdapter::LastBrushedViewRow(int newRow)
+void NFmiGenDocDataAdapter::LastBrushedViewRealRowIndex(int newRealRowIndex)
 {
-	itsDoc->LastBrushedViewRow(newRow);
+	itsDoc->LastBrushedViewRealRowIndex(newRealRowIndex);
 }
 
 bool NFmiGenDocDataAdapter::UseMasksWithFilterTool(void)

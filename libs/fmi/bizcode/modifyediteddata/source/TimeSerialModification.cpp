@@ -717,7 +717,7 @@ static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterfa
 					{
 					case 0: // 0=tehdään operaatio vain aktiiviselle parametrille
 						{
-							boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0)); // HUOM! muokkausta voi tehdä vain 1. (eli indeksi 0) desctopistä
+							boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // HUOM! muokkausta voi tehdä vain 1. (eli indeksi 0) desctopistä
 							if(drawParam)
 								paramStatus = ::MustMakeValidationCheckAfterModifyingThisParam(theAdapter, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
 						}
@@ -1138,7 +1138,7 @@ static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSeria
 
 static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0)); // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
+	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
 	if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(drawParam->Param())))
 	{
 		if(drawParam && drawParam->Param().Type() == kSymbolicParam) // turha tehdä symbolisille parametreille
@@ -1271,7 +1271,7 @@ static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 	if(info)
 	{
 		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehdä down-casti editoitavalle datalle toistaiseksi näin, smartInfo-pointteri on käytettävissä info -shared_ptr on olemassa
-		theAdapter.LastBrushedViewRow(-1); // sivellintä varten pitää 'nollata' tämä
+		theAdapter.LastBrushedViewRealRowIndex(-1); // sivellintä varten pitää 'nollata' tämä
         std::string modificationDescription = "";
 		bool status = smartInfo->UndoData(modificationDescription);
 		if(status)
@@ -1291,7 +1291,7 @@ static bool RedoData(TimeSerialModificationDataInterface &theAdapter)
 	if(info)
 	{
 		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehdä down-casti editoitavalle datalle toistaiseksi näin, smartInfo-pointteri on käytettävissä info -shared_ptr on olemassa
-		theAdapter.LastBrushedViewRow(-1); // sivellintä varten pitää 'nollata' tämä
+		theAdapter.LastBrushedViewRealRowIndex(-1); // sivellintä varten pitää 'nollata' tämä
         std::string modificationDescription = "";
 		bool status = smartInfo->RedoData(modificationDescription);
 		if(status)
@@ -1458,7 +1458,7 @@ static bool ModifyTimesLocationData(TimeSerialModificationDataInterface &theAdap
 {
 	if(theEditedData && theCopyOfEditedData)
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0));  // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
+		boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
 		if(drawParam)
 		{
 			if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(drawParam->Param())))
@@ -2740,7 +2740,7 @@ float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterfa
 static void SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
-	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0));  // tämä missing value asetus työkalulla tehdyt muokkaukset tehdään aina pääkarttaikkunan (0-desctop-indeksi) aktiiviselle datalle
+	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // tämä missing value asetus työkalulla tehdyt muokkaukset tehdään aina pääkarttaikkunan (0-desctop-indeksi) aktiiviselle datalle
 	if(editedData && drawParam && drawParam->DataType() == NFmiInfoData::kEditable)
 	{
 		try
@@ -3044,7 +3044,7 @@ std::string FmiModifyEditdData::DataFilterToolsParamsForLog(TimeSerialModificati
     {
         case 0: // Only active parameter
         {
-            boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParam(0, theAdapter.ActiveViewRow(0));
+            boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);
             if(drawParam)
             {
                 desc = drawParam->ParameterAbbreviation();
