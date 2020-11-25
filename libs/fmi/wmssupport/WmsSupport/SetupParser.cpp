@@ -1,4 +1,5 @@
 #include "wmssupport/SetupParser.h"
+#include <regex>
 
 namespace Wms
 {
@@ -94,14 +95,28 @@ namespace Wms
             return setupBase;
         }
 
+        // The real Url had to be in coded form in configurations, because "http://wms.fmi.fi/..." contains start of 
+        // one line comment with "//" in it and to avoid that we replace "//" characters in configurations with "**" 
+        // characters, which now has to be replaced with correct characters to be usefull. So basically this does the following:
+        // "http:**wms.fmi.fi/..." => "http://wms.fmi.fi/..."
+        std::string fixUrlFromNFmiSettingConfiguration(std::string url)
+        {
+            // In C++ std::regex you have to escape certain regex specific characters with double slashes (\\),
+            // so "**" must be fixed into "\\*\\*"
+            return std::regex_replace(url, std::regex("\\*\\*"), "//");
+        }
+
         UserUrlServerSetup parseUserUrl(const std::string& nspace, std::map<std::string, ServerSetup> knownServers, UserUrlServerSetup setupBase)
         {
             auto keys = NFmiSettings::ListChildren(nspace);
             for(const auto& key : keys)
             {
-                auto url = NFmiSettings::Require<std::string>(nspace + "::" + key);
-                std::replace(url.begin(), url.end(), '*', '/');
+                auto baseMapLayerKey = nspace + "::" + key;
+                auto url = NFmiSettings::Require<std::string>(baseMapLayerKey);
+                url = fixUrlFromNFmiSettingConfiguration(url);
                 auto server = parseUrl(url);
+                server.descriptiveName = NFmiSettings::Optional<std::string>(baseMapLayerKey + "::DescriptiveName", "");
+                server.macroReference = NFmiSettings::Optional<std::string>(baseMapLayerKey + "::MacroReference", "");
 
                 auto res = knownServers.find(server.host + server.path);
                 if(res != knownServers.cend())

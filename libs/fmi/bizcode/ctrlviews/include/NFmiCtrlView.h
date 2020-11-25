@@ -84,7 +84,8 @@ class NFmiCtrlView
                 ,int viewGridColumnNumber = -1);
    NFmiCtrlView (const NFmiCtrlView& theView);
    inline virtual  ~NFmiCtrlView (void){};
-   inline const NFmiRect& GetFrame(void) const { return itsRect; } ;
+   inline const NFmiRect& GetFrame(void) const { return itsRect; };
+   inline virtual const NFmiRect& GetFrameForParamBox(void) const { return itsRect; } ;
    inline void SetFrame (const NFmiRect &theRect) {itsRect = theRect; } ;
    virtual void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0);
    virtual void Update (void){};
@@ -129,6 +130,7 @@ class NFmiCtrlView
    int GetUsedParamRowIndex() const;
    bool IsPrintedMapViewDesctop();
    bool IsPrinting() const;
+   int CalcRealRowIndex() const;
 
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
    virtual NFmiPoint ViewPointToLatLon(const NFmiPoint & /* theViewPoint */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
@@ -159,7 +161,7 @@ class NFmiCtrlView
 	NFmiRect CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	void InitializeGdiplus(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect);
 	void CleanGdiplus(void);
-	int CalcRealRowIndex(int theRowIndex, int theColumnIndex);
+	int CalcRealRowIndex(int theRowIndex, int theColumnIndex) const;
     std::unique_ptr<MapHandlerInterface> GetMapHandlerInterface();
 
 	NFmiRect itsRect;

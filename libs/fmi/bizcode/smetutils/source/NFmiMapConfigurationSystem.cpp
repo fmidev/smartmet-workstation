@@ -7,6 +7,7 @@
 // ======================================================================
 
 #include "NFmiMapConfigurationSystem.h"
+#include "NFmiPathUtils.h"
 
 #include <iostream>
 
@@ -37,33 +38,10 @@ static bool EatWhiteSpaces(std::istream & theInput)
 // ******************* NFmiMapConfiguration ***********************************
 // ************************************************************************
 
-NFmiMapConfiguration::NFmiMapConfiguration(void)
-:itsMapFileNames()
-,itsMapDrawingStyles()
-,itsOverMapDibFileNames()
-,itsOverMapDibDrawingStyles()
-,itsProjectionFileName()
-{}
+NFmiMapConfiguration::NFmiMapConfiguration() = default;
+NFmiMapConfiguration::~NFmiMapConfiguration() = default;
 
-void NFmiMapConfiguration::Clear(void)
-{
-	itsMapFileNames.clear();
-	itsMapDrawingStyles.clear();
-	itsOverMapDibFileNames.clear();
-	itsOverMapDibDrawingStyles.clear();
-	itsProjectionFileName = "";
-}
-
-std::istream & NFmiMapConfiguration::Read(std::istream & file)
-{
-	Clear();
-	ReadFileNamesAndDrawStyles(file, itsMapFileNames, itsMapDrawingStyles);
-	ReadFileNamesAndDrawStyles(file, itsOverMapDibFileNames, itsOverMapDibDrawingStyles);
-	ReadProjectionFileName(file, itsProjectionFileName);
-	return file;
-}
-
-void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, checkedVector<std::string> &theFileNames, checkedVector<int> &theDrawingStyles)
+void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, std::vector<std::string> &theFileNames, std::vector<int> &theDrawingStyles)
 {
 	const int maxBufferSize = 512; // kuinka pitkä tiedoston nimi voi olla polkuineen maksimissaan
 	int mapCount = 0;
@@ -92,6 +70,66 @@ void NFmiMapConfiguration::ReadProjectionFileName(std::istream & file, std::stri
 	theFileName = buffer;
 }
 
+static void InitializeFileNameBasedGuiNameVector(const std::vector<std::string>& fileNames, std::vector<std::string>& guiNamesOut)
+{
+	guiNamesOut.clear();
+	for(const auto& fileName : fileNames)
+		guiNamesOut.push_back(PathUtils::getFilename(fileName));
+}
+
+void NFmiMapConfiguration::InitializeFileNameBasedGuiNameVectors()
+{
+	::InitializeFileNameBasedGuiNameVector(itsMapFileNames, itsBackgroundMapFileNameBasedGuiNames);
+	::InitializeFileNameBasedGuiNameVector(itsOverMapDibFileNames, itsOverlayMapFileNameBasedGuiNames);
+}
+
+size_t NFmiMapConfiguration::MapLayersCount() const
+{
+	return itsMapFileNames.size();
+}
+
+size_t NFmiMapConfiguration::MapOverlaysCount() const
+{
+	return itsOverMapDibFileNames.size();
+}
+
+static const std::string& GetLayerTextFromVector(size_t layerIndex, const std::vector<std::string>& layerNames)
+{
+	if(layerIndex < layerNames.size())
+		return layerNames[layerIndex];
+	else
+	{
+		static const std::string emptyString;
+		return emptyString;
+	}
+}
+
+// Priorisointi kun tehdään map-layer nimejä Gui:lle:
+// 1. Descriptive name
+// 2. Macro-reference name
+// 3. Väännetään sopiva nimi bitmapin tiedosto nimestä
+std::string NFmiMapConfiguration::GetBestGuiUsedMapLayerName(size_t layerIndex, bool backgroundMapCase) const
+{
+	// 1. Jos löytyy ei-puuttuva descriptiveName, käytetään sitä.
+	std::string bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapDescriptiveNames : itsOverlayMapDescriptiveNames);
+	if(bestGuiUsedname.empty())
+	{
+		// 2. Jos löytyy ei-puuttuva macroReferenceName, käytetään sitä.
+		bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapMacroReferenceNames : itsOverlayMapMacroReferenceNames);
+		if(bestGuiUsedname.empty())
+		{
+			// 3. Muutoin tehdään nimi kuvan tiedostonimestä
+			bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapFileNameBasedGuiNames : itsOverlayMapFileNameBasedGuiNames);
+		}
+	}
+	return bestGuiUsedname;
+}
+
+const std::string& NFmiMapConfiguration::GetMacroReferenceName(size_t layerIndex, bool backgroundMapCase) const
+{
+	return ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapMacroReferenceNames : itsOverlayMapMacroReferenceNames);
+}
+
 
 // ************************************************************************
 // ******************* NFmiMapConfigurationSystem *****************************
@@ -101,25 +139,13 @@ NFmiMapConfigurationSystem::NFmiMapConfigurationSystem(void)
 :itsMapConfigurations()
 {}
 
-const NFmiMapConfiguration& NFmiMapConfigurationSystem::GetMapConfiguration(int theIndex)
+std::shared_ptr<NFmiMapConfiguration>& NFmiMapConfigurationSystem::GetMapConfiguration(size_t theIndex)
 {
-	static NFmiMapConfiguration dummy;
-	if(!itsMapConfigurations.empty() && theIndex >= 0 && theIndex < static_cast<int>(itsMapConfigurations.size()))
+	if(!itsMapConfigurations.empty() && theIndex < itsMapConfigurations.size())
 		return itsMapConfigurations[theIndex];
-	return dummy;
-}
-
-std::istream & NFmiMapConfigurationSystem::Read(std::istream & file)
-{
-	itsMapConfigurations.clear();
-	int configurationCount = 0;
-	file >> configurationCount;
-	NFmiMapConfiguration confi;
-	for(int i=0; i<configurationCount; i++)
+	else
 	{
-		file >> confi;
-		itsMapConfigurations.push_back(confi);
+		static std::shared_ptr<NFmiMapConfiguration> dummy = std::make_shared<NFmiMapConfiguration>();
+		return dummy;
 	}
-	return file;
 }
-

@@ -3,6 +3,7 @@
 #include "NFmiDrawParamList.h"
 #include "NFmiFastQueryInfo.h"
 #include "catlog/catlog.h"
+#include "NFmiDictionaryFunction.h"
 
 namespace
 {
@@ -15,6 +16,50 @@ namespace
 			CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Configuration);
 	}
 }
+
+// ********* NFmiMapLayerRelatedInfo **************************************
+
+NFmiMapLayerRelatedInfo::NFmiMapLayerRelatedInfo(const std::string& guiName, const std::string& macroReference, bool isWmsLayer)
+	:guiName_(guiName)
+	, macroReference_(macroReference)
+	, prefixedMacroReference_()
+	, isWmsLayer_(isWmsLayer)
+{
+	if(!macroReference_.empty())
+		prefixedMacroReference_ = addWmsMacroReferencePrefix(macroReference_);
+}
+
+const std::string& NFmiMapLayerRelatedInfo::getWmsMacroReferencePrefix()
+{
+	static const std::string prefix = "[wms]";
+	return prefix;
+}
+
+std::string NFmiMapLayerRelatedInfo::addWmsMacroReferencePrefix(std::string macroReference)
+{
+	return getWmsMacroReferencePrefix() + macroReference;
+}
+
+bool NFmiMapLayerRelatedInfo::hasWmsMacroReferencePrefix(const std::string& macroReference)
+{
+	auto pos = macroReference.find(getWmsMacroReferencePrefix());
+	return pos == 0;
+}
+
+std::string NFmiMapLayerRelatedInfo::stripWmsMacroReferencePrefix(std::string macroReference)
+{
+	if(!macroReference.empty())
+	{
+		if(hasWmsMacroReferencePrefix(macroReference))
+		{
+			return std::string(macroReference.begin() + getWmsMacroReferencePrefix().size(), macroReference.end());
+		}
+	}
+
+	return macroReference;
+}
+
+// ********* CombinedMapHandlerInterface **************************************
 
 CombinedMapHandlerInterface::GetCombinedMapHandlerInterfaceImplementationCallBackType CombinedMapHandlerInterface::GetCombinedMapHandlerInterfaceImplementation;
 
@@ -162,4 +207,9 @@ bool CombinedMapHandlerInterface::IsBorderLayerDrawn(const NFmiDrawParam* separa
 			return true; // Jos viivan paksuus on >= 0.5, se pyöristyy vähintäin 1:een pikseliin ja borderit piirretään
 	}
 	return false;
+}
+
+std::string CombinedMapHandlerInterface::getNoneOverlayName()
+{
+	return ::GetDictionaryString("none");
 }

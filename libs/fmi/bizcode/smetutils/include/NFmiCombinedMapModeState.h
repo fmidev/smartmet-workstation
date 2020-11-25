@@ -35,11 +35,11 @@ public:
     void combinedModeMapIndex(int index);
     bool isLocalMapCurrentlyInUse() const;
     int currentMapSectionIndex() const;
+    bool isLocalOnlyMapModeInUse() const;
 
 private:
     void checkIndexUnderFlow();
     void checkIndexOverFlow();
-    bool isLocalOnlyMapModeInUse() const;
     void mapIndexIsAboutToChangeChecks();
     bool isMapIndexInLocalSection() const;
     void updateLastUsedLocalModeMapIndex();

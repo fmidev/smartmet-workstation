@@ -52,8 +52,13 @@ namespace AddParams
         // 98 = cross-section-view, 99 = time-serial-view
         unsigned int itsLastActivatedDesktopIndex;
         // The view row that has been last clicked with mouse.
-        // This index starts from 1 !!
-        int itsLastActivatedRowIndex;
+        // This index starts from 1 and its absolute
+        // Map-view's (1-3) have common row-index
+        int itsLastActivatedMapRowIndex = 1;
+        // Cross-section view have separate active row index
+        int itsLastActivatedCrossSectionRowIndex = 1;
+        // time-serial view have separate active row index
+        int itsLastActivatedTimeSerialRowIndex = 1;
 
         // Help data's producer id's
         std::vector<int> helpDataIDs_;
@@ -91,10 +96,10 @@ namespace AddParams
         std::vector<SingleRowItem>& dialogRowData();
         const std::vector<SingleRowItem>& dialogRowData() const;
         const std::vector<unsigned char>& dialogTreePatternArray() const;
+        void SetLastActiveIndexes(unsigned int desktopIndex, int rowIndex);
         unsigned int LastActivatedDesktopIndex() const { return itsLastActivatedDesktopIndex; }
-        void LastActivatedDesktopIndex(unsigned int newValue) { itsLastActivatedDesktopIndex = newValue; }
-        int LastActivatedRowIndex() const { return itsLastActivatedRowIndex; }
-        void LastActivatedRowIndex(int newValue) { itsLastActivatedRowIndex = newValue; }
+        int LastActivatedRowIndex() const;
+        int GetLastActivatedRowIndexFromWantedDesktop(unsigned int desktopIndex) const;
 		void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem& ()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
 		void setWmsCallback(std::function<WmsSupportInterface& ()> wmsCallBack) { getWmsCallback_ = wmsCallBack; }
 		void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }

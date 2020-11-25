@@ -305,7 +305,7 @@ namespace StationViews
                         NFmiRect paramBoxAbsoluteRect = CalcBetaProductParamBoxSize(gdiPlusGraphics, paramBoxTexts, *usedFont, stringFormat);
                         std::unique_ptr<Gdiplus::Font> usedRuntimeFont = MakeParamBoxFont(ctrlViewDocumentInterface, mapViewDescTopIndex, 0.8);
                         double paramStartingPointX = ::MakeRunTimeInfoAdjustments(*gdiPlusGraphics, currentBetaProduct, *usedRuntimeFont, stringFormat, paramBoxAbsoluteRect);
-                        PlaceBoxIntoFrame(paramBoxAbsoluteRect, view->GetFrame(), view->GetToolBox(), paramBoxLocation);
+                        PlaceBoxIntoFrame(paramBoxAbsoluteRect, view->GetFrameForParamBox(), view->GetToolBox(), paramBoxLocation);
                         ::DrawBetaProductParamBox(ctrlViewDocumentInterface, mapViewDescTopIndex, gdiPlusGraphics, paramBoxAbsoluteRect, paramBoxTexts, *usedFont, *usedRuntimeFont, stringFormat, paramBoxTextColors, paramStartingPointX, currentBetaProduct);
                     }
                 }

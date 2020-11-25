@@ -584,8 +584,8 @@ std::string CSmartMetView::MakeActiveDataLocationIndexString(const NFmiPoint &th
 {
 	std::string str;
 	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
-	int cursorRowIndex = genData->ToolTipRowIndex();
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam = genData->GetCombinedMapHandler()->activeDrawParam(itsMapViewDescTopIndex, cursorRowIndex);
+	int cursorRealRowIndex = genData->ToolTipRealRowIndex();
+	boost::shared_ptr<NFmiDrawParam> activeDrawParam = genData->GetCombinedMapHandler()->activeDrawParamWithRealRowNumber(itsMapViewDescTopIndex, cursorRealRowIndex);
 	if(activeDrawParam)
 	{ 
 		// jos kursorilla osoitetulta karttariviltä löytyy aktiivinen data, jolla on info, laitetaan näkyviin myös

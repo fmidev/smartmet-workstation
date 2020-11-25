@@ -32,8 +32,8 @@ public:
 	void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) override;
 	int FilteringParameterUsageState(void) override;
 	void FilteringParameterUsageState(int newValue) override;
-	boost::shared_ptr<NFmiDrawParam> ActiveDrawParam(unsigned int theDescTopIndex, int theRowIndex) override;
-	int ActiveViewRow(unsigned int theDescTopIndex) override;
+	boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
+	int AbsoluteActiveViewRow(unsigned int theDescTopIndex) override;
 	NFmiParamBag& FilteringParamBag(void) override;
 	const NFmiTimeDescriptor& EditedDataTimeDescriptor(void) override;
 	const NFmiMetTime& ActiveViewTime(void) override;
@@ -41,7 +41,7 @@ public:
 	NFmiSmartToolInfo* SmartToolInfo(void) override;
 	std::string& SmartToolEditingErrorText(void) override;
     NFmiGriddingHelperInterface* GetGriddingHelper(void) override;
-	void LastBrushedViewRow(int newRow) override;
+	void LastBrushedViewRealRowIndex(int newRealRowIndex) override;
 	bool UseMasksWithFilterTool(void) override;
 	int TestFilterUsedMask(void) override;
 	NFmiGrid* ClipBoardData(void) override;

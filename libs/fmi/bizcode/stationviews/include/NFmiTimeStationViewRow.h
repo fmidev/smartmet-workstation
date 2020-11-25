@@ -71,9 +71,9 @@ class NFmiTimeStationViewRow : public NFmiCtrlView
 
    void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tällä piirretään tavara, joka tulee myös bitmapin päälle
    bool StoreToolTipDataInDoc(const NFmiPoint& theRelativePlace);
-   bool IsActiveRow(void);
+   bool HasActiveRowView();
    std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
-   NFmiCtrlView* GetView(const NFmiMetTime &theTime, const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
+   NFmiCtrlView* GetViewWithRealRowIndex(int theRealRowIndex, const NFmiMetTime &theTime, const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
 
  private:
    NFmiMetTime GetUsedTimeForViewTile(const NFmiMetTime& theStartTime, long theTimeStepInMinutes, int theRowIndex, int theColumnIndex);

@@ -13,6 +13,7 @@
 #include "FmiWin32Helpers.h"
 #include "CloneBitmap.h"
 #include "CtrlViewFunctions.h"
+#include "CombinedMapHandlerInterface.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -415,7 +416,7 @@ void CFmiFilterDataDlg::UpdateEditedParamsString(void)
 	switch(itsParameterSelection)
 	{
 	case 0: // aktiivinen parametri
-		activeDrawParam = itsSmartMetDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsSmartMetDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex));
+		activeDrawParam = itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().activeDrawParamFromActiveRow(itsMapViewDescTopIndex);
 		if(activeDrawParam)
 		{
 			if(activeDrawParam->DataType() == NFmiInfoData::kEditable)

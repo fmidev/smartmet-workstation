@@ -2058,7 +2058,7 @@ static void IntepretBracketString(const std::string &theVariableText,
   if (trimmedText.empty())
     throw std::runtime_error(std::string("Empty brackets in variable:") + theVariableText);
   auto lastCharacter = trimmedText[trimmedText.size() - 1];
-  if (lastCharacter == 'h' || lastCharacter == 'h')
+  if (lastCharacter == 'h' || lastCharacter == 'H')
   {
     trimmedText.resize(trimmedText.size() - 1);
     theTimeOffsetInHours = NFmiStringTools::Convert<float>(trimmedText);
@@ -2427,50 +2427,45 @@ bool NFmiSmartToolIntepreter::GetProducerFromVariableById(const std::string &the
   return false;
 }
 
+static bool HandleVariableLevelInfo(const std::string &variableText,
+                                    NFmiLevel &level,
+                                    const std::string &searchedLevelTextStart,
+                                    FmiLevelType wantedLevelType)
+{
+  if (NFmiSmartToolIntepreter::IsWantedStart(variableText, searchedLevelTextStart))
+  {
+    NFmiValueString numericPart(variableText.substr(searchedLevelTextStart.size()));
+    if (numericPart.IsNumeric())
+    {
+      FmiLevelType levelType = wantedLevelType;
+      level = NFmiLevel(levelType, variableText, static_cast<float>(numericPart));
+      return true;
+    }
+  }
+  return false;
+}
+
 // tutkii alkaako annettu sana "lev"-osiolla ja sitä seuraavalla numerolla
 // esim. par100 tai LEV850 jne.
 bool NFmiSmartToolIntepreter::GetLevelFromVariableById(const std::string &theVariableText,
                                                        NFmiLevel &theLevel,
                                                        NFmiInfoData::Type /* theDataType */)
 {
-  if (NFmiSmartToolIntepreter::IsWantedStart(theVariableText, "lev"))
+  if (::HandleVariableLevelInfo(theVariableText, theLevel, "lev", kFmiHybridLevel))
   {
-    NFmiValueString numericPart(theVariableText.substr(3));
-    if (numericPart.IsNumeric())
-    {
-      float levelValue = static_cast<float>(numericPart);
-      // pitaisi tunnistaa level tyyppi arvosta kait, nyt oletus että painepinta
-      FmiLevelType levelType = kFmiHybridLevel;  // jos käyttäjä on antanut lev45, tällöin halutaan
-                                                 // hybrid level 45 ei painepinta 45. painepinnat
-                                                 // saa automaattisesti pelkällä numerolla
-      theLevel = NFmiLevel(levelType, theVariableText, levelValue);
+    // jos käyttäjä on antanut esim. T_ec_lev45, tällöin halutaan hybrid level 45 ei painepinta 45.
       return true;
     }
-  }
-  else if (NFmiSmartToolIntepreter::IsWantedStart(theVariableText, "fl"))
-  {
-    NFmiValueString numericPart(theVariableText.substr(2));
-    if (numericPart.IsNumeric())
+  else if (::HandleVariableLevelInfo(theVariableText, theLevel, "fl", kFmiFlightLevel))
     {
-      // Testataan validius
-      static_cast<long>(numericPart);
-      FmiLevelType levelType = kFmiFlightLevel;
-      theLevel = NFmiLevel(levelType, theVariableText, static_cast<float>(numericPart));
+    // jos käyttäjä on antanut esim. T_ec_fl200, tällöin halutaan flight level 200.
       return true;
     }
-  }
-  else if (NFmiSmartToolIntepreter::IsWantedStart(theVariableText, "z"))
+  else if (::HandleVariableLevelInfo(theVariableText, theLevel, "z", kFmiHeight))
   {
-    NFmiValueString numericPart(theVariableText.substr(1));
-    if (numericPart.IsNumeric())
-    {
-      // Testataan validius
-      static_cast<long>(numericPart);
-      FmiLevelType levelType = kFmiHeight;
-      theLevel = NFmiLevel(levelType, theVariableText, static_cast<float>(numericPart));
+    // jos käyttäjä on antanut esim. T_ec_z1500, tällöin halutaan arvot korkeudelta 1500 metriä.
       return true;
     }
-  }
   return false;
 }
 
@@ -3018,9 +3013,8 @@ bool NFmiSmartToolIntepreter::ExtractCalculationPointInfo()
     // että voidaan tarvittaessa jatkaa)
     try
     {
-      itsExtraMacroParamData->CalculationPointProducer(
-          NFmiSmartToolIntepreter::GetPossibleProducerInfo(latitudeStr).first);
-      if (itsExtraMacroParamData->CalculationPointProducer().GetIdent())
+      if(itsExtraMacroParamData->AddCalculationPointProducer(
+          NFmiSmartToolIntepreter::GetPossibleProducerInfo(latitudeStr).first))
       {
         return true;
       }
@@ -4049,7 +4043,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_grad"), VertFunctionMapValue(NFmiAreaMask::Grad, NFmiAreaMask::VertFL, 3, string("vertfl_grad(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_findh_cond"), VertFunctionMapValue(NFmiAreaMask::FindHeightCond, NFmiAreaMask::VertFL, 4, string("vertfl_findh_cond(par, fl1, fl2, nth, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_findc_cond"), VertFunctionMapValue(NFmiAreaMask::FindCountCond, NFmiAreaMask::VertFL, 3, string("vertfl_findc_cond(par, fl1, fl2, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
-    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_peek"),VertFunctionMapValue(NFmiAreaMask::PeekZ, NFmiAreaMask::VertFL, 2, string("vertp_peek(par, deltaFL)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_peek"),VertFunctionMapValue(NFmiAreaMask::PeekZ, NFmiAreaMask::VertFL, 2, string("vertfl_peek(par, deltaFL)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
 
     // vertz-funktiot eli näitä operoidaan aina metrisillä korkeuksilla [m]
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_max"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::VertZ, 3, string("vertz_max(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4065,7 +4059,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_grad"), VertFunctionMapValue(NFmiAreaMask::Grad, NFmiAreaMask::VertZ, 3, string("vertz_grad(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_findh_cond"), VertFunctionMapValue(NFmiAreaMask::FindHeightCond, NFmiAreaMask::VertZ, 4, string("vertz_findh_cond(par, z1, z2, nth, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_findc_cond"), VertFunctionMapValue(NFmiAreaMask::FindCountCond, NFmiAreaMask::VertZ, 3, string("vertz_findc_cond(par, z1, z2, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
-    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_peek"),VertFunctionMapValue(NFmiAreaMask::PeekZ, NFmiAreaMask::VertZ, 2, string("vertp_peek(par, deltaZ)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_peek"),VertFunctionMapValue(NFmiAreaMask::PeekZ, NFmiAreaMask::VertZ, 2, string("vertz_peek(par, deltaZ)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
 
     // vertlev-funktiot eli näitä operoidaan aina mallipintadatan hybrid-level arvoilla esim. hirlamissa arvot ovat 60 - 1
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_max"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::VertHyb, 3, string("vertlev_max(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));

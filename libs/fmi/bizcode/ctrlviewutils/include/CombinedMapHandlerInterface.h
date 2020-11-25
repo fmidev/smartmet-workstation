@@ -40,6 +40,27 @@ enum class CountryBorderDrawDirtyState
     Geometry = 2 // Karttaa on zoomattu tai kartta ruudun kokoa on muutettu, kaikki piirto ja laskenta uusiksi
 };
 
+// N‰it‰ NFmiMapLayerGuiRelatedInfo tietoja k‰ytet‰‰n mm. kun rakennetaan kartta layerien vaihtoon liittyvi‰ popup valikoita.
+// Samoin viewMacrojen reference nimien kanssa.
+class NFmiMapLayerRelatedInfo
+{
+public:
+    NFmiMapLayerRelatedInfo() = default;
+    NFmiMapLayerRelatedInfo(const std::string& guiName, const std::string& macroReference, bool isWmsLayer);
+
+    static const std::string& getWmsMacroReferencePrefix();
+    static std::string addWmsMacroReferencePrefix(std::string macroReference);
+    static bool hasWmsMacroReferencePrefix(const std::string& macroReference);
+    static std::string stripWmsMacroReferencePrefix(std::string macroReference);
+
+    std::string guiName_;
+    std::string macroReference_;
+    std::string prefixedMacroReference_;
+    bool isWmsLayer_ = false;
+};
+// MapAreaMapLayerRelatedInfo on yhden kartta-alueen (esim. skandinavia) kaikki layerit.
+using MapAreaMapLayerRelatedInfo = std::vector<NFmiMapLayerRelatedInfo>;
+
 // Interface that is meant to be used to handle all kinds of background map and overlay map stuff handling.
 class CombinedMapHandlerInterface
 {
@@ -72,6 +93,7 @@ public:
     virtual void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) = 0;
     virtual const std::unique_ptr<NFmiFastDrawParamList>& getModifiedPropertiesDrawParamList() const = 0;
     virtual unsigned int getRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex) = 0;
+    virtual unsigned int getRelativeRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual void hideShowAllMapViewParams(unsigned int mapViewDescTopIndex, bool hideAllObservations, bool showAllObservations, bool hideAllForecasts, bool showAllForecasts) = 0;
     virtual void setModelRunOffset(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void activateView(const NFmiMenuItem& menuItem, int rowIndex) = 0;
@@ -122,7 +144,8 @@ public:
     virtual void removeTimeSerialView(const NFmiMenuItem& menuItem) = 0;
     virtual void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual unsigned long& getTimeSerialViewIndexReference() = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParam(unsigned int mapViewDescTopIndex, int rowIndex) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual void changeMapType(unsigned int mapViewDescTopIndex, bool goForward) = 0;
     virtual bool scrollViewRow(unsigned int mapViewDescTopIndex, int scrollCount) = 0;
     virtual void timeControlTimeStep(unsigned int mapViewDescTopIndex, float timeStepInMinutes) = 0;
@@ -131,8 +154,8 @@ public:
     virtual void pasteDrawParamsToViewRow(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams) = 0;
     virtual void copyDrawParamsFromMapViewRow(unsigned int mapViewDescTopIndex) = 0;
     virtual void pasteDrawParamsToMapViewRow(unsigned int mapViewDescTopIndex) = 0;
-    virtual int activeViewRow(unsigned int mapViewDescTopIndex) = 0;
-    virtual void activeViewRow(unsigned int mapViewDescTopIndex, int theActiveRowIndex) = 0;
+    virtual int absoluteActiveViewRow(unsigned int mapViewDescTopIndex) = 0;
+    virtual void absoluteActiveViewRow(unsigned int mapViewDescTopIndex, int theAbsoluteActiveRowIndex) = 0;
     virtual void removeAllViewsWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual NFmiProjectionCurvatureInfo* projectionCurvatureInfo() = 0;
     virtual void projectionCurvatureInfo(const NFmiProjectionCurvatureInfo& newValue) = 0;
@@ -169,8 +192,8 @@ public:
     virtual double drawObjectScaleFactor() = 0;
     virtual void drawObjectScaleFactor(double newValue) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) = 0;
-    virtual std::string getCurrentMapLayerName(int mapViewDescTopIndex, bool backgroundMap) = 0;
-    virtual std::string getCurrentMapLayerText(int mapViewDescTopIndex, bool backgroundMap) = 0;
+    virtual std::string getCurrentMapLayerGuiName(int mapViewDescTopIndex, bool backgroundMap) = 0;
+    virtual std::string getCurrentMapLayerGuiText(int mapViewDescTopIndex, bool backgroundMap) = 0;
     virtual bool useCombinedMapMode() const = 0;
     virtual void useCombinedMapMode(bool newValue) = 0;
     virtual const NFmiMetTime& activeMapTime() = 0;
@@ -207,6 +230,11 @@ public:
     virtual void insertParamLayer(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void setBorderDrawDirtyState(unsigned int mapViewDescTopIndex, CountryBorderDrawDirtyState newState, NFmiDrawParam* separateBorderLayerDrawOptions = nullptr) = 0;
     virtual void activeEditedParameterMayHaveChangedViewUpdateFlagSetting(int mapViewDescTopIndex) = 0;
+    virtual const MapAreaMapLayerRelatedInfo& getCurrentMapLayerRelatedInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase) = 0;
+    virtual void selectMapLayer(unsigned int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase) = 0;
+    virtual std::pair<std::string, std::string> getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
+    virtual void selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName) = 0;
+    virtual void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) = 0;
 
 
     // Staattiset perushelper-funktiot
@@ -221,4 +249,5 @@ public:
     static bool hasSeparateBorderLayer(NFmiDrawParamList* drawParamList);
     static void copyDrawParamsList(NFmiPtrList<NFmiDrawParamList>* copyFromList, NFmiPtrList<NFmiDrawParamList>* copyToList);
     static bool IsBorderLayerDrawn(const NFmiDrawParam* separateBorderLayerDrawOptions);
+    static std::string getNoneOverlayName();
 };
