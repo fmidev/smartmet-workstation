@@ -66,6 +66,8 @@ public:
 		int itsUsedCombinedModeMapIndex = 0;
 		int itsUsedCombinedModeOverMapDibIndex = -1;
 		NFmiString itsZoomedAreaStr;
+		std::string itsBackgroundMacroReference;
+		std::string itsOverlayMacroReference;
 	};
 
 
@@ -86,14 +88,15 @@ public:
 	void SelectedMapIndex(unsigned int newValue);
     unsigned int SelectedMapIndex(void) const {return itsSelectedMapIndexVM;}
 	NFmiGdiPlusImageMapHandler* MapHandler(void) const;
-    std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
+	NFmiGdiPlusImageMapHandler* MapHandler(unsigned int mapAreaIndex) const;
+	std::vector<NFmiGdiPlusImageMapHandler*>& GdiPlusImageMapHandlerList(void) {return itsGdiPlusImageMapHandlerList;}
 
 	NFmiMapViewCache& MapViewCache(void) {return itsMapViewCache;}
     bool RedrawMapView(void) const;
     void SetRedrawMapView(bool newValue);
     void ClearRedrawMapView();
 	NFmiPtrList<NFmiDrawParamList>* DrawParamListVector(void) {return itsDrawParamListVector;}
-	bool ScrollViewRow(int theCount, int &theActiveViewRow);
+	bool ScrollViewRow(int theCount);
     const NFmiPoint& ViewGridSize(void) const {return itsViewGridSizeVM;}
 	void ViewGridSize(const NFmiPoint& newSize, NFmiMapViewWinRegistry *theMapViewWinRegistry);
 	void ViewGridSizeMax(const NFmiPoint& newSize){itsViewGridSizeMax = newSize;};
@@ -112,12 +115,13 @@ public:
 	bool ShowTimeString(void){return fShowTimeString;}
 	void ShowTimeString(bool newState){fShowTimeString = newState;}
 	const NFmiRect& RelativeMapRect(void);
-	void RelativeMapRect(const NFmiRect& theMapRect){itsRelativeMapRect = theMapRect;};
+	void RelativeMapRect(const NFmiRect& theMapRect);
 	void CalcClientViewXperYRatio(const NFmiPoint& theViewSize);
 	double ClientViewXperYRatio(void){return itsClientViewXperYRatio;};
 	void ClientViewXperYRatio(double theClientViewXperYRatio){itsClientViewXperYRatio = theClientViewXperYRatio;};
 	const NFmiPoint& MapViewSizeInPixels(void){return itsMapViewSizeInPixels;};
 	void MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, double theDrawObjectScaleFactor, bool fHideTimeControlView);
+	void RecalculateMapViewSizeInPixels(double theDrawObjectScaleFactor);
 	int ToggleShowTimeOnMapMode(void);
 	int ShowTimeOnMapMode(void) const {return itsShowTimeOnMapMode;}
 	bool IsTimeControlViewVisible() const;
@@ -198,13 +202,15 @@ public:
 	NFmiPoint ActualMapBitmapSizeInPixels(void);
 	const NFmiTimeDescriptor& TimeControlViewTimes(void) const {return itsTimeControlViewTimes;}
 	void TimeControlViewTimes(const NFmiTimeDescriptor &newTimeDescriptor);
-	int ActiveViewRow(void) const {return itsActiveViewRow;}
-	void ActiveViewRow(int newValue) {itsActiveViewRow = newValue;}
+	int AbsoluteActiveViewRow(void) const {return itsAbsoluteActiveViewRow;}
+	void AbsoluteActiveViewRow(int newValue) { itsAbsoluteActiveViewRow = newValue;}
     NFmiAnimationData& AnimationDataRef(void) {return itsAnimationData;}
 	int CalcPrintingPageShiftInMinutes(void);
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
-	std::string GetCurrentMapLayerText(bool backgroundMap);
+	std::string GetCurrentGuiMapLayerText(bool backgroundMap);
 	double SingleMapViewHeightInMilliMeters() const;
+	bool PrintingModeOn() const { return fPrintingModeOn; }
+	void PrintingModeOn(bool newState) { fPrintingModeOn = newState; }
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
@@ -217,7 +223,7 @@ private:
 	void InitStationPointDrawingSystem(void);
 	void InitMapViewDescTopFromSettings(void);
 	void InitGdiPlusImageMapHandlerSystem(void);
-	NFmiGdiPlusImageMapHandler* CreateGdiPlusImageMapHandler(const NFmiMapConfiguration &theMapConfiguration);
+	NFmiGdiPlusImageMapHandler* CreateGdiPlusImageMapHandler(std::shared_ptr<NFmiMapConfiguration> &theMapConfiguration);
 	void SetGdiPlusImageMapHandlerSelectedMaps(NFmiGdiPlusImageMapHandler &theGdiPlusImageMapHandler, int mapHandlerIndex);
 	void StoreHandlerSelectedMapsToSettings(NFmiGdiPlusImageMapHandler &theGdiPlusImageMapHandler, int mapHandlerIndex);
 	void InitLandBorderDrawingSystem(void);
@@ -291,9 +297,9 @@ private:
 	// kokonaisosa tunteja varten ja desimaalit minuutteja (0.5 = 30 minuuttia jne.)
 	float itsTimeControlTimeStep; 
     CtrlViewUtils::MapViewMode itsMapViewDisplayMode;
-	// kun näyttöruudukkoa klikataan hiirellä, yksi ruuduista muuttuu aktiiviseksi, sen ruudun rivinumero talletetaan tähän
-	// HUOM! tämä on suhteellinen rivinumero eli pitää ottaa huomioon monesko rivi on ensimmäisenä näkyvissä karttanäyttö ruudukossa
-	int itsActiveViewRow;
+	// Kun näyttöruudukkoa klikataan hiirellä, yksi ruuduista muuttuu aktiiviseksi. 
+	// Sen ruudun absoluuttinen rivinumero (1-50) talletetaan tähän (eli ei suhteellinen näkyvissä olevista riveistä).
+	int itsAbsoluteActiveViewRow = 1;
 	// onko tämä desctop näyttö näkyvissä vai ei
 	bool fDescTopOn; 
 	// Piiretäänkö karttanäytölle vain bitmap uudestaan (tällä saadaan pyyhittyä piirretty tooltippi pois)
@@ -341,6 +347,10 @@ private:
 	// Uudet erillismääritellyt border-layerit voivat olla eri piirtosäädöillä ja niitä voi olla jokaisella karttarivillä omansa.
 	NFmiCountryBorderBitmapCache itsSeparateCountryBorderBitmapCache;
 	TrueMapViewSizeInfo itsTrueMapViewSizeInfo;
+	// Kun karttanäyttöä printataan, laitetaan tämä päälle, jotta kartta-alue saadaan aina maksimiksi eli (0,0-1,1).
+	// Kun tullaan pois printtauksesta, pitää tämä taas laittaa false:ksi!
+	// Tätä ei talleteta minnekään, eikä arvoa kopioida mitenkään.
+	bool fPrintingModeOn = false;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMapViewDescTop& item){item.Write(os); return os;}

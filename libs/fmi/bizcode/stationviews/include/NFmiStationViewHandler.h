@@ -214,6 +214,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
     void MouseMoveCrossSectionActions(const NFmiPoint& thePlace, unsigned long theKey);
     bool DrawContourLegendOnThisMapRow();
 	bool HasSeparateCountryBorderLayer() const;
+	void SetThisAsActiveViewRow() const;
+	bool IsThisActiveViewRow() const;
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)

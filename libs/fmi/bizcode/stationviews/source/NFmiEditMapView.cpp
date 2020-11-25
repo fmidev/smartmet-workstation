@@ -740,7 +740,7 @@ void NFmiEditMapView::PrintNoDataMessageOnTimeControlView(void)
 // etsii 1. mahd. synop-plot -näytön
 NFmiSynopPlotView* NFmiEditMapView::GetSynopPlotViewFromToolTipPos(bool fDrawSoundingPlot, bool fDrawMinMaxPlot, bool fDrawMetarPlot)
 {
-	NFmiDrawParamList *drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsCtrlViewDocumentInterface->ToolTipRowIndex());
+	NFmiDrawParamList *drawParamList = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getDrawParamListWithRealRowNumber(itsMapViewDescTopIndex, itsCtrlViewDocumentInterface->ToolTipRealRowIndex());
 	if(drawParamList)
 	{
 		// ensin etsitään normaalia synop-plot paramia
@@ -759,7 +759,8 @@ NFmiSynopPlotView* NFmiEditMapView::GetSynopPlotViewFromToolTipPos(bool fDrawSou
 			ignoreLevelInfo = true;
 		if(drawParamList->Find(dataIdent, 0, NFmiInfoData::kAnyData, true, ignoreLevelInfo))
 		{
-			NFmiCtrlView *view = itsViewGrid->GetView(itsCtrlViewDocumentInterface->ToolTipRowIndex(), itsCtrlViewDocumentInterface->ToolTipTime(), dataIdent, true);
+			auto realRowIndex = itsCtrlViewDocumentInterface->ToolTipRealRowIndex();
+			NFmiCtrlView *view = itsViewGrid->GetViewWithRealRowIndex(realRowIndex, itsCtrlViewDocumentInterface->ToolTipTime(), dataIdent, true);
 			if(view)
 			{
 				return dynamic_cast<NFmiSynopPlotView*>(view);

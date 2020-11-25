@@ -1385,7 +1385,11 @@ void CFmiSmartToolDlg::OnBnClickedButtonRemoveAllFromRow5()
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRefreshList()
 {
     ResetSearchResource();
-    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = itsSmartMetDocumentInterface->MacroParamSystem().GetCurrentFolder();
+    auto& macroParamSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+    // Varmistetaan että root kansio on alustettu tai että edes se on 'valittuna', jos tausta-threadissa 
+    // tehty MacroParamSystem olion alustus on jotenkin estynyt tai mennyt pieleen.
+    macroParamSystem.EnsureRootFolderInitialized();
+    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystem.GetCurrentFolder();
 	if(currentFolder)
 	{
 		currentFolder->RefreshMacroParams();

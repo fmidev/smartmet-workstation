@@ -199,12 +199,17 @@ bool NFmiCtrlView::IsPrinting() const
 
 // Näytetty rivi numero täällä (theRowIndex) ei ole aina sama kuin dokumentin
 // rivi, koska nykyään näyttörivejä voi selata myös pystysuunnassa.
-int NFmiCtrlView::CalcRealRowIndex(int theRowIndex, int theColumnIndex)
+int NFmiCtrlView::CalcRealRowIndex(int theRowIndex, int theColumnIndex) const
 {
 	int realRowIndex = GetUsedParamRowIndex(theRowIndex, theColumnIndex); 
 	if(itsMapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
 		realRowIndex += itsCtrlViewDocumentInterface->MapRowStartingIndex(itsMapViewDescTopIndex) - 1;
 	return realRowIndex;
+}
+
+int NFmiCtrlView::CalcRealRowIndex() const
+{
+	return CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
 }
 
 std::unique_ptr<MapHandlerInterface> NFmiCtrlView::GetMapHandlerInterface()

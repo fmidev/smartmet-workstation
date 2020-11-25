@@ -47,71 +47,74 @@ namespace CFmiWin32TemplateHelpers
 		toolBox->SetDC(pDC);
 		toolBox->GetPrintInfo(pInfo); // ensin pitää laittaa CDC ja sitten printInfo!!!
 
-        smartMetDocumentInterface->Printing(true);
-		NFmiPoint oldSize = theView->PrintViewSizeInPixels();
-		// lasketaan sovitus printtaus alueeseen, niin että kuva ei vääristy ja se sopii paperille
-		// Lisäksi karttanäyttö piirretään aina ilman aikakontrolli-ikkunaa, joten lasketaan uusi alue pelkän karttanäyttöosion mukaan
-		// kuitenkin niin että suhteet eivät muutu.
-		CSize destSize = pInfo->m_rectDraw.Size();
-		CSize screenArea = theView->GetPrintedAreaOnScreenSizeInPixels();
-//		NFmiRect oldRelativeMapRect = smartMetDocumentInterface->MapViewDescTop(mapViewDescTopIndex)->RelativeMapRect();
-		NFmiRect oldRelativeMapRect = theView->RelativePrintRect() ? *(theView->RelativePrintRect()) : NFmiRect(0,0,1,1);
-		theView->RelativePrintRect(NFmiRect(0,0,1,1)); // annetaan printtaukseen koko suhteellinen alue käyttöön karttaosiolle
-
-		double widthFactor = destSize.cx / static_cast<double>(screenArea.cx);
-		double heightFactor = destSize.cy / static_cast<double>(screenArea.cy);
-		int usedDestWidth = screenArea.cx;
-		int usedDestHeight = screenArea.cy;
-		if(smartMetDocumentInterface->ApplicationWinRegistry().FitToPagePrint())
-		{
-			usedDestWidth = destSize.cx;
-			usedDestHeight = destSize.cy;
-		}
-		else
-		{
-			if(widthFactor > heightFactor) // tämä koodi sovittaa kuvan niin että siitä tuleee mahd. iso ja mahtuu annetulle paperille muotoa muuttamatta
-			{
-                usedDestWidth = static_cast<int>(::round(usedDestWidth * heightFactor));
-                usedDestHeight = static_cast<int>(::round(usedDestHeight * heightFactor));
-			}
-			else
-			{
-                usedDestWidth = static_cast<int>(::round(usedDestWidth * widthFactor));
-                usedDestHeight = static_cast<int>(::round(usedDestHeight * widthFactor));
-			}
-		}
-
-		CSize newDestSize = CSize(usedDestWidth, usedDestHeight);
-		CRect newDestRect(pInfo->m_rectDraw.TopLeft(), newDestSize);
-		pInfo->m_rectDraw = newDestRect; // toimiiko tämä uuden koon asetus?
-		toolBox->GetPrintInfo(pInfo); // otetaan printinfosta rect uudestaan!!!
-
-        NFmiPoint viewSizeInPixels(pInfo->m_rectDraw.right - pInfo->m_rectDraw.left, pInfo->m_rectDraw.bottom - pInfo->m_rectDraw.top);
-		theView->PrintViewSizeInPixels(viewSizeInPixels);
-        if(!smartMetDocumentInterface->DoMapViewOnSize(theView->MapViewDescTopIndex(), viewSizeInPixels, pDC))
+        NFmiPoint oldSize = theView->PrintViewSizeInPixels();
+        auto mapViewDescTopIndex = theView->MapViewDescTopIndex();
+        smartMetDocumentInterface->Printing(mapViewDescTopIndex, true);
+        try
         {
-    		CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->IsMapView(), theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+            // lasketaan sovitus printtaus alueeseen, niin että kuva ei vääristy ja se sopii paperille
+            // Lisäksi karttanäyttö piirretään aina ilman aikakontrolli-ikkunaa, joten lasketaan uusi alue pelkän karttanäyttöosion mukaan
+            // kuitenkin niin että suhteet eivät muutu.
+            CSize destSize = pInfo->m_rectDraw.Size();
+            CSize screenArea = theView->GetPrintedAreaOnScreenSizeInPixels();
+
+            double widthFactor = destSize.cx / static_cast<double>(screenArea.cx);
+            double heightFactor = destSize.cy / static_cast<double>(screenArea.cy);
+            int usedDestWidth = screenArea.cx;
+            int usedDestHeight = screenArea.cy;
+            if(smartMetDocumentInterface->ApplicationWinRegistry().FitToPagePrint())
+            {
+                usedDestWidth = destSize.cx;
+                usedDestHeight = destSize.cy;
+            }
+            else
+            {
+                if(widthFactor > heightFactor) // tämä koodi sovittaa kuvan niin että siitä tuleee mahd. iso ja mahtuu annetulle paperille muotoa muuttamatta
+                {
+                    usedDestWidth = static_cast<int>(::round(usedDestWidth * heightFactor));
+                    usedDestHeight = static_cast<int>(::round(usedDestHeight * heightFactor));
+                }
+                else
+                {
+                    usedDestWidth = static_cast<int>(::round(usedDestWidth * widthFactor));
+                    usedDestHeight = static_cast<int>(::round(usedDestHeight * widthFactor));
+                }
+            }
+
+            CSize newDestSize = CSize(usedDestWidth, usedDestHeight);
+            CRect newDestRect(pInfo->m_rectDraw.TopLeft(), newDestSize);
+            pInfo->m_rectDraw = newDestRect; // toimiiko tämä uuden koon asetus?
+            toolBox->GetPrintInfo(pInfo); // otetaan printinfosta rect uudestaan!!!
+
+            NFmiPoint viewSizeInPixels(pInfo->m_rectDraw.right - pInfo->m_rectDraw.left, pInfo->m_rectDraw.bottom - pInfo->m_rectDraw.top);
+            theView->PrintViewSizeInPixels(viewSizeInPixels);
+            if(!smartMetDocumentInterface->DoMapViewOnSize(mapViewDescTopIndex, viewSizeInPixels, pDC))
+            {
+                CFmiWin32Helpers::SetDescTopGraphicalInfo(theView->IsMapView(), theView->GetGraphicalInfo(), pDC, theView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor(), true); // true pakottaa initialisoinnin
+            }
+            theView->SetPrintCopyCDC(pDC);
+
+            if(smartMetDocumentInterface->IsToolMasterAvailable())
+            {
+                CtrlView::SetToolMastersDC(pDC, pInfo->m_rectDraw);
+            }
+
+            theView->MakePrintViewDirty(true, true);
+            theView->OldWayPrintUpdate(); // tämä pitää tehdä että prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
+            theView->DoDraw();
+            theView->DrawOverBitmapThings(toolBox); //en tiedä voiko tämän sijoittaa DoDraw:in?
         }
-		theView->SetPrintCopyCDC(pDC);
-
-        if(smartMetDocumentInterface->IsToolMasterAvailable())
-        {
-            CtrlView::SetToolMastersDC(pDC, pInfo->m_rectDraw);
-        }
-
-		theView->MakePrintViewDirty(true, true);
-		theView->OldWayPrintUpdate(); // tämä pitää tehdä että prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
-		theView->DoDraw();
-		theView->DrawOverBitmapThings(toolBox); //en tiedä voiko tämän sijoittaa DoDraw:in?
-
+        catch(...)
+        { }
+        // Try-catch varmistaa että lopun takaisinasetukset tehdään
 		theView->GetGraphicalInfo().fInitialized = false; // printtauksen jälkeen tämä pitää taas laittaa falseksi että piirto osaa initialisoida sen uudestaan
-		theView->SetPrintCopyCDC(0);
+        smartMetDocumentInterface->Printing(mapViewDescTopIndex, false);
+        theView->SetPrintCopyCDC(0);
 		theView->PrintViewSizeInPixels(oldSize);
-		theView->RelativePrintRect(oldRelativeMapRect);
 		CatLog::logMessage("Map view printed", CatLog::Severity::Info, CatLog::Category::Visualization);
-        smartMetDocumentInterface->Printing(false);
 		theView->MakePrintViewDirty(true, true);
 		theView->OldWayPrintUpdate(); // tämä pitää tehdä että prionttauksen aikaiset mapAreat ja systeemit tulevat voimaan
+        theView->Invalidate(FALSE);
 	}
 
 	template<class Tview>

@@ -3,6 +3,73 @@
 
 #include "execute-command-in-separate-process.h"
 #include "catlog/catlog.h"
+#include "NFmiSettings.h"
+#include "NFmiPathUtils.h"
+#include "NFmiFileSystem.h"
+
+namespace
+{
+    // Laitetaan tahan kerran rakennettu polku jatkokayttoa varten
+    std::string g_cached7zipExePath;
+
+    std::string GetOptional7zipExePath()
+    {
+        return NFmiSettings::Optional<std::string>("SmartMet::Optional7zipExePath", "");
+    }
+
+    std::string MakeOptional7zipExePath(const std::string& workingDirectory)
+    {
+        auto optionalPath = ::GetOptional7zipExePath();
+        if(optionalPath.empty())
+            return "";
+        else
+        {
+            // 1. Laitetaan absoluuttinen polku kuntoon
+            auto zipPath = PathUtils::getAbsoluteFilePath(optionalPath, workingDirectory);
+            // 2. Siivotaan polkua, poistetaan mahd. suhteelliset polkuhypyt (..\.. jutut) pois
+            zipPath = PathUtils::simplifyWindowsPath(zipPath);
+            // 3. Jos polku osoittaa johonkin tiedostoon, silloin se hyväksytään
+            if(NFmiFileSystem::FileExists(zipPath))
+                return zipPath;
+            else
+            {
+                std::string zipPathError = "7zip path from SmartMet::Optional7zipExePath -option with final value ";
+                zipPathError += zipPath + " didn't exist, using default 7zip path instead";
+                CatLog::logMessage(zipPathError, CatLog::Severity::Error, CatLog::Category::Configuration, true);
+                // 5. Palautetaan virhetilanteessa tyhjää, jotta otetaan default polku käyttöön
+                return "";
+            }
+        }
+    }
+
+    std::string MakeHardCoded7zipExePath(const std::string& workingDirectory)
+    {
+        std::string zipPath = workingDirectory;
+        zipPath += "\\utils\\";
+        zipPath += "7z.exe";
+
+        if(!NFmiFileSystem::FileExists(zipPath))
+        {
+            std::string zipPathError = "7zip executable from default path (smartmet-path\\utils\\7z.exe): ";
+            zipPathError += zipPath + " didn't exist, unpacking operations won't work!";
+            CatLog::logMessage(zipPathError, CatLog::Severity::Error, CatLog::Category::Configuration, true);
+        }
+
+        return zipPath;
+    }
+
+    // Oletus funktiota kutsutaan vain kerran, eli ennen kutsua, tarkistetaan etta g_cached7zipExePath ei ole tyhja.
+    std::string Construct7zipExePath(const std::string& workingDirectory)
+    {
+        auto used7zipExePath = MakeOptional7zipExePath(workingDirectory);
+        if(used7zipExePath.empty())
+        {
+            used7zipExePath = MakeHardCoded7zipExePath(workingDirectory);
+        }
+        used7zipExePath = PathUtils::simplifyWindowsPath(used7zipExePath);
+        return used7zipExePath;
+    }
+}
 
 namespace CFmiProcessHelpers
 {
@@ -80,12 +147,18 @@ namespace CFmiProcessHelpers
 
     std::string Make7zipExePath(const std::string& workingDirectory)
     {
-        std::string zipCommandStr = "\""; // myös zip-commandin ympärille lainausmerkit
-        zipCommandStr += workingDirectory;
-        zipCommandStr += "\\utils\\";
-        zipCommandStr += "7z.exe";
-        zipCommandStr += "\"";
-        return zipCommandStr;
+        if(g_cached7zipExePath.empty())
+        {
+            auto zipExePath = ::Construct7zipExePath(workingDirectory);
+            CatLog::logMessage(std::string("Used 7z.exe path is: ") + zipExePath, CatLog::Severity::Info, CatLog::Category::Configuration);
+
+            // Lopullisessa polussa pitää olla vielä lainausmerkit ympärillä, koska tätä käytetään komentoriviltä
+            // ja jos polussa spaceja, menee homma muuten pieleen eli:
+            // D:\polku jonnekin\7z.exe ==>> "D:\polku jonnekin\7z.exe"
+            g_cached7zipExePath = "\"" + zipExePath + "\"";
+        }
+
+        return g_cached7zipExePath;
     }
 
 } // CFmiProcessHelpers namespace

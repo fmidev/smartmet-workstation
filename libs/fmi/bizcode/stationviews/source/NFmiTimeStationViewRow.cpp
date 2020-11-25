@@ -107,7 +107,6 @@ bool NFmiTimeStationViewRow::LeftButtonDown(const NFmiPoint & thePlace, unsigned
 {
 	if(IsIn(thePlace))
 	{
-		itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex, itsRowIndex);
 		if(itsViewList && itsViewList->IsIn(thePlace))
 		{
 			bool result = itsViewList->LeftButtonDown(thePlace, theKey);
@@ -123,7 +122,6 @@ bool NFmiTimeStationViewRow::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 {
     if(itsViewList)
 	{
-        itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex, itsRowIndex);
 		if(itsViewList->IsMouseDraggingOn() || itsViewList->IsIn(thePlace))
 		{
 			bool result = itsViewList->LeftButtonUp(thePlace, theKey);
@@ -192,7 +190,6 @@ bool NFmiTimeStationViewRow::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 {
 	if(IsIn(thePlace))
 	{
-        itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex, itsRowIndex);
 		if(itsViewList && itsViewList->IsIn(thePlace))
 			return itsViewList->RightButtonUp(thePlace, theKey);
 	}
@@ -379,9 +376,22 @@ bool NFmiTimeStationViewRow::StoreToolTipDataInDoc(const NFmiPoint& theRelativeP
 	return false;
 }
 
-bool NFmiTimeStationViewRow::IsActiveRow(void)
+// Sisältääkö tämä karttanäyttörivi sen hiirellä aktiiviseksi klikatun karttaruudun?
+bool NFmiTimeStationViewRow::HasActiveRowView()
 {
-	return (itsRowIndex == itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex));
+	if(itsViewList)
+	{
+		auto &combinedMapHandler = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface();
+		auto realActiveRowIndex = combinedMapHandler.absoluteActiveViewRow(itsMapViewDescTopIndex);
+		for(itsViewList->Reset(); itsViewList->Next(); )
+		{
+			auto *currentView = itsViewList->Current();
+			auto currentViewRealRowIndex = currentView->CalcRealRowIndex();
+			if(realActiveRowIndex == currentViewRealRowIndex)
+				return true;
+		}
+	}
+	return false;
 }
 
 // tällä piirretään tavara, joka tulee myös bitmapin päälle
@@ -411,18 +421,22 @@ std::string NFmiTimeStationViewRow::ComposeToolTipText(const NFmiPoint& theRelat
 	return std::string();
 }
 
-NFmiCtrlView* NFmiTimeStationViewRow::GetView(const NFmiMetTime &theTime, const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly)
+NFmiCtrlView* NFmiTimeStationViewRow::GetViewWithRealRowIndex(int theRealRowIndex, const NFmiMetTime &theTime, const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly)
 {
 	if(itsViewList)
 	{
 		for(itsViewList->Reset(); itsViewList->Next(); )
 		{
-			if(itsViewList->Current()->Time() == theTime)
+			auto* ctrlView = itsViewList->Current();
+			if(theRealRowIndex == ctrlView->CalcRealRowIndex())
 			{
-				NFmiStationViewHandler *view = dynamic_cast<NFmiStationViewHandler *>(itsViewList->Current());
-				if(view)
+				if(itsViewList->Current()->Time() == theTime)
 				{
-					return view->GetView(theDataIdent, fUseParamIdOnly);
+					NFmiStationViewHandler* view = dynamic_cast<NFmiStationViewHandler*>(itsViewList->Current());
+					if(view)
+					{
+						return view->GetView(theDataIdent, fUseParamIdOnly);
+					}
 				}
 			}
 		}

@@ -87,6 +87,7 @@ class NFmiCrossSectionView : public NFmiIsoLineView
 	NFmiRect CalcPressureScaleRect(void);
 	NFmiRect CalcParamHandlerViewRect(void);
 	void SetParamHandlerViewRect(const NFmiRect& newRect);
+	const NFmiRect& GetFrameForParamBox(void) const override { return itsDataViewFrame; };
 
  protected:
    bool IsToolMasterAvailable(void) override;

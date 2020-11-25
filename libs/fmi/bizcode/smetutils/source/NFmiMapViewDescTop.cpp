@@ -47,6 +47,8 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
+	const NFmiRect g_TotalRelativeMapRect(0., 0., 1., 1.);
+
 	// Muuttaa suhteellisen väri kanava arvon (arvoväli 0-1) 8-bit arvoksi (arvoväli 0-255)
 	int colorRelativeTo8bit(double colorValue)
 	{
@@ -182,6 +184,10 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 	extraData.Add(itsUsedCombinedModeMapIndex); // talletetaan 1. extra-datana käytetty combined-mode karttaindeksi
 	extraData.Add(itsUsedCombinedModeOverMapDibIndex); // talletetaan 2. extra-datana käytetty combined-mode overlay-karttaindeksi
 
+	// 'string' muotoisten lisädatojen lisäys
+	extraData.Add(itsBackgroundMacroReference); // talletetaan 1. extra-datana mahdollinen taustakartan macro-referenssi nimi
+	extraData.Add(itsOverlayMacroReference); // talletetaan 2. extra-datana mahdollinen overlay-kartan macro-referenssi nimi
+
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -213,6 +219,14 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 		itsUsedCombinedModeMapIndex = static_cast<int>(extraData.itsDoubleValues[0]); // luetaan 1. extra-datana combined-mode karttaindeksi
 	if(extraData.itsDoubleValues.size() >= 2)
 		itsUsedCombinedModeOverMapDibIndex = static_cast<int>(extraData.itsDoubleValues[1]); // luetaan 2. extra-datana combined-mode overlay karttaindeksi
+
+	// 'string' muotoisten lisädatojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
+	itsBackgroundMacroReference.clear();
+	if(extraData.itsStringValues.size() >= 1)
+		itsBackgroundMacroReference = extraData.itsStringValues[0]; // luetaan 1. extra-datana taustakartan macro-referenssi nimi
+	itsOverlayMacroReference.clear();
+	if(extraData.itsStringValues.size() >= 2)
+		itsOverlayMacroReference = extraData.itsStringValues[1]; // luetaan 2. extra-datana overlay-kartan macro-referenssi nimi
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Read failed");
@@ -248,7 +262,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,itsStationPointSize(1, 1)
 ,itsTimeControlTimeStep(1)
 ,itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
-,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
 ,itsGraphicalInfo()
@@ -301,7 +314,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsStationPointSize(1, 1)
 ,itsTimeControlTimeStep(1)
 ,itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
-,itsActiveViewRow(1)
 ,fDescTopOn(false)
 ,fMapViewBitmapDirty(false)
 ,itsGraphicalInfo()
@@ -354,7 +366,6 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, itsStationPointSize()
 	, itsTimeControlTimeStep(1)
 	, itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
-	, itsActiveViewRow(1)
 	, fDescTopOn(true)
 	, fMapViewBitmapDirty(true)
 	, itsMapView(other.itsMapView) // MapView pointteri pitää kopioida tässä, se ei muutu ajon aikana
@@ -400,7 +411,7 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsLandBorderPenSize = other.itsLandBorderPenSize;
 		itsTimeControlViewTimes = other.itsTimeControlViewTimes;
 		itsClientViewXperYRatio = other.itsClientViewXperYRatio;
-		itsRelativeMapRect = other.itsRelativeMapRect;
+		RelativeMapRect(other.itsRelativeMapRect);
 		itsMapViewSizeInPixels = other.itsMapViewSizeInPixels;
 		itsParamWindowViewPosition = other.itsParamWindowViewPosition;
 		CombinedMapHandlerInterface::copyDrawParamsList(other.itsDrawParamListVector, itsDrawParamListVector);
@@ -416,7 +427,7 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsStationPointSize = other.itsStationPointSize;
 		itsTimeControlTimeStep = other.itsTimeControlTimeStep;
 		itsMapViewDisplayMode = other.itsMapViewDisplayMode;
-		itsActiveViewRow = other.itsActiveViewRow;
+		itsAbsoluteActiveViewRow = other.itsAbsoluteActiveViewRow;
 		fDescTopOn = other.fDescTopOn;
 		fMapViewBitmapDirty = true; // Kopioinnin jälkeen kaikki on 'likaista'
 		itsMapView = other.itsMapView; // MapView pointteri pitää kopioida tässä, se ei muutu ajon aikana
@@ -578,10 +589,9 @@ void NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem(void)
 
 	if(itsMapConfigurationSystem)
 	{
-		int ssize = static_cast<int>(itsMapConfigurationSystem->Size());
-		for(int i=0; i<ssize; i++)
+		for(size_t mapAreaIndex = 0; mapAreaIndex < itsMapConfigurationSystem->Size(); mapAreaIndex++)
 		{
-			NFmiGdiPlusImageMapHandler* mHandler = CreateGdiPlusImageMapHandler(itsMapConfigurationSystem->GetMapConfiguration(i));
+			NFmiGdiPlusImageMapHandler* mHandler = CreateGdiPlusImageMapHandler(itsMapConfigurationSystem->GetMapConfiguration(mapAreaIndex));
 			if(mHandler)
 				itsGdiPlusImageMapHandlerList.push_back(mHandler);
 			else
@@ -592,21 +602,12 @@ void NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem(void)
 		throw std::runtime_error("ERROR in NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem - MapConfigurationSystem was null pointer.");
 }
 
-NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::CreateGdiPlusImageMapHandler(const NFmiMapConfiguration &theMapConfiguration)
+NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::CreateGdiPlusImageMapHandler(std::shared_ptr<NFmiMapConfiguration> &theMapConfiguration)
 {
 	NFmiGdiPlusImageMapHandler* mHandler = new NFmiGdiPlusImageMapHandler;
 	mHandler->UsedMapIndex(0);
     mHandler->ControlPath(std::string(itsControlPath));
-	if(theMapConfiguration.ProjectionFileName().empty())
-	{
-		mHandler->OriginalArea(theMapConfiguration.Projection());
-		mHandler->Init(theMapConfiguration.MapFileNames(), theMapConfiguration.MapDrawingStyles(), theMapConfiguration.OverMapDibFileNames(), theMapConfiguration.OverMapDibDrawingStyles());
-	}
-	else
-	{
-		mHandler->Init(theMapConfiguration.ProjectionFileName(), theMapConfiguration.MapFileNames(), theMapConfiguration.MapDrawingStyles(), theMapConfiguration.OverMapDibFileNames(), theMapConfiguration.OverMapDibDrawingStyles());
-	}
-
+	mHandler->Init(theMapConfiguration);
 	return mHandler;
 }
 
@@ -625,6 +626,13 @@ NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(void) const
 	throw std::runtime_error("ERROR in NFmiMapViewDescTop::GdiPlusImageMapHandler - SelectedMapIndex was out of bounds, error in program or configurations.");
 }
 
+NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(unsigned int mapAreaIndex) const
+{
+	if(mapAreaIndex < itsGdiPlusImageMapHandlerList.size())
+		return itsGdiPlusImageMapHandlerList[mapAreaIndex];
+	throw std::runtime_error("ERROR in NFmiMapViewDescTop::GdiPlusImageMapHandler - given MapIndex was out of bounds, error in program or configurations.");
+}
+
 int NFmiMapViewDescTop::CalcVisibleRowCount() const
 {
     if(itsMapViewDisplayMode == CtrlViewUtils::MapViewMode::kNormal)
@@ -636,7 +644,7 @@ int NFmiMapViewDescTop::CalcVisibleRowCount() const
 }
 
 // scrollaa näyttöriveja halutun määrän (negatiivinen skrollaa ylös ja positiivinen count alas)
-bool NFmiMapViewDescTop::ScrollViewRow(int theCount, int &theActiveViewRow)
+bool NFmiMapViewDescTop::ScrollViewRow(int theCount)
 {
     int oldValue = itsMapRowStartingIndex;
     itsMapRowStartingIndex += theCount;
@@ -652,10 +660,7 @@ bool NFmiMapViewDescTop::ScrollViewRow(int theCount, int &theActiveViewRow)
     if(oldValue == itsMapRowStartingIndex)
         return false;
     else
-    {
-        theActiveViewRow = theActiveViewRow + (oldValue - itsMapRowStartingIndex);
         return true;
-    }
 }
 
 int NFmiMapViewDescTop::CalcMaxRowStartingIndex() const
@@ -751,12 +756,18 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC,
 	auto timeControlViewIsHidden = fHideTimeControlView || !IsTimeControlViewVisible();
 
 	itsTrueMapViewSizeInfo.onSize(newSize, pDC, itsViewGridSizeVM, !timeControlViewIsHidden, theDrawObjectScaleFactor);
-	// Säädetään smalla suhteellista osiota, minkä karttanäyttö ottaa ja jättää loput aikakontrolli-ikkunalle.
-    int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.logicalPixelsPerMilliMeter().X()));
-    if(timeControlViewIsHidden)
-        wantedTimeControlHeightInPixels = 0;
-    double mapVerticalPortion = (newSize.Y() - wantedTimeControlHeightInPixels) / newSize.Y();
-    itsRelativeMapRect.Height(mapVerticalPortion);
+	// Ei saa tehdä itsRelativeMapRect jos timeControlViewIsHidden on true, 
+	// koska siitä tulee max-area laatikko eli (0,0-1,1). Tämä on erikoistapaus ja ne hoidetaan
+	// RelativeMapRect -metodeissa omalla tavalla. itsRelativeMapRect:in arvoksi ei saa tulla sitä!
+    if(!timeControlViewIsHidden)
+	{
+		// Säädetään samalla suhteellista osiota, minkä karttanäyttö ottaa ja jättää loput aikakontrolli-ikkunalle.
+		int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.logicalPixelsPerMilliMeter().X()));
+	    double mapVerticalPortion = (newSize.Y() - wantedTimeControlHeightInPixels) / newSize.Y();
+		auto modifiedRelativeMapRect = itsRelativeMapRect;
+		modifiedRelativeMapRect.Height(mapVerticalPortion);
+		RelativeMapRect(modifiedRelativeMapRect);
+	}
 
     // lopuksi pitää vielä päivittää x-y suhde
     CalcClientViewXperYRatio(newSize);
@@ -764,15 +775,27 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC,
     UpdateOneMapViewSize();
 }
 
+void NFmiMapViewDescTop::RecalculateMapViewSizeInPixels(double theDrawObjectScaleFactor)
+{
+	auto timeControlViewIsHidden = fPrintingModeOn || !IsTimeControlViewVisible();
+	MapViewSizeInPixels(itsMapViewSizeInPixels, nullptr, theDrawObjectScaleFactor, timeControlViewIsHidden);
+}
+
 const NFmiRect& NFmiMapViewDescTop::RelativeMapRect(void)
 { 
-    if(IsTimeControlViewVisible())
+    if(!fPrintingModeOn && IsTimeControlViewVisible())
         return itsRelativeMapRect; 
     else
     {
-		static const NFmiRect totalRelativeRect(0.,0.,1.,1.);
-        return totalRelativeRect;
+        return g_TotalRelativeMapRect;
     }
+}
+
+void NFmiMapViewDescTop::RelativeMapRect(const NFmiRect& theMapRect) 
+{ 
+	// Ei sallita (0,0 - 1,1) rectin asetusta, joka on erikoistapaus
+	if(theMapRect != g_TotalRelativeMapRect)
+		itsRelativeMapRect = theMapRect; 
 }
 
 bool NFmiMapViewDescTop::IsTimeControlViewVisible() const
@@ -790,6 +813,9 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 {
 	itsShowTimeOnMapMode++;
 	if(itsShowTimeOnMapMode > 3)
+		itsShowTimeOnMapMode = 0;
+	// Jos vaikka on luettu joku negatiivinen luku näyttömakrosta, se pitää korjata
+	if(itsShowTimeOnMapMode < 0)
 		itsShowTimeOnMapMode = 0;
 	bool mapAreaDirty = false;
 	switch(itsShowTimeOnMapMode)
@@ -815,7 +841,7 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 		SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry); // ikkunan koko muuttuu tietyissä tapauksissa, joten rajaviivat on laskettava uudestaan
 	}
 	// Kartta-alueen koot pitää myös päivittää, jos aikakontrolli-ikkuna menee pois näkyvistä tai tulee taas näkyviin
-	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisible());
+	RecalculateMapViewSizeInPixels(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->ApplicationWinRegistry().DrawObjectScaleFactor());
 	return itsShowTimeOnMapMode;
 }
 
@@ -1109,7 +1135,7 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NF
 
 	itsLandBorderPenSize = theOther.itsLandBorderPenSize;
 
-	itsRelativeMapRect = theOther.itsRelativeMapRect;
+	RelativeMapRect(theOther.itsRelativeMapRect);
 
 	// drawparamlistoje ei initialisoida tässä!!!!
 //	itsDrawParamListVector = theOther.itsDrawParamListVector;
@@ -1144,7 +1170,7 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NF
     }
 	itsTimeControlTimeStep = theOther.itsTimeControlTimeStep;
 	itsMapViewDisplayMode = theOther.itsMapViewDisplayMode;
-	itsActiveViewRow = theOther.itsActiveViewRow;
+	itsAbsoluteActiveViewRow = theOther.itsAbsoluteActiveViewRow;
 
 	fDescTopOn = theOther.fDescTopOn;
     fLockToMainMapViewTime = theOther.fLockToMainMapViewTime;
@@ -1244,8 +1270,9 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	is >> itsLandBorderColorIndex >> showParamWindowView;
 
 	is >> itsLandBorderPenSize;
-
-	is >> itsRelativeMapRect;
+	NFmiRect tmpMapRect;
+	is >> tmpMapRect;
+	RelativeMapRect(tmpMapRect);
 
 	// itsDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa
 	// itsExtraDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa
@@ -1327,6 +1354,9 @@ std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetVi
 		tmpData.itsUsedCombinedModeMapIndex = combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
 		tmpData.itsUsedCombinedModeOverMapDibIndex = combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex();
 		tmpData.itsZoomedAreaStr = mapHandler.Area() ? mapHandler.Area()->AreaStr() : "";
+		auto macroReferenceNamePair = combinedMapHandler.getMacroReferenceNamesForViewMacro(itsMapViewDescTopIndex, mapAreaIndex);
+		tmpData.itsBackgroundMacroReference = macroReferenceNamePair.first;
+		tmpData.itsOverlayMacroReference = macroReferenceNamePair.second;
 		helperList.push_back(tmpData);
 	}
 
@@ -1347,8 +1377,8 @@ void NFmiMapViewDescTop::SetViewMacroDipMapHelperList(const std::vector<NFmiMapV
 		mapHandler.OverMapBitmapIndex(tmpData.itsUsedOverMapDibIndex);
 
 		auto& combinedMapHandler = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetCombinedMapHandlerInterface();
-		combinedMapHandler.getCombinedMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeMapIndex);
-		combinedMapHandler.getCombinedOverlayMapModeState(itsMapViewDescTopIndex, mapAreaIndex).combinedModeMapIndex(tmpData.itsUsedCombinedModeOverMapDibIndex);
+		combinedMapHandler.selectCombinedMapModeIndices(itsMapViewDescTopIndex, mapAreaIndex, tmpData.itsUsedCombinedModeMapIndex, tmpData.itsUsedCombinedModeOverMapDibIndex);
+		combinedMapHandler.selectMapLayersByMacroReferenceNamesFromViewMacro(itsMapViewDescTopIndex, mapAreaIndex, tmpData.itsBackgroundMacroReference, tmpData.itsOverlayMacroReference);
 
 		mapHandler.Area(NFmiAreaFactory::Create(static_cast<char*>(tmpData.itsZoomedAreaStr)));
 	}
@@ -1414,7 +1444,7 @@ void NFmiMapViewDescTop::MapViewDisplayMode(CtrlViewUtils::MapViewMode newValue)
 	// kuin ne voivat kulloisessakin moodissa olla. Esim. Jos ollaan ensin yksi-aika-moodissa rivillä 35
 	// ja siirrytään yksi-aika-per-sarake eli normaali moodiiin, silloin ei voida olla rivillä 35, vaan 
 	// aloitus riviä pitää säätää, niin että se mahtuu 5 ensimmäiseen riviin riippuen ruudukon koosta.
-	ScrollViewRow(0, itsActiveViewRow);
+	ScrollViewRow(0);
 }
 
 // Säädetään kaikki aikaa liittyvät jutut parametrina annettuun aikaan, että SmartMet säätyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
@@ -1480,12 +1510,9 @@ void NFmiMapViewDescTop::InsertSeparateBorderLayerCacheBitmap(const std::string&
 	itsSeparateCountryBorderBitmapCache.insertCacheBitmap(cacheKeyString, std::move(cacheBitmap));
 }
 
-std::string NFmiMapViewDescTop::GetCurrentMapLayerText(bool backgroundMap)
+std::string NFmiMapViewDescTop::GetCurrentGuiMapLayerText(bool backgroundMap)
 {
-	if(backgroundMap)
-		return MapHandler()->GetBitmapFileName();
-	else
-		return MapHandler()->GetOverMapBitmapFileName();
+	return MapHandler()->GetCurrentGuiMapLayerText(backgroundMap);
 }
 
 

@@ -2250,6 +2250,11 @@ void NFmiStationViewHandler::DrawTimeText(void)
 	}
 }
 
+bool NFmiStationViewHandler::IsThisActiveViewRow() const
+{
+	return itsCtrlViewDocumentInterface->AbsoluteActiveViewRow(itsMapViewDescTopIndex) == CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+}
+
 // piirtää reunat sopivalla värillä ja mahdollisesti levitystyökalun jutut
 // 1. normaali ei aktiivinen väri musta, ohut reuna
 // 2. Aktiivinen näyttö, rivi ja aika punaisella paksulla reunalla
@@ -2263,7 +2268,7 @@ void NFmiStationViewHandler::DrawCurrentFrame(NFmiToolBox* theGTB)
 		return;  // jos jossain ohjelmassa on animaatio menossa, älä piirrä tätä framea, koska se välkkyy
 
     bool activeMapView = true;
-    bool activeRow = itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex) == itsViewGridRowNumber;
+    bool activeRow = IsThisActiveViewRow();
 	bool activeTime = itsCtrlViewDocumentInterface->ActiveViewTime() == itsTime;
 	NFmiPoint penSize(1,1);
 	NFmiColor frameColor(0,0,0);
@@ -2342,7 +2347,8 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
     itsCtrlViewDocumentInterface->MouseCaptured(true);
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-        if(IsMouseCursorOverParameterBox(thePlace)) // param-näytön on napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
+		SetThisAsActiveViewRow();
+		if(IsMouseCursorOverParameterBox(thePlace)) // param-näytön on napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
 		{
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonDown(thePlace, theKey); });
 		}
@@ -2449,8 +2455,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
     
     if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-        // Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan tällä uudella funktiolla.
-        itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex());
+		SetThisAsActiveViewRow();
 
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
 
@@ -2560,7 +2565,7 @@ bool NFmiStationViewHandler::IsControlPointModeOn()
 
 void NFmiStationViewHandler::LeftButtonUpBrushToolActions()
 {
-    boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsViewGridRowNumber);
+    boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
     if(drawParam)
     {
         itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
@@ -2654,7 +2659,7 @@ bool NFmiStationViewHandler::MiddleButtonDown(const NFmiPoint & thePlace, unsign
 			itsZoomDragDownPoint = thePlace;
 			itsZoomDragUpPoint = thePlace;
 			itsOldZoomRect = NFmiRect(itsZoomDragDownPoint, itsZoomDragUpPoint);
-			itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex, itsViewGridRowNumber);
+			SetThisAsActiveViewRow();
 			if(theKey & kCtrlKey)
 				itsCtrlViewDocumentInterface->MapMouseDragPanMode(true);
 			else
@@ -2938,6 +2943,13 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 	return false;
 }
 
+void NFmiStationViewHandler::SetThisAsActiveViewRow() const
+{
+	itsCtrlViewDocumentInterface->AbsoluteActiveViewRow(itsMapViewDescTopIndex, CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
+	// Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan tällä uudella funktiolla.
+	itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex());
+}
+
 //--------------------------------------------------------
 // RightButtonUp
 //--------------------------------------------------------
@@ -2951,6 +2963,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->RightButtonUp(thePlace, theKey); });
         }
 
+		SetThisAsActiveViewRow();
 		NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
 		if(IsControlPointModeOn())
@@ -2959,7 +2972,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 		}
 		if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush && itsCtrlViewDocumentInterface->ViewBrushed())
 		{
-			boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsViewGridRowNumber);
+			boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
 			if(drawParam)
 			{
                 itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
@@ -3049,7 +3062,7 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
 {
 	if(itsCtrlViewDocumentInterface->MouseCaptured() && IsIn(thePlace)) // turha, on jo kysytty?
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParam(itsMapViewDescTopIndex, itsViewGridRowNumber);
+		boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
 		if(drawParam && drawParam->DataType() == NFmiInfoData::kEditable && (!drawParam->IsParamHidden())) // parametri ei saa myös olla piilossa jos sitä meinaa alkaa sutimaan!!
 		{
 			if(drawParam->Param().Type() == kSymbolicParam)
@@ -3057,7 +3070,7 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
 			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, false, false);
 			if(info && info->Time(itsTime)) // else brushtool
 			{
-				if(itsCtrlViewDocumentInterface->ActiveViewRow(itsMapViewDescTopIndex) == itsViewGridRowNumber && itsCtrlViewDocumentInterface->ActiveViewTime() == itsTime)
+				if(IsThisActiveViewRow() && itsCtrlViewDocumentInterface->ActiveViewTime() == itsTime)
 				{
 //					if(itsDoc->EditorModeData()->FullControlEditDataTimeBag().IsInside(itsTime)) // tee vastaava funktio dokumenttiin
 					{
@@ -3905,7 +3918,7 @@ void NFmiStationViewHandler::StoreToolTipDataInDoc(const NFmiPoint& theRelativeP
 {
     itsCtrlViewDocumentInterface->ToolTipLatLonPoint(itsMapArea->ToLatLon(theRelativePlace));
     itsCtrlViewDocumentInterface->ToolTipTime(itsTime);
-    itsCtrlViewDocumentInterface->ToolTipRowIndex(itsViewGridRowNumber);
+    itsCtrlViewDocumentInterface->ToolTipRealRowIndex(CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
     itsCtrlViewDocumentInterface->ToolTipColumnIndex(itsViewGridColumnNumber);
 }
 
@@ -3920,7 +3933,7 @@ void NFmiStationViewHandler::DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawPar
                 itsCtrlViewDocumentInterface->SnapShotData(info, theDrawParam->Param(), "Brush tool modification", itsTime, itsTime);
         }
         itsCtrlViewDocumentInterface->LastBrushedViewTime(itsTime);
-        itsCtrlViewDocumentInterface->LastBrushedViewRow(itsViewGridRowNumber);
+        itsCtrlViewDocumentInterface->LastBrushedViewRealRowIndex(CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
     }
 }
 
@@ -4354,12 +4367,12 @@ std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIs
 		str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
 		str += ">";
 		if(addBackgroundText)
-			str += combinedMapHandlerInterface.getCurrentMapLayerText(itsMapViewDescTopIndex, true);
+			str += combinedMapHandlerInterface.getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);
 		if(addOverlayText)
 		{
 			if(addBackgroundText)
 				str += "\n";
-			str += combinedMapHandlerInterface.getCurrentMapLayerText(itsMapViewDescTopIndex, false);
+			str += combinedMapHandlerInterface.getCurrentMapLayerGuiText(itsMapViewDescTopIndex, false);
 		}
 		str += "</font></b>\n";
 	}
