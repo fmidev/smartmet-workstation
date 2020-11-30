@@ -156,15 +156,15 @@ static void EnsureCacheDirectoryForPartialData(const std::string &theTotalCacheF
 // Kun catlog ja sen speedlog systeemit otettiin k‰yttˆˆn, ovat smartmetin
 // lokitiedostot lukossa ja niihin ei voi menn‰ ulkopuoliset loggerit lis‰‰m‰‰n mit‰‰n.
 // Siksi luodaan oma unpack lokitiedosto. Jokaiselle tunnille oma jotta niit‰ saadaan v‰h‰n niputettua.
-static std::string MakeHourlyUnpackLogFilePath()
+static std::string MakeDaylyUnpackLogFilePath()
 {
     auto basicLogFile = CatLog::currentLogFilePath();
     NFmiFileString fileString = basicLogFile;
     std::string hourlyLogFilePath = fileString.Device();
     hourlyLogFilePath += fileString.Path();
-    hourlyLogFilePath += "smartmet_unpacking_log_";
+    hourlyLogFilePath += "smartmet_unpacking_daily_log_";
     NFmiTime atime;
-    hourlyLogFilePath += atime.ToStr(kYYYYMMDDHH);
+    hourlyLogFilePath += atime.ToStr(kYYYYMMDD);
     hourlyLogFilePath += ".txt";
     return hourlyLogFilePath;
 }
@@ -190,7 +190,7 @@ static std::string MakeUnpackCommand(CachedDataFileInfo &theCachedDataFileInfo)
     commandStr += CFmiProcessHelpers::Make7zipExePath(gSmartMetWorkingDirectory);
     // 6. k‰ytetty lokitiedosto
     commandStr += " \"";
-    commandStr += ::MakeHourlyUnpackLogFilePath();
+    commandStr += ::MakeDaylyUnpackLogFilePath();
     commandStr += "\"";
 
     return commandStr;
