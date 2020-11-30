@@ -2430,9 +2430,6 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 				}
 			}
 		}
-        // Paikkojen valinta vaikuttaa lähinnä seuraaviin näyttöihin, joten vain ne päivitetään (optimointia):
-        // Kaikki karttanäytöt, aikasarja, luotaus, poikkileikkaus
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::SoundingView | SmartMetViewId::TimeSerialView);
     }
 	catch(...)
 	{ // haluan vain varmistaa että asetus menee lopuksi pois päältä
@@ -2493,11 +2490,11 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
 {
     NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-    if(theKey & kCtrlKey)
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
+	if(theKey & kCtrlKey)
     { // CTRL-pohjassa aktivoidaan lähin minor piste
         crossSectionSystem->ActivateNearestMinorPoint(latlon);
         itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
         return true; // ei mennä hilapisteen valintaan
     }
     else
@@ -2987,7 +2984,8 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
             // täytyy myös mahdollistaa pelkän luotaus paikan valinta kun ollaan poikkileikkaus moodissa
             if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
                 SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
-            itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::CrossSectionView);
+			itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
             return true; // ei mennä hilapisteen valintaan
         }
 		if(itsViewList->NumberOfItems() > 0) // jos yksikin näyttö listassa, hoidetaan hiiren klikkaus siellä

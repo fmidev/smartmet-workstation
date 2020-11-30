@@ -7625,12 +7625,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                     , GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ViewGridSize());
                 if(theInfo && theInfo->Grid() && theInfo->Area()->IsInside(theLatLon) == false)
                     OutOfEditedAreaTimeSerialPoint(theLatLon);
-            }
+				ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::TimeSerialView);
+			}
 		}
 
 		// jos ollaan luotaus näytön MTA-moodissa, lisätään myös valittu luotaus info dokumenttiin
 		if(doMTAModeAdd)
 		{
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::SoundingView);
 			if(theMask == NFmiMetEditorTypes::kFmiDisplayedMask) // HUOM! Hiiren oikealla saa valita useita luotauspaikkoja hiiren oikealla, vaikka se olisi estetty aikasarja ikkunassa
 			{ // jos oikealla klikkaus, lisätään yksi luotaus listaan
 				NFmiMTATempSystem::TempInfo tempInfo(theLatLon, theTime, GetMTATempSystem().CurrentProducer());
@@ -7660,6 +7662,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 					TrajectorySystem()->SelectedLatLon(theLatLon);
 			}
             // Trajektorien muutos vaikuttaa kaikkiin karttanäytön ruutuihin joka rivillä (siksi 3. parametri on true)
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::TrajectoryView);
 			GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, false, true, true, false, false, false);
 		}
 	}
