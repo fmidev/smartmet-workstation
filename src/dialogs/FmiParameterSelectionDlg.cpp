@@ -580,10 +580,12 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(const CPoint &poi
         {
             return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
         }
-        else if(IsParameterType(singleRowItem.rowType()))
-        {
-            return TooltipForParameterType(singleRowItem);
-        }
+        // Pelk‰lle parametrille ei en‰ ‰tehd‰ tooltippi‰, koska siin‰ ei ole en‰‰ mit‰‰n uutta tietoa (interpolaatio), 
+        // mutta tooltipin esille pomppaaminen h‰iritsee parametrin tupla-klik valintaa.
+        //else if(IsParameterType(singleRowItem.rowType()))
+        //{
+        //    return TooltipForParameterType(singleRowItem);
+        //}
         else
             return "";
     }
