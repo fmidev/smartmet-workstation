@@ -125,6 +125,7 @@ public:
 	afx_msg void OnAcceleratorLockTimeToMainMap();
 	afx_msg void OnAcceleratorMakeSwapBaseArea();
 	afx_msg void OnAcceleratorSwapArea();
+	afx_msg void OnAcceleratorSwapAreaSecondaryKey();
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditPaste();
 	afx_msg void OnAcceleratorCopyAllMapViewParams();
