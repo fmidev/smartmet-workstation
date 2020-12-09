@@ -2178,6 +2178,18 @@ static NFmiAreaMask::FunctionType GetFunctionType(const NFmiAreaMaskInfo &theAre
   return functionType;
 }
 
+bool NFmiSmartToolModifier::IsMultiDataSynopCase(const NFmiAreaMaskInfo &theAreaMaskInfo)
+{
+  auto producerId = theAreaMaskInfo.GetDataIdent().GetProducer()->GetIdent();
+  if (producerId == kFmiSYNOP || producerId == NFmiInfoData::kFmiSpSynoXProducer)
+  {
+    auto infoVector = itsInfoOrganizer->GetInfos(kFmiSYNOP);
+    if (infoVector.size() > 1) 
+        return true;
+  }
+  return false;
+}
+
 void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
     boost::shared_ptr<NFmiAreaMask> &areaMask,
     const NFmiAreaMaskInfo &theAreaMaskInfo,
@@ -2203,8 +2215,9 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
                                    functionsThatAllowObservations.end(),
                                    functionType);
       auto isCalculationPointsUsed = !CalculationPoints().empty();
-      auto keepStationDataForm = isCalculationPointsUsed ||
-                                 itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing;
+      auto isMultiDataSynopCase = IsMultiDataSynopCase(theAreaMaskInfo);
+      auto keepStationDataForm = (!isMultiDataSynopCase) && (isCalculationPointsUsed ||
+                                 itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing);
       if (allowedIter != functionsThatAllowObservations.end())
       {  // tämä on ok, ei tarvitse tehdä mitään
       }
