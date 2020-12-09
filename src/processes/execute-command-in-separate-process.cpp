@@ -161,4 +161,9 @@ namespace CFmiProcessHelpers
         return g_cached7zipExePath;
     }
 
+    std::string GetStoreMessagesString() 
+    { 
+        return "store-messages="; 
+    }
+
 } // CFmiProcessHelpers namespace

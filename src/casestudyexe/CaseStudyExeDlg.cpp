@@ -9,6 +9,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "NFmiStringTools.h"
 #include "NFmiFileSystem.h"
+#include "NFmiPathUtils.h"
 #include "execute-command-in-separate-process.h"
 #include <thread>
 
@@ -74,21 +75,46 @@ END_MESSAGE_MAP()
 
 // CCaseStudyExeDlg dialog
 
-
-
+static bool GetCommandOptionWithoutStoreMessagesPart(std::string& theCommandOptionInOut)
+{
+    auto storeMessagesString = CFmiProcessHelpers::GetStoreMessagesString();
+    auto position = theCommandOptionInOut.find(storeMessagesString);
+    if(position == std::string::npos)
+        return false;
+    else
+    {
+        theCommandOptionInOut.erase(position, storeMessagesString.size());
+        return true;
+    }
+}
 
 CCaseStudyExeDlg::CCaseStudyExeDlg(const std::string &theSimpleCommandLineStr, CWnd* pParent)
 	: CDialog(CCaseStudyExeDlg::IDD, pParent)
 	,itsSimpleCommandLineStr(theSimpleCommandLineStr)
 	,itsMetaFileName()
 	,itsZipExe()
+    ,itsHakeMessagesFileFilterPath()
     ,itsCaseStudySystem()
 {
 	std::vector<std::string> commandParts = NFmiStringTools::Split(itsSimpleCommandLineStr, "?");
-	if(commandParts.size() >= 1)
+    if(commandParts.size() >= 1)
 		itsMetaFileName = commandParts[0];
-	if(commandParts.size() >= 2)
-		itsZipExe = commandParts[1];
+    if(commandParts.size() >= 2)
+    {
+        auto commandParts1 = commandParts[1];
+        bool wasStoreMessagesOption = ::GetCommandOptionWithoutStoreMessagesPart(commandParts1);
+        if(wasStoreMessagesOption)
+            itsHakeMessagesFileFilterPath = commandParts1;
+        else
+            itsZipExe = commandParts1;
+    }
+    if(commandParts.size() >= 3)
+    {
+        auto commandParts2 = commandParts[2];
+        bool wasStoreMessagesOption = ::GetCommandOptionWithoutStoreMessagesPart(commandParts2);
+        if(wasStoreMessagesOption)
+            itsHakeMessagesFileFilterPath = commandParts2;
+    }
 
 	m_hIcon = CCloneBitmap::BitmapToIcon(FMI_LOGO_BITMAP_3, ColorPOD(160, 160, 164));
 }
@@ -234,15 +260,41 @@ void CCaseStudyExeDlg::OnTimer(UINT_PTR nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
+// itsHakeMessagesFileFilterPath on mahdollisesti HAKE sanomien file-filter absoluuttisen polun 
+// kanssa lainausmerkeiss‰ (jotta spacet ei polussa h‰iritse), esim:
+// "D:\SmartMet\Dropbox (FMI)\data_FMI\HAKE\*.json"
+// Sit‰ k‰ytet‰‰n seuraaviin asioihin:
+// 1. Polusta otetaan viimeisen hakemiston nimi (esim. "HAKE")
+// 2. Vastaava kansio lis‰t‰‰n case-study-data kansioon (esim. "Messages\HAKE")
+// 3. Kaikki originaali file-filteriin sopivat tiedostot kopioidaan l‰hde hakemistosta 2. kohdan tuloskansioon
+void CCaseStudyExeDlg::DoMessageCopyOperations(const std::string& theActualCaseStudyDataDirectory)
+{
+    if(!itsHakeMessagesFileFilterPath.empty())
+    {
+        
+        std::string usedDestinationDirectory = NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(theActualCaseStudyDataDirectory);
+        NFmiFileSystem::CreateDirectory(usedDestinationDirectory);
+
+        auto fileNameList = NFmiFileSystem::PatternFiles(itsHakeMessagesFileFilterPath);
+        std::string sourcePathDirectory = NFmiFileSystem::PathFromPattern(itsHakeMessagesFileFilterPath);
+        for(const auto& fileName : fileNameList)
+        {
+            NFmiFileSystem::CopyFile(sourcePathDirectory + fileName, usedDestinationDirectory + fileName);
+        }
+    }
+}
+
 void CCaseStudyExeDlg::DoCaseDataOperation(void)
 {
     bool operationCanceled = false;
     std::string errorStr;
-    std::string pathStr = NFmiFileSystem::PathFromPattern(itsMetaFileName);
+    std::string baseCaseStudyPath = NFmiFileSystem::PathFromPattern(itsMetaFileName);
     try
     {
         // 1. Kopioidaan data-tiedostot haluttuun hakemisto rakenteeseen
         itsCaseStudySystem.MakeCaseStudyData(itsMetaFileName, this, GetCopyDialogPositionWindow());
+        std::string actualCaseStudyDataDirectory = NFmiCaseStudySystem::MakeBaseDataDirectory(itsMetaFileName, itsCaseStudySystem.Name());
+        DoMessageCopyOperations(actualCaseStudyDataDirectory);
 
         // 2. Zippaa datapaketti
         if(!itsZipExe.empty())
@@ -268,11 +320,11 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
                                     // 7 = max
                                     // 9 = ultra
             commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-            commandStr += pathStr + itsCaseStudySystem.Name();
+            commandStr += baseCaseStudyPath + itsCaseStudySystem.Name();
             // K‰ytet‰‰n 7z:an omaa formaattia (.7z extensio pakatulle tiedostolle), joka on nopein
             commandStr += ".7z";
             commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-            commandStr += pathStr + itsCaseStudySystem.Name();
+            commandStr += baseCaseStudyPath + itsCaseStudySystem.Name();
             commandStr += "*\""; // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
             if(CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, showWindow, true, BELOW_NORMAL_PRIORITY_CLASS))
             {
@@ -322,7 +374,7 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
         messageStr += "\n";
         messageStr += ::GetDictionaryString("You have to delete generated files by yourself from the directory");
         messageStr += ":\n";
-        messageStr += pathStr;
+        messageStr += baseCaseStudyPath;
         messageStr += "\n";
         messageStr += ::GetDictionaryString("You can now close this dialog");
     }

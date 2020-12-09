@@ -13,6 +13,7 @@
 #include "NFmiDataLoadingInfo.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiMacroParamfunctions.h"
+#include "NFmiPathUtils.h"
 
 #include "boost/shared_ptr.hpp"
 #include <boost/filesystem/operations.hpp>
@@ -1119,6 +1120,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
 ,itsSmartMetLocalCachePath()
 ,itsTime()
 ,fZipFiles()
+,fStoreWarningMessages()
 ,fDeleteTmpFiles(true)
 ,fApproximateOnlyLocalDataSize(true)
 ,itsCategoriesData()
@@ -1130,6 +1132,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
     std::string baseRegistryPath = "Software\\Fmi\\SmartMet";
     itsCaseStudyPath = ::CreateRegValue<CachedRegString>(baseRegistryPath, sectionName, "\\CaseStudyPath", usedKey, "D:\\data\\case");
     fZipFiles = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\ZipFiles", usedKey, true);
+	fStoreWarningMessages = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\StoreWarningMessages", usedKey, true);
 }
 
 NFmiCaseStudySystem::~NFmiCaseStudySystem(void)
@@ -1500,7 +1503,9 @@ bool NFmiCaseStudySystem::AreStoredMetaDataChanged(const NFmiCaseStudySystem &ot
     // Huom! aikaa ei tässä tarkastella, koska siihen otetaan aina vain nykyinen ajan hetki ja se muuttuisi aina
     if(*fZipFiles != *other.fZipFiles)
         return true;
-    if(fDeleteTmpFiles != other.fDeleteTmpFiles)
+	if(*fStoreWarningMessages != *other.fStoreWarningMessages)
+		return true;
+	if(fDeleteTmpFiles != other.fDeleteTmpFiles)
         return true;
     if(itsCategoriesData != other.itsCategoriesData)
         return true;
@@ -1709,16 +1714,24 @@ static std::string GetDirectory(const std::string &theFileFilter)
 	return std::string(str);
 }
 
-static std::string MakeBaseDataDirectory(const std::string &theMetaDataFile, const std::string &theName)
+std::string NFmiCaseStudySystem::MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName)
 {
-	std::string basePath = ::GetDirectory(theMetaDataFile);
+	std::string basePath = ::GetDirectory(theMetaDataFilePath);
 	std::string dataDir = basePath;
 	NFmiStringTools::ReplaceChars(dataDir, '/', '\\');
 	if(dataDir.size() && dataDir[dataDir.size()-1] != '\\')
 		dataDir += "\\";
-	dataDir += theName;
+	dataDir += theCaseStudyName;
 	dataDir += "_data";
 	return dataDir;
+}
+
+std::string NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(const std::string& theBaseCaseStudyDataDirectory)
+{
+	std::string caseStudyDataHakeDirectory = theBaseCaseStudyDataDirectory;
+	PathUtils::addDirectorySeparatorAtEnd(caseStudyDataHakeDirectory);
+	caseStudyDataHakeDirectory += "Messages\\HAKE\\";
+	return caseStudyDataHakeDirectory;
 }
 
 // 1. Tekee listan kopioitavista tiedostoista.
@@ -2017,7 +2030,7 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 	{
 		int progressDialogMaxCount = CalculateProgressDialogCount();
 		int progressCounter = 1;
-		std::string dataDir = ::MakeBaseDataDirectory(theFullPathMetaDataFileName, Name());
+		std::string dataDir = NFmiCaseStudySystem::MakeBaseDataDirectory(theFullPathMetaDataFileName, Name());
 		std::string relativeDataDir = ::GetRelativeDataDirectory(dataDir);
 		if(NFmiFileSystem::CreateDirectory(dataDir))
 		{
@@ -2127,6 +2140,16 @@ bool NFmiCaseStudySystem::ZipFiles(void) const
 void NFmiCaseStudySystem::ZipFiles(bool newValue) 
 { 
     *fZipFiles = newValue; 
+}
+
+bool NFmiCaseStudySystem::StoreWarningMessages(void) const
+{
+	return *fStoreWarningMessages;
+}
+
+void NFmiCaseStudySystem::StoreWarningMessages(bool newValue)
+{
+	*fStoreWarningMessages = newValue;
 }
 
 // ************************************************************
