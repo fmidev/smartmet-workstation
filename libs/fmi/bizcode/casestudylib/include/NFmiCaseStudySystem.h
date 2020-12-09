@@ -278,6 +278,8 @@ public:
 	void Time(const NFmiMetTime &newValue) {itsTime = newValue;}
     bool ZipFiles(void) const;
     void ZipFiles(bool newValue);
+	bool StoreWarningMessages(void) const;
+	void StoreWarningMessages(bool newValue);
 	bool DeleteTmpFiles(void) const {return fDeleteTmpFiles;}
 	void DeleteTmpFiles(bool newValue) {fDeleteTmpFiles = newValue;}
 	bool ApproximateOnlyLocalDataSize(void) const {return fApproximateOnlyLocalDataSize;}
@@ -295,6 +297,8 @@ public:
 	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(const NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
 
 	void SetUpDataLoadinInfoForCaseStudy(NFmiDataLoadingInfo &theDataLoadingInfo, const std::string &theBasePath);
+	static std::string MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName);
+	static std::string MakeCaseStudyDataHakeDirectory(const std::string& theBaseCaseStudyDataDirectory);
 
 private:
 	void OrganizeDatas(void);
@@ -312,7 +316,8 @@ private:
 	std::string itsName; // talletettavan case-studyn nimi
 	std::string itsInfo; // talletettavan case-studyn info
     boost::shared_ptr<CachedRegString> itsCaseStudyPath; // tässä on abs polku hakemistoon johon on tarkoitus tehdä case study talletuksia
-    boost::shared_ptr<CachedRegBool> fZipFiles; // pakataanko tehty case-study data lopuksi vai ei
+	boost::shared_ptr<CachedRegBool> fZipFiles; // pakataanko tehty case-study data lopuksi vai ei
+	boost::shared_ptr<CachedRegBool> fStoreWarningMessages; // Talletetaanko mitään sanomia (lähinnä HAKE) CaseStudy dataan
     std::string itsSmartMetLocalCachePath; // polku johon smartmet tallettaa queryDatat, jos data löytyy tämän polun alta, sen koko voidaan aina arvioida
 	NFmiMetTime itsTime; // talletetttavan case-studyn ns. seinäkello aika
 	bool fDeleteTmpFiles; // deletoidaanko case-study datat zippauksen jälkeen
