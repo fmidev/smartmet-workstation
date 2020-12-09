@@ -15,6 +15,7 @@
 #include "NFmiMetTime.h"
 #include "NFmiQueryData.h"
 #include "NFmiProducerName.h"
+#include "NFmiFileString.h"
 #include "cppback/background-manager.h"
 #include "cppback/loop-signal-checker.h"
 
@@ -117,6 +118,56 @@ namespace HakeMessage
         legacyData_->UpdateTimeStepInMinutes(milliSecondsToMinutes(configurer_->checkForNewMessagesDelay));
     }
 
+    using namespace std::chrono_literals;
+
+    void Main::goIntoCaseStudyMode(const std::string& usedAbsoluteCaseStudyHakeDirectory)
+    {
+        if(isThereAnyWorkToDo())
+        {
+            doCaseStudyModeChangePreparations();
+            // Originaali konffeista saa ottaa vain 1. kerran kopion
+            if(!originalConfigurer_)
+            {
+                originalConfigurer_ = std::make_unique<Configurer>(*configurer_);
+            }
+            configurer_->jsonPath = usedAbsoluteCaseStudyHakeDirectory;
+            configurer_->xmlPath = usedAbsoluteCaseStudyHakeDirectory;
+
+            pauseWorking_ = false;
+            wakeUpWorker();
+        }
+    }
+
+    void Main::doCaseStudyModeChangePreparations()
+    {
+        pauseWorking_ = true;
+        // Odotetaan v‰h‰n aikaa ja toivotaan ett‰ mahdolliset tyˆt ovat loppuneet ja systeemi on pause moodissa
+        std::this_thread::sleep_for(500ms);
+        hakeMessages_->clearMessages();
+        hakeData_.reset(nullptr);
+        io_->clearReadFiles();
+    }
+
+    void Main::goIntoNormalModeFromStudyMode()
+    {
+        if(isThereAnyWorkToDo())
+        {
+            doCaseStudyModeChangePreparations();
+            // Tehd‰‰n originaalista konffista takaisin kopio
+            if(originalConfigurer_)
+                configurer_ = std::make_unique<Configurer>(*originalConfigurer_);
+
+            pauseWorking_ = false;
+            wakeUpWorker();
+        }
+    }
+
+    void Main::wakeUpWorker()
+    {
+        if(bManager_)
+            bManager_->doForcedWakeUp();
+    }
+
     void Main::setUpdateApplicationCallback(std::function<void()> updateApplicationCallback)
     {
         updateApplicationCallback_ = updateApplicationCallback;
@@ -154,8 +205,11 @@ namespace HakeMessage
             {
                 using namespace std::literals;
                 bManager_->sleepInIntervals(tmp, 500ms, "hakeMessageFetch");
-                handleHakeMessages(configurer_->maxNumberOfMessagesReadAtOnce);
-                handleKahaMessages();
+                if(!pauseWorking_)
+                {
+                    handleHakeMessages(configurer_->maxNumberOfMessagesReadAtOnce);
+                    handleKahaMessages();
+                }
                 if(firstRound)
                 {
                     tmp = configurer_->checkForNewMessagesDelay;
@@ -353,6 +407,23 @@ namespace HakeMessage
     {
         return *legacyData_;
     }
+
+    std::string Main::getHakeMessageAbsoluteFileFilter() const
+    {
+        // 1. Palauttaa vain json:eihin liittyv‰n polun, koska xml versiota ei ole en‰‰ k‰ytˆss‰.
+        auto finalPath = configurer_->jsonPath;
+        // 2. jsonPath:in per‰‰n pit‰‰ laittaa tarvittaessa hakemistoerotin
+        if(!finalPath.empty() && finalPath.back() != '\\' && finalPath.back() != '/')
+            finalPath += '\\';
+        // 3. jsonFilter:ia pit‰‰ viritell‰, koska siin‰ on mukana merkki, joka kuuluu regex syntaksiin (1. '.' merkki)
+        auto finalFileFilter = configurer_->jsonFilter;
+        if(!finalFileFilter.empty() && finalFileFilter.front() == '.')
+            finalFileFilter.erase(0, 1);
+        NFmiFileString fileString = finalPath + finalFileFilter;
+        fileString.NormalizeDelimiter();
+        return std::string(fileString);
+    }
+
 }
 
 #endif // DISABLE_CPPRESTSDK

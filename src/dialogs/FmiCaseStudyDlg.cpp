@@ -14,6 +14,7 @@
 #include "NFmiFileSystem.h"
 #include "FmiWin32Helpers.h"
 #include "persist2.h"
+#include "HakeMessage/Main.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include "execute-command-in-separate-process.h"
@@ -110,6 +111,7 @@ CFmiCaseStudyDlg::CFmiCaseStudyDlg(SmartMetDocumentInterface *smartMetDocumentIn
     , itsPathStrU_(_T(""))
     , fEditEnableData(FALSE)
     , fZipData(FALSE)
+	, fStoreWarningMessages(FALSE)
 {
 
 }
@@ -127,32 +129,33 @@ BOOL CFmiCaseStudyDlg::Create(CWnd* pParentWnd)
 
 void CFmiCaseStudyDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialog::DoDataExchange(pDX);
-    DDX_GridControl(pDX, IDC_CUSTOM_GRID_CASE_STUDY, itsGridCtrl);
-    DDX_Text(pDX, IDC_EDIT_NAME_STR, itsNameStrU_);
-    DDX_Text(pDX, IDC_EDIT_INFO_STR, itsInfoStrU_);
-    DDX_Text(pDX, IDC_EDIT_PATH_STR, itsPathStrU_);
+	CDialog::DoDataExchange(pDX);
+	DDX_GridControl(pDX, IDC_CUSTOM_GRID_CASE_STUDY, itsGridCtrl);
+	DDX_Text(pDX, IDC_EDIT_NAME_STR, itsNameStrU_);
+	DDX_Text(pDX, IDC_EDIT_INFO_STR, itsInfoStrU_);
+	DDX_Text(pDX, IDC_EDIT_PATH_STR, itsPathStrU_);
 
-    // Tähän oma tarkastelu polulle, jonka pitää olla absoluuttinen
-    if(itsPathStrU_.IsEmpty() == false)
-    {
-        // CString -> NFmiFileString piti tehdä hankalasti kolmessa vaiheessa
-        std::string tmpStr = CT2A(itsPathStrU_);
-        NFmiString tmpStr2(tmpStr);
-        NFmiFileString fileStr(tmpStr2);
-        if(fileStr.IsAbsolutePath() == false)
-        {
-            std::string errStr(::GetDictionaryString("Given path"));
-            errStr += "\n";
-            errStr += tmpStr;
-            errStr += "\n";
-            errStr += "was not absolute, you must provide absolute path for Case Study data.\nE.g. C:\\data or D:\\data";
-            std::string captionStr(::GetDictionaryString("Case-Study data path was not absolute"));
-            ::MessageBox(GetSafeHwnd(), CA2T(errStr.c_str()), CA2T(captionStr.c_str()), MB_OK | MB_ICONWARNING);
-        }
-    }
-    DDX_Check(pDX, IDC_CHECK_EDIT_ENABLE_DATA, fEditEnableData);
-    DDX_Check(pDX, IDC_CHECK_ZIP_DATA, fZipData);
+	// Tähän oma tarkastelu polulle, jonka pitää olla absoluuttinen
+	if(itsPathStrU_.IsEmpty() == false)
+	{
+		// CString -> NFmiFileString piti tehdä hankalasti kolmessa vaiheessa
+		std::string tmpStr = CT2A(itsPathStrU_);
+		NFmiString tmpStr2(tmpStr);
+		NFmiFileString fileStr(tmpStr2);
+		if(fileStr.IsAbsolutePath() == false)
+		{
+			std::string errStr(::GetDictionaryString("Given path"));
+			errStr += "\n";
+			errStr += tmpStr;
+			errStr += "\n";
+			errStr += "was not absolute, you must provide absolute path for Case Study data.\nE.g. C:\\data or D:\\data";
+			std::string captionStr(::GetDictionaryString("Case-Study data path was not absolute"));
+			::MessageBox(GetSafeHwnd(), CA2T(errStr.c_str()), CA2T(captionStr.c_str()), MB_OK | MB_ICONWARNING);
+		}
+	}
+	DDX_Check(pDX, IDC_CHECK_EDIT_ENABLE_DATA, fEditEnableData);
+	DDX_Check(pDX, IDC_CHECK_ZIP_DATA, fZipData);
+	DDX_Check(pDX, IDC_CHECK_STORE_WARNING_MESSAGES, fStoreWarningMessages);
 }
 
 #define WM_CASE_STUDY_OFFSET_EDITED = WM_USER + 222
@@ -213,7 +216,8 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
 	itsNameStrU_ = CA2T(caseStudySystem.Name().c_str());
     itsInfoStrU_ = CA2T(caseStudySystem.Info().c_str());
     itsPathStrU_ = CA2T(caseStudySystem.CaseStudyPath().c_str());
-    fZipData = caseStudySystem.ZipFiles();
+	fZipData = caseStudySystem.ZipFiles();
+	fStoreWarningMessages = caseStudySystem.StoreWarningMessages();
 
 	UpdateButtonStates();
     UpdateEditEnableDataText();
@@ -248,7 +252,7 @@ CRect CFmiCaseStudyDlg::CalcGridArea(void)
 {
 	CRect clientRect;
 	GetClientRect(clientRect);
-	CWnd *win = GetDlgItem(IDC_CHECK_DELETE_TMP_DATA);
+	CWnd *win = GetDlgItem(IDC_CHECK_ZIP_DATA);
 	if(win)
 	{
 		CRect rect2;
@@ -829,7 +833,8 @@ void CFmiCaseStudyDlg::GetBasicInfoFromDialog(void)
 	NFmiStringTools::ReplaceChars(strippedPathString, '/', '\\'); // varmistetaan vielä että kaikki kenot ovat winkkarin omaan suuntaan.
     caseStudySystem.CaseStudyPath(strippedPathString);
 
-    caseStudySystem.ZipFiles(fZipData == TRUE);
+	caseStudySystem.ZipFiles(fZipData == TRUE);
+	caseStudySystem.StoreWarningMessages(fStoreWarningMessages == TRUE);
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
@@ -867,19 +872,47 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
         commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
         commandStr += metaDataTotalFileName;
         commandStr += "\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-        if(fZipData)
-        {
-            commandStr += "?"; // tämä kysymysmerkki on erotin, jolla erotellaan metatiedosto ja zip-ohjelman polku+nimi
-                            // En keksinyt tähän hätään muuta keinoa antaa winExelle erilaisia argumentteja yhdellä kertaa, joutuisin tekemään erillesen komentorivi 
-                            // parserin, joka osaisi käsitellä erilaisia optioita (kuten SmartMetissa tehdään).
-                            // '?' on erotin, koska sellaista kirjainta ei voi olla polussa kuin wild-card -merkkinä, ei varsinaisessa polussa tai tiedoston nimessä.
-            std::string zipCommandStr = CFmiProcessHelpers::Make7zipExePath(itsSmartMetDocumentInterface->WorkingDirectory());
-            commandStr += zipCommandStr;
-        }
+		commandStr += AddPossibleZippingOptions();
+		commandStr += AddPossibleHakeMessageOptions();
 
         CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, SW_MINIMIZE);
     }
     UpdateButtonStates();
+}
+
+std::string CFmiCaseStudyDlg::AddPossibleZippingOptions() const
+{
+	if(fZipData)
+	{
+		// Tämä kysymysmerkki on erotin, jolla erotellaan metatiedosto ja zip-ohjelman polku+nimi
+		// En keksinyt tähän hätään muuta keinoa antaa winExelle erilaisia argumentteja yhdellä kertaa, joutuisin tekemään erillesen komentorivi 
+		// parserin, joka osaisi käsitellä erilaisia optioita (kuten SmartMetissa tehdään).
+		// '?' on erotin, koska sellaista kirjainta ei voi olla polussa kuin wild-card -merkkinä, ei varsinaisessa polussa tai tiedoston nimessä.
+		std::string zipOptions = "?";
+		zipOptions += CFmiProcessHelpers::Make7zipExePath(itsSmartMetDocumentInterface->WorkingDirectory());
+		return zipOptions;
+	}
+	else
+		return "";
+}
+
+std::string CFmiCaseStudyDlg::AddPossibleHakeMessageOptions() const
+{
+	if(fStoreWarningMessages && itsSmartMetDocumentInterface->WarningCenterSystem().isThereAnyWorkToDo())
+	{
+		// Tälläisiä store-messages optioita voi olla monia, jos tulevaisuudessa tulee uusia talletettavia sanomia.
+		// ?store-messages="absolute-path-to-messages-file-filter"
+		// And here is actual sample from FMI HAKE messages file-filter:
+		// ?store-messages="D:\SmartMet\Dropbox (FMI)\data_FMI\HAKE\*.json"
+		std::string storeMessagesOptions = "?";
+		storeMessagesOptions += CFmiProcessHelpers::GetStoreMessagesString();
+		storeMessagesOptions += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
+		storeMessagesOptions += itsSmartMetDocumentInterface->WarningCenterSystem().getHakeMessageAbsoluteFileFilter();
+		storeMessagesOptions += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
+		return storeMessagesOptions;
+	}
+	else
+		return "";
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonLoadData()

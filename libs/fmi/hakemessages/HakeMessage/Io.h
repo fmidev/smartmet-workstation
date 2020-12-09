@@ -16,6 +16,7 @@ namespace HakeMessage
         Io(std::shared_ptr<cppback::BackgroundManager> bManager);
 
         std::vector<std::string> readFromFolderWithFilter(const std::string& folder, const std::string& filter, unsigned maxNumberOfMessagesToRead);
+        void clearReadFiles();
     };
 
     class FileNotFoundException : public std::runtime_error

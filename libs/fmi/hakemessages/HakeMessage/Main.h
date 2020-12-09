@@ -18,6 +18,7 @@
 #include <vector>
 #include <chrono>
 #include <future>
+#include <atomic>
 
 namespace HakeMessage
 {
@@ -33,12 +34,14 @@ namespace HakeMessage
         std::unique_ptr<NFmiQueryData> hakeData_;
         std::unique_ptr<NFmiQueryData> kahaData_;
         std::unique_ptr<Configurer> configurer_;
+        std::unique_ptr<Configurer> originalConfigurer_;
 
         std::function<void()> updateApplicationCallback_;
         std::unique_ptr<Logger> logger_;
         std::shared_ptr<cppback::BackgroundManager> bManager_;
 
         std::unique_ptr<HakeLegacySupport::HakeSystemConfigurations> legacyData_;
+        std::atomic<bool> pauseWorking_ = false;
     public:
         Main();
         
@@ -61,6 +64,10 @@ namespace HakeMessage
         bool isDead(std::chrono::milliseconds wait);
 
         HakeLegacySupport::HakeSystemConfigurations& getLegacyData();
+        std::string getHakeMessageAbsoluteFileFilter() const;
+        void goIntoCaseStudyMode(const std::string& usedAbsoluteCaseStudyHakeDirectory);
+        void goIntoNormalModeFromStudyMode();
+        void wakeUpWorker();
     private:
         void handleHakeMessages(unsigned int maxNumberOfMessagesToRead);
         void handleKahaMessages();
@@ -68,6 +75,7 @@ namespace HakeMessage
         size_t handleHakeXml(unsigned int maxNumberOfMessagesToRead);
         size_t handleKahaJson();
         void doUpdateApplicationCallback();
+        void doCaseStudyModeChangePreparations();
     };
 }
 

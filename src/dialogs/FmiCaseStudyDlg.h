@@ -147,6 +147,9 @@ public:
 	afx_msg void OnPaint();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 private:
+	std::string AddPossibleZippingOptions() const;
+	std::string AddPossibleHakeMessageOptions() const;
+
     CString itsNameStrU_;
     CString itsInfoStrU_;
     CString itsPathStrU_;
@@ -160,4 +163,5 @@ public:
     afx_msg void OnBnClickedCheckEditEnableData();
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg void OnBnClickedButtonRefreshGrid();
+	BOOL fStoreWarningMessages;
 };
