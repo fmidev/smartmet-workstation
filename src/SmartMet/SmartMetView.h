@@ -184,6 +184,7 @@ public:
 	virtual void OnPrepareDC(CDC* pDC, CPrintInfo* pInfo = NULL);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnAcceleratorSwapArea();
+	afx_msg void OnAcceleratorSwapAreaSecondaryKey();
 	afx_msg void OnAcceleratorMakeSwapBaseArea();
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditPaste();

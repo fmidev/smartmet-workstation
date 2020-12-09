@@ -108,7 +108,8 @@ ON_COMMAND(ID_TOGGLE_EXTRA_MAP_VIEW_DISPLAY_MODE, OnToggleMapViewDisplayMode)
 ON_COMMAND(IDC_BUTTON_PRINT, OnButtonExtraMapPrint)
 ON_COMMAND(ID_ACCELERATOR_LOCK_TIME_TO_MAIN_MAP, OnAcceleratorLockTimeToMainMap)
 ON_COMMAND(ID_ACCELERATOR_MAKE_SWAP_BASE_AREA_EXTRA_MAP, OnAcceleratorMakeSwapBaseArea)
-ON_COMMAND(ID_ACCELERATOR_CLOSE_SIDE_VIEW, OnAcceleratorSwapArea)
+ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_EXTRA_MAP, OnAcceleratorSwapArea)
+ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_SECONDARY_KEY_EXTRA_MAP, OnAcceleratorSwapAreaSecondaryKey)
 ON_COMMAND(ID_EDIT_COPY, &CFmiExtraMapViewDlg::OnEditCopy)
 ON_COMMAND(ID_EDIT_PASTE, &CFmiExtraMapViewDlg::OnEditPaste)
 ON_COMMAND(ID_ACCELERATOR_COPY_ALL_EXTRA_MAP_VIEW_PARAMS, &CFmiExtraMapViewDlg::OnAcceleratorCopyAllMapViewParams)
@@ -729,7 +730,13 @@ void CFmiExtraMapViewDlg::OnAcceleratorMakeSwapBaseArea()
 void CFmiExtraMapViewDlg::OnAcceleratorSwapArea()
 {
     itsSmartMetDocumentInterface->SwapArea(itsMapViewDescTopIndex);
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Swap zoomed map area");
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Swap zoomed map area (SPACE)");
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorSwapAreaSecondaryKey()
+{
+	itsSmartMetDocumentInterface->SwapArea(itsMapViewDescTopIndex);
+	itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Swap zoomed map area (CTRL + SHIFT + SPACE -> secondary key)");
 }
 
 void CFmiExtraMapViewDlg::OnEditCopy()
