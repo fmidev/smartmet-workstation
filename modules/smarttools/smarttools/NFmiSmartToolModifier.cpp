@@ -2215,15 +2215,15 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
                                    functionsThatAllowObservations.end(),
                                    functionType);
       auto isCalculationPointsUsed = !CalculationPoints().empty();
-      auto isMultiDataSynopCase = IsMultiDataSynopCase(theAreaMaskInfo);
-      auto keepStationDataForm = (!isMultiDataSynopCase) && (isCalculationPointsUsed ||
-                                 itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing);
+      //auto isMultiDataSynopCase = IsMultiDataSynopCase(theAreaMaskInfo);
+      //auto keepStationDataForm = (!isMultiDataSynopCase) && (isCalculationPointsUsed ||
+      //                           itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing);
       if (allowedIter != functionsThatAllowObservations.end())
       {  // tämä on ok, ei tarvitse tehdä mitään
       }
       else if (maskType == NFmiAreaMask::InfoVariable)
       {
-        if (!keepStationDataForm)
+//        if (!keepStationDataForm)
         {
           if (itsWorkingGrid->itsArea)
           {
