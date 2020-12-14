@@ -58,4 +58,10 @@ namespace HakeMessage
         }
         return msgs;
     }
+
+    void Io::clearReadFiles()
+    {
+        readFiles_.clear();
+    }
+
 }

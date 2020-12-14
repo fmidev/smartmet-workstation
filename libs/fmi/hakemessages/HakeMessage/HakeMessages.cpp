@@ -41,4 +41,11 @@ namespace HakeMessage
     {
         return messages_.size();
     }
+
+    void HakeMessages::clearMessages()
+    {
+        messages_.clear();
+        idMap_.clear();
+    }
+
 }

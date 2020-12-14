@@ -47,6 +47,7 @@ namespace cppback
         std::atomic_uint running_ = 0;
         std::future<void> shouldDie_;
         std::promise<void> killBackgroundTasks_;
+        mutable std::atomic_bool forcedWakeUp_ = false;
     public:
         BackgroundManager()
         {
@@ -154,8 +155,25 @@ namespace cppback
                 {
                     throw TaskStoppedByKillSignal{ taskName };
                 }
+                if(isForcedWakeUpTime())
+                    return;
                 durationSlept = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
             }
+        }
+
+        void doForcedWakeUp()
+        {
+            forcedWakeUp_ = true;
+        }
+
+        bool isForcedWakeUpTime() const
+        {
+            if(forcedWakeUp_)
+            {
+                forcedWakeUp_ = false;
+                return true;
+            }
+            return false;
         }
     };
 }

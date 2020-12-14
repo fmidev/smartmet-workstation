@@ -37,10 +37,16 @@ private:
 	void BringDialogUpFront(const std::string &theTitleStr, const std::string &theMessageStr);
     void DoResizerHooking(void);
     void DoSuccessReport();
+	void DoMessageCopyOperations(const std::string &theActualCaseStudyDataDirectory);
 
 	std::string itsSimpleCommandLineStr;
 	std::string itsMetaFileName;
+	// T‰ss‰ on k‰ytetyn zippaus ohjelman absoluuttinen polku lainausmerkeiss‰ (jotta spacet ei polussa h‰iritse), esim:
+	// "D:\SmartMet\Dropbox (FMI)\SmartMet\utils\7-zip\7z.exe"
 	std::string itsZipExe;
+	// T‰ss‰ on mahdollisesti HAKE sanomien file-filter absoluuttisen polun kanssa lainausmerkeiss‰ (jotta spacet ei polussa h‰iritse), esim:
+	// "D:\SmartMet\Dropbox (FMI)\data_FMI\HAKE\*.json"
+	std::string itsHakeMessagesFileFilterPath;
 	NFmiCaseStudySystem itsCaseStudySystem;
 	UINT itsStartOperationTimer; // k‰ynnistet‰‰n OnInitDialog:in lopuksi timer, joka laukaisee halutun toiminnan initialisoinnin lopuksi pienell‰ viiveell‰ (ett‰ dialogi on varmasti alustettu)
     CWndResizer m_resizer;
