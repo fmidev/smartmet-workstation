@@ -17,5 +17,6 @@ namespace HakeMessage
         void addMessage(const HakeMsg &messagePtr);
         const SetOfHakeMsgs& peekMessages() const;
         size_t getSize() const;
+        void clearMessages();
     };
 }

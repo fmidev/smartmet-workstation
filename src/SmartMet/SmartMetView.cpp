@@ -83,6 +83,7 @@ BEGIN_MESSAGE_MAP(CSmartMetView, CView)
 	ON_COMMAND(ID_MENUITEM_VIEW_GRID_SELECTION_DLG, OnMenuitemViewGridSelectionDlg)
 	ON_NOTIFY (UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 	ON_COMMAND(ID_ACCELERATOR_SWAP_AREA, OnAcceleratorSwapArea)
+	ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_SECONDARY_KEY, OnAcceleratorSwapAreaSecondaryKey)
 	ON_COMMAND(ID_ACCELERATOR_MAKE_SWAP_BASE_AREA, OnAcceleratorMakeSwapBaseArea)
 	ON_COMMAND(ID_EDIT_COPY, &CSmartMetView::OnEditCopy)
 	ON_COMMAND(ID_EDIT_PASTE, &CSmartMetView::OnEditPaste)
@@ -1191,7 +1192,13 @@ void CSmartMetView::DrawSynopPlotImage(bool fDrawSoundingPlot, bool fDrawMinMaxP
 void CSmartMetView::OnAcceleratorSwapArea()
 {
 	GetDocument()->GetData()->GetCombinedMapHandler()->swapArea(itsMapViewDescTopIndex);
-	GetDocument()->UpdateAllViewsAndDialogs("Main map view: used map area swapped");
+	GetDocument()->UpdateAllViewsAndDialogs("Main map view: used map area swapped (SPACE)");
+}
+
+void CSmartMetView::OnAcceleratorSwapAreaSecondaryKey()
+{
+	GetDocument()->GetData()->GetCombinedMapHandler()->swapArea(itsMapViewDescTopIndex);
+	GetDocument()->UpdateAllViewsAndDialogs("Main map view: used map area swapped (CTRL + SHIFT + SPACE -> secondary key)");
 }
 
 void CSmartMetView::OnAcceleratorMakeSwapBaseArea()
