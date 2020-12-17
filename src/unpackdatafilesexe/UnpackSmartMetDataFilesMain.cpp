@@ -185,6 +185,9 @@ int main(int argc, const char* argv[])
     std::string dataFileName = argv[1];
     NFmiQueryData data(dataFileName);
     NFmiFastQueryInfo fastInfo(&data);
+    auto amdarCase = (fastInfo.SizeLocations() == 1);
+    std::string soundingName = amdarCase ? "amdar sounding" : "sounding";
+    int hasDataSoundingCounter = 1;
 
     std::string outputTxtFileName = argv[2];
     std::ofstream output(outputTxtFileName.c_str(), std::ios::binary);
@@ -192,38 +195,56 @@ int main(int argc, const char* argv[])
     {
         const size_t usedWitdth = 10;
         output.fill(' ');
-        output << "Print out separate amdar sounding from given '" << dataFileName << "' querydata file\n";
+        output << "Print out separate non-missing " << soundingName << "(s) from given '" << dataFileName << "' querydata file\n";
         int amdarsWithHeightData = 0;
-        // Amdar datan luotauskohtainen (aikakohtainen) tulostus
-        // Location:ia ei tarvitse juoksuttaa, koska jokainen erillinen aika on erillinen luotaus
         for(fastInfo.ResetTime(); fastInfo.NextTime(); )
         {
-            output << "\n" << std::to_string(fastInfo.TimeIndex() + 1) << ". amdar sounding from time " << fastInfo.Time().ToStr("YYYYMMDDHHmmSS").CharPtr() << std::endl;
-            output << "      ";
-            for(fastInfo.ResetParam(); fastInfo.NextParam(); )
+            for(fastInfo.ResetLocation(); fastInfo.NextLocation(); )
             {
-                // Tulostetaan jokaiselle amdarille oma parametri otsikko rivi
-                std::string usedName = fastInfo.Param().GetParamName().CharPtr();
-                if(usedName.size() > usedWitdth)
-                    usedName.resize(usedWitdth);
-                output << std::setw(10) << usedName << "|";
-            }
-            output << std::endl;
+                bool soundingHasData = false;
+                std::stringstream temporaryOutput;
+                temporaryOutput << std::setprecision(1) << std::fixed;
 
-            for(fastInfo.ResetLevel(); fastInfo.NextLevel(); )
-            {
-                output << "L-" << std::to_string(fastInfo.LevelIndex()) << ": ";
-                if(fastInfo.LevelIndex() < 10)
-                    output << " ";
+                temporaryOutput << "\n" << std::to_string(hasDataSoundingCounter) << ". " << soundingName << " from time " << fastInfo.Time().ToStr("YYYY MM.DD. HH:mm:SS Utc", kEnglish).CharPtr() << std::endl;
+                if(!amdarCase)
+                {
+                    auto location = fastInfo.Location();
+                    temporaryOutput << "Location: " << location->GetName().CharPtr() << " (id = " << location->GetIdent() << ")" << std::endl;
+                }
+                temporaryOutput << "      ";
                 for(fastInfo.ResetParam(); fastInfo.NextParam(); )
                 {
-                    auto value = fastInfo.FloatValue();
-                    if(value == kFloatMissing)
-                        output << std::setw(10) << "-" << " ";
-                    else
-                        output << std::setw(10) << NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, 1).CharPtr() << " ";
+                    // Tulostetaan jokaiselle amdarille oma parametri otsikko rivi
+                    std::string usedName = fastInfo.Param().GetParamName().CharPtr();
+                    if(usedName.size() > usedWitdth)
+                        usedName.resize(usedWitdth);
+                    temporaryOutput << std::setw(10) << usedName << "|";
                 }
-                output << std::endl;
+                temporaryOutput << std::endl;
+
+                for(fastInfo.ResetLevel(); fastInfo.NextLevel(); )
+                {
+                    temporaryOutput << "L-" << std::to_string(fastInfo.LevelIndex()) << ": ";
+                    if(fastInfo.LevelIndex() < 10)
+                        temporaryOutput << " ";
+                    for(fastInfo.ResetParam(); fastInfo.NextParam(); )
+                    {
+                        auto value = fastInfo.FloatValue();
+                        if(value == kFloatMissing)
+                            temporaryOutput << std::setw(10) << "-" << " ";
+                        else
+                        {
+                            soundingHasData = true;
+                            temporaryOutput << std::setw(10) << value << " ";
+                        }
+                    }
+                    temporaryOutput << std::endl;
+                }
+                if(soundingHasData)
+                {
+                    hasDataSoundingCounter++;
+                    output << temporaryOutput.str();
+                }
             }
         }
         return 0;
