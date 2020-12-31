@@ -2671,13 +2671,13 @@ static float GetAxisStepValue(float theMinValue, float theMaxValue)
 	if(diff == 0)
 		return 1;
 	float step = diff / 20.f;
-	int powPlus = 0;
+	float powPlus = 0.f;
 	for(; step < 1;)
 	{
 		step *= 10.f;
 		powPlus++;
 	}
-	int powMinus = 0;
+	float powMinus = 0.f;
 	for(; step > 10;)
 	{
 		step /= 10.f;
@@ -2698,9 +2698,9 @@ static float GetAxisStepValue(float theMinValue, float theMaxValue)
 
 	// palutetaan stepin suuruus luokka
 	if(powMinus)
-		step = step * ::pow(10.f, powMinus);
+		step = step * std::powf(10.f, powMinus);
 	if(powPlus)
-		step = step / ::pow(10.f, powPlus);
+		step = step / std::powf(10.f, powPlus);
 
 	return step;
 }
