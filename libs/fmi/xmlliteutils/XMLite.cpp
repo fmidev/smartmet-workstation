@@ -298,6 +298,21 @@ void _SetString( LPTSTR psz, LPTSTR end, CString* ps, bool trim = FALSE, int esc
 	}
 	int len = static_cast<int>(end - psz);
 	if( len <= 0 ) return;
+	// Marko: Sanity check for string len, when XMLNode Load's some Wms GetCapability responses 
+	// from some servers there has been cases when this character len has been some where between 1-3 * 10^9.
+	// This has caused the SmartMet application to crash. 
+	// So let's say that maximum allowed character length is from now on 50.000.000 (50 M).
+	// Making this exception, so that program won't try to do anything with this 'garbage' xml.
+	const int MAXIMUM_ALLOWED_CHARACTER_LENGTH = 50000000;
+	if(len >= MAXIMUM_ALLOWED_CHARACTER_LENGTH)
+	{
+		std::string exceptionMessage = "Error in XMLite.cpp in function _SetString: Calculated needed character len(gth) was ";
+		exceptionMessage += std::to_string(len);
+		exceptionMessage += ", when maximum allowed len limit was ";
+		exceptionMessage += std::to_string(MAXIMUM_ALLOWED_CHARACTER_LENGTH);
+		throw std::runtime_error(exceptionMessage);
+	}
+
 	if( escape )
 	{
 		len = _tcselen( escape, psz, end );
