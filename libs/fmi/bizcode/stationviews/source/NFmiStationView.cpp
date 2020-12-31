@@ -1756,7 +1756,8 @@ void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, co
 static void FixDataWithMaskValues(const NFmiMetTime &theTime, NFmiDataMatrix<float> &theValues, const NFmiGrid &theGrid, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theParamMaskList)
 {
     // theValues matrix migth be empty in certain kind of errors (e.g. macroParam couldn't be calculated at all)
-    if(theValues.size())
+	// and the matrix and given grid objects must be the same size in both directions.
+    if(theValues.NX() && theValues.NY() && theValues.NX() == theGrid.XNumber() && theValues.NY() == theGrid.YNumber())
     {
         if(theParamMaskList && theDrawParam->DrawOnlyOverMask())
         {
