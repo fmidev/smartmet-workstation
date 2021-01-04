@@ -1428,14 +1428,6 @@ static void DrawPolyLineList(NFmiToolBox *theGTB, list<NFmiPolyline*> &thePolyLi
 
 }
 
-bool NFmiIsoLineView::FillIsoLineGridDataForImagine(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData)
-{
-    if(CalcViewFloatValueMatrix(theValues, 0, 0, 0, 0) == false) // imaginella piirrolla ei ole vielä croppi optimointia
-        return false;
-    theIsoLineData.Init(theValues);
-    return true;
-}
-
 //template<typename T>
 struct PointerDestroyer
 {

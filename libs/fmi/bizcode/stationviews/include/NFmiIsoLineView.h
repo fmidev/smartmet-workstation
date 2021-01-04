@@ -204,7 +204,6 @@ class NFmiIsoLineView : public NFmiStationView
     CRect GetTrueClientRect();
  private:
 	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
-	bool FillIsoLineGridDataForImagine(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData);
 	void DrawIsoLinesWithToolMaster(void);
 	void DrawIsoLines(void);
 

@@ -1114,7 +1114,9 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	else
         FillCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
 
-	isoLineData.Init(itsIsolineValues);
+	if(!isoLineData.Init(itsIsolineValues))
+		return; // Jos data hila (isoLineData.Init() ==> false) oli tyhjä, pitää lopettaa
+
 	Imagine::NFmiDataHints helper(itsIsolineValues);
 
 	// HUOM! TÄMÄ ON VIRITYS!!!! -alkaa
