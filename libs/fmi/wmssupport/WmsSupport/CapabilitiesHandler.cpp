@@ -136,7 +136,7 @@ namespace Wms
                     catch(std::exception &e)
                     {
                         std::string errorMessage = "Error with dynamic Wms server '";
-                        errorMessage += serverKV.second.producer.GetName();
+                        errorMessage += serverKV.second.generic.host;
                         errorMessage += "', while parsing getCapabilities response: ";
                         errorMessage += e.what();
                         CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
