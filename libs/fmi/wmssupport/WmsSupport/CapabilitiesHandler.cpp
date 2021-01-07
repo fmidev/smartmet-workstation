@@ -98,7 +98,7 @@ namespace Wms
 
                 for(auto& serverKV : servers_)
                 {
-                    auto server = serverKV.second;
+                    const auto &server = serverKV.second;
                     auto query = QueryBuilder{}.setScheme(server.generic.scheme)
                         .setHost(server.generic.host)
                         .setPath(server.generic.path)
@@ -112,10 +112,8 @@ namespace Wms
                     try
                     {
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-						auto xml = fetchCapabilitiesXml(*client_, query, serverKV.second.logFetchCapabilitiesRequest, serverKV.second.doVerboseLogging);
+						auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging);
 
-						// Doing logging only the first time
-						serverKV.second.logFetchCapabilitiesRequest = false;
 						changedLayers_.changedLayers.clear();
 
 						// Two options on how to deal with wms capability xmls (parseXml/parseXmlToPropertyTree).
@@ -136,7 +134,7 @@ namespace Wms
                     catch(std::exception &e)
                     {
                         std::string errorMessage = "Error with dynamic Wms server '";
-                        errorMessage += serverKV.second.generic.host;
+                        errorMessage += server.generic.host;
                         errorMessage += "', while parsing getCapabilities response: ";
                         errorMessage += e.what();
                         CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
