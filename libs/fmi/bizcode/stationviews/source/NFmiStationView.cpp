@@ -726,7 +726,6 @@ void NFmiStationView::DrawSymbols(void)
 {
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kCenter);
-    bool drawStationPlot = IsAccessoryStationDataDrawn();
 
 	try
 	{

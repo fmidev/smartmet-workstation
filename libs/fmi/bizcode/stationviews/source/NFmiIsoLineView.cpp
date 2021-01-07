@@ -471,7 +471,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
 
             if(IsAccessoryStationDataDrawn())
             {
-                DrawAllAccessoryStationData(); // ei piirret‰ dataa, koska parametri on piilotettu, mutta piirret‰‰n asema valinnat, koska parametri on editoitava ja editoitava parametri n‰ytt‰‰ kaikki valinnat!!!
+                DrawAllAccessoryStationData(); // piirret‰‰n aktiivisen parametrin hilapisteet
             }
         }
     }
