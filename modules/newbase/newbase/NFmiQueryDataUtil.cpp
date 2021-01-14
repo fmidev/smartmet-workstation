@@ -4564,7 +4564,7 @@ static void DoMetaInfoLogging(NFmiQueryDataUtil::LoggingFunction *loggingFunctio
 {
   if (loggingFunction)
   {
-    std::string message = "Combined data ";
+    std::string message = "Starting to combine data ";
     if (theFileFilterPtr)
     {
       message += "for '";
@@ -4593,7 +4593,7 @@ static void DoMetaInfoLogging(NFmiQueryDataUtil::LoggingFunction *loggingFunctio
       if (!timeStepsStr.empty()) timeStepsStr += ", ";
       timeStepsStr += metaInfo.Time().ToStr("YYYY.MM.DD HH:mm", kEnglish);
     }
-    (*loggingFunction)(std::string("Combined data times: ") + timeStepsStr);
+    (*loggingFunction)(std::string("Combined data will have times: ") + timeStepsStr);
   }
 }
 
