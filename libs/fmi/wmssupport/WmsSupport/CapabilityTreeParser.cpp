@@ -204,27 +204,35 @@ namespace Wms
 		{
 			auto dateAndTime = cppext::split(value, std::string("T"));
 
-			if (dateAndTime.size() < 2) //If no time, use current time
+			if(dateAndTime.size() >= 2)
 			{
-				std::time_t t = std::time(0);
-				std::tm* currentTime = std::localtime(&t);
-				return *currentTime;
+				auto date = dateAndTime[0];
+				auto time = dateAndTime[1];
+				time.pop_back();
+				auto YearMonthDay = cppext::split(date, std::string("-"));
+				auto HourMinuteSecond = cppext::split(time, std::string(":"));
+				// Joskus time-osio voi olla vajaa, esim. "12:00:", tällöin haluamme että sekunnit annetaan 0:na kuitenkin.
+				std::string secondsString = "0";
+				if(HourMinuteSecond.size() >= 3)
+					secondsString = HourMinuteSecond[2];
+
+				if(HourMinuteSecond.size() >= 2 && YearMonthDay.size() >= 3)
+				{
+					return std::tm{
+						std::stoi(secondsString) ,
+						std::stoi(HourMinuteSecond[1]) ,
+						std::stoi(HourMinuteSecond[0]) ,
+						std::stoi(YearMonthDay[2]) ,
+						std::stoi(YearMonthDay[1]) - 1 ,
+						std::stoi(YearMonthDay[0]) - 1900
+					};
+				}
 			}
 
-			auto date = dateAndTime[0];
-			auto time = dateAndTime[1];
-			time.pop_back();
-			auto YearMonthDay = cppext::split(date, std::string("-"));
-			auto HourMinuteSecond = cppext::split(time, std::string(":"));
-
-			return std::tm{
-				std::stoi(HourMinuteSecond[2]) ,
-				std::stoi(HourMinuteSecond[1]) ,
-				std::stoi(HourMinuteSecond[0]) ,
-				std::stoi(YearMonthDay[2]) ,
-				std::stoi(YearMonthDay[1]) - 1 ,
-				std::stoi(YearMonthDay[0]) - 1900
-			};
+			//If no time, use current time
+			std::time_t t = std::time(0);
+			std::tm* currentTime = std::localtime(&t);
+			return *currentTime;
 		}
 
 		NFmiMetTime parseMetTime(const std::string& timeStr)
