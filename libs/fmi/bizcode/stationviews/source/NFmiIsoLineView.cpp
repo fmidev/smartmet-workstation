@@ -64,6 +64,8 @@
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
 #include "SpecialDesctopIndex.h"
+#include "CtrlViewFunctions.h"
+#include "ForcedIsolineLogging.h"
 
 #include "datautilities\DataUtilitiesAdapter.h"
 #include "NFmiApplicationWinRegistry.h"
@@ -315,6 +317,11 @@ bool NFmiIsoLineView::IsToolMasterAvailable(void)
 }
 
 bool NFmiIsoLineView::DeleteTransparencyBitmap()
+{
+    return true;
+}
+
+bool NFmiIsoLineView::IsMapViewCase()
 {
     return true;
 }
@@ -789,9 +796,9 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
     if(NFmiDrawParam::IsIsolineType(viewType))
     {
         if(theDrawParam->UseSimpleIsoLineDefinitions()) // 2=isoline
-            FillIsoLineInfoSimple(theDrawParam, theIsoLineData, fToolMasterUsed);
+            FillIsoLineInfoSimple(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
         else // custom isoviivat tähän
-            FillIsoLineInfoCustom(theDrawParam, theIsoLineData, fStationData);
+            FillIsoLineInfoCustom(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
     }
 
     FillHatchInfo(theDrawParam, theIsoLineData);
@@ -958,8 +965,9 @@ static int GetLabelBoxFillColorIndex(const NFmiColor &color, bool doTransparentC
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed)
+void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
+    ForcedLogging::IsolineDrawingInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed, IsMapViewCase());
     theIsoLineData->fUseIsoLines = 1;
     theIsoLineData->fUseCustomIsoLineClasses = false;
     float zeroValue = theIsoLineData->itsIsoLineZeroClassValue = theDrawParam->SimpleIsoLineZeroValue();
@@ -1016,8 +1024,10 @@ void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &th
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData)
+void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
+    ForcedLogging::IsolineDrawingInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed, IsMapViewCase());
+
     theIsoLineData->fUseIsoLines = 1;
     theIsoLineData->fUseCustomIsoLineClasses = true;
 

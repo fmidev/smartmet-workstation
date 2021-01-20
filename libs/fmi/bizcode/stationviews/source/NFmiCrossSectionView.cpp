@@ -1072,6 +1072,11 @@ bool NFmiCrossSectionView::DeleteTransparencyBitmap()
     return false;
 }
 
+bool NFmiCrossSectionView::IsMapViewCase()
+{
+	return false;
+}
+
 void NFmiCrossSectionView::DrawCrossSection(void)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw layer");

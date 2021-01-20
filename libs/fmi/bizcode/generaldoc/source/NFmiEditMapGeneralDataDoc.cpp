@@ -1584,7 +1584,7 @@ void InitDrawDifferenceDrawParam(void)
 	if(itsSmartInfoOrganizer)
 	{
 		// korjaa tämä kohta niin että tulee kolmivärinen isoviiva esitys!!!
-		itsDrawDifferenceDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpDrawDifferenceParam)), 0, NFmiInfoData::kAnyData);
+		itsDrawDifferenceDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpDrawDifferenceParam, "Diff to orig")), 0, NFmiInfoData::kAnyData);
 		itsDrawDifferenceDrawParam->SimpleIsoLineColorShadeClassCount(3);
 		itsDrawDifferenceDrawParam->SimpleIsoLineLabelHeight(3.1f);
 		itsDrawDifferenceDrawParam->UseSingleColorsWithSimpleIsoLines(false);
@@ -1597,7 +1597,7 @@ void InitDrawDifferenceDrawParam(void)
 		itsDrawDifferenceDrawParam->StationDataViewType(NFmiMetEditorTypes::View::kFmiIsoLineView);
 
 		// Laitoin alustamaan myös valittujen hilapisteiden uuden visualisointi piirron
-		itsSelectedGridPointDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSelectedGridPoints)), 0, NFmiInfoData::kAnyData);
+		itsSelectedGridPointDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSelectedGridPoints, "Selected grid points")), 0, NFmiInfoData::kAnyData);
 		if(itsSelectedGridPointDrawParam)
 		{
 			itsSelectedGridPointLimit = NFmiSettings::Optional<int>("SmartMet::SelectedGridPointsDrawLimit", 100);
