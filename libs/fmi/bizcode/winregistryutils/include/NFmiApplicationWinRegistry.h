@@ -308,8 +308,6 @@ public:
     const std::string& GetCurrentSaveImageFileFilterExtension() const;
     double MapViewCacheMaxSizeInMB();
     void MapViewCacheMaxSizeInMB(double newValue);
-    bool ForceWdParameterToLinearInterpolation();
-    void ForceWdParameterToLinearInterpolation(bool newValue);
     bool ShowTooltipOnSmarttoolDialog();
     void ShowTooltipOnSmarttoolDialog(bool newValue);
     void HatchingToolmasterEpsilonFactor(float newEpsilon);
@@ -400,7 +398,6 @@ private:
     // Näytön cachena käytettyjen bitmappien max koko megatavuina, tarkoittaa siis aina yhden näytön
     // cachea kerrallaan, eli kolme näyttöä ottaa mahdollisesti kaikkiaan 3x tämä koon.
     boost::shared_ptr<CachedRegDouble> mMapViewCacheMaxSizeInMB;
-    boost::shared_ptr<CachedRegBool> mForceWdParameterToLinearInterpolation;
     boost::shared_ptr<CachedRegBool> mShowTooltipOnSmarttoolDialog;
 
     boost::shared_ptr<CachedRegDouble> mHatchingToolmasterEpsilonFactor;

@@ -490,7 +490,7 @@ BEGIN
     LTEXT           "Isoline min length factor (0-100)",IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT,173,195,127,8,0,WS_EX_RIGHT
     CONTROL         "Generate time combination data (unchecking might prevent crashes)",IDC_CHECK_MAKE_COMBINATION_DATA,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,12,124,144,19
-    CONTROL         "Forced linear WD (on=better, off=fast)",IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION,
+    CONTROL         "Use forced linear interpolation option",IDC_CHECK_USE_FORCED_LINEAR_INTERPOLATION_OPTION,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,141,144,12
     EDITTEXT        IDC_EDIT_HATCHING_EPSILON_FACTOR,305,208,29,12,ES_AUTOHSCROLL
     LTEXT           "Hatching calculation epsilon factor (~1)",IDC_STATIC_HATCHING_EPSILON_FACTOR_TEXT,164,210,137,8,0,WS_EX_RIGHT

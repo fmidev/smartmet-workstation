@@ -138,6 +138,7 @@
 #include "NFmiColorContourLegendSettings.h"
 #include "NFmiCombinedMapHandler.h"
 #include "NFmiFastDrawParamList.h"
+#include "NFmiParameterInterpolationFixer.h"
 
 #include "AnimationProfiler.h"
 
@@ -579,6 +580,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitMacroParamDataCache();
 	InitTimeSerialParameters();
     InitColorContourLegendSettings();
+	InitParameterInterpolationFixer();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -590,6 +592,19 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
 	LogMessage("SmartMet document initialization ends...", CatLog::Severity::Info, CatLog::Category::Configuration);
 	return true;
+}
+
+void InitParameterInterpolationFixer()
+{
+	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+	try
+	{
+		itsParameterInterpolationFixer.init();
+	}
+	catch(exception& e)
+	{
+		LogAndWarnUser(e.what(), "Problems with ParameterInterpolationFixer initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, false);
+	}
 }
 
 void InitMacroParamDataCache()
@@ -2250,31 +2265,9 @@ bool ModifyParametersInterpolationToLinear(NFmiDataIdent& editedData)
 // interpolaatioksi nearest, mik‰ on turhaa ja aiheuttaa ristiriitoja tuulen suunnan ja 
 // nopeuksien kanssa, kun niit‰ interpoloidaan lineaarisesti. T‰m‰ on j‰lkik‰teen tehty
 // dataan teht‰v‰ fiksaus ja t‰ss‰ asetetaan interpolaatio halutuksia, jos datasta lˆytyy total-wind.
-void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data)
+void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data, const std::string& theDataFileName)
 {
-    if(data)
-    {
-        auto paramDescriptor = data->Info()->ParamDescriptor();
-        bool parameterModified = false;
-        if(paramDescriptor.Param(kFmiTotalWindMS))
-        {
-            if(paramDescriptor.Param(kFmiWindVectorMS))
-            {
-                parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam(false));
-            }
-        }
-        else if(paramDescriptor.Param(kFmiWindDirection))
-        {
-            if(ApplicationWinRegistry().ForceWdParameterToLinearInterpolation())
-            {
-                // Teht‰v‰ #2: jos p‰‰tasolla on tuulensuunta parametri, varmista ett‰ sekin on lineaarisesti interpoloitu (muuten tulee ongelmia macroParamien kanssa)
-                parameterModified = ModifyParametersInterpolationToLinear(paramDescriptor.EditParam());
-            }
-        }
-
-        if(parameterModified)
-            data->Info()->SetParamDescriptor(paramDescriptor);
-    }
+	itsParameterInterpolationFixer.fixCheckedParametersInterpolation(data, theDataFileName);
 }
 
 bool IsDataReloadedInCaseStudyEvent(const std::string& theDataFilePattern)
@@ -2301,7 +2294,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 	}
 
 	NormalizeGridDataArea(theData);
-    FixTotalWindsWindVectorInterpolation(theData);
+    FixTotalWindsWindVectorInterpolation(theData, theDataFileName);
 	NFmiTimeDescriptor removedDatasTimesOut; // t‰t‰ k‰ytet‰‰n mm. tutka-datan ruudun likaus optimointiin
 
 	if(theData)
@@ -10295,7 +10288,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsCurrentCrossSectionRowIndex;
 	}
 
+	NFmiParameterInterpolationFixer& ParameterInterpolationFixer()
+	{
+		return itsParameterInterpolationFixer;
+	}
 
+	NFmiParameterInterpolationFixer itsParameterInterpolationFixer;
 	NFmiCombinedMapHandler itsCombinedMapHandler;
 	bool fChangingCaseStudyToNormalMode = false;
     NFmiColorContourLegendSettings itsColorContourLegendSettings;
@@ -12565,4 +12563,9 @@ void NFmiEditMapGeneralDataDoc::SetCPCropGridSettings(const boost::shared_ptr<NF
 int NFmiEditMapGeneralDataDoc::CurrentCrossSectionRowIndex()
 {
 	return pimpl->CurrentCrossSectionRowIndex();
+}
+
+NFmiParameterInterpolationFixer& NFmiEditMapGeneralDataDoc::ParameterInterpolationFixer()
+{
+	return pimpl->ParameterInterpolationFixer();
 }
