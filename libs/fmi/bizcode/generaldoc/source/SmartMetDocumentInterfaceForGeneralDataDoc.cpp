@@ -1417,6 +1417,11 @@ CombinedMapHandlerInterface& SmartMetDocumentInterfaceForGeneralDataDoc::GetComb
     return *itsDoc->GetCombinedMapHandler();
 }
 
+NFmiParameterInterpolationFixer& SmartMetDocumentInterfaceForGeneralDataDoc::ParameterInterpolationFixer()
+{
+    return itsDoc->ParameterInterpolationFixer();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 
