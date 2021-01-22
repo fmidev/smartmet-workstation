@@ -15,6 +15,7 @@
 #include "NFmiApplicationDataBase.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "Q2ServerInfo.h"
+#include "NFmiParameterInterpolationFixer.h"
 #include "boost\math\special_functions\round.hpp"
 
 #ifdef _DEBUG
@@ -59,7 +60,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , fDroppedDataEditable(FALSE)
     , itsIsolineMinimumLengthFactor(1)
     , fGenerateTimeCombinationData(FALSE)
-    , fForceWdParameterToLinearInterpolation(FALSE)
+    , fUseForcedLinearInterpolationOption(FALSE)
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -130,7 +131,7 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_ISOLINE_MINIMUM_LENGTH_FACTOR, itsIsolineMinimumLengthFactor);
     DDV_MinMaxDouble(pDX, itsIsolineMinimumLengthFactor, 0, 100);
     DDX_Check(pDX, IDC_CHECK_MAKE_COMBINATION_DATA, fGenerateTimeCombinationData);
-    DDX_Check(pDX, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, fForceWdParameterToLinearInterpolation);
+    DDX_Check(pDX, IDC_CHECK_USE_FORCED_LINEAR_INTERPOLATION_OPTION, fUseForcedLinearInterpolationOption);
     DDX_Text(pDX, IDC_EDIT_HATCHING_EPSILON_FACTOR, itsHatchingToolmasterEpsilonFactor);
 }
 
@@ -207,7 +208,7 @@ BOOL COptionsDlg::OnInitDialog()
     fDroppedDataEditable = applicationWinRegistry.ConfigurationRelatedWinRegistry().DroppedDataEditable();
     itsIsolineMinimumLengthFactor = applicationWinRegistry.IsolineMinLengthFactor();
     fGenerateTimeCombinationData = applicationWinRegistry.GenerateTimeCombinationData();
-    fForceWdParameterToLinearInterpolation = applicationWinRegistry.ForceWdParameterToLinearInterpolation();
+    fUseForcedLinearInterpolationOption = itsSmartMetDocumentInterface->ParameterInterpolationFixer().doForcedParameterInterpolationChanges();
     itsHatchingToolmasterEpsilonFactor = applicationWinRegistry.HatchingToolmasterEpsilonFactor();
 
 	DisableControls();
@@ -347,7 +348,7 @@ void COptionsDlg::OnOK()
     configurationRelatedWinRegistry.DroppedDataEditable(fDroppedDataEditable == TRUE);
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
     applicationWinRegistry.GenerateTimeCombinationData(fGenerateTimeCombinationData == TRUE);
-    applicationWinRegistry.ForceWdParameterToLinearInterpolation(fForceWdParameterToLinearInterpolation == TRUE);
+    itsSmartMetDocumentInterface->ParameterInterpolationFixer().doForcedParameterInterpolationChanges(fUseForcedLinearInterpolationOption == TRUE);
     // HatchingToolmasterEpsilonFactor:in asetus pitää tehdä näin, koska arvo asetetaan tässä useampaan paikkaan.
     itsSmartMetDocumentInterface->SetHatchingToolmasterEpsilonFactor(itsHatchingToolmasterEpsilonFactor);
 
@@ -427,7 +428,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DROPPED_DATA_EDITABLE, "Dropped data editable (slower to drop)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_ISOLINE_MINIMUM_LENGTH_FACTOR_TEXT, "Isoline min length factor (0-100)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MAKE_COMBINATION_DATA, "Generate time combination data (unchecking might prevent crashes)");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FORCE_WD_PARAMETER_TO_LINEAR_INTERPOLATION, "Forced linear WD (on=better, off=fast)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_FORCED_LINEAR_INTERPOLATION_OPTION, "Use forced linear interpolation option");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COMBINED_MAP_MODE, "Use combined map mode(local + wms)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_HATCHING_EPSILON_FACTOR_TEXT, "Hatching calculation epsilon factor (~1)");
 }

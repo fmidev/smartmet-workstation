@@ -292,6 +292,7 @@ public:
     bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) override;
     void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) override;
     CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
+    NFmiParameterInterpolationFixer& ParameterInterpolationFixer() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;
