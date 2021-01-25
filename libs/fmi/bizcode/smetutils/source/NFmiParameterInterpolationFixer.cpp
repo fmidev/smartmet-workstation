@@ -241,7 +241,7 @@ void NFmiParameterInterpolationFixer::doForcedParameterInterpolationChanges(bool
 void NFmiParameterInterpolationFixer::fixCheckedParametersInterpolation(NFmiQueryData* data, const std::string& dataFileName)
 {
     // Huom! asema/havainto dataa ei muuteta mitenkään, data->IsGrid() pitää olla true.
-    if(data && data->IsGrid())
+    if(data && data->IsGrid() && !checkedParameters_.empty())
     {
         auto paramDescriptor = data->Info()->ParamDescriptor();
         auto totalWindSubparamWindVectorrFixed = ::fixTotalWindSubparamWindVector(paramDescriptor);
