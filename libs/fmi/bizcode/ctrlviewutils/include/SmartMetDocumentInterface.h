@@ -62,6 +62,8 @@ class NFmiWindTableSystem;
 class NFmiMacroParamDataCache;
 class NFmiGdiPlusImageMapHandler;
 class CDC;
+class NFmiParameterInterpolationFixer;
+
 namespace HakeMessage
 {
     class Main;
@@ -365,6 +367,7 @@ public:
     virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
     virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) = 0;
     virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
+    virtual NFmiParameterInterpolationFixer& ParameterInterpolationFixer() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

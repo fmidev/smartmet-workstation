@@ -1072,6 +1072,11 @@ bool NFmiCrossSectionView::DeleteTransparencyBitmap()
     return false;
 }
 
+bool NFmiCrossSectionView::IsMapViewCase()
+{
+	return false;
+}
+
 void NFmiCrossSectionView::DrawCrossSection(void)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw layer");
@@ -1113,7 +1118,9 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	else
         FillCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
 
-	isoLineData.Init(itsIsolineValues);
+	if(!isoLineData.Init(itsIsolineValues))
+		return; // Jos data hila (isoLineData.Init() ==> false) oli tyhjä, pitää lopettaa
+
 	Imagine::NFmiDataHints helper(itsIsolineValues);
 
 	// HUOM! TÄMÄ ON VIRITYS!!!! -alkaa

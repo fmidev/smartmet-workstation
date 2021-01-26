@@ -1,7 +1,7 @@
 #include "EditedInfoMaskHandler.h"
 #include "NFmiFastQueryInfo.h"
 
-EditedInfoMaskHandler::EditedInfoMaskHandler(boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, unsigned long newMask)
+EditedInfoMaskHandler::EditedInfoMaskHandler(const boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, unsigned long newMask)
     :editedInfo_(editedInfo)
 {
     oldMask_ = editedInfo_->MaskType();

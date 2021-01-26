@@ -296,8 +296,19 @@ void _SetString( LPTSTR psz, LPTSTR end, CString* ps, bool trim = FALSE, int esc
 		while( psz && psz < end && _istspace(*psz) ) psz++;
 		while( (end-1) && psz < (end-1) && _istspace(*(end-1)) ) end--;
 	}
+
+	// Marko: In some rare cases 'len' (calculated below) variable can have value in region of 1-2 billion.
+	// Which suggest that 'psz' has been larger than 'end' pointer and this causes under-flow value 
+	// in 64-bit pointer subtraction (unsigned values) and result that is casted to int, which narrows 
+	// the result to be under 2,147,483,647. This suggest that above 'trim' code can't handle all possible 
+	// cases correctly. Anyway allocating string buffer that big can crash program and would be wrong anyway.
+	if(psz > end)
+		return;
+
 	int len = static_cast<int>(end - psz);
-	if( len <= 0 ) return;
+	if( len <= 0 ) 
+		return;
+
 	if( escape )
 	{
 		len = _tcselen( escape, psz, end );
