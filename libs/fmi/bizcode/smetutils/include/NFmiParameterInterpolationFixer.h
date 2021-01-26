@@ -14,6 +14,7 @@ class NFmiQueryData;
 
 class NFmiParameterInterpolationFixer
 {
+	std::string originalCheckedParametersConfigurationValue_;
 	std::vector<NFmiParam> checkedParameters_;
     boost::shared_ptr<CachedRegBool> doForcedParameterInterpolationChanges_;
 	// Ei sallita tupla initialisointia
@@ -30,4 +31,5 @@ public:
 private:
 	const std::string& makeConfigurationKey() const;
 	void doFinalChecksForCheckedParameters() const;
+	std::vector<NFmiParam> makeCheckedParametersFromConfigurations(const std::string& configurationKey);
 };
