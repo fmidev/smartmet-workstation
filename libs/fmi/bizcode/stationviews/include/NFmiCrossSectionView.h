@@ -92,6 +92,7 @@ class NFmiCrossSectionView : public NFmiIsoLineView
  protected:
    bool IsToolMasterAvailable(void) override;
    bool DeleteTransparencyBitmap() override;
+   bool IsMapViewCase() override;
    NFmiTimeBag GetUsedTimeBagForDataCalculations(void);
    void SetupUsedDrawParam(void);
    float GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck = true);

@@ -93,7 +93,7 @@ private:
     BOOL fDroppedDataEditable;
     double itsIsolineMinimumLengthFactor;
     BOOL fGenerateTimeCombinationData;
-    BOOL fForceWdParameterToLinearInterpolation;
+    BOOL fUseForcedLinearInterpolationOption;
 	float itsHatchingToolmasterEpsilonFactor = 1.f;
 };
 

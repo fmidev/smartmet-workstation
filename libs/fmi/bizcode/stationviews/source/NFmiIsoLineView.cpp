@@ -64,6 +64,8 @@
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
 #include "SpecialDesctopIndex.h"
+#include "CtrlViewFunctions.h"
+#include "ForcedIsolineLogging.h"
 
 #include "datautilities\DataUtilitiesAdapter.h"
 #include "NFmiApplicationWinRegistry.h"
@@ -319,6 +321,11 @@ bool NFmiIsoLineView::DeleteTransparencyBitmap()
     return true;
 }
 
+bool NFmiIsoLineView::IsMapViewCase()
+{
+    return true;
+}
+
 // valitsin l‰pin‰kyv‰ksi v‰riksi mahd. l‰helt‰ valkoista, mutta siiit‰ v‰h‰n poikkeavan, koska
 // t‰m‰ l‰pin‰kyvyys asetus ei toimi. Eli t‰st‰ v‰rist‰ ei tule l‰pin‰kyv‰‰ (en osaa k‰ytt‰‰ Gdiplus-systeemej‰
 // funktiossa CFmiGdiPlusHelpers::DrawBitmapToDC???).
@@ -471,7 +478,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
 
             if(IsAccessoryStationDataDrawn())
             {
-                DrawAllAccessoryStationData(); // ei piirret‰ dataa, koska parametri on piilotettu, mutta piirret‰‰n asema valinnat, koska parametri on editoitava ja editoitava parametri n‰ytt‰‰ kaikki valinnat!!!
+                DrawAllAccessoryStationData(); // piirret‰‰n aktiivisen parametrin hilapisteet
             }
         }
     }
@@ -789,9 +796,9 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
     if(NFmiDrawParam::IsIsolineType(viewType))
     {
         if(theDrawParam->UseSimpleIsoLineDefinitions()) // 2=isoline
-            FillIsoLineInfoSimple(theDrawParam, theIsoLineData, fToolMasterUsed);
+            FillIsoLineInfoSimple(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
         else // custom isoviivat t‰h‰n
-            FillIsoLineInfoCustom(theDrawParam, theIsoLineData, fStationData);
+            FillIsoLineInfoCustom(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
     }
 
     FillHatchInfo(theDrawParam, theIsoLineData);
@@ -958,8 +965,9 @@ static int GetLabelBoxFillColorIndex(const NFmiColor &color, bool doTransparentC
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed)
+void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
+    ForcedLogging::IsolineDrawingInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed, IsMapViewCase());
     theIsoLineData->fUseIsoLines = 1;
     theIsoLineData->fUseCustomIsoLineClasses = false;
     float zeroValue = theIsoLineData->itsIsoLineZeroClassValue = theDrawParam->SimpleIsoLineZeroValue();
@@ -1016,8 +1024,10 @@ void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &th
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData)
+void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
+    ForcedLogging::IsolineDrawingInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed, IsMapViewCase());
+
     theIsoLineData->fUseIsoLines = 1;
     theIsoLineData->fUseCustomIsoLineClasses = true;
 
@@ -1400,14 +1410,6 @@ static void DrawPolyLineList(NFmiToolBox *theGTB, list<NFmiPolyline*> &thePolyLi
 
 }
 
-bool NFmiIsoLineView::FillIsoLineGridDataForImagine(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData)
-{
-    if(CalcViewFloatValueMatrix(theValues, 0, 0, 0, 0) == false) // imaginella piirrolla ei ole viel‰ croppi optimointia
-        return false;
-    theIsoLineData.Init(theValues);
-    return true;
-}
-
 //template<typename T>
 struct PointerDestroyer
 {
@@ -1478,12 +1480,11 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     isoLineData.itsInfo = itsInfo;
     isoLineData.itsParam = itsInfo->Param();
     isoLineData.itsTime = itsInfo->Time();
-    NFmiDataMatrix<float> values;
 
     {
         // Laitetaan t‰m‰ erilliseen blokkiin, jotta vanha maski arvo saadaan takaisin p‰‰lle niin kuin vanhallakin koodilla
         EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
-        if(FillIsoLineGridDataForImagine(values, isoLineData) == false)
+        if(!FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0))
             return;
     }
 
@@ -1491,7 +1492,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
 
     /* bool status = */ FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, false, itsInfo->IsGrid() == false);
 
-    Imagine::NFmiDataHints helper(values);
+    Imagine::NFmiDataHints helper(itsIsolineValues);
     NFmiGridPointCache::Data coordData;
 
     coordData.itsOffSet = itsArea->TopLeft();
@@ -1499,7 +1500,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     NFmiPoint usedOffset; // pit‰‰ laskea mik‰ on k‰ytetty offsetti, kun contoureja aletaan piirt‰m‰‰n
     string gridCacheStr = itsInfo->Grid() ? NFmiGridPointCache::MakeGridCacheStr(*itsInfo->Grid()) : "";
     if(fGetCurrentDataFromQ2Server)
-        gridCacheStr = NFmiGridPointCache::MakeGridCacheStr(*itsArea, values.NX(), values.NY());
+        gridCacheStr = NFmiGridPointCache::MakeGridCacheStr(*itsArea, itsIsolineValues.NX(), itsIsolineValues.NY());
     auto &gridPointCache = itsCtrlViewDocumentInterface->GridPointCache(itsMapViewDescTopIndex);
     NFmiGridPointCache::pointMap::iterator it = gridPointCache.Find(gridCacheStr);
     if(gridCacheStr.empty() == false && it != gridPointCache.End())
@@ -1512,7 +1513,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
         if(fGetCurrentDataFromQ2Server == false)
             itsInfo->LocationsXY(coordData.itsPoints, *itsArea); // otetaan koordinaatit t‰m‰n ruudun arealla, jossa on XYRect kohdallaan
         else
-            ::LocationsXYForArchiveData(coordData.itsPoints, *itsArea, values.NX(), values.NY());
+            ::LocationsXYForArchiveData(coordData.itsPoints, *itsArea, itsIsolineValues.NX(), itsIsolineValues.NY());
 
         gridPointCache.Add(gridCacheStr, coordData);
         usedCoordinatesPtr = &coordData.itsPoints;
@@ -1520,29 +1521,29 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     }
     else // asema datasta lasketaan hilattua dataa
     { // pit‰‰ laskea hila viel‰ t‰ss‰
-        ::CalcLocationsXYMatrix(coordData.itsPoints, *itsArea, static_cast<int>(values.NX()), static_cast<int>(values.NY())); // otetaan koordinaatit t‰m‰n ruudun arealla, jossa on XYRect kohdallaan
+        ::CalcLocationsXYMatrix(coordData.itsPoints, *itsArea, static_cast<int>(itsIsolineValues.NX()), static_cast<int>(itsIsolineValues.NY())); // otetaan koordinaatit t‰m‰n ruudun arealla, jossa on XYRect kohdallaan
         usedCoordinatesPtr = &coordData.itsPoints;
         usedOffset = NFmiPoint(0, 0); // kun kyse on 'originaali' hila pisteist‰, offset on (0, 0)
     }
 
     if(isoLineData.itsHatch1.fUseHatch)
-        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch1, values, *usedCoordinatesPtr, helper, usedOffset);
+        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch1, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
     if(isoLineData.itsHatch2.fUseHatch)
-        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch2, values, *usedCoordinatesPtr, helper, usedOffset);
+        DrawHatchesWithImagine(isoLineData, isoLineData.itsHatch2, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
 
     if(isoLineData.fUseIsoLines)
     {
         if(!isoLineData.fUseCustomIsoLineClasses) // piirret‰‰n tasa v‰liset isoviivat
-            DrawSimpleIsoLinesWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawSimpleIsoLinesWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
         else
-            DrawCustomIsoLinesWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawCustomIsoLinesWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
     }
     else
     {
         if(isoLineData.fUseCustomColorContoursClasses) // piirret‰‰n tasa v‰liset isoviivat
-            DrawCustomColorContourWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawCustomColorContourWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
         else
-            DrawSimpleColorContourWithImagine(isoLineData, values, *usedCoordinatesPtr, helper, usedOffset);
+            DrawSimpleColorContourWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
     }
 
     RestoreUpDifferenceDrawing(itsDrawParam);
@@ -2406,7 +2407,6 @@ void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
 
 bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2)
 {
-    FmiParameterName parId = itsInfo ? static_cast<FmiParameterName>(itsInfo->Param().GetParamIdent()) : kFmiBadParameter;
     if(CalcViewFloatValueMatrix(itsIsolineValues, x1, y1, x2, y2) == false)
         return false;
 

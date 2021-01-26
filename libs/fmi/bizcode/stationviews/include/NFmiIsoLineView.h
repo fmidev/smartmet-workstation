@@ -176,12 +176,13 @@ class NFmiIsoLineView : public NFmiStationView
 
  protected:
     virtual bool IsToolMasterAvailable(void);
-    virtual bool DeleteTransparencyBitmap();
+	virtual bool DeleteTransparencyBitmap();
+	virtual bool IsMapViewCase();
 	bool FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
-    void FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed);
+    void FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
 	void FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData);
     void FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
-    void FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData);
+    void FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
     void FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
 	void PrepareForTransparentDraw(void);
 	void EndTransparentDraw(void);
@@ -204,7 +205,6 @@ class NFmiIsoLineView : public NFmiStationView
     CRect GetTrueClientRect();
  private:
 	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
-	bool FillIsoLineGridDataForImagine(NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData);
 	void DrawIsoLinesWithToolMaster(void);
 	void DrawIsoLines(void);
 

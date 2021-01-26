@@ -701,7 +701,6 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mVisualizationGriddingProperties()
 ,mSaveImageExtensionFilterIndex()
 ,mMapViewCacheMaxSizeInMB()
-,mForceWdParameterToLinearInterpolation()
 ,mShowTooltipOnSmarttoolDialog()
 ,mHatchingToolmasterEpsilonFactor()
 {
@@ -713,7 +712,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
 {
     if(mInitialized)
-        throw std::runtime_error("NFmiApplicationWinRegistry::Init: all ready initialized.");
+        throw std::runtime_error("NFmiApplicationWinRegistry::Init: already initialized.");
 
     mInitialized = true;
     mConfigurationName = configurationName;
@@ -765,7 +764,6 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mMapViewCacheMaxSizeInMB = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\MapViewCacheMaxSizeInMB", usedKey, 2000);
     // En tiedä onko oikeasti väliä, jos luku olisi vahingossa esim. negatiivinen, joten laitetaan alustettu arvo varmuuden vuoksi setterin läpi, joka tekee tarkistuksia.
     MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
-    mForceWdParameterToLinearInterpolation = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ForceWdParameterToLinearInterpolation", usedKey, false);
     mShowTooltipOnSmarttoolDialog = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowTooltipOnSmarttoolDialog", usedKey, true);
     mHatchingToolmasterEpsilonFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\HatchingToolmasterEpsilonFactor", usedKey, 1.);
 
@@ -1077,16 +1075,6 @@ void NFmiApplicationWinRegistry::MapViewCacheMaxSizeInMB(double newValue)
     }
 
     *mMapViewCacheMaxSizeInMB = newValue;
-}
-
-bool NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation()
-{
-    return *mForceWdParameterToLinearInterpolation;
-}
-
-void NFmiApplicationWinRegistry::ForceWdParameterToLinearInterpolation(bool newValue)
-{
-    *mForceWdParameterToLinearInterpolation = newValue;
 }
 
 bool NFmiApplicationWinRegistry::ShowTooltipOnSmarttoolDialog()
