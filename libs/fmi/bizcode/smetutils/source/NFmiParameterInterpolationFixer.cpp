@@ -77,54 +77,6 @@ namespace
         return params;
     }
 
-    std::vector<NFmiParam> makeCheckedParametersFromConfigurations(const std::string& configurationKey)
-    {
-        std::string loggedConfigurationKey = "'";
-        loggedConfigurationKey += configurationKey + "'";
-        const std::string emptyResultLogMessage = "no parameters are forced to linear interpolation";
-
-        auto configurationValue = NFmiSettings::Optional(configurationKey, std::string(""));
-        std::string configurationValueLogMessage = configurationKey;
-        configurationValueLogMessage += " had following 'raw' values: ";
-        configurationValueLogMessage += configurationValue;
-        CatLog::logMessage(configurationValueLogMessage, CatLog::Severity::Debug, CatLog::Category::Configuration);
-        try
-        {
-            if(configurationValue.empty())
-            {
-                std::string emptyValueMessage = loggedConfigurationKey;
-                emptyValueMessage += " configuration has no value, " + emptyResultLogMessage;
-                CatLog::logMessage(emptyValueMessage, CatLog::Severity::Debug, CatLog::Category::Configuration);
-                return std::vector<NFmiParam>();
-            }
-            else
-            {
-                return ::makeCheckedParametersFromString(configurationValue);
-            }
-        }
-        catch(std::exception &e)
-        { 
-            std::string emptyValueMessage = loggedConfigurationKey;
-            emptyValueMessage += " configuration had value = '";
-            emptyValueMessage += configurationValue;
-            emptyValueMessage += "' and that resulted following error: '";
-            emptyValueMessage += e.what();
-            emptyValueMessage += "' and ";
-            emptyValueMessage += emptyResultLogMessage;
-            throw std::runtime_error(emptyValueMessage);
-        }
-        catch(...)
-        {
-            std::string emptyValueMessage = loggedConfigurationKey;
-            emptyValueMessage += " configuration had value = '";
-            emptyValueMessage += configurationValue;
-            emptyValueMessage += "' and that resulted unknown error ";
-            emptyValueMessage += " and ";
-            emptyValueMessage += emptyResultLogMessage;
-            throw std::runtime_error(emptyValueMessage);
-        }
-    }
-
     // TotalWind parametrin wind-vector pitää aina korjata lineaariseksi ja ilman mitään lokituksia.
     bool fixTotalWindSubparamWindVector(NFmiParamDescriptor& paramDescriptor)
     {
@@ -201,6 +153,9 @@ const std::string& NFmiParameterInterpolationFixer::makeConfigurationKey() const
 
 void NFmiParameterInterpolationFixer::doFinalChecksForCheckedParameters() const
 {
+    if(originalCheckedParametersConfigurationValue_.empty())
+        return; 
+
     if(checkedParameters_.empty())
     {
         std::string noParametersObtainedLogMessage = "No actual parameters were obtained from ";
@@ -280,5 +235,53 @@ void NFmiParameterInterpolationFixer::fixCheckedParametersInterpolation(NFmiQuer
             data->Info()->SetParamDescriptor(paramDescriptor);
         }
 
+    }
+}
+
+std::vector<NFmiParam> NFmiParameterInterpolationFixer::makeCheckedParametersFromConfigurations(const std::string& configurationKey)
+{
+    std::string loggedConfigurationKey = "'";
+    loggedConfigurationKey += configurationKey + "'";
+    const std::string emptyResultLogMessage = "no parameters are forced to linear interpolation";
+
+    originalCheckedParametersConfigurationValue_ = NFmiSettings::Optional(configurationKey, std::string(""));
+    try
+    {
+        if(originalCheckedParametersConfigurationValue_.empty())
+        {
+            std::string emptyValueMessage = loggedConfigurationKey;
+            emptyValueMessage += " configuration has no value, " + emptyResultLogMessage;
+            CatLog::logMessage(emptyValueMessage, CatLog::Severity::Debug, CatLog::Category::Configuration);
+            return std::vector<NFmiParam>();
+        }
+        else
+        {
+            std::string configurationValueLogMessage = configurationKey;
+            configurationValueLogMessage += " had following 'raw' values: ";
+            configurationValueLogMessage += originalCheckedParametersConfigurationValue_;
+            CatLog::logMessage(configurationValueLogMessage, CatLog::Severity::Debug, CatLog::Category::Configuration);
+            return ::makeCheckedParametersFromString(originalCheckedParametersConfigurationValue_);
+        }
+    }
+    catch(std::exception& e)
+    {
+        std::string emptyValueMessage = loggedConfigurationKey;
+        emptyValueMessage += " configuration had value = '";
+        emptyValueMessage += originalCheckedParametersConfigurationValue_;
+        emptyValueMessage += "' and that resulted following error: '";
+        emptyValueMessage += e.what();
+        emptyValueMessage += "' and ";
+        emptyValueMessage += emptyResultLogMessage;
+        throw std::runtime_error(emptyValueMessage);
+    }
+    catch(...)
+    {
+        std::string emptyValueMessage = loggedConfigurationKey;
+        emptyValueMessage += " configuration had value = '";
+        emptyValueMessage += originalCheckedParametersConfigurationValue_;
+        emptyValueMessage += "' and that resulted unknown error ";
+        emptyValueMessage += " and ";
+        emptyValueMessage += emptyResultLogMessage;
+        throw std::runtime_error(emptyValueMessage);
     }
 }
