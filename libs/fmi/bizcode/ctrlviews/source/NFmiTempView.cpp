@@ -1863,23 +1863,20 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	auto& hodografViewData = mtaTempSystem.GetHodografViewData();
-	if(hodografViewData.Rect().IsInside(thePlace))
+	if(mtaTempSystem.ShowHodograf() && hodografViewData.Rect().IsInside(thePlace))
 	{
-		if(mtaTempSystem.ShowHodograf())
-		{ 
-			// hodografin pit‰‰ viel‰ n‰ky‰
-			if(theKey & kCtrlKey)
-			{ 
-				// s‰‰det‰‰n suhteellista kokoa
-				hodografViewData.AdjustRelativiHeightFactor(theDelta);
-			}
-			else
-			{ 
-				// s‰‰det‰‰n arvoalueen kokoa
-				hodografViewData.AdjustScaleMaxValue(theDelta);
-			}
-			return true;
+		// Jos hodografi n‰kyy ja hiiren kursori on sen sis‰ll‰
+		if(theKey & kCtrlKey)
+		{
+			// s‰‰det‰‰n suhteellista kokoa
+			hodografViewData.AdjustRelativiHeightFactor(theDelta);
 		}
+		else
+		{
+			// s‰‰det‰‰n arvoalueen kokoa
+			hodografViewData.AdjustScaleMaxValue(theDelta);
+		}
+		return true;
 	}
 	else if(itsAnimationButtonRect.IsInside(thePlace))
 	{
