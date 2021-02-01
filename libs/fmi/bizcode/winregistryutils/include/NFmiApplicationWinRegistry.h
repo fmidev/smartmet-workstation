@@ -8,6 +8,7 @@
 #include "NFmiGriddingProperties.h"
 
 class NFmiHelpDataInfoSystem;
+class SoundingViewSettingsFromWindowsRegisty;
 
 // En osaa laittaa tälläistä muuttujaa luokan muuttujaksi, koska siinä on tyhjä taulukko ja kääntäjä tekee erinäisiä valituksia sellaisen käytöstä luokan dataosana.
 const TCHAR BASED_CODE g_SaveImageFileFilter[] = _TEXT("PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|TIFF (*.tiff)|*.tiff|GIF (*.gif)|*.gif|");
@@ -263,6 +264,12 @@ public:
     void SoundingTextUpward(bool newValue);
     bool SoundingTimeLockWithMapView();
     void SoundingTimeLockWithMapView(bool newValue);
+    bool ShowStabilityIndexSideView();
+    void ShowStabilityIndexSideView(bool newValue);
+    bool ShowTextualSoundingDataSideView();
+    void ShowTextualSoundingDataSideView(bool newValue);
+    SoundingViewSettingsFromWindowsRegisty GetSoundingViewSettings() const;
+    void SetSoundingViewSettings(const SoundingViewSettingsFromWindowsRegisty& soundingViewSettings);
     bool KeepMapAspectRatio();
     void KeepMapAspectRatio(bool newValue);
 
@@ -340,6 +347,8 @@ private:
     boost::shared_ptr<CachedRegBool> mUseTimeSerialAxisAutoAdjust; // käytetäänkö 'vihattua' auto-adjust säätöä aikasarjaikkunassa (laskee min ja max arvoja ja päättelee siitä sopivan arvoasteikon automaattisesti)
     boost::shared_ptr<CachedRegBool> mSoundingTextUpward; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)
     boost::shared_ptr<CachedRegBool> mSoundingTimeLockWithMapView; // Luotausnäytössä voi olla nyt aikalukko päällä, jolloin luotausten ajat sidotaan pääkarttanäyttöön, eli niitä säädetään jos karttanäytöllä vaihdetaan aikaa
+    boost::shared_ptr<CachedRegBool> mShowStabilityIndexSideView; // Onko Luotausnäytössä stabiilisuusindeksi sivunäyttö auki vai ei
+    boost::shared_ptr<CachedRegBool> mShowTextualSoundingDataSideView; // Onko Luotausnäytössä tekstimuotoinen luotausdata sivunäyttö auki vai ei
     boost::shared_ptr<CachedRegBool> mKeepMapAspectRatio; // Pitääkö smartmet karttanäytöissä aspect-ratio -lukkoa päälä vai ei
 
     boost::shared_ptr<CachedRegBool> mUseMultiProcessCpCalc; // käytetäänkö kontrollipistetyökalun yhteydessä multi-process-worker -poolia vai ei

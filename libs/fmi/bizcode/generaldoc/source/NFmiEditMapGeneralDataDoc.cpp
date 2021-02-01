@@ -751,7 +751,7 @@ void InitMTATempSystem()
 {
     try
     {
-        GetMTATempSystem().Init(ProducerSystem(), ExtraSoundingProducerList(), ApplicationWinRegistry().SoundingTextUpward(), ApplicationWinRegistry().SoundingTimeLockWithMapView());
+        GetMTATempSystem().Init(ProducerSystem(), ExtraSoundingProducerList(), ApplicationWinRegistry().GetSoundingViewSettings());
     }
     catch(std::exception &e)
     {
@@ -5847,8 +5847,11 @@ void StoreSupplementaryData(void)
 		::_chdir(itsBasicConfigurations.WorkingDirectory().c_str()); // palautetaan alkuperäinen työhakemisto voimaan talletuksia varten
 		itsMTATempSystem.StoreSettings();
         // Nämä sounding dialogin asetukset pitää ottaa MTATempSystem:istä takaisin Win-registeriin, koska niitä on mahdollisesti latailtu näyttömakroista
-        ApplicationWinRegistry().SoundingTextUpward(itsMTATempSystem.SoundingTextUpward());
-        ApplicationWinRegistry().SoundingTimeLockWithMapView(itsMTATempSystem.SoundingTimeLockWithMapView());
+		auto& soundingSettingsForWinReg = itsMTATempSystem.GetSoundingViewSettingsFromWindowsRegisty();
+        ApplicationWinRegistry().SoundingTextUpward(soundingSettingsForWinReg.SoundingTextUpward());
+		ApplicationWinRegistry().SoundingTimeLockWithMapView(soundingSettingsForWinReg.SoundingTimeLockWithMapView());
+		ApplicationWinRegistry().ShowStabilityIndexSideView(soundingSettingsForWinReg.ShowStabilityIndexSideView());
+		ApplicationWinRegistry().ShowTextualSoundingDataSideView(soundingSettingsForWinReg.ShowTextualSoundingDataSideView());
 
         itsTrajectorySystem->StoreSettings();
 		GetCombinedMapHandler()->storeMapViewDescTopToSettings();

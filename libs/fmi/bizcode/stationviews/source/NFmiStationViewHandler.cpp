@@ -718,7 +718,7 @@ void NFmiStationViewHandler::DrawSelectedMTAModeSoundingPlaces(void)
         return ;
 
     NFmiMTATempSystem &mtaSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    bool soundingViewTimeLock = mtaSystem.SoundingTimeLockWithMapView();
+	bool soundingViewTimeLock = mtaSystem.GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView();
 	const NFmiMTATempSystem::Container &temps = mtaSystem.GetTemps();
 	if(temps.size() > 0)
 	{
