@@ -17,6 +17,7 @@
 #include "NFmiTempLineInfo.h"
 #include "NFmiTempLabelInfo.h"
 #include "SoundingDataServerConfigurations.h"
+#include "SoundingViewSettingsFromWindowsRegisty.h"
 
 class NFmiProducerSystem;
 
@@ -129,7 +130,8 @@ class NFmiMTATempSystem
 	NFmiMTATempSystem(void);
 	virtual ~NFmiMTATempSystem(void);
 
-    void Init(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers, bool theSoundingTextUpward, bool theSoundingTimeLockWithMapView); // heittää poikkeuksia virhetilanteissa
+	// Heittää poikkeuksia virhetilanteissa
+    void Init(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers, const SoundingViewSettingsFromWindowsRegisty & soundingViewSettingsFromWindowsRegisty);
 	void InitFromViewMacro(const NFmiMTATempSystem &theOther);
 	void AddTemp(const TempInfo &theTempInfo);
 	void ClearTemps(void);
@@ -209,8 +211,6 @@ class NFmiMTATempSystem
 	void DrawOnlyHeightValuesOfFirstDrawedSounding(bool newValue) {fDrawOnlyHeightValuesOfFirstDrawedSounding = newValue;}
 	int SoundingColorCount(void) const {return static_cast<int>(itsSoundingColors.size());}
 	void StoreSettings(void); // initialisoinnin (InitializeSoundingColors-metodin) vastakohta eli tallettaa asetukset NFmiSettings-systeemiin.
-	bool ShowIndexies(void) const {return fShowIndexies;}
-	void ShowIndexies(bool newValue) {fShowIndexies = newValue;}
 
 	int IndexiesFontSize(void) const {return itsIndexiesFontSize;}
 	void IndexiesFontSize(int newValue) {itsIndexiesFontSize = newValue;}
@@ -268,8 +268,6 @@ class NFmiMTATempSystem
 	int WindBarbSpaceOutFactor(void) const {return itsWindBarbSpaceOutFactor;}
 	void WindBarbSpaceOutFactor(int newValue);
 	void ChangeWindBarbSpaceOutFactor(void);
-	bool ShowSideView(void) const {return fShowSideView;}
-	void ShowSideView(bool newValue) {fShowSideView = newValue;}
 	CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void) {return itsGraphicalInfo;}
 	int ModelRunCount(void) const {return itsModelRunCount;}
 	void ModelRunCount(int newValue) {itsModelRunCount = newValue;}
@@ -285,12 +283,9 @@ class NFmiMTATempSystem
     void NLineInfo(const NFmiTempLineInfo &newValue) { itsNLineInfo = newValue; }
     NFmiTempLineInfo& RHLineInfo() { return itsRHLineInfo; }
     void RHLineInfo(const NFmiTempLineInfo &newValue) { itsRHLineInfo = newValue; }
-    bool SoundingTextUpward() const { return fSoundingTextUpwardWinReg; }
-    void SoundingTextUpward(bool newValue) { fSoundingTextUpwardWinReg = newValue; }
-    bool SoundingTimeLockWithMapView() const { return fSoundingTimeLockWithMapViewWinReg; }
-    void SoundingTimeLockWithMapView(bool newValue) { fSoundingTimeLockWithMapViewWinReg = newValue; }
     SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() { return itsSoundingDataServerConfigurations; }
 	HodografViewData& GetHodografViewData() { return itsHodografViewData; }
+	SoundingViewSettingsFromWindowsRegisty& GetSoundingViewSettingsFromWindowsRegisty() { return itsSoundingViewSettingsFromWindowsRegisty; }
 
 	void Write(std::ostream& os) const;
 	void Read(std::istream& is);
@@ -304,6 +299,9 @@ private:
     void AddVerticalModelDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, NFmiProducerSystem &theProducerSystem);
     void AddExtraSoundingDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, const std::vector<NFmiProducer>& theExtraSoundingProducers);
     void AddSoundingDataFromServerToPossibleProducerList(SelectedProducerContainer &possibleProducerList);
+	bool ShowIndexiesViewMacroLegacy() const;
+	bool ShowSideViewViewMacroLegacy() const;
+	void SetupSideViewsFromLegacyViewMacroValues(bool showIndexiesLegacyValue, bool showSideViewLegacyValue);
 
 	Container itsTempInfos;
 	int itsMaxTempsShowed; // MTA-moodissa tämän enempää ei oteta listaan näytettäviä temppejä. Jos joku lisää
@@ -369,7 +367,6 @@ private:
     NFmiTempLabelInfo itsHeightValueLabelInfo;
 	bool fDrawOnlyHeightValuesOfFirstDrawedSounding;
 
-	bool fShowIndexies; // näytetäänkö luotausnäytössä indeksitaulukkoa vain luotausta tekstinä
 	int itsIndexiesFontSize; // indeksi taulukon fontin koko pikseleinä
 	int itsSoundingTextFontSize; // luotaus tekstinä fontin koko pikseleinä
 
@@ -398,7 +395,6 @@ private:
 	int itsWindBarbSpaceOutFactor; // 0 = ei harvennusta, 1 vähän ja 2 enemmän
 
 	bool fUpdateFromViewMacro; // tätä käytetään vain kertomaan että luotaus-dialogia päivitetään viewMacrosta ja täytyy toimia hieman erilailla kuin normaalisti
-	bool fShowSideView; // onko sivu-ikkuna, missä indeksit/level tiedot näkyvissä vai ei
     CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
 	int itsModelRunCount; // Kuinka monta viimeisintä malliajoa näytetään luotausnäytössä, jos katsotaan jotain malli luotausta (0 = vain viimeisin data, 1 on viimeisin + edellinen malliajo, 2 = viimeisin ja kaksi edellista jne.)
     bool fDrawSecondaryData; // piirretäänkö apudatat (0-100 asteikkoon WS, N, RH, muita?) vai ei (SmartMetin luotausnäytössä CTRL + F säätää on/off tilaa)
@@ -407,10 +403,9 @@ private:
     NFmiTempLineInfo itsNLineInfo; // Apudatanäytön N (kokonaispilvisyys) viivan piirto-ominaisuudet
     NFmiTempLineInfo itsRHLineInfo; // Apudatanäytön RH (suhteellinen kosteus prosentti) viivan piirto-ominaisuudet
 
-    // Windows registry:ssä oikeasti talletetut muttujat, jotka otetaan myös tänne talteen, että ne saadaan mukaan näyttömakroihin
-    bool fSoundingTextUpwardWinReg; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)
-    bool fSoundingTimeLockWithMapViewWinReg; // Luotausnäytössä voi olla nyt aikalukko päällä, jolloin luotausten ajat sidotaan pääkarttanäyttöön, eli niitä säädetään jos karttanäytöllä vaihdetaan aikaa
-    SoundingDataServerConfigurations itsSoundingDataServerConfigurations;
+    // Windows registry:ssä oikeasti talletetut muuttujat, jotka otetaan myös tänne talteen, että ne saadaan mukaan näyttömakroihin
+	SoundingViewSettingsFromWindowsRegisty itsSoundingViewSettingsFromWindowsRegisty;
+	SoundingDataServerConfigurations itsSoundingDataServerConfigurations;
 	HodografViewData itsHodografViewData;
 };
 

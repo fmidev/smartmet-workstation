@@ -16,6 +16,7 @@
 #include "CtrlViewFunctions.h"
 #include "persist2.h"
 #include "ApplicationInterface.h"
+#include "SoundingViewSettingsFromWindowsRegisty.h"
 
 /*
 #ifdef _DEBUG
@@ -36,13 +37,13 @@ CFmiTempDlg::CFmiTempDlg(SmartMetDocumentInterface *smartMetDocumentInterface, C
 	,itsTooltipCtrl()
 	,itsView(0)
 	,fSkewTModeOn(FALSE)
-	,fShowIndexies(FALSE)
+	,fShowStabilityIndexSideView(FALSE)
 	,fShowHodograf(FALSE)
 	,itsProducerListWithData()
 	,fProducerSelectorUsedYet(false)
 	,fShowMapMarkers(FALSE)
 	,m_hAccel(0)
-	, fShowSideView(FALSE)
+	, fShowTextualSoundingDataSideView(FALSE)
 	, itsModelRunCount(0)
     , fSoundingTimeLockWithMapView(FALSE)
     , fSoundingTextUpward(FALSE)
@@ -62,12 +63,12 @@ void CFmiTempDlg::DoDataExchange(CDataExchange* pDX)
     //{{AFX_DATA_MAP(CFmiTempDlg)
     DDX_Control(pDX, IDC_BUTTON_PRINT, itsPrintButtom);
     DDX_Check(pDX, IDC_CHECK_TEMP_SKEWT_MODE, fSkewTModeOn);
-    DDX_Check(pDX, IDC_CHECK_SHOW_INDEXIES, fShowIndexies);
+    DDX_Check(pDX, IDC_CHECK_SHOW_STABILITY_INDEXIES_SIDE_VIEW, fShowStabilityIndexSideView);
     DDX_Check(pDX, IDC_CHECK_SHOW_HODOGRAF, fShowHodograf);
     //}}AFX_DATA_MAP
     DDX_Check(pDX, IDC_CHECK_TEMP_SHOW_MAP_MARKERS, fShowMapMarkers);
     DDX_Control(pDX, IDC_COMBO_TEMP_PRODUCER_MULTI_SELECTOR, itsMultiProducerSelector);
-    DDX_Check(pDX, IDC_CHECK_SHOW_SIDE_VIEW, fShowSideView);
+    DDX_Check(pDX, IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW, fShowTextualSoundingDataSideView);
     DDX_Text(pDX, IDC_EDIT_MODEL_RUN_COUNT, itsModelRunCount);
     //	DDV_MinMaxInt(pDX, itsModelRunCount, 0, 10);
     DDX_Control(pDX, IDC_SPIN_MODEL_RUN_COUNT, itsModelRunSpinner);
@@ -90,7 +91,7 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_TEMP_SHOW_MAP_MARKERS, OnBnClickedShowMapMarkers)
 	ON_BN_CLICKED(IDC_CHECK_TEMP_SKEWT_MODE, OnBnClickedCheckTempSkewtMode)
 	ON_BN_CLICKED(IDC_BUTTON_SETTINGS, OnBnClickedButtonSettings)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_INDEXIES, OnBnClickedCheckShowIndexies)
+	ON_BN_CLICKED(IDC_CHECK_SHOW_STABILITY_INDEXIES_SIDE_VIEW, OnBnClickedCheckShowStabilityIndexiesSideView)
 	ON_BN_CLICKED(IDC_CHECK_SHOW_HODOGRAF, OnBnClickedCheckShowHodograf)
 	ON_BN_CLICKED(IDC_BUTTON_SHOW_TXT_SOUNDING_DATA, OnBnClickedShowTxtSoundingData)
 	ON_WM_MOUSEWHEEL()
@@ -112,7 +113,7 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
 	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_10, OnAcceleratorTempProducer10)
 
 	ON_COMMAND(ID_ACCELERATOR_SPACE_OUT_TEMP_WINDS, OnEditSpaceOut)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_SIDE_VIEW, &CFmiTempDlg::OnBnClickedCheckShowSideView)
+	ON_BN_CLICKED(IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW, &CFmiTempDlg::OnBnClickedCheckShowTextualSoundingDataSideView)
 	ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_EXTRA_MAP, &CFmiTempDlg::OnAcceleratorSwapArea)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_TEMP_VIEW_TOOLTIP, &CFmiTempDlg::OnAcceleratorToggleTooltip)
 	ON_EN_CHANGE(IDC_EDIT_MODEL_RUN_COUNT, &CFmiTempDlg::OnEnChangeEditModelRunCount)
@@ -120,6 +121,7 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
     ON_BN_CLICKED(IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, &CFmiTempDlg::OnBnClickedCheckPutSoundingTextsUpward)
     ON_COMMAND(ID_ACCELERATOR_CHANGE_MAP_TYPE_EXTRA_MAP, &CFmiTempDlg::OnAcceleratorChangeMapTypeExtraMap)
     ON_BN_CLICKED(IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, &CFmiTempDlg::OnBnClickedCheckShowSecondaryDataView)
+	ON_WM_GETMINMAXINFO()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -175,13 +177,14 @@ void CFmiTempDlg::UpdateControlsFromDocument()
 {
     auto &mtaTempSystem = itsSmartMetDocumentInterface->GetMTATempSystem();
     fSkewTModeOn = mtaTempSystem.SkewTDegree() == 45 ? TRUE : FALSE;
-    fShowIndexies = mtaTempSystem.ShowIndexies() ? TRUE : FALSE;
+	auto& soundingSettingsFromWinReg = mtaTempSystem.GetSoundingViewSettingsFromWindowsRegisty();
+    fShowStabilityIndexSideView = soundingSettingsFromWinReg.ShowStabilityIndexSideView() ? TRUE : FALSE;
     fShowHodograf = mtaTempSystem.ShowHodograf();
     fShowMapMarkers = mtaTempSystem.ShowMapMarkers();
     itsModelRunSpinner.SetPos(mtaTempSystem.ModelRunCount());
-    fShowSideView = mtaTempSystem.ShowSideView();
-    fSoundingTimeLockWithMapView = mtaTempSystem.SoundingTimeLockWithMapView();
-    fSoundingTextUpward = mtaTempSystem.SoundingTextUpward();
+    fShowTextualSoundingDataSideView = soundingSettingsFromWinReg.ShowTextualSoundingDataSideView();
+    fSoundingTimeLockWithMapView = soundingSettingsFromWinReg.SoundingTimeLockWithMapView();
+    fSoundingTextUpward = soundingSettingsFromWinReg.SoundingTextUpward();
     fShowSecondaryDataView = mtaTempSystem.DrawSecondaryData();
 
     UpdateData(FALSE);
@@ -201,7 +204,7 @@ void CFmiTempDlg::OnSize(UINT nType, int cx, int cy)
 int CFmiTempDlg::CalcControlAreaHeight(void)
 {
 	int areaHeight = 20;
-	CWnd* win = GetDescendantWindow(IDC_CHECK_SHOW_SIDE_VIEW);
+	CWnd* win = GetDescendantWindow(IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW);
 	if(win)
 	{
 		WINDOWPLACEMENT wplace;
@@ -344,10 +347,12 @@ void CFmiTempDlg::OnBnClickedButtonSettings()
 	}
 }
 
-void CFmiTempDlg::OnBnClickedCheckShowIndexies()
+void CFmiTempDlg::OnBnClickedCheckShowStabilityIndexiesSideView()
 {
 	UpdateData(TRUE);
-    itsSmartMetDocumentInterface->GetMTATempSystem().ShowIndexies(fShowIndexies == TRUE);
+	// Asetus pitää laittaa talteen sekä MTATempSystem:iin että Windows rekisteriin
+	itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowStabilityIndexSideView(fShowStabilityIndexSideView == TRUE);
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowStabilityIndexSideView(fShowStabilityIndexSideView == TRUE);
 	Update(); // tämä laittaa vielä mm. luotausnäyttöluokan cachen likaiseksi
 	Invalidate(FALSE);
 }
@@ -393,14 +398,14 @@ void CFmiTempDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SETTINGS, "IDC_BUTTON_SETTINGS");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_SCALES, "IDC_BUTTON_RESET_SCALES");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TEMP_SKEWT_MODE, "IDC_CHECK_TEMP_SKEWT_MODE");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_INDEXIES, "IDC_CHECK_SHOW_INDEXIES");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_STABILITY_INDEXIES_SIDE_VIEW, "Stab.-ind");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_HODOGRAF, "IDC_CHECK_SHOW_HODOGRAF");
 
     CFmiWin32Helpers::SetDialogItemText(this, INSERT_TEMP_CODE, "TEMP");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_SOUNDING_DATA, "R");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SHOW_TXT_SOUNDING_DATA, "txt");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TEMP_SHOW_MAP_MARKERS, "Map markers");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_SIDE_VIEW, "SideView");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW, "Text-data");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, "SV2");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_MAP_TIME_WITH_SOUNDINGS, "MT");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, "Up");
@@ -676,19 +681,21 @@ void CFmiTempDlg::OnEditSpaceOut()
 	Invalidate(FALSE);
 }
 
-void CFmiTempDlg::OnBnClickedCheckShowSideView()
+void CFmiTempDlg::OnBnClickedCheckShowTextualSoundingDataSideView()
 {
 	UpdateData(TRUE);
-    itsSmartMetDocumentInterface->GetMTATempSystem().ShowSideView(fShowSideView == TRUE);
+	// Asetus pitää laittaa talteen sekä MTATempSystem:iin että Windows rekisteriin
+	itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowTextualSoundingDataSideView(fShowTextualSoundingDataSideView == TRUE);
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowTextualSoundingDataSideView(fShowTextualSoundingDataSideView == TRUE);
 	Update();
 	Invalidate(FALSE);
 }
 
 void CFmiTempDlg::OnAcceleratorSwapArea()
 {
-	fShowSideView = !fShowSideView;
+	fShowTextualSoundingDataSideView = !fShowTextualSoundingDataSideView;
 	UpdateData(FALSE);
-	OnBnClickedCheckShowSideView();
+	OnBnClickedCheckShowTextualSoundingDataSideView();
 }
 
 void CFmiTempDlg::OnAcceleratorToggleTooltip()
@@ -720,8 +727,9 @@ void CFmiTempDlg::OnEnChangeEditModelRunCount()
 void CFmiTempDlg::OnBnClickedCheckUseMapTimeWithSoundings()
 {
 	UpdateData(TRUE);
-    itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTimeLockWithMapView(fSoundingTimeLockWithMapView == TRUE);
-    itsSmartMetDocumentInterface->GetMTATempSystem().SoundingTimeLockWithMapView(itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTimeLockWithMapView()); // Asetus pitää laittaa talteen myös MTATempSystem -luokalle!
+	// Asetus pitää laittaa talteen sekä MTATempSystem:iin että Windows rekisteriin
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTimeLockWithMapView(fSoundingTimeLockWithMapView == TRUE);
+    itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView(itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTimeLockWithMapView()); 
 	Update();
     itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SoundingView);
@@ -732,8 +740,9 @@ void CFmiTempDlg::OnBnClickedCheckUseMapTimeWithSoundings()
 void CFmiTempDlg::OnBnClickedCheckPutSoundingTextsUpward()
 {
 	UpdateData(TRUE);
-    itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTextUpward(fSoundingTextUpward == TRUE);
-    itsSmartMetDocumentInterface->GetMTATempSystem().SoundingTextUpward(itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTextUpward()); // Asetus pitää laittaa talteen myös MTATempSystem -luokalle!
+	// Asetus pitää laittaa talteen sekä MTATempSystem:iin että Windows rekisteriin
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTextUpward(fSoundingTextUpward == TRUE);
+    itsSmartMetDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTextUpward(itsSmartMetDocumentInterface->ApplicationWinRegistry().SoundingTextUpward()); // Asetus pitää laittaa talteen myös MTATempSystem -luokalle!
     Update();
 	Invalidate(FALSE);
 }
@@ -754,4 +763,12 @@ void CFmiTempDlg::OnBnClickedCheckShowSecondaryDataView()
     itsSmartMetDocumentInterface->GetMTATempSystem().DrawSecondaryData(fShowSecondaryDataView == TRUE);
     Update();
     Invalidate(FALSE);
+}
+
+
+void CFmiTempDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+	// set the minimum tracking width and height of the window
+	lpMMI->ptMinTrackSize.x = 500;
+	lpMMI->ptMinTrackSize.y = 500;
 }

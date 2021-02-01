@@ -221,7 +221,6 @@ NFmiMTATempSystem::NFmiMTATempSystem(void)
 ,fInitializationOk(false)
 ,fUpdateFromViewMacro(false)
 ,itsWindBarbSpaceOutFactor(0)
-,fShowSideView(true)
 ,itsModelRunCount(0)
 ,fDrawSecondaryData(false)
 ,itsSecondaryDataFrameWidthFactor(gDefaultSecondaryDataFrameWidthFactor)
@@ -229,8 +228,7 @@ NFmiMTATempSystem::NFmiMTATempSystem(void)
 ,itsWSLineInfo(NFmiColor(), 2, FMI_SOLID, true)
 ,itsNLineInfo(NFmiColor(), 2, FMI_DASH, true)
 ,itsRHLineInfo(NFmiColor(), 2, FMI_DOT, true)
-,fSoundingTextUpwardWinReg(true)
-,fSoundingTimeLockWithMapViewWinReg(false)
+,itsSoundingViewSettingsFromWindowsRegisty()
 ,itsSoundingDataServerConfigurations()
 {
 }
@@ -239,11 +237,10 @@ NFmiMTATempSystem::~NFmiMTATempSystem(void)
 {
 }
 
-void NFmiMTATempSystem::Init(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers, bool theSoundingTextUpward, bool theSoundingTimeLockWithMapView)
+void NFmiMTATempSystem::Init(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers, const SoundingViewSettingsFromWindowsRegisty& soundingViewSettingsFromWindowsRegisty)
 {
 	fInitializationOk = false;
-    fSoundingTextUpwardWinReg = theSoundingTextUpward;
-    fSoundingTimeLockWithMapViewWinReg = theSoundingTimeLockWithMapView;
+	itsSoundingViewSettingsFromWindowsRegisty = soundingViewSettingsFromWindowsRegisty;
     InitializeSoundingDataServerConfigurations();
     InitializeSoundingColors();
     InitPossibleProducerList(theProducerSystem, theExtraSoundingProducers);
@@ -411,8 +408,6 @@ void NFmiMTATempSystem::InitializeSoundingColors(void)
 	GetHelpLabelInfoSettings("MetEditor::TempView::HeightValue::Label", itsHeightValueLabelInfo);
 	fDrawOnlyHeightValuesOfFirstDrawedSounding = NFmiSettings::Require<bool>("MetEditor::TempView::HeightValue::OnlyFirstDrawed");
 
-	fShowIndexies = NFmiSettings::Require<bool>("MetEditor::TempView::ShowIndexies");
-
 	itsIndexiesFontSize = NFmiSettings::Require<int>("MetEditor::TempView::IndexiesFontSize");
 	itsSoundingTextFontSize = NFmiSettings::Require<int>("MetEditor::TempView::SoundingTextFontSize");
 	fShowHodograf = NFmiSettings::Require<bool>("MetEditor::TempView::ShowHodograf");
@@ -429,7 +424,6 @@ void NFmiMTATempSystem::InitializeSoundingColors(void)
 	itsResetScalesSkewTStartT = NFmiSettings::Require<double>("MetEditor::TempView::ResetScalesSkewTStartT");
 	itsResetScalesSkewTEndT = NFmiSettings::Require<double>("MetEditor::TempView::ResetScalesSkewTEndT");
 	itsWindBarbSpaceOutFactor = NFmiSettings::Require<int>("MetEditor::TempView::WindBarbSpaceOutFactor");
-	fShowSideView = NFmiSettings::Require<bool>("MetEditor::TempView::ShowSideView");
 	itsModelRunCount = NFmiSettings::Require<int>("MetEditor::TempView::ModelRunCount");
 
     fDrawSecondaryData = NFmiSettings::Optional<bool>("MetEditor::TempView::DrawSecondaryData", false);
@@ -513,7 +507,6 @@ void NFmiMTATempSystem::StoreSettings(void)
 	SetHelpLabelInfoToSettings("MetEditor::TempView::HeightValue::Label", itsHeightValueLabelInfo);
 	NFmiSettings::Set("MetEditor::TempView::HeightValue::OnlyFirstDrawed", NFmiStringTools::Convert<bool>(fDrawOnlyHeightValuesOfFirstDrawedSounding), true);
 
-	NFmiSettings::Set("MetEditor::TempView::ShowIndexies", NFmiStringTools::Convert<bool>(fShowIndexies), true);
 	NFmiSettings::Set("MetEditor::TempView::IndexiesFontSize", NFmiStringTools::Convert<int>(itsIndexiesFontSize), true);
 	NFmiSettings::Set("MetEditor::TempView::SoundingTextFontSize", NFmiStringTools::Convert<int>(itsSoundingTextFontSize), true);
 	NFmiSettings::Set("MetEditor::TempView::ShowHodograf", NFmiStringTools::Convert<bool>(fShowHodograf), true);
@@ -530,7 +523,6 @@ void NFmiMTATempSystem::StoreSettings(void)
 	NFmiSettings::Set("MetEditor::TempView::ResetScalesSkewTStartT", NFmiStringTools::Convert<double>(itsResetScalesSkewTStartT), true);
 	NFmiSettings::Set("MetEditor::TempView::ResetScalesSkewTEndT", NFmiStringTools::Convert<double>(itsResetScalesSkewTEndT), true);
 	NFmiSettings::Set("MetEditor::TempView::WindBarbSpaceOutFactor", NFmiStringTools::Convert<int>(itsWindBarbSpaceOutFactor), true);
-	NFmiSettings::Set("MetEditor::TempView::ShowSideView", NFmiStringTools::Convert<bool>(fShowSideView), true);
 	NFmiSettings::Set("MetEditor::TempView::ModelRunCount", NFmiStringTools::Convert<int>(itsModelRunCount), true);
 
     try
@@ -923,7 +915,7 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	os << fDrawOnlyHeightValuesOfFirstDrawedSounding << std::endl;
 
 	os << "// ShowIndexies + IndexiesFontSize + SoundingTextFontSize" << std::endl;
-	os << fShowIndexies << " " << itsIndexiesFontSize << " " << itsSoundingTextFontSize << std::endl;
+	os << ShowIndexiesViewMacroLegacy() << " " << itsIndexiesFontSize << " " << itsSoundingTextFontSize << std::endl;
 
 	os << "// ShowHodograf + ShowCondensationTrailProbabilityLines + ShowKilometerScale + ShowFlightLevelScale + fShowMapMarkers + ShowOnlyFirstSoundingInHodograf" << std::endl;
 	os << fShowHodograf << " " << fShowCondensationTrailProbabilityLines << " " << fShowKilometerScale << " " << fShowFlightLevelScale << " " << fShowMapMarkers << " " << fShowOnlyFirstSoundingInHodograf << std::endl;
@@ -938,12 +930,14 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
     extraData.Add(static_cast<double>(itsWindBarbSpaceOutFactor)); // itsWindBarbSpaceOutFactor on 1. uusi double arvo
-    extraData.Add(static_cast<double>(fShowSideView)); // fShowSideView on 2. uusi double arvo
+    extraData.Add(static_cast<double>(ShowSideViewViewMacroLegacy())); // fShowSideView on 2. uusi double arvo
     extraData.Add(static_cast<double>(itsModelRunCount)); // itsModelRunCount on 3. uusi double arvo
     extraData.Add(static_cast<double>(fDrawSecondaryData)); // fDrawSecondaryData on 4. uusi double arvo
     extraData.Add(itsSecondaryDataFrameWidthFactor); // itsSecondaryDataFrameWidthFactor on 5. uusi double arvo
-    extraData.Add(static_cast<double>(fSoundingTextUpwardWinReg)); // fSoundingTextUpwardWinReg on 6. uusi double arvo
-    extraData.Add(static_cast<double>(fSoundingTimeLockWithMapViewWinReg)); // fSoundingTimeLockWithMapViewWinReg on 7. uusi double arvo
+    extraData.Add(static_cast<double>(itsSoundingViewSettingsFromWindowsRegisty.SoundingTextUpward())); // fSoundingTextUpwardWinReg on 6. uusi double arvo
+	extraData.Add(static_cast<double>(itsSoundingViewSettingsFromWindowsRegisty.SoundingTimeLockWithMapView())); // fSoundingTimeLockWithMapViewWinReg on 7. uusi double arvo
+	extraData.Add(static_cast<double>(itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView())); // ShowStabilityIndexSideView on 8. uusi double arvo
+	extraData.Add(static_cast<double>(itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView())); // ShowTextualSoundingDataSideView on 9. uusi double arvo
 
     extraData.Add(MakeSecondaryDataLineInfoString()); // WS + N + RH lineInfor yhtenä stringinä on 1. uusi string arvo extroissa
     extraData.Add(::MakeProducerContainerServerUsageString(itsSoundingComparisonProducers)); // 2. uusi string arvo extroissa on valittujen tuottajien server/local data käyttötila tyyliin "0 1 0 0"
@@ -954,6 +948,42 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 
 	if(os.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Write failed");
+}
+
+// Jos stabiilisuus sivuikkuna on auki, avataan se myös legacy näyttömakroissa, 
+// eli sen prioriteetti on valittu suuremmaksi kuin tekstuaalisen luotausdata sivuikkunan, 
+// jos molemmat 'teksti' sivuikkunoista ovat auki.
+bool NFmiMTATempSystem::ShowIndexiesViewMacroLegacy() const
+{
+	return itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView();
+}
+
+// Jos jompikumpi tai molemmat 'teksti' sivuikkunoista on auki, on vanhassa systeemissä ShowSideView = true
+bool NFmiMTATempSystem::ShowSideViewViewMacroLegacy() const
+{
+	return itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView() || itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView();
+}
+
+void NFmiMTATempSystem::SetupSideViewsFromLegacyViewMacroValues(bool showIndexiesLegacyValue, bool showSideViewLegacyValue)
+{
+	if(!showSideViewLegacyValue)
+	{
+		itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView(false);
+		itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView(false);
+	}
+	else
+	{
+		if(showIndexiesLegacyValue)
+		{
+			itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView(true);
+			itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView(false);
+		}
+		else
+		{
+			itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView(false);
+			itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView(true);
+		}
+	}
 }
 
 std::string NFmiMTATempSystem::MakeSecondaryDataLineInfoString() const
@@ -1057,7 +1087,8 @@ void NFmiMTATempSystem::Read(std::istream& is)
 	is >> itsHeightValueLabelInfo;
 	is >> fDrawOnlyHeightValuesOfFirstDrawedSounding;
 
-	is >> fShowIndexies >> itsIndexiesFontSize >> itsSoundingTextFontSize;
+	bool showIndexiesLegacyValue = false;
+	is >> showIndexiesLegacyValue >> itsIndexiesFontSize >> itsSoundingTextFontSize;
 
 	is >> fShowHodograf >> fShowCondensationTrailProbabilityLines >> fShowKilometerScale >> fShowFlightLevelScale >> fShowMapMarkers >> fShowOnlyFirstSoundingInHodograf;
 
@@ -1074,9 +1105,9 @@ void NFmiMTATempSystem::Read(std::istream& is)
 	itsWindBarbSpaceOutFactor = 0;
     if(extraData.itsDoubleValues.size() > 0)
         itsWindBarbSpaceOutFactor = static_cast<int>(extraData.itsDoubleValues[0]);
-	fShowSideView = true;
+	bool showSideViewLegacyValue = true;
     if(extraData.itsDoubleValues.size() > 1)
-        fShowSideView = extraData.itsDoubleValues[1] != 0.;
+        showSideViewLegacyValue = extraData.itsDoubleValues[1] != 0.;
 	itsModelRunCount = 0;
     if(extraData.itsDoubleValues.size() > 2)
         itsModelRunCount = static_cast<int>(extraData.itsDoubleValues[2]);
@@ -1086,12 +1117,26 @@ void NFmiMTATempSystem::Read(std::istream& is)
     itsSecondaryDataFrameWidthFactor = gDefaultSecondaryDataFrameWidthFactor;
     if(extraData.itsDoubleValues.size() > 4)
         itsSecondaryDataFrameWidthFactor = extraData.itsDoubleValues[4];
-    fSoundingTextUpwardWinReg = true;
+    bool soundingTextUpwardTmp = true;
     if(extraData.itsDoubleValues.size() > 5)
-        fSoundingTextUpwardWinReg = extraData.itsDoubleValues[5] != 0;
-    fSoundingTimeLockWithMapViewWinReg = false;
+        soundingTextUpwardTmp = extraData.itsDoubleValues[5] != 0;
+	itsSoundingViewSettingsFromWindowsRegisty.SoundingTextUpward(soundingTextUpwardTmp);
+	bool soundingTimeLockWithMapViewTmp = false;
     if(extraData.itsDoubleValues.size() > 6)
-        fSoundingTimeLockWithMapViewWinReg = extraData.itsDoubleValues[6] != 0;
+        soundingTimeLockWithMapViewTmp = extraData.itsDoubleValues[6] != 0;
+	itsSoundingViewSettingsFromWindowsRegisty.SoundingTimeLockWithMapView(soundingTimeLockWithMapViewTmp);
+
+	if(extraData.itsDoubleValues.size() > 8)
+	{
+		// Version 5.13.12.0 jälkeisillä versioilla tehty näyttömakro hanskataan käyttämällä extraData arvoja suoraan
+		itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView(extraData.itsDoubleValues[7] != 0);
+		itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView(extraData.itsDoubleValues[8] != 0);
+	}
+	else
+	{
+		// Versiolla 5.13.12.0 ja sitä edeltävillä versioilla tehty näyttömakro pitää tehdä erityis lagacy metodeilla
+		SetupSideViewsFromLegacyViewMacroValues(showIndexiesLegacyValue, showSideViewLegacyValue);
+	}
 
     if(extraData.itsStringValues.size() > 0)
         ReadSecondaryDataLineInfoFromString(extraData.itsStringValues[0]);
@@ -1160,7 +1205,6 @@ void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther)
 	itsDewPointLineInfo = theOther.itsDewPointLineInfo;
 	itsHeightValueLabelInfo = theOther.itsHeightValueLabelInfo;
 	fDrawOnlyHeightValuesOfFirstDrawedSounding = theOther.fDrawOnlyHeightValuesOfFirstDrawedSounding;
-	fShowIndexies = theOther.fShowIndexies;
 	itsIndexiesFontSize = theOther.itsIndexiesFontSize;
 	itsSoundingTextFontSize = theOther.itsSoundingTextFontSize;
 	fShowHodograf = theOther.fShowHodograf;
@@ -1177,17 +1221,15 @@ void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther)
 	itsResetScalesSkewTEndT = theOther.itsResetScalesSkewTEndT;
 	itsAnimationTimeStepInMinutes = theOther.itsAnimationTimeStepInMinutes;
 	itsWindBarbSpaceOutFactor = theOther.itsWindBarbSpaceOutFactor;
-	fShowSideView = theOther.fShowSideView;
     itsModelRunCount = theOther.itsModelRunCount;
     fDrawSecondaryData = theOther.fDrawSecondaryData;
     itsSecondaryDataFrameWidthFactor = theOther.itsSecondaryDataFrameWidthFactor;
     itsWSLineInfo = theOther.itsWSLineInfo;
     itsNLineInfo = theOther.itsNLineInfo;
     itsRHLineInfo = theOther.itsRHLineInfo;
-    fSoundingTextUpwardWinReg = theOther.fSoundingTextUpwardWinReg;
-    fSoundingTimeLockWithMapViewWinReg = theOther.fSoundingTimeLockWithMapViewWinReg;
+	itsSoundingViewSettingsFromWindowsRegisty = theOther.itsSoundingViewSettingsFromWindowsRegisty;
 	// Pitäisikö myös itsSoundingDataServerConfigurations asetukset kopioida tässä???
-//	itsSoundingDataServerConfigurations = theOther.itsSoundingDataServerConfigurations;
+	// itsSoundingDataServerConfigurations = theOther.itsSoundingDataServerConfigurations;
 	itsHodografViewData = theOther.itsHodografViewData;
 }
 
