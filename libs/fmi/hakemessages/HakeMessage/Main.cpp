@@ -305,9 +305,9 @@ namespace HakeMessage
     {
         try
         {
-            std::string kahaRequestString = "/mobile/interfaces/crowd/map.php?smartmet=1";
+            std::string kahaRequestString = "/mobile/interfaces/crowd/map.php?smartmet=1&version=2.3.7";
             kahaRequestString += ::makeKahaTimeRangeString(7 * 24);
-            auto jsonFut = client_->queryFor("http://m.fmi.fi", kahaRequestString);
+            auto jsonFut = client_->queryFor("https://m.fmi.fi", kahaRequestString);
 
             jsonFut.wait();
 
@@ -320,7 +320,7 @@ namespace HakeMessage
                 checker.check(*bManager_);
                 try
                 {
-                    kahaMessages_->addMessage(MsgParser::parseJsonToKahaMessage(json.dump()));
+                    kahaMessages_->addMessage(MsgParser::parseJsonToKahaMessage(json.dump(4)));
                 }
                 catch(std::exception &e)
                 {
