@@ -360,7 +360,7 @@ inline bool NFmiRect::IsInside(const NFmiRect &theRect) const
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiRect::IsEmpty(void) const { return (itsSize.X() == 0 && itsSize.Y() == 0); }
+inline bool NFmiRect::IsEmpty(void) const { return (itsSize.X() == 0 || itsSize.Y() == 0); }
 // ----------------------------------------------------------------------
 /*!
  * \param theRect Undocumented
