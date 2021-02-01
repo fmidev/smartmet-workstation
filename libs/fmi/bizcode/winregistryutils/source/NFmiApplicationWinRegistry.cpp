@@ -7,6 +7,7 @@
 #include "NFmiStringTools.h"
 #include "NFmiSettings.h"
 #include "NFmiHelpDataInfo.h"
+#include "SoundingViewSettingsFromWindowsRegisty.h"
 #include "catlog/catlog.h"
 
 #include <unordered_map>
@@ -681,6 +682,8 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
 ,mUseTimeSerialAxisAutoAdjust()
 ,mSoundingTextUpward()
 ,mSoundingTimeLockWithMapView()
+,mShowStabilityIndexSideView()
+,mShowTextualSoundingDataSideView()
 ,mKeepMapAspectRatio()
 ,mFitToPagePrint()
 ,mSmartOrientationPrint()
@@ -741,6 +744,9 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     mUseTimeSerialAxisAutoAdjust = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\UseTimeSerialAxisAutoAdjust", usedKey, true, "SmartMet::UseTimeSerialAxisAutoAdjust");
     mSoundingTextUpward = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\SoundingTextUpward", usedKey, true);
     mSoundingTimeLockWithMapView = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\SoundingTimeLockWithMapView", usedKey, false);
+    mShowStabilityIndexSideView = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowStabilityIndexSideView", usedKey, false);
+    mShowTextualSoundingDataSideView = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowTextualSoundingDataSideView", usedKey, false);
+
     mKeepMapAspectRatio = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\KeepMapAspectRatio", usedKey, false, "SmartMet::GeneralOptions::KeepMapAspectRatio");
 
     mFitToPagePrint = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\FitToPagePrint", usedKey, true, "MetEditor::FitToPagePrint");
@@ -851,6 +857,39 @@ bool NFmiApplicationWinRegistry::SoundingTimeLockWithMapView()
 void NFmiApplicationWinRegistry::SoundingTimeLockWithMapView(bool newValue)
 {
     *mSoundingTimeLockWithMapView = newValue;
+}
+
+bool NFmiApplicationWinRegistry::ShowStabilityIndexSideView()
+{
+    return *mShowStabilityIndexSideView;
+}
+
+void NFmiApplicationWinRegistry::ShowStabilityIndexSideView(bool newValue)
+{
+    *mShowStabilityIndexSideView = newValue;
+}
+
+bool NFmiApplicationWinRegistry::ShowTextualSoundingDataSideView()
+{
+    return *mShowTextualSoundingDataSideView;
+}
+
+void NFmiApplicationWinRegistry::ShowTextualSoundingDataSideView(bool newValue)
+{
+    *mShowTextualSoundingDataSideView = newValue;
+}
+
+SoundingViewSettingsFromWindowsRegisty NFmiApplicationWinRegistry::GetSoundingViewSettings() const
+{
+    return SoundingViewSettingsFromWindowsRegisty(*mSoundingTextUpward, *mSoundingTimeLockWithMapView, *mShowStabilityIndexSideView, *mShowTextualSoundingDataSideView);
+}
+
+void NFmiApplicationWinRegistry::SetSoundingViewSettings(const SoundingViewSettingsFromWindowsRegisty& soundingViewSettings)
+{
+    SoundingTextUpward(soundingViewSettings.SoundingTextUpward());
+    SoundingTimeLockWithMapView(soundingViewSettings.SoundingTimeLockWithMapView());
+    ShowStabilityIndexSideView(soundingViewSettings.ShowStabilityIndexSideView());
+    ShowTextualSoundingDataSideView(soundingViewSettings.ShowTextualSoundingDataSideView());
 }
 
 bool NFmiApplicationWinRegistry::KeepMapAspectRatio()

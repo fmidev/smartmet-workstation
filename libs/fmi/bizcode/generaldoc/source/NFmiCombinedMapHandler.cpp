@@ -1765,7 +1765,7 @@ void NFmiCombinedMapHandler::centerTimeControlView(unsigned int mapViewDescTopIn
 SmartMetViewId NFmiCombinedMapHandler::getUpdatedViewIdMaskForChangingTime()
 {
 	SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::CrossSectionView | SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg;
-	if(::getMTATempSystem().SoundingTimeLockWithMapView())
+	if(::getMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView())
 		updatedViewIds = updatedViewIds | SmartMetViewId::SoundingView;
 	if(::getWindTableSystem().UseMapTime())
 		updatedViewIds = updatedViewIds | SmartMetViewId::WindTableDlg;
@@ -1778,7 +1778,7 @@ void NFmiCombinedMapHandler::updateTimeInLockedDescTops(const NFmiMetTime& wante
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(getUpdatedViewIdMaskForChangingTime());
 
 	// P‰ivitet‰‰n ajan muutoksessa myˆs aina luotausn‰yttˆ‰, jos s‰‰dˆt ovat kohdallaan
-	if(::getMTATempSystem().SoundingTimeLockWithMapView() && ::getMTATempSystem().TempViewOn())
+	if(::getMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView() && ::getMTATempSystem().TempViewOn())
 		ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateTempView();
 	
 	// Jos originaali ikkunassa on animaatio p‰‰ll‰ tai on edes animointi alue n‰kyviss‰, ei tehd‰ mit‰‰n

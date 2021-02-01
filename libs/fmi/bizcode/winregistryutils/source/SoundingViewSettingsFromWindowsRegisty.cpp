@@ -1,0 +1,11 @@
+#include "SoundingViewSettingsFromWindowsRegisty.h"
+
+SoundingViewSettingsFromWindowsRegisty::SoundingViewSettingsFromWindowsRegisty() = default;
+SoundingViewSettingsFromWindowsRegisty::~SoundingViewSettingsFromWindowsRegisty() = default;
+
+SoundingViewSettingsFromWindowsRegisty::SoundingViewSettingsFromWindowsRegisty(bool soundingTextUpward,	bool soundingTimeLockWithMapView, bool showStabilityIndexSideView, bool showTextualSoundingDataSideView)
+:fSoundingTextUpward(soundingTextUpward)
+,fSoundingTimeLockWithMapView(soundingTimeLockWithMapView)
+,fShowStabilityIndexSideView(showStabilityIndexSideView)
+,fShowTextualSoundingDataSideView(showTextualSoundingDataSideView)
+{}
