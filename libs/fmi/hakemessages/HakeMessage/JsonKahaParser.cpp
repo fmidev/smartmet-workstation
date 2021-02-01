@@ -79,7 +79,12 @@ namespace HakeMessage
         auto json = Json::parse(jsonString);
         const auto& properties = json["properties"];
 
-        kahaMsg.Number(std::to_string(properties["id"].get<int>()));
+        auto idProperties = properties["id"];
+        if(idProperties.is_number_integer())
+            kahaMsg.Number(std::to_string(properties["id"].get<int>()));
+        else if(idProperties.is_string())
+            kahaMsg.Number(properties["id"]);
+
         kahaMsg.MessageStr(properties["title"]);
         kahaMsg.StartTime(kahaTimeToMetTime(properties["utctime"]));
 
@@ -89,6 +94,7 @@ namespace HakeMessage
 
         kahaMsg.LatlonPoint(NFmiPoint(coordinates[0], coordinates[1]));
         fixHakaCategoryId(kahaMsg, properties);
+        kahaMsg.TotalMessageStr(jsonString);
 
         return kahaMsg;
     }
