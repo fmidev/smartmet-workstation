@@ -5,6 +5,7 @@
 #include "NFmiMTATempSystem.h"
 #include "NFmiSoundingDataOpt1.h"
 #include "NFmiTempViewDataRects.h"
+#include "NFmiTempViewScrollingData.h"
 #include <gdiplus.h>
 
 class NFmiFastQueryInfo;
@@ -86,15 +87,20 @@ class NFmiTempView : public NFmiCtrlView
 						   const checkedVector<double> &theValues, double startP, double endP, double deltaStartLevelP,
 						   NFmiDrawingEnvironment * theEnvi);
 	void DrawTemperatures(NFmiSoundingDataOpt1 &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
-    void DrawOneLevelStringData(NFmiText &text, NFmiPoint &p, int levelIndex, std::deque<float> &pVec, std::deque<float> &tVec, std::deque<float> &tdVec, std::deque<float> &zVec, std::deque<float> &wsVec, std::deque<float> &wdVec);
+	std::string MakeTextualSoundingLevelString(int levelIndex, std::deque<float>& pVec, std::deque<float>& tVec, std::deque<float>& tdVec, std::deque<float>& zVec, std::deque<float>& wsVec, std::deque<float>& wdVec);
+	std::vector<std::string> MakeSoundingDataLevelStrings(NFmiSoundingDataOpt1& theData);
+	void DrawWantedTextualSoundingDataLevels(NFmiText& text, NFmiPoint& p, const std::vector<std::string>& levelStrings, double relativeLineHeight);
+	double CalcRelativeTextLineHeight(int fontSizeInPixels, double heightFactor);
+	double CalcSideViewTextRowCount(const NFmiRect& viewRect, const NFmiPoint &currentRowCursor, double relativeTextRowHeight, bool advanceBeforeDraw);
+	void DrawSimpleLineWithGdiplus(const NFmiTempLineInfo& lineInfo, const NFmiPoint& relativeP1, const NFmiPoint& relativeP2, bool fixEndPixelX, bool fixEndPixelY);
 	double GetPAxisChangeValue(double change);
 	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi);
 	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const NFmiString &thePostStr = NFmiString(""));
 	void DrawWind(NFmiSoundingDataOpt1 &theData, int theIndex, bool onSouthernHemiSphere);
 	void DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theIndex);
 	void DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theIndex);
-	void MoveToNextLine(NFmiPoint &theTextPoint, double factor);
-	void DrawNextLineToIndexView(NFmiText &theText, const NFmiString &theStr, NFmiPoint &theTextPoint, double factor, bool moveFirst = true, bool addToString = true);
+	void MoveToNextLine(double relativeLineHeight, NFmiPoint &theTextPoint);
+	void DrawNextLineToIndexView(double relativeLineHeight, NFmiText& theText, const NFmiString& theStr, NFmiPoint& theTextPoint, bool moveFirst = true, bool addToString = true);
 	void DrawLCL(NFmiSoundingDataOpt1 &theData, int theIndex, FmiLCLCalcType theLCLCalcType);
 	void DrawTrMw(NFmiSoundingDataOpt1 &theData, int theIndex);
 	NFmiString GetIndexText(double theValue, const NFmiString &theText, int theDecimalCount);
@@ -113,6 +119,11 @@ class NFmiTempView : public NFmiCtrlView
 	bool IsAnyTextualSideViewVisible() const;
 	void DrawTextualSideViewRelatedStuff();
 	void CalculateAllDataViewRelatedRects();
+	double ConvertFixedPixelSizeToRelativeWidth(long fixedPixelSize);
+	double ConvertFixedPixelSizeToRelativeHeight(long fixedPixelSize);
+	void ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theIndex);
+	void DrawTextualSideViewScrollingVisuals(NFmiPoint& p, double relativeLineHeight, int totalSoundingRows, int fullVisibleRows, int startingRowIndex, bool drawUpwardSounding);
+	bool DoTextualSideViewSetup(bool showSideView, const NFmiRect& sideViewRect, int fontSize, double fontHeightFactor, double& relativeLineHeightOut);
 
 	double Tpot2x(double tpot, double p);
 	double pt2x(double p, double t);
@@ -144,7 +155,7 @@ class NFmiTempView : public NFmiCtrlView
 	bool fMustResetFirstSoundingData; // joskus k‰ytt‰j‰ haluaa resetoida muokattua luotausta
 	bool fHodografInitialized; // kun ikkuna piirret‰‰n 1. kerran, pit‰‰ laskea alkuarvaus, muutoin ei
 	double itsFirstSoundinWindBarbXPos;
-	std::string itsSoundingIndexStr; // t‰h‰n talletetaan ain piirretty stabiilisuus indeksi teksti rimpsu / luotaus numeroina, riippuen mik‰ moodi on valittuna
+	std::string itsSoundingIndexStr; // t‰h‰n talletetaan aina piirretty stabiilisuus indeksi teksti rimpsu / luotaus numeroina, riippuen mik‰ moodi on valittuna, tai molemmat
 
 	NFmiPoint itsGdiplusScale; // GDI+ piirrossa kaikki koordinaatit pit‰‰ muuttaa pikseli maailmaan (toolbaxin relatiivisesta 0,0 - 1,1 maailmasta)
 
@@ -161,6 +172,11 @@ class NFmiTempView : public NFmiCtrlView
     SoundingDataCacheMap itsSoundingDataCacheForTooltips;
     Gdiplus::SmoothingMode itsCurveDrawSmoothingMode = Gdiplus::SmoothingMode::SmoothingModeAntiAlias;
 	NFmiTempViewDataRects itsTempViewDataRects;
+	double itsStabilityIndexNextLineFontHeightFactor = 1.;
+	double itsTextualSoundingDataNextLineFontHeightFactor = 0.8;
+	double itsStabilityIndexRelativeLineHeight;
+	double itsTextualSoundingDataRelativeLineHeight;
+	NFmiTempViewScrollingData itsTempViewScrollingData;
 };
 
 

@@ -324,7 +324,7 @@ double NFmiTempView::pt2x(double p, double t)
 	double denom = tan(deg2rad(tdegree));
 	double xpix1 = denom ? xpix0 + (ypix1 - ypix0)/denom : xpix0;
 	// 5. laske x xpix1:n avulla toolboxilla
-	double x = x0 + itsToolBox->SX(static_cast<long>(xpix1 - xpix0));
+	double x = x0 + itsToolBox->SX(boost::math::iround(xpix1 - xpix0));
 	return x;
 }
 
@@ -431,7 +431,7 @@ void NFmiTempView::DrawSecondaryDataRect()
     int trueLineWidth = 0;
 
     // 1. Piirret‰‰n asteikko alareunaan
-    double verticalOffset = itsToolBox->SY(boost::math::iround(2 * itsDrawSizeFactor.Y()));
+    double verticalOffset = ConvertFixedPixelSizeToRelativeHeight(2);
 	// Labeleita pit‰‰ siirt‰‰ hieman vertikaali suunnassa, alareunassa pikkuisen ylˆsp‰in (negatiivinen offset)
     NFmiPoint labelOffset(0, -verticalOffset); 
     DrawSecondaryDataHorizontalAxel(labelInfo, lineInfo, kTopCenter, secondaryDataFrame.Bottom(), labelOffset);
@@ -440,7 +440,7 @@ void NFmiTempView::DrawSecondaryDataRect()
 	// Labeleita pit‰‰ siirt‰‰ hieman vertikaali suunnassa, yl‰reunassa pikkuisen alasp‰in (positiivinen offset)
     labelOffset.Y(verticalOffset); 
 	// Yl‰reunan tektit menev‰t hieman vasemmalle tuntemattomasta syyst‰, ja siksi niit‰ siirret‰‰n hieman oikealla t‰ss‰
-	double topHorizontalLabelOffset = itsToolBox->SX(boost::math::iround(5 * itsDrawSizeFactor.X()));
+	double topHorizontalLabelOffset = ConvertFixedPixelSizeToRelativeWidth(5);
 	labelOffset.X(topHorizontalLabelOffset);
 	DrawSecondaryDataHorizontalAxel(labelInfo, lineInfo, kBottomCenter, secondaryDataFrame.Top(), labelOffset);
 
@@ -638,7 +638,7 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
 //    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-
+	itsTempViewScrollingData.resetLastTextualSideViewValues();
     if(theToolBox == 0)
 		return ;
 	itsToolBox = theToolBox;
@@ -664,8 +664,8 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
 		InitializeHodografRect();
         DrawBackground();
 
-        _1PixelInRel.X(itsToolBox->SX(1));
-		_1PixelInRel.Y(itsToolBox->SY(1));
+        _1PixelInRel.X(ConvertFixedPixelSizeToRelativeWidth(1));
+		_1PixelInRel.Y(ConvertFixedPixelSizeToRelativeHeight(1));
 		const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 		xpix = itsToolBox->HX(dataRect.Width());
         ypix = itsToolBox->HY(dataRect.Height());
@@ -732,10 +732,8 @@ void NFmiTempView::InitializeHodografRect(void)
 	long pixelHeight = itsToolBox->HY(relativeHeight);
 	long pixelWidth = pixelHeight;
 	double relativeWidth = itsToolBox->SX(pixelWidth);
-	long blPixelOffsetX = boost::math::iround(5 * itsDrawSizeFactor.X());
-	long blPixelOffsetY = boost::math::iround(5 * itsDrawSizeFactor.Y());
-	double blRelativeOffsetX = itsToolBox->SX(blPixelOffsetX);
-	double blRelativeOffsetY = itsToolBox->SY(blPixelOffsetY);
+	double blRelativeOffsetX = ConvertFixedPixelSizeToRelativeWidth(5);
+	double blRelativeOffsetY = ConvertFixedPixelSizeToRelativeHeight(5);
 	NFmiRect hodografRect = hodografViewData.Rect();
 	NFmiPoint centePoint(hodografRect.Center());
 	if(fHodografInitialized == false) // 1, kerralla pit‰‰ laskea laatikon koko ja sijainti
@@ -763,10 +761,14 @@ bool NFmiTempView::IsAnyTextualSideViewVisible() const
 
 void NFmiTempView::DrawTextualSideViewRelatedStuff()
 {
+	// T‰ytyy nollata t‰m‰ teksti, sit‰ p‰ivitet‰‰n aina sitten DrawNextLineToIndexView-metodissa
+	itsSoundingIndexStr = ""; 
 	if(IsAnyTextualSideViewVisible())
 	{
 		DrawStabilityIndexData();
 		DrawTextualSoundingData();
+		// Lis‰t‰‰n varmuuden vuoksi rivinvaihto, niin n‰kee paremmin, miss‰ eri tekstiosuudet vaihtuvat
+		itsSoundingIndexStr += "\n"; 
 		DrawAnimationControls();
 	}
 }
@@ -854,17 +856,23 @@ NFmiString NFmiTempView::GetIndexText(double theValue, const NFmiString &theText
 	return str;
 }
 
-void NFmiTempView::MoveToNextLine(NFmiPoint &theTextPoint, double factor)
-{ // siirret‰‰n annettua pistett‰ alasp‰in sen verran mit‰ fontti koko m‰‰r‰‰
-	theTextPoint.Y(theTextPoint.Y() + itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontHeight()*factor)));
+double NFmiTempView::CalcRelativeTextLineHeight(int fontSizeInPixels, double heightFactor)
+{
+	int usedFontSizeInPixels = std::max(1, fontSizeInPixels);
+	return itsToolBox->SY(boost::math::iround(usedFontSizeInPixels * heightFactor));
 }
 
-void NFmiTempView::DrawNextLineToIndexView(NFmiText &theText, const NFmiString &theStr, NFmiPoint &theTextPoint, double factor, bool moveFirst, bool addToString)
+void NFmiTempView::MoveToNextLine(double relativeLineHeight, NFmiPoint& theTextPoint)
+{ 
+	theTextPoint.Y(theTextPoint.Y() + relativeLineHeight);
+}
+
+void NFmiTempView::DrawNextLineToIndexView(double relativeLineHeight, NFmiText &theText, const NFmiString &theStr, NFmiPoint &theTextPoint, bool moveFirst, bool addToString)
 {
 	if(addToString)
 		itsSoundingIndexStr += theStr + "\n";
 	if(moveFirst)
-		MoveToNextLine(theTextPoint, factor);
+		MoveToNextLine(relativeLineHeight, theTextPoint);
 	theText.SetRelativeRect(NFmiRect(theTextPoint, theTextPoint));
 	theText.SetText(theStr);
 	itsToolBox->Convert(&theText);
@@ -976,135 +984,147 @@ void NFmiTempView::DrawLiftedAirParcel(NFmiSoundingDataOpt1 &theData, FmiLCLCalc
 NFmiPoint NFmiTempView::CalcStabilityIndexStartPoint(void)
 {
 	NFmiPoint p(itsTempViewDataRects.getStabilityIndexSideViewRect().TopLeft());
-	p.X(p.X() + itsToolBox->SX(2)); // siirret‰‰n teksti‰ pikkusen oikealle p‰in
+	p.X(p.X() + ConvertFixedPixelSizeToRelativeWidth(2)); // siirret‰‰n teksti‰ pikkusen oikealle p‰in
 	return p;
 }
 
 void NFmiTempView::DrawTextualSoundingData(void)
 {
-	auto& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-	auto settingsWinReg = mtaTempSystem.GetSoundingViewSettingsFromWindowsRegisty();
-	if(!settingsWinReg.ShowTextualSoundingDataSideView())
-		return;
-
-	itsSoundingIndexStr = ""; // t‰ytyy nollata t‰m‰ teksti, sit‰ p‰ivitet‰‰n aina sitten DrawNextLineToIndexView-metodissa
-	DrawStabilityIndexBackground(itsTempViewDataRects.getTextualSoundingDataSideViewRect());
-
-	// piirret‰‰n vain 1. luotaukseen liittyv‰t indeksit ja ne piirret‰‰n samalla v‰rilla kuin 1. luotaus
-	itsDrawingEnvironment->SetFrameColor(mtaTempSystem.SoundingColor(0));
-	int fontSize = itsTempViewDataRects.getTextualSoundingDataFontSize();
-	if(itsToolBox->GetDC()->IsPrinting())
-		fontSize = boost::math::iround(fontSize * 0.9); // printatessa pit‰‰ fonttia hieman jostain syyst‰ pienent‰‰, koska muuten tekstit eiv‰t mahdu kokonaisuudessaan ruutuun
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize * itsDrawSizeFactor.X(), fontSize * itsDrawSizeFactor.Y()));
-	itsToolBox->SetTextAlignment(kLeft);
-
-	DrawSoundingInTextFormat(itsFirstSoundingData); // printataan 1. piirretyn luotauksen data tekstimuodossa sivu n‰yttˆˆn
+	auto doContinue = DoTextualSideViewSetup(
+		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowTextualSoundingDataSideView(),
+		itsTempViewDataRects.getTextualSoundingDataSideViewRect(),
+		itsTempViewDataRects.getTextualSoundingDataFontSize(),
+		itsTextualSoundingDataNextLineFontHeightFactor,
+		itsTextualSoundingDataRelativeLineHeight);
+	if(doContinue)
+	{
+		// Printataan 1. piirretyn luotauksen data tekstimuodossa sivu n‰yttˆˆn.
+		DrawSoundingInTextFormat(itsFirstSoundingData);
+	}
 }
+
+bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sideViewRect, int fontSize, double fontHeightFactor, double& relativeLineHeightOut)
+{
+	if(!showSideView)
+		return false;
+
+	DrawStabilityIndexBackground(sideViewRect);
+
+	// Laitetaan toolboxin piirtoasetukset kuntoon ennen lopullisen piirto funktion kutsua.
+	// Piirret‰‰n vain 1. luotaukseen liittyv‰t indeksit ja ne piirret‰‰n samalla v‰rilla kuin 1. luotaus
+	itsDrawingEnvironment->SetFrameColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(0));
+	int usedFontSize = fontSize;
+	if(itsToolBox->GetDC()->IsPrinting())
+	{
+		// Printatessa pit‰‰ fonttia hieman jostain syyst‰ pienent‰‰, koska muuten tekstit eiv‰t mahdu kokonaisuudessaan ruutuun
+		usedFontSize = boost::math::iround(usedFontSize * 0.9);
+	}
+	usedFontSize = boost::math::iround(usedFontSize * itsDrawSizeFactor.Y());
+	itsDrawingEnvironment->SetFontSize(NFmiPoint(usedFontSize, usedFontSize));
+	relativeLineHeightOut = CalcRelativeTextLineHeight(usedFontSize, fontHeightFactor);
+	itsToolBox->SetTextAlignment(kLeft);
+	return true;
+}
+
 
 void NFmiTempView::DrawStabilityIndexData(void)
 {
-	auto& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-	auto settingsWinReg = mtaTempSystem.GetSoundingViewSettingsFromWindowsRegisty();
-	if(!settingsWinReg.ShowStabilityIndexSideView())
+	auto doContinue = DoTextualSideViewSetup(
+		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowStabilityIndexSideView(),
+		itsTempViewDataRects.getStabilityIndexSideViewRect(),
+		itsTempViewDataRects.getStabilityIndexFontSize(),
+		itsStabilityIndexNextLineFontHeightFactor,
+		itsStabilityIndexRelativeLineHeight);
+	if(!doContinue)
 		return;
-
-	itsSoundingIndexStr = ""; // t‰ytyy nollata t‰m‰ teksti, sit‰ p‰ivitet‰‰n aina sitten DrawNextLineToIndexView-metodissa
-	DrawStabilityIndexBackground(itsTempViewDataRects.getStabilityIndexSideViewRect());
-
-	// piirret‰‰n vain 1. luotaukseen liittyv‰t indeksit ja ne piirret‰‰n samalla v‰rilla kuin 1. luotaus
-	itsDrawingEnvironment->SetFrameColor(mtaTempSystem.SoundingColor(0));
-	int fontSize = itsTempViewDataRects.getStabilityIndexFontSize();
-	if(itsToolBox->GetDC()->IsPrinting())
-		fontSize = boost::math::iround(fontSize * 0.9); // printatessa pit‰‰ fonttia hieman jostain syyst‰ pienent‰‰, koska muuten tekstit eiv‰t mahdu kokonaisuudessaan ruutuun
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize * itsDrawSizeFactor.X(), fontSize * itsDrawSizeFactor.Y()));
-	itsToolBox->SetTextAlignment(kLeft);
 
 	NFmiPoint p(CalcStabilityIndexStartPoint());
 
 	NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
-
-	DrawNextLineToIndexView(text, ::GetNameText(itsFirstSoundingData), p, 1, false);
-	DrawNextLineToIndexView(text, ::GetLatText(itsFirstSoundingData), p, 1);
-	DrawNextLineToIndexView(text, ::GetLonText(itsFirstSoundingData), p, 1);
-	DrawNextLineToIndexView(text, ::GetElevationText(itsFirstSoundingData, itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary)), p, 1);
+	auto lineH = itsStabilityIndexRelativeLineHeight;
+	DrawNextLineToIndexView(lineH, text, ::GetNameText(itsFirstSoundingData), p, false);
+	DrawNextLineToIndexView(lineH, text, ::GetLatText(itsFirstSoundingData), p);
+	DrawNextLineToIndexView(lineH, text, ::GetLonText(itsFirstSoundingData), p);
+	DrawNextLineToIndexView(lineH, text, ::GetElevationText(itsFirstSoundingData, itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary)), p);
 
 	// pit‰‰ piirt‰‰ tyhj‰‰ alkuun ett‰ saadaan "kursori-arvoille" tilaa, ne piirret‰‰n DrawOverBitmap-kohdassa
-	DrawNextLineToIndexView(text, "Cursor values:", p, 1);
-	DrawNextLineToIndexView(text, "", p, 1); // T ja P tulee t‰h‰n DrawOverBitmap-kohdassa
-	DrawNextLineToIndexView(text, "", p, 1); // Dry ja Moist tulee t‰h‰n DrawOverBitmap-kohdassa
-	DrawNextLineToIndexView(text, "", p, 1); // Mix tulee t‰h‰n DrawOverBitmap-kohdassa
-	DrawNextLineToIndexView(text, "", p, 1);
-	DrawNextLineToIndexView(text, "", p, 1);
-	DrawNextLineToIndexView(text, "-------------", p, 1);
+	DrawNextLineToIndexView(lineH, text, "Cursor values:", p);
+	DrawNextLineToIndexView(lineH, text, "", p); // T ja P tulee t‰h‰n DrawOverBitmap-kohdassa
+	DrawNextLineToIndexView(lineH, text, "", p); // Dry ja Moist tulee t‰h‰n DrawOverBitmap-kohdassa
+	DrawNextLineToIndexView(lineH, text, "", p); // Mix tulee t‰h‰n DrawOverBitmap-kohdassa
+	DrawNextLineToIndexView(lineH, text, "", p);
+	DrawNextLineToIndexView(lineH, text, "", p);
+	DrawNextLineToIndexView(lineH, text, "-------------", p);
 
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcSHOWIndex(), "SHOW", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcLIFTIndex(), "?LIFT", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcKINXIndex(), "KINX", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCTOTIndex(), "CTOT", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcVTOTIndex(), "VTOT", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcTOTLIndex(), "TOTL", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcGDI(), "GDI", 1), p, 1);
-	DrawNextLineToIndexView(text, " ", p, 1);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcSHOWIndex(), "SHOW", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLIFTIndex(), "?LIFT", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcKINXIndex(), "KINX", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCTOTIndex(), "CTOT", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcVTOTIndex(), "VTOT", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcTOTLIndex(), "TOTL", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcGDI(), "GDI", 1), p);
+	DrawNextLineToIndexView(lineH, text, " ", p);
 
-	DrawNextLineToIndexView(text, "-- Surface --", p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalcSurface), "LCL", 0), p, 1);
+	DrawNextLineToIndexView(lineH, text, "-- Surface --", p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalcSurface), "LCL", 0), p);
 	double ELsur = kFloatMissing;
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalcSurface, ELsur), "LFC", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(ELsur, "EL", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcSurface), "CAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcSurface, 3000), "0-3kmCAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalcSurface, -10, -40), "-10-40CAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalcSurface), "CIN", 0), p, 1);
-	DrawNextLineToIndexView(text, " ", p, 1);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalcSurface, ELsur), "LFC", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(ELsur, "EL", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcSurface), "CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcSurface, 3000), "0-3kmCAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalcSurface, -10, -40), "-10-40CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalcSurface), "CIN", 0), p);
+	DrawNextLineToIndexView(lineH, text, " ", p);
 
 
-	DrawNextLineToIndexView(text, "-- 500m mix --", p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalc500m2), "LCL", 0), p, 1);
+	DrawNextLineToIndexView(lineH, text, "-- 500m mix --", p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalc500m2), "LCL", 0), p);
 	double EL500m2 = kFloatMissing;
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalc500m2, EL500m2), "LFC", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(EL500m2, "EL", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalc500m2), "CAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalc500m2, 3000), "0-3kmCAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalc500m2, -10, -40), "-10-40CAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalc500m2), "CIN", 0), p, 1);
-	DrawNextLineToIndexView(text, " ", p, 1);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalc500m2, EL500m2), "LFC", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(EL500m2, "EL", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalc500m2), "CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalc500m2, 3000), "0-3kmCAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalc500m2, -10, -40), "-10-40CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalc500m2), "CIN", 0), p);
+	DrawNextLineToIndexView(lineH, text, " ", p);
 
 
-	DrawNextLineToIndexView(text, "-- Most unstable --", p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalcMostUnstable), "LCL", 0), p, 1);
+	DrawNextLineToIndexView(lineH, text, "-- Most unstable --", p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalcMostUnstable), "LCL", 0), p);
 	double ELunst = kFloatMissing;
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalcMostUnstable, ELunst), "LFC", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(ELunst, "EL", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcMostUnstable), "CAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalcMostUnstable, -10, -40), "-10-40CAPE", 0), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalcMostUnstable), "CIN", 0), p, 1);
-	DrawNextLineToIndexView(text, " ", p, 1);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalcMostUnstable, ELunst), "LFC", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(ELunst, "EL", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcMostUnstable), "CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalcMostUnstable, -10, -40), "-10-40CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalcMostUnstable), "CIN", 0), p);
+	DrawNextLineToIndexView(lineH, text, " ", p);
 
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcBulkShearIndex(0, 6), "0-6km BS", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcBulkShearIndex(0, 1), "0-1km BS", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcSRHIndex(0, 3), "0-3km SRH", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcSRHIndex(0, 1), "0-1km SRH", 1), p, 1);
-	DrawNextLineToIndexView(text, itsFirstSoundingData.Get_U_V_ID_IndexText("L-motion", kLeft), p, 1);
-	DrawNextLineToIndexView(text, itsFirstSoundingData.Get_U_V_ID_IndexText("MeanWind", kCenter), p, 1);
-	DrawNextLineToIndexView(text, itsFirstSoundingData.Get_U_V_ID_IndexText("R-motion", kRight), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcWSatHeightIndex(1500), "WS1500m", 1), p, 1);
-	DrawNextLineToIndexView(text, GetIndexText(itsFirstSoundingData.CalcThetaEDiffIndex(0, 3), "0-3kmThetaE", 1), p, 1);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcBulkShearIndex(0, 6), "0-6km BS", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcBulkShearIndex(0, 1), "0-1km BS", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcSRHIndex(0, 3), "0-3km SRH", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcSRHIndex(0, 1), "0-1km SRH", 1), p);
+	DrawNextLineToIndexView(lineH, text, itsFirstSoundingData.Get_U_V_ID_IndexText("L-motion", kLeft), p);
+	DrawNextLineToIndexView(lineH, text, itsFirstSoundingData.Get_U_V_ID_IndexText("MeanWind", kCenter), p);
+	DrawNextLineToIndexView(lineH, text, itsFirstSoundingData.Get_U_V_ID_IndexText("R-motion", kRight), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcWSatHeightIndex(1500), "WS1500m", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcThetaEDiffIndex(0, 3), "0-3kmThetaE", 1), p);
 }
 
 
-void NFmiTempView::DrawOneLevelStringData(NFmiText &text, NFmiPoint &p, int levelIndex, std::deque<float> &pVec, std::deque<float> &tVec, std::deque<float> &tdVec, std::deque<float> &zVec, std::deque<float> &wsVec, std::deque<float> &wdVec)
+std::string NFmiTempView::MakeTextualSoundingLevelString(int levelIndex, std::deque<float>& pVec, std::deque<float>& tVec, std::deque<float>& tdVec, std::deque<float>& zVec, std::deque<float>& wsVec, std::deque<float>& wdVec)
 {
 	// Jos luotauksesta lˆytyy mik‰ tahansa arvo jostain levelilt‰, piirret‰‰n sen rivin tiedot
 	if(pVec[levelIndex] == kFloatMissing && tVec[levelIndex] == kFloatMissing && zVec[levelIndex] == kFloatMissing && wsVec[levelIndex] == kFloatMissing && wdVec[levelIndex] == kFloatMissing)
-		return; // Luotausdataan voi tulla t‰ysin puuttuvia leveleit‰, skipataan ne!!!
+		return ""; // Luotausdataan voi tulla t‰ysin puuttuvia leveleit‰, skipataan ne!!!
+
 	std::string str = "";
 	str += GetStrValue(pVec[levelIndex], 0, 4);
 	str += " ";
 	str += GetStrValue(tVec[levelIndex], 1, 5);
 	str += " ";
 	float TdValue = tdVec[levelIndex];
-	if(TdValue <= -100)
-		str += GetStrValue(tdVec[levelIndex], 0, 5); // jos kastepiste on
+	if(TdValue <= -100.f)
+		str += GetStrValue(tdVec[levelIndex], 0, 5); // jos kastepiste on alle -100 tiputetaan desimaalit pois, jotta tila riitt‰‰
 	else
 		str += GetStrValue(tdVec[levelIndex], 1, 5);
 	str += " ";
@@ -1113,7 +1133,7 @@ void NFmiTempView::DrawOneLevelStringData(NFmiText &text, NFmiPoint &p, int leve
 	str += GetStrValue(wsVec[levelIndex], 0, 2);
 	str += " ";
 	str += GetStrValue(wdVec[levelIndex], 0, 3);
-	DrawNextLineToIndexView(text, str, p, 0.8);
+	return str;
 }
 
 static NFmiString GetStationsShortName(NFmiSoundingDataOpt1 &theData)
@@ -1131,12 +1151,8 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 	const auto& textualDataRect = itsTempViewDataRects.getTextualSoundingDataSideViewRect();
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &textualDataRect);
 
-    NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    // piirret‰‰n vain 1. luotaukseen liittyv‰t luotaus arvot ja ne piirret‰‰n samalla v‰rilla kuin 1. luotaus
-	itsDrawingEnvironment->SetFrameColor(mtaTempSystem.SoundingColor(0));
-
 	NFmiPoint p(textualDataRect.TopLeft());
-	p.X(p.X() + itsToolBox->SX(2)); // siirret‰‰n teksti‰ pikkusen oikealle p‰in
+	p.X(p.X() + ConvertFixedPixelSizeToRelativeWidth(2)); // siirret‰‰n teksti‰ pikkusen oikealle p‰in
 	std::deque<float> &pVec = theData.GetParamData(kFmiPressure);
 	std::deque<float> &tVec = theData.GetParamData(kFmiTemperature);
 	std::deque<float> &tdVec = theData.GetParamData(kFmiDewPoint);
@@ -1144,27 +1160,118 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 	std::deque<float> &wsVec = theData.GetParamData(kFmiWindSpeedMS);
 	std::deque<float> &wdVec = theData.GetParamData(kFmiWindDirection);
 	NFmiString str(::GetStationsShortName(theData));
-	int fontSize = boost::math::iround(itsTempViewDataRects.getTextualSoundingDataFontSize() * itsDrawSizeFactor.Y());
-	if(itsToolBox->GetDC()->IsPrinting())
-		fontSize = boost::math::iround(fontSize * 0.9); // printatessa pit‰‰ fonttia hieman jostain syyst‰ pienent‰‰, koska muuten tekstit eiv‰t mahdu kokonaisuudessaan ruutuun
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize, fontSize));
 	NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
-	DrawNextLineToIndexView(text, str, p, 0.0); // Ei vied‰ 1. rivi‰ ollenkaan alasp‰in, koska muuten j‰‰ tyhj‰‰ yl‰osaan (en ymm‰rr‰ t‰t‰ kohtaa, jos laitan kommenttiin, rivi siirtyy alas kuitenkin)
+	auto lineH = itsTextualSoundingDataRelativeLineHeight;
+	DrawNextLineToIndexView(lineH, text, str, p, false);
 
 	str = "P    T     Td    Z     WS WD";
-	DrawNextLineToIndexView(text, str, p, 0.8);
+	DrawNextLineToIndexView(lineH, text, str, p);
 
+	auto soundingDataLevelStrings = MakeSoundingDataLevelStrings(theData);
+	DrawWantedTextualSoundingDataLevels(text, p, soundingDataLevelStrings, lineH);
+}
+
+void NFmiTempView::DrawSimpleLineWithGdiplus(const NFmiTempLineInfo& lineInfo, const NFmiPoint& relativeP1, const NFmiPoint& relativeP2, bool fixEndPixelX, bool fixEndPixelY)
+{
+	auto gdiplusP1 = CtrlView::Relative2GdiplusPoint(itsToolBox, relativeP1);
+	auto gdiplusP2 = CtrlView::Relative2GdiplusPoint(itsToolBox, relativeP2);
+	CtrlView::DrawLine(*itsGdiPlusGraphics,
+		boost::math::iround(gdiplusP1.X),
+		boost::math::iround(gdiplusP1.Y),
+		boost::math::iround(gdiplusP2.X - (fixEndPixelX ? 1. : 0.)),
+		boost::math::iround(gdiplusP2.Y - (fixEndPixelY ? 1. : 0.)),
+		lineInfo.Color(),
+		float(lineInfo.Thickness()));
+}
+
+void NFmiTempView::DrawTextualSideViewScrollingVisuals(NFmiPoint& p, double relativeLineHeight, int totalSoundingRows, int fullVisibleRows, int startingRowIndex, bool drawUpwardSounding)
+{
+	// Piirret‰‰n vaakaviiva joka erottaa otsikko osion ja itse tekstidatarivit.
+	// Huom! Tekstirivin piirto systeemin hankaluuden takia, t‰ss‰ pit‰‰ l‰htˆkorkeuteen lis‰t‰ reilu 1 rivi,
+	// koska seuraavaa tekstirivi‰ piirrett‰ess‰ rivin korkeus lis‰t‰‰n ennen piirtoa.
+	auto dividerLineRelativeHeight = p.Y() + (relativeLineHeight * 1.1);
+
+	NFmiTempLineInfo basicLineInfo; // oletusarvot ok: musta, 1 [pix], solid
+	const auto& textualRect = itsTempViewDataRects.getTextualSoundingDataSideViewRect();
+	// Piirr‰ vaaka legendan jakoviiva
+	NFmiPoint horP1(textualRect.Left(), dividerLineRelativeHeight);
+	NFmiPoint horP2(textualRect.Right(), dividerLineRelativeHeight);
+	DrawSimpleLineWithGdiplus(basicLineInfo, horP1, horP2, true, false);
+	// Piirr‰ scrolli hissin pystyjakoviiva
+	auto posX = textualRect.Right() - ConvertFixedPixelSizeToRelativeWidth(5);
+	NFmiPoint vertP1(posX, dividerLineRelativeHeight);
+	NFmiPoint vertP2(posX, textualRect.Bottom());
+	DrawSimpleLineWithGdiplus(basicLineInfo, vertP1, vertP2, false, true);
+	// Piirr‰ vaaleanharmaa scrollialue laatikko
+	auto scrollAreaRelativeWidth = ConvertFixedPixelSizeToRelativeWidth(4);
+	auto scrollAreaRect = itsTempViewScrollingData.calcScrollAreaRect(dividerLineRelativeHeight, scrollAreaRelativeWidth, textualRect, totalSoundingRows, fullVisibleRows, startingRowIndex);
+	NFmiDrawingEnvironment filledRectEnvi;
+	filledRectEnvi.SetFillColor(NFmiColor(0.7f, 0.7f, 0.7f));
+	filledRectEnvi.EnableFill();
+	filledRectEnvi.DisableFrame();
+	NFmiRectangle filledRect(scrollAreaRect, nullptr, &filledRectEnvi);
+	itsToolBox->Convert(&filledRect);
+}
+
+void NFmiTempView::DrawWantedTextualSoundingDataLevels(NFmiText& text, NFmiPoint& p, const std::vector<std::string>& levelStrings, double relativeLineHeight)
+{
+	auto totalTextRowCount = CalcSideViewTextRowCount(itsTempViewDataRects.getTextualSoundingDataSideViewRect(), p, relativeLineHeight, true);
+	if(totalTextRowCount > 0)
+	{
+		auto totalSoundingRows = static_cast<int>(levelStrings.size());
+		auto fullVisibleRows = static_cast<int>(totalTextRowCount);
+		auto drawUpwardSounding = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTextUpward();
+		auto startingRowIndex = itsTempViewScrollingData.calcActualScrollingIndex(totalSoundingRows, fullVisibleRows, drawUpwardSounding);
+		if(totalSoundingRows > fullVisibleRows)
+		{  // piirret‰‰n scrollaus-hissi visuaalit vain jos niille on tarvetta
+			DrawTextualSideViewScrollingVisuals(p, relativeLineHeight, totalSoundingRows, fullVisibleRows, startingRowIndex, drawUpwardSounding);
+		}
+		int counter = 0;
+		for(auto rowIndex = startingRowIndex; rowIndex < totalSoundingRows; rowIndex++)
+		{
+			DrawNextLineToIndexView(relativeLineHeight, text, levelStrings[rowIndex], p);
+			counter++;
+			if(counter > fullVisibleRows)
+				break;
+		}
+	}
+}
+
+double NFmiTempView::CalcSideViewTextRowCount(const NFmiRect& viewRect, const NFmiPoint& currentRowCursor, double relativeTextRowHeight, bool advanceBeforeDraw)
+{
+	double usableHeight = viewRect.Bottom() - currentRowCursor.Y();
+	auto rowCount = usableHeight / relativeTextRowHeight;
+	if(advanceBeforeDraw)
+		rowCount--;
+	return rowCount;
+}
+
+std::vector<std::string> NFmiTempView::MakeSoundingDataLevelStrings(NFmiSoundingDataOpt1& theData)
+{
+	std::deque<float>& pVec = theData.GetParamData(kFmiPressure);
+	std::deque<float>& tVec = theData.GetParamData(kFmiTemperature);
+	std::deque<float>& tdVec = theData.GetParamData(kFmiDewPoint);
+	std::deque<float>& zVec = theData.GetParamData(kFmiGeopHeight);
+	std::deque<float>& wsVec = theData.GetParamData(kFmiWindSpeedMS);
+	std::deque<float>& wdVec = theData.GetParamData(kFmiWindDirection);
 	int ssize = static_cast<int>(pVec.size());
-    if(mtaTempSystem.GetSoundingViewSettingsFromWindowsRegisty().SoundingTextUpward())
-    {
-        for(int i = ssize - 1; i >= 0; i--)
-            DrawOneLevelStringData(text, p, i, pVec, tVec, tdVec, zVec, wsVec, wdVec);
-    }
-    else
-    {
-	    for(int i=0; i < ssize; i++)
-            DrawOneLevelStringData(text, p, i, pVec, tVec, tdVec, zVec, wsVec, wdVec);
-    }
+	std::vector<std::string> levels;
+	auto drawUpwardSounding = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTextUpward();
+	if(drawUpwardSounding)
+	{
+		for(int i = ssize - 1; i >= 0; i--)
+			levels.push_back(MakeTextualSoundingLevelString(i, pVec, tVec, tdVec, zVec, wsVec, wdVec));
+	}
+	else
+	{
+		for(int i = 0; i < ssize; i++)
+			levels.push_back(MakeTextualSoundingLevelString(i, pVec, tVec, tdVec, zVec, wsVec, wdVec));
+	}
+
+	// Tyhj‰ level stringit pit‰‰ viel‰ lopuksi poistaa
+	levels.erase(std::remove_if(levels.begin(), levels.end(), [](const auto& levelStr) {return levelStr.empty(); }), levels.end());
+
+	return levels;
 }
 
 // Haluan ett‰ vaaka-asteikon arvot eiv‰t mene varsinkaan oikealla olevien sivuosioiden alueelle,
@@ -1294,6 +1401,19 @@ static double CalcHelpScaleUnitStringYPos(const NFmiRect &theRect, double lastLa
 	return unitStringY;
 }
 
+// Konvertoi halutun vakio pikseli m‰‰r‰n joko x- tai y-suuntaiseen suhteelliseen pituuteen.
+// Laskuissa otetaan huomioon printtauksen koukerot, eli vakio pikseli pituus 
+// kerrotaan itsDrawSizeFactor:illa.
+double NFmiTempView::ConvertFixedPixelSizeToRelativeWidth(long fixedPixelSize)
+{
+	return itsToolBox->SX(boost::math::iround(fixedPixelSize * itsDrawSizeFactor.X()));
+}
+
+double NFmiTempView::ConvertFixedPixelSizeToRelativeHeight(long fixedPixelSize)
+{
+	return itsToolBox->SY(boost::math::iround(fixedPixelSize * itsDrawSizeFactor.Y()));
+}
+
 void NFmiTempView::DrawFlightLevelScale(void)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
@@ -1307,7 +1427,7 @@ void NFmiTempView::DrawFlightLevelScale(void)
 		if(mtaTempSystem.ShowKilometerScale())
 			extraOffsetInPixels = static_cast<long>(labelInfo.FontSize()*1.6); // siirret‰‰n asteikkoa, jos myˆs kilometri asteikko on n‰kyviss‰
 		labelInfo.StartPointPixelOffSet(NFmiPoint(-6 * itsDrawSizeFactor.X(), -labelInfo.FontSize()/2));
-		double extraOffset = itsToolBox->SX(extraOffsetInPixels);
+		double extraOffset = ConvertFixedPixelSizeToRelativeWidth(extraOffsetInPixels);
 		labelInfo.ClipWithDataRect(true);
 		labelInfo.TextAlignment(kRight);
         NFmiTempLineInfo lineInfo;
@@ -1315,7 +1435,7 @@ void NFmiTempView::DrawFlightLevelScale(void)
 		lineInfo.Color(NFmiColor(0.f, 0.f, 0.f)); // t‰m‰ on myˆs label v‰ri
 		lineInfo.Thickness(boost::math::iround(2 * itsDrawSizeFactor.X()));
 
-		double tickMarkWidth = itsToolBox->SX(boost::math::iround(6 * itsDrawSizeFactor.X()));
+		double tickMarkWidth = ConvertFixedPixelSizeToRelativeWidth(6);
 		double unitStringYoffset = itsToolBox->SY(labelInfo.FontSize());
 		int trueLineWidth = boost::math::iround(1 * itsDrawSizeFactor.X());
 		SetHelpLineDrawingAttributes(itsToolBox, &envi, labelInfo, lineInfo, trueLineWidth, true);
@@ -1372,7 +1492,7 @@ void NFmiTempView::DrawHeightScale(void)
 		lineInfo.DrawLine(false);
 		lineInfo.Color(NFmiColor(0.f, 0.f, 0.f)); // t‰m‰ on myˆs label v‰ri
 
-		double tickMarkWidth = itsToolBox->SX(boost::math::iround(6 * itsDrawSizeFactor.X()));
+		double tickMarkWidth = ConvertFixedPixelSizeToRelativeWidth(6);
 		double unitStringYoffset = itsToolBox->SY(labelInfo.FontSize());
 		int trueLineWidth = boost::math::iround(1 * itsDrawSizeFactor.X());
 		SetHelpLineDrawingAttributes(itsToolBox, itsDrawingEnvironment, labelInfo, lineInfo, trueLineWidth, true);
@@ -1421,8 +1541,8 @@ void NFmiTempView::DrawCondensationTrailRHValues(NFmiSoundingDataOpt1 &theData, 
 		envi.SetFontSize(NFmiPoint(fontSize, fontSize));
         NFmiTempLabelInfo labelInfo;
 		labelInfo.DrawLabelText(true);
-		double xShift = itsToolBox->SX(boost::math::iround(8 * itsDrawSizeFactor.Y()));
-		double yShift = itsToolBox->SX(boost::math::iround(fontSize/2.));
+		double xShift = ConvertFixedPixelSizeToRelativeWidth(8);
+		double yShift = ConvertFixedPixelSizeToRelativeHeight(boost::math::iround(fontSize/2.));
 		NFmiPoint moveLabelRelatively(xShift, -yShift);
 		NFmiString unitStr("%");
 		double lastY = -99;
@@ -1684,8 +1804,8 @@ void NFmiTempView::DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawS
 	}
 	if(theHelpDotPixelSize) // jos apu laatikko koko on suurempi kuin 0, piirret‰‰n aloituspisteeseen halutun kokoinen laatikko
 	{
-		double width = itsToolBox->SX(theHelpDotPixelSize);
-		double height = itsToolBox->SY(theHelpDotPixelSize);
+		double width = ConvertFixedPixelSizeToRelativeWidth(theHelpDotPixelSize);
+		double height = ConvertFixedPixelSizeToRelativeHeight(theHelpDotPixelSize);
 		NFmiRect rec(0,0,width, height);
 		rec.Center(p2);
 		NFmiRectangle rec2(rec, 0, theEnvi);
@@ -1794,6 +1914,21 @@ static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentIn
     return usedSoundingTime;
 }
 
+void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theIndex)
+{
+	// Tarkastelut tehd‰‰n vain 1. sounding datalle.
+	if(theIndex == 0)
+	{
+		NFmiMetTime dataOriginTime = NFmiMetTime::gMissingTime;
+		if(theInfo)
+			dataOriginTime = theInfo->OriginTime();
+
+		SoundingInformation soundingInformation(theTempInfo.Time(), dataOriginTime, theTempInfo.Latlon(), theProducer);
+		if(itsTempViewScrollingData.isSoundingChanged(soundingInformation))
+			itsTempViewScrollingData.resetRelativeScrollingIndex();
+	}
+}
+
 void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto usedTempInfo(theTempInfo);
@@ -1809,6 +1944,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 		if(groundDataInfo == 0)
 			groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kAnalyzeData);  // t‰m‰ on siksi ett‰ LAPS data on nyky‰‰n analyysi dataa, pit‰‰ korjata t‰m‰ infoorganizer sotku joskus kunnolla!!!
 
+		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theIndex);
 		NFmiSoundingDataOpt1 sounding;
 		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
@@ -1891,6 +2027,22 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
             mtaTempSystem.PreviousAnimationStep();
 		return true;
 	}
+	else if(itsTempViewDataRects.getTextualSoundingDataSideViewRect().IsInside(thePlace))
+	{
+		auto drawUpward = mtaTempSystem.GetSoundingViewSettingsFromWindowsRegisty().SoundingTextUpward();
+		int scrollValue = 3; // pelkk‰ rulla
+		if(theKey & kCtrlKey)
+		{
+			scrollValue = 20; // rulla + ctrl
+			if(theKey & kShiftKey)
+				scrollValue = 100; // rulla + ctrl + shift
+		}
+
+		if(theDelta > 0)
+			return itsTempViewScrollingData.doScrolling(-scrollValue, drawUpward);
+		else
+			return itsTempViewScrollingData.doScrolling(scrollValue, drawUpward);
+	}
 	else if(dataRect.Bottom() < thePlace.Y() && dataRect.Left() < thePlace.X())
 	{ // nyt kursori on l‰mpp‰ri asteikolla
 		double change = theDelta < 0 ? 2 : -2;
@@ -1948,7 +2100,7 @@ void NFmiTempView::DrawWindModificationArea(void)
 	NFmiRect windBarbRect(::CalcGeneralWindBarbRect(itsToolBox, windVecSizeInPixels));
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 	double xPos = ::CalcWindBarbXPos(dataRect, windBarbRect, 0); // vain 1. (0:s indeksi) luotausta voi muokata, joten piirret‰‰n siihen liittyv‰ muokkaus alue
-	double width = itsToolBox->SX(boost::math::iround(gWindModificationAreaWidthInPixels * itsDrawSizeFactor.X()));
+	double width = ConvertFixedPixelSizeToRelativeWidth(gWindModificationAreaWidthInPixels);
 
 	DrawLine(NFmiPoint(xPos-width/2., dataRect.Top()), NFmiPoint(xPos-width/2., dataRect.Bottom()), drawSpecialLines, trueLineWidth, true, 0, &envi);
 	DrawLine(NFmiPoint(xPos+width/2., dataRect.Top()), NFmiPoint(xPos+width/2., dataRect.Bottom()), drawSpecialLines, trueLineWidth, true, 0, &envi);
@@ -1958,7 +2110,7 @@ bool NFmiTempView::ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long 
 {
 	if(itsFirstSoundinWindBarbXPos != kFloatMissing)
 	{
-		double width = itsToolBox->SX(gWindModificationAreaWidthInPixels);
+		double width = ConvertFixedPixelSizeToRelativeWidth(gWindModificationAreaWidthInPixels);
 		const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 		NFmiRect windModRect(itsFirstSoundinWindBarbXPos - width/2., dataRect.Top(), itsFirstSoundinWindBarbXPos + width/2., dataRect.Bottom());
 		if(windModRect.IsInside(thePlace))
@@ -2056,9 +2208,9 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 					markEnvi.SetFrameColor(markerFrameColor);
 					markEnvi.SetFillColor(markerFillColor);
 					markEnvi.EnableFill();
-					long arrowHeadSize = boost::math::iround(3 * itsDrawSizeFactor.X());
-					double markWidth = itsToolBox->SX(arrowHeadSize);
-					double markHeight = itsToolBox->SY(arrowHeadSize);
+					long arrowHeadPixelSize = 3;
+					double markWidth = ConvertFixedPixelSizeToRelativeWidth(arrowHeadPixelSize);
+					double markHeight = ConvertFixedPixelSizeToRelativeHeight(arrowHeadPixelSize);
 					NFmiPoint scale(markWidth, markHeight);
 
 					// piirr‰ nuoli (0, 0) -> (u_upwind, v_upwind) ja laita label "upwind"
@@ -2199,8 +2351,8 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 		NFmiLine line2(centerTop, centerBottom, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&line2);
 
-		double tickHeightRel = itsToolBox->SY(boost::math::iround(3 * itsDrawSizeFactor.Y()));
-		double tickWidthRel = itsToolBox->SX(boost::math::iround(3 * itsDrawSizeFactor.X()));
+		double tickHeightRel = ConvertFixedPixelSizeToRelativeHeight(3);
+		double tickWidthRel = ConvertFixedPixelSizeToRelativeWidth(3);
 
 		itsToolBox->SetTextAlignment(kCenter);
 		for(double x = -hodografScaleMaxValue; x <= hodografScaleMaxValue; x += 10)
@@ -2304,8 +2456,8 @@ void NFmiTempView::DrawHodografTextWithMarker(const std::string &theText, float 
 	fontEnvi.SetFontSize(NFmiPoint(theFontSize * itsDrawSizeFactor.X(), theFontSize * itsDrawSizeFactor.Y()));
 	itsToolBox->SetTextAlignment(theTextAlignment);
 
-	double markWidth = itsToolBox->SX(boost::math::iround(theMarkerSizeInPixel * itsDrawSizeFactor.X()));
-	double markHeight = itsToolBox->SY(boost::math::iround(theMarkerSizeInPixel * itsDrawSizeFactor.Y()));
+	double markWidth = ConvertFixedPixelSizeToRelativeWidth(theMarkerSizeInPixel);
+	double markHeight = ConvertFixedPixelSizeToRelativeHeight(theMarkerSizeInPixel);
 	NFmiRect markRect(0,0,markWidth,markHeight);
 	if(u != kFloatMissing && v != kFloatMissing)
 	{ // piirret‰‰n merkki
@@ -2517,7 +2669,7 @@ void NFmiTempView::DrawLCL(NFmiSoundingDataOpt1 &theData, int theIndex, FmiLCLCa
 			{
 				double x = pt2x(pLCL, T);
 				double y = p2y(pLCL);
-				double lclLineLength = itsToolBox->SX(30);
+				double lclLineLength = ConvertFixedPixelSizeToRelativeWidth(30);
 				NFmiPoint p1(x - lclLineLength/2., y);
 				NFmiPoint p2(x + lclLineLength/2., y);
 				NFmiPoint p3(x + lclLineLength/1.8, y);
@@ -2959,7 +3111,7 @@ void NFmiTempView::ResetScales(void)
 
 void NFmiTempView::DrawAnimationControls(void)
 {
-	double moveX = itsToolBox->SX(boost::math::iround(2 * itsDrawSizeFactor.X()));
+	double moveX = ConvertFixedPixelSizeToRelativeWidth(2);
 	NFmiDrawingEnvironment envi;
 	envi.SetFontSize(NFmiPoint(18 * itsDrawSizeFactor.Y(), 18 * itsDrawSizeFactor.Y()));
 	envi.EnableFill();
@@ -3027,14 +3179,15 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 		NFmiPoint p(CalcStabilityIndexStartPoint());
 
 		NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
+		auto lineH = itsStabilityIndexRelativeLineHeight;
 		for(int i=0; i<4; i++)
-			DrawNextLineToIndexView(text, "", p, 1, true, false); // n‰it‰ ei lis‰t‰ soundingIndex-stringiin
+			DrawNextLineToIndexView(lineH, text, "", p, true, false); // n‰it‰ ei lis‰t‰ soundingIndex-stringiin
 
-		DrawNextLineToIndexView(text, GetIndexText(temperature, "T", 1), p, 1, true, false);
-		DrawNextLineToIndexView(text, GetIndexText(pressure, "P", 1), p, 1, true, false);
-		DrawNextLineToIndexView(text, GetIndexText(Tpot, "dry", 1), p, 1, true, false);
-		DrawNextLineToIndexView(text, GetIndexText(moistT, "moist", 1), p, 1, true, false);
-		DrawNextLineToIndexView(text, GetIndexText(W, "mix", 1), p, 1, true, false);
+		DrawNextLineToIndexView(lineH, text, GetIndexText(temperature, "T", 1), p, true, false);
+		DrawNextLineToIndexView(lineH, text, GetIndexText(pressure, "P", 1), p, true, false);
+		DrawNextLineToIndexView(lineH, text, GetIndexText(Tpot, "dry", 1), p, true, false);
+		DrawNextLineToIndexView(lineH, text, GetIndexText(moistT, "moist", 1), p, true, false);
+		DrawNextLineToIndexView(lineH, text, GetIndexText(W, "mix", 1), p, true, false);
 	}
 
 	if(dataRect.IsInside(thePlace))
