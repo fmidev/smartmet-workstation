@@ -1,4 +1,5 @@
 #include "GdiplusBitmapParser.h"
+#include "catlog/catlog.h"
 
 #include <Objidl.h>
 
@@ -102,6 +103,13 @@ namespace BitmapHandler
         }
         else
         {
+            std::string errorMessage = "Retrieved Wms image was invalid, it contains possible error message: ";
+            const size_t maxCharactersTakenToLogMessage = 2000;
+            if(bitmapAsString.size() <= maxCharactersTakenToLogMessage)
+                errorMessage += bitmapAsString;
+             else
+                errorMessage += std::string(bitmapAsString.begin(), bitmapAsString.begin() + maxCharactersTakenToLogMessage);
+            CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
             return nullptr;
         }
     }

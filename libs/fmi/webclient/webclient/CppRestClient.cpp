@@ -36,7 +36,7 @@ namespace Web
     {
     }
 
-    std::future<std::string> CppRestClient::queryFor(const std::string& domain, const std::string& request) const
+    std::future<std::string> CppRestClient::queryFor(const std::string& domain, const std::string& request, int timeoutInSeconds) const
     {
         ::makeTraceLevelRequestLogging(domain, request);
             return bManager_->addTask(
@@ -44,7 +44,7 @@ namespace Web
                 domain = domain,
                 request = request]
                     {
-                            auto response = tmp(domain, request);
+                            auto response = tmp(domain, request, timeoutInSeconds);
                             auto bodyStream = response.body();
                             Concurrency::streams::container_buffer<std::string> inStringBuffer;
                             bodyStream.read_to_end(inStringBuffer).wait();
@@ -52,9 +52,9 @@ namespace Web
                     });
     }
 
-    web::http::http_response CppRestClient::tmp(const std::string& domain, const std::string& request) const
+    web::http::http_response CppRestClient::tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const
     {
-        auto client = web::http::client::http_client(to_string_t(domain), createConfig(domain));
+        auto client = web::http::client::http_client(to_string_t(domain), createConfig(domain, timeoutInSeconds));
         auto responseFut = client.request(web::http::methods::GET, to_string_t(request), tokenSource_.get_token());
         try
         {
@@ -65,7 +65,7 @@ namespace Web
             if(!needsProxy(domain))
             {
                 useProxy_.insert(domain);
-                return tmp(domain, request);
+                return tmp(domain, request, timeoutInSeconds);
             }
             else
             {
@@ -84,7 +84,7 @@ namespace Web
         return useProxy_.find(domain) != useProxy_.cend();
     }
 
-    web::http::client::http_client_config CppRestClient::createConfig(const std::string& domain) const
+    web::http::client::http_client_config CppRestClient::createConfig(const std::string& domain, int timeoutInSeconds) const
     {
         auto client_config = web::http::client::http_client_config{};
 		client_config.set_validate_certificates(false);
@@ -92,6 +92,7 @@ namespace Web
         {
             client_config.set_proxy(web::web_proxy(to_string_t(proxyUrl_)));
         }
+        client_config.set_timeout(std::chrono::seconds(timeoutInSeconds));
         return client_config;
     }
 }

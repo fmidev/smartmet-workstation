@@ -63,6 +63,9 @@ namespace Wms
 
         int backgroundBackwardAmount;
         int backgroundForwardAmount;
+        int imageTimeoutInSeconds;
+        int legendTimeoutInSeconds;
+        int getCapabilitiesTimeoutInSeconds;
 
         std::chrono::seconds intervalToPollGetCapabilities;
 
