@@ -307,7 +307,7 @@ namespace HakeMessage
         {
             std::string kahaRequestString = "/mobile/interfaces/crowd/map.php?smartmet=1&version=2.3.7";
             kahaRequestString += ::makeKahaTimeRangeString(7 * 24);
-            auto jsonFut = client_->queryFor("https://m.fmi.fi", kahaRequestString);
+            auto jsonFut = client_->queryFor("https://m.fmi.fi", kahaRequestString, 30);
 
             jsonFut.wait();
 

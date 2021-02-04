@@ -33,13 +33,17 @@ namespace Wms
         std::unique_ptr<BitmapHandler::BitmapParser> parser,
         std::unique_ptr<Web::Client> client,
         std::shared_ptr<cppback::BackgroundManager> bManager,
-        std::unique_ptr<QueryBuilder> qb
+        std::unique_ptr<QueryBuilder> qb,
+        int imgTimeoutInSeconds,
+        int lgndTimeoutInSeconds
     )
         : cache_{ std::move(cache) }
         , bitmapParser_{ std::move(parser) }
         , client_{ std::move(client) }
         , bManager_{ bManager }
         , qb_{ std::move(qb) }
+        , imageTimeoutInSeconds(imgTimeoutInSeconds)
+        , legendTimeoutInSeconds(lgndTimeoutInSeconds)
     {}
 
     void WmsClient::setImageLoadedCallback(std::function<void()> imageLoadedCallback)
@@ -99,7 +103,7 @@ namespace Wms
     {
         try
         {
-            auto response = client_->queryFor(domain, request).share();
+            auto response = client_->queryFor(domain, request, legendTimeoutInSeconds).share();
             return parseResponse(response);
         }
         catch(const std::exception&)
@@ -127,7 +131,7 @@ namespace Wms
     {
         try
         {
-            auto response = client_->queryFor(toBaseUri(query), toRequest(query)).share();
+            auto response = client_->queryFor(toBaseUri(query), toRequest(query), imageTimeoutInSeconds).share();
             if(imageLoadedCallback_)
             {
                 return asyncWait(query, response);

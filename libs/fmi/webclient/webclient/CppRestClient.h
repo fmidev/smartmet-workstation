@@ -23,11 +23,11 @@ namespace Web
         mutable std::set<std::string> useProxy_;
     public:
         CppRestClient(std::shared_ptr<cppback::BackgroundManager> bManager, std::string proxyUrl = "");
-        std::future<std::string> queryFor(const std::string& domain, const std::string& query) const final;
+        std::future<std::string> queryFor(const std::string& domain, const std::string& query, int timeoutInSeconds) const final;
         void cancel() const final;
     private:
-       web::http::http_response tmp(const std::string& domain, const std::string& request) const;
-       web::http::client::http_client_config createConfig(const std::string& domain) const;
+       web::http::http_response tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const;
+       web::http::client::http_client_config createConfig(const std::string& domain, int timeoutInSeconds) const;
        bool needsProxy(const std::string& domain) const;
     };
 }
