@@ -2,6 +2,7 @@
 #include "CtrlViewDocumentInterface.h"
 #include "NFmiMTATempSystem.h"
 #include "NFmiToolBox.h"
+#include "NFmiText.h"
 #include "catlog/catlog.h"
 
 namespace
@@ -104,6 +105,8 @@ double NFmiTempViewDataRects::calculateLeftRelativeEdgeOfSideView(double rightEd
 	return leftEdge;
 }
 
+const std::string g_maximumSampleStringForIndex = "--Most unstable--";
+
 // 1. Laske stabilityIndexSideViewRect_, se on kaikkein oikeanpuoleisin osio.
 //    - Se on aina koko piirtoalueen oikeassa reunassa.
 //    - Jos se on piilossa, tee alueen leveydestä 0, mutta tee siitä oikean alueen korkuinen ja 
@@ -118,11 +121,13 @@ NFmiRect NFmiTempViewDataRects::calcStabilityIndexRect()
 	int stabilityIndexSideViewTextWidthCount = 19; 
 	double left = calculateLeftRelativeEdgeOfSideView(right, 
 		settings.ShowStabilityIndexSideView(), 
-		stabilityIndexSideViewTextWidthCount, 
+		stabilityIndexSideViewTextWidthCount,
 		stabilityIndexFontSize_);
 	NFmiRect rec(left, top, right, bottom);
 	return rec;
 }
+
+const std::string g_maximumSampleStringForTextual = "203  -61.4 -74.0 10030 15 351";
 
 // 2. Laske textualSoundingDataSideViewRect_.
 //    - Se on stability-rectin vasemmassa reunassa.
@@ -149,25 +154,31 @@ NFmiRect NFmiTempViewDataRects::calcTextualSoundingDataRect(const NFmiRect& righ
 	return rec;
 }
 
-// 3. Animaatio rect on näkyvissä vain jos stability-rect ja/tai textual-rect ovat näkyvissä.
-//    - Se on niistä oikeanpuoleisemman alueen (stability-rect on 1. prioriteetti) ala-reunassa ja sen levyinen.
-//    - Animaatio-rect tulee stability/textual-rectin päälle alareunaan, ei siis sen alapuolelle.
+// 3. Animaatio rect on näkyvissä vain jos jompi kumpi stabilityIndex/textualSounding sivuosioista on näkyvissä.
+//    - Se tulee niistä oikeanpuoleisemman alueen alle ja on sen levyinen.
+//    - Animaatio-rect osiot tulevat oikeanpuoleisimman-rectin alle alareunaan ja siksi myös sitä perus rect:iä
+//      pitää säätää, jonka alle nämä tulevat.
 void NFmiTempViewDataRects::makeAnimationControlRects()
 {
 	auto& settings = ctrlViewDocumentInterface_->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty();
-	if(settings.ShowStabilityIndexSideView() || settings.ShowTextualSoundingDataSideView())
+	auto showStabilitySV = settings.ShowStabilityIndexSideView();
+	auto showTextualSV = settings.ShowTextualSoundingDataSideView();
+	if(showStabilitySV || showTextualSV)
 	{
-		NFmiRect usedBaseRect = stabilityIndexSideViewRect_;
-		if(!settings.ShowStabilityIndexSideView())
+		NFmiRect *usedBaseRect = &stabilityIndexSideViewRect_;
+		if(!showStabilitySV)
 		{
-			usedBaseRect = textualSoundingDataSideViewRect_;
+			usedBaseRect = &textualSoundingDataSideViewRect_;
 		}
 		int buttonHeight = boost::math::iround(30 * drawSizeFactor_.Y());
 		double buttonHeights = usedToolBox_->SY(buttonHeight);
-		double animButtonWidth = usedBaseRect.Width() * 0.66;
-		double animStepButtonWidth = usedBaseRect.Width() - animButtonWidth;
-		animationButtonRect_ = NFmiRect(usedBaseRect.Left(), usedBaseRect.Bottom() - buttonHeights, usedBaseRect.Left() + animButtonWidth, usedBaseRect.Bottom());
-		animationStepButtonRect_ = NFmiRect(usedBaseRect.Right() - animStepButtonWidth, usedBaseRect.Bottom() - buttonHeights, usedBaseRect.Right(), usedBaseRect.Bottom());
+		double animButtonWidth = usedBaseRect->Width() * 0.66;
+		double animStepButtonWidth = usedBaseRect->Width() - animButtonWidth;
+		animationButtonRect_ = NFmiRect(usedBaseRect->Left(), usedBaseRect->Bottom() - buttonHeights, usedBaseRect->Left() + animButtonWidth, usedBaseRect->Bottom());
+		animationStepButtonRect_ = NFmiRect(usedBaseRect->Right() - animStepButtonWidth, usedBaseRect->Bottom() - buttonHeights, usedBaseRect->Right(), usedBaseRect->Bottom());
+		// Laitetaan originaali baseRect vielä animaatio-laatikon päälle, jotta ne eivät ole päällekkäin
+		auto verticalMargin = usedToolBox_->SY(boost::math::iround(1 * drawSizeFactor_.Y()));
+		usedBaseRect->Bottom(animationButtonRect_.Top() - verticalMargin);
 	}
 	else
 	{
