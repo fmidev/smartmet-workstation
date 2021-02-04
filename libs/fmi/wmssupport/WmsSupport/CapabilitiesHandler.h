@@ -41,6 +41,7 @@ namespace Wms
         std::unordered_map<int, Wms::DynamicServerSetup> servers_;
         std::string proxyUrl_;
         std::chrono::seconds intervalToPollGetCapabilities_;
+        int getCapabilitiesTimeoutInSeconds;
     public:
         CapabilitiesHandler(
             std::unique_ptr<Web::Client> client,
@@ -49,8 +50,9 @@ namespace Wms
             std::string proxyUrl,
             std::unordered_map<int, DynamicServerSetup> servers,
             std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback,
-            std::function<bool(long, const std::string&)> cacheHitCallback
-        );
+            std::function<bool(long, const std::string&)> cacheHitCallback,
+            int capabilitiesTimeoutInSeconds
+            );
 
         void startFetchingCapabilitiesInBackground();
 		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;

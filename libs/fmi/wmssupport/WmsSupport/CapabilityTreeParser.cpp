@@ -2,6 +2,7 @@
 #include "wmssupport/QueryBuilder.h"
 #include "NFmiParameterName.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
+#include "catlog/catlog.h"
 
 #include <regex>
 #include <algorithm>
@@ -472,6 +473,25 @@ namespace Wms
 		addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);	
 	}
 
+	void traceLogLayerInfo(const LayerInfo& layerInfo, std::string serverName)
+	{
+		if(CatLog::logLevel() <= CatLog::Severity::Debug)
+		{
+			if(layerInfo.endTime.DifferenceInHours(layerInfo.startTime) <= 3)
+			{
+				std::string logMessage = "Short time-window with ";
+				logMessage += serverName;
+				logMessage += ": layerName = ";
+				logMessage += layerInfo.name;
+				logMessage += " startTime = ";
+				logMessage += layerInfo.startTime.ToStr("YYYY MM.DD. HH:mm:SS");
+				logMessage += " endTime = ";
+				logMessage += layerInfo.endTime.ToStr("YYYY MM.DD. HH:mm:SS");
+				CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+			}
+		}
+	}
+
 	void CapabilityTreeParser::addWithStyles(std::unique_ptr<CapabilityNode>& subTree,
 		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
 		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, std::set<Wms::Style>& styles) const
@@ -509,6 +529,7 @@ namespace Wms
 				layerInfo.endTime = startEnd.second;
 				changedLayers.update(hashedName, layerInfo, timeWindow);
 				hashes[producer_.GetIdent()][hashedName] = layerInfo;
+				traceLogLayerInfo(layerInfo, std::string(producer_.GetName()));
 			}
 		}
 	}
