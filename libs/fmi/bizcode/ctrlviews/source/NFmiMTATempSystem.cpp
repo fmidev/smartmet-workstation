@@ -950,12 +950,12 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 		throw std::runtime_error("NFmiMTATempSystem::Write failed");
 }
 
-// Jos stabiilisuus sivuikkuna on auki, avataan se myös legacy näyttömakroissa, 
-// eli sen prioriteetti on valittu suuremmaksi kuin tekstuaalisen luotausdata sivuikkunan, 
+// Jos textual-sounding sivuikkuna on auki, avataan se myös legacy näyttömakroissa, 
+// eli sen prioriteetti on valittu suuremmaksi kuin stability-index sivuikkunan, 
 // jos molemmat 'teksti' sivuikkunoista ovat auki.
 bool NFmiMTATempSystem::ShowIndexiesViewMacroLegacy() const
 {
-	return itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView();
+	return !itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView();
 }
 
 // Jos jompikumpi tai molemmat 'teksti' sivuikkunoista on auki, on vanhassa systeemissä ShowSideView = true
