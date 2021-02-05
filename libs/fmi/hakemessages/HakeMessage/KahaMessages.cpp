@@ -41,31 +41,7 @@ namespace HakeMessage
 
     void KahaMessages::addMessage(KahaMsg message)
     {
-        auto res = idMap_.find(message.Number());
-        if(res == idMap_.cend() || shouldReplaceOlderMessage(message, res->second))
-        {
-            try
-            {
-                auto jsonFut = client_->queryFor("http://m.fmi.fi", "/mobile/interfaces/crowd/observation.php?id=" + message.Number());
-
-                jsonFut.wait();
-
-                auto json = nlohmann::json::parse(jsonFut.get());
-
-                json = json["observation"];
-                auto res = json.find("answers");
-                if(res != json.cend())
-                {
-                    message.ReasonStr(parseAnswers(*res));
-                }
-                message.TotalMessageStr(UtfConverter::ConvertUtf_8ToString(json.dump(4)));
-                idMap_[message.Number()] = message.SendingTime();
-                messages_.insert(message);
-            }
-            catch(const std::exception&)
-            {
-            }
-        }
+        messages_.insert(message);
     }
 
     const KahaMessages::SetOfKahaMsgs& KahaMessages::peekMessages() const

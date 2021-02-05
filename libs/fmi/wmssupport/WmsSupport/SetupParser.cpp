@@ -145,6 +145,9 @@ namespace Wms
         auto settings = Setup{};
         settings.backgroundBackwardAmount = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::Backward", 1);
         settings.backgroundForwardAmount = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::Forward", 1);
+        settings.imageTimeoutInSeconds = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::ImageTimeoutInSeconds", 60);
+        settings.legendTimeoutInSeconds = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::LegendTimeoutInSeconds", 30);
+        settings.getCapabilitiesTimeoutInSeconds = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::GetCapabilitiesTimeoutInSeconds", 30);
         settings.numberOfCaches = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfCaches", 0);
         settings.numberOfLayersPerCache = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfLayersPerCache", 0);
         settings.proxyUrl = "http://" + NFmiSettings::Optional("SmartMet::Wms2::ProxyUrl", std::string(""));

@@ -22,7 +22,7 @@ namespace Wms
             return pTree;
         }
 
-        std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging, bool doVerboseLogging)
+        std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging, bool doVerboseLogging, int getCapabilitiesTimeoutInSeconds)
         {
             try
             {
@@ -30,7 +30,7 @@ namespace Wms
                 auto requestStr = toRequest(query);
                 if(doLogging)
                     CatLog::logMessage(std::string("fetchCapabilitiesXml Wms request, base-uri: ") + baseUriStr + " , request: " + requestStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
-                auto httpResponseFut = client.queryFor(baseUriStr, requestStr);
+                auto httpResponseFut = client.queryFor(baseUriStr, requestStr, getCapabilitiesTimeoutInSeconds);
                 httpResponseFut.wait();
                 auto responseStr = httpResponseFut.get();
                 if(doLogging)
@@ -63,7 +63,8 @@ namespace Wms
         std::string proxyUrl,
         std::unordered_map<int, DynamicServerSetup> servers,
         std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback,
-        std::function<bool(long, const std::string&)> cacheHitCallback
+        std::function<bool(long, const std::string&)> cacheHitCallback,
+        int capabilitiesTimeoutInSeconds
     )
         : client_(std::move(client))
         , cacheDirtyCallback_(cacheDirtyCallback)
@@ -71,6 +72,7 @@ namespace Wms
         , proxyUrl_{ proxyUrl }
         , servers_{ servers }
         , intervalToPollGetCapabilities_{ intervalToPollGetCapabilities }
+        , getCapabilitiesTimeoutInSeconds{capabilitiesTimeoutInSeconds}
         , cacheHitCallback_{ cacheHitCallback }
     {}
 
@@ -112,7 +114,7 @@ namespace Wms
                     try
                     {
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-						auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging);
+						auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
 
 						changedLayers_.changedLayers.clear();
 

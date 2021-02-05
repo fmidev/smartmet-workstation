@@ -718,7 +718,7 @@ void NFmiStationViewHandler::DrawSelectedMTAModeSoundingPlaces(void)
         return ;
 
     NFmiMTATempSystem &mtaSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    bool soundingViewTimeLock = mtaSystem.SoundingTimeLockWithMapView();
+    bool soundingViewTimeLock = mtaSystem.GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView();
 	const NFmiMTATempSystem::Container &temps = mtaSystem.GetTemps();
 	if(temps.size() > 0)
 	{
@@ -4467,57 +4467,11 @@ std::string KahaUTCTime(const HakeMessage::HakeMsg &msg)
     return str;
 }
 
-void KahaMinutesToPrintableTime(std::string& s)
-{
-    int time = stoi(s);
-    if(time > 60 * 24 * 20) { //month category
-        s = "kuukausi";
-    }
-    else if(time > 60 * 24 * 5) { //week category
-        s = "viikko";
-    }
-    else if(time > 60 * 12) { // day category
-        s = "päivä";
-    }
-    else if(time > 30) { // hour category
-        s = "tunti";
-    }
-    else if(time > 1) {
-        s = "10 min";
-    }
-    else {
-        s = "-";
-    }
-}
-
-std::string KahaTooltipAccuracy(const HakeMessage::HakeMsg &msg)
-{
-    std::string str;
-    std::stringstream strStream;
-    std::string tempStr;
-
-    str = "Aikatiedon tarkkuus: ";
-    std::size_t found = msg.TotalMessageStr().find("accuracy");
-    if(found != std::string::npos)
-    {
-        strStream.str(msg.TotalMessageStr().substr(found + 9));
-        std::getline(strStream, tempStr);
-    }
-    std::string s = std::regex_replace(tempStr, std::regex("[^0-9]+"), std::string("")); // Remove all but digits
-    KahaMinutesToPrintableTime(s);
-    str += s;
-    return str;
-}
-
 static std::string KahaToolTipText(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
-    std::string remainingStr = msg.ReasonStr();
     std::string tempStr;
     std::stringstream strStream;
-
-    // Replace < and > tags with lt and gt
-    ::ConvertXML2PlainCode(remainingStr);
 
     //Phenomenon
     str = msg.MessageStr() + "\n";
@@ -4527,28 +4481,6 @@ static std::string KahaToolTipText(const HakeMessage::HakeMsg &msg)
 
     //UTC time
     str += KahaUTCTime(msg) + "\n";
-
-    //Accuracy in minutes
-    str += KahaTooltipAccuracy(msg) + "\n";
-
-    //Other info
-    std::vector<std::string> searchWords;
-    searchWords.push_back("Kysymys: ");
-    searchWords.push_back("Vastaus: ");
-    searchWords.push_back("Kysymys: ");
-    searchWords.push_back("Vastaus: ");
-
-    for(auto word : searchWords)
-    {
-        std::size_t found = remainingStr.find(word);
-        if(found != std::string::npos)
-        {
-            remainingStr = remainingStr.substr(found + word.size());
-            strStream.str(remainingStr);
-            std::getline(strStream, tempStr);
-            str += (word == "Kysymys: ") ? tempStr : " -" + tempStr + "\n";
-        }
-    }
 
     return str;
 }

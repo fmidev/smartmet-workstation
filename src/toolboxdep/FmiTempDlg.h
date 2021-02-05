@@ -73,7 +73,7 @@ private:
 	CToolTipCtrl itsTooltipCtrl;
     BOOL fSkewTModeOn;
     // Näytetäänkö indeksi taulukko vain luotaus tekstinä
-    BOOL fShowIndexies;
+    BOOL fShowStabilityIndexSideView;
     BOOL fShowHodograf;
     // lista luotaus tuottajista, joilta löytyi dataa, tällä täytetään yllä oleva combolista.
     checkedVector<NFmiProducer> itsProducerListWithData; 
@@ -84,7 +84,7 @@ private:
     BOOL fShowMapMarkers;
     CCheckComboBox itsMultiProducerSelector;
     HACCEL m_hAccel; // accelerator hanskaus menee tämän kautta
-    BOOL fShowSideView;
+    BOOL fShowTextualSoundingDataSideView;
     int itsModelRunCount;
     CSpinButtonCtrl itsModelRunSpinner;
     BOOL fSoundingTimeLockWithMapView;
@@ -106,7 +106,7 @@ public:
 	afx_msg void OnBnClickedCheckTempSkewtMode();
 	afx_msg void OnBnClickedButtonSettings();
 	afx_msg void OnBnClickedButtonResetSoundingData();
-	afx_msg void OnBnClickedCheckShowIndexies();
+	afx_msg void OnBnClickedCheckShowStabilityIndexiesSideView();
 	afx_msg void OnBnClickedCheckShowHodograf();
 	afx_msg void OnBnClickedShowTxtSoundingData();
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
@@ -127,7 +127,7 @@ public:
 	afx_msg void OnAcceleratorTempProducer9();
 	afx_msg void OnAcceleratorTempProducer10();
 	afx_msg void OnEditSpaceOut();
-	afx_msg void OnBnClickedCheckShowSideView();
+	afx_msg void OnBnClickedCheckShowTextualSoundingDataSideView();
 	afx_msg void OnAcceleratorSwapArea();
 	afx_msg void OnAcceleratorToggleTooltip();
 	afx_msg void OnEnChangeEditModelRunCount();
@@ -135,6 +135,7 @@ public:
     afx_msg void OnBnClickedCheckPutSoundingTextsUpward();
     afx_msg void OnAcceleratorChangeMapTypeExtraMap();
     afx_msg void OnBnClickedCheckShowSecondaryDataView();
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 };
 
 

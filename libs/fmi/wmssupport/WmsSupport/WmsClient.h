@@ -42,12 +42,16 @@ namespace Wms
 
         std::vector<QueryBuilder> parsedUserUrls_;
         std::unique_ptr<QueryBuilder> qb_;
+        int imageTimeoutInSeconds;
+        int legendTimeoutInSeconds;
     public:
         WmsClient(std::unique_ptr<BitmapCache> cache,
             std::unique_ptr<BitmapHandler::BitmapParser> parser,
             std::unique_ptr<Web::Client> client,
             std::shared_ptr<cppback::BackgroundManager> bManager,
-            std::unique_ptr<QueryBuilder> qb
+            std::unique_ptr<QueryBuilder> qb,
+            int imgTimeoutInSeconds,
+            int lgndTimeoutInSeconds
             );
 
         void setImageLoadedCallback(std::function<void()> imageLoadedCallback);

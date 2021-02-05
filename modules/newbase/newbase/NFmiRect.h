@@ -335,6 +335,7 @@ inline const NFmiRect NFmiRect::ToAbs(const NFmiRect &theRelativeRect) const
 
 inline bool NFmiRect::IsInside(const NFmiPoint &thePoint) const
 {
+  if (IsEmpty()) return false;
   const double errorMarginal = 0.0000001;  // 7.4.1998/Marko
   return ((Left() - thePoint.X() <= errorMarginal) && (thePoint.X() - Right() <= errorMarginal) &&
           (Top() - thePoint.Y() <= errorMarginal) && (thePoint.Y() - Bottom() <= errorMarginal));
@@ -349,6 +350,7 @@ inline bool NFmiRect::IsInside(const NFmiPoint &thePoint) const
 
 inline bool NFmiRect::IsInside(const NFmiRect &theRect) const
 {
+  if (IsEmpty()) return false;
   return (IsInside(theRect.TopLeft()) && IsInside(theRect.BottomRight()));
 }
 
@@ -358,7 +360,7 @@ inline bool NFmiRect::IsInside(const NFmiRect &theRect) const
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiRect::IsEmpty(void) const { return (itsSize.X() == 0 && itsSize.Y() == 0); }
+inline bool NFmiRect::IsEmpty(void) const { return (itsSize.X() == 0 || itsSize.Y() == 0); }
 // ----------------------------------------------------------------------
 /*!
  * \param theRect Undocumented

@@ -56,7 +56,7 @@ namespace Wms
 
     NFmiImageHolder WmsSupport::getDynamicImage(long producerId, long paramId, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes)
     {
-        auto layerInfo = capabilitiesHandler_->peekHashes().at(producerId).at(paramId);
+        const auto &layerInfo = capabilitiesHandler_->peekHashes().at(producerId).at(paramId);
 
         if(time > layerInfo.endTime || time < layerInfo.startTime)
         {
@@ -223,7 +223,8 @@ namespace Wms
             [&](long producerId, const std::string& layerName)
             {
                 return dynamicClients_[producerId]->isCached(layerName);
-            }
+            },
+            setup_->getCapabilitiesTimeoutInSeconds
             );
 
         for(auto index = 0u; index < mapViewCount; index++)
@@ -247,7 +248,9 @@ namespace Wms
             std::make_unique<BitmapHandler::GdiplusBitmapParser>(),
             std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
             bManager_,
-            std::make_unique<QueryBuilder>()
+            std::make_unique<QueryBuilder>(),
+            setup_->imageTimeoutInSeconds,
+            setup_->legendTimeoutInSeconds
             );
         mapClientState.backgroundClient_->initializeUserUrl(setup_->background, setup_->proxyUrl);
 
@@ -258,7 +261,9 @@ namespace Wms
             std::make_unique<BitmapHandler::GdiplusBitmapParser>(),
             std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
             bManager_,
-            std::make_unique<QueryBuilder>()
+            std::make_unique<QueryBuilder>(),
+            setup_->imageTimeoutInSeconds,
+            setup_->legendTimeoutInSeconds
             );
         mapClientState.overlayClient_->initializeUserUrl(setup_->overlay, setup_->proxyUrl);
 
@@ -301,7 +306,9 @@ namespace Wms
             std::make_unique<BitmapHandler::GdiplusBitmapParser>(),
             std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
             bManager_,
-            std::make_unique<QueryBuilder>()
+            std::make_unique<QueryBuilder>(),
+            setup_->imageTimeoutInSeconds,
+            setup_->legendTimeoutInSeconds
             );
         wmsClient->initializeDynamic(setup, proxyUrl);
         return std::move(wmsClient);
