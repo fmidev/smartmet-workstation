@@ -77,9 +77,12 @@ static int CalcActualLimitCount(float bottomLimit, float topLimit, float contour
     return boost::math::iround(((topLimit - bottomLimit) / contourStep) + 1.f);
 }
 
+const int g_MinimumLimitCountRequired = 4;
+const int g_MaximumLimitCountAllowed = 40;
+
 static bool CheckOriginalLimits(const std::vector<float>& originalClasses)
 {
-    if(originalClasses.size() < 4)
+    if(originalClasses.size() < g_MinimumLimitCountRequired)
         return false;
     float currentValue = originalClasses.front();
     for(auto index = 1; index < originalClasses.size(); index++)
@@ -90,13 +93,7 @@ static bool CheckOriginalLimits(const std::vector<float>& originalClasses)
     return true;
 }
 
-const int g_MinimumLimitCountRequired = 10;
-const int g_MaximumLimitCountAllowed = 40;
-
-// Simple color contour juttu on tehty aikoinaan pieleen. Siin‰ on 4 rajaa ja niille 4 v‰ri‰, vaikka v‰rej‰ pit‰isi
-// olla yksi enemm‰n kuin rajoja. Seurauksena v‰rit ja rajat alkavat toimimaan vasta kun k‰ytet‰‰n tarpeeksi
-// pient‰ steppi‰, jolloin tehdyt laskut alkavat menem‰‰n j‰rkev‰sti kohdilleen. 
-// Siksi pit‰‰ tulla tarpeeksi laskettuja rajoja (> 10 ?), ennen kuin t‰m‰ hyv‰ksyt‰‰n visualisoitavaksi legendaksi. 
+// Simple color contour tapauksessa pit‰‰ tulla 4 rajaa ja niille v‰rit minimiss‰‰n, ett‰ hyv‰ksyt‰‰n legendaksi.
 // Jos taas steppi on niin pieni ett‰ tulee n. >30 rajaa, pit‰‰ alkaa harventamaan sopivasti tehty‰ legendaa.
 void NFmiColorContourLegendValues::FillSimpleColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
