@@ -643,9 +643,10 @@ void InitGriddingCallback()
 void InitLogFileCleaning()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	auto logFilePattern = CatLog::baseLogFilePath();
-    logFilePattern += "*";
-    NFmiFilePatternCleanerInfo info(logFilePattern, 25);
+	// Let's clean log directory so that there is max 30 days old files
+	auto baseLogFilePath = CatLog::baseLogFilePath();
+	auto directoryPart = PathUtils::getPathSectionFromTotalFilePath(baseLogFilePath);
+    NFmiDirectorCleanerInfo info(directoryPart, 30);
     FileCleanerSystem().Add(info);
 }
 
