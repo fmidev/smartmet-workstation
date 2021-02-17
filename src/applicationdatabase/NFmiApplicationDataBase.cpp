@@ -144,7 +144,7 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	}
 
 	if(action.empty() == false)
-	{
+{
 		resultStr += "&action=";
 		resultStr += action;
 	}
@@ -1066,4 +1066,10 @@ bool NFmiApplicationDataBase::SendSmartMetDataToDB(NFmiApplicationDataBase theDa
 	}
 	theResponceStr = responseStr;
 	return false;
+}
+
+std::string NFmiApplicationDataBase::GetDecodedApplicationDirectory() const
+{
+	std::string tmpApppath = apppath;
+	return NFmiStringTools::UrlDecode(tmpApppath);
 }

@@ -478,8 +478,7 @@ void CMainFrame::StartQDataCacheThreads(void)
 	if(itsDoc->HelpDataInfoSystem()->UseQueryDataCache() == false)
 		return ; // ei käynnistetä cache-worker-threadeja, koska asetukset sanovat että niitä ei käytetä
 
-    // valitettavasti apppath-stringi on url-encodattu ja se pitää purkaa...
-    std::string smartMetBinariesDirectory = NFmiStringTools::UrlDecode(itsDoc->ApplicationDataBase().apppath); 
+    std::string smartMetBinariesDirectory = itsDoc->ApplicationDataBase().GetDecodedApplicationDirectory(); 
 	// käynnistetään qdata cache-loader threadi kerran, ja se pitää ensin initialisoida. Tämä threadi käynnistetään aina.
 	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), itsDoc->WorkingDirectory());
 	// Käynnistetään 3 eri tasoista cache-loader threadia 
@@ -518,22 +517,10 @@ void CMainFrame::StartQDataCacheThreads(void)
         ::MakeDataLoaderThread(2, mediumFileSizeMB, largeFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread2DelayInMS);
     if((itsDisableThreadsVariable & gDisableDataCache3Thread) == 0)
         ::MakeDataLoaderThread(3, largeFileSizeMB, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas, thread3DelayInMS); // laitetaan tosi isot tiedostot tulemaan pienemmällä prioriteetillä
-    //if((itsDisableThreadsVariable & gDisableDataCacheHistoryThread) == 0)
-    //    ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas, thread4DelayInMS, true); // laitetaan historia tiedostot tulemaan pienemmällä prioriteetillä
 }
 
 void CMainFrame::StartHistoryDataCacheThread(void)
 {
-    double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
-    // Tämä yrittää käynnistää uuden worker threadin. Jos se on jo käynnissä, uusi threadi lopettaa saman 2 sekunnin odottelun jälkeen.
-    ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, 0, true); // laitetaan tosi isot tiedostot tulemaan pinemmällä prioriteetillä
-}
-
-
-// tämä yrittää aloittaa uudestaan historia datan keruu threadin (jos esim. cachen polku muuttunut tms)
-void CMainFrame::RestartHistoryDataCacheThread(void)
-{
-	CFmiQueryDataCacheLoaderThread::RestartHistoryCollection();
     double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
     // Tämä yrittää käynnistää uuden worker threadin. Jos se on jo käynnissä, uusi threadi lopettaa saman 2 sekunnin odottelun jälkeen.
     ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, 0, true); // laitetaan tosi isot tiedostot tulemaan pinemmällä prioriteetillä
@@ -1088,24 +1075,24 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 	static int counter = 0;
 	counter++;
 //	TRACE("%7d nIDEvent = %d\n", counter, nIDEvent);
-
 	CSmartMetDoc* cdoc = (CSmartMetDoc*)GetActiveDocument();
 	if(!cdoc)
 		return;
+
 	switch(nIDEvent)
 	{
 		case kFmiCheckAnimationLockedModeTimeBagsTimer:
 		{
-			cdoc->GetData()->GetCombinedMapHandler()->checkAnimationLockedModeTimeBags(CtrlViewUtils::kDoAllMapViewDescTopIndex, false);
+			itsDoc->GetCombinedMapHandler()->checkAnimationLockedModeTimeBags(CtrlViewUtils::kDoAllMapViewDescTopIndex, false);
 			return;
 		}
 		case kFmiCheckForNewSatelDataTimer:
 		{
 			KillTimer(itsCheckForNewSatelDataTimer);
-			int checkFrequenceInMinutes = cdoc->GetData()->SatelDataRefreshTimerInMinutes();
+			int checkFrequenceInMinutes = itsDoc->SatelDataRefreshTimerInMinutes();
 			if(checkFrequenceInMinutes > 0)
 			{
-                cdoc->GetData()->GetCombinedMapHandler()->checkForNewConceptualModelData();
+				itsDoc->GetCombinedMapHandler()->checkForNewConceptualModelData();
 			}
 			else
 				checkFrequenceInMinutes = 1; // käynnistetään tämä timeri kuitenkin ainakin kerran minuutissa, jos joku muuttaa asetuksia, tällöin ei tarvitse erikseen käynnistää timeria uudestaan
@@ -1117,10 +1104,10 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		case kFmiCleanDataTimer:
 		{
 			KillTimer(itsCleanDataTimer);
-			double cleaningFreqInMinutes = cdoc->GetData()->FileCleanerSystem().CleaningTimeStepInHours() * 60;
+			double cleaningFreqInMinutes = itsDoc->FileCleanerSystem().CleaningTimeStepInHours() * 60;
 			if(cleaningFreqInMinutes > 0)
 			{
-				cdoc->GetData()->CleanDataDirectories();
+				itsDoc->CleanDataDirectories();
 				itsCleanDataTimer = static_cast<UINT>(SetTimer(kFmiCleanDataTimer, static_cast<UINT>(cleaningFreqInMinutes * 60 * 1000), NULL));
 			}
 			return ;
@@ -1137,8 +1124,8 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 			}
 			else
 				itsDebugDataSizeLoggerTimer = static_cast<UINT>(SetTimer(kFmiDebugDataSizeLoggerTimer, static_cast<UINT>(20 * 60 * 1000), NULL)); // 2. raportin jälkeen tehdään loput raportit hieman harvemmin
-			cdoc->GetData()->ReportInfoOrganizerDataConsumption();
-			cdoc->GetData()->ReportProcessMemoryUsage();
+			itsDoc->ReportInfoOrganizerDataConsumption();
+			itsDoc->ReportProcessMemoryUsage();
 			return ;
 		}
 
@@ -1147,7 +1134,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 			KillTimer(itsAutoSaveTimer);
 			cdoc->DoAutoSave();
 
-			int autoSaveFreqInMinutes = cdoc->GetData()->MetEditorOptionsData().AutoSaveFrequensInMinutes();
+			int autoSaveFreqInMinutes = itsDoc->MetEditorOptionsData().AutoSaveFrequensInMinutes();
 			itsAutoSaveTimer = static_cast<UINT>(SetTimer(kFmiAutoSaveTimer, autoSaveFreqInMinutes * 60 * 1000, NULL));
 			return;
 		}
@@ -1194,7 +1181,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 
 		case kFmiCleanOldDataFromMemoryTimer:
 		{
-			cdoc->GetData()->CleanUnusedDataFromMemory();
+			itsDoc->CleanUnusedDataFromMemory();
 			return;
 		}
 
@@ -1206,7 +1193,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 
         case kFmiStoreCrashBackupViewMacroTimer:
         {
-            cdoc->GetData()->StoreBackUpViewMacro(false);
+			itsDoc->StoreBackUpViewMacro(false);
             return;
         }
 
@@ -1261,14 +1248,10 @@ void CMainFrame::PutWarningFlagTimerOn(void)
 
 void CMainFrame::StartDataLoadingWorkingThread(void)
 {
-	CSmartMetDoc* cdoc = (CSmartMetDoc*)GetActiveDocument();
-	if(!cdoc)
-		return;
-
 	// datan lataus thread käynnistys, jos ei olla ns. normaali moodissa
-	if(cdoc->GetData()->EditorModeDataWCTR()->EditorMode() != NFmiMetEditorModeDataWCTR::kNormal)
+	if(itsDoc->EditorModeDataWCTR()->EditorMode() != NFmiMetEditorModeDataWCTR::kNormal)
 	{
-		if(cdoc->GetData()->EditorModeDataWCTR()->InNormalModeStillInDataLoadDialog())
+		if(itsDoc->EditorModeDataWCTR()->InNormalModeStillInDataLoadDialog())
 			return ; // ollaan oikeasti normaali moodissa ja datanlataus dialogi on auki, tällöin ei laitetan data threadeja päälle
 
 		static bool firstTime = true;
@@ -1287,16 +1270,16 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
                     // kunnes sille sanotaan että lopeta (ohjelmaa suljettaessa).
                     // Tämä on hyvä sijoittaa tänne normaalin working-threadin käynnistykseen, koska aina ei haluta että
                     // kyseinen threadi lähtee edes pyörimään.
-                    CFmiCombineDataThread::InitCombineDataInfos(*(cdoc->GetData()->HelpDataInfoSystem()));
+                    CFmiCombineDataThread::InitCombineDataInfos(*itsDoc->HelpDataInfoSystem(), itsDoc->ApplicationDataBase().GetDecodedApplicationDirectory());
                     int combineThreadDelayInMS = 60 * 1000;
                     if(itsDoc->MachineThreadCount() >= 6)
-                        combineThreadDelayInMS = 30 * 1000; // jos konessa on paljon coreja, ei tarvitse viivyttää alkua niin paljoa
+                        combineThreadDelayInMS = 3 * 1000; // jos konessa on paljon coreja, ei tarvitse viivyttää alkua niin paljoa
                     CFmiCombineDataThread::SetFirstTimeDelay(combineThreadDelayInMS);
                     if((itsDisableThreadsVariable & gDisableCombineDataThread) == 0)
                         CWinThread* combineDataThread = AfxBeginThread(CFmiCombineDataThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
                 }
                 // käynnistetään myös SoundingIndexDataThread kerran, se pitää myös ensin initialisoida.
-                CFmiSoundingIndexDataThread::InitSoundingIndexDataInfos(*(cdoc->GetData()->HelpDataInfoSystem()), cdoc->GetData()->AutoGeneratedSoundingIndexBasePath()); // tämä pitää siirtää threadin käynnistystä edeltäväksi kohdaksi
+                CFmiSoundingIndexDataThread::InitSoundingIndexDataInfos(*(itsDoc->HelpDataInfoSystem()), itsDoc->AutoGeneratedSoundingIndexBasePath()); // tämä pitää siirtää threadin käynnistystä edeltäväksi kohdaksi
                 int soundingIndexThreadDelayInMS = 70 * 1000;
                 if(itsDoc->MachineThreadCount() >= 6)
                     soundingIndexThreadDelayInMS = 35 * 1000; // jos konessa on paljon coreja, ei tarvitse viivyttää alkua niin paljoa
@@ -1305,7 +1288,7 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
                     CWinThread* soundingIndexDataThread = AfxBeginThread(CFmiSoundingIndexDataThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
 
                 // käynnistetään myös SeaIcing sanomien luku threadi kerran, ja se pitää ensin initialisoida.
-                CFmiSeaIcingMessageThread::InitSeaIcingMessageInfo(cdoc->GetData()->SeaIcingWarningSystem()); // tämä pitää siirtää threadin käynnistystä edeltäväksi kohdaksi
+                CFmiSeaIcingMessageThread::InitSeaIcingMessageInfo(itsDoc->SeaIcingWarningSystem()); // tämä pitää siirtää threadin käynnistystä edeltäväksi kohdaksi
                 int seaIcingThreadDelayInMS = 75 * 1000;
                 if(itsDoc->MachineThreadCount() >= 6)
                     seaIcingThreadDelayInMS = 40 * 1000; // jos konessa on paljon coreja, ei tarvitse viivyttää alkua niin paljoa
@@ -1329,8 +1312,7 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
 			// data loading threadin käynnistys 
             // Tämä on doExternalDataThreads -blokin ulkona, koska tätä ei haluta yleensä edes debuggauksessa laittaa pois päältä.
 			// HUOM! tämä pitää aloittaa viimeisenä, koska muut threadit (ainakin CFmiSoundingIndexDataThread) voivat lisätä luettavia datoja.
-            auto genDoc = cdoc->GetData();
-			CFmiDataLoadingThread2::InitDynamicHelpDataInfo(*genDoc->HelpDataInfoSystem(), genDoc->DataNotificationSettings() , genDoc->Language());
+			CFmiDataLoadingThread2::InitDynamicHelpDataInfo(*itsDoc->HelpDataInfoSystem(), itsDoc->DataNotificationSettings() , itsDoc->Language());
 			if((itsDisableThreadsVariable & gDisableDataLoaderThread) == 0)
 				CWinThread *dataLoadingThread = AfxBeginThread(CFmiDataLoadingThread2::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
 		}

@@ -11,7 +11,11 @@
 #include "NFmiStreamQueryData.h"
 #include "NFmiSoundingIndexCalculator.h"
 #include "FmiDataLoadingThread2.h"
+#include "CombineDataFileHelper.h"
 #include "catlog/catlog.h"
+#include "execute-command-in-separate-process.h"
+#include "NFmiApplicationDataBase.h"
+#include "NFmiPathUtils.h"
 
 #include <vector>
 #include <thread>
@@ -37,34 +41,59 @@ namespace
 	CSemaphore gSoundingIndexDataThreadRunning; // t‰m‰n avulla yritet‰‰n lopettaan jatkuvasti pyˆriv‰ working thread 'siististi'
 
 	NFmiStopFunctor gCombineDataStopFunctor, gSoundingIndexDataStopFunctor;
-	bool gCheckForCombinedDataRebuild; // cache-threadi laittaa t‰m‰n flagin p‰‰lle, kun se on saanut kopsattua historia datan lokaali cacheen. 
-										// T‰llˆin pit‰‰ tarkistaa, voidaanko yhdistelm‰ data rakentaa t‰ydellisill‰ tiedoilla.
 	int gCombineDataStartUpDelayInMS = 0; // t‰m‰n avulla voidaan s‰‰t‰‰ kuinka kauan alussa odotellaan, ennen kuin tehd‰‰n tyˆt ensimm‰isen kerran
 	int gSoundingIndexStartUpDelayInMS = 0; // t‰m‰n avulla voidaan s‰‰t‰‰ kuinka kauan alussa odotellaan, ennen kuin tehd‰‰n tyˆt ensimm‰isen kerran
 
-/*
-	int gClosingTime = 0; // main-thread ilmoittaa t‰ll‰, kun se haluaa lopettaa ohjelman, working threadilla
-					// on jonkin aikaa lopettaa omat juttunsa (mutta jos kesken qdatan luvun, ei t‰t‰ voi testata)
-					// Aluksi arvo nolla. Kun main-thread haluaa lopettaa, asettaa t‰m‰n ykkˆseksi.
-					// Sen j‰lkeen yritt‰‰ saada lukkoon tietyn ajan gThreadRunning-semaphorea,
-					// jos onnistuu, lopetetaan ohjelma halitusti. Jos se ei onnistu
-					// (eli worker tekee datan lukua liian pitk‰‰n), main-thread lopettaa v‰kivaltaisesti.
-*/
 	// Tietorakenne, miss‰ tarvittavat tiedot datan yhdist‰misest‰ ja hakemistoista ja file-filttereist‰
 	class DataCombineInfo
 	{
 	public:
-		std::string itsSourceDirectory; // johdettu itsSourceFileFilter:ist‰
-		std::string itsSourceFileFilter; // polkuineen filefilttereineen
-		std::string itsTargetDirectory; // johdettu itsTargetFileFilter:ist‰
-		std::string itsTargetFileFilter; // yhdistelm‰ tiedosto polkuineen ja filefilttereineen. nimess‰ pit‰‰ olla timestamppi minuutteja myˆten, aikaleima laitetaan *-merkin tilalle
-		int itsMaximumTimeSteps; // kuinka monta aika-askelta kootussa datassa saa maksimissaan olla
+		// Partial-datan hakemisto, saatu itsSourceFileFilter:ist‰
+		std::string itsSourceDirectory; 
+		// Partial-datan file-filtter polkuineen kaikkineen
+		std::string itsSourceFileFilter; 
+		// Viimeisimm‰n combine-work:iin johtaneen partial-data tiedoston aikaleima.
+		// T‰m‰n avulla estet‰‰n se ett‰ samasta data l‰hteest‰ ei yritet‰ tehd‰ 
+		// combine-workia useita kertoja, jos vaikka DataCombinationExe kaatuu.
+		std::time_t itsLastCheckedSourceFileTime = 0;
+		// Combine-datan hakemisto, saatu itsTargetFileFilter:ist‰
+		std::string itsTargetDirectory;
+		// Combine-datan file-filtter polkuineen kaikkineen
+		std::string itsTargetFileFilter;
+		// Kuinka monta aika-askelta combine-datassa saa maksimissaan olla
+		int itsMaximumTimeSteps; 
 	};
 
 	std::vector<DataCombineInfo> gDataCombineInfos;
 	CSemaphore gChangeCombineDataSettings; // t‰m‰n avulla muutetaan combine-data asetuksia thread-safesty
 	std::vector<DataCombineInfo> gMediatorDataCombineInfos; // t‰t‰ k‰ytet‰‰n kun asetuksia muutetaan ja pit‰‰ rakentaa uusi info-setti thread-safesty
 	bool gDataCombineSettingsChanged; 
+	std::string gSmartMetBinDirectory; // SmartMetin bin‰‰ri-hakemistoa tarvitaan ainakin kun tehd‰‰n tiedostojen purkua erillisess‰ prosessissa (purku ohjelma sijaitsee siell‰ miss‰ smartmetin exe)
+	std::string gDataCombinationExeFullPath;
+
+	// Oletus ett‰ funktiota kutsutaan vain kerran
+	std::string ConstructDataCombinationExePath(const std::string& applicationDirectory)
+	{
+		auto exePath = NFmiSettings::Optional<std::string>("SmartMet::OptionalDataCombinationExePath", "");
+		if(exePath.empty())
+		{
+			exePath = applicationDirectory + "DataCombinationExe.exe";
+		}
+		exePath = PathUtils::simplifyWindowsPath(exePath);
+		return exePath;
+	}
+
+	// Oletus ett‰ funktiota kutsutaan vain kerran
+	std::string MakeDataCombinationExePath(const std::string& applicationDirectory)
+	{
+		auto dataCombinationExePath = ::ConstructDataCombinationExePath(applicationDirectory);
+		CatLog::logMessage(std::string("Used DataCombinationExe.exe path is: ") + dataCombinationExePath, CatLog::Severity::Info, CatLog::Category::Configuration);
+
+		// Lopullisessa polussa pit‰‰ olla viel‰ lainausmerkit ymp‰rill‰, koska t‰t‰ k‰ytet‰‰n komentorivilt‰
+		// ja jos polussa spaceja, menee homma muuten pieleen eli:
+		// D:\polku jonnekin\7z.exe ==>> "D:\polku jonnekin\7z.exe"
+		return "\"" + dataCombinationExePath + "\"";
+	}
 
 	// Tietorakenne, miss‰ tarvittavat tiedot sounding-index datan tekemisest‰ ja hakemistoista ja file-filttereist‰
 	class SoundingIndexDataInfo
@@ -106,11 +135,6 @@ static bool LetGoAfterFirstTimeDelaying(NFmiMilliSecondTimer &theTimer, bool the
 	return false;
 }
 
-void CFmiCombineDataThread::CheckForCombinedDataRebuild(void)
-{
-	gCheckForCombinedDataRebuild = true;
-}
-
 // main-thread kertoo t‰ll‰ funtiolla, ett‰ nyt on aika lopettaa
 void CFmiCombineDataThread::CloseNow(void)
 {
@@ -146,12 +170,12 @@ static std::string GetDirectory(const std::string &theFileFilter)
 static void MakeCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem, std::vector<DataCombineInfo> &theDataCombineInfos)
 {
 	theDataCombineInfos.clear();
-	const std::vector<NFmiHelpDataInfo> &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
-	for(size_t i = 0; i < helpDataInfoVector.size(); i++)
+	const auto &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
+	for(const auto& helpDataInfo : helpDataInfoVector)
 	{
-		const NFmiHelpDataInfo &helpDataInfo = helpDataInfoVector[i];
 		if(helpDataInfo.IsEnabled() && helpDataInfo.IsCombineData())
-		{ // jos kyseess‰ oli datatiedostoista koottava data, lis‰t‰‰n se listaan
+		{ 
+			// jos kyseess‰ oli datatiedostoista koottava data, lis‰t‰‰n se listaan
 			DataCombineInfo dataCombineInfo;
 			dataCombineInfo.itsMaximumTimeSteps = helpDataInfo.CombineDataMaxTimeSteps();
 			dataCombineInfo.itsTargetFileFilter = helpDataInfo.CombineDataPathAndFileName();
@@ -163,13 +187,15 @@ static void MakeCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSy
 	}
 }
 
-void CFmiCombineDataThread::InitCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
+void CFmiCombineDataThread::InitCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem, const std::string& smartMetBinariesDirectory)
 {
 	CSingleLock singleLock(&gChangeCombineDataSettings); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
 	if(singleLock.Lock(3000)) // Attempt to lock the shared resource, 3000 means 3 sec wait
 	{
 		::MakeCombineDataInfos(theHelpDataInfoSystem, gMediatorDataCombineInfos);
 		gDataCombineSettingsChanged = true;
+		gSmartMetBinDirectory = smartMetBinariesDirectory;
+		gDataCombinationExeFullPath = ::MakeDataCombinationExePath(gSmartMetBinDirectory);
 	}
 }
 
@@ -187,92 +213,124 @@ static void ApplyCombineDataInfoSettings(void)
 	}
 }
 
-static void	DoCombinationWork(bool fDoRebuildCheck)
+static bool IsDataCombinationExeRunning()
+{
+	// gDataCombinationExeFullPath:ista pit‰‰ poistaa lainausmerkit p‰ist‰
+	auto trimmedDataCombinationExeFullPath = gDataCombinationExeFullPath;
+	NFmiStringTools::Trim(trimmedDataCombinationExeFullPath, '"');
+	NFmiFileString dataCombinationExePath = trimmedDataCombinationExeFullPath;
+	std::string fileName = dataCombinationExePath.FileName();
+	// false = ei olla kiinnostuneita ohjelman versiosta
+	NFmiApplicationDataBase::AppSpyData dataCombinationExe(fileName, false);
+	std::string appVersionsStrOutDummy; // t‰m‰ pit‰‰ antaa NFmiApplicationDataBase::CountProcessCount-funktiolle, mutta sit‰ ei k‰ytet‰
+	return NFmiApplicationDataBase::CountProcessCount(dataCombinationExe, appVersionsStrOutDummy) > 0;
+}
+
+// Kun catlog ja sen speedlog systeemit otettiin k‰yttˆˆn, ovat smartmetin
+// lokitiedostot lukossa ja niihin ei voi menn‰ ulkopuoliset loggerit lis‰‰m‰‰n mit‰‰n.
+// Siksi luodaan oma unpack lokitiedosto. Jokaiselle p‰iv‰lle tehd‰‰n oma tiedosto 
+// jotta niit‰ saadaan v‰h‰n niputettua.
+// Polku laitetaan lainausmerkkeihin, koska polussa voi olla spaceja ja se 
+// annetaan argumenttina k‰ynnistett‰v‰lle uudelle prosessille.
+static std::string MakeDailyDataCombinationLogFilePath()
+{
+	auto basicLogFile = CatLog::currentLogFilePath();
+	NFmiFileString fileString = basicLogFile;
+	std::string dailyLogFilePath = "\""; 
+	dailyLogFilePath += fileString.Device();
+	dailyLogFilePath += fileString.Path();
+	dailyLogFilePath += "data_combination_daily_log_";
+	NFmiTime atime;
+	dailyLogFilePath += atime.ToStr(kYYYYMMDD);
+	dailyLogFilePath += ".txt";
+	dailyLogFilePath += "\"";
+	return dailyLogFilePath;
+}
+
+static std::string MakeDataCombinationWorkArgument(const DataCombineInfo& dataCombineInfo)
+{
+	std::string workArgument = "\"";
+	workArgument += dataCombineInfo.itsSourceFileFilter;
+	workArgument += ",";
+	workArgument += dataCombineInfo.itsTargetFileFilter;
+	workArgument += ",";
+	workArgument += std::to_string(dataCombineInfo.itsMaximumTimeSteps);
+	workArgument += "\"";
+	return workArgument;
+}
+
+static std::string MakeDataCombinationExeCommandLineArguments(const std::vector<DataCombineInfo>& dataThatNeedsCombining)
+{
+	// 1. DataCombinationExe t‰yspolku lainausmerkeiss‰ (haetaan jollain 
+	// rajapinnalla jossa uusi metodi, exe konffeista tai default arvo smartmet polku + default nimi)
+	// Esim. "D:\SmartMet\Dropbox (FMI)\SmartMet\utils\DataCombination\DataCombination.exe"
+	std::string totalCommandLine = gDataCombinationExeFullPath;
+	totalCommandLine += " ";
+
+	// 2. DataCombinationExe:lle lokipolku, pyyd‰ perushakemisto jostain ja perusnimi sitten ja lainausmerkeiss‰.
+	// Esim. "D:\SmartMet\log\data_combination_log_*.txt"
+	totalCommandLine += ::MakeDailyDataCombinationLogFilePath();
+
+	totalCommandLine += " ";
+	// 3. Jokaiselle DataCombineInfo:lle tehd‰‰n oma lainausmerkeiss‰ oleva argumentti, 
+	// jossa "partial-filter,combine-filter,time-steps"
+	// Esim. "D:\SmartMet\wrk\data\partial_data\SMHImesan\*_SMHImesan_skandinavia_pinta.sqd,D:\SmartMet\wrk\data\cache\SMHImesan\*_SMHImesan_skandinavia_pinta.sqd,21"
+	for(const auto& dataCombineInfo : dataThatNeedsCombining)
+	{
+		totalCommandLine += ::MakeDataCombinationWorkArgument(dataCombineInfo);
+		totalCommandLine += " ";
+	}
+
+	return totalCommandLine;
+}
+
+static void	TryDataCombinationExeStarting(const std::vector<DataCombineInfo>& dataThatNeedsCombining)
+{
+	if(!dataThatNeedsCombining.empty())
+	{
+		auto commandLineString = ::MakeDataCombinationExeCommandLineArguments(dataThatNeedsCombining);
+
+		// Ainoastaan 1 exe saa olla kerrallaan ajossa. Voidaan oletaa ett‰ joko t‰m‰ tai joku 
+		// toinen smartmet on jo laittanut datoja rakentumaan, eik‰ kannata tehd‰ nyt enemp‰‰.
+		if(IsDataCombinationExeRunning())
+			return;
+
+		// K‰ynnist‰ exe k‰ynnist‰m‰ll‰ uusi prosessi
+		CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandLineString, true, false, SW_HIDE);
+	}
+}
+
+static void	DoCombinationWork()
 {
 	::ApplyCombineDataInfoSettings(); // aina kierroksen aluksi kokeillaan tarvitseeko asetuksia p‰ivitt‰‰...
 
+	// Ainoastaan 1 exe saa olla kerrallaan ajossa. Voidaan oletaa ett‰ joko t‰m‰ tai joku 
+	// toinen smartmet on jo laittanut datoja rakentumaan, eik‰ kannata tehd‰ nyt enemp‰‰.
+	if(IsDataCombinationExeRunning())
+		return;
+
+	std::vector<DataCombineInfo> dataThatNeedsCombining;
 	// 1. k‰y l‰pi kaikki tarkasteltavat hakemistot, ja tutki onko niihin ilmestynyt uusia datatiedostoja
-	//	- kumpaa aikaleimaa pit‰‰ tarkastella cache-hakiksen viimeisint‰ vai lahde hakemiston viimeisint‰
-	//  - jos useita SmartMeteja k‰ynniss‰, ei ehk‰ kuin yhden tarvitsisi tehd‰ yhdistelm‰ data, 
-	//    jos tarkastellaan cache-hakemiston viimeisint‰ tiedostoa ja verataan sit‰ l‰hde-hakemiston viimeiseen
-	//		- jos cache-hakis sis‰lt‰‰ tuoreemman, ei tehd‰ mit‰‰n!!
-	for(size_t i = 0; i < gDataCombineInfos.size(); i++)
+	for(auto &dataCombineInfo : gDataCombineInfos)
 	{
-		DataCombineInfo &combinedDataInfo = gDataCombineInfos[i];
 		NFmiQueryDataUtil::CheckIfStopped(&gCombineDataStopFunctor);
-        ::DebugCombineDataThread(std::string("Checking if data combination is needed from directories:\n") + combinedDataInfo.itsSourceDirectory + std::string(" and ") + combinedDataInfo.itsTargetDirectory, CatLog::Severity::Debug);
-//		if(NFmiFileSystem::NewestFileTime(combinedDataInfo.itsSourceDirectory) > NFmiFileSystem::NewestFileTime(combinedDataInfo.itsTargetDirectory))
-		if(fDoRebuildCheck || NFmiFileSystem::NewestPatternFileTime(combinedDataInfo.itsSourceFileFilter) > NFmiFileSystem::NewestPatternFileTime(combinedDataInfo.itsTargetFileFilter))
-		{
-            ::DebugCombineDataThread(std::string("Starting doing combine data from directory: ") + combinedDataInfo.itsSourceDirectory, CatLog::Severity::Debug, true);
-	// 2. jos on, niin tee yhdistely 
-			try
-			{
-				std::function<void(const std::string&)> loggingFunction = [](const std::string& message)
-				{
-					CatLog::logMessage(message, CatLog::Severity::Debug, CatLog::Category::Data, true);
-				};
-                std::unique_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CombineQueryDatas(fDoRebuildCheck, combinedDataInfo.itsTargetFileFilter, combinedDataInfo.itsSourceFileFilter, true, combinedDataInfo.itsMaximumTimeSteps, &gCombineDataStopFunctor, &loggingFunction)); // true = tehd‰‰n aika-askel yhdistelty‰ dataa
-                if(data)
-                {
-                    // varmistetaan ett‰ kohda hakemisto on olemassa
-                    NFmiFileSystem::CreateDirectory(combinedDataInfo.itsTargetDirectory);
-                    // 3. tarkista ensin ett‰ ja talleta queryData tiedostoon oikeaan cache-hakemistoon, mutta v‰‰r‰ll‰ nimell‰ ja lopuksi tee rename jolloin tiedosto on halutun niminen
-                    std::string outputFileName = combinedDataInfo.itsTargetFileFilter;
-                    NFmiStaticTime currentTime;
-                    std::string timeStampStr = static_cast<char*>(currentTime.ToStr(kYYYYMMDDHHMM)); // tehd‰‰n minuutin tarkkuudella aikaleima, t‰llˆin jos toinen k‰ynniss‰ oleva SmartMet tekee jo ennenmin tiedoston, t‰t‰ ei tarvitse tallentaa
-                    NFmiStringTools::ReplaceAll(outputFileName, "*", timeStampStr);
-                    std::string tmpOutputFileName = outputFileName + "_TMP_FILE_DELETE_THIS_";
+        ::DebugCombineDataThread(std::string("Checking if data combination is needed from directories:\n") + dataCombineInfo.itsSourceDirectory + std::string(" and ") + dataCombineInfo.itsTargetDirectory, CatLog::Severity::Debug);
 
-                    if(NFmiFileSystem::FileExists(outputFileName) == false && NFmiFileSystem::FileExists(tmpOutputFileName) == false)
-                    {
-                        ::DebugCombineDataThread(std::string("Storing data to file: ") + tmpOutputFileName, CatLog::Severity::Debug);
-                        NFmiStreamQueryData sQueryData;
-                        sQueryData.WriteData(tmpOutputFileName, data.get(), static_cast<long>(data->InfoVersion()));
-                        if(NFmiFileSystem::FileExists(outputFileName) == false)
-                        {
-                            NFmiFileSystem::RenameFile(tmpOutputFileName, outputFileName);
-                            ::DebugCombineDataThread(std::string("renaming to final data-file: ") + outputFileName, CatLog::Severity::Debug);
-                            CFmiDataLoadingThread2::LoadDataNow(); // laitetaan tietoa data-loading threadille ett‰ on tullut uutta dataa
-                        }
-                        else
-                        { // jos sinne on nyt ilmestynyt saman niminen tiedosto, poistetaan v‰liaikainen tiedosto, joka ehdittiin tallentaa
-                            NFmiFileSystem::RemoveFile(tmpOutputFileName);
-                            ::DebugCombineDataThread(std::string("Removing temporary file because final data-file allready exist: ") + outputFileName, CatLog::Severity::Debug);
-                        }
-
-                        // siivotaan hakemistoa aina kun lis‰t‰‰n tiedostoja
-                        double maxFileAgeInHours = 1;
-                        if(data->Info()->TimeResolution() > 0)
-                            maxFileAgeInHours = data->Info()->TimeResolution() * 4.2 / 60.; // yritet‰‰n tehd‰ niin pitk‰ ik‰‰ntymis aika, ett‰ 4 tiedostoa j‰‰
-                        NFmiFileSystem::CleanDirectory(combinedDataInfo.itsTargetDirectory, maxFileAgeInHours); // tuhotaan tuntia vanhemmat tiedostot, ei voida k‰ytt‰‰ fileFilter siivousta, t‰llˆin hakemistoon j‰isi mahdolliset tmp-tiedostot
-                        NFmiFileSystem::CleanFilePattern(combinedDataInfo.itsTargetFileFilter, 3); // tuhotaan viel‰ muut paitsi 3 viimaist‰ tiedostoa, jotka osuvat filefilteriin
-                    }
-                    else
-                    {
-                        ::DebugCombineDataThread(std::string("Not storing the data, all ready exist?: ") + outputFileName, CatLog::Severity::Debug);
-                        // siell‰ oli jo sen niminen tiedosto, oletetaan ett‰ toinen SmartMet teki sen juuri, eik‰ tehd‰ mit‰‰n
-                    }
-                }
-                else
-                    ::DebugCombineDataThread(std::string("Unable to create the combined data"), CatLog::Severity::Debug);
-            }
-			catch(NFmiStopThreadException & /* e */ )
-			{
-				return ; // aika lopettaa threadi
-			}
-			catch(...)
-			{ // t‰m‰ oli joku muu 'normaali' virhe
-				continue; // jatketaan for-looppia
-			}
-		}
+		if(CombineDataFileHelper::checkIfDataCombinationIsNeeded(dataCombineInfo.itsSourceFileFilter, dataCombineInfo.itsTargetFileFilter, &dataCombineInfo.itsLastCheckedSourceFileTime))
+			dataThatNeedsCombining.push_back(dataCombineInfo);
 	}
+
+	TryDataCombinationExeStarting(dataThatNeedsCombining);
+}
+
+// Pidet‰‰n aina minuutin pausseja datan yhdistelytoiminnassa...
+static bool IsCombinationWorkPauseOver(const NFmiMilliSecondTimer &timer)
+{
+	return timer.CurrentTimeDiffInMSeconds() > (60 * 1000);
 }
 
 UINT CFmiCombineDataThread::DoThread(LPVOID /* pParam */)
 {
-	gCheckForCombinedDataRebuild = false;
-
     ::DebugCombineDataThread("CFmiCombineDataThread::DoThread - starting combineData-thread.", CatLog::Severity::Debug);
 
 	CSingleLock singleLock(&gCombineDataThreadRunning); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
@@ -293,14 +351,14 @@ UINT CFmiCombineDataThread::DoThread(LPVOID /* pParam */)
 		for( ; ; counter++)
 		{
 			NFmiQueryDataUtil::CheckIfStopped(&gCombineDataStopFunctor);
-			bool localDoRebuildCheckFlag = 	gCheckForCombinedDataRebuild; // tehd‰‰n rebuild-check lokaalin muuttujan kautta, ett‰ DoCombinationWork-funktiossa ei aloiteta sit‰ kesken kierroksen (jonka lopuksi lippu laitetaan sitten pois p‰‰lt‰)
 
-			if(localDoRebuildCheckFlag || ::LetGoAfterFirstTimeDelaying(timer, firstTime, gCombineDataStartUpDelayInMS) || timer.CurrentTimeDiffInMSeconds() > (30 * 1000))
-			{ // jos on kulunut tarpeeksi aikaa, tarkastetaan, onko jonnekin tullut uusia datatiedostoja jotka pit‰‰ yhdist‰‰
+			if(::LetGoAfterFirstTimeDelaying(timer, firstTime, gCombineDataStartUpDelayInMS) || ::IsCombinationWorkPauseOver(timer))
+			{ 
+				// jos on kulunut tarpeeksi aikaa, tarkastetaan, onko jonnekin tullut uusia datatiedostoja jotka pit‰‰ yhdist‰‰
 				firstTime = false;
 				try
 				{
-					::DoCombinationWork(localDoRebuildCheckFlag);
+					::DoCombinationWork();
 				}
 				catch(NFmiStopThreadException & /* e */ )
 				{
@@ -311,8 +369,6 @@ UINT CFmiCombineDataThread::DoThread(LPVOID /* pParam */)
 					// t‰m‰ oli joku 'tavallinen' virhe tilanne,
 					// jatketaan vain loopitusta
 				}
-				if(localDoRebuildCheckFlag)
-					gCheckForCombinedDataRebuild = false; // t‰ss‰ on varmistettu, ett‰ lippua ei aseteta ennen kuin kaikki datat on k‰yty l‰pi
 				timer.StartTimer(); // aloitetaan taas uusi ajan lasku
 			}
 			else

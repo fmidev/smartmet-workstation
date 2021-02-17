@@ -101,6 +101,7 @@
 #include "FmiWarningMessageOptionsDlg.h"
 #include "NFmiMacroParamDataCache.h"
 #include "FmiSoundingDataServerConfigurationsDlg.h"
+#include "NFmiApplicationDataBase.h"
 
 #include "AnimationProfiler.h"
 
@@ -782,28 +783,25 @@ BOOL CSmartMetDoc::StoreData(const NFmiString& theFileName, boost::shared_ptr<NF
 
 void CSmartMetDoc::OnMenuitemOptiot()
 {
-	if(GetData())
+	COptionsDlg dlg;
+	bool oldDoCacheSetting = itsData->HelpDataInfoSystem()->UseQueryDataCache();
+	dlg.SetData(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+	if(dlg.DoModal() == IDOK)
 	{
-		COptionsDlg dlg;
-		bool oldDoCacheSetting = GetData()->HelpDataInfoSystem()->UseQueryDataCache();
-		dlg.SetData(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
-		if(dlg.DoModal() == IDOK)
+		itsData->StoreOptionsData();
+		CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
+		CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
+		itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, true, true, true, false, false, false);
+		bool cacheSettingChanged = oldDoCacheSetting != itsData->HelpDataInfoSystem()->UseQueryDataCache();
+		if(cacheSettingChanged)
 		{
-			GetData()->StoreOptionsData();
-            CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(GetData()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
-            CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(GetData()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
-			GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, true, true, true, false, false, false);
-			bool cacheSettingChanged = oldDoCacheSetting != GetData()->HelpDataInfoSystem()->UseQueryDataCache();
-			if(cacheSettingChanged)
-			{
-				CFmiCombineDataThread::InitCombineDataInfos(*(GetData()->HelpDataInfoSystem())); // kun cache asetukset muuttuvat, pitää yhdistelmä data asetuksia pävittää
-				if(GetData()->HelpDataInfoSystem()->UseQueryDataCache())
-					((CMainFrame*)AfxGetMainWnd())->StartQDataCacheThreads();
-				else
-					((CMainFrame*)AfxGetMainWnd())->StopQDataCacheThreads();
-			}
-			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": Settings dialog closed with Ok");
+			CFmiCombineDataThread::InitCombineDataInfos(*itsData->HelpDataInfoSystem(), itsData->ApplicationDataBase().GetDecodedApplicationDirectory()); // kun cache asetukset muuttuvat, pitää yhdistelmä data asetuksia pävittää
+			if(itsData->HelpDataInfoSystem()->UseQueryDataCache())
+				((CMainFrame*)AfxGetMainWnd())->StartQDataCacheThreads();
+			else
+				((CMainFrame*)AfxGetMainWnd())->StopQDataCacheThreads();
 		}
+		UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": Settings dialog closed with Ok");
 	}
 }
 

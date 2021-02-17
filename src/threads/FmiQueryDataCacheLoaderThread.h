@@ -23,6 +23,5 @@ namespace CFmiQueryDataCacheLoaderThread
     void AutoLoadNewCacheDataMode(bool newState);
 
 	UINT DoHistoryThread(LPVOID pParam);
-	void RestartHistoryCollection(void);
 }
 
