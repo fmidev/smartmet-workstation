@@ -61,8 +61,6 @@ public:
 	void StartDataLoadingWorkingThread(void);
 	void StartAdditionalWorkerThreads(void);
     void StartQDataCacheThreads(void);
-    //void StartQDataCacheThread(void);
-    void RestartHistoryDataCacheThread(void);
     void StartHistoryDataCacheThread(void);
 	void StopQDataCacheThreads(void);
 	void WaitQDataCacheThreadsToStop(void);

@@ -24,7 +24,6 @@ public:
     void LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro) override;  // CSmartMetView
     void UpdateMapView(unsigned int theDescTopIndex) override;  // CSmartMetView
     void UpdateOnlyExtraMapViews(bool updateMap1, bool updateMap2) override; // CSmartMetDoc
-    void RestartHistoryDataCacheThread() override; // CMainFrame
     void DrawOverBitmapThings(NFmiToolBox *theGTB) override;  // CSmartMetView
     void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;  // CSmartMetView
     void UpdateTempView() override; // CSmartMetDoc

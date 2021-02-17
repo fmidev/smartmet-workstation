@@ -37,7 +37,6 @@ namespace
 	CSemaphore gSettingsChanged; // t‰m‰n avulla p‰ivitet‰‰n datan luku asetuksia thread safetysti
 	NFmiHelpDataInfoSystem gMediatorHelpDataSystem; // t‰m‰n avulla s‰‰det‰‰n threadin asetuksia thread safetysti
 	bool gSettingsHaveChanged;
-	bool gRestartHistoryCollection; // t‰m‰n avulla voidaan aloittaa historia datan kopiointi alusta (jos cache-hakemisto asetuksia vaihdetaan)
     bool gLoadDataAtStartUp = true; // Jos t‰m‰ on false, se est‰‰ datan latauksen cacheen ja hakemistojen siivouksen
     bool gAutoLoadNewCacheDataMode = true; // Onko SmartMet ns. operatiivisessa moodissa, eli silloin se automaattisesti latailee uusia datoja cacheen ja silloin myˆs vanhoja pit‰‰ siivoilla pois.
                             // Joskus halutaan ett‰ uutta dataa ei lueta eik‰ vanhoja siivota, silloin t‰m‰ moodi pit‰‰ laittaa pois p‰‰lt‰.
@@ -926,8 +925,10 @@ int CFmiQueryDataCacheLoaderThread::WaitToClose(int theMilliSecondsToWait, CFmiC
 	return 0; // jokin oli pieless‰, ei voi mit‰‰n....
 }
 
-static void CollectHistoryDataToCache(const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, CFmiCacheLoaderData *theCacheLoaderData)
+// CollectHistoryDataToCache palauttaa true, jos yksikin tiedosto kopioitiin serverilt‰ lokaaliin hakemistoon.
+static bool CollectHistoryDataToCache(const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, CFmiCacheLoaderData *theCacheLoaderData)
 {
+    bool anythingCopied = false;
 	// aluksi tehd‰‰n vain combine-datojen historiat
 	if(theDataInfo.IsCombineData())
 	{
@@ -949,54 +950,36 @@ static void CollectHistoryDataToCache(const NFmiHelpDataInfo &theDataInfo, const
 		for(std::list<std::string>::iterator it = fileList.begin(); it != fileList.end(); ++it)
 		{
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-			if(gRestartHistoryCollection)
-				break;
 			std::string totalFileName = usedPath;
 			totalFileName += *it;
             CachedDataFileInfo cachedDataFileInfo;
             cachedDataFileInfo.itsTotalServerFileName = totalFileName;
             cachedDataFileInfo.fFilePacked = fileInfoList.second;
             ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
-			::CopyFileToLocalCache(cachedDataFileInfo, theCacheLoaderData, theDataInfo);
+            if(::CopyFileToLocalCache(cachedDataFileInfo, theCacheLoaderData, theDataInfo) == kFmiCopyWentOk)
+            {
+                anythingCopied = true;
+            }
 			counter++;
 			if(counter > theDataInfo.CombineDataMaxTimeSteps())
 				break;
-
-            // Jostain syyst‰ t‰m‰ v‰hiten t‰rkein historian datanlataus threadi saa korkeimman 
-            // prioriteetin verrattuna muihin kolmeen normaali datojen lataus threadeihin (vaikka t‰lle on 
-            // annettu alhaisin prioriteetti).
-            // Kun Kumpulan datanlataus viuhti-serveri muutettiin Windows -> Linux -pohjaiseksi, 
-            // ovat SmartMetien datan lataukset jostain syyst‰ p‰‰osin yksi tiedosto kerrallaan,
-            // kun ennen tiedostoja tuli parhaimmillaan 4 rinnakkain (4 threadia).
-            // Siksi laitan t‰h‰n jokaisen ladatun historia tiedoston j‰lkeen pikku paussin ett‰ muut
-            // lataus threadit saavat tilaisuuden ladata tiedostojaan.
-            Sleep(200); 
 		}
 	}
+    return anythingCopied;
 }
 
-static void CollectAllHistoryDatas(const NFmiHelpDataInfoSystem &theHelpDataSystem, CFmiCacheLoaderData *theCacheLoaderData)
+static void CollectAllHistoryDatas(const NFmiHelpDataInfoSystem& theHelpDataSystem, CFmiCacheLoaderData* theCacheLoaderData)
 {
-	do
-	{
-		::ApplyChangedSettings(); // katsotaan onko asetuksia muutettu
-		gRestartHistoryCollection = false;
-
-		const checkedVector<NFmiHelpDataInfo> &helpInfos = theHelpDataSystem.DynamicHelpDataInfos();
-		for(size_t i=0; i < helpInfos.size(); i++)
-		{
-			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-			if(helpInfos[i].IsEnabled())
-				CollectHistoryDataToCache(helpInfos[i], theHelpDataSystem, theCacheLoaderData);
-			if(gRestartHistoryCollection)
-				break;
-		}
-	} while(gRestartHistoryCollection);
-}
-
-void CFmiQueryDataCacheLoaderThread::RestartHistoryCollection(void)
-{
-	gRestartHistoryCollection = true;
+    ::ApplyChangedSettings(); // katsotaan onko asetuksia muutettu
+    const auto& helpDataInfos = theHelpDataSystem.DynamicHelpDataInfos();
+    for(const auto &helpDataInfo : helpDataInfos)
+    {
+        NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+        if(helpDataInfo.IsEnabled())
+        {
+            ::CollectHistoryDataToCache(helpDataInfo, theHelpDataSystem, theCacheLoaderData);
+        }
+    }
 }
 
 // T‰m‰ apu threadi kopioi lokaali cacheen kaiken tarvittavan historia datan.
@@ -1048,9 +1031,7 @@ UINT CFmiQueryDataCacheLoaderThread::DoHistoryThread(LPVOID pParam)
                     // t‰m‰ oli luultavasti StopThreadException, lopetetaan joka tapauksessa
                 }
 
-                CFmiCombineDataThread::CheckForCombinedDataRebuild();
                 ::LogGeneralMessage(threadNameStr, "CFmiQueryDataCacheLoaderThread::DoHistoryThread with", "is now stopped as requested...", CatLog::Severity::Debug);
-
                 return 0;   // thread completed successfully
             }
 			Sleep(1*1000); // nukutaan aina sekunnin p‰tki‰, ett‰ voidaan tarkkailla lopetus merkki‰

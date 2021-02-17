@@ -5,16 +5,16 @@
 #include "stdafx.h"
 
 #include <string>
+#include <vector>
 
 class NFmiHelpDataInfoSystem;
 
 namespace CFmiCombineDataThread
 {
-	void InitCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem); // t‰m‰ pit‰‰ kutsua ennen kuin threadi (DoThread) k‰ynnistet‰‰n ja kun cache-asetuksia muutetaan
+	void InitCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem, const std::string& smartMetBinariesDirectory); // t‰m‰ pit‰‰ kutsua ennen kuin threadi (DoThread) k‰ynnistet‰‰n ja kun cache-asetuksia muutetaan
 	UINT DoThread(LPVOID pParam);
 	void CloseNow(void);
 	int WaitToClose(int theMilliSecondsToWait);
-	void CheckForCombinedDataRebuild(void);
 	void SetFirstTimeDelay(int theStartUpDelayInMS);
 }
 

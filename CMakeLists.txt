@@ -301,6 +301,10 @@ add_subdirectory(
     )
 
 add_subdirectory(
+    src/datacombinationexe
+    )
+
+add_subdirectory(
     src/casestudyexe
     )
 	

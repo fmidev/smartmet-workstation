@@ -9494,8 +9494,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         // Tarkista onko Master-prosessi jo käynnissä, jos oli, lopetetaan
         if(MasterProcessRunningCount() <= 0)
         {
-            std::string usedAppPath = ApplicationDataBase().apppath;
-            usedAppPath = NFmiStringTools::UrlDecode(usedAppPath); // valitettavasti tämä stringi on url-encodattu ja se pitää purkaa...
+            std::string usedAppPath = ApplicationDataBase().GetDecodedApplicationDirectory();
 
             // Jos ei ollut, käynnistä Master-prosessi
             std::string commandStr;

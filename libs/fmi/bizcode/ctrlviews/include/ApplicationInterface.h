@@ -47,7 +47,6 @@ public:
     virtual void LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro) = 0;
     virtual void UpdateMapView(unsigned int theDescTopIndex) = 0;
     virtual void UpdateOnlyExtraMapViews(bool updateMap1, bool updateMap2) = 0;
-    virtual void RestartHistoryDataCacheThread() = 0;
     virtual void DrawOverBitmapThings(NFmiToolBox *theGTB) = 0;
     virtual void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) = 0;
     virtual void UpdateTempView() = 0;
