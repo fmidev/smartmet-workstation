@@ -33,8 +33,8 @@ namespace
                 return zipPath;
             else
             {
-                std::string zipPathError = "7zip path from SmartMet::Optional7zipExePath -option with final value ";
-                zipPathError += zipPath + " didn't exist, using default 7zip path instead";
+                std::string zipPathError = "7zip path from SmartMet::Optional7zipExePath -option with final value '";
+                zipPathError += zipPath + "' didn't exist, using default 7zip path instead";
                 CatLog::logMessage(zipPathError, CatLog::Severity::Error, CatLog::Category::Configuration, true);
                 // 5. Palautetaan virhetilanteessa tyhjää, jotta otetaan default polku käyttöön
                 return "";
@@ -50,8 +50,8 @@ namespace
 
         if(!NFmiFileSystem::FileExists(zipPath))
         {
-            std::string zipPathError = "7zip executable from default path (smartmet-path\\utils\\7z.exe): ";
-            zipPathError += zipPath + " didn't exist, unpacking operations won't work!";
+            std::string zipPathError = "7zip executable from default path (smartmet-path\\utils\\7z.exe): '";
+            zipPathError += zipPath + "' didn't exist, unpacking operations won't work!";
             CatLog::logMessage(zipPathError, CatLog::Severity::Error, CatLog::Category::Configuration, true);
         }
 

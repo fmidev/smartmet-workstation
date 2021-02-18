@@ -74,11 +74,17 @@ namespace
 	// Oletus ett‰ funktiota kutsutaan vain kerran
 	std::string ConstructDataCombinationExePath(const std::string& applicationDirectory)
 	{
-		auto exePath = NFmiSettings::Optional<std::string>("SmartMet::OptionalDataCombinationExePath", "");
-		if(exePath.empty())
+		std::string settingsKey = "SmartMet::OptionalDataCombiningExePath";
+		auto exePath = NFmiSettings::Optional<std::string>(settingsKey, "");
+		if(!exePath.empty())
+			CatLog::logMessage(std::string("Using  ") + settingsKey + " with value " + exePath, CatLog::Severity::Info, CatLog::Category::Configuration);
+		else
 		{
+			CatLog::logMessage(std::string("Optional configuration for DataCombinationExe path ") + settingsKey + " didn't have value, using default path", CatLog::Severity::Info, CatLog::Category::Configuration);
+
 			exePath = applicationDirectory + "DataCombinationExe.exe";
 		}
+		exePath = PathUtils::getAbsoluteFilePath(exePath, applicationDirectory);
 		exePath = PathUtils::simplifyWindowsPath(exePath);
 		return exePath;
 	}
@@ -87,7 +93,10 @@ namespace
 	std::string MakeDataCombinationExePath(const std::string& applicationDirectory)
 	{
 		auto dataCombinationExePath = ::ConstructDataCombinationExePath(applicationDirectory);
-		CatLog::logMessage(std::string("Used DataCombinationExe.exe path is: ") + dataCombinationExePath, CatLog::Severity::Info, CatLog::Category::Configuration);
+		if(NFmiFileSystem::FileExists(dataCombinationExePath))
+			CatLog::logMessage(std::string("Used DataCombinationExe.exe path is: ") + dataCombinationExePath, CatLog::Severity::Info, CatLog::Category::Configuration);
+		else
+			CatLog::logMessage(std::string("Used DataCombinationExe.exe doesn't exist: ") + dataCombinationExePath + ", data-combination won't work", CatLog::Severity::Error, CatLog::Category::Configuration);
 
 		// Lopullisessa polussa pit‰‰ olla viel‰ lainausmerkit ymp‰rill‰, koska t‰t‰ k‰ytet‰‰n komentorivilt‰
 		// ja jos polussa spaceja, menee homma muuten pieleen eli:
@@ -254,7 +263,10 @@ static std::string MakeDataCombinationWorkArgument(const DataCombineInfo& dataCo
 	workArgument += ",";
 	workArgument += dataCombineInfo.itsTargetFileFilter;
 	workArgument += ",";
-	workArgument += std::to_string(dataCombineInfo.itsMaximumTimeSteps);
+	// Jos doDebugLongSleep = true, laittaa DataCombinationExe ohjelman aina nukkumaan 10 
+	// minuutiksi jokaisen ajon j‰lkeen erikoistilanteiden debuggauksia varten.
+	bool doDebugLongSleep = false; 
+	workArgument += std::to_string(doDebugLongSleep ? 99999 : dataCombineInfo.itsMaximumTimeSteps);
 	workArgument += "\"";
 	return workArgument;
 }
@@ -292,7 +304,7 @@ static void	TryDataCombinationExeStarting(const std::vector<DataCombineInfo>& da
 
 		// Ainoastaan 1 exe saa olla kerrallaan ajossa. Voidaan oletaa ett‰ joko t‰m‰ tai joku 
 		// toinen smartmet on jo laittanut datoja rakentumaan, eik‰ kannata tehd‰ nyt enemp‰‰.
-		if(IsDataCombinationExeRunning())
+		if(::IsDataCombinationExeRunning())
 			return;
 
 		// K‰ynnist‰ exe k‰ynnist‰m‰ll‰ uusi prosessi
@@ -300,14 +312,26 @@ static void	TryDataCombinationExeStarting(const std::vector<DataCombineInfo>& da
 	}
 }
 
-static void	DoCombinationWork()
+static void	DoCombinationWork(NFmiNanoSecondTimer &howLongConsecutiveHasDataCombinationExeBeenRunningOnBackground)
 {
 	::ApplyCombineDataInfoSettings(); // aina kierroksen aluksi kokeillaan tarvitseeko asetuksia p‰ivitt‰‰...
 
 	// Ainoastaan 1 exe saa olla kerrallaan ajossa. Voidaan oletaa ett‰ joko t‰m‰ tai joku 
 	// toinen smartmet on jo laittanut datoja rakentumaan, eik‰ kannata tehd‰ nyt enemp‰‰.
-	if(IsDataCombinationExeRunning())
+	if(::IsDataCombinationExeRunning())
+	{
+		const double warningTimeLimitInSeconds = 3. * 60;
+		if(howLongConsecutiveHasDataCombinationExeBeenRunningOnBackground.elapsedTimeInSeconds() > warningTimeLimitInSeconds)
+		{
+			std::string backgroundMessage = "Unable to do any possible data combining because DataCombinationExe has been running consecutively ";
+			backgroundMessage += howLongConsecutiveHasDataCombinationExeBeenRunningOnBackground.elapsedTimeInSecondsString();
+			backgroundMessage += " on the background, and only one is allowed to run at one time";
+			CatLog::logMessage(backgroundMessage, CatLog::Severity::Debug, CatLog::Category::Data);
+		}
 		return;
+	}
+	else
+		howLongConsecutiveHasDataCombinationExeBeenRunningOnBackground.restart();
 
 	std::vector<DataCombineInfo> dataThatNeedsCombining;
 	// 1. k‰y l‰pi kaikki tarkasteltavat hakemistot, ja tutki onko niihin ilmestynyt uusia datatiedostoja
@@ -348,6 +372,7 @@ UINT CFmiCombineDataThread::DoThread(LPVOID /* pParam */)
 	int counter = 0;
 	try
 	{
+		NFmiNanoSecondTimer howLongConsecutiveHasDataCombinationExeBeenRunningOnBackground;
 		for( ; ; counter++)
 		{
 			NFmiQueryDataUtil::CheckIfStopped(&gCombineDataStopFunctor);
@@ -358,7 +383,7 @@ UINT CFmiCombineDataThread::DoThread(LPVOID /* pParam */)
 				firstTime = false;
 				try
 				{
-					::DoCombinationWork();
+					::DoCombinationWork(howLongConsecutiveHasDataCombinationExeBeenRunningOnBackground);
 				}
 				catch(NFmiStopThreadException & /* e */ )
 				{
