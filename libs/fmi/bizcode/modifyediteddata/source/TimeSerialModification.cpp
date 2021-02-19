@@ -2286,7 +2286,7 @@ static bool FillDataWithSourceDataWCTR(std::vector<NFmiFastQueryInfo*> & theSour
 				if(sourceInfo && sourceInfo->RefQueryData())
 				{
 					if(fDoMultiThread)
-						NFmiQueryDataUtil::FillGridDataFullMT(const_cast<NFmiQueryData*>(sourceInfo->RefQueryData()), theDestData, startTimeIndex, endTimeIndex, nullptr);
+						NFmiQueryDataUtil::FillGridDataFullMT(const_cast<NFmiQueryData*>(sourceInfo->RefQueryData()), theDestData, startTimeIndex, endTimeIndex, 0, nullptr);
 					else
 						NFmiQueryDataUtil::FillGridData(const_cast<NFmiQueryData*>(sourceInfo->RefQueryData()), theDestData, startTimeIndex, endTimeIndex, nullptr, true);
 				}
