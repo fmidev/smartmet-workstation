@@ -16,6 +16,7 @@ namespace CFmiCombineDataThread
 	void CloseNow(void);
 	int WaitToClose(int theMilliSecondsToWait);
 	void SetFirstTimeDelay(int theStartUpDelayInMS);
+	std::string MakeDailyDataCombinationLogFilePath(bool putInQuotes);
 }
 
 namespace CFmiSoundingIndexDataThread

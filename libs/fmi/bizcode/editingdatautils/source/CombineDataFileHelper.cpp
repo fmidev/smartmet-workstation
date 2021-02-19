@@ -65,7 +65,7 @@ void CombineDataFileHelper::doDataCombinationWork()
 		{
 			std::string noNeedToCombineDataMessage = "No need to create combined data for ";
 			noNeedToCombineDataMessage += combinedDataFileFilter_;
-			noNeedToCombineDataMessage += ", why was DataCombinationExe executed here?";
+			noNeedToCombineDataMessage += ", some other process may have done this job already?";
 			logMessage(noNeedToCombineDataMessage);
 		}
 	}
