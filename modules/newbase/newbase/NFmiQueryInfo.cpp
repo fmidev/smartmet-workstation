@@ -2052,7 +2052,7 @@ float NFmiQueryInfo::SubParamFloatValue() const
 
 
 //duplicated code because SubParamFloatValue isn't very const
-float NFmiQueryInfo::SubValueFromFloat(float fValue) {
+float NFmiQueryInfo::SubValueFromFloat(float fValue) const {
 	itsCombinedParamParser->TransformFromFloatValue(fValue);
 	return float(itsCombinedParamParser->SubValue(
 		FmiParameterName(itsParamDescriptor->Param(false).GetParam()->GetIdent())));

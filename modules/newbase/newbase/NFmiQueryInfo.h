@@ -592,7 +592,7 @@ class _FMI_DLL NFmiQueryInfo
   virtual bool SubParamFloatValue(float theFloatData);
 
   //Muuntaa floatin subvalueksi
-  float NFmiQueryInfo::SubValueFromFloat(float fValue);
+  float NFmiQueryInfo::SubValueFromFloat(float fValue) const;
 
   virtual float IndexFloatValue(
       size_t theIndex) const;  // palauttaa suoraan arvon ilman aliparametri tarkasteluja
