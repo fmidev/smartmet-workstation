@@ -41,7 +41,7 @@ struct Blend2Type
 
 //! Utilities for dealing with RGBA colours.
 
-namespace _FMI_DLL NFmiColorTools
+namespace NFmiColorTools
 {
   //! An RGBA colour is internally represented as an integer of the form 0xaarrggbb
 
