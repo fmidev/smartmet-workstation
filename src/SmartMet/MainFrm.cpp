@@ -1273,7 +1273,7 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
                     CFmiCombineDataThread::InitCombineDataInfos(*itsDoc->HelpDataInfoSystem(), itsDoc->ApplicationDataBase().GetDecodedApplicationDirectory());
                     int combineThreadDelayInMS = 60 * 1000;
                     if(itsDoc->MachineThreadCount() >= 6)
-                        combineThreadDelayInMS = 3 * 1000; // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ alkua niin paljoa
+                        combineThreadDelayInMS = 30 * 1000; // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ alkua niin paljoa
                     CFmiCombineDataThread::SetFirstTimeDelay(combineThreadDelayInMS);
                     if((itsDisableThreadsVariable & gDisableCombineDataThread) == 0)
                         CWinThread* combineDataThread = AfxBeginThread(CFmiCombineDataThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);

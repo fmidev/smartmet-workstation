@@ -25,6 +25,8 @@
 #include "ToolMasterColorCube.h"
 #include "ToolMasterHelperFunctions.h"
 #include "CombinedMapHandlerInterface.h"
+#include "FmiCombineDataThread.h"
+#include "FmiQueryDataCacheLoaderThread.h"
 
 #include "boost/format.hpp"
 
@@ -756,7 +758,11 @@ void CSmartMetApp::UpdateCrashRptLogFile()
 #ifdef DO_CRASH_REPORTING
     // Add our log file to the error report
     if(gBasicSmartMetConfigurations.EnableCrashReporter())
+    {
         ::crAddFile2(CA2T(CatLog::currentLogFilePath().c_str()), NULL, _TEXT("Log File"), CR_AF_MAKE_FILE_COPY);
+        ::crAddFile2(CA2T(CFmiCombineDataThread::MakeDailyDataCombinationLogFilePath(false).c_str()), NULL, _TEXT("Data-combining Log File"), CR_AF_MAKE_FILE_COPY);
+        ::crAddFile2(CA2T(CFmiQueryDataCacheLoaderThread::MakeDailyUnpackLogFilePath().c_str()), NULL, _TEXT("Unpack-data Log File"), CR_AF_MAKE_FILE_COPY);
+    }
 #endif
 }
 

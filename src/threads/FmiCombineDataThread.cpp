@@ -241,18 +241,21 @@ static bool IsDataCombinationExeRunning()
 // jotta niitä saadaan vähän niputettua.
 // Polku laitetaan lainausmerkkeihin, koska polussa voi olla spaceja ja se 
 // annetaan argumenttina käynnistettävälle uudelle prosessille.
-static std::string MakeDailyDataCombinationLogFilePath()
+std::string CFmiCombineDataThread::MakeDailyDataCombinationLogFilePath(bool putInQuotes)
 {
 	auto basicLogFile = CatLog::currentLogFilePath();
 	NFmiFileString fileString = basicLogFile;
-	std::string dailyLogFilePath = "\""; 
+	std::string dailyLogFilePath;
+	if(putInQuotes)
+		dailyLogFilePath += "\"";
 	dailyLogFilePath += fileString.Device();
 	dailyLogFilePath += fileString.Path();
 	dailyLogFilePath += "data_combination_daily_log_";
 	NFmiTime atime;
 	dailyLogFilePath += atime.ToStr(kYYYYMMDD);
 	dailyLogFilePath += ".txt";
-	dailyLogFilePath += "\"";
+	if(putInQuotes)
+		dailyLogFilePath += "\"";
 	return dailyLogFilePath;
 }
 
@@ -281,7 +284,7 @@ static std::string MakeDataCombinationExeCommandLineArguments(const std::vector<
 
 	// 2. DataCombinationExe:lle lokipolku, pyydä perushakemisto jostain ja perusnimi sitten ja lainausmerkeissä.
 	// Esim. "D:\SmartMet\log\data_combination_log_*.txt"
-	totalCommandLine += ::MakeDailyDataCombinationLogFilePath();
+	totalCommandLine += CFmiCombineDataThread::MakeDailyDataCombinationLogFilePath(true);
 
 	totalCommandLine += " ";
 	// 3. Jokaiselle DataCombineInfo:lle tehdään oma lainausmerkeissä oleva argumentti, 
