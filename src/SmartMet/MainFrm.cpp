@@ -493,13 +493,11 @@ void CMainFrame::StartQDataCacheThreads(void)
 	int thread1DelayInMS = 0*1000;
 	int thread2DelayInMS = 2*1000;
 	int thread3DelayInMS = 3*1000;
-	int thread4DelayInMS = 120*1000;
 	if(itsDoc->MachineThreadCount() >= 6)
 	{ // jos konessa on paljon coreja, ei tarvitse viivyttää eri threadien alkua niin paljoa
 		thread1DelayInMS = 0*1000;
 		thread2DelayInMS = 2*1000;
 		thread3DelayInMS = 20*1000;
-		thread4DelayInMS = 40*1000;
 	}
 
     CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());

@@ -26,6 +26,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "NFmiFastInfoUtils.h"
 #include "NFmiDataMatrixUtils.h"
+#include "NFmiQueryDataUtil.h"
 
 #include <gdiplus.h>
 
@@ -1600,7 +1601,7 @@ void NFmiStreamLineView::DoMultiThreadCalculations(boost::shared_ptr<NFmiFastQue
     // Kun kaikki pisteet on laskettu, katsotaan prioriteetti järjestyksessä, eliminoiko jokin streamline jonkin aloitus pisteen.
     // Jos eliminoi, otetaan kyseisen aloituspisteen streamline pois lopullisista piirrettävistä viivoista.
 
-	unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+	unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
     NFmiPoint dummyPoint = itsInfo->LatLon(); // Varmistetaan että NFmiQueryDatan itsLatLonCache on alustettu!!
 
     // 1. Tee jokaiselle threadille kopio itsInfo:sta

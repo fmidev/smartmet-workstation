@@ -161,7 +161,7 @@ static void ModifySingleTimeGridInThread(NFmiFastQueryInfo& theModifiedInfo,
 
 static void ModifyTimesLocationData_FullMT(boost::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiDataModifier * theModifier, NFmiTimeDescriptor & theTimeDescriptor)
 {
-	unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+	unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
 	unsigned long timeCount = theTimeDescriptor.Size();
 	if(usedThreadCount > timeCount)
 		usedThreadCount = timeCount;
