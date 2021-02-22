@@ -1088,7 +1088,7 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
 
-      unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+      unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(usedThreadCount, info);
       // tehdään joka coren säikeelle oma calculaatioBlokki kopio
@@ -1310,7 +1310,7 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
 
-      unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+      unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(usedThreadCount, info);
 
