@@ -8768,7 +8768,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void InitMachineThreadCount(void)
 	{
 		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-		itsMachineThreadCount = static_cast<int>(boost::thread::hardware_concurrency());
+		itsMachineThreadCount = static_cast<int>(std::thread::hardware_concurrency());
 
 		string infoStr("This workstation has support for ");
 		infoStr += NFmiStringTools::Convert(itsMachineThreadCount);

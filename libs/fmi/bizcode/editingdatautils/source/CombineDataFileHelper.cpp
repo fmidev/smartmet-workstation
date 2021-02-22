@@ -16,6 +16,13 @@ namespace
 		// Poistetaan vielä muut paitsi 3 viimeistä tiedostoa, jotka osuvat filefilteriin
 		NFmiFileSystem::CleanFilePattern(combinedDataFileFilter, 3);
 	}
+
+	void createCombinedDataDirectory(const std::string& combinedDataFileFilter)
+	{
+		// varmistetaan että kohde hakemisto on olemassa
+		auto combinedDataDirectory = NFmiFileSystem::PathFromPattern(combinedDataFileFilter);
+		NFmiFileSystem::CreateDirectory(combinedDataDirectory);
+	}
 }
 
 CombineDataFileHelper::CombineDataFileHelper(const std::string& partialDataFileFilter, const std::string& combinedDataFileFilter, int maxTimeSteps, bool doRebuildCheck, LoggingFunction& loggingFunction)
@@ -42,6 +49,7 @@ void CombineDataFileHelper::doDataCombinationWork()
 		std::unique_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CombineQueryDatas(doRebuildCheck_, combinedDataFileFilter_, partialDataFileFilter_, true, maxTimeSteps_, nullptr, &loggingFunction_));
 		if(data)
 		{
+			::createCombinedDataDirectory(combinedDataFileFilter_);
 			if(tryToStoreCombinedDataToFile(*data))
 			{
 				std::string timerMessage = "Building ";

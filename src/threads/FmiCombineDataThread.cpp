@@ -501,10 +501,16 @@ int CFmiSoundingIndexDataThread::WaitToClose(int theMilliSecondsToWait)
 	return 0;
 }
 
+// Jos koneessa on liian vähän ytimiä, ei kannata jakaa laskuja useampaan säikeeseen
+static bool UseOnlyOneThread()
+{
+	return std::thread::hardware_concurrency() < 4;
+}
+
 static void	DoSoundingIndexDataWork()
 {
     // Jos koneessa on liian vähän ytimiä, ei kannata jakaa laskuja useampaan säikeeseen
-	bool useOnlyOneThread = std::thread::hardware_concurrency() < 4; 
+	bool useOnlyOneThread = UseOnlyOneThread();
 
 	// 1. käy läpi kaikki tarkasteltavat infodatat, ja tutki, onko jossain qDatassa tuoreempi aikaleima kuin sitä vastaavassa soundingDatassa
 	//  - jos useita SmartMeteja käynnissä, ei ehkä kuin yhden tarvitsisi tehdä yhdistelmä data, 
@@ -526,7 +532,8 @@ static void	DoSoundingIndexDataWork()
 			try
 			{
 				std::string producerNameStr; // TODO: laita tähän kuvaava nimi
-                int maxUsedThreads = FmiRound(boost::thread::hardware_concurrency() * 0.3); // otetaan käyttöön n. 1/3 säikeistä
+				 // otetaan käyttöön n. 40 % koneen säikeistä
+                int maxUsedThreads = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(40.);
 				data = NFmiSoundingIndexCalculator::CreateNewSoundingIndexData(dataInfo.itsSourceFileFilter, producerNameStr, dataInfo.itsRequiredGroundDataFileFilter, false, &gSoundingIndexDataStopFunctor, useOnlyOneThread, maxUsedThreads);
 				debugTimer.StopTimer();
 			}
