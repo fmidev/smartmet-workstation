@@ -35,6 +35,7 @@
 #include "NFmiTimeList.h"
 #include "NFmiTotalWind.h"
 #include "NFmiWeatherAndCloudiness.h"
+#include "NFmiQueryDataUtil.h"
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -2676,7 +2677,7 @@ static void ModifySingleTimeGridInThread(NFmiFastQueryInfo &theModifiedInfo,
 void NFmiQueryInfo::ModifyTimesLocationData_FullMT(NFmiDataModifier *theModifier,
                                                    NFmiTimeDescriptor &theTimeDescriptor)
 {
-  unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+  unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
   unsigned long timeCount = theTimeDescriptor.Size();
   if (usedThreadCount > timeCount) usedThreadCount = timeCount;
 
