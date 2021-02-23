@@ -1542,18 +1542,10 @@ NFmiMetTime NFmiCaseStudySystem::FindSuitableCaseStudyTime(void)
 // muuten talletus polku otetaan Path-metodista.
 bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, std::string &theMetaDataTotalFileNameInOut, bool fMakeFullStore)
 {
-	// otetaan currentti aika CaseStudy-ajaksi, ei kannatakaan etsi‰ CaseStudyn alku aikaa, koska viimeiset mallit tulev‰t n‰kyviin vain 
-	// loppu ajalle eli kannattaa tallettaa t‰h‰n caseStudy-aikahaarukan loppuaika.
-	itsTime = NFmiMetTime(); // FindSuitableCaseStudyTime();
-	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, fMakeFullStore);
-	if(jsonObject.size() == 0)
-	{
-		std::string errStr(::GetDictionaryString("There was nothing to store in selected Case-Study data set."));
-		std::string captionStr(::GetDictionaryString("Nothing to store when storing Case-Study data"));
-		return ::DoErrorActions(theParentWindow, errStr, captionStr);
-	}
+	const std::string metaDataFileExtension = "csmeta";
+	const std::string metaDataFileExtensionWithDot = "." + metaDataFileExtension;
 
-    std::string pathStr = fMakeFullStore ? NFmiFileSystem::PathFromPattern(theMetaDataTotalFileNameInOut) : CaseStudyPath();
+	std::string pathStr = fMakeFullStore ? NFmiFileSystem::PathFromPattern(theMetaDataTotalFileNameInOut) : CaseStudyPath();
 	if(pathStr.empty())
 	{
 		std::string errStr(::GetDictionaryString("Given path was empty, you must provide absolute path for Case Study data.\nE.g. C:\\data or D:\\data"));
@@ -1573,6 +1565,31 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, std::string &theM
 		return ::DoErrorActions(theParentWindow, errStr, captionStr);
 	}
 
+	if(fileStr.Extension() == metaDataFileExtension)
+	{
+		std::string errStr(::GetDictionaryString("Given path "));
+		errStr += "\n";
+		errStr += pathStr;
+		errStr += "\n";
+		errStr += "had case-study metadata file extension '";
+		errStr += metaDataFileExtension;
+		errStr += "', can't allow it,\n";
+		errStr += "'because propably last loaded case-study data was just left there";
+		std::string captionStr(::GetDictionaryString("Case-Study data path had case-study file extension"));
+		return ::DoErrorActions(theParentWindow, errStr, captionStr);
+	}
+
+	// otetaan currentti aika CaseStudy-ajaksi, ei kannatakaan etsi‰ CaseStudyn alku aikaa, koska viimeiset mallit tulev‰t n‰kyviin vain 
+	// loppu ajalle eli kannattaa tallettaa t‰h‰n caseStudy-aikahaarukan loppuaika.
+	itsTime = NFmiMetTime(); // FindSuitableCaseStudyTime();
+	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, fMakeFullStore);
+	if(jsonObject.size() == 0)
+	{
+		std::string errStr(::GetDictionaryString("There was nothing to store in selected Case-Study data set."));
+		std::string captionStr(::GetDictionaryString("Nothing to store when storing Case-Study data"));
+		return ::DoErrorActions(theParentWindow, errStr, captionStr);
+	}
+
 	if(NFmiFileSystem::DirectoryExists(pathStr) == false)
 	{ // yritet‰‰n luoda polkua
 		if(NFmiFileSystem::CreateDirectory(pathStr) == false)
@@ -1585,7 +1602,7 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, std::string &theM
 		}
 	}
 
-	std::string totalFileName = (fMakeFullStore ? theMetaDataTotalFileNameInOut : (pathStr + '\\' + Name() + ".csmeta"));
+	std::string totalFileName = (fMakeFullStore ? theMetaDataTotalFileNameInOut : (pathStr + '\\' + Name() + metaDataFileExtensionWithDot));
 	std::ofstream out(totalFileName.c_str(), std::ios::binary);
 	if(!out)
 	{
