@@ -1865,29 +1865,36 @@ static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo &graphi
 
 void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 {
-    itsToolBox = theGTB;
-    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
-    if(drawParamList)
-    {
-        auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
-        auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-        auto sizeFactor = ::CalcUsedLegendSizeFactor(graphicalInfo);
-        auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+	if(DrawContourLegendOnThisMapRow())
+	{
+		// Let's draw first possible Wms legends on right side of view
+		DrawWmsLegends(theGTB);
 
-        for(const auto& drawParam : *drawParamList)
-        {
-            if(!drawParam->IsParamHidden())
-            {
-                auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
-                auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
-                NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
-                if(DrawContourLegendOnThisMapRow() && colorContourLegendValues.useLegend())
-                {
-                    CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor, GetFrame());
-                }
-            }
-        }
-    }
+		// Then normal queryData based legends are drawn on the left side of view
+		itsToolBox = theGTB;
+		auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
+		if(drawParamList)
+		{
+			auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
+			auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+			auto sizeFactor = ::CalcUsedLegendSizeFactor(graphicalInfo);
+			auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
+
+			for(const auto& drawParam : *drawParamList)
+			{
+				if(!drawParam->IsParamHidden())
+				{
+					auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+					auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
+					NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
+					if(colorContourLegendValues.useLegend())
+					{
+						CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor, GetFrame());
+					}
+				}
+			}
+		}
+	}
 }
 
 bool NFmiStationViewHandler::DrawContourLegendOnThisMapRow()
