@@ -72,6 +72,7 @@ class NFmiRawData::Pimple
 
 
   bool GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const;
+  bool SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values);
   bool GetValuesPartial(size_t startIndex, size_t rowCount, size_t columnCount, size_t step, size_t rowSkip, std::vector<float> &values) const;
 
   bool SetValue(size_t index, float value);
@@ -479,6 +480,26 @@ bool NFmiRawData::Pimple::GetValues(size_t startIndex, size_t step, size_t count
 	return true;
 }
 
+bool NFmiRawData::Pimple::SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values)
+{
+  if (startIndex + step * (count - 1) >= itsSize) return false;
+
+  float *ptr = nullptr;
+
+  if (itsData)
+    ptr = itsData;
+  else
+    ptr = reinterpret_cast<float *>(itsMappedFile->data() + itsOffset);
+
+  {
+    WriteLock lock(itsMutex);
+
+    for(size_t i = 0; i < count; i++)
+        ptr[startIndex + i * step] = values[i];
+  }
+
+  return true;
+}
 
 bool NFmiRawData::Pimple::GetValuesPartial(size_t startIndex, size_t rowCount, size_t rowStep, size_t columnCount, size_t columnStep, std::vector<float> &values) const
 {
@@ -736,6 +757,8 @@ float NFmiRawData::GetValue(size_t index) const { return itsPimple->GetValue(ind
 // ----------------------------------------------------------------------
 
 bool NFmiRawData::GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const { return itsPimple->GetValues(startIndex, step, count, values); }
+
+bool NFmiRawData::SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values) { return itsPimple->SetValues(startIndex, step, count, values); }
 
 // ----------------------------------------------------------------------
 /*!

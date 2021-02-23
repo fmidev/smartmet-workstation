@@ -46,6 +46,7 @@ public:
     static std::string GetProcessPathAndName(DWORD processID);
     const std::string& GuidStr(void) const;
     float GetApplicationHardDriveFreeSpaceInMB(void) const;
+	std::string GetDecodedApplicationDirectory() const;
 
 	// guid
 	GUID guid;

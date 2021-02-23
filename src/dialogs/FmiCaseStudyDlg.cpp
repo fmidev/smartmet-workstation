@@ -865,8 +865,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
     {
         std::string commandStr;
         commandStr += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
-        commandStr += itsSmartMetDocumentInterface->ApplicationDataBase().apppath;
-        commandStr = NFmiStringTools::UrlDecode(commandStr); // valitettavasti tämä stringi on url-encodattu ja se pitää purkaa...
+        commandStr += itsSmartMetDocumentInterface->ApplicationDataBase().GetDecodedApplicationDirectory();
         commandStr += "\\";
         commandStr += gCaseStudyMakerData.first;
         commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja

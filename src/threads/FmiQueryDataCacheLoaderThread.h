@@ -21,8 +21,8 @@ namespace CFmiQueryDataCacheLoaderThread
     void UpdateSettings(NFmiHelpDataInfoSystem &theHelpDataSystem);
     void LoadDataAtStartUp(bool newState);
     void AutoLoadNewCacheDataMode(bool newState);
+	std::string MakeDailyUnpackLogFilePath();
 
 	UINT DoHistoryThread(LPVOID pParam);
-	void RestartHistoryCollection(void);
 }
 

@@ -345,7 +345,7 @@ void NFmiSoundingIndexCalculator::CalculateWholeSoundingData(NFmiQueryData &theS
   // alustetaan ensimmäisellä kerralla ja multi-threaddaavassa jutussa se voisi olla ongelma.
 
   unsigned long timeSize = theResultData.Info()->SizeTimes();
-  unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+  unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(40);
   if (theMaxThreadCount > 0 && usedThreadCount > static_cast<unsigned int>(theMaxThreadCount))
     usedThreadCount = static_cast<unsigned int>(theMaxThreadCount);  // jos on haluttu säätää maksim
   // threadien määrää, säädetään

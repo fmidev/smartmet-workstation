@@ -11,6 +11,7 @@
 #include "MfcTools.h"
 #include "master_to_worker_connection.h"
 #include "process_helpers.h"
+#include "NFmiQueryDataUtil.h"
 
 #include <boost/thread/thread.hpp> 
 #include <boost/log/sinks/basic_sink_backend.hpp>
@@ -331,7 +332,7 @@ void master_loop_function(const MasterProcessMFCOptions &options)
         master_to_worker_connection::initialize_master(options.verbose_log_);
         master_to_worker_connection::set_keyboard_check_function(::check_if_key_pressed);
 
-        int worker_count = static_cast<int>(boost::thread::hardware_concurrency());
+        int worker_count = static_cast<int>(NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75.));
         master_to_worker_connection::startup_workers(worker_count, worker_base_name, options.worker_exe_file_path_, worker_executable_name, worker_project_name, extra_args, true);
 
         master_to_worker_connection::master_service().run();

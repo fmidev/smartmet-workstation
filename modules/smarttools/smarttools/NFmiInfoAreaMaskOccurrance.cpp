@@ -6,6 +6,7 @@
 #include <newbase/NFmiProducerName.h>
 #include "NFmiSmartInfo.h"
 #include "NFmiSimpleCondition.h"
+#include <boost/math/special_functions/round.hpp>
 
 // **********************************************************
 // *****    NFmiInfoAreaMaskOccurrance  *********************

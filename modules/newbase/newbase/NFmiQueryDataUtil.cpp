@@ -50,6 +50,7 @@
 #include <fstream>
 #include <numeric>
 #include <stdexcept>
+#include <thread>
 
 using namespace std;
 
@@ -3287,7 +3288,7 @@ NFmiQueryData *NFmiQueryDataUtil::MakeCombineParams(NFmiFastQueryInfo &theSource
   {
     NFmiFastQueryInfo destInfo(destData);
 
-    unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+    unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount();
     if (theMaxUsedThreadCount > 0)
       usedThreadCount = std::min(static_cast<unsigned int>(theMaxUsedThreadCount), usedThreadCount);
     if (usedThreadCount > destInfo.SizeTimes()) usedThreadCount = destInfo.SizeTimes();
@@ -4465,6 +4466,7 @@ static void FillDataToCurrentTime(
     if (theFilledInfo.Grid() && sourceInfo->Grid() &&
         *(theFilledInfo.Grid()) == *(sourceInfo->Grid()))
     {
+      std::vector<float> values;
       for (theFilledInfo.ResetLevel(); theFilledInfo.NextLevel();)
       {
         if (sourceInfo->Level(*theFilledInfo.Level()))
@@ -4477,9 +4479,8 @@ static void FillDataToCurrentTime(
                                                                   // aina yhden kentän täytön
                                                                   // välein...
               // oletus vielä nyt että hpalceDesc:it samanlaisia
-              NFmiDataMatrix<float> values;
-              sourceInfo->Values(values);
-              theFilledInfo.SetValues(values);
+              sourceInfo->GetLevelToVec(values);
+              theFilledInfo.SetLevelFromVec(values);
             }
           }
         }
@@ -5140,13 +5141,13 @@ void NFmiQueryDataUtil::FillGridDataFullMT(NFmiQueryData *theSource,
     if (usedStartTimeIndex == gMissingIndex) usedStartTimeIndex = 0;
     if (usedEndTimeIndex == gMissingIndex) usedEndTimeIndex = target1.SizeTimes() - 1;
 
-    unsigned int usedThreadCount = boost::thread::hardware_concurrency();
-#ifdef UNIX
-    // Using all CPUs with the algorithm below leads to severe cache
-    // trashing and poor performance for all programs running simultaneously,
-    // since time is the innermost data element in the 4D data cube.
-    usedThreadCount /= 2;
+    double threadCountPercentage = 50.; // Linux side wants to use 1/2 the cores here
+#ifdef _MSC_VER
+    // With SmartMet side more core power is needed for the parallel job
+    threadCountPercentage = 75.; 
 #endif
+    unsigned int usedThreadCount =
+        NFmiQueryDataUtil::GetReasonableWorkingThreadCount(threadCountPercentage);
 
     if (usedThreadCount > target1.SizeTimes()) usedThreadCount = target1.SizeTimes();
 
@@ -5280,6 +5281,14 @@ NFmiQueryData *NFmiQueryDataUtil::ReadNewestData(const std::string &theFileFilte
   return data;
 }
 
+template<typename T>
+static void CheckThreadCountLimits(T &threadCountInOut, T maxThreadCount)
+{
+  T minThreadCount = 1;
+  threadCountInOut = std::max(threadCountInOut, minThreadCount);
+  threadCountInOut = std::min(threadCountInOut, maxThreadCount);
+}
+
 // Halutaan laskea eri tehtäviä varten optimaalinen threadien käyttö.
 // Esim. soundingIndex laskut tehdään haluttaessa niin että otetaan käyttöön n kpl
 // työthreadeja jotka laskevat kerrallaa yksittäisen aika-askeleen.
@@ -5294,25 +5303,20 @@ NFmiQueryData *NFmiQueryDataUtil::ReadNewestData(const std::string &theFileFilte
 // CPU:lla ei olisi yli kuormitettu turhaa kahden ensimmäisen työskentely syklin aikana.
 int NFmiQueryDataUtil::CalcOptimalThreadCount(int maxAvailableThreads, int separateTaskCount)
 {
-  if (maxAvailableThreads <= 1)
-    return 1;  // Esim. jos käyttäjä on pyytänyt maxthread-1::lla arvoa ja CPU:ssa on vain 1
-               // threadi
-               // käytössä
   if (maxAvailableThreads >= separateTaskCount) return separateTaskCount;
-  if (maxAvailableThreads == 2) return 2;  // turha tälle oikeastaan laskea mitään
+  if (maxAvailableThreads <= 2) return maxAvailableThreads;
 
   double ratio = static_cast<double>(separateTaskCount) / maxAvailableThreads;
   auto wantedIntegerPart = static_cast<int>(ratio);
+  // Jos jakosuhteeksi tuli kokonaisluku, käytetään kaikkia annettuja threadeja
   if (ratio == wantedIntegerPart)
-    return maxAvailableThreads;  // jos jakosuhteeksi tuli kokonaisluku, käytetään kaikkia
-                                 // annettuja
-                                 // threadeja
+    return maxAvailableThreads;
 
   // Jos ei löytynyt tasalukuja, pitää iteroida semmoinen ratio, jolla saadaan mahdollisimman iso
   // kokonaisluku,
   // jossa on mahdollisimman iso murto-osa siis esim. 6.92 (6.92 on parempi kuin vaikka 6.34)
   // double maxRatio = ratio;
-  int maxRatioThreadcount = maxAvailableThreads;
+  int maxRatioThreadCount = maxAvailableThreads;
   for (int threadCount = maxAvailableThreads - 1; threadCount > 1; threadCount--)
   {
     double ratio2 = static_cast<double>(separateTaskCount) / threadCount;
@@ -5320,16 +5324,42 @@ int NFmiQueryDataUtil::CalcOptimalThreadCount(int maxAvailableThreads, int separ
     if (wantedIntegerPart2 == wantedIntegerPart && ratio2 > ratio)
     {
       // maxRatio = ratio2;
-      maxRatioThreadcount = threadCount;
+      maxRatioThreadCount = threadCount;
     }
     if (wantedIntegerPart2 == wantedIntegerPart + 1 && ratio2 == wantedIntegerPart2)
     {  // löydettiin jakosuhde, joka käyttää vajaata threadi määrää täysillä esim. maxThread = 4,
       // taskcount = 6, tällöin optimaali on 3 threadia
       // maxRatio = ratio2;
-      maxRatioThreadcount = threadCount;
+      maxRatioThreadCount = threadCount;
       break;
     }
     if (wantedIntegerPart2 > wantedIntegerPart) break;
   }
-  return maxRatioThreadcount;
+
+  ::CheckThreadCountLimits(maxRatioThreadCount, maxAvailableThreads);
+  return maxRatioThreadCount;
+}
+
+// By default this function returns count of half of the hardware threads in the system.
+// If you start a heavy parallel work, you shouldn't use all the threads in the machine 
+// because it will freeze the system. also the modern CPU's use hyper-threading system
+// where actual CPU cores are duplicated and when one thread on one actual core is working,
+// the other thread on that core must just wait. Using full hyper-threading gives boost of 
+// about 5-10 % depending of the work, but the system freezes. Using only half the threads 
+// gives you almost full power, but much more responsive system otherwise.
+// Use wantedHardwareThreadPercent (0 - 100 %) to use more or less cores for the work threads.
+// Use separateTaskCount to calculate more balanced thread count, works only if separate 
+// tasks takes to complete about the same amount of time. It's defaulted to 0 and then 
+// it's ignored.
+unsigned int NFmiQueryDataUtil::GetReasonableWorkingThreadCount(double wantedHardwareThreadPercent,
+                                                                unsigned int separateTaskCount)
+{
+  auto maxThreadCount = std::thread::hardware_concurrency();
+  auto threadCount =
+      static_cast<unsigned int>(boost::math::iround(maxThreadCount * (wantedHardwareThreadPercent / 100.)));
+  ::CheckThreadCountLimits(threadCount, maxThreadCount);
+  if (separateTaskCount == 0)
+    return threadCount;
+  else
+    return CalcOptimalThreadCount(threadCount, separateTaskCount);
 }

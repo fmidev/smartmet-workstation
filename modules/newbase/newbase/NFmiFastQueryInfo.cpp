@@ -2203,41 +2203,109 @@ void NFmiFastQueryInfo::Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTi
   TimeIndex(timeInterpolationData.oldTimeIndex);
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \param startIndex Undocumented
+ * \param step Undocumented
+ * \param count Undocumented
+ * \param values Vector to fill (and resize to count elements) with values startIndex,
+ * startIndex+step, startIndex+step*2, ..., startIndex+step*(count-1) - current iterators are
+ * invalidated by the resizing! \return false if out-of-range, true otherwise
+ */
+// ----------------------------------------------------------------------
+bool NFmiFastQueryInfo::GetValues(size_t startIndex,
+                                  size_t step,
+                                  size_t count,
+                                  std::vector<float> &values) const
+{
+  if (itsRefRawData && itsRefRawData->GetValues(startIndex, step, count, values))
+  {
+    DoSubParamConversions(values, __FUNCTION__);
+    return true;
+  }
+
+  return false;
+}
+
+bool NFmiFastQueryInfo::SetValues(size_t startIndex,
+                                         size_t step,
+                                         size_t count,
+                                         const std::vector<float> &values)
+{
+  if (IsSubParamUsed())
+    throw(std::runtime_error(std::string(__FUNCTION__) + ": No sub-param support yet!"));
+
+  return itsRefRawData ? itsRefRawData->SetValues(startIndex, step, count, values) : false;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \param startIndex Undocumented
+ * \param rowCount Undocumented
+ * \param rowStep Undocumented
+ * \param columCount Undocumented
+ * \param columnStep Undocumented
+ * \param values Vector to fill (and resize to count elements) with values startIndex,
+ * startIndex+rowStep, startIndex+rowStep*2, ..., startIndex+rowStep*(count-1),
+ * startIndex+columnStep, startIndex+columnStep+rowStep ... - current iterators are invalidated by
+ * the resizing! \return false if out-of-range, true otherwise
+ */
+// ----------------------------------------------------------------------
+bool NFmiFastQueryInfo::GetValuesPartial(size_t startIndex,
+                                                size_t rowCount,
+                                                size_t rowStep,
+                                                size_t columnCount,
+                                                size_t columnStep,
+                                                std::vector<float> &values) const
+{
+  if(itsRefRawData && itsRefRawData->GetValuesPartial(startIndex, rowCount, rowStep, columnCount, columnStep, values))
+  {
+    DoSubParamConversions(values, __FUNCTION__);
+    return true;
+  }
+  return false;
+}
+
 bool NFmiFastQueryInfo::GetLevelToVec(std::vector<float> &values)
 {
-	FirstLocation();
-	size_t startIndex = Index();
-	size_t step = SizeTimes()*SizeLevels();
-	size_t count = SizeLocations();
+  FirstLocation();
+  size_t startIndex = Index();
+  size_t step = SizeTimes() * SizeLevels();
+  size_t count = SizeLocations();
 
+  return GetValues(startIndex, step, count, values);
+}
 
+void NFmiFastQueryInfo::DoSubParamConversions(std::vector<float>& values, std::string callingFunctionName) const
+{
+  if (IsSubParamUsed())
+  {
+    if (itsCombinedParamParser)
+    {
+      std::transform(begin(values), end(values), begin(values), [this](const float &fVal) {
+        return SubValueFromFloat(fVal);
+      });
+    }
+    else
+      throw(std::runtime_error(callingFunctionName + ": CombinedParamParser missing!"));
+  }
+}
 
-	if (!GetValues(startIndex, step, count, values)) {
-		//std::cout << __FUNCTION__ << '(' << startIndex << ',' << step << ',' << count << ',' << &values << ") out of bounds!" << std::endl;
-		return false;
-	}
+bool NFmiFastQueryInfo::SetLevelFromVec(const std::vector<float> &values)
+{
+  if (IsSubParamUsed())
+    throw(std::runtime_error(std::string(__FUNCTION__) + ": No sub-param support yet!"));
 
-	if (IsSubParamUsed()) {
-		if (itsCombinedParamParser)
-		{
-			std::transform(begin(values), end(values), begin(values),
-				[this](const float &fVal)
-			{
-				return SubValueFromFloat(fVal);
-			});
-		}
-		else throw(std::runtime_error("CombinedParamParser missing!"));
-	}
+  FirstLocation();
+  size_t startIndex = Index();
+  size_t step = SizeTimes() * SizeLevels();
+  size_t count = SizeLocations();
 
-	return true;
-
-
+  return SetValues(startIndex, step, count, values);
 }
 
 bool NFmiFastQueryInfo::GetLevelToVecPartial(size_t x1, size_t y1, size_t x2, size_t y2,std::vector<float> &values)
 {
-
-
 	size_t columnCount = x2 - x1 + 1;
 	if (columnCount <= 0 || columnCount > itsGridXNumber) throw std::invalid_argument("Degenerate X axis");
 	size_t columnStep = SizeTimes()*SizeLevels(); 
@@ -2245,42 +2313,16 @@ bool NFmiFastQueryInfo::GetLevelToVecPartial(size_t x1, size_t y1, size_t x2, si
 	FirstLocation();
 	size_t startIndex = Index() + (x1 + y1*itsGridXNumber)*columnStep;
 
-
-
 	size_t rowCount = y2 - y1 + 1;
 	if (rowCount <= 0 || rowCount > itsGridYNumber) throw std::invalid_argument("Degenerate Y axis");
 	size_t rowStep = (itsGridXNumber - columnCount)*columnStep;
 
-	if (!GetValuesPartial(startIndex,rowCount,rowStep,columnCount,columnStep,values) ) {
-		return false;
-	}
-
-	if (IsSubParamUsed()) {
-		if (itsCombinedParamParser)
-		{
-			std::transform(begin(values), end(values), begin(values),
-				[this](const float &fVal)
-			{
-				return SubValueFromFloat(fVal);
-			});
-		}
-		else throw(std::runtime_error("CombinedParamParser missing!"));
-	}
-
-	return true;
-
-
+	return GetValuesPartial(startIndex,rowCount,rowStep,columnCount,columnStep,values);
 }
 
 bool NFmiFastQueryInfo::GetCube(std::vector<float> &values)
 {
 	values.resize(SizeLocations()*SizeLevels());
-
-// 	bool rising = HeightParamIsRising();
-// 
-// 	if (rising) ResetLevel();
-// 	else LastLevel();
-
 
 	FirstLevel();
 	FirstLocation();
@@ -2288,24 +2330,11 @@ bool NFmiFastQueryInfo::GetCube(std::vector<float> &values)
 	size_t step = SizeTimes();
 	size_t count = SizeLocations() * SizeLevels();
 
-	if (!GetValues(startIndex, step, count, values)) return false;
-
-	if (IsSubParamUsed()) {
-		if (itsCombinedParamParser)
-		{
-			std::transform(rbegin(values), rend(values), rbegin(values),
-				[this](const float &fVal)
-			{
-				return SubValueFromFloat(fVal);
-			});
-		}
-		else throw(std::runtime_error("CombinedParamParser is null!"));
-	}
-
-	return true;
+	return GetValues(startIndex, step, count, values);
 }
 
-bool NFmiFastQueryInfo::GetInterpolatedLevel(std::vector<float> &values, const NFmiMetTime &time) {
+bool NFmiFastQueryInfo::GetInterpolatedLevel(std::vector<float> &values, const NFmiMetTime &time) 
+{
 
 	auto oldTime = TimeIndex();
 
@@ -2317,9 +2346,6 @@ bool NFmiFastQueryInfo::GetInterpolatedLevel(std::vector<float> &values, const N
 
 	TimeIndex(timeCache.itsTimeIndex1);
 	GetLevelToVec(values);
-
-
-
 	TimeIndex(timeCache.itsTimeIndex2);
 	GetLevelToVec(nextValues);
 
@@ -2332,53 +2358,54 @@ bool NFmiFastQueryInfo::GetInterpolatedLevel(std::vector<float> &values, const N
 		return CachedTimeInterpolatedValue(a, b, timeCache, interp, parId);
 	});
 
-
 	TimeIndex(oldTime);
-
 	return true;
 }
 
-bool NFmiFastQueryInfo::GetInterpolatedCube(std::vector<float> &values, const NFmiMetTime &time) {
+bool NFmiFastQueryInfo::GetInterpolatedCube(std::vector<float> &values, const NFmiMetTime &time)
+{
+  auto oldTime = TimeIndex();
 
-	auto oldTime = TimeIndex();
+  values.resize(SizeLocations() * SizeLevels());
+  std::fill(begin(values), end(values), kFloatMissing);
 
-	values.resize(SizeLocations()*SizeLevels());
-	std::fill(begin(values), end(values), kFloatMissing);
-	static std::vector<float> nextValues(SizeLocations()*SizeLevels() , kFloatMissing );
+  NFmiTimeCache timeCache = CalcTimeCache(time);
+  NFmiDataIdent &param = Param();
+  FmiInterpolationMethod interp = param.GetParam()->InterpolationMethod();
+  FmiParameterName parId = static_cast<FmiParameterName>(param.GetParamIdent());
+  bool simpleInterp = kNoneInterpolation || kNearestPoint;
+  if (simpleInterp && timeCache.itsOffset <= 0.5 || timeCache.itsOffset < 0.001)
+  {
+    TimeIndex(timeCache.itsTimeIndex1);
+    GetCube(values);
+  }
+  else if (simpleInterp && timeCache.itsOffset > 0.5 || timeCache.itsOffset > 0.999)
+  {
+    TimeIndex(timeCache.itsTimeIndex2);
+    GetCube(values);
+  }
+  else
+  {
+    auto nextValues = values;
 
-	NFmiTimeCache timeCache = CalcTimeCache(time);
-	NFmiDataIdent &param = Param();
-	FmiInterpolationMethod interp = param.GetParam()->InterpolationMethod();
-	FmiParameterName parId = static_cast<FmiParameterName>(param.GetParamIdent());
-	bool simpleInterp = kNoneInterpolation ||kNearestPoint;
-	if (simpleInterp && timeCache.itsOffset <= 0.5 || timeCache.itsOffset < 0.001) {
-			TimeIndex(timeCache.itsTimeIndex1);
-			GetCube(values);
-		}
-		else if(simpleInterp && timeCache.itsOffset > 0.5 || timeCache.itsOffset > 0.999)  {
-			TimeIndex(timeCache.itsTimeIndex2);
-			GetCube(values);
-	}
-	else {
+    TimeIndex(timeCache.itsTimeIndex1);
+    GetCube(values);
 
-		TimeIndex(timeCache.itsTimeIndex1);
-		GetCube(values);
+    TimeIndex(timeCache.itsTimeIndex2);
+    GetCube(nextValues);
 
-		TimeIndex(timeCache.itsTimeIndex2);
-		GetCube(nextValues);
+    std::transform(values.begin(),
+                   values.end(),
+                   nextValues.begin(),
+                   values.begin(),
+                   [&](const float &a, const float &b) {
+                     return CachedTimeInterpolatedValue(a, b, timeCache, interp, parId);
+                   });
+  }
 
+  TimeIndex(oldTime);
 
-
-		std::transform(values.begin(), values.end(), nextValues.begin(), values.begin(),
-			[&](const float &a, const float &b) {
-			return CachedTimeInterpolatedValue(a, b, timeCache, interp, parId);
-		});
-
-	}
-
-	TimeIndex(oldTime);
-
-	return true;
+  return true;
 }
 
 // ----------------------------------------------------------------------

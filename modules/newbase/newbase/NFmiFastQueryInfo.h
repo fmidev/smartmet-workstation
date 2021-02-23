@@ -174,10 +174,13 @@ class _FMI_DLL NFmiFastQueryInfo : public NFmiQueryInfo
 
   // 31.5.2017 Tavi high performance bulk query
   bool GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const;
+  bool SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values);
   bool GetValuesPartial(size_t startIndex, size_t rowCount, size_t rowStep, size_t columnCount, size_t columnStep, std::vector<float> &values) const;
   bool GetLevelToVec(std::vector<float> &values);
+  bool SetLevelFromVec(const std::vector<float> &values);
   bool GetLevelToVecPartial(size_t x1, size_t y1, size_t x2, size_t y2, std::vector<float> &values);
   bool GetCube(std::vector<float> &values);
+  void DoSubParamConversions(std::vector<float> &values, std::string callingFunctionName) const;
 
   bool GetInterpolatedLevel(std::vector<float> &values, const NFmiMetTime &time);
   bool GetInterpolatedCube(std::vector<float> &values, const NFmiMetTime &t);
@@ -837,37 +840,6 @@ inline bool NFmiFastQueryInfo::FirstTime(void)
 inline float NFmiFastQueryInfo::IndexFloatValue(size_t theIndex) const
 {
   return itsRefRawData ? itsRefRawData->GetValue(theIndex) : kFloatMissing;
-}
-
-
-// ----------------------------------------------------------------------
-/*!
-* \param startIndex Undocumented
-* \param step Undocumented
-* \param count Undocumented
-* \param values Vector to fill (and resize to count elements) with values startIndex, startIndex+step, startIndex+step*2, ..., startIndex+step*(count-1) - current iterators are invalidated by the resizing!
-* \return false if out-of-range, true otherwise
-*/
-// ----------------------------------------------------------------------
-inline bool NFmiFastQueryInfo::GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const
-{
-	return itsRefRawData ? itsRefRawData->GetValues(startIndex, step, count, values) : false;
-}
-
-// ----------------------------------------------------------------------
-/*!
-* \param startIndex Undocumented
-* \param rowCount Undocumented
-* \param rowStep Undocumented
-* \param columCount Undocumented
-* \param columnStep Undocumented
-* \param values Vector to fill (and resize to count elements) with values startIndex, startIndex+rowStep, startIndex+rowStep*2, ..., startIndex+rowStep*(count-1), startIndex+columnStep, startIndex+columnStep+rowStep ... - current iterators are invalidated by the resizing!
-* \return false if out-of-range, true otherwise
-*/
-// ----------------------------------------------------------------------
-inline bool NFmiFastQueryInfo::GetValuesPartial(size_t startIndex, size_t rowCount, size_t  rowStep, size_t columnCount, size_t  columnStep, std::vector<float> &values) const
-{
-	return itsRefRawData ? itsRefRawData->GetValuesPartial(startIndex, rowCount, rowStep, columnCount, columnStep, values) : false;
 }
 
 // ----------------------------------------------------------------------

@@ -10,6 +10,7 @@
 #include "NFmiStringTools.h"
 #include "NFmiFileSystem.h"
 #include "NFmiPathUtils.h"
+#include "NFmiQueryDataUtil.h"
 #include "execute-command-in-separate-process.h"
 #include <thread>
 
@@ -17,21 +18,10 @@
 #define new DEBUG_NEW
 #endif
 
-static int GetUsedCoreCount()
-{
-#ifdef max
-#undef max
-#endif
-
-    auto existingCoreCount = std::thread::hardware_concurrency();
-    auto usedCoreCount = boost::math::iround(existingCoreCount * 0.3333);
-    usedCoreCount = std::max(1, usedCoreCount);
-    return usedCoreCount;
-}
-
 static std::string GetNumberOfCpuThreadsFor7zipOption()
 {
-    auto usedCoreCount = ::GetUsedCoreCount();
+    // Otetaan käyttöön vain n. 1/3 CPU coreista
+    auto usedCoreCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(33.3);
     if(usedCoreCount > 1)
     {
         std::string optionString = " -mmt";

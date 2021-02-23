@@ -35,6 +35,7 @@
 #include "NFmiTimeList.h"
 #include "NFmiTotalWind.h"
 #include "NFmiWeatherAndCloudiness.h"
+#include "NFmiQueryDataUtil.h"
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -2052,7 +2053,7 @@ float NFmiQueryInfo::SubParamFloatValue() const
 
 
 //duplicated code because SubParamFloatValue isn't very const
-float NFmiQueryInfo::SubValueFromFloat(float fValue) {
+float NFmiQueryInfo::SubValueFromFloat(float fValue) const {
 	itsCombinedParamParser->TransformFromFloatValue(fValue);
 	return float(itsCombinedParamParser->SubValue(
 		FmiParameterName(itsParamDescriptor->Param(false).GetParam()->GetIdent())));
@@ -2676,7 +2677,7 @@ static void ModifySingleTimeGridInThread(NFmiFastQueryInfo &theModifiedInfo,
 void NFmiQueryInfo::ModifyTimesLocationData_FullMT(NFmiDataModifier *theModifier,
                                                    NFmiTimeDescriptor &theTimeDescriptor)
 {
-  unsigned int usedThreadCount = boost::thread::hardware_concurrency();
+  unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
   unsigned long timeCount = theTimeDescriptor.Size();
   if (usedThreadCount > timeCount) usedThreadCount = timeCount;
 

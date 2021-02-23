@@ -167,11 +167,6 @@ void ApplicationInterfaceForSmartMet::UpdateOnlyExtraMapViews(bool updateMap1, b
         doc->UpdateOnlyExtraMapViews(updateMap1, updateMap2);
 }
 
-void ApplicationInterfaceForSmartMet::RestartHistoryDataCacheThread()
-{
-    ::GetMainFrame()->RestartHistoryDataCacheThread();
-}
-
 void ApplicationInterfaceForSmartMet::DrawOverBitmapThings(NFmiToolBox *theGTB)
 {
     auto view = ApplicationInterface::GetSmartMetView();

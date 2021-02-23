@@ -643,9 +643,10 @@ void InitGriddingCallback()
 void InitLogFileCleaning()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	auto logFilePattern = CatLog::baseLogFilePath();
-    logFilePattern += "*";
-    NFmiFilePatternCleanerInfo info(logFilePattern, 25);
+	// Let's clean log directory so that there is max 30 days old files
+	auto baseLogFilePath = CatLog::baseLogFilePath();
+	auto directoryPart = PathUtils::getPathSectionFromTotalFilePath(baseLogFilePath);
+    NFmiDirectorCleanerInfo info(directoryPart, 30);
     FileCleanerSystem().Add(info);
 }
 
@@ -8767,7 +8768,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void InitMachineThreadCount(void)
 	{
 		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-		itsMachineThreadCount = static_cast<int>(boost::thread::hardware_concurrency());
+		itsMachineThreadCount = static_cast<int>(std::thread::hardware_concurrency());
 
 		string infoStr("This workstation has support for ");
 		infoStr += NFmiStringTools::Convert(itsMachineThreadCount);
@@ -9493,8 +9494,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         // Tarkista onko Master-prosessi jo käynnissä, jos oli, lopetetaan
         if(MasterProcessRunningCount() <= 0)
         {
-            std::string usedAppPath = ApplicationDataBase().apppath;
-            usedAppPath = NFmiStringTools::UrlDecode(usedAppPath); // valitettavasti tämä stringi on url-encodattu ja se pitää purkaa...
+            std::string usedAppPath = ApplicationDataBase().GetDecodedApplicationDirectory();
 
             // Jos ei ollut, käynnistä Master-prosessi
             std::string commandStr;
