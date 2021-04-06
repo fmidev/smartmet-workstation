@@ -142,8 +142,9 @@ inline const T Split(const std::string &theString, const std::string &theSeparat
   {
     std::string::size_type pos2 = theString.find(theSeparator, pos1);
     if (pos2 == std::string::npos) pos2 = theString.size();
-    std::inserter(ret, ret.end()) =
-        Convert<typename T::value_type>(theString.substr(pos1, pos2 - pos1));
+    auto trimTrailingWhiteSpaceString = theString.substr(pos1, pos2 - pos1);
+    TrimR(trimTrailingWhiteSpaceString);
+    std::inserter(ret, ret.end()) = Convert<typename T::value_type>(trimTrailingWhiteSpaceString);
     pos1 = pos2 + theSeparator.size();
   }
   return ret;
