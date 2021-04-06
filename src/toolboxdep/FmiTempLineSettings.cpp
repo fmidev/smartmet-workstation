@@ -137,7 +137,7 @@ BOOL CFmiTempLineSettings::OnInitDialog()
 
 	NFmiColor tColor = itsLineInfo.Color();
 	itsColorRef = CtrlView::Color2ColorRef(tColor);
-	CtrlView::InitialButtonColorUpdate(this, itsColorRef, &itsColorBitmap, itsColorRect, itsColorButtom);
+	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsColorRef, &itsColorBitmap, itsColorRect, itsColorButtom));
 
 	UpdateData(FALSE);
 
@@ -250,7 +250,7 @@ void CFmiTempLineSettings::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrol
 
 void CFmiTempLineSettings::OnBnClickedButtonColor()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef, &itsColorBitmap, itsColorRect, itsColorButtom);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef, &itsColorBitmap, itsColorRect, itsColorButtom));
 }
 
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.

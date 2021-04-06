@@ -143,7 +143,7 @@ void CFmiSynopPlotSettingsDlg::InitFromDoc(void)
 
 	NFmiColor tColor = synopSettings.SingleColor();
 	itsSingleColorRef = CtrlView::Color2ColorRef(tColor);
-	CtrlView::InitialButtonColorUpdate(this, itsSingleColorRef, &itsSingleColorBitmap, itsSingleColorRect, itsSingleColorChangeButtom);
+	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsSingleColorRef, &itsSingleColorBitmap, itsSingleColorRect, itsSingleColorChangeButtom));
 
 	UpdateData(FALSE);
 }
@@ -423,7 +423,7 @@ void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowSingleColor()
 
 void CFmiSynopPlotSettingsDlg::OnBnClickedButtonSingleColor()
 {
-    CtrlView::ColorButtonPressed(this, itsSingleColorRef, &itsSingleColorBitmap, itsSingleColorRect, itsSingleColorChangeButtom);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSingleColorRef, &itsSingleColorBitmap, itsSingleColorRect, itsSingleColorChangeButtom));
 }
 
 void CFmiSynopPlotSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)

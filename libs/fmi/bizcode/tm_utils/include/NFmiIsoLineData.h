@@ -8,6 +8,7 @@
 #include "NFmiInterpolation.h"
 #include "matrix3d.h"
 #include "NFmiDataMatrix.h"
+#include "ColorContouringData.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiFastQueryInfo;
@@ -68,17 +69,9 @@ public:
 	void SetIsolineData(const NFmiDataMatrix<float>& isolineData);
 	void ResizeDefRGBArray(size_t newRowSize);
 
-	bool Init(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount = NFmiIsoLineData::DefaultMaxAllowedIsoLineCount);
-	void InitDrawOptions(const NFmiIsoLineData& theOther);
-	float InterpolatedValue(const NFmiPoint& thePoint);
+	bool InitIsoLineData(const NFmiDataMatrix<float>& theValueMatrix, NFmiIsoLineData *otherIsoLineData = nullptr);
 	void InitContourUserDrawData(const NFmiDataMatrix<float>& valueMatrix, const NFmiDataMatrix<NFmiPoint>& coordinateMatrix);
 	bool UseContourUserDraw() const;
-	bool UseContourDraw() const;
-
-	// Kuinka monta eriarvoista isoviivaa laitetaan laskuin oletuksena. 
-	// Mit‰ isompi luku, sit‰ kauemmin voi tietyiss‰ tilanteissa 'mustan mˆssˆn' piirto kest‰‰ visualisoinneissa.
-	// T‰ll‰ siis yritet‰‰n est‰‰ ett‰ v‰‰rin asetetuilla piirtoasetuksilla kone jumittaa mahdottoman kauan ja piirt‰‰ ruudulle tuhansittain isoviivoja vieriviereen.
-	static const int DefaultMaxAllowedIsoLineCount = 500;
 
 	// Data osiot on laitettu t‰‰ll‰ julkisiksi
 	// ========================================
@@ -101,6 +94,7 @@ public:
 	checkedVector<int> itsIsoLineStyle; // indeksi viiva tyyliin,0=yht.viiva,1=tihe‰ pisteviiva,jne.
 	checkedVector<float> itsIsoLineWidth; // t‰m‰ on suhteellinen paksuus riippuu ruudun koosta
 	checkedVector<float> itsIsoLineAnnonationHeight; // miten isolla piirret‰‰n isoviivan arvo (0:lla ei piirret‰), suhteellinen ruudun kokoon
+
 	bool fUseLabelBox = false;
 	int itsIsoLineBoxFillColorIndex = 0;
 	bool fUseSingleColorsWithSimpleIsoLines = true; // jos true, yksiv‰riset 'simppelit' isoviivat, muuten k‰ytet‰‰n luokka kohtaisia v‰rej‰
@@ -110,6 +104,7 @@ public:
 	bool fUseSeparatorLinesBetweenColorContourClasses = false; // piirr‰ viivat arvo/v‰ri luokkien v‰lille
 	bool fUseIsoLineGabWithCustomContours = false;
 	bool fDrawLabelsOverContours = false; // t‰m‰ optio on vain imagine piirrolle, ToolMaster piirrossa t‰m‰ hoidetaan toisin. T‰m‰ on siis true (imagine piirrossa), jos k‰ytet‰‰n isoline+contour piirtoa
+
 	int itsColorIndexCount = 0; // k‰ytet‰‰n fUseIsoLineGabWithCustomContours-option kanssa
 	float itsIsoLineStep = 0; // k‰ytet‰‰n t‰t‰, jos fUseCustomIsolineClasses == 0
 	float itsColorContoursStep = 0; // k‰ytet‰‰n t‰t‰, jos fUseCustomIsolineClasses == 0
@@ -121,6 +116,7 @@ public:
 	int itsIsoLineLabelDecimalsCount = 0; // kuinka monta desimaalia k‰ytet‰‰n
 	float itsIsoLineZeroClassValue = 0; // jos steppaavat isoviivat, mink‰ arvon kautta isoviivat menev‰t
 	float itsIsoLineStartClassValue = 0; // jos steppaavat isoviivat, t‰m‰ arvo pit‰‰ laskea, t‰st‰ arvosta alkaa steputus
+
 	// itsIsolineData matriisin min/max arvot
 	float itsDataMinValue = 3.4E+38f;
 	float itsDataMaxValue = -3.4E+38f;
@@ -138,11 +134,14 @@ public:
 	size_t itsDefRGBRowSize = 0; // T‰ss‰ on todellinen v‰ri taulu lukum‰‰r‰
 	Matrix3D<std::pair<int, COLORREF> >* itsUsedColorsCube = nullptr; // ei omista, ei tuhoa
 	NFmiContourUserDrawData itsContourUserDrawData;
+
 	// Yhden karttaruudun korkeus millimetreiss‰, tarvitaan hatch laskuissa
 	double itsSingleSubMapViewHeightInMillimeters = 100.;
 	double itsDataGridToViewHeightRatio = 1.;
+	ColorContouringData itsColorContouringData;
 private:
 	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount);
 	void DoBaseInitializationReset();
+	void InitDrawOptions(const NFmiIsoLineData& theOther);
 };
 

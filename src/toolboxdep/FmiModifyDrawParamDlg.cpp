@@ -15,13 +15,13 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiGdiPlusImageMapHandler.h"
 #include "NFmiFixedDrawParamSystem.h"
-#include "CtrlViewWin32Functions.h"
 #include "SpecialDesctopIndex.h"
 #include "CtrlViewFunctions.h"
 #include "ToolMasterColorCube.h"
 #include "PERSIST2.H"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "ApplicationInterface.h"
+#include <boost/algorithm/string.hpp>
 
 #include <direct.h> // working directory juttuja varten
 
@@ -43,23 +43,24 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 ,fModifyMapViewParam(modifyMapViewParam)
 ,fModifyCrossSectionViewParam(modifyCrossSectionViewParam)
 ,itsDrawParamPath(theDrawParamPath)
-,itsSymbolFillBitmap(0)
-,itsSymbolBitmap(0)
-,itsIsoLineLabelBitmap(0)
-,itsIsoLineBitmap(0)
-,itsIsoLineLabelBoxFillBitmap(0)
-,itsSymbolMidBitmap(0)
-,itsSymbolLowBitmap(0)
-,itsSymbolHighBitmap(0)
-,itsSimpleIsoLineMidBitmap(0)
-,itsSimpleIsoLineLowBitmap(0)
-,itsSimpleIsoLineHighBitmap(0)
-,itsSimpleColorContourMidBitmap(0)
-,itsSimpleColorContourLowBitmap(0)
-,itsSimpleColorContourHighBitmap(0)
-,itsSimpleColorContourHigh2Bitmap(0)
-,itsHatch1Bitmap(0)
-,itsHatch2Bitmap(0)
+,itsSymbolFillBitmap(nullptr)
+,itsSymbolBitmap(nullptr)
+,itsIsoLineLabelBitmap(nullptr)
+,itsIsoLineBitmap(nullptr)
+,itsIsoLineLabelBoxFillBitmap(nullptr)
+,itsSymbolMidBitmap(nullptr)
+,itsSymbolLowBitmap(nullptr)
+,itsSymbolHighBitmap(nullptr)
+,itsSimpleIsoLineMidBitmap(nullptr)
+,itsSimpleIsoLineLowBitmap(nullptr)
+,itsSimpleIsoLineHighBitmap(nullptr)
+,itsSimpleColorContourMidBitmap(nullptr)
+,itsSimpleColorContourLowBitmap(nullptr)
+,itsSimpleColorContourHighBitmap(nullptr)
+,itsSimpleColorContourHigh2Bitmap(nullptr)
+,itsSimpleColorContourHigh3Bitmap(nullptr)
+,itsHatch1Bitmap(nullptr)
+,itsHatch2Bitmap(nullptr)
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
 ,itsDescTopIndex(theDescTopIndex)
 , itsDrawParamFileNameStrU_(_T(""))
@@ -77,6 +78,15 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , fUseTransparentLabelBoxFillColor(TRUE)
 , fDoSparseDataSymbolVisualization(FALSE)
 , fUseLegend(FALSE)
+, fSimpleContourTransparency1(FALSE)
+, fSimpleContourTransparency2(FALSE)
+, fSimpleContourTransparency3(FALSE)
+, fSimpleContourTransparency4(FALSE)
+, fSimpleContourTransparency5(FALSE)
+, itsSimpleColorContourLimit1StringU_(_T(""))
+, itsSimpleColorContourLimit2StringU_(_T(""))
+, itsSimpleColorContourLimit3StringU_(_T(""))
+, itsSimpleColorContourLimit4StringU_(_T(""))
 {
 	if(theDrawParam)
 	{
@@ -136,10 +146,6 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 	itsHatch2Style = 0.0;
 	itsHatch2EndValue = 0.0;
 	itsHatch2StartValue = 0.0;
-	itsSimpleColorContourClassEnd2Value = 0.0f;
-	itsSimpleColorContourClassEndValue = 0.0f;
-	itsSimpleColorContourClassMiddleValue = 0.0f;
-	itsSimpleColorContourClassStartValue = 0.0f;
 	fUSeSeparatingLinesBetweenColorContourClasses = FALSE;
 	//}}AFX_DATA_INIT
 }
@@ -162,99 +168,106 @@ CFmiModifyDrawParamDlg::~CFmiModifyDrawParamDlg(void)
     CtrlView::DestroyBitmap(&itsSimpleColorContourMidBitmap);
     CtrlView::DestroyBitmap(&itsSimpleColorContourLowBitmap);
     CtrlView::DestroyBitmap(&itsSimpleColorContourHighBitmap);
-    CtrlView::DestroyBitmap(&itsSimpleColorContourHigh2Bitmap);
+	CtrlView::DestroyBitmap(&itsSimpleColorContourHigh2Bitmap);
+	CtrlView::DestroyBitmap(&itsSimpleColorContourHigh3Bitmap);
 }
 
 
 void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialog::DoDataExchange(pDX);
-    //{{AFX_DATA_MAP(CFmiModifyDrawParamDlg)
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_MID, itsSimpleColorContourMidColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_LOW, itsSimpleColorContourLowColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH, itsSimpleColorContourHighColor);
-    DDX_Control(pDX, IDC_BUTTON__HATCH2_COLOR, itsHatch2Color);
-    DDX_Control(pDX, IDC_BUTTON_SYMBOL_FILL_COLOR, itsSymbolFillColor);
-    DDX_Control(pDX, IDC_BUTTON_SYMBOL_COLOR, itsSymbolColor);
-    DDX_Control(pDX, IDC_BUTTON_ISOLINE_LABEL_COLOR, itsIsoLineLabelColor);
-    DDX_Control(pDX, IDC_BUTTON_ISOLINE_COLOR, itsIsoLineColor);
-    DDX_Control(pDX, IDC_BUTTON_ISOLINE_LABEL_BOX_FILL_COLOR, itsIsolineLabelBoxFillColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SYMB_MID, itsSymbolMidColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SYMB_LOW, itsSymbolLowColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SYMB_HIGH, itsSymbolHighColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_MID, itsSimpleIsoLineMidColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_LOW, itsSimpleIsoLineLowColor);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH, itsSimpleIsoLineHighColor);
-    DDX_Control(pDX, IDC_BUTTON__HATCH1_COLOR, itsHatch1Color);
-    DDX_Check(pDX, IDC_CHECK_SHOW_SYMBOL_CHANGING_COLORS, fUSeChangingColorsWithSymbols);
-    DDX_Check(pDX, IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, fUSeColorScaleWithSimpleIsoLines);
-    DDX_Check(pDX, IDC_CHECK_USE_FEATHERING, fUseIsoLineFeathering);
-    DDX_Check(pDX, IDC_CHECK_USE_HACTH1, fUseHatch1);
-    DDX_Check(pDX, IDC_CHECK_USE_LABEL_BOX, fDrawLabelBox);
-    DDX_Check(pDX, IDC_CHECK_USE_REGIONS, fDrawOnlyOverMask);
-    DDX_Check(pDX, IDC_CHECK_USE_SPECIAL_CLASSES, fUseSpecialClasses);
-    DDX_Text(pDX, IDC_HATCH1_HATCH_STYLE, itsHatch1Style);
-    DDX_Text(pDX, IDC_HATCH1_VALUE_END, itsHatch1EndValue);
-    DDX_Text(pDX, IDC_HATCH1_VALUE_START, itsHatch1StartValue);
-    DDX_Text(pDX, IDC_ISOLINE_GAP, itsIsoLineGap);
-    DDX_Text(pDX, IDC_ISOLINE_LABEL_DECIMALS, itsIsoLineDecimals);
-    DDX_Text(pDX, IDC_ISOLINE_LABEL_HEIGHT, itsIsoLineLabelHeight);
-    DDX_Text(pDX, IDC_ISOLINE_SMOOTH_FACTOR, itsIsoLineSmoothFactor);
-    DDX_Text(pDX, IDC_ISOLINE_STYLE, itsIsoLineStyle);
-    DDX_Text(pDX, IDC_ISOLINE_WIDTH, itsIsoLineWidth);
-    DDV_MinMaxFloat(pDX, itsIsoLineWidth, 0.f, 10.f);
-    DDX_Text(pDX, IDC_MODIFYING_STEP, itsModifyingStep);
-    DDX_Text(pDX, IDC_ONE_RELATIVE_HEIGHT, itsOneSymbolHeight);
-    DDX_Text(pDX, IDC_ONE_RELATIVE_WIDTH, itsOneSymbolWidth);
-    DDX_Text(pDX, IDC_PARAMETER_ABSOLUTE_VALUE_MAX, itsParamAbsolutValueMax);
-    DDX_Text(pDX, IDC_PARAMETER_ABSOLUTE_VALUE_MIN, itsParamAbsolutValueMin);
-    DDX_Text(pDX, IDC_PARAM_ABBREVIATION, itsParamAbbreviationStrU_);
-    DDX_Text(pDX, IDC_PARAM, itsParamNameStrU_);
-    DDX_Text(pDX, IDC_PRODUCER, itsProducerStrU_);
-    DDX_Radio(pDX, IDC_RADIO_GRID_DATA_DRAW_STYLE, itsGridDataDrawStyle);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_CLASS_COUNT, itsSimpleClassCount);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_END_VALUE, itsSimpleClassEndValue);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_START_VALUE, itsSimpleClassStartValue);
-    DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_CLASS_COUNT, itsSymbolsWithColorsClassCount);
-    DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_END_VALUE, itsSymbolsWithColorsEndValue);
-    DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_MIDDLE_VALUE, itsSymbolsWithColorsMiddleValue);
-    DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_START_VALUE, itsSymbolsWithColorsStartValue);
-    DDX_Text(pDX, IDC_SPECIAL_CLASSES_COUNT, itsSpecialClassCount);
-    DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_COLOR_INDICES, itsSpecialClassColorIndicesStrU_);
-    DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_LABEL_COLOR_INDICES, itsSpecialClassLabelColorIndicesStrU_);
-    DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_STYLES, itsSpecialClassLineStylesStrU_);
-    DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_WIDTH, itsSpecialClassLineWidthStrU_);
-    DDX_Text(pDX, IDC_SPECIAL_CLASSES_VALUES, itsSpecialClassValuesStrU_);
-    DDX_Text(pDX, IDC_TIME_SERIES_MOD_LIMIT, itsTimeSeriesModifyLimit);
-    DDX_Text(pDX, IDC_TIME_SERIES_SCALE_MAX, itsTimeSeriesScaleMax);
-    DDX_Text(pDX, IDC_TIME_SERIES_SCALE_MIN, itsTimeSeriesScaleMin);
-    DDX_Text(pDX, IDC_UNIT, itsParamUnitStrU_);
-    DDX_Check(pDX, IDC_F_HIDDEN, fIsHidden);
-    DDX_Check(pDX, IDC_CHECK_USE_HACTH2, fUseHatch2);
-    DDX_Text(pDX, IDC_HATCH2_HATCH_STYLE, itsHatch2Style);
-    DDX_Text(pDX, IDC_HATCH2_VALUE_END, itsHatch2EndValue);
-    DDX_Text(pDX, IDC_HATCH2_VALUE_START, itsHatch2StartValue);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_CLASS_COUNT, itsSimpleColorContourClassEnd2Value);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END_VALUE, itsSimpleColorContourClassEndValue);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_MIDDLE_VALUE, itsSimpleColorContourClassMiddleValue);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_START_VALUE, itsSimpleColorContourClassStartValue);
-    DDX_Check(pDX, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, fUSeSeparatingLinesBetweenColorContourClasses);
-    //}}AFX_DATA_MAP
-    DDX_Text(pDX, IDC_STATIC_DRAW_PARAM_FILE_NAME, itsDrawParamFileNameStrU_);
-    DDX_Control(pDX, IDC_COMBO_DRAW_PARAM_STATION_DATA_VIEW_SELECTOR, itsStationDataViewSelector);
-    DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH2, itsSimpleColorContourHigh2Color);
-    DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, fUseIsoLineGabWithCustomContours);
-    DDX_Text(pDX, IDC_CONTOUR_GAP, itsContourGap);
-    DDX_Text(pDX, IDC_CONTOUR_ALPHA, itsAlpha);
-    DDV_MinMaxFloat(pDX, itsAlpha, NFmiDrawParam::itsMinAlpha, 100);
-    DDX_Control(pDX, IDC_COMBO_FIXED_DRAW_PARAM_SELECTOR, itsFixedDrawParamSelector);
-    DDX_Text(pDX, IDC_ONE_HORIZONTAL_RELATIVE_POS_OFFSET_NEW, itsOneSymbolHorizontalOffset_NEW);
-    DDX_Text(pDX, IDC_ONE_VERTICAL_RELATIVE_POS_OFFSET_NEW, itsOneSymbolVerticalOffset_NEW);
-    DDX_Text(pDX, IDC_ISOLINE_ZERO_VALUE_POINT_NEW, itsIsoLineZeroValue_NEW);
-    DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_MIDDLE_VALUE_NEW, itsSimpleClassMiddleValue_NEW);
-    DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_TRANSPARENT_LABEL_FILL_COLOR, fUseTransparentLabelBoxFillColor);
-    DDX_Check(pDX, IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, fDoSparseDataSymbolVisualization);
-    DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_LEGEND, fUseLegend);
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CFmiModifyDrawParamDlg)
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_MID, itsSimpleColorContourMidColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_LOW, itsSimpleColorContourLowColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH, itsSimpleColorContourHighColor);
+	DDX_Control(pDX, IDC_BUTTON__HATCH2_COLOR, itsHatch2Color);
+	DDX_Control(pDX, IDC_BUTTON_SYMBOL_FILL_COLOR, itsSymbolFillColor);
+	DDX_Control(pDX, IDC_BUTTON_SYMBOL_COLOR, itsSymbolColor);
+	DDX_Control(pDX, IDC_BUTTON_ISOLINE_LABEL_COLOR, itsIsoLineLabelColor);
+	DDX_Control(pDX, IDC_BUTTON_ISOLINE_COLOR, itsIsoLineColor);
+	DDX_Control(pDX, IDC_BUTTON_ISOLINE_LABEL_BOX_FILL_COLOR, itsIsolineLabelBoxFillColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SYMB_MID, itsSymbolMidColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SYMB_LOW, itsSymbolLowColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SYMB_HIGH, itsSymbolHighColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_MID, itsSimpleIsoLineMidColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_LOW, itsSimpleIsoLineLowColor);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH, itsSimpleIsoLineHighColor);
+	DDX_Control(pDX, IDC_BUTTON__HATCH1_COLOR, itsHatch1Color);
+	DDX_Check(pDX, IDC_CHECK_SHOW_SYMBOL_CHANGING_COLORS, fUSeChangingColorsWithSymbols);
+	DDX_Check(pDX, IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, fUSeColorScaleWithSimpleIsoLines);
+	DDX_Check(pDX, IDC_CHECK_USE_FEATHERING, fUseIsoLineFeathering);
+	DDX_Check(pDX, IDC_CHECK_USE_HACTH1, fUseHatch1);
+	DDX_Check(pDX, IDC_CHECK_USE_LABEL_BOX, fDrawLabelBox);
+	DDX_Check(pDX, IDC_CHECK_USE_REGIONS, fDrawOnlyOverMask);
+	DDX_Check(pDX, IDC_CHECK_USE_SPECIAL_CLASSES, fUseSpecialClasses);
+	DDX_Text(pDX, IDC_HATCH1_HATCH_STYLE, itsHatch1Style);
+	DDX_Text(pDX, IDC_HATCH1_VALUE_END, itsHatch1EndValue);
+	DDX_Text(pDX, IDC_HATCH1_VALUE_START, itsHatch1StartValue);
+	DDX_Text(pDX, IDC_ISOLINE_GAP, itsIsoLineGap);
+	DDX_Text(pDX, IDC_ISOLINE_LABEL_DECIMALS, itsIsoLineDecimals);
+	DDX_Text(pDX, IDC_ISOLINE_LABEL_HEIGHT, itsIsoLineLabelHeight);
+	DDX_Text(pDX, IDC_ISOLINE_SMOOTH_FACTOR, itsIsoLineSmoothFactor);
+	DDX_Text(pDX, IDC_ISOLINE_STYLE, itsIsoLineStyle);
+	DDX_Text(pDX, IDC_ISOLINE_WIDTH, itsIsoLineWidth);
+	DDV_MinMaxFloat(pDX, itsIsoLineWidth, 0.f, 10.f);
+	DDX_Text(pDX, IDC_MODIFYING_STEP, itsModifyingStep);
+	DDX_Text(pDX, IDC_ONE_RELATIVE_HEIGHT, itsOneSymbolHeight);
+	DDX_Text(pDX, IDC_ONE_RELATIVE_WIDTH, itsOneSymbolWidth);
+	DDX_Text(pDX, IDC_PARAMETER_ABSOLUTE_VALUE_MAX, itsParamAbsolutValueMax);
+	DDX_Text(pDX, IDC_PARAMETER_ABSOLUTE_VALUE_MIN, itsParamAbsolutValueMin);
+	DDX_Text(pDX, IDC_PARAM_ABBREVIATION, itsParamAbbreviationStrU_);
+	DDX_Text(pDX, IDC_PARAM, itsParamNameStrU_);
+	DDX_Text(pDX, IDC_PRODUCER, itsProducerStrU_);
+	DDX_Radio(pDX, IDC_RADIO_GRID_DATA_DRAW_STYLE, itsGridDataDrawStyle);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_CLASS_COUNT, itsSimpleClassCount);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_END_VALUE, itsSimpleClassEndValue);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_START_VALUE, itsSimpleClassStartValue);
+	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_CLASS_COUNT, itsSymbolsWithColorsClassCount);
+	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_END_VALUE, itsSymbolsWithColorsEndValue);
+	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_MIDDLE_VALUE, itsSymbolsWithColorsMiddleValue);
+	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_START_VALUE, itsSymbolsWithColorsStartValue);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_COUNT, itsSpecialClassCount);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_COLOR_INDICES, itsSpecialClassColorIndicesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_LABEL_COLOR_INDICES, itsSpecialClassLabelColorIndicesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_STYLES, itsSpecialClassLineStylesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_WIDTH, itsSpecialClassLineWidthStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_VALUES, itsSpecialClassValuesStrU_);
+	DDX_Text(pDX, IDC_TIME_SERIES_MOD_LIMIT, itsTimeSeriesModifyLimit);
+	DDX_Text(pDX, IDC_TIME_SERIES_SCALE_MAX, itsTimeSeriesScaleMax);
+	DDX_Text(pDX, IDC_TIME_SERIES_SCALE_MIN, itsTimeSeriesScaleMin);
+	DDX_Text(pDX, IDC_UNIT, itsParamUnitStrU_);
+	DDX_Check(pDX, IDC_F_HIDDEN, fIsHidden);
+	DDX_Check(pDX, IDC_CHECK_USE_HACTH2, fUseHatch2);
+	DDX_Text(pDX, IDC_HATCH2_HATCH_STYLE, itsHatch2Style);
+	DDX_Text(pDX, IDC_HATCH2_VALUE_END, itsHatch2EndValue);
+	DDX_Text(pDX, IDC_HATCH2_VALUE_START, itsHatch2StartValue);
+	DDX_Check(pDX, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, fUSeSeparatingLinesBetweenColorContourClasses);
+	//}}AFX_DATA_MAP
+	DDX_Text(pDX, IDC_STATIC_DRAW_PARAM_FILE_NAME, itsDrawParamFileNameStrU_);
+	DDX_Control(pDX, IDC_COMBO_DRAW_PARAM_STATION_DATA_VIEW_SELECTOR, itsStationDataViewSelector);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH2, itsSimpleColorContourHigh2Color);
+	DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, fUseIsoLineGabWithCustomContours);
+	DDX_Text(pDX, IDC_CONTOUR_GAP, itsContourGap);
+	DDX_Text(pDX, IDC_CONTOUR_ALPHA, itsAlpha);
+	DDV_MinMaxFloat(pDX, itsAlpha, NFmiDrawParam::itsMinAlpha, 100);
+	DDX_Control(pDX, IDC_COMBO_FIXED_DRAW_PARAM_SELECTOR, itsFixedDrawParamSelector);
+	DDX_Text(pDX, IDC_ONE_HORIZONTAL_RELATIVE_POS_OFFSET_NEW, itsOneSymbolHorizontalOffset_NEW);
+	DDX_Text(pDX, IDC_ONE_VERTICAL_RELATIVE_POS_OFFSET_NEW, itsOneSymbolVerticalOffset_NEW);
+	DDX_Text(pDX, IDC_ISOLINE_ZERO_VALUE_POINT_NEW, itsIsoLineZeroValue_NEW);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_MIDDLE_VALUE_NEW, itsSimpleClassMiddleValue_NEW);
+	DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_TRANSPARENT_LABEL_FILL_COLOR, fUseTransparentLabelBoxFillColor);
+	DDX_Check(pDX, IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, fDoSparseDataSymbolVisualization);
+	DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_LEGEND, fUseLegend);
+	DDX_Check(pDX, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY1, fSimpleContourTransparency1);
+	DDX_Check(pDX, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY2, fSimpleContourTransparency2);
+	DDX_Check(pDX, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY3, fSimpleContourTransparency3);
+	DDX_Check(pDX, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY4, fSimpleContourTransparency4);
+	DDX_Check(pDX, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY5, fSimpleContourTransparency5);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH3, itsSimpleColorContourHigh3Color);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_START_VALUE, itsSimpleColorContourLimit1StringU_);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_MIDDLE_VALUE, itsSimpleColorContourLimit2StringU_);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END_VALUE, itsSimpleColorContourLimit3StringU_);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END2_VALUE, itsSimpleColorContourLimit4StringU_);
 }
 
 
@@ -276,20 +289,30 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_BN_CLICKED(IDC_SAVE_BUTTON, OnSaveButton)
 	ON_BN_CLICKED(IDC_SHOW_COLOR_INDEX_DLG, OnShowColorIndexDlg)
 	ON_BN_CLICKED(IDC_BUTTON__HATCH2_COLOR, OnButtonHatch2Color)
-	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH, OnButtonColorShowSimpleColorcontourHigh)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_LOW, OnButtonColorShowSimpleColorcontourLow)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_MID, OnButtonColorShowSimpleColorcontourMid)
+	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH, OnButtonColorShowSimpleColorcontourHigh)
+	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH2, OnButtonColorShowSimpleColorcontourHigh2)
+	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH3, OnButtonColorShowSimpleColorcontourHigh3)
 	ON_BN_CLICKED(IDC_BUTTON_RESET_DRAW_PARAM, OnButtonResetDrawParam)
 	//}}AFX_MSG_MAP
 	ON_WM_CTLCOLOR()
 	ON_BN_CLICKED(IDC_MODIFY_DRW_PARAM_REFRESH, OnBnClickedModifyDrwParamRefresh)
 	ON_BN_CLICKED(IDC_DRAW_PARAM_LOAD_FROM, OnBnClickedDrawParamLoadFrom)
 	ON_BN_CLICKED(IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, OnBnClickedModifyDrwParamUseWithAll)
-	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH2, OnBnClickedButtonColorShowSimpleColorcontourHigh2)
 	ON_WM_CLOSE()
 	ON_EN_CHANGE(IDC_SPECIAL_CLASSES_VALUES, &CFmiModifyDrawParamDlg::OnEnChangeSpecialClassesValues)
     ON_CBN_SELCHANGE(IDC_COMBO_FIXED_DRAW_PARAM_SELECTOR, &CFmiModifyDrawParamDlg::OnCbnSelchangeComboFixedDrawParamSelector)
     ON_BN_CLICKED(IDC_BUTTON_RELOAD_ORIGINAL, &CFmiModifyDrawParamDlg::OnBnClickedButtonReloadOriginal)
+	ON_BN_CLICKED(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY1, &CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency1)
+	ON_BN_CLICKED(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY2, &CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency2)
+	ON_BN_CLICKED(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY3, &CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency3)
+	ON_BN_CLICKED(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY4, &CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency4)
+	ON_BN_CLICKED(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY5, &CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency5)
+	ON_EN_CHANGE(IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_START_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsStartValue)
+	ON_EN_CHANGE(IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_MIDDLE_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsMiddleValue)
+	ON_EN_CHANGE(IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsEndValue)
+	ON_EN_CHANGE(IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END2_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsEnd2Value)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -430,23 +453,24 @@ void CFmiModifyDrawParamDlg::InitFixedDrawParamSelector()
 
 void CFmiModifyDrawParamDlg::InitColors(void)
 {
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->FillColor(), itsSymbolFillColorRef, &itsSymbolFillBitmap, itsSymbolFillColorRect, itsSymbolFillColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->FrameColor(), itsSymbolColorRef, &itsSymbolBitmap, itsSymbolColorRect, itsSymbolColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->IsolineTextColor(), itsIsoLineLabelColorRef, &itsIsoLineLabelBitmap, itsIsoLineLabelColorRect, itsIsoLineLabelColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->IsolineColor(), itsIsoLineColorRef, &itsIsoLineBitmap, itsIsoLineColorRect, itsIsoLineColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->IsolineLabelBoxFillColor(), itsIsoLineLabelBoxFillColorRef, &itsIsoLineLabelBoxFillBitmap, itsIsoLineLabelBoxFillColorRect, itsIsolineLabelBoxFillColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->StationSymbolColorShadeMidValueColor(), itsSymbolMidColorRef, &itsSymbolMidBitmap, itsSymbolMidColorRect, itsSymbolMidColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->StationSymbolColorShadeLowValueColor(), itsSymbolLowColorRef, &itsSymbolLowBitmap, itsSymbolLowColorRect, itsSymbolLowColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->StationSymbolColorShadeHighValueColor(), itsSymbolHighColorRef, &itsSymbolHighBitmap, itsSymbolHighColorRect, itsSymbolHighColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->SimpleIsoLineColorShadeMidValueColor(), itsSimpleIsoLineMidColorRef, &itsSimpleIsoLineMidBitmap, itsSimpleIsoLineMidColorRect, itsSimpleIsoLineMidColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->SimpleIsoLineColorShadeLowValueColor(), itsSimpleIsoLineLowColorRef, &itsSimpleIsoLineLowBitmap, itsSimpleIsoLineLowColorRect, itsSimpleIsoLineLowColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->SimpleIsoLineColorShadeHighValueColor(), itsSimpleIsoLineHighColorRef, &itsSimpleIsoLineHighBitmap, itsSimpleIsoLineHighColorRect, itsSimpleIsoLineHighColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->ColorContouringColorShadeMidValueColor(), itsSimpleColorContourMidColorRef, &itsSimpleColorContourMidBitmap, itsSimpleColorContourMidColorRect, itsSimpleColorContourMidColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->ColorContouringColorShadeLowValueColor(), itsSimpleColorContourLowColorRef, &itsSimpleColorContourLowBitmap, itsSimpleColorContourLowColorRect, itsSimpleColorContourLowColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->ColorContouringColorShadeHighValueColor(), itsSimpleColorContourHighColorRef, &itsSimpleColorContourHighBitmap, itsSimpleColorContourHighColorRect, itsSimpleColorContourHighColor);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->ColorContouringColorShadeHigh2ValueColor(), itsSimpleColorContourHigh2ColorRef, &itsSimpleColorContourHigh2Bitmap, itsSimpleColorContourHigh2ColorRect, itsSimpleColorContourHigh2Color);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->IsoLineHatchColor1(), itsHatch1ColorRef, &itsHatch1Bitmap, itsHatch1ColorRect, itsHatch1Color);
-    CtrlView::InitialButtonColorUpdate(this, itsDrawParam->IsoLineHatchColor2(), itsHatch2ColorRef, &itsHatch2Bitmap, itsHatch2ColorRect, itsHatch2Color);
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->FillColor(), itsSymbolFillColorRef, &itsSymbolFillBitmap, itsSymbolFillColorRect, itsSymbolFillColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->FrameColor(), itsSymbolColorRef, &itsSymbolBitmap, itsSymbolColorRect, itsSymbolColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->IsolineTextColor(), itsIsoLineLabelColorRef, &itsIsoLineLabelBitmap, itsIsoLineLabelColorRect, itsIsoLineLabelColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->IsolineColor(), itsIsoLineColorRef, &itsIsoLineBitmap, itsIsoLineColorRect, itsIsoLineColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->IsolineLabelBoxFillColor(), itsIsoLineLabelBoxFillColorRef, &itsIsoLineLabelBoxFillBitmap, itsIsoLineLabelBoxFillColorRect, itsIsolineLabelBoxFillColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->StationSymbolColorShadeMidValueColor(), itsSymbolMidColorRef, &itsSymbolMidBitmap, itsSymbolMidColorRect, itsSymbolMidColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->StationSymbolColorShadeLowValueColor(), itsSymbolLowColorRef, &itsSymbolLowBitmap, itsSymbolLowColorRect, itsSymbolLowColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->StationSymbolColorShadeHighValueColor(), itsSymbolHighColorRef, &itsSymbolHighBitmap, itsSymbolHighColorRect, itsSymbolHighColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->SimpleIsoLineColorShadeMidValueColor(), itsSimpleIsoLineMidColorRef, &itsSimpleIsoLineMidBitmap, itsSimpleIsoLineMidColorRect, itsSimpleIsoLineMidColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->SimpleIsoLineColorShadeLowValueColor(), itsSimpleIsoLineLowColorRef, &itsSimpleIsoLineLowBitmap, itsSimpleIsoLineLowColorRect, itsSimpleIsoLineLowColor));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->SimpleIsoLineColorShadeHighValueColor(), itsSimpleIsoLineHighColorRef, &itsSimpleIsoLineHighBitmap, itsSimpleIsoLineHighColorRect, itsSimpleIsoLineHighColor));
+	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(1, true));
+	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(2, true));
+	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(3, true));
+	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(4, true));
+	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(5, true));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->IsoLineHatchColor1(), itsHatch1ColorRef, &itsHatch1Bitmap, itsHatch1ColorRect, itsHatch1Color));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->IsoLineHatchColor2(), itsHatch2ColorRef, &itsHatch2Bitmap, itsHatch2ColorRect, itsHatch2Color));
 }
 
 // itsStationDataViewSelector -combobox on t‰ytetty legacy syist‰ seuraavasti:
@@ -527,11 +551,15 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	itsSymbolsWithColorsEndValue = itsDrawParam->StationSymbolColorShadeHighValue();
 	itsSymbolsWithColorsMiddleValue = itsDrawParam->StationSymbolColorShadeMidValue();
 	itsSymbolsWithColorsStartValue = itsDrawParam->StationSymbolColorShadeLowValue();
-
-	itsSimpleColorContourClassEnd2Value = itsDrawParam->ColorContouringColorShadeHigh2Value();
-	itsSimpleColorContourClassEndValue = itsDrawParam->ColorContouringColorShadeHighValue();
-	itsSimpleColorContourClassMiddleValue = itsDrawParam->ColorContouringColorShadeMidValue();
-	itsSimpleColorContourClassStartValue = itsDrawParam->ColorContouringColorShadeLowValue();
+	SetSimpleColorContourLimit(itsDrawParam->ColorContouringColorShadeLowValue(), &itsSimpleColorContourLimit1Value, &itsSimpleColorContourLimit1StringU_);
+	SetSimpleColorContourLimit(itsDrawParam->ColorContouringColorShadeMidValue(), &itsSimpleColorContourLimit2Value, &itsSimpleColorContourLimit2StringU_);
+	SetSimpleColorContourLimit(itsDrawParam->ColorContouringColorShadeHighValue(), &itsSimpleColorContourLimit3Value, &itsSimpleColorContourLimit3StringU_);
+	SetSimpleColorContourLimit(itsDrawParam->ColorContouringColorShadeHigh2Value(), &itsSimpleColorContourLimit4Value, &itsSimpleColorContourLimit4StringU_);
+	fSimpleContourTransparency1 = itsDrawParam->SimpleColorContourTransparentColor1();
+	fSimpleContourTransparency2 = itsDrawParam->SimpleColorContourTransparentColor2();
+	fSimpleContourTransparency3 = itsDrawParam->SimpleColorContourTransparentColor3();
+	fSimpleContourTransparency4 = itsDrawParam->SimpleColorContourTransparentColor4();
+	fSimpleContourTransparency5 = itsDrawParam->SimpleColorContourTransparentColor5();
 	fUseHatch2 = itsDrawParam->UseWithIsoLineHatch2() == TRUE;
 	itsHatch2Style = itsDrawParam->IsoLineHatchType2();
 	itsHatch2EndValue = itsDrawParam->IsoLineHatchHighValue2();
@@ -543,6 +571,34 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 
     FillStationDataViewSelector();
 	InitSpecialClassesData();
+}
+
+static std::string GetPrettyLimitValue(float limitValue)
+{
+	// to_string laittaa vimmatusti desimaaleja '0':ia stringin per‰‰n
+	auto limitString = std::to_string(limitValue);
+	// Poistetaan lopusta kaikki turhat 0:t pois
+	boost::trim_right_if(limitString, [](auto character) {return character == '0'; });
+	// Poistetaan viel‰ mahdollinen lopun turha desimaalipiste
+	if(limitString.back() == '.')
+		limitString.pop_back();
+	return limitString;
+}
+
+void CFmiModifyDrawParamDlg::SetSimpleColorContourLimit(float limitValue, float *limitValueDlg, CString *limitStringDlgU_)
+{
+	*limitValueDlg = limitValue;
+	if(limitValue == kFloatMissing)
+		*limitStringDlgU_ = _TEXT("#");
+	else
+	{
+		auto limitValueStdString = ::GetPrettyLimitValue(limitValue);
+		//int usedDecimals = 2;
+		//if(limitValue == int(limitValue))
+		//	usedDecimals = 0;
+		//std::string limitValueStdString = NFmiValueString::GetStringWithMaxDecimalsSmartWay(limitValue, usedDecimals);
+		*limitStringDlgU_ = CA2T(limitValueStdString.c_str());
+	}
 }
 
 void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
@@ -663,10 +719,15 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->StationSymbolColorShadeMidValue(itsSymbolsWithColorsMiddleValue);
 	itsDrawParam->StationSymbolColorShadeLowValue(itsSymbolsWithColorsStartValue);
 
-	itsDrawParam->ColorContouringColorShadeHigh2Value(itsSimpleColorContourClassEnd2Value);
-	itsDrawParam->ColorContouringColorShadeHighValue(itsSimpleColorContourClassEndValue);
-	itsDrawParam->ColorContouringColorShadeMidValue(itsSimpleColorContourClassMiddleValue);
-	itsDrawParam->ColorContouringColorShadeLowValue(itsSimpleColorContourClassStartValue);
+	itsDrawParam->ColorContouringColorShadeLowValue(itsSimpleColorContourLimit1Value);
+	itsDrawParam->ColorContouringColorShadeMidValue(itsSimpleColorContourLimit2Value);
+	itsDrawParam->ColorContouringColorShadeHighValue(itsSimpleColorContourLimit3Value);
+	itsDrawParam->ColorContouringColorShadeHigh2Value(itsSimpleColorContourLimit4Value);
+	itsDrawParam->SimpleColorContourTransparentColor1(fSimpleContourTransparency1);
+	itsDrawParam->SimpleColorContourTransparentColor2(fSimpleContourTransparency2);
+	itsDrawParam->SimpleColorContourTransparentColor3(fSimpleContourTransparency3);
+	itsDrawParam->SimpleColorContourTransparentColor4(fSimpleContourTransparency4);
+	itsDrawParam->SimpleColorContourTransparentColor5(fSimpleContourTransparency5);
 	itsDrawParam->UseWithIsoLineHatch2(fUseHatch2 == TRUE);
 	itsDrawParam->IsoLineHatchType2(static_cast<int>(itsHatch2Style));
 	itsDrawParam->IsoLineHatchHighValue2(static_cast<float>(itsHatch2EndValue));
@@ -789,62 +850,62 @@ void CFmiModifyDrawParamDlg::ParamAbbreviation(void)
 
 void CFmiModifyDrawParamDlg::OnButtonHatch1Color()
 {
-    CtrlView::ColorButtonPressed(this, itsHatch1ColorRef, &itsHatch1Bitmap, itsHatch1ColorRect, itsHatch1Color);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsHatch1ColorRef, &itsHatch1Bitmap, itsHatch1ColorRect, itsHatch1Color));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleIsolineHigh()
 {
-    CtrlView::ColorButtonPressed(this, itsSimpleIsoLineHighColorRef, &itsSimpleIsoLineHighBitmap, itsSimpleIsoLineHighColorRect, itsSimpleIsoLineHighColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSimpleIsoLineHighColorRef, &itsSimpleIsoLineHighBitmap, itsSimpleIsoLineHighColorRect, itsSimpleIsoLineHighColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleIsolineLow()
 {
-    CtrlView::ColorButtonPressed(this, itsSimpleIsoLineLowColorRef, &itsSimpleIsoLineLowBitmap, itsSimpleIsoLineLowColorRect, itsSimpleIsoLineLowColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSimpleIsoLineLowColorRef, &itsSimpleIsoLineLowBitmap, itsSimpleIsoLineLowColorRect, itsSimpleIsoLineLowColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleIsolineMid()
 {
-    CtrlView::ColorButtonPressed(this, itsSimpleIsoLineMidColorRef, &itsSimpleIsoLineMidBitmap, itsSimpleIsoLineMidColorRect, itsSimpleIsoLineMidColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSimpleIsoLineMidColorRef, &itsSimpleIsoLineMidBitmap, itsSimpleIsoLineMidColorRect, itsSimpleIsoLineMidColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSymbHigh()
 {
-    CtrlView::ColorButtonPressed(this, itsSymbolHighColorRef, &itsSymbolHighBitmap, itsSymbolHighColorRect, itsSymbolHighColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSymbolHighColorRef, &itsSymbolHighBitmap, itsSymbolHighColorRect, itsSymbolHighColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSymbLow()
 {
-    CtrlView::ColorButtonPressed(this, itsSymbolLowColorRef, &itsSymbolLowBitmap, itsSymbolLowColorRect, itsSymbolLowColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSymbolLowColorRef, &itsSymbolLowBitmap, itsSymbolLowColorRect, itsSymbolLowColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSymbMid()
 {
-    CtrlView::ColorButtonPressed(this, itsSymbolMidColorRef, &itsSymbolMidBitmap, itsSymbolMidColorRect, itsSymbolMidColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSymbolMidColorRef, &itsSymbolMidBitmap, itsSymbolMidColorRect, itsSymbolMidColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonIsolineColor()
 {
-    CtrlView::ColorButtonPressed(this, itsIsoLineColorRef, &itsIsoLineBitmap, itsIsoLineColorRect, itsIsoLineColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsIsoLineColorRef, &itsIsoLineBitmap, itsIsoLineColorRect, itsIsoLineColor));
 }
 
 void CFmiModifyDrawParamDlg::OnBnClickedButtonIsolineLabelBoxFillColor()
 {
-    CtrlView::ColorButtonPressed(this, itsIsoLineLabelBoxFillColorRef, &itsIsoLineLabelBoxFillBitmap, itsIsoLineLabelBoxFillColorRect, itsIsolineLabelBoxFillColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsIsoLineLabelBoxFillColorRef, &itsIsoLineLabelBoxFillBitmap, itsIsoLineLabelBoxFillColorRect, itsIsolineLabelBoxFillColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonIsolineLabelColor()
 {
-    CtrlView::ColorButtonPressed(this, itsIsoLineLabelColorRef, &itsIsoLineLabelBitmap, itsIsoLineLabelColorRect, itsIsoLineLabelColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsIsoLineLabelColorRef, &itsIsoLineLabelBitmap, itsIsoLineLabelColorRect, itsIsoLineLabelColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonSymbolColor()
 {
-    CtrlView::ColorButtonPressed(this, itsSymbolColorRef, &itsSymbolBitmap, itsSymbolColorRect, itsSymbolColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSymbolColorRef, &itsSymbolBitmap, itsSymbolColorRect, itsSymbolColor));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonSymbolFillColor()
 {
-    CtrlView::ColorButtonPressed(this, itsSymbolFillColorRef, &itsSymbolFillBitmap, itsSimpleIsoLineLowColorRect, itsSymbolFillColor);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSymbolFillColorRef, &itsSymbolFillBitmap, itsSimpleIsoLineLowColorRect, itsSymbolFillColor));
 }
 
 void CFmiModifyDrawParamDlg::OnOK()
@@ -1048,11 +1109,7 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 						(float(GetBValue(itsIsoLineLabelColorRef))/float(255.0)));
 	itsDrawParam->IsolineTextColor(tColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleIsoLineHighColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleIsoLineHighColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleIsoLineHighColorRef))/float(255.0)));
-	itsDrawParam->SimpleIsoLineColorShadeHighValueColor(tColor);
-
+	// Vaihtuvat isoviivav‰rit (3 kpl)
 	tColor.SetRGB((float(GetRValue(itsSimpleIsoLineLowColorRef))/float(255.0)),
 					(float(GetGValue(itsSimpleIsoLineLowColorRef))/float(255.0)),
 						(float(GetBValue(itsSimpleIsoLineLowColorRef))/float(255.0)));
@@ -1063,6 +1120,12 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 						(float(GetBValue(itsSimpleIsoLineMidColorRef))/float(255.0)));
 	itsDrawParam->SimpleIsoLineColorShadeMidValueColor(tColor);
 
+	tColor.SetRGB((float(GetRValue(itsSimpleIsoLineHighColorRef))/float(255.0)),
+					(float(GetGValue(itsSimpleIsoLineHighColorRef))/float(255.0)),
+						(float(GetBValue(itsSimpleIsoLineHighColorRef))/float(255.0)));
+	itsDrawParam->SimpleIsoLineColorShadeHighValueColor(tColor);
+
+	// Hatch v‰rit (2 kpl)
 	tColor.SetRGB((float(GetRValue(itsHatch1ColorRef))/float(255.0)),
 					(float(GetGValue(itsHatch1ColorRef))/float(255.0)),
 						(float(GetBValue(itsHatch1ColorRef))/float(255.0)));
@@ -1073,11 +1136,7 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 						(float(GetBValue(itsHatch2ColorRef))/float(255.0)));
 	itsDrawParam->IsoLineHatchColor2(tColor);
 
-	tColor.SetRGB((float(GetRValue(itsSymbolHighColorRef))/float(255.0)),
-					(float(GetGValue(itsSymbolHighColorRef))/float(255.0)),
-						(float(GetBValue(itsSymbolHighColorRef))/float(255.0)));
-	itsDrawParam->StationSymbolColorShadeHighValueColor(tColor);
-
+	// Vaihtuvat symboli v‰rit (3 kpl)
 	tColor.SetRGB((float(GetRValue(itsSymbolLowColorRef))/float(255.0)),
 					(float(GetGValue(itsSymbolLowColorRef))/float(255.0)),
 						(float(GetBValue(itsSymbolLowColorRef))/float(255.0)));
@@ -1088,16 +1147,12 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 						(float(GetBValue(itsSymbolMidColorRef))/float(255.0)));
 	itsDrawParam->StationSymbolColorShadeMidValueColor(tColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHighColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleColorContourHighColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleColorContourHighColorRef))/float(255.0)));
-	itsDrawParam->ColorContouringColorShadeHighValueColor(tColor);
+	tColor.SetRGB((float(GetRValue(itsSymbolHighColorRef)) / float(255.0)),
+		(float(GetGValue(itsSymbolHighColorRef)) / float(255.0)),
+		(float(GetBValue(itsSymbolHighColorRef)) / float(255.0)));
+	itsDrawParam->StationSymbolColorShadeHighValueColor(tColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHigh2ColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleColorContourHigh2ColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleColorContourHigh2ColorRef))/float(255.0)));
-	itsDrawParam->ColorContouringColorShadeHigh2ValueColor(tColor);
-
+	// Simple color contour v‰rit (5 kpl)
 	tColor.SetRGB((float(GetRValue(itsSimpleColorContourLowColorRef))/float(255.0)),
 					(float(GetGValue(itsSimpleColorContourLowColorRef))/float(255.0)),
 						(float(GetBValue(itsSimpleColorContourLowColorRef))/float(255.0)));
@@ -1107,6 +1162,21 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 					(float(GetGValue(itsSimpleColorContourMidColorRef))/float(255.0)),
 						(float(GetBValue(itsSimpleColorContourMidColorRef))/float(255.0)));
 	itsDrawParam->ColorContouringColorShadeMidValueColor(tColor);
+
+	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHighColorRef)) / float(255.0)),
+		(float(GetGValue(itsSimpleColorContourHighColorRef)) / float(255.0)),
+		(float(GetBValue(itsSimpleColorContourHighColorRef)) / float(255.0)));
+	itsDrawParam->ColorContouringColorShadeHighValueColor(tColor);
+
+	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHigh2ColorRef)) / float(255.0)),
+		(float(GetGValue(itsSimpleColorContourHigh2ColorRef)) / float(255.0)),
+		(float(GetBValue(itsSimpleColorContourHigh2ColorRef)) / float(255.0)));
+	itsDrawParam->ColorContouringColorShadeHigh2ValueColor(tColor);
+
+	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHigh3ColorRef)) / float(255.0)),
+		(float(GetGValue(itsSimpleColorContourHigh3ColorRef)) / float(255.0)),
+		(float(GetBValue(itsSimpleColorContourHigh3ColorRef)) / float(255.0)));
+	itsDrawParam->ColorContouringColorShadeHigh3ValueColor(tColor);
 
 	return;
 }
@@ -1131,27 +1201,214 @@ void CFmiModifyDrawParamDlg::OnShowColorIndexDlg()
 
 void CFmiModifyDrawParamDlg::OnButtonHatch2Color()
 {
-    CtrlView::ColorButtonPressed(this, itsHatch2ColorRef, &itsHatch2Bitmap, itsHatch2ColorRect, itsHatch2Color);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsHatch2ColorRef, &itsHatch2Bitmap, itsHatch2ColorRect, itsHatch2Color));
 }
 
-void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleColorcontourHigh()
+// T‰m‰n funktion tarkoitus on yritt‰‰ yksinkertaistaa koodia, kun k‰sitell‰‰n simple-contour
+// v‰rinappuloiden kasittely‰.
+// colorIndex alkaa 1:st‰, joka myˆs k‰sitell‰‰n default arvona, jos indeksi on muuten pieless‰.
+// Huom! fSimpleContourTransparency# ja itsSimpleColorContourLimit#Value dataosilla on eri indeksit,
+// koska transparencyja on yksi enemm‰n.
+std::pair<bool, bool> CFmiModifyDrawParamDlg::GetSimpleContourTransparencyAndDisabledOptions(int colorIndex) const
 {
-    CtrlView::ColorButtonPressed(this, itsSimpleColorContourHighColorRef, &itsSimpleColorContourHighBitmap, itsSimpleColorContourHighColorRect, itsSimpleColorContourHighColor);
+	auto colorIsTransparent = false;
+	auto colorIsDisabled = false;
+	switch(colorIndex)
+	{
+	case 2:
+	{
+		colorIsTransparent = fSimpleContourTransparency2 == TRUE;
+		colorIsDisabled = itsSimpleColorContourLimit1Value == kFloatMissing;
+		break;
+	}
+	case 3:
+	{
+		colorIsTransparent = fSimpleContourTransparency3 == TRUE;
+		colorIsDisabled = itsSimpleColorContourLimit2Value == kFloatMissing;
+		break;
+	}
+	case 4:
+	{
+		colorIsTransparent = fSimpleContourTransparency4 == TRUE;
+		colorIsDisabled = itsSimpleColorContourLimit3Value == kFloatMissing;
+		break;
+	}
+	case 5:
+	{
+		colorIsTransparent = fSimpleContourTransparency5 == TRUE;
+		colorIsDisabled = itsSimpleColorContourLimit4Value == kFloatMissing;
+		break;
+	}
+	default:
+	{
+		colorIsTransparent = fSimpleContourTransparency1 == TRUE;
+		colorIsDisabled = false; // HUOM! 1. v‰ri‰ ei voi disabloida (myˆs oletus indeksi k‰sittely)
+		break;
+	}
+	}
+
+	return std::make_pair(colorIsTransparent, colorIsDisabled);
 }
 
-void CFmiModifyDrawParamDlg::OnBnClickedButtonColorShowSimpleColorcontourHigh2()
+NFmiColorButtonDrawingData CFmiModifyDrawParamDlg::GetSimpleContourColorButtonData(int colorIndex, bool initColor)
 {
-    CtrlView::ColorButtonPressed(this, itsSimpleColorContourHigh2ColorRef, &itsSimpleColorContourHigh2Bitmap, itsSimpleColorContourHigh2ColorRect, itsSimpleColorContourHigh2Color);
+	switch(colorIndex)
+	{
+	case 2:
+	{
+		auto buttonDrawingData = NFmiColorButtonDrawingData(this, itsSimpleColorContourMidColorRef, &itsSimpleColorContourMidBitmap, itsSimpleColorContourMidColorRect, itsSimpleColorContourMidColor, GetSimpleContourTransparencyAndDisabledOptions(colorIndex));
+		if(initColor)
+			buttonDrawingData.SetNfmiColor(itsDrawParam->ColorContouringColorShadeMidValueColor());
+		return buttonDrawingData;
+	}
+	case 3:
+	{
+		auto buttonDrawingData = NFmiColorButtonDrawingData(this, itsSimpleColorContourHighColorRef, &itsSimpleColorContourHighBitmap, itsSimpleColorContourHighColorRect, itsSimpleColorContourHighColor, GetSimpleContourTransparencyAndDisabledOptions(colorIndex));
+		if(initColor)
+			buttonDrawingData.SetNfmiColor(itsDrawParam->ColorContouringColorShadeHighValueColor());
+		return buttonDrawingData;
+	}
+	case 4:
+	{
+		auto buttonDrawingData = NFmiColorButtonDrawingData(this, itsSimpleColorContourHigh2ColorRef, &itsSimpleColorContourHigh2Bitmap, itsSimpleColorContourHigh2ColorRect, itsSimpleColorContourHigh2Color, GetSimpleContourTransparencyAndDisabledOptions(colorIndex));
+		if(initColor)
+			buttonDrawingData.SetNfmiColor(itsDrawParam->ColorContouringColorShadeHigh2ValueColor());
+		return buttonDrawingData;
+	}
+	case 5:
+	{
+		auto buttonDrawingData = NFmiColorButtonDrawingData(this, itsSimpleColorContourHigh3ColorRef, &itsSimpleColorContourHigh3Bitmap, itsSimpleColorContourHigh3ColorRect, itsSimpleColorContourHigh3Color, GetSimpleContourTransparencyAndDisabledOptions(colorIndex));
+		if(initColor)
+			buttonDrawingData.SetNfmiColor(itsDrawParam->ColorContouringColorShadeHigh3ValueColor());
+		return buttonDrawingData;
+	}
+	default:
+	{
+		auto buttonDrawingData = NFmiColorButtonDrawingData(this, itsSimpleColorContourLowColorRef, &itsSimpleColorContourLowBitmap, itsSimpleColorContourLowColorRect, itsSimpleColorContourLowColor, GetSimpleContourTransparencyAndDisabledOptions(colorIndex));
+		if(initColor)
+			buttonDrawingData.SetNfmiColor(itsDrawParam->ColorContouringColorShadeLowValueColor());
+		return buttonDrawingData;
+	}
+	}
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleColorcontourLow()
 {
-    CtrlView::ColorButtonPressed(this, itsSimpleColorContourLowColorRef, &itsSimpleColorContourLowBitmap, itsSimpleColorContourLowColorRect, itsSimpleColorContourLowColor);
+	UpdateData(TRUE);
+    CtrlView::ColorButtonPressed(GetSimpleContourColorButtonData(1, false));
 }
 
 void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleColorcontourMid()
 {
-    CtrlView::ColorButtonPressed(this, itsSimpleColorContourMidColorRef, &itsSimpleColorContourMidBitmap, itsSimpleColorContourMidColorRect, itsSimpleColorContourMidColor);
+	UpdateData(TRUE);
+	CtrlView::ColorButtonPressed(GetSimpleContourColorButtonData(2, false));
+}
+
+void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleColorcontourHigh()
+{
+	UpdateData(TRUE);
+	CtrlView::ColorButtonPressed(GetSimpleContourColorButtonData(3, false));
+}
+
+void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleColorcontourHigh2()
+{
+	UpdateData(TRUE);
+	CtrlView::ColorButtonPressed(GetSimpleContourColorButtonData(4, false));
+}
+
+void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleColorcontourHigh3()
+{
+	UpdateData(TRUE);
+	CtrlView::ColorButtonPressed(GetSimpleContourColorButtonData(5, false));
+}
+
+void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency1()
+{
+	UpdateData(TRUE);
+	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(1, false));
+}
+
+void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency2()
+{
+	UpdateData(TRUE);
+	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(2, false));
+}
+
+void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency3()
+{
+	UpdateData(TRUE);
+	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(3, false));
+}
+
+void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency4()
+{
+	UpdateData(TRUE);
+	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(4, false));
+}
+
+void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency5()
+{
+	UpdateData(TRUE);
+	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(5, false));
+}
+
+void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourLimitValue(int colorIndex, CString& limitStringU_, float& limitValue)
+{
+	// Pit‰‰ tutkia muuttuuko v‰rinappulan disable tilanne, kun rajaa muutetaan
+	auto originalColorOptions = GetSimpleContourTransparencyAndDisabledOptions(colorIndex);
+	UpdateData(TRUE);
+	// Annetaan originaali tekstin olla sellaisenaan, ja otetaan stringi erilliseen muuttujaan
+	CString editText = limitStringU_;
+	// Siivotaan tekstist‰ pois alku ja loppu whitespacet
+	editText.Trim();
+	std::string valueInStdString = CT2A(editText);
+	limitValue = kFloatMissing;
+	try
+	{
+		size_t firstCharacterPositionAfterFloatValue = 0;
+		auto tmpLimitValue = std::stof(valueInStdString, &firstCharacterPositionAfterFloatValue);
+		if(firstCharacterPositionAfterFloatValue == valueInStdString.size())
+		{
+			// std::stof (funktioperhe) hyv‰ksyy kaikki stringit, jos alussa on hyv‰ksytt‰v‰ luku,
+			// mutta sit‰ seuraa teksti‰ tai esim. toinen luku, t‰llˆin tulkinta lopetetaan ja 
+			// std::stof funktion 2. parametriin talletetaan 1. ei lukuun liittyv‰n merkin sijainti.
+			// Nyt siis hyv‰ksyt‰‰n vain sellaiset luvu-stringit, mink‰ per‰ss‰ ei ole en‰‰ mit‰‰n muuta.
+			limitValue = tmpLimitValue;
+		}
+	}
+	catch(...)
+	{
+	}
+	auto newColorOptions = GetSimpleContourTransparencyAndDisabledOptions(colorIndex);
+	if(originalColorOptions.second != newColorOptions.second)
+	{
+		CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(colorIndex, false));
+	}
+}
+
+void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsStartValue()
+{
+	OnEnChangeShowSimpleColorcontourLimitValue(2, itsSimpleColorContourLimit1StringU_, itsSimpleColorContourLimit1Value);
+}
+
+void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsMiddleValue()
+{
+	OnEnChangeShowSimpleColorcontourLimitValue(3, itsSimpleColorContourLimit2StringU_, itsSimpleColorContourLimit2Value);
+}
+
+void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsEndValue()
+{
+	OnEnChangeShowSimpleColorcontourLimitValue(4, itsSimpleColorContourLimit3StringU_, itsSimpleColorContourLimit3Value);
+}
+
+void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourWithColorsEnd2Value()
+{
+	OnEnChangeShowSimpleColorcontourLimitValue(5, itsSimpleColorContourLimit4StringU_, itsSimpleColorContourLimit4Value);
 }
 
 void CFmiModifyDrawParamDlg::OnButtonResetDrawParam()
@@ -1259,10 +1516,10 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_LABEL_FONT_SIZE_STR, "IDC_STATIC_DRAW_PARAM_LABEL_FONT_SIZE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_LABEL_BOX, "IDC_CHECK_USE_LABEL_BOX");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, "IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, "IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, "Contour colors");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ISOLINE_CLASS_COUNT_STR, "IDC_STATIC_DRAW_PARAM_ISOLINE_CLASS_COUNT_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, "IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, "IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, "Use separating line with contours");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SPECIAL_CLASSES, "IDC_CHECK_USE_SPECIAL_CLASSES");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_COLOR_INDEX_DLG, "IDC_SHOW_COLOR_INDEX_DLG");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR");

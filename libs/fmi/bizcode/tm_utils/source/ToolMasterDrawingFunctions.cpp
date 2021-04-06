@@ -19,6 +19,7 @@
 #include "CtrlViewFunctions.h"
 #include "ToolmasterHatchingUtils.h"
 #include "ToolmasterHatchPolygonData.h"
+#include "ToolMasterColorCube.h"
 
 #include <fstream>
 #include "boost/math/special_functions/round.hpp"
@@ -47,8 +48,6 @@ static bool IsTransparencyColorUsed(const checkedVector<int>& theColorIndexies, 
     return false;
 }
 
-static const NFmiColor gTransparentColor(1.f, 1.f, 1.f, 1.f);  // valkoinen ja 100% l‰pin‰kyv‰ on l‰pin‰kyvyyden merkki
-
 static std::string MakeDataIdentString(const NFmiDataIdent &dataIdent)
 {
     std::string str = "par: ";
@@ -68,20 +67,24 @@ static void AddColorValuesToTables(checkedVector<NFmiColor> &colors, checkedVect
     colors.push_back(aColor);
     if(lastValue == false) // viimeisell‰ rajalla ei laiteta luokkaa sis‰‰n, luokkia PITƒƒ olla yksi v‰hemm‰n kuin v‰rej‰ color contourauksessa
         classes.push_back(classValue);
-    if(aColor == gTransparentColor)
-        colInds.push_back(2);
+    if(aColor.IsFullyTransparent())
+        colInds.push_back(ToolMasterColorCube::UsedHollowColorIndex());
     else
         colInds.push_back(colInd);
 }
 
-// tehd‰‰n ja aktivoidaan ToolMaster ColorTable, jossa on myˆs mukana transparency v‰ri (index 2)
+static const NFmiColor g_TransparentColor(0,0,0,1);
+
+// tehd‰‰n ja aktivoidaan ToolMaster ColorTable, jossa on myˆs mukana transparency v‰ri 
+// (index ToolMasterColorCube::UsedHollowColorIndex, joka on taas 2)
 // T‰t‰ kutsuttaessa on jo tiedosssa ett‰ mukana on transparentti v‰ri/v‰rej‰.
-static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLineData, int theColorTableIndex, int theTransparencyColorIndex)
+static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLineData, int theColorTableIndex)
 {
     size_t origColorIndexTableSize = theIsoLineData.itsColorIndexCount;
     int realOrigClassesSize = theIsoLineData.itsTrueIsoLineCount; // t‰ss‰ on tallessa originaali luokkien oikea lukum‰‰r‰ kun steppi contourit ja l‰pin‰kyvi‰ v‰rej‰ mukana
     float step = theIsoLineData.itsColorContoursStep;
-    if(origColorIndexTableSize <= 2 || realOrigClassesSize <= 2 || step == 0)
+    // Transparentti tapauksessa pienin j‰rkev‰ m‰‰r‰ v‰reja on 3 ja luokkarajoja on 2
+    if(origColorIndexTableSize < 3 || realOrigClassesSize < 2 || step == 0)
         return;
 
     float colorRGB[3], dummy[5];
@@ -89,8 +92,8 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
     checkedVector<NFmiColor> usedColorVector;
     for(size_t i = 0; i < origColorIndexTableSize; i++)
     {
-        if(theIsoLineData.itsCustomColorContoursColorIndexies[i] == theTransparencyColorIndex)
-            usedColorVector.push_back(gTransparentColor);
+        if(theIsoLineData.itsCustomColorContoursColorIndexies[i] == ToolMasterColorCube::UsedHollowColorIndex())
+            usedColorVector.push_back(g_TransparentColor);
         else
         {
             XuColorQuery(theIsoLineData.itsCustomColorContoursColorIndexies[i], colorRGB, dummy);
@@ -131,7 +134,7 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
         if(usedColorIndex >= static_cast<int>(origColorIndexTableSize - 1))
             break; // muuten menee v‰ri taulun yli
         col2 = usedColorVector[usedColorIndex + 1];
-        if(col1 != gTransparentColor && col2 == gTransparentColor)
+        if(!col1.IsFullyTransparent() && col2.IsFullyTransparent())
         {
             if(firstTime == false && colorSlideJustMade == false)
             {
@@ -145,13 +148,13 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
             colorSlideJustMade = false;
             fixStartslideColor = false;
         }
-        else if(col1 == gTransparentColor && col2 == gTransparentColor)
+        else if(col1.IsFullyTransparent() && col2.IsFullyTransparent())
         {
             ::AddColorValuesToTables(finalColorTable, finalClassesTable, finalColorIndexTable, col2, nextOrigClass, runningColorIndex++, false);
             colorSlideJustMade = false;
             fixStartslideColor = false;
         }
-        else if(col1 != gTransparentColor && col2 != gTransparentColor)
+        else if(!col1.IsFullyTransparent() && !col2.IsFullyTransparent())
         { // nyt molemmat v‰rit ovat ei transparenttia, joten nyt liuutetaan v‰rej‰ luokasta toiseen steppien mukaan
             // menn‰‰n l‰pi luvut alaraja -> yl‰raja - step
             float colorRatioFixer = 0;
@@ -189,15 +192,16 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
         if(origColorIndexTableSize <= static_cast<size_t>(lastColorIndex))
             lastColorIndex = static_cast<int>(origColorIndexTableSize - 1);
         NFmiColor lastCol2 = usedColorVector[lastColorIndex];
-        if(lastCol1 == gTransparentColor || lastCol2 == gTransparentColor)
+        if(lastCol1.IsFullyTransparent() || lastCol2.IsFullyTransparent())
             ::AddColorValuesToTables(finalColorTable, finalClassesTable, finalColorIndexTable, lastCol2, lastOrigClass, runningColorIndex++, true);
         else
             ::AddColorValuesToTables(finalColorTable, finalClassesTable, finalColorIndexTable, lastCol1, lastOrigClass, runningColorIndex++, true);
     }
 
 
-    // 3+ on tilaa fore- ja background coloreille ja transparentille v‰rille (index 2)
-    int colorTableSize = static_cast<int>(finalColorIndexTable.size() + 3);
+    // Lis‰t‰‰n taulukkoon tilaa erikoisv‰reille ToolMasterColorCube::SpecialColorCountInColorTableStart()
+    // eli mukaan pit‰‰ saada fore- ja background color:it ja fully-transparent v‰ri (index 2)
+    int colorTableSize = static_cast<int>(finalColorIndexTable.size() + ToolMasterColorCube::SpecialColorCountInColorTableStart());
 
     XuColorTableCreate(theColorTableIndex, colorTableSize, XuLOOKUP, XuRGB, 255);
     XuColorTableActivate(theColorTableIndex);
@@ -221,7 +225,7 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
     XuColorDeviceLoad(0);
 
     // m‰‰ritet‰‰n 3. v‰ri l‰pin‰kyv‰ksi (hollow)
-    int hollowColorIndex = 2;
+    int hollowColorIndex = ToolMasterColorCube::UsedHollowColorIndex();
     int colorType = 0;
     XuColorTypeQuery(hollowColorIndex, &colorType);
     if(colorType != XuOFF)
@@ -232,7 +236,7 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
     int index = hollowColorIndex + 1; // aletaan rakentaan v‰ri taulukkoa l‰pin‰kyv‰n v‰rin j‰lkeen
     for(size_t i = 0; i < finalColorTable.size(); i++)
     {
-        if(finalColorTable[i] != gTransparentColor)
+        if(!finalColorTable[i].IsFullyTransparent())
         {
             colorRGB[0] = static_cast<float>(int(255 * finalColorTable[i].GetRed()));
             colorRGB[1] = static_cast<float>(int(255 * finalColorTable[i].GetGreen()));
@@ -241,16 +245,6 @@ static void InitCustomColorTableWithTransparentColor(NFmiIsoLineData &theIsoLine
         }
         index++;
     }
-}
-
-// paluttaa annettua v‰ri‰ l‰himm‰n v‰rin indeksin annetusta 'v‰rikuutiosta'
-static int RgbToColorIndex(Matrix3D<std::pair<int, COLORREF> > &theColorsCube, const NFmiColor& color)
-{
-    int k = static_cast<int>(color.Red()*(theColorsCube.Rows() - 1));
-    int j = static_cast<int>(color.Green()*(theColorsCube.Columns() - 1));
-    int i = static_cast<int>(color.Blue()*(theColorsCube.zDIM() - 1));
-
-    return theColorsCube[k][j][i].first;
 }
 
 // t‰ytt‰‰ gridnode datan (kutsutaan kun zoomataan)
@@ -386,8 +380,60 @@ static void DoContourUserDraw(NFmiIsoLineData& theIsoLineData)
     XuContourUserDraw(theIsoLineData.itsContourUserDrawData.xCoordinates.data(), theIsoLineData.itsContourUserDrawData.yCoordinates.data(), theIsoLineData.itsContourUserDrawData.itsUserDrawValues.data(), theIsoLineData.itsContourUserDrawData.itsYNumber, theIsoLineData.itsContourUserDrawData.itsXNumber);
 }
 
+static void BaseSetupColorContourDraw_new(NFmiIsoLineData& theIsoLineData)
+{
+    // Color-contour separation line setup:
+    // 1. Viivan paksuus joko 0, jos ei piirret‰ ja 0.1, jos piirret‰‰n.
+    float isolineWidth = theIsoLineData.fUseSeparatorLinesBetweenColorContourClasses ? 0.1f : 0.f;
+    XuIsolineWidths(&isolineWidth, 1);
+    // 2. Viivan v‰ri
+    int isolineColorArr = 1; // 1 = foreground
+    XuIsolineColors(&isolineColorArr, 1);
+    // 3. Viivan piirto tyyli
+    int isolineStyle = theIsoLineData.itsColorContouringData.separationLineStyle();
+    XuIsolineStyles(&isolineStyle, 1);
+
+    XuIsolineSplineSmoothing(0); // ei kannata pyˆrist‰‰ isoviivoja koska contourit eiv‰t kuitenkaan pyˆristy
+}
+
+static void DoActualColorContourDraw_new(NFmiIsoLineData& theIsoLineData)
+{
+    if(theIsoLineData.UseContourUserDraw())
+        ::DoContourUserDraw(theIsoLineData);
+    else if(theIsoLineData.fUseColorContours == 2) // 2=quickcontours
+        XuContourQuickDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
+    else
+        XuContourDraw(&theIsoLineData.itsVectorFloatGridData[0], theIsoLineData.itsYNumber, theIsoLineData.itsXNumber);
+}
+
+static void DrawSimpleColorContours_new(NFmiIsoLineData& theIsoLineData)
+{
+    BaseSetupColorContourDraw_new(theIsoLineData);
+    auto& colorContouringData = theIsoLineData.itsColorContouringData;
+
+    if(colorContouringData.useDefaultColorTable())
+    {
+        XuColorTableActivate(ToolMasterColorCube::UsedDefaultColorTableIndex());
+        auto& classLimits = colorContouringData.finalClassLimits();
+        auto& colorIndexies = colorContouringData.finalColorIndexies();
+        XuClasses(classLimits.data(), static_cast<int>(classLimits.size()));
+        XuShadingColorIndices(colorIndexies.data(), static_cast<int>(colorIndexies.size()));
+    }
+    else
+    {
+        // Tehd‰‰n uudesta color-tablen indeksist‰ k‰ytetyn default taulun indeksi + 1
+        if(!colorContouringData.createNewToolMasterColorTable(ToolMasterColorCube::UsedDefaultColorTableIndex() + 1))
+            return; // Ei tehd‰ piirtoa, jos color-tablen alustus meni jotenkin pieleen...
+    }
+    DoActualColorContourDraw_new(theIsoLineData);
+}
+
 static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
 {
+    DrawSimpleColorContours_new(theIsoLineData);
+    return;
+    // ================>>>>>>>>>>>>>>>>>> loppu poistuu??????????????
+
     int oldColorTable;
     XuColorTableActiveQuery(&oldColorTable);
 
@@ -407,7 +453,7 @@ static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
     else
     {
         if(::IsTransparencyColorUsed(theIsoLineData.itsCustomColorContoursColorIndexies, theIsoLineData.itsColorIndexCount, 2))
-            ::InitCustomColorTableWithTransparentColor(theIsoLineData, 6, 2);
+            ::InitCustomColorTableWithTransparentColor(theIsoLineData, 6);
         else
         {
             float aMin = theIsoLineData.itsClassMinValue;
@@ -430,6 +476,10 @@ static void DrawCustomColorContours(NFmiIsoLineData &theIsoLineData)
 
 static void DrawSimpleColorContours(NFmiIsoLineData &theIsoLineData)
 {
+    DrawSimpleColorContours_new(theIsoLineData);
+    return;
+    // ================>>>>>>>>>>>>>>>>>> loppu poistuu??????????????
+
     int oldColorTable;
     XuColorTableActiveQuery(&oldColorTable);
     float aMin = theIsoLineData.itsClassMinValue;
@@ -663,8 +713,7 @@ static double CalcUsedGraceFactor(int theCrossSectionIsoLineDrawIndex)
 
 void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex, float scaleFactor)
 {
-    int oldColorTable;
-    XuColorTableActiveQuery(&oldColorTable);
+    XuColorTableActivate(ToolMasterColorCube::UsedDefaultColorTableIndex());
 
     // HUOM! ToolMaster bugi, kun piirret‰‰n contour+isoviiva (aiemmin tehty XuClassesMinMax-kutsu jyr‰‰ nyt teht‰v‰n XuClasses-kutsun)
 //	int classes1 = 0;
@@ -689,7 +738,6 @@ void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, in
     XuIsolineLabel(3, theIsoLineData.itsIsoLineLabelDecimalsCount, theViewHeight * usedGraceFactor, XuOVERLAP_CHECK);
     XuIsolineLabelAngle(55, -55);
 
-    // 2=hollowcolorIndex
     float labelBoxWidth = 0;
     if(theIsoLineData.fUseLabelBox)
         labelBoxWidth = 0.15f;
@@ -712,6 +760,7 @@ void DrawCustomIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, in
 
 void DrawSimpleIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, int theCrossSectionIsoLineDrawIndex, float scaleFactor)
 {
+    XuColorTableActivate(ToolMasterColorCube::UsedDefaultColorTableIndex());
     XuIsolineSplineSmoothing(theIsoLineData.itsIsoLineSplineSmoothingFactor);
     XuClassesStartStep(theIsoLineData.itsIsoLineStartClassValue, theIsoLineData.itsIsoLineStep, theIsoLineData.itsTrueIsoLineCount);
 
@@ -725,7 +774,6 @@ void DrawSimpleIsoLines(NFmiIsoLineData &theIsoLineData, float theViewHeight, in
         XuIsolineColors(&theIsoLineData.itsIsoLineColor[0], theIsoLineData.itsTrueIsoLineCount);
 
     XuIsolineStyles(&theIsoLineData.itsIsoLineStyle[0], 1);
-    // 2=hollowcolorIndex
     float labelBoxWidth = 0;
     if(theIsoLineData.fUseLabelBox)
         labelBoxWidth = 0.15f;
@@ -878,8 +926,11 @@ bool IsolineDataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, cons
     return IsDownSizingNeeded(theGrid2PixelRatio, criticalGrid2PixelRatio, theDownSizeFactorOut);
 }
 
-static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, FmiParameterName theParamId)
+static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, const NFmiParam &param)
 {
+    auto paramId = static_cast<FmiParameterName>(param.GetIdent());
+    auto interpolationMethod = param.InterpolationMethod();
+    auto dontInvertY = true;
     double xDiff = 1.0 / (theDownSizedData.NX() - 1.0);
     double yDiff = 1.0 / (theDownSizedData.NY() - 1.0);
     for(size_t j = 0; j < theDownSizedData.NY(); j++)
@@ -891,7 +942,7 @@ static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDa
                 pt.X(1.); // t‰m‰ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
             if(pt.Y() > 1.)
                 pt.Y(1.); // t‰m‰ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
-            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, theParamId, true);
+            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, paramId, dontInvertY, interpolationMethod);
         }
     }
 }
@@ -902,10 +953,10 @@ static void BuildDownSizedData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineD
     int newSizeY = boost::math::iround(theOrigIsoLineData.itsYNumber / theDownSizeFactor.Y());
     // T‰ytet‰‰n uuden isolineDatan hila-arvot halutuille osaalueilleen.
     NFmiDataMatrix<float> downSizedGridData(newSizeX, newSizeY, kFloatMissing);
-    ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, static_cast<FmiParameterName>(theOrigIsoLineData.itsParam.GetParamIdent()));
-    theDownSizedIsoLineData.Init(downSizedGridData, theOrigIsoLineData.itsMaxAllowedIsoLineCount);
-    // Alustetaan uuden isoline datan piirtoasetukset originaalista
-    theDownSizedIsoLineData.InitDrawOptions(theOrigIsoLineData);
+    ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, *theOrigIsoLineData.itsParam.GetParam());
+
+    // Alustetaan uusi isolinedata harvennetulla matriisilla ja sen piirtoasetukset otetaan originaalista
+    theDownSizedIsoLineData.InitIsoLineData(downSizedGridData, &theOrigIsoLineData);
 }
 
 static void DoTraceLogging(const std::string &message)
@@ -1014,7 +1065,6 @@ void CreateClassesAndColorTableAndColorShade(float aMin, float aMax, int classCo
     XuShadingScaleChange(shadingScaleIndex, defRGB, s_rgbDefCount, XuRGB, max_level);
 
     // t‰t‰ ei tarvitsisi varmaan aina luoda!!! optimoi!!!
-//	int colorIndexStart = 2; // 2 ensimm‰ist‰ paikkaa varattu backgroud ja foreground colorille + hollow?
     XuColorTableCreate(colorTableIndex, classCount, XuLOOKUP, XuRGB, max_level);
     XuColorTableActivate(colorTableIndex);
     XuShadingScaleLoad(shadingScaleIndex, colorTableIndex, 0, classCount + 1);

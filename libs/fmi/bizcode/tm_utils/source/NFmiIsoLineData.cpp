@@ -3,6 +3,11 @@
 
 namespace
 {
+	// Kuinka monta eriarvoista isoviivaa laitetaan laskuin oletuksena. 
+	// Mitä isompi luku, sitä kauemmin voi tietyissä tilanteissa 'mustan mössön' piirto kestää visualisoinneissa.
+	// Tällä siis yritetään estää että väärin asetetuilla piirtoasetuksilla kone jumittaa mahdottoman kauan ja piirtää ruudulle tuhansittain isoviivoja vieriviereen.
+	const int g_DefaultMaxAllowedIsoLineCount = 500;
+
 	size_t Matrix2ToolmasterIndex(size_t gridSizeX, size_t yIndex, size_t xIndex)
 	{
 		return ((yIndex * gridSizeX) + xIndex);
@@ -25,7 +30,7 @@ namespace
 
 	void DoMatrixDataInitialization(const NFmiDataMatrix<float>& valuesMatrix, checkedVector<float>& values, float& minOut, float& maxOut)
 	{
-		values.resize(valuesMatrix.NX()* valuesMatrix.NY());
+		values.resize(valuesMatrix.NX() * valuesMatrix.NY());
 		auto gridSizeX = valuesMatrix.NX();
 		for(size_t yIndex = 0; yIndex < valuesMatrix.NY(); yIndex++)
 		{
@@ -95,13 +100,15 @@ static bool IsValuematrixOk(const NFmiDataMatrix<float>& theValueMatrix)
 	return (theValueMatrix.NX() * theValueMatrix.NY()) != 0;
 }
 
-bool NFmiIsoLineData::Init(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
+bool NFmiIsoLineData::InitIsoLineData(const NFmiDataMatrix<float>& theValueMatrix, NFmiIsoLineData* otherIsoLineData)
 {
 	if(!::IsValuematrixOk(theValueMatrix))
 		return false;
 
-	BaseInitialization(theValueMatrix, 500);
+	BaseInitialization(theValueMatrix, g_DefaultMaxAllowedIsoLineCount);
 	::DoMatrixDataInitialization(itsIsolineData, itsVectorFloatGridData, itsDataMinValue, itsDataMaxValue);
+	if(otherIsoLineData)
+		InitDrawOptions(*otherIsoLineData);
 	return true;
 }
 
@@ -133,12 +140,12 @@ void NFmiIsoLineData::DoBaseInitializationReset()
 	*this = tmpIsoLineData;
 }
 
-// tässä ei tehdä mitää itse datalle, vain eri piirto-optiot kopioidaan
+// Tässä ei tehdä mitään itse datalle, vain tietyt eri piirto-optiot kopioidaan.
+// Tietyt dataosiot on jo kopioitu NFmiIsoLineData::InitIsoLineData metodissa 
+// kutsutuissa metodeissa ennen tämän metodin kutsua.
+// Tätä käytetään kun originaali hiladataa pitää harventaa (koskee nyt vain isoviivapiirtoa).
 void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 {
-	itsParam = theOther.itsParam;
-	itsTime = theOther.itsTime;
-
 	fUseIsoLines = theOther.fUseIsoLines;
 	fUseColorContours = theOther.fUseColorContours;
 	itsTrueIsoLineCount = theOther.itsTrueIsoLineCount;
@@ -149,7 +156,9 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsIsoLineStyle = theOther.itsIsoLineStyle;
 	itsIsoLineWidth = theOther.itsIsoLineWidth;
 	itsIsoLineAnnonationHeight = theOther.itsIsoLineAnnonationHeight;
+
 	fUseLabelBox = theOther.fUseLabelBox;
+	itsIsoLineBoxFillColorIndex = theOther.itsIsoLineBoxFillColorIndex;
 	fUseSingleColorsWithSimpleIsoLines = theOther.fUseSingleColorsWithSimpleIsoLines;
 	fUseIsoLineFeathering = theOther.fUseIsoLineFeathering;
 	fUseCustomIsoLineClasses = theOther.fUseCustomIsoLineClasses;
@@ -157,6 +166,7 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	fUseSeparatorLinesBetweenColorContourClasses = theOther.fUseSeparatorLinesBetweenColorContourClasses;
 	fUseIsoLineGabWithCustomContours = theOther.fUseIsoLineGabWithCustomContours;
 	fDrawLabelsOverContours = theOther.fDrawLabelsOverContours;
+
 	itsColorIndexCount = theOther.itsColorIndexCount;
 	itsIsoLineStep = theOther.itsIsoLineStep;
 	itsColorContoursStep = theOther.itsColorContoursStep;
@@ -168,27 +178,22 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsIsoLineLabelDecimalsCount = theOther.itsIsoLineLabelDecimalsCount;
 	itsIsoLineZeroClassValue = theOther.itsIsoLineZeroClassValue;
 	itsIsoLineStartClassValue = theOther.itsIsoLineStartClassValue;
+
 	itsDataMinValue = theOther.itsDataMinValue;
 	itsDataMaxValue = theOther.itsDataMaxValue;
 	itsClassMinValue = theOther.itsClassMinValue;
 	itsClassMaxValue = theOther.itsClassMaxValue;
 
-	itsInfo = theOther.itsInfo;
-
 	itsHatch1 = theOther.itsHatch1;
 	itsHatch2 = theOther.itsHatch2;
-	itsSingleSubMapViewHeightInMillimeters = theOther.itsSingleSubMapViewHeightInMillimeters;
-	itsDataGridToViewHeightRatio = theOther.itsDataGridToViewHeightRatio;
 
+	// Huom! itsDefRGB -taulukkoa ei tarvitse kopioida tässä, se alustetaan vasta myöhemmin
 	itsDefRGBRowSize = theOther.itsDefRGBRowSize;
 	itsUsedColorsCube = theOther.itsUsedColorsCube;
-    itsIsoLineBoxFillColorIndex = theOther.itsIsoLineBoxFillColorIndex;
-	itsIsolineMinLengthFactor = theOther.itsIsolineMinLengthFactor;
-}
 
-bool NFmiIsoLineData::UseContourDraw() const
-{
-	return fUseColorContours != 0;
+	itsSingleSubMapViewHeightInMillimeters = theOther.itsSingleSubMapViewHeightInMillimeters;
+	itsDataGridToViewHeightRatio = theOther.itsDataGridToViewHeightRatio;
+	itsColorContouringData = theOther.itsColorContouringData;
 }
 
 void NFmiIsoLineData::InitContourUserDrawData(const NFmiDataMatrix<float>& valueMatrix, const NFmiDataMatrix<NFmiPoint>& coordinateMatrix)
@@ -199,37 +204,6 @@ void NFmiIsoLineData::InitContourUserDrawData(const NFmiDataMatrix<float>& value
 bool NFmiIsoLineData::UseContourUserDraw() const
 {
 	return itsContourUserDrawData.UseUserDraw();
-}
-
-// Tämä funktio laskee interpoloidun arvon itsCrossSectionData-datasta.
-// Oletus annettu piste on aina 0,0  -  1,1 maailmassa ja lasketaan siihen halutut indeksit.
-float NFmiIsoLineData::InterpolatedValue(const NFmiPoint &thePoint)
-{
-	float value = kFloatMissing;
-		// pitää tehdä pieni huijaus pisteen kanssa, jos se tulee ulko rajalle eli x = 1 tai y = 1
-//		NFmiPoint usedPoint(thePoint);
-//		if(usedPoint.X() >= 1.)
-//			usedPoint.X(0.9999999); // tällöin pitää laittaa hieman ykköstä pienempi luku, että koodi toimii ulko rajalla
-//		if(usedPoint.Y() >= 1.)
-//			usedPoint.Y(0.9999999); // tällöin pitää laittaa hieman ykköstä pienempi luku, että koodi toimii ulko rajalla
-	double xInd = (itsXNumber-1) * thePoint.X();
-	double yInd = (itsYNumber-1) * (1 - thePoint.Y()); // taas pakko tehdä y-akseli kääntö temppu
-	int x1 = static_cast<int>(std::floor(xInd));
-	int y1 = static_cast<int>(std::floor(yInd));
-	int x2 = x1 + 1;
-	int y2 = y1 + 1;
-	if(x1 >= 0 && x2 < static_cast<int>(itsIsolineData.NX()) && y1 >= 0 && y2 < static_cast<int>(itsIsolineData.NY()))
-	{ // lasketaan tulos vain jos ollaan matriisin sisällä, tähän voisi reunoille laskea erikois arvoja jos haluaa
-		double xFraction = xInd - x1;
-		double yFraction = yInd - y1;
-		value = static_cast<float>(NFmiInterpolation::BiLinear(xFraction,
-											yFraction,
-										itsIsolineData.At(x1, y2),
-										itsIsolineData.At(x2, y2),
-										itsIsolineData.At(x1, y1),
-										itsIsolineData.At(x2, y1)));
-	}
-	return value;
 }
 
 void NFmiIsoLineData::SetIsolineData(const NFmiDataMatrix<float> &isolineData)

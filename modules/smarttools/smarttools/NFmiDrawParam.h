@@ -155,8 +155,6 @@ class NFmiDrawParam
   void ContourGab(const double theContourGab)
   {
     itsContourGab = theContourGab;
-    if (itsContourGab == 0)
-      itsContourGab = 1;
   }
   double ContourGab(void) const { return itsContourGab; };
   void ModifyingStep(const double theModifyingStep) { itsModifyingStep = theModifyingStep; };
@@ -590,6 +588,24 @@ class NFmiDrawParam
   {
     itsColorContouringColorShadeHigh2ValueColor = newValue;
   }
+  const NFmiColor& ColorContouringColorShadeHigh3ValueColor(void) const
+  {
+    return itsColorContouringColorShadeHigh3ValueColor;
+  }
+  void ColorContouringColorShadeHigh3ValueColor(const NFmiColor& newValue)
+  {
+    itsColorContouringColorShadeHigh3ValueColor = newValue;
+  }
+  bool SimpleColorContourTransparentColor1() const { return fSimpleColorContourTransparentColor1; }
+  void SimpleColorContourTransparentColor1(bool newValue) { fSimpleColorContourTransparentColor1 = newValue; }
+  bool SimpleColorContourTransparentColor2() const { return fSimpleColorContourTransparentColor2; }
+  void SimpleColorContourTransparentColor2(bool newValue) { fSimpleColorContourTransparentColor2 = newValue; }
+  bool SimpleColorContourTransparentColor3() const { return fSimpleColorContourTransparentColor3; }
+  void SimpleColorContourTransparentColor3(bool newValue) { fSimpleColorContourTransparentColor3 = newValue; }
+  bool SimpleColorContourTransparentColor4() const { return fSimpleColorContourTransparentColor4; }
+  void SimpleColorContourTransparentColor4(bool newValue) { fSimpleColorContourTransparentColor4 = newValue; }
+  bool SimpleColorContourTransparentColor5() const { return fSimpleColorContourTransparentColor5; }
+  void SimpleColorContourTransparentColor5(bool newValue) { fSimpleColorContourTransparentColor5 = newValue; }
   bool UseWithIsoLineHatch1(void) const { return fUseWithIsoLineHatch1; }
   void UseWithIsoLineHatch1(bool newValue) { fUseWithIsoLineHatch1 = newValue; }
   bool DrawIsoLineHatchWithBorders1(void) const { return fDrawIsoLineHatchWithBorders1; }
@@ -679,6 +695,9 @@ class NFmiDrawParam
   static bool IsIsolineType(NFmiMetEditorTypes::View viewType);
 
  protected:
+  double SimpleColorContourTransparentColors2Double() const;
+  void Double2SimpleColorContourTransparentColors(double theValue);
+
   NFmiDataIdent itsParameter;
   NFmiLevel itsLevel;
   std::string itsParameterAbbreviation;
@@ -817,6 +836,16 @@ class NFmiDrawParam
   NFmiColor itsColorContouringColorShadeMidValueColor;
   NFmiColor itsColorContouringColorShadeHighValueColor;
   NFmiColor itsColorContouringColorShadeHigh2ValueColor;
+  // Lisätty 5. väri, jotta simple-contour piirrot voidaan tehdä samaan tyyliin kuin custom-contourit
+  NFmiColor itsColorContouringColorShadeHigh3ValueColor; 
+  // Kaikki Simple-Color-Contour värit voidaan laittaa
+  // läpinäkyviksi, eli jos flagin arvo on true, on väri läpinäkyvä
+  // ja jos false, se on normaali näkyvä väri.
+  bool fSimpleColorContourTransparentColor1 = false;
+  bool fSimpleColorContourTransparentColor2 = false;
+  bool fSimpleColorContourTransparentColor3 = false;
+  bool fSimpleColorContourTransparentColor4 = false;
+  bool fSimpleColorContourTransparentColor5 = false;
   // isoviivojen kanssa voi käyttää myös hatchättyjä alueita (2 kpl)
   bool fUseWithIsoLineHatch1;
   bool fDrawIsoLineHatchWithBorders1;

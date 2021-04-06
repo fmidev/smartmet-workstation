@@ -114,9 +114,28 @@ void NFmiAutoComplete::InitFromSettings(const std::string &theBaseNameSpace)
 	itsMarkerFrameColor = SettingsFunctions::GetColorFromSettings(itsBaseNameSpace + "::MarkerFrameColor");
 	itsMarkerFillColor = SettingsFunctions::GetColorFromSettings(itsBaseNameSpace + "::MarkerFillColor");
 	itsOutOfMapArroyHeadColor = SettingsFunctions::GetColorFromSettings(itsBaseNameSpace + "::OutOfMapArroyHeadColor");
+	invertColorAlphaValues_ = NFmiSettings::Optional<bool>(itsBaseNameSpace + "::invertColorAlphaValues", invertColorAlphaValues_);
+	doColorAlphaFixes();
 
 	if(itsBaseUrl.empty()) // jos ei ollut annettu url:ia, ei sitten käytetä ollenkaan tätä systeemiä
 		fUse = false;
+}
+
+void NFmiAutoComplete::doColorAlphaFixes()
+{
+	if(invertColorAlphaValues_)
+	{
+		itsNameTextColor.InvertAlphaChannel();
+		itsRectangleFillColor.InvertAlphaChannel();
+		itsRectangleFrameColor.InvertAlphaChannel();
+		itsRectangleOutOfMapFillColor.InvertAlphaChannel();
+		itsRectangleOutOfMapFrameColor.InvertAlphaChannel();
+		itsRectangleSelectedFillColor.InvertAlphaChannel();
+		itsRectangleSelectedFrameColor.InvertAlphaChannel();
+		itsMarkerFrameColor.InvertAlphaChannel();
+		itsMarkerFillColor.InvertAlphaChannel();
+		itsOutOfMapArroyHeadColor.InvertAlphaChannel();
+	}
 }
 
 /*  // StoreSettings-runko on tässä vain malliksi, ei ole ehkä tarkoitustakaan tehdä talletuksia

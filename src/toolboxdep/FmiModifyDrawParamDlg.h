@@ -6,6 +6,7 @@
 #include "afxwin.h"
 #include "NFmiDrawParam.h"
 #include "WzComboBox.h"
+#include "CtrlViewWin32Functions.h"
 
 class SmartMetDocumentInterface;
 class NFmiFixedDrawParamFolder;
@@ -31,6 +32,7 @@ public:
 	CButton	itsSimpleColorContourLowColor;
 	CButton	itsSimpleColorContourHighColor;
 	CButton itsSimpleColorContourHigh2Color;
+	CButton itsSimpleColorContourHigh3Color;
 	CButton	itsHatch2Color;
 	CButton	itsSymbolFillColor;
 	CButton	itsSymbolColor;
@@ -93,14 +95,18 @@ public:
 	double	itsHatch2Style;
 	double	itsHatch2EndValue;
 	double	itsHatch2StartValue;
-	float	itsSimpleColorContourClassEnd2Value;
-	float	itsSimpleColorContourClassEndValue;
-	float	itsSimpleColorContourClassMiddleValue;
-	float	itsSimpleColorContourClassStartValue;
 	BOOL	fUSeSeparatingLinesBetweenColorContourClasses;
     double itsIsoLineZeroValue_NEW;
     double itsSimpleClassMiddleValue_NEW;
-    //}}AFX_DATA
+	CString itsSimpleColorContourLimit1StringU_;
+	float itsSimpleColorContourLimit1Value = kFloatMissing; // Saadaan vastaavasta string valuesta
+	CString itsSimpleColorContourLimit2StringU_;
+	float itsSimpleColorContourLimit2Value = kFloatMissing; // Saadaan vastaavasta string valuesta
+	CString itsSimpleColorContourLimit3StringU_;
+	float itsSimpleColorContourLimit3Value = kFloatMissing; // Saadaan vastaavasta string valuesta
+	CString itsSimpleColorContourLimit4StringU_;
+	float itsSimpleColorContourLimit4Value = kFloatMissing; // Saadaan vastaavasta string valuesta
+	//}}AFX_DATA
 
 	bool fSpecialClassesHaveInvalidValues; // t‰m‰n muuttujan avulla v‰ritet‰‰n labeli tarvittaessa punaiseksi ett‰
 											// k‰ytt‰j‰ n‰kee ett‰ annetut luokka rajat ovat virheellisi‰.
@@ -137,9 +143,11 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnShowColorIndexDlg();
 	afx_msg void OnButtonHatch2Color();
-	afx_msg void OnButtonColorShowSimpleColorcontourHigh();
 	afx_msg void OnButtonColorShowSimpleColorcontourLow();
 	afx_msg void OnButtonColorShowSimpleColorcontourMid();
+	afx_msg void OnButtonColorShowSimpleColorcontourHigh();
+	afx_msg void OnButtonColorShowSimpleColorcontourHigh2();
+	afx_msg void OnButtonColorShowSimpleColorcontourHigh3();
 	afx_msg void OnButtonResetDrawParam();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
@@ -184,6 +192,10 @@ private:
     std::string GetSelectedFixedDrawParamPath();
     void ForceStationViewUpdate();
     void AdjustStartingPosition();
+	std::pair<bool, bool> GetSimpleContourTransparencyAndDisabledOptions(int colorIndex) const;
+	NFmiColorButtonDrawingData GetSimpleContourColorButtonData(int colorIndex, bool initColor);
+	void SetSimpleColorContourLimit(float limitValue, float* limitValueDlg, CString* limitStringDlgU_);
+	void OnEnChangeShowSimpleColorcontourLimitValue(int colorIndex, CString& limitStringU_, float& limitValue);
 
 	std::string itsDrawParamPath;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -210,6 +222,7 @@ private:
 	COLORREF itsSimpleColorContourLowColorRef;
 	COLORREF itsSimpleColorContourHighColorRef;
 	COLORREF itsSimpleColorContourHigh2ColorRef;
+	COLORREF itsSimpleColorContourHigh3ColorRef;
 	COLORREF itsHatch1ColorRef;
 	COLORREF itsHatch2ColorRef;
 	CBitmap* itsSymbolFillBitmap;
@@ -227,6 +240,7 @@ private:
 	CBitmap* itsSimpleColorContourLowBitmap;
 	CBitmap* itsSimpleColorContourHighBitmap;
 	CBitmap* itsSimpleColorContourHigh2Bitmap;
+	CBitmap* itsSimpleColorContourHigh3Bitmap;
 	CBitmap* itsHatch1Bitmap;
 	CBitmap* itsHatch2Bitmap;
 	CRect itsSymbolFillColorRect;
@@ -244,6 +258,7 @@ private:
 	CRect itsSimpleColorContourLowColorRect;
 	CRect itsSimpleColorContourHighColorRect;
 	CRect itsSimpleColorContourHigh2ColorRect;
+	CRect itsSimpleColorContourHigh3ColorRect;
 	CRect itsHatch1ColorRect;
 	CRect itsHatch2ColorRect;
 
@@ -263,17 +278,30 @@ private:
     BOOL fUseTransparentLabelBoxFillColor;
     BOOL fDoSparseDataSymbolVisualization;
     BOOL fUseLegend;
+	BOOL fSimpleContourTransparency1;
+	BOOL fSimpleContourTransparency2;
+	BOOL fSimpleContourTransparency3;
+	BOOL fSimpleContourTransparency4;
+	BOOL fSimpleContourTransparency5;
 
 public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnBnClickedModifyDrwParamRefresh();
 	afx_msg void OnBnClickedDrawParamLoadFrom();
 	afx_msg void OnBnClickedModifyDrwParamUseWithAll();
-	afx_msg void OnBnClickedButtonColorShowSimpleColorcontourHigh2();
 	afx_msg void OnClose();
 	afx_msg void OnEnChangeSpecialClassesValues();
     afx_msg void OnCbnSelchangeComboFixedDrawParamSelector();
     afx_msg void OnBnClickedButtonReloadOriginal();
+	afx_msg void OnBnClickedCheckSimpleContourTransparency1();
+	afx_msg void OnBnClickedCheckSimpleContourTransparency2();
+	afx_msg void OnBnClickedCheckSimpleContourTransparency3();
+	afx_msg void OnBnClickedCheckSimpleContourTransparency4();
+	afx_msg void OnBnClickedCheckSimpleContourTransparency5();
+	afx_msg void OnEnChangeShowSimpleColorcontourWithColorsStartValue();
+	afx_msg void OnEnChangeShowSimpleColorcontourWithColorsMiddleValue();
+	afx_msg void OnEnChangeShowSimpleColorcontourWithColorsEndValue();
+	afx_msg void OnEnChangeShowSimpleColorcontourWithColorsEnd2Value();
 };
 
 //{{AFX_INSERT_LOCATION}}

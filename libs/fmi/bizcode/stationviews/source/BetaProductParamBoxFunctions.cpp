@@ -181,7 +181,7 @@ namespace
 
     void DrawGdiplusBoxRect(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex, Gdiplus::Graphics *gdiPlusGraphics, const NFmiRect &theBoxAbsoluteRect, const NFmiColor &theBoxFillColor, const NFmiColor &theBoxFrameCcolor, float theFrameThicknessInMM)
     {
-        Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(theBoxFillColor, true));
+        Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(theBoxFillColor));
         Gdiplus::GraphicsPath aPath;
         Gdiplus::Rect gdiRect(static_cast<INT>(theBoxAbsoluteRect.Left()), static_cast<INT>(theBoxAbsoluteRect.Top()), static_cast<INT>(theBoxAbsoluteRect.Width()), static_cast<INT>(theBoxAbsoluteRect.Height()));
         aPath.AddRectangle(gdiRect);
@@ -196,7 +196,7 @@ namespace
     void DrawBetaProductPlainParamBox(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex, Gdiplus::Graphics *gdiPlusGraphics, const NFmiRect &theParamBoxAbsoluteRect)
     {
         const float grayShade = 1.0f;
-        NFmiColor rectFillcolor(grayShade, grayShade, grayShade, 0.85f); // Pit‰‰ olla l‰pikuultava
+        NFmiColor rectFillcolor(grayShade, grayShade, grayShade, 0.15f); // Pit‰‰ olla l‰pikuultava
         NFmiColor rectFrameColor(0, 0, 0);
         DrawGdiplusBoxRect(ctrlViewDocumentInterface, mapViewDescTopIndex, gdiPlusGraphics, theParamBoxAbsoluteRect, rectFillcolor, rectFrameColor, 0.1f);
     }

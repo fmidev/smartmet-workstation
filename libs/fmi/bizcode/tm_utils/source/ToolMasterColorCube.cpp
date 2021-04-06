@@ -33,7 +33,7 @@ namespace ToolMasterColorCube
         return &gUsedColorsCube;
     }
 
-    int UsedColorTableIndex()
+    int UsedDefaultColorTableIndex()
     {
         return gUsedDefaultToolMasterColorTableIndex;
     }
@@ -41,6 +41,16 @@ namespace ToolMasterColorCube
     int UsedHollowColorIndex()
     {
         return gUsedDefaultToolMasterColorTableHollowColorIndex;
+    }
+
+    int ColorCubeColorChannelSize()
+    {
+        return gColorTableRedSize;
+    }
+
+    int SpecialColorCountInColorTableStart()
+    {
+        return gUsedDefaultToolMasterColorTableIndexStart;
     }
 
     void InitDefaultColorTable(bool fToolMasterAvailable)
@@ -133,27 +143,30 @@ namespace ToolMasterColorCube
 
     int RgbToColorIndex(float RGBcolors[3])
     {
-        int k = static_cast<int>(RGBcolors[0] / 255.*(gColorTableRedSize - 1));
-        int j = static_cast<int>(RGBcolors[1] / 255.*(gColorTableGreenSize - 1));
-        int i = static_cast<int>(RGBcolors[2] / 255.*(gColorTableBlueSize - 1));
+        int k = boost::math::iround(RGBcolors[0] / 255.*(gColorTableRedSize - 1));
+        int j = boost::math::iround(RGBcolors[1] / 255.*(gColorTableGreenSize - 1));
+        int i = boost::math::iround(RGBcolors[2] / 255.*(gColorTableBlueSize - 1));
 
         return gUsedColorsCube[k][j][i].first;
     }
 
     int RgbToColorIndex(COLORREF color)
     {
-        int k = GetRValue(color) / gColorTableRedSize
-            , j = GetGValue(color) / gColorTableGreenSize
-            , i = GetBValue(color) / gColorTableBlueSize;
+        int k = GetRValue(color) / gColorTableRedSize;
+        int j = GetGValue(color) / gColorTableGreenSize;
+        int i = GetBValue(color) / gColorTableBlueSize;
 
         return gUsedColorsCube[k][j][i].first;
     }
 
     int RgbToColorIndex(const NFmiColor& color)
     {
-        int k = static_cast<int>(color.Red()*(gColorTableRedSize - 1));
-        int j = static_cast<int>(color.Green()*(gColorTableGreenSize - 1));
-        int i = static_cast<int>(color.Blue()*(gColorTableBlueSize - 1));
+        if(!IsColorFullyOpaque(color))
+            return UsedHollowColorIndex();
+
+        int k = boost::math::iround(color.Red()*(gColorTableRedSize - 1));
+        int j = boost::math::iround(color.Green()*(gColorTableGreenSize - 1));
+        int i = boost::math::iround(color.Blue()*(gColorTableBlueSize - 1));
 
         return gUsedColorsCube[k][j][i].first;
     }
@@ -161,7 +174,7 @@ namespace ToolMasterColorCube
     NFmiColor ColorIndexToRgb(int theColorIndex)
     {
         if(theColorIndex < gUsedDefaultToolMasterColorTableIndexStart)
-            return NFmiColor(0, 0, 0, 0); // en jaksa palauttaa foreground, background ja hollow värejä
+            return NFmiColor(0, 0, 0, 1); // en jaksa palauttaa foreground, background ja hollow värejä
 
         theColorIndex -= gUsedDefaultToolMasterColorTableIndexStart;
         float blue = (theColorIndex % gColorTableBlueSize) / (gColorTableBlueSize - 1.f);
@@ -170,9 +183,18 @@ namespace ToolMasterColorCube
         theColorIndex = theColorIndex / gColorTableGreenSize;
         float red = (theColorIndex % gColorTableRedSize) / (gColorTableRedSize - 1.f);
 
-        return NFmiColor(red, green, blue, 1);
+        return NFmiColor(red, green, blue);
     }
 
+    NFmiColor ColorToActualCubeColor(const NFmiColor& color)
+    {
+        return ColorIndexToRgb(RgbToColorIndex(color));
+    }
+
+    bool IsColorFullyOpaque(const NFmiColor& color)
+    {
+        return color.Alpha() <= 0.f;
+    }
 }
 
 #endif // DISABLE_UNIRAS_TOOLMASTER
