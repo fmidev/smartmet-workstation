@@ -180,9 +180,12 @@ class NFmiIsoLineView : public NFmiStationView
 	virtual bool IsMapViewCase();
 	bool FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
     void FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
-	void FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData);
+	void FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
+	void FillSimpleColorContourInfo_new(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
     void FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
-    void FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
+	void FillCustomColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData);
+	void FillBaseColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
+	void FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
     void FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
 	void PrepareForTransparentDraw(void);
 	void EndTransparentDraw(void);

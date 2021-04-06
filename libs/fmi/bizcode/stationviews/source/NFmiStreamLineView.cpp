@@ -1222,7 +1222,7 @@ void NFmiStreamLineView::DrawDebugRect(int sizeInPixels, const NFmiPoint &theLat
     startPointRect.Size(NFmiPoint(width, width));
     startPointRect.Center(LatLonToViewPoint(theLatlon));
     Gdiplus::Rect rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, startPointRect);    
-    CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, theColor, theColor, false, true, false, 1, Gdiplus::DashStyleSolid);
+    CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, theColor, theColor, false, true, 1, Gdiplus::DashStyleSolid);
 }
 
 void NFmiStreamLineView::DrawDebugString(double fontSizeInMM, const NFmiPoint &thePoint, const NFmiColor &theColor, const std::string &theText, bool pointInLatlon)
@@ -1666,23 +1666,23 @@ void NFmiStreamLineView::DrawDebugEliminationInfo(const NFmiStartPointEliminatio
     if(theEliminatioInfo.fWasUsedAsStartingPoint)
     {
         NFmiColor rectColor(0.2f,0.7f,0.4f);
-        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, false, 2);
+        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, 2);
         DrawDebugString(fontSizeInMM, p, fontColor, ::MakePointIndexString(theEliminatioInfo.itsStartingPointIndex), false);
     }
     else if(theEliminatioInfo.fWasOutOfZoomedAreaStartingPoint)
     {
         NFmiColor rectColor(1.f,0.5f,0.f);
-        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, false, 1);
+        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, 1);
     }
     else if(theEliminatioInfo.fMarkedShortly)
     {
         NFmiColor rectColor(0.85f,0.4f,0.95f);
-        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, false, 1);
+        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, 1);
     }
     else if(theEliminatioInfo.fEliminated)
     {
         NFmiColor rectColor(0.9f,0.9f,0.1f);
-        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, false, 1);
+        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, 1);
         DrawDebugString(fontSizeInMM, p, fontColor, ::MakePointIndexString(theEliminatioInfo.itsStartingPointIndexEliminated), false);
 
         p.Y(p.Y() + relativeFontHeight);
@@ -1696,7 +1696,7 @@ void NFmiStreamLineView::DrawDebugEliminationInfo(const NFmiStartPointEliminatio
     else
     {
         NFmiColor rectColor(0.7f,0.7f,0.7f);
-        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, false, 1);
+        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, 1);
     }
 }
 

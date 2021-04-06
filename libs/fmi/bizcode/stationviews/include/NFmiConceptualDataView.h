@@ -49,7 +49,6 @@ public:
 	void InitDataFromRawStrings(void);
 	void InitDataFromWomlStrings(LPXNode theNode);
 	void SetDataFromObjectType(LPXNode theNode);
-	void SetAlphaFactors(float theAlphaBlendFactor);
     void CalcParameterValues(LPXNode theNode);
 
 	std::string itsPartTypeStr; // conceptual tai symbol
@@ -123,7 +122,7 @@ public:
 protected:
 	void DrawCloudArea(ConceptualObjectData &theData, float theLineWidthInMM, const std::vector<Gdiplus::PointF> &theXyPoints, float theLineWidthInPixels);
 	void DrawFrontDecorations(ConceptualObjectData &theData, float theLineWidthInMM, const std::vector<Gdiplus::PointF> &theXyPoints, float theLineWidthInPixels, FrontType theFrontType);
-	void DrawConseptualData(ConceptualObjectData &theData, float theAlphaBlendFactor);
+	void DrawConseptualData(ConceptualObjectData &theData);
 	void DrawConseptualObject(ConceptualObjectData &theData);
 	void DrawSymbol(ConceptualObjectData &theData);
 	void DrawTextArea(ConceptualObjectData &theData);

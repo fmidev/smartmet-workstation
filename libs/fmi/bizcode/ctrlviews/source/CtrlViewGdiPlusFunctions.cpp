@@ -8,91 +8,14 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiColorSpaces.h"
 #include "NFmiDrawParam.h"
+#include "ToolMasterColorCube.h"
 
 namespace CtrlView
 {
-    Gdiplus::Color NFmiColor2GdiplusColor(const NFmiColor &theColor, bool fUseAlpha)
+    // NFmiColor oliossa on alpha k‰‰nteinen (0.0 on full-opacity ja 1.0 on full-transparent)
+    Gdiplus::Color NFmiColor2GdiplusColor(const NFmiColor& theColor)
     {
-        if(fUseAlpha)
-            return Gdiplus::Color(static_cast<BYTE>(theColor.Alpha() * 255), static_cast<BYTE>(theColor.GetRed() * 255), static_cast<BYTE>(theColor.GetGreen() * 255), static_cast<BYTE>(theColor.GetBlue() * 255));
-        else
-            return Gdiplus::Color(static_cast<BYTE>(theColor.GetRed() * 255), static_cast<BYTE>(theColor.GetGreen() * 255), static_cast<BYTE>(theColor.GetBlue() * 255));
-    }
-
-    int RgbToColorIndex(Matrix3D<std::pair<int, COLORREF> > &theUsedColorsCube, const NFmiColor& color)
-    {
-        int k = boost::math::iround(color.Red()*(theUsedColorsCube.zDIM() - 1));
-        int j = boost::math::iround(color.Green()*(theUsedColorsCube.Columns() - 1));
-        int i = boost::math::iround(color.Blue()*(theUsedColorsCube.Rows() - 1));
-
-        return theUsedColorsCube[k][j][i].first;
-    }
-
-    int GetBrighterTMColorIndex(Matrix3D<std::pair<int, COLORREF> > &theUsedColorsCube, int theTMColorIndex, double theBrightningFactor, int theSpecialColorEndIndex)
-    {
-        if(theTMColorIndex <= theSpecialColorEndIndex)
-            return theTMColorIndex; // ei vaalenneta foreground, background eik‰ transparent v‰rej‰
-        else
-        {
-
-            int tmpColorIndex = theTMColorIndex - theSpecialColorEndIndex - 1;
-            size_t xInd = tmpColorIndex % theUsedColorsCube.Rows();
-            size_t yInd = (tmpColorIndex / theUsedColorsCube.Rows()) % theUsedColorsCube.Columns();
-            size_t zInd = (tmpColorIndex / (theUsedColorsCube.Rows()*theUsedColorsCube.Columns())) % theUsedColorsCube.zDIM();
-
-            NFmiColor aColor(ColorRef2Color(theUsedColorsCube[zInd][yInd][xInd].second));
-            NFmiColor modifiedColor = NFmiColorSpaces::GetBrighterColor(aColor, theBrightningFactor);
-
-            return RgbToColorIndex(theUsedColorsCube, modifiedColor);
-        }
-    }
-
-    void ModifyColors(boost::shared_ptr<NFmiDrawParam> &theDrawParam, double theBrightningFactor, bool fDoIsolineColors, bool fDoContourColors, bool fDosymbolColors, Matrix3D<std::pair<int, COLORREF> > &theUsedColorsCube, int theSpecialColorEndIndex)
-    {
-        if(fDoIsolineColors)
-        {
-            NFmiColor newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->IsolineColor(), theBrightningFactor);
-            theDrawParam->IsolineColor(newColor);
-
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->IsolineTextColor(), theBrightningFactor);
-            theDrawParam->IsolineTextColor(newColor);
-
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->SimpleIsoLineColorShadeLowValueColor(), theBrightningFactor);
-            theDrawParam->SimpleIsoLineColorShadeLowValueColor(newColor);
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->SimpleIsoLineColorShadeMidValueColor(), theBrightningFactor);
-            theDrawParam->SimpleIsoLineColorShadeMidValueColor(newColor);
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->SimpleIsoLineColorShadeHighValueColor(), theBrightningFactor);
-            theDrawParam->SimpleIsoLineColorShadeHighValueColor(newColor);
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->SimpleIsoLineColorShadeHigh2ValueColor(), theBrightningFactor);
-            theDrawParam->SimpleIsoLineColorShadeHigh2ValueColor(newColor);
-
-            std::vector<int> colIndexies = theDrawParam->SpecialIsoLineColorIndexies();
-            std::vector<int> newColIndexies;
-            for(size_t i = 0; i < colIndexies.size(); i++)
-                newColIndexies.push_back(GetBrighterTMColorIndex(theUsedColorsCube, colIndexies[i], theBrightningFactor, theSpecialColorEndIndex));
-            theDrawParam->SetSpecialIsoLineColorIndexies(newColIndexies); // HUOM! t‰m‰ aettaa myˆs SpecialContourColorIndexies samalla, joten viel‰ ei s‰‰ tehd‰ mit‰‰n myˆhemmin contour osiossa niille.
-        }
-
-        if(fDoContourColors)
-        {
-            NFmiColor newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->ColorContouringColorShadeLowValueColor(), theBrightningFactor);
-            theDrawParam->ColorContouringColorShadeLowValueColor(newColor);
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->ColorContouringColorShadeMidValueColor(), theBrightningFactor);
-            theDrawParam->ColorContouringColorShadeMidValueColor(newColor);
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->ColorContouringColorShadeHighValueColor(), theBrightningFactor);
-            theDrawParam->ColorContouringColorShadeHighValueColor(newColor);
-            newColor = NFmiColorSpaces::GetBrighterColor(theDrawParam->ColorContouringColorShadeHigh2ValueColor(), theBrightningFactor);
-            theDrawParam->ColorContouringColorShadeHigh2ValueColor(newColor);
-
-            // HUOM! N‰m‰ asetetaan isoline kohdassa samalla kuin custom isoline v‰ri indeksit, joten ei saa vaalentaa n‰it‰ toistaiseksi uudestaan.
-            /*
-            std::vector<int> colIndexies = theDrawParam->SpecialContourColorIndexies();
-            std::vector<int> newColIndexies;
-            for(size_t i = 0; i < colIndexies.size(); i++)
-            newColIndexies.push_back(::GetBrighterTMColorIndex(theUsedColorsCube, colIndexies[i], theBrightningFactor, theSpecialColorEndIndex));
-            theDrawParam->SetSpecialContourColorIndexies(newColIndexies);
-            */
-        }
+        return Gdiplus::Color(static_cast<BYTE>((1.f - theColor.Alpha()) * 255), static_cast<BYTE>(theColor.GetRed() * 255), static_cast<BYTE>(theColor.GetGreen() * 255), static_cast<BYTE>(theColor.GetBlue() * 255));
     }
 
     // Lasketaan ns. vaalennus kerroin, kun piirret‰‰n eri m‰‰r‰ malliajoja p‰‰llekk‰in.
@@ -468,11 +391,9 @@ namespace CtrlView
     {
         if(thePoints.size() > 1)
         {
-            bool useAlpha = (theLineInfo.Color().Alpha() > 0); // jos alpha on suurempi kuin 0, k‰ytet‰‰n sen arvoa. NFmiColor luokan default alpha 0 pit‰‰ ohittaa (ei ole mielest‰ni j‰rke‰ piirt‰‰ n‰kym‰ttˆmi‰ viivoja)
-            
             if(fFill)
             {
-                Gdiplus::Color gdiFillColor = NFmiColor2GdiplusColor(theLineInfo.Color(), useAlpha);
+                Gdiplus::Color gdiFillColor = NFmiColor2GdiplusColor(theLineInfo.Color());
                 if(fillHatchStyle >= 0 && fPrinting)
                 {
                     // GDI+ on bugi eli jos printtaa hatch fillattua juttua, se on t‰ysin opaque v‰litt‰m‰tt‰ mist‰‰n v‰ri-asetuksista
@@ -500,7 +421,7 @@ namespace CtrlView
             }
             else
             {
-                Gdiplus::Color lineColor = NFmiColor2GdiplusColor(theLineInfo.Color(), useAlpha);
+                Gdiplus::Color lineColor = NFmiColor2GdiplusColor(theLineInfo.Color());
                 Gdiplus::Pen pen(lineColor, static_cast<Gdiplus::REAL>(theLineInfo.Thickness()));
                 pen.SetDashStyle(static_cast<Gdiplus::DashStyle>(theLineInfo.LineType()));
                 if(theLineInfo.LineType() == 5)
@@ -587,13 +508,13 @@ namespace CtrlView
         theGdiPlusGraphics.DrawString(wideStr.c_str(), static_cast<INT>(wideStr.size()), aFont.get(), aPlace, &stringFormat, &aBrush);
     }
 
-    void DrawSimpleText(Gdiplus::Graphics &theGdiPlusGraphics, const NFmiColor &theColor, float theFontSizeInPixels, const std::string &theStr, const NFmiPoint &theAbsPlace, const std::wstring &theFontNameStr, FmiDirection theAlingment, const NFmiColor *theBkColor)
+    void DrawSimpleText(Gdiplus::Graphics &theGdiPlusGraphics, const NFmiColor &theColor, float theFontSizeInPixels, const std::string &theStr, const NFmiPoint &theAbsPlace, const std::wstring &theFontNameStr, FmiDirection theAlingment, Gdiplus::FontStyle theFontStyle, const NFmiColor *theBkColor)
     {
         Gdiplus::Color usedColor(NFmiColor2GdiplusColor(theColor));
         Gdiplus::SolidBrush aBrush(usedColor);
         Gdiplus::StringFormat stringFormat;
         SetGdiplusAlignment(theAlingment, stringFormat);
-        auto aFont = CreateFontPtr(theFontSizeInPixels, theFontNameStr, Gdiplus::FontStyleRegular);
+        auto aFont = CreateFontPtr(theFontSizeInPixels, theFontNameStr, theFontStyle);
 
         std::wstring wideStr = StringToWString(theStr);
 
@@ -616,7 +537,7 @@ namespace CtrlView
         theGdiPlusGraphics.DrawLine(&aPen, x1, y1, x2, y2);
     }
 
-    void DrawRect(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::Rect &theRectInPixels, const NFmiColor &theRectFrameColor, const NFmiColor &theRectFillColor, bool doFill, bool doFrame, bool useAlphaFill, float theRectFrameWidthInPixels, Gdiplus::DashStyle theDashStyle)
+    void DrawRect(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::Rect &theRectInPixels, const NFmiColor &theRectFrameColor, const NFmiColor &theRectFillColor, bool doFill, bool doFrame, float theRectFrameWidthInPixels, Gdiplus::DashStyle theDashStyle)
     {
         Gdiplus::GraphicsPath aPath;
         aPath.AddRectangle(theRectInPixels);
@@ -624,7 +545,7 @@ namespace CtrlView
 
         if(doFill)
         {
-            Gdiplus::SolidBrush aBrush(NFmiColor2GdiplusColor(theRectFillColor, useAlphaFill));
+            Gdiplus::SolidBrush aBrush(NFmiColor2GdiplusColor(theRectFillColor));
             theGdiPlusGraphics.FillPath(&aBrush, &aPath);
         }
         if(doFrame)
@@ -635,11 +556,11 @@ namespace CtrlView
         }
     }
 
-    void DrawPath(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::GraphicsPath &thePathInPixels, const NFmiColor &theFrameColor, const NFmiColor &theFillColor, bool doFill, bool doFrame, bool useAlphaFill, float theFrameWidthInPixels)
+    void DrawPath(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::GraphicsPath &thePathInPixels, const NFmiColor &theFrameColor, const NFmiColor &theFillColor, bool doFill, bool doFrame, float theFrameWidthInPixels)
     {
         if(doFill)
         {
-            Gdiplus::SolidBrush aBrush(NFmiColor2GdiplusColor(theFillColor, useAlphaFill));
+            Gdiplus::SolidBrush aBrush(NFmiColor2GdiplusColor(theFillColor));
             theGdiPlusGraphics.FillPath(&aBrush, &thePathInPixels);
         }
         if(doFrame)
@@ -710,69 +631,4 @@ namespace CtrlView
         DrawBitmapToDC(theGdiPlusGraphics, isPrinting, theBitmap, theSourcePixels, theDestPixels, &imageAttr, fDoNearestInterpolation);
     }
 
-    // Piirt‰‰ 3D-laatkon. Laatikon vasen ja yl‰ reunat piirret‰‰n vaaleammalla ja oikea ja ala reunat piirret‰‰n tummemmalla.
-    // Keskiosa piirret‰‰n halutulla v‰rill‰. Reunoihin saa halutun paksuuden. Tummennus ja vaalennus tapahtuu halutulla prosentilla.
-    // Testattu vain 2 pikselin paksuisilla reunoilla.
-    // HUOM! kun theEdgeWidth = 1, GDI+ -piirto toimi mielest‰ni v‰‰rin ja jouduin tekem‰‰n pariin kohtaan yhden pikselin siito viilauluja.
-    void Draw3DRect(Gdiplus::Graphics *theGdiPlusGraphics, const Gdiplus::RectF &theRect, const NFmiColor &theColor, float theEdgeColorFactor, float theEdgeWidth)
-    {
-        Gdiplus::RectF theRectX(theRect);
-        if(theEdgeWidth == 1.f)  // "yhden levyiset reunat aiheuttivat ongelmia" -fixi
-            theRectX.Width -= 1.f;
-
-        NFmiColor darkColor = NFmiColorSpaces::GetBrighterColor(theColor, -theEdgeColorFactor);
-        Gdiplus::Pen darkPen(NFmiColor2GdiplusColor(darkColor), theEdgeWidth);
-        darkPen.SetAlignment(Gdiplus::PenAlignmentInset);
-        NFmiColor lightColor = NFmiColorSpaces::GetBrighterColor(theColor, theEdgeColorFactor);
-        Gdiplus::Pen lightPen(NFmiColor2GdiplusColor(lightColor), theEdgeWidth);
-        lightPen.SetAlignment(Gdiplus::PenAlignmentInset);
-        Gdiplus::SolidBrush normalBrush(NFmiColor2GdiplusColor(theColor, false));
-
-        // Piirret‰‰n koko alueen ymp‰rˆiv‰ laatikko tummalla v‰rill‰ pohjalle.
-        // T‰ll‰ saadaan oikea ja alareuna tummemmalla v‰rill‰.
-        Gdiplus::RectF usedRect = theRectX;
-        theGdiPlusGraphics->DrawRectangle(&darkPen, usedRect);
-
-        // Pienennet‰‰n laatikkoa reunuksen verran oikeasta ja ala reunoista.
-        // Piirret‰‰n t‰m‰ laatikko vaalealla v‰rilla, jolloin saadaan vaalea reuna vasen ja yl‰ reunoista..
-        usedRect.Width -= theEdgeWidth;
-        usedRect.Height -= theEdgeWidth;
-        theGdiPlusGraphics->DrawRectangle(&lightPen, usedRect);
-
-        // T‰m‰ on kikka vitonen. Haluan piirt‰‰ laatikon l‰pi kulmasta kulmaan tietyst‰ kohtaa vaalealla v‰rille 
-        // antialisoidun viivan. T‰m‰n takoitus on antaa laatikon vaalean ja tumman risteykseen pieni vino muutos alue.
-        // T‰t‰ aluetta ei juuri erota pienill‰ reuna leveyksill‰, mutta isommilla siit‰ pit‰isi tulla 'kiva' valaistus efekti.
-        {
-            // otetaan originaali laatikon kulmapisteet ja siirret‰‰n niit‰ hieman sivulle. Piirret‰‰n niiden avulla 
-            // viiva vaalealla v‰rill‰ antialisoitu viiva poikki laatikon.
-            Gdiplus::PointF bottomLeftPoint(theRectX.GetLeft(), theRectX.GetBottom());
-            Gdiplus::PointF topRightPoint(theRectX.GetRight(), theRectX.GetTop());
-            float usedPenWidth = theEdgeWidth;
-            if(theEdgeWidth > 1.f) // t‰m‰ ei ollut yhden yhden levyiset reunat aiheuttivat ongelmia -fixi, vaan t‰m‰n viilauksen ymm‰rr‰n viivan piirto geometrioista
-            {
-                bottomLeftPoint.Y -= theEdgeWidth;
-                topRightPoint.X -= theEdgeWidth;
-                usedPenWidth -= 1.f; // poikkiviivasta pit‰‰ tehd‰ yhden ohuempi kuin laatikon reunoista, paitsi kun se on jo 1
-            }
-            Gdiplus::Pen lightPen2(NFmiColor2GdiplusColor(lightColor), usedPenWidth);
-            lightPen2.SetAlignment(Gdiplus::PenAlignmentCenter);
-            lightPen2.SetStartCap(Gdiplus::LineCapTriangle);
-            lightPen2.SetEndCap(Gdiplus::LineCapTriangle);
-            Gdiplus::SmoothingMode oldMode = theGdiPlusGraphics->GetSmoothingMode();
-            theGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-            theGdiPlusGraphics->DrawLine(&lightPen2, bottomLeftPoint, topRightPoint);
-            theGdiPlusGraphics->SetSmoothingMode(oldMode);
-        }
-
-        // Lopuksi fillataan laatikko sis‰ alueelle halutulla perusv‰rill‰.
-        usedRect = theRectX; // sijoitetaan originaal laatikko, ett‰ saadaan helpommat laskut
-        usedRect.Inflate(-theEdgeWidth, -theEdgeWidth);
-        if(theEdgeWidth == 1.f)  // "yhden levyiset reunat aiheuttivat ongelmia" -fixi
-        {
-            usedRect.Width += 1.f;
-            usedRect.Height += 1.f;
-        }
-        theGdiPlusGraphics->FillRectangle(&normalBrush, usedRect); // fillataan normaali v‰rill‰ laatikon keskus
-
-    }
 }

@@ -68,12 +68,12 @@ END_MESSAGE_MAP()
 
 void CFmiProjectionLineSetupDlg::OnBnClickedButtonPRojectionLineColor()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRefLine, &itsColorBitmapLine, itsColorRectLine, itsProjectionLineColorButtom);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRefLine, &itsColorBitmapLine, itsColorRectLine, itsProjectionLineColorButtom));
 }
 
 void CFmiProjectionLineSetupDlg::OnBnClickedButtonPRojectionLabelColor()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRefLabel, &itsColorBitmapLabel, itsColorRectLabel, itsProjectionLabelColorButtom);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRefLabel, &itsColorBitmapLabel, itsColorRectLabel, itsProjectionLabelColorButtom));
 }
 
 BOOL CFmiProjectionLineSetupDlg::OnInitDialog()
@@ -88,8 +88,8 @@ BOOL CFmiProjectionLineSetupDlg::OnInitDialog()
 		itsLineDensityLon = itsProjectionCurvatureInfo->LineDensityModeLon();
 		itsLineSmoothness = itsProjectionCurvatureInfo->GetLineSmoothness();
 	}
-	CtrlView::InitialButtonColorUpdate(this, itsProjectionCurvatureInfo->PrimaryLineEnvi()->GetFrameColor(), itsColorRefLine, &itsColorBitmapLine, itsColorRectLine, itsProjectionLineColorButtom);
-    CtrlView::InitialButtonColorUpdate(this, itsProjectionCurvatureInfo->PrimaryLineLabelEnvi()->GetFrameColor(), itsColorRefLabel, &itsColorBitmapLabel, itsColorRectLabel, itsProjectionLabelColorButtom);
+	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsProjectionCurvatureInfo->PrimaryLineEnvi()->GetFrameColor(), itsColorRefLine, &itsColorBitmapLine, itsColorRectLine, itsProjectionLineColorButtom));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsProjectionCurvatureInfo->PrimaryLineLabelEnvi()->GetFrameColor(), itsColorRefLabel, &itsColorBitmapLabel, itsColorRectLabel, itsProjectionLabelColorButtom));
 
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control

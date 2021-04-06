@@ -72,6 +72,7 @@ public:
 
 private:
 	std::string GetAutoCompleteRespond(NFmiQ2Client &theHttpClient, const std::string &theWord, bool logEvents);
+	void doColorAlphaFixes();
 
 	bool fAutoCompleteDialogOn; // jos dialogi on päällä, tämä on true, muuten false
 	std::vector<NFmiACLocationInfo> itsResults; // tänne voidaan tallettaa erikseen tuloksia
@@ -98,6 +99,11 @@ private:
 	double itsConnectingLinePenSizeInMM;
 
 	std::string itsFontName;
+    // invertColorAlphaValues_:in pitää olla true, kunnes SmartMet versio 5.13.15.0 on vanhin 
+    // käytössä olevista versioista ja silloin tämä voidaan muuttaa false:ksi ja muuttaa 
+    // color_contour_legend_settings.conf tiedoston väriasetukset niin että full opacity 
+    // on 0.f ja full transparency on 1.f.
+    bool invertColorAlphaValues_ = true;
 
 	std::string itsBaseNameSpace;
 };

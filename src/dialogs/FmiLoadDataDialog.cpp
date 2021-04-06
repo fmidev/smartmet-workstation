@@ -484,19 +484,19 @@ void CFmiLoadDataDialog::SetupProducerButtons(NFmiDataLoadingInfo& theDataLoadin
 
 	//  v‰rinappulat
  	itsButtonActivateModel1.GetWindowRect(itsColorRect1);
-	itsBitmap1 = CtrlView::CreateColorBitmap(this, itsProducerButton1Color, itsColorRect1.Width() - 6, itsColorRect1.Height() - 6);
+	itsBitmap1 = CtrlView::CreateColorBitmap(itsColorRect1.Width() - 6, itsColorRect1.Height() - 6, NFmiColorButtonDrawingData(this, itsProducerButton1Color, itsColorRect1));
 	itsButtonActivateModel1.SetBitmap(*itsBitmap1);
 
  	itsButtonActivateModel2.GetWindowRect(itsColorRect2);
-	itsBitmap2 = CtrlView::CreateColorBitmap(this, itsProducerButton2Color, itsColorRect2.Width() - 6, itsColorRect2.Height() - 6);
+	itsBitmap2 = CtrlView::CreateColorBitmap(itsColorRect2.Width() - 6, itsColorRect2.Height() - 6, NFmiColorButtonDrawingData(this, itsProducerButton2Color, itsColorRect2));
 	itsButtonActivateModel2.SetBitmap(*itsBitmap2);
 
  	itsButtonActivateModel3.GetWindowRect(itsColorRect3);
-	itsBitmap3 = CtrlView::CreateColorBitmap(this, itsProducerButton3Color, itsColorRect3.Width() - 6, itsColorRect3.Height() - 6);
+	itsBitmap3 = CtrlView::CreateColorBitmap(itsColorRect3.Width() - 6, itsColorRect3.Height() - 6, NFmiColorButtonDrawingData(this, itsProducerButton3Color, itsColorRect3));
 	itsButtonActivateModel3.SetBitmap(*itsBitmap3);
 
  	itsButtonActivateModel4.GetWindowRect(itsColorRect4);
-	itsBitmap4 = CtrlView::CreateColorBitmap(this, itsProducerButton4Color, itsColorRect4.Width() - 6, itsColorRect4.Height() - 6);
+	itsBitmap4 = CtrlView::CreateColorBitmap(itsColorRect4.Width() - 6, itsColorRect4.Height() - 6, NFmiColorButtonDrawingData(this, itsProducerButton4Color, itsColorRect4));
 	itsButtonActivateModel4.SetBitmap(*itsBitmap4);
 }
 
@@ -1073,7 +1073,7 @@ void CFmiLoadDataDialog::DrawModelBlendingControl(CDC * dc)
 	if(modelDataBlender.Use() == false)
 		fillColor = NFmiColor(0.7f, 0.7f, 0.7f);
 
-	CtrlView::DrawRect(*itsGdiPlusGraphics, CtrlView::CRect2GdiplusRect(itsModelBlendCtrlRect), txtColor, fillColor, true, true, false, 1.f);
+	CtrlView::DrawRect(*itsGdiPlusGraphics, CtrlView::CRect2GdiplusRect(itsModelBlendCtrlRect), txtColor, fillColor, true, true, 1.f);
 
 	// piirret‰‰n pohja viiva
 	::DrawLine(dc, itsModelBlendScaleRect.left, itsModelBlendScaleRect.bottom, itsModelBlendScaleRect.right, itsModelBlendScaleRect.bottom);

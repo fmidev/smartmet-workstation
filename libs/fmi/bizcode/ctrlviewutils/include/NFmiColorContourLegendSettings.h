@@ -29,6 +29,7 @@ public:
     void frameLineType(int newValue) { frameLineType_ = newValue; }
     const NFmiColor& fillColor() const { return fillColor_; }
     void fillColor(const NFmiColor &newColor) { fillColor_ = newColor; }
+    void doColorAlphaFixes(bool invertColorAlphaValues);
 };
 
 class NFmiColorContourLegendSettings
@@ -44,6 +45,11 @@ class NFmiColorContourLegendSettings
     // paikka 0,0 - 1,1 laatikossa (Huom! vasen yläkulma on 0,0 ja oikea alakulma on 1,1)
     NFmiPoint relativeStartPosition_ = NFmiPoint(0, 0.85);
     bool drawTransparentRects_ = false;
+    // invertColorAlphaValues_:in pitää olla true, kunnes SmartMet versio 5.13.15.0 on vanhin 
+    // käytössä olevista versioista ja silloin tämä voidaan muuttaa false:ksi ja muuttaa 
+    // color_contour_legend_settings.conf tiedoston väriasetukset niin että full opacity 
+    // on 0.f ja full transparency on 1.f.
+    bool invertColorAlphaValues_ = true;
 
     bool initialized_ = false;
     std::string initialNameSpace_;
@@ -71,6 +77,7 @@ public:
 
 private:
     void initializeInvisibleColorRectSettings();
+    void doColorAlphaFixes();
 };
 
 

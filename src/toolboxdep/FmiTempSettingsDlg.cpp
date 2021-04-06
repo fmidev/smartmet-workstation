@@ -246,16 +246,16 @@ BOOL CFmiTempSettingsDlg::OnInitDialog()
 	itsResetScalesSkewTEndT = itsTempSystem->ResetScalesSkewTEndT();
 
 	// huom indeksi SoundingColor-metodiin yhden pienempi kuin muuttuja nimissä!!
-	CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(0), itsColorRef1, &itsColorBitmap1, itsColorRect1, itsColorButtomTemp1);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(1), itsColorRef2, &itsColorBitmap2, itsColorRect2, itsColorButtomTemp2);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(2), itsColorRef3, &itsColorBitmap3, itsColorRect3, itsColorButtomTemp3);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(3), itsColorRef4, &itsColorBitmap4, itsColorRect4, itsColorButtomTemp4);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(4), itsColorRef5, &itsColorBitmap5, itsColorRect5, itsColorButtomTemp5);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(5), itsColorRef6, &itsColorBitmap6, itsColorRect6, itsColorButtomTemp6);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(6), itsColorRef7, &itsColorBitmap7, itsColorRect7, itsColorButtomTemp7);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(7), itsColorRef8, &itsColorBitmap8, itsColorRect8, itsColorButtomTemp8);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(8), itsColorRef9, &itsColorBitmap9, itsColorRect9, itsColorButtomTemp9);
-    CtrlView::InitialButtonColorUpdate(this, itsTempSystem->SoundingColor(9), itsColorRef10, &itsColorBitmap10, itsColorRect10, itsColorButtomTemp10);
+	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(0), itsColorRef1, &itsColorBitmap1, itsColorRect1, itsColorButtomTemp1));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(1), itsColorRef2, &itsColorBitmap2, itsColorRect2, itsColorButtomTemp2));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(2), itsColorRef3, &itsColorBitmap3, itsColorRect3, itsColorButtomTemp3));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(3), itsColorRef4, &itsColorBitmap4, itsColorRect4, itsColorButtomTemp4));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(4), itsColorRef5, &itsColorBitmap5, itsColorRect5, itsColorButtomTemp5));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(5), itsColorRef6, &itsColorBitmap6, itsColorRect6, itsColorButtomTemp6));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(6), itsColorRef7, &itsColorBitmap7, itsColorRect7, itsColorButtomTemp7));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(7), itsColorRef8, &itsColorBitmap8, itsColorRect8, itsColorButtomTemp8));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(8), itsColorRef9, &itsColorBitmap9, itsColorRect9, itsColorButtomTemp9));
+    CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(9), itsColorRef10, &itsColorBitmap10, itsColorRect10, itsColorButtomTemp10));
 
     fShowSecondaryDataView = itsTempSystem->DrawSecondaryData();
     itsSecondaryDataViewWidth = boost::math::iround(itsTempSystem->SecondaryDataFrameWidthFactor() * 100.);
@@ -481,52 +481,52 @@ void CFmiTempSettingsDlg::OnBnClickedButtonSetHelpLineSettingsWindModificationAr
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp1()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef1, &itsColorBitmap1, itsColorRect1, itsColorButtomTemp1);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef1, &itsColorBitmap1, itsColorRect1, itsColorButtomTemp1));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp2()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef2, &itsColorBitmap2, itsColorRect2, itsColorButtomTemp2);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef2, &itsColorBitmap2, itsColorRect2, itsColorButtomTemp2));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp3()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef3, &itsColorBitmap3, itsColorRect3, itsColorButtomTemp3);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef3, &itsColorBitmap3, itsColorRect3, itsColorButtomTemp3));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp4()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef4, &itsColorBitmap4, itsColorRect4, itsColorButtomTemp4);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef4, &itsColorBitmap4, itsColorRect4, itsColorButtomTemp4));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp5()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef5, &itsColorBitmap5, itsColorRect5, itsColorButtomTemp5);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef5, &itsColorBitmap5, itsColorRect5, itsColorButtomTemp5));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp6()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef6, &itsColorBitmap6, itsColorRect6, itsColorButtomTemp6);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef6, &itsColorBitmap6, itsColorRect6, itsColorButtomTemp6));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp7()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef7, &itsColorBitmap7, itsColorRect7, itsColorButtomTemp7);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef7, &itsColorBitmap7, itsColorRect7, itsColorButtomTemp7));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp8()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef8, &itsColorBitmap8, itsColorRect8, itsColorButtomTemp8);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef8, &itsColorBitmap8, itsColorRect8, itsColorButtomTemp8));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp9()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef9, &itsColorBitmap9, itsColorRect9, itsColorButtomTemp9);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef9, &itsColorBitmap9, itsColorRect9, itsColorButtomTemp9));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonColorTemp10()
 {
-    CtrlView::ColorButtonPressed(this, itsColorRef10, &itsColorBitmap10, itsColorRect10, itsColorButtomTemp10);
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsColorRef10, &itsColorBitmap10, itsColorRect10, itsColorButtomTemp10));
 }
 
 void CFmiTempSettingsDlg::OnPaint()

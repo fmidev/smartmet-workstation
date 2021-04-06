@@ -9,7 +9,15 @@ void NFmiColorRectSettings::initFromSettings(const std::string &initialNameSpace
     frameLineColor_ = SettingsFunctions::GetColorFromSettings(initialNameSpace + "::frameLineColor", &frameLineColor_);
     frameLineType_ = NFmiSettings::Optional<int>(initialNameSpace + "::frameLineType", frameLineType_);
     fillColor_ = SettingsFunctions::GetColorFromSettings(initialNameSpace + "::frameFillColor", &fillColor_);
+}
 
+void NFmiColorRectSettings::doColorAlphaFixes(bool invertColorAlphaValues)
+{
+    if(invertColorAlphaValues)
+    {
+        frameLineColor_.InvertAlphaChannel();
+        fillColor_.InvertAlphaChannel();
+    }
 }
 
 void NFmiColorContourLegendSettings::initFromSettings(const std::string &initialNameSpace)
@@ -38,6 +46,8 @@ void NFmiColorContourLegendSettings::initFromSettings(const std::string &initial
         CatLog::logMessage(logMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
     }
     drawTransparentRects_ = NFmiSettings::Optional<bool>(initialNameSpace + "::drawTransparentRects", drawTransparentRects_);
+    invertColorAlphaValues_ = NFmiSettings::Optional<bool>(initialNameSpace + "::invertColorAlphaValues", invertColorAlphaValues_);
+    doColorAlphaFixes();
 }
 
 void NFmiColorContourLegendSettings::initializeInvisibleColorRectSettings()
@@ -50,4 +60,14 @@ void NFmiColorContourLegendSettings::initializeInvisibleColorRectSettings()
     invsibleColorRectSettings_.frameLineType(1);
     // Asetetaan tämä fill-väri tyhjäksi (alpha on 0) 
     invsibleColorRectSettings_.fillColor(NFmiColor(0,0,0,0));
+}
+
+void NFmiColorContourLegendSettings::doColorAlphaFixes()
+{
+    if(invertColorAlphaValues_)
+    {
+        backgroundRectSettings_.doColorAlphaFixes(invertColorAlphaValues_);
+        invsibleColorRectSettings_.doColorAlphaFixes(invertColorAlphaValues_);
+        fontColor_.InvertAlphaChannel();
+    }
 }
