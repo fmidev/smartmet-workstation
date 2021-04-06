@@ -287,7 +287,7 @@ void CFmiDataQualityCheckerDialog::DrawBackGround(void)
 	CRect frameRect = itsDrawRect;
 	frameRect.bottom -= 1;
 	frameRect.right -= 1;
-	CtrlView::DrawRect(*itsDrawingGraphics, CtrlView::CRect2GdiplusRect(frameRect), frameColor, fillColor, true, true, false, 1.f);
+	CtrlView::DrawRect(*itsDrawingGraphics, CtrlView::CRect2GdiplusRect(frameRect), frameColor, fillColor, true, true, 1.f);
 }
 
 static const std::wstring gFontNameStr(L"Arial");
@@ -392,7 +392,7 @@ static void GetRoundedRect(const Gdiplus::RectF &baseRect, float radius, Gdiplus
 
 static CRect GetParamRect(int index, const CRect &theTotalArea)
 {
-	int paramAreaHeight = 60;
+	int paramAreaHeight = 45;
 	int parAreaTop = theTotalArea.top + index * paramAreaHeight;
 	return CRect(theTotalArea.left, parAreaTop, theTotalArea.right, parAreaTop + paramAreaHeight);
 }
@@ -406,7 +406,7 @@ static Gdiplus::RectF GetStatusRectF(const CRect &theParamAreaRect, int timeInde
 {
 	if(timeSize == 0)
 		timeSize = 1;
-	float yOffset = 30;
+	float yOffset = 20;
 	float buttonMarginX = 2;
 	float buttonHeight = 20;
 	float buttonWidthMax = 30;
@@ -461,7 +461,7 @@ static void DrawStatusButton(Gdiplus::Graphics &theGraphics, const CRect &thePar
 	Gdiplus::RectF statusButtonRect = ::GetStatusRectF(theParamRect,timeIndex, timeSize, paramTotal);
 	Gdiplus::GraphicsPath statusButtonPath;
 	::GetRoundedRect(statusButtonRect, 4.f, statusButtonPath);
-    CtrlView::DrawPath(theGraphics, statusButtonPath, frameColor, fillColor, true, true, false, 1);
+    CtrlView::DrawPath(theGraphics, statusButtonPath, frameColor, fillColor, true, true, 1);
 }
 
 // palauttaa statuksen tarkastetulle datalle.
@@ -517,7 +517,7 @@ static std::string GetLonLatString(const NFmiPoint &thePoint, int decimals)
 static std::string MakeGridValuesCheckString(const NFmiGridValuesCheck *theCheckValues, const NFmiDataParamCheckingInfo &theCheckInfo, bool shortVersion, bool mainStatus)
 {
 	std::string str = theCheckInfo.CheckedParam().GetName().CharPtr();
-	str += "\n";
+	str += ":    ";
 	str += "Status: ";
 	str += ::GetStatusString(::CalcParamStatus(theCheckInfo, theCheckValues));
 	if(theCheckValues)
@@ -596,7 +596,7 @@ void CFmiDataQualityCheckerDialog::DoDrawStatistics(void)
 
 	NFmiColor txtColor(0, 0, 0);
 	NFmiColor frameColor(0, 0, 0);
-	float fontSizeInPixels = 12;
+	float fontSizeInPixels = 16;
 
 	NFmiDataQualityChecker &dataQualityChecker = itsSmartMetDocumentInterface->DataQualityChecker();
 	const checkedVector<NFmiDataParamCheckingInfo> & dataParamCheckingInfos = dataQualityChecker.DataParamCheckingInfos();
@@ -605,14 +605,14 @@ void CFmiDataQualityCheckerDialog::DoDrawStatistics(void)
 	for(int i = 0; i < static_cast<int>(dataParamCheckingInfos.size()); i++)
 	{
 		CRect paramAreaRect = ::GetParamRect(i, itsDrawRect);
-		CtrlView::DrawRect(*itsDrawingGraphics, CtrlView::CRect2GdiplusRect(paramAreaRect), frameColor, frameColor, false, true, false, 1.f);
+		CtrlView::DrawRect(*itsDrawingGraphics, CtrlView::CRect2GdiplusRect(paramAreaRect), frameColor, frameColor, false, true, 1.f);
 
 		const NFmiGridValuesCheck *checkValues = 0;
 		if(i < static_cast<int>(combinedParamChecks.size()))
 			checkValues = &(combinedParamChecks[i]);
 		std::string statusStr = MakeGridValuesCheckString(checkValues, dataParamCheckingInfos[i], true, true);
 		NFmiPoint strPos(fontSizeInPixels * 1.2, paramAreaRect.top);
-        CtrlView::DrawSimpleText(*itsDrawingGraphics, txtColor, fontSizeInPixels, statusStr, strPos, gFontNameStr, kTopLeft);
+        CtrlView::DrawSimpleText(*itsDrawingGraphics, txtColor, fontSizeInPixels, statusStr, strPos, gFontNameStr, kTopLeft, Gdiplus::FontStyleBold);
 
 		int status = 4;
 		if(i < static_cast<int>(combinedParamChecks.size()))

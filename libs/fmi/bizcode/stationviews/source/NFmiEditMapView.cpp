@@ -158,13 +158,13 @@ static std::string MakeLastTimeText(const NFmiMetTime &theTime)
 static NFmiColor GetTimeTextcolor(const NFmiMetTime &theTime, bool fIsLastEditedDataSendHasComeBack)
 {
     if(theTime == NFmiMetTime::gMissingTime)
-        return NFmiColor(0.4f, 0.4f, 0.4f, 1.f); // harmaa, jos aika oli puuttuvaa
+        return NFmiColor(0.4f, 0.4f, 0.4f); // harmaa, jos aika oli puuttuvaa
     else if(fIsLastEditedDataSendHasComeBack)
-        return NFmiColor(0.129f, 0.568f, 0.005f, 1.f); // vihre‰, jos data on jo tullut takaisin
+        return NFmiColor(0.129f, 0.568f, 0.005f); // vihre‰, jos data on jo tullut takaisin
     else
-        return NFmiColor(0.99f, 0.64f, 0.f, 1.f); // keltainen, jos data ei ole viel‰ tullut takaisin
+        return NFmiColor(0.99f, 0.64f, 0.f); // keltainen, jos data ei ole viel‰ tullut takaisin
 //    else
-//        return NFmiColor(0.75f, 0.f, 0.f, 1.f); // punainen, jos on tullut korruptoitunut operatiivinen data takaisin viimeksi
+//        return NFmiColor(0.75f, 0.f, 0.f); // punainen, jos on tullut korruptoitunut operatiivinen data takaisin viimeksi
 }
 
 void NFmiEditMapView::DrawLastEditedDataSendTime()
@@ -182,7 +182,7 @@ void NFmiEditMapView::DrawLastEditedDataSendTime()
         NFmiColor usedTextColor = ::GetTimeTextcolor(lastEditedDataSendTime, itsCtrlViewDocumentInterface->IsLastEditedDataSendHasComeBack());
         double fontSizeInMM = 5;
         float fontSizeInPixels = static_cast<float>(fontSizeInMM * graphInfo.itsPixelsPerMM_y);
-        NFmiColor frameColor(0.f, 0.f, 0.f, 1.f);
+        NFmiColor frameColor(0.f, 0.f, 0.f);
         NFmiColor fillColor(1.f, 1.f, 1.f, 0.5f);
         FmiDirection textAlingment = kTopRight;
         std::wstring fontName = L"Courier New";
@@ -199,7 +199,7 @@ void NFmiEditMapView::DrawLastEditedDataSendTime()
             );
 
         itsLastSendTimeTextRect = CtrlView::GdiplusRect2Relative(itsToolBox, rectInPixels); // otetaan teksti laatikko talteen tooltip tarkasteluja varten
-        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, true, true, true, 1.f);
+        CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, true, true, 1.f);
         CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, usedTextColor, fontSizeInMM, timeText, textOriginPoint, graphInfo.itsPixelsPerMM_x, itsToolBox, fontName, textAlingment, Gdiplus::FontStyleBold);
     }
 }
@@ -323,8 +323,8 @@ void NFmiEditMapView::DrawVerticalAnimationControl(void)
 
     CtrlViewUtils::GraphicalInfo &graphInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
     NFmiColor frameColor(0.3f, 0.3f, 0.3f);
-    NFmiColor fillColor(1, 1, 1, 0.4f);
-    NFmiColor selectedFillColor(0.5f, 0.9f, 0.65f, 0.4f);
+    NFmiColor fillColor(1, 1, 1, 0.6f);
+    NFmiColor selectedFillColor(0.5f, 0.9f, 0.65f, 0.6f);
     NFmiColor strColor(0.f, 0.f, 0.f);
 
     NFmiMetTime selectedTime = itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
@@ -347,7 +347,7 @@ void NFmiEditMapView::DrawVerticalAnimationControl(void)
         usedFillColor = fillColor;
         if(currentTime == selectedTime)
             usedFillColor = selectedFillColor;
-        CtrlView::DrawPath(*itsGdiPlusGraphics, labelPath, frameColor, usedFillColor, true, true, true, 1);
+        CtrlView::DrawPath(*itsGdiPlusGraphics, labelPath, frameColor, usedFillColor, true, true, 1);
         std::string labelStr = currentTime.ToStr(itsVerticalAnimationInfo.itsTimeStampFormat, itsCtrlViewDocumentInterface->Language()).CharPtr();
         CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, strColor, fontSizeInMM, labelStr, singleLabelRect.Center(), graphInfo.itsPixelsPerMM_x, itsToolBox, fontNameStr, kCenter, Gdiplus::FontStyleBold);
         singleLabelRect += NFmiPoint(0, yMove);
@@ -359,7 +359,7 @@ void NFmiEditMapView::DrawVerticalAnimationControl(void)
     usedFillColor = fillColor;
     if(itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex).AnimationOn())
         usedFillColor = selectedFillColor;
-    CtrlView::DrawPath(*itsGdiPlusGraphics, labelPath, frameColor, usedFillColor, true, true, true, 1); // pit‰‰ kysy‰ Play statusta, ett‰ filli color saadaan oikein
+    CtrlView::DrawPath(*itsGdiPlusGraphics, labelPath, frameColor, usedFillColor, true, true, 1); // pit‰‰ kysy‰ Play statusta, ett‰ filli color saadaan oikein
     std::string labelStr = "Play";
     CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, strColor, fontSizeInMM, labelStr, singleLabelRect.Center(), graphInfo.itsPixelsPerMM_x, itsToolBox, fontNameStr, kCenter);
 

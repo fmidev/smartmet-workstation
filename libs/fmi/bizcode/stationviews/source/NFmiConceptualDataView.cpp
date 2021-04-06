@@ -289,7 +289,7 @@ void ConceptualObjectData::CalcParameterValues(LPXNode theNode)
     itsParameterValue = kFloatMissing;
     itsParameterValue2 = kFloatMissing;
 	std::string paramValueStr;
-	itsFontColor = NFmiColor(1,0,0,1); // tehd‰‰n aluksi kaikista punaisia
+	itsFontColor = NFmiColor(1,0,0); // tehd‰‰n aluksi kaikista punaisia
 	if(theNode)
 	{
         std::string parValueStr = XmlHelper::ChildNodeValue(theNode, "womlqty:numericalValue"); // yksitt‰inen parametri arvo
@@ -305,14 +305,14 @@ void ConceptualObjectData::CalcParameterValues(LPXNode theNode)
 			itsParameterValueStr += g_RangeSplitterString;
 			itsParameterValueStr += ::GetParamValueStr(itsParameterValue2);
             if(itsParameterValue < 0 && itsParameterValue2 < 0)
-            	itsFontColor = NFmiColor(0,0,1,1); // tehd‰‰n negatiivisista arvoista sinisi‰, HUOM! en jaa osiin piirtoa negatiiviselle ja positiiviselle v‰lille, vaan kaikki piirret‰‰n aina samalla v‰rill‰
+            	itsFontColor = NFmiColor(0,0,1); // tehd‰‰n negatiivisista arvoista sinisi‰, HUOM! en jaa osiin piirtoa negatiiviselle ja positiiviselle v‰lille, vaan kaikki piirret‰‰n aina samalla v‰rill‰
                                                 // Eli jos molemmat on negatiivisia, silloin sininen v‰ritys, muuten aina punainen
 		}
         else
         {
             itsParameterValueStr = ::GetParamValueStr(itsParameterValue);
             if(itsParameterValue < 0)
-            	itsFontColor = NFmiColor(0,0,1,1); // tehd‰‰n negatiivisista arvoista sinisi‰
+            	itsFontColor = NFmiColor(0,0,1); // tehd‰‰n negatiivisista arvoista sinisi‰
         }
 	}
 
@@ -334,15 +334,15 @@ void ConceptualObjectData::CalcParameterValues(LPXNode theNode)
             itsParameterValue2 = ::GetWindDir(windDirStr); // tuulinuolien tapauksessa mahd. nopeus talletetaan itsParameterValue:seen ja suunta itsParameterValue2:seen
             std::string windArrowTypeStr = parts[1];
             if(windArrowTypeStr == "seaflowwind")
-                itsConceptualColor = NFmiColor(0.04f, 0.04f, 0.04f, 1); // musta
+                itsConceptualColor = NFmiColor(0.04f, 0.04f, 0.04f); // musta
             else if(windArrowTypeStr == "groundflowwind")
-                itsConceptualColor = NFmiColor(0.8f,0.8f,0.8f,1); // harmaa
+                itsConceptualColor = NFmiColor(0.8f,0.8f,0.8f); // harmaa
             else if(windArrowTypeStr == "warmflowwind")
-                itsConceptualColor = NFmiColor(0.98f, 0.04f, 0.04f ,1); // punainen
+                itsConceptualColor = NFmiColor(0.98f, 0.04f, 0.04f); // punainen
             else if(windArrowTypeStr == "coldflowwind")
-                itsConceptualColor = NFmiColor(0.04f ,0.51f, 0.8f, 1); // sininen
+                itsConceptualColor = NFmiColor(0.04f ,0.51f, 0.8f); // sininen
             else if(windArrowTypeStr == "flowwind")
-                itsConceptualColor = NFmiColor(0.49f ,0.06f ,0.9f ,1); // violetti
+                itsConceptualColor = NFmiColor(0.49f ,0.06f ,0.9f); // violetti
         }
     }
 }
@@ -392,7 +392,7 @@ static NFmiPoint CalcAreaCenter(std::vector<NFmiPoint> &theLatlonPoints)
         
 static NFmiColor GetWarningAreaColor(const std::string &theReferenceStr)
 {
-    const float alpha = 0.3f;
+    const float alpha = 0.7f;
     if(theReferenceStr == "warninglevel@level-1")
         return NFmiColor(0.f, 0.7f, 0.f, alpha); // vaalean vihre‰
     else if(theReferenceStr == "warninglevel@level-2")
@@ -415,7 +415,7 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
 		fPlainArea = false; // onko kyseess‰ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
-		itsConceptualColor = NFmiColor(0.96f, 0.2f, 0.04f, 1.f);
+		itsConceptualColor = NFmiColor(0.96f, 0.2f, 0.04f);
 	}
 	else if(itsWomlMemberNameStr == "coldfront") // muista vertailu sanojen pit‰‰ olla lower casessa!
 	{
@@ -424,7 +424,7 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
 		fPlainArea = false; // onko kyseess‰ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
-		itsConceptualColor = NFmiColor(0.06f, 0.57f, 1.f, 1.f);
+		itsConceptualColor = NFmiColor(0.06f, 0.57f, 1.f);
 	}
 	else if(itsWomlMemberNameStr == "occludedfront") // muista vertailu sanojen pit‰‰ olla lower casessa!
 	{
@@ -433,7 +433,7 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
 		fPlainArea = false; // onko kyseess‰ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
-		itsConceptualColor = NFmiColor(1.f, 0.f, 1.f, 1.f);
+		itsConceptualColor = NFmiColor(1.f, 0.f, 1.f);
 	}
 	else if(itsWomlMemberNameStr == "trough") // muista vertailu sanojen pit‰‰ olla lower casessa!
 	{
@@ -442,7 +442,7 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
 		fPlainArea = false; // onko kyseess‰ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM / 1.6;
-		itsConceptualColor = NFmiColor(0.6f, 0.f, 0.47f, 1.f);
+		itsConceptualColor = NFmiColor(0.6f, 0.f, 0.47f);
 	}
 	else if(itsWomlMemberNameStr == "uppertrough") // muista vertailu sanojen pit‰‰ olla lower casessa!
 	{
@@ -451,7 +451,7 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
 		fPlainArea = false; // onko kyseess‰ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM / 1.6;
-		itsConceptualColor = NFmiColor(0.06f, 0.57f, 1.f, 1.f);
+		itsConceptualColor = NFmiColor(0.06f, 0.57f, 1.f);
 	}
 	else if(itsWomlMemberNameStr == "jetstream") // muista vertailu sanojen pit‰‰ olla lower casessa!
 	{
@@ -460,7 +460,7 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
 		fPlainArea = false; // onko kyseess‰ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM / 2.0;
-		itsConceptualColor = NFmiColor(1.f, 0.f, 1.f, 1.f);
+		itsConceptualColor = NFmiColor(1.f, 0.f, 1.f);
 	}
 	else if(itsWomlMemberNameStr == "surfaceprecipitationarea") // muista vertailu sanojen pit‰‰ olla lower casessa!
 	{
@@ -502,7 +502,7 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
 		fPlainArea = true; // onko kyseess‰ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
-		itsConceptualColor = NFmiColor(0.6f, 0.6f, 0.6f, 0.7f); // tehd‰‰n vihre‰ kun ei ole tietoa v‰rist‰ (ja 50 % alpha)
+		itsConceptualColor = NFmiColor(0.6f, 0.6f, 0.6f, 0.3f); // tehd‰‰n vihre‰ kun ei ole tietoa v‰rist‰ (ja 70 % alpha)
 	}
 	else if(itsWomlMemberNameStr == "pointmeteorologicalsymbol") // muista vertailu sanojen pit‰‰ olla lower casessa!
 	{
@@ -529,17 +529,17 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		itsFontScaleFactor = 1.6f; // tehd‰‰n kaikista aluksi jonkun kokoisia, koska ei ole tietoa
         if(itsWomlMemberNameStr == "lowpressurecenter")
         {
-		    itsFontColor = NFmiColor(1,0,0,1); // punainen
+		    itsFontColor = NFmiColor(1,0,0); // punainen
             itsSymbolCode = 53;
         }
         else if(itsWomlMemberNameStr == "polarlow")
         {
-		    itsFontColor = NFmiColor(1,0,0,1); // punainen
+		    itsFontColor = NFmiColor(1,0,0); // punainen
             itsSymbolCode = 56;
         }
         else if(itsWomlMemberNameStr == "highpressurecenter")
         {
-		    itsFontColor = NFmiColor(0,0,1,1); // sininen
+		    itsFontColor = NFmiColor(0,0,1); // sininen
             itsSymbolCode = 49;
         }
 	}
@@ -576,32 +576,30 @@ void ConceptualObjectData::InitDataFromRawStrings(void)
 			if(appearanceSize == normalFrontalAppearanceSize)
 			{
 				itsLineWidthInMM = itsPixelSizeInMM * appearanceVec[0];
-				// laitetaan v‰riin mukaan myˆs alpha-kanavaan arvo (1.f = opaque)
-				itsConceptualColor = NFmiColor(appearanceVec[normalFrontalAppearanceSize-3]/255.f, appearanceVec[normalFrontalAppearanceSize-2]/255.f, appearanceVec[normalFrontalAppearanceSize-1]/255.f, 1.f);
+				itsConceptualColor = NFmiColor(appearanceVec[normalFrontalAppearanceSize-3]/255.f, appearanceVec[normalFrontalAppearanceSize-2]/255.f, appearanceVec[normalFrontalAppearanceSize-1]/255.f);
 			}
 			else // yl‰solalla on jotain uusia appearance tietoja joista en tied‰ mit‰ neovat
 			{
 				int upperTroughAppSize = static_cast<int>(appearanceVec.size());
 				itsLineWidthInMM = itsPixelSizeInMM * appearanceVec[0];
-				// laitetaan v‰riin mukaan myˆs alpha-kanavaan arvo (1.f = opaque)
-				itsConceptualColor = NFmiColor(appearanceVec[upperTroughAppSize-3]/255.f, appearanceVec[upperTroughAppSize-2]/255.f, appearanceVec[upperTroughAppSize-1]/255.f, 1.f);
+				itsConceptualColor = NFmiColor(appearanceVec[upperTroughAppSize-3]/255.f, appearanceVec[upperTroughAppSize-2]/255.f, appearanceVec[upperTroughAppSize-1]/255.f);
 			}
 		}
 		else
 		{
 			fPlainArea = true;
+			// N‰ihin loppuihin laitetaan alphaksi 0.5
+			float usedAlpha = 0.5f;
 			if(boost::iequals(itsRainphaseStr, "water"))
-				itsConceptualColor = NFmiColor(0.3f, 0.9f, 0.3f);
+				itsConceptualColor = NFmiColor(0.3f, 0.9f, 0.3f, usedAlpha);
 			else if(boost::iequals(itsRainphaseStr, "water_with_rain_symbol"))
-				itsConceptualColor = NFmiColor(0.3f, 0.9f, 0.3f);
+				itsConceptualColor = NFmiColor(0.3f, 0.9f, 0.3f, usedAlpha);
 			else if(boost::iequals(itsRainphaseStr, "sleet"))
-				itsConceptualColor = NFmiColor(0.35f, 0.92f, 0.35f);
+				itsConceptualColor = NFmiColor(0.35f, 0.92f, 0.35f, usedAlpha);
 			else if(boost::iequals(itsRainphaseStr, "snow"))
-				itsConceptualColor = NFmiColor(0.20f, 0.75f, 0.20f);
+				itsConceptualColor = NFmiColor(0.20f, 0.75f, 0.20f, usedAlpha);
 			else if(boost::iequals(itsRainphaseStr, "fog"))
-				itsConceptualColor = NFmiColor(1.f, 1.f, 0.6f);
-			// n‰ihin laitetaan alphaksi heti 0.5
-			itsConceptualColor.Alpha(0.5f);
+				itsConceptualColor = NFmiColor(1.f, 1.f, 0.6f, usedAlpha);
 		}
 	}
 	else
@@ -609,8 +607,7 @@ void ConceptualObjectData::InitDataFromRawStrings(void)
 		vector<float> fontColorVec = NFmiStringTools::Split<vector<float> >(itsFontColorStr, " ");
 		if(fontColorVec.size() < 3)
 			throw runtime_error("Error in conceptual model data, fontColor was illegal.");
-		// laitetaan v‰riin mukaan myˆs alpha-kanavaan arvo (1.f = opaque)
-		itsFontColor = (fontColorVec.size() == 3) ? NFmiColor(fontColorVec[0]/255.f, fontColorVec[1]/255.f, fontColorVec[2]/255.f, 1.f) : NFmiColor(fontColorVec[0]/255.f, fontColorVec[1]/255.f, fontColorVec[2]/255.f, fontColorVec[3]/255.f);
+		itsFontColor = NFmiColor(fontColorVec[0]/255.f, fontColorVec[1]/255.f, fontColorVec[2]/255.f);
 		itsSymbolCode = 0;
 		try
 		{
@@ -628,13 +625,6 @@ void ConceptualObjectData::InitDataFromRawStrings(void)
 		itsSymbolLatlon = NFmiPoint(symbolLatlonVec[0], symbolLatlonVec[1]);
 	}
 
-}
-
-// s‰‰t‰‰ kaikkien NFmiColor-dataosien alphaa annetun kertoimen kanssa
-void ConceptualObjectData::SetAlphaFactors(float theAlphaBlendFactor)
-{
-	itsConceptualColor.Alpha(itsConceptualColor.Alpha()*theAlphaBlendFactor);
-	itsFontColor.Alpha(itsFontColor.Alpha()*theAlphaBlendFactor);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -938,11 +928,9 @@ void NFmiConceptualDataView::Draw(NFmiToolBox *theGTB)
 	{
 		InitializeGdiplus(itsToolBox, &GetFrame());
 		itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yll‰tt‰v‰n paljon piirtoa
-
-		float alphaBlendFactor = 1.0f; // jos aika erotus p‰‰ll‰, aikaisemmat k‰site-oliot ovat 'haaleammalla' piirrettyj‰
 		GetConceptualData(itsTime);
 		for(size_t j=0; j<itsConceptualObjectDatas.size(); j++)
-			DrawConseptualData(itsConceptualObjectDatas[j], alphaBlendFactor);
+			DrawConseptualData(itsConceptualObjectDatas[j]);
 	}
 	catch(...)
 	{
@@ -950,9 +938,8 @@ void NFmiConceptualDataView::Draw(NFmiToolBox *theGTB)
 	CleanGdiplus(); // t‰t‰ pit‰‰ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 }
 
-void NFmiConceptualDataView::DrawConseptualData(ConceptualObjectData &theData, float theAlphaBlendFactor)
+void NFmiConceptualDataView::DrawConseptualData(ConceptualObjectData &theData)
 { 
-	theData.SetAlphaFactors(theAlphaBlendFactor);
 	if(theData.fConceptualType)
 		DrawConseptualObject(theData);
 	else
@@ -1004,7 +991,7 @@ void NFmiConceptualDataView::DrawTextArea(ConceptualObjectData &theData)
 	double fontSizeInMM = 4.5; // mist‰ koko?
     fontSizeInMM *= CalcScreenSizeFactor(*itsCtrlViewDocumentInterface, itsMapViewDescTopIndex);
 
-	Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(theData.itsFontColor, true));
+	Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(theData.itsFontColor));
 	Gdiplus::SolidBrush aBrush(usedColor);
 	PointF aPlace1(CtrlView::ConvertLatlonToGdiPlusPoint(this, theData.itsSymbolLatlon));
 
@@ -1017,7 +1004,7 @@ void NFmiConceptualDataView::DrawTextArea(ConceptualObjectData &theData)
 
 	{ // t‰ysin l‰pin‰kyv‰‰n boxiin laitetaan hennot reunat
 		float penWidthInPixels = static_cast<float>(1.f * 1.f/ graphicalInfo.itsPixelsPerMM_x);
-		Pen aPen(CtrlView::NFmiColor2GdiplusColor(NFmiColor(0.6f, 0.6f, 0.6f, 0.2f), true), penWidthInPixels);
+		Pen aPen(CtrlView::NFmiColor2GdiplusColor(NFmiColor(0.6f, 0.6f, 0.6f, 0.8f)), penWidthInPixels);
 		itsGdiPlusGraphics->DrawRectangle(&aPen, boxRect);
 	}
 	itsGdiPlusGraphics->FillRectangle(&aBrush, boxRect);
@@ -1107,19 +1094,19 @@ void NFmiConceptualDataView::DrawTemperatureRange(ConceptualObjectData &theData,
 
     // 1. Laitetaan rangen "..." stringi ensin: a) v‰ri=harmaa b) alignment=center c) paikka=originaali paikka d) fontti=normaali
     std::wstring symbolStr = CtrlView::StringToWString(g_RangeSplitterString);
-    Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(NFmiColor(0.5, 0.5, 0.5, usedAlpha), true));
+    Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(NFmiColor(0.5, 0.5, 0.5, usedAlpha)));
     ::DrawFinalRangeString(itsGdiPlusGraphics, theFont, kCenter, symbolStr, usedColor, thePlace);
 
     // 2. Laitetaan rangen vasen stringi sitten: a) v‰ri=l‰mpˆtilasta riippuen b) alignment=right c) paikka=originaali paikka - dx d) fontti=normaali
     symbolStr = CtrlView::StringToWString(leftValueStr);
-    usedColor = CtrlView::NFmiColor2GdiplusColor(::TemperatureColor(leftValue, usedAlpha), true);
+    usedColor = CtrlView::NFmiColor2GdiplusColor(::TemperatureColor(leftValue, usedAlpha));
     Gdiplus::PointF leftPlace(thePlace);
     leftPlace.X -= xMoveInPixels; // siirret‰‰n alku arvoa vasemmalle
     ::DrawFinalRangeString(itsGdiPlusGraphics, theFont, kRight, symbolStr, usedColor, leftPlace);
 
     // 3. Laitetaan rangen oikea stringi sitten: a) v‰ri=l‰mpˆtilasta riippuen b) alignment=left c) paikka=originaali paikka + dx d) fontti=normaali
     symbolStr = CtrlView::StringToWString(rightValueStr);
-    usedColor = CtrlView::NFmiColor2GdiplusColor(::TemperatureColor(rightValue, usedAlpha), true);
+    usedColor = CtrlView::NFmiColor2GdiplusColor(::TemperatureColor(rightValue, usedAlpha));
     Gdiplus::PointF rightPlace(thePlace);
     rightPlace.X += xMoveInPixels; // siirret‰‰n alku arvoa vasemmalle
     ::DrawFinalRangeString(itsGdiPlusGraphics, theFont, kLeft, symbolStr, usedColor, rightPlace);
@@ -1181,13 +1168,13 @@ void NFmiConceptualDataView::DrawSymbol(ConceptualObjectData &theData)
             moveMatrix.Translate(aPlace.X, aPlace.Y);
             arrowPath.Transform(&moveMatrix);
 
-            CtrlView::DrawPath(*itsGdiPlusGraphics, arrowPath, NFmiColor(0,0,0,1), theData.itsConceptualColor, true, false, false, 0);
+            CtrlView::DrawPath(*itsGdiPlusGraphics, arrowPath, NFmiColor(0,0,0), theData.itsConceptualColor, true, false, 0);
             if(theData.itsParameterValue != kFloatMissing)
             { // piirret‰‰n nuolen p‰‰lle nopeus arvo
                 float usedFontSizeInPixels = CalcUsedFontSizeInPixels(6.f, *itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, theData.itsFontScaleFactor);
-                NFmiColor bkColor(0.5f, 0.5f, 0.5f, 1);
+                NFmiColor bkColor(0.5f, 0.5f, 0.5f);
     		    Gdiplus::PointF aPlace(CtrlView::ConvertLatlonToGdiPlusPoint(this, theData.itsSymbolLatlon));
-                CtrlView::DrawSimpleText(*itsGdiPlusGraphics, NFmiColor(1,1,1,1), usedFontSizeInPixels, theData.itsParameterValueStr, NFmiPoint(aPlace.X, aPlace.Y), L"Arial", kCenter, &bkColor);
+                CtrlView::DrawSimpleText(*itsGdiPlusGraphics, NFmiColor(1,1,1), usedFontSizeInPixels, theData.itsParameterValueStr, NFmiPoint(aPlace.X, aPlace.Y), L"Arial", kCenter, Gdiplus::FontStyleRegular, &bkColor);
             }
         }
         else if(theData.itsFontNameStr.empty())
@@ -1211,7 +1198,7 @@ void NFmiConceptualDataView::DrawSymbol(ConceptualObjectData &theData)
                 Gdiplus::StringFormat stringFormat;
                 CtrlView::SetGdiplusAlignment(kCenter, stringFormat);
 
-		        Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(theData.itsFontColor, true));
+		        Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(theData.itsFontColor));
 		        Gdiplus::SolidBrush aBrush(usedColor);
 
 		        std::wstring symbolStr;
@@ -1869,11 +1856,14 @@ void NFmiConceptualDataView::DrawFrontDecorations(ConceptualObjectData &theData,
 			CalcPathObjectPoints(theXyPoints, objectCount, startGapInMM, objectSizeInMM, gapInMM, lengthsInMM, totalLengthInMM, decoratorPoints, rotationAngles);
 		// 7. Piirr‰ pallukat skaalan, sijainnin ja rotaation avulla
 			// jos left/right suunta, s‰‰d‰ rotaatiota 180 asteella
-			SolidBrush aBrush(CtrlView::NFmiColor2GdiplusColor(theData.itsConceptualColor, true));
+			SolidBrush aBrush(CtrlView::NFmiColor2GdiplusColor(theData.itsConceptualColor));
             float usedLineWidthInPixels = theLineWidthInPixels;
 			if(theFrontType == kFmiFrontTypeThrough)
                 usedLineWidthInPixels *= 0.6f; // solien v‰k‰set ovat sola viivaa ohuemmat
-			Pen aPen(CtrlView::NFmiColor2GdiplusColor(theData.itsConceptualColor), usedLineWidthInPixels);
+			// Kyn‰lle laitetaan t‰ysi opacity p‰‰lle (NFmiColor alpha = 0)
+			auto penColor = theData.itsConceptualColor;
+			penColor.Alpha(0);
+			Pen aPen(CtrlView::NFmiColor2GdiplusColor(penColor), usedLineWidthInPixels);
 			aPen.SetLineCap(Gdiplus::LineCapRound, Gdiplus::LineCapRound, Gdiplus::DashCapFlat);
 
 
@@ -1908,7 +1898,7 @@ void NFmiConceptualDataView::DrawFrontDecorations(ConceptualObjectData &theData,
 						NFmiColor aColor = theData.itsConceptualColor;
 						aColor.Alpha(0.5f);
 						if(theFrontType == kFmiFrontTypeCloudAreaPartPie2)
-							aColor.Alpha(0.35f); // Pie2 laitetaan 'vaaleammaksi' lis‰‰m‰ll‰ l‰pin‰kyvyytt‰
+							aColor.Alpha(0.65f); // Pie2 laitetaan 'vaaleammaksi' lis‰‰m‰ll‰ l‰pin‰kyvyytt‰
 						INT pointSize = decorationPath.GetPointCount();
 						std::vector<PointF> points(pointSize);
 						decorationPath.GetPathPoints(&points[0], pointSize);

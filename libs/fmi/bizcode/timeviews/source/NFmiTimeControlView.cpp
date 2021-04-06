@@ -264,8 +264,8 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 
 		// Piirretään animaatioaikaväli vaalean sinisellä läpinäkyvällä laatikolla
 		NFmiRect animRect(CalcAnimationBoxRect());
-		NFmiColor animBoxColor(0.f, 0.498f, 1.0f, 0.392f);
-		Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(animBoxColor, true));
+		NFmiColor animBoxColor(0.f, 0.498f, 1.0f, 0.608f);
+		Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(animBoxColor));
 		Gdiplus::GraphicsPath aPath;
         CtrlView::MakePathFromRect(aPath, itsToolBox, animRect);
 		itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
@@ -605,8 +605,8 @@ void NFmiTimeControlView::DrawTimeFilterTimes()
 
 			// Piirretään animaatioaikaväli vaalean sinisellä läpinäkyvällä laatikolla
 			NFmiRect timeFilterRect(CalcTimeFilterBoxRect());
-			NFmiColor timeFilterColor(1.f, 0.498f, 0.f, 0.392f);
-			Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeFilterColor, true));
+			NFmiColor timeFilterColor(1.f, 0.498f, 0.f, 0.608f);
+			Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeFilterColor));
 			Gdiplus::GraphicsPath aPath;
             CtrlView::MakePathFromRect(aPath, itsToolBox, timeFilterRect);
 			gdiPlusGraphics->FillPath(&aBrushBox, &aPath);

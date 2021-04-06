@@ -29,9 +29,6 @@ class NFmiColorContourLegendValues
     std::string name_;
     bool useLegend_ = false;
     bool isStationData_ = false;
-    // Simple contour vs custom contours: simpleissä limit ja color lukumäärät samoja, customissa coloreita on 1 enemmän.
-    // => värien blendaus laskut menevät erilailla ja piirto menee erilailla.
-    bool isSimpleContour_ = false;
 public:
     NFmiColorContourLegendValues() = default;
     NFmiColorContourLegendValues(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info);
@@ -43,16 +40,14 @@ public:
     const std::vector<std::string>& classLimitTexts() const { return  classLimitTexts_; }
     const std::vector<NFmiColor>& classColors() const { return  classColors_; }
     const std::string& name() const { return  name_; }
-    bool isSimpleContour() const { return isSimpleContour_; }
 private:
     void clear();
     bool isStationDataType(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info);
-    void FillSimpleColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam);
-    void FillCustomColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam);
+    void FillColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam);
     void FillClassLimitTextsVector();
     void FinalizeFillingValues();
-    void MakeFinalSimpleColorContourValues(const std::vector<float>& originalClasses, const std::vector<NFmiColor>& originalColors, float contourStep, int actualLimitCount);
     void RemoveTransparentColorsFromEdges();
+    void RemoveConsecutiveTransparentColorsFromMiddle();
     bool hasEmptyValues();
 };
 

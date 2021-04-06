@@ -5,6 +5,112 @@
 
 #include <stdexcept>
 
+namespace
+{
+    CButton g_DummyButton;
+
+    void DrawColorButtonBitmap(CDC &dc, int x, int y, const NFmiColorButtonDrawingData& drawingData)
+    {
+        bool colorIsTransparent = drawingData.colorOptions_.first;
+        bool colorIsdisabled = drawingData.colorOptions_.second;
+        auto whiteColorRef = RGB(255, 255, 255);
+        auto redColorRef = RGB(255, 0, 0);
+        CRect frameRect(0, 0, x, y);
+        if(colorIsdisabled) // Disablointi on prioreteettill‰ 1.
+        {
+            // Jos v‰ri oli disabloitu, piirret‰‰n valkoinen pohja ja siihen
+            // p‰‰lle punaisilla viivoilla piirretty rasti (X).
+            dc.FillSolidRect(&frameRect, whiteColorRef);
+            CPen redPen(PS_SOLID, 2, redColorRef);
+            auto oldPen = dc.SelectObject(&redPen);
+            dc.MoveTo(1, 1);
+            dc.LineTo(x-1, y-1);
+            dc.MoveTo(x-1, 1);
+            dc.LineTo(1, y-1);
+            dc.SelectObject(oldPen);
+        }
+        else if(colorIsTransparent) // L‰pin‰kyvyys on prioreteettill‰ 2.
+        {
+            // Jos v‰ri oli l‰pin‰kyv‰, piirret‰‰n valkoinen pohja ja siihen
+            // p‰‰lle katkoviivoilla piirretty punainen laatikko.
+            // Sen j‰lkeen piirret‰‰n v‰littu v‰ri viel‰ pikkuisella laatikolla 
+            // (Transparentin v‰ri‰ k‰ytet‰‰n kuitenkin v‰rien blendailuissa)
+
+            // 1. Valkoinen pohja
+            dc.FillSolidRect(&frameRect, whiteColorRef);
+            // 2. Punainen katkoviiva laatikko
+            CPen dashedRedPen(PS_DOT, 1, redColorRef);
+            auto oldPen = dc.SelectObject(&dashedRedPen);
+            dc.Rectangle(&frameRect);
+            // 3. Valitun v‰rinen fillattu pienempi laatikko
+            frameRect.InflateRect(-2, -2);
+            dc.FillSolidRect(&frameRect, drawingData.color_);
+            dc.SelectObject(oldPen);
+        }
+        else // Normipiirto (fillattu laatikko) on prioriteetill‰ 3.
+            dc.FillSolidRect(&frameRect, drawingData.color_);
+    }
+}
+
+NFmiColorButtonDrawingData::NFmiColorButtonDrawingData(CWnd* view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button, const std::pair<bool, bool>& colorOptions)
+:view_(view)
+,nfmiColor_()
+,color_(color)
+,bitmap_(bitmap)
+,rect_(rect)
+,button_(button)
+,colorOptions_(colorOptions)
+{
+}
+
+NFmiColorButtonDrawingData::NFmiColorButtonDrawingData(CWnd* view, const NFmiColor& nfmiColor, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button, const std::pair<bool, bool>& colorOptions)
+:view_(view)
+,nfmiColor_(nfmiColor)
+,isNfmiColorUsed_(true)
+,color_(color)
+,bitmap_(bitmap)
+,rect_(rect)
+,button_(button)
+,colorOptions_(colorOptions)
+{
+}
+
+NFmiColorButtonDrawingData::NFmiColorButtonDrawingData(CWnd* view, const NFmiColor& nfmiColor, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button)
+:view_(view)
+,nfmiColor_(nfmiColor)
+,isNfmiColorUsed_(true)
+,color_(color)
+,bitmap_(bitmap)
+,rect_(rect)
+,button_(button)
+{
+}
+
+NFmiColorButtonDrawingData::NFmiColorButtonDrawingData(CWnd* view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button)
+:view_(view)
+,nfmiColor_()
+,color_(color)
+,bitmap_(bitmap)
+,rect_(rect)
+,button_(button)
+{
+}
+
+NFmiColorButtonDrawingData::NFmiColorButtonDrawingData(CWnd* view, COLORREF& color, CRect& rect)
+:view_(view)
+,nfmiColor_()
+,color_(color)
+,rect_(rect)
+,button_(g_DummyButton)
+{
+}
+
+void NFmiColorButtonDrawingData::SetNfmiColor(const NFmiColor& nfmiColor)
+{
+    nfmiColor_ = nfmiColor;
+    isNfmiColorUsed_ = true;
+}
+
 namespace CtrlView
 {
     void DestroyBitmap(CBitmap **bitmap, bool deleteOldBitmap)
@@ -40,51 +146,47 @@ namespace CtrlView
         ASSERT((*theMemoryBitmap)->m_hObject != 0);
     }
 
-    CBitmap* CreateColorBitmap(CWnd *view, COLORREF color, int x, int y)
+    CBitmap* CreateColorBitmap(int x, int y, const NFmiColorButtonDrawingData& drawingData)
     {
-        CClientDC clientDC(view);
+        CClientDC clientDC(drawingData.view_);
         CDC dc;
         dc.CreateCompatibleDC(&clientDC);
 
         CBitmap *bitmap = new CBitmap;
         bitmap->CreateCompatibleBitmap(&clientDC, x, y);
         CBitmap *tmpBitmap = dc.SelectObject(bitmap);
-
-        dc.FillSolidRect(0, 0, x, y, color);
+        ::DrawColorButtonBitmap(dc, x, y, drawingData);
         bitmap = dc.SelectObject(tmpBitmap);
         dc.DeleteDC();
         return bitmap;
     }
 
-    void ColorButtonPressed(CWnd *view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button)
+    void ColorButtonDraw(NFmiColorButtonDrawingData& drawingData)
     {
-        CColorDialog dlg(color, 0, view);
+        DestroyBitmap(drawingData.bitmap_, true);
+        const auto& rect = drawingData.rect_;
+        *drawingData.bitmap_ = CreateColorBitmap(rect.Width() - 6, rect.Height() - 6, drawingData);
+        drawingData.button_.SetBitmap(**drawingData.bitmap_);
+    }
+
+    void ColorButtonPressed(NFmiColorButtonDrawingData& drawingData)
+    {
+        CColorDialog dlg(drawingData.color_, 0, drawingData.view_);
         if(dlg.DoModal() == IDOK)
         {
-            color = dlg.GetColor();
-
-            if((*bitmap))
-                (*bitmap)->DeleteObject();
-            delete *bitmap;
-            *bitmap = CreateColorBitmap(view, color, rect.Width() - 6, rect.Height() - 6);
-            button.SetBitmap(**bitmap);
+            drawingData.color_ = dlg.GetColor();
+            ColorButtonDraw(drawingData);
         }
     }
 
-    void InitialButtonColorUpdate(CWnd *view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button)
+    void InitialButtonColorUpdate(NFmiColorButtonDrawingData& drawingData)
     {
-        button.GetWindowRect(rect);
-        if((*bitmap))
-            (*bitmap)->DeleteObject();
-        delete *bitmap;
-        *bitmap = CreateColorBitmap(view, color, rect.Width() - 6, rect.Height() - 6);
-        button.SetBitmap(**bitmap);
-    }
-
-    void InitialButtonColorUpdate(CWnd *view, const NFmiColor& theColor, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button)
-    {
-        color = CtrlView::Color2ColorRef(theColor);
-        InitialButtonColorUpdate(view, color, bitmap, rect, button);
+        if(drawingData.isNfmiColorUsed_)
+        {
+            drawingData.color_ = CtrlView::Color2ColorRef(drawingData.nfmiColor_);
+        }
+        drawingData.button_.GetWindowRect(drawingData.rect_);
+        ColorButtonDraw(drawingData);
     }
 
     // asettaa toolmasterin ja toolboxin DC:t

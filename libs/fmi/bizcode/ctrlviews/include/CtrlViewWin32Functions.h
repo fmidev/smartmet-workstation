@@ -1,9 +1,33 @@
 #pragma once
 
 #include "stdafx.h"
+#include <utility>
+#include "NFmiColor.h"
 
 class NFmiToolBox;
-class NFmiColor;
+
+class NFmiColorButtonDrawingData
+{
+public:
+    CWnd* view_ = nullptr;
+    NFmiColor nfmiColor_;
+    bool isNfmiColorUsed_ = false;
+    COLORREF &color_;
+    CBitmap** bitmap_ = nullptr;
+    CRect &rect_;
+    CButton& button_;
+    // first = colorIsTransparent
+    // second = colorIsDisabled
+    std::pair<bool, bool> colorOptions_ = std::pair<bool, bool>(false, false);
+
+    NFmiColorButtonDrawingData(CWnd* view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button, const std::pair<bool, bool>& colorOptions);
+    NFmiColorButtonDrawingData(CWnd* view, const NFmiColor& nfmiColor, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button, const std::pair<bool, bool>& colorOptions);
+    NFmiColorButtonDrawingData(CWnd* view, const NFmiColor& nfmiColor, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button);
+    NFmiColorButtonDrawingData(CWnd* view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button);
+    NFmiColorButtonDrawingData(CWnd* view, COLORREF& color, CRect& rect);
+
+    void SetNfmiColor(const NFmiColor& nfmiColor);
+};
 
 // Apufunktioita jotka ovat riippuvaisia win32/mfc jutuista
 // ja toolboxista ja muusta kivasta.
@@ -11,10 +35,10 @@ namespace CtrlView
 {
     void DestroyBitmap(CBitmap **bitmap, bool deleteOldBitmap = true);
     void MakeCombatibleBitmap(CWnd *theView, CBitmap **theMemoryBitmap, int cx = 0, int cy = 0);
-    CBitmap* CreateColorBitmap(CWnd *view, COLORREF color, int x, int y);
-    void ColorButtonPressed(CWnd *view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button);
-    void InitialButtonColorUpdate(CWnd *view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button);
-    void InitialButtonColorUpdate(CWnd *view, const NFmiColor& theColor, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button);
+    CBitmap* CreateColorBitmap(int x, int y, const NFmiColorButtonDrawingData& drawingData);
+    void ColorButtonDraw(NFmiColorButtonDrawingData& drawingData);
+    void ColorButtonPressed(NFmiColorButtonDrawingData& drawingData);
+    void InitialButtonColorUpdate(NFmiColorButtonDrawingData& drawingData);
 
     // asettaa toolmasterin ja toolboxin DC:t
     // esim. ennen piirto tai ennen kuin tarkastellaan hiiren klikkausta ruudulta

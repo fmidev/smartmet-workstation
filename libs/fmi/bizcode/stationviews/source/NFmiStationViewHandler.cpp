@@ -368,7 +368,7 @@ void NFmiStationViewHandler::DrawCPCropArea(void)
 			// piirretään uloimpi alue
 			NFmiRect relativeRect = CalcCPCropAreasRelativeRect(itsCtrlViewDocumentInterface->CPGridCropLatlonArea());
 			Gdiplus::Rect rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, relativeRect);
-            CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, false, true, false, 2, Gdiplus::DashStyleDash);
+            CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, false, true, 2, Gdiplus::DashStyleDash);
 			if(itsCtrlViewDocumentInterface->IsCPGridCropNotPlausible())
 			{ // CP croppaus on käytössä, mutta ei mahdollista, piirrä varoittava punainen rasti kartalle
 				NFmiColor crossColor(1, 0, 0);
@@ -380,7 +380,7 @@ void NFmiStationViewHandler::DrawCPCropArea(void)
 				// piirretään sisempi alue
 				relativeRect = CalcCPCropAreasRelativeRect(itsCtrlViewDocumentInterface->CPGridCropInnerLatlonArea());
 				rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, relativeRect);
-                CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, false, true, false, 2, Gdiplus::DashStyleDash);
+                CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, false, true, 2, Gdiplus::DashStyleDash);
 			}
 		}
 	}
@@ -2202,7 +2202,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
                     FmiDirection timeBoxLocation = currentBetaProduct ? currentBetaProduct->TimeBoxLocation() : kBottomLeft;
                     StationViews::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
 
-					Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFillColor(), true));
+					Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFillColor()));
 					Gdiplus::GraphicsPath aPath;
 					Gdiplus::Rect gdiRect(static_cast<INT>(timeBox.Left()), static_cast<INT>(timeBox.Top()), static_cast<INT>(timeBox.Width()), static_cast<INT>(timeBox.Height())); // = CFmiGdiPlusHelpers::Relative2GdiplusRect(itsToolBox, timeBox);
 					aPath.AddRectangle(gdiRect);
@@ -4224,7 +4224,7 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 		bool doFill = true;
 		if(markerConnectingPlace == kCenter || markerConnectingPlace == kTopCenter)
 			fillColor.Alpha(fillColor.Alpha()*0.8f); // jos boxille ei löytynyt paikkaa, joka ei ole päällekkäin, laitetaan enemmän läpinäkyvyyttä
-        CtrlView::DrawRect(*theGdiPlusGraphics, foundBoundingBox, frameColor, fillColor, doFill, true, true, FmiMax(1.f, static_cast<float>FmiRound(autoComplete.RectangleFramePenSizeInMM() * pixelsPerMM)));
+        CtrlView::DrawRect(*theGdiPlusGraphics, foundBoundingBox, frameColor, fillColor, doFill, true, FmiMax(1.f, static_cast<float>FmiRound(autoComplete.RectangleFramePenSizeInMM() * pixelsPerMM)));
 
         CtrlView::DrawTextToRelativeLocation(
 									*theGdiPlusGraphics, 

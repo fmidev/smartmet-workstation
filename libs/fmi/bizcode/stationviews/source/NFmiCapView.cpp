@@ -244,7 +244,7 @@ NFmiColor NFmiCapView::getWarningColor(const std::shared_ptr<WarningMember>& war
     int level = std::stoi(warningLevel.substr(warningLevel.find("-") + 1));
 
     NFmiColor color;
-    const float alpha = 0.8f;
+    const float alpha = 0.2f;
     switch(level) {
     case 2: //Yellow
         color = NFmiColor(1.0f, 1.0f, 0.f, alpha);
@@ -351,13 +351,12 @@ void NFmiCapView::drawArrow(const std::shared_ptr<WarningMember>& warning, doubl
     moveMatrix.Translate(aPlace.X, aPlace.Y);
     arrowPath.Transform(&moveMatrix);
 
-    CtrlView::DrawPath(*itsGdiPlusGraphics, arrowPath, NFmiColor(0, 0, 0, 1), NFmiColor(0, 0, 0, 1), true, false, false, 0);
+    CtrlView::DrawPath(*itsGdiPlusGraphics, arrowPath, NFmiColor(0, 0, 0), NFmiColor(0, 0, 0), true, false, 0);
     if(warning->getPhysicalValue() != kFloatMissing)
     { // Draw speed on top of the arrow
         float usedFontSizeInPixels = NFmiConceptualDataView::CalcUsedFontSizeInPixels((float) wantedSymbolSizeInMM * 0.3f, *itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, 1.f);
-        NFmiColor backgroundColor(0.f, 0.f, 0.f, 0);
         Gdiplus::PointF aPlace(CtrlView::ConvertLatlonToGdiPlusPoint(this, warning->getCenter()));
-        CtrlView::DrawSimpleText(*itsGdiPlusGraphics, NFmiColor(1, 1, 1, 1), usedFontSizeInPixels, std::to_string((int)warning->getPhysicalValue()), NFmiPoint(aPlace.X, aPlace.Y), L"Arial", kCenter, NULL);
+        CtrlView::DrawSimpleText(*itsGdiPlusGraphics, NFmiColor(1, 1, 1), usedFontSizeInPixels, std::to_string((int)warning->getPhysicalValue()), NFmiPoint(aPlace.X, aPlace.Y), L"Arial", kCenter);
     }
 }
 

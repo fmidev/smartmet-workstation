@@ -5,6 +5,7 @@
 #include "ToolMasterDrawingFunctions.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "GraphicalInfo.h"
+#include "ToolMasterColorCube.h"
 #include <gdiplus.h>
 
 namespace
@@ -21,11 +22,6 @@ namespace
         double usedFontSizeInMM = 0;
         Gdiplus::Rect backgroundRectInPixels;
     };
-
-    static bool IsTransparentColor(const NFmiColor& color)
-    {
-        return color.Alpha() == 0;
-    }
 
     LegendDrawingMeasures CalculateLegendDrawingMeasures(const NFmiColorContourLegendSettings& colorContourLegendSettings, const NFmiColorContourLegendValues& colorContourLegendValues, float sizeFactor, const CtrlViewUtils::GraphicalInfo& graphicalInfo, Gdiplus::Graphics& gdiPlusGraphics)
     {
@@ -78,7 +74,7 @@ namespace
             legendDrawingMeasures.backgroundRectInPixels,
             colorContourLegendSettings.backgroundRectSettings().frameLineColor(),
             colorContourLegendSettings.backgroundRectSettings().fillColor(),
-            true, true, true,
+            true, true,
             static_cast<float>(colorContourLegendSettings.backgroundRectSettings().frameLineWidthInMM()),
             static_cast<Gdiplus::DashStyle>(colorContourLegendSettings.backgroundRectSettings().frameLineType()));
         gdiPlusGraphics.ResetClip();
@@ -95,8 +91,6 @@ namespace
         int currentTextPosXInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels + legendDrawingMeasures.maxValueStringLengthInPixels;
         int currentTextPosYInPixels = lastLegendBottomRightCornerInPixels.Y - paddingInPixels;
         float startPositionAdjustFactor = 0.15f;
-        if(colorContourLegendValues.isSimpleContour())
-            startPositionAdjustFactor = 0.65f;
         currentTextPosYInPixels += boost::math::iround(heigthInPixels * startPositionAdjustFactor);
         for(const auto& classLimitText : colorContourLegendValues.classLimitTexts())
         {
@@ -109,8 +103,6 @@ namespace
         // Piirret‰‰n viel‰ otsikko
         currentTextPosXInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels;
         startPositionAdjustFactor = 1.7f;
-        if(colorContourLegendValues.isSimpleContour())
-            startPositionAdjustFactor = 1.2f;
         currentTextPosYInPixels -= boost::math::iround(heigthInPixels * startPositionAdjustFactor);
         auto textLocationInPixels = Gdiplus::Point(currentTextPosXInPixels, currentTextPosYInPixels);
         auto relativeTextPosition = CtrlView::GdiplusPoint2Relative(toolbox, textLocationInPixels);
@@ -126,7 +118,7 @@ namespace
             rectInPixels,
             drawSettings.frameLineColor(),
             color,
-            useFill, true, false,
+            useFill, true,
             static_cast<float>(boost::math::iround(drawSettings.frameLineWidthInMM() * pixelsPerMM)),
             static_cast<Gdiplus::DashStyle>(drawSettings.frameLineType()));
     }
@@ -146,7 +138,7 @@ namespace
             auto colorRectInPixels = Gdiplus::Rect(rectLeftInPixels, currentRectTopInPixels, widthInPixels, heigthInPixels);
             const auto& color = classColors[index];
 
-            if(::IsTransparentColor(color))
+            if(!ToolMasterColorCube::IsColorFullyOpaque(color))
             {
                 if(colorContourLegendSettings.drawTransparentRects())
                     DrawNormalColorContourLegendClassColorRect(colorContourLegendSettings.invsibleColorRectSettings(), colorRectInPixels, color, true, graphicalInfo, gdiPlusGraphics);
