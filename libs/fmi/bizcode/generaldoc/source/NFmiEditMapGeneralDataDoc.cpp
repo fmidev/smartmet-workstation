@@ -6645,6 +6645,13 @@ bool InitCPManagerSet(void)
 
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro in use"); // tämä sitten päivittää kaikki ruudut
 
+				// Tämä kutsu varmistaa että eri karttanäytöissä on oikeat kartan koko arvot tallessa.
+				// Jos näyttömakro lataa saman koon jollekin kartalle, ei oikeita päivitys juttuja kutsuta ollenkaan,
+				// koska kartan pikseli koko ei ole muuttunut. Tämä on todellinen ongelma, koska usein näyttöjen koot
+				// jäävät edellisesta saman näyttömakron latauksesta. Jos tätä päivitystä ei tehdä, vaikuttaa se
+				// joidenkin piirtoobjektien koon laskuihin (mm. värilegendat ja erilaiset symbolit).
+				GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes();
+
                 // lokitetaan, mikä makro on ladattu käyttöön...
                 string logStr("Applying the view-macro: ");
                 logStr += CurrentViewMacro()->InitFileName();

@@ -215,6 +215,30 @@ std::string NFmiStationIndexTextView::Value2ToolTipString(float theValue, int /*
 	return str;
 }
 
+void NFmiStationIndexTextView::DrawSymbolWithWantedBitmap(int minSymbolSize, int maxSymbolSize, NFmiImageMap& imageMap)
+{
+    float value = ViewFloatValue();
+    if(value == kFloatMissing)
+        return;
+    bool printing = itsCtrlViewDocumentInterface->Printing();
+    std::string codeStr = boost::lexical_cast<std::string>(value);
+
+    itsDrawingEnvironment->SetFontSize(CalcFontSize(minSymbolSize, boost::math::iround(MaximumFontSizeFactor() * maxSymbolSize), itsCtrlViewDocumentInterface->Printing()));
+
+    double dataRectFactor = 0.85; // Symbolia pitää hieman pienentää suhteessa DataRect:iin
+    if(printing)
+        dataRectFactor = 0.6; // Printatessa pitää pienentää vielä lisää
+    double relativeSymbolSize = dataRectFactor * (CurrentDataRect().Width() + CurrentDataRect().Height()) / 2.;
+    auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+    double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
+    symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
+    double symbolSizeInPixels = graphicalInfo.itsPixelsPerMM_y * symbolSizeInMM;
+    Gdiplus::Bitmap* symbolBitmap = imageMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
+    NFmiRect symbolRect(CalcSymbolRelativeRect(CurrentLatLon(), symbolSizeInMM));
+    CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true);
+}
+
+
 // ********************************************************************
 // ***************  NFmiStationFogTextView  ***************************
 // ********************************************************************
@@ -576,25 +600,7 @@ void NFmiBetterWeatherSymbolView::DrawSymbols(void)
 
 void NFmiBetterWeatherSymbolView::DrawData(void)
 {
-    float value = ViewFloatValue();
-    if(value == kFloatMissing)
-        return;
-    bool printing = itsCtrlViewDocumentInterface->Printing();
-    std::string codeStr = boost::lexical_cast<std::string>(value);
-
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
-
-    double dataRectFactor = 0.85; // Symbolia pitää hieman pienentää suhteessa DataRect:iin
-    if(printing)
-        dataRectFactor = 0.6; // Printatessa pitää pienentää vielä lisää
-    double relativeSymbolSize = dataRectFactor * (CurrentDataRect().Width() + CurrentDataRect().Height()) / 2.;
-    auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-    double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
-    symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
-    double symbolSizeInPixels = graphicalInfo.itsPixelsPerMM_y * symbolSizeInMM;
-    Gdiplus::Bitmap *symbolBitmap = NFmiBetterWeatherSymbolView::itsBetterWeatherSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
-    NFmiRect symbolRect(CalcSymbolRelativeRect(CurrentLatLon(), symbolSizeInMM));
-    CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true);
+    DrawSymbolWithWantedBitmap(12, 48, NFmiBetterWeatherSymbolView::itsBetterWeatherSymbolMap);
 }
 
 // HUOM! tätä pitää kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa käyttää!!!!
@@ -670,25 +676,7 @@ void NFmiSmartSymbolView::DrawSymbols(void)
 
 void NFmiSmartSymbolView::DrawData(void)
 {
-    float value = ViewFloatValue();
-    if(value == kFloatMissing)
-        return;
-    bool printing = itsCtrlViewDocumentInterface->Printing();
-    std::string codeStr = boost::lexical_cast<std::string>(value);
-
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 128), itsCtrlViewDocumentInterface->Printing()));
-
-    double dataRectFactor = 0.85; // Symbolia pitää hieman pienentää suhteessa DataRect:iin
-    if(printing)
-        dataRectFactor = 0.6; // Printatessa pitää pienentää vielä lisää
-    double relativeSymbolSize = dataRectFactor * (CurrentDataRect().Width() + CurrentDataRect().Height()) / 2.;
-    auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-    double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
-    symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
-    double symbolSizeInPixels = graphicalInfo.itsPixelsPerMM_y * symbolSizeInMM;
-    Gdiplus::Bitmap *symbolBitmap = NFmiSmartSymbolView::itsSmartSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
-    NFmiRect symbolRect(CalcSymbolRelativeRect(CurrentLatLon(), symbolSizeInMM));
-    CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true, false);
+    DrawSymbolWithWantedBitmap(12, 128, NFmiSmartSymbolView::itsSmartSymbolMap);
 }
 
 // HUOM! tätä pitää kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa käyttää!!!!
@@ -761,25 +749,7 @@ void NFmiCustomSymbolView::DrawSymbols(void)
 
 void NFmiCustomSymbolView::DrawData(void)
 {
-    float value = ViewFloatValue();
-    if(value == kFloatMissing)
-        return;
-    bool printing = itsCtrlViewDocumentInterface->Printing();
-    std::string codeStr = boost::lexical_cast<std::string>(value);
-
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 128), itsCtrlViewDocumentInterface->Printing()));
-
-    double dataRectFactor = 0.85; // Symbolia pitää hieman pienentää suhteessa DataRect:iin
-    if(printing)
-        dataRectFactor = 0.6; // Printatessa pitää pienentää vielä lisää
-    double relativeSymbolSize = dataRectFactor * (CurrentDataRect().Width() + CurrentDataRect().Height()) / 2.;
-    auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-    double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
-    symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
-    double symbolSizeInPixels = graphicalInfo.itsPixelsPerMM_y * symbolSizeInMM;
-    Gdiplus::Bitmap *symbolBitmap = NFmiCustomSymbolView::itsCustomSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
-    NFmiRect symbolRect(CalcSymbolRelativeRect(CurrentLatLon(), symbolSizeInMM));
-    CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true, false);
+    DrawSymbolWithWantedBitmap(12, 128, NFmiCustomSymbolView::itsCustomSymbolMap);
 }
 
 void NFmiCustomSymbolView::InitCustomSymbolMap(const std::string &theWomlDirectory)

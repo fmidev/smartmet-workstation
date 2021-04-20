@@ -211,6 +211,7 @@ public:
 	double SingleMapViewHeightInMilliMeters() const;
 	bool PrintingModeOn() const { return fPrintingModeOn; }
 	void PrintingModeOn(bool newState) { fPrintingModeOn = newState; }
+	void UpdateOneMapViewSize();
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
@@ -233,7 +234,6 @@ private:
     int CalcVisibleRowCount() const;
     int CalcMaxRowStartingIndex() const;
 	void StoreHandlerSelectedMapsToSettings(void);
-    void UpdateOneMapViewSize();
 	const Gdiplus::Bitmap* GetSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString);
 	void InsertSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap);
 	void ClearBaseLandBorderMapBitmap();
