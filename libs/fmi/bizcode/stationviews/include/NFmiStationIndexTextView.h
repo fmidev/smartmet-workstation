@@ -44,6 +44,7 @@ protected:
    void DrawData (void);
    void ModifyTextEnvironment (void);
    NFmiString GetPrintedText (float theValue);
+   void DrawSymbolWithWantedBitmap(int minSymbolSize, int maxSymbolSize, NFmiImageMap& imageMap);
 
   NFmiColor GetBasicParamRelatedSymbolColor(float theValue) override;
   void ModifyTextColor(float theValue) override;
