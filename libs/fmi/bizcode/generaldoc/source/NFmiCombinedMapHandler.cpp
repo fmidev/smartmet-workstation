@@ -3522,6 +3522,14 @@ void NFmiCombinedMapHandler::selectCombinedMapModeIndices(unsigned int mapViewDe
 	setWantedLayerIndex(combinedOverlayMapModeState, mapViewDescTopIndex, mapAreaIndex, false);
 }
 
+void NFmiCombinedMapHandler::updateAllMapViewsSingleMapSizes()
+{
+	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
+	{
+		mapViewDescTops_[mapViewDescTopIndex]->UpdateOneMapViewSize();
+	}
+}
+
 int NFmiCombinedMapHandler::getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase)
 {
 	const auto& mapLayerRelatedInfos = getCurrentMapLayerRelatedInfos(mapViewDescTopIndex, backgroundMapCase, wmsCase);
