@@ -8,7 +8,7 @@ namespace XmlHelper
         if(theRootNode && theRootNode->GetChildCount() >= childIndex)
             return theRootNode->GetChild(childIndex);
         else
-            return 0;
+            return nullptr;
     }
 
     std::string GetChildNodeText(LPXNode theRootNode, const std::string &theChildName)
