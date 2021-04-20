@@ -65,20 +65,22 @@ namespace Wms
 			return converterX.to_bytes(wstr);
 		}
 
-		std::pair<std::string, std::string> parseLegendUrl(const LPXNode& legendNode)
+		std::pair<std::string, std::string> parseLegendUrl(LPXNode legendNode)
 		{
 			auto domainRequest = std::pair<std::string, std::string>{};
-			auto legendUrlNode = legendNode->GetChild(_TEXT("OnlineResource"));
-			if(legendUrlNode)
+			if(legendNode)
 			{
-				auto legendUrl = legendUrlNode->GetAttrValue(_TEXT("xlink:href"));
-				std::wstring ws(legendUrl);
-				std::string legendUrlString(wstring2string(ws));
+				auto legendUrlNode = legendNode->GetChild(_TEXT("OnlineResource"));
+				if(legendUrlNode)
+				{
+					auto legendUrl = legendUrlNode->GetAttrValue(_TEXT("xlink:href"));
+					std::wstring ws(legendUrl);
+					std::string legendUrlString(wstring2string(ws));
 
-				domainRequest.first = parseDomain(legendUrlString);
-				domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
+					domainRequest.first = parseDomain(legendUrlString);
+					domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
+				}
 			}
-
 			return domainRequest;
 		}
 
@@ -93,18 +95,25 @@ namespace Wms
 			};
 		}
 
-		Style parseStyle(const LPXNode& styleNode)
+		Style parseStyle(LPXNode styleNode)
 		{
-			auto legendUrlNode = styleNode->GetChild(_TEXT("LegendURL"));
-			auto domainRequest = parseLegendUrl(legendUrlNode);
-			std::string name = XmlHelper::ChildNodeValue(styleNode, "Name");
-
-			return Style
+			if(styleNode)
 			{
-				name,
-				domainRequest.first,
-				domainRequest.second
-			};
+				auto legendUrlNode = styleNode->GetChild(_TEXT("LegendURL"));
+				if(legendUrlNode)
+				{
+					auto domainRequest = parseLegendUrl(legendUrlNode);
+					std::string name = XmlHelper::ChildNodeValue(styleNode, "Name");
+
+					return Style
+					{
+						name,
+						domainRequest.first,
+						domainRequest.second
+					};
+				}
+			}
+
 			return Style{};
 		}
 
@@ -135,16 +144,18 @@ namespace Wms
 			}
 		}
 
-		std::set<Style> lookForStyles(const LPXNode& layerNode)
+		std::set<Style> lookForStyles(LPXNode layerNode)
 		{
 			auto styles = std::set<Style>();
+			if(layerNode == nullptr)
+				return styles;
 
 			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
 			{
 				try
 				{
-					const auto& childNode = layerNode->GetChild(static_cast<int>(i));
-					if (childNode->name == "Style")
+					auto childNode = layerNode->GetChild(static_cast<int>(i));
+					if (childNode && childNode->name == "Style")
 					{
 						styles.insert(parseStyle(childNode));
 					}
@@ -366,8 +377,11 @@ namespace Wms
 				auto aNode = nodes[i];
 				for (size_t i = 0; i < aNode->GetChilds().size(); i++)
 				{
-					const auto childNode = aNode->GetChild(static_cast<int>(i));
-					parseNodes(subTree, childNode, path, hashes, changedLayers);
+					auto childNode = aNode->GetChild(static_cast<int>(i));
+					if(childNode)
+					{
+						parseNodes(subTree, childNode, path, hashes, changedLayers);
+					}
 				}
 			}
 		}
@@ -417,10 +431,13 @@ namespace Wms
 		}
 	}
 
-	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const LPXNode& layerNode
+	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, LPXNode layerNode
 		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
 	{
-		if (layerNode->name != "Layer") return;
+		if(layerNode == nullptr)
+			return;
+		if (layerNode->name != "Layer") 
+			return;
 
 		std::list<std::string> layerPath = path;
 		std::string title = XmlHelper::GetChildNodeText(layerNode, "Title");
@@ -433,8 +450,11 @@ namespace Wms
 		{
 			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
 			{
-				const auto childNode = layerNode->GetChild(static_cast<int>(i));
-				parseNodes(subTree, childNode, layerPath, hashes, changedLayers);
+				auto childNode = layerNode->GetChild(static_cast<int>(i));
+				if(childNode)
+				{
+					parseNodes(subTree, childNode, layerPath, hashes, changedLayers);
+				}
 			}			
 		}
 		else
@@ -464,13 +484,16 @@ namespace Wms
 		addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);
 	}
 
-	void CapabilityTreeParser::addWithPossibleStyles(const LPXNode& layerNode, std::unique_ptr<CapabilityNode>& subTree,
+	void CapabilityTreeParser::addWithPossibleStyles(LPXNode layerNode, std::unique_ptr<CapabilityNode>& subTree,
 		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
 		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const
 	{
-		// Check if layer has multiple styles (then add all possibilities)
-		auto styles = lookForStyles(layerNode);
-		addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);	
+		if(layerNode)
+		{
+			// Check if layer has multiple styles (then add all possibilities)
+			auto styles = lookForStyles(layerNode);
+			addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);
+		}
 	}
 
 	void traceLogLayerInfo(const LayerInfo& layerInfo, std::string serverName)
