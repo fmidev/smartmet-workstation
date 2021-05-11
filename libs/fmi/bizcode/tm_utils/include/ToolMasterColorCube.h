@@ -12,6 +12,8 @@ namespace ToolMasterColorCube
     int UsedHollowColorIndex();
     int ColorCubeColorChannelSize();
     int SpecialColorCountInColorTableStart();
+    void SetupTransparentColor(bool setup1 = true, bool setup2 = true, bool setup3 = true);
+    void SetupSpecialColorsForActiveColorTable();
     void InitDefaultColorTable(bool fToolMasterAvailable);
     int RgbToColorIndex(float RGBcolors[3]);
     int RgbToColorIndex(COLORREF color);

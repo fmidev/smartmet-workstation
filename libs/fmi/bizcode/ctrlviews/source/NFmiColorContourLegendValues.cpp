@@ -72,7 +72,8 @@ bool NFmiColorContourLegendValues::isStationDataType(const boost::shared_ptr<NFm
 void NFmiColorContourLegendValues::FillColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
     ColorContouringData colorContouringData;
-    auto maxAllowedLimitCount = 40;
+    // Testeissä 40 on osoittautunut liian isoksi max-luvuksi
+    auto maxAllowedLimitCount = 35; 
     colorContouringData.initializeForLegendCalculations(drawParam, maxAllowedLimitCount);
     if(colorContouringData.isCorrectlyInitialized())
     {

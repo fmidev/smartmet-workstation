@@ -32,6 +32,7 @@
 #include "stdafx.h"
 #include "matrix3d.h"
 #include "NFmiPath.h"
+#include "ColorContouringData.h"
 #include <list>
 #include <mutex>
 
@@ -179,7 +180,8 @@ class NFmiIsoLineView : public NFmiStationView
 	virtual bool DeleteTransparencyBitmap();
 	virtual bool IsMapViewCase();
 	bool FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
-    void FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
+	void FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
+	void FillIsoLineInfoSimple_new(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData);
 	void FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
 	void FillSimpleColorContourInfo_new(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
     void FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
@@ -191,7 +193,7 @@ class NFmiIsoLineView : public NFmiStationView
 	void EndTransparentDraw(void);
     bool FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
     void DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
-
+	ContouringJobData MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam);
 	bool IsIsoLinesDrawnWithImagine(void);
 	bool FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2);
 
@@ -233,7 +235,6 @@ protected:
 	void AddLabelsToDrawList(Imagine::NFmiPath &thePath, float theIsoLineValue, const NFmiRect &theRelativeRect, LabelBox &theLabelBox, const NFmiPoint &theOffSet);
 	void AddLabelsToDrawList(std::list<Imagine::NFmiPathData*> &thePathDataList, float theIsoLineValue, const NFmiRect &theRelativeRect, LabelBox &theLabelBox, const NFmiPoint &theOffSet);
 	void AddLabelToSingleIsoLine(const Imagine::NFmiPathData &thePath, float theIsoLineValue, const NFmiRect &theRelativeRect, LabelBox &theLabelBox /*const LabelingInfo &theLabelInfo*/);
-	void ClearEmptyPathData(std::list<Imagine::NFmiPathData*> &thePathDataList);
 	void StoreLabel(LabelBox &theLabelBox /*, const std::string &theLabelString*/); //EL
 
 

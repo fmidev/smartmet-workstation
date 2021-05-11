@@ -18,17 +18,14 @@
 
 namespace
 {
-	// Jos ei joudu blendaamaan v‰rej‰, k‰ytet‰‰n custom v‰ri-indeksi konversiota sellaisenaan, 
-	// kun lasketaan k‰ytettyj‰ v‰rej‰.
-	std::vector<NFmiColor> calcDefaultColorTableColors(const std::vector<int>& colorIndexies)
-	{
-		std::vector<NFmiColor> colors;
-		for(auto colorIndex : colorIndexies)
-		{
-			colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
-		}
-		return colors;
-	}
+	const NFmiColor g_DefaultValueRangeColor;
+
+	// Kun toolmaster piirt‰‰ isoviivan discreetist‰ datasta tulokset voivat olla hieman yll‰tt‰vi‰.
+	// Esim. kokonaispilvisyys (10% tarkkuudella) voi menn‰ pieleen jos joillain alueilla on paljon
+	// samoja arvoja (esim. 90% ja 80% sekaisin) ja raja menee siin‰ 'v‰liss‰' eli 90%.
+	// Ongelma voidaan kiert‰‰, kun esim. kaikkia rajoja pienennet‰‰n sis‰isesti hieman, jolloin
+	// 90% rajasta tuleekin oikeasti 89.99999%. T‰llˆin isoviivat kiertavat kauniisti 90% arvot.
+	static const float gToolMasterContourLimitChangeValue = std::numeric_limits<float>::epsilon() * 3; // t‰m‰ pit‰‰ olla pieni arvo (~epsilon) koska muuten pienet rajat eiv‰t toimi, mutta pelkk‰ epsilon on liian pieni
 
 
 	// Custom color laskuissa tulee mukaan transparenttien v‰rien yhdist‰minen toisiin v‰reihin.
@@ -43,18 +40,34 @@ namespace
 			auto colorIndex = colorIndexies[index];
 			auto lastColorIndexCheckedNow = (index >= colorIndexies.size() - 1);
 			if(lastColorIndexCheckedNow)
-				colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
+			{
+				auto lastColorIsTransparent = (colorIndex == ToolMasterColorCube::UsedHollowColorIndex());
+				if(lastColorIsTransparent)
+				{
+					// Jos viimeinen v‰ri oli l‰pin‰kyv‰, pit‰‰ se yhdist‰‰ listalle viimeiseksi lis‰ttyyn v‰riin
+					// laittamalla kyseisen v‰rin alpha t‰ysin l‰pin‰kyv‰ksi.
+					if(!colors.empty())
+						colors.back().Alpha(1.f);
+				}
+				else
+				{
+					// Jos viimeinen v‰ri ei ollut transparentti, lis‰t‰‰n se vain listaan.
+					colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
+				}
+			}
 			else
 			{
 				auto nextColorIndex = colorIndexies[index + 1];
-				if(colorIndex == ToolMasterColorCube::UsedHollowColorIndex())
+				auto color1IsTransparent = (colorIndex == ToolMasterColorCube::UsedHollowColorIndex());
+				auto color2IsTransparent = (nextColorIndex == ToolMasterColorCube::UsedHollowColorIndex());
+				if(color1IsTransparent || color2IsTransparent)
 				{
-					if(nextColorIndex == ToolMasterColorCube::UsedHollowColorIndex())
+					if(color1IsTransparent && color2IsTransparent)
 					{
 						// Kaksi per‰kk‰ist‰ l‰pin‰kyv‰‰ v‰ri‰, laitetaan nykyinen sellaisenaan v‰rilistaan
 						colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
 					}
-					else
+					else if(color1IsTransparent)
 					{
 						// Nykyinen on transparentti ja seuraava ei ole ==>
 						// Otetaan itse v‰ri seuraavasta indeksist‰
@@ -65,6 +78,10 @@ namespace
 						// Hyp‰t‰‰n seuraava v‰ri yli
 						++index;
 					}
+					else
+					{
+						colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
+					}
 				}
 				else
 				{
@@ -73,16 +90,6 @@ namespace
 			}
 		}
 		return colors;
-	}
-
-	std::vector<int> calcDefaultColorTableIndexies(const std::vector<NFmiColor>& colors)
-	{
-		std::vector<int> colorIndexies;
-		for(const auto& color : colors)
-		{
-			colorIndexies.push_back(ToolMasterColorCube::RgbToColorIndex(color));
-		}
-		return colorIndexies;
 	}
 
 	std::vector<int> calcNewColorTableIndexies(const std::vector<NFmiColor>& colors)
@@ -124,7 +131,7 @@ namespace
 		// T‰ss‰ on listattu kaikki halutut 'j‰rkev‰t' stepit v‰lill‰ [1,10[ (>=1 ja <10).
 		// Lopullinen steppi laitetaan sitten vain oikeaan koko luokkaan 
 		// (esim. 2:n tapauksessa ...,0.02, 0.2, 2, 20, 200,...).
-		std::vector<float> suitablePowerOfOneSteps{0.5f, 1.f, 2.f, 2.5f, (3.f + 1.f/3.f), 5.f, 10.f };
+		std::vector<float> suitablePowerOfOneSteps{0.5f, 1.f, 2.f, 2.5f, 5.f, 10.f };
 		auto suitableStepsPos = std::find_if(suitablePowerOfOneSteps.begin(), suitablePowerOfOneSteps.end(),
 			[=](auto value) {return (value + std::numeric_limits<float>::epsilon()) >= normilizedSparsedRawStep; });
 		if(suitableStepsPos != suitablePowerOfOneSteps.end())
@@ -211,11 +218,13 @@ namespace
 		return blendedClassLimits;
 	}
 
-	NFmiColor MakeBlendedColor(const NFmiColor &color1, const NFmiColor& color2, float usedRangeWidthForBlending, float distanceFromColor1)
+	NFmiColor MakeBlendedColor(const NFmiColor &color1, const NFmiColor& color2, float usedRangeWidthForBlending, float distanceFromColor1, bool clearAlpha)
 	{
 		float mixingRatio = distanceFromColor1 / usedRangeWidthForBlending;
 		auto mixedColor = color1;
 		mixedColor.Mix(color2, mixingRatio, true);
+		if(clearAlpha)
+			mixedColor.Alpha(0);
 		return mixedColor;
 	}
 
@@ -235,9 +244,13 @@ namespace
 			auto currentLimitValuePos = std::find(finalClassLimits.begin(), finalClassLimits.end(), currentLimitValue);
 			const auto& currentLimitValueColor = originalColors[originalLimitsIndex];
 			auto nextLimitValue = originalClassLimits[originalLimitsIndex + 1];
+			bool rangeIsStepSize = (nextLimitValue - currentLimitValue) <= (usedStep + std::numeric_limits<float>::epsilon());
+			//if(rangeIsStepSize)
+			//	limitRangeExtra = 0;
 			auto usedRangeWidthForBlending = (nextLimitValue - currentLimitValue + limitRangeExtra);
 			auto nextLimitValuePos = std::find(currentLimitValuePos, finalClassLimits.end(), nextLimitValue);
 			const auto& nextLimitValueColor = originalColors[originalLimitsIndex + 1];
+			bool opaqueToTransparentChange = currentLimitValueColor.Alpha() <= 0 && nextLimitValueColor.IsFullyTransparent();
 			if(currentLimitValuePos != finalClassLimits.end() && nextLimitValuePos != finalClassLimits.end())
 			{
 				auto iter = ++currentLimitValuePos;
@@ -245,14 +258,16 @@ namespace
 				{
 					auto currentBlendedValue = *iter;
 					auto distanceFromCurrentColor = currentBlendedValue - currentLimitValue;
-					finalColors.push_back(::MakeBlendedColor(currentLimitValueColor, nextLimitValueColor, usedRangeWidthForBlending, distanceFromCurrentColor));
+					auto clearAlpha = opaqueToTransparentChange && lastLimitRangeCase;
+					finalColors.push_back(::MakeBlendedColor(currentLimitValueColor, nextLimitValueColor, usedRangeWidthForBlending, distanceFromCurrentColor, clearAlpha));
 				}
 			}
 			if(lastLimitRangeCase)
 			{
 				// Viimeisin v‰lin viimeinen v‰ri pit‰‰ blendata erikseen listaan
-				auto distanceFromCurrentColor = usedRangeWidthForBlending - usedStep;
-				finalColors.push_back(::MakeBlendedColor(currentLimitValueColor, nextLimitValueColor, usedRangeWidthForBlending, distanceFromCurrentColor));
+				auto distanceFromCurrentColor = rangeIsStepSize ? usedRangeWidthForBlending : (usedRangeWidthForBlending - usedStep);
+				auto clearAlpha = opaqueToTransparentChange;
+				finalColors.push_back(::MakeBlendedColor(currentLimitValueColor, nextLimitValueColor, usedRangeWidthForBlending, distanceFromCurrentColor, clearAlpha));
 			}
 			else
 			{
@@ -268,6 +283,66 @@ namespace
 
 } // nameless namespace
 
+// ContouringJobData implementations
+// =================================
+
+ContouringJobData::ContouringJobData() = default;
+
+std::string ContouringJobData::makeJobDataString() const
+{
+	std::string jobDataString = nameAbbreviation_;
+	if(::isQueryDataRelated(dataType_))
+	{
+		jobDataString += " {par: ";
+		const auto& dataIdent = dataIdent_;
+		jobDataString += dataIdent.GetParamName();
+		jobDataString += " (id=";
+		jobDataString += std::to_string(dataIdent.GetParamIdent());
+		jobDataString += "), prod: ";
+		const auto* producer = dataIdent.GetProducer();
+		jobDataString += producer->GetName();
+		jobDataString += " (id=";
+		jobDataString += std::to_string(producer->GetIdent());
+		jobDataString += ")";
+		if(level_.GetIdent() != 0)
+		{
+			jobDataString += ", level: type=";
+			const auto& level = level_;
+			jobDataString += std::to_string(level.GetIdent());
+			jobDataString += ", value=";
+			jobDataString += std::to_string(int(level.LevelValue()));
+			jobDataString += ")";
+		}
+		jobDataString += "}";
+	}
+	else if(NFmiDrawParam::IsMacroParamCase(dataType_))
+	{
+		jobDataString += " {calculated macroParam}";
+	}
+
+	jobDataString += ", in: ";
+	if(viewIndex_ <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+	{
+		jobDataString += "map-view=";
+		jobDataString += std::to_string(viewIndex_ + 1);
+	}
+	else if(viewIndex_ == CtrlViewUtils::kFmiCrossSectionView)
+	{
+		jobDataString += "cross-section-view=1";
+	}
+
+	jobDataString += ", row=";
+	jobDataString += std::to_string(rowIndex_);
+
+	jobDataString += ", layer=";
+	jobDataString += std::to_string(layerIndex_);
+
+	return jobDataString;
+}
+
+// ColorContouringData implementations
+// ===================================
+
 ColorContouringData::ColorContouringData() = default;
 
 bool ColorContouringData::initialize(const ContouringJobData& contouringJobData, const boost::shared_ptr<NFmiDrawParam>& drawParam)
@@ -276,6 +351,7 @@ bool ColorContouringData::initialize(const ContouringJobData& contouringJobData,
 	if(drawParam->UseSimpleIsoLineDefinitions())
 	{
 		// Simple contour case
+		doSimpleContourChecks_ = true;
 		std::vector<float> classLimits;
 		classLimits.push_back(drawParam->ColorContouringColorShadeLowValue());
 		classLimits.push_back(drawParam->ColorContouringColorShadeMidValue());
@@ -294,6 +370,7 @@ bool ColorContouringData::initialize(const ContouringJobData& contouringJobData,
 	else
 	{
 		// Custom contour case
+		doSimpleContourChecks_ = false;
 		const auto& classLimits = drawParam->SpecialContourValues();
 		const auto& colorIndexies = drawParam->SpecialContourColorIndexies();
 		auto step = static_cast<float>(drawParam->ContourGab());
@@ -301,6 +378,7 @@ bool ColorContouringData::initialize(const ContouringJobData& contouringJobData,
 			step = 0;
 		isCorrectlyInitialized_ = initialize(classLimits, colorIndexies, step);
 	}
+	calcFixedToolmasterContourLimits();
 	makePossibleErrorLogging();
 	return isCorrectlyInitialized_;
 }
@@ -337,7 +415,6 @@ bool ColorContouringData::doSimpleContourInitialization()
 	useColorBlending_ = checkIfColorBlendingIsUsed();
 	if(!doFinalLimitsAndColorsChecks())
 		return false;
-
 	if(useColorBlending())
 		return doSimpleContourBlendingSetups();
 	else
@@ -352,7 +429,7 @@ bool ColorContouringData::doCustomContourInitialization()
 	if(useColorBlending())
 		originalColors_ = ::calcDefaultColorTableColorsFromCustomColorIndexies(originalColorIndexies_);
 	else
-		originalColors_ = ::calcDefaultColorTableColors(originalColorIndexies_);
+		originalColors_ = ColorContouringData::calcDefaultColorTableColors(originalColorIndexies_);
 	// Sen j‰lkeen voidaan k‰ytt‰‰ simple-contour juttuja sellaisenaan alustamaan systeemi
 	return doSimpleContourInitialization();
 }
@@ -403,7 +480,7 @@ bool ColorContouringData::doBlendingWithinColorCubeColors()
 	finalBlendingStep_ = originalBlendingStep_;
 	finalClassLimits_ = ::createBlendedClassLimits(originalClassLimits_, originalBlendingStep_);
 	finalColors_ = ::createBlendedColors(originalColors_, originalClassLimits_, finalClassLimits_, finalBlendingStep_);
-	finalColorIndexies_ = ::calcDefaultColorTableIndexies(finalColors_);
+	finalColorIndexies_ = ColorContouringData::calcDefaultColorTableIndexies(finalColors_);
 	return true;
 }
 
@@ -474,7 +551,7 @@ bool ColorContouringData::doSimpleContourNonBlendingSetups()
 	finalClassLimits_ = originalClassLimits_;
 	finalColors_ = originalColors_;
 	finalBlendingStep_ = originalBlendingStep_;
-	finalColorIndexies_ = ::calcDefaultColorTableIndexies(finalColors_);
+	finalColorIndexies_ = ColorContouringData::calcDefaultColorTableIndexies(finalColors_);
 	return true;
 }
 
@@ -548,6 +625,10 @@ bool ColorContouringData::doFinalLimitsAndColorsChecks()
 // Oletus: Kun t‰t‰ kutsutaan custom-contour alustuksesta, pit‰‰ originalColors_ olla alustettuna jo.
 void ColorContouringData::missingLimitCleanUp()
 {
+	// Tehd‰‰n n‰m‰ tarkastelut vain simple tapaukselle, koska kukaan ei annna custom osiossa rajoiksi puuttuvia arvoja
+	if(!doSimpleContourChecks_)
+		return;
+
 	auto limitsSize = originalClassLimits_.size();
 	auto colorsSize = originalColors_.size();
 	if(limitsSize && colorsSize)
@@ -570,6 +651,7 @@ void ColorContouringData::missingLimitCleanUp()
 				tmpColors.push_back(originalColors_[index + 1]);
 			}
 		}
+
 		originalClassLimits_ = tmpLimits;
 		originalColors_ = tmpColors;
 	}
@@ -583,37 +665,14 @@ bool ColorContouringData::createNewToolMasterColorTable(int colorTableIndex)
 	int createdColorTableSize = int(finalColorIndexies_.size()) + ToolMasterColorCube::SpecialColorCountInColorTableStart();
 	XuColorTableCreate(colorTableIndex, createdColorTableSize, XuLOOKUP, XuRGB, 255);
 	XuColorTableActivate(colorTableIndex);
-	XuClasses(finalClassLimits_.data(), int(finalClassLimits_.size()));
+	XuClasses(finalToolmasterFixedClassLimits_.data(), int(finalToolmasterFixedClassLimits_.size()));
 	XuShadingColorIndices(finalColorIndexies_.data(), int(finalColorIndexies_.size()));
 
 	float colorRGB[3], hatchArrayDummy[5];
 
-	// Copy Windows' window color to Toolmasters background
-	COLORREF f = GetSysColor(COLOR_WINDOW);
-	colorRGB[0] = GetRValue(f);
-	colorRGB[1] = GetGValue(f);
-	colorRGB[2] = GetBValue(f);
-	XuColor(XuCOLOR, 0, colorRGB, hatchArrayDummy);
-	XuColorDeviceLoad(0);
+	ToolMasterColorCube::SetupSpecialColorsForActiveColorTable();
 
-	// Copy Windows' text color to Toolmaster's foreground
-	f = GetSysColor(COLOR_WINDOWTEXT);
-	colorRGB[0] = GetRValue(f);
-	colorRGB[1] = GetGValue(f);
-	colorRGB[2] = GetBValue(f);
-	XuColor(XuCOLOR, 1, colorRGB, hatchArrayDummy);
-	XuColorDeviceLoad(1);
-
-	// M‰‰ritet‰‰n 3. v‰ri l‰pin‰kyv‰ksi (hollow)
-	int hollowColorIndex = 2; // ToolMasterColorCube::UsedHollowColorIndex();
-	int colorType = 0;
-	XuColorTypeQuery(hollowColorIndex, &colorType);
-	if(colorType != XuOFF)
-		XuColorType(hollowColorIndex, XuOFF);
-	XuUndefined(kFloatMissing, hollowColorIndex);
-	XuColorType(hollowColorIndex, XuHOLLOW_COLOR);
-
-	int index = hollowColorIndex + 1; // aletaan rakentaan v‰ri taulukkoa hollow v‰rin j‰lkeen
+	int index = ToolMasterColorCube::SpecialColorCountInColorTableStart(); // aletaan rakentaan v‰ri taulukkoa hollow v‰rin j‰lkeen
 	for(size_t i = 0; i < finalColors_.size(); i++)
 	{
 		const auto& currentColor = finalColors_[i];
@@ -629,66 +688,79 @@ bool ColorContouringData::createNewToolMasterColorTable(int colorTableIndex)
 	return true;
 }
 
-std::string ColorContouringData::makeJobDataString() const
-{
-	std::string jobDataString = contouringJobData_.nameAbbreviation_;
-	if(::isQueryDataRelated(contouringJobData_.dataType_))
-	{
-		jobDataString += " {par: ";
-		const auto& dataIdent = contouringJobData_.dataIdent_;
-		jobDataString += dataIdent.GetParamName();
-		jobDataString += " (id=";
-		jobDataString += std::to_string(dataIdent.GetParamIdent());
-		jobDataString += "), prod: ";
-		const auto* producer = dataIdent.GetProducer();
-		jobDataString += producer->GetName();
-		jobDataString += " (id=";
-		jobDataString += std::to_string(producer->GetIdent());
-		jobDataString += ")";
-		if(contouringJobData_.level_.GetIdent() != 0)
-		{
-			jobDataString += ", level: type=";
-			const auto& level = contouringJobData_.level_;
-			jobDataString += std::to_string(level.GetIdent());
-			jobDataString += ", value=";
-			jobDataString += std::to_string(int(level.LevelValue()));
-			jobDataString += ")";
-		}
-		jobDataString += "}";
-	}
-	else if(NFmiDrawParam::IsMacroParamCase(contouringJobData_.dataType_))
-	{
-		jobDataString += " {calculated macroParam}";
-	}
-
-	jobDataString += ", in: ";
-	if(contouringJobData_.viewIndex_ <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
-	{
-		jobDataString += "map-view=";
-		jobDataString += std::to_string(contouringJobData_.viewIndex_ + 1);
-	}
-	else if(contouringJobData_.viewIndex_ == CtrlViewUtils::kFmiCrossSectionView)
-	{
-		jobDataString += "cross-section-view=1";
-	}
-
-	jobDataString += ", row=";
-	jobDataString += std::to_string(contouringJobData_.rowIndex_);
-
-	jobDataString += ", layer=";
-	jobDataString += std::to_string(contouringJobData_.layerIndex_);
-
-	return jobDataString;
-}
-
 void ColorContouringData::makePossibleErrorLogging() const
 {
-	if(!isCorrectlyInitialized())
+	ColorContouringData::makePossibleErrorLogging(initializationErrorMessage_, isCorrectlyInitialized_, contouringJobData_);
+}
+
+void ColorContouringData::makePossibleErrorLogging(const std::string& initializationErrorMessage, bool wasCorrectlyInitialized, const ContouringJobData& contouringJobData)
+{
+	if(!wasCorrectlyInitialized)
 	{
-		std::string logMessage = initializationErrorMessage_;
+		std::string logMessage = initializationErrorMessage;
 		logMessage += " (with ";
-		logMessage += makeJobDataString();
+		logMessage += contouringJobData.makeJobDataString();
 		logMessage += ")";
 		CatLog::logMessage(logMessage, CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
+}
+
+// Jos ei joudu blendaamaan v‰rej‰, k‰ytet‰‰n custom v‰ri-indeksi konversiota sellaisenaan, 
+// kun lasketaan k‰ytettyj‰ v‰rej‰.
+std::vector<NFmiColor> ColorContouringData::calcDefaultColorTableColors(const std::vector<int>& colorIndexies)
+{
+	std::vector<NFmiColor> colors;
+	for(auto colorIndex : colorIndexies)
+	{
+		colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
+	}
+	return colors;
+}
+
+std::vector<int> ColorContouringData::calcDefaultColorTableIndexies(const std::vector<NFmiColor>& colors)
+{
+	std::vector<int> colorIndexies;
+	for(const auto& color : colors)
+	{
+		colorIndexies.push_back(ToolMasterColorCube::RgbToColorIndex(color));
+	}
+	return colorIndexies;
+}
+
+const NFmiColor& ColorContouringData::getValueRangeColor(float value1, float value2) const
+{
+	if(finalClassLimits_.empty())
+		return g_DefaultValueRangeColor;
+
+	auto index1 = ::getClosestValueIndex(value1, finalClassLimits_);
+	auto index2 = ::getClosestValueIndex(value2, finalClassLimits_);
+	if(index1 == 0 && index2 == 0)
+		return finalColors_.front();
+	auto lastIndexValue = finalClassLimits_.size() - 1;
+	if(index1 == lastIndexValue && index2 == lastIndexValue)
+		return finalColors_.back();
+	else
+		return finalColors_[index2];
+}
+
+// T‰m‰n gToolMasterContourLimitChangeValue- globaalin muuttujan k‰yttˆ on j‰‰nyt minulle nyt hieman h‰m‰r‰n peittoon,
+// Mutta luulen ett‰ se liittyy enemm‰nkin diskreettien parametrien piirtoon. 
+// Se kuitenkin pienent‰‰ rajoja hyvin pienell‰ luvulla ,jolloin tarkoitu oli saada aikaan efekti ett‰ isoviivat tai contourit 
+// kiersiv‰t tietyn arvoiset alueet paremmin. T‰st‰ rajojen pikkuriikkisest‰ muutoksesta ei ole haittaa kun operoidaan normaalin kokoisien
+// luku arvojen kanssa esim. n. 0.00001 - 10000000000000.
+// MUTTA kun arvo joukko on tarpeeksi pient‰ eli ollaan tarpeeksi l‰hell‰ gToolMasterContourLimitChangeValue, alkaa vaikutus h‰iritsem‰‰n.
+// Sen takia pit‰‰ tarkastella onko annettu raja tarpeeksi l‰hell‰ 'epsilonia' ja jos on, ei rajaa siirret‰ ollenkaan.
+float ColorContouringData::GetToolMasterContourLimitChangeValue(float theValue)
+{
+	if(::fabs(theValue / gToolMasterContourLimitChangeValue) < 1000.f)
+		return theValue; // jos theValue:n ja 'epsilonin' kokoero on alle 1000x, ei rajaa siirret‰ en‰‰
+	else
+		return theValue - gToolMasterContourLimitChangeValue;
+}
+
+void ColorContouringData::calcFixedToolmasterContourLimits()
+{
+	finalToolmasterFixedClassLimits_ = finalClassLimits_;
+	std::transform(finalToolmasterFixedClassLimits_.begin(), finalToolmasterFixedClassLimits_.end(), finalToolmasterFixedClassLimits_.begin(),
+		[&](auto value) {return ColorContouringData::GetToolMasterContourLimitChangeValue(value); });
 }

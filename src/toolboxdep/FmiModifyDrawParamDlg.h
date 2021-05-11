@@ -11,6 +11,12 @@
 class SmartMetDocumentInterface;
 class NFmiFixedDrawParamFolder;
 
+enum class ColorType
+{
+	SimpleContour = 1,
+	SimpleIsoline
+};
+
 /////////////////////////////////////////////////////////////////////////////
 // CFmiModifyDrawParamDlg dialog
 
@@ -42,12 +48,14 @@ public:
 	CButton	itsSymbolMidColor;
 	CButton	itsSymbolLowColor;
 	CButton	itsSymbolHighColor;
-	CButton	itsSimpleIsoLineMidColor;
 	CButton	itsSimpleIsoLineLowColor;
+	CButton	itsSimpleIsoLineMidColor;
 	CButton	itsSimpleIsoLineHighColor;
+	CButton	itsSimpleIsoLineHigh2Color;
 	CButton	itsHatch1Color;
 	BOOL	fUSeChangingColorsWithSymbols;
-	BOOL	fUSeColorScaleWithSimpleIsoLines;
+	BOOL	fUSeMultiColorWithSimpleIsoLines;
+	BOOL	fUSeColorBlendWithSimpleIsoLines;
 	BOOL	fUseIsoLineFeathering;
 	BOOL	fUseHatch1;
 	BOOL	fDrawLabelBox;
@@ -73,9 +81,14 @@ public:
     CString	itsParamNameStrU_;
     CString	itsProducerStrU_;
 	int		itsGridDataDrawStyle;
-    int		itsSimpleClassCount;
-	float	itsSimpleClassEndValue;
-	float	itsSimpleClassStartValue;
+	float	itsSimpleIsoLineColorLowValue;
+	CString itsSimpleIsoLineColorLowValueStringU_;
+	float   itsSimpleIsoLineColorMidValue;
+	CString itsSimpleIsoLineColorMidValueStringU_;
+	float	itsSimpleIsoLineColorHighValue;
+	CString itsSimpleIsoLineColorHighValueStringU_;
+	float	itsSimpleIsoLineColorHigh2Value;
+	CString itsSimpleIsoLineColorHigh2ValueStringU_;
 	int		itsSymbolsWithColorsClassCount;
 	float	itsSymbolsWithColorsEndValue;
 	float	itsSymbolsWithColorsMiddleValue;
@@ -97,7 +110,6 @@ public:
 	double	itsHatch2StartValue;
 	BOOL	fUSeSeparatingLinesBetweenColorContourClasses;
     double itsIsoLineZeroValue_NEW;
-    double itsSimpleClassMiddleValue_NEW;
 	CString itsSimpleColorContourLimit1StringU_;
 	float itsSimpleColorContourLimit1Value = kFloatMissing; // Saadaan vastaavasta string valuesta
 	CString itsSimpleColorContourLimit2StringU_;
@@ -125,9 +137,10 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CFmiModifyDrawParamDlg)
 	afx_msg void OnButtonHatch1Color();
-	afx_msg void OnButtonColorShowSimpleIsolineHigh();
 	afx_msg void OnButtonColorShowSimpleIsolineLow();
 	afx_msg void OnButtonColorShowSimpleIsolineMid();
+	afx_msg void OnButtonColorShowSimpleIsolineHigh();
+	afx_msg void OnButtonColorShowSimpleIsolineHigh2();
 	afx_msg void OnButtonColorShowSymbHigh();
 	afx_msg void OnButtonColorShowSymbLow();
 	afx_msg void OnButtonColorShowSymbMid();
@@ -193,9 +206,11 @@ private:
     void ForceStationViewUpdate();
     void AdjustStartingPosition();
 	std::pair<bool, bool> GetSimpleContourTransparencyAndDisabledOptions(int colorIndex) const;
+	std::pair<bool, bool> GetSimpleIsolineTransparencyAndDisabledOptions(int colorIndex) const;
 	NFmiColorButtonDrawingData GetSimpleContourColorButtonData(int colorIndex, bool initColor);
+	NFmiColorButtonDrawingData GetSimpleIsolineColorButtonData(int colorIndex, bool initColor);
 	void SetSimpleColorContourLimit(float limitValue, float* limitValueDlg, CString* limitStringDlgU_);
-	void OnEnChangeShowSimpleColorcontourLimitValue(int colorIndex, CString& limitStringU_, float& limitValue);
+	void OnEnChangeShowSimpleColorcontourLimitValue(ColorType colorType, int colorIndex, CString& limitStringU_, float& limitValue);
 
 	std::string itsDrawParamPath;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -215,11 +230,12 @@ private:
 	COLORREF itsSymbolMidColorRef;
 	COLORREF itsSymbolLowColorRef;
 	COLORREF itsSymbolHighColorRef;
-	COLORREF itsSimpleIsoLineMidColorRef;
 	COLORREF itsSimpleIsoLineLowColorRef;
+	COLORREF itsSimpleIsoLineMidColorRef;
 	COLORREF itsSimpleIsoLineHighColorRef;
-	COLORREF itsSimpleColorContourMidColorRef;
+	COLORREF itsSimpleIsoLineHigh2ColorRef;
 	COLORREF itsSimpleColorContourLowColorRef;
+	COLORREF itsSimpleColorContourMidColorRef;
 	COLORREF itsSimpleColorContourHighColorRef;
 	COLORREF itsSimpleColorContourHigh2ColorRef;
 	COLORREF itsSimpleColorContourHigh3ColorRef;
@@ -233,11 +249,12 @@ private:
 	CBitmap* itsSymbolMidBitmap;
 	CBitmap* itsSymbolLowBitmap;
 	CBitmap* itsSymbolHighBitmap;
-	CBitmap* itsSimpleIsoLineMidBitmap;
 	CBitmap* itsSimpleIsoLineLowBitmap;
+	CBitmap* itsSimpleIsoLineMidBitmap;
 	CBitmap* itsSimpleIsoLineHighBitmap;
-	CBitmap* itsSimpleColorContourMidBitmap;
+	CBitmap* itsSimpleIsoLineHigh2Bitmap;
 	CBitmap* itsSimpleColorContourLowBitmap;
+	CBitmap* itsSimpleColorContourMidBitmap;
 	CBitmap* itsSimpleColorContourHighBitmap;
 	CBitmap* itsSimpleColorContourHigh2Bitmap;
 	CBitmap* itsSimpleColorContourHigh3Bitmap;
@@ -251,11 +268,12 @@ private:
 	CRect itsSymbolMidColorRect;
 	CRect itsSymbolLowColorRect;
 	CRect itsSymbolHighColorRect;
-	CRect itsSimpleIsoLineMidColorRect;
 	CRect itsSimpleIsoLineLowColorRect;
+	CRect itsSimpleIsoLineMidColorRect;
 	CRect itsSimpleIsoLineHighColorRect;
-	CRect itsSimpleColorContourMidColorRect;
+	CRect itsSimpleIsoLineHigh2ColorRect;
 	CRect itsSimpleColorContourLowColorRect;
+	CRect itsSimpleColorContourMidColorRect;
 	CRect itsSimpleColorContourHighColorRect;
 	CRect itsSimpleColorContourHigh2ColorRect;
 	CRect itsSimpleColorContourHigh3ColorRect;
@@ -302,6 +320,10 @@ public:
 	afx_msg void OnEnChangeShowSimpleColorcontourWithColorsMiddleValue();
 	afx_msg void OnEnChangeShowSimpleColorcontourWithColorsEndValue();
 	afx_msg void OnEnChangeShowSimpleColorcontourWithColorsEnd2Value();
+	afx_msg void OnEnChangeShowSimpleIsolineWithColorsStartValue();
+	afx_msg void OnEnChangeShowSimpleIsolineWithColorsMiddleValue();
+	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEndValue();
+	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEnd2Value();
 };
 
 //{{AFX_INSERT_LOCATION}}

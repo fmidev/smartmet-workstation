@@ -16,7 +16,6 @@ namespace Toolmaster
     // Here are normal function declarations if Uniras ToolMaster is supported
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect);
     void DoToolMasterGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, const NFmiRect &theRelativeRect, const NFmiGriddingProperties &griddingProperties, float theObservationRadiusRelative, const NFmiDataMatrix<float> &gridData, std::vector<float> &toolMasterGridValuesOut);
-    void FillChangingColorIndicesForSimpleIsoline(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData *theIsoLineData, float step, float startValue, float endValue);
     std::string MakeAvsToolmasterVersionString();
     void CloseToolMaster();
     int InitToolMaster(CWnd *mainWindow, bool useToolMasterIfAvailable);
@@ -27,8 +26,6 @@ namespace Toolmaster
     inline void SetToolMastersDC(CDC* theDC, const CRect &theClientRect)
     {}
     inline void DoToolMasterGridding(std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, int arraySize, const NFmiRect &theRelativeRect, int theGriddingFunction, float theObservationRadiusRelative, const NFmiDataMatrix<float> &gridData, std::vector<float> &toolMasterGridValuesOut)
-    {}
-    inline void FillChangingColorIndicesForSimpleIsoline(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData *theIsoLineData, float step, float startValue, float endValue)
     {}
     inline std::string MakeAvsToolmasterVersionString()
     { return ""; }

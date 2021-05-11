@@ -74,13 +74,6 @@
 
 #include "boost\math\special_functions\round.hpp"
 
-// Kun toolmaster piirt‰‰ isoviivan discreetist‰ datasta tulokset voivat olla hieman yll‰tt‰vi‰.
-// Esim. kokonaispilvisyys (10% tarkkuudella) voi menn‰ pieleen jos joillain alueilla on paljon
-// samoja arvoja (esim. 90% ja 80% sekaisin) ja raja menee siin‰ 'v‰liss‰' eli 90%.
-// Ongelma voidaan kiert‰‰, kun esim. kaikkia rajoja pienennet‰‰n sis‰isesti hieman, jolloin
-// 90% rajasta tuleekin oikeasti 89.99999%. T‰llˆin isoviivat kiertavat kauniisti 90% arvot.
-static const float gToolMasterContourLimitChangeValue = std::numeric_limits<float>::epsilon() * 3; // t‰m‰ pit‰‰ olla pieni arvo (~epsilon) koska muuten pienet rajat eiv‰t toimi, mutta pelkk‰ epsilon on liian pieni
-
 // eli n. 30 x 30 (=900) hilasta ylˆsp‰in ei tehd‰ alikolmioita
 static const int gMaxGridPointsThatImagineWillSubTriangulate = 900;
 
@@ -97,21 +90,6 @@ static void CombinePaths(NFmiPathData &first, NFmiPathData &second);
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-// T‰m‰n gToolMasterContourLimitChangeValue- globaalin muuttujan k‰yttˆ on j‰‰nyt minulle nyt hieman h‰m‰r‰n peittoon,
-// Mutta luulen ett‰ se liittyy enemm‰nkin diskreettien parametrien piirtoon. 
-// Se kuitenkin pienent‰‰ rajoja hyvin pienell‰ luvulla ,jolloin tarkoitu oli saada aikaan efekti ett‰ isoviivat tai contourit 
-// kiersiv‰t tietyn arvoiset alueet paremmin. T‰st‰ rajojen pikkuriikkisest‰ muutoksesta ei ole haittaa kun operoidaan normaalin kokoisien
-// luku arvojen kanssa esim. n. 0.00001 - 10000000000000.
-// MUTTA kun arvo joukko on tarpeeksi pient‰ eli ollaan tarpeeksi l‰hell‰ gToolMasterContourLimitChangeValue, alkaa vaikutus h‰iritsem‰‰n.
-// Sen takia pit‰‰ tarkastella onko annettu raja tarpeeksi l‰hell‰ 'epsilonia' ja jos on, ei rajaa siirret‰ ollenkaan.
-static float GetToolMasterContourLimitChangeValue(float theValue)
-{
-    if(::fabs(theValue / gToolMasterContourLimitChangeValue) < 1000.f)
-        return theValue; // jos theValue:n ja 'epsilonin' kokoero on alle 1000x, ei rajaa siirret‰ en‰‰
-    else
-        return theValue - gToolMasterContourLimitChangeValue;
-}
 
 // LabelBox -----------------------------------------
 
@@ -768,15 +746,6 @@ static float WindAngleToToolMasterAngle(float windAngle)
     return toolmasterAngle;
 }
 
-static void SetColorContourLimits(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData)
-{
-    // asetetaan ainakin toistaiseksi luokkien ala, keski ja yl‰rajat customcontourtauluun
-    theIsoLineData->itsClassMinValue = theIsoLineData->itsCustomColorContours[0] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeLowValue());
-    theIsoLineData->itsCustomColorContours[1] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeMidValue());
-    theIsoLineData->itsCustomColorContours[2] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeHighValue());
-    theIsoLineData->itsClassMaxValue = theIsoLineData->itsCustomColorContours[3] = ::GetToolMasterContourLimitChangeValue(theDrawParam->ColorContouringColorShadeHigh2Value()) + theIsoLineData->itsColorContoursStep;
-}
-
 bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
     if(!(theDrawParam && theIsoLineData))
@@ -822,8 +791,8 @@ void NFmiIsoLineView::FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawPar
         theIsoLineData->itsHatch1.itsHatchColorRef = RGB(col.Red() * 255, col.Green() * 255, col.Blue() * 255);
 
         theIsoLineData->itsHatch1.itsHatchPattern = theDrawParam->IsoLineHatchType1();
-        theIsoLineData->itsHatch1.itsHatchLowerLimit = ::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchLowValue1());
-        theIsoLineData->itsHatch1.itsHatchUpperLimit = ::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchHighValue1());
+        theIsoLineData->itsHatch1.itsHatchLowerLimit = ColorContouringData::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchLowValue1());
+        theIsoLineData->itsHatch1.itsHatchUpperLimit = ColorContouringData::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchHighValue1());
     }
 
     if(theDrawParam->UseWithIsoLineHatch2())
@@ -838,18 +807,9 @@ void NFmiIsoLineView::FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawPar
         theIsoLineData->itsHatch2.itsHatchColorRef = RGB(col.Red() * 255, col.Green() * 255, col.Blue() * 255);
 
         theIsoLineData->itsHatch2.itsHatchPattern = theDrawParam->IsoLineHatchType2();
-        theIsoLineData->itsHatch2.itsHatchLowerLimit = ::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchLowValue2());
-        theIsoLineData->itsHatch2.itsHatchUpperLimit = ::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchHighValue2());
+        theIsoLineData->itsHatch2.itsHatchLowerLimit = ColorContouringData::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchLowValue2());
+        theIsoLineData->itsHatch2.itsHatchUpperLimit = ColorContouringData::GetToolMasterContourLimitChangeValue(theDrawParam->IsoLineHatchHighValue2());
     }
-}
-
-// muista theColorIndexies-vektorin koko ei ole k‰ytett‰viss‰ t‰ss‰, koska se on asetettu joksikin maksimi kooksi
-static bool IsTransparencyColorUsed(const checkedVector<int>& theColorIndexies, int theRealColorIndexCount, int theTransparencyColorIndex)
-{
-    for(int i = 0; i < theRealColorIndexCount; i++)
-        if(theColorIndexies[i] == theTransparencyColorIndex)
-            return true;
-    return false;
 }
 
 void NFmiIsoLineView::FillBaseColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
@@ -865,32 +825,24 @@ void NFmiIsoLineView::FillBaseColorContourInfo_new(boost::shared_ptr<NFmiDrawPar
         theIsoLineData->fUseColorContours = 2; // 2 asettaa quick contourin p‰‰lle
     if(viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
         theIsoLineData->fDrawLabelsOverContours = true;
-
-    theIsoLineData->itsIsoLineZeroClassValue = theDrawParam->SimpleIsoLineZeroValue();
 }
 
-static ContouringJobData MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam,
-    int viewIndex,
-    int rowIndex,
-    int layerIndex)
+ContouringJobData NFmiIsoLineView::MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam)
 {
     ContouringJobData contouringJobData;
     contouringJobData.dataIdent_ = theDrawParam->Param();
     contouringJobData.level_ = theDrawParam->Level();
     contouringJobData.nameAbbreviation_ = theDrawParam->ParameterAbbreviation();
     contouringJobData.dataType_ = theDrawParam->DataType();
-    contouringJobData.viewIndex_ = viewIndex;
-    contouringJobData.rowIndex_ = rowIndex;
-    contouringJobData.layerIndex_ = layerIndex;
+    contouringJobData.viewIndex_ = itsMapViewDescTopIndex;
+    contouringJobData.rowIndex_ = CalcRealRowIndex();
+    contouringJobData.layerIndex_ = itsViewRowLayerNumber;
     return contouringJobData;
 }
 
 void NFmiIsoLineView::FillCustomColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData)
 {
-    auto contouringJobData = ::MakeContouringJobData(theDrawParam,
-        itsMapViewDescTopIndex,
-        CalcRealRowIndex(),
-        itsViewRowLayerNumber);
+    auto contouringJobData = MakeContouringJobData(theDrawParam);
     theIsoLineData->itsColorContouringData.initialize(contouringJobData, theDrawParam);
 }
 
@@ -900,63 +852,11 @@ void NFmiIsoLineView::FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam
     FillBaseColorContourInfo_new(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed);
     theIsoLineData->fUseCustomColorContoursClasses = true;
     FillCustomColorContourInfo_new(theDrawParam, theIsoLineData);
-    return;
-    // =================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> loput roskiin???????
-
-    //const checkedVector<float>& values = theDrawParam->SpecialContourValues();
-    //int totalSize = theIsoLineData->itsTrueColorContoursCount = static_cast<int>(values.size());
-    //int size = totalSize;
-    //int i = 0;
-    //for(i = 0; i < size; i++)
-    //    theIsoLineData->itsCustomColorContours[i] = ::GetToolMasterContourLimitChangeValue(values[i]);
-
-    //const checkedVector<int>& colors = theDrawParam->SpecialContourColorIndexies();
-    //int colorIndexiesSize = static_cast<int>(colors.size());
-
-    //if(theIsoLineData->fUseIsoLineGabWithCustomContours)
-    //{
-    //    theIsoLineData->itsColorContoursStep = static_cast<float>(theDrawParam->ContourGab());
-    //    theIsoLineData->itsClassMinValue = theIsoLineData->itsCustomColorContours[0] - theIsoLineData->itsColorContoursStep;
-    //    theIsoLineData->itsClassMaxValue = theIsoLineData->itsCustomColorContours[(size > 1) ? size - 1 : 0] + theIsoLineData->itsColorContoursStep;
-    //    int colorContourCount = static_cast<int>(((theIsoLineData->itsClassMaxValue - theIsoLineData->itsClassMinValue) / theIsoLineData->itsColorContoursStep) - 1);
-    //    theIsoLineData->itsTrueColorContoursCount = colorContourCount;
-    //    theIsoLineData->itsTrueIsoLineCount = totalSize; // t‰ss‰ on tallessa originaali luokkien oikea lukum‰‰r‰ kun steppi contourit ja l‰pin‰kyvi‰ v‰rej‰ mukana
-    //    if(::IsTransparencyColorUsed(colors, colorIndexiesSize, 2))
-    //        theIsoLineData->itsColorIndexCount = colorIndexiesSize;
-    //    else
-    //        theIsoLineData->itsColorIndexCount = totalSize; // jos ei ollut l‰pin‰kyv‰‰ v‰ri‰ k‰ytˆss‰, pit‰‰ v‰rien m‰‰r‰ rajoittaa rajojen m‰‰r‰‰n
-    //}
-
-    //if(colorIndexiesSize > 0)
-    //{
-    //    theIsoLineData->itsCustomColorContoursColorIndexies[0] = 3; // oletus arvo, jos puuttuu
-    //    for(i = 0; i < colorIndexiesSize; i++)
-    //        theIsoLineData->itsCustomColorContoursColorIndexies[i] = colors[i];
-    //    if(i < 1)
-    //        i = 1;
-    //    if(colorIndexiesSize < 1)
-    //        colorIndexiesSize = 1;
-    //    for(int j = colorIndexiesSize; j < totalSize + 1; j++)
-    //        theIsoLineData->itsCustomColorContoursColorIndexies[j] = colors[i - 1]; // t‰ytet‰‰n viimeisell‰ arvolla jos puuttuu arvoja!!
-    //}
-}
-
-static void CountRealStepsAndStart(float zeroValue, float step, float minValue, float maxValue, int maxAllowedCount, int &stepCount, float &startValue)
-{
-    startValue = zeroValue + ((int(minValue / step) - 0) * step);
-    float endValue = zeroValue + ((int(maxValue / step) + 1) * step);
-
-    stepCount = static_cast<int>(((endValue - startValue) / step) + 1);
-    if(stepCount > maxAllowedCount)
-        stepCount = maxAllowedCount;
 }
 
 void NFmiIsoLineView::FillSimpleColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData)
 {
-    auto contouringJobData = ::MakeContouringJobData(theDrawParam,
-        itsMapViewDescTopIndex,
-        CalcRealRowIndex(),
-        itsViewRowLayerNumber);
+    auto contouringJobData = MakeContouringJobData(theDrawParam);
     theIsoLineData->itsColorContouringData.initialize(contouringJobData, theDrawParam);
 }
 
@@ -966,98 +866,22 @@ void NFmiIsoLineView::FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam
     FillBaseColorContourInfo_new(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed);
     theIsoLineData->fUseCustomColorContoursClasses = false;
     FillSimpleColorContourInfo_new(theDrawParam, theIsoLineData);
-    return;
-    // =================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> loput roskiin???????
-
-    //theIsoLineData->itsColorContoursStep = static_cast<float>(theDrawParam->ContourGab());
-    //int stepCount = 0;
-    //float startValue = 0;
-    //::CountRealStepsAndStart(theIsoLineData->itsIsoLineZeroClassValue, theIsoLineData->itsColorContoursStep,
-    //    theIsoLineData->itsDataMinValue,
-    //    theIsoLineData->itsDataMaxValue,
-    //    theIsoLineData->itsMaxAllowedIsoLineCount, stepCount, startValue);
-    //theIsoLineData->itsIsoLineStartClassValue = startValue; // t‰ss‰ ei voi v‰hent‰‰ gToolMasterContourLimitChangeValue:ta, koska t‰llˆin 0:sta tulee -0!!!
-
-    //theIsoLineData->itsTrueIsoLineCount = stepCount;
-
-    //// v‰ri tieto menee custom color taulussa toolmaster indeksein‰
-    //theIsoLineData->itsCustomColorContoursColorIndexies[0] = ToolMasterColorCube::RgbToColorIndex(theDrawParam->ColorContouringColorShadeLowValueColor());
-    //theIsoLineData->itsCustomColorContoursColorIndexies[1] = ToolMasterColorCube::RgbToColorIndex(theDrawParam->ColorContouringColorShadeMidValueColor());
-    //theIsoLineData->itsCustomColorContoursColorIndexies[2] = ToolMasterColorCube::RgbToColorIndex(theDrawParam->ColorContouringColorShadeHighValueColor());
-    //theIsoLineData->itsCustomColorContoursColorIndexies[3] = ToolMasterColorCube::RgbToColorIndex(theDrawParam->ColorContouringColorShadeHigh2ValueColor());
-
-    ////jos isoviivat piirret‰‰n ,t‰ss‰ v‰ri
-    //theIsoLineData->itsIsoLineColor[0] = ToolMasterColorCube::RgbToColorIndex(theDrawParam->IsolineColor());
-    //SetColorContourLimits(theDrawParam, theIsoLineData);
-    //int colorContourCount = static_cast<int>(((theDrawParam->ColorContouringColorShadeHigh2Value() - theDrawParam->ColorContouringColorShadeLowValue()) / theIsoLineData->itsColorContoursStep) + 1);
-    //theIsoLineData->itsTrueColorContoursCount = colorContourCount;
 }
 
-static int GetLabelBoxFillColorIndex(const NFmiColor &color, bool doTransparentColor)
+void NFmiIsoLineView::FillIsoLineInfoSimple_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData)
 {
-    if(doTransparentColor)
-        return ToolMasterColorCube::UsedHollowColorIndex();
-    else
-        return ToolMasterColorCube::RgbToColorIndex(color);
+    auto contouringJobData = MakeContouringJobData(theDrawParam);
+    theIsoLineData->itsIsolineVizualizationData.initialize(contouringJobData, theDrawParam, theIsoLineData->itsDataMinValue, theIsoLineData->itsDataMaxValue, fStationData);
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
 void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
     ForcedLogging::IsolineDrawingInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed, IsMapViewCase());
+
     theIsoLineData->fUseIsoLines = 1;
     theIsoLineData->fUseCustomIsoLineClasses = false;
-    float zeroValue = theIsoLineData->itsIsoLineZeroClassValue = theDrawParam->SimpleIsoLineZeroValue();
-    float step = theIsoLineData->itsIsoLineStep = static_cast<float>(theDrawParam->IsoLineGab());
-    float startValue = zeroValue + ((int(theIsoLineData->itsDataMinValue / step) - 0) * step);
-    float endValue = zeroValue + ((int(theIsoLineData->itsDataMaxValue / step) + 1) * step);
-    int stepCount = static_cast<int>(((endValue - startValue) / step) + 1);
-    if(stepCount > theIsoLineData->itsMaxAllowedIsoLineCount) // rajoitetaan hieman isoviivojen m‰‰r‰‰
-        stepCount = theIsoLineData->itsMaxAllowedIsoLineCount;
-
-    theIsoLineData->itsIsoLineStartClassValue = startValue; // t‰ss‰ ei voi v‰hent‰‰ gToolMasterContourLimitChangeValue:ta, koska t‰llˆin 0:sta tulee -0!!!
-    theIsoLineData->itsTrueIsoLineCount = stepCount;
-    theIsoLineData->itsIsoLineAnnonationHeight[0] = theDrawParam->SimpleIsoLineLabelHeight();
-    theIsoLineData->itsIsoLineWidth[0] = theDrawParam->SimpleIsoLineWidth();
-    theIsoLineData->fUseLabelBox = theDrawParam->ShowSimpleIsoLineLabelBox();
-    theIsoLineData->itsIsoLineBoxFillColorIndex = ::GetLabelBoxFillColorIndex(theDrawParam->IsolineLabelBoxFillColor(), theDrawParam->UseTransparentFillColor());
-
-    int colorIndex = ToolMasterColorCube::RgbToColorIndex(theDrawParam->IsolineColor());
-    theIsoLineData->itsIsoLineColor[0] = colorIndex;
-
-    colorIndex = ToolMasterColorCube::RgbToColorIndex(theDrawParam->IsolineTextColor());
-    theIsoLineData->itsIsoLineLabelColor[0] = colorIndex;
-
-    theIsoLineData->itsIsoLineStyle[0] = theDrawParam->SimpleIsoLineLineStyle();
-    theIsoLineData->itsIsoLineLabelDecimalsCount = theDrawParam->IsoLineLabelDigitCount();
-    theIsoLineData->itsIsoLineSplineSmoothingFactor = theDrawParam->IsoLineSplineSmoothingFactor();
-    theIsoLineData->fUseIsoLineFeathering = theDrawParam->UseIsoLineFeathering();
-
-    if(!theDrawParam->UseSingleColorsWithSimpleIsoLines()) // tehd‰‰n isoviivojen v‰rit skaalasta
-    {
-        theIsoLineData->fUseSingleColorsWithSimpleIsoLines = false;
-
-        if(fToolMasterUsed) // t‰m‰ tieto pit‰‰ antaa funktioon parametrina, koska aina dataa ei piirret‰ toolmasterilla vaikka se olisikin k‰ytett‰viss‰ (esim. kun kartta ja data eri projektiossa)
-        {
-            Toolmaster::FillChangingColorIndicesForSimpleIsoline(theDrawParam, theIsoLineData, step, startValue, endValue);
-        }
-        else // jos toolmaster ei k‰ytˆss‰, toimitaan toisella lailla
-        {
-            int colorIndex1 = ToolMasterColorCube::RgbToColorIndex(theDrawParam->SimpleIsoLineColorShadeLowValueColor());
-            int colorIndex2 = ToolMasterColorCube::RgbToColorIndex(theDrawParam->SimpleIsoLineColorShadeMidValueColor());
-            int colorIndex3 = ToolMasterColorCube::RgbToColorIndex(theDrawParam->SimpleIsoLineColorShadeHighValueColor());
-
-            // v‰ri tieto menee custom color taulussa toolmaster indeksein‰
-            theIsoLineData->itsIsoLineColor[0] = colorIndex1;
-            theIsoLineData->itsIsoLineColor[1] = colorIndex2;
-            theIsoLineData->itsIsoLineColor[2] = colorIndex3;
-
-            // asetetaan ainakin toistaiseksi luokkien ala, keski ja yl‰rajat customcontourtauluun
-            theIsoLineData->itsCustomIsoLineClasses[0] = theDrawParam->SimpleIsoLineColorShadeLowValue();
-            theIsoLineData->itsCustomIsoLineClasses[1] = theDrawParam->SimpleIsoLineColorShadeMidValue();
-            theIsoLineData->itsCustomIsoLineClasses[2] = theDrawParam->SimpleIsoLineColorShadeHighValue();
-        }
-    }
+    FillIsoLineInfoSimple_new(theDrawParam, theIsoLineData, fStationData);
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
@@ -1067,85 +891,7 @@ void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &th
 
     theIsoLineData->fUseIsoLines = 1;
     theIsoLineData->fUseCustomIsoLineClasses = true;
-
-    const checkedVector<float>& values = theDrawParam->SpecialIsoLineValues();
-    int totalSize = theIsoLineData->itsTrueIsoLineCount = static_cast<int>(values.size());
-    int size = totalSize;
-    int i = 0;
-    for(i = 0; i < size; i++)
-        theIsoLineData->itsCustomIsoLineClasses[i] = ::GetToolMasterContourLimitChangeValue(values[i]);
-
-    const checkedVector<float>& labelHeights = theDrawParam->SpecialIsoLineLabelHeight();
-    size = static_cast<int>(labelHeights.size());
-    theIsoLineData->itsIsoLineAnnonationHeight[0] = 3.f; // oletus arvo, jos puuttuu
-    for(i = 0; i < size; i++)
-        theIsoLineData->itsIsoLineAnnonationHeight[i] = labelHeights[i];
-    if(i < 1)
-        i = 1;
-    if(size < 1)
-        size = 1;
-    int j = 0;
-    for(j = size; j < totalSize; j++)
-        theIsoLineData->itsIsoLineAnnonationHeight[j] = theIsoLineData->itsIsoLineAnnonationHeight[i - 1]; // t‰ytet‰‰n viimeisell‰ arvolla jos puuttuu arvoja!!
-
-
-    const checkedVector<float>& widths = theDrawParam->SpecialIsoLineWidth();
-    size = static_cast<int>(widths.size());
-    theIsoLineData->itsIsoLineWidth[0] = 0.3f; // oletus arvo, jos puuttuu
-    for(i = 0; i < size; i++)
-        theIsoLineData->itsIsoLineWidth[i] = widths[i];
-    if(i < 1)
-        i = 1;
-    if(size < 1)
-        size = 1;
-    for(j = size; j < totalSize; j++)
-        theIsoLineData->itsIsoLineWidth[j] = theIsoLineData->itsIsoLineWidth[i - 1]; // t‰ytet‰‰n viimeisell‰ arvolla jos puuttuu arvoja!!
-
-    theIsoLineData->fUseLabelBox = theDrawParam->ShowSimpleIsoLineLabelBox();
-    theIsoLineData->itsIsoLineBoxFillColorIndex = ::GetLabelBoxFillColorIndex(theDrawParam->IsolineLabelBoxFillColor(), theDrawParam->UseTransparentFillColor());
-
-    const checkedVector<int>& lineColors = theDrawParam->SpecialIsoLineColorIndexies();
-    auto viewType = theDrawParam->GetViewType(fStationData);
-    bool colorContourAndIsolines = viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
-    size = static_cast<int>(lineColors.size());
-    theIsoLineData->itsIsoLineColor[0] = 3; // oletus arvo, jos puuttuu
-    for(i = 0; i < size; i++)
-    {
-        if(colorContourAndIsolines) // jos colorcontour ja isoviivat yht‰aikaa, piirret‰‰n isoviivat yhdell‰ v‰rill‰
-            theIsoLineData->itsIsoLineColor[i] = ToolMasterColorCube::RgbToColorIndex(theDrawParam->IsolineColor());
-        else
-            theIsoLineData->itsIsoLineColor[i] = lineColors[i];
-    }
-    if(i < 1)
-        i = 1;
-    if(size < 1)
-        size = 1;
-    for(j = size; j < totalSize; j++)
-    {
-        if(colorContourAndIsolines) // jos colorcontour ja isoviivat yht‰aikaa, piirret‰‰n isoviivat yhdell‰ v‰rill‰
-            theIsoLineData->itsIsoLineColor[i] = ToolMasterColorCube::RgbToColorIndex(theDrawParam->IsolineColor());
-        else
-            theIsoLineData->itsIsoLineColor[j] = theIsoLineData->itsIsoLineColor[i - 1]; // t‰ytet‰‰n viimeisell‰ arvolla jos puuttuu arvoja!!
-    }
-
-    int colorIndex = ToolMasterColorCube::RgbToColorIndex(theDrawParam->IsolineTextColor());
-    theIsoLineData->itsIsoLineLabelColor[0] = colorIndex;
-
-    const checkedVector<int>& lineStyles = theDrawParam->SpecialIsoLineStyle();
-    size = static_cast<int>(lineStyles.size());
-    theIsoLineData->itsIsoLineStyle[0] = 0; // oletus arvo, jos puuttuu
-    for(i = 0; i < size; i++)
-        theIsoLineData->itsIsoLineStyle[i] = lineStyles[i];
-    if(i < 1)
-        i = 1;
-    if(size < 1)
-        size = 1;
-    for(j = size; j < totalSize; j++)
-        theIsoLineData->itsIsoLineStyle[j] = theIsoLineData->itsIsoLineStyle[i - 1]; // t‰ytet‰‰n viimeisell‰ arvolla jos puuttuu arvoja!!
-
-    theIsoLineData->itsIsoLineLabelDecimalsCount = theDrawParam->IsoLineLabelDigitCount();
-    theIsoLineData->itsIsoLineSplineSmoothingFactor = theDrawParam->IsoLineSplineSmoothingFactor();
-    theIsoLineData->fUseIsoLineFeathering = theDrawParam->UseIsoLineFeathering();
+    FillIsoLineInfoSimple_new(theDrawParam, theIsoLineData, fStationData);
 }
 
 NFmiPolyline* NFmiIsoLineView::CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi)
@@ -1281,126 +1027,62 @@ void NFmiIsoLineView::ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::
         thePolyLineList.push_back(currentPolyLine); // laitetaan viel‰ viimeinen polyline listaan
 }
 
-static void SetSimpleIsoLineEnvi(NFmiIsoLineData& theIsoLineData, NFmiDrawingEnvironment &theEnvi, int  /* theIsoLineIndex */, float theValue)
+static int CalcIsolineWidthInPixels(float wantedLineWidthInMM)
 {
     float mm_per_pixel = 1000.f / 260.f; // arvio omasta n‰ytˆst‰ni
-    double wantedPenWidthInMM = theIsoLineData.itsIsoLineWidth[0];
-    int wantedPenWidthInPixels = boost::math::iround(wantedPenWidthInMM * mm_per_pixel);
+    int wantedPenWidthInPixels = boost::math::iround(wantedLineWidthInMM * mm_per_pixel);
     if(wantedPenWidthInPixels < 1)
         wantedPenWidthInPixels = 1;
-    theEnvi.SetPenSize(NFmiPoint(wantedPenWidthInPixels, wantedPenWidthInPixels));
+    return wantedPenWidthInPixels;
+}
 
-    if(theIsoLineData.fUseSingleColorsWithSimpleIsoLines)
+static void SetPenSize(IsolineVizualizationData& isolineVizData, NFmiDrawingEnvironment& theEnvi)
+{
+    const auto& lineWidths = isolineVizData.lineWidths();
+    int wantedPenWidthInPixels = lineWidths.empty() ? 0 : CalcIsolineWidthInPixels(lineWidths[0]);
+    theEnvi.SetPenSize(NFmiPoint(wantedPenWidthInPixels, wantedPenWidthInPixels));
+}
+
+static void SetSimpleIsoLineEnvi(IsolineVizualizationData& isolineVizData, NFmiDrawingEnvironment &theEnvi, float theValue)
+{
+    ::SetPenSize(isolineVizData, theEnvi);
+
+    if(isolineVizData.useSingleColor())
     {
-        theEnvi.SetFrameColor(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsIsoLineColor[0]));
+        theEnvi.SetFrameColor(isolineVizData.finalColors()[0]);
     }
     else
     {
-        NFmiColor color1(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsIsoLineColor[0]));
-        NFmiColor color2(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsIsoLineColor[1]));
-        NFmiColor color3(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsIsoLineColor[2]));
-        float limit1 = theIsoLineData.itsCustomIsoLineClasses[0];
-        float limit2 = theIsoLineData.itsCustomIsoLineClasses[1];
-        float limit3 = theIsoLineData.itsCustomIsoLineClasses[2];
-        if(theValue <= limit1)
-            theEnvi.SetFrameColor(color1);
-        else if(theValue >= limit3)
-            theEnvi.SetFrameColor(color3);
-        else if(theValue == limit2)
-            theEnvi.SetFrameColor(color2);
-        else // pit‰‰ blendata v‰ri sopivasti
-        {
-            if(theValue <= limit2)
-            { // ollaan 1. puoliskolla
-                float mixRatio = (limit2 - theValue) / (limit2 - limit1);
-                FmiMin(mixRatio, 1.f);
-                FmiMax(mixRatio, 0.f);
-                mixRatio = 1 - mixRatio;
-                color1.Mix(color2, mixRatio);
-                theEnvi.SetFrameColor(color1);
-            }
-            else
-            { // ollaan 2. puoliskolla
-                float mixRatio = (limit3 - theValue) / (limit3 - limit2);
-                FmiMin(mixRatio, 1.f);
-                FmiMax(mixRatio, 0.f);
-                mixRatio = 1 - mixRatio;
-                color2.Mix(color3, mixRatio);
-                theEnvi.SetFrameColor(color2);
-            }
-        }
+        auto multiColorValues = isolineVizData.getMultiColorValues(theValue);
+        theEnvi.SetFrameColor(multiColorValues.second);
     }
 }
 
-static void SetCustomIsoLineEnvi(NFmiIsoLineData& theIsoLineData, NFmiDrawingEnvironment &theEnvi, int theIsoLineIndex)
+static void SetCustomIsoLineEnvi(IsolineVizualizationData& isolineVizData, NFmiDrawingEnvironment &theEnvi, int theIsoLineIndex)
 {
-    static const int invisibleColorIndex = 2;
-    float mm_per_pixel = 1000.f / 260.f; // arvio omasta n‰ytˆst‰ni
-    double wantedPenWidthInMM = theIsoLineData.itsIsoLineWidth[theIsoLineIndex];
-    int wantedPenWidthInPixels = boost::math::iround(wantedPenWidthInMM * mm_per_pixel);
-    if(wantedPenWidthInPixels < 1)
-        wantedPenWidthInPixels = 1;
-    theEnvi.SetPenSize(NFmiPoint(wantedPenWidthInPixels, wantedPenWidthInPixels));
+    ::SetPenSize(isolineVizData, theEnvi);
 
-    theEnvi.SetFrameColor(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsIsoLineColor[theIsoLineIndex]));
+    const auto& colors = isolineVizData.finalColors();
+    if(theIsoLineIndex < colors.size())
+    {
+        theEnvi.SetFrameColor(colors[theIsoLineIndex]);
+    }
     theEnvi.DisableFill();
 }
 
-static void SetSimpleColorContourEnvi(NFmiIsoLineData& theIsoLineData, NFmiDrawingEnvironment &theEnvi, int /* theIsoLineIndex */, float theLowerLimit, float theUpperLimit)
+static void SetSimpleColorContourEnvi(NFmiIsoLineData& theIsoLineData, NFmiDrawingEnvironment &theEnvi, float theLowerLimit, float theUpperLimit)
 {
-    static const int invisibleColorIndex = 2;
-    float mm_per_pixel = 1000.f / 260.f; // arvio omasta n‰ytˆst‰ni
-    double wantedPenWidthInMM = theIsoLineData.itsIsoLineWidth[0];
-    int wantedPenWidthInPixels = boost::math::iround(wantedPenWidthInMM * mm_per_pixel);
-    if(wantedPenWidthInPixels < 1)
-        wantedPenWidthInPixels = 1;
-    theEnvi.SetPenSize(NFmiPoint(wantedPenWidthInPixels, wantedPenWidthInPixels));
+    ::SetPenSize(theIsoLineData.itsIsolineVizualizationData, theEnvi);
+    auto& colorContouringData = theIsoLineData.itsColorContouringData;
+    const auto& fillColor = colorContouringData.getValueRangeColor(theLowerLimit, theUpperLimit);
+    theEnvi.SetFillColor(fillColor);
+    auto colorIsColorFullyOpaque = ToolMasterColorCube::IsColorFullyOpaque(fillColor);
+    if(colorIsColorFullyOpaque)
+        theEnvi.EnableFill();
+    else
+        theEnvi.DisableFill();
 
-    NFmiColor color1(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsCustomColorContoursColorIndexies[0]));
-    NFmiColor color2(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsCustomColorContoursColorIndexies[1]));
-    NFmiColor color3(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsCustomColorContoursColorIndexies[2]));
-    NFmiColor color4(ToolMasterColorCube::ColorIndexToRgb(theIsoLineData.itsCustomColorContoursColorIndexies[3]));
-    float limit1 = theIsoLineData.itsCustomColorContours[0];
-    float limit2 = theIsoLineData.itsCustomColorContours[1];
-    float limit3 = theIsoLineData.itsCustomColorContours[2];
-    float limit4 = theIsoLineData.itsCustomColorContours[3];
-    if(theUpperLimit <= limit1)
-        theEnvi.SetFillColor(color1);
-    else if(theUpperLimit >= limit4) // indeksit alkavat 0:sta, siksi pit‰‰ lis‰t‰ yksi vertailuissa
-        theEnvi.SetFillColor(color4);
-    else // pit‰‰ blendata v‰ri sopivasti
-    {
-        if(theUpperLimit <= limit2)
-        { // ollaan 1. v‰liosassa
-            float mixRatio = (limit2 - theLowerLimit) / (limit2 - limit1);
-            FmiMin(mixRatio, 1.f);
-            FmiMax(mixRatio, 0.f);
-            mixRatio = 1 - mixRatio;
-            color1.Mix(color2, mixRatio);
-            theEnvi.SetFillColor(color1);
-        }
-        else if(theUpperLimit <= limit3)
-        { // ollaan 2. v‰liosassa
-            float mixRatio = (limit3 - theUpperLimit) / (limit3 - limit2);
-            FmiMin(mixRatio, 1.f);
-            FmiMax(mixRatio, 0.f);
-            mixRatio = 1 - mixRatio;
-            color2.Mix(color3, mixRatio);
-            theEnvi.SetFillColor(color2);
-        }
-        else if(theUpperLimit <= limit4)
-        { // ollaan 3. v‰liosassa
-            float mixRatio = (limit4 - theUpperLimit) / (limit4 - limit3);
-            FmiMin(mixRatio, 1.f);
-            FmiMax(mixRatio, 0.f);
-            mixRatio = 1 - mixRatio;
-            color3.Mix(color4, mixRatio);
-            theEnvi.SetFillColor(color3);
-        }
-    }
-
-    theEnvi.EnableFill();
-    if(theIsoLineData.fUseSeparatorLinesBetweenColorContourClasses)
+    if(colorIsColorFullyOpaque && theIsoLineData.fUseSeparatorLinesBetweenColorContourClasses)
     {
         theEnvi.SetFrameColor(ToolMasterColorCube::ColorIndexToRgb(3)); // jos v‰liviivat piirret‰‰n, piirret‰‰n ne toistaiseksi mustalla (=3)
         theEnvi.EnableFrame();
@@ -1410,31 +1092,6 @@ static void SetSimpleColorContourEnvi(NFmiIsoLineData& theIsoLineData, NFmiDrawi
         theEnvi.DisableFrame(); // TƒMƒ RAJAVIIVAN PIIRRON ESTO PITƒƒ KATSOA jotenkin toolboxista, kun ei toimi
     }
 
-}
-
-static void SetCustomColorContourEnvi(NFmiIsoLineData& theIsoLineData, NFmiDrawingEnvironment &theEnvi, int theIsoLineIndex)
-{
-    static const int invisibleColorIndex = 2;
-    float mm_per_pixel = 1000.f / 260.f; // arvio omasta n‰ytˆst‰ni
-    double wantedPenWidthInMM = theIsoLineData.itsIsoLineWidth[0];
-    int wantedPenWidthInPixels = boost::math::iround(wantedPenWidthInMM * mm_per_pixel);
-    if(wantedPenWidthInPixels < 1)
-        wantedPenWidthInPixels = 1;
-    theEnvi.SetPenSize(NFmiPoint(wantedPenWidthInPixels, wantedPenWidthInPixels));
-
-    int colorIndex = theIsoLineData.itsCustomColorContoursColorIndexies[theIsoLineIndex];
-    theEnvi.SetFillColor(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
-    theEnvi.SetFrameColor(ToolMasterColorCube::ColorIndexToRgb(3)); // jos v‰liviivat piirret‰‰n, piirret‰‰n ne toistaiseksi mustalla (=3)
-    if(colorIndex != invisibleColorIndex)
-        theEnvi.EnableFill();
-    else
-        theEnvi.DisableFill();
-    if(theIsoLineData.fUseSeparatorLinesBetweenColorContourClasses)
-        theEnvi.EnableFrame();
-    else
-    {
-        theEnvi.DisableFrame(); // TƒMƒ RAJAVIIVAN PIIRRON ESTO PITƒƒ KATSOA jotenkin toolboxista, kun ei toimi
-    }
 }
 
 static void DrawPolyLineList(NFmiToolBox *theGTB, list<NFmiPolyline*> &thePolyLineList, const NFmiPoint &theOffSet)
@@ -1681,16 +1338,13 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
     LabelBox labelBox;
     float fontSize = itsDrawParam->SimpleIsoLineLabelHeight() * ::CalcMMSizeFactor(static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM), 1.1f); // [mm]
 
-    float currentIsoLineValue = theIsoLineData.itsIsoLineStartClassValue;
-    int i = 0;
-    for(; currentIsoLineValue < theIsoLineData.itsDataMaxValue; currentIsoLineValue += theIsoLineData.itsIsoLineStep)
+    auto& isolineVizData = theIsoLineData.itsIsolineVizualizationData;
+    float currentIsoLineValue = isolineVizData.startLimitValue();
+    for(int i = 0; i < isolineVizData.usedIsolineCount(); i++, currentIsoLineValue += isolineVizData.usedStep())
     {
-        if(i >= theIsoLineData.itsMaxAllowedIsoLineCount) // ettei j‰‰ iki looppiin
-            break;
-
         Imagine::NFmiPath path = ::CalcContourPath(currentIsoLineValue, kFloatMissing, theIsoLineData, theValues, theCoordinates, theHelper, itsArea, true);
 
-        SetSimpleIsoLineEnvi(theIsoLineData, envi, i, currentIsoLineValue);
+        SetSimpleIsoLineEnvi(isolineVizData, envi, currentIsoLineValue);
 
         labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
@@ -1715,7 +1369,6 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
 
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();
-        i++;
     }
 
     if(itsDrawParam->SimpleIsoLineLabelHeight() > 0) // ShowSimpleIsoLineLabelBox())
@@ -1728,19 +1381,18 @@ void NFmiIsoLineView::DrawCustomIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
     NFmiDrawingEnvironment envi;
     list<NFmiPolyline*> polyLineList;
 
+    auto& isolineVizData = theIsoLineData.itsIsolineVizualizationData;
     LabelBox labelBox;
     float fontSize = 0; // itsDrawParam->SimpleIsoLineLabelHeight(); // [mm]
     float fontSizeFactor = ::CalcMMSizeFactor(static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM), 1.1f);
-    float currentIsoLineValue = theIsoLineData.itsIsoLineStartClassValue;
-    for(int i = 0; i < theIsoLineData.itsTrueIsoLineCount; i++)
+    float currentIsoLineValue = isolineVizData.startLimitValue();
+    for(int i = 0; i < isolineVizData.usedIsolineCount(); i++)
     {
-        if(i >= theIsoLineData.itsMaxAllowedIsoLineCount) // ettei j‰‰ iki looppiin
-            break;
-        fontSize = theIsoLineData.itsIsoLineAnnonationHeight[i] * fontSizeFactor;
-        currentIsoLineValue = theIsoLineData.itsCustomIsoLineClasses[i];
+        fontSize = isolineVizData.labelHeights()[i] * fontSizeFactor;
+        currentIsoLineValue = isolineVizData.finalClassLimits()[i];
         Imagine::NFmiPath path = ::CalcContourPath(currentIsoLineValue, kFloatMissing, theIsoLineData, theValues, theCoordinates, theHelper, itsArea, true);
 
-        SetCustomIsoLineEnvi(theIsoLineData, envi, i);
+        SetCustomIsoLineEnvi(isolineVizData, envi, i);
 
         labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
 
@@ -1780,20 +1432,24 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
     NFmiDrawingEnvironment envi;
     list<NFmiPolyline*> polyLineList;
     bool drawLabels = theIsoLineData.fDrawLabelsOverContours;
+    auto& colorContouringData = theIsoLineData.itsColorContouringData;
+    auto &contourLimits = colorContouringData.finalClassLimits();
 
     LabelBox labelBox;
     float fontSize = itsDrawParam->SimpleIsoLineLabelHeight() * ::CalcMMSizeFactor(static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM), 1.1f); // [mm]
-    float lowerLimit = theIsoLineData.itsIsoLineStartClassValue - theIsoLineData.itsColorContoursStep; // HUOM! alarasta pit‰‰ v‰hent‰‰ viel‰ yksi steppi, koska contourit piirret‰‰n eri tekniikalla kuin toolmasterissa
-    float upperLimit = lowerLimit + theIsoLineData.itsColorContoursStep;
+    float upperLimit = contourLimits.front();
+    float lowerLimit = upperLimit - colorContouringData.finalBlendingStep(); // HUOM! alarasta pit‰‰ v‰hent‰‰ viel‰ yksi steppi, koska contourit piirret‰‰n eri tekniikalla kuin toolmasterissa
     float currentIsoLineValue = lowerLimit;
 
-    for(int i = 1; i <= theIsoLineData.itsTrueIsoLineCount; i++)
+    for(int i = 0; i <= contourLimits.size(); i++)
     {
-        if(i >= theIsoLineData.itsMaxAllowedIsoLineCount) // ettei j‰‰ iki looppiin
-            break;
-        Imagine::NFmiPath path = ::CalcContourPath(lowerLimit, kFloatMissing, theIsoLineData, theValues, theCoordinates, theHelper, itsArea, false);
+        if(i < contourLimits.size())
+            upperLimit = contourLimits[i];
+        else
+            upperLimit += colorContouringData.finalBlendingStep();
+        Imagine::NFmiPath path = ::CalcContourPath(lowerLimit, upperLimit, theIsoLineData, theValues, theCoordinates, theHelper, itsArea, false);
 
-        SetSimpleColorContourEnvi(theIsoLineData, envi, i, lowerLimit, upperLimit);
+        SetSimpleColorContourEnvi(theIsoLineData, envi, lowerLimit, upperLimit);
 
         if(drawLabels)
             labelBox.Init(fontSize, currentIsoLineValue, itsDrawParam, itsToolBox, envi);
@@ -1828,10 +1484,7 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();
 
-        lowerLimit += theIsoLineData.itsColorContoursStep;
-        upperLimit += theIsoLineData.itsColorContoursStep;
-        currentIsoLineValue += theIsoLineData.itsColorContoursStep;
-
+        lowerLimit = currentIsoLineValue = upperLimit;
     }
 
     if(drawLabels)
@@ -1847,24 +1500,34 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
     NFmiDrawingEnvironment envi;
     list<NFmiPolyline*> polyLineList;
     bool drawLabels = theIsoLineData.fDrawLabelsOverContours;
+    auto& colorContouringData = theIsoLineData.itsColorContouringData;
+    auto& isolineVizData = theIsoLineData.itsIsolineVizualizationData;
+    const auto& customContourLimits = colorContouringData.finalClassLimits();
+    const auto& customContourColorIndexies = colorContouringData.finalColorIndexies();
+    auto usedStep = colorContouringData.finalBlendingStep();
+    const auto& labelHeights = isolineVizData.labelHeights();
 
     LabelBox labelBox;
     float fontSize = 0; //itsDrawParam->SimpleIsoLineLabelHeight(); // [mm]
     float fontSizeFactor = ::CalcMMSizeFactor(static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM), 1.1f);
-    float lowerLimit = 0.f;
-    float upperLimit = 0.f;
-    for(int i = 0; i <= theIsoLineData.itsTrueColorContoursCount; i++)
+    float upperLimit = customContourLimits.front();
+    float lowerLimit = upperLimit - colorContouringData.finalBlendingStep(); // HUOM! alarasta pit‰‰ v‰hent‰‰ viel‰ yksi steppi, koska contourit piirret‰‰n eri tekniikalla kuin toolmasterissa
+    float currentIsoLineValue = lowerLimit;
+    for(int i = 0; i <= customContourLimits.size(); i++)
     {
-        if(i >= theIsoLineData.itsMaxAllowedIsoLineCount) // ettei j‰‰ iki looppiin
-            break;
-        if(theIsoLineData.itsCustomColorContoursColorIndexies[i] == invisibleColorIndex)
-            continue;
-        fontSize = theIsoLineData.itsIsoLineAnnonationHeight[i] * fontSizeFactor;
-        lowerLimit = i == 0 ? minValue : theIsoLineData.itsCustomColorContours[i - 1];
-        upperLimit = i == theIsoLineData.itsTrueColorContoursCount ? maxValue : theIsoLineData.itsCustomColorContours[i];
-        Imagine::NFmiPath path = ::CalcContourPath(lowerLimit, kFloatMissing, theIsoLineData, theValues, theCoordinates, theHelper, itsArea, false);
+        if(i < customContourLimits.size())
+            upperLimit = customContourLimits[i];
+        else
+            upperLimit += colorContouringData.finalBlendingStep();
 
-        SetCustomColorContourEnvi(theIsoLineData, envi, i);
+        if(customContourColorIndexies[i] == invisibleColorIndex)
+            continue;
+        if(labelHeights.empty())
+            fontSize = 0;
+        else
+            fontSize = labelHeights[i] * fontSizeFactor;
+        Imagine::NFmiPath path = ::CalcContourPath(lowerLimit, kFloatMissing, theIsoLineData, theValues, theCoordinates, theHelper, itsArea, false);
+        SetSimpleColorContourEnvi(theIsoLineData, envi, lowerLimit, upperLimit);
 
         if(drawLabels)
             labelBox.Init(fontSize, lowerLimit, itsDrawParam, itsToolBox, envi);
@@ -1898,6 +1561,7 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
 
         std::for_each(polyLineList.begin(), polyLineList.end(), PointerDestroyer());
         polyLineList.clear();
+        lowerLimit = currentIsoLineValue = upperLimit;
     }
 
     if(drawLabels)
@@ -2189,19 +1853,6 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
 // EL <---
 
 
-void NFmiIsoLineView::ClearEmptyPathData(list<NFmiPathData*> &thePathDataList)
-{
-    list<NFmiPathData*>::iterator iter = thePathDataList.begin();
-    list<NFmiPathData*>::iterator endIter = thePathDataList.end();
-    for(; iter != endIter; ++iter)
-    {
-        if((*iter)->size() == 0)
-        {
-            delete (*iter);
-            iter = thePathDataList.erase(iter);
-        }
-    }
-}
 static bool CoordComparison(const NFmiPathElement &first, const NFmiPathElement &second)
 {
     //EL -->
