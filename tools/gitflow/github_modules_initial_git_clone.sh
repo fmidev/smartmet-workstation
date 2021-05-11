@@ -13,18 +13,18 @@ cd github_modules
 
 # First gis
 gis_dir="smartmet-library-gis"
-[ ! -d "$gis_dir" ] && git clone git@github.com:fmidev/"$gis_dir".git && cd "$gis_dir" && git checkout $dev && git pull --no-edit origin $dev && cd ..
+[ ! -d "$gis_dir" ] && git clone git@github.com:fmidev/"$gis_dir".git && cd "$gis_dir" && git checkout $dev && git pull --rebase --no-edit origin $dev && cd ..
 
 # Second newbase
 newbase_dir="smartmet-library-newbase"
-[ ! -d "$newbase_dir" ] && git clone git@github.com:fmidev/"$newbase_dir".git && cd "$newbase_dir" && git checkout $dev && git pull --no-edit origin $dev && cd ..
+[ ! -d "$newbase_dir" ] && git clone git@github.com:fmidev/"$newbase_dir".git && cd "$newbase_dir" && git checkout $dev && git pull --rebase --no-edit origin $dev && cd ..
 
 # Third smarttools
 smarttools_dir="smartmet-library-smarttools"
-[ ! -d "$smarttools_dir" ] && git clone git@github.com:fmidev/"$smarttools_dir".git && cd "$smarttools_dir" && git checkout $dev && git pull --no-edit origin $dev && cd ..
+[ ! -d "$smarttools_dir" ] && git clone git@github.com:fmidev/"$smarttools_dir".git && cd "$smarttools_dir" && git checkout $dev && git pull --rebase --no-edit origin $dev && cd ..
 
 # 4th macgyver
 smarttools_dir="smartmet-library-macgyver"
-[ ! -d "$macgyver_dir" ] && git clone git@github.com:fmidev/"$macgyver_dir".git && cd "$macgyver_dir" && git checkout $dev && git pull --no-edit origin $dev && cd ..
+[ ! -d "$macgyver_dir" ] && git clone git@github.com:fmidev/"$macgyver_dir".git && cd "$macgyver_dir" && git checkout $dev && git pull --rebase --no-edit origin $dev && cd ..
 
 read -p "Press [Enter] key to continue..."

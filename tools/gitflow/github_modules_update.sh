@@ -7,18 +7,18 @@ dev=$(cat ./branches/dev_branch)
 
 # First gis
 cd ../../github_modules/smartmet-library-gis
-git checkout $dev && git pull --no-edit origin $dev && git push --tags origin $dev
+git checkout $dev && git pull --rebase --no-edit origin $dev && git push --tags origin $dev
 
 # Second newbase
 cd ../../github_modules/smartmet-library-newbase
-git checkout $dev && git pull --no-edit origin $dev && git push --tags origin $dev
+git checkout $dev && git pull --rebase --no-edit origin $dev && git push --tags origin $dev
 
 # Third smarttools
 cd ../../github_modules/smartmet-library-smarttools
-git checkout $dev && git pull --no-edit origin $dev && git push --tags origin $dev
+git checkout $dev && git pull --rebase --no-edit origin $dev && git push --tags origin $dev
 
 # 4th macgyver
 cd ../../github_modules/smartmet-library-macgyver
-git checkout $dev && git pull --no-edit origin $dev && git push --tags origin $dev
+git checkout $dev && git pull --rebase --no-edit origin $dev && git push --tags origin $dev
 
 read -p "Press [Enter] key to continue..."
