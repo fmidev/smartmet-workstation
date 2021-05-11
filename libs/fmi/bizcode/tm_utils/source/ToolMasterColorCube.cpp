@@ -13,12 +13,12 @@ namespace
     const int gColorTableBlueSize = 8;
 
     // t‰m‰ toolmasterin colortable on varattu editorin vakio k‰yttˆˆn johon on varattu 8x8x8 v‰ri kuutio
-    int gUsedDefaultToolMasterColorTableIndex = 2;
-    // tehd‰‰n alkuun kahden siirtym‰ fore- ja background colorien takia ja + 1 hollow color
-    int gUsedDefaultToolMasterColorTableIndexStart = 3; 
+    const int gUsedDefaultToolMasterColorTableIndex = 2;
     // eli 3. v‰ri on l‰pin‰kyv‰ v‰ri kuutiossa on v‰ri COLORREF muodossa ja sen vastaava indeksi toolmaster tauluun
     //static std::pair<int, COLORREF> gUsedColorsCube[gColorTableRedSize][gColorTableGreenSize][gColorTableBlueSize];
-    int gUsedDefaultToolMasterColorTableHollowColorIndex = 2; 
+    const int gUsedDefaultToolMasterColorTableHollowColorIndex = 2;
+    // Tehd‰‰n alkuun kahden siirtym‰ fore- ja background colorien takia ja + 1 hollow color
+    const int gUsedDefaultToolMasterColorTableIndexStart = gUsedDefaultToolMasterColorTableHollowColorIndex + 1;
 
     Matrix3D<std::pair<int, COLORREF> > gUsedColorsCube(gColorTableRedSize, gColorTableGreenSize, gColorTableBlueSize);
     bool fColorTableInitialized = false;
@@ -53,6 +53,49 @@ namespace ToolMasterColorCube
         return gUsedDefaultToolMasterColorTableIndexStart;
     }
 
+    void SetupSpecialColorsForActiveColorTable()
+    {
+        COLORREF f;
+        float rgb[3], dummy[5];
+        // Copy Windows' window color to Toolmasters background
+        int backgroundColorIndex = 0;
+        f = GetSysColor(COLOR_WINDOW);
+        rgb[0] = GetRValue(f);
+        rgb[1] = GetGValue(f);
+        rgb[2] = GetBValue(f);
+        XuColor(XuCOLOR, backgroundColorIndex, rgb, dummy);
+        XuColorType(backgroundColorIndex, XuBACKGROUND);
+        XuColorDeviceLoad(backgroundColorIndex);
+
+        // Copy Windows' text color to Toolmaster's foreground
+        int foregroundColorIndex = 1;
+        f = GetSysColor(COLOR_WINDOWTEXT);
+        rgb[0] = GetRValue(f);
+        rgb[1] = GetGValue(f);
+        rgb[2] = GetBValue(f);
+        XuColor(XuCOLOR, foregroundColorIndex, rgb, dummy);
+        XuColorType(foregroundColorIndex, XuANTIBACKGROUND);
+        XuColorDeviceLoad(foregroundColorIndex);
+
+        SetupTransparentColor();
+    }
+
+    void SetupTransparentColor(bool setup1, bool setup2, bool setup3)
+    {
+        // m‰‰ritet‰‰n 3. v‰ri l‰pin‰kyv‰ksi (hollow)
+        int hollowColorIndex = gUsedDefaultToolMasterColorTableHollowColorIndex;
+        float rgb[3], dummy[5];
+        rgb[0] = 255;
+        rgb[1] = 0;
+        rgb[2] = 0;
+        if(setup1)
+            XuColor(XuCOLOR, hollowColorIndex, rgb, dummy);
+        if(setup2)
+            XuUndefined(kFloatMissing, hollowColorIndex);
+        if(setup3)
+            XuColorType(hollowColorIndex, XuHOLLOW_COLOR);
+    }
+
     void InitDefaultColorTable(bool fToolMasterAvailable)
     {
         if(!fColorTableInitialized)
@@ -65,46 +108,23 @@ namespace ToolMasterColorCube
                 float rgb[3], dummy[5];
 
                 // 2+ on tilaa fore- ja background coloreille
-                int colorTableSize = gUsedDefaultToolMasterColorTableIndexStart + gColorTableRedSize * gColorTableGreenSize * gColorTableBlueSize;
+                int colorTableSize = SpecialColorCountInColorTableStart() + gColorTableRedSize * gColorTableGreenSize * gColorTableBlueSize;
 
                 XuColorTableCreate(gUsedDefaultToolMasterColorTableIndex, colorTableSize, XuLOOKUP, XuRGB, 255);
                 XuColorTableActivate(gUsedDefaultToolMasterColorTableIndex);
 
-                // Copy Windows' text color to Toolmaster's foreground
-                f = GetSysColor(COLOR_WINDOWTEXT);
-                rgb[0] = GetRValue(f);
-                rgb[1] = GetGValue(f);
-                rgb[2] = GetBValue(f);
-                XuColor(XuCOLOR, 1, rgb, dummy);
-                XuColorDeviceLoad(1);
+                SetupSpecialColorsForActiveColorTable();
 
-                // Copy Windows' window color to Toolmasters background
-                f = GetSysColor(COLOR_WINDOW);
-                rgb[0] = GetRValue(f);
-                rgb[1] = GetGValue(f);
-                rgb[2] = GetBValue(f);
-                XuColor(XuCOLOR, 0, rgb, dummy);
-                XuColorDeviceLoad(0);
-
-                // m‰‰ritet‰‰n 3. v‰ri l‰pin‰kyv‰ksi (hollow)
-                int hollowColorIndex = gUsedDefaultToolMasterColorTableHollowColorIndex;
-                int colorType = 0;
-                XuColorTypeQuery(hollowColorIndex, &colorType);
-                if(colorType != XuOFF)
-                    XuColorType(hollowColorIndex, XuOFF);
-                XuUndefined(kFloatMissing, hollowColorIndex);
-                XuColorType(hollowColorIndex, XuHOLLOW_COLOR);
-
-                int index = gUsedDefaultToolMasterColorTableIndexStart;
+                int index = SpecialColorCountInColorTableStart();
                 for(int k = 0; k < gColorTableRedSize; k++)
                 {
                     for(int j = 0; j < gColorTableGreenSize; j++)
                     {
                         for(int i = 0; i < gColorTableBlueSize; i++)
                         {
-                            rgb[0] = static_cast<float>(::round(255. / (gColorTableRedSize - 1) * k));
-                            rgb[1] = static_cast<float>(::round(255. / (gColorTableGreenSize - 1) * j));
-                            rgb[2] = static_cast<float>(::round(255. / (gColorTableBlueSize - 1) * i));
+                            rgb[0] = std::roundf(::round(255.f / (gColorTableRedSize - 1) * k));
+                            rgb[1] = std::roundf(::round(255.f / (gColorTableGreenSize - 1) * j));
+                            rgb[2] = std::roundf(::round(255.f / (gColorTableBlueSize - 1) * i));
                             XuColor(XuCOLOR, index, rgb, dummy);
                             f = RGB(rgb[0], rgb[1], rgb[2]);
                             gUsedColorsCube[k][j][i] = std::make_pair(index, f);
@@ -119,7 +139,7 @@ namespace ToolMasterColorCube
                 float rgb[3];
 
                 // 2+ on tilaa fore- ja background coloreille
-                int index = gUsedDefaultToolMasterColorTableIndexStart;
+                int index = SpecialColorCountInColorTableStart();
                 for(int k = 0; k < gColorTableRedSize; k++)
                 {
                     for(int j = 0; j < gColorTableGreenSize; j++)

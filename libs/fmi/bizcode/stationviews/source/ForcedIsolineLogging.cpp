@@ -107,6 +107,7 @@ namespace
         commonSetupStr += std::to_string(totalCounterForIsolineDrawing);
         commonSetupStr += ", ";
 
+        auto& infoPtr = theIsoLineData->itsInfo;
         auto macroParamCase = theDrawParam->IsMacroParamCase(true);
         if(macroParamCase)
         {
@@ -117,8 +118,8 @@ namespace
         else
         {
             commonSetupStr += "queryData=\"";
-            if(theIsoLineData->itsInfo)
-                commonSetupStr += theIsoLineData->itsInfo->DataFileName();
+            if(infoPtr)
+                commonSetupStr += infoPtr->DataFileName();
             else
                 commonSetupStr += "nullptr data given?";
             commonSetupStr += "\"";
@@ -130,10 +131,10 @@ namespace
         commonSetupStr += std::to_string(theDrawParam->Param().GetParamIdent());
         commonSetupStr += "\"";
 
-        if(!macroParamCase && theIsoLineData->itsInfo)
+        if(!macroParamCase && infoPtr)
         {
             commonSetupStr += ", producer=\"";
-            auto producer = theIsoLineData->itsInfo->Producer();
+            auto producer = infoPtr->Producer();
             commonSetupStr += producer->GetName();
             commonSetupStr += ",";
             commonSetupStr += std::to_string(producer->GetIdent());
@@ -150,8 +151,35 @@ namespace
             commonSetupStr += "\"";
         }
 
-        commonSetupStr += ", stationData=";
-        commonSetupStr += ::GetBoolString(stationData);
+        commonSetupStr += ", ";
+        if(infoPtr)
+        {
+            if(stationData)
+            {
+                commonSetupStr += "station data is gridded with ";
+                commonSetupStr += std::to_string(infoPtr->SizeLocations());
+                commonSetupStr += " locations";
+            }
+            else
+            {
+                commonSetupStr += "original grid data size ";
+                commonSetupStr += std::to_string(infoPtr->GridXNumber());
+                commonSetupStr += "x";
+                commonSetupStr += std::to_string(infoPtr->GridYNumber());
+                auto areaPtr = infoPtr->Area();
+                if(areaPtr)
+                {
+                    commonSetupStr += ", data area = ";
+                    commonSetupStr += areaPtr->AreaStr();
+                }
+            }
+        }
+
+        commonSetupStr += ", calculated visualized grid ";
+        commonSetupStr += std::to_string(theIsoLineData->itsIsolineData.NX());
+        commonSetupStr += "x";
+        commonSetupStr += std::to_string(theIsoLineData->itsIsolineData.NY());
+
         return commonSetupStr;
     }
 

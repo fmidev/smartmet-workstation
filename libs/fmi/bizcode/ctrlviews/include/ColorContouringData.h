@@ -9,6 +9,41 @@
 
 class NFmiDrawParam;
 
+// Haetaan sortatusta container:ista value:ta lähimmän arvon elementin iteraattori.
+// Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c
+template <typename BidirectionalIterator, typename T>
+BidirectionalIterator getClosestValue(BidirectionalIterator first,
+    BidirectionalIterator last,
+    const T& value)
+{
+    BidirectionalIterator before = std::lower_bound(first, last, value);
+
+    if(before == first) return first;
+    if(before == last)  return --last; // iterator must be bidirectional
+
+    BidirectionalIterator after = before;
+    --before;
+
+    return (*after - value) < (value - *before) ? after : before;
+}
+
+// Haetaan sortatusta container:ista value:ta lähimmän arvon elementin indeksi.
+// Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c
+template <typename BidirectionalIterator, typename T>
+std::size_t getClosestIndex(BidirectionalIterator first,
+    BidirectionalIterator last,
+    const T& value)
+{
+    return std::distance(first, getClosestValue(first, last, value));
+}
+
+template <typename Container>
+size_t getClosestValueIndex(float value, const Container& container)
+{
+    return getClosestIndex(container.begin(), container.end(), value);
+}
+
+
 class ContouringJobData
 {
 public:
@@ -19,6 +54,9 @@ public:
     int viewIndex_ = 0;
     int rowIndex_ = 0;
     int layerIndex_ = 0;
+
+    ContouringJobData();
+    std::string makeJobDataString() const;
 };
 
 class ColorContouringData
@@ -30,10 +68,12 @@ class ColorContouringData
     float originalBlendingStep_ = 0; 
     bool useColorBlending_ = false;
     std::vector<float> finalClassLimits_;
+    std::vector<float> finalToolmasterFixedClassLimits_;
     std::vector<int> finalColorIndexies_;
     std::vector<NFmiColor> finalColors_;
     float finalBlendingStep_ = 0;
     bool useDefaultColorTable_ = true;
+    bool doSimpleContourChecks_ = false;
     bool isCorrectlyInitialized_ = false;
     std::string initializationErrorMessage_;
     std::vector<float> neededStepsBetweenLimits_;
@@ -51,6 +91,8 @@ public:
     const std::string& initializationErrorMessage() const { return initializationErrorMessage_; }
     const std::vector<float>& finalClassLimits() const { return finalClassLimits_; }
     std::vector<float>& finalClassLimits() { return finalClassLimits_; }
+    const std::vector<float>& finalToolmasterFixedClassLimits() const { return finalToolmasterFixedClassLimits_; }
+    std::vector<float>& finalToolmasterFixedClassLimits() { return finalToolmasterFixedClassLimits_; }
     const std::vector<int>& finalColorIndexies() const { return finalColorIndexies_; }
     std::vector<int>& finalColorIndexies() { return finalColorIndexies_; }
     const std::vector<NFmiColor>& finalColors() const { return finalColors_; }
@@ -59,6 +101,11 @@ public:
     bool createNewToolMasterColorTable(int colorTableIndex);
     int separationLineStyle() const { return separationLineStyle_; }
     bool useColorBlending() const { return useColorBlending_; }
+    static void makePossibleErrorLogging(const std::string & initializationErrorMessage, bool wasCorrectlyInitialized, const ContouringJobData& contouringJobData);
+    static std::vector<NFmiColor> calcDefaultColorTableColors(const std::vector<int>& colorIndexies);
+    static std::vector<int> calcDefaultColorTableIndexies(const std::vector<NFmiColor>& colors);
+    const NFmiColor& getValueRangeColor(float value1, float value2) const;
+    static float GetToolMasterContourLimitChangeValue(float theValue);
 
 private:
     bool initialize(const std::vector<float>& classLimits, const std::vector<NFmiColor>& colors, float step, int separationLineStyle);
@@ -76,6 +123,6 @@ private:
     bool doBlendingWithinColorCubeColors();
     bool blendingValuesCalculatedCorrectly() const;
     bool doBlendingWithNewColorTable();
-    std::string makeJobDataString() const;
     void makePossibleErrorLogging() const;
+    void calcFixedToolmasterContourLimits();
 };
