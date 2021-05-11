@@ -170,7 +170,7 @@ namespace
                 if(areaPtr)
                 {
                     commonSetupStr += ", data area = ";
-                    commonSetupStr += areaPtr->AreaStr();
+                    commonSetupStr += areaPtr->AreaFactoryStr();
                 }
             }
         }
