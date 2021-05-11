@@ -693,6 +693,8 @@ class NFmiDrawParam
   NFmiMetEditorTypes::View GetViewType(bool isStationData) const;
   static bool IsColorContourType(NFmiMetEditorTypes::View viewType);
   static bool IsIsolineType(NFmiMetEditorTypes::View viewType);
+  bool DoIsoLineColorBlend() const { return fDoIsoLineColorBlend; }
+  void DoIsoLineColorBlend(bool newValue) { fDoIsoLineColorBlend = newValue; }
 
  protected:
   double SimpleColorContourTransparentColors2Double() const;
@@ -930,6 +932,9 @@ class NFmiDrawParam
   // Sparse symboli piirto tarkoittaa että suurin osa hilan arvoista puuttuu (ainakin pitäisi) 
   // ja kaikki ei-puuttuvat arvot piirretään symboleilla oli SmartMetin symboliharvennus asetus käytössä tai ei.
   bool fDoSparseSymbolVisualization;
+  // Tästä eteenpäin isoviivojen värejä blendaillaan, vain jos tämän arvo on true.
+  // Blendaus välinä tällöin käytetään itsIsolineGab:in arvoa ja blendejä tehdään kahden isoviiva limitin väleihin.
+  bool fDoIsoLineColorBlend;
 };
 //@{ \name Globaalit NFmiDrawParam-luokan uudelleenohjaus-operaatiot
 inline std::ostream& operator<<(std::ostream& os, const NFmiDrawParam& item)

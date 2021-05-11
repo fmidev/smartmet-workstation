@@ -175,7 +175,8 @@ NFmiDrawParam::NFmiDrawParam()
       itsTimeSerialModelRunCount(0),
       fUseTransparentFillColor(true),
       fUseViewMacrosSettingsForMacroParam(false),
-      fDoSparseSymbolVisualization(false)
+      fDoSparseSymbolVisualization(false),
+      fDoIsoLineColorBlend(false)
 {
   itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
   itsPossibleViewTypeList[1] = NFmiMetEditorTypes::View::kFmiIsoLineView;
@@ -320,7 +321,8 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDataIdent& theParam,
       itsTimeSerialModelRunCount(0),
       fUseTransparentFillColor(true),
       fUseViewMacrosSettingsForMacroParam(false),
-      fDoSparseSymbolVisualization(false)
+      fDoSparseSymbolVisualization(false),
+      fDoIsoLineColorBlend(false)
 {
   itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
   itsPossibleViewTypeList[1] = NFmiMetEditorTypes::View::kFmiIsoLineView;
@@ -475,7 +477,8 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       itsTimeSerialModelRunCount(other.itsTimeSerialModelRunCount),
       fUseTransparentFillColor(other.fUseTransparentFillColor),
       fUseViewMacrosSettingsForMacroParam(other.fUseViewMacrosSettingsForMacroParam),
-      fDoSparseSymbolVisualization(other.fDoSparseSymbolVisualization)
+      fDoSparseSymbolVisualization(other.fDoSparseSymbolVisualization),
+      fDoIsoLineColorBlend(other.fDoIsoLineColorBlend)
 {
   Alpha(itsAlpha);  // varmistus että pysytään rajoissa
   itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
@@ -677,6 +680,7 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     fUseTransparentFillColor = theDrawParam->fUseTransparentFillColor;
     fUseViewMacrosSettingsForMacroParam = theDrawParam->fUseViewMacrosSettingsForMacroParam;
     fDoSparseSymbolVisualization = theDrawParam->fDoSparseSymbolVisualization;
+    fDoIsoLineColorBlend = theDrawParam->fDoIsoLineColorBlend;
   }
   return;
 }
@@ -1076,6 +1080,8 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     extraData.Add(static_cast<double>(fDoSparseSymbolVisualization));
     // fSimpleColorContourTransparentColor1-5 arvoista tehdään 9. uusista double-extra-parametreista
     extraData.Add(SimpleColorContourTransparentColors2Double());
+    // fDoIsoLineColorBlend arvoista tehdään 10. uusista double-extra-parametreista
+    extraData.Add(fDoIsoLineColorBlend);
 
     // modelRunIndex on 1. uusista string-extra-parametreista
     extraData.Add(::MetTime2String(itsModelOriginTime));
@@ -1465,6 +1471,13 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
           simpleContourColorsTransparencyBits = extraData.itsDoubleValues[8];
         }
         Double2SimpleColorContourTransparentColors(simpleContourColorsTransparencyBits);
+
+        fDoIsoLineColorBlend = false;
+        if (extraData.itsDoubleValues.size() >= 10)
+        {
+          fDoIsoLineColorBlend = extraData.itsDoubleValues[9] != 0;
+        }
+
 
         itsModelOriginTime = NFmiMetTime::gMissingTime;  // tämä on oletus arvo eli ei ole käytössä
         if (extraData.itsStringValues.size() >= 1)
