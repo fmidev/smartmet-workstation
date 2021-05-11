@@ -33,8 +33,6 @@ ToolmasterHatchPolygonData::ToolmasterHatchPolygonData(NFmiIsoLineData& theIsoLi
     hatchClassValues_[0] = hatchSettings_.itsHatchLowerLimit;
     hatchClassValues_[1] = hatchSettings_.itsHatchUpperLimit;
     XuClasses(&hatchClassValues_[0], static_cast<int>(hatchClassValues_.size()));
-    // onko t‰m‰ turha????
-    XuShadingColorIndices(theIsoLineData.itsCustomColorContoursColorIndexies.data(), 3);
     float lineWidth = 0.f;
     XuIsolineWidths(&lineWidth, 1); // ei piirret‰ isoviivoja sheidauksen yhteydess‰
     XuMapDrawOptions(XuPROBE); // piirret‰‰n polygonit erikseen toisella ohjelmalla, ett‰ saadaan hatch kuviot mukaan

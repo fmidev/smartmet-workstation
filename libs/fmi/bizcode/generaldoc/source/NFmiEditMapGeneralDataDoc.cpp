@@ -8035,6 +8035,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		MacroParamDataCache().clearAllLayers();
 		WindTableSystem().MustaUpdateTable(true);
 		GetCombinedMapHandler()->setBorderDrawDirtyState(CtrlViewUtils::kDoAllMapViewDescTopIndex, CountryBorderDrawDirtyState::Geometry);
+		GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes();
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
 	}
 

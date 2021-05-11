@@ -3,11 +3,6 @@
 
 namespace
 {
-	// Kuinka monta eriarvoista isoviivaa laitetaan laskuin oletuksena. 
-	// Mit‰ isompi luku, sit‰ kauemmin voi tietyiss‰ tilanteissa 'mustan mˆssˆn' piirto kest‰‰ visualisoinneissa.
-	// T‰ll‰ siis yritet‰‰n est‰‰ ett‰ v‰‰rin asetetuilla piirtoasetuksilla kone jumittaa mahdottoman kauan ja piirt‰‰ ruudulle tuhansittain isoviivoja vieriviereen.
-	const int g_DefaultMaxAllowedIsoLineCount = 500;
-
 	size_t Matrix2ToolmasterIndex(size_t gridSizeX, size_t yIndex, size_t xIndex)
 	{
 		return ((yIndex * gridSizeX) + xIndex);
@@ -105,27 +100,17 @@ bool NFmiIsoLineData::InitIsoLineData(const NFmiDataMatrix<float>& theValueMatri
 	if(!::IsValuematrixOk(theValueMatrix))
 		return false;
 
-	BaseInitialization(theValueMatrix, g_DefaultMaxAllowedIsoLineCount);
+	BaseInitialization(theValueMatrix);
 	::DoMatrixDataInitialization(itsIsolineData, itsVectorFloatGridData, itsDataMinValue, itsDataMaxValue);
 	if(otherIsoLineData)
 		InitDrawOptions(*otherIsoLineData);
 	return true;
 }
 
-void NFmiIsoLineData::BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount)
+void NFmiIsoLineData::BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix)
 {
 	DoBaseInitializationReset();
 	SetIsolineData(theValueMatrix);
-	itsMaxAllowedIsoLineCount = theMaxAllowedIsoLineCount;
-
-	itsIsoLineColor.resize(itsMaxAllowedIsoLineCount, 0);
-	itsIsoLineLabelColor.resize(itsMaxAllowedIsoLineCount, 0);
-	itsIsoLineStyle.resize(itsMaxAllowedIsoLineCount, 0);
-	itsIsoLineWidth.resize(itsMaxAllowedIsoLineCount, 0.f);
-	itsIsoLineAnnonationHeight.resize(itsMaxAllowedIsoLineCount, 0.f);
-	itsCustomIsoLineClasses.resize(itsMaxAllowedIsoLineCount, 0.f);
-	itsCustomColorContours.resize(itsMaxAllowedIsoLineCount, 0.f);
-	itsCustomColorContoursColorIndexies.resize(itsMaxAllowedIsoLineCount, 0);
 }
 
 // T‰m‰ resetoi kaiken muun paitsi itsInfo, itsParam, itsTime, itsIsolineMinLengthFactor ja itsContourUserDrawData dataosat.
@@ -151,11 +136,8 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	itsTrueIsoLineCount = theOther.itsTrueIsoLineCount;
 	itsTrueColorContoursCount = theOther.itsTrueColorContoursCount;
 
-	itsIsoLineColor = theOther.itsIsoLineColor;
-	itsIsoLineLabelColor = theOther.itsIsoLineLabelColor;
-	itsIsoLineStyle = theOther.itsIsoLineStyle;
-	itsIsoLineWidth = theOther.itsIsoLineWidth;
-	itsIsoLineAnnonationHeight = theOther.itsIsoLineAnnonationHeight;
+	itsColorContouringData = theOther.itsColorContouringData;
+	itsIsolineVizualizationData = theOther.itsIsolineVizualizationData;
 
 	fUseLabelBox = theOther.fUseLabelBox;
 	itsIsoLineBoxFillColorIndex = theOther.itsIsoLineBoxFillColorIndex;
@@ -166,18 +148,6 @@ void NFmiIsoLineData::InitDrawOptions(const NFmiIsoLineData &theOther)
 	fUseSeparatorLinesBetweenColorContourClasses = theOther.fUseSeparatorLinesBetweenColorContourClasses;
 	fUseIsoLineGabWithCustomContours = theOther.fUseIsoLineGabWithCustomContours;
 	fDrawLabelsOverContours = theOther.fDrawLabelsOverContours;
-
-	itsColorIndexCount = theOther.itsColorIndexCount;
-	itsIsoLineStep = theOther.itsIsoLineStep;
-	itsColorContoursStep = theOther.itsColorContoursStep;
-	itsCustomIsoLineClasses = theOther.itsCustomIsoLineClasses;
-	itsCustomColorContours = theOther.itsCustomColorContours;
-	itsCustomColorContoursColorIndexies = theOther.itsCustomColorContoursColorIndexies;
-
-	itsIsoLineSplineSmoothingFactor = theOther.itsIsoLineSplineSmoothingFactor;
-	itsIsoLineLabelDecimalsCount = theOther.itsIsoLineLabelDecimalsCount;
-	itsIsoLineZeroClassValue = theOther.itsIsoLineZeroClassValue;
-	itsIsoLineStartClassValue = theOther.itsIsoLineStartClassValue;
 
 	itsDataMinValue = theOther.itsDataMinValue;
 	itsDataMaxValue = theOther.itsDataMaxValue;

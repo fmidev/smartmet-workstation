@@ -10,6 +10,7 @@
 #include "NFmiDataMatrix.h"
 #include "NFmiPoint.h"
 #include "ColorContouringData.h"
+#include "IsolineVizualizationData.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiFastQueryInfo;
@@ -79,7 +80,6 @@ public:
 	std::vector<float> itsVectorFloatGridData; // itsYNumber * itsXNumber float gridded data
 	int itsXNumber = 0;
 	int itsYNumber = 0;
-	int itsMaxAllowedIsoLineCount = 0; // n‰in paljon varataan tilaa eri arvoisille isoviivoille (siis v‰ritys ja muut attribuutit)
 
 	NFmiDataIdent itsParam;
 	NFmiMetTime itsTime;
@@ -90,11 +90,6 @@ public:
 	int itsTrueIsoLineCount = 0; // pit‰‰ olla pienempi tai yht‰suuri kuin kFmiIsoLineMaxNumber
 	int itsTrueColorContoursCount = 0; // pit‰‰ olla pienempi tai yht‰suuri kuin kFmiIsoLineMaxNumber
 
-	std::vector<int> itsIsoLineColor; // indeksi agX coloriin
-	std::vector<int> itsIsoLineLabelColor; // indeksi agX coloriin
-	std::vector<int> itsIsoLineStyle; // indeksi viiva tyyliin,0=yht.viiva,1=tihe‰ pisteviiva,jne.
-	std::vector<float> itsIsoLineWidth; // t‰m‰ on suhteellinen paksuus riippuu ruudun koosta
-	std::vector<float> itsIsoLineAnnonationHeight; // miten isolla piirret‰‰n isoviivan arvo (0:lla ei piirret‰), suhteellinen ruudun kokoon
 	bool fUseLabelBox = false;
 	int itsIsoLineBoxFillColorIndex = 0;
 	bool fUseSingleColorsWithSimpleIsoLines = true; // jos true, yksiv‰riset 'simppelit' isoviivat, muuten k‰ytet‰‰n luokka kohtaisia v‰rej‰
@@ -105,22 +100,10 @@ public:
 	bool fUseIsoLineGabWithCustomContours = false;
 	bool fDrawLabelsOverContours = false; // t‰m‰ optio on vain imagine piirrolle, ToolMaster piirrossa t‰m‰ hoidetaan toisin. T‰m‰ on siis true (imagine piirrossa), jos k‰ytet‰‰n isoline+contour piirtoa
 
-	int itsColorIndexCount = 0; // k‰ytet‰‰n fUseIsoLineGabWithCustomContours-option kanssa
-	float itsIsoLineStep = 0; // k‰ytet‰‰n t‰t‰, jos fUseCustomIsolineClasses == 0
-	float itsColorContoursStep = 0; // k‰ytet‰‰n t‰t‰, jos fUseCustomIsolineClasses == 0
-	std::vector<float> itsCustomIsoLineClasses; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
-	std::vector<float> itsCustomColorContours; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
-	std::vector<int> itsCustomColorContoursColorIndexies; // t‰nne voi m‰‰ritt‰‰ millaiset luokat haluaa esim. 1,2,4,8,...
-
-	float itsIsoLineSplineSmoothingFactor = 0; // 0=ei pyˆristyst‰, 10 maksimi (ei kannata k‰ytt‰‰ jos piirret‰‰n samaal colorcontoureja, koska contoureja ei pyˆristet‰)
-	int itsIsoLineLabelDecimalsCount = 0; // kuinka monta desimaalia k‰ytet‰‰n
-	float itsIsoLineZeroClassValue = 0; // jos steppaavat isoviivat, mink‰ arvon kautta isoviivat menev‰t
-	float itsIsoLineStartClassValue = 0; // jos steppaavat isoviivat, t‰m‰ arvo pit‰‰ laskea, t‰st‰ arvosta alkaa steputus
-
 	// itsIsolineData matriisin min/max arvot
 	float itsDataMinValue = 3.4E+38f;
 	float itsDataMaxValue = -3.4E+38f;
-	// itsIsolineData matriisin min/max arvot
+	// Varsinaisten k‰ytettyjen isoline/contour rajojen min/max arvot
 	float itsClassMinValue = 0;
 	float itsClassMaxValue = 0;
 	double itsIsolineMinLengthFactor = 1;
@@ -139,8 +122,9 @@ public:
 	double itsSingleSubMapViewHeightInMillimeters = 100.;
 	double itsDataGridToViewHeightRatio = 1.;
 	ColorContouringData itsColorContouringData;
+	IsolineVizualizationData itsIsolineVizualizationData;
 private:
-	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix, int theMaxAllowedIsoLineCount);
+	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix);
 	void DoBaseInitializationReset();
 	void InitDrawOptions(const NFmiIsoLineData& theOther);
 };
