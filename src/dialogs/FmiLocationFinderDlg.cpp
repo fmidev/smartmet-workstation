@@ -290,11 +290,10 @@ void CFmiLocationFinderDlg::OnCbnEditchangeComboLocationFinder()
 		::ClearComboList(itsLocationFinderComboBox);
 		if(locationInfos.size())
 		{
-			// täytetään drolista löydetyillä paikannimillä
+			// täytetään dropdown-lista löydetyillä paikannimillä
 			for(size_t i=0; i<locationInfos.size(); i++)
 			{
-				std::string locatInfo = locationInfos[i].itsName;
-				itsLocationFinderComboBox.AddString(CA2T(locatInfo.c_str()));
+				itsLocationFinderComboBox.AddString(CW2T(locationInfos[i].itsName.c_str()));
 			}
 
 			// laitetaan lista näkyviin

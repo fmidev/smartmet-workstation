@@ -16,6 +16,7 @@ add_definitions(
     -DUNICODE 
     -DUSE_POTENTIAL_VALUES_IN_EDITING
     -DWGS84
+    -DJSON_SPIRIT_WVALUE_ENABLED
     )
 
 # To disable/enable Cpprestsdk usage in SmartMet build, do following: 

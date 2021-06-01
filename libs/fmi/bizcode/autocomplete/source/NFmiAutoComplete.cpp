@@ -31,18 +31,21 @@ ja vastaus edelliseen:
 
 */
 
+#include "stdafx.h"
 #include "NFmiAutoComplete.h"
 #include "NFmiQ2Client.h"
 #include "NFmiSettings.h"
 #include "SettingsFunctions.h"
 #include "Utf8ConversionFunctions.h"
 #include "catlog/catlog.h"
+#include "CtrlViewGdiPlusFunctions.h"
 
 #include "json_spirit.h"
+#include <boost/algorithm/string.hpp>
 
 NFmiPoint NFmiACLocationInfo::gMissingLatlon = NFmiPoint(kFloatMissing, kFloatMissing);
 
-static std::string g_TestAutoCompleteString = "{\"autocomplete\": {  \"result\": [     { \"id\": 657157,\"name\": \"Pariisi\",\"country\": \"FR\",\"feature\": \"PPL\",\"area\": \"\",\"lon\": \"2.53333\",\"lat\": \"49.0167\",\"timezone\": \"Europe/Paris\" },     { \"id\": 651980,\"name\": \"Kokem‰ki\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"\",\"lon\": \"22.35\",\"lat\": \"61.25\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651979,\"name\": \"Kokinkyl‰\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Espoo\",\"lon\": \"24.7589\",\"lat\": \"60.1831\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 840742,\"name\": \"Kokkila\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Siuntio\",\"lon\": \"24.0303\",\"lat\": \"60.1856\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651982,\"name\": \"Kokem‰enkartano\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Kokem‰ki\",\"lon\": \"22.3\",\"lat\": \"61.2333\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651976,\"name\": \"Kokkihenna\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Orimattila\",\"lon\": \"25.5\",\"lat\": \"60.8167\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651972,\"name\": \"Kokkila\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"H‰meenlinna\",\"lon\": \"24.6667\",\"lat\": \"61.1333\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651973,\"name\": \"Kokkila\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Lappeenranta\",\"lon\": \"28.55\",\"lat\": \"60.9833\",\"timezone\": \"Europe/Helsinki\" } ], \"found-results\": 8, \"max-results\": 8 }}";
+static std::wstring g_TestAutoCompleteString = L"{\"autocomplete\": {  \"result\": [     { \"id\": 657157,\"name\": \"Pariisi\",\"country\": \"FR\",\"feature\": \"PPL\",\"area\": \"\",\"lon\": \"2.53333\",\"lat\": \"49.0167\",\"timezone\": \"Europe/Paris\" },     { \"id\": 651980,\"name\": \"Kokem‰ki\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"\",\"lon\": \"22.35\",\"lat\": \"61.25\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651979,\"name\": \"Kokinkyl‰\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Espoo\",\"lon\": \"24.7589\",\"lat\": \"60.1831\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 840742,\"name\": \"Kokkila\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Siuntio\",\"lon\": \"24.0303\",\"lat\": \"60.1856\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651982,\"name\": \"Kokem‰enkartano\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Kokem‰ki\",\"lon\": \"22.3\",\"lat\": \"61.2333\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651976,\"name\": \"Kokkihenna\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Orimattila\",\"lon\": \"25.5\",\"lat\": \"60.8167\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651972,\"name\": \"Kokkila\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"H‰meenlinna\",\"lon\": \"24.6667\",\"lat\": \"61.1333\",\"timezone\": \"Europe/Helsinki\" },     { \"id\": 651973,\"name\": \"Kokkila\",\"country\": \"FI\",\"feature\": \"PPL\",\"area\": \"Lappeenranta\",\"lon\": \"28.55\",\"lat\": \"60.9833\",\"timezone\": \"Europe/Helsinki\" } ], \"found-results\": 8, \"max-results\": 8 }}";
 static bool g_DoAutoCompleteTest = false;
 
 NFmiACLocationInfo::NFmiACLocationInfo(void)
@@ -161,7 +164,7 @@ static void MakeErrorLogsFromGetRespond(const std::string &functionName, const s
     CatLog::logMessage(logStr, CatLog::Severity::Error, CatLog::Category::NetRequest);
 }
 
-std::string NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient, const std::string &theWord, bool logEvents)
+std::wstring NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient, const std::string &theWord, bool logEvents)
 {
     std::string wantedUrlStr;
 	try
@@ -187,7 +190,7 @@ std::string NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient
 			std::string utf8Word = fromLocaleStringToUtf8(theWord);
 			wantedParams += utf8Word;
 
-			std::string resultStr;
+			std::string narrowResultStr;
 			wantedUrlStr = itsBaseUrl + "?" + wantedParams;
 			if(logEvents)
 			{
@@ -196,8 +199,8 @@ std::string NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient
 				CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
 			}
 
-			theHttpClient.MakeHTTPRequest(wantedUrlStr, resultStr, true);
-			return resultStr;
+			theHttpClient.MakeHTTPRequest(wantedUrlStr, narrowResultStr, true);
+			return CtrlView::StringToWString(narrowResultStr);
 		}
 	}
 	catch(std::exception &e)
@@ -211,78 +214,78 @@ std::string NFmiAutoComplete::GetAutoCompleteRespond(NFmiQ2Client &theHttpClient
         std::string baseError = " caused unknown error";
         ::MakeErrorLogsFromGetRespond(__FUNCTION__, baseError, wantedUrlStr);
     }
-	return std::string();
+	return std::wstring();
 }
 
-static void ParseLocationObject(json_spirit::Object &theLocationObject, std::vector<NFmiACLocationInfo> &theLocationsOut)
+static void ParseLocationObject(json_spirit::wObject &theLocationObject, std::vector<NFmiACLocationInfo> &theLocationsOut)
 {
 	NFmiACLocationInfo locationInfo;
-	for(json_spirit::Object::iterator it = theLocationObject.begin(); it != theLocationObject.end(); ++it)
+	for(auto it = theLocationObject.begin(); it != theLocationObject.end(); ++it)
 	{
-		json_spirit::Pair valuePair = *it;
+		auto valuePair = *it;
 
-		if(NFmiStringTools::LowerCase(valuePair.name_) == "id")
+		if(boost::iequals(valuePair.name_, L"id"))
 		{
 			if(valuePair.value_.type() == json_spirit::int_type)
 				locationInfo.itsId = valuePair.value_.get_int();
 		}
-		else if(NFmiStringTools::LowerCase(valuePair.name_) == "name")
-			locationInfo.itsName = fromUtf8toLocaleString(valuePair.value_.get_str());
-		else if(NFmiStringTools::LowerCase(valuePair.name_) == "country")
-			locationInfo.itsCountry = fromUtf8toLocaleString(valuePair.value_.get_str());
-		else if(NFmiStringTools::LowerCase(valuePair.name_) == "feature")
-			locationInfo.itsFeature = fromUtf8toLocaleString(valuePair.value_.get_str());
-		else if(NFmiStringTools::LowerCase(valuePair.name_) == "area")
-			locationInfo.itsArea = fromUtf8toLocaleString(valuePair.value_.get_str());
-		else if(NFmiStringTools::LowerCase(valuePair.name_) == "lon")
+		else if(boost::iequals(valuePair.name_, L"name"))
+			locationInfo.itsName = valuePair.value_.get_str();
+		else if(boost::iequals(valuePair.name_, L"country"))
+			locationInfo.itsCountry = valuePair.value_.get_str();
+		else if(boost::iequals(valuePair.name_, L"feature"))
+			locationInfo.itsFeature = valuePair.value_.get_str();
+		else if(boost::iequals(valuePair.name_, L"area"))
+			locationInfo.itsArea = valuePair.value_.get_str();
+		else if(boost::iequals(valuePair.name_, L"lon"))
 		{
 			if(valuePair.value_.type() == json_spirit::real_type)
 				locationInfo.itsLatlon.X(valuePair.value_.get_real());
 		}
-		else if(NFmiStringTools::LowerCase(valuePair.name_) == "lat")
+		else if(boost::iequals(valuePair.name_, L"lat"))
 		{
 			if(valuePair.value_.type() == json_spirit::real_type)
 				locationInfo.itsLatlon.Y(valuePair.value_.get_real());
 		}
-		else if(NFmiStringTools::LowerCase(valuePair.name_) == "timezone")
+		else if(boost::iequals(valuePair.name_, L"timezone"))
 			locationInfo.itsTimeZone = valuePair.value_.get_str();
 	}
 	theLocationsOut.push_back(locationInfo);
 }
 
-static void ParseLocationArray(json_spirit::Array &theLocationArray, std::vector<NFmiACLocationInfo> &theLocationsOut)
+static void ParseLocationArray(json_spirit::wArray &theLocationArray, std::vector<NFmiACLocationInfo> &theLocationsOut)
 {
-	for(json_spirit::Array::iterator it = theLocationArray.begin(); it != theLocationArray.end(); ++it)
+	for(auto it = theLocationArray.begin(); it != theLocationArray.end(); ++it)
 	{
 		if(it->type() == json_spirit::obj_type)
 		{
-			json_spirit::Object location = it->get_obj();
+			auto location = it->get_obj();
 			::ParseLocationObject(location, theLocationsOut);
 		}
 	}
 }
 
-static void ParseJsonLocations(json_spirit::Value &theValue, std::vector<NFmiACLocationInfo> &theLocationsOut)
+static void ParseJsonLocations(json_spirit::wValue &theValue, std::vector<NFmiACLocationInfo> &theLocationsOut)
 {
 	if(theValue.type() == json_spirit::obj_type)
 	{
 		// autoCompleteObject:in nimi on "autocomplete", en tarkista, koska jos joku joskus muuttaa sit‰ homma ei tulevaisuudessa pelit‰ en‰‰
-		json_spirit::Object autoCompleteObject = theValue.get_obj();
+		auto autoCompleteObject = theValue.get_obj();
 		if(autoCompleteObject.size() == 0)
 			throw std::runtime_error("Auto Complete metadata was empty.");
 		else
 		{
 			// autoCompletePair:in nimi on "autocomplete", en tarkista, koska jos joku joskus muuttaa sit‰ homma ei tulevaisuudessa pelit‰ en‰‰
-			json_spirit::Pair autoCompletePair = autoCompleteObject[0];
+			auto autoCompletePair = autoCompleteObject[0];
 			if(autoCompletePair.value_.type() == json_spirit::obj_type)
 			{
 				// resultObject:in nimi on "result", en tarkista, koska jos joku joskus muuttaa sit‰ homma ei tulevaisuudessa pelit‰ en‰‰
-				json_spirit::Object resultObject = autoCompletePair.value_.get_obj();
-				for(json_spirit::Object::iterator it = resultObject.begin(); it != resultObject.end(); ++it)
+				auto resultObject = autoCompletePair.value_.get_obj();
+				for(auto it = resultObject.begin(); it != resultObject.end(); ++it)
 				{
 					// t‰‰ll‰ etsit‰‰n sit‰ paria miss‰ on "result" nimen‰, koska on muitakin pareja resultObject-vektorissa
-					json_spirit::Pair resultPairValue = *it;
-					if(NFmiStringTools::LowerCase(resultPairValue.name_) == "result")
+					auto resultPairValue = *it;
+					if(boost::iequals(resultPairValue.name_, L"result"))
 					{
 						if(resultPairValue.value_.type() == json_spirit::array_type)
 							::ParseLocationArray(resultPairValue.value_.get_array(), theLocationsOut);
@@ -293,12 +296,12 @@ static void ParseJsonLocations(json_spirit::Value &theValue, std::vector<NFmiACL
 	}
 }
 
-static void LogSearchAndResultStrings(const std::string &searchWord, const std::string &respondStr, CatLog::Severity logSeverity)
+static void LogSearchAndResultStrings(const std::string &searchWord, const std::wstring &respondStr, CatLog::Severity logSeverity)
 {
     std::string logStr("LocationFinder-dialog, search: '");
     logStr += searchWord;
     logStr += "', respond string was:\n";
-    logStr += respondStr;
+    logStr += CtrlView::WStringToString(respondStr);
     CatLog::logMessage(logStr, logSeverity, CatLog::Category::NetRequest);
 }
 
@@ -309,13 +312,13 @@ std::vector<NFmiACLocationInfo> NFmiAutoComplete::DoAutoComplete(NFmiQ2Client &t
 	std::vector<NFmiACLocationInfo> resultLocations;
 	if(theWord.empty() == false)
 	{
-		std::string respondStr = GetAutoCompleteRespond(theHttpClient, theWord, logEvents);
+		auto respondStr = GetAutoCompleteRespond(theHttpClient, theWord, logEvents);
 		if(respondStr.empty() == false)
 		{
             std::string errorString = __FUNCTION__;
             bool reportError = false;
 
-			json_spirit::Value metaDataValue;
+			json_spirit::wValue metaDataValue;
             try
             {
                 if(json_spirit::read(respondStr, metaDataValue))
