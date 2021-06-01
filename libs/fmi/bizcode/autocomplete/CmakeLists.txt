@@ -23,6 +23,7 @@ target_link_libraries(
     WinRegistryUtils
     CatLog
     EditingDataUtils
+    CtrlViews
     )
 
 target_include_directories( 
@@ -37,6 +38,7 @@ target_include_directories(
     PUBLIC ${WinRegistryUtils_INCLUDE_DIRS}
     PUBLIC ${CatLog_INCLUDE_DIRS}
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
+    PUBLIC ${CtrlViews_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     )
 
@@ -52,6 +54,7 @@ set(
     ${WinRegistryUtils_INCLUDE_DIRS}
     ${CatLog_INCLUDE_DIRS}
     ${EditingDataUtils_INCLUDE_DIRS}
+    ${CtrlViews_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

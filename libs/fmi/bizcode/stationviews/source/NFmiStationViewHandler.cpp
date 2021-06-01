@@ -4188,24 +4188,24 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 		double pixelsPerMM = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
         auto &autoComplete = itsCtrlViewDocumentInterface->AutoComplete();
 		NFmiColor textColor = autoComplete.NameTextColor();
-		std::string nameStr = theLocInfo.itsName;
+		auto nameStr = theLocInfo.itsName;
 		if(theLocInfo.itsArea.empty() == false)
 		{
-			nameStr += "\n";
+			nameStr += L"\n";
 			nameStr += theLocInfo.itsArea;
 		}
 		if(theLocInfo.itsCountry.empty() == false)
 		{
-			nameStr += " (";
+			nameStr += L" (";
 			nameStr += theLocInfo.itsCountry;
-			nameStr += ")";
+			nameStr += L")";
 		}
 
 		std::wstring fontName = CtrlView::StringToWString(autoComplete.FontName()); // L"arial";
 		double fontSizeInMM = autoComplete.FontSizeInMM();
 		std::string oneLineTestStr = "Pasalsmaksljjks"; // t‰m‰n stringin avulla halutaan tiet‰‰ vain yhden rivin 'laatikon' korkeus
 		Gdiplus::RectF oneLineBoundinBox = CtrlView::GetStringBoundingBox(*theGdiPlusGraphics, oneLineTestStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
-		Gdiplus::RectF boundinBox = CtrlView::GetStringBoundingBox(*theGdiPlusGraphics, nameStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
+		Gdiplus::RectF boundinBox = CtrlView::GetWStringBoundingBox(*theGdiPlusGraphics, nameStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
 		NFmiPoint relativePoint = LatLonToViewPoint(theLocInfo.itsLatlon);
 		Gdiplus::PointF locationInPixels = CtrlView::Relative2GdiplusPoint(itsToolBox, relativePoint);
 		boundinBox.Offset(locationInPixels);
