@@ -1,7 +1,7 @@
 #include "catlog/catlog.h"
 #include "catlog/catlogutils.h"
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/daily_file_sink.h"
+#include "spdlog/sinks/file_sinks.h"
 #include "spdlog/common.h"
 
 #include <boost/algorithm/string.hpp>
@@ -130,14 +130,51 @@ namespace
         }
     }
 
+    //
+    // return file path and its extension:
+    //
+    // "mylog.txt" => ("mylog", ".txt")
+    // "mylog" => ("mylog", "")
+    // "mylog." => ("mylog.", "")
+    // "/dir1/dir2/mylog.txt" => ("/dir1/dir2/mylog", ".txt")
+    //
+    // the starting dot in filenames is ignored (hidden files):
+    //
+    // ".mylog" => (".mylog". "")
+    // "my_folder/.mylog" => ("my_folder/.mylog", "")
+    // "my_folder/.mylog.txt" => ("my_folder/.mylog", ".txt")
+    std::tuple<spdlog::filename_t, spdlog::filename_t> split_by_extension(const spdlog::filename_t& fname)
+    {
+        auto ext_index = fname.rfind('.');
+
+        // no valid extension found - return whole path and empty string as
+        // extension
+        if(ext_index == spdlog::filename_t::npos || ext_index == 0 || ext_index == fname.size() - 1)
+        {
+            return std::make_tuple(fname, spdlog::filename_t());
+        }
+
+        static const char folder_sep = '\\';
+
+        // treat cases like "/etc/rc.d/somelogfile or "/abc/.hiddenfile"
+        auto folder_index = fname.rfind(folder_sep);
+        if(folder_index != spdlog::filename_t::npos && folder_index >= ext_index - 1)
+        {
+            return std::make_tuple(fname, spdlog::filename_t());
+        }
+
+        // finally - return a valid base and extension tuple
+        return std::make_tuple(fname.substr(0, ext_index), fname.substr(ext_index));
+    }
     // Generator of precise daily log file names in format basename_YYYY-MM-DD_hh-mm-ss.ext
     struct precise_daily_filename_calculator
     {
         // Create filename for the form basename_YYYY-MM-DD_hh-mm-ss.ext
-        static spdlog::filename_t calc_filename(const spdlog::filename_t& filename, const tm& now_tm)
+        static spdlog::filename_t calc_filename(const spdlog::filename_t& filename)
         {
+            std::tm now_tm = spdlog::details::os::localtime();
             spdlog::filename_t basename, ext;
-            std::tie(basename, ext) = spdlog::details::file_helper::split_by_extension(filename);
+            std::tie(basename, ext) = split_by_extension(filename);
             return fmt::format(SPDLOG_FILENAME_T("{}_{:04d}-{:02d}-{:02d}_{:02d}-{:02d}-{:02d}{}"), basename, now_tm.tm_year + 1900,
                 now_tm.tm_mon + 1, now_tm.tm_mday, now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec, ext);
         }
@@ -145,12 +182,10 @@ namespace
 
     using precise_daily_file_sink_mt = spdlog::sinks::daily_file_sink<std::mutex, precise_daily_filename_calculator>;
 
-    // factory function
-    template<typename Sink, typename Factory = spdlog::synchronous_factory>
-    std::shared_ptr<spdlog::logger> precise_daily_logger_mt(
-        const std::string& logger_name, const spdlog::filename_t& filename, int hour = 0, int minute = 0, bool truncate = false, uint16_t max_files = 0)
+    // Create precise file logger which creates new file at midnight):
+    std::shared_ptr<spdlog::logger> precise_daily_logger_mt(const std::string& logger_name, const spdlog::filename_t& filename, int hour = 0, int minute = 0)
     {
-        return Factory::template create<Sink>(logger_name, filename, hour, minute, truncate, max_files);
+        return spdlog::create<precise_daily_file_sink_mt>(logger_name, filename, hour, minute);
     }
 
     // At the end of initLogger_impl function, all the messages logged so far are logged to log file.
@@ -160,7 +195,7 @@ namespace
         maximumMessagesKept_ = maximumMessagesKept;
         // spdlog user must make sure that destination directory exists, spdlog insist that.
         ::createDirectoryFromFilePath(filePath);
-        logger_ = ::precise_daily_logger_mt<precise_daily_file_sink_mt>("daily_logger", filePath);
+        logger_ = ::precise_daily_logger_mt("daily_logger", filePath);
         logger_->flush_on(spdlog::level::warn);
         logger_->set_level(static_cast<spdlog::level::level_enum>(logLevel));
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e]'%l' %v");
