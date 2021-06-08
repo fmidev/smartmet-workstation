@@ -390,7 +390,7 @@ static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo& graphi
 void NFmiCrossSectionView::DrawLegends()
 {
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
-    if(drawParamList)
+    if(drawParamList && drawParamList->NumberOfItems() >= 1)
     {
         auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
         auto& graphicalInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();

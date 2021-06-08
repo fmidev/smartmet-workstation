@@ -40,6 +40,7 @@ public:
 	static double calculateTimeControlViewHeightInPixels(double pixelsPerMilliMeterX);
 	const NFmiPoint& singleMapSizeInMM() const { return singleMapSizeInMM_; }
 	const NFmiPoint& logicalPixelsPerMilliMeter() const { return logicalPixelsPerMilliMeter_; }
+	const NFmiPoint& clientAreaSizeInPixels() const { return clientAreaSizeInPixels_; }
 private:
 	void calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible, double drawObjectScaleFactor);
 	void updatePixelsPerMilliMeterValues(CDC* pDC, double drawObjectScaleFactor);
