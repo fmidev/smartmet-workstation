@@ -111,6 +111,7 @@ class NFmiHelpDataInfo
   std::string GetCleanedName() const;
   const std::string& RequiredGroundDataFileFilterForSoundingIndexCalculations() const { return itsRequiredGroundDataFileFilterForSoundingIndexCalculations; }
   void RequiredGroundDataFileFilterForSoundingIndexCalculations(const std::string &newValue) { itsRequiredGroundDataFileFilterForSoundingIndexCalculations = newValue; }
+  void FixCombinedDataPath(const std::string &absoluteControlBasePath);
 
  private:
   // tällä nimellä erotetaan konffi-tiedostoissa eri datat
@@ -275,6 +276,7 @@ class NFmiHelpDataInfoSystem
   void InitDataType(const std::string &theBaseKey,
                     checkedVector<NFmiHelpDataInfo> &theHelpDataInfos,
                     bool fStaticData);
+  void FixCombinedDataPaths(const std::string &absoluteControlBasePath);
 
   checkedVector<NFmiHelpDataInfo> itsDynamicHelpDataInfos;  // tähän tulee jatkuvasti päivitettävät
                                                             // datat kuten havainnot, tutka ja
