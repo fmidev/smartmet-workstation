@@ -548,14 +548,7 @@ void CFmiCrossSectionView::SetPrintCopyCDC(CDC* /* pDC */ )
 
 NFmiPoint CFmiCrossSectionView::PrintViewSizeInPixels(void)
 {
-	if(itsMemoryBitmap)
-	{
-		BITMAP bm;
-		itsMemoryBitmap->GetBitmap(&bm);
-		return NFmiPoint(bm.bmWidth, bm.bmHeight);
-	}
-	else 
-		return NFmiPoint(0, 0);
+	return GetTrueMapViewSizeInfo().clientAreaSizeInPixels();
 }
 
 void CFmiCrossSectionView::PrintViewSizeInPixels(const NFmiPoint & /* theSize */ )

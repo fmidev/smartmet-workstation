@@ -1873,7 +1873,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 		// Then normal queryData based legends are drawn on the left side of view
 		itsToolBox = theGTB;
 		auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
-		if(drawParamList)
+		if(drawParamList && drawParamList->NumberOfItems() >= 1)
 		{
 			auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
 			auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
