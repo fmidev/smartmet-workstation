@@ -6,7 +6,45 @@
 #include <newbase/NFmiQueryData.h>
 #include <fstream>
 
+namespace
+{
+TraceLogMessageCallback g_TraceLogMessageCallback;
+IsTraceLoggingInUseCallback g_IsTraceLoggingInUseCallback;
+
+bool IsTraceLoggingUsed()
+{
+  if (g_TraceLogMessageCallback && g_IsTraceLoggingInUseCallback)
+  {
+    return g_IsTraceLoggingInUseCallback();
+  }
+  else
+    return false;
+}
+
+void TraceLogMessage(const std::string &message) 
+{ 
+    if (IsTraceLoggingUsed()) 
+    {
+      g_TraceLogMessageCallback(message);
+    }
+}
+
+}  // namespace
+
 // ************* NFmiQueryDataKeeper-class **********************
+
+void NFmiQueryDataSetKeeper::SetTraceLogMessageCallback(
+    TraceLogMessageCallback &traceLogMessageCallback)
+{
+  g_TraceLogMessageCallback = traceLogMessageCallback;
+}
+
+void NFmiQueryDataSetKeeper::
+    SetIsTraceLoggingInUseCallback(
+    IsTraceLoggingInUseCallback &isTraceLoggingInUseCallback)
+{
+  g_IsTraceLoggingInUseCallback = isTraceLoggingInUseCallback;
+}
 
 NFmiQueryDataKeeper::NFmiQueryDataKeeper(void)
     : itsData(),
@@ -288,18 +326,56 @@ static std::string GetFullFileName(const std::string &theFileFilter, const std::
 
 bool NFmiQueryDataSetKeeper::DoOnDemandOldDataLoad(int theIndex)
 {
-  if (::abs(theIndex) < itsMaxLatestDataCount)  // ei yritetä hakea liian vanhoja datoja
+  std::string traceLogMessage;
+  auto doTraceLogging = ::IsTraceLoggingUsed();
+  if (::abs(theIndex) >= itsMaxLatestDataCount)  // ei yritetä hakea liian vanhoja datoja
+  {
+    if (doTraceLogging)
+    {
+      traceLogMessage +=
+          "QueryDataSetKeeper: Too old data requested to be loaded from local querydata file, "
+          "fileFilter was ";
+      traceLogMessage += itsFilePattern;
+      traceLogMessage += ", requested index ";
+      traceLogMessage += std::to_string(theIndex);
+      traceLogMessage += " is bigger than locally stored file count ";
+      traceLogMessage += std::to_string(itsMaxLatestDataCount);
+    }
+  }
+  else
   {
     if (itsModelRunTimeGap > 0)
     {
+      if (doTraceLogging)
+      {
+        traceLogMessage +=
+            "QueryDataSetKeeper: Trying to load older model-run data from local querydata file, "
+            "fileFilter was ";
+        traceLogMessage += itsFilePattern;
+        traceLogMessage += ", requested index ";
+        traceLogMessage += std::to_string(theIndex);
+        traceLogMessage += ", ModelRuntimeGab ";
+        traceLogMessage += std::to_string(itsModelRunTimeGap);
+      }
+
       NFmiMetTime wantedOrigTime =
           ::CalcWantedOrigTime(itsLatestOriginTime, theIndex, itsModelRunTimeGap);
+      if (doTraceLogging)
+      {
+        traceLogMessage += ", wanted model-runtime ";
+        traceLogMessage += wantedOrigTime.ToStr("YYYY.MM.DD HH:mm", kEnglish);
+      }
       std::list<std::string> files = NFmiFileSystem::PatternFiles(itsFilePattern);
       for (std::list<std::string>::iterator it = files.begin(); it != files.end(); ++it)
       {
         try
         {
           std::string usedFileName = ::GetFullFileName(itsFilePattern, *it);
+          if (doTraceLogging)
+          {
+            traceLogMessage += "\nchecking file ";
+            traceLogMessage += usedFileName;
+          }
           NFmiQueryInfo info;
           std::ifstream in(usedFileName.c_str(), std::ios::binary);
           if (in)
@@ -307,23 +383,87 @@ bool NFmiQueryDataSetKeeper::DoOnDemandOldDataLoad(int theIndex)
             in >> info;
             if (in.good())
             {
-              if (info.OriginTime() == wantedOrigTime)
+              const auto &originTime = info.OriginTime();
+              if (originTime == wantedOrigTime)
               {
+                if (doTraceLogging)
+                {
+                  traceLogMessage += ", origin time in file was the wanted one, using this file";
+                  ::TraceLogMessage(traceLogMessage);
+                }
                 in.close();
                 return ReadDataFileInUse(usedFileName);
               }
+              else
+              {
+                if (doTraceLogging)
+                {
+                  traceLogMessage += ", origin time (";
+                  traceLogMessage += originTime.ToStr("YYYY.MM.DD HH:mm", kEnglish);
+                  traceLogMessage += ") in file was not the wanted ";
+                }
+              }
+            }
+            else
+            {
+              if (doTraceLogging)
+              {
+                traceLogMessage += ", unable to read meta info part from file";
+              }
+            }
+          }
+          else
+          {
+            if (doTraceLogging)
+            {
+              traceLogMessage += ", unable to open the file for unknown reason";
             }
           }
         }
+        catch (std::exception &e)
+        {
+          // pitää vain varmistaa että jos tiedosto on viallinen, poikkeukset napataan kiinni tässä
+          if (doTraceLogging)
+          {
+            traceLogMessage += ", file handling caused exception to be thrown: ";
+            traceLogMessage += e.what();
+          }
+        }
         catch (...)
-        {  // pitää vain varmistaa että jos tiedosto on viallinen, poikkeukset napataan kiinni tässä
+        {
+          // pitää vain varmistaa että jos tiedosto on viallinen, poikkeukset napataan kiinni tässä
+          if (doTraceLogging)
+          {
+            traceLogMessage += ", file handling caused unknown exception to be thrown";
+          }
         }
       }
+
+      if (doTraceLogging)
+      {
+        traceLogMessage +=
+            "\n, couldn't find the wanted origin-time from any of the datafiles";
+      }
+
     }
     else if (itsModelRunTimeGap < 0)
-      ReadAllOldDatasInMemory();  // editoidut datat (tai vastaavat, joilla ei ole siis säännöllisiä
-    // tekoaikoja) pitää lukea kaikki muistiin, muuten ei voida laskea
-    // niiden indeksejä
+    {
+      if (doTraceLogging)
+      {
+        traceLogMessage +=
+            ", ModelRunTimeGap was less than 0, means that producer has data generated at random "
+            "times (like edited data)";
+      }
+      // editoidut datat (tai vastaavat, joilla ei ole siis säännöllisiä
+      // tekoaikoja) pitää lukea kaikki muistiin, muuten ei voida laskea
+      // niiden indeksejä
+      ReadAllOldDatasInMemory();
+    }
+  }
+
+  if (doTraceLogging)
+  {
+    ::TraceLogMessage(traceLogMessage);
   }
   return false;
 }
