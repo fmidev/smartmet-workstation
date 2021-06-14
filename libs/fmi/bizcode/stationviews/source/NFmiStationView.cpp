@@ -319,6 +319,7 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
         return;
     }
 
+	UpdateCachedParameterName();
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
     fUseMacroParamSpecialCalculations = false;
@@ -2974,7 +2975,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 			return ::MakeMapLayerTooltipText(itsCtrlViewDocumentInterface, itsDrawParam);
         bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
         bool macroParamCase = (drawParamDataType == NFmiInfoData::kMacroParam);
-        str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), false, showExtraInfo, true, 0, false);
+        str += CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false);
 		str += tabStr;
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
 		MakeDrawedInfoVector();
