@@ -262,17 +262,20 @@ namespace CtrlViewUtils
         return prodNameStr;
     }
 
-    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theNormalOrigTimeFormat, const std::string &theMinuteOrigTimeFormat, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool fShowModelOriginTime)
+    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool fShowModelOriginTime)
     {
+        CtrlViewDocumentInterface* ctrlViewDocumentInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
+        std::string normalOrigTimeFormat = ::GetDictionaryString("MapViewToolTipOrigTimeNormal");
+        std::string minuteOrigTimeFormat = ::GetDictionaryString("MapViewToolTipOrigTimeMinute");
         bool betaProductCase = theLongerProducerNameMaxCharCount > 0;
         NFmiInfoData::Type dataType = theDrawParam->DataType();
         std::string str;
-        boost::shared_ptr<NFmiFastQueryInfo> info = theCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
+        boost::shared_ptr<NFmiFastQueryInfo> info = ctrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
         if(theDrawParam->IsModelRunDataType())
         {
             if(info)
             {
-                str += GetProducerName(theCtrlViewDocumentInterface->ProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
+                str += GetProducerName(ctrlViewDocumentInterface->ProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
 
                 if(theDrawParam->UseArchiveModelData())
                 { // laitetaan arkisto datan kohdalle viittaus verrattuna viimeiseen malli dataan esim. H[-1] joka on siis edellinen malli jne.
@@ -289,7 +292,7 @@ namespace CtrlViewUtils
                     {
                         if(betaProductCase)
                             str += " ";
-                        str += info->OriginTime().ToStr(NFmiString(theNormalOrigTimeFormat));
+                        str += info->OriginTime().ToStr(NFmiString(normalOrigTimeFormat));
                     }
                 }
 
@@ -305,7 +308,7 @@ namespace CtrlViewUtils
             else // jos infoa ei löytynyt, laitetaan merkit mahdollisen tuottaja nimen ympärille sen merkiksi
             {
                 str += "#";
-                str += GetProducerName(theCtrlViewDocumentInterface->ProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
+                str += GetProducerName(ctrlViewDocumentInterface->ProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
                 str += "# ";
             }
         }
@@ -323,7 +326,7 @@ namespace CtrlViewUtils
         else if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kAnalyzeData)
         {
             // etsi havainto tuottajan nimi
-            str += GetProducerName(theCtrlViewDocumentInterface->ObsProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
+            str += GetProducerName(ctrlViewDocumentInterface->ObsProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
             str += " ";
         }
         else if(dataType == NFmiInfoData::kEditingHelpData)
@@ -331,14 +334,14 @@ namespace CtrlViewUtils
             if(betaProductCase)
                 str += "HelpEdit";
             else
-                str += GetEditingDataString("HE", info, theCtrlViewDocumentInterface->Language(), theMinuteOrigTimeFormat);
+                str += GetEditingDataString("HE", info, ctrlViewDocumentInterface->Language(), minuteOrigTimeFormat);
         }
         else if(dataType == NFmiInfoData::kKepaData)
         {
             if(betaProductCase)
                 str += "Official";
             else
-                str += GetEditingDataString("OF", info, theCtrlViewDocumentInterface->Language(), theMinuteOrigTimeFormat);
+                str += GetEditingDataString("OF", info, ctrlViewDocumentInterface->Language(), minuteOrigTimeFormat);
         }
 
         if(dataType == NFmiInfoData::kCopyOfEdited)

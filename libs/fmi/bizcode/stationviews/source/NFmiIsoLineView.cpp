@@ -413,6 +413,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
         return;
     }
 
+    UpdateCachedParameterName();
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
     itsIsolineValues = kFloatMissing; // varmistetaan että tämä on tyhjää täynnä
@@ -1970,11 +1971,10 @@ void NFmiIsoLineView::StoreLabel(LabelBox &theLabelBox)
 
 void NFmiIsoLineView::DrawIsoLines(void)
 {
-    auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
     string filefilter = "default";
-    if(fastInfo)
+    if(itsInfo)
     {
-        filefilter = fastInfo->DataFilePattern();
+        filefilter = itsInfo->DataFilePattern();
     }
     SmartMetDataUtilities::Toolmaster toolmasterStatus = itsCtrlViewDocumentInterface->IsToolMasterAvailable()
         ? SmartMetDataUtilities::Toolmaster::Available
