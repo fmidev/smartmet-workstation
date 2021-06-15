@@ -695,6 +695,7 @@ class NFmiDrawParam
   static bool IsIsolineType(NFmiMetEditorTypes::View viewType);
   bool DoIsoLineColorBlend() const { return fDoIsoLineColorBlend; }
   void DoIsoLineColorBlend(bool newValue) { fDoIsoLineColorBlend = newValue; }
+  bool ShowContourLegendPotentially() const;
 
  protected:
   double SimpleColorContourTransparentColors2Double() const;
