@@ -420,10 +420,9 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehd‰‰n kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan p‰‰lle
     CalculateGeneralStationRect();
     MakeDrawedInfoVector();
-    itsInfoVectorIter = itsInfoVector.begin();
-    if(itsInfoVectorIter == itsInfoVector.end())
+    if(itsInfoVector.empty())
         return;
-    SetMapViewSettings(*itsInfoVectorIter);
+    SetMapViewSettings(itsInfoVector.front());
     UpdateCachedParameterName();
     SetupPossibleWindMetaParamData();
 

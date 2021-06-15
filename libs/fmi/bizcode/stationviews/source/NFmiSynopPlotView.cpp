@@ -184,8 +184,7 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 	checkedVector<NFmiRect> synopRects;
 	MakeDrawedInfoVector();
-	itsInfoVectorIter = itsInfoVector.begin();
-	if(itsInfoVectorIter == itsInfoVector.end())
+	if(itsInfoVector.empty())
 		return ;
 
 	fSoundingPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpSoundingPlot;
@@ -204,9 +203,11 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
     bool drawStationMarker = IsAccessoryStationDataDrawn();
 	NFmiDrawingEnvironment stationPointEnvi;
 	SetStationPointDrawingEnvi(stationPointEnvi);
-	for( ; itsInfoVectorIter != itsInfoVector.end(); ++itsInfoVectorIter)
+	for(auto& fastInfo : itsInfoVector)
 	{
-		SetMapViewSettings(*itsInfoVectorIter);
+		// Varmistetaan että osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
+		fastInfo->FirstLocation();
+		SetMapViewSettings(fastInfo);
 		if(itsInfo == 0)
 			continue ;
 		if(!itsInfo->Time(itsTime) && fGetSynopDataFromQ2 == false)
