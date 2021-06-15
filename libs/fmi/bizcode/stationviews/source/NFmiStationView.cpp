@@ -177,7 +177,6 @@ NFmiStationView::NFmiStationView(int theMapViewDescTopIndex, boost::shared_ptr<N
 ,itsGeneralStationRect()
 ,itsParamId(theParamId)
 ,itsInfoVector()
-,itsInfoVectorIter()
 ,fDoTimeInterpolation(false)
 ,itsBackupDrawParamForDifferenceDrawing()
 ,fDoDifferenceDrawSwitch(false)
@@ -753,27 +752,25 @@ void NFmiStationView::DrawSymbols(void)
 
 void NFmiStationView::DrawAllAccessoryStationData(void)
 {
-    if(!itsInfo)
-        return;
-    CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, "NFmiStationView: Drawing data's station/grid point markers");
-    NFmiDrawingEnvironment stationPointEnvi;
-    SetStationPointDrawingEnvi(stationPointEnvi);
-    ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
+	if(!itsInfo)
+		return;
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, "NFmiStationView: Drawing data's station/grid point markers");
+	NFmiDrawingEnvironment stationPointEnvi;
+	SetStationPointDrawingEnvi(stationPointEnvi);
+	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 
-    itsInfoVectorIter = itsInfoVector.begin();
-    if(itsInfoVectorIter != itsInfoVector.end()) // asema datalle (synop) voi olla useita datoja
-    {
-        for(; itsInfoVectorIter != itsInfoVector.end(); ++itsInfoVectorIter)
-        {
-            SetMapViewSettings(*itsInfoVectorIter);
-            PrepareForStationDraw();
-            for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-            {
-                if(itsArea->IsInside(itsInfo->LatLon()))
-                    DrawStation(stationPointEnvi);
-            }
-        }
-    }
+	for(auto& fastInfo : itsInfoVector)
+	{
+		// Varmistetaan että osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
+		fastInfo->FirstLocation();
+		SetMapViewSettings(fastInfo);
+		PrepareForStationDraw();
+		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+		{
+			if(itsArea->IsInside(itsInfo->LatLon()))
+				DrawStation(stationPointEnvi);
+		}
+	}
 }
 
 void NFmiStationView::DrawData(void)

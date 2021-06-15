@@ -201,7 +201,6 @@ protected:
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; // t‰m‰ info vektori k‰yd‰‰n l‰pi kun piirret‰‰n dataa (aluksi useita infoja vain synop-data tapauksessa)
-   std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator itsInfoVectorIter;
    NFmiLocation itsNearestTooltipLocation; // multi synop infojen takia pient‰ virityst‰
    boost::shared_ptr<NFmiDrawParam> itsBackupDrawParamForDifferenceDrawing;  // laitetaan t‰h‰n talteen alkuper‰iset asetukset, jos piirto tapahtuu erotuksena, voidaan palauttaa alkuper‰inen t‰st‰
    bool fDoDifferenceDrawSwitch; // t‰h‰n talletetaan tieto onko k‰ytetty drawParam palautettava piirron j‰lkeen 
