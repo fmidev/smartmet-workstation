@@ -1882,7 +1882,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 
 			for(const auto& drawParam : *drawParamList)
 			{
-				if(!drawParam->IsParamHidden())
+				if(!drawParam->IsParamHidden() && drawParam->ShowContourLegendPotentially())
 				{
 					auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
 					auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);

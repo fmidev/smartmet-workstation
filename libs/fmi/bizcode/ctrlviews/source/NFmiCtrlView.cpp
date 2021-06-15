@@ -310,5 +310,5 @@ NFmiRect NFmiCtrlView::CalcWantedDirectionalPosition(const NFmiRect& positionalR
 void NFmiCtrlView::UpdateCachedParameterName()
 {
 	// Tämä on normi karttanäytön alustus, josta tehtiin oletustoiminto (override jutut tehdään mm. aikasarjaan ja poikkileikkaus luokkiin).
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false));
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, itsInfo));
 }

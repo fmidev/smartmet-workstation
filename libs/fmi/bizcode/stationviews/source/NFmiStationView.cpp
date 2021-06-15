@@ -319,7 +319,6 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
         return;
     }
 
-	UpdateCachedParameterName();
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
     fUseMacroParamSpecialCalculations = false;
@@ -347,6 +346,7 @@ void NFmiStationView::Draw(NFmiToolBox *theGTB)
 		for( ; itsInfoVectorIter != itsInfoVector.end(); ++itsInfoVectorIter)
 		{
 			SetMapViewSettings(*itsInfoVectorIter);
+			UpdateCachedParameterName();
 			CalculateGeneralStationRect();
 			FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
 

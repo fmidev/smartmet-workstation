@@ -414,7 +414,6 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
         return;
     }
 
-    UpdateCachedParameterName();
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
     itsIsolineValues = kFloatMissing; // varmistetaan että tämä on tyhjää täynnä
@@ -425,6 +424,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     if(itsInfoVectorIter == itsInfoVector.end())
         return;
     SetMapViewSettings(*itsInfoVectorIter);
+    UpdateCachedParameterName();
     SetupPossibleWindMetaParamData();
 
     if(itsDrawParam->Alpha() <= 0)
