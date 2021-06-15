@@ -4871,5 +4871,5 @@ NFmiPoint NFmiTimeSerialView::GetFirstSelectedLatlonFromEditedData() const
 
 void NFmiTimeSerialView::UpdateCachedParameterName()
 {
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true));
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, true, itsInfo));
 }

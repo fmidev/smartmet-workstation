@@ -320,7 +320,6 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 		return;
 	}
 
-	UpdateCachedParameterName();
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
 	fUseMacroParamSpecialCalculations = false;
@@ -347,6 +346,7 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 		// Varmistetaan että osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
 		fastInfo->FirstLocation();
 		SetMapViewSettings(fastInfo);
+		UpdateCachedParameterName();
 		CalculateGeneralStationRect();
 		FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
 
