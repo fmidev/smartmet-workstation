@@ -1467,6 +1467,9 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekFunctionAreaMas
 
   if (fUseLevelData) itsParethesisCounter++;
 
+  if (areaMask && theAreaMaskInfo.TimeOffsetInHours() != 0)
+    areaMask->FunctionDataTimeOffsetInHours(theAreaMaskInfo.TimeOffsetInHours());
+
   return areaMask;
 }
 
