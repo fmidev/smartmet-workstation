@@ -456,6 +456,7 @@ void CFmiBetaProductDialog::OnEnChangeEditTimeStepInMinutes()
 void CFmiBetaProductDialog::OnEnChangeEditTimeLengthInHours()
 {
     Update();
+    UpdateFileNameTemplateInfo();
 }
 
 
@@ -1232,9 +1233,23 @@ void CFmiBetaProductDialog::OnEnChangeEditSynopStationIdString()
     UpdateSynopStationIdInfo();
 }
 
+static bool CStingContainsZeroValue(const CString& cstringValue)
+{
+    try
+    {
+        std::string str = CFmiWin32Helpers::CT2std(cstringValue);
+        auto value = std::stof(str);
+        if(value == 0)
+            return true;
+    }
+    catch(...)
+    { }
+    return false;
+}
+
 bool CFmiBetaProductDialog::IsFileNameTemplateStampsOk() const
 {
-    return fFileNameTemplateContainsValidTime || fUseAutoFileNames;
+    return fFileNameTemplateContainsValidTime || fUseAutoFileNames || ::CStingContainsZeroValue(itsTimeLengthInHoursStringU_);
 }
 
 std::string CFmiBetaProductDialog::GetFileNameTemplateStampsString()
