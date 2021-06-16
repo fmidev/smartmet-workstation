@@ -344,6 +344,8 @@ class _FMI_DLL NFmiAreaMask
   // Joillain smarttool funktoilla voi olla simple-condition ehto (esim. "T_ec > T_hir"), jota käytetään mm. erilaisissa integraatiolaskuissa
   virtual const boost::shared_ptr<NFmiSimpleCondition>& SimpleCondition() const = 0;
   virtual void SimpleCondition(boost::shared_ptr<NFmiSimpleCondition> &theSimpleCondition) = 0;
+  virtual float FunctionDataTimeOffsetInHours() const = 0;
+  virtual void FunctionDataTimeOffsetInHours(float newValue) = 0;
 
   static boost::shared_ptr<NFmiFastQueryInfo> DoShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
