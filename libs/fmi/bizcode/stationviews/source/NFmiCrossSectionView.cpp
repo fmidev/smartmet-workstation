@@ -320,7 +320,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 				continue;
 			}
 			DoTimeInterpolationSettingChecks(itsInfo);
-
+			UpdateCachedParameterName();
 			AddFooterTextForCurrentData(i >= maxCount); // pitää tarkistaa onko kyseessä vielä viimeinen drawparam
 			if(!itsDrawParam->IsParamHidden())
 			{
@@ -389,7 +389,7 @@ static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo& graphi
 void NFmiCrossSectionView::DrawLegends()
 {
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, itsViewGridRowNumber);
-    if(drawParamList)
+    if(drawParamList && drawParamList->NumberOfItems() >= 1)
     {
         auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
         auto& graphicalInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
@@ -695,6 +695,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						continue; // tämä on virhe tilanne oikeasti!!!!
 					DoTimeInterpolationSettingChecks(info);
 					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
+					auto paramNameString = CtrlViewUtils::GetParamNameString(itsDrawParam, true, showExtraInfo, true, 0, false);
 
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
 					NFmiExtraMacroParamData extraMacroParamData;
@@ -709,7 +710,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
                         FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, &tooltipData, &extraMacroParamData);
 						if(!tooltipData.macroParamErrorMessage.empty())
 						{
-							str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true, 0, false);
+							str += paramNameString;
 							str += ": ";
 							str += MakeMacroParamErrorTooltipText(tooltipData.macroParamErrorMessage);
 							str += "\n";
@@ -729,7 +730,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 
 					if(itsDrawParam->IsParamHidden())
 						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
-					str += CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, showExtraInfo, true, 0, false);
+					str += paramNameString;
 					if(itsDrawParam->IsParamHidden())
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 					str += ":	";
@@ -1037,7 +1038,7 @@ void NFmiCrossSectionView::AddFooterTextForCurrentData(bool fLastOne)
 {
 	if(itsDrawParam->IsParamHidden())
 		itsHeaderParamString += "("; // jos parametri on piilotettu, laita teksti sulkuihin
-	std::string paramStr = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), true, false, false, 0, false);
+	std::string paramStr = CachedParameterName();
 	itsHeaderParamString += paramStr;
 	if(itsDrawParam->IsParamHidden())
 		itsHeaderParamString += ")";
@@ -3333,4 +3334,9 @@ bool NFmiCrossSectionView::IsMouseDraggingOn(void)
         return true;
     else
         return false;
+}
+
+void NFmiCrossSectionView::UpdateCachedParameterName()
+{
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, false, 0, false, true, itsInfo));
 }

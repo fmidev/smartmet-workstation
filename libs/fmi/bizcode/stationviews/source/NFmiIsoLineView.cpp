@@ -420,10 +420,10 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehdään kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan päälle
     CalculateGeneralStationRect();
     MakeDrawedInfoVector();
-    itsInfoVectorIter = itsInfoVector.begin();
-    if(itsInfoVectorIter == itsInfoVector.end())
+    if(itsInfoVector.empty())
         return;
-    SetMapViewSettings(*itsInfoVectorIter);
+    SetMapViewSettings(itsInfoVector.front());
+    UpdateCachedParameterName();
     SetupPossibleWindMetaParamData();
 
     if(itsDrawParam->Alpha() <= 0)
@@ -1915,11 +1915,10 @@ void NFmiIsoLineView::StoreLabel(LabelBox &theLabelBox)
 
 void NFmiIsoLineView::DrawIsoLines(void)
 {
-    auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
     string filefilter = "default";
-    if(fastInfo)
+    if(itsInfo)
     {
-        filefilter = fastInfo->DataFilePattern();
+        filefilter = itsInfo->DataFilePattern();
     }
     SmartMetDataUtilities::Toolmaster toolmasterStatus = itsCtrlViewDocumentInterface->IsToolMasterAvailable()
         ? SmartMetDataUtilities::Toolmaster::Available

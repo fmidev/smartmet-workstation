@@ -24,12 +24,12 @@ public:
 	NFmiACLocationInfo(void);
 
 	int itsId;
-	std::string itsName;
-	std::string itsCountry;
-	std::string itsFeature;
-	std::string itsArea;
+	std::wstring itsName;
+	std::wstring itsCountry;
+	std::wstring itsFeature;
+	std::wstring itsArea;
 	NFmiPoint itsLatlon;
-	std::string itsTimeZone;
+	std::wstring itsTimeZone;
 };
 
 class NFmiAutoComplete
@@ -71,7 +71,7 @@ public:
 	std::string FontName(void) const {return itsFontName;}
 
 private:
-	std::string GetAutoCompleteRespond(NFmiQ2Client &theHttpClient, const std::string &theWord, bool logEvents);
+	std::wstring GetAutoCompleteRespond(NFmiQ2Client &theHttpClient, const std::string &theWord, bool logEvents);
 	void doColorAlphaFixes();
 
 	bool fAutoCompleteDialogOn; // jos dialogi on p‰‰ll‰, t‰m‰ on true, muuten false

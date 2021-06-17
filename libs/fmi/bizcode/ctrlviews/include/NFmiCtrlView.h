@@ -131,6 +131,9 @@ class NFmiCtrlView
    bool IsPrintedMapViewDesctop();
    bool IsPrinting() const;
    int CalcRealRowIndex() const;
+   const std::string& CachedParameterName() const { return itsCachedParameterName; }
+   void CachedParameterName(const std::string &newName) { itsCachedParameterName = newName; }
+   virtual void UpdateCachedParameterName();
 
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
    virtual NFmiPoint ViewPointToLatLon(const NFmiPoint & /* theViewPoint */ ){return NFmiPoint(kFloatMissing, kFloatMissing);}
@@ -183,6 +186,9 @@ class NFmiCtrlView
 
 	// aikaa tarvitaan joissain näyttöluokissa, joten laitoin ajan asetuksen mukaan
 	NFmiMetTime itsTime;	// 1999.09.10/Marko Tämän ajan mukaan asetetaan info (siis jos tarvitsee).
+	// Parametrin nimi stringin teko on yllättävän raskasta ja se kannattaa laskea kullakin piirtokerralla kerran muistiin.
+	// Parametrin nimi riippu paljon erilaisista datatyypeista ja tilanteista, se on mm. seuraavaa 'normi' muotoa: E00/06.09 CAPE
+	std::string itsCachedParameterName;
 
 	Gdiplus::Graphics *itsGdiPlusGraphics; // tehdään GDI+ piirto tällä
 private:

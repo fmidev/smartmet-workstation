@@ -212,6 +212,7 @@ public:
 	bool PrintingModeOn() const { return fPrintingModeOn; }
 	void PrintingModeOn(bool newState) { fPrintingModeOn = newState; }
 	void UpdateOneMapViewSize();
+	bool IsTimeControlViewVisibleTotal() const;
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;

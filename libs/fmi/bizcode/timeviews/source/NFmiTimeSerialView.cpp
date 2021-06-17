@@ -196,7 +196,7 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 		if(itsInfo == 0)
 			return;
         itsModifyingUnit = true;
-
+		UpdateCachedParameterName();
 		bool editedDataDrawed = IsEditedData(itsInfo);
 		DrawBackground();
 
@@ -1592,7 +1592,7 @@ void NFmiTimeSerialView::DrawParamName(void)
 
 		itsDrawingEnvironment->SetFontSize(CalcFontSize());
 
-		NFmiString str = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), false, false, false, 0, true);
+		NFmiString str = CachedParameterName();
 
 		if(itsDrawParam->DataType() == NFmiInfoData::kEditable)
 		{
@@ -4749,7 +4749,7 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 		}
 
 		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
-		string parNameStr = CtrlViewUtils::GetParamNameString(itsDrawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), false, showExtraInfo, true, 0, true);
+		string parNameStr = showExtraInfo ? CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, true) : CachedParameterName();
 		NFmiColor stationDataColor;
 		editedInfo->FirstLocation();
 		int selectedLocationCounter = 0;
@@ -4867,4 +4867,9 @@ NFmiPoint NFmiTimeSerialView::GetFirstSelectedLatlonFromEditedData() const
 		return outOfEditedAreaTimeSerialPoint;
 	else
 		return itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
+}
+
+void NFmiTimeSerialView::UpdateCachedParameterName()
+{
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, true, itsInfo));
 }

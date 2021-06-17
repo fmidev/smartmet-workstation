@@ -93,7 +93,8 @@ NFmiAreaMaskImpl::NFmiAreaMaskImpl(const NFmiAreaMaskImpl &theOther)
       itsFunctionArgumentCount(theOther.itsFunctionArgumentCount),
       fHasSubMasks(theOther.fHasSubMasks),
       fEnabled(theOther.fEnabled),
-      itsSimpleCondition(theOther.itsSimpleCondition ? theOther.itsSimpleCondition->Clone() : nullptr)
+      itsSimpleCondition(theOther.itsSimpleCondition ? theOther.itsSimpleCondition->Clone() : nullptr),
+      itsFunctionDataTimeOffsetInHours(theOther.itsFunctionDataTimeOffsetInHours)
 {
 }
 

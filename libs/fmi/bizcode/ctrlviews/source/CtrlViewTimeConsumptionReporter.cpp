@@ -7,6 +7,30 @@
 #include "NFmiDictionaryFunction.h"
 #include "CtrlViewDocumentInterface.h"
 
+namespace
+{
+    std::string makeParameterName(boost::shared_ptr<NFmiDrawParam>& drawParam)
+    {
+        if(drawParam)
+        {
+            std::string parameterName = drawParam->ParameterAbbreviation();
+            parameterName += " (";
+            parameterName += drawParam->Param().GetProducer()->GetName();
+            if(drawParam->ModelRunIndex() < 0)
+            {
+                parameterName += "[";
+                parameterName += std::to_string(drawParam->ModelRunIndex());
+                parameterName += "]";
+            }
+            parameterName += ")";
+
+            return parameterName;
+        }
+        else
+            return "empty-drawParam";
+    }
+}
+
 namespace CtrlViewUtils
 {
     size_t CtrlViewTimeConsumptionReporter::currentUpdateId_ = 1001;
@@ -70,9 +94,8 @@ namespace CtrlViewUtils
         std::string identifier;
         if(hasActualDataWithName)
         {
-            bool crossSectionView = false;
             identifier += "'";
-            identifier += CtrlViewUtils::GetParamNameString(ctrlView->DrawParam(), ctrlView->GetCtrlViewDocumentInterface(), ::GetDictionaryString("MapViewToolTipOrigTimeNormal"), ::GetDictionaryString("MapViewToolTipOrigTimeMinute"), crossSectionView, false, false, 0, ctrlView->IsTimeSerialView());
+            identifier += ::makeParameterName(ctrlView->DrawParam());
             identifier += "' ";
         }
 

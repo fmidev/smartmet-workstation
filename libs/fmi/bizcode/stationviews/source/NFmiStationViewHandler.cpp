@@ -1873,7 +1873,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 		// Then normal queryData based legends are drawn on the left side of view
 		itsToolBox = theGTB;
 		auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
-		if(drawParamList)
+		if(drawParamList && drawParamList->NumberOfItems() >= 1)
 		{
 			auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
 			auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
@@ -1882,7 +1882,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 
 			for(const auto& drawParam : *drawParamList)
 			{
-				if(!drawParam->IsParamHidden())
+				if(!drawParam->IsParamHidden() && drawParam->ShowContourLegendPotentially())
 				{
 					auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
 					auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
@@ -4188,24 +4188,24 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 		double pixelsPerMM = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
         auto &autoComplete = itsCtrlViewDocumentInterface->AutoComplete();
 		NFmiColor textColor = autoComplete.NameTextColor();
-		std::string nameStr = theLocInfo.itsName;
+		auto nameStr = theLocInfo.itsName;
 		if(theLocInfo.itsArea.empty() == false)
 		{
-			nameStr += "\n";
+			nameStr += L"\n";
 			nameStr += theLocInfo.itsArea;
 		}
 		if(theLocInfo.itsCountry.empty() == false)
 		{
-			nameStr += " (";
+			nameStr += L" (";
 			nameStr += theLocInfo.itsCountry;
-			nameStr += ")";
+			nameStr += L")";
 		}
 
 		std::wstring fontName = CtrlView::StringToWString(autoComplete.FontName()); // L"arial";
 		double fontSizeInMM = autoComplete.FontSizeInMM();
 		std::string oneLineTestStr = "Pasalsmaksljjks"; // t‰m‰n stringin avulla halutaan tiet‰‰ vain yhden rivin 'laatikon' korkeus
 		Gdiplus::RectF oneLineBoundinBox = CtrlView::GetStringBoundingBox(*theGdiPlusGraphics, oneLineTestStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
-		Gdiplus::RectF boundinBox = CtrlView::GetStringBoundingBox(*theGdiPlusGraphics, nameStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
+		Gdiplus::RectF boundinBox = CtrlView::GetWStringBoundingBox(*theGdiPlusGraphics, nameStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
 		NFmiPoint relativePoint = LatLonToViewPoint(theLocInfo.itsLatlon);
 		Gdiplus::PointF locationInPixels = CtrlView::Relative2GdiplusPoint(itsToolBox, relativePoint);
 		boundinBox.Offset(locationInPixels);

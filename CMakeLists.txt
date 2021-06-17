@@ -15,6 +15,7 @@ add_definitions(
     -D_UNICODE 
     -DUNICODE 
     -DUSE_POTENTIAL_VALUES_IN_EDITING
+    -DJSON_SPIRIT_WVALUE_ENABLED
     )
 
 # To disable/enable Cpprestsdk usage in SmartMet build, do following: 
@@ -69,6 +70,12 @@ add_compile_options(
 # several pages long gibberish and in some cases you can't even disable warnings with pragma statements.
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
+    )
+
+# Disable globally VC++ warnings about 'something' "needs to have dll-interface to be used by clients of class" 'some-other'.
+# After adding gdal support, there has been pages after pages of these warnings that you can't do anything about it, except silence them.
+add_compile_options(
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
     )
 
 include(

@@ -100,6 +100,7 @@ class NFmiTimeSerialView : public NFmiTimeView
     bool EditingMouseMotionsAllowed(void) const {return fEditingMouseMotionsAllowed;}
     void EditingMouseMotionsAllowed(bool newValue) {fEditingMouseMotionsAllowed = newValue;}
     bool IsTimeSerialView(void) override { return true; };
+	void UpdateCachedParameterName() override;
 
  protected:
 	// ***** uusia selkeitä piirtofunktioita *********

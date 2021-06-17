@@ -15,6 +15,7 @@
 #include "SpecialDesctopIndex.h"
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
+#include "CtrlViewFunctions.h"
 
 #include <gdiplus.h>
 
@@ -304,4 +305,10 @@ NFmiRect NFmiCtrlView::CalcWantedDirectionalPosition(const NFmiRect& positionalR
 
 	finalRect.Place(NFmiPoint(placeX, placeY));
 	return finalRect;
+}
+
+void NFmiCtrlView::UpdateCachedParameterName()
+{
+	// Tämä on normi karttanäytön alustus, josta tehtiin oletustoiminto (override jutut tehdään mm. aikasarjaan ja poikkileikkaus luokkiin).
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, itsInfo));
 }

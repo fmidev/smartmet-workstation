@@ -184,8 +184,7 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 	checkedVector<NFmiRect> synopRects;
 	MakeDrawedInfoVector();
-	itsInfoVectorIter = itsInfoVector.begin();
-	if(itsInfoVectorIter == itsInfoVector.end())
+	if(itsInfoVector.empty())
 		return ;
 
 	fSoundingPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpSoundingPlot;
@@ -204,9 +203,11 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
     bool drawStationMarker = IsAccessoryStationDataDrawn();
 	NFmiDrawingEnvironment stationPointEnvi;
 	SetStationPointDrawingEnvi(stationPointEnvi);
-	for( ; itsInfoVectorIter != itsInfoVector.end(); ++itsInfoVectorIter)
+	for(auto& fastInfo : itsInfoVector)
 	{
-		SetMapViewSettings(*itsInfoVectorIter);
+		// Varmistetaan ett‰ osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
+		fastInfo->FirstLocation();
+		SetMapViewSettings(fastInfo);
 		if(itsInfo == 0)
 			continue ;
 		if(!itsInfo->Time(itsTime) && fGetSynopDataFromQ2 == false)
@@ -681,15 +682,63 @@ static float GetAviVisibility(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return theInfo->FloatValue();
 }
 
+static bool ParameterHasNonMissingValue(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, FmiParameterName parameter)
+{
+	if(theInfo->Param(parameter))
+	{
+		auto value = theInfo->FloatValue();
+		return value != kFloatMissing;
+	}
+	else
+		return false;
+}
+
+static bool HasAnySignificantCloudTypes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+{
+	if(::ParameterHasNonMissingValue(theInfo, kFmi1CloudType))
+		return true;
+	if(::ParameterHasNonMissingValue(theInfo, kFmi2CloudType))
+		return true;
+	if(::ParameterHasNonMissingValue(theInfo, kFmi3CloudType))
+		return true;
+	if(::ParameterHasNonMissingValue(theInfo, kFmi4CloudType))
+		return true;
+
+	return false;
+}
+
+static bool HasAnySignificantWeather(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+{
+	if(::ParameterHasNonMissingValue(theInfo, kFmiAviationWeather1))
+		return true;
+	if(::ParameterHasNonMissingValue(theInfo, kFmiAviationWeather2))
+		return true;
+	if(::ParameterHasNonMissingValue(theInfo, kFmiAviationWeather3))
+		return true;
+
+	return false;
+}
+
 static bool IsCavok(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-	// jos on n‰kyvyys on 9999 tai yli ja alin pilvi on yli 5000 jalkaa eik‰ ole vertical-visibility arvoa
+	// 1. Jos on n‰kyvyys on 9999 tai yli
 	float visibilityInMeters = ::GetAviVisibility(theInfo);
 	if(visibilityInMeters == kFloatMissing || visibilityInMeters >= 9999)
 	{
+		// 2.  Ja jos alin pilvi on yli 5000 jalkaa eik‰ ole vertical-visibility arvoa
 		float cloudBaseInFeets = ::GetCloudBaseInFeets(theInfo); // t‰m‰ kattaa sek‰ ver-vis arvon ja bloud-basen
 		if(cloudBaseInFeets == kFloatMissing || cloudBaseInFeets >= 5000)
-			return true;
+		{
+			// 3. Eik‰ saa olla pilvityyppein‰ Cb/Tcu pilvi‰ miss‰‰n kerroksessa
+			if(!::HasAnySignificantCloudTypes(theInfo))
+			{
+				// 4. Eik‰ saa kent‰ll‰ tail‰heisyydess‰ mit‰‰n merkitt‰v‰‰ s‰‰t‰ (eli tarkistetaan ett‰ ei ole yht‰‰n mit‰‰n s‰‰t‰)
+				if(!::HasAnySignificantWeather(theInfo))
+				{
+					return true;
+				}
+			}
+		}
 	}
 	return false;
 }

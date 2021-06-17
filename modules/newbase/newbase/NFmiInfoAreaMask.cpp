@@ -1028,6 +1028,9 @@ NFmiCalculationParams NFmiInfoAreaMaskPeekXY3::MakeModifiedCalculationParams(
 
   NFmiCalculationParams modifiedCalculationParams(theCalculationParams);
   modifiedCalculationParams.itsLatlon = loc.GetLocation();
+  if (itsFunctionDataTimeOffsetInHours != 0)
+    modifiedCalculationParams.itsTime.ChangeByMinutes(
+        static_cast<long>(itsFunctionDataTimeOffsetInHours * 60.f));
   return modifiedCalculationParams;
 }
 
@@ -1035,6 +1038,8 @@ NFmiCalculationParams NFmiInfoAreaMaskPeekXY3::MakeModifiedCalculationParams(
 double NFmiInfoAreaMaskPeekXY3::Value(const NFmiCalculationParams &theCalculationParams,
                                       bool fUseTimeInterpolationAlways)
 {
+  if (itsFunctionDataTimeOffsetInHours != 0) fUseTimeInterpolationAlways = true;
+
   return NFmiInfoAreaMask::Value(MakeModifiedCalculationParams(theCalculationParams),
                                  fUseTimeInterpolationAlways);
 }

@@ -686,7 +686,7 @@ void NFmiMapViewDescTop::ViewGridSize(const NFmiPoint& newSize, NFmiMapViewWinRe
 	// lasketaan sitten mikä on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
 	itsMapRowStartingIndex = FmiMin(maxStartIndex, itsMapRowStartingIndex);
-	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisible());
+	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisibleTotal());
 }
 
 void NFmiMapViewDescTop::MapRowStartingIndex(int newIndex)
@@ -777,13 +777,13 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC,
 
 void NFmiMapViewDescTop::RecalculateMapViewSizeInPixels(double theDrawObjectScaleFactor)
 {
-	auto timeControlViewIsHidden = fPrintingModeOn || !IsTimeControlViewVisible();
+	auto timeControlViewIsHidden = !IsTimeControlViewVisibleTotal();
 	MapViewSizeInPixels(itsMapViewSizeInPixels, nullptr, theDrawObjectScaleFactor, timeControlViewIsHidden);
 }
 
 const NFmiRect& NFmiMapViewDescTop::RelativeMapRect(void)
 { 
-    if(!fPrintingModeOn && IsTimeControlViewVisible())
+    if(IsTimeControlViewVisibleTotal())
         return itsRelativeMapRect; 
     else
     {
@@ -1057,6 +1057,7 @@ void NFmiMapViewDescTop::UpdateOneMapViewSize()
     NFmiPoint oneMapViewSizeInPixels = ActualMapBitmapSizeInPixels();
     itsGraphicalInfo.itsViewWidthInMM = oneMapViewSizeInPixels.X() / itsGraphicalInfo.itsPixelsPerMM_x;
     itsGraphicalInfo.itsViewHeightInMM = oneMapViewSizeInPixels.Y() / itsGraphicalInfo.itsPixelsPerMM_y;
+	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisibleTotal());
 }
 
 void NFmiMapViewDescTop::SetSelectedMapsFromSettings(void)
@@ -1547,4 +1548,9 @@ double NFmiMapViewDescTop::SingleMapViewHeightInMilliMeters() const
 void NFmiMapViewDescTop::ParamWindowViewPositionChange(bool forward)
 {
 	itsParamWindowViewPosition = CtrlViewUtils::CalcFollowingParamWindowViewPosition(itsParamWindowViewPosition, forward);
+}
+
+bool NFmiMapViewDescTop::IsTimeControlViewVisibleTotal() const 
+{ 
+	return !fPrintingModeOn && IsTimeControlViewVisible(); 
 }

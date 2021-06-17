@@ -1787,7 +1787,9 @@ void CSmartMetDoc::OnButtonReloadAllDynamicHelpData()
 {
     MakeNextUpdateOnSynopDataGridViewDlgForced();
     GetData()->ReloadAllDynamicHelpData();
-
+	// Ensin tyhjennyksen j‰lkeen pit‰‰ ladata editoitava data muistiin
+	LoadDataOnStartUp();
+	// Sitten laitetaan normidatanlataus threadi taas toimimaan
 	CFmiDataLoadingThread2::ResetTimeStamps();
 	CFmiDataLoadingThread2::LoadDataNow();
 	UpdateAllViewsAndDialogs("Reloading all the dynamic data");

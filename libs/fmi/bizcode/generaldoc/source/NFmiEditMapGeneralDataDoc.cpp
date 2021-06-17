@@ -139,6 +139,7 @@
 #include "NFmiCombinedMapHandler.h"
 #include "NFmiFastDrawParamList.h"
 #include "NFmiParameterInterpolationFixer.h"
+#include "NFmiQueryDataKeeper.h"
 
 #include "AnimationProfiler.h"
 
@@ -482,6 +483,8 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	itsBasicConfigurations = theBasicConfigurations; // kopsataan CSmartMetApp:issa alustettu perusasetus GenDocin dataosaan
 	CombinedMapHandlerInterface::verboseLogging(itsBasicConfigurations.Verbose());
 
+	SetupQueryDataSetKeeperCallbacks();
+
 	LogMessage("SmartMet document initialization starts...", CatLog::Severity::Info, CatLog::Category::Configuration);
 	// Laitetaan peruskonffihakemisto lokiin näkyviin
 	string infoStr("SmartMet uses configurations from base configuration file: ");
@@ -592,6 +595,24 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
 	LogMessage("SmartMet document initialization ends...", CatLog::Severity::Info, CatLog::Category::Configuration);
 	return true;
+}
+
+void SetupQueryDataSetKeeperCallbacks()
+{
+	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+	// Laitetaan mallidata-ajo systeemin loggaus callbackit kuntoon, että voidaan tutkia, 
+	// miksi joskus viittaukset edellisiin malliajoihin epäonnistuvat.
+	try
+	{
+		TraceLogMessageCallback traceLogCallback = [](const std::string& message) {CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Data); };
+		NFmiQueryDataSetKeeper::SetTraceLogMessageCallback(traceLogCallback);
+		IsTraceLoggingInUseCallback isTraceLoggingInUseCallback = []() {return CatLog::doTraceLevelLogging(); };
+		NFmiQueryDataSetKeeper::SetIsTraceLoggingInUseCallback(isTraceLoggingInUseCallback);
+	}
+	catch(exception& e)
+	{
+		LogAndWarnUser(e.what(), "Problems with SetupQueryDataSetKeeperCallbacks initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, false);
+	}
 }
 
 void InitParameterInterpolationFixer()

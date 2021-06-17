@@ -1622,6 +1622,18 @@ bool NFmiDrawParam::IsColorContourType(NFmiMetEditorTypes::View viewType)
     return false;
 }
 
+bool NFmiDrawParam::ShowContourLegendPotentially() const
+{
+  if (ShowColorLegend())
+  {
+    auto stationDataViewType = GetViewType(true);
+    auto gridDataViewType = GetViewType(false);
+    if (IsColorContourType(stationDataViewType) || IsColorContourType(gridDataViewType))
+      return true;
+  }
+  return false;
+}
+
 bool NFmiDrawParam::IsIsolineType(NFmiMetEditorTypes::View viewType) 
 {
   if (viewType == NFmiMetEditorTypes::View::kFmiIsoLineView ||

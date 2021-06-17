@@ -66,11 +66,14 @@ class NFmiQueryDataKeeper
   MutexType itsMutex;
 };
 
+using TraceLogMessageCallback = std::function<void(const std::string &)>;
+using IsTraceLoggingInUseCallback = std::function<bool()>;
+
 // NFmiQueryDataSetKeeper-luokka pitää kirjaa n kpl viimeisitä malliajoista/datasta
 class NFmiQueryDataSetKeeper
 {
  public:
-  typedef std::list<boost::shared_ptr<NFmiQueryDataKeeper> > ListType;
+  using ListType = std::list<boost::shared_ptr<NFmiQueryDataKeeper>>;
 
   NFmiQueryDataSetKeeper() = default;
   NFmiQueryDataSetKeeper(boost::shared_ptr<NFmiOwnerInfo> &theData,
@@ -101,6 +104,9 @@ class NFmiQueryDataSetKeeper
 
   size_t DataCount(void);
   size_t DataByteCount(void);
+
+  static void SetTraceLogMessageCallback(TraceLogMessageCallback &traceLogMessageCallback);
+  static void SetIsTraceLoggingInUseCallback(IsTraceLoggingInUseCallback &isTraceLoggingInUseCallback);
 
  private:
   void AddDataToSet(boost::shared_ptr<NFmiOwnerInfo> &theData, bool &fDataWasDeletedOut);
