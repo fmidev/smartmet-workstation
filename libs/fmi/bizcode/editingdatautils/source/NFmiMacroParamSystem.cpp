@@ -6,6 +6,7 @@
 #include "NFmiFileString.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiMacroParamFunctions.h"
+#include "NFmiPathUtils.h"
 #include "boost/algorithm/string.hpp"
 #include <list>
 
@@ -184,6 +185,43 @@ bool NFmiMacroParamSystem::FindMacroFromCurrentFolder(const std::string &theMacr
 		return true;
 	}
 	return false;
+}
+
+// Etsii annetulla suhteellisella polulla olevaa macroParamia (käytetään speed-search kontrollista).
+// Jos löytää, asetetaan se itsFoundMacroParam:iksi.
+bool NFmiMacroParamSystem::FindMacroParamPath(const std::string& theRelativeMacroParamPath)
+{
+	auto totalMacroParamPath = itsRootPath + theRelativeMacroParamPath;
+	return SetCurrentToWantedMacroPath(totalMacroParamPath);
+}
+
+const std::vector<std::string>& NFmiMacroParamSystem::MacroParamSpeedSearchPathNames(bool updateList)
+{
+	if(updateList)
+	{
+//		Rebuild(nullptr);
+		MakeMacroParamSpeedSearchPathNames();
+	}
+	return itsMacroParamSpeedSearchPathNames;
+}
+
+void NFmiMacroParamSystem::MakeMacroParamSpeedSearchPathNames()
+{
+	std::vector<std::string> pathNames;
+	for(const auto& folder : itsMacroParamFolders)
+	{
+		auto relativePath = PathUtils::getRelativePathIfPossible(folder->Path(), folder->RootPath());
+		const auto& macroParams = folder->MacroParams();
+		for(const auto& macroParam : macroParams)
+		{
+			if(!macroParam->IsMacroParamDirectory())
+			{
+				std::string pathName = relativePath + macroParam->Name();
+				pathNames.push_back(pathName);
+			}
+		}
+	}
+	itsMacroParamSpeedSearchPathNames = pathNames;
 }
 
 bool NFmiMacroParamSystem::CurrentMacroPointerData::wasMacroFound() const

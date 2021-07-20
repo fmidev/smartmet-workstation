@@ -1,7 +1,7 @@
 #pragma once
 
-#include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
+#include <vector>
 
 class NFmiMacroParam;
 
@@ -25,7 +25,7 @@ public:
 	std::vector<std::string> GetDialogListStrings(bool getQ3Macros); // palauttaa macroparam-dialogin listaa vatern stringi-listan, jossa näkyy kunkin macroparamin nimi
 
 	const std::string& Path(void) const {return itsPath;}
-	const std::string& RootPath(void) const {return itsRootPath;}
+	const std::string& RootPath(void) const { return itsRootPath; }
 	int CurrentIndex(void) const {return itsCurrentIndex;}
 	void CurrentIndex(int newValue) {itsCurrentIndex = newValue;}
 	int Size(void) const {return static_cast<int>(itsMacroParams.size());}

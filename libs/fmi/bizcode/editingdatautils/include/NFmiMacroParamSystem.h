@@ -1,6 +1,5 @@
 #pragma once
 
-#include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
 #include <vector>
 #include "NFmiMacroParamItem.h"
@@ -47,9 +46,10 @@ public:
     boost::shared_ptr<NFmiMacroParamFolder> GetFolder(int index) const;
 	bool SetCurrentToWantedMacroPath(const std::string &theTotalFileName); // tietyn nimistä tiedosto nimeä
 	bool FindMacroFromCurrentFolder(const std::string &theMacroName);
+	bool FindMacroParamPath(const std::string& theRelativeMacroParamPath);
 	int CurrentFolderIndex(void) const {return itsCurrentFolderIndex;}
     boost::shared_ptr<NFmiMacroParam> GetWantedMacro(const std::string& theTotalFileName) const;
-
+	const std::vector<std::string>& MacroParamSpeedSearchPathNames(bool updateList);
 	const std::string& CurrentPath(void) const {return itsCurrentPath;}
 	std::string RelativePath(void) const;
     void CurrentPath(const std::string& newValue); // tämä on alihakemistoon siirtymis metodi
@@ -71,6 +71,7 @@ private:
     void SetWantedPath(const std::string& wantedPath);
     CurrentMacroPointerData FindCurrentMacroPointerData(const std::string& theTotalFileName) const;
 	void InitializeRootFolder();
+	void MakeMacroParamSpeedSearchPathNames();
 
 	std::string itsCurrentPath; // mihin paikkaan on macroparamit talletettu
 	std::string itsRootPath; // tämän avulla saadaan kansio systeemille root kansio, josta ylöspäin ei voi mennä ..-hakiksen kautta
@@ -79,5 +80,6 @@ private:
 	int itsCurrentFolderIndex; // currenttia macroparamia osoitetaan tällä indeksillä (=paikka itsMacroParamFolders vektorissa), alkaa 0:sta ja -1 kun ei osoita mihinkään
 	boost::shared_ptr<NFmiMacroParam> itsFoundMacroParam; // Find(path, name)::lla löydetty macroParam
 	bool fUpdateMacroParamListView; // tämän lipun avulla voidaan päivittää smartTool-dialogia ja sen päivityksiä
+	std::vector<std::string> itsMacroParamSpeedSearchPathNames;
 };
 

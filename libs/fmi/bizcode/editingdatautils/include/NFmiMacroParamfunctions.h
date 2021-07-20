@@ -1,10 +1,10 @@
 #pragma once
 
 #include "NFmiInfoData.h"
-#include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
 
 #include <locale>
+#include <vector>
 
 namespace MacroParam
 {

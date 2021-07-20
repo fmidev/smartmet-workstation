@@ -87,10 +87,11 @@ protected:
     void DoResizerHooking(void);
     void UpdateLoadedSmarttoolMacroPathString();
     void UpdateLoadedMacroParamPathString();
-    void ResetSearchResource();
-    void InitSpeedSearchControl();
+    void ResetSpeedSearchResources(bool doSmartTools, bool doMacroParams);
+    void InitSpeedSearchControls();
     void DoTimedResetSearchResource();
-    void DoSmartToolLoad(const std::string &theSmartToolName, bool fDoSpeedLoad);
+    void DoSmartToolLoad(const std::string& theSmartToolName, bool fDoSpeedLoad);
+    void DoMacroParamLoad(const std::string &theMacroParamName, bool fDoSpeedLoad);
     std::string GetSmarttoolFilePath();
     void WarnUserAboutNoEditingSmarttools();
     std::string GetSmarttoolFormulaText();
@@ -116,6 +117,7 @@ protected:
     void SetDialogControlTooltip(int controlId, const std::string& tooltipRawText);
     void MakeSmarttoolSaveError(const std::string& fullFilePath);
     bool SmarttoolCanBeSaved() const;
+    void UpdateMacroParamDisplayListAfterSpeedLoad();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	NFmiSmartToolInfo *itsSmartToolInfo;
@@ -127,6 +129,7 @@ protected:
     BOOL fQ3Macro;
     CWndResizer m_resizer;
     CGUSIconEdit itsSpeedSearchMacroControl;
+    CGUSIconEdit itsSpeedSearchMacroParamControl;
     CMenu itsSpeedSearchMacroControlMenu;
     BOOL fSearchOptionCaseSensitive;
     BOOL fSearchOptionMatchAnywhere;
@@ -171,7 +174,8 @@ public:
     afx_msg LRESULT OnGUSIconEditSearchListClicked(WPARAM wParam, LPARAM lParam);
     afx_msg void OnSearchOptionCaseSesensitive();
     afx_msg void OnSearchOptionMatchAnywhere();
-    afx_msg void OnEnChangeEditSpeedSearchViewMacro();
+    afx_msg void OnEnChangeEditSpeedSearchMacro();
+    afx_msg void OnEnChangeEditSpeedSearchMacroParam();
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg void OnBnClickedButtonMacroParamSave();
