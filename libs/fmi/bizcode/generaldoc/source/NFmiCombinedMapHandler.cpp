@@ -1764,7 +1764,7 @@ void NFmiCombinedMapHandler::centerTimeControlView(unsigned int mapViewDescTopIn
 
 SmartMetViewId NFmiCombinedMapHandler::getUpdatedViewIdMaskForChangingTime()
 {
-	SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::CrossSectionView | SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg;
+	SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::CrossSectionView | SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg;
 	if(::getMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView())
 		updatedViewIds = updatedViewIds | SmartMetViewId::SoundingView;
 	if(::getWindTableSystem().UseMapTime())

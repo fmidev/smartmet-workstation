@@ -147,7 +147,6 @@ protected:
 	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 	void OnWorkinThreadDataRead2(void);
 	void GetNewWarningMessages(void);
-	void GetNewSeaIcingMessages(void);
 	void DoMacroParamUpdate(void);
 
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK

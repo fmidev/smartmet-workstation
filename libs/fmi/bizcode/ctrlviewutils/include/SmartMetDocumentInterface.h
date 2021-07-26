@@ -49,7 +49,6 @@ class NFmiFixedDrawParamSystem;
 class NFmiSmartToolInfo;
 class NFmiMacroParamSystem;
 class NFmiAutoComplete;
-class NFmiSeaIcingWarningSystem;
 class NFmiMenuItem;
 class NFmiEditDataUserList;
 class NFmiHelpEditorSystem;
@@ -310,7 +309,6 @@ public:
     virtual const std::vector<std::string>& SmartToolFileNames(bool updateList) = 0;
     virtual NFmiAutoComplete& AutoComplete() = 0;
     virtual void InvalidateMapView(bool bErase = true) = 0;
-    virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() = 0;
     virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) = 0;
     virtual AddParams::ParameterSelectionSystem& ParameterSelectionSystem() = 0;
     virtual void UpdateParameterSelectionSystem() = 0;

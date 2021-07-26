@@ -235,7 +235,6 @@ public:
     const std::vector<std::string>& SmartToolFileNames(bool updateList) override;
     NFmiAutoComplete& AutoComplete() override;
     void InvalidateMapView(bool bErase = true) override;
-    NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() override;
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) override;
     AddParams::ParameterSelectionSystem& ParameterSelectionSystem() override;
     void UpdateParameterSelectionSystem() override;

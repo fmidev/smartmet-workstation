@@ -985,11 +985,6 @@ NFmiWindTableSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::WindTableSystem
     return itsDoc->WindTableSystem();
 }
 
-NFmiSeaIcingWarningSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::SeaIcingWarningSystem(void)
-{
-    return itsDoc->SeaIcingWarningSystem();
-}
-
 NFmiProjectionCurvatureInfo* CtrlViewDocumentInterfaceForGeneralDataDoc::ProjectionCurvatureInfo(void)
 {
     return itsDoc->GetCombinedMapHandler()->projectionCurvatureInfo();

@@ -57,7 +57,6 @@ class NFmiGridPointCache;
 class NFmiMapViewCache;
 class CDC;
 class NFmiWindTableSystem;
-class NFmiSeaIcingWarningSystem;
 class NFmiProjectionCurvatureInfo;
 class NFmiPolyline;
 class NFmiDataIdent;
@@ -314,7 +313,6 @@ public:
     virtual bool IsCPGridCropNotPlausible(void) = 0;
     virtual boost::shared_ptr<NFmiArea> CPGridCropInnerLatlonArea(void) = 0;
     virtual NFmiWindTableSystem& WindTableSystem(void) = 0;
-    virtual NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) = 0;
     virtual NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) = 0;
     virtual bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;

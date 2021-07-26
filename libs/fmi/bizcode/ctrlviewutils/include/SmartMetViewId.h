@@ -30,7 +30,7 @@ enum class SmartMetViewId : size_t
     ZoomDlg = 1 << 17,
     SynopPlotSettingsDlg = 1 << 18,
     WarningCenterDlg = 1 << 19,
-    SeaIcingDlg = 1 << 20,
+//    SeaIcingDlg = 1 << 20,
     WindTableDlg = 1 << 21,
     IgnoreStationsDlg = 1 << 22,
     CaseStudyDlg = 1 << 23,

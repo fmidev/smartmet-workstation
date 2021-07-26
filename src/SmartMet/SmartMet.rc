@@ -303,7 +303,6 @@ BEGIN
         MENUITEM "Station data grid view",      ID_BUTTON_SYNOP_DATA_GRID_VIEW
         MENUITEM "Trajectory tool",             ID_BUTTON_TRAJECTORY
         MENUITEM "Warning center messages\tF9", ID_BUTTON_WARNING_CENTER_DLG
-        MENUITEM "Sea icing messages",          ID_BUTTON_SEA_ICING_WARNINGS_DLG
         MENUITEM "Wind table tool",             ID_BUTTON_WIND_TABLE_DLG
         MENUITEM "Data quality checker",        ID_BUTTON_DATA_QUALITY_CHECKER
         MENUITEM "Ignore stations\tCtrl+F3",    ID_ACCELERATOR_IGNORE_STATIONS_DLG
@@ -325,7 +324,6 @@ BEGIN
             MENUITEM "Trajectory view position",    ID_VIEW_SET_TRAJECTORY_VIEW_PLACE_TO_DEFAULT
             MENUITEM "View macro position",         ID_VIEW_SET_VIEW_MACRO_DLG_PLACE_TO_DEFAULT
             MENUITEM "Warning center view position", ID_VIEW_SET_WARNING_CENTER_DLG_PLACE_TO_DEFAULT
-            MENUITEM "Sea icing view position",     ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT
             MENUITEM "Wind table view position",    ID_VIEW_SET_WIND_TABLE_DLG_PLACE_TO_DEFAULT
             MENUITEM "Data quality checker position", ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT
             MENUITEM "Soundings from server settings position", ID_VIEW_SET_SOUNDINGS_FROM_SERVER_SETTINGS_PLACE_TO_DEFAULT
@@ -864,7 +862,6 @@ BEGIN
     ID_BUTTON_TRAJECTORY    "Trajectory tool\nTrajectory tool"
     ID_BUTTON_WARNING_CENTER_DLG 
                             "Warning center messages\nWarning center messages"
-    ID_BUTTON_SEA_ICING_WARNINGS_DLG "Sea icing messages\nSea icing messages"
     ID_BUTTON_WIND_TABLE_DLG "Wind table tool\nWind table tool"
     ID_BUTTON_DATA_QUALITY_CHECKER 
                             "Data quality checker\nData quality checker"
@@ -896,8 +893,6 @@ BEGIN
                             "View macro position\nView macro position"
     ID_VIEW_SET_WARNING_CENTER_DLG_PLACE_TO_DEFAULT 
                             "Warning center view position\nWarning center view position"
-    ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT 
-                            "Sea icing view position\nSea icing view position"
     ID_VIEW_SET_WIND_TABLE_DLG_PLACE_TO_DEFAULT 
                             "Wind table view position\nWind table view position"
     ID_VIEW_SET_DATA_QUALITY_CHECKER_DLG_PLACE_TO_DEFAULT 

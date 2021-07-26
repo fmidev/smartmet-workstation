@@ -77,7 +77,6 @@ namespace CtrlViewUtils
 }
 class NFmiConceptualModelData;
 class NFmiQ2Client;
-class NFmiSeaIcingWarningSystem;
 class CWnd;
 class NFmiMapViewTimeLabelInfo;
 class NFmiWindTableSystem;
@@ -347,7 +346,6 @@ public:
 	CWnd* TransparencyContourDrawView(void);
 	int SoundingViewWindBarbSpaceOutFactor(void);
 	void SoundingViewWindBarbSpaceOutFactor(int newValue);
-	NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void);
 	NFmiWindTableSystem& WindTableSystem(void);
 	NFmiQ2Client& Q2Client(void);
 	void GetDataFromQ2Server(const std::string &theURLStr,

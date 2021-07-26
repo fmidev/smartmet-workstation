@@ -20,7 +20,6 @@
 #include "NFmiQueryData.h"
 #include "NFmiDataNotificationSettingsWinRegistry.h"
 #include "FmiCombineDataThread.h"
-#include "FmiSeaIcingMessageThread.h"
 #include "FmiMacroParamUpdateThread.h"
 #include "SmartMetThreads_resource.h"
 #include "FmiQueryDataCacheLoaderThread.h"
@@ -34,12 +33,14 @@
 #include "NFmiSatelliteImageCacheSystem.h"
 #include "HakeMessage/Main.h"
 #include "HakeMessage/HakeSystemConfigurations.h"
-#include "NFmiSeaIcingWarningSystem.h"
 #include "CtrlViewWin32Functions.h"
 #include "CtrlViewFunctions.h"
+#include "FmiHakeWarningMessages.h"
+
 #ifndef DISABLE_CPPRESTSDK
 #include "WmsSupport.h"
 #endif // DISABLE_CPPRESTSDK
+
 #include "ApplicationInterface.h"
 #include "persist2.h"
 
@@ -966,7 +967,6 @@ void CMainFrame::OnClose()
 #endif // DISABLE_CPPRESTSDK
 			CFmiCombineDataThread::CloseNow(); // sama t‰ss‰ combineData-threadille
 			CFmiSoundingIndexDataThread::CloseNow(); // sama t‰ss‰ soundingIndexData-threadille
-			CFmiSeaIcingMessageThread::CloseNow(); // sama t‰ss‰ HAKE warning luku -threadille
 			CFmiMacroParamUpdateThread::CloseNow(); // t‰ss‰ sama macroParam p‰ivitys -threadille
 			CFmiQueryDataCacheLoaderThread::CloseNow(); // t‰ss‰ sama queryData cachetus -threadeille (3 kpl kerralla)
             NFmiSatelliteImageCacheSystem::StopUpdateThreads();
@@ -986,10 +986,6 @@ void CMainFrame::OnClose()
 				itsDoc->LogMessage("soundingIndexData working-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
 			else
 				itsDoc->LogMessage("soundingIndexData working-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
-			if(CFmiSeaIcingMessageThread::WaitToClose(5 * 1000))
-				itsDoc->LogMessage("SeaIcing Message working-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
-			else
-				itsDoc->LogMessage("SeaIcing Message working-thread didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 			if(CFmiMacroParamUpdateThread::WaitToClose(5 * 1000))
 				itsDoc->LogMessage("MacroParam update-thread stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
 			else
@@ -1285,15 +1281,6 @@ void CMainFrame::StartDataLoadingWorkingThread(void)
                 if((itsDisableThreadsVariable & gDisableSoundingIndexDataThread) == 0)
                     CWinThread* soundingIndexDataThread = AfxBeginThread(CFmiSoundingIndexDataThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
 
-                // k‰ynnistet‰‰n myˆs SeaIcing sanomien luku threadi kerran, ja se pit‰‰ ensin initialisoida.
-                CFmiSeaIcingMessageThread::InitSeaIcingMessageInfo(itsDoc->SeaIcingWarningSystem()); // t‰m‰ pit‰‰ siirt‰‰ threadin k‰ynnistyst‰ edelt‰v‰ksi kohdaksi
-                int seaIcingThreadDelayInMS = 75 * 1000;
-                if(itsDoc->MachineThreadCount() >= 6)
-                    seaIcingThreadDelayInMS = 40 * 1000; // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ alkua niin paljoa
-                CFmiSeaIcingMessageThread::SetFirstTimeDelay(seaIcingThreadDelayInMS);
-                if((itsDisableThreadsVariable & gDisableWarningMessageThread) == 0)
-                    CWinThread* hakeWarningThread = AfxBeginThread(CFmiSeaIcingMessageThread::DoThread, nullptr, THREAD_PRIORITY_BELOW_NORMAL);
-
                 // K‰ynnistet‰‰n Hake sanomien luku, jos on jotain dataa luettavaksi
 #ifndef DISABLE_CPPRESTSDK
                 if(itsDoc->WarningCenterSystem().isThereAnyWorkToDo())
@@ -1402,19 +1389,6 @@ void CMainFrame::GetNewWarningMessages(void)
 #endif // DISABLE_CPPRESTSDK
 }
 
-void CMainFrame::GetNewSeaIcingMessages(void)
-{
-	if(itsDoc)
-	{
-		CFmiSeaIcingMessageThread::GetNewSeaIcingMessages(itsDoc->SeaIcingWarningSystem());
-        if(itsDoc->SeaIcingWarningSystem().ViewVisible())
-        {
-            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
-            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: New Sea-icing messages read", TRUE, TRUE, 0); // p‰ivitet‰‰n p‰‰ ikkunaa, jos varoitus dialogi on p‰‰ll‰
-        }
-	}
-}
-
 void CMainFrame::DoMacroParamUpdate(void)
 {
 	if(itsDoc)
@@ -1442,8 +1416,6 @@ BOOL CMainFrame::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* p
 		OnWorkinThreadDataRead2();
 	else if(message == ID_MESSAGE_NEW_HAKE_WARNING_AVAILABLE)
 		GetNewWarningMessages();
-	else if(message == ID_MESSAGE_NEW_SEA_ICING_WARNING_AVAILABLE)
-		GetNewSeaIcingMessages();
 	else if(message == ID_MESSAGE_MACRO_PARAMS_UPDATE)
 		DoMacroParamUpdate();
     else if(message == ID_MESSAGE_START_HISTORY_THREAD)
