@@ -65,7 +65,6 @@
 #include "FmiExtraMapViewDlg.h"
 #include "FmiExtraMapView.h"
 #include "FmiGdiPlusHelpers.h"
-#include "FmiSeaIcingWarningsDlg.h"
 #include "FmiWindTableDlg.h"
 #include "NFmiWindTableSystem.h"
 #include "FmiLocationFinderDlg.h"
@@ -87,7 +86,6 @@
 #include "FmiBetaProductTabControlDialog.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "FmiLogViewer.h"
-#include "NFmiSeaIcingWarningSystem.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiFastInfoUtils.h"
 #include "HakeMessage/Main.h"
@@ -256,7 +254,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_VIEW_SET_TRAJECTORY_VIEW_PLACE_TO_DEFAULT, OnViewSetTrajectoryViewPlaceToDefault)
 	ON_COMMAND(ID_VIEW_EDITOR_LOG, &CSmartMetDoc::OnViewEditorLog)
 	ON_COMMAND(ID_BUTTON_WARNING_CENTER_DLG, OnButtonWarningCenterDlg)
-	ON_COMMAND(ID_BUTTON_SEA_ICING_WARNINGS_DLG, OnButtonSeaIcingWarningsDlg)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_OVERMAP_FORE_BACK_GROUND, OnToggleOverMapBackForeGround)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_TOOLTIP, OnAcceleratorToggleTooltip)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_KEEP_MAP_RATIO, OnAcceleratorToggleKeepMapRatio)
@@ -264,7 +261,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_BUTTON_HELP_EDITOR_MODE, OnButtonHelpEditorMode)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_HELP_EDITOR_MODE, OnUpdateButtonHelpEditorMode)
 	ON_COMMAND(ID_VIEW_SET_WARNING_CENTER_DLG_PLACE_TO_DEFAULT, OnViewSetWarningCenterDlgPlaceToDefault)
-	ON_COMMAND(ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT, OnViewSetSeaIcingWarningsDlgPlaceToDefault)
 	ON_COMMAND(ID_EXTRA_MAP_VIEW_1, OnExtraMapView1)
 	ON_UPDATE_COMMAND_UI(ID_EXTRA_MAP_VIEW_1, OnUpdateOnExtraMapView1)
 	ON_COMMAND(ID_EXTRA_MAP_VIEW_2, OnExtraMapView2)
@@ -355,7 +351,6 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsSynopDataGridViewDlg(nullptr)
 ,itsTrajectoryDlg(nullptr)
 ,itsWarningCenterDlg(nullptr)
-,itsSeaIcingWarningsDlg(nullptr)
 ,itsWindTableDlg(nullptr)
 ,itsDataQualityCheckerDialog(nullptr)
 ,itsMapViewDescTopIndex(0)
@@ -422,7 +417,6 @@ CSmartMetDoc::~CSmartMetDoc()
 	::DestroyModalessDialog((CDialog **)(&itsSynopDataGridViewDlg));
 	::DestroyModalessDialog((CDialog **)(&itsTrajectoryDlg));
 	::DestroyModalessDialog((CDialog **)(&itsWarningCenterDlg));
-	::DestroyModalessDialog((CDialog **)(&itsSeaIcingWarningsDlg));
 	::DestroyModalessDialog((CDialog **)(&itsWindTableDlg));
 	::DestroyModalessDialog((CDialog **)(&itsDataQualityCheckerDialog));
 	::DestroyModalessDialog((CDialog **)(&itsExtraMapViewDlg1));
@@ -936,11 +930,6 @@ void CSmartMetDoc::CreateWarningCenterDlg(NFmiEditMapGeneralDataDoc *theDoc)
     CreateModalessDialog(&itsWarningCenterDlg, IDD_DIALOG_WARNING_CENTER_DLG, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
 }
 
-void CSmartMetDoc::CreateSeaIcingWarningsDlg(NFmiEditMapGeneralDataDoc *theDoc)
-{
-    CreateModalessDialog(&itsSeaIcingWarningsDlg, IDD_DIALOG_WARNING_CENTER_DLG, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
-}
-
 void CSmartMetDoc::CreateWindTableDlg(NFmiEditMapGeneralDataDoc *theDoc)
 {
     CreateModalessDialog(&itsWindTableDlg, IDD_DIALOG_WIND_TABLE, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
@@ -1345,7 +1334,6 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
                 ::UpdateModalessDialog(itsSynopDataGridViewDlg);
                 ::UpdateModalessDialog(itsTrajectoryDlg);
                 ::UpdateModalessDialog(itsWarningCenterDlg);
-                ::UpdateModalessDialog(itsSeaIcingWarningsDlg);
                 ::UpdateModalessDialog(itsWindTableDlg);
                 //            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
                 ::UpdateModalessDialog(itsBetaProductDialog);
@@ -1421,8 +1409,6 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, 
             ::UpdateModalessDialog(itsTrajectoryDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::WarningCenterDlg))
             ::UpdateModalessDialog(itsWarningCenterDlg);
-        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::SeaIcingDlg))
-            ::UpdateModalessDialog(itsSeaIcingWarningsDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::WindTableDlg))
             ::UpdateModalessDialog(itsWindTableDlg);
         //            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
@@ -1833,7 +1819,6 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
 	CFmiWin32Helpers::SetWindowIconDynamically(itsWarningCenterDlg, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg1, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg2, usedIcons);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsSeaIcingWarningsDlg, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsWindTableDlg, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsDataQualityCheckerDialog, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsIgnoreStationsDlg, usedIcons);
@@ -2889,7 +2874,6 @@ std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
     MakeMakeWindowPosMapInsert<CFmiSynopDataGridViewDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiViewMacroDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiWarningCenterDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiSeaIcingWarningsDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiWindTableDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiDataQualityCheckerDialog>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiCaseStudyDlg>(windowPosMap);
@@ -2929,7 +2913,6 @@ void CSmartMetDoc::SaveViewPositionsToRegistry(void)
     ::SaveViewPositionToRegistry(itsTrajectoryDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsViewMacroDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsWarningCenterDlg, applicationWinRegistry, dummyMapDescTopIndex);
-    ::SaveViewPositionToRegistry(itsSeaIcingWarningsDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsWindTableDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsExtraMapViewDlg1, applicationWinRegistry, 2);
     ::SaveViewPositionToRegistry(itsExtraMapViewDlg2, applicationWinRegistry, 3);
@@ -3031,32 +3014,6 @@ void CSmartMetDoc::OnButtonDataQualityChecker()
 			GetData()->LogMessage("DataQualityChecker Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		GetData()->DataQualityChecker().ViewOn(!GetData()->DataQualityChecker().ViewOn());
-	}
-}
-
-
-void CSmartMetDoc::OnButtonSeaIcingWarningsDlg()
-{
-	if(GetData())
-	{
-		if(!itsSeaIcingWarningsDlg)
-			CreateSeaIcingWarningsDlg(GetData());
-		if(GetData()->SeaIcingWarningSystem().ViewVisible())
-		{ // jos dialogi oli päällä, laitetaan se pois päältä
-			itsSeaIcingWarningsDlg->ShowWindow(SW_HIDE);
-			GetData()->LogMessage("Closing Sea Icing dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		else
-		{ // muuten laitetaan se päälle
-			itsSeaIcingWarningsDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-			itsSeaIcingWarningsDlg->SetActiveWindow();
-			GetData()->LogMessage("Opening Sea Icing dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		GetData()->SeaIcingWarningSystem().ViewVisible(!GetData()->SeaIcingWarningSystem().ViewVisible());
-		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SeaIcingDlg);
-        UpdateAllViewsAndDialogs("Opening/closing sea-icing warnings dialog");
 	}
 }
 
@@ -3210,17 +3167,6 @@ void CSmartMetDoc::OnViewSetWarningCenterDlgPlaceToDefault()
 		itsWarningCenterDlg->SetActiveWindow();
 	}
 }
-
-void CSmartMetDoc::OnViewSetSeaIcingWarningsDlgPlaceToDefault()
-{
-	if(itsSeaIcingWarningsDlg)
-	{
-		itsSeaIcingWarningsDlg->SetDefaultValues();
-		itsSeaIcingWarningsDlg->Update();
-		itsSeaIcingWarningsDlg->SetActiveWindow();
-	}
-}
-
 
 void CSmartMetDoc::OnButtonWindTableDlg()
 {

@@ -532,7 +532,7 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
     if(::IsMainMapViewDesctopIndex(itsMapViewDescTopIndex))
     {
         // Pääkarttanäytön aika-stepin vaihto vaikuttaa myös warning ja sea-icing ikkunoiden tiloihin
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::WarningCenterDlg);
     }
 }
 

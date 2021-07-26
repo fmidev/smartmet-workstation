@@ -147,7 +147,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	bool MouseDragZooming(const NFmiPoint &thePlace);
 	bool ShowWarningMessages(void);
 	std::string ComposeWarningMessageToolTipText(void);
-	std::string ComposeSeaIcingWarningMessageToolTipText(void);
 	std::string ComposeSilamLocationsToolTipText(void);
 	std::string ComposeMapLayerToolTipText(bool beforeDataIsDrawnCase);
 	void DrawMouseCursorHelperCrossHair(void);
@@ -166,8 +165,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawSelectedMTAModeSoundingPlaces(void);
 	void DrawHALYMessageMarkers(void);
 	void DrawSilamStationMarkers(void);
-	void DrawSeaIcingMessageMarkers(void);
-	bool ShowSeaIcingWarningMessages(void);
 	void DrawTrajectories(void);
 	void DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor);
 	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);

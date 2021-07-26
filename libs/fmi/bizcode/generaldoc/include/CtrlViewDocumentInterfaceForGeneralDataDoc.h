@@ -207,7 +207,6 @@ public:
     bool IsCPGridCropNotPlausible(void) override;
     boost::shared_ptr<NFmiArea> CPGridCropInnerLatlonArea(void) override;
     NFmiWindTableSystem& WindTableSystem(void) override;
-    NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) override;
     NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) override;
     bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;

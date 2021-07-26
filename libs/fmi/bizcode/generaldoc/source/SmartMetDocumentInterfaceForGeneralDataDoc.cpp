@@ -1136,11 +1136,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::InvalidateMapView(bool bErase)
     itsDoc->InvalidateMapView(bErase);
 }
 
-NFmiSeaIcingWarningSystem& SmartMetDocumentInterfaceForGeneralDataDoc::SeaIcingWarningSystem()
-{
-    return itsDoc->SeaIcingWarningSystem();
-}
-
 CtrlViewUtils::GraphicalInfo& SmartMetDocumentInterfaceForGeneralDataDoc::GetGraphicalInfo(int theMapViewDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getGraphicalInfo(theMapViewDescTopIndex);

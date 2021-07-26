@@ -109,7 +109,6 @@
 #include "NFmiStationIndexTextView.h"
 #include "NFmiInfoAreaMaskOccurrance.h"
 #include "HakeMessage/Main.h"
-#include "NFmiSeaIcingWarningSystem.h"
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiStation2GridMask.h"
 #include "ToolboxViewsInterfaceForGeneralDataDoc.h"
@@ -380,7 +379,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsDataToDBCheckMethod(2)
 ,itsOutOfEditedAreaTimeSerialPoint(kFloatMissing, kFloatMissing)
 ,itsConceptualModelData()
-,itsSeaIcingWarningSystem()
 ,itsTransparencyContourDrawView(0)
 ,itsSynopDataFilePatternSortOrderVector()
 ,itsShowToolTipTimeView(true)
@@ -535,7 +533,6 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
 	InitEditedDataParamDescriptor(); // pit‰‰ olla itsDataLoadingInfoManager -otuksen luomisen j‰lkeen
 	InitWarningCenterSystem(); // t‰m‰n initialisointi pit‰‰ olla itsDataLoadingInfoManager-olion initialisoinnin per‰ss‰
-	InitSeaIcingWarningSystem();
 	InitWindTableSystem();
 	InitExtraSoundingProducerListFromSettings();
     InitMTATempSystem(); // pit‰‰ kutsua vasta InitProducerSystem- ja InitExtraSoundingProducerListFromSettings -kutsujen j‰lkeen
@@ -1224,21 +1221,6 @@ void InitWarningCenterSystem(void)
         LogAndWarnUser(errStr, "Problems in InitWarningCenterSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
 	}
 #endif // DISABLE_CPPRESTSDK
-}
-
-void InitSeaIcingWarningSystem(void)
-{
-	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	try
-	{
-		itsSeaIcingWarningSystem.InitializeFromSettings("SmartMet::SeaIcingWarningSystem::");
-	}
-	catch(std::exception &e)
-	{
-		string errStr("InitSeaIcingWarningSystem - Initialization error in configurations: \n");
-		errStr += e.what();
-        LogAndWarnUser(errStr, "Problems in InitSeaIcingWarningSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
-	}
 }
 
 void InitWindTableSystem(void)
@@ -8123,11 +8105,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsQ2Client;
 	}
 
-	NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void)
-	{
-		return itsSeaIcingWarningSystem;
-	}
-
 	int SoundingViewWindBarbSpaceOutFactor(void)
 	{
 		return itsMTATempSystem.WindBarbSpaceOutFactor();
@@ -10425,18 +10402,21 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool itsShowToolTipTrajectoryView;
 
 	std::vector<std::string> itsSynopDataFilePatternSortOrderVector; // t‰m‰ on m‰‰r‰tty asetuksissa helpdatainfo.conf-tiedostossa.
-
-	CWnd *itsTransparencyContourDrawView; // t‰m‰ pit‰‰ asettaa aina kun joku n‰yttˆ piirt‰‰ isoviiva/contoureja. T‰m‰n avulla piirret‰‰n
-											// l‰pin‰kyv‰t parametrit pinell‰ kikalla ja Gdiplus-piirtoa hyv‰ksi k‰ytt‰en.
-	NFmiSeaIcingWarningSystem itsSeaIcingWarningSystem;
-	NFmiConceptualModelData itsConceptualModelData; // rintama piirto ominaisuudet on t‰‰ll‰
+	// t‰m‰ pit‰‰ asettaa aina kun joku n‰yttˆ piirt‰‰ isoviiva/contoureja. T‰m‰n avulla piirret‰‰n
+	// l‰pin‰kyv‰t parametrit pinell‰ kikalla ja Gdiplus-piirtoa hyv‰ksi k‰ytt‰en.
+	CWnd *itsTransparencyContourDrawView; 
+	// rintama piirto ominaisuudet on t‰‰ll‰
+	NFmiConceptualModelData itsConceptualModelData;
 	NFmiPoint itsOutOfEditedAreaTimeSerialPoint;
-	NFmiVPlaceDescriptor itsSoundingPlotLevels; // luotauksia piirret‰‰n karttan‰ytˆlle vain tiettyihin vakio painepinnoille
-	int itsDataToDBCheckMethod; // kun dataa l‰hetet‰‰n tietokantaan, kysyt‰‰n l‰hetys dialogissa, mit‰ tarkastuus metodia
-								// halutaan k‰ytt‰‰. 1=datavalidation, 2= niin kuin asetuksissa sanotaan
-								// DBChecker ohitetaan t‰ss‰.
-	std::vector<NFmiProducer> itsExtraSoundingProducerList; // settingseissa on lista mahdollisista ylim‰‰r‰isist‰ tuottajista,
-															// joita on tarkoitus katsella luotaus-n‰ytˆll‰
+	// luotauksia piirret‰‰n karttan‰ytˆlle vain tiettyihin vakio painepinnoille
+	NFmiVPlaceDescriptor itsSoundingPlotLevels; 
+	// kun dataa l‰hetet‰‰n tietokantaan, kysyt‰‰n l‰hetys dialogissa, mit‰ tarkastuus metodia
+	// halutaan k‰ytt‰‰. 1=datavalidation, 2= niin kuin asetuksissa sanotaan
+	// DBChecker ohitetaan t‰ss‰.
+	int itsDataToDBCheckMethod; 
+	// settingseissa on lista mahdollisista ylim‰‰r‰isist‰ tuottajista,
+	// joita on tarkoitus katsella luotaus-n‰ytˆll‰
+	std::vector<NFmiProducer> itsExtraSoundingProducerList; 
 	NFmiQ2Client itsQ2Client;
 	NFmiPoint itsStationDataGridSize; // miss‰ hilassa asema/piste datan hilaus lasketaan
 
@@ -11624,11 +11604,6 @@ NFmiQ2Client& NFmiEditMapGeneralDataDoc::Q2Client(void)
 }
 bool NFmiEditMapGeneralDataDoc::UseQ2Server(void)
 {return pimpl->UseQ2Server();}
-
-NFmiSeaIcingWarningSystem& NFmiEditMapGeneralDataDoc::SeaIcingWarningSystem(void)
-{
-	return pimpl->SeaIcingWarningSystem();
-}
 
 NFmiWindTableSystem& NFmiEditMapGeneralDataDoc::WindTableSystem(void)
 {

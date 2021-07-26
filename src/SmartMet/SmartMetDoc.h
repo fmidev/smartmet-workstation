@@ -30,7 +30,6 @@ class CFmiSynopDataGridViewDlg;
 class CFmiTrajectoryDlg;
 class CFmiWarningCenterDlg;
 class CFmiExtraMapViewDlg;
-class CFmiSeaIcingWarningsDlg;
 class CFmiWindTableDlg;
 class NFmiViewSettingMacro;
 class CFmiLocationFinderDlg;
@@ -103,7 +102,6 @@ public:
 	void CreateSynopDataGridViewDlg(NFmiEditMapGeneralDataDoc *theDoc);
 	void CreateTrajectoryDlg(NFmiEditMapGeneralDataDoc *theDoc);
 	void CreateWarningCenterDlg(NFmiEditMapGeneralDataDoc *theDoc);
-	void CreateSeaIcingWarningsDlg(NFmiEditMapGeneralDataDoc *theDoc);
 	void CreateWindTableDlg(NFmiEditMapGeneralDataDoc *theDoc);
 	void CreateDataQualityCheckerDialog(NFmiEditMapGeneralDataDoc *theDoc);
 	void CreateIgnoreStationsDlg(NFmiEditMapGeneralDataDoc *theDoc);
@@ -266,7 +264,6 @@ private:
 	CFmiWarningCenterDlg *itsWarningCenterDlg;
 	CFmiExtraMapViewDlg *itsExtraMapViewDlg1;
 	CFmiExtraMapViewDlg *itsExtraMapViewDlg2;
-	CFmiSeaIcingWarningsDlg *itsSeaIcingWarningsDlg;
 	CFmiWindTableDlg *itsWindTableDlg;
 	CFmiDataQualityCheckerDialog *itsDataQualityCheckerDialog;
 	CFmiIgnoreStationsDlg *itsIgnoreStationsDlg;
@@ -336,7 +333,6 @@ public:
 	afx_msg void OnUpdateButtonTrajectory(CCmdUI *pCmdUI);
 	afx_msg void OnViewSetTrajectoryViewPlaceToDefault();
 	afx_msg void OnButtonWarningCenterDlg();
-	afx_msg void OnButtonSeaIcingWarningsDlg();
 	afx_msg void OnViewEditorLog();
 	afx_msg void OnToggleOverMapBackForeGround();
 	afx_msg void OnAcceleratorToggleTooltip();
@@ -345,7 +341,6 @@ public:
 	afx_msg void OnButtonHelpEditorMode();
 	afx_msg void OnUpdateButtonHelpEditorMode(CCmdUI *pCmdUI);
 	afx_msg void OnViewSetWarningCenterDlgPlaceToDefault();
-	afx_msg void OnViewSetSeaIcingWarningsDlgPlaceToDefault();
 
 	afx_msg void OnAcceleratorBorrowParams1();
 	afx_msg void OnAcceleratorBorrowParams2();
