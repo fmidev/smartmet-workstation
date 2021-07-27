@@ -2692,24 +2692,24 @@ bool NFmiStationViewHandler::ShowParamHandlerView(void)
 	return false;
 }
 
-void NFmiStationViewHandler::DrawParamView(NFmiToolBox * theGTB)
+void NFmiStationViewHandler::DrawParamView(NFmiToolBox* theGTB)
 {
-    bool doBetaProductParameterBox = itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
-    bool doBetaParamBoxDuePrinting = (itsCtrlViewDocumentInterface->Printing() && IsPrintedMapViewDesctop());
-    if(doBetaProductParameterBox || doBetaParamBoxDuePrinting)
-    {
-        const NFmiBetaProduct *optionalPrintingBetaProduct = doBetaParamBoxDuePrinting ? &StationViews::GetPrintingBetaProductForParamBoxDraw(itsMapViewDescTopIndex, *itsCtrlViewDocumentInterface) : nullptr;
-        
-        StationViews::DrawBetaProductParamBox(this, false, optionalPrintingBetaProduct);
-    }
-    else
-    {
-        if(ShowParamHandlerView())
-        {
-            UpdateParamHandlerView();
-            itsParamHandlerView->Draw(theGTB);
-        }
-    }
+	if(ShowParamHandlerView())
+	{
+		bool doBetaProductParameterBox = itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
+		bool doBetaParamBoxDuePrinting = (itsCtrlViewDocumentInterface->Printing() && IsPrintedMapViewDesctop());
+		if(doBetaProductParameterBox || doBetaParamBoxDuePrinting)
+		{
+			const NFmiBetaProduct* optionalPrintingBetaProduct = doBetaParamBoxDuePrinting ? &StationViews::GetPrintingBetaProductForParamBoxDraw(itsMapViewDescTopIndex, *itsCtrlViewDocumentInterface) : nullptr;
+
+			StationViews::DrawBetaProductParamBox(this, false, optionalPrintingBetaProduct);
+		}
+		else
+		{
+			UpdateParamHandlerView();
+			itsParamHandlerView->Draw(theGTB);
+		}
+	}
 }
 
 bool NFmiStationViewHandler::ChangeSatelDataChannel(NFmiStationView* theView, short theDelta)
