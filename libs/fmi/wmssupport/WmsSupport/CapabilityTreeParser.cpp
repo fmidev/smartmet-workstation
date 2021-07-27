@@ -502,7 +502,7 @@ namespace Wms
 		{
 			if(layerInfo.endTime.DifferenceInHours(layerInfo.startTime) <= 3)
 			{
-				std::string logMessage = "Short time-window with ";
+				std::string logMessage = "Short time-window with Wms server ";
 				logMessage += serverName;
 				logMessage += ": layerName = ";
 				logMessage += layerInfo.name;
