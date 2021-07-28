@@ -8,7 +8,7 @@ namespace Wms
     }
 
 
-    void LegendSelf::Row::addLegend(LegendBuffer legend)
+    void LegendSelf::Row::addLegend(const LegendBuffer &legend)
     {
         auto legendH = legend.legendHeightRelativeToOrientation();
         auto legendW = legend.legendWidthRelativeToOrientation();

@@ -7,6 +7,7 @@
 #include <regex>
 #include <algorithm>
 #include <codecvt>
+#include <regex>
 
 using namespace boost::property_tree;
 
@@ -256,8 +257,27 @@ namespace Wms
 				static_cast<short>(time.tm_mday),
 				static_cast<short>(time.tm_hour),
 				static_cast<short>(time.tm_min),
-				static_cast<short>(time.tm_sec)
+				static_cast<short>(time.tm_sec),
+				1l
 			};
+		}
+
+		const std::regex g_UniversalTimeStringRegex(std::string("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z.*"));
+
+		bool containsUniversalTimeString(const std::string& timeStringProspect)
+		{
+			return std::regex_match(timeStringProspect, g_UniversalTimeStringRegex);
+		}
+
+		std::string getLastSuitableTimeString(const std::vector<std::string>& timeStringProspects)
+		{
+			for(auto reverseIter = timeStringProspects.rbegin(); reverseIter != timeStringProspects.rend(); ++reverseIter)
+			{
+				if(containsUniversalTimeString(*reverseIter))
+					return *reverseIter;
+			}
+			// jos ei löytynyt mitään, palautetaan vain viimeinen stringi
+			return timeStringProspects.back();
 		}
 
 		std::pair<NFmiMetTime, NFmiMetTime> parseDimension(const std::string& dimension)
@@ -283,12 +303,14 @@ namespace Wms
 				if (beginningIsSeparated(dimension))
 				{
 					beginEnd.first = parseMetTime(cppext::split(dimension, ',').front());
+					auto dimensionSplit = cppext::split(dimension, '/');
+					beginEnd.second = parseMetTime(getLastSuitableTimeString(dimensionSplit));
 				}
 				else
 				{
 					beginEnd.first = parseMetTime(cppext::split(dimension, '/').front());
+					beginEnd.second = parseMetTime(cppext::split(dimension, '/').at(1));
 				}
-				beginEnd.second = parseMetTime(cppext::split(dimension, '/').at(1));
 			}
 
 			return beginEnd;
@@ -333,7 +355,7 @@ namespace Wms
 
 	}
 
-	CapabilityTreeParser::CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback)
+	CapabilityTreeParser::CapabilityTreeParser(const NFmiProducer &producer, const std::string &delimiter, std::function<bool(long, const std::string&)> &cacheHitCallback)
 		:producer_{ producer }
 		, delimiter_{ delimiter }
 		, cacheHitCallback_{ cacheHitCallback }
