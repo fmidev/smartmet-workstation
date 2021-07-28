@@ -45,10 +45,10 @@ namespace Wms
     public:
         CapabilitiesHandler(
             std::unique_ptr<Web::Client> client,
-            std::shared_ptr<cppback::BackgroundManager> bManager,
+            const std::shared_ptr<cppback::BackgroundManager> &bManager,
             std::chrono::seconds intervalToPollGetCapabilities,
-            std::string proxyUrl,
-            std::unordered_map<int, DynamicServerSetup> servers,
+            const std::string &proxyUrl,
+            const std::unordered_map<int, DynamicServerSetup> &servers,
             std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback,
             std::function<bool(long, const std::string&)> cacheHitCallback,
             int capabilitiesTimeoutInSeconds

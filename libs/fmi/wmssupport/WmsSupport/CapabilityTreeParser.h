@@ -22,7 +22,7 @@ namespace Wms
         std::function<bool(long, const std::string&)> cacheHitCallback_;
 
     public:
-        CapabilityTreeParser(NFmiProducer producer, std::string delimiter, std::function<bool(long, const std::string&)> cacheHitCallback);
+        CapabilityTreeParser(const NFmiProducer &producer, const std::string &delimiter, std::function<bool(long, const std::string&)> &cacheHitCallback);
 		std::unique_ptr<CapabilityTree> parse(const boost::property_tree::ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
 		std::unique_ptr<CapabilityTree> parseXml(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers);
 

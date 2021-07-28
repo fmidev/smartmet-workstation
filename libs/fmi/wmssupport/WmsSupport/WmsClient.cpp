@@ -32,7 +32,7 @@ namespace Wms
     WmsClient::WmsClient(std::unique_ptr<BitmapCache> cache,
         std::unique_ptr<BitmapHandler::BitmapParser> parser,
         std::unique_ptr<Web::Client> client,
-        std::shared_ptr<cppback::BackgroundManager> bManager,
+        const std::shared_ptr<cppback::BackgroundManager> &bManager,
         std::unique_ptr<QueryBuilder> qb,
         int imgTimeoutInSeconds,
         int lgndTimeoutInSeconds
@@ -46,7 +46,7 @@ namespace Wms
         , legendTimeoutInSeconds(lgndTimeoutInSeconds)
     {}
 
-    void WmsClient::setImageLoadedCallback(std::function<void()> imageLoadedCallback)
+    void WmsClient::setImageLoadedCallback(std::function<void()> &imageLoadedCallback)
     {
         imageLoadedCallback_ = imageLoadedCallback;
     }
@@ -153,7 +153,7 @@ namespace Wms
         }
     }
 
-    NFmiImageHolder WmsClient::asyncWait(const WmsQuery& query, std::shared_future<std::string> response)
+    NFmiImageHolder WmsClient::asyncWait(const WmsQuery& query, std::shared_future<std::string> &response)
     {
         if(response.wait_for(200ms) == std::future_status::ready)
         {
@@ -168,7 +168,7 @@ namespace Wms
         }
     }
 
-    void WmsClient::waitUntilReadyAndNotifyByCallback(const WmsQuery& query, std::shared_future<std::string> response)
+    void WmsClient::waitUntilReadyAndNotifyByCallback(const WmsQuery& query, std::shared_future<std::string> &response)
     {
         bManager_->addTask([&,
             fut = std::move(response),
@@ -184,7 +184,7 @@ namespace Wms
         });
     }
 
-    NFmiImageHolder WmsClient::parseResponse(std::shared_future<std::string> fut) const
+    NFmiImageHolder WmsClient::parseResponse(std::shared_future<std::string> &fut) const
     {
         if(fut.valid())
         {
@@ -202,7 +202,7 @@ namespace Wms
         }
     }
 
-    bool WmsClient::isCached(WmsQuery query) const
+    bool WmsClient::isCached(const WmsQuery &query) const
     {
         return isCached(toKey1(query), toKey2(query));
     }

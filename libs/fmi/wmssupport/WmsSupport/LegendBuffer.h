@@ -18,7 +18,7 @@ namespace Wms
         unsigned int height;
         Orientation orientation;
 
-        LegendBuffer(NFmiImageHolder legend);
+        LegendBuffer(const NFmiImageHolder &legend);
 
         unsigned int legendWidthRelativeToOrientation() const;
         unsigned int legendHeightRelativeToOrientation() const;

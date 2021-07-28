@@ -17,7 +17,7 @@ namespace Wms
 
             std::vector<LegendBuffer> legends;
 
-            void addLegend(LegendBuffer legend);
+            void addLegend(const LegendBuffer &legend);
 
             unsigned int getRemainingRoom() const;
             unsigned int getHeight() const;
