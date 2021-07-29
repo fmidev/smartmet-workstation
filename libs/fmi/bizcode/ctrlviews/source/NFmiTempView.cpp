@@ -32,6 +32,7 @@
 #include "catlog/catlog.h"
 #include "ModelDataServerConfiguration.h"
 #include "SoundingViewSettingsFromWindowsRegisty.h"
+#include "NFmiHelpDataInfo.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -1349,13 +1350,13 @@ void NFmiTempView::DrawYAxel(void)
 	labelInfo.StartPointPixelOffSet(ScaleOffsetPoint(labelInfo.StartPointPixelOffSet()));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X()), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y()));
 
-	std::vector<double> &values = mtaTempSystem.PressureValues();
-	std::vector<double>::const_iterator endIt = values.end();
+	const auto &values = mtaTempSystem.PressureValues();
+	auto endIt = values.cend();
     double x1 = usedDataRect.Left();
     double x2 = usedDataRect.Right();
 	// # Y-axel
 	std::vector<LineLabelDrawData> lineLabels;
-	for(std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for(auto it = values.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		double y = p2y(*it);
@@ -1583,11 +1584,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 		lineInfo.LineType(FMI_SOLID);
 		lineInfo.Color(NFmiColor(0.99f, 0.5f, 0.f));
 		lineInfo.Thickness(boost::math::iround(2 * itsDrawSizeFactor.X()));
-		std::vector<double> values;
-		values.push_back(0.11);
-		values.push_back(0.135);
-		values.push_back(0.17);
-		values.push_back(0.32);
+		std::vector<double> values{ 0.11, 0.135, 0.17, 0.32 };
 		double startP = CalcPressureAtHeight(6); // aloitetaan viivan piirto 6 km:sta
 
 		double deltaP = -15;
@@ -1599,17 +1596,13 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 		envi.SetFontSize(NFmiPoint(labelInfo.FontSize(), labelInfo.FontSize()));
 		envi.BoldFont(true);
 		labelInfo.StartPointPixelOffSet(NFmiPoint(-5* itsDrawSizeFactor.X(), 0 * itsDrawSizeFactor.Y()));
-		std::vector<double> probValues;
-		probValues.push_back(0);
-		probValues.push_back(40);
-		probValues.push_back(70);
-		probValues.push_back(100);
+		std::vector<double> probValues{ 0, 40, 70, 100 };
 
 		NFmiPoint moveLabelRelatively(CalcReltiveMoveFromPixels(itsToolBox, labelInfo.StartPointPixelOffSet()));
-		std::vector<double>::const_iterator itProb = probValues.begin();
-		std::vector<double>::const_iterator endIt = values.end();
+		auto itProb = probValues.cbegin();
+		auto endIt = values.cend();
 		double P = startP;
-		for (std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it, ++itProb)
+		for (auto it = values.cbegin(); it != endIt;  ++it, ++itProb)
 		{
 			double T = NFmiSoundingFunctions::TMR(*it, P);
 			double X = pt2x(P, T);
@@ -1633,10 +1626,10 @@ void NFmiTempView::DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const 
 	itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, dataRect));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(theLabelInfo.StartPointPixelOffSet().X()), static_cast<REAL>(theLabelInfo.StartPointPixelOffSet().Y()));
 
-	std::vector<double>::const_iterator endIt = theValues.end();
+	auto endIt = theValues.cend();
 	double deltap = 50;
 	std::vector<LineLabelDrawData> lineLabels;
-	for (std::vector<double>::const_iterator it = theValues.begin(); it != endIt;  ++it)
+	for (auto it = theValues.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		for (double p = startP; p >= endP; p-=deltap)
@@ -1682,11 +1675,11 @@ void NFmiTempView::DrawDryAdiapaticks(void)
     NFmiTempLabelInfo labelInfo = mtaTempSystem.DryAdiabaticLabelInfo();
 	labelInfo.FontSize(boost::math::iround(labelInfo.FontSize() * itsDrawSizeFactor.Y()));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X() * itsDrawSizeFactor.X()), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y() * itsDrawSizeFactor.Y()));
-	std::vector<double> &values = mtaTempSystem.DryAdiabaticValues();
-	std::vector<double>::const_iterator endIt = values.end();
+	const auto &values = mtaTempSystem.DryAdiabaticValues();
+	auto endIt = values.cend();
 	double deltap = 50;
 	std::vector<LineLabelDrawData> lineLabels;
-	for (std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for (auto it = values.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		for (double p = pmax; p > 100; p-=deltap)
@@ -1719,10 +1712,10 @@ void NFmiTempView::DrawMoistAdiapaticks(void)
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X() * itsDrawSizeFactor.X()), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y() * itsDrawSizeFactor.Y()));
 
 	std::vector<LineLabelDrawData> lineLabels;
-	std::vector<double> &values = mtaTempSystem.MoistAdiabaticValues();
-	std::vector<double>::const_iterator endIt = values.end();
+	const auto &values = mtaTempSystem.MoistAdiabaticValues();
+	auto endIt = values.cend();
 	double deltap = 50;
-	for (std::vector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for (auto it = values.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		double P   = pmax;
@@ -1849,16 +1842,36 @@ static NFmiLocation GetSoundingLocation(boost::shared_ptr<NFmiFastQueryInfo> &th
 	return location;
 }
 
+static bool IsSurfaceDataCombiningAllowed(CtrlViewDocumentInterface* ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+{
+	if(ctrlViewDocumentInterface && theInfo)
+	{
+		auto* helpInfoData = ctrlViewDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());
+		if(helpInfoData)
+		{
+			return helpInfoData->AllowCombiningToSurfaceDataInSoundingView();
+		}
+	}
+	return false;
+}
+
 // Haetaan painepinta datalle pinta-dataa, että luotauksia voidaan leikata maanpinnalle.
-static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiProducer &theProducer, NFmiInfoOrganizer &theInfoOrganizer, NFmiInfoData::Type theDataType)
+static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface *ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiProducer &theProducer, const std::vector<NFmiInfoData::Type> &theDataTypes)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo;
-    if(theInfo)
+    if(ctrlViewDocumentInterface && theInfo)
     {
+		auto &infoOrganizer = *ctrlViewDocumentInterface->InfoOrganizer();
         theInfo->FirstLevel();
         if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
-        { // jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
-            std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = theInfoOrganizer.GetInfos(theDataType, true, theProducer.GetIdent());
+        { 
+			if(::IsSurfaceDataCombiningAllowed(ctrlViewDocumentInterface, theInfo))
+			{
+				// Käydään mahdolliset datatyypit läpi
+				for(auto dataType : theDataTypes)
+				{
+					// jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
+					auto infoVec = infoOrganizer.GetInfos(dataType, true, theProducer.GetIdent());
             if(infoVec.size())
             {
                 for(size_t i = 0; i < infoVec.size(); i++)
@@ -1871,6 +1884,8 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(boost::shared_
                     }
                 }
             }
+        }
+    }
         }
     }
 	return groundDataInfo;
@@ -1929,6 +1944,8 @@ void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempS
 	}
 }
 
+const std::vector<NFmiInfoData::Type> g_CombineSurfaceDataTypes{ NFmiInfoData::kViewable , NFmiInfoData::kAnalyzeData };
+
 void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto usedTempInfo(theTempInfo);
@@ -1940,10 +1957,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	{
         auto usedLocationWithName = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
         usedTempInfo.Latlon(usedLocationWithName.GetLocation());
-		boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kViewable);
-		if(groundDataInfo == 0)
-			groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kAnalyzeData);  // tämä on siksi että LAPS data on nykyään analyysi dataa, pitää korjata tämä infoorganizer sotku joskus kunnolla!!!
-
+		auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
 		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theIndex);
 		NFmiSoundingData sounding;
 		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
@@ -1998,8 +2012,6 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 	if(mtaTempSystem.ShowHodograf() && hodografViewData.Rect().IsInside(thePlace))
 	{
-		if(mtaTempSystem.ShowHodograf())
-		{ 
 			// hodografin pitää vielä näkyä
 			if(theKey & kCtrlKey)
 			{ 
@@ -2013,7 +2025,6 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
 			}
 			return true;
 		}
-	}
 	else if(itsTempViewDataRects.getAnimationButtonRect().IsInside(thePlace))
 	{
 		if(theDelta > 0)
