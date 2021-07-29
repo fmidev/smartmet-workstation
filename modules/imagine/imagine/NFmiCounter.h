@@ -51,7 +51,7 @@ namespace Imagine
 {
 //! An unique object counter.
 template <class T>
-class _FMI_DLL NFmiCounter
+class NFmiCounter
 {
  protected:
   //! The counted data is held in this type containers.

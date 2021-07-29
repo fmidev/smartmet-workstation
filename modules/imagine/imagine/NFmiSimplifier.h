@@ -74,7 +74,7 @@
 namespace Imagine
 {
 template <class T>
-class _FMI_DLL NFmiSimplifier
+class NFmiSimplifier
 {
  public:
   // Different smoothening methods

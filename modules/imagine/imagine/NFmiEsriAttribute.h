@@ -47,7 +47,7 @@
 
 namespace Imagine
 {
-class _FMI_DLL NFmiEsriAttribute
+class NFmiEsriAttribute
 {
  public:
   // Constructors based on data types

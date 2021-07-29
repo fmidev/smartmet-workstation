@@ -20,7 +20,7 @@ namespace Imagine
 // A working class, holding an unique edge
 // ----------------------------------------------------------------------
 
-class _FMI_DLL NFmiEdge
+class NFmiEdge
 {
  public:
   // The constructor will sort the vertices

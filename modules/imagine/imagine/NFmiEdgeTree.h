@@ -31,7 +31,7 @@ namespace Imagine
 // A working class, holding a tree of unique edges
 // ----------------------------------------------------------------------
 
-class _FMI_DLL NFmiEdgeTree
+class NFmiEdgeTree
 #ifndef IMAGINE_WITH_CAIRO
     : public NFmiDrawable
 #endif

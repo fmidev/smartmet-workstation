@@ -16,7 +16,7 @@
 
 namespace Imagine
 {
-class _FMI_DLL NFmiEsriBox
+class NFmiEsriBox
 {
  public:
   // Constructors, destructors

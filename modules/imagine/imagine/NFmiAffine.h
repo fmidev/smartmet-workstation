@@ -17,7 +17,7 @@
 namespace Imagine
 {
 //! A class to perform affine transformations
-class _FMI_DLL NFmiAffine
+class NFmiAffine
 {
  public:
   ~NFmiAffine();

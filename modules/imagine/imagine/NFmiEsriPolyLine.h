@@ -25,7 +25,7 @@
 
 namespace Imagine
 {
-class _FMI_DLL NFmiEsriPolyLine : public NFmiEsriElement
+class NFmiEsriPolyLine : public NFmiEsriElement
 {
  public:
   // Constructors, destructors

@@ -146,7 +146,7 @@ namespace Imagine
 {
 /// Class to calculating 2D contour polygons given a data interval.
 
-class _FMI_DLL NFmiContourTree : public NFmiEdgeTree
+class NFmiContourTree : public NFmiEdgeTree
 {
  public:
   /// Different contouring methods.
