@@ -80,7 +80,7 @@ NFmiAreaMaskInfo::NFmiAreaMaskInfo(const NFmiAreaMaskInfo &theOther)
 {
 }
 
-NFmiAreaMaskInfo::~NFmiAreaMaskInfo(void)
+NFmiAreaMaskInfo::~NFmiAreaMaskInfo()
 {
   delete itsLevel;
 }

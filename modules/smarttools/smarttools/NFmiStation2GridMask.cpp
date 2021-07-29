@@ -31,7 +31,7 @@ NFmiStation2GridMask::NFmiStation2GridMask(Type theMaskType,
 {
 }
 
-NFmiStation2GridMask::~NFmiStation2GridMask(void)
+NFmiStation2GridMask::~NFmiStation2GridMask()
 {
 }
 
@@ -49,7 +49,7 @@ NFmiStation2GridMask::NFmiStation2GridMask(const NFmiStation2GridMask &theOther)
 {
 }
 
-NFmiAreaMask *NFmiStation2GridMask::Clone(void) const
+NFmiAreaMask *NFmiStation2GridMask::Clone() const
 {
   return new NFmiStation2GridMask(*this);
 }
@@ -245,7 +245,7 @@ NFmiNearestObsValue2GridMask::NFmiNearestObsValue2GridMask(
   itsFunctionArgumentCount = theArgumentCount;
 }
 
-NFmiNearestObsValue2GridMask::~NFmiNearestObsValue2GridMask(void)
+NFmiNearestObsValue2GridMask::~NFmiNearestObsValue2GridMask()
 {
 }
 
@@ -262,7 +262,7 @@ NFmiNearestObsValue2GridMask::NFmiNearestObsValue2GridMask(
 {
 }
 
-NFmiAreaMask *NFmiNearestObsValue2GridMask::Clone(void) const
+NFmiAreaMask *NFmiNearestObsValue2GridMask::Clone() const
 {
   return new NFmiNearestObsValue2GridMask(*this);
 }
@@ -304,7 +304,7 @@ static NFmiDataMatrix<float> CalcNearestValueMatrix(
     const NFmiLevel &theLevel,
     const NFmiCalculationParams &theCalculationParams,
     const NFmiPoint &theResultGridSize,
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector,
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector,
     boost::shared_ptr<NFmiArea> &theAreaPtr,
     float theTimePeekInHours)
 {
@@ -395,7 +395,7 @@ void NFmiNearestObsValue2GridMask::DoNearestValueGriddingCheck(
 
         boost::shared_ptr<NFmiDrawParam> drawParam(
             new NFmiDrawParam(itsDataIdent, itsLevel, 0, itsDataType));
-        checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;  // tähän haetaan
+        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;  // tähän haetaan
                                                                           // tarvittavat datat
                                                                           // (synopin tapauksessa
                                                                           // mahdollisesti lista)
@@ -437,7 +437,7 @@ NFmiLastTimeValueMask::NFmiLastTimeValueMask(Type theMaskType,
     itsFunctionArgumentCount = theArgumentCount;
 }
 
-NFmiLastTimeValueMask::~NFmiLastTimeValueMask(void) = default;
+NFmiLastTimeValueMask::~NFmiLastTimeValueMask() = default;
 
 NFmiLastTimeValueMask::NFmiLastTimeValueMask(const NFmiLastTimeValueMask &theOther)
     :NFmiStation2GridMask(theOther)
@@ -445,7 +445,7 @@ NFmiLastTimeValueMask::NFmiLastTimeValueMask(const NFmiLastTimeValueMask &theOth
     , itsLastTimeOfData(theOther.itsLastTimeOfData)
 {}
 
-NFmiAreaMask* NFmiLastTimeValueMask::Clone(void) const
+NFmiAreaMask* NFmiLastTimeValueMask::Clone() const
 {
     return new NFmiLastTimeValueMask(*this);
 }
@@ -493,7 +493,7 @@ NFmiMetTime NFmiLastTimeValueMask::FindLastTime()
     {
         boost::shared_ptr<NFmiDrawParam> drawParam(new NFmiDrawParam(itsDataIdent, itsLevel, 0, itsDataType));
         // tähän haetaan tarvittavat datat (synopin tapauksessa mahdollisesti lista)
-        checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;  
+        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;  
         itsGriddingHelper->MakeDrawedInfoVectorForMapView(infoVector, drawParam, itsAreaPtr);
         if(infoVector.size() >= 1)
         {
@@ -523,7 +523,7 @@ NFmiStation2GridTimeShiftMask::NFmiStation2GridTimeShiftMask(Type theMaskType,
     ,itsChangeByMinutesValue(boost::math::lround(theTimeOffsetInHours*60.f))
 {}
 
-NFmiStation2GridTimeShiftMask::~NFmiStation2GridTimeShiftMask(void)
+NFmiStation2GridTimeShiftMask::~NFmiStation2GridTimeShiftMask()
 {}
 
 NFmiStation2GridTimeShiftMask::NFmiStation2GridTimeShiftMask(const NFmiStation2GridTimeShiftMask &theOther)
@@ -532,7 +532,7 @@ NFmiStation2GridTimeShiftMask::NFmiStation2GridTimeShiftMask(const NFmiStation2G
     , itsChangeByMinutesValue(theOther.itsChangeByMinutesValue)
 {}
 
-NFmiAreaMask* NFmiStation2GridTimeShiftMask::Clone(void) const
+NFmiAreaMask* NFmiStation2GridTimeShiftMask::Clone() const
 {
     return new NFmiStation2GridTimeShiftMask(*this);
 }

@@ -16,14 +16,14 @@ class NFmiFastQueryInfo;
 class NFmiInfoAreaMaskSoundingIndex : public NFmiInfoAreaMask
 {
  public:
-  virtual ~NFmiInfoAreaMaskSoundingIndex(void);
+  virtual ~NFmiInfoAreaMaskSoundingIndex();
   NFmiInfoAreaMaskSoundingIndex(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                 FmiSoundingParameters theSoundingParam,
                                 unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskSoundingIndex(const NFmiInfoAreaMaskSoundingIndex &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
-  FmiSoundingParameters SoundingParam(void) const { return itsSoundingParam; }
+  FmiSoundingParameters SoundingParam() const { return itsSoundingParam; }
   void SoundingParam(FmiSoundingParameters newValue) { itsSoundingParam = newValue; }
   // tätä kaytetaan smarttool-modifierin yhteydessä
   using NFmiInfoAreaMask::Value;

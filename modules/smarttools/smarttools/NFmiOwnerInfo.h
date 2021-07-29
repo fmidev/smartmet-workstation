@@ -13,28 +13,28 @@
 class NFmiOwnerInfo : public NFmiFastQueryInfo
 {
  public:
-  NFmiOwnerInfo(void);
+  NFmiOwnerInfo();
   NFmiOwnerInfo(const NFmiOwnerInfo &theInfo);  // matala kopio, eli jaettu data
   NFmiOwnerInfo(NFmiQueryData *theOwnedData,
                 NFmiInfoData::Type theDataType,
                 const std::string &theDataFileName,
                 const std::string &theDataFilePattern);  // ottaa datan omistukseensa
-  ~NFmiOwnerInfo(void);
+  ~NFmiOwnerInfo();
 
   NFmiOwnerInfo &operator=(const NFmiOwnerInfo &theInfo);  // matala kopio, eli jaettu data
   NFmiOwnerInfo *Clone(
       void) const;  // syvä kopio, eli kloonille luodaan oma queryData sen omistukseen
                     // TODO: katso pitääkö metodin nimi muuttaa, koska emoissa Clone on
                     // virtuaali funktio, jossa eri paluu-luokka.
-  const std::string &DataFileName(void) const { return itsDataFileName; }
+  const std::string &DataFileName() const { return itsDataFileName; }
   void DataFileName(const std::string &theDataFileName) { itsDataFileName = theDataFileName; }
-  const std::string &DataFilePattern(void) const { return itsDataFilePattern; }
+  const std::string &DataFilePattern() const { return itsDataFilePattern; }
   void DataFilePattern(const std::string &theDataFilePattern)
   {
     itsDataFilePattern = theDataFilePattern;
   }
 
-  boost::shared_ptr<NFmiQueryData> DataReference(void) { return itsDataPtr; }
+  boost::shared_ptr<NFmiQueryData> DataReference() { return itsDataPtr; }
  protected:
   boost::shared_ptr<NFmiQueryData> itsDataPtr;
   std::string itsDataFileName;

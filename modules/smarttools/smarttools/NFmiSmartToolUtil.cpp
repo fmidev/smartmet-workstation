@@ -25,7 +25,7 @@
 NFmiQueryData *NFmiSmartToolUtil::ModifyData(
     const std::string &theMacroText,
     NFmiQueryData *theModifiedData,
-    const checkedVector<std::string> *theHelperDataFileNames,
+    const std::vector<std::string> *theHelperDataFileNames,
     bool createDrawParamFileIfNotExist,
     bool goThroughLevels,
     bool fMakeStaticIfOneTimeStepData)
@@ -44,7 +44,7 @@ NFmiQueryData *NFmiSmartToolUtil::ModifyData(
     const std::string &theMacroText,
     NFmiQueryData *theModifiedData,
     NFmiTimeDescriptor *theTimes,
-    const checkedVector<std::string> *theHelperDataFileNames,
+    const std::vector<std::string> *theHelperDataFileNames,
     bool createDrawParamFileIfNotExist,
     bool goThroughLevels,
     bool fMakeStaticIfOneTimeStepData)
@@ -142,7 +142,7 @@ NFmiQueryData *NFmiSmartToolUtil::ModifyData(const std::string &theMacroText,
                     fMakeStaticIfOneTimeStepData);  // 0=tyhjä apudata filename-lista
 }
 
-std::string NFmiSmartToolUtil::GetWorkingDirectory(void)
+std::string NFmiSmartToolUtil::GetWorkingDirectory()
 {
 #ifndef UNIX
   static char path[_MAX_PATH];
@@ -160,7 +160,7 @@ std::string NFmiSmartToolUtil::GetWorkingDirectory(void)
 
 bool NFmiSmartToolUtil::InitDataBase(NFmiInfoOrganizer *theDataBase,
                                      NFmiQueryData *theModifiedData,
-                                     const checkedVector<std::string> *theHelperDataFileNames,
+                                     const std::vector<std::string> *theHelperDataFileNames,
                                      bool createDrawParamFileIfNotExist,
                                      bool fMakeStaticIfOneTimeStepData)
 {
@@ -194,7 +194,7 @@ bool NFmiSmartToolUtil::InitDataBase(NFmiInfoOrganizer *theDataBase,
 
 bool NFmiSmartToolUtil::InitDataBaseHelperData(
     NFmiInfoOrganizer &theDataBase,
-    const checkedVector<std::string> &theHelperDataFileNames,
+    const std::vector<std::string> &theHelperDataFileNames,
     bool fMakeStaticIfOneTimeStepData)
 {
   for (unsigned int i = 0; i < theHelperDataFileNames.size(); i++)

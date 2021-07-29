@@ -33,6 +33,7 @@
 
 #include <newbase/NFmiValueString.h>
 #include <newbase/NFmiFileSystem.h>
+#include <newbase/NFmiStringTools.h>
 
 #include <cassert>
 
@@ -66,7 +67,7 @@ static void InitDrawParam(boost::shared_ptr<NFmiDrawParam>& theDrawParam,
 }
 
 //--------------------------------------------------------
-// NFmiDrawParamFactory(void)
+// NFmiDrawParamFactory()
 //--------------------------------------------------------
 NFmiDrawParamFactory::NFmiDrawParamFactory(bool createDrawParamFileIfNotExist,
                                            bool onePressureLevelDrawParam)
@@ -76,9 +77,9 @@ NFmiDrawParamFactory::NFmiDrawParamFactory(bool createDrawParamFileIfNotExist,
 {
 }
 //--------------------------------------------------------
-// ~FmiDrawParamFactory(void)
+// ~FmiDrawParamFactory()
 //--------------------------------------------------------
-NFmiDrawParamFactory::~NFmiDrawParamFactory(void)
+NFmiDrawParamFactory::~NFmiDrawParamFactory()
 {
 }
 

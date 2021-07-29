@@ -36,13 +36,13 @@ class NFmiDrawParamFactory
 {
  public:
   NFmiDrawParamFactory(bool createDrawParamFileIfNotExist, bool onePressureLevelDrawParam);
-  ~NFmiDrawParamFactory(void);
+  ~NFmiDrawParamFactory();
   boost::shared_ptr<NFmiDrawParam> CreateDrawParam(const NFmiDataIdent& theIdent,
                                                    const NFmiLevel* theLevel);
   boost::shared_ptr<NFmiDrawParam> CreateCrossSectionDrawParam(const NFmiDataIdent& theIdent);
   boost::shared_ptr<NFmiDrawParam> CreateEmptyInfoDrawParam(const NFmiDataIdent& theIdent);
   bool Init();
-  const std::string& LoadDirectory(void) const { return itsLoadDirectory; };
+  const std::string& LoadDirectory() const { return itsLoadDirectory; };
   void LoadDirectory(const std::string& newValue) { itsLoadDirectory = newValue; };
  private:
   boost::shared_ptr<NFmiDrawParam> CreateDrawParam(boost::shared_ptr<NFmiDrawParam>& theDrawParam,

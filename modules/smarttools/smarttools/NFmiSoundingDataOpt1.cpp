@@ -40,7 +40,7 @@ static void FillAllDataContainersWithMissingValuesIfNeeded(
   }
 }
 
-NFmiSoundingDataOpt1::NFmiSoundingDataOpt1(void)
+NFmiSoundingDataOpt1::NFmiSoundingDataOpt1()
     : itsLocation(),
       itsTime(NFmiMetTime::gMissingTime),
       itsOriginTime(NFmiMetTime::gMissingTime),
@@ -919,7 +919,7 @@ bool NFmiSoundingDataOpt1::IsDataGood()
 
 // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että pelkät puuttuvat kerrokset
 // otetaan pois
-void NFmiSoundingDataOpt1::CutEmptyData(void)
+void NFmiSoundingDataOpt1::CutEmptyData()
 {
   std::vector<FmiParameterName> itsSoundingParameters;
   itsSoundingParameters.push_back(kFmiPressure);
@@ -1111,7 +1111,7 @@ static bool AnyGoodValues(const std::deque<float> &values)
 // -lipun päälle.
 // Tarkistaa onko height taulussa yhtaan ei puuttuvaa arvoa ja asettaa fHeightDataAvailable -lipun
 // päälle.
-void NFmiSoundingDataOpt1::SetVerticalParamStatus(void)
+void NFmiSoundingDataOpt1::SetVerticalParamStatus()
 {
   std::deque<float> &pVec = GetParamData(kFmiPressure);
   if (::AnyGoodValues(pVec)) fPressureDataAvailable = true;
@@ -1268,7 +1268,7 @@ void NFmiSoundingDataOpt1::FixPressureDataSoundingWithGroundData(
 
 // laskee jo laskettujen T ja Td avulla RH 
 // tai sitten T:n ja RH:n avulla Td:n.
-void NFmiSoundingDataOpt1::CalculateHumidityData(void)
+void NFmiSoundingDataOpt1::CalculateHumidityData()
 {
   auto &temperatureData = GetParamData(kFmiTemperature);
   auto &dewPointData = GetParamData(kFmiDewPoint);
@@ -1309,7 +1309,7 @@ void NFmiSoundingDataOpt1::CalculateHumidityData(void)
 // Poikkeus: jos löytyy paine ja korkeus tiedot alempaa ja heti sen jälkeen tarpeeksi
 // lähellä (<  4 Hpa) on leveli, jossa on muita tietoja, mutta ei korkeutta, hyväksytään
 // aiemman levelin korkeus.
-void NFmiSoundingDataOpt1::InitZeroHeight(void)
+void NFmiSoundingDataOpt1::InitZeroHeight()
 {
   float closeLevelHeight = kFloatMissing;
   float closeLevelPressure = kFloatMissing;
@@ -1401,7 +1401,7 @@ std::deque<float> &NFmiSoundingDataOpt1::GetParamData(FmiParameterName theId)
   }
 }
 
-void NFmiSoundingDataOpt1::ClearDatas(void)
+void NFmiSoundingDataOpt1::ClearDatas()
 {
   for (auto &paramData : itsParamDataVector)
     std::deque<float>().swap(paramData);
@@ -1599,7 +1599,7 @@ static float CalcV(float WS, float WD)
   return value;
 }
 
-void NFmiSoundingDataOpt1::UpdateUandVParams(void)
+void NFmiSoundingDataOpt1::UpdateUandVParams()
 {
   std::deque<float> &wsV = GetParamData(kFmiWindSpeedMS);
   std::deque<float> &wdV = GetParamData(kFmiWindDirection);
@@ -1650,7 +1650,7 @@ bool NFmiSoundingDataOpt1::HasRealSoundingData(
 // SHOW	= T500 - Tparcel
 // T500 = Temperature in Celsius at 500 mb
 // Tparcel = Temperature in Celsius at 500 mb of a parcel lifted from 850 mb
-double NFmiSoundingDataOpt1::CalcSHOWIndex(void)
+double NFmiSoundingDataOpt1::CalcSHOWIndex()
 {
   double indexValue = kFloatMissing;
   double T_850 = GetValueAtPressure(kFmiTemperature, 850);
@@ -1671,7 +1671,7 @@ double NFmiSoundingDataOpt1::CalcSHOWIndex(void)
 // T500 = temperature in Celsius of the environment at 500 mb
 // Tparcel = 500 mb temperature in Celsius of a lifted parcel with the average pressure,
 //			 temperature, and dewpoint of the layer 500 m above the surface.
-double NFmiSoundingDataOpt1::CalcLIFTIndex(void)
+double NFmiSoundingDataOpt1::CalcLIFTIndex()
 {
   double indexValue = kFloatMissing;
   double P_500m_avg = kFloatMissing;
@@ -1701,7 +1701,7 @@ double NFmiSoundingDataOpt1::CalcLIFTIndex(void)
 //	TD850 = Dewpoint in Celsius at 850 mb
 //	T700 = Temperature in Celsius at 700 mb
 //	TD700 = Dewpoint in Celsius at 700 mb
-double NFmiSoundingDataOpt1::CalcKINXIndex(void)
+double NFmiSoundingDataOpt1::CalcKINXIndex()
 {
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
@@ -1718,7 +1718,7 @@ double NFmiSoundingDataOpt1::CalcKINXIndex(void)
 //	CTOT	= TD850 - T500
 //		TD850 	= Dewpoint in Celsius at 850 mb
 //		T500 	= Temperature in Celsius at 500 mb
-double NFmiSoundingDataOpt1::CalcCTOTIndex(void)
+double NFmiSoundingDataOpt1::CalcCTOTIndex()
 {
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
   double TD850 = GetValueAtPressure(kFmiDewPoint, 850);
@@ -1730,7 +1730,7 @@ double NFmiSoundingDataOpt1::CalcCTOTIndex(void)
 //	VTOT	= T850 - T500
 //		T850	= Temperature in Celsius at 850 mb
 //		T500	= Temperature in Celsius at 500 mb
-double NFmiSoundingDataOpt1::CalcVTOTIndex(void)
+double NFmiSoundingDataOpt1::CalcVTOTIndex()
 {
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
@@ -1743,7 +1743,7 @@ double NFmiSoundingDataOpt1::CalcVTOTIndex(void)
 //		T850 	= Temperature in Celsius at 850 mb
 //		TD850	= Dewpoint in Celsius at 850 mb
 //		T500 	= Temperature in Celsius at 500 mb
-double NFmiSoundingDataOpt1::CalcTOTLIndex(void)
+double NFmiSoundingDataOpt1::CalcTOTLIndex()
 {
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
@@ -1919,7 +1919,7 @@ static double CalcCrossingPressureFromPoints(
 class CapeAreaLfcData
 {
  public:
-  CapeAreaLfcData(void)
+  CapeAreaLfcData()
       : itsCapeAreaSize(0),
         itsLFC(kFloatMissing),
         itsEL(kFloatMissing),
@@ -1928,14 +1928,14 @@ class CapeAreaLfcData
   {
   }
 
-  void Reset(void) { *this = CapeAreaLfcData(); }
+  void Reset() { *this = CapeAreaLfcData(); }
   void AddCapeAreaPoint(
       const MyPoint &thePoint)  // x on positiivinen T-diff ja y on kyseisen levelin paine
   {
     itsSizePoints.push_back(thePoint);
   }
 
-  void CalcData(void)
+  void CalcData()
   {  // Tätä kutsutaan kun luokalle on lisätty kaikki cape-alueen pisteet
     if (itsSizePoints.size())
     {
@@ -1948,14 +1948,14 @@ class CapeAreaLfcData
     }
   }
 
-  double CapeAreaSize(void) const { return itsCapeAreaSize; }
-  double LFC(void) const { return itsLFC; }
-  double EL(void) const { return itsEL; }
-  bool LFConWarmerSide(void) const { return fLFConWarmerSide; }
+  double CapeAreaSize() const { return itsCapeAreaSize; }
+  double LFC() const { return itsLFC; }
+  double EL() const { return itsEL; }
+  bool LFConWarmerSide() const { return fLFConWarmerSide; }
   void LFConWarmerSide(bool newValue) { fLFConWarmerSide = newValue; }
 
  private:
-  void CalcCapeAreaSize(void)
+  void CalcCapeAreaSize()
   {
     itsCapeAreaSize = 0;
     if (itsSizePoints.size() >= 2)

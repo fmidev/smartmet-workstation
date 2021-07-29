@@ -38,7 +38,7 @@ void NFmiProducerInfo::SetShortNames(const std::string &newShortNames)
                            itsShortNameVector.end());
 }
 
-NFmiProducer NFmiProducerInfo::GetProducer(void)
+NFmiProducer NFmiProducerInfo::GetProducer()
 {
   return NFmiProducer(itsProducerId, itsName);
 }

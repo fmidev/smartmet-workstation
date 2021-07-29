@@ -42,7 +42,7 @@ using namespace std;
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiSmartToolCalculation::NFmiSmartToolCalculation(void)
+NFmiSmartToolCalculation::NFmiSmartToolCalculation()
     : itsCalculationText(),
       itsLowerLimit(0),
       itsUpperLimit(1),
@@ -84,7 +84,7 @@ NFmiSmartToolCalculation::NFmiSmartToolCalculation(const NFmiSmartToolCalculatio
 {
 }
 
-NFmiSmartToolCalculation::~NFmiSmartToolCalculation(void)
+NFmiSmartToolCalculation::~NFmiSmartToolCalculation()
 {
 }
 
@@ -793,7 +793,7 @@ void NFmiSmartToolCalculation::atom(double &result,
 // itsCalcIterator osoittaa jo 1. tokeniin, tehdään ensin
 // sijoitus tokeniin ja sitten siirretään iteraattoria eteenpäin.
 // Tällä lailla C++: Compl. Ref. kirjasta kopioitu koodi toimii 'sellaisenaan'.
-void NFmiSmartToolCalculation::get_token(void)
+void NFmiSmartToolCalculation::get_token()
 {
   if (itsCalcIterator != itsCalculations.end())
   {
@@ -1129,7 +1129,7 @@ void NFmiSmartToolCalculation::bin_atom(bool &maskresult,
 
 // tarkistaa onko resultinfon aktiivinen parametri kuten tuulen suunta
 // ja tekee tarvittavat asetukset
-void NFmiSmartToolCalculation::CheckIfModularParameter(void)
+void NFmiSmartToolCalculation::CheckIfModularParameter()
 {
   fCircularValue = false;
   itsCircularValueModulor = kFloatMissing;
@@ -1156,10 +1156,10 @@ double NFmiSmartToolCalculation::FixCircularValues(double theValue)
   return theValue;
 }
 
-checkedVector<boost::shared_ptr<NFmiSmartToolCalculation> > NFmiSmartToolCalculation::DoShallowCopy(
-    const checkedVector<boost::shared_ptr<NFmiSmartToolCalculation> > &theCalculationVector)
+std::vector<boost::shared_ptr<NFmiSmartToolCalculation> > NFmiSmartToolCalculation::DoShallowCopy(
+    const std::vector<boost::shared_ptr<NFmiSmartToolCalculation> > &theCalculationVector)
 {
-  checkedVector<boost::shared_ptr<NFmiSmartToolCalculation> > returnVector(
+  std::vector<boost::shared_ptr<NFmiSmartToolCalculation> > returnVector(
       theCalculationVector.size());
   for (size_t i = 0; i < theCalculationVector.size(); i++)
     returnVector[i] = boost::shared_ptr<NFmiSmartToolCalculation>(

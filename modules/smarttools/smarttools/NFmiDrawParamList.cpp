@@ -35,7 +35,7 @@
 //--------------------------------------------------------
 // Constructor  NFmiDrawParamList
 //--------------------------------------------------------
-NFmiDrawParamList::NFmiDrawParamList(void)
+NFmiDrawParamList::NFmiDrawParamList()
     : fBeforeFirstItem(true),
       itsList(),
       itsIter(itsList.begin()),
@@ -47,7 +47,7 @@ NFmiDrawParamList::NFmiDrawParamList(void)
 //--------------------------------------------------------
 // Destructor  ~NFmiDrawParamList
 //--------------------------------------------------------
-NFmiDrawParamList::~NFmiDrawParamList(void) { Clear(); }
+NFmiDrawParamList::~NFmiDrawParamList() { Clear(); }
 
 //--------------------------------------------------------
 // Add
@@ -113,7 +113,7 @@ void NFmiDrawParamList::BorrowParams(NFmiDrawParamList& theList)
 }
 
 // poistaa listasta lainatut parametrit
-void NFmiDrawParamList::ClearBorrowedParams(void)
+void NFmiDrawParamList::ClearBorrowedParams()
 {
   for (Reset(); Next();)
   {
@@ -125,7 +125,7 @@ void NFmiDrawParamList::ClearBorrowedParams(void)
 //--------------------------------------------------------
 // Current
 //--------------------------------------------------------
-boost::shared_ptr<NFmiDrawParam> NFmiDrawParamList::Current(void)
+boost::shared_ptr<NFmiDrawParam> NFmiDrawParamList::Current()
 {
   if (fBeforeFirstItem || itsIter == itsList.end())
     return boost::shared_ptr<NFmiDrawParam>();
@@ -135,7 +135,7 @@ boost::shared_ptr<NFmiDrawParam> NFmiDrawParamList::Current(void)
 //--------------------------------------------------------
 // Reset
 //--------------------------------------------------------
-bool NFmiDrawParamList::Reset(void)
+bool NFmiDrawParamList::Reset()
 {
   itsIter = itsList.begin();
   fBeforeFirstItem = true;
@@ -144,7 +144,7 @@ bool NFmiDrawParamList::Reset(void)
 //--------------------------------------------------------
 // Next
 //--------------------------------------------------------
-bool NFmiDrawParamList::Next(void)
+bool NFmiDrawParamList::Next()
 {
   if (itsIter == itsList.end()) return false;
   if (fBeforeFirstItem)
@@ -169,7 +169,7 @@ void NFmiDrawParamList::Clear()
 //--------------------------------------------------------
 // Remove
 //--------------------------------------------------------
-bool NFmiDrawParamList::Remove(void)
+bool NFmiDrawParamList::Remove()
 {
   if (fBeforeFirstItem || itsIter == itsList.end())
     return false;
@@ -223,7 +223,7 @@ bool NFmiDrawParamList::Find(NFmiDrawParam* item)
 //--------------------------------------------------------
 // Update
 //--------------------------------------------------------
-void NFmiDrawParamList::Update(void) {}
+void NFmiDrawParamList::Update() {}
 
 void NFmiDrawParamList::HideAllParams(bool newState)
 {
@@ -232,13 +232,13 @@ void NFmiDrawParamList::HideAllParams(bool newState)
 }
 
 // asettaa kaikkien listalla olevien tilan 'ei editoitaviksi' (toisin päin ei ole järkevää tehdä)
-void NFmiDrawParamList::DisableEditing(void)
+void NFmiDrawParamList::DisableEditing()
 {
   for (Reset(); Next();)
     Current()->EditParam(false);
 }
 
-void NFmiDrawParamList::DeactivateAll(void)
+void NFmiDrawParamList::DeactivateAll()
 {
   for (Reset(); Next();)
     Current()->Activate(false);
@@ -283,7 +283,7 @@ bool NFmiDrawParamList::Find(const NFmiDataIdent& theParam,
 // tynyt paramId poistetaan theParamIdsNotRemoved-listalta, että niitä ei
 // lisättäisi myöhemmin tähän listaan.
 void NFmiDrawParamList::Clear(const NFmiProducer& theProducer,
-                              checkedVector<int>& theParamIdsNotRemoved,
+                              std::vector<int>& theParamIdsNotRemoved,
                               NFmiLevel* theLevel)
 {
   std::list<int> tmpParIdList;
@@ -495,7 +495,7 @@ void NFmiDrawParamList::Swap(int index1, int index2)
  * ja sen indeksi palautetaan (indeksit alkavat 1:stä). Jos ei ole aktiivista
  * palautetaan 0.
  */
-int NFmiDrawParamList::FindActive(void)
+int NFmiDrawParamList::FindActive()
 {
   int index = 1;
   for (Reset(); Next(); index++)
@@ -505,7 +505,7 @@ int NFmiDrawParamList::FindActive(void)
   return 0;
 }
 
-int NFmiDrawParamList::FindEdited(void)
+int NFmiDrawParamList::FindEdited()
 {
   int index = 1;
   for (Reset(); Next(); index++)
@@ -534,7 +534,7 @@ void NFmiDrawParamList::CopyList(NFmiDrawParamList& theList, bool clearFirst)
 // Tämä metodi varmistaa, että listassa on vain yksi aktivoitu DrawParami.
 // Jos listassa on useita aktiivisia, ensimmäinen niistä jää aktiiviseksi.
 // Jos listassa ei ole yhtään aktiivista, ensimmäinen aktivoidaan.
-void NFmiDrawParamList::ActivateOnlyOne(void)
+void NFmiDrawParamList::ActivateOnlyOne()
 {
   if (NumberOfItems() == 0) return;
   int activeIndex = FindActive();

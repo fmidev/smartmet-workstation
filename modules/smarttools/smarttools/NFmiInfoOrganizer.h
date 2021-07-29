@@ -23,7 +23,6 @@
 // tuhoa alkuperäinen luokka.
 
 #include <newbase/NFmiPoint.h>
-#include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiInfoData.h>
 #include <newbase/NFmiParamBag.h>
 #include <newbase/NFmiProducerName.h>
@@ -65,8 +64,8 @@ class NFmiInfoOrganizer
     bool fTrajectory;
   };
 
-  NFmiInfoOrganizer(void);
-  ~NFmiInfoOrganizer(void);
+  NFmiInfoOrganizer();
+  ~NFmiInfoOrganizer();
 
   bool Init(const std::string &theDrawParamPath,
             bool createDrawParamFileIfNotExist,
@@ -81,7 +80,7 @@ class NFmiInfoOrganizer
                int theModelRunTimeGap,
                bool &fDataWasDeletedOut,
                bool reloadCaseStudyData);
-  int CleanUnusedDataFromMemory(void);
+  int CleanUnusedDataFromMemory();
   static boost::shared_ptr<NFmiFastQueryInfo> DoDynamicShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   static bool IsTempData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
@@ -89,7 +88,7 @@ class NFmiInfoOrganizer
   static int CalcWantedParameterCount(boost::shared_ptr<NFmiFastQueryInfo> &info,
                                       const std::vector<FmiParameterName> &wantedParameters);
   static boost::shared_ptr<NFmiFastQueryInfo> GetInfoWithMostWantedParams(
-      checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &infos,
+      std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &infos,
       const std::vector<FmiParameterName> &wantedParameters);
   static bool CheckForDataIdent(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       const NFmiDataIdent &theDataIdent,
@@ -121,16 +120,16 @@ class NFmiInfoOrganizer
                                             bool fLevelData = false,
                                             int theModelRunIndex = 0,
       const std::vector<FmiParameterName> *possibleComparisonParameters = nullptr);
-  checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
       const std::string &theFileNameFilter,
       int theModelRunIndex = 0);  // palauttaa vectorin halutunlaisia infoja
-  checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
       int theProducerId,
       int theProducerId2 = -1,
       int theProducerId3 = -1,
       int theProducerId4 = -1);  // palauttaa vectorin halutun tuottajan infoja
-  checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(NFmiInfoData::Type theDataType);
-  checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(NFmiInfoData::Type theDataType);
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
       NFmiInfoData::Type theType,
       bool fGroundData,
       int theProducerId,
@@ -161,8 +160,8 @@ class NFmiInfoOrganizer
   // HUOM! Nämä makroParamData jutut pitää miettiä uusiksi, jos niitä aletaan käsittelemään eri
   // säikeissä. Tällöin
   // Niistä pitää luoda aina ilmeisesti paikalliset kopiot?!?!
-  boost::shared_ptr<NFmiFastQueryInfo> MacroParamData(void);
-  boost::shared_ptr<NFmiFastQueryInfo> CrossSectionMacroParamData(void);
+  boost::shared_ptr<NFmiFastQueryInfo> MacroParamData();
+  boost::shared_ptr<NFmiFastQueryInfo> CrossSectionMacroParamData();
 
   NFmiParamBag GetParams(int theProducerId1);
   int GetNearestUnRegularTimeIndex(boost::shared_ptr<NFmiDrawParam> &theDrawParam,
@@ -174,7 +173,7 @@ class NFmiInfoOrganizer
   boost::shared_ptr<NFmiDrawParam> CreateCrossSectionDrawParam(const NFmiDataIdent &theDataIdent,
                                                                NFmiInfoData::Type theType);
 
-  bool Clear(void);
+  bool Clear();
   void ClearData(NFmiInfoData::Type theDataType);
   void ClearThisKindOfData(NFmiQueryInfo *theInfo,
                            NFmiInfoData::Type theDataType,
@@ -182,11 +181,11 @@ class NFmiInfoOrganizer
                            NFmiTimeDescriptor &theRemovedDatasTimesOut);
   void ClearDynamicHelpData(bool caseStudyEvent);
 
-  const std::string &WorkingDirectory(void) const { return itsWorkingDirectory; };
+  const std::string &WorkingDirectory() const { return itsWorkingDirectory; };
   void WorkingDirectory(const std::string &newValue) { itsWorkingDirectory = newValue; };
-  void UpdateEditedDataCopy(void);  // 28.09.1999/Marko
+  void UpdateEditedDataCopy();  // 28.09.1999/Marko
 
-  const std::string GetDrawParamPath(void);
+  const std::string GetDrawParamPath();
   void SetMacroParamDataGridSize(int x, int y);
   void SetMacroParamDataMinGridSize(int x, int y);
   void SetMacroParamDataMaxGridSize(int x, int y);
@@ -195,11 +194,11 @@ class NFmiInfoOrganizer
                                                                int y,
                                                                NFmiInfoData::Type theDataType);
 
-  const NFmiPoint &GetMacroParamDataGridSize(void) const { return itsMacroParamGridSize; }
-  const NFmiPoint &GetMacroParamDataMaxGridSize(void) const { return itsMacroParamMaxGridSize; }
-  const NFmiPoint &GetMacroParamDataMinGridSize(void) const { return itsMacroParamMinGridSize; }
-  int CountData(void);
-  double CountDataSize(void);
+  const NFmiPoint &GetMacroParamDataGridSize() const { return itsMacroParamGridSize; }
+  const NFmiPoint &GetMacroParamDataMaxGridSize() const { return itsMacroParamMaxGridSize; }
+  const NFmiPoint &GetMacroParamDataMinGridSize() const { return itsMacroParamMinGridSize; }
+  int CountData();
+  double CountDataSize();
   void UpdateCrossSectionMacroParamDataSize(int x, int y);
   void UpdateMacroParamDataSize(int x, int y);
   static bool HasGoodParamsForSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
@@ -274,5 +273,5 @@ class NFmiInfoOrganizer
   static std::vector<FmiParameterName> itsWantedSoundingParams;
   static std::vector<FmiParameterName> itsWantedTrajectoryParams;
   static bool fCheckParamsInitialized;
-  static void InitializeCheckParams(void);
+  static void InitializeCheckParams();
 };

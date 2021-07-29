@@ -45,7 +45,7 @@ bool NFmiGriddingProperties::fromString(const std::string &str)
     return false;
 }
 
-FmiGriddingFunction NFmiGriddingProperties::function(void) const
+FmiGriddingFunction NFmiGriddingProperties::function() const
 {
     if(toolMasterAvailable_)
         return function_;

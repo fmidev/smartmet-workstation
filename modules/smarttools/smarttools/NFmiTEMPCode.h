@@ -15,7 +15,7 @@ class NFmiVPlaceDescriptor;
 
 struct TEMPLevelData
 {
-  void Clear(void)
+  void Clear()
   {
     itsPressure = kFloatMissing;
     itsHeight = kFloatMissing;
@@ -56,10 +56,10 @@ NFmiQueryData *CreateNewQData(std::vector<NFmiTEMPCode> &theTempCodeVec,
 class NFmiTEMPCode
 {
  public:
-  NFmiTEMPCode(void);
+  NFmiTEMPCode();
   NFmiTEMPCode(NFmiAviationStationInfoSystem *theTempStations,
                const NFmiPoint &theUnknownStationLocation);
-  ~NFmiTEMPCode(void);
+  ~NFmiTEMPCode();
 
   // Saa A,B,C ja D koodit. Tarkistaa ne ja purkaa. Palauttaa luvun, joka kertoo kuinka monta
   // osaa kelpasi (eli oli samalta asemalta, samaan aikaan jne. )
@@ -69,20 +69,20 @@ class NFmiTEMPCode
                         const std::string &theCodeDStr,
                         bool fNoEqualSignInCode);
   void AddData(const TEMPLevelData &theLevelData);
-  void Clear(void);
+  void Clear();
   void ForceWantedPressureLevels(NFmiVPlaceDescriptor &theLevels);
 
   void Time(const NFmiMetTime &theTime) { itsTime = theTime; }
-  const NFmiMetTime &Time(void) const { return itsTime; }
-  const NFmiStation &Station(void) const { return itsStation; }
+  const NFmiMetTime &Time() const { return itsTime; }
+  const NFmiStation &Station() const { return itsStation; }
   void Station(const NFmiStation &theStation) { itsStation = theStation; }
-  const std::map<double, TEMPLevelData> &LevelData(void) const { return itsLevels; }
+  const std::map<double, TEMPLevelData> &LevelData() const { return itsLevels; }
  private:
-  int Decode(void);
-  bool DecodeA(void);
-  bool DecodeB(void);
-  bool DecodeC(void);
-  bool DecodeD(void);
+  int Decode();
+  bool DecodeA();
+  bool DecodeB();
+  bool DecodeC();
+  bool DecodeD();
 
   std::string itsOriginalCodeAStr;  // tähän talletetaan koko koodi osa A
   std::string itsOriginalCodeBStr;  // tähän talletetaan koko koodi osa B

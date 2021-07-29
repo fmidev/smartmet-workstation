@@ -15,9 +15,9 @@ class NFmiLocation;
 class NFmiIgnoreStation
 {
  public:
-  NFmiIgnoreStation(void);
-  std::string MakeStationString(void);
-  bool IsRange(void) const;
+  NFmiIgnoreStation();
+  std::string MakeStationString();
+  bool IsRange() const;
   bool GetIdValues(const std::string &theStationIdstr);
 
   unsigned long itsId;   // halutun aseman id (wmo tai muu vastaava)
@@ -32,25 +32,25 @@ class NFmiIgnoreStation
 class NFmiIgnoreStationsData
 {
  public:
-  NFmiIgnoreStationsData(void);
+  NFmiIgnoreStationsData();
 
   void InitFromSettings(const std::string &theBaseNameSpace);
-  void StoreToSettings(void);
-  void Clear(void);
+  void StoreToSettings();
+  void Clear();
   void Add(const NFmiIgnoreStation &theStation);
   void Remove(unsigned long theId);
-  bool IgnoreStationsDialogOn(void) const { return fIgnoreStationsDialogOn; }
+  bool IgnoreStationsDialogOn() const { return fIgnoreStationsDialogOn; }
   void IgnoreStationsDialogOn(bool newValue) { fIgnoreStationsDialogOn = newValue; }
-  bool UseListWithContourDraw(void) const { return fUseListWithContourDraw; }
+  bool UseListWithContourDraw() const { return fUseListWithContourDraw; }
   void UseListWithContourDraw(bool newValue) { fUseListWithContourDraw = newValue; }
-  bool UseListWithSymbolDraw(void) const { return fUseListWithSymbolDraw; }
+  bool UseListWithSymbolDraw() const { return fUseListWithSymbolDraw; }
   void UseListWithSymbolDraw(bool newValue) { fUseListWithSymbolDraw = newValue; }
-  std::list<NFmiIgnoreStation> &StationList(void) { return itsStationList; }
+  std::list<NFmiIgnoreStation> &StationList() { return itsStationList; }
   bool IsStationBlocked(const NFmiLocation &theLocation, bool theSymbolCase);
   bool IsIdInList(unsigned long theStationId);
 
  private:
-  std::string MakeStationListString(void);
+  std::string MakeStationListString();
   void AddStationsFromString(const std::string &theStationListStr);
 
   bool fIgnoreStationsDialogOn;  // onko dialogi näkyvissä vai ei

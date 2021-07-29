@@ -15,7 +15,6 @@
 // ======================================================================
 #pragma once
 
-#include <newbase/NFmiDataMatrix.h>
 #include <string>
 
 class NFmiQueryData;
@@ -36,14 +35,14 @@ class NFmiSmartToolUtil
                                    bool fMakeStaticIfOneTimeStepData);
   static NFmiQueryData *ModifyData(const std::string &theMacroText,
                                    NFmiQueryData *theModifiedData,
-                                   const checkedVector<std::string> *theHelperDataFileNames,
+                                   const std::vector<std::string> *theHelperDataFileNames,
                                    bool createDrawParamFileIfNotExist,
                                    bool goThroughLevels,
                                    bool fMakeStaticIfOneTimeStepData);
   static NFmiQueryData *ModifyData(const std::string &theMacroText,
                                    NFmiQueryData *theModifiedData,
                                    NFmiTimeDescriptor *theTimes,
-                                   const checkedVector<std::string> *theHelperDataFileNames,
+                                   const std::vector<std::string> *theHelperDataFileNames,
                                    bool createDrawParamFileIfNotExist,
                                    bool goThroughLevels,
                                    bool fMakeStaticIfOneTimeStepData);
@@ -51,11 +50,11 @@ class NFmiSmartToolUtil
  private:
   static bool InitDataBase(NFmiInfoOrganizer *theDataBase,
                            NFmiQueryData *theModifiedData,
-                           const checkedVector<std::string> *theHelperDataFileNames,
+                           const std::vector<std::string> *theHelperDataFileNames,
                            bool createDrawParamFileIfNotExist,
                            bool fMakeStaticIfOneTimeStepData);
   static bool InitDataBaseHelperData(NFmiInfoOrganizer &theDataBase,
-                                     const checkedVector<std::string> &theHelperDataFileNames,
+                                     const std::vector<std::string> &theHelperDataFileNames,
                                      bool fMakeStaticIfOneTimeStepData);
-  static std::string GetWorkingDirectory(void);
+  static std::string GetWorkingDirectory();
 };

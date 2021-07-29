@@ -117,7 +117,7 @@ void NFmiDataStoringHelpers::SetUsedViewMacroTime(const NFmiMetTime &theTime)
   itsViewMacroTime = theTime;
 }
 
-NFmiMetTime NFmiDataStoringHelpers::GetUsedViewMacroTime(void)
+NFmiMetTime NFmiDataStoringHelpers::GetUsedViewMacroTime()
 {
   if (itsViewMacroTime == NFmiMetTime::gMissingTime)
     return NFmiMetTime(1);
@@ -125,7 +125,7 @@ NFmiMetTime NFmiDataStoringHelpers::GetUsedViewMacroTime(void)
     return itsViewMacroTime;
 }
 
-void NFmiDataStoringHelpers::NFmiExtraDataStorage::Clear(void)
+void NFmiDataStoringHelpers::NFmiExtraDataStorage::Clear()
 {
   itsDoubleValues.clear();
   itsStringValues.clear();

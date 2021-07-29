@@ -16,7 +16,7 @@ class NFmiColor
 {
  public:
   // Destructors
-  virtual ~NFmiColor(void) {}
+  virtual ~NFmiColor() {}
   // Constructors
 
   // Default: 100% opacity when aAlphaValue = 0.f
@@ -45,22 +45,22 @@ class NFmiColor
   void Green(float theGreen) { itsColor.green = theGreen; }
   void Blue(float theBlue) { itsColor.blue = theBlue; }
   void Alpha(float theAlpha) { itsColor.alpha = theAlpha; }
-  float Red(void) const { return itsColor.red; }
-  float Green(void) const { return itsColor.green; }
-  float Blue(void) const { return itsColor.blue; }
-  float Alpha(void) const { return itsColor.alpha; }
+  float Red() const { return itsColor.red; }
+  float Green() const { return itsColor.green; }
+  float Blue() const { return itsColor.blue; }
+  float Alpha() const { return itsColor.alpha; }
   // Taaksepäin yhteensopivuuden takia TFmiColor:in GetVäri-metodeja
   // toteutetaan tässä samallalailla kuten poistetussa TFmiColor-luokassa.
 
-  float GetRed(void) const { return Red(); }
-  float GetGreen(void) const { return Green(); }
-  float GetBlue(void) const { return Blue(); }
-  const FmiRGBColor &GetRGB(void) const { return itsColor; }
-  const FmiRGBColor &GetRGBA(void) const { return itsColor; }
+  float GetRed() const { return Red(); }
+  float GetGreen() const { return Green(); }
+  float GetBlue() const { return Blue(); }
+  const FmiRGBColor &GetRGB() const { return itsColor; }
+  const FmiRGBColor &GetRGBA() const { return itsColor; }
   void BlendColor(const NFmiColor &foregroundcolor, float value, float minvalue, float maxvalue);
 
   void Overlay(const NFmiColor &theForegroundColor);
-  unsigned long GetPackedColor(void) const;
+  unsigned long GetPackedColor() const;
 
   void Mix(const NFmiColor &anOtherColor, float mixingRatio, bool mixAlpha = false);
   bool IsFullyTransparent() const;

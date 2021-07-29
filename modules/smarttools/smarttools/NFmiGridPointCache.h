@@ -29,12 +29,12 @@ class NFmiGridPointCache
 
   typedef std::map<std::string, Data> pointMap;
 
-  NFmiGridPointCache(void) : itsPointCache() {}
-  ~NFmiGridPointCache(void) {}
+  NFmiGridPointCache() : itsPointCache() {}
+  ~NFmiGridPointCache() {}
   void Add(const std::string &theGridStr, const NFmiGridPointCache::Data &theData);
   pointMap::iterator Find(const std::string &theGridStr) { return itsPointCache.find(theGridStr); };
-  pointMap::iterator End(void) { return itsPointCache.end(); };
-  void Clear(void) { itsPointCache.clear(); };
+  pointMap::iterator End() { return itsPointCache.end(); };
+  void Clear() { itsPointCache.clear(); };
   static const std::string MakeGridCacheStr(const NFmiGrid &theGrid);
   static const std::string MakeGridCacheStr(const NFmiArea &theArea, size_t xCount, size_t yCount);
 

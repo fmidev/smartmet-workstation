@@ -13,12 +13,12 @@ class NFmiModifiableQDatasBookKeeping
 {
  public:
   NFmiModifiableQDatasBookKeeping(unsigned long theMaskSize = 32);
-  ~NFmiModifiableQDatasBookKeeping(void);
+  ~NFmiModifiableQDatasBookKeeping();
   void CopyClonedDatas(const NFmiModifiableQDatasBookKeeping &theOther);
 
-  bool IsDirty(void) const { return *fDirty; };
+  bool IsDirty() const { return *fDirty; };
   void Dirty(bool newState) { *fDirty = newState; };
-  bool LoadedFromFile(void) { return *fLoadedFromFile; }
+  bool LoadedFromFile() { return *fLoadedFromFile; }
   void LoadedFromFile(bool loadedFromFile) { *fLoadedFromFile = loadedFromFile; }
   int MaskedCount(unsigned long theMaskType,
                   unsigned long theIndex,
@@ -34,23 +34,23 @@ class NFmiModifiableQDatasBookKeeping
                     unsigned long theMaskType,
                     unsigned long theLocationIndex);
   void MaskType(unsigned long theMaskType);
-  unsigned long MaskType(void);
+  unsigned long MaskType();
   bool IsMasked(unsigned long theIndex) const;
 
   bool SnapShotData(const std::string &theAction,
                     const NFmiRawData &theRawData);
-  void RearrangeUndoTable(void);
-  bool Undo(void);
-  bool Redo(void);
+  void RearrangeUndoTable();
+  bool Undo();
+  bool Redo();
   bool UndoData(NFmiRawData &theRawData, std::string &modificationDescription);
   bool RedoData(NFmiRawData &theRawData, std::string &modificationDescription);
   void UndoLevel(long theDepth, const NFmiRawData &theRawData);
 
-  bool LocationSelectionSnapShot(void);                  // ota maskit talteen
-  bool LocationSelectionUndo(void);                      // kysyy onko undo mahdollinen
-  bool LocationSelectionRedo(void);                      // kysyy onko redo mahdollinen
-  bool LocationSelectionUndoData(void);                  // suorittaa todellisen undon
-  bool LocationSelectionRedoData(void);                  // suorittaa todellisen redon
+  bool LocationSelectionSnapShot();                  // ota maskit talteen
+  bool LocationSelectionUndo();                      // kysyy onko undo mahdollinen
+  bool LocationSelectionRedo();                      // kysyy onko redo mahdollinen
+  bool LocationSelectionUndoData();                  // suorittaa todellisen undon
+  bool LocationSelectionRedoData();                  // suorittaa todellisen redon
   void LocationSelectionUndoLevel(int theNewUndoLevel);  // undolevel asetetaan tällä
  private:
   NFmiModifiableQDatasBookKeeping &operator=(

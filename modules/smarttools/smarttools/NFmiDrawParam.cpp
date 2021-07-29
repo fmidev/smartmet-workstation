@@ -44,7 +44,7 @@ float NFmiDrawParam::itsFileVersionNumber = 3.0;
 const float NFmiDrawParam::itsMinAlpha = 5.f;
 
 //--------------------------------------------------------
-// NFmiDrawParam(void)
+// NFmiDrawParam()
 //--------------------------------------------------------
 NFmiDrawParam::NFmiDrawParam()
     : itsParameter(NFmiParam(kFmiLastParameter)),
@@ -488,7 +488,7 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
 //-------------------------------------------------------
 // ~NFmiDrawParam
 //-------------------------------------------------------
-NFmiDrawParam::~NFmiDrawParam(void) {}
+NFmiDrawParam::~NFmiDrawParam() {}
 
 //-------------------------------------------------------
 // Init
@@ -905,8 +905,8 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
   file << fZeroColorMean << endl;
 
   bool dummyLegacyValue = false;
-  checkedVector<float> dummyLegacyFloatVectorValues;
-  checkedVector<int> dummyLegacyIntVectorValues;
+  std::vector<float> dummyLegacyFloatVectorValues;
+  std::vector<int> dummyLegacyIntVectorValues;
   if (itsFileVersionNumber >= 2.)  // tämä on vain esimerkki siitä mitä joskus tulee olemaan
   {
     //***********************************************
@@ -1260,8 +1260,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       file >> fZeroColorMean;
 
       bool dummyLegacyValue = false;
-      checkedVector<float> dummyLegacyFloatVectorValues;
-      checkedVector<int> dummyLegacyIntVectorValues;
+      std::vector<float> dummyLegacyFloatVectorValues;
+      std::vector<int> dummyLegacyIntVectorValues;
       //***********************************************
       //********** 'versio 2' parametreja *************
       //***********************************************
@@ -1544,7 +1544,7 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
   return file;
 }
 
-const std::string& NFmiDrawParam::ParameterAbbreviation(void) const
+const std::string& NFmiDrawParam::ParameterAbbreviation() const
 {
   static std::string dummy;
   if (itsParameterAbbreviation != std::string("") && itsParameterAbbreviation != std::string("?"))
@@ -1556,7 +1556,7 @@ const std::string& NFmiDrawParam::ParameterAbbreviation(void) const
   }
 }
 
-bool NFmiDrawParam::UseArchiveModelData(void) const
+bool NFmiDrawParam::UseArchiveModelData() const
 {
   if (IsModelRunDataType())
   {
@@ -1566,7 +1566,7 @@ bool NFmiDrawParam::UseArchiveModelData(void) const
   return false;
 }
 
-bool NFmiDrawParam::IsModelRunDataType(void) const
+bool NFmiDrawParam::IsModelRunDataType() const
 {
   return NFmiDrawParam::IsModelRunDataType(this->DataType());
 }

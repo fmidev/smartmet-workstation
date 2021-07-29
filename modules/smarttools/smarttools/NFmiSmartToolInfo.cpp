@@ -14,7 +14,7 @@
 
 using namespace std;
 
-NFmiSmartToolInfo::NFmiSmartToolInfo(void)
+NFmiSmartToolInfo::NFmiSmartToolInfo()
     : itsCurrentScript(),
       itsScriptFileExtension(),
       itsCurrentScriptName(),
@@ -27,7 +27,7 @@ NFmiSmartToolInfo::NFmiSmartToolInfo(void)
 {
 }
 
-NFmiSmartToolInfo::~NFmiSmartToolInfo(void)
+NFmiSmartToolInfo::~NFmiSmartToolInfo()
 {
 }
 // luetaan  asetukset nykyään NFmiSetting-luokasta
@@ -83,7 +83,7 @@ bool NFmiSmartToolInfo::SaveScript(const std::string &theFullScriptPath)
   return false;
 }
 
-bool NFmiSmartToolInfo::LoadDBChecker(void)
+bool NFmiSmartToolInfo::LoadDBChecker()
 {
   if (NFmiFileSystem::ReadFile2String(itsDBCheckerFileName, itsDBCheckerText))
   {
@@ -94,7 +94,7 @@ bool NFmiSmartToolInfo::LoadDBChecker(void)
   return false;
 }
 
-bool NFmiSmartToolInfo::SaveDBChecker(void)
+bool NFmiSmartToolInfo::SaveDBChecker()
 {
   return WriteScript2File(itsDBCheckerFileName, itsDBCheckerText);
 }
@@ -114,7 +114,7 @@ bool NFmiSmartToolInfo::WriteScript2File(const std::string &theFileName,
   return false;
 }
 
-bool NFmiSmartToolInfo::LoadSettings(void)
+bool NFmiSmartToolInfo::LoadSettings()
 {
   try
   {
@@ -131,7 +131,7 @@ bool NFmiSmartToolInfo::LoadSettings(void)
   }
 }
 
-bool NFmiSmartToolInfo::SaveSettings(void)
+bool NFmiSmartToolInfo::SaveSettings()
 {
   try
   {
@@ -150,15 +150,15 @@ bool NFmiSmartToolInfo::SaveSettings(void)
 
 bool NFmiSmartToolInfo::ScriptExist(const std::string &theScriptName)
 {
-  checkedVector<string> names = GetScriptNames();
-  checkedVector<string>::iterator it = std::find(names.begin(), names.end(), theScriptName);
+  std::vector<string> names = GetScriptNames();
+  std::vector<string>::iterator it = std::find(names.begin(), names.end(), theScriptName);
   if (it != names.end())
     return true;
   return false;
 }
-checkedVector<std::string> NFmiSmartToolInfo::GetScriptNames(void)
+std::vector<std::string> NFmiSmartToolInfo::GetScriptNames()
 {
-  checkedVector<string> names;
+  std::vector<string> names;
 
   // listataan alkuun hakemistot ja jos ei olla rootissa, laitetaan vielä ..-hakemsito mukaan
   std::list<std::string> directories = NFmiFileSystem::Directories(itsLoadDirectory);

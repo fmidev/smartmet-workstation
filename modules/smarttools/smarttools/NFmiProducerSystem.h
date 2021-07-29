@@ -23,7 +23,7 @@ class NFmiMetTime;
 class NFmiProducerInfo
 {
  public:
-  NFmiProducerInfo(void)
+  NFmiProducerInfo()
       : itsName(),
         itsShortNameVector(),
         itsUltraShortName(),
@@ -34,23 +34,23 @@ class NFmiProducerInfo
   {
   }
 
-  const std::string &Name(void) const { return itsName; }
+  const std::string &Name() const { return itsName; }
   void Name(const std::string &newValue) { itsName = newValue; }
   const std::string &ShortName(size_t index = 0) const;
   void ShortName(const std::string &newValue, size_t index = 0);
-  size_t ShortNameCount(void) const { return itsShortNameVector.size(); }
+  size_t ShortNameCount() const { return itsShortNameVector.size(); }
   void SetShortNames(const std::string &newShortNames);
 
-  const std::string &UltraShortName(void) const { return itsUltraShortName; }
+  const std::string &UltraShortName() const { return itsUltraShortName; }
   void UltraShortName(const std::string &newValue) { itsUltraShortName = newValue; }
-  unsigned long ProducerId(void) const { return itsProducerId; }
+  unsigned long ProducerId() const { return itsProducerId; }
   void ProducerId(unsigned long newValue) { itsProducerId = newValue; }
-  const std::string &Description(void) const { return itsDescription; }
+  const std::string &Description() const { return itsDescription; }
   void Description(const std::string &newValue) { itsDescription = newValue; }
-  NFmiProducer GetProducer(void);
-  bool HasRealVerticalData(void) const { return fHasRealVerticalData; }
+  NFmiProducer GetProducer();
+  bool HasRealVerticalData() const { return fHasRealVerticalData; }
   void HasRealVerticalData(bool newValue) { fHasRealVerticalData = newValue; }
-  bool HasQ2ArchiveData(void) const { return fHasQ2ArchiveData; }
+  bool HasQ2ArchiveData() const { return fHasQ2ArchiveData; }
   void HasQ2ArchiveData(bool newValue) { fHasQ2ArchiveData = newValue; }
  private:
   std::string itsName;  // Pitempi nimi esim. Hirlam tai Ecmwf (voidaan käyttää esim.
@@ -78,12 +78,12 @@ class NFmiProducerSystem
             // newbasen ProducerName listaan. Tätä käytetään ainakin
             // smarttool-kielen alustamisessa ja dokumentin HelpDataSystemin alustuksessa
 
-  NFmiProducerSystem(void) : itsProducers() {}
+  NFmiProducerSystem() : itsProducers() {}
   void Add(const NFmiProducerInfo &newValue) { itsProducers.push_back(newValue); }
-  void Clear(void) { itsProducers.clear(); }
-  std::vector<NFmiProducerInfo> &Producers(void) { return itsProducers; }
+  void Clear() { itsProducers.clear(); }
+  std::vector<NFmiProducerInfo> &Producers() { return itsProducers; }
   void InitFromSettings(const std::string &theInitNameSpace);
-  const std::string &GetInitializeLogStr(void) const { return itsInitializeLogStr; }
+  const std::string &GetInitializeLogStr() const { return itsInitializeLogStr; }
   bool ExistProducer(unsigned int index1Based) const;
   NFmiProducerInfo &Producer(unsigned int index1Based);
   unsigned int FindProducerInfo(const NFmiProducer &theProducer);
@@ -107,7 +107,7 @@ class NFmiProducerSystem
 
 struct NFmiProducerHelperInfo
 {
-  NFmiProducerHelperInfo(void)
+  NFmiProducerHelperInfo()
       : itsName(),
         itsProducerId(kFmiNoProducer),
         itsDataType(NFmiInfoData::kNoDataType),
