@@ -21,7 +21,7 @@ const long kNotInList = -1;
  */
 // ----------------------------------------------------------------------
 
-class _FMI_DLL NFmiVoidPtrData
+class NFmiVoidPtrData
 {
   friend class NFmiVoidPtrList;
   friend class NFmiVoidPtrItem;
@@ -29,8 +29,8 @@ class _FMI_DLL NFmiVoidPtrData
 
  public:
   NFmiVoidPtrData(void* value) : itsDataValue(value), itsReferenceCount(0) {}
-  void* GetVoidPtr(void) { return itsDataValue; }
-  bool Remove(void) { return --itsReferenceCount ? false : true; }
+  void* GetVoidPtr() { return itsDataValue; }
+  bool Remove() { return --itsReferenceCount ? false : true; }
 
  private:
   NFmiVoidPtrData(const NFmiVoidPtrData& theData);
@@ -49,13 +49,13 @@ class _FMI_DLL NFmiVoidPtrData
  */
 // ----------------------------------------------------------------------
 
-class _FMI_DLL NFmiVoidPtrItem
+class NFmiVoidPtrItem
 {
   friend class NFmiVoidPtrList;
   friend class NFmiVoidPtrIterator;
 
  public:
-  ~NFmiVoidPtrItem(void)
+  ~NFmiVoidPtrItem()
   {
     if (itsValue->Remove()) delete itsValue;
   }
@@ -88,13 +88,13 @@ class _FMI_DLL NFmiVoidPtrItem
  */
 // ----------------------------------------------------------------------
 
-class _FMI_DLL NFmiVoidPtrList
+class NFmiVoidPtrList
 {
   friend class NFmiVoidPtrIterator;
 
  public:
-  virtual ~NFmiVoidPtrList(void) { Clear(0); }
-  NFmiVoidPtrList(void);
+  virtual ~NFmiVoidPtrList() { Clear(0); }
+  NFmiVoidPtrList();
   NFmiVoidPtrList(const NFmiVoidPtrList& listItem);
 
   virtual void Add(void* value) { Add(new NFmiVoidPtrData(value)); }
@@ -109,12 +109,12 @@ class _FMI_DLL NFmiVoidPtrList
   virtual void Remove(NFmiVoidPtrData* removeValue);
   virtual void Clear(bool doDelete = kNoDelete);
 
-  int NumberOfItems(void) { return itsNumberOffItems; }
-  NFmiVoidPtrItem* FirstItem(void) { return itsFirstItem; }
+  int NumberOfItems() { return itsNumberOffItems; }
+  NFmiVoidPtrItem* FirstItem() { return itsFirstItem; }
   void operator+=(const NFmiVoidPtrList& listItem);
 
   virtual void CopyList(const NFmiVoidPtrList& listItem);
-  virtual void DeleteItem(void);
+  virtual void DeleteItem();
 
  protected:
   NFmiVoidPtrItem* itsFirstItem;
@@ -139,25 +139,25 @@ class _FMI_DLL NFmiVoidPtrList
  */
 // ----------------------------------------------------------------------
 
-class _FMI_DLL NFmiVoidPtrIterator
+class NFmiVoidPtrIterator
 {
  public:
   virtual ~NFmiVoidPtrIterator() {}
   NFmiVoidPtrIterator(NFmiVoidPtrList* listItem);
   NFmiVoidPtrIterator(NFmiVoidPtrList& listItem);
 
-  void Reset(void);
-  virtual void* Next(void);
-  virtual NFmiVoidPtrData* NextPtr(void);
-  virtual NFmiVoidPtrData* CurrentPtr(void);
+  void Reset();
+  virtual void* Next();
+  virtual NFmiVoidPtrData* NextPtr();
+  virtual NFmiVoidPtrData* CurrentPtr();
   virtual bool Next(void*& theItem);
-  virtual void NextPreviousPtr(void);  // tämä on todella tyhmää
+  virtual void NextPreviousPtr();  // tämä on todella tyhmää
   virtual bool NextPtr(NFmiVoidPtrData*& theItem);
-  long Index(void) const;
+  long Index() const;
   bool Index(long theNewValue);
 
-  void* operator++(void) { return Next(); }
-  virtual void* Current(void);
+  void* operator++() { return Next(); }
+  virtual void* Current();
 
  private:
   //  NFmiVoidPtrIterator(const NFmiVoidPtrIterator & theIterator);

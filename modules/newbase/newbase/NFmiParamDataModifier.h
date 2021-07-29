@@ -16,10 +16,10 @@ class NFmiDataModifierList;
 //! Tämä modifier on tehty parametri ja level kohtaiseksi. Match-metodilla kysytään onko haluttu
 //! modifier.
 
-class _FMI_DLL NFmiParamDataModifier : public NFmiDataModifier
+class NFmiParamDataModifier : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiParamDataModifier(void);
+  virtual ~NFmiParamDataModifier();
   // NFmiDataModifier(const NFmiDataModifier & theModier); // compiler generated
   NFmiParamDataModifier(NFmiDataIdent* theParam,
                         NFmiLevel* theLevel = 0,
@@ -32,16 +32,16 @@ class _FMI_DLL NFmiParamDataModifier : public NFmiDataModifier
   using NFmiDataModifier::CalculationResult;
   using NFmiDataModifier::Calculate;
 
-  virtual float CalculationResult(void);
+  virtual float CalculationResult();
   virtual void Calculate(float);
 
-  void Clear(void);
+  void Clear();
 
   bool Match(const NFmiDataIdent& theParam, const NFmiLevel* theLevel);
   bool AddSubModifier(NFmiDataModifier* theModifier);
-  NFmiDataModifierList* SubModifiers(void);
-  NFmiDataIdent* Param(void);
-  NFmiLevel* Level(void);
+  NFmiDataModifierList* SubModifiers();
+  NFmiDataIdent* Param();
+  NFmiLevel* Level();
 
  protected:
   NFmiDataIdent* itsParam;           // Omistaa/tuhoaa
@@ -61,13 +61,13 @@ class _FMI_DLL NFmiParamDataModifier : public NFmiDataModifier
  */
 // ----------------------------------------------------------------------
 
-inline NFmiDataIdent* NFmiParamDataModifier::Param(void) { return itsParam; }
+inline NFmiDataIdent* NFmiParamDataModifier::Param() { return itsParam; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline NFmiLevel* NFmiParamDataModifier::Level(void) { return itsLevel; }
+inline NFmiLevel* NFmiParamDataModifier::Level() { return itsLevel; }
 
 // ======================================================================

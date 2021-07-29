@@ -10,14 +10,14 @@
 #include "NFmiInfoModifier.h"
 
 //! Undocumented
-class _FMI_DLL NFmiRegressionModifier : public NFmiInfoModifier
+class NFmiRegressionModifier : public NFmiInfoModifier
 {
  public:
   virtual ~NFmiRegressionModifier();
   NFmiRegressionModifier(NFmiDataIdent* theParam, NFmiLevel* theLevel, NFmiQueryInfo* theData = 0);
 
   virtual std::ostream& WriteOperand(std::ostream& file) const;
-  virtual double FloatValue(void);
+  virtual double FloatValue();
 
  protected:
   NFmiDataModifierList* itsRegressionItems;

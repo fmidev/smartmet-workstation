@@ -49,10 +49,10 @@
 #include "NFmiGlobals.h"
 
 template <class Type>
-class _FMI_DLL NFmiPtrList
+class NFmiPtrList
 {
  private:
-  class _FMI_DLL Node
+  class Node
   {
    public:
     Node(Type *theData = 0, Node *thePrevious = 0, Node *theNext = 0)
@@ -76,7 +76,7 @@ class _FMI_DLL NFmiPtrList
   unsigned long itsCounter;  // Lisäsin nämä 8.9.99 /Mikael
 
  public:
-  class _FMI_DLL Iterator
+  class Iterator
   {
    private:
     NFmiPtrList<Type> *itsList;  // Lisäsin tämän 8.9.99 /Mikael
@@ -85,7 +85,7 @@ class _FMI_DLL NFmiPtrList
    public:
     friend class NFmiPtrList<Type>;
 
-    Iterator(void) : itsList(0), itsCurrent(0) {}
+    Iterator() : itsList(0), itsCurrent(0) {}
     // Lisäsin seuraavaan iteraattoriin toisen parametrin 8.9.99 /Mikael
     Iterator(Node *theNode, NFmiPtrList<Type> *theList) : itsList(theList), itsCurrent(theNode){};
     Iterator(const Iterator &theIter) : itsList(theIter.itsList), itsCurrent(theIter.itsCurrent){};
@@ -96,8 +96,8 @@ class _FMI_DLL NFmiPtrList
       itsCurrent = theIter.itsCurrent;
       return *this;
     }
-    Node *GetNode(void) { return itsCurrent; }
-    bool Next(void)  // miten koodin saisi headerin hännille?
+    Node *GetNode() { return itsCurrent; }
+    bool Next()  // miten koodin saisi headerin hännille?
     {
       if (itsCurrent && itsCurrent->itsNext)
       {
@@ -108,7 +108,7 @@ class _FMI_DLL NFmiPtrList
       return false;
     };
 
-    bool Previous(void)  // miten koodin saisi headerin hännille?
+    bool Previous()  // miten koodin saisi headerin hännille?
     {
       if (itsCurrent && itsCurrent->itsPrevious)
       {
@@ -119,8 +119,8 @@ class _FMI_DLL NFmiPtrList
       return false;
     };
 
-    Type *CurrentPtr(void) { return itsCurrent->itsData; };
-    Type &Current(void) { return *itsCurrent->itsData; };
+    Type *CurrentPtr() { return itsCurrent->itsData; };
+    Type &Current() { return *itsCurrent->itsData; };
     bool AddBefore(Type *theItem)
     {
       if (!theItem)  // nolla-pointteria ei voi viedä listaan
@@ -185,10 +185,10 @@ class _FMI_DLL NFmiPtrList
   };                      // Iterator
   friend class Iterator;  // Lisäsin tämän ja kopiokonstruktorin 9.9.99 /Mikael
   //	friend class NFmiPtrList<Type>::Iterator;
-  NFmiPtrList(void);
+  NFmiPtrList();
   NFmiPtrList(NFmiPtrList<Type> &theList);
 
-  ~NFmiPtrList(void);
+  ~NFmiPtrList();
   void Clear(bool fDeleteItem = false);
   Iterator Start();
   Iterator End();
@@ -197,7 +197,7 @@ class _FMI_DLL NFmiPtrList
   bool RemoveStart(bool fDeleteItem = false);
   bool RemoveEnd(bool fDeleteItem = false);
   bool Remove(unsigned long index, bool fDeleteItem = false);
-  unsigned long NumberOfItems(void);
+  unsigned long NumberOfItems();
   Iterator Index(unsigned long index);
   bool Add(Type *theItem, unsigned long index);
   bool Swap(unsigned long ind1, unsigned long ind2);
@@ -214,7 +214,7 @@ class _FMI_DLL NFmiPtrList
 /* // En tiedä oikeaa syntaksia, että Iterator-koodi saataisiin tänne!
 template <class Type>
 inline
-bool NFmiPtrList<Type>::Iterator::Next(void)
+bool NFmiPtrList<Type>::Iterator::Next()
 {
         if(current->next)
         {
@@ -226,7 +226,7 @@ bool NFmiPtrList<Type>::Iterator::Next(void)
 }*/
 
 template <class Type>
-NFmiPtrList<Type>::NFmiPtrList(void) : itsStart(new Node()), itsEnd(new Node()), itsCounter(0)
+NFmiPtrList<Type>::NFmiPtrList() : itsStart(new Node()), itsEnd(new Node()), itsCounter(0)
 {
   itsStart->itsNext = itsEnd;
   itsEnd->itsPrevious = itsStart;
@@ -247,7 +247,7 @@ NFmiPtrList<Type>::NFmiPtrList(NFmiPtrList<Type> &theList)
 }
 
 template <class Type>
-NFmiPtrList<Type>::~NFmiPtrList(void)
+NFmiPtrList<Type>::~NFmiPtrList()
 {
   Clear(false);
   delete itsStart;
@@ -424,7 +424,7 @@ bool NFmiPtrList<Type>::Remove(unsigned long theIndex, bool fDeleteItem)
 }
 
 template <class Type>
-unsigned long NFmiPtrList<Type>::NumberOfItems(void)
+unsigned long NFmiPtrList<Type>::NumberOfItems()
 {
   // Muutin seuraavaa koodia 8.9.99 /Mikael
   return itsCounter;

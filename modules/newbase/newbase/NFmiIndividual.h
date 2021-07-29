@@ -12,11 +12,11 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiIndividual : public NFmiSortable
+class NFmiIndividual : public NFmiSortable
 {
  public:
-  virtual ~NFmiIndividual(void) {}
-  NFmiIndividual(void) : itsName("None"), itsIdent(0) {}
+  virtual ~NFmiIndividual() {}
+  NFmiIndividual() : itsName("None"), itsIdent(0) {}
   NFmiIndividual(long theIdent, const NFmiString &theName = "None")
       : itsName(theName), itsIdent(theIdent)
   {
@@ -27,8 +27,8 @@ class _FMI_DLL NFmiIndividual : public NFmiSortable
   {
   }
 
-  long GetIdent(void) const { return itsIdent; }
-  const NFmiString &GetName(void) const { return itsName; }
+  long GetIdent() const { return itsIdent; }
+  const NFmiString &GetName() const { return itsName; }
   void SetIdent(long theIdent) { itsIdent = theIdent; }
   void SetName(const NFmiString &theName) { itsName = theName; }
   NFmiIndividual &operator=(const NFmiIndividual &theIndividual);
@@ -39,7 +39,7 @@ class _FMI_DLL NFmiIndividual : public NFmiSortable
   virtual std::ostream &Write(std::ostream &file) const;
   virtual std::istream &Read(std::istream &file);
 
-  virtual const char *ClassName(void) const { return "NFmiIndividual"; }
+  virtual const char *ClassName() const { return "NFmiIndividual"; }
   void SetContents(long ident, NFmiString name);
 
   std::size_t HashValue() const;

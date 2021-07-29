@@ -36,10 +36,10 @@
 class NFmiLocation;
 
 //! Undocumented
-class _FMI_DLL NFmiTime : public NFmiStaticTime
+class NFmiTime : public NFmiStaticTime
 {
  public:
-  NFmiTime(void);
+  NFmiTime();
   NFmiTime(const NFmiTime &aTime);
   NFmiTime(long datePart, long timePart);
 
@@ -76,8 +76,8 @@ class _FMI_DLL NFmiTime : public NFmiStaticTime
   long DifferenceInHours(const NFmiTime &anotherTime) const;
   long DifferenceInDays(const NFmiTime &anotherTime) const;
 
-  short GetZoneDifferenceHour(void) const;
-  short GetWeekday(void) const;  // mon=1, tue=2,..., sat=6,  sun=7
+  short GetZoneDifferenceHour() const;
+  short GetWeekday() const;  // mon=1, tue=2,..., sat=6,  sun=7
 
   const NFmiString Weekday(const FmiLanguage theLanguage = kFinnish) const;
   const NFmiString MonthName(const FmiLanguage theLanguage = kFinnish) const;
@@ -87,8 +87,8 @@ class _FMI_DLL NFmiTime : public NFmiStaticTime
   virtual const NFmiString ToStr(const NFmiString theTimeFormat,
                                  const FmiLanguage theLanguage = kFinnish) const;
 
-  void PrintWeekday(void) const;
-  short GetJulianDay(void) const;
+  void PrintWeekday() const;
+  short GetJulianDay() const;
 
   virtual const NFmiTime UTCTime(float theLongitude = kFloatMissing) const;
   virtual const NFmiTime UTCTime(const NFmiLocation &theLocation) const;
@@ -100,11 +100,11 @@ class _FMI_DLL NFmiTime : public NFmiStaticTime
   static short DaysInYear(short aYear);
   static short DaysInMonth(short aMonth, short aYear);
 
-  long GetCompareValue(void) const;
+  long GetCompareValue() const;
 
  protected:
   void DecodeCompareValue(long aCompareValue);
-  void SetZoneDifferenceHour(void);
+  void SetZoneDifferenceHour();
   short CalcZoneDifferenceHour(float theLongitude) const;
   const NFmiString RelativeDay(FmiLanguage theLanguage,
                                NFmiString theFormat,
@@ -129,7 +129,7 @@ typedef NFmiTime TFmiTime;
  */
 // ----------------------------------------------------------------------
 
-inline NFmiTime::NFmiTime(void) : NFmiStaticTime(), itsZoneDifferenceHour()
+inline NFmiTime::NFmiTime() : NFmiStaticTime(), itsZoneDifferenceHour()
 {
   SetZoneDifferenceHour();
 }
@@ -257,6 +257,6 @@ inline long NFmiTime::DifferenceInDays(const NFmiTime &anotherTime) const
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiTime::GetZoneDifferenceHour(void) const { return itsZoneDifferenceHour; }
+inline short NFmiTime::GetZoneDifferenceHour() const { return itsZoneDifferenceHour; }
 
 // ======================================================================

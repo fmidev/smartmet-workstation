@@ -32,7 +32,7 @@ class NFmiStation;
 #define HEADERMAX 3  // Poistetaan
 
 //! Undocumented
-class _FMI_DLL NFmiQueryInfo
+class NFmiQueryInfo
 {
  public:
   virtual ~NFmiQueryInfo();
@@ -121,12 +121,12 @@ class _FMI_DLL NFmiQueryInfo
 
   //! Hakee listan paikkaindeksi/etäisyys metreinä pareja. Listaan haetaan annettua paikkaa lähimmat
   //! datapisteet.
-  checkedVector<std::pair<int, double> > NearestLocations(
+  std::vector<std::pair<int, double> > NearestLocations(
       const NFmiLocation &theLocation,
       int theMaxWantedLocations,
       double theMaxDistance = kFloatMissing) const;
 
-  checkedVector<std::pair<int, double> > NearestLocations(
+  std::vector<std::pair<int, double> > NearestLocations(
       const NFmiPoint &theLatLonPoint,
       int theMaxWantedLocations,
       double theMaxDistance = kFloatMissing) const;
@@ -513,16 +513,16 @@ class _FMI_DLL NFmiQueryInfo
   NFmiLocationCache CalcLocationCache(const NFmiPoint &theLatlon,
                                       unsigned long thePossibleSourceSizeX = gMissingIndex,
                                       unsigned long thePossibleSourceSizeY = gMissingIndex);
-  bool CalcTimeCache(NFmiQueryInfo &theTargetInfo, checkedVector<NFmiTimeCache> &theTimeCache);
+  bool CalcTimeCache(NFmiQueryInfo &theTargetInfo, std::vector<NFmiTimeCache> &theTimeCache);
   // 17.09.2013 Anssi.R changed method to virtual to be able to override in NFmiMultiQueryInfo
   virtual NFmiTimeCache CalcTimeCache(const NFmiMetTime &theTime);
 
-  bool HasNonFiniteValueSet(void) const { return fHasNonFiniteValueSet; }
+  bool HasNonFiniteValueSet() const { return fHasNonFiniteValueSet; }
   void HasNonFiniteValueSet(bool newValue) { fHasNonFiniteValueSet = newValue; }
   bool IsInside(const NFmiPoint &theLatLon, double theRadius) const;
   virtual bool IsInside(const NFmiMetTime &theTime) const;
-  unsigned long GridXNumber(void) const { return itsGridXNumber; }
-  unsigned long GridYNumber(void) const { return itsGridYNumber; }
+  unsigned long GridXNumber() const { return itsGridXNumber; }
+  unsigned long GridYNumber() const { return itsGridYNumber; }
   std::size_t GridHashValue() const;
 
  private:

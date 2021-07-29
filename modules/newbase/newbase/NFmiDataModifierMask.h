@@ -18,7 +18,7 @@
 #include "NFmiGlobals.h"  // Added by ClassView
 
 //! Undocumented
-class _FMI_DLL NFmiDataModifierMask : public NFmiDataModifier
+class NFmiDataModifierMask : public NFmiDataModifier
 {
  public:
   virtual ~NFmiDataModifierMask();

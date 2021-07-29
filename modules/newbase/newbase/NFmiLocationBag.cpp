@@ -548,11 +548,11 @@ struct LocationIndexDistanceGreater
  */
 // ----------------------------------------------------------------------
 
-const checkedVector<pair<int, double> > NFmiLocationBag::NearestLocations(
+const std::vector<pair<int, double> > NFmiLocationBag::NearestLocations(
     const NFmiLocation &theLocation, int theMaxWantedLocations, double theMaxDistance) const
 {
   auto size = static_cast<int>(this->GetSize());
-  checkedVector<IndDistPari> tempValues(size, make_pair(-1, kFloatMissing));
+  std::vector<IndDistPari> tempValues(size, make_pair(-1, kFloatMissing));
   for (int i = 0; i < size; i++)
     tempValues[i] = make_pair(i, theLocation.Distance(*this->itsLocations[i]));
 
@@ -566,7 +566,7 @@ const checkedVector<pair<int, double> > NFmiLocationBag::NearestLocations(
   if (theMaxWantedLocations != -1 && theMaxDistance == kFloatMissing)
   {
     if (tempValues.size() == 0)
-      return checkedVector<pair<int, double> >();
+      return std::vector<pair<int, double> >();
     else
     {
       // halutaan n kpl lahimpiä paikkoja
@@ -579,7 +579,7 @@ const checkedVector<pair<int, double> > NFmiLocationBag::NearestLocations(
                         tempValues.end(),
                         LocationIndexDistanceLess<IndDistPari>());
       // palautetaan haluttu määrä locatioita
-      return checkedVector<IndDistPari>(tempValues.begin(), tempValues.begin() + usedCount);
+      return std::vector<IndDistPari>(tempValues.begin(), tempValues.begin() + usedCount);
     }
   }
 
@@ -600,7 +600,7 @@ const checkedVector<pair<int, double> > NFmiLocationBag::NearestLocations(
   if (pos == tempValues.end())
     return tempValues;
   else
-    return checkedVector<IndDistPari>(tempValues.begin(), pos);
+    return std::vector<IndDistPari>(tempValues.begin(), pos);
 }
 
 //----------------------------------------------------------------------

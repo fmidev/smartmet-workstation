@@ -19,17 +19,17 @@
 #include <iostream>
 
 //! Undocumented
-class _FMI_DLL NFmiSatel
+class NFmiSatel
 {
  public:
-  virtual ~NFmiSatel(void);
-  NFmiSatel(void);
+  virtual ~NFmiSatel();
+  NFmiSatel();
   NFmiSatel(const NFmiSatel& theSatel);
   NFmiSatel(char* theSatelFileName);
 
-  virtual const NFmiString GetName(void) const;
-  virtual unsigned long GetSize(void);
-  virtual const char* GetData(void);
+  virtual const NFmiString GetName() const;
+  virtual unsigned long GetSize();
+  virtual const char* GetData();
 
   virtual std::ostream& Write(std::ostream& file) const;
   virtual std::istream& Read(std::istream& file);
@@ -48,7 +48,7 @@ class _FMI_DLL NFmiSatel
  */
 // ----------------------------------------------------------------------
 
-inline NFmiSatel::NFmiSatel(void)
+inline NFmiSatel::NFmiSatel()
 {
   itsSatelName = "NONE";
   itsSatelData = 0;
@@ -104,7 +104,7 @@ inline NFmiSatel::NFmiSatel(const NFmiSatel& theSatel)
  */
 // ----------------------------------------------------------------------
 
-inline NFmiSatel::~NFmiSatel(void)
+inline NFmiSatel::~NFmiSatel()
 {
   if (itsSatelData) delete itsSatelData;
 }
@@ -115,21 +115,21 @@ inline NFmiSatel::~NFmiSatel(void)
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiString NFmiSatel::GetName(void) const { return itsSatelName; }
+inline const NFmiString NFmiSatel::GetName() const { return itsSatelName; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiSatel::GetSize(void) { return itsSatelDataSize; }
+inline unsigned long NFmiSatel::GetSize() { return itsSatelDataSize; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const char* NFmiSatel::GetData(void) { return itsSatelData ? itsSatelData : ""; }
+inline const char* NFmiSatel::GetData() { return itsSatelData ? itsSatelData : ""; }
 // ----------------------------------------------------------------------
 /*!
  * Write the object to the given output stream

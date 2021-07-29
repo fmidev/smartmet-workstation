@@ -299,7 +299,7 @@ int NFmiBitmapAreaMask::LatLon2Index(const NFmiPoint& theLatLon) const
 // HUOM! toimii vain NFmiBinaryMask:in kanssa. Asettaa koko maskin kaikki arvot halutuksi.
 void NFmiBitmapAreaMask::SetAll(bool theNewState)
 {
-  checkedVector<bool>(itsBitmask.size(), theNewState).swap(itsBitmask);
+  std::vector<bool>(itsBitmask.size(), theNewState).swap(itsBitmask);
 }
 
 // ======================================================================

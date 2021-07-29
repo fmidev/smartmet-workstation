@@ -11,29 +11,29 @@
 #include <iostream>
 
 //! Undocumenetd
-class _FMI_DLL NFmiSize
+class NFmiSize
 {
  public:
-  virtual ~NFmiSize(void) {}
-  NFmiSize(void);
+  virtual ~NFmiSize() {}
+  NFmiSize();
   NFmiSize(const NFmiSize& theSize);
   NFmiSize(unsigned long theSize);
   NFmiSize(unsigned long theIndex, unsigned long theSize);
 
   virtual void Reset(FmiDirection directionToIter = kForward);
-  virtual bool First(void);
-  virtual bool Next(void);
-  virtual bool Previous(void);
-  virtual long CurrentIndex(void) const;
+  virtual bool First();
+  virtual bool Next();
+  virtual bool Previous();
+  virtual long CurrentIndex() const;
 
-  virtual unsigned long GetSize(void) const;
+  virtual unsigned long GetSize() const;
   virtual void SetSize(unsigned long newSize);
   bool SetCurrentIndex(unsigned long theIndex);
 
   virtual std::ostream& Write(std::ostream& file) const;
   virtual std::istream& Read(std::istream& file);
 
-  virtual const char* ClassName(void) const;
+  virtual const char* ClassName() const;
 
  protected:
   unsigned long itsSize;

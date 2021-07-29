@@ -10,19 +10,19 @@
 #include "NFmiString.h"
 
 //! Undocumented
-class _FMI_DLL NFmiStatusString : public NFmiString
+class NFmiStatusString : public NFmiString
 {
  public:
-  ~NFmiStatusString(void);
-  NFmiStatusString(void);
+  ~NFmiStatusString();
+  NFmiStatusString();
   NFmiStatusString(const NFmiStatusString& theStatusString);
   NFmiStatusString(const NFmiString& theString, long theStatus);
 
   NFmiStatusString& operator=(const NFmiStatusString& theStausString);
 
-  long Status(void);
-  const NFmiString& String(void);
-  virtual unsigned long ClassId(void) const { return kNFmiStatusString; };
+  long Status();
+  const NFmiString& String();
+  virtual unsigned long ClassId() const { return kNFmiStatusString; };
   virtual NFmiString* Clone() const;
 
   virtual std::ostream& Write(std::ostream& file) const;

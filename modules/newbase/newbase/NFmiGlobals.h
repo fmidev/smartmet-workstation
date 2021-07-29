@@ -256,7 +256,7 @@ inline T FmiMakeValidNumber(T theValue)
 // ja muissa omissa kirjastoissa. Tein niistä nyt makrojen sijasta kunnon template funktioita.
 // Tämä sen takia, koska MSVC-kääntäjällä on idioottimaiset makrot min ja max, joita on vaikea
 // ohittaa
-// ja jotka aiheuttavat käännös ongelmia, kun otin käyttöön checkedVector:iin (NFmiDataMatrix.h)
+// ja jotka aiheuttavat käännös ongelmia, kun otin käyttöön std::vector:iin (NFmiDataMatrix.h)
 // call stack reportoinnin virhetilanteissa (toimii vain MSVC kääntäjällä). Tämä feature
 // vaatii stdafx.h headerin includointia ja sieltä tulee min ja max ja muita kivoja
 // MSVC makroja sotkemaan hommia.

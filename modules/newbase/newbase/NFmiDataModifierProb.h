@@ -12,10 +12,10 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiDataModifierProb : public NFmiDataModifier
+class NFmiDataModifierProb : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiDataModifierProb(void);
+  virtual ~NFmiDataModifierProb();
   NFmiDataModifierProb(FmiProbabilityCondition theCondition,
                        double theFirstLimit,
                        FmiJoinOperator theJoinOperator = kFmiAdd,
@@ -26,11 +26,11 @@ class _FMI_DLL NFmiDataModifierProb : public NFmiDataModifier
                        FmiJoinOperator theJoinOperator,
                        NFmiCombinedParam* theCombinedParam = 0);
 
-  void Clear(void);
+  void Clear();
   using NFmiDataModifier::Calculate;
   using NFmiDataModifier::CalculationResult;
   void Calculate(float theValue);
-  float CalculationResult(void);
+  float CalculationResult();
 
  protected:
   virtual bool CheckParams(double theValue);

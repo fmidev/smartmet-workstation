@@ -29,7 +29,7 @@ struct myenumcomparator
   }
 };
 
-class _FMI_DLL NFmiEnumConverter
+class NFmiEnumConverter
 {
  public:
   ~NFmiEnumConverter();

@@ -10,11 +10,11 @@
 #include "NFmiRect.h"
 
 //! Undocumented
-class _FMI_DLL NFmiMap
+class NFmiMap
 {
  public:
-  virtual ~NFmiMap(void);
-  NFmiMap(void);
+  virtual ~NFmiMap();
+  NFmiMap();
   NFmiMap(const NFmiMap &theMap);
   NFmiMap(const NFmiPoint &theOffset, const NFmiPoint &theScale);
 
@@ -40,7 +40,7 @@ typedef NFmiMap *PNFmiMap;
  */
 // ----------------------------------------------------------------------
 
-inline NFmiMap::~NFmiMap(void) {}
+inline NFmiMap::~NFmiMap() {}
 // ----------------------------------------------------------------------
 /*!
  * Equality comparison

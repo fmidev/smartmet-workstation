@@ -16,7 +16,7 @@ typedef enum { kDeg, kRad } FmiAngleUnit;
 
 //! Yleinen kulman määrittely perusluokka
 
-class _FMI_DLL NFmiAngle
+class NFmiAngle
 {
  public:
   //! Destruktori
@@ -28,7 +28,7 @@ class _FMI_DLL NFmiAngle
   void SetValue(double theValue, FmiAngleUnit theUnit = kDeg);
 
   //! Kulman palautus
-  double Value(void) const { return itsValue; }
+  double Value() const { return itsValue; }
   //! Suurempi kuin vertailuoperaattori
   bool operator>(const NFmiAngle &theAngle) const;
 
@@ -39,34 +39,34 @@ class _FMI_DLL NFmiAngle
   NFmiAngle &operator-=(const NFmiAngle &theAngle);
 
   //! Muunnos radiaaneiksi
-  double ToRad(void) const { return itsValue / 180.0 * kPii; }
+  double ToRad() const { return itsValue / 180.0 * kPii; }
   //! Muunnos asteiksi
-  double ToDeg(void) const { return itsValue; }
+  double ToDeg() const { return itsValue; }
   // 14.5.2002/Marko+Mika MSVC++:ssa ei sin ja muut vastaavat ole std:ssa, siitä using viritys.
 
   //! Kulman sini
-  double Sin(void) const
+  double Sin() const
   {
     using namespace std;
     return sin(ToRad());
   }
 
   //! Kulman kosini
-  double Cos(void) const
+  double Cos() const
   {
     using namespace std;
     return cos(ToRad());
   }
 
   //! Kulman tangentti
-  double Tan(void) const
+  double Tan() const
   {
     using namespace std;
     return tan(ToRad());
   }
 
   //! Kulman arcustangentti
-  double Atan(void) const
+  double Atan() const
   {
     using namespace std;
     return atan(ToRad());
@@ -92,7 +92,7 @@ class _FMI_DLL NFmiAngle
 
 //! Tuulen suunnan esitysluokka
 
-class _FMI_DLL NFmiWindDirection : public NFmiAngle
+class NFmiWindDirection : public NFmiAngle
 {
  public:
   //! Konstruktori suunnan perusteella
@@ -120,7 +120,7 @@ class _FMI_DLL NFmiWindDirection : public NFmiAngle
 
 //! Latitudin esitysluokka
 
-class _FMI_DLL NFmiLatitude : public NFmiAngle
+class NFmiLatitude : public NFmiAngle
 {
  public:
   //! Konstruktori
@@ -159,7 +159,7 @@ class _FMI_DLL NFmiLatitude : public NFmiAngle
 
 //! Longitudin esitysluokka
 
-class _FMI_DLL NFmiLongitude : public NFmiAngle
+class NFmiLongitude : public NFmiAngle
 {
  public:
   //! Konstruktori

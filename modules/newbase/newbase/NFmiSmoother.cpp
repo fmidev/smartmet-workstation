@@ -82,8 +82,8 @@ const NFmiDataMatrix<float> NFmiSmoother::Smoothen(const NFmiDataMatrix<NFmiPoin
  */
 // ----------------------------------------------------------------------
 
-const checkedVector<float> NFmiSmoother::Smoothen(const checkedVector<float>& theX,
-                                                  const checkedVector<float>& theY) const
+const std::vector<float> NFmiSmoother::Smoothen(const std::vector<float>& theX,
+                                                  const std::vector<float>& theY) const
 {
   assert(theX.size() == theY.size());
 
@@ -229,11 +229,11 @@ const NFmiDataMatrix<float> NFmiSmoother::SmoothenKernel(
  */
 // ----------------------------------------------------------------------
 
-const checkedVector<float> NFmiSmoother::SmoothenKernel(const checkedVector<float>& theX,
-                                                        const checkedVector<float>& theY) const
+const std::vector<float> NFmiSmoother::SmoothenKernel(const std::vector<float>& theX,
+                                                        const std::vector<float>& theY) const
 {
   // We need a dummy
-  checkedVector<float> result(theY.size(), kFloatMissing);
+  std::vector<float> result(theY.size(), kFloatMissing);
 
   for (unsigned int i = 0; i < result.size(); i++)
   {

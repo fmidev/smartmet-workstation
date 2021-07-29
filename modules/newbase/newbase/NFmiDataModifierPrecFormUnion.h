@@ -10,21 +10,21 @@
 #include "NFmiDataModifier.h"
 #include "NFmiWeatherAndCloudiness.h"
 
-class _FMI_DLL NFmiDataModifierPrecFormUnion : public NFmiDataModifier
+class NFmiDataModifierPrecFormUnion : public NFmiDataModifier
 {
   // HUOM missingValuesAlloved = true koska pouta tuo puuttuvan !!!
 
  public:
-  virtual ~NFmiDataModifierPrecFormUnion(void);
+  virtual ~NFmiDataModifierPrecFormUnion();
   NFmiDataModifierPrecFormUnion(FmiJoinOperator theJoinOperator = kFmiAdd,
                                 bool missingValuesAlloved = true);
 
-  void Clear(void);
+  void Clear();
   virtual void Calculate(float theValue);
   virtual void Calculate(NFmiQueryInfo* theQI);
   using NFmiDataModifier::CalculationResult;
-  virtual float CalculationResult(void);
-  float Result(void);
+  virtual float CalculationResult();
+  float Result();
 
  private:
   bool fIsRain;

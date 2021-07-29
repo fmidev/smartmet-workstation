@@ -13,18 +13,18 @@
 #include <iosfwd>  // esittelee ostream ja istream (mutta niitä ei voi vielä käyttää!)
 //_________________________________________________________ NFmiPoint
 //! NFmiPoint-luokka pitää sisällään tiedon kaksiulotteisesta pisteestä.
-class _FMI_DLL NFmiPoint
+class NFmiPoint
 {
  public:
   static const NFmiPoint gMissingLatlon;  // Tätä missing latlon-pistettä voi käyttää, jos haluaa
                                           // ilmaista että jokin latlon-piste ei mahdollisesti ole
                                           // initialisoitu
 
-  NFmiPoint(void);
+  NFmiPoint();
   NFmiPoint(double theX, double theY);
 
   // Methods left for optimized compiler generation:
-  // ~NFmiPoint(void);
+  // ~NFmiPoint();
   // NFmiPoint(const NFmiPoint & thePoint);
   // NFmiPoint & operator=(const NFmiPoint & thePoint);
 
@@ -35,8 +35,8 @@ class _FMI_DLL NFmiPoint
   //@}
 
   //@{ \name Palautus-funktiot
-  double X(void) const;
-  double Y(void) const;
+  double X() const;
+  double Y() const;
   //@}
 
   //@{ \name Yleiset vertailu- ja lasku-operaatiot
@@ -58,7 +58,7 @@ class _FMI_DLL NFmiPoint
   std::istream &Read(std::istream &file);
   //@}
 
-  const char *ClassName(void) const;
+  const char *ClassName() const;
 
   std::size_t HashValue() const;
 
@@ -77,7 +77,7 @@ typedef NFmiPoint *PNFmiPoint;
  */
 // ----------------------------------------------------------------------
 
-inline NFmiPoint::NFmiPoint(void) : itsX(0.0), itsY(0.0) {}
+inline NFmiPoint::NFmiPoint() : itsX(0.0), itsY(0.0) {}
 // ----------------------------------------------------------------------
 /*!
  * Constructor with given coordinates
@@ -143,14 +143,14 @@ inline bool NFmiPoint::operator<(const NFmiPoint &thePoint) const
  */
 // ----------------------------------------------------------------------
 
-inline double NFmiPoint::X(void) const { return itsX; }
+inline double NFmiPoint::X() const { return itsX; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline double NFmiPoint::Y(void) const { return itsY; }
+inline double NFmiPoint::Y() const { return itsY; }
 // ----------------------------------------------------------------------
 /*!
  * \param newValue Undocumented
@@ -245,7 +245,7 @@ inline NFmiPoint operator*(double leftScale, const NFmiPoint &rightPoint)
  */
 // ----------------------------------------------------------------------
 
-inline const char *NFmiPoint::ClassName(void) const { return "NFmiPoint"; }
+inline const char *NFmiPoint::ClassName() const { return "NFmiPoint"; }
 // ----------------------------------------------------------------------
 /*!
  * Output operator for class NFmiPoint.

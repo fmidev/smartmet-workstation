@@ -19,7 +19,7 @@
 
 class NFmiLocation;
 
-class _FMI_DLL NFmiNearTreeLocation
+class NFmiNearTreeLocation
 {
  public:
   NFmiNearTreeLocation(const NFmiLocation& theLocation, std::size_t theIndex);
@@ -37,7 +37,7 @@ class _FMI_DLL NFmiNearTreeLocation
   std::size_t itsIndex;
 };
 
-class _FMI_DLL NFmiNearTreeLocationDistance
+class NFmiNearTreeLocationDistance
 {
  public:
   double operator()(const NFmiNearTreeLocation& theLhs, const NFmiNearTreeLocation& theRhs) const

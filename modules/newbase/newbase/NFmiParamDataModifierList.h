@@ -14,18 +14,18 @@ class NFmiDataIdent;
 class NFmiLevel;
 
 //! Undocumented
-class _FMI_DLL NFmiParamDataModifierList
+class NFmiParamDataModifierList
 {
  public:
-  virtual ~NFmiParamDataModifierList(void);
-  NFmiParamDataModifierList(void);
+  virtual ~NFmiParamDataModifierList();
+  NFmiParamDataModifierList();
   bool Add(NFmiParamDataModifier* theModifier);
-  bool Reset(void);
-  bool Next(void);
-  NFmiParamDataModifier* Current(void);
+  bool Reset();
+  bool Next();
+  NFmiParamDataModifier* Current();
   bool Remove(bool fDeleteData = false);
   void Clear(bool fDeleteData = false);
-  unsigned long NumberOfItems(void);
+  unsigned long NumberOfItems();
 
   bool Index(unsigned long theIndex);
   bool Find(const NFmiDataIdent& theParam);
@@ -44,7 +44,7 @@ class _FMI_DLL NFmiParamDataModifierList
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiParamDataModifierList::NumberOfItems(void)
+inline unsigned long NFmiParamDataModifierList::NumberOfItems()
 {
   return itsList.NumberOfItems();
 }

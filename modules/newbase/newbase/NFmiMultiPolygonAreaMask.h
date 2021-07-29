@@ -15,12 +15,12 @@ class NFmiBitmapAreaMask;
 class NFmiGrid;
 
 //! Undocumented
-class _FMI_DLL NFmiMultiPolygonAreaMask : public NFmiAreaMaskImpl
+class NFmiMultiPolygonAreaMask : public NFmiAreaMaskImpl
 {
  public:
-  ~NFmiMultiPolygonAreaMask(void);
+  ~NFmiMultiPolygonAreaMask();
 
-  NFmiMultiPolygonAreaMask(void);
+  NFmiMultiPolygonAreaMask();
 
   NFmiMultiPolygonAreaMask(const NFmiCalculationCondition &theOperation,
                            Type theMaskType,
@@ -36,10 +36,10 @@ class _FMI_DLL NFmiMultiPolygonAreaMask : public NFmiAreaMaskImpl
 
  protected:
   double CalcValueFromLocation(const NFmiPoint &theLatLon) const;
-  const NFmiString MakeSubMaskString(void) const;
+  const NFmiString MakeSubMaskString() const;
 
  private:
-  void Clear(void);
+  void Clear();
 
   std::vector<NFmiSvgPath *> itsAreaPolygons;  //!< Tässä on erilliset alueet svg-polkuina.
   std::vector<double> itsAreaPolygonValues;    //!< Tässä on kunkin alueen maski arvo.

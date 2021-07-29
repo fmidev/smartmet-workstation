@@ -11,25 +11,25 @@
 #include "NFmiString.h"
 
 //! Undocumented
-class _FMI_DLL NFmiCalculationCondition
+class NFmiCalculationCondition
 {
  public:
-  NFmiCalculationCondition(void);
+  NFmiCalculationCondition();
   NFmiCalculationCondition(FmiMaskOperation theCondition,
                            double theLowerLimit,
                            double theUpperLimit = 1);
 
   void Condition(FmiMaskOperation theCondition);
-  double UpperLimit(void) const;
-  double LowerLimit(void) const;
+  double UpperLimit() const;
+  double LowerLimit() const;
 
-  FmiMaskOperation Condition(void) const;
+  FmiMaskOperation Condition() const;
   void UpperLimit(double newValue);
   void LowerLimit(double newValue);
 
   bool IsMasked(double theValue) const;
   double MaskValue(double theValue) const;
-  bool IsRampMask(void) const;
+  bool IsRampMask() const;
   const NFmiString MaskString(const NFmiString& theParamName) const;
 
   void Write(std::ostream& os) const;
@@ -71,14 +71,14 @@ inline void NFmiCalculationCondition::Condition(FmiMaskOperation theCondition)
  */
 // ----------------------------------------------------------------------
 
-inline FmiMaskOperation NFmiCalculationCondition::Condition(void) const { return itsCondition; }
+inline FmiMaskOperation NFmiCalculationCondition::Condition() const { return itsCondition; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline double NFmiCalculationCondition::UpperLimit(void) const { return itsUpperLimit; }
+inline double NFmiCalculationCondition::UpperLimit() const { return itsUpperLimit; }
 // ----------------------------------------------------------------------
 /*!
  * \param newValue Undocumented
@@ -92,7 +92,7 @@ inline void NFmiCalculationCondition::UpperLimit(double newValue) { itsUpperLimi
  */
 // ----------------------------------------------------------------------
 
-inline double NFmiCalculationCondition::LowerLimit(void) const { return itsLowerLimit; }
+inline double NFmiCalculationCondition::LowerLimit() const { return itsLowerLimit; }
 // ----------------------------------------------------------------------
 /*!
  * \param newValue Undocumented
@@ -106,7 +106,7 @@ inline void NFmiCalculationCondition::LowerLimit(double newValue) { itsLowerLimi
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiCalculationCondition::IsRampMask(void) const
+inline bool NFmiCalculationCondition::IsRampMask() const
 {
   return (itsCondition == kFmiMaskRisingRamp || itsCondition == kFmiMaskLoweringRamp ||
           itsCondition == kFmiMaskDoubleRamp);

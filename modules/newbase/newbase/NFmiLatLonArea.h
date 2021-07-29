@@ -11,11 +11,11 @@
 #include "NFmiArea.h"
 
 //! Undocumented
-class _FMI_DLL NFmiLatLonArea : public NFmiArea
+class NFmiLatLonArea : public NFmiArea
 {
  public:
-  virtual ~NFmiLatLonArea(void);
-  NFmiLatLonArea(void);
+  virtual ~NFmiLatLonArea();
+  NFmiLatLonArea();
   NFmiLatLonArea(const NFmiLatLonArea& theLatLonArea);
   NFmiLatLonArea(const NFmiPoint& theBottomLeftLatLon,
                  const NFmiPoint& theTopRightLatLon,
@@ -23,23 +23,23 @@ class _FMI_DLL NFmiLatLonArea : public NFmiArea
                  const NFmiPoint& theBottomRightXY = NFmiPoint(1., 1.),
                  bool usePacificView = false);
 
-  virtual NFmiArea* Clone(void) const;
+  virtual NFmiArea* Clone() const;
   virtual const NFmiPoint ToLatLon(const NFmiPoint& theXYPoint) const;
   virtual const NFmiPoint ToXY(const NFmiPoint& theLatLonPoint) const;
-  virtual double XScale(void) const;
-  virtual double YScale(void) const;
+  virtual double XScale() const;
+  virtual double YScale() const;
   virtual void Init(bool fKeepWorldRect = false);
 
-  virtual const NFmiRect WorldRect(void) const;
+  virtual const NFmiRect WorldRect() const;
   virtual const NFmiPoint XYToWorldXY(const NFmiPoint& theXYPoint) const;
   virtual const NFmiPoint WorldXYToLatLon(const NFmiPoint& theXYPoint) const;
   virtual const NFmiPoint LatLonToWorldXY(const NFmiPoint& theLatLonPoint) const;
   virtual NFmiArea* NewArea(const NFmiPoint& theBottomLeftLatLon,
                             const NFmiPoint& theTopRightLatLon,
                             bool allowPacificFix = true) const;
-  virtual unsigned long ClassId(void) const;
-  virtual const char* ClassName(void) const;
-  const std::string AreaStr(void) const;
+  virtual unsigned long ClassId() const;
+  virtual const char* ClassName() const;
+  const std::string AreaStr() const;
   virtual const std::string WKT() const;
 
   virtual bool operator==(const NFmiLatLonArea& theArea) const;
@@ -66,7 +66,7 @@ typedef NFmiLatLonArea* PNFmiLatLonArea;
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiRect NFmiLatLonArea::WorldRect(void) const { return itsWorldRect; }
+inline const NFmiRect NFmiLatLonArea::WorldRect() const { return itsWorldRect; }
 // ----------------------------------------------------------------------
 /*!
  * \param theXYPoint Undocumented
@@ -98,13 +98,13 @@ inline const NFmiPoint NFmiLatLonArea::LatLonToWorldXY(const NFmiPoint& theLatLo
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiLatLonArea::ClassId(void) const { return kNFmiLatLonArea; }
+inline unsigned long NFmiLatLonArea::ClassId() const { return kNFmiLatLonArea; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const char* NFmiLatLonArea::ClassName(void) const { return "NFmiLatLonArea"; }
+inline const char* NFmiLatLonArea::ClassName() const { return "NFmiLatLonArea"; }
 
 // ======================================================================

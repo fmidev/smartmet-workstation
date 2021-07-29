@@ -20,7 +20,7 @@ class NFmiDataModifierDescriptor;
 class NFmiBitmapAreaMask;
 
 //! Undocumented
-class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
+class NFmiSuperSmartInfo : public NFmiFastQueryInfo
 {
  public:
   // Accesslevel määrää millä tasolla dataa haetaan kulloisellakin hetkellä SSInfosta.
@@ -35,9 +35,9 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
                                  // olemassa ja käytössä)
   };
 
-  ~NFmiSuperSmartInfo(void);
+  ~NFmiSuperSmartInfo();
 
-  NFmiSuperSmartInfo(void);
+  NFmiSuperSmartInfo();
   NFmiSuperSmartInfo(const NFmiQueryInfo& theInfo);
   NFmiSuperSmartInfo(const NFmiSuperSmartInfo& theInfo);
 
@@ -55,9 +55,9 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
   // paikan-asetus-funktiot pitää kirjoittaa uudestaan areamaskien takia, koska
   // nyt liikutaan maskeja käytettäessä vain maskattuihin kohtiin ja muut hypätään yli!!!!
 
-  bool FirstLocation(void);
-  bool NextLocation(void);
-  bool PreviousLocation(void);
+  bool FirstLocation();
+  bool NextLocation();
+  bool PreviousLocation();
   using NFmiFastQueryInfo::NearestLocation;
   bool NearestLocation(const NFmiLocation& theLocation,
                        double theMaxDistance = kFloatMissing * 1000.);
@@ -76,7 +76,7 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
 #else
   // oli pakko kirjoittaa, koska muuten en voi kutsua SSInfo:lta tätä,
   // koska muitakin Param-metodeja on peittämässä tätä
-  NFmiDataIdent& Param(void) const { return NFmiFastQueryInfo::Param(); };
+  NFmiDataIdent& Param() const { return NFmiFastQueryInfo::Param(); };
 #endif
 
   bool Param(const NFmiParam& theParam);
@@ -87,27 +87,27 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
   // ajan-asetus-funktiot pitää kirjoittaa uudestaan areamaskin takia,
   // jos sattuu olemaan dynaamisia ajassa muuttuvia!!!!
 
-  bool FirstTime(void);
-  bool NextTime(void);
-  bool LastTime(void);
-  bool PreviousTime(void);
+  bool FirstTime();
+  bool NextTime();
+  bool LastTime();
+  bool PreviousTime();
 
 #ifndef UNIX
   using NFmiFastQueryInfo::Time;  // nyt voi käyttää suoraan SSInfosta muitakin Time-funktioita
   using NFmiFastQueryInfo::TimeIndex;  // nyt voi käyttää suoraan SSInfosta muitakin
                                        // TimeIndex-funktioita
 #else
-  const NFmiMetTime& Time(void) const { return NFmiFastQueryInfo::Time(); }
-  unsigned long TimeIndex(void) const { return NFmiFastQueryInfo::TimeIndex(); }
+  const NFmiMetTime& Time() const { return NFmiFastQueryInfo::Time(); }
+  unsigned long TimeIndex() const { return NFmiFastQueryInfo::TimeIndex(); }
 #endif
   bool Time(const NFmiMetTime& theTime);
   bool TimeIndex(unsigned long theIndex);
 
-  unsigned long SizeLocations(void) const;
-  unsigned long SizeActiveLocations(void) const;
+  unsigned long SizeLocations() const;
+  unsigned long SizeActiveLocations() const;
 
   // QueryData Read
-  float FloatValue(void) const;
+  float FloatValue() const;
 
   using NFmiQueryInfo::FloatValue;
 
@@ -116,7 +116,7 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
                    bool doTimeIntegration,
                    bool doVarianceCalculation);
 
-  NFmiCombinedParam* CombinedValue(void);
+  NFmiCombinedParam* CombinedValue();
   NFmiCombinedParam* CombinedValue(bool doVariationCalculation,
                                    bool doCalculation,
                                    bool doTimeIntegration,
@@ -129,10 +129,10 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
   float PeekValue(int theTimeOffset, int theXOffset, int theYOffset);
 
   // ClassIdent
-  unsigned long ClassId(void) const;
-  const char* ClassName(void) const;
+  unsigned long ClassId() const;
+  const char* ClassName() const;
 
-  NFmiQueryInfo* Clone(void) const;
+  NFmiQueryInfo* Clone() const;
   std::ostream& Write(std::ostream& file) const;
   std::istream& Read(std::istream& file);
 
@@ -140,44 +140,44 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
   NFmiSuperSmartInfo& operator=(const NFmiSuperSmartInfo& theInfo);
 
   void FloatValueAccessLevel(DataAccessLevel value);
-  DataAccessLevel FloatValueAccessLevel(void) const;
+  DataAccessLevel FloatValueAccessLevel() const;
   void UseCalculator(bool value);
-  bool UseCalculator(void) const;
+  bool UseCalculator() const;
   void UseVarianceCalculator(bool value);
-  bool UseVarianceCalculator(void) const;
+  bool UseVarianceCalculator() const;
   void UseVariationCalculator(bool value);
-  bool UseVariationCalculator(void) const;
-  bool UseTimeIntegrationCalculator(void);
+  bool UseVariationCalculator() const;
+  bool UseTimeIntegrationCalculator();
   void UseTimeIntegrationCalculator(bool value);
   void SetCalculator(NFmiCalculator* value, bool useCalculator = true);
   void SetDataModifierDescriptor(NFmiDataModifierDescriptor* value);
-  NFmiDataModifierDescriptor* DataModifierDescriptor(void);
-  NFmiCalculator* Calculator(void) const;
-  NFmiCalculator* CurrentVarianceCalculator(void) const;
+  NFmiDataModifierDescriptor* DataModifierDescriptor();
+  NFmiCalculator* Calculator() const;
+  NFmiCalculator* CurrentVarianceCalculator() const;
   void AreaMask(NFmiAreaMask* value);
-  NFmiAreaMask* AreaMask(void) const;
+  NFmiAreaMask* AreaMask() const;
   void UseAreaMask(bool value);
-  bool UseAreaMask(void) const;
-  bool UseHelperBinaryMasks(void) const;
+  bool UseAreaMask() const;
+  bool UseHelperBinaryMasks() const;
   void UseHelperBinaryMasks(bool newStatus);
-  const NFmiBitmapAreaMask* CurrentHelperBinaryMask(void) const;
-  NFmiCalculator* VariationCalculator(void);
+  const NFmiBitmapAreaMask* CurrentHelperBinaryMask() const;
+  NFmiCalculator* VariationCalculator();
   void VariationCalculator(NFmiCalculator* newCalculator);
-  NFmiCalculator* TimeIntegrationCalculator(void);
+  NFmiCalculator* TimeIntegrationCalculator();
   void TimeIntegrationCalculator(NFmiCalculator* newCalculator);
   NFmiString HelperBinaryMaskTestString(int theUsedVariationFactor);  // testi funktio
   bool LocationIndex2XYPosition(
       unsigned long theIndex,
       int* theXOffset,
       int* theYOffset);                // tämä kannattaa testien jälkeen laittaa privateksi
-  void UpdateHelperBinaryMasks(void);  // kutsu tätä kun haluat päivittää apuharvennusmaskeja
-  void InitEmptyAreaMask(void);
+  void UpdateHelperBinaryMasks();  // kutsu tätä kun haluat päivittää apuharvennusmaskeja
+  void InitEmptyAreaMask();
   bool SetNearestPointMask(const NFmiPoint& theLatLonPoint, bool newValue, bool fClearFirst);
 
  protected:
-  void Destroy(void);
+  void Destroy();
 
-  virtual size_t Index(void) const;
+  virtual size_t Index() const;
   size_t Index(unsigned long theParamIndex,
                unsigned long theLocationIndex,
                unsigned long theLevelIndex,
@@ -188,18 +188,18 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
 
   bool IsLocationMasked(unsigned long theLocationIndex) const;
 
-  float VarianceFloatValue(void) const;
-  float VariationFloatValue(void) const;
-  float TimeIntegrationFloatValue(void) const;
-  float RawFloatValue(void) const;
-  float CalculationFloatValue(void) const;
-  void UpdateVarianceCalculator(void);
-  void UpdateAreaMaskTime(void);
+  float VarianceFloatValue() const;
+  float VariationFloatValue() const;
+  float TimeIntegrationFloatValue() const;
+  float RawFloatValue() const;
+  float CalculationFloatValue() const;
+  void UpdateVarianceCalculator();
+  void UpdateAreaMaskTime();
   unsigned long CalcPeekLocationIndex(unsigned long currentIndex,
                                       int theXOffset,
                                       int theYOffset) const;
-  NFmiCombinedParam* VariationCombinedValue(void);
-  NFmiCombinedParam* CalculationCombinedValue(void);
+  NFmiCombinedParam* VariationCombinedValue();
+  NFmiCombinedParam* CalculationCombinedValue();
 
  private:
   // kutsu tätä aina kun aika muuttuu SSInfossa!!!!
@@ -209,21 +209,21 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
   void CopyHelperBinaryMasksAndInfo(const NFmiSuperSmartInfo& theSSInfo);
 
   // alustaa kaikki tarvittavat harvennusapu maskit(eli kaikille epävarmuuksille 0-n)
-  bool InitHelperBinaryMasks(void);
+  bool InitHelperBinaryMasks();
 
   // luo aina tietylle epävarmuuskertoimelle harvennusmaskin
   NFmiBitmapAreaMask* CreateHelperBinaryMask(int theUsedVariationFactor);
 
-  NFmiBitmapAreaMask* CreateZeroVariationHelperBinaryMask(void);
+  NFmiBitmapAreaMask* CreateZeroVariationHelperBinaryMask();
 
   // tuhoaa maskit
-  void ClearHelperBinaryMasks(void);
+  void ClearHelperBinaryMasks();
 
   // laskee käytetyn maskin xy-indeksi-boundingboxin
-  void CalcXYMaskBoundingBox(void);
+  void CalcXYMaskBoundingBox();
 
   NFmiBitmapAreaMask* HelperBinaryMask(int theUsedVariationFactor);
-  void SetCurrentHelperBinaryMask(void);
+  void SetCurrentHelperBinaryMask();
 
   // Vaikuttaa mm. FloatValue-metodin toimintaan. Millä tasolla dataa haetaan:
   // raakana, varianssia, todennäköisyyttä, vai Calculaattori tasolla laskettua.
@@ -277,7 +277,7 @@ class _FMI_DLL NFmiSuperSmartInfo : public NFmiFastQueryInfo
   NFmiRect itsXYMaskBoundingBox;
 
   // tähän talletetaan eri epävarmuus kertoimilla lasketut apumaskit (omistaa, tuhoaa)
-  checkedVector<NFmiBitmapAreaMask*> itsHelperBinaryMaskList;
+  std::vector<NFmiBitmapAreaMask*> itsHelperBinaryMaskList;
 
   // Tämä osaa luoda käyttäjän pyytämiä speciaali maskeja ja osaa mm.
   // hoitaa optimoinnin binaarimaskin rakentamisen.
@@ -301,14 +301,14 @@ inline bool NFmiSuperSmartInfo::Param(FmiParameterName theParam)
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiSuperSmartInfo::ClassId(void) const { return kNFmiQueryInfo; }
+inline unsigned long NFmiSuperSmartInfo::ClassId() const { return kNFmiQueryInfo; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const char* NFmiSuperSmartInfo::ClassName(void) const { return "NFmiSuperSmartInfo"; }
+inline const char* NFmiSuperSmartInfo::ClassName() const { return "NFmiSuperSmartInfo"; }
 // ----------------------------------------------------------------------
 /*!
  * \param value Undocumented
@@ -326,7 +326,7 @@ inline void NFmiSuperSmartInfo::FloatValueAccessLevel(DataAccessLevel value)
  */
 // ----------------------------------------------------------------------
 
-inline NFmiSuperSmartInfo::DataAccessLevel NFmiSuperSmartInfo::FloatValueAccessLevel(void) const
+inline NFmiSuperSmartInfo::DataAccessLevel NFmiSuperSmartInfo::FloatValueAccessLevel() const
 {
   return itsFloatValueAccessLevel;
 }
@@ -344,14 +344,14 @@ inline void NFmiSuperSmartInfo::UseCalculator(bool value) { fUseCalculator = val
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiSuperSmartInfo::UseCalculator(void) const { return fUseCalculator; }
+inline bool NFmiSuperSmartInfo::UseCalculator() const { return fUseCalculator; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiSuperSmartInfo::UseVarianceCalculator(void) const { return fUseVarianceCalculator; }
+inline bool NFmiSuperSmartInfo::UseVarianceCalculator() const { return fUseVarianceCalculator; }
 // ----------------------------------------------------------------------
 /*!
  * \param value Undocumented
@@ -369,7 +369,7 @@ inline void NFmiSuperSmartInfo::UseVariationCalculator(bool value)
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiSuperSmartInfo::UseVariationCalculator(void) const
+inline bool NFmiSuperSmartInfo::UseVariationCalculator() const
 {
   return fUseVariationCalculator;
 }
@@ -380,7 +380,7 @@ inline bool NFmiSuperSmartInfo::UseVariationCalculator(void) const
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiSuperSmartInfo::UseTimeIntegrationCalculator(void)
+inline bool NFmiSuperSmartInfo::UseTimeIntegrationCalculator()
 {
   return fUseTimeIntegrationCalculator;
 }
@@ -402,7 +402,7 @@ inline void NFmiSuperSmartInfo::UseTimeIntegrationCalculator(bool value)
  */
 // ----------------------------------------------------------------------
 
-inline NFmiDataModifierDescriptor* NFmiSuperSmartInfo::DataModifierDescriptor(void)
+inline NFmiDataModifierDescriptor* NFmiSuperSmartInfo::DataModifierDescriptor()
 {
   return itsDataModifierDescriptor;
 }
@@ -413,7 +413,7 @@ inline NFmiDataModifierDescriptor* NFmiSuperSmartInfo::DataModifierDescriptor(vo
  */
 // ----------------------------------------------------------------------
 
-inline NFmiCalculator* NFmiSuperSmartInfo::Calculator(void) const { return itsCalculator; }
+inline NFmiCalculator* NFmiSuperSmartInfo::Calculator() const { return itsCalculator; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
@@ -421,7 +421,7 @@ inline NFmiCalculator* NFmiSuperSmartInfo::Calculator(void) const { return itsCa
 // ----------------------------------------------------------------------
 
 // huom! ei asetus funktiota, koska tämä haetaan aina parametrikohtaisesta listasta!!!
-inline NFmiCalculator* NFmiSuperSmartInfo::CurrentVarianceCalculator(void) const
+inline NFmiCalculator* NFmiSuperSmartInfo::CurrentVarianceCalculator() const
 {
   return itsCurrentVarianceCalculator;
 }
@@ -439,7 +439,7 @@ inline void NFmiSuperSmartInfo::AreaMask(NFmiAreaMask* value) { itsAreaMask = va
  */
 // ----------------------------------------------------------------------
 
-inline NFmiAreaMask* NFmiSuperSmartInfo::AreaMask(void) const { return itsAreaMask; }
+inline NFmiAreaMask* NFmiSuperSmartInfo::AreaMask() const { return itsAreaMask; }
 // ----------------------------------------------------------------------
 /*!
  * \param value Undocumented
@@ -453,21 +453,21 @@ inline void NFmiSuperSmartInfo::UseAreaMask(bool value) { fUseAreaMask = value; 
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiSuperSmartInfo::UseAreaMask(void) const { return fUseAreaMask; }
+inline bool NFmiSuperSmartInfo::UseAreaMask() const { return fUseAreaMask; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiSuperSmartInfo::UseHelperBinaryMasks(void) const { return fUseHelperBinaryMasks; }
+inline bool NFmiSuperSmartInfo::UseHelperBinaryMasks() const { return fUseHelperBinaryMasks; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiBitmapAreaMask* NFmiSuperSmartInfo::CurrentHelperBinaryMask(void) const
+inline const NFmiBitmapAreaMask* NFmiSuperSmartInfo::CurrentHelperBinaryMask() const
 {
   return itsCurrentHelperBinaryMask;
 }
@@ -478,7 +478,7 @@ inline const NFmiBitmapAreaMask* NFmiSuperSmartInfo::CurrentHelperBinaryMask(voi
  */
 // ----------------------------------------------------------------------
 
-inline NFmiCalculator* NFmiSuperSmartInfo::VariationCalculator(void)
+inline NFmiCalculator* NFmiSuperSmartInfo::VariationCalculator()
 {
   return itsVariationCalculator;
 }
@@ -501,7 +501,7 @@ inline void NFmiSuperSmartInfo::VariationCalculator(NFmiCalculator* newCalculato
  */
 // ----------------------------------------------------------------------
 
-inline NFmiCalculator* NFmiSuperSmartInfo::TimeIntegrationCalculator(void)
+inline NFmiCalculator* NFmiSuperSmartInfo::TimeIntegrationCalculator()
 {
   return itsTimeIntegrationCalculator;
 }
@@ -523,7 +523,7 @@ inline void NFmiSuperSmartInfo::TimeIntegrationCalculator(NFmiCalculator* newCal
  */
 // ----------------------------------------------------------------------
 
-inline float NFmiSuperSmartInfo::RawFloatValue(void) const
+inline float NFmiSuperSmartInfo::RawFloatValue() const
 {
   return NFmiFastQueryInfo::FloatValue();
 }

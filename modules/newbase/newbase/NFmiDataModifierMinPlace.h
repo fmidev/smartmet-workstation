@@ -17,16 +17,16 @@
 #include "NFmiDataModifierExtremePlace.h"
 
 //! Undocumented
-class _FMI_DLL NFmiDataModifierMinPlace : public NFmiDataModifierExtremePlace
+class NFmiDataModifierMinPlace : public NFmiDataModifierExtremePlace
 {
  public:
-  virtual ~NFmiDataModifierMinPlace(void);
-  NFmiDataModifierMinPlace(void);
+  virtual ~NFmiDataModifierMinPlace();
+  NFmiDataModifierMinPlace();
 
-  void Clear(void);
+  void Clear();
 
   using NFmiDataModifier::CalculationResult;
-  virtual float CalculationResult(void);
+  virtual float CalculationResult();
 
  protected:
   virtual bool IsNewExtreme(float value);

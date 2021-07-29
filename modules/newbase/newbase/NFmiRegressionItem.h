@@ -13,7 +13,7 @@ class NFmiSuperSmartInfo;
 class NFmiDataIdent;
 
 //! Undocumented
-class _FMI_DLL NFmiRegressionItem : public NFmiInfoModifier
+class NFmiRegressionItem : public NFmiInfoModifier
 {
  public:
   virtual ~NFmiRegressionItem();
@@ -25,8 +25,8 @@ class _FMI_DLL NFmiRegressionItem : public NFmiInfoModifier
   using NFmiDataModifier::CalculationResult;
   virtual void Calculate(NFmiQueryInfo* theData);
   virtual void Calculate(float theValue) { NFmiInfoModifier::Calculate(theValue); }
-  virtual float CalculationResult(void);
-  virtual double FloatValue(void);
+  virtual float CalculationResult();
+  virtual double FloatValue();
 
  protected:
   double itsReturnValue;

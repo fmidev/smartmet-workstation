@@ -62,7 +62,7 @@ class NFmiLogger;
 class MyGrid
 {
  public:
-  MyGrid(void) : itsArea(0), itsNX(0), itsNY(0) {}
+  MyGrid() : itsArea(0), itsNX(0), itsNY(0) {}
   MyGrid(const NFmiArea *theArea, int theNX, int theNY)
       : itsArea(theArea ? theArea->Clone() : 0), itsNX(theNX), itsNY(theNY)
   {
@@ -82,7 +82,7 @@ class MyGrid
   {
   }
 
-  ~MyGrid(void) { delete itsArea; }
+  ~MyGrid() { delete itsArea; }
   MyGrid &operator=(const MyGrid &theGrid)
   {
     if (this != &theGrid)
@@ -136,7 +136,7 @@ class MyGrid
 struct CombinedParamStruct
 {  // tämä structi piti tehdä, että sain vähennettyä boost::in Thread:ille annettujen parametrin
   // määrää (max 9 parametria)
-  CombinedParamStruct(void)
+  CombinedParamStruct()
       : weather1(false), weather2(false), wind1(false), wind2(false), wind3(false)
   {
   }
@@ -157,7 +157,7 @@ static const NFmiRect gMissingCropRect(kFloatMissing, kFloatMissing, kFloatMissi
 // monista qdatoista yksi uusi qdata.
 struct GridRecordData
 {
-  GridRecordData(void);
+  GridRecordData();
   void ChangeParam(const NFmiParam &theWantedParam);
 
   NFmiMetTime itsOrigTime;
@@ -182,7 +182,7 @@ class NFmiStopFunctor
  public:
   NFmiStopFunctor() : fStop(false) {}
   ~NFmiStopFunctor() {}
-  bool Stop(void) const { return fStop; }
+  bool Stop() const { return fStop; }
   void Stop(bool newValue) { fStop = newValue; }
 
  private:
@@ -193,11 +193,11 @@ class NFmiOperationProgress
 {
  public:
   virtual ~NFmiOperationProgress() {}
-  virtual void StepIt(void) = 0;
+  virtual void StepIt() = 0;
   virtual void SetRange(int low, int high, int stepCount) = 0;
   virtual void AddRange(int value) = 0;
   virtual bool DoPostMessage(unsigned int message, unsigned int wParam = 0, long lParam = 0) = 0;
-  virtual bool WaitUntilInitialized(void) = 0;
+  virtual bool WaitUntilInitialized() = 0;
 };
 
 class NFmiThreadCallBacks
@@ -208,14 +208,14 @@ class NFmiThreadCallBacks
   {
   }
 
-  bool Stop(void) const;
+  bool Stop() const;
   void Stop(bool newValue);
-  void StepIt(void);
+  void StepIt();
   void SetRange(int low, int high, int stepCount);
   void AddRange(int value);
   bool DoPostMessage(unsigned int message, unsigned int wParam = 0, long lParam = 0);
-  void CheckIfStopped(void);  // heittää poikkeuksen, jos lopetetaan
-  bool WaitUntilInitialized(void);
+  void CheckIfStopped();  // heittää poikkeuksen, jos lopetetaan
+  bool WaitUntilInitialized();
 
  private:
   NFmiStopFunctor *itsStopper;
@@ -225,8 +225,8 @@ class NFmiThreadCallBacks
 class NFmiStopThreadException
 {
  public:
-  NFmiStopThreadException(void) {}
-  ~NFmiStopThreadException(void) {}
+  NFmiStopThreadException() {}
+  ~NFmiStopThreadException() {}
 };
 
 // Tämä luokka laskee worker-threadi parvelle aina kulloisenkin 'vapaan' laskettavan timeIndeksin.
@@ -289,10 +289,10 @@ class NFmiLocationIndexRangeCalculator
 };
 
 //! Undocumented
-class _FMI_DLL NFmiQueryDataUtil
+class NFmiQueryDataUtil
 {
  public:
-  typedef checkedVector<GridRecordData *> GridDataVector;
+  typedef std::vector<GridRecordData *> GridDataVector;
   using SoundingLevelContainer = std::vector<unsigned long>;
   using SignificantSoundingLevels = std::unique_ptr<SoundingLevelContainer>;
   static SignificantSoundingLevels GetSignificantSoundingLevelIndices(NFmiFastQueryInfo &theInfo);
@@ -310,25 +310,25 @@ class _FMI_DLL NFmiQueryDataUtil
    *  370, osaa laittaa arvoksi 10 eikä leikkaa 360:een. Jos taas kyseessä vaikka
    *  kosteusprosentti, pitää yli sadan mene arvo leikata 100:n.
    */
-  class _FMI_DLL LimitChecker
+  class LimitChecker
   {
    public:
     LimitChecker(float theLowerLimit, float theUpperLimit, bool theCircularValue = false);
     float GetInsideLimitsValue(float theValue) const;
 
-    inline float LowerLimit(void) const { return itsLowerLimit; }
+    inline float LowerLimit() const { return itsLowerLimit; }
     inline void LowerLimit(float newValue)
     {
       itsLowerLimit = newValue;
       Update();
     }
-    inline float UpperLimit(void) const { return itsUpperLimit; }
+    inline float UpperLimit() const { return itsUpperLimit; }
     inline void UpperLimit(float newValue)
     {
       itsUpperLimit = newValue;
       Update();
     }
-    inline bool CircularValue(void) const { return fCircularValue; }
+    inline bool CircularValue() const { return fCircularValue; }
     inline void CircularValue(bool newValue)
     {
       fCircularValue = newValue;
@@ -336,7 +336,7 @@ class _FMI_DLL NFmiQueryDataUtil
     }
 
    private:
-    void Update(void);
+    void Update();
 
     float itsLowerLimit;
     float itsUpperLimit;
@@ -430,7 +430,7 @@ class _FMI_DLL NFmiQueryDataUtil
                                      int theOriginTimeFunction,
                                      bool fMakeChangingTimeResolution);
 
-  static NFmiQueryData *CombineTimes(checkedVector<std::string> &theFileNames,
+  static NFmiQueryData *CombineTimes(std::vector<std::string> &theFileNames,
                                      int theMaxTimesInNewData);
 
   static NFmiQueryData *MakeCombineParams(NFmiFastQueryInfo &theSourceInfo,
@@ -509,7 +509,7 @@ class _FMI_DLL NFmiQueryDataUtil
   // ***************  NowcastFilter osuus on nyt täällä!  ***************************
   // ********************************************************************************
 
-  static const NFmiString &GetOfficialQueryDataProdIdsKey(void);
+  static const NFmiString &GetOfficialQueryDataProdIdsKey();
 
   static NFmiQueryData *QDCrop(
       NFmiFastQueryInfo &theInfo, int theLeft, int theTop, int theRight, int theBottom);

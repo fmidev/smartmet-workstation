@@ -9,7 +9,7 @@
 
 #include "NFmiDataModifier.h"
 
-class _FMI_DLL NFmiDataModifierGreaterThan : public NFmiDataModifier
+class NFmiDataModifierGreaterThan : public NFmiDataModifier
 {
  public:
   NFmiDataModifierGreaterThan(float theValue = kFloatMissing);

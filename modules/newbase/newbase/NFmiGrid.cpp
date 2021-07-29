@@ -607,8 +607,8 @@ bool NFmiGrid::Init(const std::string &theFileName,
   if (status && in)
   {
     unsigned long rowByteSize = nx * theElementSizeInBytes;
-    checkedVector<char> buffer(rowByteSize);
-    checkedVector<float> floatData(nx);  // tehdään float taulu, johon mahtuu rivin arvot
+    std::vector<char> buffer(rowByteSize);
+    std::vector<float> floatData(nx);  // tehdään float taulu, johon mahtuu rivin arvot
     if ((status = SeekStartingPoint(in, theStartOffsetInBytes, theDataStartsAfterString)) == true)
     {
       for (unsigned long i = 0; i < ny; i++)
@@ -699,12 +699,12 @@ typedef pair<int, double> IndDistPari;
  */
 // ----------------------------------------------------------------------
 
-checkedVector<pair<int, double> > NFmiGrid::NearestLocations(const NFmiLocation & /* theLocation */,
+std::vector<pair<int, double> > NFmiGrid::NearestLocations(const NFmiLocation & /* theLocation */,
                                                              int /* theMaxWantedLocations */,
                                                              double /* theMaxDistance */) const
 {
   int size = 1;  //(int)this->GetSize();
-  checkedVector<IndDistPari> tempValues(size, make_pair(-1, kFloatMissing));
+  std::vector<IndDistPari> tempValues(size, make_pair(-1, kFloatMissing));
 
 #ifdef COMMENTED_OUT
 
@@ -724,21 +724,21 @@ checkedVector<pair<int, double> > NFmiGrid::NearestLocations(const NFmiLocation 
                 tempValues.begin() + theMaxWantedLocations,
                 tempValues.end(),
                 LocationIndexDistanceLess<IndDistPari>());
-    return checkedVector<IndDistPari>(
+    return std::vector<IndDistPari>(
         tempValues.begin(),
         tempValues.begin() + theMaxWantedLocations);  // palautetaan haluttu määrä locatioita
   }
   else  // theMaxDistance != kFloatMissing) // haetaan kaikki annetun säteen sisällä olevat paikat
   {
     sort(tempValues.begin(), tempValues.end(), LocationIndexDistanceLess<IndDistPari>());
-    checkedVector<IndDistPari>::iterator pos =
+    std::vector<IndDistPari>::iterator pos =
         find_if(tempValues.begin(),
                 tempValues.end(),
                 LocationIndexDistanceGreater<IndDistPari>(theMaxDistance));
 
     if (theMaxWantedLocations != -1)
     {
-      checkedVector<IndDistPari>::iterator maxWantedPos =
+      std::vector<IndDistPari>::iterator maxWantedPos =
           tempValues.begin() + theMaxWantedLocations;
       if (pos > maxWantedPos) pos = maxWantedPos;
     }
@@ -746,7 +746,7 @@ checkedVector<pair<int, double> > NFmiGrid::NearestLocations(const NFmiLocation 
     if (pos == tempValues.end())
       return tempValues;
     else
-      return checkedVector<IndDistPari>(tempValues.begin(), pos);
+      return std::vector<IndDistPari>(tempValues.begin(), pos);
   }
 
 #endif  // COMMENTED_OUT

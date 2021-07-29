@@ -10,12 +10,12 @@
 #include "NFmiLocation.h"
 
 //! Undocumented
-class _FMI_DLL NFmiStation : public NFmiLocation
+class NFmiStation : public NFmiLocation
 {
  public:
-  virtual ~NFmiStation(void);
+  virtual ~NFmiStation();
 
-  NFmiStation(void);
+  NFmiStation();
 
   NFmiStation(const NFmiStation& theStation);
 
@@ -37,11 +37,11 @@ class _FMI_DLL NFmiStation : public NFmiLocation
   virtual bool IsLessThan(const NFmiSortable& theLocation) const;
   virtual bool IsEqualName(const NFmiStation& theStation) const;
 
-  virtual NFmiLocation* Clone(void) const;
-  virtual unsigned long ClassId(void) const { return kNFmiStation; }
-  virtual double MaxDistance(void) const { return itsMaxDistance; }
+  virtual NFmiLocation* Clone() const;
+  virtual unsigned long ClassId() const { return kNFmiStation; }
+  virtual double MaxDistance() const { return itsMaxDistance; }
   virtual void MaxDistance(double theMaxDistance) { itsMaxDistance = theMaxDistance; }
-  virtual FmiStationType IdentType(void) const { return itsIdentType; }
+  virtual FmiStationType IdentType() const { return itsIdentType; }
   virtual void IdentType(FmiStationType theIdentType) { itsIdentType = theIdentType; }
   virtual std::ostream& Write(std::ostream& file) const;
   virtual std::istream& Read(std::istream& file);

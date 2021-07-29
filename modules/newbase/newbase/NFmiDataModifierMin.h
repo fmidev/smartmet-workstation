@@ -9,19 +9,19 @@
 
 #include "NFmiDataModifierExtreme.h"
 
-class _FMI_DLL NFmiDataModifierMin : public NFmiDataModifierExtreme
+class NFmiDataModifierMin : public NFmiDataModifierExtreme
 {
  public:
-  virtual ~NFmiDataModifierMin(void);
-  NFmiDataModifierMin(void);
+  virtual ~NFmiDataModifierMin();
+  NFmiDataModifierMin();
   NFmiDataModifierMin(const NFmiDataModifierMin& theOther);
-  NFmiDataModifier* Clone(void) const;
+  NFmiDataModifier* Clone() const;
 
   //  virtual void Calculate(float theValue);
 
-  void Clear(void);
+  void Clear();
   using NFmiDataModifier::CalculationResult;
-  virtual float CalculationResult(void);
+  virtual float CalculationResult();
 
  protected:
   virtual bool IsNewExtreme(float value);

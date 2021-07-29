@@ -11,7 +11,7 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiRelativeTimeIntegrationIterator : public NFmiDataIterator
+class NFmiRelativeTimeIntegrationIterator : public NFmiDataIterator
 {
  public:
   virtual ~NFmiRelativeTimeIntegrationIterator();
@@ -34,7 +34,7 @@ class _FMI_DLL NFmiRelativeTimeIntegrationIterator : public NFmiDataIterator
  * Idea on sama kuin vahasaa iteraattorissa, mutta DoForEach toimii erilailla.
  */
 
-class _FMI_DLL NFmiRelativeTimeIntegrationIterator2 : public NFmiDataIterator
+class NFmiRelativeTimeIntegrationIterator2 : public NFmiDataIterator
 {
  public:
   virtual ~NFmiRelativeTimeIntegrationIterator2();

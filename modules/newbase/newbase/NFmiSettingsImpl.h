@@ -15,10 +15,10 @@
 #include <vector>
 
 //! A generic settings holder
-class _FMI_DLL NFmiSettingsImpl
+class NFmiSettingsImpl
 {
  public:
-  static NFmiSettingsImpl& Instance(void);
+  static NFmiSettingsImpl& Instance();
   void Clear();
   bool Init(const std::string& theFile = "") const;
   bool Read(const std::string& theFile) const;
@@ -36,12 +36,12 @@ class _FMI_DLL NFmiSettingsImpl
 
  private:
   //! Destruction is private - this is a singleton
-  ~NFmiSettingsImpl(void);
+  ~NFmiSettingsImpl();
 
   void InternalSet(const std::string& theName, const std::string& theValue) const;
 
   //! Default constructor is private - this is a singleton
-  NFmiSettingsImpl(void);
+  NFmiSettingsImpl();
 
   //! Copy constructor is disabled - this is a singleton
   NFmiSettingsImpl(const NFmiSettingsImpl& theSettings);
@@ -49,8 +49,8 @@ class _FMI_DLL NFmiSettingsImpl
   //! Assignment operator is disabled - this is a singleton
   NFmiSettingsImpl& operator=(const NFmiSettingsImpl& theSettings);
 
-  static void Create(void);
-  static void Die(void);
+  static void Create();
+  static void Die();
   static NFmiSettingsImpl* itsInstance;
 
   //! The type of the actual data

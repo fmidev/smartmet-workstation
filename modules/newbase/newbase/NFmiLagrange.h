@@ -5,7 +5,6 @@
  */
 // ======================================================================
 
-#include "NFmiDataMatrix.h"  // for kFloatMissing
 #include "NFmiDef.h"
 #include "NFmiGlobals.h"  // for kFloatMissing
 
@@ -15,11 +14,11 @@
 #pragma once
 
 //! Undocumented
-class _FMI_DLL NFmiLagrange
+class NFmiLagrange
 {
  public:
-  ~NFmiLagrange(void);
-  NFmiLagrange(void);
+  ~NFmiLagrange();
+  NFmiLagrange();
   NFmiLagrange(const NFmiLagrange& theLagrange);
   NFmiLagrange(const double* si, const double* ti, double* yij, int sn, int tn);
   NFmiLagrange(const double* si, const double* yij, int sn);
@@ -39,31 +38,31 @@ class _FMI_DLL NFmiLagrange
   double Interpolate(double s);
 
  private:
-  double* Si(void);
-  double* Ti(void);
-  double* Yij(void);
+  double* Si();
+  double* Ti();
+  double* Yij();
 
-  void Denominator(const checkedVector<double>& xi, checkedVector<double>& denominator, int n);
-  void SiDenominator(void);
-  void TiDenominator(void);
+  void Denominator(const std::vector<double>& xi, std::vector<double>& denominator, int n);
+  void SiDenominator();
+  void TiDenominator();
 
   double L(
-      const checkedVector<double>& xi, double x, checkedVector<double>& denominator, int i, int n);
+      const std::vector<double>& xi, double x, std::vector<double>& denominator, int i, int n);
   double Ls(double s, int i);
   double Lt(double t, int i);
 
   int itsSn;
   int itsTn;
 
-  checkedVector<double> itsSi;
-  checkedVector<double> itsTi;
-  checkedVector<double> itsYij;
+  std::vector<double> itsSi;
+  std::vector<double> itsTi;
+  std::vector<double> itsYij;
 
-  checkedVector<double> itsSiDenominator;
-  checkedVector<double> itsTiDenominator;
+  std::vector<double> itsSiDenominator;
+  std::vector<double> itsTiDenominator;
 
-  checkedVector<double> itsLs;
-  checkedVector<double> itsLt;
+  std::vector<double> itsLs;
+  std::vector<double> itsLt;
 
 };  // class NFmiLagrange
 

@@ -20,11 +20,11 @@ class NFmiLocation;
 class NFmiLocationCache
 {
  public:
-  NFmiLocationCache(void);
-  ~NFmiLocationCache(void);
+  NFmiLocationCache();
+  ~NFmiLocationCache();
 
-  bool NoValue(void) const { return itsLocationIndex == gMissingIndex; }
-  bool NoInterpolation(void) const { return fNoInterpolation; }
+  bool NoValue() const { return itsLocationIndex == gMissingIndex; }
+  bool NoInterpolation() const { return fNoInterpolation; }
   void CalcIsInterpolationNeeded(
       int theGridSizeX, int theGridSizeY);  // tämä lasketaan vain kerran kun cachea muodostetaan
   static NFmiLocationCache MakePeekedLocation(const NFmiLocationCache &theOrigLocation,
@@ -44,12 +44,12 @@ class NFmiLocationCache
 class NFmiTimeCache
 {
  public:
-  NFmiTimeCache(void);
-  ~NFmiTimeCache(void);
+  NFmiTimeCache();
+  ~NFmiTimeCache();
 
-  bool NoValue(void) const { return itsTimeIndex1 == gMissingIndex; }
-  bool NoInterpolation(void) const { return itsTimeIndex1 == itsTimeIndex2; }
-  void CalcIsInterpolationNeeded(void);  // tämä lasketaan vain kerran kun cachea muodostetaan
+  bool NoValue() const { return itsTimeIndex1 == gMissingIndex; }
+  bool NoInterpolation() const { return itsTimeIndex1 == itsTimeIndex2; }
+  void CalcIsInterpolationNeeded();  // tämä lasketaan vain kerran kun cachea muodostetaan
 
   unsigned long itsTimeIndex1;
   unsigned long itsTimeIndex2;
@@ -57,10 +57,10 @@ class NFmiTimeCache
 };
 
 //! Undocumented
-class _FMI_DLL NFmiGrid : public NFmiGridBase
+class NFmiGrid : public NFmiGridBase
 {
  public:
-  virtual ~NFmiGrid(void);
+  virtual ~NFmiGrid();
 
   NFmiGrid(const NFmiArea *theArea = 0,
            unsigned long theXNumber = 0,
@@ -97,7 +97,7 @@ class _FMI_DLL NFmiGrid : public NFmiGridBase
                      double theMaxDistance = kFloatMissing * 1000.,
                      NFmiPoint *theGridPoint = 0);
 
-  checkedVector<std::pair<int, double> > NearestLocations(
+  std::vector<std::pair<int, double> > NearestLocations(
       const NFmiLocation &theLocation,
       int theMaxWantedLocations,
       double theMaxDistance = kFloatMissing) const;
@@ -131,13 +131,13 @@ class _FMI_DLL NFmiGrid : public NFmiGridBase
 
   bool InterpolateToXYPoint(const NFmiPoint &xy, double &theValue, FmiInterpolationMethod method);
 
-  const NFmiPoint LatLon(void) const;
+  const NFmiPoint LatLon() const;
   const NFmiPoint LatLon(unsigned long theIndex) const;
   const NFmiPoint WorldXY(unsigned long theIndex) const;
-  const NFmiPoint RelativePoint(void) const;
+  const NFmiPoint RelativePoint() const;
   const NFmiPoint RelativePoint(unsigned long theIndex) const;
-  const NFmiPoint XY(void) const;
-  NFmiArea *Area(void) const;
+  const NFmiPoint XY() const;
+  NFmiArea *Area() const;
   bool AreGridsIdentical(const NFmiGrid &theOtherGrid) const;
 
   bool CropByLatLon(NFmiPoint &theBottomLeftLatLon,
@@ -156,8 +156,8 @@ class _FMI_DLL NFmiGrid : public NFmiGridBase
   void CalcLatlonCachePoints(NFmiGrid &theTargetGrid,
                              NFmiDataMatrix<NFmiLocationCache> &theLocationCache);
 
-  virtual unsigned long ClassId(void) const;
-  virtual const char *ClassName(void) const;
+  virtual unsigned long ClassId() const;
+  virtual const char *ClassName() const;
   bool operator==(const NFmiGrid &theGrid) const;
   NFmiGrid &operator=(const NFmiGrid &theGrid);
 
@@ -187,7 +187,7 @@ typedef NFmiGrid *PNFmiGrid;
  */
 // ----------------------------------------------------------------------
 
-inline NFmiGrid::~NFmiGrid(void) { delete itsArea; }
+inline NFmiGrid::~NFmiGrid() { delete itsArea; }
 // ----------------------------------------------------------------------
 /*!
  * Constructor
@@ -248,14 +248,14 @@ inline const NFmiPoint NFmiGrid::GridToXY(const NFmiPoint &theGridPoint) const
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiPoint NFmiGrid::XY(void) const { return GridToXY(GridPoint()); }
+inline const NFmiPoint NFmiGrid::XY() const { return GridToXY(GridPoint()); }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline NFmiArea *NFmiGrid::Area(void) const { return itsArea; }
+inline NFmiArea *NFmiGrid::Area() const { return itsArea; }
 // ----------------------------------------------------------------------
 /*!
  * \param xy Undocumented
@@ -349,7 +349,7 @@ inline const NFmiPoint NFmiGrid::GridToWorldXY(const NFmiPoint &theGridPoint) co
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiPoint NFmiGrid::LatLon(void) const { return GridToLatLon(GridPoint()); }
+inline const NFmiPoint NFmiGrid::LatLon() const { return GridToLatLon(GridPoint()); }
 // ----------------------------------------------------------------------
 /*!
  * \param theIndex Undocumented
@@ -528,14 +528,14 @@ inline bool NFmiGrid::InterpolateToXYPoint(double x,
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiGrid::ClassId(void) const { return kNFmiGrid; }
+inline unsigned long NFmiGrid::ClassId() const { return kNFmiGrid; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const char *NFmiGrid::ClassName(void) const { return "NFmiGrid"; }
+inline const char *NFmiGrid::ClassName() const { return "NFmiGrid"; }
 // ----------------------------------------------------------------------
 /*!
  * Output operator for class NFmiGrid

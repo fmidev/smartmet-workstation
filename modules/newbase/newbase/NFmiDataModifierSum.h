@@ -9,21 +9,21 @@
 
 #include "NFmiDataModifier.h"
 
-class _FMI_DLL NFmiDataModifierSum : public NFmiDataModifier
+class NFmiDataModifierSum : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiDataModifierSum(void);
+  virtual ~NFmiDataModifierSum();
   NFmiDataModifierSum(FmiJoinOperator theJoinOperator = kFmiAdd, bool missingValuesAlloved = true);
   NFmiDataModifierSum(const NFmiDataModifierSum& theOther);
-  NFmiDataModifier* Clone(void) const;
+  NFmiDataModifier* Clone() const;
 
-  float Sum(void);
+  float Sum();
   virtual void Calculate(float theValue);
   virtual void Calculate(NFmiQueryInfo* theQI);
 
-  void Clear(void);
+  void Clear();
   using NFmiDataModifier::CalculationResult;
-  virtual float CalculationResult(void);
+  virtual float CalculationResult();
 
  protected:
   float itsSum;

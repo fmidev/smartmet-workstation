@@ -231,7 +231,7 @@ void NFmiSuperSmartInfo::CopyHelperBinaryMasksAndInfo(const NFmiSuperSmartInfo& 
   fUseHelperBinaryMasks = theSSInfo.fUseHelperBinaryMasks;
   itsXYMaskBoundingBox = theSSInfo.itsXYMaskBoundingBox;
 
-  const checkedVector<NFmiBitmapAreaMask*>& helperBinaryMaskList =
+  const std::vector<NFmiBitmapAreaMask*>& helperBinaryMaskList =
       theSSInfo.itsHelperBinaryMaskList;
   size_t size = helperBinaryMaskList.size();
   itsHelperBinaryMaskList.resize(size);
@@ -1411,7 +1411,7 @@ NFmiString NFmiSuperSmartInfo::HelperBinaryMaskTestString(int theUsedVariationFa
     int locIndex = 0;
     int i = 0;
     string rowStr;
-    checkedVector<string> lines;
+    std::vector<string> lines;
     int x = 0, y = 0;
     for (ResetLocation(); NextLocation();)
     {

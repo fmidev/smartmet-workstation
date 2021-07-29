@@ -167,7 +167,7 @@ bool NFmiProducerIdLister::IntepretProducerIdString(const std::string &theString
     itsTimes = timesDesc;
   }
 
-  checkedVector<int> prodIds(vSize, -1);
+  std::vector<int> prodIds(vSize, -1);
   int prodId = -1;
   int i = 0;
   for (i = 0; i < vSize; i++)
@@ -176,7 +176,7 @@ bool NFmiProducerIdLister::IntepretProducerIdString(const std::string &theString
     prodIds[i] = prodId;
   }
   NFmiMetTime orgTime(1900, 1, 1, 0, 0);
-  checkedVector<NFmiMetTime> originTimes(vSize, orgTime);
+  std::vector<NFmiMetTime> originTimes(vSize, orgTime);
   for (i = 0; i < vSize; i++)
   {
     in >> orgTime;
@@ -223,9 +223,9 @@ bool NFmiProducerIdLister::ChangeTimeResolution(int theNewResolutionInMinutes)
     return false;
 
   int vSize = newTimeBag.GetSize();
-  checkedVector<int> newProdIds(vSize, -1);
+  std::vector<int> newProdIds(vSize, -1);
   int i = 0;
-  checkedVector<NFmiMetTime> newOriginTimes(vSize, NFmiMetTime(1900, 1, 1, 0, 0));
+  std::vector<NFmiMetTime> newOriginTimes(vSize, NFmiMetTime(1900, 1, 1, 0, 0));
   newTimeBag.Reset();
   for (i = 0; i < vSize; i++)
   {

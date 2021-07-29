@@ -21,7 +21,7 @@ class NFmiIndexMaskSource
 
   void Insert(const NFmiMetTime& theTime, const NFmiIndexMask& theMask);
   const NFmiIndexMask& Find(const NFmiMetTime& theTime) const;
-  void Clear(void);
+  void Clear();
 
  private:
   typedef std::map<NFmiMetTime, NFmiIndexMask> storage_type;

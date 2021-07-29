@@ -48,11 +48,11 @@ public:
     }
 };
 
-class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
+class NFmiInfoAreaMask : public NFmiAreaMaskImpl
 {
  public:
-  virtual ~NFmiInfoAreaMask(void);
-  NFmiInfoAreaMask(void);
+  virtual ~NFmiInfoAreaMask();
+  NFmiInfoAreaMask();
   NFmiInfoAreaMask(const NFmiCalculationCondition &theOperation,
                    Type theMaskType,
                    NFmiInfoData::Type theDataType,
@@ -64,7 +64,7 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
       unsigned long thePossibleMetaParamId,
       BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMask &operator=(const NFmiInfoAreaMask &theMask) = delete;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -85,25 +85,25 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
   bool IsMasked(const NFmiPoint &theLatLon) const override { return NFmiAreaMaskImpl::IsMasked(theLatLon); }
   bool Time(const NFmiMetTime &theTime) override;
   bool IsWantedParam(const NFmiDataIdent &theParam, const NFmiLevel *theLevel = 0) const override;
-  boost::shared_ptr<NFmiFastQueryInfo> Info(void) override { return itsInfo; };
+  boost::shared_ptr<NFmiFastQueryInfo> Info() override { return itsInfo; };
   void Info(const boost::shared_ptr<NFmiFastQueryInfo> &newInfo);
   void UpdateInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo) override;
 
   // tehty virtuaaliseksi, koska perusluokassa ei ole valmiuksia paaluttaa arvoa tähän
-  const NFmiDataIdent *DataIdent(void) const override;
+  const NFmiDataIdent *DataIdent() const override;
 
   // tehty virtuaaliseksi, koska perusluokassa ei ole valmiuksia paaluttaa arvoa tähän
-  const NFmiParam *Param(void) const override;
+  const NFmiParam *Param() const override;
 
   // tehty virtuaaliseksi, koska perusluokassa ei ole valmiuksia paaluttaa arvoa tähän
-  const NFmiLevel *Level(void) const override;
+  const NFmiLevel *Level() const override;
   void Level(const NFmiLevel &theLevel) override;
 
   // tehty virtuaaliseksi, koska perusluokassa ei ole valmiuksia paaluttaa arvoa tähän
-  bool UseLevelInfo(void) const override;
-  bool UsePressureLevelInterpolation(void) const override { return fUsePressureLevelInterpolation; }
+  bool UseLevelInfo() const override;
+  bool UsePressureLevelInterpolation() const override { return fUsePressureLevelInterpolation; }
   void UsePressureLevelInterpolation(bool newValue) override { fUsePressureLevelInterpolation = newValue; }
-  double UsedPressureLevelValue(void) const override { return itsUsedPressureLevelValue; }
+  double UsedPressureLevelValue() const override { return itsUsedPressureLevelValue; }
   void UsedPressureLevelValue(double newValue) override { itsUsedPressureLevelValue = newValue; }
 
   static boost::shared_ptr<NFmiDataModifier> CreateIntegrationFuction(NFmiAreaMask::FunctionType func);
@@ -125,7 +125,7 @@ class _FMI_DLL NFmiInfoAreaMask : public NFmiAreaMaskImpl
       NFmiAreaMask::FunctionType integrationFunction);
  protected:
   double CalcValueFromLocation(const NFmiPoint &theLatLon) const override;
-  const NFmiString MakeSubMaskString(void) const override;
+  const NFmiString MakeSubMaskString() const override;
   bool IsTimeInterpolationNeeded(bool fUseTimeInterpolationAlways) const;
   float CalcMetaParamValue(const NFmiCalculationParams &theCalculationParams);
   float CalcMetaParamHeightValue(double theHeight, const NFmiCalculationParams &theCalculationParams);
@@ -199,11 +199,11 @@ protected:
 };  // class NFmiInfoAreaMask
 
 //! Tämä luokka toimii kuten NFmiInfoAreaMask mutta kurkkaa halutun x-y hila pisteen yli arvoa
-class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
+class NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
 {
  public:
-  virtual ~NFmiInfoAreaMaskPeekXY(void);
-  NFmiInfoAreaMaskPeekXY(void);
+  virtual ~NFmiInfoAreaMaskPeekXY();
+  NFmiInfoAreaMaskPeekXY();
   NFmiInfoAreaMaskPeekXY(const NFmiCalculationCondition &theOperation,
                          Type theMaskType,
                          NFmiInfoData::Type theDataType,
@@ -219,7 +219,7 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
                           unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskPeekXY(const NFmiInfoAreaMaskPeekXY &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskPeekXY &operator=(const NFmiInfoAreaMaskPeekXY &theMask) = delete;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -233,7 +233,7 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
   int itsXOffset;  // kuinka monen hilapisteen yli kurkataan x-suunnassa
   int itsYOffset;  // kuinka monen hilapisteen yli kurkataan y-suunnassa
  private:
-  void CalcGridDiffs(void);
+  void CalcGridDiffs();
 
   double itsGridXDiff;  // mikä on x-hilaväli xy-koordinaatistossa
   double itsGridYDiff;  // mikä on y-hilaväli xy-koordinaatistossa
@@ -243,11 +243,11 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY : public NFmiInfoAreaMask
 //! Tämä luokka toimii kuten NFmiInfoAreaMaskPeekXY mutta käyttää kurkkaukseen editoritavan-datan tai
 //! macroParam-datan karttaprojektiota ja X/Y kurkkaukset tehdään siinä kilometreissa. Tämä kurkkaus 
 //! ei välttämättä mene lat-lon suuntaisesti kuin ehkä jos pohjana on latlon area.
-class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
+class NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
 {
  public:
-  virtual ~NFmiInfoAreaMaskPeekXY2(void);
-  NFmiInfoAreaMaskPeekXY2(void);
+  virtual ~NFmiInfoAreaMaskPeekXY2();
+  NFmiInfoAreaMaskPeekXY2();
   NFmiInfoAreaMaskPeekXY2(const NFmiCalculationCondition &theOperation,
                           Type theMaskType,
                           NFmiInfoData::Type theDataType,
@@ -259,7 +259,7 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
                           BinaryOperator thePostBinaryOperator);
 
   NFmiInfoAreaMaskPeekXY2(const NFmiInfoAreaMaskPeekXY2 &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskPeekXY2 &operator=(const NFmiInfoAreaMaskPeekXY2 &theMask) = delete;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -280,11 +280,11 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY2 : public NFmiInfoAreaMask
 
 //! Tämä luokka toimii kuten NFmiInfoAreaMaskPeekXY ja  käyttää kurkkaukseen haluttuja kilometri
 //! etäisyyksiä
-class _FMI_DLL NFmiInfoAreaMaskPeekXY3 : public NFmiInfoAreaMask
+class NFmiInfoAreaMaskPeekXY3 : public NFmiInfoAreaMask
 {
  public:
-  virtual ~NFmiInfoAreaMaskPeekXY3(void);
-  NFmiInfoAreaMaskPeekXY3(void);
+  virtual ~NFmiInfoAreaMaskPeekXY3();
+  NFmiInfoAreaMaskPeekXY3();
   NFmiInfoAreaMaskPeekXY3(const NFmiCalculationCondition &theOperation,
                           Type theMaskType,
                           NFmiInfoData::Type theDataType,
@@ -302,7 +302,7 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY3 : public NFmiInfoAreaMask
                           unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskPeekXY3(const NFmiInfoAreaMaskPeekXY3 &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskPeekXY3 &operator=(const NFmiInfoAreaMaskPeekXY2 &theMask) = delete;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -321,10 +321,10 @@ class _FMI_DLL NFmiInfoAreaMaskPeekXY3 : public NFmiInfoAreaMask
 
 };  // class NFmiInfoAreaMaskPeekXY3
 
-class _FMI_DLL NFmiInfoAreaMaskMetFuncBase : public NFmiInfoAreaMask
+class NFmiInfoAreaMaskMetFuncBase : public NFmiInfoAreaMask
 {
  public:
-  ~NFmiInfoAreaMaskMetFuncBase(void);
+  ~NFmiInfoAreaMaskMetFuncBase();
   NFmiInfoAreaMaskMetFuncBase(const NFmiCalculationCondition &theOperation,
                               Type theMaskType,
                               NFmiInfoData::Type theDataType,
@@ -335,21 +335,21 @@ class _FMI_DLL NFmiInfoAreaMaskMetFuncBase : public NFmiInfoAreaMask
                               BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskMetFuncBase(const NFmiInfoAreaMaskMetFuncBase &theOther);
   NFmiInfoAreaMaskMetFuncBase &operator=(const NFmiInfoAreaMaskMetFuncBase &theMask) = delete;
-  void Initialize(void) override;
+  void Initialize() override;
 
   bool Time(const NFmiMetTime &theTime) override;
 
  protected:
   typedef std::vector<std::pair<int, float> > CalcFactorVector;
 
-  virtual void SetDividers(void) = 0;
-  virtual void InitCalcFactorVectors(void) = 0;
-  virtual const CalcFactorVector &LowerEdgeFactors(void) const = 0;
-  virtual const CalcFactorVector &UpperEdgeFactors(void) const = 0;
-  virtual const CalcFactorVector &MiddleAreaFactors(void) const = 0;
+  virtual void SetDividers() = 0;
+  virtual void InitCalcFactorVectors() = 0;
+  virtual const CalcFactorVector &LowerEdgeFactors() const = 0;
+  virtual const CalcFactorVector &UpperEdgeFactors() const = 0;
+  virtual const CalcFactorVector &MiddleAreaFactors() const = 0;
 
   NFmiLocationCache CalcLocationCache(const NFmiPoint &theLatlon);
-  void SetGridSizeVariables(void);
+  void SetGridSizeVariables();
   bool IsDataOperatable(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const;
   float Peek(const NFmiLocationCache &theLocationCachePoint, int offsetX, int offsetY);
   NFmiLocationCache CalcPeekedLocation(const NFmiLocationCache &theLocationCachePoint,
@@ -383,10 +383,10 @@ class _FMI_DLL NFmiInfoAreaMaskMetFuncBase : public NFmiInfoAreaMask
 };
 
 //! Tämä luokka laskee gradientin tai divergenssin.
-class _FMI_DLL NFmiInfoAreaMaskGrad : public NFmiInfoAreaMaskMetFuncBase
+class NFmiInfoAreaMaskGrad : public NFmiInfoAreaMaskMetFuncBase
 {
  public:
-  ~NFmiInfoAreaMaskGrad(void);
+  ~NFmiInfoAreaMaskGrad();
   NFmiInfoAreaMaskGrad(const NFmiCalculationCondition &theOperation,
                        Type theMaskType,
                        NFmiInfoData::Type theDataType,
@@ -396,21 +396,21 @@ class _FMI_DLL NFmiInfoAreaMaskGrad : public NFmiInfoAreaMaskMetFuncBase
                        unsigned long thePossibleMetaParamId,
                        BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskGrad(const NFmiInfoAreaMaskGrad &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskGrad &operator=(const NFmiInfoAreaMaskGrad &theMask) = delete;
 
-  bool CalculateDivergence(void) const { return fCalculateDivergence; }
+  bool CalculateDivergence() const { return fCalculateDivergence; }
   void CalculateDivergence(bool newValue) { fCalculateDivergence = newValue; }
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
   double PressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams) override;
-  void InitCalcFactorVectors(void) override;
+  void InitCalcFactorVectors() override;
 
  protected:
-  void SetDividers(void) override;
-  const CalcFactorVector &LowerEdgeFactors(void) const override { return itsLowerEdgeFactors; }
-  const CalcFactorVector &UpperEdgeFactors(void) const override { return itsUpperEdgeFactors; }
-  const CalcFactorVector &MiddleAreaFactors(void) const override { return itsMiddleAreaFactors; }
+  void SetDividers() override;
+  const CalcFactorVector &LowerEdgeFactors() const override { return itsLowerEdgeFactors; }
+  const CalcFactorVector &UpperEdgeFactors() const override { return itsUpperEdgeFactors; }
+  const CalcFactorVector &MiddleAreaFactors() const override { return itsMiddleAreaFactors; }
 
  private:
   static CalcFactorVector itsLowerEdgeFactors;
@@ -424,10 +424,10 @@ class _FMI_DLL NFmiInfoAreaMaskGrad : public NFmiInfoAreaMaskMetFuncBase
 
 };  // class NFmiInfoAreaMaskGrad
 
-class _FMI_DLL NFmiInfoAreaMaskAdvection : public NFmiInfoAreaMaskGrad
+class NFmiInfoAreaMaskAdvection : public NFmiInfoAreaMaskGrad
 {
  public:
-  ~NFmiInfoAreaMaskAdvection(void);
+  ~NFmiInfoAreaMaskAdvection();
   NFmiInfoAreaMaskAdvection(const NFmiCalculationCondition &theOperation,
                             Type theMaskType,
                             NFmiInfoData::Type theDataType,
@@ -439,23 +439,23 @@ class _FMI_DLL NFmiInfoAreaMaskAdvection : public NFmiInfoAreaMaskGrad
                             unsigned long thePossibleMetaParamId,
                             BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskAdvection(const NFmiInfoAreaMaskAdvection &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
  private:
-  void SetupWindComponents(void);
+  void SetupWindComponents();
 
   boost::shared_ptr<NFmiFastQueryInfo> itsInfoUwind;  // Tästä katsotaan tuulen u-komponentti
   boost::shared_ptr<NFmiFastQueryInfo> itsInfoVwind;  // Tästä katsotaan tuulen v-komponentti
 };
 
 //! Tämä luokka laskee laplacen (eli nablan?).
-class _FMI_DLL NFmiInfoAreaMaskLaplace : public NFmiInfoAreaMaskMetFuncBase
+class NFmiInfoAreaMaskLaplace : public NFmiInfoAreaMaskMetFuncBase
 {
  public:
-  ~NFmiInfoAreaMaskLaplace(void);
+  ~NFmiInfoAreaMaskLaplace();
   NFmiInfoAreaMaskLaplace(const NFmiCalculationCondition &theOperation,
                           Type theMaskType,
                           NFmiInfoData::Type theDataType,
@@ -465,21 +465,21 @@ class _FMI_DLL NFmiInfoAreaMaskLaplace : public NFmiInfoAreaMaskMetFuncBase
                           unsigned long thePossibleMetaParamId,
                           BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskLaplace(const NFmiInfoAreaMaskLaplace &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskLaplace &operator=(const NFmiInfoAreaMaskLaplace &theMask) = delete;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
-  void InitCalcFactorVectors(void) override;
+  void InitCalcFactorVectors() override;
 
  protected:
-  void SetDividers(void) override;
+  void SetDividers() override;
   float CalcLaplaceX(const NFmiLocationCache &theLocationCachePoint);
   float CalcLaplaceY(const NFmiLocationCache &theLocationCachePoint);
 
-  const CalcFactorVector &LowerEdgeFactors(void) const override { return itsLowerEdgeFactors; }
-  const CalcFactorVector &UpperEdgeFactors(void) const override { return itsUpperEdgeFactors; }
-  const CalcFactorVector &MiddleAreaFactors(void) const override { return itsMiddleAreaFactors; }
+  const CalcFactorVector &LowerEdgeFactors() const override { return itsLowerEdgeFactors; }
+  const CalcFactorVector &UpperEdgeFactors() const override { return itsUpperEdgeFactors; }
+  const CalcFactorVector &MiddleAreaFactors() const override { return itsMiddleAreaFactors; }
 
  private:
   static CalcFactorVector itsLowerEdgeFactors;
@@ -489,10 +489,10 @@ class _FMI_DLL NFmiInfoAreaMaskLaplace : public NFmiInfoAreaMaskMetFuncBase
 
 };  // class NFmiInfoAreaMaskLaplace
 
-class _FMI_DLL NFmiInfoAreaMaskRotor : public NFmiInfoAreaMaskGrad
+class NFmiInfoAreaMaskRotor : public NFmiInfoAreaMaskGrad
 {
  public:
-  ~NFmiInfoAreaMaskRotor(void);
+  ~NFmiInfoAreaMaskRotor();
   NFmiInfoAreaMaskRotor(const NFmiCalculationCondition &theOperation,
                         Type theMaskType,
                         NFmiInfoData::Type theDataType,
@@ -502,7 +502,7 @@ class _FMI_DLL NFmiInfoAreaMaskRotor : public NFmiInfoAreaMaskGrad
                         unsigned long thePossibleMetaParamId,
                         BinaryOperator thePostBinaryOperator);
   NFmiInfoAreaMaskRotor(const NFmiInfoAreaMaskRotor &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
@@ -534,10 +534,10 @@ public:
     unsigned long index; // indeksi joka halutaan loppituksen lopuksi palauttaa
 };
 
-class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
+class NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
 {
  public:
-  ~NFmiInfoAreaMaskVertFunc(void);
+  ~NFmiInfoAreaMaskVertFunc();
   NFmiInfoAreaMaskVertFunc(const NFmiCalculationCondition &theOperation,
                            Type theMaskType,
                            NFmiInfoData::Type theDataType,
@@ -547,9 +547,9 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
                            int theArgumentCount,
                            unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskVertFunc(const NFmiInfoAreaMaskVertFunc &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskVertFunc &operator=(const NFmiInfoAreaMaskVertFunc &theMask) = delete;
-  void Initialize(void) override;
+  void Initialize() override;
   void SetArguments(std::vector<float> &theArgumentVector) override;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -557,19 +557,19 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
 
  protected:
   // Nämä virtuaali funktiot on toteutettava, vaikka niillä ei ole taas käyttöä täällä
-  void SetDividers(void) override {}
-  void InitCalcFactorVectors(void) override {}
-  const CalcFactorVector &LowerEdgeFactors(void) const override
+  void SetDividers() override {}
+  void InitCalcFactorVectors() override {}
+  const CalcFactorVector &LowerEdgeFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
   }
-  const CalcFactorVector &UpperEdgeFactors(void) const override
+  const CalcFactorVector &UpperEdgeFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
   }
-  const CalcFactorVector &MiddleAreaFactors(void) const override
+  const CalcFactorVector &MiddleAreaFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
@@ -577,7 +577,7 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
 
   void FindCalculatedLeves(const NFmiLocationCache &theLocationCache);
   void SearchLevels(const NFmiLocationCache &theLocationCache);
-  void SetLevelValues(void);
+  void SetLevelValues();
   float DoGetFunction(const NFmiLocationCache &theLocationCache,
                       const NFmiCalculationParams &theCalculationParams,
                       float theLevelValue);
@@ -644,10 +644,10 @@ class _FMI_DLL NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
 
 };
 
-class _FMI_DLL NFmiInfoAreaMaskVertConditionalFunc : public NFmiInfoAreaMaskVertFunc
+class NFmiInfoAreaMaskVertConditionalFunc : public NFmiInfoAreaMaskVertFunc
 {
  public:
-  ~NFmiInfoAreaMaskVertConditionalFunc(void);
+  ~NFmiInfoAreaMaskVertConditionalFunc();
   NFmiInfoAreaMaskVertConditionalFunc(const NFmiCalculationCondition &theOperation,
                                       Type theMaskType,
                                       NFmiInfoData::Type theDataType,
@@ -657,15 +657,15 @@ class _FMI_DLL NFmiInfoAreaMaskVertConditionalFunc : public NFmiInfoAreaMaskVert
                                       int theArgumentCount,
                                       unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskVertConditionalFunc(const NFmiInfoAreaMaskVertConditionalFunc &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskVertConditionalFunc &operator=(const NFmiInfoAreaMaskVertConditionalFunc &theMask) = delete;
-  void Initialize(void) override;
+  void Initialize() override;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
  protected:
-  bool InitializeFromArguments(void);
+  bool InitializeFromArguments();
   bool CheckProbabilityCondition(double value);
   float DoFindConditionalFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
 
@@ -677,7 +677,7 @@ class _FMI_DLL NFmiInfoAreaMaskVertConditionalFunc : public NFmiInfoAreaMaskVert
 class NFmiInfoAreaMaskTimeVertFunc : public NFmiInfoAreaMaskVertFunc
 {
  public:
-  ~NFmiInfoAreaMaskTimeVertFunc(void);
+  ~NFmiInfoAreaMaskTimeVertFunc();
   NFmiInfoAreaMaskTimeVertFunc(const NFmiCalculationCondition &theOperation,
                                Type theMaskType,
                                NFmiInfoData::Type theDataType,
@@ -687,14 +687,14 @@ class NFmiInfoAreaMaskTimeVertFunc : public NFmiInfoAreaMaskVertFunc
                                int theArgumentCount,
                                unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskTimeVertFunc(const NFmiInfoAreaMaskTimeVertFunc &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskTimeVertFunc &operator=(const NFmiInfoAreaMaskTimeVertFunc &theMask) = delete;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
  protected:
-  void SetRangeValuesFromArguments(void);
+  void SetRangeValuesFromArguments();
 
   double itsStartTimeOffsetInHours;  // kuinka monta tuntia aikaiteroinnin alkuaika poikkeaa
                                      // current-timesta
@@ -703,10 +703,10 @@ class NFmiInfoAreaMaskTimeVertFunc : public NFmiInfoAreaMaskVertFunc
 
 };
 
-class _FMI_DLL NFmiInfoAreaMaskProbFunc : public NFmiInfoAreaMask
+class NFmiInfoAreaMaskProbFunc : public NFmiInfoAreaMask
 {
  public:
-  ~NFmiInfoAreaMaskProbFunc(void);
+  ~NFmiInfoAreaMaskProbFunc();
   NFmiInfoAreaMaskProbFunc(const NFmiCalculationCondition &theOperation,
                            Type theMaskType,
                            NFmiInfoData::Type theDataType,
@@ -716,7 +716,7 @@ class _FMI_DLL NFmiInfoAreaMaskProbFunc : public NFmiInfoAreaMask
                            int theArgumentCount,
                             unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskProbFunc(const NFmiInfoAreaMaskProbFunc &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskProbFunc &operator=(const NFmiInfoAreaMaskProbFunc &theMask) = delete;
   void SetArguments(std::vector<float> &theArgumentVector) override;
 
@@ -733,7 +733,7 @@ class _FMI_DLL NFmiInfoAreaMaskProbFunc : public NFmiInfoAreaMask
   static bool CheckTimeIndicesForLoopBreak(unsigned long theStartTimeIndex, unsigned long theEndTimeIndex);
 
  protected:
-  void InitializeFromArguments(void);
+  void InitializeFromArguments();
   bool CheckProbabilityCondition(double value);
   bool IsCalculationPointInsideCircle(const NFmiLocation &theCalculationPointLocation, int theOffsetX, int theOffsetY);
   void DoSubgridCalculations(const NFmiLocation &theCalculationPointLocation, int leftSubGridOffset, int rightSubGridOffset, int bottomSubGridOffset, int topSubGridOffset, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime, NFmiCalculationParams &theSimpleConditionCalculationPointParams);
@@ -775,10 +775,10 @@ class _FMI_DLL NFmiInfoAreaMaskProbFunc : public NFmiInfoAreaMask
 
 };
 
-class _FMI_DLL NFmiInfoTimeIntegrator : public NFmiInfoAreaMaskMetFuncBase
+class NFmiInfoTimeIntegrator : public NFmiInfoAreaMaskMetFuncBase
 {
  public:
-  ~NFmiInfoTimeIntegrator(void);
+  ~NFmiInfoTimeIntegrator();
   NFmiInfoTimeIntegrator(const NFmiCalculationCondition &theOperation,
                          Type theMaskType,
                          NFmiInfoData::Type theDataType,
@@ -788,26 +788,26 @@ class _FMI_DLL NFmiInfoTimeIntegrator : public NFmiInfoAreaMaskMetFuncBase
                          int theEndTimeOffset,
                          unsigned long thePossibleMetaParamId);
   NFmiInfoTimeIntegrator(const NFmiInfoTimeIntegrator &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
  protected:
   // Nämä virtuaali funktiot on toteutettava, vaikka niillä ei ole taas käyttöä täällä
-  void SetDividers(void) override {}
-  void InitCalcFactorVectors(void) override {}
-  const CalcFactorVector &LowerEdgeFactors(void) const override
+  void SetDividers() override {}
+  void InitCalcFactorVectors() override {}
+  const CalcFactorVector &LowerEdgeFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
   }
-  const CalcFactorVector &UpperEdgeFactors(void) const override
+  const CalcFactorVector &UpperEdgeFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
   }
-  const CalcFactorVector &MiddleAreaFactors(void) const override
+  const CalcFactorVector &MiddleAreaFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
@@ -824,10 +824,10 @@ class _FMI_DLL NFmiInfoTimeIntegrator : public NFmiInfoAreaMaskMetFuncBase
 // Luokka tekee yksinkertaisen laatikko integraation halutulla funktiolla.
 // Tarkoittaen esim. MIN(T -1 -1 1 1) tyyppisiä funktioita, joissa käydään läpi
 // originaali dataa vakio hilalaatikon puitteissa.
-class _FMI_DLL NFmiInfoRectAreaIntegrator : public NFmiInfoAreaMaskMetFuncBase
+class NFmiInfoRectAreaIntegrator : public NFmiInfoAreaMaskMetFuncBase
 {
  public:
-  ~NFmiInfoRectAreaIntegrator(void);
+  ~NFmiInfoRectAreaIntegrator();
   NFmiInfoRectAreaIntegrator(const NFmiCalculationCondition &theOperation,
                              Type theMaskType,
                              NFmiInfoData::Type theDataType,
@@ -839,26 +839,26 @@ class _FMI_DLL NFmiInfoRectAreaIntegrator : public NFmiInfoAreaMaskMetFuncBase
                              int theEndYOffset,
                              unsigned long thePossibleMetaParamId);
   NFmiInfoRectAreaIntegrator(const NFmiInfoRectAreaIntegrator &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
  protected:
   // Nämä virtuaali funktiot on toteutettava, vaikka niillä ei ole taas käyttöä täällä
-  void SetDividers(void) override {}
-  void InitCalcFactorVectors(void) override {}
-  const CalcFactorVector &LowerEdgeFactors(void) const override
+  void SetDividers() override {}
+  void InitCalcFactorVectors() override {}
+  const CalcFactorVector &LowerEdgeFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
   }
-  const CalcFactorVector &UpperEdgeFactors(void) const override
+  const CalcFactorVector &UpperEdgeFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
   }
-  const CalcFactorVector &MiddleAreaFactors(void) const override
+  const CalcFactorVector &MiddleAreaFactors() const override
   {
     static CalcFactorVector dummy;
     return dummy;
@@ -877,10 +877,10 @@ class _FMI_DLL NFmiInfoRectAreaIntegrator : public NFmiInfoAreaMaskMetFuncBase
 // Luokka tekee alueellisia integraatio laskuja halutulla funktiolla.
 // Laskenta-alue on halutun säteinen [km] ympyrä kulloisen laskenta pisteen
 // ympärillä datan originaali hilassa.
-class _FMI_DLL NFmiInfoAreaIntegrationFunc : public NFmiInfoAreaMaskProbFunc
+class NFmiInfoAreaIntegrationFunc : public NFmiInfoAreaMaskProbFunc
 {
 public:
-    ~NFmiInfoAreaIntegrationFunc(void);
+    ~NFmiInfoAreaIntegrationFunc();
     NFmiInfoAreaIntegrationFunc(const NFmiCalculationCondition &theOperation,
         Type theMaskType,
         NFmiInfoData::Type theDataType,
@@ -890,7 +890,7 @@ public:
         int theArgumentCount,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaIntegrationFunc(const NFmiInfoAreaIntegrationFunc &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiInfoAreaIntegrationFunc &operator=(const NFmiInfoAreaIntegrationFunc &theMask) = delete;
 
     // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -909,10 +909,10 @@ protected:
 
 // Luokka joka laskee todennäköisyyksiä datan omassa hilassa ynmpyrä alueen sisällä olevien
 // pisteiden kanssa, MUTTA niin että laskuissa käytetään simple-condition laskuja.
-class _FMI_DLL NFmiInfoAreaMaskAreaProbFunc : public NFmiInfoAreaMaskProbFunc
+class NFmiInfoAreaMaskAreaProbFunc : public NFmiInfoAreaMaskProbFunc
 {
 public:
-    ~NFmiInfoAreaMaskAreaProbFunc(void);
+    ~NFmiInfoAreaMaskAreaProbFunc();
     NFmiInfoAreaMaskAreaProbFunc(const NFmiCalculationCondition &theOperation,
         Type theMaskType,
         NFmiInfoData::Type theDataType,
@@ -922,7 +922,7 @@ public:
         int theArgumentCount,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskAreaProbFunc(const NFmiInfoAreaIntegrationFunc &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiInfoAreaMaskAreaProbFunc &operator=(const NFmiInfoAreaMaskAreaProbFunc &theMask) = delete;
 
 protected:
@@ -932,11 +932,11 @@ protected:
 };
 
 // Datalle tehdään laskuissa aina haluttu aikasiirto. 
-class _FMI_DLL NFmiTimeShiftedInfoAreaMask : public NFmiInfoAreaMask
+class NFmiTimeShiftedInfoAreaMask : public NFmiInfoAreaMask
 {
 public:
-    virtual ~NFmiTimeShiftedInfoAreaMask(void);
-    NFmiTimeShiftedInfoAreaMask(void);
+    virtual ~NFmiTimeShiftedInfoAreaMask();
+    NFmiTimeShiftedInfoAreaMask();
     NFmiTimeShiftedInfoAreaMask(const NFmiCalculationCondition &theOperation,
         Type theMaskType,
         NFmiInfoData::Type theDataType,
@@ -945,7 +945,7 @@ public:
         unsigned long thePossibleMetaParamId,
         BinaryOperator thePostBinaryOperator);
     NFmiTimeShiftedInfoAreaMask(const NFmiTimeShiftedInfoAreaMask &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiInfoAreaMask &operator=(const NFmiInfoAreaMask &theMask) = delete;
 
     // tätä kaytetaan smarttool-modifierin yhteydessä

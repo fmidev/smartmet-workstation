@@ -11,7 +11,7 @@
 #include "NFmiPoint.h"
 
 //! Undocumented
-class _FMI_DLL NFmiGridBase
+class NFmiGridBase
 {
  public:
   virtual ~NFmiGridBase();
@@ -39,8 +39,8 @@ class _FMI_DLL NFmiGridBase
 
   virtual bool GridPoint(double x, double y);
   virtual const NFmiPoint GridPoint() const;
-  unsigned long CurrentX(void) const { return itsCurrentX; }
-  unsigned long CurrentY(void) const { return itsCurrentY; }
+  unsigned long CurrentX() const { return itsCurrentX; }
+  unsigned long CurrentY() const { return itsCurrentY; }
   bool First();
   bool Last();
   bool Reset();

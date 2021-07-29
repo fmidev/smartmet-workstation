@@ -7,16 +7,17 @@
 
 #pragma once
 
-#include "NFmiDataMatrix.h"
 #include "NFmiDef.h"
+#include "NFmiGlobals.h"
 #include <set>
 #include <string>
+#include <vector>
 
 //! Undocumented
-class _FMI_DLL NFmiCommentStripper
+class NFmiCommentStripper
 {
  public:
-  virtual ~NFmiCommentStripper(void) {}
+  virtual ~NFmiCommentStripper() {}
   NFmiCommentStripper(bool stripPound = true,
                       bool stripDoubleSlash = true,
                       bool stripSlashAst = true,
@@ -37,24 +38,24 @@ class _FMI_DLL NFmiCommentStripper
                                const std::string& theOptionBody,
                                std::set<std::string>& theOptionTexts);
   bool ReadAndStripFile(const std::string& theFileName);
-  const std::string GetMessage(void) const { return itsMessage; };
-  const std::string& GetString(void) const { return itsString; };
+  const std::string GetMessage() const { return itsMessage; };
+  const std::string& GetString() const { return itsString; };
   void SetString(const std::string& theString) { itsString = theString; };
-  virtual bool Strip(void);
+  virtual bool Strip();
   virtual bool Strip(const std::string& theString);
   bool StripBlocks(const std::string& theBeginDirective = "/*",
                    const std::string& theEndDirective = "*/");
-  bool StripDoubleSlashes(void);  // to endline
-  bool StripPounds(void);         // to endline
+  bool StripDoubleSlashes();  // to endline
+  bool StripPounds();         // to endline
   bool StripSubStrings(const std::string& theString);
 
  private:
   bool CollectAndStripNested(const std::string& theBeginDirective,
                              const std::string& theEndDirective);
-  bool StripNested(checkedVector<unsigned long> theBeginPositions,
-                   checkedVector<unsigned long> theEndPositions);
+  bool StripNested(std::vector<unsigned long> theBeginPositions,
+                   std::vector<unsigned long> theEndPositions);
   bool CollectStringPositions(const std::string& theSearchString,
-                              checkedVector<unsigned long>& theResVector);
+                              std::vector<unsigned long>& theResVector);
   void StripBomMarkersFromStart();
 
  protected:

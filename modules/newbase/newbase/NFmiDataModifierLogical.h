@@ -11,16 +11,16 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiDataModifierLogical : public NFmiDataModifier
+class NFmiDataModifierLogical : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiDataModifierLogical(void);
+  virtual ~NFmiDataModifierLogical();
   NFmiDataModifierLogical(NFmiDataModifierBoolean* theCondition = 0,
                           NFmiDataModifier* thePrimaryModifier = 0,
                           NFmiDataModifier* theSecondaryModifier = 0);
 
   virtual std::ostream& WriteOperand(std::ostream& file) const;
-  virtual double FloatValue(void);
+  virtual double FloatValue();
 
  protected:
   NFmiDataModifierBoolean* itsCondition;

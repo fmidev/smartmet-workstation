@@ -11,7 +11,7 @@
 
 #include "NFmiDataModifier.h"
 
-class _FMI_DLL NFmiDataModifierChange : public NFmiDataModifier
+class NFmiDataModifierChange : public NFmiDataModifier
 {
  public:
   virtual ~NFmiDataModifierChange();

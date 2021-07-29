@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "NFmiDataMatrix.h"
 #include "NFmiInfoData.h"
 #include "NFmiMetTime.h"
 #include "NFmiPoint.h"
@@ -25,7 +24,7 @@ class NFmiCalculationParams;
 class NFmiMacroParamValue;
 
 //! Undocumented class
-class _FMI_DLL NFmiAreaMask
+class NFmiAreaMask
 {
  public:
   /*!
@@ -251,14 +250,14 @@ class _FMI_DLL NFmiAreaMask
       MustHave
   };
 
-  virtual ~NFmiAreaMask(void);
+  virtual ~NFmiAreaMask();
   NFmiAreaMask() {}
-  virtual void Initialize(void) = 0;  // tämä on konstruktorin jälkeen kutsuttava virtuaalinen
+  virtual void Initialize() = 0;  // tämä on konstruktorin jälkeen kutsuttava virtuaalinen
                                       // initialisointi (koska konstruktorissa ei voi kutsua
                                       // virtuaali funktioita)
 
   // Default constructor intentionally left for the compiler
-  // NFmiAreaMask (void);
+  // NFmiAreaMask ();
 
   // Copy constructor intentionally left for the compiler
   // NFmiAreaMask (const NFmiMaskOperation & theMaskOperation);
@@ -277,64 +276,64 @@ class _FMI_DLL NFmiAreaMask
                              const NFmiCalculationParams &theCalculationParams) = 0;
   virtual double PressureValue(double thePressure,
                                const NFmiCalculationParams &theCalculationParams) = 0;
-  virtual bool IsEnabled(void) const = 0;
+  virtual bool IsEnabled() const = 0;
   virtual void Enable(bool theNewState) = 0;
   virtual bool Time(const NFmiMetTime &theTime) = 0;
   virtual void Condition(const NFmiCalculationCondition &theOperation) = 0;
-  virtual const NFmiCalculationCondition &Condition(void) const = 0;
-  virtual bool IsRampMask(void) const = 0;
+  virtual const NFmiCalculationCondition &Condition() const = 0;
+  virtual bool IsRampMask() const = 0;
   virtual bool IsWantedParam(const NFmiDataIdent &theParam,
                              const NFmiLevel *theLevel = 0) const = 0;
-  virtual const NFmiString MaskString(void) const = 0;
-  virtual boost::shared_ptr<NFmiFastQueryInfo> Info(void) = 0;
+  virtual const NFmiString MaskString() const = 0;
+  virtual boost::shared_ptr<NFmiFastQueryInfo> Info() = 0;
   virtual void UpdateInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo) = 0;
-  virtual const NFmiDataIdent *DataIdent(void) const = 0;
-  virtual const NFmiParam *Param(void) const = 0;
-  virtual const NFmiLevel *Level(void) const = 0;
+  virtual const NFmiDataIdent *DataIdent() const = 0;
+  virtual const NFmiParam *Param() const = 0;
+  virtual const NFmiLevel *Level() const = 0;
   virtual void Level(const NFmiLevel &) = 0;
-  virtual NFmiInfoData::Type GetDataType(void) const = 0;
+  virtual NFmiInfoData::Type GetDataType() const = 0;
   virtual void SetDataType(NFmiInfoData::Type theType) = 0;
-  virtual bool UseLevelInfo(void) const = 0;
-  virtual bool UsePressureLevelInterpolation(void) const = 0;
+  virtual bool UseLevelInfo() const = 0;
+  virtual bool UsePressureLevelInterpolation() const = 0;
   virtual void UsePressureLevelInterpolation(bool newValue) = 0;
-  virtual double UsedPressureLevelValue(void) const = 0;
+  virtual double UsedPressureLevelValue() const = 0;
   virtual void UsedPressureLevelValue(double newValue) = 0;
 
   virtual void LowerLimit(double theLowerLimit) = 0;
   virtual void UpperLimit(double theUpperLimit) = 0;
-  virtual double LowerLimit(void) const = 0;
-  virtual double UpperLimit(void) const = 0;
+  virtual double LowerLimit() const = 0;
+  virtual double UpperLimit() const = 0;
   virtual void MaskOperation(FmiMaskOperation theMaskOperation) = 0;
-  virtual FmiMaskOperation MaskOperation(void) const = 0;
+  virtual FmiMaskOperation MaskOperation() const = 0;
 
   virtual bool AddMask(NFmiAreaMask *theMask) = 0;
   virtual NFmiAreaMask *AreaMask(int theIndex) const = 0;
   virtual bool RemoveSubMask(int theIndex) = 0;
   virtual void MaskType(Type theType) = 0;
-  virtual Type MaskType(void) const = 0;
-  virtual NFmiAreaMask *Clone(void) const = 0;
+  virtual Type MaskType() const = 0;
+  virtual NFmiAreaMask *Clone() const = 0;
   virtual void PostBinaryOperator(BinaryOperator newOperator) = 0;
-  virtual BinaryOperator PostBinaryOperator(void) const = 0;
-  virtual CalculationOperationType GetCalculationOperationType(void) const = 0;
+  virtual BinaryOperator PostBinaryOperator() const = 0;
+  virtual CalculationOperationType GetCalculationOperationType() const = 0;
   virtual void SetCalculationOperationType(CalculationOperationType newValue) = 0;
-  virtual CalculationOperator GetCalculationOperator(void) const = 0;
+  virtual CalculationOperator GetCalculationOperator() const = 0;
   virtual void SetCalculationOperator(CalculationOperator newValue) = 0;
 
-  virtual MathFunctionType GetMathFunctionType(void) const = 0;
+  virtual MathFunctionType GetMathFunctionType() const = 0;
   virtual void SetMathFunctionType(MathFunctionType newValue) = 0;
-  virtual FunctionType GetFunctionType(void) const = 0;
+  virtual FunctionType GetFunctionType() const = 0;
   virtual void SetFunctionType(FunctionType newType) = 0;
-  virtual FunctionType GetSecondaryFunctionType(void) const = 0;
+  virtual FunctionType GetSecondaryFunctionType() const = 0;
   virtual void SetSecondaryFunctionType(FunctionType newType) = 0;
-  virtual MetFunctionDirection GetMetFunctionDirection(void) const = 0;
+  virtual MetFunctionDirection GetMetFunctionDirection() const = 0;
   virtual void GetMetFunctionDirection(MetFunctionDirection newValue) = 0;
-  virtual int IntegrationFunctionType(void) const = 0;
+  virtual int IntegrationFunctionType() const = 0;
   virtual void IntegrationFunctionType(int newValue) = 0;
   // tämän avulla annetaan laskuissa tarvittavia eri pituisia argumenttilistaja
   // (käytössä ainakin uusille vertikaali funktioille)
   virtual void SetArguments(std::vector<float> &theArgumentVector) = 0;
   virtual int FunctionArgumentCount(
-      void) const = 0;  // käytössä ainakin uusille vertikaali funktioille
+      ) const = 0;  // käytössä ainakin uusille vertikaali funktioille
   virtual void FunctionArgumentCount(
       int newValue) = 0;  // käytössä ainakin uusille vertikaali funktioille
 
@@ -351,8 +350,8 @@ class _FMI_DLL NFmiAreaMask
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   static boost::shared_ptr<NFmiAreaMask> DoShallowCopy(
       const boost::shared_ptr<NFmiAreaMask> &theMask);
-  static checkedVector<boost::shared_ptr<NFmiAreaMask> > DoShallowCopy(
-      const checkedVector<boost::shared_ptr<NFmiAreaMask> > &theMaskVector);
+  static std::vector<boost::shared_ptr<NFmiAreaMask> > DoShallowCopy(
+      const std::vector<boost::shared_ptr<NFmiAreaMask> > &theMaskVector);
 
 };  // class NFmiAreaMask
 

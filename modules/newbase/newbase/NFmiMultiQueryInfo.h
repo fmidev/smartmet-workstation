@@ -75,7 +75,6 @@
 // Miksi ongelma ei esiinny Linux + gcc yhdistelmän kanssa, ei ole tietoa.
 #define BOOST_DETAIL_NO_CONTAINER_FWD
 
-#include "NFmiDataMatrix.h"
 #include "NFmiFastQueryInfo.h"
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -83,7 +82,7 @@
 #include <boost/utility.hpp>
 
 //! Undocumented
-class _FMI_DLL NFmiMultiQueryInfo : public NFmiFastQueryInfo, private boost::noncopyable
+class NFmiMultiQueryInfo : public NFmiFastQueryInfo, private boost::noncopyable
 {
  public:
   using NFmiFastQueryInfo::InterpolatedValue;

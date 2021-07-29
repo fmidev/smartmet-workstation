@@ -11,12 +11,12 @@
 #include "NFmiSortable.h"
 #include <string>
 
-class _FMI_DLL NFmiString : public NFmiSortable
+class NFmiString : public NFmiSortable
 {
  public:
-  virtual ~NFmiString(void);
+  virtual ~NFmiString();
 
-  NFmiString(void);
+  NFmiString();
   NFmiString(const NFmiString &aString);
   explicit NFmiString(unsigned long len, bool fSetLengthToRealStringLength = false);
   NFmiString(const unsigned char *aText);
@@ -25,35 +25,35 @@ class _FMI_DLL NFmiString : public NFmiSortable
   NFmiString(const char *, unsigned long len);
   NFmiString(const std::string &str);
 
-  bool IsValue(void) const;
+  bool IsValue() const;
   void Set(const unsigned char *text, unsigned long len, bool fSetLengthToRealStringLength = false);
-  virtual unsigned long ClassId(void) const;
+  virtual unsigned long ClassId() const;
 
   NFmiString &Add(const unsigned char *aChar);
 
-  unsigned long GetLen(void) const;
+  unsigned long GetLen() const;
   const NFmiString GetChars(unsigned long firstChar, unsigned long length) const;
 
   char *GetCharsPtr(unsigned long firstChar, unsigned long length) const;
-  const unsigned char *GetCharPtr(void) const;
-  const char *CharPtr(void) const;
+  const unsigned char *GetCharPtr() const;
+  const char *CharPtr() const;
 
   void SetCharPtr(unsigned char *);
   void TrimR(unsigned char theChar = ' ');
   void TrimL(unsigned char theChar = ' ');
   void FillR(long theSize, unsigned char theChar = ' ');
-  void UpperCase(void);
-  void LowerCase(void);
+  void UpperCase();
+  void LowerCase();
   void FirstCharToUpper(unsigned long theUpperIndex = 0);
-  void FirstInWordToUpper(void);
+  void FirstInWordToUpper();
 
-  bool FirstCharIsUpper(void) const;
+  bool FirstCharIsUpper() const;
 
   unsigned long Search(const unsigned char *searchChar, unsigned long fromPos = 1) const;
   unsigned long SearchLast(const unsigned char *searchChar) const;
   unsigned long SearchLast(const unsigned char *searchChar, unsigned long limit) const;
   int CharCount(unsigned char theChar) const;
-  virtual NFmiString *Clone(void) const;
+  virtual NFmiString *Clone() const;
 
   virtual std::ostream &Write(std::ostream &file) const;
   virtual std::istream &Read(std::istream &file);
@@ -79,7 +79,7 @@ class _FMI_DLL NFmiString : public NFmiSortable
                      const unsigned char *toChars,
                      unsigned long replacementsMaxCount = kUnsignedLongMissing);
   bool Replace(const NFmiString &newChars, unsigned long fromIndex);
-  void RemoveExtraSpaces(void);
+  void RemoveExtraSpaces();
 
   bool IsLessThan(const NFmiSortable &aFmiTest) const;
   bool IsEqual(const NFmiSortable &aFmiTest) const;
@@ -101,28 +101,28 @@ class _FMI_DLL NFmiString : public NFmiSortable
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiString::GetLen(void) const { return fLength; }
+inline unsigned long NFmiString::GetLen() const { return fLength; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const unsigned char *NFmiString::GetCharPtr(void) const { return fChar; }
+inline const unsigned char *NFmiString::GetCharPtr() const { return fChar; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const char *NFmiString::CharPtr(void) const { return reinterpret_cast<const char *>(fChar); }
+inline const char *NFmiString::CharPtr() const { return reinterpret_cast<const char *>(fChar); }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiString::IsValue(void) const { return bool(fLength >= 1); }
+inline bool NFmiString::IsValue() const { return bool(fLength >= 1); }
 // ----------------------------------------------------------------------
 /*!
  * Assignment operator
@@ -214,7 +214,7 @@ inline unsigned char NFmiString::operator[](const unsigned long counter) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiString::ClassId(void) const { return kNFmiString; }
+inline unsigned long NFmiString::ClassId() const { return kNFmiString; }
 // ----------------------------------------------------------------------
 /*!
  * Equality comparison
