@@ -141,6 +141,8 @@ void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
     itsTimeInterpolationRangeInMinutes =
         NFmiSettings::Optional<long>(itsBaseNameSpace + "::TimeInterpolationRangeInMinutes", ::GetDefaultTimeInterpolationRangeInMinutes(itsDataType));
     fReloadCaseStudyData = NFmiSettings::Optional<bool>(itsBaseNameSpace + "::ReloadCaseStudyData", true);
+    fAllowCombiningToSurfaceDataInSoundingView =
+        NFmiSettings::Optional<bool>(itsBaseNameSpace + "::AllowCombiningToSurfaceDataInSoundingView", false);
 
     if (IsCombineData())
       ::MakeCombinedDataFilePattern(*this, theHelpDataSystem);
@@ -298,7 +300,7 @@ void NFmiHelpDataInfoSystem::AddStatic(const NFmiHelpDataInfo &theInfo)
 }
 
 void NFmiHelpDataInfoSystem::InitDataType(const std::string &theBaseKey,
-                                          checkedVector<NFmiHelpDataInfo> &theHelpDataInfos,
+                                          std::vector<NFmiHelpDataInfo> &theHelpDataInfos,
                                           bool fStaticData)
 {
   std::vector<std::string> dataKeys = NFmiSettings::ListChildren(theBaseKey);
@@ -379,7 +381,7 @@ void NFmiHelpDataInfoSystem::FixCombinedDataPaths(const std::string &absoluteCon
   }
 }
 
-void NFmiHelpDataInfoSystem::StoreToSettings(void)
+void NFmiHelpDataInfoSystem::StoreToSettings()
 {
   if (itsBaseNameSpace.empty() == false)
   {
@@ -446,7 +448,7 @@ void NFmiHelpDataInfoSystem::ResetAllDynamicDataTimeStamps()
     itsDynamicHelpDataInfos[i].LatestFileTimeStamp(-1);
 }
 
-static NFmiHelpDataInfo *FindHelpDataInfo(checkedVector<NFmiHelpDataInfo> &theHelpInfos,
+static NFmiHelpDataInfo *FindHelpDataInfo(std::vector<NFmiHelpDataInfo> &theHelpInfos,
                                           const std::string &theFileNameFilter,
                                           const NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
 {
@@ -479,7 +481,7 @@ NFmiHelpDataInfo *NFmiHelpDataInfoSystem::FindHelpDataInfo(const std::string &th
   return helpInfo;
 }
 
-static void CollectCustomMenuItems(const checkedVector<NFmiHelpDataInfo> &theHelpInfos,
+static void CollectCustomMenuItems(const std::vector<NFmiHelpDataInfo> &theHelpInfos,
                                    std::set<std::string> &theMenuSet)
 {
   size_t ssize = theHelpInfos.size();
@@ -491,7 +493,7 @@ static void CollectCustomMenuItems(const checkedVector<NFmiHelpDataInfo> &theHel
 }
 
 // kerää uniikki lista mahdollisista custom Menu folder asetuksista
-std::vector<std::string> NFmiHelpDataInfoSystem::GetUniqueCustomMenuList(void)
+std::vector<std::string> NFmiHelpDataInfoSystem::GetUniqueCustomMenuList()
 {
   std::set<std::string> menuSet;
   ::CollectCustomMenuItems(itsDynamicHelpDataInfos, menuSet);
@@ -501,7 +503,7 @@ std::vector<std::string> NFmiHelpDataInfoSystem::GetUniqueCustomMenuList(void)
   return menuList;
 }
 
-static void CollectCustomMenuHelpDatas(const checkedVector<NFmiHelpDataInfo> &theHelpInfos,
+static void CollectCustomMenuHelpDatas(const std::vector<NFmiHelpDataInfo> &theHelpInfos,
                                        const std::string &theCustomFolder,
                                        std::vector<NFmiHelpDataInfo> &theCustomHelpDatas)
 {
