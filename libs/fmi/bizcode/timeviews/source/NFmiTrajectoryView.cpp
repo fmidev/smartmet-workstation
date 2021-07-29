@@ -493,26 +493,12 @@ void NFmiTrajectoryView::DrawPressureScale(void)
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kRight);
 
-	checkedVector<double> pValues;
-	pValues.push_back(1000);
-	pValues.push_back(925);
-	pValues.push_back(850);
-	pValues.push_back(700);
-	pValues.push_back(500);
-	pValues.push_back(300);
-	pValues.push_back(150);
-	pValues.push_back(100);
-	pValues.push_back(50);
-	pValues.push_back(20);
-	pValues.push_back(10);
-	pValues.push_back(5);
-	pValues.push_back(2);
-	pValues.push_back(1);
-	checkedVector<double>::const_iterator endIt = pValues.end();
+	std::vector<double> pValues{ 1000, 925, 850, 700, 500, 300, 150, 100, 50, 20, 10, 5, 2, 1 };
+	auto endIt = pValues.end();
 	double y = 0;
 	double tickMarkLength = itsToolBox->SX(4);
 	double moveLabelY = itsToolBox->SY(static_cast<long>(itsPressureScaleFontSize/2));
-	for (checkedVector<double>::const_iterator it = pValues.begin(); it != endIt;  ++it)
+	for (auto it = pValues.begin(); it != endIt;  ++it)
 	{
 		double pressure = *it;
 		if(pressure <= itsMaxPressure && pressure >= itsMinPressure)

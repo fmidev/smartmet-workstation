@@ -308,7 +308,7 @@ namespace AddParams
 			{
 				trimmedRowData.push_back(row);
 			}
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+			auto infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
 			if (!infoVector.empty())
 			{
 				const auto &info = infoVector.at(0);
@@ -341,7 +341,7 @@ namespace AddParams
 			{
 				trimmedRowData.push_back(row);
 			}
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
+			auto infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
 			if (!infoVector.empty())
 			{
 				auto info = infoVector.at(0);

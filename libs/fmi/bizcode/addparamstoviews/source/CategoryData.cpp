@@ -196,7 +196,7 @@ namespace AddParams
         {
             if(info.CustomMenuFolder() == categoryName())
             {
-                checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = infoOrganizer.GetInfos(info.UsedFileNameFilter(helpDataInfoSystem));
+                auto infoVector = infoOrganizer.GetInfos(info.UsedFileNameFilter(helpDataInfoSystem));
                 if(infoVector.size())
                 {
                     //A little bit of fiddle to get the producer name that is used in model_producer.conf file.

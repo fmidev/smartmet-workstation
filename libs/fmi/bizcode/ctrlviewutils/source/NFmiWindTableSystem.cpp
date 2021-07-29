@@ -116,7 +116,7 @@ void NFmiWindTableSystem::Read(std::istream& is)
 		throw std::runtime_error("NFmiWindTableSystem::Read failed");
 }
 
-void NFmiWindTableSystem::AddAreaMask(checkedVector<AreaMaskData> &theAreaMaskDataList, const std::string &theFileName, const std::string &theName)
+void NFmiWindTableSystem::AddAreaMask(std::vector<AreaMaskData> &theAreaMaskDataList, const std::string &theFileName, const std::string &theName)
 {
 	AreaMaskData tmpMaskData;
     if(tmpMaskData.Init(theFileName, theName))
@@ -197,14 +197,14 @@ void NFmiWindTableSystem::InitializeAllAreaMasks(boost::shared_ptr<NFmiFastQuery
 {
 	if(theInfo && theInfo->Grid())
 	{
-		checkedVector<AreaMaskData> &areaMaskDataList = AreaMaskDataList();
+		auto &areaMaskDataList = AreaMaskDataList();
 		for(size_t k = 0; k < areaMaskDataList.size(); k++)
 			areaMaskDataList[k].InitMask(*(theInfo->Grid()));
 	}
 	fDoInitializeAreaMasks = false;
 }
 
-checkedVector<NFmiWindTableSystem::AreaMaskData>& NFmiWindTableSystem::AreaMaskDataList(void) 
+std::vector<NFmiWindTableSystem::AreaMaskData>& NFmiWindTableSystem::AreaMaskDataList(void) 
 {
 	if(itsSelectedAreaMaskList == 0)
 		return itsAreaMaskDataList;

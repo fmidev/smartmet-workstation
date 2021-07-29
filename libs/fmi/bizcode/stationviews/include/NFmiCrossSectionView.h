@@ -48,9 +48,9 @@ public:
     {}
 
     NFmiDataMatrix<float> values;
-    checkedVector<float> pressures;
-    checkedVector<NFmiPoint> latlons;
-    checkedVector<NFmiMetTime> times;
+    std::vector<float> pressures;
+    std::vector<NFmiPoint> latlons;
+    std::vector<NFmiMetTime> times;
 	std::string macroParamErrorMessage;
 };
 
@@ -111,13 +111,13 @@ private:
     void StorePressureScaleLimits(void);
 	void GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, NFmiMetTime &theEndTimeOut);
 	void DrawHelperTimeLines(void);
-	checkedVector<NFmiPoint> MakeLatlonVector(void);
-    checkedVector<NFmiMetTime> MakeTimeVector(void);
-    checkedVector<NFmiMetTime> MakeMacroParamTimeModeTimeVector(void);
+	std::vector<NFmiPoint> MakeLatlonVector(void);
+    std::vector<NFmiMetTime> MakeTimeVector(void);
+    std::vector<NFmiMetTime> MakeMacroParamTimeModeTimeVector(void);
     void PreCalculateTrajectoryLatlonPoints(void);
 	void DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor);
 	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
-	const checkedVector<NFmiPoint>& GetMinorPoints(void);
+	const std::vector<NFmiPoint>& GetMinorPoints(void);
 	NFmiMetTime GetCrossSectionTime(const NFmiPoint &theRelativePlace);
 	void FillMainPointXYInfo(NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	NFmiPoint GetCrossSectionLatlonPoint(const NFmiPoint &theRelativePlace);
@@ -130,42 +130,42 @@ private:
 	void DrawCrossSection(void);
 	void DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	void DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIsoLineData);
-	void FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData = nullptr, NFmiExtraMacroParamData* possibleExtraMacroParamData = nullptr);
-	void FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-	void FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-	int FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
-	void FillRouteCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
-	void FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures,
-		const checkedVector<NFmiPoint>& theLatlonPoints,
-		const checkedVector<NFmiMetTime>& thePointTimes);
-    bool FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData,
-		const checkedVector<NFmiPoint>& theLatlonPoints,
-		const checkedVector<NFmiMetTime>& thePointTimes);
-    void FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures);
-    bool FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData);
-	void FillCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures);
+	void FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData = nullptr, NFmiExtraMacroParamData* possibleExtraMacroParamData = nullptr);
+	void FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures);
+	void FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures);
+	int FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures);
+	void FillRouteCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures);
+	void FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures,
+		const std::vector<NFmiPoint>& theLatlonPoints,
+		const std::vector<NFmiMetTime>& thePointTimes);
+    bool FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData,
+		const std::vector<NFmiPoint>& theLatlonPoints,
+		const std::vector<NFmiMetTime>& thePointTimes);
+    void FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures);
+    bool FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData);
+	void FillCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures);
 	void FillCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData);
 	void FillTimeCrossSectionUserDrawData(NFmiIsoLineData &theIsoLineData);
 	void FillRouteCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData,
-		const checkedVector<NFmiPoint>& theLatlonPoints,
-		const checkedVector<NFmiMetTime>& thePointTimes);
+		const std::vector<NFmiPoint>& theLatlonPoints,
+		const std::vector<NFmiMetTime>& thePointTimes);
 	NFmiDataMatrix<float> MakeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData);
 	NFmiDataMatrix<float> MakeTimeCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData);
 	NFmiDataMatrix<float> MakeRouteCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData,
-		const checkedVector<NFmiPoint>& theLatlonPoints,
-		const checkedVector<NFmiMetTime>& thePointTimes);
+		const std::vector<NFmiPoint>& theLatlonPoints,
+		const std::vector<NFmiMetTime>& thePointTimes);
 	bool IsUserDrawDataNeeded(NFmiFastQueryInfo & usedInfo);
 	NFmiDataMatrix<NFmiPoint> CalcRelativeCoordinatesFromPressureMatrix(const NFmiDataMatrix<float>& pressureValues) const;
-	bool FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData);
-	void FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDataMatrix<NFmiPoint> &theCoordinates, checkedVector<float> &thePressures);
+	bool FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData);
+	void FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDataMatrix<NFmiPoint> &theCoordinates, std::vector<float> &thePressures);
 	void CalculateViewRects(void);
 	NFmiRect CalcDataViewRect(void);
 	void DrawPressureScale(void);
-	checkedVector<float> MakePressureVector(int usedCount, int normalCount);
+	std::vector<float> MakePressureVector(int usedCount, int normalCount);
 	int GetNearestCrossSectionColumn(const NFmiPoint &thePlace);
 	void MakeMultiLineToolTip(const NFmiString& theStr, double theFontSize, NFmiDrawingEnvironment *theEnvi, double theTooltipTextXOffset, const NFmiPoint &thePoint);
 	NFmiDrawingEnvironment GetToolTipEnvironment(void);
-	NFmiRect CalcToolTipRect(checkedVector<std::basic_string<char> > &theStrVector, int theFontSize, double& theLineHeigth, const NFmiPoint &thePoint);
+	NFmiRect CalcToolTipRect(std::vector<std::basic_string<char> > &theStrVector, int theFontSize, double& theLineHeigth, const NFmiPoint &thePoint);
 	void DrawGridPoints(NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	void AddFooterTextForCurrentData(bool fLastOne);
 	void DrawCrosssectionWindVectors(NFmiIsoLineData& theIsoLineData, const NFmiDataMatrix<NFmiPoint> &theXYCoordinates);
@@ -182,7 +182,7 @@ private:
 	void CalcGroundHeights(void);
 	void CalcRouteDistances(void);
 	void DrawHybridLevels(void);
-	checkedVector<float> CalcCurrentLevelPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	std::vector<float> CalcCurrentLevelPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	int CalcHorizontalPointCount(void);
 	double Column2x(int theColumn);
 
@@ -196,11 +196,11 @@ private:
 	NFmiRect itsPressureScaleFrame; // t‰lle alueelle piirret‰‰n log(p) asteikko
 
 	// tooltippia varten laitetaan talteen n‰m‰ viimeksi piirretyty parametri ja paine matriisit
-	checkedVector<float> itsPressures;
+	std::vector<float> itsPressures;
 
-	checkedVector<float> itsModelGroundPressures; // maanpinnan korkeus pit‰‰ laskea jokaiseen poikileikkaus pisteeseen
-	checkedVector<float> itsGroundHeights; // maanpinnan korkeus metreiss‰ pit‰‰ laskea jokaiseen poikileikkaus pisteeseen
-	checkedVector<float> itsRoutePointsDistToEndPoint; // reitti tapauksessa lasketaan tah‰n jokaisen poikkileikkauspisteen
+	std::vector<float> itsModelGroundPressures; // maanpinnan korkeus pit‰‰ laskea jokaiseen poikileikkaus pisteeseen
+	std::vector<float> itsGroundHeights; // maanpinnan korkeus metreiss‰ pit‰‰ laskea jokaiseen poikileikkaus pisteeseen
+	std::vector<float> itsRoutePointsDistToEndPoint; // reitti tapauksessa lasketaan tah‰n jokaisen poikkileikkauspisteen
 													   // kumulatiivinen (ei linnuntiet‰, jos mutkainen poikkileikkaus)
 													   // et‰isyys alkupisteest‰ metrein‰.
 													   // Viimeisen pisteen arvo on siis koko reitin pituus.
@@ -211,12 +211,12 @@ private:
 
 	NFmiPoint itsPressureScaleFontSize;
 
-	checkedVector<NFmiPoint> itsTrajectoryLatlonPoints; // t‰h‰n talletetaan trajektori pisteiden latlon pisteet
+	std::vector<NFmiPoint> itsTrajectoryLatlonPoints; // t‰h‰n talletetaan trajektori pisteiden latlon pisteet
 	NFmiRect itsTrajectoryDataRect; // trajektori datan toolmaster piirrossa t‰m‰ pit‰‰ laskea ja k‰ytt‰‰
 	double itsViewWidthInMM;
 	double itsViewHeightInMM;
 	int itsFirstForecastTimeIndex;
-	checkedVector<NFmiMetTime> itsObsForModeFoundObsTimes; // n‰m‰ ajat merkit‰‰n poikkileikaus n‰yttˆˆn, ett‰ n‰hd‰‰n miss‰ kohtaa on ollut havaittuja luotauksia
+	std::vector<NFmiMetTime> itsObsForModeFoundObsTimes; // n‰m‰ ajat merkit‰‰n poikkileikaus n‰yttˆˆn, ett‰ n‰hd‰‰n miss‰ kohtaa on ollut havaittuja luotauksia
 
 	double itsDrawSizeFactorX; // ruutu piirrossa 1, lasketaan printatessa t‰lle erillinen arvo
 	double itsDrawSizeFactorY;

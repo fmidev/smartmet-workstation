@@ -2,7 +2,7 @@
 
 #include "NFmiInfoData.h"
 #include "NFmiPtrList.h"
-#include "NFmiDataMatrix.h"
+#include "NFmiPoint.h"
 #include "SmartMetViewId.h"
 
 #include "boost/shared_ptr.hpp"
@@ -161,7 +161,7 @@ public:
     virtual void projectionCurvatureInfo(const NFmiProjectionCurvatureInfo& newValue) = 0;
     virtual NFmiPtrList<NFmiDrawParamList>* getDrawParamListVector(unsigned int mapViewDescTopIndex) = 0;
     virtual void clearDesctopsAllParams(unsigned int mapViewDescTopIndex) = 0;
-    virtual void makeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area) = 0;
+    virtual void makeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area) = 0;
     virtual void makeApplyViewMacroDirtyActions() = 0;
     virtual void makeSwapBaseArea(unsigned int mapViewDescTopIndex) = 0;
     virtual void swapArea(unsigned int mapViewDescTopIndex) = 0;

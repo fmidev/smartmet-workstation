@@ -272,7 +272,7 @@ double NFmiMapViewCache::MakeRoomFromNonUsedRows(double theMinCleareSizeMB)
 	int ssize = static_cast<int>(itsCacheRows.size());
 	for(int i=ssize-1 ; i>=0; i--)
 	{
-		checkedVector<int>::iterator it = std::find(itsUsedRowIndexies.begin(), itsUsedRowIndexies.end(), i);
+		auto it = std::find(itsUsedRowIndexies.begin(), itsUsedRowIndexies.end(), i);
 		if(it == itsUsedRowIndexies.end()) // jos ei loytynyt kaytossa olevien listalat, yritetaan siivota rivia
 			clearedSizeMB += itsCacheRows[i].MakeRoom(leftToClear);
 		leftToClear = theMinCleareSizeMB - clearedSizeMB;
@@ -289,7 +289,7 @@ double NFmiMapViewCache::MakeRoomFromUsedRows(double theMinCleareSizeMB)
 	int ssize = static_cast<int>(itsCacheRows.size());
 	for(int i=ssize-1 ; i>=0; i--)
 	{
-		checkedVector<int>::iterator it = std::find(itsUsedRowIndexies.begin(), itsUsedRowIndexies.end(), i);
+		auto it = std::find(itsUsedRowIndexies.begin(), itsUsedRowIndexies.end(), i);
 		if(it != itsUsedRowIndexies.end()) // jos loytyy kaytossa olevien listalta, yritetaan siivota rivia
 			clearedSizeMB += itsCacheRows[i].MakeRoom(leftToClear);
 		leftToClear = theMinCleareSizeMB - clearedSizeMB;

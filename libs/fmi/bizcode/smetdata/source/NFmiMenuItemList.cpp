@@ -29,6 +29,7 @@
 #include "NFmiDrawParam.h"
 #include "NFmiParamBag.h"
 #include "NFmiLevelBag.h"
+#include "NFmiStringTools.h"
 
 #include <boost/algorithm/string.hpp>
 #include <cassert>

@@ -350,11 +350,11 @@ static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapt
 	return ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> FmiModifyEditdData::GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> FmiModifyEditdData::GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
     bool fGroundData, int theProducerId, int theProducerId2)
 {
     auto infoVector = infoOrganizer.GetInfos(theType, fGroundData, theProducerId, theProducerId2);
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> finalInfos;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> finalInfos;
     for(const auto &info : infoVector)
     {
         if(info->Param(theParam))
@@ -386,7 +386,7 @@ static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface 
     return status;
 }
 
-static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
+static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
 {
     auto drawParam = theAdapter.GetUsedDrawParamForEditedData(editedInfo->Param());
     NFmiControlPointObservationBlender dataModifier(editedInfo, drawParam, maskList, fUsedMask,
@@ -2120,7 +2120,7 @@ static bool CheckIfSpeedLoadFileHasSimilaGridAsWanted(TimeSerialModificationData
 	return false;
 }
 
-static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &theAdapter, int thePrimaryProducer, const std::string &theLoadedFile, checkedVector<int>& theModelIndexVector, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, bool fDoMultiThread)
+static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &theAdapter, int thePrimaryProducer, const std::string &theLoadedFile, std::vector<int>& theModelIndexVector, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, bool fDoMultiThread)
 {
 	bool status = false;
 	if(theAdapter.SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa TAI startUp-loading moodissa, voidaan lataus tehda helpommin
@@ -2143,7 +2143,7 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 	// etsit‰‰n 1. prim‰‰rituottajasta poikkeava, jos eri suuri kuin end, lˆytyi muitakin tuottajia ja pika latausta ei voida suorittaa
 	if(thePrimaryProducer == 2 || thePrimaryProducer == 3) // 2 == oma tyˆdata ja 3 == virallinen db data
 	{
-        checkedVector<int>::iterator pos = std::find_if(theModelIndexVector.begin(), theModelIndexVector.end(), [=](auto modelIndex) { return modelIndex != thePrimaryProducer; });
+        std::vector<int>::iterator pos = std::find_if(theModelIndexVector.begin(), theModelIndexVector.end(), [=](auto modelIndex) { return modelIndex != thePrimaryProducer; });
 		if(pos == theModelIndexVector.end())
 		{
 			if(::CheckIfSpeedLoadFileHasSimilaGridAsWanted(theAdapter, theLoadedFile))
@@ -2203,7 +2203,7 @@ static bool TryAutoStartUpLoad(TimeSerialModificationDataInterface &theAdapter, 
 		bool fRemoveThundersOnLoad = false; // auto start-upissa ei poistella turhaan ukkosia...
 		NFmiDataLoadingInfo &dataLoadingInfo = theAdapter.GetUsedDataLoadingInfo();
 		dataLoadingInfo.UpdateSelectedFileNamesVector();
-		const checkedVector<NFmiString>& selectedFileNames = dataLoadingInfo.SelectedFileNamesVector();
+		const std::vector<NFmiString>& selectedFileNames = dataLoadingInfo.SelectedFileNamesVector();
 		if(dataLoadingInfo.MetEditorModeDataWCTR())
 		{
 			int primaryProducer = dataLoadingInfo.PrimaryProducerSetting();
@@ -2225,7 +2225,7 @@ static bool TryAutoStartUpLoad(TimeSerialModificationDataInterface &theAdapter, 
 	return status;
 }
 
-static void LoadAndCreateSelectedQueryData(TimeSerialModificationDataInterface &theAdapter, const checkedVector<NFmiString>& theSelectedFileNames, checkedVector<NFmiQueryData*> * theDatas)
+static void LoadAndCreateSelectedQueryData(TimeSerialModificationDataInterface &theAdapter, const std::vector<NFmiString>& theSelectedFileNames, std::vector<NFmiQueryData*> * theDatas)
 {
 	int size = static_cast<int>(theSelectedFileNames.size());
 	for(int i=0; i<size; i++)
@@ -2249,7 +2249,7 @@ static void LoadAndCreateSelectedQueryData(TimeSerialModificationDataInterface &
 	}
 }
 
-static void CreateQueryDataIterators(const checkedVector<NFmiQueryData*>& theDatas, checkedVector<NFmiFastQueryInfo*>* theInfos)
+static void CreateQueryDataIterators(const std::vector<NFmiQueryData*>& theDatas, std::vector<NFmiFastQueryInfo*>* theInfos)
 {
 	int size = static_cast<int>(theDatas.size());
 	for(int i=0; i<size; i++)
@@ -2264,7 +2264,7 @@ static void CreateQueryDataIterators(const checkedVector<NFmiQueryData*>& theDat
 	}
 }
 
-static bool FillDataWithSourceDataWCTR(checkedVector<NFmiFastQueryInfo*> & theSourceInfos, checkedVector<int> & theModelIndexVector, NFmiQueryData* theDestData, bool fDoMultiThread)
+static bool FillDataWithSourceDataWCTR(std::vector<NFmiFastQueryInfo*> & theSourceInfos, std::vector<int> & theModelIndexVector, NFmiQueryData* theDestData, bool fDoMultiThread)
 {
 	if(theModelIndexVector.size() && theDestData)
 	{
@@ -2359,7 +2359,7 @@ float BlendValues(float value1, float value2, float factor, FmiParameterName par
 // Blendi‰ ei tehd‰, jos prim‰‰ri ja sekund‰‰ri ovat samoja, tai jos kaikilla aika-askelilla
 // theModelIndexVector:iss‰ on sama arvo ja jos kaikilla paitsi viimeisell‰ aika-askeleella on
 // sama arvo. N‰ill‰ tarkistuksilla yritet‰‰n est‰‰ tahaton blendaus.
-void DoDataLoadingBlending(TimeSerialModificationDataInterface &theAdapter, checkedVector<NFmiFastQueryInfo*> & theSourceInfos, checkedVector<int> & theModelIndexVector, NFmiQueryData* theDestData, NFmiDataLoadingInfo* theLoadingInfo)
+void DoDataLoadingBlending(TimeSerialModificationDataInterface &theAdapter, std::vector<NFmiFastQueryInfo*> & theSourceInfos, std::vector<int> & theModelIndexVector, NFmiQueryData* theDestData, NFmiDataLoadingInfo* theLoadingInfo)
 {
 	if(theAdapter.ModelDataBlender().Use() == false)
 		return ;
@@ -2417,7 +2417,7 @@ static bool GetProducerIdsLister(NFmiQueryInfo *theInfo, NFmiProducerIdLister &t
 
 // Tekee producerIdListan ladatun datan mukaisesti.
 // Tallettaa sen datan infon headeriin ProdIds-avaimen alle
-void PutProducerIdListInDataHeader(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, checkedVector<NFmiFastQueryInfo*> &theSourceInfos, checkedVector<int> &theModelIndexVector)
+void PutProducerIdListInDataHeader(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, std::vector<NFmiFastQueryInfo*> &theSourceInfos, std::vector<int> &theModelIndexVector)
 {
 	NFmiProducerIdLister workingDataIds;
 	bool workingDataIdsExist = ::GetProducerIdsLister(theSourceInfos[2], workingDataIds); // 2=working data indeksi
@@ -2471,7 +2471,7 @@ void PutProducerIdListInDataHeader(TimeSerialModificationDataInterface &theAdapt
 
 }
 
-static bool CreateLoadedData(TimeSerialModificationDataInterface &theAdapter, checkedVector<NFmiFastQueryInfo*>& theInfos, checkedVector<int>& theModelIndexVector, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, int thePrimaryProducer, bool fDoMultiThread)
+static bool CreateLoadedData(TimeSerialModificationDataInterface &theAdapter, std::vector<NFmiFastQueryInfo*>& theInfos, std::vector<int>& theModelIndexVector, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, int thePrimaryProducer, bool fDoMultiThread)
 {
 	bool dataExist = false;
 	int size = static_cast<int>(theInfos.size());
@@ -2547,8 +2547,8 @@ static bool LoadEditedData(TimeSerialModificationDataInterface &theAdapter, bool
 
 	NFmiDataLoadingInfo &dataLoadingInfo = theAdapter.GetUsedDataLoadingInfo();
 	dataLoadingInfo.UpdateSelectedFileNamesVector();
-	const checkedVector<NFmiString>& selectedFileNames = dataLoadingInfo.SelectedFileNamesVector();
-	checkedVector<NFmiQueryData*> datas;
+	const std::vector<NFmiString>& selectedFileNames = dataLoadingInfo.SelectedFileNamesVector();
+	std::vector<NFmiQueryData*> datas;
 	if(!dataLoadingInfo.MetEditorModeDataWCTR())
 		return false;
 	int primaryProducer = dataLoadingInfo.PrimaryProducerSetting();
@@ -2556,7 +2556,7 @@ static bool LoadEditedData(TimeSerialModificationDataInterface &theAdapter, bool
 	if(!::SpeedLoadDBDataOnlyIfPossible(theAdapter, primaryProducer, std::string(selectedFileNames[primaryProducer]), theAdapter.DataLoadingProducerIndexVector(), &dataLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread))
 	{
 		::LoadAndCreateSelectedQueryData(theAdapter, selectedFileNames, &datas);
-		checkedVector<NFmiFastQueryInfo*> infos;
+		std::vector<NFmiFastQueryInfo*> infos;
 		::CreateQueryDataIterators(datas, &infos);
 		status = ::CreateLoadedData(theAdapter, infos, theAdapter.DataLoadingProducerIndexVector(), &dataLoadingInfo, fRemoveThundersOnLoad, primaryProducer, fDoMultiThread);
 		::DestroyVectorWithDynamicData(&infos);

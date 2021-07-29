@@ -6,7 +6,7 @@
 #include "SmartMetDialogs_resource.h"
 #include "NFmiTimeBag.h"
 #include "NFmiColor.h"
-#include "NFmiDataMatrix.h"
+#include "NFmiRect.h"
 
 #include "boost/shared_ptr.hpp"
 #include <map>
@@ -175,7 +175,7 @@ private:
 	void SetupNameCombos(NFmiDataLoadingInfo& theDataLoadingInfo);
 	void SetupProducerNames(NFmiDataLoadingInfo& theDataLoadingInfo);
 	void SetupTitle(NFmiDataLoadingInfo& theDataLoadingInfo);
-	checkedVector<std::string> GetSelectedFileNames(void);
+	std::vector<std::string> GetSelectedFileNames(void);
 	boost::shared_ptr<NFmiQueryInfo> ReadInfoFromFile(const std::string& theFileName);
 	std::string GetSelectedNameFromCombo(CComboBox& theNameCombo);
 	void SetActiveProducerToView(void);
@@ -194,11 +194,11 @@ private:
 														   // Ei tuhota, koska ylläoleva näyttö tuhoaa sen.
 
 	// näitä tarvitaan NFmiModelProducerIndexView-luokan päivitykseen
-	checkedVector<boost::shared_ptr<NFmiQueryInfo> > itsQueryInfoVector; // tässä on ladattavien datojen tietoja
+	std::vector<boost::shared_ptr<NFmiQueryInfo> > itsQueryInfoVector; // tässä on ladattavien datojen tietoja
 	int itsNonModifieableTimeRangeProducerIndex; // millä tuottajalla täytetään mahdollinen ei editoitava alue
 	int itsActiveProducerIndex; // millä tuottajalla täytetään mahdollinen ei editoitava alue
-	checkedVector<int> itsSelectedProducerPriorityTable; // radio buttonien asetukset
-	checkedVector<NFmiColor> itsProducerColorTable; // eri tuottajille on eri värit
+	std::vector<int> itsSelectedProducerPriorityTable; // radio buttonien asetukset
+	std::vector<NFmiColor> itsProducerColorTable; // eri tuottajille on eri värit
 
 	COLORREF itsProducerButton1Color;
 	COLORREF itsProducerButton2Color;

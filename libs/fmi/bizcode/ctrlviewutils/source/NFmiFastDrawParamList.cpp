@@ -1,5 +1,6 @@
 #include "NFmiFastDrawParamList.h"
 #include "NFmiDrawParam.h"
+#include "NFmiStringTools.h"
 
 NFmiFastDrawParamList::NFmiFastDrawParamList() = default;
 NFmiFastDrawParamList::~NFmiFastDrawParamList() = default;

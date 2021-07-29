@@ -783,7 +783,7 @@ static int GoThroughAllHelpDataInfos(const NFmiHelpDataInfoSystem &theHelpDataSy
 {
     ::ApplyChangedSettings(); // katsotaan onko asetuksia muutettu
     CFmiCopyingStatus status = kFmiNoCopyNeeded;
-    const checkedVector<NFmiHelpDataInfo> &helpInfos = theHelpDataSystem.DynamicHelpDataInfos();
+    const auto &helpInfos = theHelpDataSystem.DynamicHelpDataInfos();
     for(size_t i = 0; i < helpInfos.size(); i++)
     {
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);

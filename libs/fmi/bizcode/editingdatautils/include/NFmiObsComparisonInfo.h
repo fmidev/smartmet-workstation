@@ -30,7 +30,6 @@
 
 #include "NFmiPoint.h"
 #include "NFmiColor.h"
-#include "NFmiDataMatrix.h"
 
 class NFmiObsComparisonInfo
 {
@@ -133,7 +132,7 @@ private:
 
 	NFmiColor itsFrameColor;
 
-	checkedVector<NFmiObsComparisonInfo::Param> itsParams;
+	std::vector<NFmiObsComparisonInfo::Param> itsParams;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiObsComparisonInfo& item){item.Write(os); return os;}

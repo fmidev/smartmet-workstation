@@ -3,7 +3,6 @@
 #include "NFmiInfoData.h"
 #include "NFmiTimeDescriptor.h"
 #include "FmiSmartMetEditingMode.h"
-#include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiFastQueryInfo;
@@ -104,7 +103,7 @@ public:
     virtual NFmiHPlaceDescriptor* PossibleUsedDataLoadingGrid(void) = 0;
     virtual bool UseEditedDataParamDescriptor(void) = 0;
     virtual NFmiParamDescriptor& EditedDataParamDescriptor(void) = 0;
-    virtual checkedVector<int>& DataLoadingProducerIndexVector(void) = 0;
+    virtual std::vector<int>& DataLoadingProducerIndexVector(void) = 0;
     virtual void EditedDataNeedsToBeLoaded(bool newValue) = 0;
     virtual bool CheckEditedDataAfterAutoLoad(void) = 0;
     virtual void PutWarningFlagTimerOn(void) = 0;

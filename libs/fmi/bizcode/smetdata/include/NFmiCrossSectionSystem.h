@@ -9,7 +9,6 @@
 #pragma once
 
 #include "NFmiPoint.h"
-#include "NFmiDataMatrix.h" // t‰‰lt‰ tulee checkedVector-luokka
 #include "NFmiInfoData.h"
 #include "NFmiTimeBag.h"
 #include "NFmiLocation.h"
@@ -102,7 +101,7 @@ class NFmiCrossSectionSystem
 	void CalcMinorPoints(const boost::shared_ptr<NFmiArea> &theArea); // laskee  v‰lipisteet p‰‰pisteiden avulla k‰ytt‰en hyv‰kseen annettua areaa (josta laskuissa k‰ytet‰‰n arean xy-maailmaa)
 	void CalcRouteTimes(void);
 
-	const checkedVector<NFmiPoint>& MinorPoints(void) const {return itsMinorPoints;};
+	const std::vector<NFmiPoint>& MinorPoints(void) const {return itsMinorPoints;};
 
     int WantedMinorPointCount(void) const;
 	void WantedMinorPointCount(int newValue);
@@ -151,7 +150,7 @@ class NFmiCrossSectionSystem
 			TimeCrossSectionDirty(true);
 		fUseObsAndForCrossSection = newValue;
 	}
-	const checkedVector<NFmiMetTime>& RouteTimes(void) const {return itsRouteTimes;}
+	const std::vector<NFmiMetTime>& RouteTimes(void) const {return itsRouteTimes;}
 	CrossMode GetCrossMode(void) const;
 	bool ShowHybridLevels(void) const {return fShowHybridLevels;}
 	void ShowHybridLevels(bool newState) {fShowHybridLevels = newState;}
@@ -162,7 +161,7 @@ class NFmiCrossSectionSystem
 	void DragWholeCrossSection(bool newValue) {fDragWholeCrossSection = newValue;}
 	const NFmiLocation& ObsForModeLocation(void) const {return itsObsForModeLocation;}
 	void ObsForModeLocation(const NFmiLocation &newLocation) {itsObsForModeLocation = newLocation;}
-	const checkedVector<ExtraRowInfo>& ExtraRowInfos(void) const {return itsExtraRowInfos;}
+	const std::vector<ExtraRowInfo>& ExtraRowInfos(void) const {return itsExtraRowInfos;}
 	ExtraRowInfo& GetRowInfo(int theRowIndex); // t‰m‰ on muokkausta varten
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(){return itsGraphicalInfo;}
 	TrueMapViewSizeInfo& GetTrueMapViewSizeInfo() { return itsTrueMapViewSizeInfo; }
@@ -191,8 +190,8 @@ class NFmiCrossSectionSystem
 	void Write(std::ostream& os) const;
 	void Read(std::istream& is);
  private:
-	checkedVector<NFmiPoint> MakeMainPointsVector(void) const;
-	void SetMainPointsFromVector(const checkedVector<NFmiPoint> &theMainPointVector);
+	std::vector<NFmiPoint> MakeMainPointsVector(void) const;
+	void SetMainPointsFromVector(const std::vector<NFmiPoint> &theMainPointVector);
     static int itsNumberOfMainPoints;
 
      // Seuraavat dataosiot talletetaan ja luetaan Windows rekistereist‰, niiden per‰ss‰ on WinReg -lis‰osa sen merkiksi.
@@ -205,9 +204,9 @@ class NFmiCrossSectionSystem
 	ExtraRowInfo itsAxisValuesSpecialWinReg; // SmartMetin poikkileikkauksen [CTRL] + [SHIFT] + S s‰‰dˆt t‰st‰/t‰h‰n
 
     // loppuja ei ole talletettu Windows rekistereihin
-	checkedVector<NFmiPoint> itsMainXYPoints; // p‰‰ pisteiden xy pisteet, joiden avulla piirret‰‰n v‰ri-pallot CrossSectionManagerView:in footeriin (viimeksi piirretty CrossSectionView p‰ivitt‰‰ pisteet)
-	checkedVector<NFmiPoint> itsMinorPoints; // p‰‰pisteiden avulla lasketut v‰lipisteet
-	checkedVector<NFmiMetTime> itsRouteTimes; // reitin alku ja loppu ajan ja paikkojen avulla lasketut v‰lipiste ajat (minuutin tarkkuudella)
+	std::vector<NFmiPoint> itsMainXYPoints; // p‰‰ pisteiden xy pisteet, joiden avulla piirret‰‰n v‰ri-pallot CrossSectionManagerView:in footeriin (viimeksi piirretty CrossSectionView p‰ivitt‰‰ pisteet)
+	std::vector<NFmiPoint> itsMinorPoints; // p‰‰pisteiden avulla lasketut v‰lipisteet
+	std::vector<NFmiMetTime> itsRouteTimes; // reitin alku ja loppu ajan ja paikkojen avulla lasketut v‰lipiste ajat (minuutin tarkkuudella)
 	int itsActivatedMinorPointIndex; // aktiivisen v‰lipisteen indeksi tai -1, jos mik‰‰n ei ole aktiivinen
 	bool fCrossSectionSystemActive; // ollaanko poikkileikkaus moodissa vai ei?
 	bool fCrossSectionViewNeedsUpdate; // jos ladataan uutta crosssection dataa, pit‰‰ n‰yttˆ ja sen data p‰ivitt‰‰
@@ -231,7 +230,7 @@ class NFmiCrossSectionSystem
 	NFmiPoint itsLastMousePosition; // NFmiStationViewHandlerin mousemove:ssa tarvitaan t‰t‰ laskemaan hiiren vetoa
 	NFmiLocation itsObsForModeLocation;
 	bool fDragWholeCrossSection; // jos tehty tietynlainen mouse drag kartalla, liikutetaan koko poikkileikkausjanaa kerrallaan
-	checkedVector<ExtraRowInfo> itsExtraRowInfos; // t‰h‰ talletetaan ylim‰‰r‰iset poikkileikkausrivi kohtaiset tiedot
+	std::vector<ExtraRowInfo> itsExtraRowInfos; // t‰h‰ talletetaan ylim‰‰r‰iset poikkileikkausrivi kohtaiset tiedot
 	CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
 	TrueMapViewSizeInfo itsTrueMapViewSizeInfo;
 	NFmiColor itsStartPointFillColor;

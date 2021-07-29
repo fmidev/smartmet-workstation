@@ -345,7 +345,7 @@ namespace
 		return false;
 	}
 
-	void setInfosMask(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVector, unsigned long usedMask)
+	void setInfosMask(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVector, unsigned long usedMask)
 	{
 		for(const auto& info : infoVector)
 		{
@@ -430,7 +430,7 @@ namespace
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MacroPathSettings();
 	}
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > getSortedSynopInfoVector(int producerId, int producerId2 = -1, int producerId3 = -1, int producerId4 = -1)
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > getSortedSynopInfoVector(int producerId, int producerId2 = -1, int producerId3 = -1, int producerId4 = -1)
 	{
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetSortedSynopInfoVector(producerId, producerId2, producerId3, producerId4);
 	}
@@ -1607,7 +1607,7 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 						// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
 						if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
 						{
-							checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+							std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 							makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
 							for(size_t i = 0; i < infoVector.size(); i++)
 							{
@@ -1683,7 +1683,7 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 						// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
 						if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
 						{
-							checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+							std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 							makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
 							NFmiMetTime lastTimeOfThisDataType; // mm. synop datan tapauksessa haetaan ehkä jopa 6:sta datat tiedostosta viimeisintä aikaa
 							bool lastTimeOfThisDataTypeFoundYet = false;
@@ -1880,7 +1880,7 @@ void NFmiCombinedMapHandler::clearAllViewRowsWithEditedData()
 		timeSerialViewDirty_ = true;
 }
 
-void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area)
+void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area)
 {
 	infoVectorOut.clear();
 	auto dataType = drawParam->DataType();

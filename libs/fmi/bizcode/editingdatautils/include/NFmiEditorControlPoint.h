@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "NFmiDataMatrix.h" // täältä tulee myös checkedVector
 #include <iosfwd>
+#include <vector>
 
 class NFmiEditorControlPoint 
 {
@@ -36,7 +36,7 @@ public:
    void ClearValues (double theClearValue) ;
    double ChangeValue (void) ;
    void ChangeValue (double newValue) ;
-   checkedVector<double>& ChangeValues(void); // tämä on hieman vaarallinen metodi, mutta optimointia varten tehty
+   std::vector<double>& ChangeValues(void); // tämä on hieman vaarallinen metodi, mutta optimointia varten tehty
    inline void TimeCount (int value) {itsTimeCount = value;}
    inline int TimeCount () const {return itsTimeCount;}
    inline void TimeIndex (int value) {itsTimeIndex = value;}
@@ -49,7 +49,7 @@ private:
 
    int itsTimeCount;
    int itsTimeIndex;
-   checkedVector<double> itsChangeValueVector;
+   std::vector<double> itsChangeValueVector;
 
 };
 

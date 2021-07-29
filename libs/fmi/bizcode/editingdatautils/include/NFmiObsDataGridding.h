@@ -23,7 +23,7 @@
 #pragma once
 
 #include "NFmiRect.h"
-#include "NFmiDataMatrix.h" // täältä tulee myös checkedVector
+#include "NFmiDataMatrix.h" // täältä tulee myös std::vector
 
 
 class NFmiObsDataGridding 
@@ -67,9 +67,9 @@ public:
 private:
    void SmoothGrid(NFmiDataMatrix<float> &gridData, int ySmooth, int xSmooth);
    void DoOneValueGridding(float fillValue, NFmiDataMatrix<float> &gridData);
-   bool FindClosestPoints(float xGridPoint, float yGridPoint, float searchRange, int wantedPointCount, checkedVector<DistIndex>& theResultVector) ;
+   bool FindClosestPoints(float xGridPoint, float yGridPoint, float searchRange, int wantedPointCount, std::vector<DistIndex>& theResultVector) ;
    float CalcWeight(float distance, float theMaxDist) const;
-   float CalcValue(checkedVector<DistIndex>& theClosestPointsResultVector) ;
+   float CalcValue(std::vector<DistIndex>& theClosestPointsResultVector) ;
    float CalcDistance(float lon1, float lat1, float lon2, float lat2) const;
    float CalcRelativeDistance(float x1, float y1, float x2, float y2) const;
 

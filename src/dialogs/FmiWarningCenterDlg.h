@@ -3,7 +3,6 @@
 #include "SmartMetDialogs_resource.h"
 #include "GridCtrl.h"
 #include "NFmiMetTime.h"
-#include "NFmiDataMatrix.h"
 #include "afxwin.h"
 #include "NFmiViewPosRegistryInfo.h"
 #include "HakeMessage/HakeMsg.h"
@@ -70,7 +69,7 @@ public:
 	{}
 
 	void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface){itsSmartMetDocumentInterface = smartMetDocumentInterface;};
-	void SetUsedHeaders(checkedVector<WarningCenterHeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;};
+	void SetUsedHeaders(std::vector<WarningCenterHeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;};
 
 	void LastDataTime(const NFmiMetTime &theTime)
 	{ itsLastDataTime = theTime;}
@@ -94,7 +93,7 @@ private:
 	bool fLastSortedExist; // onko edes tehty mit‰‰n sorttausta
 
 	NFmiMetTime itsLastDataTime; // k‰ytet‰‰n printtauksessa otsikossa
-	checkedVector<WarningCenterHeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
+	std::vector<WarningCenterHeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
 	int itsLastMessageCount; // kuinka monta sanomaa/asemaa on taulukossa
 	bool fEnableFixedColumnSelection; // t‰m‰ on pikku kikka mill‰ estet‰‰n valittujen ruutujen sekoittuminen kun tehd‰‰n DoLastSort
 	bool fUpdateParent;
@@ -145,7 +144,7 @@ private:
 	CFont itsTimeAndStationTextFont;
 	int itsMapViewDescTopIndex;
 
-	checkedVector<WarningCenterHeaderParInfo> itsHeaders;
+	std::vector<WarningCenterHeaderParInfo> itsHeaders;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

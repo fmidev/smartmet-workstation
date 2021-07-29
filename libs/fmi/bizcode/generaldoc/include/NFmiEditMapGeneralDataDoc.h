@@ -253,7 +253,7 @@ public:
 	void DoDataLoadingProblemsDlg(const std::string &theMessage);
 	NFmiProducerIdLister& ProducerIdLister(void);
 	void PutWarningFlagTimerOn(void);
-	checkedVector<int>& DataLoadingProducerIndexVector(void);
+	std::vector<int>& DataLoadingProducerIndexVector(void);
 	NFmiParamDescriptor& EditedDataParamDescriptor(void);
 	bool UseEditedDataParamDescriptor(void);
 	NFmiHPlaceDescriptor* PossibleUsedDataLoadingGrid(void);
@@ -341,7 +341,7 @@ public:
 	bool ShowToolTipTrajectoryView(void);
 	void ShowToolTipTrajectoryView(bool newValue);
 	void ToggleShowHelperDatasInTimeView(int theCommand);
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1);
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1);
 	void TransparencyContourDrawView(CWnd *theView);
 	CWnd* TransparencyContourDrawView(void);
 	int SoundingViewWindBarbSpaceOutFactor(void);
@@ -360,7 +360,7 @@ public:
 	void OnShowMasksOnMap(unsigned int theDescTopIndex);
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward);
 	void OnButtonRefresh(void);
-	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing);
+	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing);
 	const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const;
 	void OutOfEditedAreaTimeSerialPoint(const NFmiPoint &newValue);
 	void ResetOutOfEditedAreaTimeSerialPoint(void);
@@ -480,7 +480,7 @@ public:
 	void RemoveAllParamsFromMapViewRow(unsigned int theDescTopIndex, int theRowIndex);
 	void RemoveAllParamsFromCrossSectionViewRow(int theRowIndex);
 
-	void SetDataLoadingProducerIndexVector(const checkedVector<int>& theIndexVector);
+	void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector);
 
 	void StoreSupplementaryData(void); // tallettaa mm. CP pisteet, muutoskäyrät jne.
 	bool IsToolMasterAvailable() const;
@@ -489,7 +489,7 @@ public:
 	void DoAutoSaveData(void);
 	NFmiMetEditorOptionsData& MetEditorOptionsData(void);
 	// theModificationFactorCurvePoints koko tulee annetusta timebagista
-	bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1);
+	bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1);
 	bool DoCombineModelAndKlapse(void);
 	CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void);
 	void ModifyToolMode(CtrlViewUtils::FmiEditorModifyToolMode newState);

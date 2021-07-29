@@ -844,7 +844,7 @@ void CTimeEditValuesDlg::UpdateCpObsBlendProducerList(void)
     UpdateData(FALSE);
 }
 
-void CTimeEditValuesDlg::UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer, const checkedVector<NFmiProducer> &producerList, bool isSelectionMadeYet)
+void CTimeEditValuesDlg::UpdateProducerList(CComboBox &theProducerSelector, const NFmiProducer &theLastSessionProducer, const std::vector<NFmiProducer> &producerList, bool isSelectionMadeYet)
 {
 	int lastSelectedProducer = theProducerSelector.GetCurSel();
     CString lastProdNameU_;

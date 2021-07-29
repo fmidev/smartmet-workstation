@@ -135,9 +135,9 @@ protected:
 protected:
    boost::shared_ptr<NFmiFastQueryInfo> GetNearestQ2SynopStation(const NFmiLocation &theWantedLocation);
    bool UseQ2ForSynopData(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
-   bool GetQ2SynopData(unsigned long theStationId = 0, checkedVector<FmiParameterName> theWantedParamVector = checkedVector<FmiParameterName>());
+   bool GetQ2SynopData(unsigned long theStationId = 0, std::vector<FmiParameterName> theWantedParamVector = std::vector<FmiParameterName>());
    void MakeDrawedInfoVector(void);
-   void MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+   void MakeDrawedInfoVector(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    void CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut);
    float CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData);
    virtual bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2);
@@ -200,7 +200,7 @@ protected:
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
-   checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; // t‰m‰ info vektori k‰yd‰‰n l‰pi kun piirret‰‰n dataa (aluksi useita infoja vain synop-data tapauksessa)
+   std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; // t‰m‰ info vektori k‰yd‰‰n l‰pi kun piirret‰‰n dataa (aluksi useita infoja vain synop-data tapauksessa)
    NFmiLocation itsNearestTooltipLocation; // multi synop infojen takia pient‰ virityst‰
    boost::shared_ptr<NFmiDrawParam> itsBackupDrawParamForDifferenceDrawing;  // laitetaan t‰h‰n talteen alkuper‰iset asetukset, jos piirto tapahtuu erotuksena, voidaan palauttaa alkuper‰inen t‰st‰
    bool fDoDifferenceDrawSwitch; // t‰h‰n talletetaan tieto onko k‰ytetty drawParam palautettava piirron j‰lkeen 

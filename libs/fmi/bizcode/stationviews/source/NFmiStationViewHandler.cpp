@@ -437,7 +437,7 @@ void NFmiStationViewHandler::DrawWindTableAreas(void)
     auto &windTableSystem = itsCtrlViewDocumentInterface->WindTableSystem();
 	if(windTableSystem.ViewVisible())
 	{
-		checkedVector<NFmiWindTableSystem::AreaMaskData>  &areaMaskDataList = windTableSystem.AreaMaskDataList();
+		auto  &areaMaskDataList = windTableSystem.AreaMaskDataList();
 		for(size_t i = 0; i < areaMaskDataList.size(); i++)
 		{
 			DrawAreaMask(*itsGdiPlusGraphics, areaMaskDataList[i]);
@@ -470,7 +470,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 				itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
 				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
                 crossSectionSystem->CalcMinorPoints(itsMapArea);
-				const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+				const auto &points = crossSectionSystem->MinorPoints();
 				for(unsigned int i=0 ; i < points.size(); i++)
 				{
 					littleCircleRect.Center(itsMapArea->ToXY(points[i]));
@@ -1049,7 +1049,7 @@ bool NFmiStationViewHandler::ShowWarningMessages(void)
 
 void NFmiStationViewHandler::DrawSilamStationMarkers(NFmiSilamStationList &theStationList, NFmiDrawingEnvironment &theEnvi, const NFmiString &theSynopStr, double symbolXShift, double symbolYShift, NFmiRect &thePlaceRect)
 {
-	checkedVector<NFmiSilamStationList::Station> &locations = theStationList.Locations();
+	auto &locations = theStationList.Locations();
 	for(size_t i = 0; i< locations.size(); i++)
 	{
 		const NFmiPoint &latlon = locations[i].itsLatlon;
@@ -4449,7 +4449,7 @@ static NFmiSilamStationList::Station GetClosestSilamStation(NFmiSilamStationList
 {
 	NFmiSilamStationList::Station closestLoc;
 	closestLoc.itsLatlon = NFmiPoint::gMissingLatlon;
-	checkedVector<NFmiSilamStationList::Station> &locList = theLocations.Locations();
+	auto &locList = theLocations.Locations();
 	double minDist = 9999999999;
 	for(size_t i=0; i < locList.size(); i++)
 	{

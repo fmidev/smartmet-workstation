@@ -443,8 +443,8 @@ void CFmiSoundingIndexDataThread::InitSoundingIndexDataInfos(NFmiHelpDataInfoSys
 	cacheBaseDir += kFmiDirectorySeparator;
 	std::string extraName = "_soundingIndex"; // t‰m‰ lis‰t‰‰n cache hakemiston ja tiedoston nimeen.
 
-	const checkedVector<NFmiHelpDataInfo> &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
-	checkedVector<NFmiHelpDataInfo> newHelpDataInfos; // t‰h‰n lis‰t‰‰n uudet datat, jotka pit‰‰ rekisterˆid‰
+	const auto &helpDataInfoVector = theHelpDataInfoSystem.DynamicHelpDataInfos();
+	std::vector<NFmiHelpDataInfo> newHelpDataInfos; // t‰h‰n lis‰t‰‰n uudet datat, jotka pit‰‰ rekisterˆid‰
 	for(size_t i = 0; i < helpDataInfoVector.size(); i++)
 	{
 		const NFmiHelpDataInfo &helpDataInfo = helpDataInfoVector[i];

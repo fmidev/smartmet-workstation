@@ -379,7 +379,7 @@ NFmiPoint NFmiCrossSectionManagerView::GetStartLatLonPoint(void)
 		static NFmiPoint dummy(kFloatMissing, kFloatMissing);
 
 		int usedRowIndex = itsCrossSectionSystem->LowestVisibleRowIndex();
-		const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
+		const auto &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
 		if(points.size() > 0)
 			return points[0];
 		else
@@ -396,7 +396,7 @@ NFmiPoint NFmiCrossSectionManagerView::GetEndLatLonPoint(void)
 		static NFmiPoint dummy(kFloatMissing, kFloatMissing);
 
 		int usedRowIndex = itsCrossSectionSystem->LowestVisibleRowIndex();
-		const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
+		const auto &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
 		if(points.size() > 0)
 			return points[points.size()-1];
 		else
@@ -413,7 +413,7 @@ NFmiPoint NFmiCrossSectionManagerView::GetMiddleLatLonPoint(void)
 		static NFmiPoint dummy(kFloatMissing, kFloatMissing);
 
 		int usedRowIndex = itsCrossSectionSystem->LowestVisibleRowIndex();
-		const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
+		const auto &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
 		if(points.size() > 0)
 			return points[points.size()/2];
 		else

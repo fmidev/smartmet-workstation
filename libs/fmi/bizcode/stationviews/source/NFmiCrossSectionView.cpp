@@ -602,7 +602,7 @@ NFmiMetTime NFmiCrossSectionView::GetCrossSectionTime(const NFmiPoint &theRelati
 	bool obsForMode = crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor;
 	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 	{
-		const checkedVector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
+		const std::vector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 		int column = GetNearestCrossSectionColumn(theRelativePlace);
 		return times[column];
 	}
@@ -840,7 +840,7 @@ void NFmiCrossSectionView::MakeMultiLineToolTip(const NFmiString& theStr, double
 
 	const unsigned long maxLineLength = 37;
 	const unsigned long normalLineLength = 32;
-	checkedVector<basic_string<char> > strVector; // t‰h‰n rakennetaan erilliset rivit koko stringist‰
+	std::vector<basic_string<char> > strVector; // t‰h‰n rakennetaan erilliset rivit koko stringist‰
 	string whitespaces(" \n");		// etsitt‰v‰t erottimet
 	string space(" ");				// pelkk‰ space
 	string wholeStr(theStr);		// parametrina annettu stringi
@@ -909,7 +909,7 @@ void NFmiCrossSectionView::MakeMultiLineToolTip(const NFmiString& theStr, double
 	}
 }
 
-NFmiRect NFmiCrossSectionView::CalcToolTipRect(checkedVector<std::basic_string<char> > &theStrVector, int theFontSize, double& theLineHeigth, const NFmiPoint &thePoint)
+NFmiRect NFmiCrossSectionView::CalcToolTipRect(std::vector<std::basic_string<char> > &theStrVector, int theFontSize, double& theLineHeigth, const NFmiPoint &thePoint)
 {
 	unsigned int len = 0;
 	for(unsigned int i=0; i < theStrVector.size(); i++)
@@ -948,7 +948,7 @@ NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theR
 		}
 		else
 		{
-			const checkedVector<NFmiPoint> &points = GetMinorPoints();
+			const std::vector<NFmiPoint> &points = GetMinorPoints();
 			int mpcount = static_cast<int>(points.size());
 			double startX = crossSectionSystem->StartXYPoint().X();
 			double width = crossSectionSystem->EndXYPoint().X() - startX;
@@ -1246,7 +1246,7 @@ void NFmiCrossSectionView::DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLi
 	}
 }
 
-const checkedVector<NFmiPoint>& NFmiCrossSectionView::GetMinorPoints(void)
+const std::vector<NFmiPoint>& NFmiCrossSectionView::GetMinorPoints(void)
 {
 	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 		return itsTrajectoryLatlonPoints;
@@ -1303,7 +1303,7 @@ void NFmiCrossSectionView::DrawGridPoints(NFmiDataMatrix<NFmiPoint> &theCoordina
 // dataa ja harvennuksen takia symbolit alkaisivat vasta korkeammalta kuin voisivat). Siis jos aloitus korkeus
 // <= 1000 mb, laita symboli aloitus korkeudeksi hieman isompi, jos aloitus korkeus on korkeammalla, voi
 // aloittaa symboli datan jaotuksen kun normaalin datankin jaotuksen.
-checkedVector<float> NFmiCrossSectionView::MakePressureVector(int usedCount, int normalCount)
+std::vector<float> NFmiCrossSectionView::MakePressureVector(int usedCount, int normalCount)
 {
 	float startY = static_cast<float>(itsDataViewFrame.Bottom());
 	float endY = static_cast<float>(itsDataViewFrame.Top());
@@ -1316,7 +1316,7 @@ checkedVector<float> NFmiCrossSectionView::MakePressureVector(int usedCount, int
 
 	float step = (startY-endY)/(usedCount-1);
 	float y = startY;
-	checkedVector<float> pressures(usedCount);
+	std::vector<float> pressures(usedCount);
 	for(int i=0; i<usedCount; i++)
 	{
 		float p = static_cast<float>(y2p(y));
@@ -1329,7 +1329,7 @@ checkedVector<float> NFmiCrossSectionView::MakePressureVector(int usedCount, int
 // T‰ytet‰‰n isoviivapiirtoa varten xy-piste matriisi, jossa pisteet sijaitsevat n‰ytˆn suhteellisessa avaruudessa.
 // Pisteiden sijainnit lasketaan annetun korkeus vektorin mukaan (y-aks.) ja jaetaan tasav‰leihin
 // poikkileikkaus pisteiden muodostaman pistejoukon l‰pi (x-aks.)
-void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDataMatrix<NFmiPoint> &theCoordinates, checkedVector<float> &thePressures)
+void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDataMatrix<NFmiPoint> &theCoordinates, std::vector<float> &thePressures)
 {
 	NFmiPoint tmpPoint;
 	theCoordinates.Resize(theIsoLineData.itsXNumber, theIsoLineData.itsYNumber);
@@ -1353,7 +1353,7 @@ void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDat
 		const NFmiTimeBag totalTimes = GetUsedTimeBagForDataCalculations();
 		NFmiMetTime startTime(totalTimes.FirstTime());
 		double timeDiffInMinutes = totalTimes.LastTime().DifferenceInMinutes(startTime);
-		const checkedVector<NFmiMetTime> &trajectoryTimes = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
+		const std::vector<NFmiMetTime> &trajectoryTimes = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 		if(trajectoryTimes.size() > 1)
 		{
 			// trajektorin aika-steppi lasketaan kahden 1. ajan perusteella. T‰m‰ siksi ett‰ muodostettu aika-vektorin
@@ -1381,10 +1381,10 @@ boost::shared_ptr<NFmiArea> NFmiCrossSectionView::GetZoomedArea(void)
 	return itsCtrlViewDocumentInterface->GetMapHandlerInterface(0)->Area(); // tassa haetaan vain p‰‰karttan‰ytˆn area
 }
 
-void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
+void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
 {
-	const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
-	const checkedVector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
+	const std::vector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
+	const std::vector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 	FillRouteCrossSectionData(theValues, theIsoLineData, thePressures, points, times);
 }
 
@@ -1404,7 +1404,7 @@ static void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocu
 	ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
 }
 
-void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
+void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
 {
     if(!possibleTooltipData)
     {
@@ -1445,8 +1445,8 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
         }
         else
         {
-            checkedVector<NFmiPoint> latlons = MakeLatlonVector();
-            checkedVector<NFmiMetTime> times = MakeTimeVector();
+            std::vector<NFmiPoint> latlons = MakeLatlonVector();
+            std::vector<NFmiMetTime> times = MakeTimeVector();
             smartToolModifier.CalcCrossSectionSmartToolValues(theValues, thePressures, latlons, times);
         }
 
@@ -1463,9 +1463,9 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 }
 
 // T‰t‰ k‰ytet‰‰n vain NFmiCrossSectionView::FillCrossSectionMacroParamData -metodissa.
-checkedVector<NFmiPoint> NFmiCrossSectionView::MakeLatlonVector(void)
+std::vector<NFmiPoint> NFmiCrossSectionView::MakeLatlonVector(void)
 {
-	checkedVector<NFmiPoint> latlons;
+	std::vector<NFmiPoint> latlons;
 
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
@@ -1493,11 +1493,11 @@ checkedVector<NFmiPoint> NFmiCrossSectionView::MakeLatlonVector(void)
 }
 
 // T‰t‰ k‰ytet‰‰n vain NFmiCrossSectionView::FillCrossSectionMacroParamData -metodissa.
-checkedVector<NFmiMetTime> NFmiCrossSectionView::MakeTimeVector(void)
+std::vector<NFmiMetTime> NFmiCrossSectionView::MakeTimeVector(void)
 {
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
     bool obsForMode = crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor;
-	checkedVector<NFmiMetTime> times;
+	std::vector<NFmiMetTime> times;
 
 	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 		times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
@@ -1520,7 +1520,7 @@ checkedVector<NFmiMetTime> NFmiCrossSectionView::MakeTimeVector(void)
 // Lasketaan macroParam laskuja varten erillinen timeVector, jossa on sopiva m‰‰r‰ 
 // tasav‰lein olevia aikoja. Koska aika-macroParam laskut ainakin viel‰ ovat niin hitaita,
 // yritet‰‰n t‰ss‰ laskea jokin sopiva aika-askel, mill‰ saadaan sopivan v‰h‰n aika-askelia.
-checkedVector<NFmiMetTime> NFmiCrossSectionView::MakeMacroParamTimeModeTimeVector(void)
+std::vector<NFmiMetTime> NFmiCrossSectionView::MakeMacroParamTimeModeTimeVector(void)
 {
     const long suitableTimeCount = 35; // pyrimme l‰himm‰ksi t‰t‰ lukua el ilaskemme kuinka monta aika-askelta millekin stepille tulisi ja l‰himm‰ksi t‰t‰ p‰‰ssyt valitaan
     std::vector<long> suitableTimeStepsInMinutes = { 60, 120, 180, 360, 720, 1440 };
@@ -1542,7 +1542,7 @@ checkedVector<NFmiMetTime> NFmiCrossSectionView::MakeMacroParamTimeModeTimeVecto
     long usedTimeStep = suitableTimeStepsInMinutes[minIndex];
     long usedTimeCount = timeCounts[minIndex];
 
-    checkedVector<NFmiMetTime> times;
+    std::vector<NFmiMetTime> times;
     NFmiMetTime aTime = actualTimeRange.FirstTime();
     aTime.SetTimeStep(1);
     for(long i = 0; i < usedTimeCount; i++)
@@ -1621,7 +1621,7 @@ static void InterpolateSoundingDatasInMatrix(NFmiDataMatrix<float> &theValues, v
 		throw runtime_error("Error in NFmiCrossSectionView - InterpolateSoundingDatasInMatrix : coudn't find any data times and that shouldn't be possible.");
 }
 
-static void FillCrossSectionMatrixWithSoundingData(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, checkedVector<float> &thePressures, int theTimeIndex)
+static void FillCrossSectionMatrixWithSoundingData(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, std::vector<float> &thePressures, int theTimeIndex)
 {
 	FmiParameterName parId = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
 	NFmiSoundingData soundingData;
@@ -1632,7 +1632,7 @@ static void FillCrossSectionMatrixWithSoundingData(NFmiDataMatrix<float> &theVal
 	}
 }
 
-static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag &theTimes, boost::shared_ptr<NFmiDrawParam> &theDrawParam, checkedVector<float> &thePressures, int &theBeforeStartIndex, NFmiDataMatrix<float> &theBeforeStartValues)
+static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag &theTimes, boost::shared_ptr<NFmiDrawParam> &theDrawParam, std::vector<float> &thePressures, int &theBeforeStartIndex, NFmiDataMatrix<float> &theBeforeStartValues)
 {
 	if(theInfo->FindNearestTime(theTimes.FirstTime(), kBackward, 360))
 	{
@@ -1648,7 +1648,7 @@ static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFast
 	}
 }
 
-static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiTimeBag &theTimes, checkedVector<float> &thePressures, int &theFirstForecastTimeIndex, checkedVector<NFmiMetTime> &theObsForModeFoundObsTimes, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiTimeBag &theTimes, std::vector<float> &thePressures, int &theFirstForecastTimeIndex, std::vector<NFmiMetTime> &theObsForModeFoundObsTimes, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
 {
 	bool foundDataYet = false;
 	int firstDataIndex = -1;
@@ -1694,7 +1694,7 @@ static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &t
 		theFirstForecastTimeIndex = 0;// (theTimes.GetSize() / 2) + 1;  // jos ei lˆytynyt kuitenkaan havainto dataa, ennusteita aletaan t‰ytt‰m‰‰n vasta puolesta v‰list‰, ett‰ k‰ytt‰j‰ huomaa  puutteen
 }
 
-int NFmiCrossSectionView::FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures)
+int NFmiCrossSectionView::FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures)
 {
 	// ker‰‰ dataa matriisiin siten, ett‰ alhaalla (pinnalla) olevat datat ovat
 	// matriisin y-akselin alap‰‰ss‰.
@@ -1730,7 +1730,7 @@ int NFmiCrossSectionView::FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float
 	return firstForecastTimeIndex;
 }
 
-void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
+void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
 { 
 	itsFirstForecastTimeIndex = FillObsPartOfTimeCrossSectionData(theValues, theIsoLineData, thePressures);
 
@@ -1747,7 +1747,7 @@ void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &
 }
 
 template<typename GetDataFunction>
-bool CalcCrossSectionMetaWindParamMatrix(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiDataMatrix<float> &theValues, checkedVector<float> &thePressures, unsigned long wantedParamId, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetDataFunction getDataFunction)
+bool CalcCrossSectionMetaWindParamMatrix(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiDataMatrix<float> &theValues, std::vector<float> &thePressures, unsigned long wantedParamId, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetDataFunction getDataFunction)
 {
     if(metaWindParamUsage.HasWsAndWd())
     {
@@ -1806,9 +1806,9 @@ bool CalcCrossSectionMetaWindParamMatrix(const boost::shared_ptr<NFmiFastQueryIn
     return false;
 }
 
-bool NFmiCrossSectionView::FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData,
-	const checkedVector<NFmiPoint>& theLatlonPoints,
-	const checkedVector<NFmiMetTime>& thePointTimes)
+bool NFmiCrossSectionView::FillRouteCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData,
+	const std::vector<NFmiPoint>& theLatlonPoints,
+	const std::vector<NFmiMetTime>& thePointTimes)
 {
     const auto &info = theIsoLineData.itsInfo;
 	if(doUserDrawData)
@@ -1817,16 +1817,16 @@ bool NFmiCrossSectionView::FillRouteCrossSectionDataForMetaWindParam(NFmiDataMat
 		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->RouteCrossSectionValuesLogP(valuesOut, thePressures, theLatlonPoints, thePointTimes); });
 }
 
-void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, checkedVector<float>& thePressures)
+void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures)
 {
 	const auto& points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
 	const auto& times = itsCtrlViewDocumentInterface->CrossSectionSystem()->RouteTimes();
 	FillRouteCrossSectionData(theValues, theIsoLineData, thePressures, points, times);
 }
 
-void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures,
-	const checkedVector<NFmiPoint>& theLatlonPoints,
-	const checkedVector<NFmiMetTime>& thePointTimes)
+void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures,
+	const std::vector<NFmiPoint>& theLatlonPoints,
+	const std::vector<NFmiMetTime>& thePointTimes)
 {
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
@@ -1839,7 +1839,7 @@ void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theV
 	FillRouteCrossSectionUserDrawData(theIsoLineData, theLatlonPoints, thePointTimes);
 }
 
-bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData)
+bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData)
 {
     auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. p‰‰piste aikapoikkileikkauksen kohteeksi
     const auto &info = theIsoLineData.itsInfo;
@@ -1850,7 +1850,7 @@ bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatr
 		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->TimeCrossSectionValuesLogP(valuesOut, thePressures, point, times, theStartTimeIndex); });
 }
 
-void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
+void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
 { // ker‰‰ dataa matriisiin siten, ett‰ alhaalla (pinnalla) olevat datat ovat
   // matriisin y-akselin alap‰‰ss‰.
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
@@ -1867,7 +1867,7 @@ void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theVa
 	FillTimeCrossSectionUserDrawData(theIsoLineData);
 }
 
-bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData)
+bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, unsigned long wantedParamId, bool doUserDrawData)
 {
     const auto &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
     const auto &info = theIsoLineData.itsInfo;
@@ -1883,7 +1883,7 @@ static bool IsContourDrawUsed(const boost::shared_ptr<NFmiDrawParam> &drawParam)
 	return (drawStyle == NFmiMetEditorTypes::View::kFmiColorContourView) || (drawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView) || (drawStyle == NFmiMetEditorTypes::View::kFmiQuickColorContourView);
 }
 
-void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, checkedVector<float> &thePressures)
+void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
 { 
 	// ker‰‰ dataa matriisiin siten, ett‰ alhaalla (pinnalla) olevat datat ovat
     // matriisin y-akselin alap‰‰ss‰
@@ -1892,7 +1892,7 @@ void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues
         FillCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, wantedParamId, false);
     else
     {
-        const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
+        const std::vector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
         theIsoLineData.itsInfo->CrossSectionValuesLogP(theValues, theIsoLineData.itsTime, thePressures, points);
     }
 
@@ -1929,7 +1929,7 @@ static NFmiDataMatrix<float> MakePressureLevelBasedPressureMatrix(size_t xSize, 
 {
 	NFmiDataMatrix<float> pressureValues(xSize, usedInfo.SizeLevels(), kFloatMissing);
 	const auto& pressureLevelValues = usedInfo.PressureLevelDataPressures();
-	checkedVector<float> pressureLevelValuesBS(pressureLevelValues.begin(), pressureLevelValues.end());
+	std::vector<float> pressureLevelValuesBS(pressureLevelValues.begin(), pressureLevelValues.end());
 	for(size_t pressureColumnIndex = 0; pressureColumnIndex < pressureValues.NX(); pressureColumnIndex++)
 	{
 		auto& pressureColumn = pressureValues[pressureColumnIndex];
@@ -1938,9 +1938,9 @@ static NFmiDataMatrix<float> MakePressureLevelBasedPressureMatrix(size_t xSize, 
 	return pressureValues;
 }
 
-static checkedVector<float> MakeHeightLevelBasedVector(NFmiFastQueryInfo& usedInfo)
+static std::vector<float> MakeHeightLevelBasedVector(NFmiFastQueryInfo& usedInfo)
 {
-	checkedVector<float> heights;
+	std::vector<float> heights;
 	for(usedInfo.ResetLevel(); usedInfo.NextLevel(); )
 	{
 		heights.push_back(usedInfo.Level()->LevelValue());
@@ -1976,7 +1976,7 @@ static NFmiDataMatrix<float> MakeHeightLevelBasedPressureMatrix(size_t xSize, NF
 	return ::ConvertMetricHeightsToPressureValues(heightValues);
 }
 
-static NFmiDataMatrix<float> MakeCrossSectionUserDrawPressureData(NFmiIsoLineData& theIsoLineData, const checkedVector<NFmiPoint> & latlonPoints)
+static NFmiDataMatrix<float> MakeCrossSectionUserDrawPressureData(NFmiIsoLineData& theIsoLineData, const std::vector<NFmiPoint> & latlonPoints)
 {
 	auto& usedInfo = *theIsoLineData.itsInfo;
 	NFmiFastInfoUtils::QueryInfoParamStateRestorer queryInfoParamStateRestorer(usedInfo);
@@ -2024,7 +2024,7 @@ static NFmiDataMatrix<float> MakeTimeCrossSectionUserDrawPressureData(NFmiIsoLin
 		return NFmiDataMatrix<float>();
 }
 
-static NFmiDataMatrix<float> MakeRouteCrossSectionUserDrawPressureData(NFmiIsoLineData& theIsoLineData, const checkedVector<NFmiPoint> &latlons, const checkedVector<NFmiMetTime> &times)
+static NFmiDataMatrix<float> MakeRouteCrossSectionUserDrawPressureData(NFmiIsoLineData& theIsoLineData, const std::vector<NFmiPoint> &latlons, const std::vector<NFmiMetTime> &times)
 {
 	auto& usedInfo = *theIsoLineData.itsInfo;
 	NFmiFastInfoUtils::QueryInfoParamStateRestorer queryInfoParamStateRestorer(usedInfo);
@@ -2059,7 +2059,7 @@ NFmiDataMatrix<float> NFmiCrossSectionView::MakeCrossSectionUserDrawValueData(NF
 	auto wantedParamId = itsDrawParam->Param().GetParamIdent();
 	if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
 	{
-		checkedVector<float> fakePressures;
+		std::vector<float> fakePressures;
 		FillCrossSectionDataForMetaWindParam(values, theIsoLineData, fakePressures, wantedParamId, true);
 	}
 	else
@@ -2076,7 +2076,7 @@ NFmiDataMatrix<float> NFmiCrossSectionView::MakeTimeCrossSectionUserDrawValueDat
 	auto wantedParamId = itsDrawParam->Param().GetParamIdent();
 	if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
 	{
-		checkedVector<float> fakePressures;
+		std::vector<float> fakePressures;
 		FillTimeCrossSectionDataForMetaWindParam(values, theIsoLineData, fakePressures, 0, wantedParamId, true);
 	}
 	else
@@ -2089,14 +2089,14 @@ NFmiDataMatrix<float> NFmiCrossSectionView::MakeTimeCrossSectionUserDrawValueDat
 }
 
 NFmiDataMatrix<float> NFmiCrossSectionView::MakeRouteCrossSectionUserDrawValueData(NFmiIsoLineData& theIsoLineData,
-	const checkedVector<NFmiPoint>& theLatlonPoints,
-	const checkedVector<NFmiMetTime>& thePointTimes)
+	const std::vector<NFmiPoint>& theLatlonPoints,
+	const std::vector<NFmiMetTime>& thePointTimes)
 {
 	NFmiDataMatrix<float> values;
 	auto wantedParamId = itsDrawParam->Param().GetParamIdent();
 	if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
 	{
-		checkedVector<float> fakePressures;
+		std::vector<float> fakePressures;
 		FillRouteCrossSectionDataForMetaWindParam(values, theIsoLineData, fakePressures, wantedParamId, true, theLatlonPoints, thePointTimes);
 	}
 	else
@@ -2132,8 +2132,8 @@ void NFmiCrossSectionView::FillTimeCrossSectionUserDrawData(NFmiIsoLineData& the
 }
 
 void NFmiCrossSectionView::FillRouteCrossSectionUserDrawData(NFmiIsoLineData& theIsoLineData,
-	const checkedVector<NFmiPoint>& theLatlonPoints,
-	const checkedVector<NFmiMetTime>& thePointTimes)
+	const std::vector<NFmiPoint>& theLatlonPoints,
+	const std::vector<NFmiMetTime>& thePointTimes)
 {
 	if(IsUserDrawDataNeeded(*theIsoLineData.itsInfo))
 	{
@@ -2364,7 +2364,7 @@ void NFmiCrossSectionView::DrawPressureScale(void)
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kRight);
 
-	checkedVector<double> pValues;
+	std::vector<double> pValues;
 	pValues.push_back(1000);
 	pValues.push_back(925);
 	pValues.push_back(850);
@@ -2376,11 +2376,11 @@ void NFmiCrossSectionView::DrawPressureScale(void)
 	pValues.push_back(50);
 	pValues.push_back(20);
 	pValues.push_back(10);
-	checkedVector<double>::const_iterator endIt = pValues.end();
+	std::vector<double>::const_iterator endIt = pValues.end();
 	double y = 0;
 	double tickMarkLength = itsToolBox->SX(FmiRound(4 * itsDrawSizeFactorX));
 	double moveLabelY = itsToolBox->SY(static_cast<long>(usedFontSize.Y()/2));
-	for (checkedVector<double>::const_iterator it = pValues.begin(); it != endIt;  ++it)
+	for (std::vector<double>::const_iterator it = pValues.begin(); it != endIt;  ++it)
 	{
 		double pressure = *it;
 		if(pressure <= itsLowerEndOfPressureAxis && pressure >= itsUpperEndOfPressureAxis)
@@ -2792,9 +2792,9 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 	}
 }
 
-checkedVector<float> NFmiCrossSectionView::CalcCurrentLevelPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+std::vector<float> NFmiCrossSectionView::CalcCurrentLevelPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-	checkedVector<float> values;
+	std::vector<float> values;
 	if(theInfo && theInfo->Param(kFmiPressure))
 	{
         auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
@@ -2803,22 +2803,22 @@ checkedVector<float> NFmiCrossSectionView::CalcCurrentLevelPressures(boost::shar
         auto trajectorySystem = itsCtrlViewDocumentInterface->TrajectorySystem();
 		if(trajectorySystem->ShowTrajectoriesInCrossSectionView())
 		{
-			const checkedVector<NFmiPoint> &points = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
-			const checkedVector<NFmiMetTime> &times = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
+			const std::vector<NFmiPoint> &points = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
+			const std::vector<NFmiMetTime> &times = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				values.push_back(theInfo->InterpolatedValue(points[i], times[i]));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kNormal)
 		{
 			NFmiMetTime aTime(CurrentTime());
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				values.push_back(theInfo->InterpolatedValue(points[i], aTime));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kRoute)
 		{
-			const checkedVector<NFmiMetTime> &times = crossSectionSystem->RouteTimes();
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiMetTime> &times = crossSectionSystem->RouteTimes();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				values.push_back(theInfo->InterpolatedValue(points[i], times[i]));
 		}
@@ -2868,7 +2868,7 @@ void NFmiCrossSectionView::DrawHybridLevels(void)
 
 			for(hybridInfo->ResetLevel(); hybridInfo->NextLevel(); )
 			{
-				checkedVector<float> levelPressures(CalcCurrentLevelPressures(hybridInfo));
+				std::vector<float> levelPressures(CalcCurrentLevelPressures(hybridInfo));
 				if(levelPressures.size() > 1)
 				{
 					double x = Column2x(0);
@@ -3016,7 +3016,7 @@ static double CalcSeaLevelLinePlaceX(const NFmiPoint &theStartPoint, const NFmiP
 	return intersectionPoint.x;
 }
 
-static double CalcRelativeXplace(int theIndex, double theRelativeStartX, double thrRelativeWidth, double theRelativePlaceDividor, const checkedVector<float> &theGroundHeights)
+static double CalcRelativeXplace(int theIndex, double theRelativeStartX, double thrRelativeWidth, double theRelativePlaceDividor, const std::vector<float> &theGroundHeights)
 {
 	if(theIndex == 0)
 		return theRelativeStartX;
@@ -3129,8 +3129,8 @@ bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryI
 
 void NFmiCrossSectionView::CalcRouteDistances(void)
 {
-	const checkedVector<NFmiPoint> &points = GetMinorPoints();
-	itsRoutePointsDistToEndPoint = checkedVector<float>(points.size(), 0);
+	const std::vector<NFmiPoint> &points = GetMinorPoints();
+	itsRoutePointsDistToEndPoint = std::vector<float>(points.size(), 0);
 	if(points.size() > 1)
 	{
 		NFmiLocation loc1(points[0]);
@@ -3160,20 +3160,20 @@ void NFmiCrossSectionView::CalcGroundHeights(void) //NFmiSmartInfo *theInfo)
         auto crossMode = crossSectionSystem->GetCrossMode();
         if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 		{
-			const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
+			const std::vector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsGroundHeights.push_back(topoInfo->InterpolatedValue(points[i]));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kNormal)
 		{
 			NFmiMetTime aTime(CurrentTime());
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsGroundHeights.push_back(topoInfo->InterpolatedValue(points[i]));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kRoute)
 		{
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsGroundHeights.push_back(topoInfo->InterpolatedValue(points[i]));
 		}
@@ -3203,22 +3203,22 @@ void NFmiCrossSectionView::CalcModelGroundPressures(boost::shared_ptr<NFmiFastQu
         bool obsForMode = crossMode == NFmiCrossSectionSystem::kObsAndFor;
 		if(trajectorySystem->ShowTrajectoriesInCrossSectionView())
 		{
-			const checkedVector<NFmiPoint> &points = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
-			const checkedVector<NFmiMetTime> &times = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
+			const std::vector<NFmiPoint> &points = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
+			const std::vector<NFmiMetTime> &times = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(points[i], times[i]));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kNormal)
 		{
 			NFmiMetTime aTime(CurrentTime());
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(points[i], aTime));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kRoute)
 		{
-			const checkedVector<NFmiMetTime> &times = crossSectionSystem->RouteTimes();
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiMetTime> &times = crossSectionSystem->RouteTimes();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(points[i], times[i]));
 		}
@@ -3245,22 +3245,22 @@ void NFmiCrossSectionView::CalcModelPressuresAtStation(boost::shared_ptr<NFmiFas
 		bool obsForMode = crossMode == NFmiCrossSectionSystem::kObsAndFor;
 		if(trajectorySystem->ShowTrajectoriesInCrossSectionView())
 		{
-			const checkedVector<NFmiPoint> &points = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
-			const checkedVector<NFmiMetTime> &times = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
+			const std::vector<NFmiPoint> &points = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryPoints();
+			const std::vector<NFmiMetTime> &times = trajectorySystem->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(points[i], times[i]));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kNormal)
 		{
 			NFmiMetTime aTime(CurrentTime());
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(points[i], aTime));
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kRoute)
 		{
-			const checkedVector<NFmiMetTime> &times = crossSectionSystem->RouteTimes();
-			const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+			const std::vector<NFmiMetTime> &times = crossSectionSystem->RouteTimes();
+			const std::vector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
 			for(int i = 0; i < static_cast<int>(points.size()); i++)
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(points[i], times[i]));
 		}

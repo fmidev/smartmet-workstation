@@ -1,10 +1,10 @@
 
 #pragma once
 
+#include "NFmiPoint.h"
 #include <vector>
 #include <list>
 #include <boost/shared_ptr.hpp>
-#include "NFmiDataMatrix.h" // täältä tulee myös checkedVector
 
 class NFmiEditorControlPointManager;
 
@@ -28,7 +28,7 @@ public:
 	size_t CPSetSize(void) const;
 	int Find(const std::string &theName) const;
 	boost::shared_ptr<NFmiEditorControlPointManager> CPManagerFromSet(size_t theIndex);
-	void UpdateViewMacroCPManager(const checkedVector<NFmiPoint>& newCpLatlonPoints);
+	void UpdateViewMacroCPManager(const std::vector<NFmiPoint>& newCpLatlonPoints);
 private:
 	void DoOldSchoolStyleInit(void);
 	void DoMultiCPManagerInit();
@@ -41,9 +41,9 @@ private:
     void MakeDefaultCPManagerSet();
 
 	boost::shared_ptr<NFmiEditorControlPointManager> itsOldSchoolCPManager;
-    checkedVector<NFmiPoint> itsOldSchoolCPManagerOrigPoints; // Talletetaan tähän initialisoinnista saadut CP-pisteet, jotta niitä voidaan lopetuksen yhteydessä vertailla sen hetkisiin pisteisiin. Jos ei muutoksia, ei talleteta tiedostoon turhaan.
+    std::vector<NFmiPoint> itsOldSchoolCPManagerOrigPoints; // Talletetaan tähän initialisoinnista saadut CP-pisteet, jotta niitä voidaan lopetuksen yhteydessä vertailla sen hetkisiin pisteisiin. Jos ei muutoksia, ei talleteta tiedostoon turhaan.
 	std::vector<boost::shared_ptr<NFmiEditorControlPointManager> > itsCPManagers;
-    std::vector<checkedVector<NFmiPoint> > itsCPManagersOrigPoints; // Talletetaan tähän initialisoinnista saadut CP-pisteet, jotta niitä voidaan lopetuksen yhteydessä vertailla sen hetkisiin pisteisiin. Jos ei muutoksia, ei talleteta tiedostoon turhaan.
+    std::vector<std::vector<NFmiPoint> > itsCPManagersOrigPoints; // Talletetaan tähän initialisoinnista saadut CP-pisteet, jotta niitä voidaan lopetuksen yhteydessä vertailla sen hetkisiin pisteisiin. Jos ei muutoksia, ei talleteta tiedostoon turhaan.
 	size_t itsIndex; // osoittaa käytössä olevam CPManagerin paikkaan itsCPManagers -vectorissa
 	std::string itsCPManagerDirectory;
     std::string itsControlDirectory; // SmartMetin kontrolli-hakemisto

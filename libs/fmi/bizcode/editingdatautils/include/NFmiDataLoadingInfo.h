@@ -37,7 +37,6 @@
 #include "NFmiString.h"
 #include "NFmiProducer.h"
 #include "nsorstrl.h"
-#include "NFmiDataMatrix.h"
 #include "NFmiMetTime.h"
 
 class NFmiTimeDescriptor;
@@ -150,7 +149,7 @@ class NFmiDataLoadingInfo
 	NFmiString CreateDataBaseInFileNameFilter (int theIndex);
 
 	void UpdateSelectedFileNamesVector(void);
-	const checkedVector<NFmiString>& SelectedFileNamesVector(void) const{return itsSelectedFileNamesVector;};
+	const std::vector<NFmiString>& SelectedFileNamesVector(void) const{return itsSelectedFileNamesVector;};
 
 	NFmiMetEditorModeDataWCTR* MetEditorModeDataWCTR(void) {return itsMetEditorModeDataWCTR;}
 	int ForecastingLength(void) const;
@@ -235,7 +234,7 @@ private:
 
 	NFmiHPlaceDescriptor* itsHPlaceDescriptor;
 
-	checkedVector<NFmiString> itsSelectedFileNamesVector; // dialogissa valitut tiedostonimet talletetaan tähän
+	std::vector<NFmiString> itsSelectedFileNamesVector; // dialogissa valitut tiedostonimet talletetaan tähän
 	int itsDataLengthInHours;
 
 	// SmartMetin cache-moodissa data kopioidaan kovalevylle ja pitää olla polut ja file-patternit osoittamaan myös niihin.

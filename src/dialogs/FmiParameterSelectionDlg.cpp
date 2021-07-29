@@ -323,7 +323,7 @@ std::string NFmiParameterSelectionGridCtrl::DataTypeString(NFmiInfoData::Type da
 
 std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(const AddParams::SingleRowItem &singleRowItem)
 {
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+    auto infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
     NFmiHelpDataInfo *helpDataInfo;
     boost::shared_ptr<NFmiFastQueryInfo> info;
     std::string serverPath = "";
@@ -382,7 +382,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(const AddParams::
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo)
+std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo)
 {
     std::string shortName = (producerInfo.ShortNameCount() == 0) ? "" : producerInfo.ShortName();
 

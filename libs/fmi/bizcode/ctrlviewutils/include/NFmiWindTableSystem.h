@@ -56,7 +56,7 @@ public:
 	const std::string& ControlDirectory(void) const {return itsControlDirectory;}
 	void ControlDirectory(const std::string &theNewValue) {itsControlDirectory = theNewValue;}
 	void InitAreaMaskDatas(void);
-	checkedVector<AreaMaskData>& AreaMaskDataList(void);
+	std::vector<AreaMaskData>& AreaMaskDataList(void);
 	void InitializeAllAreaMasks(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	bool UseMapTime(void) const {return fUseMapTime;}
 	void UseMapTime(bool newValue) {fUseMapTime = newValue;}
@@ -76,10 +76,10 @@ public:
 	// sekaan. Eli älä käytä suoraan tätä metodia, vaan Init(filename)-metodia!!!!
 	void Read(std::istream& is);
 private:
-	void AddAreaMask(checkedVector<AreaMaskData> &theAreaMaskDataList, const std::string &theFileName, const std::string &theName);
+	void AddAreaMask(std::vector<AreaMaskData> &theAreaMaskDataList, const std::string &theFileName, const std::string &theName);
 
-	checkedVector<AreaMaskData> itsAreaMaskDataList;
-	checkedVector<AreaMaskData> itsAreaMaskDataList2; // tässä vaihtoehtoinen area-maski lista
+	std::vector<AreaMaskData> itsAreaMaskDataList;
+	std::vector<AreaMaskData> itsAreaMaskDataList2; // tässä vaihtoehtoinen area-maski lista
 	int itsSelectedAreaMaskList;
 	std::string itsControlDirectory;
 	bool fViewVisible;

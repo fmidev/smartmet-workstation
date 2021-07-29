@@ -55,7 +55,7 @@ static std::string MakeDataIdentString(const NFmiDataIdent &dataIdent)
 
 // täyttää gridnode datan (kutsutaan kun zoomataan)
 // oletus alue on yksikkö laatikon sisällä (0,0, 1,1)
-static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, const NFmiRect &theGridArea)
+static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, std::vector<float>& theGridNodesX, std::vector<float>& theGridNodesY, const NFmiRect &theGridArea)
 {
     // Tämän pitää saada ottamaan huomioon myös partial hila-rect
 
@@ -80,7 +80,7 @@ static void FillGridNodeData(NFmiIsoLineData &theIsoLineData, checkedVector<floa
 // Parametrit theGridNodesX/Y: Näihin vektoreihin lasketaan käytetyn hilan x- ja y-pisteiden paikat theGridArea:n maailmassa.
 // Parametri theMfcClipRect: Tähän lasketaan piirtoalueen laatikko pikseleissä. Sitä käytetään ei ToolMaster piirroissa.
 // Parametri theTotViewSizeOut: Tähän lasketaan piirtoalueen koko pikseleissä, tietoa käytetään isoviiva labeloinnin harvennukseen.
-void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, checkedVector<float>& theGridNodesX, checkedVector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut, double & dataGridToViewHeightRatioOut)
+void SetupViewWorld(NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, std::vector<float>& theGridNodesX, std::vector<float>& theGridNodesY, CRect* theMfcClipRect, NFmiPoint &theTotViewSizeOut, double & dataGridToViewHeightRatioOut)
 {
     float xsi, ysi; // koko CWnd ikkunan piirtoalueen koko [mm]
     int   xpic, ypic; // koko CWnd ikkunan piirtoalueen koko pikseleissä
@@ -681,8 +681,8 @@ static void SetIsolineMinLength(double currentViewSizeInMM, double usedIsolineMi
 
 static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiRect &theGridArea, int theCrossSectionIsoLineDrawIndex)
 {
-    static checkedVector<float> gridNodesX;
-    static checkedVector<float> gridNodesY;
+    static std::vector<float> gridNodesX;
+    static std::vector<float> gridNodesY;
 
     CRect mfcClipRect;
     NFmiPoint totalViewSize;

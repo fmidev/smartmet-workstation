@@ -30,7 +30,7 @@
 
 using namespace std;
 
-static int CalcTotalSuggestedTime(const checkedVector<NFmiMetEditorModeDataWCTR::TimeSectionData> &theTimeSections)
+static int CalcTotalSuggestedTime(const std::vector<NFmiMetEditorModeDataWCTR::TimeSectionData> &theTimeSections)
 {
 	int totalSuggestedTime = 0;
 	for(int i = 0; i < static_cast<int>(theTimeSections.size()); i++)
@@ -92,7 +92,7 @@ NFmiMetEditorModeDataWCTR::~NFmiMetEditorModeDataWCTR(void)
 
 void NFmiMetEditorModeDataWCTR::Clear(void)
 {
-	checkedVector<TimeSectionData>().swap(itsTimeSections); // vectorin 'guru'-tyhjennys temppu
+	std::vector<TimeSectionData>().swap(itsTimeSections); // vectorin 'guru'-tyhjennys temppu
 	delete itsTimeDescriptor;
 	itsTimeDescriptor = 0;
 	itsWantedDataLengthInHours = 0;
@@ -173,7 +173,7 @@ const NFmiTimeDescriptor& NFmiMetEditorModeDataWCTR::TimeDescriptor(const NFmiMe
 
 bool NFmiMetEditorModeDataWCTR::CreateTimeListSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime)
 {
-	checkedVector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime));
+	std::vector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime));
 
 	if(borderTimes.size() > 1)
 	{
@@ -205,7 +205,7 @@ bool NFmiMetEditorModeDataWCTR::CreateTimeListSystem(const NFmiMetTime &theCurre
 // timebag systeemiss‰ katsotaan vain 1. aikasectionia ja tehd‰‰n sen mukainen timebagi
 bool NFmiMetEditorModeDataWCTR::CreateTimeBagSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime)
 {
-	checkedVector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime));
+	std::vector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime));
 	if(borderTimes.size() > 1)
 	{
 		NFmiTimeBag times(borderTimes[0], borderTimes[1], itsTimeSections[0].itsTimeResolutionInMinutes);
@@ -216,9 +216,9 @@ bool NFmiMetEditorModeDataWCTR::CreateTimeBagSystem(const NFmiMetTime &theCurren
 	return false;
 }
 
-checkedVector<NFmiMetTime> NFmiMetEditorModeDataWCTR::CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime)
+std::vector<NFmiMetTime> NFmiMetEditorModeDataWCTR::CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime)
 {
-	checkedVector<NFmiMetTime> borderTimes;
+	std::vector<NFmiMetTime> borderTimes;
 	if(itsTimeSections.size() > 0)
 	{
 		int totalSuggestedTime = CalcTotalSuggestedTime(itsTimeSections);
@@ -251,7 +251,7 @@ checkedVector<NFmiMetTime> NFmiMetEditorModeDataWCTR::CalcSectionBorderTimes(con
 			}
 			borderTimes.push_back(startTime);
 			// lopuksi pit‰‰ ajat k‰‰nt‰‰ vectorissa, k‰yt‰n siihen apuvectoria
-			checkedVector<NFmiMetTime> tmpTimes(borderTimes.size()); 
+			std::vector<NFmiMetTime> tmpTimes(borderTimes.size()); 
 			std::copy(borderTimes.rbegin(), borderTimes.rend(), tmpTimes.begin());
 			borderTimes.swap(tmpTimes);
 		}

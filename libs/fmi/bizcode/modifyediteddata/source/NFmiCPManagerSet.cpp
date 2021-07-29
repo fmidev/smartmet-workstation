@@ -130,7 +130,7 @@ void NFmiCPManagerSet::MakeBackupStuffForCpManagers()
 // Lokitetaan varoitus, jotta k‰ytt‰j‰lle selvi‰‰ mahdollinen virhe CPManager konfiguraatio virhe
 void NFmiCPManagerSet::MakeDefaultCPManagerSet()
 {
-    checkedVector<NFmiPoint> newCPs;
+    std::vector<NFmiPoint> newCPs;
     boost::shared_ptr<NFmiEditorControlPointManager> cpManager(new NFmiEditorControlPointManager());
     if(cpManager->Init(newCPs, false))
     {
@@ -238,7 +238,7 @@ static std::pair<bool, size_t> FindCpManagerByName(const std::vector<boost::shar
 // Jos lˆytyy "viewmacro" -niminen CPManager, laitetaan t‰m‰ sen arvoksi.
 // Jos ei lˆydy, lis‰t‰‰n t‰m‰ sen nimisen‰ siihen.
 // Laitetaan itsIndex osoittamaan t‰h‰n CPManager:iin.
-void NFmiCPManagerSet::UpdateViewMacroCPManager(const checkedVector<NFmiPoint>& newCpLatlonPoints)
+void NFmiCPManagerSet::UpdateViewMacroCPManager(const std::vector<NFmiPoint>& newCpLatlonPoints)
 {
     static const std::string viewMacroName = "viewmacro";
     if(UseOldSchoolStyle() == false)

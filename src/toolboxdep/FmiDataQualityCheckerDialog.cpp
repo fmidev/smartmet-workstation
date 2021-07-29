@@ -599,8 +599,8 @@ void CFmiDataQualityCheckerDialog::DoDrawStatistics(void)
 	float fontSizeInPixels = 16;
 
 	NFmiDataQualityChecker &dataQualityChecker = itsSmartMetDocumentInterface->DataQualityChecker();
-	const checkedVector<NFmiDataParamCheckingInfo> & dataParamCheckingInfos = dataQualityChecker.DataParamCheckingInfos();
-	const checkedVector<NFmiGridValuesCheck> &combinedParamChecks = dataQualityChecker.CombinedParamChecks();
+	const auto & dataParamCheckingInfos = dataQualityChecker.DataParamCheckingInfos();
+	const auto &combinedParamChecks = dataQualityChecker.CombinedParamChecks();
 	const NFmiDataMatrix<NFmiGridValuesCheck> &valueCheckMatrix = dataQualityChecker.ValueCheckMatrix();
 	for(int i = 0; i < static_cast<int>(dataParamCheckingInfos.size()); i++)
 	{
@@ -641,8 +641,8 @@ std::string CFmiDataQualityCheckerDialog::ComposeToolTipText(CPoint point)
 	Gdiplus::PointF pointF(static_cast<float>(point.x), static_cast<float>(point.y));
 	// 1. minkä parametrin alueella
 	NFmiDataQualityChecker &dataQualityChecker = itsSmartMetDocumentInterface->DataQualityChecker();
-	const checkedVector<NFmiDataParamCheckingInfo> & dataParamCheckingInfos = dataQualityChecker.DataParamCheckingInfos();
-	const checkedVector<NFmiGridValuesCheck> &combinedParamChecks = dataQualityChecker.CombinedParamChecks();
+	const auto & dataParamCheckingInfos = dataQualityChecker.DataParamCheckingInfos();
+	const auto &combinedParamChecks = dataQualityChecker.CombinedParamChecks();
 	const NFmiDataMatrix<NFmiGridValuesCheck> &valueCheckMatrix = dataQualityChecker.ValueCheckMatrix();
 	for(int i = 0; i < static_cast<int>(dataParamCheckingInfos.size()); i++)
 	{

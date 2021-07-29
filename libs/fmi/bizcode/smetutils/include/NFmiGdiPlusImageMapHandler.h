@@ -11,7 +11,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include "NFmiRect.h"
-#include "NFmiDataMatrix.h"
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiCountryBorderPolylineCache.h"
 
@@ -106,10 +105,10 @@ private:
 	// Mit‰ nimi karttaa k‰ytet‰‰n (-1 = ei mit‰‰n, 0=1. vektorissa olevaa jne.)
 	int itsUsedOverMapBitmapIndex; 
 	// T‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
-	checkedVector<Gdiplus::Bitmap*> itsMapBitmaps;
+	std::vector<Gdiplus::Bitmap*> itsMapBitmaps;
 	// T‰h‰n l‰pin‰kyv‰‰n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi‰.
 	// T‰m‰ Bitmap on tarkoitus haluttaessa piirt‰‰ oikean kartan p‰‰lle.
-	checkedVector<Gdiplus::Bitmap*> itsOverMapBitmaps;
+	std::vector<Gdiplus::Bitmap*> itsOverMapBitmaps;
 	boost::shared_ptr<NFmiArea> itsOriginalArea;
 	boost::shared_ptr<NFmiArea> itsZoomedArea;
 	NFmiRect itsZoomedAreaPosition;

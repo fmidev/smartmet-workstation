@@ -125,7 +125,7 @@ void WmoIdFilterManager::SetSelectedCountryAbbrStr(const std::string &theStr)
 }
 
 
-SynopDataGridViewUsedFileNames::SynopDataGridViewUsedFileNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime)
+SynopDataGridViewUsedFileNames::SynopDataGridViewUsedFileNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime)
 :itsUsedDataFileName()
 ,itsObsDataFileNames()
 ,itsValidTime(validTime)
@@ -226,7 +226,7 @@ bool SynopDataGridViewUsedFileNames::Empty() const
         return false;
 }
 
-void SynopDataGridViewUsedFileNames::UpdateNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+void SynopDataGridViewUsedFileNames::UpdateNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
 {
     ClearNames();
     if(usedInfo)
@@ -246,11 +246,11 @@ static string GetMinMaxDateString(const NFmiMetTime &theTime)
 static NFmiMetTime GetTimeFromMinMaxDateString(const string &theTimeStr)
 {
 	NFmiMetTime aTime(NFmiMetTime::gMissingTime);
-	const checkedVector<string> list1 = NFmiStringTools::Split<checkedVector<string> >(theTimeStr, " ");
+	const std::vector<string> list1 = NFmiStringTools::Split<std::vector<string> >(theTimeStr, " ");
 	if(list1.size() == 2)
 	{
-		const checkedVector<string> list2 = NFmiStringTools::Split<checkedVector<string> >(list1[0], ".");
-		const checkedVector<string> list3 = NFmiStringTools::Split<checkedVector<string> >(list1[1], ":");
+		const std::vector<string> list2 = NFmiStringTools::Split<std::vector<string> >(list1[0], ".");
+		const std::vector<string> list3 = NFmiStringTools::Split<std::vector<string> >(list1[1], ":");
 		if(list2.size() == 3 && list3.size() == 2)
 		{
 			short YYYY = NFmiStringTools::Convert<short>(list2[2]);
@@ -275,7 +275,7 @@ NFmiMetTime GetMinMaxEndTime(const NFmiMetTime &theStartTime, double theDayRange
 	return endTime;
 }
 
-static int FindWantedHeaderColumn(checkedVector<HeaderParInfo> *theHeaders, HeaderParInfo::RangeFunction theFunction)
+static int FindWantedHeaderColumn(std::vector<HeaderParInfo> *theHeaders, HeaderParInfo::RangeFunction theFunction)
 {
 	for(int i=0; i< static_cast<int>(theHeaders->size()); i++)
 		if((*theHeaders)[i].itsRangeCalculationFunction == theFunction)
@@ -283,7 +283,7 @@ static int FindWantedHeaderColumn(checkedVector<HeaderParInfo> *theHeaders, Head
 	return -1;
 }
 
-static HeaderParInfo::RangeFunction GetWantedHeaderColumnFunction(checkedVector<HeaderParInfo> *theHeaders,  const CCellID &focusCell)
+static HeaderParInfo::RangeFunction GetWantedHeaderColumnFunction(std::vector<HeaderParInfo> *theHeaders,  const CCellID &focusCell)
 {
 	if(focusCell.col >= 0 && focusCell.col < static_cast<int>(theHeaders->size()))
 		return (*theHeaders)[focusCell.col].itsRangeCalculationFunction;
@@ -1500,7 +1500,7 @@ static void SetParamData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGrid
 		SetParamIdGridSellValue(theInfo, theGridCtrl, theHeaderParInfo.itsParId, row, column, theLocation, theTime, useForecast, metaWindParamUsage);
 }
 
-static void SetHeaders(NFmiGridCtrl &theGridCtrl, const checkedVector<HeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
+static void SetHeaders(NFmiGridCtrl &theGridCtrl, const std::vector<HeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
 {
 	int columnCount = static_cast<int>(theHeaders.size());
 	theGridCtrl.SetRowCount(rowCount);
@@ -1524,11 +1524,11 @@ static void SetHeaders(NFmiGridCtrl &theGridCtrl, const checkedVector<HeaderParI
 	fFirstTime = false;
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > CFmiSynopDataGridViewDlg::GetWantedSynopInfos(void)
+std::vector<boost::shared_ptr<NFmiFastQueryInfo> > CFmiSynopDataGridViewDlg::GetWantedSynopInfos(void)
 {
 	UpdateData(TRUE);
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsSmartMetDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsSmartMetDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
 	if(infoVector.size() == 0)
 	{ // jos ei löytynyt havainnoista synop dataa, tarkastetaan editoitava data, onko se asema dataa
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
@@ -1551,7 +1551,7 @@ static int CalcSuitableParameters(boost::shared_ptr<NFmiFastQueryInfo> &info, co
     return suitableParametercounter;
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos)
+static boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableData(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos)
 {
     if(infos.size() == 0)
         return boost::shared_ptr<NFmiFastQueryInfo>();
@@ -1598,7 +1598,7 @@ boost::shared_ptr<NFmiFastQueryInfo> CFmiSynopDataGridViewDlg::GetWantedInfo(boo
 	else
 	{
 		int selProd = itsProducerSelector.GetCurSel();
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = infoOrganizer->GetInfos(
+		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = infoOrganizer->GetInfos(
 																						itsProducerList[selProd].itsDataType,
 																						itsProducerList[selProd].fGroundData,
 																						itsProducerList[selProd].itsProducerId);
@@ -1730,7 +1730,7 @@ void CFmiSynopDataGridViewDlg::InitForecastMinMaxDataHeaders(void)
 
 void CFmiSynopDataGridViewDlg::TakeWantedHeadersInUse(int theProducerId)
 {
-	static checkedVector<HeaderParInfo> dummyHeaders;
+	static std::vector<HeaderParInfo> dummyHeaders;
 	itsUsedHeaders = &dummyHeaders;
 	if(fMinMaxModeOn)
 	{
@@ -1793,7 +1793,7 @@ static bool IsForecastData(const struct NFmiProducerHelperInfo &theProdInfo, boo
 	return false;
 }
 
-static bool HasAnyMatchingTimes(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theWantedTime)
+static bool HasAnyMatchingTimes(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theWantedTime)
 {
 	for(unsigned int i = 0; i < theInfos.size(); i++)
 	{
@@ -1814,15 +1814,15 @@ static std::vector<int> GetWidthVector(NFmiGridCtrl &theGridCtrl)
 	return headerColumnWidths;
 }
 
-static void SetFromWidthVector(const std::vector<int> theWidthVector, checkedVector<HeaderParInfo> *theUsedHeaders)
+static void SetFromWidthVector(const std::vector<int> theWidthVector, std::vector<HeaderParInfo> *theUsedHeaders)
 {
 	if(theUsedHeaders)
 	{
-		checkedVector<HeaderParInfo> &usedHeaders = *theUsedHeaders;
+		std::vector<HeaderParInfo> &usedHeaders = *theUsedHeaders;
 		size_t ssize1 = usedHeaders.size();
 		size_t ssize2 = theWidthVector.size();
 		size_t usedSize = FmiMin(ssize1, ssize2);
-		for(checkedVector<HeaderParInfo>::size_type i=0; i<usedSize; i++)
+		for(std::vector<HeaderParInfo>::size_type i=0; i<usedSize; i++)
 			usedHeaders[i].itsColumnWidth = theWidthVector[i];
 	}
 }
@@ -1915,7 +1915,7 @@ static bool IsDataInMinMaxRange(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, c
 }
 
 
-static int CalcUsedStationCount(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const boost::shared_ptr<NFmiArea> &theZoomedArea, WmoIdFilterManager &theWmoIdFilterManager, const NFmiMetTime &theWantedTime, const NFmiMetTime &theEndTime, bool fDoForecast, bool fDoMinMax)
+static int CalcUsedStationCount(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const boost::shared_ptr<NFmiArea> &theZoomedArea, WmoIdFilterManager &theWmoIdFilterManager, const NFmiMetTime &theWantedTime, const NFmiMetTime &theEndTime, bool fDoForecast, bool fDoMinMax)
 {
 	int stationsFound = 0;
 	for(unsigned int x = 0; x < theInfos.size(); x++)
@@ -1959,7 +1959,7 @@ bool CFmiSynopDataGridViewDlg::IsSelectedProducerModelData() const
     return itsProducerList[itsProducerSelector.GetCurSel()].itsProducerId != kFmiSYNOP;
 }
 
-bool CFmiSynopDataGridViewDlg::GridControlNeedsUpdate(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+bool CFmiSynopDataGridViewDlg::GridControlNeedsUpdate(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
 {
     const std::string baseFunctionNameForLogging = "Station-data-grid-view";
 
@@ -2052,7 +2052,7 @@ void CFmiSynopDataGridViewDlg::Update(void)
         int fixedRowCount = 1;
         int fixedColumnCount = 1;
 
-        checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > obsInfos = GetWantedSynopInfos();
+        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > obsInfos = GetWantedSynopInfos();
         boost::shared_ptr<NFmiFastQueryInfo> sadeInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kObservations, NFmiProducer(10002), true);
         fUseSadeData = sadeInfo && IsSadeDataUsed(); // jos katsellaan synop-tuottajaa, silloin laitetaan myös sadedataa mukaan
         boost::shared_ptr<NFmiFastQueryInfo> usedInfo = GetWantedInfo(false);
@@ -2156,7 +2156,7 @@ bool CFmiSynopDataGridViewDlg::IsSadeDataUsed(void)
 	return false;
 }
 
-void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
+void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
 {
 	bool useObsData = theUsedInfo->Grid() == 0; // tämä vaikuttaa siihen mitä smartinfoa käytetään ja intepoloidaanko data havainto pisteeseen vai otetaanko arvo suoraan asema datan tapauksessa
 	TakeWantedHeadersInUse(useObsData ? kFmiSYNOP : kFmiHIRLAM);
@@ -2311,7 +2311,7 @@ void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(checkedVector<boost::share
     itsTimeStrU_ = CA2T(GetMinMaxTimeRangeAndStationString(itsSmartMetDocumentInterface->Language(), startTime, itsDayRangeValue, theRealStationCountInOut, itsWmoIdFilterManager, GetProducerString()).c_str());
 }
 
-void CFmiSynopDataGridViewDlg::FillGridWithSynopData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
+void CFmiSynopDataGridViewDlg::FillGridWithSynopData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
 { // täytetään taulukko havainto datalla
 	static NFmiLocation shipDataLocation;
 	TakeWantedHeadersInUse(kFmiSYNOP);
@@ -2395,7 +2395,7 @@ void CFmiSynopDataGridViewDlg::FillGridWithSynopData(checkedVector<boost::shared
 	itsGridCtrl.SetRowCount(stationsFound + theFixedRowCount); // asetetaan todellinen rivi määrä lopuksi
 }
 
-void CFmiSynopDataGridViewDlg::FillGridWithForecastData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCountInOut)
+void CFmiSynopDataGridViewDlg::FillGridWithForecastData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCountInOut)
 {
 	TakeWantedHeadersInUse(kFmiHIRLAM); // hilam-id on fixattu ennuste datoja varten yleensä
 	int columnCount = static_cast<int>(itsUsedHeaders->size());

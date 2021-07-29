@@ -106,7 +106,7 @@ void NFmiCaseStudyDataFile::Reset(void)
 
 static boost::shared_ptr<NFmiFastQueryInfo> GetInfo(NFmiInfoOrganizer &theInfoOrganizer, const std::string &theFileNameFilter)
 {
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = theInfoOrganizer.GetInfos(theFileNameFilter);
+	auto infoVector = theInfoOrganizer.GetInfos(theFileNameFilter);
 	if(infoVector.size())
 		return infoVector[0];
 	else
@@ -1176,7 +1176,7 @@ bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiIn
 	::SetCategoryHeaderInfoValues(category5, defaultStartOffsetInMinutes, defaultEndOffsetInMinutes, defaultStoreDataSetting);
 	itsCategoriesData.push_back(category5);
 
-	const checkedVector<NFmiHelpDataInfo> &infos = theDataInfoSystem.DynamicHelpDataInfos();
+	const auto &infos = theDataInfoSystem.DynamicHelpDataInfos();
 	for(size_t i = 0; i < infos.size(); i++)
 	{
 		NFmiCaseStudyDataFile data;
@@ -2071,7 +2071,7 @@ boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoS
 	boost::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystem;
 	if(itsCategoriesData.size())
 	{
-		const checkedVector<NFmiHelpDataInfo> &staticHelpDataInfos =  theOriginalHelpDataInfoSystem.StaticHelpDataInfos();
+		const auto &staticHelpDataInfos =  theOriginalHelpDataInfoSystem.StaticHelpDataInfos();
 		helpDataInfoSystem = boost::shared_ptr<NFmiHelpDataInfoSystem>(new NFmiHelpDataInfoSystem());
 		for(size_t i = 0; i < staticHelpDataInfos.size(); i++)
 			helpDataInfoSystem->AddStatic(staticHelpDataInfos[i]);

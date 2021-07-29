@@ -28,7 +28,7 @@
 #include "NFmiParamBag.h"
 #include "NFmiPoint.h"
 #include "NFmiEditorControlPoint.h"
-#include "NFmiDataMatrix.h" // t‰‰lt‰ tulee myˆs checkedVector
+#include "NFmiDataMatrix.h"
 #include "NFmiGriddingHelperInterface.h"
 #include "ControlPointAcceleratorActions.h"
 
@@ -49,9 +49,9 @@ public:
    NFmiEditorControlPointManager(void);
    ~NFmiEditorControlPointManager(void);
    bool Init(const NFmiTimeDescriptor& theTimes, const NFmiParamBag& theParams, const std::string& theCPFileName, bool fKeepOldValues, bool fKeepOldCPs, int theMaxAllowedTimeCount = 200);
-   bool Init(const checkedVector<NFmiPoint> &newCPs, bool keepModificationsIfPossible);
+   bool Init(const std::vector<NFmiPoint> &newCPs, bool keepModificationsIfPossible);
    bool Init(const NFmiEditorControlPointManager &theOther);
-   bool SetZoomedAreaStationsAsControlPoints(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea);
+   bool SetZoomedAreaStationsAsControlPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea);
    bool SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea);
    int Size (void) ;
    double ChangeValue (void);
@@ -84,8 +84,8 @@ public:
    void CPMovingInTime(bool newState, int theIndex = -1);
    void ActivateAllCPs (bool newState) ;
    bool ChangeValues (std::vector<float>& xValues, std::vector<float>& yValues, std::vector<float>& zValues, int& theArraySize) ;
-   checkedVector<double>& ActiveCPChangeValues(void); // t‰m‰ on hieman vaarallinen metodi, mutta optimointia varten tehty
-   checkedVector<double>& CPChangeValues(void); // currentin CP:n muutos arvot
+   std::vector<double>& ActiveCPChangeValues(void); // t‰m‰ on hieman vaarallinen metodi, mutta optimointia varten tehty
+   std::vector<double>& CPChangeValues(void); // currentin CP:n muutos arvot
    bool ResetTime (void) ;
    bool NextTime (void) ;
    bool ResetCP(void) ;
@@ -112,9 +112,9 @@ public:
    bool StoreCPs(void) const;
    bool WriteBackup(std::ostream& file);
    bool ReadBackup(std::istream& file);
-   void SetInTimeMovingCPRelativeLocations(const checkedVector<NFmiPoint>& theRelativeVector, int theIndex = -1);
-   const checkedVector<NFmiPoint>& GetInTimeMovingCPRelativeLocations(int theIndex = -1) const;
-   const checkedVector<NFmiPoint>& CPLocationVector(void) const {return itsCPLocationVector;}
+   void SetInTimeMovingCPRelativeLocations(const std::vector<NFmiPoint>& theRelativeVector, int theIndex = -1);
+   const std::vector<NFmiPoint>& GetInTimeMovingCPRelativeLocations(int theIndex = -1) const;
+   const std::vector<NFmiPoint>& CPLocationVector(void) const {return itsCPLocationVector;}
    const std::string& FilePath(void) const {return itsFilePath;}
    void FilePath(const std::string &newValue);
    const std::string& Name(void) const {return itsName;}
@@ -136,7 +136,7 @@ private:
 	void ClearAllChangeValues(double newValue);
 	void ClearIndexedParamChangeValues(double newValue, int paramIndex);
 	void ClearIndexedParamIndexedCPChangeValues(double newValue, int paramIndex, int CPIndex);
-    void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, checkedVector<NFmiPoint> &theAddedControlPointsInOut);
+    void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut);
     int GetActiveCpIndex() const;
     bool ActivateFirstCp();
     void ResetActivityVector();
@@ -156,29 +156,29 @@ private:
    // T‰ss‰ on kaikkien CP:en latlon pisteet.
    // HUOM!! ei viel‰ pid‰ sis‰ll‰‰n muuttuvaa paikkaa ajassa, 
    // t‰llˆin muuttuja pit‰‰ muuttaa Matrix tyyppiseksi 2D otukseksi.
-   checkedVector<NFmiPoint> itsCPLocationVector;
-   checkedVector<NFmiPoint> itsCPRelativeLocationVector;
+   std::vector<NFmiPoint> itsCPLocationVector;
+   std::vector<NFmiPoint> itsCPRelativeLocationVector;
    // Onko CP aktiivinen vai ei (muokataanko pistett‰ mitenk‰‰n vai ei)?
-   checkedVector<bool> itsCPActivityVector;
+   std::vector<bool> itsCPActivityVector;
    // Onko CP k‰ytˆss‰ (enabloitu) vai ei (otetaanko piste mukaan laskuihin mitenk‰‰n vai ei)?
-   checkedVector<bool> itsCPEnabledVector;
+   std::vector<bool> itsCPEnabledVector;
    // Muuttuuko kyseisen CP:n paikka ajassa vai onko CP paikallaan (eli 
    // kun muutat yhdess‰ ajassa CP:n paikkaa, muut ajat muuttuvat vastaavasti)?
-   checkedVector<bool> itsCPChangeInTimeVector;
+   std::vector<bool> itsCPChangeInTimeVector;
    NFmiDataMatrix<NFmiPoint> itsCPChangeInTimeRelativeLocationMatrix;
    NFmiDataMatrix<NFmiPoint> itsCPChangeInTimeLatLonLocationMatrix;
    // Kaksiulotteinen taulu Controlpointteja (n kpl CP:t‰ jokaiselle parametrille)
    // parametri-lkm on 1. Resize parametri (param-lkm = x = rivi-lkm)
    // CP-lkm on 2. Resize parametri (CP-lkm = y = column-lkm)
    NFmiDataMatrix<NFmiEditorControlPoint> itsCPMatrix;
-   checkedVector<double> itsDummyChangeValueVector; // t‰m‰ palautetaan, jos ei lˆydy aktiivista CP:t‰ ja kysyt‰‰n aktiivisen CP muutostaulua
+   std::vector<double> itsDummyChangeValueVector; // t‰m‰ palautetaan, jos ei lˆydy aktiivista CP:t‰ ja kysyt‰‰n aktiivisen CP muutostaulua
    NFmiPoint itsDummyLatlon; // t‰m‰ palautetaan kun mik‰‰n CP ei ole aktiivinen ja pyydet‰‰n latlonia
    NFmiEditorControlPoint itsDummyControlPoint;
    bool fMouseCaptured;
    const NFmiArea* itsArea; //(HUOM! ei omista) t‰m‰n avulla lasketaan latloneista suhteelliset paikat
-   checkedVector<ThreePoints> itsCPMovingInTimeHelpPoints; // CP-s‰‰tˆdialogi p‰ivitt‰‰ ja k‰ytt‰‰ n‰it‰
+   std::vector<ThreePoints> itsCPMovingInTimeHelpPoints; // CP-s‰‰tˆdialogi p‰ivitt‰‰ ja k‰ytt‰‰ n‰it‰
 
-   checkedVector<bool> itsShowCPAllwaysOnTimeView;
+   std::vector<bool> itsShowCPAllwaysOnTimeView;
 
    std::string itsFilePath; // jos t‰m‰ ei ole tyhj‰, on t‰m‰ CPManageri luettu t‰st‰ tiedostosta (polkuineen kaikkineen)
    std::string itsName; // t‰m‰ otetaan suoraan tiedoston nimest‰

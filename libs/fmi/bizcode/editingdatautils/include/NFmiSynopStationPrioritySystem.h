@@ -1,9 +1,9 @@
 #pragma once
 
 #include "NFmiSynopStationPriority.h"
-#include "NFmiDataMatrix.h" // checkedVector
+#include <vector>
 
-typedef checkedVector<NFmiSynopStationPriority> SynopStationPriorityList;
+typedef std::vector<NFmiSynopStationPriority> SynopStationPriorityList;
 
 class NFmiSynopStationPrioritySystem;
 std::ostream& operator<<(std::ostream& os, const NFmiSynopStationPrioritySystem& item);

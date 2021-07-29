@@ -248,9 +248,9 @@ static int GetSkipAdvance(double theRatio)
 	return 0;
 }
 
-static int GetFinalSkipValue2(int theCurrentValue, int theAdvanceValue, checkedVector<int> &theValues, int theMaxValue)
+static int GetFinalSkipValue2(int theCurrentValue, int theAdvanceValue, std::vector<int> &theValues, int theMaxValue)
 {
-	checkedVector<int>::iterator it = std::find(theValues.begin(), theValues.end(), theCurrentValue);
+	std::vector<int>::iterator it = std::find(theValues.begin(), theValues.end(), theCurrentValue);
 	int index = static_cast<int>(it - theValues.begin());
 	index += theAdvanceValue;
 	if(index  < static_cast<int>(theValues.size()))
@@ -260,7 +260,7 @@ static int GetFinalSkipValue2(int theCurrentValue, int theAdvanceValue, checkedV
 }
 
 // paluttaa lopullisen skippi arvon
-int NFmiAdjustedTimeScaleView::GetFinalSkipValue(int theCurrentValue, checkedVector<int> &theValues, int theMaxValue)
+int NFmiAdjustedTimeScaleView::GetFinalSkipValue(int theCurrentValue, std::vector<int> &theValues, int theMaxValue)
 {
 	double ratio = GetNormalToCurrentViewPixelRatio();
 	if(theCurrentValue < theMaxValue && ratio > 1.)
@@ -280,7 +280,7 @@ int NFmiAdjustedTimeScaleView::CalcSkipHourPrintValue(int theStepNumber) // theS
 {
 	static const int SSIZE = 4;
 	static int values[SSIZE] = {1,3,6,12};
-	static checkedVector<int> vvalues(values, values+SSIZE);
+	static std::vector<int> vvalues(values, values+SSIZE);
 	static int maxValue = 24; 
 
 	int skipHourPrintUnlessDivident = 1;
@@ -305,7 +305,7 @@ int NFmiAdjustedTimeScaleView::CalcSkipTickMarkValue(int theStepNumber) // theSt
 {
 	static const int SSIZE = 4;
 	static int values[SSIZE] = {1,3,6,12};
-	static checkedVector<int> vvalues(values, values+SSIZE);
+	static std::vector<int> vvalues(values, values+SSIZE);
 	static int maxValue = 24; 
 
 	int skipTickMarkUnlessDivident = 1; 

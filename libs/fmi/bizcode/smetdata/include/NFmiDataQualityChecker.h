@@ -134,17 +134,17 @@ public:
 	bool ViewOn(void) const {return fViewOn;}
 	void ViewOn(bool newValue) {fViewOn = newValue;}
 
-	const checkedVector<NFmiDataParamCheckingInfo>& DataParamCheckingInfos(void) const {return itsDataParamCheckingInfos;}
+	const std::vector<NFmiDataParamCheckingInfo>& DataParamCheckingInfos(void) const {return itsDataParamCheckingInfos;}
 	const NFmiDataMatrix<NFmiGridValuesCheck>& ValueCheckMatrix(void) const {return itsValueCheckMatrix;}
-	const checkedVector<NFmiGridValuesCheck>& CombinedParamChecks(void) const {return itsCombinedParamChecks;}
+	const std::vector<NFmiGridValuesCheck>& CombinedParamChecks(void) const {return itsCombinedParamChecks;}
 
 private:
 	void InitCheckMatrix(NFmiFastQueryInfo &theInfo);
 	void CalcCombinedParamChecks(void);
 
-	checkedVector<NFmiDataParamCheckingInfo> itsDataParamCheckingInfos;
+	std::vector<NFmiDataParamCheckingInfo> itsDataParamCheckingInfos;
 	NFmiDataMatrix<NFmiGridValuesCheck> itsValueCheckMatrix; // data on t‰‰ll‰ param, time j‰rjestyksess‰ x-indeksi siis parametri ja y-indeksi on aika
-	checkedVector<NFmiGridValuesCheck> itsCombinedParamChecks; // t‰ss‰ on koosteet jokaisesta parametrista (yli kaikkien aikojen)
+	std::vector<NFmiGridValuesCheck> itsCombinedParamChecks; // t‰ss‰ on koosteet jokaisesta parametrista (yli kaikkien aikojen)
 	std::auto_ptr<NFmiQueryData> itsDataPtr; // data v‰litet‰‰n t‰nne ja s‰ilytet‰‰n auto_ptr:ssa, siksi ett‰ olisi varmaa ett‰ 
 											// t‰m‰ luokka omistaa annetun datan, eik‰ tule ongelmia eri threadien v‰lill‰.
 	bool fUse; // onko checker k‰ytˆss‰ vai ei

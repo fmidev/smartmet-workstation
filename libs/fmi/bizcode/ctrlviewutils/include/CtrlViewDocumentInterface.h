@@ -160,7 +160,7 @@ public:
     virtual NFmiTrajectorySystem* TrajectorySystem(void) = 0;
     virtual const NFmiColor& GeneralColor(int theIndex) = 0;
     virtual const NFmiMetTime& ActiveMapTime(void) = 0;
-    virtual void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) = 0;
+    virtual void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) = 0;
     virtual NFmiMetTime GetModelOrigTime(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0) = 0;
     virtual void UpdateCrossSectionMacroParamDataSize(void) = 0;
     virtual NFmiMTATempSystem& GetMTATempSystem(void) = 0;
@@ -213,7 +213,7 @@ public:
     virtual NFmiHelpEditorSystem& HelpEditorSystem(void) = 0;
     virtual NFmiMetEditorOptionsData& MetEditorOptionsData(void) = 0;
     virtual boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) = 0;
+    virtual boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) = 0;
     virtual bool IsMasksUsedInTimeSerialViews(void) = 0;
     virtual NFmiAnalyzeToolData& AnalyzeToolData(void) = 0;
     virtual const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const = 0;
@@ -223,7 +223,7 @@ public:
     virtual void TimeSerialViewDirty(bool newValue) = 0;
     virtual bool CreateTimeSerialDialogPopup(int index) = 0;
     virtual bool CreateTimeSerialDialogOnViewPopup(int index) = 0;
-    virtual bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
+    virtual bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
     virtual void UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust(void) = 0;
     virtual bool UseQ2Server(void) = 0;
@@ -260,7 +260,7 @@ public:
         , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual NFmiEditMapDataListHandler* DataLists(void) = 0;
     virtual bool ShowObsComparisonOnMap(int theDescTopIndex) = 0;
-    virtual checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
+    virtual std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
     virtual int AbsoluteActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) = 0;
     virtual NFmiSynopPlotSettings* SynopPlotSettings(void) = 0;

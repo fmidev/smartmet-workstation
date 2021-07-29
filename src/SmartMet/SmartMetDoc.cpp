@@ -3688,7 +3688,7 @@ static std::string CalculationPointInfo(NFmiMapViewDescTop *mapViewDecsTop, NFmi
                     if(zoomedArea)
                     {
                         std::string str;
-                        checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+                        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
                         generalDataDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(infoVector, activeDrawParam, zoomedArea);
                         for(auto &info : infoVector)
                         {
@@ -3736,7 +3736,7 @@ static std::string ActiveRowDataFilePaths(NFmiMapViewDescTop *mapViewDecsTop, NF
                     auto zoomedArea = mapViewDecsTop->MapHandler()->Area();
                     if(zoomedArea)
                     {
-                        checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+                        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
                         generalDataDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(infoVector, drawParam, zoomedArea);
                         for(auto &info : infoVector)
                         {

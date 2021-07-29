@@ -159,11 +159,10 @@ static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 
 void NFmiTrajectorySystem::MakeSureThatTrajectoriesAreCalculated(void)
 {
-	checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = itsTrajectories.begin();
-	for( ; it != itsTrajectories.end(); ++it)
+	for(auto &trajectory : itsTrajectories)
 	{
-		if((*(*it)).Calculated() == false) // lasketaan trajektorit vain jos niitä ei ole jo laskettu
-			CalculateTrajectory(*it);
+		if(trajectory->Calculated() == false) // lasketaan trajektorit vain jos niitä ei ole jo laskettu
+			CalculateTrajectory(trajectory);
 	}
 }
 
@@ -882,7 +881,7 @@ std::string NFmiTrajectorySystem::MakeCurrentTrajectorySaveFileName(void)
 	return finalFileName;
 }
 
-static bool KeepLevelSettingsForTrajektories(checkedVector<boost::shared_ptr<NFmiTrajectory> > &theTrajectoryList)
+static bool KeepLevelSettingsForTrajektories(std::vector<boost::shared_ptr<NFmiTrajectory> > &theTrajectoryList)
 {
 	size_t trajectoryCount = theTrajectoryList.size();
 	if(trajectoryCount > 1)
@@ -890,12 +889,11 @@ static bool KeepLevelSettingsForTrajektories(checkedVector<boost::shared_ptr<NFm
 		std::set<unsigned long> producers;
 		std::set<double> levels;
 		std::set<int> dataTypes;
-		checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = theTrajectoryList.begin();
-		for( ; it != theTrajectoryList.end(); ++it)
+		for(auto &trajectory : theTrajectoryList)
 		{
-			producers.insert((*it)->Producer().GetIdent());
-			levels.insert((*it)->PressureLevel());
-			dataTypes.insert((*it)->DataType());
+			producers.insert(trajectory->Producer().GetIdent());
+			levels.insert(trajectory->PressureLevel());
+			dataTypes.insert(trajectory->DataType());
 		}
 		if(trajectoryCount > producers.size() && levels.size() > 1)
 			return true;
@@ -905,14 +903,13 @@ static bool KeepLevelSettingsForTrajektories(checkedVector<boost::shared_ptr<NFm
 
 // Jos jokaisella trajektorilla on sama tuottaja ja datatyyppi, palauttaa true. 
 // Tietoa tarvitaan, jos on 1-n kpl trajektoreita, ja joku vaihtaa tuottajaa ja painaa "Aseta kaikille" -nappia.
-static bool OnlyOneProducerAndDataType(checkedVector<boost::shared_ptr<NFmiTrajectory> > &theTrajectoryList)
+static bool OnlyOneProducerAndDataType(std::vector<boost::shared_ptr<NFmiTrajectory> > &theTrajectoryList)
 {
 	size_t trajectoryCount = theTrajectoryList.size();
 	if(trajectoryCount > 1)
 	{
         long producerId = theTrajectoryList[0]->Producer().GetIdent();
         int dataType = theTrajectoryList[0]->DataType();;
-		checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = theTrajectoryList.begin();
 		for(size_t i = 1; i < theTrajectoryList.size(); i++)
 		{
             if(producerId != theTrajectoryList[i]->Producer().GetIdent())
@@ -929,15 +926,12 @@ static bool OnlyOneProducerAndDataType(checkedVector<boost::shared_ptr<NFmiTraje
 void NFmiTrajectorySystem::SetSelectedValuesToAllTrajectories(void)
 {
 	fTrajectoryViewTimeBagDirty = true;
-	// miten saisi tälläisen mem_fun virityksen toimimaan for_each:ille?!?!?!?
-//	std::for_each(itsTrajectories.begin(), itsTrajectories.end(), std::mem_fun(&NFmiTrajectorySystem::SetSelectedValuesToTrajectory));
 	bool keepLevelSettings = KeepLevelSettingsForTrajektories(itsTrajectories);
     bool canChangeProducerOrDataType = ::OnlyOneProducerAndDataType(itsTrajectories);
-	checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = itsTrajectories.begin();
-	for( ; it != itsTrajectories.end(); ++it)
+	for(auto &trajectory : itsTrajectories)
 	{
-		SetSelectedValuesToTrajectory(*it, canChangeProducerOrDataType, keepLevelSettings);
-		CalculateTrajectory(*it);
+		SetSelectedValuesToTrajectory(trajectory, canChangeProducerOrDataType, keepLevelSettings);
+		CalculateTrajectory(trajectory);
 	}
 }
 
@@ -946,7 +940,7 @@ void NFmiTrajectorySystem::SetSelectedValuesToLastTrajectory(void)
 	fTrajectoryViewTimeBagDirty = true;
 	if(itsTrajectories.empty())
 		return ;
-	checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = itsTrajectories.end();
+	auto it = itsTrajectories.end();
 	--it;
 	if(it != itsTrajectories.end())
 	{
@@ -958,9 +952,8 @@ void NFmiTrajectorySystem::SetSelectedValuesToLastTrajectory(void)
 void NFmiTrajectorySystem::ReCalculateTrajectories(void)
 {
 	fTrajectoryViewTimeBagDirty = true;
-	checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = itsTrajectories.begin();
-	for( ; it != itsTrajectories.end(); ++it)
-		CalculateTrajectory(*it);
+	for(auto& trajectory : itsTrajectories)
+		CalculateTrajectory(trajectory);
 }
 
 void NFmiTrajectorySystem::SetSelectedValuesToTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, bool fInitialize, bool fKeepLevelSettings)
@@ -1030,13 +1023,12 @@ void NFmiTrajectorySystem::CalculateTrajectoryViewTimeBag(void)
 	NFmiMetTime lastTime(gMissingTime);
 	NFmiMetTime fTime(gMissingTime);
 	NFmiMetTime lTime(gMissingTime);
-	checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = itsTrajectories.begin();
-	for( ; it != itsTrajectories.end(); ++it)
+	for(auto& trajectory : itsTrajectories)
 	{
-		fTime = (*it)->CalcPossibleFirstTime();
+		fTime = trajectory->CalcPossibleFirstTime();
 		if(::LessThan(fTime, firstTime))
 			firstTime = fTime;
-		lTime = (*it)->CalcPossibleLastTime();
+		lTime = trajectory->CalcPossibleLastTime();
 		if(::GreaterThan(lTime, lastTime))
 			lastTime = lTime;
 	}
@@ -1125,9 +1117,9 @@ void NFmiTrajectorySystem::Read(std::istream& is)
 		throw std::runtime_error("NFmiTrajectorySystem::Read failed");
 
 	itsTrajectories.clear();
-	checkedVector<boost::shared_ptr<NFmiTrajectory> >::size_type ssize = 0;
+	size_t ssize = 0;
 	is >> ssize;
-	for(checkedVector<boost::shared_ptr<NFmiTrajectory> >::size_type i=0; i< ssize; i++)
+	for(size_t i=0; i< ssize; i++)
 	{
 		boost::shared_ptr<NFmiTrajectory> tmp(boost::shared_ptr<NFmiTrajectory>(new NFmiTrajectory()));
 		is >> tmp;
@@ -1212,7 +1204,7 @@ bool NFmiTrajectorySystem::SaveXML(const std::string &theFileName)
 
 	if(itsTrajectories.size() > 0)
 	{
-		checkedVector<boost::shared_ptr<NFmiTrajectory> >& trajectories = this->itsTrajectories;
+		const auto& trajectories = this->itsTrajectories;
 		std::string xmlStr;
 																	// 1. Kirjoitetaan hederi XML-tiedostoon
 		xmlStr += "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?>\n";  
@@ -1234,11 +1226,9 @@ bool NFmiTrajectorySystem::SaveXML(const std::string &theFileName)
 		xmlStr += "<data>\n";		//Tulostetaan trajektoridatapisteet trajektori kerrallaan
 		xmlStr += "<trajectories>\n";
 
-		checkedVector<boost::shared_ptr<NFmiTrajectory> >::iterator it = trajectories.begin(); 
-		
-		for( ; it != trajectories.end() ; ++it)
+		for(const auto &trajectory : trajectories)
 		{
-			xmlStr += (*it).get()->ToXMLStr();
+			xmlStr += trajectory->ToXMLStr();
 		}
 
 																// 4. Kirjoitetaan loppurimpsut XML-tiedostoon
