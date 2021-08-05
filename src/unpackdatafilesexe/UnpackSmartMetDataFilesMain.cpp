@@ -178,6 +178,69 @@ int main(int argc, const char* argv[])
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiValueString.h"
+#include "NFmiMilliSecondTimer.h"
+
+#include <fstream>
+
+template<typename T>
+std::function<T> make_function(T* t) {
+    return { t };
+}
+
+static float conversionFast(float value, int)
+{
+    return value;
+}
+
+static float conversionSlow(float value, int)
+{
+    NFmiValueString valueStr(value, "%f.1");
+    return valueStr;
+}
+
+static void FillData(NFmiFastQueryInfo& fastInfo1, NFmiFastQueryInfo& fastInfo2, int precision, const std::string &name, std::function<float(float, int)> &conversionFunction)
+{
+    std::cout << name << " starts..." << std::endl;
+    NFmiNanoSecondTimer timer;
+    for(fastInfo1.ResetParam(), fastInfo2.ResetParam(); fastInfo1.NextParam(), fastInfo2.NextParam(); )
+    {
+        std::cout << "#Par";
+        for(fastInfo1.ResetLocation(), fastInfo2.ResetLocation(); fastInfo1.NextLocation(), fastInfo2.NextLocation(); )
+        {
+//            std::cout << "L";
+            auto latlonNew = fastInfo1.LatLon();
+            latlonNew.X(latlonNew.X() + 0.1);
+            for(fastInfo1.ResetLevel(), fastInfo2.ResetLevel(); fastInfo1.NextLevel(), fastInfo2.NextLevel(); )
+            {
+                for(fastInfo1.ResetTime(), fastInfo2.ResetTime(); fastInfo1.NextTime(), fastInfo2.NextTime(); )
+                {
+                    auto valueOrig = fastInfo1.InterpolatedValue(latlonNew);
+                    auto valueNew = conversionFunction(valueOrig, precision);
+                    fastInfo2.FloatValue(valueNew);
+                }
+            }
+        }
+    }
+    std::cout << std::endl << name << " took " << timer.elapsedTimeInSecondsString() << std::endl;
+}
+
+int main(int argc, const char* argv[])
+{
+    std::string dataFileName = "D:\\SmartMet\\wrk\\data\\local\\202106090853_hirlam_skandinavia_mallipinta.sqd";
+    NFmiQueryData data1(dataFileName);
+    NFmiFastQueryInfo fastInfo1(&data1);
+    std::unique_ptr<NFmiQueryData> data2(data1.Clone());
+    NFmiFastQueryInfo fastInfo2(data2.get());
+    ::FillData(fastInfo1, fastInfo2, 1, "fast", ::make_function(conversionFast));
+    ::FillData(fastInfo1, fastInfo2, 1, "slow", ::make_function(conversionSlow));
+    ::FillData(fastInfo1, fastInfo2, 1, "fast", ::make_function(conversionFast));
+
+    return 0;
+}
+
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiValueString.h"
 #include <fstream>
 
 int main(int argc, const char* argv[])
