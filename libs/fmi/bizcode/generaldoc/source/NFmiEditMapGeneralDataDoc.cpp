@@ -6653,7 +6653,7 @@ bool InitCPManagerSet(void)
 				// koska kartan pikseli koko ei ole muuttunut. Tämä on todellinen ongelma, koska usein näyttöjen koot
 				// jäävät edellisesta saman näyttömakron latauksesta. Jos tätä päivitystä ei tehdä, vaikuttaa se
 				// joidenkin piirtoobjektien koon laskuihin (mm. värilegendat ja erilaiset symbolit).
-				GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes();
+				GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes(ApplicationWinRegistry().DrawObjectScaleFactor());
 
                 // lokitetaan, mikä makro on ladattu käyttöön...
                 string logStr("Applying the view-macro: ");
@@ -8046,7 +8046,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		MacroParamDataCache().clearAllLayers();
 		WindTableSystem().MustaUpdateTable(true);
 		GetCombinedMapHandler()->setBorderDrawDirtyState(CtrlViewUtils::kDoAllMapViewDescTopIndex, CountryBorderDrawDirtyState::Geometry);
-		GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes();
+		GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes(ApplicationWinRegistry().DrawObjectScaleFactor());
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
 	}
 

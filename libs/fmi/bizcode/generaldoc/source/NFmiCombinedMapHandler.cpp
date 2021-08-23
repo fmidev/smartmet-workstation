@@ -3522,11 +3522,18 @@ void NFmiCombinedMapHandler::selectCombinedMapModeIndices(unsigned int mapViewDe
 	setWantedLayerIndex(combinedOverlayMapModeState, mapViewDescTopIndex, mapAreaIndex, false);
 }
 
-void NFmiCombinedMapHandler::updateAllMapViewsSingleMapSizes()
+void NFmiCombinedMapHandler::updateAllMapViewsSingleMapSizes(double drawObjectScaleFactor)
 {
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 	{
-		mapViewDescTops_[mapViewDescTopIndex]->UpdateOneMapViewSize();
+		auto &mapViewDesctop = mapViewDescTops_[mapViewDescTopIndex];
+		if(mapViewDesctop)
+		{
+			// Päivitetään väkisin tämä pixelSize juttu ja siihen liittyvät laskut
+			auto currentPixelSize = mapViewDesctop->MapViewSizeInPixels();
+			mapViewDesctop->MapViewSizeInPixels(currentPixelSize, nullptr, drawObjectScaleFactor, !mapViewDesctop->IsTimeControlViewVisible());
+			mapViewDesctop->UpdateOneMapViewSize();
+		}
 	}
 }
 
