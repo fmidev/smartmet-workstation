@@ -13,11 +13,11 @@ class NFmiZoomView : public NFmiCtrlView
 {
 
 public:
-   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey);
-   void Draw (NFmiToolBox * theGTB);
+   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey) override;
+   void Draw (NFmiToolBox * theGTB) override;
     NFmiZoomView (int theMapViewDescTopIndex, NFmiToolBox * theToolBox
 				 ,NFmiDrawingEnvironment * theDrawingEnvi
 				 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
@@ -25,9 +25,9 @@ public:
 				  ,NFmiDrawingEnvironment* theDrawingEnvi
 				  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 				  ,const NFmiRect& theRect);
-   virtual  ~NFmiZoomView ();
+   ~NFmiZoomView ();
    boost::shared_ptr<NFmiArea> ZoomedArea (void);
-   void Update(void);
+   void Update(void) override;
 
 
 protected:

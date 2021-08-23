@@ -76,16 +76,16 @@ class NFmiTimeSerialView : public NFmiTimeView
 					   ,NFmiDrawingEnvironment * theDrawingEnvi
 					   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 					   ,int theRowIndex);
-	virtual  ~NFmiTimeSerialView (void);
-	void Draw (NFmiToolBox * theToolBox);
+	~NFmiTimeSerialView (void);
+	void Draw (NFmiToolBox * theToolBox) override;
 	virtual void ChangeTimeSeriesValues(void);
 	void MaxStationShowed (unsigned int newCount);
-	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey);
-	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
+	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
 	virtual void DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines);
 	virtual void CreateValueScale (void);
 	virtual void DrawValueAxis (void);
@@ -94,7 +94,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	virtual void EvaluateChangedValue(double& theValue);
 	virtual void ResetModifyFactorValues (void);
 	bool IsActivated(void) const; // onko tämä aikasarja aktiivinen näyttö
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 	virtual bool AutoAdjustValueScale(void);
     bool EditingMouseMotionsAllowed(void) const {return fEditingMouseMotionsAllowed;}
     void EditingMouseMotionsAllowed(bool newValue) {fEditingMouseMotionsAllowed = newValue;}

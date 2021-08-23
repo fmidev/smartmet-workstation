@@ -61,26 +61,26 @@ class NFmiEditMapView : public NFmiCtrlView
 {
 
 public:
-   void Update(void);
-   bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MiddleButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey);
-   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
-   bool LeftDoubleClick(const NFmiPoint &, unsigned long); // Marko lisäsi 14.12.2001
-   bool RightDoubleClick(const NFmiPoint &, unsigned long);
-   void Draw(NFmiToolBox * theGTB);
+   void Update(void) override;
+   bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MiddleButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey) override;
+   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+   bool LeftDoubleClick(const NFmiPoint &, unsigned long) override; // Marko lisäsi 14.12.2001
+   bool RightDoubleClick(const NFmiPoint &, unsigned long) override;
+   void Draw(NFmiToolBox * theGTB) override;
    void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4); // tällä piirretään tavara, joka tulee myös bitmapin päälle
    NFmiEditMapView(int theMapViewDescTopIndex
 				   ,NFmiToolBox * theToolBox
 				   ,NFmiDrawingEnvironment * theDrawingEnvi
 				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
-   virtual  ~NFmiEditMapView ();
+   ~NFmiEditMapView ();
    const NFmiRect& MapRect(void){return itsMapRect;};
-   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
    void DrawSynopPlotOnToolTip(NFmiToolBox * theToolBox, const NFmiRect &theRect, bool fDrawSoundingPlot, bool fDrawMinMaxPlot, bool fDrawMetarPlot);
    NFmiStationViewHandler* GetMapViewHandler(int theRowIndex, int theIndex);
 

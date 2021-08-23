@@ -22,13 +22,13 @@ class NFmiModelProducerIndexView : public NFmiModelCombineStatusView
 {
 
 public:
-	virtual void Draw(NFmiToolBox * theGTB);
+	void Draw(NFmiToolBox * theGTB) override;
 	NFmiModelProducerIndexView(NFmiToolBox * theToolBox
 							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
-	virtual  ~NFmiModelProducerIndexView();
-	virtual void Update(void);
+	~NFmiModelProducerIndexView();
+	virtual void Update(void) override;
 	void SetDataFromDialog( std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
 							,const NFmiTimeBag& theLoadedDataTimeBag
 							,const NFmiTimeBag& theNonModifieableDataTimeBag
@@ -42,16 +42,16 @@ public:
 	bool IsProducerIndexInTimeVectorFilled(void);
 	void SetExtraShortRangeData(bool useExtraData, const NFmiTimeBag& theExtraShortRangeTimeBag, NFmiTimeBag& theLoadedDataTimeBag); // joutuu antamaan myös loadedtimebagin (huonon suunnittelun takia!!)
 
-	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey);
-	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey) override;
 
 protected:
-	virtual NFmiRect CalcStatusGridViewSize(void);
-	virtual NFmiColor CheckStatusBoxColor(int theTimeIndex);
-	virtual bool IsViewDrawed(void);
-	virtual NFmiTimeBag GetUsedTimeBag(void);
+	NFmiRect CalcStatusGridViewSize(void) override;
+	NFmiColor CheckStatusBoxColor(int theTimeIndex) override;
+	bool IsViewDrawed(void) override;
+	NFmiTimeBag GetUsedTimeBag(void) override;
 
 private:
 	void DrawBackground(void);

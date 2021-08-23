@@ -32,13 +32,13 @@ class NFmiViewParamCommandView : public NFmiParamCommandView
 
  public:
 	NFmiViewParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex);
-	bool RightButtonUp(const NFmiPoint &thePlace, unsigned long); 
-	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey); // Marko lis‰si 14.12.2001
+	bool RightButtonUp(const NFmiPoint &thePlace, unsigned long) override;
+	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override; // Marko lis‰si 14.12.2001
 	NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pit‰‰ voida kysy‰ oliolta
-	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
+	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
 
  protected:
-	void DrawData(void);
+	void DrawData(void) override;
 
 };
 

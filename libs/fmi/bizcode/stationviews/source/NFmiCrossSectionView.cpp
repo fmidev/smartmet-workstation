@@ -409,15 +409,6 @@ void NFmiCrossSectionView::DrawLegends()
     }
 }
 
-// Tämä pitää viritttää poikkileikkaus näytössä näin, koska parametrin piilotus/näyttö optio menee muuten hukkaan.
-// Miten karttanäytön macroParamit hoidetaan?
-void NFmiCrossSectionView::SetupUsedDrawParam(void)
-{
-	bool hide = itsDrawParam->IsParamHidden();
-	NFmiStationView::SetupUsedDrawParam();
-	itsDrawParam->HideParam(hide);
-}
-
 void NFmiCrossSectionView::PreCalculateTrajectoryLatlonPoints(void)
 {
 	itsTrajectoryLatlonPoints.clear();

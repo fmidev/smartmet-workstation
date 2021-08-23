@@ -10,18 +10,18 @@ class NFmiTimeFilterView : public NFmiZoomView
 {
 
 public:
-   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey);
-   void Draw(NFmiToolBox * theGTB);
+   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey) override;
+   void Draw(NFmiToolBox * theGTB) override;
    NFmiTimeFilterView(NFmiToolBox * theToolBox
 					 ,NFmiDrawingEnvironment * theDrawingEnvi
 					 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 					 ,const NFmiRect& theRect
 					 ,int theIndex);
-   virtual  ~NFmiTimeFilterView();
-   void Update(void);
+   ~NFmiTimeFilterView();
+   void Update(void) override;
 
 private:
    void DrawTimeTexts(void);

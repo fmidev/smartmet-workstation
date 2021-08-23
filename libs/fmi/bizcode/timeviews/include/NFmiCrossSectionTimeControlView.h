@@ -31,7 +31,7 @@ public:
 						,double theAxisShrinkFactor);
 	virtual  ~NFmiCrossSectionTimeControlView(void);
 
-	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void);
 
 protected:

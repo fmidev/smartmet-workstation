@@ -101,9 +101,9 @@ public:
 							,FmiParameterName theParamId
 							,int theRowIndex
                             ,int theColumnIndex);
-    virtual ~NFmiConceptualDataView(void);
-	void Draw (NFmiToolBox * theGTB);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+    ~NFmiConceptualDataView(void);
+	void Draw (NFmiToolBox * theGTB) override;
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
     // HUOM! t‰t‰ pit‰‰ kutsua ennen kuin itse luokkaa saa k‰ytt‰‰!!!!
     static void InitMirwaSymbolMap(const std::string &theWomlDirectory);

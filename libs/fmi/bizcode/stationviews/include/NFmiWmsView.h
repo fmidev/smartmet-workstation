@@ -26,9 +26,9 @@ public:
 							,FmiParameterName theParamId
 							,int theRowIndex
                             ,int theColumnIndex);
-    virtual ~NFmiWmsView(void) = default;
-	void Draw (NFmiToolBox * theGTB);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+    ~NFmiWmsView(void) = default;
+	void Draw (NFmiToolBox * theGTB) override;
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
 protected:
     int itsRowIndex; // monennessako rivissä näyttöruudukossa tämä näyttö sijaitsee

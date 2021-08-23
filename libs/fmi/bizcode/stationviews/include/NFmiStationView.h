@@ -13,6 +13,7 @@
 #include "NFmiLocation.h"
 #include "NFmiDataIdent.h"
 #include "NFmiFastInfoUtils.h"
+#include "NFmiSymbolBulkDrawData.h"
 #include <unordered_map>
 
 //_________________________________________________________ NFmiStationView
@@ -26,6 +27,11 @@ class NFmiHelpDataInfo;
 class NFmiGriddingProperties;
 class NFmiExtraMacroParamData;
 class NFmiIsoLineData;
+
+namespace CtrlViewUtils
+{
+	struct GraphicalInfo;
+}
 
 class CRect;
 class CDC;
@@ -60,11 +66,11 @@ public:
 				   ,NFmiPoint theSize
                    ,int viewGridRowNumber
                    ,int viewGridColumnNumber);
-   virtual  ~NFmiStationView (void);
-   void Draw (NFmiToolBox * theGTB);
+   ~NFmiStationView (void);
+   void Draw (NFmiToolBox * theGTB) override;
    bool DrawAllSelectedStationsWithInvertStationRect(unsigned long theMaskType);
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
    bool IsActiveParam(void);
    bool IsEditedDataParamView(void);
    void DrawControlPointData(void);
@@ -73,9 +79,9 @@ public:
 									 ,unsigned long theMask
 									 ,bool fMakeMTAModeAdd
 									 ,bool fDoOnlyMTAModeAdd = false);
-   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
-   NFmiPoint LatLonToViewPoint(const NFmiPoint& theLatLon);
-   NFmiPoint ViewPointToLatLon(const NFmiPoint& theViewPoint);
+   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
+   NFmiPoint LatLonToViewPoint(const NFmiPoint& theLatLon) const override;
+   NFmiPoint ViewPointToLatLon(const NFmiPoint& theViewPoint) const override;
    NFmiDataMatrix<float>& SpecialMatrixData(void) {return itsSpecialMatrixData;}
    void SpecialMatrixData(const NFmiDataMatrix<float> &theMatrix) {itsSpecialMatrixData = theMatrix;}
    // tämä on asemadatan griddaus funktio, jota voidaan käyttää nyt staattisena funktiona
@@ -92,41 +98,78 @@ protected:
    bool IsQ2ServerUsed(void);
    bool IsThisTimeExtrapolated(const NFmiMetTime &theMapTime, NFmiFastQueryInfo & theObsInfo);
    void DrawObsComparison(void);
-   virtual std::string GetCompareObservationToolTipString(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-   virtual void SetupUsedDrawParam(void);
-   virtual bool PrepareForStationDraw(void);
    bool SelectControlPointLocation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
 										 ,int theSelectionCombineFunction
 										 ,unsigned long theMask);
    NFmiRect CalcInvertStationRectSize(double theMinXSize, double theMinYSize, double theMaxXSize, double theMaxYSize, double sizeFactor);
-   virtual void ModifyTextEnvironment(void);
-   virtual NFmiPoint CalcFontSize(int theMinSize, int theMaxSize, bool fPrinting);
-   const NFmiRect & GeneralStationRect (void);
+   const NFmiRect & GeneralStationRect () const;
    void DrawAllAccessoryStationData(void);
    void CalculateGeneralStationRect(void);
-   virtual void DrawData (void);
-   virtual void	DrawText2(void);
-   virtual NFmiString GetPrintedText(float theValue);
-   virtual void ModifyTextColor(float theValue);
    NFmiRect CurrentStationRect (double theSizeFactor);
-   NFmiRect CurrentStationRect (void);
-   virtual NFmiRect CurrentDataRect (void);
+   NFmiRect CurrentStationRect () const;
    float ToolTipValue(const NFmiPoint& theRelativePoint, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-   virtual float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-   virtual std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType);
    void DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    bool CanToolmasterBeUsed(void);
    void DrawMouseSelectionMarker(const NFmiPoint &theLatlon, bool fDrawBiggerMarker, CRect &theBiggerBaseMfcRect, CRect &theSmallerBaseMfcRect, CDC *theUsedDC);
-   double MaximumFontSizeFactor(); // tämä avulla skaalataan maksimi fontti kokoa
-   NFmiRect CalcSymbolRelativeRect(const NFmiPoint &theLatlon, double theSymbolSizeInMM);
+   // tämä avulla skaalataan maksimi fontti kokoa
+   double MaximumFontSizeFactor() const;
+   NFmiRect CalcSymbolRelativeRect(const NFmiPoint &theLatlon, double theSymbolSizeInMM) const;
    void AddLatestObsInfoToString(std::string &tooltipString);
+   std::string GetCompareObservationToolTipString(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   NFmiPoint CalcFontSize(int theMinSize, int theMaxSize, bool fPrinting) const;
 
-// ********** NÄMÄ ovat osa koordinaatiokartta lasku virityksiä **************
+   void SetupUsedDrawParam(void);
+   virtual bool PrepareForStationDraw(void);
+   virtual void ModifyTextEnvironment(void);
+   virtual NFmiString GetPrintedText(float theValue);
+   NFmiRect CurrentDataRect () const;
+   virtual float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   virtual std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType);
    virtual float ViewFloatValue(void); // tämä hakee näytettävän datan riippuen asetuksista
    virtual void SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo); // tarvittavat jutut optimointia varten
-   boost::shared_ptr<NFmiFastQueryInfo> itsOriginalDataInfo; // ei omista, optimointia erotus piirtoon
-// ********** NÄMÄ ovat osa koordinaatiokartta lasku virityksiä **************
+   bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2);
+   virtual int GetApproxmationOfDataTextLength(std::vector<float> *sampleValues = nullptr);
+   virtual NFmiPoint GetSpaceOutFontFactor(void);
+   virtual NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const;
+   NFmiPoint CalcUsedSpaceOutFactors();
+   CtrlViewUtils::GraphicalInfo& GetGraphicalInfo() const;
 
+   // Tähän tehdään kaikki metodit jotka liittyvät uuteen Symbol-Bulk-Draw toimintoon.
+   // Metodien eteen laitetaan ainakin aluksi Sbd -etuliite, jotta tiedetään että ne liittyvät siihen.
+   // Toivottavasti myöhemmin voidaan siivota yleisesti piirtokoodeja kun S-B-D on jo täysin käytössä.
+   // ******** Symbol-Bulk-Draw toimintojen alku *********
+   void SbdCollectSymbolDrawData(bool doStationPlotOnly);
+   void SbdCollectNormalSymbolDrawData(bool doStationPlotOnly);
+   void SbdCollectSpaceOutSymbolDrawData(bool doStationPlotOnly);
+   void SbdCollectSparseSymbolDrawData(bool doStationPlotOnly);
+
+   void SbdGetStationDrawSettings();
+   NFmiRect SbdCalcBaseStationRelativeRect();
+   NFmiRect SbdCalcEnlargedDrawArea();
+   bool SbdIsInsideEnlargedDrawArea() const;
+   void SbdCollectStationData(bool doStationPlotOnly);
+   virtual NFmiPoint SbdCalcDrawObjectOffset() const;
+   void SbdSetPossibleFixedSymbolColor();
+   virtual bool SbdIsFixedSymbolSize() const;
+   virtual NFmiPoint SbdCalcFixedSymbolSize() const;
+   virtual NFmiPoint SbdCalcFixedRelativeDrawObjectSize() const;
+   virtual int SbdCalcFixedPenSize() const;
+   virtual NFmiPoint SbdCalcChangingSymbolSize(float value) const;
+   void SbdSetPossibleFixedSymbolSize();
+   NFmiPoint SbdBasicSymbolSizeCalculation(int minSize, int maxSize) const;
+   void SbdSetDrawType();
+   virtual NFmiSymbolBulkDrawType SbdGetDrawType() const;
+   virtual NFmiColor SbdGetChangingColor(float value) const;
+   virtual NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const;
+   bool SbdIsChangingSymbolColorsUsed() const;
+   virtual void SbdSetFontName();
+   void SbdDoFixedSymbolDrawSettings();
+   void SbdDoSymbolDraw(bool doStationPlotOnly);
+   void SbdDoImageBasedSymbolDraw();
+
+   // ******** Symbol-Bulk-Draw toimintojen loppu *********
+
+   boost::shared_ptr<NFmiFastQueryInfo> itsOriginalDataInfo; // ei omista, optimointia erotus piirtoon
    NFmiPoint itsObjectOffSet;
    NFmiPoint itsObjectSize;
    bool fDrawText;
@@ -140,36 +183,27 @@ protected:
    void MakeDrawedInfoVector(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    void CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut);
    float CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData);
-   virtual bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2);
    void GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
    void GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
-   NFmiColor GetColoredNumberColor(float theValue);
+   NFmiColor GetColoredNumberColor(float theValue) const;
    void DrawInvertStationRect(NFmiRect &theRect);
-   void DrawStationRect(void);
    void DrawStation(NFmiDrawingEnvironment &theStationPointEnvi);
    void SetStationPointDrawingEnvi(NFmiDrawingEnvironment &envi);
-   virtual void DrawSymbols(void);
    NFmiPoint CalcUsedSpaceOutFactors(int theSpaceOutFactor);
    NFmiPoint CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpaceOutFactor, const NFmiDataMatrix<float> &probingValues);
    bool IsGridDataDrawnWithSpaceOutSymbols();
-   virtual int GetApproxmationOfDataTextLength(std::vector<float> *sampleValues = nullptr);
    int CalcApproxmationOfDataTextLength(const std::vector<float> &sampleValues);
    std::vector<float> GetSampleDataForDataTextLengthApproxmation();
-   virtual NFmiPoint GetSpaceOutFontFactor(void);
-   NFmiPoint CurrentStationPosition (void);
-   const NFmiPoint CurrentLatLon(void);
-   const NFmiPoint CurrentLatLon(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   NFmiPoint CurrentStationPosition () const;
+   const NFmiPoint CurrentLatLon() const;
+   const NFmiPoint CurrentLatLon(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const;
    bool IsStationDataMacroParam(void);
-   NFmiColor GetSymbolColor(float theValue);
-   virtual NFmiColor GetBasicParamRelatedSymbolColor(float theValue);
+   NFmiColor GetSymbolColor(float theValue) const;
    std::string GetLocationTooltipString();
    bool IsAccessoryStationDataDrawn();
    boost::shared_ptr<NFmiFastQueryInfo> CreatePossibleSpaceOutMacroParamData();
    bool IsParamDrawn();
    bool IsSpaceOutDrawingUsed();
-   void DoSpaceOutSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
-   void DoNormalSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
-   void DoSparseDataSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi);
    NFmiHelpDataInfo* GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2);
    float CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
@@ -258,5 +292,9 @@ protected:
    long itsTimeInterpolationRangeInMinutes;
    bool fAllowNearestTimeInterpolation;
    NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
+   NFmiSymbolBulkDrawData itsSymbolBulkDrawData;
+   // Symbolipiirtoa halutaan vähän venyttää zoomatun karttaalueen ulkopuolelle, 
+   // jolloin voidaan piirtää näkyviin edes osia kartta-alueen ulkopuolelle jäävistä pisteistä7asemista.
+   NFmiRect itsEnlargedDrawArea;
 };
 

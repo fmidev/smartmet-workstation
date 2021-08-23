@@ -45,6 +45,12 @@
 #include "NFmiPolyLine.h"
 #include "NFmiValueLine.h"
 #include "UnicodeStringConversions.h"
+#include "NFmiSymbolBulkDrawData.h"
+#include "NFmiWindBarb.h"
+#include "NFmiSimpleWeatherSymbol.h"
+#include "catlog/LoggingProfilerHelper.h"
+#include <set>
+#include <map>
 
 /* RR aikaisemman prototyypin kanssa
 extern "C"	ei tarvittu en‰‰
@@ -54,6 +60,19 @@ extern "C"	ei tarvittu en‰‰
 */
 
 bool gUseTransparencyWithText = true; // TƒMƒ ON MARKON PIKAVIRITYS!!!!!!
+
+TurnClippingOffHelper::TurnClippingOffHelper(NFmiToolBox* toolbox)
+	:toolbox_(toolbox)
+	, oldClippingMode_(toolbox->UseClipping())
+{
+	toolbox_->UseClipping(false);
+}
+
+TurnClippingOffHelper::~TurnClippingOffHelper()
+{
+	toolbox_->UseClipping(oldClippingMode_);
+}
+
 
 //--------------------------------------------------------TFmiToolBox
   NFmiToolBox::NFmiToolBox (CView *theEnclosure,
@@ -472,7 +491,7 @@ bool NFmiToolBox::BuildLine (const NFmiLine *fmiShape)
 		{
 		double distance = fmiShape->GetStartingPoint().Distance(fmiShape->GetEndingPoint());
 		double subLineCount = distance * fmiShape->GetEnvironment()->GetSubLinePerUnit();
-		int subLineCountInt = static_cast<int>(subLineCount);
+		int subLineCountInt = boost::math::iround(subLineCount);
 		double deltaX = (fmiShape->GetEndingPoint().X() - fmiShape->GetStartingPoint().X())/subLineCount;
 		double deltaY = (fmiShape->GetEndingPoint().Y() - fmiShape->GetStartingPoint().Y())/subLineCount;
 		double relativeFill = fmiShape->GetEnvironment()->GetRelativeFill();
@@ -531,8 +550,8 @@ bool NFmiToolBox::BuildRectangle (const NFmiRectangle *fmiShape)
 		{
 			if(!pItsFillPattern->CreateSolidBrush(itsFillColor))
 			{
-			DeSelectEnvironment(fmiShape);
-			return false;
+				DeSelectEnvironment(fmiShape);
+				return false;
 			}
 			pDC->FillRect(&theMFCRect, pItsFillPattern);
 
@@ -896,8 +915,59 @@ void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std:
 	}
 }
 
+// Jos skaala arvo on 0 tai 1, ei tehd‰ skaalausta
+static bool UseScale(double scaleValue)
+{
+	return (scaleValue != 0 && scaleValue != 1);
+}
+
+// ConvertPoint/Rect/PointList ja vastaavien funktioiden double -> int konveriot 
+// tehd‰‰n kaikki yhdell‰ ja samalla toiminnalla, joka m‰‰r‰t‰‰n 
+// CONVERT_POINT_TO_INT_FUNCTION makrolla.
+// 
+// Originaali konversio oli cast:aus int:iksi, eli leikkuri.
+#define CONVERT_POINT_TO_INT_FUNCTION int
+
+// Uusi versio k‰ytt‰‰ boost:in interger round funktiota, joten loppu tuloksen
+// pit‰isi olla parempi, mutta tarvittaessa voidaan palata vanhaan.
+//#define CONVERT_POINT_TO_INT_FUNCTION boost::math::iround
+
+//---------------------------------------------------------------------ConvertPoint
+void NFmiToolBox::ConvertPoint(const NFmiPoint& relativePoint, CPoint& absolutePoint)
+{
+	absolutePoint.y = itsYDirection * CONVERT_POINT_TO_INT_FUNCTION(relativePoint.Y() * mClientRect.Height());
+	absolutePoint.x = itsXDirection * CONVERT_POINT_TO_INT_FUNCTION(relativePoint.X() * mClientRect.Width());
+}
+//---------------------------------------------------------------------ConvertPoint
+void NFmiToolBox::ConvertPoint(const NFmiRect& theFrame, const NFmiPoint& relativePoint, CPoint& absolutePoint)
+{
+	absolutePoint.y = itsYDirection * CONVERT_POINT_TO_INT_FUNCTION(relativePoint.Y() * theFrame.Height());
+	absolutePoint.x = itsXDirection * CONVERT_POINT_TO_INT_FUNCTION(relativePoint.X() * theFrame.Width());
+}
+//---------------------------------------------------------------------ConvertRect
+void NFmiToolBox::ConvertRect(const NFmiRect& relativeRect, CRect& absoluteRect)
+{
+	absoluteRect.top = itsYDirection * CONVERT_POINT_TO_INT_FUNCTION(relativeRect.Top() * mClientRect.Height());
+	absoluteRect.left = itsXDirection * CONVERT_POINT_TO_INT_FUNCTION(relativeRect.Left() * mClientRect.Width());
+	absoluteRect.bottom = itsYDirection * CONVERT_POINT_TO_INT_FUNCTION(relativeRect.Bottom() * mClientRect.Height());
+	absoluteRect.right = itsXDirection * CONVERT_POINT_TO_INT_FUNCTION(relativeRect.Right() * mClientRect.Width());
+}
+
+//---------------------------------------------------------------------ToViewPoint
+// muutos pikseli-maailmasta toolboxin suhteelliseen maailmaan
+NFmiPoint NFmiToolBox::ToViewPoint(long xPix, long yPix)
+{
+	return NFmiPoint(static_cast<float>(xPix) / mClientRect.Width(), static_cast<float>(yPix) / mClientRect.Height());
+}
+
+// muutos toolboxin suhteellisesta maailmasta n‰ytˆn pikseli-maailmaan
+NFmiPoint NFmiToolBox::ToScreenPoint(double x, double y)
+{
+	return NFmiPoint(CONVERT_POINT_TO_INT_FUNCTION(x * mClientRect.Width()), CONVERT_POINT_TO_INT_FUNCTION(y * mClientRect.Height()));
+}
+
 void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint>& theMFCPoints,
-	CPoint& MFCOffSet, double xScale, double yScale, double rotationAlfa)
+	const CPoint& MFCOffSet, double xScale, double yScale, double rotationAlfa)
 {
 	theMFCPoints.clear();
 	if(fmiPoints.empty())
@@ -905,8 +975,8 @@ void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std:
 
 	theMFCPoints.resize(fmiPoints.size());
 
-	bool useOffSet = (MFCOffSet != CPoint(0, 0)) == TRUE;
-	bool useScale = xScale && yScale;
+	bool useOffSet = MFCOffSet != CPoint(0, 0);
+	bool useScale = ::UseScale(xScale) || ::UseScale(yScale);
 
 	if(useOffSet && useScale)
 	{
@@ -916,8 +986,8 @@ void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std:
 			for(size_t index = 0; index < fmiPoints.size(); index++)
 			{
 				ConvertPoint(fmiPoints[index], theMFCPoints[index]);
-				theMFCPoints[index].x = static_cast<LONG>(theMFCPoints[index].x * xScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
-				theMFCPoints[index].y = static_cast<LONG>(theMFCPoints[index].y * yScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
+				theMFCPoints[index].x = CONVERT_POINT_TO_INT_FUNCTION(theMFCPoints[index].x * xScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
+				theMFCPoints[index].y = CONVERT_POINT_TO_INT_FUNCTION(theMFCPoints[index].y * yScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
 				theMFCPoints[index].Offset(MFCOffSet);
 			}
 		}
@@ -927,8 +997,8 @@ void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std:
 			for(size_t index = 0; index < fmiPoints.size(); index++)
 			{
 				ConvertPoint(::RotatePoint(fmiPoints[index], rotationAlfa), theMFCPoints[index]); // rotaatio pit‰‰ tehd‰ ennen muita muunnoksia, eli kappaletta pyˆritet‰‰n itsens‰ suhteen ymp‰ri
-				theMFCPoints[index].x = static_cast<LONG>(theMFCPoints[index].x * xScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
-				theMFCPoints[index].y = static_cast<LONG>(theMFCPoints[index].y * yScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
+				theMFCPoints[index].x = CONVERT_POINT_TO_INT_FUNCTION(theMFCPoints[index].x * xScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
+				theMFCPoints[index].y = CONVERT_POINT_TO_INT_FUNCTION(theMFCPoints[index].y * yScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
 				theMFCPoints[index].Offset(MFCOffSet);
 			}
 		}
@@ -946,8 +1016,8 @@ void NFmiToolBox::ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std:
 		for(size_t index = 0; index < fmiPoints.size(); index++)
 		{
 			ConvertPoint(fmiPoints[index], theMFCPoints[index]);
-			theMFCPoints[index].x = static_cast<LONG>(theMFCPoints[index].x * xScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
-			theMFCPoints[index].y = static_cast<LONG>(theMFCPoints[index].y * yScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
+			theMFCPoints[index].x = CONVERT_POINT_TO_INT_FUNCTION(theMFCPoints[index].x * xScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
+			theMFCPoints[index].y = CONVERT_POINT_TO_INT_FUNCTION(theMFCPoints[index].y * yScale); // en ole testannut t‰t‰ skaalausta ollenkaan, en tied‰ mit‰ se oikeasti tekee (Marko)
 		}
 	}
 	else
@@ -1588,6 +1658,499 @@ void NFmiToolBox::ConvertPoint(const CPoint& absolutePoint, NFmiPoint& relativeP
 {
     relativePoint.X(itsXDirection * (static_cast<double>(absolutePoint.x) / mClientRect.Width()));
     relativePoint.Y(itsYDirection * (static_cast<double>(absolutePoint.y) / mClientRect.Height()));
+}
+
+void NFmiToolBox::DoSymbolBulkDraw(const NFmiSymbolBulkDrawData& sbdData, bool doStationPlotOnly)
+{
+	SetUpClipping();
+	if(!doStationPlotOnly)
+	{
+		if(sbdData.drawType() == NFmiSymbolBulkDrawType::Text)
+		{
+			DoTextBulkDraw(sbdData);
+		}
+		else if(sbdData.drawType() == NFmiSymbolBulkDrawType::Arrow)
+		{
+			DoArroyBulkDraw(sbdData);
+		}
+		else if(sbdData.drawType() == NFmiSymbolBulkDrawType::WindBarb)
+		{
+			DoWindBarbBulkDraw(sbdData);
+		}
+		else if(sbdData.drawType() == NFmiSymbolBulkDrawType::HessaaSymbol)
+		{
+			DoSimpleWeatherBulkkDraw(sbdData);
+		}
+	}
+
+	DoStationPlotkDraw(sbdData);
+
+	EndClipping();
+}
+
+class MfcFontHandler
+{
+	std::map<int, std::unique_ptr<CFont>> fonts_;
+	CDC* pDC_ = nullptr;
+	CFont* oldFont_ = nullptr;
+public:
+	MfcFontHandler(CDC* pDC, const std::vector<NFmiPoint>& fontSizes, bool useBold, const std::wstring &fontName)
+		:pDC_(pDC)
+	{
+		auto differentFontSizes = makeFontSizeSet(fontSizes);
+		if(!differentFontSizes.empty())
+		{
+			for(auto fontSize : differentFontSizes)
+			{
+				auto insertIter = fonts_.insert(std::make_pair(fontSize, std::make_unique<CFont>()));
+				if(insertIter.second)
+				{
+					insertIter.first->second->CreateFont(
+						fontSize // desired height of the font in logical units
+						, 0 // width
+						, 0 // escapement (angle in 0.1 degrees)
+						, 1 // orientation (angle in 0.1 degrees)
+						, useBold ? FW_BOLD : FW_NORMAL // weight (FW_NORMAL, FW_BOLD jne.)
+						, 0 // italic
+						, 0 // underline
+						, 0 // strikeout
+						, 1 // char set 
+						, OUT_TT_PRECIS
+						, 1 // nClipPrecision
+						, PROOF_QUALITY
+						, DEFAULT_PITCH
+						, fontName.c_str());
+				}
+			}
+			if(!fonts_.empty())
+			{
+				oldFont_ = pDC_->SelectObject(fonts_.begin()->second.get());
+			}
+		}
+	}
+
+	~MfcFontHandler()
+	{
+		pDC_->SelectObject(oldFont_);
+		for(auto& fontPtr : fonts_)
+		{
+			fontPtr.second->DeleteObject();
+		}
+	}
+
+	void setUsedFont(const NFmiPoint& fontSize)
+	{
+		auto fontIter = fonts_.find(makeFontSizeConversion(fontSize));
+		if(fontIter != fonts_.end())
+		{
+			pDC_->SelectObject(fontIter->second.get());
+		}
+	}
+
+private:
+	int makeFontSizeConversion(const NFmiPoint& fontSize)
+	{
+		return boost::math::iround(fontSize.Y());
+	}
+
+	std::set<int> makeFontSizeSet(const std::vector<NFmiPoint>& fontSizes)
+	{
+		std::set<int> finalSizes;
+		for(const auto& fontSize : fontSizes)
+			finalSizes.insert(makeFontSizeConversion(fontSize));
+
+		return finalSizes;
+	}
+};
+
+class CdcRestorer
+{
+	CDC* pDC_ = nullptr;
+	int oldBkMode_ = 0;
+	COLORREF oldBkColor_ = 0;
+	UINT oldTextAlingment_ = 0;
+public:
+	CdcRestorer(CDC* pDC, bool useTransparentBackground, COLORREF backgroundFillColor, UINT textAlingment)
+		:pDC_(pDC)
+	{
+		oldBkMode_ = pDC_->SetBkMode(TRANSPARENT);
+		oldBkColor_ = pDC_->GetBkColor();
+		if(!useTransparentBackground)
+		{
+			pDC_->SetBkMode(OPAQUE);
+			pDC_->SetBkColor(backgroundFillColor);
+		}
+		oldTextAlingment_ = pDC_->SetTextAlign(textAlingment);
+	}
+
+	~CdcRestorer()
+	{
+		pDC_->SetBkColor(oldBkColor_);
+		pDC_->SetBkMode(oldBkColor_);
+		pDC_->SetTextAlign(oldTextAlingment_);
+	}
+};
+
+static COLORREF Color2ColorRef(const NFmiColor& theColor)
+{
+	return RGB(theColor.Red() * 255, theColor.Green() * 255, theColor.Blue() * 255);
+}
+
+static bool isMissingValue(const NFmiSymbolBulkDrawData& sbdData, size_t index)
+{
+	return sbdData.values()[index] == kFloatMissing;
+}
+
+// Normipiirto vakioasetuksilla (vakio v‰ri, vakio koko)
+static void DoBasicTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData, CDC *pDC, const std::vector<CPoint> &mfcTextPositions)
+{
+	// Asetetaan k‰ytetty vakio v‰ri ja otetaan vanha v‰ri talteen, jotta se voidaan lopuksi palauttaa.
+	auto oldTextColor = pDC->SetTextColor(Color2ColorRef(sbdData.colors().front()));
+
+	for(size_t index = 0; index < mfcTextPositions.size(); index++)
+	{
+		if(!isMissingValue(sbdData, index))
+		{
+			const auto& textPosition = mfcTextPositions[index];
+			const auto& text = sbdData.drawnTexts()[index];
+			pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+		}
+	}
+
+	// Siivoa piirtokoodin asetukset eli palauta originaali teksti v‰ri
+	pDC->SetTextColor(oldTextColor);
+}
+
+// Normi teksti piirto eri v‰reill‰ (vakio koko)
+static void DoChangingColorTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData, CDC* pDC, const std::vector<CPoint>& mfcTextPositions)
+{
+	// Otetaan vain vanha v‰ri talteen, jotta se voidaan lopuksi palauttaa.
+	auto oldTextColor = pDC->SetTextColor(0);
+
+	for(size_t index = 0; index < mfcTextPositions.size(); index++)
+	{
+		if(!isMissingValue(sbdData, index))
+		{
+			pDC->SetTextColor(Color2ColorRef(sbdData.colors()[index]));
+			const auto& textPosition = mfcTextPositions[index];
+			const auto& text = sbdData.drawnTexts()[index];
+			pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+		}
+	}
+
+	// Siivoa piirtokoodin asetukset eli palauta originaali teksti v‰ri
+	pDC->SetTextColor(oldTextColor);
+}
+
+static void FixChangingFontSizePosition(CPoint& fixedPosition, const NFmiPoint& symbolSize)
+{
+	fixedPosition.y -= boost::math::iround(symbolSize.Y() / 2.f);
+}
+
+// Normi teksti piirto eri fontti koilla (vakio v‰ri)
+static void DoChangingFontSizeTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData, CDC* pDC, const std::vector<CPoint>& mfcTextPositions, MfcFontHandler &fontHandler, NFmiToolBox &toolbox)
+{
+	// Asetetaan k‰ytetty vakio v‰ri ja otetaan vanha v‰ri talteen, jotta se voidaan lopuksi palauttaa.
+	auto oldTextColor = pDC->SetTextColor(Color2ColorRef(sbdData.colors().front()));
+
+	for(size_t index = 0; index < mfcTextPositions.size(); index++)
+	{
+		if(!isMissingValue(sbdData, index))
+		{
+			auto textPosition = mfcTextPositions[index];
+			const auto& text = sbdData.drawnTexts()[index];
+			const auto& fontSize = sbdData.symbolSizes()[index];
+			fontHandler.setUsedFont(fontSize);
+			::FixChangingFontSizePosition(textPosition, fontSize);
+			pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+		}
+	}
+
+	// Siivoa piirtokoodin asetukset eli palauta originaali teksti v‰ri
+	pDC->SetTextColor(oldTextColor);
+}
+
+// Teksti piirto eri v‰reill‰ ja fontti koilla
+static void DoChangingColorAndSizeTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData, CDC* pDC, const std::vector<CPoint>& mfcTextPositions, MfcFontHandler& fontHandler)
+{
+	// Otetaan vanha v‰ri talteen, jotta se voidaan lopuksi palauttaa (0 on musta v‰ri, joka asetetaan aluksi k‰yttˆˆn).
+	auto oldTextColor = pDC->SetTextColor(0);
+
+	for(size_t index = 0; index < mfcTextPositions.size(); index++)
+	{
+		if(!isMissingValue(sbdData, index))
+		{
+			pDC->SetTextColor(Color2ColorRef(sbdData.colors()[index]));
+			auto textPosition = mfcTextPositions[index];
+			const auto& text = sbdData.drawnTexts()[index];
+			const auto& fontSize = sbdData.symbolSizes()[index];
+			fontHandler.setUsedFont(fontSize);
+			::FixChangingFontSizePosition(textPosition, fontSize);
+			pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+		}
+	}
+
+	// Siivoa piirtokoodin asetukset eli palauta originaali teksti v‰ri
+	pDC->SetTextColor(oldTextColor);
+}
+
+void NFmiToolBox::DoTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
+{
+	LoggingProfilerHelper profiler(__FUNCTION__);
+
+	// 1. Tee peruspiirtoasetukset
+	// 	   a) Luo fontti, aseta se CDC:lle
+	MfcFontHandler fontHandler(pDC, sbdData.symbolSizes(), sbdData.useBoldFont(), sbdData.fontName());
+
+	//	   b) Konvertoi piirtopisteet ja lis‰‰ pisteisiin konvertoitu offset
+	CPoint mfcOffSet;
+	ConvertPoint(sbdData.relativePositionOffset(), mfcOffSet);
+	std::vector<CPoint> mfcTextPositions;
+	ConvertPointList(sbdData.relativeStationPointPositions(), mfcTextPositions, mfcOffSet, 0, 0, 0);
+
+	// 	   c) Mieti mit‰ seurauksia on sill‰ ett‰ BuildText:iss‰ otetaan piirtopiste DrawObjectin top-left:ist‰!!!
+
+	// 	   d) Tee v‰riasetuksia CDC:en
+	bool useTransparentBackground = true;
+	COLORREF backgroundFillColor = RGB(0, 0, 0);
+	CdcRestorer cdcRestorer(pDC, useTransparentBackground, backgroundFillColor, TA_CENTER | TA_TOP);
+
+	// 2. Hajauta piirto seuraaviin osiin
+	if(sbdData.isChangingColorsAndSizesUsed())
+	{
+		// a) Muuttuvat v‰rit ja symboli koko
+		::DoChangingColorAndSizeTextBulkDraw(sbdData, pDC, mfcTextPositions, fontHandler);
+	}
+	else if(sbdData.isChangingColorsUsed())
+	{
+		// a) Muuttuvat v‰rit
+		::DoChangingColorTextBulkDraw(sbdData, pDC, mfcTextPositions);
+	}
+	else if(sbdData.isChangingSizesUsed())
+	{
+		// b) Muuttuvat symbolikoot
+		::DoChangingFontSizeTextBulkDraw(sbdData, pDC, mfcTextPositions, fontHandler, *this);
+	}
+	else
+	{
+		// c) Normipiirto vakioasetuksilla
+		::DoBasicTextBulkDraw(sbdData, pDC, mfcTextPositions);
+	}
+
+}
+
+static void DoPolylineConversion(std::vector<CPoint>& mfcPolylinePositions, float rotationAngle, const CPoint offset)
+{
+	for(auto& point : mfcPolylinePositions)
+	{
+		::RotatePoint(point, rotationAngle);
+		point.Offset(offset);
+	}
+}
+
+void NFmiToolBox::DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
+{
+	std::vector<NFmiPoint> arrowPoints{ NFmiPoint(0, 1), NFmiPoint(0, -1), NFmiPoint(-0.5, -0.25), NFmiPoint(0, -1), NFmiPoint(0.5, -0.25) };
+	// Samaa kokoskaalaa k‰ytet‰‰n x- ja y-suunnissa
+	auto scale = sbdData.symbolSizes().front();
+
+	CPoint mfcOffSet;
+	ConvertPoint(sbdData.relativePositionOffset(), mfcOffSet);
+	std::vector<CPoint> mfcArrowPositions;
+	ConvertPointList(sbdData.relativeStationPointPositions(), mfcArrowPositions, mfcOffSet, 0, 0, 0);
+	CPen pen;
+	if(pen.CreatePen(PS_SOLID, sbdData.penSize(), ::Color2ColorRef(sbdData.colors().front())))
+	{
+		auto oldPen = pDC->SelectObject(&pen);
+		for(size_t index = 0; index < mfcArrowPositions.size(); index++)
+		{
+			if(!isMissingValue(sbdData, index))
+			{
+				auto rotationAngle = sbdData.values()[index];
+				const auto& arrowPosition = mfcArrowPositions[index];
+
+				std::vector<CPoint> mfcArrowPoints;
+				ConvertPointList(arrowPoints, mfcArrowPoints, arrowPosition, scale.X(), scale.Y(), rotationAngle);
+
+				pDC->Polyline(mfcArrowPoints.data(), static_cast<int>(mfcArrowPoints.size()));
+			}
+		}
+		pDC->SelectObject(oldPen);
+		pItsPen->DeleteObject();
+	}
+}
+
+std::pair<float, float> NFmiToolBox::GetWsAndWdFromWindVector(float windVector)
+{
+	if(windVector == kFloatMissing)
+		return std::make_pair(kFloatMissing, kFloatMissing);
+	else
+	{
+		float WS = static_cast<float>(static_cast<int>(windVector / 100));
+		float WD = float(((int)windVector % 100) * 10);
+		return std::make_pair(WS, WD);
+	}
+}
+
+void NFmiToolBox::DoWindBarbBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
+{
+	NFmiDrawingEnvironment envi;
+	envi.SetFillColor(sbdData.colors().front());
+	envi.SetFrameColor(sbdData.colors().front());
+	envi.SetPenSize(NFmiPoint(sbdData.penSize(), sbdData.penSize()));
+
+	const auto& stationLatlons = sbdData.stationPointLatlons();
+	const auto& relativeStationPositions = sbdData.relativeStationPointPositions();
+	const auto& relativeObjectSize = sbdData.relativeDrawObjectSize();
+	const auto& symbolSize = sbdData.symbolSizes().front();
+	NFmiRect relativeSymbolRect;
+	relativeSymbolRect.Size(relativeObjectSize);
+
+	// Clippaus pit‰‰ laittaa pois p‰‰lt‰, muuten tulee p‰‰llekk‰isi‰ clippaus 
+	// asetuksia NFmiWindBarb olion sis‰ll‰, ja ohjelma kaatuu...
+	TurnClippingOffHelper turnClippingOffHelper(this);
+
+	for(size_t index = 0; index < relativeStationPositions.size(); index++)
+	{
+		if(!isMissingValue(sbdData, index))
+		{
+			float ws, wd;
+			std::tie(ws, wd) = NFmiToolBox::GetWsAndWdFromWindVector(sbdData.values()[index]);
+			// Huom1 WindBarb:illa ei voi olla offset:ia, sit‰ ei vain oteta ollenkaan huomioon.
+			// Huom2 sijoittelu tapahtuu puhtaasti suhteellisilla koordinaateilla (NFmiWindBarb::Build 
+			// tekee sitten lopuksi koordinaattimuunnokset piirrossa).
+			relativeSymbolRect.Center(relativeStationPositions[index]);
+
+			NFmiWindBarb(ws
+				, wd
+				, relativeSymbolRect
+				, this
+				, stationLatlons[index].Y() < 0
+				, symbolSize.X()
+				, symbolSize.Y()
+				, nullptr
+				, &envi).Build();
+		}
+	}
+}
+
+void NFmiToolBox::DoSimpleWeatherBulkkDraw(const NFmiSymbolBulkDrawData& sbdData)
+{
+	NFmiDrawingEnvironment envi;
+	envi.SetFrameColor(NFmiColor(1, 0, 0));
+	envi.DisableFill();
+
+	const auto& relativeStationPositions = sbdData.relativeStationPointPositions();
+	const auto& relativeObjectSize = sbdData.relativeDrawObjectSize();
+	const auto& relativeOffset = sbdData.relativePositionOffset();
+	NFmiRect relativeSymbolRect;
+	relativeSymbolRect.Size(relativeObjectSize);
+
+	// Clippaus pit‰‰ laittaa pois p‰‰lt‰, muuten tulee p‰‰llekk‰isi‰ clippaus 
+	// asetuksia NFmiWindBarb olion sis‰ll‰, ja ohjelma kaatuu...
+	TurnClippingOffHelper turnClippingOffHelper(this);
+
+	for(size_t index = 0; index < relativeStationPositions.size(); index++)
+	{
+		if(!isMissingValue(sbdData, index))
+		{
+			auto value = sbdData.values()[index];
+			auto relativeCenterPoint = relativeStationPositions[index];
+			relativeCenterPoint += relativeOffset;
+			relativeSymbolRect.Center(relativeCenterPoint);
+
+			NFmiSimpleWeatherSymbol(static_cast<short>(value)
+				, relativeSymbolRect
+				, this
+				, nullptr
+				, &envi).Build();
+		}
+	}
+}
+
+#ifdef max
+#undef max
+#undef min
+#endif
+
+// Laita DRAW_STATION_POINT_PIXEL define kommenttiin, kun piirtotestit on ohi
+//#define DRAW_STATION_POINT_PIXEL 1
+
+void NFmiToolBox::DoStationPlotkDraw(const NFmiSymbolBulkDrawData& sbdData)
+{
+	if(sbdData.drawStationPoint())
+	{
+		COLORREF stationPlotColor = ::Color2ColorRef(sbdData.stationPointColor());
+		CBrush brush;
+		if(brush.CreateSolidBrush(stationPlotColor))
+		{
+			auto oldBrush =	pDC->SelectObject(&brush);
+
+			// Normitilanteessa pit‰‰ asemapiste piirt‰‰ CDC::Ellipse metodilla ja
+			// sen kanssa pit‰‰ pDC:n kyn‰ laittaa pois p‰‰lt‰.
+			auto emptyPen = ::GetStockObject(NULL_PEN);
+			auto oldPen = pDC->SelectObject(emptyPen);
+
+			CRect mfcRect;
+			ConvertRect(sbdData.baseStationPointRect(), mfcRect);
+			// Jos piirt‰‰ CDC::Ellipse metodilla 2x2 kokoista ympyr‰‰ tai pienemp‰‰, ei tule yht‰‰n 
+			// mit‰‰n n‰kyviin, siksi ne ovat erikoistapauksia, jolloin piirto tehd‰‰n 1 tai 4 pikselin erillispiirrolla.
+			bool doRectangleSpecial = mfcRect.Width() <= 2;
+			bool doFourPointSpecial = mfcRect.Width() == 2;
+
+			// CDC::Ellipse piirrossa pit‰‰ piirto rect:i‰ kasvattaa pyk‰l‰ll‰ alas ja oikealle.
+			mfcRect.bottom++;
+			mfcRect.right++;
+			
+			// CRect oliolle ei ole SetCenter metodia, vaan CRect:eja siirret‰‰n upper-left
+			// kulman suhteen. Siksi joudumme laskemaan laatikon koon suhteen sopivan offsetin,
+			// jolla s‰‰det‰‰n laskettavien mfcPoints:ien sijainnit, joilla s‰‰det‰‰n
+			// piirrett‰v‰n ellipsin tai laatikon paikkaa.
+			auto pixelOffset = -std::max(0, (boost::math::iround(mfcRect.Width() / 2.) - 1));
+			CPoint mfcOffSet(pixelOffset, pixelOffset);
+			std::vector<CPoint> mfcPoints;
+			ConvertPointList(sbdData.relativeStationPointPositions(), mfcPoints, mfcOffSet, 0, 0, 0);
+			CPoint zeroOffSet;
+			std::vector<CPoint> originalMfcPoints;
+			ConvertPointList(sbdData.relativeStationPointPositions(), originalMfcPoints, zeroOffSet, 0, 0, 0);
+#ifdef DRAW_STATION_POINT_PIXEL
+			COLORREF stationPixelColor = RGB(128, 0, 255);
+#endif // DRAW_STATION_POINT_PIXEL
+			for(size_t index = 0; index < mfcPoints.size(); index++)
+			{
+
+				if(doRectangleSpecial)
+				{
+					CPoint specialCasePoint = originalMfcPoints[index];
+					// Pikselien piirtoon k‰ytet‰‰n CDC::SetPixelV metodia, koska se on nopeampi kuin CDC::SetPixel.
+					pDC->SetPixelV(specialCasePoint, stationPlotColor);
+					if(doFourPointSpecial)
+					{
+						specialCasePoint.x--;
+						pDC->SetPixelV(specialCasePoint, stationPlotColor);
+						specialCasePoint.y--;
+						pDC->SetPixelV(specialCasePoint, stationPlotColor);
+						specialCasePoint.x++;
+						pDC->SetPixelV(specialCasePoint, stationPlotColor);
+					}
+				}
+				else
+				{
+					mfcRect.MoveToXY(mfcPoints[index]);
+					pDC->Ellipse(&mfcRect);
+				}
+
+#ifdef DRAW_STATION_POINT_PIXEL
+				pDC->SetPixelV(originalMfcPoints[index], stationPixelColor);
+#endif // DRAW_STATION_POINT_PIXEL
+			}
+
+			// Lopuksi siivotaan...
+			pDC->SelectObject(oldBrush);
+			pDC->SelectObject(oldPen);
+			brush.DeleteObject();
+		}
+	}
 }
 
 #endif

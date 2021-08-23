@@ -165,11 +165,11 @@ class NFmiIsoLineView : public NFmiStationView
                    ,int viewGridRowNumber
                    ,int viewGridColumnNumber);
 
-   virtual  ~NFmiIsoLineView (void);
+   ~NFmiIsoLineView (void);
 
-   void Draw (NFmiToolBox *theGTB);
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+   void Draw (NFmiToolBox *theGTB) override;
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
 
    static NFmiPolyline* CreateEmptyPolyLine(const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi);
    static void ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi);

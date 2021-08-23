@@ -32,10 +32,10 @@ public:
         , int theRowIndex
         , int theColumnIndex);
 
-    virtual ~NFmiCapView(void) = default;
+    ~NFmiCapView(void) = default;
     static void InitCapSymbolMap(const std::string &theWomlDirectory);
-    void Draw(NFmiToolBox * theGTB);
-    std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+    void Draw(NFmiToolBox * theGTB) override;
+    std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
 protected:
     int itsRowIndex;

@@ -38,9 +38,9 @@ class NFmiTrajectoryView : public NFmiCtrlView
 						,NFmiDrawingEnvironment * theDrawingEnvi);
 	~NFmiTrajectoryView(void);
 
-	void Draw (NFmiToolBox *theGTB);
-	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+	void Draw (NFmiToolBox *theGTB) override;
+	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
 
  private:
 	void DrawTrajectoryLegend(const NFmiTrajectory &theTrajectory, int theIndex);

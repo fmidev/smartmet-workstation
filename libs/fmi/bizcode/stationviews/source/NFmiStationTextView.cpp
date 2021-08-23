@@ -38,21 +38,6 @@ NFmiStationTextView::~NFmiStationTextView(void)
 {
 }
 
-void NFmiStationTextView::DrawData(void)
-{
-	DrawText2();
-}
-
-void NFmiStationTextView::DrawText2(void)
-{
-	NFmiStationView::DrawText2();
-}
-
-NFmiColor NFmiStationTextView::CalcTextColor(void)
-{
-	return NFmiColor(0,0,0);
-}
-
 void NFmiStationTextView::ModifyTextEnvironment(void)
 {
 	itsDrawingEnvironment->SetFrameColor(itsDrawParam->FrameColor());
@@ -66,4 +51,9 @@ NFmiPoint NFmiStationTextView::GetSpaceOutFontFactor(void)
 	if(itsDrawingEnvironment->GetFontType() == kSynop)
 		return NFmiPoint(0.4, 0.6);
 	return NFmiStationView::GetSpaceOutFontFactor();
+}
+
+NFmiPoint NFmiStationTextView::SbdCalcFixedSymbolSize() const
+{
+	return SbdBasicSymbolSizeCalculation(12, 45);
 }

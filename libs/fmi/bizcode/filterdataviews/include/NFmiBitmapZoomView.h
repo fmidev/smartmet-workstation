@@ -10,11 +10,11 @@ class NFmiBitmapZoomView : public NFmiZoomView
 {
 
 public:
-   virtual void Draw (NFmiToolBox * theGTB);
-    NFmiBitmapZoomView (NFmiToolBox * theToolBox
+   void Draw (NFmiToolBox * theGTB) override;
+   NFmiBitmapZoomView (NFmiToolBox * theToolBox
 						 ,NFmiDrawingEnvironment * theDrawingEnvi
 						 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
-   virtual  ~NFmiBitmapZoomView();
+   ~NFmiBitmapZoomView();
 
 };
 

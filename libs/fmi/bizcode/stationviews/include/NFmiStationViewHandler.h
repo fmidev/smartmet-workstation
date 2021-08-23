@@ -86,27 +86,27 @@ class NFmiStationViewHandler : public NFmiCtrlView
 						   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 						   ,int theRowIndex
 						   ,int theColumnIndex);
-	virtual ~NFmiStationViewHandler();
-	void Draw(NFmiToolBox* theGTB);
-    void Update(void);
-	bool LeftButtonDown(const NFmiPoint& thePlace, unsigned long theKey);
-	bool LeftButtonUp(const NFmiPoint& thePlace, unsigned long theKey);
-	bool MiddleButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-	bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey);
-	bool RightButtonDown (const NFmiPoint &thePlace, unsigned long theKey);
-	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey);
-	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
-	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey);
-	bool RightDoubleClick(const NFmiPoint &thePlace, unsigned long theKey);
-    bool IsMouseDraggingOn(void);
-    void Time(const NFmiMetTime& theTime);
+	~NFmiStationViewHandler();
+	void Draw(NFmiToolBox* theGTB) override;
+    void Update(void) override;
+	bool LeftButtonDown(const NFmiPoint& thePlace, unsigned long theKey) override;
+	bool LeftButtonUp(const NFmiPoint& thePlace, unsigned long theKey) override;
+	bool MiddleButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey) override;
+	bool RightButtonDown (const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool RightDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override;
+    bool IsMouseDraggingOn(void) override;
+    void Time(const NFmiMetTime& theTime) override;
 	void DrawSelectedLocations(void);
 	void StoreToolTipDataInDoc(const NFmiPoint& theRelativePlace);
 	void DrawTimeText(void);
 
 	void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tällä piirretään tavara, joka tulee myös bitmapin päälle
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 	NFmiCtrlView* GetView(const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
 	void DrawParamView(NFmiToolBox * theGTB);
 	boost::shared_ptr<NFmiArea> GetArea() const override;
@@ -155,8 +155,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	bool ChangeSatelDataChannel(NFmiStationView* theView, short theDelta);
 	void SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon, int theSelectionCombineFunction, unsigned long theMask, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd = false);
 	void DrawCrossSectionPoints(void);
-	NFmiPoint LatLonToViewPoint(const NFmiPoint& theLatLon);
-	NFmiPoint ViewPointToLatLon(const NFmiPoint& theViewPoint);
+	NFmiPoint LatLonToViewPoint(const NFmiPoint& theLatLon) const override;
+	NFmiPoint ViewPointToLatLon(const NFmiPoint& theViewPoint) const override;
 	void DrawCurrentFrame(NFmiToolBox* theGTB);
 	void DrawSoundingPlaces(void);
 	void DrawSoundingSymbols(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM);

@@ -1716,12 +1716,12 @@ NFmiPoint NFmiStationViewHandler::CalcRelativeWarningIconSize(Gdiplus::Bitmap *t
 	return NFmiPoint(relativeWidth, relativeHeight);
 }
 
-NFmiPoint NFmiStationViewHandler::LatLonToViewPoint(const NFmiPoint& theLatLon)
+NFmiPoint NFmiStationViewHandler::LatLonToViewPoint(const NFmiPoint& theLatLon) const
 {
 	return itsMapArea->ToXY(theLatLon);
 }
 
-NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoint)
+NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoint) const
 {
 	return itsMapArea->ToLatLon(theViewPoint);
 }
