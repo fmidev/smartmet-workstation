@@ -48,22 +48,22 @@ public:
   inline NFmiCtrlViewList(NFmiCtrlViewList& theList); 
   virtual ~NFmiCtrlViewList(void); 
   using NFmiCtrlView::Update;
-  void Update(const NFmiRect& theRect, NFmiToolBox* theToolBox = 0);
-  void Draw(NFmiToolBox* theToolBox);
+  void Update(const NFmiRect& theRect, NFmiToolBox* theToolBox = 0) override;
+  void Draw(NFmiToolBox* theToolBox) override;
   inline bool IsIn(const NFmiPoint thePoint) const
   { return itsRect.IsInside (thePoint); }
 
-  bool LeftButtonDown(const NFmiPoint& thePoint, unsigned long aNumber); 
-  bool LeftButtonUp(const NFmiPoint& thePoint, unsigned long aNumber); 
-  bool MiddleButtonDown(const NFmiPoint &thePoint, unsigned long aNumber); 
-  bool MiddleButtonUp(const NFmiPoint &thePoint, unsigned long aNumber); 
-  bool RightButtonDown(const NFmiPoint& thePoint, unsigned long aNumber); 
-  bool RightButtonUp(const NFmiPoint& thePoint, unsigned long aNumber); 
-  bool MouseMove(const NFmiPoint& thePoint, unsigned long aNumber); 
-  bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta); 
-  bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey); // Marko lisäsi 14.12.2001
-  bool RightDoubleClick(const NFmiPoint &thePlace, unsigned long theKey);
-  bool IsMouseDraggingOn(void);
+  bool LeftButtonDown(const NFmiPoint& thePoint, unsigned long aNumber) override;
+  bool LeftButtonUp(const NFmiPoint& thePoint, unsigned long aNumber) override;
+  bool MiddleButtonDown(const NFmiPoint &thePoint, unsigned long aNumber) override;
+  bool MiddleButtonUp(const NFmiPoint &thePoint, unsigned long aNumber) override;
+  bool RightButtonDown(const NFmiPoint& thePoint, unsigned long aNumber) override;
+  bool RightButtonUp(const NFmiPoint& thePoint, unsigned long aNumber) override;
+  bool MouseMove(const NFmiPoint& thePoint, unsigned long aNumber) override;
+  bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+  bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override; // Marko lisäsi 14.12.2001
+  bool RightDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override;
+  bool IsMouseDraggingOn(void) override;
   bool Add(NFmiCtrlView* theView, bool fSortViewOrder = true);
   bool Add (NFmiCtrlView* theView, unsigned long theIndex);
   bool Reset (void);
@@ -80,7 +80,7 @@ public:
   unsigned long NumberOfItems(void)
   { return itsList.NumberOfItems(); }
   using NFmiCtrlView::Time;
-  void Time(const NFmiMetTime& theTime);
+  void Time(const NFmiMetTime& theTime) override;
 
  private:
   NFmiSortedPtrList<NFmiCtrlView>     itsList;

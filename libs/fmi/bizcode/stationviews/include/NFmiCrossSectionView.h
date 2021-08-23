@@ -64,19 +64,19 @@ class NFmiCrossSectionView : public NFmiIsoLineView
 						,NFmiDrawingEnvironment * theDrawingEnvi
                         , int viewGridRowNumber
                         , int viewGridColumnNumber);
-    virtual  ~NFmiCrossSectionView(void);
+    ~NFmiCrossSectionView(void);
 
-	void Draw (NFmiToolBox *theGTB);
-    bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-    bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-    bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey);
-    bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
-	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey);
-    bool IsMouseDraggingOn(void);
-    void Update(void);
+	void Draw (NFmiToolBox *theGTB) override;
+    bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+    bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+    bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey) override;
+    bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override;
+    bool IsMouseDraggingOn(void) override;
+    void Update(void) override;
 	void DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &thePlace);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
 	void SetDrawSizeFactors(double theFactorX, double theFactorY)
 	{
@@ -95,7 +95,6 @@ class NFmiCrossSectionView : public NFmiIsoLineView
    bool DeleteTransparencyBitmap() override;
    bool IsMapViewCase() override;
    NFmiTimeBag GetUsedTimeBagForDataCalculations(void);
-   void SetupUsedDrawParam(void);
    float GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck = true);
    float GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
    void DrawLegends();

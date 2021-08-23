@@ -44,6 +44,7 @@ class NFmiVoidPtrList;
 class NFmiView;
 class NFmiColor;
 class NFmiString;
+class NFmiSymbolBulkDrawData;
 
 // Yksinkertainen pisteen kääntö origon suhteen funktio.
 // Kulma annetaan asteina. 0 astetta on pohjoisessa ja kulma kiertää myötäpäivään.
@@ -53,6 +54,14 @@ inline const NFmiPoint RotatePoint(const NFmiPoint &thePoint, double alfa)
 	double X = thePoint.X() * ::cos(alfaInRadians) - thePoint.Y() * ::sin(alfaInRadians);
 	double Y = thePoint.X() * ::sin(alfaInRadians) + thePoint.Y() * ::cos(alfaInRadians);
 	return NFmiPoint(X, Y);
+}
+
+inline void RotatePoint(CPoint& mfcPoint, double alfa)
+{
+	const double alfaInRadians = alfa * 2 * kPii / 360.;
+	auto X = mfcPoint.x * ::cos(alfaInRadians) - mfcPoint.y * ::sin(alfaInRadians);
+	auto Y = mfcPoint.x * ::sin(alfaInRadians) + mfcPoint.y * ::cos(alfaInRadians);
+	mfcPoint = CPoint(boost::math::iround(X), boost::math::iround(Y));
 }
 
 class NFmiToolBox
@@ -81,7 +90,7 @@ public:
   void  ConvertEnvironment(const NFmiDrawingEnvironment * fmiEnvironment);
   COLORREF ConvertColor(const FmiRGBColor & fromFmiColor);
   void ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint> &theMFCPoints);
-  void ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint> &theMFCPoints, CPoint &MFCOffSet, double xScale, double yScale, double rotationAlfa);
+  void ConvertPointList(const std::vector<NFmiPoint>& fmiPoints, std::vector<CPoint> &theMFCPoints, const CPoint &MFCOffSet, double xScale, double yScale, double rotationAlfa);
 
   // muutos pikseli-maailmasta toolboxin suhteelliseen maailmaan
   NFmiPoint ToViewPoint(long xPix, long yPix);
@@ -141,8 +150,12 @@ public:
   void RelativeClipRect(const NFmiRect& theRect, bool newState = true) {itsRelativeClipRect=theRect; fUseClipping = newState;}
   bool UseClipping(void) const {return fUseClipping;}
   void UseClipping(bool newState) {fUseClipping = newState;}
+  void SetUpClipping();
+  void EndClipping(void);
   void SetClientRect(const CRect &theClientRect){mClientRect = theClientRect;} // älä käytä tätä jos et tiedä mitä teet!
   const CRect& GetClientRect(void){return mClientRect;}
+  void DoSymbolBulkDraw(const NFmiSymbolBulkDrawData &sbdData, bool doStationPlotOnly);
+  static std::pair<float, float> GetWsAndWdFromWindVector(float windVector);
 
 protected:
   void SetFont(const NFmiDrawingEnvironment * theEnvironment);
@@ -158,10 +171,13 @@ protected:
   void SelectEnvironment (const NFmiDrawingItem * fromFmiDrawingItem);
   void DeSelectEnvironment (const NFmiDrawingItem * fromFmiDrawingItem);
 
-  void SetUpClipping();
-  void EndClipping(void);
   void FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineList, std::vector<CPoint> &thePoints, std::vector<int> &thePolygonPointCounts, int &thePolygonCount, const NFmiPoint &theOffSet);
-
+  void DoTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData);
+  void DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData);
+  void DoWindBarbBulkDraw(const NFmiSymbolBulkDrawData& sbdData);
+  void DoSimpleWeatherBulkkDraw(const NFmiSymbolBulkDrawData& sbdData);
+  void DoStationPlotkDraw(const NFmiSymbolBulkDrawData& sbdData);
+  
 private:
 
   CView * itsEnclosure;
@@ -205,42 +221,14 @@ private:
 
 };
 
-//---------------------------------------------------------------------ConvertPoint
-inline
-void NFmiToolBox::ConvertPoint(const NFmiPoint &relativePoint, CPoint &absolutePoint)
+class TurnClippingOffHelper
 {
-  absolutePoint.y = itsYDirection * int(relativePoint.Y() * mClientRect.Height());
-  absolutePoint.x = itsXDirection * int(relativePoint.X() * mClientRect.Width());
-}
-//---------------------------------------------------------------------ConvertPoint
-inline
-void NFmiToolBox::ConvertPoint(const NFmiRect &theFrame, const NFmiPoint &relativePoint, CPoint &absolutePoint)
-{
-  absolutePoint.y = itsYDirection * int(relativePoint.Y() * theFrame.Height());
-  absolutePoint.x = itsXDirection * int(relativePoint.X() * theFrame.Width());
-}
-//---------------------------------------------------------------------ConvertRect
-inline
-void NFmiToolBox::ConvertRect(const NFmiRect &relativeRect, CRect &absoluteRect)
-{
-  absoluteRect.top = itsYDirection * int(relativeRect.Top() * mClientRect.Height());
-  absoluteRect.left = itsXDirection * int(relativeRect.Left() * mClientRect.Width());
-  absoluteRect.bottom = itsYDirection * int(relativeRect.Bottom() * mClientRect.Height());
-  absoluteRect.right = itsXDirection * int(relativeRect.Right() * mClientRect.Width());
-}
-
-//---------------------------------------------------------------------ToViewPoint
-// muutos pikseli-maailmasta toolboxin suhteelliseen maailmaan
-inline NFmiPoint NFmiToolBox::ToViewPoint(long xPix, long yPix)
-{
-  return NFmiPoint(static_cast<float>(xPix) / mClientRect.Width(), static_cast<float>(yPix) / mClientRect.Height());
-}
-
-// muutos toolboxin suhteellisesta maailmasta näytön pikseli-maailmaan
-inline NFmiPoint NFmiToolBox::ToScreenPoint(double x, double y)
-{
-  return NFmiPoint(static_cast<long>(x * mClientRect.Width()), static_cast<long>(y * mClientRect.Height()));
-}
+	NFmiToolBox* toolbox_ = nullptr;
+	bool oldClippingMode_ = false;
+public:
+	TurnClippingOffHelper(NFmiToolBox* toolbox);
+	~TurnClippingOffHelper();
+};
 
 #else // (defined) UNIX
 // Tehdään unix dummy toteutu, että saadaan käännettyä ja linkattua helper ja muut

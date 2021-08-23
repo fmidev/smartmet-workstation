@@ -247,7 +247,7 @@ void NFmiCtrlView::CleanGdiplus(void)
 	if(itsGdiPlusGraphics)
 	{
 		delete itsGdiPlusGraphics;
-		itsGdiPlusGraphics = 0;
+		itsGdiPlusGraphics = nullptr;
 	}
 }
 

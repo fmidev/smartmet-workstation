@@ -51,28 +51,28 @@ class NFmiTimeStationViewRow : public NFmiCtrlView
 					   ,NFmiDrawingEnvironment * theDrawingEnvi
 					   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 					   ,int theIndex);
-   virtual  ~NFmiTimeStationViewRow();
-   void Draw(NFmiToolBox* theGTB);
-   void Update(void);
-   void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0);
-   bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-   bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MiddleButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MouseMove (const NFmiPoint& thePlace, unsigned long theKey);
-   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta); 
-   bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey); // Marko lisäsi 14.12.2001
-   bool RightDoubleClick(const NFmiPoint &thePlace, unsigned long theKey);
-   bool IsMouseDraggingOn(void);
-   void Time(const NFmiMetTime& theTime);
+   ~NFmiTimeStationViewRow();
+   void Draw(NFmiToolBox* theGTB) override;
+   void Update(void) override;
+   void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0) override;
+   bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MiddleButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MouseMove (const NFmiPoint& thePlace, unsigned long theKey) override;
+   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+   bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override; // Marko lisäsi 14.12.2001
+   bool RightDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override;
+   bool IsMouseDraggingOn(void) override;
+   void Time(const NFmiMetTime& theTime) override;
    NFmiStationViewHandler* CreateMapView(int theIndex);
    NFmiStationViewHandler* GetMapView(int theIndex);
 
    void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tällä piirretään tavara, joka tulee myös bitmapin päälle
    bool StoreToolTipDataInDoc(const NFmiPoint& theRelativePlace);
    bool HasActiveRowView();
-   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
    NFmiCtrlView* GetViewWithRealRowIndex(int theRealRowIndex, const NFmiMetTime &theTime, const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
 
  private:

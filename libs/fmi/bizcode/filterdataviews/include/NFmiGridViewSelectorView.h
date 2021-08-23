@@ -11,15 +11,15 @@ class NFmiGridViewSelectorView : public NFmiZoomView
 
 public:
    const NFmiPoint& SelectedGridViewSize(void){return itsSelectedGridViewSize;};
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   void Draw(NFmiToolBox * theGTB);
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   void Draw(NFmiToolBox * theGTB) override;
    NFmiGridViewSelectorView(int theMapViewDescTopIndex, NFmiToolBox * theToolBox
 							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect
 							 ,int rows
 							 ,int columns);
-   virtual  ~NFmiGridViewSelectorView(){};
+   ~NFmiGridViewSelectorView(){};
    void SetViewGridSize(int rows, int columns);
 
 protected:

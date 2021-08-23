@@ -34,11 +34,11 @@ public:
 				   ,int theRowIndex
                    ,int theColumnIndex);
    ~NFmiFlashDataView (void);
-   void Draw (NFmiToolBox * theGTB);
-   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool MouseMove (const NFmiPoint& thePlace, unsigned long theKey);
+   void Draw (NFmiToolBox * theGTB) override;
+   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MouseMove (const NFmiPoint& thePlace, unsigned long theKey) override;
 
 protected:
    bool FindNearestFlashInMapTimeSection(const NFmiPoint &theRelativePoint, float &theLat, float &theLon, float &thePow, float &theAcc, float &theMulti, NFmiMetTime &theTime);

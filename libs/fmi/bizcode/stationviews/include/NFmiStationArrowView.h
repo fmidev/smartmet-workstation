@@ -28,19 +28,18 @@ public:
 							,NFmiPoint theSize
 							,int theRowIndex
                             ,int theColumnIndex);
-    virtual ~NFmiStationArrowView(void);
-
-	void Draw(NFmiToolBox * theGTB);
+    ~NFmiStationArrowView(void);
 
 protected:
-	void DrawData(void);
-	NFmiPoint GetSpaceOutFontFactor(void); 
-	void ModifyTextEnvironment(void);
-	int GetApproxmationOfDataTextLength(void);
+	NFmiPoint GetSpaceOutFontFactor(void) override;
+	void ModifyTextEnvironment(void) override;
+	int GetApproxmationOfDataTextLength(std::vector<float>* sampleValues = nullptr) override;
+	NFmiPoint SbdCalcFixedSymbolSize() const override;
+	int SbdCalcFixedPenSize() const override;
+	NFmiSymbolBulkDrawType SbdGetDrawType() const override;
+	float ViewFloatValue(void) override;
+	NFmiPoint SbdCalcDrawObjectOffset() const override;
+	NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
 
-private:
-	void DrawSymbol(void);
-
-	NFmiPolyline *itsArrowSymbol;
 };
 

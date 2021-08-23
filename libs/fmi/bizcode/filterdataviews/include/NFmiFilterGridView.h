@@ -11,18 +11,18 @@ class NFmiFilterGridView : public NFmiZoomView
 {
 
 public:
-   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey);
-   void Draw(NFmiToolBox * theGTB);
+   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey) override;
+   void Draw(NFmiToolBox * theGTB) override;
    NFmiFilterGridView(NFmiToolBox * theToolBox
 					 ,NFmiDrawingEnvironment * theDrawingEnvi
 					 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 					 ,const NFmiRect& theRect
 					 ,int theIndex);
-   virtual  ~NFmiFilterGridView();
-   void Update(void);
+   ~NFmiFilterGridView();
+   void Update(void) override;
 
 protected:
    virtual void InitGridValues(void);

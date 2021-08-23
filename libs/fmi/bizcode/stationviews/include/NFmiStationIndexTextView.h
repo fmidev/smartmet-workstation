@@ -32,22 +32,21 @@ public:
 							 ,NFmiPoint theSize
 							 ,int theRowIndex
                              ,int theColumnIndex);
-    virtual  ~NFmiStationIndexTextView (void);
-   void Draw(NFmiToolBox *theGTB);
-   std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType);
-   bool IsSingleSymbolView(void) { return true; }; // Tästä luokasta alaspäin tulostetaan aina vain yksi merkki (erikois fonteilla) tai muu symboli
+   ~NFmiStationIndexTextView (void);
+   void Draw(NFmiToolBox *theGTB) override;
+   std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType) override;
+   bool IsSingleSymbolView(void) override { return true; }; // Tästä luokasta alaspäin tulostetaan aina vain yksi merkki (erikois fonteilla) tai muu symboli
 
 protected:
-   int GetApproxmationOfDataTextLength(void);
+   int GetApproxmationOfDataTextLength(std::vector<float>* sampleValues = nullptr) override;
    bool PrepareForStationDraw(void) override;
    float ViewFloatValue(void) override;
-   void DrawData (void);
-   void ModifyTextEnvironment (void);
-   NFmiString GetPrintedText (float theValue);
-   void DrawSymbolWithWantedBitmap(int minSymbolSize, int maxSymbolSize, NFmiImageMap& imageMap);
-
-  NFmiColor GetBasicParamRelatedSymbolColor(float theValue) override;
-  void ModifyTextColor(float theValue) override;
+   void ModifyTextEnvironment (void) override;
+   NFmiString GetPrintedText (float theValue) override;
+   NFmiPoint SbdCalcFixedSymbolSize() const override;
+   void SbdSetFontName() override;
+   NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const override;
+   NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
 
    NFmiIndexMessageList * itsIndexedWordList;
    bool fUseWeatherAndCloudinessForInterpolation;
@@ -82,11 +81,11 @@ public:
     {};
 
 protected:
-   NFmiString GetPrintedText (float theValue);
-   void ModifyTextColor(float theValue) override;
+   NFmiString GetPrintedText (float theValue) override;
+   NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const override;
 
 private:
-	float FogValueToSymbolIndex(float theFogValue); // NoFog = 0, ModerateFog = 1, DenseFog = 2;
+	float FogValueToSymbolIndex(float theFogValue) const; // NoFog = 0, ModerateFog = 1, DenseFog = 2;
 };
 
 class NFmiTotalCloudinessSymbolTextView : public NFmiStationIndexTextView
@@ -116,8 +115,9 @@ public:
     {};
 
 protected:
-   NFmiString GetPrintedText(float theValue);
-   NFmiColor GetBasicParamRelatedSymbolColor(float theValue) override;
+   NFmiString GetPrintedText(float theValue) override;
+   NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const override;
+   NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
 };
 
 class NFmiPrecipitationFormSymbolTextView : public NFmiStationIndexTextView
@@ -147,8 +147,8 @@ public:
     {};
 
 protected:
-   NFmiString GetPrintedText(float theValue);
-   NFmiColor GetBasicParamRelatedSymbolColor(float theValue) override;
+   NFmiString GetPrintedText(float theValue) override;
+   NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const override;
 
 };
 
@@ -168,10 +168,13 @@ public:
         , int theColumnIndex);
 
 protected:
-    void ModifyTextEnvironment(void);
-    NFmiString GetPrintedText(float theValue);
-    NFmiPoint GetSpaceOutFontFactor(void);
-    NFmiColor GetBasicParamRelatedSymbolColor(float theValue) override;
+    void ModifyTextEnvironment(void) override;
+    NFmiString GetPrintedText(float theValue) override;
+    NFmiPoint GetSpaceOutFontFactor(void) override;
+    NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const override;
+    NFmiPoint SbdCalcFixedSymbolSize() const override;
+	void SbdSetFontName() override;
+    NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
 
 };
 
@@ -201,7 +204,7 @@ public:
     {};
 
 protected:
-   NFmiString GetPrintedText(float theValue);
+   NFmiString GetPrintedText(float theValue) override;
 };
 
 class NFmiCloudSymbolTextView : public NFmiStationIndexTextView
@@ -232,15 +235,42 @@ public:
 	{};
 
 protected:
-	void DrawData(void);
-	NFmiString GetPrintedText(float theValue);
-    void ModifyTextEnvironment(void);
-    NFmiColor GetBasicParamRelatedSymbolColor(float theValue) override;
+	NFmiString GetPrintedText(float theValue) override;
+    void ModifyTextEnvironment(void) override;
+    NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const override;
+	bool SbdIsFixedSymbolSize() const override;
+    NFmiPoint SbdCalcChangingSymbolSize(float value) const override;
+    NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
 
 	NFmiPoint itsGeneralFontSize; // tämä otetaan talteen ModifyTextEnvironment jotta fontti koko voidaan muuttaa sitten cloud symbolista riippuen
 };
 
-class NFmiBetterWeatherSymbolView : public NFmiStationIndexTextView
+class NFmiImageBasedSymbolView : public NFmiStationIndexTextView
+{
+
+public:
+    NFmiImageBasedSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea>& theArea
+        , NFmiToolBox* theToolBox
+        , NFmiDrawingEnvironment* theDrawingEnvi
+        , boost::shared_ptr<NFmiDrawParam>& theDrawParam
+        , FmiParameterName theParamIdent
+        , NFmiIndexMessageList* theIndexedWordList
+        , NFmiPoint theOffSet
+        , NFmiPoint theSize
+        , int theRowIndex
+        , int theColumnIndex);
+
+protected:
+    NFmiPoint SbdCalcFixedSymbolSize() const override;
+    NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
+    NFmiPoint GetSpaceOutFontFactor(void) override;
+    void ModifyTextEnvironment(void) override;
+    NFmiPoint SbdCalcFixedRelativeDrawObjectSize() const override;
+    double CalcSymbolSizeInMM() const;
+
+};
+
+class NFmiBetterWeatherSymbolView : public NFmiImageBasedSymbolView
 {
 
 public:
@@ -256,17 +286,15 @@ public:
         , int theColumnIndex);
 
     static void InitBetterWeatherSymbolMap(const std::string &theWomlDirectory);
+    static NFmiImageMap& GetBetterWeatherSymbolMap() { return itsBetterWeatherSymbolMap; }
 
 protected:
-    void DrawSymbols(void);
-    void DrawData(void);
-    NFmiPoint GetSpaceOutFontFactor(void);
-    void ModifyTextEnvironment(void);
+    NFmiSymbolBulkDrawType SbdGetDrawType() const override;
 
     static NFmiImageMap itsBetterWeatherSymbolMap;
 };
 
-class NFmiSmartSymbolView : public NFmiStationIndexTextView
+class NFmiSmartSymbolView : public NFmiImageBasedSymbolView
 {
 
 public:
@@ -282,17 +310,15 @@ public:
         , int theColumnIndex);
 
     static void InitSmartSymbolMap(const std::string &theWomlDirectory);
+    static NFmiImageMap& GetSmartSymbolMap() { return itsSmartSymbolMap; }
 
 protected:
-    void DrawSymbols(void);
-    void DrawData(void);
-    NFmiPoint GetSpaceOutFontFactor(void);
-    void ModifyTextEnvironment(void);
+    NFmiSymbolBulkDrawType SbdGetDrawType() const override;
 
     static NFmiImageMap itsSmartSymbolMap;
 };
 
-class NFmiCustomSymbolView : public NFmiStationIndexTextView
+class NFmiCustomSymbolView : public NFmiImageBasedSymbolView
 {
 
 public:
@@ -308,12 +334,10 @@ public:
         , int theColumnIndex);
 
     static void InitCustomSymbolMap(const std::string &theWomlDirectory);
+    static NFmiImageMap& GetCustomSymbolMap() { return itsCustomSymbolMap; }
 
 protected:
-    void DrawSymbols(void);
-    void DrawData(void);
-    NFmiPoint GetSpaceOutFontFactor(void);
-    void ModifyTextEnvironment(void);
+    NFmiSymbolBulkDrawType SbdGetDrawType() const override;
 
     static NFmiImageMap itsCustomSymbolMap;
 };

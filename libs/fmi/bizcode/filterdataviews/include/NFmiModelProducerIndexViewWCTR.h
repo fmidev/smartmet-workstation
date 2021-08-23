@@ -23,13 +23,13 @@ class NFmiModelProducerIndexViewWCTR : public NFmiModelCombineStatusView
 {
 
 public:
-	void Draw(NFmiToolBox * theGTB);
+	void Draw(NFmiToolBox * theGTB) override;
 	NFmiModelProducerIndexViewWCTR(NFmiToolBox * theToolBox
 							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
-	virtual  ~NFmiModelProducerIndexViewWCTR();
-	void Update(void);
+	~NFmiModelProducerIndexViewWCTR();
+	void Update(void) override;
 	void SetDataFromDialog(	 std::vector<boost::shared_ptr<NFmiQueryInfo> > &theQueryInfoVector
 							,const NFmiTimeDescriptor& theLoadedDataTimeDescriptor
 							,const std::vector<int>& theSelectedProducerPriorityTable
@@ -41,15 +41,15 @@ public:
 	bool IsProducerIndexInTimeVectorFilled(void);
 	bool SelectSecondProducerFromThisTimeOn(int theTimeIndex);
 
-	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey);
-	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey) override;
 
 protected:
-	virtual NFmiRect CalcStatusGridViewSize(void);
-	virtual NFmiColor CheckStatusBoxColor(int theTimeIndex);
-	virtual bool IsViewDrawed(void);
+	NFmiRect CalcStatusGridViewSize(void) override;
+	NFmiColor CheckStatusBoxColor(int theTimeIndex) override;
+	bool IsViewDrawed(void) override;
     const NFmiTimeBag& MaximalCoverageTimeBag();
 private:
 	void DrawBlendingArea(void);

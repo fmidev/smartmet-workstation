@@ -27,9 +27,9 @@ public:
 					,FmiParameterName theParamId
 					,int theRowIndex
                     ,int theColumnIndex);
-    virtual ~NFmiSynopPlotView(void);
-	void Draw(NFmiToolBox * theGTB);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+    ~NFmiSynopPlotView(void);
+	void Draw(NFmiToolBox * theGTB) override;
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 	void DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &theLocation, const NFmiRect &theRect, const NFmiMetTime &theTime, double theFontSize, bool fDrawSoundingPlot, bool fDrawMinMaxPlot, bool fDrawMetarPlot);
 
 protected:

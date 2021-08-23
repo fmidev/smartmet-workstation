@@ -22,13 +22,11 @@ public:
         , int theColumnIndex);
    virtual  ~NFmiStationTextView (void);
 
-   bool IsSingleSymbolView(void) { return false; }; // tulostaa kartalle tekstin pätkän, joten false
+   bool IsSingleSymbolView(void) override { return false; }; // tulostaa kartalle tekstin pätkän, joten false
 protected:
-   void			DrawData (void);
-   void			DrawText2(void);
-   virtual NFmiColor	CalcTextColor (void);
-   void			ModifyTextEnvironment (void);
-   NFmiPoint GetSpaceOutFontFactor(void);
+   void			ModifyTextEnvironment (void) override;
+   NFmiPoint GetSpaceOutFontFactor(void) override;
+   NFmiPoint SbdCalcFixedSymbolSize() const override;
 
 };
 

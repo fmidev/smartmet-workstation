@@ -44,21 +44,21 @@ class NFmiCrossSectionManagerView : public NFmiCtrlView
 								,NFmiToolBox * theToolBox
 								,NFmiDrawingEnvironment * theDrawingEnvi);
 	~NFmiCrossSectionManagerView(void);
-	void Update(void);
-	void Draw(NFmiToolBox* theToolBox); 
-	bool LeftButtonUp(const NFmiPoint& thePlace, unsigned long theKey);
-	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta); 
-    bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey);
-    bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey);
-    bool IsMouseDraggingOn(void);
+	void Update(void) override;
+	void Draw(NFmiToolBox* theToolBox) override;
+	bool LeftButtonUp(const NFmiPoint& thePlace, unsigned long theKey) override;
+	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+    bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey) override;
+    bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override;
+    bool IsMouseDraggingOn(void) override;
     void DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &thePlace); // tooltip feikki viritys
     void UpdateListViewFrames(void);
 	void UpdateSize(void);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
     void CalcDrawSizeFactors(void);
 
  private:

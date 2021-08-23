@@ -59,12 +59,23 @@ void NFmiFlashDataView::Draw(NFmiToolBox * theGTB)
 	itsNegativeFlashPolyLine->GetEnvironment()->SetFrameColor(negativeColor);
 	itsCloudFlashPolyLine->GetEnvironment()->SetFrameColor(cloudColor);
     MakeDrawedInfoVector();
-
-	for(size_t j = 0; j < itsInfoVector.size(); j++)
+	// Asetetaan clippaus yhden kerran salama piirrossa päälle.
+	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
+	itsToolBox->SetUpClipping();
+	// Clippaus pitää sitten laittaa "pois päältä" (TurnClippingOffHelper:in avulla), muuten tulee päällekkäisiä 
+	// clippaus asetuksia eri salamatyyppien polyline piirron sisällä, ja ohjelma kaatuu...
+	// Tämä pitää tehdä erillisen scopen sisällä, jotta TurnClippingOffHelper destruktori kutsutaan ennen itsToolBox->EndClipping kutsua.
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> &info = itsInfoVector[j];
-		DrawFlashes(*info);
+		TurnClippingOffHelper turnClippingOffHelper(itsToolBox);
+
+		for(size_t j = 0; j < itsInfoVector.size(); j++)
+		{
+			boost::shared_ptr<NFmiFastQueryInfo>& info = itsInfoVector[j];
+			DrawFlashes(*info);
+		}
 	}
+	// Lopuksi otetaan clippaus pois
+	itsToolBox->EndClipping();
 }
 
 void NFmiFlashDataView::DrawFlashes(NFmiFastQueryInfo &theInfo)
@@ -94,7 +105,6 @@ void NFmiFlashDataView::DrawFlashes(NFmiFastQueryInfo &theInfo)
 	{
 		int editorTimeStep = CalcUsedTimeStepInMinutes();
 		NFmiMetTime time1 = CalcFirstTimeOfSpan();
-        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
 		NFmiPoint scale(itsDrawParam->OnlyOneSymbolRelativeSize());
 		// käy läpi halutut salamat (olettaen että muut asetukset ovat kohdallaan)
 		for(unsigned long i=timeIndex1; i<=timeIndex2; i++)
