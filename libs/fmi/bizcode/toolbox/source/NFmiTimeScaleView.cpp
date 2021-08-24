@@ -228,7 +228,7 @@ NFmiVoidPtrList &NFmiTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawingList
 	      tmpstr += NFmiValueString("0");
 	    tmpstr += NFmiValueString(aTime.GetHour());
 
-	    NFmiText tmptext(NFmiPoint(x - fontSize.X()/2., y3), tmpstr, 0, &theEnvironment);
+	    NFmiText tmptext(NFmiPoint(x - fontSize.X()/2., y3), tmpstr, false, 0, &theEnvironment);
 	    GetToolBox()->ConvertShape(&tmptext);
 	}
 
@@ -238,7 +238,7 @@ NFmiVoidPtrList &NFmiTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawingList
 	  if(NFmiValueString(aTime.GetDay()).GetLen() <= 1)
 	    tmpstr += NFmiValueString("0");
 	  tmpstr += NFmiValueString(aTime.GetDay());
-	  NFmiText tmptext(NFmiPoint(x - fontSize.X()/2., y4), tmpstr, 0, &theEnvironment);
+	  NFmiText tmptext(NFmiPoint(x - fontSize.X()/2., y4), tmpstr, false, 0, &theEnvironment);
 	  GetToolBox()->ConvertShape(&tmptext);
 	}
   }

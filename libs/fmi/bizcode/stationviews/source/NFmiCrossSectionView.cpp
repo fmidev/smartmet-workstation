@@ -812,119 +812,6 @@ float NFmiCrossSectionView::GetLevelValueForMetaParam(boost::shared_ptr<NFmiFast
     return kFloatMissing;
 }
 
-NFmiDrawingEnvironment NFmiCrossSectionView::GetToolTipEnvironment(void)
-{
-	NFmiDrawingEnvironment envi;
-	envi.EnableFill();
-	envi.EnableFrame();
-	envi.SetFrameColor(NFmiColor(0.f,0.f,0.f));
-	envi.SetFillColor(NFmiColor(1.f,1.f,0.f));
-	return envi;
-}
-
-void NFmiCrossSectionView::MakeMultiLineToolTip(const NFmiString& theStr, double theFontSize, NFmiDrawingEnvironment *theEnvi, double theTooltipTextXOffset, const NFmiPoint &thePoint)
-{
-	using namespace std;
-#ifndef UNIX
-	using namespace std::rel_ops;
-#endif
-
-	const unsigned long maxLineLength = 37;
-	const unsigned long normalLineLength = 32;
-	std::vector<basic_string<char> > strVector; // t‰h‰n rakennetaan erilliset rivit koko stringist‰
-	string whitespaces(" \n");		// etsitt‰v‰t erottimet
-	string space(" ");				// pelkk‰ space
-	string wholeStr(theStr);		// parametrina annettu stringi
-	string currentLineStr;	// rakennettavana oleva rivi
-	string currentWord;	// viimeisin irrotettu sana
-	string::size_type startPos = 0, endPos = 0, tempPos = 0;
-	for(; (endPos = wholeStr.find_first_of(whitespaces, startPos)) != string::npos; )
-	{
-		currentLineStr += wholeStr.substr(startPos, endPos-startPos + 1);
-		if(wholeStr[endPos] == '\n' || currentLineStr.size() > normalLineLength)
-		{
-			bool makeLine = true;
-			if((wholeStr[endPos] == ' ') && (wholeStr[endPos+1] == '\n'))
-				endPos++;
-			else
-			{
-				if(wholeStr[endPos] != '\n')
-				{
-					if((tempPos = wholeStr.find_first_of(whitespaces, endPos+1)) != string::npos)
-					{
-						if(tempPos - endPos + 1 > maxLineLength - currentLineStr.size())
-							makeLine = false;
-					}
-				}
-			}
-			if(makeLine)
-			{
-				bool onlyEndl = false;
-				if(currentLineStr[currentLineStr.size()-1] == '\n')
-					onlyEndl = true;
-				currentLineStr[currentLineStr.size()-1] = ' ';
-				if(onlyEndl || currentLineStr.compare(space) != 0)
-					strVector.push_back(currentLineStr);
-				currentLineStr = "";
-			}
-		}
-		else // space erotin
-		{
-//			if()
-		}
-		startPos = endPos+1;
-	}
-	strVector.push_back(currentLineStr);
-
-	double lineHeigth = 0.;
-
-	NFmiRect rect(CalcToolTipRect(strVector, static_cast<int>(theFontSize), lineHeigth, thePoint)); // lineHeight lasketaan
-	if(!GetFrame().IsInside(rect))
-		rect.Center(GetFrame().Center());
-	NFmiRectangle rectangle(rect.TopLeft()
-						  ,rect.BottomRight()
-						  ,0
-						  ,theEnvi);
-	itsToolBox->Convert(&rectangle);
-
-
-	NFmiPoint place = rect.TopLeft();
-	place.X(place.X() + theTooltipTextXOffset);
-	theEnvi->SetFontSize(NFmiPoint(theFontSize, theFontSize));
-	for(unsigned int i=0; i < strVector.size(); i++)
-	{
-		NFmiString temp(strVector[i].c_str());
-		NFmiText text(place, temp, 0, theEnvi);
-		itsToolBox->Convert(&text);
-		place.Y(place.Y()+lineHeigth);
-	}
-}
-
-NFmiRect NFmiCrossSectionView::CalcToolTipRect(std::vector<std::basic_string<char> > &theStrVector, int theFontSize, double& theLineHeigth, const NFmiPoint &thePoint)
-{
-	unsigned int len = 0;
-	for(unsigned int i=0; i < theStrVector.size(); i++)
-		len = (len > theStrVector[i].size()) ? len : static_cast<unsigned int>(theStrVector[i].size());
-
-	double pixelLengthX = itsToolBox->SX(1);
-	double pixelLengthY = itsToolBox->SY(1);
-	double tooltipXSize = len * pixelLengthX * theFontSize * 0.57;	// tooltipin lasku onnistuu n‰in, koska k‰ytet‰‰n
-										// aina samaa fontti kokoa ja courier new:t‰
-	double tooltipYOffset = 0.01;
-	int rowCount = static_cast<int>(theStrVector.size());
-	theLineHeigth = pixelLengthY * theFontSize * 0.8;
-	double tooltipYSize = rowCount * theLineHeigth - theLineHeigth * 0.8;
-	NFmiRect rect(thePoint.X(), thePoint.Y() - tooltipYSize - tooltipYOffset
-				, thePoint.X() + tooltipXSize, thePoint.Y());
-
-	if(rect.Top() < GetFrame().Top())
-		rect.Place(NFmiPoint(rect.Left(), rect.Top() + 2*tooltipYSize));
-	if(rect.Right() > GetFrame().Right())
-		rect.Place(NFmiPoint(rect.Left() - (rect.Right() - GetFrame().Right() + 2 * pixelLengthX), rect.Top()));
-
-	return rect;
-}
-
 // laskee (interpoloi) kahden l‰himm‰n minor-pisteen avulla hiiren 'osoittaman'
 // latlon-pisteen ja palauttaa sen
 NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theRelativePlace)
@@ -1047,7 +934,7 @@ void NFmiCrossSectionView::DrawHeader(void)
 	textPoint.X(textPoint.X() + 2*moveDownward); // siirret‰‰n myˆs pari pikseli‰ oikeaan
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kTopLeft);
-	NFmiText text(textPoint, itsHeaderParamString, 0, itsDrawingEnvironment);
+	NFmiText text(textPoint, itsHeaderParamString, true, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 	itsToolBox->SetTextAlignment(oldAlignment);
 }
@@ -2389,7 +2276,7 @@ void NFmiCrossSectionView::DrawPressureScale(void)
 			NFmiPoint p3(p2);
 			p3.Y(p3.Y() - moveLabelY);
 			NFmiString str1(NFmiStringTools::Convert<double>(pressure));
-			NFmiText txt1(p3, str1, 0, &envi);
+			NFmiText txt1(p3, str1, false, 0, &envi);
 			itsToolBox->Convert(&txt1);
 
 			// apuviivaston piirto ruudun poikki
@@ -2552,7 +2439,7 @@ void NFmiCrossSectionView::DrawFlightLevelScale(void)
 		NFmiPoint p3 = p2 + moveLabelRelatively;
 		if(onlySmallTick == false)
 		{
-			NFmiText text1(p3, str, 0, &envi);
+			NFmiText text1(p3, str, false, 0, &envi);
 			itsToolBox->Convert(&text1);
 			if(itsDataViewFrame.IsInside(p2))
 				lastHeightInDataBox = y;
@@ -2562,7 +2449,7 @@ void NFmiCrossSectionView::DrawFlightLevelScale(void)
 	{
 		double unitStringY = CalcHelpScaleUnitStringYPos(itsDataViewFrame, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
 		double unitStringX = itsDataViewFrame.Right();
-		NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X() - extraOffset, unitStringY), "FL", 0, &envi);
+		NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X() - extraOffset, unitStringY), "FL", false, 0, &envi);
 		itsToolBox->Convert(&txt1);
 	}
 }
@@ -2768,7 +2655,7 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 			itsToolBox->Convert(&l1);
 			NFmiString heightLabelStr(::ComposeHeightValueString(heightKM, usedDecimals, useKmAsUnit));
 			NFmiPoint p3 = p2 + moveLabelRelatively;
-			NFmiText text1(p3, heightLabelStr, 0, &envi);
+			NFmiText text1(p3, heightLabelStr, false, 0, &envi);
 			itsToolBox->Convert(&text1);
 			if(this->itsDataViewFrame.IsInside(p2))
 				lastHeightInDataBox = y;
@@ -2777,7 +2664,7 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 		{
 			double unitStringY = CalcHelpScaleUnitStringYPos(itsDataViewFrame, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
 			double unitStringX = itsDataViewFrame.Right();
-			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), useKmAsUnit ? "KM" : "m", 0, &envi);
+			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), useKmAsUnit ? "KM" : "m", false, 0, &envi);
 			itsToolBox->Convert(&txt1);
 		}
 	}
@@ -2880,7 +2767,7 @@ void NFmiCrossSectionView::DrawHybridLevels(void)
 							{
 								NFmiString labelStr(NFmiStringTools::Convert<float>(hybridInfo->Level()->LevelValue()));
 								NFmiPoint labelPoint(p1.X() + labelMoveX, p1.Y() - labelMoveY);
-								NFmiText txt1(labelPoint, labelStr, 0, &envi);
+								NFmiText txt1(labelPoint, labelStr, false, 0, &envi);
 								itsToolBox->Convert(&txt1);
 								firstFoundPoint = false;
 							}

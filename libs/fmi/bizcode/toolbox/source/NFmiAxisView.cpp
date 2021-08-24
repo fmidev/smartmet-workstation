@@ -121,7 +121,7 @@ void NFmiAxisView::DrawHeader(void)
   theEnvironment.EnableFrame();
   theEnvironment.SetFrameColor(NFmiColor(0.2f, 0.45f, 0.3f));
   
-  NFmiText tmp(HeaderPlace(),itsAxis->Text());
+  NFmiText tmp(HeaderPlace(),itsAxis->Text(), false);
   GetToolBox()->Convert(&tmp);
 }
 //_________________________________________________________________________ HeaderPlace
@@ -441,7 +441,7 @@ void NFmiAxisView::DrawTickTexts(double theFontHeight)
 	NFmiPoint startPoint;
 	startPoint = TickEnd(theRect, RelativeTickPlace());
 	if(itsOrientation == kDown) startPoint += NFmiPoint(0.f, .3f * theFontHeight);// 170297 BaseLine ei oikein hyvä
-	NFmiText tmp(startPoint,itsAxis->Text());
+	NFmiText tmp(startPoint,itsAxis->Text(), false);
     GetToolBox()->ConvertShape(&tmp);
 //    GetToolBox()->ConvertShape(&NFmiText(point, itsAxis->Text()));
     if(!fItsSecondaryText)
@@ -455,7 +455,7 @@ void NFmiAxisView::DrawTickTexts(double theFontHeight)
 		     startPoint +=  NFmiPoint(0.f, .45f * GetFrame().Height());
        if(itsOrientation == kDown) startPoint +=  NFmiPoint(0.f, .31f * theFontHeight);// 170297 BaseLine ei oikein hyvä
        itsCurrentTextLine = 1;
-       NFmiText tmp(startPoint, secondText);
+       NFmiText tmp(startPoint, secondText, false);
        GetToolBox()->ConvertShape(&tmp);
 	}
 

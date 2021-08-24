@@ -559,7 +559,7 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 			for(size_t i = 0; (i < theFoundProducerNames.size()) && (i < theUsedColors.size()); i++)
 			{
 				envi.SetFrameColor(theUsedColors[i]);
-				NFmiText text(textPoint, theFoundProducerNames[i].c_str(), 0, &envi);
+				NFmiText text(textPoint, theFoundProducerNames[i].c_str(), true, 0, &envi);
 				itsToolBox->Convert(&text);
 
 				NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc/2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), 0, &envi);
@@ -588,7 +588,7 @@ void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NF
     if(info)
     {
         drawingEnvironmentInOut.SetFrameColor(color);
-        NFmiText text(legendPlaceInOut, producer.GetName(), 0, &drawingEnvironmentInOut);
+        NFmiText text(legendPlaceInOut, producer.GetName(), true, 0, &drawingEnvironmentInOut);
         itsToolBox->Convert(&text);
 
         NFmiLine line1(NFmiPoint(legendPlaceInOut.X(), legendPlaceInOut.Y() - heightIncrement / 2.), NFmiPoint(endPointX, legendPlaceInOut.Y() - heightIncrement / 2.), 0, &drawingEnvironmentInOut);
@@ -1218,7 +1218,7 @@ void NFmiTimeSerialView::DrawStationNameLegend(const NFmiLocation* theLocation, 
 			tmpStr += " km)";
 		}
 
-		NFmiText text(theTextPos, tmpStr, 0, &theEnvi);
+		NFmiText text(theTextPos, tmpStr, true, 0, &theEnvi);
 		FmiDirection oldAligment = itsToolBox->GetTextAlignment();
 		itsToolBox->SetTextAlignment(theTextAligment);
 		itsToolBox->Convert(&text);
@@ -1614,7 +1614,7 @@ void NFmiTimeSerialView::DrawParamName(void)
 		}
 
 		NFmiPoint place(CalcParamTextPosition());
-		NFmiText text(place, str, 0, itsDrawingEnvironment);
+		NFmiText text(place, str, true, 0, itsDrawingEnvironment);
 		FmiDirection oldDir = itsToolBox->GetTextAlignment();
 		itsToolBox->SetTextAlignment(kTop);
 		itsToolBox->Convert(&text);
@@ -1659,7 +1659,7 @@ void NFmiTimeSerialView::DrawModifyingUnit(void)
 
 		NFmiPoint place(itsModifyingUnitTextRect.BottomLeft());
 		place.Y(place.Y() - 0.005);
-		NFmiText text(place, str, 0, itsDrawingEnvironment);
+		NFmiText text(place, str, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 	}
 	return;
@@ -1792,7 +1792,7 @@ void NFmiTimeSerialView::DrawIncrementalDataLegend(void)
 	FmiDirection oldAlign = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kLeft);
 	NFmiString str("cumulative ---");
-	NFmiText text(place, str, 0, &itsIncrementalCurveEnvi);
+	NFmiText text(place, str, false, 0, &itsIncrementalCurveEnvi);
 	itsToolBox->Convert(&text);
 	itsToolBox->SetTextAlignment(oldAlign);
 }
@@ -2103,7 +2103,7 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawLegend(boost::shared_ptr<NFmiE
     {
         itsToolBox->UseClipping(false);
         NFmiValueString indexStr(cpManager->CPIndex() + 1, "%d"); // +1 koska indeksit alkavat 0:sta
-        NFmiText text(cpDrawingOptions.textPoint, indexStr, 0, &cpDrawingOptions.currentDataEnvi);
+        NFmiText text(cpDrawingOptions.textPoint, indexStr, false, 0, &cpDrawingOptions.currentDataEnvi);
         itsToolBox->Convert(&text);
 
         NFmiLine line1(NFmiPoint(cpDrawingOptions.textPoint.X(), cpDrawingOptions.textPoint.Y() - cpDrawingOptions.heightInc / 2.), NFmiPoint(cpDrawingOptions.endPointX1, cpDrawingOptions.textPoint.Y() - cpDrawingOptions.heightInc / 2.), 0, &cpDrawingOptions.currentDataEnvi);
@@ -3739,7 +3739,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedMessages(const std::vector<std::s
     textPoint.Y(GetFrame().Top() + heightInc/2.);
     for(const auto &message : messages)
     {
-        NFmiText text(textPoint, message.c_str(), 0, &envi);
+        NFmiText text(textPoint, message.c_str(), false, 0, &envi);
         itsToolBox->Convert(&text);
         textPoint.Y(textPoint.Y() + heightInc);
     }

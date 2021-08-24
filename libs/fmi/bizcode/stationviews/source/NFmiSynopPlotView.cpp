@@ -1364,7 +1364,7 @@ bool NFmiSynopPlotView::PrintParameterValue(boost::shared_ptr<NFmiFastQueryInfo>
 	}
 	if(str.GetLen() > 0)
 	{
-		NFmiText text(viewLocation, str, 0, itsDrawingEnvironment);
+		NFmiText text(viewLocation, str, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 		return true;
 	}

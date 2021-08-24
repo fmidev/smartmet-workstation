@@ -1805,7 +1805,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
             if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitää kohdistaa erikseen laatikon keskelle
                 textLocation.X(textLocation.X() + itsExistingLabels[i].LabelBoxRect().Width() / 5.);
 
-            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), 0, &env);
+            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), false, 0, &env);
             itsToolBox->Convert(&aText);
         }
     }
@@ -1842,7 +1842,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
             if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitää kohdistaa erikseen laatikon keskelle
                 textLocation.X(textLocation.X() + itsExistingLabels[i].LabelBoxRect().Width() / 5.);
 
-            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), 0, &env);
+            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), false, 0, &env);
             itsToolBox->Convert(&aText);
         }
     }

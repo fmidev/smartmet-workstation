@@ -497,7 +497,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 			NFmiPoint textPoint1(startPointXY);
 			textPoint1 += NFmiPoint(textPoint1.X() > 0.95 ? -0.03 : 0.02, textPoint1.Y() > 0.95 ? -0.03 : 0.02);
 			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-			NFmiText text1(textPoint1, NFmiString("1."), 0, itsDrawingEnvironment);
+			NFmiText text1(textPoint1, NFmiString("1."), false, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&text1);
 
 			if(drawWholeLine)
@@ -508,7 +508,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 				NFmiPoint textPoint2(endPointXY);
 				textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
 				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-				NFmiText text2(textPoint2, NFmiString("2."), 0, itsDrawingEnvironment);
+				NFmiText text2(textPoint2, NFmiString("2."), false, 0, itsDrawingEnvironment);
 				itsToolBox->Convert(&text2);
 				if(crossSectionSystem->CrossSectionMode() == NFmiCrossSectionSystem::k3Point)
 				{ // piirretää vielä keski piste väri pallolla
@@ -518,7 +518,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 					NFmiPoint textPoint3(middlePointXY);
 					textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-					NFmiText text3(textPoint3, NFmiString("M."), 0, itsDrawingEnvironment);
+					NFmiText text3(textPoint3, NFmiString("M."), false, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text3);
 				}
 
@@ -1060,7 +1060,7 @@ void NFmiStationViewHandler::DrawSilamStationMarkers(NFmiSilamStationList &theSt
 			// pelkkä toolbox-alignmentti center (eikä mikään muukaan) vie tekstiä keskelle y-suunnassa, joten tämä siirros siirtää tekstin ihan keskelle
 			p2.Y(p2.Y() + symbolYShift);
 			p2.X(p2.X() - symbolXShift);
-			NFmiText txt(p2, theSynopStr, 0, &theEnvi);
+			NFmiText txt(p2, theSynopStr, false, 0, &theEnvi);
 			itsToolBox->Convert(&txt);
 		}
 	}
@@ -2119,7 +2119,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 					place.X(place.X() + 0.004);
 					FmiDirection oldAlign = itsToolBox->GetTextAlignment();
 					itsToolBox->SetTextAlignment(static_cast<FmiDirection>(kBottom + 1000)); // + 1000 on viritys toolboxissa, laittaa läpinäkymättömyyden päälle, eli tekstille tulee pohjaväri alle
-					NFmiText text(place, timeStr, 0, &envi);
+					NFmiText text(place, timeStr, false, 0, &envi);
 					itsToolBox->Convert(&text);
 					itsToolBox->SetTextAlignment(oldAlign);
 				}

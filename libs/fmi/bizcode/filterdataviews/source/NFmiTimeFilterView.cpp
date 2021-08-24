@@ -328,6 +328,6 @@ void NFmiTimeFilterView::DrawTimeTexts(void)
 	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
 	itsDrawingEnvironment->SetFontSize(NFmiPoint(16,16));
 	NFmiPoint place(GetFrame().TopLeft());
-	NFmiText text(place, timeStr, 0, itsDrawingEnvironment);
+	NFmiText text(place, timeStr, false, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 }

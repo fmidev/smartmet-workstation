@@ -723,7 +723,7 @@ void NFmiEditMapView::PrintNoDataMessageOnTimeControlView(void)
 		NFmiPoint place = itsTimeControlViewRect.TopLeft();
 		place.X(place.X() + GetFrame().Width()/100.);
 		envi.SetFontSize(NFmiPoint(22,22));
-		NFmiText text(place, str, 0, &envi);
+		NFmiText text(place, str, false, 0, &envi);
 		itsToolBox->Convert(&text);
 	}
 	else
@@ -732,7 +732,7 @@ void NFmiEditMapView::PrintNoDataMessageOnTimeControlView(void)
 		NFmiPoint place = itsTimeControlViewRect.TopLeft();
 		place.X(place.X() + itsTimeControlViewRect.Width()/100.);
 		envi.SetFontSize(NFmiPoint(18,18));
-		NFmiText text(place, str, 0, &envi);
+		NFmiText text(place, str, false, 0, &envi);
 		itsToolBox->Convert(&text);
 	}
 }
