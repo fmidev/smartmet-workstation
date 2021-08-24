@@ -162,7 +162,7 @@ public:
     virtual NFmiPtrList<NFmiDrawParamList>* getDrawParamListVector(unsigned int mapViewDescTopIndex) = 0;
     virtual void clearDesctopsAllParams(unsigned int mapViewDescTopIndex) = 0;
     virtual void makeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area) = 0;
-    virtual void makeApplyViewMacroDirtyActions() = 0;
+    virtual void makeApplyViewMacroDirtyActions(double drawObjectScaleFactor) = 0;
     virtual void makeSwapBaseArea(unsigned int mapViewDescTopIndex) = 0;
     virtual void swapArea(unsigned int mapViewDescTopIndex) = 0;
     virtual void removeMacroParamFromDrawParamLists(const std::string& macroParamName) = 0;
@@ -235,7 +235,6 @@ public:
     virtual std::pair<std::string, std::string> getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
     virtual void selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName) = 0;
     virtual void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) = 0;
-    virtual void updateAllMapViewsSingleMapSizes(double drawObjectScaleFactor) = 0;
 
 
     // Staattiset perushelper-funktiot

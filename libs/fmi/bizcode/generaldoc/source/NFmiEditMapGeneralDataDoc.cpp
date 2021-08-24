@@ -6508,7 +6508,7 @@ bool InitCPManagerSet(void)
         ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
         MetEditorOptionsData().ControlPointMode(theMacro.UseControlPoinTool());
 
-        GetCombinedMapHandler()->makeApplyViewMacroDirtyActions();
+        GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
 
         // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
@@ -6647,13 +6647,6 @@ bool InitCPManagerSet(void)
                 LoadViewMacroInfo(*CurrentViewMacro(), true, false);
 
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro in use"); // tämä sitten päivittää kaikki ruudut
-
-				// Tämä kutsu varmistaa että eri karttanäytöissä on oikeat kartan koko arvot tallessa.
-				// Jos näyttömakro lataa saman koon jollekin kartalle, ei oikeita päivitys juttuja kutsuta ollenkaan,
-				// koska kartan pikseli koko ei ole muuttunut. Tämä on todellinen ongelma, koska usein näyttöjen koot
-				// jäävät edellisesta saman näyttömakron latauksesta. Jos tätä päivitystä ei tehdä, vaikuttaa se
-				// joidenkin piirtoobjektien koon laskuihin (mm. värilegendat ja erilaiset symbolit).
-				GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes(ApplicationWinRegistry().DrawObjectScaleFactor());
 
                 // lokitetaan, mikä makro on ladattu käyttöön...
                 string logStr("Applying the view-macro: ");
@@ -8043,10 +8036,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		LogMessage(message, CatLog::Severity::Info, CatLog::Category::Visualization);
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
-		MacroParamDataCache().clearAllLayers();
 		WindTableSystem().MustaUpdateTable(true);
-		GetCombinedMapHandler()->setBorderDrawDirtyState(CtrlViewUtils::kDoAllMapViewDescTopIndex, CountryBorderDrawDirtyState::Geometry);
-		GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes(ApplicationWinRegistry().DrawObjectScaleFactor());
+		GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
+
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
 	}
 

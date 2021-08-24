@@ -3522,21 +3522,6 @@ void NFmiCombinedMapHandler::selectCombinedMapModeIndices(unsigned int mapViewDe
 	setWantedLayerIndex(combinedOverlayMapModeState, mapViewDescTopIndex, mapAreaIndex, false);
 }
 
-void NFmiCombinedMapHandler::updateAllMapViewsSingleMapSizes(double drawObjectScaleFactor)
-{
-	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
-	{
-		auto &mapViewDesctop = mapViewDescTops_[mapViewDescTopIndex];
-		if(mapViewDesctop)
-		{
-			// Päivitetään väkisin tämä pixelSize juttu ja siihen liittyvät laskut
-			auto currentPixelSize = mapViewDesctop->MapViewSizeInPixels();
-			mapViewDesctop->MapViewSizeInPixels(currentPixelSize, nullptr, drawObjectScaleFactor, !mapViewDesctop->IsTimeControlViewVisible());
-			mapViewDesctop->UpdateOneMapViewSize();
-		}
-	}
-}
-
 int NFmiCombinedMapHandler::getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase)
 {
 	const auto& mapLayerRelatedInfos = getCurrentMapLayerRelatedInfos(mapViewDescTopIndex, backgroundMapCase, wmsCase);
@@ -3754,7 +3739,7 @@ void NFmiCombinedMapHandler::clearDesctopsAllParams(unsigned int mapViewDescTopI
 	}
 }
 
-void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions()
+void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions(double drawObjectScaleFactor)
 {
 	// läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
 	mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
@@ -3763,6 +3748,11 @@ void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions()
 		NFmiMapViewDescTop* mapDescTop = getMapViewDescTop(mapViewDescTopIndex);
 		mapDescTop->MapViewBitmapDirty(true);
 		mapDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+
+		// Päivitetään väkisin tämä pixelSize juttu ja siihen liittyvät laskut
+		auto currentPixelSize = mapDescTop->MapViewSizeInPixels();
+		mapDescTop->MapViewSizeInPixels(currentPixelSize, nullptr, drawObjectScaleFactor, !mapDescTop->IsTimeControlViewVisible());
+		mapDescTop->UpdateOneMapViewSize();
 	}
 	::getMacroParamDataCache().clearAllLayers();
 }
