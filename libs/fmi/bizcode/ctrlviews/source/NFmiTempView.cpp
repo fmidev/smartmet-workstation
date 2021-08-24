@@ -1041,7 +1041,7 @@ void NFmiTempView::DrawStabilityIndexData(void)
 
 	NFmiPoint p(CalcStabilityIndexStartPoint());
 
-	NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
+	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 	auto lineH = itsStabilityIndexRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, ::GetNameText(itsFirstSoundingData), p, false);
 	DrawNextLineToIndexView(lineH, text, ::GetLatText(itsFirstSoundingData), p);
@@ -1161,7 +1161,7 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingData &theData)
 	std::deque<float> &wsVec = theData.GetParamData(kFmiWindSpeedMS);
 	std::deque<float> &wdVec = theData.GetParamData(kFmiWindDirection);
 	NFmiString str(::GetStationsShortName(theData));
-	NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
+	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 	auto lineH = itsTextualSoundingDataRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, str, p, false);
 
@@ -1471,7 +1471,7 @@ void NFmiTempView::DrawFlightLevelScale(void)
 		{
 			double unitStringY = CalcHelpScaleUnitStringYPos(dataRect, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
 			double unitStringX = dataRect.Right();
-			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X() - extraOffset, unitStringY), "FL", 0, &envi);
+			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X() - extraOffset, unitStringY), "FL", false, 0, &envi);
 			itsToolBox->Convert(&txt1);
 		}
 	}
@@ -1518,7 +1518,7 @@ void NFmiTempView::DrawHeightScale(void)
 		{
 			double unitStringY = CalcHelpScaleUnitStringYPos(dataRect, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
 			double unitStringX = dataRect.Right();
-			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), "KM", 0, itsDrawingEnvironment);
+			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), "KM", false, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&txt1);
 		}
 	}
@@ -1751,7 +1751,7 @@ void NFmiTempView::DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMo
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), theLabelInfo.ClipWithDataRect());
 		NFmiString str(NFmiStringTools::Convert<double>(theValue));
 		str += thePostStr; // jos joku loppu liite on haluttu laittaa labeliin, se tulee tässä
-		NFmiText txt(p1 + theMoveLabelRelatively, str, 0, theEnvi);
+		NFmiText txt(p1 + theMoveLabelRelatively, str, false, 0, theEnvi);
 		itsToolBox->Convert(&txt);
 	}
 }
@@ -2339,7 +2339,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 		// kirjoita hodografi teksti ylä nurkkaan
 		itsToolBox->SetTextAlignment(kLeft);
 		NFmiString titleStr(::GetDictionaryString("TempViewHodographTitle"));
-		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, 0, itsDrawingEnvironment);
+		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&titleTxt);
 
 		// piirrä apu ympyrät haalealla värillä
@@ -2377,7 +2377,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 			NFmiLine lineU(uP1, uP2, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&lineU);
 			std::string str(NFmiStringTools::Convert<double>(x));
-			NFmiText txt(uP2, str.c_str(), 0, itsDrawingEnvironment);
+			NFmiText txt(uP2, str.c_str(), false, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&txt);
 		}
 		itsToolBox->SetTextAlignment(kLeft);
@@ -2393,7 +2393,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 			{
 				std::string str(NFmiStringTools::Convert<double>(y));
 				NFmiPoint txtP(vP2.X(), vP2.Y() - yShift);
-				NFmiText txt(txtP, str.c_str(), 0, itsDrawingEnvironment);
+				NFmiText txt(txtP, str.c_str(), false, 0, itsDrawingEnvironment);
 				itsToolBox->Convert(&txt);
 			}
 		}
@@ -2499,7 +2499,7 @@ void NFmiTempView::DrawHodografTextWithMarker(const std::string &theText, float 
 			NFmiLine line2(markRect.TopLeft(), markRect.BottomRight(), 0, &markEnvi);
 			itsToolBox->Convert(&line2);
 		}
-		NFmiText txtObject(relP, theText.c_str(), 0, &fontEnvi);
+		NFmiText txtObject(relP, theText.c_str(), false, 0, &fontEnvi);
 		itsToolBox->Convert(&txtObject);
 	}
 }
@@ -2694,7 +2694,7 @@ void NFmiTempView::DrawLCL(NFmiSoundingData &theData, int theIndex, FmiLCLCalcTy
 				str += ", ";
 				str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(T, 1);
 				str += ")";
-				NFmiText txt(p3, str, 0, itsDrawingEnvironment);
+				NFmiText txt(p3, str, false, 0, itsDrawingEnvironment);
 				itsToolBox->Convert(&txt);
 			}
 		}
@@ -2741,7 +2741,7 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingData &theData, int theIndex)
 						NFmiPoint p(currentTextX, currentTextY);
 						NFmiString str(NFmiStringTools::Convert<int>(static_cast<int>(gValue)));
 						str += "m";
-						NFmiText txt(p, str, 0, itsDrawingEnvironment);
+						NFmiText txt(p, str, false, 0, itsDrawingEnvironment);
 						itsToolBox->Convert(&txt);
 						lastPrintedTextY = currentTextY;
 					}
@@ -2798,10 +2798,10 @@ void NFmiTempView::DrawStationInfo(NFmiSoundingData &theData, int theIndex)
 			timestr += " "; // täytetään nimeä spaceilla, että pohjaväritys peittää saman alan jokaiselle 'nimelle'
 		NFmiPoint timePoint(point);
 		timePoint.Y(point.Y() - fontY);
-		NFmiText text2(timePoint, timestr, 0, envi);
+		NFmiText text2(timePoint, timestr, false, 0, envi);
 		itsToolBox->Convert(&text2);
 	}
-	NFmiText text1(point, locationNameStr, 0, envi);
+	NFmiText text1(point, locationNameStr, true, 0, envi);
 	itsToolBox->Convert(&text1);
 
 	itsToolBox->SetTextAlignment(oldAligment);
@@ -3136,7 +3136,7 @@ void NFmiTempView::DrawAnimationControls(void)
 	NFmiRectangle rec1(animButtomRect, 0, &envi);
 	itsToolBox->Convert(&rec1);
 	NFmiString str1("Anim.");
-	NFmiText txt1(NFmiPoint(animButtomRect.TopLeft().X() + moveX, animButtomRect.TopLeft().Y()) , str1, 0, &envi);
+	NFmiText txt1(NFmiPoint(animButtomRect.TopLeft().X() + moveX, animButtomRect.TopLeft().Y()) , str1, false, 0, &envi);
 	itsToolBox->Convert(&txt1);
 
 	const auto& animStepButtomRect = itsTempViewDataRects.getAnimationStepButtonRect();
@@ -3149,7 +3149,7 @@ void NFmiTempView::DrawAnimationControls(void)
 	else if(step >= 60)
 		str2 += NFmiStringTools::Convert<int>(step/60);
 	str2 += "h";
-	NFmiText txt2(NFmiPoint(animStepButtomRect.TopLeft().X() + moveX, animStepButtomRect.TopLeft().Y()), str2, 0, &envi);
+	NFmiText txt2(NFmiPoint(animStepButtomRect.TopLeft().X() + moveX, animStepButtomRect.TopLeft().Y()), str2, false, 0, &envi);
 	itsToolBox->Convert(&txt2);
 }
 
@@ -3192,7 +3192,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 	{ // jos ollaan indeksinäytto tilassa, lasketaan kursorin kohdalle arvoja ja laitetaan ne indeksi ikkunaan
 		NFmiPoint p(CalcStabilityIndexStartPoint());
 
-		NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
+		NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 		auto lineH = itsStabilityIndexRelativeLineHeight;
 		for(int i=0; i<4; i++)
 			DrawNextLineToIndexView(lineH, text, "", p, true, false); // näitä ei lisätä soundingIndex-stringiin

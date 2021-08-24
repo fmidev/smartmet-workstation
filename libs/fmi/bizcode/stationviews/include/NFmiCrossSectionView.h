@@ -162,9 +162,6 @@ private:
 	void DrawPressureScale(void);
 	std::vector<float> MakePressureVector(int usedCount, int normalCount);
 	int GetNearestCrossSectionColumn(const NFmiPoint &thePlace);
-	void MakeMultiLineToolTip(const NFmiString& theStr, double theFontSize, NFmiDrawingEnvironment *theEnvi, double theTooltipTextXOffset, const NFmiPoint &thePoint);
-	NFmiDrawingEnvironment GetToolTipEnvironment(void);
-	NFmiRect CalcToolTipRect(std::vector<std::basic_string<char> > &theStrVector, int theFontSize, double& theLineHeigth, const NFmiPoint &thePoint);
 	void DrawGridPoints(NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	void AddFooterTextForCurrentData(bool fLastOne);
 	void DrawCrosssectionWindVectors(NFmiIsoLineData& theIsoLineData, const NFmiDataMatrix<NFmiPoint> &theXYCoordinates);

@@ -81,7 +81,7 @@ void NFmiTrajectoryView::DrawLegend(void)
 	double xShift = itsToolBox->SX(3);
 	NFmiPoint p1(itsDataRect.TopLeft());
 	p1.X(p1.X() + xShift);
-	NFmiText txt(p1, str, 0, itsDrawingEnvironment);
+	NFmiText txt(p1, str, false, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&txt);
 
 
@@ -182,7 +182,7 @@ void NFmiTrajectoryView::DrawTrajectoryLegend(const NFmiTrajectory &theTrajector
 	NFmiPoint strPoint(itsDataRect.TopLeft());
 	strPoint.X(strPoint.X() + letterWidth * 4);
 	strPoint.Y(strPoint.Y() + (rowHeight*0.1) + (theIndex * rowHeight * 0.7));
-	NFmiText txt(strPoint, str2, 0, itsDrawingEnvironment);
+	NFmiText txt(strPoint, str2, false, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&txt);
 }
 
@@ -532,7 +532,7 @@ void NFmiTrajectoryView::DrawPressureScale(void)
 			NFmiPoint p3(p1);
 			p3.Y(p3.Y() - moveLabelY);
 			NFmiString str1(NFmiStringTools::Convert<double>(pressure));
-			NFmiText txt1(p3, str1, 0, &envi);
+			NFmiText txt1(p3, str1, false, 0, &envi);
 			itsToolBox->Convert(&txt1);
 		}
 	}

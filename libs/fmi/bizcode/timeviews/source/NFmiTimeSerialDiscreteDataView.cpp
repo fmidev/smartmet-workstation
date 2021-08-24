@@ -437,7 +437,7 @@ void NFmiTimeSerialDiscreteDataView::DrawValueAxis (void)
 	for(int i = 0; i < itsSizeOfArray && i <= 10; i++) // Kirjoittaa arvoakselin tekstit
 	{
 		NFmiPoint place = NFmiPoint((cat.Left() + 0), Value2AxisPosition(float(itsValueAxisNumberArray[i])) - fontHeight/2.); 
-		NFmiText text(place, itsValueAxisTextArray[i], 0, &envi);
+		NFmiText text(place, itsValueAxisTextArray[i], false, 0, &envi);
 		itsToolBox->Convert(&text);
 	}	
 	
@@ -475,7 +475,7 @@ void NFmiTimeSerialDiscreteDataView::DrawModifyFactorAxis(void)
 	for(int i = 0; i < itsSizeOfArray && i <= 10; i++) // Kirjoittaa arvoakselin tekstit
 	{
 		NFmiPoint place = NFmiPoint(cat.Left() - moveFont, Value2AxisPosition(float(itsValueAxisNumberArray[i])) - fontHeight/2.); 
-		NFmiText text(place, itsValueAxisTextArray[i], 0, &envi);
+		NFmiText text(place, itsValueAxisTextArray[i], false, 0, &envi);
 		itsToolBox->Convert(&text);
 	}	
 

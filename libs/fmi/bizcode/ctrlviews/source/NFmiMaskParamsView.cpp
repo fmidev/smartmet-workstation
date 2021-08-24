@@ -61,7 +61,7 @@ void NFmiMaskParamsView::DrawData(void)
             else
                 itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
             NFmiString str = mask->MaskString();
-            NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), str, 0, itsDrawingEnvironment);
+            NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), str, true, 0, itsDrawingEnvironment);
             itsToolBox->Convert(&text);
             DrawCheckBox(parameterRowRect, mask->IsEnabled());
         }

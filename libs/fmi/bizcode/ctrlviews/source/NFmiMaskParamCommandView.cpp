@@ -45,7 +45,7 @@ void NFmiMaskParamCommandView::DrawData(void)
 	itsDrawingEnvironment->SetFontSize(itsFontSize);
 	int zeroBasedRowIndex = 0;
 	auto parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
-	NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, false), str, 0, itsDrawingEnvironment);
+	NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, false), str, false, 0, itsDrawingEnvironment);
 	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kCenter, true);
 	itsToolBox->Convert(&text);
 }

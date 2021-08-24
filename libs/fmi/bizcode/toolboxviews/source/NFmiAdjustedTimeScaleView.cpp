@@ -365,7 +365,7 @@ void NFmiAdjustedTimeScaleView::GetTimeSteps(NFmiDrawingEnvironment &theDrawingE
 	static const NFmiString longLabel("00:00");
 
 	// 0. Tehdään dummy tekstin printtaus (varmasti kauas ruudun ulkopuolelle) että varmistetaan että toolboxissa on oikea fontti päälä tekstien pituus laskuja varten
-	NFmiText dummyText(NFmiPoint(-1111, -1111), shortLabel, 0, &theDrawingEnvi);
+	NFmiText dummyText(NFmiPoint(-1111, -1111), shortLabel, false, 0, &theDrawingEnvi);
 	itsToolBox->Convert(&dummyText);
 
 	// 1. Calc width of time scale in [mm]
@@ -555,7 +555,7 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 					GetToolBox()->Convert(&tmpline);
 
 					NFmiString timeLabel = (majorStepInMinutes >= 60) ? aTime.ToStr("HH") : aTime.ToStr("HH:mm");
-					NFmiText tmptext(NFmiPoint(x, y3), timeLabel, 0, &theEnvironment);
+					NFmiText tmptext(NFmiPoint(x, y3), timeLabel, false, 0, &theEnvironment);
 					GetToolBox()->Convert(&tmptext);
 					lastPrintedMajorTickMark = aTime;
 
@@ -577,7 +577,7 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 					if(printDateNow || (majorStepInMinutes <= 12*60 && aTime.GetHour() == 12) || (majorStepInMinutes > 12*60 && aTime.GetHour() == 0))
 					{
 						NFmiString dateString(aTime.ToStr(NFmiString(::GetDictionaryString("TimeScaleViewDateStr"))));
-						NFmiText tmptext(NFmiPoint(x, y4), dateString, 0, &theEnvironment);
+						NFmiText tmptext(NFmiPoint(x, y4), dateString, false, 0, &theEnvironment);
 						GetToolBox()->Convert(&tmptext);
 
 						// piirretään myös viikon päivä päiväyksen alle
@@ -585,7 +585,7 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 						if(itsToolboxViewsInterface->Language() == kFinnish)
 							weekDayStr = "Ww";
 						NFmiString weekDayString(aTime.ToStr(weekDayStr, itsToolboxViewsInterface->Language()));
-						NFmiText tmptext2(NFmiPoint(x, y4 + (y4-y3)), weekDayString, 0, &theEnvironment);
+						NFmiText tmptext2(NFmiPoint(x, y4 + (y4-y3)), weekDayString, false, 0, &theEnvironment);
 						GetToolBox()->Convert(&tmptext2);
 						datePrinted = true;
 						lastDate = aTime;

@@ -2701,13 +2701,13 @@ void NFmiStationView::DrawControlPointData(void)
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,1.f));
 				else
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.3f,0.7f,0.2f));
-				NFmiText text1(textPoint, changeStr, 0, itsDrawingEnvironment);
+				NFmiText text1(textPoint, changeStr, false, 0, itsDrawingEnvironment);
 				FmiDirection oldAligment = itsToolBox->GetTextAlignment();
 				itsToolBox->SetTextAlignment((FmiDirection)(int(kBottomCenter) + 1000)); // + 1000 SUPERPIKAVIRITYS!!!!
 				itsToolBox->Convert(&text1);  // muutos teksti (+0.5)
 				textPoint.Y(textPoint.Y() + 0.6 * height);
 				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-				NFmiText text2(textPoint, modifiedStr, 0, itsDrawingEnvironment);
+				NFmiText text2(textPoint, modifiedStr, false, 0, itsDrawingEnvironment);
 				itsToolBox->SetTextAlignment((FmiDirection)(int(kTopCenter) + 1000)); // + 1000 SUPERPIKAVIRITYS!!!!
 				itsToolBox->Convert(&text2); // tuleva arvo teksti (12.4)
 
@@ -2720,7 +2720,7 @@ void NFmiStationView::DrawControlPointData(void)
 					textPoint.Y(textPoint.Y() - 0.72 * height);
 					textPoint.X(textPoint.X() + 1.2 * height);
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-					NFmiText text3(textPoint, indexStr, 0, itsDrawingEnvironment);
+					NFmiText text3(textPoint, indexStr, false, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text3);
 				}
 				itsToolBox->SetTextAlignment(oldAligment);

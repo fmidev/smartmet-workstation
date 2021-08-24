@@ -743,6 +743,14 @@ bool NFmiToolBox::BuildPolyline (const NFmiPolyline *fmiShape)
 	return true;
 }
 
+static std::wstring DoWideStringConversion(const std::string& text, bool doUtf8Conversion)
+{
+	if(doUtf8Conversion)
+		return ::convertPossibleUtf8StringToWideString(text);
+	else
+		return std::wstring(CA2T(text.c_str()));
+}
+
 //--------------------------------------------------------BuildText
 bool NFmiToolBox::BuildText (const NFmiText *fmiShape)
 {
@@ -814,16 +822,16 @@ bool NFmiToolBox::BuildText (const NFmiText *fmiShape)
 
 //   pDC->SetTextAlign(TA_RIGHT);
                                     // oli .y-mheight; toimiiko käännettynä
-  std::string drawedString = fmiShape->GetText();
-  bool doMultiLineDrawing = drawedString.find("\r\n") != std::string::npos;
+  auto drawnWideString = ::DoWideStringConversion(fmiShape->GetText(), fmiShape->DoUtf8Conversion());
+  bool doMultiLineDrawing = drawnWideString.find(L"\r\n") != std::string::npos;
   if(doMultiLineDrawing)
   {
 	  CRect drawrect(theMFCPoint.x - 1, theMFCPoint.y, theMFCPoint.x + 1, theMFCPoint.y - 1);
-	  pDC->DrawText(::convertPossibleUtf8StringToWideString(drawedString).c_str(), drawrect, DT_WORDBREAK | DT_CALCRECT);
-      pDC->DrawText(::convertPossibleUtf8StringToWideString(drawedString).c_str(), drawrect, DT_WORDBREAK | DT_NOCLIP);
+	  pDC->DrawText(drawnWideString.c_str(), drawrect, DT_WORDBREAK | DT_CALCRECT);
+      pDC->DrawText(drawnWideString.c_str(), drawrect, DT_WORDBREAK | DT_NOCLIP);
   }
   else
-      pDC->TextOut(theMFCPoint.x, theMFCPoint.y, ::convertPossibleUtf8StringToWideString(drawedString).c_str());
+      pDC->TextOut(theMFCPoint.x, theMFCPoint.y, drawnWideString.c_str());
 
 
   pDC->SelectObject(oldFont);

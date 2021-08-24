@@ -8,30 +8,31 @@
 
 
 //------------------------------------------------------------------
-NFmiText::NFmiText (const NFmiPoint& theAlignedPoint
-                   ,const NFmiString &theText
-                   ,NFmiView *theEnclosure
-                   ,NFmiDrawingEnvironment *theEnvironment) 
-             : NFmiShape(NFmiRect(theAlignedPoint, theAlignedPoint)
-                        ,theEnclosure
-                        ,theEnvironment
-                        ,kTextShape)
-              , itsText(new NFmiString(theText))
-			  , fWrap(false)
+NFmiText::NFmiText(const NFmiPoint& theAlignedPoint
+    , const NFmiString& theText
+    , bool doUtf8Conversion
+    , NFmiView* theEnclosure
+    , NFmiDrawingEnvironment* theEnvironment)
+    : NFmiShape(NFmiRect(theAlignedPoint, theAlignedPoint)
+        , theEnclosure
+        , theEnvironment
+        , kTextShape)
+    , itsText(new NFmiString(theText))
+    , fDoUtf8Conversion(doUtf8Conversion)
 {
 }
 //------------------------------------------------------------------
-NFmiText::NFmiText (const NFmiRect& theRect
-                   ,const NFmiString &theText
-				   ,bool theWrap
-                   ,NFmiView *theEnclosure
-                   ,NFmiDrawingEnvironment *theEnvironment) 
-             : NFmiShape(theRect
-                        ,theEnclosure
-                        ,theEnvironment
-                        ,kTextShape)
-              , itsText(new NFmiString(theText))
-			  , fWrap(theWrap)
+NFmiText::NFmiText(const NFmiRect& theRect
+    , const NFmiString& theText
+    , bool doUtf8Conversion
+    , NFmiView* theEnclosure
+    , NFmiDrawingEnvironment* theEnvironment)
+    : NFmiShape(theRect
+        , theEnclosure
+        , theEnvironment
+        , kTextShape)
+    , itsText(new NFmiString(theText))
+    , fDoUtf8Conversion(doUtf8Conversion)
 {
 }
 
