@@ -187,7 +187,7 @@ public:
     NFmiPtrList<NFmiDrawParamList>* getDrawParamListVector(unsigned int mapViewDescTopIndex) override;
     void clearDesctopsAllParams(unsigned int mapViewDescTopIndex) override;
     void makeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area) override;
-    void makeApplyViewMacroDirtyActions() override;
+    void makeApplyViewMacroDirtyActions(double drawObjectScaleFactor) override;
     void makeSwapBaseArea(unsigned int mapViewDescTopIndex) override;
     void swapArea(unsigned int mapViewDescTopIndex) override;
     void removeMacroParamFromDrawParamLists(const std::string& macroParamName) override;
@@ -257,7 +257,6 @@ public:
     std::pair<std::string, std::string> getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) override;
     void selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName) override;
     void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) override;
-    void updateAllMapViewsSingleMapSizes(double drawObjectScaleFactor) override;
 
 private:
     unsigned int getMapViewCount() const;
