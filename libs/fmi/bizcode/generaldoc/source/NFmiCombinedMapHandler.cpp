@@ -604,16 +604,29 @@ namespace
 		changedDrawParam->Init(newDrawParamSettings);
 	}
 
+	bool areDrawParamsSimilarType(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiDrawParam>& targetDrawParam, bool useWithViewMacros)
+	{
+		if(useWithViewMacros || targetDrawParam->ViewMacroDrawParam() == false)
+		{
+			if(drawParam->IsMacroParamCase(true))
+			{
+				if(targetDrawParam->IsMacroParamCase(true) && drawParam->ParameterAbbreviation() == targetDrawParam->ParameterAbbreviation())
+					return true;
+			}
+			else if(drawParam->Param().GetParamIdent() == targetDrawParam->Param().GetParamIdent() && drawParam->Level() == targetDrawParam->Level())
+				return true;
+		}
+
+		return false;
+	}
+
 	void initializeWantedDrawParams(NFmiFastDrawParamList& drawParamList, boost::shared_ptr<NFmiDrawParam>& drawParam, bool useWithViewMacros)
 	{
 		for(auto iter = drawParamList.Begin(); iter != drawParamList.End(); ++iter)
 		{
 			boost::shared_ptr<NFmiDrawParam> aDrawParam = iter->second;
-			if(useWithViewMacros || aDrawParam->ViewMacroDrawParam() == false)
-			{
-				if(drawParam->Param().GetParamIdent() == aDrawParam->Param().GetParamIdent() && drawParam->Level() == aDrawParam->Level())
-					aDrawParam->Init(drawParam, true);
-			}
+			if(::areDrawParamsSimilarType(drawParam, aDrawParam, useWithViewMacros))
+				aDrawParam->Init(drawParam, true);
 		}
 	}
 
@@ -622,11 +635,8 @@ namespace
 		for(drawParamList.Reset(); drawParamList.Next(); )
 		{
 			boost::shared_ptr<NFmiDrawParam> aDrawParam = drawParamList.Current();
-			if(useWithViewMacros || aDrawParam->ViewMacroDrawParam() == false)
-			{
-				if(drawParam->Param().GetParamIdent() == aDrawParam->Param().GetParamIdent() && drawParam->Level() == aDrawParam->Level())
-					aDrawParam->Init(drawParam, true);
-			}
+			if(::areDrawParamsSimilarType(drawParam, aDrawParam, useWithViewMacros))
+				aDrawParam->Init(drawParam, true);
 		}
 	}
 
