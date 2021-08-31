@@ -11,8 +11,8 @@ namespace HakeMessage
         std::string baseConfigurationNamespace = "SmartMet::HakeMessages::";
         std::string jsonPath;
         std::string xmlPath;
-        std::string jsonFilter = "*.json";
-        std::string xmlFilter = "*.xml";
+        std::string jsonFilter = ".*.json";
+        std::string xmlFilter = ".*.xml";
         std::chrono::milliseconds checkForNewMessagesDelay;
         std::chrono::milliseconds killCheckDelay;
         unsigned int maxNumberOfMessagesReadAtOnce = 100;
