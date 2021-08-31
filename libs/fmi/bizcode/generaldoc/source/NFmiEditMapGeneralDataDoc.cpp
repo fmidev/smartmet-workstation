@@ -9309,8 +9309,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(GetWantedMapViewIdFlag(theMapViewDescTopIndex) == SmartMetViewId::MainMapView)
             {
                 // Jos kyse pääkarttanäytön zoomista, pitää myös päivittää asemadatataulukkonäyttöä, koska siihen laitetaan
-                // vain päkartalla näkyvät synop asemat.
-                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView);
+                // vain päkartalla näkyvät synop asemat ja Warning dialogia (HAKE sanomat näytetään pääkartan zoomin mukaan).
+                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg);
             }
         }
    }
