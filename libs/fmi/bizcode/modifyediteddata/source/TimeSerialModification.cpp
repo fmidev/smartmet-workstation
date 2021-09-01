@@ -2015,23 +2015,18 @@ void RemoveThunders(NFmiQueryData* theData, bool fDoMultiThread)
 	}
 }
 
-static bool UseLoadedDataAndLoadAccessoryData(TimeSerialModificationDataInterface &theAdapter, NFmiDataLoadingInfo* theDataLoadingInfo, boost::shared_ptr<NFmiFastQueryInfo> &theLoadedSmartInfo, bool fRemoveThundersOnLoad, bool fDoMultiThread)
+static bool UseLoadedDataAndLoadAccessoryData(TimeSerialModificationDataInterface& theAdapter, NFmiDataLoadingInfo* theDataLoadingInfo, NFmiQueryData *theLoadedQueryData, bool fRemoveThundersOnLoad, bool fDoMultiThread, bool fLoadedFromFile, bool& dataWasDeleted)
 {
-	boost::shared_ptr<NFmiQueryData> dataRef = dynamic_cast<NFmiOwnerInfo*>(theLoadedSmartInfo.get())->DataReference();
-	if(theDataLoadingInfo && theAdapter.DataLoadingOK(theLoadedSmartInfo && dataRef))
+	if(theDataLoadingInfo && theAdapter.DataLoadingOK(theLoadedQueryData != nullptr))
 	{
 		//talletetaan ja ladataan uusi data
 		std::string newFileName = static_cast<char*>(theDataLoadingInfo->NewFileName());
-		dataRef->First();
-		NFmiQueryData* data = dataRef->Clone();
-		if(data)
-		{
-			if(fRemoveThundersOnLoad)
-				::RemoveThunders(data, fDoMultiThread);
-			data->First();
-			theAdapter.AddQueryData(data, newFileName, "", NFmiInfoData::kEditable, "", false);
-			return true;
-		}
+		theLoadedQueryData->First();
+		if(fRemoveThundersOnLoad)
+			::RemoveThunders(theLoadedQueryData, fDoMultiThread);
+		theLoadedQueryData->First();
+		theAdapter.AddQueryData(theLoadedQueryData, newFileName, "", NFmiInfoData::kEditable, "", fLoadedFromFile, dataWasDeleted);
+		return true;
 	}
 	return false;
 }
@@ -2049,9 +2044,12 @@ static bool WriteDataToFile(NFmiString fileName, NFmiQueryData& data)
 	return false;
 }
 
-static bool ContinueCreatingLoadedData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theDataSmartInfo, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, bool fDoMultiThread)
+static bool ContinueCreatingLoadedData(TimeSerialModificationDataInterface &theAdapter, NFmiQueryData* theLoadedQueryData, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, bool fDoMultiThread, bool fLoadedFromFile)
 {
-	bool status= ::UseLoadedDataAndLoadAccessoryData(theAdapter, theLoadingInfo, theDataSmartInfo, fRemoveThundersOnLoad, fDoMultiThread);
+	bool dataWasDeleted = false;
+	bool status= ::UseLoadedDataAndLoadAccessoryData(theAdapter, theLoadingInfo, theLoadedQueryData, fRemoveThundersOnLoad, fDoMultiThread, fLoadedFromFile, dataWasDeleted);
+	if(dataWasDeleted)
+		return false;
 
     ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiDataLoading, false, NFmiMetEditorTypes::kFmiNoMask, kFmiLastParameter, fDoMultiThread, false);
 
@@ -2059,7 +2057,7 @@ static bool ContinueCreatingLoadedData(TimeSerialModificationDataInterface &theA
 	{
 		//talletetaan uusi data
 		NFmiString newFileName = theLoadingInfo->NewFileName();
-		if((::WriteDataToFile(newFileName, *(dynamic_cast<NFmiOwnerInfo*>(theDataSmartInfo.get())->DataReference())) == false) && theAdapter.WarnIfCantSaveWorkingFile())
+		if((::WriteDataToFile(newFileName, *theLoadedQueryData) == false) && theAdapter.WarnIfCantSaveWorkingFile())
 		{
 			std::string logStr;
 			logStr += "Unable to create working data file: \n";
@@ -2092,8 +2090,8 @@ static bool SpeedLoadModeDataLoading(TimeSerialModificationDataInterface &theAda
 
 		if(data)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> newEditedData(new NFmiSmartInfo(data, NFmiInfoData::kEditable, "", ""));
-			status = ::ContinueCreatingLoadedData(theAdapter, newEditedData, theLoadingInfo, false, fDoMultiThread); // jostain syystä tästä ei poisteta ukkosia koskaan?
+			// Jos ladattu suoraan tiedosto read-onlyna, ei poisteta ukkosia, ja loadFromFile on true
+			status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, false, fDoMultiThread, true);
 		}
 	}
 	return status;
@@ -2156,30 +2154,27 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 				catch(...)
 				{ // ei tehdä vielä mitään, tähän voisi lisätä lokitusta, tai messagebox-varoitus tms
 				}
-				std::unique_ptr<NFmiQueryData> dataPtr(data);
-				if(dataPtr)
+				if(data)
 				{
-					if(!theAdapter.UseEditedDataParamDescriptor() || theAdapter.EditedDataParamDescriptor() == dataPtr->Info()->ParamDescriptor())
+					if(!theAdapter.UseEditedDataParamDescriptor() || theAdapter.EditedDataParamDescriptor() == data->Info()->ParamDescriptor())
 					{
 						NFmiTimeDescriptor timeDescriptor(theLoadingInfo->MetEditorModeDataWCTR()->TimeDescriptor());
-						if(timeDescriptor == dataPtr->Info()->TimeDescriptor()) // jos vielä ladattavat ajat ovat samat kuin ladattavassa datassa, ei tarvitse kuin ottaa data käyttöön
+						if(timeDescriptor == data->Info()->TimeDescriptor()) // jos vielä ladattavat ajat ovat samat kuin ladattavassa datassa, ei tarvitse kuin ottaa data käyttöön
 						{
-							boost::shared_ptr<NFmiFastQueryInfo> newSmartInfo(new NFmiSmartInfo(dataPtr.release(), NFmiInfoData::kEditable, "", ""));
 							// producer id:t tulevat tiedostosta ladatstusta datasta sellaisenaan
-							status = ::ContinueCreatingLoadedData(theAdapter, newSmartInfo, theLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread);
+							status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread, false);
 							status = true;
 						}
 						else
 						{
-							NFmiTimeDescriptor dataTimeDesc(dataPtr->Info()->TimeDescriptor());
+							NFmiTimeDescriptor dataTimeDesc(data->Info()->TimeDescriptor());
 							NFmiTimeDescriptor testTimeDesc(dataTimeDesc.GetIntersection(timeDescriptor.FirstTime(), timeDescriptor.LastTime()));
 							if(timeDescriptor == testTimeDesc) // jos vielä ladattavat ajat ovat riittävän samat kuin ladattavassa datassa, voidaan pikalataus data rakentaa
 							{
-								NFmiQueryData* data2 = NFmiQueryDataUtil::ExtractTimes(dataPtr.get(), testTimeDesc);
+								NFmiQueryData *data2 = NFmiQueryDataUtil::ExtractTimes(data, testTimeDesc);
 								if(data2) // ExtractTimes hoiti samalla myos producer id:t
 								{
-									boost::shared_ptr<NFmiFastQueryInfo> newSmartInfo(new NFmiSmartInfo(data2, NFmiInfoData::kEditable, "", ""));
-									status = ::ContinueCreatingLoadedData(theAdapter, newSmartInfo, theLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread);
+									status = ::ContinueCreatingLoadedData(theAdapter, data2, theLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread, false);
 									status = true;
 								}
 							}
@@ -2417,13 +2412,14 @@ static bool GetProducerIdsLister(NFmiQueryInfo *theInfo, NFmiProducerIdLister &t
 
 // Tekee producerIdListan ladatun datan mukaisesti.
 // Tallettaa sen datan infon headeriin ProdIds-avaimen alle
-void PutProducerIdListInDataHeader(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, std::vector<NFmiFastQueryInfo*> &theSourceInfos, std::vector<int> &theModelIndexVector)
+void PutProducerIdListInDataHeader(TimeSerialModificationDataInterface &theAdapter, NFmiQueryData *data, std::vector<NFmiFastQueryInfo*> &theSourceInfos, std::vector<int> &theModelIndexVector)
 {
+	NFmiFastQueryInfo fastInfo(data);
 	NFmiProducerIdLister workingDataIds;
 	bool workingDataIdsExist = ::GetProducerIdsLister(theSourceInfos[2], workingDataIds); // 2=working data indeksi
 	NFmiProducerIdLister officialDataIds;
 	bool officialDataIdsExist = ::GetProducerIdsLister(theSourceInfos[3], officialDataIds); // 3=virallinen data indeksi
-	NFmiProducerIdLister prodIdLister(theSmartInfo->TimeDescriptor(), -1);
+	NFmiProducerIdLister prodIdLister(fastInfo.TimeDescriptor(), -1);
 	int counterSize = static_cast<int>(theModelIndexVector.size());
 	for(int i=0; i<counterSize; i++)
 	{
@@ -2444,29 +2440,29 @@ void PutProducerIdListInDataHeader(TimeSerialModificationDataInterface &theAdapt
 		else // tuottaja on meteor, nyt tutkitaan loytyyko datasta tuotttaja id tietoa
 		{
 			prodIdLister.ProducerId(i, -1); // turhaa?? // asetetaan valmiiksi puuttuva arvo, joka overridataan jos loytyy oikea id
-			if(theSmartInfo->TimeIndex(i))
+			if(fastInfo.TimeIndex(i))
 			{
 				if(theModelIndexVector[i] == 2)
 				{
 					if(workingDataIdsExist)
 					{
-						prodIdLister.ProducerId(i, workingDataIds.ProducerId(theSmartInfo->Time(), true));
-						prodIdLister.ModelOriginTime(i, workingDataIds.ModelOriginTime(theSmartInfo->Time(), true));
+						prodIdLister.ProducerId(i, workingDataIds.ProducerId(fastInfo.Time(), true));
+						prodIdLister.ModelOriginTime(i, workingDataIds.ModelOriginTime(fastInfo.Time(), true));
 					}
 				}
 				else if(theModelIndexVector[i] == 3)
 				{
 					if(officialDataIdsExist)
 					{
-						prodIdLister.ProducerId(i, officialDataIds.ProducerId(theSmartInfo->Time(), true));
-						prodIdLister.ModelOriginTime(i, officialDataIds.ModelOriginTime(theSmartInfo->Time(), true));
+						prodIdLister.ProducerId(i, officialDataIds.ProducerId(fastInfo.Time(), true));
+						prodIdLister.ModelOriginTime(i, officialDataIds.ModelOriginTime(fastInfo.Time(), true));
 					}
 				}
 			}
 		}
 	}
 
-	theSmartInfo->AddKey(NFmiQueryDataUtil::GetOfficialQueryDataProdIdsKey(), prodIdLister.MakeProducerIdString(), true);
+	fastInfo.AddKey(NFmiQueryDataUtil::GetOfficialQueryDataProdIdsKey(), prodIdLister.MakeProducerIdString(), true);
 	theAdapter.ProducerIdLister() = prodIdLister;
 
 }
@@ -2516,9 +2512,8 @@ static bool CreateLoadedData(TimeSerialModificationDataInterface &theAdapter, st
 	// Tähän väliin tehdään blendaus operaatio, jos tarpeen
 	::DoDataLoadingBlending(theAdapter, theInfos, theModelIndexVector, newData, theLoadingInfo);
 
-	boost::shared_ptr<NFmiFastQueryInfo> newSmartInfo(new NFmiSmartInfo(newData, NFmiInfoData::kEditable, "", ""));
-	::PutProducerIdListInDataHeader(theAdapter, newSmartInfo, theInfos, theModelIndexVector);
-	status &= ::ContinueCreatingLoadedData(theAdapter, newSmartInfo, theLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread);
+	::PutProducerIdListInDataHeader(theAdapter, newData, theInfos, theModelIndexVector);
+	status &= ::ContinueCreatingLoadedData(theAdapter, newData, theLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread, false);
 	return status;
 }
 
