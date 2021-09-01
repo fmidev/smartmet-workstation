@@ -186,7 +186,6 @@ protected:
 	afx_msg void OnFileOpen();
 	afx_msg void OnFileNew();
 	afx_msg void OnButtonAnimation();
-	afx_msg void OnUpdateButtonAnimation(CCmdUI* pCmdUI);
 	afx_msg void OnButtonEditorControlPointMode();
 	afx_msg void OnUpdateButtonEditorControlPointMode(CCmdUI* pCmdUI);
 	afx_msg void OnButtonDelete();
