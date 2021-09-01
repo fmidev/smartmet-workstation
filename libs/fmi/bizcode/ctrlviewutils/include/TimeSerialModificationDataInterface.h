@@ -99,7 +99,7 @@ public:
     virtual bool StoreData(bool fDoSaveTmpRename, const std::string& theFileName, NFmiQueryData *theData) = 0;
     virtual NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) = 0;
     virtual bool DataLoadingOK(bool noError) = 0;
-    virtual void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false) = 0;
+    virtual void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& dataWasDeleted) = 0;
     virtual bool WarnIfCantSaveWorkingFile(void) = 0;
     virtual NFmiHPlaceDescriptor* PossibleUsedDataLoadingGrid(void) = 0;
     virtual bool UseEditedDataParamDescriptor(void) = 0;

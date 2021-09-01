@@ -502,7 +502,7 @@ public:
 	virtual ~NFmiEditMapGeneralDataDoc();
 	NFmiEditMapDataListHandler* DataLists(void);
 
-	void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, int theType, const std::string& theNotificationStr, bool loadFromFileState=false);
+	void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, int theType, const std::string& theNotificationStr, bool loadFromFileState, bool &dataWasDeleted);
 
 	bool OpenPopupMenu(void);
 	void OpenPopupMenu(bool newState);

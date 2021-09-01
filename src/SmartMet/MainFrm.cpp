@@ -1342,7 +1342,8 @@ void CMainFrame::OnWorkinThreadDataRead2()
 			// Siksi tämä tiedon siirto vuotaa muistia, jos esim. ohjelma lopetetaan kesken kaiken.
             if(tmp.itsQueryData && tmp.itsQueryData->Info())
             {
-                itsDoc->AddQueryData(tmp.itsQueryData.release(), tmp.itsDataFileName, tmp.itsDataFilePattern, tmp.itsDataType, tmp.itsNotificationStr, false);
+				bool dataWasDeleted = false;
+                itsDoc->AddQueryData(tmp.itsQueryData.release(), tmp.itsDataFileName, tmp.itsDataFilePattern, tmp.itsDataType, tmp.itsNotificationStr, false, dataWasDeleted);
                 if(!loadedFileNames.empty())
                     loadedFileNames += ", ";
                 loadedFileNames += tmp.itsDataFileName;

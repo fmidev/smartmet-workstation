@@ -2284,7 +2284,7 @@ bool IsDataReloadedInCaseStudyEvent(const std::string& theDataFilePattern)
 }
 
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
-			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false)
+			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& fDataWasDeletedOut)
 {
 	StoreLastLoadedFileNameToLog(theDataFileName);
 	if(theData == nullptr || theData->Info() == nullptr)
@@ -2313,9 +2313,8 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			NFmiQueryInfo *aInfo = theData ? theData->Info() : 0;
 			int theModelRunTimeGap = NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(aInfo, theType, HelpDataInfoSystem()->FindHelpDataInfo(theDataFilePattern));
 			auto reloadCaseStudyData = IsDataReloadedInCaseStudyEvent(theDataFilePattern);
-			bool dataWasDeleted = false;
-			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap, dataWasDeleted, reloadCaseStudyData);
-			if(dataWasDeleted)
+			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap, fDataWasDeletedOut, reloadCaseStudyData);
+			if(fDataWasDeletedOut)
 			{ // data on deletoitu, näin voi käydä jos esim. annetun datan origin aika on pielessä esim. 1900.0.0 jne (kuten on ollut mtl_ecmwf_aalto-datan kanssa joskus)
 				// tehdään raportti lokiin ja ei jatketa funktiota eteenpäin...
 				string errorStr("Following data was not accepted to SmartMet: ");
@@ -2399,9 +2398,10 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		// Tämä on kTEMPCodeSoundingData-speciaali. Jos editori käyttää vain luotaus datan katseluun,
 		// eikä ole olemassa editoitua dataa, laitetaan tämän tyyppinen data myös editoitavaksi dataksi,
 		// jotta dataa voisi kätevästi katsella editorilla, ilman että tarvitsee erikseen tiputella editoitavia datoja
+		bool dataWasDeletedInInnerCall = false;
 		if(theType == NFmiInfoData::kTEMPCodeSoundingData && (EditedInfo() == nullptr || fIsTEMPCodeSoundingDataAlsoCopiedToEditedData))
 		{
-			AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "");
+			AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = true;
 		}
 
@@ -2410,7 +2410,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska mahdollinen mallipintadata on niin jumalattoman iso
 			{
 				fChangingCaseStudyToNormalMode = false;
-				AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "");
+				AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
 			}
 		}
         PrepareForParamAddSystemUpdate();
@@ -5243,7 +5243,8 @@ bool LoadHelpData(NFmiHelpDataInfo& theHelpDataInfo, bool fMustFindData, bool us
                 data->Info()->SetProducer(kepaProducer);
             }
 
-            AddQueryData(data.release(), latestFileName, fileFilter, theHelpDataInfo.DataType(), "", false);
+			bool dataWasDeleted = false;
+            AddQueryData(data.release(), latestFileName, fileFilter, theHelpDataInfo.DataType(), "", false, dataWasDeleted);
             theHelpDataInfo.LatestFileTimeStamp(timeStamp);
             theHelpDataInfo.LatestFileName(latestFileName);
             timer.StopTimer();
@@ -7680,7 +7681,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		if(newData && fJustCheckTEMPCode == false)
 		{
 			// otetaan TEMP koodi data käyttöön jos löytyi ja  ei ollut pelkkä tarkistus operaatio
-			AddQueryData(newData, "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "");
+			bool dataWasDeleted = false;
+			AddQueryData(newData, "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "", false, dataWasDeleted);
 		}
 		else
 			delete newData;
@@ -9973,7 +9975,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         if(data)
         {
-            AddQueryData(data.release(), filePath, filePattern, NFmiInfoData::kObservations, "");
+			bool dataWasDeleted = false;
+			AddQueryData(data.release(), filePath, filePattern, NFmiInfoData::kObservations, "", false, dataWasDeleted);
         }
     }
 
@@ -10671,9 +10674,9 @@ bool NFmiEditMapGeneralDataDoc::Init(const NFmiBasicSmartMetConfigurations &theB
 
 
 void NFmiEditMapGeneralDataDoc::AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
-										int theType, const std::string& theNotificationStr, bool loadFromFileState)
+										int theType, const std::string& theNotificationStr, bool loadFromFileState, bool& dataWasDeleted)
 {
-	pimpl->AddQueryData(theData, theDataFileName, theDataFilePattern, NFmiInfoData::Type(theType), theNotificationStr, loadFromFileState);
+	pimpl->AddQueryData(theData, theDataFileName, theDataFilePattern, NFmiInfoData::Type(theType), theNotificationStr, loadFromFileState, dataWasDeleted);
 }
 
 boost::shared_ptr<NFmiDrawParam> NFmiEditMapGeneralDataDoc::DefaultEditedDrawParam(void)
