@@ -2543,13 +2543,13 @@ static bool LoadEditedData(TimeSerialModificationDataInterface &theAdapter, bool
 	NFmiDataLoadingInfo &dataLoadingInfo = theAdapter.GetUsedDataLoadingInfo();
 	dataLoadingInfo.UpdateSelectedFileNamesVector();
 	const std::vector<NFmiString>& selectedFileNames = dataLoadingInfo.SelectedFileNamesVector();
-	std::vector<NFmiQueryData*> datas;
 	if(!dataLoadingInfo.MetEditorModeDataWCTR())
 		return false;
 	int primaryProducer = dataLoadingInfo.PrimaryProducerSetting();
 	bool status = true;
 	if(!::SpeedLoadDBDataOnlyIfPossible(theAdapter, primaryProducer, std::string(selectedFileNames[primaryProducer]), theAdapter.DataLoadingProducerIndexVector(), &dataLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread))
 	{
+		std::vector<NFmiQueryData*> datas;
 		::LoadAndCreateSelectedQueryData(theAdapter, selectedFileNames, &datas);
 		std::vector<NFmiFastQueryInfo*> infos;
 		::CreateQueryDataIterators(datas, &infos);
@@ -2573,7 +2573,7 @@ static bool LoadEditedData(TimeSerialModificationDataInterface &theAdapter, bool
 	timerStr += timer.EasyTimeDiffStr();
     ::LogMessage(theAdapter, timerStr, CatLog::Severity::Debug, CatLog::Category::Editing);
 
-	return status == true;
+	return status;
 }
 
 static bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemoveThundersOnLoad, bool fDoMultiThread)
