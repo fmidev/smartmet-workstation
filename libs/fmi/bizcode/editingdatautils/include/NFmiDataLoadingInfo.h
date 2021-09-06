@@ -165,12 +165,12 @@ class NFmiDataLoadingInfo
 	/**
 	* Initializes instance from global settings.
 	*/
-	void Configure(void);
+	void Configure(const std::string& theAbsoluteWorkingDirectory);
 	NFmiDataLoadingInfo& operator=(NFmiDataLoadingInfo& theInfo);
 
 private:	
 	NFmiString MakeCacheFilePattern(const NFmiString &theNormalFilePattern);
-	void NormalizeAllPathDelimiters(void);
+	void NormalizeAllPathDelimiters(const std::string& theAbsoluteWorkingDirectory);
 	NFmiDataLoadingInfo(NFmiDataLoadingInfo& theInfo); // esto, ei toteutusta
 	NFmiString CreateWorkingFileNameTimeFilter (void);
 

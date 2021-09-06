@@ -680,7 +680,7 @@ void InitDataLoadingInfo()
 {
     try
     {
-        itsDataLoadingInfoNormal.Configure();
+        itsDataLoadingInfoNormal.Configure(WorkingDirectory());
         AddWorkingDataPathToCleaner(); // HUOM! DataLoadingInfo ja FileCleanerSystem molemmat pit‰‰ olla initilaisoituina!!!!
         itsDataLoadingInfoCaseStudy = itsDataLoadingInfoNormal; // otetaan CaseStudy dataLoadingInfon pohjatiedot normaalista dataLoadingInfosta
     }
