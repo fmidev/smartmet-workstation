@@ -621,7 +621,8 @@ void CSmartMetDoc::OnButtonLoadData()
 		CWaitCursor cursor;
 		SetCursor(AfxGetApp()->LoadStandardCursor(IDC_WAIT)); // ‰l‰ poista, muuten ei tule jostain syyst‰ tiimalasia!?!?!?
 		itsData->LoadData(dialog.RemoveThundersOnLoad());
-		SetPathName(_TEXT("_"));
+		if(!GetPathName().IsEmpty())
+			SetPathName(_TEXT("_"));
 		((CMainFrame*)AfxGetMainWnd())->StartDataLoadingWorkingThread(); // edell‰ load datassa ladattiin vain itse data, t‰ss‰ k‰ynnistet‰‰n apudatan lataus heti
 		UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": edited data loaded");
 	}
