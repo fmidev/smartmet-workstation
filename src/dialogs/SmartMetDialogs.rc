@@ -734,6 +734,8 @@ BEGIN
     LTEXT           "Beta product name here",IDC_STATIC_BETA_PRODUCT_NAME,151,407,181,11,SS_SUNKEN
     CONTROL         "Show model orig-time",IDC_CHECK_SHOW_MODEL_ORIGIN_TIME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,241,51,91,8
+    CONTROL         "Pack images (some quality loss)",IDC_CHECK_PACK_IMAGES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,145,67,125,8
 END
 
 IDD_DIALOG_PARAM_ADDING DIALOGEX 0, 0, 309, 176

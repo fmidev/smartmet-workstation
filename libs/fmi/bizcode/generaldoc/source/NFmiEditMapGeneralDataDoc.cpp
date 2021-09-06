@@ -804,7 +804,7 @@ void InitBetaProductionSystem()
 	try
     {
         BetaProduct::SetLoggerFunction(GetLogAndWarnFunction());
-        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), ControlDirectory());
+        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), WorkingDirectory());
     }
     catch(std::exception &e)
     {

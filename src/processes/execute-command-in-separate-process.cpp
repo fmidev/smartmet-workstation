@@ -6,74 +6,29 @@
 #include "NFmiSettings.h"
 #include "NFmiPathUtils.h"
 #include "NFmiFileSystem.h"
+#include "MakeOptionalExePath.h"
 
 namespace
 {
     // Laitetaan tahan kerran rakennettu polku jatkokayttoa varten
     std::string g_cached7zipExePath;
 
-    std::string GetOptional7zipExePath()
-    {
-        return NFmiSettings::Optional<std::string>("SmartMet::Optional7zipExePath", "");
-    }
-
-    std::string MakeOptional7zipExePath(const std::string& workingDirectory)
-    {
-        auto optionalPath = ::GetOptional7zipExePath();
-        if(optionalPath.empty())
-            return "";
-        else
-        {
-            // 1. Laitetaan absoluuttinen polku kuntoon
-            auto zipPath = PathUtils::getAbsoluteFilePath(optionalPath, workingDirectory);
-            // 2. Siivotaan polkua, poistetaan mahd. suhteelliset polkuhypyt (..\.. jutut) pois
-            zipPath = PathUtils::simplifyWindowsPath(zipPath);
-            // 3. Jos polku osoittaa johonkin tiedostoon, silloin se hyväksytään
-            if(NFmiFileSystem::FileExists(zipPath))
-                return zipPath;
-            else
-            {
-                std::string zipPathError = "7zip path from SmartMet::Optional7zipExePath -option with final value '";
-                zipPathError += zipPath + "' didn't exist, using default 7zip path instead";
-                CatLog::logMessage(zipPathError, CatLog::Severity::Error, CatLog::Category::Configuration, true);
-                // 5. Palautetaan virhetilanteessa tyhjää, jotta otetaan default polku käyttöön
-                return "";
-            }
-        }
-    }
-
-    std::string MakeHardCoded7zipExePath(const std::string& workingDirectory)
-    {
-        std::string zipPath = workingDirectory;
-        zipPath += "\\utils\\";
-        zipPath += "7z.exe";
-
-        if(!NFmiFileSystem::FileExists(zipPath))
-        {
-            std::string zipPathError = "7zip executable from default path (smartmet-path\\utils\\7z.exe): '";
-            zipPathError += zipPath + "' didn't exist, unpacking operations won't work!";
-            CatLog::logMessage(zipPathError, CatLog::Severity::Error, CatLog::Category::Configuration, true);
-        }
-
-        return zipPath;
-    }
-
     // Oletus funktiota kutsutaan vain kerran, eli ennen kutsua, tarkistetaan etta g_cached7zipExePath ei ole tyhja.
     std::string Construct7zipExePath(const std::string& workingDirectory)
     {
-        auto used7zipExePath = MakeOptional7zipExePath(workingDirectory);
+        std::string exeNameInErrorMessages = "7zip";
+        auto used7zipExePath = ExePathHelper::MakeOptionalExePath(workingDirectory, "SmartMet::Optional7zipExePath", exeNameInErrorMessages);
         if(used7zipExePath.empty())
         {
-            used7zipExePath = MakeHardCoded7zipExePath(workingDirectory);
+            used7zipExePath = ExePathHelper::MakeHardCodedExePath(workingDirectory, "\\utils\\7z.exe", exeNameInErrorMessages);
         }
-        used7zipExePath = PathUtils::simplifyWindowsPath(used7zipExePath);
         return used7zipExePath;
     }
 }
 
 namespace CFmiProcessHelpers
 {
-
+    // theWorkingDirectory parametri: Ei saa olla ympäröiviä lainausmerkkejä välilyönti polkujen varalla, tällöin koko CreateProcess funktio ei toimi silloin ollenkaan.
     bool ExecuteCommandInSeparateProcess(std::string& theCommand, bool logEvents, bool showErrorMessageBox, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags, const std::string* theWorkingDirectory)
     {
         STARTUPINFO si;
@@ -105,22 +60,24 @@ namespace CFmiProcessHelpers
             &pi)             // Pointer to PROCESS_INFORMATION structure.
             )
         {
-            LPTSTR lpMsgBuf = 0;
-            FormatMessage
-            (
-                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                NULL,
-                GetLastError(),
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-                lpMsgBuf,
-                0,
-                NULL
-            );
-
             if(showErrorMessageBox)
-                MessageBox(NULL, lpMsgBuf, _TEXT("Error with CreateProcess call"), MB_OK | MB_ICONWARNING);
+            {
+                LPVOID lpMsgBuf;
+                DWORD dw = GetLastError();
 
-            LocalFree(lpMsgBuf);
+                FormatMessage(
+                    FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                    FORMAT_MESSAGE_FROM_SYSTEM |
+                    FORMAT_MESSAGE_IGNORE_INSERTS,
+                    NULL,
+                    dw,
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                    (LPTSTR)&lpMsgBuf,
+                    0, NULL);
+
+                MessageBox(NULL, (LPCTSTR)lpMsgBuf, _TEXT("Error with CreateProcess call"), MB_OK | MB_ICONERROR);
+                LocalFree(lpMsgBuf);
+            }
             if(logEvents)
             {
                 std::string virheStr("ExecuteCommandInSeparateProcess: Command '");
