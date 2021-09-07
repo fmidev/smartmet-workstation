@@ -631,9 +631,9 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::OnEditSpaceOut(unsigned int the
     itsDoc->GetCombinedMapHandler()->onEditSpaceOut(theDescTopIndex);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::OnButtonRefresh()
+void SmartMetDocumentInterfaceForGeneralDataDoc::OnButtonRefresh(const std::string& message)
 {
-    itsDoc->OnButtonRefresh();
+    itsDoc->OnButtonRefresh(message);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnShowProjectionLines()

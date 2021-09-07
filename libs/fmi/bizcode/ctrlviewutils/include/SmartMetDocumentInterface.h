@@ -208,7 +208,7 @@ public:
     virtual void OnToggleGridPointColor(unsigned int theDescTopIndex) = 0;
     virtual void OnToggleGridPointSize(unsigned int theDescTopIndex) = 0;
     virtual void OnEditSpaceOut(unsigned int theDescTopIndex) = 0;
-    virtual void OnButtonRefresh() = 0;
+    virtual void OnButtonRefresh(const std::string& message) = 0;
     virtual void OnShowProjectionLines() = 0;
     virtual void OnShowMasksOnMap(unsigned int theDescTopIndex) = 0;
     virtual void OnToggleShowNamesOnMap(unsigned int theDescTopIndex, bool fForward) = 0;

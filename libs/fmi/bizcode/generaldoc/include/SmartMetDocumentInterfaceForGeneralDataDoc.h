@@ -134,7 +134,7 @@ public:
     void OnToggleGridPointColor(unsigned int theDescTopIndex) override;
     void OnToggleGridPointSize(unsigned int theDescTopIndex) override;
     void OnEditSpaceOut(unsigned int theDescTopIndex) override;
-    void OnButtonRefresh() override;
+    void OnButtonRefresh(const std::string& message) override;
     void OnShowProjectionLines() override;
     void OnShowMasksOnMap(unsigned int theDescTopIndex) override;
     void OnToggleShowNamesOnMap(unsigned int theDescTopIndex, bool fForward) override;

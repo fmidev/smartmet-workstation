@@ -1731,7 +1731,7 @@ void CSmartMetDoc::MakeNextUpdateOnSynopDataGridViewDlgForced()
 void CSmartMetDoc::OnButtonRefresh()
 {
     MakeNextUpdateOnSynopDataGridViewDlgForced();
-	itsData->OnButtonRefresh();
+	itsData->OnButtonRefresh("Refreshing all views (F5)");
 }
 
 void CSmartMetDoc::OnButtonReloadAllDynamicHelpData()

@@ -469,7 +469,7 @@ void CFmiExtraMapViewDlg::OnShowTimeString()
 
 void CFmiExtraMapViewDlg::OnButtonRefresh()
 {
-    itsSmartMetDocumentInterface->OnButtonRefresh();
+    itsSmartMetDocumentInterface->OnButtonRefresh("Refreshing all views (F5)");
 }
 
 void CFmiExtraMapViewDlg::OnChangeMapType()
