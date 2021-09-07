@@ -8044,9 +8044,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
 	}
 
-	void OnButtonRefresh(void)
+	void OnButtonRefresh(const std::string& message)
 	{
-		DoSmartMetRefreshActions("Refreshing all views (F5)");
+		DoSmartMetRefreshActions(message);
 	}
 
 	void ReloadAllDynamicHelpData()
@@ -11565,9 +11565,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopS
 	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
 
-void NFmiEditMapGeneralDataDoc::OnButtonRefresh(void)
+void NFmiEditMapGeneralDataDoc::OnButtonRefresh(const std::string& message)
 {
-	pimpl->OnButtonRefresh();
+	pimpl->OnButtonRefresh(message);
 }
 
 void NFmiEditMapGeneralDataDoc::OnChangeMapType(unsigned int theDescTopIndex, bool fForward)

@@ -207,7 +207,8 @@ public:
     afx_msg void OnAcceleratorMapPanLeft();
     afx_msg void OnAcceleratorMapPanRight();
     afx_msg void OnAcceleratorMapPanUp();
-    afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnDisplayChange(UINT, int, int);
 };
 
 #ifndef _DEBUG  // debug version in SmartMetView.cpp

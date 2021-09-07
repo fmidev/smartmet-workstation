@@ -359,7 +359,7 @@ public:
 	void OnShowProjectionLines(void);
 	void OnShowMasksOnMap(unsigned int theDescTopIndex);
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward);
-	void OnButtonRefresh(void);
+	void OnButtonRefresh(const std::string& message);
 	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing);
 	const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const;
 	void OutOfEditedAreaTimeSerialPoint(const NFmiPoint &newValue);
