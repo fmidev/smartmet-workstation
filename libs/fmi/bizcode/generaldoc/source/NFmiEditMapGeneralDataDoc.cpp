@@ -6634,13 +6634,16 @@ bool InitCPManagerSet(void)
     // Jos näyttömakro oli korruptoitunut, palautetaan false, muuten true
 	bool LoadViewMacro(const std::string &theName)
 	{
+		std::string initFileName = itsViewMacroPath + theName + ".vmr";
+		std::string loggedLongMacroName = std::string("'") + theName + "' (" + initFileName + ")";
 		try
 		{
+			LogMessage(std::string("Starting to load viewMacro: ") + loggedLongMacroName, CatLog::Severity::Debug, CatLog::Category::Macro, true);
+
 			SnapshotViewMacro(true); // true = tyhjennetään redo-lista
 
 			// HUOM! tässä vaiheessa pitää näyttömakro lukea uudestaan, että ajat päivittyvät nykyhetkeen.
 			// Muuten ajat voivat olla lukittuna suunnilleen siihen aikaa kun editori on käynnistetty
-            std::string initFileName = itsViewMacroPath + theName + ".vmr";
             if(ReadViewMacro(*CurrentViewMacro(), initFileName))
             {
                 itsHelperViewMacro = *CurrentViewMacro();
@@ -6650,8 +6653,8 @@ bool InitCPManagerSet(void)
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro in use"); // tämä sitten päivittää kaikki ruudut
 
                 // lokitetaan, mikä makro on ladattu käyttöön...
-                string logStr("Applying the view-macro: ");
-                logStr += CurrentViewMacro()->InitFileName();
+                string logStr("Finished loading the view-macro: ");
+                logStr += loggedLongMacroName;
                 LogMessage(logStr, CatLog::Severity::Info, CatLog::Category::Macro);
                 return true;
             }
@@ -6659,15 +6662,15 @@ bool InitCPManagerSet(void)
 		catch(exception &e)
 		{
 			string errStr("Unable to load view-macro: ");
-			errStr += theName;
-			errStr += "\nReason: ";
+			errStr += loggedLongMacroName;
+			errStr += ", Reason: ";
 			errStr += e.what();
 			LogAndWarnUser(errStr, "ViewMacro loading problem", CatLog::Severity::Error, CatLog::Category::Macro, false);
 		}
 		catch(...)
 		{
 			string errStr("Unable to load view-macro (reason unknown): ");
-			errStr += theName;
+			errStr += loggedLongMacroName;
 			LogAndWarnUser(errStr, "ViewMacro loading problem", CatLog::Severity::Error, CatLog::Category::Macro, false);
 		}
         return false;
