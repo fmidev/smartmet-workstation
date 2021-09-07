@@ -394,12 +394,12 @@ void CFmiTempDlg::OnBnClickedButtonResetScales()
 void CFmiTempDlg::InitDialogTexts(void)
 {
 	SetWindowText(CA2T(::GetDictionaryString("TempViewDlgTitle").c_str()));
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "IDC_BUTTON_PRINT");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SETTINGS, "IDC_BUTTON_SETTINGS");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_SCALES, "IDC_BUTTON_RESET_SCALES");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TEMP_SKEWT_MODE, "IDC_CHECK_TEMP_SKEWT_MODE");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "Print");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SETTINGS, "Sett.");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_SCALES, "<>");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TEMP_SKEWT_MODE, u8"45\xB0");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_STABILITY_INDEXIES_SIDE_VIEW, "Stab.-ind");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_HODOGRAF, "IDC_CHECK_SHOW_HODOGRAF");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_HODOGRAF, "Hodograph");
 
     CFmiWin32Helpers::SetDialogItemText(this, INSERT_TEMP_CODE, "TEMP");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_SOUNDING_DATA, "R");
