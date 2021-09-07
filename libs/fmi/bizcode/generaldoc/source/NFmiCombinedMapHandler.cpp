@@ -3118,6 +3118,7 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedMacroDrawParam(c
 // muokataan macroParametrin asetuksia
 bool NFmiCombinedMapHandler::modifyMacroDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool crossSectionCase)
 {
+	bool updateStatus = false;
 	boost::shared_ptr<NFmiDrawParam> usedDrawParam = getUsedMacroDrawParam(menuItem);
 	if(usedDrawParam)
 	{
@@ -3125,11 +3126,15 @@ bool NFmiCombinedMapHandler::modifyMacroDrawParam(const NFmiMenuItem& menuItem, 
 		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), usedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, menuItem.MapViewDescTopIndex(), parentView);
 		if(dlg.DoModal() == IDOK)
 		{
-			updateMacroDrawParam(menuItem, viewRowIndex, crossSectionCase, usedDrawParam);
-			return true;
+			updateStatus = true;
 		}
+		else
+			updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
+
+		if(updateStatus)
+			updateMacroDrawParam(menuItem, viewRowIndex, crossSectionCase, usedDrawParam);
 	}
-	return false;
+	return updateStatus;
 }
 
 void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
