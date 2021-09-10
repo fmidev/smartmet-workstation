@@ -2922,6 +2922,61 @@ bool NFmiFastQueryInfo::GetTimeIndex(const NFmiMetTime &theTime, double &tInd)
   return false;
 }
 
+// Tällä metodilla halutaan sellainen paine arvo ja paine-level-indeksi, joka
+// on aina maanpinta levelin ja ylimmän ilmakehä levelin välissä tai niiden rajalla.
+bool NFmiFastQueryInfo::GetFixedPressureLevelIndex(const NFmiPoint &theLatlon,
+                                const NFmiMetTime &theTime,
+                                double &pressure,
+                                double &pInd)
+{
+  auto originalPressureLevelIndex = pInd;
+  auto status = GetLevelIndex(theLatlon, theTime, pressure, pInd);
+  if (!status || pInd < 0)
+  {
+      // Jokin meni pieleen ja nyt halutaan fiksata paine ja paineLevelIndex arvot
+    double maxPressureLevelIndex = SizeLevels() - 1.;
+      auto P_0 = kFloatMissing;
+    auto P_n = kFloatMissing;
+
+    if (fPressureLevelDataAvailable)
+    {
+      P_0 = itsPressureLevelDataPressures.front();
+      P_n = itsPressureLevelDataPressures.back();
+    }
+    else if (fPressureValueAvailable)
+    {
+        // Ikävää otetaan originaali parametri asetukset talteen ja laitetaan paine parametri päälle
+      unsigned long oldParamIndex = ParamIndex();
+      bool oldFSubParamUsed = fUseSubParam;
+      ParamIndex(itsPressureParamIndex);
+      fUseSubParam = false;
+
+      FirstLevel();
+      P_0 = InterpolatedValue(theLatlon, theTime);
+      LastLevel();
+      P_n = InterpolatedValue(theLatlon, theTime);
+
+      // Ikävää palautetaan originaali parametri asetukset takaisin
+      ParamIndex(oldParamIndex);
+      fUseSubParam = oldFSubParamUsed;
+    }
+
+    // Reuna arvot otetaan sen mukaan kumpaa päätä originaali pressure arvo oli
+    if (std::fabs(P_0 - pressure) < std::fabs(P_n - pressure))
+    {
+      pInd = 0;
+      pressure = P_0;
+    }
+    else
+    {
+      pInd = maxPressureLevelIndex;
+      pressure = P_n;
+    }
+
+  }
+  return pressure != kFloatMissing;
+}
+
 bool NFmiFastQueryInfo::GetLevelIndex(const NFmiPoint &theLatlon,
                                       const NFmiMetTime &theTime,
                                       double pressure,
