@@ -671,14 +671,16 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 	double currentPressure = theTrajector.StartPressureLevel();
 	NFmiLocation currentLoc(theTrajector.StartLatLon());
 	NFmiMetTime startTime(theTrajector.StartTime());
+	double pInd = 0;
+	// Aloituspisteen paine pit‰‰ fiksata, ett‰ se menee k‰ytetyn datan rajojen sis‰‰n vertikaalisti
+	theInfo->GetFixedPressureLevelIndex(currentLoc.GetLocation(), startTime, currentPressure, pInd);
 	theInfo->ParamIndex(theInfo->HeightParamIndex());
 	double heightValue = theInfo->PressureLevelValue(static_cast<float>(currentPressure), currentLoc.GetLocation(), startTime);
 	double nextPressure = currentPressure;
 	if(!fCalcBalloonTrajectory)
 	{
-		// aloituspisteen paine pit‰‰ fiksata jos kyse hybridi datasta ja aloitus piste on alempana kuin datan alin mallipinta
-		::CalcStartingPointGroundAdjustment(*theInfo, theTrajector.StartLatLon(), theTrajector.StartTime(), groundLevelIndex, hybridData, currentPressure, heightValue);
-		theTrajector.AddPoint(theTrajector.StartLatLon(), static_cast<float>(currentPressure), static_cast<float>(heightValue)); // 1. piste pit‰‰ lis‰t‰ erikseen listaan
+		// 1. piste pit‰‰ lis‰t‰ erikseen listaan
+		theTrajector.AddPoint(theTrajector.StartLatLon(), static_cast<float>(currentPressure), static_cast<float>(heightValue));
 	}
 	NFmiLocation nextLoc;
 	NFmiMetTime currentTime(startTime);
@@ -693,7 +695,6 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 	double xInd = 0;
 	double yInd = 0;
 	double tInd = 0;
-	double pInd = 0;
 	NFmiPoint currentLatLon;
 	theTempBalloonTrajectorSettings.Reset();
     bool pacificView = ::IsPacificViewData(theInfo);
@@ -715,7 +716,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 			heightValue = theInfo->InterpolatedValue(currentLatLon, currentTime);
 			theTrajector.AddPoint(theTrajector.StartLatLon(), static_cast<float>(currentPressure), static_cast<float>(heightValue)); // 1. piste pit‰‰ lis‰t‰ erikseen listaan
 		}
-		bool status3 = theInfo->GetLevelIndex(currentLatLon, currentTime, currentPressure, pInd);
+		bool status3 = theInfo->GetFixedPressureLevelIndex(currentLatLon, currentTime, currentPressure, pInd);
 		if(status1 && status2 && status3)
 		{
             ::GetWsAndWsValues(theInfo, metaWindParamUsage, xInd, yInd, tInd, pInd, WS, WD);
@@ -730,11 +731,9 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 				theTrajector.IsentropicTpotValue(isentropicTpotValue);
 			}
 		}
-		else if(status1 == false || status2 == false)
+		else if(status1 == false || status2 == false || status3 == false)
 			break;
 
-		if(!::MakeGroundAdjustment(WS, WD, w, currentPressure, theInfo, metaWindParamUsage, xInd, yInd, tInd, groundLevelIndex, hybridData, usedWParam))
-			break;
 		NFmiTrajectorySystem::Make3DRandomizing(WS, WD, w, theRandStep, index, theRandFactor, theTrajector);
         nextLoc = ::CalcNewLocation(currentLoc, WS, WD, theTimeStepInMinutes, forwardDir, pacificView);
 
