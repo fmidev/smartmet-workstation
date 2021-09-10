@@ -98,6 +98,7 @@ class NFmiCrossSectionView : public NFmiIsoLineView
    float GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck = true);
    float GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
    void DrawLegends();
+   std::string ComposeTrajectoryToolTipText();
 private:
 	const NFmiMetTime& CurrentTime(void);
 	void UpdateParamHandlerView(void);
@@ -105,7 +106,6 @@ private:
 	void DrawParamView(NFmiToolBox *theGTB);
 	void InitParamHandlerView(void);
 	NFmiTimeBag CalcHelperLineTimeBag(void);
-	NFmiRect CalcHeaderRect(void);
 	boost::shared_ptr<NFmiFastQueryInfo> GetFirstHybridInfo(void);
     void StorePressureScaleLimits(void);
 	void GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, NFmiMetTime &theEndTimeOut);
@@ -124,7 +124,6 @@ private:
 	bool FillIsoLineDataForToolMaster(const NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData);
 	bool ChangePressureScale(FmiDirection theDir, bool fChangeUpperAxis);
 	void DrawActivatedMinorPointLine(void);
-	void DrawHeader(void);
 	boost::shared_ptr<NFmiArea> GetZoomedArea(void);
 	void DrawCrossSection(void);
 	void DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates);
@@ -163,7 +162,6 @@ private:
 	std::vector<float> MakePressureVector(int usedCount, int normalCount);
 	int GetNearestCrossSectionColumn(const NFmiPoint &thePlace);
 	void DrawGridPoints(NFmiDataMatrix<NFmiPoint> &theCoordinates);
-	void AddFooterTextForCurrentData(bool fLastOne);
 	void DrawCrosssectionWindVectors(NFmiIsoLineData& theIsoLineData, const NFmiDataMatrix<NFmiPoint> &theXYCoordinates);
 	void DrawWindVector(float theValue, const NFmiRect &theSymbolRect);
 	void DrawFlightLevelScale(void);
@@ -201,7 +199,6 @@ private:
 													   // etäisyys alkupisteestä metreinä.
 													   // Viimeisen pisteen arvo on siis koko reitin pituus.
 
-	NFmiString itsHeaderParamString; // tähän kerätään parametreihin liittyvä tieto yhteen pötköön, jotka lopuksi tulostetaan otsikko riville
 	int itsCrossSectionIsoLineDrawIndex; // iso viivojen piirto poikkileikkausikkunaan laittaa labelit päällekkäin.
 										// tämän avulla ohjataan labeleita hieman syrjemmäksi toisistaan
 

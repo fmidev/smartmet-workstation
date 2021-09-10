@@ -149,7 +149,6 @@ NFmiCrossSectionView::NFmiCrossSectionView(NFmiToolBox * theToolBox
 ,itsModelGroundPressures()
 ,itsGroundHeights()
 ,itsRoutePointsDistToEndPoint()
-,itsHeaderParamString()
 ,itsPressureScaleFontSize(16, 16)
 ,itsParamHandlerView()
 ,itsParamHandlerViewRect()
@@ -293,14 +292,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	NFmiDrawParamList *dpList = itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber);
 	if(dpList)
 	{
-		// aluksi 'nollataan' header teksti
-		itsHeaderParamString = "";
-		itsHeaderParamString += NFmiValueString::GetStringWithMaxDecimalsSmartWay(itsViewGridRowNumber, 0);
-		itsHeaderParamString += ". ";
-		int maxCount = dpList->NumberOfItems();
 		int i = 1;
-		if(maxCount > 0)
-			itsHeaderParamString += "Params: ";
 		itsCrossSectionIsoLineDrawIndex = -1;
 
 		for(dpList->Reset(); dpList->Next(); i++)
@@ -322,7 +314,6 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 			}
 			DoTimeInterpolationSettingChecks(itsInfo);
 			UpdateCachedParameterName();
-			AddFooterTextForCurrentData(i >= maxCount); // pitää tarkistaa onko kyseessä vielä viimeinen drawparam
 			if(!itsDrawParam->IsParamHidden())
 			{
 				PrepareForTransparentDraw(); // jos piirto-ominaisuudessa on transparenssia, pitää tehdä kikka vitonen
@@ -354,7 +345,6 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 
         DrawLegends();
 		DrawTrajectory(itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1), itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
-		DrawHeader(); // piirretää lopuksi koko header rimpsu kerralla
 		DrawObsForModeTimeLine();
 		DrawHelperTimeLines();
 		DrawFlightLevelScale();
@@ -426,6 +416,44 @@ void NFmiCrossSectionView::PreCalculateTrajectoryLatlonPoints(void)
 	}
 }
 
+std::string NFmiCrossSectionView::ComposeTrajectoryToolTipText()
+{
+	std::string str;
+	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
+	{
+		const auto &trajectory = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1);
+		str += "<hr color=red><br>";
+		str += "<b><font color=";
+		str += CtrlViewUtils::Color2HtmlColorStr(itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
+		str += ">";
+
+		str += "Trajectory (";
+		str += std::to_string(itsViewGridRowNumber);
+		str += "):";
+		if(trajectory.Direction() == kForward)
+			str += " -> ";
+		else
+			str += " <- ";
+		NFmiLevel level((trajectory.DataType() == 2) ? kFmiHybridLevel : kFmiPressureLevel, 1);
+		if(trajectory.DataType() == 0)
+			level.SetIdent(kFmiHeight);
+		str += itsCtrlViewDocumentInterface->ProducerSystem().GetProducerAndLevelTypeString(trajectory.Producer(), level, trajectory.OriginTime(), false);
+		str += " ";
+		str += trajectory.Time().ToStr(::GetDictionaryString("CrossSectionDlgTimeStr"), itsCtrlViewDocumentInterface->Language());
+		if(trajectory.DataType() != 0)
+		{
+			str += " P=";
+			str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(trajectory.PressureLevel(), 1);
+			if(trajectory.Isentropic())
+			{
+				str += " Is. ";
+				str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(trajectory.IsentropicTpotValue(), 1);
+			}
+		}
+	}
+	return str;
+}
+
 // väri otetaan väliaikaisesti ulkoa luotaus systeemistä
 void NFmiCrossSectionView::DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor)
 {
@@ -434,31 +462,7 @@ void NFmiCrossSectionView::DrawTrajectory(const NFmiTrajectory &theTrajectory, c
 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
 
-	// lisätään headeriin myös trajektori tiedot
-	itsHeaderParamString += "  Traj: ";
-	if(theTrajectory.Direction() == kForward)
-		itsHeaderParamString += "->";
-	else
-		itsHeaderParamString += "<-";
-	NFmiLevel level((theTrajectory.DataType() == 2) ? kFmiHybridLevel : kFmiPressureLevel, 1);
-	if(theTrajectory.DataType() == 0)
-		level.SetIdent(kFmiHeight);
-	itsHeaderParamString += itsCtrlViewDocumentInterface->ProducerSystem().GetProducerAndLevelTypeString(theTrajectory.Producer(), level, theTrajectory.OriginTime(), false);
-	itsHeaderParamString += " ";
-	itsHeaderParamString += theTrajectory.Time().ToStr(::GetDictionaryString("CrossSectionDlgTimeStr"), itsCtrlViewDocumentInterface->Language());
-	if(theTrajectory.DataType() != 0)
-	{
-		itsHeaderParamString += " P=";
-		itsHeaderParamString += NFmiValueString::GetStringWithMaxDecimalsSmartWay(theTrajectory.PressureLevel(), 1);
-		if(theTrajectory.Isentropic())
-		{
-			itsHeaderParamString += " Is. ";
-			itsHeaderParamString += NFmiValueString::GetStringWithMaxDecimalsSmartWay(theTrajectory.IsentropicTpotValue(), 1);
-		}
-	}
-
 	NFmiDrawingEnvironment envi;
-
 	// piirretään sitten pää-trajektori
 	envi.SetFrameColor(theColor);
 	envi.SetPenSize(NFmiPoint(3 * itsDrawSizeFactorX, 3 * itsDrawSizeFactorY));
@@ -739,6 +743,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 				}
 			}
 		}
+		str += ComposeTrajectoryToolTipText();
 	}
 	catch(exception & /* e */ )
 	{
@@ -911,33 +916,6 @@ void NFmiCrossSectionView::Update(void)
 	}
 
     itsCtrlViewDocumentInterface->CrossSectionSystem()->CrossSectionViewNeedsUpdate(false); // nollataan flagi kun päivitys suoritettu
-}
-
-void NFmiCrossSectionView::AddFooterTextForCurrentData(bool fLastOne)
-{
-	if(itsDrawParam->IsParamHidden())
-		itsHeaderParamString += "("; // jos parametri on piilotettu, laita teksti sulkuihin
-	std::string paramStr = CachedParameterName();
-	itsHeaderParamString += paramStr;
-	if(itsDrawParam->IsParamHidden())
-		itsHeaderParamString += ")";
-	if(!fLastOne)
-		itsHeaderParamString += ", ";
-}
-
-void NFmiCrossSectionView::DrawHeader(void)
-{
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(15 * itsDrawSizeFactorX, 15 * itsDrawSizeFactorY));
-	NFmiPoint textPoint(GetFrame().TopLeft());
-	double moveDownward = itsToolBox->SY(FmiRound(1 * itsDrawSizeFactorY)); // siirretään vielä pikseli alas
-	textPoint.Y(textPoint.Y() + moveDownward);
-	textPoint.X(textPoint.X() + 2*moveDownward); // siirretään myös pari pikseliä oikeaan
-	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
-	itsToolBox->SetTextAlignment(kTopLeft);
-	NFmiText text(textPoint, itsHeaderParamString, true, 0, itsDrawingEnvironment);
-	itsToolBox->Convert(&text);
-	itsToolBox->SetTextAlignment(oldAlignment);
 }
 
 bool NFmiCrossSectionView::IsToolMasterAvailable(void)
@@ -2188,17 +2166,11 @@ void NFmiCrossSectionView::CalculateViewRects(void)
 NFmiRect NFmiCrossSectionView::CalcPressureScaleRect(void)
 {
 	NFmiRect axisRect(GetFrame());
-	double emptySpace = itsToolBox->SY(FmiRound(25 * itsDrawSizeFactorY)); // 25-pikseliä pitää olla tilaa ylhäällä // axisRect.Height()/50.; // there must be room for text at top
-	axisRect.Top(axisRect.Top() + emptySpace); // at the top there is also the time axis (in the future not!)
-	axisRect.Bottom(axisRect.Bottom() - emptySpace * 0.2);
+	double emptySpace = axisRect.Height() / 70.;
+	axisRect.Top(axisRect.Top() + emptySpace);
+	axisRect.Bottom(axisRect.Bottom() - emptySpace * 0.5);
 	axisRect.Right(axisRect.Left() + itsToolBox->SX(FmiRound(itsPressureScaleFontSize.X() * itsDrawSizeFactorX)) * 4 * 0.62); // 4 on neli merkkinen paine arvo esim 1000
 	return axisRect;
-}
-
-NFmiRect NFmiCrossSectionView::CalcHeaderRect(void)
-{
-	CalculateViewRects();
-	return NFmiRect(itsDataViewFrame.Left(), GetFrame().Top(), itsDataViewFrame.Right(), itsDataViewFrame.Top());
 }
 
 // Lasketaan itse data näytön koko korkeus akselin avulla.
@@ -3168,16 +3140,6 @@ bool NFmiCrossSectionView::MouseWheel(const NFmiPoint &thePlace, unsigned long t
 				return ChangePressureScale(theDelta < 0 ? kDown : kUp, true); // true liikuttaa asteikon yläpäätä ja false alapäätä
 			else
 				return ChangePressureScale(theDelta < 0 ? kDown : kUp, false); // true liikuttaa asteikon yläpäätä ja false alapäätä
-		}
-		else if(CalcHeaderRect().IsInside(thePlace))
-		{ // jos ollaan header alueella, vihdetaan joko parametreja tai niiden piirtojärjestystä
-			if(theKey & kCtrlKey)
-			{
-				int activeParamIndex = itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber)->FindActive();
-				return itsCtrlViewDocumentInterface->ChangeActiveMapViewParam(itsMapViewDescTopIndex, itsViewGridRowNumber, activeParamIndex, theDelta > 0 ? true : false, true);
-			}
-			else
-				return itsCtrlViewDocumentInterface->MoveActiveMapViewParamInDrawingOrderList(itsMapViewDescTopIndex, itsViewGridRowNumber, theDelta > 0 ? true : false, true);
 		}
 		else
 			return itsCtrlViewDocumentInterface->CrossSectionSystem()->MouseWheel(thePlace, theKey, theDelta);
