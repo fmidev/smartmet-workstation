@@ -2091,7 +2091,7 @@ static bool SpeedLoadModeDataLoading(TimeSerialModificationDataInterface &theAda
 		if(data)
 		{
 			// Jos ladattu suoraan tiedosto read-onlyna, ei poisteta ukkosia, ja loadFromFile on true
-			status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, false, fDoMultiThread, true);
+			status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, false, fDoMultiThread, false);
 		}
 	}
 	return status;
