@@ -253,6 +253,11 @@ NFmiMetTime GetUsedTimeIfModelClimatologyData(boost::shared_ptr<NFmiFastQueryInf
     usedTime.SetYear(theInfo->TimeDescriptor().FirstTime().GetYear());
     return usedTime;
   }
+  else if (theInfo->DataType() == NFmiInfoData::kStationary)
+  {
+      // Stationaarisissa datoissa (esim. topograafiset datat) on vain 1. aika, joka on fiksattu kun data on tehty
+    return theInfo->TimeDescriptor().FirstTime();
+  }
   else
     return theTime;
 }
