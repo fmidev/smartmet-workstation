@@ -49,6 +49,13 @@ namespace
     // Teen systeemin, jolla varmistetaan ett‰ kaikki kolme worker threadia ajetaan l‰pi ensin ja sitten vasta k‰ynnistet‰‰n historian ker‰ys threadi.
     // Eli DoHistoryThread:ia ei ajeta en‰‰ CMainFrame:sta ollenkaan automaattisesti, vaan vasta kun kolmas normaali worker threadi on mennyt kokonaan l‰pi.
     std::set<std::string> gLoaderThreadsThatHasRunOnceThrough;
+    // Aletaan pit‰m‰‰n kirjaa mitk‰ tiedostot on jo kerran kopioitu (tai yritetty kopioida) serverilt‰ lokaali cacheen.
+    // On tilanteita, miss‰ samaa tiedostoa yritet‰‰n ladata uudestaan ja uudestaan cacheen ja n‰in kulutetaan turhaan
+    // verkkoa ja mahdollisesti puretaan zipattua tiedostoa jolloin kulutetaan turhaan CPU:ta.
+    std::set<std::string> gOnceLoadedFilePathsOnServer;
+    // T‰m‰n avulla k‰ytet‰‰n gOnceLoadedFilePathsOnServer containeria thread turvallisesti
+    CSemaphore gOnceLoadedFilePathsOnServerSemaphore;
+    NFmiNanoSecondTimer gOnceLoadedFilePathsOnServerTimer;
 
 	enum CFmiCopyingStatus
 	{
@@ -400,9 +407,37 @@ static CFmiCopyingStatus CheckTmpFileStatus(const std::string &theTmpFileName)
     return kFmiGoOnWithCopying;
 }
 
+static bool CheckIfFileHasBeenLoadedEarlier(CachedDataFileInfo& theCachedDataFileInfo)
+{
+    const double resetIntervalInSeconds = 12 * 60 * 60;
+
+    CSingleLock lock(&gOnceLoadedFilePathsOnServerSemaphore);
+    if(gOnceLoadedFilePathsOnServerTimer.elapsedTimeInSeconds() > resetIntervalInSeconds)
+    {
+        // Tyhjennet‰‰n tiedostonimilista aika ajoin (esim. 12 h v‰lein), jotta sen k‰sittely ei rupea hidastelemaan
+        // t‰t‰ toimintaa, jos SmartMet on k‰ynniss‰ vaikka viikkoja (jos sill‰ ei tee juuri mit‰‰n ei kaatumisia juuri tapahdu).
+        gOnceLoadedFilePathsOnServer.clear();
+        // timer pit‰‰ myˆs k‰ynnist‰‰ uudestaan
+        gOnceLoadedFilePathsOnServerTimer.restart();
+    }
+
+    if(gOnceLoadedFilePathsOnServer.find(theCachedDataFileInfo.itsTotalServerFileName) == gOnceLoadedFilePathsOnServer.end())
+    {
+        gOnceLoadedFilePathsOnServer.insert(theCachedDataFileInfo.itsTotalServerFileName);
+        return false;
+    }
+    else
+        return true;
+}
+
 static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataFileInfo, CFmiCacheLoaderData* theCacheLoaderData, const NFmiHelpDataInfo& theDataInfo)
 {
     if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
+    {
+        return kFmiNoCopyNeeded;
+    }
+
+    if(::CheckIfFileHasBeenLoadedEarlier(theCachedDataFileInfo))
     {
         return kFmiNoCopyNeeded;
     }
