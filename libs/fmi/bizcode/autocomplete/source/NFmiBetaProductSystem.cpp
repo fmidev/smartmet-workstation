@@ -2079,6 +2079,14 @@ bool NFmiBetaProductionSystem::InitImagePackingExe(const std::string& theAbsolut
 
     if(itsImagePackingExePath.empty())
         return false;
+    else
+    {
+        std::string usedPathString = "For ";
+        usedPathString += exeNameInErrorMessages;
+        usedPathString += " executable following path is used: ";
+        usedPathString += itsImagePackingExePath;
+        CatLog::logMessage(usedPathString, CatLog::Severity::Info, CatLog::Category::Configuration);
+    }
 
     itsImagePackingExeCommandLine = NFmiSettings::Optional<std::string>("SmartMet::OptionalImagePackingExeCommandLine", "");
     if(itsImagePackingExeCommandLine.empty())
