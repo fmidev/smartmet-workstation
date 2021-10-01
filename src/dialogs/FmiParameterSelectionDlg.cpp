@@ -610,6 +610,7 @@ CFmiParameterSelectionDlg::CFmiParameterSelectionDlg(SmartMetDocumentInterface *
     , itsSmartMetDocumentInterface(smartMetDocumentInterface)
     , itsParameterSelectionSystem(&(smartMetDocumentInterface->ParameterSelectionSystem()))
     , itsSearchText(_T(""))
+    , fTimeSerialSideParameterCase(FALSE)
 {
 
 }
@@ -623,6 +624,7 @@ void CFmiParameterSelectionDlg::DoDataExchange(CDataExchange* pDX)
     CDialogEx::DoDataExchange(pDX);
     DDX_GridControl(pDX, IDC_CUSTOM_GRID_PARAM_ADDING, itsGridCtrl);
     DDX_Text(pDX, IDC_EDIT_TEXT, itsSearchText);
+    DDX_Check(pDX, IDC_CHECK_TIME_SERIAL_SIDE_PARAM_CASE, fTimeSerialSideParameterCase);
 }
 
 
@@ -631,8 +633,6 @@ BEGIN_MESSAGE_MAP(CFmiParameterSelectionDlg, CDialogEx)
     ON_WM_GETMINMAXINFO()
     ON_WM_SIZE()
     ON_WM_TIMER()
-    ON_WM_ERASEBKGND()
-    ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 void CFmiParameterSelectionDlg::SetDefaultValues(void)
@@ -644,6 +644,8 @@ void CFmiParameterSelectionDlg::SetDefaultValues(void)
 BOOL CFmiParameterSelectionDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
+    DoResizerHooking(); // Tätä pitää kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristä
+
     fDialogInitialized = true;
     CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
     // Call InitHeaders before CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry !!
@@ -659,6 +661,7 @@ BOOL CFmiParameterSelectionDlg::OnInitDialog()
     auto LButtonDblClkCallback = [this]() {this->HandleGridCtrlsLButtonDblClk(); };
     itsGridCtrl.itsLButtonDblClkCallback = LButtonDblClkCallback;
     AdjustDialogControls();
+    DoTimeSerialSideParametersCheckboxAdjustments();
 
     // Aletaan tarkastelemaan kerran sekunnissa että mikä on aktiivinen näyttö ja aktiivinen rivi ja päivitetään tarvittaessa otsikon tekstiä vastaavasti
     g_TitleTextUpdater = SetTimer(g_TitleTextUpdaterTimer, 1000, NULL);
@@ -713,19 +716,27 @@ void CFmiParameterSelectionDlg::AdjustDialogControls(void)
     if(fDialogInitialized)
     {
         AdjustGridControl();
-        AdjustControlWidth(IDC_EDIT_TEXT, 15, 600);
     }
+}
+
+void CFmiParameterSelectionDlg::DoResizerHooking(void)
+{
+    BOOL bOk = m_resizer.Hook(this);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_STATIC_TEXT_SEARCH, ANCHOR_TOP | ANCHOR_LEFT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_CHECK_TIME_SERIAL_SIDE_PARAM_CASE, ANCHOR_TOP | ANCHOR_RIGHT);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_EDIT_TEXT, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+    ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_CUSTOM_GRID_PARAM_ADDING, ANCHOR_VERTICALLY | ANCHOR_HORIZONTALLY);
+    ASSERT(bOk == TRUE);
 }
 
 void CFmiParameterSelectionDlg::AdjustGridControl(void)
 {
-    CWnd *win = GetDlgItem(IDC_CUSTOM_GRID_PARAM_ADDING);
-    if(win)
-    {
-        CRect gridControlRect = CalcGridArea();
-        win->MoveWindow(gridControlRect);
-        FitNameColumnOnVisibleArea(gridControlRect.Width());
-    }
+    CRect gridControlRect = CalcGridArea();
+    FitNameColumnOnVisibleArea(gridControlRect.Width());
 }
 
 CRect CFmiParameterSelectionDlg::CalcGridArea(void)
@@ -742,28 +753,6 @@ CRect CFmiParameterSelectionDlg::CalcGridArea(void)
         clientRect.top = clientRect.top + pt.y + 2;
     }
     return clientRect;
-}
-
-void CFmiParameterSelectionDlg::AdjustControlWidth(int theControlId, int rightOffset, int maxWidth)
-{
-    CWnd *win = GetDlgItem(theControlId);
-    if(win)
-    {
-        CRect clientRect;
-        GetClientRect(clientRect);
-
-        CRect rect2;
-        win->GetWindowRect(rect2);
-        CPoint tl(rect2.TopLeft());
-        ScreenToClient(&tl);
-        CPoint br(rect2.BottomRight());
-        ScreenToClient(&br);
-        br.x = clientRect.right - rightOffset;
-        if(br.x > maxWidth)
-            br.x = maxWidth;
-        CRect nameRect(tl, br);
-        win->MoveWindow(nameRect);
-    }
 }
 
 #ifdef max
@@ -1145,6 +1134,19 @@ void CFmiParameterSelectionDlg::Update()
     }
 }
 
+void CFmiParameterSelectionDlg::DoTimeSerialSideParametersCheckboxAdjustments()
+{
+    CWnd* checkboxControl = GetDlgItem(IDC_CHECK_TIME_SERIAL_SIDE_PARAM_CASE);
+    if(checkboxControl)
+    {
+        if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
+            checkboxControl->EnableWindow(TRUE);
+        else
+            checkboxControl->EnableWindow(FALSE);
+    }
+    UpdateData(FALSE);
+}
+
 // Returns true if search word is removed
 bool CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
 {
@@ -1166,6 +1168,7 @@ void CFmiParameterSelectionDlg::InitDialogTexts(void)
 {
     SetWindowText(CA2T(g_TitleStr.c_str()));
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_TEXT_SEARCH, "Search text\n(Press Enter!)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TIME_SERIAL_SIDE_PARAM_CASE, "Side params");
 }
 
 void CFmiParameterSelectionDlg::HandleGridCtrlsLButtonDblClk()
@@ -1182,6 +1185,8 @@ void CFmiParameterSelectionDlg::HandleGridCtrlsLButtonDblClk()
 
 void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
 {    
+    UpdateData(TRUE);
+
     if((rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode()) 
 		|| (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView && rowItem.crossSectionLeafNode())
 		)
@@ -1212,11 +1217,19 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
 		}
         else
         {
+            auto usedParamAddingCommand = kAddViewWithRealRowNumber;
+            if(itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiTimeSerialView)
+            {
+                usedParamAddingCommand = kFmiAddTimeSerialView;
+                if(fTimeSerialSideParameterCase)
+                    usedParamAddingCommand = kFmiAddTimeSerialSideParam;
+            }
+
             addParamCommand = new NFmiMenuItem(
                 static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
                 "Add some param",
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
-                kAddViewWithRealRowNumber,
+                usedParamAddingCommand,
                 NFmiMetEditorTypes::View::kFmiParamsDefaultView,
                 rowItem.level().get(), 
                 rowItem.dataType());
@@ -1239,7 +1252,6 @@ std::string CFmiParameterSelectionDlg::MakeActiveViewRowText()
     else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
     {
         str += "Time Series view active";
-		return str;
     }
     else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
     {
@@ -1271,7 +1283,9 @@ void CFmiParameterSelectionDlg::UpdateGridControlIfNeeded()
 	if (itsLastActivatedDesktopIndex != itsParameterSelectionSystem->LastActivatedDesktopIndex())
 	{
 		SetWindowText(CA2T(MakeTitleText().c_str()));
-		itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
+        // DoTimeSerialSideParametersCheckboxAdjustments metodia on kutsuttava vasta MakeTitleText metodi kutsun jälkeen
+        DoTimeSerialSideParametersCheckboxAdjustments();
+        itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
 		Update();
 	}
 	else if (itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
@@ -1289,28 +1303,10 @@ std::string CFmiParameterSelectionDlg::MakeTitleText()
     return str;
 }
 
-BOOL CFmiParameterSelectionDlg::OnEraseBkgnd(CDC* pDC)
-{
-    return FALSE;
-
-    //return CDialogEx::OnEraseBkgnd(pDC);
-}
-
 void CFmiParameterSelectionDlg::UpdateAfterSearchText()
 {
     UpdateData(TRUE);
     Update();
-}
-
-void CFmiParameterSelectionDlg::OnPaint()
-{
-    CPaintDC dc(this); 
-    CBrush brush(RGB(240, 240, 240));
-    CRect gridCtrlArea(CalcGridArea());
-    CRect clientRect;
-    GetClientRect(clientRect);
-    clientRect.bottom = gridCtrlArea.top;
-    dc.FillRect(&clientRect, &brush);
 }
 
 // Kun dialogi avataan '+' -napista, kutsutaan tätä tehdään kyseisen näytön asetukset kuntoon,
@@ -1330,7 +1326,7 @@ void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
     }
     itsParameterSelectionSystem->SetLastActiveIndexes(theDesktopIndex, absoluteActiveRow);
 	SetWindowText(CA2T(MakeTitleText().c_str()));
-	itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
+    itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
 	Update();
 }
 

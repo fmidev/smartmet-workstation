@@ -192,6 +192,7 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
     try
 	{
 		fJustScanningForMinMaxValues = false;
+		ClearSideParameterNames();
 		itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
 		if(itsInfo == 0)
 			return;
@@ -241,6 +242,37 @@ NFmiRect NFmiTimeSerialView::CalculateDataRect(void)
 	NFmiRect timeRect = CalcTimeAxisRect();
 	NFmiRect dataRect(timeRect.Left(), valueRect.Top(), timeRect.Right(), valueRect.Bottom());
 	return dataRect;
+}
+
+void NFmiTimeSerialView::DrawSideParametersDataLocationInTime(const NFmiPoint& theLatlon)
+{
+	auto viewRowSideParameters = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getTimeSerialViewSideParameters(itsViewGridRowNumber);
+	if(viewRowSideParameters && viewRowSideParameters->NumberOfItems() > 0)
+	{
+		// GeneralColor värit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtää 2. värillä, jonka indeksi on siis 1.
+		int sideParameterColorIndex = 1; 
+		NFmiDrawingEnvironment envi;
+		envi.SetPenSize(NFmiPoint(2, 2));
+		for(viewRowSideParameters->Reset(); viewRowSideParameters->Next(); sideParameterColorIndex++)
+		{
+			envi.SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(sideParameterColorIndex));
+			auto sideParamDrawParam = viewRowSideParameters->Current();
+			if(sideParamDrawParam)
+			{
+				auto &producer = *sideParamDrawParam->Param().GetProducer();
+				auto dataType = sideParamDrawParam->DataType();
+				boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType);
+				if(sideParamInfo)
+				{
+					if(!fJustScanningForMinMaxValues)
+						AddSideParameterNames(sideParamDrawParam, sideParamInfo);
+
+					sideParamInfo->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
+					DrawSimpleDataInTimeSerial(sideParamInfo, envi, theLatlon, 0, NFmiPoint(6, 6)); // 0=ei siirretä aikasarjaa mihinkään suuntaa piirrossa
+				}
+			}
+		}
+	}
 }
 
 void NFmiTimeSerialView::DrawHelperDataLocationInTime(const NFmiPoint &theLatlon)
@@ -1592,7 +1624,7 @@ void NFmiTimeSerialView::DrawParamName(void)
 
 		itsDrawingEnvironment->SetFontSize(CalcFontSize());
 
-		NFmiString str = CachedParameterName();
+		NFmiString str = CachedParameterName(false);
 
 		if(itsDrawParam->DataType() == NFmiInfoData::kEditable)
 		{
@@ -1618,7 +1650,45 @@ void NFmiTimeSerialView::DrawParamName(void)
 		FmiDirection oldDir = itsToolBox->GetTextAlignment();
 		itsToolBox->SetTextAlignment(kTop);
 		itsToolBox->Convert(&text);
+		DrawSideParameterNames(str);
 		itsToolBox->SetTextAlignment(oldDir);
+	}
+}
+
+static void MoveTextPointByDrawnText(NFmiPoint& textPointInOut, const NFmiString& drawnString, NFmiToolBox* toolbox)
+{
+	const double measureTextFactor = 1.1;
+	auto textLegth = toolbox->MeasureText(drawnString) * measureTextFactor;
+	textPointInOut.X(textPointInOut.X() + textLegth);
+}
+
+void NFmiTimeSerialView::DrawSideParameterNames(const NFmiString& mainParamString)
+{
+	if(!itsSideParameterNames.empty())
+	{
+		NFmiPoint place(CalcParamTextPosition());
+		auto usedMainParamString = mainParamString;
+		usedMainParamString += "   ";
+		::MoveTextPointByDrawnText(place, usedMainParamString, itsToolBox);
+		// Piirretään pääparametrin perään eri väreillä side-paramit
+		itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
+		NFmiString drawnText = "Side-Params:  ";
+		NFmiText headerText(place, drawnText, true, 0, itsDrawingEnvironment);
+		itsToolBox->Convert(&headerText);
+		::MoveTextPointByDrawnText(place, drawnText, itsToolBox);
+
+		// GeneralColor värit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtää 2. värillä, jonka indeksi on siis 1.
+		int sideParameterColorIndex = 1;
+		for(const auto& sideParamName : itsSideParameterNames)
+		{
+			itsDrawingEnvironment->SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(sideParameterColorIndex));
+			std::string sideParamString = std::to_string(sideParameterColorIndex) + ")" + sideParamName + "  ";
+			drawnText = sideParamString;
+			NFmiText paramText(place, drawnText, true, 0, itsDrawingEnvironment);
+			itsToolBox->Convert(&paramText);
+			::MoveTextPointByDrawnText(place, drawnText, itsToolBox);
+			sideParameterColorIndex++;
+		}
 	}
 }
 
@@ -1835,11 +1905,18 @@ void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmi
 
 void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, int &theDrawedLocationCounter)
 {
-    auto drawHelperData = DrawHelperData();
-    if(drawHelperData && theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirretään helper-data
-    {
-        DrawHelperDataLocationInTime(theLatlon);
-    }
+	auto drawHelperData = DrawHelperData();
+	// vain 1. lokaatiolle piirretään helper-data ja side-parametrit
+	if(theDrawedLocationCounter == 1)
+	{
+		// Piirretään ensin muut helper datat
+		if(drawHelperData)
+		{
+			DrawHelperDataLocationInTime(theLatlon);
+		}
+		// Piirretään sitten mahdolliset side-parametrit
+		DrawSideParametersDataLocationInTime(theLatlon);
+	}
 
     itsNormalCurveEnvi.SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(theDrawedLocationCounter - 1));
     DrawLocationInTime(theLatlon, itsNormalCurveEnvi, itsChangeCurveEnvi, true);
@@ -2507,6 +2584,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 	if(IsIn(thePlace))
 	{
         itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
+		itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(CtrlViewUtils::kFmiTimeSerialView, itsViewGridRowNumber);
 
         // kun monta alinäyttöä yhtäaikaa, pitää ensimmäisellä klikkauksella asettaa kyseinen näyttö 'editointitilaan'
 		if(itsDrawParam && (!itsDrawParam->IsParamEdited()))
@@ -4339,6 +4417,53 @@ static void AddProducerString(std::string &theStr, boost::shared_ptr<NFmiFastQue
 		theStr += "\n";
 }
 
+std::string NFmiTimeSerialView::GetSideParametersToolTipText(const NFmiPoint& theLatlon, const NFmiMetTime& theTime, bool addNewlineAtStart)
+{
+	std::string str;
+
+	auto viewRowSideParameters = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getTimeSerialViewSideParameters(itsViewGridRowNumber);
+	if(viewRowSideParameters && viewRowSideParameters->NumberOfItems() > 0)
+	{
+		if(addNewlineAtStart)
+		{
+			str += "\n";
+		}
+		str += "<hr color=red><br>";
+		str += "Side Parameter(s):\n";
+
+		// GeneralColor värit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtää 2. värillä, jonka indeksi on siis 1.
+		int sideParameterColorIndex = 1;
+		for(viewRowSideParameters->Reset(); viewRowSideParameters->Next(); sideParameterColorIndex++)
+		{
+			// Joskus esim. side-parameterin lisäys ei laukaise aikasarjaikkunan piirtoa, ja tällöin jos
+			// tooltip piirto tulee ensin, ei listasta löydy kaikkia parametri nimiä
+			auto usedSideParamNameIndex = sideParameterColorIndex - 1;
+			if(usedSideParamNameIndex < itsSideParameterNamesForTooltip.size())
+			{
+				const auto& paramNameInTooltip = itsSideParameterNamesForTooltip[usedSideParamNameIndex];
+				auto sideParamColor = itsCtrlViewDocumentInterface->GeneralColor(sideParameterColorIndex);
+				auto sideParamDrawParam = viewRowSideParameters->Current();
+				if(sideParamDrawParam)
+				{
+					auto& producer = *sideParamDrawParam->Param().GetProducer();
+					auto dataType = sideParamDrawParam->DataType();
+					boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType);
+					if(sideParamInfo)
+					{
+						float sideParameterValue = ::GetTooltipValue(sideParamInfo, theLatlon, theTime, sideParamDrawParam->Param().GetParamIdent());
+						::AddValueLineString(str, paramNameInTooltip, sideParamColor, sideParameterValue, sideParamDrawParam, true, 1);
+					}
+				}
+			}
+		}
+	}
+
+	if(!str.empty() && str.back() == '\n')
+		str.pop_back();
+
+	return str;
+}
+
 std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
 {
 	if(itsDrawParam->DataType() == NFmiInfoData::kHybridData)
@@ -4749,7 +4874,7 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 		}
 
 		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
-		string parNameStr = showExtraInfo ? CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, true) : CachedParameterName();
+		string parNameStr = showExtraInfo ? CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, true) : CachedParameterName(true);
 		NFmiColor stationDataColor;
 		editedInfo->FirstLocation();
 		int selectedLocationCounter = 0;
@@ -4799,7 +4924,12 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 					}
 				}
 			}
+		}
 
+		str += GetSideParametersToolTipText(primaryLocationLatlon, aTime, str.back() != '\n');
+
+		if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
+		{
 			str += GetModelDataToolTipText(viewedInfo, primaryLocationLatlon, aTime);
 			str += GetHelpDataToolTipText(primaryLocationLatlon, aTime);
 			str += GetObsFraktileDataToolTipText(viewedInfo, primaryLocationLatlon, aTime, normalTitleColor);
@@ -4871,5 +5001,18 @@ NFmiPoint NFmiTimeSerialView::GetFirstSelectedLatlonFromEditedData() const
 
 void NFmiTimeSerialView::UpdateCachedParameterName()
 {
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, true, itsInfo));
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, false, 0, true, true, itsInfo), false);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, true, itsInfo), true);
+}
+
+void NFmiTimeSerialView::AddSideParameterNames(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& fastInfo)
+{
+	itsSideParameterNames.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, true, true, fastInfo));
+	itsSideParameterNamesForTooltip.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, true, 0, true, true, fastInfo));
+}
+
+void NFmiTimeSerialView::ClearSideParameterNames()
+{
+	itsSideParameterNames.clear();
+	itsSideParameterNamesForTooltip.clear();
 }

@@ -52,6 +52,7 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	void DrawBackground (void);
 	virtual NFmiTimeSerialView* CreateTimeSerialView(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int index);
 	double CalcTimeAxisHeight(void);
+	int CalcRowIndex(const NFmiPoint& thePlace);
 
 	//laura siirsi seuraavat protectediksi
 	NFmiCtrlViewList *itsViewList;

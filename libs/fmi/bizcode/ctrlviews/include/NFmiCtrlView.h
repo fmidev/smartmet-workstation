@@ -131,8 +131,8 @@ class NFmiCtrlView
    bool IsPrintedMapViewDesctop();
    bool IsPrinting() const;
    int CalcRealRowIndex() const;
-   const std::string& CachedParameterName() const { return itsCachedParameterName; }
-   void CachedParameterName(const std::string &newName) { itsCachedParameterName = newName; }
+   const std::string& CachedParameterName(bool tooltipVersion) const;
+   void CachedParameterName(const std::string& newName, bool tooltipVersion);
    virtual void UpdateCachedParameterName();
 
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ) const {return NFmiPoint(kFloatMissing, kFloatMissing);}
@@ -189,6 +189,9 @@ class NFmiCtrlView
 	// Parametrin nimi stringin teko on yll‰tt‰v‰n raskasta ja se kannattaa laskea kullakin piirtokerralla kerran muistiin.
 	// Parametrin nimi riippu paljon erilaisista datatyypeista ja tilanteista, se on mm. seuraavaa 'normi' muotoa: E00/06.09 CAPE
 	std::string itsCachedParameterName;
+	// Tehd‰‰n parametrin nimi pareina, toinen n‰ytˆn piirtoa varten ja toinen tooltippej‰ varten. Se miss‰ on tooltip versio, hanskaa
+	// erikoismerkit kuten '>' jne. edelleen, joilla on erikoismerkitys html kieless‰.
+	std::string itsCachedParameterNameForTooltip;
 
 	Gdiplus::Graphics *itsGdiPlusGraphics; // tehd‰‰n GDI+ piirto t‰ll‰
 private:
