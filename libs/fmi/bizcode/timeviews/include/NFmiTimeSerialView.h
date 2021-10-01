@@ -136,7 +136,8 @@ class NFmiTimeSerialView : public NFmiTimeView
     void DrawHelperObservationData(const NFmiPoint &theLatlon);
     bool IsParamWeatherSymbol3();
     bool IsSynopticObservationData();
-    std::string GetModelDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
+	std::string GetSideParametersToolTipText(const NFmiPoint& theLatlon, const NFmiMetTime& theTime, bool addNewlineAtStart);
+	std::string GetModelDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
     std::string GetEcFraktileDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
     std::string GetSeaLevelPlumeDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
     std::string GetSeaLevelProbDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theSeaLevelFractileData, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
@@ -170,6 +171,8 @@ class NFmiTimeSerialView : public NFmiTimeView
 	void DrawModelDataLegend(const std::vector<NFmiColor> &theUsedColors, const std::vector<std::string> &theFoundProducerNames);
 	NFmiPoint CalcParamTextPosition(void);
 	void DrawHelperDataLocationInTime(const NFmiPoint &theLatlon);
+	void DrawSideParametersDataLocationInTime(const NFmiPoint& theLatlon);
+	void DrawSideParameterNames(const NFmiString& mainParamString);
 	void DrawKepaDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon);
 	void DrawObservationDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon);
 	void DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon);
@@ -289,6 +292,8 @@ class NFmiTimeSerialView : public NFmiTimeView
 
  protected:
 	bool ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+	void AddSideParameterNames(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& fastInfo);
+	void ClearSideParameterNames();
 
 	bool fJustScanningForMinMaxValues; // auto-adjust s‰‰dˆt lasketaan lˆydettyjen min ja max arvojen avulla. Jos t‰m‰ optio on true, 
 										// ei piirret‰ mit‰‰n, etsit‰‰n vain min ja max arvoja. Tarkoitus on ett‰ optio laitetaan p‰‰lle
@@ -297,6 +302,8 @@ class NFmiTimeSerialView : public NFmiTimeView
 	NFmiDataModifierMinMax itsAutoAdjustMinMaxValues; // T‰h‰n talletetaan skannauksen yhteydes‰‰ lˆydetyt minimi ja maksimi arvot
 	NFmiTimeBag itsAutoAdjustScanTimes; // kaikki datat k‰yd‰‰n l‰pi alkaen timabagin alku ajasta loppu aikaan etsitt‰ess‰ min ja max arvoja
 	std::vector<NFmiPoint> itsScannedLatlonPoints; // katseltavalle datalle t‰ss‰ voi olla useita pisteit‰, mutta muille apudatoille k‰ytet‰‰n vain 1. pistett‰
+	std::vector<std::string> itsSideParameterNames;
+	std::vector<std::string> itsSideParameterNamesForTooltip;
 
 private:
 

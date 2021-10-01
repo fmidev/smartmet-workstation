@@ -162,7 +162,10 @@ bool NFmiTimeValueEditManagerView::LeftButtonUp (const NFmiPoint & thePlace, uns
 		status = itsUpperTimeView->LeftButtonUp(thePlace, theKey);
 	if(!status)
 	{
-		itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(CtrlViewUtils::kFmiTimeSerialView, 1);
+		auto rowIndex = CalcRowIndex(thePlace);
+		if(rowIndex == 0)
+			rowIndex = 1;
+		itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(CtrlViewUtils::kFmiTimeSerialView, rowIndex);
 	}
 	else
         itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
@@ -218,6 +221,34 @@ bool NFmiTimeValueEditManagerView::LeftButtonDown (const NFmiPoint & thePlace, u
 	}
    return status;
 }
+
+// Jos ollaan aikakontrolliikkunassa, tai ollaan alueen ulkopuolella, palautetaan 0.
+// Jos ollaan 1. rivin kohdalla tai sen yläpuolella, palautetaan 1.
+// Jos ollaan 2. rivin kohdalla tai sen yläpuolella, palautetaan 2, jne.
+// Jos ollaan viimeisin rivin alapuolella, palautetaan (rivien_lkm + 1).
+int NFmiTimeValueEditManagerView::CalcRowIndex(const NFmiPoint& thePlace)
+{
+	if(itsUpperTimeView && itsUpperTimeView->IsIn(thePlace))
+		return 0;
+
+	if(IsIn(thePlace))
+	{
+		NFmiRect rect;
+		for(int rowIndex = 1; rowIndex <= itsViewCount; rowIndex++)
+		{
+			itsViewList->Index(rowIndex);
+			rect = CalcListViewRect(rowIndex);
+			if(rect.Bottom() >= thePlace.Y())
+			{
+				return rowIndex;
+			}
+		}
+		return itsViewCount + 1;
+	}
+
+	return 0;
+}
+
 //--------------------------------------------------------
 // RightButtonDown
 //--------------------------------------------------------

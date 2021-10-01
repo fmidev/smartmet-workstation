@@ -3924,13 +3924,13 @@ bool CreateMaskSelectionPopup(void)
 	return false;
 }
 
-void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiMenuItemList &thePopupMenu, unsigned int theDescTopIndex, int index)
+void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiMenuItemList &thePopupMenu, unsigned int theDescTopIndex)
 {
 	if(theDrawParam)
 	{
 		NFmiDataIdent param = theDrawParam->Param();
 		std::string menuString = "SetMultiRunMode"; // ::GetDictionaryString("TimeSerialViewParamPopUpRemove");
-        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType(), index);
+        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType());
 
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
 		for(int i = 0; i <= 10; i++)
@@ -3941,7 +3941,7 @@ void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmi
 			else
 				multiModeStr += std::string("Count to ") + NFmiStringTools::Convert(i);
 
-            auto item1 = std::make_unique<NFmiMenuItem>(theDescTopIndex, multiModeStr, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType(), index);
+            auto item1 = std::make_unique<NFmiMenuItem>(theDescTopIndex, multiModeStr, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType());
 			item1->ExtraParam(i);
 			menuList->Add(std::move(item1));
 		}
@@ -3959,9 +3959,37 @@ bool CreateTimeSerialDialogOnViewPopup(int index)
 	GetCombinedMapHandler()->getTimeSerialViewIndexReference() = index;
 	fOpenPopup = false;
 	itsPopupMenu = std::make_unique<NFmiMenuItemList>();
+
+	MenuCreationSettings menuSettings;
+	menuSettings.SetTimeSerialSettings(kFmiAddTimeSerialSideParam);
+	CreateParamSelectionBasePopup(menuSettings, itsPopupMenu.get(), "Add side parameter");
+
+	auto sideParamList = GetCombinedMapHandler()->getTimeSerialViewSideParameters(index);
+	if(sideParamList && sideParamList->NumberOfItems() > 0)
+	{
+		// Yksittäisen side-paramin poistot
+		auto removeSideParamMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, "Remove side parameter", kFmiBadParameter, kFmiRemoveSelectedTimeSerialSideParam, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		auto removeSideParamMenuItemList = new NFmiMenuItemList();
+		for(sideParamList->Reset(); sideParamList->Next(); )
+		{
+			auto currentSideParam = sideParamList->Current();
+			auto paramNameInMenu = CtrlViewUtils::GetParamNameString(currentSideParam, false, false, false, 0, false, true);
+			const auto &dataIdent = currentSideParam->Param();
+			const auto &level = currentSideParam->Level();
+			auto sideParamMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, paramNameInMenu, dataIdent, kFmiRemoveSelectedTimeSerialSideParam, g_DefaultParamView, &level, currentSideParam->DataType());
+			removeSideParamMenuItemList->Add(std::move(sideParamMenuItem));
+		}
+		removeSideParamMenuItem->AddSubMenu(removeSideParamMenuItemList);
+		itsPopupMenu->Add(std::move(removeSideParamMenuItem));
+
+		// Kaikkien side-paramien poisto kerralla
+		auto clearAllSideParamsMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, "Clear side parameters", kFmiBadParameter, kFmiRemoveAllTimeSerialRowSideParams, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		itsPopupMenu->Add(std::move(clearAllSideParamsMenuItem));
+	}
+
 	auto& timeSerialViewDrawParamList = GetCombinedMapHandler()->getTimeSerialViewDrawParamList();
 	if(timeSerialViewDrawParamList.Index(index))
-		AddMultiModelRunToMenu(timeSerialViewDrawParamList.Current(), *itsPopupMenu, CtrlViewUtils::kFmiTimeSerialView, index);
+		AddMultiModelRunToMenu(timeSerialViewDrawParamList.Current(), *itsPopupMenu, CtrlViewUtils::kFmiTimeSerialView);
 
 	if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 		return false;
@@ -4041,7 +4069,7 @@ bool CreateTimeSerialDialogPopup(int index)
 	{
 		NFmiDataIdent param = timeSerialViewDrawParamList.Current()->Param();
 		std::string menuString = ::GetDictionaryString("TimeSerialViewParamPopUpRemove");
-		auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, param, kFmiRemoveTimeSerialView, g_DefaultParamView, nullptr, infoDataType, index);
+		auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, param, kFmiRemoveTimeSerialView, g_DefaultParamView, nullptr, infoDataType);
 		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("TimeSerialViewParamPopUpRemoveAll");
 		menuItem.reset(new NFmiMenuItem(-1, menuString, param, kFmiRemoveAllTimeSerialViews, g_DefaultParamView, nullptr, infoDataType));
@@ -4361,7 +4389,15 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* the
 	case kFmiAddParamCrossSectionView:
 		GetCombinedMapHandler()->addCrossSectionView(theMenuItem, theRowIndex, false);
 		break;
-    default:
+	case kFmiAddTimeSerialView:
+		GetCombinedMapHandler()->getTimeSerialViewIndexReference() = theRowIndex;
+		GetCombinedMapHandler()->addTimeSerialView(theMenuItem, false);
+		break;
+	case kFmiAddTimeSerialSideParam:
+		GetCombinedMapHandler()->getTimeSerialViewIndexReference() = theRowIndex;
+		GetCombinedMapHandler()->addTimeSerialViewSideParameter(theMenuItem, false);
+		break;
+	default:
         return false;
     }
 
@@ -4517,8 +4553,17 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiRemoveTimeSerialView:
 			GetCombinedMapHandler()->removeTimeSerialView(*menuItem);
 			break;
+		case kFmiAddTimeSerialSideParam:
+			GetCombinedMapHandler()->addTimeSerialViewSideParameter(*menuItem, false);
+			break;
+		case kFmiRemoveSelectedTimeSerialSideParam:
+			GetCombinedMapHandler()->removeTimeSerialViewSideParameter(*menuItem);
+			break;
+		case kFmiRemoveAllTimeSerialRowSideParams:
+			GetCombinedMapHandler()->removeAllTimeSerialViewSideParameters(GetCombinedMapHandler()->getTimeSerialViewIndexReference());
+			break;
 		case kFmiTimeSerialModelRunCountSet:
-			GetCombinedMapHandler()->timeSerialViewModelRunCountSet(*menuItem, itsCurrentViewRowIndex);
+			GetCombinedMapHandler()->timeSerialViewModelRunCountSet(*menuItem);
 			break;
 		case kFmiActivateView:
 			GetCombinedMapHandler()->activateView(*menuItem, itsCurrentViewRowIndex);
@@ -6110,6 +6155,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::TimeView &timeView = theMacro.GetTimeView();
 		timeView.SetAllParams(&GetCombinedMapHandler()->getTimeSerialViewDrawParamList());
+		timeView.SetAllSideParameters(GetCombinedMapHandler()->getTimeSerialViewSideParameterList());
         timeView.ShowHelpData(ShowHelperDataInTimeSerialView() != 0);
         timeView.ShowHelpData2(ShowHelperData2InTimeSerialView());
         timeView.ShowHelpData3(ShowHelperData3InTimeSerialView());
@@ -6300,22 +6346,35 @@ bool InitCPManagerSet(void)
 
     void SetTimeViewParams(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro)
 	{
-		GetCombinedMapHandler()->removeAllTimeSerialViews();
+		auto& combinedMapHandler = *GetCombinedMapHandler();
+		combinedMapHandler.removeAllTimeSerialViews();
 
 		const std::vector<NFmiViewSettingMacro::TimeViewRow>& rows = theMacro.GetTimeView().Rows();
 		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type ssize = rows.size();
 		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type counter = 0;
-		auto& timeSerialViewIndexReference = GetCombinedMapHandler()->getTimeSerialViewIndexReference();
+		auto& timeSerialViewIndexReference = combinedMapHandler.getTimeSerialViewIndexReference();
 		timeSerialViewIndexReference = 0;
 		for( ;counter < ssize ; counter++)
 		{
+			auto& macroTimeRow = rows[counter];
 			timeSerialViewIndexReference++; // tätä juoksuttamalla saan parametrit menemään aikasarja ikkunaan oikeaan järjestykseen
-			const NFmiViewSettingMacro::Param &par = rows[counter].Param();
+			const NFmiViewSettingMacro::Param &par = macroTimeRow.Param();
 			NFmiMenuItem menuItem(-1, "x", par.DataIdent(), kFmiAddTimeSerialView, g_DefaultParamView, &par.Level(), par.DataType());
-			GetCombinedMapHandler()->addTimeSerialView(menuItem, fTreatAsViewMacro);
+			combinedMapHandler.addTimeSerialView(menuItem, fTreatAsViewMacro);
             // Kaikki makroon talletetut drawparam asetukset pitää vielä ladata luotuun ja listoihin laitettuun drawparamiin
             // viimeinen 0 on feikki indeksi jota tarvitaan karttanäyttö tapauksessa
 			AdjustDrawParam(0, par, CtrlViewUtils::kFmiTimeSerialView, 0, fTreatAsViewMacro);
+
+			// Tehdään side-parameter osio tässä
+			const auto& sideParameters = macroTimeRow.SideParameters();
+			if(sideParameters.size())
+			{
+				for(const auto& sideParameter : sideParameters)
+				{
+					NFmiMenuItem sideParameterMenuItem(-1, "x", sideParameter.DataIdent(), kFmiAddTimeSerialSideParam, g_DefaultParamView, &sideParameter.Level(), sideParameter.DataType());
+					combinedMapHandler.addTimeSerialViewSideParameter(sideParameterMenuItem, fTreatAsViewMacro);
+				}
+			}
 		}
 
         if(theMacro.GetTimeView().ShowHelpData())

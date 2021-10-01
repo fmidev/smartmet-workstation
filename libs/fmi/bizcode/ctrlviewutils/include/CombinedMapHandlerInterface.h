@@ -10,6 +10,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <list>
 
 class NFmiMetTime;
 class NFmiQueryData;
@@ -67,6 +68,11 @@ class CombinedMapHandlerInterface
 public:
     using MapViewDescTopVector = std::vector<std::unique_ptr<NFmiMapViewDescTop>>;
     using GetCombinedMapHandlerInterfaceImplementationCallBackType = std::function<CombinedMapHandlerInterface*(void)>;
+    // Aikasarjaikkunan sivu-parametri container
+    using SideParametersContainer = std::list<std::unique_ptr<NFmiDrawParamList>>;
+    // Aikasarjaikkunan sivu-parametri containerin iteraattori
+    using SideParametersIterator = std::list<std::unique_ptr<NFmiDrawParamList>>::iterator;
+
     // Tämä pitää asettaa johonkin konkreettiseen funktioon, jotta käyttäjä koodi saa käyttöönsä halutun interface toteutuksen
     static GetCombinedMapHandlerInterfaceImplementationCallBackType GetCombinedMapHandlerInterfaceImplementation;
 
@@ -137,12 +143,17 @@ public:
     virtual void showView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual NFmiPtrList<NFmiDrawParamList>& getCrossSectionDrawParamListVector() = 0;
     virtual NFmiDrawParamList& getTimeSerialViewDrawParamList() = 0;
+    virtual NFmiDrawParamList* getTimeSerialViewSideParameters(int viewRowIndex) = 0;
+    virtual SideParametersContainer& getTimeSerialViewSideParameterList() = 0;
+    virtual void addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
+    virtual void removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem) = 0;
+    virtual void removeAllTimeSerialViewSideParameters(int viewRowIndex) = 0;
     virtual void removeAllTimeSerialViews() = 0;
     virtual void showCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool showParam) = 0;
     virtual bool modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
     virtual void removeTimeSerialView(const NFmiMenuItem& menuItem) = 0;
-    virtual void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem) = 0;
     virtual unsigned long& getTimeSerialViewIndexReference() = 0;
     virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;

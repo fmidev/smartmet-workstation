@@ -9,6 +9,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <list>
 
 class NFmiMapViewDescTop;
 class WmsSupportInterface;
@@ -53,6 +54,9 @@ class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
     std::unique_ptr<NFmiPtrList<NFmiDrawParamList>> crossSectionDrawParamListVector_; 
     // Knows all the parameters that has to be drawn on timeserial-view
     std::unique_ptr<NFmiDrawParamList> timeSerialViewDrawParamList_;
+    // All the side-parameters on each timeserial-view row.
+    // Each row's main-parameter can have 0-n number of side-parameters, that will be shown on view with different colors.
+    SideParametersContainer timeSerialViewSideParameters_;
     // Hiiren oikean klikkauksen rivinumero talletetaan tähän
     unsigned long timeSerialViewIndex_ = 0; 
 
@@ -166,12 +170,17 @@ public:
     void showView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     NFmiPtrList<NFmiDrawParamList>& getCrossSectionDrawParamListVector() override;
     NFmiDrawParamList& getTimeSerialViewDrawParamList() override;
+    NFmiDrawParamList* getTimeSerialViewSideParameters(int viewRowIndex) override;
+    SideParametersContainer& getTimeSerialViewSideParameterList() override;
+    void addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) override;
+    void removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem) override;
+    void removeAllTimeSerialViewSideParameters(int viewRowIndex) override;
     void removeAllTimeSerialViews() override;
     void showCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool showParam) override;
     bool modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) override;
     void removeTimeSerialView(const NFmiMenuItem& menuItem) override;
-    void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem, int viewRowIndex) override;
+    void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem) override;
     unsigned long& getTimeSerialViewIndexReference() override;
     boost::shared_ptr<NFmiDrawParam> activeDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
     boost::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) override;
@@ -318,4 +327,8 @@ private:
     void initializeWmsMapLayerInfos();
     int getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase);
     void selectMapLayerByMacroReferenceNameFromViewMacro(bool backgroundMapCase, unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, NFmiCombinedMapModeState& combinedMapModeState, const std::string& macroReferenceName, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos);
+    void addEmptySideParamList(int viewRowIndex);
+    void removeSideParamList(int viewRowIndex);
+    SideParametersIterator getTimeSerialViewSideParameterIterator(int viewRowIndex);
+    boost::shared_ptr<NFmiDrawParam> createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam);
 };

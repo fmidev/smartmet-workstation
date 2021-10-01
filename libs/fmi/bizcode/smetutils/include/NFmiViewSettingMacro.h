@@ -172,11 +172,11 @@ public:
 	{
 	public:
 		MapRow(void);
-		MapRow(const std::vector<Param>& theParams);
+		MapRow(const std::vector<NFmiViewSettingMacro::Param>& theParams);
 		~MapRow(void);
 
-		const std::vector<Param>& RowParams(void) const {return itsRowParams;}
-		void RowParams(const std::vector<Param>& newValue) {itsRowParams = newValue;}
+		const std::vector<NFmiViewSettingMacro::Param>& RowParams(void) const {return itsRowParams;}
+		void RowParams(const std::vector<NFmiViewSettingMacro::Param>& newValue) {itsRowParams = newValue;}
 		void Clear(void);
 		void Add(const Param &theParam);
 		void SetMacroParamInitFileNames(const std::string &theRootPath);
@@ -184,7 +184,7 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		std::vector<Param> itsRowParams;
+		std::vector<NFmiViewSettingMacro::Param> itsRowParams;
 	};
 
 	class TimeViewRow
@@ -196,11 +196,14 @@ public:
 
 		const NFmiViewSettingMacro::Param& Param(void) const {return itsParam;}
 		void Param(const NFmiViewSettingMacro::Param& newValue) {itsParam = newValue;}
+		const std::vector<NFmiViewSettingMacro::Param>& SideParameters(void) const { return itsSideParameters; }
+		void SideParameters(const std::vector<NFmiViewSettingMacro::Param>& newValue) { itsSideParameters = newValue; }
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
 		NFmiViewSettingMacro::Param itsParam;
+		std::vector<NFmiViewSettingMacro::Param> itsSideParameters;
 	};
 
 	class GeneralDoc
@@ -228,7 +231,8 @@ public:
 		TimeView(void);
 		~TimeView(void);
 
-		void SetAllParams(NFmiDrawParamList *theDrawParamList);
+		void SetAllParams(NFmiDrawParamList* theDrawParamList);
+		void SetAllSideParameters(CombinedMapHandlerInterface::SideParametersContainer &theSideParameterList);
 
 		const std::vector<TimeViewRow>& Rows(void) const {return itsRows;}
 		void Rows(const std::vector<TimeViewRow>& newValue) {itsRows = newValue;}

@@ -396,7 +396,7 @@ NFmiViewSettingMacro::MapRow::MapRow(void)
 {
 }
 
-NFmiViewSettingMacro::MapRow::MapRow(const std::vector<Param>& theParams)
+NFmiViewSettingMacro::MapRow::MapRow(const std::vector<NFmiViewSettingMacro::Param>& theParams)
 :itsRowParams(theParams)
 {
 }
@@ -464,6 +464,44 @@ NFmiViewSettingMacro::TimeViewRow::~TimeViewRow(void)
 {
 }
 
+std::string removeComments(const std::string &prgm)
+{
+	int n = static_cast<int>(prgm.length());
+	std::string res;
+
+	// Flags to indicate that single line and multiple line comments
+	// have started or not.
+	bool s_cmt = false;
+	bool m_cmt = false;
+
+
+	// Traverse the given program
+	for(int i = 0; i < n; i++)
+	{
+		// If single line comment flag is on, then check for end of it
+		if(s_cmt == true && prgm[i] == '\n')
+			s_cmt = false;
+
+		// If multiple line comment is on, then check for end of it
+		else if(m_cmt == true && prgm[i] == '*' && prgm[i + 1] == '/')
+			m_cmt = false, i++;
+
+		// If this character is in a comment, ignore it
+		else if(s_cmt || m_cmt)
+			continue;
+
+		// Check for beginning of comments and set the approproate flags
+		else if(prgm[i] == '/' && prgm[i + 1] == '/')
+			s_cmt = true, i++;
+		else if(prgm[i] == '/' && prgm[i + 1] == '*')
+			m_cmt = true, i++;
+
+		// If current character is a non-comment character, append it to res
+		else  res += prgm[i];
+	}
+	return res;
+}
+
 void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::TimeViewRow::Write..." << endl;
@@ -473,6 +511,13 @@ void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+
+	// 1. lisättynä ominaisuutena on lista side-parametereista yhtenä stringinä (HUOM! pakko lisätä myös tyhjä lista)
+	std::stringstream stringOut;
+	NFmiDataStoringHelpers::WriteContainer(itsSideParameters, stringOut, string("\n"));
+	// Huom! talletettavasta stringistä pitää myös poistaa kaikki kommentit ensin, muuten homma ei toimi!!!
+	extraData.Add(::removeComments(stringOut.str()));
+
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -493,6 +538,14 @@ void NFmiViewSettingMacro::TimeViewRow::Read(std::istream& is)
 	is >> extraData;
 	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
 	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+
+	// 1. lisättynä ominaisuutena on lista side-parametereista yhtenä stringinä
+	itsSideParameters.clear();
+	if(extraData.itsStringValues.size() >= 1)
+	{
+		std::stringstream stringIn(extraData.itsStringValues[0]);
+		NFmiDataStoringHelpers::ReadContainer(itsSideParameters, stringIn);
+	}
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -705,6 +758,31 @@ void NFmiViewSettingMacro::TimeView::SetAllParams(NFmiDrawParamList *theDrawPara
 	}
 }
 
+static std::vector<NFmiViewSettingMacro::Param> MakeParamVector(NFmiDrawParamList& theDrawParamList)
+{
+	std::vector<NFmiViewSettingMacro::Param> paramVector;
+	for(theDrawParamList.Reset(); theDrawParamList.Next(); )
+	{
+		auto drawParam = theDrawParamList.Current();
+		NFmiViewSettingMacro::Param param(drawParam, drawParam->Level(), drawParam->DataType(), 0);
+		paramVector.push_back(param);
+	}
+	return paramVector;
+}
+
+void NFmiViewSettingMacro::TimeView::SetAllSideParameters(CombinedMapHandlerInterface::SideParametersContainer& theSideParameterList)
+{
+	size_t rowIndex = 0;
+	for(const auto& sideParameters : theSideParameterList)
+	{
+		if(rowIndex < itsRows.size())
+		{
+			itsRows[rowIndex].SideParameters(::MakeParamVector(*sideParameters));
+		}
+		rowIndex++;
+	}
+}
+
 void NFmiViewSettingMacro::TimeView::Clear(void)
 {
 	itsRows.clear();
@@ -754,6 +832,8 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	NFmiDataStoringHelpers::ReadContainer(itsRows, is);
+	if(is.fail())
+		throw runtime_error(exceptionErrorMessage);
 	is >> itsAbsolutRect;
     ::ReadMfcViewStatus(is, itsViewStatus);
 	is >> fShowHelpData;

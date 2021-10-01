@@ -3374,10 +3374,105 @@ NFmiDrawParamList& NFmiCombinedMapHandler::getTimeSerialViewDrawParamList()
 	return *timeSerialViewDrawParamList_;
 }
 
+NFmiCombinedMapHandler::SideParametersIterator NFmiCombinedMapHandler::getTimeSerialViewSideParameterIterator(int viewRowIndex)
+{
+	auto actualListIndex = viewRowIndex - 1;
+	if(actualListIndex >= 0 && actualListIndex < timeSerialViewSideParameters_.size())
+	{
+		auto iter = timeSerialViewSideParameters_.begin();
+		std::advance(iter, actualListIndex);
+		return iter;
+	}
+
+	return timeSerialViewSideParameters_.end();
+}
+
+// viewRowIndex parametri on 1:stä alkava rivi indeksi.
+NFmiDrawParamList* NFmiCombinedMapHandler::getTimeSerialViewSideParameters(int viewRowIndex)
+{
+	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
+	if(sideParameterIter != timeSerialViewSideParameters_.end())
+	{
+		return sideParameterIter->get();
+	}
+	else
+		return nullptr;
+}
+
+CombinedMapHandlerInterface::SideParametersContainer& NFmiCombinedMapHandler::getTimeSerialViewSideParameterList()
+{
+	return timeSerialViewSideParameters_;
+}
+
+// viewRowIndex parametri on 1:stä alkava rivi indeksi
+void NFmiCombinedMapHandler::addEmptySideParamList(int viewRowIndex)
+{
+	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
+	timeSerialViewSideParameters_.insert(sideParameterIter, std::make_unique<NFmiDrawParamList>());
+}
+
+void NFmiCombinedMapHandler::removeSideParamList(int viewRowIndex)
+{
+	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
+	if(sideParameterIter != timeSerialViewSideParameters_.end())
+	{
+		timeSerialViewSideParameters_.erase(sideParameterIter);
+	}
+}
+
+void NFmiCombinedMapHandler::addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
+{
+	auto rowSideParameters = getTimeSerialViewSideParameters(timeSerialViewIndex_);
+	if(rowSideParameters)
+	{
+		auto drawParam = createTimeSerialViewDrawParam(menuItem, isViewMacroDrawParam);
+		if(drawParam)
+		{
+			std::string logStr("Adding to time-serial-view row #");
+			logStr += std::to_string(timeSerialViewIndex_);
+			logStr += " a side parameter: ";
+			auto info = ::getInfoOrganizer().Info(drawParam, false, false);
+			if(info)
+				logStr += getSelectedParamInfoString(info, false);
+			else
+				logStr += getSelectedParamInfoString(&drawParam->Param(), &drawParam->Level());
+			logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+
+			rowSideParameters->Add(drawParam);
+			timeSerialViewDirty(true);
+		}
+	}
+}
+
+void NFmiCombinedMapHandler::removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem)
+{
+	auto rowSideParameters = getTimeSerialViewSideParameters(timeSerialViewIndex_);
+	if(rowSideParameters)
+	{
+		if(rowSideParameters->Find(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType()))
+		{
+			rowSideParameters->Remove();
+			timeSerialViewDirty(true);
+		}
+	}
+}
+
+void NFmiCombinedMapHandler::removeAllTimeSerialViewSideParameters(int viewRowIndex)
+{
+	auto rowSideParameters = getTimeSerialViewSideParameters(viewRowIndex);
+	if(rowSideParameters)
+	{
+		rowSideParameters->Clear();
+		timeSerialViewDirty(true);
+	}
+}
+
 void NFmiCombinedMapHandler::removeAllTimeSerialViews()
 {
 	timeSerialViewDirty(true);
 	timeSerialViewDrawParamList_->Clear();
+	// Tyhjennetään samalla side-parameter lista
+	timeSerialViewSideParameters_.clear();
 }
 
 void NFmiCombinedMapHandler::showCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool showParam)
@@ -3426,24 +3521,35 @@ bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int v
 	}
 }
 
+boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
+{
+	auto& infoOrganizer = ::getInfoOrganizer();
+	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
+	if(drawParam)
+	{
+		drawParam->ViewMacroDrawParam(isViewMacroDrawParam);
+	}
+	return drawParam;
+}
+
 // laitetaan drawparam aikasarjan omaan listaa ja jos vertailutila käytössä, lisätää
 // vielä eri tuottajien drawparamit erilliseen listaan
 void NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
 {
 	timeSerialViewDirty(true);
-	auto& infoOrganizer = ::getInfoOrganizer();
-	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
+	auto drawParam = createTimeSerialViewDrawParam(menuItem, isViewMacroDrawParam);
 	if(drawParam)
 	{
 		std::string logStr("Adding to time-serial-view ");
-		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.Info(drawParam, false, false);
+		boost::shared_ptr<NFmiFastQueryInfo> info = ::getInfoOrganizer().Info(drawParam, false, false);
 		if(info)
-			logStr += getSelectedParamInfoString(info, true);
+			logStr += getSelectedParamInfoString(info, false);
+		else
+			logStr += getSelectedParamInfoString(&drawParam->Param(), &drawParam->Level());
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
-		if(isViewMacroDrawParam)
-			drawParam->ViewMacroDrawParam(true); // asetetaan tarvittaessa viewmacrodrawparam-flagi päälle
 
 		timeSerialViewDrawParamList_->Add(drawParam, timeSerialViewIndex_);
+		addEmptySideParamList(timeSerialViewIndex_);
 
 		bool groundData = ::isGroundDataType(drawParam);
 		updateFromModifiedDrawParam(drawParam, groundData);
@@ -3453,21 +3559,24 @@ void NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, boo
 void NFmiCombinedMapHandler::removeTimeSerialView(const NFmiMenuItem& menuItem)
 {
 	timeSerialViewDirty(true);
-	if(timeSerialViewDrawParamList_->Index(menuItem.IndexInViewRow()))
+	if(timeSerialViewDrawParamList_->Index(timeSerialViewIndex_))
+	{
 		timeSerialViewDrawParamList_->Remove();
+		removeSideParamList(timeSerialViewIndex_);
+	}
 }
 
-void NFmiCombinedMapHandler::timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem, int viewRowIndex)
+void NFmiCombinedMapHandler::timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem)
 {
-	NFmiDrawParamList* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
-	if(drawParamList && drawParamList->Index(menuItem.IndexInViewRow()))
+	if(timeSerialViewDrawParamList_->Index(timeSerialViewIndex_))
 	{
-		drawParamList->Current()->TimeSerialModelRunCount(static_cast<int>(menuItem.ExtraParam()));
+		auto drawParam = timeSerialViewDrawParamList_->Current();
+		drawParam->TimeSerialModelRunCount(static_cast<int>(menuItem.ExtraParam()));
 
-		drawParamList->Dirty(true);
+		timeSerialViewDrawParamList_->Dirty(true);
 		checkAnimationLockedModeTimeBags(menuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
 		mapViewDirty(menuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
-		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParamList->Current(), viewRowIndex);
+		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, timeSerialViewIndex_);
 		if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiTimeSerialView)
 			timeSerialViewDirty(true);
 	}

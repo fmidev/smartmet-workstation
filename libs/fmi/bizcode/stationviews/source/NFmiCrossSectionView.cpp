@@ -3178,5 +3178,6 @@ bool NFmiCrossSectionView::IsMouseDraggingOn(void)
 
 void NFmiCrossSectionView::UpdateCachedParameterName()
 {
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, false, 0, false, true, itsInfo));
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, false, 0, false, true, itsInfo), false);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, true, 0, false, true, itsInfo), true);
 }
