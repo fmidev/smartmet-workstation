@@ -177,6 +177,169 @@ int main(int argc, const char* argv[])
 /*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
+#include "NFmiFileSystem.h"
+#include "NFmiFileString.h"
+#include "NFmiPathUtils.h"
+#include "NFmiQueryDataUtil.h"
+#include "NFmiTimeList.h"
+#include "NFmiStringTools.h"
+#include <fstream>
+#include "boost\algorithm\string\replace.hpp"
+
+static std::string MakeNextSubDirectoryPath(const std::string& currentDirectory, const std::string& subDirectoryName)
+{
+    auto nextSubDirectoryPath = currentDirectory;
+    PathUtils::addDirectorySeparatorAtEnd(nextSubDirectoryPath);
+    nextSubDirectoryPath += subDirectoryName;
+    return nextSubDirectoryPath;
+}
+
+static void ChangeTime(NFmiMetTime& changedTime, int changeTimesByHour)
+{
+    changedTime.ChangeByHours(changeTimesByHour);
+}
+
+static NFmiTimeDescriptor MakeNewTimeDescrptor(NFmiTimeDescriptor copyOfSourceTimeDescriptor, int changeTimesByHour)
+{
+    if(copyOfSourceTimeDescriptor.UseTimeList())
+    {
+        auto &timeList = *copyOfSourceTimeDescriptor.ValidTimeList();
+        for(timeList.Reset(); timeList.Next(); )
+        {
+            ::ChangeTime(*timeList.Current(), changeTimesByHour);
+        }
+    }
+    else
+    {
+        auto &timebag = *copyOfSourceTimeDescriptor.ValidTimeBag();
+        timebag.MoveByMinutes(changeTimesByHour * 60);
+    }
+    auto changedOriginTime = copyOfSourceTimeDescriptor.OriginTime();
+    changedOriginTime.ChangeByHours(changeTimesByHour);
+    copyOfSourceTimeDescriptor.OriginTime(changedOriginTime);
+    return copyOfSourceTimeDescriptor;
+}
+
+std::unique_ptr<NFmiQueryData> CreateChangedQueryData(NFmiFastQueryInfo& sourceFastInfo, int changeTimesByHour)
+{
+    auto newTimeDescriptor = ::MakeNewTimeDescrptor(sourceFastInfo.TimeDescriptor(), changeTimesByHour);
+    auto newQueryData = std::make_unique<NFmiQueryData>(*sourceFastInfo.RefQueryData());
+    newQueryData->Info()->SetTimeDescriptor(newTimeDescriptor);
+    return newQueryData;
+}
+
+// Timestampissa pit‰‰ olla 12 numeroa per‰kk‰in, jotka on eroteltu muista nimen osista '_' merkill‰.
+static std::string MakeChangedTimeStampFilePath(std::string filePath, int changeTimesByHour)
+{
+    std::string newFilePath = filePath;
+    NFmiFileString fileString(filePath);
+    std::string fileNameWithoutExtension = fileString.Header();
+    auto fileNameParts = NFmiStringTools::Split(fileNameWithoutExtension, "_");
+    for(auto fileNamePart : fileNameParts)
+    {
+        if(fileNamePart.size() == 12)
+        {
+            try
+            {
+                double tmpValue = NFmiStringTools::Convert<double>(fileNamePart);
+                // Jos poikkeusta ei heitetty, oli kyse 12 numerosta, joista tehd‰‰n nyt mettime olio
+                NFmiMetTime aTime;
+                aTime.FromStr(fileNamePart, kYYYYMMDDHHMM);
+                aTime.ChangeByHours(changeTimesByHour);
+                std::string newTimeStamp = aTime.ToStr(kYYYYMMDDHHMM);
+                boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
+            }
+            catch(...)
+            { }
+        }
+    }
+    return newFilePath;
+}
+
+static void StoreParallerQueryData(NFmiQueryData& newQueryData, const std::string& queryDataFilePath)
+{
+    newQueryData.Write(queryDataFilePath);
+}
+
+static void DoQueryDataWork(const std::string& queryDataFileName, const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+{
+    auto queryDataFileSourcePath = ::MakeNextSubDirectoryPath(currentDirectory, queryDataFileName);
+    auto parallerQueryDataFileSourcePath = ::MakeNextSubDirectoryPath(parallerDirectory, queryDataFileName);
+    parallerQueryDataFileSourcePath = ::MakeChangedTimeStampFilePath(parallerQueryDataFileSourcePath, changeTimesByHour);
+    try
+    {
+        std::cerr << "Doing queryData file " << queryDataFileSourcePath << std::endl;
+        NFmiQueryData sourceData(queryDataFileSourcePath);
+        NFmiFastQueryInfo sourceFastInfo(&sourceData);
+        auto newQueryData = ::CreateChangedQueryData(sourceFastInfo, changeTimesByHour);
+        if(newQueryData)
+            ::StoreParallerQueryData(*newQueryData, parallerQueryDataFileSourcePath);
+        else
+            std::cerr << "Error: couldn't create newQueryData from " << queryDataFileSourcePath << std::endl;
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error with file: " << queryDataFileSourcePath << std::endl;
+        std::cerr << e.what() << std::endl;
+    }
+}
+
+static void DoFilesOnDirectory(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+{
+    auto files = NFmiFileSystem::DirectoryFiles(currentDirectory);
+    for(const auto& queryDataFileName : files)
+    {
+        ::DoQueryDataWork(queryDataFileName, currentDirectory, parallerDirectory, changeTimesByHour);
+    }
+}
+
+static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+{
+    std::cerr << "Doing directory " << currentDirectory << std::endl;
+    if(NFmiFileSystem::DirectoryExists(currentDirectory))
+    {
+        if(NFmiFileSystem::CreateDirectory(parallerDirectory))
+        {
+            std::cerr << "Created paraller directory " << parallerDirectory << std::endl;
+            DoFilesOnDirectory(currentDirectory, parallerDirectory, changeTimesByHour);
+            auto subDirectories = NFmiFileSystem::Directories(currentDirectory);
+            for(const auto &subDirectoryName : subDirectories)
+            {
+                if(subDirectoryName != "." && subDirectoryName != "..")
+                {
+                    auto nextSubDirectoryPath = ::MakeNextSubDirectoryPath(currentDirectory, subDirectoryName);
+                    auto nextParallerSubDirectoryPath = ::MakeNextSubDirectoryPath(parallerDirectory, subDirectoryName);
+                    DoRecursiveDirectoryWork(nextSubDirectoryPath, nextParallerSubDirectoryPath, changeTimesByHour);
+                }
+            }
+        }
+        else
+            std::cerr << "Error: couldn't create paraller directory " << parallerDirectory << std::endl;
+    }
+    else
+        std::cerr << "Error: non existing given directory " << parallerDirectory << std::endl;
+}
+
+
+int main(int argc, const char* argv[])
+{
+    // Ohjelma k‰y rekursiivisesti l‰pi kaikki tiedostot ja hakemistot, jotka ovat
+    // annetulla pathToQueryDataFiles -polulla ja ja tekee seuraavia asioita:
+    // 1) Luo uusidata muistiin, joissa on siirretty kaikkia aikoja annetulla aikasiirtym‰ll‰.
+    // 2) Talleta uusi data rinnakkaiseen puurakenteeseen, joka alkaa newBasePath -polusta.
+    // 3) Uuden datan nimessa oleva aikaleima on myˆs muokattu samalla siirtym‰ll‰.
+    std::string pathToQueryDataFiles = argv[1];
+    std::string newBasePath = argv[2];
+    int changeTimesByHour = std::stoi(argv[3]);
+    DoRecursiveDirectoryWork(pathToQueryDataFiles, newBasePath, changeTimesByHour);
+
+    return 1;
+}
+*/
+
+/*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
 #include "NFmiValueString.h"
 #include "NFmiMilliSecondTimer.h"
 

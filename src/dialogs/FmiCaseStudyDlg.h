@@ -10,6 +10,7 @@
 class SmartMetDocumentInterface;
 class NFmiCaseStudyDataFile;
 class NFmiProducerSystemsHolder;
+class NFmiCaseStudySettingsWinRegistry;
 
 struct CaseStudyHeaderParInfo
 {
@@ -19,13 +20,13 @@ struct CaseStudyHeaderParInfo
 		kModelName,
         kProducerId,
 		kStoreData,
-		kStartTimeOffset,
-		kEndTimeOffset,
+		kCaseStudyDataCount,
+		kLocalCacheDataCount,
 		kEnableData, // t‰t‰ ei saa laittaa viimeiseen sarakkeeseen, koska sit‰ on tarkoitus piilottaa ja CGridCtrl-luokassa on bugi, joka estaa viimeisen sarakkeen Unhide-toiminnon eston, eli viimeisen sarakkeen saa aina auki hiirell‰ vet‰m‰ll‰.
 		kDataSize
 	};
 
-	CaseStudyHeaderParInfo(void)
+	CaseStudyHeaderParInfo()
 	:itsHeader()
 	,itsColumnFunction(kModelName)
 	,itsColumnWidth(0)
@@ -57,7 +58,7 @@ public:
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 };
 
-const int kFmiOffsetEditTimer = 1;
+const int kFmiDataCountEditTimer = 1;
 const int kFmiDisableStoreButtonTimer = 2;
 
 // CFmiCaseStudyDlg dialog
@@ -67,17 +68,17 @@ class CFmiCaseStudyDlg : public CDialog
 private: // n‰ill‰ talletetaan sijainti ja koko rekisteriin
     static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
 public:
-    static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo(void){return s_ViewPosRegistryInfo;}
+    static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo() {return s_ViewPosRegistryInfo;}
 
     DECLARE_DYNAMIC(CFmiCaseStudyDlg)
 
 public:
 	CFmiCaseStudyDlg(SmartMetDocumentInterface *smartMetDocumentInterface, const std::string theTitleStr, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CFmiCaseStudyDlg();
-	void SetDefaultValues(void);
+	void SetDefaultValues();
 	virtual BOOL Create(CWnd* pParentWnd = NULL);
-	void AdjustDialogControls(void); // jos dialogin kokoa muutetaan, t‰ll‰ s‰‰det‰‰n kontrollien koko ja sijainti sopiviksi
-	void GetBasicInfoFromDialog(void);
+	void AdjustDialogControls(); // jos dialogin kokoa muutetaan, t‰ll‰ s‰‰det‰‰n kontrollien koko ja sijainti sopiviksi
+	void GetBasicInfoFromDialog();
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
 	// Update metodia tarvitaan (piti luoda tyhj‰ sellainen) kun kyseinen toiminto toteutetaan CSmartmetDoc luokassa SetViewPlaceToDefault -template yleisfunktiolla
 	void Update(){}
@@ -91,27 +92,27 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	void UpdateButtonStates(void);
+	void UpdateButtonStates();
 	void EnableButton(UINT theButtonId, BOOL state);
-	void AdjustGridControl(void);
+	void AdjustGridControl();
 	void AdjustControl(int theControlId, int rightOffset);
-	CRect CalcGridArea(void);
-	CRect CalcBrowseButtomRect(void);
+	CRect CalcGridArea();
+	CRect CalcBrowseButtomRect();
 	void AdjustBrowseButton(const CRect &theButtonRect);
 	void AdjustEditPathControl(const CRect &theButtonRect);
-	void DoWhenClosing(void);
-	void InitGridControlValues(void);
+	void DoWhenClosing();
+	void InitGridControlValues();
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
 	void UpdateGridControlValues(bool updateOnly);
-	void InitHeaders(void);
+	void InitHeaders();
 	void HandleCheckBoxClick(int col, int row);
 	void HandleEnableDataCheckBoxClick(int col, int row);
 	void SetGridRow(int row, const NFmiCaseStudyDataFile &theCaseData, int theFixedColumnCount, bool updateOnly);
 	BOOL AcceptChange(int col, int row);
-	void OnOffsetEdited(void);
-	bool IsThereCaseStudyMakerRunning(void);
-    void ShowEnableColumn(void);
-    void UpdateEditEnableDataText(void);
+	void OnDataCountEdited();
+	bool IsThereCaseStudyMakerRunning();
+    void ShowEnableColumn();
+    void UpdateEditEnableDataText();
     void EnableColorCodedControls();
 
 	NFmiCaseStudyGridCtrl itsGridCtrl;
@@ -133,6 +134,7 @@ private:
 								// mit‰ solua on editoitu.
 	LOGFONT itsBoldFont; // haluan tietyissa tapauksissa k‰ytt‰‰ bold-fonttia ja t‰h‰n talletetaan sen rakenne
     std::unique_ptr<NFmiProducerSystemsHolder> itsProducerSystemsHolder; // T‰h‰n laitetaan selkokieliset tuottaja nimet, joiden avulla rakennetaan CaseStudy datojen rakenteita CaseStudySystemissa.
+	NFmiCaseStudySettingsWinRegistry& itsCaseStudySettingsWinRegistry;
 public:
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	virtual BOOL OnInitDialog();

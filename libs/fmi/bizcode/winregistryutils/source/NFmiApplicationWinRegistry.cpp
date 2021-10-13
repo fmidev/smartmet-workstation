@@ -33,7 +33,7 @@ NFmiGriddingPropertiesWinRegistry::NFmiGriddingPropertiesWinRegistry()
 bool NFmiGriddingPropertiesWinRegistry::Init(const std::string &baseRegistryPath, bool isToolMasterAvailable)
 {
     if(mInitialized)
-        std::runtime_error("NFmiGriddingPropertiesWinRegistry::Init: all ready initialized.");
+        throw std::runtime_error("NFmiGriddingPropertiesWinRegistry::Init: all ready initialized.");
 
     mInitialized = true;
     mBaseRegistryPath = baseRegistryPath;
@@ -93,7 +93,7 @@ void NFmiGriddingPropertiesWinRegistry::UpdateGriddingPropertiesFromRegistry()
 // ******   NFmiHelpDataEnableWinRegistry *********
 // ************************************************
 
-NFmiHelpDataEnableWinRegistry::NFmiHelpDataEnableWinRegistry(void)
+NFmiHelpDataEnableWinRegistry::NFmiHelpDataEnableWinRegistry()
 :mInitialized(false)
 ,mBaseRegistryPath()
 ,mSectionName()
@@ -107,7 +107,7 @@ NFmiHelpDataEnableWinRegistry::NFmiHelpDataEnableWinRegistry(void)
 bool NFmiHelpDataEnableWinRegistry::Init(const std::string &baseRegistryPath, NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
 {
     if(mInitialized)
-        std::runtime_error("NFmiHelpDataEnableWinRegistry::Init: all ready initialized.");
+        throw std::runtime_error("NFmiHelpDataEnableWinRegistry::Init: all ready initialized.");
 
     mInitialized = true;
     mBaseRegistryPath = baseRegistryPath;
@@ -145,12 +145,196 @@ bool NFmiHelpDataEnableWinRegistry::Update(NFmiHelpDataInfoSystem &theHelpDataIn
     return true;
 }
 
+// **********************************************************
+// *********   NFmiCaseStudySettingsWinRegistry *************
+// **********************************************************
+
+NFmiCaseStudySettingsWinRegistry::NFmiCaseStudySettingsWinRegistry() = default;
+
+int NFmiCaseStudySettingsWinRegistry::GetDefaultLocalCacheCountValue(NFmiInfoData::Type dataType)
+{
+    switch(dataType)
+    {
+    case NFmiInfoData::kEditable:
+    case NFmiInfoData::kViewable:
+    case NFmiInfoData::kCopyOfEdited:
+    case NFmiInfoData::kKepaData:
+    case NFmiInfoData::kClimatologyData:
+    case NFmiInfoData::kHybridData:
+    case NFmiInfoData::kFuzzyData:
+    case NFmiInfoData::kVerificationData:
+    case NFmiInfoData::kModelHelpData:
+    case NFmiInfoData::kEditingHelpData:
+        return 3;
+    case NFmiInfoData::kStationary:
+    case NFmiInfoData::kObservations:
+    case NFmiInfoData::kAnalyzeData:
+    case NFmiInfoData::kFlashData:
+    case NFmiInfoData::kTrajectoryHistoryData:
+    case NFmiInfoData::kSingleStationRadarData:
+        return 1;
+    case NFmiInfoData::kSatelData:
+        return 0;
+    default:
+        return 0;
+    }
+}
+
+int NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(NFmiInfoData::Type dataType)
+{
+    switch(dataType)
+    {
+    case NFmiInfoData::kEditable:
+    case NFmiInfoData::kViewable:
+    case NFmiInfoData::kCopyOfEdited:
+    case NFmiInfoData::kKepaData:
+    case NFmiInfoData::kClimatologyData:
+    case NFmiInfoData::kHybridData:
+    case NFmiInfoData::kFuzzyData:
+    case NFmiInfoData::kVerificationData:
+    case NFmiInfoData::kModelHelpData:
+    case NFmiInfoData::kEditingHelpData:
+        return 3;
+    case NFmiInfoData::kObservations:
+    case NFmiInfoData::kAnalyzeData:
+    case NFmiInfoData::kFlashData:
+    case NFmiInfoData::kTrajectoryHistoryData:
+    case NFmiInfoData::kSingleStationRadarData:
+        return 1;
+    case NFmiInfoData::kSatelData:
+        return 30;
+    default:
+        return 0;
+    }
+}
+
+static void CheckAndFixDataCountValue(NFmiInfoData::Type dataType, boost::shared_ptr<CachedRegInt>& countValue, bool doLocalCacheCount)
+{
+    auto defaultCountValueByType = doLocalCacheCount ? NFmiCaseStudySettingsWinRegistry::GetDefaultLocalCacheCountValue(dataType) : NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(dataType);
+    auto value = (int)(*countValue);
+    if(value < 0)
+    {
+        // Mikään luku ei saa olla negatiivinen!
+        *countValue = defaultCountValueByType;
+    }
+    else if(defaultCountValueByType == 0 && value != 0)
+    {
+        // Näillä "0 lkm" tyypeillä (ainakin satel-image) ei saa olla 0:sta poikkeavaa arvoa
+        *countValue = defaultCountValueByType;
+    }
+    else if(defaultCountValueByType == 1 && value != 1)
+    {
+        // Näillä "1 lkm" tyypeillä ei saa olla muita arvoja kuin se 1!
+        *countValue = defaultCountValueByType;
+    }
+}
+
+bool NFmiCaseStudySettingsWinRegistry::Init(const std::string& baseRegistryPath, NFmiHelpDataInfoSystem& theHelpDataInfoSystem)
+{
+    if(mInitialized)
+        throw std::runtime_error("NFmiHelpDataDataCountWinRegistry::Init: all ready initialized.");
+
+    mInitialized = true;
+
+    // EnableData section käyttää vanhaa base-polkua
+    mHelpDataEnableWinRegistry.Init(baseRegistryPath, theHelpDataInfoSystem);
+
+    mBaseRegistryPath = baseRegistryPath + "\\CaseStudyDlgSettings";
+    mSectionNameLocalCacheCount = "\\LocalCache";
+    mSectionNameCaseStudyCount = "\\CaseStudy";
+    mSectionNameStoreData = "\\StoreData";
+
+    // HKEY_CURRENT_USER -keys
+    HKEY usedKey = HKEY_CURRENT_USER;
+
+    for(const auto &helpDataInfo : theHelpDataInfoSystem.DynamicHelpDataInfos())
+    {
+        auto uniqueDataName = helpDataInfo.Name();
+        std::string regName("\\");
+        regName += uniqueDataName;
+        auto dataType = helpDataInfo.DataType();
+
+        // Local cache lukemien asetus
+        auto defaultLocalCacheCountValueByType = GetDefaultLocalCacheCountValue(dataType);
+        auto tmpLocalCacheCountValue = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameLocalCacheCount, regName.c_str(), usedKey, defaultLocalCacheCountValueByType);
+        ::CheckAndFixDataCountValue(dataType, tmpLocalCacheCountValue, true);
+        mHelpDataLocalCacheCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpLocalCacheCountValue)));
+
+        // CaseStudy lukemien asetus
+        auto defaultCaseStudyCountValueByType = GetDefaultCaseStudyCountValue(dataType);
+        auto tmpCaseStudyCountValue = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyCount, regName.c_str(), usedKey, defaultCaseStudyCountValueByType);
+        ::CheckAndFixDataCountValue(dataType, tmpCaseStudyCountValue, false);
+        mHelpDataCaseStudyCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyCountValue)));
+
+        // Store data option asetus
+        auto tmpCaseStudyStoreDataState = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionNameStoreData, regName.c_str(), usedKey, true);
+        mCaseStudyStoreDataMap.insert(std::make_pair(uniqueDataName, tmpCaseStudyStoreDataState));
+    }
+    return true;
+}
+
+int NFmiCaseStudySettingsWinRegistry::GetHelpDataLocalCacheCount(const std::string& uniqueDataName) const
+{
+    auto iter = mHelpDataLocalCacheCountMap.find(uniqueDataName);
+    if(iter != mHelpDataLocalCacheCountMap.end())
+        return *(iter->second.second);
+    else
+        return -1; // negatiivinen arvo on virheen merkki
+}
+
+void NFmiCaseStudySettingsWinRegistry::SetHelpDataLocalCacheCount(const std::string& uniqueDataName, int newValue)
+{
+    auto iter = mHelpDataLocalCacheCountMap.find(uniqueDataName);
+    if(iter != mHelpDataLocalCacheCountMap.end())
+    {
+        auto& countValue = iter->second.second;
+        *countValue = newValue;
+        ::CheckAndFixDataCountValue(iter->second.first, countValue, true);
+    }
+}
+
+int NFmiCaseStudySettingsWinRegistry::GetHelpDataCaseStudyCount(const std::string& uniqueDataName) const
+{
+    auto iter = mHelpDataCaseStudyCountMap.find(uniqueDataName);
+    if(iter != mHelpDataCaseStudyCountMap.end())
+        return *(iter->second.second);
+    else
+        return -1; // negatiivinen arvo on virheen merkki
+}
+
+void NFmiCaseStudySettingsWinRegistry::SetHelpDataCaseStudyCount(const std::string& uniqueDataName, int newValue)
+{
+    auto iter = mHelpDataCaseStudyCountMap.find(uniqueDataName);
+    if(iter != mHelpDataCaseStudyCountMap.end())
+    {
+        auto& countValue = iter->second.second;
+        *countValue = newValue;
+        ::CheckAndFixDataCountValue(iter->second.first, countValue, false);
+    }
+}
+
+bool NFmiCaseStudySettingsWinRegistry::GetStoreDataState(const std::string& uniqueDataName) const
+{
+    auto iter = mCaseStudyStoreDataMap.find(uniqueDataName);
+    if(iter != mCaseStudyStoreDataMap.end())
+        return *iter->second;
+    else
+        return false; // Palautetaan false virhetiilanteissa
+
+}
+
+void NFmiCaseStudySettingsWinRegistry::SetStoreDataState(const std::string& uniqueDataName, bool newState)
+{
+    auto iter = mCaseStudyStoreDataMap.find(uniqueDataName);
+    if(iter != mCaseStudyStoreDataMap.end())
+        *iter->second = newState;
+}
 
 // ************************************************
 // *********   NFmiMapViewWinRegistry *************
 // ************************************************
 
-NFmiMapViewWinRegistry::NFmiMapViewWinRegistry(void)
+NFmiMapViewWinRegistry::NFmiMapViewWinRegistry()
 :mInitialized(false)
 ,mBaseRegistryPath()
 ,mSectionName()
@@ -204,7 +388,7 @@ void NFmiMapViewWinRegistry::SpacingOutFactor(int newValue)
     *mSpacingOutFactor = newValue;
 }
 
-void NFmiMapViewWinRegistry::ToggleSpacingOutFactor(void)
+void NFmiMapViewWinRegistry::ToggleSpacingOutFactor()
 {
     int spacingOutFactor = SpacingOutFactor();
     spacingOutFactor++;
@@ -213,7 +397,7 @@ void NFmiMapViewWinRegistry::ToggleSpacingOutFactor(void)
     SpacingOutFactor(spacingOutFactor);
 }
 
-unsigned int NFmiMapViewWinRegistry::SelectedMapIndex(void) const
+unsigned int NFmiMapViewWinRegistry::SelectedMapIndex() const
 {
     return *mSelectedMapIndex;
 }
@@ -267,7 +451,7 @@ void NFmiMapViewWinRegistry::CombinedMapModeSelectedOverlayIndices(const std::st
 // ********   NFmiCrossSectionViewWinRegistry ***********
 // ******************************************************
 
-NFmiCrossSectionViewWinRegistry::NFmiCrossSectionViewWinRegistry(void)
+NFmiCrossSectionViewWinRegistry::NFmiCrossSectionViewWinRegistry()
 :mInitialized(false)
 ,mBaseRegistryPath()
 ,mSectionName("\\CrossSection")
@@ -286,7 +470,7 @@ NFmiCrossSectionViewWinRegistry::NFmiCrossSectionViewWinRegistry(void)
 bool NFmiCrossSectionViewWinRegistry::Init(const std::string &baseRegistryPath)
 {
     if(mInitialized)
-        std::runtime_error("NFmiCrossSectionViewWinRegistry::Init: all ready initialized.");
+        throw std::runtime_error("NFmiCrossSectionViewWinRegistry::Init: all ready initialized.");
 
     mInitialized = true;
     mBaseRegistryPath = baseRegistryPath;
@@ -307,7 +491,7 @@ bool NFmiCrossSectionViewWinRegistry::Init(const std::string &baseRegistryPath)
     return true;
 }
 
-std::string NFmiCrossSectionViewWinRegistry::StartPointStr(void)
+std::string NFmiCrossSectionViewWinRegistry::StartPointStr()
 {
     return *mStartPointStr;
 }
@@ -317,7 +501,7 @@ void NFmiCrossSectionViewWinRegistry::StartPointStr(const std::string &newValue)
     *mStartPointStr = newValue;
 }
 
-std::string NFmiCrossSectionViewWinRegistry::MiddlePointStr(void)
+std::string NFmiCrossSectionViewWinRegistry::MiddlePointStr()
 {
     return *mMiddlePointStr;
 }
@@ -327,7 +511,7 @@ void NFmiCrossSectionViewWinRegistry::MiddlePointStr(const std::string &newValue
     *mMiddlePointStr = newValue;
 }
 
-std::string NFmiCrossSectionViewWinRegistry::EndPointStr(void)
+std::string NFmiCrossSectionViewWinRegistry::EndPointStr()
 {
     return *mEndPointStr;
 }
@@ -337,7 +521,7 @@ void NFmiCrossSectionViewWinRegistry::EndPointStr(const std::string &newValue)
     *mEndPointStr = newValue;
 }
 
-int NFmiCrossSectionViewWinRegistry::HorizontalPointCount(void)
+int NFmiCrossSectionViewWinRegistry::HorizontalPointCount()
 {
     return *mHorizontalPointCount;
 }
@@ -347,7 +531,7 @@ void NFmiCrossSectionViewWinRegistry::HorizontalPointCount(int newValue)
     *mHorizontalPointCount = newValue;
 }
 
-int NFmiCrossSectionViewWinRegistry::VerticalPointCount(void)
+int NFmiCrossSectionViewWinRegistry::VerticalPointCount()
 {
     return *mVerticalPointCount;
 }
@@ -357,7 +541,7 @@ void NFmiCrossSectionViewWinRegistry::VerticalPointCount(int newValue)
     *mVerticalPointCount = newValue;
 }
 
-double NFmiCrossSectionViewWinRegistry::AxisValuesDefaultLowerEndValue(void)
+double NFmiCrossSectionViewWinRegistry::AxisValuesDefaultLowerEndValue()
 {
     return *mAxisValuesDefaultLowerEndValue;
 }
@@ -365,7 +549,7 @@ void NFmiCrossSectionViewWinRegistry::AxisValuesDefaultLowerEndValue(double newV
 {
     *mAxisValuesDefaultLowerEndValue = newValue;
 }
-double NFmiCrossSectionViewWinRegistry::AxisValuesDefaultUpperEndValue(void)
+double NFmiCrossSectionViewWinRegistry::AxisValuesDefaultUpperEndValue()
 {
     return *mAxisValuesDefaultUpperEndValue;
 }
@@ -373,7 +557,7 @@ void NFmiCrossSectionViewWinRegistry::AxisValuesDefaultUpperEndValue(double newV
 {
     *mAxisValuesDefaultUpperEndValue = newValue;
 }
-double NFmiCrossSectionViewWinRegistry::AxisValuesSpecialLowerEndValue(void)
+double NFmiCrossSectionViewWinRegistry::AxisValuesSpecialLowerEndValue()
 {
     return *mAxisValuesSpecialLowerEndValue;
 }
@@ -381,7 +565,7 @@ void NFmiCrossSectionViewWinRegistry::AxisValuesSpecialLowerEndValue(double newV
 {
     *mAxisValuesSpecialLowerEndValue = newValue;
 }
-double NFmiCrossSectionViewWinRegistry::AxisValuesSpecialUpperEndValue(void)
+double NFmiCrossSectionViewWinRegistry::AxisValuesSpecialUpperEndValue()
 {
     return *mAxisValuesSpecialUpperEndValue;
 }
@@ -395,7 +579,7 @@ void NFmiCrossSectionViewWinRegistry::AxisValuesSpecialUpperEndValue(double newV
 // *********   NFmiViewPositionsWinRegistry *************
 // ******************************************************
 
-NFmiViewPositionsWinRegistry::NFmiViewPositionsWinRegistry(void)
+NFmiViewPositionsWinRegistry::NFmiViewPositionsWinRegistry()
 :mInitialized(false)
 ,mBaseRegistryPath()
 ,mSectionName()
@@ -454,7 +638,7 @@ boost::shared_ptr<CachedRegString> NFmiViewPositionsWinRegistry::CachedWindowRec
 // *******   NFmiConfigurationRelatedWinRegistry ***********
 // *********************************************************
 
-NFmiConfigurationRelatedWinRegistry::NFmiConfigurationRelatedWinRegistry(void)
+NFmiConfigurationRelatedWinRegistry::NFmiConfigurationRelatedWinRegistry()
 :mInitialized(false)
 ,mBaseConfigurationRegistryPath()
 ,mMapViewVector()
@@ -546,7 +730,7 @@ void NFmiConfigurationRelatedWinRegistry::WindowRectStr(const std::string &keySt
         *cachedRectStr = value;
 }
 
-bool NFmiConfigurationRelatedWinRegistry::LoadDataAtStartUp(void) const
+bool NFmiConfigurationRelatedWinRegistry::LoadDataAtStartUp() const
 {
     return *mLoadDataAtStartUp;
 }
@@ -556,7 +740,7 @@ void NFmiConfigurationRelatedWinRegistry::LoadDataAtStartUp(bool newValue)
     *mLoadDataAtStartUp = newValue;
 }
 
-bool NFmiConfigurationRelatedWinRegistry::AutoLoadNewCacheData(void) const
+bool NFmiConfigurationRelatedWinRegistry::AutoLoadNewCacheData() const
 {
     return *mAutoLoadNewCacheData;
 }
@@ -660,17 +844,17 @@ void NFmiConfigurationRelatedWinRegistry::UseCombinedMapMode(bool newValue)
 // *******   NFmiApplicationWinRegistry ***********
 // ************************************************
 
-std::string NFmiApplicationWinRegistry::MakeBaseRegistryPath(void)
+std::string NFmiApplicationWinRegistry::MakeBaseRegistryPath()
 {
     return std::string("Software\\Fmi\\SmartMet");
 }
 
-std::string NFmiApplicationWinRegistry::MakeGeneralSectionName(void)
+std::string NFmiApplicationWinRegistry::MakeGeneralSectionName()
 {
     return std::string("\\General");
 }
 
-NFmiApplicationWinRegistry::NFmiApplicationWinRegistry(void)
+NFmiApplicationWinRegistry::NFmiApplicationWinRegistry()
 :mInitialized(false)
 ,mBaseRegistryPath()
 ,mBaseRegistryWithVersionPath()
@@ -735,8 +919,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     // DataNotifications section
     mDataNotificationSettingsWinRegistry.Init(mBaseRegistryPath, fullAppVer);
 
-    // EnableData section
-    mHelpDataEnableWinRegistry.Init(mBaseRegistryPath, theHelpDataInfoSystem);
+    mCaseStudySettingsWinRegistry.Init(mBaseRegistryPath, theHelpDataInfoSystem);
 
     // General section
     std::string sectionName = NFmiApplicationWinRegistry::MakeGeneralSectionName();
