@@ -82,10 +82,13 @@ namespace HakeMessage
         // in some of the dialog's that have those options.
         void fixUsedWarningPaths(std::string& fixedPathInOut, const std::string& usedAbsoluteBaseDirectory)
         {
-            // 1. Set absolute path with drive letter from usedAbsoluteBaseDirectory (on windows) if needed.
-            fixedPathInOut = PathUtils::getAbsoluteFilePath(fixedPathInOut, usedAbsoluteBaseDirectory);
-            // 2. Let's also simplify path to get rid of possible relative path jumps (xxx/yyy/../zzz => xxx/zzz)
-            fixedPathInOut = PathUtils::simplifyWindowsPath(fixedPathInOut);
+            if(!fixedPathInOut.empty() && !usedAbsoluteBaseDirectory.empty())
+            {
+                // 1. Set absolute path with drive letter from usedAbsoluteBaseDirectory (on windows) if needed.
+                fixedPathInOut = PathUtils::getAbsoluteFilePath(fixedPathInOut, usedAbsoluteBaseDirectory);
+                // 2. Let's also simplify path to get rid of possible relative path jumps (xxx/yyy/../zzz => xxx/zzz)
+                fixedPathInOut = PathUtils::simplifyWindowsPath(fixedPathInOut);
+            }
         }
 
         void fixUsedWarningPaths(Configurer& fixedConfigurerInOut, const std::string& usedAbsoluteBaseDirectory)
