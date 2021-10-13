@@ -14,7 +14,7 @@ namespace
 		// Poistetaan yli 5 tuntia vanhat tiedostot pois
 		NFmiFileSystem::CleanDirectory(combinedDataDirectory, 5);
 		// Poistetaan vielä muut paitsi 3 viimeistä tiedostoa, jotka osuvat filefilteriin
-		NFmiFileSystem::CleanFilePattern(combinedDataFileFilter, 3);
+		NFmiFileSystem::CleanFilePattern(combinedDataFileFilter, 1);
 	}
 
 	void createCombinedDataDirectory(const std::string& combinedDataFileFilter)

@@ -3206,7 +3206,6 @@ void CSmartMetDoc::OnViewCaseStudyDialog()
 	}
 	itsCaseStudyDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
 	itsCaseStudyDlg->SetActiveWindow();
-	itsCaseStudyDlg->AdjustDialogControls();
 
 	itsData->LogMessage("Case Study Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
 }

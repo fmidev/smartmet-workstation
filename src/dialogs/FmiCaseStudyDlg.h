@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include "NFmiViewPosRegistryInfo.h"
+#include "WndResizer.h"
 
 class SmartMetDocumentInterface;
 class NFmiCaseStudyDataFile;
@@ -77,7 +78,6 @@ public:
 	virtual ~CFmiCaseStudyDlg();
 	void SetDefaultValues();
 	virtual BOOL Create(CWnd* pParentWnd = NULL);
-	void AdjustDialogControls(); // jos dialogin kokoa muutetaan, t‰ll‰ s‰‰det‰‰n kontrollien koko ja sijainti sopiviksi
 	void GetBasicInfoFromDialog();
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
 	// Update metodia tarvitaan (piti luoda tyhj‰ sellainen) kun kyseinen toiminto toteutetaan CSmartmetDoc luokassa SetViewPlaceToDefault -template yleisfunktiolla
@@ -94,12 +94,7 @@ protected:
 private:
 	void UpdateButtonStates();
 	void EnableButton(UINT theButtonId, BOOL state);
-	void AdjustGridControl();
-	void AdjustControl(int theControlId, int rightOffset);
-	CRect CalcGridArea();
-	CRect CalcBrowseButtomRect();
-	void AdjustBrowseButton(const CRect &theButtonRect);
-	void AdjustEditPathControl(const CRect &theButtonRect);
+	void InitializeGridControlRelatedData();
 	void DoWhenClosing();
 	void InitGridControlValues();
     void UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly);
@@ -114,6 +109,7 @@ private:
     void ShowEnableColumn();
     void UpdateEditEnableDataText();
     void EnableColorCodedControls();
+	void InitDialogTexts();
 
 	NFmiCaseStudyGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
@@ -145,18 +141,20 @@ protected:
     afx_msg void OnGridEndEdit(NMHDR *pNotifyStruct, LRESULT* pResult);
 public:
 	afx_msg void OnClose();
-	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-	afx_msg void OnPaint();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 private:
 	std::string AddPossibleZippingOptions() const;
 	std::string AddPossibleHakeMessageOptions() const;
+	void DoResizerHooking();
 
     CString itsNameStrU_;
     CString itsInfoStrU_;
     CString itsPathStrU_;
     BOOL fEditEnableData;
     BOOL fZipData;
+	BOOL fStoreWarningMessages;
+	BOOL fCropDataToZoomedMapArea;
+	CWndResizer m_resizer;
 public:
 	afx_msg void OnBnClickedButtonStoreData();
 	afx_msg void OnBnClickedButtonLoadData();
@@ -165,5 +163,4 @@ public:
     afx_msg void OnBnClickedCheckEditEnableData();
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg void OnBnClickedButtonRefreshGrid();
-	BOOL fStoreWarningMessages;
 };
