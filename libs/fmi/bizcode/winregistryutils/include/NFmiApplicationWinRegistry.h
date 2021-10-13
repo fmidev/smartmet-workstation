@@ -6,6 +6,7 @@
 #include "NFmiCachedRegistryValue.h"
 #include "NFmiDataNotificationSettingsWinRegistry.h"
 #include "NFmiGriddingProperties.h"
+#include "NFmiInfoData.h"
 
 class NFmiHelpDataInfoSystem;
 class SoundingViewSettingsFromWindowsRegisty;
@@ -41,11 +42,13 @@ private:
     NFmiGriddingProperties mGriddingProperties;
 };
 
+using CaseStudyBoolMap = std::map<std::string, boost::shared_ptr<CachedRegBool>>;
+
 // NFmiHelpDataInfoSystem:issä olevien kaikkien dynaamisten datojen enable-asetukset Windows rekisterissä
 class NFmiHelpDataEnableWinRegistry
 {
 public:
-    NFmiHelpDataEnableWinRegistry(void);
+    NFmiHelpDataEnableWinRegistry();
     bool Init(const std::string &baseRegistryPath, NFmiHelpDataInfoSystem &theHelpDataInfoSystem);
     bool Update(NFmiHelpDataInfoSystem &theHelpDataInfoSystem);
 
@@ -56,22 +59,70 @@ private:
 
     // HKEY_CURRENT_USER -keys
 
-	std::map<std::string, boost::shared_ptr<CachedRegBool> > mHelpDataEnableMap;
+    CaseStudyBoolMap mHelpDataEnableMap;
+};
+
+// Talletetaan jokaista uniikkia datanimeä kohden pari, jossa on datan tyyppi ja lukumäärä int arvona.
+using CaseStudyCountMap = std::map<std::string, std::pair<NFmiInfoData::Type, boost::shared_ptr<CachedRegInt>>>;
+
+// CaseStudy dialogiin liittyvien asetuksien asetukset Windows rekisterissä:
+// 1) Kuinka monta viimeistä dataa säilytetään lokaali cachessa
+//    - Jos kyse mallidatasta, kuin monta viimeistä malliajoa
+//    - Jos kyse havainto/analyysi datoista, numero on aina vakio 1
+//    - Jos kyse on satel-kuvista, numero on aina vakio 0, koska niitä ei säilytetä lokaalissa cachessa
+// 2) Kuinka monta viimeistä dataa talletetaan tehtävään CaseStudy dataan 
+//    - Samat perus säädöt kuin 1:ssäkin
+//    - Satel kuville tosin on nyt säätö, toisin kuin local-cache-countissa
+// 3) Store data optio jokaiseen dataan liittyen (talletetaanko data talletettavaan case-study dataan vai ei)
+class NFmiCaseStudySettingsWinRegistry
+{
+public:
+    NFmiCaseStudySettingsWinRegistry();
+    bool Init(const std::string& baseRegistryPath, NFmiHelpDataInfoSystem& theHelpDataInfoSystem);
+
+    int GetHelpDataLocalCacheCount(const std::string& uniqueDataName) const;
+    void SetHelpDataLocalCacheCount(const std::string& uniqueDataName, int newValue);
+    int GetHelpDataCaseStudyCount(const std::string& uniqueDataName) const;
+    void SetHelpDataCaseStudyCount(const std::string& uniqueDataName, int newValue);
+    bool GetStoreDataState(const std::string& uniqueDataName) const;
+    void SetStoreDataState(const std::string& uniqueDataName, bool newState);
+    static int GetDefaultCaseStudyCountValue(NFmiInfoData::Type dataType);
+    static int GetDefaultLocalCacheCountValue(NFmiInfoData::Type dataType);
+    NFmiHelpDataEnableWinRegistry& HelpDataEnableWinRegistry() { return mHelpDataEnableWinRegistry; }
+    CaseStudyCountMap& GetHelpDataLocalCacheCountMap() { return mHelpDataLocalCacheCountMap; }
+    CaseStudyCountMap& GetHelpDataCaseStudyCountMap() { return mHelpDataCaseStudyCountMap; }
+    CaseStudyBoolMap& GetCaseStudyStoreDataMap() { return  mCaseStudyStoreDataMap; }
+
+private:
+    std::string mBaseRegistryPath;
+    std::string mSectionNameLocalCacheCount; // tässä on LocalCacheCount
+    std::string mSectionNameCaseStudyCount; // tässä on CaseStudyCount
+    std::string mSectionNameStoreData; // tässä on StoreData
+
+    // Kaikkien queryData konffien EnableData -osio
+    NFmiHelpDataEnableWinRegistry mHelpDataEnableWinRegistry;
+
+    // HKEY_CURRENT_USER -keys
+
+    CaseStudyCountMap mHelpDataLocalCacheCountMap;
+    CaseStudyCountMap mHelpDataCaseStudyCountMap;
+    CaseStudyBoolMap mCaseStudyStoreDataMap;
+    bool mInitialized = false; // ei sallita tupla initialisointia
 };
 
 // Yksittäisten karttanäyttöjen asetuksia Windows rekisterissä
 class NFmiMapViewWinRegistry
 {
 public:
-    NFmiMapViewWinRegistry(void);
+    NFmiMapViewWinRegistry();
     bool Init(const std::string &baseRegistryPath, int mapIndex);
 
     bool ShowMasksOnMap() const;
     void ShowMasksOnMap(bool newValue);
     int SpacingOutFactor() const;
     void SpacingOutFactor(int newValue);
-    void ToggleSpacingOutFactor(void);
-    unsigned int SelectedMapIndex(void) const;
+    void ToggleSpacingOutFactor();
+    unsigned int SelectedMapIndex() const;
     void SelectedMapIndex(unsigned int newValue);
 	bool ShowStationPlot() const;
 	void ShowStationPlot(bool newValue);
@@ -111,26 +162,26 @@ private:
 class NFmiCrossSectionViewWinRegistry
 {
 public:
-    NFmiCrossSectionViewWinRegistry(void);
+    NFmiCrossSectionViewWinRegistry();
     bool Init(const std::string &baseRegistryPath);
 
-    std::string StartPointStr(void);
+    std::string StartPointStr();
     void StartPointStr(const std::string &newValue);
-    std::string MiddlePointStr(void);
+    std::string MiddlePointStr();
     void MiddlePointStr(const std::string &newValue);
-    std::string EndPointStr(void);
+    std::string EndPointStr();
     void EndPointStr(const std::string &newValue);
-    int HorizontalPointCount(void);
+    int HorizontalPointCount();
     void HorizontalPointCount(int newValue);
-    int VerticalPointCount(void);
+    int VerticalPointCount();
     void VerticalPointCount(int newValue);
-    double AxisValuesDefaultLowerEndValue(void);
+    double AxisValuesDefaultLowerEndValue();
     void AxisValuesDefaultLowerEndValue(double newValue);
-    double AxisValuesDefaultUpperEndValue(void);
+    double AxisValuesDefaultUpperEndValue();
     void AxisValuesDefaultUpperEndValue(double newValue);
-    double AxisValuesSpecialLowerEndValue(void);
+    double AxisValuesSpecialLowerEndValue();
     void AxisValuesSpecialLowerEndValue(double newValue);
-    double AxisValuesSpecialUpperEndValue(void);
+    double AxisValuesSpecialUpperEndValue();
     void AxisValuesSpecialUpperEndValue(double newValue);
 
 private:
@@ -157,7 +208,7 @@ class NFmiViewPositionsWinRegistry
 public:
     using WindowRectStringMap = std::map<std::string, boost::shared_ptr<CachedRegString>>;
 
-    NFmiViewPositionsWinRegistry(void);
+    NFmiViewPositionsWinRegistry();
     bool Init(const std::string &baseRegistryPath, std::map<std::string, std::string> &windowPosMap);
 
     std::string WindowRectStr(const std::string &keyString);
@@ -179,20 +230,20 @@ private:
 class NFmiConfigurationRelatedWinRegistry
 {
 public:
-    NFmiConfigurationRelatedWinRegistry(void);
+    NFmiConfigurationRelatedWinRegistry();
     bool Init(const std::string &baseConfigurationRegistryPath, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap);
 
     boost::shared_ptr<NFmiMapViewWinRegistry> MapView(int mapIndex);
-    int MapViewCount(void) const {return static_cast<int>(mMapViewVector.size());}
-    NFmiViewPositionsWinRegistry& MapViewPositionsWinRegistry(void) {return mMapViewPositionsWinRegistry;}
+    int MapViewCount() const {return static_cast<int>(mMapViewVector.size());}
+    NFmiViewPositionsWinRegistry& MapViewPositionsWinRegistry() {return mMapViewPositionsWinRegistry;}
     std::string WindowRectStr(const std::string &keyString);
     void WindowRectStr(const std::string &keyString, const std::string &value);
-    NFmiCrossSectionViewWinRegistry& CrossSectionViewWinRegistry(void) {return mCrossSectionViewWinRegistry;}
+    NFmiCrossSectionViewWinRegistry& CrossSectionViewWinRegistry() {return mCrossSectionViewWinRegistry;}
 
-    bool LoadDataAtStartUp(void) const;
+    bool LoadDataAtStartUp() const;
     void LoadDataAtStartUp(bool newValue);
 
-    bool AutoLoadNewCacheData(void) const;
+    bool AutoLoadNewCacheData() const;
     void AutoLoadNewCacheData(bool newValue);
     bool ShowLastSendTimeOnMapView() const;
     void ShowLastSendTimeOnMapView(bool newValue);
@@ -245,17 +296,17 @@ private:
 class NFmiApplicationWinRegistry
 {
 public:
-    NFmiApplicationWinRegistry(void);
+    NFmiApplicationWinRegistry();
     bool Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem);
     void InitGriddingProperties(bool isToolMasterAvailable);
-    NFmiViewPositionsWinRegistry& OtherViewPositionsWinRegistry(void) {return mOtherViewPositionsWinRegistry;}
-    NFmiDataNotificationSettingsWinRegistry& DataNotificationSettingsWinRegistry(void) {return mDataNotificationSettingsWinRegistry;}
-    NFmiHelpDataEnableWinRegistry& HelpDataEnableWinRegistry(void) {return mHelpDataEnableWinRegistry;}
+    NFmiViewPositionsWinRegistry& OtherViewPositionsWinRegistry() {return mOtherViewPositionsWinRegistry;}
+    NFmiDataNotificationSettingsWinRegistry& DataNotificationSettingsWinRegistry() {return mDataNotificationSettingsWinRegistry;}
+    NFmiCaseStudySettingsWinRegistry& CaseStudySettingsWinRegistry() { return mCaseStudySettingsWinRegistry; }
 
     std::string WindowRectStr(const std::string &keyString);
     void WindowRectStr(const std::string &keyString, const std::string &value);
-    NFmiConfigurationRelatedWinRegistry& ConfigurationRelatedWinRegistry(void) {return mConfigurationRelatedWinRegistry;}
-    const NFmiConfigurationRelatedWinRegistry& ConfigurationRelatedWinRegistry(void) const {return mConfigurationRelatedWinRegistry;}
+    NFmiConfigurationRelatedWinRegistry& ConfigurationRelatedWinRegistry() {return mConfigurationRelatedWinRegistry;}
+    const NFmiConfigurationRelatedWinRegistry& ConfigurationRelatedWinRegistry() const {return mConfigurationRelatedWinRegistry;}
     const std::string& BaseConfigurationRegistryPath() const { return mBaseConfigurationRegistryPath; }
 
     bool UseTimeSerialAxisAutoAdjust();
@@ -320,8 +371,8 @@ public:
     void HatchingToolmasterEpsilonFactor(float newEpsilon);
     float HatchingToolmasterEpsilonFactor() const;
 
-    static std::string MakeBaseRegistryPath(void);
-    static std::string MakeGeneralSectionName(void);
+    static std::string MakeBaseRegistryPath();
+    static std::string MakeGeneralSectionName();
     
 private:
     //void DebugHelper_TestIfAnyViewsHaveSameRectValues();
@@ -341,8 +392,8 @@ private:
     NFmiViewPositionsWinRegistry mOtherViewPositionsWinRegistry;
     // Kaikkien konffien DataNotifications -osio
     NFmiDataNotificationSettingsWinRegistry mDataNotificationSettingsWinRegistry;
-    // Kaikkien konffien EnableData -osio
-    NFmiHelpDataEnableWinRegistry mHelpDataEnableWinRegistry;
+    // Eri queryDatoihin liittyvät lukumäärä arvot (local-cache + case-study)
+    NFmiCaseStudySettingsWinRegistry mCaseStudySettingsWinRegistry;
     // Kaikkien konffien General -osio
     boost::shared_ptr<CachedRegBool> mUseTimeSerialAxisAutoAdjust; // käytetäänkö 'vihattua' auto-adjust säätöä aikasarjaikkunassa (laskee min ja max arvoja ja päättelee siitä sopivan arvoasteikon automaattisesti)
     boost::shared_ptr<CachedRegBool> mSoundingTextUpward; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)

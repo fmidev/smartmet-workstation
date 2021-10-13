@@ -1134,7 +1134,7 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
 
 void UpdateEnableDataChangesToWinReg(void)
 {
-    itsApplicationWinRegistry.HelpDataEnableWinRegistry().Update(*HelpDataInfoSystem());
+    itsApplicationWinRegistry.CaseStudySettingsWinRegistry().HelpDataEnableWinRegistry().Update(*HelpDataInfoSystem());
 }
 
 void InitConceptualModelData(void)
@@ -9139,6 +9139,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
             if(itsCaseStudySystem.AreStoredMetaDataChanged(itsCaseStudySystemOrig))
             {
+				itsCaseStudySystemOrig = itsCaseStudySystem;
+				itsCaseStudySystem.UpdateValuesBackToWinRegistry(ApplicationWinRegistry().CaseStudySettingsWinRegistry());
+
 			    std::string caseStudyFileName = MakeCaseStudyMemoryFilename();
 			    return itsCaseStudySystem.StoreMetaData(ApplicationInterface::GetSmartMetViewAsCView(), caseStudyFileName, true);
             }

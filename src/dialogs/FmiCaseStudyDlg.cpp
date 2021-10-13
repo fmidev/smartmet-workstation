@@ -74,7 +74,7 @@ static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<CaseStudyHeader
 	fFirstTime = false;
 }
 
-void CFmiCaseStudyDlg::InitHeaders(void)
+void CFmiCaseStudyDlg::InitHeaders()
 {
 	int basicColumnWidthUnit = 18;
 	itsHeaders.clear();
@@ -82,8 +82,8 @@ void CFmiCaseStudyDlg::InitHeaders(void)
     itsHeaders.push_back(CaseStudyHeaderParInfo("Name", CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 18));
     itsHeaders.push_back(CaseStudyHeaderParInfo("ProdId", CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 4));
 	itsHeaders.push_back(CaseStudyHeaderParInfo("Store", CaseStudyHeaderParInfo::kStoreData, basicColumnWidthUnit*3));
-    itsHeaders.push_back(CaseStudyHeaderParInfo("Start [h]", CaseStudyHeaderParInfo::kStartTimeOffset, boost::math::iround(basicColumnWidthUnit * 4.)));
-    itsHeaders.push_back(CaseStudyHeaderParInfo("End [h]", CaseStudyHeaderParInfo::kEndTimeOffset, boost::math::iround(basicColumnWidthUnit * 4.)));
+    itsHeaders.push_back(CaseStudyHeaderParInfo("CS CNT", CaseStudyHeaderParInfo::kCaseStudyDataCount, boost::math::iround(basicColumnWidthUnit * 4.)));
+    itsHeaders.push_back(CaseStudyHeaderParInfo("LC CNT", CaseStudyHeaderParInfo::kLocalCacheDataCount, boost::math::iround(basicColumnWidthUnit * 4.)));
     itsHeaders.push_back(CaseStudyHeaderParInfo("Enable Data", CaseStudyHeaderParInfo::kEnableData, basicColumnWidthUnit*5)); // sijoita t‰m‰ indeksille CaseStudyHeaderParInfo::kEnableData
     itsHeaders.push_back(CaseStudyHeaderParInfo("File(s) size [MB]", CaseStudyHeaderParInfo::kDataSize, boost::math::iround(basicColumnWidthUnit * 10.)));
 }
@@ -106,6 +106,7 @@ CFmiCaseStudyDlg::CFmiCaseStudyDlg(SmartMetDocumentInterface *smartMetDocumentIn
 	,itsDisableStoreButtonTimer(0)
 	,itsOffsetEditedCell()
 	,itsBoldFont()
+	, itsCaseStudySettingsWinRegistry(smartMetDocumentInterface->ApplicationWinRegistry().CaseStudySettingsWinRegistry())
     , itsNameStrU_(_T(""))
     , itsInfoStrU_(_T(""))
     , itsPathStrU_(_T(""))
@@ -134,25 +135,6 @@ void CFmiCaseStudyDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_NAME_STR, itsNameStrU_);
 	DDX_Text(pDX, IDC_EDIT_INFO_STR, itsInfoStrU_);
 	DDX_Text(pDX, IDC_EDIT_PATH_STR, itsPathStrU_);
-
-	// T‰h‰n oma tarkastelu polulle, jonka pit‰‰ olla absoluuttinen
-	if(itsPathStrU_.IsEmpty() == false)
-	{
-		// CString -> NFmiFileString piti tehd‰ hankalasti kolmessa vaiheessa
-		std::string tmpStr = CT2A(itsPathStrU_);
-		NFmiString tmpStr2(tmpStr);
-		NFmiFileString fileStr(tmpStr2);
-		if(fileStr.IsAbsolutePath() == false)
-		{
-			std::string errStr(::GetDictionaryString("Given path"));
-			errStr += "\n";
-			errStr += tmpStr;
-			errStr += "\n";
-			errStr += "was not absolute, you must provide absolute path for Case Study data.\nE.g. C:\\data or D:\\data";
-			std::string captionStr(::GetDictionaryString("Case-Study data path was not absolute"));
-			::MessageBox(GetSafeHwnd(), CA2T(errStr.c_str()), CA2T(captionStr.c_str()), MB_OK | MB_ICONWARNING);
-		}
-	}
 	DDX_Check(pDX, IDC_CHECK_EDIT_ENABLE_DATA, fEditEnableData);
 	DDX_Check(pDX, IDC_CHECK_ZIP_DATA, fZipData);
 	DDX_Check(pDX, IDC_CHECK_STORE_WARNING_MESSAGES, fStoreWarningMessages);
@@ -194,7 +176,7 @@ void CFmiCaseStudyDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 	CDialog::OnGetMinMaxInfo(lpMMI);
 }
 
-void CFmiCaseStudyDlg::SetDefaultValues(void)
+void CFmiCaseStudyDlg::SetDefaultValues()
 {
     MoveWindow(CFmiCaseStudyDlg::ViewPosRegistryInfo().DefaultWindowRect());
     Persist2::WriteWindowRectToWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), MakeUsedWinRegistryKeyStr(0), this);
@@ -233,7 +215,7 @@ void CFmiCaseStudyDlg::EnableColorCodedControls()
     CFmiWin32Helpers::EnableColorCodedControl(this, IDC_CHECK_EDIT_ENABLE_DATA);
 }
 
-void CFmiCaseStudyDlg::UpdateEditEnableDataText(void)
+void CFmiCaseStudyDlg::UpdateEditEnableDataText()
 {
     if(fEditEnableData)
         CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_EDIT_ENABLE_DATA, gEditEnableDataCheckControlOnStr.c_str());
@@ -248,7 +230,7 @@ void CFmiCaseStudyDlg::OnSize(UINT nType, int cx, int cy)
 	AdjustDialogControls();
 }
 
-CRect CFmiCaseStudyDlg::CalcGridArea(void)
+CRect CFmiCaseStudyDlg::CalcGridArea()
 {
 	CRect clientRect;
 	GetClientRect(clientRect);
@@ -264,7 +246,7 @@ CRect CFmiCaseStudyDlg::CalcGridArea(void)
 	return clientRect;
 }
 
-CRect CFmiCaseStudyDlg::CalcBrowseButtomRect(void)
+CRect CFmiCaseStudyDlg::CalcBrowseButtomRect()
 {
 	CRect buttomRect;
 	CWnd *win = GetDlgItem(IDC_BUTTON_BROWSE);
@@ -280,7 +262,7 @@ CRect CFmiCaseStudyDlg::CalcBrowseButtomRect(void)
 	return buttomRect;
 }
 
-void CFmiCaseStudyDlg::AdjustDialogControls(void)
+void CFmiCaseStudyDlg::AdjustDialogControls()
 {
 	if(fDialogInitialized)
 	{
@@ -323,7 +305,7 @@ void CFmiCaseStudyDlg::AdjustEditPathControl(const CRect &theButtonRect)
 	}
 }
 
-void CFmiCaseStudyDlg::AdjustGridControl(void)
+void CFmiCaseStudyDlg::AdjustGridControl()
 {
 	CWnd *win = GetDlgItem(IDC_CUSTOM_GRID_CASE_STUDY);
 	if(win)
@@ -334,7 +316,7 @@ void CFmiCaseStudyDlg::AdjustGridControl(void)
 		{
 			fGridControlInitialized = true;
             auto &caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
-            caseStudySystem.Init(*(itsSmartMetDocumentInterface->HelpDataInfoSystem()), *(itsSmartMetDocumentInterface->InfoOrganizer()));
+            caseStudySystem.Init(*(itsSmartMetDocumentInterface->HelpDataInfoSystem()), *(itsSmartMetDocumentInterface->InfoOrganizer()), itsCaseStudySettingsWinRegistry);
             itsProducerSystemsHolder = std::make_unique<NFmiProducerSystemsHolder>();
 			itsProducerSystemsHolder->itsModelProducerSystem = &(itsSmartMetDocumentInterface->ProducerSystem());
             itsProducerSystemsHolder->itsObsProducerSystem = &(itsSmartMetDocumentInterface->ObsProducerSystem());
@@ -368,7 +350,7 @@ void CFmiCaseStudyDlg::AdjustControl(int theControlId, int rightOffset)
 	}
 }
 
-void CFmiCaseStudyDlg::DoWhenClosing(void)
+void CFmiCaseStudyDlg::DoWhenClosing()
 {
 //	itsDoc->DataQualityChecker().ViewOn(false); // jos jossain olisi tieto ett‰ onko caseStudy-dialogi auki/ei, t‰ss‰ olisi muokattava sen statusta
 	GetBasicInfoFromDialog();
@@ -395,15 +377,6 @@ void CFmiCaseStudyDlg::OnClose()
 	DoWhenClosing();
 
 	CDialog::OnClose();
-}
-
-static std::string GetOffsetStr(const NFmiCaseStudyDataFile &theCaseData, int theColumn)
-{
-	int offsetValueInMinutes = (theColumn == CaseStudyHeaderParInfo::kStartTimeOffset) ? theCaseData.StartOffsetInMinutes() : theCaseData.EndOffsetInMinutes();
-	if(theCaseData.StoreLastDataOnly())
-		return "";
-	else
-		return NFmiStringTools::Convert(::round((offsetValueInMinutes/60.)*100)/100.);
 }
 
 static std::string GetMegaByteSizeString(double theSizeInMB)
@@ -451,7 +424,7 @@ static std::string GetSizeColumnString(const NFmiCaseStudyDataFile &theCaseData)
 	}
 	else
 	{
-		bool dontStoreData = (theCaseData.Store() == false); // huom! sulut tulee vain jos ollaan tavallisen datan kohdassa, ei headerien
+		bool dontStoreData = (theCaseData.DataFileWinRegValues().Store() == false); // huom! sulut tulee vain jos ollaan tavallisen datan kohdassa, ei headerien
 		if(dontStoreData)
 			str += "(";
 		if(theCaseData.StoreLastDataOnly())
@@ -481,6 +454,11 @@ static std::string GetProducerIdString(const NFmiCaseStudyDataFile &theCaseData)
         return NFmiStringTools::Convert(theCaseData.Producer().GetIdent());
 }
 
+static std::string GetDataCountStr(int theDataCount)
+{
+	return std::to_string(theDataCount);
+}
+
 static std::string GetColumnText(int theRow, int theColumn, const NFmiCaseStudyDataFile &theCaseData)
 {
 	switch(theColumn)
@@ -491,9 +469,10 @@ static std::string GetColumnText(int theRow, int theColumn, const NFmiCaseStudyD
 		return theCaseData.Name();
     case CaseStudyHeaderParInfo::kProducerId:
         return ::GetProducerIdString(theCaseData);
-    case CaseStudyHeaderParInfo::kStartTimeOffset:
-	case CaseStudyHeaderParInfo::kEndTimeOffset:
-		return ::GetOffsetStr(theCaseData, theColumn);
+    case CaseStudyHeaderParInfo::kCaseStudyDataCount:
+		return ::GetDataCountStr(theCaseData.DataFileWinRegValues().CaseStudyDataCount());
+	case CaseStudyHeaderParInfo::kLocalCacheDataCount:
+		return ::GetDataCountStr(theCaseData.DataFileWinRegValues().LocalCacheDataCount());
 	case CaseStudyHeaderParInfo::kDataSize:
 		return ::GetSizeColumnString(theCaseData);
 	default:
@@ -505,9 +484,20 @@ static bool IsReadOnlyCell(int column, const NFmiCaseStudyDataFile &theCaseData)
 {
     if(column == CaseStudyHeaderParInfo::kStoreData || column == CaseStudyHeaderParInfo::kEnableData)
 		return false;
-	if(column == CaseStudyHeaderParInfo::kStartTimeOffset || column == CaseStudyHeaderParInfo::kEndTimeOffset)
+	if(column == CaseStudyHeaderParInfo::kCaseStudyDataCount)
 	{
-		if(theCaseData.StoreLastDataOnly() == false)
+		if(theCaseData.StoreLastDataOnly())
+			return true;
+		else
+			return false;
+	}
+	if(column == CaseStudyHeaderParInfo::kLocalCacheDataCount)
+	{
+		if(theCaseData.StoreLastDataOnly())
+			return true;
+		if(theCaseData.DataType() == NFmiInfoData::kSatelData)
+			return true;
+		else
 			return false;
 	}
 
@@ -522,7 +512,7 @@ static const COLORREF gDisabledDataBkColor = RGB(170, 170, 170); // disabloituje
 
 static void SetCellFont(CGridCtrl &theGridCtrl, int row, int col, const NFmiCaseStudyDataFile &theCaseData, LOGFONT *theBoldFont)
 {
-	bool useBoldFont = theCaseData.Store();
+	bool useBoldFont = theCaseData.DataFileWinRegValues().Store();
 	if(::IsHeaderRow(theCaseData))
 	{
 		if(theCaseData.TotalFileSize() <= 0)
@@ -572,7 +562,7 @@ void CFmiCaseStudyDlg::SetGridRow(int row, const NFmiCaseStudyDataFile &theCaseD
                 if(!updateOnly)
 				    itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
 				CGridCellCheck *pTempCell = (CGridCellCheck*) itsGridCtrl.GetCell(row, column);
-				pTempCell->SetCheck(theCaseData.Store()); 
+				pTempCell->SetCheck(theCaseData.DataFileWinRegValues().Store());
                 if(!updateOnly)
     				pTempCell->SetCheckBoxClickedCallback(boost::bind(&CFmiCaseStudyDlg::HandleCheckBoxClick, this, _1, _2));
 			}
@@ -589,7 +579,7 @@ void CFmiCaseStudyDlg::SetGridRow(int row, const NFmiCaseStudyDataFile &theCaseD
 	}
 }
 
-void CFmiCaseStudyDlg::InitGridControlValues(void)
+void CFmiCaseStudyDlg::InitGridControlValues()
 {
 	static bool fFirstTime = true;
 	int fixedRowCount = 1;
@@ -609,11 +599,11 @@ void CFmiCaseStudyDlg::InitGridControlValues(void)
 
 void CFmiCaseStudyDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool updateOnly)
 {
-	std::vector<NFmiCaseStudyDataFile*> &dataVector = itsSmartMetDocumentInterface->CaseStudySystem().CaseStudyDialogData();
+	auto &dataVector = itsSmartMetDocumentInterface->CaseStudySystem().CaseStudyDialogData();
 	int currentRowCount = fixedRowCount;
-	for(size_t i = 0; i < dataVector.size(); i++)
+	for(auto data : dataVector)
 	{
-        SetGridRow(currentRowCount++, *(dataVector[i]), fixedColumnCount, updateOnly);
+        SetGridRow(currentRowCount++, *data, fixedColumnCount, updateOnly);
 	}
 }
 
@@ -670,7 +660,7 @@ void CFmiCaseStudyDlg::HandleCheckBoxClick(int col, int row)
 			}
 			else
 			{
-				dataFile.Store(newState);
+				dataFile.DataFileWinRegValues().Store(newState);
                 caseStudySystem.Update(dataFile.Category(), dataFile.Producer().GetIdent());
 			}
 			UpdateGridControlValues(true);
@@ -729,7 +719,7 @@ BOOL CFmiCaseStudyDlg::AcceptChange(int col, int row)
 		{
 			double offsetInHours = NFmiStringTools::Convert<double>(str);
 			itsOffsetEditedCell = CCellID(row, col);
-			itsOffsetEditTimer = static_cast<UINT>(SetTimer(kFmiOffsetEditTimer, 50, NULL)); // k‰ynnistet‰‰n timer, ett‰ saadaan pikkuisen viiveen j‰lkeen k‰ynnistetty‰ offsetin muutoksesta aiheutuva p‰ivitys
+			itsOffsetEditTimer = static_cast<UINT>(SetTimer(kFmiDataCountEditTimer, 50, NULL)); // k‰ynnistet‰‰n timer, ett‰ saadaan pikkuisen viiveen j‰lkeen k‰ynnistetty‰ offsetin muutoksesta aiheutuva p‰ivitys
 			return TRUE;
 		}
 		catch(...)
@@ -744,10 +734,10 @@ void CFmiCaseStudyDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	switch(nIDEvent)
 	{
-	case kFmiOffsetEditTimer:
+	case kFmiDataCountEditTimer:
 		{
 			KillTimer(itsOffsetEditTimer);
-			OnOffsetEdited();
+			OnDataCountEdited();
 			return ;
 		}
 	case kFmiDisableStoreButtonTimer:
@@ -764,7 +754,7 @@ void CFmiCaseStudyDlg::OnTimer(UINT_PTR nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
-void CFmiCaseStudyDlg::OnOffsetEdited(void)
+void CFmiCaseStudyDlg::OnDataCountEdited()
 {
 	if(itsGridCtrl.IsValid(itsOffsetEditedCell))
 	{
@@ -776,27 +766,28 @@ void CFmiCaseStudyDlg::OnOffsetEdited(void)
 		{
 
 			std::string str = CT2A(itsGridCtrl.GetCell(itsOffsetEditedCell.row, itsOffsetEditedCell.col)->GetText());
-			int offsetInMinutes = 0;
+			int dataCount = 0;
 			try
 			{
-				offsetInMinutes = boost::math::iround(NFmiStringTools::Convert<double>(str) * 60);
-				bool startOffset = (itsOffsetEditedCell.col == CaseStudyHeaderParInfo::kStartTimeOffset);
+				dataCount = boost::math::iround(NFmiStringTools::Convert<double>(str));
+				bool caseStudyDataCountCase = (itsOffsetEditedCell.col == CaseStudyHeaderParInfo::kCaseStudyDataCount);
 
 				NFmiCaseStudyDataFile &dataFile = *dataVector[dataIndex];
 				if(dataFile.CategoryHeader())
 				{
-                    caseStudySystem.CategoryOffset(dataFile.Category(), startOffset, offsetInMinutes); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
+                    caseStudySystem.CategoryDataCount(dataFile.Category(), dataCount, caseStudyDataCountCase); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
 				}
 				else if(dataFile.ProducerHeader())
 				{
-                    caseStudySystem.ProducerOffset(dataFile.Category(), dataFile.Producer().GetIdent(), startOffset, offsetInMinutes); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
+                    caseStudySystem.ProducerDataCount(dataFile.Category(), dataFile.Producer().GetIdent(), dataCount, caseStudyDataCountCase); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
 				}
 				else
-				{ // normaali fileData-tapaus
-					if(startOffset)
-						dataFile.StartOffsetInMinutes(offsetInMinutes);
+				{ 
+					// normaali fileData-tapaus
+					if(caseStudyDataCountCase)
+						dataFile.DataFileWinRegValues().CaseStudyDataCount(dataCount);
 					else
-						dataFile.EndOffsetInMinutes(offsetInMinutes);
+						dataFile.DataFileWinRegValues().LocalCacheDataCount(dataCount);
 
                     caseStudySystem.Update(dataFile.Category(), dataFile.Producer().GetIdent());
 				}
@@ -811,13 +802,13 @@ void CFmiCaseStudyDlg::OnOffsetEdited(void)
 	itsOffsetEditedCell = CCellID();
 }
 
-bool CFmiCaseStudyDlg::IsThereCaseStudyMakerRunning(void)
+bool CFmiCaseStudyDlg::IsThereCaseStudyMakerRunning()
 {
 	std::string dummyStr;
 	return (NFmiApplicationDataBase::CountProcessCount(gCaseStudyMakerData, dummyStr) > 0);
 }
 
-void CFmiCaseStudyDlg::GetBasicInfoFromDialog(void)
+void CFmiCaseStudyDlg::GetBasicInfoFromDialog()
 {
 	UpdateData(TRUE);
     auto &caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
@@ -966,7 +957,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonCloseMode()
 // Kun Store-nappia on painettu, menn‰‰n erikois tilaan, eli disabloidaan Store-nappi ja k‰ynnistyy timer, 
 // jonka avulla katsotaan onko CaseStudyExe-tallentamassa dataa, kun ei en‰‰ ole t‰t‰ ohjelmaa k‰ynniss‰, voidaan Store-nappi enabloida (jos ei olla CaseStudy-moodissa tietenkin).
 // Close Mode-nappi on disabloitu, jos ei olla CaseStudy-moodissa.
-void CFmiCaseStudyDlg::UpdateButtonStates(void)
+void CFmiCaseStudyDlg::UpdateButtonStates()
 {
 	if(itsSmartMetDocumentInterface->CaseStudyModeOn())
 	{
@@ -999,7 +990,7 @@ void CFmiCaseStudyDlg::OnBnClickedCheckEditEnableData()
     ShowEnableColumn();
 }
 
-void CFmiCaseStudyDlg::ShowEnableColumn(void)
+void CFmiCaseStudyDlg::ShowEnableColumn()
 {
     static int lastTrueEnableColumnWidth = 0;
 

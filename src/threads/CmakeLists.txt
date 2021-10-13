@@ -22,8 +22,9 @@ target_link_libraries(
     Processes
     AutoComplete
     EditingDataUtils
-	ApplicationDataBase
-	SmetData
+    ApplicationDataBase
+    SmetData
+    CaseStudyLib
     )
 
 target_include_directories( 
@@ -38,6 +39,7 @@ target_include_directories(
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
     PUBLIC ${ApplicationDataBase_INCLUDE_DIRS}
     PUBLIC ${SmetData_INCLUDE_DIRS}
+    PUBLIC ${CaseStudyLib_INCLUDE_DIRS}
     )
 
 set(${PROJECT_NAME}_RES_FILE
@@ -56,6 +58,7 @@ set(
     ${EditingDataUtils_INCLUDE_DIRS}
     ${ApplicationDataBase_INCLUDE_DIRS}
     ${SmetData_INCLUDE_DIRS}
+    ${CaseStudyLib_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

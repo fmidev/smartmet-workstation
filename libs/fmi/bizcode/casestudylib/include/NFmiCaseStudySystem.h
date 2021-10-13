@@ -19,6 +19,7 @@ class CWnd;
 class NFmiCaseStudySystem;
 class NFmiProducerSystem;
 class NFmiDataLoadingInfo;
+class NFmiCaseStudySettingsWinRegistry;
 
 class CaseStudyOperationCanceledException
 {
@@ -49,6 +50,43 @@ public:
 	NFmiProducerSystem *itsSatelImageProducerSystem; // ei omista, ei tuhoa
 };
 
+// N‰m‰ CaseStudyDataFile:a koskevat dataosat ovat tallessa Windows rekisteriss‰,
+// paitsi jos kyse on CaseStudy dialogin Category tai Producer riveist‰, jolloin niiden arvot
+// otetaan lokaali CaseStudyMemory.csmeta tiedostosta.
+class NFmiCsDataFileWinReg
+{
+	int itsCaseStudyDataCount = 0;
+	bool fFixedValueForCaseStudyDataCount = false;
+	int itsLocalCacheDataCount = 0;
+	bool fFixedValueForLocalCacheDataCount = false;
+	bool fStore = false;
+	bool fProperlyInitialized = false;
+public:
+
+	NFmiCsDataFileWinReg();
+	NFmiCsDataFileWinReg(int caseStudyDataCount, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store);
+
+	int CaseStudyDataCount() const { return itsCaseStudyDataCount; }
+	bool FixedValueForCaseStudyDataCount() const { return fFixedValueForCaseStudyDataCount; }
+	int LocalCacheDataCount() const { return itsLocalCacheDataCount; }
+	bool FixedValueForLocalCacheDataCount() const { return fFixedValueForLocalCacheDataCount; }
+	bool Store() const { return fStore; }
+	bool ProperlyInitialized() const { return fProperlyInitialized; }
+
+	void CaseStudyDataCount(int newValue);
+	void FixedValueForCaseStudyDataCount(bool newValue);
+	void LocalCacheDataCount(int newValue);
+	void FixedValueForLocalCacheDataCount(bool newValue);
+	void Store(bool newValue);
+	void ProperlyInitialized(bool newValue);
+
+	bool AreDataCountsFixed() const;
+	void FixToLastDataOnlyType();
+	void DoCheckedAssignment(const NFmiCsDataFileWinReg& other);
+	void AdaptFixedSettings(const NFmiCsDataFileWinReg& other);
+	bool operator!=(const NFmiCsDataFileWinReg& other) const;
+};
+
 class NFmiCaseStudyDataFile
 {
 public:
@@ -66,7 +104,7 @@ public:
 	~NFmiCaseStudyDataFile(void);
 
 	void Reset(void);
-	bool Init(NFmiHelpDataInfoSystem &theDataInfoSystem, const NFmiHelpDataInfo &theDataInfo, NFmiInfoOrganizer &theInfoOrganizer, int theStartOffsetInMinutes, int theEndOffsetInMinutes, bool isStored, const NFmiCaseStudySystem &theCaseStudySystem);
+	bool Init(NFmiHelpDataInfoSystem &theDataInfoSystem, const NFmiHelpDataInfo &theDataInfo, NFmiInfoOrganizer &theInfoOrganizer, const NFmiCsDataFileWinReg& theDataFileWinRegValues, const NFmiCaseStudySystem &theCaseStudySystem);
     void UpdateWithInfo(NFmiInfoOrganizer & theInfoOrganizer, NFmiHelpDataInfoSystem &theDataInfoSystem);
     void Update(const NFmiCaseStudySystem &theCaseStudySystem);
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyDataFile &theData);
@@ -75,6 +113,8 @@ public:
 
 	const std::string& Name(void) const {return itsName;}
 	void Name(const std::string &newValue) {itsName = newValue;}
+	const std::string& HelpDataInfoName(void) const { return itsHelpDataInfoName; }
+	void HelpDataInfoName(const std::string& newValue) { itsHelpDataInfoName = newValue; }
 	const NFmiProducer& Producer(void) const {return itsProducer;}
 	void Producer(const NFmiProducer &newValue) {itsProducer = newValue;}
 	const std::string& FileFilter(void) const {return itsFileFilter;}
@@ -82,10 +122,9 @@ public:
 	void FileFilter(const std::string &newValue) {itsFileFilter = newValue;}
 	const std::string& RelativeStoredFileFilter(void) const {return itsRelativeStoredFileFilter;}
 	void RelativeStoredFileFilter(const std::string &newValue) {itsRelativeStoredFileFilter = newValue;}
-	int StartOffsetInMinutes(void) const {return itsStartOffsetInMinutes;}
-	void StartOffsetInMinutes(int newValue) {itsStartOffsetInMinutes = newValue;}
-	int EndOffsetInMinutes(void) const {return itsEndOffsetInMinutes;}
-	void EndOffsetInMinutes(int newValue) {itsEndOffsetInMinutes = newValue;}
+	const NFmiCsDataFileWinReg& DataFileWinRegValues() const { return itsDataFileWinRegValues; }
+	NFmiCsDataFileWinReg& DataFileWinRegValues() { return itsDataFileWinRegValues; }
+	void DataFileWinRegValues(const NFmiCsDataFileWinReg& newValues) { itsDataFileWinRegValues = newValues; }
 	int DataIntervalInMinutes(void) const {return itsDataIntervalInMinutes;}
 	void DataIntervalInMinutes(int newValue) {itsDataIntervalInMinutes = newValue;}
 	double SingleFileSize(void) const {return itsSingleFileSize;}
@@ -96,12 +135,9 @@ public:
 	void MaxFileSize(double newValue) {itsMaxFileSize = newValue;}
 	DataCategory Category(void) const {return itsCategory;}
 	void Category(DataCategory newValue) {itsCategory = newValue;}
-	bool Store(void) const {return fStore;}
-	void Store(bool newValue) {fStore = newValue;}
 	bool ImageFile(void) const {return fImageFile;}
 	void ImageFile(bool newValue) {fImageFile = newValue;}
-	bool StoreLastDataOnly(void) const {return fStoreLastDataOnly;}
-	void StoreLastDataOnly(bool newValue) {fStoreLastDataOnly = newValue;}
+	bool StoreLastDataOnly(void) const;
 	bool CategoryHeader(void) const {return fCategoryHeader;}
 	void CategoryHeader(bool newValue) {fCategoryHeader = newValue;}
 	bool ProducerHeader(void) const {return fProducerHeader;}
@@ -115,7 +151,6 @@ public:
 	void ImageParam(const NFmiParam &newValue) {itsImageParam = newValue;}
 	void ParseJsonValue(json_spirit::Value &theValue);
 	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath);
-	bool FindSuitableCaseStudyTime(NFmiMetTime &theTimeOut);
 
 	bool NotifyOnLoad(void) const {return fNotifyOnLoad;}
 	void NotifyOnLoad(bool newValue) {fNotifyOnLoad = newValue;}
@@ -128,6 +163,8 @@ public:
 	void InitDataWithStoredSettings(NFmiCaseStudyDataFile &theOriginalDataFile);
 	bool DataEnabled(void) const {return fDataEnabled;}
 	void DataEnabled(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue);
+	NFmiInfoData::Type DataType() const { return itsDataType; }
+	void DataType(NFmiInfoData::Type newValue) { itsDataType = newValue; }
 
     bool operator==(const NFmiCaseStudyDataFile &other) const;
     bool operator!=(const NFmiCaseStudyDataFile &other) const;
@@ -135,12 +172,14 @@ private:
 	double EvaluateTotalDataSize(void);
 	void ParseJsonPair(json_spirit::Pair &thePair);
 
-	std::string itsName; // Datan nimi, satel-imagen tapauksessa channel, muuten datatyyppi (pinta, painepinta, mallipinta jne.) / filefilter-siivottuna
+	// Datan nimi, satel-imagen tapauksessa channel, muuten datatyyppi (pinta, painepinta, mallipinta jne.) / filefilter-siivottuna
+	std::string itsName;
+	// NFmiHelpDataInfo oliolta saatu datan uniikki nimi
+	std::string itsHelpDataInfoName;
 	NFmiProducer itsProducer;
 	std::string itsFileFilter;
+	NFmiCsDataFileWinReg itsDataFileWinRegValues;
 	std::string itsRelativeStoredFileFilter; // t‰h‰n talletetaan suhteellinen polku, mihin data lopulta talletetaan CaseStudy-rakenteessa, t‰t‰ k‰ytet‰‰n sitten kun dataa k‰ytet‰‰n tulevaisuudessa
-	int itsStartOffsetInMinutes;
-	int itsEndOffsetInMinutes;
 	int itsDataIntervalInMinutes; // kuinka usein dataa tuotetaan (malliajo v‰li tai kuvan tuotanto v‰li), t‰m‰n avulla lasketaan arvio itsTotalFileSize-arvoksi
 	double itsSingleFileSize; // viimeisimm‰n datatiedoston koko
 	double itsTotalFileSize; // lasketaan arvio yhden datan perusteella ja alku/loppu offsettien ja intervallin avulla
@@ -150,9 +189,7 @@ private:
 	int itsLevelCount; // k‰ytet‰‰n priorisoinnissa
 	std::string itsImageAreaStr; // jos kyse on kuva-datasta, pit‰‰ tallettaa myˆs kuvan alue
 	NFmiParam itsImageParam; // jos kyseess‰ kuva-data, pit‰‰ tallettaa myˆs parametrin id ja nimi
-	bool fStore; // talletetaanko kyseinen data case-studyssa
 	bool fImageFile; // jos kyseess‰ on kuva tyyppist‰ dataa, t‰h‰n true, jos queryDataa, laitetaan false
-	bool fStoreLastDataOnly; // analyysi ja obs datatyypeist‰ talletetaan vain viimeinen yhdistelm‰ data
 	bool fCategoryHeader;
 	bool fProducerHeader;
 	bool fOnlyOneData;
@@ -173,12 +210,11 @@ public:
 	~NFmiCaseStudyProducerData(void);
 
 	void AddData(const NFmiCaseStudyDataFile &theData);
-	void OrganizeDatas(void);
 	void Update(const NFmiCaseStudySystem &theCaseStudySystem);
     void UpdateOnlyOneDataStates();
     void ProducerStore(bool newValue);
 	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue);
-	void ProducerOffset(bool startOffset, int theOffsetInMinutes);
+	void ProducerDataCount(int theDataCount, bool theCaseStudyCase);
 	std::vector<NFmiCaseStudyDataFile>& FilesData(void) {return itsFilesData;}
 	const std::vector<NFmiCaseStudyDataFile>& FilesData(void) const {return itsFilesData;}
 	NFmiCaseStudyDataFile& ProducerHeaderInfo(void) {return itsProducerHeaderInfo;}
@@ -187,13 +223,12 @@ public:
 	void ParseJsonValue(json_spirit::Value &theValue);
 	void SetCategory(NFmiCaseStudyDataFile::DataCategory theCategory);
 	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath);
-	bool FindSuitableCaseStudyTime(NFmiMetTime &theTimeOut);
 	void InitDataWithStoredSettings(NFmiCaseStudyProducerData &theOriginalProducerData);
+	long GetProducerIdent() const;
 
     bool operator==(const NFmiCaseStudyProducerData &other) const;
     bool operator!=(const NFmiCaseStudyProducerData &other) const;
 private:
-	void SortDatas(void);
 	void ParseJsonPair(json_spirit::Pair &thePair);
 	NFmiCaseStudyDataFile* GetDataFile(const std::string &theFileFilter);
 
@@ -205,20 +240,19 @@ class NFmiCaseStudyCategoryData
 {
 public:
 	NFmiCaseStudyCategoryData(void);
-	NFmiCaseStudyCategoryData(const std::string &theName, NFmiCaseStudyDataFile::DataCategory theCategory, bool theLatestDataOnly);
+	NFmiCaseStudyCategoryData(const std::string &theName, NFmiCaseStudyDataFile::DataCategory theCategory);
 	~NFmiCaseStudyCategoryData(void);
 
-	void AddData(const NFmiCaseStudyDataFile &theData);
+	void AddData(NFmiCaseStudyDataFile &theData);
     void UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer);
-    void OrganizeDatas(void);
 	void Update(const NFmiCaseStudySystem &theCaseStudySystem);
 	void Update(unsigned long theProdId, const NFmiCaseStudySystem &theCaseStudySystem);
 	void ProducerStore(unsigned long theProdId, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
 	void CategoryStore(bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
 	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, unsigned long theProdId, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
 	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
-	void ProducerOffset(unsigned long theProdId, bool startOffset, int theOffsetInMinutes, const NFmiCaseStudySystem &theCaseStudySystem);
-	void CategoryOffset(bool startOffset, int theOffsetInMinutes, const NFmiCaseStudySystem &theCaseStudySystem);
+	void ProducerDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase);
+	void CategoryDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase);
 	std::vector<NFmiCaseStudyProducerData>& ProducersData(void) {return itsProducersData;}
 	const std::vector<NFmiCaseStudyProducerData>& ProducersData(void) const {return itsProducersData;}
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyCategoryData &theData, bool fMakeFullStore);
@@ -227,14 +261,12 @@ public:
 	NFmiCaseStudyDataFile& CategoryHeaderInfo(void) {return itsCategoryHeaderInfo;}
 	const NFmiCaseStudyDataFile& CategoryHeaderInfo(void) const {return itsCategoryHeaderInfo;}
 	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath);
-	bool FindSuitableCaseStudyTime(NFmiMetTime &theTimeOut);
 	void InitDataWithStoredSettings(NFmiCaseStudyCategoryData &theOriginalCategoryData);
 	NFmiCaseStudyProducerData* GetProducerData(unsigned long theProdId);
 
     bool operator==(const NFmiCaseStudyCategoryData &other) const;
     bool operator!=(const NFmiCaseStudyCategoryData &other) const;
 private:
-	void SortDatas(void);
 	void ParseJsonPair(json_spirit::Pair &thePair);
     NFmiCaseStudyProducerData RemoveNoProducerData();
     void UpdateOnlyOneDataStates();
@@ -252,7 +284,8 @@ public:
 	NFmiCaseStudySystem(void);
 	~NFmiCaseStudySystem(void);
 
-	bool Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer);
+	bool Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer, NFmiCaseStudySettingsWinRegistry & theCaseStudySettingsWinRegistry);
+	void UpdateValuesBackToWinRegistry(NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry);
     void UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer);
     void Update(void);
 	void Reset(void); // HUOM! ei saa kutsua konstruktorissa, koska t‰m‰ kutsuu konstruktoria
@@ -261,8 +294,8 @@ public:
 	void CategoryStore(NFmiCaseStudyDataFile::DataCategory theCategory, bool newValue);
 	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, bool newValue);
 	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile::DataCategory theCategory, bool newValue);
-	void ProducerOffset(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, bool startOffset, int theOffsetInMinutes);
-	void CategoryOffset(NFmiCaseStudyDataFile::DataCategory theCategory, bool startOffset, int theOffsetInMinutes);
+	void ProducerDataCount(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, int theDataCount, bool theCaseStudyCase);
+	void CategoryDataCount(NFmiCaseStudyDataFile::DataCategory theCategory, int theDataCount, bool theCaseStudyCase);
 	std::vector<NFmiCaseStudyCategoryData>& CategoriesData(void) {return itsCategoriesData;}
 	void FillCaseStudyDialogData(NFmiProducerSystemsHolder &theProducerSystemsHolder);
 	std::vector<NFmiCaseStudyDataFile*>& CaseStudyDialogData(void) {return itsCaseStudyDialogData;}
@@ -301,14 +334,12 @@ public:
 	static std::string MakeCaseStudyDataHakeDirectory(const std::string& theBaseCaseStudyDataDirectory);
 
 private:
-	void OrganizeDatas(void);
-	void AddData(const NFmiCaseStudyDataFile &theData);
+	void AddData(NFmiCaseStudyDataFile &theData);
 	void SetProducerName(NFmiProducerSystemsHolder &theProducerSystemsHolder, NFmiCaseStudyProducerData &theProducerData);
 	void ParseJsonValue(json_spirit::Value &theValue);
 	void ParseJsonPair(json_spirit::Pair &thePair);
 	void ParseJsonCategoryArray(json_spirit::Array &theCategories);
 	int CalculateProgressDialogCount(void) const;
-	NFmiMetTime FindSuitableCaseStudyTime(void);
 	void InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData> &theOriginalCategoriesData);
 	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataFile::DataCategory theCategory);
 	std::string MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath);
