@@ -183,7 +183,9 @@ int main(int argc, const char* argv[])
 #include "NFmiQueryDataUtil.h"
 #include "NFmiTimeList.h"
 #include "NFmiStringTools.h"
+#include "NFmiMilliSecondTimer.h"
 #include <fstream>
+#include <thread>
 #include "boost\algorithm\string\replace.hpp"
 
 static std::string MakeNextSubDirectoryPath(const std::string& currentDirectory, const std::string& subDirectoryName)
@@ -286,10 +288,24 @@ static void DoQueryDataWork(const std::string& queryDataFileName, const std::str
 
 static void DoFilesOnDirectory(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
 {
+    static NFmiNanoSecondTimer timer;
+    // Tiedostot tulevat aikajärjestyksessä vanhimmasta uusimpaan, johtuen tiedostonimissä olevista aikaleimoista.
     auto files = NFmiFileSystem::DirectoryFiles(currentDirectory);
     for(const auto& queryDataFileName : files)
     {
         ::DoQueryDataWork(queryDataFileName, currentDirectory, parallerDirectory, changeTimesByHour);
+        auto elapsedTimeInSeconds = timer.elapsedTimeInSeconds();
+        const double minimumFileProcessTimeInSeconds = 1.5;
+        if(minimumFileProcessTimeInSeconds > elapsedTimeInSeconds)
+        {
+            // Odotetaan jokaisen tiedoston välillä niin että väliä on vähintäin 1.5 sekuntia, tällöin jokainen
+            // luotu tiedosto saa oman luomishetki sekunnin, ja tällöin smartmet saa luettavakseen eri malliajo tiedostot
+            // oikeassa aikajärjestyksessä.
+            auto sleepForMilliSecondsAmount = boost::math::iround((minimumFileProcessTimeInSeconds - elapsedTimeInSeconds) * 1000);
+            std::cerr << "Waiting for a " << sleepForMilliSecondsAmount << " ms" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleepForMilliSecondsAmount));
+        }
+        timer.restart();
     }
 }
 

@@ -14,6 +14,8 @@
 #include "execute-command-in-separate-process.h"
 #include "NFmiSettings.h"
 #include "catlog/catlog.h"
+#include "SmartMetDocumentInterface.h"
+#include "NFmiCaseStudySystem.h"
 
 #include <boost/filesystem.hpp> 
 #include <mutex> 
@@ -759,47 +761,52 @@ static void CleanCombineDataCache(void)
 	}
 }
 
-static int CalcMaxKeepFileCount(const NFmiHelpDataInfo &helpDataInfo, NFmiHelpDataInfoSystem &workerHelpDataSystem)
+static int CalcMaxKeepFileCount(const NFmiHelpDataInfo &helpDataInfo, NFmiCaseStudySystem & caseStudySystem)
 {
     NFmiInfoData::Type dataType = helpDataInfo.DataType();
     if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kSingleStationRadarData || dataType == NFmiInfoData::kTrajectoryHistoryData || dataType == NFmiInfoData::kFlashData || dataType == NFmiInfoData::kAnalyzeData)
     {
-        return 3; // n‰it‰ datatyyppeja on turhaa s‰ilˆ‰ montaa, koska vain viimeist‰ niist‰ on j‰rkev‰ k‰ytt‰‰
+        return 2; // n‰it‰ datatyyppeja on turhaa s‰ilˆ‰ montaa, koska vain viimeist‰ niist‰ on j‰rkev‰ k‰ytt‰‰
     }
     else
-        return workerHelpDataSystem.CacheMaxFilesPerPattern() + helpDataInfo.AdditionalArchiveFileCount();
+    {
+        auto localCacheFileCount = 3;
+        auto caseStudyDataFile = caseStudySystem.FindCaseStudyDataFile(helpDataInfo.FileNameFilter());
+        if(caseStudyDataFile)
+            localCacheFileCount = caseStudyDataFile->DataFileWinRegValues().LocalCacheDataCount();
+        return localCacheFileCount;
+    }
 }
 
 // HUOM! siivouksessa ei tarkisteta onko jokin data k‰ytˆss‰ vai ei (NFmiHelpDataInfo:n IsEnabled-metodi tarkistus), vanhoja tiedostoja ei 
 // j‰tet‰ levyille lojumaan, vaikka joku data on joskus otettu pois k‰ytˆst‰.
 static void CleanCache(void)
 {
-	if(gWorkerHelpDataSystem.DoCleanCache())
-	{
-		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-		// 1. siivotaan ensin pois kaikki yli halutun aikam‰‰reen olevat tiedostot
-		if(gWorkerHelpDataSystem.CacheFileKeepMaxDays() > 0)
-			::CleanDirectory(gWorkerHelpDataSystem.CacheDirectory(), gWorkerHelpDataSystem.CacheFileKeepMaxDays()*24);
-		// 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eiv‰t lukossa), oletetaan
-		// ett‰ yhden tiedoston kopiointi ei kest‰ yli puolta tuntia, vaan kyse on jostain virheest‰.
-		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-		::CleanDirectory(gWorkerHelpDataSystem.CacheTmpDirectory(), 0.5);
+    if(gWorkerHelpDataSystem.DoCleanCache())
+    {
+        NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+        // 1. siivotaan ensin pois kaikki yli halutun aikam‰‰reen olevat tiedostot
+        if(gWorkerHelpDataSystem.CacheFileKeepMaxDays() > 0)
+            ::CleanDirectory(gWorkerHelpDataSystem.CacheDirectory(), gWorkerHelpDataSystem.CacheFileKeepMaxDays() * 24);
+        // 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eiv‰t lukossa), oletetaan
+        // ett‰ yhden tiedoston kopiointi ei kest‰ yli puolta tuntia, vaan kyse on jostain virheest‰.
+        NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+        ::CleanDirectory(gWorkerHelpDataSystem.CacheTmpDirectory(), 0.5);
 
-		// 3. siivotaan pois file-pattern -kohtaisesti ylim‰‰r‰iset tiedostot n-kpl
-		if(gWorkerHelpDataSystem.CacheMaxFilesPerPattern() > 0)
-		{
-			for(size_t i=0; i < gWorkerHelpDataSystem.DynamicHelpDataInfos().size(); i++)
-			{
-				NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-				NFmiHelpDataInfo &helpDataInfo = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
-				// HUOM! yhdistelm‰ datoja ei siivota t‰ss‰ yleisill‰ asetuksilla, vaan ne 
-				// pit‰‰ siivota eri lailla ja sit‰ varten on oma funktio (CleanCombineDataCache).
-				if(::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
-					::CleanFilePattern(helpDataInfo.UsedFileNameFilter(gWorkerHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, gWorkerHelpDataSystem));
-			}
-		}
-	}
-	::CleanCombineDataCache();
+        auto& caseStudySystem = SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->CaseStudySystem();
+
+        // 3. siivotaan pois file-pattern -kohtaisesti ylim‰‰r‰iset tiedostot n-kpl
+        for(size_t i = 0; i < gWorkerHelpDataSystem.DynamicHelpDataInfos().size(); i++)
+        {
+            NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+            NFmiHelpDataInfo& helpDataInfo = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
+            // HUOM! yhdistelm‰ datoja ei siivota t‰ss‰ yleisill‰ asetuksilla, vaan ne 
+            // pit‰‰ siivota eri lailla ja sit‰ varten on oma funktio (CleanCombineDataCache).
+            if(::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
+                ::CleanFilePattern(helpDataInfo.UsedFileNameFilter(gWorkerHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, caseStudySystem));
+        }
+    }
+    ::CleanCombineDataCache();
 }
 
 static bool IsCacheCleaningDoneAtAll(CFmiCacheLoaderData &cacheLoaderData)

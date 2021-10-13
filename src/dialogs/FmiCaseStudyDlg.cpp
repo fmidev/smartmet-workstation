@@ -113,6 +113,7 @@ CFmiCaseStudyDlg::CFmiCaseStudyDlg(SmartMetDocumentInterface *smartMetDocumentIn
     , fEditEnableData(FALSE)
     , fZipData(FALSE)
 	, fStoreWarningMessages(FALSE)
+	, fCropDataToZoomedMapArea(FALSE)
 {
 
 }
@@ -138,6 +139,7 @@ void CFmiCaseStudyDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_EDIT_ENABLE_DATA, fEditEnableData);
 	DDX_Check(pDX, IDC_CHECK_ZIP_DATA, fZipData);
 	DDX_Check(pDX, IDC_CHECK_STORE_WARNING_MESSAGES, fStoreWarningMessages);
+	DDX_Check(pDX, IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, fCropDataToZoomedMapArea);
 }
 
 #define WM_CASE_STUDY_OFFSET_EDITED = WM_USER + 222
@@ -146,8 +148,7 @@ BEGIN_MESSAGE_MAP(CFmiCaseStudyDlg, CDialog)
 	ON_WM_GETMINMAXINFO()
 	ON_WM_SIZE()
 	ON_WM_CLOSE()
-	ON_WM_ERASEBKGND()
-	ON_WM_PAINT()
+//	ON_WM_PAINT()
 	ON_NOTIFY(GVN_ENDLABELEDIT, IDC_CUSTOM_GRID_CASE_STUDY, OnGridEndEdit)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON_STORE_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonStoreData)
@@ -185,11 +186,12 @@ void CFmiCaseStudyDlg::SetDefaultValues()
 BOOL CFmiCaseStudyDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-    fDialogInitialized = true;
+	DoResizerHooking(); // Tätä pitää kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristä
+	fDialogInitialized = true;
 
-    SetWindowText(CA2T(itsTitleStr.c_str()));
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
-    // Call InitHeaders before CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry !!
+	InitDialogTexts();
+	// Call InitHeaders before CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry !!
     InitHeaders();
     // Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
 	std::string errorBaseStr("Error in CFmiCaseStudyDlg::OnInitDialog while reading dialog size and position values");
@@ -204,10 +206,70 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
 	UpdateButtonStates();
     UpdateEditEnableDataText();
     EnableColorCodedControls();
+	InitializeGridControlRelatedData();
 
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiCaseStudyDlg::InitDialogTexts()
+{
+	SetWindowText(CA2T(itsTitleStr.c_str()));
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_STORE_DATA, "Store data");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_DATA, "Load data");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CLOSE_MODE, "Close mode");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH_GRID, "Refresh");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_NAME2_STR, "Name:");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_INFO_STR, "Info:");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_PATH_STR, "Absolute path:\n(e.g.c:\\data)");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_STORE_WARNING_MESSAGES, "Store warnings");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_ZIP_DATA, "Zip data");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, "Crop data to zoomed main-map area");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE, "Browse");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_EDIT_ENABLE_DATA, gEditEnableDataCheckControlOffStr.c_str());
+}
+
+void CFmiCaseStudyDlg::DoResizerHooking(void)
+{
+	BOOL bOk = m_resizer.Hook(this);
+	ASSERT(bOk == TRUE);
+
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_STORE_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_CLOSE_MODE, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_REFRESH_GRID, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_NAME2_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_INFO_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_PATH_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_CHECK_STORE_WARNING_MESSAGES, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_CHECK_ZIP_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+
+	bOk = m_resizer.SetAnchor(IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+
+	bOk = m_resizer.SetAnchor(IDC_EDIT_NAME_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_INFO_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_PATH_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_CHECK_EDIT_ENABLE_DATA, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+
+	bOk = m_resizer.SetAnchor(IDC_CUSTOM_GRID_CASE_STUDY, ANCHOR_VERTICALLY | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
 }
 
 void CFmiCaseStudyDlg::EnableColorCodedControls()
@@ -227,126 +289,27 @@ void CFmiCaseStudyDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
 
-	AdjustDialogControls();
+//	AdjustDialogControls();
 }
 
-CRect CFmiCaseStudyDlg::CalcGridArea()
+void CFmiCaseStudyDlg::InitializeGridControlRelatedData()
 {
-	CRect clientRect;
-	GetClientRect(clientRect);
-	CWnd *win = GetDlgItem(IDC_CHECK_ZIP_DATA);
-	if(win)
+	if(fGridControlInitialized == false)
 	{
-		CRect rect2;
-		win->GetWindowRect(rect2);
-		CPoint pt(rect2.BottomRight());
-		ScreenToClient(&pt);
-		clientRect.top = clientRect.top + pt.y; // rect2.Height();
-	}
-	return clientRect;
-}
-
-CRect CFmiCaseStudyDlg::CalcBrowseButtomRect()
-{
-	CRect buttomRect;
-	CWnd *win = GetDlgItem(IDC_BUTTON_BROWSE);
-	if(win)
-	{
-		CRect clientRect;
-		GetClientRect(clientRect);
-
-		win->GetWindowRect(buttomRect);
-		ScreenToClient(&buttomRect);
-		buttomRect.MoveToX(clientRect.right - buttomRect.Width() - 10);
-	}
-	return buttomRect;
-}
-
-void CFmiCaseStudyDlg::AdjustDialogControls()
-{
-	if(fDialogInitialized)
-	{
-		AdjustGridControl();
-		AdjustControl(IDC_EDIT_NAME_STR, 10);
-		AdjustControl(IDC_EDIT_INFO_STR, 10);
-		CRect browseRect = CalcBrowseButtomRect();
-		AdjustBrowseButton(browseRect);
-		AdjustEditPathControl(browseRect);
-
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            ShowEnableColumn();
-        }
-	}
-}
-
-void CFmiCaseStudyDlg::AdjustBrowseButton(const CRect &theButtonRect)
-{
-	CWnd *win = GetDlgItem(IDC_BUTTON_BROWSE);
-	if(win)
-	{
-		win->MoveWindow(theButtonRect);
-	}
-}
-
-void CFmiCaseStudyDlg::AdjustEditPathControl(const CRect &theButtonRect)
-{
-	CWnd *win = GetDlgItem(IDC_EDIT_PATH_STR);
-	if(win)
-	{
-		CRect editBoxRect;
-		win->GetWindowRect(editBoxRect);
-		ScreenToClient(&editBoxRect);
-		editBoxRect.right = theButtonRect.left - 5;
-
-		win->MoveWindow(editBoxRect);
-	}
-}
-
-void CFmiCaseStudyDlg::AdjustGridControl()
-{
-	CWnd *win = GetDlgItem(IDC_CUSTOM_GRID_CASE_STUDY);
-	if(win)
-	{
-		win->MoveWindow(CalcGridArea());
-
-		if(fGridControlInitialized == false)
-		{
-			fGridControlInitialized = true;
-            auto &caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
-            caseStudySystem.Init(*(itsSmartMetDocumentInterface->HelpDataInfoSystem()), *(itsSmartMetDocumentInterface->InfoOrganizer()), itsCaseStudySettingsWinRegistry);
-            itsProducerSystemsHolder = std::make_unique<NFmiProducerSystemsHolder>();
-			itsProducerSystemsHolder->itsModelProducerSystem = &(itsSmartMetDocumentInterface->ProducerSystem());
-            itsProducerSystemsHolder->itsObsProducerSystem = &(itsSmartMetDocumentInterface->ObsProducerSystem());
-            itsProducerSystemsHolder->itsSatelImageProducerSystem = &(itsSmartMetDocumentInterface->SatelImageProducerSystem());
-            caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
-			itsGridCtrl.GetFont()->GetLogFont(&itsBoldFont); // otetaan defaultti fontti tiedot talteen
-			itsBoldFont.lfWeight = FW_BOLD; // asetetaan 'paino' bold-arvoon 
-			InitGridControlValues();
-		}
-	}
-}
-
-void CFmiCaseStudyDlg::AdjustControl(int theControlId, int rightOffset)
-{
-	CWnd *win = GetDlgItem(theControlId);
-	if(win)
-	{
-		CRect clientRect;
-		GetClientRect(clientRect);
-
-		CRect rect2;
-		win->GetWindowRect(rect2);
-		CPoint tl(rect2.TopLeft());
-		ScreenToClient(&tl);
-		CPoint br(rect2.BottomRight());
-		ScreenToClient(&br);
-		br.x = clientRect.right - rightOffset;
-
-		CRect nameRect(tl, br);
-		win->MoveWindow(nameRect);
+		fGridControlInitialized = true;
+		auto& caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
+		caseStudySystem.Init(*(itsSmartMetDocumentInterface->HelpDataInfoSystem()), *(itsSmartMetDocumentInterface->InfoOrganizer()), itsCaseStudySettingsWinRegistry);
+		itsProducerSystemsHolder = std::make_unique<NFmiProducerSystemsHolder>();
+		itsProducerSystemsHolder->itsModelProducerSystem = &(itsSmartMetDocumentInterface->ProducerSystem());
+		itsProducerSystemsHolder->itsObsProducerSystem = &(itsSmartMetDocumentInterface->ObsProducerSystem());
+		itsProducerSystemsHolder->itsSatelImageProducerSystem = &(itsSmartMetDocumentInterface->SatelImageProducerSystem());
+		caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
+		itsGridCtrl.GetFont()->GetLogFont(&itsBoldFont); // otetaan defaultti fontti tiedot talteen
+		itsBoldFont.lfWeight = FW_BOLD; // asetetaan 'paino' bold-arvoon 
+		InitGridControlValues();
+		// Kun dialogia alustetaan, pitää tätä kutsua kerran, koska tämä laittaa piiloon "Enable data" sarakkeen, 
+		// joka aukeaa näkyville vasta kun sen toglaava checkbox kontrollia on klikattu.
+		ShowEnableColumn();
 	}
 }
 
@@ -612,29 +575,6 @@ void CFmiCaseStudyDlg::UpdateGridControlValues(bool updateOnly)
     UpdateRows(1, 1, updateOnly);
 	UpdateData(FALSE);
 	Invalidate(FALSE);
-}
-
-BOOL CFmiCaseStudyDlg::OnEraseBkgnd(CDC* pDC)
-{
-	return FALSE;
-
-//	return CDialog::OnEraseBkgnd(pDC);
-}
-
-void CFmiCaseStudyDlg::OnPaint()
-{
-	if(fGridControlInitialized)
-	{
-		CPaintDC dc(this); // device context for painting
-
-	 // tämä on pika viritys, kun muuten Print (ja muiden ) -nappulan kohdalta jää kaista maalaamatta kun laitoin ikkunaan välkkymättömän päivityksen
-		CBrush brush(RGB(240, 240, 240));
-		CRect gridCtrlArea(CalcGridArea());
-		CRect clientRect;
-		GetClientRect(clientRect);
-		clientRect.bottom = gridCtrlArea.top;
-		dc.FillRect(&clientRect, &brush);
-	}
 }
 
 void CFmiCaseStudyDlg::HandleCheckBoxClick(int col, int row)

@@ -238,8 +238,15 @@ int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, N
 		return -1; // Jos datan konffissa on erikseen määrätty määrittelemätön aikaväli, niin käytetään sitä.
 	if(theType == NFmiInfoData::kKepaData)
 		return -1; // editoidulla datalla ei ole vakio ajoväliä, niitä editoidaan ja lähetetään milloin vain
-	if(theHelpDataInfo && theHelpDataInfo->ModelRunTimeGapInHours())
-		return static_cast<int>(std::round(theHelpDataInfo->ModelRunTimeGapInHours() * 60)); // Jos datan konffissa on erikseen määrätty malliajoväli, niin käytetään sitä.
+	
+	if(theHelpDataInfo)
+	{
+		auto modelRunTimeGapInHours = theHelpDataInfo->ModelRunTimeGapInHours();
+		if(modelRunTimeGapInHours < 0)
+			return -1;
+		if(modelRunTimeGapInHours > 0)
+			return static_cast<int>(std::round(theHelpDataInfo->ModelRunTimeGapInHours() * 60)); // Jos datan konffissa on erikseen määrätty malliajoväli, niin käytetään sitä.
+	}
 
 	int modelRunTimeGap = 0; // defaultti on 0, joka pätee kaikkiin datoihin, mistä ei ole arkistodataa käytössä, kuten analyysi, havainnot jne.
 	if(NFmiDrawParam::IsModelRunDataType(theType))
@@ -537,7 +544,19 @@ bool NFmiCaseStudyDataFile::StoreLastDataOnly(void) const
 	return itsDataFileWinRegValues.CaseStudyDataCount() == 1 && itsDataFileWinRegValues.FixedValueForCaseStudyDataCount();
 }
 
-void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath)
+static void DoFinalSetupsFromOriginalHelpDataInfo(NFmiHelpDataInfo& currentHelpDataInfo, const std::string &currentFileFilter, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
+{
+	auto helpDataInfo = theOriginalHelpDataInfoSystem.FindHelpDataInfo(currentFileFilter);
+	if(helpDataInfo)
+	{
+		currentHelpDataInfo.NonFixedTimeGab(helpDataInfo->NonFixedTimeGab());
+		currentHelpDataInfo.ModelRunTimeGapInHours(helpDataInfo->ModelRunTimeGapInHours());
+		currentHelpDataInfo.TimeInterpolationRangeInMinutes(helpDataInfo->TimeInterpolationRangeInMinutes());
+		currentHelpDataInfo.AllowCombiningToSurfaceDataInSoundingView(helpDataInfo->AllowCombiningToSurfaceDataInSoundingView());
+	}
+}
+
+void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	NFmiHelpDataInfo helpDataInfo;
 	helpDataInfo.FileNameFilter(theBasePath + RelativeStoredFileFilter(), true); // true = fiksataan filefilter--polku
@@ -563,6 +582,7 @@ void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHe
 	if(itsDataType == NFmiInfoData::kKepaData || itsDataType == NFmiInfoData::kEditingHelpData || itsDataType == NFmiInfoData::kSingleStationRadarData)
 		helpDataInfo.FakeProducerId(static_cast<int>(Producer().GetIdent())); // näillä datatyypeillä on poikkeus tuottajat, siis eri tuottaja smartmetissa kuin mitä löytyy itse datasta
 
+	::DoFinalSetupsFromOriginalHelpDataInfo(helpDataInfo, FileFilter(), theOriginalHelpDataInfoSystem);
 	theHelpDataInfoSystem->AddDynamic(helpDataInfo);
 }
 
@@ -775,10 +795,10 @@ void NFmiCaseStudyProducerData::SetCategory(NFmiCaseStudyDataFile::DataCategory 
 		itsFilesData[i].Category(theCategory);
 }
 
-void NFmiCaseStudyProducerData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath)
+void NFmiCaseStudyProducerData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	for(size_t i = 0; i < itsFilesData.size(); i++)
-		itsFilesData[i].AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath);
+		itsFilesData[i].AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
 }
 
 // Joskus kun tehdään UpdateNoProducerData -päöivityksiä, tulee samalle tuottajelle useampi kuin yksi data. Tällöin 
@@ -1035,10 +1055,10 @@ void NFmiCaseStudyCategoryData::CategoryDataCount(int theDataCount, const NFmiCa
 json_spirit::Object NFmiCaseStudyCategoryData::MakeJsonObject(const NFmiCaseStudyCategoryData &theData, bool fMakeFullStore)
 {
 	json_spirit::Array dataArray;
-	const std::vector<NFmiCaseStudyProducerData> &dataVector = theData.ProducersData();
-	for(size_t i = 0; i < dataVector.size(); i++)
+	const auto &dataList = theData.ProducersData();
+	for(const auto &data : dataList)
 	{
-		json_spirit::Object tmpObject = NFmiCaseStudyProducerData::MakeJsonObject(dataVector[i], fMakeFullStore);
+		json_spirit::Object tmpObject = NFmiCaseStudyProducerData::MakeJsonObject(data, fMakeFullStore);
 		if(tmpObject.size())
 		{
 			json_spirit::Value tmpVal(tmpObject);
@@ -1097,10 +1117,10 @@ void NFmiCaseStudyCategoryData::ParseJsonPair(json_spirit::Pair &thePair)
 	}
 }
 
-void NFmiCaseStudyCategoryData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath)
+void NFmiCaseStudyCategoryData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	for(auto& producerData : itsProducersData)
-		producerData.AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath);
+		producerData.AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
 }
 
 void NFmiCaseStudyCategoryData::InitDataWithStoredSettings(NFmiCaseStudyCategoryData& theOriginalCategoryData)
@@ -1109,7 +1129,7 @@ void NFmiCaseStudyCategoryData::InitDataWithStoredSettings(NFmiCaseStudyCategory
 	CategoryHeaderInfo().DataFileWinRegValues().DoCheckedAssignment(theOriginalCategoryData.CategoryHeaderInfo().DataFileWinRegValues());
 
 	// Lisäksi jokaisen löytyneen producerDatan vastin parin tiedot päivitetään
-	std::vector<NFmiCaseStudyProducerData>& originalProducersData = theOriginalCategoryData.ProducersData();
+	auto& originalProducersData = theOriginalCategoryData.ProducersData();
 	for(auto& originalProducerData : originalProducersData)
 	{
 		NFmiCaseStudyProducerData* producerData = GetProducerData(originalProducerData.GetProducerIdent());
@@ -1117,6 +1137,18 @@ void NFmiCaseStudyCategoryData::InitDataWithStoredSettings(NFmiCaseStudyCategory
 		{
 			producerData->InitDataWithStoredSettings(originalProducerData);
 		}
+	}
+}
+
+void NFmiCaseStudyCategoryData::PutNoneProducerDataToEndFix()
+{
+	auto iter = std::find_if(itsProducersData.begin(), itsProducersData.end(),
+		[](const auto& producerData) {return producerData.GetProducerIdent() == 0; }
+	);
+	if(iter != itsProducersData.end())
+	{
+		// Jos löytyi ns. None producer, siirretään se listan loppuun
+		itsProducersData.splice(itsProducersData.end(), itsProducersData, iter);
 	}
 }
 
@@ -1252,8 +1284,18 @@ bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiIn
 		AddData(data);
 	}
 	InitDataWithStoredSettings(originalCategoriesData);
+	PutNoneProducerDataToEndFix();
 	Update();
 	return true;
+}
+
+// Kun data on alustettu 1. kerran, laitetaan tuntemattomien datojen (None) producer osio aina viimeiseksi kategorian listoissa.
+void NFmiCaseStudySystem::PutNoneProducerDataToEndFix()
+{
+	for(auto& categoryData : itsCategoriesData)
+	{
+		categoryData.PutNoneProducerDataToEndFix();
+	}
 }
 
 void NFmiCaseStudySystem::UpdateValuesBackToWinRegistry(NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
@@ -1477,10 +1519,9 @@ void NFmiCaseStudySystem::FillCaseStudyDialogData(NFmiProducerSystemsHolder &the
 		itsCaseStudyDialogData.push_back(&categoryData.CategoryHeaderInfo());
 		itsTreePatternArray.push_back(1); // päätaso puussa
 
-		std::vector<NFmiCaseStudyProducerData> &producersDataVec = categoryData.ProducersData();
-		for(size_t j = 0; j < producersDataVec.size(); j++)
+		auto &producersData = categoryData.ProducersData();
+		for(auto & producerData : producersData)
 		{
-			NFmiCaseStudyProducerData &producerData = producersDataVec[j];
 			std::vector<NFmiCaseStudyDataFile> &filesDataVec = producerData.FilesData();
 			bool hasOnlyOneData = filesDataVec.size() <= 1;
 			if(hasOnlyOneData == false)
@@ -2021,13 +2062,13 @@ static void StoreCategoryData(const std::string &theDataDir, const std::string &
 	{
 		bool storeLastDataOnlyCategory = theCategory.CategoryHeaderInfo().StoreLastDataOnly();
 		std::list<std::string> copyedFiles;
-		std::vector<NFmiCaseStudyProducerData> &producerDataVec = theCategory.ProducersData();
-		for(size_t i=0; i < producerDataVec.size(); i++)
+		auto &producersData = theCategory.ProducersData();
+		for(auto & producerData : producersData)
 		{
 			if(storeLastDataOnlyCategory)
-				::AddProducerDataFilesToList(categoryDir, relativeCategoryDir, producerDataVec[i], copyedFiles);
+				::AddProducerDataFilesToList(categoryDir, relativeCategoryDir, producerData, copyedFiles);
 			else
-				::StoreProducerData(categoryDir, relativeCategoryDir, producerDataVec[i], theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+				::StoreProducerData(categoryDir, relativeCategoryDir, producerData, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
 		}
 		if(storeLastDataOnlyCategory)
 			::CopyFilesToDestination(copyedFiles, categoryDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
@@ -2037,21 +2078,18 @@ static void StoreCategoryData(const std::string &theDataDir, const std::string &
 int NFmiCaseStudySystem::CalculateProgressDialogCount(void) const
 {
 	int counter = 0;
-	for(size_t i=0; i < itsCategoriesData.size(); i++)
+	for(const auto &categoryData : itsCategoriesData)
 	{
-		const NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		const std::vector<NFmiCaseStudyProducerData> &producerDataVec = categoryData.ProducersData();
-		for(size_t j=0; j < producerDataVec.size(); j++)
+		const auto &producersData = categoryData.ProducersData();
+		for(const auto & producerData : producersData)
 		{
 			bool storeLastDataOnlyCategory = categoryData.CategoryHeaderInfo().StoreLastDataOnly();
-			const NFmiCaseStudyProducerData &producerData = producerDataVec[j];
 			if(producerData.FilesData().size())
 			{
-				const std::vector<NFmiCaseStudyDataFile> &fileDataVec = producerData.FilesData();
+				const auto &fileDataVec = producerData.FilesData();
 				bool imageProducer = fileDataVec[0].ImageFile();
-				for(size_t k=0; k < fileDataVec.size(); k++)
+				for(const auto &fileData : fileDataVec)
 				{
-					const NFmiCaseStudyDataFile &fileData = fileDataVec[k];
 					if(fileData.DataFileWinRegValues().Store())
 					{
 						counter++;
@@ -2102,7 +2140,7 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 
 // Tekee nyt ladattuna olevasta caseStudy-datasta NFmiHelpDataInfoSystem -olion. Staattinen data-osio annetaan argumenttina, 
 // koska niitä ei talleteta CaseStudy-dataan.
-boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoSystem(const NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath)
+boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath)
 {
 	boost::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystem;
 	if(itsCategoriesData.size())
@@ -2114,9 +2152,30 @@ boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoS
 		helpDataInfoSystem->CacheMaxFilesPerPattern(theOriginalHelpDataInfoSystem.CacheMaxFilesPerPattern()); // tämä on otettava talteen, muuten ei lokaali CaseStudyn arkisto toimi
 
 		for(size_t i = 0; i < itsCategoriesData.size(); i++)
-			itsCategoriesData[i].AddDataToHelpDataInfoSystem(helpDataInfoSystem, theBasePath);
+			itsCategoriesData[i].AddDataToHelpDataInfoSystem(helpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
 	}
 	return helpDataInfoSystem;
+}
+
+NFmiCaseStudyDataFile* NFmiCaseStudySystem::FindCaseStudyDataFile(const std::string& theFileFilter)
+{
+	if(!theFileFilter.empty())
+	{
+		for(auto categoryData : itsCategoriesData)
+		{
+			auto& producersData = categoryData.ProducersData();
+			for(auto& producerData : producersData)
+			{
+				auto& dataFileVector = producerData.FilesData();
+				for(auto& dataFile : dataFileVector)
+				{
+					if(dataFile.FileFilter() == theFileFilter)
+						return &dataFile;
+				}
+			}
+		}
+	}
+	return nullptr;
 }
 
 std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath)
@@ -2124,17 +2183,14 @@ std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &the
 	std::string patternWithoutPath = NFmiFileSystem::FileNameFromPath(theFilePattern);
 	if(patternWithoutPath.empty() == false)
 	{
-		for(size_t i = 0; i < itsCategoriesData.size(); i++)
+		for(auto categoryData : itsCategoriesData)
 		{
-			NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-			std::vector<NFmiCaseStudyProducerData> &producerDataVector = categoryData.ProducersData();
-			for(size_t j = 0; j < producerDataVector.size(); j++)
+			auto &producersData = categoryData.ProducersData();
+			for(auto &producerData : producersData)
 			{
-				NFmiCaseStudyProducerData &producerData = producerDataVector[j];
-				std::vector<NFmiCaseStudyDataFile> &dataFileVector = producerData.FilesData();
-				for(size_t k = 0; k < dataFileVector.size(); k++)
+				auto &dataFileVector = producerData.FilesData();
+				for(auto & dataFile : dataFileVector)
 				{
-					NFmiCaseStudyDataFile &dataFile = dataFileVector[k];
 					auto pos = MacroParam::ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // tämä etsintä työ pitää tehdä case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pitää olla tarkalleen samalla lailla kirjoitettu
 					if(pos != MacroParam::ci_string_not_found)
 					{ // löytyi haluttu data, rakenna nyt siihen sopiva file-filter

@@ -150,7 +150,7 @@ public:
 	const NFmiParam& ImageParam(void) const {return itsImageParam;}
 	void ImageParam(const NFmiParam &newValue) {itsImageParam = newValue;}
 	void ParseJsonValue(json_spirit::Value &theValue);
-	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath);
+	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
 
 	bool NotifyOnLoad(void) const {return fNotifyOnLoad;}
 	void NotifyOnLoad(bool newValue) {fNotifyOnLoad = newValue;}
@@ -222,7 +222,7 @@ public:
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyProducerData &theData, bool fMakeFullStore);
 	void ParseJsonValue(json_spirit::Value &theValue);
 	void SetCategory(NFmiCaseStudyDataFile::DataCategory theCategory);
-	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath);
+	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
 	void InitDataWithStoredSettings(NFmiCaseStudyProducerData &theOriginalProducerData);
 	long GetProducerIdent() const;
 
@@ -253,16 +253,17 @@ public:
 	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
 	void ProducerDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase);
 	void CategoryDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase);
-	std::vector<NFmiCaseStudyProducerData>& ProducersData(void) {return itsProducersData;}
-	const std::vector<NFmiCaseStudyProducerData>& ProducersData(void) const {return itsProducersData;}
+	std::list<NFmiCaseStudyProducerData>& ProducersData(void) {return itsProducersData;}
+	const std::list<NFmiCaseStudyProducerData>& ProducersData(void) const {return itsProducersData;}
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyCategoryData &theData, bool fMakeFullStore);
 	void ParseJsonValue(json_spirit::Value &theValue);
 
 	NFmiCaseStudyDataFile& CategoryHeaderInfo(void) {return itsCategoryHeaderInfo;}
 	const NFmiCaseStudyDataFile& CategoryHeaderInfo(void) const {return itsCategoryHeaderInfo;}
-	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath);
+	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
 	void InitDataWithStoredSettings(NFmiCaseStudyCategoryData &theOriginalCategoryData);
 	NFmiCaseStudyProducerData* GetProducerData(unsigned long theProdId);
+	void PutNoneProducerDataToEndFix();
 
     bool operator==(const NFmiCaseStudyCategoryData &other) const;
     bool operator!=(const NFmiCaseStudyCategoryData &other) const;
@@ -272,7 +273,7 @@ private:
     void UpdateOnlyOneDataStates();
 
 	NFmiCaseStudyDataFile itsCategoryHeaderInfo;
-	std::vector<NFmiCaseStudyProducerData> itsProducersData;
+	std::list<NFmiCaseStudyProducerData> itsProducersData;
 	NFmiCaseStudyDataFile::DataCategory itsParsingCategory; // parsittaessa categori-dataa, otetaan t‰h‰n talteen yleis-kategoria, joka annetaan kaikille datoille 
 															// En talleta sit‰ NFmiCaseStudyDataFile:n json-dataan, koska halusin karsia datam‰‰r‰‰, mielest‰ni t‰m‰ on muutenkin turha, kun luetaan datoja
 };
@@ -327,7 +328,8 @@ public:
     bool AreStoredMetaDataChanged(const NFmiCaseStudySystem &other);
 	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow);
 	bool MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos); // voi heitt‰‰ CaseStudyOperationCanceledException -poikkeuksen!!!
-	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(const NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
+	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
+	NFmiCaseStudyDataFile* FindCaseStudyDataFile(const std::string& theFileFilter);
 
 	void SetUpDataLoadinInfoForCaseStudy(NFmiDataLoadingInfo &theDataLoadingInfo, const std::string &theBasePath);
 	static std::string MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName);
@@ -343,6 +345,7 @@ private:
 	void InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData> &theOriginalCategoriesData);
 	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataFile::DataCategory theCategory);
 	std::string MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath);
+	void PutNoneProducerDataToEndFix();
 
 	std::string itsName; // talletettavan case-studyn nimi
 	std::string itsInfo; // talletettavan case-studyn info
