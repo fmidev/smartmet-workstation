@@ -2157,19 +2157,17 @@ boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoS
 	return helpDataInfoSystem;
 }
 
-NFmiCaseStudyDataFile* NFmiCaseStudySystem::FindCaseStudyDataFile(const std::string& theFileFilter)
+NFmiCaseStudyDataFile* NFmiCaseStudySystem::FindCaseStudyDataFile(const std::string& theUniqueHelpDataInfoName)
 {
-	if(!theFileFilter.empty())
+	if(!theUniqueHelpDataInfoName.empty())
 	{
-		for(auto categoryData : itsCategoriesData)
+		for(auto& categoryData : itsCategoriesData)
 		{
-			auto& producersData = categoryData.ProducersData();
-			for(auto& producerData : producersData)
+			for(auto& producerData : categoryData.ProducersData())
 			{
-				auto& dataFileVector = producerData.FilesData();
-				for(auto& dataFile : dataFileVector)
+				for(auto& dataFile : producerData.FilesData())
 				{
-					if(dataFile.FileFilter() == theFileFilter)
+					if(dataFile.HelpDataInfoName() == theUniqueHelpDataInfoName)
 						return &dataFile;
 				}
 			}
