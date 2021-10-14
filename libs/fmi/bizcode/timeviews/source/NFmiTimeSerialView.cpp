@@ -2839,8 +2839,6 @@ bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 			float newAxisEndValue = (::round(maxValue/step) * step) + 3*step;
 
 	// 5. Aseta uudet arvot itsDrawParamille
-			newAxisStartValue = std::max(newAxisStartValue, static_cast<float>(itsDrawParam->AbsoluteMinValue()));
-			newAxisEndValue = std::min(newAxisEndValue, static_cast<float>(itsDrawParam->AbsoluteMaxValue()));
 			itsDrawParam->TimeSeriesScaleMin(newAxisStartValue);
 			itsDrawParam->TimeSeriesScaleMax(newAxisEndValue);
 			itsDrawParam->TimeSerialModifyingLimit(step);
