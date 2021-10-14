@@ -1015,6 +1015,8 @@ void InitCaseStudySystem(void)
 		{
 			itsCaseStudySystem.SmartMetLocalCachePath(HelpDataInfoSystem()->CacheDirectory());
 		}
+		itsCaseStudySystem.Init(*HelpDataInfoSystem(), *InfoOrganizer(), ApplicationWinRegistry().CaseStudySettingsWinRegistry());
+
         itsCaseStudySystemOrig = itsCaseStudySystem;
 	}
 	catch(std::exception &e)

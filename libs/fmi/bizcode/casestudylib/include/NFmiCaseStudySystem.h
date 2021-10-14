@@ -329,7 +329,8 @@ public:
 	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow);
 	bool MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos); // voi heitt‰‰ CaseStudyOperationCanceledException -poikkeuksen!!!
 	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
-	NFmiCaseStudyDataFile* FindCaseStudyDataFile(const std::string& theFileFilter);
+	NFmiCaseStudyDataFile* FindCaseStudyDataFile(const std::string& theUniqueHelpDataInfoName);
+	void PutNoneProducerDataToEndFix();
 
 	void SetUpDataLoadinInfoForCaseStudy(NFmiDataLoadingInfo &theDataLoadingInfo, const std::string &theBasePath);
 	static std::string MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName);
@@ -345,7 +346,6 @@ private:
 	void InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData> &theOriginalCategoriesData);
 	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataFile::DataCategory theCategory);
 	std::string MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath);
-	void PutNoneProducerDataToEndFix();
 
 	std::string itsName; // talletettavan case-studyn nimi
 	std::string itsInfo; // talletettavan case-studyn info

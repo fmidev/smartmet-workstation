@@ -297,16 +297,14 @@ void CFmiCaseStudyDlg::InitializeGridControlRelatedData()
 	if(fGridControlInitialized == false)
 	{
 		fGridControlInitialized = true;
-		auto& caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
-		caseStudySystem.Init(*(itsSmartMetDocumentInterface->HelpDataInfoSystem()), *(itsSmartMetDocumentInterface->InfoOrganizer()), itsCaseStudySettingsWinRegistry);
 		itsProducerSystemsHolder = std::make_unique<NFmiProducerSystemsHolder>();
 		itsProducerSystemsHolder->itsModelProducerSystem = &(itsSmartMetDocumentInterface->ProducerSystem());
 		itsProducerSystemsHolder->itsObsProducerSystem = &(itsSmartMetDocumentInterface->ObsProducerSystem());
 		itsProducerSystemsHolder->itsSatelImageProducerSystem = &(itsSmartMetDocumentInterface->SatelImageProducerSystem());
-		caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
 		itsGridCtrl.GetFont()->GetLogFont(&itsBoldFont); // otetaan defaultti fontti tiedot talteen
 		itsBoldFont.lfWeight = FW_BOLD; // asetetaan 'paino' bold-arvoon 
-		InitGridControlValues();
+		// CaseStudy datoihin pitää tehdä tuottaja kohtaisia päivityksiä ennen kuin ne näytetään 1. kerran
+		OnBnClickedButtonRefreshGrid();
 		// Kun dialogia alustetaan, pitää tätä kutsua kerran, koska tämä laittaa piiloon "Enable data" sarakkeen, 
 		// joka aukeaa näkyville vasta kun sen toglaava checkbox kontrollia on klikattu.
 		ShowEnableColumn();
@@ -973,6 +971,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid()
 {
     auto &caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
     caseStudySystem.UpdateNoProducerData(*itsSmartMetDocumentInterface->HelpDataInfoSystem(), *itsSmartMetDocumentInterface->InfoOrganizer());
-    caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
+	caseStudySystem.PutNoneProducerDataToEndFix();
+	caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
     InitGridControlValues();
 }

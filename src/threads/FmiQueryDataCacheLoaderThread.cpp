@@ -766,12 +766,12 @@ static int CalcMaxKeepFileCount(const NFmiHelpDataInfo &helpDataInfo, NFmiCaseSt
     NFmiInfoData::Type dataType = helpDataInfo.DataType();
     if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kSingleStationRadarData || dataType == NFmiInfoData::kTrajectoryHistoryData || dataType == NFmiInfoData::kFlashData || dataType == NFmiInfoData::kAnalyzeData)
     {
-        return 2; // näitä datatyyppeja on turhaa säilöä montaa, koska vain viimeistä niistä on järkevä käyttää
+        return 1; // näitä datatyyppeja on turhaa säilöä 1 enempää
     }
     else
     {
         auto localCacheFileCount = 3;
-        auto caseStudyDataFile = caseStudySystem.FindCaseStudyDataFile(helpDataInfo.FileNameFilter());
+        auto *caseStudyDataFile = caseStudySystem.FindCaseStudyDataFile(helpDataInfo.Name());
         if(caseStudyDataFile)
             localCacheFileCount = caseStudyDataFile->DataFileWinRegValues().LocalCacheDataCount();
         return localCacheFileCount;
