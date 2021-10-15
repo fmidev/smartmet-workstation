@@ -7,6 +7,7 @@
 #include <memory>
 #include "NFmiViewPosRegistryInfo.h"
 #include "WndResizer.h"
+#include "PPTooltip.h"
 
 class SmartMetDocumentInterface;
 class NFmiCaseStudyDataFile;
@@ -57,6 +58,15 @@ public:
 public:
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+	afx_msg void NotifyDisplayTooltip(NMHDR* pNMHDR, LRESULT* result);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	virtual BOOL OnInitDialog();
+private:
+	std::string ComposeToolTipText(const CPoint& point);
+
+	CPPToolTip m_tooltip;
 };
 
 const int kFmiDataCountEditTimer = 1;
@@ -110,6 +120,9 @@ private:
     void UpdateEditEnableDataText();
     void EnableColorCodedControls();
 	void InitDialogTexts();
+	void AdjustGridControl();
+	CRect CalcGridArea();
+	void FitNameColumnOnVisibleArea(int gridCtrlWidth);
 
 	NFmiCaseStudyGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support

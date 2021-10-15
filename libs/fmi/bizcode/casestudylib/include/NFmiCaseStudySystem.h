@@ -144,6 +144,7 @@ public:
 	void ProducerHeader(bool newValue) {fProducerHeader = newValue;}
 	bool OnlyOneData(void) const {return fOnlyOneData;}
 	void OnlyOneData(bool newValue) {fOnlyOneData = newValue;}
+	bool IsReadOnlyData() const;
 
 	const std::string& ImageAreaStr(void) const {return itsImageAreaStr;}
 	void ImageAreaStr(const std::string &newValue) {itsImageAreaStr = newValue;}

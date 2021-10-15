@@ -202,7 +202,7 @@ int NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(NFmiInfoData
     case NFmiInfoData::kSingleStationRadarData:
         return 1;
     case NFmiInfoData::kSatelData:
-        return 30;
+        return 10;
     default:
         return 0;
     }
