@@ -724,6 +724,9 @@ protected:
     int         m_nHeaderHeight, m_nFooterHeight, m_nLeftMargin,
                 m_nRightMargin, m_nTopMargin, m_nBottomMargin, m_nGap;
 
+    // CaseStudy dialogi tapauksessa halutaan että CGridCtrl::OnEndEditCell metodi
+    // sallii muutos signaalit vaikka kentän arvo ei muuttuisikaan.
+    BOOL m_bAllowNonChangingEdit_Marko = FALSE;
 protected:
     void SelectAllCells();
     void SelectColumns(CCellID currentCell, BOOL bForceRedraw=FALSE, BOOL bSelectCells=TRUE);
@@ -803,6 +806,7 @@ public:
 	void SetLayer(int* pLayer); // coming from a previous GetLayer (ignored if not same number of column, or the same revision number)
 	void ForceQuitFocusOnTab(bool b=true) { m_QuitFocusOnTab = b;} // use only if GetParent() is a CDialog
 	void AllowSelectRowInFixedCol(bool b=true) { m_AllowSelectRowInFixedCol = b;} // 
+    void AllowNonChangingEdit_Marko(BOOL newValue) { m_bAllowNonChangingEdit_Marko = newValue; }
 //    allow acces?
 	intlist m_arRowOrder, m_arColOrder;
 	static CGridCtrl* m_This;

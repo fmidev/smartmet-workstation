@@ -544,6 +544,16 @@ bool NFmiCaseStudyDataFile::StoreLastDataOnly(void) const
 	return itsDataFileWinRegValues.CaseStudyDataCount() == 1 && itsDataFileWinRegValues.FixedValueForCaseStudyDataCount();
 }
 
+bool NFmiCaseStudyDataFile::IsReadOnlyData() const
+{
+	if(StoreLastDataOnly())
+		return true;
+	if(itsDataType == NFmiInfoData::kSatelData)
+		return true;
+
+	return false;
+}
+
 static void DoFinalSetupsFromOriginalHelpDataInfo(NFmiHelpDataInfo& currentHelpDataInfo, const std::string &currentFileFilter, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	auto helpDataInfo = theOriginalHelpDataInfoSystem.FindHelpDataInfo(currentFileFilter);
@@ -713,17 +723,25 @@ void NFmiCaseStudyProducerData::ProducerEnable(NFmiHelpDataInfoSystem &theDataIn
 
 void NFmiCaseStudyProducerData::ProducerDataCount(int theDataCount, bool theCaseStudyCase)
 {
-	if(theCaseStudyCase)
-		ProducerHeaderInfo().DataFileWinRegValues().CaseStudyDataCount(theDataCount);
-	else
-		ProducerHeaderInfo().DataFileWinRegValues().LocalCacheDataCount(theDataCount);
-
-	for(size_t i = 0; i < itsFilesData.size(); i++)
+	if(!ProducerHeaderInfo().IsReadOnlyData())
 	{
+		// Ei sallita alle 1:n lukuja. Jos ei halua tallettaa dataa CaseStudy pakettiin, laitetaan Store -optio falseksi.
+		// Ja jos ei halua säilyttää data tiedostoja lokaali cachessa ollenkaan, laitetaan Enable data - optio falseksi.
+		if(theDataCount < 1)
+			theDataCount = 1;
+
 		if(theCaseStudyCase)
-			itsFilesData[i].DataFileWinRegValues().CaseStudyDataCount(theDataCount);
+			ProducerHeaderInfo().DataFileWinRegValues().CaseStudyDataCount(theDataCount);
 		else
-			itsFilesData[i].DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+			ProducerHeaderInfo().DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+
+		for(size_t i = 0; i < itsFilesData.size(); i++)
+		{
+			if(theCaseStudyCase)
+				itsFilesData[i].DataFileWinRegValues().CaseStudyDataCount(theDataCount);
+			else
+				itsFilesData[i].DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+		}
 	}
 }
 
@@ -1031,8 +1049,7 @@ void NFmiCaseStudyCategoryData::ProducerDataCount(unsigned long theProdId, int t
 	{
 		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
 		{
-			if(theCaseStudyCase)
-				producerData.ProducerDataCount(theDataCount, theCaseStudyCase);
+			producerData.ProducerDataCount(theDataCount, theCaseStudyCase);
 		}
 	}
 	Update(theProdId, theCaseStudySystem);
@@ -1040,16 +1057,19 @@ void NFmiCaseStudyCategoryData::ProducerDataCount(unsigned long theProdId, int t
 
 void NFmiCaseStudyCategoryData::CategoryDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase)
 {
-	if(theCaseStudyCase)
-		itsCategoryHeaderInfo.DataFileWinRegValues().CaseStudyDataCount(theDataCount);
-	else
-		itsCategoryHeaderInfo.DataFileWinRegValues().LocalCacheDataCount(theDataCount);
-
-	for(auto& producerData : itsProducersData)
+	if(!itsCategoryHeaderInfo.IsReadOnlyData())
 	{
-		producerData.ProducerDataCount(theDataCount, theCaseStudyCase);
+		if(theCaseStudyCase)
+			itsCategoryHeaderInfo.DataFileWinRegValues().CaseStudyDataCount(theDataCount);
+		else
+			itsCategoryHeaderInfo.DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+
+		for(auto& producerData : itsProducersData)
+		{
+			producerData.ProducerDataCount(theDataCount, theCaseStudyCase);
+		}
+		Update(theCaseStudySystem);
 	}
-	Update(theCaseStudySystem);
 }
 
 json_spirit::Object NFmiCaseStudyCategoryData::MakeJsonObject(const NFmiCaseStudyCategoryData &theData, bool fMakeFullStore)
@@ -1228,14 +1248,15 @@ static void SetCategoryHeaderInfoValues(NFmiCaseStudyCategoryData &theCategory, 
 
 static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const NFmiHelpDataInfo& info, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
 {
-	NFmiCsDataFileWinReg dataValues;
+	const int defaultModelDataCaseStudyCount = NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(info.DataType());
+	const int defaultModelLocalCacheCount = NFmiCaseStudySettingsWinRegistry::GetDefaultLocalCacheCountValue(info.DataType());
+	bool fixedValueForCaseStudyCount = defaultModelDataCaseStudyCount <= 1;
+	bool fixedValueForLocalCacheCount = defaultModelLocalCacheCount <= 1;
 	const auto& uniqueDataName = info.Name();
-	dataValues.CaseStudyDataCount(theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyCount(uniqueDataName));
-	dataValues.LocalCacheDataCount(theCaseStudySettingsWinRegistry.GetHelpDataLocalCacheCount(uniqueDataName));
-	dataValues.Store(theCaseStudySettingsWinRegistry.GetStoreDataState(uniqueDataName));
-	::DoCsDataFileWinRegValuesInitializingChecks(dataValues);
-
-	return dataValues;
+	int caseStudyDataCount = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyCount(uniqueDataName);
+	int localCacheDataCount = theCaseStudySettingsWinRegistry.GetHelpDataLocalCacheCount(uniqueDataName);
+	bool store = theCaseStudySettingsWinRegistry.GetStoreDataState(uniqueDataName);
+	return NFmiCsDataFileWinReg(caseStudyDataCount, fixedValueForCaseStudyCount, localCacheDataCount, fixedValueForLocalCacheCount, store);
 }
 
 bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)

@@ -19,6 +19,8 @@
 #include <boost/math/special_functions/round.hpp>
 #include "execute-command-in-separate-process.h"
 
+static const int CASE_STUDY_DIALOG_TOOLTIP_ID = 1234383;
+
 static const COLORREF gFixedBkColor = RGB(239, 235, 222);
 const double gMegaByteSize = 1024*1024;
 
@@ -34,7 +36,19 @@ IMPLEMENT_DYNCREATE(NFmiCaseStudyGridCtrl, CGridCtrl)
 
 BEGIN_MESSAGE_MAP(NFmiCaseStudyGridCtrl, CGridCtrl)
 	ON_WM_RBUTTONUP()
+	ON_WM_SIZE()
+	ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
 END_MESSAGE_MAP()
+
+BOOL NFmiCaseStudyGridCtrl::OnInitDialog()
+{
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CASE_STUDY_DIALOG_TOOLTIP_ID);
+	m_tooltip.SetMaxTipWidth(600);
+	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
+	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1000); // kuinka nopeasti tooltip ilmestyy n‰kyviin, jos kursoria ei liikuteta [ms]
+
+	return TRUE;
+}
 
 void NFmiCaseStudyGridCtrl::OnRButtonUp(UINT nFlags, CPoint point)
 {
@@ -44,6 +58,108 @@ void NFmiCaseStudyGridCtrl::OnRButtonUp(UINT nFlags, CPoint point)
 	SetSelectedRange(-1,-1,-1,-1, TRUE, TRUE);
 }
 
+BOOL NFmiCaseStudyGridCtrl::PreTranslateMessage(MSG* pMsg)
+{
+	m_tooltip.RelayEvent(pMsg);
+
+	return CGridCtrl::PreTranslateMessage(pMsg);
+}
+
+void NFmiCaseStudyGridCtrl::OnSize(UINT nType, int cx, int cy)
+{
+	CGridCtrl::OnSize(nType, cx, cy);
+
+	static bool firstTime = true;
+	if(firstTime)
+	{
+		OnInitDialog();
+		firstTime = false;
+	}
+
+	CRect rect;
+	GetClientRect(rect);
+	m_tooltip.SetToolRect(this, CASE_STUDY_DIALOG_TOOLTIP_ID, rect);
+}
+
+void NFmiCaseStudyGridCtrl::NotifyDisplayTooltip(NMHDR* pNMHDR, LRESULT* result)
+{
+	*result = 0;
+	NM_PPTOOLTIP_DISPLAY* pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
+
+	if(pNotify->ti->nIDTool == CASE_STUDY_DIALOG_TOOLTIP_ID)
+	{
+		CPoint pt = *pNotify->pt;
+		ScreenToClient(&pt);
+
+		CString strU_;
+
+		try
+		{
+			strU_ = CA2T(ComposeToolTipText(pt).c_str());
+		}
+		catch(std::exception& e)
+		{
+			strU_ = _TEXT("Error while making the tooltip string:\n");
+			strU_ += CA2T(e.what());
+		}
+		catch(...)
+		{
+			strU_ = _TEXT("Error (unknown) while making the tooltip string");
+		}
+
+		pNotify->ti->sTooltip = strU_;
+
+	}
+}
+
+std::string NFmiCaseStudyGridCtrl::ComposeToolTipText(const CPoint& point)
+{
+	CCellID idCurrentCell = GetCellFromPt(point);
+	if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount()
+		&& idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
+	{
+/*
+		int rowNumber = idCurrentCell.row;
+		AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData().at(rowNumber - 1);
+		std::vector<AddParams::SingleRowItem> singleRowItemVector = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData();
+		auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+		auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
+		auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
+		auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
+
+		if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
+		{
+			return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+		}
+		else if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItem.itemName() == "Operational data")
+		{
+			return TooltipForCategoryType();
+		}
+		else if(singleRowItem.rowType() == AddParams::RowType::kDataType)
+		{
+			return TooltipForDataType(singleRowItem);
+		}
+		else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
+		{
+			return TooltipForProducerType(singleRowItem, fastQueryInfoVector, producerInfo);
+		}
+		else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kCategoryType)
+		{
+			return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+		}
+		// Pelk‰lle parametrille ei en‰ ‰tehd‰ tooltippi‰, koska siin‰ ei ole en‰‰ mit‰‰n uutta tietoa (interpolaatio), 
+		// mutta tooltipin esille pomppaaminen h‰iritsee parametrin tupla-klik valintaa.
+		//else if(IsParameterType(singleRowItem.rowType()))
+		//{
+		//    return TooltipForParameterType(singleRowItem);
+		//}
+		else
+			return "";
+*/
+	}
+
+	return std::string("Parameter Selection");
+}
 
 static double ConvertToMB(double theFileSizeInBytes)
 {
@@ -289,7 +405,61 @@ void CFmiCaseStudyDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
 
-//	AdjustDialogControls();
+	AdjustGridControl();
+}
+
+void CFmiCaseStudyDlg::AdjustGridControl()
+{
+	if(fGridControlInitialized)
+	{
+		CRect gridControlRect = CalcGridArea();
+		FitNameColumnOnVisibleArea(gridControlRect.Width());
+	}
+}
+
+CRect CFmiCaseStudyDlg::CalcGridArea()
+{
+	CRect clientRect;
+	GetClientRect(clientRect);
+	CWnd* win = GetDlgItem(IDC_CUSTOM_GRID_CASE_STUDY);
+	if(win)
+	{
+		CRect rect2;
+		win->GetWindowRect(rect2);
+		CPoint pt(rect2.BottomRight());
+		ScreenToClient(&pt);
+		clientRect.top = clientRect.top + pt.y + 2;
+	}
+	return clientRect;
+}
+
+#ifdef max
+#undef max
+#endif
+
+void CFmiCaseStudyDlg::FitNameColumnOnVisibleArea(int gridCtrlWidth)
+{
+	if(itsGridCtrl.GetColumnCount())
+	{
+		int otherColumnsCombinedWidth = 0;
+		for(auto columnIndex = 0; columnIndex <= itsGridCtrl.GetColumnCount(); columnIndex++)
+		{
+			// Skipataan ModelName column
+			if(columnIndex != CaseStudyHeaderParInfo::kModelName)
+			{
+				CRect cellRect;
+				itsGridCtrl.GetCellRect(0, columnIndex, cellRect);
+				otherColumnsCombinedWidth += cellRect.Width();
+			}
+		}
+
+		// Calculate new width for name column so that it will fill the client area
+		// Total width (gridCtrlWidth) - otherColumnsCombinedWidth - some value (60) that represents the width of the vertical scroll control
+		int newNameColumnWidth = gridCtrlWidth - otherColumnsCombinedWidth - 60;
+		// Let's make sure that last column isn't shrinken too much
+		newNameColumnWidth = std::max(newNameColumnWidth, 120);
+		itsGridCtrl.SetColumnWidth(CaseStudyHeaderParInfo::kModelName, newNameColumnWidth);
+	}
 }
 
 void CFmiCaseStudyDlg::InitializeGridControlRelatedData()
@@ -303,6 +473,7 @@ void CFmiCaseStudyDlg::InitializeGridControlRelatedData()
 		itsProducerSystemsHolder->itsSatelImageProducerSystem = &(itsSmartMetDocumentInterface->SatelImageProducerSystem());
 		itsGridCtrl.GetFont()->GetLogFont(&itsBoldFont); // otetaan defaultti fontti tiedot talteen
 		itsBoldFont.lfWeight = FW_BOLD; // asetetaan 'paino' bold-arvoon 
+		itsGridCtrl.AllowNonChangingEdit_Marko(TRUE);
 		// CaseStudy datoihin pit‰‰ tehd‰ tuottaja kohtaisia p‰ivityksi‰ ennen kuin ne n‰ytet‰‰n 1. kerran
 		OnBnClickedButtonRefreshGrid();
 		// Kun dialogia alustetaan, pit‰‰ t‰t‰ kutsua kerran, koska t‰m‰ laittaa piiloon "Enable data" sarakkeen, 
@@ -949,6 +1120,7 @@ void CFmiCaseStudyDlg::ShowEnableColumn()
     UpdateRows(1, 1, true);
     itsGridCtrl.EnableHiddenColUnhide(FALSE);
     UpdateEditEnableDataText();
+	AdjustGridControl();
 	UpdateData(FALSE);
 	Invalidate(FALSE);
 }
