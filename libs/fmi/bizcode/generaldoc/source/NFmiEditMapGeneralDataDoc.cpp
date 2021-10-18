@@ -2160,15 +2160,22 @@ void NormalizeGridDataArea(NFmiQueryData* theData)
 	}
 }
 
-int GetMaxLatestDataCount(NFmiInfoData::Type theType, const std::string &theFileNameFilter)
+// CaseStudy systeemi tietää nykyään kuinka monta tiedostoa halutaan säilyttää lokaaleissa 
+// cache hakemistoissa.
+// HUOM! maxLatestDataCount on lukuna yhden pienempi kuin LocalCacheDataCount, joten se pitää vähentää.
+int GetMaxLatestDataCount(NFmiInfoData::Type theType, const std::string& theFileNameFilter)
 {
 	int maxLatestDataCount = 0;
-	if(NFmiDrawParam::IsModelRunDataType(theType))
+	auto* helpDataInfo = HelpDataInfoSystem()->FindHelpDataInfo(theFileNameFilter);
+	if(helpDataInfo)
 	{
-		maxLatestDataCount = HelpDataInfoSystem()->CacheMaxFilesPerPattern();
-		NFmiHelpDataInfo *hInfo = HelpDataInfoSystem()->FindHelpDataInfo(theFileNameFilter);
-		if(hInfo)
-			maxLatestDataCount += hInfo->AdditionalArchiveFileCount();
+		auto* caseStudyDataInfo = CaseStudySystem().FindCaseStudyDataFile(helpDataInfo->Name());
+		if(caseStudyDataInfo)
+		{
+			maxLatestDataCount = caseStudyDataInfo->DataFileWinRegValues().LocalCacheDataCount() - 1;
+			if(maxLatestDataCount < 0)
+				maxLatestDataCount = 0;
+		}
 	}
 
 	return maxLatestDataCount;

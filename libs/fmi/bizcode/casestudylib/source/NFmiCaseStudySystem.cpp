@@ -1400,6 +1400,8 @@ void NFmiCaseStudySystem::UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataIn
 	{
         categoryData.UpdateNoProducerData(theDataInfoSystem, theInfoOrganizer);
     }
+	Update();
+	PutNoneProducerDataToEndFix();
 }
 
 // updeittaa halutun kategorian halutun tuottajien data koot ja paivitt‰‰ omat totalSize ja maxSize-koot
@@ -2170,7 +2172,6 @@ boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoS
 		helpDataInfoSystem = boost::shared_ptr<NFmiHelpDataInfoSystem>(new NFmiHelpDataInfoSystem());
 		for(size_t i = 0; i < staticHelpDataInfos.size(); i++)
 			helpDataInfoSystem->AddStatic(staticHelpDataInfos[i]);
-		helpDataInfoSystem->CacheMaxFilesPerPattern(theOriginalHelpDataInfoSystem.CacheMaxFilesPerPattern()); // t‰m‰ on otettava talteen, muuten ei lokaali CaseStudyn arkisto toimi
 
 		for(size_t i = 0; i < itsCategoriesData.size(); i++)
 			itsCategoriesData[i].AddDataToHelpDataInfoSystem(helpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);

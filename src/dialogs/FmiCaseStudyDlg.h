@@ -65,6 +65,7 @@ public:
 	virtual BOOL OnInitDialog();
 private:
 	std::string ComposeToolTipText(const CPoint& point);
+	bool IsEnableDataColumnVisible() const;
 
 	CPPToolTip m_tooltip;
 };
