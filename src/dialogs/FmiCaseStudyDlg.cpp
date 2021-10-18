@@ -15,22 +15,158 @@
 #include "FmiWin32Helpers.h"
 #include "persist2.h"
 #include "HakeMessage/Main.h"
+#include "NFmiValueString.h"
+#include "CtrlViewFunctions.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include "execute-command-in-separate-process.h"
 
-static const int CASE_STUDY_DIALOG_TOOLTIP_ID = 1234383;
-
-static const COLORREF gFixedBkColor = RGB(239, 235, 222);
-const double gMegaByteSize = 1024*1024;
-
-static const std::string gEditEnableDataCheckControlOffStr = "Edit Enable Data";
-static const std::string gEditEnableDataCheckControlOnStr = "Edit Enable Data (MUST restart SmartMet to take changes in use)";
-
 namespace
 {
+	const int CASE_STUDY_DIALOG_TOOLTIP_ID = 1234383;
+
+	const COLORREF gFixedBkColor = RGB(239, 235, 222);
+	const double gMegaByteSize = 1024 * 1024;
+
+	const std::string gEditEnableDataCheckControlOffStr = "Edit Enable Data";
+	const std::string gEditEnableDataCheckControlOnStr = "Edit Enable Data (MUST restart SmartMet to take changes in use)";
+
 	const NFmiApplicationDataBase::AppSpyData gCaseStudyMakerData("CaseStudyExe.exe", false); // false = ei olla kiinnostuneita ohjelman versiosta
-}
+
+	const std::string g_GridCtrlHeaderName1 = "Row";
+	const std::string g_GridCtrlHeaderName2 = "Name";
+	const std::string g_GridCtrlHeaderName3 = "ProdId";
+	const std::string g_GridCtrlHeaderName4 = "Store";
+	const std::string g_GridCtrlHeaderName5 = "CS CNT";
+	const std::string g_GridCtrlHeaderName6 = "LC CNT";
+	const std::string g_GridCtrlHeaderName7 = "Enable Data";
+	const std::string g_GridCtrlHeaderName8 = "File(s) size [MB]";
+
+	std::string g_GridCtrlHeaderNameExplanation3 = "(= Producer Id)";
+	std::string g_GridCtrlHeaderNameExplanation4 = "(= store data to Case-study package)";
+	std::string g_GridCtrlHeaderNameExplanation5 = "(= Case Study data file Count)";
+	std::string g_GridCtrlHeaderNameExplanation6 = "(= Local Cache data file Count)";
+	std::string g_GridCtrlHeaderNameExplanation7 = "(= is this data used by SmartMet at all)";
+	std::string g_GridCtrlHeaderNameExplanation7_2 = "(= is this data used by SmartMet at all, now hidden)";
+	std::string g_GridCtrlHeaderNameExplanation8 = "(= estimate of total data size in stored Case-study)";
+
+	std::string GetProducerIdString(const NFmiCaseStudyDataFile& rowData)
+	{
+		if(rowData.CategoryHeader())
+			return "-";
+		else
+			return std::to_string(rowData.Producer().GetIdent());
+	}
+
+	std::string GetRowExplanationString(const NFmiCaseStudyDataFile& rowData)
+	{
+		if(rowData.CategoryHeader())
+			return "(= Category line)";
+		else if(rowData.ProducerHeader())
+			return "(= Producer line)";
+		else
+			return "(= Data file line)";
+	}
+
+	double ConvertToMB(double theFileSizeInBytes)
+	{
+		return theFileSizeInBytes / gMegaByteSize;
+	}
+
+	std::string GetMegaByteSizeString(double theSizeInMB)
+	{
+		double rounder = 1;
+		if(theSizeInMB < 1)
+			rounder = 0.01;
+		else if(theSizeInMB < 10)
+			rounder = 0.1;
+
+		theSizeInMB = ::round(theSizeInMB / rounder) * rounder;
+		if(theSizeInMB > 20)
+			return std::to_string(boost::math::iround(theSizeInMB));
+		else if(theSizeInMB > 2)
+			return std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(theSizeInMB, 1));
+		else if(theSizeInMB > 0.2)
+			return std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(theSizeInMB, 2));
+		else
+			return std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(theSizeInMB, 3));
+	}
+
+	bool IsHeaderRow(const NFmiCaseStudyDataFile& theCaseData)
+	{
+		if(theCaseData.CategoryHeader() == true || theCaseData.ProducerHeader() == true)
+			return true;
+		else
+			return false;
+	}
+
+	// Sizi column string on seuraavanlainen:
+	// 1. Category/producer -headerit:
+	// Tot=xx.x Max=yy.y
+	// 2. normaali data:
+	// Tot=xx.x 1=yy.y
+	// 3. normaali data jos store=false:
+	// (Tot=xx.x 1=yy.y)
+	// 4. normaali data, jossa vain viim. data talletetaan:
+	// 1=yy.y
+	// 5. normaali data, jossa vain viim. data talletetaan, mutta store=false:
+	// (1=yy.y)
+	std::string GetSizeColumnString(const NFmiCaseStudyDataFile& theCaseData)
+	{
+		size_t tabLineCount = 8; // yritin laittaa tabulaattorin stringiin joka annetaan hila ruutuun, mutta se ignoorataan jotenkin
+							  // joten yrit‰n itse laskea mist‰ kohtaa alkaa sulku lause, niin ett‰ ne alkaisivat tasaisesti taulukossa
+		std::string str;
+		if(::IsHeaderRow(theCaseData))
+		{
+			str += "Tot=";
+			str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.TotalFileSize()));
+			str += "   Max=";
+			str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.MaxFileSize()));
+		}
+		else
+		{
+			bool dontStoreData = (theCaseData.DataFileWinRegValues().Store() == false); // huom! sulut tulee vain jos ollaan tavallisen datan kohdassa, ei headerien
+			if(dontStoreData)
+				str += "(";
+			if(theCaseData.StoreLastDataOnly())
+			{
+				str += "1=";
+				str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.SingleFileSize()));
+			}
+			else
+			{
+				str += "Tot=";
+				str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.TotalFileSize()));
+				str += "   1=";
+				str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.SingleFileSize()));
+			}
+
+			if(dontStoreData)
+				str += ")";
+		}
+		return str;
+	}
+
+	std::string GetColoredBoldTextForTooltip(const std::string& text, bool useBold, bool useColor, const NFmiColor& color)
+	{
+		std::string str;
+		if(useBold)
+			str += "<b>";
+		if(useColor)
+		{
+			str += "<font color=";
+			str += CtrlViewUtils::Color2HtmlColorStr(color);
+			str += ">";
+		}
+		str += text;
+		if(useColor)
+			str += "</font>";
+		if(useBold)
+			str += "</b>";
+		return str;
+	}
+
+} // nameless namespace
 
 IMPLEMENT_DYNCREATE(NFmiCaseStudyGridCtrl, CGridCtrl)
 
@@ -112,58 +248,68 @@ void NFmiCaseStudyGridCtrl::NotifyDisplayTooltip(NMHDR* pNMHDR, LRESULT* result)
 	}
 }
 
+bool NFmiCaseStudyGridCtrl::IsEnableDataColumnVisible() const
+{
+	return GetColumnWidth(CaseStudyHeaderParInfo::kEnableData) > 0;
+}
+
 std::string NFmiCaseStudyGridCtrl::ComposeToolTipText(const CPoint& point)
 {
+	std::string str;
 	CCellID idCurrentCell = GetCellFromPt(point);
 	if(idCurrentCell.row >= this->GetFixedRowCount() && idCurrentCell.row < this->GetRowCount()
 		&& idCurrentCell.col >= this->GetFixedColumnCount() && idCurrentCell.col < this->GetColumnCount())
 	{
-/*
-		int rowNumber = idCurrentCell.row;
-		AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData().at(rowNumber - 1);
-		std::vector<AddParams::SingleRowItem> singleRowItemVector = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData();
-		auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
-		auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
-		auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
-		auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
+		const auto& caseStudyDialogData = SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->CaseStudySystem().CaseStudyDialogData();
+		auto actualRowIndex = idCurrentCell.row - GetFixedRowCount();
+		if(actualRowIndex < caseStudyDialogData.size())
+		{
+			NFmiColor headerNameColor(0, 0.67f, 0);
+			NFmiColor explanationTextColor(1, 0, 0);
+			NFmiColor valueTextColor(0, 0, 1);
+			const auto& rowData = caseStudyDialogData[actualRowIndex];
 
-		if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
-		{
-			return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName1, true, true, headerNameColor) + ": ";
+			str += ::GetColoredBoldTextForTooltip(std::to_string(idCurrentCell.row), true, true, valueTextColor);
+			str += "<br>";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName2, true, true, headerNameColor) + " ";
+			str += ::GetColoredBoldTextForTooltip(::GetRowExplanationString(*rowData), true, true, explanationTextColor) + ": ";
+			str += ::GetColoredBoldTextForTooltip(rowData->Name(), true, true, valueTextColor);
+			str += "<br><hr color=darkblue><br>";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName3, true, true, headerNameColor) + " ";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderNameExplanation3, true, true, explanationTextColor) + ": ";
+			str += ::GetColoredBoldTextForTooltip(GetProducerIdString(*rowData), true, true, valueTextColor);
+			str += "<br>";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName4, true, true, headerNameColor) + " ";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderNameExplanation4, true, true, explanationTextColor) + ": ";
+			str += ::GetColoredBoldTextForTooltip(rowData->DataFileWinRegValues().Store() ? "On" : "Off", true, true, valueTextColor);
+			str += "<br>";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName5, true, true, headerNameColor) + " ";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderNameExplanation5, true, true, explanationTextColor) + ": ";
+			str += ::GetColoredBoldTextForTooltip(std::to_string(rowData->DataFileWinRegValues().CaseStudyDataCount()), true, true, valueTextColor);
+			str += "<br>";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName6, true, true, headerNameColor) + " ";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderNameExplanation6, true, true, explanationTextColor) + ": ";
+			str += ::GetColoredBoldTextForTooltip(std::to_string(rowData->DataFileWinRegValues().LocalCacheDataCount()), true, true, valueTextColor);
+			str += "<br>";
+			auto enableDataColumnVisible = IsEnableDataColumnVisible();
+			auto useBoldFontForEnableData = enableDataColumnVisible;
+			if(!enableDataColumnVisible)
+				str += "(";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName7, useBoldFontForEnableData, true, headerNameColor) + " ";
+			str += ::GetColoredBoldTextForTooltip(enableDataColumnVisible ? g_GridCtrlHeaderNameExplanation7 : g_GridCtrlHeaderNameExplanation7_2, useBoldFontForEnableData, true, explanationTextColor) + ": ";
+			str += ::GetColoredBoldTextForTooltip(rowData->DataEnabled() ? "On" : "Off", useBoldFontForEnableData, true, valueTextColor);
+			if(!enableDataColumnVisible)
+				str += ")";
+			str += "<br>";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName8, true, true, headerNameColor) + " ";
+			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderNameExplanation8, true, true, explanationTextColor) + ": ";
+			str += "<br>";
+			str += ::GetColoredBoldTextForTooltip(::GetSizeColumnString(*rowData), true, true, valueTextColor);
 		}
-		else if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItem.itemName() == "Operational data")
-		{
-			return TooltipForCategoryType();
-		}
-		else if(singleRowItem.rowType() == AddParams::RowType::kDataType)
-		{
-			return TooltipForDataType(singleRowItem);
-		}
-		else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
-		{
-			return TooltipForProducerType(singleRowItem, fastQueryInfoVector, producerInfo);
-		}
-		else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kCategoryType)
-		{
-			return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
-		}
-		// Pelk‰lle parametrille ei en‰ ‰tehd‰ tooltippi‰, koska siin‰ ei ole en‰‰ mit‰‰n uutta tietoa (interpolaatio), 
-		// mutta tooltipin esille pomppaaminen h‰iritsee parametrin tupla-klik valintaa.
-		//else if(IsParameterType(singleRowItem.rowType()))
-		//{
-		//    return TooltipForParameterType(singleRowItem);
-		//}
-		else
-			return "";
-*/
 	}
 
-	return std::string("Parameter Selection");
-}
-
-static double ConvertToMB(double theFileSizeInBytes)
-{
-	return theFileSizeInBytes/gMegaByteSize;
+	return str;
 }
 
 static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<CaseStudyHeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
@@ -194,14 +340,14 @@ void CFmiCaseStudyDlg::InitHeaders()
 {
 	int basicColumnWidthUnit = 18;
 	itsHeaders.clear();
-	itsHeaders.push_back(CaseStudyHeaderParInfo("Row", CaseStudyHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit*2.5)));
-    itsHeaders.push_back(CaseStudyHeaderParInfo("Name", CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 18));
-    itsHeaders.push_back(CaseStudyHeaderParInfo("ProdId", CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 4));
-	itsHeaders.push_back(CaseStudyHeaderParInfo("Store", CaseStudyHeaderParInfo::kStoreData, basicColumnWidthUnit*3));
-    itsHeaders.push_back(CaseStudyHeaderParInfo("CS CNT", CaseStudyHeaderParInfo::kCaseStudyDataCount, boost::math::iround(basicColumnWidthUnit * 4.)));
-    itsHeaders.push_back(CaseStudyHeaderParInfo("LC CNT", CaseStudyHeaderParInfo::kLocalCacheDataCount, boost::math::iround(basicColumnWidthUnit * 4.)));
-    itsHeaders.push_back(CaseStudyHeaderParInfo("Enable Data", CaseStudyHeaderParInfo::kEnableData, basicColumnWidthUnit*5)); // sijoita t‰m‰ indeksille CaseStudyHeaderParInfo::kEnableData
-    itsHeaders.push_back(CaseStudyHeaderParInfo("File(s) size [MB]", CaseStudyHeaderParInfo::kDataSize, boost::math::iround(basicColumnWidthUnit * 10.)));
+	itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName1, CaseStudyHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit*2.5)));
+    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName2, CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 18));
+    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName3, CaseStudyHeaderParInfo::kProducerId, basicColumnWidthUnit * 4));
+	itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName4, CaseStudyHeaderParInfo::kStoreData, basicColumnWidthUnit*3));
+    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName5, CaseStudyHeaderParInfo::kCaseStudyDataCount, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName6, CaseStudyHeaderParInfo::kLocalCacheDataCount, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName7, CaseStudyHeaderParInfo::kEnableData, basicColumnWidthUnit*5)); // sijoita t‰m‰ indeksille CaseStudyHeaderParInfo::kEnableData
+    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName8, CaseStudyHeaderParInfo::kDataSize, boost::math::iround(basicColumnWidthUnit * 11.)));
 }
 
 const NFmiViewPosRegistryInfo CFmiCaseStudyDlg::s_ViewPosRegistryInfo(CRect(150, 250, 670, 800), "\\CaseStudyDialog");
@@ -511,81 +657,6 @@ void CFmiCaseStudyDlg::OnClose()
 	CDialog::OnClose();
 }
 
-static std::string GetMegaByteSizeString(double theSizeInMB)
-{
-	double rounder = 1;
-	if(theSizeInMB < 1)
-		rounder = 0.01;
-	else if(theSizeInMB < 10)
-		rounder = 0.1;
-
-	theSizeInMB = ::round(theSizeInMB/rounder)*rounder;
-	return NFmiStringTools::Convert(theSizeInMB);
-}
-
-static bool IsHeaderRow(const NFmiCaseStudyDataFile &theCaseData)
-{
-	if(theCaseData.CategoryHeader() == true || theCaseData.ProducerHeader() == true)
-		return true;
-	else
-		return false;
-}
-
-// Sizi column string on seuraavanlainen:
-// 1. Category/producer -headerit:
-// Tot=xx.x Max=yy.y
-// 2. normaali data:
-// Tot=xx.x 1=yy.y
-// 3. normaali data jos store=false:
-// (Tot=xx.x 1=yy.y)
-// 4. normaali data, jossa vain viim. data talletetaan:
-// 1=yy.y
-// 5. normaali data, jossa vain viim. data talletetaan, mutta store=false:
-// (1=yy.y)
-static std::string GetSizeColumnString(const NFmiCaseStudyDataFile &theCaseData)
-{
-	size_t tabLineCount = 8; // yritin laittaa tabulaattorin stringiin joka annetaan hila ruutuun, mutta se ignoorataan jotenkin
-						  // joten yrit‰n itse laskea mist‰ kohtaa alkaa sulku lause, niin ett‰ ne alkaisivat tasaisesti taulukossa
-	std::string str;
-	if(::IsHeaderRow(theCaseData))
-	{
-		str += "Tot=";
-		str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.TotalFileSize()));
-		str += "   Max=";
-		str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.MaxFileSize()));
-	}
-	else
-	{
-		bool dontStoreData = (theCaseData.DataFileWinRegValues().Store() == false); // huom! sulut tulee vain jos ollaan tavallisen datan kohdassa, ei headerien
-		if(dontStoreData)
-			str += "(";
-		if(theCaseData.StoreLastDataOnly())
-		{
-			str += "1=";
-			str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.SingleFileSize()));
-		}
-		else
-		{
-			str += "Tot=";
-			str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.TotalFileSize()));
-			str += "   1=";
-			str += ::GetMegaByteSizeString(::ConvertToMB(theCaseData.SingleFileSize()));
-		}
-
-		if(dontStoreData)
-			str += ")";
-	}
-	return str;
-}
-
-static std::string GetProducerIdString(const NFmiCaseStudyDataFile &theCaseData)
-{
-    if(theCaseData.CategoryHeader())
-        return ""; // Categories don't have specific producer id.
-    else
-        return NFmiStringTools::Convert(theCaseData.Producer().GetIdent());
-}
-
 static std::string GetDataCountStr(int theDataCount)
 {
 	return std::to_string(theDataCount);
@@ -641,6 +712,7 @@ static const COLORREF gCategoryBkColor = RGB(250, 220, 220);
 static const COLORREF gProducerBkColor = RGB(220, 250, 220);
 static const COLORREF gOneDataBkColor = RGB(240, 240, 255);
 static const COLORREF gDisabledDataBkColor = RGB(170, 170, 170); // disabloitujen datojen rivi v‰riksi harmaa
+static const COLORREF gLocalCacheColumnColor = RGB(255, 255, 150);
 
 static void SetCellFont(CGridCtrl &theGridCtrl, int row, int col, const NFmiCaseStudyDataFile &theCaseData, LOGFONT *theBoldFont)
 {
@@ -659,26 +731,28 @@ static void SetCellFont(CGridCtrl &theGridCtrl, int row, int col, const NFmiCase
 		theGridCtrl.SetItemFont(row, col, NULL);
 }
 
-void CFmiCaseStudyDlg::SetGridRow(int row, const NFmiCaseStudyDataFile &theCaseData, int theFixedColumnCount, bool updateOnly)
+void CFmiCaseStudyDlg::SetGridRow(int row, const NFmiCaseStudyDataFile& theCaseData, int theFixedColumnCount, bool updateOnly)
 {
 	for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
 	{
-        if(!updateOnly)
-    		::SetCellFont(itsGridCtrl, row, column, theCaseData, &itsBoldFont);
+		if(!updateOnly)
+			::SetCellFont(itsGridCtrl, row, column, theCaseData, &itsBoldFont);
 		bool dataDisabled = theCaseData.DataEnabled() == false;
 		bool readOnlyCell = ::IsReadOnlyCell(column, theCaseData);
-        itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theCaseData).c_str()));
+		itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theCaseData).c_str()));
 		if(column >= theFixedColumnCount)
 		{
 			if(column != CaseStudyHeaderParInfo::kEnableData)
-            {
-			    if(readOnlyCell || dataDisabled)
-				    itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY); // Laita read-only -bitti p‰‰lle
-                else
-				    itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) & ~GVIS_READONLY); // Laita read-only -bitti pois p‰‰lt‰
-            }
+			{
+				if(readOnlyCell || dataDisabled)
+					itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY); // Laita read-only -bitti p‰‰lle
+				else
+					itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) & ~GVIS_READONLY); // Laita read-only -bitti pois p‰‰lt‰
+			}
 
-			if(dataDisabled)
+			if(column == CaseStudyHeaderParInfo::kLocalCacheDataCount)
+				itsGridCtrl.SetItemBkColour(row, column, gLocalCacheColumnColor);
+			else if(dataDisabled)
 				itsGridCtrl.SetItemBkColour(row, column, gDisabledDataBkColor);
 			else if(theCaseData.CategoryHeader())
 				itsGridCtrl.SetItemBkColour(row, column, gCategoryBkColor);
@@ -689,23 +763,23 @@ void CFmiCaseStudyDlg::SetGridRow(int row, const NFmiCaseStudyDataFile &theCaseD
 			else
 				itsGridCtrl.SetItemBkColour(row, column, gNormalBkColor);
 
-            if(column == CaseStudyHeaderParInfo::kStoreData)
+			if(column == CaseStudyHeaderParInfo::kStoreData)
 			{
-                if(!updateOnly)
-				    itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
-				CGridCellCheck *pTempCell = (CGridCellCheck*) itsGridCtrl.GetCell(row, column);
+				if(!updateOnly)
+					itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
+				CGridCellCheck* pTempCell = (CGridCellCheck*)itsGridCtrl.GetCell(row, column);
 				pTempCell->SetCheck(theCaseData.DataFileWinRegValues().Store());
-                if(!updateOnly)
-    				pTempCell->SetCheckBoxClickedCallback(boost::bind(&CFmiCaseStudyDlg::HandleCheckBoxClick, this, _1, _2));
+				if(!updateOnly)
+					pTempCell->SetCheckBoxClickedCallback(boost::bind(&CFmiCaseStudyDlg::HandleCheckBoxClick, this, _1, _2));
 			}
-            else if(column == CaseStudyHeaderParInfo::kEnableData)
+			else if(column == CaseStudyHeaderParInfo::kEnableData)
 			{
-                if(!updateOnly)
-    				itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
-				CGridCellCheck *pTempCell = (CGridCellCheck*) itsGridCtrl.GetCell(row, column);
-                pTempCell->SetCheck(theCaseData.DataEnabled()); 
-                if(!updateOnly)
-    				pTempCell->SetCheckBoxClickedCallback(boost::bind(&CFmiCaseStudyDlg::HandleEnableDataCheckBoxClick, this, _1, _2));
+				if(!updateOnly)
+					itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
+				CGridCellCheck* pTempCell = (CGridCellCheck*)itsGridCtrl.GetCell(row, column);
+				pTempCell->SetCheck(theCaseData.DataEnabled());
+				if(!updateOnly)
+					pTempCell->SetCheckBoxClickedCallback(boost::bind(&CFmiCaseStudyDlg::HandleEnableDataCheckBoxClick, this, _1, _2));
 			}
 		}
 	}
