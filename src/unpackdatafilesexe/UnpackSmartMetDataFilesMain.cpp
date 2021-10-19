@@ -174,6 +174,7 @@ int main(int argc, const char* argv[])
     return 1; // virheellinen ulostulo
 } 
 
+
 /*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
@@ -187,6 +188,7 @@ int main(int argc, const char* argv[])
 #include <fstream>
 #include <thread>
 #include "boost\algorithm\string\replace.hpp"
+#include "boost/filesystem.hpp"
 
 static std::string MakeNextSubDirectoryPath(const std::string& currentDirectory, const std::string& subDirectoryName)
 {
@@ -231,43 +233,95 @@ std::unique_ptr<NFmiQueryData> CreateChangedQueryData(NFmiFastQueryInfo& sourceF
 }
 
 // Timestampissa pitää olla 12 numeroa peräkkäin, jotka on eroteltu muista nimen osista '_' merkillä.
-static std::string MakeChangedTimeStampFilePath(std::string filePath, int changeTimesByHour)
+// Palautetaan pair, jossa korjattu polku string:ina ja uuden aikaleiman aika NFmiMetTime:na.
+static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::string filePath, int changeTimesByHour)
 {
+    NFmiStaticTime usedTime = NFmiMetTime::gMissingTime;
+    NFmiStaticTime usedTimeWithDDHHMMss_mask = NFmiMetTime::gMissingTime;
     std::string newFilePath = filePath;
     NFmiFileString fileString(filePath);
     std::string fileNameWithoutExtension = fileString.Header();
     auto fileNameParts = NFmiStringTools::Split(fileNameWithoutExtension, "_");
     for(auto fileNamePart : fileNameParts)
     {
-        if(fileNamePart.size() == 12)
+        try
         {
-            try
+            // Katsotaan voidaanko fileNamePart konvertoida numeroksi. Jos voidaan, silloin tarkastellaan
+            // kuinka eripituisista timestampeista voisi rakentaa ajan
+            double tmpValue = NFmiStringTools::Convert<double>(fileNamePart);
+            NFmiTime aTime;
+            auto fileNamePartSize = fileNamePart.size();
+            if(fileNamePartSize == 12 || fileNamePartSize == 14)
             {
-                double tmpValue = NFmiStringTools::Convert<double>(fileNamePart);
-                // Jos poikkeusta ei heitetty, oli kyse 12 numerosta, joista tehdään nyt mettime olio
-                NFmiMetTime aTime;
-                aTime.FromStr(fileNamePart, kYYYYMMDDHHMM);
+                auto usedTimeMask = (fileNamePartSize == 12) ? kYYYYMMDDHHMM : kYYYYMMDDHHMMSS;
+                aTime.FromStr(fileNamePart, usedTimeMask);
+                // Valitettavasti ChangeByHours aina nolla sekunnit väkisin
+                auto currentSeconds = aTime.GetSec();
                 aTime.ChangeByHours(changeTimesByHour);
-                std::string newTimeStamp = aTime.ToStr(kYYYYMMDDHHMM);
+                aTime.SetSec(currentSeconds);
+                std::string newTimeStamp = aTime.ToStr(usedTimeMask);
                 boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
+                usedTime = aTime;
+                break; // lopetetaan kun on löytynyt 1. kunnon aikaleima tiedostonimestä
             }
-            catch(...)
-            { }
+            else if(fileNamePartSize == 8)
+            {
+                // Oletus maski on muotoa DDHHmmSS (näin ainakin smartmet_roadmodel_skandinavia -tiedostoissa),
+                // valitettavasti se ei toimi oikein FromStr metodin kanssa ja tässä pitää tehdä erillistä kikkailua.
+                auto YYYYMMstr = aTime.ToStr("YYYYMM");
+                auto totalTimeString = YYYYMMstr + fileNamePart;
+                aTime.FromStr(totalTimeString, kYYYYMMDDHHMMSS);
+                // Valitettavasti ChangeByHours aina nolla sekunnit väkisin
+                auto currentSeconds = aTime.GetSec();
+                aTime.ChangeByHours(changeTimesByHour);
+                aTime.SetSec(currentSeconds);
+                std::string newTimeStamp = aTime.ToStr("DDHHmmSS");
+                boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
+                if(usedTimeWithDDHHMMss_mask == NFmiMetTime::gMissingTime)
+                    usedTimeWithDDHHMMss_mask = aTime;
+            }
+        }
+        catch(...)
+        {
         }
     }
-    return newFilePath;
+
+    if(usedTime == NFmiMetTime::gMissingTime)
+        return std::make_pair(newFilePath, usedTimeWithDDHHMMss_mask);
+    else
+        return std::make_pair(newFilePath, usedTime);
 }
 
-static void StoreParallerQueryData(NFmiQueryData& newQueryData, const std::string& queryDataFilePath)
+static time_t MakeTimeT(const NFmiStaticTime& newModifiedTime)
+{
+    struct tm timeStruct;
+    timeStruct.tm_sec = newModifiedTime.GetSec();
+    timeStruct.tm_min = newModifiedTime.GetMin();
+    timeStruct.tm_hour = newModifiedTime.GetHour();
+    timeStruct.tm_mday = newModifiedTime.GetDay();
+    timeStruct.tm_mon = newModifiedTime.GetMonth() - 1;     // tm months start from 0
+    timeStruct.tm_year = newModifiedTime.GetYear() - 1900;  // tm years start from 1900
+    timeStruct.tm_wday = -1;
+    timeStruct.tm_yday = -1;
+    timeStruct.tm_isdst = -1;
+
+    return ::mktime(&timeStruct);
+}
+
+static void StoreParallerQueryData(NFmiQueryData& newQueryData, const std::string& queryDataFilePath, const NFmiStaticTime & newModifiedTime)
 {
     newQueryData.Write(queryDataFilePath);
+    // Muutetaan luodun tiedoston modified time annetun ajan mukaiseksi
+    boost::filesystem::path boostPath = queryDataFilePath;
+    boost::filesystem::last_write_time(boostPath, ::MakeTimeT(newModifiedTime));
 }
 
 static void DoQueryDataWork(const std::string& queryDataFileName, const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
 {
     auto queryDataFileSourcePath = ::MakeNextSubDirectoryPath(currentDirectory, queryDataFileName);
     auto parallerQueryDataFileSourcePath = ::MakeNextSubDirectoryPath(parallerDirectory, queryDataFileName);
-    parallerQueryDataFileSourcePath = ::MakeChangedTimeStampFilePath(parallerQueryDataFileSourcePath, changeTimesByHour);
+    auto responsePair = ::MakeChangedTimeStampFilePath(parallerQueryDataFileSourcePath, changeTimesByHour);
+    parallerQueryDataFileSourcePath = responsePair.first;
     try
     {
         std::cerr << "Doing queryData file " << queryDataFileSourcePath << std::endl;
@@ -275,7 +329,7 @@ static void DoQueryDataWork(const std::string& queryDataFileName, const std::str
         NFmiFastQueryInfo sourceFastInfo(&sourceData);
         auto newQueryData = ::CreateChangedQueryData(sourceFastInfo, changeTimesByHour);
         if(newQueryData)
-            ::StoreParallerQueryData(*newQueryData, parallerQueryDataFileSourcePath);
+            ::StoreParallerQueryData(*newQueryData, parallerQueryDataFileSourcePath, responsePair.second);
         else
             std::cerr << "Error: couldn't create newQueryData from " << queryDataFileSourcePath << std::endl;
     }
@@ -288,24 +342,11 @@ static void DoQueryDataWork(const std::string& queryDataFileName, const std::str
 
 static void DoFilesOnDirectory(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
 {
-    static NFmiNanoSecondTimer timer;
     // Tiedostot tulevat aikajärjestyksessä vanhimmasta uusimpaan, johtuen tiedostonimissä olevista aikaleimoista.
     auto files = NFmiFileSystem::DirectoryFiles(currentDirectory);
     for(const auto& queryDataFileName : files)
     {
         ::DoQueryDataWork(queryDataFileName, currentDirectory, parallerDirectory, changeTimesByHour);
-        auto elapsedTimeInSeconds = timer.elapsedTimeInSeconds();
-        const double minimumFileProcessTimeInSeconds = 1.5;
-        if(minimumFileProcessTimeInSeconds > elapsedTimeInSeconds)
-        {
-            // Odotetaan jokaisen tiedoston välillä niin että väliä on vähintäin 1.5 sekuntia, tällöin jokainen
-            // luotu tiedosto saa oman luomishetki sekunnin, ja tällöin smartmet saa luettavakseen eri malliajo tiedostot
-            // oikeassa aikajärjestyksessä.
-            auto sleepForMilliSecondsAmount = boost::math::iround((minimumFileProcessTimeInSeconds - elapsedTimeInSeconds) * 1000);
-            std::cerr << "Waiting for a " << sleepForMilliSecondsAmount << " ms" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleepForMilliSecondsAmount));
-        }
-        timer.restart();
     }
 }
 
