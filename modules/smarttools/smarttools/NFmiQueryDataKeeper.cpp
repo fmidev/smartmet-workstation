@@ -333,7 +333,7 @@ bool NFmiQueryDataSetKeeper::DoOnDemandOldDataLoad(int theIndex)
 {
   std::string traceLogMessage;
   auto doTraceLogging = ::IsTraceLoggingUsed();
-  if (::abs(theIndex) >= itsMaxLatestDataCount)  // ei yritetä hakea liian vanhoja datoja
+  if (::abs(theIndex) > itsMaxLatestDataCount)  // ei yritetä hakea liian vanhoja datoja
   {
     if (doTraceLogging)
     {
