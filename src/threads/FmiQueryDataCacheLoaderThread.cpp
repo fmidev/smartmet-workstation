@@ -679,10 +679,12 @@ static void StartHistoryLoaderThreadOnce(const std::string &theThreadName)
 static std::string DeletedFilesStr(const std::list<std::string> &theDeletedFiles)
 {
 	std::string str;
-	for(std::list<std::string>::const_iterator it = theDeletedFiles.begin(); it != theDeletedFiles.end(); ++it)
+	for(auto filePath : theDeletedFiles)
 	{
-		str += *it;
-		str += "\n";
+        if(!str.empty())
+            str += "\n";
+        boost::replace_all(filePath, "\\/", "\\");
+		str += filePath;
 	}
 	return str;
 }
@@ -720,9 +722,9 @@ void CleanFilePattern(const std::string &theFilePattern, int theKeepMaxFiles)
 		{
 			std::string logStr("CFmiQueryDataCacheLoaderThread - CleanFilePattern: ");
 			logStr += theFilePattern;
-			logStr += ", keep-max-files: ";
+			logStr += ",\n keep-max-files: ";
 			logStr += NFmiStringTools::Convert(theKeepMaxFiles);
-			logStr += "\nDeleted files:\n";
+			logStr += ",\n Deleted files: \n";
 			logStr += ::DeletedFilesStr(deletedFiles);
 			CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
 		}

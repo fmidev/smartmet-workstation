@@ -38,6 +38,8 @@ private:
     void DoResizerHooking(void);
     void DoSuccessReport();
 	void DoMessageCopyOperations(const std::string &theActualCaseStudyDataDirectory);
+	bool CheckForStoreMessagesOption(const std::string& theCommandLineOption);
+	bool CheckForCropDataAreaOption(const std::string& theCommandLineOption);
 
 	std::string itsSimpleCommandLineStr;
 	std::string itsMetaFileName;
@@ -47,6 +49,7 @@ private:
 	// T‰ss‰ on mahdollisesti HAKE sanomien file-filter absoluuttisen polun kanssa lainausmerkeiss‰ (jotta spacet ei polussa h‰iritse), esim:
 	// "D:\SmartMet\Dropbox (FMI)\data_FMI\HAKE\*.json"
 	std::string itsHakeMessagesFileFilterPath;
+	std::string itsCropDataAreaString;
 	NFmiCaseStudySystem itsCaseStudySystem;
 	UINT itsStartOperationTimer; // k‰ynnistet‰‰n OnInitDialog:in lopuksi timer, joka laukaisee halutun toiminnan initialisoinnin lopuksi pienell‰ viiveell‰ (ett‰ dialogi on varmasti alustettu)
     CWndResizer m_resizer;
