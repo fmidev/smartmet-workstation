@@ -15,6 +15,8 @@
 #include "NFmiMacroParamfunctions.h"
 #include "NFmiPathUtils.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "NFmiQueryData.h"
+#include "NFmiQueryDataUtil.h"
 
 #include "boost/shared_ptr.hpp"
 #include <boost/filesystem/operations.hpp>
@@ -563,6 +565,8 @@ static void DoFinalSetupsFromOriginalHelpDataInfo(NFmiHelpDataInfo& currentHelpD
 		currentHelpDataInfo.ModelRunTimeGapInHours(helpDataInfo->ModelRunTimeGapInHours());
 		currentHelpDataInfo.TimeInterpolationRangeInMinutes(helpDataInfo->TimeInterpolationRangeInMinutes());
 		currentHelpDataInfo.AllowCombiningToSurfaceDataInSoundingView(helpDataInfo->AllowCombiningToSurfaceDataInSoundingView());
+		if(currentHelpDataInfo.Name().empty())
+			currentHelpDataInfo.Name(helpDataInfo->Name());
 	}
 }
 
@@ -571,7 +575,7 @@ void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHe
 	NFmiHelpDataInfo helpDataInfo;
 	helpDataInfo.FileNameFilter(theBasePath + RelativeStoredFileFilter(), true); // true = fiksataan filefilter--polku
 	helpDataInfo.DataType(itsDataType);
-	helpDataInfo.Name(Name());
+	helpDataInfo.Name(HelpDataInfoName());
 	helpDataInfo.NotifyOnLoad(NotifyOnLoad());
 	helpDataInfo.NotificationLabel(NotificationLabel());
 	helpDataInfo.CustomMenuFolder(CustomMenuFolder());
@@ -1214,6 +1218,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
 ,itsTime()
 ,fZipFiles()
 ,fStoreWarningMessages()
+,fCropDataToZoomedMapArea()
 ,fDeleteTmpFiles(true)
 ,fApproximateOnlyLocalDataSize(true)
 ,itsCategoriesData()
@@ -1226,6 +1231,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
     itsCaseStudyPath = ::CreateRegValue<CachedRegString>(baseRegistryPath, sectionName, "\\CaseStudyPath", usedKey, "D:\\data\\case");
     fZipFiles = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\ZipFiles", usedKey, true);
 	fStoreWarningMessages = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\StoreWarningMessages", usedKey, true);
+	fCropDataToZoomedMapArea = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\CropDataToZoomedMapArea", usedKey, false);
 }
 
 NFmiCaseStudySystem::~NFmiCaseStudySystem(void)
@@ -1905,6 +1911,186 @@ static std::string GetRelativeDataDirectory(const std::string &theDataDir)
 		return "";
 }
 
+static double DoFixesToGridPointValue(double value, bool horizontalCase, const NFmiGrid& dataGrid)
+{
+	auto bottomLeftGridPoint = dataGrid.FirstGridPoint();
+	auto topRightGridPoint = dataGrid.LastGridPoint();
+	if(horizontalCase)
+	{
+		if(value < bottomLeftGridPoint.X())
+			return bottomLeftGridPoint.X();
+		if(value > topRightGridPoint.X())
+			return topRightGridPoint.X();
+	}
+	else
+	{
+		if(value < bottomLeftGridPoint.Y())
+			return bottomLeftGridPoint.Y();
+		if(value > topRightGridPoint.Y())
+			return topRightGridPoint.Y();
+	}
+
+	return value;
+}
+
+static std::pair<NFmiRect, NFmiGrid> CalcPossibleCropGrid(NFmiAreaFactory::return_type& mapViewArea, const NFmiGrid& dataGrid)
+{
+	auto gridPointBottomLeft = dataGrid.LatLonToGrid(mapViewArea->BottomLeftLatLon());
+	auto gridPointBottomRight = dataGrid.LatLonToGrid(mapViewArea->BottomRightLatLon());
+	auto gridPointTopLeft = dataGrid.LatLonToGrid(mapViewArea->TopLeftLatLon());
+	auto gridPointTopRight = dataGrid.LatLonToGrid(mapViewArea->TopRightLatLon());
+	auto left = std::floor(gridPointBottomLeft.X());
+	left = ::DoFixesToGridPointValue(left, true, dataGrid);
+	auto bottom = std::floor(gridPointBottomLeft.Y());
+	bottom = ::DoFixesToGridPointValue(bottom, false, dataGrid);
+	auto right = std::ceil(gridPointTopRight.X());
+	right = ::DoFixesToGridPointValue(right, true, dataGrid);
+	auto top = std::ceil(gridPointTopRight.Y());
+	top = ::DoFixesToGridPointValue(top, false, dataGrid);
+	auto width = (right - left) + 1;
+	auto height = (top - bottom) + 1;
+	auto croppedGridPointArea = width * height;
+	auto dataGridArea = static_cast<double>(dataGrid.XNumber() * dataGrid.YNumber());
+	auto croppedToOrigGridAreaRatio = croppedGridPointArea / dataGridArea;
+	if(croppedToOrigGridAreaRatio > 0 && croppedToOrigGridAreaRatio < 0.8)
+	{
+		NFmiPoint croppedBottomLeftGridPoint(left, bottom);
+		NFmiPoint croppedTopRightGridPoint(right, top);
+		auto croppedBottomLeftLatlonPoint = dataGrid.GridToLatLon(croppedBottomLeftGridPoint);
+		auto croppedTopRightLatlonPoint = dataGrid.GridToLatLon(croppedTopRightGridPoint);
+		auto newCroppedArea = dataGrid.Area()->CreateNewArea(croppedBottomLeftLatlonPoint, croppedTopRightLatlonPoint);
+		if(newCroppedArea)
+		{
+			NFmiRect cropGridPointRect(left, top, right, bottom);
+			NFmiGrid croppedGrid(newCroppedArea, static_cast<unsigned long>(width), static_cast<unsigned long>(height));
+			return std::make_pair(cropGridPointRect, croppedGrid);
+		}
+	}
+
+	return std::make_pair(NFmiRect(), NFmiGrid());
+}
+
+static std::unique_ptr<NFmiQueryData> CreateCroppedQueryData(NFmiFastQueryInfo &sourceFastInfo, const NFmiRect& croppedGridRect, const NFmiGrid& croppedGrid)
+{
+	NFmiHPlaceDescriptor hplaceDescriptor(croppedGrid);
+	NFmiQueryInfo croppedMetaInfo(sourceFastInfo.ParamDescriptor(), sourceFastInfo.TimeDescriptor(), hplaceDescriptor, sourceFastInfo.VPlaceDescriptor());
+	std::unique_ptr<NFmiQueryData> croppedQueryData(NFmiQueryDataUtil::CreateEmptyData(croppedMetaInfo));
+	if(croppedQueryData)
+	{
+		NFmiFastQueryInfo croppedFastInfo(croppedQueryData.get());
+		int x1 = static_cast<int>(croppedGridRect.Left());
+		int x2 = static_cast<int>(croppedGridRect.Right());
+		int y1 = static_cast<int>(croppedGridRect.Top());
+		int y2 = static_cast<int>(croppedGridRect.Bottom());
+		for(sourceFastInfo.ResetParam(), croppedFastInfo.ResetParam(); sourceFastInfo.NextParam() && croppedFastInfo.NextParam();)
+		{
+			for(sourceFastInfo.ResetLevel(), croppedFastInfo.ResetLevel(); sourceFastInfo.NextLevel() && croppedFastInfo.NextLevel();)
+			{
+				for(sourceFastInfo.ResetTime(), croppedFastInfo.ResetTime(); sourceFastInfo.NextTime() && croppedFastInfo.NextTime();)
+				{
+					NFmiDataMatrix<float> matrix;
+					sourceFastInfo.CroppedValues(matrix, x1, y1, x2, y2);
+					croppedFastInfo.SetValues(matrix);
+				}
+			}
+		}
+	}
+	return croppedQueryData;
+}
+
+static bool IsAnyAreaCornersInsideOtherArea(const NFmiArea* theArea1, const NFmiArea* theArea2)
+{
+	if(theArea1 && theArea2)
+	{
+		if(theArea2->IsInside(theArea1->BottomLeftLatLon()))
+			return true;
+		if(theArea2->IsInside(theArea1->BottomRightLatLon()))
+			return true;
+		if(theArea2->IsInside(theArea1->TopLeftLatLon()))
+			return true;
+		if(theArea2->IsInside(theArea1->TopRightLatLon()))
+			return true;
+	}
+	return false;
+}
+
+static bool AreAreasOverlapping(const NFmiArea* theArea1, const NFmiArea* theArea2)
+{
+	if(theArea1 && theArea2)
+	{
+		if(::IsAnyAreaCornersInsideOtherArea(theArea1, theArea2))
+			return true;
+		if(::IsAnyAreaCornersInsideOtherArea(theArea2, theArea1))
+			return true;
+	}
+	return false;
+}
+
+static bool CropDataToDestination(const std::string& filePath, const std::string& theDestDir, NFmiAreaFactory::return_type& mapViewArea)
+{
+	try
+	{
+		NFmiQueryData sourceData(filePath);
+		NFmiFastQueryInfo sourceFastInfo(&sourceData);
+		if(sourceFastInfo.IsGrid())
+		{
+			if(NFmiQueryDataUtil::AreAreasSameKind(sourceFastInfo.Area(), mapViewArea.get()))
+			{
+				auto cropRectAndGrid = ::CalcPossibleCropGrid(mapViewArea, *sourceFastInfo.Grid());
+				if(cropRectAndGrid.first.Width())
+				{
+					auto croppedQueryData = ::CreateCroppedQueryData(sourceFastInfo, cropRectAndGrid.first, cropRectAndGrid.second);
+					if(croppedQueryData)
+					{
+						NFmiFileString fileString(filePath);
+						std::string destFilePath = theDestDir + '\\';
+						destFilePath += fileString.FileName();
+						croppedQueryData->Write(destFilePath);
+						return true;
+					}
+				}
+			}
+
+			if(!::AreAreasOverlapping(sourceFastInfo.Area(), mapViewArea.get()))
+			{
+				// Jos kartan ja datan alueet eiv‰t ole p‰‰llekk‰in mill‰‰n tavalla, palautetaan t‰ss‰ true, jotta 
+				// kyseist‰ dataa ei talleteta 'turhaan' case-studyyn.
+				// Esimerkkitapaus: 
+				// Maailmadatasta tehd‰‰n Australian alueelle caseStudy-data. Kartalla on latlon-projektio.
+				// Halutaan ett‰ euro-alueen stereograafiset (hirlam jne.) datat j‰‰v‰t pois.
+				return true;
+			}
+		}
+	}
+	catch(...)
+	{
+	}
+	return false;
+}
+
+static std::list<std::string> DoCropDataToZoomedAreaOperations(const std::list<std::string>& theCopyedFiles, const std::string& theDestDir, const std::string& theCropDataAreaString)
+{
+	std::list<std::string> remainingFiles = theCopyedFiles;
+	if(!theCropDataAreaString.empty())
+	{
+		try
+		{
+			auto mapViewArea = NFmiAreaFactory::Create(theCropDataAreaString);
+			if(mapViewArea)
+			{
+				for(const auto &filePath : theCopyedFiles)
+				{
+					if(CropDataToDestination(filePath, theDestDir, mapViewArea))
+						remainingFiles.remove(filePath);
+				}
+			}
+		}
+		catch(...)
+		{ }
+	}
+	return remainingFiles;
+}
+
 
 #ifdef CopyFile // winkkari makro pit‰‰ disabloida ensin ennen kuin voi k‰ytt‰‰ NFmiFileSystem:in FileCopy-funktiota
 #undef CopyFile
@@ -1912,15 +2098,18 @@ static std::string GetRelativeDataDirectory(const std::string &theDataDir)
 
 // 1. kopioi annetut tiedostot theDestDir-hakemistoon.
 // 2. Pit‰‰kˆ muokata NFmiCaseStudyDataFile:en uusi suhteellinen polku, ett‰ myˆhemmin sit‰ voidaan k‰ytt‰‰ kun dataa ladataan katsottavaksi?
-static void CopyFilesToDestination(const std::list<std::string> &theCopyedFiles, const std::string &theDestDir, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void CopyFilesToDestination(const std::list<std::string> &theCopyedFiles, const std::string &theDestDir, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
-	if(theCopyedFiles.size() == 0)
+	auto remainingCopyedFiles = theCopyedFiles;
+	if(!theCropDataAreaString.empty())
+		remainingCopyedFiles = ::DoCropDataToZoomedAreaOperations(remainingCopyedFiles, theDestDir, theCropDataAreaString);
+	if(remainingCopyedFiles.size() == 0)
 		return ;
 
 	CShellFileOp sfo;
 	BOOL bAPICalled = FALSE;
 	int nAPIReturnVal = 0;
-	for(std::list<std::string>::const_iterator it = theCopyedFiles.begin(); it != theCopyedFiles.end(); ++it)
+	for(std::list<std::string>::const_iterator it = remainingCopyedFiles.begin(); it != remainingCopyedFiles.end(); ++it)
 	{
         sfo.AddSourceFile(CA2T((*it).c_str()));
 	}
@@ -1996,7 +2185,7 @@ static std::string GetDataFileDir(const std::string &theBaseDir, NFmiCaseStudyDa
 	return usedDir;
 }
 
-static void StoreFileData(const std::string &theProducerDir, const std::string &theRelativeProducerDir, NFmiCaseStudyDataFile &theDataFile, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void StoreFileData(const std::string &theProducerDir, const std::string &theRelativeProducerDir, NFmiCaseStudyDataFile &theDataFile, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	std::string usedDestDir = ::GetDataFileDir(theProducerDir, theDataFile);
 	std::string usedRelativeDestDir = ::GetDataFileDir(theRelativeProducerDir, theDataFile);
@@ -2007,7 +2196,7 @@ static void StoreFileData(const std::string &theProducerDir, const std::string &
 	if(NFmiFileSystem::CreateDirectory(usedDestDir))
 	{
 		std::list<std::string> copyedFiles = ::GetWantedFileList(theDataFile);
-		::CopyFilesToDestination(copyedFiles, usedDestDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+		::CopyFilesToDestination(copyedFiles, usedDestDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 	}
 }
 
@@ -2041,7 +2230,7 @@ static std::string GetProducerDir(const std::string &theBaseDir, NFmiCaseStudyPr
 	return producerDir;
 }
 
-static void StoreProducerData(const std::string &theCategoryDir, const std::string &theRelativeCategoryDir, NFmiCaseStudyProducerData &theProducerData, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void StoreProducerData(const std::string &theCategoryDir, const std::string &theRelativeCategoryDir, NFmiCaseStudyProducerData &theProducerData, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	std::string producerDir = ::GetProducerDir(theCategoryDir, theProducerData);
 	std::string relativeProducerDir = ::GetProducerDir(theRelativeCategoryDir, theProducerData);
@@ -2057,7 +2246,7 @@ static void StoreProducerData(const std::string &theCategoryDir, const std::stri
 			{
 				if(dataFile.ImageFile())
 				{
-					::StoreFileData(producerDir, relativeProducerDir, dataFile, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+					::StoreFileData(producerDir, relativeProducerDir, dataFile, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 					imageFiles = true;
 				}
 				else
@@ -2065,7 +2254,7 @@ static void StoreProducerData(const std::string &theCategoryDir, const std::stri
 			}
 		}
 		if(imageFiles == false)
-			::CopyFilesToDestination(copyedFiles, producerDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+			::CopyFilesToDestination(copyedFiles, producerDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 	}
 }
 
@@ -2077,7 +2266,7 @@ static std::string GetCategoryDir(const std::string &theBaseDir, NFmiCaseStudyCa
 	return categoryDir;
 }
 
-static void StoreCategoryData(const std::string &theDataDir, const std::string &theRelativeDataDir, NFmiCaseStudyCategoryData &theCategory, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void StoreCategoryData(const std::string &theDataDir, const std::string &theRelativeDataDir, NFmiCaseStudyCategoryData &theCategory, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	std::string categoryDir = ::GetCategoryDir(theDataDir, theCategory);
 	std::string relativeCategoryDir = ::GetCategoryDir(theRelativeDataDir, theCategory);
@@ -2091,10 +2280,10 @@ static void StoreCategoryData(const std::string &theDataDir, const std::string &
 			if(storeLastDataOnlyCategory)
 				::AddProducerDataFilesToList(categoryDir, relativeCategoryDir, producerData, copyedFiles);
 			else
-				::StoreProducerData(categoryDir, relativeCategoryDir, producerData, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+				::StoreProducerData(categoryDir, relativeCategoryDir, producerData, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 		}
 		if(storeLastDataOnlyCategory)
-			::CopyFilesToDestination(copyedFiles, categoryDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+			::CopyFilesToDestination(copyedFiles, categoryDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 	}
 }
 
@@ -2138,7 +2327,7 @@ storeLastDataOnlyBailOut: ;
 // 5. Tee image datoille viel‰ jokaiselle parametrille oma hakemisto
 // 6. Kopioi halutut datat omiin hakemistoihinha annetuista poluista annetuilla fileFiltereill‰ ja aikav‰lill‰
 // HUOM! Voi heitt‰‰ CaseStudyOperationCanceledException -poikkeuksen!!!
-bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos)
+bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	if(ReadMetaData(theFullPathMetaDataFileName, theParentWindow))
 	{
@@ -2149,7 +2338,7 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 		if(NFmiFileSystem::CreateDirectory(dataDir))
 		{
 			for(size_t i=0; i < itsCategoriesData.size(); i++)
-				::StoreCategoryData(dataDir, relativeDataDir, itsCategoriesData[i], progressDialogMaxCount, progressCounter, theCopyWindowPos);
+				::StoreCategoryData(dataDir, relativeDataDir, itsCategoriesData[i], progressDialogMaxCount, progressCounter, theCopyWindowPos, theCropDataAreaString);
 		}
 
 		// TODO pit‰‰kˆ metadata tallettaa nyt uusilla poluilla?
@@ -2279,6 +2468,16 @@ bool NFmiCaseStudySystem::StoreWarningMessages(void) const
 void NFmiCaseStudySystem::StoreWarningMessages(bool newValue)
 {
 	*fStoreWarningMessages = newValue;
+}
+
+bool NFmiCaseStudySystem::CropDataToZoomedMapArea(void) const
+{
+	return *fCropDataToZoomedMapArea;
+}
+
+void NFmiCaseStudySystem::CropDataToZoomedMapArea(bool newValue)
+{
+	*fCropDataToZoomedMapArea = newValue;
 }
 
 // ************************************************************

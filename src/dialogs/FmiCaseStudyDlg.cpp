@@ -17,6 +17,7 @@
 #include "HakeMessage/Main.h"
 #include "NFmiValueString.h"
 #include "CtrlViewFunctions.h"
+#include "NFmiGdiPlusImageMapHandler.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include "execute-command-in-separate-process.h"
@@ -458,12 +459,14 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
     // Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
 	std::string errorBaseStr("Error in CFmiCaseStudyDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
+
     auto &caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
 	itsNameStrU_ = CA2T(caseStudySystem.Name().c_str());
     itsInfoStrU_ = CA2T(caseStudySystem.Info().c_str());
     itsPathStrU_ = CA2T(caseStudySystem.CaseStudyPath().c_str());
 	fZipData = caseStudySystem.ZipFiles();
 	fStoreWarningMessages = caseStudySystem.StoreWarningMessages();
+	fCropDataToZoomedMapArea = caseStudySystem.CropDataToZoomedMapArea();
 
 	UpdateButtonStates();
     UpdateEditEnableDataText();
@@ -1009,6 +1012,7 @@ void CFmiCaseStudyDlg::GetBasicInfoFromDialog()
 
 	caseStudySystem.ZipFiles(fZipData == TRUE);
 	caseStudySystem.StoreWarningMessages(fStoreWarningMessages == TRUE);
+	caseStudySystem.CropDataToZoomedMapArea(fCropDataToZoomedMapArea == TRUE);
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
@@ -1047,6 +1051,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
         commandStr += "\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
 		commandStr += AddPossibleZippingOptions();
 		commandStr += AddPossibleHakeMessageOptions();
+		commandStr += AddPossibleCropDataToZoomedMapAreaOptions();
 
         CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, SW_MINIMIZE);
     }
@@ -1083,6 +1088,25 @@ std::string CFmiCaseStudyDlg::AddPossibleHakeMessageOptions() const
 		storeMessagesOptions += itsSmartMetDocumentInterface->WarningCenterSystem().getHakeMessageAbsoluteFileFilter();
 		storeMessagesOptions += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
 		return storeMessagesOptions;
+	}
+	else
+		return "";
+}
+
+std::string CFmiCaseStudyDlg::AddPossibleCropDataToZoomedMapAreaOptions() const
+{
+	if(fCropDataToZoomedMapArea)
+	{
+		// Tämä kysymysmerkki on erotin, jolla erotellaan metatiedosto ja zip-ohjelman polku+nimi
+		// En keksinyt tähän hätään muuta keinoa antaa winExelle erilaisia argumentteja yhdellä kertaa, joutuisin tekemään erillesen komentorivi 
+		// parserin, joka osaisi käsitellä erilaisia optioita (kuten SmartMetissa tehdään).
+		// Jos croppaus option on päällä, lisätään seuraavat optiot: ?CropDataArea=newbasearea
+		int mainMapViewIndex = 0;
+		auto area = itsSmartMetDocumentInterface->GetMapHandlerInterface(mainMapViewIndex)->Area();
+		std::string optionStr = "?";
+		optionStr += NFmiCaseStudySystem::GetCropDataOptionStartPart();
+		optionStr += area->AreaStr();
+		return optionStr;
 	}
 	else
 		return "";
@@ -1220,4 +1244,5 @@ void CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid()
 	caseStudySystem.PutNoneProducerDataToEndFix();
 	caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
     InitGridControlValues();
+	UpdateData(FALSE);
 }

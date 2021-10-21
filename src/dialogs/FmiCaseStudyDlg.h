@@ -159,6 +159,7 @@ public:
 private:
 	std::string AddPossibleZippingOptions() const;
 	std::string AddPossibleHakeMessageOptions() const;
+	std::string AddPossibleCropDataToZoomedMapAreaOptions() const;
 	void DoResizerHooking();
 
     CString itsNameStrU_;
