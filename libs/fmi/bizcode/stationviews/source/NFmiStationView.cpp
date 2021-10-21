@@ -2918,7 +2918,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
                     if(fGetCurrentDataFromQ2Server == false) 
                     {
                         NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
-                        auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
+                        auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(info, itsTime);
                         float interpValue = InterpolatedToolTipValue(usedTime, latlon, info);
                         str += " (intp: ";
                         str += Value2ToolTipString(interpValue, itsDrawParam->IsoLineLabelDigitCount(), itsDrawParam->Param().GetParam()->InterpolationMethod(), paramType);
