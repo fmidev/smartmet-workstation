@@ -6106,8 +6106,28 @@ bool InitCPManagerSet(void)
 			string errStr("SmartTool-ohjausta ei saatu luettua asetuksista.");
 			LogMessage(errStr, CatLog::Severity::Error, CatLog::Category::Configuration);
 		}
-		string fileName2(itsBasicConfigurations.ControlPath());
-		fileName2 += "DBChecker.st";
+		string dbCheckerSettingsKey = "SmartMet::OptionalDBCheckerPath";
+		string fileName2 = NFmiSettings::Optional<string>(dbCheckerSettingsKey, "");
+		if(!fileName2.empty())
+		{
+			string augmentedFileName2 = PathUtils::makeFixedAbsolutePath(fileName2, itsBasicConfigurations.ControlPath());
+			if(!NFmiFileSystem::FileExists(augmentedFileName2))
+			{
+				string errorMessage = dbCheckerSettingsKey;
+				errorMessage += " was given with value: '";
+				errorMessage += fileName2;
+				errorMessage += "' but that path has no existing file to be read";
+				LogAndWarnUser(errorMessage, "", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
+			}
+			else
+				fileName2 = augmentedFileName2;
+		}
+		else
+		{
+			fileName2 = itsBasicConfigurations.ControlPath();
+			fileName2 += "DBChecker.st";
+		}
+
 		itsSmartToolInfo.DBCheckerFileName(fileName2);
 		bool status2 = itsSmartToolInfo.LoadDBChecker();
 		SetCurrentSmartToolMacro(itsSmartToolInfo.CurrentScript()); // laitetaan currentti skripti myös dociin
