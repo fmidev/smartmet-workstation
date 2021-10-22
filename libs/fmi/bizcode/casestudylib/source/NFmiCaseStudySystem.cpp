@@ -1988,8 +1988,7 @@ static std::unique_ptr<NFmiQueryData> CreateCroppedQueryData(NFmiFastQueryInfo &
 			{
 				for(sourceFastInfo.ResetTime(), croppedFastInfo.ResetTime(); sourceFastInfo.NextTime() && croppedFastInfo.NextTime();)
 				{
-					NFmiDataMatrix<float> matrix;
-					sourceFastInfo.CroppedValues(matrix, x1, y1, x2, y2);
+					NFmiDataMatrix<float> matrix = sourceFastInfo.CroppedValues(x1, y1, x2, y2);
 					croppedFastInfo.SetValues(matrix);
 				}
 			}

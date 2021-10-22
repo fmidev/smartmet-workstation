@@ -1105,7 +1105,7 @@ std::string CFmiCaseStudyDlg::AddPossibleCropDataToZoomedMapAreaOptions() const
 		auto area = itsSmartMetDocumentInterface->GetMapHandlerInterface(mainMapViewIndex)->Area();
 		std::string optionStr = "?";
 		optionStr += NFmiCaseStudySystem::GetCropDataOptionStartPart();
-		optionStr += area->AreaStr();
+		optionStr += area->AreaFactoryStr();
 		return optionStr;
 	}
 	else
