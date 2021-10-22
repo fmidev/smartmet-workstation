@@ -8,6 +8,7 @@ namespace HakeMessage
     class Configurer
     {
     public:
+        bool ignoreMissingPathWarning = true;
         std::string baseConfigurationNamespace = "SmartMet::HakeMessages::";
         std::string jsonPath;
         std::string xmlPath;
