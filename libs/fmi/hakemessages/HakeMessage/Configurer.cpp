@@ -38,7 +38,7 @@ namespace HakeMessage
             );
         }
 
-        void logUsedWarningDataFormatPath(const std::string& path, const std::string& filter, const std::string& dataFormatName)
+        void logUsedWarningDataFormatPath(const std::string& path, const std::string& filter, const std::string& dataFormatName, bool ignoreMissingPathWarning)
         {
             if(path.empty() && filter.empty())
                 return;
@@ -55,26 +55,29 @@ namespace HakeMessage
                 return;
             }
 
-            // path or filter was empty, make warning
-            std::string pathWarningMessage = "HAKE message with ";
-            pathWarningMessage += dataFormatName;
-            pathWarningMessage += " data format had missing configuration: ";
-            if(path.empty())
-                pathWarningMessage += "search path was empty";
-            else
-                pathWarningMessage += "search path was '" + path + "'";
-            pathWarningMessage += " and ";
-            if(filter.empty())
-                pathWarningMessage += "regex based file filter was empty";
-            else
-                pathWarningMessage += "regex based file filter was '" + filter + "'";
-            CatLog::logMessage(pathWarningMessage, CatLog::Severity::Warning, CatLog::Category::Configuration, true);
+            if(!ignoreMissingPathWarning)
+            {
+                // path or filter was empty, make warning
+                std::string pathWarningMessage = "HAKE message with ";
+                pathWarningMessage += dataFormatName;
+                pathWarningMessage += " data format had missing configuration: ";
+                if(path.empty())
+                    pathWarningMessage += "search path was empty";
+                else
+                    pathWarningMessage += "search path was '" + path + "'";
+                pathWarningMessage += " and ";
+                if(filter.empty())
+                    pathWarningMessage += "regex based file filter was empty";
+                else
+                    pathWarningMessage += "regex based file filter was '" + filter + "'";
+                CatLog::logMessage(pathWarningMessage, CatLog::Severity::Warning, CatLog::Category::Configuration, true);
+            }
         }
 
         void logUsedWarningPaths(const Configurer& configurer)
         {
-            logUsedWarningDataFormatPath(configurer.jsonPath, configurer.jsonFilter, "json");
-            logUsedWarningDataFormatPath(configurer.xmlPath, configurer.xmlFilter, "xml");
+            logUsedWarningDataFormatPath(configurer.jsonPath, configurer.jsonFilter, "json", configurer.ignoreMissingPathWarning);
+            logUsedWarningDataFormatPath(configurer.xmlPath, configurer.xmlFilter, "xml", configurer.ignoreMissingPathWarning);
         }
 
         // If used HAKE message paths are not fixed properly, there migth be problems with them over
@@ -100,6 +103,7 @@ namespace HakeMessage
 
     void Configurer::configure(const std::string& usedAbsoluteBaseDirectory)
     {
+        ignoreMissingPathWarning = NFmiSettings::Optional(baseConfigurationNamespace + "ignoreMissingPathWarning", ignoreMissingPathWarning);
         jsonPath = NFmiSettings::Optional(baseConfigurationNamespace + "pathForJson", jsonPath);
         xmlPath = NFmiSettings::Optional(baseConfigurationNamespace + "pathForXml", xmlPath);
         xmlFilter = NFmiSettings::Optional(baseConfigurationNamespace + "xmlFilter", xmlFilter);
