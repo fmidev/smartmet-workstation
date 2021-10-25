@@ -1325,9 +1325,7 @@ void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
         absoluteActiveRow = itsParameterSelectionSystem->GetLastActivatedRowIndexFromWantedDesktop(theDesktopIndex);
     }
     itsParameterSelectionSystem->SetLastActiveIndexes(theDesktopIndex, absoluteActiveRow);
-	SetWindowText(CA2T(MakeTitleText().c_str()));
-    itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
-	Update();
+    UpdateGridControlIfNeeded();
 }
 
 BOOL CFmiParameterSelectionDlg::PreTranslateMessage(MSG* pMsg)
