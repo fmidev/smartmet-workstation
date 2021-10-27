@@ -9,6 +9,7 @@
 #include "NFmiHelpDataInfo.h"
 #include "SoundingViewSettingsFromWindowsRegisty.h"
 #include "catlog/catlog.h"
+#include "NFmiCategoryHeaderInitData.h"
 
 #include <unordered_map>
 
@@ -229,7 +230,7 @@ static void CheckAndFixDataCountValue(NFmiInfoData::Type dataType, boost::shared
     }
 }
 
-bool NFmiCaseStudySettingsWinRegistry::Init(const std::string& baseRegistryPath, NFmiHelpDataInfoSystem& theHelpDataInfoSystem)
+bool NFmiCaseStudySettingsWinRegistry::Init(const std::string& baseRegistryPath, NFmiHelpDataInfoSystem& theHelpDataInfoSystem, const std::vector<NFmiCategoryHeaderInitData>& categoryHeaders)
 {
     if(mInitialized)
         throw std::runtime_error("NFmiHelpDataDataCountWinRegistry::Init: all ready initialized.");
@@ -244,33 +245,41 @@ bool NFmiCaseStudySettingsWinRegistry::Init(const std::string& baseRegistryPath,
     mSectionNameCaseStudyCount = "\\CaseStudy";
     mSectionNameStoreData = "\\StoreData";
 
+    for(const auto &helpDataInfo : theHelpDataInfoSystem.DynamicHelpDataInfos())
+    {
+        InitHelpDataRelatedWinRegValues(helpDataInfo.Name(), helpDataInfo.DataType());
+    }
+
+    for(const auto& categoryData : categoryHeaders)
+    {
+        InitHelpDataRelatedWinRegValues(categoryData.uniqueName, categoryData.dataType);
+    }
+    return true;
+}
+
+void NFmiCaseStudySettingsWinRegistry::InitHelpDataRelatedWinRegValues(const std::string &uniqueDataName, NFmiInfoData::Type dataType)
+{
+    std::string regName("\\");
+    regName += uniqueDataName;
+
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
 
-    for(const auto &helpDataInfo : theHelpDataInfoSystem.DynamicHelpDataInfos())
-    {
-        auto uniqueDataName = helpDataInfo.Name();
-        std::string regName("\\");
-        regName += uniqueDataName;
-        auto dataType = helpDataInfo.DataType();
+    // Local cache lukemien asetus
+    auto defaultLocalCacheCountValueByType = GetDefaultLocalCacheCountValue(dataType);
+    auto tmpLocalCacheCountValue = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameLocalCacheCount, regName.c_str(), usedKey, defaultLocalCacheCountValueByType);
+    ::CheckAndFixDataCountValue(dataType, tmpLocalCacheCountValue, true);
+    mHelpDataLocalCacheCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpLocalCacheCountValue)));
 
-        // Local cache lukemien asetus
-        auto defaultLocalCacheCountValueByType = GetDefaultLocalCacheCountValue(dataType);
-        auto tmpLocalCacheCountValue = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameLocalCacheCount, regName.c_str(), usedKey, defaultLocalCacheCountValueByType);
-        ::CheckAndFixDataCountValue(dataType, tmpLocalCacheCountValue, true);
-        mHelpDataLocalCacheCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpLocalCacheCountValue)));
+    // CaseStudy lukemien asetus
+    auto defaultCaseStudyCountValueByType = GetDefaultCaseStudyCountValue(dataType);
+    auto tmpCaseStudyCountValue = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyCount, regName.c_str(), usedKey, defaultCaseStudyCountValueByType);
+    ::CheckAndFixDataCountValue(dataType, tmpCaseStudyCountValue, false);
+    mHelpDataCaseStudyCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyCountValue)));
 
-        // CaseStudy lukemien asetus
-        auto defaultCaseStudyCountValueByType = GetDefaultCaseStudyCountValue(dataType);
-        auto tmpCaseStudyCountValue = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyCount, regName.c_str(), usedKey, defaultCaseStudyCountValueByType);
-        ::CheckAndFixDataCountValue(dataType, tmpCaseStudyCountValue, false);
-        mHelpDataCaseStudyCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyCountValue)));
-
-        // Store data option asetus
-        auto tmpCaseStudyStoreDataState = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionNameStoreData, regName.c_str(), usedKey, true);
-        mCaseStudyStoreDataMap.insert(std::make_pair(uniqueDataName, tmpCaseStudyStoreDataState));
-    }
-    return true;
+    // Store data option asetus
+    auto tmpCaseStudyStoreDataState = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionNameStoreData, regName.c_str(), usedKey, true);
+    mCaseStudyStoreDataMap.insert(std::make_pair(uniqueDataName, tmpCaseStudyStoreDataState));
 }
 
 int NFmiCaseStudySettingsWinRegistry::GetHelpDataLocalCacheCount(const std::string& uniqueDataName) const
@@ -896,7 +905,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry()
 // fullAppVer esim. 5.9.3.0
 // shortAppVer esim. 5.9
 // configurationName se loppu osa konffista ilman mit‰‰n alku polkuja esim. control_scand_saa2_edit_conf
-bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
+bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem, const std::vector<NFmiCategoryHeaderInitData>& categoryHeaders)
 {
     if(mInitialized)
         throw std::runtime_error("NFmiApplicationWinRegistry::Init: already initialized.");
@@ -919,7 +928,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     // DataNotifications section
     mDataNotificationSettingsWinRegistry.Init(mBaseRegistryPath, fullAppVer);
 
-    mCaseStudySettingsWinRegistry.Init(mBaseRegistryPath, theHelpDataInfoSystem);
+    mCaseStudySettingsWinRegistry.Init(mBaseRegistryPath, theHelpDataInfoSystem, categoryHeaders);
 
     // General section
     std::string sectionName = NFmiApplicationWinRegistry::MakeGeneralSectionName();

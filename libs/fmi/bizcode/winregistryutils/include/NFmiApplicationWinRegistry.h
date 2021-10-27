@@ -10,6 +10,7 @@
 
 class NFmiHelpDataInfoSystem;
 class SoundingViewSettingsFromWindowsRegisty;
+class NFmiCategoryHeaderInitData;
 
 // En osaa laittaa tälläistä muuttujaa luokan muuttujaksi, koska siinä on tyhjä taulukko ja kääntäjä tekee erinäisiä valituksia sellaisen käytöstä luokan dataosana.
 const TCHAR BASED_CODE g_SaveImageFileFilter[] = _TEXT("PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|TIFF (*.tiff)|*.tiff|GIF (*.gif)|*.gif|");
@@ -78,7 +79,7 @@ class NFmiCaseStudySettingsWinRegistry
 {
 public:
     NFmiCaseStudySettingsWinRegistry();
-    bool Init(const std::string& baseRegistryPath, NFmiHelpDataInfoSystem& theHelpDataInfoSystem);
+    bool Init(const std::string& baseRegistryPath, NFmiHelpDataInfoSystem& theHelpDataInfoSystem, const std::vector<NFmiCategoryHeaderInitData> &categoryHeaders);
 
     int GetHelpDataLocalCacheCount(const std::string& uniqueDataName) const;
     void SetHelpDataLocalCacheCount(const std::string& uniqueDataName, int newValue);
@@ -94,6 +95,8 @@ public:
     CaseStudyBoolMap& GetCaseStudyStoreDataMap() { return  mCaseStudyStoreDataMap; }
 
 private:
+    void InitHelpDataRelatedWinRegValues(const std::string& uniqueDataName, NFmiInfoData::Type dataType);
+
     std::string mBaseRegistryPath;
     std::string mSectionNameLocalCacheCount; // tässä on LocalCacheCount
     std::string mSectionNameCaseStudyCount; // tässä on CaseStudyCount
@@ -297,7 +300,7 @@ class NFmiApplicationWinRegistry
 {
 public:
     NFmiApplicationWinRegistry();
-    bool Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem);
+    bool Init(const std::string &fullAppVer, const std::string &shortAppVer, const std::string &configurationName, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap, std::map<std::string, std::string> &otherWindowPosMap, NFmiHelpDataInfoSystem &theHelpDataInfoSystem, const std::vector<NFmiCategoryHeaderInitData>& categoryHeaders);
     void InitGriddingProperties(bool isToolMasterAvailable);
     NFmiViewPositionsWinRegistry& OtherViewPositionsWinRegistry() {return mOtherViewPositionsWinRegistry;}
     NFmiDataNotificationSettingsWinRegistry& DataNotificationSettingsWinRegistry() {return mDataNotificationSettingsWinRegistry;}
