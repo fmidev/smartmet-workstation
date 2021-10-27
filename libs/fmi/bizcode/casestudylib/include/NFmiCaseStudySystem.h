@@ -5,6 +5,7 @@
 #include "NFmiMetTime.h"
 #include "NFmiParam.h"
 #include "NFmiCachedRegistryValue.h"
+#include "NFmiCategoryHeaderInitData.h"
 
 #include <vector>
 
@@ -90,16 +91,6 @@ public:
 class NFmiCaseStudyDataFile
 {
 public:
-	enum DataCategory
-	{
-		kFmiCategoryError = 0,
-		kFmiCategoryModel,
-		kFmiCategoryObservation,
-		kFmiCategoryAnalyze,
-		kFmiCategoryEdited,
-		kFmiCategorySatelImage
-	};
-
 	NFmiCaseStudyDataFile(void);
 	~NFmiCaseStudyDataFile(void);
 
@@ -133,8 +124,8 @@ public:
 	void TotalFileSize(double newValue) {itsTotalFileSize = newValue;}
 	double MaxFileSize(void) const {return itsMaxFileSize;}
 	void MaxFileSize(double newValue) {itsMaxFileSize = newValue;}
-	DataCategory Category(void) const {return itsCategory;}
-	void Category(DataCategory newValue) {itsCategory = newValue;}
+	NFmiCaseStudyDataCategory Category(void) const {return itsCategory;}
+	void Category(NFmiCaseStudyDataCategory newValue) {itsCategory = newValue;}
 	bool ImageFile(void) const {return fImageFile;}
 	void ImageFile(bool newValue) {fImageFile = newValue;}
 	bool StoreLastDataOnly(void) const;
@@ -144,7 +135,8 @@ public:
 	void ProducerHeader(bool newValue) {fProducerHeader = newValue;}
 	bool OnlyOneData(void) const {return fOnlyOneData;}
 	void OnlyOneData(bool newValue) {fOnlyOneData = newValue;}
-	bool IsReadOnlyData() const;
+	bool IsReadOnlyDataCount(bool theCaseStudyCase) const;
+	int GetMinDataCount(bool theCaseStudyCase) const;
 
 	const std::string& ImageAreaStr(void) const {return itsImageAreaStr;}
 	void ImageAreaStr(const std::string &newValue) {itsImageAreaStr = newValue;}
@@ -185,7 +177,7 @@ private:
 	double itsSingleFileSize; // viimeisimm‰n datatiedoston koko
 	double itsTotalFileSize; // lasketaan arvio yhden datan perusteella ja alku/loppu offsettien ja intervallin avulla
 	double itsMaxFileSize; // t‰t‰ k‰ytet‰‰n producer- ja category- header infojen yhteydess‰ kertomaan arvio kaikkien mahdollisten datojen yhteis koosta vaikka niit‰ ei olisi valittu talletettavaksi
-	DataCategory itsCategory;
+	NFmiCaseStudyDataCategory itsCategory;
 	NFmiInfoData::Type itsDataType; // k‰ytet‰‰n priorisoinnissa
 	int itsLevelCount; // k‰ytet‰‰n priorisoinnissa
 	std::string itsImageAreaStr; // jos kyse on kuva-datasta, pit‰‰ tallettaa myˆs kuvan alue
@@ -222,7 +214,7 @@ public:
 	const NFmiCaseStudyDataFile& ProducerHeaderInfo(void) const {return itsProducerHeaderInfo;}
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyProducerData &theData, bool fMakeFullStore);
 	void ParseJsonValue(json_spirit::Value &theValue);
-	void SetCategory(NFmiCaseStudyDataFile::DataCategory theCategory);
+	void SetCategory(NFmiCaseStudyDataCategory theCategory);
 	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
 	void InitDataWithStoredSettings(NFmiCaseStudyProducerData &theOriginalProducerData);
 	long GetProducerIdent() const;
@@ -241,7 +233,7 @@ class NFmiCaseStudyCategoryData
 {
 public:
 	NFmiCaseStudyCategoryData(void);
-	NFmiCaseStudyCategoryData(const std::string &theName, NFmiCaseStudyDataFile::DataCategory theCategory);
+	NFmiCaseStudyCategoryData(const std::string &theName, NFmiCaseStudyDataCategory theCategory);
 	~NFmiCaseStudyCategoryData(void);
 
 	void AddData(NFmiCaseStudyDataFile &theData);
@@ -275,10 +267,9 @@ private:
 
 	NFmiCaseStudyDataFile itsCategoryHeaderInfo;
 	std::list<NFmiCaseStudyProducerData> itsProducersData;
-	NFmiCaseStudyDataFile::DataCategory itsParsingCategory; // parsittaessa categori-dataa, otetaan t‰h‰n talteen yleis-kategoria, joka annetaan kaikille datoille 
+	NFmiCaseStudyDataCategory itsParsingCategory; // parsittaessa categori-dataa, otetaan t‰h‰n talteen yleis-kategoria, joka annetaan kaikille datoille 
 															// En talleta sit‰ NFmiCaseStudyDataFile:n json-dataan, koska halusin karsia datam‰‰r‰‰, mielest‰ni t‰m‰ on muutenkin turha, kun luetaan datoja
 };
-
 
 class NFmiCaseStudySystem
 {
@@ -291,13 +282,13 @@ public:
     void UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer);
     void Update(void);
 	void Reset(void); // HUOM! ei saa kutsua konstruktorissa, koska t‰m‰ kutsuu konstruktoria
-	void Update(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId);
-	void ProducerStore(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, bool newValue);
-	void CategoryStore(NFmiCaseStudyDataFile::DataCategory theCategory, bool newValue);
-	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, bool newValue);
-	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile::DataCategory theCategory, bool newValue);
-	void ProducerDataCount(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, int theDataCount, bool theCaseStudyCase);
-	void CategoryDataCount(NFmiCaseStudyDataFile::DataCategory theCategory, int theDataCount, bool theCaseStudyCase);
+	void Update(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId);
+	void ProducerStore(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue);
+	void CategoryStore(NFmiCaseStudyDataCategory theCategory, bool newValue);
+	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue);
+	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, bool newValue);
+	void ProducerDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount, bool theCaseStudyCase);
+	void CategoryDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount, bool theCaseStudyCase);
 	std::vector<NFmiCaseStudyCategoryData>& CategoriesData(void) {return itsCategoriesData;}
 	void FillCaseStudyDialogData(NFmiProducerSystemsHolder &theProducerSystemsHolder);
 	std::vector<NFmiCaseStudyDataFile*>& CaseStudyDialogData(void) {return itsCaseStudyDialogData;}
@@ -340,6 +331,7 @@ public:
 	static std::string MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName);
 	static std::string MakeCaseStudyDataHakeDirectory(const std::string& theBaseCaseStudyDataDirectory);
 	static std::string GetCropDataOptionStartPart() { return "CropDataArea="; }
+	static const std::vector<NFmiCategoryHeaderInitData>& GetCategoryHeaders();
 
 private:
 	void AddData(NFmiCaseStudyDataFile &theData);
@@ -349,7 +341,7 @@ private:
 	void ParseJsonCategoryArray(json_spirit::Array &theCategories);
 	int CalculateProgressDialogCount(void) const;
 	void InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData> &theOriginalCategoriesData);
-	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataFile::DataCategory theCategory);
+	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataCategory theCategory);
 	std::string MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath);
 
 	std::string itsName; // talletettavan case-studyn nimi

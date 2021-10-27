@@ -1009,7 +1009,6 @@ void InitCaseStudySystem(void)
 	try
 	{
 //		itsCaseStudySystem.InitFromSettings();
-		LoadCaseStudyMemory();
 		if(HelpDataInfoSystem()->UseQueryDataCache())
 		{
 			itsCaseStudySystem.SmartMetLocalCachePath(HelpDataInfoSystem()->CacheDirectory());
@@ -1117,7 +1116,7 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         if(shortAppVerStr.size() < 3)
             throw std::runtime_error(std::string("Invalid application's short version number: '") + shortAppVerStr + "', should be in format X.Y");
         // 3 = 3 eri karttan‰yttˆ‰, ei viel‰k‰‰n miss‰‰n asetusta t‰lle, koska p‰‰karttan‰yttˆ poikkeaa kahdesta apukarttan‰ytˆst‰
-        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem());
+        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem(), NFmiCaseStudySystem::GetCategoryHeaders());
 
 		// V‰h‰n nurinkurisesti t‰ss‰ asetetaan rekisterist‰ yksi arvo edelleen pariin paikkaan (mm. takaisin itseens‰, mutta modulaarisuus vaatii t‰m‰n)
 		ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(itsApplicationWinRegistry.HatchingToolmasterEpsilonFactor());
@@ -9148,28 +9147,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		PrepareForParamAddSystemUpdate();
 	}
 
-	std::string MakeCaseStudyMemoryFilename(void)
-	{
-		std::string pathAndFileName = SpecialFileStoragePath();
-		pathAndFileName += "CaseStudyMemory.csmeta";
-
-		return pathAndFileName;
-	}
-
-	bool LoadCaseStudyMemory(void)
-	{
-		std::string caseStudyFileName = MakeCaseStudyMemoryFilename();
-		if(NFmiFileSystem::FileExists(caseStudyFileName))
-		{
-			if(itsCaseStudySystem.ReadMetaData(caseStudyFileName, ApplicationInterface::GetSmartMetViewAsCView()))
-				return true;
-		}
-		// jos ei ollut tiedostoa, tai siell‰ oli puppua, yritet‰‰n talllettaa t‰ss‰ perus-setti tiedostoon
-		StoreCaseStudyMemory();
-
-		return false;
-	}
-
 	bool StoreCaseStudyMemory(void)
 	{
 		if(itsCaseStudySystem.CategoriesData().size() > 0) // turha tallettaa mit‰‰n, jos CaseStudy-systeemi‰ ei ole edes alustettu
@@ -9178,9 +9155,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             {
 				itsCaseStudySystemOrig = itsCaseStudySystem;
 				itsCaseStudySystem.UpdateValuesBackToWinRegistry(ApplicationWinRegistry().CaseStudySettingsWinRegistry());
-
-			    std::string caseStudyFileName = MakeCaseStudyMemoryFilename();
-			    return itsCaseStudySystem.StoreMetaData(ApplicationInterface::GetSmartMetViewAsCView(), caseStudyFileName, true);
+			    return true;
             }
 		}
 		return false;
