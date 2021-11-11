@@ -25,6 +25,7 @@ namespace Wms
         CapabilityTreeParser(const NFmiProducer &producer, const std::string &delimiter, std::function<bool(long, const std::string&)> &cacheHitCallback);
 		std::unique_ptr<CapabilityTree> parse(const boost::property_tree::ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
 		std::unique_ptr<CapabilityTree> parseXml(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers);
+		std::unique_ptr<CapabilityTree> parseXmlGeneral(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers);
 
 	private:
 		void addWithPossibleStyles(const std::pair<const std::string, boost::property_tree::ptree>& layerKV, std::unique_ptr<CapabilityNode>& subTree, std::list<std::string>& path, 
@@ -34,6 +35,15 @@ namespace Wms
 		void addWithStyles(std::unique_ptr<CapabilityNode>& subTree, std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, std::set<Wms::Style>& styles) const;
 		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::pair<const std::string, boost::property_tree::ptree>& layerKV, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
 		void parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, LPXNode aNode, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const;
-
+		void ParseCapability(std::unique_ptr<Wms::CapabilityNode>& subTree, LPXNode capabilityNode
+			, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers);
+		void ParseLayer(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path, 
+			std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers);
+		bool DoPossibleSubLayerParsing(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,
+			std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers);
+		void ParseLeafLayer(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,
+			std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers);
+		bool HasFlatWmsStructure(LPXNode layerNode, std::list<std::string>& path);
+		void DoGeneralPathHandling(LPXNode layerNode, std::list<std::string>& path);
 	};
 }
