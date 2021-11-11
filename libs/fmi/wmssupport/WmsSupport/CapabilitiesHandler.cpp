@@ -10,7 +10,6 @@
 #include <cppback/background-manager.h>
 #include <boost/property_tree/xml_parser.hpp>
 
-
 namespace Wms
 {
     namespace
@@ -54,7 +53,7 @@ namespace Wms
             }
         }
 
-    }
+    } // unnamed namespace ends
 
     CapabilitiesHandler::CapabilitiesHandler(
         std::unique_ptr<Web::Client> client,
@@ -115,19 +114,8 @@ namespace Wms
                     {
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
 						auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
-
 						changedLayers_.changedLayers.clear();
-
-						// Two options on how to deal with wms capability xmls (parseXml/parseXmlToPropertyTree).
-						if (server.delimiter == "0") // Parser that is/should be used outside FMI
-						{				
-							children.push_back(capabilityTreeParser.parseXml(xml, hashes_, changedLayers_));
-						}
-						else // This second method suits FMI specific style
-						{
-							auto capabilities = parseXmlToPropertyTree(xml);
-							children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
-						}
+                        children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
                         if(!changedLayers_.changedLayers.empty())
                         {
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);

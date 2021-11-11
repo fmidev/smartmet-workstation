@@ -121,21 +121,21 @@ namespace Wms
 		std::set<Style> lookForStyles(const ptree& layerTree)
 		{
 			auto styles = std::set<Style>();
-			for (const auto& attributeKV : layerTree)
+			for(const auto& attributeKV : layerTree)
 			{
 				try
 				{
-					if (attributeKV.first == "Style")
+					if(attributeKV.first == "Style")
 					{
 						styles.insert(parseStyle(attributeKV.second));
 					}
 				}
-				catch (...)
+				catch(...)
 				{
 					continue;
 				}
 			}
-			if (styles.size() == 1 && styles.begin()->name == "Default")
+			if(styles.size() == 1 && styles.begin()->name == "Default")
 			{
 				return std::set<Style>{};
 			}
@@ -151,23 +151,23 @@ namespace Wms
 			if(layerNode == nullptr)
 				return styles;
 
-			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
+			for(size_t i = 0; i < layerNode->GetChilds().size(); i++)
 			{
 				try
 				{
 					auto childNode = layerNode->GetChild(static_cast<int>(i));
-					if (childNode && childNode->name == "Style")
+					if(childNode && childNode->name == "Style")
 					{
 						styles.insert(parseStyle(childNode));
 					}
 				}
-				catch (...)
+				catch(...)
 				{
 					continue;
 				}
 
 			}
-			if (styles.size() == 1 && (styles.begin()->name == "Default" || styles.begin()->name == "default"))
+			if(styles.size() == 1 && (styles.begin()->name == "Default" || styles.begin()->name == "default"))
 			{
 				return std::set<Style>{};
 			}
@@ -180,17 +180,17 @@ namespace Wms
 		ptree lookForSubLayer(const ptree& layerTree)
 		{
 			auto pTree = ptree{};
-			for (const auto& attributeKV : layerTree)
+			for(const auto& attributeKV : layerTree)
 			{
 				try
 				{
-					if (attributeKV.first == "Layer")
+					if(attributeKV.first == "Layer")
 					{
 						pTree = attributeKV.second;
 						return pTree.get_child("Layer");
 					}
 				}
-				catch (...)
+				catch(...)
 				{
 					continue;
 				}
@@ -284,10 +284,10 @@ namespace Wms
 		{
 			auto beginEnd = std::pair<NFmiMetTime, NFmiMetTime>{};
 
-			if (dimension.empty())
+			if(dimension.empty())
 				return beginEnd;
 
-			if (isTimeTable(dimension))
+			if(isTimeTable(dimension))
 			{
 				// Tämä on pilkulla eritelty lista aikoja, otetaan niistä 1. ja viimeinen. Esim.
 				// 2019-02-13T12:00:55Z, 2019-02-14T11:50:18Z, 2019-02-15T12:02:33Z, 2019-02-16T11:43:52Z, 2019-02-17T11:41:21Z, 2019-02-18T11:13:24Z, 2019-02-19T11:29:36Z, 2019-02-20T11:34:05Z
@@ -300,7 +300,7 @@ namespace Wms
 			}
 			else
 			{
-				if (beginningIsSeparated(dimension))
+				if(beginningIsSeparated(dimension))
 				{
 					beginEnd.first = parseMetTime(cppext::split(dimension, ',').front());
 					auto dimensionSplit = cppext::split(dimension, '/');
@@ -320,18 +320,17 @@ namespace Wms
 		{
 			try
 			{
-				auto dimensionName = layerTree
-					.get_child("Dimension")
-					.get_child("<xmlattr>")
-					.get<std::string>("name");
+				const auto& dimensionNode = layerTree.get_child("Dimension");
+				const auto& xmlattrNode = dimensionNode.get_child("<xmlattr>");
+				auto dimensionName = xmlattrNode.get<std::string>("name");
 
-				if (dimensionName == "time")
+				if(dimensionName == "time")
 				{
 					return layerTree.get<std::string>("Dimension");
 				}
 				return "";
 			}
-			catch (...)
+			catch(...)
 			{
 				return "";
 			}
@@ -342,20 +341,69 @@ namespace Wms
 			auto name = layerKV.second.get_optional<std::string>("Name");
 			auto title = layerKV.second.get_optional<std::string>("Title");
 
-			if (name)
+			if(name)
 			{
 				return layerKV.second.get<std::string>("Name");
 			}
-			else if (title)
+			else if(title)
 			{
 				return layerKV.second.get<std::string>("Title");
 			}
 			return std::string{};
 		}
 
-	}
+		bool IsNameStringNumeric(const std::string& nameString)
+		{
+			try
+			{
+				auto numericValue = boost::lexical_cast<double>(nameString);
+				return true;
+			}
+			catch(...)
+			{
+				return false;
+			}
+		}
 
-	CapabilityTreeParser::CapabilityTreeParser(const NFmiProducer &producer, const std::string &delimiter, std::function<bool(long, const std::string&)> &cacheHitCallback)
+		std::string GetLastPartOfName(const std::string& nameString, const std::string& delimiter)
+		{
+			std::string finalString = nameString;
+			if(!finalString.empty())
+			{
+				if(delimiter != "0")
+				{
+					auto nameSplit = cppext::split(finalString, delimiter);
+					finalString = nameSplit.back();
+				}
+			}
+			return finalString;
+		}
+
+		std::string GetStrippedSubPathName(LPXNode layerNode, const std::string& delimiter, bool checkTitleFirst)
+		{
+			std::string titleStr = XmlHelper::GetChildNodeText(layerNode, "Title");
+			auto finalTitleString = GetLastPartOfName(titleStr, delimiter);
+			std::string nameStr = XmlHelper::GetChildNodeText(layerNode, "Name");
+			auto finalNameString = GetLastPartOfName(nameStr, delimiter);
+			if(finalTitleString.empty())
+				return finalNameString;
+			if(finalNameString.empty())
+				return finalTitleString;
+
+			if(IsNameStringNumeric(finalTitleString))
+				return finalNameString;
+			if(IsNameStringNumeric(finalNameString))
+				return finalTitleString;
+
+			if(checkTitleFirst)
+				return finalTitleString;
+			else
+				return finalNameString;
+		}
+
+	} // end of unnamed namespace
+
+	CapabilityTreeParser::CapabilityTreeParser(const NFmiProducer& producer, const std::string& delimiter, std::function<bool(long, const std::string&)>& cacheHitCallback)
 		:producer_{ producer }
 		, delimiter_{ delimiter }
 		, cacheHitCallback_{ cacheHitCallback }
@@ -369,7 +417,7 @@ namespace Wms
 		changedLayers.setProducerId(producer_.GetIdent());
 		auto path = std::list<std::string>{};
 
-		for (const auto& layerKV : layerTree)
+		for(const auto& layerKV : layerTree)
 		{
 			parseNodes(subTree, layerKV, path, hashes, changedLayers);
 		}
@@ -386,18 +434,18 @@ namespace Wms
 
 		XNode xmlRoot;
 		CString sxmlU_(CA2T(xml.c_str()));
-		if (xmlRoot.Load(sxmlU_) == false)
+		if(xmlRoot.Load(sxmlU_) == false)
 		{
-			throw std::runtime_error(std::string("CapabilitiesHandler::startFetchingCapabilitiesInBackground - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
+			throw std::runtime_error(std::string("CapabilityTreeParser::parseXml - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
 		}
 
 		try
 		{
 			auto nodes = xmlRoot.GetChilds(_TEXT("Capability"));
-			for (size_t i = 0; i < nodes.size(); i++)
+			for(size_t i = 0; i < nodes.size(); i++)
 			{
 				auto aNode = nodes[i];
-				for (size_t i = 0; i < aNode->GetChilds().size(); i++)
+				for(size_t i = 0; i < aNode->GetChilds().size(); i++)
 				{
 					auto childNode = aNode->GetChild(static_cast<int>(i));
 					if(childNode)
@@ -407,11 +455,137 @@ namespace Wms
 				}
 			}
 		}
-		catch (...)
+		catch(...)
 		{
 		}
 
 		return std::move(subTree);
+	}
+
+	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parseXmlGeneral(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
+	{
+		auto subTree = std::make_unique<CapabilityNode>();
+		subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
+		changedLayers.setProducerId(producer_.GetIdent());
+		auto path = std::list<std::string>{};
+
+		XNode xmlRoot;
+		CString sxmlU_(CA2T(xml.c_str()));
+		if(xmlRoot.Load(sxmlU_) == false)
+		{
+			throw std::runtime_error(std::string("CapabilityTreeParser::parseXml - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
+		}
+
+		try
+		{
+
+			auto capabilityNodes = xmlRoot.GetChilds(_TEXT("Capability"));
+			for(const auto& capabilityNode : capabilityNodes)
+			{
+				ParseCapability(subTree, capabilityNode, path, hashes, changedLayers);
+			}
+		}
+		catch(...)
+		{
+		}
+
+		return std::move(subTree);
+	}
+
+	void CapabilityTreeParser::ParseCapability(std::unique_ptr<Wms::CapabilityNode>& subTree, LPXNode capabilityNode
+		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
+	{
+		if(capabilityNode)
+		{
+			auto layerNodes = capabilityNode->GetChilds(_TEXT("Layer"));
+			for(const auto& layerNode : layerNodes)
+			{
+				std::list<std::string> path;
+				ParseLayer(subTree, layerNode, path, hashes, changedLayers);
+			}
+		}
+	}
+
+	void CapabilityTreeParser::ParseLayer(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,
+		std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
+	{
+		if(layerNode)
+		{
+			if(DoPossibleSubLayerParsing(subTree, layerNode, path, hashes, changedLayers))
+				return;
+
+			ParseLeafLayer(subTree, layerNode, path, hashes, changedLayers);
+		}
+	}
+
+	bool CapabilityTreeParser::DoPossibleSubLayerParsing(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,
+		std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
+	{
+		auto subLayerNodes = layerNode->GetChilds(_TEXT("Layer"));
+		if(!subLayerNodes.empty())
+		{
+			for(const auto& subLayerNode : subLayerNodes)
+			{
+				auto subNodePath = path;
+				std::string title = GetStrippedSubPathName(layerNode, delimiter_, true);
+				addToList(title, subNodePath);
+				ParseLayer(subTree, subLayerNode, subNodePath, hashes, changedLayers);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	void CapabilityTreeParser::ParseLeafLayer(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,
+		std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
+	{
+		if(layerNode)
+		{
+			auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension"));
+			if(!dimensionNode.empty())
+			{
+				auto dNode = dimensionNode.at(0);
+				std::string dimensionNodeValue = XmlHelper::AttributeValue(dNode, "name");
+				if(dimensionNodeValue == "time")
+				{
+					auto timeWindow = XmlHelper::ChildNodeValue(layerNode, "Dimension");
+					DoGeneralPathHandling(layerNode, path);
+					auto name = XmlHelper::GetChildNodeText(layerNode, "Name");
+					cacheHitCallback_(producer_.GetIdent(), name);
+					auto startEnd = parseDimension(timeWindow);
+					addWithPossibleStyles(layerNode, subTree, path, timeWindow, changedLayers, hashes, startEnd, name);
+				}
+			}
+		}
+	}
+
+
+	void CapabilityTreeParser::DoGeneralPathHandling(LPXNode layerNode, std::list<std::string>& path)
+	{
+		if(HasFlatWmsStructure(layerNode, path))
+		{
+			// Fmi flat structure handling
+			std::string pathName = XmlHelper::GetChildNodeText(layerNode, "Name");
+			splitToList(pathName, delimiter_, path);
+		}
+		else
+		{
+			// Normal recursive structure handling
+			std::string title = GetStrippedSubPathName(layerNode, delimiter_, false);
+			addToList(title, path);
+		}
+	}
+
+	bool CapabilityTreeParser::HasFlatWmsStructure(LPXNode layerNode, std::list<std::string>& path)
+	{
+		if(path.size() <= 1 && delimiter_ != "0")
+		{
+			std::string title = XmlHelper::GetChildNodeText(layerNode, "Name");
+			auto splitName = cppext::split(title, delimiter_);
+			if(splitName.size() > 1)
+				return true;
+		}
+		return false;
 	}
 
 	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::pair<const std::string, ptree>& layerKV
@@ -439,7 +613,7 @@ namespace Wms
 				ptree& subLayerTree = lookForSubLayer(layerKV.second);
 				for (const auto& layer : subLayerTree)
 				{
-					parseNodes(subTree, layerKV, layerPath, hashes, changedLayers);
+					parseNodes(subTree, layer, layerPath, hashes, changedLayers);
 				}
 			}
 			catch (...)
