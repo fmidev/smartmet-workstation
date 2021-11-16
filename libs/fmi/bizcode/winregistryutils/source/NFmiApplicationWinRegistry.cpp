@@ -230,6 +230,25 @@ static void CheckAndFixDataCountValue(NFmiInfoData::Type dataType, boost::shared
     }
 }
 
+static void CheckAndFixIndexRangeValues(NFmiInfoData::Type dataType, boost::shared_ptr<CachedRegInt>& index1, boost::shared_ptr<CachedRegInt>& index2)
+{
+    // index1 voidaa tarkastaa vanhaan tyyliin
+    ::CheckAndFixDataCountValue(dataType, index1, false);
+
+    // Seuraavat ehdot pätevät index2:lle:
+    // index1 >= index2 ja index2 >= defaultIndex2Value
+    auto defaultIndex2Value = 1;
+    auto index2value = (int)(*index2);
+    if(index2value < defaultIndex2Value)
+    {
+        *index2 = defaultIndex2Value;
+    }
+    else if(index2value > *index1)
+    {
+        *index2 = *index1;
+    }
+}
+
 bool NFmiCaseStudySettingsWinRegistry::Init(const std::string& baseRegistryPath, NFmiHelpDataInfoSystem& theHelpDataInfoSystem, const std::vector<NFmiCategoryHeaderInitData>& categoryHeaders)
 {
     if(mInitialized)
@@ -242,7 +261,8 @@ bool NFmiCaseStudySettingsWinRegistry::Init(const std::string& baseRegistryPath,
 
     mBaseRegistryPath = baseRegistryPath + "\\CaseStudyDlgSettings";
     mSectionNameLocalCacheCount = "\\LocalCache";
-    mSectionNameCaseStudyCount = "\\CaseStudy";
+    mSectionNameCaseStudyIndex1 = "\\CaseStudyIndex1";
+    mSectionNameCaseStudyIndex2 = "\\CaseStudyIndex2";
     mSectionNameStoreData = "\\StoreData";
 
     for(const auto &helpDataInfo : theHelpDataInfoSystem.DynamicHelpDataInfos())
@@ -273,9 +293,11 @@ void NFmiCaseStudySettingsWinRegistry::InitHelpDataRelatedWinRegValues(const std
 
     // CaseStudy lukemien asetus
     auto defaultCaseStudyCountValueByType = GetDefaultCaseStudyCountValue(dataType);
-    auto tmpCaseStudyCountValue = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyCount, regName.c_str(), usedKey, defaultCaseStudyCountValueByType);
-    ::CheckAndFixDataCountValue(dataType, tmpCaseStudyCountValue, false);
-    mHelpDataCaseStudyCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyCountValue)));
+    auto tmpCaseStudyIndex1 = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyIndex1, regName.c_str(), usedKey, defaultCaseStudyCountValueByType);
+    auto tmpCaseStudyIndex2 = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyIndex2, regName.c_str(), usedKey, 1);
+    ::CheckAndFixIndexRangeValues(dataType, tmpCaseStudyIndex1, tmpCaseStudyIndex2);
+    mHelpDataCaseStudyIndex1Map.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyIndex1)));
+    mHelpDataCaseStudyIndex2Map.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyIndex2)));
 
     // Store data option asetus
     auto tmpCaseStudyStoreDataState = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionNameStoreData, regName.c_str(), usedKey, true);
@@ -302,23 +324,27 @@ void NFmiCaseStudySettingsWinRegistry::SetHelpDataLocalCacheCount(const std::str
     }
 }
 
-int NFmiCaseStudySettingsWinRegistry::GetHelpDataCaseStudyCount(const std::string& uniqueDataName) const
+std::pair<int, int> NFmiCaseStudySettingsWinRegistry::GetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName) const
 {
-    auto iter = mHelpDataCaseStudyCountMap.find(uniqueDataName);
-    if(iter != mHelpDataCaseStudyCountMap.end())
-        return *(iter->second.second);
+    auto iter1 = mHelpDataCaseStudyIndex1Map.find(uniqueDataName);
+    auto iter2 = mHelpDataCaseStudyIndex2Map.find(uniqueDataName);
+    if(iter1 != mHelpDataCaseStudyIndex1Map.end() && iter2 != mHelpDataCaseStudyIndex2Map.end())
+        return std::make_pair(*(iter1->second.second), *(iter2->second.second));
     else
-        return -1; // negatiivinen arvo on virheen merkki
+        return gMissingIndexRange;
 }
 
-void NFmiCaseStudySettingsWinRegistry::SetHelpDataCaseStudyCount(const std::string& uniqueDataName, int newValue)
+void NFmiCaseStudySettingsWinRegistry::SetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName, const std::pair<int, int>& indexRange)
 {
-    auto iter = mHelpDataCaseStudyCountMap.find(uniqueDataName);
-    if(iter != mHelpDataCaseStudyCountMap.end())
+    auto iter1 = mHelpDataCaseStudyIndex1Map.find(uniqueDataName);
+    auto iter2 = mHelpDataCaseStudyIndex2Map.find(uniqueDataName);
+    if(iter1 != mHelpDataCaseStudyIndex1Map.end() && iter2 != mHelpDataCaseStudyIndex2Map.end())
     {
-        auto& countValue = iter->second.second;
-        *countValue = newValue;
-        ::CheckAndFixDataCountValue(iter->second.first, countValue, false);
+        auto& index1 = iter1->second.second;
+        *index1 = indexRange.first;
+        auto& index2 = iter2->second.second;
+        *index2 = indexRange.second;
+        ::CheckAndFixIndexRangeValues(iter1->second.first, index1, index2);
     }
 }
 

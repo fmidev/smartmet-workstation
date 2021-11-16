@@ -6,6 +6,7 @@
 #include "NFmiParam.h"
 #include "NFmiCachedRegistryValue.h"
 #include "NFmiCategoryHeaderInitData.h"
+#include "NFmiApplicationWinRegistry.h"
 
 #include <vector>
 
@@ -56,7 +57,7 @@ public:
 // otetaan lokaali CaseStudyMemory.csmeta tiedostosta.
 class NFmiCsDataFileWinReg
 {
-	int itsCaseStudyDataCount = 0;
+	std::pair<int, int> itsCaseStudyDataIndexRange = gMissingIndexRange;
 	bool fFixedValueForCaseStudyDataCount = false;
 	int itsLocalCacheDataCount = 0;
 	bool fFixedValueForLocalCacheDataCount = false;
@@ -65,21 +66,26 @@ class NFmiCsDataFileWinReg
 public:
 
 	NFmiCsDataFileWinReg();
-	NFmiCsDataFileWinReg(int caseStudyDataCount, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store);
+	NFmiCsDataFileWinReg(const std::pair<int, int> &caseStudyDataIndexRange, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store);
 
-	int CaseStudyDataCount() const { return itsCaseStudyDataCount; }
+	const std::pair<int, int>& CaseStudyDataIndexRange() const { return itsCaseStudyDataIndexRange; }
 	bool FixedValueForCaseStudyDataCount() const { return fFixedValueForCaseStudyDataCount; }
 	int LocalCacheDataCount() const { return itsLocalCacheDataCount; }
 	bool FixedValueForLocalCacheDataCount() const { return fFixedValueForLocalCacheDataCount; }
 	bool Store() const { return fStore; }
 	bool ProperlyInitialized() const { return fProperlyInitialized; }
+	bool StoreLastDataOnly() const;
+	bool LatestDataIncluded() const;
+	std::vector<int> GetWantedModelRunIndexList() const;
 
-	void CaseStudyDataCount(int newValue);
+	static void FixCaseStudyDataIndexRange(std::pair<int, int> &caseStudyDataIndexRange);
+	void CaseStudyDataIndexRange(std::pair<int, int> caseStudyDataIndexRange);
 	void FixedValueForCaseStudyDataCount(bool newValue);
 	void LocalCacheDataCount(int newValue);
 	void FixedValueForLocalCacheDataCount(bool newValue);
 	void Store(bool newValue);
 	void ProperlyInitialized(bool newValue);
+	int CalcCaseStudyDataCount() const;
 
 	bool AreDataCountsFixed() const;
 	void FixToLastDataOnlyType();
@@ -185,6 +191,7 @@ private:
 	bool fImageFile; // jos kyseessä on kuva tyyppistä dataa, tähän true, jos queryDataa, laitetaan false
 	bool fCategoryHeader;
 	bool fProducerHeader;
+	// Onko tämän datan tuottajalla yksi tai usemapia datoja (esim. Ec:llä on usein pinta/painepinta/mallipinta jne., mutta joku SHIP tuottaja on varmaan vain yhdellä datalla)
 	bool fOnlyOneData;
 
 	bool fNotifyOnLoad; // Jos datan latauksen yhteydessä halutaan tehdä ilmoitus, tämä on true. Oletus arvo on false
@@ -207,7 +214,8 @@ public:
     void UpdateOnlyOneDataStates();
     void ProducerStore(bool newValue);
 	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue);
-	void ProducerDataCount(int theDataCount, bool theCaseStudyCase);
+	void ProducerLocalCacheDataCount(int theDataCount);
+	void ProducerCaseStudyIndexRange(const std::pair<int, int> &theIndexRange);
 	std::vector<NFmiCaseStudyDataFile>& FilesData(void) {return itsFilesData;}
 	const std::vector<NFmiCaseStudyDataFile>& FilesData(void) const {return itsFilesData;}
 	NFmiCaseStudyDataFile& ProducerHeaderInfo(void) {return itsProducerHeaderInfo;}
@@ -244,8 +252,10 @@ public:
 	void CategoryStore(bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
 	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, unsigned long theProdId, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
 	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
-	void ProducerDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase);
-	void CategoryDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase);
+	void ProducerLocalCacheDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem);
+	void CategoryLocalCacheDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem);
+	void ProducerCaseStudyIndexRange(unsigned long theProdId, const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem);
+	void CategoryCaseStudyIndexRange(const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem);
 	std::list<NFmiCaseStudyProducerData>& ProducersData(void) {return itsProducersData;}
 	const std::list<NFmiCaseStudyProducerData>& ProducersData(void) const {return itsProducersData;}
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyCategoryData &theData, bool fMakeFullStore);
@@ -287,8 +297,12 @@ public:
 	void CategoryStore(NFmiCaseStudyDataCategory theCategory, bool newValue);
 	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue);
 	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, bool newValue);
-	void ProducerDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount, bool theCaseStudyCase);
-	void CategoryDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount, bool theCaseStudyCase);
+
+	void ProducerLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount);
+	void CategoryLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount);
+	void ProducerCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, const std::pair<int, int>& theIndexRange);
+	void CategoryCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, const std::pair<int, int>& theIndexRange);
+
 	std::vector<NFmiCaseStudyCategoryData>& CategoriesData(void) {return itsCategoriesData;}
 	void FillCaseStudyDialogData(NFmiProducerSystemsHolder &theProducerSystemsHolder);
 	std::vector<NFmiCaseStudyDataFile*>& CaseStudyDialogData(void) {return itsCaseStudyDialogData;}
@@ -332,6 +346,8 @@ public:
 	static std::string MakeCaseStudyDataHakeDirectory(const std::string& theBaseCaseStudyDataDirectory);
 	static std::string GetCropDataOptionStartPart() { return "CropDataArea="; }
 	static const std::vector<NFmiCategoryHeaderInitData>& GetCategoryHeaders();
+	static std::string MakeIndexRangeString(const std::pair<int, int>& indexRange);
+	static std::pair<int, int> MakeIndexRange(const std::string& str);
 
 private:
 	void AddData(NFmiCaseStudyDataFile &theData);

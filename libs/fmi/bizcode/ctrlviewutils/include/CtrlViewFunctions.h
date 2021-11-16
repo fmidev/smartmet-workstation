@@ -3,6 +3,7 @@
 #include "NFmiTimeBag.h"
 #include "NFmiInfoData.h"
 #include <vector>
+#include <list>
 #include <boost/shared_ptr.hpp>
 
 class NFmiColor;
@@ -72,5 +73,8 @@ namespace CtrlViewUtils
            return true;
        return false;
    }
+
+   using FileNameWithTimeList = std::list<std::pair<std::string, std::time_t>>;
+   FileNameWithTimeList TimeSortFiles(FileNameWithTimeList filesWithTimesCopy, bool descending = true);
 
 } // namespace CtrlViewUtils

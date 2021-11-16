@@ -65,6 +65,7 @@ private:
 
 // Talletetaan jokaista uniikkia datanimeä kohden pari, jossa on datan tyyppi ja lukumäärä int arvona.
 using CaseStudyCountMap = std::map<std::string, std::pair<NFmiInfoData::Type, boost::shared_ptr<CachedRegInt>>>;
+const std::pair<int, int> gMissingIndexRange = std::make_pair(-1, -1);
 
 // CaseStudy dialogiin liittyvien asetuksien asetukset Windows rekisterissä:
 // 1) Kuinka monta viimeistä dataa säilytetään lokaali cachessa
@@ -83,15 +84,16 @@ public:
 
     int GetHelpDataLocalCacheCount(const std::string& uniqueDataName) const;
     void SetHelpDataLocalCacheCount(const std::string& uniqueDataName, int newValue);
-    int GetHelpDataCaseStudyCount(const std::string& uniqueDataName) const;
-    void SetHelpDataCaseStudyCount(const std::string& uniqueDataName, int newValue);
+    std::pair<int, int> GetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName) const;
+    void SetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName, const std::pair<int, int> &indexRange);
     bool GetStoreDataState(const std::string& uniqueDataName) const;
     void SetStoreDataState(const std::string& uniqueDataName, bool newState);
     static int GetDefaultCaseStudyCountValue(NFmiInfoData::Type dataType);
     static int GetDefaultLocalCacheCountValue(NFmiInfoData::Type dataType);
     NFmiHelpDataEnableWinRegistry& HelpDataEnableWinRegistry() { return mHelpDataEnableWinRegistry; }
     CaseStudyCountMap& GetHelpDataLocalCacheCountMap() { return mHelpDataLocalCacheCountMap; }
-    CaseStudyCountMap& GetHelpDataCaseStudyCountMap() { return mHelpDataCaseStudyCountMap; }
+    CaseStudyCountMap& GetHelpDataCaseStudyIndex1Map() { return mHelpDataCaseStudyIndex1Map; }
+    CaseStudyCountMap& GetHelpDataCaseStudyIndex2Map() { return mHelpDataCaseStudyIndex2Map; }
     CaseStudyBoolMap& GetCaseStudyStoreDataMap() { return  mCaseStudyStoreDataMap; }
 
 private:
@@ -99,7 +101,8 @@ private:
 
     std::string mBaseRegistryPath;
     std::string mSectionNameLocalCacheCount; // tässä on LocalCacheCount
-    std::string mSectionNameCaseStudyCount; // tässä on CaseStudyCount
+    std::string mSectionNameCaseStudyIndex1; // tässä on CaseStudyIndex1
+    std::string mSectionNameCaseStudyIndex2; // tässä on CaseStudyIndex2
     std::string mSectionNameStoreData; // tässä on StoreData
 
     // Kaikkien queryData konffien EnableData -osio
@@ -108,7 +111,16 @@ private:
     // HKEY_CURRENT_USER -keys
 
     CaseStudyCountMap mHelpDataLocalCacheCountMap;
-    CaseStudyCountMap mHelpDataCaseStudyCountMap;
+    // Muutetaan talletettavien datojen lukumäärä kahdeksi indeksiksi, joiden väliin jäävät malliajot talletetaan.
+    // CaseStudy-dialogissa molemmat luvut annetaan yhdestä grid-controllin cell:ista.
+    // Jos cell:in string arvo on vain yksi luku (esim. "3"), tällöin talletetaan kaikki malliajot 3-1 (3. tuoreimmasta 1. tuoreimpaan).
+    // Muuten cell:in string arvossa on kaksi lukua eroteltuna '-' merkillä ,esim. "4-3". Tällöin talletetaan 4. tuorein ja 3. tuorein, mutta ei 2. ja 1. tuoreimpia.
+    // Näin voi tallettaa CaseStudyn jälkikäteen vaikka eilisen datoilla niin että uusimpia datoja ei tarvitse sulloa väkisin datapakettiin.
+
+    // Tässä on siis aloitus indeksi, joka kertoo vanhimman talletettavan datan järjestysnumeron.
+    CaseStudyCountMap mHelpDataCaseStudyIndex1Map;
+    // Tässä on siis lopetus indeksi, joka kertoo tuoreimman talletettavan datan järjestysnumeron (oletusarvo on 1, jolloin se ignoorataan dialogin cell-näytössä).
+    CaseStudyCountMap mHelpDataCaseStudyIndex2Map;
     CaseStudyBoolMap mCaseStudyStoreDataMap;
     bool mInitialized = false; // ei sallita tupla initialisointia
 };
