@@ -14,12 +14,12 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiMacroParamfunctions.h"
 #include "NFmiPathUtils.h"
-#include "NFmiApplicationWinRegistry.h"
 #include "NFmiQueryData.h"
 #include "NFmiQueryDataUtil.h"
 
 #include "boost/shared_ptr.hpp"
 #include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
 #include "json_spirit_writer.h"
 #include "json_spirit_reader.h"
 #include "json_spirit_writer_options.h"
@@ -47,7 +47,7 @@ static const std::string gJsonName_FileFilter = "FileFilter";
 static const std::string gJsonName_RelativeStoredFileFilter = "RelativeStoredFileFilter";
 static const std::string gJsonName_StartOffsetInMinutes_legacy = "StartOffsetInMinutes";
 static const std::string gJsonName_EndOffsetInMinutes_legacy = "EndOffsetInMinutes";
-static const std::string gJsonName_CaseStudyDataCount = "CaseStudyDataCount";
+static const std::string gJsonName_CaseStudyDataIndexRange = "CaseStudyDataIndexRange";
 static const std::string gJsonName_LocalCacheDataCount = "LocalCacheDataCount";
 static const std::string gJsonName_DataType = "DataType";
 static const std::string gJsonName_Store = "Store";
@@ -75,7 +75,7 @@ static std::string NormalizePathDelimiters(const std::string& thePath)
 static void DoCsDataFileWinRegValuesInitializingChecks(NFmiCsDataFileWinReg& csDataValues)
 {
 	// Jos saatu ainakin yksi dataCount arvo joka ei ole puuttuva (-1), laitetaan alustus 'kunnolliseksi'.
-	if(csDataValues.CaseStudyDataCount() >= 0 || csDataValues.LocalCacheDataCount() >= 0)
+	if(csDataValues.CaseStudyDataIndexRange() != gMissingIndexRange || csDataValues.LocalCacheDataCount() >= 0)
 		csDataValues.ProperlyInitialized(true);
 }
 
@@ -85,8 +85,8 @@ static void DoCsDataFileWinRegValuesInitializingChecks(NFmiCsDataFileWinReg& csD
 
 NFmiCsDataFileWinReg::NFmiCsDataFileWinReg() = default;
 
-NFmiCsDataFileWinReg::NFmiCsDataFileWinReg(int caseStudyDataCount, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store)
-:itsCaseStudyDataCount(caseStudyDataCount)
+NFmiCsDataFileWinReg::NFmiCsDataFileWinReg(const std::pair<int, int>& caseStudyDataIndexRange, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store)
+:itsCaseStudyDataIndexRange(caseStudyDataIndexRange)
 ,fFixedValueForCaseStudyDataCount(fixedValueForCaseStudyDataCount)
 ,itsLocalCacheDataCount(localCacheDataCount)
 ,fFixedValueForLocalCacheDataCount(fixedValueForLocalCacheDataCount)
@@ -95,12 +95,41 @@ NFmiCsDataFileWinReg::NFmiCsDataFileWinReg(int caseStudyDataCount, bool fixedVal
 {
 }
 
-void NFmiCsDataFileWinReg::CaseStudyDataCount(int newValue) 
-{ 
-	if(newValue < 1)
-		newValue = 1;
+bool NFmiCsDataFileWinReg::StoreLastDataOnly() const
+{
+	return itsCaseStudyDataIndexRange.first == 1 && itsCaseStudyDataIndexRange.second == 1;
+}
+
+bool NFmiCsDataFileWinReg::LatestDataIncluded() const
+{
+	return itsCaseStudyDataIndexRange.second == 1;
+}
+
+std::vector<int> NFmiCsDataFileWinReg::GetWantedModelRunIndexList() const
+{
+	std::vector<int> indexList;
+	for(int index = itsCaseStudyDataIndexRange.second; index <= itsCaseStudyDataIndexRange.first; index++)
+	{
+		indexList.push_back(index);
+	}
+	return indexList;
+}
+
+void NFmiCsDataFileWinReg::FixCaseStudyDataIndexRange(std::pair<int, int>& caseStudyDataIndexRange)
+{
+	if(caseStudyDataIndexRange.first < 1)
+		caseStudyDataIndexRange.first = 1;
+	if(caseStudyDataIndexRange.second < 1)
+		caseStudyDataIndexRange.second = 1;
+	if(caseStudyDataIndexRange.second > caseStudyDataIndexRange.first)
+		caseStudyDataIndexRange.second = caseStudyDataIndexRange.first;
+}
+
+void NFmiCsDataFileWinReg::CaseStudyDataIndexRange(std::pair<int, int> caseStudyDataIndexRange)
+{
+	FixCaseStudyDataIndexRange(caseStudyDataIndexRange);
 	if(!fFixedValueForCaseStudyDataCount)
-		itsCaseStudyDataCount = newValue; 
+		itsCaseStudyDataIndexRange = caseStudyDataIndexRange; 
 }
 
 void NFmiCsDataFileWinReg::FixedValueForCaseStudyDataCount(bool newValue) 
@@ -131,6 +160,11 @@ void NFmiCsDataFileWinReg::ProperlyInitialized(bool newValue)
 	fProperlyInitialized = newValue; 
 }
 
+int NFmiCsDataFileWinReg::CalcCaseStudyDataCount() const
+{
+	return (itsCaseStudyDataIndexRange.first - itsCaseStudyDataIndexRange.second) + 1;
+}
+
 bool NFmiCsDataFileWinReg::AreDataCountsFixed() const
 {
 	return fFixedValueForCaseStudyDataCount && fFixedValueForLocalCacheDataCount;
@@ -138,7 +172,7 @@ bool NFmiCsDataFileWinReg::AreDataCountsFixed() const
 
 void NFmiCsDataFileWinReg::FixToLastDataOnlyType()
 {
-	itsCaseStudyDataCount = 1;
+	itsCaseStudyDataIndexRange = std::make_pair(1, 1);
 	fFixedValueForCaseStudyDataCount = true;
 	itsLocalCacheDataCount = 1;
 	fFixedValueForLocalCacheDataCount = true;
@@ -149,7 +183,7 @@ void NFmiCsDataFileWinReg::FixToLastDataOnlyType()
 void NFmiCsDataFileWinReg::DoCheckedAssignment(const NFmiCsDataFileWinReg& other)
 {
 	if(!fFixedValueForCaseStudyDataCount)
-		itsCaseStudyDataCount = other.itsCaseStudyDataCount;
+		itsCaseStudyDataIndexRange = other.itsCaseStudyDataIndexRange;
 	if(!fFixedValueForLocalCacheDataCount)
 		itsLocalCacheDataCount = other.itsLocalCacheDataCount;
 	fStore = other.fStore;
@@ -161,7 +195,7 @@ void NFmiCsDataFileWinReg::AdaptFixedSettings(const NFmiCsDataFileWinReg& other)
 {
 	if(other.fFixedValueForCaseStudyDataCount)
 	{
-		itsCaseStudyDataCount = other.itsCaseStudyDataCount;
+		itsCaseStudyDataIndexRange = other.itsCaseStudyDataIndexRange;
 		fFixedValueForCaseStudyDataCount = other.fFixedValueForCaseStudyDataCount;
 	}
 	if(other.fFixedValueForLocalCacheDataCount)
@@ -173,7 +207,7 @@ void NFmiCsDataFileWinReg::AdaptFixedSettings(const NFmiCsDataFileWinReg& other)
 
 bool NFmiCsDataFileWinReg::operator != (const NFmiCsDataFileWinReg & other) const
 {
-	if(itsCaseStudyDataCount != other.itsCaseStudyDataCount)
+	if(itsCaseStudyDataIndexRange != other.itsCaseStudyDataIndexRange)
 		return true;
 	if(itsLocalCacheDataCount != other.itsLocalCacheDataCount)
 		return true;
@@ -334,7 +368,7 @@ double NFmiCaseStudyDataFile::EvaluateTotalDataSize(void)
 		return itsSingleFileSize;
 	else
 	{
-		return DataFileWinRegValues().CaseStudyDataCount() * itsSingleFileSize;
+		return DataFileWinRegValues().CalcCaseStudyDataCount() * itsSingleFileSize;
 	}
 }
 
@@ -449,7 +483,7 @@ json_spirit::Object NFmiCaseStudyDataFile::MakeJsonObject(const NFmiCaseStudyDat
 	// start ja end offsetit laitetaan vain, jotta systeemi olisi taaksepäin vanhoihin versioihin nähden mahdollisimman yhteensopiva
 	jsonObject.push_back(json_spirit::Pair(gJsonName_StartOffsetInMinutes_legacy, 10 * 60));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_EndOffsetInMinutes_legacy, 0));
-	jsonObject.push_back(json_spirit::Pair(gJsonName_CaseStudyDataCount, theData.DataFileWinRegValues().CaseStudyDataCount()));
+	jsonObject.push_back(json_spirit::Pair(gJsonName_CaseStudyDataIndexRange, NFmiCaseStudySystem::MakeIndexRangeString(theData.DataFileWinRegValues().CaseStudyDataIndexRange())));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_LocalCacheDataCount, theData.DataFileWinRegValues().LocalCacheDataCount()));
 //	int itsDataIntervalInMinutes;	// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
 //	double itsSingleFileSize;		// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
@@ -512,8 +546,17 @@ void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 		// Muutetaan vielä luetut polut niin että SHFileOperation-funktio ymmärtää ne varmasti
 		itsRelativeStoredFileFilter = ::NormalizePathDelimiters(thePair.value_.get_str());
 	}
-	else if(thePair.name_ == gJsonName_CaseStudyDataCount)
-		DataFileWinRegValues().CaseStudyDataCount(thePair.value_.get_int());
+	else if(thePair.name_ == gJsonName_CaseStudyDataIndexRange)
+	{
+		auto indexRange = gMissingIndexRange;
+		try
+		{
+			indexRange = NFmiCaseStudySystem::MakeIndexRange(thePair.value_.get_str());
+		}
+		catch(...)
+		{ }
+		DataFileWinRegValues().CaseStudyDataIndexRange(indexRange);
+	}
 	else if(thePair.name_ == gJsonName_LocalCacheDataCount)
 		DataFileWinRegValues().LocalCacheDataCount(thePair.value_.get_int());
 	else if(thePair.name_ == gJsonName_DataType)
@@ -548,7 +591,7 @@ void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 
 bool NFmiCaseStudyDataFile::StoreLastDataOnly(void) const 
 { 
-	return itsDataFileWinRegValues.CaseStudyDataCount() == 1 && itsDataFileWinRegValues.FixedValueForCaseStudyDataCount();
+	return itsDataFileWinRegValues.CalcCaseStudyDataCount() == 1 && itsDataFileWinRegValues.FixedValueForCaseStudyDataCount();
 }
 
 bool NFmiCaseStudyDataFile::IsReadOnlyDataCount(bool theCaseStudyCase) const
@@ -740,28 +783,46 @@ void NFmiCaseStudyProducerData::ProducerEnable(NFmiHelpDataInfoSystem &theDataIn
 
 static int FixGivenDataCount(const NFmiCaseStudyDataFile& dataFile, int theDataCount, bool theCaseStudyCase)
 {
-	if(theDataCount < dataFile.GetMinDataCount(theCaseStudyCase))
-		theDataCount = dataFile.GetMinDataCount(theCaseStudyCase);
+	auto minDataCount = dataFile.GetMinDataCount(theCaseStudyCase);
+	if(theDataCount < minDataCount)
+		theDataCount = minDataCount;
 	return theDataCount;
 }
 
-void NFmiCaseStudyProducerData::ProducerDataCount(int theDataCount, bool theCaseStudyCase)
+void NFmiCaseStudyProducerData::ProducerLocalCacheDataCount(int theDataCount)
 {
-	if(!ProducerHeaderInfo().IsReadOnlyDataCount(theCaseStudyCase))
+	if(!ProducerHeaderInfo().IsReadOnlyDataCount(false))
 	{
-		::FixGivenDataCount(ProducerHeaderInfo(), theDataCount, theCaseStudyCase);
-
-		if(theCaseStudyCase)
-			ProducerHeaderInfo().DataFileWinRegValues().CaseStudyDataCount(theDataCount);
-		else
-			ProducerHeaderInfo().DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+		theDataCount = ::FixGivenDataCount(ProducerHeaderInfo(), theDataCount, false);
+		ProducerHeaderInfo().DataFileWinRegValues().LocalCacheDataCount(theDataCount);
 
 		for(size_t i = 0; i < itsFilesData.size(); i++)
 		{
-			if(theCaseStudyCase)
-				itsFilesData[i].DataFileWinRegValues().CaseStudyDataCount(theDataCount);
-			else
-				itsFilesData[i].DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+			itsFilesData[i].DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+		}
+	}
+}
+
+static void FixGivenIndexRange(const NFmiCaseStudyDataFile& dataFile, std::pair<int, int> &theIndexRange)
+{
+	theIndexRange.first = ::FixGivenDataCount(dataFile, theIndexRange.first, true);
+	if(theIndexRange.second < 1)
+		theIndexRange.second = 1;
+	if(theIndexRange.second > theIndexRange.first)
+		theIndexRange.second = theIndexRange.first;
+}
+
+void NFmiCaseStudyProducerData::ProducerCaseStudyIndexRange(const std::pair<int, int>& theIndexRange)
+{
+	if(!ProducerHeaderInfo().IsReadOnlyDataCount(false))
+	{
+		auto finalIndexRange = theIndexRange;
+		::FixGivenIndexRange(ProducerHeaderInfo(), finalIndexRange);
+		ProducerHeaderInfo().DataFileWinRegValues().CaseStudyDataIndexRange(finalIndexRange);
+
+		for(size_t i = 0; i < itsFilesData.size(); i++)
+		{
+			itsFilesData[i].DataFileWinRegValues().CaseStudyDataIndexRange(finalIndexRange);
 		}
 	}
 }
@@ -1064,32 +1125,54 @@ void NFmiCaseStudyCategoryData::CategoryEnable(NFmiHelpDataInfoSystem &theDataIn
 	Update(theCaseStudySystem);
 }
 
-void NFmiCaseStudyCategoryData::ProducerDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase)
+void NFmiCaseStudyCategoryData::ProducerLocalCacheDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem)
 {
 	for(auto& producerData : itsProducersData)
 	{
 		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
 		{
-			producerData.ProducerDataCount(theDataCount, theCaseStudyCase);
+			producerData.ProducerLocalCacheDataCount(theDataCount);
+		}
+	}
+}
+
+void NFmiCaseStudyCategoryData::CategoryLocalCacheDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem)
+{
+	if(!itsCategoryHeaderInfo.IsReadOnlyDataCount(false))
+	{
+		theDataCount = ::FixGivenDataCount(CategoryHeaderInfo(), theDataCount, false);
+		itsCategoryHeaderInfo.DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+
+		for(auto& producerData : itsProducersData)
+		{
+			producerData.ProducerLocalCacheDataCount(theDataCount);
+		}
+	}
+}
+
+void NFmiCaseStudyCategoryData::ProducerCaseStudyIndexRange(unsigned long theProdId, const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem)
+{
+	for(auto& producerData : itsProducersData)
+	{
+		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
+		{
+			producerData.ProducerCaseStudyIndexRange(theIndexRange);
 		}
 	}
 	Update(theProdId, theCaseStudySystem);
 }
 
-void NFmiCaseStudyCategoryData::CategoryDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem, bool theCaseStudyCase)
+void NFmiCaseStudyCategoryData::CategoryCaseStudyIndexRange(const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem)
 {
-	if(!itsCategoryHeaderInfo.IsReadOnlyDataCount(theCaseStudyCase))
+	if(!itsCategoryHeaderInfo.IsReadOnlyDataCount(true))
 	{
-		::FixGivenDataCount(CategoryHeaderInfo(), theDataCount, theCaseStudyCase);
-
-		if(theCaseStudyCase)
-			itsCategoryHeaderInfo.DataFileWinRegValues().CaseStudyDataCount(theDataCount);
-		else
-			itsCategoryHeaderInfo.DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+		auto finalIndexRange = theIndexRange;
+		::FixGivenIndexRange(CategoryHeaderInfo(), finalIndexRange);
+		itsCategoryHeaderInfo.DataFileWinRegValues().CaseStudyDataIndexRange(finalIndexRange);
 
 		for(auto& producerData : itsProducersData)
 		{
-			producerData.ProducerDataCount(theDataCount, theCaseStudyCase);
+			producerData.ProducerCaseStudyIndexRange(finalIndexRange);
 		}
 		Update(theCaseStudySystem);
 	}
@@ -1286,10 +1369,10 @@ static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const std::string& unique
 	const int defaultModelLocalCacheCount = NFmiCaseStudySettingsWinRegistry::GetDefaultLocalCacheCountValue(dataType);
 	bool fixedValueForCaseStudyCount = defaultModelDataCaseStudyCount <= 1;
 	bool fixedValueForLocalCacheCount = defaultModelLocalCacheCount <= 1;
-	int caseStudyDataCount = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyCount(uniqueName);
+	auto caseStudyIndexRange = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyIndexRange(uniqueName);
 	int localCacheDataCount = theCaseStudySettingsWinRegistry.GetHelpDataLocalCacheCount(uniqueName);
 	bool store = theCaseStudySettingsWinRegistry.GetStoreDataState(uniqueName);
-	return NFmiCsDataFileWinReg(caseStudyDataCount, fixedValueForCaseStudyCount, localCacheDataCount, fixedValueForLocalCacheCount, store);
+	return NFmiCsDataFileWinReg(caseStudyIndexRange, fixedValueForCaseStudyCount, localCacheDataCount, fixedValueForLocalCacheCount, store);
 }
 
 static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const NFmiHelpDataInfo& info, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
@@ -1366,13 +1449,16 @@ static void UpdateStoredValueBackToMap(T& updatedMap, U value, const std::string
 static void StoreDataFileValuesToWinRegistry(const NFmiCaseStudyDataFile &dataFile, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
 {
 	// 1. CaseStudy data count
-	auto& caseStudyDataCountMap = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyCountMap();
+	auto& caseStudyIndex1Map = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyIndex1Map();
+	auto& caseStudyIndex2Map = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyIndex2Map();
 	// 2. Local cache data count
 	auto& localCacheDataCountMap = theCaseStudySettingsWinRegistry.GetHelpDataLocalCacheCountMap();
 	// 3. CaseStudy store
 	auto& caseStudyStoreMap = theCaseStudySettingsWinRegistry.GetCaseStudyStoreDataMap();
 	const auto& helpDataInfoName = dataFile.HelpDataInfoName();
-	::UpdateDataCountValueBackToMap(caseStudyDataCountMap, dataFile.DataFileWinRegValues().CaseStudyDataCount(), helpDataInfoName);
+	const auto& indexRange = dataFile.DataFileWinRegValues().CaseStudyDataIndexRange();
+	::UpdateDataCountValueBackToMap(caseStudyIndex1Map, indexRange.first, helpDataInfoName);
+	::UpdateDataCountValueBackToMap(caseStudyIndex2Map, indexRange.second, helpDataInfoName);
 	::UpdateDataCountValueBackToMap(localCacheDataCountMap, dataFile.DataFileWinRegValues().LocalCacheDataCount(), helpDataInfoName);
 	::UpdateStoredValueBackToMap(caseStudyStoreMap, dataFile.DataFileWinRegValues().Store(), helpDataInfoName);
 }
@@ -1381,13 +1467,6 @@ static void StoreDataFileValuesToWinRegistry(const NFmiCaseStudyDataFile &dataFi
 void NFmiCaseStudySystem::UpdateValuesBackToWinRegistry(NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
 {
 	// Laitetaan CaseStudy dialogissa tehdyt muutokset talteen Windows rekisteriin
-
-	// 1. CaseStudy data count
-	auto &caseStudyDataCountMap = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyCountMap();
-	// 2. Local cache data count
-	auto& localCacheDataCountMap = theCaseStudySettingsWinRegistry.GetHelpDataLocalCacheCountMap();
-	// 3. CaseStudy store
-	auto& caseStudyStoreMap = theCaseStudySettingsWinRegistry.GetCaseStudyStoreDataMap();
 	for(auto& categoryData : itsCategoriesData)
 	{
 		::StoreDataFileValuesToWinRegistry(categoryData.CategoryHeaderInfo(), theCaseStudySettingsWinRegistry);
@@ -1527,18 +1606,32 @@ void NFmiCaseStudySystem::CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSyst
 		categoryData->CategoryEnable(theDataInfoSystem, newValue, *this);
 }
 
-void NFmiCaseStudySystem::ProducerDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount, bool theCaseStudyCase)
+void NFmiCaseStudySystem::ProducerLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount)
 {
 	auto categoryData = GetCategoryData(theCategory);
 	if(categoryData)
-		categoryData->ProducerDataCount(theProdId, theDataCount, *this, theCaseStudyCase);
+		categoryData->ProducerLocalCacheDataCount(theProdId, theDataCount, *this);
 }
 
-void NFmiCaseStudySystem::CategoryDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount, bool theCaseStudyCase)
+void NFmiCaseStudySystem::CategoryLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount)
 {
 	auto categoryData = GetCategoryData(theCategory);
 	if(categoryData)
-		categoryData->CategoryDataCount(theDataCount, *this, theCaseStudyCase);
+		categoryData->CategoryLocalCacheDataCount(theDataCount, *this);
+}
+
+void NFmiCaseStudySystem::ProducerCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, const std::pair<int, int>& theIndexRange)
+{
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->ProducerCaseStudyIndexRange(theProdId, theIndexRange, *this);
+}
+
+void NFmiCaseStudySystem::CategoryCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, const std::pair<int, int>& theIndexRange)
+{
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->CategoryCaseStudyIndexRange(theIndexRange, *this);
 }
 
 static NFmiProducerSystem* GetProducerSystem(NFmiProducerSystemsHolder &theProducerSystemsHolder, NFmiCaseStudyDataCategory theCategory)
@@ -1886,17 +1979,6 @@ std::string NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(const std::strin
 	return caseStudyDataHakeDirectory;
 }
 
-static std::list<std::pair<std::string, std::time_t>> TimeSortFilesDescending(std::list<std::pair<std::string, std::time_t>> filesWithTimes)
-{
-	filesWithTimes.sort(
-		[](const auto &pair1, const auto &pair2) 
-		{
-			return pair1.second > pair2.second;
-		}
-	);
-	return filesWithTimes;
-}
-
 static std::list<std::string> GetFinalFileList(const std::list<std::pair<std::string, std::time_t>>& filesWithTimes)
 {
 	std::list<std::string> files;
@@ -1913,27 +1995,38 @@ static std::list<std::string> GetFinalFileList(const std::list<std::pair<std::st
 static std::list<std::string> GetWantedFileList(NFmiCaseStudyDataFile& theDataFile)
 {
 	const auto& dataFileWinRegValues = theDataFile.DataFileWinRegValues();
-	if(theDataFile.StoreLastDataOnly() || dataFileWinRegValues.CaseStudyDataCount() == 1)
+	if(dataFileWinRegValues.Store())
 	{
-		std::list<std::string> copyedFileList;
-		std::string fileName = NFmiFileSystem::NewestPatternFileName(theDataFile.FileFilter());
-		copyedFileList.push_back(fileName);
-		return copyedFileList;
-	}
-	else if(dataFileWinRegValues.CaseStudyDataCount() > 0)
-	{
-		// Haetaan kaikki tiedostot mitä FileFilter:illä löytyy (annettu aikaraja 1 on 1970.01.01 00:00:01) ja katsotaan sitten listasta n kpl uusinta
-		time_t earliestTimeLimit = 1;
-		auto filesWithTimes = NFmiFileSystem::PatternFiles(theDataFile.FileFilter(), earliestTimeLimit);
-		if(filesWithTimes.size() <= dataFileWinRegValues.CaseStudyDataCount())
-			return ::GetFinalFileList(filesWithTimes);
+		if(theDataFile.StoreLastDataOnly() || dataFileWinRegValues.StoreLastDataOnly())
+		{
+			std::list<std::string> copyedFileList;
+			std::string fileName = NFmiFileSystem::NewestPatternFileName(theDataFile.FileFilter());
+			copyedFileList.push_back(fileName);
+			return copyedFileList;
+		}
+		else // Muuten talletetaan aina 1-n kpl tiedostoja
+		{
+			// Haetaan kaikki tiedostot mitä FileFilter:illä löytyy (annettu aikaraja 1 on 1970.01.01 00:00:01)
+			time_t earliestTimeLimit = 1;
+			auto filesWithTimes = NFmiFileSystem::PatternFiles(theDataFile.FileFilter(), earliestTimeLimit);
+			if(!filesWithTimes.empty())
+			{
+				// Järjestetään tiedostot ajan suhteen laskevassa järjestyksessä, jolloin uusimmat ovat listan kärjessä
+				auto timeSortedFiles = CtrlViewUtils::TimeSortFiles(filesWithTimes);
 
-		// Järjestetään tiedostot ajan suhteen laskevassa järjestyksessä, jolloin uusimmat ovat listan kärjessä
-		auto timeSortedFiles = ::TimeSortFilesDescending(filesWithTimes);
-		timeSortedFiles.resize(dataFileWinRegValues.CaseStudyDataCount());
-		return ::GetFinalFileList(timeSortedFiles);
+				std::list<std::string> copyedFileList;
+				for(auto modelRunIndex : dataFileWinRegValues.GetWantedModelRunIndexList())
+				{
+					auto iter = timeSortedFiles.begin();
+					// modelRunIndex indeksit alkavat 1:stä (= uusin data tiedosto joka löytyy), joten siitä pitää vähentää 1, jotta voidaan liikuttaa iteraattoria oikein
+					std::advance(iter, modelRunIndex - 1);
+					if(iter != timeSortedFiles.end())
+						copyedFileList.push_back(iter->first);
+				}
+				return copyedFileList;
+			}
+		}
 	}
-
 	return std::list<std::string>();
 }
 
@@ -2520,6 +2613,40 @@ bool NFmiCaseStudySystem::CropDataToZoomedMapArea(void) const
 void NFmiCaseStudySystem::CropDataToZoomedMapArea(bool newValue)
 {
 	*fCropDataToZoomedMapArea = newValue;
+}
+
+std::string NFmiCaseStudySystem::MakeIndexRangeString(const std::pair<int, int>& indexRange)
+{
+	std::string text = std::to_string(indexRange.first);
+	text += "-";
+	text += std::to_string(indexRange.second);
+	return text;
+}
+
+std::pair<int, int> NFmiCaseStudySystem::MakeIndexRange(const std::string& str)
+{
+	std::vector<std::string> parts;
+	// Tehdään varmuuden vuoksi splittaus kaikilla mahdollisilla erotinmerkeillä, vaikka virallinen onkin '-' merkki.
+	boost::split(parts, str, boost::is_any_of(",-:;/|\\"));
+	if(parts.size() == 1)
+	{
+		auto index1 = boost::lexical_cast<int>(parts.back());
+		// Vain yksi mahdollinen luku, toinen indeksi on tällöin aina 1
+		return std::make_pair(index1, 1);
+	}
+	else if(parts.size() == 2)
+	{
+		auto index1 = boost::lexical_cast<int>(parts.front());
+		auto index2 = boost::lexical_cast<int>(parts.back());
+		return std::make_pair(index1, index2);
+	}
+	else
+	{
+		std::string errorMessage = "Too many 'index' splits from given cellText '";
+		errorMessage += str;
+		errorMessage += "'";
+		throw std::runtime_error(errorMessage);
+	}
 }
 
 // ************************************************************

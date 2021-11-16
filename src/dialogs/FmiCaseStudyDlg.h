@@ -22,7 +22,7 @@ struct CaseStudyHeaderParInfo
 		kModelName,
         kProducerId,
 		kStoreData,
-		kCaseStudyDataCount,
+		kCaseStudyDataIndexRange,
 		kLocalCacheDataCount,
 		kEnableData, // tätä ei saa laittaa viimeiseen sarakkeeseen, koska sitä on tarkoitus piilottaa ja CGridCtrl-luokassa on bugi, joka estaa viimeisen sarakkeen Unhide-toiminnon eston, eli viimeisen sarakkeen saa aina auki hiirellä vetämällä.
 		kDataSize
@@ -161,6 +161,8 @@ private:
 	std::string AddPossibleHakeMessageOptions() const;
 	std::string AddPossibleCropDataToZoomedMapAreaOptions() const;
 	void DoResizerHooking();
+	void DoLocalCacheCountEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
+	void DoCaseStudyIndexRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
 
     CString itsNameStrU_;
     CString itsInfoStrU_;

@@ -606,4 +606,18 @@ namespace CtrlViewUtils
         }
     }
 
+    FileNameWithTimeList TimeSortFiles(FileNameWithTimeList filesWithTimesCopy, bool descending)
+    {
+        filesWithTimesCopy.sort(
+            [=](const auto& pair1, const auto& pair2)
+            {
+                if(descending)
+                    return pair1.second > pair2.second;
+                else
+                    return pair1.second < pair2.second;
+            }
+        );
+        return filesWithTimesCopy;
+    }
+
 } // namespace CtrlViewUtils
