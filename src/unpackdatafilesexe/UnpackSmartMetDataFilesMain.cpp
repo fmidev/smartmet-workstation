@@ -185,6 +185,7 @@ int main(int argc, const char* argv[])
 #include "NFmiTimeList.h"
 #include "NFmiStringTools.h"
 #include "NFmiMilliSecondTimer.h"
+#include "NFmiProducerName.h"
 #include <fstream>
 #include <thread>
 #include "boost\algorithm\string\replace.hpp"
@@ -377,17 +378,103 @@ static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const 
         std::cerr << "Error: non existing given directory " << parallerDirectory << std::endl;
 }
 
+// Tutkitaan annetusta queryData hakemistosta local hakemistoa.
+// Käydään läpi sen kaikki qData tiedostot.
+// Tärkeimpiä ovat synop ja metar tiedostot, jos niitä löytyy, käytetään sen datasetin 'seinäkelloaikana'
+// minkä tahansa synop/metar datan viimeisintä validTimea. 
+// Jos tälläistä ei löydy, käytetään minkä tahansa hiladatan (oletetaan että on ennuste) myöhäisintä ensimmäistä validTimea.
+// Jos tälläistä ei löydy, käytetään minkä tahansa asemadatan (oletetaan että on havainto)  myöhäisintä viimeistä validTimea.
+static int CalculateActualChangeTimesByHourValue(const std::string& pathToQueryDataFiles, int changeTimesByHourAgainstWallClock)
+{
+    auto localDirectory = pathToQueryDataFiles;
+    PathUtils::addDirectorySeparatorAtEnd(localDirectory);
+    localDirectory += "local";
+    if(NFmiFileSystem::DirectoryExists(localDirectory))
+    {
+        PathUtils::addDirectorySeparatorAtEnd(localDirectory);
+        auto qDataFilePattern = localDirectory;
+        qDataFilePattern += "*.?qd";
+        auto files = NFmiFileSystem::PatternFiles(qDataFilePattern);
+        if(!files.empty())
+        {
+            NFmiMetTime wallClockTime;
+            NFmiMetTime synopBasedWallClock = NFmiMetTime::gMissingTime;
+            NFmiMetTime modelDataBasedWallClock = NFmiMetTime::gMissingTime;
+            NFmiMetTime obsDataBasedWallClock = NFmiMetTime::gMissingTime;
+            for(const auto& fileName : files)
+            {
+                try
+                {
+                    auto finalFilePath = localDirectory + fileName;
+                    NFmiQueryData qData(finalFilePath);
+                    NFmiFastQueryInfo fastInfo(&qData);
+                    if(fastInfo.IsGrid())
+                    {
+                        const auto& firstValidTime = fastInfo.TimeDescriptor().FirstTime();
+                        if(modelDataBasedWallClock < firstValidTime)
+                            modelDataBasedWallClock = firstValidTime;
+                    }
+                    else
+                    {
+                        const auto& lastValidTime = fastInfo.TimeDescriptor().LastTime();
+                        auto producerId = fastInfo.Producer()->GetIdent();
+                        if(producerId == kFmiSYNOP || producerId == kFmiMETAR)
+                        {
+                            if(synopBasedWallClock < lastValidTime)
+                                synopBasedWallClock = lastValidTime;
+                        }
+                        else
+                        {
+                            if(obsDataBasedWallClock < lastValidTime)
+                                obsDataBasedWallClock = lastValidTime;
+                        }
+                    }
+                }
+                catch(...)
+                { }
+            }
+            if(synopBasedWallClock != NFmiMetTime::gMissingTime)
+            {
+                int usedDifferenceInHours = wallClockTime.DifferenceInHours(synopBasedWallClock) + changeTimesByHourAgainstWallClock;
+                std::cerr << "Using synop/metar based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
+                return usedDifferenceInHours;
+            }
+            else if(modelDataBasedWallClock != NFmiMetTime::gMissingTime)
+            {
+                int usedDifferenceInHours = wallClockTime.DifferenceInHours(modelDataBasedWallClock) + changeTimesByHourAgainstWallClock;
+                std::cerr << "Using model based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
+                return usedDifferenceInHours;
+            }
+            else if(obsDataBasedWallClock != NFmiMetTime::gMissingTime)
+            {
+                int usedDifferenceInHours = wallClockTime.DifferenceInHours(obsDataBasedWallClock) + changeTimesByHourAgainstWallClock;
+                std::cerr << "Using other-observation based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
+                return usedDifferenceInHours;
+            }
+            else
+                std::cerr << "Warning: the 'local' sub-directory didn't contain any usable qdata files, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+        }
+        else
+            std::cerr << "Warning: the 'local' sub-directory didn't contain any qdata files, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+    }
+    else
+        std::cerr << "Warning: given directory didn't have 'local' sub-directory, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+
+    return changeTimesByHourAgainstWallClock;
+}
 
 int main(int argc, const char* argv[])
 {
     // Ohjelma käy rekursiivisesti läpi kaikki tiedostot ja hakemistot, jotka ovat
     // annetulla pathToQueryDataFiles -polulla ja ja tekee seuraavia asioita:
-    // 1) Luo uusidata muistiin, joissa on siirretty kaikkia aikoja annetulla aikasiirtymällä.
+    // 1) Luo uusi data muistiin, joissa on siirretty kaikkia aikoja annetulla aikasiirtymällä,
+    // suhteessa sainäkelloaikaan, elli -12 siirtää seinäkellosta 12 tuntia taaksepäin.
     // 2) Talleta uusi data rinnakkaiseen puurakenteeseen, joka alkaa newBasePath -polusta.
     // 3) Uuden datan nimessa oleva aikaleima on myös muokattu samalla siirtymällä.
     std::string pathToQueryDataFiles = argv[1];
     std::string newBasePath = argv[2];
-    int changeTimesByHour = std::stoi(argv[3]);
+    int changeTimesByHourAgainstWallClock = std::stoi(argv[3]);
+    auto changeTimesByHour = ::CalculateActualChangeTimesByHourValue(pathToQueryDataFiles, changeTimesByHourAgainstWallClock);
     DoRecursiveDirectoryWork(pathToQueryDataFiles, newBasePath, changeTimesByHour);
 
     return 1;
